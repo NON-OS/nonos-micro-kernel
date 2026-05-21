@@ -54,6 +54,45 @@ fn fill_rect(fb: &KernelFramebuffer, x0: u32, y0: u32, w: u32, h: u32, color: u3
 	}
 }
 
+const GLYPH_BLANK: [u8; 8] = [0; 8];
+const GLYPH_N: [u8; 8] = [0xC3, 0xE3, 0xF3, 0xDB, 0xCF, 0xC7, 0xC3, 0x00];
+const GLYPH_O: [u8; 8] = [0x7E, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0x7E, 0x00];
+const GLYPH_S: [u8; 8] = [0x7E, 0xC0, 0xC0, 0x7E, 0x03, 0x03, 0xFE, 0x00];
+const GLYPH_D: [u8; 8] = [0xFC, 0xC6, 0xC3, 0xC3, 0xC3, 0xC6, 0xFC, 0x00];
+const GLYPH_E: [u8; 8] = [0xFF, 0xC0, 0xC0, 0xFC, 0xC0, 0xC0, 0xFF, 0x00];
+const GLYPH_K: [u8; 8] = [0xC6, 0xCC, 0xD8, 0xF0, 0xD8, 0xCC, 0xC6, 0x00];
+const GLYPH_T: [u8; 8] = [0xFF, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x00];
+const GLYPH_P: [u8; 8] = [0xFE, 0xC3, 0xC3, 0xFE, 0xC0, 0xC0, 0xC0, 0x00];
+
+fn glyph(c: u8) -> &'static [u8; 8] {
+	match c {
+		b'N' => &GLYPH_N,
+		b'O' => &GLYPH_O,
+		b'S' => &GLYPH_S,
+		b'D' => &GLYPH_D,
+		b'E' => &GLYPH_E,
+		b'K' => &GLYPH_K,
+		b'T' => &GLYPH_T,
+		b'P' => &GLYPH_P,
+		_ => &GLYPH_BLANK,
+	}
+}
+
+fn draw_text(fb: &KernelFramebuffer, x: u32, y: u32, s: &[u8], color: u32, scale: u32) {
+	let mut cx = x;
+	for &c in s {
+		let g = glyph(c);
+		for (ry, bits) in g.iter().enumerate() {
+			for rx in 0..8u32 {
+				if bits & (0x80 >> rx) != 0 {
+					fill_rect(fb, cx + rx * scale, y + ry as u32 * scale, scale, scale, color);
+				}
+			}
+		}
+		cx += 9 * scale;
+	}
+}
+
 pub(crate) fn draw_desktop() {
 	let Some(fb) = framebuffer_state() else {
 		crate::sys::serial::println(b"[DESKTOP] no framebuffer state");
@@ -64,6 +103,8 @@ pub(crate) fn draw_desktop() {
 	fill_rect(fb, 0, fb.height.saturating_sub(56), fb.width, 56, 0xFF0C141E);
 	let dock_x = fb.width / 2;
 	fill_rect(fb, dock_x.saturating_sub(120), fb.height.saturating_sub(48), 240, 40, 0xFF1E66A8);
+	draw_text(fb, 12, 6, b"NONOS", 0xFFE6ECF4, 2);
+	draw_text(fb, dock_x.saturating_sub(100), fb.height.saturating_sub(42), b"DESKTOP", 0xFFE6ECF4, 3);
 	// Push write-back directmap stores out to the scanout device.
 	unsafe { core::arch::asm!("wbinvd", options(nostack, preserves_flags)) };
 	crate::sys::serial::println(b"[DESKTOP] drawn");
