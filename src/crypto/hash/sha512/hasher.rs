@@ -30,11 +30,8 @@ pub struct Sha512 {
 impl Sha512 {
     #[inline]
     pub fn new() -> Self {
-        crate::sys::serial::println(b"[SHA] Sha512::new: start");
         let state = INITIAL_STATE;
-        crate::sys::serial::println(b"[SHA] Sha512::new: state done");
         let buffer = [0u8; 128];
-        crate::sys::serial::println(b"[SHA] Sha512::new: buffer done");
         Self { state, buffer, buffer_len: 0, bit_len: 0 }
     }
 

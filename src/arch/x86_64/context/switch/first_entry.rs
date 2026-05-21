@@ -34,13 +34,6 @@ pub(super) fn try_first_entry(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool 
         None => return false,
     };
 
-    crate::sys::serial::print(b"[SCHED] enter-user pid=");
-    crate::arch::x86_64::diag::print_hex_u64(pid as u64);
-    crate::sys::serial::print(b" rip=");
-    crate::arch::x86_64::diag::print_hex_u64(frame.rip);
-    crate::sys::serial::print(b" rsp=");
-    crate::arch::x86_64::diag::print_hex_u64(frame.rsp);
-    crate::sys::serial::println(b"");
 
     let kstack = pcb.kernel_stack_top.load(Ordering::Acquire);
     if kstack == 0 {
