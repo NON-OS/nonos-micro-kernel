@@ -124,6 +124,7 @@ fn init_arch_memory_and_framebuffer(handoff: &KernelHandoff) {
             #[cfg(target_arch = "x86_64")]
             init_memory(v1);
             init_framebuffer(v1);
+            super::framebuffer::draw_desktop();
         }
     }
 }

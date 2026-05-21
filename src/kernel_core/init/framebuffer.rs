@@ -41,6 +41,34 @@ pub(crate) fn framebuffer_state() -> Option<&'static KernelFramebuffer> {
 	FRAMEBUFFER.get()
 }
 
+fn fill_rect(fb: &KernelFramebuffer, x0: u32, y0: u32, w: u32, h: u32, color: u32) {
+	let start = fb.base_va.as_u64() as usize + fb.offset;
+	let x_end = (x0 + w).min(fb.width);
+	let y_end = (y0 + h).min(fb.height);
+	for y in y0..y_end {
+		let row = start + (y as usize) * fb.stride as usize;
+		for x in x0..x_end {
+			// SAFETY: x<width, y<height, stride>=width*4: within frame.
+			unsafe { core::ptr::write_volatile((row + (x as usize) * 4) as *mut u32, color) };
+		}
+	}
+}
+
+pub(crate) fn draw_desktop() {
+	let Some(fb) = framebuffer_state() else {
+		crate::sys::serial::println(b"[DESKTOP] no framebuffer state");
+		return;
+	};
+	fill_rect(fb, 0, 0, fb.width, fb.height, 0xFF1A2738);
+	fill_rect(fb, 0, 0, fb.width, 28, 0xFF0C141E);
+	fill_rect(fb, 0, fb.height.saturating_sub(56), fb.width, 56, 0xFF0C141E);
+	let dock_x = fb.width / 2;
+	fill_rect(fb, dock_x.saturating_sub(120), fb.height.saturating_sub(48), 240, 40, 0xFF1E66A8);
+	// Push write-back directmap stores out to the scanout device.
+	unsafe { core::arch::asm!("wbinvd", options(nostack, preserves_flags)) };
+	crate::sys::serial::println(b"[DESKTOP] drawn");
+}
+
 pub(super) fn init_framebuffer(handoff: &BootHandoffV1) {
 	let Some(fb) = handoff.framebuffer() else {
 		return;
@@ -63,8 +91,12 @@ pub(super) fn init_framebuffer(handoff: &BootHandoffV1) {
 	let Some(map_len) = offset.checked_add(fb_size) else {
 		return;
 	};
-	let Ok(base_va) = crate::memory::mmio::map_framebuffer(PhysAddr::new(base), map_len) else {
-		return;
+	let base_va = match crate::memory::mmio::map_framebuffer(PhysAddr::new(base), map_len) {
+		Ok(v) => v,
+		Err(_) => {
+			crate::sys::serial::println(b"[FBINIT] map_framebuffer failed; using directmap");
+			VirtAddr::new(crate::memory::layout::DIRECTMAP_BASE + base)
+		}
 	};
 	FRAMEBUFFER.call_once(|| KernelFramebuffer {
 		width: fb.width,
