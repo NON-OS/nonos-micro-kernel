@@ -79,7 +79,22 @@ eK's domain (paging/asid or context machinery).
   value `0x7fffffff…` is user-half, so it isn't the kernel stack top, and the
   CPL=3 interrupt frame is pushed to a valid kernel RSP0.
 
-## Reframed: it's a *read* of stale bytes, not a clean write
+## DECISIVE (2026-05-22): it's a real, stable async WRITE — not a read anomaly
+Double-read test: `sys_mk_debug` reads the user buffer twice back-to-back and
+compares. Result: **zero inconsistencies** across the whole boot, yet the gpu
+markers are still corrupted. So both reads see the *same* garbage — the user
+memory genuinely holds it. `copy_from_user` is fine; the capsule's `buf[0..16]`
+is **really overwritten in physical memory** between `debug::marker`'s
+prefix-write and the `mk_debug` read. The write is 16 bytes ({pointer,
+small-counter}), async (SMP=1, so timer-ISR-driven), counter increments per
+marker (≈per tick). Conclusion: a kernel interrupt path writes 16 bytes into
+the running capsule's user stack at `buf[0]`. The only thing that pushes to a
+stack on a CPL=3→0 interrupt is TSS.RSP0; if the gpu's RSP0/kernel-stack is
+mis-set into (or overlapping) its user stack, the timer's iret-frame + GPR
+pushes land in user memory. **Verify the gpu's actual RSP0 / kernel_stack_top
+at runtime** and watch `buf[0]` — that is the remaining decisive datum.
+
+## (earlier hypothesis, now superseded) read of stale bytes
 `debug::marker` provably writes `buf[0..18]=PREFIX` (same code for the clean
 `find:listed` and the corrupt `find:matched`/`bar ok`). Across runs the corrupt
 `buf[0..16]` *varies* (all-zeros, `0x7fffffffed780`, `0x7fffffffff80`) while
