@@ -104,6 +104,33 @@ otherwise-correct buffer — a 16-byte-granular read/translation anomaly, not a
 whole-frame mistranslation and not a traceable overwrite. Counter ~0x1f/0x20
 increments per marker (≈ per timer tick).
 
+## lldb investigation (2026-05-22) — works, and narrowed it sharply
+lldb 21 attaches to QEMU's gdb stub (`-s`), no KASLR slide (ELF addrs ==
+runtime). Breaking on the `#GP` handler (`gpf::handle`, 0xffffffff8003a060)
+captured the exact wedge chain:
+`page_fault::handle → terminate_user_process → exit::teardown →
+ipc::nonos_inbox::registry::unregister_for_pid → BTreeMap remove_kv →
+[0x18] #GP`. So a capsule takes a user `#PF`, and tearing down its inbox
+walks a `BTreeMap` whose node pointer is smashed to `0x18` → kernel wedge.
+`unregister_for_pid` itself is clean (single locked `map.remove`), so the
+node was corrupted by the external write.
+
+Caught the gpu marker buffer at its clean `find:listed` (lldb breakpoint
+on `sys_mk_debug` 0xffffffff8002a760, callback matches the buffer text):
+`user_va=0x7ffffffed780`. The corrupt bytes are `{0x7ffffffed780, 0x1f}` =
+`{buf_ptr, total}` — i.e. **exactly the `mk_debug(buf.as_ptr(), total)`
+arguments / a `{ptr,len}` slice** (libc `call_raw(N_MK_DEBUG,[buf,len,0,..])`).
+This may be a `debug::marker` codegen/liveness artifact (the buffer's stack
+slot vs the syscall arg array) and a **red herring** separate from the real
+crashes — to be confirmed.
+
+Watchpoint hunt status: `wp.py` catches `find:listed` and sets a conditional
+hardware watchpoint (stop when `buf[0]` becomes a user pointer = the
+corruptor's write). Not yet landed: the full 33-capsule boot under an
+lldb breakpoint on hot `sys_mk_debug` is too slow/variable to reach the gpu
+within the window. **Next: reproduce on a minimal gpu-only profile** (fast
+boot → watchpoint lands in seconds), or run the session interactively.
+
 ## Disposition
 Five hypotheses refuted by experiment (preemption, libc, signals, aliasing,
 RSP0). Static analysis is exhausted; continuing to guess violates disciplined
