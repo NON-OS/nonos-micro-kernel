@@ -18,12 +18,17 @@ use crate::frame_pacer::composite;
 
 use crate::gfx_client;
 use crate::state::Context;
+use nonos_libc::nonos_surface_present_full;
 
 pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
     let Some(rect) = ctx.damage.drain() else {
         return Ok(());
     };
     composite::paint(ctx, rect);
+    if ctx.gfx_port == 0 {
+        let _ = nonos_surface_present_full(0, ctx.backing_va);
+        return Ok(());
+    }
     let req_a = ctx.issue_request_id();
     let pixel_offset = (rect.y as u64) * (ctx.stride as u64) + (rect.x as u64) * 4;
     gfx_client::transfer_to_host(

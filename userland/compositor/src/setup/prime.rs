@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_surface_attach, mk_yield, SurfaceDescriptor, SURFACE_FORMAT_ARGB8888};
+use nonos_libc::{
+    mk_mmap, mk_surface_attach, mk_yield, nonos_display_dimensions, SurfaceDescriptor,
+    SURFACE_FORMAT_ARGB8888,
+};
 
 use super::discover;
 use crate::gfx_client;
@@ -23,8 +26,13 @@ use crate::state::{
 };
 
 const READY_ATTEMPTS: usize = 256;
+const PROT_READ_WRITE: i32 = 0x3;
+const MAP_PRIVATE_ANON: i32 = 0x22;
 
 pub fn run() -> Result<Context, &'static str> {
+    if let Ok(ctx) = run_gop_once() {
+        return Ok(ctx);
+    }
     let mut last_err = "gfx primary unavailable";
     for _ in 0..READY_ATTEMPTS {
         match run_virtio_once() {
@@ -36,6 +44,41 @@ pub fn run() -> Result<Context, &'static str> {
         }
     }
     Err(last_err)
+}
+
+fn run_gop_once() -> Result<Context, &'static str> {
+    let mut width: u32 = 0;
+    let mut height: u32 = 0;
+    let rc = nonos_display_dimensions(0, &mut width as *mut u32, &mut height as *mut u32);
+    if rc != 0 || width == 0 || height == 0 {
+        return Err("gop dimensions unavailable");
+    }
+    let stride = width.checked_mul(4).ok_or("gop stride overflow")?;
+    let byte_len = (stride as u64).checked_mul(height as u64).ok_or("gop size overflow")?;
+    let base =
+        mk_mmap(core::ptr::null_mut(), byte_len as usize, PROT_READ_WRITE, MAP_PRIVATE_ANON, -1, 0);
+    if base.is_null() {
+        return Err("gop backing mmap failed");
+    }
+    let mut damage = DamageAccumulator::new();
+    damage.mark_full(width, height);
+    crate::debug::marker(b"[compositor] GOP-fb fallback mode");
+    Ok(Context {
+        gfx_port: 0,
+        resource_id: 0,
+        width,
+        height,
+        stride,
+        backing_va: base as u64,
+        first_scanout_done: false,
+        scanout_error_reported: false,
+        next_request_id: 2,
+        scene: SceneTable::new(),
+        damage,
+        focus: FocusTable::new(),
+        cursor: CursorTracker::new(),
+        attach: AttachCache::new(),
+    })
 }
 
 fn run_virtio_once() -> Result<Context, &'static str> {

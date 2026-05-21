@@ -96,5 +96,8 @@ fn blit(display: u64, surface: u64, x: u64, y: u64, w: u64, h: u64, full: bool) 
             copied += chunk;
         }
     }
+    // The GOP framebuffer is reached through the write-back directmap when
+    // map_framebuffer is unavailable; flush so the stores hit the scanout.
+    unsafe { core::arch::asm!("wbinvd", options(nostack, preserves_flags)) };
     SyscallResult::success_audited(0)
 }
