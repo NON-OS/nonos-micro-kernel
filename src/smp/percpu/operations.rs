@@ -83,6 +83,35 @@ pub fn init_ap(cpu_id: usize) {
     }
 }
 
+/// Re-establish a valid per-CPU GS base on trap entry.
+///
+/// A trap can land in a window where the active GS base is the user
+/// value (0); reading per-CPU state through `gs:` then faults on the
+/// unmapped zero page and storms the fault handler. When the GS base is
+/// not a canonical higher-half kernel pointer, re-derive this CPU's
+/// `PerCpuData` from the local APIC id (which needs no GS) and reload
+/// the GS base from it before any `gs:`-relative access runs.
+pub fn ensure_gs_base() {
+    if GsBase::read().as_u64() >= 0xffff_8000_0000_0000 {
+        return;
+    }
+    let apic = crate::arch::x86_64::interrupt::apic::id();
+    for i in 0..MAX_CPUS {
+        // SAFETY: read-only scan of the initialized per-CPU array.
+        let entry = unsafe { &PERCPU_DATA[i] };
+        if entry.self_ptr != 0 && entry.apic_id == apic {
+            // SAFETY: self_ptr is this CPU's own PerCpuData pointer.
+            unsafe { GsBase::write(VirtAddr::new(entry.self_ptr)) };
+            return;
+        }
+    }
+    // SAFETY: BSP fallback when the APIC id scan finds no match.
+    let bsp = unsafe { &PERCPU_DATA[0] };
+    if bsp.self_ptr != 0 {
+        unsafe { GsBase::write(VirtAddr::new(bsp.self_ptr)) };
+    }
+}
+
 #[inline]
 pub fn current() -> &'static PerCpuData {
     // SAFETY: cpu_id returns valid index, data is initialized

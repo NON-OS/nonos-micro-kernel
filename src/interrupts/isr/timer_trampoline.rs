@@ -137,6 +137,7 @@ pub unsafe extern "C" fn timer_trampoline() {
 /// `take()`s the most recent one.
 #[no_mangle]
 pub extern "C" fn timer_trap_handler(ctx: *mut UserContext) {
+    crate::smp::percpu::ensure_gs_base();
     // SAFETY: eK@nonos.systems — `ctx` was produced by the trampoline
     // above and points at 160 bytes of valid stack memory laid out as
     // the leading fields of `UserContext`. We read those fields here;

@@ -32,21 +32,12 @@ static INTERRUPT_DEPTH: [AtomicU8; MAX_CPUS] = {
     [INIT; MAX_CPUS]
 };
 
-/// # Safety
-/// Reads CPU ID from GS segment base.
+/// Per-CPU index for the interrupt-context arrays. Routed through the
+/// arch facade (APIC id / MPIDR / hart id) instead of a `gs:`-relative
+/// read so it cannot fault when an interrupt lands while the GS base is
+/// the user value; the trap path must not depend on a valid GS base.
 fn cpu_id() -> usize {
-    #[cfg(target_arch = "x86_64")]
-    {
-        let id: u64;
-        unsafe {
-            core::arch::asm!("mov {}, gs:0", out(reg) id, options(nostack, preserves_flags));
-        }
-        (id as usize) % MAX_CPUS
-    }
-    #[cfg(not(target_arch = "x86_64"))]
-    {
-        0
-    }
+    crate::smp::cpu_id() % MAX_CPUS
 }
 
 /// # Safety
