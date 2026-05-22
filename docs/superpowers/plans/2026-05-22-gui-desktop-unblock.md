@@ -180,6 +180,41 @@ heap/DMA frame collision, DeviceRecord ABI, device_list overflow, DMA scrub.
 **Next:** watch the saved `Context` node (`INTERRUPT_SAVED_CONTEXTS` for pid 2)
 or single-step proof-io's crashing resume to see where `rsp` first diverges.
 
+## 2026-05-22 (DECISIVE pivot) — it's USER-memory corruption, NOT the resume
+Built a feature-flagged probe: in the syscall-exit asm, assert `rsp ==
+kstack_top-24` right before `pop rcx`; on divergence dump the frozen frames.
+**It never fired** — so the SYSRET resume rsp is *correct*. The capsule resumes
+to a valid rip and only then jumps to garbage **in user mode** (`TRAP PF cpl=3
+rip=<garbage> rsp≈user-stack-top`). So the entire kstack / `Context` / resume
+investigation (and the `kstack-writer-trap` plan) targeted the **wrong layer**.
+
+What's actually happening:
+- The crashing pid (pid 2) is **virtio-rng** (the DMA/IRQ-looping driver that
+  resumes 100+ times), **not** proof-io (whose `_start` is just
+  `mk_debug; mk_exit` — it can't loop).
+- virtio-rng's **user-mode control flow** is corrupted: a return address /
+  function pointer in its user memory gets overwritten, and it jumps there.
+- The injected values **vary** across runs: `0x2`, `0xff00`, `0x7ffffffffffffffc`
+  (the `movabsq` mask from `allocate_kernel_stack`), and pointers **into the
+  16 MiB bootstrap heap** (`BOOTSTRAP_HEAP_MEMORY = 0xffffffff82150000`; seen
+  `…82157b20`, `…82164b20`, `…82167b20`, `…822e0b20`). So the writer copies
+  *varying live data* onto a capsule's user stack, not a fixed value.
+
+Ruled out this round: kernel resume (rsp-probe), and **all syscall out-struct
+ABI sizes** (IrqPollOut 16, MmioMapOut 24, DmaMapOut 32, IrqBindOut 16,
+DeviceRecord 176 — each `static_assert`-checked, kernel == userland). So it is
+**not** a usercopy out-struct overflow.
+
+**Corrected target:** something writes varying live kernel/device data onto a
+capsule's **user stack** (return address). Leading hypothesis given pid 2 =
+virtio-rng: the **virtio DMA / virtqueue** — the device DMA-writing past the
+allocated buffer (a queue-layout/size bug) into the adjacent physical frame that
+backs the user stack, OR a kernel path copying a buffer to the wrong user
+offset. Next probe: a hw watchpoint (DR0+DR1 VA+directmap) on the **corrupted
+user-stack return slot** of pid 2 (found by reading its user stack at the
+crash), armed while it's parked — catches the writer. The `kstack-writer-trap`
+plan's machinery applies, retargeted from the kstack to the **user stack**.
+
 ## Test loop
 `make nonos-mk-desktop-gui-prod && make nonos-mk-esp`, boot headless with
 `-monitor tcp` + `-serial file`, `screendump` the framebuffer, grep serial for

@@ -1,5 +1,16 @@
 # Kstack Wild-Writer Trap — Implementation Plan
 
+> **RETARGETED 2026-05-22:** Executing Task 1 disproved the premise. A
+> syscall-exit `rsp` assertion (before `pop rcx`) **never fired**, proving the
+> kernel **resume is correct** — the corruption is in the capsule's **USER
+> stack**, not the kernel stack, and the crashing pid is **virtio-rng** (not
+> proof-io). Same DR0/DR1 watchpoint machinery, but arm it on the corrupted
+> **user-stack** return slot, not `kstack_top - N`. See the "DECISIVE pivot"
+> section in `2026-05-22-gui-desktop-unblock.md`. Leading root hypothesis: a
+> virtio DMA / virtqueue overflow writing past the buffer into the user-stack
+> frame. The tasks below stand as a template; retarget the address.
+
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Catch the exact kernel RIP that writes a kernel-BSS pointer into a parked capsule's frozen kernel-stack frame, then fix the root so the desktop boots cleanly.
