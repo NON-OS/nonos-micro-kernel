@@ -147,6 +147,11 @@ nonos-dev-unverified-capsules = []
 # bounded to the lanes that watch serial.
 nonos-user-entry-proof = []
 
+# Debug-only: trap the kernel writer that scribbles kernel memory into a
+# pid-2 capsule's user-stack return slot. Adds a PF-time user-RSP dump and
+# DR0/DR1 watchpoints. Never in any shipping profile.
+nonos-trap-kstack-writer = []
+
 # Boot smoketests. Each one drives a real round trip on the boot
 # serial and emits PASS/FAIL markers consumed by the matching
 # `tests/boot/*.sh` harness.

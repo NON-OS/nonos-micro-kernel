@@ -38,6 +38,16 @@ pub fn handle(frame: InterruptStackFrame, error_code: u64) {
         Some(error_code),
         Some(accessed_address),
     );
+    #[cfg(feature = "nonos-trap-kstack-writer")]
+    {
+        let cpl = (frame.code_segment as u64 & 0x3) as u8;
+        let pid_now = crate::process::current_pid().unwrap_or(0);
+        if cpl == 3 && pid_now == 2 {
+            crate::arch::x86_64::diag::dump_user_around_rsp(
+                frame.stack_pointer.as_u64(),
+            );
+        }
+    }
     let exception = ExceptionContext::from_frame(&frame);
     let error = PageFaultErrorCode::from_bits(error_code);
 

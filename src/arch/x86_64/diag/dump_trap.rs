@@ -62,3 +62,23 @@ pub fn dump_trap(name: &[u8], frame: &InterruptStackFrame, err: Option<u64>, cr2
     }
     crate::sys::serial::println(b"");
 }
+
+#[cfg(feature = "nonos-trap-kstack-writer")]
+pub fn dump_user_around_rsp(rsp: u64) {
+    let page_lo = rsp & !0xfff;
+    let page_hi = page_lo.wrapping_add(0x1000);
+    let lo = rsp.saturating_sub(128) & !0x7;
+    let lo = if lo < page_lo { page_lo } else { lo };
+    let hi = rsp.saturating_add(128);
+    let hi = if hi > page_hi { page_hi } else { hi };
+    let mut va = lo;
+    while va + 8 <= hi {
+        let v = unsafe { core::ptr::read_volatile(va as *const u64) };
+        crate::sys::serial::print(b"[USER-DUMP] ");
+        print_hex_u64(va);
+        crate::sys::serial::print(b" = ");
+        print_hex_u64(v);
+        crate::sys::serial::println(b"");
+        va = va.wrapping_add(8);
+    }
+}

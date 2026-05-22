@@ -23,6 +23,8 @@ mod user_proof;
 
 pub use dump_gdt::dump_gdt;
 pub use dump_trap::dump_trap;
+#[cfg(feature = "nonos-trap-kstack-writer")]
+pub use dump_trap::dump_user_around_rsp;
 pub use print_hex::print_hex_u64;
 #[cfg(feature = "nonos-user-entry-proof")]
 pub use user_proof::assert_user_entry;
