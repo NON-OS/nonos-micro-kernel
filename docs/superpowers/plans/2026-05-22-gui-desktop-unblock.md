@@ -125,6 +125,61 @@ read proof-io's *actual* `kernel_stack_top` for the run (the value at the
 resolve `WatchAddress` returning None on the directmap address. Once armed, the
 watchpoint's backtrace names the directmap writer = the root corruptor.
 
+## 2026-05-22 (catch attempt) — it's resume RSP/control-flow corruption, NOT the slot
+Built the live-phys directmap watchpoint (script reads proof-io's kstack base
+from `rdi` at the `memset` call in `allocate_kernel_stack` @0xffffffff80036abb,
+gva2gpa's `base+0x4000-24`, arms `DIRECTMAP_BASE+phys`). It armed correctly
+(base=0xffffff502c4e6000, slot=0xffffff502c4e9fe8, live phys e.g. 0x3fbedfe8) —
+**but never fired**; the crash did.
+
+Decisive diagnostic (`wp-phys-compare.py`): at the crash,
+`phys_pre==phys_post` (no page remap) and **`[slot] = 0x1ca4f2bb` (a valid
+proof-io code addr), NOT the crash rip `0x2`**. Per `syscall.S`, SYSRET does
+`pop rcx` from `[kstack_top-24]`; that slot is intact, yet `rip(=rcx)=0x2`. So
+**SYSRET popped `rcx` from a wrong `rsp`** — the kernel **resume `rsp` /
+control-flow is corrupted**, not the rcx data slot. All slot-watchpoints
+(kernel-VA and directmap) missed because the slot is never the write target.
+
+**Corrected root target:** what corrupts the resume's `rsp`/return-chain for a
+capsule preempted at CPL=0 (in `mk_yield`'s `hlt`) and resumed via
+`resume_kernel_thread → Context::restore`. Candidates: the saved `Context.rsp`
+in `INTERRUPT_SAVED_CONTEXTS` (heap BTreeMap), or a return-address frame on the
+kstack between the `Context` restore point and the syscall-exit pops. The
+existing `Context::validate` only checks canonical + `rsp!=0`, so a
+canonical-but-wrong `rsp` passes. On the full desktop the same corruption also
+hits the **kernel's own** control flow (cpl=0 jump to garbage), so a
+SYSRET-side guard alone won't save it — the resume-`rsp` corruptor must be
+found/fixed.
+
+**Next catch:** watchpoint the saved `Context` for proof-io (find the
+`INTERRUPT_SAVED_CONTEXTS` node, watch its `rsp` field), or single-step the
+resume to see where `rsp` diverges from `kstack_top-56`. Scripts:
+`wp-directmap-catch.py` (arm helper), `wp-phys-compare.py` (pre/post phys+slot).
+
+## 2026-05-22 (ruled out) — NOT stack overflow; resume path asm is correct
+- **Stack overflow ruled out conclusively**: 32 KB `KERNEL_STACK_SIZE` on the
+  *minimal* repro (2 capsules, no spawn-memory-pressure) crashes identically
+  (pid 2 → rip=0x2 → same `#GP`). The earlier 32/64 KB full-desktop test was
+  confounded by an unrelated spawn livelock; the minimal repro removes that.
+- **`context_restore_asm` is correct**: it loads `rsp = ctx.rsp` (offset 56),
+  pushes rip/rflags/rdi, pops rdi/popfq/ret — leaving `rsp = ctx.rsp`, `rip =
+  ctx.rip`. No bug. So the corruption is in the *input data* (`ctx.rsp` /
+  `ctx.rip` in `INTERRUPT_SAVED_CONTEXTS`, or a kstack return-chain frame),
+  written by an external wild write, not in the restore logic.
+- `Context::validate` only checks canonical + `rsp!=0`, so a canonical-but-wrong
+  `rsp` (our case) passes — a stricter check (rsp inside the owning kstack, rip
+  in kernel text) could *contain* the failure but won't find the writer.
+
+**Status:** root = a wild write corrupting **resume control-flow data** (saved
+`Context.rsp` or a kstack frame for a capsule preempted in `mk_yield`'s `hlt`),
+which makes SYSRET pop `rcx` from a bad `rsp` → jump to a tiny garbage rip;
+on the full desktop it also corrupts the kernel's own return path. Ruled out
+this session: the rcx data slot, directmap write to the slot, page remap, stack
+overflow, restore-asm logic, timer-snapshot path, frame-allocator fallback,
+heap/DMA frame collision, DeviceRecord ABI, device_list overflow, DMA scrub.
+**Next:** watch the saved `Context` node (`INTERRUPT_SAVED_CONTEXTS` for pid 2)
+or single-step proof-io's crashing resume to see where `rsp` first diverges.
+
 ## Test loop
 `make nonos-mk-desktop-gui-prod && make nonos-mk-esp`, boot headless with
 `-monitor tcp` + `-serial file`, `screendump` the framebuffer, grep serial for
