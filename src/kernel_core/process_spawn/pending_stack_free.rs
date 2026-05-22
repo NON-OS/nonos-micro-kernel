@@ -19,6 +19,14 @@
 //! has to wait until the CPU has context-switched off it. The list
 //! is per-CPU; only the originating core drains its own deferred
 //! stacks, which keeps the API correct once SMP goes live.
+//!
+//! The drain runs from the timer trap on whatever kernel stack is
+//! current. If `exit_and_yield` is still standing on a deferred stack
+//! (e.g. idling because no successor is ready yet), freeing it here is
+//! a use-after-free: the frame is reused and zeroed under the live
+//! stack, smashing return addresses and heap pointers. So the drain
+//! skips any stack the current `rsp` still falls inside and re-queues
+//! it for a later tick once the CPU has moved off.
 
 extern crate alloc;
 
@@ -68,8 +76,22 @@ pub fn drain() {
         }
         None => return,
     };
+    let rsp: u64;
+    unsafe {
+        core::arch::asm!("mov {}, rsp", out(reg) rsp, options(nomem, nostack, preserves_flags));
+    }
+    let mut still_live: Vec<u64> = Vec::new();
     for top in drained {
-        let base = VirtAddr::new(top - KERNEL_STACK_SIZE as u64);
-        let _ = deallocate_page(base);
+        let base = top - KERNEL_STACK_SIZE as u64;
+        if rsp > base && rsp <= top {
+            still_live.push(top);
+            continue;
+        }
+        let _ = deallocate_page(VirtAddr::new(base));
+    }
+    if !still_live.is_empty() {
+        if let Some(mut q) = slot().try_lock() {
+            q.extend(still_live);
+        }
     }
 }
