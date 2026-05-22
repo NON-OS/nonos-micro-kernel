@@ -37,6 +37,16 @@ pub(super) fn resume_kernel_thread(pcb: &Arc<ProcessControlBlock>, pid: u32) {
         }
     };
 
+    let kstack = pcb.kernel_stack_top.load(Ordering::Acquire);
+    if kstack != 0 {
+        let cpu = crate::smp::percpu::current().cpu_id;
+        // SAFETY: cpu bounded by MAX_CPUS; set_kernel_stack validates.
+        unsafe {
+            let _ = crate::arch::x86_64::gdt::set_kernel_stack(cpu, kstack);
+        }
+        crate::smp::percpu::set_kernel_stack(kstack);
+    }
+
     let has_own_addr_space = pcb.cr3.load(Ordering::Relaxed) != 0;
     *pcb.state.lock() = ProcessState::Running;
     CURRENT_PID.store(pid, Ordering::SeqCst);
