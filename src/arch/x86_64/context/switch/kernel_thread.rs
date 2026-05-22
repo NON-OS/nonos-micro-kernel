@@ -62,5 +62,9 @@ pub(super) fn resume_kernel_thread(pcb: &Arc<ProcessControlBlock>, pid: u32) {
         init_fpu();
     }
 
+    let saved_urs = pcb.saved_user_stack.load(Ordering::Acquire);
+    if saved_urs != 0 {
+        crate::smp::percpu::set_user_stack(saved_urs);
+    }
     ctx.restore()
 }

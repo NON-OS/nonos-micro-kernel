@@ -145,6 +145,18 @@ pub fn kernel_stack() -> u64 {
     current().kernel_stack_top
 }
 
+pub fn set_user_stack(rsp: u64) {
+    // SAFETY: Modifying current CPU's data only
+    unsafe {
+        PERCPU_DATA[cpu_id()].user_stack_saved = rsp;
+    }
+}
+
+#[inline]
+pub fn user_stack() -> u64 {
+    current().user_stack_saved
+}
+
 pub fn set_current_process(ptr: u64) {
     current().current_process.store(ptr, Ordering::Release);
 }

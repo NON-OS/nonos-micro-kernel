@@ -37,6 +37,7 @@ pub(crate) fn preempt_current_process() {
 
     crate::process::nonos_core::save_interrupt_context(curr_pid, ctx);
     if let Some(pcb) = PROCESS_TABLE.find_by_pid(curr_pid) {
+        pcb.saved_user_stack.store(crate::smp::percpu::user_stack(), Ordering::Release);
         let mut state = pcb.state.lock();
         if matches!(*state, ProcessState::Running) {
             *state = ProcessState::Ready;
