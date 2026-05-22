@@ -80,6 +80,21 @@ Recommended: **option 2** (no asm surgery on the hot syscall path). Add a
 `debug_assert!`/regression that a resumed syscall exits with the same user rsp
 it entered with.
 
+## FIX IMPLEMENTED (commit on feature/bootloader-hardening)
+
+`fix(sched): preserve per-process user rsp across preemption` — added
+`pcb.saved_user_stack`, a `percpu::set_user_stack`/`user_stack` pair, a snapshot
+of the per-cpu user rsp into the PCB on the **timer-preempt** (`switch.rs`) and
+**cooperative-yield** (`yield_body.rs`) park paths, and a restore in
+`resume_kernel_thread` before `ctx.restore()` (guarded `!= 0`). This is option 2
+below (no asm surgery on the syscall hot path).
+
+**Gate A: PASS.** The virtio-rng minimal repro, previously a deterministic
+crash by ~line 318 within ~70 s, now boots **zero `[TRAP]`** for ~144 s and
+continues spawning capsules. (An intermediate version that restored an unsaved
+`0` produced `rsp=0`; fixed by also saving on the yield path + the `!= 0`
+guard.)
+
 ## Verification gates
 
 - **Gate A:** minimal virtio-rng repro, **zero `[TRAP]` for ≥120 s**.
