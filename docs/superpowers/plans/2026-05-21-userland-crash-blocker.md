@@ -156,6 +156,34 @@ broker/registry/inbox work + locks + heap; making capsule death **non-fatal to
 the kernel** (idempotent/deferred teardown, guarded remove) is the
 highest-leverage fix to keep survivors (the compositor) alive → desktop.
 
+## 2026-05-22 — kernel-stack UAF fixed (commit fcb1d2c21); a 2nd corruptor remains
+Root-caused and fixed a real use-after-free: `pending_stack_free::drain()` runs
+from the timer trap on the *current* kernel stack and could `deallocate_page`
+the very stack `exit_and_yield` was still standing on (its `idle_cpu` spin when
+no successor is ready) — reused+zeroed frame smashed return addresses/heap →
+kernel `rip=0` wedge + cascade. Fix: skip any deferred stack the live `rsp`
+falls inside, re-queue for a later tick. **Result: the crash cascade and the
+kernel `rip=0` (cpl=0) wedge are gone.** Desktop renders (kernel desktop +
+`[compositor] setup complete` in GOP fallback) on both SMP=1 and SMP=2.
+
+**Residual:** exactly one capsule still crashes to `rip=0` and its teardown
+hits the original kernel `#GP` in `BTreeMap::remove_leaf_kv` (inbox map node
+corrupt) → guest hangs there. The crashing pid *varies* (blk on SMP=1, net on
+SMP=2) and those drivers have **no device in QEMU** — so it's neither
+device-DMA nor driver-specific. Newly ruled out this round:
+- **DeviceRecord/Bar ABI**: kernel and `nonos_libc` are byte-identical (176 B),
+  no `mk_device_list` overflow.
+- **device-DMA aliasing**: the crashing drivers have no device to DMA.
+- DMA `validate` enforces page-aligned length, so `scrub_buffer`/`zero_run`
+  don't overrun.
+
+So a second systemic kernel-heap zeroing corruptor remains — it zeros a running
+capsule's `saved_user_context.rip` (→ rip=0) and inbox `BTreeMap` nodes. Next:
+hardware write-watchpoint on the inbox `REGISTRY` static (fixed kernel address),
+or on a PCB's `saved_user_context`, stopping when the slot goes to 0 — that
+names the second writer. Likely the context/scheduler save-restore or another
+deferred-free, in eK's domain.
+
 ## Disposition
 Five hypotheses refuted by experiment (preemption, libc, signals, aliasing,
 RSP0). Static analysis is exhausted; continuing to guess violates disciplined
