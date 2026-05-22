@@ -131,6 +131,31 @@ lldb breakpoint on hot `sys_mk_debug` is too slow/variable to reach the gpu
 within the window. **Next: reproduce on a minimal gpu-only profile** (fast
 boot → watchpoint lands in seconds), or run the session interactively.
 
+## lldb crash capture (2026-05-22) — the marker garbage was a red herring
+Watchpoint on the gpu marker buffer fired with the writing **rip in the gpu
+capsule itself** (`0x0e7842a9`, capsule base + offset `0x62a9`, an inlined
+`debug::marker`/find-loop site). Disasm shows `debug::marker` writes PREFIX
+correctly (`movups PREFIX→buf; movw "] "`). So the marker garbage is
+gpu-userland stack reuse made visible by the extra `find:` markers in a tight
+loop — **cosmetic, not the real corruption.**
+
+Breaking on `terminate_user_process` (page-fault path, 0xffffffff80032040)
+caught the REAL crashes:
+- **pid 8 (gpu)**: writes to `cr2=0x10` (null+0x10) at a valid rip after
+  `find:bar ok` — a null/garbage pointer deref in the gpu's post-find setup.
+- **pid 6 (driver_virtio_rng)**: `rip=0`, `cr2=0`, err=0x14 — jump/call to
+  null, shallow stack (rsp≈top) → early-startup null call. **Two faults in a
+  row** (err 0x14 then 0x15, same pid/rsp).
+
+These look like **null-pointer bugs in the WIP driver capsules** (or stack
+corruption), not a uniform wild write. The system-killer is the kernel `#GP`
+in `teardown → unregister_for_pid → BTreeMap remove` (node→0x18) when a
+crashed capsule's inbox is torn down — possibly aggravated by the double-fault
+(double teardown). `teardown` runs from the page-fault handler and does heavy
+broker/registry/inbox work + locks + heap; making capsule death **non-fatal to
+the kernel** (idempotent/deferred teardown, guarded remove) is the
+highest-leverage fix to keep survivors (the compositor) alive → desktop.
+
 ## Disposition
 Five hypotheses refuted by experiment (preemption, libc, signals, aliasing,
 RSP0). Static analysis is exhausted; continuing to guess violates disciplined
