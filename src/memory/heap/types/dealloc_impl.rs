@@ -37,12 +37,16 @@ pub(super) unsafe fn dealloc_impl(allocator: &SecureHeapAllocator, ptr: *mut u8,
 
         let header = ptr::read_volatile(header_ptr);
         if !header.is_valid() || header.size != layout.size() {
+            #[cfg(feature = "nonos-heap-debug")]
+            heap_corrupt_log(b"hdr", ptr as u64, header.size as u64, layout.size() as u64);
             return;
         }
 
         let canary_ptr = ptr.add(header.canary_offset) as *const u64;
         let canary = ptr::read_volatile(canary_ptr);
         if canary != allocator.canary_value {
+            #[cfg(feature = "nonos-heap-debug")]
+            heap_corrupt_log(b"canary", ptr as u64, canary, allocator.canary_value);
             return;
         }
 
@@ -57,4 +61,22 @@ pub(super) unsafe fn dealloc_impl(allocator: &SecureHeapAllocator, ptr: *mut u8,
             allocator.inner.dealloc(raw_ptr, adjusted_layout);
         }
     }
+}
+
+#[cfg(feature = "nonos-heap-debug")]
+fn heap_corrupt_log(kind: &[u8], ptr: u64, got: u64, want: u64) {
+    use core::sync::atomic::{AtomicU32, Ordering};
+    static N: AtomicU32 = AtomicU32::new(0);
+    if N.fetch_add(1, Ordering::Relaxed) >= 40 {
+        return;
+    }
+    crate::sys::serial::print(b"[HEAP-CORRUPT ");
+    crate::sys::serial::print(kind);
+    crate::sys::serial::print(b"] ptr=");
+    crate::arch::x86_64::diag::print_hex_u64(ptr);
+    crate::sys::serial::print(b" got=");
+    crate::arch::x86_64::diag::print_hex_u64(got);
+    crate::sys::serial::print(b" want=");
+    crate::arch::x86_64::diag::print_hex_u64(want);
+    crate::sys::serial::println(b"");
 }
