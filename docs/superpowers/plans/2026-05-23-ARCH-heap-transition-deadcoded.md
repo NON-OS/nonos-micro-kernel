@@ -278,6 +278,37 @@ This closes the universal blocker identified throughout this document. The
 `nonos-heap-debug` poison/quarantine allocator that pinned it remains as a gated
 diagnostic.
 
+## Compositor present path — localized to a hung recv (post teardown-#GP fix)
+
+With the teardown #GP fixed and the desktop stable, re-instrumented the present
+path (kernel `graphics_present::blit` + compositor `run`/`tick`/`drain_ipc`):
+
+- `[compositor] run: enter` fires (server loop entered), then **nothing** — no
+  `drain:`, no `tick:`, no `[BLIT]`, even **90 s** after `run: enter`.
+- So the loop's **first `mk_ipc_recv_from` never returns**; `tick()` is never
+  reached, so the compositor never issues `nonos_surface_present_full`. The
+  compositor pid never faults — the recv simply hangs.
+
+Mechanism: the compositor's `drain_ipc` is built around a *non-blocking* poll
+(`RECV_NOWAIT = 1`), but the kernel `sys_ipc_recv_from`'s 4th arg is `timeout_ms`
+(there is no nowait flag), so it gets `timeout_ms = 1` and enters the kernel
+`drain()` loop: `try_dequeue → check timeout → sched::yield_now()` where
+`yield_now()` is a raw `hlt`. `now_ns()` is TSC-based and advances, so the 1 ms
+timeout *should* fire — yet the recv never returns, meaning the drain-`hlt` loop
+either runs with interrupts masked (the `hlt` never wakes) or its context is
+never resumed after preemption. (Note `timeout_ms == 0` means *block forever*,
+so the API has no true non-blocking recv.)
+
+This is a separate bug from the teardown #GP (which is fixed). Next: instrument
+the kernel `drain()` loop (log `interrupts::are_enabled()` + iteration count) to
+distinguish hlt-with-IF-clear vs never-resumed; the fix is likely a true
+non-blocking recv (`timeout_ms == 0` ⇒ return-if-empty) with the compositor
+passing 0, or ensuring the recv runs with interrupts enabled. A `tick`-before-
+`drain_ipc` reorder would present the first (empty-scene) frame as a stopgap.
+
+Uncommitted diagnostics in tree (revert before merge): `blit_dbg` in
+`graphics_present.rs`; `run`/`drain`/`tick` markers in the compositor.
+
 ## Status of the broader effort
 - FIXED+verified: user-rsp drift (`8d2d0e5c1`), PF-loop on kernel address
   (`74fb14aeb`). Desktop fleet launches; minimal-repro zero TRAP; full-desktop
