@@ -90,6 +90,34 @@ over the main region; freed orphans rejoin as isolated holes).
 Also `7c7d5f374`: removed the kernel-side static NONOS/DESKTOP placeholder text
 (screen now shows the textless background/bars/dock).
 
+## Compositor present path: correct, but blocked by an intermittent teardown #GP
+
+Investigated the GUI present path (user request). The path is **correct**:
+`frame_pacer::tick` composites into `ctx.backing_va` and, in GOP-fb mode
+(`gfx_port==0`), calls `nonos_surface_present_full(0, backing_va)` → kernel
+`graphics_present::blit` (validated; `surface_span_for_id` accepts the mmap VA;
+copies the backing into the GOP framebuffer via the directmap + `wbinvd`). The
+runner loop calls `tick` every iteration with `drain_ipc` non-blocking, and
+setup `mark_full`s damage so the first tick should present.
+
+**But the compositor never presents** (instrumented `tick`: zero `present:`
+markers). The serial shows why: right after `[compositor] setup complete`, app
+capsules fault (their own startup bugs — jumps to low garbage rips like
+`0x1474`) and **one teardown #GPs the kernel** (`8000fdac`, inbox-registry
+`BTreeMap::remove`) **before the compositor is scheduled to run its render
+loop**, wedging the system.
+
+**The teardown #GP is intermittent even with the 256 MiB heap:** desk3 (heap
+fix) = **0** teardown GPs; desk6 = **1**. So the heap transition *reduced* the
+inbox-registry corruption (less pressure/fragmentation) but did **not eliminate
+it** — a residual stray writer corrupts the registry `BTreeMap` occasionally.
+That intermittent teardown #GP — not the present code — is the true blocker for
+a live wallpaper desktop (it wedges the kernel before the compositor presents).
+
+**Next:** hunt the residual registry corruptor (watchpoint the registry nodes,
+or audit IPC enqueue/Arc<Inbox> paths for a stray write/UAF), independent of the
+heap-pressure factor already addressed. The present code itself needs no change.
+
 ## Status of the broader effort
 - FIXED+verified: user-rsp drift (`8d2d0e5c1`), PF-loop on kernel address
   (`74fb14aeb`). Desktop fleet launches; minimal-repro zero TRAP; full-desktop
