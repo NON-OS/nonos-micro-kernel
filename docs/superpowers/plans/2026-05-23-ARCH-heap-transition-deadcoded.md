@@ -292,12 +292,15 @@ path (kernel `graphics_present::blit` + compositor `run`/`tick`/`drain_ipc`):
 Mechanism: the compositor's `drain_ipc` is built around a *non-blocking* poll
 (`RECV_NOWAIT = 1`), but the kernel `sys_ipc_recv_from`'s 4th arg is `timeout_ms`
 (there is no nowait flag), so it gets `timeout_ms = 1` and enters the kernel
-`drain()` loop: `try_dequeue → check timeout → sched::yield_now()` where
-`yield_now()` is a raw `hlt`. `now_ns()` is TSC-based and advances, so the 1 ms
-timeout *should* fire — yet the recv never returns, meaning the drain-`hlt` loop
-either runs with interrupts masked (the `hlt` never wakes) or its context is
-never resumed after preemption. (Note `timeout_ms == 0` means *block forever*,
-so the API has no true non-blocking recv.)
+`drain()` loop: `try_dequeue → check timeout → sched::yield_now()`. `yield_now`
+resolves to the cooperative `contract_switch(SwitchIntent::Yield)` (not a raw
+`hlt`), so the loop yields correctly and `now_ns()` (TSC) advances — yet the recv
+never returns even after 90 s. So the compositor **yields in the recv and is
+never rescheduled**: starvation by a busy/faulting capsule (pid 0x1a/0x0c were
+seen in tight fault loops), or the recv parks the process blocked-on-inbox with
+no waker. (Note `timeout_ms == 0` means *block forever*, so the API has no true
+non-blocking recv.) Setup's `mk_yield`s resumed fine, so the yield/resume
+machinery works in general — the recv-loop case specifically starves.
 
 This is a separate bug from the teardown #GP (which is fixed). Next: instrument
 the kernel `drain()` loop (log `interrupts::are_enabled()` + iteration count) to
