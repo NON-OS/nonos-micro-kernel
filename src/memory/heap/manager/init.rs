@@ -28,7 +28,7 @@ use super::globals::KERNEL_HEAP;
 
 #[cfg(not(test))]
 pub fn init() -> HeapResult<()> {
-    if KERNEL_HEAP.is_initialized() {
+    if !USING_BOOTSTRAP.load(Ordering::Acquire) {
         return Ok(());
     }
     let heap_size = layout::KHEAP_SIZE as usize;
