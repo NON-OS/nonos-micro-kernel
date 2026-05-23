@@ -152,6 +152,11 @@ nonos-user-entry-proof = []
 # DR0/DR1 watchpoints. Never in any shipping profile.
 nonos-trap-kstack-writer = []
 
+# Lean desktop: spawn only the GUI core (drivers + compositor/wm/wallpaper/
+# desktop_shell) and skip network, apps, and market. Lets the compositor
+# present without app-capsule faults wedging the kernel via teardown.
+nonos-desktop-lean = []
+
 # Boot smoketests. Each one drives a real round trip on the boot
 # serial and emits PASS/FAIL markers consumed by the matching
 # `tests/boot/*.sh` harness.

@@ -25,9 +25,12 @@ pub fn run_init() -> ! {
     spawn_plan::spawn_core_after_ramfs();
     spawn_plan::spawn_drivers();
     spawn_plan::spawn_vfs();
+    #[cfg(not(feature = "nonos-desktop-lean"))]
     spawn_plan::spawn_network();
     spawn_plan::spawn_desktop();
+    #[cfg(not(feature = "nonos-desktop-lean"))]
     spawn_plan::spawn_apps();
+    #[cfg(not(feature = "nonos-desktop-lean"))]
     spawn_plan::spawn_market();
     spawn_plan::run_smoketests();
     boot_log::ok("INIT", "Capsules spawned");
