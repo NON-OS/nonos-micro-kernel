@@ -77,13 +77,47 @@ pub fn allocate_user_stack(pid: Pid) -> Result<u64, UserStackError> {
                 return Err(UserStackError::FrameExhausted);
             }
         };
+        unsafe {
+            core::ptr::write_bytes(
+                (crate::memory::layout::constants::DIRECTMAP_BASE + frame.as_u64()) as *mut u8,
+                0,
+                PAGE_SIZE as usize,
+            );
+        }
         if map_page(va, frame, perms).is_err() {
             let _ = frame_alloc::deallocate_frame(frame);
             rollback(&allocated);
             let _ = switch_address_space(KERNEL_ASID);
             return Err(UserStackError::MapFailed);
         }
+        let fp = frame.as_u64();
         allocated.push((va, frame));
+        #[cfg(feature = "nonos-trap-kstack-writer")]
+        if pid == crate::interrupts::debug_watch::TARGET_PID
+            && va.as_u64() == (crate::interrupts::debug_watch::TARGET_SLOT_VA & !0xfff)
+        {
+            use core::sync::atomic::Ordering as O;
+            let slot_phys = fp + (crate::interrupts::debug_watch::TARGET_SLOT_VA & 0xfff);
+            crate::interrupts::debug_watch::TARGET_SLOT_PHYS.store(slot_phys, O::Release);
+            crate::sys::serial::print(b"[USTACK-PHYS] slot_phys=");
+            crate::arch::x86_64::diag::print_hex_u64(slot_phys);
+            crate::sys::serial::println(b"");
+            let kss = crate::process::userspace::constants::KERNEL_STACK_SIZE as u64;
+            for p in crate::process::core::PROCESS_TABLE.get_all_processes() {
+                let top2 = p.kernel_stack_top.load(O::Acquire);
+                if top2 == 0 {
+                    continue;
+                }
+                let kt = top2.wrapping_sub(crate::memory::layout::constants::DIRECTMAP_BASE);
+                if fp >= kt.wrapping_sub(kss) && fp < kt {
+                    crate::sys::serial::print(b"[USTACK=KSTACK-LIVE] owner_pid=");
+                    crate::arch::x86_64::diag::print_hex_u64(p.pid as u64);
+                    crate::sys::serial::print(b" ktop=");
+                    crate::arch::x86_64::diag::print_hex_u64(top2);
+                    crate::sys::serial::println(b"");
+                }
+            }
+        }
     }
 
     // Guard page at `bottom - PAGE_SIZE` is left unmapped on purpose.
