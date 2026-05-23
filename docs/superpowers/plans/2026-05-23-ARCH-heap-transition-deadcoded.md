@@ -118,6 +118,31 @@ a live wallpaper desktop (it wedges the kernel before the compositor presents).
 or audit IPC enqueue/Arc<Inbox> paths for a stray write/UAF), independent of the
 heap-pressure factor already addressed. The present code itself needs no change.
 
+## Lean GUI profile result — confirms the teardown #GP is the universal blocker
+
+Added `nonos-desktop-lean` (skip network/apps/market; GUI core only) to test
+whether removing the buggy app capsules lets the compositor present. Result:
+the compositor reaches `setup complete` + `[desktop_shell] boot`, but **the
+screen still shows the kernel desktop, not the compositor output** — because a
+**GUI-core capsule still faults** (pid 12, `ret` to `rip=0x0` — a capsule
+returning from `_start` into a zeroed initial RA) and its **teardown #GPs the
+kernel** (`8000fdac`) before the compositor's first present. So the lean profile
+*reduced* the fault surface but did not yield a live desktop.
+
+**Converged conclusion:** the teardown #GP (inbox-registry `BTreeMap` corruption)
+fires on **any** capsule death and wedges the kernel — it is the universal
+blocker for a stable/live desktop, not the apps, net, present code, or heap size
+alone. The 256 MiB heap reduced its frequency but it recurs intermittently.
+Secondary finding: `setup_initial_user_context` leaves the initial user RA at
+`0x0`, so a capsule that returns from `_start` (instead of `mk_exit`) jumps to
+NULL — one source of capsule faults that then trigger the teardown #GP.
+
+**The one fix that unblocks everything:** make capsule teardown robust — root
+out the residual inbox-registry corruptor (watchpoint the registry nodes / audit
+IPC enqueue + `Arc<Inbox>` for a stray write or UAF), so capsule deaths stop
+wedging the kernel. Then the compositor (present path already verified correct)
+presents the wallpaper.
+
 ## Status of the broader effort
 - FIXED+verified: user-rsp drift (`8d2d0e5c1`), PF-loop on kernel address
   (`74fb14aeb`). Desktop fleet launches; minimal-repro zero TRAP; full-desktop
