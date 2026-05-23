@@ -70,6 +70,26 @@ This is a careful, testable change, not a one-liner — staged separately from t
 two committed corruption fixes so it can be reviewed and boot-verified on its
 own.
 
+## FIX IMPLEMENTED + VERIFIED (`857baf664`)
+
+Gated `heap::init()` on `!USING_BOOTSTRAP` instead of `is_initialized()`, so the
+previously-dead 256 MiB paged-heap transition runs. The existing transition code
+(allocate frames → map at `KHEAP_BASE` → re-init `KERNEL_HEAP` → clear
+`USING_BOOTSTRAP`) was correct; only the guard was wrong. Bootstrap-window
+allocations are orphaned in the static (safe: re-init builds a fresh hole list
+over the main region; freed orphans rejoin as isolated holes).
+
+- **Minimal repro:** boots zero TRAP with the 256 MiB heap (no "Heap init
+  failed", no frame exhaustion).
+- **Full desktop:** **teardown #GP eliminated — 0 occurrences** of `8000fdac`/
+  `TRAP GP` (was the wedge). `[compositor] setup complete` + `[desktop_shell]
+  boot` now appear and the system survives; the only residual traps are 2
+  *different* app capsules (pid 24, 32) faulting once each — contained (no loop,
+  no teardown GP). The recurring desktop-load fragility is resolved.
+
+Also `7c7d5f374`: removed the kernel-side static NONOS/DESKTOP placeholder text
+(screen now shows the textless background/bars/dock).
+
 ## Status of the broader effort
 - FIXED+verified: user-rsp drift (`8d2d0e5c1`), PF-loop on kernel address
   (`74fb14aeb`). Desktop fleet launches; minimal-repro zero TRAP; full-desktop
