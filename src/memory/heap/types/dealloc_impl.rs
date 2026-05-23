@@ -20,6 +20,7 @@ use super::header::AllocationHeader;
 use core::alloc::{GlobalAlloc, Layout};
 use core::mem;
 use core::ptr;
+#[cfg(not(feature = "nonos-heap-debug"))]
 use core::sync::atomic::Ordering;
 
 // Counterpart of `alloc_impl`: the pointer was produced by an allocation
@@ -50,15 +51,36 @@ pub(super) unsafe fn dealloc_impl(allocator: &SecureHeapAllocator, ptr: *mut u8,
             return;
         }
 
-        if super::super::manager::HEAP_ZERO_ON_FREE.load(Ordering::Relaxed) {
-            ptr::write_bytes(ptr, 0, layout.size());
-        }
-
         let total_size = header_size + layout.size() + mem::size_of::<u64>();
         let align = layout.align().max(MIN_ALIGNMENT);
-        if let Ok(adjusted_layout) = Layout::from_size_align(total_size, align) {
+
+        #[cfg(feature = "nonos-heap-debug")]
+        {
+            super::quarantine::poison(ptr as usize, layout.size());
             super::super::manager::HEAP_STATS.record_deallocation(layout.size());
-            allocator.inner.dealloc(raw_ptr, adjusted_layout);
+            if let Some((ev_raw, ev_size, ev_align)) = super::quarantine::push(
+                raw_ptr as usize,
+                total_size,
+                align,
+                ptr as usize,
+                layout.size(),
+            ) {
+                if let Ok(ev_layout) = Layout::from_size_align(ev_size, ev_align) {
+                    allocator.inner.dealloc(ev_raw as *mut u8, ev_layout);
+                }
+            }
+            return;
+        }
+
+        #[cfg(not(feature = "nonos-heap-debug"))]
+        {
+            if super::super::manager::HEAP_ZERO_ON_FREE.load(Ordering::Relaxed) {
+                ptr::write_bytes(ptr, 0, layout.size());
+            }
+            if let Ok(adjusted_layout) = Layout::from_size_align(total_size, align) {
+                super::super::manager::HEAP_STATS.record_deallocation(layout.size());
+                allocator.inner.dealloc(raw_ptr, adjusted_layout);
+            }
         }
     }
 }

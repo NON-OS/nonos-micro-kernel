@@ -20,6 +20,8 @@ mod bootstrap;
 mod dealloc_impl;
 mod global_alloc;
 mod header;
+#[cfg(feature = "nonos-heap-debug")]
+mod quarantine;
 mod statistics;
 mod stats;
 
