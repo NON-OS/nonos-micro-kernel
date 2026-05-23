@@ -145,6 +145,36 @@ virtio-gpu), so the fix is to back/present GOP-fb mode against the actual
 framebuffer (or wire a present/flush step), and/or complete the virtio-gpu
 scanout path. This is GUI-pipeline work, out of scope for the corruption fix.
 
+## Layered bug chain (each fix exposed the next — architectural signal)
+
+1. **user-rsp drift** (FIXED, verified Gate A) — per-cpu `PCPU_USER_STACK`
+   clobbered across preemption. Unblocked the GUI chain.
+2. **PF loop** (FIXED, verified — traps 1901→2) — `handle_page_fault` COW-
+   resumed a CPL=3 fault on a kernel address → tight loop. Now terminates the
+   capsule. **Exposed #3.**
+3. **Teardown #GP** (NOT fixed — next blocker) — terminating a capsule calls
+   `process::exit::teardown` → `ipc::nonos_inbox::unregister_for_pid` →
+   `BTreeMap::remove` on the inbox registry, which **#GPs** (`rip=0xffffffff
+   8000fdac`, `remove_leaf_kv`) — a non-canonical/corrupted tree-node pointer.
+   The lock is a clean `REGISTRY.write()` (no concurrency bug), so the registry
+   `BTreeMap<String, Arc<Inbox>>` is **heap-corrupted**. It is **desktop-load-
+   specific**: proof-io exits cleanly in the minimal repro (Gate A, zero TRAP),
+   but under the full fleet the registry is corrupt by the time a capsule dies.
+   Because run 1 (pre-PF-fix) *looped* instead of terminating, it never hit
+   teardown and the compositor reached `setup complete`; with the PF fix the
+   first capsule death now `#GP`s the kernel and wedges it before the compositor
+   runs.
+
+**Architectural read (per systematic-debugging Phase 4.5):** three symptoms
+peeled in sequence — a per-cpu-state preemption hazard, a fault-resume hazard,
+and now heap corruption of a core registry — point at fragility around the
+**bootstrap heap (16 MiB, holds the registry) + the teardown path** under real
+multi-capsule load, not three unrelated bugs. The inbox-registry corruption is
+the next focused investigation: what writes the registry's `BTreeMap` nodes
+(heap overflow from an IPC path, an `Arc<Inbox>` UAF, or bootstrap-heap
+pressure). No OOM/alloc warnings appear, so it is a stray write, not simple
+exhaustion.
+
 ## Verification gates
 
 - **Gate A:** minimal virtio-rng repro, **zero `[TRAP]` for ≥120 s**.
