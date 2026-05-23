@@ -180,6 +180,38 @@ only guards the tail), or KASAN-style shadow, to catch the stray write at its
 victim; alternatively a focused audit of every `&mut`/raw write reachable from
 the IPC/scene/registry hot paths. Boot-cycle bisection won't pin it (intermittent).
 
+## Poisoning + quarantine allocator result (`8ca349acd`) — reuse-sensitive corruption
+
+Built a poison+quarantine allocator under `nonos-heap-debug` (`heap/types/
+quarantine.rs`): freed user regions are filled with a canonical-unmapped poison
+word (`0x0000_5EED_5EED_5EED`) and held in a 1024-slot ring (reuse delayed); a
+UAF *read* would fault as `#PF cr2=…5eed…`, a stray *write* to freed memory is
+caught on eviction (`[UAF-WRITE]`, logging the written word).
+
+**Result across 8 full-desktop boots with quarantine** (3× `0xAB`, 5× canonical):
+- **teardown #GP: 0 occurrences** (vs ~80% of runs without quarantine).
+- **UAF-read poison #PF: 0.** **UAF-write eviction hits: 0.**
+
+**Interpretation.** Delaying reuse *suppresses* the corruption, yet neither a
+dangling-pointer read of poison nor a write to freed memory ever fires. So it is
+**not** a classic dangling-read or write-after-free, but it **is reuse/layout-
+sensitive**: the bug needs a freed block recycled eagerly. Two shapes fit —
+(a) a freed block reused for a new allocation whose bytes are then misinterpreted
+through a stale reference *after* it leaves quarantine (the quarantine outlasts
+the stale-reference window), or (b) a heap-adjacency overflow into a live node
+that the quarantine's layout shift separates. The end-of-allocation canary
+(`HEAP-CORRUPT`) also never trips, so any overflow is interior, not tail.
+
+**Next diagnostics to pin it (cheap, bound the mechanism):**
+- Vary `SLOTS` (e.g. 8 vs 1024): if a tiny quarantine still suppresses it, the
+  stale-reference/reuse window is short; binary-search the threshold.
+- A no-evict (leak-all-frees) run: if still clean, reuse is definitively required.
+- Validate the inbox-registry `BTreeMap` integrity after each `register`/
+  `unregister` to catch the corrupting op and correlate it with concurrent IPC.
+
+Practical note: the quarantine **mitigates** the wedge (8/8 clean), so it doubles
+as a stopgap, though the eviction-scan makes boots slow (debug-only).
+
 ## Status of the broader effort
 - FIXED+verified: user-rsp drift (`8d2d0e5c1`), PF-loop on kernel address
   (`74fb14aeb`). Desktop fleet launches; minimal-repro zero TRAP; full-desktop
