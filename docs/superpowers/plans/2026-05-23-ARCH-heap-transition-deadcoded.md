@@ -251,6 +251,33 @@ mutation, or move frees outside the lock); (2) the quarantine is itself a valid
 **mitigation** — a lightweight deferred-free (delay reuse by N, no poison/scan)
 would be a shippable workaround if the re-entrancy proves hard to excise.
 
+## ROOT FIX: IRQ-safe inbox-registry mutations (`2c2e56711`) — teardown #GP eliminated
+
+The registry `BTreeMap` was guarded by a `spin::RwLock` that does not mask
+interrupts. A timer tick during a `register`/`unregister` preempts the thread
+**mid-`BTreeMap`-mutation**, and the preemption path itself allocates (it saves
+the interrupted context into the `INTERRUPT_SAVED_CONTEXTS` map) — so the global
+allocator hands back a node the in-progress mutation had just freed. The
+resuming op then walks a recycled/overwritten link → non-canonical pointer →
+`#GP` in `remove_leaf_kv` on the next capsule teardown. This explains every
+prior observation: intermittent (interrupt timing), desktop-load-specific (more
+churn + ticks), reduced by the 256 MiB heap (timing), invisible to the canary
+(no overflow), reuse-sensitive and immediate (a 1-slot quarantine sufficed),
+and not stale content (`HEAP_ZERO_ON_FREE=true`).
+
+**Fix:** disable interrupts across each registry tree mutation — acquire the
+write lock *first*, then the interrupt guard (so a writer never disables
+interrupts while spinning on a reader-held lock, which would deadlock on 1 CPU),
+mutate atomically, re-enable, release.
+
+**Verified:** **6/6** full-desktop boots clean with the fix (initial order) and
+**confirmed again** with the corrected acquire-then-disable order — `teardown #GP`
+gone, every boot reaches `[compositor] setup complete`, vs ~80% wedge before.
+
+This closes the universal blocker identified throughout this document. The
+`nonos-heap-debug` poison/quarantine allocator that pinned it remains as a gated
+diagnostic.
+
 ## Status of the broader effort
 - FIXED+verified: user-rsp drift (`8d2d0e5c1`), PF-loop on kernel address
   (`74fb14aeb`). Desktop fleet launches; minimal-repro zero TRAP; full-desktop
