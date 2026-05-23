@@ -30,6 +30,12 @@ impl PagingManager {
     ) -> PagingResult<()> {
         stats.record_page_fault();
 
+        if error_code & PF_USER != 0
+            && virtual_addr.as_u64() >= crate::memory::layout::constants::CANONICAL_HIGH_MIN
+        {
+            return Err(PagingError::UnhandledPageFault);
+        }
+
         if error_code & PF_WRITE != 0 && error_code & PF_PRESENT != 0 {
             stats.record_cow_fault();
             return self.handle_cow_fault(virtual_addr, stats);
