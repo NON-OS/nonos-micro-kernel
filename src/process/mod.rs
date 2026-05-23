@@ -45,7 +45,7 @@ pub use core::{
     isolate_process, restore_fpu_state, save_fpu_state, save_interrupt_context, suspend_process,
     Pid, Priority, ProcessControlBlock, ProcessCredentials, ProcessManagementStats,
     ProcessMemoryInfo, ProcessState, ProcessTable, ProcessTimeInfo, ThreadGroup, CURRENT_PID,
-    INTERRUPT_SAVED_CONTEXTS, INTERRUPT_SAVED_FPU_STATES, PROCESS_TABLE,
+    INTERRUPT_SAVED_CONTEXTS, PROCESS_TABLE,
 };
 pub use manager::{
     get_process_manager, init_process_manager, is_manager_initialized, ProcessManager,

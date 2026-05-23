@@ -28,9 +28,6 @@ static SUSPENDED_CONTEXTS: RwLock<BTreeMap<Pid, SuspendedContext>> = RwLock::new
 pub static INTERRUPT_SAVED_CONTEXTS: RwLock<BTreeMap<Pid, crate::sched::Context>> =
     RwLock::new(BTreeMap::new());
 
-pub static INTERRUPT_SAVED_FPU_STATES: RwLock<BTreeMap<Pid, FpuState>> =
-    RwLock::new(BTreeMap::new());
-
 pub fn suspend_process(pid: Pid) -> Result<(), &'static str> {
     let pcb = PROCESS_TABLE.find_by_pid(pid).ok_or("Process not found")?;
 
@@ -150,24 +147,31 @@ pub fn clear_interrupt_context(pid: Pid) {
 }
 
 pub fn save_fpu_state(pid: Pid) {
-    let mut fpu = FpuState::default();
-    fpu.save();
-    INTERRUPT_SAVED_FPU_STATES.write().insert(pid, fpu);
+    if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
+        pcb.fpu.lock().save();
+        pcb.fpu_valid.store(true, Ordering::Release);
+    }
 }
 
 pub fn restore_fpu_state(pid: Pid) {
-    let fpu_copy = INTERRUPT_SAVED_FPU_STATES.read().get(&pid).cloned();
-    if let Some(fpu) = fpu_copy {
-        fpu.restore();
+    if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
+        if pcb.fpu_valid.load(Ordering::Acquire) {
+            pcb.fpu.lock().restore();
+        }
     }
 }
 
 pub fn clear_fpu_state(pid: Pid) {
-    INTERRUPT_SAVED_FPU_STATES.write().remove(&pid);
+    if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
+        pcb.fpu_valid.store(false, Ordering::Release);
+    }
 }
 
 pub fn has_saved_fpu_state(pid: Pid) -> bool {
-    INTERRUPT_SAVED_FPU_STATES.read().contains_key(&pid)
+    PROCESS_TABLE
+        .find_by_pid(pid)
+        .map(|pcb| pcb.fpu_valid.load(Ordering::Acquire))
+        .unwrap_or(false)
 }
 
 pub fn init_fpu() {

@@ -126,6 +126,13 @@ pub struct ProcessControlBlock {
     pub arch_fpu: crate::arch::aarch64::fpu::PcbArchFpu,
     #[cfg(target_arch = "riscv64")]
     pub arch_fpu: crate::arch::riscv64::fpu::PcbArchFpu,
+    // Per-PCB eager x86 FPU/SSE slot (FXSAVE/FXRSTOR), replacing the
+    // former pid-keyed `INTERRUPT_SAVED_FPU_STATES` side-table. Touched
+    // only on the CPU running this task, during the context switch.
+    #[cfg(target_arch = "x86_64")]
+    pub fpu: Mutex<crate::process::userspace::types::FpuState>,
+    #[cfg(target_arch = "x86_64")]
+    pub fpu_valid: core::sync::atomic::AtomicBool,
 }
 
 impl ProcessControlBlock {

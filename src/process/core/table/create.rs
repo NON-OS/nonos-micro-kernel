@@ -137,5 +137,9 @@ fn build_pcb(
         arch_fpu: crate::arch::aarch64::fpu::PcbArchFpu::zeroed(),
         #[cfg(target_arch = "riscv64")]
         arch_fpu: crate::arch::riscv64::fpu::PcbArchFpu::zeroed(),
+        #[cfg(target_arch = "x86_64")]
+        fpu: spin::Mutex::new(crate::process::userspace::types::FpuState::default()),
+        #[cfg(target_arch = "x86_64")]
+        fpu_valid: core::sync::atomic::AtomicBool::new(false),
     }))
 }
