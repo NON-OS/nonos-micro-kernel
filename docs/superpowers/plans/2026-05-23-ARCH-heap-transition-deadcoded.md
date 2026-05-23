@@ -212,6 +212,45 @@ that the quarantine's layout shift separates. The end-of-allocation canary
 Practical note: the quarantine **mitigates** the wedge (8/8 clean), so it doubles
 as a stopgap, though the eviction-scan makes boots slow (debug-only).
 
+## SLOTS binary-search — the corruption is an immediate-reuse collision
+
+Varied the quarantine size to find the threshold at which it stops the wedge:
+
+| quarantine | runs | teardown #GP |
+| --- | --- | --- |
+| none | ~5 | ~80% wedge |
+| 1024 | 8 | 0 |
+| 8 | 4 | 0 |
+| 1 | 4 | 0 |
+
+**Even a 1-slot quarantine suppresses it** — delaying a freed block's return to
+the allocator by a *single* subsequent free is enough. So the corruption needs
+the just-freed block handed back to the **very next allocation**.
+
+Crucial corroborating fact: `HEAP_ZERO_ON_FREE` defaults to **true**, so the
+production path already zeroes freed memory. The `#GP` garbage is therefore
+**not** stale freed content (zeroed) — it is a block that was freed, immediately
+**reallocated and written with new data**, while a reference from the original
+(mid-flight) owner still points at it. Reading that new data as a tree node
+yields the non-canonical child pointer.
+
+**Refined root hypothesis: a re-entrant/interrupt allocation reuses a node that
+an in-progress inbox-registry `BTreeMap` operation just freed but still
+references.** The registry op holds `REGISTRY.write()` (which guards the map, not
+the global allocator); if an interrupt fires between a node free and the tree
+fixup and its handler allocates, the allocator hands back the just-freed node,
+the handler writes it, and the resuming `remove` dereferences the stale parent
+link → `#GP`. Delaying reuse (even by one free) lets the registry op finish
+before the node can be recycled. No poison read/write fired because the stale
+link is only followed *after* the node is reallocated, never while it sits
+poisoned in quarantine.
+
+**Next:** (1) audit whether any interrupt/softirq path allocates, and make the
+registry critical sections IRQ-safe (disable interrupts across the `BTreeMap`
+mutation, or move frees outside the lock); (2) the quarantine is itself a valid
+**mitigation** — a lightweight deferred-free (delay reuse by N, no poison/scan)
+would be a shippable workaround if the re-entrancy proves hard to excise.
+
 ## Status of the broader effort
 - FIXED+verified: user-rsp drift (`8d2d0e5c1`), PF-loop on kernel address
   (`74fb14aeb`). Desktop fleet launches; minimal-repro zero TRAP; full-desktop
