@@ -143,6 +143,43 @@ IPC enqueue + `Arc<Inbox>` for a stray write or UAF), so capsule deaths stop
 wedging the kernel. Then the compositor (present path already verified correct)
 presents the wallpaper.
 
+## Blit instrumentation: present syscall is never reached (teardown #GP gates it)
+
+Capped `[BLIT …]` logging at the kernel `graphics_present::blit` entry +
+decision points (reverted after). Across 5 full-desktop boots: **`[BLIT]` fires
+zero times.** The `[SCHED]` trail identifies the compositor as **pid 0x16** —
+it reaches `GOP-fb fallback mode` + `setup complete`, but in **4 of 5 runs the
+kernel wedges on the teardown #GP** (`8000fdac`) before the compositor's render
+loop ticks; the one non-wedge run never reached compositor setup. So the present
+path can't even be exercised — the teardown #GP gates it.
+
+Also confirmed: the #GP is a **non-canonical pointer deref** in `remove_leaf_kv`
+(a `#GP`, not a stack-overflow `#PF`) → a **corrupted BTreeMap node pointer**,
+i.e. registry **heap corruption**, despite the teardown running on the 16 KiB
+`IST_PAGE_FAULT` stack (the IST rsp is normal, not overflowed).
+
+Interaction with the zeroing fix (`8180bba2a`): zeroing user-stack frames turned
+the stale-garbage return address into a deterministic `rip=0x0` for capsules
+that `ret` from `_start`, so those now fault deterministically and feed the
+teardown path — raising the observed wedge rate. The zeroing is still correct
+(security: no kernel-data leak); the wedge root is unchanged (registry
+corruption), but capsule `_start` should `mk_exit`, not `ret` into a 0 RA.
+
+## CONVERGED: the teardown #GP (registry heap corruption) is the one hard root
+
+Ruled out as the corruptor: the Inbox (`Mutex<VecDeque>`, bounded), the IPC send
+path (exact-size `Vec<u8>`), the registry locking (correct `write()`), and IST
+overflow. The `nonos-heap-debug` canary check (`dealloc_impl`) never trips
+(`HEAP-CORRUPT=0` over 6 runs) → the corruption is a **mid-allocation stray
+write** that misses the end-of-allocation canary, and it is **intermittent /
+not reproducible on demand**. This is the single blocker for the live desktop.
+
+**Recommended next approach (dedicated effort):** a redzone/poisoning allocator
+that fills allocations with a pattern and validates *interior* bytes (the canary
+only guards the tail), or KASAN-style shadow, to catch the stray write at its
+victim; alternatively a focused audit of every `&mut`/raw write reachable from
+the IPC/scene/registry hot paths. Boot-cycle bisection won't pin it (intermittent).
+
 ## Status of the broader effort
 - FIXED+verified: user-rsp drift (`8d2d0e5c1`), PF-loop on kernel address
   (`74fb14aeb`). Desktop fleet launches; minimal-repro zero TRAP; full-desktop
