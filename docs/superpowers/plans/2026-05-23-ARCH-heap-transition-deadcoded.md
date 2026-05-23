@@ -346,7 +346,14 @@ working preempt path; (3) make recv truly non-blocking (return-if-empty) so the
 poll loop never calls the broken `yield_now`. Verify with the `[RDRAIN]
 post-yield` + `[BLIT]` markers, then a screenshot.
 
-(Bash classifier was briefly unavailable at this point; build/commit pending.)
+**Workaround tried + REJECTED:** made the recv non-blocking (`timeout_ms <= 1`
+⇒ return-if-empty) so poll loops bypass the broken `yield_now`. Result: it
+**broke the boot** — every recv-poll loop became a busy-poll, the IPC message
+flow stalled at the virtio-gpu driver (`gfx.virtio_gpu0`, line ~1210), and the
+compositor never reached setup even after 330 s (prior boots reached it at
+~1216). Reverted. Confirms blocking recv is load-bearing across the fleet, so
+the **only correct fix is repairing the voluntary-yield resume** (option 1) /
+the planned context-switch rewrite — busy-polling is not viable.
 
 ## Status of the broader effort
 - FIXED+verified: user-rsp drift (`8d2d0e5c1`), PF-loop on kernel address
