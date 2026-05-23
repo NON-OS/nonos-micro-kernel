@@ -312,6 +312,42 @@ passing 0, or ensuring the recv runs with interrupts enabled. A `tick`-before-
 Uncommitted diagnostics in tree (revert before merge): `blit_dbg` in
 `graphics_present.rs`; `run`/`drain`/`tick` markers in the compositor.
 
+## Present path ROOT (traced to the scheduler): voluntary-yield never resumes
+
+Instrumented the kernel recv `drain()` (`recv_from.rs`) and compositor render
+loop. Decisive markers (`timeout_ms == 1`, the compositor's `RECV_NOWAIT`):
+`t1 enter=4, pre-yield=4, post-yield=0` — every recv reaches the line *before*
+`crate::sched::yield_now()` but never the line *after*. So **`yield_now()` never
+returns**.
+
+Trace: `yield_now` → `contract_switch(SwitchIntent::Yield)` → backend →
+`perform_yield_inline()` (`scheduler/preemption/yield_body.rs`). It saves the
+caller's context (setjmp-style `Context::save_to` + `was_just_restored`), parks
+it (`save_interrupt_context` + `add_to_run_queue`, state→Ready) and
+`switch_to_process(next)` — then is **never resumed** (`post-yield` never fires).
+So the **voluntary-yield save/restore is broken**: the yielder is queued but its
+resume (`resume_kernel_thread → ctx.restore`) never returns control to
+`perform_yield_inline`, consistent with the `was_just_restored` flag not being
+set on restore (the resumed task re-parks instead of returning).
+
+`mk_yield`/setup works because it uses the **timer-preempt** path
+(`preempt_current_process` + iretq restore), not this setjmp/longjmp voluntary
+path — which is exactly the fragile mechanism the context-switch-rewrite spec
+(`docs/.../2026-05-22-ctx-switch-rewrite-*`) set out to replace.
+
+Effect: every capsule whose service loop polls via recv (compositor, etc.) hangs
+at the first `yield_now`, so no compositing/present ever happens — the present
+path was never functional, independent of the (now-fixed) teardown #GP.
+
+**Fix options:** (1) fix the voluntary-yield resume — ensure `ctx.restore` on the
+resume path sets `was_just_restored` so `perform_yield_inline` returns (or adopt
+the planned context-switch rewrite); (2) route the recv's wait through the
+working preempt path; (3) make recv truly non-blocking (return-if-empty) so the
+poll loop never calls the broken `yield_now`. Verify with the `[RDRAIN]
+post-yield` + `[BLIT]` markers, then a screenshot.
+
+(Bash classifier was briefly unavailable at this point; build/commit pending.)
+
 ## Status of the broader effort
 - FIXED+verified: user-rsp drift (`8d2d0e5c1`), PF-loop on kernel address
   (`74fb14aeb`). Desktop fleet launches; minimal-repro zero TRAP; full-desktop
