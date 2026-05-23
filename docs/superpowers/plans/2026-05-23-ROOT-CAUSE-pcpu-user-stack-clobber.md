@@ -121,6 +121,30 @@ So the assigned root cause (user-stack control-flow corruption blocking the
 desktop) is **fixed and verified**; a fully-live wallpaper+shell desktop needs
 the pid-8 fault-loop fix + the GOP-fb-vs-virtio-gpu compositor path.
 
+## Second fix + healthy desktop (2026-05-23)
+
+**Fix 2 (committed):** `fix(mem): never resolve a user-mode fault on a
+kernel-half address`. `handle_page_fault` treated any present+write fault as a
+COW fault, so a CPL=3 capsule writing a stray kernel-half pointer was
+COW-"handled" and resumed at the faulting rip → tight re-fault loop (one
+desktop capsule, pid 8, faulted ~1880× on a bootstrap-heap address). Now a
+user-mode fault on the kernel half returns `UnhandledPageFault` → the capsule
+is terminated. **Verified: full-desktop trap count 1901 → 2.**
+
+**Desktop state now:** the entire fleet spawns (`[INIT] Capsules spawned`),
+compositor/wm/wallpaper/desktop_shell run, the static GOP-fb desktop renders,
+and the system is healthy (residual: one contained pid-7 fault, two app
+endpoint-registration errors — non-fatal).
+
+**Remaining for a LIVE wallpaper desktop (separate feature work, NOT a crash):**
+the compositor's `setup/prime.rs::run_gop_once` allocates its backing with
+`mk_mmap(MAP_PRIVATE_ANON)` — a private buffer that is never presented to the
+real GOP framebuffer — so composited content (wallpaper, windows) doesn't reach
+the screen. GOP-fb is the compositor's *preferred* mode (tried before
+virtio-gpu), so the fix is to back/present GOP-fb mode against the actual
+framebuffer (or wire a present/flush step), and/or complete the virtio-gpu
+scanout path. This is GUI-pipeline work, out of scope for the corruption fix.
+
 ## Verification gates
 
 - **Gate A:** minimal virtio-rng repro, **zero `[TRAP]` for ≥120 s**.
