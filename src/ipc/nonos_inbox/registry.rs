@@ -103,6 +103,7 @@ pub fn register_inbox_with_capacity(
         });
     }
     let mut reg = REGISTRY.write();
+    let _irq = crate::interrupts::disable_interrupts_guard();
     if reg.map.contains_key(module) {
         return Err(InboxError::AlreadyRegistered { module: module.into() });
     }
@@ -120,6 +121,7 @@ pub fn register_or_get_bootstrap_inbox(module: &str) {
         return;
     }
     let mut reg = REGISTRY.write();
+    let _irq = crate::interrupts::disable_interrupts_guard();
     if !reg.map.contains_key(module) {
         let cap = DEFAULT_CAP.load(Ordering::Relaxed);
         reg.map.insert(module.into(), Arc::new(Inbox::new(cap, KERNEL_OWNER)));
@@ -131,6 +133,7 @@ pub fn register_or_get_bootstrap_inbox(module: &str) {
 /// dropped count, or `None` if the inbox was not registered.
 pub fn unregister_inbox(module: &str) -> Option<usize> {
     let mut reg = REGISTRY.write();
+    let _irq = crate::interrupts::disable_interrupts_guard();
     if let Some(inbox) = reg.map.remove(module) {
         GLOBAL_STATS.total_inboxes_removed.fetch_add(1, Ordering::Relaxed);
         Some(inbox.len())
@@ -148,6 +151,7 @@ pub fn unregister_for_pid(pid: u32) -> Option<usize> {
     use alloc::format;
     let module = format!("proc.{}", pid);
     let mut reg = REGISTRY.write();
+    let _irq = crate::interrupts::disable_interrupts_guard();
     if let Some(inbox) = reg.map.remove(module.as_str()) {
         GLOBAL_STATS.total_inboxes_removed.fetch_add(1, Ordering::Relaxed);
         Some(inbox.len())
