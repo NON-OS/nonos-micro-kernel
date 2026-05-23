@@ -1,0 +1,78 @@
+# Architecture: the bootstrap→paged-heap transition is dead-coded
+
+**Date:** 2026-05-23 · **Context:** stepping back from the teardown-#GP symptom
+to the heap/teardown architecture (the recurring desktop-load fragility).
+
+## Structural root cause
+
+The kernel has two heap init paths over one global allocator
+(`KERNEL_HEAP: SecureHeapAllocator { inner: linked_list_allocator::LockedHeap }`):
+
+- `heap::manager::init_bootstrap()` (boot, `boot/main/core_init.rs:42`) →
+  `KERNEL_HEAP.init(BOOTSTRAP_HEAP_MEMORY, 16 MiB)` over a **static `.bss`
+  array**. Sets `initialized = true`.
+- `heap::manager::init()` (`memory/unified/system.rs`, after `frame_alloc`) is
+  meant to allocate the **256 MiB** paged main heap (`KHEAP_BASE`,
+  `KHEAP_SIZE = 0x1000_0000`), map it, re-point `KERNEL_HEAP`, and clear
+  `USING_BOOTSTRAP`.
+
+**The bug:** `init()` opens with `if KERNEL_HEAP.is_initialized() { return Ok(()) }`
+— and `init_bootstrap` already set `initialized = true`. So `init()` **always
+early-returns**, the 256 MiB main heap is never created, `USING_BOOTSTRAP` is
+never cleared, and **the entire system runs forever on the 16 MiB bootstrap
+heap** — which `constants.rs` explicitly sized only for "early static state, a
+couple of concurrent AEAD round-trips, and the ELF loader scratch" (~3-4 MiB
+transient), *not* a ~25-capsule desktop.
+
+## Why this is the recurring desktop-load fragility
+
+Under the full desktop fleet (25 capsules: PCBs incl. 8 KiB io_bitmap each,
+inboxes, IPC bounce buffers, the inbox registry `BTreeMap`, services, caps,
+scheduler state, crypto transients) the 16 MiB heap is pressured/fragmented.
+That is the most likely source of the **teardown #GP**: the inbox-registry
+`BTreeMap<String, Arc<Inbox>>` node pointers are corrupted, so
+`unregister_for_pid → BTreeMap::remove` `#GP`s when a capsule dies — and it is
+**desktop-load-specific** (clean in the 2-capsule minimal repro). The earlier
+"bootstrap-heap pointer" corruption values seen on user stacks are consistent
+with the registry/PCBs living in this single 16 MiB region.
+
+## Fix-design analysis (both naive fixes are risky — by design)
+
+1. **Enlarge `BOOTSTRAP_HEAP_SIZE`.** Simple, but `constants.rs` warns it is
+   bounded so as **not to stretch the bootloader's mapping/signature-verify
+   window**. The bootstrap heap is a static `.bss` array (NOBITS, placed last);
+   growing it grows `p_memsz`, which the **separate UEFI bootloader** must map.
+   Requires verifying/extending the bootloader's kernel-segment mapping —
+   a cross-crate (hand-synced ABI) change. **Test empirically before trusting.**
+2. **Make the transition work.** The intended design. Blocker:
+   `LockedHeap`/`linked_list_allocator::Heap` is single-region and single-`init`
+   — calling `init` twice (re-point to the 256 MiB region) is unsafe, and the
+   bootstrap and main regions are non-contiguous so `extend` cannot bridge them.
+   A correct transition needs either (a) swapping the global allocator's inner
+   to a freshly-constructed `Heap` over the main region — orphaning pre-
+   transition bootstrap allocations (safe only if none are freed afterward, or
+   if freed-bootstrap blocks rejoining the free list is proven harmless), or
+   (b) a multi-region allocator. Both are deliberate allocator changes needing
+   careful boot + teardown verification.
+
+## Recommendation
+
+Pursue **(2a)**: at `init()`, gate on `!USING_BOOTSTRAP` (not
+`is_initialized()`), construct a fresh `Heap` over the mapped 256 MiB main
+region, swap it into `KERNEL_HEAP.inner`, and clear `USING_BOOTSTRAP` — *after*
+auditing that allocations made between `init_bootstrap` and `init()`
+(`phys::init` bitmap [leaked], `frame_alloc` ranges, the main-heap frame Vec)
+are either permanent or safe to free post-swap. Verify: full-desktop boots,
+teardown #GP gone, `get_heap_stats().free_memory()` shows the 256 MiB region in
+use. Keep the bootstrap heap at 16 MiB (do not stretch the bootloader window).
+
+This is a careful, testable change, not a one-liner — staged separately from the
+two committed corruption fixes so it can be reviewed and boot-verified on its
+own.
+
+## Status of the broader effort
+- FIXED+verified: user-rsp drift (`8d2d0e5c1`), PF-loop on kernel address
+  (`74fb14aeb`). Desktop fleet launches; minimal-repro zero TRAP; full-desktop
+  traps 1901→2.
+- NEXT: this heap transition (root of the teardown #GP), then the compositor
+  GOP-fb present path (live wallpaper).
