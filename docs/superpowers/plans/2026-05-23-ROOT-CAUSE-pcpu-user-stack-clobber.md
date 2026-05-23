@@ -95,6 +95,32 @@ continues spawning capsules. (An intermediate version that restored an unsaved
 `0` produced `rsp=0`; fixed by also saving on the yield path + the `!= 0`
 guard.)
 
+## Gate B (full desktop) — assigned blocker cleared; separate bugs remain
+
+`make nonos-mk-desktop-gui-prod`, booted with virtio-vga + virtio-rng +
+virtio-keyboard/mouse. The **GUI chain that the user-rsp bug blocked now
+launches and runs**:
+```
+[DRIVER-VIRTIO-GPU] capsule spawned
+[COMPOSITOR] capsule spawned -> [compositor] setup complete
+[WALLPAPER] capsule spawned
+[DESKTOP-SHELL] capsule spawned -> [desktop_shell] boot -> overlay attached
+```
+Screendump: the static GOP-fb desktop renders (NONOS bar + DESKTOP dock).
+
+**Not yet a fully-live compositor desktop — distinct follow-up bugs (NOT the
+user-rsp drift):**
+- **pid 8 fault loop:** ~1880 repeated `#PF cpl=3 cr2=0xffffffff824145d0` (a
+  bootstrap-heap kernel pointer) — one capsule dereferencing a kernel pointer
+  and the fault path not terminating it (re-faults forever). Top priority next.
+- A few app capsules (pid 0x16–0x1e) fault once on near-null addresses.
+- `[compositor] GOP-fb fallback mode` — compositor isn't using live virtio-gpu
+  compositing, so the wallpaper isn't presented (only the static desktop).
+
+So the assigned root cause (user-stack control-flow corruption blocking the
+desktop) is **fixed and verified**; a fully-live wallpaper+shell desktop needs
+the pid-8 fault-loop fix + the GOP-fb-vs-virtio-gpu compositor path.
+
 ## Verification gates
 
 - **Gate A:** minimal virtio-rng repro, **zero `[TRAP]` for ≥120 s**.
