@@ -28,7 +28,10 @@ mod setup;
 mod state;
 mod sw_blitter;
 
-use nonos_libc::{heap_init, mk_exit, mk_yield};
+use nonos_libc::{heap_init, mk_exit, mk_service_register, mk_yield};
+
+const SERVICE_NAME: &[u8] = b"compositor";
+const SERVICE_PORT: u32 = 4310;
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
@@ -37,6 +40,9 @@ pub unsafe extern "C" fn _start() -> ! {
     }
     let ctx = wait_for_setup();
     debug::marker(b"setup complete");
+    if mk_service_register(SERVICE_NAME.as_ptr(), SERVICE_NAME.len(), SERVICE_PORT) < 0 {
+        debug::marker(b"service register failed");
+    }
     server::run(ctx);
 }
 

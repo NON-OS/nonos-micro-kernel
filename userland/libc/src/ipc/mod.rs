@@ -18,6 +18,7 @@ mod call;
 mod lookup;
 mod recv;
 mod recv_from;
+mod register;
 mod send;
 mod send_to_pid;
 
@@ -25,5 +26,6 @@ pub use call::mk_ipc_call;
 pub use lookup::mk_service_lookup;
 pub use recv::mk_ipc_recv;
 pub use recv_from::mk_ipc_recv_from;
+pub use register::mk_service_register;
 pub use send::mk_ipc_send;
 pub use send_to_pid::mk_ipc_send_to_pid;

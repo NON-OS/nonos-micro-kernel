@@ -20,7 +20,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use spin::Mutex;
 
-pub const MAX_SERVICES: usize = 64;
+pub const MAX_SERVICES: usize = 256;
 
 #[derive(Debug, Clone)]
 pub struct ServiceEndpoint {

@@ -25,6 +25,7 @@ pub const SYS_IPC_CALL: u64 = tag4(b"MICL");
 pub const SYS_IPC_RECV_FROM: u64 = tag4(b"MIRF");
 pub const SYS_IPC_SEND_TO_PID: u64 = tag4(b"MISP");
 pub const SYS_SERVICE_LOOKUP: u64 = tag4(b"MSVL");
+pub const SYS_SERVICE_REGISTER: u64 = tag4(b"MSVR");
 pub const SYS_MMAP: u64 = tag4(b"MMAP");
 pub const SYS_MUNMAP: u64 = tag4(b"MUMP");
 pub const SYS_SPAWN: u64 = tag4(b"MSPN");

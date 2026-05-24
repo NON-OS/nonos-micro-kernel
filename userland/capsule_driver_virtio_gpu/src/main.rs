@@ -26,7 +26,11 @@ mod regs;
 mod server;
 mod setup;
 mod state;
-use nonos_libc::{heap_init, mk_exit, mk_yield};
+use nonos_libc::{heap_init, mk_exit, mk_service_register, mk_yield};
+
+const SERVICE_NAME: &[u8] = b"driver.virtio_gpu0";
+const SERVICE_PORT: u32 = 4226;
+
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
@@ -42,5 +46,6 @@ pub unsafe extern "C" fn _start() -> ! {
             }
         }
     };
+    let _ = mk_service_register(SERVICE_NAME.as_ptr(), SERVICE_NAME.len(), SERVICE_PORT);
     server::run(driver);
 }

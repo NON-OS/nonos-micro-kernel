@@ -52,7 +52,8 @@ pub use graphics::{
 };
 pub use heap::{init as heap_init, HeapError};
 pub use ipc::{
-    mk_ipc_call, mk_ipc_recv, mk_ipc_recv_from, mk_ipc_send, mk_ipc_send_to_pid, mk_service_lookup,
+    mk_ipc_call, mk_ipc_recv, mk_ipc_recv_from, mk_ipc_send, mk_ipc_send_to_pid,
+    mk_service_lookup, mk_service_register,
 };
 pub use mem::mk_mmap;
 pub use surface_registry::{

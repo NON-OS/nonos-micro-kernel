@@ -14,20 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod inbox_name;
-mod lookup;
-mod recv;
-mod recv_from;
-mod register;
-mod send;
-mod send_to_pid;
-mod sender_pid;
+use crate::syscall::{call_raw, N_MK_SERVICE_REGISTER};
 
-pub use call::sys_ipc_call;
-pub use lookup::sys_service_lookup;
-pub use recv::sys_ipc_recv;
-pub use recv_from::sys_ipc_recv_from;
-pub use register::sys_service_register;
-pub use send::sys_ipc_send;
-pub use send_to_pid::sys_ipc_send_to_pid;
+// Anchor the caller as the owner of the named service on `port`. The
+// kernel binds (name, port, current_pid) into the service registry so
+// peers can resolve it via `mk_service_lookup` without hardcoding the
+// wire-side endpoint number. Returns 0 on success or a negative errno.
+#[no_mangle]
+pub extern "C" fn mk_service_register(name: *const u8, name_len: usize, port: u32) -> i64 {
+    call_raw(
+        N_MK_SERVICE_REGISTER,
+        [name as u64, name_len as u64, port as u64, 0, 0, 0],
+    )
+}

@@ -24,6 +24,7 @@ pub(crate) const N_MK_IPC_CALL: i64 = tag4(b"MICL");
 pub(crate) const N_MK_IPC_RECV_FROM: i64 = tag4(b"MIRF");
 pub(crate) const N_MK_IPC_SEND_TO_PID: i64 = tag4(b"MISP");
 pub(crate) const N_MK_SERVICE_LOOKUP: i64 = tag4(b"MSVL");
+pub(crate) const N_MK_SERVICE_REGISTER: i64 = tag4(b"MSVR");
 pub(crate) const N_MK_MMAP: i64 = tag4(b"MMAP");
 pub(crate) const N_MK_EXIT: i64 = tag4(b"MEXT");
 pub(crate) const N_MK_YIELD: i64 = tag4(b"MYLD");

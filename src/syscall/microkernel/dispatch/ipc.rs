@@ -17,7 +17,7 @@
 use super::args::Args;
 use crate::syscall::microkernel::ipc::{
     sys_ipc_call, sys_ipc_recv, sys_ipc_recv_from, sys_ipc_send, sys_ipc_send_to_pid,
-    sys_service_lookup,
+    sys_service_lookup, sys_service_register,
 };
 use crate::syscall::microkernel::numbers::*;
 
@@ -29,6 +29,7 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_IPC_RECV_FROM => sys_ipc_recv_from(a.a0, a.a1, a.a2 as usize, a.a3, a.a4),
         SYS_IPC_SEND_TO_PID => sys_ipc_send_to_pid(a.a0, a.a1, a.a2 as usize),
         SYS_SERVICE_LOOKUP => sys_service_lookup(a.a0, a.a1 as usize, a.a2, a.a3),
+        SYS_SERVICE_REGISTER => sys_service_register(a.a0, a.a1 as usize, a.a2 as u32),
         _ => return None,
     })
 }
