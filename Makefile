@@ -150,7 +150,7 @@ QEMU_BLK_IMG := $(TARGET_DIR)/qemu-virtio-blk.img
 QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
 QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
-QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=1024,yres=768
+QEMU_GPU := -device virtio-vga,vectors=0,xres=1024,yres=768
 QEMU_USB := -device qemu-xhci,id=xhci -device usb-tablet,bus=xhci.0
 QEMU_RNG := -device virtio-rng-pci
 
