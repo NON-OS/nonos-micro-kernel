@@ -17,7 +17,7 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use crate::about::section_render::section_line_count;
-use crate::about::state::{State, VISIBLE_BODY_LINES};
+use crate::about::state::State;
 use crate::about::theme::{
     HEADER_HEIGHT, SCROLLBAR_THUMB, SCROLLBAR_TRACK, SCROLLBAR_WIDTH, STATUS_BAR_HEIGHT,
     TAB_BAR_HEIGHT,
@@ -25,7 +25,8 @@ use crate::about::theme::{
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     let total = section_line_count(state.section);
-    if total <= VISIBLE_BODY_LINES {
+    let visible = state.last_visible_lines;
+    if total <= visible {
         return;
     }
     let track_top = HEADER_HEIGHT.saturating_add(TAB_BAR_HEIGHT);
@@ -38,11 +39,10 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     }
     let track_x = fb.width - SCROLLBAR_WIDTH;
     fb.fill_rect(track_x, track_top, SCROLLBAR_WIDTH, track_height, SCROLLBAR_TRACK);
-    let thumb_height = ((VISIBLE_BODY_LINES as u64 * track_height as u64)
-        / total as u64)
-        .max(8) as u32;
+    let thumb_height =
+        ((visible as u64 * track_height as u64) / total as u64).max(8) as u32;
     let thumb_height = thumb_height.min(track_height);
-    let max_scroll = total.saturating_sub(VISIBLE_BODY_LINES).max(1);
+    let max_scroll = total.saturating_sub(visible).max(1);
     let usable = track_height.saturating_sub(thumb_height);
     let thumb_offset = ((usable as u64 * state.scroll as u64) / max_scroll as u64) as u32;
     let thumb_y = track_top.saturating_add(thumb_offset);

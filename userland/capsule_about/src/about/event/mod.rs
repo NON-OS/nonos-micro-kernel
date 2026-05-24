@@ -16,7 +16,9 @@
 
 mod on_arrow_down;
 mod on_arrow_up;
+mod on_end;
 mod on_esc;
+mod on_home;
 mod on_page_down;
 mod on_page_up;
 mod on_pointer_button;

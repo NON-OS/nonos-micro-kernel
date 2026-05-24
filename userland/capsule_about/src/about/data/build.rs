@@ -16,5 +16,13 @@
 
 pub const VERSION: &[u8] = env!("CARGO_PKG_VERSION").as_bytes();
 pub const GIT_SHA: &[u8] = env!("ABOUT_GIT_SHA").as_bytes();
-pub const BUILD_UNIX: &[u8] = env!("ABOUT_BUILD_UNIX").as_bytes();
 pub const TOOLCHAIN: &[u8] = b"nightly-2026-01-16";
+
+#[cfg(target_arch = "x86_64")]
+pub const ARCH: &[u8] = b"x86_64";
+#[cfg(target_arch = "aarch64")]
+pub const ARCH: &[u8] = b"aarch64";
+#[cfg(target_arch = "riscv64")]
+pub const ARCH: &[u8] = b"riscv64";
+#[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64", target_arch = "riscv64")))]
+pub const ARCH: &[u8] = b"unknown";

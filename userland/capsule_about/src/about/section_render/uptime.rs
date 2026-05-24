@@ -19,11 +19,10 @@ use nonos_app_skeleton::PaintBuffer;
 use super::row;
 use crate::about::data::uptime::{read_millis, split_dhms};
 use crate::about::format::u64_decimal;
-use crate::about::state::VISIBLE_BODY_LINES;
 
 pub const LINE_COUNT: u32 = 5;
 
-pub fn render(scroll: u32, top: u32, fb: &mut PaintBuffer) {
+pub fn render(scroll: u32, visible: u32, top: u32, fb: &mut PaintBuffer) {
     let mut buf_ms = [0u8; 20];
     let mut buf_d = [0u8; 20];
     let mut buf_h = [0u8; 20];
@@ -45,7 +44,7 @@ pub fn render(scroll: u32, top: u32, fb: &mut PaintBuffer) {
         (b"Minutes", u64_decimal(m, &mut buf_m)),
         (b"Seconds", u64_decimal(s, &mut buf_s)),
     ];
-    let end = scroll.saturating_add(VISIBLE_BODY_LINES).min(LINE_COUNT);
+    let end = scroll.saturating_add(visible).min(LINE_COUNT);
     let visible_count = end.saturating_sub(scroll);
     for offset in 0..visible_count {
         let (label, value) = rows[(scroll + offset) as usize];

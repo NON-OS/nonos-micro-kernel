@@ -16,13 +16,10 @@
 
 use std::env;
 use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() {
     let sha = resolve_sha();
     println!("cargo:rustc-env=ABOUT_GIT_SHA={sha}");
-    let secs = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
-    println!("cargo:rustc-env=ABOUT_BUILD_UNIX={secs}");
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=../../LICENSE");

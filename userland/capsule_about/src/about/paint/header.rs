@@ -17,10 +17,39 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use crate::about::data::product::{NAME, TAGLINE};
+use crate::about::format::u64_decimal;
+use crate::about::section::SECTIONS;
+use crate::about::state::State;
 use crate::about::theme::{HEADER, HEADER_HEIGHT, HEADLINE, TEXT_LEFT};
 
-pub fn paint(fb: &mut PaintBuffer) {
+const BREADCRUMB_RIGHT_PADDING: u32 = 12;
+const CELL_WIDTH: u32 = 8;
+
+pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.fill_rect(0, 0, fb.width, HEADER_HEIGHT, HEADER);
     fb.text(TEXT_LEFT, 12, NAME, HEADLINE);
     fb.text(TEXT_LEFT + 64, 16, TAGLINE, HEADLINE);
+    let mut buf_idx = [0u8; 20];
+    let mut buf_total = [0u8; 20];
+    let idx_text = u64_decimal((state.section.index() + 1) as u64, &mut buf_idx);
+    let total_text = u64_decimal(SECTIONS.len() as u64, &mut buf_total);
+    let mut crumb = [0u8; 32];
+    let mut written = 0usize;
+    for &b in idx_text {
+        crumb[written] = b;
+        written += 1;
+    }
+    crumb[written] = b' ';
+    written += 1;
+    crumb[written] = b'/';
+    written += 1;
+    crumb[written] = b' ';
+    written += 1;
+    for &b in total_text {
+        crumb[written] = b;
+        written += 1;
+    }
+    let crumb_width = (written as u32) * CELL_WIDTH;
+    let x = fb.width.saturating_sub(crumb_width + BREADCRUMB_RIGHT_PADDING);
+    fb.text(x, 16, &crumb[..written], HEADLINE);
 }

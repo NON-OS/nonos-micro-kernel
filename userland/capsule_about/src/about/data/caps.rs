@@ -44,7 +44,7 @@ pub const ALL_CAPS: &[CapDescriptor] = &[
     CapDescriptor { bit: 1 << 20, name: b"Pio",                  role: b"raw port io" },
 ];
 
-pub const MASK: u64 = (1 << 0) | (1 << 3) | (1 << 4) | (1 << 8) | (1 << 11) | (1 << 12);
+pub const MASK: u64 = (1 << 0) | (1 << 3) | (1 << 4) | (1 << 11) | (1 << 12);
 
 pub fn is_granted(bit: u64) -> bool {
     MASK & bit != 0

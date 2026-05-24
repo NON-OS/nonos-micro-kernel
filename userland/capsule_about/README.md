@@ -42,7 +42,7 @@ toolkit (window kind, paint buffer, key router)
 
 ## Authority
 
-`Capsule.mk` declares `CAPSULE_REQUIRED_CAPS := 0x1919`, which decodes to
+`Capsule.mk` declares `CAPSULE_REQUIRED_CAPS := 0x1819`, which decodes to
 exactly:
 
 | Bit | Capability | Purpose |
@@ -50,14 +50,27 @@ exactly:
 | 0x0001 | CoreExec | run user code |
 | 0x0008 | IPC | toolkit calls + event recv |
 | 0x0010 | Memory | mmap the paint buffer |
-| 0x0100 | Debug | proof markers via `MkDebug` |
 | 0x0800 | GraphicsDisplayQuery | learn display dimensions |
 | 0x1000 | GraphicsSurfaceCreate | register the paint surface |
 
 `MkTimeMillis` requires no extra capability bit (it is part of the CoreExec
-microkernel surface). No `Driver`, `Mmio`, `Irq`, `Dma`, `Pio`, `Network`,
-`Crypto`, `FileSystem`, `Hardware`, `Admin` or `RegisterService` capability
-is requested.
+microkernel surface). `Debug` is **deliberately absent** — the NO LOGS /
+NO TRACES posture refuses any serial surface to the capsule and the capsule
+emits no `MkDebug` markers anywhere in its source. No `Driver`, `Mmio`,
+`Irq`, `Dma`, `Pio`, `Network`, `Crypto`, `FileSystem`, `Hardware`, `Admin`
+or `RegisterService` capability is requested.
+
+## Privacy posture
+
+This capsule is designed under the NONOS first-principles invariants:
+
+| Invariant | How `capsule_about` honors it |
+|---|---|
+| NO LOGS | `Debug` cap dropped from the mask; no `MkDebug` call in any file; `debug_tag` field in the kernel spawn spec is the empty string so even spawn-time errors do not leak a label. |
+| NO TRACES | Build timestamp removed from the embedded info; only the SHA + version remain (integrity, not forensic). The Uptime section displays wall-clock since-boot only — there is no persistent identifier of any kind in the binary or in runtime state. |
+| EPHEMERAL | The capsule reads zero files, writes zero files, opens zero sockets, and registers zero IPC service endpoints. State is reconstructed from compile-time tables on every paint. |
+| NOT LINUX | No POSIX shapes anywhere. Capability names follow the NONOS taxonomy (`CoreExec`, `GraphicsDisplayQuery`). Syscalls are the 4-byte ASCII tag form (`MMAP`, `MTMS`). No `errno`, no `fd`. |
+| PRIVACY MICROKERNEL | Capability mask is the minimal viable surface (5 bits). Refuses `Network`, `FileSystem`, `Crypto`, `Hardware`, `Admin`, `RegisterService`. The kernel rejects any syscall outside the granted mask, so a compromise of the capsule cannot reach disks, sockets, devices, or other capsules. |
 
 ## Privacy and persistence
 
@@ -110,7 +123,7 @@ live; everything else is compile-time-static from `about/data/*`.
 | State + scroll/section cursor | `about/state.rs` |
 | Theme colors + metrics | `about/theme.rs` |
 | Event router | `about/event/router.rs` |
-| Per-key handlers | `about/event/on_*.rs` (7 key handlers) |
+| Per-key handlers | `about/event/on_*.rs` (9 key handlers: esc, tab, shift-tab, arrow up/down, page up/down, home, end) |
 | Pointer handler | `about/event/on_pointer_button.rs` (tab strip hit-test) |
 | Frame composition | `about/paint/frame.rs` |
 | Header band | `about/paint/header.rs` |
@@ -178,6 +191,11 @@ must produce a signed ELF whose SHA matches the embedded manifest
 - [x] Mouse support — click any tab to jump to its section
 - [x] Saturating arithmetic in scrollbar and section iteration (no over/underflow class)
 - [x] Trust section wording grounded in fact ("reached _start" implies `spawn_verified` passed)
+- [x] Home/End keys jump to top/bottom of section
+- [x] Window-size-aware visible-line count (no hardcoded `14`; recomputed every paint from `fb.height`)
+- [x] Section breadcrumb (e.g. `2 / 5`) rendered in the header
+- [x] Architecture string in Identity section (cfg-gated per target)
+- [x] Privacy posture (NO LOGS / NO TRACES / EPHEMERAL) explicitly enforced: Debug cap dropped, build timestamp removed
 - [ ] QEMU spawn-verify with `OP_HEALTHCHECK` reply on serial
   (blocked by the OVMF ExitBootServices `#PF` boot escalation)
 

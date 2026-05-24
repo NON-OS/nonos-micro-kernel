@@ -18,11 +18,10 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::row;
 use crate::about::data::{abi, build, product};
-use crate::about::state::VISIBLE_BODY_LINES;
 
 pub const LINE_COUNT: u32 = 9;
 
-pub fn render(scroll: u32, top: u32, fb: &mut PaintBuffer) {
+pub fn render(scroll: u32, visible: u32, top: u32, fb: &mut PaintBuffer) {
     let rows: [(&[u8], &[u8]); 9] = [
         (b"Product", product::NAME),
         (b"Tagline", product::TAGLINE),
@@ -30,11 +29,11 @@ pub fn render(scroll: u32, top: u32, fb: &mut PaintBuffer) {
         (b"Copyright", product::COPYRIGHT),
         (b"Version", build::VERSION),
         (b"Commit", build::GIT_SHA),
-        (b"Built (unix)", build::BUILD_UNIX),
         (b"Toolchain", build::TOOLCHAIN),
+        (b"Architecture", build::ARCH),
         (b"ABI", abi::NAME),
     ];
-    let end = scroll.saturating_add(VISIBLE_BODY_LINES).min(LINE_COUNT);
+    let end = scroll.saturating_add(visible).min(LINE_COUNT);
     let visible_count = end.saturating_sub(scroll);
     for offset in 0..visible_count {
         let (label, value) = rows[(scroll + offset) as usize];

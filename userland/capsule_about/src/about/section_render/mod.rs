@@ -25,13 +25,13 @@ use nonos_app_skeleton::PaintBuffer;
 
 use crate::about::section::Section;
 
-pub fn render_section(section: Section, scroll: u32, top: u32, fb: &mut PaintBuffer) {
+pub fn render_section(section: Section, scroll: u32, visible: u32, top: u32, fb: &mut PaintBuffer) {
     match section {
-        Section::Identity => identity::render(scroll, top, fb),
-        Section::Authority => authority::render(scroll, top, fb),
-        Section::Display => display::render(scroll, top, fb),
-        Section::Uptime => uptime::render(scroll, top, fb),
-        Section::License => license::render(scroll, top, fb),
+        Section::Identity => identity::render(scroll, visible, top, fb),
+        Section::Authority => authority::render(scroll, visible, top, fb),
+        Section::Display => display::render(scroll, visible, top, fb),
+        Section::Uptime => uptime::render(scroll, visible, top, fb),
+        Section::License => license::render(scroll, visible, top, fb),
     }
 }
 

@@ -15,13 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::{
-    EventOutcome, InputEvent, InputKind, KEY_DOWN, KEY_ESC, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_TAB,
-    KEY_UP, MOD_SHIFT,
+    EventOutcome, InputEvent, InputKind, KEY_DOWN, KEY_END, KEY_ESC, KEY_HOME, KEY_PAGE_DOWN,
+    KEY_PAGE_UP, KEY_TAB, KEY_UP, MOD_SHIFT,
 };
 
 use super::on_arrow_down::on_arrow_down;
 use super::on_arrow_up::on_arrow_up;
+use super::on_end::on_end;
 use super::on_esc::on_esc;
+use super::on_home::on_home;
 use super::on_page_down::on_page_down;
 use super::on_page_up::on_page_up;
 use super::on_pointer_button::on_pointer_button;
@@ -44,6 +46,8 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
         KEY_DOWN => on_arrow_down(state),
         KEY_PAGE_UP => on_page_up(state),
         KEY_PAGE_DOWN => on_page_down(state),
+        KEY_HOME => on_home(state),
+        KEY_END => on_end(state),
         _ => EventOutcome::Idle,
     }
 }

@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+use nonos_app_skeleton::EventOutcome;
 
-use crate::about::section_render::render_section;
 use crate::about::state::State;
-use crate::about::theme::{HEADER_HEIGHT, SECTION_TOP_PADDING, TAB_BAR_HEIGHT};
 
-pub fn paint(state: &State, fb: &mut PaintBuffer) {
-    let body_top = HEADER_HEIGHT + TAB_BAR_HEIGHT + SECTION_TOP_PADDING;
-    render_section(state.section, state.scroll, state.last_visible_lines, body_top, fb);
+pub fn on_home(state: &mut State) -> EventOutcome {
+    if state.scroll == 0 {
+        return EventOutcome::Idle;
+    }
+    state.scroll = 0;
+    EventOutcome::Repaint
 }

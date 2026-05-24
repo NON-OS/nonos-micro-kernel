@@ -21,12 +21,13 @@ use super::header;
 use super::scrollbar;
 use super::status_bar;
 use super::tabs;
-use crate::about::state::State;
+use crate::about::state::{visible_lines_for, State};
 use crate::about::theme::BACKGROUND;
 
 pub fn paint(state: &mut State, fb: &mut PaintBuffer) {
+    state.record_visible_lines(visible_lines_for(fb.height));
     fb.clear(BACKGROUND);
-    header::paint(fb);
+    header::paint(state, fb);
     tabs::paint(state, fb);
     body::paint(state, fb);
     scrollbar::paint(state, fb);

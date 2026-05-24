@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::section::{Section, SECTIONS};
+use super::theme::{HEADER_HEIGHT, LINE_HEIGHT, SECTION_TOP_PADDING, STATUS_BAR_HEIGHT, TAB_BAR_HEIGHT};
 
 pub const VISIBLE_BODY_LINES: u32 = 14;
 
@@ -22,11 +23,15 @@ pub struct State {
     pub section: Section,
     pub scroll: u32,
     pub painted: bool,
+    pub last_visible_lines: u32,
 }
 
 impl State {
     pub fn new() -> Self {
-        State { section: Section::Identity, scroll: 0, painted: false }
+        State { section: Section::Identity, scroll: 0, painted: false, last_visible_lines: VISIBLE_BODY_LINES }
+    }
+    pub fn record_visible_lines(&mut self, lines: u32) {
+        self.last_visible_lines = lines.max(1);
     }
     pub fn select_next_section(&mut self) {
         let next = (self.section.index() + 1) % SECTIONS.len();
@@ -42,16 +47,22 @@ impl State {
         self.scroll = self.scroll.saturating_sub(1);
     }
     pub fn scroll_line_down(&mut self, total_lines: u32) {
-        let max = total_lines.saturating_sub(VISIBLE_BODY_LINES);
+        let max = total_lines.saturating_sub(self.last_visible_lines);
         if self.scroll < max {
             self.scroll += 1;
         }
     }
     pub fn scroll_page_up(&mut self) {
-        self.scroll = self.scroll.saturating_sub(VISIBLE_BODY_LINES);
+        self.scroll = self.scroll.saturating_sub(self.last_visible_lines);
     }
     pub fn scroll_page_down(&mut self, total_lines: u32) {
-        let max = total_lines.saturating_sub(VISIBLE_BODY_LINES);
-        self.scroll = (self.scroll + VISIBLE_BODY_LINES).min(max);
+        let max = total_lines.saturating_sub(self.last_visible_lines);
+        self.scroll = (self.scroll + self.last_visible_lines).min(max);
     }
+}
+
+pub fn visible_lines_for(height: u32) -> u32 {
+    let body_top = HEADER_HEIGHT.saturating_add(TAB_BAR_HEIGHT).saturating_add(SECTION_TOP_PADDING);
+    let body_height = height.saturating_sub(body_top).saturating_sub(STATUS_BAR_HEIGHT);
+    (body_height / LINE_HEIGHT).max(1)
 }
