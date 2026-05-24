@@ -14,23 +14,43 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::process::core::PROCESS_TABLE;
+use core::sync::atomic::Ordering;
 
-use super::first_entry::try_first_entry;
-use super::kernel_thread::resume_kernel_thread;
-use super::resume::try_resume;
+use crate::process::core::{CURRENT_PID, PROCESS_TABLE};
 
-pub(crate) fn switch_to_user_pcb_x86_64(pid: u32) {
-    let pcb = match PROCESS_TABLE.find_by_pid(pid) {
+use super::cpu_switch::cpu_switch;
+use super::resume_env::prepare_resume;
+
+// Unified resume: install the next task's environment, then swap kernel
+// stacks via `cpu_switch`. A never-run task lands on its `first_entry_
+// trampoline` frame (seeded in setup); an already-run task resumes exactly
+// where it parked inside its own preempt/yield call, and the iretq/SYSRET
+// frame still on its kernel stack carries it back to userspace. The outgoing
+// task's resume point is saved into its own `kernel_rsp` by `cpu_switch`.
+pub(crate) fn switch_to_user_pcb_x86_64(next_pid: u32) {
+    let prev_pid = CURRENT_PID.load(Ordering::SeqCst);
+    if next_pid == prev_pid {
+        return;
+    }
+    let next = match PROCESS_TABLE.find_by_pid(next_pid) {
         Some(p) => p,
         None => return,
     };
+    let next_rsp = next.kernel_rsp.load(Ordering::Acquire);
+    if next_rsp == 0 {
+        return;
+    }
 
-    if try_first_entry(&pcb, pid) {
+    let prev = PROCESS_TABLE.find_by_pid(prev_pid);
+    if !prepare_resume(&next, next_pid) {
         return;
     }
-    if try_resume(&pcb, pid) {
-        return;
+
+    match prev {
+        Some(p) => unsafe { cpu_switch(p.kernel_rsp.as_ptr(), next_rsp) },
+        None => {
+            let mut discard = 0u64;
+            unsafe { cpu_switch(&mut discard as *mut u64, next_rsp) }
+        }
     }
-    resume_kernel_thread(&pcb, pid);
 }

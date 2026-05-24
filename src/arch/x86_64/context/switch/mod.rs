@@ -18,13 +18,11 @@ mod cpu_switch;
 #[cfg(feature = "nonos-cpuswitch-selftest")]
 mod cpu_switch_selftest;
 mod dispatch;
-mod first_entry;
-mod kernel_thread;
-mod resume;
+mod resume_env;
 mod trampolines;
 
 pub(crate) use cpu_switch::build_initial_switch_frame;
 pub(crate) use dispatch::switch_to_user_pcb_x86_64;
-pub(crate) use trampolines::{first_entry_trampoline, resume_user_trampoline};
+pub(crate) use trampolines::first_entry_trampoline;
 #[cfg(feature = "nonos-cpuswitch-selftest")]
 pub(crate) use cpu_switch_selftest::run as cpu_switch_selftest;

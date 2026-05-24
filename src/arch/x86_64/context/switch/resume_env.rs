@@ -14,47 +14,43 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Per-task resume environment installed on the dispatcher's side just before
+//! `cpu_switch`. Stages TSS.RSP0 + per-cpu mirror, swaps CR3 if owned, marks
+//! the task Running, restores its FPU and per-cpu user rsp. Runs while still
+//! on the outgoing task's (global, CR3-agnostic) kernel stack. Returns false
+//! and marks the task Terminated if its kernel stack or address space is gone.
+
 use alloc::sync::Arc;
 use core::sync::atomic::Ordering;
 
+use crate::arch::x86_64::gdt;
 use crate::memory::paging::manager::api::switch_to_process_address_space;
 use crate::process::core::{ProcessControlBlock, ProcessState, CURRENT_PID};
-use crate::process::nonos_core::{
-    has_saved_fpu_state, init_fpu, restore_fpu_state, INTERRUPT_SAVED_CONTEXTS,
-};
+use crate::process::nonos_core::{has_saved_fpu_state, init_fpu, restore_fpu_state};
 use crate::process::scheduler::preemption::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLICE};
+use crate::smp::percpu;
 
-// CPL=0 resume path. Used when the PCB has no pending user-entry and
-// no saved user context — typically a kernel thread whose CpuContext
-// was parked in INTERRUPT_SAVED_CONTEXTS by the preempt/yield path.
-// Returns control to that context via CpuContext::restore.
-pub(super) fn resume_kernel_thread(pcb: &Arc<ProcessControlBlock>, pid: u32) {
-    let ctx = match INTERRUPT_SAVED_CONTEXTS.write().remove(&pid) {
-        Some(c) => c,
-        None => {
-            *pcb.state.lock() = ProcessState::Ready;
-            return;
-        }
-    };
-
+pub(super) fn prepare_resume(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
     let kstack = pcb.kernel_stack_top.load(Ordering::Acquire);
     if kstack != 0 {
-        let cpu = crate::smp::percpu::current().cpu_id;
-        // SAFETY: cpu bounded by MAX_CPUS; set_kernel_stack validates.
+        let cpu = percpu::current().cpu_id;
         unsafe {
-            let _ = crate::arch::x86_64::gdt::set_kernel_stack(cpu, kstack);
+            if gdt::set_kernel_stack(cpu, kstack).is_err() {
+                *pcb.state.lock() = ProcessState::Terminated(-1);
+                return false;
+            }
         }
-        crate::smp::percpu::set_kernel_stack(kstack);
+        percpu::set_kernel_stack(kstack);
     }
 
-    let has_own_addr_space = pcb.cr3.load(Ordering::Relaxed) != 0;
+    if pcb.cr3.load(Ordering::Relaxed) != 0 && switch_to_process_address_space(pid).is_err() {
+        *pcb.state.lock() = ProcessState::Terminated(-1);
+        return false;
+    }
+
     *pcb.state.lock() = ProcessState::Running;
     CURRENT_PID.store(pid, Ordering::SeqCst);
     CURRENT_TIME_SLICE.store(DEFAULT_TIME_SLICE, Ordering::SeqCst);
-
-    if has_own_addr_space {
-        let _ = switch_to_process_address_space(pid);
-    }
 
     if has_saved_fpu_state(pid) {
         restore_fpu_state(pid);
@@ -62,9 +58,9 @@ pub(super) fn resume_kernel_thread(pcb: &Arc<ProcessControlBlock>, pid: u32) {
         init_fpu();
     }
 
-    let saved_urs = pcb.saved_user_stack.load(Ordering::Acquire);
-    if saved_urs != 0 {
-        crate::smp::percpu::set_user_stack(saved_urs);
+    let urs = pcb.saved_user_stack.load(Ordering::Acquire);
+    if urs != 0 {
+        percpu::set_user_stack(urs);
     }
-    ctx.restore()
+    true
 }

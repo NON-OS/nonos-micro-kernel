@@ -14,36 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `cpu_switch` resume targets for the context-switch rewrite. A parked
-//! `kernel_rsp` carries one of these as its `ret` address: when `cpu_switch`
-//! lands here the running task is identified by `CURRENT_PID` (set by the
-//! dispatcher before the switch), and the trampoline drives the existing
-//! first-entry / preempt-resume tail (TSS/CR3/state/FPU + iretq). Not yet
-//! routed (phase 3): baked into `kernel_rsp` but reached only after the
-//! phase-4 cutover.
+//! `cpu_switch` resume target for a never-run task. Its `kernel_rsp` carries
+//! this as the `ret` address of a fake switch frame (seeded in setup). The
+//! dispatcher (`prepare_resume`) has already installed TSS/CR3/state/FPU for
+//! the task, so the trampoline only consumes `pending_user_entry` and iretqs
+//! to CPL=3. An already-run task needs no trampoline: it resumes inside its
+//! own parked preempt/yield call.
 
 use core::sync::atomic::Ordering;
 
 use crate::process::core::{CURRENT_PID, PROCESS_TABLE};
+use crate::process::userspace::transitions::return_to_usermode;
 
-/// `ret` target for a never-run task: consumes `pending_user_entry` and iretqs
-/// to CPL=3. Only returns here if the task had no pending entry (then parks).
-#[allow(dead_code)]
 pub(crate) extern "C" fn first_entry_trampoline() -> ! {
     let pid = CURRENT_PID.load(Ordering::SeqCst);
-    if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
-        super::first_entry::try_first_entry(&pcb, pid);
+    let frame = PROCESS_TABLE
+        .find_by_pid(pid)
+        .and_then(|pcb| pcb.pending_user_entry.lock().take());
+    match frame {
+        Some(f) => unsafe { return_to_usermode(&f as *const _) },
+        None => crate::arch::halt_loop(),
     }
-    crate::arch::halt_loop()
-}
-
-/// `ret` target for a preempted CPL=3 task: restores the captured
-/// `saved_user_context` and iretqs. Parks only if the snapshot was missing.
-#[allow(dead_code)]
-pub(crate) extern "C" fn resume_user_trampoline() -> ! {
-    let pid = CURRENT_PID.load(Ordering::SeqCst);
-    if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
-        super::resume::try_resume(&pcb, pid);
-    }
-    crate::arch::halt_loop()
 }

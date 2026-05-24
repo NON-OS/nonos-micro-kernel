@@ -21,24 +21,18 @@ use core::sync::atomic::Ordering;
 
 /// Voluntary-yield body. Runs with interrupts already disabled by the
 /// caller. The contract backend dispatches `SwitchIntent::Yield` here.
+/// `switch_to_process` parks this task via `cpu_switch` and returns here
+/// only once it is scheduled again, already marked Running by the resumer.
 pub(crate) fn perform_yield_inline() {
     use crate::process::nonos_core::{current_pid, ProcessState, PROCESS_TABLE};
 
     let Some(pid) = current_pid() else { return };
 
-    let mut ctx: crate::sched::Context = unsafe { core::mem::zeroed() };
-    crate::sched::Context::clear_restored_flag();
-    unsafe { crate::sched::Context::save_to(&mut ctx as *mut crate::sched::Context) };
-    if crate::sched::Context::was_just_restored() {
-        return;
-    }
-
-    crate::process::nonos_core::save_interrupt_context(pid, ctx);
     crate::process::nonos_core::save_fpu_state(pid);
 
     if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
         pcb.saved_user_stack
-            .store(crate::smp::percpu::user_stack(), core::sync::atomic::Ordering::Release);
+            .store(crate::smp::percpu::user_stack(), Ordering::Release);
         let mut state = pcb.state.lock();
         if matches!(*state, ProcessState::Running) {
             *state = ProcessState::Ready;
@@ -51,11 +45,13 @@ pub(crate) fn perform_yield_inline() {
     if let Some(next) = select_next_process() {
         if next != pid {
             switch_to_process(next);
-        } else if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
-            let mut state = pcb.state.lock();
-            if matches!(*state, ProcessState::Ready) {
-                *state = ProcessState::Running;
-            }
+        }
+    }
+
+    if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
+        let mut state = pcb.state.lock();
+        if matches!(*state, ProcessState::Ready) {
+            *state = ProcessState::Running;
         }
     }
 }

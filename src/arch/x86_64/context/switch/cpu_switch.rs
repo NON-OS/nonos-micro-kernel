@@ -24,7 +24,6 @@
 /// `prev_rsp_slot` must be a valid `*mut u64`; `next_rsp` must point at a frame
 /// previously produced by `cpu_switch` or `build_initial_switch_frame` on a live
 /// kernel stack. Must run with interrupts disabled.
-#[allow(dead_code)]
 #[unsafe(naked)]
 pub(crate) unsafe extern "C" fn cpu_switch(prev_rsp_slot: *mut u64, next_rsp: u64) {
     core::arch::naked_asm!(
@@ -47,12 +46,13 @@ pub(crate) unsafe extern "C" fn cpu_switch(prev_rsp_slot: *mut u64, next_rsp: u6
 }
 
 /// Seed a fresh kernel stack with a fake `cpu_switch` frame so the first
-/// `cpu_switch` into the task lands at `entry` with `rsp == stack_top`. Layout
-/// (low→high): r15,r14,r13,r12,rbx,rbp (zeroed), then `entry` as the ret target.
-/// Returns the value to store in `pcb.kernel_rsp`.
-#[allow(dead_code)]
+/// `cpu_switch` into the task `ret`s into `entry`. Layout (low→high):
+/// r15,r14,r13,r12,rbx,rbp (zeroed), then `entry` as the ret target. The
+/// target lands with `rsp` ≡ 8 (mod 16) — the SysV state right after a `call`
+/// — so its SSE spills stay 16-aligned. Returns the value for `pcb.kernel_rsp`.
 pub(crate) fn build_initial_switch_frame(stack_top: u64, entry: u64) -> u64 {
-    let rsp = stack_top - 7 * 8;
+    let entry_rsp = (stack_top & !0xF) - 8;
+    let rsp = entry_rsp - 7 * 8;
     unsafe {
         let p = rsp as *mut u64;
         for i in 0..6 {
