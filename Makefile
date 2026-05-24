@@ -388,6 +388,25 @@ include userland/capsule_power/Capsule.mk
 # capsule depend on `$(proof-io_ARTIFACTS)` directly.
 NONOS_VERIFIED_ARTIFACTS = $(foreach slug,$(NONOS_VERIFIED_CAPSULES),$($(slug)_ARTIFACTS))
 
+NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
+	$(proof-io_VERIFY) $(ramfs_VERIFY) $(keyring_VERIFY) \
+	$(entropy_VERIFY) $(crypto_VERIFY) $(vfs_VERIFY) \
+	$(driver-virtio-rng_VERIFY) $(driver-virtio-blk_VERIFY) \
+	$(driver-virtio-gpu_VERIFY) $(driver-virtio-net_VERIFY) \
+	$(driver-ps2-input_VERIFY) $(driver-xhci_VERIFY) \
+	$(net-l2_VERIFY) $(net-ip_VERIFY) $(net-udp_VERIFY) \
+	$(net-dhcp_VERIFY) $(net-tcp_VERIFY) $(net-dns_VERIFY) \
+	$(net-sockets_VERIFY) $(net-nym_VERIFY) \
+	$(input-router_VERIFY) $(compositor_VERIFY) $(wm_VERIFY) \
+	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
+	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
+	$(about_VERIFY) $(calculator_VERIFY) $(terminal_VERIFY) \
+	$(file-manager_VERIFY) $(text-editor_VERIFY) $(settings_VERIFY) \
+	$(process-manager_VERIFY) $(attest_VERIFY) $(power_VERIFY)
+
+.PHONY: nonos-mk-verify-desktop-gui-capsules
+nonos-mk-verify-desktop-gui-capsules: $(NONOS_DESKTOP_GUI_CAPSULE_CHECKS)
+
 WALLPAPER_BIN := $(wallpaper_BIN)
 
 MARKETPLACE_ABI_LIB := $(USERLAND_DIR)/marketplace_abi/target/x86_64-nonos-user/release/libnonos_marketplace_abi.rlib
@@ -920,6 +939,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
 		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
+		nonos-mk-verify-desktop-gui-capsules \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-desktop-gui)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \

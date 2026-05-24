@@ -25,7 +25,7 @@ const DEFAULT_ARGB: u32 = 0xFF0A_0F0A;
 pub fn run() -> Result<Context, &'static str> {
     let compositor_port = discover::lookup_compositor_port()?;
     healthcheck(compositor_port, 1)?;
-    let backing = backing::allocate()?;
+    let backing = backing::allocate(compositor_port, 2)?;
     fill_argb(backing.backing_va, backing.stride, backing.width, backing.height, DEFAULT_ARGB);
     let mut ctx = Context {
         compositor_port,
@@ -37,7 +37,7 @@ pub fn run() -> Result<Context, &'static str> {
         alpha: 0xFF,
         policy: Policy::Fill,
         fade: FadeTimeline::new(),
-        next_request_id: 1,
+        next_request_id: 3,
     };
     ctx.set_argb(DEFAULT_ARGB);
     let rid = ctx.issue_request_id();

@@ -17,5 +17,5 @@
 pub mod hit_test;
 pub mod model;
 
-pub use hit_test::topmost_at;
+pub use hit_test::topmost_hit_at;
 pub use model::FocusModel;

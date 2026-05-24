@@ -15,10 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use nonos_libc::{mk_surface_register, mk_surface_share};
 use super::state::Primary;
-use super::{descriptor, dma, geometry, resource};
+use super::{descriptor, dma, geometry, prime, resource};
 use crate::constants::VG_FORMAT_B8G8R8A8_UNORM;
 use crate::device::cmd;
-use crate::device::cmd::transfer_to_host_2d::Rect;
 use crate::device::virtqueue::ControlQueue;
 use crate::state::{FenceCounter, ResourceTable, Scanout};
 pub fn create(
@@ -37,7 +36,7 @@ pub fn create(
     let resource_id = resources.alloc_id();
     cmd::create_resource_2d(q, fences.issue(), resource_id, VG_FORMAT_B8G8R8A8_UNORM, scanout.width, scanout.height)?;
     cmd::attach_backing(q, fences.issue(), resource_id, dma.device_addr, geom.byte_len as u32)?;
-    cmd::set_scanout(q, fences.issue(), 0, resource_id, Rect { x: 0, y: 0, width: scanout.width, height: scanout.height })?;
+    prime::display(q, fences, resource_id, scanout)?;
     let desc = descriptor::build(scanout, geom, dma.user_va);
     let sid = mk_surface_register(&desc);
     if sid < 0 {

@@ -66,4 +66,9 @@ impl SubscriptionTable {
             .filter(move |e| e.in_use && (e.kind_mask & bit) != 0)
             .map(|e| e.pid)
     }
+
+    pub fn allows(&self, pid: u32, kind: u16) -> bool {
+        let bit = 1u32.checked_shl(kind as u32).unwrap_or(0);
+        self.entries.iter().any(|e| e.in_use && e.pid == pid && (e.kind_mask & bit) != 0)
+    }
 }

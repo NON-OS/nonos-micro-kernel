@@ -42,7 +42,7 @@ pub fn run() -> ! {
             route_event(&mut ctx, ev);
         }
         if n == 0 {
-            let _ = mk_yield();
+            mk_yield();
         }
     }
 }

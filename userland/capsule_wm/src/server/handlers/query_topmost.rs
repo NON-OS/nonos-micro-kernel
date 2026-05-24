@@ -16,7 +16,7 @@
 
 use nonos_libc::mk_ipc_send_to_pid;
 
-use crate::focus::topmost_at;
+use crate::focus::topmost_hit_at;
 use crate::protocol::{
     response_header, write_status, Request, E_INVAL, HDR_LEN, QUERY_TOPMOST_REQ_LEN,
     QUERY_TOPMOST_RESP_LEN, STATUS_LEN,
@@ -24,10 +24,6 @@ use crate::protocol::{
 use crate::server::respond;
 use crate::state::Context;
 
-// input_router calls this on pointer events to resolve hit-test
-// against the live wm window table. Returns (owner_pid, window_id)
-// of the topmost visible focusable window at (x, y), or (0, 0)
-// when nothing is hit (status still 0).
 pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != QUERY_TOPMOST_REQ_LEN {
         let _ = respond::status(sender_pid, req, E_INVAL, tx);
@@ -41,10 +37,15 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
         let _ = respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
-    let (owner, wid) = topmost_at(&ctx.windows, x, y).unwrap_or((0, 0));
+    let hit = topmost_hit_at(&ctx.windows, x, y);
     let off = HDR_LEN + STATUS_LEN;
-    tx[off..off + 4].copy_from_slice(&owner.to_le_bytes());
-    tx[off + 4..off + 8].copy_from_slice(&wid.to_le_bytes());
+    let values = hit
+        .map(|h| [h.owner_pid, h.window_id, h.local_x, h.local_y])
+        .unwrap_or([0, 0, 0, 0]);
+    for (idx, value) in values.iter().enumerate() {
+        let start = off + idx * 4;
+        tx[start..start + 4].copy_from_slice(&value.to_le_bytes());
+    }
     response_header(tx, req, (STATUS_LEN + QUERY_TOPMOST_RESP_LEN) as u32);
     write_status(tx, 0);
     let _ =

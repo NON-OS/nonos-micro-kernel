@@ -17,6 +17,7 @@ mod create;
 mod descriptor;
 mod dma;
 mod geometry;
+mod prime;
 mod resource;
 mod state;
 pub use self::create::create;

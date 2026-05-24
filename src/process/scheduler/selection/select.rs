@@ -25,7 +25,19 @@ pub fn select_next_process() -> Option<u32> {
     let current = CURRENT_PID.load(Ordering::Relaxed);
     let runnable = get_runnable_pids();
     if runnable.is_empty() {
+        static EMPTY_SHOWN: AtomicU32 = AtomicU32::new(0);
+        if EMPTY_SHOWN.fetch_add(1, Ordering::Relaxed) < 2 {
+            crate::sys::serial::println(b"[SCHED] runnable empty");
+        }
         return None;
+    }
+    {
+        static RUNNABLE_SHOWN: AtomicU32 = AtomicU32::new(0);
+        if RUNNABLE_SHOWN.fetch_add(1, Ordering::Relaxed) < 2 {
+            crate::sys::serial::print(b"[SCHED] runnable count=");
+            crate::sys::serial::print_hex(runnable.len() as u64);
+            crate::sys::serial::println(b"");
+        }
     }
     let last = LAST_SCHEDULED_PID.load(Ordering::Relaxed);
     for prio in
@@ -33,6 +45,14 @@ pub fn select_next_process() -> Option<u32> {
     {
         if let Some(pid) = select_by_priority(&runnable, last, current, prio) {
             LAST_SCHEDULED_PID.store(pid, Ordering::Relaxed);
+            {
+                static PICKED_SHOWN: AtomicU32 = AtomicU32::new(0);
+                if PICKED_SHOWN.fetch_add(1, Ordering::Relaxed) < 64 {
+                    crate::sys::serial::print(b"[SCHED] picked pid=");
+                    crate::sys::serial::print_hex(pid as u64);
+                    crate::sys::serial::println(b"");
+                }
+            }
             return Some(pid);
         }
     }

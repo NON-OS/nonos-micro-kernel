@@ -16,6 +16,7 @@
 
 pub mod cursor_update;
 pub mod damage_commit;
+pub mod display_info;
 pub mod focus_set;
 pub mod health;
 pub mod input_subscribe;

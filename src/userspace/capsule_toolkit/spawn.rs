@@ -43,12 +43,7 @@ pub fn spawn_toolkit_capsule() -> Result<(), SpawnError> {
         nonos_id_cert_bytes: TOOLKIT_NONOS_ID_CERT_BYTES,
         manifest_bytes: TOOLKIT_MANIFEST_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::CoreExec.bit()
-            | Capability::IPC.bit()
-            | Capability::Memory.bit()
-            | Capability::GraphicsDisplayQuery.bit()
-            | Capability::GraphicsSurfaceCreate.bit()
-            | Capability::GraphicsSurfaceMap.bit(),
+        requested_caps: Capability::CoreExec.bit() | Capability::IPC.bit() | Capability::Memory.bit(),
         debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

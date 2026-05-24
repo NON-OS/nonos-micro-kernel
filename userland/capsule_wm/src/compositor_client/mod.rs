@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod display_info;
 pub mod focus_set;
 pub mod health;
 pub mod wire;
 
+pub use display_info::query as query_display_info;
 pub use focus_set::push_focus_set;
 pub use health::probe as probe_compositor;

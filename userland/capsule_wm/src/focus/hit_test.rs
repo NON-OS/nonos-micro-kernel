@@ -16,10 +16,14 @@
 
 use crate::window::{Visibility, Window, WindowTable};
 
-// Returns the (owner_pid, window_id) of the topmost visible window
-// whose rect contains (px, py). Used by the input_router via a
-// FOCUS_QUERY call to resolve pointer routing on each event.
-pub fn topmost_at(table: &WindowTable, px: u32, py: u32) -> Option<(u32, u32)> {
+pub struct HitTarget {
+    pub owner_pid: u32,
+    pub window_id: u32,
+    pub local_x: u32,
+    pub local_y: u32,
+}
+
+pub fn topmost_hit_at(table: &WindowTable, px: u32, py: u32) -> Option<HitTarget> {
     let mut best: Option<&Window> = None;
     for w in table.windows() {
         if w.visibility != Visibility::Visible {
@@ -37,5 +41,10 @@ pub fn topmost_at(table: &WindowTable, px: u32, py: u32) -> Option<(u32, u32)> {
             Some(cur) => cur,
         });
     }
-    best.map(|w| (w.owner_pid, w.window_id))
+    best.map(|w| HitTarget {
+        owner_pid: w.owner_pid,
+        window_id: w.window_id,
+        local_x: px.saturating_sub(w.rect.x),
+        local_y: py.saturating_sub(w.rect.y),
+    })
 }

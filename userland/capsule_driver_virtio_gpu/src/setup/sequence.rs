@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use nonos_libc::mk_irq_ack;
-use super::{claim, dma, irq, mmio, primary_surface, scanouts};
+use super::{claim, dma, irq, mmio, pci, primary_surface, scanouts};
 use crate::device::virtqueue::QueueLayout;
 use crate::device::ControlQueue;
 use crate::discover::find_virtio_gpu;
@@ -24,6 +24,7 @@ use crate::state::{FenceCounter, ResourceTable, ScanoutTable};
 pub fn run() -> Result<Driver, &'static str> {
     let dev = find_virtio_gpu().ok_or("virtio-gpu: device not found")?;
     let claim_epoch = claim::claim(dev.device_id)?;
+    pci::enable_bus_master(dev.device_id, claim_epoch)?;
     let registers = mmio::grant(dev, claim_epoch)?;
     let irq = irq::bind(dev, claim_epoch, registers)?;
     let queue = dma::map_queue(dev.device_id, claim_epoch, registers, &irq)?;
@@ -43,16 +44,7 @@ pub fn run() -> Result<Driver, &'static str> {
     let primary = scanouts
         .get(0)
         .and_then(|s| s.enabled.then_some(s))
-        .map(|s| {
-            primary_surface::create(
-                dev.device_id,
-                claim_epoch,
-                &control_queue,
-                &fences,
-                &resources,
-                s,
-            )
-        })
+        .map(|s| primary_surface::create(dev.device_id, claim_epoch, &control_queue, &fences, &resources, s))
         .transpose()?
         .flatten();
     Ok(Driver {

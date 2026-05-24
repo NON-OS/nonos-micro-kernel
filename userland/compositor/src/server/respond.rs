@@ -23,3 +23,11 @@ pub fn status(sender_pid: u32, req: &Request, errno: i32, tx: &mut [u8]) -> i64 
     write_status(tx, errno);
     mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + STATUS_LEN)
 }
+
+pub fn status_payload(sender_pid: u32, req: &Request, errno: i32, payload: &[u8], tx: &mut [u8]) -> i64 {
+    let body_len = STATUS_LEN + payload.len();
+    response_header(tx, req, body_len as u32);
+    write_status(tx, errno);
+    tx[HDR_LEN + STATUS_LEN..HDR_LEN + body_len].copy_from_slice(payload);
+    mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + body_len)
+}

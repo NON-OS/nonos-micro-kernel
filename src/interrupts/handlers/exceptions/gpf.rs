@@ -61,7 +61,7 @@ pub fn handle(frame: InterruptStackFrame, error_code: u64) {
     analyze_gpf(&ctx, &gpf_error);
 
     if ctx.is_user_mode() {
-        terminate_user_process(&ctx);
+        terminate_user_process();
     } else {
         kernel_panic(&ctx);
     }
@@ -106,9 +106,14 @@ fn log_instruction_context(ctx: &ExceptionContext) {
     );
 }
 
-fn terminate_user_process(_ctx: &ExceptionContext) {
+// Tear the faulting capsule down through the canonical exit path and
+// transfer control to the next runnable process via the scheduler's
+// first-entry / resume helpers. Never returns; the dying capsule's
+// kernel stack is queued for deferred release on the next live
+// capsule's timer tick.
+fn terminate_user_process() -> ! {
     crate::log::logger::log_error!("Terminating user process: general protection fault");
-    halt_loop();
+    crate::process::exit::exit_and_yield(0x8000_0000u32 as i32, true)
 }
 
 fn kernel_panic(_ctx: &ExceptionContext) {

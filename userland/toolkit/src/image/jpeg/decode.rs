@@ -126,7 +126,7 @@ pub fn decode_jpeg_argb8888(input: &[u8], out: &mut [u32]) -> Result<ImageSize, 
                     qt: &dqt,
                     restart_interval,
                 };
-                let _ = walk_scan(&ctx, input, pos, out)?;
+                walk_scan(&ctx, input, pos, out)?;
                 let size = ImageSize::new(frame.width as u32, frame.height as u32)?;
                 return Ok(size);
             }

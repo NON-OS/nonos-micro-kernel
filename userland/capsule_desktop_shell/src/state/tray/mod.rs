@@ -17,5 +17,5 @@
 mod entry;
 mod table;
 
-pub use entry::{TrayEntry, MAX_TRAY_ITEMS};
+pub use entry::TrayEntry;
 pub use table::TrayTable;

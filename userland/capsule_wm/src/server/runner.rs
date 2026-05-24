@@ -20,8 +20,8 @@ use nonos_libc::mk_ipc_recv_from;
 
 use crate::protocol::{
     parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_HEALTHCHECK, OP_LIFECYCLE_SUBSCRIBE,
-    OP_QUERY_TOPMOST, OP_WINDOW_CLOSE, OP_WINDOW_FOCUS, OP_WINDOW_MINIMIZE, OP_WINDOW_MOVE,
-    OP_WINDOW_OPEN, OP_WINDOW_RAISE, OP_WINDOW_RESIZE, OP_WINDOW_RESTORE,
+    OP_QUERY_TOPMOST, OP_ROUTE_FOCUS, OP_WINDOW_CLOSE, OP_WINDOW_FOCUS, OP_WINDOW_MINIMIZE,
+    OP_WINDOW_MOVE, OP_WINDOW_OPEN, OP_WINDOW_RAISE, OP_WINDOW_RESIZE, OP_WINDOW_RESTORE,
 };
 use crate::server::{handlers, respond};
 use crate::state::Context;
@@ -60,6 +60,7 @@ fn dispatch(
         OP_WINDOW_MINIMIZE => handlers::window_minimize::handle(ctx, sender_pid, &req, body, tx),
         OP_WINDOW_RESTORE => handlers::window_restore::handle(ctx, sender_pid, &req, body, tx),
         OP_QUERY_TOPMOST => handlers::query_topmost::handle(ctx, sender_pid, &req, body, tx),
+        OP_ROUTE_FOCUS => handlers::route_focus::handle(ctx, sender_pid, &req, body, tx),
         OP_LIFECYCLE_SUBSCRIBE if body.is_empty() => {
             handlers::lifecycle_subscribe::handle(ctx, sender_pid, &req, tx)
         }

@@ -23,7 +23,7 @@ use crate::wm_client;
 
 pub fn run() -> Result<Context, &'static str> {
     let peers = peers::resolve()?;
-    let overlay = overlay::allocate()?;
+    let overlay = overlay::allocate(peers.compositor_port, 1)?;
     let mut ctx = Context {
         compositor_port: peers.compositor_port,
         wm_port: peers.wm_port,
@@ -36,7 +36,7 @@ pub fn run() -> Result<Context, &'static str> {
         tray: TrayTable::new(),
         spotlight: SpotlightState::new(),
         last_notify_level: None,
-        next_request_id: 1,
+        next_request_id: 2,
     };
     paint_chrome(&ctx);
     let rid = ctx.issue_request_id();
