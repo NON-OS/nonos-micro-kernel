@@ -31,7 +31,7 @@ const SERVICE_PORT: u32 = 4412;
 const REPLY_INBOX: &str = "endpoint.image_codec.reply";
 const REPLY_PORT: u32 = 4413;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
-const REQUIRED_CAPS: u64 = 0x1919;
+const REQUIRED_CAPS: u64 = 0x19;
 
 pub fn spawn_image_codec_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
@@ -46,7 +46,7 @@ pub fn spawn_image_codec_capsule() -> Result<(), SpawnError> {
         manifest_bytes: IMAGE_CODEC_MANIFEST_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: REQUIRED_CAPS,
-        debug_tag: b"[IMAGE-CODEC-DEBUG] load_elf_executable error:",
+        debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
     state::set_alive(pid);

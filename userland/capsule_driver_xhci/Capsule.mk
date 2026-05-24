@@ -12,8 +12,8 @@ CAPSULE_FEATURE          := nonos-capsule-driver-xhci
 CAPSULE_NAMESPACE        := systems.nonos.driver.xhci0
 CAPSULE_SERVICE_ENDPOINT := service:4206:driver.xhci0
 CAPSULE_REPLY_ENDPOINT   := reply:4207:endpoint.4294967307
-# IPC|Memory|Driver|DeviceEnum|Mmio|Irq|Dma = 0xF8018
-CAPSULE_REQUIRED_CAPS    := 0xF8018
+# IPC|Memory|Driver|DeviceEnum|Mmio|Irq|Dma = 0xF8019
+CAPSULE_REQUIRED_CAPS    := 0xF8019
 CAPSULE_KERNEL_MIRROR    := src/hardware/xhci_capsule
 
 include nonos-mk/capsule.mk

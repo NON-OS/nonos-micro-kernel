@@ -1,0 +1,36 @@
+# NONOS userland: capsule_power
+# eK@nonos.systems
+#
+# Power management capsule. Exposes reboot and shutdown to other
+# capsules via IPC. Reboot lands real on every x86 (ACPI reset reg,
+# 8042 fallback, triple-fault last resort). Shutdown is honest about
+# the AML evaluator gap: returns ENOTSUP until a real AML interpreter
+# can evaluate the DSDT _S5 method.
+
+[package]
+name = "nonos_power"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS power-management capsule"
+
+[[bin]]
+name = "power"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
+
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true

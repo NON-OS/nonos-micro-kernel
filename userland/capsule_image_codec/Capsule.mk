@@ -8,7 +8,7 @@ CAPSULE_NAMESPACE        := systems.nonos.image_codec
 CAPSULE_SERVICE_ENDPOINT := service:4412:image_codec
 CAPSULE_REPLY_ENDPOINT   := reply:4413:endpoint.image_codec.reply
 # CoreExec|IPC|Memory|Debug|GraphicsDisplayQuery|GraphicsSurfaceCreate
-CAPSULE_REQUIRED_CAPS    := 0x1919
+CAPSULE_REQUIRED_CAPS    := 0x1819
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_image_codec
 
 include nonos-mk/capsule.mk

@@ -12,8 +12,8 @@ CAPSULE_FEATURE          := nonos-capsule-driver-i2c-pci
 CAPSULE_NAMESPACE        := systems.nonos.driver.i2c_pci0
 CAPSULE_SERVICE_ENDPOINT := service:4230:driver.i2c_pci0
 CAPSULE_REPLY_ENDPOINT   := reply:4231:endpoint.4294967318
-# IPC|Memory|Driver|DeviceEnum|Mmio|Irq = 0x78018
-CAPSULE_REQUIRED_CAPS    := 0x78018
+# IPC|Memory|Driver|DeviceEnum|Mmio|Irq = 0x78019
+CAPSULE_REQUIRED_CAPS    := 0x78019
 CAPSULE_KERNEL_MIRROR    := src/hardware/i2c_pci_capsule
 
 include nonos-mk/capsule.mk

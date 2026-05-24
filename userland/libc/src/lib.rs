@@ -16,6 +16,7 @@
 
 #![no_std]
 
+pub mod admin;
 pub mod broker;
 pub mod crypto;
 pub mod debug;
@@ -38,6 +39,7 @@ pub use broker::{
     MK_IRQ_BIND_MSIX, MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER, MK_PCI_MSIX_CTRL_ENABLE,
     MK_PCI_MSIX_CTRL_FUNCTION_MASK,
 };
+pub use admin::{mk_admin_reboot, mk_admin_shutdown};
 pub use crypto::{
     crypto_decrypt, crypto_ed25519_verify, crypto_encrypt, crypto_hash, crypto_hkdf_sha256,
     crypto_hmac_sha256, crypto_random, crypto_x25519_public, crypto_x25519_shared,

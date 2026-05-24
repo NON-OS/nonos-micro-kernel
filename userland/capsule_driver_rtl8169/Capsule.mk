@@ -12,7 +12,7 @@ CAPSULE_FEATURE          := nonos-capsule-driver-rtl8169
 CAPSULE_NAMESPACE        := systems.nonos.driver.rtl8169_0
 CAPSULE_SERVICE_ENDPOINT := service:4214:driver.rtl8169_0
 CAPSULE_REPLY_ENDPOINT   := reply:4215:endpoint.4294967310
-# IPC|Memory|Driver|DeviceEnum|Mmio|Irq|Dma = 0xF8018
-CAPSULE_REQUIRED_CAPS    := 0xF8018
+# IPC|Memory|Driver|DeviceEnum|Mmio|Irq|Dma = 0xF8019
+CAPSULE_REQUIRED_CAPS    := 0xF8019
 
 include nonos-mk/capsule.mk

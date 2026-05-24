@@ -16,6 +16,10 @@
 
 extern crate alloc;
 
+mod theme;
+
+pub use theme::{theme_get, Theme};
+
 use alloc::vec::Vec;
 
 use nonos_libc::{mk_debug, mk_ipc_call};

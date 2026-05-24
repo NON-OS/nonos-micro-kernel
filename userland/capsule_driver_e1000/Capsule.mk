@@ -15,8 +15,8 @@ CAPSULE_FEATURE          := nonos-capsule-driver-e1000
 CAPSULE_NAMESPACE        := systems.nonos.driver.e1000_0
 CAPSULE_SERVICE_ENDPOINT := service:4210:driver.e1000_0
 CAPSULE_REPLY_ENDPOINT   := reply:4211:endpoint.4294967308
-# IPC|Memory|Driver|DeviceEnum|Mmio|Irq|Dma = 0xF8018
-CAPSULE_REQUIRED_CAPS    := 0xF8018
+# IPC|Memory|Driver|DeviceEnum|Mmio|Irq|Dma = 0xF8019
+CAPSULE_REQUIRED_CAPS    := 0xF8019
 CAPSULE_KERNEL_MIRROR    := src/hardware/e1000_capsule
 
 include nonos-mk/capsule.mk

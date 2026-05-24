@@ -46,8 +46,10 @@ pub fn spawn_driver_usb_hid_capsule() -> Result<(), SpawnError> {
         nonos_id_cert_bytes: DRIVER_USB_HID_NONOS_ID_CERT_BYTES,
         manifest_bytes: DRIVER_USB_HID_MANIFEST_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit() | Capability::Memory.bit(),
-        debug_tag: b"[DRIVER-USB-HID] load_elf_executable error:",
+        requested_caps: Capability::CoreExec.bit()
+            | Capability::IPC.bit()
+            | Capability::Memory.bit(),
+        debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
     state::set_alive(pid);

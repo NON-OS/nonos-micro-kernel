@@ -13,8 +13,8 @@ CAPSULE_FEATURE          := nonos-capsule-keyring
 CAPSULE_NAMESPACE        := systems.nonos.keyring
 CAPSULE_SERVICE_ENDPOINT := service:4098:keyring
 CAPSULE_REPLY_ENDPOINT   := reply:4099:endpoint.4294967298
-# IPC | Memory | Crypto = 0x08 | 0x10 | 0x20 = 0x38
-CAPSULE_REQUIRED_CAPS    := 0x38
+# IPC | Memory | Crypto = 0x08 | 0x10 | 0x20 = 0x39
+CAPSULE_REQUIRED_CAPS    := 0x39
 CAPSULE_KERNEL_MIRROR    := src/security/keyring_capsule
 
 include nonos-mk/capsule.mk

@@ -13,8 +13,8 @@ CAPSULE_FEATURE            := nonos-capsule-proof-io
 CAPSULE_NAMESPACE          := systems.nonos.proof_io
 CAPSULE_SERVICE_ENDPOINT   := service:4500:proof_io
 CAPSULE_REPLY_ENDPOINT     := reply:4501:endpoint.proof_io.reply
-# IPC | Memory = 0x08 | 0x10 = 0x18
-CAPSULE_REQUIRED_CAPS      := 0x18
+# IPC | Memory = 0x08 | 0x10 = 0x19
+CAPSULE_REQUIRED_CAPS      := 0x19
 CAPSULE_KERNEL_MIRROR      := src/userspace/capsule_proof_io
 # proof_io's `_start` predates the global allocator and never calls
 # alloc; build it without alloc to keep the ELF minimal.

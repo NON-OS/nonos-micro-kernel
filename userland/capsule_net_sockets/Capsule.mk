@@ -11,7 +11,7 @@ CAPSULE_FEATURE          := nonos-capsule-net-sockets
 CAPSULE_NAMESPACE        := systems.nonos.net.sockets
 CAPSULE_SERVICE_ENDPOINT := service:4460:net.sockets
 CAPSULE_REPLY_ENDPOINT   := reply:4461:endpoint.net.sockets.reply
-CAPSULE_REQUIRED_CAPS    := 0x00018
+CAPSULE_REQUIRED_CAPS    := 0x00019
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_net_sockets
 
 include nonos-mk/capsule.mk

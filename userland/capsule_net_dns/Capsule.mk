@@ -10,7 +10,7 @@ CAPSULE_FEATURE          := nonos-capsule-net-dns
 CAPSULE_NAMESPACE        := systems.nonos.net.dns
 CAPSULE_SERVICE_ENDPOINT := service:4450:net.dns
 CAPSULE_REPLY_ENDPOINT   := reply:4451:endpoint.net.dns.reply
-CAPSULE_REQUIRED_CAPS    := 0x00018
+CAPSULE_REQUIRED_CAPS    := 0x00019
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_net_dns
 
 include nonos-mk/capsule.mk

@@ -24,8 +24,8 @@ use crate::animation;
 use crate::component_dispatch;
 use crate::protocol::{
     decode, encode, Header, E_BAD_OP, E_SHORT, HDR_LEN, IPC_PAYLOAD_MAX, STATUS_OK,
-    TOOLKIT_ENDPOINT, TOOLKIT_OP_ANIMATION_TICK, TOOLKIT_OP_COMPONENT_RENDER,
-    TOOLKIT_OP_HEALTHCHECK, TOOLKIT_OP_THEME_APPLY,
+    THEME_PAYLOAD_LEN, TOOLKIT_ENDPOINT, TOOLKIT_OP_ANIMATION_TICK, TOOLKIT_OP_COMPONENT_RENDER,
+    TOOLKIT_OP_HEALTHCHECK, TOOLKIT_OP_THEME_APPLY, TOOLKIT_OP_THEME_GET,
 };
 use crate::theme;
 
@@ -60,6 +60,7 @@ fn dispatch(op: u16, payload: &[u8], reply: &mut [u8]) -> (u16, usize) {
     match op {
         TOOLKIT_OP_HEALTHCHECK => (STATUS_OK, 0),
         TOOLKIT_OP_THEME_APPLY => (theme::apply(payload), 0),
+        TOOLKIT_OP_THEME_GET => theme_get(reply),
         TOOLKIT_OP_ANIMATION_TICK => animation::tick(payload, reply),
         TOOLKIT_OP_COMPONENT_RENDER => (component_dispatch::render(payload), 0),
         _ => {
@@ -67,4 +68,18 @@ fn dispatch(op: u16, payload: &[u8], reply: &mut [u8]) -> (u16, usize) {
             (E_BAD_OP, 0)
         }
     }
+}
+
+fn theme_get(reply: &mut [u8]) -> (u16, usize) {
+    if reply.len() < THEME_PAYLOAD_LEN {
+        return (E_BAD_OP, 0);
+    }
+    let snap = theme::snapshot();
+    reply[0..4].copy_from_slice(&snap.background_argb.to_le_bytes());
+    reply[4..8].copy_from_slice(&snap.surface_argb.to_le_bytes());
+    reply[8..12].copy_from_slice(&snap.accent_argb.to_le_bytes());
+    reply[12..16].copy_from_slice(&snap.text_argb.to_le_bytes());
+    reply[16..20].copy_from_slice(&snap.border_argb.to_le_bytes());
+    reply[20..24].copy_from_slice(&snap.revision.to_le_bytes());
+    (STATUS_OK, THEME_PAYLOAD_LEN)
 }

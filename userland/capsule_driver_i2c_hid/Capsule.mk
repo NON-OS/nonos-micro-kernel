@@ -12,7 +12,7 @@ CAPSULE_NAMESPACE        := systems.nonos.driver.i2c_hid0
 CAPSULE_SERVICE_ENDPOINT := service:4232:driver.i2c_hid0
 CAPSULE_REPLY_ENDPOINT   := reply:4233:endpoint.4294967319
 # IPC|Memory = 0x18. No Driver/DeviceEnum/Mmio/Irq/Dma/Pio.
-CAPSULE_REQUIRED_CAPS    := 0x18
+CAPSULE_REQUIRED_CAPS    := 0x19
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_driver_i2c_hid
 
 include nonos-mk/capsule.mk

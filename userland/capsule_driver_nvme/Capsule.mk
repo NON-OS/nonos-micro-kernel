@@ -13,7 +13,7 @@ CAPSULE_FEATURE          := nonos-capsule-driver-nvme
 CAPSULE_NAMESPACE        := systems.nonos.driver.nvme0
 CAPSULE_SERVICE_ENDPOINT := service:4220:driver.nvme0
 CAPSULE_REPLY_ENDPOINT   := reply:4221:endpoint.4294967313
-# IPC|Memory|Driver|DeviceEnum|Mmio|Irq|Dma = 0xF8018
-CAPSULE_REQUIRED_CAPS    := 0xF8018
+# IPC|Memory|Driver|DeviceEnum|Mmio|Irq|Dma = 0xF8019
+CAPSULE_REQUIRED_CAPS    := 0xF8019
 
 include nonos-mk/capsule.mk

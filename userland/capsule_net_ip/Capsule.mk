@@ -14,7 +14,7 @@ CAPSULE_NAMESPACE        := systems.nonos.net.ip
 CAPSULE_SERVICE_ENDPOINT := service:4402:net.ip
 CAPSULE_REPLY_ENDPOINT   := reply:4403:endpoint.net.ip.reply
 # IPC|Memory
-CAPSULE_REQUIRED_CAPS    := 0x00018
+CAPSULE_REQUIRED_CAPS    := 0x00019
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_net_ip
 
 include nonos-mk/capsule.mk

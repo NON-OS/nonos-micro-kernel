@@ -10,7 +10,7 @@ CAPSULE_FEATURE          := nonos-capsule-net-nym
 CAPSULE_NAMESPACE        := systems.nonos.net.nym
 CAPSULE_SERVICE_ENDPOINT := service:4470:net.nym
 CAPSULE_REPLY_ENDPOINT   := reply:4471:endpoint.net.nym.reply
-CAPSULE_REQUIRED_CAPS    := 0x00038
+CAPSULE_REQUIRED_CAPS    := 0x00039
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_net_nym
 
 include nonos-mk/capsule.mk

@@ -13,8 +13,8 @@ CAPSULE_FEATURE          := nonos-capsule-market
 CAPSULE_NAMESPACE        := systems.nonos.market
 CAPSULE_SERVICE_ENDPOINT := service:4106:market.index
 CAPSULE_REPLY_ENDPOINT   := reply:4107:endpoint.4294967303
-# IPC | Memory = 0x08 | 0x10 = 0x18
-CAPSULE_REQUIRED_CAPS    := 0x18
+# IPC | Memory = 0x08 | 0x10 = 0x19
+CAPSULE_REQUIRED_CAPS    := 0x19
 CAPSULE_KERNEL_MIRROR    := src/security/market_capsule
 
 include nonos-mk/capsule.mk

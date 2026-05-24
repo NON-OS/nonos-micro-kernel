@@ -29,7 +29,7 @@ const SERVICE_PORT: u32 = 4416;
 const REPLY_INBOX: &str = "endpoint.login.reply";
 const REPLY_PORT: u32 = 4417;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
-const REQUIRED_CAPS: u64 = 0x18;
+const REQUIRED_CAPS: u64 = 0x19;
 
 pub fn spawn_login_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
@@ -44,7 +44,7 @@ pub fn spawn_login_capsule() -> Result<(), SpawnError> {
         manifest_bytes: LOGIN_MANIFEST_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: REQUIRED_CAPS,
-        debug_tag: b"[LOGIN-DEBUG] load_elf_executable error:",
+        debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
     state::set_alive(pid);

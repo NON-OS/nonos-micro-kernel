@@ -43,8 +43,10 @@ pub fn spawn_proof_io_capsule() -> Result<(), SpawnError> {
         nonos_id_cert_bytes: PROOF_IO_NONOS_ID_CERT_BYTES,
         manifest_bytes: PROOF_IO_MANIFEST_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit() | Capability::Memory.bit(),
-        debug_tag: b"[PROOF-IO-DEBUG] load_elf_executable error:",
+        requested_caps: Capability::CoreExec.bit()
+            | Capability::IPC.bit()
+            | Capability::Memory.bit(),
+        debug_tag: b"",
     };
     capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
     Ok(())
