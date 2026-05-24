@@ -25,6 +25,7 @@ pub mod idt;
 pub mod io;
 pub mod serial;
 pub mod settings;
+pub mod sync;
 pub mod timer;
 
 #[cfg(test)]
