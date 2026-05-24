@@ -126,7 +126,9 @@ pub fn write8(bus: u8, device: u8, function: u8, offset: u16, value: u8) -> Resu
     let byte_offset = (offset & 3) as u32;
     let mask = 0xFFu32 << (byte_offset * 8);
 
-    // SAFETY: PCI config space ports are valid for kernel access
+    let _g = CONFIG_PORT_LOCK.lock();
+    // SAFETY: PCI config space ports are valid for kernel access; the
+    // lock guarantees the read-modify-write is atomic.
     unsafe {
         outl(PCI_CONFIG_ADDRESS, addr);
         let current = inl(PCI_CONFIG_DATA);
@@ -146,7 +148,9 @@ pub fn write16(bus: u8, device: u8, function: u8, offset: u16, value: u16) -> Re
     let word_offset = (offset & 2) as u32;
     let mask = 0xFFFFu32 << (word_offset * 8);
 
-    // SAFETY: PCI config space ports are valid for kernel access
+    let _g = CONFIG_PORT_LOCK.lock();
+    // SAFETY: PCI config space ports are valid for kernel access; the
+    // lock guarantees the read-modify-write is atomic.
     unsafe {
         outl(PCI_CONFIG_ADDRESS, addr);
         let current = inl(PCI_CONFIG_DATA);
@@ -164,7 +168,9 @@ pub fn write32(bus: u8, device: u8, function: u8, offset: u16, value: u32) -> Re
 
     let addr = make_config_address(bus, device, function, offset);
 
-    // SAFETY: PCI config space ports are valid for kernel access
+    let _g = CONFIG_PORT_LOCK.lock();
+    // SAFETY: PCI config space ports are valid for kernel access; the
+    // lock guarantees the (address, data) pair is atomic.
     unsafe {
         outl(PCI_CONFIG_ADDRESS, addr);
         outl(PCI_CONFIG_DATA, value);
@@ -177,7 +183,9 @@ pub fn write32(bus: u8, device: u8, function: u8, offset: u16, value: u32) -> Re
 pub fn read32_unchecked(bus: u8, device: u8, function: u8, offset: u8) -> u32 {
     CONFIG_READS.fetch_add(1, Ordering::Relaxed);
     let addr = pci_config_address(bus, device, function, offset);
-    // SAFETY: PCI config space ports are valid for kernel access
+    let _g = CONFIG_PORT_LOCK.lock();
+    // SAFETY: PCI config space ports are valid for kernel access; the
+    // lock guarantees the (address, data) pair is atomic.
     unsafe {
         outl(PCI_CONFIG_ADDRESS, addr);
         inl(PCI_CONFIG_DATA)
@@ -188,7 +196,9 @@ pub fn read32_unchecked(bus: u8, device: u8, function: u8, offset: u8) -> u32 {
 pub fn write32_unchecked(bus: u8, device: u8, function: u8, offset: u8, value: u32) {
     CONFIG_WRITES.fetch_add(1, Ordering::Relaxed);
     let addr = pci_config_address(bus, device, function, offset);
-    // SAFETY: PCI config space ports are valid for kernel access
+    let _g = CONFIG_PORT_LOCK.lock();
+    // SAFETY: PCI config space ports are valid for kernel access; the
+    // lock guarantees the (address, data) pair is atomic.
     unsafe {
         outl(PCI_CONFIG_ADDRESS, addr);
         outl(PCI_CONFIG_DATA, value);
