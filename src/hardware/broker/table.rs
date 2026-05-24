@@ -115,6 +115,15 @@ fn record_from_pci(device_id: u64, dev: &PciDevice) -> DeviceRecord {
         _pad1: [0; 1],
         irq_source: dev.interrupt_line as u32,
         bars,
+        virtio_present: dev.virtio.map_or(0, |_| 1),
+        virtio_common_bar: dev.virtio.map_or(0, |v| v.common_bar),
+        virtio_notify_bar: dev.virtio.map_or(0, |v| v.notify_bar),
+        virtio_device_bar: dev.virtio.map_or(0, |v| v.device_bar),
+        virtio_common_off: dev.virtio.map_or(0, |v| v.common_off),
+        virtio_notify_off: dev.virtio.map_or(0, |v| v.notify_off),
+        virtio_device_off: dev.virtio.map_or(0, |v| v.device_off),
+        virtio_isr_off: dev.virtio.map_or(0, |v| v.isr_off),
+        virtio_notify_mult: dev.virtio.map_or(0, |v| v.notify_mult),
     }
 }
 

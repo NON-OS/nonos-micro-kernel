@@ -21,7 +21,9 @@ use alloc::vec::Vec;
 use super::super::config::ConfigSpace;
 use super::super::constants::*;
 use super::super::error::Result;
-use super::super::types::{MsiInfo, MsixInfo, PciCapability, PcieInfo, PowerManagementInfo};
+use super::super::types::{
+    MsiInfo, MsixInfo, PciCapability, PcieInfo, PowerManagementInfo, VirtioPciCfg,
+};
 use super::enumerate::enumerate_pcie_capabilities;
 use super::parse::{
     parse_msi_capability, parse_msix_capability, parse_pcie_capability,
@@ -51,6 +53,42 @@ pub fn get_msix_info(config: &ConfigSpace) -> Result<Option<MsixInfo>> {
         }
     }
     Ok(None)
+}
+
+pub fn get_virtio_info(config: &ConfigSpace) -> Result<Option<VirtioPciCfg>> {
+    let mut cfg = VirtioPciCfg::default();
+    if let Some(walker) = CapabilityWalker::new(config)? {
+        for cap_result in walker {
+            let cap = cap_result?;
+            if cap.id != CAP_ID_VNDR {
+                continue;
+            }
+            let cfg_type = config.read8(cap.offset as u16 + 3)?;
+            let bar = config.read8(cap.offset as u16 + 4)?;
+            let off = config.read32(cap.offset as u16 + 8)?;
+            match cfg_type {
+                1 => {
+                    cfg.common_bar = bar;
+                    cfg.common_off = off;
+                    cfg.present = true;
+                }
+                2 => {
+                    cfg.notify_bar = bar;
+                    cfg.notify_off = off;
+                    cfg.notify_mult = config.read32(cap.offset as u16 + 16)?;
+                }
+                3 => {
+                    cfg.isr_off = off;
+                }
+                4 => {
+                    cfg.device_bar = bar;
+                    cfg.device_off = off;
+                }
+                _ => {}
+            }
+        }
+    }
+    Ok(if cfg.present { Some(cfg) } else { None })
 }
 
 pub fn get_power_management_info(config: &ConfigSpace) -> Result<Option<PowerManagementInfo>> {

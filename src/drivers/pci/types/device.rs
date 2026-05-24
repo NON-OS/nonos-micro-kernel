@@ -27,6 +27,7 @@ use super::class_code::ClassCode;
 use super::device_id::DeviceId;
 use super::header::HeaderType;
 use super::msi::{MsiInfo, MsixInfo};
+use super::virtio::VirtioPciCfg;
 use super::pcie::PcieInfo;
 use super::power::PowerManagementInfo;
 
@@ -44,6 +45,7 @@ pub struct PciDevice {
     pub interrupt_pin: u8,
     pub msi: Option<MsiInfo>,
     pub msix: Option<MsixInfo>,
+    pub virtio: Option<VirtioPciCfg>,
     pub power_management: Option<PowerManagementInfo>,
     pub pcie: Option<PcieInfo>,
     pub bus: u8,
@@ -71,6 +73,7 @@ impl PciDevice {
             interrupt_pin: 0,
             msi: None,
             msix: None,
+            virtio: None,
             power_management: None,
             pcie: None,
             bus: address.bus,

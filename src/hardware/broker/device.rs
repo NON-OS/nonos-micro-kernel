@@ -89,6 +89,19 @@ pub struct DeviceRecord {
     // bind path refuses such devices.
     pub irq_source: u32,
     pub bars: [Bar; 6],
+    // Modern virtio register locations parsed from the device's PCI vendor
+    // caps (virtio_present 0 = none). A capsule cannot read PCI config space,
+    // so it relies on these to map the correct BAR+offset for the common /
+    // notify / device configuration structures.
+    pub virtio_present: u8,
+    pub virtio_common_bar: u8,
+    pub virtio_notify_bar: u8,
+    pub virtio_device_bar: u8,
+    pub virtio_common_off: u32,
+    pub virtio_notify_off: u32,
+    pub virtio_device_off: u32,
+    pub virtio_isr_off: u32,
+    pub virtio_notify_mult: u32,
 }
 
 impl DeviceRecord {
@@ -107,6 +120,15 @@ impl DeviceRecord {
             _pad1: [0; 1],
             irq_source: 0,
             bars: [Bar::empty(); 6],
+            virtio_present: 0,
+            virtio_common_bar: 0,
+            virtio_notify_bar: 0,
+            virtio_device_bar: 0,
+            virtio_common_off: 0,
+            virtio_notify_off: 0,
+            virtio_device_off: 0,
+            virtio_isr_off: 0,
+            virtio_notify_mult: 0,
         }
     }
 }
@@ -115,5 +137,5 @@ impl DeviceRecord {
 // `driver_broker_abi.md` promises.
 const _: () = {
     assert!(core::mem::size_of::<Bar>() == 24);
-    assert!(core::mem::size_of::<DeviceRecord>() == 176);
+    assert!(core::mem::size_of::<DeviceRecord>() == 200);
 };

@@ -14,28 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod address;
-mod bar;
-mod bridge;
-mod capability;
-mod class_code;
-mod device;
-mod device_id;
-mod header;
-mod msi;
-mod pcie;
-mod power;
-mod virtio;
-
-pub use address::PciAddress;
-pub use bar::PciBar;
-pub use bridge::BridgeInfo;
-pub use capability::{PciCapability, PcieCapability};
-pub use class_code::ClassCode;
-pub use device::PciDevice;
-pub use device_id::DeviceId;
-pub use header::HeaderType;
-pub use msi::{MsiInfo, MsiMessage, MsixInfo};
-pub use pcie::{PcieDeviceType, PcieInfo};
-pub use power::PowerManagementInfo;
-pub use virtio::VirtioPciCfg;
+/// Modern (virtio 1.0) PCI register locations, harvested from the device's
+/// vendor capabilities (cap_vndr 0x09). Each `cfg_type` names the BAR and the
+/// byte offset within it where that structure lives. A capsule cannot read PCI
+/// config space, so the kernel parses these and publishes them so the driver
+/// can map the correct BAR (not the framebuffer) at the right offset.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct VirtioPciCfg {
+    pub common_bar: u8,
+    pub notify_bar: u8,
+    pub device_bar: u8,
+    pub common_off: u32,
+    pub notify_off: u32,
+    pub device_off: u32,
+    pub isr_off: u32,
+    pub notify_mult: u32,
+    pub present: bool,
+}

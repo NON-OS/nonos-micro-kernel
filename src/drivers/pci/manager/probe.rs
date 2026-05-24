@@ -21,7 +21,7 @@ use alloc::vec::Vec;
 use super::super::bar::decode_all_bars_unchecked;
 use super::super::capabilities::{
     collect_all_capabilities, enumerate_pcie_capabilities, get_msi_info, get_msix_info,
-    get_pcie_info, get_power_management_info,
+    get_pcie_info, get_power_management_info, get_virtio_info,
 };
 use super::super::config::{read32_unchecked, ConfigSpace};
 use super::super::constants::*;
@@ -72,6 +72,7 @@ pub(super) fn probe_device(bus: u8, device_num: u8, function: u8) -> Option<PciD
 
     let msi = get_msi_info(&config).ok().flatten();
     let msix = get_msix_info(&config).ok().flatten();
+    let virtio = get_virtio_info(&config).ok().flatten();
     let power_management = get_power_management_info(&config).ok().flatten();
     let pcie = get_pcie_info(&config).ok().flatten();
 
@@ -88,6 +89,7 @@ pub(super) fn probe_device(bus: u8, device_num: u8, function: u8) -> Option<PciD
     device.interrupt_pin = interrupt_pin;
     device.msi = msi;
     device.msix = msix;
+    device.virtio = virtio;
     device.power_management = power_management;
     device.pcie = pcie;
 

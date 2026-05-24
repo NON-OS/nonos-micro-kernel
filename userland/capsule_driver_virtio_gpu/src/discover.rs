@@ -28,6 +28,12 @@ pub struct Found {
     pub register_kind: u8,
     pub register_size: u64,
     pub pci_device: u16,
+    // Modern virtio register window from the kernel-parsed PCI caps. When
+    // `has_virtio`, `register_bar` is the common-cfg BAR, mapped at
+    // `common_off`, and the notify register sits `notify_rel` bytes past it.
+    pub has_virtio: bool,
+    pub common_off: u32,
+    pub notify_rel: u32,
 }
 
 pub fn find_virtio_gpu() -> Option<Found> {
@@ -40,6 +46,21 @@ pub fn find_virtio_gpu() -> Option<Found> {
         if !is_match(r) || r.irq_pin == 0 || r.irq_line == 0xFF {
             continue;
         }
+        if r.virtio_present != 0 {
+            let cb = r.virtio_common_bar as usize;
+            let size = if cb < r.bars.len() { r.bars[cb].size } else { 0 };
+            return Some(Found {
+                device_id: r.device_id,
+                irq_line: r.irq_line,
+                register_bar: r.virtio_common_bar,
+                register_kind: BAR_KIND_MMIO,
+                register_size: size,
+                pci_device: r.device,
+                has_virtio: true,
+                common_off: r.virtio_common_off,
+                notify_rel: r.virtio_notify_off.saturating_sub(r.virtio_common_off),
+            });
+        }
         if let Some((bar, kind, size)) = first_register_bar(r) {
             return Some(Found {
                 device_id: r.device_id,
@@ -48,6 +69,9 @@ pub fn find_virtio_gpu() -> Option<Found> {
                 register_kind: kind,
                 register_size: size,
                 pci_device: r.device,
+                has_virtio: false,
+                common_off: 0,
+                notify_rel: 0,
             });
         }
     }
@@ -90,5 +114,14 @@ fn empty_record() -> DeviceRecord {
         _pad1: [0; 1],
         irq_source: 0,
         bars: [Bar { base: 0, size: 0, kind: 0, flags: 0, _pad: [0; 6] }; 6],
+        virtio_present: 0,
+        virtio_common_bar: 0,
+        virtio_notify_bar: 0,
+        virtio_device_bar: 0,
+        virtio_common_off: 0,
+        virtio_notify_off: 0,
+        virtio_device_off: 0,
+        virtio_isr_off: 0,
+        virtio_notify_mult: 0,
     }
 }

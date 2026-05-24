@@ -24,8 +24,8 @@ pub use enumerate::{
 };
 pub use helpers::{
     collect_all_capabilities, get_msi_info, get_msix_info, get_pcie_info,
-    get_power_management_info, has_acs_capability, has_aer_capability, has_ats_capability,
-    has_pasid_capability, has_sriov_capability,
+    get_power_management_info, get_virtio_info, has_acs_capability, has_aer_capability,
+    has_ats_capability, has_pasid_capability, has_sriov_capability,
 };
 pub use parse::{
     parse_msi_capability, parse_msix_capability, parse_pcie_capability,

@@ -73,5 +73,14 @@ fn empty_record() -> DeviceRecord {
         _pad1: [0; 1],
         irq_source: 0,
         bars: [Bar { base: 0, size: 0, kind: 0, flags: 0, _pad: [0; 6] }; 6],
+        virtio_present: 0,
+        virtio_common_bar: 0,
+        virtio_notify_bar: 0,
+        virtio_device_bar: 0,
+        virtio_common_off: 0,
+        virtio_notify_off: 0,
+        virtio_device_off: 0,
+        virtio_isr_off: 0,
+        virtio_notify_mult: 0,
     }
 }

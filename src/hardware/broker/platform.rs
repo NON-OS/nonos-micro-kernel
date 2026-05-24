@@ -68,6 +68,7 @@ pub fn register_legacy() -> u64 {
         // zero so the non-x86 broker bind refuses this PC device.
         irq_source: 0,
         bars,
+        ..DeviceRecord::empty()
     };
     let kbd_id = table::register_platform_device(kbd);
 
@@ -85,6 +86,7 @@ pub fn register_legacy() -> u64 {
         _pad1: [0; 1],
         irq_source: 0,
         bars: [Bar::empty(); 6],
+        ..DeviceRecord::empty()
     };
     let _ = table::register_platform_device(aux);
     kbd_id

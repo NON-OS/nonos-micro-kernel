@@ -19,7 +19,7 @@ use nonos_libc::{
     PioGrantOut, BAR_KIND_MMIO, BAR_KIND_PIO,
 };
 
-use crate::constants::{BAR_OFFSET, MOD_NOTIFY_BASE, VIRTIO_GPU_MODERN};
+use crate::constants::BAR_OFFSET;
 use crate::discover::Found;
 use crate::regs::Regs;
 
@@ -32,11 +32,12 @@ pub enum RegisterGrant {
 }
 
 impl RegisterGrant {
-    pub fn regs(self, pci_device: u16) -> Regs {
+    pub fn regs(self, dev: Found) -> Regs {
         match self {
-            Self::Mmio(g) if pci_device == VIRTIO_GPU_MODERN => {
-                Regs::mmio_with_notify(g.user_va, MOD_NOTIFY_BASE)
-            }
+            Self::Mmio(g) if dev.has_virtio => Regs::mmio_with_notify(
+                g.user_va + dev.common_off as u64,
+                dev.notify_rel as usize,
+            ),
             Self::Mmio(g) => Regs::mmio(g.user_va),
             Self::Pio(g) => Regs::pio(g.grant_id),
         }

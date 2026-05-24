@@ -61,6 +61,18 @@ pub struct DeviceRecord {
     pub _pad1: [u8; 1],
     pub irq_source: u32,
     pub bars: [Bar; 6],
+    // Modern virtio register locations from the device's PCI vendor caps
+    // (virtio_present 0 = none). Kernel-parsed because capsules cannot read
+    // PCI config space; used to map the correct BAR+offset.
+    pub virtio_present: u8,
+    pub virtio_common_bar: u8,
+    pub virtio_notify_bar: u8,
+    pub virtio_device_bar: u8,
+    pub virtio_common_off: u32,
+    pub virtio_notify_off: u32,
+    pub virtio_device_off: u32,
+    pub virtio_isr_off: u32,
+    pub virtio_notify_mult: u32,
 }
 
 #[repr(C)]
@@ -104,7 +116,7 @@ pub struct PioGrantOut {
 }
 
 const _: () = assert!(core::mem::size_of::<Bar>() == 24);
-const _: () = assert!(core::mem::size_of::<DeviceRecord>() == 176);
+const _: () = assert!(core::mem::size_of::<DeviceRecord>() == 200);
 const _: () = assert!(core::mem::size_of::<MmioMapOut>() == 24);
 const _: () = assert!(core::mem::size_of::<IrqBindOut>() == 16);
 const _: () = assert!(core::mem::size_of::<IrqPollOut>() == 16);
