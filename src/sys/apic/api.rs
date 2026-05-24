@@ -24,6 +24,40 @@ use core::sync::atomic::Ordering;
 pub fn init() {
     init_local_apic();
     init_ioapic();
+    init_broker_ioapic();
+}
+
+// Populate the capability-broker's IO-APIC registry from the same MADT
+// descriptors the legacy programmer adopts. Without this the broker's
+// `locate()`/`program_route_external` find no chip and every capsule
+// `MkIrqBind` (INTx) fails with GsiNotFound. The legacy path keeps
+// driving kernel IRQs; the broker drives capsule device GSIs.
+fn init_broker_ioapic() {
+    use crate::arch::x86_64::acpi;
+    use crate::arch::x86_64::interrupt::nonos_ioapic::{
+        init as broker_init, IsoFlags, MadtIoApic, MadtIso, MadtNmi,
+    };
+    use alloc::vec::Vec;
+
+    let mut ioapics: Vec<MadtIoApic> = acpi::ioapics()
+        .iter()
+        .map(|i| MadtIoApic { phys_base: i.address, gsi_base: i.gsi_base })
+        .collect();
+    if ioapics.is_empty() {
+        ioapics.push(MadtIoApic { phys_base: 0xFEC0_0000, gsi_base: 0 });
+    }
+    let isos: Vec<MadtIso> = acpi::interrupt_overrides()
+        .iter()
+        .map(|o| MadtIso {
+            bus_irq: o.source_irq,
+            gsi: o.gsi,
+            flags: IsoFlags::from_polarity_trigger(o.polarity, o.trigger_mode),
+        })
+        .collect();
+    let nmis: [MadtNmi; 0] = [];
+    if unsafe { broker_init(&ioapics, &isos, &nmis) }.is_err() {
+        serial::println(b"[APIC] broker IOAPIC init skipped");
+    }
 }
 
 pub fn is_init() -> bool {

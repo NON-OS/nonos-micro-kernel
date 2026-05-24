@@ -18,21 +18,9 @@ use crate::memory::addr::{PhysAddr, VirtAddr};
 
 use super::constants::*;
 use super::error::{IoApicError, IoApicResult};
-use crate::memory::paging::manager;
-use crate::memory::paging::types::PagePermissions;
 
 pub(crate) unsafe fn map_mmio(pa: PhysAddr) -> IoApicResult<VirtAddr> {
-    unsafe {
-        extern "Rust" {
-            fn __nonos_alloc_mmio_va(pages: usize) -> u64;
-        }
-
-        let va = VirtAddr::new(__nonos_alloc_mmio_va(1));
-        let perms = PagePermissions::READ | PagePermissions::WRITE;
-        manager::map_page(va, pa, perms).map_err(|_| IoApicError::MmioMapFailed)?;
-
-        Ok(va)
-    }
+    crate::memory::unified::phys_to_virt_checked(pa).ok_or(IoApicError::MmioMapFailed)
 }
 
 #[inline(always)]
