@@ -16,10 +16,7 @@
 
 pub(super) fn spawn_ramfs() {
     use crate::fs::ramfs_capsule as c;
-
-    crate::sys::serial::println(b"[INIT-TRACE] before spawn_ramfs_capsule");
     super::boot::capsule("RAMFS", "ramfs", c::spawn_ramfs_capsule, c::shared_state);
-    crate::sys::serial::println(b"[INIT-TRACE] after spawn_ramfs_capsule");
 }
 
 pub(super) fn spawn_after_ramfs() {

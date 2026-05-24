@@ -29,65 +29,31 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     boot_log::init_after_fb(cursor_y);
     boot_log::ok("NONOS", "Microkernel init");
 
-    crate::sys::serial::println(b"[INIT-TRACE] before firmware");
     init_arch_firmware(handoff);
-    crate::sys::serial::println(b"[INIT-TRACE] after firmware");
-
-    crate::sys::serial::println(b"[INIT-TRACE] before settings");
     crate::sys::settings::init();
-    crate::sys::serial::println(b"[INIT-TRACE] after settings");
-
-    crate::sys::serial::println(b"[INIT-TRACE] before hostname");
     crate::sys::settings::init_hostname();
-    crate::sys::serial::println(b"[INIT-TRACE] after hostname");
-
-    crate::sys::serial::println(b"[INIT-TRACE] before rng");
     if let Err(_) = crate::crypto::util::rng::init_rng() {
         fatal("crypto: init_rng failed", "entropy unavailable");
     }
-    crate::sys::serial::println(b"[INIT-TRACE] after rng");
-
-    crate::sys::serial::println(b"[INIT-TRACE] before ipc-secret");
     if let Err(e) = crate::ipc::nonos_channel::init_ipc_secret() {
         fatal("ipc: init_ipc_secret failed", e);
     }
-    crate::sys::serial::println(b"[INIT-TRACE] after ipc-secret");
-
-    crate::sys::serial::println(b"[INIT-TRACE] before percpu-bsp");
     if let Err(e) = crate::smp::init_bsp() {
         fatal("smp: init_bsp failed", e);
     }
-    crate::sys::serial::println(b"[INIT-TRACE] after percpu-bsp");
-
-    crate::sys::serial::println(b"[INIT-TRACE] before sched");
     crate::sched::init();
-    crate::sys::serial::println(b"[INIT-TRACE] after sched");
-
-    crate::sys::serial::println(b"[INIT-TRACE] before clock");
     clock::init(handoff.timing.fixed_freq_hz.unwrap_or(0), handoff.timing.unix_epoch_ms);
-    crate::sys::serial::println(b"[INIT-TRACE] after clock");
 
     // VM/paging must be ready before any process creator runs. The
     // process subsystem only initializes its tables after this; the
     // userspace init process itself is created exactly once in
     // `microkernel_main`.
-    crate::sys::serial::println(b"[INIT-TRACE] before unified-vm");
     if let Err(e) = crate::memory::unified::init_unified_vm() {
         fatal("memory: init_unified_vm failed", e);
     }
-    crate::sys::serial::println(b"[INIT-TRACE] after unified-vm");
-
-    crate::sys::serial::println(b"[INIT-TRACE] before process-management");
     crate::process::init_process_management();
-    crate::sys::serial::println(b"[INIT-TRACE] after process-management");
-
-    crate::sys::serial::println(b"[INIT-TRACE] before elf-loader");
     crate::elf::loader::init_elf_loader();
-    crate::sys::serial::println(b"[INIT-TRACE] after elf-loader");
-
-    crate::sys::serial::println(b"[INIT-TRACE] before kernel-keys");
     crate::crypto::kernel_keys::init();
-    crate::sys::serial::println(b"[INIT-TRACE] after kernel-keys");
 
     #[cfg(feature = "nonos-selftest")]
     {

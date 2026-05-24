@@ -12,11 +12,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use super::super::image::{DynamicInfo, ElfImage};
+use super::super::image::ElfImage;
 use super::section::ParsedSection;
 use crate::elf::aslr::AslrManager;
 use crate::elf::errors::ElfError;
-use crate::elf::reloc::process_relocations;
 use crate::elf::types::*;
 use crate::memory::addr::VirtAddr;
 use alloc::{collections::BTreeMap, string::String, vec::Vec};
@@ -82,7 +81,6 @@ impl ElfLoader {
         } else {
             VirtAddr::new(header.e_entry)
         };
-        crate::sys::serial::println(b"[ELF] post-loop");
         let total_size = loaded_segments.iter().map(|seg| seg.size).sum();
         let image = ElfImage {
             base_addr,
@@ -95,15 +93,6 @@ impl ElfLoader {
             tls_info,
             interpreter,
         };
-        crate::sys::serial::println(b"[ELF] image built");
-        // Relocations are deferred: the kernel never writes through
-        // user VAs while building a process. For static-PIE
-        // userland (current default) all in-image references are
-        // RIP-relative and do not need runtime patching at this
-        // boundary. If the userspace toolchain ever emits absolute
-        // relocs that need fixing, this is where the directmap-
-        // routed applier goes.
-        let _ = &image.dynamic_info;
         Ok(image)
     }
 
@@ -131,37 +120,7 @@ impl ElfLoader {
         } else {
             VirtAddr::new(header.e_entry)
         };
-        crate::sys::serial::println(b"[ELF] post-loop");
-        crate::sys::serial::println(b"[ELF] image built");
         Ok(entry_point)
-    }
-
-    fn process_image_relocations(
-        &self,
-        image: &ElfImage,
-        dyn_info: &DynamicInfo,
-    ) -> Result<(), ElfError> {
-        let mut rela_entries = Vec::new();
-        if let Some(rela_addr) = dyn_info.rela_table {
-            let rela_ptr = rela_addr.as_u64() as *const RelaEntry;
-            unsafe {
-                for i in 0..dyn_info.rela_count() {
-                    rela_entries.push(core::ptr::read(rela_ptr.add(i)));
-                }
-            }
-        }
-        if let Some(plt_addr) = dyn_info.plt_relocations {
-            let plt_ptr = plt_addr.as_u64() as *const RelaEntry;
-            unsafe {
-                for i in 0..dyn_info.plt_rela_count() {
-                    rela_entries.push(core::ptr::read(plt_ptr.add(i)));
-                }
-            }
-        }
-        if !rela_entries.is_empty() {
-            process_relocations(image, &rela_entries)?;
-        }
-        Ok(())
     }
 
     pub fn load_executable(&mut self, elf_data: &[u8]) -> Result<ElfImage, ElfError> {

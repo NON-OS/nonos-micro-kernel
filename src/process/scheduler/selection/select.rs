@@ -20,19 +20,11 @@ use core::sync::atomic::{AtomicU32, Ordering};
 
 pub static LAST_SCHEDULED_PID: AtomicU32 = AtomicU32::new(0);
 
-static SELECT_TRACE_SHOWN: AtomicU32 = AtomicU32::new(0);
-const SELECT_TRACE_CAP: u32 = 32;
-
 pub fn select_next_process() -> Option<u32> {
     use crate::process::nonos_core::CURRENT_PID;
     let current = CURRENT_PID.load(Ordering::Relaxed);
     let runnable = get_runnable_pids();
     if runnable.is_empty() {
-        if SELECT_TRACE_SHOWN.fetch_add(1, Ordering::Relaxed) < SELECT_TRACE_CAP {
-            crate::sys::serial::print(b"[SCHED] select cur=");
-            crate::sys::serial::print_hex(current as u64);
-            crate::sys::serial::println(b" runnable=empty");
-        }
         return None;
     }
     let last = LAST_SCHEDULED_PID.load(Ordering::Relaxed);
@@ -41,25 +33,10 @@ pub fn select_next_process() -> Option<u32> {
     {
         if let Some(pid) = select_by_priority(&runnable, last, current, prio) {
             LAST_SCHEDULED_PID.store(pid, Ordering::Relaxed);
-            if SELECT_TRACE_SHOWN.fetch_add(1, Ordering::Relaxed) < SELECT_TRACE_CAP {
-                crate::sys::serial::print(b"[SCHED] select cur=");
-                crate::sys::serial::print_hex(current as u64);
-                crate::sys::serial::print(b" -> next=");
-                crate::sys::serial::print_hex(pid as u64);
-                crate::sys::serial::println(b"");
-            }
             return Some(pid);
         }
     }
-    let fb = select_fallback(&runnable, current);
-    if SELECT_TRACE_SHOWN.fetch_add(1, Ordering::Relaxed) < SELECT_TRACE_CAP {
-        crate::sys::serial::print(b"[SCHED] select cur=");
-        crate::sys::serial::print_hex(current as u64);
-        crate::sys::serial::print(b" -> fallback=");
-        crate::sys::serial::print_hex(fb.unwrap_or(0) as u64);
-        crate::sys::serial::println(b"");
-    }
-    fb
+    select_fallback(&runnable, current)
 }
 
 fn select_by_priority(pids: &[u32], last: u32, current: u32, prio: Priority) -> Option<u32> {

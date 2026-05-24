@@ -39,9 +39,7 @@ pub fn run_init() -> ! {
 
 #[cfg(feature = "nonos-user-entry-proof")]
 fn run_user_entry_proof() {
-    crate::sys::serial::println(b"[INIT-TRACE] before spawn_proof_io_capsule");
     let _ = crate::userspace::capsule_proof_io::spawn_proof_io_capsule();
-    crate::sys::serial::println(b"[INIT-TRACE] after spawn_proof_io_capsule");
 }
 
 #[cfg(not(feature = "nonos-user-entry-proof"))]

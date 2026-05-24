@@ -39,44 +39,32 @@ pub(super) struct InstallParams {
 }
 
 pub(super) fn install(params: &InstallParams) -> Result<u32, SpawnError> {
-    use crate::sys::serial::println;
     if params.elf.is_empty() {
         return Err(SpawnError::FeatureDisabled);
     }
 
-    println(b"[SPAWN] inbox+endpoint");
     nonos_inbox::register_or_get_bootstrap_inbox(params.reply_inbox);
     register_endpoint(params.reply_inbox, params.reply_port, 0, 0)
         .map_err(|_| SpawnError::EndpointCollision)?;
 
-    println(b"[SPAWN] create_process");
     let pid = create_process(params.name, ProcessState::Ready, Priority::Normal)
         .map_err(|_| SpawnError::ProcessCreation)?;
 
-    println(b"[SPAWN] recv inbox");
     nonos_inbox::register_inbox(&format!("proc.{}", pid), pid)
         .map_err(|_| SpawnError::ProcessCreation)?;
 
-    println(b"[SPAWN] elf load");
     let entry = load_elf_into_pid(params.elf, pid, params.debug_tag)?;
-    println(b"[SPAWN] elf load done");
 
     install_caps(pid, params.caps_bits | crate::capabilities::smoke::debug_grant())?;
-    println(b"[SPAWN] caps installed");
 
     let _kernel_stack = allocate_kernel_stack(pid).map_err(|_| SpawnError::AddressSpace)?;
-    println(b"[SPAWN] kstack");
     let user_rsp = allocate_user_stack(pid).map_err(|_| SpawnError::AddressSpace)?;
-    println(b"[SPAWN] ustack");
     setup_initial_user_context(pid, entry, user_rsp).map_err(|_| SpawnError::AddressSpace)?;
-    println(b"[SPAWN] ucontext");
 
     register_endpoint(params.name, params.service_port, pid, Capability::IPC.bit())
         .map_err(|_| SpawnError::EndpointCollision)?;
-    println(b"[SPAWN] svc endpoint");
 
     crate::sched::add_to_run_queue(pid);
-    println(b"[SPAWN] enqueued");
     Ok(pid)
 }
 

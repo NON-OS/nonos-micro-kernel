@@ -46,8 +46,6 @@ pub(in crate::elf::loader::core) fn load_segment(
     base_addr: VirtAddr,
     target_asid: u32,
 ) -> Result<LoadedSegment, ElfError> {
-    use crate::sys::serial::println;
-
     if ph.p_filesz > ph.p_memsz {
         return Err(ElfError::SegmentDataOutOfBounds);
     }
@@ -83,7 +81,6 @@ pub(in crate::elf::loader::core) fn load_segment(
     let seg_va = VirtAddr::new(seg_start);
     let seg_va_aligned = VirtAddr::new(aligned_start);
 
-    println(b"[ELF] seg start");
     for i in 0..pages {
         let page_off = (i as u64).checked_mul(PAGE as u64).ok_or(ElfError::AddressOverflow)?;
         let page_va =
@@ -113,15 +110,8 @@ pub(in crate::elf::loader::core) fn load_segment(
             &file_bytes[consumed_segment..end]
         };
 
-        if i == 0 {
-            println(b"[ELF] first populate_page");
-        }
         populate_page(target_asid, page_va, perms, dst_off, src)?;
-        if i == 0 {
-            println(b"[ELF] first populate_page done");
-        }
     }
-    println(b"[ELF] seg done");
 
     let _ = seg_va_aligned;
 

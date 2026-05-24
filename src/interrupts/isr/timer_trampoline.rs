@@ -145,21 +145,6 @@ pub extern "C" fn timer_trap_handler(ctx: *mut UserContext) {
     let frame = unsafe { &*ctx };
     let from_user = (frame.cs & 3) == 3;
 
-    {
-        use core::sync::atomic::{AtomicU32, Ordering};
-        static TICK_TRACE_SHOWN: AtomicU32 = AtomicU32::new(0);
-        const TICK_TRACE_CAP: u32 = 32;
-        if TICK_TRACE_SHOWN.fetch_add(1, Ordering::Relaxed) < TICK_TRACE_CAP {
-            crate::sys::serial::print(b"[TICK] from_user=");
-            crate::sys::serial::print(if from_user { b"1" } else { b"0" });
-            crate::sys::serial::print(b" pid=");
-            crate::arch::x86_64::diag::print_hex_u64(crate::process::current_pid().unwrap_or(0) as u64);
-            crate::sys::serial::print(b" rip=");
-            crate::arch::x86_64::diag::print_hex_u64(frame.rip);
-            crate::sys::serial::println(b"");
-        }
-    }
-
     if from_user {
         if let Some(pcb) = crate::process::current_process() {
             let snapshot = UserContext {
