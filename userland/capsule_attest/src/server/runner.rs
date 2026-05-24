@@ -21,13 +21,19 @@ use nonos_libc::{mk_ipc_recv, mk_ipc_send, mk_yield};
 use super::handlers::route;
 use crate::protocol::IPC_PAYLOAD_MAX;
 
-const SERVICE_PORT: u32 = 4444;
+const SERVICE_PORT: u64 = 4444;
+const RECV_TIMEOUT_MS: u64 = 0;
 
 pub fn run() -> ! {
     let mut in_buf = vec![0u8; IPC_PAYLOAD_MAX];
     let mut out_buf = vec![0u8; IPC_PAYLOAD_MAX];
     loop {
-        let received = mk_ipc_recv(SERVICE_PORT, in_buf.as_mut_ptr(), in_buf.len());
+        let received = mk_ipc_recv(
+            SERVICE_PORT,
+            in_buf.as_mut_ptr(),
+            in_buf.len(),
+            RECV_TIMEOUT_MS,
+        );
         if received <= 0 {
             mk_yield();
             continue;

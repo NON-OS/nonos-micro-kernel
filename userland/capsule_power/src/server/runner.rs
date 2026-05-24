@@ -22,14 +22,20 @@ use super::handlers::route;
 use crate::protocol::IPC_PAYLOAD_MAX;
 use crate::state::PowerState;
 
-const SERVICE_PORT: u32 = 4448;
+const SERVICE_PORT: u64 = 4448;
+const RECV_TIMEOUT_MS: u64 = 0;
 
 pub fn run() -> ! {
     let mut in_buf = vec![0u8; IPC_PAYLOAD_MAX];
     let mut out_buf = vec![0u8; IPC_PAYLOAD_MAX];
     let mut state = PowerState::new();
     loop {
-        let received = mk_ipc_recv(SERVICE_PORT, in_buf.as_mut_ptr(), in_buf.len());
+        let received = mk_ipc_recv(
+            SERVICE_PORT,
+            in_buf.as_mut_ptr(),
+            in_buf.len(),
+            RECV_TIMEOUT_MS,
+        );
         if received <= 0 {
             mk_yield();
             continue;
