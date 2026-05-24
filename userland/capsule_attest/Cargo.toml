@@ -1,0 +1,34 @@
+# NONOS userland: capsule_attest
+# eK@nonos.systems
+#
+# Privacy attestation capsule. Returns a structural proof that the
+# running system honors NO LOGS / NO TRACES / EPHEMERAL / PRIVACY
+# MICROKERNEL invariants. Linux fundamentally cannot make this claim.
+
+[package]
+name = "nonos_attest"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS privacy attestation capsule"
+
+[[bin]]
+name = "attest"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
+
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true
