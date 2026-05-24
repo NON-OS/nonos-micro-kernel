@@ -14,12 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constructors;
-mod descriptor;
-mod kind;
-mod page;
-mod pte;
+use super::kind::Granule;
 
-pub use kind::MemoryType;
-pub use page::PageAttributes;
-pub use pte::{PTE_ADDR_MASK, PTE_AF, PTE_AP_RO_ALL, PTE_AP_RO_EL1, PTE_AP_RW_ALL, PTE_AP_RW_EL1, PTE_ATTR_INDX_MASK, PTE_BLOCK, PTE_CONT, PTE_NG, PTE_NS, PTE_PAGE, PTE_PXN, PTE_SH_IS, PTE_SH_MASK, PTE_SH_NS, PTE_SH_OS, PTE_TABLE, PTE_UXN, PTE_VALID};
+pub const GRANULE_4K: Granule = Granule::G4K;
+pub const GRANULE_16K: Granule = Granule::G16K;
+pub const GRANULE_64K: Granule = Granule::G64K;

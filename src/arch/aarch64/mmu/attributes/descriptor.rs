@@ -14,12 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constructors;
-mod descriptor;
-mod kind;
-mod page;
-mod pte;
+use super::page::PageAttributes;
 
-pub use kind::MemoryType;
-pub use page::PageAttributes;
-pub use pte::{PTE_ADDR_MASK, PTE_AF, PTE_AP_RO_ALL, PTE_AP_RO_EL1, PTE_AP_RW_ALL, PTE_AP_RW_EL1, PTE_ATTR_INDX_MASK, PTE_BLOCK, PTE_CONT, PTE_NG, PTE_NS, PTE_PAGE, PTE_PXN, PTE_SH_IS, PTE_SH_MASK, PTE_SH_NS, PTE_SH_OS, PTE_TABLE, PTE_UXN, PTE_VALID};
+impl PageAttributes {
+    pub fn to_descriptor_bits(&self) -> u64 {
+        let mut bits = self.memory_type.attr_index() << 2;
+        if !self.user {
+            bits |= 1 << 6;
+        }
+        if !self.write {
+            bits |= 1 << 7;
+        }
+        bits |= 0b11 << 8;
+        if self.accessed {
+            bits |= 1 << 10;
+        }
+        if !self.global {
+            bits |= 1 << 11;
+        }
+        if self.contiguous {
+            bits |= 1 << 52;
+        }
+        if !self.execute && self.user {
+            bits |= 1 << 53;
+        }
+        if !self.execute && !self.user {
+            bits |= 1 << 54;
+        }
+        bits
+    }
+}

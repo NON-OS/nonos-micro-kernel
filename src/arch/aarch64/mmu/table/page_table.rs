@@ -14,12 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constructors;
-mod descriptor;
-mod kind;
-mod page;
-mod pte;
+#[repr(C, align(4096))]
+#[derive(Clone, Copy)]
+pub struct PageTable {
+    pub(super) entries: [u64; 512],
+}
 
-pub use kind::MemoryType;
-pub use page::PageAttributes;
-pub use pte::{PTE_ADDR_MASK, PTE_AF, PTE_AP_RO_ALL, PTE_AP_RO_EL1, PTE_AP_RW_ALL, PTE_AP_RW_EL1, PTE_ATTR_INDX_MASK, PTE_BLOCK, PTE_CONT, PTE_NG, PTE_NS, PTE_PAGE, PTE_PXN, PTE_SH_IS, PTE_SH_MASK, PTE_SH_NS, PTE_SH_OS, PTE_TABLE, PTE_UXN, PTE_VALID};
+impl PageTable {
+    pub const fn new() -> Self {
+        Self { entries: [0; 512] }
+    }
+
+    pub fn as_ptr(&self) -> *const u64 {
+        self.entries.as_ptr()
+    }
+
+    pub fn as_mut_ptr(&mut self) -> *mut u64 {
+        self.entries.as_mut_ptr()
+    }
+
+    pub fn physical_address(&self) -> u64 {
+        self.entries.as_ptr() as u64
+    }
+}
+
+impl Default for PageTable {
+    fn default() -> Self {
+        Self::new()
+    }
+}

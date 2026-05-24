@@ -14,12 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constructors;
-mod descriptor;
-mod kind;
-mod page;
-mod pte;
+use super::super::attributes::{PTE_ADDR_MASK, PTE_TABLE, PTE_VALID};
+use super::super::granule::Granule;
+use super::page_table::PageTable;
 
-pub use kind::MemoryType;
-pub use page::PageAttributes;
-pub use pte::{PTE_ADDR_MASK, PTE_AF, PTE_AP_RO_ALL, PTE_AP_RO_EL1, PTE_AP_RW_ALL, PTE_AP_RW_EL1, PTE_ATTR_INDX_MASK, PTE_BLOCK, PTE_CONT, PTE_NG, PTE_NS, PTE_PAGE, PTE_PXN, PTE_SH_IS, PTE_SH_MASK, PTE_SH_NS, PTE_SH_OS, PTE_TABLE, PTE_UXN, PTE_VALID};
+pub fn walk_page_tables(root: &PageTable, virt: u64, granule: Granule) -> Option<(u64, usize)> {
+    let mut table = root;
+    let levels = granule.levels();
+    for level in 0..levels {
+        let index = granule.index_at_level(virt, level);
+        let entry = table.entry(index);
+        if entry & PTE_VALID == 0 {
+            return None;
+        }
+        if level == levels - 1 || (entry & PTE_TABLE == 0) {
+            return Some((entry & PTE_ADDR_MASK, level));
+        }
+        table = unsafe { &*((entry & PTE_ADDR_MASK) as *const PageTable) };
+    }
+    None
+}
