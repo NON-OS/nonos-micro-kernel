@@ -60,7 +60,7 @@ fn expand(prk: &[u8; 32], info: &[u8], out_len: usize) -> Vec<u8> {
         data.extend_from_slice(&t);
         data.extend_from_slice(info);
         data.push(counter as u8);
-        t = hmac_sha256(&prk, &data).to_vec();
+        t = hmac_sha256(prk, &data).to_vec();
         out.extend_from_slice(&t);
     }
     out.truncate(out_len);
