@@ -25,6 +25,8 @@ use crate::process::scheduler::preemption::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLI
 use crate::process::userspace::transitions::restore_user_context_iretq;
 use crate::smp::percpu;
 
+use super::{build_initial_switch_frame, resume_user_trampoline};
+
 // Preempt-resume path: a CPL=3 capsule was trapped/IRQ'd back into the
 // kernel by the trap trampoline, which captured a full UserContext on
 // the PCB. Take() consumes the snapshot so a subsequent resume sees
@@ -50,6 +52,15 @@ pub(super) fn try_resume(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
         }
     }
     percpu::set_kernel_stack(kstack);
+
+    let switch_rsp = build_initial_switch_frame(kstack, resume_user_trampoline as u64);
+    pcb.kernel_rsp.store(switch_rsp, Ordering::Release);
+    #[cfg(feature = "nonos-cpuswitch-selftest")]
+    {
+        crate::sys::serial::print(b"[CPUSWITCH] preempt kernel_rsp set pid=");
+        crate::arch::x86_64::diag::print_hex_u64(pid as u64);
+        crate::sys::serial::println(b"");
+    }
 
     if pcb.cr3.load(Ordering::Relaxed) != 0
         && switch_to_process_address_space(pid).is_err()

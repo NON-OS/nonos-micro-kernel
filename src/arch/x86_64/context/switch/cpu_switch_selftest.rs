@@ -27,7 +27,7 @@ static mut TMP_STACK: [u64; 512] = [0; 512];
 
 pub fn run() {
     let _irq = crate::interrupts::disable_interrupts_guard();
-    let top = unsafe { core::ptr::addr_of!(TMP_STACK) as u64 + 512 * 8 };
+    let top = core::ptr::addr_of!(TMP_STACK) as u64 + 512 * 8;
     let target_rsp = build_initial_switch_frame(top, target as u64);
     unsafe { cpu_switch(MAIN_RSP.as_ptr(), target_rsp) };
     if RESULT.load(Ordering::SeqCst) == 0x00C0_FFEE {
