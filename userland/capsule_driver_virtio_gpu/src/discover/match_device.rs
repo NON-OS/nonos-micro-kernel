@@ -14,23 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{Request, E_INVAL, FOCUS_SET_REQ_LEN};
-use crate::server::respond;
-use crate::state::Context;
+use nonos_libc::{DeviceRecord, BUS_KIND_PCI};
 
-pub fn handle(
-    ctx: &mut Context,
-    sender_pid: u32,
-    req: &Request,
-    body: &[u8],
-    tx: &mut [u8],
-) -> Result<(), &'static str> {
-    if body.len() != FOCUS_SET_REQ_LEN {
-        return respond::status(sender_pid, req, E_INVAL, tx);
-    }
-    let Some(target_pid) = super::u32_at(body, 0) else {
-        return respond::status(sender_pid, req, E_INVAL, tx);
-    };
-    ctx.focus.set(target_pid);
-    respond::status(sender_pid, req, 0, tx)
+use crate::constants::{VIRTIO_GPU_MODERN, VIRTIO_GPU_TRANSITIONAL, VIRTIO_VENDOR_ID};
+
+pub fn is_match(r: &DeviceRecord) -> bool {
+    r.vendor == VIRTIO_VENDOR_ID
+        && r.bus_kind == BUS_KIND_PCI
+        && (r.device == VIRTIO_GPU_TRANSITIONAL || r.device == VIRTIO_GPU_MODERN)
+}
+
+pub fn is_usable(r: &DeviceRecord) -> bool {
+    is_match(r) && r.irq_pin != 0 && r.irq_line != 0xFF
 }

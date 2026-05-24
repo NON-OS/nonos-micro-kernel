@@ -17,6 +17,7 @@ mod claim;
 mod dma;
 mod irq;
 mod mmio;
+mod modern_caps;
 mod pci;
 mod primary_surface;
 mod scanouts;

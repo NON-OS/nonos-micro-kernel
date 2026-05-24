@@ -18,35 +18,35 @@ use crate::protocol::{Request, DAMAGE_COMMIT_REQ_LEN, E_INVAL};
 use crate::server::respond;
 use crate::state::{damage::Rect, Context};
 
-pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+pub fn handle(
+    ctx: &mut Context,
+    sender_pid: u32,
+    req: &Request,
+    body: &[u8],
+    tx: &mut [u8],
+) -> Result<(), &'static str> {
     if body.len() != DAMAGE_COMMIT_REQ_LEN {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
+        return respond::status(sender_pid, req, E_INVAL, tx);
     }
     let Some(x) = super::u32_at(body, 0) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
+        return respond::status(sender_pid, req, E_INVAL, tx);
     };
     let Some(y) = super::u32_at(body, 4) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
+        return respond::status(sender_pid, req, E_INVAL, tx);
     };
     let Some(width) = super::u32_at(body, 8) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
+        return respond::status(sender_pid, req, E_INVAL, tx);
     };
     let Some(height) = super::u32_at(body, 12) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
+        return respond::status(sender_pid, req, E_INVAL, tx);
     };
     if width == 0
         || height == 0
         || x.saturating_add(width) > ctx.width
         || y.saturating_add(height) > ctx.height
     {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
+        return respond::status(sender_pid, req, E_INVAL, tx);
     }
     ctx.damage.accumulate(Rect { x, y, width, height });
-    let _ = respond::status(sender_pid, req, 0, tx);
+    respond::status(sender_pid, req, 0, tx)
 }

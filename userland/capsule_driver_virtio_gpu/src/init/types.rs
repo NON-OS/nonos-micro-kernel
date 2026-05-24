@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::regs::Regs;
+
 pub struct InitOut {
     pub queue_size: u16,
     pub host_features: u32,
+    pub regs: Regs,
 }

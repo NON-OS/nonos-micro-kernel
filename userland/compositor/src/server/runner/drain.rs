@@ -34,10 +34,12 @@ pub fn drain_ipc(ctx: &mut Context, rx: &mut [u8], tx: &mut [u8]) {
         let (req, body) = match parse(&rx[..n as usize]) {
             Ok(parsed) => parsed,
             Err((code, req)) => {
-                let _ = respond::status(sender_pid, &req, code, tx);
+                if respond::status(sender_pid, &req, code, tx).is_err() {}
                 continue;
             }
         };
-        dispatch(ctx, sender_pid, req, body, tx);
+        if dispatch(ctx, sender_pid, req, body, tx).is_err() {
+            return;
+        }
     }
 }

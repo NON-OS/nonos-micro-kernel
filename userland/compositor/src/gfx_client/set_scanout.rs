@@ -18,8 +18,6 @@ use alloc::vec;
 
 use super::wire::{call, read_status};
 
-// driver_virtio_gpu::OP_SET_SCANOUT = 0x0009.
-// Body: scanout_id u32, resource_id u32, x u32, y u32, w u32, h u32.
 const OP: u16 = 0x0009;
 const BODY_LEN: usize = 24;
 
@@ -41,7 +39,7 @@ pub fn set_scanout(
     body[16..20].copy_from_slice(&width.to_le_bytes());
     body[20..24].copy_from_slice(&height.to_le_bytes());
     let mut rx = vec![0u8; super::wire::NVGP_HDR_LEN + 4];
-    let _ = call(gfx_port, OP, request_id, &body, &mut rx)?;
+    call(gfx_port, OP, request_id, &body, &mut rx)?;
     let status = read_status(&rx).ok_or("gfx scanout: short response")?;
     if status != 0 {
         return Err("gfx scanout: driver rejected");

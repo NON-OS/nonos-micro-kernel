@@ -21,11 +21,11 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
     matches!(
         nr,
         MkIpcSend | MkIpcRecv | MkIpcCall | MkIpcRecvFrom | MkIpcSendToPid | MkServiceLookup
-            | MkMmap | MkMunmap | MkSpawn | MkExit | MkYield | MkTimeMillis | MkCapGrant
-            | MkCapRevoke | MkCapCheck | MkDeviceList | MkDeviceClaim | MkDeviceRelease
-            | MkMmioMap | MkMmioUnmap | MkIrqBind | MkIrqUnbind | MkIrqAck | MkIrqPoll
-            | MkDmaMap | MkDmaUnmap | MkPciConfigWrite | MkPioGrant | MkPioRead
-            | MkPioWrite | MkPioRelease | MkDebug
+            | MkServiceRegister | MkMmap | MkMunmap | MkSpawn | MkExit | MkYield
+            | MkTimeMillis | MkCapGrant | MkCapRevoke | MkCapCheck | MkDeviceList
+            | MkDeviceClaim | MkDeviceRelease | MkMmioMap | MkMmioUnmap | MkIrqBind
+            | MkIrqUnbind | MkIrqAck | MkIrqPoll | MkDmaMap | MkDmaUnmap | MkPciConfigRead
+            | MkPciConfigWrite | MkPioGrant | MkPioRead | MkPioWrite | MkPioRelease | MkDebug
     )
 }
 

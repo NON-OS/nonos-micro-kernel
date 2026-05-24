@@ -21,7 +21,13 @@ use crate::protocol::{
 use crate::server::{handlers, respond};
 use crate::state::Context;
 
-pub fn dispatch(ctx: &mut Context, sender_pid: u32, req: Request, body: &[u8], tx: &mut [u8]) {
+pub fn dispatch(
+    ctx: &mut Context,
+    sender_pid: u32,
+    req: Request,
+    body: &[u8],
+    tx: &mut [u8],
+) -> Result<(), &'static str> {
     match req.op {
         OP_HEALTHCHECK if body.is_empty() => handlers::health::handle(sender_pid, &req, tx),
         OP_SCENE_SUBMIT => handlers::scene_submit::handle(ctx, sender_pid, &req, body, tx),
@@ -31,11 +37,7 @@ pub fn dispatch(ctx: &mut Context, sender_pid: u32, req: Request, body: &[u8], t
         OP_CURSOR_UPDATE => handlers::cursor_update::handle(ctx, sender_pid, &req, body, tx),
         OP_INPUT_SUBSCRIBE if body.is_empty() => handlers::input_subscribe::handle(ctx, sender_pid, &req, tx),
         OP_DISPLAY_INFO if body.is_empty() => handlers::display_info::handle(ctx, sender_pid, &req, tx),
-        _ if body.is_empty() => {
-            let _ = respond::status(sender_pid, &req, E_BAD_OP, tx);
-        }
-        _ => {
-            let _ = respond::status(sender_pid, &req, E_INVAL, tx);
-        }
+        _ if body.is_empty() => respond::status(sender_pid, &req, E_BAD_OP, tx),
+        _ => respond::status(sender_pid, &req, E_INVAL, tx),
     }
 }

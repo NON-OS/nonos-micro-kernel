@@ -13,20 +13,34 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{BAR_KIND_MMIO, BAR_KIND_PIO};
-use super::grant_pio::grant_pio;
-use super::map_modern::map_modern;
-use super::map_mmio::map_mmio;
+
+use nonos_libc::{mk_device_release, mk_mmio_unmap, MmioMapOut};
+
 use super::state::RegisterGrant;
-use crate::constants::VIRTIO_GPU_MODERN;
 use crate::discover::Found;
-pub fn grant(dev: Found, claim_epoch: u64) -> Result<RegisterGrant, &'static str> {
-    if dev.pci_device == VIRTIO_GPU_MODERN {
-        return map_modern(dev, claim_epoch);
+
+pub fn rollback_one(
+    dev: Found,
+    common: MmioMapOut,
+    err: &'static str,
+) -> Result<RegisterGrant, &'static str> {
+    if mk_mmio_unmap(common.grant_id) < 0 || mk_device_release(dev.device_id) < 0 {
+        return Err("virtio-gpu: modern rollback failed");
     }
-    match dev.register_kind {
-        BAR_KIND_MMIO => map_mmio(dev, claim_epoch),
-        BAR_KIND_PIO => grant_pio(dev, claim_epoch),
-        _ => Err("virtio-gpu: unsupported register bar"),
+    Err(err)
+}
+
+pub fn rollback_two(
+    dev: Found,
+    common: MmioMapOut,
+    notify: MmioMapOut,
+    err: &'static str,
+) -> Result<RegisterGrant, &'static str> {
+    if mk_mmio_unmap(common.grant_id) < 0 || mk_mmio_unmap(notify.grant_id) < 0 {
+        return Err("virtio-gpu: modern rollback failed");
     }
+    if mk_device_release(dev.device_id) < 0 {
+        return Err("virtio-gpu: modern release rollback failed");
+    }
+    Err(err)
 }

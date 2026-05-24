@@ -64,6 +64,7 @@ pub(crate) const N_MK_PIO_READ: i64 = tag4(b"MPRD");
 pub(crate) const N_MK_PIO_WRITE: i64 = tag4(b"MPWR");
 pub(crate) const N_MK_PIO_RELEASE: i64 = tag4(b"MPRL");
 pub(crate) const N_MK_DEBUG: i64 = tag4(b"MDBG");
+pub(crate) const N_MK_PCI_CONFIG_READ: i64 = tag4(b"MPCR");
 pub(crate) const N_MK_PCI_CONFIG_WRITE: i64 = tag4(b"MPCW");
 pub(crate) const N_MK_SURFACE_REGISTER: i64 = tag4(b"MSRG");
 pub(crate) const N_MK_SURFACE_SHARE: i64 = tag4(b"MSSH");

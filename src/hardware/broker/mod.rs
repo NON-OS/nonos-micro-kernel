@@ -56,7 +56,10 @@ pub use mmio::{
     map_for_caller, release_all_for_pid, release_for_device, unmap_grant, MmioMapError,
     MmioMapRequest, MmioMapResult,
 };
-pub use pci::{write as pci_config_write, PciWriteError, PciWriteRequest};
+pub use pci::{
+    read as pci_config_read, write as pci_config_write, PciReadError, PciReadRequest,
+    PciWriteError, PciWriteRequest,
+};
 #[cfg(target_arch = "x86_64")]
 pub use pio::{
     grant_for_caller as pio_grant_for_caller, read as pio_read,

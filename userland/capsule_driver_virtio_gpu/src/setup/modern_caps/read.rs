@@ -14,23 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{Request, E_INVAL, FOCUS_SET_REQ_LEN};
-use crate::server::respond;
-use crate::state::Context;
+use nonos_libc::mk_pci_config_read;
 
-pub fn handle(
-    ctx: &mut Context,
-    sender_pid: u32,
-    req: &Request,
-    body: &[u8],
-    tx: &mut [u8],
-) -> Result<(), &'static str> {
-    if body.len() != FOCUS_SET_REQ_LEN {
-        return respond::status(sender_pid, req, E_INVAL, tx);
+pub fn u8_at(device_id: u64, epoch: u64, off: u32) -> Result<u8, &'static str> {
+    let rc = mk_pci_config_read(device_id, epoch, off, 1);
+    if rc < 0 {
+        return Err("virtio-gpu: pci config read8 failed");
     }
-    let Some(target_pid) = super::u32_at(body, 0) else {
-        return respond::status(sender_pid, req, E_INVAL, tx);
-    };
-    ctx.focus.set(target_pid);
-    respond::status(sender_pid, req, 0, tx)
+    Ok(rc as u8)
+}
+
+pub fn u32_at(device_id: u64, epoch: u64, off: u32) -> Result<u32, &'static str> {
+    let rc = mk_pci_config_read(device_id, epoch, off, 4);
+    if rc < 0 {
+        return Err("virtio-gpu: pci config read32 failed");
+    }
+    Ok(rc as u32)
 }

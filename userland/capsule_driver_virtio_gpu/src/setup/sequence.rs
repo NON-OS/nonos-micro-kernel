@@ -28,8 +28,8 @@ pub fn run() -> Result<Driver, &'static str> {
     let registers = mmio::grant(dev, claim_epoch)?;
     let irq = irq::bind(dev, claim_epoch, registers)?;
     let queue = dma::map_queue(dev.device_id, claim_epoch, registers, &irq)?;
-    let regs = registers.regs(dev.pci_device);
-    let init = bring_up(regs, queue.device_addr, dev.pci_device)?;
+    let init = bring_up(registers.regs(dev.pci_device), queue.device_addr, dev.pci_device)?;
+    let regs = init.regs;
     if irq.grant_id != 0 {
         if mk_irq_ack(irq.grant_id) < 0 {
             return Err("virtio-gpu: irq ack failed");

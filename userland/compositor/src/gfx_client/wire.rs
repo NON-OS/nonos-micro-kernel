@@ -18,9 +18,6 @@ use alloc::vec::Vec;
 
 use nonos_libc::{mk_ipc_call, mk_ipc_recv};
 
-// Mirrors driver_virtio_gpu's NVGP wire envelope (4-byte magic,
-// 2-byte version, 2-byte op, 2-byte flags, 2-byte _pad, 4-byte
-// request_id, 4-byte payload_len = 20 bytes), then payload.
 pub const NVGP_MAGIC: u32 = 0x4E56_4750;
 pub const NVGP_VERSION: u16 = 1;
 pub const NVGP_HDR_LEN: usize = 20;
@@ -48,7 +45,9 @@ pub fn call(
     build_request(&mut tx, op, request_id, payload);
     let rc = mk_ipc_call(gfx_port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len());
     if rc <= 0 {
-        let _ = mk_ipc_recv(0, rx.as_mut_ptr(), rx.len(), 0);
+        if mk_ipc_recv(0, rx.as_mut_ptr(), rx.len(), 0) < 0 {
+            return Err("gfx ipc receive failed");
+        }
         return Err("gfx ipc call failed");
     }
     Ok(rc as usize)

@@ -18,16 +18,34 @@ use nonos_libc::mk_ipc_send_to_pid;
 
 use crate::protocol::{response_header, write_status, Request, HDR_LEN, STATUS_LEN};
 
-pub fn status(sender_pid: u32, req: &Request, errno: i32, tx: &mut [u8]) -> i64 {
+pub fn status(
+    sender_pid: u32,
+    req: &Request,
+    errno: i32,
+    tx: &mut [u8],
+) -> Result<(), &'static str> {
     response_header(tx, req, STATUS_LEN as u32);
     write_status(tx, errno);
-    mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + STATUS_LEN)
+    require_sent(mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + STATUS_LEN))
 }
 
-pub fn status_payload(sender_pid: u32, req: &Request, errno: i32, payload: &[u8], tx: &mut [u8]) -> i64 {
+pub fn status_payload(
+    sender_pid: u32,
+    req: &Request,
+    errno: i32,
+    payload: &[u8],
+    tx: &mut [u8],
+) -> Result<(), &'static str> {
     let body_len = STATUS_LEN + payload.len();
     response_header(tx, req, body_len as u32);
     write_status(tx, errno);
     tx[HDR_LEN + STATUS_LEN..HDR_LEN + body_len].copy_from_slice(payload);
-    mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + body_len)
+    require_sent(mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + body_len))
+}
+
+fn require_sent(rc: i64) -> Result<(), &'static str> {
+    if rc < 0 {
+        return Err("ipc reply send failed");
+    }
+    Ok(())
 }

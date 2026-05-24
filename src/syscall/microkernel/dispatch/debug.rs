@@ -17,11 +17,12 @@
 use super::args::Args;
 use crate::syscall::microkernel::debug::sys_mk_debug;
 use crate::syscall::microkernel::numbers::*;
-use crate::syscall::microkernel::pci::sys_pci_config_write;
+use crate::syscall::microkernel::pci::{sys_pci_config_read, sys_pci_config_write};
 
 pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
     Some(match nr {
         SYS_MK_DEBUG => sys_mk_debug(a.a0, a.a1),
+        SYS_PCI_CONFIG_READ => sys_pci_config_read(a.a0, a.a1, a.a2 as u32, a.a3 as u32),
         SYS_PCI_CONFIG_WRITE => sys_pci_config_write(a.a0, a.a1, a.a2 as u32, a.a3 as u32),
         _ => return None,
     })

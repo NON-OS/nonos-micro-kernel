@@ -20,11 +20,16 @@ use crate::protocol::{Request, DISPLAY_INFO_RESP_LEN};
 use crate::server::respond;
 use crate::state::Context;
 
-pub fn handle(ctx: &Context, sender_pid: u32, req: &Request, tx: &mut [u8]) {
+pub fn handle(
+    ctx: &Context,
+    sender_pid: u32,
+    req: &Request,
+    tx: &mut [u8],
+) -> Result<(), &'static str> {
     let mut body = [0u8; DISPLAY_INFO_RESP_LEN - 4];
     body[0..4].copy_from_slice(&ctx.width.to_le_bytes());
     body[4..8].copy_from_slice(&ctx.height.to_le_bytes());
     body[8..12].copy_from_slice(&ctx.stride.to_le_bytes());
     body[12..16].copy_from_slice(&SURFACE_FORMAT_ARGB8888.to_le_bytes());
-    respond::status_payload(sender_pid, req, 0, &body, tx);
+    respond::status_payload(sender_pid, req, 0, &body, tx)
 }

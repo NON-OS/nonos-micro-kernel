@@ -41,8 +41,16 @@ pub fn run() -> Result<Context, &'static str> {
     paint_chrome(&ctx);
     let rid = ctx.issue_request_id();
     register::register_overlay(peers.compositor_port, rid, &overlay)?;
-    let _ = wm_client::healthcheck(ctx.wm_port, ctx.issue_request_id());
-    let _ = wallpaper_client::set_policy(ctx.wallpaper_port, ctx.issue_request_id(), 0);
-    let _ = market_client::healthcheck(ctx.market_port, ctx.issue_request_id());
+    require_status(wm_client::healthcheck(ctx.wm_port, ctx.issue_request_id()))?;
+    require_status(wallpaper_client::set_policy(ctx.wallpaper_port, ctx.issue_request_id(), 0))?;
+    require_status(market_client::healthcheck(ctx.market_port, ctx.issue_request_id()))?;
     Ok(ctx)
+}
+
+fn require_status(result: Result<i32, &'static str>) -> Result<(), &'static str> {
+    let status = result?;
+    if status != 0 {
+        return Err("desktop peer rejected request");
+    }
+    Ok(())
 }

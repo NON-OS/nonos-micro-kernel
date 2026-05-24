@@ -14,23 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{Request, E_INVAL, FOCUS_SET_REQ_LEN};
-use crate::server::respond;
-use crate::state::Context;
+extern crate alloc;
 
-pub fn handle(
-    ctx: &mut Context,
-    sender_pid: u32,
-    req: &Request,
-    body: &[u8],
-    tx: &mut [u8],
-) -> Result<(), &'static str> {
-    if body.len() != FOCUS_SET_REQ_LEN {
-        return respond::status(sender_pid, req, E_INVAL, tx);
+use alloc::string::String;
+
+#[derive(Debug, Clone)]
+pub struct ServiceEndpoint {
+    pub name: String,
+    pub port: u32,
+    pub pid: u32,
+    pub caps_required: u64,
+}
+
+impl ServiceEndpoint {
+    pub fn new(name: &str, port: u32, pid: u32, caps_required: u64) -> Self {
+        Self { name: String::from(name), port, pid, caps_required }
     }
-    let Some(target_pid) = super::u32_at(body, 0) else {
-        return respond::status(sender_pid, req, E_INVAL, tx);
-    };
-    ctx.focus.set(target_pid);
-    respond::status(sender_pid, req, 0, tx)
 }

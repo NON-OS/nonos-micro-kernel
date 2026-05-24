@@ -17,10 +17,10 @@
 use alloc::vec;
 
 use super::drain::drain_ipc;
-use crate::debug;
 use crate::frame_pacer;
 use crate::protocol::{HDR_LEN, IPC_PAYLOAD_MAX};
 use crate::state::Context;
+use nonos_libc::mk_yield;
 
 pub fn run(mut ctx: Context) -> ! {
     let mut rx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
@@ -29,12 +29,13 @@ pub fn run(mut ctx: Context) -> ! {
         drain_ipc(&mut ctx, &mut rx, &mut tx);
         match frame_pacer::tick(&mut ctx) {
             Ok(()) => {}
-            Err(e) if !ctx.scanout_error_reported => {
-                debug::marker(e.as_bytes());
+            Err(_) if !ctx.scanout_error_reported => {
                 ctx.scanout_error_reported = true;
             }
             Err(_) => {}
         }
-        let _ = frame_pacer::wait_for_vsync();
+        if frame_pacer::wait_for_vsync().is_err() {
+            mk_yield();
+        }
     }
 }

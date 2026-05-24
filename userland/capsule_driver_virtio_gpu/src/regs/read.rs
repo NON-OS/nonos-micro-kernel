@@ -20,23 +20,30 @@ use super::state::Regs;
 impl Regs {
     #[inline]
     pub unsafe fn r8(self, offset: usize) -> u8 {
-        match self.io {
-            RegIo::Mmio(base) => read_volatile(base.add(offset)),
-            RegIo::Pio(grant) => pio::read(grant, offset, 1) as u8,
+        match self.common {
+            RegIo::Mmio(base) => read_volatile(base.add(self.common_offset + offset)),
+            RegIo::Pio(grant) => pio::read(grant, self.common_offset + offset, 1) as u8,
         }
     }
     #[inline]
     pub unsafe fn r16(self, offset: usize) -> u16 {
-        match self.io {
-            RegIo::Mmio(base) => read_volatile(base.add(offset).cast()),
-            RegIo::Pio(grant) => pio::read(grant, offset, 2) as u16,
+        match self.common {
+            RegIo::Mmio(base) => read_volatile(base.add(self.common_offset + offset).cast()),
+            RegIo::Pio(grant) => pio::read(grant, self.common_offset + offset, 2) as u16,
         }
     }
     #[inline]
     pub unsafe fn r32(self, offset: usize) -> u32 {
-        match self.io {
-            RegIo::Mmio(base) => read_volatile(base.add(offset).cast()),
-            RegIo::Pio(grant) => pio::read(grant, offset, 4),
+        match self.common {
+            RegIo::Mmio(base) => read_volatile(base.add(self.common_offset + offset).cast()),
+            RegIo::Pio(grant) => pio::read(grant, self.common_offset + offset, 4),
+        }
+    }
+    #[inline]
+    pub unsafe fn config_r32(self, offset: usize) -> u32 {
+        match self.device {
+            RegIo::Mmio(base) => read_volatile(base.add(self.device_offset + offset).cast()),
+            RegIo::Pio(grant) => pio::read(grant, self.device_offset + offset, 4),
         }
     }
 }

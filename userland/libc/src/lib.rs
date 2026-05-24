@@ -33,11 +33,12 @@ mod unistd;
 
 pub use broker::{
     mk_device_claim, mk_device_list, mk_device_release, mk_dma_map, mk_dma_unmap, mk_irq_ack,
-    mk_irq_bind, mk_irq_poll, mk_irq_unbind, mk_mmio_map, mk_mmio_unmap, mk_pci_config_write,
-    mk_pio_grant, mk_pio_read, mk_pio_release, mk_pio_write, Bar, DeviceRecord, DmaMapOut,
-    IrqBindOut, IrqPollOut, MmioMapOut, PioGrantOut, BAR_KIND_MMIO, BAR_KIND_NONE, BAR_KIND_PIO,
-    BUS_KIND_ACPI, BUS_KIND_PCI, BUS_KIND_VIRT, MK_IRQ_BIND_MSIX, MK_PCI_CFG_COMMAND,
-    MK_PCI_CMD_BUS_MASTER, MK_PCI_MSIX_CTRL_ENABLE, MK_PCI_MSIX_CTRL_FUNCTION_MASK,
+    mk_irq_bind, mk_irq_poll, mk_irq_unbind, mk_mmio_map, mk_mmio_unmap, mk_pci_config_read,
+    mk_pci_config_write, mk_pio_grant, mk_pio_read, mk_pio_release, mk_pio_write, Bar,
+    DeviceRecord, DmaMapOut, IrqBindOut, IrqPollOut, MmioMapOut, PioGrantOut, BAR_KIND_MMIO,
+    BAR_KIND_NONE, BAR_KIND_PIO, BUS_KIND_ACPI, BUS_KIND_PCI, BUS_KIND_VIRT, MK_IRQ_BIND_MSIX,
+    MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER, MK_PCI_MSIX_CTRL_ENABLE,
+    MK_PCI_MSIX_CTRL_FUNCTION_MASK,
 };
 pub use admin::{mk_admin_reboot, mk_admin_shutdown};
 pub use crypto::{

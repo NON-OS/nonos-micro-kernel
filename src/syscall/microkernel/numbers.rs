@@ -51,4 +51,5 @@ pub const SYS_PIO_READ: u64 = tag4(b"MPRD");
 pub const SYS_PIO_WRITE: u64 = tag4(b"MPWR");
 pub const SYS_PIO_RELEASE: u64 = tag4(b"MPRL");
 pub const SYS_MK_DEBUG: u64 = tag4(b"MDBG");
+pub const SYS_PCI_CONFIG_READ: u64 = tag4(b"MPCR");
 pub const SYS_PCI_CONFIG_WRITE: u64 = tag4(b"MPCW");

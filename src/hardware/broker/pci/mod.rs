@@ -16,8 +16,10 @@
 
 pub mod allowlist;
 pub mod ownership;
+mod read;
 mod types;
 mod write;
 
-pub use types::{PciWriteError, PciWriteRequest, WriteAction};
+pub use read::read;
+pub use types::{PciReadError, PciReadRequest, PciWriteError, PciWriteRequest, WriteAction};
 pub use write::write;
