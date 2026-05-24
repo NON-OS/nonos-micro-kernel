@@ -39,7 +39,14 @@ impl AllocatorState {
     pub fn is_initialized(&self) -> bool {
         self.frame_count > 0 && !self.bitmap_ptr.is_null()
     }
+
+    pub fn contig_split(&self) -> usize {
+        let reserve = core::cmp::min(self.frame_count / 4, CONTIG_RESERVE_FRAMES);
+        self.frame_count - reserve
+    }
 }
+
+const CONTIG_RESERVE_FRAMES: usize = 32768;
 
 impl Default for AllocatorState {
     fn default() -> Self {

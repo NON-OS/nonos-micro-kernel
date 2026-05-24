@@ -22,7 +22,8 @@ pub fn allocate_frame(state: &mut AllocatorState, flags: AllocFlags) -> Option<F
     if !state.is_initialized() {
         return None;
     }
-    let (bptr, total, start) = (state.bitmap_ptr, state.frame_count, state.frame_start);
+    let (bptr, start) = (state.bitmap_ptr, state.frame_start);
+    let total = state.contig_split();
     if flags.contains(AllocFlags::HIGH) {
         for i in (0..total).rev() {
             if unsafe { !bitmap::bit_test(bptr, i) } {
