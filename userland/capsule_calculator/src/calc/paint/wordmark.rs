@@ -14,36 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::op::Op;
+use nonos_app_skeleton::PaintBuffer;
 
-pub enum Key {
-    Digit(u8),
-    Decimal,
-    Operator(Op),
-    Equals,
-    Clear,
-    Negate,
-    Percent,
-    Close,
-    Ignored,
-}
+use crate::calc::layout::PADDING;
+use crate::calc::theme::WORDMARK;
 
-pub fn classify(code: u32) -> Key {
-    if code > 0x7F {
-        return Key::Ignored;
-    }
-    match code as u8 {
-        b'0'..=b'9' => Key::Digit(code as u8 - b'0'),
-        b'.' => Key::Decimal,
-        b'+' => Key::Operator(Op::Add),
-        b'-' => Key::Operator(Op::Sub),
-        b'*' | b'x' | b'X' => Key::Operator(Op::Mul),
-        b'/' => Key::Operator(Op::Div),
-        b'=' | 0x0D => Key::Equals,
-        b'c' | b'C' | 0x08 => Key::Clear,
-        b'n' | b'N' => Key::Negate,
-        b'%' => Key::Percent,
-        0x1B => Key::Close,
-        _ => Key::Ignored,
-    }
+const TEXT: &[u8] = b"NONOS calc";
+
+pub fn paint(fb: &mut PaintBuffer) {
+    fb.text(PADDING, 4, TEXT, WORDMARK);
 }

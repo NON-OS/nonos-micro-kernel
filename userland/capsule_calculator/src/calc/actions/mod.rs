@@ -14,18 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod clear;
-mod decimal;
-mod digit;
-mod equals;
-mod negate;
-mod percent;
-mod set_op;
-
-pub use clear::clear;
-pub use decimal::input_decimal;
-pub use digit::input_digit;
-pub use equals::equals;
-pub use negate::negate;
-pub use percent::percent;
-pub use set_op::set_operator;
+pub mod clear;
+pub mod decimal;
+pub mod digit;
+pub mod digit_helpers;
+pub mod dispatch;
+pub mod equals;
+pub mod memory_add;
+pub mod memory_clear;
+pub mod memory_recall;
+pub mod memory_store;
+pub mod memory_sub;
+pub mod negate;
+pub mod percent;
+pub mod reciprocal;
+pub mod set_op;
+pub mod square;
+pub mod square_root;

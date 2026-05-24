@@ -16,10 +16,9 @@
 
 use crate::calc::state::State;
 
-pub fn percent(state: &mut State) {
-    if state.error {
+pub fn run(state: &mut State) {
+    if state.is_error() {
         return;
     }
-    state.display = state.display / 100;
-    state.decimal_pos = 0;
+    state.display /= 100;
 }

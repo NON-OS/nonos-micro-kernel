@@ -14,35 +14,46 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::calc::fixed::{Fixed, FRAC, MAX_FRACTION_DIGITS};
 use crate::calc::state::State;
 
-const DIGIT_LIMIT: i64 = 999_999_999_99; // 9,999,999,999.99 displayed
+use super::digit_helpers::{integer_digit_count, pow10};
 
-pub fn input_digit(state: &mut State, digit: u8) {
-    if state.error {
+const INTEGER_DIGIT_LIMIT: u32 = 16;
+
+pub fn run(state: &mut State, digit: u8) {
+    if state.is_error() || digit > 9 {
         return;
     }
     if state.new_input {
-        state.display = (digit as i64) * 100;
+        state.display = (digit as Fixed) * FRAC;
         state.new_input = false;
-        state.decimal_pos = 0;
+        state.decimal_digits_typed = 0;
         return;
     }
-    let sign = if state.display < 0 { -1 } else { 1 };
-    let mag = state.display.saturating_abs();
-    let next = match state.decimal_pos {
-        0 => {
-            let int_part = mag / 100;
-            let dec_part = mag % 100;
-            int_part.saturating_mul(10).saturating_add(digit as i64).saturating_mul(100) + dec_part
+    let sign: Fixed = if state.display < 0 { -1 } else { 1 };
+    let magnitude = state.display.saturating_abs();
+    let next = if state.decimal_digits_typed == 0 {
+        if integer_digit_count(magnitude) >= INTEGER_DIGIT_LIMIT {
+            return;
         }
-        1 => mag.saturating_add((digit as i64) * 10),
-        2 => mag.saturating_add(digit as i64),
-        _ => mag,
+        let int_part = magnitude / FRAC;
+        let frac_part = magnitude % FRAC;
+        int_part
+            .saturating_mul(10)
+            .saturating_add(digit as Fixed)
+            .saturating_mul(FRAC)
+            .saturating_add(frac_part)
+    } else {
+        if state.decimal_digits_typed >= MAX_FRACTION_DIGITS as u8 {
+            return;
+        }
+        let shift = MAX_FRACTION_DIGITS - 1 - state.decimal_digits_typed as u32;
+        let increment = (digit as Fixed) * pow10(shift);
+        magnitude.saturating_add(increment)
     };
-    let bounded = if next > DIGIT_LIMIT { DIGIT_LIMIT } else { next };
-    state.display = sign * bounded;
-    if state.decimal_pos >= 1 && state.decimal_pos < 2 {
-        state.decimal_pos += 1;
+    state.display = sign * next;
+    if state.decimal_digits_typed >= 1 && state.decimal_digits_typed < MAX_FRACTION_DIGITS as u8 {
+        state.decimal_digits_typed += 1;
     }
 }

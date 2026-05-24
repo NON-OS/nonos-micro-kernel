@@ -14,15 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::fixed::Fixed;
 use super::op::Op;
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum ErrorKind {
+    None,
+    DivByZero,
+    DomainError,
+    Overflow,
+}
+
 pub struct State {
-    pub display: i64,
-    pub operand: i64,
+    pub display: Fixed,
+    pub operand: Fixed,
     pub operator: Op,
+    pub memory: Fixed,
     pub new_input: bool,
-    pub decimal_pos: u8,
-    pub error: bool,
+    pub decimal_digits_typed: u8,
+    pub error: ErrorKind,
 }
 
 impl State {
@@ -31,9 +41,20 @@ impl State {
             display: 0,
             operand: 0,
             operator: Op::None,
+            memory: 0,
             new_input: true,
-            decimal_pos: 0,
-            error: false,
+            decimal_digits_typed: 0,
+            error: ErrorKind::None,
         }
+    }
+    pub fn memory_engaged(&self) -> bool {
+        self.memory != 0
+    }
+    pub fn is_error(&self) -> bool {
+        self.error != ErrorKind::None
+    }
+    pub fn reset_input(&mut self) {
+        self.new_input = true;
+        self.decimal_digits_typed = 0;
     }
 }

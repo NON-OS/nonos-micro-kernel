@@ -14,17 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::calc::state::{ErrorKind, State};
+use crate::calc::fixed::{Fixed, FRAC};
 
-pub fn run(state: &mut State) {
-    if state.is_error() {
-        return;
+pub fn integer_digit_count(magnitude: Fixed) -> u32 {
+    let mut int_part = magnitude / FRAC;
+    if int_part == 0 {
+        return 1;
     }
-    state.display = match state.display.checked_neg() {
-        Some(v) => v,
-        None => {
-            state.error = ErrorKind::Overflow;
-            0
-        }
-    };
+    let mut count = 0;
+    while int_part > 0 {
+        int_part /= 10;
+        count += 1;
+    }
+    count
+}
+
+pub fn pow10(exp: u32) -> Fixed {
+    let mut value: Fixed = 1;
+    for _ in 0..exp {
+        value *= 10;
+    }
+    value
 }

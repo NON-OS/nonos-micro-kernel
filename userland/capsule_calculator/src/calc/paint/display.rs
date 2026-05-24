@@ -16,33 +16,30 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::calc::format::{format, DISPLAY_MAX};
+use crate::calc::format::{format, DISPLAY_MAX, ERROR_TEXT};
 use crate::calc::layout::{DISPLAY_H, PADDING};
+use crate::calc::manifest::WIDTH;
 use crate::calc::state::State;
-use crate::calc::theme::{DISPLAY_BG, DISPLAY_TEXT, ERROR_TEXT};
+use crate::calc::theme::{DISPLAY_BG, DISPLAY_BORDER, DISPLAY_ERROR, DISPLAY_TEXT};
 
-const GLYPH_ADVANCE: u32 = 8;
-const TEXT_LEFT_INSET: u32 = 16;
-const TEXT_TOP_INSET: u32 = 36;
+const CELL_WIDTH: u32 = 8;
+const TEXT_RIGHT_PADDING: u32 = 16;
 
-pub fn paint(fb: &mut PaintBuffer, state: &State) {
-    let w = fb.width - PADDING * 2;
-    fb.fill_rect(PADDING, PADDING, w, DISPLAY_H, DISPLAY_BG);
+pub fn paint(state: &State, fb: &mut PaintBuffer) {
+    let display_top = 20;
+    fb.fill_rect(PADDING, display_top, WIDTH - PADDING * 2, DISPLAY_H, DISPLAY_BG);
+    fb.fill_rect(PADDING, display_top, WIDTH - PADDING * 2, 1, DISPLAY_BORDER);
+    fb.fill_rect(PADDING, display_top + DISPLAY_H - 1, WIDTH - PADDING * 2, 1, DISPLAY_BORDER);
     let mut buf = [0u8; DISPLAY_MAX];
-    let len = if state.error {
-        let err = b"ERROR";
-        let n = err.len().min(buf.len());
-        buf[..n].copy_from_slice(&err[..n]);
-        n
+    let (text, color): (&[u8], u32) = if state.is_error() {
+        (ERROR_TEXT, DISPLAY_ERROR)
     } else {
-        format(state.display, state.decimal_pos, &mut buf)
+        let n = format(state.display, state.decimal_digits_typed, &mut buf);
+        (&buf[..n], DISPLAY_TEXT)
     };
-    let color = if state.error { ERROR_TEXT } else { DISPLAY_TEXT };
-    let text_w = (len as u32) * GLYPH_ADVANCE;
-    let text_x = if text_w + TEXT_LEFT_INSET < w {
-        PADDING + w - TEXT_LEFT_INSET - text_w
-    } else {
-        PADDING + TEXT_LEFT_INSET
-    };
-    fb.text(text_x, PADDING + TEXT_TOP_INSET, &buf[..len], color);
+    let text_width = (text.len() as u32) * CELL_WIDTH;
+    let display_right = WIDTH - PADDING - TEXT_RIGHT_PADDING;
+    let x = display_right.saturating_sub(text_width);
+    let y = display_top + (DISPLAY_H - 8) / 2;
+    fb.text(x, y, text, color);
 }

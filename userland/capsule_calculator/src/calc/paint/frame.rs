@@ -14,17 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::calc::state::{ErrorKind, State};
+use nonos_app_skeleton::PaintBuffer;
 
-pub fn run(state: &mut State) {
-    if state.is_error() {
-        return;
-    }
-    state.display = match state.display.checked_neg() {
-        Some(v) => v,
-        None => {
-            state.error = ErrorKind::Overflow;
-            0
-        }
-    };
+use super::background;
+use super::display;
+use super::grid;
+use super::memory_badge;
+use super::wordmark;
+use crate::calc::state::State;
+
+pub fn paint(state: &State, fb: &mut PaintBuffer) {
+    background::paint(fb);
+    wordmark::paint(fb);
+    display::paint(state, fb);
+    memory_badge::paint(state, fb);
+    grid::paint(fb);
 }

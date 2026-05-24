@@ -14,12 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const BACKGROUND: u32 = 0xFF0E1116;
-pub const DISPLAY_BG: u32 = 0xFF1B2027;
-pub const DISPLAY_TEXT: u32 = 0xFFFFFFFF;
-pub const ERROR_TEXT: u32 = 0xFFFF5050;
-pub const BTN_NUM: u32 = 0xFF2A313C;
-pub const BTN_FUNC: u32 = 0xFF3A4250;
-pub const BTN_OP: u32 = 0xFF1F6FEB;
-pub const BTN_EQ: u32 = 0xFFE26A2C;
-pub const BTN_TEXT: u32 = 0xFFEDEFF2;
+pub const BACKGROUND: u32 = 0xFF0A0F0A;
+pub const DISPLAY_BG: u32 = 0xFF050A05;
+pub const DISPLAY_BORDER: u32 = 0xFF1F4020;
+pub const DISPLAY_TEXT: u32 = 0xFF8CF08C;
+pub const DISPLAY_DIM: u32 = 0xFF5FB95F;
+pub const DISPLAY_ERROR: u32 = 0xFFFF5757;
+pub const MEMORY_INDICATOR: u32 = 0xFFD8B45F;
+
+pub const NUMBER_BG: u32 = 0xFF101810;
+pub const NUMBER_TEXT: u32 = 0xFFB6FF7A;
+pub const OPERATOR_BG: u32 = 0xFF1A3520;
+pub const OPERATOR_TEXT: u32 = 0xFF8CF08C;
+pub const FUNCTION_BG: u32 = 0xFF152015;
+pub const FUNCTION_TEXT: u32 = 0xFF5FB95F;
+pub const EQUALS_BG: u32 = 0xFF2D8F44;
+pub const EQUALS_TEXT: u32 = 0xFF0A0F0A;
+pub const MEMORY_BG: u32 = 0xFF332010;
+pub const MEMORY_TEXT: u32 = 0xFFD8B45F;
+pub const BUTTON_BORDER: u32 = 0xFF2A4530;
+pub const WORDMARK: u32 = 0xFF1F4020;

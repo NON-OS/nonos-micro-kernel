@@ -14,27 +14,43 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::calc::op::Op;
+
 #[derive(Clone, Copy)]
 pub enum Role {
-    Function,
     Number,
     Operator,
     Equals,
+    Function,
+    Memory,
 }
 
+#[derive(Clone, Copy)]
+pub enum Action {
+    Digit(u8),
+    Decimal,
+    Operator(Op),
+    Equals,
+    Clear,
+    Negate,
+    Percent,
+    Square,
+    SquareRoot,
+    Reciprocal,
+    MemoryAdd,
+    MemorySub,
+    MemoryRecall,
+    MemoryClear,
+    MemoryStore,
+}
+
+#[derive(Clone, Copy)]
 pub struct Button {
     pub label: &'static [u8],
     pub role: Role,
+    pub action: Action,
 }
 
-const fn b(label: &'static [u8], role: Role) -> Button {
-    Button { label, role }
+pub const fn b(label: &'static [u8], role: Role, action: Action) -> Button {
+    Button { label, role, action }
 }
-
-pub static GRID: [[Button; 4]; 5] = [
-    [b(b"AC", Role::Function), b(b"+/-", Role::Function), b(b"%", Role::Function), b(b"/", Role::Operator)],
-    [b(b"7", Role::Number), b(b"8", Role::Number), b(b"9", Role::Number), b(b"*", Role::Operator)],
-    [b(b"4", Role::Number), b(b"5", Role::Number), b(b"6", Role::Number), b(b"-", Role::Operator)],
-    [b(b"1", Role::Number), b(b"2", Role::Number), b(b"3", Role::Number), b(b"+", Role::Operator)],
-    [b(b"0", Role::Number), b(b".", Role::Number), b(b"C", Role::Function), b(b"=", Role::Equals)],
-];

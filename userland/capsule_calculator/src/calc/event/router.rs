@@ -14,30 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent};
+use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
 
-use super::actions;
-use super::keys::{classify, Key};
-use super::state::State;
+use super::on_key::on_key;
+use super::on_pointer_button::on_pointer_button;
+use crate::calc::state::State;
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
+    if event.kind == InputKind::ButtonDown {
+        return on_pointer_button(state, event.x, event.y);
+    }
     if !event.is_key_down() {
         return EventOutcome::Idle;
     }
-    match classify(event.code) {
-        Key::Close => EventOutcome::Close,
-        Key::Ignored => EventOutcome::Idle,
-        Key::Digit(d) => act(state, |s| actions::input_digit(s, d)),
-        Key::Decimal => act(state, actions::input_decimal),
-        Key::Operator(op) => act(state, |s| actions::set_operator(s, op)),
-        Key::Equals => act(state, actions::equals),
-        Key::Clear => act(state, actions::clear),
-        Key::Negate => act(state, actions::negate),
-        Key::Percent => act(state, actions::percent),
-    }
-}
-
-fn act<F: FnOnce(&mut State)>(state: &mut State, f: F) -> EventOutcome {
-    f(state);
-    EventOutcome::Repaint
+    on_key(state, event.code)
 }

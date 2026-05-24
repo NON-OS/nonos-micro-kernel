@@ -17,21 +17,27 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use crate::calc::buttons::{Button, Role};
-use crate::calc::theme::{BTN_EQ, BTN_FUNC, BTN_NUM, BTN_OP, BTN_TEXT};
+use crate::calc::theme::{
+    BUTTON_BORDER, EQUALS_BG, EQUALS_TEXT, FUNCTION_BG, FUNCTION_TEXT, MEMORY_BG, MEMORY_TEXT,
+    NUMBER_BG, NUMBER_TEXT, OPERATOR_BG, OPERATOR_TEXT,
+};
 
-const GLYPH_ADVANCE: u32 = 8;
-const GLYPH_HEIGHT: u32 = 16;
+const CELL_WIDTH: u32 = 8;
+const CELL_HEIGHT: u32 = 8;
 
 pub fn paint(fb: &mut PaintBuffer, btn: &Button, x: u32, y: u32, w: u32, h: u32) {
-    let bg = match btn.role {
-        Role::Function => BTN_FUNC,
-        Role::Number => BTN_NUM,
-        Role::Operator => BTN_OP,
-        Role::Equals => BTN_EQ,
+    let (bg, fg) = match btn.role {
+        Role::Number => (NUMBER_BG, NUMBER_TEXT),
+        Role::Operator => (OPERATOR_BG, OPERATOR_TEXT),
+        Role::Equals => (EQUALS_BG, EQUALS_TEXT),
+        Role::Function => (FUNCTION_BG, FUNCTION_TEXT),
+        Role::Memory => (MEMORY_BG, MEMORY_TEXT),
     };
     fb.fill_rect(x, y, w, h, bg);
-    let label_w = (btn.label.len() as u32) * GLYPH_ADVANCE;
-    let tx = x + w.saturating_sub(label_w) / 2;
-    let ty = y + h.saturating_sub(GLYPH_HEIGHT) / 2;
-    fb.text(tx, ty, btn.label, BTN_TEXT);
+    fb.fill_rect(x, y, w, 1, BUTTON_BORDER);
+    fb.fill_rect(x, y + h - 1, w, 1, BUTTON_BORDER);
+    let label_w = (btn.label.len() as u32) * CELL_WIDTH;
+    let tx = x + (w.saturating_sub(label_w)) / 2;
+    let ty = y + (h.saturating_sub(CELL_HEIGHT)) / 2;
+    fb.text(tx, ty, btn.label, fg);
 }

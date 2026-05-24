@@ -20,11 +20,11 @@ pub fn run(state: &mut State) {
     if state.is_error() {
         return;
     }
-    state.display = match state.display.checked_neg() {
+    state.memory = match state.memory.checked_sub(state.display) {
         Some(v) => v,
         None => {
             state.error = ErrorKind::Overflow;
-            0
+            return;
         }
     };
 }

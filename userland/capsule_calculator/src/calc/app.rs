@@ -35,11 +35,9 @@ impl App for Calculator {
     fn manifest(&self) -> AppManifest {
         manifest()
     }
-
     fn on_event(&mut self, event: InputEvent) -> EventOutcome {
         on_event(&mut self.state, event)
     }
-
     fn paint(&mut self, fb: &mut PaintBuffer) {
         paint(&self.state, fb);
     }

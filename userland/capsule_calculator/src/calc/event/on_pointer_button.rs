@@ -14,17 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::calc::state::{ErrorKind, State};
+use nonos_app_skeleton::EventOutcome;
 
-pub fn run(state: &mut State) {
-    if state.is_error() {
-        return;
+use crate::calc::actions::dispatch;
+use crate::calc::buttons::GRID;
+use crate::calc::layout::hit_test;
+use crate::calc::state::State;
+
+pub fn on_pointer_button(state: &mut State, x: i32, y: i32) -> EventOutcome {
+    if x < 0 || y < 0 {
+        return EventOutcome::Idle;
     }
-    state.display = match state.display.checked_neg() {
-        Some(v) => v,
-        None => {
-            state.error = ErrorKind::Overflow;
-            0
-        }
+    let (row, col) = match hit_test(x as u32, y as u32) {
+        Some(rc) => rc,
+        None => return EventOutcome::Idle,
     };
+    if row as usize >= GRID.len() || col as usize >= GRID[0].len() {
+        return EventOutcome::Idle;
+    }
+    let button = GRID[row as usize][col as usize];
+    dispatch::run(state, button.action);
+    EventOutcome::Repaint
 }

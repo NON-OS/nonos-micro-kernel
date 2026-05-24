@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::fixed::{Fixed, FRAC};
+use super::state::ErrorKind;
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Op {
     None,
@@ -23,18 +26,21 @@ pub enum Op {
     Div,
 }
 
-pub fn apply(a: i64, b: i64, op: Op) -> i64 {
+pub fn apply(a: Fixed, b: Fixed, op: Op) -> Result<Fixed, ErrorKind> {
     match op {
-        Op::None => b,
-        Op::Add => a.saturating_add(b),
-        Op::Sub => a.saturating_sub(b),
-        Op::Mul => a.saturating_mul(b) / 100,
+        Op::None => Ok(b),
+        Op::Add => a.checked_add(b).ok_or(ErrorKind::Overflow),
+        Op::Sub => a.checked_sub(b).ok_or(ErrorKind::Overflow),
+        Op::Mul => {
+            let prod = a.checked_mul(b).ok_or(ErrorKind::Overflow)?;
+            Ok(prod / FRAC)
+        }
         Op::Div => {
             if b == 0 {
-                0
-            } else {
-                a.saturating_mul(100) / b
+                return Err(ErrorKind::DivByZero);
             }
+            let scaled = a.checked_mul(FRAC).ok_or(ErrorKind::Overflow)?;
+            Ok(scaled / b)
         }
     }
 }

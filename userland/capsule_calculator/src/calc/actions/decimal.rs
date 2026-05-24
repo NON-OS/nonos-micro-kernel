@@ -16,15 +16,15 @@
 
 use crate::calc::state::State;
 
-pub fn input_decimal(state: &mut State) {
-    if state.error {
+pub fn run(state: &mut State) {
+    if state.is_error() {
         return;
     }
     if state.new_input {
         state.display = 0;
         state.new_input = false;
     }
-    if state.decimal_pos == 0 {
-        state.decimal_pos = 1;
+    if state.decimal_digits_typed == 0 {
+        state.decimal_digits_typed = 1;
     }
 }

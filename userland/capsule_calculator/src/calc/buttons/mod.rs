@@ -14,17 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::calc::state::{ErrorKind, State};
+mod kinds;
+mod row_memory;
+mod row_function;
+mod row_seven;
+mod row_four;
+mod row_one;
+mod row_zero;
 
-pub fn run(state: &mut State) {
-    if state.is_error() {
-        return;
-    }
-    state.display = match state.display.checked_neg() {
-        Some(v) => v,
-        None => {
-            state.error = ErrorKind::Overflow;
-            0
-        }
-    };
-}
+pub use kinds::{Action, Button, Role};
+
+pub static GRID: [[Button; 5]; 6] = [
+    row_memory::ROW,
+    row_function::ROW,
+    row_seven::ROW,
+    row_four::ROW,
+    row_one::ROW,
+    row_zero::ROW,
+];

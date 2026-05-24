@@ -14,17 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::calc::state::{ErrorKind, State};
+mod key_classifier;
+mod on_key;
+mod on_pointer_button;
+mod router;
 
-pub fn run(state: &mut State) {
-    if state.is_error() {
-        return;
-    }
-    state.display = match state.display.checked_neg() {
-        Some(v) => v,
-        None => {
-            state.error = ErrorKind::Overflow;
-            0
-        }
-    };
-}
+pub use router::on_event;

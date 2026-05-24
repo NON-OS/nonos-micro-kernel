@@ -14,17 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::calc::state::{ErrorKind, State};
-
-pub fn run(state: &mut State) {
-    if state.is_error() {
-        return;
-    }
-    state.display = match state.display.checked_neg() {
-        Some(v) => v,
-        None => {
-            state.error = ErrorKind::Overflow;
-            0
+pub fn write_u128(mut value: u128, out: &mut [u8]) -> usize {
+    if value == 0 {
+        if out.is_empty() {
+            return 0;
         }
-    };
+        out[0] = b'0';
+        return 1;
+    }
+    let mut tmp = [0u8; 40];
+    let mut len = 0;
+    while value > 0 && len < tmp.len() {
+        tmp[len] = b'0' + (value % 10) as u8;
+        value /= 10;
+        len += 1;
+    }
+    let mut n = 0;
+    while len > 0 && n < out.len() {
+        len -= 1;
+        out[n] = tmp[len];
+        n += 1;
+    }
+    n
 }

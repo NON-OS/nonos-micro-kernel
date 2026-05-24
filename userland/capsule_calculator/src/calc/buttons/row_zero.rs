@@ -14,17 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::calc::state::{ErrorKind, State};
+use super::kinds::{b, Action, Button, Role};
 
-pub fn run(state: &mut State) {
-    if state.is_error() {
-        return;
-    }
-    state.display = match state.display.checked_neg() {
-        Some(v) => v,
-        None => {
-            state.error = ErrorKind::Overflow;
-            0
-        }
-    };
-}
+pub const ROW: [Button; 5] = [
+    b(b"0", Role::Number, Action::Digit(0)),
+    b(b"00", Role::Number, Action::Digit(0)),
+    b(b"00", Role::Number, Action::Digit(0)),
+    b(b"=", Role::Equals, Action::Equals),
+    b(b"=", Role::Equals, Action::Equals),
+];

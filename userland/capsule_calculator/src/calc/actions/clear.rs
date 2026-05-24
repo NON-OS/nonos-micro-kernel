@@ -15,13 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::calc::op::Op;
-use crate::calc::state::State;
+use crate::calc::state::{ErrorKind, State};
 
-pub fn clear(state: &mut State) {
+pub fn run(state: &mut State) {
     state.display = 0;
     state.operand = 0;
     state.operator = Op::None;
-    state.new_input = true;
-    state.decimal_pos = 0;
-    state.error = false;
+    state.error = ErrorKind::None;
+    state.reset_input();
 }

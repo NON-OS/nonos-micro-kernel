@@ -16,20 +16,24 @@
 
 use nonos_app_skeleton::{AppManifest, WindowKind};
 
-pub const WIDTH: u32 = 320;
-pub const HEIGHT: u32 = 460;
-
+pub const WIDTH: u32 = 360;
+pub const HEIGHT: u32 = 520;
+const WINDOW_ID: u32 = 0x4341_4C43;
+const TITLE: &[u8] = b"Calculator";
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
+const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
+const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
+const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_BUTTON_DOWN_BIT | INPUT_POINTER_ABS_BIT;
 
 pub fn manifest() -> AppManifest {
     AppManifest {
-        title: b"Calculator",
-        window_id: 0x4341_4C43,
+        title: TITLE,
+        window_id: WINDOW_ID,
         kind: WindowKind::Normal,
-        initial_x: 420,
-        initial_y: 180,
+        initial_x: 380,
+        initial_y: 160,
         width: WIDTH,
         height: HEIGHT,
-        input_kind_mask: INPUT_KEY_DOWN_BIT,
+        input_kind_mask: INPUT_MASK,
     }
 }

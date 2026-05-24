@@ -16,17 +16,16 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::button;
 use crate::calc::buttons::GRID;
 use crate::calc::layout::{cell_origin, cell_size};
 
-use super::button;
-
 pub fn paint(fb: &mut PaintBuffer) {
-    let (cell_w, cell_h) = cell_size();
+    let (cw, ch) = cell_size();
     for (row_idx, row) in GRID.iter().enumerate() {
         for (col_idx, btn) in row.iter().enumerate() {
-            let (x, y) = cell_origin(row_idx as u32, col_idx as u32, cell_w, cell_h);
-            button::paint(fb, btn, x, y, cell_w, cell_h);
+            let (x, y) = cell_origin(row_idx as u32, col_idx as u32, cw, ch);
+            button::paint(fb, btn, x, y, cw, ch);
         }
     }
 }

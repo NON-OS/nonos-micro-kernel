@@ -14,14 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
-
 use crate::calc::state::State;
+use crate::calc::unary::square;
 
-use super::{background, display, grid};
-
-pub fn paint(state: &State, fb: &mut PaintBuffer) {
-    background::paint(fb);
-    display::paint(fb, state);
-    grid::paint(fb);
+pub fn run(state: &mut State) {
+    if state.is_error() {
+        return;
+    }
+    match square(state.display) {
+        Ok(v) => state.display = v,
+        Err(kind) => {
+            state.error = kind;
+            state.display = 0;
+        }
+    }
+    state.reset_input();
 }

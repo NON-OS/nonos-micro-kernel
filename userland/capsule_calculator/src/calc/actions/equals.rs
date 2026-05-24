@@ -17,17 +17,20 @@
 use crate::calc::op::{apply, Op};
 use crate::calc::state::State;
 
-pub fn equals(state: &mut State) {
-    if state.error || state.operator == Op::None {
+pub fn run(state: &mut State) {
+    if state.is_error() || state.operator == Op::None {
         return;
     }
-    if state.operator == Op::Div && state.display == 0 {
-        state.error = true;
-        state.display = 0;
-    } else {
-        state.display = apply(state.operand, state.display, state.operator);
+    match apply(state.operand, state.display, state.operator) {
+        Ok(result) => {
+            state.display = result;
+        }
+        Err(kind) => {
+            state.error = kind;
+            state.display = 0;
+        }
     }
     state.operator = Op::None;
-    state.new_input = true;
-    state.decimal_pos = 0;
+    state.operand = 0;
+    state.reset_input();
 }

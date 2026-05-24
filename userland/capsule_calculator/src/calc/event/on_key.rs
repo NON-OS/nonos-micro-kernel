@@ -14,17 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::calc::state::{ErrorKind, State};
+use nonos_app_skeleton::EventOutcome;
 
-pub fn run(state: &mut State) {
-    if state.is_error() {
-        return;
-    }
-    state.display = match state.display.checked_neg() {
-        Some(v) => v,
-        None => {
-            state.error = ErrorKind::Overflow;
-            0
+use super::key_classifier::{classify, Classified};
+use crate::calc::actions::dispatch;
+use crate::calc::state::State;
+
+pub fn on_key(state: &mut State, code: u32) -> EventOutcome {
+    match classify(code) {
+        Classified::Close => EventOutcome::Close,
+        Classified::Ignored => EventOutcome::Idle,
+        Classified::Action(action) => {
+            dispatch::run(state, action);
+            EventOutcome::Repaint
         }
-    };
+    }
 }

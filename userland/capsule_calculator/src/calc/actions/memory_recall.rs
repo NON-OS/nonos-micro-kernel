@@ -17,14 +17,8 @@
 use crate::calc::state::{ErrorKind, State};
 
 pub fn run(state: &mut State) {
-    if state.is_error() {
-        return;
-    }
-    state.display = match state.display.checked_neg() {
-        Some(v) => v,
-        None => {
-            state.error = ErrorKind::Overflow;
-            0
-        }
-    };
+    state.display = state.memory;
+    state.error = ErrorKind::None;
+    state.new_input = true;
+    state.decimal_digits_typed = 0;
 }

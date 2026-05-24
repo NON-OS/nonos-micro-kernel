@@ -17,7 +17,9 @@
 mod background;
 mod button;
 mod display;
+mod frame;
 mod grid;
-mod paint;
+mod memory_badge;
+mod wordmark;
 
-pub use paint::paint;
+pub use frame::paint;

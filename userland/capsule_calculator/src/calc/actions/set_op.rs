@@ -14,20 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::calc::op::Op;
-use crate::calc::state::State;
+use crate::calc::op::{apply, Op};
+use crate::calc::state::{ErrorKind, State};
 
-use super::equals::equals;
-
-pub fn set_operator(state: &mut State, op: Op) {
-    if state.error {
+pub fn run(state: &mut State, op: Op) {
+    if state.is_error() {
         return;
     }
     if state.operator != Op::None && !state.new_input {
-        equals(state);
+        match apply(state.operand, state.display, state.operator) {
+            Ok(result) => {
+                state.display = result;
+                state.operand = result;
+            }
+            Err(kind) => {
+                state.error = kind;
+                state.display = 0;
+                state.operator = Op::None;
+                state.operand = 0;
+                state.reset_input();
+                return;
+            }
+        }
+    } else {
+        state.operand = state.display;
     }
-    state.operand = state.display;
     state.operator = op;
-    state.new_input = true;
-    state.decimal_pos = 0;
+    state.reset_input();
+    let _ = ErrorKind::None;
 }

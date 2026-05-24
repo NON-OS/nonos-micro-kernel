@@ -18,13 +18,14 @@ mod actions;
 mod app;
 mod buttons;
 mod event;
+mod fixed;
 mod format;
-mod keys;
 mod layout;
 mod manifest;
 mod op;
 mod paint;
 mod state;
 mod theme;
+mod unary;
 
 pub use app::Calculator;
