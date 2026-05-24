@@ -28,19 +28,28 @@ const OPT_COVER_TICK: u16 = 1;
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     let handle = match u32_at(body, 0) {
         Ok(handle) => handle,
-        Err(e) => return respond(pid, OP_SETSOCKOPT, e, req.request_id, 0, tx),
+        Err(e) => {
+            let _ = respond(pid, OP_SETSOCKOPT, e, req.request_id, 0, tx);
+            return;
+        }
     };
     let level = match u16_at(body, 4) {
         Ok(level) => level,
-        Err(e) => return respond(pid, OP_SETSOCKOPT, e, req.request_id, 0, tx),
+        Err(e) => {
+            let _ = respond(pid, OP_SETSOCKOPT, e, req.request_id, 0, tx);
+            return;
+        }
     };
     let opt = match u16_at(body, 6) {
         Ok(opt) => opt,
-        Err(e) => return respond(pid, OP_SETSOCKOPT, e, req.request_id, 0, tx),
+        Err(e) => {
+            let _ = respond(pid, OP_SETSOCKOPT, e, req.request_id, 0, tx);
+            return;
+        }
     };
     let key = SocketKey { pid, handle };
     let errno = SOCKETS.with(key, |s| apply(s, level, opt)).map_or(E_NO_HANDLE, |e| e);
-    respond(pid, OP_SETSOCKOPT, errno, req.request_id, 0, tx);
+    let _ = respond(pid, OP_SETSOCKOPT, errno, req.request_id, 0, tx);
 }
 
 fn apply(sock: &mut Socket, level: u16, opt: u16) -> u16 {

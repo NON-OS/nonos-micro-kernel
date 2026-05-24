@@ -40,7 +40,9 @@ pub fn exchange(query: &[u8], xid: u16) -> Result<Answer, u16> {
             Ok(d) if d.src == upstream && d.src_port == DNS_PORT => {
                 return parse_response(&d.payload, xid);
             }
-            Ok(_) | Err(UdpRecvError::Empty) => mk_yield(),
+            Ok(_) | Err(UdpRecvError::Empty) => {
+                mk_yield();
+            }
             Err(_) => return Err(E_TIMEOUT),
         }
     }

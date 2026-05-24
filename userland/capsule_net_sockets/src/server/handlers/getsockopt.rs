@@ -23,13 +23,16 @@ use crate::sockets::{Kind, Socket, SocketKey, SOCKETS};
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     let handle = match u32_at(body, 0) {
         Ok(handle) => handle,
-        Err(e) => return respond(pid, OP_GETSOCKOPT, e, req.request_id, 0, tx),
+        Err(e) => {
+            let _ = respond(pid, OP_GETSOCKOPT, e, req.request_id, 0, tx);
+            return;
+        }
     };
     let key = SocketKey { pid, handle };
-    match SOCKETS.with(key, |s| write_status(s, &mut tx[20..36])) {
+    let _ = match SOCKETS.with(key, |s| write_status(s, &mut tx[20..36])) {
         Some(()) => respond(pid, OP_GETSOCKOPT, E_OK, req.request_id, 16, tx),
         None => respond(pid, OP_GETSOCKOPT, E_NO_HANDLE, req.request_id, 0, tx),
-    }
+    };
 }
 
 fn write_status(sock: &Socket, out: &mut [u8]) {
