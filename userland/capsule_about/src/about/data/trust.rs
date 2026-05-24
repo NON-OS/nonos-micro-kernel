@@ -18,4 +18,5 @@ pub const HYBRID_SCHEME: &[u8] = b"Ed25519 + ML-DSA-65 (hybrid)";
 pub const MANIFEST_FORMAT: &[u8] = b"capsule_manifest v3";
 pub const CERT_FORMAT: &[u8] = b"NONOS-ID cert hybrid";
 pub const SIGNING_CHAIN: &[u8] = b"trust-anchor -> publisher -> capsule";
-pub const STATUS: &[u8] = b"this binary verified at spawn time";
+pub const STATUS: &[u8] =
+    b"reached _start, which means capsule_spawn::spawn_verified accepted the cert + manifest";

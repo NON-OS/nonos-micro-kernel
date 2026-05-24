@@ -28,12 +28,23 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     if total <= VISIBLE_BODY_LINES {
         return;
     }
-    let track_top = HEADER_HEIGHT + TAB_BAR_HEIGHT;
-    let track_height = fb.height - track_top - STATUS_BAR_HEIGHT;
+    let track_top = HEADER_HEIGHT.saturating_add(TAB_BAR_HEIGHT);
+    let track_height = fb
+        .height
+        .saturating_sub(track_top)
+        .saturating_sub(STATUS_BAR_HEIGHT);
+    if track_height == 0 || fb.width < SCROLLBAR_WIDTH {
+        return;
+    }
     let track_x = fb.width - SCROLLBAR_WIDTH;
     fb.fill_rect(track_x, track_top, SCROLLBAR_WIDTH, track_height, SCROLLBAR_TRACK);
-    let thumb_height = ((VISIBLE_BODY_LINES * track_height) / total).max(8);
-    let max_scroll = total - VISIBLE_BODY_LINES;
-    let thumb_y = track_top + ((track_height - thumb_height) * state.scroll) / max_scroll.max(1);
+    let thumb_height = ((VISIBLE_BODY_LINES as u64 * track_height as u64)
+        / total as u64)
+        .max(8) as u32;
+    let thumb_height = thumb_height.min(track_height);
+    let max_scroll = total.saturating_sub(VISIBLE_BODY_LINES).max(1);
+    let usable = track_height.saturating_sub(thumb_height);
+    let thumb_offset = ((usable as u64 * state.scroll as u64) / max_scroll as u64) as u32;
+    let thumb_y = track_top.saturating_add(thumb_offset);
     fb.fill_rect(track_x, thumb_y, SCROLLBAR_WIDTH, thumb_height, SCROLLBAR_THUMB);
 }

@@ -4,10 +4,11 @@
 
 `capsule_about` is the userland "About this system" application. It owns five
 sections of product, authority, display and license metadata; the user cycles
-sections with Tab/Shift-Tab and scrolls long sections with Up/Down or
-Page Up/Page Down. Esc closes the window. All UI policy lives in the capsule;
-the kernel mediates only window registration, input delivery and surface
-presentation through the toolkit and the compositor.
+sections with Tab/Shift-Tab, clicks a tab to jump directly, and scrolls long
+sections (like the full AGPL-3 license) with Up/Down or Page Up/Page Down.
+Esc closes the window. All UI policy lives in the capsule; the kernel
+mediates only window registration, input delivery and surface presentation
+through the toolkit and the compositor.
 
 ```text
 about app
@@ -99,7 +100,7 @@ live; everything else is compile-time-static from `about/data/*`.
 | Authority | `data/{caps,trust}` (compile-time + decoded mask) | 6 + 6 + 1 + 15 |
 | Display | `data/display::primary_dimensions()` (live) | 4 |
 | Uptime | `data/uptime::read_millis() + split_dhms()` (live) | 5 |
-| License | `data/license::SUMMARY_LINES` (AGPL summary) | 4 + 17 |
+| License | `data/license::TEXT` (full AGPL-3 via `include_str!`) | 4 + 661 |
 
 | Concern | File |
 |---|---|
@@ -109,7 +110,8 @@ live; everything else is compile-time-static from `about/data/*`.
 | State + scroll/section cursor | `about/state.rs` |
 | Theme colors + metrics | `about/theme.rs` |
 | Event router | `about/event/router.rs` |
-| Per-key handlers | `about/event/on_*.rs` (7 files) |
+| Per-key handlers | `about/event/on_*.rs` (7 key handlers) |
+| Pointer handler | `about/event/on_pointer_button.rs` (tab strip hit-test) |
 | Frame composition | `about/paint/frame.rs` |
 | Header band | `about/paint/header.rs` |
 | Tab strip | `about/paint/tabs.rs` |
@@ -169,8 +171,13 @@ must produce a signed ELF whose SHA matches the embedded manifest
 - [x] Cert + manifest baked into `nonos-data/trust/capsules/`
 - [x] Spawn wired through `src/userspace/init/spawn_plan/apps.rs`
 - [x] README documents all 16 contract sections
-- [x] Build info embedded at compile time (git SHA + unix timestamp)
+- [x] Build info embedded at compile time (git SHA + unix timestamp, fallback to `NONOS_BUILD_SHA` / `GITHUB_SHA` env vars in CI)
 - [x] Live data sources for Display and Uptime sections
+- [x] Full AGPL-3 text embedded via `include_str!`, scrollable in the License section
+- [x] Cap mask auto-decoded from single `ALL_CAPS` table (no hand-maintained grant/deny lists)
+- [x] Mouse support — click any tab to jump to its section
+- [x] Saturating arithmetic in scrollbar and section iteration (no over/underflow class)
+- [x] Trust section wording grounded in fact ("reached _start" implies `spawn_verified` passed)
 - [ ] QEMU spawn-verify with `OP_HEALTHCHECK` reply on serial
   (blocked by the OVMF ExitBootServices `#PF` boot escalation)
 
@@ -179,9 +186,14 @@ must produce a signed ELF whose SHA matches the embedded manifest
 - No HTTP/network access. The capsule never opens a socket.
 - No file IO. The capsule never reads from VFS.
 - No CPU/RAM/process telemetry. Those require kernel syscalls not yet in
-  the libc surface; will be added before claiming production-ready.
+  the libc surface (cpuid, mem stats, process list); will be added before
+  the Identity section grows a hardware/process panel.
+- No clipboard yet. Ctrl-C to copy the commit SHA would need a libc
+  binding for `capsule_clipboard`; deferred until that binding lands.
+- No toolkit theme pull. `nonos_toolkit::theme::snapshot()` is a static
+  palette today and changes nothing; will be wired once the theme grows a
+  live observer.
 - No internationalization. Strings are ASCII byte literals.
-- No themable colors. Local constants only; no toolkit theme integration.
 
 ## Verification
 

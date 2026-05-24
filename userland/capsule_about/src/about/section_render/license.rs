@@ -17,22 +17,22 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::row;
-use crate::about::data::license::{NAME, SUMMARY_LINES, URL, VERSION};
+use crate::about::data::license::{NAME, TEXT, URL, VERSION};
 use crate::about::state::VISIBLE_BODY_LINES;
 
-const FIXED_ROWS: u32 = 4;
+const HEADER_ROWS: u32 = 4;
 
 pub fn line_count() -> u32 {
-    FIXED_ROWS + SUMMARY_LINES.len() as u32
+    HEADER_ROWS + TEXT.lines().count() as u32
 }
 
 pub fn render(scroll: u32, top: u32, fb: &mut PaintBuffer) {
     let total = line_count();
-    let end = (scroll + VISIBLE_BODY_LINES).min(total);
+    let end = scroll.saturating_add(VISIBLE_BODY_LINES).min(total);
     let mut idx: u32 = 0;
     let mut visible: u32 = 0;
-    let header_pairs: [(&[u8], &[u8]); 3] = [(b"Name", NAME), (b"Version", VERSION), (b"URL", URL)];
-    for (label, value) in header_pairs {
+    let header: [(&[u8], &[u8]); 3] = [(b"Name", NAME), (b"Version", VERSION), (b"URL", URL)];
+    for (label, value) in header {
         if idx >= scroll && idx < end {
             row::pair(label, value, row::line_y(visible, top), fb);
             visible += 1;
@@ -44,9 +44,9 @@ pub fn render(scroll: u32, top: u32, fb: &mut PaintBuffer) {
         visible += 1;
     }
     idx += 1;
-    for line in SUMMARY_LINES {
+    for line in TEXT.lines() {
         if idx >= scroll && idx < end {
-            row::single(line, row::line_y(visible, top), fb);
+            row::single(line.as_bytes(), row::line_y(visible, top), fb);
             visible += 1;
         }
         idx += 1;

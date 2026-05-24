@@ -19,6 +19,7 @@ mod on_arrow_up;
 mod on_esc;
 mod on_page_down;
 mod on_page_up;
+mod on_pointer_button;
 mod on_shift_tab;
 mod on_tab;
 mod router;

@@ -34,9 +34,10 @@ pub fn render(scroll: u32, top: u32, fb: &mut PaintBuffer) {
         (b"Toolchain", build::TOOLCHAIN),
         (b"ABI", abi::NAME),
     ];
-    let end = (scroll + VISIBLE_BODY_LINES).min(LINE_COUNT);
-    for visible in 0..(end - scroll) {
-        let (label, value) = rows[(scroll + visible) as usize];
-        row::pair(label, value, row::line_y(visible, top), fb);
+    let end = scroll.saturating_add(VISIBLE_BODY_LINES).min(LINE_COUNT);
+    let visible_count = end.saturating_sub(scroll);
+    for offset in 0..visible_count {
+        let (label, value) = rows[(scroll + offset) as usize];
+        row::pair(label, value, row::line_y(offset, top), fb);
     }
 }

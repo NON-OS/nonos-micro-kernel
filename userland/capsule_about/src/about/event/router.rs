@@ -15,8 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::{
-    EventOutcome, InputEvent, KEY_DOWN, KEY_ESC, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_TAB, KEY_UP,
-    MOD_SHIFT,
+    EventOutcome, InputEvent, InputKind, KEY_DOWN, KEY_ESC, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_TAB,
+    KEY_UP, MOD_SHIFT,
 };
 
 use super::on_arrow_down::on_arrow_down;
@@ -24,11 +24,15 @@ use super::on_arrow_up::on_arrow_up;
 use super::on_esc::on_esc;
 use super::on_page_down::on_page_down;
 use super::on_page_up::on_page_up;
+use super::on_pointer_button::on_pointer_button;
 use super::on_shift_tab::on_shift_tab;
 use super::on_tab::on_tab;
 use crate::about::state::State;
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
+    if event.kind == InputKind::ButtonDown {
+        return on_pointer_button(state, event.x, event.y);
+    }
     if !event.is_key_down() {
         return EventOutcome::Idle;
     }

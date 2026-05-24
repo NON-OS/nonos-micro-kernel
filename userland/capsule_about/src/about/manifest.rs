@@ -20,6 +20,9 @@ use super::theme::{WINDOW_HEIGHT, WINDOW_INITIAL_X, WINDOW_INITIAL_Y, WINDOW_WID
 
 const WINDOW_ID: u32 = 0x4142_4F55;
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
+const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
+const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
+const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_BUTTON_DOWN_BIT | INPUT_POINTER_ABS_BIT;
 const TITLE: &[u8] = b"About NONOS";
 
 pub fn manifest() -> AppManifest {
@@ -31,6 +34,6 @@ pub fn manifest() -> AppManifest {
         initial_y: WINDOW_INITIAL_Y,
         width: WINDOW_WIDTH,
         height: WINDOW_HEIGHT,
-        input_kind_mask: INPUT_KEY_DOWN_BIT,
+        input_kind_mask: INPUT_MASK,
     }
 }

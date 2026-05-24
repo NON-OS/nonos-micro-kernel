@@ -14,20 +14,43 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use std::env;
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() {
-    let sha = Command::new("git")
-        .args(["rev-parse", "--short=12", "HEAD"])
-        .output()
-        .ok()
-        .and_then(|o| if o.status.success() { String::from_utf8(o.stdout).ok() } else { None })
-        .map(|s| s.trim().to_string())
-        .unwrap_or_else(|| "unknown".into());
+    let sha = resolve_sha();
     println!("cargo:rustc-env=ABOUT_GIT_SHA={sha}");
     let secs = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
     println!("cargo:rustc-env=ABOUT_BUILD_UNIX={secs}");
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src");
+    println!("cargo:rerun-if-changed=../../LICENSE");
+    println!("cargo:rerun-if-env-changed=NONOS_BUILD_SHA");
+    println!("cargo:rerun-if-env-changed=GITHUB_SHA");
+}
+
+fn resolve_sha() -> String {
+    if let Ok(sha) = env::var("NONOS_BUILD_SHA") {
+        if !sha.trim().is_empty() {
+            return sha.trim().chars().take(12).collect();
+        }
+    }
+    if let Ok(sha) = env::var("GITHUB_SHA") {
+        if !sha.trim().is_empty() {
+            return sha.trim().chars().take(12).collect();
+        }
+    }
+    if let Some(sha) = Command::new("git")
+        .args(["rev-parse", "--short=12", "HEAD"])
+        .output()
+        .ok()
+        .and_then(|o| if o.status.success() { String::from_utf8(o.stdout).ok() } else { None })
+        .map(|s| s.trim().to_string())
+    {
+        if !sha.is_empty() {
+            return sha;
+        }
+    }
+    "unknown".into()
 }

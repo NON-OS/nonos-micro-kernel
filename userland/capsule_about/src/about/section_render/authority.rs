@@ -24,13 +24,15 @@ use crate::about::state::VISIBLE_BODY_LINES;
 const FIXED_ROWS: u32 = 6;
 
 pub fn line_count() -> u32 {
-    FIXED_ROWS + caps::GRANTED.len() as u32 + 1 + caps::DENIED.len() as u32
+    let granted = caps::ALL_CAPS.iter().filter(|c| caps::is_granted(c.bit)).count() as u32;
+    let denied = caps::ALL_CAPS.iter().filter(|c| !caps::is_granted(c.bit)).count() as u32;
+    FIXED_ROWS + granted + 1 + denied
 }
 
 pub fn render(scroll: u32, top: u32, fb: &mut PaintBuffer) {
     let mut buf = [0u8; 20];
     let total = line_count();
-    let end = (scroll + VISIBLE_BODY_LINES).min(total);
+    let end = scroll.saturating_add(VISIBLE_BODY_LINES).min(total);
     let mut idx: u32 = 0;
     let mut visible: u32 = 0;
     let fixed: [(&[u8], &[u8]); 6] = [
@@ -48,9 +50,9 @@ pub fn render(scroll: u32, top: u32, fb: &mut PaintBuffer) {
         }
         idx += 1;
     }
-    for (name, role) in caps::GRANTED {
+    for descriptor in caps::ALL_CAPS.iter().filter(|c| caps::is_granted(c.bit)) {
         if idx >= scroll && idx < end {
-            row::pair(name, role, row::line_y(visible, top), fb);
+            row::pair(descriptor.name, descriptor.role, row::line_y(visible, top), fb);
             visible += 1;
         }
         idx += 1;
@@ -60,9 +62,9 @@ pub fn render(scroll: u32, top: u32, fb: &mut PaintBuffer) {
         visible += 1;
     }
     idx += 1;
-    for name in caps::DENIED {
+    for descriptor in caps::ALL_CAPS.iter().filter(|c| !caps::is_granted(c.bit)) {
         if idx >= scroll && idx < end {
-            row::single(name, row::line_y(visible, top), fb);
+            row::single(descriptor.name, row::line_y(visible, top), fb);
             visible += 1;
         }
         idx += 1;
