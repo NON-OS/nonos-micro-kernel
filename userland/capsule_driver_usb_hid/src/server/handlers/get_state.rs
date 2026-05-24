@@ -25,5 +25,7 @@ pub fn handle(state: &State, sender_pid: u32, req: &Request, tx: &mut [u8]) {
     tx[base + 16..base + 24].copy_from_slice(&state.mouse_reports.to_le_bytes());
     tx[base + 24..base + 28].copy_from_slice(&state.keyboard.pending().to_le_bytes());
     tx[base + 28..base + 32].copy_from_slice(&state.mouse.pending().to_le_bytes());
-    let _ = respond::payload(sender_pid, req, 32, tx);
+    tx[base + 32..base + 40].copy_from_slice(&state.keyboard.post_failures().to_le_bytes());
+    tx[base + 40..base + 48].copy_from_slice(&state.mouse.post_failures().to_le_bytes());
+    let _ = respond::payload(sender_pid, req, 48, tx);
 }

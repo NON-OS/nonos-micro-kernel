@@ -14,15 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod key_event;
-mod keyboard;
-mod keymap;
-mod mouse;
-mod mouse_event;
-mod post_key;
-mod post_mouse;
-mod post_wire;
-mod punctuation;
+use nonos_libc::{mk_input_event_post, InputEvent};
 
-pub use keyboard::Keyboard;
-pub use mouse::Mouse;
+pub fn send(kind: u16, flags: u16, code: u32, dx: i32, dy: i32) -> bool {
+    let ev = InputEvent {
+        kind,
+        flags,
+        code,
+        x: 0,
+        y: 0,
+        delta_x: dx,
+        delta_y: dy,
+        timestamp_ns: 0,
+    };
+    mk_input_event_post(&ev) >= 0
+}

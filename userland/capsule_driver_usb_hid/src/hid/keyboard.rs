@@ -16,8 +16,7 @@
 
 use alloc::collections::VecDeque;
 
-use super::key_event::KeyEvent;
-use super::keymap;
+use super::{key_event::KeyEvent, keymap, post_key};
 
 const CAP: usize = 64;
 
@@ -26,11 +25,12 @@ pub struct Keyboard {
     modifiers: u8,
     caps_lock: bool,
     events: VecDeque<KeyEvent>,
+    post_failures: u64,
 }
 
 impl Keyboard {
     pub fn new() -> Self {
-        Self { prev: [0; 6], modifiers: 0, caps_lock: false, events: VecDeque::new() }
+        Self { prev: [0; 6], modifiers: 0, caps_lock: false, events: VecDeque::new(), post_failures: 0 }
     }
 
     pub fn feed(&mut self, report: &[u8; 8]) {
@@ -49,13 +49,11 @@ impl Keyboard {
         self.prev = keys;
     }
 
-    pub fn pop(&mut self) -> Option<KeyEvent> {
-        self.events.pop_front()
-    }
+    pub fn pop(&mut self) -> Option<KeyEvent> { self.events.pop_front() }
 
-    pub fn pending(&self) -> u32 {
-        self.events.len() as u32
-    }
+    pub fn pending(&self) -> u32 { self.events.len() as u32 }
+
+    pub fn post_failures(&self) -> u64 { self.post_failures }
 
     fn push_key(&mut self, scancode: u8, pressed: bool) {
         if pressed && keymap::is_caps_lock(scancode) {
@@ -63,12 +61,14 @@ impl Keyboard {
         }
         let ascii =
             if pressed { keymap::ascii(scancode, self.modifiers, self.caps_lock) } else { 0 };
+        let event = KeyEvent { scancode, ascii, modifiers: self.modifiers, pressed };
+        if !post_key::publish(event) {
+            self.post_failures = self.post_failures.wrapping_add(1);
+        }
         if self.events.len() < CAP {
-            self.events.push_back(KeyEvent { scancode, ascii, modifiers: self.modifiers, pressed });
+            self.events.push_back(event);
         }
     }
 }
 
-fn is_real_key(key: u8) -> bool {
-    key > 1
-}
+fn is_real_key(key: u8) -> bool { key > 1 }

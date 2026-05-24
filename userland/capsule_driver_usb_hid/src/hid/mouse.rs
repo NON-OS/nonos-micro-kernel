@@ -17,20 +17,23 @@
 use alloc::collections::VecDeque;
 
 use super::mouse_event::MouseEvent;
+use super::post_mouse;
 
 const CAP: usize = 64;
 
 pub struct Mouse {
     buttons: u8,
     events: VecDeque<MouseEvent>,
+    post_failures: u64,
 }
 
 impl Mouse {
     pub fn new() -> Self {
-        Self { buttons: 0, events: VecDeque::new() }
+        Self { buttons: 0, events: VecDeque::new(), post_failures: 0 }
     }
 
     pub fn feed(&mut self, report: &[u8]) {
+        let previous_buttons = self.buttons;
         let buttons = report[0] & 0x1f;
         let dx = report[1] as i8 as i16;
         let dy = report[2] as i8 as i16;
@@ -39,7 +42,7 @@ impl Mouse {
         let changed = buttons != self.buttons;
         if moved || dz != 0 || changed {
             let flags = u8::from(moved) | (u8::from(changed) << 1) | (u8::from(dz != 0) << 2);
-            self.push(MouseEvent { dx, dy, dz, buttons, flags });
+            self.push(MouseEvent { dx, dy, dz, buttons, flags }, previous_buttons);
         }
         self.buttons = buttons;
     }
@@ -52,7 +55,14 @@ impl Mouse {
         self.events.len() as u32
     }
 
-    fn push(&mut self, event: MouseEvent) {
+    pub fn post_failures(&self) -> u64 {
+        self.post_failures
+    }
+
+    fn push(&mut self, event: MouseEvent, previous_buttons: u8) {
+        if !post_mouse::publish(event, previous_buttons) {
+            self.post_failures = self.post_failures.wrapping_add(1);
+        }
         if self.events.len() < CAP {
             self.events.push_back(event);
         }
