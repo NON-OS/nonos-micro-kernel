@@ -28,18 +28,6 @@ pub(super) const ESRCH: i32 = 3;
 pub(super) const EPERM: i32 = 1;
 pub(super) const ENOMEM: i32 = 12;
 
-pub(super) fn matches(nr: SyscallNumber) -> bool {
-    matches!(
-        nr,
-        SyscallNumber::MkSurfaceRegister
-            | SyscallNumber::MkSurfaceShare
-            | SyscallNumber::MkSurfaceAttach
-            | SyscallNumber::MkSurfaceRelease
-            | SyscallNumber::MkSurfacePresent
-            | SyscallNumber::MkDisplayVsyncWait
-    )
-}
-
 pub(super) fn handle(
     nr: SyscallNumber,
     a0: u64,

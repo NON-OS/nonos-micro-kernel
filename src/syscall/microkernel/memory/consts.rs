@@ -18,11 +18,8 @@ pub(super) const PAGE_SIZE: usize = 4096;
 pub(super) const USER_SPACE_MAX: u64 = 0x0000_7FFF_FFFF_FFFF;
 pub(super) const MAX_MMAP_SIZE: usize = 1 << 30;
 
-pub const PROT_READ: u32 = 0x1;
-pub const PROT_WRITE: u32 = 0x2;
-pub const PROT_EXEC: u32 = 0x4;
-pub const MAP_PRIVATE: u32 = 0x02;
-pub const MAP_ANONYMOUS: u32 = 0x20;
+pub(super) const PROT_WRITE: u32 = 0x2;
+pub(super) const PROT_EXEC: u32 = 0x4;
 
 #[inline]
 pub(super) fn is_user_space(addr: u64, len: usize) -> bool {

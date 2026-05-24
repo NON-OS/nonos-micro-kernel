@@ -14,16 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod get_random;
-mod get_stats;
-mod healthcheck;
-mod reseed;
-mod seq;
-mod transport;
+use super::super::capability::gate_hash;
+use super::super::error::CryptoCapsuleError;
+use super::super::protocol::{encode_request, OP_HEALTHCHECK};
+use super::seq::next_request_id;
+use super::transport::round_trip;
 
-pub(super) use transport::REPLY_INBOX;
-
-pub use get_random::get_random;
-pub use get_stats::{get_stats, EntropyStats};
-pub use healthcheck::healthcheck;
-pub use reseed::reseed;
+pub fn healthcheck() -> Result<(), CryptoCapsuleError> {
+    gate_hash()?;
+    let request_id = next_request_id();
+    let frame = encode_request(OP_HEALTHCHECK, 0, request_id, &[]);
+    let resp = round_trip(request_id, frame)?;
+    if resp.status != 0 || !resp.body.is_empty() {
+        return Err(CryptoCapsuleError::ProtocolMismatch);
+    }
+    Ok(())
+}

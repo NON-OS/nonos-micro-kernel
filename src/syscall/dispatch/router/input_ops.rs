@@ -26,13 +26,6 @@ const ENOTSUP: i32 = 95;
 const ENOMEM: i32 = 12;
 const MAX_DRAIN: usize = 64;
 
-pub(super) fn matches(nr: SyscallNumber) -> bool {
-    matches!(
-        nr,
-        SyscallNumber::MkInputEventPost | SyscallNumber::MkInputEventDrain
-    )
-}
-
 pub(super) fn handle(
     nr: SyscallNumber,
     a0: u64,

@@ -48,6 +48,7 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     e(b"MIRP", SyscallNumber::MkIrqPoll, "MkIrqPoll"),
     e(b"MDMM", SyscallNumber::MkDmaMap, "MkDmaMap"),
     e(b"MDMU", SyscallNumber::MkDmaUnmap, "MkDmaUnmap"),
+    e(b"MPCW", SyscallNumber::MkPciConfigWrite, "MkPciConfigWrite"),
     e(b"MPGT", SyscallNumber::MkPioGrant, "MkPioGrant"),
     e(b"MPRD", SyscallNumber::MkPioRead, "MkPioRead"),
     e(b"MPWR", SyscallNumber::MkPioWrite, "MkPioWrite"),

@@ -45,6 +45,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkIrqAck
         | SyscallNumber::MkIrqPoll => caps.can_irq(),
         SyscallNumber::MkDmaMap | SyscallNumber::MkDmaUnmap => caps.can_dma(),
+        SyscallNumber::MkPciConfigWrite => caps.can_driver(),
         SyscallNumber::MkPioGrant
         | SyscallNumber::MkPioRead
         | SyscallNumber::MkPioWrite
@@ -58,7 +59,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkSurfaceAttach => caps.can_surface_map(),
         SyscallNumber::MkSurfacePresent => caps.can_present(),
         SyscallNumber::MkDisplayVsyncWait => caps.can_display_query(),
-        SyscallNumber::MkInputEventPost => caps.can_irq(),
+        SyscallNumber::MkInputEventPost => caps.can_input_source(),
         SyscallNumber::MkInputEventDrain => caps.can_ipc(),
 
         _ => return None,

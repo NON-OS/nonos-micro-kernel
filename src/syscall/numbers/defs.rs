@@ -50,6 +50,7 @@ pub enum SyscallNumber {
     MkIrqBind = tag4(b"MIRB"), MkIrqUnbind = tag4(b"MIRU"),
     MkIrqAck = tag4(b"MIRA"), MkIrqPoll = tag4(b"MIRP"),
     MkDmaMap = tag4(b"MDMM"), MkDmaUnmap = tag4(b"MDMU"),
+    MkPciConfigWrite = tag4(b"MPCW"),
     MkPioGrant = tag4(b"MPGT"), MkPioRead = tag4(b"MPRD"),
     MkPioWrite = tag4(b"MPWR"), MkPioRelease = tag4(b"MPRL"),
     MkDebug = tag4(b"MDBG"), MkSurfaceRegister = tag4(b"MSRG"),
