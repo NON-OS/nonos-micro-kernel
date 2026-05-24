@@ -13,10 +13,5 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! IMAN bits. IP is the per-interrupter Interrupt-Pending latch
-//! (write-1-to-clear); IE is the per-interrupter enable bit. The
-//! event-drain path reads IMAN to clear IP after each pass.
-
 pub const IMAN_IP: u32 = 1 << 0;
 pub const IMAN_IE: u32 = 1 << 1;

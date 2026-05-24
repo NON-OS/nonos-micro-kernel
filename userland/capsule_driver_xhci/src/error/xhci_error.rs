@@ -13,55 +13,22 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! P0 controller-bring-up error surface. Each variant maps to a
-//! deterministic errno value through `errno_value()`; that
-//! mapping is what the kernel-side spawn renders on capsule
-//! exit. P1 will grow the surface (port-reset failures, slot
-//! exhaustion, address-device errors, transfer faults).
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum XhciError {
-    /// `MkDeviceList` returned no xHCI controller (class 0x0071).
     DeviceNotFound,
-    /// Broker syscall failed; the inner i64 is the broker's negative
-    /// errno return.
     BrokerCallFailed(i64),
-    /// Controller advertises a feature this slice cannot drive
-    /// (e.g. 32-bit-only addressing, zero device slots).
     ControllerUnsupported,
-    /// HCRST never self-cleared inside the spin bound.
     ResetTimeout,
-    /// USBSTS.CNR stayed set after HCRST cleared.
     ControllerNotReadyTimeout,
-    /// USBSTS.HCH stayed set after USBCMD.RS=1.
     StartTimeout,
-    /// USBSTS.HCH stayed clear after USBCMD.RS=0 in halt phase.
     HaltTimeout,
-    /// Command-ring wrap caught the consumer; ring is full and the
-    /// capsule has nowhere to enqueue.
     CommandRingFull,
-    /// Endpoint transfer ring producer caught its Link TRB before
-    /// the controller consumed earlier control-transfer work.
     TransferRingFull,
-    /// PORTSC.CCS was clear when enumeration tried to reset a port.
     NoDeviceOnPort,
-    /// Port Reset Change never arrived inside the bounded spin.
     PortResetTimeout,
-    /// Bounded spin elapsed without the transfer event for the
-    /// status-stage TRB that completed a control transfer.
     TransferCompletionTimeout,
-    /// Spin bound elapsed without seeing the matching Command
-    /// Completion Event for the issued command.
     CommandCompletionTimeout,
-    /// Command Completion Event arrived but the completion-code
-    /// byte was not `CC_SUCCESS`. Inner u8 is the raw completion
-    /// code so the kernel-side smoke can render it.
     CommandCompletionFailed(u8),
-    /// Completion arrived for the issued command but named a
-    /// different slot than the command targeted.
     UnexpectedCompletionSlot,
-    /// Transfer Event arrived but carried a non-success completion
-    /// code; inner u8 is the controller code.
     TransferCompletionFailed(u8),
 }

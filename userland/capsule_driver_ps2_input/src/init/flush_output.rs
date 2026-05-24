@@ -13,18 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Drain any stale bytes the firmware/BIOS left in the i8042
-//! output buffer before we arm the IRQ. Bounded loop so a wedged
-//! controller cannot keep us in init forever.
-
 use nonos_libc::mk_pio_read;
-
 use crate::constants::STATUS_OUTPUT_FULL;
 use crate::constants::{DATA_OFFSET, STATUS_OFFSET};
-
 const MAX_FLUSH_BYTES: u32 = 16;
-
 pub fn flush_output(grant_id: u64) {
     for _ in 0..MAX_FLUSH_BYTES {
         let mut status: u32 = 0;

@@ -13,17 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `driver.ps2_kbd0` service loop. One in-flight request at a
-//! time. Receive buffer carries the 20-byte envelope only (no
-//! request payloads on this driver); transmit buffer is sized for
-//! the largest reply, which is a full poll batch.
-
 use alloc::vec;
-
 use nonos_libc::mk_ipc_recv;
-
-use crate::debug::marker;
 use crate::protocol::{
     decode_request, CONTROLLER_STATUS_PAYLOAD_LEN, EVENT_WIRE_LEN, E_INVAL, HDR_LEN,
     MAX_POLL_EVENTS, MOUSE_EVENT_WIRE_LEN, MOUSE_POLL_PAYLOAD_PREFIX_LEN, OP_CONTROLLER_STATUS,
@@ -34,7 +25,6 @@ use crate::server::context::Context;
 use crate::server::error::{reply_decode_failed, reply_with_status};
 use crate::server::handlers;
 use crate::setup::Driver;
-
 pub fn run(driver: Driver) -> ! {
     let rx_len = HDR_LEN;
     let poll_tx_len = RESP_HDR_LEN + POLL_PAYLOAD_PREFIX_LEN + MAX_POLL_EVENTS * EVENT_WIRE_LEN;
@@ -46,13 +36,9 @@ pub fn run(driver: Driver) -> ! {
         core::cmp::max(poll_tx_len, mouse_tx_len),
         core::cmp::max(state_tx_len, ctl_tx_len),
     );
-
     let mut rx = vec![0u8; rx_len];
     let mut tx = vec![0u8; tx_len];
     let mut ctx = Context::new(driver);
-
-    marker(b"endpoint driver.ps2_kbd0 ready");
-
     loop {
         let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, 0);
         if n <= 0 {

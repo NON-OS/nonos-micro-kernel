@@ -13,12 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::state::EventRing;
-
 impl EventRing {
-    /// Bus-side base of the Event Ring Segment Table. Programmed
-    /// into ERSTBA after ERSTSZ has been set.
     pub fn erst_base_phys(&self) -> u64 {
         self.erst.phys()
     }

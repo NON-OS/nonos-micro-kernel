@@ -13,10 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{TRB_DIR_IN, TRB_TYPE_STATUS_STAGE};
 use crate::trb::Trb;
-
 pub fn status_stage_in(cycle: bool) -> Trb {
     let mut trb = Trb::zero();
     trb.set_ioc(true);

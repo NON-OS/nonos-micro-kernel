@@ -13,10 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::TRB_TYPE_ADDRESS_DEVICE_CMD;
 use crate::trb::Trb;
-
 pub fn address_device_command(cycle: bool, input_context_phys: u64, slot_id: u8) -> Trb {
     let mut trb = Trb::zero();
     trb.set_pointer(input_context_phys);

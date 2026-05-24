@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Response encoder. The header echoes op/flags/request_id from
-//! the request so the kernel client can match the reply; the
-//! first four bytes after the header are an `i32` status, with
-//! per-op data following.
+
+
+
+
 
 use super::header::{Request, MAGIC, VERSION};
 

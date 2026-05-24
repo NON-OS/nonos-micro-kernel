@@ -13,13 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Event Ring Segment Table Base Address. 64-byte aligned, must
-//! be programmed AFTER ERSTSZ per spec section 4.9.4.
-
 use crate::constants::ERSTBA_LO;
 use crate::regs::mmio_write64;
-
 pub fn erstba_program(intr_base: u64, erst_phys: u64) {
     mmio_write64(intr_base + ERSTBA_LO, erst_phys & !0x3F);
 }

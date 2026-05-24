@@ -13,11 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Synthetic PNP identifiers the kernel registers for the i8042
-//! keyboard controller. The capsule matches these against
-//! `MkDeviceList` records to find its device.
-
 pub const PNP_VENDOR_PS2_KBD: u16 = 0x0001;
 pub const PNP_DEVICE_PS2_KBD: u16 = 0x0303;
 pub const PNP_VENDOR_PS2_AUX: u16 = 0x0001;

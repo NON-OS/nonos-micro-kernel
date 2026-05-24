@@ -13,9 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::base::Trb;
-
 impl Trb {
     pub fn set_transfer_length(&mut self, len: u32) {
         self.d2 = (self.d2 & !0x1_FFFF) | (len & 0x1_FFFF);

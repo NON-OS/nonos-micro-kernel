@@ -13,19 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-// P0 round trip: enqueue No-op, kick host doorbell, poll event
-// ring for the matching Command Completion Event, verify
-// CC_SUCCESS. Caller guarantees the controller is running; the
-// service loop's IRQ consumer takes over after this returns.
-
 use super::ring_doorbell::ring_doorbell;
 use super::wait_command_completion::wait_command_completion;
 use crate::error::XhciResult;
 use crate::rings::command::CommandRing;
 use crate::rings::event::EventRing;
 use crate::trb::commands::noop_command;
-
 pub fn issue_noop_and_wait(
     op_doorbell_base: u64,
     intr_base: u64,

@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod layout;
 mod post;
+mod rx_queue;
+mod tx_queue;
 mod used;
 
-pub use layout::{RxQueue, TxQueue};
+pub use rx_queue::RxQueue;
+pub use tx_queue::TxQueue;

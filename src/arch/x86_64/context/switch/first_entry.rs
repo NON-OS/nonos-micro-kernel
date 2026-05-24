@@ -25,22 +25,11 @@ use crate::process::scheduler::preemption::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLI
 use crate::process::userspace::transitions::return_to_usermode;
 use crate::smp::percpu;
 
-// First-entry CPL=3 path. Stages TSS.RSP0 + per-CPU mirror, swaps CR3
-// if owned, sets state Running, restores FPU, iretqs. On any failure
-// before iretq the PCB is marked Terminated.
 pub(super) fn try_first_entry(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
     let frame = match pcb.pending_user_entry.lock().take() {
         Some(f) => f,
         None => return false,
     };
-
-    crate::sys::serial::print(b"[SCHED] enter-user pid=");
-    crate::arch::x86_64::diag::print_hex_u64(pid as u64);
-    crate::sys::serial::print(b" rip=");
-    crate::arch::x86_64::diag::print_hex_u64(frame.rip);
-    crate::sys::serial::print(b" rsp=");
-    crate::arch::x86_64::diag::print_hex_u64(frame.rsp);
-    crate::sys::serial::println(b"");
 
     let kstack = pcb.kernel_stack_top.load(Ordering::Acquire);
     if kstack == 0 {
@@ -49,8 +38,6 @@ pub(super) fn try_first_entry(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool 
     }
 
     let cpu = percpu::current().cpu_id;
-    // SAFETY: cpu bounded by MAX_CPUS; set_kernel_stack validates and
-    // writes the matching TSS RSP0 entry.
     unsafe {
         if gdt::set_kernel_stack(cpu, kstack).is_err() {
             *pcb.state.lock() = ProcessState::Terminated(-1);
@@ -76,6 +63,5 @@ pub(super) fn try_first_entry(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool 
         init_fpu();
     }
 
-    // SAFETY: `frame` fully populated; asm reads via rdi and iretqs.
     unsafe { return_to_usermode(&frame as *const _) }
 }

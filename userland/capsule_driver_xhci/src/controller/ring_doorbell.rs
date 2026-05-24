@@ -13,14 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Kick a doorbell. Slot 0 / target 0 is the host doorbell that
-//! tells the controller to fetch from the command ring. Per-slot
-//! transfer doorbells (slot N, target = DCI) are P1+ work and
-//! not exposed here.
-
 use crate::regs::mmio_write32;
-
 pub fn ring_doorbell(doorbell_base: u64, slot: u8, target: u8) {
     let addr = doorbell_base + (slot as u64) * 4;
     mmio_write32(addr, target as u32);

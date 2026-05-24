@@ -13,16 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #![no_std]
 #![no_main]
-
 extern crate alloc;
-
 mod constants;
 mod contexts;
 mod controller;
-mod debug;
 mod discover;
 mod dma;
 mod error;
@@ -34,26 +30,18 @@ mod server;
 mod setup;
 mod slots;
 mod trb;
-
 use nonos_libc::{heap_init, mk_exit};
-
 use crate::error::errno_value;
-
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
-
     let driver = match setup::run() {
         Ok(d) => d,
         Err(e) => {
-            // The exit code carries the deterministic errno so the
-            // kernel-side spawn can render the failure mode without
-            // round-tripping IPC.
             mk_exit(-errno_value(e));
         }
     };
-
     server::run(driver);
 }

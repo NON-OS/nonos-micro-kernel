@@ -13,13 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Read CAPLENGTH (low 8 bits at offset 0). Adding this to BAR0
-//! gives the start of the Operational register block.
-
 use crate::constants::CAPLENGTH;
 use crate::regs::mmio_read32;
-
 pub fn caplength(mmio_base: u64) -> u8 {
     (mmio_read32(mmio_base + CAPLENGTH) & 0xFF) as u8
 }

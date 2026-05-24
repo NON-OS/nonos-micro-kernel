@@ -27,3 +27,6 @@ pub const OP_CREATE_SURB: u16 = 10;
 pub const OP_SEND_REPLY: u16 = 11;
 pub const OP_SET_TIMING: u16 = 12;
 pub const OP_SET_AUTHORITY: u16 = 13;
+pub const OP_SYNC_DIRECTORY: u16 = 14;
+pub const OP_TOPOLOGY_STATUS: u16 = 15;
+pub const OP_TIMING_STATUS: u16 = 16;

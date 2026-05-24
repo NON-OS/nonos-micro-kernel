@@ -15,5 +15,4 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const REALTEK_VENDOR_ID: u16 = 0x10EC;
-pub const RTL8168_DEVICE_ID: u16 = 0x8168;
-pub const RTL8169_DEVICE_ID: u16 = 0x8169;
+pub const RTL8169_DEVICE_IDS: &[u16] = &[0x8161, 0x8162, 0x8167, 0x8168, 0x8169];

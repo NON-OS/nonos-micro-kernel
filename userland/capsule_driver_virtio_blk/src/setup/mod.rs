@@ -13,14 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod claim;
 mod dma;
 mod driver;
 mod irq;
 mod registers;
 mod sequence;
-mod trace;
-
 pub use driver::Driver;
 pub use sequence::run;

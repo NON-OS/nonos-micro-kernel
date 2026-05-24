@@ -13,16 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! IBM PC Scancode Set 1 — E0-prefixed extension. Returns the keycode
-//! for an E0-prefixed scancode. None means no mapping in this layer.
-
 use super::set1::{
     KEYCODE_DEL, KEYCODE_DOWN, KEYCODE_END, KEYCODE_HOME, KEYCODE_INS, KEYCODE_LEFT, KEYCODE_LMETA,
     KEYCODE_PGDN, KEYCODE_PGUP, KEYCODE_RALT, KEYCODE_RCTRL, KEYCODE_RIGHT, KEYCODE_RMETA,
     KEYCODE_UP,
 };
-
 pub fn keycode_for(scan: u8) -> Option<u32> {
     let v = match scan {
         0x1C => 0x0D,

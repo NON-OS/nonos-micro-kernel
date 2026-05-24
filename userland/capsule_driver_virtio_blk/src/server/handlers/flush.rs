@@ -13,19 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `OP_FLUSH`. Posts a virtio-blk flush request and replies with
-//! the status byte. If the device did not advertise
-//! `VIRTIO_BLK_F_FLUSH` at init, the handler still attempts the
-//! request: by spec the device returns `S_UNSUPP`, which we map
-//! to `E_INVAL` so the caller sees a deterministic refusal.
-
 use crate::io::{submit, BlkError};
 use crate::protocol::{Request, E_INVAL, E_IO};
 use crate::queue::Direction;
 use crate::server::error::reply_with_status;
 use crate::setup::Driver;
-
 pub fn handle(driver: &mut Driver, req: &Request, tx: &mut [u8]) {
     let outcome = submit(driver.regs, &mut driver.queue, driver.irq_grant, Direction::Flush, 0, 0);
     let status = match outcome {

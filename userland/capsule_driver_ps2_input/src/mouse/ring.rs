@@ -13,12 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::event::MouseEvent;
-
 pub const MOUSE_RING_CAPACITY: usize = 128;
 const EMPTY: MouseEvent = MouseEvent { dx: 0, dy: 0, dz: 0, buttons: 0, flags: 0 };
-
 pub struct MouseRing {
     buf: [MouseEvent; MOUSE_RING_CAPACITY],
     head: usize,
@@ -27,7 +24,6 @@ pub struct MouseRing {
     pub events_dropped: u64,
     pub sync_errors: u64,
 }
-
 impl MouseRing {
     pub const fn new() -> Self {
         Self {
@@ -39,7 +35,6 @@ impl MouseRing {
             sync_errors: 0,
         }
     }
-
     pub fn push(&mut self, ev: MouseEvent) {
         self.events_seen = self.events_seen.wrapping_add(1);
         let next = (self.tail + 1) % MOUSE_RING_CAPACITY;
@@ -50,7 +45,6 @@ impl MouseRing {
         self.buf[self.tail] = ev;
         self.tail = next;
     }
-
     pub fn pop(&mut self) -> Option<MouseEvent> {
         if self.head == self.tail {
             return None;
@@ -59,7 +53,6 @@ impl MouseRing {
         self.head = (self.head + 1) % MOUSE_RING_CAPACITY;
         Some(ev)
     }
-
     pub fn queued(&self) -> usize {
         if self.tail >= self.head {
             self.tail - self.head

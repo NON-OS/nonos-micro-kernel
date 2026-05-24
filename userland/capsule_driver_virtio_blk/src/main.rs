@@ -13,12 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #![no_std]
 #![no_main]
-
 extern crate alloc;
-
 mod constants;
 mod discover;
 mod init;
@@ -28,17 +25,12 @@ mod queue;
 mod regs;
 mod server;
 mod setup;
-
-use nonos_libc::{heap_init, mk_debug, mk_exit, mk_yield};
-
-const READY: &[u8] = b"[driver_blk] endpoint driver.virtio_blk0 ready\n";
-
+use nonos_libc::{heap_init, mk_exit, mk_yield};
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
-
     let mut driver = loop {
         match setup::run() {
             Ok(d) => break d,
@@ -49,7 +41,5 @@ pub unsafe extern "C" fn _start() -> ! {
             }
         }
     };
-
-    let _ = mk_debug(READY.as_ptr(), READY.len());
     server::run(&mut driver);
 }

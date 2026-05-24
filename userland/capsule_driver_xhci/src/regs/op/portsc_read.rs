@@ -13,14 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Read PORTSC for one port (1-indexed). The capsule does not
-//! gate on the port number here — the IPC handler validates it
-//! against `max_ports` before this function is reached.
-
 use crate::constants::{PORTSC_BASE, PORT_REG_STRIDE};
 use crate::regs::mmio_read32;
-
 pub fn portsc_read(op_base: u64, port: u8) -> u32 {
     let reg = op_base + PORTSC_BASE + ((port as u64) - 1) * PORT_REG_STRIDE;
     mmio_read32(reg)

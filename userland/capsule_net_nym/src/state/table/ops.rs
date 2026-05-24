@@ -15,9 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::{Gateway, Session};
+use super::topology_gate;
 use super::types::{Table, TableError, TABLE_CAP};
 use crate::crypto::Key;
-use crate::{state, topology};
+use crate::state;
 
 impl Table {
     pub fn set_gateway(&mut self, gateway: Gateway) -> Option<Gateway> {
@@ -29,9 +30,7 @@ impl Table {
         if self.sessions.len() >= TABLE_CAP {
             return Err(TableError::Full);
         }
-        if !topology::ready() {
-            return Err(TableError::NoTopology);
-        }
+        topology_gate::check()?;
         if state::credential_material().is_err() {
             return Err(TableError::NoCredential);
         }

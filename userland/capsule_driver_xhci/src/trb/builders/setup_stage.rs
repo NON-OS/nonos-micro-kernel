@@ -13,14 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{TRB_IDT, TRB_TYPE_SETUP_STAGE, TRT_IN_DATA};
 use crate::trb::Trb;
-
 pub fn setup_stage_get_descriptor(length: u16, cycle: bool) -> Trb {
     setup_stage_get_descriptor_typed(1, 0, length, cycle)
 }
-
 pub fn setup_stage_get_descriptor_typed(
     desc_type: u8,
     desc_index: u8,

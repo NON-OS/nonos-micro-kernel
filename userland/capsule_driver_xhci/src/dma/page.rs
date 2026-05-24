@@ -13,10 +13,5 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Page-size constants the DMA layer rounds against. The broker
-//! returns 4 KiB-aligned bases for `MkDmaMap` and accepts up to
-//! `MAX_PAGES_PER_GRANT` = 16 pages per grant call.
-
 pub const PAGE_SIZE: u64 = 4096;
 pub const MAX_PAGES_PER_GRANT: u64 = 16;

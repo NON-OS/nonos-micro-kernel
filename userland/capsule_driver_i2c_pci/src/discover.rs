@@ -1,8 +1,25 @@
-use nonos_libc::{mk_device_list, Bar, DeviceRecord};
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BUS_KIND_PCI};
 
 use crate::constants::{device_info, INTEL_VENDOR_ID};
 
 const MAX_DEVICES: usize = 128;
+const PCI_CLASS_SERIAL_BUS: u8 = 0x0c;
 
 #[derive(Clone, Copy)]
 pub struct Found {
@@ -15,18 +32,18 @@ pub struct Found {
 }
 
 pub fn find_controller() -> Option<Found> {
-    let mut buf = [empty_record(); MAX_DEVICES];
+    let mut buf = [DeviceRecord::empty(); MAX_DEVICES];
     let n = mk_device_list(0, buf.as_mut_ptr(), MAX_DEVICES as u64);
     if n <= 0 {
         return None;
     }
     for r in &buf[..core::cmp::min(n as usize, MAX_DEVICES)] {
-        if r.vendor != INTEL_VENDOR_ID || r.irq_pin == 0 || r.irq_line == 0xFF {
+        if !is_intel_i2c(r) || r.irq_pin == 0 || r.irq_line == 0xFF {
             continue;
         }
         let Some((family, clock_hz)) = device_info(r.device) else { continue };
         let bar0 = r.bars[0];
-        if r.bar_count != 0 && bar0.size != 0 {
+        if r.bar_count != 0 && bar0.kind == BAR_KIND_MMIO && bar0.size != 0 {
             return Some(Found {
                 device_id: r.device_id,
                 irq_line: r.irq_line,
@@ -40,20 +57,9 @@ pub fn find_controller() -> Option<Found> {
     None
 }
 
-fn empty_record() -> DeviceRecord {
-    DeviceRecord {
-        device_id: 0,
-        bus_kind: 0,
-        _pad0: [0; 3],
-        class: 0,
-        vendor: 0,
-        device: 0,
-        flags: 0,
-        bar_count: 0,
-        irq_line: 0xFF,
-        irq_pin: 0,
-        _pad1: [0; 1],
-        irq_source: 0,
-        bars: [Bar { base: 0, size: 0, kind: 0, flags: 0, _pad: [0; 6] }; 6],
-    }
+fn is_intel_i2c(r: &DeviceRecord) -> bool {
+    r.vendor == INTEL_VENDOR_ID
+        && r.bus_kind == BUS_KIND_PCI
+        && r.pci_class == PCI_CLASS_SERIAL_BUS
+        && device_info(r.device).is_some()
 }

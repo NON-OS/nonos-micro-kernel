@@ -13,11 +13,5 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Completion codes carried in bits 31:24 of a Command Completion
-//! Event or Transfer Event TRB. P0 only matches `CC_SUCCESS`;
-//! every other value the No-op smoke sees is surfaced verbatim
-//! to the kernel-side client through `XhciError::CommandCompletionFailed`.
-
 pub const CC_SUCCESS: u8 = 1;
 pub const CC_SHORT_PACKET: u8 = 13;

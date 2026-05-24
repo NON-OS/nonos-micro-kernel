@@ -13,19 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! BAR0 MMIO map. The broker bounds the mapping at the BAR's
-//! advertised size so the capsule cannot reach past the
-//! controller's register window. On failure the prior device
-//! claim is released — `BrokerHandles` is not yet constructed
-//! at this point so RAII has not taken over.
-
 use nonos_libc::{mk_device_release, mk_mmio_map, MmioMapOut};
-
 use crate::error::{XhciError, XhciResult};
-
 const BAR_INDEX: u32 = 0;
-
 pub fn mmio_map(device_id: u64, claim_epoch: u64, bar0_size: u64) -> XhciResult<MmioMapOut> {
     let mut out = MmioMapOut { user_va: 0, length: 0, grant_id: 0 };
     let r = mk_mmio_map(device_id, claim_epoch, BAR_INDEX, 0, 0, bar0_size, &mut out);

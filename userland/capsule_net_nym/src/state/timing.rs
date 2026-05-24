@@ -15,9 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use core::sync::atomic::{AtomicU16, AtomicU64, Ordering};
-
 use nonos_libc::mk_time_millis;
-
 use crate::crypto::fill_random;
 
 static COVER_BURST: AtomicU16 = AtomicU16::new(1);
@@ -43,10 +41,11 @@ pub fn install(body: &[u8]) -> bool {
 }
 
 pub fn policy() -> TimingPolicy {
-    TimingPolicy {
-        cover_burst: COVER_BURST.load(Ordering::Acquire),
-        delay_jitter_ms: DELAY_JITTER_MS.load(Ordering::Acquire),
-    }
+    TimingPolicy { cover_burst: COVER_BURST.load(Ordering::Acquire), delay_jitter_ms: DELAY_JITTER_MS.load(Ordering::Acquire) }
+}
+
+pub fn next_cover_ms() -> u64 {
+    NEXT_COVER_MS.load(Ordering::Acquire)
 }
 
 pub fn cover_due() -> Result<bool, ()> {

@@ -13,9 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::base::Trb;
-
 impl Trb {
     pub fn set_pointer(&mut self, ptr: u64) {
         self.d0 = (ptr & 0xFFFF_FFFF) as u32;

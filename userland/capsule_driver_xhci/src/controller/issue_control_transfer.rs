@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::ring_doorbell::ring_doorbell;
 use super::wait_transfer_completion::wait_transfer_completion;
 use crate::error::XhciResult;
@@ -24,9 +23,7 @@ use crate::trb::builders::data_stage_out::data_stage_out;
 use crate::trb::builders::setup_stage_generic::{setup_stage, SetupDir};
 use crate::trb::builders::status_stage::status_stage_out;
 use crate::trb::builders::status_stage_in::status_stage_in;
-
 const DCI_EP0_BIDIR: u8 = 1;
-
 pub fn issue_control_transfer(
     doorbell_base: u64,
     intr_base: u64,
@@ -56,7 +53,6 @@ pub fn issue_control_transfer(
     ring_doorbell(doorbell_base, slot_id, DCI_EP0_BIDIR);
     wait_transfer_completion(intr_base, status_phys, evt_ring)
 }
-
 fn direction(bm_request_type: u8, data_len: u16) -> SetupDir {
     if data_len == 0 {
         SetupDir::NoData

@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Event Ring Dequeue Pointer. Bit 3 (EHB) is write-1-to-clear
-//! to acknowledge an interrupt; bits 2:0 hold the Dequeue ERST
-//! Segment Index. Caller folds the desired DESI / EHB into
-//! `ehb_clear` and passes the 64-byte aligned dequeue address.
-
 use crate::constants::{ERDP_EHB, ERDP_LO};
 use crate::regs::mmio_write64;
-
 pub fn erdp_program(intr_base: u64, dequeue_phys: u64, ehb_clear: bool, desi: u8) {
     let mut value = dequeue_phys & !0xF;
     value |= (desi as u64) & 0x7;

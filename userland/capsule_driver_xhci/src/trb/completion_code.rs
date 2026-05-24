@@ -13,13 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::base::Trb;
-
 impl Trb {
-    /// Bits 31:24 of the third dword carry the completion code on
-    /// Command Completion and Transfer Event TRBs. `CC_SUCCESS`
-    /// is 1; everything else is an error or non-success status.
     pub fn completion_code(&self) -> u8 {
         ((self.d2 >> 24) & 0xFF) as u8
     }

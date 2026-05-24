@@ -13,12 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::base::Trb;
 use crate::constants::{TRB_TYPE_MASK, TRB_TYPE_SHIFT};
-
 impl Trb {
-    /// Bits 15:10 of the third dword: TRB type discriminant.
     pub fn get_type(&self) -> u32 {
         (self.d3 & TRB_TYPE_MASK) >> TRB_TYPE_SHIFT
     }

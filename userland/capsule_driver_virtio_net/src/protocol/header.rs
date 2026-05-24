@@ -14,20 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! 20-byte v1 envelope shared with the other userland service
-//! capsules so a single kernel-side transport can serve every
-//! endpoint.
-//!
-//!   u32 magic
-//!   u16 version
-//!   u16 op
-//!   u16 flags
-//!   u16 _reserved
-//!   u32 request_id
-//!   u32 payload_len
-//! = 20 bytes.
 
-pub const MAGIC: u32 = 0x4E4E_4554; // "NNET" — NONOS NETwork driver
+
+
+
+
+
+
+
+
+
+
+
+
+pub const MAGIC: u32 = 0x4E4E_4554;
 pub const VERSION: u16 = 1;
 
 pub const HDR_LEN: usize = 20;

@@ -13,31 +13,19 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-// Drain up to DRAIN_BATCH event TRBs, advance the ring, write
-// ERDP once with EHB cleared.
-
 use crate::regs::runtime::erdp_program;
 use crate::rings::event::EventRing;
 use crate::trb::Trb;
-
-/// Maximum events the capsule consumes in one drain pass before
-/// updating ERDP. Bounded so a flood of events cannot starve the
-/// rest of the service loop; the controller re-fires IRQs after
-/// EHB clears and the consumer cycle still matches.
 pub const DRAIN_BATCH: usize = 32;
-
 pub struct DrainBatch {
     pub trbs: [Trb; DRAIN_BATCH],
     pub count: usize,
 }
-
 impl DrainBatch {
     pub fn new() -> Self {
         Self { trbs: [Trb::zero(); DRAIN_BATCH], count: 0 }
     }
 }
-
 pub fn drain_events(intr_base: u64, ring: &mut EventRing) -> DrainBatch {
     let mut batch = DrainBatch::new();
     while batch.count < DRAIN_BATCH && ring.has_event() {

@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! PCI identifiers for virtio-net. Both transitional (legacy
-//! 0x1000) and modern (0x1041) device IDs are accepted; the
-//! capsule still drives the legacy BAR0 register window either
-//! way.
+
+
+
+
 
 pub const VIRTIO_VENDOR_ID: u16 = 0x1AF4;
 pub const VIRTIO_NET_TRANSITIONAL: u16 = 0x1000;

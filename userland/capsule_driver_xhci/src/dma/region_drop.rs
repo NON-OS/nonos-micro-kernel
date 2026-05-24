@@ -13,16 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Release the broker DMA grant when the region falls out of
-//! scope. The kernel-side teardown also reclaims grants on capsule
-//! exit, but explicit Drop keeps the broker accounting clean
-//! during in-process error paths and rebuilds.
-
 use nonos_libc::mk_dma_unmap;
-
 use super::region::DmaRegion;
-
 impl Drop for DmaRegion {
     fn drop(&mut self) {
         let _ = mk_dma_unmap(self.grant_id);

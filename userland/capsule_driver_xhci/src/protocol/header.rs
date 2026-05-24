@@ -13,16 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! 20-byte v1 envelope. Magic `"NXHC"` distinguishes this driver
-//! from the rest of the userland-capsule fleet.
-
-pub const MAGIC: u32 = 0x4E58_4843; // "NXHC" — NONOS xHCI host
+pub const MAGIC: u32 = 0x4E58_4843;
 pub const VERSION: u16 = 1;
-
 pub const HDR_LEN: usize = 20;
 pub const RESP_HDR_LEN: usize = HDR_LEN;
-
 #[derive(Debug, Clone, Copy)]
 pub struct Request {
     pub op: u16,

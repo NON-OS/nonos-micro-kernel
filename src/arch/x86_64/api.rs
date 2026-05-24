@@ -20,18 +20,18 @@ pub fn init() -> Result<(), &'static str> {
     gdt::init().map_err(|_| "GDT initialization failed")?;
     idt::init().map_err(|_| "IDT initialization failed")?;
     cpu::init().map_err(|_| "CPU initialization failed")?;
-    let _ = port::init();
-    let _ = serial::init();
-    let _ = vga::init();
-    let _ = time::init();
-    let _ = syscall::init();
+    port::init().map_err(|_| "Port initialization failed")?;
+    serial::init().map_err(|_| "Serial initialization failed")?;
+    vga::init().map_err(|_| "VGA initialization failed")?;
+    time::init()?;
+    syscall::init()?;
     Ok(())
 }
 
 pub fn init_with_acpi() -> Result<(), &'static str> {
     acpi::init().map_err(|_| "ACPI initialization failed")?;
     if let Some(hpet_addr) = acpi::hpet_address() {
-        let _ = time::init_with_hpet(hpet_addr);
+        time::init_with_hpet(hpet_addr)?;
     }
     Ok(())
 }

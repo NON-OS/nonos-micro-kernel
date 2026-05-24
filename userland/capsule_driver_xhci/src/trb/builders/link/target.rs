@@ -13,9 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::state::LinkTrbBuilderState;
-
 impl LinkTrbBuilderState {
     pub(super) fn target(mut self, phys_addr: u64) -> Self {
         self.trb.set_pointer(phys_addr & !0xF);

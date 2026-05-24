@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod config_set_max_slots;
 mod crcr_program;
 mod dcbaap_program;
@@ -24,7 +23,6 @@ mod usbcmd_read;
 mod usbcmd_write;
 mod usbsts_clear;
 mod usbsts_read;
-
 pub use config_set_max_slots::config_set_max_slots;
 pub use crcr_program::crcr_program;
 pub use dcbaap_program::dcbaap_program;

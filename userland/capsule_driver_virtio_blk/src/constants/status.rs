@@ -13,11 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Virtio device status register bits. Init walks ACK -> DRIVER ->
-//! features -> FEATURES_OK -> queue setup -> DRIVER_OK; FAILED is
-//! written if any earlier step does not validate.
-
 pub const STATUS_ACKNOWLEDGE: u8 = 1;
 pub const STATUS_DRIVER: u8 = 2;
 pub const STATUS_DRIVER_OK: u8 = 4;

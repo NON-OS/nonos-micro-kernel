@@ -13,17 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! virtio-blk request-type and status-byte values. Discard and
-//! write-zeroes are deliberately omitted from this slice — the
-//! capsule advertises no support for them, the feature
-//! negotiation in `init` clears the matching bits, and a request
-//! never carries one of the unsupported types.
-
 pub const VIRTIO_BLK_T_IN: u32 = 0;
 pub const VIRTIO_BLK_T_OUT: u32 = 1;
 pub const VIRTIO_BLK_T_FLUSH: u32 = 4;
-
 pub const VIRTIO_BLK_S_OK: u8 = 0;
 pub const VIRTIO_BLK_S_IOERR: u8 = 1;
 pub const VIRTIO_BLK_S_UNSUPP: u8 = 2;

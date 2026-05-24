@@ -13,9 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use nonos_libc::mk_ipc_send;
-
 use crate::controller::{get_device_descriptor, DEVICE_DESCRIPTOR_LEN};
 use crate::protocol::{
     encode_response_header, write_status, Request, DEVICE_DESCRIPTOR_REPLY_LEN,
@@ -23,7 +21,6 @@ use crate::protocol::{
 };
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
-
 pub fn handle(ctx: &mut Context, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != DEVICE_DESCRIPTOR_REQUEST_LEN {
         reply_with_status(tx, req, E_INVAL);
@@ -44,7 +41,6 @@ pub fn handle(ctx: &mut Context, req: &Request, body: &[u8], tx: &mut [u8]) {
     }
     reply_descriptor(tx, req, &out);
 }
-
 fn transfer(
     ctx: &mut Context,
     slot: u8,
@@ -60,7 +56,6 @@ fn transfer(
         .ok_or(crate::error::XhciError::ControllerUnsupported)?;
     get_device_descriptor(doorbell, intr, &mut ctx.driver.event_ring, slot, &mut resources.ep0, out)
 }
-
 fn reply_descriptor(tx: &mut [u8], req: &Request, out: &crate::dma::DmaRegion) {
     let payload_len = (STATUS_LEN + DEVICE_DESCRIPTOR_REPLY_LEN) as u32;
     encode_response_header(tx, req, payload_len);

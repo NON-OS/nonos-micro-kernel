@@ -20,11 +20,14 @@ mod layout;
 mod node;
 mod parse;
 mod select;
+mod status;
 mod store;
 mod types;
 mod verify;
 
 pub use parse::install;
 pub use select::route;
-pub use store::ready;
-pub use types::{Node, Role, RouteError, TopologyError, NODE_WIRE_LEN, ROUTE_HOPS};
+pub use status::current as status;
+pub use store::{meta, ready};
+pub use directory::DirectoryMeta;
+pub use types::{Node, Role, RouteError, TopologyError, TopologyStatus, NODE_WIRE_LEN, ROUTE_HOPS};

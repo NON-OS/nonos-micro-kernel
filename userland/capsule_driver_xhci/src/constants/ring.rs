@@ -13,15 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Ring sizing. xHCI TRBs are 16 bytes. The command ring carries
-//! `COMMAND_RING_TRBS - 1` usable slots plus one Link TRB; the
-//! event ring uses one segment with `EVENT_RING_SEGMENT_TRBS`
-//! entries. Capacity is intentionally small for v1; the next
-//! slice grows it once the boot path proves out.
-
 pub const TRB_BYTES: usize = 16;
-
 pub const COMMAND_RING_TRBS: usize = 64;
 pub const EVENT_RING_SEGMENT_TRBS: usize = 64;
 pub const EVENT_RING_SEGMENT_TABLE_ENTRIES: usize = 1;

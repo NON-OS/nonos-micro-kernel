@@ -13,10 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{TRB_DIR_IN, TRB_TYPE_DATA_STAGE};
 use crate::trb::Trb;
-
 pub fn data_stage_in(buffer_phys: u64, length: u16, cycle: bool) -> Trb {
     let mut trb = Trb::zero();
     trb.set_pointer(buffer_phys);

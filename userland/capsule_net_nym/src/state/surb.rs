@@ -15,47 +15,47 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec::Vec;
+use nonos_libc::mk_time_millis;
 use spin::Mutex;
 
-use crate::crypto::{fill_random, hmac_sha256};
+use super::surb_types::{normalize_ttl, Surb, CAP, DEFAULT_TTL_MS};
+use super::{surb_id, surb_tag};
 
-const CAP: usize = 64;
 static SURBS: Mutex<Vec<Surb>> = Mutex::new(Vec::new());
 
-#[derive(Clone, Copy)]
-struct Surb {
-    owner: u32,
-    id: u32,
-    session: u32,
-    tag: [u8; 32],
-}
-
-pub fn create(owner: u32, session: u32, cred: &[u8; 32]) -> Option<(u32, [u8; 32])> {
-    let mut seed = [0u8; 32];
-    fill_random(&mut seed).ok()?;
-    let id = u32::from_le_bytes([seed[0], seed[1], seed[2], seed[3]]).max(1);
-    let tag = tag(owner, session, id, cred, &seed)?;
+pub fn create(owner: u32, session: u32, cred: &[u8; 32], ttl_ms: u64) -> Option<(u32, [u8; 32])> {
+    let now = now_ms()?;
     let mut g = SURBS.lock();
+    prune(&mut g, now);
+    let (id, seed) = surb_id::create(&g, owner)?;
+    let tag = surb_tag::make(owner, session, id, cred, &seed)?;
+    let expires_ms = now.saturating_add(normalize_ttl(ttl_ms));
     if g.len() >= CAP {
         g.remove(0);
     }
-    g.push(Surb { owner, id, session, tag });
+    g.push(Surb { owner, id, session, tag, expires_ms });
     Some((id, tag))
 }
 
 pub fn consume(owner: u32, id: u32, tag: &[u8; 32]) -> Option<u32> {
+    let now = now_ms()?;
     let mut g = SURBS.lock();
-    let pos = g.iter().position(|s| s.owner == owner && s.id == id && &s.tag == tag)?;
+    prune(&mut g, now);
+    let pos = g.iter().position(|s| {
+        s.owner == owner && s.id == id && surb_tag::matches(&s.tag, tag)
+    })?;
     Some(g.remove(pos).session)
 }
 
-fn tag(owner: u32, session: u32, id: u32, cred: &[u8; 32], seed: &[u8; 32]) -> Option<[u8; 32]> {
-    let mut material = Vec::with_capacity(44);
-    material.extend_from_slice(&owner.to_le_bytes());
-    material.extend_from_slice(&session.to_le_bytes());
-    material.extend_from_slice(&id.to_le_bytes());
-    material.extend_from_slice(seed);
-    let mut out = [0u8; 32];
-    hmac_sha256(cred, &material, &mut out).ok()?;
-    Some(out)
+pub fn default_ttl_ms() -> u64 {
+    DEFAULT_TTL_MS
+}
+
+fn now_ms() -> Option<u64> {
+    let now = mk_time_millis();
+    (now >= 0).then_some(now as u64)
+}
+
+fn prune(g: &mut Vec<Surb>, now: u64) {
+    g.retain(|s| s.expires_ms > now);
 }

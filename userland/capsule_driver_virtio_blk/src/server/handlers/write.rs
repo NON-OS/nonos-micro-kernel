@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `OP_WRITE_BLOCKS`. Payload: u64 lba + u32 nsectors + nsectors *
-//! 512 bytes of data. Stages the data into the DMA buffer, posts
-//! the descriptor chain, waits on the used ring, and replies with
-//! the status byte.
-
 use crate::constants::{MAX_SECTORS_PER_REQUEST, SECTOR_SIZE};
 use crate::io::{submit, BlkError};
 use crate::protocol::{
@@ -27,7 +21,6 @@ use crate::protocol::{
 use crate::queue::Direction;
 use crate::server::error::reply_with_status;
 use crate::setup::Driver;
-
 pub fn handle(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() < RW_HEADER_LEN {
         reply_with_status(tx, req, E_MSGSIZE);
@@ -68,15 +61,10 @@ pub fn handle(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) {
         reply_with_status(tx, req, E_NXIO);
         return;
     }
-
-    // SAFETY: the data DMA grant is owned by this capsule; the
-    // server loop is single-threaded and no request is in flight
-    // until `submit` is called below.
     unsafe {
         let dst = driver.queue.data_mut(bytes_n as u32);
         dst.copy_from_slice(&body[RW_HEADER_LEN..RW_HEADER_LEN + bytes_n]);
     }
-
     let outcome =
         submit(driver.regs, &mut driver.queue, driver.irq_grant, Direction::Write, lba, nsectors);
     let status = match outcome {

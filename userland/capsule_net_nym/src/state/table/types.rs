@@ -34,6 +34,7 @@ pub struct Table {
 pub enum TableError {
     NoGateway,
     NoTopology,
+    StaleTopology,
     NoCredential,
     Full,
 }

@@ -13,18 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Clear the interrupter's IP latch and the broker's IRQ grant
-//! ack. The controller's IMAN.IP is write-1-to-clear; once cleared,
-//! the line can fire again on the next event. The broker-side
-//! `mk_irq_ack` releases the kernel-side queue slot so the next
-//! `mk_irq_poll` can block.
-
 use nonos_libc::mk_irq_ack;
-
 use crate::constants::IMAN_IP;
 use crate::regs::runtime::{iman_read, iman_write};
-
 pub fn ack_irq(intr_base: u64, irq_grant_id: u64) {
     let cur = iman_read(intr_base);
     if cur & IMAN_IP != 0 {

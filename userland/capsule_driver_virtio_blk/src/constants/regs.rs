@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Legacy virtio-pci register offsets in BAR0. The shared block
-//! (host_features..status) follows the virtio 1.x spec §4.1.4.8;
-//! `LEG_CFG_CAPACITY` is the start of the per-device-class config
-//! space which for virtio-blk is the 64-bit capacity in sectors.
-
 pub const LEG_HOST_FEATURES: usize = 0x00;
 pub const LEG_GUEST_FEATURES: usize = 0x04;
 pub const LEG_QUEUE_PFN: usize = 0x08;

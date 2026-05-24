@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod ack_irq;
 mod drain_events;
 mod dcbaa_slot;
@@ -41,7 +40,6 @@ mod wait_cnr_clear;
 mod wait_command_completion;
 mod wait_transfer_completion;
 mod wait_hc_running;
-
 pub use ack_irq::ack_irq;
 pub use drain_events::drain_events;
 pub use dcbaa_slot::{clear_dcbaa_slot, set_dcbaa_slot};

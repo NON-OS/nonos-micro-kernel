@@ -20,8 +20,24 @@ use super::constants::*;
 use crate::clients::envelope::call;
 
 pub fn create_surb(port: u32, session: u32) -> Result<(u32, [u8; 32]), u16> {
+    let body = session.to_le_bytes();
+    create_with_body(port, &body)
+}
+
+pub fn create_surb_with_ttl(
+    port: u32,
+    session: u32,
+    ttl_ms: u64,
+) -> Result<(u32, [u8; 32]), u16> {
+    let mut body = [0u8; 12];
+    body[0..4].copy_from_slice(&session.to_le_bytes());
+    body[4..12].copy_from_slice(&ttl_ms.to_le_bytes());
+    create_with_body(port, &body)
+}
+
+fn create_with_body(port: u32, body: &[u8]) -> Result<(u32, [u8; 32]), u16> {
     let mut out = [0u8; 36];
-    if call(port, MAGIC, CREATE_SURB, &session.to_le_bytes(), &mut out)? != 36 {
+    if call(port, MAGIC, CREATE_SURB, body, &mut out)? != 36 {
         return Err(4);
     }
     let mut tag = [0u8; 32];

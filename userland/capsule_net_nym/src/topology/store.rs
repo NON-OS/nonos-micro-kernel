@@ -62,6 +62,10 @@ pub fn ready() -> bool {
     snapshot().is_ok()
 }
 
+pub fn meta() -> Option<DirectoryMeta> {
+    STORE.lock().meta
+}
+
 fn fresh(meta: DirectoryMeta, now: u64) -> bool {
     now >= meta.not_before_ms && now < meta.not_after_ms
 }

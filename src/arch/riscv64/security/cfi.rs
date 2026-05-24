@@ -14,62 +14,36 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Zicfiss / Zicfilp detection lives behind a CSR probe that does not
-// exist in the kernel yet (no SBI exposure, no DTB binding). The local
-// has_zicfiss / has_zicfilp helpers return false until that lands.
+mod error;
+mod mode;
+mod stack;
+mod state;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CfiMode {
-    Disabled,
-    ShadowStack,
-    LandingPad,
-    Both,
-}
+pub use error::CfiError;
+pub use mode::CfiMode;
 
 pub fn init_cfi() {
-    if has_zicfiss() {
-        enable_shadow_stack();
-    }
-
-    if has_zicfilp() {
-        enable_landing_pad();
-    }
+    state::enable_shadow_stack();
 }
-
-fn has_zicfiss() -> bool {
-    false
-}
-
-fn has_zicfilp() -> bool {
-    false
-}
-
-fn enable_shadow_stack() {}
-
-fn enable_landing_pad() {}
 
 pub fn cfi_supported() -> bool {
-    has_zicfiss() || has_zicfilp()
+    state::shadow_stack_capacity() != 0
 }
 
 pub fn current_mode() -> CfiMode {
-    let ss = has_zicfiss();
-    let lp = has_zicfilp();
-
-    match (ss, lp) {
-        (false, false) => CfiMode::Disabled,
-        (true, false) => CfiMode::ShadowStack,
-        (false, true) => CfiMode::LandingPad,
-        (true, true) => CfiMode::Both,
+    if state::shadow_stack_enabled() {
+        CfiMode::ShadowStack
+    } else {
+        CfiMode::Disabled
     }
 }
 
-pub fn software_shadow_stack_push(ra: usize) {
-    let _ = ra;
+pub fn software_shadow_stack_push(ra: usize) -> Result<(), CfiError> {
+    state::push_shadow_return(ra)
 }
 
-pub fn software_shadow_stack_pop() -> usize {
-    0
+pub fn software_shadow_stack_pop() -> Result<usize, CfiError> {
+    state::pop_shadow_return()
 }
 
 pub fn software_shadow_stack_check(expected: usize, actual: usize) -> bool {

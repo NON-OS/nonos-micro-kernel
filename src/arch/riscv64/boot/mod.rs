@@ -26,40 +26,21 @@ pub use info::{BootInfo, MemoryRegion};
 pub use multicore::start_secondary_harts;
 pub use stack::setup_stack;
 
-use super::{cpu, interrupts, mmu, plic, timer, uart};
+use super::{cpu, interrupts, mmu, plic, security, timer, uart};
 
 pub fn init(boot_info: &BootInfo) {
     uart::init_uart(boot_info.uart_base);
-
-    uart::puts(b"[BOOT] NONOS RISC-V starting...\n");
-
     cpu::init_cpu();
-
-    uart::puts(b"[BOOT] CPU initialized\n");
-
-    // stvec before anything that can trap.
     interrupts::install_stvec();
-
-    uart::puts(b"[BOOT] Trap vector installed\n");
-
+    if security::init_all().is_err() {
+        cpu::halt();
+    }
     mmu::init_mmu(boot_info);
-
-    uart::puts(b"[BOOT] MMU configured\n");
-
     if boot_info.plic_base != 0 {
         plic::init_plic(boot_info.plic_base);
-        uart::puts(b"[BOOT] PLIC initialized\n");
-    } else {
-        uart::puts(b"[BOOT] PLIC absent (ACLINT-only or pre-DTB); IRQ broker fail-closed\n");
     }
-
     timer::init_timer();
-
-    uart::puts(b"[BOOT] Timer initialized\n");
-
     if boot_info.hart_count > 1 {
         multicore::start_secondary_harts(boot_info);
     }
-
-    uart::puts(b"[BOOT] RISC-V initialization complete\n");
 }

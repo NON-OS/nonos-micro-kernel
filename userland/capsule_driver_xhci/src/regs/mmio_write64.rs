@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Volatile 64-bit MMIO write. Used for CRCR / DCBAAP / ERSTBA /
-//! ERDP — registers that must be programmed atomically as a
-//! single 64-bit transaction. See `mmio_read64` for the
-//! AC64 prerequisite.
-
 pub(crate) fn mmio_write64(addr: u64, value: u64) {
     unsafe { core::ptr::write_volatile(addr as *mut u64, value) };
 }

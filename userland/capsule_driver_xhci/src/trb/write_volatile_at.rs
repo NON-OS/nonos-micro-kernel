@@ -13,9 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::base::Trb;
-
 pub fn write_volatile_at(slot_va: u64, trb: Trb) {
     unsafe { core::ptr::write_volatile(slot_va as *mut Trb, trb) }
 }

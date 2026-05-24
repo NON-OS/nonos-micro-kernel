@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! i8042 status-port bit definitions. A status byte without
-//! `OUTPUT_FULL` set means there is nothing to read; `PARITY` or
-//! `TIMEOUT` set means the byte we'd read is bad and should be
-//! discarded. The capsule honours both.
-
 pub const STATUS_OUTPUT_FULL: u8 = 0x01;
 pub const STATUS_INPUT_FULL: u8 = 0x02;
 pub const STATUS_AUX_DATA: u8 = 0x20;

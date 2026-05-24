@@ -13,12 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::region::DmaRegion;
-
 impl DmaRegion {
-    /// Bus-side physical address. The controller's BAR-side
-    /// transactions reach the buffer through this address.
     pub fn phys(&self) -> u64 {
         self.device_addr
     }

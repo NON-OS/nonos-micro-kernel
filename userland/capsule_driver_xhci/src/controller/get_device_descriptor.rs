@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::ring_doorbell::ring_doorbell;
 use super::wait_transfer_completion::wait_transfer_completion;
 use crate::dma::DmaRegion;
@@ -23,9 +22,7 @@ use crate::rings::transfer::TransferRing;
 use crate::trb::builders::data_stage::data_stage_in;
 use crate::trb::builders::setup_stage::setup_stage_get_descriptor;
 use crate::trb::builders::status_stage::status_stage_out;
-
 pub const DEVICE_DESCRIPTOR_LEN: u16 = 18;
-
 pub fn get_device_descriptor(
     doorbell_base: u64,
     intr_base: u64,

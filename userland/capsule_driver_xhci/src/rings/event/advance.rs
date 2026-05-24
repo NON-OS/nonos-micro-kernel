@@ -13,20 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::state::EventRing;
 use crate::constants::{EVENT_RING_SEGMENT_TRBS, TRB_BYTES};
 use crate::trb::{write_volatile_at, Trb};
-
 impl EventRing {
-    /// Consume the current TRB and step the consumer cursor. The
-    /// freshly-consumed slot is zeroed so a stale-cycle re-read
-    /// after a wrap cannot accidentally mis-match against the new
-    /// consumer cycle. On segment wrap, the cycle flips.
     pub fn advance(&mut self) {
         let va = self.segment.user_va() + (self.dequeue_index as u64) * (TRB_BYTES as u64);
         write_volatile_at(va, Trb::zero());
-
         self.dequeue_index += 1;
         if self.dequeue_index == EVENT_RING_SEGMENT_TRBS {
             self.dequeue_index = 0;

@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `Ring` carries the bounded scancode buffer plus the
-//! diagnostic counters the IPC `get_state` op surfaces.
-//! Behaviour lives in sibling files (`push.rs`, `pop.rs`); this
-//! one only owns the layout and the constructor.
-
 use super::event::Event;
 use crate::constants::RING_CAPACITY;
-
 pub struct Ring {
     pub(super) buf: [Event; RING_CAPACITY],
     pub(super) head: usize,
@@ -31,7 +24,6 @@ pub struct Ring {
     pub parity_errors: u64,
     pub timeout_errors: u64,
 }
-
 impl Ring {
     pub const fn new() -> Self {
         Self {
@@ -44,7 +36,6 @@ impl Ring {
             timeout_errors: 0,
         }
     }
-
     pub fn queued(&self) -> usize {
         if self.tail >= self.head {
             self.tail - self.head
@@ -52,11 +43,9 @@ impl Ring {
             RING_CAPACITY - self.head + self.tail
         }
     }
-
     pub fn head(&self) -> usize {
         self.head
     }
-
     pub fn tail(&self) -> usize {
         self.tail
     }

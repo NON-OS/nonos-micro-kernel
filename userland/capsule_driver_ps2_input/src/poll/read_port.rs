@@ -13,13 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Single u8 read against a granted PIO port. Returns `None` if
-//! the syscall fails (epoch stale, grant revoked); the drainer
-//! treats that the same as "no data" and stops the cycle.
-
 use nonos_libc::mk_pio_read;
-
 pub fn read_port(grant_id: u64, offset: u16) -> Option<u8> {
     let mut value: u32 = 0;
     let r = mk_pio_read(grant_id, offset, 1, &mut value);

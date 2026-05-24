@@ -13,14 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::ring_doorbell::ring_doorbell;
 use super::wait_command_completion::wait_command_completion;
 use crate::error::{XhciError, XhciResult};
 use crate::rings::command::CommandRing;
 use crate::rings::event::EventRing;
 use crate::trb::commands::address_device_command;
-
 pub fn issue_address_device(
     doorbell_base: u64,
     intr_base: u64,

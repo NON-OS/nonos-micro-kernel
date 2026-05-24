@@ -13,17 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `Drainer` carries the prefix-state across drain cycles. The
-//! E0 / E1 prefix bytes appear on a separate IRQ from the actual
-//! key code, so the drainer remembers "we just saw an E0" until
-//! the next byte arrives.
-
 pub struct Drainer {
     pub(super) pending_e0: bool,
     pub(super) pending_e1: bool,
 }
-
 impl Drainer {
     pub const fn new() -> Self {
         Self { pending_e0: false, pending_e1: false }

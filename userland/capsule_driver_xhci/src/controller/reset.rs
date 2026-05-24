@@ -13,17 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Issue HCRST and wait for the bit to self-clear. The spec
-//! gives the controller "up to 1 second" to finish; the spin
-//! bound is sized for that on a typical kernel polling cadence.
-
 use crate::constants::USBCMD_HCRST;
 use crate::error::{XhciError, XhciResult};
 use crate::regs::op::{usbcmd_read, usbcmd_write};
-
 const RESET_POLL_LIMIT: u32 = 200_000;
-
 pub fn reset(op_base: u64) -> XhciResult<()> {
     usbcmd_write(op_base, usbcmd_read(op_base) | USBCMD_HCRST);
     for _ in 0..RESET_POLL_LIMIT {

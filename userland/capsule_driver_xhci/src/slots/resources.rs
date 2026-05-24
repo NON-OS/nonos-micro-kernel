@@ -13,14 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::contexts::{
     device_context_bytes, input_context_bytes, max_packet_for_speed, write_address_device_input,
 };
 use crate::dma::{DmaPool, DmaRegion};
 use crate::error::XhciResult;
 use crate::rings::transfer::TransferRing;
-
 pub struct SlotResources {
     pub slot_id: u8,
     pub port_id: u8,
@@ -30,7 +28,6 @@ pub struct SlotResources {
     pub input_context: DmaRegion,
     pub ep0: TransferRing,
 }
-
 impl SlotResources {
     pub fn allocate(
         pool: &DmaPool,
@@ -44,7 +41,6 @@ impl SlotResources {
         let ep0 = TransferRing::new(pool)?;
         output_context.zero();
         input_context.zero();
-
         let max_packet = max_packet_for_speed(speed);
         write_address_device_input(
             &input_context,
@@ -54,7 +50,6 @@ impl SlotResources {
             max_packet,
             ep0.phys(),
         );
-
         Ok(Self { slot_id, port_id, speed, max_packet, output_context, input_context, ep0 })
     }
 }

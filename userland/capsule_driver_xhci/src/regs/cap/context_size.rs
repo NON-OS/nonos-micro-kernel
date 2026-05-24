@@ -13,12 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::HCCPARAMS1;
 use crate::regs::mmio_read32;
-
 const HCCPARAMS1_CSZ: u32 = 1 << 2;
-
 pub fn context_size(mmio_base: u64) -> u8 {
     if (mmio_read32(mmio_base + HCCPARAMS1) & HCCPARAMS1_CSZ) != 0 {
         64

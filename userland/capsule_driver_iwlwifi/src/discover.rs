@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_device_list, Bar, DeviceRecord};
+use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BUS_KIND_PCI};
 
 use crate::constants::INTEL_VENDOR_ID;
 use crate::firmware::family::family_for_device;
 
 const MAX_DEVICES: usize = 96;
+const PCI_CLASS_NETWORK: u8 = 0x02;
+const PCI_SUBCLASS_OTHER: u8 = 0x80;
 
 #[derive(Clone, Copy)]
 pub struct Found {
@@ -30,7 +32,7 @@ pub struct Found {
 }
 
 pub fn find_iwlwifi() -> Option<Found> {
-    let mut buf = [empty_record(); MAX_DEVICES];
+    let mut buf = [DeviceRecord::empty(); MAX_DEVICES];
     let n = mk_device_list(0, buf.as_mut_ptr(), MAX_DEVICES as u64);
     if n <= 0 {
         return None;
@@ -40,7 +42,7 @@ pub fn find_iwlwifi() -> Option<Found> {
             continue;
         }
         let bar0 = r.bars[0];
-        if r.bar_count != 0 && bar0.size != 0 {
+        if r.bar_count != 0 && bar0.kind == BAR_KIND_MMIO && bar0.size != 0 {
             return Some(Found {
                 device_id: r.device_id,
                 irq_line: r.irq_line,
@@ -53,14 +55,9 @@ pub fn find_iwlwifi() -> Option<Found> {
 }
 
 fn is_match(r: &DeviceRecord) -> bool {
-    r.vendor == INTEL_VENDOR_ID && family_for_device(r.device).is_some()
-}
-
-fn empty_record() -> DeviceRecord {
-    DeviceRecord {
-        device_id: 0, bus_kind: 0, _pad0: [0; 3], class: 0, vendor: 0,
-        device: 0, flags: 0, bar_count: 0, irq_line: 0xFF, irq_pin: 0,
-        _pad1: [0; 1], irq_source: 0,
-        bars: [Bar { base: 0, size: 0, kind: 0, flags: 0, _pad: [0; 6] }; 6],
-    }
+    r.vendor == INTEL_VENDOR_ID
+        && r.bus_kind == BUS_KIND_PCI
+        && r.pci_class == PCI_CLASS_NETWORK
+        && r.pci_subclass == PCI_SUBCLASS_OTHER
+        && family_for_device(r.device).is_some()
 }

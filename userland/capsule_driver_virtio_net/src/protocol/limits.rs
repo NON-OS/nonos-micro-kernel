@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Per-op payload sizes the server enforces.
-//!
-//! `MAX_TX_PAYLOAD_BYTES` matches the Ethernet upper bound; a
-//! frame larger than `MAX_ETHERNET_FRAME` is refused at the IPC
-//! boundary so a misbehaving caller cannot drive the TX DMA
-//! buffer past its grant.
+
+
+
+
+
+
 
 use crate::constants::{MAC_LEN, MAX_ETHERNET_FRAME};
 
@@ -28,5 +28,5 @@ pub const STATUS_LEN: usize = 4;
 pub const MAX_TX_PAYLOAD_BYTES: u32 = MAX_ETHERNET_FRAME as u32;
 pub const MAC_ADDRESS_PAYLOAD_LEN: usize = MAC_LEN;
 pub const LINK_STATUS_PAYLOAD_LEN: usize = 1;
-// rx_packet body: u32 length followed by frame bytes.
+
 pub const RX_PAYLOAD_PREFIX_LEN: usize = 4;

@@ -13,15 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Producer side. A full ring drops the oldest event and bumps
-//! the dropped-events counter rather than blocking; the IRQ
-//! drainer must never stall on a slow IPC consumer.
-
 use super::event::Event;
 use super::state::Ring;
 use crate::constants::RING_CAPACITY;
-
 impl Ring {
     pub fn push(&mut self, ev: Event) {
         let next = (self.head + 1) % RING_CAPACITY;

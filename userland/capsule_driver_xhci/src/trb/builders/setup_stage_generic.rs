@@ -13,19 +13,16 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{
     TRB_IDT, TRB_TYPE_SETUP_STAGE, TRT_IN_DATA, TRT_NO_DATA, TRT_OUT_DATA,
 };
 use crate::trb::Trb;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SetupDir {
     NoData,
     HostToDevice,
     DeviceToHost,
 }
-
 pub fn setup_stage(
     bm_request_type: u8,
     b_request: u8,
@@ -46,7 +43,6 @@ pub fn setup_stage(
     trb.set_cycle(cycle);
     trb
 }
-
 fn trt_bits(dir: SetupDir) -> u32 {
     match dir {
         SetupDir::NoData => TRT_NO_DATA,

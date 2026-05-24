@@ -13,16 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `OP_CONTROLLER_STATUS`. 56-byte payload after the status word
-//! (see `protocol::limits` for the layout). The kernel-side smoke
-//! asserts USBSTS.HCH=0 (controller running), max_slots>0,
-//! events_drained_total > 0 (the No-op completion has been
-//! drained), dcbaa_phys is non-zero (DCBAA was actually
-//! programmed), and scratchpad_pages_alloc matches max_scratchpad.
-
 use nonos_libc::mk_ipc_send;
-
 use crate::protocol::{
     encode_response_header, write_status, Request, CONTROLLER_STATUS_PAYLOAD_LEN,
     KERNEL_REPLY_ENDPOINT, RESP_HDR_LEN, STATUS_LEN,
@@ -30,7 +21,6 @@ use crate::protocol::{
 use crate::regs::op::{usbcmd_read, usbsts_read};
 use crate::regs::runtime::iman_read;
 use crate::server::context::Context;
-
 pub fn handle(ctx: &Context, req: &Request, tx: &mut [u8]) {
     let usbsts = usbsts_read(ctx.driver.layout.op_base);
     let usbcmd = usbcmd_read(ctx.driver.layout.op_base);
@@ -41,11 +31,9 @@ pub fn handle(ctx: &Context, req: &Request, tx: &mut [u8]) {
     let scratchpad_phys = ctx.driver.scratchpads.array_phys();
     let scratchpad_pages = ctx.driver.scratchpads.page_count();
     let allocated_slots = ctx.driver.slots.count() as u32;
-
     let payload_len = (STATUS_LEN + CONTROLLER_STATUS_PAYLOAD_LEN) as u32;
     encode_response_header(tx, req, payload_len);
     write_status(&mut tx[RESP_HDR_LEN..], 0);
-
     let mut o = RESP_HDR_LEN + STATUS_LEN;
     tx[o] = ctx.driver.layout.max_slots;
     tx[o + 1] = ctx.driver.layout.max_ports;
@@ -74,6 +62,5 @@ pub fn handle(ctx: &Context, req: &Request, tx: &mut [u8]) {
     tx[o..o + 8].copy_from_slice(&scratchpad_phys.to_le_bytes());
     o += 8;
     tx[o..o + 4].copy_from_slice(&allocated_slots.to_le_bytes());
-
     let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), RESP_HDR_LEN + (payload_len as usize));
 }

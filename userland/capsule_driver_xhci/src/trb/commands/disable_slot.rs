@@ -13,15 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Disable Slot command TRB. It releases a controller-owned slot
-//! after a failed or completed enumeration path.
-
 use crate::constants::TRB_TYPE_DISABLE_SLOT_CMD;
 use crate::trb::Trb;
-
 const SLOT_ID_SHIFT: u32 = 24;
-
 pub fn disable_slot_command(cycle: bool, slot_id: u8) -> Trb {
     let mut trb = Trb::zero();
     trb.set_type(TRB_TYPE_DISABLE_SLOT_CMD);

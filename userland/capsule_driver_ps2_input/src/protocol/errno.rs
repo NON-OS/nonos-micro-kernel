@@ -13,10 +13,5 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Status codes carried in the first four payload bytes. Mirror
-//! Linux errnos so the kernel-side client can route them through
-//! the existing errno-to-error mapper.
-
 pub const E_INVAL: i32 = -22;
 pub const E_IO: i32 = -5;

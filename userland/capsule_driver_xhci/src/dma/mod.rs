@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod page;
 mod pool;
 mod pool_alloc;
@@ -23,6 +22,5 @@ mod region_drop;
 mod region_phys;
 mod region_user_va;
 mod region_zero;
-
 pub use pool::DmaPool;
 pub use region::DmaRegion;

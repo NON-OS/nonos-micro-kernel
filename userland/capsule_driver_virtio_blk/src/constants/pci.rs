@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! PCI identifiers for virtio-blk. The driver accepts both the
-//! transitional (legacy 0x1001) and the modern (0x1042) device IDs;
-//! the on-the-wire register layout selected by `setup::sequence` is
-//! still the legacy BAR0 interface either way.
-
 pub const VIRTIO_VENDOR_ID: u16 = 0x1AF4;
 pub const VIRTIO_BLK_TRANSITIONAL: u16 = 0x1001;
 pub const VIRTIO_BLK_MODERN: u16 = 0x1042;

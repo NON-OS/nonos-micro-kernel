@@ -16,10 +16,14 @@
 
 mod authority;
 mod credential;
+mod directory;
 mod gateway;
 mod replay;
 mod session;
 mod surb;
+mod surb_id;
+mod surb_tag;
+mod surb_types;
 mod table;
 mod timing;
 
@@ -27,9 +31,12 @@ pub use authority::{install as install_authority, trusted as trusted_authority};
 pub use credential::{
     install as install_credential, material as credential_material, CredentialError,
 };
+pub use directory::{get as directory_source, install as install_directory_source};
 pub use gateway::{Gateway, Transport};
 pub use replay::ReplayWindow;
 pub use session::{Session, RX_DEPTH};
-pub use surb::{consume as consume_surb, create as create_surb};
+pub use surb::{consume as consume_surb, create as create_surb, default_ttl_ms as surb_ttl_ms};
 pub use table::{TableError, TABLE};
-pub use timing::{cover_due, install as install_timing, policy as timing_policy};
+pub use timing::{
+    cover_due, install as install_timing, next_cover_ms, policy as timing_policy,
+};

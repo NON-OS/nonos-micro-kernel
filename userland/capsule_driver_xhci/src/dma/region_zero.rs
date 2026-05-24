@@ -13,14 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Zero the entire region in one byte-wise pass. The broker
-//! already zeros DMA pages on allocation, but ring/context
-//! reinitialisation paths invoke this explicitly so the assertion
-//! in caller-side code holds independent of broker policy.
-
 use super::region::DmaRegion;
-
 impl DmaRegion {
     pub fn zero(&self) {
         unsafe {

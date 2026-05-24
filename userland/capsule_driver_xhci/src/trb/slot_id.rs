@@ -13,12 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::base::Trb;
-
 impl Trb {
-    /// Bits 31:24 of the fourth dword carry the slot id on
-    /// Command Completion Event TRBs.
     pub fn slot_id(&self) -> u8 {
         ((self.d3 >> 24) & 0xFF) as u8
     }

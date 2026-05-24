@@ -13,14 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `OP_READ_BLOCKS`. Payload: u64 lba + u32 nsectors. Bounds-
-//! checks against device capacity and the per-request sector cap,
-//! then runs one virtqueue round trip and copies the data DMA
-//! buffer into the response after the status byte.
-
 use nonos_libc::mk_ipc_send;
-
 use crate::constants::{MAX_SECTORS_PER_REQUEST, SECTOR_SIZE};
 use crate::io::{submit, BlkError};
 use crate::protocol::{
@@ -30,7 +23,6 @@ use crate::protocol::{
 use crate::queue::Direction;
 use crate::server::error::reply_with_status;
 use crate::setup::Driver;
-
 pub fn handle(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() < READ_REQ_LEN || req.payload_len != READ_REQ_LEN as u32 {
         reply_with_status(tx, req, E_MSGSIZE);
@@ -38,17 +30,11 @@ pub fn handle(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) {
     }
     let lba = match read_u64_le(body, 0) {
         Some(v) => v,
-        None => {
-            reply_with_status(tx, req, E_MSGSIZE);
-            return;
-        }
+        None => { reply_with_status(tx, req, E_MSGSIZE); return; }
     };
     let nsectors = match read_u32_le(body, 8) {
         Some(v) => v,
-        None => {
-            reply_with_status(tx, req, E_MSGSIZE);
-            return;
-        }
+        None => { reply_with_status(tx, req, E_MSGSIZE); return; }
     };
     if nsectors == 0 || nsectors > MAX_SECTORS_PER_REQUEST {
         reply_with_status(tx, req, E_INVAL);
@@ -56,18 +42,13 @@ pub fn handle(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) {
     }
     let last = match lba.checked_add(nsectors as u64) {
         Some(v) => v,
-        None => {
-            reply_with_status(tx, req, E_INVAL);
-            return;
-        }
+        None => { reply_with_status(tx, req, E_INVAL); return; }
     };
     if last > driver.capacity_sectors {
         reply_with_status(tx, req, E_NXIO);
         return;
     }
-
-    let outcome =
-        submit(driver.regs, &mut driver.queue, driver.irq_grant, Direction::Read, lba, nsectors);
+    let outcome = submit(driver.regs, &mut driver.queue, driver.irq_grant, Direction::Read, lba, nsectors);
     match outcome {
         Ok(()) => {}
         Err(BlkError::Unsupported) => {
@@ -79,15 +60,13 @@ pub fn handle(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) {
             return;
         }
     }
-
     let bytes_n = (nsectors as usize) * SECTOR_SIZE;
     let payload_len = STATUS_LEN as u32 + bytes_n as u32;
     encode_response_header(tx, req, payload_len);
     write_status(&mut tx[RESP_HDR_LEN..], 0);
-    // SAFETY: `submit` returned Ok, so the device has finished
-    // writing the data buffer; the server loop is single-threaded
-    // so no concurrent device write is in flight while we copy.
     let buf = unsafe { driver.queue.data(bytes_n as u32) };
     tx[RESP_HDR_LEN + STATUS_LEN..RESP_HDR_LEN + STATUS_LEN + bytes_n].copy_from_slice(buf);
-    let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), RESP_HDR_LEN + STATUS_LEN + bytes_n);
+    if mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), RESP_HDR_LEN + STATUS_LEN + bytes_n) < 0 {
+        return;
+    }
 }

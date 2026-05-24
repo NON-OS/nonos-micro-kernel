@@ -13,19 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-// XhciError -> Linux errno. Used by `mk_exit(-errno_value(e))` so
-// the spawn path can render setup failures without an IPC trip.
-
 use super::xhci_error::XhciError;
-
 const ENODEV: i32 = -19;
 const EIO: i32 = -5;
 const ENOTSUP: i32 = -95;
 const ETIMEDOUT: i32 = -110;
 const EAGAIN: i32 = -11;
 const EREMOTEIO: i32 = -121;
-
 pub fn errno_value(e: XhciError) -> i32 {
     match e {
         XhciError::DeviceNotFound => ENODEV,

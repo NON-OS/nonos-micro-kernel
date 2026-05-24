@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Legacy virtio-pci register offsets in BAR0. The shared block
-//! (host_features..isr) follows the virtio 1.x spec §4.1.4.8;
-//! `LEG_MAC` is the start of the per-device-class config window
-//! which for virtio-net carries the 6-byte MAC followed by a
-//! 2-byte status word when `VIRTIO_NET_F_STATUS` is negotiated.
+
+
+
+
+
 
 pub const LEG_HOST_FEATURES: usize = 0x00;
 pub const LEG_GUEST_FEATURES: usize = 0x04;
@@ -29,14 +29,14 @@ pub const LEG_QUEUE_NOTIFY: usize = 0x10;
 pub const LEG_STATUS: usize = 0x12;
 pub const LEG_MAC: usize = 0x14;
 
-// Net-config status word lives 6 bytes after LEG_MAC. Only valid
-// when VIRTIO_NET_F_STATUS was negotiated; without that feature
-// the capsule treats the link as unconditionally up.
+
+
+
 pub const LEG_NET_STATUS_OFFSET: usize = LEG_MAC + 6;
 
-// Feature bits this capsule recognises.
+
 pub const VIRTIO_NET_F_MAC: u32 = 5;
 pub const VIRTIO_NET_F_STATUS: u32 = 16;
 
-// Net-config status bits.
+
 pub const VIRTIO_NET_S_LINK_UP: u16 = 1;

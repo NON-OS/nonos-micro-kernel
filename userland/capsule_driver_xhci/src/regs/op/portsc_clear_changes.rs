@@ -13,17 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Clear the write-1-to-clear change bits in a port's PORTSC. The
-//! caller passes the snapshot it just read; this function masks
-//! the change bits in and writes them back. Bits outside the
-//! change mask are zeroed in the write — PORTSC's RW1C semantics
-//! means we must not echo PED back as 1 (that would *clear* PED),
-//! and writing 0 to PED leaves it untouched.
-
 use crate::constants::{PORTSC_BASE, PORTSC_CHANGE_BITS, PORT_REG_STRIDE};
 use crate::regs::mmio_write32;
-
 pub fn portsc_clear_changes(op_base: u64, port: u8, snapshot: u32) {
     let reg = op_base + PORTSC_BASE + ((port as u64) - 1) * PORT_REG_STRIDE;
     let to_clear = snapshot & PORTSC_CHANGE_BITS;

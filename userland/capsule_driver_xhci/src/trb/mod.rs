@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod base;
 pub mod builders;
 pub mod commands;
@@ -29,7 +28,6 @@ mod set_transfer_length;
 mod set_type;
 mod slot_id;
 mod write_volatile_at;
-
 pub use base::Trb;
 pub use read_volatile_at::read_volatile_at;
 pub use write_volatile_at::write_volatile_at;

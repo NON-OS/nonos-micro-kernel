@@ -14,31 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `OP_TX_PACKET`. Body is the raw Ethernet frame; the capsule
-//! prepends the virtio-net header and posts a one-shot TX
-//! descriptor. Length bounds are enforced at the IPC boundary
-//! (must be MIN_ETHERNET_FRAME..=MAX_ETHERNET_FRAME) so a
-//! misbehaving caller cannot drive the TX DMA buffer out of
-//! range.
-
 use crate::constants::{MAX_ETHERNET_FRAME, MIN_ETHERNET_FRAME};
 use crate::protocol::{Request, E_INVAL, E_IO, E_MSGSIZE, MAX_TX_PAYLOAD_BYTES};
 use crate::server::error::reply_with_status;
 use crate::setup::Driver;
 use crate::tx::send;
 
-pub fn handle(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) {
+pub fn handle(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) -> bool {
     if req.payload_len as usize != body.len() {
-        reply_with_status(tx, req, E_MSGSIZE);
-        return;
+        return reply_with_status(tx, req, E_MSGSIZE);
     }
     if body.len() < MIN_ETHERNET_FRAME || body.len() > MAX_ETHERNET_FRAME {
-        reply_with_status(tx, req, E_INVAL);
-        return;
+        return reply_with_status(tx, req, E_INVAL);
     }
     if body.len() as u32 > MAX_TX_PAYLOAD_BYTES {
-        reply_with_status(tx, req, E_MSGSIZE);
-        return;
+        return reply_with_status(tx, req, E_MSGSIZE);
     }
     match send(driver.regs, &mut driver.tx, driver.irq_grant, body) {
         Ok(()) => reply_with_status(tx, req, 0),

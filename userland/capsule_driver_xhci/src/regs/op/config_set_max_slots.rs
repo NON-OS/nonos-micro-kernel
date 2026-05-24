@@ -13,14 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! CONFIG.MaxSlotsEn — bits 7:0. Tells the controller how many
-//! device slots the system intends to use. Larger than HCSPARAMS1
-//! is illegal; v1 sets this equal to MaxSlots.
-
 use crate::constants::CONFIG;
 use crate::regs::{mmio_read32, mmio_write32};
-
 pub fn config_set_max_slots(op_base: u64, max_slots: u8) {
     let cur = mmio_read32(op_base + CONFIG) & !0xFF;
     mmio_write32(op_base + CONFIG, cur | (max_slots as u32));

@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod ac64;
 mod caplength;
 mod context_size;
@@ -22,7 +21,6 @@ mod max_ports;
 mod max_scratchpad;
 mod max_slots;
 mod rtsoff;
-
 pub use ac64::ac64;
 pub use caplength::caplength;
 pub use context_size::context_size;

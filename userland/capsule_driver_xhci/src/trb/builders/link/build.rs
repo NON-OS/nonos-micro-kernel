@@ -13,36 +13,24 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Public entry point for the Link TRB builder. Mirrors the
-//! monolith shape (`LinkTrbBuilder::new().target(..).toggle_cycle(..)
-//! .cycle(..).build()`) but the per-step state stays internal to
-//! `link/state.rs`.
-
 use super::state::LinkTrbBuilderState;
 use crate::trb::base::Trb;
-
 pub struct LinkTrbBuilder {
     inner: LinkTrbBuilderState,
 }
-
 impl LinkTrbBuilder {
     pub fn new() -> Self {
         Self { inner: LinkTrbBuilderState::new() }
     }
-
     pub fn target(self, phys_addr: u64) -> Self {
         Self { inner: self.inner.target(phys_addr) }
     }
-
     pub fn toggle_cycle(self, toggle: bool) -> Self {
         Self { inner: self.inner.toggle_cycle(toggle) }
     }
-
     pub fn cycle(self, cycle: bool) -> Self {
         Self { inner: self.inner.cycle(cycle) }
     }
-
     pub fn build(self) -> Trb {
         self.inner.trb
     }

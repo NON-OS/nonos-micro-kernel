@@ -13,12 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::broker_handles::BrokerHandles;
-
 impl BrokerHandles {
-    /// Capsule-side virtual address of BAR0. Every register read
-    /// or write is computed as a fixed offset from this base.
     pub fn mmio_user_va(&self) -> u64 {
         self.mmio_user_va
     }

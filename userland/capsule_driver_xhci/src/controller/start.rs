@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Set USBCMD.RUN | USBCMD.INTE. Any latched HSE from a prior
-//! firmware run is cleared first so it does not propagate; the
-//! capsule never observes that bit when the controller comes up
-//! cleanly.
-
 use crate::constants::{USBCMD_INTE, USBCMD_RUN, USBSTS_HSE};
 use crate::regs::op::{usbcmd_read, usbcmd_write, usbsts_clear};
-
 pub fn start(op_base: u64) {
     usbsts_clear(op_base, USBSTS_HSE);
     let cur = usbcmd_read(op_base);

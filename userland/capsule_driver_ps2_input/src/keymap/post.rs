@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Build an `InputEvent` from a translated PS/2 keystroke and post it
-//! to the kernel input ring. The kernel input ring stamps incoming
-//! events at receive time on the kernel side.
-
 use nonos_libc::{mk_input_event_post, InputEvent, INPUT_KIND_KEY_DOWN, INPUT_KIND_KEY_UP};
-
 use super::translate::Translated;
-
 pub fn publish(t: Translated) -> bool {
     let kind = if t.is_release { INPUT_KIND_KEY_UP } else { INPUT_KIND_KEY_DOWN };
     let ev = InputEvent {

@@ -14,8 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod accept;
+mod stats;
+
 use super::{hpet, pit, rtc, timer as nonos_timer, tsc};
-use super::{PitStatistics, RtcError, RtcStatistics, RtcTime, TimerStats, TscStatistics};
+use super::{RtcError, RtcTime};
+use self::accept::{accept_pit, accept_rtc, accept_tsc};
+pub use self::stats::get_all_stats;
 
 #[inline(always)]
 pub fn rdtsc() -> u64 {
@@ -47,30 +52,22 @@ pub fn unix_timestamp() -> u64 {
     rtc::read_unix_timestamp()
 }
 
-pub fn init() {
-    let _ = tsc::init();
-    let _ = pit::init();
-    let _ = rtc::init();
+pub fn init() -> Result<(), &'static str> {
+    accept_tsc(tsc::init())?;
+    accept_pit(pit::init())?;
+    accept_rtc(rtc::init())?;
     nonos_timer::init();
+    Ok(())
 }
 
-pub fn init_with_hpet(hpet_base: u64) {
-    let _ = tsc::init();
-    let _ = pit::init();
-    if hpet_base != 0 {
-        if let Some(_) = hpet::detect_hpet() {
-            crate::log::info!("HPET detected and initialized");
-        }
+pub fn init_with_hpet(hpet_base: u64) -> Result<(), &'static str> {
+    if hpet_base == 0 || hpet::detect_hpet() != Some(hpet_base) {
+        accept_tsc(tsc::init())?;
+    } else {
+        accept_tsc(tsc::init_with_hpet(hpet_base))?;
     }
-    let _ = rtc::init();
+    accept_pit(pit::init())?;
+    accept_rtc(rtc::init())?;
     nonos_timer::init();
-}
-
-pub fn get_all_stats() -> (TscStatistics, PitStatistics, RtcStatistics, TimerStats) {
-    (
-        tsc::get_statistics(),
-        pit::get_statistics(),
-        rtc::get_statistics(),
-        nonos_timer::get_timer_stats(),
-    )
+    Ok(())
 }

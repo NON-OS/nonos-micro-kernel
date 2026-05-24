@@ -13,27 +13,23 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! IRQ phase. Bind the device's INTx line to a broker IRQ slot.
-//! On failure, the prior register grant is released and the device
-//! claim is released, so the broker never holds a partial setup.
-
 use nonos_libc::{mk_device_release, mk_irq_bind, IrqBindOut, MK_IRQ_BIND_MSIX};
-
 use super::registers::RegisterGrant;
 use crate::discover::Found;
-
 pub fn bind(dev: Found, claim_epoch: u64, regs: RegisterGrant) -> Result<IrqBindOut, &'static str> {
     let mut out = IrqBindOut { grant_id: 0, vector: 0 };
     let r = mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out);
     if r >= 0 {
         return Ok(out);
     }
-
     let msix = mk_irq_bind(dev.device_id, claim_epoch, 0, MK_IRQ_BIND_MSIX, 1, &mut out);
     if msix < 0 {
-        regs.release();
-        let _ = mk_device_release(dev.device_id);
+        if !regs.release() {
+            return Err("register release failed after irq bind failure");
+        }
+        if mk_device_release(dev.device_id) < 0 {
+            return Err("device release failed after irq bind failure");
+        }
         return Err("irq bind failed");
     }
     Ok(out)

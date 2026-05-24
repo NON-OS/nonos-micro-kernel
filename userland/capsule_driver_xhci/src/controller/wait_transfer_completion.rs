@@ -13,14 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{CC_SHORT_PACKET, CC_SUCCESS, TRB_TYPE_TRANSFER_EVENT};
 use crate::error::{XhciError, XhciResult};
 use crate::regs::runtime::erdp_program;
 use crate::rings::event::EventRing;
-
 const TRANSFER_POLL_LIMIT: u32 = 1_000_000;
-
 pub fn wait_transfer_completion(
     intr_base: u64,
     issued_phys: u64,
@@ -44,7 +41,6 @@ pub fn wait_transfer_completion(
     }
     Err(XhciError::TransferCompletionTimeout)
 }
-
 fn complete(code: u8) -> XhciResult<()> {
     match code {
         CC_SUCCESS | CC_SHORT_PACKET => Ok(()),

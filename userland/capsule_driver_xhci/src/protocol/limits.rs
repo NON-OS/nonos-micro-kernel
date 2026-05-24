@@ -13,10 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-// Reply payload sizes. Status word is the leading i32. Layouts
-// are mirrored verbatim by the kernel-side decoder.
-
 pub const STATUS_LEN: usize = 4;
 pub const CONTROLLER_STATUS_PAYLOAD_LEN: usize = 56;
 pub const PORT_ENTRY_BYTES: usize = 8;

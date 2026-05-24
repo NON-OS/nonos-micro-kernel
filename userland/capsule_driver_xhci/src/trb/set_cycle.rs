@@ -13,10 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::base::Trb;
 use crate::constants::TRB_CYCLE;
-
 impl Trb {
     pub fn set_cycle(&mut self, cycle: bool) {
         if cycle {

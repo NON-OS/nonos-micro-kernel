@@ -13,13 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::state::TransferRing;
 use crate::constants::{COMMAND_RING_TRBS, TRB_BYTES};
 use crate::error::{XhciError, XhciResult};
 use crate::trb::builders::link::LinkTrbBuilder;
 use crate::trb::{write_volatile_at, Trb};
-
 impl TransferRing {
     pub fn enqueue(&mut self, mut trb: Trb) -> XhciResult<u64> {
         if self.enqueue_index == COMMAND_RING_TRBS - 1 {
@@ -33,7 +31,6 @@ impl TransferRing {
         self.wrap_if_needed();
         Ok(slot_phys)
     }
-
     fn wrap_if_needed(&mut self) {
         if self.enqueue_index != COMMAND_RING_TRBS - 1 {
             return;

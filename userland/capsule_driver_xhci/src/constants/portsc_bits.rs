@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! PORTSC change-status bits. The capsule clears these after each
-//! port-status read so subsequent events reflect only new edges.
-//! Non-change PORTSC bits are named only when the capsule itself
-//! needs them for controller-owned enumeration steps.
-
 pub const PORTSC_CCS: u32 = 1 << 0;
 pub const PORTSC_PED: u32 = 1 << 1;
 pub const PORTSC_PR: u32 = 1 << 4;
@@ -32,6 +26,5 @@ pub const PORTSC_OCC: u32 = 1 << 20;
 pub const PORTSC_PRC: u32 = 1 << 21;
 pub const PORTSC_PLC: u32 = 1 << 22;
 pub const PORTSC_CEC: u32 = 1 << 23;
-
 pub const PORTSC_CHANGE_BITS: u32 =
     PORTSC_CSC | PORTSC_PEC | PORTSC_WRC | PORTSC_OCC | PORTSC_PRC | PORTSC_PLC | PORTSC_CEC;

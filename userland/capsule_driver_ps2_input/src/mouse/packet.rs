@@ -13,16 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::event::MouseEvent;
-
 pub const BUTTON_LEFT: u8 = 1 << 0;
 pub const BUTTON_RIGHT: u8 = 1 << 1;
 pub const BUTTON_MIDDLE: u8 = 1 << 2;
 pub const FLAG_X_OVERFLOW: u8 = 1 << 0;
 pub const FLAG_Y_OVERFLOW: u8 = 1 << 1;
 pub const PACKET_LEN: usize = 3;
-
 pub fn parse(bytes: [u8; PACKET_LEN]) -> Option<MouseEvent> {
     let b0 = bytes[0];
     if b0 & 0x08 == 0 {
@@ -53,7 +50,6 @@ pub fn parse(bytes: [u8; PACKET_LEN]) -> Option<MouseEvent> {
         flags,
     })
 }
-
 fn sign(v: u8, sign_bit: u8) -> i16 {
     if sign_bit != 0 {
         v as i16 | -256i16

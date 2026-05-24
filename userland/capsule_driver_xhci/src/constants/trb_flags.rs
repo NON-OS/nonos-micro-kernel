@@ -13,13 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! TRB d3 control flags used in P0. Cycle is the producer/consumer
-//! ownership bit; the type discriminant lives in bits 15:10;
-//! LINK_TC is the Toggle Cycle bit on a Link TRB. The transfer
-//! flags (CH, IOC, ENT, IDT) come back in P1 with the address-
-//! device path.
-
 pub const TRB_CYCLE: u32 = 1 << 0;
 pub const TRB_IOC: u32 = 1 << 5;
 pub const TRB_IDT: u32 = 1 << 6;

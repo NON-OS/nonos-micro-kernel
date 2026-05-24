@@ -13,19 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Builder for the Link TRB. The xHCI ring writes a Link TRB at
-//! the last slot of every TRB ring; the controller follows it
-//! back to the ring base when its dequeue pointer crosses the
-//! Link, optionally flipping its consumer-cycle bit (TC).
-
 use crate::constants::TRB_TYPE_LINK;
 use crate::trb::base::Trb;
-
 pub(super) struct LinkTrbBuilderState {
     pub(super) trb: Trb,
 }
-
 impl LinkTrbBuilderState {
     pub(super) fn new() -> Self {
         let mut trb = Trb::zero();

@@ -20,6 +20,7 @@
 extern crate alloc;
 
 mod crypto;
+mod directory_sync;
 mod gateway_client;
 mod packet;
 mod protocol;

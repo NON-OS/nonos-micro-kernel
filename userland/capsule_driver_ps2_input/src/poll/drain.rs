@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! IRQ-driven drain. Reads the status port, peels every byte the
-//! controller has buffered, and stops as soon as the output-full
-//! bit clears. Parity and timeout flags bump the ring's diagnostic
-//! counters but do not abort the cycle.
-
 use super::absorb::absorb;
 use super::drainer::Drainer;
 use super::read_port::read_port;
@@ -26,9 +20,7 @@ use crate::constants::{DATA_OFFSET, STATUS_OFFSET};
 use crate::constants::{STATUS_AUX_DATA, STATUS_OUTPUT_FULL, STATUS_PARITY, STATUS_TIMEOUT};
 use crate::mouse::{MouseParser, MouseRing};
 use crate::ring::Ring;
-
 const MAX_BYTES_PER_DRAIN: u32 = 16;
-
 pub fn drain(
     grant_id: u64,
     drainer: &mut Drainer,

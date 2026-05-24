@@ -15,10 +15,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod claim;
+mod config;
 mod dma;
+mod dma_set;
 mod driver;
 mod irq;
 mod mmio;
+mod queues;
 mod sequence;
 
 pub use driver::Driver;

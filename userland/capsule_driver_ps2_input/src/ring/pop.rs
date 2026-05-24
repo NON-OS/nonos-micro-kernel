@@ -13,15 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Consumer side. Returns `None` on empty so the IPC caller can
-//! poll without distinguishing between "no event yet" and a real
-//! transport error.
-
 use super::event::Event;
 use super::state::Ring;
 use crate::constants::RING_CAPACITY;
-
 impl Ring {
     pub fn pop(&mut self) -> Option<Event> {
         if self.head == self.tail {

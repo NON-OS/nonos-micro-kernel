@@ -13,37 +13,24 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Bring the device through the legacy virtio init handshake:
-//! ACK -> DRIVER -> negotiate features -> FEATURES_OK -> queue 0
-//! select / PFN -> DRIVER_OK. The capsule advertises support
-//! for `VIRTIO_BLK_F_FLUSH` only; everything else (DISCARD, WRITE_
-//! ZEROES, GEOMETRY, BLK_SIZE, SIZE_MAX, SEG_MAX) is masked off so
-//! the device cannot ask for behaviour we do not implement.
-
 use super::constants::{
     LEG_GUEST_FEATURES, LEG_HOST_FEATURES, LEG_QUEUE_NUM, LEG_QUEUE_PFN, LEG_QUEUE_SEL, LEG_STATUS,
     STATUS_ACKNOWLEDGE, STATUS_DRIVER, STATUS_DRIVER_OK, STATUS_FAILED, STATUS_FEATURES_OK,
 };
 use super::regs::Regs;
-
 const VIRTIO_BLK_F_FLUSH: u32 = 1 << 9;
-
 pub struct InitOut {
     pub queue_size: u16,
 }
-
 pub fn bring_up(regs: Regs, queue_phys: u64, max_queue_size: u16) -> Result<InitOut, &'static str> {
     unsafe {
         regs.w8(LEG_STATUS, 0);
         regs.w8(LEG_STATUS, STATUS_ACKNOWLEDGE);
         let s = regs.r8(LEG_STATUS);
         regs.w8(LEG_STATUS, s | STATUS_DRIVER);
-
         let host = regs.r32(LEG_HOST_FEATURES);
         let want = host & VIRTIO_BLK_F_FLUSH;
         regs.w32(LEG_GUEST_FEATURES, want);
-
         let s2 = regs.r8(LEG_STATUS);
         regs.w8(LEG_STATUS, s2 | STATUS_FEATURES_OK);
         let s3 = regs.r8(LEG_STATUS);
@@ -51,7 +38,6 @@ pub fn bring_up(regs: Regs, queue_phys: u64, max_queue_size: u16) -> Result<Init
             regs.w8(LEG_STATUS, s3 | STATUS_FAILED);
             return Err("virtio-blk: features-ok rejected");
         }
-
         regs.w16(LEG_QUEUE_SEL, 0);
         let qmax = regs.r16(LEG_QUEUE_NUM);
         if qmax == 0 {
@@ -62,10 +48,8 @@ pub fn bring_up(regs: Regs, queue_phys: u64, max_queue_size: u16) -> Result<Init
             regs.w8(LEG_STATUS, regs.r8(LEG_STATUS) | STATUS_FAILED);
             return Err("virtio-blk: unsupported requestq size");
         }
-
         let pfn = (queue_phys >> 12) as u32;
         regs.w32(LEG_QUEUE_PFN, pfn);
-
         regs.w8(LEG_STATUS, regs.r8(LEG_STATUS) | STATUS_DRIVER_OK);
         Ok(InitOut { queue_size: qmax })
     }

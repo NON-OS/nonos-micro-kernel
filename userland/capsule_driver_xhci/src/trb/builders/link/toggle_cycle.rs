@@ -13,13 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::state::LinkTrbBuilderState;
 use crate::constants::LINK_TC;
-
 impl LinkTrbBuilderState {
-    /// Toggle Cycle. Set on the Link TRB so the controller flips
-    /// its consumer cycle when it walks across the link.
     pub(super) fn toggle_cycle(mut self, toggle: bool) -> Self {
         if toggle {
             self.trb.d3 |= LINK_TC;

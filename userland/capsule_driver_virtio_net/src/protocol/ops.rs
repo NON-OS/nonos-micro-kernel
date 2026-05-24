@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Op discriminants for `driver.virtio_net0`. Adding a new op
-//! means a new constant here, a handler in `server::handlers`,
-//! and a kernel-side client; nothing else routes by op.
+
+
+
 
 pub const OP_HEALTHCHECK: u16 = 1;
 pub const OP_LINK_STATUS: u16 = 2;

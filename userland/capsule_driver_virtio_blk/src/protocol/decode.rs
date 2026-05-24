@@ -13,15 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Strict request decoder. The caller's buffer must carry the full
-//! 20-byte envelope; per-op payload bytes are interpreted by the
-//! handler. Any envelope whose magic or version does not match
-//! returns `None`, so the server can respond `EINVAL` rather than
-//! act on a stale protocol.
-
 use super::header::{Request, HDR_LEN, MAGIC, VERSION};
-
 pub fn decode_request(buf: &[u8]) -> Option<Request> {
     if buf.len() < HDR_LEN {
         return None;
@@ -36,12 +28,10 @@ pub fn decode_request(buf: &[u8]) -> Option<Request> {
     }
     let op = u16::from_le_bytes(buf[6..8].try_into().ok()?);
     let flags = u16::from_le_bytes(buf[8..10].try_into().ok()?);
-    // bytes 10..12 reserved
     let request_id = u32::from_le_bytes(buf[12..16].try_into().ok()?);
     let payload_len = u32::from_le_bytes(buf[16..20].try_into().ok()?);
     Some(Request { op, flags, request_id, payload_len })
 }
-
 fn read_array<const N: usize>(buf: &[u8], offset: usize) -> Option<[u8; N]> {
     let end = offset.checked_add(N)?;
     let src = buf.get(offset..end)?;
@@ -49,11 +39,9 @@ fn read_array<const N: usize>(buf: &[u8], offset: usize) -> Option<[u8; N]> {
     out.copy_from_slice(src);
     Some(out)
 }
-
 pub fn read_u32_le(buf: &[u8], offset: usize) -> Option<u32> {
     Some(u32::from_le_bytes(read_array(buf, offset)?))
 }
-
 pub fn read_u64_le(buf: &[u8], offset: usize) -> Option<u64> {
     Some(u64::from_le_bytes(read_array(buf, offset)?))
 }

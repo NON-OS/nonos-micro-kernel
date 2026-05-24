@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `Driver` is the live state the server loop holds. It owns one
-//! grant per broker primitive and drops them in the reverse order
-//! on shutdown so the broker sees a clean teardown even when the
-//! capsule exits voluntarily. The MAC, link feature flags and a
-//! cached link snapshot live here too so the IPC handlers do not
-//! re-walk the device-config window on every request.
-
 use nonos_libc::{mk_device_release, mk_dma_unmap, mk_irq_unbind, mk_mmio_unmap};
 
 use crate::constants::MAC_LEN;
@@ -44,17 +37,20 @@ pub struct Driver {
 }
 
 impl Driver {
-    /// Drop every grant the driver holds, in the reverse order
-    /// the setup sequence took them. Each broker call is best-
-    /// effort: an `EINVAL` from a doubly-dropped grant is
-    /// harmless because the broker has already revoked it.
-    pub fn release(&self) {
-        let _ = mk_dma_unmap(self.tx_buffer_grant);
-        let _ = mk_dma_unmap(self.tx_queue_grant);
-        let _ = mk_dma_unmap(self.rx_buffer_grant);
-        let _ = mk_dma_unmap(self.rx_queue_grant);
-        let _ = mk_irq_unbind(self.irq_grant);
-        let _ = mk_mmio_unmap(self.mmio_grant);
-        let _ = mk_device_release(self.device_id);
+    pub fn release(&self) -> bool {
+        let tx_buffer = mk_dma_unmap(self.tx_buffer_grant);
+        let tx_queue = mk_dma_unmap(self.tx_queue_grant);
+        let rx_buffer = mk_dma_unmap(self.rx_buffer_grant);
+        let rx_queue = mk_dma_unmap(self.rx_queue_grant);
+        let irq = mk_irq_unbind(self.irq_grant);
+        let mmio = mk_mmio_unmap(self.mmio_grant);
+        let device = mk_device_release(self.device_id);
+        tx_buffer >= 0
+            && tx_queue >= 0
+            && rx_buffer >= 0
+            && rx_queue >= 0
+            && irq >= 0
+            && mmio >= 0
+            && device >= 0
     }
 }

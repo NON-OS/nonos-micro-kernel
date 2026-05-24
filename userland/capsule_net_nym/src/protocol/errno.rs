@@ -34,3 +34,6 @@ pub const E_TOPOLOGY_AUTH: u16 = 16;
 pub const E_TOPOLOGY_STALE: u16 = 17;
 pub const E_AUTHORITY_MISSING: u16 = 18;
 pub const E_AUTHORITY_UNTRUSTED: u16 = 19;
+pub const E_DIRECTORY_PROTO: u16 = 20;
+pub const E_DIRECTORY_SOURCE: u16 = 21;
+pub const E_TOPOLOGY_EXPIRED: u16 = 22;

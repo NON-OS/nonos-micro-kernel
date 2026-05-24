@@ -13,17 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Reverse-acquisition Drop. IRQ first (so no further events fire
-//! against a torn-down BAR), MMIO second, device claim last. Each
-//! broker call's failure is intentionally swallowed: a Drop path
-//! has no caller to surface the error to and the kernel's
-//! pid-keyed teardown reclaims grants on capsule exit.
-
 use nonos_libc::{mk_device_release, mk_irq_unbind, mk_mmio_unmap};
-
 use super::broker_handles::BrokerHandles;
-
 impl Drop for BrokerHandles {
     fn drop(&mut self) {
         let _ = mk_irq_unbind(self.irq_grant_id);

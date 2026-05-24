@@ -13,20 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Per-loop runtime state. Owns the `Driver` (broker handles, DMA
-//! regions, rings, layout) plus the cumulative event-drain count
-//! the IRQ poll loop maintains. IPC handlers see it through
-//! `&Context`; the IRQ poll path needs `&mut Context` to bump the
-//! counter and advance the event ring.
-
 use crate::setup::Driver;
-
 pub struct Context {
     pub driver: Driver,
     pub events_drained_total: u64,
 }
-
 impl Context {
     pub fn new(driver: Driver) -> Self {
         Self { driver, events_drained_total: 0 }

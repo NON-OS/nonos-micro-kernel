@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Send 0xF4 ("enable scanning") to the keyboard. Most firmware
-//! has done this already, but a clean smoke run on a fresh
-//! controller needs the kick to start producing IRQs.
-
 use nonos_libc::mk_pio_write;
-
 use crate::constants::{DATA_OFFSET, KBD_ENABLE_SCANNING};
-
 pub fn enable_scanning(grant_id: u64) -> Result<(), &'static str> {
     let r = mk_pio_write(grant_id, DATA_OFFSET, 1, KBD_ENABLE_SCANNING as u32);
     if r < 0 {

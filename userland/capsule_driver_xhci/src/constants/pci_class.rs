@@ -13,11 +13,4 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Broker class id for xHCI controllers. The kernel-side
-//! `classify_pci` maps PCI class 0x0C / subclass 0x03 / prog-if
-//! 0x30 to this id; older UHCI/OHCI/EHCI prog-ifs land on the
-//! generic USB_HOST id (0x0070) which this capsule does not
-//! match on.
-
 pub const CLASS_USB_HOST_XHCI: u32 = 0x0071;

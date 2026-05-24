@@ -13,13 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Volatile 32-bit MMIO read against a granted BAR. Caller passes
-//! the absolute virtual address (BAR base + register offset). The
-//! kernel mediator does not gate per-access for MMIO; the broker
-//! grants the page and the capsule reads it directly, so the
-//! pointer must already be inside a valid grant.
-
 pub(crate) fn mmio_read32(addr: u64) -> u32 {
     unsafe { core::ptr::read_volatile(addr as *const u32) }
 }

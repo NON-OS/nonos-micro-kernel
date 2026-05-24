@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `OP_HEALTHCHECK`. Replies success with an empty body. The
-//! kernel client probes this before issuing real I/O so a
-//! supervisor can confirm the capsule is alive without touching
-//! the device.
-
 use crate::protocol::Request;
 use crate::server::error::reply_with_status;
-
 pub fn handle(req: &Request, tx: &mut [u8]) {
     reply_with_status(tx, req, 0);
 }

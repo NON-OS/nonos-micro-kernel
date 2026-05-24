@@ -13,16 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `driver.virtio_blk0` service loop. One in-flight request at a
-//! time. Receive buffer carries the 20-byte envelope plus a write
-//! payload; transmit buffer carries the envelope plus the largest
-//! possible read payload.
-
 use alloc::vec;
-
 use nonos_libc::mk_ipc_recv;
-
 use crate::protocol::{
     decode_request, E_INVAL, HDR_LEN, MAX_RW_PAYLOAD_BYTES, OP_CAPACITY, OP_FLUSH, OP_HEALTHCHECK,
     OP_READ_BLOCKS, OP_WRITE_BLOCKS, RESP_HDR_LEN, STATUS_LEN,
@@ -30,13 +22,11 @@ use crate::protocol::{
 use crate::server::error::{reply_decode_failed, reply_with_status};
 use crate::server::handlers;
 use crate::setup::Driver;
-
 pub fn run(driver: &mut Driver) -> ! {
     let rx_len = HDR_LEN + MAX_RW_PAYLOAD_BYTES as usize;
     let tx_len = RESP_HDR_LEN + STATUS_LEN + MAX_RW_PAYLOAD_BYTES as usize;
     let mut rx = vec![0u8; rx_len];
     let mut tx = vec![0u8; tx_len];
-
     loop {
         let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, 0);
         if n <= 0 {

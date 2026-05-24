@@ -33,3 +33,7 @@ pub fn recv(port: u32, session: u32, out: &mut [u8]) -> Result<usize, u16> {
 pub fn cover(port: u32, session: u32) -> Result<(), u16> {
     call(port, MAGIC, COVER, &session.to_le_bytes(), &mut []).map(|_| ())
 }
+
+pub fn cover_all(port: u32) -> Result<(), u16> {
+    call(port, MAGIC, COVER, &[], &mut []).map(|_| ())
+}

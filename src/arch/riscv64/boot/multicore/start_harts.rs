@@ -20,13 +20,9 @@ use crate::arch::riscv64::asm::_riscv64_secondary_start;
 use crate::arch::riscv64::boot::info::BootInfo;
 use crate::arch::riscv64::boot::stack::get_kernel_stack;
 use crate::arch::riscv64::sbi;
-use crate::arch::riscv64::uart;
 
 use super::state::HARTS_ONLINE;
 
-// Issue SBI HSM HART_START for every secondary listed in BootInfo.
-// SBI delivers each AP at `_riscv64_secondary_start` with a0=hartid,
-// a1 = per-hart stack top.
 pub fn start_secondary_harts(boot_info: &BootInfo) {
     for hart in 0..boot_info.hart_count {
         if hart == boot_info.boot_hart {
@@ -36,10 +32,8 @@ pub fn start_secondary_harts(boot_info: &BootInfo) {
         let stack_top = get_kernel_stack(hart as usize);
         let entry = _riscv64_secondary_start as u64;
 
-        if sbi::hart_start(hart as u64, entry, stack_top).is_ok() {
-            uart::puts(b"[BOOT] Started hart ");
-            uart::putc((b'0' + hart as u8) as char);
-            uart::puts(b"\n");
+        if sbi::hart_start(hart as u64, entry, stack_top).is_err() {
+            crate::arch::riscv64::cpu::halt();
         }
     }
 

@@ -13,10 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::protocol::Request;
 use crate::server::error::reply_with_status;
-
 pub fn handle(req: &Request, tx: &mut [u8]) {
     reply_with_status(tx, req, 0);
 }

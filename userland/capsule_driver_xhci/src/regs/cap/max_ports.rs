@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! HCSPARAMS1 bits 31:24 — Number of Ports (MaxPorts). USB 2 and
-//! USB 3 ports share this count; the per-port USB version is
-//! encoded in the Supported Protocol extended capability, not
-//! here.
-
 use crate::constants::HCSPARAMS1;
 use crate::regs::mmio_read32;
-
 pub fn max_ports(mmio_base: u64) -> u8 {
     ((mmio_read32(mmio_base + HCSPARAMS1) >> 24) & 0xFF) as u8
 }

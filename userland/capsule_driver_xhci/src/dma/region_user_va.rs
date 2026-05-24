@@ -13,12 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::region::DmaRegion;
-
 impl DmaRegion {
-    /// CPU-side virtual address. Used to construct typed pointers
-    /// for in-place TRB / context writes.
     pub fn user_va(&self) -> u64 {
         self.user_va
     }

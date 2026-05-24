@@ -13,16 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! HCCPARAMS1 bit 0 — 64-bit Addressing Capability. The capsule
-//! refuses to operate on a controller without this bit because
-//! the v1 init programs CRCR/DCBAAP/ERSTBA/ERDP as single 64-bit
-//! transactions. A 32-bit-only controller would need a split-
-//! access path that this slice does not implement.
-
 use crate::constants::HCCPARAMS1;
 use crate::regs::mmio_read32;
-
 pub fn ac64(mmio_base: u64) -> bool {
     (mmio_read32(mmio_base + HCCPARAMS1) & 0x1) != 0
 }

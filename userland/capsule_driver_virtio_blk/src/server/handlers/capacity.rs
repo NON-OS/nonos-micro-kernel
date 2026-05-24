@@ -13,21 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `OP_CAPACITY`. Returns the device capacity in 512-byte sectors
-//! as a little-endian u64 immediately after the 4-byte status
-//! field. Capacity comes from the legacy device-config window read
-//! once at setup and stored on the driver, so the handler does no
-//! MMIO of its own.
-
 use nonos_libc::mk_ipc_send;
-
 use crate::protocol::{
     encode_response_header, write_status, Request, CAPACITY_PAYLOAD_LEN, KERNEL_REPLY_ENDPOINT,
     RESP_HDR_LEN, STATUS_LEN,
 };
 use crate::setup::Driver;
-
 pub fn handle(driver: &Driver, req: &Request, tx: &mut [u8]) {
     let payload_len = STATUS_LEN as u32 + CAPACITY_PAYLOAD_LEN as u32;
     encode_response_header(tx, req, payload_len);
@@ -35,9 +26,11 @@ pub fn handle(driver: &Driver, req: &Request, tx: &mut [u8]) {
     let cap_le = driver.capacity_sectors.to_le_bytes();
     tx[RESP_HDR_LEN + STATUS_LEN..RESP_HDR_LEN + STATUS_LEN + CAPACITY_PAYLOAD_LEN]
         .copy_from_slice(&cap_le);
-    let _ = mk_ipc_send(
+    if mk_ipc_send(
         KERNEL_REPLY_ENDPOINT,
         tx.as_ptr(),
         RESP_HDR_LEN + STATUS_LEN + CAPACITY_PAYLOAD_LEN,
-    );
+    ) < 0 {
+        return;
+    }
 }

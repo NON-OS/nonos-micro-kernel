@@ -13,9 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! xHCI Capability Register offsets, relative to BAR0.
-
 pub const CAPLENGTH: u64 = 0x00;
 pub const HCSPARAMS1: u64 = 0x04;
 pub const HCSPARAMS2: u64 = 0x08;

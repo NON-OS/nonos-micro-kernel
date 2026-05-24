@@ -13,13 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Strict request decoder. Anything whose magic or version does
-//! not match returns `None`; the server replies `EINVAL` rather
-//! than acting on a stale or hostile envelope.
-
 use super::header::{Request, HDR_LEN, MAGIC, VERSION};
-
 pub fn decode_request(buf: &[u8]) -> Option<Request> {
     if buf.len() < HDR_LEN {
         return None;

@@ -13,16 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::controller::reset_port;
 use crate::protocol::{
     Request, ADDRESS_DEVICE_REQUEST_LEN, E_INVAL, E_IO, E_NODEV,
 };
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
-
 use super::address_flow::{address_after_reset, port_speed, slot_ready};
-
 pub fn handle(ctx: &mut Context, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != ADDRESS_DEVICE_REQUEST_LEN {
         reply_with_status(tx, req, E_INVAL);

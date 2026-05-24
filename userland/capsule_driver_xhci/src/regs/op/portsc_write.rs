@@ -13,10 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{PORTSC_BASE, PORT_REG_STRIDE};
 use crate::regs::mmio_write32;
-
 pub fn portsc_write(op_base: u64, port: u8, value: u32) {
     let reg = op_base + PORTSC_BASE + ((port as u64) - 1) * PORT_REG_STRIDE;
     mmio_write32(reg, value);

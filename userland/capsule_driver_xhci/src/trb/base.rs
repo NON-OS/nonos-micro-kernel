@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! 16-byte Transfer Request Block. The xHCI spec packs four
-//! 32-bit words; this struct carries them in little-endian order
-//! matching the on-the-wire layout. All sub-field accessors (type,
-//! cycle, pointer, completion-code) live in sibling files.
-
 #[repr(C, align(16))]
 #[derive(Clone, Copy, Debug)]
 pub struct Trb {
@@ -27,7 +21,6 @@ pub struct Trb {
     pub d2: u32,
     pub d3: u32,
 }
-
 impl Trb {
     pub const fn zero() -> Self {
         Self { d0: 0, d1: 0, d2: 0, d3: 0 }

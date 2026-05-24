@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod erdp_program;
 mod erstba_program;
 mod erstsz_program;
@@ -21,7 +20,6 @@ mod iman_read;
 mod iman_write;
 mod imod_program;
 mod interrupter_addr;
-
 pub use erdp_program::erdp_program;
 pub use erstba_program::erstba_program;
 pub use erstsz_program::erstsz_program;

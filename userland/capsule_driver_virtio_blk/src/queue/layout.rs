@@ -13,18 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `Queue` carries the pointers and bookkeeping post/used share.
-//! Three DMA regions back the queue: `region` is the descriptor
-//! table + avail ring + used ring (two pages, the legacy spec
-//! requires the used ring page-aligned); `header` carries the
-//! virtio-blk request header and the trailing status byte;
-//! `data` carries the read or write payload.
-
 use core::ptr::write_bytes;
-
 use crate::constants::{DATA_BUF_LEN, MAX_QUEUE_SIZE, VQ_DESC_OFFSET, VQ_REGION_SIZE};
-
 #[derive(Debug, Clone, Copy)]
 pub struct Queue {
     pub region_va: *mut u8,
@@ -38,7 +28,6 @@ pub struct Queue {
     pub data_len: u32,
     pub last_used: u16,
 }
-
 impl Queue {
     pub fn new(
         region_va: u64,
@@ -67,20 +56,16 @@ impl Queue {
             last_used: 0,
         }
     }
-
     pub const fn max_supported_size() -> u16 {
         MAX_QUEUE_SIZE
     }
 }
-
 const fn align_up(value: usize, align: usize) -> usize {
     (value + align - 1) & !(align - 1)
 }
-
 const fn avail_offset(queue_size: u16) -> usize {
     VQ_DESC_OFFSET + (queue_size as usize) * 16
 }
-
 const fn used_offset(queue_size: u16) -> usize {
     align_up(avail_offset(queue_size) + 6 + (queue_size as usize) * 2, 4096)
 }

@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Program the Command Ring Control register. The low six bits
-//! are RW status (RCS, CS, CA, CRR) — caller passes the desired
-//! RCS bit; the rest of the low byte is left zero. The high
-//! 58 bits hold the 64-byte aligned command ring base address.
-
 use crate::constants::CRCR_LO;
 use crate::regs::mmio_write64;
-
 pub fn crcr_program(op_base: u64, ring_phys: u64, rcs: u8) {
     let value = (ring_phys & !0x3F) | ((rcs as u64) & 0x1);
     mmio_write64(op_base + CRCR_LO, value);

@@ -13,36 +13,17 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Port offsets and per-controller commands. The capsule never
-//! sees absolute port numbers — the broker hands it a window
-//! starting at port 0x60, and the offsets here are relative to
-//! that base.
-//!
-//!   offset 0 = data port (0x60)
-//!   offset 4 = status / command (0x64)
-
 pub const DATA_OFFSET: u16 = 0;
 pub const STATUS_OFFSET: u16 = 4;
-
 pub const CTL_READ_CONFIG: u8 = 0x20;
 pub const CTL_WRITE_CONFIG: u8 = 0x60;
 pub const CTL_ENABLE_AUX: u8 = 0xA8;
 pub const CTL_WRITE_AUX: u8 = 0xD4;
-
-// Keyboard-side command byte for "enable scanning" — sent through
-// the data port, ack'd by the device with 0xFA.
 pub const KBD_ENABLE_SCANNING: u8 = 0xF4;
-
 pub const MOUSE_ENABLE_REPORTING: u8 = 0xF4;
 pub const MOUSE_SET_DEFAULTS: u8 = 0xF6;
 pub const MOUSE_ACK: u8 = 0xFA;
-
 pub const CONFIG_IRQ1: u8 = 1 << 0;
 pub const CONFIG_IRQ12: u8 = 1 << 1;
 pub const CONFIG_AUX_DISABLE: u8 = 1 << 5;
-
-// Capsule-side scancode ring. Sized for a comfortable depth at
-// maximum sustained typing speed; a slow consumer drops events
-// silently and bumps the dropped-events counter.
 pub const RING_CAPACITY: usize = 256;

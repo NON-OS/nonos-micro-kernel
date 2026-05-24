@@ -13,21 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Translate a raw PS/2 set-1 scancode + drainer flags into a
-//! normalised (keycode, is_release) pair the kernel input ring can
-//! carry.
-
 use crate::ring::{FLAG_BREAK, FLAG_E0_PREFIX};
-
 use super::set1::SET1_BASE;
 use super::set1_e0::keycode_for as e0_keycode_for;
-
 pub struct Translated {
     pub keycode: u32,
     pub is_release: bool,
 }
-
 pub fn translate(scancode: u8, flags: u8) -> Option<Translated> {
     let is_release = (flags & FLAG_BREAK) != 0;
     let key = scancode & 0x7F;

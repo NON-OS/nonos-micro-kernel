@@ -13,13 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Event Ring Segment Table Size. Number of entries in the ERST.
-//! Low 16 bits only.
-
 use crate::constants::ERSTSZ;
 use crate::regs::mmio_write32;
-
 pub fn erstsz_program(intr_base: u64, entries: u16) {
     mmio_write32(intr_base + ERSTSZ, entries as u32);
 }

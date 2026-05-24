@@ -13,10 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::dma::DmaRegion;
 use crate::error::{XhciError, XhciResult};
-
 pub fn set_dcbaa_slot(
     dcbaa: &DmaRegion,
     slot_id: u8,
@@ -25,11 +23,9 @@ pub fn set_dcbaa_slot(
 ) -> XhciResult<()> {
     write_dcbaa_slot(dcbaa, slot_id, max_slots, device_context_phys)
 }
-
 pub fn clear_dcbaa_slot(dcbaa: &DmaRegion, slot_id: u8, max_slots: u8) -> XhciResult<()> {
     write_dcbaa_slot(dcbaa, slot_id, max_slots, 0)
 }
-
 fn write_dcbaa_slot(dcbaa: &DmaRegion, slot_id: u8, max_slots: u8, value: u64) -> XhciResult<()> {
     if slot_id == 0 || slot_id > max_slots {
         return Err(XhciError::ControllerUnsupported);

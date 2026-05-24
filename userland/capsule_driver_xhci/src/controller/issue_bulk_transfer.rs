@@ -13,14 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::ring_doorbell::ring_doorbell;
 use super::wait_transfer_completion::wait_transfer_completion;
 use crate::error::XhciResult;
 use crate::rings::event::EventRing;
 use crate::rings::transfer::TransferRing;
 use crate::trb::builders::normal::normal;
-
 pub fn issue_bulk_transfer(
     doorbell_base: u64,
     intr_base: u64,

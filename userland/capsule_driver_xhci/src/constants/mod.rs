@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod cap_offsets;
 mod completion_codes;
 mod erdp_bits;
@@ -27,7 +26,6 @@ mod trb_flags;
 mod trb_kinds;
 mod usbcmd_bits;
 mod usbsts_bits;
-
 pub use cap_offsets::{CAPLENGTH, DBOFF, HCCPARAMS1, HCSPARAMS1, HCSPARAMS2, RTSOFF};
 pub use completion_codes::{CC_SHORT_PACKET, CC_SUCCESS};
 pub use erdp_bits::ERDP_EHB;

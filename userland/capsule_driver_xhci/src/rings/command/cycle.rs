@@ -13,13 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::state::CommandRing;
-
 impl CommandRing {
-    /// Producer cycle bit (0 or 1). Caller TRBs must carry this
-    /// value before being written to the ring; once enqueued, the
-    /// ring owns the cycle and flips it at every wrap.
     pub fn cycle(&self) -> u8 {
         self.cycle
     }

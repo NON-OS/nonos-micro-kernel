@@ -13,18 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! INTx bind phase. P0 ships INTx only; MSI/MSI-X is a future
-//! broker work item (P4). On failure the prior MMIO grant and
-//! device claim are unwound so the broker is never left holding
-//! a partial setup. After this phase, `BrokerHandles` takes over
-//! and any further error path unwinds through Drop.
-
 use nonos_libc::{mk_device_release, mk_irq_bind, mk_mmio_unmap, IrqBindOut, MmioMapOut};
-
 use crate::discover::Found;
 use crate::error::{XhciError, XhciResult};
-
 pub fn irq_bind(dev: Found, claim_epoch: u64, mmio: &MmioMapOut) -> XhciResult<IrqBindOut> {
     let mut out = IrqBindOut { grant_id: 0, vector: 0 };
     let r = mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out);

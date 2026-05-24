@@ -13,13 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Runtime Register Set offset. Low five bits are reserved-as-
-//! zero per the spec.
-
 use crate::constants::RTSOFF;
 use crate::regs::mmio_read32;
-
 pub fn rtsoff(mmio_base: u64) -> u64 {
     (mmio_read32(mmio_base + RTSOFF) & !0x1F) as u64
 }

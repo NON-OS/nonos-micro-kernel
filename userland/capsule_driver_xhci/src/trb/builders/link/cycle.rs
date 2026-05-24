@@ -13,9 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::state::LinkTrbBuilderState;
-
 impl LinkTrbBuilderState {
     pub(super) fn cycle(mut self, cycle: bool) -> Self {
         self.trb.set_cycle(cycle);

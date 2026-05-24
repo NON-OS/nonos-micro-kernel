@@ -13,9 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use nonos_libc::mk_ipc_send;
-
 use crate::controller::{get_config_descriptor, CONFIG_DESCRIPTOR_MAX};
 use crate::protocol::{
     encode_response_header, write_status, Request, CONFIG_DESCRIPTOR_REPLY_PREFIX,
@@ -23,7 +21,6 @@ use crate::protocol::{
 };
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
-
 pub fn handle(ctx: &mut Context, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != CONFIG_DESCRIPTOR_REQUEST_LEN || body[0] == 0 || body[1] != 0 {
         reply_with_status(tx, req, E_INVAL);
@@ -48,7 +45,6 @@ pub fn handle(ctx: &mut Context, req: &Request, body: &[u8], tx: &mut [u8]) {
         Err(_) => reply_with_status(tx, req, E_IO),
     }
 }
-
 fn transfer(
     ctx: &mut Context,
     slot: u8,
@@ -71,7 +67,6 @@ fn transfer(
         len,
     )
 }
-
 fn reply_config(tx: &mut [u8], req: &Request, out: &crate::dma::DmaRegion, actual: usize) {
     let payload_len = (STATUS_LEN + CONFIG_DESCRIPTOR_REPLY_PREFIX + actual) as u32;
     encode_response_header(tx, req, payload_len);

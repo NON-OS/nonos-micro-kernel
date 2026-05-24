@@ -13,16 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! HCSPARAMS2 — Max Scratchpad Buffers. The high-order bits 31:27
-//! and the low-order bits 25:21 jointly encode the count
-//! (Max Scratchpad Buffers Hi << 5 | Lo). The controller demands
-//! that many physically-contiguous PAGESIZE buffers and the
-//! capsule must populate slot 0 of the DCBAA with their array.
-
 use crate::constants::HCSPARAMS2;
 use crate::regs::mmio_read32;
-
 pub fn max_scratchpad(mmio_base: u64) -> u32 {
     let v = mmio_read32(mmio_base + HCSPARAMS2);
     let hi = (v >> 21) & 0x1F;

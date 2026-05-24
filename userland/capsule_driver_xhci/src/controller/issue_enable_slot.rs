@@ -13,18 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Issue an xHCI Enable Slot command and return the controller
-//! assigned slot id. This is controller enumeration state only;
-//! Address Device and endpoint-zero transfers are separate steps.
-
 use super::ring_doorbell::ring_doorbell;
 use super::wait_command_completion::wait_command_completion;
 use crate::error::{XhciError, XhciResult};
 use crate::rings::command::CommandRing;
 use crate::rings::event::EventRing;
 use crate::trb::commands::enable_slot_command;
-
 pub fn issue_enable_slot(
     op_doorbell_base: u64,
     intr_base: u64,
@@ -34,7 +28,6 @@ pub fn issue_enable_slot(
     let trb = enable_slot_command(cmd_ring.cycle() != 0, 0);
     let issued_phys = cmd_ring.enqueue(trb)?;
     ring_doorbell(op_doorbell_base, 0, 0);
-
     let completion = wait_command_completion(intr_base, issued_phys, evt_ring)?;
     let slot_id = completion.slot_id;
     if slot_id == 0 {

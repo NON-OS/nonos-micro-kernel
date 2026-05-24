@@ -13,12 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod claim;
 mod driver;
 mod irq_bind;
 mod mmio_map;
 mod sequence;
-
 pub use driver::Driver;
 pub use sequence::run;

@@ -13,15 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `OP_DISABLE_SLOT`: release a controller slot that this capsule
-//! previously enabled.
-
 use crate::controller::{clear_dcbaa_slot, issue_disable_slot};
 use crate::protocol::{Request, E_INVAL, E_IO, SLOT_DISABLE_PAYLOAD_LEN};
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
-
 pub fn handle(ctx: &mut Context, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != SLOT_DISABLE_PAYLOAD_LEN {
         reply_with_status(tx, req, E_INVAL);

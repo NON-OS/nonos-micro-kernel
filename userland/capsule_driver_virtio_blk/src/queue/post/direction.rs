@@ -13,16 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{VIRTIO_BLK_T_FLUSH, VIRTIO_BLK_T_IN, VIRTIO_BLK_T_OUT};
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Direction {
     Read,
     Write,
     Flush,
 }
-
 impl Direction {
     pub(super) fn req_type(self) -> u32 {
         match self {

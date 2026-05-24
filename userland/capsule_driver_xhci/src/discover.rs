@@ -13,34 +13,27 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Walk the broker device table for a PCI xHCI controller. Class
-//! 0x0C / subclass 0x03 / prog-if 0x30. Refuses anything without
-//! a usable INTx line because the broker's IRQ surface is INTx
-//! only on this slice.
-
-use nonos_libc::{mk_device_list, Bar, DeviceRecord};
-
+use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BUS_KIND_PCI};
 use super::constants::CLASS_USB_HOST_XHCI;
-
 const MAX_DEVICES: usize = 32;
-
+const PCI_CLASS_SERIAL_BUS: u8 = 0x0c;
+const PCI_SUBCLASS_USB: u8 = 0x03;
+const PCI_PROGIF_XHCI: u8 = 0x30;
 #[derive(Debug, Clone, Copy)]
 pub struct Found {
     pub device_id: u64,
     pub irq_line: u8,
     pub bar0_size: u64,
 }
-
 pub fn find_xhci() -> Option<Found> {
-    let mut buf: [DeviceRecord; MAX_DEVICES] = [empty_record(); MAX_DEVICES];
+    let mut buf = [DeviceRecord::empty(); MAX_DEVICES];
     let n = mk_device_list(0, buf.as_mut_ptr(), MAX_DEVICES as u64);
     if n <= 0 {
         return None;
     }
     let count = core::cmp::min(n as usize, MAX_DEVICES);
     for r in &buf[..count] {
-        if r.class != CLASS_USB_HOST_XHCI {
+        if r.class != CLASS_USB_HOST_XHCI || !raw_xhci(r) {
             continue;
         }
         if r.irq_pin == 0 || r.irq_line == 0xFF {
@@ -50,28 +43,16 @@ pub fn find_xhci() -> Option<Found> {
             continue;
         }
         let bar0 = r.bars[0];
-        if bar0.size == 0 {
+        if bar0.kind != BAR_KIND_MMIO || bar0.size == 0 {
             continue;
         }
         return Some(Found { device_id: r.device_id, irq_line: r.irq_line, bar0_size: bar0.size });
     }
     None
 }
-
-fn empty_record() -> DeviceRecord {
-    DeviceRecord {
-        device_id: 0,
-        bus_kind: 0,
-        _pad0: [0; 3],
-        class: 0,
-        vendor: 0,
-        device: 0,
-        flags: 0,
-        bar_count: 0,
-        irq_line: 0xFF,
-        irq_pin: 0,
-        _pad1: [0; 1],
-        irq_source: 0,
-        bars: [Bar { base: 0, size: 0, kind: 0, flags: 0, _pad: [0; 6] }; 6],
-    }
+fn raw_xhci(r: &DeviceRecord) -> bool {
+    r.pci_class == PCI_CLASS_SERIAL_BUS
+        && r.bus_kind == BUS_KIND_PCI
+        && r.pci_subclass == PCI_SUBCLASS_USB
+        && r.pci_progif == PCI_PROGIF_XHCI
 }

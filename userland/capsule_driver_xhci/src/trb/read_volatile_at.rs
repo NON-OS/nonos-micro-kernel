@@ -13,14 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Volatile TRB read against a 16-byte-aligned address. The DMA
-//! buffer is shared with the controller; without a volatile read
-//! the optimiser is free to assume the underlying memory is
-//! unchanged across observations.
-
 use super::base::Trb;
-
 pub fn read_volatile_at(slot_va: u64) -> Trb {
     unsafe { core::ptr::read_volatile(slot_va as *const Trb) }
 }

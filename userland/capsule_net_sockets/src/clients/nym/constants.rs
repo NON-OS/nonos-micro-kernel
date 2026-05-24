@@ -27,3 +27,6 @@ pub const CREATE_SURB: u16 = 10;
 pub const SEND_REPLY: u16 = 11;
 pub const SET_TIMING: u16 = 12;
 pub const SET_AUTHORITY: u16 = 13;
+pub const SYNC_DIRECTORY: u16 = 14;
+pub const TOPOLOGY_STATUS: u16 = 15;
+pub const TIMING_STATUS: u16 = 16;

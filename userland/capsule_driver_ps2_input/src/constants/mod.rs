@@ -13,11 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod pnp;
 mod ports;
 mod status;
-
 pub use pnp::{PNP_DEVICE_PS2_AUX, PNP_DEVICE_PS2_KBD, PNP_VENDOR_PS2_AUX, PNP_VENDOR_PS2_KBD};
 pub use ports::{
     CONFIG_AUX_DISABLE, CONFIG_IRQ1, CONFIG_IRQ12, CTL_ENABLE_AUX, CTL_READ_CONFIG, CTL_WRITE_AUX,

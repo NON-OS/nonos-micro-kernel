@@ -13,10 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! P0 op discriminants. Adding a new op needs both a userland
-//! handler and a kernel client; nothing else routes by op.
-
 pub const OP_HEALTHCHECK: u16 = 0x0001;
 pub const OP_CONTROLLER_STATUS: u16 = 0x0002;
 pub const OP_PORT_STATUS: u16 = 0x0003;

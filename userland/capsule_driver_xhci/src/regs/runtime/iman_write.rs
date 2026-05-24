@@ -13,14 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Write the per-interrupter Management register. Used to set IE
-//! at init and to clear the IP latch (write-1-to-clear) after
-//! the completion handler has drained the event ring.
-
 use crate::constants::IMAN;
 use crate::regs::mmio_write32;
-
 pub fn iman_write(intr_base: u64, value: u32) {
     mmio_write32(intr_base + IMAN, value);
 }

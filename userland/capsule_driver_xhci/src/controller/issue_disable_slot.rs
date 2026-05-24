@@ -13,17 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Issue Disable Slot and wait for the matching command
-//! completion. The caller owns slot-table validation.
-
 use super::ring_doorbell::ring_doorbell;
 use super::wait_command_completion::wait_command_completion;
 use crate::error::XhciResult;
 use crate::rings::command::CommandRing;
 use crate::rings::event::EventRing;
 use crate::trb::commands::disable_slot_command;
-
 pub fn issue_disable_slot(
     op_doorbell_base: u64,
     intr_base: u64,

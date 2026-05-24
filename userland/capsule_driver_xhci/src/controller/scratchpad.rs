@@ -13,67 +13,43 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-// HCSPARAMS2.MaxScratchpad pages, plus a pointer array. The
-// pointer array's bus address goes into DCBAA[0]. Each page is
-// its own broker DMA grant. QEMU often reports zero; real boards
-// don't.
-
 use alloc::vec::Vec;
-
 use crate::dma::{DmaPool, DmaRegion};
 use crate::error::XhciResult;
-
 const SCRATCHPAD_PAGE_BYTES: u64 = 4096;
 const SCRATCHPAD_PTR_BYTES: u64 = 8;
-
 pub enum Scratchpads {
     None,
     Allocated { array: DmaRegion, pages: Vec<DmaRegion> },
 }
-
 impl Scratchpads {
-    /// Allocate `count` scratchpad pages and the pointer array.
-    /// Caller must install `array.phys()` into `DCBAA[0]`.
     pub fn allocate(pool: &DmaPool, count: u32) -> XhciResult<Self> {
         if count == 0 {
             return Ok(Scratchpads::None);
         }
-
         let array_bytes = (count as u64) * SCRATCHPAD_PTR_BYTES;
         let array = pool.alloc(array_bytes)?;
         array.zero();
-
         let mut pages: Vec<DmaRegion> = Vec::with_capacity(count as usize);
         for _ in 0..count {
             let page = pool.alloc(SCRATCHPAD_PAGE_BYTES)?;
             page.zero();
             pages.push(page);
         }
-
         let array_va = array.as_mut_ptr::<u64>();
         for (i, page) in pages.iter().enumerate() {
             unsafe {
                 core::ptr::write_volatile(array_va.add(i), page.phys());
             }
         }
-
         Ok(Scratchpads::Allocated { array, pages })
     }
-
-    /// Bus-side base of the scratchpad pointer array, or 0 when no
-    /// scratchpads are required. Caller writes this into the first
-    /// 8 bytes of the DCBAA.
     pub fn array_phys(&self) -> u64 {
         match self {
             Scratchpads::None => 0,
             Scratchpads::Allocated { array, .. } => array.phys(),
         }
     }
-
-    /// Number of scratchpad pages held by this allocator. Reported
-    /// through `controller_status` so the kernel-side smoke can
-    /// assert it matches HCSPARAMS2.MaxScratchpad.
     pub fn page_count(&self) -> u32 {
         match self {
             Scratchpads::None => 0,

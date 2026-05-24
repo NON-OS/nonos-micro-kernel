@@ -21,7 +21,6 @@ use crate::server::context::Context;
 use crate::server::error::reply_with_status;
 use crate::slots::SlotResources;
 use super::address_reply::reply_ok;
-
 pub fn slot_ready(ctx: &Context, slot_id: u8, port_id: u8) -> bool {
     port_id != 0
         && port_id <= ctx.driver.layout.max_ports

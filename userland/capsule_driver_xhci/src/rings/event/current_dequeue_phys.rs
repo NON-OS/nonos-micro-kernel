@@ -13,14 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::state::EventRing;
 use crate::constants::TRB_BYTES;
-
 impl EventRing {
-    /// Bus-side address of the slot the controller will write the
-    /// next event into. Reported through ERDP after each drain
-    /// pass; the controller uses it to detect overrun.
     pub fn current_dequeue_phys(&self) -> u64 {
         self.segment.phys() + (self.dequeue_index as u64) * (TRB_BYTES as u64)
     }

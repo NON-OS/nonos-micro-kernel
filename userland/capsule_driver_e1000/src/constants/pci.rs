@@ -14,26 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! PCI identifiers for Intel 8254x-class NICs. `0x100E` is the
-//! 82540EM that QEMU emulates with `-device e1000`; the others are
-//! family members the same register layout drives. The discovery
-//! step accepts any of them; physical-hardware-only IDs (8259x,
-//! e1000e family) live in their own slice.
-
 pub const INTEL_VENDOR_ID: u16 = 0x8086;
 
-pub const E1000_82540EM: u16 = 0x100E;
-pub const E1000_82545EM_C: u16 = 0x100F;
-pub const E1000_82545EM_F: u16 = 0x1011;
-pub const E1000_82546EB_C: u16 = 0x1010;
-pub const E1000_82547EI: u16 = 0x1019;
+pub const E1000_DEVICE_IDS: &[u16] = &[
+    0x100E, 0x1015, 0x1016, 0x1017, 0x101E,
+    0x100F, 0x1011, 0x1026, 0x1027, 0x1028,
+    0x1010, 0x1012, 0x101D, 0x1079, 0x107A, 0x107B, 0x1099, 0x10B5,
+    0x1013, 0x1014, 0x1018, 0x1076, 0x1077, 0x1078, 0x107C,
+    0x1019, 0x101A, 0x1075,
+];
 
-pub const E1000_DEVICE_IDS: &[u16] =
-    &[E1000_82540EM, E1000_82545EM_C, E1000_82545EM_F, E1000_82546EB_C, E1000_82547EI];
-
-// MMIO register window lives in BAR0; flash + I/O BARs are not
-// touched by this capsule. The window length comes from the
-// broker device record at discovery time, so we do not pin it
-// here.
 pub const BAR_INDEX: u32 = 0;
 pub const BAR_OFFSET: u64 = 0;

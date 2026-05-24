@@ -13,10 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Per-event flag bits surfaced to the IPC client. These get
-//! OR-ed into the `flags` byte of a ring `Event` at push time.
-
 pub const FLAG_BREAK: u8 = 1 << 0;
 pub const FLAG_E0_PREFIX: u8 = 1 << 1;
 pub const FLAG_E1_PREFIX: u8 = 1 << 2;

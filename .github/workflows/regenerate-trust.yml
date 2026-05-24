@@ -56,6 +56,12 @@ jobs:
           git config --global user.email 'trust-bot@nonos.systems'
 
       - name: Run scratch trust bootstrap
+        env:
+          CAPSULE_SLUGS: >-
+            proof-io ramfs keyring entropy crypto vfs market
+            driver-virtio-rng driver-virtio-gpu driver-ps2-input
+            driver-virtio-blk driver-virtio-net
+            driver-xhci driver-e1000
         run: bash nonos-ci/scratch-trust-bootstrap.sh
 
       - name: Refresh MANIFEST.sha256 ledger

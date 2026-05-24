@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `driver.virtio_net0` service loop. One in-flight request at a
-//! time. Receive buffer holds the 20-byte envelope plus a TX
-//! payload; transmit buffer holds the envelope plus the largest
-//! possible RX reply.
+
+
+
+
 
 use alloc::vec;
 

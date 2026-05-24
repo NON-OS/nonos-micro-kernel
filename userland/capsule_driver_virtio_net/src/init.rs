@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Bring the device through the legacy virtio init handshake. We
-//! advertise interest in `VIRTIO_NET_F_MAC` (read the burned-in
-//! address) and `VIRTIO_NET_F_STATUS` (link state). Everything
-//! else (CSUM, GSO, MQ, MRG_RXBUF) is masked off so the device
-//! does not ask for behaviour the capsule does not implement.
-
 use super::constants::{
     LEG_GUEST_FEATURES, LEG_HOST_FEATURES, LEG_QUEUE_NUM, LEG_QUEUE_PFN, LEG_QUEUE_SEL, LEG_STATUS,
     STATUS_ACKNOWLEDGE, STATUS_DRIVER, STATUS_DRIVER_OK, STATUS_FAILED, STATUS_FEATURES_OK,

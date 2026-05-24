@@ -13,9 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Op codes carried in the v1 envelope's `op` slot.
-
 pub const OP_HEALTHCHECK: u16 = 0x0001;
 pub const OP_POLL_EVENTS: u16 = 0x0002;
 pub const OP_GET_STATE: u16 = 0x0003;

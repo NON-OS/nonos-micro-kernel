@@ -14,17 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Walk the broker device table for an e1000-class NIC with a
-//! usable INTx line. Vendor must be Intel (`0x8086`); device id
-//! must match one of the family IDs the capsule drives. The capsule
-//! refuses anything without an INTx pin until the kernel-side
-//! network client opts into MSI-X for this driver in a later slice.
-
-use nonos_libc::{mk_device_list, Bar, DeviceRecord};
+use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BUS_KIND_PCI};
 
 use crate::constants::pci::{E1000_DEVICE_IDS, INTEL_VENDOR_ID};
 
 const MAX_DEVICES: usize = 32;
+const PCI_CLASS_NETWORK: u8 = 0x02;
+const PCI_SUBCLASS_ETHERNET: u8 = 0x00;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Found {
@@ -34,21 +30,21 @@ pub struct Found {
 }
 
 pub fn find_e1000() -> Option<Found> {
-    let mut buf: [DeviceRecord; MAX_DEVICES] = [empty_record(); MAX_DEVICES];
+    let mut buf = [DeviceRecord::empty(); MAX_DEVICES];
     let n = mk_device_list(0, buf.as_mut_ptr(), MAX_DEVICES as u64);
     if n <= 0 {
         return None;
     }
     let count = core::cmp::min(n as usize, MAX_DEVICES);
     for r in &buf[..count] {
-        if r.vendor != INTEL_VENDOR_ID || !E1000_DEVICE_IDS.contains(&r.device) {
+        if !is_match(r) {
             continue;
         }
         if r.irq_pin == 0 || r.irq_line == 0xFF || r.bar_count == 0 {
             continue;
         }
         let bar0 = r.bars[0];
-        if bar0.size == 0 {
+        if bar0.kind != BAR_KIND_MMIO || bar0.size == 0 {
             continue;
         }
         return Some(Found { device_id: r.device_id, irq_line: r.irq_line, bar0_size: bar0.size });
@@ -56,20 +52,10 @@ pub fn find_e1000() -> Option<Found> {
     None
 }
 
-fn empty_record() -> DeviceRecord {
-    DeviceRecord {
-        device_id: 0,
-        bus_kind: 0,
-        _pad0: [0; 3],
-        class: 0,
-        vendor: 0,
-        device: 0,
-        flags: 0,
-        bar_count: 0,
-        irq_line: 0xFF,
-        irq_pin: 0,
-        _pad1: [0; 1],
-        irq_source: 0,
-        bars: [Bar { base: 0, size: 0, kind: 0, flags: 0, _pad: [0; 6] }; 6],
-    }
+fn is_match(r: &DeviceRecord) -> bool {
+    r.vendor == INTEL_VENDOR_ID
+        && r.bus_kind == BUS_KIND_PCI
+        && E1000_DEVICE_IDS.contains(&r.device)
+        && r.pci_class == PCI_CLASS_NETWORK
+        && r.pci_subclass == PCI_SUBCLASS_ETHERNET
 }

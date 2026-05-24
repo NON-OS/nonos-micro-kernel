@@ -13,19 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod descriptors;
 mod direction;
 mod header;
 mod publish;
-
 use super::layout::Queue;
-
 pub use direction::Direction;
-
 impl Queue {
-    /// SAFETY: descriptor, header, data, and status memory are
-    /// broker DMA grants. The capsule owns writes until queue notify.
     pub fn post_request(&self, dir: Direction, lba: u64, nsectors: u32) {
         unsafe {
             self.write_header(dir, lba);

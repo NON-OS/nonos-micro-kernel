@@ -13,19 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Walk the broker's device table for a virtio-blk device with a
-//! usable INTx line. The capsule refuses anything without an INTx
-//! pin: MSI/MSI-X is not yet handled by the broker, so a device
-//! without a legacy IRQ line would have no notify path back to
-//! userland.
-
-use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BAR_KIND_PIO};
-
+use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BAR_KIND_PIO, BUS_KIND_PCI};
 use super::constants::{VIRTIO_BLK_MODERN, VIRTIO_BLK_TRANSITIONAL, VIRTIO_VENDOR_ID};
-
 const MAX_DEVICES: usize = 32;
-
 #[derive(Debug, Clone, Copy)]
 pub struct Found {
     pub device_id: u64,
@@ -34,19 +24,14 @@ pub struct Found {
     pub register_kind: u8,
     pub register_size: u64,
 }
-
 pub fn find_virtio_blk() -> Option<Found> {
-    let mut buf: [DeviceRecord; MAX_DEVICES] = [empty_record(); MAX_DEVICES];
+    let mut buf = [DeviceRecord::empty(); MAX_DEVICES];
     let n = mk_device_list(0, buf.as_mut_ptr(), MAX_DEVICES as u64);
     if n <= 0 {
         return None;
     }
-    let count = core::cmp::min(n as usize, MAX_DEVICES);
-    for r in &buf[..count] {
-        if r.vendor != VIRTIO_VENDOR_ID {
-            continue;
-        }
-        if r.device != VIRTIO_BLK_TRANSITIONAL && r.device != VIRTIO_BLK_MODERN {
+    for r in &buf[..core::cmp::min(n as usize, MAX_DEVICES)] {
+        if !is_match(r) {
             continue;
         }
         if r.irq_pin == 0 || r.irq_line == 0xFF {
@@ -64,7 +49,11 @@ pub fn find_virtio_blk() -> Option<Found> {
     }
     None
 }
-
+fn is_match(r: &DeviceRecord) -> bool {
+    r.vendor == VIRTIO_VENDOR_ID
+        && r.bus_kind == BUS_KIND_PCI
+        && (r.device == VIRTIO_BLK_TRANSITIONAL || r.device == VIRTIO_BLK_MODERN)
+}
 fn first_register_bar(r: &DeviceRecord) -> Option<(u8, u8, u64)> {
     for i in 0..r.bars.len() {
         let bar = r.bars[i];
@@ -76,23 +65,4 @@ fn first_register_bar(r: &DeviceRecord) -> Option<(u8, u8, u64)> {
         }
     }
     None
-}
-
-fn empty_record() -> DeviceRecord {
-    use nonos_libc::Bar;
-    DeviceRecord {
-        device_id: 0,
-        bus_kind: 0,
-        _pad0: [0; 3],
-        class: 0,
-        vendor: 0,
-        device: 0,
-        flags: 0,
-        bar_count: 0,
-        irq_line: 0xFF,
-        irq_pin: 0,
-        _pad1: [0; 1],
-        irq_source: 0,
-        bars: [Bar { base: 0, size: 0, kind: 0, flags: 0, _pad: [0; 6] }; 6],
-    }
 }

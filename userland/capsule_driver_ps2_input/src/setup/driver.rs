@@ -13,11 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `Driver` is the binding from a successful `setup::run` to the
-//! main loop: PIO grant id used for every port access plus IRQ
-//! grant ids used to acknowledge keyboard and AUX mouse interrupts.
-
 pub struct Driver {
     pub pio_grant_id: u64,
     pub irq_grant_id: u64,

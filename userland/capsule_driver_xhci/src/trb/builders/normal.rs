@@ -13,10 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{TRB_CH, TRB_ISP, TRB_TYPE_NORMAL};
 use crate::trb::Trb;
-
 pub fn normal(buffer_phys: u64, length: u32, cycle: bool, ioc: bool, chain: bool) -> Trb {
     let mut trb = Trb::zero();
     trb.set_pointer(buffer_phys);

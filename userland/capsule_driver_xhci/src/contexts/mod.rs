@@ -13,11 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod ep0;
 mod input;
 mod size;
-
 pub use ep0::max_packet_for_speed;
 pub use input::write_address_device_input;
 pub use size::{device_context_bytes, input_context_bytes};

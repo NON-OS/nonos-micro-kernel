@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! IBM PC Scancode Set 1 — base (non-E0) lower 7-bit codes mapped to
-//! the userland keycode space the app skeleton consumes (ASCII for
-//! printables, KEY_BACKSPACE/ENTER/ESC for control). 0x00 means no
-//! mapping for this scancode in this layer.
-
 pub const SET1_BASE: [u32; 128] = [
     0,
     0x1B,
@@ -149,7 +143,6 @@ pub const SET1_BASE: [u32; 128] = [
     0,
     0,
 ];
-
 pub const KEYCODE_LCTRL: u32 = 0x1001;
 pub const KEYCODE_RCTRL: u32 = 0x1002;
 pub const KEYCODE_LSHIFT: u32 = 0x1003;

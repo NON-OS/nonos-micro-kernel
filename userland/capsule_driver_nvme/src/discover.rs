@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_device_list, Bar, DeviceRecord, BAR_KIND_MMIO};
+use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BUS_KIND_PCI};
 
 use crate::constants::{CLASS_BLOCK, NVME_BAR_INDEX, NVME_BAR_MIN_SIZE};
 
 const MAX_DEVICES: usize = 32;
-const BUS_KIND_PCI: u8 = 1;
+const PCI_CLASS_STORAGE: u8 = 0x01;
+const PCI_SUBCLASS_NVM: u8 = 0x08;
+const PCI_PROGIF_NVME: u8 = 0x02;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Found {
@@ -28,7 +30,7 @@ pub struct Found {
 }
 
 pub fn find_nvme() -> Option<Found> {
-    let mut buf: [DeviceRecord; MAX_DEVICES] = [empty_record(); MAX_DEVICES];
+    let mut buf = [DeviceRecord::empty(); MAX_DEVICES];
     let n = mk_device_list(CLASS_BLOCK, buf.as_mut_ptr(), MAX_DEVICES as u64);
     if n <= 0 {
         return None;
@@ -48,25 +50,10 @@ fn is_candidate(r: &DeviceRecord) -> bool {
     let bar = r.bars[NVME_BAR_INDEX as usize];
     r.bus_kind == BUS_KIND_PCI
         && r.class == CLASS_BLOCK
+        && r.pci_class == PCI_CLASS_STORAGE
+        && r.pci_subclass == PCI_SUBCLASS_NVM
+        && r.pci_progif == PCI_PROGIF_NVME
         && r.bar_count > NVME_BAR_INDEX
         && bar.kind == BAR_KIND_MMIO
         && bar.size >= NVME_BAR_MIN_SIZE
-}
-
-fn empty_record() -> DeviceRecord {
-    DeviceRecord {
-        device_id: 0,
-        bus_kind: 0,
-        _pad0: [0; 3],
-        class: 0,
-        vendor: 0,
-        device: 0,
-        flags: 0,
-        bar_count: 0,
-        irq_line: 0xff,
-        irq_pin: 0,
-        _pad1: [0; 1],
-        irq_source: 0,
-        bars: [Bar { base: 0, size: 0, kind: 0, flags: 0, _pad: [0; 6] }; 6],
-    }
 }

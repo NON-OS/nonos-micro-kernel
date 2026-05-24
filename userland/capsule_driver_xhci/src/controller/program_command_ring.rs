@@ -13,16 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Write the Command Ring Control register. The xHCI spec
-//! recommends a zero-write before the real value so the controller
-//! latches a clean state; we follow that. CRCR's RCS bit is
-//! folded in via `CommandRing::crcr_value()` so the controller's
-//! initial consumer cycle matches the producer.
-
 use crate::regs::op::crcr_program;
 use crate::rings::command::CommandRing;
-
 pub fn program_command_ring(op_base: u64, ring: &CommandRing) {
     crcr_program(op_base, 0, 0);
     let v = ring.crcr_value();

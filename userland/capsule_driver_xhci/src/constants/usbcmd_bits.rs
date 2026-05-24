@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Bits in the xHCI USBCMD register. R/S = run/stop; HCRST = host
-//! controller reset (self-clearing once the controller has gone
-//! through its internal reset sequence); INTE = interrupter
-//! enable, master gate over per-interrupter IMAN.IE.
-
 pub const USBCMD_RUN: u32 = 1 << 0;
 pub const USBCMD_HCRST: u32 = 1 << 1;
 pub const USBCMD_INTE: u32 = 1 << 2;

@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Volatile MMIO accessors over the BAR0 mapping the broker
-//! returns. The pointer is the `user_va` from `MmioMapOut`; the
-//! kernel guarantees the page is mapped user / RW / NX / uncached.
+
+
+
 
 use core::ptr::{read_volatile, write_volatile};
 
@@ -30,10 +30,10 @@ impl Regs {
         Self { base: base as *mut u8 }
     }
 
-    /// # Safety
-    /// `offset` must lie inside the BAR0 grant the broker handed
-    /// the caller. Grants are bounds-checked when created; any
-    /// offset less than the grant length is in-bounds.
+
+
+
+
     #[inline]
     pub unsafe fn r8(self, offset: usize) -> u8 {
         read_volatile(self.base.add(offset))

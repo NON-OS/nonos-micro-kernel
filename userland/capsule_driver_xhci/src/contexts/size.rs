@@ -13,14 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 const INPUT_CONTEXTS: u64 = 33;
 const DEVICE_CONTEXTS: u64 = 32;
-
 pub fn input_context_bytes(context_size: u8) -> u64 {
     INPUT_CONTEXTS * context_size as u64
 }
-
 pub fn device_context_bytes(context_size: u8) -> u64 {
     DEVICE_CONTEXTS * context_size as u64
 }

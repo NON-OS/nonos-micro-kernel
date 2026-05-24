@@ -13,19 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{CC_SUCCESS, TRB_TYPE_CMD_COMPLETION_EVENT};
 use crate::error::{XhciError, XhciResult};
 use crate::regs::runtime::erdp_program;
 use crate::rings::event::EventRing;
-
 const COMPLETION_POLL_LIMIT: u32 = 1_000_000;
-
 #[derive(Clone, Copy)]
 pub struct CommandCompletion {
     pub slot_id: u8,
 }
-
 pub fn wait_command_completion(
     intr_base: u64,
     issued_phys: u64,
@@ -39,7 +35,6 @@ pub fn wait_command_completion(
         let event = evt_ring.current_trb();
         evt_ring.advance();
         erdp_program(intr_base, evt_ring.current_dequeue_phys(), true, 0);
-
         if event.get_type() != TRB_TYPE_CMD_COMPLETION_EVENT {
             continue;
         }

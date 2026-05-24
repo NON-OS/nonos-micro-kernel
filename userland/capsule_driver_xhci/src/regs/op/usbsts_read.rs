@@ -13,10 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::USBSTS;
 use crate::regs::mmio_read32;
-
 pub fn usbsts_read(op_base: u64) -> u32 {
     mmio_read32(op_base + USBSTS)
 }

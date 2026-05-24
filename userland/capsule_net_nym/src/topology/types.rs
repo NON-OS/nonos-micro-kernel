@@ -60,3 +60,12 @@ pub enum RouteError {
     Expired,
     MissingHop,
 }
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TopologyStatus {
+    Missing,
+    Ready,
+    Expired,
+    Clock,
+    UntrustedAuthority,
+}

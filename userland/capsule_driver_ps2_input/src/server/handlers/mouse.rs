@@ -13,16 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use nonos_libc::{mk_ipc_send, mk_irq_ack};
-
 use crate::poll::drain;
 use crate::protocol::{
     encode_response_header, write_status, Request, KERNEL_REPLY_ENDPOINT, MAX_POLL_EVENTS,
     MOUSE_EVENT_WIRE_LEN, MOUSE_POLL_PAYLOAD_PREFIX_LEN, RESP_HDR_LEN,
 };
 use crate::server::context::Context;
-
 pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
     drain(
         ctx.driver.pio_grant_id,
@@ -33,7 +30,6 @@ pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
     );
     let _ = mk_irq_ack(ctx.driver.irq_grant_id);
     let _ = mk_irq_ack(ctx.driver.aux_irq_grant_id);
-
     let mut count: u32 = 0;
     while count < MAX_POLL_EVENTS as u32 {
         let Some(ev) = ctx.mouse_ring.pop() else { break };
@@ -47,7 +43,6 @@ pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
         tx[off + 7] = 0;
         count += 1;
     }
-
     let payload_len =
         (MOUSE_POLL_PAYLOAD_PREFIX_LEN + count as usize * MOUSE_EVENT_WIRE_LEN) as u32;
     encode_response_header(tx, req, payload_len);

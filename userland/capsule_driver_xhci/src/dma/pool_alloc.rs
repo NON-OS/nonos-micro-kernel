@@ -13,20 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Mint one broker DMA grant. The broker requires a non-zero,
-//! page-aligned length and caps the request at
-//! `MAX_PAGES_PER_GRANT` pages. Sizes smaller than a page are
-//! rounded up; oversized requests are refused locally so the
-//! broker never has to. Returned region is broker-zeroed.
-
 use nonos_libc::{mk_dma_map, DmaMapOut};
-
 use super::page::{MAX_PAGES_PER_GRANT, PAGE_SIZE};
 use super::pool::DmaPool;
 use super::region::DmaRegion;
 use crate::error::{XhciError, XhciResult};
-
 impl DmaPool {
     pub fn alloc(&self, requested: u64) -> XhciResult<DmaRegion> {
         if requested == 0 {
@@ -36,7 +27,6 @@ impl DmaPool {
         if length / PAGE_SIZE > MAX_PAGES_PER_GRANT {
             return Err(XhciError::ControllerUnsupported);
         }
-
         let mut out = DmaMapOut { user_va: 0, device_addr: 0, length: 0, grant_id: 0 };
         let r = mk_dma_map(self.device_id, self.claim_epoch, length, 0, &mut out);
         if r < 0 {

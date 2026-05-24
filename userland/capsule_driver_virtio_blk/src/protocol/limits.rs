@@ -13,21 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Per-op payload sizes the server enforces.
-//!
-//! `RW_HEADER_LEN` is the leading u64 lba + u32 nsectors carried
-//! by both `OP_READ_BLOCKS` and `OP_WRITE_BLOCKS`.
-//! `MAX_RW_PAYLOAD_BYTES` caps a single read/write at the size of
-//! the data DMA grant.
-
 use crate::constants::{DATA_BUF_LEN, MAX_SECTORS_PER_REQUEST, SECTOR_SIZE};
-
 pub const STATUS_LEN: usize = 4;
 pub const RW_HEADER_LEN: usize = 12;
 pub const READ_REQ_LEN: usize = RW_HEADER_LEN;
-
 pub const MAX_RW_PAYLOAD_BYTES: u32 = DATA_BUF_LEN as u32;
 pub const CAPACITY_PAYLOAD_LEN: usize = 8;
-
 const _: () = assert!(MAX_RW_PAYLOAD_BYTES == MAX_SECTORS_PER_REQUEST * SECTOR_SIZE as u32);

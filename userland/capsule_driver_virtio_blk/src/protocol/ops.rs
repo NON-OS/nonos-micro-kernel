@@ -13,11 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Op discriminants for `driver.virtio_blk0`. Adding a new op
-//! means a new constant here, a handler in `server::handlers`,
-//! and a matching kernel-side client; nothing else routes by op.
-
 pub const OP_HEALTHCHECK: u16 = 1;
 pub const OP_CAPACITY: u16 = 2;
 pub const OP_READ_BLOCKS: u16 = 3;

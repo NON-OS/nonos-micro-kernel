@@ -13,12 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Claim phase. Returns the broker's per-claim epoch so subsequent
-//! grant calls can be fenced if the device is re-claimed.
-
 use nonos_libc::mk_device_claim;
-
 pub fn claim(device_id: u64) -> Result<u64, &'static str> {
     let r = mk_device_claim(device_id);
     if r < 0 {

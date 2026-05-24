@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Owning handle for one broker DMA grant. `device_addr` is the
-//! address the controller hands to its bus master; `user_va` is
-//! the address the capsule's CPU dereferences. The underlying
-//! grant is released by the `Drop` impl in a sibling file.
-
 #[derive(Debug)]
 pub struct DmaRegion {
     pub(super) user_va: u64,

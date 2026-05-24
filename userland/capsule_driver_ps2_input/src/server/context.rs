@@ -13,17 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Per-loop runtime state. The server owns the ring (consumer
-//! side of scancode events), the drainer (E0/E1 prefix carry),
-//! and the driver binding (PIO/IRQ grant ids). All handlers see
-//! it through `&mut Context`.
-
 use crate::mouse::{MouseParser, MouseRing};
 use crate::poll::Drainer;
 use crate::ring::Ring;
 use crate::setup::Driver;
-
 pub struct Context {
     pub driver: Driver,
     pub ring: Ring,
@@ -31,7 +24,6 @@ pub struct Context {
     pub mouse: MouseParser,
     pub mouse_ring: MouseRing,
 }
-
 impl Context {
     pub fn new(driver: Driver) -> Self {
         Self {

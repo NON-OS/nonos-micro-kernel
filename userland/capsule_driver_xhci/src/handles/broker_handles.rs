@@ -13,14 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! RAII bundle for the three non-DMA broker grants the controller
-//! capsule needs: the device claim, the BAR0 MMIO grant, and the
-//! IRQ grant. Drop releases them in the reverse of acquisition
-//! order; an early return through `?` from the bring-up sequence
-//! unwinds cleanly without leaving the broker in a half-claimed
-//! state.
-
 #[derive(Debug)]
 pub struct BrokerHandles {
     pub(super) device_id: u64,
@@ -28,7 +20,6 @@ pub struct BrokerHandles {
     pub(super) mmio_user_va: u64,
     pub(super) irq_grant_id: u64,
 }
-
 impl BrokerHandles {
     pub(crate) fn new(
         device_id: u64,

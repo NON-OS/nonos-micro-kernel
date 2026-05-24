@@ -13,18 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Per-capsule DMA allocator. Holds the active device claim
-//! coordinates so subsequent grants can be epoch-fenced; every
-//! `alloc()` call routes through `mk_dma_map`. Drop is *not*
-//! implemented: regions outlive the pool and clean themselves up.
-
 #[derive(Debug, Clone, Copy)]
 pub struct DmaPool {
     pub device_id: u64,
     pub claim_epoch: u64,
 }
-
 impl DmaPool {
     pub const fn new(device_id: u64, claim_epoch: u64) -> Self {
         Self { device_id, claim_epoch }

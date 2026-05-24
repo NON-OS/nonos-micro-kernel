@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 pub fn max_packet_for_speed(speed: u8) -> u16 {
     match speed {
         4 | 5 => 512,

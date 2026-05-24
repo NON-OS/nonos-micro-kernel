@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::state::EventRing;
-
 impl EventRing {
-    /// True when the TRB at the consumer cursor carries the
-    /// expected cycle bit (the controller wrote it). When the
-    /// consumer crosses a segment boundary it flips its cycle so
-    /// stale (already-consumed) entries with the old cycle stop
-    /// matching.
     pub fn has_event(&self) -> bool {
         let trb = self.current_trb();
         trb.get_cycle() == (self.consumer_cycle != 0)

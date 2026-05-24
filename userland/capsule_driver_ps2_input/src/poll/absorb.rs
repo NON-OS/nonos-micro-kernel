@@ -13,20 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Single-byte absorb step. Folds prefix bytes into the drainer's
-//! pending state and returns; the actual key code (anything that
-//! is neither E0 nor E1) becomes a `Ring` event with the carried
-//! prefix flag and the BREAK bit derived from bit 7 of the code.
-
 use super::drainer::Drainer;
 use crate::keymap;
 use crate::ring::{Event, Ring, FLAG_BREAK, FLAG_E0_PREFIX, FLAG_E1_PREFIX};
-
 const E0_PREFIX: u8 = 0xE0;
 const E1_PREFIX: u8 = 0xE1;
 const BREAK_BIT: u8 = 0x80;
-
 pub(super) fn absorb(drainer: &mut Drainer, ring: &mut Ring, byte: u8) {
     if byte == E0_PREFIX {
         drainer.pending_e0 = true;
@@ -36,7 +28,6 @@ pub(super) fn absorb(drainer: &mut Drainer, ring: &mut Ring, byte: u8) {
         drainer.pending_e1 = true;
         return;
     }
-
     let mut flags: u8 = 0;
     if byte & BREAK_BIT != 0 {
         flags |= FLAG_BREAK;
@@ -49,9 +40,7 @@ pub(super) fn absorb(drainer: &mut Drainer, ring: &mut Ring, byte: u8) {
         flags |= FLAG_E1_PREFIX;
         drainer.pending_e1 = false;
     }
-
     ring.push(Event { scancode: byte, flags });
-
     if let Some(t) = keymap::translate(byte, flags) {
         let _ = keymap::publish(t);
     }

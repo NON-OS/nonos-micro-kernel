@@ -13,12 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::broker_handles::BrokerHandles;
-
 impl BrokerHandles {
-    /// Broker-side IRQ grant id; the service loop polls this for
-    /// IMAN.IP edges from the controller.
     pub fn irq_grant_id(&self) -> u64 {
         self.irq_grant_id
     }

@@ -13,11 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 pub mod post;
 pub mod set1;
 pub mod set1_e0;
 pub mod translate;
-
 pub use post::publish;
 pub use translate::{translate, Translated};

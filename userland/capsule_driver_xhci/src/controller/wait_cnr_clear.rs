@@ -13,18 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! After HCRST self-clears, USBSTS.CNR (Controller Not Ready)
-//! stays set until the controller has finished its internal
-//! reset state and is safe to program. Reading or writing the
-//! operational registers while CNR is still set is undefined.
-
 use crate::constants::USBSTS_CNR;
 use crate::error::{XhciError, XhciResult};
 use crate::regs::op::usbsts_read;
-
 const CNR_POLL_LIMIT: u32 = 200_000;
-
 pub fn wait_cnr_clear(op_base: u64) -> XhciResult<()> {
     for _ in 0..CNR_POLL_LIMIT {
         if usbsts_read(op_base) & USBSTS_CNR == 0 {

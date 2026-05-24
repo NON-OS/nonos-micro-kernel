@@ -13,16 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! xHCI Operational Register offsets, relative to BAR0 + CAPLENGTH.
-//! `PORTSC_BASE` is offset 0x400 within the operational region;
-//! per-port registers stride 0x10 with port indices starting at 1.
-
 pub const USBCMD: u64 = 0x00;
 pub const USBSTS: u64 = 0x04;
 pub const CRCR_LO: u64 = 0x18;
 pub const DCBAAP_LO: u64 = 0x30;
 pub const CONFIG: u64 = 0x38;
-
 pub const PORTSC_BASE: u64 = 0x400;
 pub const PORT_REG_STRIDE: u64 = 0x10;

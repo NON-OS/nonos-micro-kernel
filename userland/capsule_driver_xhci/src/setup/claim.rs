@@ -13,17 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Device-claim phase. The broker returns the per-claim epoch as
-//! the syscall's positive return value; subsequent grant calls
-//! quote it back so a foreign re-claim is detected as a stale
-//! epoch by the broker. There is no prior grant to roll back if
-//! this phase fails.
-
 use nonos_libc::mk_device_claim;
-
 use crate::error::{XhciError, XhciResult};
-
 pub fn claim(device_id: u64) -> XhciResult<u64> {
     let r = mk_device_claim(device_id);
     if r < 0 {

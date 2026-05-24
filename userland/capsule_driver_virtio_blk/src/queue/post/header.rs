@@ -13,13 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use core::ptr::write_volatile;
-
 use super::direction::Direction;
 use crate::constants::{HEADER_OFFSET, STATUS_OFFSET};
 use crate::queue::layout::Queue;
-
 impl Queue {
     pub(super) unsafe fn write_header(&self, dir: Direction, lba: u64) {
         let hdr = self.header_va.add(HEADER_OFFSET);

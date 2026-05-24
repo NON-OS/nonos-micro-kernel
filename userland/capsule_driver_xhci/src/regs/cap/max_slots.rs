@@ -13,14 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! HCSPARAMS1 bits 7:0 — Number of Device Slots (MaxSlots). A
-//! controller advertising zero slots cannot enumerate any device
-//! and is rejected by init.
-
 use crate::constants::HCSPARAMS1;
 use crate::regs::mmio_read32;
-
 pub fn max_slots(mmio_base: u64) -> u8 {
     (mmio_read32(mmio_base + HCSPARAMS1) & 0xFF) as u8
 }

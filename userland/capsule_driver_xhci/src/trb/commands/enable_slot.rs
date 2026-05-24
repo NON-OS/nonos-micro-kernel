@@ -13,17 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Enable Slot command TRB. This is the first enumeration command:
-//! the controller allocates a device slot and returns its slot id
-//! in the matching Command Completion Event.
-
 use crate::constants::TRB_TYPE_ENABLE_SLOT_CMD;
 use crate::trb::Trb;
-
 const SLOT_TYPE_SHIFT: u32 = 16;
 const SLOT_TYPE_MASK: u32 = 0x1F;
-
 pub fn enable_slot_command(cycle: bool, slot_type: u8) -> Trb {
     let mut trb = Trb::zero();
     trb.set_type(TRB_TYPE_ENABLE_SLOT_CMD);

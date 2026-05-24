@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 pub const E_INVAL: i32 = -22;
 pub const E_IO: i32 = -5;
 pub const E_NODEV: i32 = -19;

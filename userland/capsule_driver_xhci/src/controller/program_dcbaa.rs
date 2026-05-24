@@ -13,18 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Allocate the Device Context Base Address Array, install the
-//! scratchpad pointer array (if any) into slot 0, program DCBAAP,
-//! and set CONFIG.MaxSlotsEn. Returns the DCBAA region so the
-//! caller keeps it alive for the controller's lifetime.
-
 use crate::dma::{DmaPool, DmaRegion};
 use crate::error::XhciResult;
 use crate::regs::op::{config_set_max_slots, dcbaap_program};
-
 const DCBAA_ENTRY_BYTES: u64 = 8;
-
 pub fn program_dcbaa(
     pool: &DmaPool,
     op_base: u64,
@@ -34,13 +26,11 @@ pub fn program_dcbaa(
     let bytes = ((max_slots as u64) + 1) * DCBAA_ENTRY_BYTES;
     let region = pool.alloc(bytes)?;
     region.zero();
-
     if scratchpad_array_phys != 0 {
         unsafe {
             core::ptr::write_volatile(region.as_mut_ptr::<u64>(), scratchpad_array_phys);
         }
     }
-
     dcbaap_program(op_base, region.phys());
     config_set_max_slots(op_base, max_slots);
     Ok(region)

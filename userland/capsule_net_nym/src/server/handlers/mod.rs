@@ -31,5 +31,9 @@ mod set_credential;
 mod set_timing;
 mod set_topology;
 mod surb;
+mod sync_directory;
+mod timing_status;
+mod topology_errno;
+mod topology_status;
 
 pub use dispatch::dispatch;

@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! One-shot TX path: stage virtio-net header + frame in the TX
-//! buffer, post descriptor 0, kick the queue, wait on the used
-//! ring with a bounded yield-loop. The handler enforces frame
-//! length bounds at the IPC boundary; this module trusts its
-//! input.
-
 use nonos_libc::{mk_irq_ack, mk_irq_poll, mk_yield, IrqPollOut};
 
 use crate::constants::{LEG_QUEUE_NOTIFY, Q_TX, VIRTIO_NET_HDR_LEN};
@@ -30,14 +24,13 @@ const MAX_YIELDS: u32 = 200_000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TxError {
+    IrqAck,
+    IrqPoll,
     Timeout,
 }
 
 pub fn send(regs: Regs, tx: &mut TxQueue, irq_grant: u64, frame: &[u8]) -> Result<(), TxError> {
     let total = (VIRTIO_NET_HDR_LEN + frame.len()) as u32;
-    // SAFETY: server loop is single-threaded, no other writer
-    // touches the TX buffer between this call and the matching
-    // used-ring read.
     unsafe {
         let buf = tx.buffer_mut(total);
         for b in buf[..VIRTIO_NET_HDR_LEN].iter_mut() {
@@ -50,29 +43,33 @@ pub fn send(regs: Regs, tx: &mut TxQueue, irq_grant: u64, frame: &[u8]) -> Resul
         regs.w16(LEG_QUEUE_NOTIFY, Q_TX);
     }
 
-    let prev_seq = read_seq(irq_grant);
+    let prev_seq = read_seq(irq_grant)?;
     let target = tx.last_used.wrapping_add(1);
     let mut tries = 0u32;
     loop {
         if tx.used_idx() == target {
             break;
         }
-        if read_seq(irq_grant) != prev_seq {
+        if read_seq(irq_grant)? != prev_seq {
             break;
         }
         if tries >= MAX_YIELDS {
             return Err(TxError::Timeout);
         }
-        let _ = mk_yield();
+        mk_yield();
         tries = tries.wrapping_add(1);
     }
     tx.last_used = target;
-    let _ = mk_irq_ack(irq_grant);
+    if mk_irq_ack(irq_grant) < 0 {
+        return Err(TxError::IrqAck);
+    }
     Ok(())
 }
 
-fn read_seq(grant: u64) -> u64 {
+fn read_seq(grant: u64) -> Result<u64, TxError> {
     let mut out = IrqPollOut { seq: 0, overflow: 0 };
-    let _ = mk_irq_poll(grant, &mut out as *mut _);
-    out.seq
+    if mk_irq_poll(grant, &mut out as *mut _) < 0 {
+        return Err(TxError::IrqPoll);
+    }
+    Ok(out.seq)
 }

@@ -14,10 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! MMIO phase. Maps BAR0 into the capsule's address space at the
-//! 4 KiB-aligned length the broker reports. Failure releases the
-//! claim so the broker is left clean.
-
 use nonos_libc::{mk_device_release, mk_mmio_map, MmioMapOut};
 
 use crate::constants::{BAR_INDEX, BAR_OFFSET};
@@ -30,7 +26,9 @@ pub fn map(dev: Found, claim_epoch: u64) -> Result<MmioMapOut, &'static str> {
     let length = (dev.bar0_size + PAGE_MASK) & !PAGE_MASK;
     let r = mk_mmio_map(dev.device_id, claim_epoch, BAR_INDEX, 0, BAR_OFFSET, length, &mut out);
     if r < 0 {
-        let _ = mk_device_release(dev.device_id);
+        if mk_device_release(dev.device_id) < 0 {
+            return Err("mmio map rollback failed");
+        }
         return Err("mmio map failed");
     }
     Ok(out)

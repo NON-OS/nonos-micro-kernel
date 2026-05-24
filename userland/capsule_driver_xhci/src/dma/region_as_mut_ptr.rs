@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::region::DmaRegion;
-
 impl DmaRegion {
-    /// Construct a typed mutable pointer at the start of the
-    /// region. Caller stays responsible for index bounds and
-    /// for using `read_volatile` / `write_volatile` against the
-    /// returned pointer — the DMA buffer is shared with a bus
-    /// master so the optimiser must not reorder accesses.
     pub fn as_mut_ptr<T>(&self) -> *mut T {
         self.user_va as *mut T
     }

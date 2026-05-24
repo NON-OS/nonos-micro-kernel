@@ -13,18 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Halt the controller before reset. The xHCI spec requires the
-//! controller to be in a halted state (USBSTS.HCH=1) before
-//! HCRST can be safely issued; firmware that left the controller
-//! running gets reset cleanly only after a halt cycle.
-
 use crate::constants::{USBCMD_RUN, USBSTS_HCH};
 use crate::error::{XhciError, XhciResult};
 use crate::regs::op::{usbcmd_read, usbcmd_write, usbsts_read};
-
 const HALT_POLL_LIMIT: u32 = 200_000;
-
 pub fn halt(op_base: u64) -> XhciResult<()> {
     let cur = usbcmd_read(op_base);
     if cur & USBCMD_RUN != 0 {

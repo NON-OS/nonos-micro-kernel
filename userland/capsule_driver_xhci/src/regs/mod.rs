@@ -13,14 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 pub mod cap;
 mod mmio_read32;
 mod mmio_write32;
 mod mmio_write64;
 pub mod op;
 pub mod runtime;
-
 pub(crate) use mmio_read32::mmio_read32;
 pub(crate) use mmio_write32::mmio_write32;
 pub(crate) use mmio_write64::mmio_write64;

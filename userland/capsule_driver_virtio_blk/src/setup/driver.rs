@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `Driver` is the live state the server loop holds. Broker grants
-//! are revoked by kernel exit teardown if this capsule dies; while
-//! alive, the server only needs the IRQ grant, register aperture,
-//! queue memory, capacity, and feature flags.
-
 use crate::queue::Queue;
 use crate::regs::Regs;
-
 pub struct Driver {
     pub irq_grant: u64,
     pub queue: Queue,

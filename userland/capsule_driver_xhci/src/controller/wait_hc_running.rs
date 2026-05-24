@@ -13,18 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! After USBCMD.RUN goes high the controller clears USBSTS.HCH
-//! within bounded time. Spinning until HCH=0 is the "controller
-//! is running" handshake; if HCH never clears the controller is
-//! stuck and bring-up fails closed.
-
 use crate::constants::USBSTS_HCH;
 use crate::error::{XhciError, XhciResult};
 use crate::regs::op::usbsts_read;
-
 const HCH_POLL_LIMIT: u32 = 200_000;
-
 pub fn wait_hc_running(op_base: u64) -> XhciResult<()> {
     for _ in 0..HCH_POLL_LIMIT {
         if usbsts_read(op_base) & USBSTS_HCH == 0 {

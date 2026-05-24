@@ -13,34 +13,25 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-// Command ring. Slot N-1 is the trailing Link TRB (TC=1) so the
-// producer cycle flips on wrap. Producer cycle starts at 1; the
-// controller's consumer side picks the same via CRCR.RCS.
-
 use crate::constants::{COMMAND_RING_TRBS, TRB_BYTES};
 use crate::dma::{DmaPool, DmaRegion};
 use crate::error::XhciResult;
 use crate::trb::builders::link::LinkTrbBuilder;
 use crate::trb::write_volatile_at;
-
 pub struct CommandRing {
     pub(super) region: DmaRegion,
     pub(super) cycle: u8,
     pub(super) enqueue_index: usize,
 }
-
 impl CommandRing {
     pub fn new(pool: &DmaPool) -> XhciResult<Self> {
         let bytes = (COMMAND_RING_TRBS as u64) * (TRB_BYTES as u64);
         let region = pool.alloc(bytes)?;
         region.zero();
-
         let last_slot_va = region.user_va() + ((COMMAND_RING_TRBS as u64) - 1) * (TRB_BYTES as u64);
         let link =
             LinkTrbBuilder::new().target(region.phys()).toggle_cycle(true).cycle(true).build();
         write_volatile_at(last_slot_va, link);
-
         Ok(Self { region, cycle: 1, enqueue_index: 0 })
     }
 }

@@ -13,14 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::base::Trb;
-
 impl Trb {
-    /// Read the 64-bit pointer carried in the first two dwords.
-    /// On Command Completion / Transfer Event TRBs this is the
-    /// address of the originating command/transfer TRB; on Link
-    /// TRBs it is the wrap target.
     pub fn get_pointer(&self) -> u64 {
         (self.d0 as u64) | ((self.d1 as u64) << 32)
     }

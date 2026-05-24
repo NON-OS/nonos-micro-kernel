@@ -13,24 +13,16 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `OP_GET_STATE`. Returns keyboard counters followed by AUX
-//! mouse counters as little-endian u64s. Diagnostic only; no
-//! device interaction.
-
 use nonos_libc::mk_ipc_send;
-
 use crate::protocol::{
     encode_response_header, write_status, Request, KERNEL_REPLY_ENDPOINT, RESP_HDR_LEN,
     STATE_PAYLOAD_LEN, STATUS_LEN,
 };
 use crate::server::context::Context;
-
 pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
     let payload_len = (STATUS_LEN + STATE_PAYLOAD_LEN) as u32;
     encode_response_header(tx, req, payload_len);
     write_status(&mut tx[RESP_HDR_LEN..], 0);
-
     let mut off = RESP_HDR_LEN + STATUS_LEN;
     tx[off..off + 8].copy_from_slice(&ctx.ring.events_seen.to_le_bytes());
     off += 8;
@@ -45,6 +37,5 @@ pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
     tx[off..off + 8].copy_from_slice(&ctx.mouse_ring.events_dropped.to_le_bytes());
     off += 8;
     tx[off..off + 8].copy_from_slice(&ctx.mouse_ring.sync_errors.to_le_bytes());
-
     let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), RESP_HDR_LEN + (payload_len as usize));
 }

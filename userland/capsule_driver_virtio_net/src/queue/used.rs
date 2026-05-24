@@ -14,18 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Read used-ring state from RX and TX queues, plus accessors for
-//! the underlying buffer slots. The bounds clamp every length to
-//! its declared per-buffer size so a misbehaving device cannot
-//! induce an out-of-bounds copy.
-
 use core::ptr::read_volatile;
 
-use super::layout::{RxQueue, TxQueue};
+use super::{RxQueue, TxQueue};
 use crate::constants::VQ_USED_OFFSET;
 
-// VirtqUsed: u16 flags, u16 idx, VirtqUsedElem ring[QUEUE_SIZE]
-// VirtqUsedElem: u32 id, u32 len   (8 bytes each)
 const USED_IDX_OFFSET: usize = 2;
 const USED_RING_OFFSET: usize = 4;
 const USED_ELEM_SIZE: usize = 8;
@@ -50,10 +43,6 @@ impl TxQueue {
         unsafe { read_volatile(self.region_va.add(VQ_USED_OFFSET + USED_IDX_OFFSET).cast()) }
     }
 
-    /// # Safety
-    /// Caller must hold the TX serialisation lock; the buffer is
-    /// reused per packet so concurrent stages would clobber each
-    /// other.
     pub unsafe fn buffer_mut(&self, len: u32) -> &mut [u8] {
         let n = core::cmp::min(len, self.buf_len) as usize;
         core::slice::from_raw_parts_mut(self.buf_va, n)

@@ -17,5 +17,10 @@
 pub mod cfi;
 pub mod pmp;
 
-pub use cfi::{init_cfi, CfiMode};
-pub use pmp::{init_pmp, PmpConfig, PmpEntry};
+pub use cfi::{init_cfi, CfiError, CfiMode};
+pub use pmp::{init_pmp, PmpConfig, PmpEntry, PmpError, PmpResult};
+
+pub fn init_all() -> PmpResult<()> {
+    init_cfi();
+    init_pmp()
+}

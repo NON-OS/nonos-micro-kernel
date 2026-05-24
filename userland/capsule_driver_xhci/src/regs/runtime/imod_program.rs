@@ -13,16 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Interrupter Moderation. Caller passes the IMODI (low 16 bits,
-//! 250 ns granularity) and IMODC (high 16 bits) values. The
-//! capsule programs a low IMODI on init so the IRQ line fires
-//! responsively under boot-time hotplug, then leaves the field
-//! alone.
-
 use crate::constants::IMOD;
 use crate::regs::mmio_write32;
-
 pub fn imod_program(intr_base: u64, imodi: u16, imodc: u16) {
     let value = (imodi as u32) | ((imodc as u32) << 16);
     mmio_write32(intr_base + IMOD, value);

@@ -14,194 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::arch::asm;
+mod address;
+mod config;
+mod constants;
+mod entry;
+mod error;
+mod registers;
+mod state;
 
-const PMP_R: u8 = 1 << 0;
-const PMP_W: u8 = 1 << 1;
-const PMP_X: u8 = 1 << 2;
+pub use config::{PmpAddressMode, PmpConfig};
+pub use entry::PmpEntry;
+pub use error::{PmpError, PmpResult};
+pub use state::is_initialized;
 
-const PMP_A_OFF: u8 = 0 << 3;
-const PMP_A_TOR: u8 = 1 << 3;
-const PMP_A_NA4: u8 = 2 << 3;
-const PMP_A_NAPOT: u8 = 3 << 3;
-
-const PMP_L: u8 = 1 << 7;
-
-#[derive(Debug, Clone, Copy)]
-pub struct PmpConfig {
-    pub read: bool,
-    pub write: bool,
-    pub execute: bool,
-    pub address_mode: PmpAddressMode,
-    pub locked: bool,
+pub fn init_pmp() -> PmpResult<()> {
+    for index in 0..constants::PMP_ENTRY_COUNT {
+        registers::clear_entry(index)?;
+    }
+    state::set_initialized();
+    Ok(())
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PmpAddressMode {
-    Off,
-    Tor,
-    Na4,
-    Napot,
+pub fn set_pmp_entry(index: usize, entry: &PmpEntry) -> PmpResult<()> {
+    registers::write_entry(index, entry)
 }
 
-impl PmpConfig {
-    pub const fn new() -> Self {
-        Self {
-            read: false,
-            write: false,
-            execute: false,
-            address_mode: PmpAddressMode::Off,
-            locked: false,
-        }
-    }
-
-    pub const fn rwx() -> Self {
-        Self {
-            read: true,
-            write: true,
-            execute: true,
-            address_mode: PmpAddressMode::Napot,
-            locked: false,
-        }
-    }
-
-    pub const fn ro() -> Self {
-        Self {
-            read: true,
-            write: false,
-            execute: false,
-            address_mode: PmpAddressMode::Napot,
-            locked: false,
-        }
-    }
-
-    pub const fn rx() -> Self {
-        Self {
-            read: true,
-            write: false,
-            execute: true,
-            address_mode: PmpAddressMode::Napot,
-            locked: false,
-        }
-    }
-
-    pub const fn rw() -> Self {
-        Self {
-            read: true,
-            write: true,
-            execute: false,
-            address_mode: PmpAddressMode::Napot,
-            locked: false,
-        }
-    }
-
-    pub fn to_cfg_byte(&self) -> u8 {
-        let mut cfg = 0u8;
-
-        if self.read {
-            cfg |= PMP_R;
-        }
-        if self.write {
-            cfg |= PMP_W;
-        }
-        if self.execute {
-            cfg |= PMP_X;
-        }
-
-        cfg |= match self.address_mode {
-            PmpAddressMode::Off => PMP_A_OFF,
-            PmpAddressMode::Tor => PMP_A_TOR,
-            PmpAddressMode::Na4 => PMP_A_NA4,
-            PmpAddressMode::Napot => PMP_A_NAPOT,
-        };
-
-        if self.locked {
-            cfg |= PMP_L;
-        }
-
-        cfg
-    }
-}
-
-impl Default for PmpConfig {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct PmpEntry {
-    pub addr: u64,
-    pub config: PmpConfig,
-}
-
-impl PmpEntry {
-    pub fn new(addr: u64, config: PmpConfig) -> Self {
-        Self { addr, config }
-    }
-
-    pub fn napot(base: u64, size: u64, config: PmpConfig) -> Self {
-        let napot_addr = (base | (size / 2 - 1)) >> 2;
-        Self { addr: napot_addr, config }
-    }
-}
-
-// PMP is left unconfigured at boot. The previous open-all PMP entry
-// granted U/S R/W/X to every address, which is indistinguishable from
-// PMP being off. Real isolation needs per-task entries written on
-// context switch; that policy is owned by the scheduler and not yet
-// implemented. Until then we leave PMP off (mstatus.MPRV=0 default,
-// no PMP entries enabled) so the lack of isolation is honest.
-pub fn init_pmp() {}
-
-pub fn set_pmp_entry(index: usize, entry: &PmpEntry) {
-    if index >= 16 {
-        return;
-    }
-
-    set_pmpaddr(index, entry.addr);
-    set_pmpcfg(index, entry.config.to_cfg_byte());
-}
-
-fn set_pmpaddr(index: usize, addr: u64) {
-    match index {
-        0 => unsafe { asm!("csrw pmpaddr0, {}", in(reg) addr) },
-        1 => unsafe { asm!("csrw pmpaddr1, {}", in(reg) addr) },
-        2 => unsafe { asm!("csrw pmpaddr2, {}", in(reg) addr) },
-        3 => unsafe { asm!("csrw pmpaddr3, {}", in(reg) addr) },
-        4 => unsafe { asm!("csrw pmpaddr4, {}", in(reg) addr) },
-        5 => unsafe { asm!("csrw pmpaddr5, {}", in(reg) addr) },
-        6 => unsafe { asm!("csrw pmpaddr6, {}", in(reg) addr) },
-        7 => unsafe { asm!("csrw pmpaddr7, {}", in(reg) addr) },
-        _ => {}
-    }
-}
-
-fn set_pmpcfg(index: usize, cfg: u8) {
-    let shift = (index % 8) * 8;
-    let reg_index = index / 8;
-
-    let mask = !(0xFFu64 << shift);
-    let new_cfg = (cfg as u64) << shift;
-
-    match reg_index {
-        0 => unsafe {
-            let mut pmpcfg0: u64;
-            asm!("csrr {}, pmpcfg0", out(reg) pmpcfg0);
-            pmpcfg0 = (pmpcfg0 & mask) | new_cfg;
-            asm!("csrw pmpcfg0, {}", in(reg) pmpcfg0);
-        },
-        1 => unsafe {
-            let mut pmpcfg2: u64;
-            asm!("csrr {}, pmpcfg2", out(reg) pmpcfg2);
-            pmpcfg2 = (pmpcfg2 & mask) | new_cfg;
-            asm!("csrw pmpcfg2, {}", in(reg) pmpcfg2);
-        },
-        _ => {}
-    }
-}
-
-pub fn clear_pmp_entry(index: usize) {
-    set_pmpaddr(index, 0);
-    set_pmpcfg(index, 0);
+pub fn clear_pmp_entry(index: usize) -> PmpResult<()> {
+    registers::clear_entry(index)
 }

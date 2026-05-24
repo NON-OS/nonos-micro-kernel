@@ -49,23 +49,11 @@ pub unsafe extern "C" fn _start() -> ! {
         }
     };
 
-    // Probe: the device-config window must report non-zero queue
-    // physical addresses (negotiation set them), and the cached
-    // MAC must be non-zero whenever VIRTIO_NET_F_MAC is in play.
-    // A zero on either side means the BAR mapping or the
-    // negotiation lied; tear the broker grants down rather than
-    // serve a half-initialised endpoint.
     if driver.rx.region_phys() == 0 || driver.tx.region_phys() == 0 {
-        driver.release();
+        if !driver.release() {
+            mk_exit(4);
+        }
         mk_exit(3);
     }
-    let _ = driver.mac.iter().all(|&b| b == 0);
-    let _ = driver.claim_epoch;
-    let _ = driver.device_id;
-    let _ = driver.mmio_grant;
-    let _ = driver.rx_queue_grant;
-    let _ = driver.rx_buffer_grant;
-    let _ = driver.tx_queue_grant;
-    let _ = driver.tx_buffer_grant;
     server::run(&mut driver);
 }

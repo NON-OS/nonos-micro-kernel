@@ -13,27 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! 20-byte wire-form header. Same shape as the other userland
-//! capsules so a kernel-side client can transport them uniformly.
-//! Magic `"NBLK"` distinguishes the block driver from the entropy/
-//! crypto/vfs/ramfs/keyring/rng peers.
-//!
-//!   u32 magic
-//!   u16 version
-//!   u16 op
-//!   u16 flags
-//!   u16 _reserved
-//!   u32 request_id
-//!   u32 payload_len
-//! = 20 bytes.
-
-pub const MAGIC: u32 = 0x4E42_4C4B; // "NBLK" — NONOS Block driver
+pub const MAGIC: u32 = 0x4E42_4C4B;
 pub const VERSION: u16 = 1;
-
 pub const HDR_LEN: usize = 20;
 pub const RESP_HDR_LEN: usize = HDR_LEN;
-
 #[derive(Debug, Clone, Copy)]
 pub struct Request {
     pub op: u16,

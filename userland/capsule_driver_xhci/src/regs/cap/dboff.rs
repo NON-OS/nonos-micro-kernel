@@ -13,16 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Doorbell Array offset. Bottom two bits are reserved-as-zero
-//! per the spec; we mask them off. The doorbell array starts at
-//! BAR0 + DBOFF; element 0 is the host-controller doorbell
-//! (kicks the command ring), elements 1..MaxSlots are the per-
-//! slot doorbells (kick endpoint transfer rings).
-
 use crate::constants::DBOFF;
 use crate::regs::mmio_read32;
-
 pub fn dboff(mmio_base: u64) -> u64 {
     (mmio_read32(mmio_base + DBOFF) & !0x3) as u64
 }

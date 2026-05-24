@@ -13,16 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! No-Op command TRB. Issuing one of these via the command ring
-//! and waiting for a Command Completion Event with `CC_SUCCESS`
-//! is the controller-bring-up smoke proof: it exercises producer
-//! cycle, doorbell, controller fetch, completion event, ERDP
-//! advance, and IMAN.IP clear all in one path.
-
 use crate::constants::TRB_TYPE_NOOP_CMD;
 use crate::trb::base::Trb;
-
 pub fn noop_command(cycle: bool) -> Trb {
     let mut trb = Trb::zero();
     trb.set_type(TRB_TYPE_NOOP_CMD);

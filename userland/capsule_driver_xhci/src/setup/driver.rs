@@ -13,19 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Aggregate the capsule's runtime state. Every field is alive
-//! for the controller's lifetime: the broker handles drop in
-//! reverse-acquisition order on capsule exit, the DMA regions
-//! drop after them, and the layout snapshot answers IPC reads.
-
 use crate::controller::{ControllerLayout, Scratchpads};
 use crate::dma::{DmaPool, DmaRegion};
 use crate::handles::BrokerHandles;
 use crate::rings::command::CommandRing;
 use crate::rings::event::EventRing;
 use crate::slots::SlotTable;
-
 pub struct Driver {
     pub handles: BrokerHandles,
     pub dcbaa: DmaRegion,

@@ -14,25 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Build descriptor entries on the RX and TX rings. RX uses one
-//! descriptor per buffer with the device-write flag set; TX uses
-//! a single device-read descriptor reused per outbound packet.
-//! Both publish the descriptor index into the available ring and
-//! bump `idx` last so the device never sees a half-written slot.
-
 use core::ptr::{read_volatile, write_volatile};
 
-use super::layout::{RxQueue, TxQueue};
+use super::{RxQueue, TxQueue};
 use crate::constants::{VQ_AVAIL_OFFSET, VQ_DESC_OFFSET, VRING_DESC_F_WRITE};
 
 const DESC_SIZE: usize = 16;
 const AVAIL_RING_OFFSET: usize = 4;
 
 impl RxQueue {
-    /// Lay out one device-write descriptor per RX buffer in the
-    /// pool, then publish all of them in the available ring at
-    /// once. Called exactly once before DRIVER_OK; the runtime
-    /// loop refills slots as their used entries land.
     pub fn prime(&self) {
         unsafe {
             let desc_base = self.region_va.add(VQ_DESC_OFFSET);
@@ -50,9 +40,6 @@ impl RxQueue {
         }
     }
 
-    /// Re-publish a single RX descriptor whose used entry has
-    /// been consumed. Caller bumped `last_used` already; this
-    /// hands the slot back to the device.
     pub fn refill(&self, slot: u16) {
         unsafe {
             let avail = self.region_va.add(VQ_AVAIL_OFFSET).cast::<u16>();
@@ -65,9 +52,6 @@ impl RxQueue {
 }
 
 impl TxQueue {
-    /// Stage a single outbound packet on descriptor 0 and publish
-    /// slot 0 in the available ring. The device sees the request
-    /// after the queue-notify register is poked next.
     pub fn post_packet(&self, length: u32) {
         unsafe {
             let desc_base = self.region_va.add(VQ_DESC_OFFSET);

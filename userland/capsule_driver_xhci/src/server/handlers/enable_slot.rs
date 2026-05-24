@@ -13,12 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! `OP_ENABLE_SLOT`: allocate a controller slot and return the
-//! controller-assigned slot id.
-
 use nonos_libc::mk_ipc_send;
-
 use crate::controller::{issue_disable_slot, issue_enable_slot};
 use crate::protocol::{
     encode_response_header, write_status, Request, E_IO, E_NODEV, KERNEL_REPLY_ENDPOINT,
@@ -26,7 +21,6 @@ use crate::protocol::{
 };
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
-
 pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
     let slot_id = match issue_enable_slot(
         ctx.driver.layout.doorbell_base,
@@ -40,7 +34,6 @@ pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
             return;
         }
     };
-
     if !ctx.driver.slots.mark_allocated(slot_id, ctx.driver.layout.max_slots) {
         let _ = issue_disable_slot(
             ctx.driver.layout.doorbell_base,
@@ -52,7 +45,6 @@ pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
         reply_with_status(tx, req, E_NODEV);
         return;
     }
-
     let payload_len = (STATUS_LEN + SLOT_ENABLE_PAYLOAD_LEN) as u32;
     encode_response_header(tx, req, payload_len);
     write_status(&mut tx[RESP_HDR_LEN..], 0);

@@ -13,37 +13,23 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! xHCI event ring. Consumer-side ownership: the controller pushes
-//! TRBs into the segment, the capsule pulls them out in order. P0
-//! provisions one segment + a single-entry ERST. Wrap is implicit
-//! on segment boundary — no Link TRB; the consumer increments and
-//! flips its cycle. The ERST entry is allocated as a separate
-//! 64-byte-aligned DMA grant so the ERSTBA write lands cleanly.
-
 use crate::constants::{EVENT_RING_SEGMENT_TRBS, TRB_BYTES};
 use crate::dma::{DmaPool, DmaRegion};
 use crate::error::XhciResult;
-
 const ERST_ENTRY_BYTES: u64 = 16;
-
 pub struct EventRing {
     pub(super) segment: DmaRegion,
     pub(super) erst: DmaRegion,
     pub(super) consumer_cycle: u8,
     pub(super) dequeue_index: usize,
 }
-
 impl EventRing {
     pub fn new(pool: &DmaPool) -> XhciResult<Self> {
         let segment_bytes = (EVENT_RING_SEGMENT_TRBS as u64) * (TRB_BYTES as u64);
         let segment = pool.alloc(segment_bytes)?;
         segment.zero();
-
         let erst = pool.alloc(ERST_ENTRY_BYTES)?;
         erst.zero();
-
-        // ERST entry layout: u32 base_lo, u32 base_hi, u32 size, u32 reserved.
         let segment_phys = segment.phys();
         let erst_va = erst.as_mut_ptr::<u32>();
         unsafe {
@@ -52,7 +38,6 @@ impl EventRing {
             core::ptr::write_volatile(erst_va.add(2), EVENT_RING_SEGMENT_TRBS as u32);
             core::ptr::write_volatile(erst_va.add(3), 0);
         }
-
         Ok(Self { segment, erst, consumer_cycle: 1, dequeue_index: 0 })
     }
 }

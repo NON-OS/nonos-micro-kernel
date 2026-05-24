@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod decode;
 mod encode;
 mod endpoint;
@@ -21,7 +20,6 @@ mod errno;
 mod header;
 mod limits;
 mod ops;
-
 pub use decode::decode_request;
 pub use encode::{encode_response_header, write_status};
 pub use endpoint::KERNEL_REPLY_ENDPOINT;

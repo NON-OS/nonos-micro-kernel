@@ -13,13 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod event;
 mod flags;
 mod pop;
 mod push;
 mod state;
-
 pub use event::Event;
 pub use flags::{FLAG_BREAK, FLAG_E0_PREFIX, FLAG_E1_PREFIX};
 pub use state::Ring;

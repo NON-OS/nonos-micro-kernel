@@ -13,25 +13,20 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{
     PORTSC_CCS, PORTSC_CHANGE_BITS, PORTSC_PED, PORTSC_PLS_MASK, PORTSC_PR, PORTSC_PRC,
 };
 use crate::error::{XhciError, XhciResult};
 use crate::regs::op::{portsc_clear_changes, portsc_read, portsc_write};
-
 const RESET_POLL_LIMIT: u32 = 1_000_000;
-
 pub fn reset_port(op_base: u64, port: u8) -> XhciResult<u32> {
     let first = portsc_read(op_base, port);
     if (first & PORTSC_CCS) == 0 {
         return Err(XhciError::NoDeviceOnPort);
     }
     portsc_clear_changes(op_base, port, first);
-
     let clean = portsc_read(op_base, port) & !PORTSC_CHANGE_BITS;
     portsc_write(op_base, port, (clean & !PORTSC_PLS_MASK) | PORTSC_PR);
-
     for _ in 0..RESET_POLL_LIMIT {
         let now = portsc_read(op_base, port);
         if (now & PORTSC_PRC) != 0 && (now & PORTSC_PED) != 0 {

@@ -13,10 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod broker_handles;
 mod broker_handles_drop;
 mod broker_handles_irq_grant_id;
 mod broker_handles_mmio_user_va;
-
 pub use broker_handles::BrokerHandles;

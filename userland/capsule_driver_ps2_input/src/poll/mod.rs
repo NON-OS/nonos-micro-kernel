@@ -13,12 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod absorb;
 mod drain;
 mod drainer;
 mod read_port;
-
 pub use drain::drain;
 pub use drainer::Drainer;
 pub use read_port::read_port;

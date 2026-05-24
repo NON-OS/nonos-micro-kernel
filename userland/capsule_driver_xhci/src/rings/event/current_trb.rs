@@ -13,15 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use super::state::EventRing;
 use crate::constants::TRB_BYTES;
 use crate::trb::{read_volatile_at, Trb};
-
 impl EventRing {
-    /// Volatile read of the TRB the consumer cursor points at.
-    /// Caller checks `has_event()` first; otherwise the returned
-    /// TRB is the last cleared slot from a prior wrap.
     pub fn current_trb(&self) -> Trb {
         let va = self.segment.user_va() + (self.dequeue_index as u64) * (TRB_BYTES as u64);
         read_volatile_at(va)

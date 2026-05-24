@@ -13,12 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Static controller coordinates carried into the service loop.
-//! `mmio_base` and `runtime_base` stay local to setup. The service
-//! loop keeps the operational region, doorbell region, primary
-//! interrupter slice, and discoverable controller parameters.
-
 #[derive(Debug, Clone, Copy)]
 pub struct ControllerLayout {
     pub op_base: u64,

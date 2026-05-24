@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Reply inbox the kernel-side client owns. Slot 9 in the
-//! per-service reply numbering (ramfs=1, keyring=2, entropy=3,
-//! crypto=4, vfs=5, virtio_rng=6, market=7, virtio_blk=8,
-//! virtio_net=9).
+
+
+
+
 
 pub const KERNEL_REPLY_ENDPOINT: u64 = 0x1_0000_0009;

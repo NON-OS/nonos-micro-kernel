@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::log_info;
-
 use crate::arch::x86_64::acpi;
 use crate::arch::x86_64::cpu;
 use crate::arch::x86_64::gdt;
@@ -24,44 +22,13 @@ use crate::arch::x86_64::multiboot;
 use crate::arch::x86_64::pci;
 use crate::arch::x86_64::serial;
 
-pub fn init_early() {
-    crate::log::init_logger();
-    log_info!("Logger initialized.");
-
-    if let Err(e) = cpu::init() {
-        let _ = e;
-    }
-    log_info!("CPU features initialized.");
-
-    if let Err(e) = gdt::init() {
-        let _ = e;
-    }
-    log_info!("GDT initialized.");
-
-    if let Err(e) = idt::init() {
-        let _ = e;
-    }
-    log_info!("IDT initialized.");
-
-    if let Err(e) = acpi::init() {
-        let _ = e;
-    }
-    log_info!("ACPI tables parsed.");
-
-    if let Err(e) = multiboot::init() {
-        let _ = e;
-    }
-    log_info!("Multiboot info parsed.");
-
-    if let Err(e) = serial::init() {
-        let _ = e;
-    }
-    log_info!("Serial port initialized.");
-
-    if let Err(e) = pci::init() {
-        let _ = e;
-    }
-    log_info!("PCI bus scanned.");
-
-    log_info!("Early boot initialization completed.");
+pub fn init_early() -> Result<(), &'static str> {
+    cpu::init().map_err(|_| "cpu init failed")?;
+    gdt::init().map_err(|_| "gdt init failed")?;
+    idt::init().map_err(|_| "idt init failed")?;
+    acpi::init().map_err(|_| "acpi init failed")?;
+    multiboot::init().map_err(|_| "multiboot init failed")?;
+    serial::init().map_err(|_| "serial init failed")?;
+    pci::init().map_err(|_| "pci init failed")?;
+    Ok(())
 }
