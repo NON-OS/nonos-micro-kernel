@@ -1,0 +1,39 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+pub const BAR_KIND_NONE: u8 = 0;
+pub const BAR_KIND_MMIO: u8 = 1;
+pub const BAR_KIND_PIO: u8 = 2;
+pub const BAR_FLAG_PREFETCH: u8 = 1 << 0;
+pub const BAR_FLAG_MEM64: u8 = 1 << 1;
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct Bar {
+    pub base: u64,
+    pub size: u64,
+    pub kind: u8,
+    pub flags: u8,
+    pub _pad: [u8; 6],
+}
+
+impl Bar {
+    pub const fn empty() -> Self {
+        Self { base: 0, size: 0, kind: BAR_KIND_NONE, flags: 0, _pad: [0; 6] }
+    }
+}
+
+const _: () = assert!(core::mem::size_of::<Bar>() == 24);
