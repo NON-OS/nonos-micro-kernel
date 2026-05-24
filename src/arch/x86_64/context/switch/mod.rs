@@ -14,9 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod cpu_switch;
+#[cfg(feature = "nonos-cpuswitch-selftest")]
+mod cpu_switch_selftest;
 mod dispatch;
 mod first_entry;
 mod kernel_thread;
 mod resume;
 
 pub(crate) use dispatch::switch_to_user_pcb_x86_64;
+#[cfg(feature = "nonos-cpuswitch-selftest")]
+pub(crate) use cpu_switch_selftest::run as cpu_switch_selftest;

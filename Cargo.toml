@@ -156,6 +156,10 @@ nonos-trap-kstack-writer = []
 # instead of silently leaking the block. Surfaces heap corruption.
 nonos-heap-debug = []
 
+# Debug-only: run the cpu_switch kernel<->kernel round-trip self-test at boot
+# (context-switch rewrite phase 2). Off in shipping profiles.
+nonos-cpuswitch-selftest = []
+
 # Lean desktop: spawn only the GUI core (drivers + compositor/wm/wallpaper/
 # desktop_shell) and skip network, apps, and market. Lets the compositor
 # present without app-capsule faults wedging the kernel via teardown.

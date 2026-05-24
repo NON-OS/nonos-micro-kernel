@@ -21,3 +21,5 @@ mod switch;
 pub use aliases::{SavedUser, UserEntry};
 pub use setup::{setup_initial_user_pcb_x86_64, SetupError};
 pub(crate) use switch::switch_to_user_pcb_x86_64;
+#[cfg(feature = "nonos-cpuswitch-selftest")]
+pub(crate) use switch::cpu_switch_selftest;

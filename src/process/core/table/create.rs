@@ -131,6 +131,7 @@ fn build_pcb(
         io_bitmap: spin::Mutex::new([0xFF; 8192]),
         kernel_stack_top: AtomicU64::new(0),
         saved_user_stack: AtomicU64::new(0),
+        kernel_rsp: AtomicU64::new(0),
         pending_user_entry: spin::Mutex::new(None),
         saved_user_context: spin::Mutex::new(None),
         #[cfg(target_arch = "aarch64")]

@@ -107,6 +107,9 @@ pub struct ProcessControlBlock {
     // Saved when parked, restored on resume so a preempted syscall's
     // SYSRET cannot pick up another process's user rsp.
     pub saved_user_stack: AtomicU64,
+    // Saved kernel rsp of a parked `cpu_switch` frame (context-switch rewrite).
+    // 0 = no parked kernel context. Resume = `cpu_switch` into this rsp.
+    pub kernel_rsp: AtomicU64,
     // First-transition-to-user record consumed by the arch's enter-user
     // helper. On x86_64 this is the iretq 5-tuple; on aarch64/riscv64
     // it carries the per-arch entry shape (ELR/SP_EL0/SPSR + per-task

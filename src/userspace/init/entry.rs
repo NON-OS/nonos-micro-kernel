@@ -19,6 +19,8 @@ use crate::sys::boot_log;
 
 pub fn run_init() -> ! {
     boot_log::ok("INIT", "Starting");
+    #[cfg(feature = "nonos-cpuswitch-selftest")]
+    crate::arch::x86_64::context::cpu_switch_selftest();
     run_user_entry_proof();
     spawn_plan::spawn_ramfs();
     spawn_plan::run_ramfs_smoketest();
