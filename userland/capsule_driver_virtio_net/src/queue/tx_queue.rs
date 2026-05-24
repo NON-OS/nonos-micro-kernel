@@ -13,25 +13,36 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::constants::VG_FORMAT_B8G8R8A8_UNORM;
-use crate::state::{Resource, ResourceTable, Scanout};
-pub fn insert(
-    resources: &ResourceTable,
-    resource_id: u32,
-    scanout: Scanout,
-    backing_addr: u64,
-    backing_len: u32,
-) -> Result<(), &'static str> {
-    resources
-        .insert(Resource {
-            resource_id,
-            owner_pid: 0,
-            width: scanout.width,
-            height: scanout.height,
-            format: VG_FORMAT_B8G8R8A8_UNORM,
-            backing_addr,
-            backing_len,
-            in_use: true,
-        })
-        .map_err(|_| "virtio-gpu: primary resource insert failed")
+
+use crate::constants::{QUEUE_SIZE, TX_BUFFER_LEN};
+
+#[derive(Debug, Clone, Copy)]
+pub struct TxQueue {
+    pub region_va: *mut u8,
+    pub region_phys: u64,
+    pub buf_va: *mut u8,
+    pub buf_phys: u64,
+    pub buf_len: u32,
+    pub last_used: u16,
+}
+
+impl TxQueue {
+    pub fn new(region_va: u64, region_phys: u64, buf_va: u64, buf_phys: u64) -> Self {
+        Self {
+            region_va: region_va as *mut u8,
+            region_phys,
+            buf_va: buf_va as *mut u8,
+            buf_phys,
+            buf_len: TX_BUFFER_LEN,
+            last_used: 0,
+        }
+    }
+
+    pub const fn queue_size() -> u16 {
+        QUEUE_SIZE
+    }
+
+    pub fn region_phys(&self) -> u64 {
+        self.region_phys
+    }
 }

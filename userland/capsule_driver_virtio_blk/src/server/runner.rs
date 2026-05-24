@@ -47,7 +47,9 @@ pub fn run(driver: &mut Driver) -> ! {
             OP_READ_BLOCKS => handlers::read::handle(driver, &req, body, &mut tx),
             OP_WRITE_BLOCKS => handlers::write::handle(driver, &req, body, &mut tx),
             OP_FLUSH => handlers::flush::handle(driver, &req, &mut tx),
-            _ => reply_with_status(&mut tx, &req, E_INVAL),
+            _ => {
+                let _ = reply_with_status(&mut tx, &req, E_INVAL);
+            }
         }
     }
 }

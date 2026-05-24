@@ -13,25 +13,22 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::constants::VG_FORMAT_B8G8R8A8_UNORM;
-use crate::state::{Resource, ResourceTable, Scanout};
-pub fn insert(
-    resources: &ResourceTable,
-    resource_id: u32,
-    scanout: Scanout,
-    backing_addr: u64,
-    backing_len: u32,
-) -> Result<(), &'static str> {
-    resources
-        .insert(Resource {
-            resource_id,
-            owner_pid: 0,
-            width: scanout.width,
-            height: scanout.height,
-            format: VG_FORMAT_B8G8R8A8_UNORM,
-            backing_addr,
-            backing_len,
-            in_use: true,
-        })
-        .map_err(|_| "virtio-gpu: primary resource insert failed")
+use nonos_libc::{mk_dma_map, DmaMapOut, IrqBindOut};
+use super::rollback;
+use super::super::registers::RegisterGrant;
+use crate::constants::HEADER_BUF_LEN;
+pub fn map_header(
+    device_id: u64,
+    claim_epoch: u64,
+    regs: RegisterGrant,
+    irq: &IrqBindOut,
+    queue: &DmaMapOut,
+) -> Result<DmaMapOut, &'static str> {
+    let mut out = DmaMapOut { user_va: 0, device_addr: 0, length: 0, grant_id: 0 };
+    let r = mk_dma_map(device_id, claim_epoch, HEADER_BUF_LEN, 0, &mut out);
+    if r < 0 {
+        rollback::queue(device_id, regs, irq, queue)?;
+        return Err("dma map failed (header)");
+    }
+    Ok(out)
 }

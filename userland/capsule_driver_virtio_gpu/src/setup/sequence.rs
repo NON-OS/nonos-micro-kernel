@@ -16,6 +16,7 @@
 use nonos_libc::mk_irq_ack;
 use super::{claim, dma, irq, mmio, primary_surface, scanouts};
 use crate::device::virtqueue::QueueLayout;
+use crate::device::ControlQueue;
 use crate::discover::find_virtio_gpu;
 use crate::driver::Driver;
 use crate::init::bring_up;

@@ -60,6 +60,6 @@ pub fn run(driver: &mut Driver) -> ! {
             OP_TX_PACKET => handlers::tx_packet::handle(driver, &req, body, &mut tx),
             OP_RX_PACKET => handlers::rx_packet::handle(driver, &req, &mut tx),
             _ => reply_with_status(&mut tx, &req, E_INVAL),
-        }
+        };
     }
 }

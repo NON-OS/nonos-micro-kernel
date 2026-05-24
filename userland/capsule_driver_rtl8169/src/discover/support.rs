@@ -13,25 +13,18 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::constants::VG_FORMAT_B8G8R8A8_UNORM;
-use crate::state::{Resource, ResourceTable, Scanout};
-pub fn insert(
-    resources: &ResourceTable,
-    resource_id: u32,
-    scanout: Scanout,
-    backing_addr: u64,
-    backing_len: u32,
-) -> Result<(), &'static str> {
-    resources
-        .insert(Resource {
-            resource_id,
-            owner_pid: 0,
-            width: scanout.width,
-            height: scanout.height,
-            format: VG_FORMAT_B8G8R8A8_UNORM,
-            backing_addr,
-            backing_len,
-            in_use: true,
-        })
-        .map_err(|_| "virtio-gpu: primary resource insert failed")
+
+use nonos_libc::{DeviceRecord, BUS_KIND_PCI};
+
+use crate::constants::pci::{REALTEK_VENDOR_ID, RTL8169_DEVICE_IDS};
+
+const PCI_CLASS_NETWORK: u8 = 0x02;
+const PCI_SUBCLASS_ETHERNET: u8 = 0x00;
+
+pub fn is_supported(r: &DeviceRecord) -> bool {
+    r.vendor == REALTEK_VENDOR_ID
+        && r.bus_kind == BUS_KIND_PCI
+        && RTL8169_DEVICE_IDS.contains(&r.device)
+        && r.pci_class == PCI_CLASS_NETWORK
+        && r.pci_subclass == PCI_SUBCLASS_ETHERNET
 }

@@ -13,25 +13,16 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::constants::VG_FORMAT_B8G8R8A8_UNORM;
-use crate::state::{Resource, ResourceTable, Scanout};
-pub fn insert(
-    resources: &ResourceTable,
-    resource_id: u32,
-    scanout: Scanout,
-    backing_addr: u64,
-    backing_len: u32,
-) -> Result<(), &'static str> {
-    resources
-        .insert(Resource {
-            resource_id,
-            owner_pid: 0,
-            width: scanout.width,
-            height: scanout.height,
-            format: VG_FORMAT_B8G8R8A8_UNORM,
-            backing_addr,
-            backing_len,
-            in_use: true,
-        })
-        .map_err(|_| "virtio-gpu: primary resource insert failed")
+use nonos_libc::{mk_pio_read, mk_pio_write};
+pub fn read(grant: u64, offset: usize, width: u8) -> u32 {
+    let mut value = 0u32;
+    if mk_pio_read(grant, offset as u16, width, &mut value) < 0 {
+        return 0;
+    }
+    value
+}
+pub fn write(grant: u64, offset: usize, width: u8, value: u32) {
+    if mk_pio_write(grant, offset as u16, width, value) < 0 {
+        return;
+    }
 }

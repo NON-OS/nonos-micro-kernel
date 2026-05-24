@@ -13,25 +13,20 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::constants::VG_FORMAT_B8G8R8A8_UNORM;
-use crate::state::{Resource, ResourceTable, Scanout};
-pub fn insert(
-    resources: &ResourceTable,
-    resource_id: u32,
-    scanout: Scanout,
-    backing_addr: u64,
-    backing_len: u32,
-) -> Result<(), &'static str> {
-    resources
-        .insert(Resource {
-            resource_id,
-            owner_pid: 0,
-            width: scanout.width,
-            height: scanout.height,
-            format: VG_FORMAT_B8G8R8A8_UNORM,
-            backing_addr,
-            backing_len,
-            in_use: true,
-        })
-        .map_err(|_| "virtio-gpu: primary resource insert failed")
+
+use crate::constants::{LEG_MAC, MAC_LEN, VIRTIO_NET_F_MAC};
+use crate::regs::Regs;
+
+pub fn feature_enabled(features: u32, bit: u32) -> bool {
+    features & (1u32 << bit) != 0
+}
+
+pub fn read_mac(regs: Regs, features: u32) -> [u8; MAC_LEN] {
+    let mut mac = [0u8; MAC_LEN];
+    if feature_enabled(features, VIRTIO_NET_F_MAC) {
+        for (i, b) in mac.iter_mut().enumerate() {
+            *b = unsafe { regs.r8(LEG_MAC + i) };
+        }
+    }
+    mac
 }
