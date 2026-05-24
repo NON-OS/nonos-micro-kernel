@@ -24,11 +24,13 @@ const CFG_NOTIFY: u8 = 2;
 const CFG_DEVICE: u8 = 4;
 
 pub fn read(device_id: u64, epoch: u64) -> Result<ModernCaps, &'static str> {
+    crate::debug::marker(b"caps: read CAP_PTR");
     let mut common = None;
     let mut notify = None;
     let mut device = None;
     let mut multiplier = 0;
     let mut ptr = u8_at(device_id, epoch, CAP_PTR)? as u32 & 0xFC;
+    crate::debug::marker(b"caps: walk");
     for _ in 0..48 {
         if ptr < 0x40 {
             break;
@@ -36,6 +38,7 @@ pub fn read(device_id: u64, epoch: u64) -> Result<ModernCaps, &'static str> {
         scan_one(device_id, epoch, ptr, &mut common, &mut notify, &mut device, &mut multiplier)?;
         ptr = u8_at(device_id, epoch, ptr + 1)? as u32 & 0xFC;
     }
+    crate::debug::marker(b"caps: walk done");
     Ok(ModernCaps {
         common: common.ok_or("virtio-gpu: common cfg missing")?,
         notify: notify.ok_or("virtio-gpu: notify cfg missing")?,
