@@ -93,7 +93,38 @@ fn compile_arch_asm() {
         build.flag(flag);
     }
 
+    configure_cross_archive(&mut build);
     build.compile("nonos_arch_asm");
+}
+
+fn configure_cross_archive(build: &mut cc::Build) {
+    if let Some(path) = find_build_tool("LLVM_AR", "llvm-ar") {
+        build.archiver(path);
+    }
+    if let Some(path) = find_build_tool("LLVM_RANLIB", "llvm-ranlib") {
+        build.ranlib(path);
+    }
+}
+
+fn find_build_tool(env_key: &str, tool: &str) -> Option<PathBuf> {
+    if let Some(path) = env::var_os(env_key).map(PathBuf::from).filter(|p| p.exists()) {
+        return Some(path);
+    }
+    if let Some(paths) = env::var_os("PATH") {
+        for dir in env::split_paths(&paths) {
+            let path = dir.join(tool);
+            if path.exists() {
+                return Some(path);
+            }
+        }
+    }
+    for dir in ["/usr/local/opt/llvm/bin", "/opt/homebrew/opt/llvm/bin"] {
+        let path = PathBuf::from(dir).join(tool);
+        if path.exists() {
+            return Some(path);
+        }
+    }
+    None
 }
 
 fn compile_pqclean_mlkem() {
@@ -166,6 +197,7 @@ fn compile_pqclean_mlkem() {
         .define(kem_macro, None)
         .warnings(false);
 
+    configure_cross_archive(&mut build);
     build.compile("pqclean_mlkem_clean");
 }
 
@@ -239,6 +271,7 @@ fn compile_pqclean_mldsa() {
         .define(sign_macro, None)
         .warnings(false);
 
+    configure_cross_archive(&mut build);
     build.compile("pqclean_mldsa_clean");
 }
 
