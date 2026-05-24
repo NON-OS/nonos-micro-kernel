@@ -96,6 +96,7 @@ pub enum IrqBindError {
 pub enum IrqError {
     UnknownGrant,
     NotHolder,
+    PlatformError,
 }
 
 #[derive(Debug, Clone, Copy)]

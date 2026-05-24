@@ -14,19 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::hardware::broker::IrqError;
-use crate::process::current_pid;
-use crate::syscall::microkernel::errnos::{ERRNO_INVAL, ERRNO_NODEV, ERRNO_PERM};
+pub const BUS_KIND_PCI: u8 = 1;
+pub const BUS_KIND_ACPI: u8 = 2;
+pub const BUS_KIND_VIRT: u8 = 3;
 
-pub fn sys_irq_unbind(grant_id: u64) -> i64 {
-    let pid = match current_pid() {
-        Some(p) => p,
-        None => return ERRNO_PERM,
-    };
-    match crate::hardware::broker::irq_unmap_grant(pid, grant_id) {
-        Ok(()) => 0,
-        Err(IrqError::NotHolder) => ERRNO_PERM,
-        Err(IrqError::UnknownGrant) => ERRNO_INVAL,
-        Err(IrqError::PlatformError) => ERRNO_NODEV,
-    }
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BusKind {
+    Pci = BUS_KIND_PCI,
+    Acpi = BUS_KIND_ACPI,
+    Virt = BUS_KIND_VIRT,
 }

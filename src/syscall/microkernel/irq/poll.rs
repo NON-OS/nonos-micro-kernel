@@ -18,7 +18,7 @@ use core::mem::size_of;
 
 use crate::hardware::broker::IrqError;
 use crate::process::current_pid;
-use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_PERM};
+use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_NODEV, ERRNO_PERM};
 use crate::usercopy::{validate_user_write, write_user_value};
 
 use super::out::IrqPollOut;
@@ -40,6 +40,7 @@ pub fn sys_irq_poll(grant_id: u64, out_ptr: u64) -> i64 {
         Ok(r) => r,
         Err(IrqError::NotHolder) => return ERRNO_PERM,
         Err(IrqError::UnknownGrant) => return ERRNO_INVAL,
+        Err(IrqError::PlatformError) => return ERRNO_NODEV,
     };
     let out = IrqPollOut { seq: res.seq, overflow: res.overflow };
     if write_user_value(out_ptr, &out).is_err() {

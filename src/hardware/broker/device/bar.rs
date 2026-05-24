@@ -14,19 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::hardware::broker::IrqError;
-use crate::process::current_pid;
-use crate::syscall::microkernel::errnos::{ERRNO_INVAL, ERRNO_NODEV, ERRNO_PERM};
+pub const BAR_KIND_NONE: u8 = 0;
+pub const BAR_KIND_MMIO: u8 = 1;
+pub const BAR_KIND_PIO: u8 = 2;
 
-pub fn sys_irq_unbind(grant_id: u64) -> i64 {
-    let pid = match current_pid() {
-        Some(p) => p,
-        None => return ERRNO_PERM,
-    };
-    match crate::hardware::broker::irq_unmap_grant(pid, grant_id) {
-        Ok(()) => 0,
-        Err(IrqError::NotHolder) => ERRNO_PERM,
-        Err(IrqError::UnknownGrant) => ERRNO_INVAL,
-        Err(IrqError::PlatformError) => ERRNO_NODEV,
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BarKind {
+    None = BAR_KIND_NONE,
+    Mmio = BAR_KIND_MMIO,
+    Pio = BAR_KIND_PIO,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct Bar {
+    pub base: u64,
+    pub size: u64,
+    pub kind: u8,
+    pub flags: u8,
+    pub _pad: [u8; 6],
+}
+
+impl Bar {
+    pub const fn empty() -> Self {
+        Self { base: 0, size: 0, kind: BAR_KIND_NONE, flags: 0, _pad: [0; 6] }
     }
 }
+
+const _: () = assert!(core::mem::size_of::<Bar>() == 24);

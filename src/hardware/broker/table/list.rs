@@ -14,19 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::hardware::broker::IrqError;
-use crate::process::current_pid;
-use crate::syscall::microkernel::errnos::{ERRNO_INVAL, ERRNO_NODEV, ERRNO_PERM};
+extern crate alloc;
 
-pub fn sys_irq_unbind(grant_id: u64) -> i64 {
-    let pid = match current_pid() {
-        Some(p) => p,
-        None => return ERRNO_PERM,
-    };
-    match crate::hardware::broker::irq_unmap_grant(pid, grant_id) {
-        Ok(()) => 0,
-        Err(IrqError::NotHolder) => ERRNO_PERM,
-        Err(IrqError::UnknownGrant) => ERRNO_INVAL,
-        Err(IrqError::PlatformError) => ERRNO_NODEV,
+use alloc::vec::Vec;
+
+use crate::hardware::broker::DeviceRecord;
+
+use super::state::TABLE;
+
+pub fn list() -> Vec<DeviceRecord> {
+    TABLE.read().clone()
+}
+
+pub fn list_by_class(class: u32) -> Vec<DeviceRecord> {
+    if class == 0 {
+        return list();
     }
+    TABLE.read().iter().filter(|r| r.class == class).copied().collect()
+}
+
+pub fn contains(device_id: u64) -> bool {
+    TABLE.read().iter().any(|r| r.device_id == device_id)
+}
+
+pub fn lookup(device_id: u64) -> Option<DeviceRecord> {
+    TABLE.read().iter().find(|r| r.device_id == device_id).copied()
+}
+
+pub fn class_of(device_id: u64) -> Option<u32> {
+    TABLE.read().iter().find(|r| r.device_id == device_id).map(|r| r.class)
 }

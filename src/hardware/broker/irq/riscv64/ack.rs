@@ -33,6 +33,6 @@ pub fn ack_grant(pid: u32, grant_id: u64) -> Result<(), IrqError> {
     if source == 0 {
         return Err(IrqError::UnknownGrant);
     }
-    plic::enable_irq(source);
+    plic::enable_irq(source).map_err(|_| IrqError::PlatformError)?;
     Ok(())
 }

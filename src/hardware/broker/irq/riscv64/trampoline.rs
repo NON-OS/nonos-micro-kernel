@@ -29,5 +29,7 @@ pub(super) fn handle(source: u32) {
     if prev == u64::MAX {
         e.overflow.fetch_add(1, Ordering::Relaxed);
     }
-    plic::disable_irq(source);
+    if plic::disable_irq(source).is_err() {
+        e.overflow.fetch_add(1, Ordering::Relaxed);
+    }
 }
