@@ -15,50 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::geometry::{clamp_to_display, Rect};
-use crate::protocol::{Request, E_INVAL, E_NOMEM, WINDOW_OPEN_REQ_LEN};
+use crate::protocol::{Request, E_INVAL, E_NOMEM, NOTIFY_KIND_OPENED, WINDOW_OPEN_REQ_LEN};
 use crate::server::{notify_fanout, respond};
 use crate::state::Context;
 use crate::window::{kind_from_u32, Visibility, Window};
 
 pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
-    if body.len() != WINDOW_OPEN_REQ_LEN {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    }
-    let Some(window_id) = super::u32_at(body, 0) else {
+    let Some((window_id, kind, rect)) = decode(body, ctx.display_width, ctx.display_height) else {
         let _ = respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
-    let Some(kind_raw) = super::u32_at(body, 4) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    };
-    let Some(x) = super::u32_at(body, 8) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    };
-    let Some(y) = super::u32_at(body, 12) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    };
-    let Some(w) = super::u32_at(body, 16) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    };
-    let Some(h) = super::u32_at(body, 20) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    };
-    let Some(kind) = kind_from_u32(kind_raw) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    };
-    if window_id == 0 || w == 0 || h == 0 {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    }
-    let rect =
-        clamp_to_display(Rect { x, y, width: w, height: h }, ctx.display_width, ctx.display_height);
     let z = ctx.z.allocate();
     let window = Window {
         owner_pid: sender_pid,
@@ -73,13 +39,23 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
         let _ = respond::status(sender_pid, req, E_NOMEM, tx);
         return;
     }
-    notify_fanout::broadcast(
-        ctx,
-        crate::protocol::NOTIFY_KIND_OPENED,
-        sender_pid,
-        window_id,
-        rect.x,
-        rect.y,
-    );
+    notify_fanout::broadcast(ctx, NOTIFY_KIND_OPENED, sender_pid, window_id, rect.x, rect.y);
     let _ = respond::status(sender_pid, req, 0, tx);
+}
+
+fn decode(body: &[u8], display_w: u32, display_h: u32) -> Option<(u32, crate::window::Kind, Rect)> {
+    if body.len() != WINDOW_OPEN_REQ_LEN {
+        return None;
+    }
+    let window_id = super::u32_at(body, 0)?;
+    let kind_raw = super::u32_at(body, 4)?;
+    let x = super::u32_at(body, 8)?;
+    let y = super::u32_at(body, 12)?;
+    let w = super::u32_at(body, 16)?;
+    let h = super::u32_at(body, 20)?;
+    let kind = kind_from_u32(kind_raw)?;
+    if window_id == 0 || w == 0 || h == 0 {
+        return None;
+    }
+    Some((window_id, kind, clamp_to_display(Rect { x, y, width: w, height: h }, display_w, display_h)))
 }
