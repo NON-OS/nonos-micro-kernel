@@ -18,19 +18,19 @@ use crate::arch::aarch64::exceptions::frame::ExceptionFrame;
 
 use super::fatal::fatal;
 
-// Current EL with SP_EL0. NONOS runs the kernel on SPx; entry through
-// SP0 vectors is a stack-selection bug.
+
+
 #[no_mangle]
 pub extern "C" fn aarch64_exc_invalid_sp0(frame: *mut ExceptionFrame) -> ! {
-    // SAFETY: frame is the kernel-stack frame built by vectors.S.
+
     let frame = unsafe { &*frame };
     fatal(b"SP_EL0 vector", frame)
 }
 
-// Lower EL using AArch32. AArch32 user execution is not supported.
+
 #[no_mangle]
 pub extern "C" fn aarch64_exc_invalid_aarch32(frame: *mut ExceptionFrame) -> ! {
-    // SAFETY: frame is the kernel-stack frame built by vectors.S.
+
     let frame = unsafe { &*frame };
     fatal(b"AArch32 vector", frame)
 }

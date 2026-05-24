@@ -27,14 +27,14 @@ pub enum GicIrqError {
     NotOwner,
 }
 
-// Kernel-side claim. Used by in-kernel drivers (timer, future UART).
-// Fails closed if the line is already owned.
+
+
 pub fn register(intid: u32, handler: fn(u32)) -> Result<(), GicIrqError> {
     claim(intid, handler, OWNER_KERNEL)
 }
 
-// Broker-side claim for a capsule binding. Fails closed if the line
-// is kernel-owned or already capsule-owned.
+
+
 pub fn register_for_capsule(intid: u32, handler: fn(u32)) -> Result<(), GicIrqError> {
     claim(intid, handler, OWNER_CAPSULE)
 }
@@ -58,9 +58,9 @@ fn claim(intid: u32, handler: fn(u32), owner: u8) -> Result<(), GicIrqError> {
     Ok(())
 }
 
-// Owner-checked release. Clear the handler first so a racing dispatch
-// drops the line instead of jumping into stale code, then publish the
-// free state so a new register can succeed.
+
+
+
 fn release(intid: u32, expected: u8) -> Result<(), GicIrqError> {
     if intid >= MAX_INTID {
         return Err(GicIrqError::OutOfRange);

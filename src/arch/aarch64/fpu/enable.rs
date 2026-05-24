@@ -16,7 +16,7 @@
 
 use core::arch::asm;
 
-// CPACR_EL1.FPEN[21:20] = 0b11: EL0 and EL1 may use FP without trapping.
+
 const CPACR_FPEN_FULL: u64 = 0b11 << 20;
 const CPACR_FPEN_TRAP: u64 = 0b00 << 20;
 const CPACR_FPEN_MASK: u64 = 0b11 << 20;

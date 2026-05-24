@@ -19,10 +19,10 @@ use crate::syscall::contract::{dispatch as contract_dispatch, SyscallArgs};
 use crate::syscall::numbers::SyscallNumber;
 use crate::syscall::types::errnos;
 
-// AAPCS64 syscall ABI: x8 = number, x0..x5 = args, return in x0.
-// ELR_EL1 already points past SVC, so no PC advance is needed before
-// eret. Result is written back to frame.x0; vectors.S restore reloads
-// x0 from the frame.
+
+
+
+
 pub(super) fn dispatch(frame: &mut ExceptionFrame) {
     let result_word = match SyscallNumber::from_u64(frame.x8) {
         Some(sc) => {

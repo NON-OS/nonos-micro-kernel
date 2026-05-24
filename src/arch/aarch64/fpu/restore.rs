@@ -20,9 +20,9 @@ extern "C" {
     fn aarch64_fpu_restore(ctx: *const FpSimdContext);
 }
 
-// SAFETY: caller must hold CPACR_EL1.FPEN at the value that grants
-// EL1 FP access, and `ctx` must be a 16-aligned, readable
-// FpSimdContext.
+
+
+
 pub unsafe fn restore(ctx: &FpSimdContext) {
     unsafe { aarch64_fpu_restore(ctx as *const FpSimdContext) }
 }

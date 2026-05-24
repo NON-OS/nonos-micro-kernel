@@ -16,7 +16,7 @@
 
 use core::arch::asm;
 
-// Physical counter. Calibration to wall time lives in timer::generic.
+
 #[inline(always)]
 pub(super) fn counter() -> u64 {
     let count: u64;

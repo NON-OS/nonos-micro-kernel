@@ -20,9 +20,9 @@ extern "C" {
     fn aarch64_fpu_save(ctx: *mut FpSimdContext);
 }
 
-// SAFETY: caller must hold CPACR_EL1.FPEN at the value that grants
-// EL1 FP access, and `ctx` must be a unique, 16-aligned, writable
-// FpSimdContext.
+
+
+
 pub unsafe fn save(ctx: &mut FpSimdContext) {
     unsafe { aarch64_fpu_save(ctx as *mut FpSimdContext) }
 }

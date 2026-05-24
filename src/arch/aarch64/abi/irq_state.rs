@@ -16,7 +16,7 @@
 
 use core::arch::asm;
 
-// I-bit at position 7 in DAIF. Mask set means IRQ disabled.
+
 #[inline(always)]
 pub(super) fn enabled() -> bool {
     let daif: u64;

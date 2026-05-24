@@ -18,21 +18,21 @@ use core::cell::UnsafeCell;
 
 use super::slot::FpSimdSlot;
 
-// PCB-owned FP/SIMD slot. UnsafeCell because the slot is mutated in
-// trap context with traps masked; the task runs on at most one CPU at
-// a time, so the only writer is the kernel handler for that task and
-// no locking is needed. Marker Sync makes the cell embeddable in a PCB
-// that is itself Sync (held in PROCESS_TABLE via Arc).
+
+
+
+
+
 #[repr(transparent)]
 pub struct PcbArchFpu {
     inner: UnsafeCell<FpSimdSlot>,
 }
 
-// SAFETY: at any moment, the inner cell is accessed only on the CPU
-// running the task that owns the enclosing PCB; aliasing is impossible
-// because a task is not migrated mid-handler. The pointer returned by
-// `slot_ptr` is read by `fpu::current::slot_mut` from that same CPU's
-// trap path.
+
+
+
+
+
 unsafe impl Sync for PcbArchFpu {}
 
 impl PcbArchFpu {
@@ -40,8 +40,8 @@ impl PcbArchFpu {
         Self { inner: UnsafeCell::new(FpSimdSlot::zeroed()) }
     }
 
-    // Stable address for as long as the enclosing PCB lives in
-    // PROCESS_TABLE. Callers must hold the trap-context invariant.
+
+
     pub fn slot_ptr(&self) -> *mut FpSimdSlot {
         self.inner.get()
     }

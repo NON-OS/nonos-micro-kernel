@@ -16,17 +16,13 @@
 
 use crate::arch::aarch64::cpu;
 use crate::arch::aarch64::exceptions::frame::ExceptionFrame;
-use crate::sys::serial;
 
-// Log the tag, dump the frame, halt this CPU. Mask DAIF first so the
-// dump cannot be re-entered by an asynchronous exception.
-pub fn fatal(tag: &[u8], frame: &ExceptionFrame) -> ! {
-    // SAFETY: tightening DAIF cannot fault on a valid CPU.
+
+
+pub fn fatal(_tag: &[u8], _frame: &ExceptionFrame) -> ! {
+
     unsafe {
         core::arch::asm!("msr daifset, #0xf", options(nostack));
     }
-    serial::print(b"[aarch64] fatal: ");
-    serial::println(tag);
-    frame.dump();
     cpu::halt()
 }

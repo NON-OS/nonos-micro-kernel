@@ -16,7 +16,7 @@
 
 use core::arch::asm;
 
-// Mask DAIF before parking so a stray external abort cannot re-enter.
+
 #[inline(always)]
 pub(super) fn halt() -> ! {
     unsafe {

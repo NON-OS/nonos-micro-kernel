@@ -75,8 +75,6 @@ static mut EXCEPTION_STACKS: [ExceptionStack; 256] = [const { ExceptionStack::ne
 pub fn setup_stack(cpu_id: usize) {
     let kernel_top = unsafe { KERNEL_STACKS[cpu_id].top() };
     let irq_top = unsafe { IRQ_STACKS[cpu_id].top() };
-    let exc_top = unsafe { EXCEPTION_STACKS[cpu_id].top() };
-
     unsafe {
         asm!(
             "mov sp, {0}",
@@ -91,7 +89,6 @@ pub fn setup_stack(cpu_id: usize) {
         );
     }
 
-    let _ = exc_top;
 }
 
 pub fn get_kernel_stack(cpu_id: usize) -> u64 {

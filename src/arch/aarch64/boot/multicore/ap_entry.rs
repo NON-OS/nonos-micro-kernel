@@ -21,17 +21,16 @@ use crate::arch::aarch64::exceptions::install_vbar_el1;
 use crate::arch::aarch64::gic::init_gic_cpu;
 use crate::arch::aarch64::security;
 use crate::arch::aarch64::timer::{init_timer_cpu, install_on_cpu as install_preemption_tick};
-use crate::arch::aarch64::uart;
 use crate::arch::cpu::idle_cpu;
 use crate::process::scheduler::smp::api::init_ap_scheduler;
 
 use super::state::CPUS_ONLINE;
 
-// Called from `_aarch64_secondary_start` with sp pointing at this CPU's
-// stack. Order: VBAR before anything that can trap, CPU/SCTLR/CPACR
-// next, security mitigations gated by ID-reg checks, then GIC CPU
-// interface + timer. IRQs stay masked until idle_cpu unmasks atomically
-// with wfi.
+
+
+
+
+
 #[no_mangle]
 pub extern "C" fn aarch64_ap_entry() -> ! {
     install_vbar_el1();
@@ -39,14 +38,13 @@ pub extern "C" fn aarch64_ap_entry() -> ! {
     security::init_all();
     init_gic_cpu();
     init_timer_cpu();
-    let _ = install_preemption_tick();
+    if install_preemption_tick().is_err() {
+        cpu::halt();
+    }
 
     CPUS_ONLINE.fetch_add(1, Ordering::AcqRel);
 
     let cpu_id = cpu::id::cpu_id();
-    uart::puts(b"[BOOT] CPU ");
-    uart::putc((b'0' + cpu_id as u8) as char);
-    uart::puts(b" online\n");
 
     init_ap_scheduler(cpu_id);
 

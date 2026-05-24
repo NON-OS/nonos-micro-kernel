@@ -17,12 +17,12 @@
 use crate::arch::aarch64::timer::set_timer;
 use crate::process::scheduler::preemption::tick::tick;
 
-// 10 ms slice. Matches scheduler::preemption::tick's per-tick
-// CURRENT_TIME_SLICE decrement.
+
+
 pub(super) const TICK_PERIOD_NS: u64 = 10_000_000;
 
-// EOI is issued by the outer IRQ entry path (handlers::irq::handle)
-// after `dispatch_irq` returns true.
+
+
 pub(super) fn timer_tick(_intid: u32) {
     set_timer(TICK_PERIOD_NS);
     tick();

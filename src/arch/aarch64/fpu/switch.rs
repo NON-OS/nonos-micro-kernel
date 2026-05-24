@@ -19,11 +19,11 @@ use super::enable::{disable, enable};
 use super::restore::restore;
 use super::save::save;
 
-// Save the outgoing task's FP context if dirty, then disable FPEN.
-// Called by the scheduler when actually descheduling a user task; not
-// called on every trap so a task that runs without yielding keeps FPEN
-// granted and avoids a re-trap on the next FP op. Idempotent: if no
-// current slot or slot is clean, just disable FPEN as a fail-closed.
+
+
+
+
+
 pub fn save_outgoing() {
     let slot = match slot_mut() {
         Some(s) => s,
@@ -33,8 +33,8 @@ pub fn save_outgoing() {
         }
     };
     if slot.enabled && slot.dirty {
-        // SAFETY: slot.enabled => FPEN is granted on this CPU; the
-        // task's q-regs hold its live state.
+
+
         unsafe { save(&mut slot.ctx) };
         slot.valid = true;
         slot.dirty = false;
@@ -43,10 +43,10 @@ pub fn save_outgoing() {
     slot.enabled = false;
 }
 
-// Prepare the incoming task. If it has a valid snapshot, restore and
-// grant FPEN — the task can keep computing without a lazy-enable
-// re-trap. If not, leave FPEN disabled so the first FP op traps into
-// the lazy-enable path. Always called by the scheduler before eret.
+
+
+
+
 pub fn prepare_incoming() {
     let slot = match slot_mut() {
         Some(s) => s,
@@ -57,7 +57,7 @@ pub fn prepare_incoming() {
     };
     if slot.valid {
         enable();
-        // SAFETY: FPEN just granted; ctx is the task's saved snapshot.
+
         unsafe { restore(&slot.ctx) };
         slot.enabled = true;
         slot.dirty = false;

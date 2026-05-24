@@ -20,13 +20,13 @@ use crate::process::core::{CURRENT_PID, PROCESS_TABLE};
 
 use super::slot::FpSimdSlot;
 
-// Returns the FP slot of the user task currently running on this CPU.
-// Path: CURRENT_PID -> PCB::arch_fpu (UnsafeCell<FpSimdSlot>) -> raw
-// pointer. The Arc returned by find_by_pid drops at function exit, but
-// PROCESS_TABLE retains an Arc to the same PCB, so the slot's address
-// remains valid for the trap context that called this. Returns None
-// before any user task is scheduled (CURRENT_PID == 0) — keeps the
-// lazy-enable path fail-closed at boot.
+
+
+
+
+
+
+
 pub fn slot_mut() -> Option<&'static mut FpSimdSlot> {
     let pid = CURRENT_PID.load(Ordering::Acquire);
     if pid == 0 {
@@ -34,9 +34,9 @@ pub fn slot_mut() -> Option<&'static mut FpSimdSlot> {
     }
     let pcb = PROCESS_TABLE.find_by_pid(pid)?;
     let ptr = pcb.arch_fpu.slot_ptr();
-    // SAFETY: PCB is Arc-pinned in PROCESS_TABLE; the slot lives inside
-    // a UnsafeCell whose address is stable; the task runs on exactly
-    // one CPU at a time and traps are masked here, so this is the only
-    // live reference.
+
+
+
+
     Some(unsafe { &mut *ptr })
 }

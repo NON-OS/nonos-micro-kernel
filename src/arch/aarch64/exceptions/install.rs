@@ -18,12 +18,12 @@ use core::arch::asm;
 
 use crate::arch::aarch64::asm::vectors_el1_addr;
 
-// Install the EL1 vector table. ISB after VBAR_EL1 to serialise; any
-// exception taken before this point uses whatever VBAR_EL1 the boot
-// firmware left, which is undefined.
+
+
+
 pub fn install_vbar_el1() {
     let vbar = vectors_el1_addr();
-    // SAFETY: vbar is the address of an aligned static in this image.
+
     unsafe {
         asm!(
             "msr vbar_el1, {0}",

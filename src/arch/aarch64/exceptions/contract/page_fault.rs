@@ -17,8 +17,8 @@
 use crate::arch::aarch64::exceptions::frame::ExceptionFrame;
 use crate::arch::trap::contract::{FaultAccess, PageFaultInfo};
 
-// ESR_EL1.ISS[6]   = WnR for data abort
-// ESR_EL1.ISS[5:0] = DFSC; 4..7 are translation faults (not-present)
+
+
 pub(super) fn decode_data(frame: &ExceptionFrame) -> PageFaultInfo {
     let iss = (frame.esr & 0x01FF_FFFF) as u32;
     let wnr = (iss & (1 << 6)) != 0;
@@ -42,9 +42,9 @@ pub(super) fn decode_instruction(frame: &ExceptionFrame) -> PageFaultInfo {
     }
 }
 
-// Translation faults at L0..L3 = 0b000100..0b000111. Anything else
-// (permission, access flag, alignment, external abort) means the entry
-// was present.
+
+
+
 #[inline]
 fn is_translation_fault(fsc: u8) -> bool {
     (fsc & 0x3C) == 0x04

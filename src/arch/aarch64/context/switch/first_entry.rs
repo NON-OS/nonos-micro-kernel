@@ -24,9 +24,9 @@ use crate::process::scheduler::preemption::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLI
 
 use super::address_space::swap_address_space;
 
-// Returns true iff we consumed a pending user-entry record. On success
-// the helper does not return; on validation failure we mark the PCB
-// terminated and return true so the caller does not try resume too.
+
+
+
 pub(super) fn try_first_entry(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
     let mut entry = match pcb.pending_user_entry.lock().take() {
         Some(e) => e,
@@ -38,8 +38,8 @@ pub(super) fn try_first_entry(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool 
         *pcb.state.lock() = ProcessState::Terminated(-1);
         return true;
     }
-    // Mirror PCB's kernel sp top into the entry record so the asm
-    // helper sees one source of truth; refuse mismatch as defense.
+
+
     if entry.kernel_sp == 0 {
         entry.kernel_sp = kstack;
     } else if entry.kernel_sp != kstack {
@@ -56,13 +56,13 @@ pub(super) fn try_first_entry(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool 
     CURRENT_PID.store(pid, Ordering::SeqCst);
     CURRENT_TIME_SLICE.store(DEFAULT_TIME_SLICE, Ordering::SeqCst);
 
-    // FP slot belongs to the incoming task; restore if it has a saved
-    // snapshot, otherwise leave FPEN trapping so the first FP op lazy-
-    // enables. CURRENT_PID is set above so `fpu::current::slot_mut`
-    // resolves to this PCB.
+
+
+
+
     fpu::prepare_incoming();
 
-    // SAFETY: PCB fields validated above; enter_user diverges on success.
+
     if unsafe { enter_user(&entry) }.is_err() {
         *pcb.state.lock() = ProcessState::Terminated(-1);
     }

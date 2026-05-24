@@ -14,117 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod clock;
+mod control;
+mod deadline;
+mod delay;
 pub mod generic;
+mod init;
+mod interrupt;
 pub mod physical;
 pub mod preemption;
+mod state;
 pub mod virtual_timer;
 
+pub use clock::{current_time_ns, current_time_us};
+pub use deadline::{disable_timer, set_timer};
+pub use delay::{delay_ms, delay_ns, delay_us};
 pub use generic::{current_count, frequency, nanoseconds_to_ticks, ticks_to_nanoseconds};
+pub use init::{init_timer, init_timer_cpu};
+pub use interrupt::handle_timer_interrupt;
 pub use physical::{set_physical_timer, PhysicalTimer};
 pub use preemption::{configure as configure_preemption_intid, install_on_cpu};
 pub use virtual_timer::{set_virtual_timer, VirtualTimer};
-
-use core::arch::asm;
-use core::sync::atomic::{AtomicU64, Ordering};
-
-static TIMER_FREQ: AtomicU64 = AtomicU64::new(0);
-
-// BSP path: read CNTFRQ_EL0 once and enable EL0 timer reads via CNTKCTL.
-// The IRQ-driven arm is `preemption::install_on_cpu`, which is called
-// after the GIC + interrupt registry are up.
-pub fn init_timer() {
-    let freq = read_frequency();
-    TIMER_FREQ.store(freq, Ordering::Release);
-    enable_timer();
-}
-
-// AP path: same EL0-access bits per CPU. Preemption arming is again
-// handled by `preemption::install_on_cpu` from the AP entry.
-pub fn init_timer_cpu() {
-    enable_timer();
-}
-
-fn read_frequency() -> u64 {
-    let freq: u64;
-    unsafe {
-        asm!("mrs {}, cntfrq_el0", out(reg) freq);
-    }
-    freq
-}
-
-fn enable_timer() {
-    unsafe {
-        asm!(
-            "mrs x0, cntkctl_el1",
-            "orr x0, x0, #3",
-            "msr cntkctl_el1, x0",
-            out("x0") _,
-        );
-    }
-}
-
-pub fn current_time_ns() -> u64 {
-    let count = current_count();
-    let freq = TIMER_FREQ.load(Ordering::Acquire);
-
-    if freq == 0 {
-        return 0;
-    }
-
-    (count * 1_000_000_000) / freq
-}
-
-pub fn current_time_us() -> u64 {
-    let count = current_count();
-    let freq = TIMER_FREQ.load(Ordering::Acquire);
-
-    if freq == 0 {
-        return 0;
-    }
-
-    (count * 1_000_000) / freq
-}
-
-pub fn set_timer(ns: u64) {
-    let freq = TIMER_FREQ.load(Ordering::Acquire);
-    let ticks = (ns * freq) / 1_000_000_000;
-
-    let cval: u64;
-    unsafe {
-        asm!("mrs {}, cntpct_el0", out(reg) cval);
-    }
-
-    let next = cval + ticks;
-
-    unsafe {
-        asm!("msr cntp_cval_el0, {}", in(reg) next);
-        asm!("msr cntp_ctl_el0, {}", in(reg) 1u64);
-    }
-}
-
-pub fn disable_timer() {
-    unsafe {
-        asm!("msr cntp_ctl_el0, {}", in(reg) 0u64);
-    }
-}
-
-// Standalone arm; the production tick path goes through
-// `preemption::handler::timer_tick` registered on the GIC.
-pub fn handle_timer_interrupt() {
-    set_timer(10_000_000);
-}
-
-pub fn delay_ns(ns: u64) {
-    let start = current_time_ns();
-    while current_time_ns() - start < ns {
-        core::hint::spin_loop();
-    }
-}
-
-pub fn delay_us(us: u64) {
-    delay_ns(us * 1000);
-}
-
-pub fn delay_ms(ms: u64) {
-    delay_ns(ms * 1_000_000);
-}

@@ -32,7 +32,7 @@ pub(crate) fn switch_to_user_pcb_aarch64(pid: u32) {
         return;
     }
 
-    // No user-entry record and no preempt snapshot — kernel thread or
-    // unstaged PCB. Leave Ready for the next selection.
+
+
     *pcb.state.lock() = ProcessState::Ready;
 }

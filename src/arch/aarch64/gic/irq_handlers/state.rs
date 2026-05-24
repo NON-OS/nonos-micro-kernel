@@ -16,20 +16,20 @@
 
 use core::sync::atomic::{AtomicPtr, AtomicU8};
 
-// GICv3 SGI 0..15, PPI 16..31, SPI 32..1019. 1020..1023 are special
-// IAR values handled in the IRQ entry path; they never reach lookup.
+
+
 pub const MAX_INTID: u32 = 1020;
 
-// AtomicPtr is the right primitive for lock-free single-writer
-// (register) / multi-reader (every CPU at IRQ entry).
+
+
 pub(super) static IRQ_HANDLERS: [AtomicPtr<()>; MAX_INTID as usize] = {
     const INIT: AtomicPtr<()> = AtomicPtr::new(core::ptr::null_mut());
     [INIT; MAX_INTID as usize]
 };
 
-// Per-intid ownership. CAS Free→{Kernel,Capsule} at registration time
-// so a capsule cannot overwrite a kernel-owned line and a kernel
-// driver cannot overwrite a capsule-owned line.
+
+
+
 pub(super) const OWNER_FREE: u8 = 0;
 pub(super) const OWNER_KERNEL: u8 = 1;
 pub(super) const OWNER_CAPSULE: u8 = 2;

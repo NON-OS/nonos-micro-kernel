@@ -19,8 +19,8 @@ use super::mte::init_mte;
 use super::pac::init_pac;
 use super::spectre::init_spectre_mitigations;
 
-// Each sub-init self-gates on `cpu::features::has_feature(...)` and
-// is a no-op when the feature is absent on this silicon.
+
+
 pub fn init_all() {
     init_pac();
     init_bti();

@@ -18,18 +18,18 @@ use crate::arch::aarch64::exceptions::frame::ExceptionFrame;
 
 use super::fatal::fatal;
 
-// SError is an asynchronous external abort. Almost always indicates an
-// uncorrected hardware error; not recoverable here.
+
+
 #[no_mangle]
 pub extern "C" fn aarch64_exc_serror_current(frame: *mut ExceptionFrame) -> ! {
-    // SAFETY: frame is the kernel-stack frame built by vectors.S.
+
     let frame = unsafe { &*frame };
     fatal(b"SError EL1", frame)
 }
 
 #[no_mangle]
 pub extern "C" fn aarch64_exc_serror_lower(frame: *mut ExceptionFrame) -> ! {
-    // SAFETY: frame is the kernel-stack frame built by vectors.S.
+
     let frame = unsafe { &*frame };
     fatal(b"SError EL0", frame)
 }

@@ -16,7 +16,7 @@
 
 use core::arch::asm;
 
-// DAIF bit 7 = I (IRQ mask). Clear to enable.
+
 #[inline(always)]
 pub(super) unsafe fn enable() {
     asm!("msr daifclr, #2", options(nostack));

@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Fixed-size SIMD/FP context for one task.
-//   q[0..32]   = 32 * 128 bits = v0..v31 (Q-form aliasing of full vector regs)
-//   fpsr/fpcr  = FP status / control
-// Total: 528 bytes, 16-aligned (required by `stp q*, q*, [ptr, #off]`).
+
+
+
+
 #[repr(C, align(16))]
 #[derive(Clone)]
 pub struct FpSimdContext {

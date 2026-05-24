@@ -18,7 +18,7 @@ use core::arch::asm;
 
 use crate::memory::addr::VirtAddr;
 
-// TLBI VAAE1IS operand carries VA[47:12] in bits [43:0].
+
 #[inline(always)]
 pub(super) unsafe fn flush_one(addr: VirtAddr) {
     let page = addr.as_u64() >> 12;

@@ -20,10 +20,10 @@ use crate::arch::trap::contract::{FaultAccess, PageFaultInfo, TrapCause};
 
 use super::page_fault;
 
-// EC[5:0] of ESR_EL1 selects the projection. SVC is intentionally
-// classified as OtherException here — the SVC path in vectors.S routes
-// through the syscall dispatcher before reaching `deliver`, so seeing
-// SVC inside contract::deliver means the asm shim let it through.
+
+
+
+
 pub(super) fn project(frame: &ExceptionFrame) -> TrapCause {
     let ec = ExceptionClass::from(((frame.esr >> 26) & 0x3F) as u8);
     match ec {

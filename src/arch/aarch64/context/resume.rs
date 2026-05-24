@@ -26,11 +26,11 @@ pub enum ResumeError {
     NotFromEl0,
 }
 
-// Resume an EL0 task from a captured preempt snapshot. `saved.spsr_el1`
-// must reflect a return to EL0t (M[3:0] = 0); refusing otherwise stops
-// a resume hook from accidentally eret'ing into EL1 with user-controlled
-// registers. Caller has already swapped CR3-equivalent (TTBR0) and
-// masked IRQs.
+
+
+
+
+
 pub unsafe fn resume_user(saved: &SavedUser) -> Result<core::convert::Infallible, ResumeError> {
     if saved.kernel_sp == 0 {
         return Err(ResumeError::NoKernelStack);

@@ -16,10 +16,10 @@
 
 use super::context::FpSimdContext;
 
-// Per-task FP state. `valid` means `ctx` holds a saved snapshot;
-// `enabled` means FPEN is granted for this task; `dirty` means a
-// post-save FP write has happened and a re-save is required before
-// the task can be migrated or descheduled.
+
+
+
+
 #[repr(C)]
 pub struct FpSimdSlot {
     pub ctx: FpSimdContext,

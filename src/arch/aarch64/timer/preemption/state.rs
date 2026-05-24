@@ -16,10 +16,10 @@
 
 use core::sync::atomic::{AtomicU32, Ordering};
 
-// 0 means unset. The BSP boot path calls `configure` once the DTB
-// adapter has resolved the intid; every AP then reads the same value
-// during its own `install_on_cpu`. Atomic because reads happen from
-// many CPUs after the BSP has published.
+
+
+
+
 static PHYS_INTID: AtomicU32 = AtomicU32::new(0);
 
 pub fn configure(intid: u32) {

@@ -161,24 +161,6 @@ impl ExceptionFrame {
         }
     }
 
-    pub fn dump(&self) {
-        crate::sys::serial::println(b"Exception Frame:");
-        crate::sys::serial::print(b"  ELR: ");
-        crate::sys::serial::print_hex(self.elr);
-        crate::sys::serial::print(b" ESR: ");
-        crate::sys::serial::print_hex(self.esr);
-        crate::sys::serial::println(b"");
-        crate::sys::serial::print(b"  FAR: ");
-        crate::sys::serial::print_hex(self.far);
-        crate::sys::serial::print(b" SP: ");
-        crate::sys::serial::print_hex(self.sp);
-        crate::sys::serial::println(b"");
-        crate::sys::serial::print(b"  X0: ");
-        crate::sys::serial::print_hex(self.x0);
-        crate::sys::serial::print(b" X1: ");
-        crate::sys::serial::print_hex(self.x1);
-        crate::sys::serial::println(b"");
-    }
 }
 
 pub const FRAME_SIZE: usize = core::mem::size_of::<ExceptionFrame>();

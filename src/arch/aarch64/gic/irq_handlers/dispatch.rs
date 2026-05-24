@@ -18,9 +18,9 @@ use core::sync::atomic::Ordering;
 
 use super::state::{IRQ_HANDLERS, MAX_INTID};
 
-// Returns true if a handler ran; false if no handler is registered for
-// this intid. Caller is responsible for the GIC EOI sequence in either
-// case.
+
+
+
 pub fn dispatch(intid: u32) -> bool {
     if intid >= MAX_INTID {
         return false;
@@ -29,7 +29,7 @@ pub fn dispatch(intid: u32) -> bool {
     if raw.is_null() {
         return false;
     }
-    // SAFETY: pointer was stored via `register` from a `fn(u32)`.
+
     let handler: fn(u32) = unsafe { core::mem::transmute(raw) };
     handler(intid);
     true

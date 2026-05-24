@@ -18,8 +18,8 @@ use core::arch::asm;
 
 use crate::memory::addr::PhysAddr;
 
-// User half lives in TTBR0_EL1; kernel half stays in TTBR1_EL1.
-// ASID is preserved at 0 — per-ASID lifecycle is the scheduler's job.
+
+
 #[inline(always)]
 pub(super) unsafe fn switch(root: PhysAddr) {
     asm!(

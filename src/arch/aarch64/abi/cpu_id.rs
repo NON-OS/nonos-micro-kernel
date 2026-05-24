@@ -16,7 +16,7 @@
 
 use core::arch::asm;
 
-// MPIDR_EL1 affinity bytes packed Aff2:Aff1:Aff0 into u32.
+
 #[inline(always)]
 pub(super) fn current() -> u32 {
     let mpidr: u64;

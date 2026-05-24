@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::arch::aarch64::boot::info::BootInfo;
+use crate::arch::aarch64::boot::info::{BootInfo, MemoryType};
 use crate::arch::fdt::find::cpus;
 use crate::arch::fdt::find::gic::{find as find_gic, GicVersion};
 use crate::arch::fdt::find::memory::{find as find_memory, MemoryRange};
@@ -22,10 +22,6 @@ use crate::arch::fdt::find::timer::find as find_timer;
 use crate::arch::fdt::find::uart::{find as find_uart, UartKind};
 use crate::arch::fdt::Fdt;
 
-// Populate scalar fields from the DTB pointed to by `dtb_ptr`. Returns
-// true if parsing succeeded and at least the memory range was found.
-// On any parse failure the caller's existing default `BootInfo` is left
-// untouched and `dtb_base` stays 0 to signal "no DTB consumed".
 pub fn populate(dtb_ptr: u64, info: &mut BootInfo) -> bool {
     let fdt = match Fdt::from_ptr(dtb_ptr as *const u8) {
         Ok(f) => f,
@@ -44,6 +40,10 @@ pub fn populate(dtb_ptr: u64, info: &mut BootInfo) -> bool {
     }
     info.ram_base = ranges[0].base;
     info.ram_size = ranges[0].size;
+    info.memory_regions.clear();
+    for range in ranges.iter().take(mem_count) {
+        info.add_memory_region(range.base, range.size, MemoryType::Available);
+    }
 
     if let Ok(Some(u)) = find_uart(&fdt) {
         if u.kind == UartKind::Pl011 {
@@ -58,8 +58,6 @@ pub fn populate(dtb_ptr: u64, info: &mut BootInfo) -> bool {
                 info.gic_redist_base = g.redist_or_cpu_base;
             }
             GicVersion::V2 => {
-                // Only the V3 path is implemented; flag so boot::init
-                // can fail closed instead of pretending.
                 info.gic_unsupported = true;
             }
         }

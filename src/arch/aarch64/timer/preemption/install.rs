@@ -20,10 +20,10 @@ use crate::arch::aarch64::timer::set_timer;
 use super::handler::{timer_tick, TICK_PERIOD_NS};
 use super::state::phys_intid;
 
-// Register handler globally and enable the interrupt on this CPU. The
-// intid is set by the BSP via `configure(...)` after DTB parsing; APs
-// read the same value. `gic::enable_irq` routes PPI (intid < 32) to
-// this CPU's redistributor and SPI (intid >= 32) to the distributor.
+
+
+
+
 pub fn install_on_cpu() -> Result<(), &'static str> {
     let intid = phys_intid();
     if intid == 0 {

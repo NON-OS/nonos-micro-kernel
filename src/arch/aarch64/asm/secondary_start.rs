@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// AP entry symbol used as the `entry_point` argument to PSCI CPU_ON.
-// PSCI delivers the AP with x0 = context_id (the per-CPU stack top
-// chosen by the kernel) and the same EL the boot CPU last set.
+
+
+
 extern "C" {
     pub fn _aarch64_secondary_start();
 }

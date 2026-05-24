@@ -21,22 +21,22 @@ use crate::arch::trap::contract::deliver;
 use super::fatal::fatal;
 use super::svc;
 
-// Kernel-mode synchronous exception. No SVC from EL1, no kernel-fault
-// recovery — contract::deliver classifies and fatals.
+
+
 #[no_mangle]
 pub extern "C" fn aarch64_exc_sync_current(frame: *mut ExceptionFrame) -> ! {
     let frame = unsafe { &*frame };
     deliver(frame)
 }
 
-// ESR_EL1 EC codes we special-case here. Everything else routes to
-// the cross-arch contract.
+
+
 const EC_FP_ACCESS: u8 = 0x07;
 const EC_SVC64: u8 = 0x15;
 
-// Lower-EL synchronous: SVC -> syscall dispatch, FP/SIMD access ->
-// lazy FPEN enable + register restore (no ELR advance: the trapping
-// FP op re-executes after eret), anything else -> contract delivery.
+
+
+
 #[no_mangle]
 pub extern "C" fn aarch64_exc_sync_lower(frame: *mut ExceptionFrame) {
     let frame = unsafe { &mut *frame };
@@ -51,5 +51,5 @@ pub extern "C" fn aarch64_exc_sync_lower(frame: *mut ExceptionFrame) {
         }
         fatal(b"FP/SIMD access (no per-task FP slot)", frame)
     }
-    let _: ! = deliver(frame);
+    deliver(frame)
 }

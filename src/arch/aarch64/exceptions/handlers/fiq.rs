@@ -18,18 +18,18 @@ use crate::arch::aarch64::exceptions::frame::ExceptionFrame;
 
 use super::fatal::fatal;
 
-// FIQ is reserved for secure-world use in NONOS; we never enable it at
-// EL1. Any entry here is a firmware contract violation.
+
+
 #[no_mangle]
 pub extern "C" fn aarch64_exc_fiq_current(frame: *mut ExceptionFrame) -> ! {
-    // SAFETY: frame is the kernel-stack frame built by vectors.S.
+
     let frame = unsafe { &*frame };
     fatal(b"FIQ EL1", frame)
 }
 
 #[no_mangle]
 pub extern "C" fn aarch64_exc_fiq_lower(frame: *mut ExceptionFrame) -> ! {
-    // SAFETY: frame is the kernel-stack frame built by vectors.S.
+
     let frame = unsafe { &*frame };
     fatal(b"FIQ EL0", frame)
 }

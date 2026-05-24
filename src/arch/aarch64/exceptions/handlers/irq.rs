@@ -17,14 +17,13 @@
 use crate::arch::aarch64::context::save_user_frame;
 use crate::arch::aarch64::exceptions::frame::ExceptionFrame;
 use crate::arch::aarch64::gic::{acknowledge_interrupt, dispatch_irq, end_interrupt};
-use crate::sys::serial::{print_hex, print_str};
 
 use super::fatal::fatal;
 
-// IAR special intids (1020..1023) self-deassert; nothing to do.
-// Real intid: dispatch through the GIC IRQ registry. EOI in both
-// dispatched and unhandled cases so the line is released; unhandled
-// is a contract violation and halts.
+
+
+
+
 #[no_mangle]
 pub extern "C" fn aarch64_exc_irq_current(frame: *mut ExceptionFrame) {
     let frame = unsafe { &*frame };
@@ -34,10 +33,10 @@ pub extern "C" fn aarch64_exc_irq_current(frame: *mut ExceptionFrame) {
 #[no_mangle]
 pub extern "C" fn aarch64_exc_irq_lower(frame: *mut ExceptionFrame) {
     let frame = unsafe { &*frame };
-    // Mirror EL0 state to the current PCB before the IRQ handler runs.
-    // If the scheduler decides to yield (via tick → NEED_RESCHEDULE),
-    // the saved snapshot is the most recent user state; on normal eret
-    // the snapshot is overwritten on the next trap.
+
+
+
+
     save_user_frame(frame);
     handle(frame, b"IRQ EL0")
 }
@@ -51,9 +50,6 @@ fn handle(frame: &ExceptionFrame, tag: &[u8]) {
         end_interrupt(intid);
         return;
     }
-    print_str("[aarch64] unhandled intid=");
-    print_hex(intid as u64);
-    print_str("\n");
     end_interrupt(intid);
     fatal(tag, frame)
 }

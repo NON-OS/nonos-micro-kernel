@@ -16,11 +16,10 @@
 
 use super::icc;
 use super::redistributor::GicRedistributor;
-use super::REDIST_BASE;
-use core::sync::atomic::Ordering;
+use super::state::redist_base;
 
 pub fn init_gic_cpu() {
-    let redist_base = REDIST_BASE.load(Ordering::Acquire);
+    let redist_base = redist_base();
 
     if redist_base != 0 {
         let cpu_id = crate::arch::aarch64::cpu::cpu_id();

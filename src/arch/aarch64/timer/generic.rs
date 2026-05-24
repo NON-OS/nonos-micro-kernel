@@ -14,83 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::arch::asm;
+mod convert;
+mod count;
+mod freq;
+mod offset;
 
-pub fn frequency() -> u64 {
-    let freq: u64;
-    unsafe {
-        asm!("mrs {}, cntfrq_el0", out(reg) freq);
-    }
-    freq
-}
-
-pub fn current_count() -> u64 {
-    let count: u64;
-    unsafe {
-        asm!("mrs {}, cntpct_el0", out(reg) count);
-    }
-    count
-}
-
-pub fn virtual_count() -> u64 {
-    let count: u64;
-    unsafe {
-        asm!("mrs {}, cntvct_el0", out(reg) count);
-    }
-    count
-}
-
-pub fn nanoseconds_to_ticks(ns: u64) -> u64 {
-    let freq = frequency();
-    (ns * freq) / 1_000_000_000
-}
-
-pub fn ticks_to_nanoseconds(ticks: u64) -> u64 {
-    let freq = frequency();
-    if freq == 0 {
-        return 0;
-    }
-    (ticks * 1_000_000_000) / freq
-}
-
-pub fn microseconds_to_ticks(us: u64) -> u64 {
-    let freq = frequency();
-    (us * freq) / 1_000_000
-}
-
-pub fn ticks_to_microseconds(ticks: u64) -> u64 {
-    let freq = frequency();
-    if freq == 0 {
-        return 0;
-    }
-    (ticks * 1_000_000) / freq
-}
-
-pub fn milliseconds_to_ticks(ms: u64) -> u64 {
-    let freq = frequency();
-    (ms * freq) / 1_000
-}
-
-pub fn ticks_to_milliseconds(ticks: u64) -> u64 {
-    let freq = frequency();
-    if freq == 0 {
-        return 0;
-    }
-    (ticks * 1_000) / freq
-}
-
-pub fn virtual_offset() -> u64 {
-    let offset: u64;
-    unsafe {
-        asm!("mrs {}, cntvoff_el2", out(reg) offset);
-    }
-    offset
-}
-
-pub fn physical_to_virtual(phys_count: u64) -> u64 {
-    phys_count.wrapping_sub(virtual_offset())
-}
-
-pub fn virtual_to_physical(virt_count: u64) -> u64 {
-    virt_count.wrapping_add(virtual_offset())
-}
+pub use convert::{microseconds_to_ticks, milliseconds_to_ticks, nanoseconds_to_ticks, ticks_to_microseconds, ticks_to_milliseconds, ticks_to_nanoseconds};
+pub use count::{current_count, virtual_count};
+pub use freq::frequency;
+pub use offset::{physical_to_virtual, virtual_offset, virtual_to_physical};

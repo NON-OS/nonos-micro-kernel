@@ -18,25 +18,25 @@ use super::current::slot_mut;
 use super::enable::enable;
 use super::restore::restore;
 
-// First-use lazy enable. Returns true if the current task's FP slot
-// was found, enabled, and restored — the caller eret's without
-// advancing ELR. Returns false if no task slot is registered; the
-// caller must fail closed.
+
+
+
+
 pub fn try_enable_for_current_task() -> bool {
     let slot = match slot_mut() {
         Some(s) => s,
         None => return false,
     };
-    // Grant EL0/EL1 FP access, then load the task's saved register
-    // file. If never used before, `ctx` is zeroed by FpSimdSlot::zeroed,
-    // which is the architectural reset state.
+
+
+
     enable();
-    // SAFETY: CPACR_EL1.FPEN was just granted, ctx is owned by this
-    // task's slot, and we are on the CPU running that task.
+
+
     unsafe { restore(&slot.ctx) };
     slot.enabled = true;
-    // Any FP op after restore can dirty the registers; mark dirty so
-    // the next save-on-deschedule actually saves.
+
+
     slot.dirty = true;
     true
 }
