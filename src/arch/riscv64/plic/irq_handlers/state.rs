@@ -16,7 +16,6 @@
 
 use core::sync::atomic::{AtomicPtr, AtomicU8};
 
-// PLIC source 0 is reserved (no interrupt). 1..1023 are valid.
 pub const MAX_IRQ: u32 = 1024;
 
 pub(super) static IRQ_HANDLERS: [AtomicPtr<()>; MAX_IRQ as usize] = {
@@ -24,9 +23,6 @@ pub(super) static IRQ_HANDLERS: [AtomicPtr<()>; MAX_IRQ as usize] = {
     [INIT; MAX_IRQ as usize]
 };
 
-// Per-source ownership. CAS Free→{Kernel,Capsule} at registration so
-// a capsule cannot overwrite a kernel-owned source and a kernel
-// driver cannot overwrite a capsule-owned source.
 pub(super) const OWNER_FREE: u8 = 0;
 pub(super) const OWNER_KERNEL: u8 = 1;
 pub(super) const OWNER_CAPSULE: u8 = 2;

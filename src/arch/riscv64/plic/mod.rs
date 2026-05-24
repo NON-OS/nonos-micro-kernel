@@ -26,5 +26,5 @@ pub use irq_handlers::{
 };
 pub use registers::{
     claim_interrupt, complete_interrupt, disable_irq, enable_irq, init_plic, plic_present,
-    set_priority, set_threshold, Plic,
+    set_priority, set_threshold, Plic, PlicError, PlicResult,
 };

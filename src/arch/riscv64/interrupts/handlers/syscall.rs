@@ -19,9 +19,6 @@ use crate::syscall::contract::{dispatch as contract_dispatch, SyscallArgs};
 use crate::syscall::numbers::SyscallNumber;
 use crate::syscall::types::errnos;
 
-// RISC-V Linux ABI: a7 = number, a0..a5 = args, return in a0.
-// Hardware does not advance sepc on ecall; bump past the ecall before
-// returning so sret resumes at the next instruction.
 pub(super) fn dispatch_ecall(frame: &mut TrapFrame) {
     let result_word = match SyscallNumber::from_u64(frame.a7 as u64) {
         Some(sc) => {

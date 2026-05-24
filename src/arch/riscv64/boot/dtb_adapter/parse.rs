@@ -25,9 +25,6 @@ use crate::arch::riscv64::boot::info::BootInfo;
 use crate::arch::riscv64::cpu::caps;
 use crate::arch::riscv64::timer::set_frequency;
 
-// Populate scalar BootInfo fields from the DTB. Returns true if the
-// blob was valid and at least the memory range was parsed. The caller
-// keeps its existing default `BootInfo` if false is returned.
 pub fn populate(dtb_ptr: u64, info: &mut BootInfo) -> bool {
     let fdt = match Fdt::from_ptr(dtb_ptr as *const u8) {
         Ok(f) => f,

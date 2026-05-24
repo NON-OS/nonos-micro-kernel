@@ -19,8 +19,8 @@ use crate::process::core::{Pid, PROCESS_TABLE};
 use super::enter::SSTATUS_USER_INITIAL;
 use super::types::UserEntry;
 
-// Sv39 user VA upper bound (Sv48 will widen; Sv48 is not on the active
-// init path per the ledger, so Sv39 is the conservative validator).
+
+
 const USER_VA_MAX_SV39: u64 = (1u64 << 38) - 1;
 
 #[derive(Debug, Clone, Copy)]
@@ -30,12 +30,12 @@ pub enum SetupError {
     NonUserStack,
 }
 
-// riscv64 builder: sstatus initial value sets SPP=0, SPIE=1, FS=Off,
-// VS=Off — sret returns to U-mode with interrupts on and FP/V trapping
-// to the lazy-enable path. kernel_sp left zero; the scheduler dispatch
-// hook fills it from pcb.kernel_stack_top so sscratch primes for the
-// next trap-from-user swap. args[] zeroed (capsule loader writes any
-// non-trivial values via its own ABI).
+
+
+
+
+
+
 pub fn setup_initial_user_pcb_riscv64(
     pid: Pid,
     entry: u64,

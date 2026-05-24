@@ -18,19 +18,19 @@ use core::cell::UnsafeCell;
 
 use super::slot::FpSlot;
 
-// PCB-owned F/D-extension slot. UnsafeCell because the slot is mutated
-// in trap context with SIE masked; the task runs on at most one hart
-// at a time, so the only writer is the kernel handler for that task
-// and no locking is needed. Sync for embedding in PCB which is Sync.
+
+
+
+
 #[repr(transparent)]
 pub struct PcbArchFpu {
     inner: UnsafeCell<FpSlot>,
 }
 
-// SAFETY: the cell is accessed only on the hart running the task that
-// owns the enclosing PCB; aliasing is impossible because tasks are not
-// migrated mid-handler. `slot_ptr` is read from the same hart's lazy-
-// enable trap path.
+
+
+
+
 unsafe impl Sync for PcbArchFpu {}
 
 impl PcbArchFpu {

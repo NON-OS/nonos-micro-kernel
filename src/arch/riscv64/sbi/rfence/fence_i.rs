@@ -21,8 +21,6 @@ use super::ext::EID_RFENCE;
 
 const FID_REMOTE_FENCE_I: usize = 0;
 
-// Broadcast `fence.i` to a hart mask. Pair with code-store completion
-// before issuing.
 pub fn remote_fence_i(hart_mask: usize, hart_mask_base: usize) -> Result<(), SbiError> {
     let ret = sbi_call(EID_RFENCE, FID_REMOTE_FENCE_I, hart_mask, hart_mask_base, 0);
     if ret.error == 0 {

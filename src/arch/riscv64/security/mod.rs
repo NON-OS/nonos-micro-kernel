@@ -15,12 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod cfi;
+mod init;
 pub mod pmp;
 
 pub use cfi::{init_cfi, CfiError, CfiMode};
+pub use init::init_all;
 pub use pmp::{init_pmp, PmpConfig, PmpEntry, PmpError, PmpResult};
-
-pub fn init_all() -> PmpResult<()> {
-    init_cfi();
-    init_pmp()
-}

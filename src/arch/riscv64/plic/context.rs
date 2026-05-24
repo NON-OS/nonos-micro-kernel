@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::registers::{set_threshold, Plic};
-use super::PLIC_BASE;
-use core::sync::atomic::Ordering;
+use super::registers::{current_plic, set_threshold, PlicResult};
 
 pub struct PlicContext {
     hart: usize,
@@ -36,39 +34,31 @@ impl PlicContext {
         self.context_id
     }
 
-    pub fn enable_irq(&self, irq: u32) {
-        let base = PLIC_BASE.load(Ordering::Acquire);
-        let plic = Plic::new(base);
-        plic.enable(self.hart, irq);
+    pub fn enable_irq(&self, irq: u32) -> PlicResult<()> {
+        current_plic()?.enable(self.hart, irq)
     }
 
-    pub fn disable_irq(&self, irq: u32) {
-        let base = PLIC_BASE.load(Ordering::Acquire);
-        let plic = Plic::new(base);
-        plic.disable(self.hart, irq);
+    pub fn disable_irq(&self, irq: u32) -> PlicResult<()> {
+        current_plic()?.disable(self.hart, irq)
     }
 
-    pub fn set_threshold(&self, threshold: u8) {
-        set_threshold(self.hart, threshold);
+    pub fn set_threshold(&self, threshold: u8) -> PlicResult<()> {
+        set_threshold(self.hart, threshold)
     }
 
-    pub fn claim(&self) -> Option<u32> {
-        let base = PLIC_BASE.load(Ordering::Acquire);
-        let plic = Plic::new(base);
-        plic.claim(self.hart)
+    pub fn claim(&self) -> PlicResult<Option<u32>> {
+        current_plic()?.claim(self.hart)
     }
 
-    pub fn complete(&self, irq: u32) {
-        let base = PLIC_BASE.load(Ordering::Acquire);
-        let plic = Plic::new(base);
-        plic.complete(self.hart, irq);
+    pub fn complete(&self, irq: u32) -> PlicResult<()> {
+        current_plic()?.complete(self.hart, irq)
     }
 }
 
-pub fn init_plic_hart() {
+pub fn init_plic_hart() -> PlicResult<()> {
     let hart = super::super::cpu::hart_id();
     let ctx = PlicContext::new(hart);
-    ctx.set_threshold(0);
+    ctx.set_threshold(0)
 }
 
 pub fn current_context() -> PlicContext {

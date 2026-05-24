@@ -27,10 +27,10 @@ pub enum ResumeError {
     NotFromUMode,
 }
 
-// Resume a U-mode task from a preempt snapshot. Refuses if the saved
-// sstatus would sret back to S-mode (SPP=1) — that path can only come
-// from a corrupted snapshot and must not be granted user-controlled
-// registers in S-mode. Caller has installed satp and masked SIE.
+
+
+
+
 pub unsafe fn resume_user(saved: &SavedUser) -> Result<core::convert::Infallible, ResumeError> {
     if saved.kernel_sp == 0 {
         return Err(ResumeError::NoKernelStack);

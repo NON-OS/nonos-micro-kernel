@@ -17,6 +17,7 @@
 pub mod abi;
 pub mod asm;
 pub mod boot;
+mod constants;
 pub mod context;
 pub mod cpu;
 pub mod fpu;
@@ -31,6 +32,7 @@ pub mod uart;
 pub use abi::Riscv64;
 
 pub use boot::init;
+pub use constants::{PAGE_SIZE, STACK_SIZE};
 pub use cpu::{cpu_id, disable_interrupts, enable_interrupts, halt};
 pub use interrupts::TrapFrame;
 pub use mmu::{init_mmu, map_page, unmap_page, PageTable};
@@ -38,6 +40,3 @@ pub use plic::{enable_irq, init_plic, Plic};
 pub use sbi::{console_getchar, console_putchar, set_timer, shutdown};
 pub use timer::{current_time_ns, init_timer, read_time};
 pub use uart::{init_uart, putc, puts};
-
-pub const PAGE_SIZE: usize = 4096;
-pub const STACK_SIZE: usize = 32768;

@@ -14,97 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::base::sbi_call;
-use super::error::SbiError;
+mod constants;
+mod control;
+mod status;
+mod suspend;
 
-const EID_HSM: usize = 0x48534D;
-
-const FID_HART_START: usize = 0;
-const FID_HART_STOP: usize = 1;
-const FID_HART_GET_STATUS: usize = 2;
-const FID_HART_SUSPEND: usize = 3;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum HartStatus {
-    Started,
-    Stopped,
-    StartPending,
-    StopPending,
-    Suspended,
-    SuspendPending,
-    ResumePending,
-    Unknown(usize),
-}
-
-impl From<usize> for HartStatus {
-    fn from(status: usize) -> Self {
-        match status {
-            0 => Self::Started,
-            1 => Self::Stopped,
-            2 => Self::StartPending,
-            3 => Self::StopPending,
-            4 => Self::Suspended,
-            5 => Self::SuspendPending,
-            6 => Self::ResumePending,
-            n => Self::Unknown(n),
-        }
-    }
-}
-
-pub fn hart_start(hartid: u64, start_addr: u64, opaque: u64) -> Result<(), SbiError> {
-    let ret =
-        sbi_call(EID_HSM, FID_HART_START, hartid as usize, start_addr as usize, opaque as usize);
-
-    if ret.error != 0 {
-        Err(SbiError::from(ret.error))
-    } else {
-        Ok(())
-    }
-}
-
-pub fn hart_stop() -> Result<(), SbiError> {
-    let ret = sbi_call(EID_HSM, FID_HART_STOP, 0, 0, 0);
-
-    if ret.error != 0 {
-        Err(SbiError::from(ret.error))
-    } else {
-        Ok(())
-    }
-}
-
-pub fn hart_get_status(hartid: u64) -> Result<HartStatus, SbiError> {
-    let ret = sbi_call(EID_HSM, FID_HART_GET_STATUS, hartid as usize, 0, 0);
-
-    if ret.error != 0 {
-        Err(SbiError::from(ret.error))
-    } else {
-        Ok(HartStatus::from(ret.value))
-    }
-}
-
-pub fn hart_suspend(suspend_type: u32, resume_addr: u64, opaque: u64) -> Result<(), SbiError> {
-    let ret = sbi_call(
-        EID_HSM,
-        FID_HART_SUSPEND,
-        suspend_type as usize,
-        resume_addr as usize,
-        opaque as usize,
-    );
-
-    if ret.error != 0 {
-        Err(SbiError::from(ret.error))
-    } else {
-        Ok(())
-    }
-}
-
-pub const SUSPEND_DEFAULT_RETENTIVE: u32 = 0x0000_0000;
-pub const SUSPEND_DEFAULT_NON_RETENTIVE: u32 = 0x8000_0000;
-
-pub fn suspend_retentive() -> Result<(), SbiError> {
-    hart_suspend(SUSPEND_DEFAULT_RETENTIVE, 0, 0)
-}
-
-pub fn suspend_non_retentive(resume_addr: u64, opaque: u64) -> Result<(), SbiError> {
-    hart_suspend(SUSPEND_DEFAULT_NON_RETENTIVE, resume_addr, opaque)
-}
+pub use control::{hart_get_status, hart_start, hart_stop, hart_suspend};
+pub use status::HartStatus;
+pub use suspend::{
+    suspend_non_retentive, suspend_retentive, SUSPEND_DEFAULT_NON_RETENTIVE,
+    SUSPEND_DEFAULT_RETENTIVE,
+};

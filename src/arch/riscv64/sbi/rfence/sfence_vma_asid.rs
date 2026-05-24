@@ -20,8 +20,6 @@ use super::ext::EID_RFENCE;
 
 const FID_REMOTE_SFENCE_VMA_ASID: usize = 2;
 
-// Remote sfence.vma scoped to ASID. start=0 / size=usize::MAX flushes
-// every entry tagged with the ASID on every targeted hart.
 pub fn remote_sfence_vma_asid(
     hart_mask: usize,
     hart_mask_base: usize,

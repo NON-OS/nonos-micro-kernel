@@ -14,18 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod ns16550;
+mod ns16550;
+mod state;
 
 pub use ns16550::{getc, handle_uart_interrupt, init_uart, putc, puts, Ns16550};
-
-use core::sync::atomic::{AtomicU64, Ordering};
-
-static UART_BASE: AtomicU64 = AtomicU64::new(0x1000_0000);
-
-pub fn set_uart_base(base: u64) {
-    UART_BASE.store(base, Ordering::Release);
-}
-
-pub fn uart_base() -> u64 {
-    UART_BASE.load(Ordering::Acquire)
-}
+pub use state::{set_uart_base, uart_base};

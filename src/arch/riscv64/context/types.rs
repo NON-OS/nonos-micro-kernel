@@ -14,16 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// First-entry context the scheduler hands to riscv64_enter_user.
-// Field offsets are stable — referenced by enter_user.S.
+
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct UserEntry {
-    pub entry: u64,         // sepc
-    pub user_sp: u64,       // sp at sret time
-    pub sstatus: u64,       // SPP=0, SPIE=1, FS=Off, VS=Off, etc.
-    pub kernel_sp: u64,     // sscratch primer = per-hart kernel-sp top
-    pub args: [u64; 8],     // a0..a7
+    pub entry: u64,
+    pub user_sp: u64,
+    pub sstatus: u64,
+    pub kernel_sp: u64,
+    pub args: [u64; 8],
 }
 
 impl UserEntry {
@@ -32,9 +32,9 @@ impl UserEntry {
     }
 }
 
-// Snapshot for resume-from-preempt. gprs holds x1..x31 in numeric order
-// (x0 is hardwired zero, never stored). sp lives at gprs[1] (= x2).
-// Layout consumed by resume_user.S — do not reorder.
+
+
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct SavedUser {

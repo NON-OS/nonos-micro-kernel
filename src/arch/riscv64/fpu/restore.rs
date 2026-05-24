@@ -20,8 +20,8 @@ extern "C" {
     fn riscv64_fpu_restore(ctx: *const FpContext);
 }
 
-// SAFETY: caller must have sstatus.FS != Off; ctx must be an
-// 8-aligned, readable FpContext.
+
+
 pub unsafe fn restore(ctx: &FpContext) {
     unsafe { riscv64_fpu_restore(ctx as *const FpContext) }
 }

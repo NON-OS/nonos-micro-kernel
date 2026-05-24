@@ -29,56 +29,8 @@ pub use hart::{hart_get_status, hart_start, hart_stop, hart_suspend};
 pub use ipi::send_ipi;
 pub use timer::set_timer;
 
-use core::arch::asm;
+mod console;
+mod reset;
 
-pub fn console_putchar(c: u8) {
-    unsafe {
-        asm!(
-            "li a7, 0x01",
-            "mv a0, {0}",
-            "ecall",
-            in(reg) c as usize,
-            options(nostack)
-        );
-    }
-}
-
-pub fn console_getchar() -> Option<u8> {
-    let ret: isize;
-    unsafe {
-        asm!(
-            "li a7, 0x02",
-            "ecall",
-            "mv {0}, a0",
-            out(reg) ret,
-            options(nostack)
-        );
-    }
-
-    if ret >= 0 {
-        Some(ret as u8)
-    } else {
-        None
-    }
-}
-
-pub fn shutdown() -> ! {
-    unsafe {
-        asm!("li a7, 0x08", "ecall", options(noreturn));
-    }
-}
-
-pub fn system_reset(reset_type: u32, reason: u32) -> ! {
-    unsafe {
-        asm!(
-            "li a7, 0x53525354",
-            "li a6, 0",
-            "mv a0, {0}",
-            "mv a1, {1}",
-            "ecall",
-            in(reg) reset_type,
-            in(reg) reason,
-            options(noreturn)
-        );
-    }
-}
+pub use console::{console_getchar, console_putchar};
+pub use reset::{shutdown, system_reset};

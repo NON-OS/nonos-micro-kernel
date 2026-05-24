@@ -16,8 +16,8 @@
 
 use super::store::store;
 
-// Symbol called from start.S with a0 = boot hart id. The trampoline
-// keeps `store()` Rust-only while exposing a stable extern "C" name.
+
+
 #[no_mangle]
 pub extern "C" fn riscv64_store_boot_hart(hart_id: u64) {
     store(hart_id);

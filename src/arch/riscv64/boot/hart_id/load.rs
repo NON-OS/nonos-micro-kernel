@@ -18,8 +18,8 @@ use core::sync::atomic::Ordering;
 
 use super::state::BOOT_HART_ID;
 
-// Returns the boot hart id captured at supervisor entry, or None if
-// the stash has not been written yet.
+
+
 pub fn load() -> Option<u64> {
     let v = BOOT_HART_ID.load(Ordering::Acquire);
     if v == u64::MAX {

@@ -16,9 +16,9 @@
 
 use super::info::BootInfo;
 
-// `_start` and BSS clearing live in arch/riscv64/asm/start.S; the asm
-// stashes a0 = hart id via `riscv64_store_boot_hart` and tail-calls
-// here with a1 = dtb_ptr forwarded into a0.
+
+
+
 
 #[no_mangle]
 pub extern "C" fn kernel_entry(dtb_ptr: u64) -> ! {

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Defined in start.S. linker_riscv64.ld must declare ENTRY(_start).
+
 extern "C" {
     pub fn _start() -> !;
 }

@@ -17,103 +17,15 @@
 pub mod caps;
 pub mod csr;
 pub mod extensions;
+pub mod fence;
+pub mod halt;
 pub mod id;
+pub mod irq;
+pub mod setup;
 
 pub use csr::{clear_csr, read_csr, set_csr, write_csr};
+pub use fence::{fence, fence_i, sfence_vma, sfence_vma_addr, sfence_vma_addr_asid, sfence_vma_asid};
+pub use halt::{halt, wait_for_interrupt};
 pub use id::{cpu_id, hart_id, marchid, mimpid, mvendorid};
-
-use core::arch::asm;
-
-pub fn init_cpu() {
-    configure_sstatus();
-    configure_sie();
-}
-
-fn configure_sstatus() {
-    unsafe {
-        let mut sstatus: usize;
-        asm!("csrr {}, sstatus", out(reg) sstatus, options(nostack));
-
-        sstatus |= 1 << 18;
-        sstatus |= 1 << 19;
-
-        asm!("csrw sstatus, {}", in(reg) sstatus, options(nostack));
-    }
-}
-
-fn configure_sie() {
-    unsafe {
-        let sie: usize = (1 << 1) | (1 << 5) | (1 << 9);
-        asm!("csrw sie, {}", in(reg) sie, options(nostack));
-    }
-}
-
-pub fn halt() -> ! {
-    loop {
-        unsafe {
-            asm!("wfi", options(nomem, nostack));
-        }
-    }
-}
-
-pub fn wait_for_interrupt() {
-    unsafe {
-        asm!("wfi", options(nomem, nostack));
-    }
-}
-
-pub fn enable_interrupts() {
-    unsafe {
-        asm!("csrsi sstatus, 2", options(nostack));
-    }
-}
-
-pub fn disable_interrupts() {
-    unsafe {
-        asm!("csrci sstatus, 2", options(nostack));
-    }
-}
-
-pub fn interrupts_enabled() -> bool {
-    let sstatus: usize;
-    unsafe {
-        asm!("csrr {}, sstatus", out(reg) sstatus, options(nostack));
-    }
-    (sstatus & (1 << 1)) != 0
-}
-
-pub fn fence() {
-    unsafe {
-        asm!("fence", options(nostack));
-    }
-}
-
-pub fn fence_i() {
-    unsafe {
-        asm!("fence.i", options(nostack));
-    }
-}
-
-pub fn sfence_vma() {
-    unsafe {
-        asm!("sfence.vma", options(nostack));
-    }
-}
-
-pub fn sfence_vma_addr(addr: usize) {
-    unsafe {
-        asm!("sfence.vma {}, zero", in(reg) addr, options(nostack));
-    }
-}
-
-pub fn sfence_vma_asid(asid: usize) {
-    unsafe {
-        asm!("sfence.vma zero, {}", in(reg) asid, options(nostack));
-    }
-}
-
-pub fn sfence_vma_addr_asid(addr: usize, asid: usize) {
-    unsafe {
-        asm!("sfence.vma {}, {}", in(reg) addr, in(reg) asid, options(nostack));
-    }
-}
+pub use irq::{disable_interrupts, enable_interrupts, interrupts_enabled};
+pub use setup::init_cpu;

@@ -21,16 +21,16 @@ use crate::arch::ArchOps;
 use crate::memory::addr::PhysAddr;
 use crate::process::core::ProcessControlBlock;
 
-// PCB::cr3 carries the active address-space root regardless of arch.
-// On riscv64 this is the satp PPN-encoded value the ArchOps backend
-// writes into satp (with sfence.vma to flush). Zero means "share the
-// kernel address space"; used by kernel-thread PCBs.
+
+
+
+
 pub(super) fn swap_address_space(pcb: &Arc<ProcessControlBlock>) -> Result<(), ()> {
     let root = pcb.cr3.load(Ordering::Relaxed);
     if root == 0 {
         return Ok(());
     }
-    // SAFETY: caller has masked SIE; ArchOps impl handles sfence.vma.
+
     unsafe {
         <crate::arch::Arch as ArchOps>::switch_address_space(PhysAddr::new(root));
     }

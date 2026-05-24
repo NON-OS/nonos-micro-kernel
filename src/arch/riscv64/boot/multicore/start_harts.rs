@@ -29,7 +29,10 @@ pub fn start_secondary_harts(boot_info: &BootInfo) {
             continue;
         }
 
-        let stack_top = get_kernel_stack(hart as usize);
+        let stack_top = match get_kernel_stack(hart as usize) {
+            Some(top) => top,
+            None => crate::arch::riscv64::cpu::halt(),
+        };
         let entry = _riscv64_secondary_start as u64;
 
         if sbi::hart_start(hart as u64, entry, stack_top).is_err() {

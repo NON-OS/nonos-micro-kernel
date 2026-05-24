@@ -15,18 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::arch::riscv64::cpu;
-use crate::arch::riscv64::interrupts::frame::TrapFrame;
-use crate::sys::serial;
 
-// Mask sstatus.SIE so the dump cannot be re-entered by an interrupt,
-// log the cause tag, dump the frame, halt the hart.
-pub fn fatal(tag: &[u8], frame: &TrapFrame) -> ! {
-    // SAFETY: csrci is a leaf CSR write that never faults.
+pub fn fatal() -> ! {
     unsafe {
         core::arch::asm!("csrci sstatus, 2", options(nostack));
     }
-    serial::print(b"[riscv64] fatal: ");
-    serial::println(tag);
-    frame.dump();
     cpu::halt()
 }

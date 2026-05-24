@@ -33,8 +33,12 @@ pub extern "C" fn riscv64_ap_entry(_hart_id: u64, _stack_top: u64) -> ! {
     if security::init_all().is_err() {
         cpu::halt();
     }
-    init_plic_hart();
-    init_timer_hart();
+    if init_plic_hart().is_err() {
+        cpu::halt();
+    }
+    if init_timer_hart().is_err() {
+        cpu::halt();
+    }
     HARTS_ONLINE.fetch_add(1, Ordering::AcqRel);
     let hart = cpu::id::hart_id();
     init_ap_scheduler(hart);

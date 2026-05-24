@@ -20,29 +20,29 @@ use super::current::slot_mut;
 use super::enable::{enable_initial, mark_dirty};
 use super::restore::restore;
 
-// First-use lazy FP enable. Returns true if the task slot was found,
-// FS flipped, registers restored, and the user's trapping instruction
-// can re-run via sret without sepc advance. Returns false when no per-
-// task FP slot is wired; caller must fail closed.
+
+
+
+
 pub fn try_enable_for_current_task(frame: &mut TrapFrame) -> bool {
     let slot = match slot_mut() {
         Some(s) => s,
         None => return false,
     };
 
-    // Move sstatus.FS in this CPU to Initial so the restore's fsd
-    // instructions don't take the same illegal-instruction trap.
+
+
     enable_initial();
 
-    // SAFETY: FS is now Initial; ctx is owned by this task's slot.
+
     unsafe { restore(&slot.ctx) };
 
-    // Promote FS to Dirty: subsequent FP writes happen anyway, and
-    // the next deschedule sees Dirty and runs save.
+
+
     mark_dirty();
 
-    // Mirror the FS bits into the frame's sstatus so sret restores
-    // FS=Dirty into the user context, not the Off it trapped with.
+
+
     frame.sstatus = (frame.sstatus
         & !crate::arch::riscv64::cpu::csr::SSTATUS_FS_MASK)
         | crate::arch::riscv64::cpu::csr::SSTATUS_FS_DIRTY;

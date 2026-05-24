@@ -18,8 +18,8 @@ use core::arch::asm;
 
 use crate::memory::addr::VirtAddr;
 
-// sfence.vma rs1, x0 flushes the entry for a single VA on this hart.
-// Cross-hart shootdown is the SMP layer's job (RFENCE via SBI).
+
+
 #[inline(always)]
 pub(super) unsafe fn flush_one(addr: VirtAddr) {
     asm!(

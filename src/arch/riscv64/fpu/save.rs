@@ -20,8 +20,8 @@ extern "C" {
     fn riscv64_fpu_save(ctx: *mut FpContext);
 }
 
-// SAFETY: caller must have sstatus.FS != Off; ctx must be a unique,
-// 8-aligned, writable FpContext.
+
+
 pub unsafe fn save(ctx: &mut FpContext) {
     unsafe { riscv64_fpu_save(ctx as *mut FpContext) }
 }

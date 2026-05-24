@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// cpu::id::cpu_id reads from the boot-hart stash populated by start.S.
+
 #[inline(always)]
 pub(super) fn current() -> u32 {
     super::super::cpu::id::cpu_id() as u32

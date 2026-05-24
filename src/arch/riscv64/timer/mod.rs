@@ -16,105 +16,17 @@
 
 pub mod clint;
 
-pub use clint::{clear_timer_interrupt, set_timer_interrupt, Clint};
+mod convert;
+mod deadline;
+mod delay;
+mod frequency;
+mod interrupt;
+mod read;
 
-use core::arch::asm;
-use core::sync::atomic::{AtomicU64, Ordering};
-
-// Sane QEMU virt fallback when the DTB walker hasn't run yet.
-// `set_frequency` overrides this once /cpus/timebase-frequency is parsed.
-static TIMER_FREQ: AtomicU64 = AtomicU64::new(10_000_000);
-
-// Called from the DTB adapter with the parsed timebase. Idempotent.
-pub fn set_frequency(hz: u64) {
-    if hz != 0 {
-        TIMER_FREQ.store(hz, Ordering::Release);
-    }
-}
-
-pub fn init_timer() {
-    set_next_timer(10_000_000);
-}
-
-pub fn init_timer_hart() {
-    set_next_timer(10_000_000);
-}
-
-fn read_frequency() -> u64 {
-    10_000_000
-}
-
-pub fn read_time() -> u64 {
-    let time: u64;
-    unsafe {
-        asm!("csrr {}, time", out(reg) time, options(nostack));
-    }
-    time
-}
-
-pub fn current_time_ns() -> u64 {
-    let time = read_time();
-    let freq = TIMER_FREQ.load(Ordering::Acquire);
-
-    if freq == 0 {
-        return 0;
-    }
-
-    (time * 1_000_000_000) / freq
-}
-
-pub fn current_time_us() -> u64 {
-    let time = read_time();
-    let freq = TIMER_FREQ.load(Ordering::Acquire);
-
-    if freq == 0 {
-        return 0;
-    }
-
-    (time * 1_000_000) / freq
-}
-
-pub fn set_next_timer(ticks: u64) {
-    let current = read_time();
-    let next = current + ticks;
-
-    super::sbi::set_timer(next);
-}
-
-// SupervisorTimer ISR: arm the next deadline first (so the next tick
-// can race the work below cleanly), clear sip.STIP, deliver the tick
-// to the scheduler. Per-hart: SBI set_timer programs the calling
-// hart's stimecmp, so each AP rearms its own deadline naturally.
-pub fn handle_timer_interrupt() {
-    set_next_timer(10_000_000);
-    super::cpu::csr::clear_csr(super::cpu::csr::SIP, super::cpu::csr::SIP_STIP);
-    crate::process::scheduler::preemption::tick::tick();
-}
-
-pub fn delay_ns(ns: u64) {
-    let start = current_time_ns();
-    while current_time_ns() - start < ns {
-        core::hint::spin_loop();
-    }
-}
-
-pub fn delay_us(us: u64) {
-    delay_ns(us * 1000);
-}
-
-pub fn delay_ms(ms: u64) {
-    delay_ns(ms * 1_000_000);
-}
-
-pub fn ticks_to_ns(ticks: u64) -> u64 {
-    let freq = TIMER_FREQ.load(Ordering::Acquire);
-    if freq == 0 {
-        return 0;
-    }
-    (ticks * 1_000_000_000) / freq
-}
-
-pub fn ns_to_ticks(ns: u64) -> u64 {
-    let freq = TIMER_FREQ.load(Ordering::Acquire);
-    (ns * freq) / 1_000_000_000
-}
+pub use clint::{clear_ipi, clear_timer_interrupt, is_ipi_pending, read_mtime, send_ipi, set_clint_base, set_timer_interrupt, Clint};
+pub use convert::{current_time_ns, current_time_us, ns_to_ticks, ticks_to_ns};
+pub use deadline::{init_timer, init_timer_hart, set_next_timer};
+pub use delay::{delay_ms, delay_ns, delay_us};
+pub use frequency::set_frequency;
+pub use interrupt::handle_timer_interrupt;
+pub use read::read_time;

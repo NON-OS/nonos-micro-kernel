@@ -15,59 +15,54 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::arch::riscv64::context::save_user_frame;
+use crate::arch::riscv64::cpu::csr::{clear_csr, SIP, SIP_SSIP};
 use crate::arch::riscv64::interrupts::cause::InterruptCode;
 use crate::arch::riscv64::interrupts::frame::TrapFrame;
 use crate::arch::riscv64::plic::{claim_interrupt, complete_interrupt, dispatch_irq};
 use crate::arch::riscv64::timer;
-use crate::sys::serial::{print_hex, print_str};
+use crate::process::scheduler::preemption::NEED_RESCHEDULE;
+use core::sync::atomic::Ordering;
 
 use super::fatal::fatal;
 
 pub fn dispatch(code: InterruptCode, frame: &mut TrapFrame) {
-    // Mirror U-mode state to the current PCB before the handler runs.
-    // SupervisorTimer/SupervisorExternal can lead to a yield via
-    // NEED_RESCHEDULE; on normal sret the snapshot is overwritten on
-    // the next trap. is_from_user() reads sstatus.SPP from the frame.
     if frame.is_from_user() {
         save_user_frame(frame);
     }
 
     match code {
         InterruptCode::SupervisorTimer => timer::handle_timer_interrupt(),
-        InterruptCode::SupervisorExternal => handle_external(frame),
-
-        // No kernel-side IPI emitter is wired today; receipt is a stray
-        // sip.SSIP write.
-        InterruptCode::SupervisorSoftware => fatal(b"S-mode software IPI (no sender wired)", frame),
-
-        // M-mode and U-mode interrupts cannot be delivered to S-mode
-        // unless mideleg is misprogrammed.
+        InterruptCode::SupervisorExternal => handle_external(),
+        InterruptCode::SupervisorSoftware => handle_software(),
         InterruptCode::MachineSoftware
         | InterruptCode::MachineTimer
-        | InterruptCode::MachineExternal => fatal(b"M-mode interrupt to S-mode", frame),
-        InterruptCode::UserSoftware | InterruptCode::UserTimer | InterruptCode::UserExternal => {
-            fatal(b"U-mode interrupt to S-mode", frame)
-        }
-
-        InterruptCode::Unknown(_) => fatal(b"unknown interrupt code", frame),
+        | InterruptCode::MachineExternal => fatal(),
+        InterruptCode::UserSoftware | InterruptCode::UserTimer | InterruptCode::UserExternal => fatal(),
+        InterruptCode::Unknown(_) => fatal(),
     }
 }
 
-// PLIC external IRQ. Claim returns 0 when nothing is pending. Always
-// complete so the line is released; unhandled is a contract violation
-// and halts.
-fn handle_external(frame: &mut TrapFrame) {
+fn handle_external() {
     let irq = match claim_interrupt() {
-        Some(i) if i != 0 => i,
+        Ok(Some(i)) => i,
+        Ok(None) => return,
         _ => return,
     };
     if dispatch_irq(irq) {
-        complete_interrupt(irq);
+        if complete_interrupt(irq).is_err() {
+            fatal();
+        }
         return;
     }
-    print_str("[riscv64] unhandled PLIC irq=");
-    print_hex(irq as u64);
-    print_str("\n");
-    complete_interrupt(irq);
-    fatal(b"S-mode external", frame)
+    if complete_interrupt(irq).is_err() {
+        fatal();
+    }
+    fatal()
+}
+
+fn handle_software() {
+    if clear_csr(SIP, SIP_SSIP).is_err() {
+        fatal();
+    }
+    NEED_RESCHEDULE.store(true, Ordering::Release);
 }

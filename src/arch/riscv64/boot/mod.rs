@@ -18,29 +18,12 @@ pub mod dtb_adapter;
 pub mod entry;
 pub mod hart_id;
 pub mod info;
+mod init;
 pub mod multicore;
 pub mod stack;
 
 pub use entry::kernel_entry;
 pub use info::{BootInfo, MemoryRegion};
+pub use init::init;
 pub use multicore::start_secondary_harts;
 pub use stack::setup_stack;
-
-use super::{cpu, interrupts, mmu, plic, security, timer, uart};
-
-pub fn init(boot_info: &BootInfo) {
-    uart::init_uart(boot_info.uart_base);
-    cpu::init_cpu();
-    interrupts::install_stvec();
-    if security::init_all().is_err() {
-        cpu::halt();
-    }
-    mmu::init_mmu(boot_info);
-    if boot_info.plic_base != 0 {
-        plic::init_plic(boot_info.plic_base);
-    }
-    timer::init_timer();
-    if boot_info.hart_count > 1 {
-        multicore::start_secondary_harts(boot_info);
-    }
-}

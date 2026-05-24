@@ -16,7 +16,7 @@
 
 use core::sync::atomic::AtomicU64;
 
-// SBI delivers the boot hart id in a0 at supervisor entry. mhartid is
-// M-mode-only and faults in S; we stash a0 here once and read from it
-// thereafter. AtomicU64 because reads happen from interrupt context.
+
+
+
 pub(super) static BOOT_HART_ID: AtomicU64 = AtomicU64::new(u64::MAX);

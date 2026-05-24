@@ -16,9 +16,9 @@
 
 use super::context::FpContext;
 
-// Per-task FP state. `valid` means `ctx` holds a saved snapshot;
-// `enabled` means sstatus.FS != Off was granted to this task on its
-// next sret; `dirty` means an FP write happened after restore.
+
+
+
 #[repr(C)]
 pub struct FpSlot {
     pub ctx: FpContext,

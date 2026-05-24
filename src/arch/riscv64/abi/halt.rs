@@ -16,7 +16,7 @@
 
 use core::arch::asm;
 
-// Mask sstatus.SIE before parking.
+
 #[inline(always)]
 pub(super) fn halt() -> ! {
     unsafe {

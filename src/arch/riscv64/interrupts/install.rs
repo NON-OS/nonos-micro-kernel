@@ -17,15 +17,14 @@
 use crate::arch::riscv64::asm::trap_entry_addr;
 use crate::arch::riscv64::cpu::csr::{write_csr, STVEC};
 
-// stvec encoding: bits[63:2]=BASE (4-byte aligned), bits[1:0]=MODE.
-// MODE=0 (Direct) — every trap branches to BASE; the dispatcher
-// decodes scause. Vectored mode is unused until per-cause tables exist.
 const STVEC_MODE_DIRECT: usize = 0;
 
 pub fn install_stvec() {
     let base = trap_entry_addr();
-    // Asm enforces 4-byte alignment via `.balign 4`; assert before
-    // committing so a future linker placement bug fails closed.
-    assert!(base & 0x3 == 0, "trap entry not 4-byte aligned");
-    write_csr(STVEC, base | STVEC_MODE_DIRECT);
+    if base & 0x3 != 0 {
+        crate::arch::riscv64::cpu::halt();
+    }
+    if write_csr(STVEC, base | STVEC_MODE_DIRECT).is_err() {
+        crate::arch::riscv64::cpu::halt();
+    }
 }

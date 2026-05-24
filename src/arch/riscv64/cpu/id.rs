@@ -16,15 +16,13 @@
 
 use core::arch::asm;
 
+use crate::arch::riscv64::sbi::SbiError;
 use crate::arch::riscv64::sbi::base as sbi_base;
 
 pub fn cpu_id() -> usize {
     hart_id()
 }
 
-// start.S sets tp = hartid on both BSP and AP entry; tp survives the
-// call chain by ABI. Reading tp here is a pure register move and is
-// safe in S-mode (unlike mhartid, which faults).
 pub fn hart_id() -> usize {
     let id: usize;
     unsafe {
@@ -33,22 +31,16 @@ pub fn hart_id() -> usize {
     id
 }
 
-// SBI Base extension proxies for what would otherwise be M-only CSRs.
-// Implementations that lack the extension return 0.
-pub fn mvendorid() -> usize {
-    sbi_base::mvendorid().unwrap_or(0)
+pub fn mvendorid() -> Result<usize, SbiError> {
+    sbi_base::mvendorid()
 }
 
-pub fn marchid() -> usize {
-    sbi_base::marchid().unwrap_or(0)
+pub fn marchid() -> Result<usize, SbiError> {
+    sbi_base::marchid()
 }
 
-pub fn mimpid() -> usize {
-    sbi_base::mimpid().unwrap_or(0)
-}
-
-pub fn mconfigptr() -> usize {
-    0
+pub fn mimpid() -> Result<usize, SbiError> {
+    sbi_base::mimpid()
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -60,8 +52,13 @@ pub struct HartInfo {
 }
 
 impl HartInfo {
-    pub fn current() -> Self {
-        Self { hart_id: hart_id(), mvendorid: mvendorid(), marchid: marchid(), mimpid: mimpid() }
+    pub fn current() -> Result<Self, SbiError> {
+        Ok(Self {
+            hart_id: hart_id(),
+            mvendorid: mvendorid()?,
+            marchid: marchid()?,
+            mimpid: mimpid()?,
+        })
     }
 
     pub fn vendor_name(&self) -> &'static str {
@@ -74,17 +71,4 @@ impl HartInfo {
         }
     }
 }
-
-pub fn is_primary_hart() -> bool {
-    hart_id() == 0
-}
-
-pub fn print_hart_info() {
-    let info = HartInfo::current();
-
-    crate::sys::serial::print(b"RISC-V Hart ");
-    crate::sys::serial::print_dec(info.hart_id as u64);
-    crate::sys::serial::print(b": ");
-    crate::sys::serial::print(info.vendor_name().as_bytes());
-    crate::sys::serial::println(b"");
-}
+pub fn is_primary_hart() -> bool { hart_id() == 0 }

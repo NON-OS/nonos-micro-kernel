@@ -19,9 +19,6 @@ use crate::arch::riscv64::interrupts::frame::TrapFrame;
 
 use super::{exception, interrupt, syscall};
 
-// Single entry from trap.S. scause MSB picks interrupt vs exception;
-// UserEcall short-circuits to the syscall dispatcher (must mutate the
-// frame and advance sepc before sret).
 #[no_mangle]
 pub extern "C" fn riscv64_trap_dispatch(frame: *mut TrapFrame) {
     let frame = unsafe { &mut *frame };

@@ -19,9 +19,9 @@ use super::enable::{disable, enable_initial, mark_dirty};
 use super::restore::restore;
 use super::save::save;
 
-// Save the outgoing task's FP context if dirty, then set FS=Off. The
-// scheduler calls this when descheduling a user task; not on every
-// trap. If the slot is clean or no current slot, just clamp FS=Off.
+
+
+
 pub fn save_outgoing() {
     let slot = match slot_mut() {
         Some(s) => s,
@@ -31,8 +31,8 @@ pub fn save_outgoing() {
         }
     };
     if slot.enabled && slot.dirty {
-        // SAFETY: slot.enabled => FS is non-Off on this hart; f-regs
-        // hold the task's live state.
+
+
         unsafe { save(&mut slot.ctx) };
         slot.valid = true;
         slot.dirty = false;
@@ -41,10 +41,10 @@ pub fn save_outgoing() {
     slot.enabled = false;
 }
 
-// Prepare the incoming task. If it has a valid snapshot, set FS=Initial,
-// restore, then mark FS=Dirty so the save path treats the f-regs as
-// live without needing a re-trap. Otherwise leave FS=Off so the first
-// FP op traps into lazy enable.
+
+
+
+
 pub fn prepare_incoming() {
     let slot = match slot_mut() {
         Some(s) => s,
@@ -55,7 +55,7 @@ pub fn prepare_incoming() {
     };
     if slot.valid {
         enable_initial();
-        // SAFETY: FS just set to Initial.
+
         unsafe { restore(&slot.ctx) };
         mark_dirty();
         slot.enabled = true;

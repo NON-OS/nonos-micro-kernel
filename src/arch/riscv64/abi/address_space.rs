@@ -18,9 +18,9 @@ use crate::memory::addr::PhysAddr;
 
 use super::super::mmu::{make_satp, mmu_mode, write_satp};
 
-// Preserve the active MMU mode; ASID stays 0 — per-ASID lifecycle is
-// the scheduler's job. write_satp is followed by sfence.vma inside the
-// helper.
+
+
+
 #[inline(always)]
 pub(super) unsafe fn switch(root: PhysAddr) {
     let mode = mmu_mode();

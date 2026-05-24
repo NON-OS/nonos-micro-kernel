@@ -18,9 +18,6 @@ use core::sync::atomic::Ordering;
 
 use super::state::{IRQ_HANDLERS, MAX_IRQ};
 
-// Returns true if a handler ran. Caller is responsible for
-// `complete_interrupt(irq)` in either case so the PLIC releases the
-// source.
 pub fn dispatch(irq: u32) -> bool {
     if irq == 0 || irq >= MAX_IRQ {
         return false;
@@ -29,7 +26,6 @@ pub fn dispatch(irq: u32) -> bool {
     if raw.is_null() {
         return false;
     }
-    // SAFETY: pointer was stored via `register` from a `fn(u32)`.
     let handler: fn(u32) = unsafe { core::mem::transmute(raw) };
     handler(irq);
     true

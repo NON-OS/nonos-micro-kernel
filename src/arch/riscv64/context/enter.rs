@@ -21,17 +21,17 @@ extern "C" {
     fn riscv64_enter_user(ctx: *const UserEntry) -> !;
 }
 
-// Baseline sstatus for first U-mode entry:
-//   SPP=0     -> sret returns to U-mode
-//   SPIE=1    -> SIE=1 after sret (interrupts on in user)
-//   SIE=0     -> S-mode interrupts masked until sret swaps in SPIE
-//   FS=00     -> FP off; lazy-enable trap delivers fail-closed fault
-//   VS=00     -> V off; same fail-closed
+
+
+
+
+
+
 pub const SSTATUS_USER_INITIAL: u64 = SSTATUS_SPIE as u64;
 
-// Sv39/Sv48 canonical user range. The kernel half is everything with
-// bit 38/47 set on the respective layout; we treat anything above the
-// usable user maximum as kernel and refuse.
+
+
+
 const USER_VA_MAX_SV39: u64 = (1u64 << 38) - 1;
 
 #[derive(Debug, Clone, Copy)]
@@ -42,9 +42,9 @@ pub enum EnterError {
     SstatusWouldStayInSMode,
 }
 
-// Hand control to U-mode. Refuses kernel VAs and any sstatus value that
-// would not return to U-mode after sret. Caller has masked SIE and
-// installed satp; on success this function does not return.
+
+
+
 pub unsafe fn enter_user(ctx: &UserEntry) -> Result<core::convert::Infallible, EnterError> {
     if ctx.entry == 0 || ctx.entry > USER_VA_MAX_SV39 {
         return Err(EnterError::NonUserEntry);

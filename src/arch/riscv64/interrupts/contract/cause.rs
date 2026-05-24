@@ -18,11 +18,6 @@ use crate::arch::riscv64::interrupts::cause::{ExceptionCode, TrapCause as RiscvC
 use crate::arch::riscv64::interrupts::frame::TrapFrame;
 use crate::arch::trap::contract::{FaultAccess, PageFaultInfo, TrapCause};
 
-// scause MSB selects interrupt vs exception. Interrupts arriving via
-// the contract are asynchronous and fatal by construction (the routine
-// dispatch is in interrupts::handlers, not here). Ecall is intentionally
-// classified as OtherException — the asm dispatcher routes ECALL into
-// the syscall path before invoking `contract::deliver`.
 pub(super) fn project(frame: &TrapFrame) -> TrapCause {
     match RiscvCause::from_scause(frame.scause) {
         RiscvCause::Interrupt(_) => TrapCause::Nmi,
@@ -54,10 +49,6 @@ fn exception(code: ExceptionCode, frame: &TrapFrame) -> TrapCause {
     }
 }
 
-// `present` is not exposed by RISC-V; the page-table walk hardware
-// either delivered page-fault (entry missing or invalid) or
-// access-fault (permission). Page-fault always implies not-present
-// from the PTE.V bit perspective.
 fn page_fault(frame: &TrapFrame, access: FaultAccess) -> PageFaultInfo {
     PageFaultInfo {
         fault_address: frame.stval as u64,

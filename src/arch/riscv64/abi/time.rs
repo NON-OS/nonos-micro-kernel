@@ -16,8 +16,8 @@
 
 use core::arch::asm;
 
-// `time` CSR. Read in S-mode via SBI when mcounteren bit 1 is clear;
-// transparent to this caller.
+
+
 #[inline(always)]
 pub(super) fn counter() -> u64 {
     let t: u64;

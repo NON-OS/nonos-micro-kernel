@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// LP64D context: 32 doubles + fcsr. fsd needs 8-byte alignment; the
-// repr(align(16)) is conservative and lets the same struct hold an
-// optional pair-stp on hypothetical extensions.
+
+
+
 #[repr(C, align(16))]
 #[derive(Clone)]
 pub struct FpContext {

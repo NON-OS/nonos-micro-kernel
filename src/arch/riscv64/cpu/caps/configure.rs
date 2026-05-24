@@ -21,8 +21,6 @@ use crate::arch::fdt::find::isa::IsaFlags;
 use super::bits::{CAP_A, CAP_C, CAP_CONFIGURED, CAP_D, CAP_F, CAP_V};
 use super::state::CAPS;
 
-// Called once on the BSP after the DTB adapter has parsed the boot
-// hart's `riscv,isa`. Idempotent.
 pub fn configure(flags: IsaFlags) {
     let mut bits = CAP_CONFIGURED;
     if flags.f {

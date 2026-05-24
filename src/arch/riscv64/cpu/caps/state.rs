@@ -16,6 +16,4 @@
 
 use core::sync::atomic::AtomicU16;
 
-// 0 with CAP_CONFIGURED clear = "not yet parsed"; queries treat all
-// extensions as unavailable until the DTB adapter sets this on BSP.
 pub(super) static CAPS: AtomicU16 = AtomicU16::new(0);
