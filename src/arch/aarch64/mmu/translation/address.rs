@@ -14,12 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod address;
-mod asid;
-mod fault;
-mod stage;
+use super::stage::translate_stage1_read;
 
-pub use address::{kernel_phys_to_virt, phys_to_virt, virt_to_phys};
-pub use asid::{current_asid, set_asid};
-pub use fault::TranslationFault;
-pub use stage::{translate_stage1_read, translate_stage1_write, translate_user_read, translate_user_write};
+const PHYS_OFFSET: u64 = 0xFFFF_0000_0000_0000;
+const KERNEL_OFFSET: u64 = 0xFFFF_8000_0000_0000;
+
+pub fn virt_to_phys(virt: u64) -> Option<u64> {
+    if virt >= KERNEL_OFFSET {
+        return Some(virt - KERNEL_OFFSET);
+    }
+    if virt >= PHYS_OFFSET {
+        return Some(virt - PHYS_OFFSET);
+    }
+    translate_stage1_read(virt).ok()
+}
+
+pub fn phys_to_virt(phys: u64) -> u64 {
+    PHYS_OFFSET + phys
+}
+
+pub fn kernel_phys_to_virt(phys: u64) -> u64 {
+    KERNEL_OFFSET + phys
+}

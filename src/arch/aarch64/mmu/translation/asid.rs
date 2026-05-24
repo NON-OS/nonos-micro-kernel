@@ -14,12 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod address;
-mod asid;
-mod fault;
-mod stage;
+use core::arch::asm;
 
-pub use address::{kernel_phys_to_virt, phys_to_virt, virt_to_phys};
-pub use asid::{current_asid, set_asid};
-pub use fault::TranslationFault;
-pub use stage::{translate_stage1_read, translate_stage1_write, translate_user_read, translate_user_write};
+pub fn current_asid() -> u16 {
+    let ttbr: u64;
+    unsafe {
+        asm!("mrs {}, ttbr0_el1", out(reg) ttbr, options(nostack));
+    }
+    (ttbr >> 48) as u16
+}
+
+pub fn set_asid(asid: u16) {
+    let mut ttbr: u64;
+    unsafe {
+        asm!("mrs {}, ttbr0_el1", out(reg) ttbr, options(nostack));
+    }
+    ttbr = (ttbr & 0x0000_FFFF_FFFF_FFFF) | ((asid as u64) << 48);
+    unsafe {
+        asm!("msr ttbr0_el1, {}", "isb", in(reg) ttbr, options(nostack));
+    }
+}
