@@ -36,10 +36,6 @@ pub fn insert(record: DmaGrant) {
     RECORDS.lock().push(record);
 }
 
-pub fn lookup(grant_id: u64) -> Option<DmaGrant> {
-    RECORDS.lock().iter().find(|g| g.grant_id == grant_id).copied()
-}
-
 pub fn remove(pid: u32, grant_id: u64) -> Result<DmaGrant, DmaError> {
     let mut all = RECORDS.lock();
     let idx = all.iter().position(|g| g.grant_id == grant_id).ok_or(DmaError::UnknownGrant)?;

@@ -18,16 +18,11 @@
 
 extern crate alloc;
 
-use alloc::string::String;
 use core::sync::atomic::Ordering;
 use spin::Mutex;
 
-use super::error::InboxError;
 use super::stats::{InboxStats, InboxStatsSnapshot};
 use crate::ipc::nonos_channel::IpcMessage;
-
-/// Spin loop iterations for backoff
-const SPIN_BACKOFF_ITERATIONS: usize = 256;
 
 /// Per-module message inbox with bounded capacity. `owner` is the
 /// pid that registered the inbox; `0` is kernel-owned (the reply
@@ -74,44 +69,6 @@ impl Inbox {
     #[inline]
     pub(super) fn capacity(&self) -> usize {
         self.capacity
-    }
-
-    /// Enqueue a message with timeout
-    ///
-    /// Spins with backoff until space is available or timeout expires.
-    pub(super) fn enqueue_with_timeout(
-        &self,
-        msg: IpcMessage,
-        timeout_ms: u64,
-    ) -> Result<(), InboxError> {
-        let start = crate::time::timestamp_millis();
-
-        loop {
-            {
-                let mut q = self.queue.lock();
-                if q.len() < self.capacity {
-                    q.push_back(msg);
-                    let size = q.len();
-                    drop(q);
-                    self.stats.record_enqueue(size);
-                    return Ok(());
-                }
-            }
-
-            let elapsed = crate::time::timestamp_millis().saturating_sub(start);
-            if elapsed >= timeout_ms {
-                self.stats.record_timeout();
-                return Err(InboxError::Timeout {
-                    module: String::new(), // Filled in by caller
-                    waited_ms: elapsed,
-                });
-            }
-
-            // Spin backoff
-            for _ in 0..SPIN_BACKOFF_ITERATIONS {
-                core::hint::spin_loop();
-            }
-        }
     }
 
     /// Try to enqueue without blocking

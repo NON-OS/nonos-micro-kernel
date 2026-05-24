@@ -17,4 +17,4 @@
 // Boot log is serial-only; the framebuffer renderer is intentionally
 // a no-op so `output.rs` does not branch on the absence of a graphics
 // surface.
-pub fn write_line(_tag: &str, _msg: &str, _color: u32) {}
+pub(super) fn write_line(_tag: &str, _msg: &str, _color: u32) {}

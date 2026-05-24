@@ -64,9 +64,6 @@ impl InboxStats {
         self.dropped_full.fetch_add(1, Ordering::Relaxed);
     }
 
-    pub(super) fn record_timeout(&self) {
-        self.timeouts.fetch_add(1, Ordering::Relaxed);
-    }
 }
 
 /// Snapshot of inbox statistics

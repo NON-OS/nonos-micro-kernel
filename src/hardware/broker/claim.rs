@@ -82,19 +82,19 @@ pub fn lookup(device_id: u64) -> Option<Claim> {
     CLAIMS.lock().iter().find(|c| c.device_id == device_id).copied()
 }
 
-pub fn snapshot() -> Vec<Claim> {
+#[cfg(test)]
+pub(crate) fn snapshot() -> Vec<Claim> {
     CLAIMS.lock().clone()
 }
 
-// Test-only by convention. The kernel never calls these from a
-// production path; the broker MSI-X test crate imports this file
-// via `#[path]` and uses both helpers to seed claim state.
-pub fn reset_for_test() {
+#[cfg(test)]
+pub(crate) fn reset_for_test() {
     CLAIMS.lock().clear();
     EPOCH.store(1, Ordering::SeqCst);
 }
 
-pub fn install_for_test(pid: u32, device_id: u64) -> u64 {
+#[cfg(test)]
+pub(crate) fn install_for_test(pid: u32, device_id: u64) -> u64 {
     let mut claims = CLAIMS.lock();
     let epoch = EPOCH.fetch_add(1, Ordering::SeqCst);
     claims.push(Claim { pid, device_id, epoch });

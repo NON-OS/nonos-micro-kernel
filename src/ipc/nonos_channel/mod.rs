@@ -23,5 +23,5 @@ mod hash;
 mod message;
 
 pub use error::ChannelError;
-pub use hash::{compute_checksum, init_ipc_secret};
+pub use hash::{compute_channel_key, compute_checksum, init_ipc_secret};
 pub use message::{IpcMessage, MAX_MESSAGE_SIZE};

@@ -113,9 +113,8 @@ pub fn drain_for_device(pid: u32, device_id: u64) -> Vec<IrqGrant> {
     taken
 }
 
-// Test-only by convention; imported by the broker MSI-X test crate
-// to wipe global record state between cases.
-pub fn reset_for_test() {
+#[cfg(test)]
+pub(crate) fn reset_for_test() {
     RECORDS.lock().clear();
     NEXT_GRANT_ID.store(1, Ordering::SeqCst);
 }

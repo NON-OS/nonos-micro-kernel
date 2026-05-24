@@ -17,5 +17,3 @@
 pub const MSR_AMD_SYSCFG: u32 = 0xC0010010;
 pub const MSR_AMD_SMEE: u32 = 0xC0010015;
 pub const SYSCFG_MEM_ENCRYPT_BIT: u64 = 1 << 23;
-pub const C_BIT_POSITION_MIN: u8 = 47;
-pub const C_BIT_POSITION_MAX: u8 = 51;

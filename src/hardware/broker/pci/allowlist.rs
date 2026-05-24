@@ -48,10 +48,11 @@ pub fn validate(
 }
 
 fn validate_command(new: u16, current: u16) -> Result<WriteAction, PciWriteError> {
-    if (new ^ current) & !CMD_BUS_MASTER != 0 {
+    let desired = if new & !CMD_BUS_MASTER == 0 { current | new } else { new };
+    if (desired ^ current) & !CMD_BUS_MASTER != 0 {
         return Err(PciWriteError::BitsNotAllowed);
     }
-    Ok(WriteAction::Command(new))
+    Ok(WriteAction::Command(desired))
 }
 
 fn validate_msix_control(

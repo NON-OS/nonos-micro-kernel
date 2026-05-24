@@ -37,10 +37,6 @@ pub fn contains(device_id: u64) -> bool {
     TABLE.read().iter().any(|r| r.device_id == device_id)
 }
 
-pub fn lookup(device_id: u64) -> Option<DeviceRecord> {
-    TABLE.read().iter().find(|r| r.device_id == device_id).copied()
-}
-
 pub fn class_of(device_id: u64) -> Option<u32> {
     TABLE.read().iter().find(|r| r.device_id == device_id).map(|r| r.class)
 }

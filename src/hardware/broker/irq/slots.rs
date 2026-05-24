@@ -149,9 +149,8 @@ pub fn read_counters(slot_idx: usize) -> (u64, u64) {
     (slot.seq.load(Ordering::Acquire), slot.overflow.load(Ordering::Acquire))
 }
 
-// Test-only by convention; imported by the broker MSI-X test crate
-// to wipe slot bitmap and counters between cases.
-pub fn reset_for_test() {
+#[cfg(test)]
+pub(crate) fn reset_for_test() {
     SLOT_BITMAP.store(0, Ordering::SeqCst);
     for slot in SLOTS.iter() {
         slot.active.store(false, Ordering::SeqCst);

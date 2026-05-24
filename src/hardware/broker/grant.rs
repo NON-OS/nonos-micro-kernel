@@ -112,10 +112,6 @@ pub fn drain_for_device(pid: u32, device_id: u64) -> Vec<MmioGrant> {
 
 // Lookup a single grant by id. Used by an explicit `MkMmioUnmap`
 // from the holder.
-pub fn lookup(grant_id: u64) -> Option<MmioGrant> {
-    GRANTS.lock().iter().find(|g| g.grant_id == grant_id).copied()
-}
-
 // Remove a single grant if `pid` is the holder. Returns the removed
 // record on success.
 pub fn remove(pid: u32, grant_id: u64) -> Result<MmioGrant, GrantError> {
@@ -129,7 +125,8 @@ pub fn remove(pid: u32, grant_id: u64) -> Result<MmioGrant, GrantError> {
 
 // Snapshot for diagnostics and tests. The lock is dropped before the
 // caller sees the data.
-pub fn snapshot() -> Vec<MmioGrant> {
+#[cfg(test)]
+pub(crate) fn snapshot() -> Vec<MmioGrant> {
     GRANTS.lock().clone()
 }
 

@@ -14,20 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::security::capsule_manifest::{
-    verify_with_publisher, DeclaredEndpoint, EndpointKind, VerifiedManifest,
-};
+use crate::security::capsule_manifest::{verify_with_publisher, DeclaredEndpoint, EndpointKind};
 use crate::security::nonos_id_cert::{
-    decode as decode_id_cert, verify as verify_id_cert, IdCertVerifyError, VerifiedNonosId,
-    NONOS_PRODUCTION_POLICY,
+    decode as decode_id_cert, verify as verify_id_cert, IdCertVerifyError, NONOS_PRODUCTION_POLICY,
 };
 use crate::security::nonos_trust_anchor::NonosTrustAnchorPolicy;
 
 use super::super::spec::{CapsuleSpecVerified, SpawnError};
 
 pub(crate) struct Preflighted {
-    pub verified_id: VerifiedNonosId,
-    pub manifest: VerifiedManifest,
     pub install_caps: u64,
 }
 
@@ -50,7 +45,7 @@ pub(crate) fn run(
         },
     ];
 
-    let (manifest, install_caps) = verify_with_publisher(
+    let verification = verify_with_publisher(
         spec.manifest_bytes,
         spec.nonos_id_cert_bytes,
         &cert,
@@ -62,6 +57,7 @@ pub(crate) fn run(
         spec.requested_caps,
         &declared,
     )?;
+    let install_caps = verification.1;
 
-    Ok(Preflighted { verified_id, manifest, install_caps })
+    Ok(Preflighted { install_caps })
 }

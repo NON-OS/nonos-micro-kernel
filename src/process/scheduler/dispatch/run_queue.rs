@@ -53,6 +53,3 @@ pub fn get_runnable_pids() -> Vec<u32> {
 // Pop the head — arrival-order selection. Used by the dispatcher
 // when it wants O(1) "next runnable pid" rather than a full
 // snapshot to scan.
-pub fn pop_head() -> Option<u32> {
-    PID_RUN_QUEUE.lock().pop_front()
-}

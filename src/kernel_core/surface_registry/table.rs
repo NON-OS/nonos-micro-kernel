@@ -20,8 +20,8 @@ use spin::Mutex;
 use crate::memory::addr::PhysAddr;
 
 use super::types::{
-    encode_handle, RegistryError, SurfaceDescriptor, SurfaceFormat, SurfaceHandle, SurfaceSid,
-    FMT_ARGB8888, MAX_PAGES_PER_SURFACE, PIXEL_BYTES, SLOT_CAP,
+    encode_handle, RegistryError, SurfaceDescriptor, SurfaceHandle, SurfaceSid, FMT_ARGB8888,
+    MAX_PAGES_PER_SURFACE, PIXEL_BYTES, SLOT_CAP,
 };
 
 pub(super) struct Slot {
@@ -90,9 +90,4 @@ pub fn lookup_owned(owner_pid: u32, sid: SurfaceSid) -> Result<SurfaceHandle, Re
         return Err(RegistryError::NotOwner);
     }
     Ok(encode_handle(idx as u32, slot.epoch))
-}
-
-#[inline]
-pub(super) fn slot_format_argb8888() -> SurfaceFormat {
-    SurfaceFormat::Argb8888
 }

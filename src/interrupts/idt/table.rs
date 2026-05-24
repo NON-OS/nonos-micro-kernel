@@ -101,7 +101,7 @@ fn configure_irqs(idt: &mut InterruptDescriptorTable) {
     // function pinned in kernel text. Its address is stable.
     unsafe {
         idt[vectors::VECTOR_TIMER as usize]
-            .set_handler_addr(VirtAddr::new(isr::timer_trampoline as u64));
+            .set_handler_addr(VirtAddr::new(isr::timer_trampoline as *const () as u64));
     }
     idt[vectors::VECTOR_KEYBOARD as usize].set_handler_fn(isr::irq_keyboard);
     idt[vectors::VECTOR_MOUSE as usize].set_handler_fn(isr::irq_mouse);
