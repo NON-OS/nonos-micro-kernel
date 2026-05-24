@@ -1,0 +1,38 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use super::super::{pit, rtc, tsc};
+
+pub fn accept_tsc(result: Result<(), tsc::TscError>) -> Result<(), &'static str> {
+    match result {
+        Ok(()) | Err(tsc::TscError::AlreadyInitialized) => Ok(()),
+        Err(_) => Err("TSC initialization failed"),
+    }
+}
+
+pub fn accept_pit(result: Result<(), pit::PitError>) -> Result<(), &'static str> {
+    match result {
+        Ok(()) | Err(pit::PitError::AlreadyInitialized) => Ok(()),
+        Err(_) => Err("PIT initialization failed"),
+    }
+}
+
+pub fn accept_rtc(result: Result<(), rtc::RtcError>) -> Result<(), &'static str> {
+    match result {
+        Ok(()) | Err(rtc::RtcError::AlreadyInitialized) => Ok(()),
+        Err(_) => Err("RTC initialization failed"),
+    }
+}
