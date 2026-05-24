@@ -14,12 +14,44 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::section::{Section, SECTIONS};
+
+pub const VISIBLE_BODY_LINES: u32 = 14;
+
 pub struct State {
+    pub section: Section,
+    pub scroll: u32,
     pub painted: bool,
 }
 
 impl State {
     pub fn new() -> Self {
-        State { painted: false }
+        State { section: Section::Identity, scroll: 0, painted: false }
+    }
+    pub fn select_next_section(&mut self) {
+        let next = (self.section.index() + 1) % SECTIONS.len();
+        self.section = SECTIONS[next];
+        self.scroll = 0;
+    }
+    pub fn select_prev_section(&mut self) {
+        let prev = (self.section.index() + SECTIONS.len() - 1) % SECTIONS.len();
+        self.section = SECTIONS[prev];
+        self.scroll = 0;
+    }
+    pub fn scroll_line_up(&mut self) {
+        self.scroll = self.scroll.saturating_sub(1);
+    }
+    pub fn scroll_line_down(&mut self, total_lines: u32) {
+        let max = total_lines.saturating_sub(VISIBLE_BODY_LINES);
+        if self.scroll < max {
+            self.scroll += 1;
+        }
+    }
+    pub fn scroll_page_up(&mut self) {
+        self.scroll = self.scroll.saturating_sub(VISIBLE_BODY_LINES);
+    }
+    pub fn scroll_page_down(&mut self, total_lines: u32) {
+        let max = total_lines.saturating_sub(VISIBLE_BODY_LINES);
+        self.scroll = (self.scroll + VISIBLE_BODY_LINES).min(max);
     }
 }

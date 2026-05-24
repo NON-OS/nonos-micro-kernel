@@ -15,7 +15,26 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const BACKGROUND: u32 = 0xFF101418;
-pub const ACCENT: u32 = 0xFF1F6FEB;
+pub const HEADER: u32 = 0xFF1F6FEB;
+pub const TAB_BAR: u32 = 0xFF161B22;
+pub const TAB_SELECTED: u32 = 0xFF1F6FEB;
 pub const HEADLINE: u32 = 0xFFE6EDF3;
 pub const BODY: u32 = 0xFF9DA7B3;
 pub const HINT: u32 = 0xFF6E7681;
+pub const SCROLLBAR_TRACK: u32 = 0xFF161B22;
+pub const SCROLLBAR_THUMB: u32 = 0xFF30363D;
+
+pub const WINDOW_WIDTH: u32 = 560;
+pub const WINDOW_HEIGHT: u32 = 400;
+pub const WINDOW_INITIAL_X: u32 = 320;
+pub const WINDOW_INITIAL_Y: u32 = 180;
+
+pub const HEADER_HEIGHT: u32 = 48;
+pub const TAB_BAR_HEIGHT: u32 = 28;
+pub const STATUS_BAR_HEIGHT: u32 = 22;
+pub const SCROLLBAR_WIDTH: u32 = 6;
+
+pub const TEXT_LEFT: u32 = 18;
+pub const LINE_HEIGHT: u32 = 18;
+pub const SECTION_TOP_PADDING: u32 = 12;
+pub const TAB_HORIZONTAL_PADDING: u32 = 14;

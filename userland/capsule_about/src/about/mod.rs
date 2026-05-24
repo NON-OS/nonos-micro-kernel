@@ -15,10 +15,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod app;
+mod data;
 mod event;
-mod lines;
+mod format;
 mod manifest;
 mod paint;
+mod section;
+mod section_render;
 mod state;
 mod theme;
 

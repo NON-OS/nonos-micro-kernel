@@ -2,117 +2,192 @@
 
 ## Role
 
-`capsule_about` is an application UI capsule skeleton. It proves that ordinary
-application UI policy belongs in userland and routes through the toolkit IPC
-path rather than through kernel UI code.
+`capsule_about` is the userland "About this system" application. It owns five
+sections of product, authority, display and license metadata; the user cycles
+sections with Tab/Shift-Tab and scrolls long sections with Up/Down or
+Page Up/Page Down. Esc closes the window. All UI policy lives in the capsule;
+the kernel mediates only window registration, input delivery and surface
+presentation through the toolkit and the compositor.
 
 ```text
 about app
     |
-    | UI frame request
+    | window registration + paint buffer + input subscribe
     v
-toolkit endpoint 4610
+toolkit (window kind, paint buffer, key router)
     |
-    `-- app event loop on endpoint 4710
+    `-- compositor (scene + scanout) --- driver.virtio_gpu
 ```
 
 ## Microkernel contract
 
-The capsule uses the basic Mk IPC surface:
-
-- `MkIpcCall` sends a UI-frame request to the toolkit endpoint.
-- `MkIpcRecv` receives application messages on endpoint `4710`.
-- `MkYield` backs off when no message is available.
-- `MkDebug` emits proof markers.
-- `MkExit` exits when the IPC surface is parked.
-
-This directory currently has no `Capsule.mk`, so it is not a verified
-production spawn target yet.
+- `MkIpcCall` requests window registration and per-frame paint buffers via
+  the toolkit endpoint.
+- `MkIpcRecv` waits on the app event inbox at port `4710`.
+- `MkSurfaceRegister` / `MkSurfaceAttach` / `MkSurfacePresent` route the
+  paint buffer to the compositor (through the toolkit).
+- `MkTimeMillis` reads the monotonic wall clock for the Uptime section.
+- `MkExit` is the only termination path.
 
 ## Interface contract
 
 | Call | Purpose |
 |---|---|
-| `MkIpcCall` to toolkit | request a UI frame through userland toolkit policy |
-| `MkIpcRecv` on endpoint 4710 | receive app messages |
-| `MkYield`, `MkDebug`, `MkExit` | cooperative loop and proof markers |
+| `MkIpcCall` toolkit `4610` | register window, request paint buffer |
+| `MkIpcRecv` on `4710` | receive input events from the toolkit |
+| `MkSurfacePresent` | flush the paint buffer to the compositor |
+| `MkTimeMillis` | read the wall clock for the Uptime section |
+| `MkExit` | terminate when the user presses Esc |
 
 ## Authority
 
-There is no production `CAPSULE_REQUIRED_CAPS` mask in this directory today.
-A promoted version should require only IPC and memory, plus whatever explicit
-toolkit/app capability the manifest model assigns.
+`Capsule.mk` declares `CAPSULE_REQUIRED_CAPS := 0x1919`, which decodes to
+exactly:
+
+| Bit | Capability | Purpose |
+|---|---|---|
+| 0x0001 | CoreExec | run user code |
+| 0x0008 | IPC | toolkit calls + event recv |
+| 0x0010 | Memory | mmap the paint buffer |
+| 0x0100 | Debug | proof markers via `MkDebug` |
+| 0x0800 | GraphicsDisplayQuery | learn display dimensions |
+| 0x1000 | GraphicsSurfaceCreate | register the paint surface |
+
+`MkTimeMillis` requires no extra capability bit (it is part of the CoreExec
+microkernel surface). No `Driver`, `Mmio`, `Irq`, `Dma`, `Pio`, `Network`,
+`Crypto`, `FileSystem`, `Hardware`, `Admin` or `RegisterService` capability
+is requested.
 
 ## Privacy and persistence
 
-The capsule keeps no user profile, settings, files, telemetry, or persistent
-UI state. Runtime messages are transient and disappear with the process.
+The capsule reads no user data and writes no user data. No configuration
+file, no telemetry, no persistent UI state. The Display section reads
+display dimensions live; the Uptime section reads the monotonic wall clock
+live; everything else is compile-time-static from `about/data/*`.
 
 ## Runtime lifecycle
 
-The capsule emits ownership markers, sends one toolkit request, then enters a
-receive/yield loop until the IPC surface is parked or the app is replaced by a
-promoted manifest-backed version.
+1. `_start` initializes the userland heap via `nonos_app_skeleton::run` and
+   constructs the `About` value.
+2. The skeleton calls `manifest()` once to register the window.
+3. The skeleton drives a paint pass via `paint(state, fb)` whenever the
+   compositor requests a new frame; the body dispatches to the current
+   `Section`.
+4. The skeleton delivers each input event via `on_event(state, event)` which
+   dispatches into the per-key handlers under `about/event/`.
+5. Pressing Esc returns `EventOutcome::Close` and the capsule exits cleanly
+   through `MkExit`.
 
 ## Failure model
 
-Toolkit failure is observable through the proof markers and does not grant
-fallback framebuffer access. `ENOTSUP` exits cleanly because this is still an
-app-UI ownership proof.
+- Heap init failure → exit status `1` (caught inside
+  `nonos_app_skeleton::run`).
+- Window registration failure → toolkit returns a typed error, the skeleton
+  exits with status `2`; no partial state is left in the compositor.
+- Surface attach failure during paint → the skeleton drops the frame, marks
+  the surface dead, and re-registers on the next paint tick.
+- Display dimensions query failure → the Display section renders the literal
+  string `unavailable` instead of a fake value.
+- Wall clock unavailable (TSC not yet calibrated) → the Uptime section
+  renders `unavailable` instead of a zero.
 
 ## Current implemented surface
 
-- Source exists for the app UI ownership proof.
-- Calls the toolkit endpoint instead of kernel UI paths.
-- Runs a small receive loop on the app endpoint.
-- Exits cleanly when the IPC surface is parked.
+| Section | Source | Lines |
+|---|---|---|
+| Identity | `data/{product,build,abi}` (compile-time) | 9 |
+| Authority | `data/{caps,trust}` (compile-time + decoded mask) | 6 + 6 + 1 + 15 |
+| Display | `data/display::primary_dimensions()` (live) | 4 |
+| Uptime | `data/uptime::read_millis() + split_dhms()` (live) | 5 |
+| License | `data/license::SUMMARY_LINES` (AGPL summary) | 4 + 17 |
+
+| Concern | File |
+|---|---|
+| App harness | `about/app.rs` |
+| Window manifest | `about/manifest.rs` |
+| Section enum | `about/section.rs` |
+| State + scroll/section cursor | `about/state.rs` |
+| Theme colors + metrics | `about/theme.rs` |
+| Event router | `about/event/router.rs` |
+| Per-key handlers | `about/event/on_*.rs` (7 files) |
+| Frame composition | `about/paint/frame.rs` |
+| Header band | `about/paint/header.rs` |
+| Tab strip | `about/paint/tabs.rs` |
+| Body dispatcher | `about/paint/body.rs` |
+| Scrollbar | `about/paint/scrollbar.rs` |
+| Status bar | `about/paint/status_bar.rs` |
+| Section renderers | `about/section_render/*.rs` (6 files) |
+| Data sources | `about/data/*.rs` (8 files) |
+| Number formatting | `about/format.rs` |
 
 ## Wire format
 
-The current app proof sends a one-byte UI-frame request to the toolkit endpoint
-and receives app messages on endpoint `4710`. A promoted app protocol must
-version its message format before release.
+The capsule speaks the standard toolkit NCMP wire surface as defined in
+`abi/wire.toml`. It does not introduce any private wire types.
 
 ## State ownership
 
-The capsule owns only its app-local message loop state. The toolkit owns UI
-rendering. The compositor owns scene and focus policy. The kernel owns none of
-the app UI state.
+`State` (`about/state.rs`) owns: the current `Section`, the `scroll` line
+index within that section, and a `painted: bool` first-frame flag. There is
+no shared static state, no cross-thread state, and no IPC-visible state.
 
 ## Operating rules
 
-- Route UI through toolkit IPC only.
-- Do not request direct framebuffer authority.
-- Keep app state volatile until a storage contract exists.
-- Do not add kernel UI exports for this app.
+- No inline comments anywhere outside the 15-line license header.
+- No `unsafe` blocks.
+- No `panic!`, `unwrap`, `expect`, `todo!`, `unimplemented!` anywhere in the
+  capsule.
+- Every file ≤ 75 LOC.
+- One function per file where the function is non-trivial; `mod.rs` carries
+  re-exports only.
+- No hardcoded version: `data/build.rs` baked from `build.rs` env vars
+  (commit SHA, build timestamp, package version).
 
 ## Release target
 
-The finished about capsule is a signed application capsule with `Capsule.mk`,
-manifest, feature-gated spawn, toolkit-only UI rendering, no direct framebuffer
-authority, and smoke proof that app UI policy stays outside the kernel.
+x86_64-nonos-user. Cross-compiled with the kernel-pinned nightly toolchain
+under `userland/x86_64-nonos-user.json`. `aarch64-nonos-user` and
+`riscv64-nonos-user` are architecture-ready but not yet validated for this
+capsule.
 
 ## Release evidence
 
-Release evidence is a signed manifest, feature-gated spawn, toolkit IPC smoke,
-and static proof that app UI policy does not appear in kernel exports.
+The kernel `cargo check --features microkernel-core,nonos-production,nonos-capsule-about`
+must compile clean. The capsule's own
+`cd userland/capsule_about && cargo build --release --target ../x86_64-nonos-user.json`
+must produce a signed ELF whose SHA matches the embedded manifest
+`nonos-data/trust/capsules/about.manifest.bin`.
 
 ## Release checklist
 
-- `Capsule.mk` and signed manifest exist.
-- Toolkit IPC smoke passes.
-- Feature-gated spawn is present.
-- Static gate confirms no kernel app-UI exports.
+- [x] One function per file or ≤ 75 LOC per file
+- [x] 15-line license header on every file
+- [x] No inline comments past the license header
+- [x] `Capsule.mk` with `CAPSULE_REQUIRED_CAPS`, slug, handle, endpoints
+- [x] Capability mask audited (`0x1919` decodes correctly)
+- [x] Kernel mirror at `src/userspace/capsule_about/`
+- [x] Cert + manifest baked into `nonos-data/trust/capsules/`
+- [x] Spawn wired through `src/userspace/init/spawn_plan/apps.rs`
+- [x] README documents all 16 contract sections
+- [x] Build info embedded at compile time (git SHA + unix timestamp)
+- [x] Live data sources for Display and Uptime sections
+- [ ] QEMU spawn-verify with `OP_HEALTHCHECK` reply on serial
+  (blocked by the OVMF ExitBootServices `#PF` boot escalation)
 
 ## Explicit non-goals today
 
-No production manifest, signed spawn path, persistent settings, network
-access, filesystem access, graphics driver access, or direct framebuffer
-authority lives here.
+- No HTTP/network access. The capsule never opens a socket.
+- No file IO. The capsule never reads from VFS.
+- No CPU/RAM/process telemetry. Those require kernel syscalls not yet in
+  the libc surface; will be added before claiming production-ready.
+- No internationalization. Strings are ASCII byte literals.
+- No themable colors. Local constants only; no toolkit theme integration.
 
 ## Verification
 
-- Build: `cargo build --manifest-path userland/capsule_about/Cargo.toml`
-- Static gate: `bash nonos-ci/run-static-checks.sh`
-- Promotion check: add `Capsule.mk`, manifest signing, feature-gated spawn,
-  and smoke proof before claiming production app status.
+- `nonos-ci/run-static-checks.sh` clean (per-capsule one-function-per-file
+  enforcement, capability mask, README contract sections).
+- `cd nonos-sign && cargo test --release --test artifacts` round-trips the
+  baked `about.manifest.bin` against the trust anchor.
+- Kernel cargo check matrix passes with `nonos-capsule-about` on top of
+  `microkernel-core,nonos-production`.

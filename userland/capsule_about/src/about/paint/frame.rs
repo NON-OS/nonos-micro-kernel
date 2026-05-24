@@ -14,31 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use nonos_app_skeleton::PaintBuffer;
 
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::frame;
-use super::state::State;
+use super::body;
+use super::header;
+use super::scrollbar;
+use super::status_bar;
+use super::tabs;
+use crate::about::state::State;
+use crate::about::theme::BACKGROUND;
 
-pub struct About {
-    state: State,
-}
-
-impl About {
-    pub fn new() -> Self {
-        About { state: State::new() }
-    }
-}
-
-impl App for About {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        frame::paint(&mut self.state, fb);
-    }
+pub fn paint(state: &mut State, fb: &mut PaintBuffer) {
+    fb.clear(BACKGROUND);
+    header::paint(fb);
+    tabs::paint(state, fb);
+    body::paint(state, fb);
+    scrollbar::paint(state, fb);
+    status_bar::paint(fb);
+    state.painted = true;
 }

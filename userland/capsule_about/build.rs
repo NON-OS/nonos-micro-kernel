@@ -14,31 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use std::process::Command;
+use std::time::{SystemTime, UNIX_EPOCH};
 
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::frame;
-use super::state::State;
-
-pub struct About {
-    state: State,
-}
-
-impl About {
-    pub fn new() -> Self {
-        About { state: State::new() }
-    }
-}
-
-impl App for About {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        frame::paint(&mut self.state, fb);
-    }
+fn main() {
+    let sha = Command::new("git")
+        .args(["rev-parse", "--short=12", "HEAD"])
+        .output()
+        .ok()
+        .and_then(|o| if o.status.success() { String::from_utf8(o.stdout).ok() } else { None })
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|| "unknown".into());
+    println!("cargo:rustc-env=ABOUT_GIT_SHA={sha}");
+    let secs = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
+    println!("cargo:rustc-env=ABOUT_BUILD_UNIX={secs}");
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=src");
 }

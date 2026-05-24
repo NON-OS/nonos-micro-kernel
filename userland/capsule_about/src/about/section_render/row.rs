@@ -14,31 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use nonos_app_skeleton::PaintBuffer;
 
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::frame;
-use super::state::State;
+use crate::about::theme::{BODY, HEADLINE, LINE_HEIGHT, TEXT_LEFT};
 
-pub struct About {
-    state: State,
+pub const LABEL_X: u32 = TEXT_LEFT;
+pub const VALUE_X: u32 = TEXT_LEFT + 152;
+
+pub fn pair(label: &[u8], value: &[u8], y: u32, fb: &mut PaintBuffer) {
+    fb.text(LABEL_X, y, label, BODY);
+    fb.text(VALUE_X, y, value, HEADLINE);
 }
 
-impl About {
-    pub fn new() -> Self {
-        About { state: State::new() }
-    }
+pub fn single(text: &[u8], y: u32, fb: &mut PaintBuffer) {
+    fb.text(TEXT_LEFT, y, text, BODY);
 }
 
-impl App for About {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        frame::paint(&mut self.state, fb);
-    }
+pub fn line_y(index: u32, top: u32) -> u32 {
+    top + index * LINE_HEIGHT
 }

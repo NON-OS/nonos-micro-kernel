@@ -16,20 +16,21 @@
 
 use nonos_app_skeleton::{AppManifest, WindowKind};
 
-pub const WIDTH: u32 = 480;
-pub const HEIGHT: u32 = 320;
+use super::theme::{WINDOW_HEIGHT, WINDOW_INITIAL_X, WINDOW_INITIAL_Y, WINDOW_WIDTH};
 
+const WINDOW_ID: u32 = 0x4142_4F55;
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
+const TITLE: &[u8] = b"About NONOS";
 
 pub fn manifest() -> AppManifest {
     AppManifest {
-        title: b"About NONOS",
-        window_id: 0x4142_4F55,
+        title: TITLE,
+        window_id: WINDOW_ID,
         kind: WindowKind::Normal,
-        initial_x: 360,
-        initial_y: 200,
-        width: WIDTH,
-        height: HEIGHT,
+        initial_x: WINDOW_INITIAL_X,
+        initial_y: WINDOW_INITIAL_Y,
+        width: WINDOW_WIDTH,
+        height: WINDOW_HEIGHT,
         input_kind_mask: INPUT_KEY_DOWN_BIT,
     }
 }

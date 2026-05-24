@@ -14,31 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
-
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::frame;
-use super::state::State;
-
-pub struct About {
-    state: State,
+pub fn u64_decimal(mut value: u64, dst: &mut [u8; 20]) -> &[u8] {
+    if value == 0 {
+        dst[0] = b'0';
+        return &dst[..1];
+    }
+    let mut tmp = [0u8; 20];
+    let mut idx = 0;
+    while value > 0 {
+        tmp[idx] = b'0' + (value % 10) as u8;
+        value /= 10;
+        idx += 1;
+    }
+    let mut out_len = 0;
+    while idx > 0 {
+        idx -= 1;
+        dst[out_len] = tmp[idx];
+        out_len += 1;
+    }
+    &dst[..out_len]
 }
 
-impl About {
-    pub fn new() -> Self {
-        About { state: State::new() }
-    }
-}
-
-impl App for About {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        frame::paint(&mut self.state, fb);
-    }
-}

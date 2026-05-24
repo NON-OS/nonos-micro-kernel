@@ -14,31 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use nonos_app_skeleton::PaintBuffer;
 
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::frame;
-use super::state::State;
+use crate::about::theme::{HINT, STATUS_BAR_HEIGHT, TAB_BAR, TEXT_LEFT};
 
-pub struct About {
-    state: State,
-}
+const HINT_LINE: &[u8] = b"Tab/Shift-Tab cycle sections   Up/Down scroll line   PgUp/PgDn scroll page   Esc close";
 
-impl About {
-    pub fn new() -> Self {
-        About { state: State::new() }
-    }
-}
-
-impl App for About {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        frame::paint(&mut self.state, fb);
-    }
+pub fn paint(fb: &mut PaintBuffer) {
+    let y = fb.height - STATUS_BAR_HEIGHT;
+    fb.fill_rect(0, y, fb.width, STATUS_BAR_HEIGHT, TAB_BAR);
+    fb.text(TEXT_LEFT, y + 6, HINT_LINE, HINT);
 }

@@ -14,31 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use nonos_libc::nonos_display_dimensions;
 
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::frame;
-use super::state::State;
-
-pub struct About {
-    state: State,
-}
-
-impl About {
-    pub fn new() -> Self {
-        About { state: State::new() }
+pub fn primary_dimensions() -> Option<(u32, u32)> {
+    let mut width = 0u32;
+    let mut height = 0u32;
+    let rc = nonos_display_dimensions(0, &mut width, &mut height);
+    if rc < 0 || width == 0 || height == 0 {
+        return None;
     }
-}
-
-impl App for About {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        frame::paint(&mut self.state, fb);
-    }
+    Some((width, height))
 }

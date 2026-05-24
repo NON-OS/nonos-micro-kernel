@@ -14,13 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_ESC};
-
-use super::state::State;
-
-pub fn on_event(_state: &mut State, event: InputEvent) -> EventOutcome {
-    if event.is_key_down() && event.code == KEY_ESC {
-        return EventOutcome::Close;
-    }
-    EventOutcome::Idle
-}
+pub const HYBRID_SCHEME: &[u8] = b"Ed25519 + ML-DSA-65 (hybrid)";
+pub const MANIFEST_FORMAT: &[u8] = b"capsule_manifest v3";
+pub const CERT_FORMAT: &[u8] = b"NONOS-ID cert hybrid";
+pub const SIGNING_CHAIN: &[u8] = b"trust-anchor -> publisher -> capsule";
+pub const STATUS: &[u8] = b"this binary verified at spawn time";
