@@ -14,15 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+use super::types::Clipboard;
 
-pub struct Entry {
-    pub content_type: u32,
-    pub data: Vec<u8>,
-}
-
-impl Entry {
-    pub fn len(&self) -> usize {
-        self.data.len()
+impl Clipboard {
+    pub fn touch(&mut self, now_ms: u64) {
+        self.last_activity_ms = now_ms;
+    }
+    pub fn idle_for(&self, now_ms: u64) -> u64 {
+        now_ms.saturating_sub(self.last_activity_ms)
+    }
+    pub fn expire_if_idle(&mut self, now_ms: u64) -> bool {
+        if self.idle_timeout_ms == 0 || self.items.is_empty() {
+            return false;
+        }
+        if self.idle_for(now_ms) >= self.idle_timeout_ms {
+            self.clear();
+            return true;
+        }
+        false
+    }
+    pub fn set_idle_timeout_ms(&mut self, value: u64) {
+        self.idle_timeout_ms = value;
     }
 }

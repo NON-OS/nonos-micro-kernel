@@ -14,15 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+use crate::protocol::{
+    Request, E_INVAL, E_RANGE, MAX_IDLE_TIMEOUT_MS, MIN_IDLE_TIMEOUT_MS,
+};
+use crate::server::respond;
+use crate::state::Clipboard;
 
-pub struct Entry {
-    pub content_type: u32,
-    pub data: Vec<u8>,
-}
-
-impl Entry {
-    pub fn len(&self) -> usize {
-        self.data.len()
+pub fn run(clipboard: &mut Clipboard, req: &Request, payload: &[u8], out: &mut [u8]) -> usize {
+    if payload.len() < 8 {
+        return respond::status(out, req, E_INVAL);
     }
+    let raw = u64::from_le_bytes([
+        payload[0], payload[1], payload[2], payload[3],
+        payload[4], payload[5], payload[6], payload[7],
+    ]);
+    if raw != 0 && (raw < MIN_IDLE_TIMEOUT_MS || raw > MAX_IDLE_TIMEOUT_MS) {
+        return respond::status(out, req, E_RANGE);
+    }
+    clipboard.set_idle_timeout_ms(raw);
+    respond::status(out, req, 0)
 }

@@ -14,15 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+mod storage;
+mod timer;
+mod types;
 
-pub struct Entry {
-    pub content_type: u32,
-    pub data: Vec<u8>,
-}
-
-impl Entry {
-    pub fn len(&self) -> usize {
-        self.data.len()
-    }
-}
+pub use types::Clipboard;
