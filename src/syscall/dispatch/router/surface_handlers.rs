@@ -20,8 +20,7 @@ use crate::kernel_core::surface_registry::{
     attach_map, attach_surface, lookup_attached_va, lookup_owned, register_surface,
     release_surface, share_surface, wait_for_vsync, SurfaceDescriptor,
 };
-use crate::memory::addr::{PhysAddr, VirtAddr};
-use crate::memory::paging::manager::api::translate_address;
+use crate::memory::addr::PhysAddr;
 use crate::process::current_pid;
 use crate::syscall::dispatch::util::errno;
 use crate::syscall::SyscallResult;
@@ -44,11 +43,11 @@ pub(super) fn do_register(desc_ptr: u64) -> SyscallResult {
     }
     let mut frames = Vec::with_capacity(pages);
     for i in 0..pages {
-        let va = VirtAddr::new(desc.base_va + (i as u64) * 4096);
-        let Some(pa) = translate_address(va) else {
+        let va = desc.base_va + (i as u64) * 4096;
+        let Some(pa) = crate::usercopy::user_page_phys(va) else {
             return errno(EFAULT);
         };
-        frames.push(PhysAddr::new(pa.as_u64() & !0xFFF));
+        frames.push(PhysAddr::new(pa & !0xFFF));
     }
     match register_surface(pid, &desc, frames) {
         Ok((sid, h)) => {
