@@ -28,6 +28,10 @@ fn main() {
     println!("cargo:rerun-if-changed=linker.ld");
     println!("cargo:rerun-if-changed=linker_aarch64.ld");
     println!("cargo:rerun-if-changed=linker_riscv64.ld");
+    println!("cargo:rerun-if-changed=nonos-data/trust/capsules");
+    println!("cargo:rerun-if-changed=nonos-data/trust/keys");
+    println!("cargo:rerun-if-changed=nonos-data/trust/policy");
+    rerun_on_capsule_binaries();
 
     compile_pqclean_mlkem();
     compile_pqclean_mldsa();
@@ -466,4 +470,30 @@ pub fn get_signature() -> &'static [u8] {{
 
     let rs_path = format!("{}/manifest_data.rs", out_dir);
     fs::write(&rs_path, &rs_content).expect("Failed to write manifest Rust module");
+}
+
+// Tell cargo to rebuild the kernel when any embedded capsule ELF on disk
+// changes. include_bytes! does not register a dependency on the byte file
+// itself, so without this the kernel keeps embedding the previous build.
+fn rerun_on_capsule_binaries() {
+    let userland = PathBuf::from("userland");
+    let Ok(entries) = fs::read_dir(&userland) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let bin_dir = entry.path().join("target/x86_64-nonos-user/release");
+        let Ok(children) = fs::read_dir(&bin_dir) else {
+            continue;
+        };
+        for child in children.flatten() {
+            let path = child.path();
+            if path.is_file() {
+                if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                    if !name.contains('.') {
+                        println!("cargo:rerun-if-changed={}", path.display());
+                    }
+                }
+            }
+        }
+    }
 }
