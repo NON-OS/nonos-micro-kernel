@@ -16,11 +16,11 @@
 
 use super::types::{NetworkSettings, SavedNetwork};
 use crate::network::boot_config::PrivacyMode;
+use crate::sys::sync::IrqMutex;
 use alloc::vec::Vec;
 use core::sync::atomic::AtomicBool;
-use spin::Mutex;
 
-pub static NETWORK_SETTINGS: Mutex<NetworkSettings> = Mutex::new(NetworkSettings {
+pub static NETWORK_SETTINGS: IrqMutex<NetworkSettings> = IrqMutex::new(NetworkSettings {
     privacy_mode: PrivacyMode::TorOnly,
     dhcp_enabled: true,
     static_ip: [0, 0, 0, 0],
@@ -43,5 +43,5 @@ pub static NETWORK_SETTINGS: Mutex<NetworkSettings> = Mutex::new(NetworkSettings
     log_connections: true,
 });
 
-pub static SAVED_NETWORKS: Mutex<Vec<SavedNetwork>> = Mutex::new(Vec::new());
+pub static SAVED_NETWORKS: IrqMutex<Vec<SavedNetwork>> = IrqMutex::new(Vec::new());
 pub static SETTINGS_MODIFIED: AtomicBool = AtomicBool::new(false);

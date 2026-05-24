@@ -8,7 +8,7 @@
 
 //! Hostname and domainname management
 
-use spin::Mutex;
+use crate::sys::sync::IrqMutex;
 
 struct HostnameState {
     hostname: [u8; 64],
@@ -17,7 +17,7 @@ struct HostnameState {
     domainname_len: usize,
 }
 
-static STATE: Mutex<HostnameState> = Mutex::new(HostnameState {
+static STATE: IrqMutex<HostnameState> = IrqMutex::new(HostnameState {
     hostname: [0; 64],
     hostname_len: 0,
     domainname: [0; 64],
