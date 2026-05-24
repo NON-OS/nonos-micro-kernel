@@ -74,7 +74,7 @@ pub fn attach_surface(
     let proc = current_process().ok_or(RegistryError::NoProc)?;
     let length = frames.len().saturating_mul(4096);
     let base = proc.reserve_vma(length).map_err(|_| RegistryError::MapFailed)?;
-    let perms = PagePermissions::READ | PagePermissions::WRITE;
+    let perms = PagePermissions::READ | PagePermissions::WRITE | PagePermissions::USER;
     for (i, frame) in frames.iter().enumerate() {
         let va = crate::memory::addr::VirtAddr::new(base.as_u64() + (i as u64) * 4096);
         map_page_in_asid(asid, va, *frame, perms).map_err(|_| RegistryError::MapFailed)?;
