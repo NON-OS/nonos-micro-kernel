@@ -22,12 +22,19 @@ use crate::driver::Driver;
 use crate::init::bring_up;
 use crate::state::{FenceCounter, ResourceTable, ScanoutTable};
 pub fn run() -> Result<Driver, &'static str> {
+    crate::debug::marker(b"setup: discover");
     let dev = find_virtio_gpu().ok_or("virtio-gpu: device not found")?;
+    crate::debug::marker(b"setup: claim");
     let claim_epoch = claim::claim(dev.device_id)?;
+    crate::debug::marker(b"setup: bus master");
     pci::enable_bus_master(dev.device_id, claim_epoch)?;
+    crate::debug::marker(b"setup: mmio grant");
     let registers = mmio::grant(dev, claim_epoch)?;
+    crate::debug::marker(b"setup: irq bind");
     let irq = irq::bind(dev, claim_epoch, registers)?;
+    crate::debug::marker(b"setup: dma map_queue");
     let queue = dma::map_queue(dev.device_id, claim_epoch, registers, &irq)?;
+    crate::debug::marker(b"setup: bring_up");
     let init = bring_up(registers.regs(dev.pci_device), queue.device_addr, dev.pci_device)?;
     let regs = init.regs;
     if irq.grant_id != 0 {
@@ -40,7 +47,9 @@ pub fn run() -> Result<Driver, &'static str> {
     let scanouts = ScanoutTable::new();
     let fences = FenceCounter::new();
     let resources = ResourceTable::new();
+    crate::debug::marker(b"setup: get_display_info");
     scanouts::seed(&control_queue, &scanouts, &fences)?;
+    crate::debug::marker(b"setup: primary surface");
     let primary = scanouts
         .get(0)
         .and_then(|s| s.enabled.then_some(s))

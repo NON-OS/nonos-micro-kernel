@@ -19,6 +19,7 @@
 
 extern crate alloc;
 
+mod debug;
 mod frame_pacer;
 mod gfx_client;
 mod protocol;
@@ -37,18 +38,27 @@ pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
+    debug::marker(b"start");
     let ctx = wait_for_setup();
+    debug::marker(b"setup ok");
     if mk_service_register(SERVICE_NAME.as_ptr(), SERVICE_NAME.len(), SERVICE_PORT) < 0 {
+        debug::marker(b"service register failed");
         mk_exit(1);
     }
+    debug::marker(b"service registered");
     server::run(ctx);
 }
 
 fn wait_for_setup() -> crate::state::Context {
+    let mut last: &'static str = "";
     loop {
         match setup::run() {
             Ok(ctx) => return ctx,
-            Err(_) => {
+            Err(e) => {
+                if e != last {
+                    debug::marker(e.as_bytes());
+                    last = e;
+                }
                 wait_after_error();
             }
         }
