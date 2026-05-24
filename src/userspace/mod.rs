@@ -27,6 +27,7 @@
 // `src/userspace/*_service` directory.
 
 pub mod capsule_about;
+pub mod capsule_attest;
 pub mod capsule_calculator;
 pub mod capsule_clipboard;
 pub mod capsule_compositor;

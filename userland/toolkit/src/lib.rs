@@ -5,6 +5,7 @@ extern crate alloc;
 pub mod animation;
 pub mod component_dispatch;
 pub mod components;
+pub mod decorations;
 pub mod design;
 pub mod font;
 pub mod image;

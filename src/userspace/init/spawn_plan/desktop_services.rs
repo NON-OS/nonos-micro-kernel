@@ -17,9 +17,18 @@
 pub(super) fn spawn() {
     spawn_image_codec();
     spawn_clipboard();
+    spawn_attest();
     spawn_login();
     spawn_toolkit();
 }
+
+#[cfg(feature = "nonos-capsule-attest")]
+fn spawn_attest() {
+    use crate::userspace::capsule_attest as c;
+    super::boot::capsule("ATTEST", "attest", c::spawn_attest_capsule, c::shared_state);
+}
+#[cfg(not(feature = "nonos-capsule-attest"))]
+fn spawn_attest() {}
 
 #[cfg(feature = "nonos-capsule-image-codec")]
 fn spawn_image_codec() {
