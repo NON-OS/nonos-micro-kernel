@@ -30,7 +30,9 @@
 mod registry;
 pub mod smoketest_log;
 mod state;
+pub mod supervisor;
 pub mod transport;
 
 pub use registry::{register, tick, Capsule};
 pub use state::CapsuleState;
+pub use supervisor::{tick as supervisor_tick, Supervised};

@@ -14,49 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU32, AtomicU64, Ordering};
+use core::sync::atomic::Ordering;
 
+use super::types::CapsuleState;
 use crate::process::{get_process, ProcessState};
 
-// Per-capsule lifecycle state. One static instance per capsule, owned
-// by the kernel-side capsule module. `set_alive` is called by the
-// spawn path; `mark_dead` is called by `is_alive` when the process
-// table shows the capsule has exited.
-pub struct CapsuleState {
-    pid: AtomicU32,
-    generation: AtomicU64,
-}
-
 impl CapsuleState {
-    pub const fn new() -> Self {
-        Self { pid: AtomicU32::new(0), generation: AtomicU64::new(0) }
-    }
-
-    // Record a freshly-spawned capsule. Bumps the generation so any
-    // in-flight client request issued against the previous epoch
-    // returns ESTALE on the next generation check, even if its
-    // request_id collides.
     pub fn set_alive(&self, pid: u32) {
         self.pid.store(pid, Ordering::SeqCst);
         self.generation.fetch_add(1, Ordering::SeqCst);
     }
-
     pub fn mark_dead(&self) {
         self.pid.store(0, Ordering::SeqCst);
     }
-
     pub fn pid(&self) -> u32 {
         self.pid.load(Ordering::SeqCst)
     }
-
     pub fn generation(&self) -> u64 {
         self.generation.load(Ordering::SeqCst)
     }
-
-    // Liveness re-checked against the process table on every call so a
-    // capsule that exited or zombied is observed deterministically by
-    // the next request. The stored pid is cleared on observed death so
-    // subsequent checks short-circuit without re-walking the table.
     pub fn is_alive(&self) -> bool {
         let pid = self.pid.load(Ordering::SeqCst);
         if pid == 0 {
@@ -64,8 +40,6 @@ impl CapsuleState {
         }
         match get_process(pid) {
             Some(pcb) => {
-                // Alive set: every non-terminal `ProcessState`.
-                // `Zombie(_)` and `Terminated(_)` are the dead states.
                 let alive = matches!(
                     *pcb.state.lock(),
                     ProcessState::New
