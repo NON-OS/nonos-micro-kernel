@@ -19,6 +19,7 @@ use nonos_libc::{mk_surface_attach, SurfaceDescriptor};
 use crate::sw_blitter::Surface;
 
 pub const MAX_ATTACH: usize = 32;
+const EMPTY: Surface = Surface { base_va: 0, stride: 0, width: 0, height: 0 };
 
 #[derive(Clone, Copy, Default)]
 struct Slot {
@@ -33,23 +34,14 @@ pub struct AttachCache {
 
 impl AttachCache {
     pub const fn new() -> Self {
-        Self {
-            slots: [Slot {
-                handle: 0,
-                surface: Surface { base_va: 0, stride: 0, width: 0, height: 0 },
-                in_use: false,
-            }; MAX_ATTACH],
-        }
+        Self { slots: [Slot { handle: 0, surface: EMPTY, in_use: false }; MAX_ATTACH] }
     }
-
     pub fn get_or_attach(&mut self, handle: u64) -> Option<Surface> {
         if handle == 0 {
             return None;
         }
-        for slot in self.slots.iter() {
-            if slot.in_use && slot.handle == handle {
-                return Some(slot.surface);
-            }
+        if let Some(s) = self.slots.iter().find(|s| s.in_use && s.handle == handle) {
+            return Some(s.surface);
         }
         let mut desc = SurfaceDescriptor::default();
         let rc = mk_surface_attach(handle, &mut desc);
@@ -62,15 +54,11 @@ impl AttachCache {
             width: desc.width,
             height: desc.height,
         };
-        for slot in self.slots.iter_mut() {
-            if !slot.in_use {
-                *slot = Slot { handle, surface, in_use: true };
-                break;
-            }
+        if let Some(slot) = self.slots.iter_mut().find(|s| !s.in_use) {
+            *slot = Slot { handle, surface, in_use: true };
         }
         Some(surface)
     }
-
     pub fn forget(&mut self, handle: u64) {
         for slot in self.slots.iter_mut() {
             if slot.in_use && slot.handle == handle {

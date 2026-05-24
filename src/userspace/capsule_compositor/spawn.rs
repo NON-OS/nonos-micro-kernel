@@ -46,12 +46,11 @@ pub fn spawn_compositor_capsule() -> Result<(), SpawnError> {
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
             | Capability::Memory.bit()
-            | Capability::Debug.bit()
             | Capability::GraphicsDisplayQuery.bit()
             | Capability::GraphicsSurfaceCreate.bit()
             | Capability::GraphicsSurfaceMap.bit()
             | Capability::GraphicsPresent.bit(),
-        debug_tag: b"[COMPOSITOR-DEBUG] load_elf_executable error:",
+        debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
     state::set_alive(pid);
