@@ -24,13 +24,13 @@ use core::sync::atomic::{AtomicU64, Ordering};
 
 use crate::memory::addr::VirtAddr;
 
-pub const USER_DMA_BASE: u64 = 0x0000_00A0_0000_0000;
-pub const USER_DMA_END: u64 = 0x0000_00B0_0000_0000;
+pub(super) const USER_DMA_BASE: u64 = 0x0000_00A0_0000_0000;
+pub(super) const USER_DMA_END: u64 = 0x0000_00B0_0000_0000;
 const PAGE_SIZE: u64 = 4096;
 
 static NEXT_USER_DMA_VA: AtomicU64 = AtomicU64::new(USER_DMA_BASE);
 
-pub fn reserve(pages: u64) -> Option<VirtAddr> {
+pub(super) fn reserve(pages: u64) -> Option<VirtAddr> {
     let bytes = pages.checked_mul(PAGE_SIZE)?;
     let with_guard = bytes.checked_add(PAGE_SIZE)?;
     let base = NEXT_USER_DMA_VA.fetch_add(with_guard, Ordering::SeqCst);

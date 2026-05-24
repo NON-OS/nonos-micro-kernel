@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const BAR_FLAG_PREFETCH: u8 = 1 << 0;
-pub const BAR_FLAG_MEM64: u8 = 1 << 1;
+pub(super) const BAR_FLAG_PREFETCH: u8 = 1 << 0;
+pub(super) const BAR_FLAG_MEM64: u8 = 1 << 1;
 pub const DEVICE_FLAG_CLAIMED: u32 = 1 << 0;
 pub const DEVICE_FLAG_DISABLED: u32 = 1 << 1;

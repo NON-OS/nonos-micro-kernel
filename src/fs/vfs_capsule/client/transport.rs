@@ -24,7 +24,7 @@ use crate::services::lifecycle::transport;
 
 // 0x1_0000_0005 = 4294967301. Distinct from ramfs/keyring/entropy/
 // crypto reply inboxes.
-pub const REPLY_INBOX: &str = "endpoint.4294967301";
+pub(crate) const REPLY_INBOX: &str = "endpoint.4294967301";
 const SENDER_NAME: &str = "kernel.vfs";
 
 static TRANSPORT_LOCK: Mutex<()> = Mutex::new(());

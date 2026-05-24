@@ -22,17 +22,17 @@ use super::super::protocol::decode_response;
 use super::super::state;
 use crate::services::lifecycle::transport;
 
-pub const REPLY_INBOX: &str = "endpoint.4294967297";
+pub(crate) const REPLY_INBOX: &str = "endpoint.4294967297";
 const SENDER_NAME: &str = "kernel.ramfs";
 
 static TRANSPORT_LOCK: Mutex<()> = Mutex::new(());
 
-pub struct ResponseBytes {
+pub(super) struct ResponseBytes {
     pub status: i32,
     pub payload: Vec<u8>,
 }
 
-pub fn round_trip(seq: u32, request: Vec<u8>) -> Result<ResponseBytes, CapsuleFsError> {
+pub(super) fn round_trip(seq: u32, request: Vec<u8>) -> Result<ResponseBytes, CapsuleFsError> {
     let _guard = TRANSPORT_LOCK.lock();
     let resp = transport::round_trip(
         seq,

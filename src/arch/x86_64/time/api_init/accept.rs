@@ -16,21 +16,21 @@
 
 use super::super::{pit, rtc, tsc};
 
-pub fn accept_tsc(result: Result<(), tsc::TscError>) -> Result<(), &'static str> {
+pub(super) fn accept_tsc(result: Result<(), tsc::TscError>) -> Result<(), &'static str> {
     match result {
         Ok(()) | Err(tsc::TscError::AlreadyInitialized) => Ok(()),
         Err(_) => Err("TSC initialization failed"),
     }
 }
 
-pub fn accept_pit(result: Result<(), pit::PitError>) -> Result<(), &'static str> {
+pub(super) fn accept_pit(result: Result<(), pit::PitError>) -> Result<(), &'static str> {
     match result {
         Ok(()) | Err(pit::PitError::AlreadyInitialized) => Ok(()),
         Err(_) => Err("PIT initialization failed"),
     }
 }
 
-pub fn accept_rtc(result: Result<(), rtc::RtcError>) -> Result<(), &'static str> {
+pub(super) fn accept_rtc(result: Result<(), rtc::RtcError>) -> Result<(), &'static str> {
     match result {
         Ok(()) | Err(rtc::RtcError::AlreadyInitialized) => Ok(()),
         Err(_) => Err("RTC initialization failed"),

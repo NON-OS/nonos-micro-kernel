@@ -20,6 +20,6 @@ use crate::services::lifecycle::transport;
 
 static SEQ: AtomicU32 = AtomicU32::new(1);
 
-pub fn next() -> u32 {
+pub(super) fn next() -> u32 {
     transport::next_request_id(&SEQ)
 }

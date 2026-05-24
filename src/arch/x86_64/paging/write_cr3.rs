@@ -18,7 +18,7 @@
 // instruction fetch goes through the new mapping, so the caller
 // has to make sure RIP and RSP are still reachable in `cr3`.
 #[inline]
-pub unsafe fn write_cr3(cr3: u64) {
+pub(super) unsafe fn write_cr3(cr3: u64) {
     core::arch::asm!(
         "mov {0}, %cr3",
         in(reg) cr3,

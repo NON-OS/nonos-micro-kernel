@@ -40,7 +40,7 @@ fn icr_send(apic_id: u32, mode: u64, vec: u8) {
     }
 }
 
-pub fn delay_us_via_tsc(us: u32) {
+fn delay_us_via_tsc(us: u32) {
     let freq = crate::sys::timer::tsc::tsc_frequency();
     if freq == 0 {
         pit_spin_us(us);

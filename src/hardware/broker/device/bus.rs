@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const BUS_KIND_PCI: u8 = 1;
-pub const BUS_KIND_ACPI: u8 = 2;
-pub const BUS_KIND_VIRT: u8 = 3;
+const BUS_KIND_PCI: u8 = 1;
+const BUS_KIND_ACPI: u8 = 2;
+const BUS_KIND_VIRT: u8 = 3;
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

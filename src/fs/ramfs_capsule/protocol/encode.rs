@@ -26,7 +26,7 @@ fn header(seq: u32, op: u16) -> Vec<u8> {
     out
 }
 
-pub fn encode_open(seq: u32, flags: u32, path: &str) -> Vec<u8> {
+pub(super) fn encode_open(seq: u32, flags: u32, path: &str) -> Vec<u8> {
     let mut out = header(seq, OP_OPEN);
     out.extend_from_slice(&flags.to_le_bytes());
     out.extend_from_slice(&(path.len() as u16).to_le_bytes());
@@ -34,7 +34,7 @@ pub fn encode_open(seq: u32, flags: u32, path: &str) -> Vec<u8> {
     out
 }
 
-pub fn encode_read(seq: u32, handle: u64, offset: u64, count: u32) -> Vec<u8> {
+pub(super) fn encode_read(seq: u32, handle: u64, offset: u64, count: u32) -> Vec<u8> {
     let mut out = header(seq, OP_READ);
     out.extend_from_slice(&handle.to_le_bytes());
     out.extend_from_slice(&offset.to_le_bytes());
@@ -42,7 +42,7 @@ pub fn encode_read(seq: u32, handle: u64, offset: u64, count: u32) -> Vec<u8> {
     out
 }
 
-pub fn encode_write(seq: u32, handle: u64, offset: u64, data: &[u8]) -> Vec<u8> {
+pub(super) fn encode_write(seq: u32, handle: u64, offset: u64, data: &[u8]) -> Vec<u8> {
     let mut out = header(seq, OP_WRITE);
     out.extend_from_slice(&handle.to_le_bytes());
     out.extend_from_slice(&offset.to_le_bytes());
@@ -50,14 +50,14 @@ pub fn encode_write(seq: u32, handle: u64, offset: u64, data: &[u8]) -> Vec<u8> 
     out
 }
 
-pub fn encode_truncate(seq: u32, handle: u64, length: u64) -> Vec<u8> {
+pub(super) fn encode_truncate(seq: u32, handle: u64, length: u64) -> Vec<u8> {
     let mut out = header(seq, OP_TRUNCATE);
     out.extend_from_slice(&handle.to_le_bytes());
     out.extend_from_slice(&length.to_le_bytes());
     out
 }
 
-pub fn encode_close(seq: u32, handle: u64) -> Vec<u8> {
+pub(super) fn encode_close(seq: u32, handle: u64) -> Vec<u8> {
     let mut out = header(seq, OP_CLOSE);
     out.extend_from_slice(&handle.to_le_bytes());
     out

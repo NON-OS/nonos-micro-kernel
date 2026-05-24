@@ -28,15 +28,15 @@ use super::types::{DmaError, DmaGrant};
 static RECORDS: Mutex<Vec<DmaGrant>> = Mutex::new(Vec::new());
 static NEXT_GRANT_ID: AtomicU64 = AtomicU64::new(1);
 
-pub fn allocate_id() -> u64 {
+pub(super) fn allocate_id() -> u64 {
     NEXT_GRANT_ID.fetch_add(1, Ordering::SeqCst)
 }
 
-pub fn insert(record: DmaGrant) {
+pub(super) fn insert(record: DmaGrant) {
     RECORDS.lock().push(record);
 }
 
-pub fn remove(pid: u32, grant_id: u64) -> Result<DmaGrant, DmaError> {
+pub(super) fn remove(pid: u32, grant_id: u64) -> Result<DmaGrant, DmaError> {
     let mut all = RECORDS.lock();
     let idx = all.iter().position(|g| g.grant_id == grant_id).ok_or(DmaError::UnknownGrant)?;
     if all[idx].pid != pid {
@@ -45,7 +45,7 @@ pub fn remove(pid: u32, grant_id: u64) -> Result<DmaGrant, DmaError> {
     Ok(all.remove(idx))
 }
 
-pub fn drain_for_pid(pid: u32) -> Vec<DmaGrant> {
+pub(super) fn drain_for_pid(pid: u32) -> Vec<DmaGrant> {
     let mut all = RECORDS.lock();
     let mut taken = Vec::new();
     all.retain(|g| {
@@ -59,7 +59,7 @@ pub fn drain_for_pid(pid: u32) -> Vec<DmaGrant> {
     taken
 }
 
-pub fn drain_for_device(pid: u32, device_id: u64) -> Vec<DmaGrant> {
+pub(super) fn drain_for_device(pid: u32, device_id: u64) -> Vec<DmaGrant> {
     let mut all = RECORDS.lock();
     let mut taken = Vec::new();
     all.retain(|g| {

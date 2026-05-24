@@ -29,7 +29,7 @@ use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 
 use crate::arch::interrupt::broker::BROKER_VEC_COUNT;
 
-pub struct IrqSlot {
+pub(super) struct IrqSlot {
     pub active: AtomicBool,
     pub seq: AtomicU64,
     pub overflow: AtomicU64,
@@ -50,7 +50,7 @@ impl IrqSlot {
 }
 
 const SLOT_INIT: IrqSlot = IrqSlot::new();
-pub static SLOTS: [IrqSlot; BROKER_VEC_COUNT] = [SLOT_INIT; BROKER_VEC_COUNT];
+pub(super) static SLOTS: [IrqSlot; BROKER_VEC_COUNT] = [SLOT_INIT; BROKER_VEC_COUNT];
 
 // One bit per broker vector. The pool is sized so a `u64` is always
 // exactly enough; the const-assert keeps that honest.
@@ -71,7 +71,7 @@ fn run_mask(base: usize, n: usize) -> u64 {
     }
 }
 
-pub fn try_alloc_slot() -> Option<usize> {
+pub(super) fn try_alloc_slot() -> Option<usize> {
     loop {
         let cur = SLOT_BITMAP.load(Ordering::Acquire);
         let mut idx = None;
@@ -93,7 +93,7 @@ pub fn try_alloc_slot() -> Option<usize> {
 // Returns `None` if the count is zero, exceeds the pool, or no run
 // of that length is currently free. CAS-retried so concurrent
 // callers do not corrupt the bitmap.
-pub fn try_alloc_contiguous(count: usize) -> Option<usize> {
+pub(super) fn try_alloc_contiguous(count: usize) -> Option<usize> {
     if count == 0 || count > BROKER_VEC_COUNT {
         return None;
     }
@@ -117,18 +117,18 @@ pub fn try_alloc_contiguous(count: usize) -> Option<usize> {
     }
 }
 
-pub fn free_slot(idx: usize) {
+pub(super) fn free_slot(idx: usize) {
     SLOT_BITMAP.fetch_and(!mask_for(idx), Ordering::AcqRel);
 }
 
-pub fn free_contiguous(base: usize, count: usize) {
+pub(super) fn free_contiguous(base: usize, count: usize) {
     if count == 0 || base + count > BROKER_VEC_COUNT {
         return;
     }
     SLOT_BITMAP.fetch_and(!run_mask(base, count), Ordering::AcqRel);
 }
 
-pub fn activate(slot_idx: usize, grant_id: u64, gsi: u32) {
+pub(super) fn activate(slot_idx: usize, grant_id: u64, gsi: u32) {
     let slot = &SLOTS[slot_idx];
     slot.grant_id.store(grant_id, Ordering::Relaxed);
     slot.gsi.store(gsi, Ordering::Relaxed);
@@ -137,14 +137,14 @@ pub fn activate(slot_idx: usize, grant_id: u64, gsi: u32) {
     slot.active.store(true, Ordering::Release);
 }
 
-pub fn deactivate(slot_idx: usize) {
+pub(super) fn deactivate(slot_idx: usize) {
     let slot = &SLOTS[slot_idx];
     slot.active.store(false, Ordering::Release);
     slot.grant_id.store(0, Ordering::Relaxed);
     slot.gsi.store(0, Ordering::Relaxed);
 }
 
-pub fn read_counters(slot_idx: usize) -> (u64, u64) {
+pub(super) fn read_counters(slot_idx: usize) -> (u64, u64) {
     let slot = &SLOTS[slot_idx];
     (slot.seq.load(Ordering::Acquire), slot.overflow.load(Ordering::Acquire))
 }

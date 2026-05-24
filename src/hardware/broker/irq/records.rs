@@ -29,22 +29,22 @@ use super::types::{IrqError, IrqGrant, IrqGrantKind};
 static RECORDS: Mutex<Vec<IrqGrant>> = Mutex::new(Vec::new());
 static NEXT_GRANT_ID: AtomicU64 = AtomicU64::new(1);
 
-pub fn allocate_id() -> u64 {
+pub(super) fn allocate_id() -> u64 {
     NEXT_GRANT_ID.fetch_add(1, Ordering::SeqCst)
 }
 
 // Reserve `count` consecutive grant IDs and return the base. Used
 // by the MSI-X bind path so the capsule can derive per-vector grants
 // as `base + i` without an extra round-trip per vector.
-pub fn allocate_id_run(count: u64) -> u64 {
+pub(super) fn allocate_id_run(count: u64) -> u64 {
     NEXT_GRANT_ID.fetch_add(count, Ordering::SeqCst)
 }
 
-pub fn insert(record: IrqGrant) {
+pub(super) fn insert(record: IrqGrant) {
     RECORDS.lock().push(record);
 }
 
-pub fn insert_many(records_in: &[IrqGrant]) {
+pub(super) fn insert_many(records_in: &[IrqGrant]) {
     let mut all = RECORDS.lock();
     all.extend_from_slice(records_in);
 }
@@ -53,14 +53,14 @@ pub fn insert_many(records_in: &[IrqGrant]) {
 // grant. The bind path uses this to keep MSI-X bindings all-or-
 // nothing per device — the kernel either programs the full N-vector
 // run or none of it.
-pub fn has_msix_grant_for(pid: u32, device_id: u64) -> bool {
+pub(super) fn has_msix_grant_for(pid: u32, device_id: u64) -> bool {
     RECORDS
         .lock()
         .iter()
         .any(|g| g.pid == pid && g.device_id == device_id && g.kind == IrqGrantKind::Msix)
 }
 
-pub fn count_msix_for_device(device_id: u64) -> usize {
+pub(super) fn count_msix_for_device(device_id: u64) -> usize {
     RECORDS
         .lock()
         .iter()
@@ -68,15 +68,15 @@ pub fn count_msix_for_device(device_id: u64) -> usize {
         .count()
 }
 
-pub fn lookup(grant_id: u64) -> Option<IrqGrant> {
+pub(super) fn lookup(grant_id: u64) -> Option<IrqGrant> {
     RECORDS.lock().iter().find(|g| g.grant_id == grant_id).copied()
 }
 
-pub fn vector_for_gsi(gsi: u32) -> Option<u8> {
+pub(super) fn vector_for_gsi(gsi: u32) -> Option<u8> {
     RECORDS.lock().iter().find(|g| g.irq_source == gsi).map(|g| g.vector)
 }
 
-pub fn remove(pid: u32, grant_id: u64) -> Result<IrqGrant, IrqError> {
+pub(super) fn remove(pid: u32, grant_id: u64) -> Result<IrqGrant, IrqError> {
     let mut all = RECORDS.lock();
     let idx = all.iter().position(|g| g.grant_id == grant_id).ok_or(IrqError::UnknownGrant)?;
     if all[idx].pid != pid {
@@ -85,7 +85,7 @@ pub fn remove(pid: u32, grant_id: u64) -> Result<IrqGrant, IrqError> {
     Ok(all.remove(idx))
 }
 
-pub fn drain_for_pid(pid: u32) -> Vec<IrqGrant> {
+pub(super) fn drain_for_pid(pid: u32) -> Vec<IrqGrant> {
     let mut all = RECORDS.lock();
     let mut taken = Vec::new();
     all.retain(|g| {
@@ -99,7 +99,7 @@ pub fn drain_for_pid(pid: u32) -> Vec<IrqGrant> {
     taken
 }
 
-pub fn drain_for_device(pid: u32, device_id: u64) -> Vec<IrqGrant> {
+pub(super) fn drain_for_device(pid: u32, device_id: u64) -> Vec<IrqGrant> {
     let mut all = RECORDS.lock();
     let mut taken = Vec::new();
     all.retain(|g| {

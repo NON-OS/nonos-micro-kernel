@@ -64,13 +64,13 @@ fn next_grant_id() -> u64 {
 // already validated claim ownership, BAR containment and alignment,
 // and installed the user pages. This function only persists the
 // record so revocation can find it later.
-pub fn insert(record: MmioGrant) {
+pub(super) fn insert(record: MmioGrant) {
     GRANTS.lock().push(record);
 }
 
 // Allocate a fresh grant id without recording yet. Lets the handler
 // stamp the id into the record before insertion.
-pub fn allocate_id() -> u64 {
+pub(super) fn allocate_id() -> u64 {
     next_grant_id()
 }
 
@@ -78,7 +78,7 @@ pub fn allocate_id() -> u64 {
 // records so the caller can decide whether to unmap user pages
 // (self-context) or skip the unmap and let address-space teardown
 // drop the PTEs (cross-pid).
-pub fn drain_for_pid(pid: u32) -> Vec<MmioGrant> {
+pub(super) fn drain_for_pid(pid: u32) -> Vec<MmioGrant> {
     let mut grants = GRANTS.lock();
     let mut taken = Vec::new();
     grants.retain(|g| {
@@ -96,7 +96,7 @@ pub fn drain_for_pid(pid: u32) -> Vec<MmioGrant> {
 // when the holder voluntarily gives the device back. Caller passes
 // the holder pid for the cross-check; mismatch indicates a bug, not
 // a userland error.
-pub fn drain_for_device(pid: u32, device_id: u64) -> Vec<MmioGrant> {
+pub(super) fn drain_for_device(pid: u32, device_id: u64) -> Vec<MmioGrant> {
     let mut grants = GRANTS.lock();
     let mut taken = Vec::new();
     grants.retain(|g| {
@@ -114,7 +114,7 @@ pub fn drain_for_device(pid: u32, device_id: u64) -> Vec<MmioGrant> {
 // from the holder.
 // Remove a single grant if `pid` is the holder. Returns the removed
 // record on success.
-pub fn remove(pid: u32, grant_id: u64) -> Result<MmioGrant, GrantError> {
+pub(super) fn remove(pid: u32, grant_id: u64) -> Result<MmioGrant, GrantError> {
     let mut grants = GRANTS.lock();
     let idx = grants.iter().position(|g| g.grant_id == grant_id).ok_or(GrantError::UnknownGrant)?;
     if grants[idx].pid != pid {
@@ -136,8 +136,8 @@ pub(crate) fn snapshot() -> Vec<MmioGrant> {
 // so VA reuse across address spaces is harmless. Within one address
 // space the bump never wraps for the life of the run; if it ever
 // does, that is a real exhaustion and the request fails.
-pub const USER_MMIO_BASE: u64 = 0x0000_0080_0000_0000;
-pub const USER_MMIO_END: u64 = 0x0000_0090_0000_0000;
+pub(super) const USER_MMIO_BASE: u64 = 0x0000_0080_0000_0000;
+pub(super) const USER_MMIO_END: u64 = 0x0000_0090_0000_0000;
 const PAGE_SIZE: u64 = 4096;
 
 static NEXT_USER_MMIO_VA: AtomicU64 = AtomicU64::new(USER_MMIO_BASE);
@@ -146,7 +146,7 @@ static NEXT_USER_MMIO_VA: AtomicU64 = AtomicU64::new(USER_MMIO_BASE);
 // guard page is added between adjacent grants so a runaway access
 // cannot silently spill into the next grant. Returns `None` on
 // region exhaustion.
-pub fn reserve_user_va(pages: u64) -> Option<VirtAddr> {
+pub(super) fn reserve_user_va(pages: u64) -> Option<VirtAddr> {
     let bytes = pages.checked_mul(PAGE_SIZE)?;
     let with_guard = bytes.checked_add(PAGE_SIZE)?;
     let base = NEXT_USER_MMIO_VA.fetch_add(with_guard, Ordering::SeqCst);

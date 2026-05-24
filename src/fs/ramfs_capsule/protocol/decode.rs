@@ -18,7 +18,7 @@ use crate::services::lifecycle::transport::DecodedResponse;
 
 const RESPONSE_HDR_LEN: usize = 8;
 
-pub fn decode_response(buf: &[u8]) -> Option<DecodedResponse<'_>> {
+pub(super) fn decode_response(buf: &[u8]) -> Option<DecodedResponse<'_>> {
     if buf.len() < RESPONSE_HDR_LEN {
         return None;
     }

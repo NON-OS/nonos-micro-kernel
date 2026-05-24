@@ -16,7 +16,7 @@
 
 use crate::sys::serial;
 
-pub fn init_token_signing_key() {
+pub(crate) fn init_token_signing_key() {
     let mut key = [0u8; 32];
     if crate::crypto::random_api::get_bytes_secure(&mut key).is_err() {
         serial::println(b"[FATAL] token signing key init failed: RNG not ready");

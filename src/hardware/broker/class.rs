@@ -18,21 +18,21 @@
 // `abi/driver_broker_abi.md`.
 
 #[allow(non_upper_case_globals)]
-pub mod ids {
-    pub const RNG: u32 = 0x0001;
-    pub const BLOCK: u32 = 0x0010;
-    pub const NETWORK: u32 = 0x0020;
-    pub const DISPLAY: u32 = 0x0030;
-    pub const INPUT: u32 = 0x0040;
-    pub const AUDIO: u32 = 0x0050;
-    pub const SERIAL: u32 = 0x0060;
-    pub const USB_HOST: u32 = 0x0070;
+pub(in crate::hardware::broker) mod ids {
+    pub(in crate::hardware::broker) const RNG: u32 = 0x0001;
+    pub(in crate::hardware::broker) const BLOCK: u32 = 0x0010;
+    pub(in crate::hardware::broker) const NETWORK: u32 = 0x0020;
+    pub(in crate::hardware::broker) const DISPLAY: u32 = 0x0030;
+    pub(in crate::hardware::broker) const INPUT: u32 = 0x0040;
+    pub(in crate::hardware::broker) const AUDIO: u32 = 0x0050;
+    pub(in crate::hardware::broker) const SERIAL: u32 = 0x0060;
+    pub(in crate::hardware::broker) const USB_HOST: u32 = 0x0070;
     /// Subset of USB_HOST: a controller advertising xHCI prog-if
     /// (0x30). Older UHCI/OHCI/EHCI controllers stay on the
     /// generic USB_HOST id. Userland discovery matches on this
     /// id so it never tries to drive a non-xHCI USB host.
-    pub const USB_HOST_XHCI: u32 = 0x0071;
-    pub const OTHER: u32 = 0xFFFF;
+    pub(in crate::hardware::broker) const USB_HOST_XHCI: u32 = 0x0071;
+    pub(in crate::hardware::broker) const OTHER: u32 = 0xFFFF;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

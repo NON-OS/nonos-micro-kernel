@@ -17,7 +17,7 @@
 use crate::memory::encryption::{init_memory_encryption as detect_and_init, MemEncryption};
 use crate::sys::serial;
 
-pub fn init_memory_encryption() {
+pub(crate) fn init_memory_encryption() {
     match detect_and_init() {
         Ok(MemEncryption::None) => {
             serial::println(b"[NONOS] memory encryption: none");
