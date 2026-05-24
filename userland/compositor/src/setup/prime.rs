@@ -30,9 +30,6 @@ const PROT_READ_WRITE: i32 = 0x3;
 const MAP_PRIVATE_ANON: i32 = 0x22;
 
 pub fn run() -> Result<Context, &'static str> {
-    if let Ok(ctx) = run_gop_once() {
-        return Ok(ctx);
-    }
     let mut last_err = "gfx primary unavailable";
     for _ in 0..READY_ATTEMPTS {
         match run_virtio_once() {
@@ -42,6 +39,9 @@ pub fn run() -> Result<Context, &'static str> {
                 mk_yield();
             }
         }
+    }
+    if let Ok(ctx) = run_gop_once() {
+        return Ok(ctx);
     }
     Err(last_err)
 }
