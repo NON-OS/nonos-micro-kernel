@@ -380,6 +380,8 @@ include userland/capsule_net_dns/Capsule.mk
 include userland/capsule_net_sockets/Capsule.mk
 include userland/capsule_net_nym/Capsule.mk
 include userland/capsule_wallpaper/Capsule.mk
+include userland/capsule_attest/Capsule.mk
+include userland/capsule_power/Capsule.mk
 
 # Orchestration helper: union of every verified capsule's artifact
 # triple. Smoke and test targets that need proof_io plus another
@@ -917,6 +919,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(calculator_ARTIFACTS) $(terminal_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
+		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-desktop-gui)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \

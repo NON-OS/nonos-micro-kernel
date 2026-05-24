@@ -478,6 +478,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-text-editor",
   "nonos-capsule-settings",
   "nonos-capsule-process-manager",
+  "nonos-capsule-power",
 ]
 
 microkernel-toolkit = ["microkernel-desktop-gui"]
