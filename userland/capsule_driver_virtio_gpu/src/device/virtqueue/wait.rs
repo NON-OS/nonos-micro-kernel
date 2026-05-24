@@ -13,12 +13,25 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-pub mod avail;
-pub mod control_queue;
-pub mod desc;
-pub mod layout;
-pub mod submit;
-pub mod used;
-mod wait;
-pub use control_queue::ControlQueue;
-pub use layout::QueueLayout;
+
+use nonos_libc::mk_yield;
+
+use super::{layout::QueueLayout, used};
+
+const SPINS_PER_YIELD: u32 = 1024;
+const YIELD_LIMIT: u32 = 8192;
+
+pub fn used_changed(layout: QueueLayout, pre_used_idx: u16) -> Result<(), &'static str> {
+    for _ in 0..YIELD_LIMIT {
+        for _ in 0..SPINS_PER_YIELD {
+            if used::read_idx(layout) != pre_used_idx {
+                return Ok(());
+            }
+            core::hint::spin_loop();
+        }
+        if mk_yield() < 0 {
+            return Err("virtio-gpu: yield failed");
+        }
+    }
+    Err("virtio-gpu: device timeout")
+}
