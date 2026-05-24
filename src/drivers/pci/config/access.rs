@@ -16,12 +16,21 @@
 
 use core::sync::atomic::{AtomicU64, Ordering};
 
+use spin::Mutex;
+
 use super::super::constants::*;
 use super::super::error::{PciError, Result};
 use super::port_io::{inl, outl};
 
 pub static CONFIG_READS: AtomicU64 = AtomicU64::new(0);
 pub static CONFIG_WRITES: AtomicU64 = AtomicU64::new(0);
+
+// Serialise the (PCI_CONFIG_ADDRESS, PCI_CONFIG_DATA) port pair. On
+// SMP, an interleaving between one CPU's address write and the other
+// CPU's data read returns garbage from the wrong device. The lock is
+// held only across the two outl/inl that form one PCI config word
+// access, so contention is bounded by the port-IO latency.
+static CONFIG_PORT_LOCK: Mutex<()> = Mutex::new(());
 
 pub fn validate_access(_bus: u8, device: u8, function: u8, offset: u16) -> Result<()> {
     if device > PCI_MAX_DEVICE {
@@ -59,7 +68,9 @@ pub fn read8(bus: u8, device: u8, function: u8, offset: u16) -> Result<u8> {
     let addr = make_config_address(bus, device, function, offset);
     let byte_offset = (offset & 3) as u16;
 
-    // SAFETY: PCI config space ports are valid for kernel access
+    let _g = CONFIG_PORT_LOCK.lock();
+    // SAFETY: PCI config space ports are valid for kernel access; the
+    // lock guarantees the (address, data) pair is atomic.
     let value = unsafe {
         outl(PCI_CONFIG_ADDRESS, addr);
         let data = inl(PCI_CONFIG_DATA);
@@ -77,7 +88,9 @@ pub fn read16(bus: u8, device: u8, function: u8, offset: u16) -> Result<u16> {
     let addr = make_config_address(bus, device, function, offset);
     let word_offset = (offset & 2) as u16;
 
-    // SAFETY: PCI config space ports are valid for kernel access
+    let _g = CONFIG_PORT_LOCK.lock();
+    // SAFETY: PCI config space ports are valid for kernel access; the
+    // lock guarantees the (address, data) pair is atomic.
     let value = unsafe {
         outl(PCI_CONFIG_ADDRESS, addr);
         let data = inl(PCI_CONFIG_DATA);
@@ -94,7 +107,9 @@ pub fn read32(bus: u8, device: u8, function: u8, offset: u16) -> Result<u32> {
 
     let addr = make_config_address(bus, device, function, offset);
 
-    // SAFETY: PCI config space ports are valid for kernel access
+    let _g = CONFIG_PORT_LOCK.lock();
+    // SAFETY: PCI config space ports are valid for kernel access; the
+    // lock guarantees the (address, data) pair is atomic.
     let value = unsafe {
         outl(PCI_CONFIG_ADDRESS, addr);
         inl(PCI_CONFIG_DATA)
