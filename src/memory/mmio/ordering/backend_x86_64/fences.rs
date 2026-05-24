@@ -17,7 +17,7 @@
 use core::sync::atomic::{compiler_fence, Ordering};
 
 #[inline(always)]
-pub fn fence_writes() {
+pub(in crate::memory::mmio::ordering) fn fence_writes() {
     compiler_fence(Ordering::Release);
     // SAFETY: ek@nonos.systems — the block-level write barrier requires
     // the WC buffer drain that only `sfence` provides; no compiler fence
@@ -28,7 +28,7 @@ pub fn fence_writes() {
 }
 
 #[inline(always)]
-pub fn fence_reads() {
+pub(in crate::memory::mmio::ordering) fn fence_reads() {
     // SAFETY: ek@nonos.systems — the block-level read barrier needs
     // hardware load serialisation against WC sources, not just compiler
     // ordering. `lfence` is the right granularity.
@@ -39,7 +39,7 @@ pub fn fence_reads() {
 }
 
 #[inline(always)]
-pub fn fence_full() {
+pub(in crate::memory::mmio::ordering) fn fence_full() {
     compiler_fence(Ordering::SeqCst);
     // SAFETY: ek@nonos.systems — `mfence` is the only x86_64 instruction
     // that gives StoreLoad ordering across MMIO and write-back cacheable

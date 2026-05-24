@@ -21,15 +21,15 @@ use super::super::domain_id::DomainId;
 use super::super::error::IommuError;
 use super::super::protection::IommuProtection;
 
-pub fn allocate_domain() -> Result<DomainId, IommuError> {
+pub(in crate::memory::iommu) fn allocate_domain() -> Result<DomainId, IommuError> {
     Err(IommuError::NotSupported)
 }
 
-pub fn free_domain(_id: DomainId) -> Result<(), IommuError> {
+pub(in crate::memory::iommu) fn free_domain(_id: DomainId) -> Result<(), IommuError> {
     Err(IommuError::NotSupported)
 }
 
-pub fn map(
+pub(in crate::memory::iommu) fn map(
     _domain: DomainId,
     _iova: u64,
     _phys: PhysAddr,
@@ -39,14 +39,24 @@ pub fn map(
     Err(IommuError::NotSupported)
 }
 
-pub fn unmap(_domain: DomainId, _iova: u64, _size: usize) -> Result<(), IommuError> {
+pub(in crate::memory::iommu) fn unmap(
+    _domain: DomainId,
+    _iova: u64,
+    _size: usize,
+) -> Result<(), IommuError> {
     Err(IommuError::NotSupported)
 }
 
-pub fn attach_device(_domain: DomainId, _device: DeviceAddress) -> Result<(), IommuError> {
+pub(in crate::memory::iommu) fn attach_device(
+    _domain: DomainId,
+    _device: DeviceAddress,
+) -> Result<(), IommuError> {
     Err(IommuError::NotSupported)
 }
 
-pub fn detach_device(_domain: DomainId, _device: DeviceAddress) -> Result<(), IommuError> {
+pub(in crate::memory::iommu) fn detach_device(
+    _domain: DomainId,
+    _device: DeviceAddress,
+) -> Result<(), IommuError> {
     Err(IommuError::NotSupported)
 }

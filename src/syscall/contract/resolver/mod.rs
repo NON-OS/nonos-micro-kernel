@@ -23,5 +23,5 @@ mod context;
 mod error;
 mod resolve;
 
-pub use context::ResolveContext;
-pub use resolve::resolve;
+pub(super) use context::ResolveContext;
+pub(super) use resolve::resolve;

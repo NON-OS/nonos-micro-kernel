@@ -19,7 +19,7 @@ use crate::capabilities::token::CapabilityToken;
 use super::context::ResolveContext;
 use super::error::ResolverError;
 
-pub fn check_revocation_epoch(
+pub(super) fn check_revocation_epoch(
     token: &CapabilityToken,
     ctx: &ResolveContext,
 ) -> Result<(), ResolverError> {

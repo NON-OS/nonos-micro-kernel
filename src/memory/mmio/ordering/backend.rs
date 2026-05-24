@@ -18,6 +18,6 @@
 #[path = "backend_x86_64/mod.rs"]
 mod backend_x86_64;
 #[cfg(target_arch = "x86_64")]
-pub use backend_x86_64::{
+pub(super) use backend_x86_64::{
     fence_full, fence_reads, fence_writes, read_acquire, read_relaxed, write_relaxed, write_release,
 };

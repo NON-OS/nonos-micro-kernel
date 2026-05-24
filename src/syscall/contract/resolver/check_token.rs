@@ -18,7 +18,7 @@ use crate::capabilities::token::{is_token_not_revoked, verify_token, CapabilityT
 
 use super::error::ResolverError;
 
-pub fn check_token(token: &CapabilityToken) -> Result<(), ResolverError> {
+pub(super) fn check_token(token: &CapabilityToken) -> Result<(), ResolverError> {
     if !verify_token(token) {
         return Err(ResolverError::TokenSignatureInvalid);
     }

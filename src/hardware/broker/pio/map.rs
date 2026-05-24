@@ -29,7 +29,10 @@ use crate::hardware::broker::table;
 
 const FLAGS_KNOWN: u32 = 0;
 
-pub fn grant_for_caller(pid: u32, req: PioGrantRequest) -> Result<PioGrantResult, PioError> {
+pub(super) fn grant_for_caller(
+    pid: u32,
+    req: PioGrantRequest,
+) -> Result<PioGrantResult, PioError> {
     if req.flags & !FLAGS_KNOWN != 0 {
         return Err(PioError::UnsupportedFlags);
     }

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn set_cbit_on_pte(pte_slot: &mut u64, c_bit_mask: u64) -> bool {
+pub(super) fn set_cbit_on_pte(pte_slot: &mut u64, c_bit_mask: u64) -> bool {
     let current = *pte_slot;
     let new = current | c_bit_mask;
     if new == current {

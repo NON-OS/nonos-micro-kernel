@@ -19,7 +19,7 @@ use crate::capabilities::token::CapabilityToken;
 use super::context::ResolveContext;
 use super::error::ResolverError;
 
-pub fn check_asid_binding(
+pub(super) fn check_asid_binding(
     token: &CapabilityToken,
     ctx: &ResolveContext,
 ) -> Result<(), ResolverError> {

@@ -21,7 +21,7 @@ use crate::memory::dma::types::DmaDirection;
 
 use super::super::Coherency;
 
-pub fn sync_for_device(
+pub(in crate::memory::dma::coherency) fn sync_for_device(
     _cpu_addr: VirtAddr,
     _size: usize,
     _direction: DmaDirection,
@@ -30,7 +30,7 @@ pub fn sync_for_device(
     bus_fence();
 }
 
-pub fn sync_for_cpu(
+pub(in crate::memory::dma::coherency) fn sync_for_cpu(
     _cpu_addr: VirtAddr,
     _size: usize,
     _direction: DmaDirection,

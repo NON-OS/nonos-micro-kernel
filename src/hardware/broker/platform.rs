@@ -18,10 +18,10 @@ use super::class::ids;
 use super::device::{Bar, BarKind, BusKind, DeviceRecord};
 use super::table;
 
-pub const PNP_VENDOR_PS2_KBD: u16 = 0x0001;
-pub const PNP_DEVICE_PS2_KBD: u16 = 0x0303;
-pub const PNP_VENDOR_PS2_AUX: u16 = 0x0001;
-pub const PNP_DEVICE_PS2_AUX: u16 = 0x0304;
+pub(super) const PNP_VENDOR_PS2_KBD: u16 = 0x0001;
+pub(super) const PNP_DEVICE_PS2_KBD: u16 = 0x0303;
+pub(super) const PNP_VENDOR_PS2_AUX: u16 = 0x0001;
+pub(super) const PNP_DEVICE_PS2_AUX: u16 = 0x0304;
 
 const PS2_PORT_BASE: u64 = 0x60;
 const PS2_PORT_COUNT: u64 = 5;

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub struct ResolveContext {
-    pub current_asid: u32,
-    pub boot_session_nonce: Option<[u8; 16]>,
-    pub capsule_revocation_epoch: u64,
+pub(in crate::syscall::contract) struct ResolveContext {
+    pub(in crate::syscall::contract) current_asid: u32,
+    pub(in crate::syscall::contract) boot_session_nonce: Option<[u8; 16]>,
+    pub(in crate::syscall::contract) capsule_revocation_epoch: u64,
 }

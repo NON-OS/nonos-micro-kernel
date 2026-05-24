@@ -18,7 +18,7 @@ mod caps;
 mod capsule_id;
 mod cert_binding;
 mod dispatch;
-pub mod endpoint_drift;
+mod endpoint_drift;
 mod namespace;
 mod payload;
 mod signed_region;

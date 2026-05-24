@@ -25,7 +25,7 @@ pub(super) struct Args {
 }
 
 impl Args {
-    pub const fn new(a0: u64, a1: u64, a2: u64, a3: u64, a4: u64, a5: u64) -> Self {
+    pub(super) const fn new(a0: u64, a1: u64, a2: u64, a3: u64, a4: u64, a5: u64) -> Self {
         Self { a0, a1, a2, a3, a4, a5 }
     }
 }

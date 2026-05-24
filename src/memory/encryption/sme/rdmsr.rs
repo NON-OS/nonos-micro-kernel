@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn rdmsr(msr: u32) -> u64 {
+pub(super) fn rdmsr(msr: u32) -> u64 {
     let (low, high): (u32, u32);
     unsafe {
         core::arch::asm!("rdmsr", in("ecx") msr, out("eax") low, out("edx") high);

@@ -24,7 +24,7 @@ use crate::services::lifecycle::transport;
 
 // 0x1_0000_0006 = 4294967302. Slot 6 in the per-service reply-inbox
 // numbering; distinct from ramfs/keyring/entropy/crypto/vfs.
-pub const REPLY_INBOX: &str = "endpoint.4294967302";
+pub(crate) const REPLY_INBOX: &str = "endpoint.4294967302";
 const SENDER_NAME: &str = "kernel.driver_virtio_rng";
 
 static TRANSPORT_LOCK: Mutex<()> = Mutex::new(());

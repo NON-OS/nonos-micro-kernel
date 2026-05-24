@@ -20,7 +20,7 @@ use crate::crypto::util::constant_time::ct_eq_16;
 use super::context::ResolveContext;
 use super::error::ResolverError;
 
-pub fn check_session_binding(
+pub(super) fn check_session_binding(
     token: &CapabilityToken,
     ctx: &ResolveContext,
 ) -> Result<(), ResolverError> {

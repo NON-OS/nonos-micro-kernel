@@ -18,7 +18,7 @@ use super::walk_pdpt::walk_pdpt;
 use crate::memory::layout::DIRECTMAP_BASE;
 use crate::memory::paging::constants::{pte_address, pte_is_present, PAGE_TABLE_ENTRIES};
 
-pub unsafe fn walk_pml4_entry(pml4_phys: u64, index: usize, c_bit_mask: u64) -> u64 {
+pub(super) unsafe fn walk_pml4_entry(pml4_phys: u64, index: usize, c_bit_mask: u64) -> u64 {
     if index >= PAGE_TABLE_ENTRIES {
         return 0;
     }

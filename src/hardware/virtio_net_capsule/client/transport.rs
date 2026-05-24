@@ -25,7 +25,7 @@ use crate::services::lifecycle::transport;
 // 0x1_0000_0009 = 4294967305. Slot 9 in the per-service reply
 // numbering. Matches the userland mirror at
 // userland/capsule_driver_virtio_net/src/protocol/endpoint.rs.
-pub const REPLY_INBOX: &str = "endpoint.4294967305";
+pub(crate) const REPLY_INBOX: &str = "endpoint.4294967305";
 const SENDER_NAME: &str = "kernel.driver_virtio_net";
 
 static TRANSPORT_LOCK: Mutex<()> = Mutex::new(());

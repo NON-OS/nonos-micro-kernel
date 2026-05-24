@@ -21,7 +21,7 @@ use crate::memory::paging::constants::{
     pte_address, pte_is_huge, pte_is_present, PAGE_TABLE_ENTRIES,
 };
 
-pub unsafe fn walk_pd(pd_phys: u64, c_bit_mask: u64) -> u64 {
+pub(super) unsafe fn walk_pd(pd_phys: u64, c_bit_mask: u64) -> u64 {
     let table_va = DIRECTMAP_BASE + (pd_phys & !c_bit_mask);
     let table = &mut *(table_va as *mut [u64; PAGE_TABLE_ENTRIES]);
     let mut touched = 0u64;

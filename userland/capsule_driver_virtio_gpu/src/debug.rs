@@ -14,11 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[allow(dead_code)]
-pub fn wrmsr(msr: u32, value: u64) {
-    let low = value as u32;
-    let high = (value >> 32) as u32;
-    unsafe {
-        core::arch::asm!("wrmsr", in("ecx") msr, in("eax") low, in("edx") high);
-    }
+use nonos_libc::mk_debug;
+
+const PREFIX: &[u8] = b"[virtio_gpu] ";
+const NEWLINE: &[u8] = b"\n";
+const MAX_LABEL: usize = 200;
+
+pub fn marker(label: &[u8]) {
+    let label_len = if label.len() > MAX_LABEL { MAX_LABEL } else { label.len() };
+    let mut buf = [0u8; PREFIX.len() + MAX_LABEL + 1];
+    let prefix_end = PREFIX.len();
+    buf[..prefix_end].copy_from_slice(PREFIX);
+    buf[prefix_end..prefix_end + label_len].copy_from_slice(&label[..label_len]);
+    buf[prefix_end + label_len] = b'\n';
+    let total = prefix_end + label_len + NEWLINE.len();
+    let _ = mk_debug(buf.as_ptr(), total);
 }

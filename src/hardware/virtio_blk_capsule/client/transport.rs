@@ -27,7 +27,7 @@ use crate::services::lifecycle::transport;
 // virtio_rng=6, market=7, virtio_blk=8). Matches the userland
 // mirror at userland/capsule_driver_virtio_blk/src/protocol/
 // endpoint.rs.
-pub const REPLY_INBOX: &str = "endpoint.4294967304";
+pub(crate) const REPLY_INBOX: &str = "endpoint.4294967304";
 const SENDER_NAME: &str = "kernel.driver_virtio_blk";
 
 static TRANSPORT_LOCK: Mutex<()> = Mutex::new(());

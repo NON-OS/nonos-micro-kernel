@@ -18,11 +18,11 @@
 // land here through the Arch trait once M-ARCH-1 ships.
 
 #[cfg(target_arch = "x86_64")]
-pub fn clear_low_half() -> Result<(), &'static str> {
+pub(super) fn clear_low_half() -> Result<(), &'static str> {
     crate::arch::x86_64::paging::clear_low_half()
 }
 
 #[cfg(not(target_arch = "x86_64"))]
-pub fn clear_low_half() -> Result<(), &'static str> {
+pub(super) fn clear_low_half() -> Result<(), &'static str> {
     Ok(())
 }

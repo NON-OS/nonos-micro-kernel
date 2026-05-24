@@ -21,7 +21,7 @@ mod real;
 mod swap;
 
 #[cfg(not(test))]
-pub use real::current_ops;
+pub(super) use real::current_ops;
 
 #[cfg(test)]
-pub use swap::{clear_ops_for_test, current_ops, install_ops_for_test};
+pub(super) use swap::{clear_ops_for_test, current_ops, install_ops_for_test};

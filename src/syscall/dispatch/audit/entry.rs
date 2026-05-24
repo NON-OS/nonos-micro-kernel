@@ -38,12 +38,12 @@ pub(super) struct AuditLog {
 }
 
 impl AuditLog {
-    pub const fn new() -> Self {
+    pub(super) const fn new() -> Self {
         const NONE: Option<SyscallAuditEntry> = None;
         Self { entries: [NONE; 256], head: 0, count: 0 }
     }
 
-    pub fn push(&mut self, entry: SyscallAuditEntry) {
+    pub(super) fn push(&mut self, entry: SyscallAuditEntry) {
         self.entries[self.head] = Some(entry);
         self.head = (self.head + 1) % 256;
         if self.count < 256 {

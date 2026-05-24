@@ -25,7 +25,7 @@ use crate::services::lifecycle::transport;
 // 0x1_0000_000C = 4294967308. Slot 12 in the per-service reply
 // numbering. Matches the userland mirror at
 // userland/capsule_driver_e1000/src/protocol/endpoint.rs.
-pub const REPLY_INBOX: &str = "endpoint.4294967308";
+pub(crate) const REPLY_INBOX: &str = "endpoint.4294967308";
 const SENDER_NAME: &str = "kernel.driver_e1000";
 
 static TRANSPORT_LOCK: Mutex<()> = Mutex::new(());

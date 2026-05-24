@@ -28,7 +28,7 @@ use super::check_token::check_token;
 use super::context::ResolveContext;
 use super::error::ResolverError;
 
-pub fn resolve(
+pub(in crate::syscall::contract) fn resolve(
     token: &Arc<CapabilityToken>,
     number: SyscallNumber,
     _args: &SyscallArgs,

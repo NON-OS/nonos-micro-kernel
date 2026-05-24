@@ -26,7 +26,7 @@ use crate::hardware::broker::pci_index::{self, PciHandle};
 
 use super::types::{PciWriteError, PciWriteRequest};
 
-pub fn resolve(pid: u32, req: &PciWriteRequest) -> Result<PciHandle, PciWriteError> {
+pub(super) fn resolve(pid: u32, req: &PciWriteRequest) -> Result<PciHandle, PciWriteError> {
     let claim = claim::lookup(req.device_id).ok_or(PciWriteError::NotClaimed)?;
     if claim.pid != pid {
         return Err(PciWriteError::NotClaimed);

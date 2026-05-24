@@ -20,7 +20,7 @@ use crate::syscall::numbers::SyscallNumber;
 use super::super::cap_table;
 use super::error::ResolverError;
 
-pub fn check_syscall_allowed(
+pub(super) fn check_syscall_allowed(
     token: &CapabilityToken,
     number: SyscallNumber,
 ) -> Result<(), ResolverError> {

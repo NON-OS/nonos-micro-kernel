@@ -22,7 +22,6 @@ mod is_page_encrypted;
 mod rdmsr;
 mod sme_decrypt_page;
 mod sme_encrypt_page;
-mod wrmsr;
 
 pub use enable_sme::enable_sme;
 pub use get_sme_status::get_sme_status;

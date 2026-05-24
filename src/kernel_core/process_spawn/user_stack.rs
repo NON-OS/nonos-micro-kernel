@@ -40,7 +40,7 @@ use alloc::vec::Vec;
 const PAGE_SIZE: u64 = 4096;
 
 #[derive(Debug, Clone, Copy)]
-pub enum UserStackError {
+pub(crate) enum UserStackError {
     AddressSpace,
     FrameExhausted,
     MapFailed,
@@ -52,7 +52,7 @@ pub enum UserStackError {
 /// SysV AMD64 entry ABI: a synthetic call would push an 8-byte return
 /// address, so we hand back `top - 8` so a real entry sees rsp ≡ 8
 /// (mod 16) before its prologue).
-pub fn allocate_user_stack(pid: Pid) -> Result<u64, UserStackError> {
+pub(crate) fn allocate_user_stack(pid: Pid) -> Result<u64, UserStackError> {
     let top: u64 = USER_STACK_BASE;
     let size: u64 = USER_STACK_SIZE as u64;
     let bottom: u64 = top.checked_sub(size).ok_or(UserStackError::AddressSpace)?;

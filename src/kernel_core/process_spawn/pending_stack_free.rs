@@ -42,7 +42,7 @@ fn slot() -> &'static Mutex<Vec<u64>> {
     &PENDING[if idx < MAX_CPUS { idx } else { 0 }]
 }
 
-pub fn defer_release(pid: Pid) {
+pub(crate) fn defer_release(pid: Pid) {
     let pcb = match PROCESS_TABLE.find_by_pid(pid) {
         Some(p) => p,
         None => return,
@@ -54,7 +54,7 @@ pub fn defer_release(pid: Pid) {
     slot().lock().push(top);
 }
 
-pub fn drain() {
+pub(crate) fn drain() {
     // Called from the timer trap. `try_lock` so the trap handler never
     // spins on a `defer_release` caller — they share a CPU and the
     // syscall path holds the lock with interrupts on. A missed tick is

@@ -31,7 +31,7 @@ use core::sync::atomic::Ordering;
 const PAGE_SIZE: usize = 4096;
 
 #[derive(Debug, Clone, Copy)]
-pub enum KernelStackError {
+pub(crate) enum KernelStackError {
     NoSuchProcess,
     Allocation,
 }
@@ -41,7 +41,7 @@ pub enum KernelStackError {
 /// page-aligned base; `KERNEL_STACK_SIZE` is a multiple of the page
 /// size, so `top - KERNEL_STACK_SIZE` reconstructs the base verbatim
 /// at deallocation time without needing a second PCB field.
-pub fn allocate_kernel_stack(pid: Pid) -> Result<u64, KernelStackError> {
+pub(crate) fn allocate_kernel_stack(pid: Pid) -> Result<u64, KernelStackError> {
     let pages = (KERNEL_STACK_SIZE + PAGE_SIZE - 1) / PAGE_SIZE;
     let base = allocate_pages(pages).map_err(|e| {
         crate::sys::serial::print(b"[KSTACK] alloc err: ");

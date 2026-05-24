@@ -28,7 +28,7 @@ pub(crate) struct UserLeaf {
 }
 
 impl UserLeaf {
-    pub fn bytes_remaining_in_page(&self) -> u64 {
+    pub(crate) fn bytes_remaining_in_page(&self) -> u64 {
         self.size - self.offset
     }
 }

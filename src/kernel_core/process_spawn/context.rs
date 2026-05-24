@@ -18,7 +18,7 @@ use crate::arch::context::{setup_initial_user_pcb, SetupError};
 use crate::process::core::Pid;
 
 #[derive(Debug, Clone, Copy)]
-pub enum UserEntryError {
+pub(crate) enum UserEntryError {
     NoSuchProcess,
     NonUserEntry,
     NonUserStack,

@@ -18,5 +18,6 @@ mod embed;
 mod spawn;
 mod state;
 
-pub use spawn::{spawn_net_nym_capsule, SpawnError};
+pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
+pub use spawn::spawn_net_nym_capsule;
 pub use state::shared_state;

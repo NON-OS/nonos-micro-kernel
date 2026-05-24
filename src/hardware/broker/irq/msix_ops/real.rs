@@ -28,7 +28,7 @@ use super::super::types::IrqBindError;
 use super::mmio_zero::zero_table_entry;
 use super::ops::MsixOps;
 
-pub struct RealMsixOps;
+struct RealMsixOps;
 
 impl MsixOps for RealMsixOps {
     fn program_run(
@@ -70,9 +70,9 @@ impl MsixOps for RealMsixOps {
     }
 }
 
-pub(super) static REAL_OPS: RealMsixOps = RealMsixOps;
+static REAL_OPS: RealMsixOps = RealMsixOps;
 
 #[cfg(not(test))]
-pub fn current_ops() -> &'static dyn MsixOps {
+pub(in crate::hardware::broker::irq) fn current_ops() -> &'static dyn MsixOps {
     &REAL_OPS
 }

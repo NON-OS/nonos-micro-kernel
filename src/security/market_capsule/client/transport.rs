@@ -25,7 +25,7 @@ use crate::services::lifecycle::transport;
 // 0x1_0000_0007 = 4294967303. Slot 7 in the per-service reply-inbox
 // numbering (ramfs=1, keyring=2, entropy=3, crypto=4, vfs=5,
 // virtio_rng=6, market=7).
-pub const REPLY_INBOX: &str = "endpoint.4294967303";
+pub(crate) const REPLY_INBOX: &str = "endpoint.4294967303";
 const SENDER_NAME: &str = "kernel.market";
 
 static TRANSPORT_LOCK: Mutex<()> = Mutex::new(());

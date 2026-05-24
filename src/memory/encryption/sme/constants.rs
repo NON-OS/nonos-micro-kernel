@@ -14,6 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const MSR_AMD_SYSCFG: u32 = 0xC0010010;
-pub const MSR_AMD_SMEE: u32 = 0xC0010015;
-pub const SYSCFG_MEM_ENCRYPT_BIT: u64 = 1 << 23;
+pub(super) const MSR_AMD_SYSCFG: u32 = 0xC0010010;
+pub(super) const MSR_AMD_SMEE: u32 = 0xC0010015;
+pub(super) const SYSCFG_MEM_ENCRYPT_BIT: u64 = 1 << 23;

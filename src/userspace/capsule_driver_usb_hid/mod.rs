@@ -26,5 +26,6 @@ pub use client::{
     probe_config, HidBinding, HidKind, KeyEvent, MouseEvent, UsbHidState,
 };
 pub use error::UsbHidError;
-pub use spawn::{spawn_driver_usb_hid_capsule, SpawnError};
+pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
+pub use spawn::spawn_driver_usb_hid_capsule;
 pub use state::shared_state;

@@ -24,12 +24,12 @@ use crate::services::lifecycle::transport;
 
 // 0x1_0000_0002 = 4294967298. Distinct from ramfs/entropy/crypto/vfs
 // reply inboxes.
-pub const REPLY_INBOX: &str = "endpoint.4294967298";
+pub(crate) const REPLY_INBOX: &str = "endpoint.4294967298";
 const SENDER_NAME: &str = "kernel.keyring";
 
 static TRANSPORT_LOCK: Mutex<()> = Mutex::new(());
 
-pub struct ResponseBytes {
+pub(super) struct ResponseBytes {
     pub status: i32,
     pub payload: Vec<u8>,
 }

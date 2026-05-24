@@ -25,7 +25,7 @@ use crate::services::lifecycle::transport;
 // 0x1_0000_0004 in decimal is 4294967300. Distinct from ramfs/keyring/
 // entropy reply inboxes so concurrent in-flight requests cannot
 // cross-route.
-pub const REPLY_INBOX: &str = "endpoint.4294967300";
+pub(crate) const REPLY_INBOX: &str = "endpoint.4294967300";
 const SENDER_NAME: &str = "kernel.crypto";
 
 static TRANSPORT_LOCK: Mutex<()> = Mutex::new(());

@@ -27,7 +27,7 @@ pub struct DeclaredEndpoint<'a> {
 // register. Manifest must declare every one of them; manifest may
 // declare more (Reply with no Service-side, etc.) but the spawn
 // site must not register an endpoint the manifest does not list.
-pub fn check(
+pub(super) fn check(
     manifest: &CapsuleManifest,
     declared: &[DeclaredEndpoint<'_>],
 ) -> Result<(), ManifestVerifyError> {

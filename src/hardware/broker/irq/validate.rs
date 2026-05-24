@@ -44,17 +44,17 @@ use super::types::{IrqBindError, IrqBindRequest, BIND_MSIX, FLAGS_KNOWN};
 /// real `pci_index` entry; the validator itself only inspects the
 /// fields and never goes back to the kernel.
 #[derive(Clone, Copy, Debug)]
-pub struct MsixHandleView {
-    pub msix_present: bool,
-    pub msix_table_size: u16,
-    pub table_bar_in_range: bool,
-    pub table_bar_is_mmio: bool,
-    pub pba_bar_in_range: bool,
-    pub pba_bar_is_mmio: bool,
+pub(super) struct MsixHandleView {
+    pub(super) msix_present: bool,
+    pub(super) msix_table_size: u16,
+    pub(super) table_bar_in_range: bool,
+    pub(super) table_bar_is_mmio: bool,
+    pub(super) pba_bar_in_range: bool,
+    pub(super) pba_bar_is_mmio: bool,
 }
 
 impl MsixHandleView {
-    pub const fn no_msix() -> Self {
+    pub(super) const fn no_msix() -> Self {
         Self {
             msix_present: false,
             msix_table_size: 0,
@@ -72,7 +72,7 @@ impl MsixHandleView {
 /// broker vector pool's total size, passed in so the validator
 /// stays free of any global lookup. `handle` is `None` when the
 /// broker has no PCI side-table entry for this device id.
-pub fn validate_msix_request(
+pub(super) fn validate_msix_request(
     req: &IrqBindRequest,
     pool_capacity: usize,
     handle: Option<&MsixHandleView>,
@@ -122,7 +122,7 @@ pub fn validate_msix_request(
 /// presence here lets the host test crate cover the INTx-side
 /// rejections (`NotIntx`, `NotDeviceIrq`, `BadVectorCount`) as
 /// pure functions too.
-pub fn validate_intx_request(
+pub(super) fn validate_intx_request(
     req: &IrqBindRequest,
     irq_pin: u8,
     irq_line: u8,

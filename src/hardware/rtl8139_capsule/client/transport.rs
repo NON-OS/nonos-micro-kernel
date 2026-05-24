@@ -22,7 +22,7 @@ use super::super::protocol::decode_response;
 use super::super::state;
 use crate::services::lifecycle::transport;
 
-pub const REPLY_INBOX: &str = "endpoint.4294967309";
+pub(crate) const REPLY_INBOX: &str = "endpoint.4294967309";
 const SENDER_NAME: &str = "kernel.driver_rtl8139";
 
 static TRANSPORT_LOCK: Mutex<()> = Mutex::new(());

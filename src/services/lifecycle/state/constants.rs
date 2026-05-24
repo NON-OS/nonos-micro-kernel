@@ -14,5 +14,5 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const DEFAULT_MAX_RESTARTS: u32 = 8;
-pub const DEFAULT_RESPAWN_DEBOUNCE_MS: u64 = 2_000;
+pub(super) const DEFAULT_MAX_RESTARTS: u32 = 8;
+pub(super) const DEFAULT_RESPAWN_DEBOUNCE_MS: u64 = 2_000;

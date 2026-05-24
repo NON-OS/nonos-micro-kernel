@@ -28,7 +28,7 @@ use crate::security::nonos_trust_anchor::{
     decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
 };
 
-pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
+use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 
 const SERVICE_NAME: &str = "net.l2";
 const SERVICE_PORT: u32 = 4400;

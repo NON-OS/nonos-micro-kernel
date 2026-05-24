@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ResolverError {
+pub(in crate::syscall::contract) enum ResolverError {
     TokenSignatureInvalid,
     TokenExpired,
     TokenRevoked,

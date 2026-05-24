@@ -136,7 +136,7 @@ pub unsafe extern "C" fn timer_trampoline() {
 /// later context write overwrites earlier ones, and the scheduler
 /// `take()`s the most recent one.
 #[no_mangle]
-pub extern "C" fn timer_trap_handler(ctx: *mut UserContext) {
+pub(super) extern "C" fn timer_trap_handler(ctx: *mut UserContext) {
     // SAFETY: eK@nonos.systems — `ctx` was produced by the trampoline
     // above and points at 160 bytes of valid stack memory laid out as
     // the leading fields of `UserContext`. We read those fields here;

@@ -30,19 +30,19 @@ use spin::RwLock;
 use crate::drivers::pci::types::{MsixInfo, PciAddress, PciBar};
 
 #[derive(Clone, Copy, Debug)]
-pub struct PciHandle {
-    pub device_id: u64,
-    pub address: PciAddress,
-    pub bars: [PciBar; 6],
-    pub msix: Option<MsixInfo>,
+pub(in crate::hardware::broker) struct PciHandle {
+    pub(in crate::hardware::broker) device_id: u64,
+    pub(in crate::hardware::broker) address: PciAddress,
+    pub(in crate::hardware::broker) bars: [PciBar; 6],
+    pub(in crate::hardware::broker) msix: Option<MsixInfo>,
 }
 
 static INDEX: RwLock<Vec<PciHandle>> = RwLock::new(Vec::new());
 
-pub fn install(handles: Vec<PciHandle>) {
+pub(in crate::hardware::broker) fn install(handles: Vec<PciHandle>) {
     *INDEX.write() = handles;
 }
 
-pub fn lookup(device_id: u64) -> Option<PciHandle> {
+pub(in crate::hardware::broker) fn lookup(device_id: u64) -> Option<PciHandle> {
     INDEX.read().iter().find(|h| h.device_id == device_id).copied()
 }

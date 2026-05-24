@@ -17,7 +17,9 @@
 use super::types::RESPONSE_HDR_LEN;
 use crate::services::lifecycle::transport::DecodedResponse;
 
-pub fn decode_response(buf: &[u8]) -> Option<DecodedResponse<'_>> {
+pub(in crate::security::keyring_capsule) fn decode_response(
+    buf: &[u8],
+) -> Option<DecodedResponse<'_>> {
     if buf.len() < RESPONSE_HDR_LEN {
         return None;
     }

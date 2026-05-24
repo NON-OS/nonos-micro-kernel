@@ -25,7 +25,7 @@ use core::sync::atomic::{compiler_fence, Ordering};
 /// WC-attributed page. The function performs one volatile load and
 /// returns the bus value verbatim.
 #[inline(always)]
-pub unsafe fn read_relaxed<T: Copy>(ptr: *const T) -> T {
+pub(in crate::memory::mmio::ordering) unsafe fn read_relaxed<T: Copy>(ptr: *const T) -> T {
     // SAFETY: ek@nonos.systems — caller has proved the pointer per the fn contract.
     unsafe { core::ptr::read_volatile(ptr) }
 }
@@ -39,7 +39,7 @@ pub unsafe fn read_relaxed<T: Copy>(ptr: *const T) -> T {
 /// The store is the device-visible side effect; whether the value is
 /// well-formed for the register is not the function's concern.
 #[inline(always)]
-pub unsafe fn write_relaxed<T: Copy>(ptr: *mut T, value: T) {
+pub(in crate::memory::mmio::ordering) unsafe fn write_relaxed<T: Copy>(ptr: *mut T, value: T) {
     // SAFETY: ek@nonos.systems — caller has proved the pointer per the fn contract.
     unsafe { core::ptr::write_volatile(ptr, value) }
 }
@@ -55,7 +55,7 @@ pub unsafe fn write_relaxed<T: Copy>(ptr: *mut T, value: T) {
 /// the optimiser from hoisting later code over the read. The function
 /// makes no claim about cross-CPU acquire-release pairing.
 #[inline(always)]
-pub unsafe fn read_acquire<T: Copy>(ptr: *const T) -> T {
+pub(in crate::memory::mmio::ordering) unsafe fn read_acquire<T: Copy>(ptr: *const T) -> T {
     // SAFETY: ek@nonos.systems — single volatile load against the proved pointer.
     let value = unsafe { core::ptr::read_volatile(ptr) };
     // SAFETY: ek@nonos.systems — `lfence` is unconditional on x86_64,
@@ -78,7 +78,7 @@ pub unsafe fn read_acquire<T: Copy>(ptr: *const T) -> T {
 /// optimiser from sinking earlier statements past the write. The
 /// function makes no claim about cross-CPU acquire-release pairing.
 #[inline(always)]
-pub unsafe fn write_release<T: Copy>(ptr: *mut T, value: T) {
+pub(in crate::memory::mmio::ordering) unsafe fn write_release<T: Copy>(ptr: *mut T, value: T) {
     compiler_fence(Ordering::Release);
     // SAFETY: ek@nonos.systems — `sfence` is unconditional on x86_64,
     // takes no operands, and modifies neither registers nor flags.
