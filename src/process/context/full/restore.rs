@@ -70,7 +70,6 @@ impl Context {
         }
         let mut safe_ctx = *self;
         safe_ctx.rflags = Self::validate_rflags(safe_ctx.rflags);
-        super::save::set_restored_flag();
         context_restore_asm(&safe_ctx as *const Context)
     }
 }

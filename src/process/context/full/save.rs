@@ -15,20 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::definition::Context;
-use core::sync::atomic::{AtomicBool, Ordering};
-
-const MAX_CPUS: usize = 256;
-const INIT_FALSE: AtomicBool = AtomicBool::new(false);
-static CONTEXT_JUST_RESTORED: [AtomicBool; MAX_CPUS] = [INIT_FALSE; MAX_CPUS];
-
-#[inline]
-fn current_cpu_index() -> usize {
-    (crate::process::scheduler::api::current_cpu_id() as usize) % MAX_CPUS
-}
-
-pub(crate) fn set_restored_flag() {
-    CONTEXT_JUST_RESTORED[current_cpu_index()].store(true, Ordering::SeqCst);
-}
 
 impl Context {
     #[unsafe(naked)]
@@ -65,13 +51,5 @@ impl Context {
         let mut ctx: Context = unsafe { core::mem::zeroed() };
         unsafe { Self::save_to(&mut ctx as *mut Context) };
         ctx
-    }
-
-    pub fn was_just_restored() -> bool {
-        CONTEXT_JUST_RESTORED[current_cpu_index()].swap(false, Ordering::SeqCst)
-    }
-
-    pub fn clear_restored_flag() {
-        CONTEXT_JUST_RESTORED[current_cpu_index()].store(false, Ordering::SeqCst);
     }
 }
