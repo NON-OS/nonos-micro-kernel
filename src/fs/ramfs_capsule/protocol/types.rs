@@ -20,7 +20,7 @@ pub(super) const OP_READ: u16 = 3;
 pub(super) const OP_WRITE: u16 = 4;
 pub(super) const OP_TRUNCATE: u16 = 5;
 
-pub(super) const OPEN_FLAG_CREATE: u32 = 0x1;
-pub(super) const OPEN_FLAG_TRUNCATE: u32 = 0x2;
+pub(in crate::fs::ramfs_capsule) const OPEN_FLAG_CREATE: u32 = 0x1;
+pub(in crate::fs::ramfs_capsule) const OPEN_FLAG_TRUNCATE: u32 = 0x2;
 
 pub(super) const HDR_LEN: usize = 8;
