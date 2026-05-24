@@ -18,7 +18,6 @@ extern crate alloc;
 use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::sync::atomic::Ordering;
 use spin::RwLock;
 
 use crate::crypto::CryptoResult;
@@ -49,21 +48,6 @@ pub fn retrieve_key(key_id: &str) -> CryptoResult<Vec<u8>> {
     }
 
     STRING_KEY_VAULT.read().get(key_id).cloned().ok_or(crate::crypto::CryptoError::InvalidInput)
-}
-
-pub fn delete_key(key_id: &str) -> CryptoResult<()> {
-    if key_id.is_empty() {
-        return Err(crate::crypto::CryptoError::InvalidInput);
-    }
-
-    let mut vault = STRING_KEY_VAULT.write();
-    if let Some(mut key_data) = vault.remove(key_id) {
-        for byte in key_data.iter_mut() {
-            unsafe { core::ptr::write_volatile(byte, 0) };
-        }
-        core::sync::atomic::compiler_fence(Ordering::SeqCst);
-    }
-    Ok(())
 }
 
 pub fn list_keys() -> CryptoResult<Vec<String>> {

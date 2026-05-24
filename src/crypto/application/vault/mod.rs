@@ -35,7 +35,6 @@
 // Edits should only land as part of moving callers off this tree.
 
 mod key_vault;
-mod memory;
 mod random;
 mod string_vault;
 mod types;

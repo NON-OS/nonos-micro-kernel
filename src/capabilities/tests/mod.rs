@@ -1494,8 +1494,8 @@ pub fn run_all() -> bool {
         "capabilities/types",
     ));
     suite.add(TestCase::new(
-        "capability_all_returns_20_items",
-        types::test_capability_all_returns_20_items,
+        "capability_all_returns_22_items",
+        types::test_capability_all_returns_22_items,
         "capabilities/types",
     ));
     suite.add(TestCase::new(

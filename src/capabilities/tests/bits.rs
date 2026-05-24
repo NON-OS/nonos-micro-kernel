@@ -48,7 +48,11 @@ pub(crate) fn test_caps_to_bits_multiple() -> TestResult {
 pub(crate) fn test_caps_to_bits_all() -> TestResult {
     let all = Capability::all();
     let bits = caps_to_bits(&all);
-    if bits != 2047 {
+    let mut expected = 0;
+    for cap in all {
+        expected |= cap.bit();
+    }
+    if bits != expected {
         return TestResult::Fail;
     }
     TestResult::Pass
@@ -99,15 +103,16 @@ pub(crate) fn test_bits_to_caps_multiple() -> TestResult {
 }
 
 pub(crate) fn test_bits_to_caps_all() -> TestResult {
-    let caps = bits_to_caps(2047);
-    if caps.len() != 11 {
+    let all = Capability::all();
+    let caps = bits_to_caps(caps_to_bits(&all));
+    if caps.len() != all.len() {
         return TestResult::Fail;
     }
     TestResult::Pass
 }
 
 pub(crate) fn test_bits_to_caps_ignores_invalid_bits() -> TestResult {
-    let caps = bits_to_caps(1 | (1 << 20));
+    let caps = bits_to_caps(1 | (1 << 40));
     if caps.len() != 1 {
         return TestResult::Fail;
     }

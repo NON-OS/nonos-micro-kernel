@@ -162,6 +162,12 @@ impl CapabilityToken {
     pub fn can_pio(&self) -> bool {
         self.grants(Capability::Pio) || self.grants(Capability::Admin)
     }
+    #[inline]
+    pub fn can_input_source(&self) -> bool {
+        self.grants(Capability::InputSource)
+            || self.grants(Capability::Irq)
+            || self.grants(Capability::Admin)
+    }
 }
 
 impl core::fmt::Display for CapabilityToken {

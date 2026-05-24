@@ -46,6 +46,7 @@ pub enum Capability {
     Irq,
     Dma,
     Pio,
+    InputSource,
 }
 
 impl Capability {
@@ -73,10 +74,11 @@ impl Capability {
             Self::Irq => 262144,
             Self::Dma => 524288,
             Self::Pio => 1048576,
+            Self::InputSource => 2097152,
         }
     }
 
-    pub const fn all() -> [Capability; 21] {
+    pub const fn all() -> [Capability; 22] {
         [
             Self::CoreExec,
             Self::IO,
@@ -99,6 +101,7 @@ impl Capability {
             Self::Irq,
             Self::Dma,
             Self::Pio,
+            Self::InputSource,
         ]
     }
 
@@ -125,11 +128,12 @@ impl Capability {
             Self::Irq => "Irq",
             Self::Dma => "Dma",
             Self::Pio => "Pio",
+            Self::InputSource => "InputSource",
         }
     }
 
     pub const fn count() -> usize {
-        21
+        22
     }
 }
 

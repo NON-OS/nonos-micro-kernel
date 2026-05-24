@@ -19,7 +19,7 @@ use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 use spin::RwLock;
 
-use super::types::{KeyEntry, VaultKeyAlgorithm};
+use super::types::KeyEntry;
 use crate::crypto::CryptoResult;
 
 pub(super) static KEY_VAULT: RwLock<BTreeMap<u32, KeyEntry>> = RwLock::new(BTreeMap::new());
@@ -50,17 +50,10 @@ pub fn get_public_key(key_id: u32) -> Option<[u8; 32]> {
     })
 }
 
-pub fn store_keypair(
-    key_id: u32,
-    private_key: &[u8],
-    public_key: &[u8],
-    algorithm: VaultKeyAlgorithm,
-) -> CryptoResult<()> {
+fn store_keypair(key_id: u32, private_key: &[u8], public_key: &[u8]) -> CryptoResult<()> {
     let entry = KeyEntry {
         private_key: private_key.to_vec(),
         public_key: public_key.to_vec(),
-        algorithm,
-        created_ms: crate::time::timestamp_millis(),
     };
     KEY_VAULT.write().insert(key_id, entry);
     Ok(())
@@ -72,7 +65,7 @@ pub fn generate_and_store_ed25519_keypair() -> CryptoResult<u32> {
     static NEXT_KEY_ID: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(1);
     let key_id = NEXT_KEY_ID.fetch_add(1, core::sync::atomic::Ordering::SeqCst);
 
-    store_keypair(key_id, &keypair.private, &keypair.public, VaultKeyAlgorithm::Ed25519)?;
+    store_keypair(key_id, &keypair.private, &keypair.public)?;
 
     Ok(key_id)
 }

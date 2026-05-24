@@ -87,9 +87,3 @@ fn rdrand_u64() -> Option<u64> {
         None
     }
 }
-
-pub fn random_u64() -> u64 {
-    let mut bytes = [0u8; 8];
-    let _ = generate_random_bytes(&mut bytes);
-    u64::from_le_bytes(bytes)
-}

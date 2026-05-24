@@ -17,34 +17,8 @@
 extern crate alloc;
 use alloc::vec::Vec;
 
-#[derive(Debug, Clone, Default)]
-pub struct VaultPublicKey {
-    pub key_data: Vec<u8>,
-    pub algorithm: VaultKeyAlgorithm,
-}
-
-#[derive(Debug, Clone, Default)]
-pub enum VaultKeyAlgorithm {
-    #[default]
-    Ed25519,
-    Rsa2048,
-    Secp256k1,
-}
-
-impl VaultPublicKey {
-    pub fn new(key_data: Vec<u8>, algorithm: VaultKeyAlgorithm) -> Self {
-        Self { key_data, algorithm }
-    }
-
-    pub fn from_ed25519(public_key: &[u8]) -> Self {
-        Self { key_data: public_key.to_vec(), algorithm: VaultKeyAlgorithm::Ed25519 }
-    }
-}
-
 #[derive(Debug, Clone)]
-pub struct KeyEntry {
+pub(super) struct KeyEntry {
     pub private_key: Vec<u8>,
     pub public_key: Vec<u8>,
-    pub algorithm: VaultKeyAlgorithm,
-    pub created_ms: u64,
 }
