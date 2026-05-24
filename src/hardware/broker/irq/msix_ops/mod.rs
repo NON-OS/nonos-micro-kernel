@@ -20,8 +20,6 @@ mod real;
 #[cfg(test)]
 mod swap;
 
-pub use ops::MsixOps;
-
 #[cfg(not(test))]
 pub use real::current_ops;
 

@@ -23,7 +23,7 @@ mod error_types;
 pub mod parser;
 pub mod power;
 mod power_query;
-mod power_reboot;
+pub mod power_reboot;
 mod power_sleep;
 mod power_types;
 pub mod tables;

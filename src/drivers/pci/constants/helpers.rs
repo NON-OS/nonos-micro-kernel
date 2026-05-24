@@ -19,8 +19,6 @@ use super::classes::*;
 use super::pcie::*;
 use super::registers::CFG_BAR0;
 
-pub use super::address_packing::pci_config_address;
-
 #[inline]
 pub const fn bar_offset(index: u8) -> u16 {
     CFG_BAR0 + (index as u16 * 4)

@@ -23,5 +23,5 @@ mod helpers;
 
 pub use audit::*;
 pub use crypto::*;
-pub use router::*;
+pub(crate) use router::*;
 pub use util::*;

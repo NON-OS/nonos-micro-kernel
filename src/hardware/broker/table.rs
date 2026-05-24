@@ -22,6 +22,6 @@ mod state;
 mod test_api;
 
 pub use init::{init_from_pci, register_platform_device};
-pub use list::{class_of, contains, list, list_by_class, lookup};
+pub use list::{class_of, contains, list, list_by_class};
 #[cfg(test)]
 pub(crate) use test_api::{count, install_for_test};

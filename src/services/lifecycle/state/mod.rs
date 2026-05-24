@@ -19,5 +19,4 @@ mod liveness;
 mod respawn;
 mod types;
 
-pub use constants::{DEFAULT_MAX_RESTARTS, DEFAULT_RESPAWN_DEBOUNCE_MS};
 pub use types::CapsuleState;
