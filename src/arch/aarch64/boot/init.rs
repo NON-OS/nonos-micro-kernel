@@ -21,7 +21,9 @@ pub fn init(boot_info: &BootInfo) {
     uart::init_uart(boot_info.uart_base);
     cpu::init_cpu();
     exceptions::install_vbar_el1();
-    security::init_all();
+    if security::init_all().is_err() {
+        cpu::halt();
+    }
     mmu::init_mmu(boot_info);
     if boot_info.gic_unsupported {
         cpu::halt();

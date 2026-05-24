@@ -35,7 +35,9 @@ use super::state::CPUS_ONLINE;
 pub extern "C" fn aarch64_ap_entry() -> ! {
     install_vbar_el1();
     cpu::init_cpu();
-    security::init_all();
+    if security::init_all().is_err() {
+        cpu::halt();
+    }
     init_gic_cpu();
     init_timer_cpu();
     if install_preemption_tick().is_err() {

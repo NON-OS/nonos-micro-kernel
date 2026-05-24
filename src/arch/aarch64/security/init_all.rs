@@ -16,14 +16,15 @@
 
 use super::bti::init_bti;
 use super::mte::init_mte;
-use super::pac::init_pac;
+use super::pac::{init_pac, PacResult};
 use super::spectre::init_spectre_mitigations;
 
 
 
-pub fn init_all() {
-    init_pac();
+pub fn init_all() -> PacResult<()> {
+    init_pac()?;
     init_bti();
     init_mte();
     init_spectre_mitigations();
+    Ok(())
 }

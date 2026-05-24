@@ -28,7 +28,9 @@ use super::state::CPUS_ONLINE;
 
 pub fn start_secondary_cpus(boot_info: &BootInfo) {
     for cpu in 1..boot_info.cpu_count {
-        let stack_top = get_kernel_stack(cpu as usize);
+        let Some(stack_top) = get_kernel_stack(cpu as usize) else {
+            cpu::halt();
+        };
         let entry = _aarch64_secondary_start as u64;
 
         if psci::cpu_on(cpu as u64, entry, stack_top).is_err() {
