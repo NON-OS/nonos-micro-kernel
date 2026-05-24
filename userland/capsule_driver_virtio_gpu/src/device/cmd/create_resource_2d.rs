@@ -13,20 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{VG_CMD_RESOURCE_CREATE_2D, VG_RESP_OK_NODATA};
 use crate::device::virtqueue::ControlQueue;
-
 use super::hdr::{Hdr, HDR_LEN, RESP_HDR_LEN};
-
-// virtio_gpu_resource_create_2d body:
-//   le32 resource_id
-//   le32 format
-//   le32 width
-//   le32 height
 const BODY_LEN: usize = 16;
 const REQ_LEN: usize = HDR_LEN + BODY_LEN;
-
 pub fn create_resource_2d(
     q: &ControlQueue,
     fence_id: u64,
@@ -44,7 +35,7 @@ pub fn create_resource_2d(
     req[HDR_LEN + 4..HDR_LEN + 8].copy_from_slice(&format.to_le_bytes());
     req[HDR_LEN + 8..HDR_LEN + 12].copy_from_slice(&width.to_le_bytes());
     req[HDR_LEN + 12..HDR_LEN + 16].copy_from_slice(&height.to_le_bytes());
-    let _ = q.submit(&req, RESP_HDR_LEN as u32)?;
+    q.submit(&req, RESP_HDR_LEN as u32)?;
     let mut resp = [0u8; RESP_HDR_LEN];
     q.read_response(REQ_LEN, &mut resp);
     let hdr = Hdr::parse(&resp).ok_or("virtio-gpu: bad create_resource response")?;

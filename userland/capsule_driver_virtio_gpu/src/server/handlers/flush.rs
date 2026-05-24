@@ -13,47 +13,45 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::device::cmd::{self, transfer_to_host_2d::Rect};
 use crate::driver::Driver;
 use crate::protocol::{le_u32, Request, E_BUSY, E_DEVICE, E_INVAL, FLUSH_REQ_LEN};
 use crate::server::respond;
-
 pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != FLUSH_REQ_LEN {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     }
     let Some(resource_id) = le_u32(body, 0) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     let Some(x) = le_u32(body, 4) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     let Some(y) = le_u32(body, 8) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     let Some(w) = le_u32(body, 12) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     let Some(h) = le_u32(body, 16) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     let Some(res) = driver.resources.lookup(resource_id) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     if res.owner_pid != sender_pid {
-        let _ = respond::status(sender_pid, req, E_BUSY, tx);
+        respond::status(sender_pid, req, E_BUSY, tx);
         return;
     }
     if w == 0 || h == 0 || x.saturating_add(w) > res.width || y.saturating_add(h) > res.height {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     }
     let fence_id = driver.fences.issue();
@@ -65,8 +63,8 @@ pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, body: &[u8], tx: 
     )
     .is_err()
     {
-        let _ = respond::status(sender_pid, req, E_DEVICE, tx);
+        respond::status(sender_pid, req, E_DEVICE, tx);
         return;
     }
-    let _ = respond::status(sender_pid, req, 0, tx);
+    respond::status(sender_pid, req, 0, tx);
 }

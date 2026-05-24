@@ -45,14 +45,16 @@ pub fn spawn_driver_virtio_gpu_capsule() -> Result<(), SpawnError> {
         nonos_id_cert_bytes: DRIVER_VIRTIO_GPU_NONOS_ID_CERT_BYTES,
         manifest_bytes: DRIVER_VIRTIO_GPU_MANIFEST_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit()
+        requested_caps: Capability::CoreExec.bit()
+            | Capability::IPC.bit()
             | Capability::Memory.bit()
-            | Capability::Driver.bit()
             | Capability::DeviceEnum.bit()
+            | Capability::Driver.bit()
             | Capability::Mmio.bit()
             | Capability::Irq.bit()
-            | Capability::Dma.bit(),
-        debug_tag: b"[DRIVER-VIRTIO-GPU] load_elf_executable error:",
+            | Capability::Dma.bit()
+            | Capability::Pio.bit(),
+        debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
     state::set_alive(pid);

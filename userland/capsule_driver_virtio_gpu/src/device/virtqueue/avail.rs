@@ -13,35 +13,20 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use core::ptr::{read_volatile, write_volatile};
 use core::sync::atomic::{fence, Ordering};
-
 use super::layout::QueueLayout;
-
-// Layout of virtq_avail:
-//   le16 flags                 -- offset 0
-//   le16 idx                   -- offset 2
-//   le16 ring[queue_size]      -- offset 4
-//   le16 used_event            -- offset 4 + 2*queue_size
-
 #[inline]
 fn avail_idx_ptr(layout: QueueLayout) -> *mut u16 {
     (layout.avail_va() as usize + 2) as *mut u16
 }
-
 #[inline]
 fn avail_ring_ptr(layout: QueueLayout, slot: u16) -> *mut u16 {
     (layout.avail_va() as usize + 4 + (slot as usize) * 2) as *mut u16
 }
-
 pub fn read_idx(layout: QueueLayout) -> u16 {
     unsafe { read_volatile(avail_idx_ptr(layout)) }
 }
-
-// Records `desc_head` at avail.ring[avail_idx % queue_size] and
-// publishes a new avail.idx after a release fence. The fence pairs
-// with the device-side acquire on used.idx readers.
 pub fn publish(layout: QueueLayout, desc_head: u16) {
     let idx = read_idx(layout);
     let slot = idx % layout.queue_size;

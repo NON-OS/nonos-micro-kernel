@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod decode;
 mod encode;
 mod errno;
@@ -21,7 +20,6 @@ mod header;
 mod limits;
 mod ops;
 mod read;
-
 pub use decode::parse;
 pub use encode::{response_header, write_status};
 pub use errno::{E_BAD_OP, E_BUSY, E_DEVICE, E_INVAL, E_NOMEM};

@@ -13,12 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use nonos_libc::{mk_device_release, mk_irq_bind, mk_mmio_unmap, IrqBindOut};
-
 use super::mmio::RegisterGrant;
 use crate::discover::Found;
-
 pub fn bind(
     dev: Found,
     claim_epoch: u64,

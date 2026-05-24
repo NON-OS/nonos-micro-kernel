@@ -13,13 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-use nonos_libc::{mk_device_list, Bar, DeviceRecord, BAR_KIND_MMIO, BAR_KIND_PIO};
-
+use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BAR_KIND_PIO, BUS_KIND_PCI};
 use crate::constants::{VIRTIO_GPU_MODERN, VIRTIO_GPU_TRANSITIONAL, VIRTIO_VENDOR_ID};
-
 const MAX_DEVICES: usize = 64;
-
 #[derive(Clone, Copy)]
 pub struct Found {
     pub device_id: u64,
@@ -29,9 +25,8 @@ pub struct Found {
     pub register_size: u64,
     pub pci_device: u16,
 }
-
 pub fn find_virtio_gpu() -> Option<Found> {
-    let mut buf = [empty_record(); MAX_DEVICES];
+    let mut buf = [DeviceRecord::empty(); MAX_DEVICES];
     let n = mk_device_list(0, buf.as_mut_ptr(), MAX_DEVICES as u64);
     if n <= 0 {
         return None;
@@ -53,42 +48,19 @@ pub fn find_virtio_gpu() -> Option<Found> {
     }
     None
 }
-
 fn is_match(r: &DeviceRecord) -> bool {
     r.vendor == VIRTIO_VENDOR_ID
+        && r.bus_kind == BUS_KIND_PCI
         && (r.device == VIRTIO_GPU_TRANSITIONAL || r.device == VIRTIO_GPU_MODERN)
 }
-
 fn first_register_bar(r: &DeviceRecord) -> Option<(u8, u8, u64)> {
-    for i in 0..r.bars.len() {
-        let bar = r.bars[i];
-        if bar.kind == BAR_KIND_PIO && bar.size != 0 {
-            return Some((i as u8, bar.kind, bar.size));
-        }
-    }
-    for i in 0..r.bars.len() {
-        let bar = r.bars[i];
-        if bar.kind == BAR_KIND_MMIO && bar.size != 0 {
-            return Some((i as u8, bar.kind, bar.size));
+    for kind in [BAR_KIND_PIO, BAR_KIND_MMIO] {
+        for i in 0..r.bars.len() {
+            let bar = r.bars[i];
+            if bar.kind == kind && bar.size != 0 {
+                return Some((i as u8, bar.kind, bar.size));
+            }
         }
     }
     None
-}
-
-fn empty_record() -> DeviceRecord {
-    DeviceRecord {
-        device_id: 0,
-        bus_kind: 0,
-        _pad0: [0; 3],
-        class: 0,
-        vendor: 0,
-        device: 0,
-        flags: 0,
-        bar_count: 0,
-        irq_line: 0xFF,
-        irq_pin: 0,
-        _pad1: [0; 1],
-        irq_source: 0,
-        bars: [Bar { base: 0, size: 0, kind: 0, flags: 0, _pad: [0; 6] }; 6],
-    }
 }

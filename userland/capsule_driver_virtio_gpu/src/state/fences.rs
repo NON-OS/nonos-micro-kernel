@@ -13,22 +13,14 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use core::cell::Cell;
-
-// Monotonically increasing fence id stamped on every control-queue
-// command. The driver is single-threaded inside the server runner,
-// so Cell is sound here; a multi-worker design would swap this for
-// AtomicU64.
 pub struct FenceCounter {
     next: Cell<u64>,
 }
-
 impl FenceCounter {
     pub const fn new() -> Self {
         Self { next: Cell::new(1) }
     }
-
     pub fn issue(&self) -> u64 {
         let v = self.next.get();
         self.next.set(v.wrapping_add(1));

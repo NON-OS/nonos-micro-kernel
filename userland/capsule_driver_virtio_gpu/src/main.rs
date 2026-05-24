@@ -13,14 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #![no_std]
 #![no_main]
-
 extern crate alloc;
-
 mod constants;
-mod debug;
 mod device;
 mod discover;
 mod driver;
@@ -30,27 +26,21 @@ mod regs;
 mod server;
 mod setup;
 mod state;
-
 use nonos_libc::{heap_init, mk_exit, mk_yield};
-
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
-    debug::marker(b"boot");
     if heap_init().is_err() {
-        debug::marker(b"heap init failed");
         mk_exit(1);
     }
     let driver = loop {
         match setup::run() {
             Ok(driver) => break driver,
-            Err(err) => {
-                debug::marker(err.as_bytes());
+            Err(_) => {
                 for _ in 0..64 {
                     mk_yield();
                 }
             }
         }
     };
-    debug::marker(b"setup complete");
     server::run(driver);
 }

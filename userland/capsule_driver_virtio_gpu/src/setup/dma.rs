@@ -13,12 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use nonos_libc::{mk_device_release, mk_dma_map, mk_irq_unbind, DmaMapOut, IrqBindOut};
-
 use super::mmio::RegisterGrant;
 use crate::constants::VQ_REGION_SIZE;
-
 pub fn map_queue(
     device_id: u64,
     claim_epoch: u64,
@@ -29,10 +26,16 @@ pub fn map_queue(
     let r = mk_dma_map(device_id, claim_epoch, VQ_REGION_SIZE, 0, &mut out);
     if r < 0 {
         if irq.grant_id != 0 {
-            let _ = mk_irq_unbind(irq.grant_id);
+            if mk_irq_unbind(irq.grant_id) < 0 {
+                return Err("virtio-gpu: irq rollback failed after queue dma failure");
+            }
         }
-        registers.release();
-        let _ = mk_device_release(device_id);
+        if !registers.release() {
+            return Err("virtio-gpu: register rollback failed after queue dma failure");
+        }
+        if mk_device_release(device_id) < 0 {
+            return Err("virtio-gpu: device rollback failed after queue dma failure");
+        }
         Err("virtio-gpu: queue dma failed")
     } else {
         Ok(out)

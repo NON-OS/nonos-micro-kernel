@@ -13,15 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::VG_MAX_SCANOUTS;
 use crate::driver::Driver;
 use crate::protocol::{Request, HDR_LEN, MODE_LIST_ENTRY_LEN, STATUS_LEN};
 use crate::server::respond;
-
-// Returns the driver's cached scanout topology populated by
-// `setup::sequence` after GET_DISPLAY_INFO. Compositor uses this to
-// pick the first enabled scanout before issuing SET_SCANOUT.
 pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, tx: &mut [u8]) {
     let body_off = HDR_LEN + STATUS_LEN;
     let mut emitted = 0usize;
@@ -38,5 +33,5 @@ pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, tx: &mut [u8]) {
         tx[off + 28..off + 32].fill(0);
         emitted += 1;
     }
-    let _ = respond::payload(sender_pid, req, emitted * MODE_LIST_ENTRY_LEN, tx);
+    respond::payload(sender_pid, req, emitted * MODE_LIST_ENTRY_LEN, tx);
 }

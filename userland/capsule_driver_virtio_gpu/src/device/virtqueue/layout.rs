@@ -13,18 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{
     VQ_AVAIL_OFFSET, VQ_DESC_OFFSET, VQ_MAX_SIZE, VQ_STAGING_LEN, VQ_STAGING_OFFSET, VQ_USED_OFFSET,
 };
-
 #[derive(Clone, Copy)]
 pub struct QueueLayout {
     pub queue_size: u16,
     pub region_user_va: u64,
     pub region_device_addr: u64,
 }
-
 impl QueueLayout {
     pub fn new(
         queue_size: u16,

@@ -13,11 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-pub const MAGIC: u32 = 0x4E56_4750; // "NVGP"
+pub const MAGIC: u32 = 0x4E56_4750;
 pub const VERSION: u16 = 1;
 pub const HDR_LEN: usize = 20;
-
 #[derive(Clone, Copy)]
 pub struct Request {
     pub op: u16,

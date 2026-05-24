@@ -22,58 +22,41 @@ use crate::protocol::{
 use crate::server::respond;
 
 pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
-    if body.len() != TRANSFER_TO_HOST_REQ_LEN {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    }
-    let Some(resource_id) = le_u32(body, 0) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    };
-    let Some(x) = le_u32(body, 4) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    };
-    let Some(y) = le_u32(body, 8) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    };
-    let Some(w) = le_u32(body, 12) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    };
-    let Some(h) = le_u32(body, 16) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
-    };
-    let Some(offset) = le_u64(body, 24) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+    let Some((resource_id, rect, offset)) = decode(body) else {
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     let Some(res) = driver.resources.lookup(resource_id) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     if res.owner_pid != sender_pid {
-        let _ = respond::status(sender_pid, req, E_BUSY, tx);
+        respond::status(sender_pid, req, E_BUSY, tx);
         return;
     }
-    if w == 0 || h == 0 || x.saturating_add(w) > res.width || y.saturating_add(h) > res.height {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+    let x_end = rect.x.saturating_add(rect.width);
+    let y_end = rect.y.saturating_add(rect.height);
+    if rect.width == 0 || rect.height == 0 || x_end > res.width || y_end > res.height {
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     }
     let fence_id = driver.fences.issue();
-    if cmd::transfer_to_host_2d(
-        &driver.control_queue,
-        fence_id,
-        resource_id,
-        Rect { x, y, width: w, height: h },
-        offset,
-    )
-    .is_err()
-    {
-        let _ = respond::status(sender_pid, req, E_DEVICE, tx);
+    if cmd::transfer_to_host_2d(&driver.control_queue, fence_id, resource_id, rect, offset).is_err() {
+        respond::status(sender_pid, req, E_DEVICE, tx);
         return;
     }
-    let _ = respond::status(sender_pid, req, 0, tx);
+    respond::status(sender_pid, req, 0, tx);
+}
+
+fn decode(body: &[u8]) -> Option<(u32, Rect, u64)> {
+    if body.len() != TRANSFER_TO_HOST_REQ_LEN {
+        return None;
+    }
+    let resource_id = le_u32(body, 0)?;
+    let x = le_u32(body, 4)?;
+    let y = le_u32(body, 8)?;
+    let width = le_u32(body, 12)?;
+    let height = le_u32(body, 16)?;
+    let offset = le_u64(body, 24)?;
+    Some((resource_id, Rect { x, y, width, height }, offset))
 }

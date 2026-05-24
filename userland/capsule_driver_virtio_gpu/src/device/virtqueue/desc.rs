@@ -13,16 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use core::ptr::write_volatile;
-
 use crate::constants::{VRING_DESC_F_NEXT, VRING_DESC_F_WRITE};
-
 use super::layout::QueueLayout;
-
 pub const DESC_LEN: usize = 16;
-
-// Writes a single split-ring descriptor at `index`.
 pub fn write_desc(layout: QueueLayout, index: u16, addr: u64, len: u32, flags: u16, next: u16) {
     let base = layout.desc_va() as usize + (index as usize) * DESC_LEN;
     unsafe {
@@ -32,9 +26,6 @@ pub fn write_desc(layout: QueueLayout, index: u16, addr: u64, len: u32, flags: u
         write_volatile((base + 14) as *mut u16, next);
     }
 }
-
-// Writes a request/response chain: head points at the request descriptor,
-// head+1 is the response descriptor. Returns the head index.
 pub fn write_request_chain(
     layout: QueueLayout,
     head: u16,

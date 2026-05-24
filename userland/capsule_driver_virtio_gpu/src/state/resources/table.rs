@@ -16,34 +16,8 @@
 
 use core::cell::Cell;
 
+use super::resource::Resource;
 use crate::protocol::MAX_RESOURCES;
-
-#[derive(Clone, Copy)]
-pub struct Resource {
-    pub resource_id: u32,
-    pub owner_pid: u32,
-    pub width: u32,
-    pub height: u32,
-    pub format: u32,
-    pub backing_addr: u64,
-    pub backing_len: u32,
-    pub in_use: bool,
-}
-
-impl Default for Resource {
-    fn default() -> Self {
-        Self {
-            resource_id: 0,
-            owner_pid: 0,
-            width: 0,
-            height: 0,
-            format: 0,
-            backing_addr: 0,
-            backing_len: 0,
-            in_use: false,
-        }
-    }
-}
 
 pub struct ResourceTable {
     next_id: Cell<u32>,
@@ -64,24 +38,20 @@ impl ResourceTable {
         });
         Self { next_id: Cell::new(1), entries: [EMPTY; MAX_RESOURCES] }
     }
-
     pub fn alloc_id(&self) -> u32 {
         let id = self.next_id.get();
         self.next_id.set(id.wrapping_add(1).max(1));
         id
     }
-
     pub fn insert(&self, r: Resource) -> Result<(), ()> {
         for entry in &self.entries {
-            let cur = entry.get();
-            if !cur.in_use {
+            if !entry.get().in_use {
                 entry.set(r);
                 return Ok(());
             }
         }
         Err(())
     }
-
     pub fn lookup(&self, resource_id: u32) -> Option<Resource> {
         for entry in &self.entries {
             let r = entry.get();
@@ -91,7 +61,6 @@ impl ResourceTable {
         }
         None
     }
-
     pub fn update<F: FnOnce(&mut Resource)>(&self, resource_id: u32, f: F) -> bool {
         for entry in &self.entries {
             let mut r = entry.get();

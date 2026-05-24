@@ -13,19 +13,14 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::driver::Driver;
 use crate::protocol::{Request, HDR_LEN, QUERY_CAPS_RESP_LEN, STATUS_LEN};
 use crate::server::respond;
-
-// Compositor probes the device topology before any allocation. The
-// answer is derived from the virtio-gpu config window so it never
-// races device bringup.
 pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, tx: &mut [u8]) {
     let (events_read, num_scanouts, num_capsets) = driver.config();
     let body_off = HDR_LEN + STATUS_LEN;
     tx[body_off..body_off + 4].copy_from_slice(&num_scanouts.to_le_bytes());
     tx[body_off + 4..body_off + 8].copy_from_slice(&num_capsets.to_le_bytes());
     tx[body_off + 8..body_off + 12].copy_from_slice(&events_read.to_le_bytes());
-    let _ = respond::payload(sender_pid, req, QUERY_CAPS_RESP_LEN, tx);
+    respond::payload(sender_pid, req, QUERY_CAPS_RESP_LEN, tx);
 }

@@ -13,11 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 pub mod fences;
 pub mod resources;
 pub mod scanouts;
-
 pub use fences::FenceCounter;
 pub use resources::{Resource, ResourceTable};
 pub use scanouts::{Scanout, ScanoutTable};

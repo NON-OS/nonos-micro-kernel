@@ -13,11 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::driver::Driver;
 use crate::protocol::{Request, HDR_LEN, STATUS_LEN};
 use crate::server::respond;
-
 pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, tx: &mut [u8]) {
     let body = &mut tx[HDR_LEN + STATUS_LEN..];
     body[0..8].copy_from_slice(&driver.device_id.to_le_bytes());
@@ -27,5 +25,5 @@ pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, tx: &mut [u8]) {
     body[20..24].copy_from_slice(&driver.host_features.to_le_bytes());
     body[24..32].copy_from_slice(&driver.mmio_grant.to_le_bytes());
     body[32..40].copy_from_slice(&driver.irq_grant.to_le_bytes());
-    let _ = respond::payload(sender_pid, req, crate::protocol::CONTROLLER_INFO_LEN, tx);
+    respond::payload(sender_pid, req, crate::protocol::CONTROLLER_INFO_LEN, tx);
 }

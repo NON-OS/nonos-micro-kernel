@@ -13,22 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use core::ptr::{read_volatile, write_volatile};
-
 use crate::constants::CTRLQ_INDEX;
 use crate::regs::Regs;
-
 use super::{avail, desc, layout::QueueLayout, used};
-
 pub struct SubmitOutput {
     pub used_len: u32,
 }
-
-// Synchronous round-trip: marshal `request` into staging[0..],
-// reserve a response window of `resp_len` directly after, chain two
-// descriptors, publish, kick, and spin on used.idx. Returns the
-// device-reported response byte count.
 pub fn submit_sync(
     layout: QueueLayout,
     regs: Regs,
@@ -76,7 +67,6 @@ pub fn submit_sync(
     }
     Ok(SubmitOutput { used_len: entry.len })
 }
-
 pub fn read_response_byte(layout: QueueLayout, req_len: usize, offset: usize) -> u8 {
     let staging = layout.staging_va();
     unsafe { read_volatile(staging.add(req_len + offset)) }

@@ -13,11 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use core::cell::Cell;
-
 use crate::constants::VG_MAX_SCANOUTS;
-
 #[derive(Clone, Copy, Default)]
 pub struct Scanout {
     pub x: u32,
@@ -27,11 +24,9 @@ pub struct Scanout {
     pub current_resource_id: u32,
     pub enabled: bool,
 }
-
 pub struct ScanoutTable {
     entries: [Cell<Scanout>; VG_MAX_SCANOUTS],
 }
-
 impl ScanoutTable {
     pub const fn new() -> Self {
         const EMPTY: Cell<Scanout> = Cell::new(Scanout {
@@ -44,7 +39,6 @@ impl ScanoutTable {
         });
         Self { entries: [EMPTY; VG_MAX_SCANOUTS] }
     }
-
     pub fn record(&self, scanout_id: u32, s: Scanout) -> bool {
         let idx = scanout_id as usize;
         if idx >= VG_MAX_SCANOUTS {
@@ -53,7 +47,6 @@ impl ScanoutTable {
         self.entries[idx].set(s);
         true
     }
-
     pub fn get(&self, scanout_id: u32) -> Option<Scanout> {
         let idx = scanout_id as usize;
         if idx >= VG_MAX_SCANOUTS {

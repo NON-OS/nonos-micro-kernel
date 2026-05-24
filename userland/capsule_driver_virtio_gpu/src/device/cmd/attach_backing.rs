@@ -13,20 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{VG_CMD_RESOURCE_ATTACH_BACKING, VG_RESP_OK_NODATA};
 use crate::device::virtqueue::ControlQueue;
-
 use super::hdr::{Hdr, HDR_LEN, RESP_HDR_LEN};
-
-// virtio_gpu_resource_attach_backing body (single entry):
-//   le32 resource_id
-//   le32 nr_entries (= 1 here)
-//   { le64 addr; le32 length; le32 padding } entries[nr_entries]
 const ENTRY_LEN: usize = 16;
 const BODY_LEN: usize = 8 + ENTRY_LEN;
 const REQ_LEN: usize = HDR_LEN + BODY_LEN;
-
 pub fn attach_backing(
     q: &ControlQueue,
     fence_id: u64,
@@ -44,7 +36,7 @@ pub fn attach_backing(
     req[HDR_LEN + 8..HDR_LEN + 16].copy_from_slice(&backing_addr.to_le_bytes());
     req[HDR_LEN + 16..HDR_LEN + 20].copy_from_slice(&backing_len.to_le_bytes());
     req[HDR_LEN + 20..HDR_LEN + 24].fill(0);
-    let _ = q.submit(&req, RESP_HDR_LEN as u32)?;
+    q.submit(&req, RESP_HDR_LEN as u32)?;
     let mut resp = [0u8; RESP_HDR_LEN];
     q.read_response(REQ_LEN, &mut resp);
     let hdr = Hdr::parse(&resp).ok_or("virtio-gpu: bad attach_backing response")?;

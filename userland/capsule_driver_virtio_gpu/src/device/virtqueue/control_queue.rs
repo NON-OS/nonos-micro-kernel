@@ -13,24 +13,17 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::regs::Regs;
-
 use super::{layout::QueueLayout, submit};
-
-// Control queue handle. The driver retains one of these post-bringup
-// and routes every virtio-gpu command through `submit_sync`.
 #[derive(Clone, Copy)]
 pub struct ControlQueue {
     pub layout: QueueLayout,
     pub regs: Regs,
 }
-
 impl ControlQueue {
     pub fn new(layout: QueueLayout, regs: Regs) -> Self {
         Self { layout, regs }
     }
-
     pub fn submit(
         &self,
         request: &[u8],
@@ -38,7 +31,6 @@ impl ControlQueue {
     ) -> Result<submit::SubmitOutput, &'static str> {
         submit::submit_sync(self.layout, self.regs, request, resp_len)
     }
-
     pub fn read_response(&self, request_len: usize, dst: &mut [u8]) {
         for (i, b) in dst.iter_mut().enumerate() {
             *b = submit::read_response_byte(self.layout, request_len, i);

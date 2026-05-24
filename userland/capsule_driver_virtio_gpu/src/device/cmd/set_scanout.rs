@@ -13,20 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{VG_CMD_SET_SCANOUT, VG_MAX_SCANOUTS, VG_RESP_OK_NODATA};
 use crate::device::virtqueue::ControlQueue;
-
 use super::hdr::{Hdr, HDR_LEN, RESP_HDR_LEN};
 use super::transfer_to_host_2d::Rect;
-
-// virtio_gpu_set_scanout body:
-//   virtio_gpu_rect r        -- 16 bytes
-//   le32 scanout_id
-//   le32 resource_id
 const BODY_LEN: usize = 24;
 const REQ_LEN: usize = HDR_LEN + BODY_LEN;
-
 pub fn set_scanout(
     q: &ControlQueue,
     fence_id: u64,
@@ -45,7 +37,7 @@ pub fn set_scanout(
     req[HDR_LEN + 12..HDR_LEN + 16].copy_from_slice(&rect.height.to_le_bytes());
     req[HDR_LEN + 16..HDR_LEN + 20].copy_from_slice(&scanout_id.to_le_bytes());
     req[HDR_LEN + 20..HDR_LEN + 24].copy_from_slice(&resource_id.to_le_bytes());
-    let _ = q.submit(&req, RESP_HDR_LEN as u32)?;
+    q.submit(&req, RESP_HDR_LEN as u32)?;
     let mut resp = [0u8; RESP_HDR_LEN];
     q.read_response(REQ_LEN, &mut resp);
     let hdr = Hdr::parse(&resp).ok_or("virtio-gpu: bad set_scanout response")?;

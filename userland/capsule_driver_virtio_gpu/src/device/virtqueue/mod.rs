@@ -13,13 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 pub mod avail;
 pub mod control_queue;
 pub mod desc;
 pub mod layout;
 pub mod submit;
 pub mod used;
-
 pub use control_queue::ControlQueue;
 pub use layout::QueueLayout;

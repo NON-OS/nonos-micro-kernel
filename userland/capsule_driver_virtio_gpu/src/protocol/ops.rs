@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 pub const OP_HEALTHCHECK: u16 = 0x0001;
 pub const OP_CONTROLLER_INFO: u16 = 0x0002;
 pub const OP_DISPLAY_INFO: u16 = 0x0003;

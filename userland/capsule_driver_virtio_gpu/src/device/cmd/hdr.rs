@@ -13,14 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-// virtio_gpu_ctrl_hdr (spec section 5.7.6.6). All commands prefix
-// their payload with this 24-byte header; responses reuse the same
-// shape with type = VG_RESP_*.
-
 pub const HDR_LEN: usize = 24;
 pub const RESP_HDR_LEN: usize = 24;
-
 #[derive(Clone, Copy)]
 pub struct Hdr {
     pub type_: u32,
@@ -28,7 +22,6 @@ pub struct Hdr {
     pub fence_id: u64,
     pub ctx_id: u32,
 }
-
 impl Hdr {
     pub fn new(type_: u32, fence_id: u64) -> Self {
         Self { type_, flags: 0, fence_id, ctx_id: 0 }

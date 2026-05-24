@@ -13,13 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{GPU_CFG_EVENTS_READ, GPU_CFG_NUM_CAPSETS, GPU_CFG_NUM_SCANOUTS};
 use crate::device::ControlQueue;
 use crate::regs::Regs;
 use crate::setup::Primary;
 use crate::state::{FenceCounter, ResourceTable, ScanoutTable};
-
 pub struct Driver {
     pub device_id: u64,
     pub pci_device: u16,
@@ -38,7 +36,6 @@ pub struct Driver {
     pub fences: FenceCounter,
     pub primary: Option<Primary>,
 }
-
 impl Driver {
     pub fn config(&self) -> (u32, u32, u32) {
         unsafe {

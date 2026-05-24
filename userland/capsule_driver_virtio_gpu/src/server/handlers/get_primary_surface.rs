@@ -13,20 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::VG_FORMAT_B8G8R8A8_UNORM;
 use crate::driver::Driver;
 use crate::protocol::{
     Request, E_BUSY, E_DEVICE, GET_PRIMARY_SURFACE_RESP_LEN, HDR_LEN, STATUS_LEN,
 };
 use crate::server::respond;
-
-// Hands the compositor the driver-owned primary scanout buffer:
-// surface registry handle (for cross-AS attach) plus the resource id
-// it must pass to TRANSFER_TO_HOST / SET_SCANOUT / FLUSH.
 pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, tx: &mut [u8]) {
     let Some(primary) = driver.primary.as_ref() else {
-        let _ = respond::status(sender_pid, req, E_DEVICE, tx);
+        respond::status(sender_pid, req, E_DEVICE, tx);
         return;
     };
     if !driver.resources.update(primary.resource_id, |r| {
@@ -34,15 +29,15 @@ pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, tx: &mut [u8]) {
             r.owner_pid = sender_pid;
         }
     }) {
-        let _ = respond::status(sender_pid, req, E_DEVICE, tx);
+        respond::status(sender_pid, req, E_DEVICE, tx);
         return;
     }
     let Some(resource) = driver.resources.lookup(primary.resource_id) else {
-        let _ = respond::status(sender_pid, req, E_DEVICE, tx);
+        respond::status(sender_pid, req, E_DEVICE, tx);
         return;
     };
     if resource.owner_pid != sender_pid {
-        let _ = respond::status(sender_pid, req, E_BUSY, tx);
+        respond::status(sender_pid, req, E_BUSY, tx);
         return;
     }
     let off = HDR_LEN + STATUS_LEN;
@@ -53,5 +48,5 @@ pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, tx: &mut [u8]) {
     tx[off + 20..off + 24].copy_from_slice(&primary.stride.to_le_bytes());
     tx[off + 24..off + 28].copy_from_slice(&VG_FORMAT_B8G8R8A8_UNORM.to_le_bytes());
     tx[off + 28..off + 32].fill(0);
-    let _ = respond::payload(sender_pid, req, GET_PRIMARY_SURFACE_RESP_LEN, tx);
+    respond::payload(sender_pid, req, GET_PRIMARY_SURFACE_RESP_LEN, tx);
 }

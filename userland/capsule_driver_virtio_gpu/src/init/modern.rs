@@ -14,47 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::constants::*;
+use super::types::InitOut;
+use crate::constants::{
+    CTRLQ_INDEX, MOD_DEVICE_FEATURE, MOD_DEVICE_FEATURE_SELECT, MOD_DEVICE_STATUS,
+    MOD_DRIVER_FEATURE, MOD_DRIVER_FEATURE_SELECT, MOD_QUEUE_DESC, MOD_QUEUE_DEVICE,
+    MOD_QUEUE_DRIVER, MOD_QUEUE_ENABLE, MOD_QUEUE_SELECT, MOD_QUEUE_SIZE, STATUS_ACKNOWLEDGE,
+    STATUS_DRIVER, STATUS_DRIVER_OK, STATUS_FAILED, STATUS_FEATURES_OK, VQ_AVAIL_OFFSET,
+    VQ_DESC_OFFSET, VQ_MAX_SIZE, VQ_USED_OFFSET,
+};
 use crate::regs::Regs;
 
-pub struct InitOut {
-    pub queue_size: u16,
-    pub host_features: u32,
-}
-
-pub fn bring_up(regs: Regs, queue_phys: u64, pci_device: u16) -> Result<InitOut, &'static str> {
-    if pci_device == VIRTIO_GPU_MODERN {
-        bring_up_modern(regs, queue_phys)
-    } else {
-        bring_up_legacy(regs, queue_phys)
-    }
-}
-
-fn bring_up_legacy(regs: Regs, queue_phys: u64) -> Result<InitOut, &'static str> {
-    unsafe {
-        regs.w8(LEG_STATUS, 0);
-        regs.w8(LEG_STATUS, STATUS_ACKNOWLEDGE);
-        regs.w8(LEG_STATUS, regs.r8(LEG_STATUS) | STATUS_DRIVER);
-        let host = regs.r32(LEG_HOST_FEATURES);
-        regs.w32(LEG_GUEST_FEATURES, 0);
-        regs.w8(LEG_STATUS, regs.r8(LEG_STATUS) | STATUS_FEATURES_OK);
-        if regs.r8(LEG_STATUS) & STATUS_FEATURES_OK == 0 {
-            regs.w8(LEG_STATUS, regs.r8(LEG_STATUS) | STATUS_FAILED);
-            return Err("virtio-gpu: features rejected");
-        }
-        regs.w16(LEG_QUEUE_SEL, 0);
-        let qsize = regs.r16(LEG_QUEUE_NUM);
-        if qsize == 0 {
-            regs.w8(LEG_STATUS, regs.r8(LEG_STATUS) | STATUS_FAILED);
-            return Err("virtio-gpu: missing control queue");
-        }
-        regs.w32(LEG_QUEUE_PFN, (queue_phys >> 12) as u32);
-        regs.w8(LEG_STATUS, regs.r8(LEG_STATUS) | STATUS_DRIVER_OK);
-        Ok(InitOut { queue_size: qsize, host_features: host })
-    }
-}
-
-fn bring_up_modern(regs: Regs, queue_phys: u64) -> Result<InitOut, &'static str> {
+pub fn bring_up_modern(regs: Regs, queue_phys: u64) -> Result<InitOut, &'static str> {
     unsafe {
         regs.w8(MOD_DEVICE_STATUS, 0);
         regs.w8(MOD_DEVICE_STATUS, STATUS_ACKNOWLEDGE);

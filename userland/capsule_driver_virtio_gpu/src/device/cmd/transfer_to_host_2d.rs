@@ -13,20 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::constants::{VG_CMD_TRANSFER_TO_HOST_2D, VG_RESP_OK_NODATA};
 use crate::device::virtqueue::ControlQueue;
-
 use super::hdr::{Hdr, HDR_LEN, RESP_HDR_LEN};
-
-// virtio_gpu_transfer_to_host_2d body:
-//   virtio_gpu_rect { le32 x, y, width, height }   -- 16 bytes
-//   le64 offset
-//   le32 resource_id
-//   le32 padding
 const BODY_LEN: usize = 32;
 const REQ_LEN: usize = HDR_LEN + BODY_LEN;
-
 #[derive(Clone, Copy)]
 pub struct Rect {
     pub x: u32,
@@ -34,7 +25,6 @@ pub struct Rect {
     pub width: u32,
     pub height: u32,
 }
-
 pub fn transfer_to_host_2d(
     q: &ControlQueue,
     fence_id: u64,
@@ -54,7 +44,7 @@ pub fn transfer_to_host_2d(
     req[HDR_LEN + 16..HDR_LEN + 24].copy_from_slice(&offset.to_le_bytes());
     req[HDR_LEN + 24..HDR_LEN + 28].copy_from_slice(&resource_id.to_le_bytes());
     req[HDR_LEN + 28..HDR_LEN + 32].fill(0);
-    let _ = q.submit(&req, RESP_HDR_LEN as u32)?;
+    q.submit(&req, RESP_HDR_LEN as u32)?;
     let mut resp = [0u8; RESP_HDR_LEN];
     q.read_response(REQ_LEN, &mut resp);
     let hdr = Hdr::parse(&resp).ok_or("virtio-gpu: bad transfer response")?;

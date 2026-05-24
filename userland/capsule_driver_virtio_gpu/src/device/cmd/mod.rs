@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 pub mod attach_backing;
 pub mod create_resource_2d;
 pub mod flush;
@@ -21,7 +20,6 @@ pub mod get_display_info;
 pub mod hdr;
 pub mod set_scanout;
 pub mod transfer_to_host_2d;
-
 pub use attach_backing::attach_backing;
 pub use create_resource_2d::create_resource_2d;
 pub use flush::resource_flush;

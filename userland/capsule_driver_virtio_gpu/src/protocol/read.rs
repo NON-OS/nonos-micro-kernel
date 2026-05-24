@@ -13,13 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 pub fn le_u32(buf: &[u8], off: usize) -> Option<u32> {
     let end = off.checked_add(4)?;
     let bytes = buf.get(off..end)?;
     Some(u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
 }
-
 pub fn le_u64(buf: &[u8], off: usize) -> Option<u64> {
     let end = off.checked_add(8)?;
     let bytes = buf.get(off..end)?;

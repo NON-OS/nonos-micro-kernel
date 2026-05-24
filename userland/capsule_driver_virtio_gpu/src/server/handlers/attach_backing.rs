@@ -13,39 +13,37 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use crate::device::cmd;
 use crate::driver::Driver;
 use crate::protocol::{le_u32, le_u64, Request, ATTACH_BACKING_REQ_LEN, E_BUSY, E_DEVICE, E_INVAL};
 use crate::server::respond;
-
 pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != ATTACH_BACKING_REQ_LEN {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     }
     let Some(resource_id) = le_u32(body, 0) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     let Some(backing_addr) = le_u64(body, 8) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     let Some(backing_len) = le_u64(body, 16) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     if backing_addr == 0 || backing_len == 0 || backing_len > u32::MAX as u64 {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     }
     let Some(existing) = driver.resources.lookup(resource_id) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
     if existing.owner_pid != sender_pid {
-        let _ = respond::status(sender_pid, req, E_BUSY, tx);
+        respond::status(sender_pid, req, E_BUSY, tx);
         return;
     }
     let fence_id = driver.fences.issue();
@@ -58,12 +56,12 @@ pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, body: &[u8], tx: 
     )
     .is_err()
     {
-        let _ = respond::status(sender_pid, req, E_DEVICE, tx);
+        respond::status(sender_pid, req, E_DEVICE, tx);
         return;
     }
     driver.resources.update(resource_id, |r| {
         r.backing_addr = backing_addr;
         r.backing_len = backing_len as u32;
     });
-    let _ = respond::status(sender_pid, req, 0, tx);
+    respond::status(sender_pid, req, 0, tx);
 }

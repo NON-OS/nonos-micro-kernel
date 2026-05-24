@@ -13,17 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 pub const VIRTIO_VENDOR_ID: u16 = 0x1AF4;
 pub const VIRTIO_GPU_TRANSITIONAL: u16 = 0x1010;
 pub const VIRTIO_GPU_MODERN: u16 = 0x1050;
 pub const BAR_OFFSET: u64 = 0;
-
-// Legacy split-ring layout for queue_size up to 256:
-//   desc table (16*256)             at offset 0     ..  4096
-//   avail ring (4+2*256)            at offset 4096  ..  8192 (padded)
-//   used ring  (4+8*256, page-aligned) at offset 8192 .. 12288
-//   command staging (request+response marshaling)   12288 .. 16384
 pub const VQ_REGION_SIZE: u64 = 16384;
 pub const VQ_MAX_SIZE: u16 = 256;
 pub const VQ_DESC_OFFSET: usize = 0;
@@ -31,7 +24,6 @@ pub const VQ_AVAIL_OFFSET: usize = 4096;
 pub const VQ_USED_OFFSET: usize = 8192;
 pub const VQ_STAGING_OFFSET: usize = 12288;
 pub const VQ_STAGING_LEN: usize = 4096;
-
 pub const LEG_HOST_FEATURES: usize = 0x00;
 pub const LEG_GUEST_FEATURES: usize = 0x04;
 pub const LEG_QUEUE_PFN: usize = 0x08;
@@ -42,7 +34,6 @@ pub const LEG_STATUS: usize = 0x12;
 pub const GPU_CFG_EVENTS_READ: usize = 0x14;
 pub const GPU_CFG_NUM_SCANOUTS: usize = 0x1C;
 pub const GPU_CFG_NUM_CAPSETS: usize = 0x20;
-
 pub const MOD_DEVICE_FEATURE_SELECT: usize = 0x00;
 pub const MOD_DEVICE_FEATURE: usize = 0x04;
 pub const MOD_DRIVER_FEATURE_SELECT: usize = 0x08;
@@ -60,28 +51,16 @@ pub const STATUS_DRIVER: u8 = 2;
 pub const STATUS_DRIVER_OK: u8 = 4;
 pub const STATUS_FEATURES_OK: u8 = 8;
 pub const STATUS_FAILED: u8 = 128;
-
-// virtq descriptor flags (legacy split ring).
 pub const VRING_DESC_F_NEXT: u16 = 1;
 pub const VRING_DESC_F_WRITE: u16 = 2;
-
 pub const CTRLQ_INDEX: u16 = 0;
-
-// virtio_gpu command/response type codes (spec section 5.7.6). Only
-// the subset the active op surface drives is listed; cursor / capset
-// / resource_unref / detach_backing show up alongside their handlers
-// when those land.
 pub const VG_CMD_GET_DISPLAY_INFO: u32 = 0x0100;
 pub const VG_CMD_RESOURCE_CREATE_2D: u32 = 0x0101;
 pub const VG_CMD_SET_SCANOUT: u32 = 0x0103;
 pub const VG_CMD_RESOURCE_FLUSH: u32 = 0x0104;
 pub const VG_CMD_TRANSFER_TO_HOST_2D: u32 = 0x0105;
 pub const VG_CMD_RESOURCE_ATTACH_BACKING: u32 = 0x0106;
-
 pub const VG_RESP_OK_NODATA: u32 = 0x1100;
 pub const VG_RESP_OK_DISPLAY_INFO: u32 = 0x1101;
-
-// virtio-gpu pixel format B8G8R8A8_UNORM (compositor's ARGB8888 in LE).
 pub const VG_FORMAT_B8G8R8A8_UNORM: u32 = 1;
-
 pub const VG_MAX_SCANOUTS: usize = 16;

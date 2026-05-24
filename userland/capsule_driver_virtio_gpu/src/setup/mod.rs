@@ -13,13 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 mod claim;
 mod dma;
 mod irq;
 mod mmio;
 mod primary_surface;
+mod scanouts;
 mod sequence;
-
 pub use primary_surface::Primary;
 pub use sequence::run;
