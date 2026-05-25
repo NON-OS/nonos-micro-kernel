@@ -1,0 +1,26 @@
+# NONOS shared policy wire format.
+# Single source of truth for the IPC ABI between capsule_policy (the
+# RAM-ephemeral store) and any client capsule that reads or writes
+# policy fields (capsule_settings GUI, future agents). no_std,
+# zero-dep — pure bytes-on-the-wire.
+
+[package]
+name = "nonos_policy_proto"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS system policy wire format"
+
+[lib]
+path = "src/lib.rs"
+
+[profile.release]
+opt-level = 2
+lto = false
+debug = false
+
+[profile.dev]
+opt-level = 0
+debug = true
