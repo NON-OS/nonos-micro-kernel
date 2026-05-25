@@ -86,6 +86,8 @@ nonos-capsule-terminal          = []
 nonos-capsule-file-manager      = []
 nonos-capsule-text-editor       = []
 nonos-capsule-settings          = []
+nonos-capsule-policy            = []
+nonos-capsule-wallpaper-catalog = []
 nonos-capsule-process-manager   = []
 nonos-capsule-keyring           = []
 nonos-capsule-entropy           = []
@@ -470,6 +472,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-attest",
   "nonos-capsule-login",
   "nonos-capsule-wallpaper",
+  "nonos-capsule-wallpaper-catalog",
   "nonos-capsule-toolkit",
   "nonos-capsule-about",
   "nonos-capsule-calculator",
@@ -477,6 +480,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-file-manager",
   "nonos-capsule-text-editor",
   "nonos-capsule-settings",
+  "nonos-capsule-policy",
   "nonos-capsule-process-manager",
   "nonos-capsule-power",
 ]

@@ -18,10 +18,24 @@ pub(super) fn spawn() {
     spawn_input_router();
     spawn_compositor();
     spawn_wm();
+    spawn_wallpaper_catalog();
     spawn_wallpaper();
     spawn_shell();
     super::desktop_services::spawn();
 }
+
+#[cfg(feature = "nonos-capsule-wallpaper-catalog")]
+fn spawn_wallpaper_catalog() {
+    use crate::userspace::capsule_wallpaper_catalog as c;
+    super::boot::capsule(
+        "WALLPAPER-CATALOG",
+        "wallpaper_catalog",
+        c::spawn_wallpaper_catalog_capsule,
+        c::shared_state,
+    );
+}
+#[cfg(not(feature = "nonos-capsule-wallpaper-catalog"))]
+fn spawn_wallpaper_catalog() {}
 
 #[cfg(feature = "nonos-capsule-input-router")]
 fn spawn_input_router() {

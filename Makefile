@@ -146,9 +146,11 @@ endif
 QEMU_MEM := 2G
 QEMU_CPU := max
 QEMU_SMP := 2
+QEMU_HOST_SSH_PORT ?= 2222
+QEMU_HOST_HTTP_PORT ?= 8080
 QEMU_BLK_IMG := $(TARGET_DIR)/qemu-virtio-blk.img
 QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
-QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80
+QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::$(QEMU_HOST_SSH_PORT)-:22,hostfwd=tcp::$(QEMU_HOST_HTTP_PORT)-:80
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
 QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=1024,yres=768
 QEMU_USB := -device qemu-xhci,id=xhci -device usb-tablet,bus=xhci.0
@@ -350,6 +352,8 @@ include userland/capsule_calculator/Capsule.mk
 include userland/capsule_terminal/Capsule.mk
 include userland/capsule_file_manager/Capsule.mk
 include userland/capsule_text_editor/Capsule.mk
+include userland/capsule_policy/Capsule.mk
+include userland/capsule_wallpaper_catalog/Capsule.mk
 include userland/capsule_settings/Capsule.mk
 include userland/capsule_process_manager/Capsule.mk
 include userland/capsule_vfs/Capsule.mk
@@ -397,6 +401,7 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(net-l2_VERIFY) $(net-ip_VERIFY) $(net-udp_VERIFY) \
 	$(net-dhcp_VERIFY) $(net-tcp_VERIFY) $(net-dns_VERIFY) \
 	$(net-sockets_VERIFY) $(net-nym_VERIFY) \
+	$(policy_VERIFY) $(wallpaper_catalog_VERIFY) \
 	$(input-router_VERIFY) $(compositor_VERIFY) $(wm_VERIFY) \
 	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
 	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
@@ -930,6 +935,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) \
 		$(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) \
 		$(net-nym_ARTIFACTS) \
+		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
 		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
 		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
@@ -1012,8 +1018,8 @@ $(QEMU_OVMF_VARS_RW): $(OVMF_VARS)
 
 nonos-mk-run: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS in QEMU..."
-	@echo "  SSH:  ssh -p 2222 localhost"
-	@echo "  HTTP: http://localhost:8080"
+	@echo "  SSH:  ssh -p $(QEMU_HOST_SSH_PORT) localhost"
+	@echo "  HTTP: http://localhost:$(QEMU_HOST_HTTP_PORT)"
 	@echo "  Quit: Ctrl+A then X"
 	@$(QEMU) -m $(QEMU_MEM) -cpu $(QEMU_CPU) -smp $(QEMU_SMP) -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
@@ -1036,7 +1042,7 @@ nonos-mk-run-serial: nonos-mk-esp
 	@$(QEMU) -m $(QEMU_MEM) -cpu $(QEMU_CPU) -smp $(QEMU_SMP) -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
 		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
-		$(QEMU_NET) $(QEMU_RNG) \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial mon:stdio -display none -no-reboot
 
 nonos-mk-debug: nonos-mk-esp

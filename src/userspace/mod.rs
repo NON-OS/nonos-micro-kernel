@@ -47,6 +47,7 @@ pub mod capsule_net_nym;
 pub mod capsule_net_sockets;
 pub mod capsule_net_tcp;
 pub mod capsule_net_udp;
+pub mod capsule_policy;
 pub mod capsule_process_manager;
 pub mod capsule_proof_io;
 pub mod capsule_settings;
@@ -54,6 +55,7 @@ pub mod capsule_terminal;
 pub mod capsule_text_editor;
 pub mod capsule_toolkit;
 pub mod capsule_wallpaper;
+pub mod capsule_wallpaper_catalog;
 pub mod capsule_wm;
 pub mod init;
 

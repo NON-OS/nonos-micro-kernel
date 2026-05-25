@@ -23,6 +23,7 @@ pub(super) fn spawn_after_ramfs() {
     spawn_keyring();
     spawn_entropy();
     spawn_crypto();
+    spawn_policy();
 }
 
 pub(super) fn spawn_vfs() {
@@ -58,3 +59,13 @@ fn spawn_crypto() {
 
     super::boot::capsule("CRYPTO", "crypto", c::spawn_crypto_capsule, c::shared_state);
 }
+
+#[cfg(feature = "nonos-capsule-policy")]
+fn spawn_policy() {
+    use crate::userspace::capsule_policy as c;
+
+    super::boot::capsule("POLICY", "policy", c::spawn_policy_capsule, c::shared_state);
+}
+
+#[cfg(not(feature = "nonos-capsule-policy"))]
+fn spawn_policy() {}
