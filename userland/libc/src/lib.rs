@@ -37,10 +37,10 @@ pub use broker::{
     mk_pci_config_write, mk_pio_grant, mk_pio_read, mk_pio_release, mk_pio_write, Bar,
     DeviceRecord, DmaMapOut, IrqBindOut, IrqPollOut, MmioMapOut, PioGrantOut, BAR_KIND_MMIO,
     BAR_KIND_NONE, BAR_KIND_PIO, BUS_KIND_ACPI, BUS_KIND_PCI, BUS_KIND_VIRT, MK_IRQ_BIND_MSIX,
-    MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER, MK_PCI_MSIX_CTRL_ENABLE,
+    MK_DMA_MAP_HIGH, MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER, MK_PCI_MSIX_CTRL_ENABLE,
     MK_PCI_MSIX_CTRL_FUNCTION_MASK,
 };
-pub use admin::{mk_admin_reboot, mk_admin_shutdown};
+pub use admin::{mk_admin_policy_push, mk_admin_reboot, mk_admin_shutdown};
 pub use crypto::{
     crypto_decrypt, crypto_ed25519_verify, crypto_encrypt, crypto_hash, crypto_hkdf_sha256,
     crypto_hmac_sha256, crypto_random, crypto_x25519_public, crypto_x25519_shared,

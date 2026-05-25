@@ -14,10 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod policy_push;
-mod reboot;
-mod shutdown;
+use crate::syscall::{call_raw, N_ADMIN_POLICY_PUSH};
 
-pub use policy_push::mk_admin_policy_push;
-pub use reboot::mk_admin_reboot;
-pub use shutdown::mk_admin_shutdown;
+pub extern "C" fn mk_admin_policy_push(
+    field_id: u32,
+    kind: u32,
+    value_ptr: *const u8,
+    value_len: u32,
+) -> i64 {
+    call_raw(
+        N_ADMIN_POLICY_PUSH,
+        [field_id as u64, kind as u64, value_ptr as u64, value_len as u64, 0, 0],
+    )
+}

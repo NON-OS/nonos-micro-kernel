@@ -31,6 +31,7 @@ pub(crate) const N_MK_YIELD: i64 = tag4(b"MYLD");
 pub(crate) const N_MK_TIME_MILLIS: i64 = tag4(b"MTMS");
 pub(crate) const N_ADMIN_REBOOT: i64 = tag4(b"ARBT");
 pub(crate) const N_ADMIN_SHUTDOWN: i64 = tag4(b"ASDN");
+pub(crate) const N_ADMIN_POLICY_PUSH: i64 = tag4(b"APPS");
 pub(crate) const N_CRYPTO_RANDOM: i64 = tag4(b"CRND");
 pub(crate) const N_CRYPTO_HASH: i64 = tag4(b"CHSH");
 pub(crate) const N_CRYPTO_ENCRYPT: i64 = tag4(b"CENC");
