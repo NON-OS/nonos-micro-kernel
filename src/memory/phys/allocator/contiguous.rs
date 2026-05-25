@@ -30,7 +30,11 @@ pub fn allocate_contiguous(
         return None;
     }
     let (bptr, start) = (state.bitmap_ptr, state.frame_start);
-    let run_start = unsafe { bitmap::find_contiguous_free(bptr, total, frame_count)? };
+    let run_start = if flags.contains(AllocFlags::HIGH) {
+        unsafe { find_contiguous_high(bptr, total, frame_count)? }
+    } else {
+        unsafe { bitmap::find_contiguous_free(bptr, total, frame_count)? }
+    };
     if !unsafe { bitmap::set_bit_range(bptr, run_start, frame_count) } {
         return None;
     }
@@ -42,6 +46,21 @@ pub fn allocate_contiguous(
         }
     }
     Some(phys_addr)
+}
+
+unsafe fn find_contiguous_high(ptr: *mut u8, total: usize, count: usize) -> Option<usize> {
+    let mut run_length = 0usize;
+    for i in (0..total).rev() {
+        if unsafe { !bitmap::bit_test(ptr, i) } {
+            run_length += 1;
+            if run_length >= count {
+                return Some(i);
+            }
+        } else {
+            run_length = 0;
+        }
+    }
+    None
 }
 
 pub fn free_contiguous(
