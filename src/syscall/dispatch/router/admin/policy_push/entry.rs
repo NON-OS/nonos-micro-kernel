@@ -14,23 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::core::unix_ms;
-use crate::sys::policy;
+use crate::sys::policy::PolicyField;
 
-pub struct Time {
-    pub hour: u8,
-    pub minute: u8,
-    pub second: u8,
-}
+use super::super::errno::E_INVAL;
+use super::bool_arg::push_bool_arg;
+use super::i8_arg::push_i8_arg;
+use super::kinds::{KIND_BOOL, KIND_I8, KIND_STR};
+use super::string_arg::push_string_arg;
 
-pub fn get_time() -> Time {
-    let ms = unix_ms();
-    let total_secs = ms / 1000;
-    let tz_offset = policy::timezone_offset() as i64;
-    let local_secs = (total_secs as i64 + tz_offset * 3600).max(0) as u64;
-    let seconds_in_day = local_secs % (24 * 60 * 60);
-    let hour = (seconds_in_day / 3600) as u8;
-    let minute = ((seconds_in_day % 3600) / 60) as u8;
-    let second = (seconds_in_day % 60) as u8;
-    Time { hour, minute, second }
+pub(in crate::syscall::dispatch::router::admin) fn policy_push(
+    field_id: u64,
+    kind: u64,
+    value_ptr: u64,
+    value_len: u64,
+) -> i64 {
+    let field = match PolicyField::from_u32(field_id as u32) {
+        Some(f) => f,
+        None => return E_INVAL,
+    };
+    match kind as u32 {
+        KIND_BOOL => push_bool_arg(field, value_ptr),
+        KIND_I8 => push_i8_arg(field, value_ptr),
+        KIND_STR => push_string_arg(field, value_ptr, value_len as usize),
+        _ => E_INVAL,
+    }
 }

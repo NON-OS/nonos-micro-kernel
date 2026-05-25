@@ -14,22 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::arch::x86_64::acpi::power_reboot;
-use crate::syscall::numbers::SyscallNumber;
-use crate::syscall::SyscallResult;
+use crate::sys::policy::field_id::PolicyField;
+use crate::sys::policy::kernel_preempt::set_kernel_preempt;
 
-pub(super) fn matches(nr: SyscallNumber) -> bool {
-    matches!(nr, SyscallNumber::AdminReboot | SyscallNumber::AdminShutdown)
-}
+use super::error::PolicyPushError;
 
-pub(super) fn handle(nr: SyscallNumber, _a0: u64, _a1: u64, _a2: u64, _a3: u64, _a4: u64, _a5: u64) -> SyscallResult {
-    let value = match nr {
-        SyscallNumber::AdminReboot => {
-            let _ = power_reboot::reboot();
-            0
+pub fn push_bool(field: PolicyField, value: bool) -> Result<(), PolicyPushError> {
+    match field {
+        PolicyField::KernelPreempt => {
+            set_kernel_preempt(value);
+            Ok(())
         }
-        SyscallNumber::AdminShutdown => -95,
-        _ => -38,
-    };
-    SyscallResult { value, capability_consumed: false, audit_required: true }
+        _ => Err(PolicyPushError::WrongType),
+    }
 }

@@ -32,7 +32,7 @@ pub enum SyscallNumber {
     CryptoHmacSha256 = tag4(b"CHMC"), CryptoHkdfSha256 = tag4(b"CHKF"),
     DebugLog = tag4(b"DLOG"), DebugTrace = tag4(b"DTRC"),
     AdminReboot = tag4(b"ARBT"), AdminShutdown = tag4(b"ASDN"),
-    AdminModLoad = tag4(b"AMOD"),
+    AdminModLoad = tag4(b"AMOD"), AdminPolicyPush = tag4(b"APPS"),
     GraphicsDisplayDimensions = tag4(b"GDIM"), GraphicsSurfaceCreate = tag4(b"GSCR"),
     GraphicsSurfaceDestroy = tag4(b"GSDS"), GraphicsSurfaceMap = tag4(b"GSMP"),
     GraphicsSurfacePresentFull = tag4(b"GPRF"), GraphicsSurfacePresentRect = tag4(b"GPRR"),

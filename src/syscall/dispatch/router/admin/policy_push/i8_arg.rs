@@ -14,23 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::core::unix_ms;
-use crate::sys::policy;
+use crate::sys::policy::{push_i8, PolicyField};
+use crate::usercopy::{copy_from_user, validate_user_read};
 
-pub struct Time {
-    pub hour: u8,
-    pub minute: u8,
-    pub second: u8,
-}
+use super::super::errno::E_FAULT;
+use super::map_err::map_err;
 
-pub fn get_time() -> Time {
-    let ms = unix_ms();
-    let total_secs = ms / 1000;
-    let tz_offset = policy::timezone_offset() as i64;
-    let local_secs = (total_secs as i64 + tz_offset * 3600).max(0) as u64;
-    let seconds_in_day = local_secs % (24 * 60 * 60);
-    let hour = (seconds_in_day / 3600) as u8;
-    let minute = ((seconds_in_day % 3600) / 60) as u8;
-    let second = (seconds_in_day % 60) as u8;
-    Time { hour, minute, second }
+pub(super) fn push_i8_arg(field: PolicyField, value_ptr: u64) -> i64 {
+    let mut buf = [0u8; 1];
+    if value_ptr == 0 || validate_user_read(value_ptr, 1).is_err() {
+        return E_FAULT;
+    }
+    if copy_from_user(value_ptr, &mut buf).is_err() {
+        return E_FAULT;
+    }
+    map_err(push_i8(field, buf[0] as i8))
 }

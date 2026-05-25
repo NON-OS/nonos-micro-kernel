@@ -14,23 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::core::unix_ms;
-use crate::sys::policy;
+use crate::sys::sync::IrqMutex;
 
-pub struct Time {
-    pub hour: u8,
-    pub minute: u8,
-    pub second: u8,
+pub(super) const NAME_MAX: usize = 64;
+
+pub(super) struct HostnameState {
+    pub(super) hostname: [u8; NAME_MAX],
+    pub(super) hostname_len: usize,
+    pub(super) domainname: [u8; NAME_MAX],
+    pub(super) domainname_len: usize,
 }
 
-pub fn get_time() -> Time {
-    let ms = unix_ms();
-    let total_secs = ms / 1000;
-    let tz_offset = policy::timezone_offset() as i64;
-    let local_secs = (total_secs as i64 + tz_offset * 3600).max(0) as u64;
-    let seconds_in_day = local_secs % (24 * 60 * 60);
-    let hour = (seconds_in_day / 3600) as u8;
-    let minute = ((seconds_in_day % 3600) / 60) as u8;
-    let second = (seconds_in_day % 60) as u8;
-    Time { hour, minute, second }
-}
+pub(super) static STATE: IrqMutex<HostnameState> = IrqMutex::new(HostnameState {
+    hostname: [0; NAME_MAX],
+    hostname_len: 0,
+    domainname: [0; NAME_MAX],
+    domainname_len: 0,
+});

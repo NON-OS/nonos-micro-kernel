@@ -30,8 +30,7 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     boot_log::ok("NONOS", "Microkernel init");
 
     init_arch_firmware(handoff);
-    crate::sys::settings::init();
-    crate::sys::settings::init_hostname();
+    crate::sys::policy::hostname_init();
     if let Err(_) = crate::crypto::util::rng::init_rng() {
         fatal("crypto: init_rng failed", "entropy unavailable");
     }

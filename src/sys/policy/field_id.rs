@@ -14,23 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::core::unix_ms;
-use crate::sys::policy;
-
-pub struct Time {
-    pub hour: u8,
-    pub minute: u8,
-    pub second: u8,
+#[repr(u32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PolicyField {
+    KernelPreempt = 0x0001,
+    TimezoneOffset = 0x0002,
+    Hostname = 0x0003,
+    DomainName = 0x0004,
 }
 
-pub fn get_time() -> Time {
-    let ms = unix_ms();
-    let total_secs = ms / 1000;
-    let tz_offset = policy::timezone_offset() as i64;
-    let local_secs = (total_secs as i64 + tz_offset * 3600).max(0) as u64;
-    let seconds_in_day = local_secs % (24 * 60 * 60);
-    let hour = (seconds_in_day / 3600) as u8;
-    let minute = ((seconds_in_day % 3600) / 60) as u8;
-    let second = (seconds_in_day % 60) as u8;
-    Time { hour, minute, second }
+impl PolicyField {
+    pub const fn from_u32(value: u32) -> Option<Self> {
+        match value {
+            0x0001 => Some(Self::KernelPreempt),
+            0x0002 => Some(Self::TimezoneOffset),
+            0x0003 => Some(Self::Hostname),
+            0x0004 => Some(Self::DomainName),
+            _ => None,
+        }
+    }
 }

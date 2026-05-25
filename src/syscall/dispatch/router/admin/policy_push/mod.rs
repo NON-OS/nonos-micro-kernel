@@ -14,12 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::SETTINGS_MODIFIED;
-use core::sync::atomic::Ordering;
+mod bool_arg;
+mod entry;
+mod i8_arg;
+mod kinds;
+mod map_err;
+mod string_arg;
 
-pub use super::load::load_from_disk;
-pub use super::save::{save_to_disk, NETWORK_SETTINGS_FILENAME, WIFI_NETWORKS_FILENAME};
-
-pub fn needs_save() -> bool {
-    SETTINGS_MODIFIED.load(Ordering::Relaxed)
-}
+pub(super) use entry::policy_push;

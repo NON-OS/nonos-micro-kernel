@@ -14,23 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::core::unix_ms;
-use crate::sys::policy;
+use super::state::STATE;
+use super::validate::domain;
 
-pub struct Time {
-    pub hour: u8,
-    pub minute: u8,
-    pub second: u8,
-}
-
-pub fn get_time() -> Time {
-    let ms = unix_ms();
-    let total_secs = ms / 1000;
-    let tz_offset = policy::timezone_offset() as i64;
-    let local_secs = (total_secs as i64 + tz_offset * 3600).max(0) as u64;
-    let seconds_in_day = local_secs % (24 * 60 * 60);
-    let hour = (seconds_in_day / 3600) as u8;
-    let minute = ((seconds_in_day % 3600) / 60) as u8;
-    let second = (seconds_in_day % 60) as u8;
-    Time { hour, minute, second }
+pub(in crate::sys::policy) fn set_domain(name: &str) -> Result<(), &'static str> {
+    domain(name)?;
+    let mut state = STATE.lock();
+    if name.is_empty() {
+        state.domainname_len = 0;
+    } else {
+        state.domainname[..name.len()].copy_from_slice(name.as_bytes());
+        state.domainname_len = name.len();
+    }
+    Ok(())
 }
