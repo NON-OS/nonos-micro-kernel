@@ -16,6 +16,12 @@
 
 mod populate_page;
 mod pte_flags;
+mod result;
 mod run;
+mod source;
+mod plan;
+mod validate;
+#[cfg(test)]
+mod tests;
 
 pub(in crate::elf::loader::core) use run::load_segment;

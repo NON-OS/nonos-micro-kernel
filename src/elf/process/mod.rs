@@ -18,6 +18,7 @@ mod builder;
 mod image;
 
 pub use builder::{
-    create_process, create_process_with_args, ProcessBuilder, DEFAULT_USER_STACK_TOP,
+    create_process, create_process_with_args, create_process_with_args_and_registry,
+    create_process_with_registry, ProcessBuilder, DEFAULT_USER_STACK_TOP,
 };
 pub use image::{ProcessConfig, ProcessImage, ProcessState};
