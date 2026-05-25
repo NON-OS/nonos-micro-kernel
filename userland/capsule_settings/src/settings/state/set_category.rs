@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::Category;
 
-pub use app::Settings;
+use super::state::State;
+use super::track_scroll::track_scroll;
+
+pub fn set_category(state: &mut State, category: Category) {
+    state.category = category;
+    state.editing = false;
+    track_scroll(state);
+}

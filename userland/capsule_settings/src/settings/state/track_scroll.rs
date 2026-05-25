@@ -14,13 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use crate::settings::paint::visible_rows::visible_rows;
 
-pub use app::Settings;
+use super::state::State;
+
+pub fn track_scroll(state: &mut State) {
+    let i = state.category as usize;
+    let cursor = state.cursor[i];
+    let top = state.scroll_top[i];
+    let rows = visible_rows();
+    if rows == 0 {
+        state.scroll_top[i] = cursor;
+        return;
+    }
+    if cursor < top {
+        state.scroll_top[i] = cursor;
+        return;
+    }
+    if cursor >= top + rows {
+        state.scroll_top[i] = cursor + 1 - rows;
+    }
+}

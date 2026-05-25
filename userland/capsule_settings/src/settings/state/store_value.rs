@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::Field;
 
-pub use app::Settings;
+use super::cache::FieldValue;
+use super::slot_of::slot_of;
+use super::state::State;
+
+pub fn store_value(state: &mut State, field: Field, value: FieldValue) {
+    if let Some(i) = slot_of(field) {
+        state.values[i] = value;
+    }
+}

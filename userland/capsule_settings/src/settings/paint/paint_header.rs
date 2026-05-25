@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_app_skeleton::PaintBuffer;
 
-pub use app::Settings;
+use crate::settings::manifest::WIDTH;
+use crate::settings::theme::{HEADER_BG, HEADER_FG};
+
+use super::layout::{HEADER_H, PAD_X};
+
+pub fn paint_header(fb: &mut PaintBuffer) {
+    fb.fill_rect(0, 0, WIDTH, HEADER_H, HEADER_BG);
+    fb.text(PAD_X, 10, b"NONOS Settings", HEADER_FG);
+}

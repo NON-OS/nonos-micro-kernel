@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
-
-pub use app::Settings;
+pub const HEADER_H: u32 = 36;
+pub const TAB_H: u32 = 28;
+pub const STATUS_H: u32 = 24;
+pub const BODY_TOP: u32 = HEADER_H + TAB_H;
+pub const ROW_H: u32 = 24;
+pub const PAD_X: u32 = 14;
+pub const LABEL_LEFT: u32 = PAD_X;
+pub const VALUE_LEFT: u32 = 320;

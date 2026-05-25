@@ -14,26 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+use super::cache::FieldValue;
+use super::cached_value::cached_value;
+use super::current_field::current_field;
+use super::edit_buffer::EditBuffer;
+use super::state::State;
 
-use super::state::{State, LABELS};
-use super::theme::{BACKGROUND, FOREGROUND, SELECTED};
-
-const TEXT_LEFT: u32 = 16;
-const MARK_LEFT: u32 = 20;
-const LABEL_LEFT: u32 = 60;
-const FIRST_ROW_Y: u32 = 56;
-const ROW_HEIGHT: u32 = 26;
-
-pub fn paint(state: &State, fb: &mut PaintBuffer) {
-    fb.clear(BACKGROUND);
-    fb.text(TEXT_LEFT, 18, b"settings", FOREGROUND);
-    let mut y = FIRST_ROW_Y;
-    for (i, label) in LABELS.iter().enumerate() {
-        let mark: &[u8] = if state.on[i] { b"[x]" } else { b"[ ]" };
-        let color = if i == state.cursor { SELECTED } else { FOREGROUND };
-        fb.text(MARK_LEFT, y, mark, color);
-        fb.text(LABEL_LEFT, y, label, color);
-        y += ROW_HEIGHT;
+pub fn edit_start(state: &mut State) {
+    let field = match current_field(state) {
+        Some(f) => f,
+        None => return,
+    };
+    let mut edit = EditBuffer::empty();
+    if let FieldValue::Str { bytes, len } = cached_value(state, field) {
+        edit.bytes[..len].copy_from_slice(&bytes[..len]);
+        edit.len = len;
     }
+    state.edit = edit;
+    state.editing = true;
 }

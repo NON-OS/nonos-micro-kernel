@@ -14,13 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+pub mod fmt_dec;
+pub mod fmt_signed;
+pub mod layout;
+pub mod paint;
+pub mod paint_field_row;
+pub mod paint_header;
+pub mod paint_status;
+pub mod paint_tabs;
+pub mod paint_value_bool;
+pub mod paint_value_enum;
+pub mod paint_value_i8;
+pub mod paint_value_str;
+pub mod paint_value_u8;
+pub mod scroll_indicator;
+pub mod visible_rows;
 
-pub use app::Settings;
+pub use paint::paint;

@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use crate::settings::manifest::HEIGHT;
 
-pub use app::Settings;
+use super::layout::{BODY_TOP, ROW_H, STATUS_H};
+
+pub fn visible_rows() -> usize {
+    let body_height = HEIGHT.saturating_sub(BODY_TOP + STATUS_H);
+    (body_height / ROW_H) as usize
+}

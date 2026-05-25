@@ -17,17 +17,39 @@
 use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
 
 use super::event::on_event;
+use super::ipc::{hydrate, lookup_policy_port};
 use super::manifest::manifest;
 use super::paint::paint;
-use super::state::State;
+use super::state::{state_new, State};
 
 pub struct Settings {
     state: State,
+    hydrated: bool,
 }
 
 impl Settings {
     pub fn new() -> Self {
-        Settings { state: State::new() }
+        let mut state = state_new();
+        if let Ok(port) = lookup_policy_port() {
+            state.policy_port = port;
+            state.policy_ready = true;
+        }
+        Settings { state, hydrated: false }
+    }
+}
+
+impl Settings {
+    fn ensure_ready(&mut self) {
+        if !self.state.policy_ready {
+            if let Ok(port) = lookup_policy_port() {
+                self.state.policy_port = port;
+                self.state.policy_ready = true;
+            }
+        }
+        if self.state.policy_ready && !self.hydrated {
+            hydrate(&mut self.state);
+            self.hydrated = true;
+        }
     }
 }
 
@@ -37,10 +59,12 @@ impl App for Settings {
     }
 
     fn on_event(&mut self, event: InputEvent) -> EventOutcome {
+        self.ensure_ready();
         on_event(&mut self.state, event)
     }
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
+        self.ensure_ready();
         paint(&self.state, fb);
     }
 }

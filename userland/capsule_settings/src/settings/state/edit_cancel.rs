@@ -14,30 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_ENTER, KEY_ESC};
-
+use super::edit_buffer::EditBuffer;
 use super::state::State;
 
-const KEY_SPACE: u32 = 0x20;
-
-pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
-    if !event.is_key_down() {
-        return EventOutcome::Idle;
-    }
-    match event.code {
-        KEY_ESC => EventOutcome::Close,
-        KEY_SPACE | KEY_ENTER => {
-            state.toggle();
-            EventOutcome::Repaint
-        }
-        code if code == b'j' as u32 => {
-            state.next();
-            EventOutcome::Repaint
-        }
-        code if code == b'k' as u32 => {
-            state.prev();
-            EventOutcome::Repaint
-        }
-        _ => EventOutcome::Idle,
-    }
+pub fn edit_cancel(state: &mut State) {
+    state.editing = false;
+    state.edit = EditBuffer::empty();
 }

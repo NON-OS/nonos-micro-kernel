@@ -14,13 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::Field;
 
-pub use app::Settings;
+pub const USER_FIELDS: &[Field] = &[
+    Field::Brightness,
+    Field::MouseSensitivity,
+    Field::CursorSize,
+    Field::SoundEnabled,
+    Field::NotificationsEnabled,
+    Field::AnimationsEnabled,
+    Field::HighContrast,
+    Field::FontSize,
+    Field::Theme,
+    Field::Wallpaper,
+    Field::KeyboardLayout,
+    Field::Language,
+    Field::Timezone,
+    Field::ScreenTimeout,
+    Field::AutoLockTimeout,
+    Field::WifiAutoconnect,
+    Field::AnonymousMode,
+    Field::NymEnabled,
+    Field::AutoWipe,
+    Field::DeveloperMode,
+    Field::HardwareCrypto,
+    Field::ZkAttestation,
+    Field::SystemKeysGenerated,
+];

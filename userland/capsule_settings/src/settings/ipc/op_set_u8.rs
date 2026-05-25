@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::{Field, IPC_PAYLOAD_MAX, KIND_U8, OP_SET};
 
-pub use app::Settings;
+use super::error::IpcError;
+use super::recv::recv_into;
+use super::send::send;
+
+pub fn op_set_u8(port: u32, field: Field, value: u8) -> Result<(), IpcError> {
+    send(port, OP_SET, field as u32, KIND_U8, &[value])?;
+    let mut buf = [0u8; IPC_PAYLOAD_MAX];
+    let _ = recv_into(&mut buf)?;
+    Ok(())
+}

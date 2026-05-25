@@ -14,13 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::{Category, Field};
 
-pub use app::Settings;
+use super::identity_fields::IDENTITY_FIELDS;
+use super::kernel_fields::KERNEL_FIELDS;
+use super::user_fields::USER_FIELDS;
+
+pub fn visible_for(category: Category) -> &'static [Field] {
+    match category {
+        Category::User => USER_FIELDS,
+        Category::Kernel => KERNEL_FIELDS,
+        Category::Identity => IDENTITY_FIELDS,
+    }
+}

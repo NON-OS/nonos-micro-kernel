@@ -14,13 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::{kind_of, KIND_BOOL, KIND_STR};
 
-pub use app::Settings;
+use crate::settings::state::{cached_value, current_field, edit_start, FieldValue, State};
+
+use super::adjust::adjust;
+use super::commit_bool::commit_bool;
+
+pub fn toggle_or_inc(state: &mut State) {
+    let field = match current_field(state) {
+        Some(f) => f,
+        None => return,
+    };
+    match kind_of(field) {
+        KIND_BOOL => {
+            let current = matches!(cached_value(state, field), FieldValue::Bool(true));
+            commit_bool(state, field, !current);
+        }
+        KIND_STR => edit_start(state),
+        _ => adjust(state, 1),
+    }
+}

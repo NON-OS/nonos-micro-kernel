@@ -14,13 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_app_skeleton::PaintBuffer;
 
-pub use app::Settings;
+use crate::settings::theme::{VALUE_FG, VALUE_FG_FALSE};
+
+use super::layout::VALUE_LEFT;
+
+pub fn paint_value_bool(fb: &mut PaintBuffer, y: u32, value: Option<bool>) {
+    let (text, color): (&[u8], u32) = match value {
+        Some(true) => (b"[x] enabled", VALUE_FG),
+        Some(false) => (b"[ ] disabled", VALUE_FG_FALSE),
+        None => (b"...", VALUE_FG_FALSE),
+    };
+    fb.text(VALUE_LEFT, y, text, color);
+}

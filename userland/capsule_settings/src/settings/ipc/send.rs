@@ -14,13 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_libc::mk_ipc_send;
+use nonos_policy_proto::{Header, HDR_LEN, IPC_PAYLOAD_MAX};
 
-pub use app::Settings;
+use super::error::IpcError;
+
+pub fn send(port: u32, op: u16, field: u32, kind: u8, payload: &[u8]) -> Result<(), IpcError> {
+    let mut buf = [0u8; IPC_PAYLOAD_MAX];
+    let hdr = Header { op, field, kind, status: 0, payload_len: payload.len() as u16 };
+    hdr.encode(&mut buf[..HDR_LEN]);
+    let total = HDR_LEN + payload.len();
+    buf[HDR_LEN..total].copy_from_slice(payload);
+    let rc = mk_ipc_send(port as u64, buf.as_ptr(), total);
+    if rc < 0 {
+        return Err(IpcError::SendFailed);
+    }
+    Ok(())
+}

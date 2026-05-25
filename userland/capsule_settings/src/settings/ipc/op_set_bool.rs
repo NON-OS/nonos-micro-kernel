@@ -14,13 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::{Field, IPC_PAYLOAD_MAX, KIND_BOOL, OP_SET};
 
-pub use app::Settings;
+use super::error::IpcError;
+use super::recv::recv_into;
+use super::send::send;
+
+pub fn op_set_bool(port: u32, field: Field, value: bool) -> Result<(), IpcError> {
+    let payload = [if value { 1u8 } else { 0u8 }];
+    send(port, OP_SET, field as u32, KIND_BOOL, &payload)?;
+    let mut buf = [0u8; IPC_PAYLOAD_MAX];
+    let _ = recv_into(&mut buf)?;
+    Ok(())
+}

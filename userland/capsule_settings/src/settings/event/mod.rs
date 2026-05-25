@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+pub mod adjust;
+pub mod commit_bool;
+pub mod commit_string;
+pub mod next_category;
+pub mod on_event;
+pub mod prev_category;
+pub mod push_text_char;
+pub mod report;
+pub mod toggle_or_inc;
 
-pub use app::Settings;
+pub use on_event::on_event;

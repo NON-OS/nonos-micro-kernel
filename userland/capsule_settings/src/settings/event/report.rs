@@ -14,13 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use crate::settings::ipc::IpcError;
+use crate::settings::state::status::StatusKind;
+use crate::settings::state::State;
 
-pub use app::Settings;
+pub fn report(state: &mut State, err: IpcError) {
+    let msg: &[u8] = match err {
+        IpcError::NotFound => b"policy service not registered",
+        IpcError::SendFailed => b"ipc send failed",
+        IpcError::RecvTimeout => b"policy timeout",
+        IpcError::ShortReply => b"short reply",
+        IpcError::BadHeader => b"bad header",
+        IpcError::KindMismatch => b"kind mismatch",
+        IpcError::Status(_) => b"policy rejected",
+    };
+    state.status.set(StatusKind::Error, msg);
+}

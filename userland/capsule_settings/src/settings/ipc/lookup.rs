@@ -14,13 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use core::ptr;
 
-pub use app::Settings;
+use nonos_libc::mk_service_lookup;
+use nonos_policy_proto::POLICY_SERVICE_NAME;
+
+use super::error::IpcError;
+
+pub fn lookup_policy_port() -> Result<u32, IpcError> {
+    let mut port: u32 = 0;
+    let rc = mk_service_lookup(
+        POLICY_SERVICE_NAME.as_ptr(),
+        POLICY_SERVICE_NAME.len(),
+        &mut port as *mut u32,
+        ptr::null_mut(),
+    );
+    if rc != 0 || port == 0 {
+        return Err(IpcError::NotFound);
+    }
+    Ok(port)
+}

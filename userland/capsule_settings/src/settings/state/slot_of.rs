@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::Field;
 
-pub use app::Settings;
+use crate::settings::schema::ALL_FIELDS;
+
+pub fn slot_of(field: Field) -> Option<usize> {
+    let id = field as u32;
+    ALL_FIELDS.iter().position(|f| (*f) as u32 == id)
+}

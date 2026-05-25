@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::Field;
 
-pub use app::Settings;
+use super::cache::FieldValue;
+use super::slot_of::slot_of;
+use super::state::State;
+
+pub fn cached_value(state: &State, field: Field) -> FieldValue {
+    match slot_of(field) {
+        Some(i) => state.values[i],
+        None => FieldValue::Unknown,
+    }
+}

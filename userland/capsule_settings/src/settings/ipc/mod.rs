@@ -14,13 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+pub mod error;
+pub mod hydrate;
+pub mod lookup;
+pub mod op_get;
+pub mod op_set_bool;
+pub mod op_set_i8;
+pub mod op_set_str;
+pub mod op_set_u8;
+pub mod recv;
+pub mod send;
+pub mod timeout;
 
-pub use app::Settings;
+pub use error::IpcError;
+pub use hydrate::hydrate;
+pub use lookup::lookup_policy_port;
+pub use op_set_bool::op_set_bool;
+pub use op_set_i8::op_set_i8;
+pub use op_set_str::op_set_str;
+pub use op_set_u8::op_set_u8;

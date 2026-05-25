@@ -14,13 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use crate::settings::state::State;
 
-pub use app::Settings;
+pub fn push_text_char(state: &mut State, ch: u32) -> bool {
+    if !state.editing {
+        return false;
+    }
+    let b = match ch {
+        c @ 0x20..=0x7E => c as u8,
+        _ => return false,
+    };
+    if !allowed(b) {
+        return false;
+    }
+    state.edit.push(b)
+}
+
+fn allowed(b: u8) -> bool {
+    matches!(b, b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'-' | b'.' | b'_')
+}

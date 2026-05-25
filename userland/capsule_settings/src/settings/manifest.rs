@@ -16,18 +16,18 @@
 
 use nonos_app_skeleton::{AppManifest, WindowKind};
 
-pub const WIDTH: u32 = 380;
-pub const HEIGHT: u32 = 260;
+pub const WIDTH: u32 = 760;
+pub const HEIGHT: u32 = 520;
 
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
 
 pub fn manifest() -> AppManifest {
     AppManifest {
-        title: b"Settings",
+        title: b"NONOS Settings",
         window_id: 0x5345_5447,
         kind: WindowKind::Normal,
-        initial_x: 250,
-        initial_y: 170,
+        initial_x: 180,
+        initial_y: 90,
         width: WIDTH,
         height: HEIGHT,
         input_kind_mask: INPUT_KEY_DOWN_BIT,

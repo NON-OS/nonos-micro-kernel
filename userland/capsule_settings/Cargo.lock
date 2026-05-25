@@ -29,10 +29,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "nonos_policy_proto"
+version = "0.1.0"
+
+[[package]]
 name = "nonos_settings"
 version = "0.1.0"
 dependencies = [
  "nonos_app_skeleton",
+ "nonos_policy_proto",
  "nonos_userland_libc",
 ]
 

@@ -14,13 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::Field;
 
-pub use app::Settings;
+use crate::settings::ipc::op_set_bool;
+use crate::settings::state::status::StatusKind;
+use crate::settings::state::{store_value, FieldValue, State};
+
+use super::report::report;
+
+pub fn commit_bool(state: &mut State, field: Field, value: bool) {
+    let port = state.policy_port;
+    match op_set_bool(port, field, value) {
+        Ok(()) => {
+            store_value(state, field, FieldValue::Bool(value));
+            state.status.set(StatusKind::Ok, b"updated");
+        }
+        Err(e) => report(state, e),
+    }
+}

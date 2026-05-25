@@ -14,13 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::Category;
 
-pub use app::Settings;
+use crate::settings::state::set_category::set_category;
+use crate::settings::state::State;
+
+pub fn prev_category(state: &mut State) {
+    let prev = match state.category {
+        Category::User => Category::Identity,
+        Category::Kernel => Category::User,
+        Category::Identity => Category::Kernel,
+    };
+    set_category(state, prev);
+}

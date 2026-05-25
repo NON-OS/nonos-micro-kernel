@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
-
-pub use app::Settings;
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum IpcError {
+    NotFound,
+    SendFailed,
+    RecvTimeout,
+    ShortReply,
+    BadHeader,
+    Status(u16),
+    KindMismatch,
+}

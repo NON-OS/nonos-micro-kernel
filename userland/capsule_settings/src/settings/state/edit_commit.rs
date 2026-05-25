@@ -14,13 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use super::edit_buffer::EditBuffer;
+use super::state::State;
 
-pub use app::Settings;
+pub fn edit_commit(state: &mut State) -> EditBuffer {
+    state.editing = false;
+    core::mem::replace(&mut state.edit, EditBuffer::empty())
+}

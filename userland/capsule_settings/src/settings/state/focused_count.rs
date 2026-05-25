@@ -14,27 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const LABELS: [&[u8]; 4] = [b"dark mode", b"animations", b"sounds", b"telemetry"];
+use nonos_policy_proto::Category;
 
-pub struct State {
-    pub on: [bool; LABELS.len()],
-    pub cursor: usize,
-}
+use crate::settings::schema::visible_for;
 
-impl State {
-    pub fn new() -> Self {
-        State { on: [false; LABELS.len()], cursor: 0 }
-    }
-
-    pub fn next(&mut self) {
-        self.cursor = (self.cursor + 1) % LABELS.len();
-    }
-
-    pub fn prev(&mut self) {
-        self.cursor = (self.cursor + LABELS.len() - 1) % LABELS.len();
-    }
-
-    pub fn toggle(&mut self) {
-        self.on[self.cursor] = !self.on[self.cursor];
-    }
+pub fn focused_count(category: Category) -> usize {
+    visible_for(category).len()
 }

@@ -14,13 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use super::focused_count::focused_count;
+use super::state::State;
+use super::track_scroll::track_scroll;
 
-pub use app::Settings;
+pub fn cursor_up(state: &mut State) {
+    let n = focused_count(state.category);
+    if n == 0 {
+        return;
+    }
+    let i = state.category as usize;
+    state.cursor[i] = if state.cursor[i] == 0 { n - 1 } else { state.cursor[i] - 1 };
+    track_scroll(state);
+}

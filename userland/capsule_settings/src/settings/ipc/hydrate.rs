@@ -14,13 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_libc::mk_yield;
 
-pub use app::Settings;
+use crate::settings::schema::ALL_FIELDS;
+use crate::settings::state::{store_value, State};
+
+use super::op_get::op_get;
+
+pub fn hydrate(state: &mut State) {
+    if !state.policy_ready {
+        return;
+    }
+    let port = state.policy_port;
+    for field in ALL_FIELDS.iter().copied() {
+        if let Ok(v) = op_get(port, field) {
+            store_value(state, field, v);
+        }
+        mk_yield();
+    }
+}

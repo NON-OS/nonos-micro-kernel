@@ -14,13 +14,38 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use super::cache::STRING_CAP;
 
-pub use app::Settings;
+#[derive(Clone, Copy)]
+pub struct EditBuffer {
+    pub bytes: [u8; STRING_CAP],
+    pub len: usize,
+}
+
+impl EditBuffer {
+    pub const fn empty() -> Self {
+        Self { bytes: [0u8; STRING_CAP], len: 0 }
+    }
+
+    pub fn push(&mut self, b: u8) -> bool {
+        if self.len >= STRING_CAP {
+            return false;
+        }
+        self.bytes[self.len] = b;
+        self.len += 1;
+        true
+    }
+
+    pub fn pop(&mut self) -> bool {
+        if self.len == 0 {
+            return false;
+        }
+        self.len -= 1;
+        self.bytes[self.len] = 0;
+        true
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        &self.bytes[..self.len]
+    }
+}

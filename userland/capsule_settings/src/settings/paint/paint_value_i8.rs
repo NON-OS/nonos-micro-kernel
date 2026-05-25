@@ -14,13 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_app_skeleton::PaintBuffer;
 
-pub use app::Settings;
+use crate::settings::theme::{VALUE_FG, VALUE_FG_FALSE};
+
+use super::fmt_signed::fmt_signed;
+use super::layout::VALUE_LEFT;
+
+pub fn paint_value_i8(fb: &mut PaintBuffer, y: u32, value: Option<i8>) {
+    fb.text(VALUE_LEFT, y, b"<", VALUE_FG);
+    let mut buf = [0u8; 5];
+    let n = match value {
+        Some(v) => fmt_signed(v as i32, &mut buf),
+        None => {
+            buf[0] = b'.';
+            buf[1] = b'.';
+            buf[2] = b'.';
+            3
+        }
+    };
+    fb.text(VALUE_LEFT + 18, y, &buf[..n], VALUE_FG);
+    fb.text(VALUE_LEFT + 64, y, b">", VALUE_FG);
+    fb.text(VALUE_LEFT + 86, y, b"hours UTC", VALUE_FG_FALSE);
+}

@@ -14,13 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
-
-pub use app::Settings;
+pub fn fmt_dec(mut value: u32, out: &mut [u8; 4]) -> usize {
+    if value == 0 {
+        out[0] = b'0';
+        return 1;
+    }
+    let mut tmp = [0u8; 4];
+    let mut n = 0;
+    while value > 0 && n < 4 {
+        tmp[n] = b'0' + (value % 10) as u8;
+        value /= 10;
+        n += 1;
+    }
+    for i in 0..n {
+        out[i] = tmp[n - 1 - i];
+    }
+    n
+}

@@ -14,13 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::Field;
 
-pub use app::Settings;
+pub const KERNEL_FIELDS: &[Field] = &[
+    Field::KernelAslr,
+    Field::KernelStackGuard,
+    Field::KernelNxBit,
+    Field::KernelSmep,
+    Field::KernelSmap,
+    Field::KernelDebug,
+    Field::KernelSerial,
+    Field::KernelWatchdog,
+    Field::KernelPreempt,
+    Field::KernelHugepages,
+    Field::KernelIommu,
+    Field::KernelSeccomp,
+];

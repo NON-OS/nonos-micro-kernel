@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::STR_MAX;
 
-pub use app::Settings;
+pub const STRING_CAP: usize = STR_MAX + 1;
+
+#[derive(Clone, Copy)]
+pub enum FieldValue {
+    Unknown,
+    Bool(bool),
+    U8(u8),
+    I8(i8),
+    Str { bytes: [u8; STRING_CAP], len: usize },
+}

@@ -14,13 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod event;
-mod ipc;
-mod manifest;
-mod paint;
-mod schema;
-mod state;
-mod theme;
+use nonos_policy_proto::Category;
 
-pub use app::Settings;
+use super::cache::FieldValue;
+use super::edit_buffer::EditBuffer;
+use super::status::Status;
+
+pub const FIELD_SLOTS: usize = 37;
+
+pub struct State {
+    pub policy_port: u32,
+    pub policy_ready: bool,
+    pub category: Category,
+    pub cursor: [usize; 3],
+    pub scroll_top: [usize; 3],
+    pub values: [FieldValue; FIELD_SLOTS],
+    pub editing: bool,
+    pub edit: EditBuffer,
+    pub status: Status,
+}
