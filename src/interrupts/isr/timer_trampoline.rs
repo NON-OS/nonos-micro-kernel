@@ -178,6 +178,7 @@ pub(super) extern "C" fn timer_trap_handler(ctx: *mut UserContext) {
     let _ctx_guard = set_interrupt_context();
     stats::increment_timer();
     timer::on_timer_interrupt();
+    crate::process::exit::drain_pending_teardowns();
     crate::kernel_core::process_spawn::drain_pending_kernel_stacks();
     send_eoi();
 }
