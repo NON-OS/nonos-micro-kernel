@@ -58,7 +58,8 @@ pub fn spawn_driver_virtio_rng_capsule() -> Result<(), SpawnError> {
             | Capability::DeviceEnum.bit()
             | Capability::Mmio.bit()
             | Capability::Irq.bit()
-            | Capability::Dma.bit(),
+            | Capability::Dma.bit()
+            | Capability::Debug.bit(),
         debug_tag: b"[DRIVER-VIRTIO-RNG] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

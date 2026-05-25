@@ -20,6 +20,7 @@
 extern crate alloc;
 
 mod constants;
+mod debug;
 mod discover;
 mod fill;
 mod init;
@@ -36,13 +37,19 @@ pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
+    debug::marker(b"heap ok");
 
     let mut driver = loop {
         match setup::run() {
-            Ok(d) => break d,
+            Ok(d) => {
+                debug::marker(b"setup ok");
+                break d
+            }
             Err(_) => {
+                debug::marker(b"setup err");
                 for _ in 0..64 {
                     mk_yield();
+                    debug::marker(b"retry ok");
                 }
             }
         }
@@ -53,6 +60,7 @@ pub unsafe extern "C" fn _start() -> ! {
     // exposing as an entropy source.
     match crate::fill::fill(driver.regs, &mut driver.queue, driver.irq_grant) {
         Ok(n) => {
+            debug::marker(b"fill ok");
             let bytes = driver.queue.buffer(n);
             let mut nz = 0usize;
             for &b in bytes.iter() {
@@ -61,11 +69,13 @@ pub unsafe extern "C" fn _start() -> ! {
                 }
             }
             if nz == 0 {
+                debug::marker(b"fill zero");
                 driver.release();
                 mk_exit(4);
             }
         }
         Err(_) => {
+            debug::marker(b"fill err");
             driver.release();
             mk_exit(3);
         }
@@ -73,5 +83,6 @@ pub unsafe extern "C" fn _start() -> ! {
 
     let _ = driver.queue.region_phys();
     let _ = driver.claim_epoch;
+    debug::marker(b"server enter");
     server::run(&mut driver);
 }
