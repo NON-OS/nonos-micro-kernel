@@ -103,6 +103,12 @@ pub struct ProcessControlBlock {
     // unallocated; the scheduler hook treats this as "no user mode
     // expected" and refuses to dispatch a pending user entry.
     pub kernel_stack_top: AtomicU64,
+    // User RSP captured on syscall entry for a blocking Mk path. The
+    // x86_64 syscall trampoline parks it in per-CPU state first; when
+    // a syscall yields and another task runs on the same CPU, that
+    // per-CPU slot must be restored from the PCB before the syscall
+    // returns to user mode.
+    pub syscall_user_rsp: AtomicU64,
     // First-transition-to-user record consumed by the arch's enter-user
     // helper. On x86_64 this is the iretq 5-tuple; on aarch64/riscv64
     // it carries the per-arch entry shape (ELR/SP_EL0/SPSR + per-task

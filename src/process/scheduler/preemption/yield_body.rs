@@ -16,23 +16,42 @@
 
 use super::super::dispatch::add_to_run_queue;
 use super::super::selection::{select_next_process, switch_to_process};
+use super::save_syscall_user_rsp;
 use super::state::CURRENT_TIME_SLICE;
-use core::sync::atomic::Ordering;
+use core::sync::atomic::{AtomicU32, Ordering};
+
+static YIELD_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
+
+fn is_traced(pid: u32) -> bool {
+    matches!(pid, 7 | 8 | 0x1c | 0x27)
+}
+
+fn trace(label: &[u8], pid: u32) {
+    if !is_traced(pid) || YIELD_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 40 {
+        return;
+    }
+    crate::sys::serial::print(b"[YIELD] ");
+    crate::sys::serial::println(label);
+}
 
 /// Voluntary-yield body. Runs with interrupts already disabled by the
 /// caller. The contract backend dispatches `SwitchIntent::Yield` here.
+#[inline(never)]
 pub(crate) fn perform_yield_inline() {
     use crate::process::nonos_core::{current_pid, ProcessState, PROCESS_TABLE};
 
     let Some(pid) = current_pid() else { return };
+    trace(b"enter", pid);
 
     let mut ctx: crate::sched::Context = unsafe { core::mem::zeroed() };
     crate::sched::Context::clear_restored_flag();
     unsafe { crate::sched::Context::save_to(&mut ctx as *mut crate::sched::Context) };
     if crate::sched::Context::was_just_restored() {
+        trace(b"restored", pid);
         return;
     }
 
+    save_syscall_user_rsp(pid);
     crate::process::nonos_core::save_interrupt_context(pid, ctx);
     crate::process::nonos_core::save_fpu_state(pid);
 
@@ -48,6 +67,7 @@ pub(crate) fn perform_yield_inline() {
 
     if let Some(next) = select_next_process() {
         if next != pid {
+            trace(b"switch away", pid);
             switch_to_process(next);
         } else if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
             let mut state = pcb.state.lock();

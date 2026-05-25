@@ -19,8 +19,20 @@ extern crate alloc;
 use super::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOMEM};
 use crate::process::core::{create_process, Priority, ProcessState};
 use crate::process::current_pid;
+use core::sync::atomic::{AtomicU32, Ordering};
 
 const MAX_NAME_LEN: usize = 256;
+static EXIT_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
+
+fn trace_exit(label: &[u8], pid: u32) {
+    if !matches!(pid, 7 | 8 | 0x1c | 0x27)
+        || EXIT_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 24
+    {
+        return;
+    }
+    crate::sys::serial::print(b"[EXIT] ");
+    crate::sys::serial::println(label);
+}
 
 pub fn sys_spawn(name_ptr: u64, name_len: usize) -> i64 {
     if name_len == 0 || name_len > MAX_NAME_LEN {
@@ -44,9 +56,11 @@ pub fn sys_spawn(name_ptr: u64, name_len: usize) -> i64 {
 }
 
 pub fn sys_exit(code: i32) -> i64 {
-    if current_pid().is_none() {
+    let Some(pid) = current_pid() else {
         return ERRNO_INVAL;
-    }
+    };
+    let _ = code;
+    trace_exit(b"enter", pid);
     crate::process::exit::exit_and_yield(code, false)
 }
 
