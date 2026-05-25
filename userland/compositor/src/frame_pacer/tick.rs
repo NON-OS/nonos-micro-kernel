@@ -17,6 +17,7 @@
 use crate::frame_pacer::composite;
 
 use crate::gfx_client;
+use crate::debug;
 use crate::state::Context;
 
 pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
@@ -49,6 +50,7 @@ pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
             ctx.height,
         )?;
         ctx.first_scanout_done = true;
+        debug::marker(b"scanout ok");
     }
     let req_c = ctx.issue_request_id();
     gfx_client::resource_flush(

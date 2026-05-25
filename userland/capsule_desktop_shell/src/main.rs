@@ -34,7 +34,9 @@ use nonos_libc::{heap_init, mk_exit, mk_yield};
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
+    debug::marker(b"start");
     if heap_init().is_err() {
+        debug::marker(b"heap fail");
         mk_exit(1);
     }
     debug::marker(b"boot");

@@ -17,11 +17,12 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use nonos_libc::mk_ipc_call;
+use nonos_libc::{mk_ipc_recv, mk_ipc_send};
 
 pub const NCMP_MAGIC: u32 = 0x4E43_4D50;
 pub const NCMP_VERSION: u16 = 1;
 pub const NCMP_HDR_LEN: usize = 20;
+const REPLY_TIMEOUT_MS: u64 = 16;
 
 pub fn build_request(out: &mut Vec<u8>, op: u16, request_id: u32, payload: &[u8]) {
     out.clear();
@@ -44,7 +45,11 @@ pub fn call(
     let mut tx = Vec::with_capacity(NCMP_HDR_LEN + payload.len());
     build_request(&mut tx, op, request_id, payload);
     let mut rx = vec![0u8; NCMP_HDR_LEN + 4];
-    let rc = mk_ipc_call(compositor_port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len());
+    let send_rc = mk_ipc_send(compositor_port as u64, tx.as_ptr(), tx.len());
+    if send_rc < 0 {
+        return Err("compositor send failed");
+    }
+    let rc = mk_ipc_recv(0, rx.as_mut_ptr(), rx.len(), REPLY_TIMEOUT_MS);
     if rc < (NCMP_HDR_LEN + 4) as i64 {
         return Err("compositor call failed");
     }
@@ -63,7 +68,11 @@ pub fn call_payload(
     let mut tx = Vec::with_capacity(NCMP_HDR_LEN + payload.len());
     build_request(&mut tx, op, request_id, payload);
     let mut rx = vec![0u8; NCMP_HDR_LEN + 4 + body.len()];
-    let rc = mk_ipc_call(compositor_port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len());
+    let send_rc = mk_ipc_send(compositor_port as u64, tx.as_ptr(), tx.len());
+    if send_rc < 0 {
+        return Err("compositor send failed");
+    }
+    let rc = mk_ipc_recv(0, rx.as_mut_ptr(), rx.len(), REPLY_TIMEOUT_MS);
     if rc < (NCMP_HDR_LEN + 4 + body.len()) as i64 {
         return Err("compositor call failed");
     }

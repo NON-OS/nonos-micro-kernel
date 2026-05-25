@@ -17,13 +17,14 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use nonos_libc::mk_ipc_call;
+use nonos_libc::{mk_ipc_recv, mk_ipc_send};
 
 const MAGIC: u32 = 0x4E57_4C50;
 const VERSION: u16 = 1;
 const HDR_LEN: usize = 20;
 const STATUS_LEN: usize = 4;
 const OP_SET_POLICY: u16 = 0x0004;
+const REPLY_TIMEOUT_MS: u64 = 16;
 
 pub fn set_policy(port: u32, request_id: u32, policy: u32) -> Result<i32, &'static str> {
     let mut tx = Vec::with_capacity(HDR_LEN + 4);
@@ -36,7 +37,11 @@ pub fn set_policy(port: u32, request_id: u32, policy: u32) -> Result<i32, &'stat
     tx.extend_from_slice(&4u32.to_le_bytes());
     tx.extend_from_slice(&policy.to_le_bytes());
     let mut rx = vec![0u8; HDR_LEN + STATUS_LEN];
-    let rc = mk_ipc_call(port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len());
+    let send_rc = mk_ipc_send(port as u64, tx.as_ptr(), tx.len());
+    if send_rc < 0 {
+        return Err("wallpaper send failed");
+    }
+    let rc = mk_ipc_recv(0, rx.as_mut_ptr(), rx.len(), REPLY_TIMEOUT_MS);
     if rc < (HDR_LEN + STATUS_LEN) as i64 {
         return Err("wallpaper call failed");
     }
