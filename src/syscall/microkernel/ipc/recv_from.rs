@@ -25,7 +25,7 @@ use super::sender_pid::from_envelope;
 static RECV_FROM_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn trace(label: &[u8], pid: u32) {
-    if !matches!(pid, 7 | 8 | 0x1c | 0x27)
+    if !matches!(pid, 7 | 8 | 0x17 | 0x1b | 0x1c | 0x27)
         || RECV_FROM_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 40
     {
         return;

@@ -23,7 +23,7 @@ use core::sync::atomic::{AtomicU32, Ordering};
 static YIELD_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn is_traced(pid: u32) -> bool {
-    matches!(pid, 7 | 8 | 0x1c | 0x27)
+    matches!(pid, 7 | 8 | 0x1b | 0x1c | 0x26 | 0x27)
 }
 
 fn trace(label: &[u8], pid: u32) {
@@ -32,6 +32,31 @@ fn trace(label: &[u8], pid: u32) {
     }
     crate::sys::serial::print(b"[YIELD] ");
     crate::sys::serial::println(label);
+}
+
+fn trace_return_slot(pid: u32) {
+    if !matches!(pid, 0x26 | 0x27) || YIELD_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 40 {
+        return;
+    }
+    let rsp: u64;
+    let rbp: u64;
+    unsafe {
+        core::arch::asm!(
+            "mov {0}, rsp",
+            "mov {1}, rbp",
+            out(reg) rsp,
+            out(reg) rbp,
+            options(nomem, nostack, preserves_flags),
+        );
+    }
+    let ret = unsafe { *((rbp + 8) as *const u64) };
+    crate::sys::serial::print(b"[YIELD] rsp=");
+    crate::arch::x86_64::diag::print_hex_u64(rsp);
+    crate::sys::serial::print(b" rbp=");
+    crate::arch::x86_64::diag::print_hex_u64(rbp);
+    crate::sys::serial::print(b" ret=");
+    crate::arch::x86_64::diag::print_hex_u64(ret);
+    crate::sys::serial::println(b"");
 }
 
 /// Voluntary-yield body. Runs with interrupts already disabled by the
@@ -47,6 +72,7 @@ pub(crate) fn perform_yield_inline() {
     crate::sched::Context::clear_restored_flag();
     unsafe { crate::sched::Context::save_to(&mut ctx as *mut crate::sched::Context) };
     if crate::sched::Context::was_just_restored() {
+        trace_return_slot(pid);
         trace(b"restored", pid);
         return;
     }

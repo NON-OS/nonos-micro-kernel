@@ -25,7 +25,7 @@ const MAX_NAME_LEN: usize = 256;
 static EXIT_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn trace_exit(label: &[u8], pid: u32) {
-    if !matches!(pid, 7 | 8 | 0x1c | 0x27)
+    if !matches!(pid, 7 | 8 | 0x1b | 0x1c | 0x27)
         || EXIT_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 24
     {
         return;

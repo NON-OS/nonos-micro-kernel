@@ -27,7 +27,7 @@ use core::sync::atomic::{AtomicU32, Ordering};
 static RECV_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn is_traced(pid: u32) -> bool {
-    matches!(pid, 7 | 8 | 0x1c | 0x27)
+    matches!(pid, 7 | 8 | 0x1b | 0x1c | 0x27)
 }
 
 fn trace(label: &[u8], pid: u32) {

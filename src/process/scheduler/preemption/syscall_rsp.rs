@@ -14,18 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod state;
-mod switch;
-mod syscall_rsp;
-mod tick;
-mod yield_body;
-mod yield_impl;
+use crate::process::nonos_core::PROCESS_TABLE;
+use core::sync::atomic::Ordering;
 
-pub(crate) use state::SCHEDULER_STATS;
-pub(crate) use syscall_rsp::save_syscall_user_rsp;
-pub use state::{clear_reschedule, need_reschedule};
-pub use state::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLICE, NEED_RESCHEDULE};
-pub(crate) use switch::preempt_current_process;
-pub use tick::tick;
-pub(crate) use yield_body::perform_yield_inline;
-pub use yield_impl::yield_now;
+#[cfg(target_arch = "x86_64")]
+pub(crate) fn save_syscall_user_rsp(pid: u32) {
+    let rsp: u64;
+    unsafe {
+        core::arch::asm!(
+            "mov {0}, gs:0x28",
+            out(reg) rsp,
+            options(nomem, nostack, preserves_flags),
+        );
+    }
+    if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
+        pcb.syscall_user_rsp.store(rsp, Ordering::Relaxed);
+    }
+}
+
+#[cfg(not(target_arch = "x86_64"))]
+pub(crate) fn save_syscall_user_rsp(_pid: u32) {}

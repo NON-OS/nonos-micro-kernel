@@ -22,7 +22,7 @@ use core::sync::atomic::{AtomicU32, Ordering};
 static YIELD_CALL_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn trace(label: &[u8], pid: u32) {
-    if !matches!(pid, 7 | 8 | 0x1c | 0x27)
+    if !matches!(pid, 7 | 8 | 0x1b | 0x1c | 0x26 | 0x27)
         || YIELD_CALL_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 32
     {
         return;
