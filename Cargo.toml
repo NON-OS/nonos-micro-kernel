@@ -73,6 +73,7 @@ nonos-capsule-wallpaper         = []
 nonos-capsule-compositor        = []
 nonos-capsule-desktop-shell     = []
 nonos-capsule-input-router      = []
+nonos-capsule-input-proof       = []
 nonos-capsule-wm                = []
 nonos-capsule-toolkit           = []
 nonos-capsule-login             = []
@@ -579,6 +580,80 @@ microkernel-driver-xhci-smoketest = [
   "nonos-capsule-proof-io",
   "nonos-capsule-driver-xhci",
   "nonos-driver-xhci-smoketest",
+]
+
+# Input stack end-to-end proof (Deliverable 2). Trimmed desktop fleet:
+# the four mandatory app peers (compositor, wm, input_router, toolkit)
+# plus the display backend and the capsule_input_proof surface. NO
+# focusable production apps / shell / login / wallpaper, so input_proof
+# is the sole focusable window and a click always routes focus to it.
+microkernel-input-e2e-ps2 = [
+  "microkernel-core",
+  "nonos-production",
+  "nonos-user-entry-proof",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-ramfs",
+  "nonos-capsule-keyring",
+  "nonos-capsule-entropy",
+  "nonos-capsule-crypto",
+  "nonos-capsule-vfs",
+  "nonos-capsule-driver-virtio-rng",
+  "nonos-capsule-driver-virtio-blk",
+  "nonos-capsule-driver-virtio-gpu",
+  "nonos-capsule-driver-virtio-net",
+  "nonos-capsule-driver-ps2-input",
+  "nonos-capsule-net-l2",
+  "nonos-capsule-net-ip",
+  "nonos-capsule-net-udp",
+  "nonos-capsule-net-dhcp",
+  "nonos-capsule-net-tcp",
+  "nonos-capsule-net-dns",
+  "nonos-capsule-net-sockets",
+  "nonos-capsule-net-nym",
+  "nonos-capsule-input-router",
+  "nonos-capsule-compositor",
+  "nonos-capsule-wm",
+  "nonos-capsule-image-codec",
+  "nonos-capsule-clipboard",
+  "nonos-capsule-attest",
+  "nonos-capsule-toolkit",
+  "nonos-capsule-power",
+  "nonos-capsule-input-proof",
+]
+
+microkernel-input-e2e-xhci = [
+  "microkernel-core",
+  "nonos-production",
+  "nonos-user-entry-proof",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-ramfs",
+  "nonos-capsule-keyring",
+  "nonos-capsule-entropy",
+  "nonos-capsule-crypto",
+  "nonos-capsule-vfs",
+  "nonos-capsule-driver-virtio-rng",
+  "nonos-capsule-driver-virtio-blk",
+  "nonos-capsule-driver-virtio-gpu",
+  "nonos-capsule-driver-virtio-net",
+  "nonos-capsule-driver-xhci",
+  "nonos-capsule-driver-usb-hid",
+  "nonos-capsule-net-l2",
+  "nonos-capsule-net-ip",
+  "nonos-capsule-net-udp",
+  "nonos-capsule-net-dhcp",
+  "nonos-capsule-net-tcp",
+  "nonos-capsule-net-dns",
+  "nonos-capsule-net-sockets",
+  "nonos-capsule-net-nym",
+  "nonos-capsule-input-router",
+  "nonos-capsule-compositor",
+  "nonos-capsule-wm",
+  "nonos-capsule-image-codec",
+  "nonos-capsule-clipboard",
+  "nonos-capsule-attest",
+  "nonos-capsule-toolkit",
+  "nonos-capsule-power",
+  "nonos-capsule-input-proof",
 ]
 
 microkernel-driver-e1000-smoketest = [

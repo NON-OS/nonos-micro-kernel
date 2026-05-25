@@ -15,12 +15,26 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub(super) fn spawn() {
+    spawn_input_proof();
     spawn_about();
     spawn_calculator();
     spawn_terminal();
     spawn_file_manager();
     super::apps_tools::spawn();
 }
+
+#[cfg(feature = "nonos-capsule-input-proof")]
+fn spawn_input_proof() {
+    use crate::userspace::capsule_input_proof as c;
+    super::boot::capsule(
+        "APP-INPUT-PROOF",
+        "app_input_proof",
+        c::spawn_input_proof_capsule,
+        c::shared_state,
+    );
+}
+#[cfg(not(feature = "nonos-capsule-input-proof"))]
+fn spawn_input_proof() {}
 
 #[cfg(feature = "nonos-capsule-about")]
 fn spawn_about() {

@@ -30,6 +30,7 @@
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
 .PHONY: nonos-mk-run nonos-mk-run-serial nonos-mk-debug nonos-mk-plan-a-runtime
 .PHONY: nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-mk-boot-entropy nonos-mk-boot-crypto-hash nonos-mk-boot-vfs nonos-mk-boot-ps2-input nonos-mk-boot-xhci nonos-mk-boot-desktop-gui
+.PHONY: nonos-mk-input-e2e-ps2-test nonos-mk-input-e2e-ps2-esp nonos-mk-input-e2e-xhci-test nonos-mk-input-e2e-xhci-esp nonos-mk-boot-input-e2e-ps2 nonos-mk-boot-input-e2e-xhci
 .PHONY: nonos-mk-static nonos-mk-scan
 .PHONY: nonos-mk-verify nonos-mk-verify-fast
 .PHONY: nonos-mk-test nonos-mk-host-test
@@ -341,6 +342,7 @@ include userland/capsule_entropy/Capsule.mk
 include userland/capsule_crypto/Capsule.mk
 include userland/compositor/Capsule.mk
 include userland/capsule_input_router/Capsule.mk
+include userland/capsule_input_proof/Capsule.mk
 include userland/capsule_wm/Capsule.mk
 include userland/capsule_desktop_shell/Capsule.mk
 include userland/capsule_image_codec/Capsule.mk
@@ -651,6 +653,64 @@ nonos-mk-driver-xhci-test: $(proof-io_ARTIFACTS) $(driver-xhci_BIN) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-driver-xhci-smoketest
+
+# Input stack end-to-end proof (Deliverable 2). Dedicated build + ESP
+# packaging that bypasses nonos-mk-esp (which always rebuilds the
+# desktop-gui kernel); these targets sign+attest the just-built
+# feature kernel into a lane-specific ESP. The trimmed fleet embeds the
+# whole desktop input chain plus capsule_input_proof.
+NONOS_INPUT_E2E_ARTIFACTS := $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
+	$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
+	$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
+	$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
+	$(driver-virtio-net_ARTIFACTS) $(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) \
+	$(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) $(net-tcp_ARTIFACTS) \
+	$(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) \
+	$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) $(wm_ARTIFACTS) \
+	$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) $(attest_ARTIFACTS) \
+	$(toolkit_ARTIFACTS) $(power_ARTIFACTS) $(input-proof_ARTIFACTS)
+
+NONOS_BOOT_EFI := $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
+
+define NONOS_INPUT_E2E_ESP
+	@echo "Signing + attesting $(1) kernel..."
+	@PY=python3; [ "$$(uname -s)" = Darwin ] && PY=/usr/bin/python3; \
+		$$PY nonos-utils/sign_kernel.py \
+		$(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY) \
+		$(TARGET_DIR)/kernel_signed_$(1).bin
+	@$(EMBED_TOOL) --input $(TARGET_DIR)/kernel_signed_$(1).bin \
+		--output $(TARGET_DIR)/kernel_attested_$(1).bin \
+		--proving-key $(ZK_PROVING_KEY) --seed "$(ZK_KEY_SEED)" --verbose
+	@mkdir -p $(TARGET_DIR)/esp-$(1)/EFI/Boot $(TARGET_DIR)/esp-$(1)/EFI/nonos
+	@cp $(NONOS_BOOT_EFI) $(TARGET_DIR)/esp-$(1)/EFI/Boot/BOOTX64.EFI
+	@cp $(TARGET_DIR)/kernel_attested_$(1).bin $(TARGET_DIR)/esp-$(1)/EFI/nonos/kernel.bin
+	@printf "timeout=0\ndefault=nonos\n" > $(TARGET_DIR)/esp-$(1)/EFI/nonos/boot.cfg
+	@echo 'fs0:\EFI\Boot\BOOTX64.EFI' > $(TARGET_DIR)/esp-$(1)/startup.nsh
+	@echo "$(1) ESP ready at $(TARGET_DIR)/esp-$(1)"
+endef
+
+nonos-mk-input-e2e-ps2-test: $(NONOS_INPUT_E2E_ARTIFACTS) \
+		$(driver-ps2-input_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-input-e2e-ps2)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-input-e2e-ps2
+
+nonos-mk-input-e2e-ps2-esp: nonos-mk-input-e2e-ps2-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
+	$(call NONOS_INPUT_E2E_ESP,input-e2e-ps2)
+
+nonos-mk-input-e2e-xhci-test: $(NONOS_INPUT_E2E_ARTIFACTS) \
+		$(driver-xhci_ARTIFACTS) $(driver-usb-hid_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-input-e2e-xhci)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-input-e2e-xhci
+
+nonos-mk-input-e2e-xhci-esp: nonos-mk-input-e2e-xhci-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
+	$(call NONOS_INPUT_E2E_ESP,input-e2e-xhci)
 
 # Boot-time wallpaper round trip. Kernel boots wallpaper as the
 # init one-shot; the binary drives display_dimensions /
@@ -1076,6 +1136,12 @@ nonos-mk-boot-ps2-input:
 nonos-mk-boot-xhci:
 	@./tests/boot/xhci_round_trip.sh
 
+nonos-mk-boot-input-e2e-ps2:
+	@./tests/boot/input_e2e_ps2.sh
+
+nonos-mk-boot-input-e2e-xhci:
+	@./tests/boot/input_e2e_xhci.sh
+
 nonos-mk-boot-desktop-gui:
 	@./tests/boot/desktop_gui_boot.sh
 
@@ -1227,6 +1293,8 @@ help:
 	@echo "  make nonos-mk-boot-entropy    entropy capsule round trip under QEMU"
 	@echo "  make nonos-mk-boot-crypto-hash crypto hash round trip under QEMU"
 	@echo "  make nonos-mk-boot-vfs        vfs capsule round trip under QEMU"
+	@echo "  make nonos-mk-boot-input-e2e-ps2  input stack e2e proof (PS/2) under QEMU"
+	@echo "  make nonos-mk-boot-input-e2e-xhci input stack e2e proof (xHCI HID) under QEMU"
 	@echo "  make nonos-mk-test            verify + both boot harnesses"
 	@echo "  make nonos-mk-host-test       host-mode cargo tests (flaky; see roadmap)"
 	@echo

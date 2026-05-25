@@ -354,6 +354,150 @@ jobs:
         if: always()
         run: rm -rf .keys/
 
+  input-e2e-ps2:
+    name: input stack e2e proof (PS/2)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+            | sh -s -- -y --default-toolchain ${TOOLCHAIN}
+          source ~/.cargo/env
+          rustup component add rust-src llvm-tools-preview rustfmt
+          rustup target add x86_64-unknown-uefi
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Install QEMU + OVMF + helpers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip xorriso gdisk mtools \
+            qemu-system-x86 ovmf binutils netcat-openbsd
+          pip3 install --user pynacl
+
+      - name: Setup signing key
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
+        run: bash nonos-ci/setup-signing-key.sh
+
+      - name: Generate ZK ceremony keys
+        env:
+          SIGNING_KEY: ${{ github.workspace }}/.keys/dev-signing.seed
+        run: make nonos-mk-ensure-zk-keys
+
+      - name: Expected serial markers
+        run: |
+          echo "Pass requires every [INPUT-PROOF] marker in the QEMU serial log:"
+          echo "  [INPUT-PROOF] surface composited"
+          echo "  [INPUT-PROOF] surface ready"
+          echo "  [INPUT-PROOF] key down code="
+          echo "  [INPUT-PROOF] pointer motion x="
+          echo "  [INPUT-PROOF] click dispatch local="
+          echo "  [INPUT-PROOF] focus routed"
+          echo "  [INPUT-PROOF] PASS"
+
+      - name: make nonos-mk-boot-input-e2e-ps2
+        env:
+          SIGNING_KEY: ${{ github.workspace }}/.keys/dev-signing.seed
+        run: make nonos-mk-boot-input-e2e-ps2
+
+      - name: Serial log tail
+        if: always()
+        run: |
+          if [ -f target/boot-test-input-e2e-ps2.log ]; then
+            echo "----- last 200 lines of target/boot-test-input-e2e-ps2.log -----"
+            tail -n 200 target/boot-test-input-e2e-ps2.log
+          else
+            echo "No serial log produced"
+          fi
+
+      - name: Upload serial log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: boot-test-input-e2e-ps2-serial-${{ github.sha }}
+          path: target/boot-test-input-e2e-ps2.log
+          retention-days: 30
+
+      - name: Cleanup signing material
+        if: always()
+        run: rm -rf .keys/
+
+  input-e2e-xhci:
+    name: input stack e2e proof (xHCI HID)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+            | sh -s -- -y --default-toolchain ${TOOLCHAIN}
+          source ~/.cargo/env
+          rustup component add rust-src llvm-tools-preview rustfmt
+          rustup target add x86_64-unknown-uefi
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Install QEMU + OVMF + helpers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip xorriso gdisk mtools \
+            qemu-system-x86 ovmf binutils netcat-openbsd
+          pip3 install --user pynacl
+
+      - name: Setup signing key
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
+        run: bash nonos-ci/setup-signing-key.sh
+
+      - name: Generate ZK ceremony keys
+        env:
+          SIGNING_KEY: ${{ github.workspace }}/.keys/dev-signing.seed
+        run: make nonos-mk-ensure-zk-keys
+
+      - name: Expected serial markers
+        run: |
+          echo "Pass requires every [INPUT-PROOF] marker; key flows via USB HID:"
+          echo "  [INPUT-PROOF] surface composited"
+          echo "  [INPUT-PROOF] surface ready"
+          echo "  [INPUT-PROOF] key down code="
+          echo "  [INPUT-PROOF] pointer motion x="
+          echo "  [INPUT-PROOF] click dispatch local="
+          echo "  [INPUT-PROOF] focus routed"
+          echo "  [INPUT-PROOF] PASS"
+
+      - name: make nonos-mk-boot-input-e2e-xhci
+        env:
+          SIGNING_KEY: ${{ github.workspace }}/.keys/dev-signing.seed
+        run: make nonos-mk-boot-input-e2e-xhci
+
+      - name: Serial log tail
+        if: always()
+        run: |
+          if [ -f target/boot-test-input-e2e-xhci.log ]; then
+            echo "----- last 200 lines of target/boot-test-input-e2e-xhci.log -----"
+            tail -n 200 target/boot-test-input-e2e-xhci.log
+          else
+            echo "No serial log produced"
+          fi
+
+      - name: Upload serial log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: boot-test-input-e2e-xhci-serial-${{ github.sha }}
+          path: target/boot-test-input-e2e-xhci.log
+          retention-days: 30
+
+      - name: Cleanup signing material
+        if: always()
+        run: rm -rf .keys/
+
   boot-smoke-summary:
     name: boot-smoke summary
     runs-on: ubuntu-latest
@@ -362,6 +506,8 @@ jobs:
       - keyring-round-trip
       - ps2-input-round-trip
       - xhci-round-trip
+      - input-e2e-ps2
+      - input-e2e-xhci
     if: always()
     steps:
       - name: Aggregate
@@ -371,7 +517,9 @@ jobs:
             "${{ needs.ramfs-round-trip.result }}" \
             "${{ needs.keyring-round-trip.result }}" \
             "${{ needs.ps2-input-round-trip.result }}" \
-            "${{ needs.xhci-round-trip.result }}"; do
+            "${{ needs.xhci-round-trip.result }}" \
+            "${{ needs.input-e2e-ps2.result }}" \
+            "${{ needs.input-e2e-xhci.result }}"; do
             echo "  - ${r}"
             [ "${r}" = "success" ] || ok=false
           done
