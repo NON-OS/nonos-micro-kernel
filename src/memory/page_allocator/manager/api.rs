@@ -18,10 +18,11 @@ use super::super::error::PageAllocResult;
 use super::super::types::{PageAllocatorStats, PageInfo};
 use super::globals::{ALLOCATOR_STATS, PAGE_ALLOCATOR};
 use crate::memory::addr::VirtAddr;
-use crate::memory::layout;
+use crate::memory::{buddy_alloc, layout};
 use core::sync::atomic::Ordering;
 
 pub fn init() -> PageAllocResult<()> {
+    buddy_alloc::init().map_err(|_| super::super::error::PageAllocError::MappingFailed)?;
     PAGE_ALLOCATOR.lock().init()
 }
 pub fn allocate_page() -> PageAllocResult<VirtAddr> {

@@ -16,43 +16,31 @@
 
 use super::super::error::{PageAllocError, PageAllocResult};
 use crate::memory::addr::{PhysAddr, VirtAddr};
+use crate::memory::buddy_alloc;
 use crate::memory::paging::manager;
-use crate::memory::paging::types::PagePermissions;
-use crate::memory::{frame_alloc, layout};
-use alloc::vec::Vec;
 
 pub(super) fn allocate_virtual_pages(page_count: usize) -> PageAllocResult<VirtAddr> {
-    let mut allocated_frames = Vec::new();
-    for _ in 0..page_count {
-        let frame = frame_alloc::allocate_frame().ok_or(PageAllocError::FrameAllocationFailed)?;
-        allocated_frames.push(frame);
-    }
-    let first_frame = allocated_frames[0];
-    let va = VirtAddr::new(layout::VMAP_BASE + first_frame.as_u64());
-    for (i, frame) in allocated_frames.iter().enumerate() {
-        let page_va = VirtAddr::new(va.as_u64() + (i * layout::PAGE_SIZE) as u64);
-        map_page(page_va, *frame)?;
-    }
-    Ok(va)
+    buddy_alloc::allocate_pages(page_count).map_err(|e| match e {
+        buddy_alloc::BuddyAllocError::InvalidPageCount => PageAllocError::InvalidSize,
+        buddy_alloc::BuddyAllocError::AllocationTooLarge => PageAllocError::TooManyPages,
+        buddy_alloc::BuddyAllocError::OutOfVirtualMemory => PageAllocError::OutOfVirtualSpace,
+        buddy_alloc::BuddyAllocError::FrameAllocationFailed => PageAllocError::FrameAllocationFailed,
+        buddy_alloc::BuddyAllocError::MappingFailed => PageAllocError::MappingFailed,
+        buddy_alloc::BuddyAllocError::NotInitialized => PageAllocError::NotInitialized,
+        _ => PageAllocError::TranslationFailed,
+    })
 }
 
 pub(super) fn free_virtual_pages(va: VirtAddr, page_count: usize) -> PageAllocResult<()> {
-    for i in 0..page_count {
-        let page_va = VirtAddr::new(va.as_u64() + (i * layout::PAGE_SIZE) as u64);
-        let pa = get_physical_address(page_va)?;
-        unmap_page(page_va)?;
-        let _ = frame_alloc::deallocate_frame(pa);
-    }
-    Ok(())
-}
-
-fn map_page(va: VirtAddr, pa: PhysAddr) -> PageAllocResult<()> {
-    let perms = PagePermissions::READ | PagePermissions::WRITE;
-    manager::map_page(va, pa, perms).map_err(|_| PageAllocError::MappingFailed)
-}
-
-fn unmap_page(va: VirtAddr) -> PageAllocResult<()> {
-    manager::unmap_page(va).map(|_| ()).map_err(|_| PageAllocError::UnmapFailed)
+    buddy_alloc::free_pages(va, page_count).map_err(|e| match e {
+        buddy_alloc::BuddyAllocError::InvalidPageCount => PageAllocError::InvalidSize,
+        buddy_alloc::BuddyAllocError::InvalidAddress | buddy_alloc::BuddyAllocError::DoubleFree => {
+            PageAllocError::PageNotFound
+        }
+        buddy_alloc::BuddyAllocError::UnmapFailed => PageAllocError::UnmapFailed,
+        buddy_alloc::BuddyAllocError::NotInitialized => PageAllocError::NotInitialized,
+        _ => PageAllocError::TranslationFailed,
+    })
 }
 
 pub(super) fn get_physical_address(va: VirtAddr) -> PageAllocResult<PhysAddr> {
