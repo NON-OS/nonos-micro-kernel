@@ -25,16 +25,22 @@ use super::types::{DmaGrant, DmaMapError, DmaMapRequest, DmaMapResult};
 // record. Each step is a single responsibility in its own file; this
 // function is the transaction boundary and owns the rollback chain.
 pub fn map_for_caller(pid: u32, req: DmaMapRequest) -> Result<DmaMapResult, DmaMapError> {
-    let claim_epoch = validate::validate(&req, pid)?;
+    let claim_epoch = match validate::validate(&req, pid) {
+        Ok(epoch) => epoch,
+        Err(e) => return fail("validate", e),
+    };
     let pages = req.length / validate::PAGE_SIZE;
 
-    let phys_start = alloc::alloc_and_zero(pages, req.length)?;
+    let phys_start = match alloc::alloc_and_zero(pages, req.length, req.flags) {
+        Ok(start) => start,
+        Err(e) => return fail("alloc", e),
+    };
 
     let user_va = match install::install(pages, req.length, phys_start) {
         Ok(va) => va,
         Err(e) => {
             alloc::free(phys_start, pages);
-            return Err(e);
+            return fail("install", e);
         }
     };
 
@@ -51,4 +57,31 @@ pub fn map_for_caller(pid: u32, req: DmaMapRequest) -> Result<DmaMapResult, DmaM
     });
 
     Ok(DmaMapResult { user_va, device_addr: phys_start, length: req.length, grant_id })
+}
+
+fn fail(stage: &str, error: DmaMapError) -> Result<DmaMapResult, DmaMapError> {
+    if stage == "alloc" && error == DmaMapError::NoMemory {
+        let (start, end) = crate::memory::phys::managed_range();
+        crate::sys::serial::print(b"[DMA] free-frames=");
+        crate::sys::serial::print_dec(crate::memory::phys::total_free_frames() as u64);
+        crate::sys::serial::print(b" max-run=");
+        crate::sys::serial::print_dec(crate::memory::phys::largest_free_run() as u64);
+        crate::sys::serial::print(b" range=");
+        crate::sys::serial::print_hex(start);
+        crate::sys::serial::print(b"..");
+        crate::sys::serial::print_hex(end);
+        crate::sys::serial::println(b"");
+    }
+    crate::sys::serial::println(match (stage, error) {
+        ("validate", DmaMapError::BadLengthForClass) => b"[DMA] validate bad-length-class",
+        ("validate", DmaMapError::BadLength) => b"[DMA] validate bad-length",
+        ("validate", DmaMapError::NotClaimed) => b"[DMA] validate not-claimed",
+        ("validate", DmaMapError::StaleEpoch) => b"[DMA] validate stale-epoch",
+        ("validate", DmaMapError::UnknownDevice) => b"[DMA] validate unknown-device",
+        ("alloc", DmaMapError::NoMemory) => b"[DMA] alloc no-memory",
+        ("install", DmaMapError::NoVaSpace) => b"[DMA] install no-va-space",
+        ("install", DmaMapError::MapFailed) => b"[DMA] install map-failed",
+        _ => b"[DMA] map failed",
+    });
+    Err(error)
 }

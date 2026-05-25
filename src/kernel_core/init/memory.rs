@@ -48,6 +48,9 @@ pub(crate) fn init_memory(handoff: &BootHandoffV1) {
         serial::println(b"[MEM] CRITICAL: phys not initialized");
         init_fallback();
     }
+    if crate::memory::phys::is_initialized() {
+        crate::hardware::broker::dma::init_display_pool();
+    }
 }
 
 fn init_fallback() {

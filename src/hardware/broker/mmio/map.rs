@@ -42,6 +42,7 @@ const PAGE_MASK: u64 = PAGE_SIZE - 1;
 const FLAGS_KNOWN: u32 = 0;
 
 pub fn map_for_caller(pid: u32, req: MmioMapRequest) -> Result<MmioMapResult, MmioMapError> {
+    crate::sys::serial::println(b"[MMIO] claim");
     if req.flags & !FLAGS_KNOWN != 0 {
         return Err(MmioMapError::UnsupportedFlags);
     }
@@ -58,6 +59,7 @@ pub fn map_for_caller(pid: u32, req: MmioMapRequest) -> Result<MmioMapResult, Mm
     if claim.epoch != req.claim_epoch {
         return Err(MmioMapError::StaleEpoch);
     }
+    crate::sys::serial::println(b"[MMIO] device");
     let device = table::list()
         .into_iter()
         .find(|r| r.device_id == req.device_id)
@@ -79,6 +81,7 @@ pub fn map_for_caller(pid: u32, req: MmioMapRequest) -> Result<MmioMapResult, Mm
     if let Ordering::Greater = phys_end.cmp(&bar_end) {
         return Err(MmioMapError::BadRange);
     }
+    crate::sys::serial::println(b"[MMIO] reserve");
     let msix = pci_index::lookup(req.device_id).and_then(|h| h.msix);
     msix_exclusion::validate(msix.as_ref(), req.bar_index, req.offset, req.length)?;
     let pages = req.length / PAGE_SIZE;
@@ -87,11 +90,13 @@ pub fn map_for_caller(pid: u32, req: MmioMapRequest) -> Result<MmioMapResult, Mm
     if user_va.as_u64() < USER_MMIO_BASE || user_va_end > USER_MMIO_END {
         return Err(MmioMapError::NoVaSpace);
     }
+    crate::sys::serial::println(b"[MMIO] map");
     if crate::memory::paging::map_user_mmio(user_va, PhysAddr::new(phys_start), req.length as usize)
         .is_err()
     {
         return Err(MmioMapError::MapFailed);
     }
+    crate::sys::serial::println(b"[MMIO] record");
     let grant_id = grant::allocate_id();
     grant::insert(MmioGrant {
         grant_id,
