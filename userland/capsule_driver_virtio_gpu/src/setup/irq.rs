@@ -13,27 +13,28 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_device_release, mk_irq_bind, IrqBindOut};
+use nonos_libc::{mk_irq_bind, IrqBindOut, MK_IRQ_BIND_MSIX};
 use super::mmio::RegisterGrant;
 use crate::discover::Found;
 pub fn bind(
     dev: Found,
     claim_epoch: u64,
-    registers: RegisterGrant,
+    _registers: RegisterGrant,
 ) -> Result<IrqBindOut, &'static str> {
     let mut out = IrqBindOut { grant_id: 0, vector: 0 };
     if dev.irq_line == 0 || dev.irq_line == 0xFF {
         return Ok(out);
     }
-    let r = mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out);
-    if r < 0 {
-        if !registers.release() {
-            return Err("irq bind failed; register rollback also failed");
-        }
-        if mk_device_release(dev.device_id) < 0 {
-            return Err("irq bind failed; device release rollback also failed");
-        }
-        return Err("irq bind failed");
+    let intx = mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out);
+    if intx >= 0 {
+        return Ok(out);
     }
+    crate::debug::marker(b"irq bind: intx failed");
+    let msix = mk_irq_bind(dev.device_id, claim_epoch, 0, MK_IRQ_BIND_MSIX, 1, &mut out);
+    if msix >= 0 {
+        crate::debug::marker(b"irq bind: msix");
+        return Ok(out);
+    }
+    crate::debug::marker(b"irq bind: none");
     Ok(out)
 }

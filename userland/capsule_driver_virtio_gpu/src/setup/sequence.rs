@@ -23,7 +23,9 @@ use crate::init::bring_up;
 use crate::state::{FenceCounter, ResourceTable, ScanoutTable};
 pub fn run() -> Result<Driver, &'static str> {
     crate::debug::marker(b"setup: discover");
-    let dev = find_virtio_gpu().ok_or("virtio-gpu: device not found")?;
+    let dev = find_virtio_gpu();
+    crate::debug::marker(b"setup: discover returned");
+    let dev = dev.ok_or("virtio-gpu: device not found")?;
     crate::debug::marker(b"setup: claim");
     let claim_epoch = claim::claim(dev.device_id)?;
     crate::debug::marker(b"setup: bus master");
