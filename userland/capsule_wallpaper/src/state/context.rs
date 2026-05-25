@@ -27,6 +27,10 @@ pub struct Context {
     pub policy: Policy,
     pub fade: FadeTimeline,
     pub next_request_id: u32,
+    pub policy_port: Option<u32>,
+    pub catalog_port: Option<u32>,
+    pub applied_wallpaper: Option<u8>,
+    pub subscriber_ticks: u32,
 }
 
 impl Context {

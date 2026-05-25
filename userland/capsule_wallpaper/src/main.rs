@@ -19,14 +19,17 @@
 
 extern crate alloc;
 
+mod catalog_client;
 mod compositor_client;
 mod debug;
 mod decode_client;
 mod paint;
+mod policy_client;
 mod protocol;
 mod server;
 mod setup;
 mod state;
+mod subscriber;
 
 use nonos_libc::{heap_init, mk_exit, mk_yield};
 

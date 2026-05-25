@@ -16,8 +16,10 @@
 
 use super::super::discover;
 use super::{backing, register};
+use crate::catalog_client::lookup_catalog;
 use crate::compositor_client::healthcheck;
 use crate::paint::fill_argb;
+use crate::policy_client::lookup_policy;
 use crate::state::{Context, FadeTimeline, Policy};
 
 const DEFAULT_ARGB: u32 = 0xFF0A_0F0A;
@@ -38,6 +40,10 @@ pub fn run() -> Result<Context, &'static str> {
         policy: Policy::Fill,
         fade: FadeTimeline::new(),
         next_request_id: 3,
+        policy_port: lookup_policy(),
+        catalog_port: lookup_catalog(),
+        applied_wallpaper: None,
+        subscriber_ticks: 0,
     };
     ctx.set_argb(DEFAULT_ARGB);
     let rid = ctx.issue_request_id();

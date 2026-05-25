@@ -22,12 +22,14 @@ use super::drain::drain_ipc;
 use crate::protocol::{HDR_LEN, IPC_PAYLOAD_MAX};
 use crate::server::tick;
 use crate::state::Context;
+use crate::subscriber::subscriber_tick;
 
 pub fn run(mut ctx: Context) -> ! {
     let mut rx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut tx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     loop {
         drain_ipc(&mut ctx, &mut rx, &mut tx);
+        subscriber_tick(&mut ctx);
         if !tick::tick(&mut ctx) {
             let _ = mk_display_vsync_wait(0);
         }

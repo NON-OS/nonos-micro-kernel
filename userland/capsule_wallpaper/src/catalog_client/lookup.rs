@@ -14,11 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod blit_argb;
-pub mod decode_jpeg;
-pub mod fill;
-pub mod paint_image;
+use core::ptr;
 
-pub use decode_jpeg::decode_jpeg;
-pub use fill::fill_argb;
-pub use paint_image::paint_image;
+use nonos_libc::mk_service_lookup;
+
+use super::proto::SERVICE_NAME;
+
+pub fn lookup_catalog() -> Option<u32> {
+    let mut port: u32 = 0;
+    let rc = mk_service_lookup(
+        SERVICE_NAME.as_ptr(),
+        SERVICE_NAME.len(),
+        &mut port as *mut u32,
+        ptr::null_mut(),
+    );
+    if rc != 0 || port == 0 {
+        return None;
+    }
+    Some(port)
+}
