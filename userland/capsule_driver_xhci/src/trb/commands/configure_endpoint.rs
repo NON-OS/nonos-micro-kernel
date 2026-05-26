@@ -13,11 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod configure_ep;
-mod ep0;
-mod input;
-mod size;
-pub use configure_ep::write_configure_endpoint_input;
-pub use ep0::max_packet_for_speed;
-pub use input::write_address_device_input;
-pub use size::{device_context_bytes, input_context_bytes};
+use crate::constants::TRB_TYPE_CONFIGURE_ENDPOINT_CMD;
+use crate::trb::Trb;
+pub fn configure_endpoint_command(input_context_phys: u64, slot_id: u8, cycle: bool) -> Trb {
+    let mut trb = Trb::zero();
+    trb.set_pointer(input_context_phys);
+    trb.set_type(TRB_TYPE_CONFIGURE_ENDPOINT_CMD);
+    trb.d3 |= (slot_id as u32) << 24;
+    trb.set_cycle(cycle);
+    trb
+}
