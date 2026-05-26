@@ -14,25 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+//! USB-HID enumeration orchestrator. Drives the xHCI client to bring
+//! connected HID boot devices to the interrupt-IN polling stage.
 
-extern crate alloc;
+mod binding;
+mod enumerate;
 
-mod descriptors;
-mod hid;
-mod orchestrator;
-mod protocol;
-mod server;
-mod state;
-mod xhci;
-
-use nonos_libc::{heap_init, mk_exit};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    server::run();
-}
+pub use enumerate::{enumerate, HidEndpoint};

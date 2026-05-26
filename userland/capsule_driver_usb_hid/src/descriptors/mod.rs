@@ -19,5 +19,7 @@ mod parse;
 mod types;
 mod wire;
 
+pub use binding::HidBinding;
 pub use parse::hid_bindings;
+pub use types::HidKind;
 pub use wire::write_binding;
