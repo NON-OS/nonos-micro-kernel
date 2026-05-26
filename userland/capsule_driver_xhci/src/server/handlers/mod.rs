@@ -24,4 +24,5 @@ pub mod device_descriptor;
 pub mod disable_slot;
 pub mod enable_slot;
 pub mod health;
+pub mod interrupt_in;
 pub mod port_status;

@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use crate::constants::{TRB_TYPE_CMD_COMPLETION_EVENT, TRB_TYPE_TRANSFER_EVENT};
 use crate::regs::runtime::erdp_program;
 use crate::rings::event::EventRing;
 use crate::trb::Trb;
@@ -29,10 +30,17 @@ impl DrainBatch {
 pub fn drain_events(intr_base: u64, ring: &mut EventRing) -> DrainBatch {
     let mut batch = DrainBatch::new();
     while batch.count < DRAIN_BATCH && ring.has_event() {
-        batch.trbs[batch.count] = ring.current_trb();
+        let trb = ring.current_trb();
+        if reserved_for_waiter(trb.get_type()) {
+            break;
+        }
+        batch.trbs[batch.count] = trb;
         batch.count += 1;
         ring.advance();
     }
     erdp_program(intr_base, ring.current_dequeue_phys(), true, 0);
     batch
+}
+fn reserved_for_waiter(trb_type: u32) -> bool {
+    trb_type == TRB_TYPE_TRANSFER_EVENT || trb_type == TRB_TYPE_CMD_COMPLETION_EVENT
 }
