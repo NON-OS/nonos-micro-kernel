@@ -126,3 +126,5 @@ pub use observability::{
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod trust_runtime_tests;

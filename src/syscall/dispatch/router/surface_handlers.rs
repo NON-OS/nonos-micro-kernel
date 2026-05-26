@@ -33,7 +33,9 @@ use super::surface_ops::{map_err, EFAULT, EINVAL, ESRCH};
 static VSYNC_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn trace_surface(op: &[u8], label: &[u8], pid: u32) {
-    if !matches!(pid, 0x26 | 0x27) || VSYNC_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 40 {
+    if !matches!(pid, 0x17 | 0x26 | 0x27)
+        || VSYNC_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80
+    {
         return;
     }
     crate::sys::serial::print(b"[SURFACE] ");
@@ -98,12 +100,14 @@ pub(super) fn do_attach(handle: u64, out_desc_ptr: u64) -> SyscallResult {
         Some(p) => p,
         None => return errno(ESRCH),
     };
+    trace_surface(b"attach", b"enter", pid);
     let mut desc = SurfaceDescriptor::default();
     match attach_surface(pid, handle, &mut desc) {
         Ok(va) => {
             if out_desc_ptr != 0 && write_user_value(out_desc_ptr, &desc).is_err() {
                 return errno(EFAULT);
             }
+            trace_surface(b"attach", b"ok", pid);
             SyscallResult::success_audited(va as i64)
         }
         Err(e) => errno(map_err(e)),
