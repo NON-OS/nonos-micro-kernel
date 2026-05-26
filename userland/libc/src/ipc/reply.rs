@@ -14,30 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::syscall::{call_raw, N_MK_IPC_CALL};
+use crate::syscall::{call_raw, N_MK_IPC_REPLY};
 
 #[no_mangle]
-pub extern "C" fn mk_ipc_call(
-    endpoint: u64,
-    req: *const u8,
-    req_len: usize,
-    resp: *mut u8,
-    resp_len: usize,
-) -> i64 {
-    call_raw(N_MK_IPC_CALL, [endpoint, req as u64, req_len as u64, resp as u64, resp_len as u64, 0])
-}
-
-#[no_mangle]
-pub extern "C" fn mk_ipc_call_timeout(
-    endpoint: u64,
-    req: *const u8,
-    req_len: usize,
-    resp: *mut u8,
-    resp_len: usize,
-    timeout_ms: u64,
-) -> i64 {
-    call_raw(
-        N_MK_IPC_CALL,
-        [endpoint, req as u64, req_len as u64, resp as u64, resp_len as u64, timeout_ms],
-    )
+pub extern "C" fn mk_ipc_reply(dest_pid: u32, buf: *const u8, len: usize) -> i64 {
+    call_raw(N_MK_IPC_REPLY, [dest_pid as u64, buf as u64, len as u64, 0, 0, 0])
 }

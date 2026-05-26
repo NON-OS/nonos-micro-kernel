@@ -53,7 +53,8 @@ pub use graphics::{
 };
 pub use heap::{init as heap_init, HeapError};
 pub use ipc::{
-    mk_ipc_call, mk_ipc_recv, mk_ipc_recv_from, mk_ipc_send, mk_ipc_send_to_pid,
+    mk_ipc_call, mk_ipc_call_timeout, mk_ipc_recv, mk_ipc_recv_from, mk_ipc_reply, mk_ipc_send,
+    mk_ipc_send_to_pid,
     mk_service_lookup, mk_service_register,
 };
 pub use mem::mk_mmap;
