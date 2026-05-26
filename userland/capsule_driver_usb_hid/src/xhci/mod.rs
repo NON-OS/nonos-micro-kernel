@@ -14,24 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+//! xHCI IPC client for usb_hid. Mirrors `capsule_net_l2/nic_client/`.
+//! Call `lookup::lookup()` to resolve the port, then use the typed
+//! wrappers from `ops::*`. The generic `call::call` is available for
+//! future ops not yet wrapped.
 
-extern crate alloc;
+mod call;
+mod lookup;
+mod ops;
+mod seq;
+mod wire;
 
-mod descriptors;
-mod hid;
-mod protocol;
-mod server;
-mod state;
-mod xhci;
-
-use nonos_libc::{heap_init, mk_exit};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    server::run();
-}
+pub use call::XhciClientError;
+pub use lookup::lookup;
+pub use ops::{
+    address_device, AddressedDevice, alloc_transfer_ring, control_transfer,
+    enable_slot, get_config_descriptor, interrupt_in, port_status,
+    PortSnapshot, MAX_DESCRIPTOR_LEN,
+};

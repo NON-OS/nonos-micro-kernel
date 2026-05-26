@@ -14,24 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use core::sync::atomic::{AtomicU32, Ordering};
 
-extern crate alloc;
+static SEQ: AtomicU32 = AtomicU32::new(1);
 
-mod descriptors;
-mod hid;
-mod protocol;
-mod server;
-mod state;
-mod xhci;
-
-use nonos_libc::{heap_init, mk_exit};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
+pub fn next() -> u32 {
+    let v = SEQ.fetch_add(1, Ordering::Relaxed);
+    if v == 0 {
+        SEQ.fetch_add(1, Ordering::Relaxed)
+    } else {
+        v
     }
-    server::run();
 }
