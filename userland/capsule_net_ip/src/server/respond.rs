@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_ipc_send_to_pid;
+use nonos_libc::mk_ipc_reply;
 
 use crate::protocol::MAGIC;
 
@@ -40,5 +40,5 @@ pub fn respond(
     tx: &mut [u8],
 ) -> i64 {
     write_header(tx, op, errno, request_id, payload_len);
-    mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + payload_len as usize)
+    mk_ipc_reply(sender_pid, tx.as_ptr(), HDR_LEN + payload_len as usize)
 }

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_ipc_send_to_pid;
+use nonos_libc::mk_ipc_reply;
 
 use crate::protocol::{response_header, write_status, Request, HDR_LEN, STATUS_LEN};
 
@@ -26,7 +26,7 @@ pub fn status(
 ) -> Result<(), &'static str> {
     response_header(tx, req, STATUS_LEN as u32);
     write_status(tx, errno);
-    require_sent(mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + STATUS_LEN))
+    require_sent(mk_ipc_reply(sender_pid, tx.as_ptr(), HDR_LEN + STATUS_LEN))
 }
 
 pub fn status_payload(
@@ -40,7 +40,7 @@ pub fn status_payload(
     response_header(tx, req, body_len as u32);
     write_status(tx, errno);
     tx[HDR_LEN + STATUS_LEN..HDR_LEN + body_len].copy_from_slice(payload);
-    require_sent(mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + body_len))
+    require_sent(mk_ipc_reply(sender_pid, tx.as_ptr(), HDR_LEN + body_len))
 }
 
 fn require_sent(rc: i64) -> Result<(), &'static str> {

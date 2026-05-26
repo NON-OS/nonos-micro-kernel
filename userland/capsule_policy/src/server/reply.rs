@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_ipc_send_to_pid;
+use nonos_libc::mk_ipc_reply;
 
 pub fn send(pid: u32, buf: &[u8]) {
-    let _ = mk_ipc_send_to_pid(pid, buf.as_ptr(), buf.len());
+    let _ = mk_ipc_reply(pid, buf.as_ptr(), buf.len());
 }

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_ipc_send_to_pid;
+use nonos_libc::mk_ipc_reply;
 
 use crate::focus::topmost_hit_at;
 use crate::protocol::{
@@ -49,5 +49,5 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
     response_header(tx, req, (STATUS_LEN + QUERY_TOPMOST_RESP_LEN) as u32);
     write_status(tx, 0);
     let _ =
-        mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + STATUS_LEN + QUERY_TOPMOST_RESP_LEN);
+        mk_ipc_reply(sender_pid, tx.as_ptr(), HDR_LEN + STATUS_LEN + QUERY_TOPMOST_RESP_LEN);
 }

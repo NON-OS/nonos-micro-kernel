@@ -18,7 +18,7 @@ extern crate alloc;
 
 use alloc::vec;
 
-use nonos_libc::{mk_exit, mk_ipc_recv_from, mk_ipc_send_to_pid};
+use nonos_libc::{mk_exit, mk_ipc_recv_from, mk_ipc_reply};
 
 use crate::protocol::{decode, encode, Header, HDR_LEN, IPC_PAYLOAD_MAX, TOOLKIT_ENDPOINT};
 
@@ -47,7 +47,7 @@ pub fn run() -> ! {
         let reply_hdr =
             Header { op: hdr.op, request_id: hdr.request_id, payload_len: reply_len as u32 };
         encode(&mut tx[..HDR_LEN], &reply_hdr, status);
-        if mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + reply_len) < 0 {
+        if mk_ipc_reply(sender_pid, tx.as_ptr(), HDR_LEN + reply_len) < 0 {
             continue;
         }
     }
