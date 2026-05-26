@@ -129,6 +129,7 @@ fn build_pcb(
         involuntary_switches: AtomicU64::new(0),
         cr3: AtomicU64::new(0),
         io_bitmap: spin::Mutex::new([0xFF; 8192]),
+        reply_inbox: spin::RwLock::new(None),
         kernel_stack_top: AtomicU64::new(0),
         syscall_user_rsp: AtomicU64::new(0),
         pending_user_entry: spin::Mutex::new(None),

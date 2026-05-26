@@ -98,6 +98,7 @@ pub struct ProcessControlBlock {
     pub involuntary_switches: AtomicU64,
     pub cr3: AtomicU64,
     pub io_bitmap: Mutex<[u8; 8192]>,
+    pub reply_inbox: RwLock<Option<&'static str>>,
     // Kernel-only stack top installed in TSS RSP0 on context switch.
     // Allocated by `kernel_core::process_spawn::kernel_stack`. 0 means
     // unallocated; the scheduler hook treats this as "no user mode

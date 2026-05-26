@@ -14,17 +14,55 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::recv::sys_ipc_recv;
+use crate::process::current_pid;
+
+use super::recv::recv_from_inbox;
+use super::reply_inbox;
 use super::send::sys_ipc_send;
 
-// Send-then-recv. The reply lands in the caller's per-process inbox,
-// not on `endpoint.<ep>`; recv with endpoint = 0 to read it. Using
-// `ep` here would route through the registry-owned named inbox and
-// deny because the caller doesn't own it.
-pub fn sys_ipc_call(ep: u64, req: u64, req_len: usize, resp: u64, resp_len: usize) -> i64 {
+fn trace(pid: u32, label: &[u8], rc: i64) {
+    if pid != 0x17 {
+        return;
+    }
+    crate::sys::serial::print(b"[IPC-CALL] pid=");
+    crate::sys::serial::print_hex(pid as u64);
+    crate::sys::serial::print(b" ");
+    crate::sys::serial::print(label);
+    crate::sys::serial::print(b" rc=");
+    if rc < 0 {
+        crate::sys::serial::print(b"-");
+        crate::sys::serial::print_dec((-rc) as u64);
+    } else {
+        crate::sys::serial::print_dec(rc as u64);
+    }
+    crate::sys::serial::println(b"");
+}
+
+// Send-then-recv. Replies drain from the caller's dedicated reply
+// inbox when the capsule spawn path assigned one; legacy callers fall
+// back to `proc.<pid>`.
+pub fn sys_ipc_call(
+    ep: u64,
+    req: u64,
+    req_len: usize,
+    resp: u64,
+    resp_len: usize,
+    timeout_ms: u64,
+) -> i64 {
     let send_result = sys_ipc_send(ep, req, req_len);
+    let pid = current_pid().unwrap_or(0);
+    trace(pid, b"send", send_result);
     if send_result < 0 {
         return send_result;
     }
-    sys_ipc_recv(0, resp, resp_len, 5000)
+    let inbox = reply_inbox::for_pid(pid);
+    let recv_result = recv_from_inbox(
+        pid,
+        &inbox,
+        resp,
+        resp_len,
+        if timeout_ms == 0 { 5000 } else { timeout_ms },
+    );
+    trace(pid, b"recv", recv_result);
+    recv_result
 }

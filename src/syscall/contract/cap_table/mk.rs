@@ -31,6 +31,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkIpcCall
         | SyscallNumber::MkIpcRecv
         | SyscallNumber::MkIpcRecvFrom
+        | SyscallNumber::MkIpcReply
         | SyscallNumber::MkIpcSend
         | SyscallNumber::MkIpcSendToPid
         | SyscallNumber::MkServiceLookup

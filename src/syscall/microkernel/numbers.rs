@@ -23,6 +23,7 @@ pub const SYS_IPC_SEND: u64 = tag4(b"MISD");
 pub const SYS_IPC_RECV: u64 = tag4(b"MIRC");
 pub const SYS_IPC_CALL: u64 = tag4(b"MICL");
 pub const SYS_IPC_RECV_FROM: u64 = tag4(b"MIRF");
+pub const SYS_IPC_REPLY: u64 = tag4(b"MIRY");
 pub const SYS_IPC_SEND_TO_PID: u64 = tag4(b"MISP");
 pub const SYS_SERVICE_LOOKUP: u64 = tag4(b"MSVL");
 pub const SYS_SERVICE_REGISTER: u64 = tag4(b"MSVR");

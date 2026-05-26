@@ -24,14 +24,30 @@ use super::sender_pid::from_envelope;
 
 static RECV_FROM_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
+fn is_traced(pid: u32) -> bool {
+    matches!(pid, 7 | 8 | 0x17 | 0x18 | 0x1a | 0x1b | 0x1c | 0x27)
+}
+
 fn trace(label: &[u8], pid: u32) {
-    if !matches!(pid, 7 | 8 | 0x17 | 0x1b | 0x1c | 0x27)
-        || RECV_FROM_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 40
+    if !is_traced(pid) || RECV_FROM_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80
     {
         return;
     }
-    crate::sys::serial::print(b"[IPC-RF] ");
+    crate::sys::serial::print(b"[IPC-RF] pid=");
+    crate::sys::serial::print_hex(pid as u64);
+    crate::sys::serial::print(b" ");
     crate::sys::serial::println(label);
+}
+
+fn trace_dequeue(pid: u32, sender_pid: u32) {
+    if !is_traced(pid) || RECV_FROM_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80 {
+        return;
+    }
+    crate::sys::serial::print(b"[IPC-RF] pid=");
+    crate::sys::serial::print_hex(pid as u64);
+    crate::sys::serial::print(b" from=");
+    crate::sys::serial::print_hex(sender_pid as u64);
+    crate::sys::serial::println(b" dequeue");
 }
 
 // `MkIpcRecvFrom`. Same drain semantics as `MkIpcRecv`, with an
@@ -75,13 +91,14 @@ fn drain(buf: u64, len: usize, timeout_ms: u64, sender_pid_out: u64, inbox: &str
     let pid = current_pid().unwrap_or(0);
     loop {
         if let Some(msg) = nonos_inbox::try_dequeue_existing(inbox) {
-            trace(b"dequeue", pid);
+            let sender_pid = from_envelope(&msg.from);
+            trace_dequeue(pid, sender_pid);
             let copy_len = msg.data.len().min(len);
             if crate::usercopy::copy_to_user(buf, &msg.data[..copy_len]).is_err() {
                 return ERRNO_FAULT;
             }
             if sender_pid_out != 0 {
-                let bytes = from_envelope(&msg.from).to_le_bytes();
+                let bytes = sender_pid.to_le_bytes();
                 if crate::usercopy::copy_to_user(sender_pid_out, &bytes).is_err() {
                     return ERRNO_FAULT;
                 }
