@@ -23,20 +23,14 @@ use crate::state::{Context, SubscriptionList};
 use crate::window::WindowTable;
 use crate::z_order::ZStack;
 
-const READY_ATTEMPTS: usize = 256;
-
 pub fn run() -> Result<Context, &'static str> {
-    let mut last_err = "compositor unavailable";
-    for _ in 0..READY_ATTEMPTS {
-        match run_once() {
-            Ok(ctx) => return Ok(ctx),
-            Err(e) => {
-                last_err = e;
-                mk_yield();
-            }
+    match run_once() {
+        Ok(ctx) => Ok(ctx),
+        Err(e) => {
+            mk_yield();
+            Err(e)
         }
     }
-    Err(last_err)
 }
 
 fn run_once() -> Result<Context, &'static str> {

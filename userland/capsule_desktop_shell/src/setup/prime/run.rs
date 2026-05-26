@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::{overlay, peers, register};
+use crate::debug;
 use crate::market_client;
 use crate::render::paint_chrome;
 use crate::state::{Context, SpotlightState, TrayTable};
@@ -41,9 +42,11 @@ pub fn run() -> Result<Context, &'static str> {
     paint_chrome(&ctx);
     let rid = ctx.issue_request_id();
     register::register_overlay(peers.compositor_port, rid, &overlay)?;
+    debug::marker(b"scene submitted");
     require_status(wm_client::healthcheck(ctx.wm_port, ctx.issue_request_id()))?;
     require_status(wallpaper_client::set_policy(ctx.wallpaper_port, ctx.issue_request_id(), 0))?;
     require_status(market_client::healthcheck(ctx.market_port, ctx.issue_request_id()))?;
+    debug::marker(b"peers ok");
     Ok(ctx)
 }
 

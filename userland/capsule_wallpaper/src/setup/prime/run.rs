@@ -18,6 +18,7 @@ use super::super::discover;
 use super::{backing, register};
 use crate::catalog_client::lookup_catalog;
 use crate::compositor_client::healthcheck;
+use crate::debug;
 use crate::paint::fill_argb;
 use crate::policy_client::lookup_policy;
 use crate::state::{Context, FadeTimeline, Policy};
@@ -48,5 +49,6 @@ pub fn run() -> Result<Context, &'static str> {
     ctx.set_argb(DEFAULT_ARGB);
     let rid = ctx.issue_request_id();
     register::register_wallpaper(compositor_port, rid, &backing)?;
+    debug::marker(b"scene submitted");
     Ok(ctx)
 }

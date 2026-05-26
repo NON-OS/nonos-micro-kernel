@@ -46,17 +46,19 @@ pub unsafe extern "C" fn _start() -> ! {
 }
 
 fn wait_for_setup() -> crate::state::Context {
-    let mut reported = false;
+    let mut last: &'static str = "";
     loop {
-        if let Ok(ctx) = setup::run() {
-            return ctx;
-        }
-        if !reported {
-            debug::marker(b"setup waiting");
-            reported = true;
-        }
-        for _ in 0..64 {
-            mk_yield();
+        match setup::run() {
+            Ok(ctx) => return ctx,
+            Err(e) => {
+                if e != last {
+                    debug::marker(e.as_bytes());
+                    last = e;
+                }
+                for _ in 0..64 {
+                    mk_yield();
+                }
+            }
         }
     }
 }

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::wire::call_payload;
+use super::wire::call_payload_boot;
 
 const OP: u16 = 0x0008;
 const BODY_LEN: usize = 16;
@@ -26,7 +26,7 @@ pub struct DisplayInfo {
 
 pub fn query(compositor_port: u32, request_id: u32) -> Result<DisplayInfo, &'static str> {
     let mut body = [0u8; BODY_LEN];
-    let status = call_payload(compositor_port, OP, request_id, &[], &mut body)?;
+    let status = call_payload_boot(compositor_port, OP, request_id, &[], &mut body)?;
     if status != 0 {
         return Err("compositor rejected display_info");
     }
