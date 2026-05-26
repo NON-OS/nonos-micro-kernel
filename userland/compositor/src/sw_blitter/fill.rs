@@ -31,13 +31,12 @@ pub fn fill_rect(
         return;
     }
     let row_stride = stride_bytes as usize;
+    let row_width = width as usize;
     for row in 0..height as usize {
         let row_va = base_va as usize + (y as usize + row) * row_stride + x as usize * 4;
-        for col in 0..width as usize {
-            let cell = (row_va + col * 4) as *mut u32;
-            // SAFETY: caller has the surface mapped writable in this
-            // AS; bounds are checked against (width, height) above.
-            unsafe { core::ptr::write_volatile(cell, argb) };
-        }
+        let row_ptr = row_va as *mut u32;
+        // SAFETY: caller provides a mapped ARGB8888 surface and the
+        // requested rectangle is already clipped by the caller.
+        unsafe { core::slice::from_raw_parts_mut(row_ptr, row_width).fill(argb) };
     }
 }

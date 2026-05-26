@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::protocol::{Request, E_INVAL, SCENE_SUBMIT_REQ_LEN};
+use crate::debug;
 use crate::server::respond;
 use crate::state::{damage::Rect, Context, Layer};
 
@@ -59,5 +60,6 @@ pub fn handle(
         return respond::status(sender_pid, req, E_INVAL, tx);
     }
     ctx.damage.accumulate(Rect { x, y, width, height });
+    debug::marker(b"scene ok");
     respond::status(sender_pid, req, 0, tx)
 }

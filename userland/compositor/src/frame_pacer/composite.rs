@@ -16,6 +16,7 @@
 
 use crate::state::damage::Rect;
 use crate::state::Context;
+use crate::debug;
 use crate::sw_blitter::{self, Surface};
 
 pub const BACKGROUND_ARGB: u32 = 0xFF10_1620;
@@ -30,6 +31,7 @@ pub fn paint(ctx: &mut Context, rect: Rect) {
         rect.height,
         BACKGROUND_ARGB,
     );
+    debug::marker(b"fill ok");
     let dst = Surface {
         base_va: ctx.backing_va,
         stride: ctx.stride,
@@ -37,6 +39,7 @@ pub fn paint(ctx: &mut Context, rect: Rect) {
         height: ctx.height,
     };
     let (layers, count) = ctx.scene.z_sorted_snapshot();
+    debug::marker(b"snap ok");
     for layer in layers.iter().take(count) {
         if let Some(src) = ctx.attach.get_or_attach(layer.surface_handle) {
             sw_blitter::composite_layer(
@@ -50,4 +53,5 @@ pub fn paint(ctx: &mut Context, rect: Rect) {
             );
         }
     }
+    debug::marker(b"paint done");
 }

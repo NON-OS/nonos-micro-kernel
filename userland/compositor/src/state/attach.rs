@@ -16,6 +16,7 @@
 
 use nonos_libc::{mk_surface_attach, SurfaceDescriptor};
 
+use crate::debug;
 use crate::sw_blitter::Surface;
 
 pub const MAX_ATTACH: usize = 32;
@@ -44,10 +45,12 @@ impl AttachCache {
             return Some(s.surface);
         }
         let mut desc = SurfaceDescriptor::default();
+        debug::marker(b"attach call");
         let rc = mk_surface_attach(handle, &mut desc);
         if rc <= 0 {
             return None;
         }
+        debug::marker(b"attach ok");
         let surface = Surface {
             base_va: rc as u64,
             stride: desc.stride,

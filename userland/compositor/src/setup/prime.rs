@@ -22,20 +22,14 @@ use crate::state::{
     AttachCache, Context, CursorTracker, DamageAccumulator, FocusTable, SceneTable,
 };
 
-const READY_ATTEMPTS: usize = 256;
-
 pub fn run() -> Result<Context, &'static str> {
-    let mut last_err = "gfx primary unavailable";
-    for _ in 0..READY_ATTEMPTS {
-        match run_virtio_once() {
-            Ok(ctx) => return Ok(ctx),
-            Err(e) => {
-                last_err = e;
-                mk_yield();
-            }
+    match run_virtio_once() {
+        Ok(ctx) => Ok(ctx),
+        Err(e) => {
+            mk_yield();
+            Err(e)
         }
     }
-    Err(last_err)
 }
 
 fn run_virtio_once() -> Result<Context, &'static str> {
@@ -52,14 +46,30 @@ fn run_virtio_once() -> Result<Context, &'static str> {
     if rc <= 0 {
         return Err("surface attach rejected");
     }
+    if desc.format != SURFACE_FORMAT_ARGB8888 {
+        return Err("surface attach format mismatch");
+    }
+    if desc.width == 0 || desc.height == 0 {
+        return Err("surface attach geometry missing");
+    }
+    let min_stride = desc.width.checked_mul(4).ok_or("surface attach stride overflow")?;
+    if desc.stride < min_stride {
+        return Err("surface attach stride too small");
+    }
+    let min_bytes = (desc.stride as u64)
+        .checked_mul(desc.height as u64)
+        .ok_or("surface attach byte_len overflow")?;
+    if desc.byte_len < min_bytes {
+        return Err("surface attach byte_len too small");
+    }
     let mut damage = DamageAccumulator::new();
-    damage.mark_full(primary.width, primary.height);
+    damage.mark_full(desc.width, desc.height);
     Ok(Context {
         gfx_port: gfx.port,
         resource_id: primary.resource_id,
-        width: primary.width,
-        height: primary.height,
-        stride: primary.stride,
+        width: desc.width,
+        height: desc.height,
+        stride: desc.stride,
         backing_va: rc as u64,
         first_scanout_done: false,
         scanout_error_reported: false,
