@@ -34,5 +34,5 @@ pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
-    server::run();
+    orchestrator::run();
 }

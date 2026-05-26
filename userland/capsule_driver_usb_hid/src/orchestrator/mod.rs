@@ -19,5 +19,18 @@
 
 mod binding;
 mod enumerate;
+mod poll;
 
 pub use enumerate::{enumerate, HidEndpoint};
+
+use nonos_libc::mk_yield;
+
+pub fn run() -> ! {
+    let port = loop {
+        match crate::xhci::lookup() {
+            Some(p) => break p,
+            None => { mk_yield(); }
+        }
+    };
+    poll::run(port)
+}
