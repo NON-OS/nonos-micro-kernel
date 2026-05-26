@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod call;
 pub mod error;
 pub mod hydrate;
 pub mod lookup;
@@ -22,8 +23,6 @@ pub mod op_set_bool;
 pub mod op_set_i8;
 pub mod op_set_str;
 pub mod op_set_u8;
-pub mod recv;
-pub mod send;
 pub mod timeout;
 
 pub use error::IpcError;

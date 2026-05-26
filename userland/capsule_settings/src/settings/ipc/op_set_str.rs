@@ -16,13 +16,11 @@
 
 use nonos_policy_proto::{Field, IPC_PAYLOAD_MAX, KIND_STR, OP_SET};
 
+use super::call::call;
 use super::error::IpcError;
-use super::recv::recv_into;
-use super::send::send;
 
 pub fn op_set_str(port: u32, field: Field, bytes: &[u8]) -> Result<(), IpcError> {
-    send(port, OP_SET, field as u32, KIND_STR, bytes)?;
-    let mut buf = [0u8; IPC_PAYLOAD_MAX];
-    let _ = recv_into(&mut buf)?;
+    let mut rx = [0u8; IPC_PAYLOAD_MAX];
+    let _ = call(port, OP_SET, field as u32, KIND_STR, bytes, &mut rx)?;
     Ok(())
 }

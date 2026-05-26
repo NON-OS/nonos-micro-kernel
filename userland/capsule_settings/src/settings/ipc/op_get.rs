@@ -20,15 +20,13 @@ use nonos_policy_proto::{
 
 use crate::settings::state::cache::{FieldValue, STRING_CAP};
 
+use super::call::call;
 use super::error::IpcError;
-use super::recv::recv_into;
-use super::send::send;
 
 pub fn op_get(port: u32, field: Field) -> Result<FieldValue, IpcError> {
     let kind = kind_of(field);
-    send(port, OP_GET, field as u32, kind, &[])?;
-    let mut buf = [0u8; IPC_PAYLOAD_MAX];
-    let reply = recv_into(&mut buf)?;
+    let mut rx = [0u8; IPC_PAYLOAD_MAX];
+    let reply = call(port, OP_GET, field as u32, kind, &[], &mut rx)?;
     if reply.header.kind != kind {
         return Err(IpcError::KindMismatch);
     }
