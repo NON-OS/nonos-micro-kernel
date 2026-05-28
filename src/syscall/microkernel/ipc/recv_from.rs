@@ -25,7 +25,7 @@ use super::sender_pid::from_envelope;
 static RECV_FROM_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn is_traced(pid: u32) -> bool {
-    matches!(pid, 7 | 8 | 0x17 | 0x18 | 0x1a | 0x1b | 0x1c | 0x27)
+    matches!(pid, 7 | 8 | 9 | 0x17 | 0x18 | 0x1a | 0x1b | 0x1c | 0x27)
 }
 
 fn trace(label: &[u8], pid: u32) {
@@ -86,28 +86,52 @@ pub fn sys_ipc_recv_from(
     drain(buf, len, timeout_ms, sender_pid_out, &inbox_name)
 }
 
+fn deliver(
+    pid: u32,
+    msg: &crate::ipc::nonos_channel::IpcMessage,
+    buf: u64,
+    len: usize,
+    sender_pid_out: u64,
+) -> i64 {
+    let sender_pid = from_envelope(&msg.from);
+    trace_dequeue(pid, sender_pid);
+    let copy_len = msg.data.len().min(len);
+    if crate::usercopy::copy_to_user(buf, &msg.data[..copy_len]).is_err() {
+        return ERRNO_FAULT;
+    }
+    if sender_pid_out != 0 {
+        let bytes = sender_pid.to_le_bytes();
+        if crate::usercopy::copy_to_user(sender_pid_out, &bytes).is_err() {
+            return ERRNO_FAULT;
+        }
+    }
+    copy_len as i64
+}
+
 fn drain(buf: u64, len: usize, timeout_ms: u64, sender_pid_out: u64, inbox: &str) -> i64 {
     let start = crate::time::timestamp_millis();
     let pid = current_pid().unwrap_or(0);
+    let mut slept = false;
     loop {
         if let Some(msg) = nonos_inbox::try_dequeue_existing(inbox) {
-            let sender_pid = from_envelope(&msg.from);
-            trace_dequeue(pid, sender_pid);
-            let copy_len = msg.data.len().min(len);
-            if crate::usercopy::copy_to_user(buf, &msg.data[..copy_len]).is_err() {
-                return ERRNO_FAULT;
+            if slept {
+                crate::sched::wake_process(pid);
             }
-            if sender_pid_out != 0 {
-                let bytes = sender_pid.to_le_bytes();
-                if crate::usercopy::copy_to_user(sender_pid_out, &bytes).is_err() {
-                    return ERRNO_FAULT;
-                }
-            }
-            return copy_len as i64;
+            return deliver(pid, &msg, buf, len, sender_pid_out);
         }
         let elapsed = crate::time::timestamp_millis().saturating_sub(start);
         if timeout_ms > 0 && elapsed >= timeout_ms {
+            if slept {
+                crate::sched::wake_process(pid);
+            }
             return ERRNO_TIMEDOUT;
+        }
+        let deadline = if timeout_ms == 0 { u64::MAX } else { start.saturating_add(timeout_ms) };
+        crate::sched::sleep_until(pid, deadline);
+        slept = true;
+        if let Some(msg) = nonos_inbox::try_dequeue_existing(inbox) {
+            crate::sched::wake_process(pid);
+            return deliver(pid, &msg, buf, len, sender_pid_out);
         }
         trace(b"before yield", pid);
         crate::sched::yield_now();

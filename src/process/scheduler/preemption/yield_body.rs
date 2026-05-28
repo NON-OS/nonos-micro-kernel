@@ -81,14 +81,19 @@ pub(crate) fn perform_yield_inline() {
     crate::process::nonos_core::save_interrupt_context(pid, ctx);
     crate::process::nonos_core::save_fpu_state(pid);
 
-    if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
+    let runnable = if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
         let mut state = pcb.state.lock();
         if matches!(*state, ProcessState::Running) {
             *state = ProcessState::Ready;
         }
-    }
+        matches!(*state, ProcessState::Ready)
+    } else {
+        false
+    };
 
-    add_to_run_queue(pid);
+    if runnable {
+        add_to_run_queue(pid);
+    }
     CURRENT_TIME_SLICE.store(0, Ordering::Relaxed);
 
     if let Some(next) = select_next_process() {

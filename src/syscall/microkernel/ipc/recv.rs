@@ -69,9 +69,13 @@ pub(super) fn recv_from_inbox(
         return ERRNO_NOENT;
     }
     let start = crate::time::timestamp_millis();
+    let mut slept = false;
     loop {
         if let Some(msg) = nonos_inbox::try_dequeue_existing(&inbox_name) {
             trace(b"dequeue", pid);
+            if slept {
+                crate::sched::wake_process(pid);
+            }
             let copy_len = msg.data.len().min(len);
             if crate::usercopy::copy_to_user(buf, &msg.data[..copy_len]).is_err() {
                 return ERRNO_FAULT;
@@ -80,7 +84,22 @@ pub(super) fn recv_from_inbox(
         }
         let elapsed = crate::time::timestamp_millis().saturating_sub(start);
         if timeout_ms > 0 && elapsed >= timeout_ms {
+            if slept {
+                crate::sched::wake_process(pid);
+            }
             return ERRNO_TIMEDOUT;
+        }
+        let deadline = if timeout_ms == 0 { u64::MAX } else { start.saturating_add(timeout_ms) };
+        crate::sched::sleep_until(pid, deadline);
+        slept = true;
+        if let Some(msg) = nonos_inbox::try_dequeue_existing(&inbox_name) {
+            trace(b"dequeue", pid);
+            crate::sched::wake_process(pid);
+            let copy_len = msg.data.len().min(len);
+            if crate::usercopy::copy_to_user(buf, &msg.data[..copy_len]).is_err() {
+                return ERRNO_FAULT;
+            }
+            return copy_len as i64;
         }
         trace(b"before yield", pid);
         crate::sched::yield_now();

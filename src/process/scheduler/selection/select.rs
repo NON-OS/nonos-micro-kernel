@@ -40,6 +40,31 @@ pub fn select_next_process() -> Option<u32> {
         }
     }
     let last = LAST_SCHEDULED_PID.load(Ordering::Relaxed);
+    {
+        use crate::process::nonos_core::PROCESS_TABLE;
+        static QDUMP: AtomicU32 = AtomicU32::new(0);
+        if current == 0x1F && QDUMP.fetch_add(1, Ordering::Relaxed) < 40 {
+            crate::sys::serial::print(b"[QDUMP] last=");
+            crate::sys::serial::print_hex(last as u64);
+            crate::sys::serial::print(b" rq=[");
+            for &p in runnable.iter() {
+                crate::sys::serial::print_hex(p as u64);
+                if let Some(pcb) = PROCESS_TABLE.find_by_pid(p) {
+                    let s = *pcb.state.lock();
+                    let tag: &[u8] = match s {
+                        crate::process::nonos_core::ProcessState::Ready => b":R,",
+                        crate::process::nonos_core::ProcessState::Running => b":U,",
+                        crate::process::nonos_core::ProcessState::Sleeping => b":S,",
+                        _ => b":?,",
+                    };
+                    crate::sys::serial::print(tag);
+                } else {
+                    crate::sys::serial::print(b":?,");
+                }
+            }
+            crate::sys::serial::println(b"]");
+        }
+    }
     for prio in
         [Priority::RealTime, Priority::High, Priority::Normal, Priority::Low, Priority::Idle]
     {
@@ -47,7 +72,7 @@ pub fn select_next_process() -> Option<u32> {
             LAST_SCHEDULED_PID.store(pid, Ordering::Relaxed);
             {
                 static PICKED_SHOWN: AtomicU32 = AtomicU32::new(0);
-                if PICKED_SHOWN.fetch_add(1, Ordering::Relaxed) < 64 {
+                if PICKED_SHOWN.fetch_add(1, Ordering::Relaxed) < 4000 {
                     crate::sys::serial::print(b"[SCHED] picked pid=");
                     crate::sys::serial::print_hex(pid as u64);
                     crate::sys::serial::println(b"");
@@ -61,7 +86,7 @@ pub fn select_next_process() -> Option<u32> {
 
 fn select_by_priority(pids: &[u32], last: u32, current: u32, prio: Priority) -> Option<u32> {
     use crate::process::nonos_core::{ProcessState, PROCESS_TABLE};
-    let start = pids.iter().position(|&p| p > last).unwrap_or(0);
+    let start = pids.iter().position(|&p| p == last).map(|i| i + 1).unwrap_or(0);
     for &pid in pids[start..].iter().chain(pids[..start].iter()) {
         if pid == current {
             continue;
@@ -69,6 +94,30 @@ fn select_by_priority(pids: &[u32], last: u32, current: u32, prio: Priority) -> 
         if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
             let state = *pcb.state.lock();
             let proc_prio = *pcb.priority.lock();
+            if (pid == 0x17 || pid == 9) && prio == Priority::Normal {
+                static SHOWN_TGT: AtomicU32 = AtomicU32::new(0);
+                if SHOWN_TGT.fetch_add(1, Ordering::Relaxed) < 60 {
+                    let state_tag: &[u8] = match state {
+                        ProcessState::New => b"new",
+                        ProcessState::Ready => b"ready",
+                        ProcessState::Running => b"running",
+                        ProcessState::Sleeping => b"sleeping",
+                        ProcessState::Stopped => b"stopped",
+                        ProcessState::Zombie(_) => b"zombie",
+                        ProcessState::Terminated(_) => b"terminated",
+                    };
+                    let prio_match: &[u8] = if proc_prio == prio { b"prio=ok" } else { b"prio=mismatch" };
+                    crate::sys::serial::print(b"[SEL] pid=");
+                    crate::sys::serial::print_hex(pid as u64);
+                    crate::sys::serial::print(b" state=");
+                    crate::sys::serial::print(state_tag);
+                    crate::sys::serial::print(b" ");
+                    crate::sys::serial::print(prio_match);
+                    crate::sys::serial::print(b" current=");
+                    crate::sys::serial::print_hex(current as u64);
+                    crate::sys::serial::println(b"");
+                }
+            }
             if state == ProcessState::Ready && proc_prio == prio {
                 return Some(pid);
             }

@@ -53,13 +53,18 @@ pub(crate) fn preempt_current_process() {
 
     save_syscall_user_rsp(curr_pid);
     crate::process::nonos_core::save_interrupt_context(curr_pid, ctx);
-    if let Some(pcb) = PROCESS_TABLE.find_by_pid(curr_pid) {
+    let runnable = if let Some(pcb) = PROCESS_TABLE.find_by_pid(curr_pid) {
         let mut state = pcb.state.lock();
         if matches!(*state, ProcessState::Running) {
             *state = ProcessState::Ready;
         }
+        matches!(*state, ProcessState::Ready)
+    } else {
+        false
+    };
+    if runnable {
+        add_to_run_queue(curr_pid);
     }
-    add_to_run_queue(curr_pid);
 
     match select_next_process() {
         Some(next) if next != curr_pid => {

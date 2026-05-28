@@ -76,6 +76,11 @@ pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {
         Err(StrictEnqueueError::MissingInbox) | Err(StrictEnqueueError::DeadOwner) => ERRNO_NOENT,
         Err(StrictEnqueueError::QueueFull(_)) => ERRNO_BUSY,
     };
-    trace(caller_pid, dest_pid, b"enqueue", rc, &dest);
+    let mut woke = false;
+    if rc == 0 && crate::sched::is_sleeping(dest_pid as u32) {
+        crate::sched::wake_process(dest_pid as u32);
+        woke = true;
+    }
+    trace(caller_pid, dest_pid, if woke { b"enqueue wake=1" } else { b"enqueue wake=0" }, rc, &dest);
     rc
 }

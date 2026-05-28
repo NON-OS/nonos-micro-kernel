@@ -31,6 +31,13 @@ pub fn add_to_run_queue(pid: u32) {
     }
 }
 
+pub fn add_to_run_queue_front(pid: u32) {
+    let mut q = PID_RUN_QUEUE.lock();
+    if !q.iter().any(|p| *p == pid) {
+        q.push_front(pid);
+    }
+}
+
 pub fn remove_from_run_queue(pid: u32) {
     let mut q = PID_RUN_QUEUE.lock();
     if let Some(pos) = q.iter().position(|p| *p == pid) {

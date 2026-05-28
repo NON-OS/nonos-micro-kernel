@@ -67,9 +67,13 @@ pub fn sys_ipc_send_to_pid(dest_pid: u64, buf: u64, len: usize) -> i64 {
         Ok(m) => m,
         Err(e) => return e,
     };
-    match try_enqueue_strict(&dest, msg) {
+    let rc = match try_enqueue_strict(&dest, msg) {
         Ok(()) => 0,
         Err(StrictEnqueueError::MissingInbox) | Err(StrictEnqueueError::DeadOwner) => ERRNO_NOENT,
         Err(StrictEnqueueError::QueueFull(_)) => ERRNO_BUSY,
+    };
+    if rc == 0 && crate::sched::is_sleeping(dest_pid as u32) {
+        crate::sched::wake_process(dest_pid as u32);
     }
+    rc
 }
