@@ -21,7 +21,7 @@ use crate::state::Context;
 
 use super::apply::apply;
 
-const POLL_EVERY: u32 = 60;
+const POLL_EVERY: u32 = 1;
 
 pub fn tick(ctx: &mut Context) {
     ctx.subscriber_ticks = ctx.subscriber_ticks.wrapping_add(1);

@@ -25,6 +25,7 @@ pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
     let Some(rect) = ctx.damage.drain() else {
         return Ok(());
     };
+    debug::marker(b"tick: damage drained");
     if !ctx.first_scanout_done {
         debug::marker(b"first frame");
     }

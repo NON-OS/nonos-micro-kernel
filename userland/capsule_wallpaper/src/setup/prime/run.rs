@@ -23,7 +23,7 @@ use crate::paint::fill_argb;
 use crate::policy_client::lookup_policy;
 use crate::state::{Context, FadeTimeline, Policy};
 
-const DEFAULT_ARGB: u32 = 0xFF0A_0F0A;
+const DEFAULT_ARGB: u32 = 0xFF00_80FF;
 
 pub fn run() -> Result<Context, &'static str> {
     let compositor_port = discover::lookup_compositor_port()?;
