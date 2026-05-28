@@ -14,13 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_ipc_recv, mk_ipc_send};
+use nonos_libc::mk_ipc_call_timeout;
 use nonos_policy_proto::{
     Field, Header, E_OK, HDR_LEN, IPC_PAYLOAD_MAX, KIND_U8, OP_GET,
 };
 
 const REPLY_TIMEOUT_MS: u64 = 200;
-const OWN_INBOX: u64 = 0;
 
 pub fn get_wallpaper(policy_port: u32) -> Option<u8> {
     let mut buf = [0u8; IPC_PAYLOAD_MAX];
@@ -32,10 +31,14 @@ pub fn get_wallpaper(policy_port: u32) -> Option<u8> {
         payload_len: 0,
     };
     req.encode(&mut buf[..HDR_LEN]);
-    if mk_ipc_send(policy_port as u64, buf.as_ptr(), HDR_LEN) < 0 {
-        return None;
-    }
-    let n = mk_ipc_recv(OWN_INBOX, buf.as_mut_ptr(), buf.len(), REPLY_TIMEOUT_MS);
+    let n = mk_ipc_call_timeout(
+        policy_port as u64,
+        buf.as_ptr(),
+        HDR_LEN,
+        buf.as_mut_ptr(),
+        buf.len(),
+        REPLY_TIMEOUT_MS,
+    );
     if n <= 0 || (n as usize) < HDR_LEN + 1 {
         return None;
     }

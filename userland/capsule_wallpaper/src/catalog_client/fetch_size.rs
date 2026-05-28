@@ -14,21 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_ipc_recv, mk_ipc_send};
+use nonos_libc::mk_ipc_call_timeout;
 
 use super::proto::{Header, E_OK, HDR_LEN, IPC_PAYLOAD_MAX, OP_GET_SIZE};
 
 const REPLY_TIMEOUT_MS: u64 = 500;
-const OWN_INBOX: u64 = 0;
 
 pub fn fetch_size(catalog_port: u32, index: u32) -> Option<u32> {
     let mut buf = [0u8; IPC_PAYLOAD_MAX];
     let req = Header { op: OP_GET_SIZE, status: 0, index, offset: 0, payload_len: 0 };
     req.encode(&mut buf[..HDR_LEN]);
-    if mk_ipc_send(catalog_port as u64, buf.as_ptr(), HDR_LEN) < 0 {
-        return None;
-    }
-    let n = mk_ipc_recv(OWN_INBOX, buf.as_mut_ptr(), buf.len(), REPLY_TIMEOUT_MS);
+    let n = mk_ipc_call_timeout(
+        catalog_port as u64,
+        buf.as_ptr(),
+        HDR_LEN,
+        buf.as_mut_ptr(),
+        buf.len(),
+        REPLY_TIMEOUT_MS,
+    );
     if n <= 0 || (n as usize) < HDR_LEN + 4 {
         return None;
     }
