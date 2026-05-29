@@ -50,8 +50,13 @@ pub fn composite_layer(
         let src_row_va = src.base_va as usize + src_row * src_stride + src_x0 * 4;
         let dst_ptr = dst_row_va as *mut u32;
         let src_ptr = src_row_va as *const u32;
-        // SAFETY: source and destination rectangles are clipped to
-        // valid bounds and surfaces do not intentionally overlap.
-        unsafe { core::ptr::copy_nonoverlapping(src_ptr, dst_ptr, copy_w) };
+        for col in 0..copy_w {
+            // SAFETY: source and destination rectangles are clipped to
+            // valid bounds and surfaces do not intentionally overlap.
+            let px = unsafe { core::ptr::read_volatile(src_ptr.add(col)) };
+            if px & 0xFF00_0000 != 0 {
+                unsafe { core::ptr::write_volatile(dst_ptr.add(col), px) };
+            }
+        }
     }
 }
