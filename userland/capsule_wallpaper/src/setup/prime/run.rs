@@ -19,11 +19,13 @@ use super::{backing, register};
 use crate::catalog_client::lookup_catalog;
 use crate::compositor_client::healthcheck;
 use crate::debug;
-use crate::paint::fill_argb;
+use crate::paint::{decode_jpeg, fill_argb, paint_image};
 use crate::policy_client::lookup_policy;
 use crate::state::{Context, FadeTimeline, Policy};
 
 const DEFAULT_ARGB: u32 = 0xFF00_80FF;
+const EMBEDDED_WALLPAPER: &[u8] =
+    include_bytes!("../../../../../nonos-data/wallpapers/special-variant-12.jpg");
 
 pub fn run() -> Result<Context, &'static str> {
     let compositor_port = discover::lookup_compositor_port()?;
@@ -47,6 +49,13 @@ pub fn run() -> Result<Context, &'static str> {
         subscriber_ticks: 0,
     };
     ctx.set_argb(DEFAULT_ARGB);
+    match decode_jpeg(EMBEDDED_WALLPAPER) {
+        Some(img) => {
+            paint_image(&ctx, &img);
+            debug::marker(b"jpeg painted");
+        }
+        None => debug::marker(b"jpeg decode failed"),
+    }
     let rid = ctx.issue_request_id();
     register::register_wallpaper(compositor_port, rid, &backing)?;
     debug::marker(b"scene submitted");
