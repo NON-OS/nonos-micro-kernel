@@ -49,6 +49,17 @@ SECTIONS {
         __nonos_signature_end = .;
     } :data
 
+    /* Layout-stable observation ring for the `dbg-ring` feature.
+     * Pinned ahead of .bss with its own ALIGN so that growing other
+     * statics does not shift the ring's VA. Tagged NOBITS via
+     * NOLOAD-equivalent: the ring is zero-initialised at the call
+     * site (magic field flips from 0 to "NDBG" on first emit). */
+    .nonos.dbg_ring ALIGN(0x1000) : {
+        __nonos_dbg_ring_start = .;
+        KEEP(*(.nonos.dbg_ring))
+        __nonos_dbg_ring_end = .;
+    } :data
+
     /* BSS is the LAST loadable section in :data so it stays NOBITS
      * and the kernel image stays small no matter how much zero-init
      * static data the kernel grows. */

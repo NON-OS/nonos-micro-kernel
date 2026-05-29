@@ -121,6 +121,13 @@ nonos-capsule-net-sockets       = []
 nonos-capsule-net-nym           = []
 nonos-capsule-market            = []
 
+# Layout-stable debug ring. Allocation-free, formatter-free fixed-VA
+# byte ring at the `.nonos.dbg_ring` section. Triggered by adding
+# `dbg_emit(tag, &payload)` call sites; drained from the panic path
+# and the smoketest hook. Off by default — production builds are
+# byte-identical to before when this feature is absent.
+dbg-ring = []
+
 # Compile the in-kernel selftest runner that drives every
 # `boot::tests::*::all_pass()` group. Off by default; enabling it
 # wires `boot::tests::selftest::run_all` into the kernel image and
