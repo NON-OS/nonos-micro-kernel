@@ -17,46 +17,53 @@
 use nonos_libc::mk_debug;
 
 const PREFIX: &[u8] = b"[virtio_blk] ";
-const NEWLINE: &[u8] = b"\n";
-const SPACE: &[u8] = b" ";
 const MAX_LABEL: usize = 200;
 
 pub fn marker(label: &[u8]) {
-    let label_len = if label.len() > MAX_LABEL { MAX_LABEL } else { label.len() };
-    let _ = mk_debug(PREFIX.as_ptr(), PREFIX.len());
-    let _ = mk_debug(label.as_ptr(), label_len);
-    let _ = mk_debug(NEWLINE.as_ptr(), NEWLINE.len());
+    let n = if label.len() > MAX_LABEL { MAX_LABEL } else { label.len() };
+    let mut buf = [0u8; PREFIX.len() + MAX_LABEL + 1];
+    let p = PREFIX.len();
+    buf[..p].copy_from_slice(PREFIX);
+    buf[p..p + n].copy_from_slice(&label[..n]);
+    buf[p + n] = b'\n';
+    let _ = mk_debug(buf.as_ptr(), p + n + 1);
 }
 
 pub fn marker_i64(label: &[u8], value: i64) {
-    let label_len = if label.len() > MAX_LABEL { MAX_LABEL } else { label.len() };
-    let _ = mk_debug(PREFIX.as_ptr(), PREFIX.len());
-    let _ = mk_debug(label.as_ptr(), label_len);
-    let _ = mk_debug(SPACE.as_ptr(), SPACE.len());
-    emit_i64(value);
-    let _ = mk_debug(NEWLINE.as_ptr(), NEWLINE.len());
+    let n = if label.len() > MAX_LABEL { MAX_LABEL } else { label.len() };
+    let mut buf = [0u8; 256];
+    let p = PREFIX.len();
+    buf[..p].copy_from_slice(PREFIX);
+    buf[p..p + n].copy_from_slice(&label[..n]);
+    let mut pos = p + n;
+    buf[pos] = b' ';
+    pos += 1;
+    pos += write_dec(&mut buf[pos..], value);
+    buf[pos] = b'\n';
+    pos += 1;
+    let _ = mk_debug(buf.as_ptr(), pos);
 }
 
-fn emit_i64(value: i64) {
-    if value < 0 {
-        let _ = mk_debug(b"-".as_ptr(), 1);
-        emit_u64((value as i128).unsigned_abs() as u64);
-    } else {
-        emit_u64(value as u64);
-    }
-}
-
-fn emit_u64(mut value: u64) {
-    if value == 0 {
-        let _ = mk_debug(b"0".as_ptr(), 1);
-        return;
-    }
-    let mut buf = [0u8; 20];
-    let mut idx = buf.len();
-    while value > 0 {
+fn write_dec(out: &mut [u8], value: i64) -> usize {
+    let mut tmp = [0u8; 20];
+    let neg = value < 0;
+    let mut v = if neg { (value as i128).unsigned_abs() as u64 } else { value as u64 };
+    let mut idx = tmp.len();
+    if v == 0 {
         idx -= 1;
-        buf[idx] = b'0' + (value % 10) as u8;
-        value /= 10;
+        tmp[idx] = b'0';
     }
-    let _ = mk_debug(buf.as_ptr().wrapping_add(idx), buf.len() - idx);
+    while v > 0 {
+        idx -= 1;
+        tmp[idx] = b'0' + (v % 10) as u8;
+        v /= 10;
+    }
+    let mut w = 0;
+    if neg {
+        out[w] = b'-';
+        w += 1;
+    }
+    let digits = &tmp[idx..];
+    out[w..w + digits.len()].copy_from_slice(digits);
+    w + digits.len()
 }
