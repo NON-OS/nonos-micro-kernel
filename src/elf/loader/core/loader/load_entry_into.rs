@@ -30,6 +30,9 @@ impl ElfLoader {
             let header_at = super::super::parse_header::parse_program_header_at(elf_data, &header, index)?;
             map_load_segment(elf_data, &header_at, base_addr, target_asid)?;
         }
+        super::super::relocate::apply_relative_relocations(
+            elf_data, &header, ph_count, base_addr, target_asid,
+        )?;
         Ok(base_addr::entry_point(&header, base_addr))
     }
 }

@@ -86,4 +86,40 @@ impl PagingManager {
         }
         Ok(())
     }
+
+    pub(in crate::memory::paging::manager) fn translate_in_asid(
+        &self,
+        asid: u32,
+        va: VirtAddr,
+    ) -> Option<PhysAddr> {
+        let cr3 = self.address_spaces.get(&asid)?.cr3_value;
+        let v = va.as_u64();
+        // SAFETY: eK@nonos.systems — cr3 is one of ours; every table
+        // is reached through the directmap and only read here.
+        unsafe {
+            let e4 = (*table_at(cr3))[pml4_index(v)];
+            if !pte_is_present(e4) {
+                return None;
+            }
+            let e3 = (*table_at(PhysAddr::new(pte_address(e4))))[pdpt_index(v)];
+            if !pte_is_present(e3) {
+                return None;
+            }
+            if pte_is_huge(e3) {
+                return Some(PhysAddr::new(pte_address(e3) + (v & 0x3fff_ffff)));
+            }
+            let e2 = (*table_at(PhysAddr::new(pte_address(e3))))[pd_index(v)];
+            if !pte_is_present(e2) {
+                return None;
+            }
+            if pte_is_huge(e2) {
+                return Some(PhysAddr::new(pte_address(e2) + (v & 0x1f_ffff)));
+            }
+            let e1 = (*table_at(PhysAddr::new(pte_address(e2))))[pt_index(v)];
+            if !pte_is_present(e1) {
+                return None;
+            }
+            Some(PhysAddr::new(pte_address(e1) + (v & 0xfff)))
+        }
+    }
 }
