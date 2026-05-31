@@ -20,8 +20,8 @@ mod timer_trampoline;
 mod wrappers;
 
 pub use exception_trampoline::{
-    ac_trampoline, bp_trampoline, br_trampoline, de_trampoline, gpf_trampoline, of_trampoline,
-    ud_trampoline,
+    ac_trampoline, bp_trampoline, br_trampoline, db_trampoline, de_trampoline, gpf_trampoline,
+    of_trampoline, ud_trampoline,
 };
 pub use page_fault_trampoline::page_fault_trampoline;
 pub use timer_trampoline::timer_trampoline;

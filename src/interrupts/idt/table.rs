@@ -44,7 +44,13 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
         idt.divide_error
             .set_handler_addr(VirtAddr::new(isr::de_trampoline as *const () as u64));
     }
-    idt.debug.set_handler_fn(isr::isr_debug);
+    // SAFETY: #DB is CPL=3-reachable; the naked `db_trampoline` swapgs-es
+    // onto the kernel per-CPU base, then iretqs back (the handler resumes).
+    // Address is a stable naked fn in kernel text.
+    unsafe {
+        idt.debug
+            .set_handler_addr(VirtAddr::new(isr::db_trampoline as *const () as u64));
+    }
 
     // SAFETY: NMI uses dedicated IST stack to handle nested NMIs safely
     unsafe {
