@@ -1036,7 +1036,7 @@ nonos-mk-process-manager-prod: nonos-mk-desktop-gui-prod
 
 # Sign + attest + ESP packaging
 
-$(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY) | nonos-mk-desktop-gui-prod
+$(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY)
 	@echo "Signing kernel (Ed25519)..."
 	@mkdir -p $(TARGET_DIR)
 ifeq ($(UNAME_S),Darwin)
@@ -1054,7 +1054,6 @@ $(TARGET_DIR)/kernel_attested.bin: $(TARGET_DIR)/kernel_signed.bin $(EMBED_TOOL)
 nonos-mk-attest: $(TARGET_DIR)/kernel_attested.bin
 
 nonos-mk-esp: \
-		nonos-mk-desktop-gui-prod \
 		$(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi \
 		$(TARGET_DIR)/kernel_attested.bin
 	@echo "Packaging EFI System Partition..."
@@ -1098,14 +1097,14 @@ nonos-mk-terminal-only-run: nonos-mk-terminal-only-prod nonos-mk-esp $(QEMU_OVMF
 		$(QEMU_GPU) $(QEMU_RNG) \
 		-serial mon:stdio -no-reboot
 
-nonos-mk-run-serial: nonos-mk-esp
+nonos-mk-run-serial: nonos-mk-desktop-gui-prod nonos-mk-esp
 	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
 		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial mon:stdio -display none -no-reboot
 
-nonos-mk-debug: nonos-mk-esp
+nonos-mk-debug: nonos-mk-desktop-gui-prod nonos-mk-esp
 	@echo "QEMU listening for GDB on :1234   (gdb -ex 'target remote :1234')"
 	@$(QEMU) -m $(QEMU_MEM) -cpu $(QEMU_CPU) -smp $(QEMU_SMP) -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
