@@ -610,7 +610,7 @@ nonos-mk-virtio-blk-test-image: $(TEST_VIRTIO_BLK_IMG)
 # userland virtio-blk capsule plus the smoketest harness and
 # drives the device via the broker. The harness shell script
 # attaches the scratch image at boot.
-nonos-mk-driver-virtio-blk-test: $(proof-io_ARTIFACTS) $(driver-virtio-blk_BIN) \
+nonos-mk-driver-virtio-blk-test: $(proof-io_ARTIFACTS) $(driver-virtio-blk_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-driver-virtio-blk-smoketest)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
