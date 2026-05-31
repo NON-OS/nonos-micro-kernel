@@ -14,10 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod exception_trampoline;
 mod page_fault_trampoline;
 mod timer_trampoline;
 mod wrappers;
 
+pub use exception_trampoline::{br_trampoline, de_trampoline, gpf_trampoline, ud_trampoline};
 pub use page_fault_trampoline::page_fault_trampoline;
 pub use timer_trampoline::timer_trampoline;
 pub use wrappers::{

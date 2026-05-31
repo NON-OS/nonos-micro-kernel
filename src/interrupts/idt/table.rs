@@ -37,7 +37,13 @@ fn build_idt() -> InterruptDescriptorTable {
 }
 
 fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
-    idt.divide_error.set_handler_fn(isr::isr_divide_error);
+    // SAFETY: #DE is CPL=3-reachable; the naked `de_trampoline` swapgs-es
+    // onto the kernel per-CPU base so its terminate path does not fault on
+    // gs-relative state. Address is a stable naked fn in kernel text.
+    unsafe {
+        idt.divide_error
+            .set_handler_addr(VirtAddr::new(isr::de_trampoline as *const () as u64));
+    }
     idt.debug.set_handler_fn(isr::isr_debug);
 
     // SAFETY: NMI uses dedicated IST stack to handle nested NMIs safely
@@ -47,8 +53,15 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
 
     idt.breakpoint.set_handler_fn(isr::isr_breakpoint);
     idt.overflow.set_handler_fn(isr::isr_overflow);
-    idt.bound_range_exceeded.set_handler_fn(isr::isr_bound_range);
-    idt.invalid_opcode.set_handler_fn(isr::isr_invalid_opcode);
+    // SAFETY: #BR and #UD are CPL=3-reachable; their naked trampolines
+    // swapgs onto the kernel per-CPU base so the terminate path does not
+    // fault on gs-relative state. Addresses are stable naked fns.
+    unsafe {
+        idt.bound_range_exceeded
+            .set_handler_addr(VirtAddr::new(isr::br_trampoline as *const () as u64));
+        idt.invalid_opcode
+            .set_handler_addr(VirtAddr::new(isr::ud_trampoline as *const () as u64));
+    }
     idt.device_not_available.set_handler_fn(isr::isr_device_na);
 
     // SAFETY: Double fault uses dedicated IST stack to recover from stack overflow
@@ -66,7 +79,7 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
     // CPL=3 #GP cannot land on a torn TSS.RSP0 mid-context-switch.
     unsafe {
         idt.general_protection_fault
-            .set_handler_fn(isr::isr_gpf)
+            .set_handler_addr(VirtAddr::new(isr::gpf_trampoline as *const () as u64))
             .set_stack_index(gdt::GP_IST_INDEX);
     }
 
