@@ -50,7 +50,7 @@ pub fn run() -> Result<Driver, &'static str> {
     debug::marker(b"bdma ok");
 
     let regs = register_grant.regs();
-    bring_up(regs, queue_dma.device_addr, Queue::queue_size())?;
+    let queue_size = bring_up(regs, queue_dma.device_addr, Queue::queue_size())?;
     debug::marker(b"bring ok");
     let queue = Queue::new(
         queue_dma.user_va,
@@ -58,6 +58,7 @@ pub fn run() -> Result<Driver, &'static str> {
         buf_dma.user_va,
         buf_dma.device_addr,
         ENTROPY_BUF_LEN as u32,
+        queue_size,
     );
 
     let _ = mk_irq_ack(irq_grant.grant_id);
