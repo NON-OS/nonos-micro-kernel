@@ -119,6 +119,11 @@ pub fn microkernel_main() -> ! {
         crate::sys::serial::println(b"[FATAL] Init address space creation failed");
         crate::arch::halt_loop()
     }
+    if crate::kernel_core::process_spawn::allocate_kernel_stack(init_pid).is_err() {
+        boot_log::error("Failed to allocate init kernel stack");
+        crate::sys::serial::println(b"[FATAL] Init kernel stack allocation failed");
+        crate::arch::halt_loop()
+    }
     CURRENT_PID.store(init_pid, Ordering::SeqCst);
     boot_log::ok("UKERNEL", "Entering userspace");
     crate::userspace::run_init()
