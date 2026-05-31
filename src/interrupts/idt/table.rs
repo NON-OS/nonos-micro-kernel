@@ -70,9 +70,14 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
             .set_stack_index(gdt::GP_IST_INDEX);
     }
 
-    // SAFETY: Page fault uses dedicated IST stack for guard page handling
+    // SAFETY: Page fault uses the naked `page_fault_trampoline` so a #PF
+    // from CPL=3 swapgs-es onto the kernel per-CPU base before the handler's
+    // gs-relative accesses run (otherwise it faults on gs:0 and storms). The
+    // dedicated IST stack for guard-page handling is preserved.
     unsafe {
-        idt.page_fault.set_handler_fn(isr::isr_page_fault).set_stack_index(gdt::PF_IST_INDEX);
+        idt.page_fault
+            .set_handler_addr(VirtAddr::new(isr::page_fault_trampoline as *const () as u64))
+            .set_stack_index(gdt::PF_IST_INDEX);
     }
 
     idt.x87_floating_point.set_handler_fn(isr::isr_x87_fp);
