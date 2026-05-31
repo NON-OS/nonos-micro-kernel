@@ -45,5 +45,17 @@ pub fn glyph_for_ascii(ascii: u8) -> &'static GlyphBitmap {
     if ascii == b' ' {
         return &GLYPH_SPACE;
     }
-    digit_glyph(ascii).unwrap_or(&GLYPH_UNKNOWN)
+    if let Some(g) = digit_glyph(ascii) {
+        return g;
+    }
+    if ascii.is_ascii_uppercase() {
+        return super::upper::glyph(ascii);
+    }
+    if ascii.is_ascii_lowercase() {
+        return super::lower::glyph(ascii);
+    }
+    if let Some(g) = super::punct::glyph(ascii) {
+        return g;
+    }
+    &GLYPH_UNKNOWN
 }
