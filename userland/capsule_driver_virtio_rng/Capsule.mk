@@ -12,9 +12,9 @@ CAPSULE_FEATURE          := nonos-capsule-driver-virtio-rng
 CAPSULE_NAMESPACE        := systems.nonos.driver.virtio_rng
 CAPSULE_SERVICE_ENDPOINT := service:4200:driver.virtio_rng
 CAPSULE_REPLY_ENDPOINT   := reply:4201:endpoint.4294967302
-# IPC|Memory|Debug|Driver|DeviceEnum|Mmio|Irq|Dma
-# = 0x08|0x10|0x100|0x10000|0x8000|0x20000|0x40000|0x80000 = 0xF8119
-CAPSULE_REQUIRED_CAPS    := 0xF8119
+# IPC|Memory|Debug|Driver|DeviceEnum|Mmio|Irq|Dma|Pio
+# = 0x08|0x10|0x100|0x10000|0x8000|0x20000|0x40000|0x80000|0x100000 = 0x1F8119
+CAPSULE_REQUIRED_CAPS    := 0x1F8119
 CAPSULE_KERNEL_MIRROR    := src/hardware/virtio_rng_capsule
 
 include nonos-mk/capsule.mk

@@ -13,12 +13,16 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! PCI identifiers for the virtio-rng device. Both transitional
-//! and modern device IDs are recognised; the device the broker
-//! reports must match one of them or the driver refuses to drive
-//! it.
-
-pub const VIRTIO_VENDOR_ID: u16 = 0x1AF4;
-pub const VIRTIO_RNG_TRANSITIONAL: u16 = 0x1005;
-pub const VIRTIO_RNG_MODERN: u16 = 0x1044;
+use nonos_libc::{mk_pio_read, mk_pio_write};
+pub fn read(grant: u64, offset: usize, width: u8) -> u32 {
+    let mut value = 0u32;
+    if mk_pio_read(grant, offset as u16, width, &mut value) < 0 {
+        return 0;
+    }
+    value
+}
+pub fn write(grant: u64, offset: usize, width: u8, value: u32) {
+    if mk_pio_write(grant, offset as u16, width, value) < 0 {
+        return;
+    }
+}

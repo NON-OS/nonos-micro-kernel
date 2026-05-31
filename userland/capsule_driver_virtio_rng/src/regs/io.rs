@@ -13,12 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! PCI identifiers for the virtio-rng device. Both transitional
-//! and modern device IDs are recognised; the device the broker
-//! reports must match one of them or the driver refuses to drive
-//! it.
-
-pub const VIRTIO_VENDOR_ID: u16 = 0x1AF4;
-pub const VIRTIO_RNG_TRANSITIONAL: u16 = 0x1005;
-pub const VIRTIO_RNG_MODERN: u16 = 0x1044;
+#[derive(Debug, Clone, Copy)]
+pub enum RegIo {
+    Mmio(*mut u8),
+    Pio(u64),
+}

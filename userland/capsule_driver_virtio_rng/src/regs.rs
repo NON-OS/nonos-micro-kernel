@@ -14,54 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Volatile MMIO accessors over the BAR0 mapping returned by the
-//! broker. The pointer is the `user_va` from `MmioMapOut`; the
-//! kernel guarantees the page is mapped user / RW / NX / uncached.
+//! Register accessors over the virtio legacy register window. The
+//! window is reached either through an MMIO mapping (`user_va`) or
+//! a PIO grant, depending on the BAR the broker handed the caller;
+//! `Regs` hides the transport behind a uniform offset interface.
 
-use core::ptr::{read_volatile, write_volatile};
+mod io;
+mod pio;
+mod state;
 
-#[derive(Debug, Clone, Copy)]
-pub struct Regs {
-    pub base: *mut u8,
-}
-
-impl Regs {
-    pub const fn new(base: u64) -> Self {
-        Self { base: base as *mut u8 }
-    }
-
-    /// # Safety
-    /// `offset` must lie inside the MMIO window the broker handed
-    /// the caller. The broker grants are bounds-checked against
-    /// the BAR; once `mmio::map` has succeeded any offset less
-    /// than the grant length is in-bounds.
-    #[inline]
-    pub unsafe fn r8(self, offset: usize) -> u8 {
-        read_volatile(self.base.add(offset))
-    }
-
-    #[inline]
-    pub unsafe fn r16(self, offset: usize) -> u16 {
-        read_volatile(self.base.add(offset).cast())
-    }
-
-    #[inline]
-    pub unsafe fn r32(self, offset: usize) -> u32 {
-        read_volatile(self.base.add(offset).cast())
-    }
-
-    #[inline]
-    pub unsafe fn w8(self, offset: usize, value: u8) {
-        write_volatile(self.base.add(offset), value)
-    }
-
-    #[inline]
-    pub unsafe fn w16(self, offset: usize, value: u16) {
-        write_volatile(self.base.add(offset).cast(), value)
-    }
-
-    #[inline]
-    pub unsafe fn w32(self, offset: usize, value: u32) {
-        write_volatile(self.base.add(offset).cast(), value)
-    }
-}
+pub use self::state::Regs;

@@ -22,13 +22,12 @@
 use nonos_libc::mk_irq_ack;
 
 use super::driver::Driver;
-use super::{claim, dma, irq, mmio};
+use super::{claim, dma, irq, registers};
 use crate::constants::ENTROPY_BUF_LEN;
 use crate::debug;
 use crate::discover::find_virtio_rng;
 use crate::init::bring_up;
 use crate::queue::Queue;
-use crate::regs::Regs;
 
 pub fn run() -> Result<Driver, &'static str> {
     debug::marker(b"setup start");
@@ -38,18 +37,19 @@ pub fn run() -> Result<Driver, &'static str> {
     let claim_epoch = claim::claim(dev.device_id)?;
     debug::marker(b"claim ok");
 
-    let mmio = mmio::map(dev, claim_epoch)?;
+    let register_grant = registers::grant(dev, claim_epoch)?;
     debug::marker(b"mmio ok");
 
-    let irq_grant = irq::bind(dev, claim_epoch, &mmio)?;
+    let irq_grant = irq::bind(dev, claim_epoch, register_grant)?;
     debug::marker(b"irq ok");
 
-    let queue_dma = dma::map_queue(dev.device_id, claim_epoch, &mmio, &irq_grant)?;
+    let queue_dma = dma::map_queue(dev.device_id, claim_epoch, register_grant, &irq_grant)?;
     debug::marker(b"qdma ok");
-    let buf_dma = dma::map_buffer(dev.device_id, claim_epoch, &mmio, &irq_grant, &queue_dma)?;
+    let buf_dma =
+        dma::map_buffer(dev.device_id, claim_epoch, register_grant, &irq_grant, &queue_dma)?;
     debug::marker(b"bdma ok");
 
-    let regs = Regs::new(mmio.user_va);
+    let regs = register_grant.regs();
     bring_up(regs, queue_dma.device_addr, Queue::queue_size())?;
     debug::marker(b"bring ok");
     let queue = Queue::new(
@@ -66,7 +66,7 @@ pub fn run() -> Result<Driver, &'static str> {
     Ok(Driver {
         device_id: dev.device_id,
         claim_epoch,
-        mmio_grant: mmio.grant_id,
+        register_grant,
         irq_grant: irq_grant.grant_id,
         queue_grant: queue_dma.grant_id,
         buf_grant: buf_dma.grant_id,
