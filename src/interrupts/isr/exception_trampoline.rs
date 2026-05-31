@@ -77,3 +77,11 @@ exc_tramp_err!(gpf_trampoline, gpf_trap, crate::interrupts::handlers::general_pr
 exc_tramp_noerr!(ud_trampoline, ud_trap, crate::interrupts::handlers::invalid_opcode);
 exc_tramp_noerr!(de_trampoline, de_trap, crate::interrupts::handlers::divide_error);
 exc_tramp_noerr!(br_trampoline, br_trap, crate::interrupts::handlers::bound_range_exceeded);
+
+// #AC pushes an error code (always 0) but its handler ignores it; drop it.
+fn ac_handler(frame: InterruptStackFrame, _error_code: u64) {
+    crate::interrupts::handlers::alignment_check(frame);
+}
+exc_tramp_err!(ac_trampoline, ac_trap, ac_handler);
+exc_tramp_noerr!(of_trampoline, of_trap, crate::interrupts::handlers::overflow);
+exc_tramp_noerr!(bp_trampoline, bp_trap, crate::interrupts::handlers::breakpoint);
