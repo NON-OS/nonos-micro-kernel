@@ -33,6 +33,6 @@ mod tests;
 pub use caps as capabilities;
 pub use caps::current_caps;
 pub use contract::{dispatch as contract_dispatch, Capability, SyscallArgs};
-pub use entry::{handle_interrupt, handle_syscall};
+pub use entry::handle_syscall;
 pub use numbers::SyscallNumber;
 pub use types::{errno, errnos, SyscallResult};

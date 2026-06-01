@@ -14,12 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[inline(always)]
-pub fn syscall_entry_ptr() -> extern "C" fn() {
-    super::handle_interrupt
+pub fn syscall_entry_ptr() -> unsafe extern "C" fn() {
+    crate::arch::x86_64::asm::syscall_entry_asm
 }
 
-#[inline]
-pub fn register_syscall_handler() -> extern "C" fn() {
+pub fn register_syscall_handler() -> unsafe extern "C" fn() {
     syscall_entry_ptr()
 }

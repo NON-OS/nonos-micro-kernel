@@ -21,17 +21,13 @@
 #![feature(thread_local)]
 #![allow(unsafe_op_in_unsafe_fn)]
 #![allow(unexpected_cfgs)]
-// Kernel-wide lint exceptions. Keep this list small. These cover
-// intentional kernel patterns: page-size arithmetic, static lock/atomic
-// initializers, and raw syscall-entry helpers after trap/usercopy checks.
 #![allow(clippy::integer_division)]
 #![allow(clippy::declare_interior_mutable_const)]
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 
-// NØNOS capsule trust posture mutex. `nonos-production` excludes
-// the legacy unverified capsule spawn path; any future
-// `nonos-dev-unverified-capsules` would re-enable it. The two
-// cannot coexist without weakening the production trust contract.
+#[cfg(not(target_arch = "x86_64"))]
+compile_error!("Developer Preview 1.0 supports only x86_64; other arch trees are not release targets.");
+
 #[cfg(all(feature = "nonos-production", feature = "nonos-dev-unverified-capsules"))]
 compile_error!(
     "nonos-production and nonos-dev-unverified-capsules are mutually exclusive: \
@@ -47,8 +43,6 @@ fn alloc_error_handler(layout: core::alloc::Layout) -> ! {
     entry::handle_oom(layout)
 }
 
-// Microkernel modules. Every entry is reached on the live boot/init
-// path or by a kernel-side capsule mirror.
 pub mod arch;
 pub mod boot;
 pub mod bus;
