@@ -14,21 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::wire::call;
+use nonos_libc::mk_service_lookup;
 
-const OP: u16 = 0x0004;
-const BODY_LEN: usize = 8;
+const INPUT_ROUTER: &[u8] = b"input_router";
 
-pub fn push_focus_set(
-    compositor_port: u32,
-    request_id: u32,
-    target_pid: u32,
-) -> Result<(), &'static str> {
-    let mut body = [0u8; BODY_LEN];
-    body[0..4].copy_from_slice(&target_pid.to_le_bytes());
-    let status = call(compositor_port, OP, request_id, &body)?;
-    if status != 0 {
-        return Err("compositor rejected focus_set");
-    }
-    Ok(())
+pub fn is_input_router(sender_pid: u32) -> bool {
+    let mut port = 0u32;
+    let mut pid = 0u32;
+    let rc = mk_service_lookup(INPUT_ROUTER.as_ptr(), INPUT_ROUTER.len(), &mut port, &mut pid);
+    rc >= 0 && pid == sender_pid && port != 0
 }

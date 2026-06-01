@@ -21,24 +21,46 @@ use crate::state::Context;
 
 pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != WINDOW_CLOSE_REQ_LEN {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+            return;
+        }
         return;
     }
     let Some(window_id) = super::u32_at(body, 0) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+            return;
+        }
         return;
     };
-    let Some(window) = ctx.windows.remove(sender_pid, window_id) else {
-        let _ = respond::status(sender_pid, req, E_NOENT, tx);
+    if ctx.windows.find(sender_pid, window_id).is_none() {
+        if respond::status(sender_pid, req, E_NOENT, tx) < 0 {
+            return;
+        }
         return;
-    };
+    }
     if let Some(focused) = ctx.focus.current() {
         if focused.owner_pid == sender_pid && focused.window_id == window_id {
-            let _ = ctx.focus.clear();
             let rid = ctx.issue_request_id();
-            let _ = push_focus_set(ctx.compositor_port, rid, 0);
+            if push_focus_set(ctx.compositor_port, rid, 0).is_err() {
+                if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+                    return;
+                }
+                return;
+            }
+            if !ctx.focus.clear() {
+                if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+                    return;
+                }
+                return;
+            }
         }
     }
+    let Some(window) = ctx.windows.remove(sender_pid, window_id) else {
+        if respond::status(sender_pid, req, E_NOENT, tx) < 0 {
+            return;
+        }
+        return;
+    };
     notify_fanout::broadcast(
         ctx,
         crate::protocol::NOTIFY_KIND_CLOSED,
@@ -47,5 +69,7 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
         window.rect.x,
         window.rect.y,
     );
-    let _ = respond::status(sender_pid, req, 0, tx);
+    if respond::status(sender_pid, req, 0, tx) < 0 {
+        return;
+    }
 }

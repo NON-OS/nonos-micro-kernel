@@ -14,46 +14,60 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_service_lookup;
-
 use crate::compositor_client::push_focus_set;
 use crate::protocol::{Request, E_INVAL, E_NOENT, E_PERM, ROUTE_FOCUS_REQ_LEN};
 use crate::server::respond;
 use crate::state::Context;
 
-const INPUT_ROUTER: &[u8] = b"input_router";
+use super::is_input_router::is_input_router;
 
 pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != ROUTE_FOCUS_REQ_LEN || !is_input_router(sender_pid) {
-        let _ = respond::status(sender_pid, req, E_PERM, tx);
+        if respond::status(sender_pid, req, E_PERM, tx) < 0 {
+            return;
+        }
         return;
     }
-    let Some(owner_pid) = super::u32_at(body, 0) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+    let Some(owner_pid) = super::super::u32_at(body, 0) else {
+        if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+            return;
+        }
         return;
     };
-    let Some(window_id) = super::u32_at(body, 4) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+    let Some(window_id) = super::super::u32_at(body, 4) else {
+        if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+            return;
+        }
         return;
     };
     let Some(window) = ctx.windows.find(owner_pid, window_id) else {
-        let _ = respond::status(sender_pid, req, E_NOENT, tx);
+        if respond::status(sender_pid, req, E_NOENT, tx) < 0 {
+            return;
+        }
         return;
     };
     if !window.kind.focusable() {
-        let _ = respond::status(sender_pid, req, E_PERM, tx);
+        if respond::status(sender_pid, req, E_PERM, tx) < 0 {
+            return;
+        }
         return;
     }
-    if ctx.focus.set(owner_pid, window_id) {
+    if !matches!(ctx.focus.current(), Some(f) if f.owner_pid == owner_pid && f.window_id == window_id) {
         let rid = ctx.issue_request_id();
-        let _ = push_focus_set(ctx.compositor_port, rid, owner_pid);
+        if push_focus_set(ctx.compositor_port, rid, owner_pid).is_err() {
+            if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+                return;
+            }
+            return;
+        }
+        if !ctx.focus.set(owner_pid, window_id) {
+            if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+                return;
+            }
+            return;
+        }
     }
-    let _ = respond::status(sender_pid, req, 0, tx);
-}
-
-fn is_input_router(sender_pid: u32) -> bool {
-    let mut port = 0u32;
-    let mut pid = 0u32;
-    let rc = mk_service_lookup(INPUT_ROUTER.as_ptr(), INPUT_ROUTER.len(), &mut port, &mut pid);
-    rc >= 0 && pid == sender_pid && port != 0
+    if respond::status(sender_pid, req, 0, tx) < 0 {
+        return;
+    }
 }

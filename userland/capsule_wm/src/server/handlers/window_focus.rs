@@ -21,25 +21,49 @@ use crate::state::Context;
 
 pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != WINDOW_FOCUS_REQ_LEN {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+            return;
+        }
         return;
     }
     let Some(window_id) = super::u32_at(body, 0) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+            return;
+        }
         return;
     };
     let Some(window) = ctx.windows.find(sender_pid, window_id) else {
-        let _ = respond::status(sender_pid, req, E_NOENT, tx);
+        if respond::status(sender_pid, req, E_NOENT, tx) < 0 {
+            return;
+        }
         return;
     };
     if !window.kind.focusable() {
-        let _ = respond::status(sender_pid, req, E_PERM, tx);
+        if respond::status(sender_pid, req, E_PERM, tx) < 0 {
+            return;
+        }
         return;
     }
-    let changed = ctx.focus.set(sender_pid, window_id);
-    if changed {
+    let unchanged = matches!(
+        ctx.focus.current(),
+        Some(f) if f.owner_pid == sender_pid && f.window_id == window_id
+    );
+    if !unchanged {
         let rid = ctx.issue_request_id();
-        let _ = push_focus_set(ctx.compositor_port, rid, sender_pid);
+        if push_focus_set(ctx.compositor_port, rid, sender_pid).is_err() {
+            if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+                return;
+            }
+            return;
+        }
+        if !ctx.focus.set(sender_pid, window_id) {
+            if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
+                return;
+            }
+            return;
+        }
     }
-    let _ = respond::status(sender_pid, req, 0, tx);
+    if respond::status(sender_pid, req, 0, tx) < 0 {
+        return;
+    }
 }
