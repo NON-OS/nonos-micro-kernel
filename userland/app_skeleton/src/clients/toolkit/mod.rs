@@ -26,7 +26,6 @@ use nonos_libc::mk_ipc_call;
 
 const NOTK_MAGIC: u32 = 0x4E4F_544B;
 const HDR_LEN: usize = 16;
-const TOOLKIT_ENDPOINT: u64 = 4610;
 const TOOLKIT_OP_COMPONENT_RENDER: u16 = 0x0003;
 const STATUS_OK: u16 = 0;
 const KIND_PANEL: u16 = 0;
@@ -90,7 +89,6 @@ fn render_component(
     let mut reply = [0u8; HDR_LEN];
     let rc =
         mk_ipc_call(port as u64, request.as_ptr(), request.len(), reply.as_mut_ptr(), reply.len());
-    let _ = TOOLKIT_ENDPOINT;
     if rc < HDR_LEN as i64 {
         return Err("toolkit ui route failed");
     }
