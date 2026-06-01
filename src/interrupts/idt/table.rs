@@ -46,15 +46,22 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
     }
     // SAFETY: #DB is CPL=3-reachable; the naked `db_trampoline` swapgs-es
     // onto the kernel per-CPU base, then iretqs back (the handler resumes).
-    // Address is a stable naked fn in kernel text.
+    // It runs on the dedicated debug IST stack so a #DB taken in the
+    // kernel-entry window (after swapgs, before the stack switch) cannot
+    // corrupt the interrupted stack. Address is a stable naked fn.
     unsafe {
         idt.debug
-            .set_handler_addr(VirtAddr::new(isr::db_trampoline as *const () as u64));
+            .set_handler_addr(VirtAddr::new(isr::db_trampoline as *const () as u64))
+            .set_stack_index(gdt::DB_IST_INDEX - 1);
     }
 
-    // SAFETY: NMI uses dedicated IST stack to handle nested NMIs safely
+    // SAFETY: NMI uses dedicated IST stack to handle nested NMIs safely.
+    // `set_stack_index` is 0-based and adds 1 internally; the gdt
+    // constant is the 1-based hardware slot, so subtract 1.
     unsafe {
-        idt.non_maskable_interrupt.set_handler_fn(isr::isr_nmi).set_stack_index(gdt::NMI_IST_INDEX);
+        idt.non_maskable_interrupt
+            .set_handler_fn(isr::isr_nmi)
+            .set_stack_index(gdt::NMI_IST_INDEX - 1);
     }
 
     // SAFETY: #BP and #OF are CPL=3-reachable; their naked trampolines swapgs
@@ -81,19 +88,25 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
     unsafe {
         idt.double_fault
             .set_handler_addr(VirtAddr::new(isr::isr_double_fault as *const () as u64))
-            .set_stack_index(gdt::DF_IST_INDEX);
+            .set_stack_index(gdt::DF_IST_INDEX - 1);
     }
 
     idt.invalid_tss.set_handler_fn(isr::isr_invalid_tss);
     idt.segment_not_present.set_handler_fn(isr::isr_segment_not_present);
-    idt.stack_segment_fault.set_handler_fn(isr::isr_stack_segment_fault);
+    // SAFETY: #SS is CPL=3-reachable; the naked `ss_trampoline` swapgs-es onto
+    // the kernel per-CPU base before the handler runs (and discards the
+    // CPU-pushed error code before iretq). Address is a stable naked fn.
+    unsafe {
+        idt.stack_segment_fault
+            .set_handler_addr(VirtAddr::new(isr::ss_trampoline as *const () as u64));
+    }
 
     // SAFETY: General protection fault uses a dedicated IST stack so a
     // CPL=3 #GP cannot land on a torn TSS.RSP0 mid-context-switch.
     unsafe {
         idt.general_protection_fault
             .set_handler_addr(VirtAddr::new(isr::gpf_trampoline as *const () as u64))
-            .set_stack_index(gdt::GP_IST_INDEX);
+            .set_stack_index(gdt::GP_IST_INDEX - 1);
     }
 
     // SAFETY: Page fault uses the naked `page_fault_trampoline` so a #PF
@@ -103,7 +116,7 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
     unsafe {
         idt.page_fault
             .set_handler_addr(VirtAddr::new(isr::page_fault_trampoline as *const () as u64))
-            .set_stack_index(gdt::PF_IST_INDEX);
+            .set_stack_index(gdt::PF_IST_INDEX - 1);
     }
 
     idt.x87_floating_point.set_handler_fn(isr::isr_x87_fp);
@@ -119,10 +132,16 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
     unsafe {
         idt.machine_check
             .set_handler_addr(VirtAddr::new(isr::isr_machine_check as *const () as u64))
-            .set_stack_index(gdt::MC_IST_INDEX);
+            .set_stack_index(gdt::MC_IST_INDEX - 1);
     }
 
-    idt.simd_floating_point.set_handler_fn(isr::isr_simd_fp);
+    // SAFETY: #XF is CPL=3-reachable from user SIMD code; the naked
+    // `xf_trampoline` swapgs-es onto the kernel per-CPU base before the
+    // handler's gs-relative accesses run. Address is a stable naked fn.
+    unsafe {
+        idt.simd_floating_point
+            .set_handler_addr(VirtAddr::new(isr::xf_trampoline as *const () as u64));
+    }
     idt.virtualization.set_handler_fn(isr::isr_virtualization);
 }
 

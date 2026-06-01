@@ -33,13 +33,17 @@ static INTERRUPT_DEPTH: [AtomicU8; MAX_CPUS] = {
 };
 
 /// # Safety
-/// Reads CPU ID from GS segment base.
+/// Reads the CPU id from the per-CPU data block pointed to by GS base.
+/// The `cpu_id` field sits at offset 8 of `PerCpuData` (after the
+/// `self_ptr: u64` at offset 0); `gs:0` is the self-pointer, which is
+/// 4096-aligned and therefore useless as an index. Callers must run
+/// with the kernel GS base loaded (post-swapgs).
 fn cpu_id() -> usize {
     #[cfg(target_arch = "x86_64")]
     {
-        let id: u64;
+        let id: u32;
         unsafe {
-            core::arch::asm!("mov {}, gs:0", out(reg) id, options(nostack, preserves_flags));
+            core::arch::asm!("mov {:e}, gs:8", out(reg) id, options(nostack, preserves_flags));
         }
         (id as usize) % MAX_CPUS
     }

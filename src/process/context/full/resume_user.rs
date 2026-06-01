@@ -16,8 +16,13 @@
 
 use super::definition::Context;
 
-const USER_CS: u64 = 0x1B;
-const USER_SS: u64 = 0x23;
+// Ring-3 selectors with RPL=3. These must match the GDT layout in
+// `arch::x86_64::gdt::constants` (SEL_USER_CODE = 0x20|3 = 0x23,
+// SEL_USER_DATA = 0x18|3 = 0x1B). `iretq` loads CS from the code
+// descriptor and SS from the data descriptor; swapping them makes the
+// CPU fault with #GP on the return, so the values are pinned here.
+const USER_CS: u64 = 0x23;
+const USER_SS: u64 = 0x1B;
 
 impl Context {
     /// Restore this context as the user-mode register state and `iretq`
@@ -25,7 +30,7 @@ impl Context {
     pub fn resume_user(&self) -> ! {
         // SAFETY: ek@nonos.systems — `resume_user_asm` reads the
         // `Context` once, builds a five-word iret frame on the kernel
-        // stack (SS=0x23, RSP, RFLAGS|0x202, CS=0x1B, RIP), loads every
+        // stack (SS=0x1B, RSP, RFLAGS|0x202, CS=0x23, RIP), loads every
         // GPR from the context, swapgs to restore user GS, then iretq.
         // The reserved RFLAGS bits 1 and 9 are forced on so the user
         // resumes with interrupts enabled and a legal RFLAGS.

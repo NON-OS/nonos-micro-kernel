@@ -54,8 +54,13 @@ pub use syscall::setup_syscall;
 pub use table::{Gdt, GdtPtr};
 pub use tss::{Tss, TssEntry};
 
+// Hardware (1-based) IST slot numbers, matching the TSS fill in
+// `PerCpuGdt::init` (the custom `Tss::set_ist` indexes `ist[index - 1]`).
+// The x86_64 crate's `Entry::set_stack_index` takes a 0-based index and
+// adds 1 internally, so IDT gates pass `*_IST_INDEX - 1`.
 pub const NMI_IST_INDEX: u16 = IST_NMI as u16;
 pub const DF_IST_INDEX: u16 = IST_DOUBLE_FAULT as u16;
 pub const PF_IST_INDEX: u16 = IST_PAGE_FAULT as u16;
 pub const GP_IST_INDEX: u16 = IST_GP as u16;
 pub const MC_IST_INDEX: u16 = IST_MACHINE_CHECK as u16;
+pub const DB_IST_INDEX: u16 = IST_DEBUG as u16;
