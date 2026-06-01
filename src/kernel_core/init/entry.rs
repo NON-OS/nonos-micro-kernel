@@ -68,6 +68,8 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
         }
     }
 
+    super::start_secondary::start_secondary_cpus();
+
     boot_log::ok("NONOS", "Core ready");
 }
 

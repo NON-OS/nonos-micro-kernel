@@ -53,6 +53,11 @@ pub fn detect_cpus() -> usize {
         }
     }
 
+    let acpi_enabled = crate::arch::x86_64::acpi::processors().iter().filter(|p| p.enabled).count();
+    if acpi_enabled > 0 {
+        topology.logical_cpus = acpi_enabled;
+    }
+
     if topology.logical_cpus > MAX_CPUS {
         topology.logical_cpus = MAX_CPUS;
     }
@@ -122,9 +127,19 @@ fn build_ap_list() {
     let mut ap_list = AP_LIST.lock();
     ap_list.clear();
 
-    if let Some(topo) = *TOPOLOGY.lock() {
-        let bsp_apic = crate::arch::x86_64::interrupt::apic::id();
+    let bsp_apic = crate::arch::x86_64::interrupt::apic::id();
 
+    let procs = crate::arch::x86_64::acpi::processors();
+    if !procs.is_empty() {
+        for p in &procs {
+            if p.enabled && p.apic_id != bsp_apic {
+                ap_list.push(p.apic_id);
+            }
+        }
+        return;
+    }
+
+    if let Some(topo) = *TOPOLOGY.lock() {
         for i in 0..topo.logical_cpus {
             let apic_id = i as u32;
             if apic_id != bsp_apic {

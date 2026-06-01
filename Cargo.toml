@@ -205,6 +205,8 @@ microkernel-capsules = [
 # are the kernel build path for everything that is not the smoketest
 # harness; the matching `nonos-mk-<slug>-prod` Makefile recipes
 # invoke them.
+nonos-smp = []
+
 microkernel-proof-io = [
   "microkernel-core",
   "nonos-production",

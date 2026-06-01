@@ -14,11 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod entry;
-mod start_secondary;
-pub(crate) mod framebuffer;
+#[cfg(feature = "nonos-smp")]
+pub fn start_secondary_cpus() {
+    match crate::smp::start_aps() {
+        Ok(started) => {
+            crate::sys::serial::print(b"[SMP-PROOF] cpu_count=");
+            crate::sys::serial::print_dec((started + 1) as u64);
+            if started > 0 {
+                crate::sys::serial::println(b" PASS");
+            } else {
+                crate::sys::serial::println(b" UP");
+            }
+        }
+        Err(e) => {
+            crate::sys::serial::print(b"[SMP-PROOF] FAIL ");
+            crate::sys::serial::println(e.as_bytes());
+        }
+    }
+}
 
-#[cfg(target_arch = "x86_64")]
-mod memory;
-
-pub use entry::{microkernel_init, microkernel_main};
+#[cfg(not(feature = "nonos-smp"))]
+pub fn start_secondary_cpus() {}
