@@ -21,8 +21,8 @@ pub unsafe extern "C" fn _start() -> ! {
     debug::marker(b"probe boot");
     let ctx = match setup::run() {
         Ok(ctx) => ctx,
-        Err(_) => {
-            debug::marker(b"setup failed");
+        Err(e) => {
+            debug::marker(e.as_bytes());
             mk_exit(2);
         }
     };

@@ -15,9 +15,9 @@ fn lookup_port(name: &[u8]) -> Result<u32, &'static str> {
 }
 
 pub fn lookup_compositor_port() -> Result<u32, &'static str> {
-    lookup_port(COMPOSITOR_SERVICE)
+    lookup_port(COMPOSITOR_SERVICE).map_err(|_| "lookup compositor")
 }
 
 pub fn lookup_router_port() -> Result<u32, &'static str> {
-    lookup_port(INPUT_ROUTER_SERVICE)
+    lookup_port(INPUT_ROUTER_SERVICE).map_err(|_| "lookup input_router")
 }
