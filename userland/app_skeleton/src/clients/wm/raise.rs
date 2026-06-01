@@ -14,14 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub struct Peers {
-    pub compositor: u32,
-    pub wm: u32,
-    pub input_router: u32,
-    pub toolkit: u32,
-}
+use crate::wire::{call_status, NWMP_MAGIC};
 
-pub struct ServicePeer {
-    pub port: u32,
-    pub pid: u32,
+const OP: u16 = 0x0007;
+const BODY_LEN: usize = 8;
+
+pub fn window_raise(port: u32, request_id: u32, window_id: u32) -> Result<(), &'static str> {
+    let mut body = [0u8; BODY_LEN];
+    body[0..4].copy_from_slice(&window_id.to_le_bytes());
+    let status = call_status(port, NWMP_MAGIC, OP, request_id, &body)?;
+    if status != 0 {
+        return Err("wm rejected window_raise");
+    }
+    Ok(())
 }

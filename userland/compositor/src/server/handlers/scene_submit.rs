@@ -54,8 +54,17 @@ pub fn handle(
     {
         return respond::status(sender_pid, req, E_INVAL, tx);
     }
-    let layer =
-        Layer { owner_pid: sender_pid, surface_handle, x, y, width, height, z, in_use: true };
+    let layer = Layer {
+        owner_pid: sender_pid,
+        surface_handle,
+        x,
+        y,
+        width,
+        height,
+        z,
+        in_use: true,
+        miss_count: 0,
+    };
     if ctx.scene.submit(layer).is_err() {
         return respond::status(sender_pid, req, E_INVAL, tx);
     }

@@ -17,12 +17,14 @@
 mod constants;
 mod lookup_port;
 mod require_compositor;
+mod require_input_router;
 mod require_port;
 mod require_wallpaper;
 mod require_wm;
 mod try_market;
 
 pub use require_compositor::require_compositor;
+pub use require_input_router::require_input_router;
 pub use require_wallpaper::require_wallpaper;
 pub use require_wm::require_wm;
 pub use try_market::try_market;

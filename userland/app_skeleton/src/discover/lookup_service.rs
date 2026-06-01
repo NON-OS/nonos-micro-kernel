@@ -14,14 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub struct Peers {
-    pub compositor: u32,
-    pub wm: u32,
-    pub input_router: u32,
-    pub toolkit: u32,
-}
+use nonos_libc::mk_service_lookup;
 
-pub struct ServicePeer {
-    pub port: u32,
-    pub pid: u32,
+use super::peers::ServicePeer;
+
+pub fn lookup_service(service: &[u8]) -> Option<ServicePeer> {
+    let mut pid = 0u32;
+    let mut port = 0u32;
+    let rc = mk_service_lookup(service.as_ptr(), service.len(), &mut port, &mut pid);
+    if rc < 0 || pid == 0 || port == 0 {
+        return None;
+    }
+    Some(ServicePeer { port, pid })
 }

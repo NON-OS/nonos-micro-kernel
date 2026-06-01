@@ -14,14 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub struct Peers {
-    pub compositor: u32,
-    pub wm: u32,
-    pub input_router: u32,
-    pub toolkit: u32,
+pub struct LauncherApp {
+    pub icon: &'static [u8],
+    pub label: &'static [u8],
+    pub service: &'static [u8],
 }
 
-pub struct ServicePeer {
-    pub port: u32,
-    pub pid: u32,
-}
+pub const LAUNCHER_APPS: [LauncherApp; 7] = [
+    LauncherApp { icon: b"T", label: b"terminal", service: b"app.terminal" },
+    LauncherApp { icon: b"F", label: b"file_manager", service: b"app.file_manager" },
+    LauncherApp { icon: b"E", label: b"text_editor", service: b"app.text_editor" },
+    LauncherApp { icon: b"S", label: b"settings", service: b"app.settings" },
+    LauncherApp { icon: b"P", label: b"process_manager", service: b"app.process_manager" },
+    LauncherApp { icon: b"A", label: b"about", service: b"app.about" },
+    LauncherApp { icon: b"C", label: b"calculator", service: b"app.calculator" },
+];

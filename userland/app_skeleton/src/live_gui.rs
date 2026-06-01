@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub struct Peers {
-    pub compositor: u32,
-    pub wm: u32,
-    pub input_router: u32,
-    pub toolkit: u32,
-}
+use nonos_libc::mk_debug;
 
-pub struct ServicePeer {
-    pub port: u32,
-    pub pid: u32,
+pub fn announce_live_gui(label: &[u8]) {
+    let n = core::cmp::min(label.len(), 160);
+    let mut buf = [0u8; 173];
+    buf[..11].copy_from_slice(b"[LIVE-GUI] ");
+    buf[11..11 + n].copy_from_slice(&label[..n]);
+    buf[11 + n] = b'\n';
+    let _ = mk_debug(buf.as_ptr(), 12 + n);
 }

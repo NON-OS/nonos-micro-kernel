@@ -14,14 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub struct Peers {
-    pub compositor: u32,
-    pub wm: u32,
-    pub input_router: u32,
-    pub toolkit: u32,
-}
-
-pub struct ServicePeer {
-    pub port: u32,
-    pub pid: u32,
+pub fn require_input_router() -> Result<u32, &'static str> {
+    super::require_port::require_port(super::constants::INPUT_ROUTER_SERVICE)
+        .map_err(|_| "input_router service not announced")
 }

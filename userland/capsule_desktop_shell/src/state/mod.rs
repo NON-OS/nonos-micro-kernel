@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod apps;
 pub mod context;
 pub mod notify;
 pub mod spotlight;
 pub mod tray;
 
+pub use apps::LAUNCHER_APPS;
 pub use context::Context;
 pub use notify::NotifyLevel;
 pub use spotlight::SpotlightState;

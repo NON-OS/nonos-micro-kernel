@@ -14,14 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub struct Peers {
-    pub compositor: u32,
-    pub wm: u32,
-    pub input_router: u32,
-    pub toolkit: u32,
-}
+mod call;
+mod list_paths;
+mod read_file;
+mod types;
+mod write_file;
 
-pub struct ServicePeer {
-    pub port: u32,
-    pub pid: u32,
-}
+pub use list_paths::list_paths;
+pub use read_file::read_file;
+pub use write_file::write_file;

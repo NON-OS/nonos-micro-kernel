@@ -26,4 +26,5 @@ pub struct Layer {
     pub height: u32,
     pub z: u32,
     pub in_use: bool,
+    pub miss_count: u16,
 }

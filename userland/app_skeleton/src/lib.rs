@@ -21,6 +21,7 @@ extern crate alloc;
 pub mod app;
 pub mod clients;
 pub mod discover;
+pub mod live_gui;
 pub mod input;
 pub mod paint;
 pub mod runner;
@@ -28,6 +29,7 @@ pub mod setup;
 pub mod wire;
 
 pub use app::{App, AppManifest, EventOutcome, WindowKind};
+pub use live_gui::announce_live_gui;
 pub use clients::clipboard::{clipboard_copy, clipboard_paste};
 pub use input::{
     InputEvent, InputKind, KEY_BACKSPACE, KEY_DELETE, KEY_DOWN, KEY_END, KEY_ENTER, KEY_ESC,

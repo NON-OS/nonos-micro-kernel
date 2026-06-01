@@ -1,0 +1,52 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use alloc::{vec, vec::Vec};
+
+use crate::discover::lookup_service;
+use crate::wire::HDR_LEN;
+
+pub fn write_file(owner_pid: u32, path: &[u8], data: &[u8]) -> Result<(), &'static str> {
+    let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
+    let mut open = Vec::with_capacity(9 + path.len());
+    open.extend_from_slice(&owner_pid.to_le_bytes());
+    open.push(path.len() as u8);
+    open.extend_from_slice(path);
+    open.extend_from_slice(&(super::types::O_CREATE | super::types::O_TRUNC).to_le_bytes());
+    let mut rx = vec![0u8; HDR_LEN + 8];
+    let (status, total) = super::call::call(peer.port, super::types::OP_OPEN, 5, &open, &mut rx)?;
+    if status != 0 || total < HDR_LEN + 8 {
+        return Err("vfs open failed");
+    }
+    let fd = u32::from_le_bytes(rx[HDR_LEN + 4..HDR_LEN + 8].try_into().unwrap());
+    let mut write = Vec::with_capacity(8 + data.len());
+    write.extend_from_slice(&owner_pid.to_le_bytes());
+    write.extend_from_slice(&fd.to_le_bytes());
+    write.extend_from_slice(data);
+    let (status, total) = super::call::call(peer.port, super::types::OP_WRITE, 6, &write, &mut rx)?;
+    let mut close = [0u8; 8];
+    close[..4].copy_from_slice(&owner_pid.to_le_bytes());
+    close[4..8].copy_from_slice(&fd.to_le_bytes());
+    let _ = super::call::call(peer.port, super::types::OP_CLOSE, 7, &close, &mut rx);
+    if status != 0 || total < HDR_LEN + 8 {
+        return Err("vfs write failed");
+    }
+    let wrote = u32::from_le_bytes(rx[HDR_LEN + 4..HDR_LEN + 8].try_into().unwrap()) as usize;
+    if wrote != data.len() {
+        return Err("vfs short write");
+    }
+    Ok(())
+}

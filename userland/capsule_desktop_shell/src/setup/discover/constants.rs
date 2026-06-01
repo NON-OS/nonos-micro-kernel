@@ -17,6 +17,7 @@
 use core::sync::atomic::AtomicBool;
 
 pub(super) const COMPOSITOR_SERVICE: &[u8] = b"compositor";
+pub(super) const INPUT_ROUTER_SERVICE: &[u8] = b"input_router";
 pub(super) const MARKET_SERVICE: &[u8] = b"market.index";
 pub(super) const MARKET_UNAVAILABLE_LEN: usize = 75;
 pub(super) const MARKET_UNAVAILABLE: &[u8] =

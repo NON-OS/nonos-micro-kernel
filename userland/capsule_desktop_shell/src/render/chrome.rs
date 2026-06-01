@@ -16,6 +16,7 @@
 
 use super::fill::fill_rect;
 use super::layout::{bottom_dock_rect, menubar_rect, side_dock_rect, spotlight_rect, Rect};
+use super::{draw_overlay_text, paint_bottom_taskbar, paint_side_launchers};
 use crate::state::Context;
 
 const TRANSPARENT: u32 = 0x0000_0000;
@@ -23,6 +24,7 @@ const MENUBAR_ARGB: u32 = 0xFF0E_1218;
 const SIDE_DOCK_ARGB: u32 = 0xFF0F_1218;
 const BOTTOM_DOCK_ARGB: u32 = 0xFF1B_2030;
 const SPOTLIGHT_ARGB: u32 = 0xFF14_1B26;
+const TITLE_FG: u32 = 0xFFE1_ECF7;
 
 pub fn clear_overlay(ctx: &Context) {
     fill_rect(
@@ -43,6 +45,9 @@ pub fn paint_chrome(ctx: &Context) {
     paint(ctx, menubar_rect(ctx.width), MENUBAR_ARGB);
     paint(ctx, side_dock_rect(ctx.width, ctx.height), SIDE_DOCK_ARGB);
     paint(ctx, bottom_dock_rect(ctx.width, ctx.height), BOTTOM_DOCK_ARGB);
+    draw_overlay_text(ctx, 16, 10, b"NONOS launcher", TITLE_FG);
+    paint_side_launchers(ctx);
+    paint_bottom_taskbar(ctx);
     paint_notify_badge(ctx);
     if ctx.spotlight.visible {
         paint(ctx, spotlight_rect(ctx.width, ctx.height), SPOTLIGHT_ARGB);

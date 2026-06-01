@@ -21,6 +21,7 @@ extern crate alloc;
 
 mod compositor_client;
 mod debug;
+mod input_router_client;
 mod market_client;
 mod protocol;
 mod render;

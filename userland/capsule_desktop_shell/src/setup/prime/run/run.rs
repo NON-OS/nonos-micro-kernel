@@ -15,12 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::debug;
+use crate::input_router_client;
 use crate::market_client;
 use crate::render::paint_chrome;
 use crate::setup::prime::{overlay, peers, register};
 use crate::state::{Context, SpotlightState, TrayTable};
 use crate::wm_client;
 use nonos_libc::mk_munmap;
+
+const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
+const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
+const SHELL_INPUT_MASK: u32 = INPUT_POINTER_ABS_BIT | INPUT_BUTTON_DOWN_BIT;
 
 pub fn run() -> Result<Context, &'static str> {
     let peers = peers::resolve()?;
@@ -47,6 +52,9 @@ pub fn run() -> Result<Context, &'static str> {
         }
         return Err(e);
     }
+    let rid = ctx.issue_request_id();
+    input_router_client::subscribe(peers.input_router_port, rid, SHELL_INPUT_MASK)?;
+    debug::marker(b"[LIVE-GUI] launcher visible");
     debug::marker(b"scene submitted");
     debug::marker(b"peers ok");
     Ok(ctx)

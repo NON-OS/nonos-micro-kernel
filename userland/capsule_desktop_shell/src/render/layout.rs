@@ -17,12 +17,15 @@
 use crate::state::spotlight::{SPOTLIGHT_HEIGHT, SPOTLIGHT_WIDTH};
 
 pub const MENUBAR_HEIGHT: u32 = 28;
-pub const SIDE_DOCK_WIDTH: u32 = 56;
+pub const SIDE_DOCK_WIDTH: u32 = 152;
 pub const SIDE_DOCK_TOP_INSET: u32 = MENUBAR_HEIGHT + 40;
-pub const SIDE_DOCK_HEIGHT: u32 = 200;
-pub const BOTTOM_DOCK_WIDTH: u32 = 360;
+pub const SIDE_DOCK_HEIGHT: u32 = 220;
+pub const SIDE_ENTRY_H: u32 = 22;
+pub const SIDE_ENTRY_PAD: u32 = 6;
+pub const BOTTOM_DOCK_WIDTH: u32 = 620;
 pub const BOTTOM_DOCK_HEIGHT: u32 = 64;
 pub const BOTTOM_DOCK_BOTTOM_INSET: u32 = 24;
+pub const TASKBAR_ENTRY_W: u32 = 80;
 
 #[derive(Clone, Copy, Default, Debug)]
 pub struct Rect {

@@ -33,6 +33,7 @@ impl SceneTable {
                 height: 0,
                 z: 0,
                 in_use: false,
+                miss_count: 0,
             }; MAX_LAYERS],
             count: 0,
         }
@@ -69,5 +70,25 @@ impl SceneTable {
             }
         }
         dropped
+    }
+    pub fn reap_unattachable(&mut self, attached: &[u64], threshold: u16, dropped: &mut [u64]) -> usize {
+        let mut n = 0;
+        for slot in self.entries.iter_mut() {
+            if !slot.in_use {
+                continue;
+            }
+            if attached.contains(&slot.surface_handle) {
+                slot.miss_count = 0;
+                continue;
+            }
+            slot.miss_count = slot.miss_count.saturating_add(1);
+            if slot.miss_count >= threshold && n < dropped.len() {
+                dropped[n] = slot.surface_handle;
+                n += 1;
+                *slot = Layer::default();
+                self.count = self.count.saturating_sub(1);
+            }
+        }
+        n
     }
 }

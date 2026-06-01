@@ -36,6 +36,9 @@ pub fn run(mut ctx: Context) -> ! {
         if n <= 0 || sender_pid == 0 {
             continue;
         }
+        if super::input::handle(&mut ctx, &rx[..n as usize]) {
+            continue;
+        }
         let (req, body) = match parse(&rx[..n as usize]) {
             Ok(parsed) => parsed,
             Err((code, req)) => {

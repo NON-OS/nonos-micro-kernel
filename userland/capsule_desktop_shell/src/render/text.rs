@@ -14,14 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub struct Peers {
-    pub compositor: u32,
-    pub wm: u32,
-    pub input_router: u32,
-    pub toolkit: u32,
-}
+use nonos_toolkit::font::render::draw_text;
 
-pub struct ServicePeer {
-    pub port: u32,
-    pub pid: u32,
+use crate::state::Context;
+
+pub fn draw_overlay_text(ctx: &Context, x: u32, y: u32, text: &[u8], color: u32) {
+    let words = (ctx.stride as usize * ctx.height as usize) / 4;
+    let pixels = unsafe { core::slice::from_raw_parts_mut(ctx.backing_va as *mut u32, words) };
+    draw_text(pixels, (ctx.stride / 4) as usize, ctx.width, ctx.height, x, y, text, color);
 }

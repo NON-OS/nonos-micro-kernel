@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod lookup;
+mod lookup_service;
 mod peers;
 mod require;
 
 pub use lookup::lookup_port;
-pub use peers::Peers;
+pub use lookup_service::lookup_service;
+pub use peers::{Peers, ServicePeer};
 pub use require::require_peers;

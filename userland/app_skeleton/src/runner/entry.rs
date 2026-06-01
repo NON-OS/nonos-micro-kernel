@@ -45,7 +45,13 @@ pub fn run<A: App>(app: A) -> ! {
     };
     let mut rx = vec![0u8; DELIVERY_LEN.max(256)];
     loop {
-        let result = drain(&mut booted.app, &mut rx);
+        let result = drain(
+            &mut booted.app,
+            &mut rx,
+            peers.wm,
+            booted.manifest.window_id,
+            &mut request_id,
+        );
         if result.close {
             close(&peers, booted.manifest.window_id, &booted.binding, &mut request_id);
         }

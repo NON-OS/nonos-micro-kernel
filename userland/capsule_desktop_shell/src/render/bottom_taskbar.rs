@@ -14,14 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub struct Peers {
-    pub compositor: u32,
-    pub wm: u32,
-    pub input_router: u32,
-    pub toolkit: u32,
-}
+use super::fill::fill_rect;
+use super::layout::{bottom_dock_rect, TASKBAR_ENTRY_W};
+use super::text::draw_overlay_text;
+use crate::state::{Context, LAUNCHER_APPS};
 
-pub struct ServicePeer {
-    pub port: u32,
-    pub pid: u32,
+pub fn paint_bottom_taskbar(ctx: &Context) {
+    let dock = bottom_dock_rect(ctx.width, ctx.height);
+    let mut x = dock.x + 12;
+    for app in LAUNCHER_APPS.iter() {
+        fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, x, dock.y + 10, TASKBAR_ENTRY_W, dock.height - 20, 0x2241_5164);
+        draw_overlay_text(ctx, x + 8, dock.y + 24, app.icon, 0xFFDA_EAF9);
+        draw_overlay_text(ctx, x + 24, dock.y + 24, app.label, 0xFFDA_EAF9);
+        x += TASKBAR_ENTRY_W + 6;
+    }
 }

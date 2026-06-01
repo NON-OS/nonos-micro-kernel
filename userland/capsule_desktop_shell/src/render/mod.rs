@@ -14,9 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod bottom_taskbar;
 pub mod chrome;
 pub mod fill;
 pub mod layout;
+mod side_launchers;
+mod text;
 
+pub use bottom_taskbar::paint_bottom_taskbar;
 pub use chrome::paint_chrome;
+pub use side_launchers::paint_side_launchers;
+pub use text::draw_overlay_text;
 pub use layout::{menubar_rect, spotlight_rect};

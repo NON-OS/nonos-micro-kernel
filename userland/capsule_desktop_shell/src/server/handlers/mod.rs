@@ -15,6 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod health;
+pub mod launcher_focus;
+pub mod launcher_request;
 pub mod notify;
 pub mod spotlight_open;
 pub mod tray_register;
