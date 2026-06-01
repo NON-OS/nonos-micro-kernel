@@ -1,0 +1,29 @@
+# NØNOS runtime example: CLI
+# eK@nonos.systems
+#
+# A non-graphical capsule: read the boot clock and a few entropy
+# bytes, format a line, and emit it on the log channel. Declares
+# CoreExec, Memory, Debug, and Crypto.
+
+[package]
+name = "nonos-example-cli"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS runtime example: CLI capsule"
+
+[[bin]]
+name = "cli_probe"
+path = "src/main.rs"
+
+[dependencies]
+nonos-runtime = { path = "../../nonos_runtime" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true

@@ -1,0 +1,28 @@
+# NØNOS runtime example: hello
+# eK@nonos.systems
+#
+# Smallest possible capsule on the native runtime: boot, emit one
+# line, exit cleanly. Declares only CoreExec and Debug.
+
+[package]
+name = "nonos-example-hello"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS runtime example: hello capsule"
+
+[[bin]]
+name = "hello"
+path = "src/main.rs"
+
+[dependencies]
+nonos-runtime = { path = "../../nonos_runtime" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true

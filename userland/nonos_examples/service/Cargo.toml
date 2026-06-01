@@ -1,0 +1,29 @@
+# NØNOS runtime example: service
+# eK@nonos.systems
+#
+# A service capsule: register a named endpoint, then loop receiving
+# requests and replying with the same bytes (echo). Declares CoreExec,
+# IPC, Memory, and RegisterService.
+
+[package]
+name = "nonos-example-service"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS runtime example: service capsule"
+
+[[bin]]
+name = "echo_service"
+path = "src/main.rs"
+
+[dependencies]
+nonos-runtime = { path = "../../nonos_runtime" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
