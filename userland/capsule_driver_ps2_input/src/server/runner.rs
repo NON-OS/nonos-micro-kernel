@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use alloc::vec;
 use nonos_libc::mk_ipc_recv;
+use crate::debug::marker;
 use crate::protocol::{
     decode_request, CONTROLLER_STATUS_PAYLOAD_LEN, EVENT_WIRE_LEN, E_INVAL, HDR_LEN,
     MAX_POLL_EVENTS, MOUSE_EVENT_WIRE_LEN, MOUSE_POLL_PAYLOAD_PREFIX_LEN, OP_CONTROLLER_STATUS,
@@ -39,6 +40,7 @@ pub fn run(driver: Driver) -> ! {
     let mut rx = vec![0u8; rx_len];
     let mut tx = vec![0u8; tx_len];
     let mut ctx = Context::new(driver);
+    marker(b"endpoint driver.ps2_kbd0 ready");
     loop {
         let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, 0);
         if n <= 0 {

@@ -13,35 +13,18 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-#![no_std]
-#![no_main]
-extern crate alloc;
-mod constants;
-mod debug;
-mod discover;
-mod init;
-mod keymap;
-mod mouse;
-mod poll;
-mod protocol;
-mod ring;
-mod server;
-mod setup;
-use nonos_libc::{heap_init, mk_exit, mk_yield};
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    let driver = loop {
-        match setup::run() {
-            Ok(d) => break d,
-            Err(_) => {
-                for _ in 0..64 {
-                    mk_yield();
-                }
-            }
-        }
-    };
-    server::run(driver);
+
+use nonos_libc::mk_debug;
+
+const PREFIX: &[u8] = b"[driver_ps2_input] ";
+const MAX_LABEL: usize = 160;
+
+pub fn marker(label: &[u8]) {
+    let label_len = if label.len() > MAX_LABEL { MAX_LABEL } else { label.len() };
+    let mut buf = [0u8; PREFIX.len() + MAX_LABEL + 1];
+    let p = PREFIX.len();
+    buf[..p].copy_from_slice(PREFIX);
+    buf[p..p + label_len].copy_from_slice(&label[..label_len]);
+    buf[p + label_len] = b'\n';
+    let _ = mk_debug(buf.as_ptr(), p + label_len + 1);
 }
