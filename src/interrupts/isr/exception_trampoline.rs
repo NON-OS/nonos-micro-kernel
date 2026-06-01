@@ -86,3 +86,5 @@ exc_tramp_err!(ac_trampoline, ac_trap, ac_handler);
 exc_tramp_noerr!(of_trampoline, of_trap, crate::interrupts::handlers::overflow);
 exc_tramp_noerr!(bp_trampoline, bp_trap, crate::interrupts::handlers::breakpoint);
 exc_tramp_noerr!(db_trampoline, db_trap, crate::interrupts::handlers::debug);
+exc_tramp_err!(ss_trampoline, ss_trap, crate::interrupts::handlers::stack_segment_fault);
+exc_tramp_noerr!(xf_trampoline, xf_trap, crate::interrupts::handlers::simd_floating_point);
