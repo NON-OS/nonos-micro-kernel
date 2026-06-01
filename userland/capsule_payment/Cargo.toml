@@ -1,0 +1,30 @@
+# NONOS userland: capsule_payment
+# eK@nonos.systems
+#
+# Issues signed NOX micro-receipts for paid capsule installs. Holds no
+# key material: it assembles receipt fields, derives epoch/expiry and a
+# monotonic nonce, asks capsule_keyring to sign the EIP-712 receipt, and
+# persists the signed receipt to a local outbox for batch settlement.
+
+[package]
+name = "nonos_capsule_payment"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS payment capsule, signed NOX install receipts"
+
+[[bin]]
+name = "payment"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true

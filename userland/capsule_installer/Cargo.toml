@@ -1,0 +1,31 @@
+# NONOS userland: capsule_installer
+# eK@nonos.systems
+#
+# Install authority. Receives a verified install request (capsule id,
+# price, publisher Ethereum address) from the trusted market driver,
+# and for paid listings gates the install on a settled NOX payment
+# receipt produced by capsule_payment. Free listings install without
+# payment. Holds no key material and no index-signature authority.
+
+[package]
+name = "nonos_capsule_installer"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS install authority, payment-gated capsule installs"
+
+[[bin]]
+name = "installer"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
