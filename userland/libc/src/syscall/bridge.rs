@@ -21,7 +21,7 @@ use super::raw::raw;
 /// surface that. The POSIX `-1 + errno` fold is a separate bridge that
 /// arrives with per-thread errno storage.
 #[inline]
-pub(crate) fn call_raw(num: i64, args: [u64; 6]) -> i64 {
+pub fn call_raw(num: i64, args: [u64; 6]) -> i64 {
     // SAFETY: the SYSCALL instruction itself is the only unsafe
     // operation; the kernel validates argument semantics and returns
     // -EFAULT on a bad pointer rather than producing UB.

@@ -14,8 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod mmap;
-mod munmap;
+use crate::syscall::call_raw;
 
-pub use mmap::mk_mmap;
-pub use munmap::mk_munmap;
+const N_MK_MUNMAP: i64 = 0x504D_554D;
+
+#[no_mangle]
+pub extern "C" fn mk_munmap(addr: *mut u8, len: usize) -> i64 {
+    call_raw(N_MK_MUNMAP, [addr as u64, len as u64, 0, 0, 0, 0])
+}

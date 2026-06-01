@@ -18,7 +18,8 @@ mod bridge;
 mod numbers;
 mod raw;
 
-pub(crate) use bridge::{call_diverging, call_raw};
+pub use bridge::call_raw;
+pub(crate) use bridge::call_diverging;
 pub(crate) use numbers::{
     N_CRYPTO_DECRYPT, N_CRYPTO_ED25519_VERIFY, N_CRYPTO_ENCRYPT, N_CRYPTO_HASH,
     N_CRYPTO_HKDF_SHA256, N_CRYPTO_HMAC_SHA256, N_CRYPTO_RANDOM, N_CRYPTO_X25519_PUBLIC,

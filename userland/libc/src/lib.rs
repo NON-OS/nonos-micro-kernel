@@ -57,7 +57,7 @@ pub use ipc::{
     mk_ipc_send_to_pid,
     mk_service_lookup, mk_service_register,
 };
-pub use mem::mk_mmap;
+pub use mem::{mk_mmap, mk_munmap};
 pub use surface_registry::{
     mk_display_vsync_wait, mk_input_event_drain, mk_input_event_post, mk_surface_attach,
     mk_surface_present, mk_surface_register, mk_surface_release, mk_surface_share, InputEvent,
@@ -65,5 +65,6 @@ pub use surface_registry::{
     INPUT_KIND_KEY_UP, INPUT_KIND_POINTER_ABS, INPUT_KIND_POINTER_REL, INPUT_KIND_TOUCH,
     INPUT_KIND_WHEEL, SURFACE_FORMAT_ARGB8888,
 };
+pub use syscall::call_raw as mk_syscall_raw;
 pub use time::mk_time_millis;
 pub use unistd::{mk_exit, mk_yield};
