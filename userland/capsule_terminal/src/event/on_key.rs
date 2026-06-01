@@ -30,7 +30,7 @@ use crate::term::state::State;
 
 pub fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
     if event.flags & MOD_CTRL != 0 {
-        if let Some(out) = on_ctrl(state, event.code) {
+        if let Some(out) = on_ctrl(state, event.code, event.flags) {
             return out;
         }
     }

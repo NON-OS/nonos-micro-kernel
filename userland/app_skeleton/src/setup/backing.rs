@@ -35,7 +35,7 @@ pub(super) fn alloc_backing(width: u32, height: u32) -> Result<(u64, u32, u64), 
         -1,
         0,
     );
-    if base.is_null() {
+    if (base as isize) <= 0 {
         return Err("backing mmap failed");
     }
     Ok((base as u64, stride, byte_len))

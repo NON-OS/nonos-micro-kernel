@@ -14,25 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
+mod copy;
+mod paste;
 
-extern crate alloc;
-
-pub mod app;
-pub mod clients;
-pub mod discover;
-pub mod input;
-pub mod paint;
-pub mod runner;
-pub mod setup;
-pub mod wire;
-
-pub use app::{App, AppManifest, EventOutcome, WindowKind};
-pub use clients::clipboard::{clipboard_copy, clipboard_paste};
-pub use input::{
-    InputEvent, InputKind, KEY_BACKSPACE, KEY_DELETE, KEY_DOWN, KEY_END, KEY_ENTER, KEY_ESC,
-    KEY_HOME, KEY_LEFT, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_RIGHT, KEY_TAB, KEY_UP, MOD_ALT, MOD_CAPS,
-    MOD_CTRL, MOD_META, MOD_NUM, MOD_SHIFT,
-};
-pub use paint::PaintBuffer;
-pub use runner::run;
+pub use copy::clipboard_copy;
+pub use paste::clipboard_paste;

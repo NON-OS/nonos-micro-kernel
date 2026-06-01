@@ -41,4 +41,6 @@ pub fn run(out: &mut Output<'_>, _argv: &[&[u8]]) {
     out.writeln(b"  Ctrl-C                  cancel current input line");
     out.writeln(b"  Ctrl-U                  drop the current input line");
     out.writeln(b"  Ctrl-A / Ctrl-E         home / end of input line");
+    out.writeln(b"  Ctrl-Shift-C            copy input line to clipboard");
+    out.writeln(b"  Ctrl-V                  paste from clipboard");
 }

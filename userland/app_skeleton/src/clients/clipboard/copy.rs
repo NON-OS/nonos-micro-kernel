@@ -14,25 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
+use alloc::vec::Vec;
 
-extern crate alloc;
+use crate::discover::lookup_port;
+use crate::wire::{call_status, NCLP_MAGIC};
 
-pub mod app;
-pub mod clients;
-pub mod discover;
-pub mod input;
-pub mod paint;
-pub mod runner;
-pub mod setup;
-pub mod wire;
+const OP_COPY: u16 = 0x0002;
+const CONTENT_TYPE_TEXT: u32 = 1;
 
-pub use app::{App, AppManifest, EventOutcome, WindowKind};
-pub use clients::clipboard::{clipboard_copy, clipboard_paste};
-pub use input::{
-    InputEvent, InputKind, KEY_BACKSPACE, KEY_DELETE, KEY_DOWN, KEY_END, KEY_ENTER, KEY_ESC,
-    KEY_HOME, KEY_LEFT, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_RIGHT, KEY_TAB, KEY_UP, MOD_ALT, MOD_CAPS,
-    MOD_CTRL, MOD_META, MOD_NUM, MOD_SHIFT,
-};
-pub use paint::PaintBuffer;
-pub use runner::run;
+pub fn clipboard_copy(text: &[u8]) -> Result<(), &'static str> {
+    let port = lookup_port(b"clipboard").ok_or("clipboard not available")?;
+    let mut payload = Vec::with_capacity(4 + text.len());
+    payload.extend_from_slice(&CONTENT_TYPE_TEXT.to_le_bytes());
+    payload.extend_from_slice(text);
+    let status = call_status(port, NCLP_MAGIC, OP_COPY, 0, &payload)?;
+    if status != 0 {
+        return Err("clipboard rejected copy");
+    }
+    Ok(())
+}

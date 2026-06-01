@@ -14,25 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
+use nonos_libc::mk_ipc_call;
 
-extern crate alloc;
+use super::builder::build_request;
+use super::constants::HDR_LEN;
 
-pub mod app;
-pub mod clients;
-pub mod discover;
-pub mod input;
-pub mod paint;
-pub mod runner;
-pub mod setup;
-pub mod wire;
-
-pub use app::{App, AppManifest, EventOutcome, WindowKind};
-pub use clients::clipboard::{clipboard_copy, clipboard_paste};
-pub use input::{
-    InputEvent, InputKind, KEY_BACKSPACE, KEY_DELETE, KEY_DOWN, KEY_END, KEY_ENTER, KEY_ESC,
-    KEY_HOME, KEY_LEFT, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_RIGHT, KEY_TAB, KEY_UP, MOD_ALT, MOD_CAPS,
-    MOD_CTRL, MOD_META, MOD_NUM, MOD_SHIFT,
-};
-pub use paint::PaintBuffer;
-pub use runner::run;
+pub fn call_payload(
+    port: u32,
+    magic: u32,
+    op: u16,
+    request_id: u32,
+    payload: &[u8],
+    rx: &mut [u8],
+) -> Result<usize, &'static str> {
+    let tx = build_request(magic, op, request_id, payload);
+    let rc = mk_ipc_call(port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len());
+    if rc <= 0 || (rc as usize) < HDR_LEN + 4 {
+        return Err("ipc call failed");
+    }
+    let status = i32::from_le_bytes(rx[HDR_LEN..HDR_LEN + 4].try_into().unwrap());
+    if status != 0 {
+        return Err("service returned error");
+    }
+    Ok(rc as usize)
+}

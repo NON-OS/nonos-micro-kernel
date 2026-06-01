@@ -16,7 +16,7 @@
 
 use nonos_libc::mk_service_lookup;
 
-pub(super) fn lookup_port(service: &[u8]) -> Option<u32> {
+pub fn lookup_port(service: &[u8]) -> Option<u32> {
     let mut pid: u32 = 0;
     let mut port: u32 = 0;
     let rc = mk_service_lookup(

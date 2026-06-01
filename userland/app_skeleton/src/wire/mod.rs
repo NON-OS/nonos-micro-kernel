@@ -16,8 +16,12 @@
 
 mod builder;
 mod call;
+mod call_payload;
 mod constants;
 
 pub use builder::build_request;
 pub use call::call_status;
-pub use constants::{HDR_LEN, NCMP_MAGIC, NINP_MAGIC, NIRS_MAGIC, NWMP_MAGIC, VERSION};
+pub use call_payload::call_payload;
+pub use constants::{
+    HDR_LEN, NCLP_MAGIC, NCMP_MAGIC, NINP_MAGIC, NIRS_MAGIC, NWMP_MAGIC, VERSION,
+};

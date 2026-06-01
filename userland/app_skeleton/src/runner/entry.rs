@@ -47,7 +47,7 @@ pub fn run<A: App>(app: A) -> ! {
     loop {
         let result = drain(&mut booted.app, &mut rx);
         if result.close {
-            close(&peers, booted.manifest.window_id, &mut request_id);
+            close(&peers, booted.manifest.window_id, &booted.binding, &mut request_id);
         }
         if result.repaint {
             let _ = paint(

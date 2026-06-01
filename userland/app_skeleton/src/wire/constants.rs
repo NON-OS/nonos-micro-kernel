@@ -18,6 +18,7 @@ pub const NCMP_MAGIC: u32 = 0x4E43_4D50;
 pub const NWMP_MAGIC: u32 = 0x4E57_4D50;
 pub const NIRS_MAGIC: u32 = 0x4E49_5253;
 pub const NINP_MAGIC: u32 = 0x4E49_4E50;
+pub const NCLP_MAGIC: u32 = 0x4342_4930;
 
 pub const VERSION: u16 = 1;
 pub const HDR_LEN: usize = 20;

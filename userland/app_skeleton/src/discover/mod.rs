@@ -18,5 +18,6 @@ mod lookup;
 mod peers;
 mod require;
 
+pub use lookup::lookup_port;
 pub use peers::Peers;
 pub use require::require_peers;
