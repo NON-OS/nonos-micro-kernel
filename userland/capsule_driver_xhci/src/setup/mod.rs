@@ -17,6 +17,7 @@ mod claim;
 mod driver;
 mod irq_bind;
 mod mmio_map;
+mod require_window;
 mod sequence;
 pub use driver::Driver;
 pub use sequence::run;

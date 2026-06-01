@@ -13,15 +13,21 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_device_release, mk_irq_bind, mk_mmio_unmap, IrqBindOut, MmioMapOut};
+use nonos_libc::{
+    mk_device_release, mk_irq_bind, mk_mmio_unmap, IrqBindOut, MmioMapOut, MK_IRQ_BIND_MSIX,
+};
 use crate::discover::Found;
 use crate::error::{XhciError, XhciResult};
 pub fn irq_bind(dev: Found, claim_epoch: u64, mmio: &MmioMapOut) -> XhciResult<IrqBindOut> {
     let mut out = IrqBindOut { grant_id: 0, vector: 0 };
-    let r = mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out);
+    let r = mk_irq_bind(dev.device_id, claim_epoch, 0, MK_IRQ_BIND_MSIX, 1, &mut out);
     if r < 0 {
-        let _ = mk_mmio_unmap(mmio.grant_id);
-        let _ = mk_device_release(dev.device_id);
+        if mk_mmio_unmap(mmio.grant_id) < 0 {
+            return Err(XhciError::BrokerCallFailed(r));
+        }
+        if mk_device_release(dev.device_id) < 0 {
+            return Err(XhciError::BrokerCallFailed(r));
+        }
         return Err(XhciError::BrokerCallFailed(r));
     }
     Ok(out)

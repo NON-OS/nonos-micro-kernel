@@ -22,7 +22,6 @@ const PCI_PROGIF_XHCI: u8 = 0x30;
 #[derive(Debug, Clone, Copy)]
 pub struct Found {
     pub device_id: u64,
-    pub irq_line: u8,
     pub bar0_size: u64,
 }
 pub fn find_xhci() -> Option<Found> {
@@ -36,9 +35,6 @@ pub fn find_xhci() -> Option<Found> {
         if r.class != CLASS_USB_HOST_XHCI || !raw_xhci(r) {
             continue;
         }
-        if r.irq_pin == 0 || r.irq_line == 0xFF {
-            continue;
-        }
         if r.bar_count == 0 {
             continue;
         }
@@ -46,7 +42,7 @@ pub fn find_xhci() -> Option<Found> {
         if bar0.kind != BAR_KIND_MMIO || bar0.size == 0 {
             continue;
         }
-        return Some(Found { device_id: r.device_id, irq_line: r.irq_line, bar0_size: bar0.size });
+        return Some(Found { device_id: r.device_id, bar0_size: bar0.size });
     }
     None
 }

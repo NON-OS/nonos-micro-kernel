@@ -13,20 +13,18 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_mmio_map, MmioMapOut};
-use crate::error::{XhciError, XhciResult};
-const BAR_INDEX: u32 = 0;
-const REGISTER_WINDOW_LEN: u64 = 0x3000;
-pub fn mmio_map(device_id: u64, claim_epoch: u64, bar0_size: u64) -> XhciResult<MmioMapOut> {
-    let mut out = MmioMapOut { user_va: 0, length: 0, grant_id: 0 };
-    let length = if bar0_size < REGISTER_WINDOW_LEN {
-        bar0_size
-    } else {
-        REGISTER_WINDOW_LEN
-    };
-    let r = mk_mmio_map(device_id, claim_epoch, BAR_INDEX, 0, 0, length, &mut out);
-    if r < 0 {
-        return Err(XhciError::BrokerCallFailed(r));
-    }
-    Ok(out)
+
+use nonos_libc::mk_debug;
+
+const PREFIX: &[u8] = b"[driver_xhci] ";
+const MAX_LABEL: usize = 160;
+
+pub fn marker(label: &[u8]) {
+    let label_len = if label.len() > MAX_LABEL { MAX_LABEL } else { label.len() };
+    let mut buf = [0u8; PREFIX.len() + MAX_LABEL + 1];
+    let p = PREFIX.len();
+    buf[..p].copy_from_slice(PREFIX);
+    buf[p..p + label_len].copy_from_slice(&label[..label_len]);
+    buf[p + label_len] = b'\n';
+    let _ = mk_debug(buf.as_ptr(), p + label_len + 1);
 }

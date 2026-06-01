@@ -19,6 +19,7 @@ extern crate alloc;
 mod constants;
 mod contexts;
 mod controller;
+mod debug;
 mod discover;
 mod dma;
 mod error;
