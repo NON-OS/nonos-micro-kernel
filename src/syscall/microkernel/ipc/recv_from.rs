@@ -111,26 +111,17 @@ fn deliver(
 fn drain(buf: u64, len: usize, timeout_ms: u64, sender_pid_out: u64, inbox: &str) -> i64 {
     let start = crate::time::timestamp_millis();
     let pid = current_pid().unwrap_or(0);
-    let mut slept = false;
     loop {
         if let Some(msg) = nonos_inbox::try_dequeue_existing(inbox) {
-            if slept {
-                crate::sched::wake_process(pid);
-            }
             return deliver(pid, &msg, buf, len, sender_pid_out);
         }
         let elapsed = crate::time::timestamp_millis().saturating_sub(start);
         if timeout_ms > 0 && elapsed >= timeout_ms {
-            if slept {
-                crate::sched::wake_process(pid);
-            }
             return ERRNO_TIMEDOUT;
         }
         let deadline = if timeout_ms == 0 { u64::MAX } else { start.saturating_add(timeout_ms) };
         crate::sched::sleep_until(pid, deadline);
-        slept = true;
         if let Some(msg) = nonos_inbox::try_dequeue_existing(inbox) {
-            crate::sched::wake_process(pid);
             return deliver(pid, &msg, buf, len, sender_pid_out);
         }
         trace(b"before yield", pid);
