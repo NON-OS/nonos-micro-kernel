@@ -14,23 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod attach_map;
-mod dump;
-pub mod input_ring;
-pub mod release;
-pub mod share;
-pub mod table;
-pub mod types;
-pub mod vsync;
+use crate::kernel_core::surface_registry::attach_map::state::ATTACHES;
+use crate::kernel_core::surface_registry::types::SurfaceHandle;
 
-pub use attach_map::lookup as lookup_attached_va;
-pub use dump::dump_surface_accounting;
-pub use input_ring::{drain_input, post_input};
-pub use release::{release_owned_by_pid, release_surface};
-pub use share::{attach_surface, share_surface};
-pub use table::{lookup_owned, register_surface};
-pub use types::{
-    InputEvent, RegistryError, SurfaceDescriptor, SurfaceFormat, SurfaceHandle, SurfaceSid,
-    MAX_PAGES_PER_SURFACE, PIXEL_BYTES,
-};
-pub use vsync::{vsync_period_ns, wait_for_vsync};
+pub fn forget_handle(handle: SurfaceHandle) {
+    let mut v = ATTACHES.lock();
+    v.retain(|r| r.handle != handle);
+}

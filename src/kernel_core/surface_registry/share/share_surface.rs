@@ -14,23 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod attach_map;
-mod dump;
-pub mod input_ring;
-pub mod release;
-pub mod share;
-pub mod table;
-pub mod types;
-pub mod vsync;
-
-pub use attach_map::lookup as lookup_attached_va;
-pub use dump::dump_surface_accounting;
-pub use input_ring::{drain_input, post_input};
-pub use release::{release_owned_by_pid, release_surface};
-pub use share::{attach_surface, share_surface};
-pub use table::{lookup_owned, register_surface};
-pub use types::{
-    InputEvent, RegistryError, SurfaceDescriptor, SurfaceFormat, SurfaceHandle, SurfaceSid,
-    MAX_PAGES_PER_SURFACE, PIXEL_BYTES,
+use crate::kernel_core::surface_registry::table::SLOTS;
+use crate::kernel_core::surface_registry::types::{
+    decode_handle, RegistryError, SurfaceHandle,
 };
-pub use vsync::{vsync_period_ns, wait_for_vsync};
+
+pub fn share_surface(owner_pid: u32, handle: SurfaceHandle) -> Result<SurfaceHandle, RegistryError> {
+    let (idx, epoch) = decode_handle(handle);
+    let mut slots = SLOTS.lock();
+    let slot = slots
+        .get_mut(idx as usize)
+        .and_then(|s| s.as_mut())
+        .ok_or(RegistryError::BadHandle)?;
+    if slot.epoch != epoch {
+        return Err(RegistryError::BadHandle);
+    }
+    if slot.owner_pid != owner_pid {
+        return Err(RegistryError::NotOwner);
+    }
+    slot.refcount = slot.refcount.checked_add(1).ok_or(RegistryError::InvalidArg)?;
+    Ok(handle)
+}

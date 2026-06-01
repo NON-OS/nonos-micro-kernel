@@ -16,29 +16,16 @@
 
 use crate::memory::paging::unmap_page;
 use crate::memory::VirtAddr;
-use crate::process::{current_pid, with_process_mut};
 
-use super::consts::PAGE_SIZE;
+use super::super::consts::PAGE_SIZE;
 
-pub(super) fn reserve_va(pages: u64) -> Option<u64> {
-    let pid = current_pid()?;
-    with_process_mut(pid, |pcb| pcb.mmap_va.lock().reserve(pages)).flatten()
-}
-
-pub(super) fn release_va(base: u64, pages: u64) -> bool {
-    let Some(pid) = current_pid() else {
-        return false;
-    };
-    with_process_mut(pid, |pcb| pcb.mmap_va.lock().release(base, pages)).unwrap_or(false)
-}
-
-// Unmap and free the first `installed` pages of a partially-mapped
-// range. Used by `sys_mmap` to roll back a partial walk.
-pub(super) fn rollback_mapped_pages(base_va: u64, installed: usize) {
+pub(crate) fn rollback_mapped_pages(base_va: u64, installed: usize) {
     for j in 0..installed {
         let va = VirtAddr::new(base_va + (j * PAGE_SIZE) as u64);
         if let Ok(phys) = unmap_page(va) {
-            let _ = crate::memory::frame_alloc::deallocate_frame(phys);
+            if crate::memory::frame_alloc::deallocate_frame(phys).is_err() {
+                crate::sys::serial::println(b"[MMAP] rollback_frame_release_failed");
+            }
         }
     }
 }

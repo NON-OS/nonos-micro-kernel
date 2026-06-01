@@ -14,25 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::table::SLOTS;
-use super::types::{decode_handle, RegistryError, SurfaceHandle};
+use crate::kernel_core::surface_registry::attach_map::state::ATTACHES;
+use crate::kernel_core::surface_registry::types::SurfaceHandle;
 
-pub fn release_surface(handle: SurfaceHandle) -> Result<u32, RegistryError> {
-    let (idx, epoch) = decode_handle(handle);
-    let mut slots = SLOTS.lock();
-    let entry = slots
-        .get_mut(idx as usize)
-        .ok_or(RegistryError::BadHandle)?;
-    let new_count = {
-        let slot = entry.as_mut().ok_or(RegistryError::BadHandle)?;
-        if slot.epoch != epoch {
-            return Err(RegistryError::BadHandle);
-        }
-        slot.refcount = slot.refcount.checked_sub(1).ok_or(RegistryError::InvalidArg)?;
-        slot.refcount
-    };
-    if new_count == 0 {
-        *entry = None;
-    }
-    Ok(new_count)
+pub fn forget(pid: u32, handle: SurfaceHandle) {
+    let mut v = ATTACHES.lock();
+    v.retain(|r| !(r.pid == pid && r.handle == handle));
 }

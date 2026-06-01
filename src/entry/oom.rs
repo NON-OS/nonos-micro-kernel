@@ -62,6 +62,9 @@ pub fn handle_oom(layout: Layout) -> ! {
     serial_num(layout.size());
     serial_str(b" bytes, align: ");
     serial_num(layout.align());
+    serial_str(b"\r\n");
+    crate::syscall::microkernel::memory::dump_mmap_accounting();
+    crate::kernel_core::surface_registry::dump_surface_accounting();
     serial_str(b"\r\n[OOM] System halted\r\n");
     show_vga_error();
     loop {

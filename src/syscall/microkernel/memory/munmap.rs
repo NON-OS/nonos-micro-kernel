@@ -16,8 +16,10 @@
 
 use crate::memory::paging::unmap_page;
 use crate::memory::VirtAddr;
+use crate::process::current_pid;
 use crate::syscall::microkernel::errnos::ERRNO_INVAL;
 
+use super::accounting::record_munmap;
 use super::consts::PAGE_SIZE;
 use super::va::release_va;
 
@@ -32,9 +34,14 @@ pub fn sys_munmap(addr: u64, length: usize) -> i64 {
     for i in 0..pages as usize {
         let va = VirtAddr::new(addr + (i * PAGE_SIZE) as u64);
         if let Ok(phys) = unmap_page(va) {
-            let _ = crate::memory::frame_alloc::deallocate_frame(phys);
+            if crate::memory::frame_alloc::deallocate_frame(phys).is_err() {
+                crate::sys::serial::println(b"[MUNMAP] frame_release_failed");
+            }
         }
     }
-    let _ = release_va(addr, pages);
+    if !release_va(addr, pages) {
+        crate::sys::serial::println(b"[MUNMAP] release_va_failed");
+    }
+    record_munmap(current_pid().unwrap_or(0), length, addr);
     0
 }

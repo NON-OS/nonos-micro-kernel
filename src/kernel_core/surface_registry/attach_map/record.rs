@@ -14,22 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
-
-use alloc::vec::Vec;
-use spin::Mutex;
-
-use super::types::SurfaceHandle;
-
-#[derive(Clone, Copy)]
-struct AttachRecord {
-    pid: u32,
-    handle: SurfaceHandle,
-    base_va: u64,
-    byte_len: u64,
-}
-
-static ATTACHES: Mutex<Vec<AttachRecord>> = Mutex::new(Vec::new());
+use crate::kernel_core::surface_registry::attach_map::state::{AttachRecord, ATTACHES};
+use crate::kernel_core::surface_registry::types::SurfaceHandle;
 
 pub fn record(pid: u32, handle: SurfaceHandle, base_va: u64, byte_len: u64) {
     let mut v = ATTACHES.lock();
@@ -41,21 +27,4 @@ pub fn record(pid: u32, handle: SurfaceHandle, base_va: u64, byte_len: u64) {
         }
     }
     v.push(AttachRecord { pid, handle, base_va, byte_len });
-}
-
-pub fn lookup(pid: u32, handle: SurfaceHandle) -> Option<(u64, u64)> {
-    let v = ATTACHES.lock();
-    v.iter()
-        .find(|r| r.pid == pid && r.handle == handle)
-        .map(|r| (r.base_va, r.byte_len))
-}
-
-pub fn forget(pid: u32, handle: SurfaceHandle) {
-    let mut v = ATTACHES.lock();
-    v.retain(|r| !(r.pid == pid && r.handle == handle));
-}
-
-pub fn forget_pid(pid: u32) {
-    let mut v = ATTACHES.lock();
-    v.retain(|r| r.pid != pid);
 }

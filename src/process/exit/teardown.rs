@@ -14,16 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Minimal exit path for the current capsule. The fault/sys_exit path
-//! only poisons scheduler-visible state and releases the current
-//! address space; heavier broker/registry cleanup is deferred to a
-//! later timer tick on a live capsule's stack.
-
 use core::sync::atomic::Ordering;
 
 use crate::process::core::{clear_current_if, Pid, ProcessState, CURRENT_PID, PROCESS_TABLE};
 
-pub fn teardown(pid: Pid, exit_code: i32, by_signal: bool) {
+pub fn teardown(pid: Pid, exit_code: i32, _by_signal: bool) {
     let pcb = match PROCESS_TABLE.find_by_pid(pid) {
         Some(p) => p,
         None => return,
@@ -35,15 +30,24 @@ pub fn teardown(pid: Pid, exit_code: i32, by_signal: bool) {
         return;
     }
 
-    if CURRENT_PID.load(Ordering::Acquire) == pid {
+    crate::kernel_core::surface_registry::release_owned_by_pid(pid);
+    crate::kernel_core::surface_registry::attach_map::forget_pid(pid);
+    let current = CURRENT_PID.load(Ordering::Acquire) == pid;
+    crate::hardware::broker::release_all_for_pid(pid, current);
+    crate::hardware::broker::irq_release_all_for_pid(pid);
+    crate::hardware::broker::dma_release_all_for_pid(pid, current);
+    crate::hardware::broker::pio_release_all_for_pid(pid);
+
+    if current {
         crate::process::address_space::lifecycle::release(&pcb);
     } else if let Some(asid) = crate::memory::paging::manager::lookup_asid_for_process(pid) {
-        let _ = crate::memory::paging::manager::cleanup_address_space(asid);
+        if crate::memory::paging::manager::cleanup_address_space(asid).is_err() {
+            crate::sys::serial::print(b"[EXIT] address_space_cleanup_failed\n");
+        }
     }
 
     crate::kernel_core::process_spawn::defer_kernel_stack_release(pid);
 
-    let _ = by_signal;
     pcb.exit_code.store(exit_code, Ordering::Release);
     *pcb.state.lock() = ProcessState::Zombie(exit_code);
     crate::sched::remove_from_run_queue(pid);
