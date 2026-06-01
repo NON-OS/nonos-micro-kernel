@@ -15,6 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use core::sync::atomic::{AtomicU64, Ordering};
+#[cfg(feature = "input-probe-inject")]
+use core::sync::atomic::AtomicBool;
 use spin::Mutex;
 
 use super::types::{InputEvent, RegistryError, INPUT_RING_CAP};
@@ -46,18 +48,48 @@ static RING: Mutex<Ring> = Mutex::new(Ring {
 });
 
 static DROPPED: AtomicU64 = AtomicU64::new(0);
+static SEQ: AtomicU64 = AtomicU64::new(0);
+static WAITER: AtomicU64 = AtomicU64::new(0);
+#[cfg(feature = "input-probe-inject")]
+static INPUT_CONSUMER_READY: AtomicBool = AtomicBool::new(false);
 
 pub fn post_input(ev: InputEvent) -> Result<(), RegistryError> {
-    let mut ring = RING.lock();
-    let next = (ring.head + 1) % INPUT_RING_CAP;
-    if next == ring.tail {
-        DROPPED.fetch_add(1, Ordering::Relaxed);
-        return Err(RegistryError::OutOfSlots);
+    {
+        let mut ring = RING.lock();
+        let next = (ring.head + 1) % INPUT_RING_CAP;
+        if next == ring.tail {
+            DROPPED.fetch_add(1, Ordering::Relaxed);
+            return Err(RegistryError::OutOfSlots);
+        }
+        let head = ring.head;
+        ring.buf[head] = ev;
+        ring.head = next;
     }
-    let head = ring.head;
-    ring.buf[head] = ev;
-    ring.head = next;
+    SEQ.fetch_add(1, Ordering::Release);
+    let waiter = WAITER.swap(0, Ordering::AcqRel);
+    if waiter != 0 {
+        crate::sched::wake_process(waiter as u32);
+    }
     Ok(())
+}
+
+pub fn input_seq() -> u64 {
+    SEQ.load(Ordering::Acquire)
+}
+
+pub fn arm_input_waiter(pid: u32) {
+    WAITER.store(pid as u64, Ordering::Release);
+    #[cfg(feature = "input-probe-inject")]
+    INPUT_CONSUMER_READY.store(true, Ordering::Release);
+}
+
+#[cfg(feature = "input-probe-inject")]
+pub fn consumer_ready() -> bool {
+    INPUT_CONSUMER_READY.load(Ordering::Acquire)
+}
+
+pub fn clear_input_waiter() {
+    WAITER.store(0, Ordering::Release);
 }
 
 pub fn drain_input(out: &mut [InputEvent]) -> usize {

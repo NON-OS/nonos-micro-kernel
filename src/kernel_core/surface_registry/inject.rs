@@ -16,17 +16,30 @@
 
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-use super::input_ring::post_input;
+use super::input_ring::{consumer_ready, post_input};
 use super::types::InputEvent;
 
 const SCRIPT: &[u8] = b"NONOS";
 const TICKS_PER_CHAR: usize = 30;
+const GRAB_MARGIN_TICKS: usize = 200;
+const UNARMED: usize = usize::MAX;
 static IDX: AtomicUsize = AtomicUsize::new(0);
+static ARMED_AT: AtomicUsize = AtomicUsize::new(UNARMED);
 static TICK: AtomicUsize = AtomicUsize::new(0);
 
 pub fn on_tick() {
     let t = TICK.fetch_add(1, Ordering::Relaxed);
-    if t % TICKS_PER_CHAR != 0 {
+    if !consumer_ready() {
+        return;
+    }
+    let _ = ARMED_AT.compare_exchange(UNARMED, t, Ordering::AcqRel, Ordering::Relaxed);
+    let armed = ARMED_AT.load(Ordering::Acquire);
+    let elapsed = t.wrapping_sub(armed);
+    if elapsed < GRAB_MARGIN_TICKS {
+        return;
+    }
+    let phase = elapsed - GRAB_MARGIN_TICKS;
+    if phase % TICKS_PER_CHAR != 0 {
         return;
     }
     let i = IDX.fetch_add(1, Ordering::Relaxed);
