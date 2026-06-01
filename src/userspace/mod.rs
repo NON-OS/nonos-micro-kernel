@@ -38,6 +38,8 @@ pub mod capsule_driver_usb_msc;
 pub mod capsule_file_manager;
 pub mod capsule_image_codec;
 pub mod capsule_input_proof;
+#[cfg(feature = "nonos-capsule-input-probe")]
+pub mod capsule_input_probe;
 pub mod capsule_input_router;
 pub mod capsule_login;
 pub mod capsule_net_dhcp;
