@@ -16,7 +16,6 @@
 
 mod admin;
 mod crypto;
-mod debug;
 mod graphics;
 mod mk;
 #[cfg(test)]
@@ -33,7 +32,6 @@ use crate::syscall::numbers::SyscallNumber;
 pub(super) fn is_allowed(caps: &CapabilityToken, number: SyscallNumber) -> bool {
     crypto::check(caps, number)
         .or_else(|| admin::check(caps, number))
-        .or_else(|| debug::check(caps, number))
         .or_else(|| mk::check(caps, number))
         .or_else(|| graphics::check(caps, number))
         .unwrap_or(false)

@@ -16,7 +16,6 @@
 
 mod admin;
 mod crypto;
-mod debug;
 mod graphics;
 mod mk;
 
@@ -29,6 +28,5 @@ pub const REGISTRY: &[&[AbiEntry]] = &[
     mk::ENTRIES,
     crypto::ENTRIES,
     admin::ENTRIES,
-    debug::ENTRIES,
     graphics::ENTRIES,
 ];

@@ -21,18 +21,15 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
     Some(match number {
         SyscallNumber::CryptoRandom
         | SyscallNumber::CryptoHash
-        | SyscallNumber::CryptoSign
-        | SyscallNumber::CryptoVerify
         | SyscallNumber::CryptoEncrypt
         | SyscallNumber::CryptoDecrypt
-        | SyscallNumber::CryptoKeyGen
-        | SyscallNumber::CryptoZkProve
-        | SyscallNumber::CryptoZkVerify
         | SyscallNumber::CryptoEd25519Verify
         | SyscallNumber::CryptoX25519Public
         | SyscallNumber::CryptoX25519Shared
         | SyscallNumber::CryptoHmacSha256
-        | SyscallNumber::CryptoHkdfSha256 => caps.can_crypto(),
+        | SyscallNumber::CryptoHkdfSha256
+        | SyscallNumber::CryptoKeccak256
+        | SyscallNumber::CryptoSecp256k1Sign => caps.can_crypto(),
 
         _ => return None,
     })

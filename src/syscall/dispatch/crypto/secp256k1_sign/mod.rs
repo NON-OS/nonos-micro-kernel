@@ -14,23 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::syscall::abi::{tag4, AbiDomain, AbiEntry, AbiStatus};
-use crate::syscall::numbers::SyscallNumber;
+mod handler;
 
-// Debug family. Reserved Unavailable until a debug capsule wires the
-// handler. Capability gate is `caps.can_debug()`; dispatch returns
-// ENOSYS.
-pub(super) const ENTRIES: &[AbiEntry] = &[
-    u(b"DLOG", SyscallNumber::DebugLog, "DebugLog"),
-    u(b"DTRC", SyscallNumber::DebugTrace, "DebugTrace"),
-];
-
-const fn u(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {
-    AbiEntry {
-        id: tag4(tag),
-        variant,
-        name,
-        domain: AbiDomain::Debug,
-        status: AbiStatus::Unavailable,
-    }
-}
+pub use handler::handle_crypto_secp256k1_sign;

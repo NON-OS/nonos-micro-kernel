@@ -22,30 +22,17 @@ use crate::syscall::numbers::SyscallNumber;
 pub(super) const ENTRIES: &[AbiEntry] = &[
     r(b"CRND", SyscallNumber::CryptoRandom, "CryptoRandom"),
     r(b"CHSH", SyscallNumber::CryptoHash, "CryptoHash"),
-    u(b"CSGN", SyscallNumber::CryptoSign, "CryptoSign"),
-    u(b"CVRF", SyscallNumber::CryptoVerify, "CryptoVerify"),
     r(b"CENC", SyscallNumber::CryptoEncrypt, "CryptoEncrypt"),
     r(b"CDEC", SyscallNumber::CryptoDecrypt, "CryptoDecrypt"),
-    u(b"CKGN", SyscallNumber::CryptoKeyGen, "CryptoKeyGen"),
-    u(b"CZKP", SyscallNumber::CryptoZkProve, "CryptoZkProve"),
-    u(b"CZKV", SyscallNumber::CryptoZkVerify, "CryptoZkVerify"),
     r(b"CEDV", SyscallNumber::CryptoEd25519Verify, "CryptoEd25519Verify"),
     r(b"CXPK", SyscallNumber::CryptoX25519Public, "CryptoX25519Public"),
     r(b"CXSH", SyscallNumber::CryptoX25519Shared, "CryptoX25519Shared"),
     r(b"CHMC", SyscallNumber::CryptoHmacSha256, "CryptoHmacSha256"),
     r(b"CHKF", SyscallNumber::CryptoHkdfSha256, "CryptoHkdfSha256"),
+    r(b"CKEC", SyscallNumber::CryptoKeccak256, "CryptoKeccak256"),
+    r(b"CSKS", SyscallNumber::CryptoSecp256k1Sign, "CryptoSecp256k1Sign"),
 ];
 
 const fn r(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {
     AbiEntry { id: tag4(tag), variant, name, domain: AbiDomain::Crypto, status: AbiStatus::Routed }
-}
-
-const fn u(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {
-    AbiEntry {
-        id: tag4(tag),
-        variant,
-        name,
-        domain: AbiDomain::Crypto,
-        status: AbiStatus::Unavailable,
-    }
 }

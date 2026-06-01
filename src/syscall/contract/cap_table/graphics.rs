@@ -26,16 +26,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         return Some(false);
     }
     let required = match number {
-        SyscallNumber::GraphicsDisplayDimensions | SyscallNumber::GraphicsDisplayList => {
-            Capability::GraphicsDisplayQuery
-        }
-        SyscallNumber::GraphicsSurfaceCreate | SyscallNumber::GraphicsSurfaceDestroy => {
-            Capability::GraphicsSurfaceCreate
-        }
-        SyscallNumber::GraphicsSurfaceMap => Capability::GraphicsSurfaceMap,
-        SyscallNumber::GraphicsSurfacePresentFull
-        | SyscallNumber::GraphicsSurfacePresentRect
-        | SyscallNumber::GraphicsCursorPresent => Capability::GraphicsPresent,
+        SyscallNumber::GraphicsDisplayDimensions => Capability::GraphicsDisplayQuery,
         _ => return None,
     };
     Some(caps.grants(required))

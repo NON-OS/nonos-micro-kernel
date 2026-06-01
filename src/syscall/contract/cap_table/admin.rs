@@ -21,7 +21,6 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
     Some(match number {
         SyscallNumber::AdminReboot
         | SyscallNumber::AdminShutdown
-        | SyscallNumber::AdminModLoad
         | SyscallNumber::AdminPolicyPush => caps.can_admin(),
 
         _ => return None,

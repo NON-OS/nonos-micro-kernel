@@ -25,17 +25,6 @@ pub(super) fn handle(display: u64, surface: u64) -> SyscallResult {
     blit(display, surface, 0, 0, 0, 0, true)
 }
 
-pub(super) fn handle_rect(
-    display: u64,
-    surface: u64,
-    x: u64,
-    y: u64,
-    w: u64,
-    h: u64,
-) -> SyscallResult {
-    blit(display, surface, x, y, w, h, false)
-}
-
 fn blit(display: u64, surface: u64, x: u64, y: u64, w: u64, h: u64, full: bool) -> SyscallResult {
     if display != 0 {
         return super::super::util::errno(EINVAL);

@@ -20,7 +20,6 @@ use crate::syscall::numbers::SyscallNumber;
 pub(super) const ENTRIES: &[AbiEntry] = &[
     r(b"ARBT", SyscallNumber::AdminReboot, "AdminReboot"),
     r(b"ASDN", SyscallNumber::AdminShutdown, "AdminShutdown"),
-    u(b"AMOD", SyscallNumber::AdminModLoad, "AdminModLoad"),
     r(b"APPS", SyscallNumber::AdminPolicyPush, "AdminPolicyPush"),
 ];
 
@@ -31,15 +30,5 @@ const fn r(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntr
         name,
         domain: AbiDomain::Admin,
         status: AbiStatus::Routed,
-    }
-}
-
-const fn u(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {
-    AbiEntry {
-        id: tag4(tag),
-        variant,
-        name,
-        domain: AbiDomain::Admin,
-        status: AbiStatus::Unavailable,
     }
 }

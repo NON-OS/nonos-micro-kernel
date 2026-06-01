@@ -17,19 +17,12 @@
 use crate::syscall::abi::{tag4, AbiDomain, AbiEntry, AbiStatus};
 use crate::syscall::numbers::SyscallNumber;
 
-// Graphics family. Routed through the in-kernel graphics router
-// (`syscall::dispatch::router::graphics_present` /
-// `graphics_backend`) until a graphics capsule takes over; the ABI
-// is preserved so that capsule binaries can be re-linked unchanged.
+// Graphics family. Only the display-dimensions query remains in the
+// kernel; surface create/map/present and the cursor/display-list calls
+// were retired in favor of the MkSurface* path served by the surface
+// registry and the compositor capsule.
 pub(super) const ENTRIES: &[AbiEntry] = &[
     r(b"GDIM", SyscallNumber::GraphicsDisplayDimensions, "GraphicsDisplayDimensions"),
-    r(b"GSCR", SyscallNumber::GraphicsSurfaceCreate, "GraphicsSurfaceCreate"),
-    r(b"GSDS", SyscallNumber::GraphicsSurfaceDestroy, "GraphicsSurfaceDestroy"),
-    r(b"GSMP", SyscallNumber::GraphicsSurfaceMap, "GraphicsSurfaceMap"),
-    r(b"GPRF", SyscallNumber::GraphicsSurfacePresentFull, "GraphicsSurfacePresentFull"),
-    r(b"GPRR", SyscallNumber::GraphicsSurfacePresentRect, "GraphicsSurfacePresentRect"),
-    r(b"GDLS", SyscallNumber::GraphicsDisplayList, "GraphicsDisplayList"),
-    r(b"GCUR", SyscallNumber::GraphicsCursorPresent, "GraphicsCursorPresent"),
 ];
 
 const fn r(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {
