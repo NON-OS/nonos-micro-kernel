@@ -10,7 +10,7 @@ pub(crate) use status::{call, call_boot};
 pub(super) const NCMP_MAGIC: u32 = 0x4E43_4D50;
 pub(super) const NCMP_VERSION: u16 = 1;
 pub(super) const NCMP_HDR_LEN: usize = 20;
-pub(super) const CALL_REPLY_TIMEOUT_MS: u64 = 16;
+pub(super) const CALL_REPLY_TIMEOUT_MS: u64 = 5000;
 pub(super) const BOOT_REPLY_TIMEOUT_MS: u64 = 250;
 
 pub(super) fn build_request(out: &mut Vec<u8>, op: u16, request_id: u32, payload: &[u8]) {

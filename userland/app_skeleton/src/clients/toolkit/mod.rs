@@ -22,7 +22,7 @@ pub use theme::{theme_get, Theme};
 
 use alloc::vec::Vec;
 
-use nonos_libc::{mk_debug, mk_ipc_call};
+use nonos_libc::mk_ipc_call;
 
 const NOTK_MAGIC: u32 = 0x4E4F_544B;
 const HDR_LEN: usize = 16;
@@ -43,9 +43,7 @@ pub fn ui_frame(
     width: u32,
     title: &[u8],
 ) -> Result<(), &'static str> {
-    mk_debug(b"app ui owner".as_ptr(), b"app ui owner".len());
     render_component(port, request_id, surface_handle, 0, 0, width, CHROME_H, KIND_PANEL, b"")?;
-    mk_debug(b"toolkit ui route".as_ptr(), b"toolkit ui route".len());
     render_component(
         port,
         request_id.wrapping_add(1),

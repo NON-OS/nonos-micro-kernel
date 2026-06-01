@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod close_chrome_windows;
 mod overlay;
+mod open_chrome_windows;
 mod peers;
 mod register;
 mod run;

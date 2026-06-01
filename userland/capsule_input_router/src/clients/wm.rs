@@ -20,6 +20,7 @@ const SERVICE: &[u8] = b"wm";
 const MAGIC: u32 = 0x4E57_4D50;
 const OP_QUERY_TOPMOST: u16 = 0x000B;
 const OP_ROUTE_FOCUS: u16 = 0x000C;
+const OP_QUERY_FOCUS: u16 = 0x000D;
 
 #[derive(Clone, Copy)]
 pub struct Target {
@@ -47,6 +48,27 @@ pub fn query_topmost(port_slot: &mut u32, request_id: u32, x: u32, y: u32) -> Op
         local_x: u32_at(&body, 8).ok()?,
         local_y: u32_at(&body, 12).ok()?,
     })
+}
+
+// Ask the WM, the focus authority, which pid currently holds keyboard focus.
+// Returns None when nothing is focused or the call fails. Keyboard events are
+// low frequency, so querying per event is cheaper than caching focus locally
+// and keeps the router in sync with self-focus (launcher) and window close.
+pub fn query_focus(port_slot: &mut u32, request_id: u32) -> Option<u32> {
+    if *port_slot == 0 {
+        *port_slot = lookup_port(SERVICE)?;
+    }
+    let mut body = [0u8; 8];
+    if call(*port_slot, MAGIC, OP_QUERY_FOCUS, request_id, &[], &mut body).ok()? != 0 {
+        *port_slot = 0;
+        return None;
+    }
+    let owner_pid = u32_at(&body, 0).ok()?;
+    if owner_pid == 0 {
+        None
+    } else {
+        Some(owner_pid)
+    }
 }
 
 pub fn route_focus(port: u32, request_id: u32, target: Target) -> bool {

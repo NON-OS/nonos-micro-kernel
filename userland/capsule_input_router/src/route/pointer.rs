@@ -31,11 +31,16 @@ pub fn route_pointer(ctx: &mut Context, event: &InputEvent) -> u32 {
         Some(t) if t.owner_pid != 0 => t,
         _ => return route_to_shell(ctx, event, x, y),
     };
+    // Shell-owned chrome (launcher dock, taskbar) registers as topmost WM
+    // windows but must not steal focus or it would black-hole the keyboard,
+    // and the shell hit-tests its own layout in absolute screen coordinates.
+    // Route these like the bare-desktop fallback: absolute coords, focus held.
+    if target.owner_pid == shell_pid(ctx) {
+        return route_to_shell(ctx, event, x, y);
+    }
     if event.kind == INPUT_KIND_BUTTON_DOWN {
         let rid = ctx.issue_request_id();
-        if wm::route_focus(ctx.wm_port, rid, target) {
-            ctx.focus_pid = target.owner_pid;
-        }
+        let _ = wm::route_focus(ctx.wm_port, rid, target);
     }
     let mut routed = *event;
     if routed.kind == INPUT_KIND_POINTER_REL {
@@ -54,19 +59,26 @@ pub fn route_pointer(ctx: &mut Context, event: &InputEvent) -> u32 {
     delivered
 }
 
-// Clicks that land on no app window belong to the desktop chrome: the shell
-// paints its launcher and taskbar as compositor layers, not WM windows, so the
-// topmost query finds nothing there. Button presses go to the shell so its
-// chrome is clickable; bare-desktop movement needs no delivery.
+// Resolve and cache the desktop shell pid. Reset to 0 on a failed delivery so a
+// shell respawn is picked up on the next click.
+fn shell_pid(ctx: &mut Context) -> u32 {
+    if ctx.shell_pid == 0 {
+        ctx.shell_pid = wire::lookup_pid(DESKTOP_SHELL_SERVICE).unwrap_or(0);
+    }
+    ctx.shell_pid
+}
+
+// Deliver desktop-chrome clicks to the shell in absolute screen coordinates.
+// Covers two cases with one contract: bare-desktop clicks (no WM window under
+// the cursor) and clicks on shell-owned chrome WM windows. The shell receives a
+// single coordinate space and never gains focus, so the launched app keeps the
+// keyboard. Only button presses are forwarded; bare movement needs no delivery.
 fn route_to_shell(ctx: &mut Context, event: &InputEvent, x: u32, y: u32) -> u32 {
     if event.kind != INPUT_KIND_BUTTON_DOWN {
         ctx.record(0);
         return 0;
     }
-    if ctx.shell_pid == 0 {
-        ctx.shell_pid = wire::lookup_pid(DESKTOP_SHELL_SERVICE).unwrap_or(0);
-    }
-    if ctx.shell_pid == 0 {
+    if shell_pid(ctx) == 0 {
         ctx.record(0);
         return 0;
     }

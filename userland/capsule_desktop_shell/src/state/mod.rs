@@ -15,12 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod apps;
+pub mod chrome;
 pub mod context;
 pub mod notify;
 pub mod spotlight;
 pub mod tray;
 
 pub use apps::LAUNCHER_APPS;
+pub use chrome::{SIDE_DOCK_WINDOW_ID, TASKBAR_WINDOW_ID};
 pub use context::Context;
 pub use notify::NotifyLevel;
 pub use spotlight::SpotlightState;

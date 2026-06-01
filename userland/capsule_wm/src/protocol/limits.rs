@@ -34,3 +34,5 @@ pub const WINDOW_RESTORE_REQ_LEN: usize = 8;
 pub const QUERY_TOPMOST_REQ_LEN: usize = 8;
 pub const QUERY_TOPMOST_RESP_LEN: usize = 16;
 pub const ROUTE_FOCUS_REQ_LEN: usize = 8;
+// QUERY_FOCUS: empty body; resp is owner_pid u32, window_id u32
+pub const QUERY_FOCUS_RESP_LEN: usize = 8;

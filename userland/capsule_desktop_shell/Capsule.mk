@@ -11,10 +11,9 @@ CAPSULE_FEATURE          := nonos-capsule-desktop-shell
 CAPSULE_NAMESPACE        := systems.nonos.desktop_shell
 CAPSULE_SERVICE_ENDPOINT := service:4410:desktop_shell
 CAPSULE_REPLY_ENDPOINT   := reply:4411:endpoint.desktop_shell.reply
-# CoreExec | IPC | Memory | GraphicsDisplayQuery | GraphicsSurfaceCreate
-# = 0x01 | 0x08 | 0x10 | 0x800 | 0x1000 = 0x1819
-# Debug deliberately absent: desktop_shell emits no MkDebug markers.
-CAPSULE_REQUIRED_CAPS    := 0x1819
+# CoreExec | IPC | Memory | Debug | GraphicsDisplayQuery | GraphicsSurfaceCreate
+# = 0x01 | 0x08 | 0x10 | 0x100 | 0x800 | 0x1000 = 0x1919
+CAPSULE_REQUIRED_CAPS    := 0x1919
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_desktop_shell
 
 include nonos-mk/capsule.mk

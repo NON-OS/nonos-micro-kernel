@@ -21,18 +21,28 @@ use super::super::wire::NINP_MAGIC;
 use super::parse::parse_event;
 
 const INBOX: u64 = 0;
+const RECV_BLOCK: u64 = 0;
 const RECV_NOWAIT: u64 = 1;
 const HDR: usize = 8;
 const FRAME: usize = HDR + 32;
 
 pub fn drain_input(out: &mut [InputEvent]) -> usize {
+    if out.is_empty() {
+        return 0;
+    }
     let mut count = 0;
+    let mut blocking = true;
     let mut rx = [0u8; FRAME];
     while count < out.len() {
         let mut sender = 0u32;
-        let n = recv_from(INBOX, &mut rx, RECV_NOWAIT, &mut sender);
-        if n <= 0 || (n as usize) < FRAME {
+        let timeout = if blocking { RECV_BLOCK } else { RECV_NOWAIT };
+        let n = recv_from(INBOX, &mut rx, timeout, &mut sender);
+        if n <= 0 {
             break;
+        }
+        blocking = false;
+        if (n as usize) < FRAME {
+            continue;
         }
         if u32::from_le_bytes([rx[0], rx[1], rx[2], rx[3]]) != NINP_MAGIC {
             continue;

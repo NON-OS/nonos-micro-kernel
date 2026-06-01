@@ -17,6 +17,7 @@
 use crate::app::AppManifest;
 use crate::clients::{compositor, input_router, wm};
 use crate::discover::Peers;
+use nonos_libc::mk_debug;
 
 const APP_LAYER_Z: u32 = 2;
 
@@ -49,7 +50,10 @@ pub(super) fn announce(
         APP_LAYER_Z,
     )?;
     let rid = bump(request_id);
-    input_router::subscribe(peers.input_router, rid, manifest.input_kind_mask)
+    if input_router::subscribe(peers.input_router, rid, manifest.input_kind_mask).is_err() {
+        mk_debug(b"input subscribe deferred\n".as_ptr(), 24);
+    }
+    Ok(())
 }
 
 fn bump(slot: &mut u32) -> u32 {

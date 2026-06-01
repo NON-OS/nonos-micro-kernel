@@ -17,5 +17,6 @@
 mod apply_wallpaper_policy;
 mod require_status;
 mod run;
+mod subscribe_input_router;
 
 pub use run::run;

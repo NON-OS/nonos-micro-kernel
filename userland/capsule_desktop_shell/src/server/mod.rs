@@ -18,5 +18,6 @@ pub mod handlers;
 mod input;
 pub mod respond;
 pub mod runner;
+mod wm_notify;
 
 pub use runner::run;

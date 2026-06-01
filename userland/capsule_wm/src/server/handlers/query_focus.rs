@@ -14,24 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::InputEvent;
+use nonos_libc::mk_ipc_reply;
 
-use crate::clients::wm;
+use crate::protocol::{
+    response_header, write_status, Request, HDR_LEN, QUERY_FOCUS_RESP_LEN, STATUS_LEN,
+};
 use crate::state::Context;
 
-use super::deliver::deliver_one;
-
-pub fn route_keyboard(ctx: &mut Context, event: &InputEvent) -> u32 {
-    let rid = ctx.issue_request_id();
-    let Some(pid) = wm::query_focus(&mut ctx.wm_port, rid) else {
-        ctx.record(0);
-        return 0;
-    };
-    if !ctx.subscriptions.allows(pid, event.kind) {
-        ctx.record(0);
-        return 0;
+pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, tx: &mut [u8]) {
+    let off = HDR_LEN + STATUS_LEN;
+    let focused = ctx.focus.current();
+    let values = focused
+        .map(|f| [f.owner_pid, f.window_id])
+        .unwrap_or([0, 0]);
+    for (idx, value) in values.iter().enumerate() {
+        let start = off + idx * 4;
+        tx[start..start + 4].copy_from_slice(&value.to_le_bytes());
     }
-    let delivered = deliver_one(pid, event);
-    ctx.record(delivered);
-    delivered
+    response_header(tx, req, (STATUS_LEN + QUERY_FOCUS_RESP_LEN) as u32);
+    write_status(tx, 0);
+    let _ = mk_ipc_reply(sender_pid, tx.as_ptr(), HDR_LEN + STATUS_LEN + QUERY_FOCUS_RESP_LEN);
 }

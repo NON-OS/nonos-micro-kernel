@@ -14,21 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod health;
-pub mod lifecycle_subscribe;
-pub mod query_focus;
-pub mod query_topmost;
-pub mod route_focus;
-pub mod window_close;
-pub mod window_focus;
-pub mod window_minimize;
-pub mod window_move;
-pub mod window_open;
-pub mod window_raise;
-pub mod window_resize;
-pub mod window_restore;
+use crate::state::{Context, SIDE_DOCK_WINDOW_ID, TASKBAR_WINDOW_ID};
+use crate::wm_client;
 
-pub(super) fn u32_at(buf: &[u8], off: usize) -> Option<u32> {
-    let bytes = buf.get(off..off + 4)?;
-    Some(u32::from_le_bytes(bytes.try_into().ok()?))
+pub fn close_chrome_windows(ctx: &mut Context) {
+    let _ = wm_client::window_close(ctx.wm_port, ctx.issue_request_id(), TASKBAR_WINDOW_ID);
+    let _ = wm_client::window_close(ctx.wm_port, ctx.issue_request_id(), SIDE_DOCK_WINDOW_ID);
 }

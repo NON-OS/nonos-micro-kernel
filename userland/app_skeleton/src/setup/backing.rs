@@ -38,5 +38,8 @@ pub(super) fn alloc_backing(width: u32, height: u32) -> Result<(u64, u32, u64), 
     if (base as isize) <= 0 {
         return Err("backing mmap failed");
     }
+    let words = usize::try_from(byte_len / 4).map_err(|_| "backing size overflow")?;
+    let pixels = unsafe { core::slice::from_raw_parts_mut(base as *mut u32, words) };
+    pixels.fill(0);
     Ok((base as u64, stride, byte_len))
 }

@@ -14,10 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod lifecycle_subscribe;
+mod window_close;
+mod window_open;
+mod window_raise;
+
 use alloc::vec;
 use alloc::vec::Vec;
 
 use nonos_libc::mk_ipc_call_timeout;
+
+pub use lifecycle_subscribe::lifecycle_subscribe;
+pub use window_close::window_close;
+pub use window_open::window_open;
+pub use window_raise::window_raise;
 
 const MAGIC: u32 = 0x4E57_4D50;
 const VERSION: u16 = 1;

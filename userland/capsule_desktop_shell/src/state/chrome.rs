@@ -14,21 +14,5 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod health;
-pub mod lifecycle_subscribe;
-pub mod query_focus;
-pub mod query_topmost;
-pub mod route_focus;
-pub mod window_close;
-pub mod window_focus;
-pub mod window_minimize;
-pub mod window_move;
-pub mod window_open;
-pub mod window_raise;
-pub mod window_resize;
-pub mod window_restore;
-
-pub(super) fn u32_at(buf: &[u8], off: usize) -> Option<u32> {
-    let bytes = buf.get(off..off + 4)?;
-    Some(u32::from_le_bytes(bytes.try_into().ok()?))
-}
+pub const SIDE_DOCK_WINDOW_ID: u32 = 0x5344_4F43;
+pub const TASKBAR_WINDOW_ID: u32 = 0x5442_4152;
