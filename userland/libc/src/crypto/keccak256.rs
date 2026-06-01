@@ -14,22 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod decrypt;
-mod ed25519_verify;
-mod encrypt;
-mod hash;
-mod keccak256;
-mod prf;
-mod random;
-mod secp256k1_sign;
-mod x25519;
+use crate::syscall::{call_raw, N_CRYPTO_KECCAK256};
 
-pub use decrypt::crypto_decrypt;
-pub use ed25519_verify::crypto_ed25519_verify;
-pub use encrypt::crypto_encrypt;
-pub use hash::crypto_hash;
-pub use keccak256::crypto_keccak256;
-pub use prf::{crypto_hkdf_sha256, crypto_hmac_sha256};
-pub use random::crypto_random;
-pub use secp256k1_sign::crypto_secp256k1_sign;
-pub use x25519::{crypto_x25519_public, crypto_x25519_shared};
+/// keccak256 over `data`, writing 32 bytes to `out`. `out_len` must be 32.
+/// Returns 32 on success, negative errno otherwise.
+#[no_mangle]
+pub extern "C" fn crypto_keccak256(
+    data: *const u8,
+    len: usize,
+    out: *mut u8,
+    out_len: usize,
+) -> i64 {
+    call_raw(N_CRYPTO_KECCAK256, [data as u64, len as u64, out as u64, out_len as u64, 0, 0])
+}

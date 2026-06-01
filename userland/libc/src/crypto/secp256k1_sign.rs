@@ -14,22 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod decrypt;
-mod ed25519_verify;
-mod encrypt;
-mod hash;
-mod keccak256;
-mod prf;
-mod random;
-mod secp256k1_sign;
-mod x25519;
+use crate::syscall::{call_raw, N_CRYPTO_SECP256K1_SIGN};
 
-pub use decrypt::crypto_decrypt;
-pub use ed25519_verify::crypto_ed25519_verify;
-pub use encrypt::crypto_encrypt;
-pub use hash::crypto_hash;
-pub use keccak256::crypto_keccak256;
-pub use prf::{crypto_hkdf_sha256, crypto_hmac_sha256};
-pub use random::crypto_random;
-pub use secp256k1_sign::crypto_secp256k1_sign;
-pub use x25519::{crypto_x25519_public, crypto_x25519_shared};
+/// Recoverable secp256k1 ECDSA sign of a 32-byte digest.
+///
+/// `sk` points to a 32-byte secret, `digest` to a 32-byte message hash,
+/// `out` to a 65-byte buffer that receives r||s||v with v in {27,28}.
+/// The secret is consumed and zeroized inside the kernel; it is never
+/// returned. Returns 65 on success, negative errno otherwise.
+#[no_mangle]
+pub extern "C" fn crypto_secp256k1_sign(
+    sk: *const u8,
+    digest: *const u8,
+    out: *mut u8,
+) -> i64 {
+    call_raw(N_CRYPTO_SECP256K1_SIGN, [sk as u64, digest as u64, out as u64, 0, 0, 0])
+}
