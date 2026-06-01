@@ -39,7 +39,11 @@ pub fn run(mut ctx: Context) -> ! {
     }
 }
 
-fn on_key(_ctx: &mut Context, ev: InputEvent) {
+fn on_key(ctx: &mut Context, ev: InputEvent) {
     debug::marker(b"[KEY]");
     debug::marker_u32(ev.code);
+    if (0x20..=0x7E).contains(&ev.code) {
+        crate::render::push_and_draw(ctx, ev.code as u8);
+        let _ = clients::compositor::damage_commit(ctx.compositor_port, 3, ctx.width, ctx.height);
+    }
 }
