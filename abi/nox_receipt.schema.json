@@ -2,73 +2,115 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nonos/abi/nox_receipt.schema.json",
   "title": "NOX local micro-receipt",
-  "description": "Signed local receipt issued by capsule_payment and accepted by publishers. Settled in batches against NOXReceiptSettlement on Ethereum mainnet.",
+  "description": "Signed local receipt issued by capsule_payment and accepted by publishers. Settled in batches against ReceiptSettlement (mainnet 0x1b522b9d62986f4ad0e7e881bad464b6e7e37317) which routes NOX through FeeRouter (0x0d0dd1d8d2940ed4c1cf05635722528def612559). The signature is EIP-712 typed data over the on-chain Receipt struct, recovered with ECDSA.recover(_hashTypedDataV4(structHash), signature) and required to equal `user`. Field names, order, and types match IReceiptSettlement.Receipt one-to-one.",
   "type": "object",
   "required": [
     "schema_version",
-    "user_wallet",
-    "capsule_id",
+    "chain_id",
+    "verifying_contract",
+    "domain_name",
+    "domain_version",
+    "capsuleId",
+    "user",
     "publisher",
-    "amount_nox",
+    "amountNox",
     "nonce",
     "epoch",
-    "expiry_ms",
-    "receipt_hash",
+    "expiry",
+    "receiptType",
+    "structHash",
     "signature"
   ],
   "additionalProperties": false,
+  "x-eip712": {
+    "primaryType": "Receipt",
+    "typeString": "Receipt(bytes32 capsuleId,address user,address publisher,uint256 amountNox,uint256 nonce,uint256 epoch,uint256 expiry,bytes32 receiptType)",
+    "typeHash": "0xcaf13c4f8e77e168b5be72c27bd31ca59c4d92217fed1a37a9700c398582edfc",
+    "domain": {
+      "name": "0xNOX Receipt Settlement",
+      "version": "1",
+      "chainId": 1,
+      "verifyingContract": "0x1b522b9d62986f4ad0e7e881bad464b6e7e37317"
+    },
+    "structHash": "keccak256(abi.encode(typeHash, capsuleId, user, publisher, amountNox, nonce, epoch, expiry, receiptType)) — nine 32-byte words, addresses left-padded to 32 bytes, uint256 big-endian.",
+    "digest": "keccak256(0x1901 || domainSeparator || structHash); domainSeparator = keccak256(abi.encode(keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'), keccak256(domain.name), keccak256(domain.version), chainId, verifyingContract)).",
+    "signature": "secp256k1 recoverable signature over digest. 65 bytes = r(32) || s(32) || v(1), v in {27,28}."
+  },
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 1
+      "const": 2,
+      "description": "Receipt envelope version. Bumped to 2 when the receipt switched from EIP-191/BLAKE3 to EIP-712/keccak256 to match the deployed verifier."
     },
-    "user_wallet": {
+    "chain_id": {
+      "type": "integer",
+      "const": 1,
+      "description": "EIP-712 domain chainId. Mainnet. A receipt carrying any other chain_id is rejected before signing; settlement on a fork/wrong chain recovers a different signer and fails wrong-signer."
+    },
+    "verifying_contract": {
+      "type": "string",
+      "const": "0x1b522b9d62986f4ad0e7e881bad464b6e7e37317",
+      "description": "EIP-712 domain verifyingContract: the live ReceiptSettlement proxy. Part of the domain separator, so a receipt signed for any other contract fails recovery."
+    },
+    "domain_name": {
+      "type": "string",
+      "const": "0xNOX Receipt Settlement",
+      "description": "EIP-712 domain name, exactly as set by __EIP712_init on-chain."
+    },
+    "domain_version": {
+      "type": "string",
+      "const": "1",
+      "description": "EIP-712 domain version, exactly as set by __EIP712_init on-chain."
+    },
+    "capsuleId": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{64}$",
+      "description": "bytes32 capsule id, the BLAKE3-derived capsule_id from the manifest as a 0x-prefixed 32-byte value. capsuleRegistry.publisherOf(capsuleId) must equal `publisher` or settlement fails wrong-publisher."
+    },
+    "user": {
       "type": "string",
       "pattern": "^0x[0-9a-fA-F]{40}$",
-      "description": "Ethereum address of the wallet that signed the receipt."
-    },
-    "capsule_id": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{64}$",
-      "description": "BLAKE3-derived capsule_id, matches manifest.capsule_id."
+      "description": "Ethereum address of the wallet that signs the receipt and is debited NOX. Must equal ECDSA.recover(_hashTypedDataV4(structHash), signature). The wallet must hold an ERC-20 allowance to verifying_contract for at least amountNox before batchSettle."
     },
     "publisher": {
       "type": "string",
       "pattern": "^0x[0-9a-fA-F]{40}$",
-      "description": "Ethereum address of the publisher that will redeem the receipt."
+      "description": "Ethereum address of the publisher that redeems the receipt and receives the publisher split via FeeRouter."
     },
-    "amount_nox": {
+    "amountNox": {
       "type": "string",
       "pattern": "^[0-9]+$",
-      "description": "Decimal NOX amount in base units. String to avoid float loss."
+      "description": "uint256 NOX amount in atto-NOX (18 decimals), as a decimal string to avoid float loss. Must be > 0 or settlement fails zero-amount."
     },
     "nonce": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 18446744073709551615,
-      "description": "Monotonic per (user_wallet, publisher). Settlement contract rejects non-monotonic nonces."
+      "description": "Monotonic per (user, publisher), issued by capsule_payment. Part of the struct hash, so reusing a nonce with identical fields produces the same hash and fails replay."
     },
     "epoch": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 18446744073709551615,
-      "description": "Settlement epoch identifier. Receipts older than the last settled epoch are rejected on chain."
+      "description": "Settlement epoch = (block.timestamp - epochZero) / epochDuration, epochDuration = 86400s. Settlement accepts epoch == currentEpoch or epoch + 1 == currentEpoch (one-epoch grace); anything else fails wrong-epoch."
     },
-    "expiry_ms": {
+    "expiry": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 18446744073709551615,
-      "description": "Boot-time millisecond clock at which the receipt becomes invalid."
+      "description": "ABSOLUTE unix timestamp in seconds at which the receipt becomes invalid, compared against block.timestamp on-chain. 0 means never expires. NOT a boot-relative clock."
     },
-    "receipt_hash": {
+    "receiptType": {
       "type": "string",
-      "pattern": "^[0-9a-f]{64}$",
-      "description": "BLAKE3 of the canonical receipt encoding, excluding the signature field."
+      "pattern": "^0x[0-9a-fA-F]{64}$",
+      "description": "bytes32 tag describing the charge. Convention: keccak256 of a lowercase ASCII label. install = keccak256('install'), subscribe = keccak256('subscribe'), use = keccak256('use'). Included in the struct hash and emitted in ReceiptSettled; not otherwise validated on-chain."
+    },
+    "structHash": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{64}$",
+      "description": "keccak256(abi.encode(typeHash, capsuleId, user, publisher, amountNox, nonce, epoch, expiry, receiptType)). Equals ReceiptSettlement.hashReceipt(r). The signature is over _hashTypedDataV4(structHash), not over this value directly."
     },
     "signature": {
       "type": "string",
       "pattern": "^0x[0-9a-fA-F]{130}$",
-      "description": "Wallet signature over receipt_hash. EIP-191 personal_sign format, 65 bytes hex."
+      "description": "65-byte secp256k1 recoverable signature over the EIP-712 digest keccak256(0x1901 || domainSeparator || structHash). Layout r(32)||s(32)||v(1), v in {27,28}. EIP-712 typed data, NOT EIP-191 personal_sign."
     }
   }
 }
