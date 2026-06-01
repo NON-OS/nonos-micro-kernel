@@ -1,0 +1,25 @@
+# NØNOS App Kit
+# eK@nonos.systems
+#
+# First-party widget toolkit for NØNOS applications. Widgets paint
+# through the UI canvas into a window surface; the compositor composites
+# them. No GTK, no Qt, no external desktop framework. This crate carries
+# the theme and the core widgets the desktop apps share.
+
+[package]
+name = "nonos-appkit"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS first-party App Kit widgets"
+
+[lib]
+name = "nonos_appkit"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-ui = { path = "../nonos_ui" }
+nonos-font = { path = "../nonos_font" }
+nonos-abi = { path = "../../nonos_abi" }

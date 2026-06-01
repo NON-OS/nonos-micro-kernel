@@ -1,0 +1,20 @@
+# NØNOS App Kit font
+# eK@nonos.systems
+#
+# The canonical 8x8 bitmap font for NØNOS applications: ASCII letters,
+# digits, and punctuation with a tofu fallback for everything else.
+# Pure data and lookup, no allocation and no kernel calls, so any
+# widget can rasterize text into a surface framebuffer.
+
+[package]
+name = "nonos-font"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS App Kit 8x8 bitmap font"
+
+[lib]
+name = "nonos_font"
+path = "src/lib.rs"

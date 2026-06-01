@@ -1,0 +1,24 @@
+# NØNOS SDK UI primitives
+# eK@nonos.systems
+#
+# Rendering foundation for NØNOS applications: colors, rectangles, a
+# canvas that paints into a window framebuffer, and the Widget trait
+# the app kit builds on. Pure pixel math over an ARGB8888 buffer; no
+# allocation and no kernel calls.
+
+[package]
+name = "nonos-ui"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS SDK UI primitives"
+
+[lib]
+name = "nonos_ui"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-font = { path = "../nonos_font" }
+nonos-abi = { path = "../../nonos_abi" }

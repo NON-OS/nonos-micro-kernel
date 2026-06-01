@@ -1,0 +1,25 @@
+# NØNOS SDK
+# eK@nonos.systems
+#
+# The one dependency a NØNOS application takes. Re-exports the prelude
+# and provides sdk_main!, which wires the capsule entry point to the
+# runtime with the standard GUI capability set. The developer writes an
+# App; the SDK handles boot, capabilities, and the surface plumbing.
+
+[package]
+name = "nonos-sdk"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS application SDK"
+
+[lib]
+name = "nonos_sdk"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-runtime = { path = "../../nonos_runtime" }
+nonos-cap = { path = "../../nonos_cap" }
+nonos-prelude = { path = "../nonos_prelude" }

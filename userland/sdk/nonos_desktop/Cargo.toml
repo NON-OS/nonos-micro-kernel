@@ -1,0 +1,26 @@
+# NØNOS SDK desktop client
+# eK@nonos.systems
+#
+# Client side of the NØNOS desktop protocol for SDK applications:
+# resolve the compositor/WM/input-router peers, open and close real
+# windows, submit and damage surfaces, subscribe to input, and decode
+# input events the input-router delivers over IPC. No compositor or WM
+# changes live here; this is purely the application-facing client.
+
+[package]
+name = "nonos-desktop"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS SDK desktop protocol client"
+
+[lib]
+name = "nonos_desktop"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-abi = { path = "../../nonos_abi" }
+nonos-ipc = { path = "../../nonos_ipc" }
+nonos-service = { path = "../../nonos_service" }

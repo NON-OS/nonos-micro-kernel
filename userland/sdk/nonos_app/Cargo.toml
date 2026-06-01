@@ -1,0 +1,25 @@
+# NØNOS SDK application builder
+# eK@nonos.systems
+#
+# The App builder: name a capsule, request a window, paint a
+# background, and show it. show() creates a surface-backed window,
+# paints it through the UI canvas, presents it to the compositor, and
+# keeps the capsule live. The runtime owns boot and exit.
+
+[package]
+name = "nonos-app"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS SDK application builder"
+
+[lib]
+name = "nonos_app"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-runtime = { path = "../../nonos_runtime" }
+nonos-window = { path = "../nonos_window" }
+nonos-ui = { path = "../nonos_ui" }

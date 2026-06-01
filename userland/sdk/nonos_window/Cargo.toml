@@ -1,0 +1,23 @@
+# NØNOS SDK window
+# eK@nonos.systems
+#
+# A window is a registered NØNOS surface: created in the surface
+# registry, attached to read back its mapped framebuffer, presented to
+# damage it, and released on close. The compositor composites it like
+# any other capsule surface; there is no separate window server.
+
+[package]
+name = "nonos-window"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS SDK surface-backed window"
+
+[lib]
+name = "nonos_window"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-surface = { path = "../../nonos_surface" }

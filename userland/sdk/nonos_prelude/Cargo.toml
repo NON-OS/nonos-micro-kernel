@@ -1,0 +1,26 @@
+# NØNOS SDK prelude
+# eK@nonos.systems
+#
+# The common surface a NØNOS application reaches for: the App builder,
+# windows, the UI canvas and primitives, and the runtime essentials
+# for logging and exit. Pulled in through the SDK prelude so apps need
+# one glob import.
+
+[package]
+name = "nonos-prelude"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS SDK prelude"
+
+[lib]
+name = "nonos_prelude"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-runtime = { path = "../../nonos_runtime" }
+nonos-app = { path = "../nonos_app" }
+nonos-ui = { path = "../nonos_ui" }
+nonos-window = { path = "../nonos_window" }

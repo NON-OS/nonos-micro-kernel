@@ -1,0 +1,29 @@
+# NØNOS SDK example: hello_nonos
+# eK@nonos.systems
+#
+# The smallest graphical NØNOS application written against the SDK.
+# It names itself, asks for a window, and shows it. The SDK supplies
+# boot, capabilities, and the surface plumbing.
+
+[package]
+name = "hello-nonos"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS SDK example application"
+
+[[bin]]
+name = "hello_nonos"
+path = "src/main.rs"
+
+[dependencies]
+nonos-sdk = { path = "../../nonos_sdk" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true

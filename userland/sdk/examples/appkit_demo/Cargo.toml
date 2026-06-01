@@ -1,0 +1,29 @@
+# NØNOS App Kit example: appkit_demo
+# eK@nonos.systems
+#
+# A graphical capsule that paints App Kit widgets (a themed label and
+# button with rendered text) into a window surface and presents it.
+
+[package]
+name = "nonos-example-appkit"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS App Kit example application"
+
+[[bin]]
+name = "appkit_demo"
+path = "src/main.rs"
+
+[dependencies]
+nonos-sdk = { path = "../../nonos_sdk" }
+nonos-appkit = { path = "../../nonos_appkit" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
