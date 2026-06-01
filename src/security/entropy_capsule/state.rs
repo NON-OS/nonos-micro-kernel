@@ -22,6 +22,7 @@ pub(super) fn set_alive(pid: u32) {
     STATE.set_alive(pid);
 }
 
+#[cfg(feature = "nonos-entropy-smoketest")]
 pub(super) fn is_alive() -> bool {
     STATE.is_alive()
 }

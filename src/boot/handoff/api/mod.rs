@@ -24,4 +24,7 @@ pub use cleanup::wipe_sensitive_handoff_data;
 pub use error::{FbGeometryReason, HandoffError};
 pub use init::init_handoff;
 pub use query::{get_handoff, is_initialized, total_memory};
+// Re-exported only for the gated boot handoff tests; the production
+// caller in `init` imports it directly from the `security` submodule.
+#[cfg(any(test, feature = "nonos-selftest"))]
 pub(crate) use security::validate_security;
