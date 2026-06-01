@@ -36,19 +36,19 @@ fn trace(label: &[u8], pid: u32) {
     if !is_traced(pid) || RESUME_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 32 {
         return;
     }
-    crate::sys::serial::print(b"[KRESUME] ");
-    crate::sys::serial::println(label);
+    crate::sys::serial::trace(b"[KRESUME] ");
+    crate::sys::serial::traceln(label);
 }
 
 fn trace_ctx(ctx: &crate::sched::Context, pid: u32) {
     if !matches!(pid, 0x26 | 0x27) || RESUME_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 32 {
         return;
     }
-    crate::sys::serial::print(b"[KRESUME] rip=");
+    crate::sys::serial::trace(b"[KRESUME] rip=");
     crate::arch::x86_64::diag::print_hex_u64(ctx.rip);
-    crate::sys::serial::print(b" rsp=");
+    crate::sys::serial::trace(b" rsp=");
     crate::arch::x86_64::diag::print_hex_u64(ctx.rsp);
-    crate::sys::serial::println(b"");
+    crate::sys::serial::traceln(b"");
 }
 
 fn restore_syscall_user_rsp(pcb: &Arc<ProcessControlBlock>) {

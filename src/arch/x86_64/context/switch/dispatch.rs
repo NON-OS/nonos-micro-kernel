@@ -30,10 +30,10 @@ fn trace(label: &[u8], pid: u32) {
     {
         return;
     }
-    crate::sys::serial::print(b"[DISPATCH] pid=");
-    crate::sys::serial::print_hex(pid as u64);
-    crate::sys::serial::print(b" ");
-    crate::sys::serial::println(label);
+    crate::sys::serial::trace(b"[DISPATCH] pid=");
+    crate::sys::serial::trace_hex(pid as u64);
+    crate::sys::serial::trace(b" ");
+    crate::sys::serial::traceln(label);
 }
 
 pub(crate) fn switch_to_user_pcb_x86_64(pid: u32) {

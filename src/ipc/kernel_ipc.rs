@@ -26,14 +26,14 @@ fn trace_route(caller_pid: u32, target: &str, dest_pid: u32, woke: bool) {
     if !matches!(dest_pid, 9 | 0x17) || ROUTE_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 40 {
         return;
     }
-    crate::sys::serial::print(b"[ROUTE] from=");
-    crate::sys::serial::print_hex(caller_pid as u64);
-    crate::sys::serial::print(b" target=");
-    crate::sys::serial::print(target.as_bytes());
-    crate::sys::serial::print(b" dest=");
-    crate::sys::serial::print_hex(dest_pid as u64);
-    crate::sys::serial::print(if woke { b" wake=1" } else { b" wake=0" });
-    crate::sys::serial::println(b"");
+    crate::sys::serial::trace(b"[ROUTE] from=");
+    crate::sys::serial::trace_hex(caller_pid as u64);
+    crate::sys::serial::trace(b" target=");
+    crate::sys::serial::trace(target.as_bytes());
+    crate::sys::serial::trace(b" dest=");
+    crate::sys::serial::trace_hex(dest_pid as u64);
+    crate::sys::serial::trace(if woke { b" wake=1" } else { b" wake=0" });
+    crate::sys::serial::traceln(b"");
 }
 
 pub const EACCES: i32 = -13;

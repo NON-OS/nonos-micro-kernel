@@ -27,16 +27,16 @@ pub fn select_next_process() -> Option<u32> {
     if runnable.is_empty() {
         static EMPTY_SHOWN: AtomicU32 = AtomicU32::new(0);
         if EMPTY_SHOWN.fetch_add(1, Ordering::Relaxed) < 2 {
-            crate::sys::serial::println(b"[SCHED] runnable empty");
+            crate::sys::serial::traceln(b"[SCHED] runnable empty");
         }
         return None;
     }
     {
         static RUNNABLE_SHOWN: AtomicU32 = AtomicU32::new(0);
         if RUNNABLE_SHOWN.fetch_add(1, Ordering::Relaxed) < 2 {
-            crate::sys::serial::print(b"[SCHED] runnable count=");
-            crate::sys::serial::print_hex(runnable.len() as u64);
-            crate::sys::serial::println(b"");
+            crate::sys::serial::trace(b"[SCHED] runnable count=");
+            crate::sys::serial::trace_hex(runnable.len() as u64);
+            crate::sys::serial::traceln(b"");
         }
     }
     let last = LAST_SCHEDULED_PID.load(Ordering::Relaxed);
@@ -44,11 +44,11 @@ pub fn select_next_process() -> Option<u32> {
         use crate::process::nonos_core::PROCESS_TABLE;
         static QDUMP: AtomicU32 = AtomicU32::new(0);
         if current == 0x1F && QDUMP.fetch_add(1, Ordering::Relaxed) < 40 {
-            crate::sys::serial::print(b"[QDUMP] last=");
-            crate::sys::serial::print_hex(last as u64);
-            crate::sys::serial::print(b" rq=[");
+            crate::sys::serial::trace(b"[QDUMP] last=");
+            crate::sys::serial::trace_hex(last as u64);
+            crate::sys::serial::trace(b" rq=[");
             for &p in runnable.iter() {
-                crate::sys::serial::print_hex(p as u64);
+                crate::sys::serial::trace_hex(p as u64);
                 if let Some(pcb) = PROCESS_TABLE.find_by_pid(p) {
                     let s = *pcb.state.lock();
                     let tag: &[u8] = match s {
@@ -57,12 +57,12 @@ pub fn select_next_process() -> Option<u32> {
                         crate::process::nonos_core::ProcessState::Sleeping => b":S,",
                         _ => b":?,",
                     };
-                    crate::sys::serial::print(tag);
+                    crate::sys::serial::trace(tag);
                 } else {
-                    crate::sys::serial::print(b":?,");
+                    crate::sys::serial::trace(b":?,");
                 }
             }
-            crate::sys::serial::println(b"]");
+            crate::sys::serial::traceln(b"]");
         }
     }
     for prio in
@@ -73,9 +73,9 @@ pub fn select_next_process() -> Option<u32> {
             {
                 static PICKED_SHOWN: AtomicU32 = AtomicU32::new(0);
                 if PICKED_SHOWN.fetch_add(1, Ordering::Relaxed) < 4000 {
-                    crate::sys::serial::print(b"[SCHED] picked pid=");
-                    crate::sys::serial::print_hex(pid as u64);
-                    crate::sys::serial::println(b"");
+                    crate::sys::serial::trace(b"[SCHED] picked pid=");
+                    crate::sys::serial::trace_hex(pid as u64);
+                    crate::sys::serial::traceln(b"");
                 }
             }
             return Some(pid);
@@ -107,15 +107,15 @@ fn select_by_priority(pids: &[u32], last: u32, current: u32, prio: Priority) -> 
                         ProcessState::Terminated(_) => b"terminated",
                     };
                     let prio_match: &[u8] = if proc_prio == prio { b"prio=ok" } else { b"prio=mismatch" };
-                    crate::sys::serial::print(b"[SEL] pid=");
-                    crate::sys::serial::print_hex(pid as u64);
-                    crate::sys::serial::print(b" state=");
-                    crate::sys::serial::print(state_tag);
-                    crate::sys::serial::print(b" ");
-                    crate::sys::serial::print(prio_match);
-                    crate::sys::serial::print(b" current=");
-                    crate::sys::serial::print_hex(current as u64);
-                    crate::sys::serial::println(b"");
+                    crate::sys::serial::trace(b"[SEL] pid=");
+                    crate::sys::serial::trace_hex(pid as u64);
+                    crate::sys::serial::trace(b" state=");
+                    crate::sys::serial::trace(state_tag);
+                    crate::sys::serial::trace(b" ");
+                    crate::sys::serial::trace(prio_match);
+                    crate::sys::serial::trace(b" current=");
+                    crate::sys::serial::trace_hex(current as u64);
+                    crate::sys::serial::traceln(b"");
                 }
             }
             if state == ProcessState::Ready && proc_prio == prio {

@@ -29,22 +29,22 @@ fn trace(caller_pid: u32, dest_pid: u64, label: &[u8], rc: i64, inbox: &str) {
     if caller_pid != 0x9 && dest_pid != 0x17 {
         return;
     }
-    crate::sys::serial::print(b"[IPC-REPLY] from=");
-    crate::sys::serial::print_hex(caller_pid as u64);
-    crate::sys::serial::print(b" to=");
-    crate::sys::serial::print_hex(dest_pid);
-    crate::sys::serial::print(b" inbox=");
-    crate::sys::serial::print(inbox.as_bytes());
-    crate::sys::serial::print(b" ");
-    crate::sys::serial::print(label);
-    crate::sys::serial::print(b" rc=");
+    crate::sys::serial::trace(b"[IPC-REPLY] from=");
+    crate::sys::serial::trace_hex(caller_pid as u64);
+    crate::sys::serial::trace(b" to=");
+    crate::sys::serial::trace_hex(dest_pid);
+    crate::sys::serial::trace(b" inbox=");
+    crate::sys::serial::trace(inbox.as_bytes());
+    crate::sys::serial::trace(b" ");
+    crate::sys::serial::trace(label);
+    crate::sys::serial::trace(b" rc=");
     if rc < 0 {
-        crate::sys::serial::print(b"-");
-        crate::sys::serial::print_dec((-rc) as u64);
+        crate::sys::serial::trace(b"-");
+        crate::sys::serial::trace_dec((-rc) as u64);
     } else {
-        crate::sys::serial::print_dec(rc as u64);
+        crate::sys::serial::trace_dec(rc as u64);
     }
-    crate::sys::serial::println(b"");
+    crate::sys::serial::traceln(b"");
 }
 
 pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {

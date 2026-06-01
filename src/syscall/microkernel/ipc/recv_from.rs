@@ -33,21 +33,21 @@ fn trace(label: &[u8], pid: u32) {
     {
         return;
     }
-    crate::sys::serial::print(b"[IPC-RF] pid=");
-    crate::sys::serial::print_hex(pid as u64);
-    crate::sys::serial::print(b" ");
-    crate::sys::serial::println(label);
+    crate::sys::serial::trace(b"[IPC-RF] pid=");
+    crate::sys::serial::trace_hex(pid as u64);
+    crate::sys::serial::trace(b" ");
+    crate::sys::serial::traceln(label);
 }
 
 fn trace_dequeue(pid: u32, sender_pid: u32) {
     if !is_traced(pid) || RECV_FROM_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80 {
         return;
     }
-    crate::sys::serial::print(b"[IPC-RF] pid=");
-    crate::sys::serial::print_hex(pid as u64);
-    crate::sys::serial::print(b" from=");
-    crate::sys::serial::print_hex(sender_pid as u64);
-    crate::sys::serial::println(b" dequeue");
+    crate::sys::serial::trace(b"[IPC-RF] pid=");
+    crate::sys::serial::trace_hex(pid as u64);
+    crate::sys::serial::trace(b" from=");
+    crate::sys::serial::trace_hex(sender_pid as u64);
+    crate::sys::serial::traceln(b" dequeue");
 }
 
 // `MkIpcRecvFrom`. Same drain semantics as `MkIpcRecv`, with an

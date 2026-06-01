@@ -38,10 +38,10 @@ fn trace_surface(op: &[u8], label: &[u8], pid: u32) {
     {
         return;
     }
-    crate::sys::serial::print(b"[SURFACE] ");
-    crate::sys::serial::print(op);
-    crate::sys::serial::print(b" ");
-    crate::sys::serial::println(label);
+    crate::sys::serial::trace(b"[SURFACE] ");
+    crate::sys::serial::trace(op);
+    crate::sys::serial::trace(b" ");
+    crate::sys::serial::traceln(label);
 }
 
 pub(super) fn do_register(desc_ptr: u64) -> SyscallResult {

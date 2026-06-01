@@ -29,3 +29,29 @@ pub fn set_debug_enabled(v: bool) {
 pub fn is_debug_enabled() -> bool {
     DEBUG_ENABLED.load(Ordering::Relaxed)
 }
+
+pub fn trace(s: &[u8]) {
+    if is_debug_enabled() {
+        print::print(s);
+    }
+}
+pub fn trace_str(s: &str) {
+    if is_debug_enabled() {
+        print::print_str(s);
+    }
+}
+pub fn traceln(s: &[u8]) {
+    if is_debug_enabled() {
+        print::println(s);
+    }
+}
+pub fn trace_hex(v: u64) {
+    if is_debug_enabled() {
+        print::print_hex(v);
+    }
+}
+pub fn trace_dec(v: u64) {
+    if is_debug_enabled() {
+        print::print_dec(v);
+    }
+}

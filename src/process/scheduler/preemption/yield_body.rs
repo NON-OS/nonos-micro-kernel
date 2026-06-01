@@ -30,8 +30,8 @@ fn trace(label: &[u8], pid: u32) {
     if !is_traced(pid) || YIELD_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 40 {
         return;
     }
-    crate::sys::serial::print(b"[YIELD] ");
-    crate::sys::serial::println(label);
+    crate::sys::serial::trace(b"[YIELD] ");
+    crate::sys::serial::traceln(label);
 }
 
 fn trace_return_slot(pid: u32) {
@@ -50,13 +50,13 @@ fn trace_return_slot(pid: u32) {
         );
     }
     let ret = unsafe { *((rbp + 8) as *const u64) };
-    crate::sys::serial::print(b"[YIELD] rsp=");
+    crate::sys::serial::trace(b"[YIELD] rsp=");
     crate::arch::x86_64::diag::print_hex_u64(rsp);
-    crate::sys::serial::print(b" rbp=");
+    crate::sys::serial::trace(b" rbp=");
     crate::arch::x86_64::diag::print_hex_u64(rbp);
-    crate::sys::serial::print(b" ret=");
+    crate::sys::serial::trace(b" ret=");
     crate::arch::x86_64::diag::print_hex_u64(ret);
-    crate::sys::serial::println(b"");
+    crate::sys::serial::traceln(b"");
 }
 
 /// Voluntary-yield body. Runs with interrupts already disabled by the

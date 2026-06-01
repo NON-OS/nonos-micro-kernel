@@ -24,18 +24,18 @@ fn trace(pid: u32, label: &[u8], rc: i64) {
     if pid != 0x17 {
         return;
     }
-    crate::sys::serial::print(b"[IPC-CALL] pid=");
-    crate::sys::serial::print_hex(pid as u64);
-    crate::sys::serial::print(b" ");
-    crate::sys::serial::print(label);
-    crate::sys::serial::print(b" rc=");
+    crate::sys::serial::trace(b"[IPC-CALL] pid=");
+    crate::sys::serial::trace_hex(pid as u64);
+    crate::sys::serial::trace(b" ");
+    crate::sys::serial::trace(label);
+    crate::sys::serial::trace(b" rc=");
     if rc < 0 {
-        crate::sys::serial::print(b"-");
-        crate::sys::serial::print_dec((-rc) as u64);
+        crate::sys::serial::trace(b"-");
+        crate::sys::serial::trace_dec((-rc) as u64);
     } else {
-        crate::sys::serial::print_dec(rc as u64);
+        crate::sys::serial::trace_dec(rc as u64);
     }
-    crate::sys::serial::println(b"");
+    crate::sys::serial::traceln(b"");
 }
 
 // Send-then-recv. Replies drain from the caller's dedicated reply

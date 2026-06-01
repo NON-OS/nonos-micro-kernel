@@ -35,10 +35,10 @@ fn trace(label: &[u8], pid: u32) {
     if !is_traced(pid) || RECV_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80 {
         return;
     }
-    crate::sys::serial::print(b"[IPC-RECV] pid=");
-    crate::sys::serial::print_hex(pid as u64);
-    crate::sys::serial::print(b" ");
-    crate::sys::serial::println(label);
+    crate::sys::serial::trace(b"[IPC-RECV] pid=");
+    crate::sys::serial::trace_hex(pid as u64);
+    crate::sys::serial::trace(b" ");
+    crate::sys::serial::traceln(label);
 }
 
 pub fn sys_ipc_recv(endpoint: u64, buf: u64, len: usize, timeout_ms: u64) -> i64 {

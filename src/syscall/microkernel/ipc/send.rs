@@ -33,15 +33,15 @@ fn trace(pid: u32, endpoint: u64, target: &str, len: usize) {
     if !is_traced(pid) || SEND_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 48 {
         return;
     }
-    crate::sys::serial::print(b"[IPC-SEND] pid=");
-    crate::sys::serial::print_hex(pid as u64);
-    crate::sys::serial::print(b" ep=");
-    crate::sys::serial::print_hex(endpoint);
-    crate::sys::serial::print(b" len=");
-    crate::sys::serial::print_dec(len as u64);
-    crate::sys::serial::print(b" target=");
-    crate::sys::serial::print(target.as_bytes());
-    crate::sys::serial::println(b"");
+    crate::sys::serial::trace(b"[IPC-SEND] pid=");
+    crate::sys::serial::trace_hex(pid as u64);
+    crate::sys::serial::trace(b" ep=");
+    crate::sys::serial::trace_hex(endpoint);
+    crate::sys::serial::trace(b" len=");
+    crate::sys::serial::trace_dec(len as u64);
+    crate::sys::serial::trace(b" target=");
+    crate::sys::serial::trace(target.as_bytes());
+    crate::sys::serial::traceln(b"");
 }
 
 pub fn sys_ipc_send(endpoint: u64, buf: u64, len: usize) -> i64 {
