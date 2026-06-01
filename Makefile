@@ -1353,3 +1353,13 @@ nonos-mk-cargo-to-capsule-test:
 	@cd nonos-sign && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) build --release --bin capsule-sign
 	@cd userland/platform/nonos_capsule && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) build --release
 	@bash userland/platform/tests/cargo_to_capsule.sh
+
+# ---------------------------------------------------------------------------
+# Live GUI demo. One command boots the desktop image to a virtio-vga window
+# with wallpaper, shell, and the SDK/App Kit apps. The capture variant boots
+# headless and saves a framebuffer screenshot + a bounded serial log.
+.PHONY: nonos-mk-run-gui-demo nonos-mk-gui-demo-capture
+nonos-mk-run-gui-demo: nonos-mk-run
+
+nonos-mk-gui-demo-capture: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
+	@bash tests/boot/gui_demo_capture.sh
