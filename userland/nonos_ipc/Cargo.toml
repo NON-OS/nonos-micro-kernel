@@ -1,0 +1,23 @@
+# NØNOS runtime IPC
+# eK@nonos.systems
+#
+# Typed message passing for NØNOS capsules: send, call (request and
+# wait for reply), recv, recv_from (with sender pid), and reply. Every
+# path routes through the kernel IPC syscalls, which enforce the
+# per-endpoint capability checks; this crate adds no authority.
+
+[package]
+name = "nonos-ipc"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS runtime typed IPC"
+
+[lib]
+name = "nonos_ipc"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-abi = { path = "../nonos_abi" }

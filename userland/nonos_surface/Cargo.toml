@@ -1,0 +1,24 @@
+# NØNOS runtime surface client
+# eK@nonos.systems
+#
+# Surface lifecycle for NØNOS GUI capsules: create (register a backing
+# descriptor), attach (map it and read back the base VA), damage
+# (present the committed frame), and destroy (release). All four route
+# through the kernel surface registry, gated by the Graphics caps the
+# manifest grants.
+
+[package]
+name = "nonos-surface"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS runtime surface lifecycle"
+
+[lib]
+name = "nonos_surface"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-abi = { path = "../nonos_abi" }

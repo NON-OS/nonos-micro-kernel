@@ -1,0 +1,24 @@
+# NØNOS runtime allocator
+# eK@nonos.systems
+#
+# Global heap for NØNOS capsules built on the native runtime. Maps a
+# private anonymous region through MkMmap and binds it to a spin-locked
+# linked-list heap. One-shot init; all authority comes from the Memory
+# capability the manifest grants.
+
+[package]
+name = "nonos-alloc"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS runtime global allocator and heap init"
+
+[lib]
+name = "nonos_alloc"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-abi = { path = "../nonos_abi" }
+linked_list_allocator = { version = "0.10", default-features = false, features = ["use_spin"] }

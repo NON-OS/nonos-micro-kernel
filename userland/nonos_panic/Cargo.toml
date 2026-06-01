@@ -1,0 +1,23 @@
+# NØNOS runtime panic handler
+# eK@nonos.systems
+#
+# The single #[panic_handler] for capsules built on the native
+# runtime. An unrecoverable fault becomes a clean MkExit with the
+# SIGABRT-convention status (128 + 6) so the kernel reaps and
+# sanitizes the capsule rather than leaving it wedged.
+
+[package]
+name = "nonos-panic"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS runtime panic handler"
+
+[lib]
+name = "nonos_panic"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-abi = { path = "../nonos_abi" }

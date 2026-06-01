@@ -1,0 +1,23 @@
+# NØNOS runtime logging
+# eK@nonos.systems
+#
+# Capsule diagnostics and stdout/stderr. Lines route through the
+# kernel MkDebug trace channel (gated by the Debug capability and
+# bounded per call). When a console/log service is present the same
+# surface can be retargeted to it without changing callers.
+
+[package]
+name = "nonos-log"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS runtime logging and stdout/stderr"
+
+[lib]
+name = "nonos_log"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-abi = { path = "../nonos_abi" }

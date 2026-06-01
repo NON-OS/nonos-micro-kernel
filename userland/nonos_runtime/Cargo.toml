@@ -1,0 +1,32 @@
+# NØNOS native runtime
+# eK@nonos.systems
+#
+# The official userland runtime for NØNOS capsules. Pulls in the
+# allocator and panic handler, records the manifest-granted capability
+# set, runs the capsule entry point, drains cleanup hooks, and exits
+# cleanly. Re-exports IPC, services, surfaces, capabilities, and
+# logging so a capsule needs only this one dependency.
+
+[package]
+name = "nonos-runtime"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS native userland runtime"
+
+[lib]
+name = "nonos_runtime"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-abi = { path = "../nonos_abi" }
+nonos-alloc = { path = "../nonos_alloc" }
+nonos-panic = { path = "../nonos_panic" }
+nonos-cap = { path = "../nonos_cap" }
+nonos-ipc = { path = "../nonos_ipc" }
+nonos-service = { path = "../nonos_service" }
+nonos-surface = { path = "../nonos_surface" }
+nonos-log = { path = "../nonos_log" }
+spin = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex"] }

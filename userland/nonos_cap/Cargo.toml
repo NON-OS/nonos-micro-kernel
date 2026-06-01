@@ -1,0 +1,21 @@
+# NØNOS runtime capability model
+# eK@nonos.systems
+#
+# The capsule's view of its own authority. The granted set is the
+# manifest's required_caps, recorded once at runtime init. query()
+# reports it; request() checks membership before an operation. This
+# crate never grants a capability and never reaches the kernel; the
+# kernel remains the sole enforcer at every syscall.
+
+[package]
+name = "nonos-cap"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS runtime capability set model"
+
+[lib]
+name = "nonos_cap"
+path = "src/lib.rs"

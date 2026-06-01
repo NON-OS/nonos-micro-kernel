@@ -1,0 +1,21 @@
+# NØNOS native ABI
+# eK@nonos.systems
+#
+# Lowest layer of the NØNOS userland runtime. Owns the SYSCALL
+# instruction trampoline and the kernel syscall number tags. Every
+# higher runtime crate binds the kernel through this contract and
+# nothing else, so the from-scratch runtime never depends on the
+# legacy libc.
+
+[package]
+name = "nonos-abi"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS native ABI: SYSCALL trampoline and number tags"
+
+[lib]
+name = "nonos_abi"
+path = "src/lib.rs"

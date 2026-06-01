@@ -1,0 +1,23 @@
+# NØNOS runtime service registry client
+# eK@nonos.systems
+#
+# Resolve and announce named services. A capsule registers the port it
+# owns so peers can find it, and looks peers up by name instead of
+# hardcoding wire ports. The kernel registry is the source of truth;
+# this crate only carries the request.
+
+[package]
+name = "nonos-service"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS runtime service lookup and register"
+
+[lib]
+name = "nonos_service"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-abi = { path = "../nonos_abi" }
