@@ -56,7 +56,9 @@ pub fn register_overlay(
         overlay.height,
         OVERLAY_Z,
     ) {
-        if mk_surface_release(handle as u64) < 0 {
+        let first = mk_surface_release(handle as u64);
+        let second = mk_surface_release(handle as u64);
+        if first < 0 || second < 0 {
             return Err("overlay surface release rejected");
         }
         return Err(e);

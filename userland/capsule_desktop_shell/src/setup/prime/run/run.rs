@@ -14,22 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{overlay, peers, register};
 use crate::debug;
 use crate::market_client;
 use crate::render::paint_chrome;
+use crate::setup::prime::{overlay, peers, register};
 use crate::state::{Context, SpotlightState, TrayTable};
-use crate::wallpaper_client;
 use crate::wm_client;
+use nonos_libc::mk_munmap;
 
 pub fn run() -> Result<Context, &'static str> {
     let peers = peers::resolve()?;
+    super::require_status::require_status(wm_client::healthcheck(peers.wm_port, 2))?;
+    super::apply_wallpaper_policy::apply_wallpaper_policy(peers.wallpaper_port)?;
+    super::require_status::require_status(market_client::healthcheck(peers.market_port, 4))?;
     let overlay = overlay::allocate(peers.compositor_port, 1)?;
     let mut ctx = Context {
         compositor_port: peers.compositor_port,
-        wm_port: peers.wm_port,
-        wallpaper_port: peers.wallpaper_port,
-        market_port: peers.market_port,
         width: overlay.width,
         height: overlay.height,
         stride: overlay.stride,
@@ -41,19 +41,13 @@ pub fn run() -> Result<Context, &'static str> {
     };
     paint_chrome(&ctx);
     let rid = ctx.issue_request_id();
-    register::register_overlay(peers.compositor_port, rid, &overlay)?;
+    if let Err(e) = register::register_overlay(peers.compositor_port, rid, &overlay) {
+        if mk_munmap(overlay.backing_va as *mut u8, overlay.byte_len as usize) < 0 {
+            return Err("overlay munmap failed");
+        }
+        return Err(e);
+    }
     debug::marker(b"scene submitted");
-    require_status(wm_client::healthcheck(ctx.wm_port, ctx.issue_request_id()))?;
-    require_status(wallpaper_client::set_policy(ctx.wallpaper_port, ctx.issue_request_id(), 0))?;
-    require_status(market_client::healthcheck(ctx.market_port, ctx.issue_request_id()))?;
     debug::marker(b"peers ok");
     Ok(ctx)
-}
-
-fn require_status(result: Result<i32, &'static str>) -> Result<(), &'static str> {
-    let status = result?;
-    if status != 0 {
-        return Err("desktop peer rejected request");
-    }
-    Ok(())
 }

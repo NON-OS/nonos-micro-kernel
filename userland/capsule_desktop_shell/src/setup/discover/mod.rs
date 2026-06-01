@@ -14,24 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{NotifyLevel, SpotlightState, TrayTable};
+mod constants;
+mod lookup_port;
+mod require_compositor;
+mod require_port;
+mod require_wallpaper;
+mod require_wm;
+mod try_market;
 
-pub struct Context {
-    pub compositor_port: u32,
-    pub width: u32,
-    pub height: u32,
-    pub stride: u32,
-    pub backing_va: u64,
-    pub tray: TrayTable,
-    pub spotlight: SpotlightState,
-    pub last_notify_level: Option<NotifyLevel>,
-    pub next_request_id: u32,
-}
-
-impl Context {
-    pub fn issue_request_id(&mut self) -> u32 {
-        let id = self.next_request_id;
-        self.next_request_id = id.wrapping_add(1).max(1);
-        id
-    }
-}
+pub use require_compositor::require_compositor;
+pub use require_wallpaper::require_wallpaper;
+pub use require_wm::require_wm;
+pub use try_market::try_market;

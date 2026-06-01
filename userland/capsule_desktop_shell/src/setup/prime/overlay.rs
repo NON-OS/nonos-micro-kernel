@@ -43,7 +43,7 @@ pub fn allocate(compositor_port: u32, request_id: u32) -> Result<Overlay, &'stat
         -1,
         0,
     );
-    if base.is_null() {
+    if (base as isize) <= 0 {
         return Err("overlay mmap failed");
     }
     Ok(Overlay {

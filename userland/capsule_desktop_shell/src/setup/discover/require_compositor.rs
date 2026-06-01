@@ -14,24 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{NotifyLevel, SpotlightState, TrayTable};
-
-pub struct Context {
-    pub compositor_port: u32,
-    pub width: u32,
-    pub height: u32,
-    pub stride: u32,
-    pub backing_va: u64,
-    pub tray: TrayTable,
-    pub spotlight: SpotlightState,
-    pub last_notify_level: Option<NotifyLevel>,
-    pub next_request_id: u32,
-}
-
-impl Context {
-    pub fn issue_request_id(&mut self) -> u32 {
-        let id = self.next_request_id;
-        self.next_request_id = id.wrapping_add(1).max(1);
-        id
-    }
+pub fn require_compositor() -> Result<u32, &'static str> {
+    super::require_port::require_port(super::constants::COMPOSITOR_SERVICE)
+        .map_err(|_| "compositor service not announced")
 }
