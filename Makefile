@@ -30,7 +30,7 @@
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
 .PHONY: nonos-mk-run nonos-mk-run-serial nonos-mk-debug nonos-mk-plan-a-runtime
 .PHONY: nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-mk-boot-entropy nonos-mk-boot-crypto-hash nonos-mk-boot-vfs nonos-mk-boot-ps2-input nonos-mk-boot-xhci nonos-mk-boot-desktop-gui
-.PHONY: nonos-mk-input-e2e-ps2-test nonos-mk-input-e2e-ps2-esp nonos-mk-input-e2e-xhci-test nonos-mk-input-e2e-xhci-esp nonos-mk-boot-input-e2e-ps2 nonos-mk-boot-input-e2e-xhci
+.PHONY: nonos-mk-input-e2e-ps2-test nonos-mk-input-e2e-ps2-esp nonos-mk-input-e2e-xhci-test nonos-mk-input-e2e-xhci-esp nonos-mk-boot-input-e2e-ps2 nonos-mk-boot-input-e2e-xhci nonos-mk-input-probe-test nonos-mk-input-probe-esp
 .PHONY: nonos-mk-static nonos-mk-scan
 .PHONY: nonos-mk-verify nonos-mk-verify-fast
 .PHONY: nonos-mk-test nonos-mk-host-test
@@ -700,6 +700,22 @@ nonos-mk-input-e2e-ps2-test: $(NONOS_INPUT_E2E_ARTIFACTS) \
 
 nonos-mk-input-e2e-ps2-esp: nonos-mk-input-e2e-ps2-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
 	$(call NONOS_INPUT_E2E_ESP,input-e2e-ps2)
+
+NONOS_INPUT_PROBE_ARTIFACTS := $(proof-io_ARTIFACTS) \
+	$(driver-ps2-input_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
+	$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
+	$(input-probe_ARTIFACTS)
+
+nonos-mk-input-probe-test: $(NONOS_INPUT_PROBE_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-input-probe)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-input-probe
+
+nonos-mk-input-probe-esp: nonos-mk-input-probe-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
+	$(call NONOS_INPUT_E2E_ESP,input-probe)
 
 nonos-mk-input-e2e-xhci-test: $(NONOS_INPUT_E2E_ARTIFACTS) \
 		$(driver-xhci_ARTIFACTS) $(driver-usb-hid_ARTIFACTS) \

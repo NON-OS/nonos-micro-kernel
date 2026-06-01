@@ -18,8 +18,12 @@ mod apps;
 mod apps_tools;
 mod boot;
 mod core;
+#[cfg(not(feature = "microkernel-input-probe"))]
 mod desktop_fleet;
+#[cfg(not(feature = "microkernel-input-probe"))]
 mod desktop_services;
+#[cfg(feature = "microkernel-input-probe")]
+mod input_probe_fleet;
 mod drivers_bus;
 mod drivers_input;
 mod drivers_nic;

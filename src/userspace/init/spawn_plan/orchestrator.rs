@@ -43,6 +43,12 @@ pub(in crate::userspace::init) fn spawn_network() {
     super::network::spawn();
 }
 
+#[cfg(feature = "microkernel-input-probe")]
+pub(in crate::userspace::init) fn spawn_desktop() {
+    super::input_probe_fleet::spawn();
+}
+
+#[cfg(not(feature = "microkernel-input-probe"))]
 pub(in crate::userspace::init) fn spawn_desktop() {
     super::desktop_fleet::spawn();
 }
