@@ -16,23 +16,21 @@
 
 use nonos_libc::{InputEvent, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS, INPUT_KIND_POINTER_REL};
 
-use crate::clients::{compositor, wm};
+use crate::clients::{compositor, wire, wm};
 use crate::state::Context;
 
 use super::deliver::deliver_one;
+
+const DESKTOP_SHELL_SERVICE: &[u8] = b"desktop_shell";
 
 pub fn route_pointer(ctx: &mut Context, event: &InputEvent) -> u32 {
     refresh_display(ctx);
     let (x, y) = ctx.cursor.apply(event);
     let rid = ctx.issue_request_id();
-    let Some(target) = wm::query_topmost(&mut ctx.wm_port, rid, x, y) else {
-        ctx.record(0);
-        return 0;
+    let target = match wm::query_topmost(&mut ctx.wm_port, rid, x, y) {
+        Some(t) if t.owner_pid != 0 => t,
+        _ => return route_to_shell(ctx, event, x, y),
     };
-    if target.owner_pid == 0 {
-        ctx.record(0);
-        return 0;
-    }
     if event.kind == INPUT_KIND_BUTTON_DOWN {
         let rid = ctx.issue_request_id();
         if wm::route_focus(ctx.wm_port, rid, target) {
@@ -52,6 +50,33 @@ pub fn route_pointer(ctx: &mut Context, event: &InputEvent) -> u32 {
         return 0;
     }
     let delivered = deliver_one(target.owner_pid, &routed);
+    ctx.record(delivered);
+    delivered
+}
+
+// Clicks that land on no app window belong to the desktop chrome: the shell
+// paints its launcher and taskbar as compositor layers, not WM windows, so the
+// topmost query finds nothing there. Button presses go to the shell so its
+// chrome is clickable; bare-desktop movement needs no delivery.
+fn route_to_shell(ctx: &mut Context, event: &InputEvent, x: u32, y: u32) -> u32 {
+    if event.kind != INPUT_KIND_BUTTON_DOWN {
+        ctx.record(0);
+        return 0;
+    }
+    if ctx.shell_pid == 0 {
+        ctx.shell_pid = wire::lookup_pid(DESKTOP_SHELL_SERVICE).unwrap_or(0);
+    }
+    if ctx.shell_pid == 0 {
+        ctx.record(0);
+        return 0;
+    }
+    let mut routed = *event;
+    routed.x = x as i32;
+    routed.y = y as i32;
+    let delivered = deliver_one(ctx.shell_pid, &routed);
+    if delivered == 0 {
+        ctx.shell_pid = 0;
+    }
     ctx.record(delivered);
     delivered
 }

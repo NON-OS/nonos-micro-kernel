@@ -29,6 +29,13 @@ pub fn lookup_port(name: &[u8]) -> Option<u32> {
     if rc < 0 || pid == 0 || port == 0 { None } else { Some(port) }
 }
 
+pub fn lookup_pid(name: &[u8]) -> Option<u32> {
+    let mut pid = 0u32;
+    let mut port = 0u32;
+    let rc = mk_service_lookup(name.as_ptr(), name.len(), &mut port, &mut pid);
+    if rc < 0 || pid == 0 { None } else { Some(pid) }
+}
+
 pub fn call(
     port: u32,
     magic: u32,
