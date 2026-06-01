@@ -14,19 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::{Store, StoreError};
+use core::sync::atomic::{compiler_fence, Ordering};
 
-impl Store {
-    pub fn delete(&mut self, id: u32, caller_pid: u32) -> Result<(), StoreError> {
-        let entry = self.entries.get(&id).ok_or(StoreError::NotFound)?;
-        if entry.owner_pid != caller_pid {
-            return Err(StoreError::AccessDenied);
+pub(super) fn secure_wipe(buf: &mut [u8]) {
+    for byte in buf.iter_mut() {
+        unsafe {
+            core::ptr::write_volatile(byte, 0);
         }
-        let mut removed = match self.entries.remove(&id) {
-            Some(entry) => entry,
-            None => return Err(StoreError::NotFound),
-        };
-        super::wipe::secure_wipe(&mut removed.data);
-        Ok(())
     }
+    compiler_fence(Ordering::SeqCst);
 }

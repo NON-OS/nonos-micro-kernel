@@ -23,5 +23,6 @@ mod state;
 mod store_key;
 mod types;
 mod unlock;
+mod wipe;
 
 pub use types::{KeyMetadata, KeyType, Store, StoreError};
