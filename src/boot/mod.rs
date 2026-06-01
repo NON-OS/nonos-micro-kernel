@@ -17,6 +17,10 @@
 pub mod firmware;
 pub mod handoff;
 mod init;
+// Boot selftests are not part of a production image; only the selftest
+// build or host tests compile them. handoff_security and test_result are
+// consumed solely by the gated selftest module.
+#[cfg(any(test, feature = "nonos-selftest"))]
 pub mod tests;
 
 #[cfg(target_arch = "x86_64")]
