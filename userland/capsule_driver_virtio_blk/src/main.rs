@@ -17,6 +17,7 @@
 #![no_main]
 extern crate alloc;
 mod constants;
+mod debug;
 mod discover;
 mod init;
 mod io;
@@ -31,9 +32,13 @@ pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
+    debug::marker(b"_start heap ok");
     let mut driver = loop {
         match setup::run() {
-            Ok(d) => break d,
+            Ok(d) => {
+                debug::marker(b"setup ok");
+                break d;
+            }
             Err(_) => {
                 for _ in 0..64 {
                     mk_yield();
@@ -41,5 +46,6 @@ pub unsafe extern "C" fn _start() -> ! {
             }
         }
     };
+    debug::marker(b"server enter");
     server::run(&mut driver);
 }

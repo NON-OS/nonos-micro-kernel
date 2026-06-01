@@ -18,16 +18,11 @@ extern crate alloc;
 
 use alloc::vec;
 
-use nonos_libc::{mk_exit, mk_ipc_recv_from, mk_ipc_send_to_pid};
+use nonos_libc::{mk_exit, mk_ipc_recv_from, mk_ipc_reply};
 
-use crate::animation;
-use crate::component_dispatch;
-use crate::protocol::{
-    decode, encode, Header, E_BAD_OP, E_SHORT, HDR_LEN, IPC_PAYLOAD_MAX, STATUS_OK,
-    THEME_PAYLOAD_LEN, TOOLKIT_ENDPOINT, TOOLKIT_OP_ANIMATION_TICK, TOOLKIT_OP_COMPONENT_RENDER,
-    TOOLKIT_OP_HEALTHCHECK, TOOLKIT_OP_THEME_APPLY, TOOLKIT_OP_THEME_GET,
-};
-use crate::theme;
+use crate::protocol::{decode, encode, Header, HDR_LEN, IPC_PAYLOAD_MAX, TOOLKIT_ENDPOINT};
+
+use super::dispatch;
 
 const ENOTSUP: i64 = -95;
 
@@ -48,38 +43,12 @@ pub fn run() -> ! {
             continue;
         };
         let payload = &rx[HDR_LEN..used];
-        let (status, reply_len) = dispatch(hdr.op, payload, &mut tx[HDR_LEN..]);
+        let (status, reply_len) = dispatch::dispatch(hdr.op, payload, &mut tx[HDR_LEN..]);
         let reply_hdr =
             Header { op: hdr.op, request_id: hdr.request_id, payload_len: reply_len as u32 };
         encode(&mut tx[..HDR_LEN], &reply_hdr, status);
-        let _ = mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), HDR_LEN + reply_len);
-    }
-}
-
-fn dispatch(op: u16, payload: &[u8], reply: &mut [u8]) -> (u16, usize) {
-    match op {
-        TOOLKIT_OP_HEALTHCHECK => (STATUS_OK, 0),
-        TOOLKIT_OP_THEME_APPLY => (theme::apply(payload), 0),
-        TOOLKIT_OP_THEME_GET => theme_get(reply),
-        TOOLKIT_OP_ANIMATION_TICK => animation::tick(payload, reply),
-        TOOLKIT_OP_COMPONENT_RENDER => (component_dispatch::render(payload), 0),
-        _ => {
-            let _ = E_SHORT;
-            (E_BAD_OP, 0)
+        if mk_ipc_reply(sender_pid, tx.as_ptr(), HDR_LEN + reply_len) < 0 {
+            continue;
         }
     }
-}
-
-fn theme_get(reply: &mut [u8]) -> (u16, usize) {
-    if reply.len() < THEME_PAYLOAD_LEN {
-        return (E_BAD_OP, 0);
-    }
-    let snap = theme::snapshot();
-    reply[0..4].copy_from_slice(&snap.background_argb.to_le_bytes());
-    reply[4..8].copy_from_slice(&snap.surface_argb.to_le_bytes());
-    reply[8..12].copy_from_slice(&snap.accent_argb.to_le_bytes());
-    reply[12..16].copy_from_slice(&snap.text_argb.to_le_bytes());
-    reply[16..20].copy_from_slice(&snap.border_argb.to_le_bytes());
-    reply[20..24].copy_from_slice(&snap.revision.to_le_bytes());
-    (STATUS_OK, THEME_PAYLOAD_LEN)
 }

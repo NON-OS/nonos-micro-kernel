@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! DMA buffer mapping. Cap requirement: `Dma`. The first slice
-//! caps `length` at one page; the kernel returns `EINVAL` for any
-//! larger request.
+//! DMA buffer mapping. Cap requirement: `Dma`.
 
 use super::types::DmaMapOut;
 use crate::syscall::{call_raw, N_MK_DMA_MAP, N_MK_DMA_UNMAP};
+
+pub const MK_DMA_MAP_HIGH: u32 = 1 << 0;
 
 #[no_mangle]
 pub extern "C" fn mk_dma_map(

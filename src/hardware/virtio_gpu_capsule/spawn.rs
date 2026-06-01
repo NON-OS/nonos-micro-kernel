@@ -48,6 +48,7 @@ pub fn spawn_driver_virtio_gpu_capsule() -> Result<(), SpawnError> {
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
             | Capability::Memory.bit()
+            | Capability::GraphicsSurfaceCreate.bit()
             | Capability::DeviceEnum.bit()
             | Capability::Driver.bit()
             | Capability::Mmio.bit()

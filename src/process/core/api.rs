@@ -94,11 +94,7 @@ pub fn get_process_stats() -> ProcessManagementStats {
 }
 
 pub mod syscalls {
-    use super::*;
     pub fn sys_exit(code: i32) -> ! {
-        if let Some(pid) = current_pid() {
-            crate::process::exit::teardown(pid, code, false);
-        }
-        crate::arch::halt_loop()
+        crate::process::exit::exit_and_yield(code, false)
     }
 }

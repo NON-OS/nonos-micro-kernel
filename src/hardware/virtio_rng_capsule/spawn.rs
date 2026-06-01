@@ -16,7 +16,9 @@
 
 //! Spawn the virtio-rng driver capsule with the broker capability
 //! bundle. Driver capsules need IPC and Memory like every other
-//! capsule, plus the four broker caps (Driver, Mmio, Irq, Dma).
+//! capsule, plus the broker caps (Driver, Mmio, Pio, Irq, Dma).
+//! Pio backs the transitional device's legacy register window,
+//! which the broker reports as a port BAR rather than MMIO.
 //! No Crypto cap: the driver does not run crypto, it only feeds
 //! bytes into whichever capsule consumes them.
 
@@ -58,7 +60,9 @@ pub fn spawn_driver_virtio_rng_capsule() -> Result<(), SpawnError> {
             | Capability::DeviceEnum.bit()
             | Capability::Mmio.bit()
             | Capability::Irq.bit()
-            | Capability::Dma.bit(),
+            | Capability::Dma.bit()
+            | Capability::Pio.bit()
+            | Capability::Debug.bit(),
         debug_tag: b"[DRIVER-VIRTIO-RNG] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

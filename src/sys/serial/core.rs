@@ -28,10 +28,27 @@ the boot process. Output is simply dropped if no UART is present.
 
 use crate::sys::io::{inb, outb};
 use core::sync::atomic::{AtomicBool, Ordering};
+use spin::Mutex;
 
 pub const SERIAL_PORT: u16 = 0x3F8;
 
 static SERIAL_AVAILABLE: AtomicBool = AtomicBool::new(false);
+
+static SERIAL_LOCK: Mutex<()> = Mutex::new(());
+
+/*
+Run one logical output unit holding the COM1 lock with interrupts
+disabled, so concurrent CPUs and same-core ISRs cannot interleave
+bytes mid-line. The closure must emit only through `write_byte`;
+nesting another locked print inside would self-deadlock the
+non-reentrant spinlock, so callers keep the byte loop inline.
+*/
+pub fn with_serial_lock<R>(f: impl FnOnce() -> R) -> R {
+    crate::arch::x86_64::idt::without_interrupts(|| {
+        let _guard = SERIAL_LOCK.lock();
+        f()
+    })
+}
 
 /*
 Initialize COM1 UART at 115200 baud. Probes for hardware presence

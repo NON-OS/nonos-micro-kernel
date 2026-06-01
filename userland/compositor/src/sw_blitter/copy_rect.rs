@@ -42,17 +42,20 @@ pub fn composite_layer(
     }
     let dst_stride = dst.stride as usize;
     let src_stride = src.stride as usize;
+    let copy_w = (x1 - x0) as usize;
+    let src_x0 = (x0 - at_x) as usize;
     for y in y0..y1 {
         let src_row = (y - at_y) as usize;
-        let dst_row_va = dst.base_va as usize + y as usize * dst_stride;
-        let src_row_va = src.base_va as usize + src_row * src_stride;
-        for x in x0..x1 {
-            let src_col = (x - at_x) as usize;
-            let s = (src_row_va + src_col * 4) as *const u32;
-            let d = (dst_row_va + x as usize * 4) as *mut u32;
-            unsafe {
-                let px = core::ptr::read_volatile(s);
-                core::ptr::write_volatile(d, px);
+        let dst_row_va = dst.base_va as usize + y as usize * dst_stride + x0 as usize * 4;
+        let src_row_va = src.base_va as usize + src_row * src_stride + src_x0 * 4;
+        let dst_ptr = dst_row_va as *mut u32;
+        let src_ptr = src_row_va as *const u32;
+        for col in 0..copy_w {
+            // SAFETY: source and destination rectangles are clipped to
+            // valid bounds and surfaces do not intentionally overlap.
+            let px = unsafe { core::ptr::read_volatile(src_ptr.add(col)) };
+            if px & 0xFF00_0000 != 0 {
+                unsafe { core::ptr::write_volatile(dst_ptr.add(col), px) };
             }
         }
     }

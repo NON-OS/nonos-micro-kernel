@@ -12,11 +12,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::sys::clock::core::unix_ms;
-use crate::sys::settings;
+use crate::sys::policy;
 
 pub(super) fn local_unix_secs() -> u64 {
     let ms = unix_ms();
-    let tz_offset = settings::timezone() as i64;
+    let tz_offset = policy::timezone_offset() as i64;
     ((ms / 1000) as i64 + tz_offset * 3600).max(0) as u64
 }
 

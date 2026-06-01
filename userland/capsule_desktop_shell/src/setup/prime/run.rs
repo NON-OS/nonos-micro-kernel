@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::{overlay, peers, register};
+use crate::debug;
 use crate::market_client;
 use crate::render::paint_chrome;
 use crate::state::{Context, SpotlightState, TrayTable};
@@ -23,7 +24,7 @@ use crate::wm_client;
 
 pub fn run() -> Result<Context, &'static str> {
     let peers = peers::resolve()?;
-    let overlay = overlay::allocate()?;
+    let overlay = overlay::allocate(peers.compositor_port, 1)?;
     let mut ctx = Context {
         compositor_port: peers.compositor_port,
         wm_port: peers.wm_port,
@@ -36,13 +37,23 @@ pub fn run() -> Result<Context, &'static str> {
         tray: TrayTable::new(),
         spotlight: SpotlightState::new(),
         last_notify_level: None,
-        next_request_id: 1,
+        next_request_id: 2,
     };
     paint_chrome(&ctx);
     let rid = ctx.issue_request_id();
     register::register_overlay(peers.compositor_port, rid, &overlay)?;
-    let _ = wm_client::healthcheck(ctx.wm_port, ctx.issue_request_id());
-    let _ = wallpaper_client::set_policy(ctx.wallpaper_port, ctx.issue_request_id(), 0);
-    let _ = market_client::healthcheck(ctx.market_port, ctx.issue_request_id());
+    debug::marker(b"scene submitted");
+    require_status(wm_client::healthcheck(ctx.wm_port, ctx.issue_request_id()))?;
+    require_status(wallpaper_client::set_policy(ctx.wallpaper_port, ctx.issue_request_id(), 0))?;
+    require_status(market_client::healthcheck(ctx.market_port, ctx.issue_request_id()))?;
+    debug::marker(b"peers ok");
     Ok(ctx)
+}
+
+fn require_status(result: Result<i32, &'static str>) -> Result<(), &'static str> {
+    let status = result?;
+    if status != 0 {
+        return Err("desktop peer rejected request");
+    }
+    Ok(())
 }

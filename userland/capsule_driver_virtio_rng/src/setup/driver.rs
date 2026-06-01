@@ -19,15 +19,16 @@
 //! order on shutdown so the kernel sees a clean teardown even
 //! when the capsule exits voluntarily.
 
-use nonos_libc::{mk_device_release, mk_dma_unmap, mk_irq_unbind, mk_mmio_unmap};
+use nonos_libc::{mk_device_release, mk_dma_unmap, mk_irq_unbind};
 
+use super::registers::RegisterGrant;
 use crate::queue::Queue;
 use crate::regs::Regs;
 
 pub struct Driver {
     pub device_id: u64,
     pub claim_epoch: u64,
-    pub mmio_grant: u64,
+    pub(super) register_grant: RegisterGrant,
     pub irq_grant: u64,
     pub queue_grant: u64,
     pub buf_grant: u64,
@@ -44,7 +45,7 @@ impl Driver {
         let _ = mk_dma_unmap(self.buf_grant);
         let _ = mk_dma_unmap(self.queue_grant);
         let _ = mk_irq_unbind(self.irq_grant);
-        let _ = mk_mmio_unmap(self.mmio_grant);
+        let _ = self.register_grant.release();
         let _ = mk_device_release(self.device_id);
     }
 }

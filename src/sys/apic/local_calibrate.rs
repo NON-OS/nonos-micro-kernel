@@ -15,10 +15,10 @@
 
 use core::sync::atomic::{AtomicU64, Ordering};
 
-use super::local::{
-    lapic_read_raw, lapic_write_raw, LAPIC_TIMER_CURRENT, LAPIC_TIMER_DIV, LAPIC_TIMER_INIT,
-    LAPIC_TIMER_MASKED,
+use super::local::constants::{
+    LAPIC_LVT_TIMER, LAPIC_TIMER_CURRENT, LAPIC_TIMER_DIV, LAPIC_TIMER_INIT, LAPIC_TIMER_MASKED,
 };
+use super::local::regs::{lapic_read_raw, lapic_write_raw};
 use crate::sys::timer::tsc::{rdtsc, tsc_frequency};
 
 static LAPIC_TICKS_PER_MS: AtomicU64 = AtomicU64::new(0);
@@ -50,8 +50,8 @@ pub fn calibrate_lapic_ticks_per_ms() -> u64 {
 
         lapic_write_raw(LAPIC_TIMER_INIT, 0);
         lapic_write_raw(LAPIC_TIMER_DIV, 0x03);
-        let prev = lapic_read_raw(super::local::LAPIC_LVT_TIMER);
-        lapic_write_raw(super::local::LAPIC_LVT_TIMER, prev | LAPIC_TIMER_MASKED);
+        let prev = lapic_read_raw(LAPIC_LVT_TIMER);
+        lapic_write_raw(LAPIC_LVT_TIMER, prev | LAPIC_TIMER_MASKED);
 
         let elapsed = u32::MAX.wrapping_sub(remaining) as u64;
         let ticks_per_ms = elapsed / window_ms;

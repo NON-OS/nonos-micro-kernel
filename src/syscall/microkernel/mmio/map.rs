@@ -63,12 +63,15 @@ pub fn sys_mmio_map(
         length,
         flags,
     };
+    crate::sys::serial::println(b"[MMIO] broker");
     let result = match broker::map_for_caller(pid, req) {
         Ok(r) => r,
         Err(e) => return errno_for(e),
     };
+    crate::sys::serial::println(b"[MMIO] broker ok");
     let out =
         MmioMapOut { user_va: result.user_va, length: result.length, grant_id: result.grant_id };
+    crate::sys::serial::println(b"[MMIO] out");
     if write_user_value(out_ptr, &out).is_err() {
         // Pages are mapped but the caller can't read the result. Roll
         // the grant back so we don't leak a window with no handle.

@@ -23,9 +23,10 @@ use crate::state::Context;
 
 const SERVICE_INBOX: u64 = 0;
 const RECV_NOWAIT: u64 = 1;
+const MAX_BATCH: usize = 16;
 
 pub fn drain_ipc(ctx: &mut Context, rx: &mut [u8], tx: &mut [u8]) {
-    loop {
+    for _ in 0..MAX_BATCH {
         let mut sender_pid = 0u32;
         let n = mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), RECV_NOWAIT, &mut sender_pid);
         if n <= 0 || sender_pid == 0 {
@@ -34,10 +35,12 @@ pub fn drain_ipc(ctx: &mut Context, rx: &mut [u8], tx: &mut [u8]) {
         let (req, body) = match parse(&rx[..n as usize]) {
             Ok(parsed) => parsed,
             Err((code, req)) => {
-                let _ = respond::status(sender_pid, &req, code, tx);
+                if respond::status(sender_pid, &req, code, tx).is_err() {}
                 continue;
             }
         };
-        dispatch(ctx, sender_pid, req, body, tx);
+        if dispatch(ctx, sender_pid, req, body, tx).is_err() {
+            return;
+        }
     }
 }

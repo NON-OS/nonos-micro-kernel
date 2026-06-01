@@ -16,12 +16,12 @@
 
 use crate::hardware::broker::claim;
 use crate::hardware::broker::dma::limits::dma_page_limit_for_class;
-use crate::hardware::broker::dma::types::{DmaMapError, DmaMapRequest};
+use crate::hardware::broker::dma::types::{DmaMapError, DmaMapRequest, DMA_MAP_HIGH};
 use crate::hardware::broker::table;
 
 pub(super) const PAGE_SIZE: u64 = 4096;
 const PAGE_MASK: u64 = PAGE_SIZE - 1;
-const FLAGS_KNOWN: u32 = 0;
+const FLAGS_KNOWN: u32 = DMA_MAP_HIGH;
 
 // Returns the claim epoch on success so the caller can record it
 // without a second lookup. All state is observed read-only here.

@@ -20,4 +20,3 @@ mod modern;
 mod types;
 
 pub use bring_up::bring_up;
-pub use types::InitOut;

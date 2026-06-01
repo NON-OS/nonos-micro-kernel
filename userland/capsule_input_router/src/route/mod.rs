@@ -16,5 +16,7 @@
 
 pub mod deliver;
 pub mod dispatch;
+mod keyboard;
+mod pointer;
 
 pub use dispatch::route_event;

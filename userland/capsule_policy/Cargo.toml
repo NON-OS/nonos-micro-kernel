@@ -1,0 +1,39 @@
+# NONOS userland: capsule_policy
+# eK@nonos.systems
+#
+# Authoritative store for the live system policy. RAM-ephemeral —
+# every boot starts at compile-time defaults; the user-facing
+# capsule_settings GUI app and any other capsule that wants to read
+# or change a setting goes through the IPC surface exposed here.
+# Kernel-mirrored fields (kernel_preempt, timezone, hostname) are
+# pushed down via MkAdminPolicyPush whenever they change.
+
+[package]
+name = "nonos_capsule_policy"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS system policy store"
+
+[[bin]]
+name = "policy"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_policy_proto = { path = "../policy_proto" }
+spin = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex"] }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
+
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true

@@ -16,11 +16,13 @@
 
 mod state;
 mod switch;
+mod syscall_rsp;
 mod tick;
 mod yield_body;
 mod yield_impl;
 
 pub(crate) use state::SCHEDULER_STATS;
+pub(crate) use syscall_rsp::save_syscall_user_rsp;
 pub use state::{clear_reschedule, need_reschedule};
 pub use state::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLICE, NEED_RESCHEDULE};
 pub(crate) use switch::preempt_current_process;

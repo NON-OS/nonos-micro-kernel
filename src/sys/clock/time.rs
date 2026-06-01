@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::core::unix_ms;
-use crate::sys::settings;
+use crate::sys::policy;
 
 pub struct Time {
     pub hour: u8,
@@ -26,7 +26,7 @@ pub struct Time {
 pub fn get_time() -> Time {
     let ms = unix_ms();
     let total_secs = ms / 1000;
-    let tz_offset = settings::timezone() as i64;
+    let tz_offset = policy::timezone_offset() as i64;
     let local_secs = (total_secs as i64 + tz_offset * 3600).max(0) as u64;
     let seconds_in_day = local_secs % (24 * 60 * 60);
     let hour = (seconds_in_day / 3600) as u8;

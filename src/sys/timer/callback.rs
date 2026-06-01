@@ -15,15 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::uptime::uptime_ms;
+use crate::sys::sync::IrqMutex;
 use core::sync::atomic::{AtomicU64, Ordering};
-use spin::Mutex;
 
 const MAX_CALLBACKS: usize = 16;
 
 pub type TimerCallback = fn();
 
-static CALLBACKS: Mutex<[Option<(TimerCallback, u64, u64)>; MAX_CALLBACKS]> =
-    Mutex::new([None; MAX_CALLBACKS]);
+static CALLBACKS: IrqMutex<[Option<(TimerCallback, u64, u64)>; MAX_CALLBACKS]> =
+    IrqMutex::new([None; MAX_CALLBACKS]);
 pub static CALLBACK_COUNT: AtomicU64 = AtomicU64::new(0);
 
 pub fn register_callback(callback: TimerCallback, interval_ms: u64) -> Option<usize> {

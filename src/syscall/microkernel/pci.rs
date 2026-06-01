@@ -20,8 +20,26 @@
 
 use super::errnos::{ERRNO_INVAL, ERRNO_NODEV, ERRNO_PERM, ERRNO_STALE};
 use crate::capabilities::Capability;
-use crate::hardware::broker::{pci_config_write, PciWriteError, PciWriteRequest};
+use crate::hardware::broker::{
+    pci_config_read, pci_config_write, PciReadError, PciReadRequest, PciWriteError,
+    PciWriteRequest,
+};
 use crate::process::{caps, current_pid};
+
+pub fn sys_pci_config_read(device_id: u64, claim_epoch: u64, offset: u32, width: u32) -> i64 {
+    let pid = match current_pid() {
+        Some(p) => p,
+        None => return ERRNO_PERM,
+    };
+    if !caps::has(pid, Capability::Driver.bit()) {
+        return ERRNO_PERM;
+    }
+    let req = PciReadRequest { device_id, claim_epoch, offset, width };
+    match pci_config_read(pid, req) {
+        Ok(value) => value as i64,
+        Err(e) => read_errno(e),
+    }
+}
 
 pub fn sys_pci_config_write(device_id: u64, claim_epoch: u64, offset: u32, value: u32) -> i64 {
     let pid = match current_pid() {
@@ -35,6 +53,15 @@ pub fn sys_pci_config_write(device_id: u64, claim_epoch: u64, offset: u32, value
     match pci_config_write(pid, req) {
         Ok(()) => 0,
         Err(e) => write_errno(e),
+    }
+}
+
+fn read_errno(e: PciReadError) -> i64 {
+    match e {
+        PciReadError::NotClaimed => ERRNO_PERM,
+        PciReadError::StaleEpoch => ERRNO_STALE,
+        PciReadError::NoDeviceHandle | PciReadError::PlatformError => ERRNO_NODEV,
+        PciReadError::OffsetNotAllowed | PciReadError::WidthNotAllowed => ERRNO_INVAL,
     }
 }
 

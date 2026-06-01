@@ -43,6 +43,7 @@ fn serial_print(args: core::fmt::Arguments<'_>) {
 fn panic(info: &PanicInfo) -> ! {
     serial_print(format_args!("\n!!! KERNEL PANIC !!!\n"));
     serial_print(format_args!("{}\n", info));
+    crate::log::dbg_ring::dbg_drain_to_serial();
 
     // SAFETY: eK@nonos.systems — VGA framebuffer is kernel-owned
     // and not aliased to user mappings on this path; the diagnostic

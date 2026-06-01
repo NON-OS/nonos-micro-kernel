@@ -18,7 +18,7 @@ use super::super::error::PhysAllocResult;
 use super::super::types::{AllocFlags, AllocatorState, Frame, ZoneStats};
 use super::{
     allocate_contiguous, allocate_frame, deallocate_frame, free_contiguous, get_zone_stats,
-    init_with_bitmap, managed_range, total_memory,
+    init_with_bitmap, largest_free_run, managed_range, total_memory,
 };
 use crate::memory::addr::PhysAddr;
 use spin::Mutex;
@@ -71,6 +71,9 @@ pub fn phys_total_free_frames() -> usize {
 }
 pub fn phys_total_memory() -> u64 {
     total_memory(&ALLOCATOR.lock())
+}
+pub fn phys_largest_free_run() -> usize {
+    largest_free_run(&ALLOCATOR.lock())
 }
 pub fn phys_managed_range() -> (u64, u64) {
     managed_range(&ALLOCATOR.lock())

@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod context;
+pub mod cursor;
 pub mod grabs;
 pub mod subscriptions;
 
 pub use context::Context;
+pub use cursor::CursorState;
 pub use grabs::GrabTable;
 pub use subscriptions::SubscriptionTable;

@@ -16,6 +16,7 @@
 
 use crate::state::damage::Rect;
 use crate::state::Context;
+use crate::debug;
 use crate::sw_blitter::{self, Surface};
 
 pub const BACKGROUND_ARGB: u32 = 0xFF10_1620;
@@ -30,6 +31,7 @@ pub fn paint(ctx: &mut Context, rect: Rect) {
         rect.height,
         BACKGROUND_ARGB,
     );
+    debug::marker(b"fill ok");
     let dst = Surface {
         base_va: ctx.backing_va,
         stride: ctx.stride,
@@ -37,8 +39,19 @@ pub fn paint(ctx: &mut Context, rect: Rect) {
         height: ctx.height,
     };
     let (layers, count) = ctx.scene.z_sorted_snapshot();
+    let mut tag = [b'l', b'a', b'y', b'e', b'r', b's', b'=', b'0'];
+    tag[7] = b'0' + (count.min(9) as u8);
+    debug::marker(&tag);
+    let mut composited: u32 = 0;
     for layer in layers.iter().take(count) {
         if let Some(src) = ctx.attach.get_or_attach(layer.surface_handle) {
+            let first: u32 = unsafe { core::ptr::read_volatile(src.base_va as *const u32) };
+            let mut tag = [b'p', b'x', b'=', b'0', b'0', b'0', b'0', b'0', b'0', b'0', b'0'];
+            for i in 0..8u32 {
+                let nyb = ((first >> ((7 - i) * 4)) & 0xF) as u8;
+                tag[3 + i as usize] = if nyb < 10 { b'0' + nyb } else { b'a' + nyb - 10 };
+            }
+            debug::marker(&tag);
             sw_blitter::composite_layer(
                 dst,
                 src,
@@ -48,6 +61,10 @@ pub fn paint(ctx: &mut Context, rect: Rect) {
                 layer.height,
                 rect,
             );
+            composited += 1;
         }
     }
+    let mut done = [b'd', b'o', b'n', b'e', b'=', b'0'];
+    done[5] = b'0' + (composited.min(9) as u8);
+    debug::marker(&done);
 }

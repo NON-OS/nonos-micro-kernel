@@ -15,21 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-
-use alloc::string::String;
 use alloc::vec::Vec;
 use spin::Mutex;
 
+mod endpoint;
+mod error;
+
+pub use endpoint::ServiceEndpoint;
+pub use error::RegError;
+
 pub const MAX_SERVICES: usize = 256;
-
-#[derive(Debug, Clone)]
-pub struct ServiceEndpoint {
-    pub name: String,
-    pub port: u32,
-    pub pid: u32,
-    pub caps_required: u64,
-}
-
 static ENDPOINTS: Mutex<Vec<ServiceEndpoint>> = Mutex::new(Vec::new());
 
 fn caller_can_register() -> bool {
@@ -48,19 +43,21 @@ pub fn register_endpoint(name: &str, port: u32, pid: u32, caps: u64) -> Result<(
         return Err(RegError::PermissionDenied);
     }
     let mut eps = ENDPOINTS.lock();
+    if eps
+        .iter()
+        .any(|e| e.name == name && e.port == port && e.pid == pid)
+    {
+        return Ok(());
+    }
+    if eps.iter().any(|e| e.name == name || e.port == port) {
+        return Err(RegError::Exists);
+    }
     if eps.len() >= MAX_SERVICES {
         return Err(RegError::Full);
     }
-    if eps.iter().any(|e| e.name == name) {
-        return Err(RegError::Exists);
-    }
-    eps.push(ServiceEndpoint { name: String::from(name), port, pid, caps_required: caps });
+    eps.push(ServiceEndpoint::new(name, port, pid, caps));
     Ok(())
 }
-
-// Static-name shortcut used by legacy `*_engine` server bring-up and
-// by the registry test suite. No active-build capsule consumes it;
-// capsules call `register_endpoint` with explicit caps.
 
 pub fn lookup_service(name: &str) -> Option<ServiceEndpoint> {
     ENDPOINTS.lock().iter().find(|e| e.name == name).cloned()
@@ -70,21 +67,9 @@ pub fn lookup_port(port: u32) -> Option<ServiceEndpoint> {
     ENDPOINTS.lock().iter().find(|e| e.port == port).cloned()
 }
 
-/// Drop every endpoint registered to `pid`. Called from
-/// `process::exit::teardown` so a dying capsule's name is not left
-/// pointing at a zombie. Returns the number of removed entries;
-/// idempotent — a no-op when the pid never registered any endpoint.
 pub fn unregister_endpoints_for_pid(pid: u32) -> usize {
     let mut eps = ENDPOINTS.lock();
     let before = eps.len();
     eps.retain(|e| e.pid != pid);
     before - eps.len()
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum RegError {
-    Full,
-    Exists,
-    NotFound,
-    PermissionDenied,
 }

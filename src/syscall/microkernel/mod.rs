@@ -39,7 +39,7 @@ pub use debug::sys_mk_debug;
 pub use device::{sys_device_claim, sys_device_list, sys_device_release};
 pub use dispatch::dispatch_microkernel_syscall;
 pub use dma::{sys_dma_map, sys_dma_unmap};
-pub use ipc::{sys_ipc_call, sys_ipc_recv, sys_ipc_send};
+pub use ipc::{sys_ipc_call, sys_ipc_recv, sys_ipc_reply, sys_ipc_send};
 pub use irq::{sys_irq_ack, sys_irq_bind, sys_irq_poll, sys_irq_unbind};
 pub use memory::{sys_mmap, sys_munmap};
 pub use mmio::{sys_mmio_map, sys_mmio_unmap};

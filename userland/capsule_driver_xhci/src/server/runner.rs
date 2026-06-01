@@ -18,8 +18,8 @@ use nonos_libc::mk_ipc_recv;
 use crate::controller::{ack_irq, drain_events};
 use crate::protocol::{
     decode_request, E_INVAL, HDR_LEN, MAX_PORTS_REPORTED, MAX_REQUEST_PAYLOAD_LEN,
-    OP_ADDRESS_DEVICE, OP_CONTROLLER_STATUS, OP_DISABLE_SLOT, OP_ENABLE_SLOT, OP_HEALTHCHECK,
-    OP_GET_CONFIG_DESCRIPTOR, OP_GET_DEVICE_DESCRIPTOR, OP_PORT_STATUS, PORT_ENTRY_BYTES,
+    OP_ADDRESS_DEVICE, OP_ALLOC_TRANSFER_RING, OP_CONTROL_TRANSFER, OP_CONTROLLER_STATUS, OP_DISABLE_SLOT, OP_ENABLE_SLOT,
+    OP_HEALTHCHECK, OP_GET_CONFIG_DESCRIPTOR, OP_GET_DEVICE_DESCRIPTOR, OP_INTERRUPT_IN, OP_PORT_STATUS, PORT_ENTRY_BYTES,
     PORT_STATUS_HEADER_BYTES, RESP_HDR_LEN, STATUS_LEN,
 };
 use crate::server::context::Context;
@@ -70,6 +70,15 @@ pub fn run(driver: Driver) -> ! {
             }
             OP_GET_CONFIG_DESCRIPTOR => {
                 handlers::config_descriptor::handle(&mut ctx, &req, body, &mut tx)
+            }
+            OP_CONTROL_TRANSFER => {
+                handlers::control_transfer::handle(&mut ctx, &req, body, &mut tx)
+            }
+            OP_ALLOC_TRANSFER_RING => {
+                handlers::alloc_transfer_ring::handle(&mut ctx, &req, body, &mut tx)
+            }
+            OP_INTERRUPT_IN => {
+                handlers::interrupt_in::handle(&mut ctx, &req, body, &mut tx)
             }
             _ => reply_with_status(&mut tx, &req, E_INVAL),
         }

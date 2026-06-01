@@ -14,6 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod blit_argb;
+pub mod decode_jpeg;
 pub mod fill;
+pub mod paint_image;
 
+pub use decode_jpeg::decode_jpeg;
 pub use fill::fill_argb;
+pub use paint_image::paint_image;

@@ -18,7 +18,7 @@ mod claim;
 mod dma;
 mod driver;
 mod irq;
-mod mmio;
+mod registers;
 mod sequence;
 
 pub use driver::Driver;

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_ipc_send_to_pid;
+use nonos_libc::mk_ipc_reply;
 
 use crate::protocol::{write_header, HDR_LEN};
 
@@ -33,7 +33,7 @@ pub fn respond(
     tx: &mut [u8],
 ) -> i64 {
     let total = write_header(tx, op, errno, request_id, payload_len);
-    mk_ipc_send_to_pid(sender_pid, tx.as_ptr(), total)
+    mk_ipc_reply(sender_pid, tx.as_ptr(), total)
 }
 
 pub fn respond_status_only(

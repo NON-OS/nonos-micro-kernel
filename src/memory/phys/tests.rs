@@ -365,6 +365,25 @@ fn test_allocator_contiguous() {
 }
 
 #[test]
+fn test_allocator_contiguous_high() {
+    use crate::memory::addr::PhysAddr;
+
+    let mut state = AllocatorState::new();
+    let mut bitmap = [0u8; 4];
+
+    let start = PhysAddr::new(0x3100_0000);
+    let end = PhysAddr::new(0x3100_0000 + 32 * 4096);
+
+    allocator::init_with_bitmap(&mut state, start, end, bitmap.as_mut_ptr(), bitmap.len())
+        .expect("init");
+
+    let addr = allocator::allocate_contiguous(&mut state, 4, AllocFlags::HIGH).expect("alloc");
+    assert_eq!(addr, 0x3100_0000 + 28 * 4096);
+
+    allocator::free_contiguous(&mut state, addr, 4).expect("free");
+}
+
+#[test]
 fn test_allocator_exhaust() {
     use crate::memory::addr::PhysAddr;
 

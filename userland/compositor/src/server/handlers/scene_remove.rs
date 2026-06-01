@@ -18,18 +18,21 @@ use crate::protocol::{Request, E_INVAL, SCENE_REMOVE_REQ_LEN};
 use crate::server::respond;
 use crate::state::{scene_remove, Context};
 
-pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+pub fn handle(
+    ctx: &mut Context,
+    sender_pid: u32,
+    req: &Request,
+    body: &[u8],
+    tx: &mut [u8],
+) -> Result<(), &'static str> {
     if body.len() != SCENE_REMOVE_REQ_LEN {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
+        return respond::status(sender_pid, req, E_INVAL, tx);
     }
     let Some(owner_pid) = super::u32_at(body, 0) else {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
+        return respond::status(sender_pid, req, E_INVAL, tx);
     };
     if owner_pid == 0 || owner_pid != sender_pid {
-        let _ = respond::status(sender_pid, req, E_INVAL, tx);
-        return;
+        return respond::status(sender_pid, req, E_INVAL, tx);
     }
     let mut gone = [0u64; 32];
     let mut n = 0;
@@ -45,5 +48,5 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
     for handle in gone.iter().take(n) {
         ctx.attach.forget(*handle);
     }
-    let _ = respond::status(sender_pid, req, 0, tx);
+    respond::status(sender_pid, req, 0, tx)
 }

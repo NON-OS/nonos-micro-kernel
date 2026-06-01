@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub(super) const DMA_MAP_HIGH: u32 = 1 << 0;
+
 #[derive(Debug, Clone, Copy)]
 pub struct DmaGrant {
     pub grant_id: u64,

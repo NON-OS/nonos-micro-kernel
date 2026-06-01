@@ -40,9 +40,9 @@ impl Driver {
     pub fn config(&self) -> (u32, u32, u32) {
         unsafe {
             (
-                self.regs.r32(GPU_CFG_EVENTS_READ),
-                self.regs.r32(GPU_CFG_NUM_SCANOUTS),
-                self.regs.r32(GPU_CFG_NUM_CAPSETS),
+                self.regs.config_r32(GPU_CFG_EVENTS_READ),
+                self.regs.config_r32(GPU_CFG_NUM_SCANOUTS),
+                self.regs.config_r32(GPU_CFG_NUM_CAPSETS),
             )
         }
     }

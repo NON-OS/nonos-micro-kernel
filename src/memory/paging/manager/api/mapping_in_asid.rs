@@ -34,3 +34,7 @@ pub fn map_page_in_asid(
         &PAGING_STATS,
     )
 }
+
+pub fn translate_in_asid(asid: u32, virtual_addr: VirtAddr) -> Option<PhysAddr> {
+    PAGING_MANAGER.lock().translate_in_asid(asid, virtual_addr)
+}

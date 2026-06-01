@@ -72,9 +72,9 @@ fn log_segment_error(error: &SegmentErrorCode) {
     );
 }
 
-fn terminate_user_process(_ctx: &ExceptionContext) {
+fn terminate_user_process(_ctx: &ExceptionContext) -> ! {
     crate::log::logger::log_error!("Terminating user process: segment not present");
-    halt_loop();
+    crate::process::exit::exit_and_yield(-12, true)
 }
 
 fn kernel_panic(_ctx: &ExceptionContext) {

@@ -14,10 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 mod address_device;
+mod configure_endpoint;
 mod disable_slot;
 mod enable_slot;
 mod noop;
 pub use address_device::address_device_command;
+pub use configure_endpoint::configure_endpoint_command;
 pub use disable_slot::disable_slot_command;
 pub use enable_slot::enable_slot_command;
 pub use noop::noop_command;

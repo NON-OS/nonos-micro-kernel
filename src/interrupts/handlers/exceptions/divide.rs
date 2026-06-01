@@ -32,9 +32,9 @@ pub fn handle(frame: InterruptStackFrame) {
     }
 }
 
-fn terminate_user_process(_ctx: &ExceptionContext) {
+fn terminate_user_process(_ctx: &ExceptionContext) -> ! {
     crate::log::logger::log_error!("Terminating user process due to divide error");
-    halt_loop();
+    crate::process::exit::exit_and_yield(-8, true)
 }
 
 fn kernel_panic(_ctx: &ExceptionContext) {

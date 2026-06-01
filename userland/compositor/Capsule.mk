@@ -11,8 +11,6 @@ CAPSULE_FEATURE          := nonos-capsule-compositor
 CAPSULE_NAMESPACE        := systems.nonos.compositor
 CAPSULE_SERVICE_ENDPOINT := service:4310:compositor
 CAPSULE_REPLY_ENDPOINT   := reply:4311:endpoint.compositor.reply
-# CoreExec|IPC|Memory|Debug|GraphicsDisplayQuery|GraphicsSurfaceCreate
-# |GraphicsSurfaceMap|GraphicsPresent
 CAPSULE_REQUIRED_CAPS    := 0x7919
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_compositor
 

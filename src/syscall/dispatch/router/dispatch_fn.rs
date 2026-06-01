@@ -17,7 +17,7 @@
 use crate::syscall::numbers::SyscallNumber;
 use crate::syscall::SyscallResult;
 
-use super::{admin_ops, crypto, graphics_backend, input_ops, microkernel_ops, surface_ops};
+use super::{admin, crypto, graphics_backend, input_ops, microkernel_ops, surface_ops};
 
 // Graphics is served by the in-kernel backend until a capsule takes
 // over; all other unrouted numbers return ENOSYS. Smoke builds log a
@@ -43,7 +43,7 @@ pub(super) fn dispatch_syscall(
         | SyscallNumber::CryptoHkdfSha256 => {
             crypto::dispatch_crypto(syscall, a0, a1, a2, a3, a4, a5)
         }
-        nr if admin_ops::matches(nr) => admin_ops::handle(nr, a0, a1, a2, a3, a4, a5),
+        nr if admin::matches(nr) => admin::handle(nr, a0, a1, a2, a3, a4, a5),
         nr if microkernel_ops::matches(nr) => microkernel_ops::handle(nr, a0, a1, a2, a3, a4, a5),
         nr if graphics_backend::matches(nr) => graphics_backend::handle(nr, a0, a1, a2, a3, a4, a5),
         SyscallNumber::MkSurfaceRegister

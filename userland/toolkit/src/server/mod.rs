@@ -15,5 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod runner;
+pub mod dispatch;
 
 pub use runner::run;

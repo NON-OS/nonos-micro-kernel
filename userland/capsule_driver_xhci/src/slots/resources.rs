@@ -27,6 +27,10 @@ pub struct SlotResources {
     pub output_context: DmaRegion,
     pub input_context: DmaRegion,
     pub ep0: TransferRing,
+    pub int_ring: Option<TransferRing>,
+    pub int_buf: Option<DmaRegion>,
+    pub int_dci: u8,
+    pub int_armed: Option<u64>, // issued TRB phys while a read is outstanding
 }
 impl SlotResources {
     pub fn allocate(
@@ -50,6 +54,18 @@ impl SlotResources {
             max_packet,
             ep0.phys(),
         );
-        Ok(Self { slot_id, port_id, speed, max_packet, output_context, input_context, ep0 })
+        Ok(Self {
+            slot_id,
+            port_id,
+            speed,
+            max_packet,
+            output_context,
+            input_context,
+            ep0,
+            int_ring: None,
+            int_buf: None,
+            int_dci: 0,
+            int_armed: None,
+        })
     }
 }

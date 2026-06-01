@@ -22,6 +22,22 @@ use crate::process::current_pid;
 use crate::syscall::microkernel::errnos::{
     ERRNO_BUSY, ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOENT, ERRNO_NOMEM,
 };
+use core::sync::atomic::{AtomicU32, Ordering};
+
+static SEND_TO_PID_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
+
+fn trace(caller_pid: u32, dest_pid: u64, len: usize) {
+    if caller_pid != 0x17 || SEND_TO_PID_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 40 {
+        return;
+    }
+    crate::sys::serial::print(b"[IPC-RPLY] from=");
+    crate::sys::serial::print_hex(caller_pid as u64);
+    crate::sys::serial::print(b" to=");
+    crate::sys::serial::print_hex(dest_pid);
+    crate::sys::serial::print(b" len=");
+    crate::sys::serial::print_dec(len as u64);
+    crate::sys::serial::println(b"");
+}
 
 // `MkIpcSendToPid` delivers `buf` to the destination pid's default
 // per-process inbox `proc.<pid>`. Used by servers replying to a
@@ -43,6 +59,7 @@ pub fn sys_ipc_send_to_pid(dest_pid: u64, buf: u64, len: usize) -> i64 {
         return ERRNO_FAULT;
     }
     let caller_pid = current_pid().unwrap_or(0);
+    trace(caller_pid, dest_pid, len);
     let dest = alloc::format!("proc.{}", dest_pid as u32);
     let from = alloc::format!("proc.{}", caller_pid);
     let msg = IpcMessage::new(&from, &dest, &data).map_err(|_| ERRNO_NOMEM as i64);
@@ -50,9 +67,13 @@ pub fn sys_ipc_send_to_pid(dest_pid: u64, buf: u64, len: usize) -> i64 {
         Ok(m) => m,
         Err(e) => return e,
     };
-    match try_enqueue_strict(&dest, msg) {
+    let rc = match try_enqueue_strict(&dest, msg) {
         Ok(()) => 0,
         Err(StrictEnqueueError::MissingInbox) | Err(StrictEnqueueError::DeadOwner) => ERRNO_NOENT,
         Err(StrictEnqueueError::QueueFull(_)) => ERRNO_BUSY,
+    };
+    if rc == 0 && crate::sched::is_sleeping(dest_pid as u32) {
+        crate::sched::wake_process(dest_pid as u32);
     }
+    rc
 }

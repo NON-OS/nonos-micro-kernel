@@ -25,3 +25,4 @@ pub const OP_LIFECYCLE_SUBSCRIBE: u16 = 0x0008;
 pub const OP_WINDOW_MINIMIZE: u16 = 0x0009;
 pub const OP_WINDOW_RESTORE: u16 = 0x000A;
 pub const OP_QUERY_TOPMOST: u16 = 0x000B;
+pub const OP_ROUTE_FOCUS: u16 = 0x000C;

@@ -18,5 +18,5 @@ mod layer;
 mod snapshot;
 mod table;
 
-pub use layer::{Layer, MAX_LAYERS};
+pub use layer::Layer;
 pub use table::SceneTable;

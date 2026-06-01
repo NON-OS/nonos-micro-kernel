@@ -31,9 +31,11 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkIpcCall
         | SyscallNumber::MkIpcRecv
         | SyscallNumber::MkIpcRecvFrom
+        | SyscallNumber::MkIpcReply
         | SyscallNumber::MkIpcSend
         | SyscallNumber::MkIpcSendToPid
         | SyscallNumber::MkServiceLookup
+        | SyscallNumber::MkServiceRegister
         | SyscallNumber::MkCapGrant
         | SyscallNumber::MkCapRevoke => caps.can_ipc(),
 
@@ -45,7 +47,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkIrqAck
         | SyscallNumber::MkIrqPoll => caps.can_irq(),
         SyscallNumber::MkDmaMap | SyscallNumber::MkDmaUnmap => caps.can_dma(),
-        SyscallNumber::MkPciConfigWrite => caps.can_driver(),
+        SyscallNumber::MkPciConfigRead | SyscallNumber::MkPciConfigWrite => caps.can_driver(),
         SyscallNumber::MkPioGrant
         | SyscallNumber::MkPioRead
         | SyscallNumber::MkPioWrite

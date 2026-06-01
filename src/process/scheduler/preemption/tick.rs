@@ -29,7 +29,7 @@ pub fn tick() {
     });
     if remaining == Ok(1) {
         SCHEDULER_STATS.time_slice_exhaustions.fetch_add(1, Ordering::SeqCst);
-        if crate::sys::settings::kernel_preempt() {
+        if crate::sys::policy::kernel_preempt() {
             NEED_RESCHEDULE.store(true, Ordering::Release);
         }
     }

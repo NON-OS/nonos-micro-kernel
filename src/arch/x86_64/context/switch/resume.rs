@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::sync::Arc;
-use core::sync::atomic::Ordering;
+use core::sync::atomic::{AtomicU32, Ordering};
 
 use crate::arch::x86_64::gdt;
 use crate::memory::paging::manager::api::switch_to_process_address_space;
@@ -24,6 +24,18 @@ use crate::process::nonos_core::{has_saved_fpu_state, init_fpu, restore_fpu_stat
 use crate::process::scheduler::preemption::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLICE};
 use crate::process::userspace::transitions::restore_user_context_iretq;
 use crate::smp::percpu;
+
+static USER_RESUME_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
+
+fn trace(label: &[u8], pid: u32) {
+    if !matches!(pid, 7 | 8 | 0x1b | 0x1c | 0x26 | 0x27)
+        || USER_RESUME_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 24
+    {
+        return;
+    }
+    crate::sys::serial::print(b"[URESUME] ");
+    crate::sys::serial::println(label);
+}
 
 // Preempt-resume path: a CPL=3 capsule was trapped/IRQ'd back into the
 // kernel by the trap trampoline, which captured a full UserContext on
@@ -34,6 +46,7 @@ pub(super) fn try_resume(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
         Some(s) => s,
         None => return false,
     };
+    trace(b"enter", pid);
 
     let kstack = pcb.kernel_stack_top.load(Ordering::Acquire);
     if kstack == 0 {
@@ -68,6 +81,7 @@ pub(super) fn try_resume(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
         init_fpu();
     }
 
+    trace(b"iretq", pid);
     // SAFETY: `saved` fully populated; asm consumes via rdi and iretqs.
     unsafe { restore_user_context_iretq(&saved as *const _) }
 }

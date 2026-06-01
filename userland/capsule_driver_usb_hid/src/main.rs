@@ -21,9 +21,11 @@ extern crate alloc;
 
 mod descriptors;
 mod hid;
+mod orchestrator;
 mod protocol;
 mod server;
 mod state;
+mod xhci;
 
 use nonos_libc::{heap_init, mk_exit};
 
@@ -32,5 +34,5 @@ pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
-    server::run();
+    orchestrator::run();
 }

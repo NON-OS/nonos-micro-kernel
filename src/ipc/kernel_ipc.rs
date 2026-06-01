@@ -14,9 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use core::sync::atomic::{AtomicU32, Ordering};
+
 use crate::ipc::nonos_inbox::{self, StrictEnqueueError, KERNEL_OWNER};
 use crate::process::caps;
 use crate::services::registry::lookup_service;
+
+static ROUTE_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
+
+fn trace_route(caller_pid: u32, target: &str, dest_pid: u32, woke: bool) {
+    if !matches!(dest_pid, 9 | 0x17) || ROUTE_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 40 {
+        return;
+    }
+    crate::sys::serial::print(b"[ROUTE] from=");
+    crate::sys::serial::print_hex(caller_pid as u64);
+    crate::sys::serial::print(b" target=");
+    crate::sys::serial::print(target.as_bytes());
+    crate::sys::serial::print(b" dest=");
+    crate::sys::serial::print_hex(dest_pid as u64);
+    crate::sys::serial::print(if woke { b" wake=1" } else { b" wake=0" });
+    crate::sys::serial::println(b"");
+}
 
 pub const EACCES: i32 = -13;
 pub const ENOENT: i32 = -2;
@@ -51,7 +69,14 @@ pub fn kernel_route_ipc(caller_pid: u32, target: &str, data: &[u8]) -> Result<()
     )
     .map_err(|_| ENOMEM)?;
     match nonos_inbox::try_enqueue_strict(&dest, msg) {
-        Ok(()) => Ok(()),
+        Ok(()) => {
+            let woke = endpoint.pid != KERNEL_OWNER && crate::sched::is_sleeping(endpoint.pid);
+            if woke {
+                crate::sched::wake_process(endpoint.pid);
+            }
+            trace_route(caller_pid, target, endpoint.pid, woke);
+            Ok(())
+        }
         Err(StrictEnqueueError::MissingInbox) | Err(StrictEnqueueError::DeadOwner) => Err(ESRCH),
         Err(StrictEnqueueError::QueueFull(_)) => Err(EAGAIN),
     }

@@ -26,14 +26,30 @@ use crate::process::current_pid;
 use crate::syscall::dispatch::util::errno;
 use crate::syscall::SyscallResult;
 use crate::usercopy::{read_user_value, write_user_value};
+use core::sync::atomic::{AtomicU32, Ordering};
 
 use super::surface_ops::{map_err, EFAULT, EINVAL, ESRCH};
+
+static VSYNC_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
+
+fn trace_surface(op: &[u8], label: &[u8], pid: u32) {
+    if !matches!(pid, 0x17 | 0x26 | 0x27)
+        || VSYNC_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80
+    {
+        return;
+    }
+    crate::sys::serial::print(b"[SURFACE] ");
+    crate::sys::serial::print(op);
+    crate::sys::serial::print(b" ");
+    crate::sys::serial::println(label);
+}
 
 pub(super) fn do_register(desc_ptr: u64) -> SyscallResult {
     let pid = match current_pid() {
         Some(p) => p,
         None => return errno(ESRCH),
     };
+    trace_surface(b"register", b"enter", pid);
     let desc: SurfaceDescriptor = match read_user_value(desc_ptr) {
         Ok(v) => v,
         Err(_) => return errno(EFAULT),
@@ -53,6 +69,7 @@ pub(super) fn do_register(desc_ptr: u64) -> SyscallResult {
     match register_surface(pid, &desc, frames) {
         Ok((sid, h)) => {
             attach_map::record(pid, h, desc.base_va, desc.byte_len);
+            trace_surface(b"register", b"ok", pid);
             SyscallResult::success_audited(sid as i64)
         }
         Err(e) => errno(map_err(e)),
@@ -64,12 +81,16 @@ pub(super) fn do_share(sid: u64) -> SyscallResult {
         Some(p) => p,
         None => return errno(ESRCH),
     };
+    trace_surface(b"share", b"enter", pid);
     let handle = match lookup_owned(pid, sid) {
         Ok(h) => h,
         Err(e) => return errno(map_err(e)),
     };
     match share_surface(pid, handle) {
-        Ok(h) => SyscallResult::success_audited(h as i64),
+        Ok(h) => {
+            trace_surface(b"share", b"ok", pid);
+            SyscallResult::success_audited(h as i64)
+        }
         Err(e) => errno(map_err(e)),
     }
 }
@@ -79,12 +100,14 @@ pub(super) fn do_attach(handle: u64, out_desc_ptr: u64) -> SyscallResult {
         Some(p) => p,
         None => return errno(ESRCH),
     };
+    trace_surface(b"attach", b"enter", pid);
     let mut desc = SurfaceDescriptor::default();
     match attach_surface(pid, handle, &mut desc) {
         Ok(va) => {
             if out_desc_ptr != 0 && write_user_value(out_desc_ptr, &desc).is_err() {
                 return errno(EFAULT);
             }
+            trace_surface(b"attach", b"ok", pid);
             SyscallResult::success_audited(va as i64)
         }
         Err(e) => errno(map_err(e)),
@@ -114,8 +137,13 @@ pub(super) fn do_present(handle: u64) -> SyscallResult {
 }
 
 pub(super) fn do_vsync_wait(display: u64) -> SyscallResult {
+    let pid = current_pid().unwrap_or(0);
+    trace_surface(b"vsync", b"enter", pid);
     match wait_for_vsync(display as u32) {
-        Ok(deadline) => SyscallResult::success_audited(deadline as i64),
+        Ok(deadline) => {
+            trace_surface(b"vsync", b"ok", pid);
+            SyscallResult::success_audited(deadline as i64)
+        }
         Err(e) => errno(map_err(e)),
     }
 }

@@ -17,5 +17,5 @@
 mod relocations;
 mod table;
 
-pub use relocations::{apply_single_relocation, RelocationProcessor};
+pub use relocations::{apply_single_relocation, RelocationProcessor, ResolvedSymbolValue};
 pub use table::{GlobalOffsetTable, GotEntry, GotEntryType, GOT_ENTRY_SIZE, PLT_ENTRY_SIZE};

@@ -16,7 +16,9 @@ mod loader;
 mod parse_dynamic;
 mod parse_header;
 mod parse_sections;
+mod relocate;
 mod section;
 
 pub use loader::ElfLoader;
 pub use section::ParsedSection;
+pub(crate) use parse_header::{parse_elf_header, parse_program_headers, validate_elf};

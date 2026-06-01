@@ -15,7 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod exit_and_yield;
+mod finalize;
+mod pending;
 mod teardown;
 
+pub(crate) use pending::drain as drain_pending_teardowns;
 pub use exit_and_yield::exit_and_yield;
 pub use teardown::teardown;

@@ -25,6 +25,7 @@ use nonos_libc::{mk_irq_ack, mk_irq_poll, mk_yield, IrqPollOut};
 use super::constants::LEG_QUEUE_NOTIFY;
 use super::queue::Queue;
 use super::regs::Regs;
+use crate::debug;
 
 const MAX_YIELDS: u32 = 100_000;
 
@@ -39,10 +40,25 @@ pub fn fill(regs: Regs, queue: &mut Queue, irq_grant: u64) -> Result<u32, &'stat
 
     let mut tries = 0u32;
     loop {
+        if tries == 1 {
+            debug::marker(b"fill retry");
+        }
+        if tries == 1 {
+            debug::marker(b"fill used_idx");
+        }
         if queue.used_idx() == target {
+            if tries == 1 {
+                debug::marker(b"fill used");
+            }
             break;
         }
+        if tries == 1 {
+            debug::marker(b"fill read_seq");
+        }
         if read_seq(irq_grant) != prev_seq {
+            if tries == 1 {
+                debug::marker(b"fill irq");
+            }
             break;
         }
         if tries >= MAX_YIELDS {
@@ -52,7 +68,13 @@ pub fn fill(regs: Regs, queue: &mut Queue, irq_grant: u64) -> Result<u32, &'stat
         tries = tries.wrapping_add(1);
     }
     queue.last_used = target;
+    if tries == 1 {
+        debug::marker(b"fill used_len");
+    }
     let len = queue.used_len();
+    if tries == 1 {
+        debug::marker(b"fill ack");
+    }
     let _ = mk_irq_ack(irq_grant);
     Ok(len)
 }

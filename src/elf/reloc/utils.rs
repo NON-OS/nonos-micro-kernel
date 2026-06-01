@@ -14,65 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::elf::types::{reloc_type, RelaEntry};
+mod counts;
+mod names;
+mod supported;
 
-pub fn reloc_type_name(reloc_type: u32) -> &'static str {
-    match reloc_type {
-        reloc_type::R_X86_64_NONE => "R_X86_64_NONE",
-        reloc_type::R_X86_64_64 => "R_X86_64_64",
-        reloc_type::R_X86_64_PC32 => "R_X86_64_PC32",
-        reloc_type::R_X86_64_GOT32 => "R_X86_64_GOT32",
-        reloc_type::R_X86_64_PLT32 => "R_X86_64_PLT32",
-        reloc_type::R_X86_64_COPY => "R_X86_64_COPY",
-        reloc_type::R_X86_64_GLOB_DAT => "R_X86_64_GLOB_DAT",
-        reloc_type::R_X86_64_JUMP_SLOT => "R_X86_64_JUMP_SLOT",
-        reloc_type::R_X86_64_RELATIVE => "R_X86_64_RELATIVE",
-        reloc_type::R_X86_64_GOTPCREL => "R_X86_64_GOTPCREL",
-        reloc_type::R_X86_64_32 => "R_X86_64_32",
-        reloc_type::R_X86_64_32S => "R_X86_64_32S",
-        reloc_type::R_X86_64_16 => "R_X86_64_16",
-        reloc_type::R_X86_64_PC16 => "R_X86_64_PC16",
-        reloc_type::R_X86_64_8 => "R_X86_64_8",
-        reloc_type::R_X86_64_PC8 => "R_X86_64_PC8",
-        reloc_type::R_X86_64_DTPMOD64 => "R_X86_64_DTPMOD64",
-        reloc_type::R_X86_64_DTPOFF64 => "R_X86_64_DTPOFF64",
-        reloc_type::R_X86_64_TPOFF64 => "R_X86_64_TPOFF64",
-        reloc_type::R_X86_64_TLSGD => "R_X86_64_TLSGD",
-        reloc_type::R_X86_64_TLSLD => "R_X86_64_TLSLD",
-        reloc_type::R_X86_64_DTPOFF32 => "R_X86_64_DTPOFF32",
-        reloc_type::R_X86_64_GOTTPOFF => "R_X86_64_GOTTPOFF",
-        reloc_type::R_X86_64_TPOFF32 => "R_X86_64_TPOFF32",
-        reloc_type::R_X86_64_IRELATIVE => "R_X86_64_IRELATIVE",
-        _ => "UNKNOWN",
-    }
-}
-
-pub fn is_supported(reloc_type: u32) -> bool {
-    matches!(
-        reloc_type,
-        reloc_type::R_X86_64_NONE
-            | reloc_type::R_X86_64_64
-            | reloc_type::R_X86_64_PC32
-            | reloc_type::R_X86_64_GOT32
-            | reloc_type::R_X86_64_PLT32
-            | reloc_type::R_X86_64_GLOB_DAT
-            | reloc_type::R_X86_64_JUMP_SLOT
-            | reloc_type::R_X86_64_RELATIVE
-            | reloc_type::R_X86_64_GOTPCREL
-            | reloc_type::R_X86_64_32
-            | reloc_type::R_X86_64_32S
-            | reloc_type::R_X86_64_16
-            | reloc_type::R_X86_64_PC16
-            | reloc_type::R_X86_64_8
-            | reloc_type::R_X86_64_PC8
-            | reloc_type::R_X86_64_IRELATIVE
-    )
-}
-
-pub fn count_supported(rela_entries: &[RelaEntry]) -> usize {
-    rela_entries.iter().filter(|r| is_supported(r.reloc_type())).count()
-}
-
-pub fn count_unsupported(rela_entries: &[RelaEntry]) -> usize {
-    rela_entries.iter().filter(|r| !is_supported(r.reloc_type())).count()
-}
+pub use counts::{count_supported, count_unsupported};
+pub use names::reloc_type_name;
+pub use supported::is_supported;

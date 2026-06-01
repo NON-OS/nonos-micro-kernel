@@ -68,6 +68,20 @@ pub unsafe fn return_to_usermode(frame: *const InterruptFrame) -> ! {
         crate::arch::halt_loop()
     }
 
+    {
+        use core::sync::atomic::{AtomicU32, Ordering};
+        static FIRST_ENTRY_SHOWN: AtomicU32 = AtomicU32::new(0);
+        if FIRST_ENTRY_SHOWN.fetch_add(1, Ordering::Relaxed) < 64 {
+            crate::sys::serial::print(b"[USER-FIRST] pid=");
+            crate::arch::x86_64::diag::print_hex_u64(
+                crate::process::current_pid().unwrap_or(0) as u64,
+            );
+            crate::sys::serial::print(b" rip=");
+            crate::arch::x86_64::diag::print_hex_u64(f.rip);
+            crate::sys::serial::println(b"");
+        }
+    }
+
     #[cfg(feature = "nonos-user-entry-proof")]
     {
         let cr3 = crate::arch::x86_64::paging::read_cr3();

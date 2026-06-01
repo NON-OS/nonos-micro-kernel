@@ -30,8 +30,7 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     boot_log::ok("NONOS", "Microkernel init");
 
     init_arch_firmware(handoff);
-    crate::sys::settings::init();
-    crate::sys::settings::init_hostname();
+    crate::sys::policy::hostname_init();
     if let Err(_) = crate::crypto::util::rng::init_rng() {
         fatal("crypto: init_rng failed", "entropy unavailable");
     }
@@ -118,6 +117,11 @@ pub fn microkernel_main() -> ! {
     if let Err(_) = create_address_space(init_pid) {
         boot_log::error("Failed to create init address space");
         crate::sys::serial::println(b"[FATAL] Init address space creation failed");
+        crate::arch::halt_loop()
+    }
+    if crate::kernel_core::process_spawn::allocate_kernel_stack(init_pid).is_err() {
+        boot_log::error("Failed to allocate init kernel stack");
+        crate::sys::serial::println(b"[FATAL] Init kernel stack allocation failed");
         crate::arch::halt_loop()
     }
     CURRENT_PID.store(init_pid, Ordering::SeqCst);

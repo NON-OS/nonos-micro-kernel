@@ -19,7 +19,7 @@ use core::sync::atomic::{AtomicBool, Ordering};
 use super::allocator::ALLOCATOR;
 use crate::mem::mk_mmap;
 
-const INITIAL_HEAP_SIZE: usize = 4 * 1024 * 1024;
+const INITIAL_HEAP_SIZE: usize = 16 * 1024 * 1024;
 
 // MkMmap prot/flag bits. The microkernel ignores `flags`; only
 // `prot` selects the page-table flags installed.

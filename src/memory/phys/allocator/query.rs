@@ -33,3 +33,22 @@ pub fn managed_range(state: &AllocatorState) -> (u64, u64) {
 pub fn total_memory(state: &AllocatorState) -> u64 {
     (state.frame_count as u64).saturating_mul(PAGE_SIZE as u64)
 }
+
+pub fn largest_free_run(state: &AllocatorState) -> usize {
+    if !state.is_initialized() {
+        return 0;
+    }
+    let mut best = 0usize;
+    let mut run = 0usize;
+    for i in 0..state.frame_count {
+        if unsafe { !bitmap::bit_test(state.bitmap_ptr, i) } {
+            run += 1;
+            if run > best {
+                best = run;
+            }
+        } else {
+            run = 0;
+        }
+    }
+    best
+}

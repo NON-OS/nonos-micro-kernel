@@ -17,6 +17,7 @@
 use nonos_libc::mk_ipc_recv_from;
 
 use super::dispatch::dispatch;
+use crate::debug;
 use crate::driver::Driver;
 use crate::protocol::parse;
 
@@ -28,6 +29,9 @@ pub fn loop_once(driver: Driver, rx: &mut [u8], tx: &mut [u8]) -> ! {
         let n = mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), 0, &mut sender_pid);
         if n <= 0 || sender_pid == 0 {
             continue;
+        }
+        if sender_pid == 0x17 {
+            debug::marker(b"recv compositor");
         }
         let Some((req, body)) = parse(&rx[..n as usize]) else { continue };
         dispatch(&driver, sender_pid, req, body, tx);

@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::globals::{PAGING_MANAGER, PAGING_STATS};
+use crate::arch::x86_64::idt::without_interrupts;
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use crate::memory::paging::constants::{pages_needed, PAGE_SIZE_4K};
 use crate::memory::paging::error::PagingResult;
@@ -25,13 +26,20 @@ pub fn map_page(
     physical_addr: PhysAddr,
     permissions: PagePermissions,
 ) -> PagingResult<()> {
-    PAGING_MANAGER.lock().map_page(
-        virtual_addr,
-        physical_addr,
-        permissions,
-        PageSize::Size4KiB,
-        &PAGING_STATS,
-    )
+    // Disable interrupts across the PAGING_MANAGER critical section.
+    // Without this, a timer ISR firing on this CPU while the lock is
+    // held would try to call switch_to_process_address_space from
+    // preempt_current_process and re-enter the same spin::Mutex,
+    // deadlocking the CPU.
+    without_interrupts(|| {
+        PAGING_MANAGER.lock().map_page(
+            virtual_addr,
+            physical_addr,
+            permissions,
+            PageSize::Size4KiB,
+            &PAGING_STATS,
+        )
+    })
 }
 
 pub fn map_huge_page(
@@ -40,11 +48,15 @@ pub fn map_huge_page(
     permissions: PagePermissions,
     size: PageSize,
 ) -> PagingResult<()> {
-    PAGING_MANAGER.lock().map_page(virtual_addr, physical_addr, permissions, size, &PAGING_STATS)
+    without_interrupts(|| {
+        PAGING_MANAGER
+            .lock()
+            .map_page(virtual_addr, physical_addr, permissions, size, &PAGING_STATS)
+    })
 }
 
 pub fn unmap_page(virtual_addr: VirtAddr) -> PagingResult<PhysAddr> {
-    let (phys, perms, size) = PAGING_MANAGER.lock().unmap_page(virtual_addr)?;
+    let (phys, perms, size) = without_interrupts(|| PAGING_MANAGER.lock().unmap_page(virtual_addr))?;
     PAGING_STATS.record_unmapping(perms, size);
     Ok(phys)
 }

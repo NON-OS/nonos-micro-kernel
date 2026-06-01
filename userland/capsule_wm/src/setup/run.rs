@@ -14,51 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_yield, nonos_display_dimensions};
+use nonos_libc::mk_yield;
 
 use super::discover;
-use crate::compositor_client::probe_compositor;
+use crate::compositor_client::{probe_compositor, query_display_info};
 use crate::focus::FocusModel;
 use crate::state::{Context, SubscriptionList};
 use crate::window::WindowTable;
 use crate::z_order::ZStack;
 
-const READY_ATTEMPTS: usize = 256;
-
-// Wait for the compositor service then read display dimensions
-// through the graphics contract. Display is needed up front so the
-// wm can clamp window geometry on every move/resize.
 pub fn run() -> Result<Context, &'static str> {
-    let mut last_err = "compositor unavailable";
-    for _ in 0..READY_ATTEMPTS {
-        match run_once() {
-            Ok(ctx) => return Ok(ctx),
-            Err(e) => {
-                last_err = e;
-                mk_yield();
-            }
+    match run_once() {
+        Ok(ctx) => Ok(ctx),
+        Err(e) => {
+            mk_yield();
+            Err(e)
         }
     }
-    Err(last_err)
 }
 
 fn run_once() -> Result<Context, &'static str> {
     let compositor_port = discover::lookup_compositor_port()?;
     probe_compositor(compositor_port, 1)?;
-    let mut width: u32 = 0;
-    let mut height: u32 = 0;
-    let rc = nonos_display_dimensions(0, &mut width as *mut u32, &mut height as *mut u32);
-    if rc != 0 || width == 0 || height == 0 {
-        return Err("display dimensions unavailable");
-    }
+    let display = query_display_info(compositor_port, 2)?;
     Ok(Context {
         compositor_port,
-        display_width: width,
-        display_height: height,
+        display_width: display.width,
+        display_height: display.height,
         windows: WindowTable::new(),
         focus: FocusModel::new(),
         z: ZStack::new(),
         subscriptions: SubscriptionList::new(),
-        next_request_id: 1,
+        next_request_id: 3,
     })
 }

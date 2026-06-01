@@ -16,10 +16,13 @@
 pub mod address_device;
 pub mod address_flow;
 pub mod address_reply;
+pub mod alloc_transfer_ring;
 pub mod config_descriptor;
+pub mod control_transfer;
 pub mod controller_status;
 pub mod device_descriptor;
 pub mod disable_slot;
 pub mod enable_slot;
 pub mod health;
+pub mod interrupt_in;
 pub mod port_status;

@@ -39,30 +39,34 @@ pub unsafe extern "C" fn _start() -> ! {
         mk_exit(1);
     }
     debug::marker(b"start");
+    let ctx = wait_for_setup();
+    debug::marker(b"setup ok");
     if mk_service_register(SERVICE_NAME.as_ptr(), SERVICE_NAME.len(), SERVICE_PORT) < 0 {
         debug::marker(b"service register failed");
-    } else {
-        debug::marker(b"service registered");
+        mk_exit(1);
     }
-    let ctx = wait_for_setup();
-    debug::marker(b"setup complete");
+    debug::marker(b"service registered");
     server::run(ctx);
 }
 
 fn wait_for_setup() -> crate::state::Context {
-    let mut last_err: &'static str = "";
+    let mut last: &'static str = "";
     loop {
         match setup::run() {
             Ok(ctx) => return ctx,
             Err(e) => {
-                if e != last_err {
+                if e != last {
                     debug::marker(e.as_bytes());
-                    last_err = e;
+                    last = e;
                 }
-                for _ in 0..64 {
-                    mk_yield();
-                }
+                wait_after_error();
             }
         }
+    }
+}
+
+fn wait_after_error() {
+    for _ in 0..64 {
+        mk_yield();
     }
 }

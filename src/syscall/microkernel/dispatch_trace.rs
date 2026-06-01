@@ -55,6 +55,7 @@ fn kind(nr: u64) -> &'static [u8] {
         SYS_IPC_SEND => b"MkIpcSend",
         SYS_IPC_RECV => b"MkIpcRecv",
         SYS_IPC_CALL => b"MkIpcCall",
+        SYS_IPC_REPLY => b"MkIpcReply",
         SYS_MMAP => b"MkMmap",
         SYS_MUNMAP => b"MkMunmap",
         SYS_EXIT => b"MkExit",

@@ -21,6 +21,7 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     r(b"ARBT", SyscallNumber::AdminReboot, "AdminReboot"),
     r(b"ASDN", SyscallNumber::AdminShutdown, "AdminShutdown"),
     u(b"AMOD", SyscallNumber::AdminModLoad, "AdminModLoad"),
+    r(b"APPS", SyscallNumber::AdminPolicyPush, "AdminPolicyPush"),
 ];
 
 const fn r(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {

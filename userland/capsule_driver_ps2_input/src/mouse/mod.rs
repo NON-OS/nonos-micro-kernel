@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 mod event;
 mod packet;
+mod post;
 mod parser;
 mod ring;
 pub use parser::MouseParser;

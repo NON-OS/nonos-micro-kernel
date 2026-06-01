@@ -30,6 +30,7 @@
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
 .PHONY: nonos-mk-run nonos-mk-run-serial nonos-mk-debug nonos-mk-plan-a-runtime
 .PHONY: nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-mk-boot-entropy nonos-mk-boot-crypto-hash nonos-mk-boot-vfs nonos-mk-boot-ps2-input nonos-mk-boot-xhci nonos-mk-boot-desktop-gui
+.PHONY: nonos-mk-input-e2e-ps2-test nonos-mk-input-e2e-ps2-esp nonos-mk-input-e2e-xhci-test nonos-mk-input-e2e-xhci-esp nonos-mk-boot-input-e2e-ps2 nonos-mk-boot-input-e2e-xhci
 .PHONY: nonos-mk-static nonos-mk-scan
 .PHONY: nonos-mk-verify nonos-mk-verify-fast
 .PHONY: nonos-mk-test nonos-mk-host-test
@@ -146,9 +147,11 @@ endif
 QEMU_MEM := 2G
 QEMU_CPU := max
 QEMU_SMP := 2
+QEMU_HOST_SSH_PORT ?= 2222
+QEMU_HOST_HTTP_PORT ?= 8080
 QEMU_BLK_IMG := $(TARGET_DIR)/qemu-virtio-blk.img
 QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
-QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80
+QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::$(QEMU_HOST_SSH_PORT)-:22,hostfwd=tcp::$(QEMU_HOST_HTTP_PORT)-:80
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
 QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=1024,yres=768
 QEMU_USB := -device qemu-xhci,id=xhci -device usb-tablet,bus=xhci.0
@@ -339,6 +342,7 @@ include userland/capsule_entropy/Capsule.mk
 include userland/capsule_crypto/Capsule.mk
 include userland/compositor/Capsule.mk
 include userland/capsule_input_router/Capsule.mk
+include userland/capsule_input_proof/Capsule.mk
 include userland/capsule_wm/Capsule.mk
 include userland/capsule_desktop_shell/Capsule.mk
 include userland/capsule_image_codec/Capsule.mk
@@ -350,6 +354,8 @@ include userland/capsule_calculator/Capsule.mk
 include userland/capsule_terminal/Capsule.mk
 include userland/capsule_file_manager/Capsule.mk
 include userland/capsule_text_editor/Capsule.mk
+include userland/capsule_policy/Capsule.mk
+include userland/capsule_wallpaper_catalog/Capsule.mk
 include userland/capsule_settings/Capsule.mk
 include userland/capsule_process_manager/Capsule.mk
 include userland/capsule_vfs/Capsule.mk
@@ -387,6 +393,26 @@ include userland/capsule_power/Capsule.mk
 # triple. Smoke and test targets that need proof_io plus another
 # capsule depend on `$(proof-io_ARTIFACTS)` directly.
 NONOS_VERIFIED_ARTIFACTS = $(foreach slug,$(NONOS_VERIFIED_CAPSULES),$($(slug)_ARTIFACTS))
+
+NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
+	$(proof-io_VERIFY) $(ramfs_VERIFY) $(keyring_VERIFY) \
+	$(entropy_VERIFY) $(crypto_VERIFY) $(vfs_VERIFY) \
+	$(driver-virtio-rng_VERIFY) $(driver-virtio-blk_VERIFY) \
+	$(driver-virtio-gpu_VERIFY) $(driver-virtio-net_VERIFY) \
+	$(driver-ps2-input_VERIFY) $(driver-xhci_VERIFY) \
+	$(net-l2_VERIFY) $(net-ip_VERIFY) $(net-udp_VERIFY) \
+	$(net-dhcp_VERIFY) $(net-tcp_VERIFY) $(net-dns_VERIFY) \
+	$(net-sockets_VERIFY) $(net-nym_VERIFY) \
+	$(policy_VERIFY) $(wallpaper_catalog_VERIFY) \
+	$(input-router_VERIFY) $(compositor_VERIFY) $(wm_VERIFY) \
+	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
+	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
+	$(about_VERIFY) $(calculator_VERIFY) $(terminal_VERIFY) \
+	$(file-manager_VERIFY) $(text-editor_VERIFY) $(settings_VERIFY) \
+	$(process-manager_VERIFY) $(attest_VERIFY) $(power_VERIFY)
+
+.PHONY: nonos-mk-verify-desktop-gui-capsules
+nonos-mk-verify-desktop-gui-capsules: $(NONOS_DESKTOP_GUI_CAPSULE_CHECKS)
 
 WALLPAPER_BIN := $(wallpaper_BIN)
 
@@ -509,7 +535,7 @@ nonos-mk-capsules: $(proof-io_ARTIFACTS) $(ramfs_BIN) $(keyring_BIN) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-capsules
 
-nonos-mk-driver-virtio-rng-test: $(proof-io_ARTIFACTS) $(driver-virtio-rng_BIN) \
+nonos-mk-driver-virtio-rng-test: $(proof-io_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (driver-virtio-rng smoketest)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
@@ -584,7 +610,7 @@ nonos-mk-virtio-blk-test-image: $(TEST_VIRTIO_BLK_IMG)
 # userland virtio-blk capsule plus the smoketest harness and
 # drives the device via the broker. The harness shell script
 # attaches the scratch image at boot.
-nonos-mk-driver-virtio-blk-test: $(proof-io_ARTIFACTS) $(driver-virtio-blk_BIN) \
+nonos-mk-driver-virtio-blk-test: $(proof-io_ARTIFACTS) $(driver-virtio-blk_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-driver-virtio-blk-smoketest)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
@@ -627,6 +653,64 @@ nonos-mk-driver-xhci-test: $(proof-io_ARTIFACTS) $(driver-xhci_BIN) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-driver-xhci-smoketest
+
+# Input stack end-to-end proof (Deliverable 2). Dedicated build + ESP
+# packaging that bypasses nonos-mk-esp (which always rebuilds the
+# desktop-gui kernel); these targets sign+attest the just-built
+# feature kernel into a lane-specific ESP. The trimmed fleet embeds the
+# whole desktop input chain plus capsule_input_proof.
+NONOS_INPUT_E2E_ARTIFACTS := $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
+	$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
+	$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
+	$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
+	$(driver-virtio-net_ARTIFACTS) $(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) \
+	$(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) $(net-tcp_ARTIFACTS) \
+	$(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) \
+	$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) $(wm_ARTIFACTS) \
+	$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) $(attest_ARTIFACTS) \
+	$(toolkit_ARTIFACTS) $(power_ARTIFACTS) $(input-proof_ARTIFACTS)
+
+NONOS_BOOT_EFI := $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
+
+define NONOS_INPUT_E2E_ESP
+	@echo "Signing + attesting $(1) kernel..."
+	@PY=python3; [ "$$(uname -s)" = Darwin ] && PY=/usr/bin/python3; \
+		$$PY nonos-utils/sign_kernel.py \
+		$(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY) \
+		$(TARGET_DIR)/kernel_signed_$(1).bin
+	@$(EMBED_TOOL) --input $(TARGET_DIR)/kernel_signed_$(1).bin \
+		--output $(TARGET_DIR)/kernel_attested_$(1).bin \
+		--proving-key $(ZK_PROVING_KEY) --seed "$(ZK_KEY_SEED)" --verbose
+	@mkdir -p $(TARGET_DIR)/esp-$(1)/EFI/Boot $(TARGET_DIR)/esp-$(1)/EFI/nonos
+	@cp $(NONOS_BOOT_EFI) $(TARGET_DIR)/esp-$(1)/EFI/Boot/BOOTX64.EFI
+	@cp $(TARGET_DIR)/kernel_attested_$(1).bin $(TARGET_DIR)/esp-$(1)/EFI/nonos/kernel.bin
+	@printf "timeout=0\ndefault=nonos\n" > $(TARGET_DIR)/esp-$(1)/EFI/nonos/boot.cfg
+	@echo 'fs0:\EFI\Boot\BOOTX64.EFI' > $(TARGET_DIR)/esp-$(1)/startup.nsh
+	@echo "$(1) ESP ready at $(TARGET_DIR)/esp-$(1)"
+endef
+
+nonos-mk-input-e2e-ps2-test: $(NONOS_INPUT_E2E_ARTIFACTS) \
+		$(driver-ps2-input_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-input-e2e-ps2)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-input-e2e-ps2
+
+nonos-mk-input-e2e-ps2-esp: nonos-mk-input-e2e-ps2-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
+	$(call NONOS_INPUT_E2E_ESP,input-e2e-ps2)
+
+nonos-mk-input-e2e-xhci-test: $(NONOS_INPUT_E2E_ARTIFACTS) \
+		$(driver-xhci_ARTIFACTS) $(driver-usb-hid_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-input-e2e-xhci)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-input-e2e-xhci
+
+nonos-mk-input-e2e-xhci-esp: nonos-mk-input-e2e-xhci-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
+	$(call NONOS_INPUT_E2E_ESP,input-e2e-xhci)
 
 # Boot-time wallpaper round trip. Kernel boots wallpaper as the
 # init one-shot; the binary drives display_dimensions /
@@ -911,6 +995,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) \
 		$(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) \
 		$(net-nym_ARTIFACTS) \
+		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
 		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
 		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
@@ -920,6 +1005,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
 		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
+		nonos-mk-verify-desktop-gui-capsules \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-desktop-gui)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
@@ -950,7 +1036,7 @@ nonos-mk-process-manager-prod: nonos-mk-desktop-gui-prod
 
 # Sign + attest + ESP packaging
 
-$(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY) | nonos-mk-desktop-gui-prod
+$(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY)
 	@echo "Signing kernel (Ed25519)..."
 	@mkdir -p $(TARGET_DIR)
 ifeq ($(UNAME_S),Darwin)
@@ -968,7 +1054,6 @@ $(TARGET_DIR)/kernel_attested.bin: $(TARGET_DIR)/kernel_signed.bin $(EMBED_TOOL)
 nonos-mk-attest: $(TARGET_DIR)/kernel_attested.bin
 
 nonos-mk-esp: \
-		nonos-mk-desktop-gui-prod \
 		$(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi \
 		$(TARGET_DIR)/kernel_attested.bin
 	@echo "Packaging EFI System Partition..."
@@ -992,10 +1077,10 @@ $(QEMU_OVMF_VARS_RW): $(OVMF_VARS)
 
 nonos-mk-run: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS in QEMU..."
-	@echo "  SSH:  ssh -p 2222 localhost"
-	@echo "  HTTP: http://localhost:8080"
+	@echo "  SSH:  ssh -p $(QEMU_HOST_SSH_PORT) localhost"
+	@echo "  HTTP: http://localhost:$(QEMU_HOST_HTTP_PORT)"
 	@echo "  Quit: Ctrl+A then X"
-	@$(QEMU) -m $(QEMU_MEM) -cpu $(QEMU_CPU) -smp $(QEMU_SMP) -machine q35 \
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
 		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
 		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
@@ -1012,14 +1097,14 @@ nonos-mk-terminal-only-run: nonos-mk-terminal-only-prod nonos-mk-esp $(QEMU_OVMF
 		$(QEMU_GPU) $(QEMU_RNG) \
 		-serial mon:stdio -no-reboot
 
-nonos-mk-run-serial: nonos-mk-esp
-	@$(QEMU) -m $(QEMU_MEM) -cpu $(QEMU_CPU) -smp $(QEMU_SMP) -machine q35 \
+nonos-mk-run-serial: nonos-mk-desktop-gui-prod nonos-mk-esp
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
 		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
-		$(QEMU_NET) $(QEMU_RNG) \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial mon:stdio -display none -no-reboot
 
-nonos-mk-debug: nonos-mk-esp
+nonos-mk-debug: nonos-mk-desktop-gui-prod nonos-mk-esp
 	@echo "QEMU listening for GDB on :1234   (gdb -ex 'target remote :1234')"
 	@$(QEMU) -m $(QEMU_MEM) -cpu $(QEMU_CPU) -smp $(QEMU_SMP) -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
@@ -1049,6 +1134,12 @@ nonos-mk-boot-ps2-input:
 
 nonos-mk-boot-xhci:
 	@./tests/boot/xhci_round_trip.sh
+
+nonos-mk-boot-input-e2e-ps2:
+	@./tests/boot/input_e2e_ps2.sh
+
+nonos-mk-boot-input-e2e-xhci:
+	@./tests/boot/input_e2e_xhci.sh
 
 nonos-mk-boot-desktop-gui:
 	@./tests/boot/desktop_gui_boot.sh
@@ -1201,6 +1292,8 @@ help:
 	@echo "  make nonos-mk-boot-entropy    entropy capsule round trip under QEMU"
 	@echo "  make nonos-mk-boot-crypto-hash crypto hash round trip under QEMU"
 	@echo "  make nonos-mk-boot-vfs        vfs capsule round trip under QEMU"
+	@echo "  make nonos-mk-boot-input-e2e-ps2  input stack e2e proof (PS/2) under QEMU"
+	@echo "  make nonos-mk-boot-input-e2e-xhci input stack e2e proof (xHCI HID) under QEMU"
 	@echo "  make nonos-mk-test            verify + both boot harnesses"
 	@echo "  make nonos-mk-host-test       host-mode cargo tests (flaky; see roadmap)"
 	@echo

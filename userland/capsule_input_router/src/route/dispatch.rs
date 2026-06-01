@@ -14,36 +14,49 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::InputEvent;
+use nonos_libc::{
+    InputEvent, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP, INPUT_KIND_KEY_DOWN,
+    INPUT_KIND_KEY_UP, INPUT_KIND_POINTER_ABS, INPUT_KIND_POINTER_REL, INPUT_KIND_TOUCH,
+    INPUT_KIND_WHEEL,
+};
 
 use crate::state::Context;
 
 use super::deliver::deliver_one;
+use super::{keyboard, pointer};
 
-// Route a single event:
-//   1. If a grab is held for this kind, the holder gets the event
-//      exclusively.
-//   2. Otherwise every subscriber whose mask includes this kind
-//      receives the event.
-// Returns the number of deliveries the router enqueued for this event.
 pub fn route_event(ctx: &mut Context, event: &InputEvent) -> u32 {
     if let Some(holder) = ctx.grabs.holder_for(event.kind) {
         let n = deliver_one(holder, event);
-        record(ctx, n);
+        ctx.record(n);
         return n;
+    }
+    if is_pointer(event.kind) {
+        return pointer::route_pointer(ctx, event);
+    }
+    if is_keyboard(event.kind) {
+        return keyboard::route_keyboard(ctx, event);
     }
     let mut total = 0u32;
     for pid in ctx.subscriptions.match_kind(event.kind) {
         total += deliver_one(pid, event);
     }
-    record(ctx, total);
+    ctx.record(total);
     total
 }
 
-fn record(ctx: &mut Context, delivered: u32) {
-    if delivered == 0 {
-        ctx.dropped_count = ctx.dropped_count.saturating_add(1);
-    } else {
-        ctx.delivered_count = ctx.delivered_count.saturating_add(delivered as u64);
-    }
+fn is_keyboard(kind: u16) -> bool {
+    kind == INPUT_KIND_KEY_DOWN || kind == INPUT_KIND_KEY_UP
+}
+
+fn is_pointer(kind: u16) -> bool {
+    matches!(
+        kind,
+        INPUT_KIND_POINTER_REL
+            | INPUT_KIND_POINTER_ABS
+            | INPUT_KIND_WHEEL
+            | INPUT_KIND_BUTTON_DOWN
+            | INPUT_KIND_BUTTON_UP
+            | INPUT_KIND_TOUCH
+    )
 }

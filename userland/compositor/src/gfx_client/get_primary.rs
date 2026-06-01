@@ -16,7 +16,7 @@
 
 use alloc::vec;
 
-use super::wire::{call, payload_slice, read_status};
+use super::wire::{call_boot, payload_slice, read_status};
 
 // driver_virtio_gpu::OP_GET_PRIMARY_SURFACE
 const OP: u16 = 0x000C;
@@ -28,13 +28,12 @@ pub struct PrimaryReply {
     pub resource_id: u32,
     pub width: u32,
     pub height: u32,
-    pub stride: u32,
     pub format: u32,
 }
 
 pub fn get_primary_surface(gfx_port: u32, request_id: u32) -> Result<PrimaryReply, &'static str> {
     let mut rx = vec![0u8; super::wire::NVGP_HDR_LEN + 4 + RESP_LEN];
-    let n = call(gfx_port, OP, request_id, &[], &mut rx)?;
+    let n = call_boot(gfx_port, OP, request_id, &[], &mut rx)?;
     let rx = &rx[..n];
     let status = read_status(rx).ok_or("gfx primary: short response")?;
     if status != 0 {
@@ -49,7 +48,6 @@ pub fn get_primary_surface(gfx_port: u32, request_id: u32) -> Result<PrimaryRepl
         resource_id: u32_at(body, 8).ok_or("gfx primary: body too short")?,
         width: u32_at(body, 12).ok_or("gfx primary: body too short")?,
         height: u32_at(body, 16).ok_or("gfx primary: body too short")?,
-        stride: u32_at(body, 20).ok_or("gfx primary: body too short")?,
         format: u32_at(body, 24).ok_or("gfx primary: body too short")?,
     })
 }

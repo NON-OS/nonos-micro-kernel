@@ -16,11 +16,12 @@
 
 use super::types::InitOut;
 use crate::constants::{
+    FEATURE_PAGE_HIGH, FEATURE_PAGE_LOW,
     CTRLQ_INDEX, MOD_DEVICE_FEATURE, MOD_DEVICE_FEATURE_SELECT, MOD_DEVICE_STATUS,
     MOD_DRIVER_FEATURE, MOD_DRIVER_FEATURE_SELECT, MOD_QUEUE_DESC, MOD_QUEUE_DEVICE,
-    MOD_QUEUE_DRIVER, MOD_QUEUE_ENABLE, MOD_QUEUE_SELECT, MOD_QUEUE_SIZE, STATUS_ACKNOWLEDGE,
-    STATUS_DRIVER, STATUS_DRIVER_OK, STATUS_FAILED, STATUS_FEATURES_OK, VQ_AVAIL_OFFSET,
-    VQ_DESC_OFFSET, VQ_MAX_SIZE, VQ_USED_OFFSET,
+    MOD_QUEUE_DRIVER, MOD_QUEUE_ENABLE, MOD_QUEUE_NOTIFY_OFF, MOD_QUEUE_SELECT, MOD_QUEUE_SIZE,
+    STATUS_ACKNOWLEDGE, STATUS_DRIVER, STATUS_DRIVER_OK, STATUS_FAILED, STATUS_FEATURES_OK,
+    VIRTIO_F_VERSION_1_HIGH, VQ_AVAIL_OFFSET, VQ_DESC_OFFSET, VQ_MAX_SIZE, VQ_USED_OFFSET,
 };
 use crate::regs::Regs;
 
@@ -29,10 +30,17 @@ pub fn bring_up_modern(regs: Regs, queue_phys: u64) -> Result<InitOut, &'static 
         regs.w8(MOD_DEVICE_STATUS, 0);
         regs.w8(MOD_DEVICE_STATUS, STATUS_ACKNOWLEDGE);
         regs.w8(MOD_DEVICE_STATUS, regs.r8(MOD_DEVICE_STATUS) | STATUS_DRIVER);
-        regs.w32(MOD_DEVICE_FEATURE_SELECT, 0);
+        regs.w32(MOD_DEVICE_FEATURE_SELECT, FEATURE_PAGE_LOW);
         let host = regs.r32(MOD_DEVICE_FEATURE);
-        regs.w32(MOD_DRIVER_FEATURE_SELECT, 0);
+        regs.w32(MOD_DEVICE_FEATURE_SELECT, FEATURE_PAGE_HIGH);
+        if regs.r32(MOD_DEVICE_FEATURE) & VIRTIO_F_VERSION_1_HIGH == 0 {
+            regs.w8(MOD_DEVICE_STATUS, regs.r8(MOD_DEVICE_STATUS) | STATUS_FAILED);
+            return Err("virtio-gpu: modern feature missing");
+        }
+        regs.w32(MOD_DRIVER_FEATURE_SELECT, FEATURE_PAGE_LOW);
         regs.w32(MOD_DRIVER_FEATURE, 0);
+        regs.w32(MOD_DRIVER_FEATURE_SELECT, FEATURE_PAGE_HIGH);
+        regs.w32(MOD_DRIVER_FEATURE, VIRTIO_F_VERSION_1_HIGH);
         regs.w8(MOD_DEVICE_STATUS, regs.r8(MOD_DEVICE_STATUS) | STATUS_FEATURES_OK);
         if regs.r8(MOD_DEVICE_STATUS) & STATUS_FEATURES_OK == 0 {
             regs.w8(MOD_DEVICE_STATUS, regs.r8(MOD_DEVICE_STATUS) | STATUS_FAILED);
@@ -46,11 +54,12 @@ pub fn bring_up_modern(regs: Regs, queue_phys: u64) -> Result<InitOut, &'static 
         }
         let qsize = core::cmp::min(qmax, VQ_MAX_SIZE);
         regs.w16(MOD_QUEUE_SIZE, qsize);
+        let regs = regs.with_queue_notify(regs.r16(MOD_QUEUE_NOTIFY_OFF));
         regs.w64(MOD_QUEUE_DESC, queue_phys + VQ_DESC_OFFSET as u64);
         regs.w64(MOD_QUEUE_DRIVER, queue_phys + VQ_AVAIL_OFFSET as u64);
         regs.w64(MOD_QUEUE_DEVICE, queue_phys + VQ_USED_OFFSET as u64);
         regs.w16(MOD_QUEUE_ENABLE, 1);
         regs.w8(MOD_DEVICE_STATUS, regs.r8(MOD_DEVICE_STATUS) | STATUS_DRIVER_OK);
-        Ok(InitOut { queue_size: qsize, host_features: host })
+        Ok(InitOut { queue_size: qsize, host_features: host, regs })
     }
 }

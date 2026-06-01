@@ -20,30 +20,30 @@ use super::state::Regs;
 impl Regs {
     #[inline]
     pub unsafe fn w8(self, offset: usize, value: u8) {
-        match self.io {
-            RegIo::Mmio(base) => write_volatile(base.add(offset), value),
-            RegIo::Pio(grant) => pio::write(grant, offset, 1, value as u32),
+        match self.common {
+            RegIo::Mmio(base) => write_volatile(base.add(self.common_offset + offset), value),
+            RegIo::Pio(grant) => pio::write(grant, self.common_offset + offset, 1, value as u32),
         }
     }
     #[inline]
     pub unsafe fn w16(self, offset: usize, value: u16) {
-        match self.io {
-            RegIo::Mmio(base) => write_volatile(base.add(offset).cast(), value),
-            RegIo::Pio(grant) => pio::write(grant, offset, 2, value as u32),
+        match self.common {
+            RegIo::Mmio(base) => write_volatile(base.add(self.common_offset + offset).cast(), value),
+            RegIo::Pio(grant) => pio::write(grant, self.common_offset + offset, 2, value as u32),
         }
     }
     #[inline]
     pub unsafe fn w32(self, offset: usize, value: u32) {
-        match self.io {
-            RegIo::Mmio(base) => write_volatile(base.add(offset).cast(), value),
-            RegIo::Pio(grant) => pio::write(grant, offset, 4, value),
+        match self.common {
+            RegIo::Mmio(base) => write_volatile(base.add(self.common_offset + offset).cast(), value),
+            RegIo::Pio(grant) => pio::write(grant, self.common_offset + offset, 4, value),
         }
     }
     #[inline]
     pub unsafe fn w64(self, offset: usize, value: u64) {
-        match self.io {
-            RegIo::Mmio(base) => write_volatile(base.add(offset).cast(), value),
-            RegIo::Pio(grant) => write_pio64(grant, offset, value),
+        match self.common {
+            RegIo::Mmio(base) => write_volatile(base.add(self.common_offset + offset).cast(), value),
+            RegIo::Pio(grant) => write_pio64(grant, self.common_offset + offset, value),
         }
     }
 }

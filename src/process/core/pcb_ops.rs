@@ -71,4 +71,12 @@ impl ProcessControlBlock {
             tg.remove_thread(self.pid);
         }
     }
+
+    pub fn reply_inbox(&self) -> Option<&'static str> {
+        *self.reply_inbox.read()
+    }
+
+    pub fn set_reply_inbox(&self, inbox: &'static str) {
+        *self.reply_inbox.write() = Some(inbox);
+    }
 }

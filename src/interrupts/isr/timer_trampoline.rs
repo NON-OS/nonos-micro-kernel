@@ -91,8 +91,20 @@ pub unsafe extern "C" fn timer_trampoline() {
         // After the 15 pushes, rsp ≡ 8 (mod 16); `call` adds another
         // 8 byte return address, giving rsp ≡ 0 (mod 16) at handler
         // entry — exactly what the SysV AMD64 ABI requires.
+        "mov rbp, rsp",
         "mov rdi, rsp",
+        // Save the interrupted SIMD state before any Rust runs. The
+        // handler chain clobbers volatile XMM and would otherwise
+        // corrupt a preempted kernel-side SSE computation (blake3).
+        // `rbp`/`rbx` are callee-saved across the C call; their
+        // original values are already on the stack for the pops.
+        "sub rsp, 528",
+        "and rsp, -16",
+        "fxsave [rsp]",
+        "mov rbx, rsp",
         "call {handler}",
+        "fxrstor [rbx]",
+        "mov rsp, rbp",
         // Pop GPRs in reverse, restoring user state.
         "pop r15",
         "pop r14",
@@ -178,6 +190,7 @@ pub(super) extern "C" fn timer_trap_handler(ctx: *mut UserContext) {
     let _ctx_guard = set_interrupt_context();
     stats::increment_timer();
     timer::on_timer_interrupt();
+    crate::process::exit::drain_pending_teardowns();
     crate::kernel_core::process_spawn::drain_pending_kernel_stacks();
     send_eoi();
 }

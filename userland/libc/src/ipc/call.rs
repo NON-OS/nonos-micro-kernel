@@ -26,3 +26,18 @@ pub extern "C" fn mk_ipc_call(
 ) -> i64 {
     call_raw(N_MK_IPC_CALL, [endpoint, req as u64, req_len as u64, resp as u64, resp_len as u64, 0])
 }
+
+#[no_mangle]
+pub extern "C" fn mk_ipc_call_timeout(
+    endpoint: u64,
+    req: *const u8,
+    req_len: usize,
+    resp: *mut u8,
+    resp_len: usize,
+    timeout_ms: u64,
+) -> i64 {
+    call_raw(
+        N_MK_IPC_CALL,
+        [endpoint, req as u64, req_len as u64, resp as u64, resp_len as u64, timeout_ms],
+    )
+}

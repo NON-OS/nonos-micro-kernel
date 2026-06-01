@@ -23,8 +23,9 @@ pub mod gdt;
 #[cfg(target_arch = "x86_64")]
 pub mod idt;
 pub mod io;
+pub mod policy;
 pub mod serial;
-pub mod settings;
+pub mod sync;
 pub mod timer;
 
 #[cfg(test)]
@@ -58,13 +59,5 @@ pub use timer::{
     register_callback, short_delay, stats, ticks_to_ms, ticks_to_ns, ticks_to_us, tsc_frequency,
     unix_timestamp, unix_timestamp_ms, unregister_callback, uptime_ms, uptime_seconds, uptime_us,
     us_to_ticks, Stopwatch, TimerCallback,
-};
-
-pub use settings::init as settings_init;
-pub use settings::{
-    anonymous_mode, auto_wipe, brightness, deserialize, get, get_domainname, get_hostname, get_mut,
-    init_hostname, mark_modified, mouse_sensitivity, needs_save, nym_enabled, reset_to_defaults,
-    serialize, set_anonymous_mode, set_auto_wipe, set_brightness, set_domainname, set_hostname,
-    set_mouse_sensitivity, set_nym_enabled, set_theme, theme, Settings,
 };
 

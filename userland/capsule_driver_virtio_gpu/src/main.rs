@@ -52,11 +52,10 @@ pub unsafe extern "C" fn _start() -> ! {
             }
         }
     };
-    let rc = mk_service_register(SERVICE_NAME.as_ptr(), SERVICE_NAME.len(), SERVICE_PORT);
-    if rc < 0 {
+    if mk_service_register(SERVICE_NAME.as_ptr(), SERVICE_NAME.len(), SERVICE_PORT) < 0 {
         debug::marker(b"service register failed");
-    } else {
-        debug::marker(b"service registered");
+        mk_exit(1);
     }
+    debug::marker(b"service registered");
     server::run(driver);
 }

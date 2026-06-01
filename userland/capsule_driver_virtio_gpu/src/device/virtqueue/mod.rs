@@ -19,5 +19,6 @@ pub mod desc;
 pub mod layout;
 pub mod submit;
 pub mod used;
+mod wait;
 pub use control_queue::ControlQueue;
 pub use layout::QueueLayout;

@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_dma_map, mk_dma_unmap, DmaMapOut};
+use nonos_libc::{mk_dma_map, mk_dma_unmap, DmaMapOut, MK_DMA_MAP_HIGH};
 const PAGE_SIZE: u64 = 4096;
 const PAGE_MASK: u64 = PAGE_SIZE - 1;
 pub fn map(device_id: u64, claim_epoch: u64, byte_len: u64) -> Result<DmaMapOut, &'static str> {
@@ -21,7 +21,7 @@ pub fn map(device_id: u64, claim_epoch: u64, byte_len: u64) -> Result<DmaMapOut,
         byte_len.checked_add(PAGE_MASK).ok_or("virtio-gpu: surface map length overflow")?
             & !PAGE_MASK;
     let mut dma = DmaMapOut { user_va: 0, device_addr: 0, length: 0, grant_id: 0 };
-    let rc = mk_dma_map(device_id, claim_epoch, map_len, 0, &mut dma);
+    let rc = mk_dma_map(device_id, claim_epoch, map_len, MK_DMA_MAP_HIGH, &mut dma);
     if rc < 0 || dma.user_va == 0 || dma.device_addr == 0 {
         return Err("virtio-gpu: primary dma map failed");
     }

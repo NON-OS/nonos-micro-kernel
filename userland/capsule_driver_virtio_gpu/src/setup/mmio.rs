@@ -16,7 +16,9 @@
 mod grant;
 mod grant_pio;
 mod labels;
+mod map_modern;
 mod map_mmio;
+mod rollback_modern;
 mod state;
 pub use self::grant::grant;
 pub use self::state::RegisterGrant;

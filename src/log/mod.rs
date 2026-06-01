@@ -16,6 +16,7 @@
 
 pub mod backend;
 mod compat;
+pub mod dbg_ring;
 mod helpers;
 mod macros;
 pub mod manager;

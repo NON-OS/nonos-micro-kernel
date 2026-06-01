@@ -17,11 +17,31 @@
 extern crate alloc;
 
 use alloc::vec;
+use core::sync::atomic::{AtomicU32, Ordering};
 
+use crate::process::current_pid;
 use crate::services::registry::lookup_service;
 use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOENT};
 
 const NAME_MAX: usize = 64;
+static LOOKUP_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
+
+fn is_traced(pid: u32) -> bool {
+    matches!(pid, 0x18 | 0x1a | 0x1b)
+}
+
+fn trace(pid: u32, name: &str, rc: i64) {
+    if !is_traced(pid) || LOOKUP_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 48 {
+        return;
+    }
+    crate::sys::serial::print(b"[SLOOK] pid=");
+    crate::sys::serial::print_hex(pid as u64);
+    crate::sys::serial::print(b" name=");
+    crate::sys::serial::print(name.as_bytes());
+    crate::sys::serial::print(b" rc=");
+    crate::sys::serial::print_hex(rc as u64);
+    crate::sys::serial::println(b"");
+}
 
 // `MkServiceLookup(name_ptr, name_len, *port_out, *pid_out)`. The
 // caller passes the service name they want to resolve; the kernel
@@ -30,6 +50,7 @@ const NAME_MAX: usize = 64;
 // Returns 0 on success or a negative errno. Capsule clients use
 // this in setup so they do not have to hardcode peer ports.
 pub fn sys_service_lookup(name_ptr: u64, name_len: usize, port_out: u64, pid_out: u64) -> i64 {
+    let caller_pid = current_pid().unwrap_or(0);
     if name_len == 0 || name_len > NAME_MAX {
         return ERRNO_INVAL;
     }
@@ -52,8 +73,14 @@ pub fn sys_service_lookup(name_ptr: u64, name_len: usize, port_out: u64, pid_out
         Err(_) => return ERRNO_INVAL,
     };
     let ep = match lookup_service(name) {
-        Some(e) => e,
-        None => return ERRNO_NOENT,
+        Some(e) => {
+            trace(caller_pid, name, 0);
+            e
+        }
+        None => {
+            trace(caller_pid, name, ERRNO_NOENT);
+            return ERRNO_NOENT;
+        }
     };
     if port_out != 0 {
         let bytes = ep.port.to_le_bytes();

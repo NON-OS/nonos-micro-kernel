@@ -147,7 +147,12 @@ pub fn round_trip(
     let msg = IpcMessage::new(sender_name, &target, request)
         .map_err(|_| TransportError::TransportFailure)?;
     match nonos_inbox::try_enqueue_strict(&target, msg) {
-        Ok(()) => {}
+        Ok(()) => {
+            let owner = state.pid();
+            if crate::sched::is_sleeping(owner) {
+                crate::sched::wake_process(owner);
+            }
+        }
         // Owner exited between the liveness check above and the
         // enqueue, or the inbox was already unregistered. Either
         // way the capsule is gone from this caller's view; surface

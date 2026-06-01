@@ -34,7 +34,9 @@ use nonos_libc::{heap_init, mk_exit, mk_yield};
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
+    debug::marker(b"start");
     if heap_init().is_err() {
+        debug::marker(b"heap fail");
         mk_exit(1);
     }
     debug::marker(b"boot");
@@ -44,17 +46,19 @@ pub unsafe extern "C" fn _start() -> ! {
 }
 
 fn wait_for_setup() -> crate::state::Context {
-    let mut reported = false;
+    let mut last: &'static str = "";
     loop {
-        if let Ok(ctx) = setup::run() {
-            return ctx;
-        }
-        if !reported {
-            debug::marker(b"setup waiting");
-            reported = true;
-        }
-        for _ in 0..64 {
-            mk_yield();
+        match setup::run() {
+            Ok(ctx) => return ctx,
+            Err(e) => {
+                if e != last {
+                    debug::marker(e.as_bytes());
+                    last = e;
+                }
+                for _ in 0..64 {
+                    mk_yield();
+                }
+            }
         }
     }
 }

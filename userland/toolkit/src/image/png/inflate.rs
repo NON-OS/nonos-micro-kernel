@@ -138,7 +138,10 @@ pub fn inflate_zlib(src: &[u8], out: &mut [u8]) -> Result<usize, DecodeError> {
             0 => {
                 bits.align_byte();
                 let len = bits.read_bits(16)? as usize;
-                let _nlen = bits.read_bits(16)?;
+                let nlen = bits.read_bits(16)?;
+                if nlen != (!(len as u16)) {
+                    return Err(DecodeError::BadMagic);
+                }
                 for _ in 0..len {
                     let b = bits.read_bits(8)? as u8;
                     put(out, &mut w, b)?;

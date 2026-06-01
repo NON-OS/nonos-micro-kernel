@@ -14,41 +14,51 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(target_arch = "x86_64")]
-use core::arch::asm;
-
-/// x86_64 SYSCALL trampoline. Issues `syscall` with the System V
-/// register layout the NONOS per-arch shim expects:
+/// x86_64 SYSCALL trampoline. This lives in a naked assembly shim
+/// instead of inline asm so Rust treats it like a normal C call and
+/// preserves the full caller-clobbered ABI around the syscall leaf.
 ///
+/// Syscall register layout expected by the NONOS kernel entry shim:
 ///   rax = number, rdi = a1, rsi = a2, rdx = a3,
 ///   r10 = a4    (rcx is clobbered by SYSCALL itself),
 ///   r8  = a5,   r9  = a6
 ///
-/// The kernel returns in rax. SYSCALL clobbers rcx (return RIP) and
-/// r11 (return RFLAGS); we mark those.
+/// The Rust caller invokes this helper with SysV arguments:
+///   rdi = number, rsi = a1, rdx = a2, rcx = a3, r8 = a4, r9 = a5,
+///   [rsp + 8] = a6
 ///
 /// # Safety
 /// This is the leaf at which user-mode hands control to the kernel.
 /// The caller is responsible for argument meaning. Bad pointers do not
 /// produce undefined behavior here; the kernel returns `-EFAULT`.
+#[cfg(target_arch = "x86_64")]
+#[unsafe(naked)]
+unsafe extern "C" fn raw_syscall_asm(
+    _num: i64,
+    _a1: u64,
+    _a2: u64,
+    _a3: u64,
+    _a4: u64,
+    _a5: u64,
+    _a6: u64,
+) -> i64 {
+    core::arch::naked_asm!(
+        "mov rax, rdi",
+        "mov rdi, rsi",
+        "mov rsi, rdx",
+        "mov rdx, rcx",
+        "mov r10, r8",
+        "mov r8, r9",
+        "mov r9, [rsp + 8]",
+        "syscall",
+        "ret",
+    );
+}
+
 #[inline]
 #[cfg(target_arch = "x86_64")]
 pub(super) unsafe fn raw(num: i64, a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) -> i64 {
-    let ret: i64;
-    asm!(
-        "syscall",
-        inlateout("rax") num => ret,
-        in("rdi") a1,
-        in("rsi") a2,
-        in("rdx") a3,
-        in("r10") a4,
-        in("r8")  a5,
-        in("r9")  a6,
-        lateout("rcx") _,
-        lateout("r11") _,
-        options(nostack),
-    );
-    ret
+    raw_syscall_asm(num, a1, a2, a3, a4, a5, a6)
 }
 
 #[inline]

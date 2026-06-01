@@ -15,7 +15,6 @@ use super::super::bitmap;
 use super::super::constants::PAGE_SIZE_U64;
 use super::super::error::{PhysAllocError, PhysAllocResult};
 use super::super::types::{AllocFlags, AllocatorState, Frame};
-use super::random::mix64;
 use super::zeroing::zero_frame;
 
 pub fn allocate_frame(state: &mut AllocatorState, flags: AllocFlags) -> Option<Frame> {
@@ -27,7 +26,7 @@ pub fn allocate_frame(state: &mut AllocatorState, flags: AllocFlags) -> Option<F
         for i in (0..total).rev() {
             if unsafe { !bitmap::bit_test(bptr, i) } {
                 unsafe { bitmap::bit_set(bptr, i) };
-                state.next_hint = i as u64;
+                state.next_hint = i.saturating_sub(1) as u64;
                 let frame = Frame::new(start.wrapping_add((i as u64).wrapping_mul(PAGE_SIZE_U64)));
                 if flags.contains(AllocFlags::ZERO) {
                     zero_frame(frame);
@@ -37,13 +36,12 @@ pub fn allocate_frame(state: &mut AllocatorState, flags: AllocFlags) -> Option<F
         }
         return None;
     }
-    state.random_seed = state.random_seed.wrapping_add(1);
-    let idx0 = (mix64(state.random_seed) as usize).wrapping_add(state.next_hint as usize) % total;
+    let idx0 = state.next_hint as usize % total;
     for offset in 0..total {
         let i = (idx0 + offset) % total;
         if unsafe { !bitmap::bit_test(bptr, i) } {
             unsafe { bitmap::bit_set(bptr, i) };
-            state.next_hint = i as u64;
+            state.next_hint = (i.saturating_add(1) % total) as u64;
             let frame = Frame::new(start.wrapping_add((i as u64).wrapping_mul(PAGE_SIZE_U64)));
             if flags.contains(AllocFlags::ZERO) {
                 zero_frame(frame);

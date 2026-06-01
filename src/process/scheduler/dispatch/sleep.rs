@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::preemption::SCHEDULER_STATS;
-use super::run_queue::{add_to_run_queue, remove_from_run_queue};
+use super::run_queue::{add_to_run_queue_front, remove_from_run_queue};
 use alloc::collections::BTreeMap;
 use core::sync::atomic::Ordering;
 
@@ -40,7 +40,7 @@ pub fn wake_process(pid: u32) {
             *state = ProcessState::Ready;
         }
     }
-    add_to_run_queue(pid);
+    add_to_run_queue_front(pid);
     SCHEDULER_STATS.wakeups.fetch_add(1, Ordering::Relaxed);
     crate::log_debug!("Process {} woken up", pid);
 }

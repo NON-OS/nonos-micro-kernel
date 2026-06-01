@@ -16,18 +16,10 @@
 
 pub const IPC_PAYLOAD_MAX: usize = 256;
 pub const STATUS_LEN: usize = 4;
-
-// SCENE_SUBMIT body: surface_handle u64, x u32, y u32, w u32, h u32, z u32, _pad u32
 pub const SCENE_SUBMIT_REQ_LEN: usize = 32;
-
-// DAMAGE_COMMIT body: x u32, y u32, w u32, h u32
 pub const DAMAGE_COMMIT_REQ_LEN: usize = 16;
-
-// FOCUS_SET body: target_pid u32, _pad u32
 pub const FOCUS_SET_REQ_LEN: usize = 8;
-
-// CURSOR_UPDATE body: x u32, y u32, visible u32, _pad u32
 pub const CURSOR_UPDATE_REQ_LEN: usize = 16;
-
-// SCENE_REMOVE body: owner_pid u32, _pad u32
 pub const SCENE_REMOVE_REQ_LEN: usize = 8;
+pub const DISPLAY_INFO_DATA_LEN: usize = 16;
+pub const DISPLAY_INFO_RESP_LEN: usize = STATUS_LEN + DISPLAY_INFO_DATA_LEN;

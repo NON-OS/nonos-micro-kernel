@@ -29,7 +29,11 @@ extern crate alloc;
 use alloc::vec::Vec;
 
 const PAGE_SIZE: u64 = 4096;
-const USER_MMAP_BASE: u64 = 0x0000_4000_0000;
+// Must sit above the PIE load window so an anonymous mmap never lands on
+// a capsule's own image: ELF bases span [DEFAULT_PIE_BASE, + EXEC range]
+// = [0x40_0000, 0x4040_0000) and images extend further, so the old
+// 0x4000_0000 base let the heap map over a capsule loaded near the top.
+const USER_MMAP_BASE: u64 = 0x0000_8000_0000;
 const USER_MMAP_END: u64 = 0x0000_7000_0000_0000;
 
 #[derive(Clone, Copy)]

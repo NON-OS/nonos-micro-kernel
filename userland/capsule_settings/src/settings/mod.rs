@@ -16,8 +16,10 @@
 
 mod app;
 mod event;
+mod ipc;
 mod manifest;
 mod paint;
+mod schema;
 mod state;
 mod theme;
 

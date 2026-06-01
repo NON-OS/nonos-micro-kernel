@@ -18,11 +18,12 @@ use crate::protocol::Request;
 use crate::server::respond;
 use crate::state::Context;
 
-// Records the subscriber as the current input focus owner. The
-// input_router capsule lands in B4 with grab/release semantics; this
-// keeps the contract surface honest in the meantime so subscribers
-// get a deterministic E_OK or E_INVAL today.
-pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, tx: &mut [u8]) {
+pub fn handle(
+    ctx: &mut Context,
+    sender_pid: u32,
+    req: &Request,
+    tx: &mut [u8],
+) -> Result<(), &'static str> {
     ctx.focus.set(sender_pid);
-    let _ = respond::status(sender_pid, req, 0, tx);
+    respond::status(sender_pid, req, 0, tx)
 }

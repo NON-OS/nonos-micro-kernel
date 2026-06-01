@@ -1,0 +1,36 @@
+# NONOS userland: capsule_input_proof
+# eK@nonos.systems
+#
+# Test-only proof surface for the input-stack end-to-end harness. Subscribes
+# to key + pointer + button events, emits [INPUT-PROOF] serial markers, and
+# proves key press, pointer motion, focus routing, and click dispatch reach a
+# CPL=3 app surface. Built on `nonos_app_skeleton`.
+
+[package]
+name = "nonos_input_proof"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS input end-to-end proof capsule"
+
+[[bin]]
+name = "input_proof"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_app_skeleton = { path = "../app_skeleton" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
+
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true

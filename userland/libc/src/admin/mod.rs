@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod policy_push;
 mod reboot;
 mod shutdown;
 
+pub use policy_push::mk_admin_policy_push;
 pub use reboot::mk_admin_reboot;
 pub use shutdown::mk_admin_shutdown;

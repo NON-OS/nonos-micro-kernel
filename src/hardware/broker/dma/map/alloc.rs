@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::hardware::broker::dma::types::DmaMapError;
+use super::super::pool;
+use crate::hardware::broker::dma::types::{DmaMapError, DMA_MAP_HIGH};
 use crate::memory::layout::DIRECTMAP_BASE;
 use crate::memory::phys::{alloc_contiguous, free_contiguous, AllocFlags};
 
@@ -22,9 +23,18 @@ use crate::memory::phys::{alloc_contiguous, free_contiguous, AllocFlags};
 // the direct map so the buffer is provably zero before it leaves the
 // kernel. The phys allocator's ZERO flag is best-effort across zones;
 // the volatile loop here is the load-bearing scrub.
-pub(super) fn alloc_and_zero(pages: u64, length: u64) -> Result<u64, DmaMapError> {
-    let phys_start = alloc_contiguous(pages as usize, AllocFlags::DMA | AllocFlags::ZERO)
-        .ok_or(DmaMapError::NoMemory)?;
+pub(super) fn alloc_and_zero(pages: u64, length: u64, dma_flags: u32) -> Result<u64, DmaMapError> {
+    if dma_flags & DMA_MAP_HIGH != 0 {
+        if let Some(phys_start) = pool::alloc(pages as usize) {
+            zero_run(phys_start, length);
+            return Ok(phys_start);
+        }
+    }
+    let mut flags = AllocFlags::DMA | AllocFlags::ZERO;
+    if dma_flags & DMA_MAP_HIGH != 0 {
+        flags |= AllocFlags::HIGH;
+    }
+    let phys_start = alloc_contiguous(pages as usize, flags).ok_or(DmaMapError::NoMemory)?;
     zero_run(phys_start, length);
     Ok(phys_start)
 }

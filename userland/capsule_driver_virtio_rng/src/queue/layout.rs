@@ -27,17 +27,27 @@ pub struct Queue {
     pub buf_va: *mut u8,
     pub buf_phys: u64,
     pub buf_len: u32,
+    pub avail_offset: usize,
     pub last_used: u16,
 }
 
 impl Queue {
-    pub fn new(region_va: u64, region_phys: u64, buf_va: u64, buf_phys: u64, buf_len: u32) -> Self {
+    pub fn new(
+        region_va: u64,
+        region_phys: u64,
+        buf_va: u64,
+        buf_phys: u64,
+        buf_len: u32,
+        queue_size: u16,
+    ) -> Self {
+        const DESC_BYTES: usize = 16;
         Self {
             region_va: region_va as *mut u8,
             region_phys,
             buf_va: buf_va as *mut u8,
             buf_phys,
             buf_len,
+            avail_offset: queue_size as usize * DESC_BYTES,
             last_used: 0,
         }
     }

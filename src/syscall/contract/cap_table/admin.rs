@@ -17,16 +17,12 @@
 use crate::capabilities::CapabilityToken;
 use crate::syscall::numbers::SyscallNumber;
 
-// AdminReboot / AdminShutdown / AdminModLoad are reserved; the
-// dispatcher returns ENOSYS until the corresponding admin capsule
-// handlers land. AdminCapGrant / AdminCapRevoke have been removed —
-// MkCapGrant / MkCapRevoke are the single source of truth for
-// capability operations.
 pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<bool> {
     Some(match number {
         SyscallNumber::AdminReboot
         | SyscallNumber::AdminShutdown
-        | SyscallNumber::AdminModLoad => caps.can_admin(),
+        | SyscallNumber::AdminModLoad
+        | SyscallNumber::AdminPolicyPush => caps.can_admin(),
 
         _ => return None,
     })

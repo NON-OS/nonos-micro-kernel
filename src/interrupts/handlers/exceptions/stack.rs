@@ -47,9 +47,9 @@ fn analyze_stack_fault(ctx: &ExceptionContext, error_code: u64) {
     crate::log::logger::log_error!("Stack pointer at fault: {:#x}", ctx.stack_pointer);
 }
 
-fn terminate_user_process(_ctx: &ExceptionContext) {
+fn terminate_user_process(_ctx: &ExceptionContext) -> ! {
     crate::log::logger::log_error!("Terminating user process: stack overflow");
-    halt_loop();
+    crate::process::exit::exit_and_yield(-11, true)
 }
 
 fn kernel_panic(_ctx: &ExceptionContext) {

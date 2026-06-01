@@ -22,7 +22,7 @@
 use core::ptr::{read_volatile, write_volatile};
 
 use super::layout::Queue;
-use crate::constants::{VQ_AVAIL_OFFSET, VQ_DESC_OFFSET, VRING_DESC_F_WRITE};
+use crate::constants::{VQ_DESC_OFFSET, VRING_DESC_F_WRITE};
 
 const DESC_SIZE: usize = 16; // VirtqDesc { addr, len, flags, next }
 
@@ -46,7 +46,7 @@ impl Queue {
             write_volatile(desc_base.add(14).cast::<u16>(), 0u16);
             let _ = DESC_SIZE; // documented size; the offsets above derive from it.
 
-            let avail = self.region_va.add(VQ_AVAIL_OFFSET).cast::<u16>();
+            let avail = self.region_va.add(self.avail_offset).cast::<u16>();
             // VirtqAvail layout: u16 flags, u16 idx, u16 ring[QUEUE_SIZE], u16 used_event
             // ring slot 0 lives at offset 4 = avail.add(2)
             write_volatile(avail.add(2), 0u16);

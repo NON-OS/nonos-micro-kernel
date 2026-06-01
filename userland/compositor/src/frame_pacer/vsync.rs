@@ -16,11 +16,6 @@
 
 use nonos_libc::mk_display_vsync_wait;
 
-// Blocks the calling thread until the kernel reports the next vsync
-// deadline on display 0. The kernel currently approximates this with
-// a 60 Hz cadence over the cross-arch monotonic clock; the gfx
-// driver will replace the source with a real VBlank IRQ in a later
-// slice without changing this contract.
 pub fn wait_for_vsync() -> Result<u64, &'static str> {
     let rc = mk_display_vsync_wait(0);
     if rc < 0 {

@@ -16,7 +16,7 @@
 use core::ptr::{read_volatile, write_volatile};
 use crate::constants::CTRLQ_INDEX;
 use crate::regs::Regs;
-use super::{avail, desc, layout::QueueLayout, used};
+use super::{avail, desc, layout::QueueLayout, used, wait};
 pub struct SubmitOutput {
     pub used_len: u32,
 }
@@ -52,15 +52,7 @@ pub fn submit_sync(
     unsafe {
         regs.notify(CTRLQ_INDEX);
     }
-    let mut spins = 0u64;
-    let timeout = 1u64 << 22;
-    while used::read_idx(layout) == pre_used_idx {
-        spins += 1;
-        if spins > timeout {
-            return Err("virtio-gpu: device timeout");
-        }
-        core::hint::spin_loop();
-    }
+    wait::used_changed(layout, pre_used_idx)?;
     let entry = used::read_entry(layout, pre_used_idx);
     if entry.id as u16 != head {
         return Err("virtio-gpu: used id mismatch");

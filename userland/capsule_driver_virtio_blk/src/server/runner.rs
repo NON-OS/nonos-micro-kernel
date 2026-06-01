@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use alloc::vec;
-use nonos_libc::mk_ipc_recv;
+use nonos_libc::{mk_ipc_recv, mk_yield};
+use crate::debug;
 use crate::protocol::{
     decode_request, E_INVAL, HDR_LEN, MAX_RW_PAYLOAD_BYTES, OP_CAPACITY, OP_FLUSH, OP_HEALTHCHECK,
     OP_READ_BLOCKS, OP_WRITE_BLOCKS, RESP_HDR_LEN, STATUS_LEN,
@@ -27,15 +28,21 @@ pub fn run(driver: &mut Driver) -> ! {
     let tx_len = RESP_HDR_LEN + STATUS_LEN + MAX_RW_PAYLOAD_BYTES as usize;
     let mut rx = vec![0u8; rx_len];
     let mut tx = vec![0u8; tx_len];
+    debug::marker(b"server: enter run");
     loop {
+        debug::marker(b"server: loop top");
+        debug::marker(b"server: before recv");
         let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, 0);
+        debug::marker_i64(b"server: after recv n=", n);
         if n <= 0 {
+            mk_yield();
             continue;
         }
         let len = n as usize;
         let req = match decode_request(&rx[..len]) {
             Some(r) => r,
             None => {
+                debug::marker(b"server: decode fail");
                 reply_decode_failed(&mut tx, E_INVAL);
                 continue;
             }

@@ -20,6 +20,38 @@ use alloc::{sync::Arc, vec::Vec};
 use core::sync::atomic::{AtomicU32, Ordering};
 use spin::RwLock;
 
+const INIT_PID: AtomicU32 = AtomicU32::new(0);
+
+pub struct CurrentPid {
+    slots: [AtomicU32; crate::smp::MAX_CPUS],
+}
+
+impl CurrentPid {
+    pub const fn new() -> Self {
+        Self { slots: [INIT_PID; crate::smp::MAX_CPUS] }
+    }
+
+    #[inline]
+    fn slot(&self) -> &AtomicU32 {
+        &self.slots[crate::smp::cpu_id()]
+    }
+
+    #[inline]
+    pub fn load(&self, order: Ordering) -> u32 {
+        self.slot().load(order)
+    }
+
+    #[inline]
+    pub fn store(&self, value: u32, order: Ordering) {
+        self.slot().store(value, order);
+    }
+
+    #[inline]
+    pub fn swap(&self, value: u32, order: Ordering) -> u32 {
+        self.slot().swap(value, order)
+    }
+}
+
 #[derive(Default)]
 pub struct ProcessTable {
     pub(super) inner: RwLock<Vec<Arc<ProcessControlBlock>>>,
@@ -53,7 +85,7 @@ impl ProcessTable {
 }
 
 pub static PROCESS_TABLE: ProcessTable = ProcessTable { inner: RwLock::new(Vec::new()) };
-pub static CURRENT_PID: AtomicU32 = AtomicU32::new(0);
+pub static CURRENT_PID: CurrentPid = CurrentPid::new();
 pub(super) static NEXT_PID: AtomicU32 = AtomicU32::new(1);
 
 static PID_ALLOC_LOCK: spin::Mutex<()> = spin::Mutex::new(());

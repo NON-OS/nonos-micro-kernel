@@ -29,14 +29,8 @@ pub const WINDOW_RESIZE_REQ_LEN: usize = 16;
 pub const WINDOW_FOCUS_REQ_LEN: usize = 8;
 // WINDOW_RAISE body: window_id u32, _pad u32
 pub const WINDOW_RAISE_REQ_LEN: usize = 8;
-
-// WINDOW_MINIMIZE body: window_id u32, _pad u32
 pub const WINDOW_MINIMIZE_REQ_LEN: usize = 8;
-
-// WINDOW_RESTORE body: window_id u32, _pad u32
 pub const WINDOW_RESTORE_REQ_LEN: usize = 8;
-
-// QUERY_TOPMOST body: x u32, y u32
-// QUERY_TOPMOST response payload: owner_pid u32, window_id u32 (after status).
 pub const QUERY_TOPMOST_REQ_LEN: usize = 8;
-pub const QUERY_TOPMOST_RESP_LEN: usize = 8;
+pub const QUERY_TOPMOST_RESP_LEN: usize = 16;
+pub const ROUTE_FOCUS_REQ_LEN: usize = 8;

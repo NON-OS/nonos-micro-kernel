@@ -15,10 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod damage_commit;
+pub mod display_info;
 pub mod health;
 pub mod scene_submit;
 pub mod wire;
 
 pub use damage_commit::push_damage_commit;
+pub use display_info::query as query_display_info;
 pub use health::healthcheck;
 pub use scene_submit::push_scene_submit;
