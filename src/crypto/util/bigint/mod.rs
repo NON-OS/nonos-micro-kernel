@@ -28,4 +28,4 @@ mod types;
 #[cfg(test)]
 mod tests;
 
-pub use types::{BigUint, LIMB_BITS, LIMB_MAX};
+pub use types::{BigUint, LIMB_BITS};

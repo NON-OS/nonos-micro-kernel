@@ -19,8 +19,6 @@ use crate::crypto::constant_time::compiler_fence;
 use alloc::vec::Vec;
 
 pub const LIMB_BITS: usize = 64;
-#[allow(dead_code)]
-pub const LIMB_MAX: u64 = u64::MAX;
 
 #[derive(Clone, Eq)]
 pub struct BigUint {

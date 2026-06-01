@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
 use spin::Mutex;
 
 use super::types::{InputEvent, RegistryError, INPUT_RING_CAP};
@@ -45,13 +44,10 @@ static RING: Mutex<Ring> = Mutex::new(Ring {
     }; INPUT_RING_CAP],
 });
 
-static DROPPED: AtomicU64 = AtomicU64::new(0);
-
 pub fn post_input(ev: InputEvent) -> Result<(), RegistryError> {
     let mut ring = RING.lock();
     let next = (ring.head + 1) % INPUT_RING_CAP;
     if next == ring.tail {
-        DROPPED.fetch_add(1, Ordering::Relaxed);
         return Err(RegistryError::OutOfSlots);
     }
     let head = ring.head;
@@ -72,9 +68,4 @@ pub fn drain_input(out: &mut [InputEvent]) -> usize {
         n += 1;
     }
     n
-}
-
-#[allow(dead_code)]
-pub fn dropped_count() -> u64 {
-    DROPPED.load(Ordering::Relaxed)
 }

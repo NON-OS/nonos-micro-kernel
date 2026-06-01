@@ -41,7 +41,6 @@ pub(crate) fn poly_degree(p: &[u16]) -> usize {
     usize::MAX
 }
 
-#[allow(dead_code)]
 pub(crate) fn poly_gcd(a: &[u16], b: &[u16]) -> Vec<u16> {
     let mut u = a.to_vec();
     let mut v = b.to_vec();

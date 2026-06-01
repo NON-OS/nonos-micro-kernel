@@ -53,10 +53,3 @@ pub fn wait_for_vsync(display_id: u32) -> Result<u64, super::types::RegistryErro
     LAST_VBLANK_NS.store(deadline, Ordering::Release);
     Ok(deadline)
 }
-
-#[allow(dead_code)]
-pub(super) fn set_target_hz(hz: u32) {
-    if hz > 0 {
-        TARGET_HZ.store(hz as u64, Ordering::Release);
-    }
-}
