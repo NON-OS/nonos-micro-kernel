@@ -1,0 +1,20 @@
+# NØNOS local registry
+# eK@nonos.systems
+#
+# A local registry is the capsule store's index: one record per
+# installed capsule carrying name, version, target, namespace, and the
+# publisher cert fingerprint. Records are reproducible (sorted, tab
+# separated) so the same set of installs yields the same index.
+
+[package]
+name = "nonos-registry"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS local capsule registry index"
+
+[lib]
+name = "nonos_registry"
+path = "src/lib.rs"

@@ -1,0 +1,37 @@
+# NØNOS capsule CLI
+# eK@nonos.systems
+#
+# The Cargo-to-Capsule front end. `nonos-capsule new|build|manifest|sign`
+# turns a Rust crate into a signed capsule package; `nonos
+# install|run|inspect|remove` manages the local capsule store and
+# registry. Signing and verification delegate to the audited hybrid
+# signer; the kernel remains the sole capability enforcer.
+
+[package]
+name = "nonos-capsule"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS Cargo-to-Capsule CLI"
+
+[lib]
+name = "nonos_capsule"
+path = "src/lib.rs"
+
+[[bin]]
+name = "nonos-capsule"
+path = "src/bin/nonos_capsule.rs"
+
+[[bin]]
+name = "nonos"
+path = "src/bin/nonos.rs"
+
+[dependencies]
+nonos-manifest = { path = "../nonos_manifest" }
+nonos-sign-bridge = { path = "../nonos_sign_bridge" }
+nonos-package = { path = "../nonos_package" }
+nonos-install = { path = "../nonos_install" }
+nonos-registry = { path = "../nonos_registry" }
+blake3 = "1"

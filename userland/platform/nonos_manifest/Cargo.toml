@@ -1,0 +1,22 @@
+# NØNOS capsule manifest model
+# eK@nonos.systems
+#
+# Host-side model for a capsule's declared identity and authority:
+# namespace, version, target, publisher cert, capabilities (by name),
+# service endpoints, and hybrid signing seeds. Resolves capability
+# names to the kernel bit layout and renders the exact flag vector the
+# real hybrid signer consumes. Unknown capability names are rejected
+# so nothing is granted implicitly.
+
+[package]
+name = "nonos-manifest"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS capsule manifest model and signer-argument builder"
+
+[lib]
+name = "nonos_manifest"
+path = "src/lib.rs"

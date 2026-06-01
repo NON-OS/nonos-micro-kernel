@@ -1,0 +1,20 @@
+# NØNOS capsule package format
+# eK@nonos.systems
+#
+# On-disk shape of an installable capsule: the payload ELF, the signed
+# manifest, and a small reproducible metadata record (name, version,
+# target). The package carries the audited signature artifacts intact;
+# it adds no trust of its own.
+
+[package]
+name = "nonos-package"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS capsule package layout"
+
+[lib]
+name = "nonos_package"
+path = "src/lib.rs"

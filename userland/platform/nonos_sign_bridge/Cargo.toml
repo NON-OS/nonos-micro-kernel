@@ -1,0 +1,24 @@
+# NØNOS signing bridge
+# eK@nonos.systems
+#
+# Drives the real hybrid signer (nonos-capsule-sign) for a capsule
+# manifest. This crate never performs cryptography itself: it builds
+# the signer's argument vector from a manifest model and shells out to
+# the signer binary, so every capsule keeps its Ed25519 + ML-DSA
+# hybrid signature produced by the audited signer.
+
+[package]
+name = "nonos-sign-bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS bridge to the hybrid capsule signer"
+
+[lib]
+name = "nonos_sign_bridge"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-manifest = { path = "../nonos_manifest" }

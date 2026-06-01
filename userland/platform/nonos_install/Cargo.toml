@@ -1,0 +1,26 @@
+# NØNOS capsule installer
+# eK@nonos.systems
+#
+# Verify-before-install into the capsule store. Verification is
+# delegated to the audited hybrid verifier (capsule-sign
+# verify-manifest), which checks the publisher cert, trust policy, and
+# Ed25519 + ML-DSA signatures; install refuses on any failure. Payload
+# tampering is additionally caught at verified spawn by the kernel.
+
+[package]
+name = "nonos-install"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS verify-before-install into the capsule store"
+
+[lib]
+name = "nonos_install"
+path = "src/lib.rs"
+
+[dependencies]
+nonos-package = { path = "../nonos_package" }
+nonos-sign = { path = "../../../nonos-sign" }
+blake3 = "1"
