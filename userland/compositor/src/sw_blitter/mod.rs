@@ -26,4 +26,22 @@ pub struct Surface {
     pub stride: u32,
     pub width: u32,
     pub height: u32,
+    pub byte_len: u64,
+}
+
+impl Surface {
+    pub fn row_start(self, y: u32, x: u32, width: u32) -> Option<usize> {
+        if width == 0 || y >= self.height || x >= self.width || width > self.width - x {
+            return None;
+        }
+        let row_off = (y as u64).checked_mul(self.stride as u64)?;
+        let col_off = (x as u64).checked_mul(4)?;
+        let span_bytes = (width as u64).checked_mul(4)?;
+        let start = row_off.checked_add(col_off)?;
+        let end = start.checked_add(span_bytes)?;
+        if end > self.byte_len {
+            return None;
+        }
+        usize::try_from(self.base_va.checked_add(start)?).ok()
+    }
 }

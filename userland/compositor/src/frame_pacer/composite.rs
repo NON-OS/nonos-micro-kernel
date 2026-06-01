@@ -22,22 +22,15 @@ use crate::sw_blitter::{self, Surface};
 pub const BACKGROUND_ARGB: u32 = 0xFF10_1620;
 
 pub fn paint(ctx: &mut Context, rect: Rect) {
-    sw_blitter::fill_rect(
-        ctx.backing_va,
-        ctx.stride,
-        rect.x,
-        rect.y,
-        rect.width,
-        rect.height,
-        BACKGROUND_ARGB,
-    );
-    debug::marker(b"fill ok");
     let dst = Surface {
         base_va: ctx.backing_va,
         stride: ctx.stride,
         width: ctx.width,
         height: ctx.height,
+        byte_len: ctx.backing_len,
     };
+    sw_blitter::fill_rect(dst, rect, BACKGROUND_ARGB);
+    debug::marker(b"fill ok");
     let (layers, count) = ctx.scene.z_sorted_snapshot();
     let mut tag = [b'l', b'a', b'y', b'e', b'r', b's', b'=', b'0'];
     tag[7] = b'0' + (count.min(9) as u8);

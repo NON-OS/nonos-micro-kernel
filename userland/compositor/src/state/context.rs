@@ -22,6 +22,7 @@ pub struct Context {
     pub width: u32,
     pub height: u32,
     pub stride: u32,
+    pub backing_len: u64,
     pub backing_va: u64,
     pub first_scanout_done: bool,
     pub scanout_error_reported: bool,

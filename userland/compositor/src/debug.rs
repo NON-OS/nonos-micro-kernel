@@ -17,6 +17,7 @@
 use nonos_libc::mk_debug;
 
 const PREFIX: &[u8] = b"[compositor] ";
+const SPACE: &[u8] = b" ";
 const MAX_LABEL: usize = 200;
 
 pub fn marker(label: &[u8]) {
@@ -28,4 +29,28 @@ pub fn marker(label: &[u8]) {
     buf[prefix_end + label_len] = b'\n';
     let total = prefix_end + label_len + 1;
     let _ = mk_debug(buf.as_ptr(), total);
+}
+
+pub fn marker_u64(label: &[u8], value: u64) {
+    let label_len = if label.len() > MAX_LABEL { MAX_LABEL } else { label.len() };
+    let _ = mk_debug(PREFIX.as_ptr(), PREFIX.len());
+    let _ = mk_debug(label.as_ptr(), label_len);
+    let _ = mk_debug(SPACE.as_ptr(), SPACE.len());
+    emit_u64(value);
+    let _ = mk_debug(b"\n".as_ptr(), 1);
+}
+
+fn emit_u64(mut value: u64) {
+    if value == 0 {
+        let _ = mk_debug(b"0".as_ptr(), 1);
+        return;
+    }
+    let mut buf = [0u8; 20];
+    let mut idx = buf.len();
+    while value > 0 {
+        idx -= 1;
+        buf[idx] = b'0' + (value % 10) as u8;
+        value /= 10;
+    }
+    let _ = mk_debug(buf.as_ptr().wrapping_add(idx), buf.len() - idx);
 }

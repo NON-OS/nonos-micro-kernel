@@ -40,14 +40,16 @@ pub fn composite_layer(
     if x0 >= x1 || y0 >= y1 {
         return;
     }
-    let dst_stride = dst.stride as usize;
-    let src_stride = src.stride as usize;
     let copy_w = (x1 - x0) as usize;
     let src_x0 = (x0 - at_x) as usize;
     for y in y0..y1 {
         let src_row = (y - at_y) as usize;
-        let dst_row_va = dst.base_va as usize + y as usize * dst_stride + x0 as usize * 4;
-        let src_row_va = src.base_va as usize + src_row * src_stride + src_x0 * 4;
+        let Some(dst_row_va) = dst.row_start(y, x0, x1 - x0) else {
+            break;
+        };
+        let Some(src_row_va) = src.row_start(src_row as u32, src_x0 as u32, x1 - x0) else {
+            break;
+        };
         let dst_ptr = dst_row_va as *mut u32;
         let src_ptr = src_row_va as *const u32;
         for col in 0..copy_w {

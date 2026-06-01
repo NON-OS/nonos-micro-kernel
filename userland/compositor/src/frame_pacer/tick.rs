@@ -28,6 +28,8 @@ pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
     debug::marker(b"tick: damage drained");
     if !ctx.first_scanout_done {
         debug::marker(b"first frame");
+        debug::marker_u64(b"damage w", rect.width as u64);
+        debug::marker_u64(b"damage h", rect.height as u64);
     }
     composite::paint(ctx, rect);
     if !ctx.first_scanout_done {

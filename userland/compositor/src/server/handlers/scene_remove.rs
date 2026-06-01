@@ -31,7 +31,8 @@ pub fn handle(
     let Some(owner_pid) = super::u32_at(body, 0) else {
         return respond::status(sender_pid, req, E_INVAL, tx);
     };
-    if owner_pid == 0 || owner_pid != sender_pid {
+    let owner_pid = if owner_pid == 0 { sender_pid } else { owner_pid };
+    if owner_pid != sender_pid {
         return respond::status(sender_pid, req, E_INVAL, tx);
     }
     let mut gone = [0u64; 32];
@@ -46,7 +47,9 @@ pub fn handle(
         ctx.damage.accumulate(rect);
     }
     for handle in gone.iter().take(n) {
-        ctx.attach.forget(*handle);
+        if ctx.attach.forget(*handle).is_err() {
+            return respond::status(sender_pid, req, E_INVAL, tx);
+        }
     }
     respond::status(sender_pid, req, 0, tx)
 }

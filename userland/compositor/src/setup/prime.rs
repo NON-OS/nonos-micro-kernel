@@ -17,6 +17,7 @@
 use nonos_libc::{mk_surface_attach, mk_yield, SurfaceDescriptor, SURFACE_FORMAT_ARGB8888};
 
 use super::discover;
+use crate::debug;
 use crate::gfx_client;
 use crate::state::{
     AttachCache, Context, CursorTracker, DamageAccumulator, FocusTable, SceneTable,
@@ -62,6 +63,10 @@ fn run_virtio_once() -> Result<Context, &'static str> {
     if desc.byte_len < min_bytes {
         return Err("surface attach byte_len too small");
     }
+    debug::marker_u64(b"primary w", desc.width as u64);
+    debug::marker_u64(b"primary h", desc.height as u64);
+    debug::marker_u64(b"primary stride", desc.stride as u64);
+    debug::marker_u64(b"primary bytes", desc.byte_len);
     let mut damage = DamageAccumulator::new();
     damage.mark_full(desc.width, desc.height);
     Ok(Context {
@@ -70,6 +75,7 @@ fn run_virtio_once() -> Result<Context, &'static str> {
         width: desc.width,
         height: desc.height,
         stride: desc.stride,
+        backing_len: desc.byte_len,
         backing_va: rc as u64,
         first_scanout_done: false,
         scanout_error_reported: false,

@@ -14,29 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Writes `argb` into a rectangle of the ARGB8888 surface mapped at
-// `base_va` (which the GPU reads on TRANSFER_TO_HOST). Volatile so the
-// optimizer cannot reorder around the gfx_client RPCs that follow.
+use super::Surface;
+use crate::state::damage::Rect;
 
-pub fn fill_rect(
-    base_va: u64,
-    stride_bytes: u32,
-    x: u32,
-    y: u32,
-    width: u32,
-    height: u32,
-    argb: u32,
-) {
-    if width == 0 || height == 0 {
+pub fn fill_rect(surface: Surface, rect: Rect, argb: u32) {
+    if rect.width == 0 || rect.height == 0 {
         return;
     }
-    let row_stride = stride_bytes as usize;
-    let row_width = width as usize;
-    for row in 0..height as usize {
-        let row_va = base_va as usize + (y as usize + row) * row_stride + x as usize * 4;
+    let x1 = rect.x.saturating_add(rect.width).min(surface.width);
+    let y1 = rect.y.saturating_add(rect.height).min(surface.height);
+    if rect.x >= x1 || rect.y >= y1 {
+        return;
+    }
+    let row_width = (x1 - rect.x) as usize;
+    for y in rect.y..y1 {
+        let Some(row_va) = surface.row_start(y, rect.x, x1 - rect.x) else {
+            break;
+        };
         let row_ptr = row_va as *mut u32;
-        // SAFETY: caller provides a mapped ARGB8888 surface and the
-        // requested rectangle is already clipped by the caller.
         unsafe { core::slice::from_raw_parts_mut(row_ptr, row_width).fill(argb) };
     }
 }
