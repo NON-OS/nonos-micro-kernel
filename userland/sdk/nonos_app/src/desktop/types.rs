@@ -14,14 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_abi::InputEvent;
+use nonos_desktop::Peers;
 
-use crate::canvas::Canvas;
-
-pub trait Control {
-    fn paint(&self, canvas: &mut Canvas<'_>);
-    fn on_event(&mut self, event: &InputEvent) -> bool;
-    fn wants_close(&self) -> bool {
-        false
-    }
+pub(crate) struct DesktopWindow {
+    pub(crate) handle: u64,
+    pub(crate) backing: *mut u32,
+    pub(crate) pixels: usize,
+    pub(crate) byte_len: u64,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) window_id: u32,
+    pub(crate) peers: Peers,
+    pub(crate) rid: u32,
 }

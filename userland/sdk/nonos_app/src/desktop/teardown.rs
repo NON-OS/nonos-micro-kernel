@@ -14,14 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_abi::InputEvent;
+use nonos_desktop::{scene_remove, window_close};
+use nonos_runtime::munmap;
+use nonos_surface::destroy;
 
-use crate::canvas::Canvas;
+use super::types::DesktopWindow;
 
-pub trait Control {
-    fn paint(&self, canvas: &mut Canvas<'_>);
-    fn on_event(&mut self, event: &InputEvent) -> bool;
-    fn wants_close(&self) -> bool {
-        false
+impl DesktopWindow {
+    pub(crate) fn close(self) {
+        let _ = scene_remove(self.peers.compositor, self.rid, 0);
+        let _ = destroy(self.handle);
+        let _ = destroy(self.handle);
+        let _ = munmap(self.backing as *mut u8, self.byte_len as usize);
+        let _ = window_close(self.peers.wm, self.rid.wrapping_add(1).max(1), self.window_id);
     }
 }

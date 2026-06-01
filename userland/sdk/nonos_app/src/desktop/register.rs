@@ -14,14 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_abi::InputEvent;
+use nonos_surface::{create, share, SurfaceDescriptor, SURFACE_FORMAT_ARGB8888};
 
-use crate::canvas::Canvas;
-
-pub trait Control {
-    fn paint(&self, canvas: &mut Canvas<'_>);
-    fn on_event(&mut self, event: &InputEvent) -> bool;
-    fn wants_close(&self) -> bool {
-        false
+pub(super) fn register_share(
+    base: *mut u32,
+    width: u32,
+    height: u32,
+    stride: u32,
+    byte_len: u64,
+) -> Option<u64> {
+    let desc = SurfaceDescriptor {
+        width,
+        height,
+        stride,
+        format: SURFACE_FORMAT_ARGB8888,
+        byte_len,
+        base_va: base as u64,
+        flags: 0,
+    };
+    let sid = create(&desc);
+    if sid < 0 {
+        return None;
     }
+    let handle = share(sid as u64);
+    if handle <= 0 {
+        return None;
+    }
+    Some(handle as u64)
 }

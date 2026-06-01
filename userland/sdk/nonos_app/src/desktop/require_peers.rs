@@ -14,14 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_abi::InputEvent;
+use nonos_desktop::{lookup_peers, Peers};
+use nonos_runtime::yield_now;
 
-use crate::canvas::Canvas;
+const ATTEMPTS: usize = 256;
 
-pub trait Control {
-    fn paint(&self, canvas: &mut Canvas<'_>);
-    fn on_event(&mut self, event: &InputEvent) -> bool;
-    fn wants_close(&self) -> bool {
-        false
+pub(super) fn require_peers() -> Option<Peers> {
+    for _ in 0..ATTEMPTS {
+        if let Some(peers) = lookup_peers() {
+            return Some(peers);
+        }
+        yield_now();
     }
+    None
 }

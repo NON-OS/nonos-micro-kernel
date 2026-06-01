@@ -14,14 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_abi::InputEvent;
+use nonos_runtime::mmap;
 
-use crate::canvas::Canvas;
+const PROT_RW: i32 = 0x1 | 0x2;
+const MAP_PRIVATE_ANON: i32 = 0x02 | 0x20;
 
-pub trait Control {
-    fn paint(&self, canvas: &mut Canvas<'_>);
-    fn on_event(&mut self, event: &InputEvent) -> bool;
-    fn wants_close(&self) -> bool {
-        false
+pub(super) fn alloc_backing(width: u32, height: u32) -> Option<(*mut u32, u32, u64)> {
+    let stride = width * 4;
+    let byte_len = width as u64 * height as u64 * 4;
+    let base = mmap(core::ptr::null_mut(), byte_len as usize, PROT_RW, MAP_PRIVATE_ANON, -1, 0);
+    if base.is_null() || (base as i64) < 0 {
+        return None;
     }
+    Some((base as *mut u32, stride, byte_len))
 }

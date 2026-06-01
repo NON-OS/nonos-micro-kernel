@@ -20,8 +20,8 @@ extern crate alloc;
 
 mod app;
 mod background;
+mod desktop;
 mod new;
-mod paint_all;
 mod run;
 mod show;
 mod size;

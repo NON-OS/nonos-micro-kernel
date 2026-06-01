@@ -14,32 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_desktop::drain_input;
 use nonos_runtime::{
-    exit, input_drain, yield_now, InputEvent, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP,
+    exit, yield_now, InputEvent, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP,
     INPUT_KIND_POINTER_ABS,
 };
 use nonos_ui::Control;
-use nonos_window::Window;
 
 use super::app::App;
-use super::paint_all::paint_all;
+use super::desktop::{paint_present, DesktopWindow};
+
+const WINDOW_ID: u32 = 1;
 
 impl App {
     pub fn run<C: Control>(self, mut root: C) -> ! {
-        let mut win = match Window::new(self.width, self.height) {
+        let mut win = match DesktopWindow::open(self.width, self.height, WINDOW_ID) {
             Some(w) => w,
             None => exit(1),
         };
-        let (w, h) = (win.width(), win.height());
-        paint_all(&mut win, w, h, self.background, &root);
+        paint_present(&mut win, self.background, &root);
         let (mut px, mut py) = (0i32, 0i32);
         let mut buf = [InputEvent::default(); 16];
         loop {
-            let n = input_drain(&mut buf);
+            let n = drain_input(&mut buf);
             if n > 0 {
-                let count = (n as usize).min(buf.len());
                 let mut repaint = false;
-                for ev in buf.iter().take(count) {
+                for ev in buf.iter().take(n) {
                     let mut e = *ev;
                     if e.kind == INPUT_KIND_POINTER_ABS {
                         px = e.x;
@@ -52,8 +52,12 @@ impl App {
                         repaint = true;
                     }
                 }
+                if root.wants_close() {
+                    win.close();
+                    exit(0);
+                }
                 if repaint {
-                    paint_all(&mut win, w, h, self.background, &root);
+                    paint_present(&mut win, self.background, &root);
                 }
             }
             yield_now();

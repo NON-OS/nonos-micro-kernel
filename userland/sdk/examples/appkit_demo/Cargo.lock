@@ -36,7 +36,10 @@ dependencies = [
 name = "nonos-app"
 version = "0.1.0"
 dependencies = [
+ "nonos-abi",
+ "nonos-desktop",
  "nonos-runtime",
+ "nonos-surface",
  "nonos-ui",
  "nonos-window",
 ]
@@ -53,6 +56,15 @@ dependencies = [
 [[package]]
 name = "nonos-cap"
 version = "0.1.0"
+
+[[package]]
+name = "nonos-desktop"
+version = "0.1.0"
+dependencies = [
+ "nonos-abi",
+ "nonos-ipc",
+ "nonos-service",
+]
 
 [[package]]
 name = "nonos-example-appkit"

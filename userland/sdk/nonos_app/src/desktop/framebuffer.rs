@@ -14,14 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_abi::InputEvent;
+use super::types::DesktopWindow;
 
-use crate::canvas::Canvas;
-
-pub trait Control {
-    fn paint(&self, canvas: &mut Canvas<'_>);
-    fn on_event(&mut self, event: &InputEvent) -> bool;
-    fn wants_close(&self) -> bool {
-        false
+impl DesktopWindow {
+    pub(crate) fn framebuffer(&mut self) -> &mut [u32] {
+        unsafe { core::slice::from_raw_parts_mut(self.backing, self.pixels) }
     }
 }

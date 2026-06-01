@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_ui::{Canvas, Color, Control};
-use nonos_window::Window;
 
-pub(crate) fn paint_all<C: Control>(win: &mut Window, w: u32, h: u32, bg: Color, root: &C) {
+use super::types::DesktopWindow;
+
+pub(crate) fn paint_present<C: Control>(win: &mut DesktopWindow, bg: Color, root: &C) {
+    let (w, h) = (win.width, win.height);
     {
         let mut canvas = Canvas::new(win.framebuffer(), w, h);
         canvas.fill(bg);

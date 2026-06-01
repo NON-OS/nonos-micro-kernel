@@ -14,14 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_abi::InputEvent;
+use nonos_desktop::{scene_submit, subscribe, window_open, Peers};
 
-use crate::canvas::Canvas;
+const APP_LAYER_Z: u32 = 2;
+const INPUT_MASK: u32 = 0xFF;
 
-pub trait Control {
-    fn paint(&self, canvas: &mut Canvas<'_>);
-    fn on_event(&mut self, event: &InputEvent) -> bool;
-    fn wants_close(&self) -> bool {
-        false
+pub(super) fn announce(peers: &Peers, window_id: u32, handle: u64, width: u32, height: u32) -> bool {
+    if window_open(peers.wm, 1, window_id, 0, 0, 0, width, height).is_err() {
+        return false;
     }
+    if scene_submit(peers.compositor, 2, handle, 0, 0, width, height, APP_LAYER_Z).is_err() {
+        return false;
+    }
+    subscribe(peers.input_router, 3, INPUT_MASK).is_ok()
 }

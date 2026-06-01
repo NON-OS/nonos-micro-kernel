@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_abi::InputEvent;
+use nonos_desktop::damage_commit;
 
-use crate::canvas::Canvas;
+use super::types::DesktopWindow;
 
-pub trait Control {
-    fn paint(&self, canvas: &mut Canvas<'_>);
-    fn on_event(&mut self, event: &InputEvent) -> bool;
-    fn wants_close(&self) -> bool {
-        false
+impl DesktopWindow {
+    pub(crate) fn present(&mut self) {
+        let _ = damage_commit(self.peers.compositor, self.rid, 0, 0, self.width, self.height);
+        self.rid = self.rid.wrapping_add(1).max(1);
     }
 }
