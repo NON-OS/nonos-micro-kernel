@@ -86,7 +86,15 @@ pub fn select_next_process() -> Option<u32> {
 
 fn select_by_priority(pids: &[u32], last: u32, current: u32, prio: Priority) -> Option<u32> {
     use crate::process::nonos_core::{ProcessState, PROCESS_TABLE};
-    let start = pids.iter().position(|&p| p == last).map(|i| i + 1).unwrap_or(0);
+    // Round-robin anchor: resume the scan just after the last-scheduled pid. The
+    // running pid is pulled out of the queue while it runs, so `last` is usually
+    // absent; falling back to 0 there would restart every scan at the front and
+    // starve pids near the tail. Continue at the first pid past `last` instead so
+    // the rotation keeps advancing across the whole queue.
+    let start = match pids.iter().position(|&p| p == last) {
+        Some(i) => i + 1,
+        None => pids.iter().position(|&p| p > last).unwrap_or(0),
+    };
     for &pid in pids[start..].iter().chain(pids[..start].iter()) {
         if pid == current {
             continue;

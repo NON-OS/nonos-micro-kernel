@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::preemption::SCHEDULER_STATS;
-use super::run_queue::{add_to_run_queue_front, remove_from_run_queue};
+use super::run_queue::{add_to_run_queue, remove_from_run_queue};
 use alloc::collections::BTreeMap;
 use core::sync::atomic::Ordering;
 
@@ -34,15 +34,19 @@ pub fn sleep_until(pid: u32, wake_time_ms: u64) {
 pub fn wake_process(pid: u32) {
     use crate::process::nonos_core::{ProcessState, PROCESS_TABLE};
     SLEEPING_PROCESSES.write().remove(&pid);
+    let mut woke = false;
     if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
         let mut state = pcb.state.lock();
         if *state == ProcessState::Sleeping {
             *state = ProcessState::Ready;
+            woke = true;
         }
     }
-    add_to_run_queue_front(pid);
-    SCHEDULER_STATS.wakeups.fetch_add(1, Ordering::Relaxed);
-    crate::log_debug!("Process {} woken up", pid);
+    if woke {
+        add_to_run_queue(pid);
+        SCHEDULER_STATS.wakeups.fetch_add(1, Ordering::Relaxed);
+        crate::log_debug!("Process {} woken up", pid);
+    }
 }
 
 pub fn is_sleeping(pid: u32) -> bool {
