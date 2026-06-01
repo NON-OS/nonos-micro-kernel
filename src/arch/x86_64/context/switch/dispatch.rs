@@ -25,12 +25,14 @@ use super::resume::try_resume;
 static DISPATCH_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn trace(label: &[u8], pid: u32) {
-    if !matches!(pid, 7 | 8 | 0x1b | 0x1c | 0x26 | 0x27)
-        || DISPATCH_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 32
+    if !matches!(pid, 7 | 8 | 9 | 0x1b | 0x1c | 0x26 | 0x27)
+        || DISPATCH_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 64
     {
         return;
     }
-    crate::sys::serial::print(b"[DISPATCH] ");
+    crate::sys::serial::print(b"[DISPATCH] pid=");
+    crate::sys::serial::print_hex(pid as u64);
+    crate::sys::serial::print(b" ");
     crate::sys::serial::println(label);
 }
 

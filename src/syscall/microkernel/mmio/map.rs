@@ -66,7 +66,12 @@ pub fn sys_mmio_map(
     crate::sys::serial::println(b"[MMIO] broker");
     let result = match broker::map_for_caller(pid, req) {
         Ok(r) => r,
-        Err(e) => return errno_for(e),
+        Err(e) => {
+            crate::sys::serial::print(b"[MMIO] err=");
+            crate::sys::serial::print_dec(errno_for(e) as u64);
+            crate::sys::serial::println(b"");
+            return errno_for(e);
+        }
     };
     crate::sys::serial::println(b"[MMIO] broker ok");
     let out =
@@ -75,7 +80,9 @@ pub fn sys_mmio_map(
     if write_user_value(out_ptr, &out).is_err() {
         // Pages are mapped but the caller can't read the result. Roll
         // the grant back so we don't leak a window with no handle.
-        let _ = broker::unmap_grant(pid, result.grant_id);
+        if broker::unmap_grant(pid, result.grant_id).is_err() {
+            crate::sys::serial::println(b"[MMIO] rollback failed");
+        }
         return ERRNO_FAULT;
     }
     0

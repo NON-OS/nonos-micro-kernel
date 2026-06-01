@@ -83,9 +83,12 @@ pub fn map_for_caller(pid: u32, req: MmioMapRequest) -> Result<MmioMapResult, Mm
     }
     crate::sys::serial::println(b"[MMIO] reserve");
     let msix = pci_index::lookup(req.device_id).and_then(|h| h.msix);
+    crate::sys::serial::println(b"[MMIO] msix");
     msix_exclusion::validate(msix.as_ref(), req.bar_index, req.offset, req.length)?;
+    crate::sys::serial::println(b"[MMIO] msix ok");
     let pages = req.length / PAGE_SIZE;
     let user_va = grant::reserve_user_va(pages).ok_or(MmioMapError::NoVaSpace)?;
+    crate::sys::serial::println(b"[MMIO] va");
     let user_va_end = user_va.as_u64().checked_add(req.length).ok_or(MmioMapError::Overflow)?;
     if user_va.as_u64() < USER_MMIO_BASE || user_va_end > USER_MMIO_END {
         return Err(MmioMapError::NoVaSpace);
