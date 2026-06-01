@@ -22,10 +22,8 @@ extern crate alloc;
 mod settings;
 
 use nonos_app_skeleton::run;
-use nonos_libc::heap_init;
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
-    let _ = heap_init();
-    run(settings::Settings::new())
+    run(settings::Settings::new)
 }

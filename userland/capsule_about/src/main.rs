@@ -25,5 +25,5 @@ use nonos_app_skeleton::run;
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
-    run(about::About::new())
+    run(about::About::new)
 }

@@ -16,8 +16,7 @@
 
 use nonos_desktop::drain_input;
 use nonos_runtime::{
-    exit, yield_now, InputEvent, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP,
-    INPUT_KIND_POINTER_ABS,
+    exit, InputEvent, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP, INPUT_KIND_POINTER_ABS,
 };
 use nonos_ui::Control;
 
@@ -60,7 +59,6 @@ impl App {
                     paint_present(&mut win, self.background, &root);
                 }
             }
-            yield_now();
         }
     }
 }

@@ -19,14 +19,25 @@
 
 extern crate alloc;
 
+use nonos_libc::{heap_init, mk_debug, mk_exit, HeapError};
 use nonos_toolkit::server;
-use nonos_libc::{heap_init, mk_exit, HeapError};
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
+    debug(b"[toolkit] start\n");
     match heap_init() {
         Ok(()) | Err(HeapError::AlreadyInitialized) => {}
-        Err(_) => mk_exit(1),
+        Err(_) => fail(1, b"[toolkit] heap fail\n"),
     }
+    debug(b"[toolkit] server\n");
     server::runner::run();
+}
+
+fn debug(label: &[u8]) {
+    let _ = mk_debug(label.as_ptr(), label.len());
+}
+
+fn fail(code: i32, label: &[u8]) -> ! {
+    debug(label);
+    mk_exit(code)
 }

@@ -25,5 +25,5 @@ use nonos_app_skeleton::run;
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
-    run(editor::Editor::new())
+    run(editor::Editor::new)
 }

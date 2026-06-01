@@ -16,33 +16,33 @@
 
 use alloc::vec;
 
-use nonos_libc::{mk_ipc_recv_from, mk_yield};
+use nonos_libc::mk_ipc_recv_from;
 
 use crate::protocol::{parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_DECODE_BMP, OP_DECODE_JPEG, OP_DECODE_LZ4_RAW, OP_DECODE_PNG, OP_HEALTHCHECK};
 use crate::server::{handlers, respond};
 
 const SERVICE_INBOX: u64 = 0;
+const RECV_BLOCK: u64 = 0;
 const RECV_NOWAIT: u64 = 1;
 
 pub fn run() -> ! {
     let mut rx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut tx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     loop {
-        if !drain_ipc(&mut rx, &mut tx) {
-            let _ = mk_yield();
-        }
+        drain_ipc(&mut rx, &mut tx);
     }
 }
 
-fn drain_ipc(rx: &mut [u8], tx: &mut [u8]) -> bool {
-    let mut did = false;
+fn drain_ipc(rx: &mut [u8], tx: &mut [u8]) {
+    let mut blocking = true;
     loop {
         let mut sender_pid = 0u32;
-        let n = mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), RECV_NOWAIT, &mut sender_pid);
+        let timeout = if blocking { RECV_BLOCK } else { RECV_NOWAIT };
+        let n = mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), timeout, &mut sender_pid);
         if n <= 0 || sender_pid == 0 {
-            return did;
+            return;
         }
-        did = true;
+        blocking = false;
         let parsed = parse(&rx[..n as usize]);
         let (req, body) = match parsed {
             Ok(v) => v,

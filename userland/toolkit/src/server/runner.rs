@@ -18,7 +18,7 @@ extern crate alloc;
 
 use alloc::vec;
 
-use nonos_libc::{mk_exit, mk_ipc_recv_from, mk_ipc_reply};
+use nonos_libc::{mk_debug, mk_exit, mk_ipc_recv_from, mk_ipc_reply};
 
 use crate::protocol::{decode, encode, Header, HDR_LEN, IPC_PAYLOAD_MAX, TOOLKIT_ENDPOINT};
 
@@ -33,6 +33,7 @@ pub fn run() -> ! {
         let mut sender_pid = 0u32;
         let n = mk_ipc_recv_from(TOOLKIT_ENDPOINT, rx.as_mut_ptr(), rx.len(), 0, &mut sender_pid);
         if n == ENOTSUP {
+            let _ = mk_debug(b"[toolkit] recv unsupported\n".as_ptr(), 27);
             mk_exit(0);
         }
         if n <= 0 || sender_pid == 0 {

@@ -25,5 +25,5 @@ use nonos_app_skeleton::run;
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
-    run(fm::FileManager::new())
+    run(fm::FileManager::new)
 }
