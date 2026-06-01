@@ -23,3 +23,6 @@ path = "src/lib.rs"
 nonos-runtime = { path = "../../nonos_runtime" }
 nonos-window = { path = "../nonos_window" }
 nonos-ui = { path = "../nonos_ui" }
+nonos-desktop = { path = "../nonos_desktop" }
+nonos-surface = { path = "../../nonos_surface" }
+nonos-abi = { path = "../../nonos_abi" }
