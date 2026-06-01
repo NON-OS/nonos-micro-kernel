@@ -29,7 +29,7 @@ use spin::Mutex;
 use super::super::tlb;
 use crate::memory::addr::VirtAddr;
 use crate::memory::paging::constants::PAGE_SIZE_4K;
-use crate::smp::cpu_count;
+use crate::smp::cpus_online;
 use crate::smp::percpu::ASID_NONE;
 
 /// `0` is the sentinel for "kernel half" or "no asid scoping". A
@@ -50,7 +50,7 @@ static REQ_PENDING_ACKS: AtomicU32 = AtomicU32::new(0);
 #[inline]
 pub fn flush_tlb_one_smp(va: VirtAddr, asid: u32) {
     tlb::invalidate_page(va);
-    if cpu_count() <= 1 {
+    if cpus_online() <= 1 {
         return;
     }
     broadcast(va, 1, asid);
@@ -69,7 +69,7 @@ pub fn flush_tlb_range_smp(start: VirtAddr, page_count: usize, asid: u32) {
         let va = VirtAddr::new(start.as_u64() + (i * PAGE_SIZE_4K) as u64);
         tlb::invalidate_page(va);
     }
-    if cpu_count() <= 1 {
+    if cpus_online() <= 1 {
         return;
     }
     broadcast(start, page_count as u32, asid);
@@ -78,7 +78,7 @@ pub fn flush_tlb_range_smp(start: VirtAddr, page_count: usize, asid: u32) {
 #[inline]
 pub fn flush_tlb_all_smp(asid: u32) {
     tlb::invalidate_all();
-    if cpu_count() <= 1 {
+    if cpus_online() <= 1 {
         return;
     }
     // Encode "flush whole TLB" as page_count == 0 in the request
@@ -89,7 +89,7 @@ pub fn flush_tlb_all_smp(asid: u32) {
 fn broadcast(va: VirtAddr, page_count: u32, asid: u32) {
     let _guard = SHOOTDOWN_LOCK.lock();
     let self_cpu = crate::smp::cpu_id();
-    let count = cpu_count();
+    let count = cpus_online();
     let mut targets: u32 = 0;
     for cpu in 0..count {
         if cpu == self_cpu {
