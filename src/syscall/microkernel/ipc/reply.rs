@@ -72,7 +72,10 @@ pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {
         }
     };
     let rc = match try_enqueue_strict(&dest, msg) {
-        Ok(()) => 0,
+        Ok(()) => {
+            crate::sched::wake_process(dest_pid as u32);
+            0
+        }
         Err(StrictEnqueueError::MissingInbox) | Err(StrictEnqueueError::DeadOwner) => ERRNO_NOENT,
         Err(StrictEnqueueError::QueueFull(_)) => ERRNO_BUSY,
     };
