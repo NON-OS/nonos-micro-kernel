@@ -33,6 +33,7 @@
 use super::Capability;
 
 #[cfg(any(
+    feature = "nonos-user-entry-proof",
     feature = "nonos-ramfs-smoketest",
     feature = "nonos-keyring-smoketest",
     feature = "nonos-entropy-smoketest",
@@ -51,6 +52,7 @@ pub fn debug_grant() -> u64 {
 }
 
 #[cfg(not(any(
+    feature = "nonos-user-entry-proof",
     feature = "nonos-ramfs-smoketest",
     feature = "nonos-keyring-smoketest",
     feature = "nonos-entropy-smoketest",

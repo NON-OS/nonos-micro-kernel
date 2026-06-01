@@ -1112,6 +1112,24 @@ nonos-mk-debug: nonos-mk-desktop-gui-prod nonos-mk-esp
 		$(QEMU_NET) $(QEMU_RNG) \
 		-serial mon:stdio -vga std -s -S -no-reboot
 
+.PHONY: nonos-mk-tamper nonos-mk-tamper-run nonos-mk-tamper-restore nonos-mk-tamper-status
+nonos-mk-tamper:
+	@nonos-utils/tamper_kernel.sh tamper $(ESP_DIR)/EFI/nonos/kernel.bin
+
+nonos-mk-tamper-restore:
+	@nonos-utils/tamper_kernel.sh restore $(ESP_DIR)/EFI/nonos/kernel.bin
+
+nonos-mk-tamper-status:
+	@nonos-utils/tamper_kernel.sh status $(ESP_DIR)/EFI/nonos/kernel.bin
+
+nonos-mk-tamper-run:
+	@echo "Booting current ESP as-is (no rebuild)..."
+	@$(QEMU) -m $(QEMU_MEM) -cpu $(QEMU_CPU) -smp $(QEMU_SMP) -machine q35 \
+		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
+		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
+		$(QEMU_NET) $(QEMU_RNG) \
+		-serial mon:stdio -vga std -no-reboot
+
 # Boot-test harnesses
 
 nonos-mk-boot-ramfs:
@@ -1325,3 +1343,13 @@ boot-test:                             nonos-mk-boot-ramfs
 check-static:                          nonos-mk-static
 clean-kernel-only:                     nonos-mk-clean
 microkernel-symbol-scan:               nonos-mk-scan
+
+# ---------------------------------------------------------------------------
+# Cargo-to-Capsule host pipeline. Builds the hybrid signer and the nonos CLI,
+# then runs the end-to-end proof: sign a package through the real Ed25519 +
+# ML-DSA signer, install it, and confirm tampered/unsigned packages refuse.
+.PHONY: nonos-mk-cargo-to-capsule-test
+nonos-mk-cargo-to-capsule-test:
+	@cd nonos-sign && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) build --release --bin capsule-sign
+	@cd userland/platform/nonos_capsule && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) build --release
+	@bash userland/platform/tests/cargo_to_capsule.sh

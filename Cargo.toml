@@ -208,6 +208,7 @@ microkernel-capsules = [
 microkernel-proof-io = [
   "microkernel-core",
   "nonos-production",
+  "nonos-user-entry-proof",
   "nonos-capsule-proof-io",
 ]
 
