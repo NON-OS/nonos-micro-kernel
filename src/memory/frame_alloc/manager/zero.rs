@@ -14,12 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod alloc;
-mod global;
-mod stats;
-mod zero;
+use super::super::constants::FRAME_SIZE;
+use crate::memory::addr::PhysAddr;
+use crate::memory::layout::{DIRECTMAP_BASE, DIRECTMAP_SIZE};
 
-pub use alloc::{add_memory_region, alloc_frame, allocate_frame, deallocate_frame};
-pub use global::{get_allocator, init, is_initialized};
-pub use stats::{get_stats, total_free_frames};
-pub use zero::zero_frame;
+pub fn zero_frame(addr: PhysAddr) {
+    let pa = addr.as_u64();
+    if pa >= DIRECTMAP_SIZE {
+        return;
+    }
+    let va = DIRECTMAP_BASE.wrapping_add(pa);
+    if va < DIRECTMAP_BASE || va.wrapping_add(FRAME_SIZE) > DIRECTMAP_BASE.wrapping_add(DIRECTMAP_SIZE)
+    {
+        return;
+    }
+    unsafe {
+        core::ptr::write_bytes(va as *mut u8, 0, FRAME_SIZE as usize);
+    }
+}

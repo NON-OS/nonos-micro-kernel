@@ -38,6 +38,7 @@ pub fn allocate_frame() -> Option<PhysAddr> {
 }
 
 pub fn deallocate_frame(addr: PhysAddr) -> FrameResult<()> {
+    super::zero::zero_frame(addr);
     let frame = PhysFrame::containing_address(addr.into());
     get_allocator().lock().dealloc(frame)
 }
