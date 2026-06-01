@@ -56,7 +56,12 @@ pub fn register_wallpaper(
         backing.height,
         BOTTOM_Z,
     ) {
-        let _ = mk_surface_release(handle as u64);
+        if mk_surface_release(handle as u64) < 0 {
+            return Err("wallpaper surface release rejected");
+        }
+        if mk_surface_release(handle as u64) < 0 {
+            return Err("wallpaper surface release rejected");
+        }
         return Err(e);
     }
     Ok(handle as u64)
