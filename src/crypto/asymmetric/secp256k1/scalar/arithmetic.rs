@@ -39,61 +39,40 @@ pub(crate) fn reduce(s: &mut Scalar) {
 }
 
 fn reduce_wide(wide: &[u128; 8]) -> Scalar {
-    let mut w = [0u64; 8];
-    for i in 0..8 {
-        w[i] = wide[i] as u64;
-    }
-
     const R: [u64; 4] =
         [0x402DA1732FC9BEBF, 0x4551231950B75FC4, 0x0000000000000001, 0x0000000000000000];
 
-    let mut acc = [0u128; 8];
-
-    for i in 0..4 {
-        acc[i] = w[i] as u128;
+    let mut limbs = [0u64; 8];
+    for i in 0..8 {
+        limbs[i] = wide[i] as u64;
     }
 
-    for i in 0..4 {
-        for j in 0..4 {
-            acc[i + j] += (w[4 + i] as u128) * (R[j] as u128);
-        }
-    }
+    while limbs[4] | limbs[5] | limbs[6] | limbs[7] != 0 {
+        let mut acc = [0u64; 8];
+        acc[0] = limbs[0];
+        acc[1] = limbs[1];
+        acc[2] = limbs[2];
+        acc[3] = limbs[3];
 
-    for i in 0..7 {
-        acc[i + 1] += acc[i] >> 64;
-        acc[i] &= 0xFFFFFFFFFFFFFFFF;
-    }
-
-    let mut result = [0u64; 4];
-    for i in 0..4 {
-        result[i] = acc[i] as u64;
-    }
-
-    let mut overflow = [0u64; 4];
-    for i in 0..4 {
-        overflow[i] = acc[4 + i] as u64;
-    }
-
-    let mut has_overflow = 0u64;
-    for i in 0..4 {
-        has_overflow |= overflow[i];
-    }
-
-    if has_overflow != 0 {
-        let mut carry = 0u128;
         for i in 0..4 {
+            let mut carry = 0u128;
             for j in 0..4 {
-                if i + j < 4 {
-                    carry += (overflow[i] as u128) * (R[j] as u128);
-                    carry += result[i + j] as u128;
-                    result[i + j] = carry as u64;
-                    carry >>= 64;
-                }
+                let p = acc[i + j] as u128 + limbs[4 + i] as u128 * R[j] as u128 + carry;
+                acc[i + j] = p as u64;
+                carry = p >> 64;
+            }
+            let mut q = i + 4;
+            while carry != 0 && q < 8 {
+                let p = acc[q] as u128 + carry;
+                acc[q] = p as u64;
+                carry = p >> 64;
+                q += 1;
             }
         }
+        limbs = acc;
     }
 
-    let mut res = Scalar(result);
+    let mut res = Scalar([limbs[0], limbs[1], limbs[2], limbs[3]]);
     reduce(&mut res);
     reduce(&mut res);
     res
@@ -108,6 +87,21 @@ impl Scalar {
             carry += self.0[i] as u128 + other.0[i] as u128;
             result[i] = carry as u64;
             carry >>= 64;
+        }
+
+        const RR: [u64; 4] =
+            [0x402DA1732FC9BEBF, 0x4551231950B75FC4, 0x0000000000000001, 0x0000000000000000];
+        let mut fold = 0u128;
+        for i in 0..4 {
+            fold += result[i] as u128 + carry * RR[i] as u128;
+            result[i] = fold as u64;
+            fold >>= 64;
+        }
+        let mut fold2 = 0u128;
+        for i in 0..4 {
+            fold2 += result[i] as u128 + fold * RR[i] as u128;
+            result[i] = fold2 as u64;
+            fold2 >>= 64;
         }
 
         let mut res = Self(result);

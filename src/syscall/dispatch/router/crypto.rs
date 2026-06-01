@@ -16,8 +16,9 @@
 
 use crate::syscall::dispatch::crypto::{
     handle_crypto_decrypt, handle_crypto_ed25519_verify, handle_crypto_encrypt, handle_crypto_hash,
-    handle_crypto_keccak256, handle_crypto_random, handle_crypto_secp256k1_sign,
-    handle_hkdf_sha256, handle_hmac_sha256, handle_x25519_public, handle_x25519_shared,
+    handle_crypto_keccak256, handle_crypto_random, handle_crypto_secp256k1_pubkey,
+    handle_crypto_secp256k1_sign, handle_hkdf_sha256, handle_hmac_sha256, handle_x25519_public,
+    handle_x25519_shared,
 };
 use crate::syscall::dispatch::util::errno;
 use crate::syscall::numbers::SyscallNumber;
@@ -44,6 +45,7 @@ pub(super) fn dispatch_crypto(
         SyscallNumber::CryptoHkdfSha256 => handle_hkdf_sha256(a0, a1, a2, a3),
         SyscallNumber::CryptoKeccak256 => handle_crypto_keccak256(a0, a1, a2, a3),
         SyscallNumber::CryptoSecp256k1Sign => handle_crypto_secp256k1_sign(a0, a1, a2),
+        SyscallNumber::CryptoSecp256k1Pubkey => handle_crypto_secp256k1_pubkey(a0, a1),
         _ => errno(38),
     }
 }

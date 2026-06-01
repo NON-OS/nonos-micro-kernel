@@ -31,6 +31,7 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     r(b"CHKF", SyscallNumber::CryptoHkdfSha256, "CryptoHkdfSha256"),
     r(b"CKEC", SyscallNumber::CryptoKeccak256, "CryptoKeccak256"),
     r(b"CSKS", SyscallNumber::CryptoSecp256k1Sign, "CryptoSecp256k1Sign"),
+    r(b"CSPB", SyscallNumber::CryptoSecp256k1Pubkey, "CryptoSecp256k1Pubkey"),
 ];
 
 const fn r(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {

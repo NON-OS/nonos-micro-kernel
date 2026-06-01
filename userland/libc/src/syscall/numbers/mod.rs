@@ -44,6 +44,7 @@ pub(crate) const N_CRYPTO_HMAC_SHA256: i64 = tag4(b"CHMC");
 pub(crate) const N_CRYPTO_HKDF_SHA256: i64 = tag4(b"CHKF");
 pub(crate) const N_CRYPTO_KECCAK256: i64 = tag4(b"CKEC");
 pub(crate) const N_CRYPTO_SECP256K1_SIGN: i64 = tag4(b"CSKS");
+pub(crate) const N_CRYPTO_SECP256K1_PUBKEY: i64 = tag4(b"CSPB");
 pub(crate) const N_GFX_DISPLAY_DIMENSIONS: i64 = tag4(b"GDIM");
 pub(crate) const N_GFX_SURFACE_CREATE: i64 = tag4(b"GSCR");
 pub(crate) const N_GFX_SURFACE_DESTROY: i64 = tag4(b"GSDS");

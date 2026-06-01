@@ -14,23 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod aead;
-mod error;
-mod hash;
-mod keccak;
-mod primitives;
-mod random;
-mod secp256k1_pubkey;
-mod secp256k1_sign;
-mod verify;
+use crate::syscall::{call_raw, N_CRYPTO_SECP256K1_PUBKEY};
 
-pub use aead::{handle_crypto_decrypt, handle_crypto_encrypt};
-pub use hash::handle_crypto_hash;
-pub use keccak::handle_crypto_keccak256;
-pub use primitives::{
-    handle_hkdf_sha256, handle_hmac_sha256, handle_x25519_public, handle_x25519_shared,
-};
-pub use random::handle_crypto_random;
-pub use secp256k1_pubkey::handle_crypto_secp256k1_pubkey;
-pub use secp256k1_sign::handle_crypto_secp256k1_sign;
-pub use verify::handle_crypto_ed25519_verify;
+#[no_mangle]
+pub extern "C" fn crypto_secp256k1_pubkey(sk: *const u8, out: *mut u8) -> i64 {
+    call_raw(N_CRYPTO_SECP256K1_PUBKEY, [sk as u64, out as u64, 0, 0, 0, 0])
+}

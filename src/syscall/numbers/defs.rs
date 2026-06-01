@@ -29,6 +29,7 @@ pub enum SyscallNumber {
     CryptoX25519Public = tag4(b"CXPK"), CryptoX25519Shared = tag4(b"CXSH"),
     CryptoHmacSha256 = tag4(b"CHMC"), CryptoHkdfSha256 = tag4(b"CHKF"),
     CryptoKeccak256 = tag4(b"CKEC"), CryptoSecp256k1Sign = tag4(b"CSKS"),
+    CryptoSecp256k1Pubkey = tag4(b"CSPB"),
     AdminReboot = tag4(b"ARBT"), AdminShutdown = tag4(b"ASDN"),
     AdminPolicyPush = tag4(b"APPS"),
     GraphicsDisplayDimensions = tag4(b"GDIM"),

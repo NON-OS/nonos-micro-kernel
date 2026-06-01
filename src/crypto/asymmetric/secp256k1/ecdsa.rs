@@ -100,18 +100,24 @@ pub fn sign(sk: &SecretKey, message_hash: &[u8; 32]) -> Option<RecoverableSignat
         return None;
     }
 
-    // SECURITY: Constant-time high-S normalization and recovery ID computation
-    // high_s = 1 if s > n/2 (checking high bit of top limb)
-    let high_s = (s.0[3] >> 63) as u64;
+    const HALF_N: [u64; 4] =
+        [0xDFE92F46681B20A0, 0x5D576E7357A4501D, 0xFFFFFFFFFFFFFFFF, 0x7FFFFFFFFFFFFFFF];
+    let mut high_s = 0u64;
+    let mut undecided = 1u64;
+    for i in (0..4).rev() {
+        let a = s.0[i];
+        let b = HALF_N[i];
+        let lt = (a ^ ((a ^ b) | (a.wrapping_sub(b) ^ b))) >> 63;
+        let gt = (b ^ ((b ^ a) | (b.wrapping_sub(a) ^ a))) >> 63;
+        high_s |= undecided & gt;
+        undecided &= 1 ^ (gt | lt);
+    }
     let s_negated = s.negate();
     let mask = 0u64.wrapping_sub(high_s);
     let s = Scalar::ct_select(mask, &s_negated, &s);
 
-    // Recovery ID depends on y parity and whether we negated
-    // Base recovery_id from y parity
-    let y_even = if r_point.y.is_even() { 1u8 } else { 0u8 };
-    // If high_s, flip the recovery_id
-    let recovery_id = y_even ^ (high_s as u8);
+    let y_parity = if r_point.y.is_even() { 0u8 } else { 1u8 };
+    let recovery_id = y_parity ^ (high_s as u8);
 
     Some(RecoverableSignature { r: r.to_bytes(), s: s.to_bytes(), recovery_id })
 }

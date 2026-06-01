@@ -27,6 +27,19 @@ impl FieldElement {
             carry >>= 64;
         }
 
+        let mut fold = carry * 0x1000003D1u128;
+        for i in 0..4 {
+            fold += result[i] as u128;
+            result[i] = fold as u64;
+            fold >>= 64;
+        }
+        let mut fold2 = fold * 0x1000003D1u128;
+        for i in 0..4 {
+            fold2 += result[i] as u128;
+            result[i] = fold2 as u64;
+            fold2 >>= 64;
+        }
+
         let mut res = Self(result);
         res.reduce();
         res

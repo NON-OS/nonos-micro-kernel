@@ -21,6 +21,7 @@ mod hash;
 mod keccak256;
 mod prf;
 mod random;
+mod secp256k1_pubkey;
 mod secp256k1_sign;
 mod x25519;
 
@@ -31,5 +32,6 @@ pub use hash::crypto_hash;
 pub use keccak256::crypto_keccak256;
 pub use prf::{crypto_hkdf_sha256, crypto_hmac_sha256};
 pub use random::crypto_random;
+pub use secp256k1_pubkey::crypto_secp256k1_pubkey;
 pub use secp256k1_sign::crypto_secp256k1_sign;
 pub use x25519::{crypto_x25519_public, crypto_x25519_shared};
