@@ -17,3 +17,4 @@
 pub const BACKGROUND: u32 = 0xFF181212;
 pub const FOREGROUND: u32 = 0xFFECD7D7;
 pub const WARNING: u32 = 0xFFF2A65A;
+pub const MUTED: u32 = 0xFFB9A7A7;

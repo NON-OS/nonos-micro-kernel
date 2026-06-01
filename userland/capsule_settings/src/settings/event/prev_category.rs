@@ -21,9 +21,9 @@ use crate::settings::state::State;
 
 pub fn prev_category(state: &mut State) {
     let prev = match state.category {
-        Category::User => Category::Identity,
-        Category::Kernel => Category::User,
-        Category::Identity => Category::Kernel,
+        Category::User => Category::Kernel,
+        Category::Identity => Category::User,
+        Category::Kernel => Category::Identity,
     };
     set_category(state, prev);
 }

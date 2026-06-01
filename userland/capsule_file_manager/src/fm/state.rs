@@ -14,27 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::entries::ENTRIES;
+extern crate alloc;
+
+use alloc::{string::String, vec::Vec};
+
+use nonos_app_skeleton::discover::lookup_service;
+
+use super::entries::Entry;
 
 pub struct State {
+    pub owner_pid: u32,
+    pub prefix: String,
+    pub entries: Vec<Entry>,
     pub cursor: usize,
-    pub opened: Option<usize>,
+    pub preview: Option<String>,
+    pub status: &'static [u8],
 }
 
 impl State {
     pub fn new() -> Self {
-        State { cursor: 0, opened: None }
-    }
-
-    pub fn next(&mut self) {
-        self.cursor = (self.cursor + 1) % ENTRIES.len();
-    }
-
-    pub fn prev(&mut self) {
-        self.cursor = (self.cursor + ENTRIES.len() - 1) % ENTRIES.len();
-    }
-
-    pub fn open(&mut self) {
-        self.opened = Some(self.cursor);
+        State {
+            owner_pid: lookup_service(b"app.file_manager").map(|peer| peer.pid).unwrap_or(0x464D_4752),
+            prefix: String::from("/"),
+            entries: Vec::new(),
+            cursor: 0,
+            preview: None,
+            status: b"loading...",
+        }
     }
 }

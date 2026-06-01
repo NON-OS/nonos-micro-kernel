@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+use nonos_app_skeleton::{announce_live_gui, PaintBuffer};
 
 use super::types::Terminal;
 use crate::paint::paint;
@@ -22,5 +22,9 @@ use crate::paint::paint;
 impl Terminal {
     pub(super) fn paint_inner(&mut self, fb: &mut PaintBuffer) {
         paint(&self.state, fb);
+        if !self.announced {
+            announce_live_gui(b"terminal visible");
+            self.announced = true;
+        }
     }
 }

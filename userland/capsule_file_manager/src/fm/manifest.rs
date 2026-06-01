@@ -20,6 +20,8 @@ pub const WIDTH: u32 = 360;
 pub const HEIGHT: u32 = 260;
 
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
+const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
+const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
 
 pub fn manifest() -> AppManifest {
     AppManifest {
@@ -30,6 +32,6 @@ pub fn manifest() -> AppManifest {
         initial_y: 170,
         width: WIDTH,
         height: HEIGHT,
-        input_kind_mask: INPUT_KEY_DOWN_BIT,
+        input_kind_mask: INPUT_KEY_DOWN_BIT | INPUT_BUTTON_DOWN_BIT | INPUT_POINTER_ABS_BIT,
     }
 }

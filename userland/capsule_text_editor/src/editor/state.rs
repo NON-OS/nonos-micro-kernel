@@ -14,30 +14,42 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const CAPACITY: usize = 256;
+use nonos_app_skeleton::discover::lookup_service;
+
+pub const CAPACITY: usize = 4096;
+pub const PATH: &[u8] = b"/notes.txt";
 
 pub struct State {
+    pub owner_pid: u32,
     pub buf: [u8; CAPACITY],
     pub len: usize,
+    pub status: &'static [u8],
 }
 
 impl State {
     pub fn new() -> Self {
-        State { buf: [0; CAPACITY], len: 0 }
+        State {
+            owner_pid: lookup_service(b"app.text_editor").map(|peer| peer.pid).unwrap_or(0x5445_4458),
+            buf: [0; CAPACITY],
+            len: 0,
+            status: b"Ctrl-O open  Ctrl-S save  Ctrl-C copy  Ctrl-V paste",
+        }
     }
 
     pub fn backspace(&mut self) -> bool {
-        if self.len > 0 {
+        while self.len > 0 {
             self.len -= 1;
-            return true;
+            if self.buf[self.len] & 0b1100_0000 != 0b1000_0000 {
+                return true;
+            }
         }
         false
     }
 
-    pub fn insert(&mut self, byte: u8) -> bool {
-        if self.len < CAPACITY {
-            self.buf[self.len] = byte;
-            self.len += 1;
+    pub fn insert(&mut self, bytes: &[u8]) -> bool {
+        if self.len + bytes.len() <= CAPACITY {
+            self.buf[self.len..self.len + bytes.len()].copy_from_slice(bytes);
+            self.len += bytes.len();
             return true;
         }
         false

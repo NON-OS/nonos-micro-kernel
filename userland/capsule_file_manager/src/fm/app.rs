@@ -14,20 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use nonos_app_skeleton::{announce_live_gui, App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
 
 use super::event::on_event;
 use super::manifest::manifest;
 use super::paint::paint;
+use super::refresh::refresh;
 use super::state::State;
 
 pub struct FileManager {
     state: State,
+    announced: bool,
 }
 
 impl FileManager {
     pub fn new() -> Self {
-        FileManager { state: State::new() }
+        let mut state = State::new();
+        refresh(&mut state);
+        FileManager { state, announced: false }
     }
 }
 
@@ -42,5 +46,9 @@ impl App for FileManager {
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
         paint(&self.state, fb);
+        if !self.announced {
+            announce_live_gui(b"file_manager visible");
+            self.announced = true;
+        }
     }
 }

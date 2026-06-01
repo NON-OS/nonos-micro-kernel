@@ -28,7 +28,7 @@ pub fn paint_status(fb: &mut PaintBuffer, status: &Status, ready: bool) {
     let y = HEIGHT - STATUS_H;
     fb.fill_rect(0, y, WIDTH, STATUS_H, STATUS_BG);
     if !ready {
-        fb.text(PAD_X, y + 6, b"waiting for policy service...", STATUS_FG_ERR);
+        fb.text(PAD_X, y + 6, b"policy unavailable; showing static defaults", STATUS_FG_ERR);
         return;
     }
     let text = status.as_slice();

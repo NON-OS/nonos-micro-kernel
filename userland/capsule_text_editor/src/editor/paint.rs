@@ -16,30 +16,33 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::state::State;
-use super::theme::{BACKGROUND, FOREGROUND, TITLE};
+use super::state::{State, PATH};
+use super::theme::{BACKGROUND, FOREGROUND, MUTED, TITLE};
 
 const WRAP_COLS: u32 = 48;
 const GLYPH_ADVANCE: u32 = 9;
 const LINE_HEIGHT: u32 = 20;
 const TEXT_LEFT: u32 = 16;
-const FIRST_LINE_Y: u32 = 48;
+const FIRST_LINE_Y: u32 = 76;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
     fb.text(TEXT_LEFT, 18, b"text_editor", TITLE);
+    fb.text(TEXT_LEFT, 38, PATH, MUTED);
+    fb.text(TEXT_LEFT, 58, state.status, MUTED);
     let mut y = FIRST_LINE_Y;
     let mut col: u32 = 0;
-    for i in 0..state.len {
-        let ch = state.buf[i];
-        if ch == b'\n' || col == WRAP_COLS {
+    let text = core::str::from_utf8(&state.buf[..state.len]).unwrap_or("");
+    for ch in text.chars() {
+        if ch == '\n' || col == WRAP_COLS {
             y += LINE_HEIGHT;
             col = 0;
-            if ch == b'\n' {
+            if ch == '\n' {
                 continue;
             }
         }
-        fb.text(TEXT_LEFT + col * GLYPH_ADVANCE, y, &state.buf[i..i + 1], FOREGROUND);
+        let glyph = if ch.is_ascii() { [ch as u8, 0, 0, 0] } else { [b'?', 0, 0, 0] };
+        fb.text(TEXT_LEFT + col * GLYPH_ADVANCE, y, &glyph[..1], FOREGROUND);
         col += 1;
     }
 }

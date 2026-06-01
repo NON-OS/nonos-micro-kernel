@@ -14,19 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_policy_proto::Field;
+use nonos_app_skeleton::clients::vfs::list_paths;
 
-pub const KERNEL_FIELDS: &[Field] = &[
-    Field::KernelAslr,
-    Field::KernelStackGuard,
-    Field::KernelNxBit,
-    Field::KernelSmep,
-    Field::KernelSmap,
-    Field::KernelDebug,
-    Field::KernelSerial,
-    Field::KernelWatchdog,
-    Field::KernelPreempt,
-    Field::KernelHugepages,
-    Field::KernelIommu,
-    Field::KernelSeccomp,
-];
+use super::entries::build_entries;
+use super::state::State;
+
+pub fn refresh(state: &mut State) {
+    state.preview = None;
+    match list_paths(state.owner_pid, state.prefix.as_bytes()) {
+        Ok(paths) => {
+            state.entries = build_entries(state.prefix.as_str(), &paths);
+            state.cursor = state.cursor.min(state.entries.len().saturating_sub(1));
+            state.status = if state.entries.is_empty() { b"empty directory" } else { b"click or Enter to open" };
+        }
+        Err(_) => {
+            state.entries.clear();
+            state.cursor = 0;
+            state.status = b"vfs unavailable";
+        }
+    }
+}

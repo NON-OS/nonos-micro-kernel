@@ -16,14 +16,43 @@
 
 use nonos_policy_proto::{Category, Field};
 
-use super::identity_fields::IDENTITY_FIELDS;
-use super::kernel_fields::KERNEL_FIELDS;
-use super::user_fields::USER_FIELDS;
+const DISPLAY_FIELDS: &[Field] = &[
+    Field::Brightness,
+    Field::MouseSensitivity,
+    Field::CursorSize,
+    Field::HighContrast,
+    Field::FontSize,
+    Field::Theme,
+    Field::Wallpaper,
+    Field::ScreenTimeout,
+    Field::AnimationsEnabled,
+];
+
+const NETWORK_FIELDS: &[Field] = &[
+    Field::WifiAutoconnect,
+    Field::AnonymousMode,
+    Field::NymEnabled,
+    Field::Hostname,
+    Field::DomainName,
+];
+
+const SECURITY_FIELDS: &[Field] = &[
+    Field::AutoLockTimeout,
+    Field::AutoWipe,
+    Field::HardwareCrypto,
+    Field::ZkAttestation,
+    Field::DeveloperMode,
+    Field::KernelAslr,
+    Field::KernelNxBit,
+    Field::KernelSmep,
+    Field::KernelSmap,
+    Field::KernelSeccomp,
+];
 
 pub fn visible_for(category: Category) -> &'static [Field] {
     match category {
-        Category::User => USER_FIELDS,
-        Category::Kernel => KERNEL_FIELDS,
-        Category::Identity => IDENTITY_FIELDS,
+        Category::User => DISPLAY_FIELDS,
+        Category::Identity => NETWORK_FIELDS,
+        Category::Kernel => SECURITY_FIELDS,
     }
 }

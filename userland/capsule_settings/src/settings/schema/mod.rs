@@ -15,9 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod all_fields;
-pub mod identity_fields;
-pub mod kernel_fields;
-pub mod user_fields;
 pub mod visible_for;
 
 pub use all_fields::ALL_FIELDS;

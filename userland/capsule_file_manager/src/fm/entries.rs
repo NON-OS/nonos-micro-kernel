@@ -14,4 +14,38 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const ENTRIES: [&[u8]; 4] = [b"bin", b"etc", b"home", b"capsules"];
+extern crate alloc;
+
+use alloc::{string::String, vec::Vec};
+
+#[derive(Clone)]
+pub struct Entry {
+    pub label: String,
+    pub full_path: String,
+    pub is_dir: bool,
+}
+
+pub fn build_entries(prefix: &str, paths: &[String]) -> Vec<Entry> {
+    let mut out = Vec::new();
+    for path in paths {
+        let Some(rest) = path.strip_prefix(prefix) else { continue };
+        if rest.is_empty() {
+            continue;
+        }
+        let cut = rest.find('/').unwrap_or(rest.len());
+        let name = &rest[..cut];
+        let is_dir = cut < rest.len();
+        if name.is_empty() || out.iter().any(|entry: &Entry| entry.label.as_str() == name) {
+            continue;
+        }
+        let mut label = String::from(name);
+        let full_path = if is_dir {
+            label.push('/');
+            alloc::format!("{prefix}{name}/")
+        } else {
+            alloc::format!("{prefix}{name}")
+        };
+        out.push(Entry { label, full_path, is_dir });
+    }
+    out
+}

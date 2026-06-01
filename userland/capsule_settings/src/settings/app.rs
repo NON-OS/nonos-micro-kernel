@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use nonos_app_skeleton::{announce_live_gui, App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
 
 use super::event::on_event;
 use super::ipc::{hydrate, lookup_policy_port};
@@ -25,6 +25,7 @@ use super::state::{state_new, State};
 pub struct Settings {
     state: State,
     hydrated: bool,
+    announced: bool,
 }
 
 impl Settings {
@@ -34,7 +35,7 @@ impl Settings {
             state.policy_port = port;
             state.policy_ready = true;
         }
-        Settings { state, hydrated: false }
+        Settings { state, hydrated: false, announced: false }
     }
 }
 
@@ -66,5 +67,9 @@ impl App for Settings {
     fn paint(&mut self, fb: &mut PaintBuffer) {
         self.ensure_ready();
         paint(&self.state, fb);
+        if !self.announced {
+            announce_live_gui(b"settings visible");
+            self.announced = true;
+        }
     }
 }

@@ -18,17 +18,32 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::format::u32_decimal;
 use super::state::State;
-use super::theme::{BACKGROUND, FOREGROUND, WARNING};
+use super::theme::{BACKGROUND, FOREGROUND, MUTED, WARNING};
 
 const TEXT_LEFT: u32 = 16;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
     fb.text(TEXT_LEFT, 18, b"process_manager", FOREGROUND);
-    fb.text(TEXT_LEFT, 56, b"kernel observability op: E_NOSYS", WARNING);
-    fb.text(TEXT_LEFT, 80, b"(pending debug-gated syscall)", WARNING);
+    fb.text(TEXT_LEFT, 40, b"name", WARNING);
+    fb.text(TEXT_LEFT + 140, 40, b"pid", WARNING);
+    fb.text(TEXT_LEFT + 220, 40, b"caps", WARNING);
+    fb.text(TEXT_LEFT, 212, state.status, MUTED);
     let mut digits = [0u8; 10];
     let n = u32_decimal(state.refreshes, &mut digits);
-    fb.text(TEXT_LEFT, 120, b"refreshes:", FOREGROUND);
-    fb.text(TEXT_LEFT + 96, 120, &digits[..n], FOREGROUND);
+    fb.text(TEXT_LEFT, 232, b"refreshes:", MUTED);
+    fb.text(TEXT_LEFT + 96, 232, &digits[..n], MUTED);
+    let mut y = 68;
+    for row in state.rows.iter() {
+        fb.text(TEXT_LEFT, y, row.label, FOREGROUND);
+        if row.online {
+            let n = u32_decimal(row.pid, &mut digits);
+            fb.text(TEXT_LEFT + 140, y, &digits[..n], FOREGROUND);
+            fb.text(TEXT_LEFT + 220, y, b"unavailable", MUTED);
+        } else {
+            fb.text(TEXT_LEFT + 140, y, b"offline", MUTED);
+            fb.text(TEXT_LEFT + 220, y, b"unavailable", MUTED);
+        }
+        y += 18;
+    }
 }

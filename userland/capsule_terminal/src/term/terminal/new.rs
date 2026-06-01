@@ -22,6 +22,6 @@ impl Terminal {
     pub fn new() -> Self {
         let mut state = State::new();
         paint_motd(&mut state.scrollback);
-        Self { state }
+        Self { state, announced: false }
     }
 }
