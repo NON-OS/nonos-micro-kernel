@@ -12,3 +12,14 @@ pub fn marker(label: &[u8]) {
     buf[PREFIX.len() + n] = b'\n';
     let _ = mk_debug(buf.as_ptr(), total);
 }
+
+pub fn marker_u32(v: u32) {
+    let mut hex = [0u8; 10];
+    hex[0] = b'0';
+    hex[1] = b'x';
+    for i in 0..8 {
+        let nibble = ((v >> ((7 - i) * 4)) & 0xf) as u8;
+        hex[2 + i] = if nibble < 10 { b'0' + nibble } else { b'a' + nibble - 10 };
+    }
+    marker(&hex);
+}

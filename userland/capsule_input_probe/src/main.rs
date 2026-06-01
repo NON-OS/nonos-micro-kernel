@@ -6,10 +6,11 @@ extern crate alloc;
 mod clients;
 mod debug;
 mod protocol;
+mod server;
 mod setup;
 mod state;
 
-use nonos_libc::{heap_init, mk_exit, mk_yield};
+use nonos_libc::{heap_init, mk_exit};
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
@@ -17,14 +18,12 @@ pub unsafe extern "C" fn _start() -> ! {
         mk_exit(1);
     }
     debug::marker(b"probe boot");
-    let _ctx = match setup::run() {
+    let ctx = match setup::run() {
         Ok(ctx) => ctx,
         Err(_) => {
             debug::marker(b"setup failed");
             mk_exit(2);
         }
     };
-    loop {
-        mk_yield();
-    }
+    server::runner::run(ctx);
 }
