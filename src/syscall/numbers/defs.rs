@@ -59,5 +59,5 @@ pub enum SyscallNumber {
     MkSurfaceShare = tag4(b"MSSH"), MkSurfaceAttach = tag4(b"MSAT"),
     MkSurfaceRelease = tag4(b"MSRL"), MkSurfacePresent = tag4(b"MSPR"),
     MkDisplayVsyncWait = tag4(b"MDVW"), MkInputEventPost = tag4(b"MIEP"),
-    MkInputEventDrain = tag4(b"MIED"),
+    MkInputEventDrain = tag4(b"MIED"), MkInputEventWait = tag4(b"MIEW"),
 }

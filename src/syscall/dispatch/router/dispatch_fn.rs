@@ -52,7 +52,9 @@ pub(super) fn dispatch_syscall(
         | SyscallNumber::MkSurfaceRelease
         | SyscallNumber::MkSurfacePresent
         | SyscallNumber::MkDisplayVsyncWait => surface_ops::handle(syscall, a0, a1, a2, a3, a4, a5),
-        SyscallNumber::MkInputEventPost | SyscallNumber::MkInputEventDrain => {
+        SyscallNumber::MkInputEventPost
+        | SyscallNumber::MkInputEventDrain
+        | SyscallNumber::MkInputEventWait => {
             input_ops::handle(syscall, a0, a1, a2, a3, a4, a5)
         }
         _ => {

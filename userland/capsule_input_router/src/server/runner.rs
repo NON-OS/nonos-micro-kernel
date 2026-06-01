@@ -16,7 +16,7 @@
 
 use alloc::vec;
 
-use nonos_libc::{mk_ipc_recv_from, mk_yield, InputEvent};
+use nonos_libc::{mk_input_event_wait, mk_ipc_recv_from, InputEvent};
 
 use crate::protocol::{
     parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_GRAB_RELEASE, OP_GRAB_REQUEST,
@@ -29,12 +29,14 @@ use crate::state::Context;
 
 const SERVICE_INBOX: u64 = 0;
 const RECV_NOWAIT: u64 = 1;
+const INPUT_WAIT_MS: u64 = 20;
 
 pub fn run() -> ! {
     let mut ctx = Context::new();
     let mut rx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut tx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut batch: [InputEvent; MAX_BATCH] = [InputEvent::default(); MAX_BATCH];
+    let mut last_seq: u64 = 0;
     loop {
         drain_ipc(&mut ctx, &mut rx, &mut tx);
         let n = drain_batch(&mut batch);
@@ -42,7 +44,9 @@ pub fn run() -> ! {
             route_event(&mut ctx, ev);
         }
         if n == 0 {
-            mk_yield();
+            let mut seq = last_seq;
+            let _ = mk_input_event_wait(last_seq, INPUT_WAIT_MS, &mut seq);
+            last_seq = seq;
         }
     }
 }
