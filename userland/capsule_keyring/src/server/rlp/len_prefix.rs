@@ -14,14 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
+use alloc::vec;
+use alloc::vec::Vec;
 
-pub use runner::run;
+use super::minimal_be::minimal_be;
+
+pub fn len_prefix(base: u8, len: usize) -> Vec<u8> {
+    if len <= 55 {
+        return vec![base + len as u8];
+    }
+    let be = minimal_be(len);
+    let mut out = vec![base + 55 + be.len() as u8];
+    out.extend_from_slice(&be);
+    out
+}

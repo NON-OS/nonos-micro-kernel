@@ -14,14 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
+use super::consts::{APPROVE_SELECTOR, SETTLEMENT};
 
-pub use runner::run;
+pub fn approve_calldata(amount: &[u8; 32]) -> [u8; 68] {
+    let mut out = [0u8; 68];
+    out[0..4].copy_from_slice(&APPROVE_SELECTOR);
+    out[16..36].copy_from_slice(&SETTLEMENT);
+    out[36..68].copy_from_slice(amount);
+    out
+}

@@ -43,7 +43,8 @@ pub use broker::{
 pub use admin::{mk_admin_policy_push, mk_admin_reboot, mk_admin_shutdown};
 pub use crypto::{
     crypto_decrypt, crypto_ed25519_verify, crypto_encrypt, crypto_hash, crypto_hkdf_sha256,
-    crypto_hmac_sha256, crypto_random, crypto_x25519_public, crypto_x25519_shared,
+    crypto_hmac_sha256, crypto_keccak256, crypto_random, crypto_secp256k1_pubkey,
+    crypto_secp256k1_sign, crypto_x25519_public, crypto_x25519_shared,
 };
 pub use debug::mk_debug;
 pub use graphics::{

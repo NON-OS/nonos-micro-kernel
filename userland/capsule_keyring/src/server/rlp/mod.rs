@@ -14,14 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
+mod encode_list;
+mod encode_str;
+mod encode_uint;
+mod len_prefix;
+mod minimal_be;
 
-pub use runner::run;
+pub use encode_list::rlp_list;
+pub use encode_str::rlp_string;
+pub use encode_uint::rlp_uint_be;

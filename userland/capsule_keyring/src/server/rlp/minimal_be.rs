@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
+use alloc::vec::Vec;
 
-pub use runner::run;
+pub fn minimal_be(n: usize) -> Vec<u8> {
+    let full = n.to_be_bytes();
+    let mut start = 0;
+    while start < full.len() && full[start] == 0 {
+        start += 1;
+    }
+    full[start..].to_vec()
+}

@@ -14,23 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
-
 use super::types::{KeyType, Store, StoreError};
 
 impl Store {
-    pub fn retrieve(&mut self, id: u32, caller_pid: u32) -> Result<Vec<u8>, StoreError> {
+    pub fn eth_secret(&mut self, id: u32, caller_pid: u32) -> Result<[u8; 32], StoreError> {
         let entry = self.entries.get_mut(&id).ok_or(StoreError::NotFound)?;
         if entry.owner_pid != caller_pid {
             return Err(StoreError::AccessDenied);
         }
-        if entry.key_type == KeyType::Secp256k1Eth {
-            return Err(StoreError::AccessDenied);
+        if entry.key_type != KeyType::Secp256k1Eth {
+            return Err(StoreError::InvalidArgument);
         }
         if entry.locked {
             return Err(StoreError::Locked);
         }
+        if entry.data.len() != 32 {
+            return Err(StoreError::InvalidArgument);
+        }
+        let mut out = [0u8; 32];
+        out.copy_from_slice(&entry.data);
         entry.use_count = entry.use_count.saturating_add(1);
-        Ok(entry.data.clone())
+        Ok(out)
     }
 }

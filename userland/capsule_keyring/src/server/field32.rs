@@ -14,14 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
-
-pub use runner::run;
+pub fn field32(payload: &[u8], offset: usize) -> [u8; 32] {
+    let mut out = [0u8; 32];
+    out.copy_from_slice(&payload[offset..offset + 32]);
+    out
+}

@@ -43,6 +43,10 @@ pub struct MarketplaceEntry {
     /// Publisher's Ed25519 verifier key. Must match the signing
     /// key used on every release the listing exposes.
     pub publisher_pubkey: [u8; 32],
+    /// Publisher's Ethereum address (20 bytes). On-chain settlement
+    /// authority for paid installs; covered by the operator index
+    /// signature and cross-checked against CapsuleRegistry on chain.
+    pub publisher_eth_address: [u8; 20],
     /// Free-form description; UTF-8, capped at `MAX_DESCRIPTION`.
     pub description: String,
     /// Price contract for the listing.

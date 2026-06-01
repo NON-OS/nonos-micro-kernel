@@ -14,14 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
+use alloc::vec;
+use alloc::vec::Vec;
 
-pub use runner::run;
+use super::super::rlp::{rlp_list, rlp_string, rlp_uint_be};
+use super::fields::base_fields;
+
+pub fn signed_tx(
+    parts: (&[u8; 32], &[u8; 32], &[u8; 32], &[u8; 32], &[u8; 32]),
+    y_parity: u8,
+    r: &[u8; 32],
+    s: &[u8; 32],
+) -> Vec<u8> {
+    let mut f = base_fields(parts.0, parts.1, parts.2, parts.3, parts.4);
+    f.push(rlp_uint_be(&[y_parity]));
+    f.push(rlp_string(r));
+    f.push(rlp_string(s));
+    let mut out = vec![0x02u8];
+    out.extend_from_slice(&rlp_list(&f));
+    out
+}

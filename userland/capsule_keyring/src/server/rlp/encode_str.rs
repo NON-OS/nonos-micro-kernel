@@ -14,14 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
+use alloc::vec;
+use alloc::vec::Vec;
 
-pub use runner::run;
+use super::len_prefix::len_prefix;
+
+pub fn rlp_string(data: &[u8]) -> Vec<u8> {
+    if data.len() == 1 && data[0] <= 0x7f {
+        return vec![data[0]];
+    }
+    let mut out = len_prefix(0x80, data.len());
+    out.extend_from_slice(data);
+    out
+}

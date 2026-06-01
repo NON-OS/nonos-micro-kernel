@@ -14,14 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
+use alloc::vec;
+use alloc::vec::Vec;
 
-pub use runner::run;
+use super::super::rlp::rlp_list;
+use super::fields::base_fields;
+
+pub fn unsigned_payload(
+    nonce: &[u8; 32],
+    max_priority: &[u8; 32],
+    max_fee: &[u8; 32],
+    gas: &[u8; 32],
+    amount: &[u8; 32],
+) -> Vec<u8> {
+    let f = base_fields(nonce, max_priority, max_fee, gas, amount);
+    let mut out = vec![0x02u8];
+    out.extend_from_slice(&rlp_list(&f));
+    out
+}

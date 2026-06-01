@@ -14,14 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
+use alloc::vec::Vec;
 
-pub use runner::run;
+use super::super::rlp::{rlp_list, rlp_string, rlp_uint_be};
+use super::approve_data::approve_calldata;
+use super::consts::{CHAIN_ID, NOX_TOKEN};
+
+pub fn base_fields(
+    nonce: &[u8; 32],
+    max_priority: &[u8; 32],
+    max_fee: &[u8; 32],
+    gas: &[u8; 32],
+    amount: &[u8; 32],
+) -> Vec<Vec<u8>> {
+    let mut f = Vec::with_capacity(9);
+    f.push(rlp_uint_be(&[CHAIN_ID]));
+    f.push(rlp_uint_be(nonce));
+    f.push(rlp_uint_be(max_priority));
+    f.push(rlp_uint_be(max_fee));
+    f.push(rlp_uint_be(gas));
+    f.push(rlp_string(&NOX_TOKEN));
+    f.push(rlp_uint_be(&[]));
+    f.push(rlp_string(&approve_calldata(amount)));
+    f.push(rlp_list(&[]));
+    f
+}

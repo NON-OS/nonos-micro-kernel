@@ -14,14 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
+use super::consts::DOMAIN_SEPARATOR;
 
-pub use runner::run;
+pub fn receipt_digest(struct_hash: &[u8; 32]) -> Option<[u8; 32]> {
+    let mut pre = [0u8; 66];
+    pre[0] = 0x19;
+    pre[1] = 0x01;
+    pre[2..34].copy_from_slice(&DOMAIN_SEPARATOR);
+    pre[34..66].copy_from_slice(struct_hash);
+    let mut out = [0u8; 32];
+    if nonos_libc::crypto_keccak256(pre.as_ptr(), 66, out.as_mut_ptr(), 32) != 32 {
+        return None;
+    }
+    Some(out)
+}

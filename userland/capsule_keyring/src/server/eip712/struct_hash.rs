@@ -14,24 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::writer::Writer;
-use super::{encode_price, encode_release, encode_token};
-use crate::types::MarketplaceEntry;
+use super::consts::RECEIPT_TYPEHASH;
+use super::fields::ReceiptFields;
 
-pub(super) fn write(w: &mut Writer<'_>, entry: &MarketplaceEntry) {
-    w.lp_string(&entry.listing_id);
-    w.fixed(&entry.capsule_id);
-    w.lp_string(&entry.name);
-    w.lp_string(&entry.publisher_name);
-    w.fixed(&entry.publisher_pubkey);
-    w.fixed(&entry.publisher_eth_address);
-    w.lp_string(&entry.description);
-
-    encode_price::write(w, &entry.price);
-    encode_token::write(w, &entry.token);
-
-    w.u32(entry.releases.len() as u32);
-    for release in &entry.releases {
-        encode_release::write(w, release);
+pub fn struct_hash(f: &ReceiptFields) -> Option<[u8; 32]> {
+    let mut pre = [0u8; 288];
+    pre[0..32].copy_from_slice(&RECEIPT_TYPEHASH);
+    pre[32..64].copy_from_slice(&f.capsule_id);
+    pre[76..96].copy_from_slice(&f.user);
+    pre[108..128].copy_from_slice(&f.publisher);
+    pre[128..160].copy_from_slice(&f.amount_nox);
+    pre[160..192].copy_from_slice(&f.nonce);
+    pre[192..224].copy_from_slice(&f.epoch);
+    pre[224..256].copy_from_slice(&f.expiry);
+    pre[256..288].copy_from_slice(&f.receipt_type);
+    let mut out = [0u8; 32];
+    if nonos_libc::crypto_keccak256(pre.as_ptr(), 288, out.as_mut_ptr(), 32) != 32 {
+        return None;
     }
+    Some(out)
 }

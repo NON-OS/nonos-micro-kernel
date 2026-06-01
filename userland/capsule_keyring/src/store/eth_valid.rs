@@ -14,14 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
-
-pub use runner::run;
+pub fn eth_secret_valid(secret: &[u8; 32]) -> bool {
+    const N: [u8; 32] = [
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFE, 0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B, 0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36,
+        0x41, 0x41,
+    ];
+    let mut nonzero = false;
+    for &b in secret.iter() {
+        if b != 0 {
+            nonzero = true;
+            break;
+        }
+    }
+    if !nonzero {
+        return false;
+    }
+    for i in 0..32 {
+        if secret[i] < N[i] {
+            return true;
+        }
+        if secret[i] > N[i] {
+            return false;
+        }
+    }
+    false
+}

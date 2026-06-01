@@ -31,6 +31,7 @@ pub enum KeyType {
     SessionKey = 5,
     MasterKey = 6,
     SigningKey = 7,
+    Secp256k1Eth = 8,
 }
 
 impl KeyType {
@@ -44,6 +45,7 @@ impl KeyType {
             5 => Some(Self::SessionKey),
             6 => Some(Self::MasterKey),
             7 => Some(Self::SigningKey),
+            8 => Some(Self::Secp256k1Eth),
             _ => None,
         }
     }

@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
-
-pub use runner::run;
+pub struct ReceiptFields {
+    pub capsule_id: [u8; 32],
+    pub user: [u8; 20],
+    pub publisher: [u8; 20],
+    pub amount_nox: [u8; 32],
+    pub nonce: [u8; 32],
+    pub epoch: [u8; 32],
+    pub expiry: [u8; 32],
+    pub receipt_type: [u8; 32],
+}

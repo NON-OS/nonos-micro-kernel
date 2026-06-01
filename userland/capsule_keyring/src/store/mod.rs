@@ -16,6 +16,8 @@
 
 mod count;
 mod delete;
+mod eth_secret;
+mod eth_valid;
 mod lock;
 mod metadata;
 mod retrieve;
@@ -25,4 +27,5 @@ mod types;
 mod unlock;
 mod wipe;
 
+pub use eth_valid::eth_secret_valid;
 pub use types::{KeyMetadata, KeyType, Store, StoreError};

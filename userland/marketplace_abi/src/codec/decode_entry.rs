@@ -31,6 +31,7 @@ pub(super) fn read(r: &mut Reader<'_>) -> Result<MarketplaceEntry, DecodeError> 
     let name = bounded_string(r, MAX_NAME)?;
     let publisher_name = bounded_string(r, MAX_PUBLISHER)?;
     let publisher_pubkey = r.fixed::<32>()?;
+    let publisher_eth_address = r.fixed::<20>()?;
     let description = bounded_string(r, MAX_DESCRIPTION)?;
 
     let price = decode_price::read(r)?;
@@ -48,6 +49,7 @@ pub(super) fn read(r: &mut Reader<'_>) -> Result<MarketplaceEntry, DecodeError> 
         name,
         publisher_name,
         publisher_pubkey,
+        publisher_eth_address,
         description,
         price,
         token,

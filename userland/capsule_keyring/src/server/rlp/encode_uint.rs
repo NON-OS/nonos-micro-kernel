@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
+use alloc::vec::Vec;
 
-pub use runner::run;
+use super::encode_str::rlp_string;
+
+pub fn rlp_uint_be(bytes: &[u8]) -> Vec<u8> {
+    let mut start = 0;
+    while start < bytes.len() && bytes[start] == 0 {
+        start += 1;
+    }
+    rlp_string(&bytes[start..])
+}

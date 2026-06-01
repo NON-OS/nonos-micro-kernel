@@ -21,6 +21,11 @@ pub const OP_LOCK: u16 = 4;
 pub const OP_UNLOCK: u16 = 5;
 pub const OP_METADATA: u16 = 6;
 pub const OP_COUNT: u16 = 7;
+pub const OP_WALLET_IMPORT: u16 = 8;
+pub const OP_WALLET_GENERATE: u16 = 9;
+pub const OP_WALLET_ADDRESS: u16 = 10;
+pub const OP_SIGN_NOX_RECEIPT: u16 = 11;
+pub const OP_SIGN_NOX_APPROVE: u16 = 12;
 
 pub const KERNEL_REPLY_ENDPOINT: u64 = 0x1_0000_0002;
 

@@ -14,14 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod eip1559;
-mod eip712;
-mod ethaddr;
-mod field32;
-mod handlers;
-mod rlp;
-mod runner;
-mod zeroize;
+mod consts;
+mod digest;
+mod fields;
+mod struct_hash;
 
-pub use runner::run;
+pub use digest::receipt_digest;
+pub use fields::ReceiptFields;
+pub use struct_hash::struct_hash;
