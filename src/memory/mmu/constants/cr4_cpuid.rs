@@ -15,12 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const CR4_PGE: u64 = 1 << 7;
+pub const CR4_UMIP: u64 = 1 << 11;
 pub const CR4_SMEP: u64 = 1 << 20;
 pub const CR4_SMAP: u64 = 1 << 21;
 
 pub const CPUID_FEATURES_LEAF: u32 = 0x07;
 pub const CPUID_EBX_SMEP: u32 = 1 << 7;
 pub const CPUID_EBX_SMAP: u32 = 1 << 20;
+pub const CPUID_ECX_UMIP: u32 = 1 << 2;
 pub const CPUID_EXTENDED_LEAF: u32 = 0x8000_0001;
 pub const CPUID_EDX_NX: u32 = 1 << 20;
 

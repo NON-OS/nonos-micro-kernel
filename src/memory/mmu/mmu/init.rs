@@ -34,9 +34,10 @@ impl MMU {
     }
 
     pub(super) fn enable_smep_smap(&self) -> MmuResult<()> {
-        let (_, ebx, _, _) = Self::cpuid(CPUID_FEATURES_LEAF, 0);
+        let (_, ebx, ecx, _) = Self::cpuid(CPUID_FEATURES_LEAF, 0);
         let has_smep = (ebx & CPUID_EBX_SMEP) != 0;
         let has_smap = (ebx & CPUID_EBX_SMAP) != 0;
+        let has_umip = (ecx & CPUID_ECX_UMIP) != 0;
         unsafe {
             let mut cr4: u64;
             asm!("mov {}, cr4", out(reg) cr4, options(nostack, preserves_flags));
@@ -46,11 +47,15 @@ impl MMU {
             if has_smap {
                 cr4 |= CR4_SMAP;
             }
+            if has_umip {
+                cr4 |= CR4_UMIP;
+            }
             asm!("mov cr4, {}", in(reg) cr4, options(nostack, preserves_flags));
         }
         let mut flags = self.protection_flags.lock();
         flags.smep_enabled = has_smep;
         flags.smap_enabled = has_smap;
+        flags.umip_enabled = has_umip;
         Ok(())
     }
 

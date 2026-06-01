@@ -20,11 +20,21 @@ pub struct ProtectionFlags {
     pub smap_enabled: bool,
     pub nx_enabled: bool,
     pub wp_enabled: bool,
+    // UMIP is best-effort: it hardens against SGDT/SIDT/SLDT/SMSW/STR
+    // leaks from userspace but is not present on every CPU, so it is
+    // tracked here without gating `is_fully_protected`.
+    pub umip_enabled: bool,
 }
 
 impl ProtectionFlags {
     pub const fn new() -> Self {
-        Self { smep_enabled: false, smap_enabled: false, nx_enabled: false, wp_enabled: true }
+        Self {
+            smep_enabled: false,
+            smap_enabled: false,
+            nx_enabled: false,
+            wp_enabled: true,
+            umip_enabled: false,
+        }
     }
 
     pub const fn is_fully_protected(&self) -> bool {
