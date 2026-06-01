@@ -52,9 +52,10 @@ pub fn find_rsdp() -> AcpiResult<RsdpExtended> {
 }
 
 fn read_rsdp_at(addr: usize) -> Option<RsdpExtended> {
-    if addr == 0 || addr % rsdp::RSDP_ALIGNMENT != 0 {
+    if addr == 0 {
         return None;
     }
+    let addr = super::phys::directmap(addr as u64)? as usize;
     unsafe {
         let ptr = addr as *const Rsdp;
         let sig = ptr::read_volatile(&(*ptr).signature);

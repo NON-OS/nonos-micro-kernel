@@ -27,6 +27,10 @@ pub fn parse_srat(registry: &mut TableRegistry) {
         Some(&a) => a,
         None => return,
     };
+    let addr = match super::super::phys::directmap(addr) {
+        Some(v) => v,
+        None => return,
+    };
 
     unsafe {
         let srat = ptr::read_volatile(addr as *const Srat);

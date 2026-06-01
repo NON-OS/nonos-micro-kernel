@@ -22,6 +22,7 @@ use crate::arch::x86_64::acpi::tables::{Fadt, SIG_FADT};
 
 pub fn parse_fadt(registry: &mut TableRegistry) -> AcpiResult<()> {
     let addr = *registry.tables.get(&SIG_FADT).ok_or(AcpiError::FadtNotFound)?;
+    let addr = super::phys::directmap(addr).ok_or(AcpiError::FadtNotFound)?;
 
     unsafe {
         let fadt = ptr::read_volatile(addr as *const Fadt);

@@ -20,6 +20,7 @@ mod getters_table;
 pub mod init;
 pub mod madt;
 pub mod other;
+mod phys;
 mod root_rsdt;
 mod root_xsdt;
 pub mod rsdp;

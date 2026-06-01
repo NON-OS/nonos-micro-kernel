@@ -14,22 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::ptr;
+use crate::memory::addr::PhysAddr;
 
-use super::super::state::TableRegistry;
-use crate::arch::x86_64::acpi::tables::{Hpet, SIG_HPET};
-
-pub fn parse_hpet(registry: &mut TableRegistry) {
-    if let Some(&addr) = registry.tables.get(&SIG_HPET) {
-        let addr = match super::super::phys::directmap(addr) {
-            Some(v) => v,
-            None => return,
-        };
-        unsafe {
-            let hpet = ptr::read_volatile(addr as *const Hpet);
-            if hpet.is_valid() {
-                registry.data.hpet_address = Some(hpet.address());
-            }
-        }
-    }
+pub(crate) fn directmap(phys: u64) -> Option<u64> {
+    crate::memory::unified::phys_to_virt_checked(PhysAddr::new(phys)).map(|v| v.as_u64())
 }
