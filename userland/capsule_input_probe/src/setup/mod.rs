@@ -2,11 +2,12 @@ mod discover;
 mod fill;
 
 use nonos_libc::{
-    mk_mmap, mk_surface_register, mk_surface_release, mk_surface_share, nonos_display_dimensions,
-    SurfaceDescriptor, SURFACE_FORMAT_ARGB8888,
+    mk_mmap, mk_surface_register, mk_surface_release, mk_surface_share, SurfaceDescriptor,
+    SURFACE_FORMAT_ARGB8888,
 };
 
 use crate::clients::compositor;
+use crate::clients::display_info;
 use crate::debug;
 use crate::state::Context;
 
@@ -19,13 +20,11 @@ pub fn run() -> Result<Context, &'static str> {
     let compositor_port = discover::lookup_compositor_port()?;
     let router_port = discover::lookup_router_port()?;
     compositor::healthcheck(compositor_port, 1).map_err(|_| "compositor health failed")?;
-    let mut width: u32 = 0;
-    let mut height: u32 = 0;
-    let rc = nonos_display_dimensions(0, &mut width as *mut u32, &mut height as *mut u32);
-    if rc != 0 || width == 0 || height == 0 {
-        return Err("display dimensions unavailable");
-    }
-    let stride = width.checked_mul(4).ok_or("stride overflow")?;
+    let di = display_info::query_display_info(compositor_port, 3)
+        .map_err(|_| "display info query failed")?;
+    let width = di.width;
+    let height = di.height;
+    let stride = di.stride;
     let byte_len = (stride as u64).checked_mul(height as u64).ok_or("surface size overflow")?;
     let base =
         mk_mmap(core::ptr::null_mut(), byte_len as usize, PROT_READ_WRITE, MAP_PRIVATE_ANON, -1, 0);
