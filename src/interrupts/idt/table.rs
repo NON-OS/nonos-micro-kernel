@@ -52,7 +52,7 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
     unsafe {
         idt.debug
             .set_handler_addr(VirtAddr::new(isr::db_trampoline as *const () as u64))
-            .set_stack_index(gdt::DB_IST_INDEX - 1);
+            .set_stack_index(gdt::DEBUG_IST_INDEX - 1);
     }
 
     // SAFETY: NMI uses dedicated IST stack to handle nested NMIs safely.

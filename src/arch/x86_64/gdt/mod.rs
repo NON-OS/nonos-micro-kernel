@@ -63,4 +63,4 @@ pub const DF_IST_INDEX: u16 = IST_DOUBLE_FAULT as u16;
 pub const PF_IST_INDEX: u16 = IST_PAGE_FAULT as u16;
 pub const GP_IST_INDEX: u16 = IST_GP as u16;
 pub const MC_IST_INDEX: u16 = IST_MACHINE_CHECK as u16;
-pub const DB_IST_INDEX: u16 = IST_DEBUG as u16;
+pub const DEBUG_IST_INDEX: u16 = IST_DEBUG as u16;
