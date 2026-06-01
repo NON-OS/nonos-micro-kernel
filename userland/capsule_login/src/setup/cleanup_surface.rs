@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod backing;
-mod cleanup_backing;
-mod cleanup_surface;
-mod constants;
-mod discover;
-mod display;
-mod register;
-mod run;
+use nonos_libc::mk_surface_release;
 
-pub use run::run;
+pub(super) fn cleanup_surface(handle: u64) -> Result<(), &'static str> {
+    if mk_surface_release(handle) < 0 {
+        return Err("surface release rejected");
+    }
+    if mk_surface_release(handle) < 0 {
+        return Err("surface release rejected");
+    }
+    Ok(())
+}

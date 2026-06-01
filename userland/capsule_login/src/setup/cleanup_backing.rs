@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod backing;
-mod cleanup_backing;
-mod cleanup_surface;
-mod constants;
-mod discover;
-mod display;
-mod register;
-mod run;
+use nonos_libc::mk_munmap;
 
-pub use run::run;
+pub(super) fn cleanup_backing(backing_va: u64, byte_len: u64) -> Result<(), &'static str> {
+    if mk_munmap(backing_va as *mut u8, byte_len as usize) < 0 {
+        return Err("backing munmap failed");
+    }
+    Ok(())
+}

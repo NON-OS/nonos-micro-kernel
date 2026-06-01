@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod backing;
-mod cleanup_backing;
-mod cleanup_surface;
-mod constants;
-mod discover;
-mod display;
-mod register;
-mod run;
-
-pub use run::run;
+pub(super) const MAP_PRIVATE_ANON: i32 = 0x22;
+pub(super) const OVERLAY_Z: u32 = 1;
+pub(super) const PROT_READ_WRITE: i32 = 0x3;

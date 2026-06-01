@@ -14,13 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod backing;
-mod cleanup_backing;
-mod cleanup_surface;
-mod constants;
-mod discover;
-mod display;
-mod register;
-mod run;
+use nonos_libc::{mk_surface_register, mk_surface_share, SurfaceDescriptor, SURFACE_FORMAT_ARGB8888};
 
-pub use run::run;
+pub(super) fn surface(
+    width: u32,
+    height: u32,
+    stride: u32,
+    byte_len: u64,
+    backing_va: u64,
+) -> Result<u64, &'static str> {
+    let desc =
+        SurfaceDescriptor { width, height, stride, format: SURFACE_FORMAT_ARGB8888, byte_len, base_va: backing_va, flags: 0 };
+    let sid = mk_surface_register(&desc);
+    if sid < 0 {
+        return Err("surface register rejected");
+    }
+    let handle = mk_surface_share(sid as u64);
+    if handle <= 0 {
+        return Err("surface share rejected");
+    }
+    Ok(handle as u64)
+}

@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod backing;
-mod cleanup_backing;
-mod cleanup_surface;
-mod constants;
-mod discover;
-mod display;
-mod register;
-mod run;
-
-pub use run::run;
+pub fn lookup_keyring_port() -> Result<u32, &'static str> {
+    super::lookup_port::lookup_port(super::constants::KEYRING_SERVICE)
+}

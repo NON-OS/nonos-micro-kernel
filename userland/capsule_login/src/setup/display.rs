@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod backing;
-mod cleanup_backing;
-mod cleanup_surface;
-mod constants;
-mod discover;
-mod display;
-mod register;
-mod run;
+use nonos_libc::nonos_display_dimensions;
 
-pub use run::run;
+pub(super) fn dimensions() -> Result<(u32, u32), &'static str> {
+    let mut width: u32 = 0;
+    let mut height: u32 = 0;
+    let rc = nonos_display_dimensions(0, &mut width as *mut u32, &mut height as *mut u32);
+    if rc != 0 || width == 0 || height == 0 {
+        return Err("display dimensions unavailable");
+    }
+    Ok((width, height))
+}

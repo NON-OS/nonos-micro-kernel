@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod backing;
-mod cleanup_backing;
-mod cleanup_surface;
-mod constants;
-mod discover;
-mod display;
-mod register;
-mod run;
-
-pub use run::run;
+pub(super) const COMPOSITOR_SERVICE: &[u8] = b"compositor";
+pub(super) const DESKTOP_SHELL_SERVICE: &[u8] = b"desktop_shell";
+pub(super) const KEYRING_SERVICE: &[u8] = b"keyring";

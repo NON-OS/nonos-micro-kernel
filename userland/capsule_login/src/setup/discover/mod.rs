@@ -14,13 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod backing;
-mod cleanup_backing;
-mod cleanup_surface;
 mod constants;
-mod discover;
-mod display;
-mod register;
-mod run;
+mod lookup_compositor_port;
+mod lookup_desktop_shell_port;
+mod lookup_keyring_port;
+mod lookup_port;
 
-pub use run::run;
+pub use lookup_compositor_port::lookup_compositor_port;
+pub use lookup_desktop_shell_port::lookup_desktop_shell_port;
+pub use lookup_keyring_port::lookup_keyring_port;

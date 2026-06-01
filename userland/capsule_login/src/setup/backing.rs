@@ -14,13 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod backing;
-mod cleanup_backing;
-mod cleanup_surface;
-mod constants;
-mod discover;
-mod display;
-mod register;
-mod run;
+use nonos_libc::mk_mmap;
 
-pub use run::run;
+pub(super) fn alloc(width: u32, height: u32) -> Result<(u64, u32, u64), &'static str> {
+    let stride = width.checked_mul(4).ok_or("stride overflow")?;
+    let byte_len = (stride as u64).checked_mul(height as u64).ok_or("surface size overflow")?;
+    let base = mk_mmap(
+        core::ptr::null_mut(),
+        byte_len as usize,
+        super::constants::PROT_READ_WRITE,
+        super::constants::MAP_PRIVATE_ANON,
+        -1,
+        0,
+    );
+    if (base as isize) <= 0 {
+        return Err("backing mmap failed");
+    }
+    Ok((base as u64, stride, byte_len))
+}

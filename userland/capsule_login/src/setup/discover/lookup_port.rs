@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod backing;
-mod cleanup_backing;
-mod cleanup_surface;
-mod constants;
-mod discover;
-mod display;
-mod register;
-mod run;
+use nonos_libc::mk_service_lookup;
 
-pub use run::run;
+pub(super) fn lookup_port(name: &[u8]) -> Result<u32, &'static str> {
+    let mut pid: u32 = 0;
+    let mut port: u32 = 0;
+    let rc =
+        mk_service_lookup(name.as_ptr(), name.len(), &mut port as *mut u32, &mut pid as *mut u32);
+    if rc < 0 || pid == 0 || port == 0 {
+        return Err("service lookup failed");
+    }
+    Ok(port)
+}
