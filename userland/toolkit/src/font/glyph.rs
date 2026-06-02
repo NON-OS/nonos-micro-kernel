@@ -13,6 +13,8 @@ impl GlyphBitmap {
 
 const GLYPH_UNKNOWN: GlyphBitmap =
     GlyphBitmap::new([0x7E, 0x81, 0xA5, 0x81, 0x99, 0x81, 0x7E, 0x00]);
+const GLYPH_OSLASH: GlyphBitmap =
+    GlyphBitmap::new([0x3C, 0x42, 0x46, 0x4A, 0x52, 0x62, 0x3C, 0x00]);
 const GLYPH_SPACE: GlyphBitmap = GlyphBitmap::new([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 const GLYPH_0: GlyphBitmap = GlyphBitmap::new([0x3C, 0x42, 0x46, 0x4A, 0x52, 0x62, 0x3C, 0x00]);
 const GLYPH_1: GlyphBitmap = GlyphBitmap::new([0x08, 0x18, 0x28, 0x08, 0x08, 0x08, 0x3E, 0x00]);
@@ -44,6 +46,9 @@ pub fn digit_glyph(ascii: u8) -> Option<&'static GlyphBitmap> {
 pub fn glyph_for_ascii(ascii: u8) -> &'static GlyphBitmap {
     if ascii == b' ' {
         return &GLYPH_SPACE;
+    }
+    if ascii == 0xD8 {
+        return &GLYPH_OSLASH;
     }
     if let Some(g) = digit_glyph(ascii) {
         return g;
