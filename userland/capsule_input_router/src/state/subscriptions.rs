@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const MAX_SUBSCRIBERS: usize = 8;
+pub const MAX_SUBSCRIBERS: usize = 16;
 
 #[derive(Clone, Copy, Default)]
 pub struct Subscription {

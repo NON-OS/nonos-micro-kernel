@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{InputEvent, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS, INPUT_KIND_POINTER_REL};
+use nonos_libc::{
+    InputEvent, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS, INPUT_KIND_POINTER_REL,
+    INPUT_KIND_TOUCH,
+};
 
 use crate::clients::{compositor, wire, wm};
 use crate::state::Context;
@@ -26,35 +29,12 @@ const DESKTOP_SHELL_SERVICE: &[u8] = b"desktop_shell";
 pub fn route_pointer(ctx: &mut Context, event: &InputEvent) -> u32 {
     refresh_display(ctx);
     let (x, y) = ctx.cursor.apply(event);
-    let rid = ctx.issue_request_id();
-    let target = match wm::query_topmost(&mut ctx.wm_port, rid, x, y) {
-        Some(t) if t.owner_pid != 0 => t,
-        _ => return route_to_shell(ctx, event, x, y),
-    };
-    // Shell-owned chrome (launcher dock, taskbar) registers as topmost WM
-    // windows but must not steal focus or it would black-hole the keyboard,
-    // and the shell hit-tests its own layout in absolute screen coordinates.
-    // Route these like the bare-desktop fallback: absolute coords, focus held.
-    if target.owner_pid == shell_pid(ctx) {
-        return route_to_shell(ctx, event, x, y);
-    }
-    if event.kind == INPUT_KIND_BUTTON_DOWN {
-        let rid = ctx.issue_request_id();
-        let _ = wm::route_focus(ctx.wm_port, rid, target);
-    }
-    let mut routed = *event;
-    if routed.kind == INPUT_KIND_POINTER_REL {
-        routed.kind = INPUT_KIND_POINTER_ABS;
-        routed.delta_x = 0;
-        routed.delta_y = 0;
-    }
-    routed.x = target.local_x as i32;
-    routed.y = target.local_y as i32;
-    if !ctx.subscriptions.allows(target.owner_pid, routed.kind) {
-        ctx.record(0);
-        return 0;
-    }
-    let delivered = deliver_one(target.owner_pid, &routed);
+    let delivered = mirror_shell_pointer(ctx, event, x, y)
+        + match topmost_target(ctx, x, y) {
+            None => route_to_shell(ctx, event, x, y),
+            Some(target) if target.owner_pid == shell_pid(ctx) => route_to_shell(ctx, event, x, y),
+            Some(target) => route_to_window(ctx, event, target),
+        };
     ctx.record(delivered);
     delivered
 }
@@ -68,6 +48,51 @@ fn shell_pid(ctx: &mut Context) -> u32 {
     ctx.shell_pid
 }
 
+fn topmost_target(ctx: &mut Context, x: u32, y: u32) -> Option<wm::Target> {
+    let rid = ctx.issue_request_id();
+    wm::query_topmost(&mut ctx.wm_port, rid, x, y).filter(|target| target.owner_pid != 0)
+}
+
+fn route_to_window(ctx: &mut Context, event: &InputEvent, target: wm::Target) -> u32 {
+    if event.kind == INPUT_KIND_BUTTON_DOWN {
+        let rid = ctx.issue_request_id();
+        let _ = wm::route_focus(ctx.wm_port, rid, target);
+    }
+    let mut routed = *event;
+    if routed.kind == INPUT_KIND_POINTER_REL {
+        routed.kind = INPUT_KIND_POINTER_ABS;
+        routed.delta_x = 0;
+        routed.delta_y = 0;
+    }
+    routed.x = target.local_x as i32;
+    routed.y = target.local_y as i32;
+    if !ctx.subscriptions.allows(target.owner_pid, routed.kind) {
+        return 0;
+    }
+    deliver_one(target.owner_pid, &routed)
+}
+
+fn mirror_shell_pointer(ctx: &mut Context, event: &InputEvent, x: u32, y: u32) -> u32 {
+    if !matches!(event.kind, INPUT_KIND_POINTER_REL | INPUT_KIND_POINTER_ABS | INPUT_KIND_TOUCH) {
+        return 0;
+    }
+    let pid = shell_pid(ctx);
+    if pid == 0 || !ctx.subscriptions.allows(pid, INPUT_KIND_POINTER_ABS) {
+        return 0;
+    }
+    let mut routed = *event;
+    routed.kind = INPUT_KIND_POINTER_ABS;
+    routed.x = x as i32;
+    routed.y = y as i32;
+    routed.delta_x = 0;
+    routed.delta_y = 0;
+    let delivered = deliver_one(pid, &routed);
+    if delivered == 0 {
+        ctx.shell_pid = 0;
+    }
+    delivered
+}
+
 // Deliver desktop-chrome clicks to the shell in absolute screen coordinates.
 // Covers two cases with one contract: bare-desktop clicks (no WM window under
 // the cursor) and clicks on shell-owned chrome WM windows. The shell receives a
@@ -75,11 +100,9 @@ fn shell_pid(ctx: &mut Context) -> u32 {
 // keyboard. Only button presses are forwarded; bare movement needs no delivery.
 fn route_to_shell(ctx: &mut Context, event: &InputEvent, x: u32, y: u32) -> u32 {
     if event.kind != INPUT_KIND_BUTTON_DOWN {
-        ctx.record(0);
         return 0;
     }
     if shell_pid(ctx) == 0 {
-        ctx.record(0);
         return 0;
     }
     let mut routed = *event;
@@ -89,7 +112,6 @@ fn route_to_shell(ctx: &mut Context, event: &InputEvent, x: u32, y: u32) -> u32 
     if delivered == 0 {
         ctx.shell_pid = 0;
     }
-    ctx.record(delivered);
     delivered
 }
 
