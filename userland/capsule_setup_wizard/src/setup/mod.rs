@@ -14,7 +14,7 @@ use crate::state::Context;
 const PROT_READ_WRITE: i32 = 0x3;
 const MAP_PRIVATE_ANON: i32 = 0x22;
 const OVERLAY_Z: u32 = 1;
-const FILL_ARGB: u32 = 0x0020_3040;
+const FILL_ARGB: u32 = 0xFF20_3040;
 
 pub fn run() -> Result<Context, &'static str> {
     let compositor_port = discover::lookup_compositor_port()?;

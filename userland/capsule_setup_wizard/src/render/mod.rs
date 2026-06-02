@@ -4,10 +4,10 @@ use nonos_toolkit::font::render::draw_text;
 
 use crate::state::Context;
 
-const BG: u32 = 0x0020_3040;
-const FG: u32 = 0x00FF_FFFF;
-const DOT_DONE: u32 = 0x004F_D1C5;
-const DOT_TODO: u32 = 0x0022_303D;
+const BG: u32 = 0xFF20_3040;
+const FG: u32 = 0xFFFF_FFFF;
+const DOT_DONE: u32 = 0xFF4F_D1C5;
+const DOT_TODO: u32 = 0xFF22_303D;
 const STEPS: u32 = 6;
 const DOT: u32 = 10;
 const GAP: u32 = 18;
