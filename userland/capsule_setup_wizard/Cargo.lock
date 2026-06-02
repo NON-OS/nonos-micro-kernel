@@ -24,9 +24,14 @@ dependencies = [
 name = "nonos_capsule_setup_wizard"
 version = "0.1.0"
 dependencies = [
+ "nonos_policy_proto",
  "nonos_toolkit",
  "nonos_userland_libc",
 ]
+
+[[package]]
+name = "nonos_policy_proto"
+version = "0.1.0"
 
 [[package]]
 name = "nonos_toolkit"
