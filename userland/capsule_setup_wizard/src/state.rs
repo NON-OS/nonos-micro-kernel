@@ -17,6 +17,13 @@ pub struct Context {
     pub lang_sel: u8,
     pub tz_off: i8,
     pub theme_sel: u8,
+    pub net_sel: u8,
+    pub persist_sel: u8,
+    pub privacy: u16,
+    pub admin_len: usize,
+    pub admin_buf: [u8; 64],
+    pub host_len: usize,
+    pub host_buf: [u8; 64],
 }
 
 impl Context {
@@ -51,6 +58,13 @@ impl Context {
             lang_sel: 0,
             tz_off: 0,
             theme_sel: 0,
+            net_sel: 0,
+            persist_sel: 0,
+            privacy: 0b0000_0011,
+            admin_len: 0,
+            admin_buf: [0u8; 64],
+            host_len: 0,
+            host_buf: [0u8; 64],
         }
     }
 }
