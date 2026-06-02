@@ -14,6 +14,9 @@ pub struct Context {
     pub pass_len: usize,
     pub pass_buf: [u8; 64],
     pub keys_done: bool,
+    pub lang_sel: u8,
+    pub tz_off: i8,
+    pub theme_sel: u8,
 }
 
 impl Context {
@@ -45,6 +48,9 @@ impl Context {
             pass_len: 0,
             pass_buf: [0u8; 64],
             keys_done: false,
+            lang_sel: 0,
+            tz_off: 0,
+            theme_sel: 0,
         }
     }
 }
