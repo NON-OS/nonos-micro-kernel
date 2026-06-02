@@ -51,6 +51,7 @@ pub(in crate::userspace::init) fn spawn_desktop() {
 #[cfg(all(feature = "microkernel-setup-wizard", not(feature = "microkernel-input-probe")))]
 pub(in crate::userspace::init) fn spawn_desktop() {
     use crate::userspace::capsule_setup_wizard as wiz;
+    super::desktop_fleet::spawn_gui_core();
     super::boot::capsule(
         "SETUP-WIZARD",
         "setup_wizard",
