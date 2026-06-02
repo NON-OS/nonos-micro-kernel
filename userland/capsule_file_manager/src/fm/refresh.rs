@@ -15,12 +15,25 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::clients::vfs::list_paths;
+use nonos_app_skeleton::discover::lookup_service;
 
 use super::entries::build_entries;
 use super::state::State;
 
 pub fn refresh(state: &mut State) {
     state.preview = None;
+    if state.owner_pid == 0 {
+        state.owner_pid = lookup_service(b"app.file_manager").map(|peer| peer.pid).unwrap_or(0);
+    }
+    if state.owner_pid == 0 {
+        if state.entries.is_empty() {
+            state.cursor = 0;
+            state.status = b"vfs unavailable";
+        } else {
+            state.status = b"refresh deferred";
+        }
+        return;
+    }
     match list_paths(state.owner_pid, state.prefix.as_bytes()) {
         Ok(paths) => {
             state.entries = build_entries(state.prefix.as_str(), &paths);
@@ -28,9 +41,12 @@ pub fn refresh(state: &mut State) {
             state.status = if state.entries.is_empty() { b"empty directory" } else { b"click or Enter to open" };
         }
         Err(_) => {
-            state.entries.clear();
-            state.cursor = 0;
-            state.status = b"vfs unavailable";
+            if state.entries.is_empty() {
+                state.cursor = 0;
+                state.status = b"vfs unavailable";
+            } else {
+                state.status = b"refresh deferred";
+            }
         }
     }
 }

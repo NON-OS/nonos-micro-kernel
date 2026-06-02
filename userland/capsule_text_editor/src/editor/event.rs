@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::{clipboard_copy, clipboard_paste, clients::vfs, EventOutcome, InputEvent, KEY_BACKSPACE, KEY_ENTER, KEY_ESC, MOD_CTRL};
+use nonos_app_skeleton::discover::lookup_service;
 
 use super::state::{State, PATH};
 
@@ -53,6 +54,10 @@ fn on_ctrl(state: &mut State, code: u32) -> EventOutcome {
             EventOutcome::Repaint
         }
         c if matches!(c, 0x4F | 0x6F) => {
+            if !resolve_owner_pid(state) {
+                state.status = b"open failed";
+                return EventOutcome::Repaint;
+            }
             match vfs::read_file(state.owner_pid, PATH, super::state::CAPACITY as u32) {
                 Ok(bytes) if core::str::from_utf8(&bytes).is_ok() && bytes.len() <= super::state::CAPACITY => {
                     state.buf[..bytes.len()].copy_from_slice(&bytes);
@@ -65,6 +70,10 @@ fn on_ctrl(state: &mut State, code: u32) -> EventOutcome {
             EventOutcome::Repaint
         }
         c if matches!(c, 0x53 | 0x73) => {
+            if !resolve_owner_pid(state) {
+                state.status = b"save failed";
+                return EventOutcome::Repaint;
+            }
             state.status = if vfs::write_file(state.owner_pid, PATH, &state.buf[..state.len]).is_ok() { b"saved /notes.txt" } else { b"save failed" };
             EventOutcome::Repaint
         }
@@ -87,4 +96,11 @@ fn on_ctrl(state: &mut State, code: u32) -> EventOutcome {
         }
         _ => EventOutcome::Idle,
     }
+}
+
+fn resolve_owner_pid(state: &mut State) -> bool {
+    if state.owner_pid == 0 {
+        state.owner_pid = lookup_service(b"app.text_editor").map(|peer| peer.pid).unwrap_or(0);
+    }
+    state.owner_pid != 0
 }

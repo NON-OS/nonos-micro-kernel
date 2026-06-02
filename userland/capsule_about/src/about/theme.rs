@@ -26,8 +26,8 @@ pub const SCROLLBAR_THUMB: u32 = 0xFF30363D;
 
 pub const WINDOW_WIDTH: u32 = 560;
 pub const WINDOW_HEIGHT: u32 = 400;
-pub const WINDOW_INITIAL_X: u32 = 320;
-pub const WINDOW_INITIAL_Y: u32 = 180;
+pub const WINDOW_INITIAL_X: u32 = 188;
+pub const WINDOW_INITIAL_Y: u32 = 52;
 
 pub const HEADER_HEIGHT: u32 = 48;
 pub const TAB_BAR_HEIGHT: u32 = 28;

@@ -14,11 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_ESC};
+use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_ESC};
 
 use super::state::State;
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
+    if event.kind == InputKind::ButtonDown {
+        state.refresh();
+        return EventOutcome::Repaint;
+    }
     if !event.is_key_down() {
         return EventOutcome::Idle;
     }

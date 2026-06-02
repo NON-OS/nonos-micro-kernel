@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::discover::lookup_service;
-
 pub const CAPACITY: usize = 4096;
 pub const PATH: &[u8] = b"/notes.txt";
 
@@ -29,7 +27,7 @@ pub struct State {
 impl State {
     pub fn new() -> Self {
         State {
-            owner_pid: lookup_service(b"app.text_editor").map(|peer| peer.pid).unwrap_or(0x5445_4458),
+            owner_pid: 0,
             buf: [0; CAPACITY],
             len: 0,
             status: b"Ctrl-O open  Ctrl-S save  Ctrl-C copy  Ctrl-V paste",

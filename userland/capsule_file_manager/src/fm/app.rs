@@ -41,10 +41,16 @@ impl App for FileManager {
     }
 
     fn on_event(&mut self, event: InputEvent) -> EventOutcome {
+        if self.state.owner_pid == 0 || self.state.status == b"vfs unavailable" {
+            refresh(&mut self.state);
+        }
         on_event(&mut self.state, event)
     }
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
+        if self.state.owner_pid == 0 || self.state.status == b"vfs unavailable" {
+            refresh(&mut self.state);
+        }
         paint(&self.state, fb);
         if !self.announced {
             announce_live_gui(b"file_manager visible");

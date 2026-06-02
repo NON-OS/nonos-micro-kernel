@@ -18,8 +18,6 @@ extern crate alloc;
 
 use alloc::{string::String, vec::Vec};
 
-use nonos_app_skeleton::discover::lookup_service;
-
 use super::entries::Entry;
 
 pub struct State {
@@ -34,7 +32,7 @@ pub struct State {
 impl State {
     pub fn new() -> Self {
         State {
-            owner_pid: lookup_service(b"app.file_manager").map(|peer| peer.pid).unwrap_or(0x464D_4752),
+            owner_pid: 0,
             prefix: String::from("/"),
             entries: Vec::new(),
             cursor: 0,
