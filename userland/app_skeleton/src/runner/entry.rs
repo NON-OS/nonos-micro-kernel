@@ -65,6 +65,7 @@ pub fn run<A: App, F: FnOnce() -> A>(build: F) -> ! {
         let result = drain(
             &mut booted.app,
             &mut rx,
+            booted.manifest.width,
             peers.wm,
             booted.manifest.window_id,
             &mut request_id,

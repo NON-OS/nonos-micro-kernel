@@ -14,23 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::event::InputEvent;
-use super::kind::InputKind;
+use crate::input::{InputEvent, InputKind};
+use crate::clients::wm;
 
-impl InputEvent {
-    pub fn is_pointer(&self) -> bool {
-        matches!(
-            self.kind,
-            InputKind::PointerRel
-                | InputKind::PointerAbs
-                | InputKind::Wheel
-                | InputKind::ButtonDown
-                | InputKind::ButtonUp
-                | InputKind::Touch
-        )
+pub(super) fn handle(
+    event: InputEvent,
+    wm_port: u32,
+    window_id: u32,
+    request_id: &mut u32,
+) {
+    if event.kind != InputKind::ButtonDown {
+        return;
     }
+    let raise_id = next(request_id);
+    let _ = wm::window_raise(wm_port, raise_id, window_id);
+    let focus_id = next(request_id);
+    let _ = wm::window_focus(wm_port, focus_id, window_id);
+}
 
-    pub fn is_key_down(&self) -> bool {
-        matches!(self.kind, InputKind::KeyDown)
-    }
+fn next(slot: &mut u32) -> u32 {
+    let id = *slot;
+    *slot = slot.wrapping_add(1).max(1);
+    id
 }

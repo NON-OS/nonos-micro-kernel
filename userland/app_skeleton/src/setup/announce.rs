@@ -17,9 +17,12 @@
 use crate::app::AppManifest;
 use crate::clients::{compositor, input_router, wm};
 use crate::discover::Peers;
-use nonos_libc::mk_debug;
+use nonos_libc::{mk_debug, mk_yield};
 
 const APP_LAYER_Z: u32 = 2;
+const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
+const INPUT_TOUCH_BIT: u32 = 1 << 7;
+const SUBSCRIBE_ATTEMPTS: usize = 4;
 
 pub(super) fn announce(
     peers: &Peers,
@@ -49,11 +52,25 @@ pub(super) fn announce(
         manifest.height,
         APP_LAYER_Z,
     )?;
-    let rid = bump(request_id);
-    if input_router::subscribe(peers.input_router, rid, manifest.input_kind_mask).is_err() {
+    if subscribe_input(peers.input_router, request_id, input_mask(manifest)).is_err() {
         mk_debug(b"input subscribe deferred\n".as_ptr(), 24);
     }
     Ok(())
+}
+
+fn input_mask(manifest: &AppManifest) -> u32 {
+    manifest.input_kind_mask | INPUT_BUTTON_DOWN_BIT | INPUT_TOUCH_BIT
+}
+
+fn subscribe_input(port: u32, request_id: &mut u32, kind_mask: u32) -> Result<(), &'static str> {
+    for _ in 0..SUBSCRIBE_ATTEMPTS {
+        let rid = bump(request_id);
+        if input_router::subscribe(port, rid, kind_mask).is_ok() {
+            return Ok(());
+        }
+        mk_yield();
+    }
+    Err("input subscribe deferred")
 }
 
 fn bump(slot: &mut u32) -> u32 {

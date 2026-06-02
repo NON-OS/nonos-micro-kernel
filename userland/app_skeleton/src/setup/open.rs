@@ -48,9 +48,6 @@ pub fn open_window(
         if mk_surface_release(surface_handle) < 0 {
             return Err("surface release failed");
         }
-        if mk_surface_release(surface_handle) < 0 {
-            return Err("surface release failed");
-        }
         if mk_munmap(backing_va as *mut u8, byte_len as usize) < 0 {
             return Err("backing munmap failed");
         }

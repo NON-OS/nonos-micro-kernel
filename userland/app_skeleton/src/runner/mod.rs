@@ -15,7 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod boot;
+mod click_focus;
 mod control;
+mod decorations;
 mod dispatch;
 mod drain_ipc;
 mod entry;

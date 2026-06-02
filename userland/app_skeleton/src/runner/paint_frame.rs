@@ -18,8 +18,12 @@ use crate::app::{App, AppManifest};
 use crate::clients::toolkit;
 use crate::paint::PaintBuffer;
 use crate::setup::WindowBinding;
+use nonos_toolkit::decorations::{close_button_rect, draw_close_button};
 
 use super::request_id::next;
+
+const CLOSE_FILL_ARGB: u32 = 0xFF4B_5563;
+const CLOSE_GLYPH_ARGB: u32 = 0xFFE6_EDF3;
 
 pub(super) fn paint<A: App>(
     app: &mut A,
@@ -32,13 +36,15 @@ pub(super) fn paint<A: App>(
     // SAFETY: backing_va is the surface the kernel mapped writable into our AS at register time; words = byte_len / 4.
     let pixels: &mut [u32] =
         unsafe { core::slice::from_raw_parts_mut(binding.backing_va as *mut u32, words) };
-    let mut fb = PaintBuffer {
-        pixels,
-        stride_words: binding.stride_words,
-        width: manifest.width,
-        height: manifest.height,
-    };
-    app.paint(&mut fb);
+    {
+        let mut fb = PaintBuffer {
+            pixels,
+            stride_words: binding.stride_words,
+            width: manifest.width,
+            height: manifest.height,
+        };
+        app.paint(&mut fb);
+    }
     let rid = next(request_id);
     let result = toolkit::ui_frame(
         toolkit_port,
@@ -48,5 +54,20 @@ pub(super) fn paint<A: App>(
         manifest.title,
     );
     let _ = next(request_id);
+    if result.is_ok() {
+        paint_close_button(pixels, binding.stride_words as usize, manifest.width);
+    }
     result
+}
+
+fn paint_close_button(pixels: &mut [u32], stride_words: usize, width: u32) {
+    let rect = close_button_rect(width);
+    draw_close_button(
+        pixels,
+        stride_words,
+        width,
+        &rect,
+        CLOSE_FILL_ARGB,
+        CLOSE_GLYPH_ARGB,
+    );
 }

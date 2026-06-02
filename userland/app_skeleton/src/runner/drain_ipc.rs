@@ -18,7 +18,7 @@ use nonos_libc::mk_ipc_recv_from;
 
 use crate::app::{App, EventOutcome};
 
-use super::{control::handle_control, dispatch::parse_delivery};
+use super::{click_focus, control::handle_control, decorations, dispatch::parse_delivery};
 
 const SERVICE_INBOX: u64 = 0;
 const RECV_NOWAIT: u64 = 1;
@@ -31,6 +31,7 @@ pub(super) struct DrainResult {
 pub(super) fn drain<A: App>(
     app: &mut A,
     rx: &mut [u8],
+    width: u32,
     wm_port: u32,
     window_id: u32,
     request_id: &mut u32,
@@ -46,6 +47,11 @@ pub(super) fn drain<A: App>(
             continue;
         }
         let Some(event) = parse_delivery(&rx[..n as usize]) else { continue };
+        let event = decorations::normalize(event);
+        click_focus::handle(event, wm_port, window_id, request_id);
+        if let Some(EventOutcome::Close) = decorations::handle(width, event) {
+            return DrainResult { repaint, close: true };
+        }
         match app.on_event(event) {
             EventOutcome::Idle => {}
             EventOutcome::Repaint => repaint = true,

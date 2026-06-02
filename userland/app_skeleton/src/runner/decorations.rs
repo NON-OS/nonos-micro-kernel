@@ -14,23 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::event::InputEvent;
-use super::kind::InputKind;
+use crate::app::EventOutcome;
+use crate::input::{InputEvent, InputKind};
+use nonos_toolkit::decorations::{hit_test, DecorationHit};
 
-impl InputEvent {
-    pub fn is_pointer(&self) -> bool {
-        matches!(
-            self.kind,
-            InputKind::PointerRel
-                | InputKind::PointerAbs
-                | InputKind::Wheel
-                | InputKind::ButtonDown
-                | InputKind::ButtonUp
-                | InputKind::Touch
-        )
+pub(super) fn normalize(mut event: InputEvent) -> InputEvent {
+    if event.kind == InputKind::Touch {
+        event.kind = InputKind::ButtonDown;
     }
+    event
+}
 
-    pub fn is_key_down(&self) -> bool {
-        matches!(self.kind, InputKind::KeyDown)
+pub(super) fn handle(width: u32, event: InputEvent) -> Option<EventOutcome> {
+    if event.kind != InputKind::ButtonDown || event.x < 0 || event.y < 0 {
+        return None;
     }
+    if hit_test(width, event.x as u32, event.y as u32) == DecorationHit::CloseButton {
+        return Some(EventOutcome::Close);
+    }
+    None
 }
