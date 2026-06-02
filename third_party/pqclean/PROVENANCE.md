@@ -34,7 +34,7 @@ file under this directory changes the tree hash and fails the gate.
 Current pin:
 
 ```
-PQCLEAN_TREE_SHA=13aaaa68d6b8120fc325054125c791cfc8411f4c
+PQCLEAN_TREE_SHA=dd152ebaa9a001f9eb0d6b9c20dc82f8767335a0
 ```
 
 To intentionally update the snapshot:
