@@ -293,7 +293,20 @@ $(CAPSULE_SIGN_BIN):
 	@echo "Building capsule-sign host tool..."
 	@cd nonos-sign && cargo build --release --bin capsule-sign
 
-nonos-mk-host-trust-test:
+.PHONY: nonos-mk-host-trust-elfs
+nonos-mk-host-trust-elfs: $(USERLAND_LIBC) $(MARKETPLACE_ABI_LIB) \
+		$(proof-io_BIN) $(ramfs_BIN) $(keyring_BIN) $(entropy_BIN) \
+		$(crypto_BIN) $(vfs_BIN) $(market_BIN) $(driver-virtio-rng_BIN) \
+		$(driver-virtio-gpu_BIN) $(driver-ps2-input_BIN) $(driver-virtio-blk_BIN) \
+		$(driver-virtio-net_BIN) $(driver-xhci_BIN) $(driver-e1000_BIN) \
+		$(net-l2_BIN) $(net-ip_BIN) $(net-udp_BIN) $(net-dhcp_BIN) \
+		$(input-router_BIN) $(compositor_BIN) $(wm_BIN) $(desktop-shell_BIN) \
+		$(image-codec_BIN) $(clipboard_BIN) $(login_BIN) $(wallpaper_BIN) \
+		$(toolkit_BIN) $(about_BIN) $(calculator_BIN) $(terminal_BIN) \
+		$(file-manager_BIN) $(text-editor_BIN) $(settings_BIN) $(process-manager_BIN)
+	@echo "Capsule ELFs built for the host-trust artifact proof."
+
+nonos-mk-host-trust-test: nonos-mk-host-trust-elfs
 	@echo "Running host trust chain integration tests..."
 	@cd nonos-sign && cargo test --release --test host_trust
 	@echo "Verifying on-disk capsule artifacts against baked policy..."
