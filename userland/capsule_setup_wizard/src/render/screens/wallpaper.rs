@@ -8,7 +8,7 @@ pub fn draw(ctx: &Context) {
         1 => b"WALLPAPER  1 DEEP  2 SLATE  3 NIGHT  -> SLATE",
         _ => b"WALLPAPER  1 DEEP  2 SLATE  3 NIGHT  -> NIGHT",
     };
-    render::frame(ctx, label, b"1-3 SELECT  ENTER NEXT  ESC BACK");
+    render::frame(ctx, label, b"Pick a desktop wallpaper", b"1-3 SELECT  ENTER NEXT  ESC BACK");
 }
 
 pub fn on_key(ctx: &mut Context, code: u32) -> Outcome {

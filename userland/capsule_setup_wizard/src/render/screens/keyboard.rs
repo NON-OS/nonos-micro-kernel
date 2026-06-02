@@ -8,7 +8,7 @@ pub fn draw(ctx: &Context) {
     } else {
         b"KEYBOARD  1 US  2 INTL  -> INTL"
     };
-    render::frame(ctx, label, b"1/2 SELECT  ENTER NEXT  ESC BACK");
+    render::frame(ctx, label, b"Choose your keyboard layout", b"1/2 SELECT  ENTER NEXT  ESC BACK");
 }
 
 pub fn on_key(ctx: &mut Context, code: u32) -> Outcome {

@@ -12,7 +12,7 @@ pub fn draw(ctx: &Context) {
     } else {
         b"REVIEW  KBD INTL  KEYS OK  PASS OK"
     };
-    render::frame(ctx, label, b"ENTER FINISH  ESC BACK");
+    render::frame(ctx, label, b"Confirm and finish setup", b"ENTER FINISH  ESC BACK");
 }
 
 pub fn on_key(ctx: &mut Context, code: u32) -> Outcome {

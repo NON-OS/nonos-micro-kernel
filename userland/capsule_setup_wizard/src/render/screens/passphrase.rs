@@ -11,7 +11,7 @@ pub fn draw(ctx: &Context) {
     for i in 0..n {
         buf[prefix.len() + i] = b'*';
     }
-    render::frame(ctx, &buf[..prefix.len() + n], b"TYPE  BACKSPACE EDIT  ENTER NEXT  ESC BACK");
+    render::frame(ctx, &buf[..prefix.len() + n], b"Protects the persistent store at rest", b"TYPE  BACKSPACE EDIT  ENTER NEXT  ESC BACK");
 }
 
 pub fn on_key(ctx: &mut Context, code: u32) -> Outcome {

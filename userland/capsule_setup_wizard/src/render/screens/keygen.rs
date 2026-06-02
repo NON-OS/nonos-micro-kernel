@@ -9,7 +9,7 @@ pub fn draw(ctx: &Context) {
     } else {
         b"SYSTEM KEYS  ENTER TO GENERATE"
     };
-    render::frame(ctx, label, b"ENTER NEXT  ESC BACK");
+    render::frame(ctx, label, b"Generate this machine's identity keys", b"ENTER NEXT  ESC BACK");
 }
 
 pub fn on_key(ctx: &mut Context, code: u32) -> Outcome {
