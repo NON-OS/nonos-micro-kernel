@@ -6,6 +6,7 @@ extern crate alloc;
 mod clients;
 mod debug;
 mod protocol;
+mod render;
 mod setup;
 mod state;
 
@@ -24,6 +25,8 @@ pub unsafe extern "C" fn _start() -> ! {
             mk_exit(2);
         }
     };
+    render::frame(&ctx, b"WELCOME TO NONOS", b"ENTER BEGIN");
+    let _ = clients::compositor::damage_commit(ctx.compositor_port, 4, ctx.width, ctx.height);
     let _ = clients::input_router::subscribe(ctx.router_port, 1);
     let _ = clients::input_router::grab_keyboard(ctx.router_port, 2);
     debug::marker(b"subscribed+grabbed");
