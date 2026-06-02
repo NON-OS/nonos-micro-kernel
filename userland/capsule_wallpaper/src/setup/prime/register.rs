@@ -56,8 +56,8 @@ pub fn register_wallpaper(
         backing.height,
         BOTTOM_Z,
     ) {
-        if mk_surface_release(handle as u64) < 0 {
-            return Err("wallpaper surface release rejected");
+        if e == "compositor call failed" {
+            return Err(e);
         }
         if mk_surface_release(handle as u64) < 0 {
             return Err("wallpaper surface release rejected");
