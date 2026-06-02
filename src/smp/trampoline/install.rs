@@ -59,6 +59,10 @@ pub fn install_trampoline_at(addr: PhysAddr) -> Result<(), TrampolineError> {
     Ok(())
 }
 
+// The trampoline fields are emitted after `.balign 8` in tables.S and the
+// image is installed at a page-aligned address, so every field offset is
+// naturally aligned for its width; the volatile pointer casts below are sound.
+#[allow(clippy::cast_ptr_alignment)]
 pub fn write_per_ap_context(addr: PhysAddr, ctx: &PerApBootContext) -> Result<(), TrampolineError> {
     if ctx.pml4_phys > u32::MAX as u64 {
         return Err(TrampolineError::Pml4Above4G);
@@ -87,6 +91,9 @@ pub fn write_per_ap_context(addr: PhysAddr, ctx: &PerApBootContext) -> Result<()
     Ok(())
 }
 
+// `ready` sits at a 4-aligned offset (see tables.S) in the page-aligned
+// trampoline image, so the volatile u32 read is correctly aligned.
+#[allow(clippy::cast_ptr_alignment)]
 pub fn ap_signaled_ready(addr: PhysAddr) -> bool {
     let Some(base_virt) = phys_to_virt_checked(addr) else { return false };
     let off_ready = field_offset(&raw const nonos_ap_trampoline_ready);

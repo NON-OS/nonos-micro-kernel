@@ -28,5 +28,5 @@ impl ElfHeader {
     pub fn has_native_header_size(&self) -> bool { usize::from(self.e_ehsize) == Self::SIZE }
     pub fn has_native_program_header_size(&self) -> bool { self.e_phnum == 0 || usize::from(self.e_phentsize) == ProgramHeader::SIZE }
     pub fn has_native_section_header_size(&self) -> bool { self.e_shnum == 0 || usize::from(self.e_shentsize) == SectionHeader::SIZE }
-    pub fn has_valid_section_name_table_index(&self) -> bool { (self.e_shnum == 0 && self.e_shstrndx == 0) || self.e_shstrndx == 0 || self.e_shstrndx < self.e_shnum }
+    pub fn has_valid_section_name_table_index(&self) -> bool { self.e_shstrndx == 0 || self.e_shstrndx < self.e_shnum }
 }

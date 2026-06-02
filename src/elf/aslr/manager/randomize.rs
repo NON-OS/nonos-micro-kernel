@@ -23,7 +23,7 @@ impl AslrManager {
 
     pub fn random_address(min: usize, max: usize, size: usize) -> usize {
         if min >= max || size == 0 || max - min <= size { return min; }
-        let entropy = match usize::try_from(gather_entropy() >> 16) { Ok(value) => value, Err(_) => 0 };
+        let entropy = usize::try_from(gather_entropy() >> 16).unwrap_or_default();
         let offset = entropy % (max - min - size);
         (min + offset) & !0xFFF
     }
