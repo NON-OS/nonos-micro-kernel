@@ -25,6 +25,9 @@ const SIDE_DOCK_ARGB: u32 = 0xFF0F_1218;
 const BOTTOM_DOCK_ARGB: u32 = 0xFF1B_2030;
 const SPOTLIGHT_ARGB: u32 = 0xFF14_1B26;
 const TITLE_FG: u32 = 0xFFE1_ECF7;
+const CURSOR_ARGB: u32 = 0xFFF7_FBFF;
+const CURSOR_SHADOW_ARGB: u32 = 0xFF0A_0D12;
+const CURSOR_SIZE: u32 = 12;
 
 pub fn clear_overlay(ctx: &Context) {
     fill_rect(
@@ -52,6 +55,7 @@ pub fn paint_chrome(ctx: &Context) {
     if ctx.spotlight.visible {
         paint(ctx, spotlight_rect(ctx.width, ctx.height), SPOTLIGHT_ARGB);
     }
+    paint_cursor(ctx);
 }
 
 const NOTIFY_BADGE: u32 = 8;
@@ -70,4 +74,16 @@ fn paint_notify_badge(ctx: &Context) {
 
 fn paint(ctx: &Context, r: Rect, argb: u32) {
     fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, r.x, r.y, r.width, r.height, argb);
+}
+
+fn paint_cursor(ctx: &Context) {
+    if !ctx.pointer_visible {
+        return;
+    }
+    let x = ctx.pointer_x.min(ctx.width.saturating_sub(CURSOR_SIZE));
+    let y = ctx.pointer_y.min(ctx.height.saturating_sub(CURSOR_SIZE));
+    paint(ctx, Rect { x: x + 1, y, width: 2, height: CURSOR_SIZE }, CURSOR_SHADOW_ARGB);
+    paint(ctx, Rect { x, y: y + 1, width: CURSOR_SIZE, height: 2 }, CURSOR_SHADOW_ARGB);
+    paint(ctx, Rect { x, y, width: 2, height: CURSOR_SIZE }, CURSOR_ARGB);
+    paint(ctx, Rect { x, y, width: CURSOR_SIZE, height: 2 }, CURSOR_ARGB);
 }

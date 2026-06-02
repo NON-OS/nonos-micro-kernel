@@ -14,18 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+#[derive(Clone, Copy)]
+pub enum LauncherIcon {
+    Terminal,
+    FileManager,
+    TextEditor,
+    Settings,
+    ProcessManager,
+    About,
+    Calculator,
+}
+
 pub struct LauncherApp {
-    pub icon: &'static [u8],
+    pub icon: LauncherIcon,
     pub label: &'static [u8],
     pub service: &'static [u8],
 }
 
 pub const LAUNCHER_APPS: [LauncherApp; 7] = [
-    LauncherApp { icon: b"T", label: b"terminal", service: b"app.terminal" },
-    LauncherApp { icon: b"F", label: b"file_manager", service: b"app.file_manager" },
-    LauncherApp { icon: b"E", label: b"text_editor", service: b"app.text_editor" },
-    LauncherApp { icon: b"S", label: b"settings", service: b"app.settings" },
-    LauncherApp { icon: b"P", label: b"process_manager", service: b"app.process_manager" },
-    LauncherApp { icon: b"A", label: b"about", service: b"app.about" },
-    LauncherApp { icon: b"C", label: b"calculator", service: b"app.calculator" },
+    LauncherApp { icon: LauncherIcon::Terminal, label: b"terminal", service: b"app.terminal" },
+    LauncherApp { icon: LauncherIcon::FileManager, label: b"file_manager", service: b"app.file_manager" },
+    LauncherApp { icon: LauncherIcon::TextEditor, label: b"text_editor", service: b"app.text_editor" },
+    LauncherApp { icon: LauncherIcon::Settings, label: b"settings", service: b"app.settings" },
+    LauncherApp { icon: LauncherIcon::ProcessManager, label: b"process_manager", service: b"app.process_manager" },
+    LauncherApp { icon: LauncherIcon::About, label: b"about", service: b"app.about" },
+    LauncherApp { icon: LauncherIcon::Calculator, label: b"calculator", service: b"app.calculator" },
 ];

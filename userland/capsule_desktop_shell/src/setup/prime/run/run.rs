@@ -16,6 +16,7 @@
 
 use crate::debug;
 use crate::market_client;
+use crate::compositor_client::push_damage_commit;
 use crate::render::paint_chrome;
 use crate::setup::prime::{close_chrome_windows, open_chrome_windows, overlay, peers, register};
 use crate::state::{Context, SpotlightState, TrayTable};
@@ -39,6 +40,9 @@ pub fn run() -> Result<Context, &'static str> {
         height: overlay.height,
         stride: overlay.stride,
         backing_va: overlay.backing_va,
+        pointer_x: 0,
+        pointer_y: 0,
+        pointer_visible: false,
         tray: TrayTable::new(),
         spotlight: SpotlightState::new(),
         last_notify_level: None,
@@ -62,6 +66,11 @@ pub fn run() -> Result<Context, &'static str> {
             }
             return Err(e);
         }
+    }
+    let rid = ctx.issue_request_id();
+    debug::marker(b"setup overlay commit");
+    if let Err(e) = push_damage_commit(peers.compositor_port, rid, 0, 0, ctx.width, ctx.height) {
+        debug::marker(e.as_bytes());
     }
     let rid = ctx.issue_request_id();
     debug::marker(b"setup input subscribe");

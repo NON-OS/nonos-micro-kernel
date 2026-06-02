@@ -22,7 +22,7 @@ use nonos_libc::{
 use super::overlay::Overlay;
 use crate::compositor_client::push_scene_submit;
 
-const OVERLAY_Z: u32 = 1;
+const OVERLAY_Z: u32 = 16;
 
 pub fn register_overlay(
     compositor_port: u32,
@@ -56,9 +56,10 @@ pub fn register_overlay(
         overlay.height,
         OVERLAY_Z,
     ) {
-        let first = mk_surface_release(handle as u64);
-        let second = mk_surface_release(handle as u64);
-        if first < 0 || second < 0 {
+        if e == "compositor call failed" {
+            return Err(e);
+        }
+        if mk_surface_release(handle as u64) < 0 {
             return Err("overlay surface release rejected");
         }
         return Err(e);

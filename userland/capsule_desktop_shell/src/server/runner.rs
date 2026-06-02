@@ -16,18 +16,28 @@
 
 use alloc::vec;
 
-use nonos_libc::mk_ipc_recv_from;
+use nonos_libc::{mk_ipc_recv_from, mk_yield};
 
+use crate::compositor_client::push_damage_commit;
 use crate::protocol::{
     parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_HEALTHCHECK, OP_NOTIFY,
     OP_SPOTLIGHT_OPEN, OP_TRAY_REGISTER, OP_TRAY_REMOVE, OP_TRAY_UPDATE,
 };
+use crate::render::paint_chrome;
 use crate::server::{handlers, respond};
 use crate::state::Context;
 
 const SERVICE_INBOX: u64 = 0;
 
 pub fn run(mut ctx: Context) -> ! {
+    for _ in 0..8 {
+        paint_chrome(&ctx);
+        let rid = ctx.issue_request_id();
+        if push_damage_commit(ctx.compositor_port, rid, 0, 0, ctx.width, ctx.height).is_ok() {
+            break;
+        }
+        mk_yield();
+    }
     let mut rx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut tx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     loop {
