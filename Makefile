@@ -344,6 +344,7 @@ include userland/compositor/Capsule.mk
 include userland/capsule_input_router/Capsule.mk
 include userland/capsule_input_proof/Capsule.mk
 include userland/capsule_input_probe/Capsule.mk
+include userland/capsule_setup_wizard/Capsule.mk
 include userland/capsule_wm/Capsule.mk
 include userland/capsule_desktop_shell/Capsule.mk
 include userland/capsule_image_codec/Capsule.mk
