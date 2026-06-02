@@ -26,3 +26,26 @@ pub fn default_key(code: u32) -> Outcome {
         _ => Outcome::Stay,
     }
 }
+
+pub fn list_nav(sel: &mut u8, len: u8, code: u32) -> Option<Outcome> {
+    match code {
+        0x6B => {
+            *sel = sel.saturating_sub(1);
+            Some(Outcome::Stay)
+        }
+        0x6A => {
+            if *sel + 1 < len {
+                *sel += 1;
+            }
+            Some(Outcome::Stay)
+        }
+        0x31..=0x39 => {
+            let i = (code - 0x31) as u8;
+            if i < len {
+                *sel = i;
+            }
+            Some(Outcome::Stay)
+        }
+        _ => None,
+    }
+}

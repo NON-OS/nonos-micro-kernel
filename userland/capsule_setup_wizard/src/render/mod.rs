@@ -2,6 +2,7 @@ pub mod chrome;
 pub mod paint;
 pub mod screens;
 pub mod theme;
+pub mod widgets;
 
 use nonos_toolkit::font::render::draw_text;
 
