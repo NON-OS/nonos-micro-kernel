@@ -63,6 +63,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkDisplayVsyncWait => caps.can_display_query(),
         SyscallNumber::MkInputEventPost => caps.can_input_source(),
         SyscallNumber::MkInputEventDrain => caps.can_ipc(),
+        SyscallNumber::MkInputEventWait => caps.can_ipc(),
 
         _ => return None,
     })

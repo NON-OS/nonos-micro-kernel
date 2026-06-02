@@ -12,7 +12,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use super::super::constants::{size_to_order, FREE_LIST_COUNT, MAX_ORDER, MIN_ORDER};
+use super::super::constants::{FREE_LIST_COUNT, MAX_ORDER, MIN_ORDER};
 use super::super::error::BuddyAllocResult;
 use super::super::types::{AllocatedBlock, BuddyBlock};
 use crate::memory::layout;
@@ -47,13 +47,13 @@ impl VmapAllocator {
             list.clear();
         }
         self.allocated_blocks.clear();
-        let initial_order = size_to_order(self.total_size as usize);
-        if initial_order <= MAX_ORDER {
-            let list_idx = initial_order.saturating_sub(MIN_ORDER);
-            if list_idx < self.free_lists.len() {
-                self.free_lists[list_idx]
-                    .push(BuddyBlock { addr: self.base_addr, order: initial_order });
-            }
+        let block_size = 1u64 << MAX_ORDER;
+        let list_idx = MAX_ORDER - MIN_ORDER;
+        let region_end = self.base_addr.saturating_add(self.total_size);
+        let mut addr = self.base_addr;
+        while addr.saturating_add(block_size) <= region_end && list_idx < self.free_lists.len() {
+            self.free_lists[list_idx].push(BuddyBlock { addr, order: MAX_ORDER });
+            addr = addr.saturating_add(block_size);
         }
         self.initialized = true;
         Ok(())

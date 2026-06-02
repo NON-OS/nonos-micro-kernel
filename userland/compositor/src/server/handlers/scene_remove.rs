@@ -28,13 +28,10 @@ pub fn handle(
     if body.len() != SCENE_REMOVE_REQ_LEN {
         return respond::status(sender_pid, req, E_INVAL, tx);
     }
-    let Some(owner_pid) = super::u32_at(body, 0) else {
-        return respond::status(sender_pid, req, E_INVAL, tx);
-    };
-    let owner_pid = if owner_pid == 0 { sender_pid } else { owner_pid };
-    if owner_pid != sender_pid {
+    if sender_pid == 0 {
         return respond::status(sender_pid, req, E_INVAL, tx);
     }
+    let owner_pid = sender_pid;
     let mut gone = [0u64; 32];
     let mut n = 0;
     for layer in ctx.scene.layers().filter(|l| l.owner_pid == owner_pid) {
