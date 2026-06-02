@@ -25,6 +25,13 @@ fn commit(ctx: &Context) {
     let _ = policy::set_i8(p, Field::Timezone as u32, ctx.tz_off);
     let _ = policy::set_u8(p, Field::Wallpaper as u32, ctx.wall_sel);
     let _ = policy::set_u8(p, Field::Theme as u32, ctx.theme_sel);
+    let _ = policy::set_bool(p, Field::AnonymousMode as u32, ctx.net_sel == 0);
+    let _ = policy::set_bool(p, Field::WifiAutoconnect as u32, ctx.net_sel == 1);
+    let _ = policy::set_bool(p, Field::AutoWipe as u32, ctx.privacy & 0b010 != 0);
+    let _ = policy::set_bool(p, Field::NymEnabled as u32, ctx.privacy & 0b001 != 0);
+    if ctx.host_len > 0 {
+        let _ = policy::set_str(p, Field::Hostname as u32, &ctx.host_buf[..ctx.host_len]);
+    }
     let _ = policy::set_bool(p, Field::SystemKeysGenerated as u32, true);
 }
 
