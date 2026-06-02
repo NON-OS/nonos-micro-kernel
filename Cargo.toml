@@ -75,6 +75,7 @@ nonos-capsule-desktop-shell     = []
 nonos-capsule-input-router      = []
 nonos-capsule-input-proof       = []
 nonos-capsule-input-probe       = []
+nonos-capsule-setup-wizard      = []
 nonos-capsule-wm                = []
 nonos-capsule-toolkit           = []
 nonos-capsule-login             = []
@@ -683,6 +684,11 @@ microkernel-input-probe = [
   "nonos-capsule-driver-virtio-gpu",
   "nonos-capsule-compositor",
   "nonos-capsule-input-probe",
+]
+
+microkernel-setup-wizard = [
+  "microkernel-desktop-gui",
+  "nonos-capsule-setup-wizard",
 ]
 
 microkernel-driver-e1000-smoketest = [

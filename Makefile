@@ -1066,6 +1066,33 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-desktop-gui
 
+nonos-mk-setup-wizard-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
+		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
+		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
+		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
+		$(driver-virtio-net_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
+		$(driver-xhci_ARTIFACTS) $(net-l2_ARTIFACTS) \
+		$(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) \
+		$(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) \
+		$(net-nym_ARTIFACTS) \
+		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
+		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
+		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
+		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
+		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
+		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(terminal_ARTIFACTS) \
+		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
+		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
+		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
+		$(setup-wizard_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-setup-wizard)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-setup-wizard
+
 nonos-mk-toolkit-prod: nonos-mk-desktop-gui-prod
 nonos-mk-about-prod: nonos-mk-desktop-gui-prod
 nonos-mk-calculator-prod: nonos-mk-desktop-gui-prod

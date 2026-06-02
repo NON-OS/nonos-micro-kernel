@@ -48,7 +48,22 @@ pub(in crate::userspace::init) fn spawn_desktop() {
     super::input_probe_fleet::spawn();
 }
 
-#[cfg(not(feature = "microkernel-input-probe"))]
+#[cfg(all(feature = "microkernel-setup-wizard", not(feature = "microkernel-input-probe")))]
+pub(in crate::userspace::init) fn spawn_desktop() {
+    use crate::userspace::capsule_setup_wizard as wiz;
+    super::boot::capsule(
+        "SETUP-WIZARD",
+        "setup_wizard",
+        wiz::spawn_setup_wizard_capsule,
+        wiz::shared_state,
+    );
+    while wiz::shared_state().is_alive() {
+        crate::sched::yield_now();
+    }
+    super::desktop_fleet::spawn();
+}
+
+#[cfg(all(not(feature = "microkernel-input-probe"), not(feature = "microkernel-setup-wizard")))]
 pub(in crate::userspace::init) fn spawn_desktop() {
     super::desktop_fleet::spawn();
 }
