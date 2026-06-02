@@ -1,0 +1,50 @@
+pub struct Context {
+    pub base: u64,
+    pub width: u32,
+    pub height: u32,
+    pub stride: u32,
+    pub compositor_port: u32,
+    pub router_port: u32,
+    pub keyring_port: u32,
+    pub policy_port: u32,
+    pub wallpaper_port: u32,
+    pub step: u8,
+    pub kbd_sel: u8,
+    pub wall_sel: u8,
+    pub pass_len: usize,
+    pub pass_buf: [u8; 64],
+    pub keys_done: bool,
+}
+
+impl Context {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        base: u64,
+        width: u32,
+        height: u32,
+        stride: u32,
+        compositor_port: u32,
+        router_port: u32,
+        keyring_port: u32,
+        policy_port: u32,
+        wallpaper_port: u32,
+    ) -> Self {
+        Self {
+            base,
+            width,
+            height,
+            stride,
+            compositor_port,
+            router_port,
+            keyring_port,
+            policy_port,
+            wallpaper_port,
+            step: 0,
+            kbd_sel: 0,
+            wall_sel: 0,
+            pass_len: 0,
+            pass_buf: [0u8; 64],
+            keys_done: false,
+        }
+    }
+}
