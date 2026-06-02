@@ -58,10 +58,13 @@ pub(in crate::userspace::init) fn spawn_desktop() {
         wiz::spawn_setup_wizard_capsule,
         wiz::shared_state,
     );
-    while wiz::shared_state().is_alive() {
-        crate::sched::yield_now();
-    }
+}
+
+#[cfg(feature = "microkernel-setup-wizard")]
+pub(in crate::userspace::init) fn spawn_post_wizard() {
     super::desktop_fleet::spawn();
+    super::apps::spawn();
+    super::core::spawn_market();
 }
 
 #[cfg(all(not(feature = "microkernel-input-probe"), not(feature = "microkernel-setup-wizard")))]
@@ -69,13 +72,19 @@ pub(in crate::userspace::init) fn spawn_desktop() {
     super::desktop_fleet::spawn();
 }
 
+#[cfg(not(feature = "microkernel-setup-wizard"))]
 pub(in crate::userspace::init) fn spawn_apps() {
     super::apps::spawn();
 }
+#[cfg(feature = "microkernel-setup-wizard")]
+pub(in crate::userspace::init) fn spawn_apps() {}
 
+#[cfg(not(feature = "microkernel-setup-wizard"))]
 pub(in crate::userspace::init) fn spawn_market() {
     super::core::spawn_market();
 }
+#[cfg(feature = "microkernel-setup-wizard")]
+pub(in crate::userspace::init) fn spawn_market() {}
 
 pub(in crate::userspace::init) fn run_smoketests() {
     super::smoketests::run_all();

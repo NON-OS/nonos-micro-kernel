@@ -44,3 +44,6 @@ pub(super) use orchestrator::{
     run_ramfs_smoketest, run_smoketests, spawn_apps, spawn_core_after_ramfs, spawn_desktop,
     spawn_drivers, spawn_market, spawn_network, spawn_ramfs, spawn_vfs,
 };
+
+#[cfg(feature = "microkernel-setup-wizard")]
+pub(super) use orchestrator::spawn_post_wizard;
