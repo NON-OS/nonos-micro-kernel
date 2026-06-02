@@ -19,7 +19,7 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 use super::input_ring::{consumer_ready, post_input};
 use super::types::InputEvent;
 
-const SCRIPT: &[u8] = b"NONOS";
+const SCRIPT: &[u8] = &[0x0D, 0x0D, 0x0D, b't', b'e', b's', b't', 0x0D, 0x0D, 0x0D];
 const TICKS_PER_CHAR: usize = 30;
 const GRAB_MARGIN_TICKS: usize = 200;
 const UNARMED: usize = usize::MAX;
