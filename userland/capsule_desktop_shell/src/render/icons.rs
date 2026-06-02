@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::fill::fill_rect;
-use crate::state::{Context, LauncherIcon};
+use crate::state::Context;
+use crate::state::apps::LauncherIcon;
 
 pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u32) {
     let bg = 0xFF223245;
