@@ -14,17 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use core::sync::atomic::{AtomicBool, Ordering};
+
 use nonos_libc::{
     InputEvent, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS, INPUT_KIND_POINTER_REL,
     INPUT_KIND_TOUCH,
 };
 
 use crate::clients::{compositor, wire, wm};
+use crate::debug;
 use crate::state::Context;
 
 use super::deliver::deliver_one;
 
 const DESKTOP_SHELL_SERVICE: &[u8] = b"desktop_shell";
+static POINTER_LOGGED: AtomicBool = AtomicBool::new(false);
+static FOCUS_LOGGED: AtomicBool = AtomicBool::new(false);
 
 pub fn route_pointer(ctx: &mut Context, event: &InputEvent) -> u32 {
     refresh_display(ctx);
@@ -57,6 +62,9 @@ fn route_to_window(ctx: &mut Context, event: &InputEvent, target: wm::Target) ->
     if event.kind == INPUT_KIND_BUTTON_DOWN {
         let rid = ctx.issue_request_id();
         let _ = wm::route_focus(ctx.wm_port, rid, target);
+        if !FOCUS_LOGGED.swap(true, Ordering::Relaxed) {
+            debug::marker(b"button focus routed");
+        }
     }
     let mut routed = *event;
     if routed.kind == INPUT_KIND_POINTER_REL {
@@ -89,6 +97,8 @@ fn mirror_shell_pointer(ctx: &mut Context, event: &InputEvent, x: u32, y: u32) -
     let delivered = deliver_one(pid, &routed);
     if delivered == 0 {
         ctx.shell_pid = 0;
+    } else if !POINTER_LOGGED.swap(true, Ordering::Relaxed) {
+        debug::marker(b"shell pointer mirrored");
     }
     delivered
 }

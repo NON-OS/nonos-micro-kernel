@@ -14,12 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use core::sync::atomic::{AtomicBool, Ordering};
+
 use nonos_libc::InputEvent;
 
 use crate::clients::wm;
+use crate::debug;
 use crate::state::Context;
 
 use super::deliver::deliver_one;
+
+static KEYBOARD_LOGGED: AtomicBool = AtomicBool::new(false);
 
 pub fn route_keyboard(ctx: &mut Context, event: &InputEvent) -> u32 {
     let rid = ctx.issue_request_id();
@@ -32,6 +37,9 @@ pub fn route_keyboard(ctx: &mut Context, event: &InputEvent) -> u32 {
         return 0;
     }
     let delivered = deliver_one(pid, event);
+    if delivered != 0 && !KEYBOARD_LOGGED.swap(true, Ordering::Relaxed) {
+        debug::marker(b"keyboard delivered");
+    }
     ctx.record(delivered);
     delivered
 }

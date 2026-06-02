@@ -14,14 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use core::sync::atomic::{AtomicBool, Ordering};
+
 use nonos_libc::{INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS};
 
 use crate::compositor_client::push_damage_commit;
+use crate::debug;
 use crate::render::paint_chrome;
 use crate::server::handlers::launcher_focus;
 use crate::state::Context;
 
 const CURSOR_SIZE: u32 = 12;
+static POINTER_LOGGED: AtomicBool = AtomicBool::new(false);
+static BUTTON_LOGGED: AtomicBool = AtomicBool::new(false);
 
 pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     if buf.len() < 40 || u32::from_le_bytes(buf[0..4].try_into().unwrap()) != 0x4E49_4E50 {
@@ -35,8 +40,14 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     let y = i32::from_le_bytes(buf[20..24].try_into().unwrap());
     if x >= 0 && y >= 0 {
         if kind == INPUT_KIND_POINTER_ABS {
+            if !POINTER_LOGGED.swap(true, Ordering::Relaxed) {
+                debug::marker(b"pointer abs received");
+            }
             repaint_cursor(ctx, x as u32, y as u32);
         } else if kind == INPUT_KIND_BUTTON_DOWN {
+            if !BUTTON_LOGGED.swap(true, Ordering::Relaxed) {
+                debug::marker(b"button down received");
+            }
             launcher_focus::handle(ctx, x as u32, y as u32);
         }
     }
