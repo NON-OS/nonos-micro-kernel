@@ -27,7 +27,7 @@ pub const FREED_MAGIC: u32 = 0xFEEDFACE;
 // concurrent AEAD round-trips, and the ELF loader scratch. The linker
 // places .bss last, so this stays NOBITS and does not bloat the kernel
 // ELF or stretch the bootloader's signature-verify window.
-pub const BOOTSTRAP_HEAP_SIZE: usize = 16 * 1024 * 1024;
+pub const BOOTSTRAP_HEAP_SIZE: usize = 64 * 1024 * 1024;
 pub const BOOTSTRAP_HEAP_ALIGN: usize = 4096;
 
 pub const MIN_ALIGNMENT: usize = 8;
