@@ -28,7 +28,7 @@ pub const KERNEL_DS: u16 = 0x10;
 
 pub const USER_RFLAGS: u64 = 0x202;
 pub const USER_STACK_SIZE: usize = 2 * 1024 * 1024;
-pub const KERNEL_STACK_SIZE: usize = 16 * 1024;
+pub const KERNEL_STACK_SIZE: usize = 32 * 1024;
 pub const USER_STACK_BASE: u64 = 0x0000_7FFF_FFFF_0000;
 pub const USER_HEAP_START: u64 = 0x0000_0001_0000_0000;
 pub const USER_CODE_START: u64 = 0x0000_0000_0040_0000;

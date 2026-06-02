@@ -51,7 +51,7 @@ pub(crate) fn test_user_stack_size_constant() -> TestResult {
 }
 
 pub(crate) fn test_kernel_stack_size_constant() -> TestResult {
-    if KERNEL_STACK_SIZE != 16 * 1024 {
+    if KERNEL_STACK_SIZE != 32 * 1024 {
         return TestResult::Fail;
     }
     TestResult::Pass

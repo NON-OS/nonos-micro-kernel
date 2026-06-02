@@ -36,7 +36,7 @@ pub(crate) enum KernelStackError {
     Allocation,
 }
 
-/// Allocate a 16 KiB kernel-only stack and stash its top on the PCB.
+/// Allocate a 32 KiB kernel-only stack and stash its top on the PCB.
 /// Returns the top (16-byte aligned). `allocate_pages` returns a
 /// page-aligned base; `KERNEL_STACK_SIZE` is a multiple of the page
 /// size, so `top - KERNEL_STACK_SIZE` reconstructs the base verbatim
