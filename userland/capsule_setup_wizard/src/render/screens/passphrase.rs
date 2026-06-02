@@ -1,17 +1,14 @@
 use crate::debug;
-use crate::render;
+use crate::render::{self, widgets};
 use crate::server::step::{default_key, Outcome, K_BACKSPACE, K_ENTER, K_ENTER_LF};
 use crate::state::Context;
 
 pub fn draw(ctx: &Context) {
-    let prefix = b"PASSPHRASE  ";
-    let mut buf = [0u8; 48];
-    buf[..prefix.len()].copy_from_slice(prefix);
-    let n = ctx.pass_len.min(buf.len() - prefix.len());
-    for i in 0..n {
-        buf[prefix.len() + i] = b'*';
-    }
-    render::frame(ctx, &buf[..prefix.len() + n], b"Protects the persistent store at rest", b"TYPE  BACKSPACE EDIT  ENTER NEXT  ESC BACK");
+    render::frame(ctx, b"Disk-encryption passphrase", b"Protects the persistent store at rest", b"TYPE  BACKSPACE EDIT  ENTER NEXT  ESC BACK");
+    let spx = ctx.stride as usize / 4;
+    let (w, h) = (ctx.width, ctx.height);
+    let buf = render::buffer(ctx);
+    widgets::field::masked(buf, spx, w, h, render::content_x(w), 120, ctx.pass_len, widgets::field::strength_of(ctx.pass_len));
 }
 
 pub fn on_key(ctx: &mut Context, code: u32) -> Outcome {
