@@ -763,6 +763,15 @@ nonos-mk-setup-wizard-run-serial: nonos-mk-setup-wizard-esp $(QEMU_OVMF_VARS_RW)
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial mon:stdio -display none -no-reboot
 
+nonos-mk-setup-wizard-run: nonos-mk-setup-wizard-esp $(QEMU_OVMF_VARS_RW)
+	@echo "Booting NONOS setup wizard (GUI) in QEMU..."
+	@echo "  Drive it with the host keyboard; Quit: Ctrl+A then X"
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-setup-wizard" \
+		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial mon:stdio -vga none -no-reboot
+
 nonos-mk-setup-wizard-inject-esp: nonos-mk-setup-wizard-inject-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
 	$(call NONOS_INPUT_E2E_ESP,setup-wizard-inject)
 
