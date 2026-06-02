@@ -17,7 +17,7 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use super::super::rlp::{rlp_list, rlp_string, rlp_uint_be};
+use super::super::rlp::{rlp_list, rlp_uint_be};
 use super::fields::base_fields;
 
 pub fn signed_tx(
@@ -28,8 +28,8 @@ pub fn signed_tx(
 ) -> Vec<u8> {
     let mut f = base_fields(parts.0, parts.1, parts.2, parts.3, parts.4);
     f.push(rlp_uint_be(&[y_parity]));
-    f.push(rlp_string(r));
-    f.push(rlp_string(s));
+    f.push(rlp_uint_be(r));
+    f.push(rlp_uint_be(s));
     let mut out = vec![0x02u8];
     out.extend_from_slice(&rlp_list(&f));
     out

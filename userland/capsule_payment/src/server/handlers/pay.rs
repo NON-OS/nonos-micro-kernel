@@ -48,7 +48,7 @@ pub fn pay(state: &mut State, req: Request<'_>) -> Vec<u8> {
         return encode_response(req.seq, EINVAL, &[]);
     }
     let now_secs = (now_ms as u64) / 1000;
-    let nonce = state.next_nonce(owner_pid, wallet_id, &publisher);
+    let nonce = state.next_nonce(owner_pid, wallet_id, &publisher, now_ms as u64);
     let f = ReceiptInput {
         capsule_id: word32(p, 8),
         publisher,

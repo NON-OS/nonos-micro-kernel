@@ -19,6 +19,7 @@ use alloc::vec;
 use nonos_libc::{mk_ipc_recv, mk_ipc_send};
 
 use super::dispatch::dispatch;
+use super::wipe::wipe;
 use crate::protocol::{decode_request, KERNEL_REPLY_ENDPOINT};
 use crate::store::Store;
 
@@ -32,11 +33,15 @@ pub fn run() -> ! {
         if n <= 0 {
             continue;
         }
-        let req = match decode_request(&buf[..n as usize]) {
-            Some(r) => r,
-            None => continue,
+        let used = n as usize;
+        let resp = match decode_request(&buf[..used]) {
+            Some(req) => dispatch(&mut store, req),
+            None => {
+                wipe(&mut buf[..used]);
+                continue;
+            }
         };
-        let resp = dispatch(&mut store, req);
         let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, resp.as_ptr(), resp.len());
+        wipe(&mut buf[..used]);
     }
 }

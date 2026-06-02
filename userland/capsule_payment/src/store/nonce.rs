@@ -17,13 +17,20 @@
 use super::types::State;
 
 impl State {
-    pub fn next_nonce(&mut self, owner_pid: u32, wallet_id: u32, publisher: &[u8; 20]) -> u64 {
+    pub fn next_nonce(
+        &mut self,
+        owner_pid: u32,
+        wallet_id: u32,
+        publisher: &[u8; 20],
+        floor: u64,
+    ) -> u64 {
         let mut key = [0u8; 40];
         key[0..4].copy_from_slice(&owner_pid.to_le_bytes());
         key[4..8].copy_from_slice(&wallet_id.to_le_bytes());
         key[8..28].copy_from_slice(publisher);
         let slot = self.nonces.entry(key).or_insert(0);
-        *slot = slot.saturating_add(1);
-        *slot
+        let next = floor.max(slot.saturating_add(1));
+        *slot = next;
+        next
     }
 }

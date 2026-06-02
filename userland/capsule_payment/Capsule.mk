@@ -13,8 +13,8 @@ CAPSULE_FEATURE          := nonos-capsule-payment
 CAPSULE_NAMESPACE        := systems.nonos.payment
 CAPSULE_SERVICE_ENDPOINT := service:4110:payment
 CAPSULE_REPLY_ENDPOINT   := reply:4111:endpoint.4294967312
-# IPC | Memory = 0x08 | 0x10 = 0x18
-CAPSULE_REQUIRED_CAPS    := 0x18
+# CoreExec | IPC | Memory = 0x01 | 0x08 | 0x10 = 0x19
+CAPSULE_REQUIRED_CAPS    := 0x19
 CAPSULE_KERNEL_MIRROR    := src/security/payment_capsule
 
 include nonos-mk/capsule.mk
