@@ -1,4 +1,4 @@
-pub const DONE: u8 = 6;
+pub const DONE: u8 = 10;
 
 pub const K_ENTER: u32 = 0x0D;
 pub const K_ENTER_LF: u32 = 0x0A;

@@ -17,6 +17,10 @@ pub const STEP_LABELS: &[&[u8]] = &[
     b"Keyboard",
     b"Identity keys",
     b"Passphrase",
-    b"Wallpaper",
+    b"Persistence",
+    b"Network",
+    b"Admin",
+    b"Privacy",
+    b"Appearance",
     b"Review",
 ];
