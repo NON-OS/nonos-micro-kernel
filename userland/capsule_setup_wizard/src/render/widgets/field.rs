@@ -10,6 +10,8 @@ pub fn masked(buf: &mut [u32], spx: usize, w: u32, h: u32, x: u32, y: u32, len: 
     let dots = [b'*'; 32];
     let n = len.min(32);
     draw_text(buf, spx, w, h, x + 8, y + 9, &dots[..n], FG);
+    let caret_x = x + 8 + (n as u32) * 8;
+    fill_rect(buf, spx, w, h, caret_x, y + 7, 2, 12, ACCENT);
     fill_rect(buf, spx, w, h, x, y + 34, fw, 6, ROW_BORDER);
     let fillw = fw * strength.min(100) / 100;
     fill_rect(buf, spx, w, h, x, y + 34, fillw, 6, ACCENT);
