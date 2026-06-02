@@ -31,6 +31,7 @@ pub fn run(mut ctx: Context) -> ! {
         let outcome = screens::on_key(&mut ctx, ev.code);
         ctx.step = step::apply(ctx.step, outcome);
         if ctx.step >= DONE {
+            let _ = compositor::push_scene_remove(ctx.compositor_port, 3);
             debug::marker(b"wizard done");
             mk_exit(0);
         }

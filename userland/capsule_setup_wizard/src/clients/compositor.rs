@@ -9,8 +9,10 @@ const HDR_LEN: usize = 20;
 const OP_HEALTHCHECK: u16 = 0x0001;
 const OP_SCENE_SUBMIT: u16 = 0x0002;
 const OP_DAMAGE_COMMIT: u16 = 0x0003;
+const OP_SCENE_REMOVE: u16 = 0x0007;
 const SCENE_REQ_LEN: usize = 32;
 const DAMAGE_REQ_LEN: usize = 16;
+const SCENE_REMOVE_REQ_LEN: usize = 8;
 
 fn call_status(port: u32, tx: &[u8]) -> Result<(), i32> {
     let mut rx = vec![0u8; HDR_LEN + 4];
@@ -59,6 +61,13 @@ pub fn push_scene_submit(
     tx.extend_from_slice(&width.to_le_bytes());
     tx.extend_from_slice(&height.to_le_bytes());
     tx.extend_from_slice(&z.to_le_bytes());
+    tx.extend_from_slice(&0u32.to_le_bytes());
+    call_status(port, &tx)
+}
+
+pub fn push_scene_remove(port: u32, request_id: u32) -> Result<(), i32> {
+    let mut tx = header(OP_SCENE_REMOVE, request_id, SCENE_REMOVE_REQ_LEN as u32);
+    tx.extend_from_slice(&0u32.to_le_bytes());
     tx.extend_from_slice(&0u32.to_le_bytes());
     call_status(port, &tx)
 }
