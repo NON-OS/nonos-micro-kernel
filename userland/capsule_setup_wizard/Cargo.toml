@@ -1,0 +1,16 @@
+[package]
+name = "nonos_capsule_setup_wizard"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "setup_wizard"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_toolkit = { package = "nonos_toolkit", path = "../toolkit" }
+
+[features]
+default = []
