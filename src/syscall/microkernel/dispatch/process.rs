@@ -18,7 +18,7 @@ use super::args::Args;
 use crate::syscall::microkernel::memory::{sys_mmap, sys_munmap};
 use crate::syscall::microkernel::numbers::*;
 use crate::syscall::microkernel::process::{sys_exit, sys_spawn, sys_yield};
-use crate::syscall::microkernel::time::sys_time_millis;
+use crate::syscall::microkernel::time::{sys_time_millis, sys_time_rtc};
 
 pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
     Some(match nr {
@@ -28,6 +28,7 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_EXIT => sys_exit(a.a0 as i32),
         SYS_YIELD => sys_yield(),
         SYS_TIME_MILLIS => sys_time_millis(),
+        SYS_TIME_RTC => sys_time_rtc(a.a0),
         _ => return None,
     })
 }
