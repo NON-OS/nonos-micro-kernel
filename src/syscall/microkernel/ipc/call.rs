@@ -16,9 +16,10 @@
 
 use crate::process::current_pid;
 
-use super::recv::recv_from_inbox;
+use super::correlation;
+use super::recv::recv_reply_matching;
 use super::reply_inbox;
-use super::send::sys_ipc_send;
+use super::send::send_with_correlation;
 
 fn trace(pid: u32, label: &[u8], rc: i64) {
     if pid != 0x17 {
@@ -49,19 +50,21 @@ pub fn sys_ipc_call(
     resp_len: usize,
     timeout_ms: u64,
 ) -> i64 {
-    let send_result = sys_ipc_send(ep, req, req_len);
+    let token = correlation::next_token();
+    let send_result = send_with_correlation(ep, req, req_len, token);
     let pid = current_pid().unwrap_or(0);
     trace(pid, b"send", send_result);
     if send_result < 0 {
         return send_result;
     }
     let inbox = reply_inbox::for_pid(pid);
-    let recv_result = recv_from_inbox(
+    let recv_result = recv_reply_matching(
         pid,
         &inbox,
         resp,
         resp_len,
         if timeout_ms == 0 { 5000 } else { timeout_ms },
+        token,
     );
     trace(pid, b"recv", recv_result);
     recv_result

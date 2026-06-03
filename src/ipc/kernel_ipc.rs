@@ -51,6 +51,15 @@ pub fn kernel_check_ipc_permission(caller_pid: u32, target: &str) -> Result<(), 
 }
 
 pub fn kernel_route_ipc(caller_pid: u32, target: &str, data: &[u8]) -> Result<(), i32> {
+    kernel_route_ipc_corr(caller_pid, target, data, 0)
+}
+
+pub fn kernel_route_ipc_corr(
+    caller_pid: u32,
+    target: &str,
+    data: &[u8],
+    correlation: u64,
+) -> Result<(), i32> {
     let endpoint = lookup_service(target).ok_or(ENOENT)?;
     if !caps::has(caller_pid, endpoint.caps_required) {
         return Err(EACCES);
@@ -62,12 +71,13 @@ pub fn kernel_route_ipc(caller_pid: u32, target: &str, data: &[u8]) -> Result<()
     } else {
         alloc::format!("proc.{}", endpoint.pid)
     };
-    let msg = crate::ipc::nonos_channel::IpcMessage::new(
+    let mut msg = crate::ipc::nonos_channel::IpcMessage::new(
         &alloc::format!("proc.{}", caller_pid),
         &dest,
         data,
     )
     .map_err(|_| ENOMEM)?;
+    msg.correlation = correlation;
     match nonos_inbox::try_enqueue_strict(&dest, msg) {
         Ok(()) => {
             let woke = endpoint.pid != KERNEL_OWNER && crate::sched::is_sleeping(endpoint.pid);

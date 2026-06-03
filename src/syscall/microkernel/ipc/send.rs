@@ -18,7 +18,7 @@ extern crate alloc;
 
 use core::sync::atomic::{AtomicU32, Ordering};
 
-use crate::ipc::kernel_ipc::kernel_route_ipc;
+use crate::ipc::kernel_ipc::kernel_route_ipc_corr;
 use crate::process::current_pid;
 use crate::services::registry::{lookup_port, lookup_service};
 use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL};
@@ -45,6 +45,15 @@ fn trace(pid: u32, endpoint: u64, target: &str, len: usize) {
 }
 
 pub fn sys_ipc_send(endpoint: u64, buf: u64, len: usize) -> i64 {
+    send_with_correlation(endpoint, buf, len, 0)
+}
+
+pub(super) fn send_with_correlation(
+    endpoint: u64,
+    buf: u64,
+    len: usize,
+    correlation: u64,
+) -> i64 {
     if len == 0 {
         return ERRNO_INVAL;
     }
@@ -58,7 +67,7 @@ pub fn sys_ipc_send(endpoint: u64, buf: u64, len: usize) -> i64 {
     let pid = current_pid().unwrap_or(0);
     let target = resolve_send_target(endpoint);
     trace(pid, endpoint, &target, len);
-    match kernel_route_ipc(pid, &target, &data) {
+    match kernel_route_ipc_corr(pid, &target, &data, correlation) {
         Ok(()) => 0,
         Err(e) => e as i64,
     }

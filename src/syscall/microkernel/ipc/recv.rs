@@ -23,7 +23,9 @@ use crate::syscall::microkernel::errnos::{
 };
 use core::sync::atomic::{AtomicU32, Ordering};
 
+use super::correlation::note_request;
 use super::inbox_name::resolve_for_recv;
+use super::sender_pid::from_envelope;
 
 static RECV_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
@@ -73,6 +75,7 @@ pub(super) fn recv_from_inbox(
     loop {
         if let Some(msg) = nonos_inbox::try_dequeue_existing(&inbox_name) {
             trace(b"dequeue", pid);
+            note_request(from_envelope(&msg.from), msg.correlation);
             if slept {
                 crate::sched::wake_process(pid);
             }
@@ -94,6 +97,7 @@ pub(super) fn recv_from_inbox(
         slept = true;
         if let Some(msg) = nonos_inbox::try_dequeue_existing(&inbox_name) {
             trace(b"dequeue", pid);
+            note_request(from_envelope(&msg.from), msg.correlation);
             crate::sched::wake_process(pid);
             let copy_len = msg.data.len().min(len);
             if crate::usercopy::copy_to_user(buf, &msg.data[..copy_len]).is_err() {
@@ -104,5 +108,46 @@ pub(super) fn recv_from_inbox(
         trace(b"before yield", pid);
         crate::sched::yield_now();
         trace(b"after yield", pid);
+    }
+}
+
+pub(super) fn recv_reply_matching(
+    pid: u32,
+    inbox_name: &str,
+    buf: u64,
+    len: usize,
+    timeout_ms: u64,
+    expected: u64,
+) -> i64 {
+    if !nonos_inbox::exists(&inbox_name) {
+        return ERRNO_NOENT;
+    }
+    let start = crate::time::timestamp_millis();
+    let mut slept = false;
+    loop {
+        if let Some(msg) = nonos_inbox::try_dequeue_existing(&inbox_name) {
+            if msg.correlation != expected {
+                continue;
+            }
+            if slept {
+                crate::sched::wake_process(pid);
+            }
+            let copy_len = msg.data.len().min(len);
+            if crate::usercopy::copy_to_user(buf, &msg.data[..copy_len]).is_err() {
+                return ERRNO_FAULT;
+            }
+            return copy_len as i64;
+        }
+        let elapsed = crate::time::timestamp_millis().saturating_sub(start);
+        if timeout_ms > 0 && elapsed >= timeout_ms {
+            if slept {
+                crate::sched::wake_process(pid);
+            }
+            return ERRNO_TIMEDOUT;
+        }
+        let deadline = if timeout_ms == 0 { u64::MAX } else { start.saturating_add(timeout_ms) };
+        crate::sched::sleep_until(pid, deadline);
+        slept = true;
+        crate::sched::yield_now();
     }
 }
