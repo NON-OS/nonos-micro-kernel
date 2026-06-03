@@ -14,10 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod chrome;
-pub mod fill;
-pub mod layout;
-pub mod text;
+use nonos_toolkit::font::render::draw_text;
 
-pub use chrome::paint_chrome;
-pub use layout::{menubar_rect, spotlight_rect};
+use crate::state::Context;
+
+pub fn draw_status(ctx: &Context, x: u32, y: u32, bytes: &[u8], argb: u32) {
+    let words = (ctx.stride / 4) as usize * ctx.height as usize;
+    // SAFETY: backing_va is the anon mmap overlay buffer of stride*height
+    // bytes owned by this capsule for its lifetime; the draw is synchronous
+    // and the slice is not aliased elsewhere during the call.
+    let pixels = unsafe { core::slice::from_raw_parts_mut(ctx.backing_va as *mut u32, words) };
+    draw_text(
+        pixels,
+        (ctx.stride / 4) as usize,
+        ctx.width,
+        ctx.height,
+        x,
+        y,
+        bytes,
+        argb,
+    );
+}
