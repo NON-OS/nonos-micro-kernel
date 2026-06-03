@@ -17,7 +17,9 @@
 pub mod chrome;
 pub mod fill;
 pub mod layout;
+pub mod status;
 pub mod text;
 
 pub use chrome::paint_chrome;
 pub use layout::{menubar_rect, spotlight_rect};
+pub use status::paint_status;
