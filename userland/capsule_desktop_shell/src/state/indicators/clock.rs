@@ -14,13 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod context;
-pub mod indicators;
-pub mod notify;
-pub mod spotlight;
-pub mod tray;
+use nonos_libc::{mk_time_rtc, RtcTime};
 
-pub use context::Context;
-pub use notify::NotifyLevel;
-pub use spotlight::SpotlightState;
-pub use tray::{TrayEntry, TrayTable};
+pub fn hhmm(buf: &mut [u8; 5]) -> bool {
+    let mut t = RtcTime::default();
+    if mk_time_rtc(&mut t as *mut RtcTime) != 0 {
+        return false;
+    }
+    buf[0] = b'0' + (t.hour / 10) % 10;
+    buf[1] = b'0' + t.hour % 10;
+    buf[2] = b':';
+    buf[3] = b'0' + (t.minute / 10) % 10;
+    buf[4] = b'0' + t.minute % 10;
+    true
+}

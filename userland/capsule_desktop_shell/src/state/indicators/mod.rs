@@ -14,13 +14,4 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod context;
-pub mod indicators;
-pub mod notify;
-pub mod spotlight;
-pub mod tray;
-
-pub use context::Context;
-pub use notify::NotifyLevel;
-pub use spotlight::SpotlightState;
-pub use tray::{TrayEntry, TrayTable};
+pub mod clock;
