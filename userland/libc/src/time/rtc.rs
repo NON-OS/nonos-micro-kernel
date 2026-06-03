@@ -14,8 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod rtc;
-mod wall;
+use crate::syscall::{call_raw, N_MK_TIME_RTC};
 
-pub use rtc::{mk_time_rtc, RtcTime};
-pub use wall::mk_time_millis;
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub struct RtcTime {
+    pub year: u16,
+    pub month: u8,
+    pub day: u8,
+    pub hour: u8,
+    pub minute: u8,
+    pub second: u8,
+    pub _pad: u8,
+}
+
+pub extern "C" fn mk_time_rtc(out: *mut RtcTime) -> i64 {
+    call_raw(N_MK_TIME_RTC, [out as u64, 0, 0, 0, 0, 0])
+}

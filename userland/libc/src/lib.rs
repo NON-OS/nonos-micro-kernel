@@ -33,7 +33,8 @@ mod unistd;
 
 pub use broker::{
     mk_device_claim, mk_device_list, mk_device_release, mk_dma_map, mk_dma_unmap, mk_irq_ack,
-    mk_irq_bind, mk_irq_poll, mk_irq_unbind, mk_mmio_map, mk_mmio_unmap, mk_pci_config_read,
+    mk_irq_bind, mk_irq_poll, mk_irq_unbind, mk_irq_wait, mk_mmio_map, mk_mmio_unmap,
+    mk_pci_config_read,
     mk_pci_config_write, mk_pio_grant, mk_pio_read, mk_pio_release, mk_pio_write, Bar,
     DeviceRecord, DmaMapOut, IrqBindOut, IrqPollOut, MmioMapOut, PioGrantOut, BAR_KIND_MMIO,
     BAR_KIND_NONE, BAR_KIND_PIO, BUS_KIND_ACPI, BUS_KIND_PCI, BUS_KIND_VIRT, MK_IRQ_BIND_MSIX,
@@ -66,5 +67,5 @@ pub use surface_registry::{
     INPUT_KIND_KEY_UP, INPUT_KIND_POINTER_ABS, INPUT_KIND_POINTER_REL, INPUT_KIND_TOUCH,
     INPUT_KIND_WHEEL, SURFACE_FORMAT_ARGB8888,
 };
-pub use time::mk_time_millis;
+pub use time::{mk_time_millis, mk_time_rtc, RtcTime};
 pub use unistd::{mk_exit, mk_yield};
