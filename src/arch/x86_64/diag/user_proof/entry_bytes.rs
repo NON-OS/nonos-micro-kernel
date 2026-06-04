@@ -27,7 +27,7 @@ use crate::memory::layout::DIRECTMAP_BASE;
 const BYTES_PER_LINE: usize = 16;
 const HEX: &[u8; 16] = b"0123456789abcdef";
 
-pub fn print(user_rip: u64, leaf: Leaf) {
+pub(super) fn print(user_rip: u64, leaf: Leaf) {
     let phys = leaf.phys_base + leaf.offset;
     let src = (DIRECTMAP_BASE + phys) as *const u8;
     let mut buf = [0u8; BYTES_PER_LINE];

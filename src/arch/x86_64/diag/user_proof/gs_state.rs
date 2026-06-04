@@ -23,13 +23,13 @@
 
 use crate::arch::x86_64::syscall::msr::{read_msr, IA32_GS_BASE, IA32_KERNEL_GS_BASE};
 
-pub struct GsState {
+pub(super) struct GsState {
     pub base: u64,
     pub kernel_base: u64,
     pub rsp0: u64,
 }
 
-pub fn read() -> GsState {
+pub(super) fn read() -> GsState {
     GsState {
         base: read_msr(IA32_GS_BASE),
         kernel_base: read_msr(IA32_KERNEL_GS_BASE),

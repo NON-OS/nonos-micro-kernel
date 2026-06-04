@@ -32,32 +32,32 @@ const PAGE_2M_MASK: u64 = 0x000F_FFFF_FFE0_0000;
 const PAGE_1G_MASK: u64 = 0x000F_FFFF_C000_0000;
 
 #[derive(Clone, Copy)]
-pub struct LeafReq {
+pub(super) struct LeafReq {
     pub user: bool,
     pub writable: bool,
     pub executable: bool,
 }
 
-pub struct Leaf {
+pub(super) struct Leaf {
     pub entry: u64,
     pub phys_base: u64,
     pub offset: u64,
 }
 
-pub fn pml4_present(cr3: u64, idx: usize) -> bool {
+pub(super) fn pml4_present(cr3: u64, idx: usize) -> bool {
     let pml4 = (DIRECTMAP_BASE + (cr3 & PHYS_MASK)) as *const u64;
     let entry = unsafe { core::ptr::read_volatile(pml4.add(idx)) };
     entry & PRESENT != 0
 }
 
-pub fn leaf_satisfies(cr3: u64, va: u64, req: LeafReq) -> bool {
+pub(super) fn leaf_satisfies(cr3: u64, va: u64, req: LeafReq) -> bool {
     let Some(leaf) = leaf_for(cr3, va) else {
         return false;
     };
     matches_perms(leaf.entry, req)
 }
 
-pub fn leaf_for(cr3: u64, va: u64) -> Option<Leaf> {
+pub(super) fn leaf_for(cr3: u64, va: u64) -> Option<Leaf> {
     let i4 = ((va >> 39) & 0x1FF) as usize;
     let i3 = ((va >> 30) & 0x1FF) as usize;
     let i2 = ((va >> 21) & 0x1FF) as usize;

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(feature = "nonos-smp")]
-pub fn start_secondary_cpus() {
+pub(super) fn start_secondary_cpus() {
+    #[cfg(feature = "nonos-smp")]
     match crate::smp::start_aps() {
         Ok(started) => {
             crate::sys::serial::print(b"[SMP-PROOF] cpu_count=");
@@ -32,6 +32,3 @@ pub fn start_secondary_cpus() {
         }
     }
 }
-
-#[cfg(not(feature = "nonos-smp"))]
-pub fn start_secondary_cpus() {}

@@ -18,6 +18,7 @@ pub mod constants;
 pub mod error;
 pub mod gsi_owners;
 pub mod init;
+pub mod init_from_acpi;
 pub mod mmio;
 pub mod ops;
 mod ops_helpers;
@@ -38,6 +39,7 @@ pub use gsi_owners::{
     owner_of as gsi_owner_of, release_capsule as release_gsi_from_capsule,
 };
 pub use init::init;
+pub use init_from_acpi::init_from_acpi;
 pub use ops::{
     alloc_route, claim_gsi_for_msi, free_vector, mask, program_route, program_route_external,
     query, release_gsi_from_msi, restore, retarget, snapshot, status, IoApicStatus,

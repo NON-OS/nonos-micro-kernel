@@ -50,13 +50,6 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     if let Err(e) = crate::memory::unified::init_unified_vm() {
         fatal("memory: init_unified_vm failed", e);
     }
-    if crate::arch::x86_64::interrupt::ioapic::init_from_acpi() {
-        boot_log::ok("NONOS", "Broker IO-APIC ready");
-    } else {
-        boot_log::error("Broker IO-APIC init failed");
-    }
-    crate::interrupts::init_timer();
-    crate::interrupts::set_tick_hook(broker_irq_wake_tick);
     crate::process::init_process_management();
     crate::elf::loader::init_elf_loader();
     crate::crypto::kernel_keys::init();
@@ -78,12 +71,6 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     super::start_secondary::start_secondary_cpus();
 
     boot_log::ok("NONOS", "Core ready");
-}
-
-fn broker_irq_wake_tick() {
-    crate::hardware::broker::irq::wake::drain_and_wake();
-    #[cfg(feature = "input-probe-inject")]
-    crate::kernel_core::surface_registry::inject::on_tick();
 }
 
 fn fatal(stage: &str, detail: &str) -> ! {
