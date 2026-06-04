@@ -14,11 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod field_bool_value;
+mod field_i8_value;
+mod field_str_value;
+mod field_u8_value;
 pub mod fmt_dec;
 pub mod fmt_signed;
 pub mod layout;
 pub mod paint;
 pub mod paint_field_row;
+pub mod paint_field_value;
 pub mod paint_header;
 pub mod paint_status;
 pub mod paint_tabs;

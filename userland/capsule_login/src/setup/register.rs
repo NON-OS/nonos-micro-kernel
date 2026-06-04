@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_surface_register, mk_surface_share, SurfaceDescriptor, SURFACE_FORMAT_ARGB8888};
+use nonos_libc::{
+    mk_surface_register, mk_surface_share, SurfaceDescriptor, SURFACE_FORMAT_ARGB8888,
+};
 
 pub(super) fn surface(
     width: u32,
@@ -23,8 +25,15 @@ pub(super) fn surface(
     byte_len: u64,
     backing_va: u64,
 ) -> Result<u64, &'static str> {
-    let desc =
-        SurfaceDescriptor { width, height, stride, format: SURFACE_FORMAT_ARGB8888, byte_len, base_va: backing_va, flags: 0 };
+    let desc = SurfaceDescriptor {
+        width,
+        height,
+        stride,
+        format: SURFACE_FORMAT_ARGB8888,
+        byte_len,
+        base_va: backing_va,
+        flags: 0,
+    };
     let sid = mk_surface_register(&desc);
     if sid < 0 {
         return Err("surface register rejected");

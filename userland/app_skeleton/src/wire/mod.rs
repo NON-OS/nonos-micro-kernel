@@ -18,10 +18,14 @@ mod builder;
 mod call;
 mod call_payload;
 mod constants;
+mod read_i32;
+mod read_u32;
+mod read_u64;
 
 pub use builder::build_request;
 pub use call::call_status;
 pub use call_payload::call_payload;
-pub use constants::{
-    HDR_LEN, NCLP_MAGIC, NCMP_MAGIC, NINP_MAGIC, NIRS_MAGIC, NWMP_MAGIC, VERSION,
-};
+pub use constants::{HDR_LEN, NCLP_MAGIC, NCMP_MAGIC, NINP_MAGIC, NIRS_MAGIC, NWMP_MAGIC, VERSION};
+pub use read_i32::read_i32;
+pub use read_u32::read_u32;
+pub use read_u64::read_u64;

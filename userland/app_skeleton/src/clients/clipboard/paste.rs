@@ -17,7 +17,7 @@
 use alloc::vec;
 
 use crate::discover::lookup_port;
-use crate::wire::{call_payload, HDR_LEN, NCLP_MAGIC};
+use crate::wire::{call_payload, read_u32, HDR_LEN, NCLP_MAGIC};
 
 const OP_PASTE: u16 = 0x0003;
 const CONTENT_TYPE_TEXT: u32 = 1;
@@ -32,7 +32,7 @@ pub fn clipboard_paste(out: &mut [u8]) -> Result<usize, &'static str> {
     if total < base + 4 {
         return Ok(0);
     }
-    let len = u32::from_le_bytes(rx[base..base + 4].try_into().unwrap()) as usize;
+    let len = read_u32(&rx, base)? as usize;
     let avail = total - base - 4;
     let n = len.min(avail).min(out.len());
     out[..n].copy_from_slice(&rx[base + 4..base + 4 + n]);

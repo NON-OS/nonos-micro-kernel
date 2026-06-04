@@ -22,7 +22,8 @@ use crate::settings::theme::{STATUS_BG, STATUS_FG_ERR, STATUS_FG_IDLE, STATUS_FG
 
 use super::layout::{PAD_X, STATUS_H};
 
-const HINT: &[u8] = b"[Tab] tabs  [Up/Down] move  [Left/Right] adjust  [Enter] edit/toggle  [Esc] close";
+const HINT: &[u8] =
+    b"[Tab] tabs  [Up/Down] move  [Left/Right] adjust  [Enter] edit/toggle  [Esc] close";
 
 pub fn paint_status(fb: &mut PaintBuffer, status: &Status, ready: bool) {
     let y = HEIGHT - STATUS_H;

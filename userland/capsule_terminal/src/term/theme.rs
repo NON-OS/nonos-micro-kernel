@@ -14,7 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const BACKGROUND: u32 = 0xFF0A0F0A;
-pub const FOREGROUND: u32 = 0xFF8CF08C;
-pub const PROMPT: u32 = 0xFF5FB95F;
-pub const CURSOR: u32 = 0xFFB6FF7A;
+pub const BACKGROUND: u32 = 0xFF0B0E13;
+pub const FOREGROUND: u32 = 0xFFB9C2CC;
+pub const PROMPT: u32 = 0xFF35D07A;
+pub const CURSOR: u32 = 0xFF7CF0A8;
+pub const ACCENT: u32 = 0xFF35D07A;
+pub const PATH: u32 = 0xFF5AA9E6;
+pub const DIM: u32 = 0xFF5A6573;
+pub const HEADER_BG: u32 = 0xFF141A24;
+pub const HEADER_RULE: u32 = 0xFF35D07A;
+pub const FOOTER_BG: u32 = 0xFF0E141C;

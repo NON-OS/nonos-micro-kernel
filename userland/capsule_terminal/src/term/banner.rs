@@ -17,17 +17,13 @@
 use crate::term::scrollback::Scrollback;
 
 pub fn paint_motd(sb: &mut Scrollback) {
-    sb.push_line(b"  __  __  ____  _   _  ____  ____  ");
-    sb.push_line(b" |  \\/  |/ __ \\| \\ | |/ __ \\/ ___| ");
-    sb.push_line(b" | \\  / | |  | |  \\| | |  | \\___ \\ ");
-    sb.push_line(b" | |\\/| | |  | | . ` | |  | |___) |");
-    sb.push_line(b" | |  | | |__| | |\\  | |__| |____/ ");
-    sb.push_line(b" |_|  |_|\\____/|_| \\_|\\____/       ");
     sb.push_line(b"");
-    sb.push_line(b" RAM-ephemeral microkernel. Capsules, not processes.");
-    sb.push_line(b" Hybrid Ed25519 + ML-DSA-65 trust chain end-to-end.");
-    sb.push_line(b" Not Linux. Not BSD. Native.");
+    sb.push_line(b"  \xd8 NONOS shell");
     sb.push_line(b"");
-    sb.push_line(b" type `help` for commands. Ctrl-L clears, Ctrl-C cancels.");
+    sb.push_line(b"  RAM-ephemeral microkernel. Capsules, not processes.");
+    sb.push_line(b"  Hybrid Ed25519 + ML-DSA-65 trust chain end to end.");
+    sb.push_line(b"  Not Linux. Not BSD. Native.");
+    sb.push_line(b"");
+    sb.push_line(b"  type 'nox help' for the command index.");
     sb.push_line(b"");
 }

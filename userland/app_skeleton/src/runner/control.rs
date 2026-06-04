@@ -57,7 +57,5 @@ fn control_op(buf: &[u8]) -> Option<u16> {
 }
 
 fn from_desktop_shell(sender_pid: u32) -> bool {
-    lookup_service(DESKTOP_SHELL)
-        .map(|peer| peer.pid == sender_pid)
-        .unwrap_or(false)
+    lookup_service(DESKTOP_SHELL).map(|peer| peer.pid == sender_pid).unwrap_or(false)
 }

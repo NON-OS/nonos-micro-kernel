@@ -17,9 +17,7 @@
 use crate::settings::ipc::op_set_str;
 use crate::settings::state::cache::STRING_CAP;
 use crate::settings::state::status::StatusKind;
-use crate::settings::state::{
-    current_field, edit_commit, store_value, FieldValue, State,
-};
+use crate::settings::state::{current_field, edit_commit, store_value, FieldValue, State};
 
 use super::report::report;
 

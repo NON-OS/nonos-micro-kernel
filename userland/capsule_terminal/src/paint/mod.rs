@@ -17,6 +17,12 @@
 mod constants;
 mod draw_cursor;
 mod draw_input_line;
+mod fetch;
+mod fetch_palette;
+mod fetch_row;
+mod fetch_uptime;
+mod footer;
+mod header;
 mod paint;
 
 pub use paint::paint;

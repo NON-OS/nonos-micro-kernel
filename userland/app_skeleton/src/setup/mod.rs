@@ -17,8 +17,14 @@
 mod announce;
 mod backing;
 mod binding;
+mod ensure_input_subscription;
+mod input_mask;
 mod open;
 mod register;
+mod request_id;
+mod submit_scene;
+mod subscribe_input;
 
 pub use binding::WindowBinding;
+pub(crate) use ensure_input_subscription::ensure_input_subscription;
 pub use open::open_window;

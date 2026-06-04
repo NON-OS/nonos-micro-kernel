@@ -24,17 +24,9 @@ pub(super) fn alloc_backing(width: u32, height: u32) -> Result<(u64, u32, u64), 
         return Err("zero rect");
     }
     let stride = width.checked_mul(4).ok_or("stride overflow")?;
-    let byte_len = (stride as u64)
-        .checked_mul(height as u64)
-        .ok_or("backing size overflow")?;
-    let base = mk_mmap(
-        core::ptr::null_mut(),
-        byte_len as usize,
-        PROT_READ_WRITE,
-        MAP_PRIVATE_ANON,
-        -1,
-        0,
-    );
+    let byte_len = (stride as u64).checked_mul(height as u64).ok_or("backing size overflow")?;
+    let base =
+        mk_mmap(core::ptr::null_mut(), byte_len as usize, PROT_READ_WRITE, MAP_PRIVATE_ANON, -1, 0);
     if (base as isize) <= 0 {
         return Err("backing mmap failed");
     }

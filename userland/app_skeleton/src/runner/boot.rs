@@ -15,20 +15,18 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::app::{App, AppManifest};
-use crate::clients::compositor;
 use crate::discover::Peers;
-use crate::setup::{open_window, WindowBinding};
-use nonos_libc::mk_yield;
+use crate::setup::{ensure_input_subscription, open_window, WindowBinding};
 
-use super::paint_frame::paint;
-use super::request_id::next;
+use super::prime_frame::prime_frame;
 
-const INITIAL_PAINT_ATTEMPTS: usize = 256;
+pub(super) const INITIAL_PAINT_ATTEMPTS: usize = 256;
 
 pub(super) struct BootedApp<A: App> {
     pub app: A,
     pub manifest: AppManifest,
     pub binding: WindowBinding,
+    pub input_ready: bool,
     pub primed: bool,
 }
 
@@ -39,37 +37,7 @@ pub(super) fn boot<A: App>(
 ) -> Result<BootedApp<A>, &'static str> {
     let manifest = app.manifest();
     let binding = open_window(peers, &manifest, request_id)?;
+    let input_ready = ensure_input_subscription(peers.input_router, &manifest, request_id);
     let primed = prime_frame(&mut app, &manifest, &binding, peers, request_id);
-    Ok(BootedApp { app, manifest, binding, primed })
-}
-
-fn prime_frame<A: App>(
-    app: &mut A,
-    manifest: &AppManifest,
-    binding: &WindowBinding,
-    peers: &Peers,
-    request_id: &mut u32,
-) -> bool {
-    for _ in 0..INITIAL_PAINT_ATTEMPTS {
-        if paint_once(app, manifest, binding, peers.toolkit, peers.compositor, request_id) {
-            return true;
-        }
-        mk_yield();
-    }
-    false
-}
-
-pub(super) fn paint_once<A: App>(
-    app: &mut A,
-    manifest: &AppManifest,
-    binding: &WindowBinding,
-    toolkit_port: u32,
-    compositor_port: u32,
-    request_id: &mut u32,
-) -> bool {
-    if paint(app, manifest, binding, toolkit_port, request_id).is_err() {
-        return false;
-    }
-    let rid = next(request_id);
-    compositor::damage_commit(compositor_port, rid, 0, 0, manifest.width, manifest.height).is_ok()
+    Ok(BootedApp { app, manifest, binding, input_ready, primed })
 }

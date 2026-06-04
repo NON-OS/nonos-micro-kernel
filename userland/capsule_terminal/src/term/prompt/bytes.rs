@@ -14,4 +14,4 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const PROMPT_BYTES: &[u8] = b"nonos> ";
+pub const PROMPT_BYTES: &[u8] = b"\xd8 ";

@@ -25,8 +25,15 @@ pub fn run() -> Result<Context, &'static str> {
     compositor::healthcheck(compositor_port, 1).map_err(|_| "compositor health failed")?;
     let (width, height) = super::display::dimensions()?;
     let (backing_va, stride, byte_len) = super::backing::alloc(width, height)?;
-    let ctx =
-        Context::new(keyring_port, desktop_shell_port, compositor_port, width, height, stride, backing_va);
+    let ctx = Context::new(
+        keyring_port,
+        desktop_shell_port,
+        compositor_port,
+        width,
+        height,
+        stride,
+        backing_va,
+    );
     render::paint_locked(&ctx);
     let handle = match super::register::surface(width, height, stride, byte_len, backing_va) {
         Ok(handle) => handle,
@@ -35,8 +42,17 @@ pub fn run() -> Result<Context, &'static str> {
             return Err(e);
         }
     };
-    if compositor::push_scene_submit(compositor_port, 1, handle, 0, 0, width, height, super::constants::OVERLAY_Z)
-        .is_err()
+    if compositor::push_scene_submit(
+        compositor_port,
+        1,
+        handle,
+        0,
+        0,
+        width,
+        height,
+        super::constants::OVERLAY_Z,
+    )
+    .is_err()
     {
         super::cleanup_surface::cleanup_surface(handle)?;
         super::cleanup_backing::cleanup_backing(backing_va, byte_len)?;

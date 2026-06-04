@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{announce_live_gui, App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
 
 use super::event::on_event;
 use super::manifest::manifest;
@@ -23,12 +23,11 @@ use super::state::State;
 
 pub struct Editor {
     state: State,
-    announced: bool,
 }
 
 impl Editor {
     pub fn new() -> Self {
-        Editor { state: State::new(), announced: false }
+        Editor { state: State::new() }
     }
 }
 
@@ -43,9 +42,5 @@ impl App for Editor {
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
         paint(&self.state, fb);
-        if !self.announced {
-            announce_live_gui(b"text_editor visible");
-            self.announced = true;
-        }
     }
 }

@@ -16,13 +16,19 @@
 
 use nonos_libc::mk_ipc_call;
 
-use crate::wire::{build_request, HDR_LEN};
+use crate::wire::{build_request, read_i32, HDR_LEN};
 
-pub fn call(port: u32, op: u16, request_id: u32, body: &[u8], rx: &mut [u8]) -> Result<(i32, usize), &'static str> {
+pub fn call(
+    port: u32,
+    op: u16,
+    request_id: u32,
+    body: &[u8],
+    rx: &mut [u8],
+) -> Result<(i32, usize), &'static str> {
     let tx = build_request(super::types::MAGIC, op, request_id, body);
     let rc = mk_ipc_call(port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len());
     if rc <= 0 || (rc as usize) < HDR_LEN + 4 {
         return Err("vfs ipc failed");
     }
-    Ok((i32::from_le_bytes(rx[HDR_LEN..HDR_LEN + 4].try_into().unwrap()), rc as usize))
+    Ok((read_i32(rx, HDR_LEN)?, rc as usize))
 }

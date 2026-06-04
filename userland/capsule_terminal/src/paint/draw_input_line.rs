@@ -19,15 +19,19 @@ use nonos_app_skeleton::PaintBuffer;
 use super::constants::{CELL_WIDTH, TEXT_LEFT};
 use super::draw_cursor::draw_cursor;
 use crate::term::dimensions::COLS;
-use crate::term::prompt::{prompt_len, PROMPT_BYTES};
 use crate::term::state::State;
-use crate::term::theme::{FOREGROUND, PROMPT};
+use crate::term::theme::{FOREGROUND, PATH, PROMPT};
 
 pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32) {
-    fb.text(TEXT_LEFT, y, PROMPT_BYTES, PROMPT);
-    let prompt_w = prompt_len() as u32 * CELL_WIDTH;
+    fb.text(TEXT_LEFT, y, b"\xd8", PROMPT);
+    let cwd = state.cwd.as_bytes();
+    let take = cwd.len().min(40);
+    let start = cwd.len() - take;
+    fb.text(TEXT_LEFT + CELL_WIDTH, y, &cwd[start..], PATH);
+    let prompt_cells = 1 + take + 1;
+    let px = TEXT_LEFT + prompt_cells as u32 * CELL_WIDTH;
     let body = state.line.as_bytes();
-    let take = body.len().min(COLS);
-    fb.text(TEXT_LEFT + prompt_w, y, &body[..take], FOREGROUND);
-    draw_cursor(fb, prompt_len(), state.line.cursor, y + 1);
+    let btake = body.len().min(COLS);
+    fb.text(px, y, &body[..btake], FOREGROUND);
+    draw_cursor(fb, prompt_cells, state.line.cursor, y + 1);
 }

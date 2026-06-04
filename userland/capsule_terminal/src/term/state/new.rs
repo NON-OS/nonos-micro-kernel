@@ -15,12 +15,21 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::types::State;
+use crate::term::cwd::Cwd;
 use crate::term::history::History;
 use crate::term::line::Line;
 use crate::term::scrollback::Scrollback;
 
 impl State {
-    pub const fn new() -> Self {
-        Self { line: Line::new(), history: History::new(), scrollback: Scrollback::new() }
+    pub fn new() -> Self {
+        Self {
+            line: Line::new(),
+            history: History::new(),
+            scrollback: Scrollback::new(),
+            cwd: Cwd::new(),
+            owner_pid: 0,
+            fresh: true,
+            start_ms: 0,
+        }
     }
 }

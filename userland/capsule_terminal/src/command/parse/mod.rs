@@ -18,4 +18,4 @@ mod parse;
 mod types;
 
 pub use parse::parse;
-pub use types::{Argv, MAX_ARGS};
+pub use types::Argv;

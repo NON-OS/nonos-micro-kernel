@@ -17,7 +17,7 @@
 use alloc::{vec, vec::Vec};
 
 use crate::discover::lookup_service;
-use crate::wire::HDR_LEN;
+use crate::wire::{read_u32, HDR_LEN};
 
 pub fn read_file(owner_pid: u32, path: &[u8], max_bytes: u32) -> Result<Vec<u8>, &'static str> {
     let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
@@ -31,7 +31,7 @@ pub fn read_file(owner_pid: u32, path: &[u8], max_bytes: u32) -> Result<Vec<u8>,
     if status != 0 || total < HDR_LEN + 8 {
         return Err("vfs open failed");
     }
-    let fd = u32::from_le_bytes(rx[HDR_LEN + 4..HDR_LEN + 8].try_into().unwrap());
+    let fd = read_u32(&rx, HDR_LEN + 4)?;
     let mut read = Vec::with_capacity(12);
     read.extend_from_slice(&owner_pid.to_le_bytes());
     read.extend_from_slice(&fd.to_le_bytes());

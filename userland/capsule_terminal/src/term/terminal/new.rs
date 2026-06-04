@@ -15,13 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::types::Terminal;
-use crate::term::banner::paint_motd;
 use crate::term::state::State;
 
 impl Terminal {
     pub fn new() -> Self {
-        let mut state = State::new();
-        paint_motd(&mut state.scrollback);
-        Self { state, announced: false }
+        let state = State::new();
+        Self { state }
     }
 }

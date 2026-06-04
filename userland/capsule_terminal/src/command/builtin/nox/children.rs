@@ -14,13 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_debug;
+use alloc::string::String;
+use alloc::vec::Vec;
 
-pub fn announce_live_gui(label: &[u8]) {
-    let n = core::cmp::min(label.len(), 160);
-    let mut buf = [0u8; 173];
-    buf[..11].copy_from_slice(b"[LIVE-GUI] ");
-    buf[11..11 + n].copy_from_slice(&label[..n]);
-    buf[11 + n] = b'\n';
-    let _ = mk_debug(buf.as_ptr(), 12 + n);
+pub fn children(prefix: &str, paths: &[String]) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for full in paths {
+        let rel = match full.strip_prefix(prefix) {
+            Some(r) if !r.is_empty() => r,
+            _ => continue,
+        };
+        let mut name = match rel.split('/').next() {
+            Some(s) if !s.is_empty() => String::from(s),
+            _ => continue,
+        };
+        if rel.len() > name.len() {
+            name.push('/');
+        }
+        if !out.iter().any(|e| e == &name) {
+            out.push(name);
+        }
+    }
+    out
 }

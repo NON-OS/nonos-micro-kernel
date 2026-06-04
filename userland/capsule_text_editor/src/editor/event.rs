@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{clipboard_copy, clipboard_paste, clients::vfs, EventOutcome, InputEvent, KEY_BACKSPACE, KEY_ENTER, KEY_ESC, MOD_CTRL};
-use nonos_app_skeleton::discover::lookup_service;
+use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_BACKSPACE, KEY_ENTER, KEY_ESC, MOD_CTRL};
 
-use super::state::{State, PATH};
+use super::on_ctrl::on_ctrl;
+use super::state::State;
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     if !event.is_key_down() {
@@ -45,62 +45,4 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     } else {
         EventOutcome::Idle
     }
-}
-
-fn on_ctrl(state: &mut State, code: u32) -> EventOutcome {
-    match code {
-        c if matches!(c, 0x43 | 0x63) => {
-            state.status = if clipboard_copy(&state.buf[..state.len]).is_ok() { b"copied /notes.txt" } else { b"clipboard unavailable" };
-            EventOutcome::Repaint
-        }
-        c if matches!(c, 0x4F | 0x6F) => {
-            if !resolve_owner_pid(state) {
-                state.status = b"open failed";
-                return EventOutcome::Repaint;
-            }
-            match vfs::read_file(state.owner_pid, PATH, super::state::CAPACITY as u32) {
-                Ok(bytes) if core::str::from_utf8(&bytes).is_ok() && bytes.len() <= super::state::CAPACITY => {
-                    state.buf[..bytes.len()].copy_from_slice(&bytes);
-                    state.len = bytes.len();
-                    state.status = b"opened /notes.txt";
-                }
-                Ok(_) => state.status = b"file is not valid utf-8",
-                Err(_) => state.status = b"open failed",
-            }
-            EventOutcome::Repaint
-        }
-        c if matches!(c, 0x53 | 0x73) => {
-            if !resolve_owner_pid(state) {
-                state.status = b"save failed";
-                return EventOutcome::Repaint;
-            }
-            state.status = if vfs::write_file(state.owner_pid, PATH, &state.buf[..state.len]).is_ok() { b"saved /notes.txt" } else { b"save failed" };
-            EventOutcome::Repaint
-        }
-        c if matches!(c, 0x56 | 0x76) => {
-            let mut scratch = [0u8; 512];
-            match clipboard_paste(&mut scratch) {
-                Ok(n) if core::str::from_utf8(&scratch[..n]).is_ok() && state.insert(&scratch[..n]) => {
-                    state.status = b"pasted into /notes.txt";
-                    EventOutcome::Repaint
-                }
-                Ok(_) => {
-                    state.status = b"paste rejected";
-                    EventOutcome::Repaint
-                }
-                Err(_) => {
-                    state.status = b"clipboard unavailable";
-                    EventOutcome::Repaint
-                }
-            }
-        }
-        _ => EventOutcome::Idle,
-    }
-}
-
-fn resolve_owner_pid(state: &mut State) -> bool {
-    if state.owner_pid == 0 {
-        state.owner_pid = lookup_service(b"app.text_editor").map(|peer| peer.pid).unwrap_or(0);
-    }
-    state.owner_pid != 0
 }

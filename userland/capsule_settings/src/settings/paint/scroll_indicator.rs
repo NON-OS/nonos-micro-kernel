@@ -39,10 +39,6 @@ pub fn paint_scroll_indicator(fb: &mut PaintBuffer, top: usize, rows: usize, tot
     let thumb_h = thumb_h.max(8);
     let max_top_px = total_px.saturating_sub(track_h);
     let top_px = (top as u32) * ROW_H;
-    let thumb_y = if max_top_px == 0 {
-        0
-    } else {
-        (top_px * (track_h - thumb_h)) / max_top_px
-    };
+    let thumb_y = if max_top_px == 0 { 0 } else { (top_px * (track_h - thumb_h)) / max_top_px };
     fb.fill_rect(track_x, track_y + thumb_y, TRACK_W, thumb_h, TAB_ACTIVE_BG);
 }

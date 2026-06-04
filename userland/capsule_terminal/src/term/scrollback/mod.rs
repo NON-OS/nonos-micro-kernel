@@ -21,8 +21,7 @@ mod push_line;
 mod scroll_down;
 mod scroll_up;
 mod types;
-mod view;
+pub mod view;
 mod visible;
 
 pub use types::Scrollback;
-pub use view::ScrollbackView;

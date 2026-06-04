@@ -17,6 +17,10 @@
 pub struct WindowBinding {
     pub surface_handle: u64,
     pub backing_va: u64,
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
     pub stride_words: u32,
     pub byte_len: u64,
 }

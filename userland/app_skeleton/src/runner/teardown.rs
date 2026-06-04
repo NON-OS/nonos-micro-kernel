@@ -16,7 +16,7 @@
 
 use nonos_libc::{mk_exit, mk_munmap, mk_surface_release};
 
-use crate::clients::{compositor, wm};
+use crate::clients::{compositor, input_router, wm};
 use crate::discover::Peers;
 use crate::setup::WindowBinding;
 
@@ -32,14 +32,12 @@ pub(super) fn close(
     if compositor::scene_remove(peers.compositor, rid, 0).is_err() {
         mk_exit(12);
     }
+    let _ = input_router::subscribe(peers.input_router, next(request_id), 0);
     if mk_surface_release(binding.surface_handle) < 0 {
         mk_exit(13);
     }
-    if mk_surface_release(binding.surface_handle) < 0 {
-        mk_exit(14);
-    }
     if mk_munmap(binding.backing_va as *mut u8, binding.byte_len as usize) < 0 {
-        mk_exit(15);
+        mk_exit(14);
     }
     let rid = next(request_id);
     if wm::window_close(peers.wm, rid, window_id).is_err() {

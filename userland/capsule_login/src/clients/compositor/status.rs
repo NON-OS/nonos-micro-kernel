@@ -13,16 +13,16 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use super::constants::HDR_LEN;
 
-use crate::command::output::Output;
-use crate::term::dimensions::COLS;
-use crate::term::util::copy_into;
-
-pub fn run(out: &mut Output<'_>, name: &[u8]) {
-    let mut buf = [0u8; COLS];
-    let mut n = 0;
-    n += copy_into(&mut buf[n..], b"unknown command: ");
-    n += copy_into(&mut buf[n..], name);
-    out.writeln(&buf[..n]);
-    out.writeln(b"type `help` for the list");
+pub fn check(rc: i64, rx: &[u8]) -> Result<(), i32> {
+    if rc < (HDR_LEN + 4) as i64 {
+        return Err(-11);
+    }
+    let status = i32::from_le_bytes(rx[HDR_LEN..HDR_LEN + 4].try_into().map_err(|_| -11)?);
+    if status == 0 {
+        Ok(())
+    } else {
+        Err(status)
+    }
 }

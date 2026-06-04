@@ -16,10 +16,18 @@
 
 mod call;
 mod list_paths;
+mod mkdir;
 mod read_file;
+mod rename;
+mod stat;
 mod types;
+mod unlink;
 mod write_file;
 
 pub use list_paths::list_paths;
+pub use mkdir::mkdir;
 pub use read_file::read_file;
+pub use rename::rename;
+pub use stat::stat;
+pub use unlink::unlink;
 pub use write_file::write_file;
