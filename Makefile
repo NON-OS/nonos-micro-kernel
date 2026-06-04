@@ -154,7 +154,7 @@ QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
 QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::$(QEMU_HOST_SSH_PORT)-:22,hostfwd=tcp::$(QEMU_HOST_HTTP_PORT)-:80
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
 QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=1024,yres=768
-QEMU_USB := -device qemu-xhci,id=xhci -device usb-tablet,bus=xhci.0
+QEMU_USB := -device qemu-xhci,id=xhci -device usb-mouse,bus=xhci.0
 QEMU_RNG := -device virtio-rng-pci
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -298,7 +298,8 @@ nonos-mk-host-trust-elfs: $(USERLAND_LIBC) $(MARKETPLACE_ABI_LIB) \
 		$(proof-io_BIN) $(ramfs_BIN) $(keyring_BIN) $(entropy_BIN) \
 		$(crypto_BIN) $(vfs_BIN) $(market_BIN) $(driver-virtio-rng_BIN) \
 		$(driver-virtio-gpu_BIN) $(driver-ps2-input_BIN) $(driver-virtio-blk_BIN) \
-		$(driver-virtio-net_BIN) $(driver-xhci_BIN) $(driver-e1000_BIN) \
+		$(driver-virtio-net_BIN) $(driver-xhci_BIN) $(driver-usb-hid_BIN) \
+		$(driver-e1000_BIN) \
 		$(net-l2_BIN) $(net-ip_BIN) $(net-udp_BIN) $(net-dhcp_BIN) \
 		$(input-router_BIN) $(compositor_BIN) $(wm_BIN) $(desktop-shell_BIN) \
 		$(image-codec_BIN) $(clipboard_BIN) $(login_BIN) $(wallpaper_BIN) \
@@ -415,6 +416,7 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(driver-virtio-rng_VERIFY) $(driver-virtio-blk_VERIFY) \
 	$(driver-virtio-gpu_VERIFY) $(driver-virtio-net_VERIFY) \
 	$(driver-ps2-input_VERIFY) $(driver-xhci_VERIFY) \
+	$(driver-usb-hid_VERIFY) \
 	$(net-l2_VERIFY) $(net-ip_VERIFY) $(net-udp_VERIFY) \
 	$(net-dhcp_VERIFY) $(net-tcp_VERIFY) $(net-dns_VERIFY) \
 	$(net-sockets_VERIFY) $(net-nym_VERIFY) \
@@ -1086,7 +1088,8 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
 		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
 		$(driver-virtio-net_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
-		$(driver-xhci_ARTIFACTS) $(net-l2_ARTIFACTS) \
+		$(driver-xhci_ARTIFACTS) $(driver-usb-hid_ARTIFACTS) \
+		$(net-l2_ARTIFACTS) \
 		$(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) \
 		$(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) \
 		$(net-nym_ARTIFACTS) \

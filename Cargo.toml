@@ -472,6 +472,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-driver-virtio-net",
   "nonos-capsule-driver-ps2-input",
   "nonos-capsule-driver-xhci",
+  "nonos-capsule-driver-usb-hid",
   "nonos-capsule-net-l2",
   "nonos-capsule-net-ip",
   "nonos-capsule-net-udp",

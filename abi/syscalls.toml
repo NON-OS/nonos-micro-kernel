@@ -83,6 +83,7 @@ MMAP = 0x50414D4D
 MUMP = 0x504D554D
 MSPN = 0x4E50534D
 MEXT = 0x5458454D
+MPAL = 0x4C41504D
 MYLD = 0x444C594D
 MCGT = 0x5447434D
 MCRV = 0x5652434D
@@ -310,6 +311,12 @@ nr   = 0x5458454D
 caps = ["valid_token"]
 args = [{name="code",type="u32",dir="in"}]
 ret  = {type="!"}
+
+[desc.MPAL]
+nr   = 0x4C41504D
+caps = ["valid_token"]
+args = [{name="pid",type="u32",dir="in"}]
+ret  = {type="bool"}
 
 [desc.MYLD]
 nr   = 0x444C594D
