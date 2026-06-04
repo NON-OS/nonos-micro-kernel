@@ -13,18 +13,17 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use super::super::io::RegIo;
+use super::types::Regs;
+use crate::regs::pio;
+use core::ptr::write_volatile;
 
-use nonos_libc::mk_debug;
-
-const PREFIX: &[u8] = b"[virtio_gpu] ";
-const MAX_LABEL: usize = 200;
-
-pub fn marker(label: &[u8]) {
-    let label_len = if label.len() > MAX_LABEL { MAX_LABEL } else { label.len() };
-    let mut buf = [0u8; PREFIX.len() + MAX_LABEL + 1];
-    let p = PREFIX.len();
-    buf[..p].copy_from_slice(PREFIX);
-    buf[p..p + label_len].copy_from_slice(&label[..label_len]);
-    buf[p + label_len] = b'\n';
-    let _ = mk_debug(buf.as_ptr(), p + label_len + 1);
+impl Regs {
+    #[inline]
+    pub unsafe fn w16(self, offset: usize, value: u16) {
+        match self.io {
+            RegIo::Mmio(base) => write_volatile(base.add(offset).cast(), value),
+            RegIo::Pio(grant) => pio::write(grant, offset, 2, value as u32),
+        }
+    }
 }

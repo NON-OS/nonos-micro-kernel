@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_device_release, mk_pci_config_write, MK_PCI_CFG_COMMAND};
 use nonos_libc::MK_PCI_CMD_BUS_MASTER;
+use nonos_libc::{mk_device_release, mk_pci_config_write, MK_PCI_CFG_COMMAND};
 
 pub fn enable_bus_master(device_id: u64, claim_epoch: u64) -> Result<(), &'static str> {
     let rc = mk_pci_config_write(device_id, claim_epoch, MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER);

@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use super::layout::QueueLayout;
 use core::ptr::{read_volatile, write_volatile};
 use core::sync::atomic::{fence, Ordering};
-use super::layout::QueueLayout;
 #[inline]
 fn avail_idx_ptr(layout: QueueLayout) -> *mut u16 {
     (layout.avail_va() as usize + 2) as *mut u16

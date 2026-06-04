@@ -13,29 +13,32 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_irq_ack, mk_irq_poll, mk_yield, IrqPollOut};
-use crate::constants::{LEG_QUEUE_NOTIFY, VIRTIO_BLK_S_IOERR, VIRTIO_BLK_S_OK, VIRTIO_BLK_S_UNSUPP};
-use crate::queue::Queue;
+use super::error::BlkError;
+use super::read_seq::read_seq;
+use crate::constants::{
+    LEG_QUEUE_NOTIFY, VIRTIO_BLK_S_IOERR, VIRTIO_BLK_S_OK, VIRTIO_BLK_S_UNSUPP,
+};
+use crate::queue::{Direction, Queue};
 use crate::regs::Regs;
-pub use crate::queue::Direction;
+use nonos_libc::{mk_irq_ack, mk_yield};
+
 const MAX_YIELDS: u32 = 200_000;
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BlkError {
-    Io,
-    Unsupported,
-    Timeout,
-}
-pub fn submit(regs: Regs, queue: &mut Queue, irq_grant: u64, dir: Direction, lba: u64, nsectors: u32) -> Result<(), BlkError> {
+
+pub fn submit(
+    regs: Regs,
+    queue: &mut Queue,
+    irq_grant: u64,
+    dir: Direction,
+    lba: u64,
+    nsectors: u32,
+) -> Result<(), BlkError> {
     queue.post_request(dir, lba, nsectors);
     unsafe { regs.w16(LEG_QUEUE_NOTIFY, 0) }
     let prev_seq = read_seq(irq_grant)?;
     let target = queue.last_used.wrapping_add(1);
     let mut tries = 0u32;
     loop {
-        if queue.used_idx() == target {
-            break;
-        }
-        if read_seq(irq_grant)? != prev_seq {
+        if queue.used_idx() == target || read_seq(irq_grant)? != prev_seq {
             break;
         }
         if tries >= MAX_YIELDS {
@@ -57,11 +60,4 @@ pub fn submit(regs: Regs, queue: &mut Queue, irq_grant: u64, dir: Direction, lba
         VIRTIO_BLK_S_UNSUPP => Err(BlkError::Unsupported),
         _ => Err(BlkError::Io),
     }
-}
-fn read_seq(grant: u64) -> Result<u64, BlkError> {
-    let mut out = IrqPollOut { seq: 0, overflow: 0 };
-    if mk_irq_poll(grant, &mut out as *mut _) < 0 {
-        return Err(BlkError::Io);
-    }
-    Ok(out.seq)
 }

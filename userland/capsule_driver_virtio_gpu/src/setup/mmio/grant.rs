@@ -13,13 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{BAR_KIND_MMIO, BAR_KIND_PIO};
 use super::grant_pio::grant_pio;
-use super::map_modern::map_modern;
 use super::map_mmio::map_mmio;
+use super::map_modern::map_modern;
 use super::state::RegisterGrant;
 use crate::constants::VIRTIO_GPU_MODERN;
 use crate::discover::Found;
+use nonos_libc::{BAR_KIND_MMIO, BAR_KIND_PIO};
 pub fn grant(dev: Found, claim_epoch: u64) -> Result<RegisterGrant, &'static str> {
     if dev.pci_device == VIRTIO_GPU_MODERN {
         return map_modern(dev, claim_epoch);

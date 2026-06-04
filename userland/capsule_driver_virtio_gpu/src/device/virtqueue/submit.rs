@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use core::ptr::{read_volatile, write_volatile};
+use super::{avail, desc, layout::QueueLayout, used, wait};
 use crate::constants::CTRLQ_INDEX;
 use crate::regs::Regs;
-use super::{avail, desc, layout::QueueLayout, used, wait};
+use core::ptr::{read_volatile, write_volatile};
 pub struct SubmitOutput {
     pub used_len: u32,
 }

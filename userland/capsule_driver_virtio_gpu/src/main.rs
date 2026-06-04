@@ -17,7 +17,6 @@
 #![no_main]
 extern crate alloc;
 mod constants;
-mod debug;
 mod device;
 mod discover;
 mod driver;
@@ -37,15 +36,11 @@ pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
-    debug::marker(b"start");
     let driver = loop {
         match setup::run() {
-            Ok(driver) => {
-                debug::marker(b"setup ok");
-                break driver;
-            }
+            Ok(driver) => break driver,
             Err(e) => {
-                debug::marker(e.as_bytes());
+                let _ = e;
                 for _ in 0..64 {
                     mk_yield();
                 }
@@ -53,9 +48,7 @@ pub unsafe extern "C" fn _start() -> ! {
         }
     };
     if mk_service_register(SERVICE_NAME.as_ptr(), SERVICE_NAME.len(), SERVICE_PORT) < 0 {
-        debug::marker(b"service register failed");
         mk_exit(1);
     }
-    debug::marker(b"service registered");
     server::run(driver);
 }

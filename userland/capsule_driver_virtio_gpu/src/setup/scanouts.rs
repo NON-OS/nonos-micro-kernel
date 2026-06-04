@@ -19,7 +19,11 @@ use crate::device::virtqueue::ControlQueue;
 use crate::state::{FenceCounter, Scanout, ScanoutTable};
 const DEFAULT_SCANOUT_WIDTH: u32 = 1024;
 const DEFAULT_SCANOUT_HEIGHT: u32 = 768;
-pub fn seed(q: &ControlQueue, table: &ScanoutTable, fences: &FenceCounter) -> Result<(), &'static str> {
+pub fn seed(
+    q: &ControlQueue,
+    table: &ScanoutTable,
+    fences: &FenceCounter,
+) -> Result<(), &'static str> {
     let info = cmd::get_display_info(q, fences.issue())?;
     let mut recorded = 0usize;
     for i in 0..VG_MAX_SCANOUTS {
@@ -27,14 +31,17 @@ pub fn seed(q: &ControlQueue, table: &ScanoutTable, fences: &FenceCounter) -> Re
         if s.enabled == 0 || s.width == 0 || s.height == 0 {
             continue;
         }
-        if !table.record(i as u32, Scanout {
-            x: s.x,
-            y: s.y,
-            width: s.width,
-            height: s.height,
-            current_resource_id: 0,
-            enabled: true,
-        }) {
+        if !table.record(
+            i as u32,
+            Scanout {
+                x: s.x,
+                y: s.y,
+                width: s.width,
+                height: s.height,
+                current_resource_id: 0,
+                enabled: true,
+            },
+        ) {
             return Err("virtio-gpu: scanout table rejected display info");
         }
         recorded += 1;
@@ -45,14 +52,17 @@ pub fn seed(q: &ControlQueue, table: &ScanoutTable, fences: &FenceCounter) -> Re
     Ok(())
 }
 fn seed_default(table: &ScanoutTable) -> Result<(), &'static str> {
-    if table.record(0, Scanout {
-        x: 0,
-        y: 0,
-        width: DEFAULT_SCANOUT_WIDTH,
-        height: DEFAULT_SCANOUT_HEIGHT,
-        current_resource_id: 0,
-        enabled: true,
-    }) {
+    if table.record(
+        0,
+        Scanout {
+            x: 0,
+            y: 0,
+            width: DEFAULT_SCANOUT_WIDTH,
+            height: DEFAULT_SCANOUT_HEIGHT,
+            current_resource_id: 0,
+            enabled: true,
+        },
+    ) {
         return Ok(());
     }
     Err("virtio-gpu: scanout table rejected default mode")

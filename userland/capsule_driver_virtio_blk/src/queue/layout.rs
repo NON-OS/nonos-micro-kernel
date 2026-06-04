@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use core::ptr::write_bytes;
 use crate::constants::{DATA_BUF_LEN, MAX_QUEUE_SIZE, VQ_DESC_OFFSET, VQ_REGION_SIZE};
+use core::ptr::write_bytes;
 #[derive(Debug, Clone, Copy)]
 pub struct Queue {
     pub region_va: *mut u8,

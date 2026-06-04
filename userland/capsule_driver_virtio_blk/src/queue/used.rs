@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use core::ptr::read_volatile;
 use super::layout::Queue;
 use crate::constants::STATUS_OFFSET;
+use core::ptr::read_volatile;
 const USED_IDX_OFFSET: usize = 2;
 impl Queue {
     pub fn used_idx(&self) -> u16 {

@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_device_release, mk_dma_map, mk_irq_unbind, DmaMapOut, IrqBindOut};
 use super::mmio::RegisterGrant;
 use crate::constants::VQ_REGION_SIZE;
+use nonos_libc::{mk_device_release, mk_dma_map, mk_irq_unbind, DmaMapOut, IrqBindOut};
 pub fn map_queue(
     device_id: u64,
     claim_epoch: u64,

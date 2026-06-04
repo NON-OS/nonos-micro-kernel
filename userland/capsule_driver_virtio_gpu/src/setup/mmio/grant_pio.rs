@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_device_release, mk_pio_grant, PioGrantOut};
 use super::labels::pio_errno_label;
 use super::state::RegisterGrant;
 use crate::discover::Found;
+use nonos_libc::{mk_device_release, mk_pio_grant, PioGrantOut};
 pub fn grant_pio(dev: Found, claim_epoch: u64) -> Result<RegisterGrant, &'static str> {
     let mut out = PioGrantOut { port_base: 0, port_count: 0, _pad: 0, grant_id: 0 };
     let r = mk_pio_grant(dev.device_id, claim_epoch, dev.register_bar, 0, &mut out);

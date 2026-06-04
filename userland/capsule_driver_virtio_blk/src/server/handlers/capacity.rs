@@ -13,12 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_ipc_send;
 use crate::protocol::{
     encode_response_header, write_status, Request, CAPACITY_PAYLOAD_LEN, KERNEL_REPLY_ENDPOINT,
     RESP_HDR_LEN, STATUS_LEN,
 };
 use crate::setup::Driver;
+use nonos_libc::mk_ipc_send;
 pub fn handle(driver: &Driver, req: &Request, tx: &mut [u8]) {
     let payload_len = STATUS_LEN as u32 + CAPACITY_PAYLOAD_LEN as u32;
     encode_response_header(tx, req, payload_len);
@@ -30,7 +30,8 @@ pub fn handle(driver: &Driver, req: &Request, tx: &mut [u8]) {
         KERNEL_REPLY_ENDPOINT,
         tx.as_ptr(),
         RESP_HDR_LEN + STATUS_LEN + CAPACITY_PAYLOAD_LEN,
-    ) < 0 {
+    ) < 0
+    {
         return;
     }
 }

@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_dma_map, DmaMapOut, IrqBindOut};
-use super::rollback;
 use super::super::registers::RegisterGrant;
+use super::rollback;
 use crate::constants::DATA_BUF_LEN;
+use nonos_libc::{mk_dma_map, DmaMapOut, IrqBindOut};
 pub fn map_data(
     device_id: u64,
     claim_epoch: u64,

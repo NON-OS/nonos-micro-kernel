@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_device_release, mk_irq_bind, IrqBindOut, MK_IRQ_BIND_MSIX};
 use super::registers::RegisterGrant;
 use crate::discover::Found;
+use nonos_libc::{mk_device_release, mk_irq_bind, IrqBindOut, MK_IRQ_BIND_MSIX};
 pub fn bind(dev: Found, claim_epoch: u64, regs: RegisterGrant) -> Result<IrqBindOut, &'static str> {
     let mut out = IrqBindOut { grant_id: 0, vector: 0 };
     let r = mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out);

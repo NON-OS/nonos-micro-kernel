@@ -13,15 +13,17 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use core::ptr::write_volatile;
 use super::io::RegIo;
 use super::pio;
 use super::state::Regs;
+use core::ptr::write_volatile;
 impl Regs {
     #[inline]
     pub unsafe fn notify(self, queue: u16) {
         match self.notify {
-            RegIo::Mmio(base) => write_volatile((base as usize + self.notify_offset) as *mut u16, queue),
+            RegIo::Mmio(base) => {
+                write_volatile((base as usize + self.notify_offset) as *mut u16, queue)
+            }
             RegIo::Pio(grant) => pio::write(grant, self.notify_offset, 2, queue as u32),
         }
     }

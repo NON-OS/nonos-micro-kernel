@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_mmio_unmap, mk_pio_release, MmioMapOut, PioGrantOut};
 use crate::regs::Regs;
+use nonos_libc::{mk_mmio_unmap, mk_pio_release, MmioMapOut, PioGrantOut};
 
 #[derive(Clone, Copy)]
 pub struct ModernGrant {

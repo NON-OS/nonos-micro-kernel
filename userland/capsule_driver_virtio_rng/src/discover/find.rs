@@ -13,21 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BAR_KIND_PIO, BUS_KIND_PCI};
-
-use super::constants::{VIRTIO_RNG_MODERN, VIRTIO_RNG_TRANSITIONAL, VIRTIO_VENDOR_ID};
+use super::first_register_bar::first_register_bar;
+use super::found::Found;
+use super::is_match::is_match;
+use nonos_libc::{mk_device_list, DeviceRecord};
 
 const MAX_DEVICES: usize = 32;
-
-#[derive(Debug, Clone, Copy)]
-pub struct Found {
-    pub device_id: u64,
-    pub irq_line: u8,
-    pub register_bar: u8,
-    pub register_kind: u8,
-    pub register_size: u64,
-}
 
 pub fn find_virtio_rng() -> Option<Found> {
     let mut buf = [DeviceRecord::empty(); MAX_DEVICES];
@@ -37,10 +28,7 @@ pub fn find_virtio_rng() -> Option<Found> {
     }
     let count = core::cmp::min(n as usize, MAX_DEVICES);
     for r in &buf[..count] {
-        if !is_match(r) {
-            continue;
-        }
-        if r.irq_pin == 0 || r.irq_line == 0xFF {
+        if !is_match(r) || r.irq_pin == 0 || r.irq_line == 0xFF {
             continue;
         }
         if let Some((idx, kind, size)) = first_register_bar(r) {
@@ -51,25 +39,6 @@ pub fn find_virtio_rng() -> Option<Found> {
                 register_kind: kind,
                 register_size: size,
             });
-        }
-    }
-    None
-}
-
-fn is_match(r: &DeviceRecord) -> bool {
-    r.vendor == VIRTIO_VENDOR_ID
-        && r.bus_kind == BUS_KIND_PCI
-        && (r.device == VIRTIO_RNG_TRANSITIONAL || r.device == VIRTIO_RNG_MODERN)
-}
-
-fn first_register_bar(r: &DeviceRecord) -> Option<(u8, u8, u64)> {
-    for i in 0..r.bars.len() {
-        let bar = r.bars[i];
-        if bar.size == 0 {
-            continue;
-        }
-        if bar.kind == BAR_KIND_PIO || bar.kind == BAR_KIND_MMIO {
-            return Some((i as u8, bar.kind, bar.size));
         }
     }
     None

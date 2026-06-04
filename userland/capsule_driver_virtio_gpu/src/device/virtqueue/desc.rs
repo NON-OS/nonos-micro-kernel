@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use core::ptr::write_volatile;
-use crate::constants::{VRING_DESC_F_NEXT, VRING_DESC_F_WRITE};
 use super::layout::QueueLayout;
+use crate::constants::{VRING_DESC_F_NEXT, VRING_DESC_F_WRITE};
+use core::ptr::write_volatile;
 pub const DESC_LEN: usize = 16;
 pub fn write_desc(layout: QueueLayout, index: u16, addr: u64, len: u32, flags: u16, next: u16) {
     let base = layout.desc_va() as usize + (index as usize) * DESC_LEN;

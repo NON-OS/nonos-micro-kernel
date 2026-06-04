@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_device_release, mk_dma_unmap, mk_irq_unbind, DmaMapOut, IrqBindOut};
 use super::super::registers::RegisterGrant;
+use nonos_libc::{mk_device_release, mk_dma_unmap, mk_irq_unbind, DmaMapOut, IrqBindOut};
 pub fn base(device_id: u64, regs: RegisterGrant, irq: &IrqBindOut) -> Result<(), &'static str> {
     if mk_irq_unbind(irq.grant_id) < 0 {
         return Err("virtio-blk: irq rollback failed");

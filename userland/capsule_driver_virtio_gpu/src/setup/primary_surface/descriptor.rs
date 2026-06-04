@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{SurfaceDescriptor, SURFACE_FORMAT_ARGB8888};
 use super::geometry::Geometry;
 use crate::state::Scanout;
+use nonos_libc::{SurfaceDescriptor, SURFACE_FORMAT_ARGB8888};
 pub fn build(scanout: Scanout, geom: Geometry, base_va: u64) -> SurfaceDescriptor {
     SurfaceDescriptor {
         width: scanout.width,

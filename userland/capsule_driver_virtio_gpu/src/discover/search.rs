@@ -24,21 +24,16 @@ const MAX_DEVICES: usize = 64;
 
 pub fn find_virtio_gpu() -> Option<Found> {
     let mut buf = [DeviceRecord::empty(); MAX_DEVICES];
-    crate::debug::marker(b"discover: mk_device_list");
     let n = mk_device_list(0, buf.as_mut_ptr(), MAX_DEVICES as u64);
     if n <= 0 {
-        crate::debug::marker(b"discover: list empty");
         return None;
     }
-    crate::debug::marker(b"discover: listed");
     let limit = core::cmp::min(n as usize, MAX_DEVICES);
     for r in &buf[..limit] {
         if !match_device::is_usable(r) {
             continue;
         }
-        crate::debug::marker(b"discover: matched");
         if let Some((bar, kind, size)) = bar_select::select(r) {
-            crate::debug::marker(b"discover: selected");
             return Some(Found {
                 device_id: r.device_id,
                 irq_line: r.irq_line,
@@ -49,6 +44,5 @@ pub fn find_virtio_gpu() -> Option<Found> {
             });
         }
     }
-    crate::debug::marker(b"discover: no match");
     None
 }
