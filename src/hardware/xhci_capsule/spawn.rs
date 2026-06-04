@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Spawn the xHCI driver capsule with the broker capability
-//! bundle. MMIO + IRQ + DMA driver — needs IPC | Memory | Driver |
-//! DeviceEnum | Mmio | Irq | Dma. No Pio (xHCI is MMIO-only).
-//! INTx interrupt path; MSI/MSI-X land later behind a separate
-//! broker work item. The verified-spawn path requires the
-//! manifest to mirror this exact cap union.
-
 use super::client::REPLY_INBOX;
 use super::embed::{DRIVER_XHCI_ELF, DRIVER_XHCI_MANIFEST_BYTES, DRIVER_XHCI_NONOS_ID_CERT_BYTES};
 use super::state;

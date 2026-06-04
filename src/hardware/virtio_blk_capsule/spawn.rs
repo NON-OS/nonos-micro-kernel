@@ -14,23 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Spawn the virtio-blk driver capsule with the broker capability
-//! bundle. Transitional virtio-pci uses PIO for its legacy register
-//! window; modern/internal fixtures may use MMIO. The capsule needs
-//! IPC | Memory | Driver | DeviceEnum | Mmio | Irq | Dma | Pio. No
-//! Crypto cap: the capsule moves blocks, not keys. The verified-spawn
-//! path requires the manifest to mirror this exact cap union.
-
 use super::client::REPLY_INBOX;
 use super::embed::{
-    DRIVER_VIRTIO_BLK_ELF, DRIVER_VIRTIO_BLK_MANIFEST_BYTES,
-    DRIVER_VIRTIO_BLK_NONOS_ID_CERT_BYTES,
+    DRIVER_VIRTIO_BLK_ELF, DRIVER_VIRTIO_BLK_MANIFEST_BYTES, DRIVER_VIRTIO_BLK_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
 use crate::security::nonos_id_cert::IdCertVerifyError;
-use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY};
+use crate::security::nonos_trust_anchor::{
+    decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
+};
 
 pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 
@@ -40,9 +34,8 @@ const REPLY_PORT: u32 = 4203;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
 
 pub fn spawn_driver_virtio_blk_capsule() -> Result<(), SpawnError> {
-    let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY).map_err(|_| {
-        SpawnError::NonosIdCertRejected(IdCertVerifyError::TrustAnchorPolicy)
-    })?;
+    let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
+        .map_err(|_| SpawnError::NonosIdCertRejected(IdCertVerifyError::TrustAnchorPolicy))?;
 
     let spec = CapsuleSpecVerified {
         name: SERVICE_NAME,

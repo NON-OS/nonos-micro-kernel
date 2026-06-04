@@ -48,7 +48,8 @@ pub fn spawn_driver_usb_hid_capsule() -> Result<(), SpawnError> {
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
-            | Capability::Memory.bit(),
+            | Capability::Memory.bit()
+            | Capability::InputSource.bit(),
         debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

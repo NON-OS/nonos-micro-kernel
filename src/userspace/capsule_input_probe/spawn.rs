@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{
-    INPUT_PROBE_ELF, INPUT_PROBE_MANIFEST_BYTES, INPUT_PROBE_NONOS_ID_CERT_BYTES,
-};
+use super::embed::{INPUT_PROBE_ELF, INPUT_PROBE_MANIFEST_BYTES, INPUT_PROBE_NONOS_ID_CERT_BYTES};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
@@ -49,8 +47,7 @@ pub fn spawn_input_probe_capsule() -> Result<(), SpawnError> {
             | Capability::IPC.bit()
             | Capability::Memory.bit()
             | Capability::GraphicsDisplayQuery.bit()
-            | Capability::GraphicsSurfaceCreate.bit()
-            | Capability::Debug.bit(),
+            | Capability::GraphicsSurfaceCreate.bit(),
         debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

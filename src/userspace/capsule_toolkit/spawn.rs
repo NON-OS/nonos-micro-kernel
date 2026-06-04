@@ -45,8 +45,7 @@ pub fn spawn_toolkit_capsule() -> Result<(), SpawnError> {
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
-            | Capability::Memory.bit()
-            | Capability::Debug.bit(),
+            | Capability::Memory.bit(),
         debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
