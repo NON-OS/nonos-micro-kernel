@@ -22,6 +22,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkExit
         | SyscallNumber::MkYield
         | SyscallNumber::MkTimeMillis
+        | SyscallNumber::MkTimeRtc
         | SyscallNumber::MkCapCheck => caps.is_valid(),
 
         SyscallNumber::MkMmap => caps.can_allocate_memory(),
@@ -45,7 +46,8 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkIrqBind
         | SyscallNumber::MkIrqUnbind
         | SyscallNumber::MkIrqAck
-        | SyscallNumber::MkIrqPoll => caps.can_irq(),
+        | SyscallNumber::MkIrqPoll
+        | SyscallNumber::MkIrqWait => caps.can_irq(),
         SyscallNumber::MkDmaMap | SyscallNumber::MkDmaUnmap => caps.can_dma(),
         SyscallNumber::MkPciConfigRead | SyscallNumber::MkPciConfigWrite => caps.can_driver(),
         SyscallNumber::MkPioGrant
