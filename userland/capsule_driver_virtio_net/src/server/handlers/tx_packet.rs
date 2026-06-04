@@ -20,18 +20,18 @@ use crate::server::error::reply_with_status;
 use crate::setup::Driver;
 use crate::tx::send;
 
-pub fn handle(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) -> bool {
+pub fn handle(sender_pid: u32, driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) -> bool {
     if req.payload_len as usize != body.len() {
-        return reply_with_status(tx, req, E_MSGSIZE);
+        return reply_with_status(sender_pid, tx, req, E_MSGSIZE);
     }
     if body.len() < MIN_ETHERNET_FRAME || body.len() > MAX_ETHERNET_FRAME {
-        return reply_with_status(tx, req, E_INVAL);
+        return reply_with_status(sender_pid, tx, req, E_INVAL);
     }
     if body.len() as u32 > MAX_TX_PAYLOAD_BYTES {
-        return reply_with_status(tx, req, E_MSGSIZE);
+        return reply_with_status(sender_pid, tx, req, E_MSGSIZE);
     }
     match send(driver.regs, &mut driver.tx, driver.irq_grant, body) {
-        Ok(()) => reply_with_status(tx, req, 0),
-        Err(_) => reply_with_status(tx, req, E_IO),
+        Ok(()) => reply_with_status(sender_pid, tx, req, 0),
+        Err(_) => reply_with_status(sender_pid, tx, req, E_IO),
     }
 }

@@ -14,22 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_ipc_send;
-
 use crate::protocol::{
-    encode_response_header, write_status, Request, E_AGAIN, KERNEL_REPLY_ENDPOINT, RESP_HDR_LEN,
-    RX_PAYLOAD_PREFIX_LEN, STATUS_LEN,
+    encode_response_header, write_status, Request, E_AGAIN, RESP_HDR_LEN, RX_PAYLOAD_PREFIX_LEN,
+    STATUS_LEN,
 };
 use crate::rx::take_one;
-use crate::server::error::reply_with_status;
+use crate::server::error::{reply, reply_with_status};
 use crate::setup::Driver;
 
-pub fn handle(driver: &mut Driver, req: &Request, tx: &mut [u8]) -> bool {
+pub fn handle(sender_pid: u32, driver: &mut Driver, req: &Request, tx: &mut [u8]) -> bool {
     let frame = unsafe { take_one(&mut driver.rx) };
     let frame = match frame {
         Some(f) => f,
         None => {
-            return reply_with_status(tx, req, E_AGAIN);
+            return reply_with_status(sender_pid, tx, req, E_AGAIN);
         }
     };
     let len = frame.bytes.len();
@@ -42,5 +40,5 @@ pub fn handle(driver: &mut Driver, req: &Request, tx: &mut [u8]) -> bool {
         .copy_from_slice(&prefix);
     tx[RESP_HDR_LEN + STATUS_LEN + RX_PAYLOAD_PREFIX_LEN..RESP_HDR_LEN + STATUS_LEN + body_len]
         .copy_from_slice(frame.bytes);
-    mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), RESP_HDR_LEN + STATUS_LEN + body_len) >= 0
+    reply(sender_pid, tx, RESP_HDR_LEN + STATUS_LEN + body_len)
 }

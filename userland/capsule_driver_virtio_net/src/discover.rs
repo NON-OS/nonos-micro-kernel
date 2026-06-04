@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BUS_KIND_PCI};
+use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BAR_KIND_PIO, BUS_KIND_PCI};
 
 use super::constants::{VIRTIO_NET_MODERN, VIRTIO_NET_TRANSITIONAL, VIRTIO_VENDOR_ID};
 
@@ -24,7 +24,9 @@ const MAX_DEVICES: usize = 32;
 pub struct Found {
     pub device_id: u64,
     pub irq_line: u8,
-    pub bar0_size: u64,
+    pub register_bar: u8,
+    pub register_kind: u8,
+    pub register_size: u64,
 }
 
 pub fn find_virtio_net() -> Option<Found> {
@@ -41,14 +43,15 @@ pub fn find_virtio_net() -> Option<Found> {
         if r.irq_pin == 0 || r.irq_line == 0xFF {
             continue;
         }
-        if r.bar_count == 0 {
-            continue;
+        if let Some((idx, kind, size)) = first_register_bar(r) {
+            return Some(Found {
+                device_id: r.device_id,
+                irq_line: r.irq_line,
+                register_bar: idx,
+                register_kind: kind,
+                register_size: size,
+            });
         }
-        let bar0 = r.bars[0];
-        if bar0.kind != BAR_KIND_MMIO || bar0.size == 0 {
-            continue;
-        }
-        return Some(Found { device_id: r.device_id, irq_line: r.irq_line, bar0_size: bar0.size });
     }
     None
 }
@@ -57,4 +60,17 @@ fn is_match(r: &DeviceRecord) -> bool {
     r.vendor == VIRTIO_VENDOR_ID
         && r.bus_kind == BUS_KIND_PCI
         && (r.device == VIRTIO_NET_TRANSITIONAL || r.device == VIRTIO_NET_MODERN)
+}
+
+fn first_register_bar(r: &DeviceRecord) -> Option<(u8, u8, u64)> {
+    for i in 0..r.bars.len() {
+        let bar = r.bars[i];
+        if bar.size == 0 {
+            continue;
+        }
+        if bar.kind == BAR_KIND_PIO || bar.kind == BAR_KIND_MMIO {
+            return Some((i as u8, bar.kind, bar.size));
+        }
+    }
+    None
 }

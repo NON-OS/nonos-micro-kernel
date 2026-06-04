@@ -20,8 +20,8 @@ mod dma;
 mod dma_set;
 mod driver;
 mod irq;
-mod mmio;
 mod queues;
+mod registers;
 mod sequence;
 
 pub use driver::Driver;

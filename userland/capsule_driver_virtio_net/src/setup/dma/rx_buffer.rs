@@ -14,15 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_dma_map, DmaMapOut, IrqBindOut, MmioMapOut};
+use nonos_libc::{mk_dma_map, DmaMapOut, IrqBindOut};
 
+use super::super::registers::RegisterGrant;
 use super::rollback;
 use crate::constants::{RX_BUFFER_LEN, RX_DESC_COUNT};
 
 pub fn map_rx_buffers(
     device_id: u64,
     claim_epoch: u64,
-    mmio: &MmioMapOut,
+    reg: &RegisterGrant,
     irq: &IrqBindOut,
     rx_queue: &DmaMapOut,
 ) -> Result<DmaMapOut, &'static str> {
@@ -32,7 +33,7 @@ pub fn map_rx_buffers(
     if r >= 0 {
         return Ok(out);
     }
-    if !rollback::after(device_id, mmio, irq, &[rx_queue.grant_id]) {
+    if !rollback::after(device_id, reg, irq, &[rx_queue.grant_id]) {
         return Err("dma rollback failed (rx buffers)");
     }
     Err("dma map failed (rx buffers)")

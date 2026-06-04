@@ -22,6 +22,3 @@
 pub const VIRTIO_VENDOR_ID: u16 = 0x1AF4;
 pub const VIRTIO_NET_TRANSITIONAL: u16 = 0x1000;
 pub const VIRTIO_NET_MODERN: u16 = 0x1041;
-
-pub const BAR_INDEX: u32 = 0;
-pub const BAR_OFFSET: u64 = 0;
