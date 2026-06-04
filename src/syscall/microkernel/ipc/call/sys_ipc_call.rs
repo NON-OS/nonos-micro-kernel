@@ -15,32 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::process::current_pid;
+use crate::services::registry::lookup_port;
+use crate::syscall::microkernel::errnos::ERRNO_BUSY;
 
-use super::recv::recv_from_inbox;
-use super::reply_inbox;
-use super::send::sys_ipc_send;
+use super::super::pending_reply;
+use super::super::recv::recv_from_inbox;
+use super::super::reply_inbox;
+use super::super::send::sys_ipc_send;
+use super::trace::trace;
 
-fn trace(pid: u32, label: &[u8], rc: i64) {
-    if pid != 0x17 {
-        return;
-    }
-    crate::sys::serial::trace(b"[IPC-CALL] pid=");
-    crate::sys::serial::trace_hex(pid as u64);
-    crate::sys::serial::trace(b" ");
-    crate::sys::serial::trace(label);
-    crate::sys::serial::trace(b" rc=");
-    if rc < 0 {
-        crate::sys::serial::trace(b"-");
-        crate::sys::serial::trace_dec((-rc) as u64);
-    } else {
-        crate::sys::serial::trace_dec(rc as u64);
-    }
-    crate::sys::serial::traceln(b"");
-}
-
-// Send-then-recv. Replies drain from the caller's dedicated reply
-// inbox when the capsule spawn path assigned one; legacy callers fall
-// back to `proc.<pid>`.
 pub fn sys_ipc_call(
     ep: u64,
     req: u64,
@@ -49,20 +32,29 @@ pub fn sys_ipc_call(
     resp_len: usize,
     timeout_ms: u64,
 ) -> i64 {
-    let send_result = sys_ipc_send(ep, req, req_len);
     let pid = current_pid().unwrap_or(0);
+    let inbox = reply_inbox::for_pid(pid);
+    let endpoint_pid = lookup_port(ep as u32).map(|endpoint| endpoint.pid);
+    if let Some(server_pid) = endpoint_pid {
+        if !pending_reply::push(server_pid, inbox.clone()) {
+            return ERRNO_BUSY;
+        }
+    }
+    let send_result = sys_ipc_send(ep, req, req_len);
     trace(pid, b"send", send_result);
     if send_result < 0 {
+        if let Some(server_pid) = endpoint_pid {
+            pending_reply::remove(server_pid, &inbox);
+        }
         return send_result;
     }
-    let inbox = reply_inbox::for_pid(pid);
-    let recv_result = recv_from_inbox(
-        pid,
-        &inbox,
-        resp,
-        resp_len,
-        if timeout_ms == 0 { 5000 } else { timeout_ms },
-    );
+    let timeout = if timeout_ms == 0 { 5000 } else { timeout_ms };
+    let recv_result = recv_from_inbox(pid, &inbox, resp, resp_len, timeout);
+    if recv_result < 0 {
+        if let Some(server_pid) = endpoint_pid {
+            pending_reply::remove(server_pid, &inbox);
+        }
+    }
     trace(pid, b"recv", recv_result);
     recv_result
 }

@@ -59,6 +59,7 @@ fn kind(nr: u64) -> &'static [u8] {
         SYS_MMAP => b"MkMmap",
         SYS_MUNMAP => b"MkMunmap",
         SYS_EXIT => b"MkExit",
+        SYS_PID_ALIVE => b"MkPidAlive",
         SYS_MK_DEBUG => b"MkDebug",
         SYS_YIELD => b"MkYield",
         SYS_TIME_MILLIS => b"MkTimeMillis",

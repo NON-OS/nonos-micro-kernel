@@ -14,24 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod inbox_name;
-mod lookup;
-mod pending_reply;
-mod recv;
-mod recv_from;
-mod reply;
-mod reply_inbox;
-mod register;
-mod send;
-mod send_to_pid;
-mod sender_pid;
-
-pub use call::sys_ipc_call;
-pub use lookup::sys_service_lookup;
-pub use recv::sys_ipc_recv;
-pub use recv_from::sys_ipc_recv_from;
-pub use reply::sys_ipc_reply;
-pub use register::sys_service_register;
-pub use send::sys_ipc_send;
-pub use send_to_pid::sys_ipc_send_to_pid;
+pub(super) fn trace(pid: u32, label: &[u8], rc: i64) {
+    if pid != 0x17 {
+        return;
+    }
+    crate::sys::serial::trace(b"[IPC-CALL] pid=");
+    crate::sys::serial::trace_hex(pid as u64);
+    crate::sys::serial::trace(b" ");
+    crate::sys::serial::trace(label);
+    crate::sys::serial::trace(b" rc=");
+    if rc < 0 {
+        crate::sys::serial::trace(b"-");
+        crate::sys::serial::trace_dec((-rc) as u64);
+    } else {
+        crate::sys::serial::trace_dec(rc as u64);
+    }
+    crate::sys::serial::traceln(b"");
+}

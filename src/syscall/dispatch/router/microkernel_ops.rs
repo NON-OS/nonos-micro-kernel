@@ -20,13 +20,42 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
     use SyscallNumber::*;
     matches!(
         nr,
-        MkIpcSend | MkIpcRecv | MkIpcCall | MkIpcRecvFrom | MkIpcReply | MkIpcSendToPid
-            | MkServiceLookup | MkServiceRegister | MkMmap | MkMunmap | MkSpawn | MkExit
-            | MkYield | MkTimeMillis | MkCapGrant | MkCapRevoke | MkCapCheck
-            | MkDeviceList | MkDeviceClaim | MkDeviceRelease | MkMmioMap | MkMmioUnmap
-            | MkIrqBind | MkIrqUnbind | MkIrqAck | MkIrqPoll | MkDmaMap | MkDmaUnmap
-            | MkPciConfigRead | MkPciConfigWrite | MkPioGrant | MkPioRead | MkPioWrite
-            | MkPioRelease | MkDebug
+        MkIpcSend
+            | MkIpcRecv
+            | MkIpcCall
+            | MkIpcRecvFrom
+            | MkIpcReply
+            | MkIpcSendToPid
+            | MkServiceLookup
+            | MkServiceRegister
+            | MkMmap
+            | MkMunmap
+            | MkSpawn
+            | MkExit
+            | MkPidAlive
+            | MkYield
+            | MkTimeMillis
+            | MkCapGrant
+            | MkCapRevoke
+            | MkCapCheck
+            | MkDeviceList
+            | MkDeviceClaim
+            | MkDeviceRelease
+            | MkMmioMap
+            | MkMmioUnmap
+            | MkIrqBind
+            | MkIrqUnbind
+            | MkIrqAck
+            | MkIrqPoll
+            | MkDmaMap
+            | MkDmaUnmap
+            | MkPciConfigRead
+            | MkPciConfigWrite
+            | MkPioGrant
+            | MkPioRead
+            | MkPioWrite
+            | MkPioRelease
+            | MkDebug
     )
 }
 

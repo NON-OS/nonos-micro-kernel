@@ -14,24 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod inbox_name;
-mod lookup;
-mod pending_reply;
-mod recv;
-mod recv_from;
-mod reply;
-mod reply_inbox;
-mod register;
-mod send;
-mod send_to_pid;
-mod sender_pid;
+use alloc::string::String;
 
-pub use call::sys_ipc_call;
-pub use lookup::sys_service_lookup;
-pub use recv::sys_ipc_recv;
-pub use recv_from::sys_ipc_recv_from;
-pub use reply::sys_ipc_reply;
-pub use register::sys_service_register;
-pub use send::sys_ipc_send;
-pub use send_to_pid::sys_ipc_send_to_pid;
+use super::state::{MAX_PER_SERVICE, PENDING};
+
+pub(in crate::syscall::microkernel::ipc) fn push(server_pid: u32, caller_inbox: String) -> bool {
+    let mut map = PENDING.lock();
+    let queue = map.entry(server_pid).or_default();
+    if queue.len() < MAX_PER_SERVICE {
+        queue.push_back(caller_inbox);
+        true
+    } else {
+        false
+    }
+}

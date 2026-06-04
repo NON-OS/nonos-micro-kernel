@@ -56,12 +56,25 @@ pub fn sys_ipc_send(endpoint: u64, buf: u64, len: usize) -> i64 {
         return ERRNO_FAULT;
     }
     let pid = current_pid().unwrap_or(0);
-    let target = resolve_send_target(endpoint);
+    let target = redirect_reply(pid, resolve_send_target(endpoint));
     trace(pid, endpoint, &target, len);
     match kernel_route_ipc(pid, &target, &data) {
         Ok(()) => 0,
         Err(e) => e as i64,
     }
+}
+
+// When a service replies to its own fixed reply endpoint, hand the
+// message to the matching `mk_ipc_call` caller's private inbox instead.
+// A non-reply send, or a reply with no pending caller, is left as-is.
+fn redirect_reply(sender_pid: u32, target: alloc::string::String) -> alloc::string::String {
+    let own_reply = crate::process::get_process(sender_pid).and_then(|p| p.reply_inbox());
+    if own_reply == Some(target.as_str()) {
+        if let Some(caller_inbox) = super::pending_reply::pop(sender_pid) {
+            return caller_inbox;
+        }
+    }
+    target
 }
 
 fn resolve_send_target(endpoint: u64) -> alloc::string::String {

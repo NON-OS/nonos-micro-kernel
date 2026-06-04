@@ -31,6 +31,7 @@ pub const SYS_MMAP: u64 = tag4(b"MMAP");
 pub const SYS_MUNMAP: u64 = tag4(b"MUMP");
 pub const SYS_SPAWN: u64 = tag4(b"MSPN");
 pub const SYS_EXIT: u64 = tag4(b"MEXT");
+pub const SYS_PID_ALIVE: u64 = tag4(b"MPAL");
 pub const SYS_YIELD: u64 = tag4(b"MYLD");
 pub const SYS_TIME_MILLIS: u64 = tag4(b"MTMS");
 pub const SYS_CAP_GRANT: u64 = tag4(b"MCGT");

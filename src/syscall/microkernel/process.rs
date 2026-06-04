@@ -64,6 +64,17 @@ pub fn sys_exit(code: i32) -> i64 {
     crate::process::exit::exit_and_yield(code, false)
 }
 
+pub fn sys_pid_alive(pid: u32) -> i64 {
+    if pid == 0 {
+        return 0;
+    }
+    if crate::process::get_process_table().find_by_pid(pid).is_some() {
+        1
+    } else {
+        0
+    }
+}
+
 pub fn sys_yield() -> i64 {
     crate::sched::yield_now();
     0

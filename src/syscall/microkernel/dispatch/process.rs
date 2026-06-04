@@ -17,7 +17,7 @@
 use super::args::Args;
 use crate::syscall::microkernel::memory::{sys_mmap, sys_munmap};
 use crate::syscall::microkernel::numbers::*;
-use crate::syscall::microkernel::process::{sys_exit, sys_spawn, sys_yield};
+use crate::syscall::microkernel::process::{sys_exit, sys_pid_alive, sys_spawn, sys_yield};
 use crate::syscall::microkernel::time::sys_time_millis;
 
 pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
@@ -26,6 +26,7 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_MUNMAP => sys_munmap(a.a0, a.a1 as usize),
         SYS_SPAWN => sys_spawn(a.a0, a.a1 as usize),
         SYS_EXIT => sys_exit(a.a0 as i32),
+        SYS_PID_ALIVE => sys_pid_alive(a.a0 as u32),
         SYS_YIELD => sys_yield(),
         SYS_TIME_MILLIS => sys_time_millis(),
         _ => return None,
