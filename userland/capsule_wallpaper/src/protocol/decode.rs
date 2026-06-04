@@ -14,25 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{Request, E_BAD_LEN, E_BAD_MAGIC, E_BAD_VERSION, HDR_LEN, MAGIC, VERSION};
+use super::{
+    read_u16, read_u32, Request, E_BAD_LEN, E_BAD_MAGIC, E_BAD_VERSION, HDR_LEN, MAGIC, VERSION,
+};
 
 pub fn parse(buf: &[u8]) -> Result<(Request, &[u8]), (i32, Request)> {
     if buf.len() < HDR_LEN {
         return Err((E_BAD_LEN, Request { op: 0, flags: 0, request_id: 0 }));
     }
-    let op = u16::from_le_bytes(buf[6..8].try_into().unwrap());
-    let flags = u16::from_le_bytes(buf[8..10].try_into().unwrap());
-    let request_id = u32::from_le_bytes(buf[12..16].try_into().unwrap());
+    let op = read_u16(buf, 6).unwrap_or(0);
+    let flags = read_u16(buf, 8).unwrap_or(0);
+    let request_id = read_u32(buf, 12).unwrap_or(0);
     let req = Request { op, flags, request_id };
-    let magic = u32::from_le_bytes(buf[0..4].try_into().unwrap());
-    if magic != MAGIC {
+    if read_u32(buf, 0) != Some(MAGIC) {
         return Err((E_BAD_MAGIC, req));
     }
-    let version = u16::from_le_bytes(buf[4..6].try_into().unwrap());
-    if version != VERSION {
+    if read_u16(buf, 4) != Some(VERSION) {
         return Err((E_BAD_VERSION, req));
     }
-    let payload_len = u32::from_le_bytes(buf[16..20].try_into().unwrap());
+    let Some(payload_len) = read_u32(buf, 16) else {
+        return Err((E_BAD_LEN, req));
+    };
     let end = match HDR_LEN.checked_add(payload_len as usize) {
         Some(end) if end == buf.len() => end,
         _ => return Err((E_BAD_LEN, req)),

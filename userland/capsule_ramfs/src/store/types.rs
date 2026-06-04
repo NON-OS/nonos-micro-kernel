@@ -30,7 +30,7 @@ pub struct Store {
     pub(super) files: BTreeMap<String, File>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum StoreError {
     NotFound,
     CryptoFailure,

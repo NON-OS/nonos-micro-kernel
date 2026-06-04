@@ -32,6 +32,9 @@ impl Store {
             Some(i) => i,
             None => self.create_file(path, create)?,
         };
+        if self.files[file_idx].is_dir {
+            return Err(StoreError::IsDir);
+        }
         if truncate {
             self.files[file_idx].data.clear();
         }
@@ -49,7 +52,7 @@ impl Store {
         if self.files.len() >= MAX_FILES {
             return Err(StoreError::Full);
         }
-        self.files.push(File { name: String::from(path), data: Vec::new() });
+        self.files.push(File { name: String::from(path), data: Vec::new(), is_dir: false });
         Ok(self.files.len() - 1)
     }
 }

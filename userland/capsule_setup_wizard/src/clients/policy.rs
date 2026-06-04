@@ -1,5 +1,7 @@
 use nonos_libc::mk_ipc_call;
-use nonos_policy_proto::{Header, HDR_LEN, IPC_PAYLOAD_MAX, KIND_BOOL, KIND_I8, KIND_STR, KIND_U8, OP_SET};
+use nonos_policy_proto::{
+    Header, HDR_LEN, IPC_PAYLOAD_MAX, KIND_BOOL, KIND_I8, KIND_STR, KIND_U8, OP_SET,
+};
 
 fn finish(port: u32, tx: &[u8]) -> Result<(), i32> {
     let mut rx = [0u8; IPC_PAYLOAD_MAX];

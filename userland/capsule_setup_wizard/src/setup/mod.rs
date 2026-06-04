@@ -8,7 +8,6 @@ use nonos_libc::{
 
 use crate::clients::compositor;
 use crate::clients::display_info;
-use crate::debug;
 use crate::state::Context;
 
 const PROT_READ_WRITE: i32 = 0x3;
@@ -19,7 +18,7 @@ const FILL_ARGB: u32 = 0xFF20_3040;
 pub fn run() -> Result<Context, &'static str> {
     let compositor_port = discover::lookup_compositor_port()?;
     let router_port = discover::lookup_router_port()?;
-    let (keyring_port, policy_port, wallpaper_port) = discover::lookup_side_ports();
+    let policy_port = discover::lookup_policy_port();
     compositor::healthcheck(compositor_port, 1).map_err(|_| "compositor health failed")?;
     let di = display_info::query_display_info(compositor_port, 3)
         .map_err(|_| "display info query failed")?;
@@ -52,7 +51,14 @@ pub fn run() -> Result<Context, &'static str> {
     }
     fill::fill(backing_va, width, height, stride, FILL_ARGB);
     let submit = compositor::push_scene_submit(
-        compositor_port, 1, handle as u64, 0, 0, width, height, OVERLAY_Z,
+        compositor_port,
+        1,
+        handle as u64,
+        0,
+        0,
+        width,
+        height,
+        OVERLAY_Z,
     );
     if submit.is_err() {
         let _ = mk_surface_release(handle as u64);
@@ -62,9 +68,5 @@ pub fn run() -> Result<Context, &'static str> {
         let _ = mk_surface_release(handle as u64);
         return Err("compositor damage commit failed");
     }
-    debug::marker(b"setup ok");
-    Ok(Context::new(
-        backing_va, width, height, stride, compositor_port, router_port, keyring_port, policy_port,
-        wallpaper_port,
-    ))
+    Ok(Context::new(backing_va, width, height, stride, compositor_port, router_port, policy_port))
 }

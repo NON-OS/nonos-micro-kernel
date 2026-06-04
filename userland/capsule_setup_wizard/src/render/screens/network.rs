@@ -5,7 +5,12 @@ use crate::state::Context;
 const MODES: &[&[u8]] = &[b"Amnesic / offline", b"Direct connection", b"Bridged / obfuscated"];
 
 pub fn draw(ctx: &Context) {
-    render::frame(ctx, b"Network mode", b"How this machine reaches the world", b"ENTER NEXT  ESC BACK");
+    render::frame(
+        ctx,
+        b"Network mode",
+        b"How this machine reaches the world",
+        b"ENTER NEXT  ESC BACK",
+    );
     let spx = ctx.stride as usize / 4;
     let (w, h) = (ctx.width, ctx.height);
     let buf = render::buffer(ctx);

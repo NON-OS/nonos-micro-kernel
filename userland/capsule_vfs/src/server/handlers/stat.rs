@@ -43,10 +43,11 @@ pub fn stat(store: &mut Store, req: Request<'_>) -> Vec<u8> {
         Err(_) => return encode_response(OP_STAT, req.flags, req.request_id, EINVAL, &[]),
     };
     match store.stat(path) {
-        Ok(size) => {
+        Ok((size, is_dir)) => {
             let mut body = Vec::with_capacity(12);
             body.extend_from_slice(&size.to_le_bytes());
-            body.extend_from_slice(&0u32.to_le_bytes());
+            let flags: u32 = if is_dir { 1 } else { 0 };
+            body.extend_from_slice(&flags.to_le_bytes());
             encode_response(OP_STAT, req.flags, req.request_id, 0, &body)
         }
         Err(e) => encode_response(OP_STAT, req.flags, req.request_id, map_store_err(e), &[]),

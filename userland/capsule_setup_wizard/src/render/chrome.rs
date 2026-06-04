@@ -1,7 +1,9 @@
 use nonos_toolkit::font::render::{draw_text, draw_text_scaled};
 
 use crate::render::paint::{fill_rect, gradient_v};
-use crate::render::theme::{ACCENT, DOT_CUR, DOT_DONE, DOT_TODO, GRAD_BOT, GRAD_TOP, HINT, STEP_LABELS};
+use crate::render::theme::{
+    ACCENT, DOT_CUR, DOT_DONE, DOT_TODO, GRAD_BOT, GRAD_TOP, HINT, STEP_LABELS,
+};
 use crate::state::Context;
 
 const WORDMARK: &[u8] = b"N\xD8NOS";

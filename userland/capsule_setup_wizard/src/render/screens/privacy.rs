@@ -2,14 +2,20 @@ use crate::render::{self, widgets::toggles};
 use crate::server::step::{default_key, Outcome};
 use crate::state::Context;
 
-const ITEMS: &[&[u8]] = &[b"MAC address randomization", b"Secure-wipe RAM on shutdown", b"Telemetry"];
+const ITEMS: &[&[u8]] =
+    &[b"MAC address randomization", b"Secure-wipe RAM on shutdown", b"Telemetry"];
 
 fn focus(ctx: &Context) -> usize {
     (ctx.privacy >> 8) as usize % ITEMS.len()
 }
 
 pub fn draw(ctx: &Context) {
-    render::frame(ctx, b"Privacy & hardening", b"SPACE toggles, j/k moves", b"ENTER NEXT  ESC BACK");
+    render::frame(
+        ctx,
+        b"Privacy & hardening",
+        b"SPACE toggles, j/k moves",
+        b"ENTER NEXT  ESC BACK",
+    );
     let spx = ctx.stride as usize / 4;
     let (w, h) = (ctx.width, ctx.height);
     let buf = render::buffer(ctx);

@@ -1,7 +1,7 @@
 pub mod admin;
 pub mod appearance;
-pub mod keygen;
 pub mod keyboard;
+pub mod keygen;
 pub mod language;
 pub mod network;
 pub mod passphrase;

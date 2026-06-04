@@ -17,13 +17,16 @@
 use alloc::vec::Vec;
 
 use super::handlers;
-use crate::protocol::{encode_response, Request, EINVAL, OP_HEALTHCHECK, OP_PAY};
+use crate::protocol::{
+    encode_response, Request, EINVAL, OP_DRAIN_RECEIPTS, OP_HEALTHCHECK, OP_PAY,
+};
 use crate::store::State;
 
 pub fn dispatch(state: &mut State, req: Request<'_>) -> Vec<u8> {
     match req.op {
         OP_HEALTHCHECK => handlers::health(req),
         OP_PAY => handlers::pay(state, req),
+        OP_DRAIN_RECEIPTS => handlers::drain(state, req),
         _ => encode_response(req.seq, EINVAL, &[]),
     }
 }

@@ -9,7 +9,16 @@ pub fn draw(ctx: &Context) {
     let spx = ctx.stride as usize / 4;
     let (w, h) = (ctx.width, ctx.height);
     let buf = render::buffer(ctx);
-    rows::list(buf, spx, w, h, render::content_x(w), 110, KEYBOARD_LAYOUT_LABELS, ctx.kbd_sel as usize);
+    rows::list(
+        buf,
+        spx,
+        w,
+        h,
+        render::content_x(w),
+        110,
+        KEYBOARD_LAYOUT_LABELS,
+        ctx.kbd_sel as usize,
+    );
 }
 
 pub fn on_key(ctx: &mut Context, code: u32) -> Outcome {

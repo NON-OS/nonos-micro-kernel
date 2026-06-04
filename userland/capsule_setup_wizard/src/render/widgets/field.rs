@@ -3,7 +3,16 @@ use nonos_toolkit::font::render::draw_text;
 use crate::render::paint::fill_rect;
 use crate::render::theme::{ACCENT, FG, ROW_BG, ROW_BORDER};
 
-pub fn masked(buf: &mut [u32], spx: usize, w: u32, h: u32, x: u32, y: u32, len: usize, strength: u32) {
+pub fn masked(
+    buf: &mut [u32],
+    spx: usize,
+    w: u32,
+    h: u32,
+    x: u32,
+    y: u32,
+    len: usize,
+    strength: u32,
+) {
     let fw = 360u32;
     fill_rect(buf, spx, w, h, x, y, fw, 26, ACCENT);
     fill_rect(buf, spx, w, h, x + 1, y + 1, fw - 2, 24, ROW_BG);

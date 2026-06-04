@@ -13,26 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-use alloc::collections::BTreeMap;
-use alloc::vec::Vec;
-
-pub const MAX_KEY_SIZE: usize = 256;
-pub const MAX_KEYS: usize = 128;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
-pub enum KeyType {
-    Symmetric = 0,
-    PrivateKey = 1,
-    PublicKey = 2,
-    HmacSecret = 3,
-    DerivedKey = 4,
-    SessionKey = 5,
-    MasterKey = 6,
-    SigningKey = 7,
-    Secp256k1Eth = 8,
-}
+use super::key_type::KeyType;
 
 impl KeyType {
     pub fn from_u8(v: u8) -> Option<Self> {
@@ -49,43 +30,4 @@ impl KeyType {
             _ => None,
         }
     }
-
-    pub fn to_u8(self) -> u8 {
-        self as u8
-    }
-}
-
-pub(super) struct KeyEntry {
-    pub(super) key_type: KeyType,
-    pub(super) data: Vec<u8>,
-    pub(super) owner_pid: u32,
-    pub(super) created_at: u64,
-    pub(super) expires_at: u64,
-    pub(super) use_count: u64,
-    pub(super) locked: bool,
-}
-
-pub struct KeyMetadata {
-    pub id: u32,
-    pub key_type: KeyType,
-    pub size: u16,
-    pub owner_pid: u32,
-    pub created_at: u64,
-    pub expires_at: u64,
-    pub use_count: u64,
-    pub locked: bool,
-}
-
-pub struct Store {
-    pub(super) entries: BTreeMap<u32, KeyEntry>,
-    pub(super) next_id: u32,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum StoreError {
-    NotFound,
-    AccessDenied,
-    Locked,
-    Full,
-    InvalidArgument,
 }

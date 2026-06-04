@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::E_INVAL;
+use crate::protocol::{read_u32, E_INVAL};
 
 pub const DECODE_HDR_LEN: usize = 16;
 
@@ -37,10 +37,18 @@ pub fn parse_decode_req(body: &[u8]) -> Result<DecodeReq<'_>, i32> {
     if body.len() < DECODE_HDR_LEN {
         return Err(E_INVAL);
     }
-    let kind_raw = u32::from_le_bytes(body[0..4].try_into().unwrap());
-    let width = u32::from_le_bytes(body[4..8].try_into().unwrap());
-    let height = u32::from_le_bytes(body[8..12].try_into().unwrap());
-    let payload_len = u32::from_le_bytes(body[12..16].try_into().unwrap()) as usize;
+    let Some(kind_raw) = read_u32(body, 0) else {
+        return Err(E_INVAL);
+    };
+    let Some(width) = read_u32(body, 4) else {
+        return Err(E_INVAL);
+    };
+    let Some(height) = read_u32(body, 8) else {
+        return Err(E_INVAL);
+    };
+    let Some(payload_len) = read_u32(body, 12).map(|v| v as usize) else {
+        return Err(E_INVAL);
+    };
     if body.len() != DECODE_HDR_LEN + payload_len {
         return Err(E_INVAL);
     }

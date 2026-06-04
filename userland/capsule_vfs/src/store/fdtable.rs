@@ -16,11 +16,14 @@
 
 mod close;
 mod lookup;
+mod mkdir;
 mod new;
 mod open;
 mod query;
 mod read;
+mod rename;
 mod types;
+mod unlink;
 mod write;
 
 pub use types::{Store, StoreError};

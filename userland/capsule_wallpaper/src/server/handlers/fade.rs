@@ -18,7 +18,7 @@ use nonos_libc::mk_display_vsync_wait;
 
 use crate::compositor_client::push_damage_commit;
 use crate::paint::fill_argb;
-use crate::protocol::{Request, E_INVAL, FADE_REQ_LEN};
+use crate::protocol::{read_u32, Request, E_INVAL, FADE_REQ_LEN};
 use crate::server::respond;
 use crate::state::Context;
 
@@ -27,8 +27,14 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
         let _ = respond::status(sender_pid, req, E_INVAL, tx);
         return;
     }
-    let target_alpha = u32::from_le_bytes(body[0..4].try_into().unwrap());
-    let duration_ms = u32::from_le_bytes(body[4..8].try_into().unwrap());
+    let Some(target_alpha) = read_u32(body, 0) else {
+        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        return;
+    };
+    let Some(duration_ms) = read_u32(body, 4) else {
+        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        return;
+    };
     if target_alpha > 0xFF {
         let _ = respond::status(sender_pid, req, E_INVAL, tx);
         return;

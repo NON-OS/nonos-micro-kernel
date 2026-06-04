@@ -3,7 +3,16 @@ use nonos_toolkit::font::render::draw_text;
 use crate::render::paint::fill_rect;
 use crate::render::theme::{ACCENT, FG, ROW_BG, ROW_BORDER, ROW_SEL_BG};
 
-pub fn list(buf: &mut [u32], spx: usize, w: u32, h: u32, x: u32, y: u32, items: &[&[u8]], sel: usize) {
+pub fn list(
+    buf: &mut [u32],
+    spx: usize,
+    w: u32,
+    h: u32,
+    x: u32,
+    y: u32,
+    items: &[&[u8]],
+    sel: usize,
+) {
     let rw = 360u32;
     let mut yy = y;
     for (i, item) in items.iter().enumerate() {

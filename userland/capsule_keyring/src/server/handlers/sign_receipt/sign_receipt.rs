@@ -13,15 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use alloc::vec::Vec;
 
-use super::super::eip712::{receipt_digest, struct_hash, ReceiptFields};
-use super::super::ethaddr::address_of;
-use super::super::field32::field32;
-use super::super::zeroize::zeroize32;
 use crate::protocol::{encode_response, Request, EACCES, EINVAL};
+use crate::server::eip712::{receipt_digest, struct_hash};
+use crate::server::ethaddr::address_of;
+use crate::server::zeroize::zeroize32;
 use crate::store::{Store, StoreError};
+
+use super::read_fields::read_fields;
 
 pub fn sign_receipt(store: &mut Store, req: Request<'_>) -> Vec<u8> {
     const HDR: usize = 4 + 4 + 32 + 20 + 32 + 32 + 32 + 32 + 32;
@@ -43,21 +43,7 @@ pub fn sign_receipt(store: &mut Store, req: Request<'_>) -> Vec<u8> {
             return encode_response(req.seq, EINVAL, &[]);
         }
     };
-    let f = ReceiptFields {
-        capsule_id: field32(p, 8),
-        user,
-        publisher: {
-            let mut a = [0u8; 20];
-            a.copy_from_slice(&p[40..60]);
-            a
-        },
-        amount_nox: field32(p, 60),
-        nonce: field32(p, 92),
-        epoch: field32(p, 124),
-        expiry: field32(p, 156),
-        receipt_type: field32(p, 188),
-    };
-    let sh = struct_hash(&f);
+    let sh = struct_hash(&read_fields(p, user));
     let digest = sh.and_then(|h| receipt_digest(&h).map(|d| (h, d)));
     let (sh, digest) = match digest {
         Some(v) => v,

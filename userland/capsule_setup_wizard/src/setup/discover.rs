@@ -2,9 +2,7 @@ use nonos_libc::mk_service_lookup;
 
 const COMPOSITOR_SERVICE: &[u8] = b"compositor";
 const INPUT_ROUTER_SERVICE: &[u8] = b"input_router";
-const KEYRING_SERVICE: &[u8] = b"keyring";
 const POLICY_SERVICE: &[u8] = b"policy";
-const WALLPAPER_SERVICE: &[u8] = b"wallpaper";
 
 fn lookup_port(name: &[u8]) -> Result<u32, &'static str> {
     let mut pid: u32 = 0;
@@ -29,10 +27,6 @@ pub fn lookup_router_port() -> Result<u32, &'static str> {
     lookup_port(INPUT_ROUTER_SERVICE).map_err(|_| "lookup input_router")
 }
 
-pub fn lookup_side_ports() -> (u32, u32, u32) {
-    (
-        lookup_optional(KEYRING_SERVICE),
-        lookup_optional(POLICY_SERVICE),
-        lookup_optional(WALLPAPER_SERVICE),
-    )
+pub fn lookup_policy_port() -> u32 {
+    lookup_optional(POLICY_SERVICE)
 }

@@ -19,3 +19,5 @@ pub const EPOCH_DURATION: u64 = 86400;
 pub const RECEIPT_TTL_SECS: u64 = 86400;
 pub const KEYRING_SERVICE: &[u8] = b"keyring";
 pub const KEYRING_OP_SIGN_RECEIPT: u16 = 11;
+pub const RECORD_LEN: usize = 297;
+pub const DRAIN_BATCH_MAX: usize = (4096 - 12) / RECORD_LEN;
