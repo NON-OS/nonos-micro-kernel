@@ -17,6 +17,7 @@
 #![no_std]
 
 pub mod admin;
+pub mod battery;
 pub mod broker;
 pub mod crypto;
 pub mod debug;
@@ -67,5 +68,6 @@ pub use surface_registry::{
     INPUT_KIND_KEY_UP, INPUT_KIND_POINTER_ABS, INPUT_KIND_POINTER_REL, INPUT_KIND_TOUCH,
     INPUT_KIND_WHEEL, SURFACE_FORMAT_ARGB8888,
 };
+pub use battery::mk_battery_status;
 pub use time::{mk_time_millis, mk_time_rtc, RtcTime};
 pub use unistd::{mk_exit, mk_yield};

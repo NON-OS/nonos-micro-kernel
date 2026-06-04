@@ -14,6 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod battery;
-pub mod clock;
-pub mod net;
+//! `MkBatteryStatus` returns the battery charge as a percentage 0..=100,
+//! or a negative errno when no battery can be read. NONOS has no ACPI
+//! battery (_BST/_BIF) support yet — that needs an AML interpreter the
+//! kernel does not have — so until a battery driver lands this reports
+//! AC-full. When such a driver exists it should replace the body here
+//! with the real remaining-capacity reading.
+
+const AC_FULL_PERCENT: i64 = 100;
+
+pub fn sys_battery_status() -> i64 {
+    AC_FULL_PERCENT
+}

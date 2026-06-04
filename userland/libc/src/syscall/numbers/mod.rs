@@ -31,6 +31,7 @@ pub(crate) const N_MK_EXIT: i64 = tag4(b"MEXT");
 pub(crate) const N_MK_YIELD: i64 = tag4(b"MYLD");
 pub(crate) const N_MK_TIME_MILLIS: i64 = tag4(b"MTMS");
 pub(crate) const N_MK_TIME_RTC: i64 = tag4(b"MTRT");
+pub(crate) const N_MK_BATTERY_STATUS: i64 = tag4(b"MBAT");
 pub(crate) const N_ADMIN_REBOOT: i64 = tag4(b"ARBT");
 pub(crate) const N_ADMIN_SHUTDOWN: i64 = tag4(b"ASDN");
 pub(crate) const N_ADMIN_POLICY_PUSH: i64 = tag4(b"APPS");

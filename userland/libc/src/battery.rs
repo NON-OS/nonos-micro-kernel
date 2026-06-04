@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod battery;
-pub mod clock;
-pub mod net;
+use crate::syscall::{call_raw, N_MK_BATTERY_STATUS};
+
+pub extern "C" fn mk_battery_status() -> i64 {
+    call_raw(N_MK_BATTERY_STATUS, [0; 6])
+}

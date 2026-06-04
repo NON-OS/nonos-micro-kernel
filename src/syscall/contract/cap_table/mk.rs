@@ -23,6 +23,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkYield
         | SyscallNumber::MkTimeMillis
         | SyscallNumber::MkTimeRtc
+        | SyscallNumber::MkBatteryStatus
         | SyscallNumber::MkCapCheck => caps.is_valid(),
 
         SyscallNumber::MkMmap => caps.can_allocate_memory(),

@@ -22,7 +22,8 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
         nr,
         MkIpcSend | MkIpcRecv | MkIpcCall | MkIpcRecvFrom | MkIpcReply | MkIpcSendToPid
             | MkServiceLookup | MkServiceRegister | MkMmap | MkMunmap | MkSpawn | MkExit
-            | MkYield | MkTimeMillis | MkTimeRtc | MkCapGrant | MkCapRevoke | MkCapCheck
+            | MkYield | MkTimeMillis | MkTimeRtc | MkBatteryStatus | MkCapGrant | MkCapRevoke
+            | MkCapCheck
             | MkDeviceList | MkDeviceClaim | MkDeviceRelease | MkMmioMap | MkMmioUnmap
             | MkIrqBind | MkIrqUnbind | MkIrqAck | MkIrqPoll | MkIrqWait | MkDmaMap | MkDmaUnmap
             | MkPciConfigRead | MkPciConfigWrite | MkPioGrant | MkPioRead | MkPioWrite

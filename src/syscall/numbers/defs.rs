@@ -45,7 +45,7 @@ pub enum SyscallNumber {
     MkMmap = tag4(b"MMAP"), MkMunmap = tag4(b"MUMP"),
     MkSpawn = tag4(b"MSPN"), MkExit = tag4(b"MEXT"),
     MkYield = tag4(b"MYLD"), MkTimeMillis = tag4(b"MTMS"),
-    MkTimeRtc = tag4(b"MTRT"),
+    MkTimeRtc = tag4(b"MTRT"), MkBatteryStatus = tag4(b"MBAT"),
     MkCapGrant = tag4(b"MCGT"), MkCapRevoke = tag4(b"MCRV"),
     MkCapCheck = tag4(b"MCCK"), MkDeviceList = tag4(b"MDLS"),
     MkDeviceClaim = tag4(b"MDCL"), MkDeviceRelease = tag4(b"MDRL"),

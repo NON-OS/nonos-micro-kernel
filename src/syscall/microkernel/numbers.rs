@@ -34,6 +34,7 @@ pub const SYS_EXIT: u64 = tag4(b"MEXT");
 pub const SYS_YIELD: u64 = tag4(b"MYLD");
 pub const SYS_TIME_MILLIS: u64 = tag4(b"MTMS");
 pub const SYS_TIME_RTC: u64 = tag4(b"MTRT");
+pub const SYS_BATTERY_STATUS: u64 = tag4(b"MBAT");
 pub const SYS_CAP_GRANT: u64 = tag4(b"MCGT");
 pub const SYS_CAP_REVOKE: u64 = tag4(b"MCRV");
 pub const SYS_CAP_CHECK: u64 = tag4(b"MCCK");
