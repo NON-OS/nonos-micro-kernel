@@ -28,3 +28,21 @@ pub fn hhmm(buf: &mut [u8; 5]) -> bool {
     buf[4] = b'0' + t.minute % 10;
     true
 }
+
+pub fn ymd(buf: &mut [u8; 10]) -> bool {
+    let mut t = RtcTime::default();
+    if mk_time_rtc(&mut t as *mut RtcTime) != 0 {
+        return false;
+    }
+    buf[0] = b'0' + ((t.year / 1000) % 10) as u8;
+    buf[1] = b'0' + ((t.year / 100) % 10) as u8;
+    buf[2] = b'0' + ((t.year / 10) % 10) as u8;
+    buf[3] = b'0' + (t.year % 10) as u8;
+    buf[4] = b'-';
+    buf[5] = b'0' + (t.month / 10) % 10;
+    buf[6] = b'0' + t.month % 10;
+    buf[7] = b'-';
+    buf[8] = b'0' + (t.day / 10) % 10;
+    buf[9] = b'0' + t.day % 10;
+    true
+}
