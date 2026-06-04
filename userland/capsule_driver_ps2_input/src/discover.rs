@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_device_list, DeviceRecord, BUS_KIND_ACPI};
 use super::constants::{
     PNP_DEVICE_PS2_AUX, PNP_DEVICE_PS2_KBD, PNP_VENDOR_PS2_AUX, PNP_VENDOR_PS2_KBD,
 };
+use nonos_libc::{mk_device_list, DeviceRecord, BUS_KIND_ACPI};
 const MAX_DEVICES: usize = 32;
 #[derive(Debug, Clone, Copy)]
 pub struct Found {

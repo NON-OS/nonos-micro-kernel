@@ -13,11 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_dma_map, DmaMapOut};
 use super::page::{MAX_PAGES_PER_GRANT, PAGE_SIZE};
 use super::pool::DmaPool;
 use super::region::DmaRegion;
 use crate::error::{XhciError, XhciResult};
+use nonos_libc::{mk_dma_map, DmaMapOut};
 impl DmaPool {
     pub fn alloc(&self, requested: u64) -> XhciResult<DmaRegion> {
         if requested == 0 {

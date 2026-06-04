@@ -12,8 +12,8 @@ CAPSULE_FEATURE          := nonos-capsule-driver-ps2-input
 CAPSULE_NAMESPACE        := systems.nonos.driver.ps2_kbd0
 CAPSULE_SERVICE_ENDPOINT := service:4208:driver.ps2_kbd0
 CAPSULE_REPLY_ENDPOINT   := reply:4209:endpoint.4294967306
-# IPC|Memory|Driver|DeviceEnum|Irq|Pio|InputSource
-# = 0x08|0x10|0x10000|0x8000|0x40000|0x100000|0x200000 = 0x358019
+# CoreExec|IPC|Memory|DeviceEnum|Driver|Irq|Pio|InputSource
+# = 0x01|0x08|0x10|0x8000|0x10000|0x40000|0x100000|0x200000 = 0x358019
 CAPSULE_REQUIRED_CAPS    := 0x358019
 CAPSULE_KERNEL_MIRROR    := src/hardware/ps2_kbd_capsule
 

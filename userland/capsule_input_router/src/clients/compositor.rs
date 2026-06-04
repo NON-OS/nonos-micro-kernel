@@ -31,5 +31,9 @@ pub fn display_size(port_slot: &mut u32, request_id: u32) -> Option<(u32, u32)> 
     }
     let width = u32_at(&body, 0).ok()?;
     let height = u32_at(&body, 4).ok()?;
-    if width == 0 || height == 0 { None } else { Some((width, height)) }
+    if width == 0 || height == 0 {
+        None
+    } else {
+        Some((width, height))
+    }
 }

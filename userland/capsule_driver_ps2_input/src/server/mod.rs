@@ -16,5 +16,6 @@
 mod context;
 mod error;
 mod handlers;
+mod pump;
 mod runner;
 pub use runner::run;

@@ -14,23 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! USB-HID enumeration orchestrator. Drives the xHCI client to bring
-//! connected HID boot devices to the interrupt-IN polling stage.
-
 mod binding;
 mod enumerate;
 mod poll;
+mod run;
 
-pub use enumerate::{enumerate, HidEndpoint};
-
-use nonos_libc::mk_yield;
-
-pub fn run() -> ! {
-    let port = loop {
-        match crate::xhci::lookup() {
-            Some(p) => break p,
-            None => { mk_yield(); }
-        }
-    };
-    poll::run(port)
-}
+pub use run::run;

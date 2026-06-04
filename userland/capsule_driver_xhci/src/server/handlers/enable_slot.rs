@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_ipc_send;
 use crate::controller::{issue_disable_slot, issue_enable_slot};
 use crate::protocol::{
     encode_response_header, write_status, Request, E_IO, E_NODEV, KERNEL_REPLY_ENDPOINT,
@@ -21,6 +20,7 @@ use crate::protocol::{
 };
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
+use nonos_libc::mk_ipc_send;
 pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
     let slot_id = match issue_enable_slot(
         ctx.driver.layout.doorbell_base,

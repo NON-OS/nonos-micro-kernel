@@ -32,6 +32,10 @@ pub fn parse_delivery(buf: &[u8]) -> Option<InputEvent> {
     if magic != DELIVERY_MAGIC {
         return None;
     }
+    let version = u16::from_le_bytes(buf[4..6].try_into().ok()?);
+    if version != DELIVERY_VERSION {
+        return None;
+    }
     Some(InputEvent {
         kind: u16::from_le_bytes(buf[8..10].try_into().ok()?),
         flags: u16::from_le_bytes(buf[10..12].try_into().ok()?),

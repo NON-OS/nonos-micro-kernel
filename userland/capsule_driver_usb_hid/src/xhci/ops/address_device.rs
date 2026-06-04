@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! ADDRESS_DEVICE call. Request body (2 bytes): `[0]=slot_id,
-//! [1]=port_id`. Reply payload (after status, 8 bytes):
-//! `[0]=slot,[1]=port,[2]=speed,[3]=resv,[4..6]=max_packet,[6..8]=resv`.
-//! Mirrors `xhci/server/handlers/address_reply.rs`.
-
 use crate::xhci::call::{call, XhciClientError};
 use crate::xhci::wire::{HDR_LEN, OP_ADDRESS_DEVICE, STATUS_LEN};
 
@@ -33,7 +28,11 @@ pub struct AddressedDevice {
     pub max_packet_size: u16,
 }
 
-pub fn address_device(xhci_port: u32, slot: u8, port: u8) -> Result<AddressedDevice, XhciClientError> {
+pub fn address_device(
+    xhci_port: u32,
+    slot: u8,
+    port: u8,
+) -> Result<AddressedDevice, XhciClientError> {
     let mut resp = [0u8; HDR_AND_STATUS + REPLY_LEN];
     let (status, data_len) = call(xhci_port, OP_ADDRESS_DEVICE, &[slot, port], &mut resp)?;
     if status != 0 || data_len < REPLY_LEN {

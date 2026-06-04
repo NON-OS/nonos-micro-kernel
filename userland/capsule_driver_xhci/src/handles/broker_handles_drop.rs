@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_device_release, mk_irq_unbind, mk_mmio_unmap};
 use super::broker_handles::BrokerHandles;
+use nonos_libc::{mk_device_release, mk_irq_unbind, mk_mmio_unmap};
 impl Drop for BrokerHandles {
     fn drop(&mut self) {
         let _ = mk_irq_unbind(self.irq_grant_id);

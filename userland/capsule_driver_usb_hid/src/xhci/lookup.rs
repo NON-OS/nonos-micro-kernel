@@ -14,9 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Service discovery for `driver.xhci0`. Mirrors
-//! `capsule_net_l2/src/setup/discover.rs`.
-
 use nonos_libc::mk_service_lookup;
 
 const SERVICE_NAME: &str = "driver.xhci0";
@@ -24,12 +21,7 @@ const SERVICE_NAME: &str = "driver.xhci0";
 pub fn lookup() -> Option<u32> {
     let mut port: u32 = 0;
     let mut pid: u32 = 0;
-    let rc = mk_service_lookup(
-        SERVICE_NAME.as_ptr(),
-        SERVICE_NAME.len(),
-        &mut port,
-        &mut pid,
-    );
+    let rc = mk_service_lookup(SERVICE_NAME.as_ptr(), SERVICE_NAME.len(), &mut port, &mut pid);
     if rc == 0 {
         Some(port)
     } else {

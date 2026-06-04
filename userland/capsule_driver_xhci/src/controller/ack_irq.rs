@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_irq_ack;
 use crate::constants::IMAN_IP;
 use crate::regs::runtime::{iman_read, iman_write};
+use nonos_libc::mk_irq_ack;
 pub fn ack_irq(intr_base: u64, irq_grant_id: u64) {
     let cur = iman_read(intr_base);
     if cur & IMAN_IP != 0 {

@@ -28,6 +28,9 @@ use super::{keyboard, pointer};
 pub fn route_event(ctx: &mut Context, event: &InputEvent) -> u32 {
     if let Some(holder) = ctx.grabs.holder_for(event.kind) {
         let n = deliver_one(holder, event);
+        if n == 0 {
+            ctx.forget_pid(holder);
+        }
         ctx.record(n);
         return n;
     }
@@ -38,8 +41,18 @@ pub fn route_event(ctx: &mut Context, event: &InputEvent) -> u32 {
         return keyboard::route_keyboard(ctx, event);
     }
     let mut total = 0u32;
+    let mut failed = [0u32; crate::state::subscriptions::MAX_SUBSCRIBERS];
+    let mut failed_count = 0usize;
     for pid in ctx.subscriptions.match_kind(event.kind) {
-        total += deliver_one(pid, event);
+        let delivered = deliver_one(pid, event);
+        if delivered == 0 && failed_count < failed.len() {
+            failed[failed_count] = pid;
+            failed_count += 1;
+        }
+        total += delivered;
+    }
+    for pid in failed.iter().take(failed_count) {
+        ctx.forget_pid(*pid);
     }
     ctx.record(total);
     total

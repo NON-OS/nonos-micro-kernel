@@ -14,14 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! INTERRUPT_IN call. Request body (4 bytes):
-//! `[0]=slot,[1]=dci,[2..4]=length_le`. Reply payload (after
-//! status): `[0..2]=actual_len_le`, then report bytes.
-//! `status == E_AGAIN(-11)` means no report yet (Ok(None)).
-//! Mirrors `xhci/server/handlers/interrupt_in/reply.rs`.
-
 use crate::xhci::call::{call, XhciClientError};
-use crate::xhci::wire::{HDR_LEN, OP_INTERRUPT_IN, STATUS_LEN, E_AGAIN};
+use crate::xhci::wire::{E_AGAIN, HDR_LEN, OP_INTERRUPT_IN, STATUS_LEN};
 
 const HDR_AND_STATUS: usize = HDR_LEN + STATUS_LEN;
 const REPLY_PREFIX: usize = 2;

@@ -15,7 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec::Vec;
-use nonos_libc::mk_debug;
 
 use crate::descriptors::HidBinding;
 use crate::xhci::{alloc_transfer_ring, control_transfer};
@@ -40,7 +39,6 @@ pub fn configure_binding(
     ) else {
         return;
     };
-    let _ = mk_debug(b"[USB-HID] hid endpoint ready\n".as_ptr(), 29);
     out.push(HidEndpoint {
         port: xhci_port,
         slot,

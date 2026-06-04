@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_input_event_post, InputEvent, INPUT_KIND_KEY_DOWN, INPUT_KIND_KEY_UP};
 use super::translate::Translated;
+use nonos_libc::{mk_input_event_post, InputEvent, INPUT_KIND_KEY_DOWN, INPUT_KIND_KEY_UP};
 pub fn publish(t: Translated) -> bool {
     let kind = if t.is_release { INPUT_KIND_KEY_UP } else { INPUT_KIND_KEY_DOWN };
     let ev = InputEvent {
@@ -27,5 +27,6 @@ pub fn publish(t: Translated) -> bool {
         delta_y: 0,
         timestamp_ns: 0,
     };
-    mk_input_event_post(&ev) >= 0
+    let rc = mk_input_event_post(&ev);
+    rc >= 0
 }

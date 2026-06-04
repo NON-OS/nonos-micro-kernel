@@ -13,12 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_ipc_send;
 use crate::protocol::{
     encode_response_header, write_status, Request, KERNEL_REPLY_ENDPOINT, RESP_HDR_LEN,
     STATE_PAYLOAD_LEN, STATUS_LEN,
 };
 use crate::server::context::Context;
+use nonos_libc::mk_ipc_send;
 pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
     let payload_len = (STATUS_LEN + STATE_PAYLOAD_LEN) as u32;
     encode_response_header(tx, req, payload_len);

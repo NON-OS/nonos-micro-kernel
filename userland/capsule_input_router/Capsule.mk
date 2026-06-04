@@ -12,8 +12,6 @@ CAPSULE_NAMESPACE        := systems.nonos.input_router
 CAPSULE_SERVICE_ENDPOINT := service:4320:input_router
 CAPSULE_REPLY_ENDPOINT   := reply:4321:endpoint.input_router.reply
 # CoreExec | IPC | Memory = 0x01 | 0x08 | 0x10 = 0x19
-# Debug deliberately absent: input_router emits no MkDebug markers.
-# The NO LOGS / NO TRACES posture refuses any serial surface.
 CAPSULE_REQUIRED_CAPS    := 0x19
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_input_router
 

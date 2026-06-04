@@ -16,7 +16,7 @@
 
 mod dispatch;
 mod handlers;
+mod pump_once;
 mod respond;
-mod runner;
 
-pub use runner::run;
+pub use pump_once::pump_once;

@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_pio_read;
 use crate::constants::STATUS_OUTPUT_FULL;
 use crate::constants::{DATA_OFFSET, STATUS_OFFSET};
+use nonos_libc::mk_pio_read;
 const MAX_FLUSH_BYTES: u32 = 16;
 pub fn flush_output(grant_id: u64) {
     for _ in 0..MAX_FLUSH_BYTES {

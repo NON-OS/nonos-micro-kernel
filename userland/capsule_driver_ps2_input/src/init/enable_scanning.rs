@@ -13,12 +13,25 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_pio_write;
-use crate::constants::{DATA_OFFSET, KBD_ENABLE_SCANNING};
+use crate::constants::{DATA_OFFSET, KBD_ENABLE_SCANNING, STATUS_INPUT_FULL, STATUS_OFFSET};
+use nonos_libc::{mk_pio_read, mk_pio_write};
+
+const WAIT_SPINS: u32 = 10_000;
+
 pub fn enable_scanning(grant_id: u64) -> Result<(), &'static str> {
-    let r = mk_pio_write(grant_id, DATA_OFFSET, 1, KBD_ENABLE_SCANNING as u32);
-    if r < 0 {
-        return Err("kbd enable-scanning write failed");
+    let mut spins = 0u32;
+    while spins < WAIT_SPINS {
+        let mut status = 0u32;
+        if mk_pio_read(grant_id, STATUS_OFFSET, 1, &mut status) < 0 {
+            return Err("kbd status read failed");
+        }
+        if status as u8 & STATUS_INPUT_FULL == 0 {
+            if mk_pio_write(grant_id, DATA_OFFSET, 1, KBD_ENABLE_SCANNING as u32) < 0 {
+                return Err("kbd enable-scanning write failed");
+            }
+            return Ok(());
+        }
+        spins += 1;
     }
-    Ok(())
+    Err("kbd input buffer busy")
 }

@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::constants::TRB_IOC;
 use super::base::Trb;
+use crate::constants::TRB_IOC;
 impl Trb {
     pub fn set_ioc(&mut self, ioc: bool) {
         if ioc {

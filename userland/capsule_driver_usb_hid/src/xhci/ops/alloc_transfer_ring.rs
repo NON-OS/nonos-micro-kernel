@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! ALLOC_TRANSFER_RING call. Request body (6 bytes):
-//! `[0]=slot,[1]=ep_address,[2..4]=max_packet_le,[4]=interval,[5]=resv`.
-//! Reply payload (after status, 4 bytes): `[0]=dci,[1..4]=resv`.
-//! Mirrors `xhci/server/handlers/alloc_transfer_ring.rs`.
-
 use crate::xhci::call::{call, XhciClientError};
 use crate::xhci::wire::{HDR_LEN, OP_ALLOC_TRANSFER_RING, STATUS_LEN};
 

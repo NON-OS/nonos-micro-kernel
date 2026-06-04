@@ -1,7 +1,6 @@
 use super::font_table;
 
 pub const GLYPH_W: u32 = 8;
-pub const GLYPH_H: u32 = 8;
 
 pub fn rows(c: u8) -> [u8; 8] {
     let c = c.to_ascii_uppercase();

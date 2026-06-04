@@ -15,9 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 mod reply;
 use crate::controller::{poll_interrupt_in, IntrPoll};
-use crate::protocol::{
-    Request, E_INVAL, E_IO, HID_REPORT_MAX, INTERRUPT_IN_REQUEST_LEN,
-};
+use crate::protocol::{Request, E_INVAL, E_IO, HID_REPORT_MAX, INTERRUPT_IN_REQUEST_LEN};
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
 const MAX_SPINS: u32 = 4096;

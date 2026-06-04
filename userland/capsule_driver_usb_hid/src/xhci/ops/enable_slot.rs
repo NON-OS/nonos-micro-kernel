@@ -14,10 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! ENABLE_SLOT call. Request: empty body. Reply payload (after
-//! status): `[0]=slot_id, [1..4]=resv` (4 bytes total).
-//! Mirrors `xhci/server/handlers/enable_slot.rs`.
-
 use crate::xhci::call::{call, XhciClientError};
 use crate::xhci::wire::{HDR_LEN, OP_ENABLE_SLOT, STATUS_LEN};
 

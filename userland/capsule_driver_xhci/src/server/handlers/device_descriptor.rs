@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_ipc_send;
 use crate::controller::{get_device_descriptor, DEVICE_DESCRIPTOR_LEN};
 use crate::protocol::{
     encode_response_header, write_status, Request, DEVICE_DESCRIPTOR_REPLY_LEN,
@@ -21,6 +20,7 @@ use crate::protocol::{
 };
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
+use nonos_libc::mk_ipc_send;
 pub fn handle(ctx: &mut Context, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != DEVICE_DESCRIPTOR_REQUEST_LEN {
         reply_with_status(tx, req, E_INVAL);

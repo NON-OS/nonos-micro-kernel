@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_ipc_send;
 use crate::protocol::{
     encode_response_header, write_status, Request, CONTROLLER_STATUS_PAYLOAD_LEN,
     KERNEL_REPLY_ENDPOINT, RESP_HDR_LEN, STATUS_LEN,
@@ -21,6 +20,7 @@ use crate::protocol::{
 use crate::regs::op::{usbcmd_read, usbsts_read};
 use crate::regs::runtime::iman_read;
 use crate::server::context::Context;
+use nonos_libc::mk_ipc_send;
 pub fn handle(ctx: &Context, req: &Request, tx: &mut [u8]) {
     let usbsts = usbsts_read(ctx.driver.layout.op_base);
     let usbcmd = usbcmd_read(ctx.driver.layout.op_base);

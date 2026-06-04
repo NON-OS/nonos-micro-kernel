@@ -13,13 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_ipc_send;
 use crate::protocol::{
     encode_response_header, write_status, Request, KERNEL_REPLY_ENDPOINT, MAX_PORTS_REPORTED,
     PORT_ENTRY_BYTES, PORT_STATUS_HEADER_BYTES, RESP_HDR_LEN, STATUS_LEN,
 };
 use crate::regs::op::{portsc_clear_changes, portsc_read};
 use crate::server::context::Context;
+use nonos_libc::mk_ipc_send;
 pub fn handle(ctx: &Context, req: &Request, tx: &mut [u8]) {
     let max_ports = ctx.driver.layout.max_ports as usize;
     let port_count = core::cmp::min(max_ports, MAX_PORTS_REPORTED);

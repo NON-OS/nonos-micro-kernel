@@ -13,18 +13,19 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_device_release, mk_irq_bind, mk_pio_release, IrqBindOut};
 use crate::discover::Found;
+use nonos_libc::{mk_irq_bind, mk_pio_release, IrqBindOut};
+
 pub fn bind(dev: Found, claim_epoch: u64, pio_grant_id: u64) -> Result<IrqBindOut, &'static str> {
     match bind_raw(dev, claim_epoch) {
         Ok(out) => Ok(out),
         Err(e) => {
             let _ = mk_pio_release(pio_grant_id);
-            let _ = mk_device_release(dev.device_id);
             Err(e)
         }
     }
 }
+
 pub fn bind_raw(dev: Found, claim_epoch: u64) -> Result<IrqBindOut, &'static str> {
     let mut out = IrqBindOut { grant_id: 0, vector: 0 };
     let r = mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out);

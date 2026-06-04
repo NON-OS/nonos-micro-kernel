@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use alloc::vec::Vec;
 use crate::dma::{DmaPool, DmaRegion};
 use crate::error::XhciResult;
+use alloc::vec::Vec;
 const SCRATCHPAD_PAGE_BYTES: u64 = 4096;
 const SCRATCHPAD_PTR_BYTES: u64 = 8;
 pub enum Scratchpads {
