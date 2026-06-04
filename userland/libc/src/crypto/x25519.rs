@@ -22,10 +22,6 @@ pub extern "C" fn crypto_x25519_public(private: *const u8, out: *mut u8) -> i64 
 }
 
 #[no_mangle]
-pub extern "C" fn crypto_x25519_shared(
-    private: *const u8,
-    public: *const u8,
-    out: *mut u8,
-) -> i64 {
+pub extern "C" fn crypto_x25519_shared(private: *const u8, public: *const u8, out: *mut u8) -> i64 {
     call_raw(N_CRYPTO_X25519_SHARED, [private as u64, public as u64, out as u64, 0, 0, 0])
 }

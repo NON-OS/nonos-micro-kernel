@@ -40,7 +40,11 @@ pub fn parse_dqt(seg: &[u8], tables: &mut [QuantTable; MAX_QT]) -> Result<(), De
         if tq >= MAX_QT {
             return Err(DecodeError::Unsupported);
         }
-        let entry_bytes = if pq == 0 { 64 } else if pq == 1 { 128 } else {
+        let entry_bytes = if pq == 0 {
+            64
+        } else if pq == 1 {
+            128
+        } else {
             return Err(DecodeError::Unsupported);
         };
         if p + entry_bytes > seg.len() {

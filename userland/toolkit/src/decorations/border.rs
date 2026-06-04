@@ -16,13 +16,7 @@
 
 use super::metrics::BORDER_PX;
 
-pub fn draw_border(
-    pixels: &mut [u32],
-    stride_words: usize,
-    width: u32,
-    height: u32,
-    argb: u32,
-) {
+pub fn draw_border(pixels: &mut [u32], stride_words: usize, width: u32, height: u32, argb: u32) {
     fill_band(pixels, stride_words, 0, 0, width, BORDER_PX, argb);
     if height < BORDER_PX {
         return;
@@ -35,15 +29,7 @@ pub fn draw_border(
     fill_band(pixels, stride_words, width - BORDER_PX, 0, BORDER_PX, height, argb);
 }
 
-fn fill_band(
-    pixels: &mut [u32],
-    stride_words: usize,
-    x: u32,
-    y: u32,
-    w: u32,
-    h: u32,
-    argb: u32,
-) {
+fn fill_band(pixels: &mut [u32], stride_words: usize, x: u32, y: u32, w: u32, h: u32, argb: u32) {
     for row in y..y + h {
         let row_start = (row as usize) * stride_words;
         for col in x..x + w {

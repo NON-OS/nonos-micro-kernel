@@ -14,16 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Server-side response helper. A capsule handler builds the
-//! response payload into `tx` after the header; this routine
-//! writes the v2 header with the caller's `reply_port` echoed
-//! back and sends to that endpoint. `reply_port == 0` is a
-//! pre-v2 caller (a kernel-side client that bakes its slot into
-//! `default_reply_port`); the helper routes to that fallback
-//! so the existing transports keep working unchanged.
-
 use super::envelope::{HDR_LEN_V2, VERSION_V2};
 use crate::ipc::mk_ipc_send;
+
+const E_MSGSIZE: i64 = -90;
 
 pub fn respond(
     magic: u32,
@@ -35,7 +29,10 @@ pub fn respond(
     default_reply_port: u32,
     tx: &mut [u8],
 ) -> i64 {
-    debug_assert!(tx.len() >= HDR_LEN_V2 + payload_len as usize);
+    let total = HDR_LEN_V2 + payload_len as usize;
+    if tx.len() < total {
+        return E_MSGSIZE;
+    }
     tx[0..4].copy_from_slice(&magic.to_le_bytes());
     tx[4..6].copy_from_slice(&VERSION_V2.to_le_bytes());
     tx[6..8].copy_from_slice(&op.to_le_bytes());
@@ -46,6 +43,5 @@ pub fn respond(
     tx[20..24].copy_from_slice(&payload_len.to_le_bytes());
     let dest =
         if request_reply_port == 0 { default_reply_port as u64 } else { request_reply_port as u64 };
-    let total = HDR_LEN_V2 + payload_len as usize;
     mk_ipc_send(dest, tx.as_ptr(), total)
 }
