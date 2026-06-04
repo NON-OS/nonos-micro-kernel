@@ -46,4 +46,26 @@ impl SubscriptionList {
     pub fn iter(&self) -> impl Iterator<Item = u32> + '_ {
         self.entries.iter().copied().filter(|p| *p != 0)
     }
+
+    pub fn remove_pid(&mut self, pid: u32) -> bool {
+        let mut removed = false;
+        for slot in self.entries.iter_mut() {
+            if *slot == pid {
+                *slot = 0;
+                removed = true;
+            }
+        }
+        removed
+    }
+
+    pub fn purge_dead(&mut self) -> u32 {
+        let mut removed = 0u32;
+        for slot in self.entries.iter_mut() {
+            if *slot != 0 && !nonos_libc::mk_pid_alive(*slot) {
+                *slot = 0;
+                removed += 1;
+            }
+        }
+        removed
+    }
 }

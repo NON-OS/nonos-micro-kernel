@@ -15,7 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::drain::drain_ipc;
-use crate::debug;
 use crate::frame_pacer;
 use crate::protocol::{HDR_LEN, IPC_PAYLOAD_MAX};
 use crate::state::Context;
@@ -24,14 +23,12 @@ use nonos_libc::mk_yield;
 pub fn run(mut ctx: Context) -> ! {
     let mut rx = [0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut tx = [0u8; HDR_LEN + IPC_PAYLOAD_MAX];
-    debug::marker(b"server enter");
     loop {
         drain_ipc(&mut ctx, &mut rx, &mut tx);
         match frame_pacer::tick(&mut ctx) {
             Ok(()) => {}
             Err(_) if !ctx.scanout_error_reported => {
                 ctx.scanout_error_reported = true;
-                debug::marker(b"scanout err");
             }
             Err(_) => {}
         }

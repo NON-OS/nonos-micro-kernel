@@ -49,7 +49,9 @@ impl TrayTable {
         self.entries.iter().find(|e| e.in_use && e.owner_pid == owner_pid && e.tray_id == tray_id)
     }
     pub fn find_mut(&mut self, owner_pid: u32, tray_id: u32) -> Option<&mut TrayEntry> {
-        self.entries.iter_mut().find(|e| e.in_use && e.owner_pid == owner_pid && e.tray_id == tray_id)
+        self.entries
+            .iter_mut()
+            .find(|e| e.in_use && e.owner_pid == owner_pid && e.tray_id == tray_id)
     }
     pub fn remove(&mut self, owner_pid: u32, tray_id: u32) -> bool {
         for slot in self.entries.iter_mut() {

@@ -37,19 +37,26 @@ fn validate(
     }
     Err("compositor call failed")
 }
-fn matches_header(buf: &[u8], op: u16, request_id: u32, payload_len: u32) -> Result<bool, &'static str> {
+fn matches_header(
+    buf: &[u8],
+    op: u16,
+    request_id: u32,
+    payload_len: u32,
+) -> Result<bool, &'static str> {
     let magic = u32::from_le_bytes(buf[0..4].try_into().map_err(|_| "compositor short response")?);
-    let version = u16::from_le_bytes(buf[4..6].try_into().map_err(|_| "compositor short response")?);
-    let resp_op = u16::from_le_bytes(buf[6..8].try_into().map_err(|_| "compositor short response")?);
-    let resp_request_id = u32::from_le_bytes(buf[12..16].try_into().map_err(|_| "compositor short response")?);
-    let resp_payload_len = u32::from_le_bytes(buf[16..20].try_into().map_err(|_| "compositor short response")?);
-    Ok(
-        magic == NCMP_MAGIC
-            && version == NCMP_VERSION
-            && resp_op == op
-            && resp_request_id == request_id
-            && resp_payload_len == payload_len,
-    )
+    let version =
+        u16::from_le_bytes(buf[4..6].try_into().map_err(|_| "compositor short response")?);
+    let resp_op =
+        u16::from_le_bytes(buf[6..8].try_into().map_err(|_| "compositor short response")?);
+    let resp_request_id =
+        u32::from_le_bytes(buf[12..16].try_into().map_err(|_| "compositor short response")?);
+    let resp_payload_len =
+        u32::from_le_bytes(buf[16..20].try_into().map_err(|_| "compositor short response")?);
+    Ok(magic == NCMP_MAGIC
+        && version == NCMP_VERSION
+        && resp_op == op
+        && resp_request_id == request_id
+        && resp_payload_len == payload_len)
 }
 fn read_status(rx: &[u8]) -> Result<i32, &'static str> {
     Ok(i32::from_le_bytes(

@@ -26,15 +26,7 @@ pub fn open_chrome_windows(ctx: &mut Context) -> Result<(), &'static str> {
     let side = side_dock_rect(ctx.width, ctx.height);
     let bottom = bottom_dock_rect(ctx.width, ctx.height);
     open_retry(ctx, SIDE_DOCK_WINDOW_ID, side.x, side.y, side.width, side.height)?;
-    if open_retry(
-        ctx,
-        TASKBAR_WINDOW_ID,
-        bottom.x,
-        bottom.y,
-        bottom.width,
-        bottom.height,
-    )
-    .is_err()
+    if open_retry(ctx, TASKBAR_WINDOW_ID, bottom.x, bottom.y, bottom.width, bottom.height).is_err()
     {
         let _ = wm_client::window_close(ctx.wm_port, ctx.issue_request_id(), SIDE_DOCK_WINDOW_ID);
         return Err("wm rejected taskbar window_open");

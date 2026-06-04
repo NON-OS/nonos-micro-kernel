@@ -14,17 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::geometry::{clamp_to_display, Rect};
-use crate::protocol::{Request, E_INVAL, E_NOMEM, NOTIFY_KIND_OPENED, WINDOW_OPEN_REQ_LEN};
-use crate::server::{notify_fanout, respond};
+use crate::protocol::{Request, E_INVAL, E_NOMEM, NOTIFY_KIND_OPENED};
+use crate::server::{notify_fanout, respond, respond_window_opened};
 use crate::state::Context;
-use crate::window::{kind_from_u32, Visibility, Window};
+use crate::window::{Kind, Visibility, Window};
+
+use super::decode::decode;
+use super::focus_new_window::focus_new_window;
+use super::place::place;
 
 pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
-    let Some((window_id, kind, rect)) = decode(body, ctx.display_width, ctx.display_height) else {
+    let Some((window_id, kind, requested)) = decode(body, ctx.display_width, ctx.display_height)
+    else {
         let _ = respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
+    let rect = place(ctx, kind, requested);
     let z = ctx.z.allocate();
     let window = Window {
         owner_pid: sender_pid,
@@ -39,23 +44,9 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
         let _ = respond::status(sender_pid, req, E_NOMEM, tx);
         return;
     }
+    if kind == Kind::Normal {
+        let _ = focus_new_window(ctx, sender_pid, window_id);
+    }
     notify_fanout::broadcast(ctx, NOTIFY_KIND_OPENED, sender_pid, window_id, rect.x, rect.y);
-    let _ = respond::status(sender_pid, req, 0, tx);
-}
-
-fn decode(body: &[u8], display_w: u32, display_h: u32) -> Option<(u32, crate::window::Kind, Rect)> {
-    if body.len() != WINDOW_OPEN_REQ_LEN {
-        return None;
-    }
-    let window_id = super::u32_at(body, 0)?;
-    let kind_raw = super::u32_at(body, 4)?;
-    let x = super::u32_at(body, 8)?;
-    let y = super::u32_at(body, 12)?;
-    let w = super::u32_at(body, 16)?;
-    let h = super::u32_at(body, 20)?;
-    let kind = kind_from_u32(kind_raw)?;
-    if window_id == 0 || w == 0 || h == 0 {
-        return None;
-    }
-    Some((window_id, kind, clamp_to_display(Rect { x, y, width: w, height: h }, display_w, display_h)))
+    let _ = respond_window_opened::window_opened(sender_pid, req, 0, rect, tx);
 }

@@ -16,6 +16,8 @@
 
 use nonos_libc::mk_ipc_call_timeout;
 
+use crate::protocol::read_i32;
+
 const MAGIC: u32 = 0x4E49_5253;
 const VERSION: u16 = 1;
 const HDR_LEN: usize = 20;
@@ -44,7 +46,9 @@ pub fn subscribe(port: u32, request_id: u32, kind_mask: u32) -> Result<(), &'sta
     if rc < (HDR_LEN + STATUS_LEN) as i64 {
         return Err("input_router call failed");
     }
-    let status = i32::from_le_bytes(rx[HDR_LEN..HDR_LEN + STATUS_LEN].try_into().unwrap());
+    let Some(status) = read_i32(&rx, HDR_LEN) else {
+        return Err("input_router short response");
+    };
     if status != 0 {
         return Err("input_router rejected subscribe");
     }

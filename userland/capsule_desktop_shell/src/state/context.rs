@@ -19,6 +19,10 @@ use super::{NotifyLevel, SpotlightState, TrayTable};
 pub struct Context {
     pub compositor_port: u32,
     pub wm_port: u32,
+    pub input_router_port: u32,
+    pub input_kind_mask: u32,
+    pub input_ready: bool,
+    pub wm_notify_ready: bool,
     pub width: u32,
     pub height: u32,
     pub stride: u32,

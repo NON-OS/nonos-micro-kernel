@@ -2,9 +2,16 @@ use alloc::vec::Vec;
 
 use nonos_libc::mk_ipc_call_timeout;
 
-use super::{build_request, reply::decode_status, BOOT_REPLY_TIMEOUT_MS, CALL_REPLY_TIMEOUT_MS, NCMP_HDR_LEN};
+use super::{
+    build_request, reply::decode_status, BOOT_REPLY_TIMEOUT_MS, CALL_REPLY_TIMEOUT_MS, NCMP_HDR_LEN,
+};
 
-pub(crate) fn call(compositor_port: u32, op: u16, request_id: u32, payload: &[u8]) -> Result<i32, &'static str> {
+pub(crate) fn call(
+    compositor_port: u32,
+    op: u16,
+    request_id: u32,
+    payload: &[u8],
+) -> Result<i32, &'static str> {
     call_with_timeout(compositor_port, op, request_id, payload, CALL_REPLY_TIMEOUT_MS)
 }
 

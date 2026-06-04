@@ -33,10 +33,26 @@ pub struct LauncherApp {
 
 pub const LAUNCHER_APPS: [LauncherApp; 7] = [
     LauncherApp { icon: LauncherIcon::Terminal, label: b"terminal", service: b"app.terminal" },
-    LauncherApp { icon: LauncherIcon::FileManager, label: b"file_manager", service: b"app.file_manager" },
-    LauncherApp { icon: LauncherIcon::TextEditor, label: b"text_editor", service: b"app.text_editor" },
+    LauncherApp {
+        icon: LauncherIcon::FileManager,
+        label: b"file_manager",
+        service: b"app.file_manager",
+    },
+    LauncherApp {
+        icon: LauncherIcon::TextEditor,
+        label: b"text_editor",
+        service: b"app.text_editor",
+    },
     LauncherApp { icon: LauncherIcon::Settings, label: b"settings", service: b"app.settings" },
-    LauncherApp { icon: LauncherIcon::ProcessManager, label: b"process_manager", service: b"app.process_manager" },
+    LauncherApp {
+        icon: LauncherIcon::ProcessManager,
+        label: b"process_manager",
+        service: b"app.process_manager",
+    },
     LauncherApp { icon: LauncherIcon::About, label: b"about", service: b"app.about" },
-    LauncherApp { icon: LauncherIcon::Calculator, label: b"calculator", service: b"app.calculator" },
+    LauncherApp {
+        icon: LauncherIcon::Calculator,
+        label: b"calculator",
+        service: b"app.calculator",
+    },
 ];

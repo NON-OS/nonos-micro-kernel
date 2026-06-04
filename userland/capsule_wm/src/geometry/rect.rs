@@ -29,4 +29,11 @@ impl Rect {
             && px < self.x.saturating_add(self.width)
             && py < self.y.saturating_add(self.height)
     }
+
+    pub fn overlaps(&self, other: &Rect) -> bool {
+        self.x < other.x.saturating_add(other.width)
+            && self.x.saturating_add(self.width) > other.x
+            && self.y < other.y.saturating_add(other.height)
+            && self.y.saturating_add(self.height) > other.y
+    }
 }

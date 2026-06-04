@@ -24,9 +24,7 @@ use crate::state::Context;
 pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, tx: &mut [u8]) {
     let off = HDR_LEN + STATUS_LEN;
     let focused = ctx.focus.current();
-    let values = focused
-        .map(|f| [f.owner_pid, f.window_id])
-        .unwrap_or([0, 0]);
+    let values = focused.map(|f| [f.owner_pid, f.window_id]).unwrap_or([0, 0]);
     for (idx, value) in values.iter().enumerate() {
         let start = off + idx * 4;
         tx[start..start + 4].copy_from_slice(&value.to_le_bytes());

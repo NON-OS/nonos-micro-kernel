@@ -14,8 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod drop_by_pid;
 mod layer;
+mod layers;
+mod new;
+mod reap_unattachable;
 mod snapshot;
+mod submit;
 mod table;
 
 pub use layer::Layer;

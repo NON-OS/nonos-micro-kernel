@@ -20,6 +20,9 @@ mod errno;
 mod header;
 mod limits;
 mod ops;
+mod read_i32;
+mod read_u16;
+mod read_u32;
 
 pub use decode::parse;
 pub use encode::{response_header, write_status};
@@ -34,3 +37,6 @@ pub use limits::{
 pub use ops::{
     OP_HEALTHCHECK, OP_NOTIFY, OP_SPOTLIGHT_OPEN, OP_TRAY_REGISTER, OP_TRAY_REMOVE, OP_TRAY_UPDATE,
 };
+pub use read_i32::read_i32;
+pub use read_u16::read_u16;
+pub use read_u32::read_u32;

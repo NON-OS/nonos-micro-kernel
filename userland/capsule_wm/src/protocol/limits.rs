@@ -16,23 +16,18 @@
 
 pub const IPC_PAYLOAD_MAX: usize = 256;
 pub const STATUS_LEN: usize = 4;
+pub const RECT_LEN: usize = 16;
 
-// WINDOW_OPEN body: window_id u32, kind u32, x u32, y u32, w u32, h u32
 pub const WINDOW_OPEN_REQ_LEN: usize = 24;
-// WINDOW_CLOSE body: window_id u32, _pad u32
+pub const WINDOW_OPEN_RESP_LEN: usize = STATUS_LEN + RECT_LEN;
 pub const WINDOW_CLOSE_REQ_LEN: usize = 8;
-// WINDOW_MOVE body: window_id u32, _pad u32, x u32, y u32
 pub const WINDOW_MOVE_REQ_LEN: usize = 16;
-// WINDOW_RESIZE body: window_id u32, _pad u32, w u32, h u32
 pub const WINDOW_RESIZE_REQ_LEN: usize = 16;
-// WINDOW_FOCUS body: window_id u32, _pad u32
 pub const WINDOW_FOCUS_REQ_LEN: usize = 8;
-// WINDOW_RAISE body: window_id u32, _pad u32
 pub const WINDOW_RAISE_REQ_LEN: usize = 8;
 pub const WINDOW_MINIMIZE_REQ_LEN: usize = 8;
 pub const WINDOW_RESTORE_REQ_LEN: usize = 8;
 pub const QUERY_TOPMOST_REQ_LEN: usize = 8;
 pub const QUERY_TOPMOST_RESP_LEN: usize = 16;
 pub const ROUTE_FOCUS_REQ_LEN: usize = 8;
-// QUERY_FOCUS: empty body; resp is owner_pid u32, window_id u32
 pub const QUERY_FOCUS_RESP_LEN: usize = 8;

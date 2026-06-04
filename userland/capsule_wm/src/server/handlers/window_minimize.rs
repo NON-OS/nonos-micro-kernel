@@ -27,7 +27,7 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
         }
         return;
     }
-    let Some(window_id) = super::u32_at(body, 0) else {
+    let Some(window_id) = super::u32_at::u32_at(body, 0) else {
         if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
             return;
         }

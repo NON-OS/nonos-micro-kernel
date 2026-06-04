@@ -14,18 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_debug;
+use alloc::vec::Vec;
 
-const PREFIX: &[u8] = b"[wm] ";
-const MAX_LABEL: usize = 200;
-
-pub fn marker(label: &[u8]) {
-    let label_len = if label.len() > MAX_LABEL { MAX_LABEL } else { label.len() };
-    let total = PREFIX.len() + label_len + 1;
-    let mut buf = [0u8; PREFIX.len() + MAX_LABEL + 1];
-    let prefix_end = PREFIX.len();
-    buf[..prefix_end].copy_from_slice(PREFIX);
-    buf[prefix_end..prefix_end + label_len].copy_from_slice(&label[..label_len]);
-    buf[prefix_end + label_len] = b'\n';
-    let _ = mk_debug(buf.as_ptr(), total);
+pub fn build_request(out: &mut Vec<u8>, op: u16, request_id: u32, payload: &[u8]) {
+    out.clear();
+    out.extend_from_slice(&super::NVGP_MAGIC.to_le_bytes());
+    out.extend_from_slice(&super::NVGP_VERSION.to_le_bytes());
+    out.extend_from_slice(&op.to_le_bytes());
+    out.extend_from_slice(&0u16.to_le_bytes());
+    out.extend_from_slice(&0u16.to_le_bytes());
+    out.extend_from_slice(&request_id.to_le_bytes());
+    out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
+    out.extend_from_slice(payload);
 }

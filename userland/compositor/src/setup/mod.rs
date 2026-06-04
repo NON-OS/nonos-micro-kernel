@@ -16,5 +16,6 @@
 
 mod discover;
 mod prime;
+mod prime_once;
 
 pub use prime::run;

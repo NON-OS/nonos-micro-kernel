@@ -25,6 +25,6 @@ mod text;
 pub use bottom_taskbar::paint_bottom_taskbar;
 pub use chrome::paint_chrome;
 pub use icons::draw_app_icon;
+pub use layout::{menubar_rect, spotlight_rect};
 pub use side_launchers::paint_side_launchers;
 pub use text::draw_overlay_text;
-pub use layout::{menubar_rect, spotlight_rect};

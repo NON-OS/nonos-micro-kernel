@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::fill::fill_rect;
 use super::draw_app_icon;
+use super::fill::fill_rect;
 use super::layout::{side_dock_rect, SIDE_ENTRY_H, SIDE_ENTRY_PAD};
 use super::text::draw_overlay_text;
 use crate::state::{Context, LAUNCHER_APPS};
@@ -24,7 +24,17 @@ pub fn paint_side_launchers(ctx: &Context) {
     let dock = side_dock_rect(ctx.width, ctx.height);
     let mut y = dock.y + SIDE_ENTRY_PAD;
     for app in LAUNCHER_APPS.iter() {
-        fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, dock.x + 6, y, dock.width - 12, SIDE_ENTRY_H, 0x2230_3B4A);
+        fill_rect(
+            ctx.backing_va,
+            ctx.stride,
+            ctx.width,
+            ctx.height,
+            dock.x + 6,
+            y,
+            dock.width - 12,
+            SIDE_ENTRY_H,
+            0x2230_3B4A,
+        );
         draw_app_icon(ctx, dock.x + 10, y + 3, app.icon, 16);
         draw_overlay_text(ctx, dock.x + 34, y + 7, app.label, 0xFFD9_E8F8);
         y += SIDE_ENTRY_H + SIDE_ENTRY_PAD;

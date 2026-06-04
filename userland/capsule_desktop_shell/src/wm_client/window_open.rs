@@ -16,6 +16,8 @@
 
 use nonos_libc::mk_ipc_call_timeout;
 
+use crate::protocol::read_i32;
+
 const MAGIC: u32 = 0x4E57_4D50;
 const VERSION: u16 = 1;
 const HDR_LEN: usize = 20;
@@ -47,11 +49,20 @@ pub fn window_open(
     tx[36..40].copy_from_slice(&width.to_le_bytes());
     tx[40..44].copy_from_slice(&height.to_le_bytes());
     let mut rx = [0u8; HDR_LEN + STATUS_LEN];
-    let rc = mk_ipc_call_timeout(port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len(), REPLY_TIMEOUT_MS);
+    let rc = mk_ipc_call_timeout(
+        port as u64,
+        tx.as_ptr(),
+        tx.len(),
+        rx.as_mut_ptr(),
+        rx.len(),
+        REPLY_TIMEOUT_MS,
+    );
     if rc < (HDR_LEN + STATUS_LEN) as i64 {
         return Err("wm open failed");
     }
-    let status = i32::from_le_bytes(rx[HDR_LEN..HDR_LEN + STATUS_LEN].try_into().unwrap());
+    let Some(status) = read_i32(&rx, HDR_LEN) else {
+        return Err("wm short open response");
+    };
     if status != 0 {
         return Err("wm rejected window_open");
     }

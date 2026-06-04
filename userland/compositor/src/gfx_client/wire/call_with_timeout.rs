@@ -14,17 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_debug;
+use alloc::vec::Vec;
 
-const PREFIX: &[u8] = b"[desktop_shell] ";
-const MAX_LABEL: usize = 200;
+use nonos_libc::mk_ipc_call_timeout;
 
-pub fn marker(label: &[u8]) {
-    let n = if label.len() > MAX_LABEL { MAX_LABEL } else { label.len() };
-    let total = PREFIX.len() + n + 1;
-    let mut buf = [0u8; PREFIX.len() + MAX_LABEL + 1];
-    buf[..PREFIX.len()].copy_from_slice(PREFIX);
-    buf[PREFIX.len()..PREFIX.len() + n].copy_from_slice(&label[..n]);
-    buf[PREFIX.len() + n] = b'\n';
-    let _ = mk_debug(buf.as_ptr(), total);
+pub fn call_with_timeout(
+    gfx_port: u32,
+    op: u16,
+    request_id: u32,
+    payload: &[u8],
+    rx: &mut Vec<u8>,
+    timeout_ms: u64,
+) -> Result<usize, &'static str> {
+    let mut tx = Vec::with_capacity(super::NVGP_HDR_LEN + payload.len());
+    super::build_request(&mut tx, op, request_id, payload);
+    let rc = mk_ipc_call_timeout(
+        gfx_port as u64,
+        tx.as_ptr(),
+        tx.len(),
+        rx.as_mut_ptr(),
+        rx.len(),
+        timeout_ms,
+    );
+    if rc <= 0 {
+        return Err("gfx ipc call failed");
+    }
+    Ok(rc as usize)
 }
