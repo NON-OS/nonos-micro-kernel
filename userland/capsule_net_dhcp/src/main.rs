@@ -37,6 +37,7 @@ pub unsafe extern "C" fn _start() -> ! {
         mk_exit(1);
     }
     wait_for_setup();
+    acquire_initial_lease();
     server::run();
 }
 
@@ -46,6 +47,17 @@ fn wait_for_setup() {
             return;
         }
         for _ in 0..64 {
+            mk_yield();
+        }
+    }
+}
+
+fn acquire_initial_lease() {
+    for _ in 0..16 {
+        if dora::acquire().is_ok() {
+            return;
+        }
+        for _ in 0..256 {
             mk_yield();
         }
     }
