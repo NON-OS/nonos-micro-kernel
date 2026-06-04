@@ -27,15 +27,16 @@ const OP_SET_POLICY: u16 = 0x0004;
 const REPLY_TIMEOUT_MS: u64 = 250;
 
 pub fn set_policy(port: u32, request_id: u32, policy: u32) -> Result<i32, &'static str> {
-    let mut tx = Vec::with_capacity(HDR_LEN + 4);
+    let mut tx = Vec::with_capacity(HDR_LEN + 8);
     tx.extend_from_slice(&MAGIC.to_le_bytes());
     tx.extend_from_slice(&VERSION.to_le_bytes());
     tx.extend_from_slice(&OP_SET_POLICY.to_le_bytes());
     tx.extend_from_slice(&0u16.to_le_bytes());
     tx.extend_from_slice(&0u16.to_le_bytes());
     tx.extend_from_slice(&request_id.to_le_bytes());
-    tx.extend_from_slice(&4u32.to_le_bytes());
+    tx.extend_from_slice(&8u32.to_le_bytes());
     tx.extend_from_slice(&policy.to_le_bytes());
+    tx.extend_from_slice(&0u32.to_le_bytes());
     let mut rx = vec![0u8; HDR_LEN + STATUS_LEN];
     let rc = mk_ipc_call_timeout(
         port as u64,
