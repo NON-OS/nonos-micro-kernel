@@ -25,7 +25,10 @@ use crate::server::handlers;
 use crate::server::pump::pump;
 use crate::setup::Driver;
 use alloc::vec;
-use nonos_libc::{mk_ipc_recv, mk_yield};
+use nonos_libc::mk_ipc_recv;
+
+const POLL_IDLE_MS: u64 = 4;
+
 pub fn run(driver: Driver) -> ! {
     let rx_len = HDR_LEN;
     let poll_tx_len = RESP_HDR_LEN + POLL_PAYLOAD_PREFIX_LEN + MAX_POLL_EVENTS * EVENT_WIRE_LEN;
@@ -43,9 +46,8 @@ pub fn run(driver: Driver) -> ! {
     let mut prev_buttons = 0u8;
     loop {
         pump(&mut ctx, &mut prev_buttons);
-        let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, 1);
+        let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, POLL_IDLE_MS);
         if n <= 0 {
-            mk_yield();
             continue;
         }
         let len = n as usize;
