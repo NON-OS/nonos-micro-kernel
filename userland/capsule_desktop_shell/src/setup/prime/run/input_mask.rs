@@ -14,13 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+const INPUT_KEY_DOWN_BIT: u32 = 1;
+const INPUT_KEY_UP_BIT: u32 = 1 << 1;
 const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
 const INPUT_WHEEL_BIT: u32 = 1 << 4;
 const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
 const INPUT_BUTTON_UP_BIT: u32 = 1 << 6;
 const INPUT_TOUCH_BIT: u32 = 1 << 7;
 
-pub(super) const SHELL_INPUT_MASK: u32 = INPUT_POINTER_ABS_BIT
+pub(super) const SHELL_INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT
+    | INPUT_KEY_UP_BIT
+    | INPUT_POINTER_ABS_BIT
     | INPUT_WHEEL_BIT
     | INPUT_BUTTON_DOWN_BIT
     | INPUT_BUTTON_UP_BIT

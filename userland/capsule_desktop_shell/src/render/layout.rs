@@ -27,7 +27,7 @@ pub const BOTTOM_DOCK_HEIGHT: u32 = 64;
 pub const BOTTOM_DOCK_BOTTOM_INSET: u32 = 24;
 pub const TASKBAR_ENTRY_W: u32 = 80;
 
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default)]
 pub struct Rect {
     pub x: u32,
     pub y: u32,

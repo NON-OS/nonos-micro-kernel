@@ -14,27 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[repr(u32)]
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Kind {
-    Normal = 0,
-    Dialog = 1,
-    Tooltip = 2,
-    Popup = 3,
-}
+use super::field_focus::FIELD_FOCUS;
+use super::hardware_aesthetic::HARDWARE_AESTHETIC;
+use super::network_topology::NETWORK_TOPOLOGY;
+use super::special_variant::SPECIAL_VARIANT;
+use crate::catalog::entry::Entry;
 
-impl Kind {
-    pub fn focusable(self) -> bool {
-        matches!(self, Self::Normal | Self::Dialog | Self::Popup)
-    }
-}
-
-pub fn from_u32(raw: u32) -> Option<Kind> {
-    match raw {
-        0 => Some(Kind::Normal),
-        1 => Some(Kind::Dialog),
-        2 => Some(Kind::Tooltip),
-        3 => Some(Kind::Popup),
-        _ => None,
-    }
-}
+pub(crate) const ENTRY_GROUPS: &[&[Entry]] = &[
+    FIELD_FOCUS,
+    HARDWARE_AESTHETIC,
+    NETWORK_TOPOLOGY,
+    SPECIAL_VARIANT,
+];

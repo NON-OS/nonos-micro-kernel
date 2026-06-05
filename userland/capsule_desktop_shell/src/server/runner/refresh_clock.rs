@@ -14,27 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[repr(u32)]
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Kind {
-    Normal = 0,
-    Dialog = 1,
-    Tooltip = 2,
-    Popup = 3,
-}
+use crate::compositor_client::push_damage_commit;
+use crate::render::{menubar_rect, paint_chrome, paint_status};
+use crate::state::Context;
 
-impl Kind {
-    pub fn focusable(self) -> bool {
-        matches!(self, Self::Normal | Self::Dialog | Self::Popup)
-    }
-}
-
-pub fn from_u32(raw: u32) -> Option<Kind> {
-    match raw {
-        0 => Some(Kind::Normal),
-        1 => Some(Kind::Dialog),
-        2 => Some(Kind::Tooltip),
-        3 => Some(Kind::Popup),
-        _ => None,
-    }
+pub(super) fn refresh_clock(ctx: &mut Context) {
+    paint_chrome(ctx);
+    paint_status(ctx);
+    let r = menubar_rect(ctx.width);
+    let rid = ctx.issue_request_id();
+    let _ = push_damage_commit(ctx.compositor_port, rid, r.x, r.y, r.width, r.height);
 }

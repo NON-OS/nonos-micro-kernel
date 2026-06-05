@@ -17,7 +17,7 @@
 use super::Kind;
 use crate::geometry::Rect;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Visibility {
     Visible,
     Minimized,

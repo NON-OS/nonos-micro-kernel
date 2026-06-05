@@ -14,8 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::entries::ENTRIES;
+use super::entries::ENTRY_GROUPS;
 
 pub fn count() -> u32 {
-    ENTRIES.len() as u32
+    let mut total = 0usize;
+    for group in ENTRY_GROUPS {
+        total = total.saturating_add(group.len());
+    }
+    total as u32
 }

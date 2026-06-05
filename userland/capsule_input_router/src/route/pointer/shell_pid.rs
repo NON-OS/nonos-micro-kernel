@@ -19,7 +19,7 @@ use crate::state::Context;
 
 use super::constants::DESKTOP_SHELL_SERVICE;
 
-pub(super) fn shell_pid(ctx: &mut Context) -> u32 {
+pub(in crate::route) fn shell_pid(ctx: &mut Context) -> u32 {
     if ctx.shell_pid == 0 {
         ctx.shell_pid = wire::lookup_pid(DESKTOP_SHELL_SERVICE).unwrap_or(0);
     }

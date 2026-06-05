@@ -24,3 +24,4 @@ mod shell_pid;
 mod topmost_target;
 
 pub use route_pointer::route_pointer;
+pub(super) use shell_pid::shell_pid;

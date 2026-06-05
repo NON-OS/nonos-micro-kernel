@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::entries::ENTRIES;
+use super::entries::entry_by_index;
 
 pub fn get_bytes(index: u32) -> Option<&'static [u8]> {
-    ENTRIES.get(index as usize).map(|e| e.bytes)
+    entry_by_index(index).map(|e| e.bytes)
 }

@@ -14,27 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[repr(u32)]
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Kind {
-    Normal = 0,
-    Dialog = 1,
-    Tooltip = 2,
-    Popup = 3,
-}
+use super::groups::ENTRY_GROUPS;
+use crate::catalog::entry::Entry;
 
-impl Kind {
-    pub fn focusable(self) -> bool {
-        matches!(self, Self::Normal | Self::Dialog | Self::Popup)
+pub(crate) fn entry_at(index: u32) -> Option<&'static Entry> {
+    let mut remaining = index as usize;
+    for group in ENTRY_GROUPS {
+        if remaining < group.len() {
+            return group.get(remaining);
+        }
+        remaining -= group.len();
     }
-}
-
-pub fn from_u32(raw: u32) -> Option<Kind> {
-    match raw {
-        0 => Some(Kind::Normal),
-        1 => Some(Kind::Dialog),
-        2 => Some(Kind::Tooltip),
-        3 => Some(Kind::Popup),
-        _ => None,
-    }
+    None
 }
