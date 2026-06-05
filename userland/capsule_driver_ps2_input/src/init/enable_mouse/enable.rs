@@ -21,9 +21,11 @@ use crate::constants::{
     CONFIG_AUX_DISABLE, CONFIG_IRQ1, CONFIG_IRQ12, CTL_ENABLE_AUX, CTL_READ_CONFIG,
     CTL_WRITE_CONFIG, MOUSE_ENABLE_REPORTING, MOUSE_SET_DEFAULTS,
 };
+use crate::init::flush_output;
 
 pub fn enable_mouse(grant_id: u64) -> Result<(), &'static str> {
     command(grant_id, CTL_ENABLE_AUX)?;
+    flush_output(grant_id);
     command(grant_id, CTL_READ_CONFIG)?;
     let cfg = read_data(grant_id)?;
     command(grant_id, CTL_WRITE_CONFIG)?;
