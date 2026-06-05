@@ -20,3 +20,5 @@ pub(crate) const N_MK_EXIT: i64 = tag4(b"MEXT");
 pub(crate) const N_MK_PID_ALIVE: i64 = tag4(b"MPAL");
 pub(crate) const N_MK_YIELD: i64 = tag4(b"MYLD");
 pub(crate) const N_MK_TIME_MILLIS: i64 = tag4(b"MTMS");
+pub(crate) const N_MK_TIME_RTC: i64 = tag4(b"MTRT");
+pub(crate) const N_MK_BATTERY_STATUS: i64 = tag4(b"MBAT");

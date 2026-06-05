@@ -14,21 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-
-
-
-
-
-const ETH_HEADER_LEN: usize = 14;
-pub const MIN_ETHERNET_FRAME: usize = 60;
-const MTU: usize = 1500;
-pub const MAX_ETHERNET_FRAME: usize = MTU + ETH_HEADER_LEN;
-
-
-
-
-
-pub const VIRTIO_NET_HDR_LEN: usize = 10;
-
-pub const MAC_LEN: usize = 6;
+pub mod battery;
+pub mod clock;
+pub mod net;

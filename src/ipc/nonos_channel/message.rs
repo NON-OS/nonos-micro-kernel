@@ -39,6 +39,8 @@ pub struct IpcMessage {
     pub data: Vec<u8>,
     /// Creation timestamp (milliseconds since boot)
     pub timestamp_ms: u64,
+    /// Kernel request/reply correlation token (0 = uncorrelated send)
+    pub correlation: u64,
     /// Integrity checksum
     checksum64: u64,
 }
@@ -58,6 +60,7 @@ impl IpcMessage {
             to: String::from(to),
             data: data.to_vec(),
             timestamp_ms: ts,
+            correlation: 0,
             checksum64: csum,
         })
     }
@@ -70,6 +73,7 @@ impl IpcMessage {
             to: String::from(to),
             data: data.to_vec(),
             timestamp_ms: ts,
+            correlation: 0,
             checksum64: csum,
         }
     }

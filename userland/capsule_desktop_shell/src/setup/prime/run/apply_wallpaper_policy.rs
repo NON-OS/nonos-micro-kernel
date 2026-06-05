@@ -18,6 +18,6 @@ pub(super) fn apply_wallpaper_policy(port: u32) -> Result<(), &'static str> {
     if port == 0 {
         return Err("wallpaper service not announced");
     }
-    wallpaper_client::queue_policy(port, 3, 0)?;
+    wallpaper_client::set_policy(port, 3, 0)?;
     Ok(())
 }

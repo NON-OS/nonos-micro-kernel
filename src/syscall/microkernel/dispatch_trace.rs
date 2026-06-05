@@ -63,6 +63,8 @@ fn kind(nr: u64) -> &'static [u8] {
         SYS_MK_DEBUG => b"MkDebug",
         SYS_YIELD => b"MkYield",
         SYS_TIME_MILLIS => b"MkTimeMillis",
+        SYS_TIME_RTC => b"MkTimeRtc",
+        SYS_BATTERY_STATUS => b"MkBatteryStatus",
         SYS_SPAWN => b"MkSpawn",
         _ => b"Mk?",
     }

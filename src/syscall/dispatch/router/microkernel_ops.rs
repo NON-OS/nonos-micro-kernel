@@ -35,6 +35,8 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkPidAlive
             | MkYield
             | MkTimeMillis
+            | MkTimeRtc
+            | MkBatteryStatus
             | MkCapGrant
             | MkCapRevoke
             | MkCapCheck
@@ -47,6 +49,7 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkIrqUnbind
             | MkIrqAck
             | MkIrqPoll
+            | MkIrqWait
             | MkDmaMap
             | MkDmaUnmap
             | MkPciConfigRead

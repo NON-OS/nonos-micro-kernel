@@ -31,9 +31,9 @@ pub const QUEUE_SIZE: u16 = 8;
 pub const VRING_DESC_F_WRITE: u16 = 2;
 
 pub const VQ_DESC_OFFSET: usize = 0;
-pub const VQ_AVAIL_OFFSET: usize = 256;
-pub const VQ_USED_OFFSET: usize = 4096;
-pub const VQ_REGION_SIZE: usize = 8192;
+pub const VQ_AVAIL_OFFSET: usize = 4096;
+pub const VQ_USED_OFFSET: usize = 8192;
+pub const VQ_REGION_SIZE: usize = 12288;
 
 
 

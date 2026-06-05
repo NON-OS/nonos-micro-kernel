@@ -61,7 +61,7 @@ pub fn poll_frame(nic_port: u32) -> Result<alloc::vec::Vec<u8>, RxError> {
         return Err(RxError::BadResponse);
     }
     let frame_len = u32::from_le_bytes(resp[body..body + 4].try_into().unwrap()) as usize;
-    let frame_start = body + 4 + 12; // skip virtio_net header
+    let frame_start = body + 4;
     if frame_start + frame_len > resp.len() {
         return Err(RxError::BadResponse);
     }

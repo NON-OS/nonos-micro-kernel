@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod acquire;
 mod discover;
 mod install;
 mod mask;
@@ -22,6 +23,7 @@ mod request;
 mod send_bootp;
 mod wait_reply;
 
+pub use acquire::{acquire, AcquireError};
 pub use discover::{run as discover, DiscoverError};
 pub use install::{install, InstallError};
 pub use release::run as release;

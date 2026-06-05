@@ -17,22 +17,24 @@
 use nonos_libc::mk_irq_ack;
 
 use super::driver::Driver;
-use super::{claim, config, dma_set, irq, mmio, queues};
-use crate::constants::VIRTIO_NET_F_STATUS;
+use super::{claim, config, dma_set, irq, queues, registers};
+use crate::constants::{LEG_MAC, VIRTIO_NET_F_STATUS};
 use crate::discover::find_virtio_net;
 use crate::init::{driver_ok, negotiate};
-use crate::regs::Regs;
+
+const MSIX_CONFIG_SHIFT: usize = 4;
 
 pub fn run() -> Result<Driver, &'static str> {
     let dev = find_virtio_net().ok_or("no virtio-net device")?;
     let claim_epoch = claim::claim(dev.device_id)?;
-    let mmio_grant = mmio::map(dev, claim_epoch)?;
-    let irq_grant = irq::bind(dev, claim_epoch, &mmio_grant)?;
-    let dma = dma_set::map(dev.device_id, claim_epoch, &mmio_grant, &irq_grant)?;
-    let regs = Regs::new(mmio_grant.user_va);
+    let register = registers::map(dev, claim_epoch)?;
+    let (irq_grant, msix) = irq::bind(dev, claim_epoch, &register)?;
+    let dma = dma_set::map(dev.device_id, claim_epoch, &register, &irq_grant)?;
+    let regs = register.regs();
     let negotiated = negotiate(regs)?;
     let status_supported = config::feature_enabled(negotiated, VIRTIO_NET_F_STATUS);
-    let mac = config::read_mac(regs, negotiated);
+    let config_base = if msix { LEG_MAC + MSIX_CONFIG_SHIFT } else { LEG_MAC };
+    let mac = config::read_mac(regs, negotiated, config_base);
     let (rx, tx) = queues::build(regs, &dma)?;
     rx.prime();
     driver_ok(regs);
@@ -43,7 +45,7 @@ pub fn run() -> Result<Driver, &'static str> {
     Ok(Driver {
         device_id: dev.device_id,
         claim_epoch,
-        mmio_grant: mmio_grant.grant_id,
+        register,
         irq_grant: irq_grant.grant_id,
         rx_queue_grant: dma.rx_queue.grant_id,
         rx_buffer_grant: dma.rx_buffer.grant_id,
@@ -54,5 +56,6 @@ pub fn run() -> Result<Driver, &'static str> {
         regs,
         mac,
         status_supported,
+        net_status_offset: config_base + 6,
     })
 }

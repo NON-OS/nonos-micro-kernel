@@ -14,18 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_ipc_send;
-
-use crate::constants::{LEG_NET_STATUS_OFFSET, VIRTIO_NET_S_LINK_UP};
+use crate::constants::VIRTIO_NET_S_LINK_UP;
 use crate::protocol::{
-    encode_response_header, write_status, Request, KERNEL_REPLY_ENDPOINT, LINK_STATUS_PAYLOAD_LEN,
-    RESP_HDR_LEN, STATUS_LEN,
+    encode_response_header, write_status, Request, LINK_STATUS_PAYLOAD_LEN, RESP_HDR_LEN, STATUS_LEN,
 };
+use crate::server::error::reply;
 use crate::setup::Driver;
 
-pub fn handle(driver: &Driver, req: &Request, tx: &mut [u8]) -> bool {
+pub fn handle(sender_pid: u32, driver: &Driver, req: &Request, tx: &mut [u8]) -> bool {
     let up = if driver.status_supported {
-        let s = unsafe { driver.regs.r16(LEG_NET_STATUS_OFFSET) };
+        let s = unsafe { driver.regs.r16(driver.net_status_offset) };
         (s & VIRTIO_NET_S_LINK_UP) != 0
     } else {
         true
@@ -34,9 +32,5 @@ pub fn handle(driver: &Driver, req: &Request, tx: &mut [u8]) -> bool {
     encode_response_header(tx, req, payload_len);
     write_status(&mut tx[RESP_HDR_LEN..], 0);
     tx[RESP_HDR_LEN + STATUS_LEN] = if up { 1 } else { 0 };
-    mk_ipc_send(
-        KERNEL_REPLY_ENDPOINT,
-        tx.as_ptr(),
-        RESP_HDR_LEN + STATUS_LEN + LINK_STATUS_PAYLOAD_LEN,
-    ) >= 0
+    reply(sender_pid, tx, RESP_HDR_LEN + STATUS_LEN + LINK_STATUS_PAYLOAD_LEN)
 }

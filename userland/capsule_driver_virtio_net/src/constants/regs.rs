@@ -30,11 +30,6 @@ pub const LEG_STATUS: usize = 0x12;
 pub const LEG_MAC: usize = 0x14;
 
 
-
-
-pub const LEG_NET_STATUS_OFFSET: usize = LEG_MAC + 6;
-
-
 pub const VIRTIO_NET_F_MAC: u32 = 5;
 pub const VIRTIO_NET_F_STATUS: u32 = 16;
 

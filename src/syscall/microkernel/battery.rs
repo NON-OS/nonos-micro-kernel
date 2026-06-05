@@ -14,22 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_device_release, mk_mmio_map, MmioMapOut};
+//! `MkBatteryStatus` returns the battery charge as a percentage 0..=100,
+//! or a negative errno when no battery can be read. NONOS has no ACPI
+//! battery (_BST/_BIF) support yet — that needs an AML interpreter the
+//! kernel does not have — so until a battery driver lands this reports
+//! AC-full. When such a driver exists it should replace the body here
+//! with the real remaining-capacity reading.
 
-use crate::constants::{BAR_INDEX, BAR_OFFSET};
-use crate::discover::Found;
+const AC_FULL_PERCENT: i64 = 100;
 
-const PAGE_MASK: u64 = 0xFFF;
-
-pub fn map(dev: Found, claim_epoch: u64) -> Result<MmioMapOut, &'static str> {
-    let mut out = MmioMapOut { user_va: 0, length: 0, grant_id: 0 };
-    let length = (dev.bar0_size + PAGE_MASK) & !PAGE_MASK;
-    let r = mk_mmio_map(dev.device_id, claim_epoch, BAR_INDEX, 0, BAR_OFFSET, length, &mut out);
-    if r < 0 {
-        if mk_device_release(dev.device_id) < 0 {
-            return Err("mmio map rollback failed");
-        }
-        return Err("mmio map failed");
-    }
-    Ok(out)
+pub fn sys_battery_status() -> i64 {
+    AC_FULL_PERCENT
 }

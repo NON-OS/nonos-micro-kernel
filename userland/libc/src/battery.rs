@@ -14,21 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::syscall::{call_raw, N_MK_BATTERY_STATUS};
 
-
-
-
-
-
-const ETH_HEADER_LEN: usize = 14;
-pub const MIN_ETHERNET_FRAME: usize = 60;
-const MTU: usize = 1500;
-pub const MAX_ETHERNET_FRAME: usize = MTU + ETH_HEADER_LEN;
-
-
-
-
-
-pub const VIRTIO_NET_HDR_LEN: usize = 10;
-
-pub const MAC_LEN: usize = 6;
+pub extern "C" fn mk_battery_status() -> i64 {
+    call_raw(N_MK_BATTERY_STATUS, [0; 6])
+}

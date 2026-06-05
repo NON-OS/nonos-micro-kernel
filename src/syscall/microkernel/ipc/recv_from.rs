@@ -19,6 +19,7 @@ use crate::process::current_pid;
 use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOENT, ERRNO_TIMEDOUT};
 use core::sync::atomic::{AtomicU32, Ordering};
 
+use super::correlation::note_request;
 use super::inbox_name::resolve_for_recv;
 use super::sender_pid::from_envelope;
 
@@ -94,6 +95,7 @@ fn deliver(
     sender_pid_out: u64,
 ) -> i64 {
     let sender_pid = from_envelope(&msg.from);
+    note_request(sender_pid, msg.correlation);
     trace_dequeue(pid, sender_pid);
     let copy_len = msg.data.len().min(len);
     if crate::usercopy::copy_to_user(buf, &msg.data[..copy_len]).is_err() {

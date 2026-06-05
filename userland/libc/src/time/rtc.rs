@@ -14,21 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::syscall::{call_raw, N_MK_TIME_RTC};
 
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub struct RtcTime {
+    pub year: u16,
+    pub month: u8,
+    pub day: u8,
+    pub hour: u8,
+    pub minute: u8,
+    pub second: u8,
+    pub _pad: u8,
+}
 
-
-
-
-
-const ETH_HEADER_LEN: usize = 14;
-pub const MIN_ETHERNET_FRAME: usize = 60;
-const MTU: usize = 1500;
-pub const MAX_ETHERNET_FRAME: usize = MTU + ETH_HEADER_LEN;
-
-
-
-
-
-pub const VIRTIO_NET_HDR_LEN: usize = 10;
-
-pub const MAC_LEN: usize = 6;
+pub extern "C" fn mk_time_rtc(out: *mut RtcTime) -> i64 {
+    call_raw(N_MK_TIME_RTC, [out as u64, 0, 0, 0, 0, 0])
+}

@@ -14,53 +14,87 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-
-
-
 use core::ptr::{read_volatile, write_volatile};
+
+use nonos_libc::{mk_pio_read, mk_pio_write};
+
+#[derive(Debug, Clone, Copy)]
+enum RegIo {
+    Mmio(*mut u8),
+    Pio(u64),
+}
+
+fn pio_read(grant: u64, offset: usize, width: u8) -> u32 {
+    let mut value = 0u32;
+    if mk_pio_read(grant, offset as u16, width, &mut value) < 0 {
+        return 0;
+    }
+    value
+}
+
+fn pio_write(grant: u64, offset: usize, width: u8, value: u32) {
+    let _ = mk_pio_write(grant, offset as u16, width, value);
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Regs {
-    pub base: *mut u8,
+    io: RegIo,
 }
 
 impl Regs {
-    pub const fn new(base: u64) -> Self {
-        Self { base: base as *mut u8 }
+    pub const fn mmio(base: u64) -> Self {
+        Self { io: RegIo::Mmio(base as *mut u8) }
     }
 
-
-
-
+    pub const fn pio(grant_id: u64) -> Self {
+        Self { io: RegIo::Pio(grant_id) }
+    }
 
     #[inline]
     pub unsafe fn r8(self, offset: usize) -> u8 {
-        read_volatile(self.base.add(offset))
+        match self.io {
+            RegIo::Mmio(base) => read_volatile(base.add(offset)),
+            RegIo::Pio(grant) => pio_read(grant, offset, 1) as u8,
+        }
     }
 
     #[inline]
     pub unsafe fn r16(self, offset: usize) -> u16 {
-        read_volatile(self.base.add(offset).cast())
+        match self.io {
+            RegIo::Mmio(base) => read_volatile(base.add(offset).cast()),
+            RegIo::Pio(grant) => pio_read(grant, offset, 2) as u16,
+        }
     }
 
     #[inline]
     pub unsafe fn r32(self, offset: usize) -> u32 {
-        read_volatile(self.base.add(offset).cast())
+        match self.io {
+            RegIo::Mmio(base) => read_volatile(base.add(offset).cast()),
+            RegIo::Pio(grant) => pio_read(grant, offset, 4),
+        }
     }
 
     #[inline]
     pub unsafe fn w8(self, offset: usize, value: u8) {
-        write_volatile(self.base.add(offset), value)
+        match self.io {
+            RegIo::Mmio(base) => write_volatile(base.add(offset), value),
+            RegIo::Pio(grant) => pio_write(grant, offset, 1, value as u32),
+        }
     }
 
     #[inline]
     pub unsafe fn w16(self, offset: usize, value: u16) {
-        write_volatile(self.base.add(offset).cast(), value)
+        match self.io {
+            RegIo::Mmio(base) => write_volatile(base.add(offset).cast(), value),
+            RegIo::Pio(grant) => pio_write(grant, offset, 2, value as u32),
+        }
     }
 
     #[inline]
     pub unsafe fn w32(self, offset: usize, value: u32) {
-        write_volatile(self.base.add(offset).cast(), value)
+        match self.io {
+            RegIo::Mmio(base) => write_volatile(base.add(offset).cast(), value),
+            RegIo::Pio(grant) => pio_write(grant, offset, 4, value),
+        }
     }
 }

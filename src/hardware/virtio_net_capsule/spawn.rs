@@ -59,7 +59,8 @@ pub fn spawn_driver_virtio_net_capsule() -> Result<(), SpawnError> {
             | Capability::DeviceEnum.bit()
             | Capability::Mmio.bit()
             | Capability::Irq.bit()
-            | Capability::Dma.bit(),
+            | Capability::Dma.bit()
+            | Capability::Pio.bit(),
         debug_tag: b"[DRIVER-VIRTIO-NET] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
