@@ -58,7 +58,7 @@ pub fn open_window(
         y: placement.y,
         width: placement.width,
         height: placement.height,
-        stride_words: stride,
+        stride_words: manifest.width,
         byte_len,
     })
 }
