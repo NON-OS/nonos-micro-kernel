@@ -13,29 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::mouse::{MouseParser, MouseRing};
-use crate::poll::Drainer;
-use crate::ring::Ring;
-use crate::setup::Driver;
-pub struct Context {
-    pub driver: Driver,
-    pub ring: Ring,
-    pub drainer: Drainer,
-    pub mouse: MouseParser,
-    pub mouse_ring: MouseRing,
-    pub last_kbd_seq: u64,
-    pub last_aux_seq: u64,
-}
-impl Context {
-    pub fn new(driver: Driver) -> Self {
-        Self {
-            driver,
-            ring: Ring::new(),
-            drainer: Drainer::new(),
-            mouse: MouseParser::new(),
-            mouse_ring: MouseRing::new(),
-            last_kbd_seq: 0,
-            last_aux_seq: 0,
-        }
+use nonos_libc::{mk_irq_poll, IrqPollOut};
+
+pub(super) fn poll_seq(grant_id: u64) -> u64 {
+    if grant_id == 0 {
+        return 0;
     }
+    let mut out = IrqPollOut { seq: 0, overflow: 0 };
+    if mk_irq_poll(grant_id, &mut out) < 0 {
+        return 0;
+    }
+    out.seq
 }
