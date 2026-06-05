@@ -10,7 +10,7 @@ fn main() {
     println!("cargo:rerun-if-env-changed=NONOS_SIGNING_KEY");
     println!("cargo:rerun-if-env-changed=NONOS_ZK_CEREMONY_DIR");
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
-    println!("cargo:rerun-if-changed=../assets/wallpapers/hardware-aesthetic-9.png");
+    println!("cargo:rerun-if-changed=../assets/boot-splash.png");
     println!("cargo:rerun-if-changed=zk/ceremony/");
 
     generate_keys();
@@ -463,7 +463,7 @@ fn generate_background_image() {
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR not set");
     let dest_path = Path::new(&out_dir).join("background_generated.rs");
 
-    let wallpaper_path = Path::new("../assets/wallpapers/hardware-aesthetic-9.png");
+    let wallpaper_path = Path::new("../assets/boot-splash.png");
 
     if !wallpaper_path.exists() {
         eprintln!("NOTE: Wallpaper not found at {:?}, generating gradient fallback", wallpaper_path);
