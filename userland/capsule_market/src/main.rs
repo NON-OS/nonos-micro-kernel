@@ -27,16 +27,10 @@ mod server;
 mod store;
 mod verify;
 
-use nonos_libc::{mk_exit, heap_init};
+use nonos_libc::{heap_init, mk_exit};
 
 use crate::store::Store;
 
-// Default verifier routes through capsule_crypto's
-// `OP_ED25519_VERIFY` op via the kernel's `CryptoEd25519Verify`
-// syscall. The `offline-verify` feature swaps in the `RejectAll`
-// fallback for offline builds where capsule_crypto is not running;
-// every signed index is refused under that fallback, which keeps
-// install readiness honest.
 #[cfg(not(feature = "offline-verify"))]
 use crate::verify::CryptoVerifier as DefaultVerifier;
 

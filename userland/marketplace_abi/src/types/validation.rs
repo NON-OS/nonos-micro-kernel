@@ -21,7 +21,7 @@ extern crate alloc;
 
 use alloc::string::String;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum ValidationStatus {
     Unknown = 0,
@@ -45,7 +45,7 @@ impl ValidationStatus {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ValidationReport {
     /// Marketplace operator's status verdict.
     pub status: ValidationStatus,

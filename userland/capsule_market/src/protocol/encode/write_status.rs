@@ -14,22 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Response encoder. Writes the v1 envelope into the caller's
-//! buffer; the first four bytes after the header carry the
-//! `i32 status`, then the per-op body.
-
-use super::header::{Request, MAGIC, VERSION};
-
-pub(in super::super) fn encode_response_header(out: &mut [u8], req: &Request, payload_len: u32) {
-    out[0..4].copy_from_slice(&MAGIC.to_le_bytes());
-    out[4..6].copy_from_slice(&VERSION.to_le_bytes());
-    out[6..8].copy_from_slice(&req.op.to_le_bytes());
-    out[8..10].copy_from_slice(&req.flags.to_le_bytes());
-    out[10..12].copy_from_slice(&0u16.to_le_bytes());
-    out[12..16].copy_from_slice(&req.request_id.to_le_bytes());
-    out[16..20].copy_from_slice(&payload_len.to_le_bytes());
-}
-
-pub(in super::super) fn write_status(out: &mut [u8], status: i32) {
+pub(crate) fn write_status(out: &mut [u8], status: i32) {
     out[0..4].copy_from_slice(&status.to_le_bytes());
 }

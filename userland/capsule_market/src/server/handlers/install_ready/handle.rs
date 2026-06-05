@@ -14,19 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `OP_INSTALL_READY` handler. Returns the install-readiness
-//! verdict for a specific (listing, release) pair as a six-byte
-//! body: one byte per check plus the AND-result. The AND-result
-//! is the only bit a sane caller acts on; the per-check bits let
-//! a UI explain which gate refused the install.
-
+use super::constants::READINESS_LEN;
+use super::find_release::find_release;
+use super::parse_pair::parse_pair;
 use crate::install_ready::evaluate;
 use crate::protocol::{Request, E_INVAL, E_NODATA};
 use crate::server::error::reply_status;
 use crate::server::payload::{body_slot, reply_with_body};
 use crate::store::Store;
-
-const READINESS_LEN: usize = 6;
 
 pub(crate) fn handle(store: &Store, body: &[u8], req: &Request, tx: &mut [u8]) {
     let accepted = match store.current() {
@@ -37,21 +32,11 @@ pub(crate) fn handle(store: &Store, body: &[u8], req: &Request, tx: &mut [u8]) {
         Some(p) => p,
         None => return reply_status(tx, req, E_INVAL),
     };
-    let pair = accepted.index.entries.iter().enumerate().find_map(|(entry_index, e)| {
-        if e.listing_id != listing_id {
-            return None;
-        }
-        e.releases
-            .iter()
-            .enumerate()
-            .find(|(_, r)| r.release_id == release_id)
-            .map(|(release_index, r)| (entry_index, release_index, r))
-    });
-    let (entry_index, release_index, release) = match pair {
-        Some(p) => p,
-        None => return reply_status(tx, req, E_NODATA),
-    };
-
+    let (entry_index, release_index, release) =
+        match find_release(&accepted.index, listing_id, release_id) {
+            Some(p) => p,
+            None => return reply_status(tx, req, E_NODATA),
+        };
     let publisher_ok = accepted.publisher_signature_verified(entry_index, release_index);
     let verdict = evaluate(accepted.signature_verified, release, publisher_ok);
     let slot = match body_slot(tx, READINESS_LEN) {
@@ -65,20 +50,4 @@ pub(crate) fn handle(store: &Store, body: &[u8], req: &Request, tx: &mut [u8]) {
     slot[4] = verdict.validation_passed as u8;
     slot[5] = verdict.arch_match as u8;
     reply_with_body(tx, req, READINESS_LEN);
-}
-
-fn parse_pair(buf: &[u8]) -> Option<(&str, &str)> {
-    let (first, rest) = take_lp(buf)?;
-    let (second, _) = take_lp(rest)?;
-    Some((core::str::from_utf8(first).ok()?, core::str::from_utf8(second).ok()?))
-}
-
-fn take_lp(buf: &[u8]) -> Option<(&[u8], &[u8])> {
-    if buf.len() < 4 {
-        return None;
-    }
-    let len = u32::from_le_bytes(buf[0..4].try_into().ok()?) as usize;
-    let body = buf.get(4..4 + len)?;
-    let rest = &buf[4 + len..];
-    Some((body, rest))
 }

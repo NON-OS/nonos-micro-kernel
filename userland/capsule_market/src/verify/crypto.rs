@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Crypto-capsule-backed verifier. Calls into libc's
-//! `crypto_ed25519_verify`, which routes through the kernel's
-//! `CryptoEd25519Verify` syscall and on to the capsule_crypto
-//! `OP_ED25519_VERIFY` handler. capsule_market never sees a
-//! curve25519 byte directly; the math lives behind the IPC
-//! boundary.
-
 use nonos_libc::crypto_ed25519_verify;
 
 use super::trait_def::{Verdict, Verifier};

@@ -14,15 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `OP_GET_APP` handler. Caller sends a `(listing_id_len, listing_id)`
-//! payload; capsule responds with publisher details and release
-//! count. The caller drills into a specific release with
-//! `OP_GET_RELEASE`.
-
-extern crate alloc;
-
-use alloc::vec::Vec;
-
+use super::encode_release::encode_release;
+use super::parse_pair::parse_pair;
 use crate::protocol::{Request, E_INVAL, E_MSGSIZE, E_NODATA};
 use crate::server::error::reply_status;
 use crate::server::payload::{body_slot, reply_with_body};
@@ -33,24 +26,21 @@ pub(crate) fn handle(store: &Store, body: &[u8], req: &Request, tx: &mut [u8]) {
         Some(a) => a,
         None => return reply_status(tx, req, E_NODATA),
     };
-    let listing_id = match read_lp_string(body) {
-        Some(s) => s,
+    let (listing_id, release_id) = match parse_pair(body) {
+        Some(p) => p,
         None => return reply_status(tx, req, E_INVAL),
     };
-    let entry = match accepted.index.entries.iter().find(|e| e.listing_id == listing_id) {
-        Some(e) => e,
+    let release = accepted
+        .index
+        .entries
+        .iter()
+        .find(|e| e.listing_id == listing_id)
+        .and_then(|e| e.releases.iter().find(|r| r.release_id == release_id));
+    let release = match release {
+        Some(r) => r,
         None => return reply_status(tx, req, E_NODATA),
     };
-
-    let mut out: Vec<u8> = Vec::new();
-    write_lp_string(&mut out, &entry.listing_id);
-    out.extend_from_slice(&entry.capsule_id);
-    write_lp_string(&mut out, &entry.name);
-    write_lp_string(&mut out, &entry.publisher_name);
-    out.extend_from_slice(&entry.publisher_pubkey);
-    write_lp_string(&mut out, &entry.description);
-    out.extend_from_slice(&(entry.releases.len() as u32).to_le_bytes());
-
+    let out = encode_release(release);
     let body_len = out.len();
     let slot = match body_slot(tx, body_len) {
         Some(s) => s,
@@ -58,19 +48,4 @@ pub(crate) fn handle(store: &Store, body: &[u8], req: &Request, tx: &mut [u8]) {
     };
     slot.copy_from_slice(&out);
     reply_with_body(tx, req, body_len);
-}
-
-fn read_lp_string(buf: &[u8]) -> Option<&str> {
-    if buf.len() < 4 {
-        return None;
-    }
-    let len = u32::from_le_bytes(buf[0..4].try_into().ok()?) as usize;
-    let body = buf.get(4..4 + len)?;
-    core::str::from_utf8(body).ok()
-}
-
-fn write_lp_string(out: &mut Vec<u8>, s: &str) {
-    let bytes = s.as_bytes();
-    out.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
-    out.extend_from_slice(bytes);
 }

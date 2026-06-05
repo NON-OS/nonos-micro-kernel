@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `OP_LOAD_INDEX` handler. Takes the index blob inline in the
-//! request payload, runs the verified ingest pipeline, and
-//! commits the result to the store on success. Refused signatures,
-//! malformed blobs, and stale serials all surface as distinct
-//! errnos so the caller can report which gate tripped.
-
 use crate::ingest::{load_verified, IngestError};
 use crate::protocol::{Request, E_INVAL, E_KEYREJECTED, E_STALE};
 use crate::server::error::reply_status;

@@ -25,7 +25,7 @@ use alloc::vec::Vec;
 
 use super::entry::MarketplaceEntry;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct MarketplaceIndex {
     /// Schema version; bump every time the wire format changes.
     pub schema_version: u32,

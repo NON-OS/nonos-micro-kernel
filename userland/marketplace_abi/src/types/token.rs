@@ -22,7 +22,7 @@ extern crate alloc;
 
 use alloc::string::String;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct TokenInfo {
     /// Human-facing symbol ("NOX", "ETH"). Capped at
     /// `MAX_TOKEN_SYMBOL` bytes; ASCII only on the wire.

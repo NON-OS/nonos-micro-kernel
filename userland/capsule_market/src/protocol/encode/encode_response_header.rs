@@ -14,22 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Single error-reply path. Handlers funnel through here so the
-//! status-only response shape stays uniform regardless of op.
+use crate::protocol::header::{Request, MAGIC, VERSION};
 
-use nonos_libc::mk_ipc_send;
-
-use crate::protocol::{
-    encode_response_header, write_status, Request, KERNEL_REPLY_ENDPOINT, RESP_HDR_LEN, STATUS_LEN,
-};
-
-pub(crate) fn reply_status(tx: &mut [u8], req: &Request, status: i32) {
-    encode_response_header(tx, req, STATUS_LEN as u32);
-    write_status(&mut tx[RESP_HDR_LEN..], status);
-    let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), RESP_HDR_LEN + STATUS_LEN);
-}
-
-pub(crate) fn reply_decode_failed(tx: &mut [u8], status: i32) {
-    let req = Request { op: 0, flags: 0, request_id: 0, payload_len: 0 };
-    reply_status(tx, &req, status);
+pub(crate) fn encode_response_header(out: &mut [u8], req: &Request, payload_len: u32) {
+    out[0..4].copy_from_slice(&MAGIC.to_le_bytes());
+    out[4..6].copy_from_slice(&VERSION.to_le_bytes());
+    out[6..8].copy_from_slice(&req.op.to_le_bytes());
+    out[8..10].copy_from_slice(&req.flags.to_le_bytes());
+    out[10..12].copy_from_slice(&0u16.to_le_bytes());
+    out[12..16].copy_from_slice(&req.request_id.to_le_bytes());
+    out[16..20].copy_from_slice(&payload_len.to_le_bytes());
 }

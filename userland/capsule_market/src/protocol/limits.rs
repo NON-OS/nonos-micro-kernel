@@ -14,10 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Bounded sizes the server enforces. The receive buffer is sized
-//! for `OP_LOAD_INDEX` because that op carries the full marketplace
-//! index inline; the other ops fit comfortably.
-
 use nonos_marketplace_abi::limits::MAX_INDEX_BLOB;
 
 pub(in super::super) const STATUS_LEN: usize = 4;

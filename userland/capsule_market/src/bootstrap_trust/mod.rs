@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Compile-time trust list for marketplace operator pubkeys. The
-//! capsule refuses every signed index whose embedded
-//! `operator_pubkey` is not in this list, even if the Ed25519
-//! signature itself validates. Rotating the list is a kernel image
-//! rebuild — there is no runtime add or remove.
-
 mod check;
 mod keys;
 

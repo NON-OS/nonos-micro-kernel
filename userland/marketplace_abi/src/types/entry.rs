@@ -26,7 +26,7 @@ use super::price::PriceModel;
 use super::release::CapsuleRelease;
 use super::token::TokenInfo;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct MarketplaceEntry {
     /// Listing identifier the marketplace assigns. Independent of
     /// `capsule_id` so the same capsule can be listed twice (e.g.

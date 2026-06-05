@@ -14,16 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `OP_LIST_APPS` handler. Returns a compact summary tuple per
-//! listing — `(listing_id, capsule_id, name, install_ready)` —
-//! suitable for a market UI without flooding the IPC channel with
-//! full release detail. Detail comes via `OP_GET_APP` /
-//! `OP_GET_RELEASE`.
-
 extern crate alloc;
 
 use alloc::vec::Vec;
 
+use super::write_lp_string::write_lp_string;
 use crate::install_ready;
 use crate::protocol::{Request, E_MSGSIZE, E_NODATA};
 use crate::server::error::reply_status;
@@ -35,11 +30,9 @@ pub(crate) fn handle(store: &Store, req: &Request, tx: &mut [u8]) {
         Some(a) => a,
         None => return reply_status(tx, req, E_NODATA),
     };
-
     let mut body: Vec<u8> = Vec::new();
     let count = accepted.index.entries.len() as u32;
     body.extend_from_slice(&count.to_le_bytes());
-
     for (entry_index, entry) in accepted.index.entries.iter().enumerate() {
         let any_ready = entry.releases.iter().enumerate().any(|(release_index, rel)| {
             let publisher_ok = accepted.publisher_signature_verified(entry_index, release_index);
@@ -50,7 +43,6 @@ pub(crate) fn handle(store: &Store, req: &Request, tx: &mut [u8]) {
         write_lp_string(&mut body, &entry.name);
         body.push(any_ready as u8);
     }
-
     let body_len = body.len();
     let slot = match body_slot(tx, body_len) {
         Some(s) => s,
@@ -58,10 +50,4 @@ pub(crate) fn handle(store: &Store, req: &Request, tx: &mut [u8]) {
     };
     slot.copy_from_slice(&body);
     reply_with_body(tx, req, body_len);
-}
-
-fn write_lp_string(out: &mut Vec<u8>, s: &str) {
-    let bytes = s.as_bytes();
-    out.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
-    out.extend_from_slice(bytes);
 }
