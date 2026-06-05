@@ -27,13 +27,14 @@ use super::super::core::PagingManager;
 use crate::memory::addr::PhysAddr;
 use crate::memory::paging::constants::{KERNEL_ASID, PAGE_TABLE_ENTRIES};
 use crate::memory::paging::error::{PagingError, PagingResult};
-use crate::memory::unified::phys_to_virt;
+use crate::memory::unified::phys_to_virt_checked;
 
 const PML4_KERNEL_HALF_START: usize = PAGE_TABLE_ENTRIES / 2;
 
 impl PagingManager {
     pub(super) fn clone_kernel_half_into(&self, page_table_pa: PhysAddr) -> PagingResult<()> {
-        let page_table_va = phys_to_virt(page_table_pa);
+        let page_table_va =
+            phys_to_virt_checked(page_table_pa).ok_or(PagingError::NoActivePageTable)?;
         let page_table =
             unsafe { &mut *(page_table_va.as_u64() as *mut [u64; PAGE_TABLE_ENTRIES]) };
         for entry in page_table.iter_mut() {
@@ -43,7 +44,8 @@ impl PagingManager {
             .address_spaces
             .get(&KERNEL_ASID)
             .ok_or(PagingError::NoActivePageTable)?;
-        let kernel_table_va = phys_to_virt(kernel_space.cr3_value);
+        let kernel_table_va =
+            phys_to_virt_checked(kernel_space.cr3_value).ok_or(PagingError::NoActivePageTable)?;
         let kernel_table =
             unsafe { &*(kernel_table_va.as_u64() as *const [u64; PAGE_TABLE_ENTRIES]) };
         let mut populated = 0usize;

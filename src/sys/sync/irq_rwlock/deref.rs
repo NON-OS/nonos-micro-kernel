@@ -21,19 +21,19 @@ use super::guard::{IrqRwLockReadGuard, IrqRwLockWriteGuard};
 impl<'a, T> Deref for IrqRwLockReadGuard<'a, T> {
     type Target = T;
     fn deref(&self) -> &T {
-        self.inner.as_deref().expect("IrqRwLockReadGuard inner")
+        &**self.inner
     }
 }
 
 impl<'a, T> Deref for IrqRwLockWriteGuard<'a, T> {
     type Target = T;
     fn deref(&self) -> &T {
-        self.inner.as_deref().expect("IrqRwLockWriteGuard inner")
+        &**self.inner
     }
 }
 
 impl<'a, T> DerefMut for IrqRwLockWriteGuard<'a, T> {
     fn deref_mut(&mut self) -> &mut T {
-        self.inner.as_deref_mut().expect("IrqRwLockWriteGuard inner")
+        &mut **self.inner
     }
 }

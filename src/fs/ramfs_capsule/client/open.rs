@@ -42,7 +42,16 @@ pub fn open(path: &str, posix_flags: i32) -> Result<OpenResult, CapsuleFsError> 
     if resp.payload.len() != 8 {
         return Err(CapsuleFsError::TransportFailure);
     }
-    let h = u64::from_le_bytes(resp.payload[0..8].try_into().unwrap());
+    let h = u64::from_le_bytes([
+        resp.payload[0],
+        resp.payload[1],
+        resp.payload[2],
+        resp.payload[3],
+        resp.payload[4],
+        resp.payload[5],
+        resp.payload[6],
+        resp.payload[7],
+    ]);
     Ok(OpenResult { remote_handle: h, generation })
 }
 

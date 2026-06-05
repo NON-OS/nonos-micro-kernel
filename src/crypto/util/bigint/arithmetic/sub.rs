@@ -21,7 +21,9 @@ impl Sub<&BigUint> for &BigUint {
     type Output = BigUint;
 
     fn sub(self, other: &BigUint) -> BigUint {
-        debug_assert!(self >= other, "Subtraction underflow");
+        if self < other {
+            return BigUint::zero();
+        }
 
         let mut result = self.limbs.clone();
         let mut borrow = 0i128;
@@ -40,7 +42,9 @@ impl Sub<&BigUint> for &BigUint {
             }
         }
 
-        debug_assert!(borrow == 0, "Subtraction underflow");
+        if borrow != 0 {
+            return BigUint::zero();
+        }
         BigUint::normalize(result)
     }
 }

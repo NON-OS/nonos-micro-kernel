@@ -14,32 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Request/reply correlation for `MkIpcCall`. The caller stamps a
-//! nonzero token on its request; the server side records the token
-//! per calling pid (FIFO, since a synchronous caller has at most one
-//! outstanding call) and the kernel echoes it on the matching reply,
-//! so a late reply from a timed-out call carries the old token and is
-//! discarded by the next call instead of being mistaken for its reply.
-
 extern crate alloc;
 
 use alloc::collections::{BTreeMap, VecDeque};
-use core::sync::atomic::{AtomicU64, Ordering};
 use spin::Mutex;
 
 const MAX_PENDING_PER_PID: usize = 16;
 
-static NEXT_TOKEN: AtomicU64 = AtomicU64::new(1);
 static PENDING: Mutex<BTreeMap<u32, VecDeque<u64>>> = Mutex::new(BTreeMap::new());
-
-pub(super) fn next_token() -> u64 {
-    let t = NEXT_TOKEN.fetch_add(1, Ordering::Relaxed);
-    if t == 0 {
-        NEXT_TOKEN.fetch_add(1, Ordering::Relaxed)
-    } else {
-        t
-    }
-}
 
 pub(super) fn note_request(client_pid: u32, token: u64) {
     if token == 0 {

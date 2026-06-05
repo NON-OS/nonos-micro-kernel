@@ -25,12 +25,6 @@ use crate::memory::paging::types::PagePermissions;
 
 const PAGE: usize = 4096;
 
-// Map one 4 KiB page at a page-aligned target VA, zero it, then copy
-// up to (PAGE - dst_off) bytes from `src` starting at `dst_off`
-// inside the new frame. Used by `load_segment` to honour a
-// `p_vaddr` whose intra-page offset is non-zero: the segment's
-// first page lays its data down at offset (p_vaddr & 0xFFF), every
-// later page starts at offset 0.
 pub(super) fn populate_page(
     target_asid: u32,
     page_va: VirtAddr,
@@ -38,7 +32,9 @@ pub(super) fn populate_page(
     dst_off: usize,
     src: &[u8],
 ) -> Result<(), ElfError> {
-    debug_assert!(dst_off < PAGE);
+    if dst_off >= PAGE {
+        return Err(ElfError::MemoryAllocationFailed);
+    }
     let frame = frame_alloc::allocate_frame().ok_or(ElfError::MemoryAllocationFailed)?;
     if map_page_in_asid(target_asid, page_va, frame, perms).is_err() {
         frame_alloc::deallocate_frame(frame).map_err(|_| ElfError::MemoryAllocationFailed)?;
@@ -47,8 +43,6 @@ pub(super) fn populate_page(
 
     let dst = (DIRECTMAP_BASE + frame.as_u64()) as *mut u8;
 
-    // SAFETY: eK@nonos.systems — frame phys came from frame_alloc, so
-    // DIRECTMAP_BASE + phys is a fresh 4 KiB page we own.
     unsafe {
         ptr::write_bytes(dst, 0, PAGE);
         if !src.is_empty() {

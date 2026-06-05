@@ -140,7 +140,9 @@ impl GhashState {
     }
 
     pub(super) fn update_aad(&mut self, data: &[u8]) {
-        debug_assert!(!self.aad_done, "AAD already finalized");
+        if self.aad_done {
+            return;
+        }
         self.aad_len += data.len() as u64;
         self.update_internal(data);
     }

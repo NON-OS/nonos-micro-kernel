@@ -28,12 +28,12 @@ use crate::memory::addr::PhysAddr;
 use crate::memory::frame_alloc;
 use crate::memory::paging::constants::{PAGE_TABLE_ENTRIES, PTE_KERNEL_TABLE, PTE_PRESENT};
 use crate::memory::paging::error::{PagingError, PagingResult};
-use crate::memory::unified::phys_to_virt;
+use crate::memory::unified::phys_to_virt_checked;
 
 const PML4_KERNEL_HALF_START: usize = PAGE_TABLE_ENTRIES / 2;
 
 pub(super) fn seed_kernel_half_pdpts(kernel_cr3: PhysAddr) -> PagingResult<()> {
-    let pml4_va = phys_to_virt(kernel_cr3);
+    let pml4_va = phys_to_virt_checked(kernel_cr3).ok_or(PagingError::NoActivePageTable)?;
     let pml4 = unsafe { &mut *(pml4_va.as_u64() as *mut [u64; PAGE_TABLE_ENTRIES]) };
     for i in PML4_KERNEL_HALF_START..PAGE_TABLE_ENTRIES {
         if pml4[i] & PTE_PRESENT != 0 {
@@ -41,7 +41,7 @@ pub(super) fn seed_kernel_half_pdpts(kernel_cr3: PhysAddr) -> PagingResult<()> {
         }
         let pdpt_frame =
             frame_alloc::allocate_frame().ok_or(PagingError::FrameAllocationFailed)?;
-        let pdpt_va = phys_to_virt(pdpt_frame);
+        let pdpt_va = phys_to_virt_checked(pdpt_frame).ok_or(PagingError::NoActivePageTable)?;
         let pdpt = unsafe { &mut *(pdpt_va.as_u64() as *mut [u64; PAGE_TABLE_ENTRIES]) };
         for entry in pdpt.iter_mut() {
             *entry = 0;

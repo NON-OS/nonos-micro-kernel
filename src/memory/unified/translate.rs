@@ -17,13 +17,9 @@
 use super::super::layout;
 use crate::memory::addr::{PhysAddr, VirtAddr};
 
-// Unchecked directmap translation. Preserved for existing call
-// sites that depend on a value return; panics on out-of-window
-// phys instead of silently wrapping. New code must use the
-// checked variants.
 #[inline]
-pub fn phys_to_virt(phys: PhysAddr) -> VirtAddr {
-    phys_to_virt_checked(phys).expect("phys_to_virt: phys outside directmap window")
+pub fn phys_to_virt(phys: PhysAddr) -> Option<VirtAddr> {
+    phys_to_virt_checked(phys)
 }
 
 #[inline]
@@ -31,12 +27,6 @@ pub fn virt_to_phys(virt: VirtAddr) -> Option<PhysAddr> {
     virt_to_phys_checked(virt)
 }
 
-// Translate a physical address to its directmap virtual address,
-// or `None` if it lies outside the directmap window. The previous
-// unchecked implementation silently wrapped u64 for any
-// `phys >= 2^64 - DIRECTMAP_BASE`, which produced low-half
-// addresses that aliased random RAM pages. This rejects out-of-
-// window phys deterministically.
 #[inline]
 pub fn phys_to_virt_checked(phys: PhysAddr) -> Option<VirtAddr> {
     let p = phys.as_u64();

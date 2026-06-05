@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `OP_RX_PACKET`. Non-blocking. Returns one ready frame from the
-//! capsule's RX ring or `RxQueueEmpty` if the ring is empty. The
-//! frame body is preceded on the wire by a u32 length so the
-//! kernel client can validate the trailing bytes regardless of
-//! the response payload size.
-
 use alloc::vec::Vec;
 
 use super::super::capability::gate_call;
@@ -45,7 +39,8 @@ pub fn rx_packet() -> Result<RxPacket, DriverNetError> {
     if resp.body.len() < 4 {
         return Err(DriverNetError::ProtocolMismatch);
     }
-    let declared = u32::from_le_bytes(resp.body[0..4].try_into().unwrap()) as usize;
+    let declared = u32::from_le_bytes([resp.body[0], resp.body[1], resp.body[2], resp.body[3]])
+        as usize;
     let frame_bytes = &resp.body[4..];
     if frame_bytes.len() < declared {
         return Err(DriverNetError::ProtocolMismatch);

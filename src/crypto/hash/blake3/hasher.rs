@@ -64,7 +64,9 @@ impl Hasher {
         let mut total_chunks = chunk_counter;
 
         while total_chunks & 1 == 1 {
-            debug_assert!(self.cv_stack_len > 0);
+            if self.cv_stack_len == 0 {
+                break;
+            }
             self.cv_stack_len -= 1;
             let left = self.cv_stack[self.cv_stack_len];
             cv = parent_output(left, cv, &self.key_words, self.flags).chaining_value();

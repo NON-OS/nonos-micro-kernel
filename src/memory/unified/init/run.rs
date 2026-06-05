@@ -59,7 +59,8 @@ pub fn init_unified_vm() -> Result<(), &'static str> {
     // clone path returns `NoActivePageTable`. That mode is the
     // regression we are guarding against.
     let kernel_half_populated =
-        unsafe { count_pml4_entries(active.as_u64(), KERNEL_HALF_START..KERNEL_HALF_END) };
+        unsafe { count_pml4_entries(active.as_u64(), KERNEL_HALF_START..KERNEL_HALF_END) }
+            .ok_or("init_unified_vm: active PML4 is outside directmap")?;
     if kernel_half_populated == 0 {
         crate::sys::serial::print(b"[VM-INIT] kernel half empty; CR3=");
         print_hex_u64(active.as_u64());

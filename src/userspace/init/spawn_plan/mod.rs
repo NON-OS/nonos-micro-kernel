@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod apps;
-mod apps_tools;
 mod boot;
 mod core;
 #[cfg(not(feature = "microkernel-input-probe"))]
@@ -41,8 +39,8 @@ mod smoketests_security;
 mod smoketests_services;
 
 pub(super) use orchestrator::{
-    run_ramfs_smoketest, run_smoketests, spawn_apps, spawn_core_after_ramfs, spawn_desktop,
-    spawn_drivers, spawn_market, spawn_network, spawn_ramfs, spawn_vfs,
+    run_ramfs_smoketest, run_smoketests, spawn_core_after_ramfs, spawn_desktop, spawn_drivers,
+    spawn_market, spawn_network, spawn_ramfs, spawn_vfs,
 };
 
 #[cfg(feature = "microkernel-setup-wizard")]

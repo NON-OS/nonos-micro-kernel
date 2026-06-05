@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Applies R_X86_64_RELATIVE dynamic relocations for a PIE capsule image
-//! already mapped into `target_asid`. Without this every `&'static`
-//! pointer in a relocated static (e.g. a table of `include_bytes!`
-//! slices) stays at its zero RELA slot, so the capsule reads from null.
-//! Each fixup writes `base + addend` at `base + offset`, reaching the
-//! target page through the directmap via `translate_in_asid`.
-
 use crate::elf::errors::ElfError;
 use crate::elf::types::{phdr_type, ElfHeader};
 use crate::memory::addr::VirtAddr;
@@ -36,7 +29,16 @@ const DYN_ENTRY: usize = 16;
 const RELA_ENTRY: usize = 24;
 
 fn rd_u64(bytes: &[u8], off: usize) -> u64 {
-    u64::from_le_bytes(bytes[off..off + 8].try_into().unwrap())
+    u64::from_le_bytes([
+        bytes[off],
+        bytes[off + 1],
+        bytes[off + 2],
+        bytes[off + 3],
+        bytes[off + 4],
+        bytes[off + 5],
+        bytes[off + 6],
+        bytes[off + 7],
+    ])
 }
 
 pub(in crate::elf::loader::core) fn apply_relative_relocations(
@@ -80,8 +82,6 @@ pub(in crate::elf::loader::core) fn apply_relative_relocations(
         let va = VirtAddr::new(base_addr.as_u64().wrapping_add(r_offset));
         let value = base_addr.as_u64().wrapping_add(r_addend);
         let pa = translate_in_asid(target_asid, va).ok_or(ElfError::DynamicSectionError)?;
-        // SAFETY: eK@nonos.systems — pa backs a freshly mapped, 8-aligned
-        // RELATIVE slot inside one page; the directmap alias is ours.
         unsafe {
             core::ptr::write((DIRECTMAP_BASE + pa.as_u64()) as *mut u64, value);
         }

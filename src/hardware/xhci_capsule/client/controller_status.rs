@@ -14,16 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Decode the 56-byte CONTROLLER_STATUS payload. Field layout
-//! mirrors `userland/capsule_driver_xhci/src/protocol/limits.rs`.
-
 use super::super::capability::gate_call;
 use super::super::error::DriverXhciError;
 use super::super::protocol::{encode_request, CONTROLLER_STATUS_PAYLOAD_LEN, OP_CONTROLLER_STATUS};
 use super::seq::next_request_id;
 use super::transport::round_trip;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct ControllerStatus {
     pub max_slots: u8,
     pub max_ports: u8,
@@ -61,9 +58,15 @@ pub fn controller_status() -> Result<ControllerStatus, DriverXhciError> {
         usbcmd: u32::from_le_bytes([b[16], b[17], b[18], b[19]]),
         iman: u32::from_le_bytes([b[20], b[21], b[22], b[23]]),
         cmd_cycle: b[24],
-        events_drained_total: u64::from_le_bytes(b[28..36].try_into().unwrap()),
-        dcbaa_phys: u64::from_le_bytes(b[36..44].try_into().unwrap()),
-        scratchpad_array_phys: u64::from_le_bytes(b[44..52].try_into().unwrap()),
+        events_drained_total: u64::from_le_bytes([
+            b[28], b[29], b[30], b[31], b[32], b[33], b[34], b[35],
+        ]),
+        dcbaa_phys: u64::from_le_bytes([
+            b[36], b[37], b[38], b[39], b[40], b[41], b[42], b[43],
+        ]),
+        scratchpad_array_phys: u64::from_le_bytes([
+            b[44], b[45], b[46], b[47], b[48], b[49], b[50], b[51],
+        ]),
         allocated_slots: u32::from_le_bytes([b[52], b[53], b[54], b[55]]),
     })
 }

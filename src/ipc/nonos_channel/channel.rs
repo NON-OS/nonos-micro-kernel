@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Channel entry and handle types.
-
 extern crate alloc;
 
 use alloc::string::String;
@@ -42,15 +40,15 @@ pub(super) struct ChannelEntry {
 }
 
 impl ChannelEntry {
-    pub(super) fn new(from: &str, to: &str) -> Self {
-        Self {
+    pub(super) fn new(from: &str, to: &str) -> Result<Self, &'static str> {
+        Ok(Self {
             from: String::from(from),
             to: String::from(to),
-            key: compute_channel_key(from, to),
+            key: compute_channel_key(from, to)?,
             alive: AtomicBool::new(true),
             last_active_ms: AtomicU64::new(crate::time::timestamp_millis()),
             messages_sent: AtomicU64::new(0),
-        }
+        })
     }
 
     pub(super) fn touch(&self) {
@@ -64,13 +62,8 @@ impl ChannelEntry {
     }
 }
 
-/// Handle to a registered IPC route
-///
-/// Lightweight, copyable handle that can be used to send messages
-/// on a registered channel.
 #[derive(Clone, Copy)]
 pub struct IpcChannel {
-    /// Channel key
     pub(super) key: u64,
 }
 

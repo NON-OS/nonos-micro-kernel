@@ -21,13 +21,12 @@ use super::guard::IrqMutexGuard;
 impl<'a, T> Deref for IrqMutexGuard<'a, T> {
     type Target = T;
     fn deref(&self) -> &T {
-        // SAFETY: `inner` is Some until Drop runs.
-        self.inner.as_deref().expect("IrqMutexGuard inner")
+        &**self.inner
     }
 }
 
 impl<'a, T> DerefMut for IrqMutexGuard<'a, T> {
     fn deref_mut(&mut self) -> &mut T {
-        self.inner.as_deref_mut().expect("IrqMutexGuard inner")
+        &mut **self.inner
     }
 }

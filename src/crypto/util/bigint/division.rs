@@ -39,14 +39,16 @@ impl BigUint {
         }
 
         if divisor.limbs.len() == 1 {
-            return Some(self.div_rem_u64(divisor.limbs[0]));
+            return self.div_rem_u64(divisor.limbs[0]);
         }
 
         Some(self.div_rem_knuth(divisor))
     }
 
-    pub(crate) fn div_rem_u64(&self, divisor: u64) -> (Self, Self) {
-        debug_assert!(divisor != 0, "div_rem_u64 called with zero divisor");
+    pub(crate) fn div_rem_u64(&self, divisor: u64) -> Option<(Self, Self)> {
+        if divisor == 0 {
+            return None;
+        }
 
         let mut quotient = vec![0u64; self.limbs.len()];
         let mut remainder = 0u128;
@@ -57,7 +59,7 @@ impl BigUint {
             remainder = dividend % (divisor as u128);
         }
 
-        (BigUint::normalize(quotient), BigUint::from_u64(remainder as u64))
+        Some((BigUint::normalize(quotient), BigUint::from_u64(remainder as u64)))
     }
 
     pub(crate) fn div_rem_knuth(&self, divisor: &Self) -> (Self, Self) {

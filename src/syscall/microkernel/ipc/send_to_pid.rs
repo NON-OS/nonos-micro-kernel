@@ -22,21 +22,18 @@ use crate::process::current_pid;
 use crate::syscall::microkernel::errnos::{
     ERRNO_BUSY, ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOENT, ERRNO_NOMEM,
 };
-use core::sync::atomic::{AtomicU32, Ordering};
-
-static SEND_TO_PID_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn trace(caller_pid: u32, dest_pid: u64, len: usize) {
-    if caller_pid != 0x17 || SEND_TO_PID_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 40 {
+    if caller_pid != 0x17 {
         return;
     }
-    crate::sys::serial::print(b"[IPC-RPLY] from=");
-    crate::sys::serial::print_hex(caller_pid as u64);
-    crate::sys::serial::print(b" to=");
-    crate::sys::serial::print_hex(dest_pid);
-    crate::sys::serial::print(b" len=");
-    crate::sys::serial::print_dec(len as u64);
-    crate::sys::serial::println(b"");
+    crate::sys::serial::trace(b"[IPC-RPLY] from=");
+    crate::sys::serial::trace_hex(caller_pid as u64);
+    crate::sys::serial::trace(b" to=");
+    crate::sys::serial::trace_hex(dest_pid);
+    crate::sys::serial::trace(b" len=");
+    crate::sys::serial::trace_dec(len as u64);
+    crate::sys::serial::traceln(b"");
 }
 
 // `MkIpcSendToPid` delivers `buf` to the destination pid's default
