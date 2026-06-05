@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use crate::constants::{DATA_BUF_LEN, MAX_QUEUE_SIZE, VQ_DESC_OFFSET, VQ_REGION_SIZE};
 use core::ptr::write_bytes;
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Queue {
     pub region_va: *mut u8,
     pub queue_size: u16,

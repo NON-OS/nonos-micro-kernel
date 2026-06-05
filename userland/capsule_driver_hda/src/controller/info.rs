@@ -18,7 +18,7 @@ use crate::constants::{GCAP, GCTL, GSTS, INPAY, INTCTL, INTSTS, OUTPAY, STATESTS
 use crate::controller::streams;
 use crate::regs::Regs;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct ControllerInfo {
     pub gcap: u16,
     pub vmin: u8,

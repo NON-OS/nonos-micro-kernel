@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum RegIo {
     Mmio(*mut u8),
     Pio(u64),

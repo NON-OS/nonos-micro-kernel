@@ -17,7 +17,7 @@
 use super::types::ProbeResult;
 use super::visitor::visit_record;
 use super::wire::*;
-use crate::protocol::{E_INVAL, E_NO_MSC, MAX_BINDINGS};
+use crate::protocol::{E_INVAL, E_NO_MSC};
 
 pub fn parse_config(raw: &[u8]) -> Result<ProbeResult, i32> {
     if raw.len() < 9 || raw[1] != DESC_CONFIGURATION {

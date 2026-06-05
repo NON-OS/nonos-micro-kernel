@@ -44,7 +44,6 @@ pub fn run() -> Result<Driver, &'static str> {
 
     Ok(Driver {
         device_id: dev.device_id,
-        claim_epoch,
         register,
         irq_grant: irq_grant.grant_id,
         rx_queue_grant: dma.rx_queue.grant_id,

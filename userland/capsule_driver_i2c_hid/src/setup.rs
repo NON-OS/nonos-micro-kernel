@@ -1,4 +1,4 @@
-use crate::hid::probe_bus;
+use crate::hid::{input_len, input_register, probe_bus};
 use crate::i2c_client::resolve;
 use crate::state::State;
 
@@ -14,5 +14,7 @@ pub fn reprobe(state: &mut State) {
     if let Some((addr, len)) = probe_bus(state.i2c_port, &mut state.descriptor) {
         state.addr = addr;
         state.descriptor_len = len;
+        state.input_register = input_register(&state.descriptor);
+        state.input_len = input_len(&state.descriptor);
     }
 }

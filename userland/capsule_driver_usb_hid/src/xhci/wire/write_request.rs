@@ -16,8 +16,10 @@
 
 use super::constants::{HDR_LEN, MAGIC, VERSION};
 
-pub fn write_request(out: &mut [u8], op: u16, request_id: u32, payload_len: u32) {
-    debug_assert!(out.len() >= HDR_LEN);
+pub fn write_request(out: &mut [u8], op: u16, request_id: u32, payload_len: u32) -> bool {
+    if out.len() < HDR_LEN {
+        return false;
+    }
     out[0..4].copy_from_slice(&MAGIC.to_le_bytes());
     out[4..6].copy_from_slice(&VERSION.to_le_bytes());
     out[6..8].copy_from_slice(&op.to_le_bytes());
@@ -25,4 +27,5 @@ pub fn write_request(out: &mut [u8], op: u16, request_id: u32, payload_len: u32)
     out[10..12].copy_from_slice(&0u16.to_le_bytes());
     out[12..16].copy_from_slice(&request_id.to_le_bytes());
     out[16..20].copy_from_slice(&payload_len.to_le_bytes());
+    true
 }

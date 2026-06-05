@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `OP_TX_PACKET`. Body is the raw Ethernet frame; the capsule
-//! copies it into the TX buffer pool, programs the descriptor,
-//! advances TDT, and polls DD with a bounded budget. Length bounds
-//! are enforced at the IPC boundary so a misbehaving caller cannot
-//! drive the TX DMA buffer past its grant.
-
 use crate::constants::queue::TX_DESC_COUNT;
 use crate::constants::regs::REG_TDT;
 use crate::constants::{MAX_ETHERNET_FRAME, MIN_ETHERNET_FRAME};
@@ -42,15 +36,11 @@ pub fn handle(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) {
         return;
     }
     let dst = driver.tx.buffer_va(driver.tx.tail) as *mut u8;
-    // SAFETY: eK@nonos.systems — `dst` lies inside the TX buffer
-    // pool's broker DMA grant (TX_BUFFER_LEN bytes per slot,
-    // body.len() bounded above by MAX_ETHERNET_FRAME).
     unsafe {
         core::ptr::copy_nonoverlapping(body.as_ptr(), dst, body.len());
     }
     let idx = driver.tx.post(body.len() as u16);
     let next_tdt = ((idx as u32) + 1) % (TX_DESC_COUNT as u32);
-    // SAFETY: same DMA + MMIO grant invariants.
     unsafe {
         driver.regs.w32(REG_TDT, next_tdt);
     }

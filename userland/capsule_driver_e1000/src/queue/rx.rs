@@ -14,13 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! RX ring state. The capsule pre-fills every descriptor with a
-//! buffer phys-addr at bring-up; the device sets `status.DD` when
-//! a frame lands. `consume` returns the oldest unread frame (or
-//! `None` when the ring is empty) and clears the descriptor's
-//! status so the slot can be re-armed before RDT advances.
-
-use crate::constants::queue::{RX_BUFFER_LEN, RX_DESC_COUNT, RX_STATUS_DD};
+use crate::constants::queue::{RX_BUFFER_LEN, RX_DESC_COUNT, RX_STATUS_DD, RX_STATUS_EOP};
+use crate::constants::MAX_ETHERNET_FRAME;
 
 use super::layout::RxDesc;
 
@@ -36,9 +31,6 @@ impl RxRing {
         Self { ring_user_va, buffer_user_va, buffer_device_addr, head: 0 }
     }
 
-    /// # Safety
-    /// `ring_user_va` must point to RX_DESC_COUNT contiguous
-    /// `RxDesc`s mapped read+write into this address space.
     pub unsafe fn descriptor(&self, idx: u16) -> *mut RxDesc {
         let base = self.ring_user_va as *mut RxDesc;
         base.add(idx as usize)
@@ -52,19 +44,25 @@ impl RxRing {
         self.buffer_user_va + (idx as u64) * (RX_BUFFER_LEN as u64)
     }
 
-    /// Return the next descriptor with `DD` set, or `None`.
     pub fn consume(&mut self) -> Option<(u16, u16)> {
-        // SAFETY: eK@nonos.systems — `ring_user_va` is the broker
-        // DMA grant we asked for in `setup::dma`; descriptor index
-        // is always < RX_DESC_COUNT by construction.
         let desc = unsafe { &mut *self.descriptor(self.head) };
         if desc.status & RX_STATUS_DD == 0 {
             return None;
         }
+        let status = desc.status;
+        let errors = desc.errors;
         let len = desc.length;
         let idx = self.head;
         desc.status = 0;
+        desc.errors = 0;
         self.head = (self.head + 1) % (RX_DESC_COUNT as u16);
+        if status & RX_STATUS_EOP == 0
+            || errors != 0
+            || len == 0
+            || len as usize > MAX_ETHERNET_FRAME
+        {
+            return Some((idx, 0));
+        }
         Some((idx, len))
     }
 }

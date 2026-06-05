@@ -38,7 +38,9 @@ pub fn call(
         return Err(XhciClientError::BufferTooSmall);
     }
     let rid = seq::next();
-    write_request(&mut req, op, rid, body.len() as u32);
+    if !write_request(&mut req, op, rid, body.len() as u32) {
+        return Err(XhciClientError::BufferTooSmall);
+    }
     req[HDR_LEN..total_req].copy_from_slice(body);
     let n = mk_ipc_call(port as u64, req.as_ptr(), total_req, resp.as_mut_ptr(), resp.len());
     if n < 0 {

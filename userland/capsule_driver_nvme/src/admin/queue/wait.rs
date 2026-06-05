@@ -16,7 +16,9 @@
 
 use core::ptr::read_volatile;
 
-use super::{cq0_head, AdminQueue, COMPLETION_POLL_LIMIT};
+use super::constants::{ADMIN_ENTRIES, COMPLETION_POLL_LIMIT};
+use super::cq0_head::cq0_head;
+use super::types::AdminQueue;
 use crate::admin::Completion;
 use crate::error::{NvmeError, NvmeResult};
 use crate::regs::Regs;
@@ -41,7 +43,7 @@ impl AdminQueue {
     }
 
     fn advance(&mut self, regs: Regs, stride: u8) {
-        self.head = (self.head + 1) % super::ADMIN_ENTRIES;
+        self.head = (self.head + 1) % ADMIN_ENTRIES;
         if self.head == 0 {
             self.phase = !self.phase;
         }

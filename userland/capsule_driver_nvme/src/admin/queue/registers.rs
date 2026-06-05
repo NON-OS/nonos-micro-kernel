@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{AdminQueue, ADMIN_ENTRIES};
+use super::constants::ADMIN_ENTRIES;
+use super::types::AdminQueue;
 use crate::constants::{REG_ACQ, REG_AQA, REG_ASQ};
 use crate::regs::Regs;
 

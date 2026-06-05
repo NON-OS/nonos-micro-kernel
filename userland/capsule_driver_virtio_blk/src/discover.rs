@@ -16,7 +16,7 @@
 use super::constants::{VIRTIO_BLK_MODERN, VIRTIO_BLK_TRANSITIONAL, VIRTIO_VENDOR_ID};
 use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BAR_KIND_PIO, BUS_KIND_PCI};
 const MAX_DEVICES: usize = 32;
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Found {
     pub device_id: u64,
     pub irq_line: u8,

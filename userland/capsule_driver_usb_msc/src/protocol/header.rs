@@ -18,7 +18,7 @@ pub const MAGIC: u32 = 0x4E55_4D53; // "NUMS"
 pub const VERSION: u16 = 1;
 pub const HDR_LEN: usize = 20;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Request {
     pub op: u16,
     pub flags: u16,

@@ -23,7 +23,6 @@ use crate::regs::Regs;
 
 pub struct Driver {
     pub device_id: u64,
-    pub claim_epoch: u64,
     pub register: RegisterGrant,
     pub irq_grant: u64,
     pub rx_queue_grant: u64,
