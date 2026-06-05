@@ -20,7 +20,7 @@ pub const DEVICE_FLAG_CLAIMED: u32 = 1 << 0;
 pub const DEVICE_FLAG_DISABLED: u32 = 1 << 1;
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct DeviceRecord {
     pub device_id: u64,
     pub bus_kind: u8,

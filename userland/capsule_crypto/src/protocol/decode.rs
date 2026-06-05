@@ -16,7 +16,7 @@
 
 use super::types::{Request, HDR_LEN, MAGIC, MAX_PAYLOAD_BYTES, VERSION};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum DecodeError {
     Short,
     BadMagic,

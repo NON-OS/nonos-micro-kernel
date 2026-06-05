@@ -14,13 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct PioGrantOut {
-    pub port_base: u16,
-    pub port_count: u16,
-    pub _pad: u32,
-    pub grant_id: u64,
-}
+use super::constants::DEFAULT_HOSTNAME;
+use crate::store::types::{StringField, STRING_CAP};
 
-const _: () = assert!(core::mem::size_of::<PioGrantOut>() == 16);
+pub(super) const fn default_hostname() -> StringField {
+    let mut bytes = [0u8; STRING_CAP];
+    let src = DEFAULT_HOSTNAME;
+    let mut i = 0;
+    while i < src.len() {
+        bytes[i] = src[i];
+        i += 1;
+    }
+    StringField { bytes, len: src.len() }
+}

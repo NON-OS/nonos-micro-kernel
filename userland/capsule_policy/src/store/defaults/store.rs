@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::{Store, StringField, STRING_CAP};
-
-const DEFAULT_HOSTNAME: &[u8] = b"nonos";
+use super::default_hostname::default_hostname;
+use super::empty_string::empty_string;
+use crate::store::types::Store;
 
 pub const fn store() -> Store {
     Store {
@@ -58,19 +58,4 @@ pub const fn store() -> Store {
         hostname: default_hostname(),
         domainname: empty_string(),
     }
-}
-
-const fn default_hostname() -> StringField {
-    let mut bytes = [0u8; STRING_CAP];
-    let src = DEFAULT_HOSTNAME;
-    let mut i = 0;
-    while i < src.len() {
-        bytes[i] = src[i];
-        i += 1;
-    }
-    StringField { bytes, len: src.len() }
-}
-
-const fn empty_string() -> StringField {
-    StringField { bytes: [0u8; STRING_CAP], len: 0 }
 }

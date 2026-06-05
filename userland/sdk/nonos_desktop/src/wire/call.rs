@@ -34,5 +34,5 @@ pub(crate) fn call_status(
     if rc <= 0 || (rc as usize) < HDR_LEN + 4 {
         return Err("ipc call failed");
     }
-    Ok(i32::from_le_bytes(rx[HDR_LEN..HDR_LEN + 4].try_into().unwrap()))
+    Ok(i32::from_le_bytes([rx[HDR_LEN], rx[HDR_LEN + 1], rx[HDR_LEN + 2], rx[HDR_LEN + 3]]))
 }

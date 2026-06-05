@@ -14,13 +14,4 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct PioGrantOut {
-    pub port_base: u16,
-    pub port_count: u16,
-    pub _pad: u32,
-    pub grant_id: u64,
-}
-
-const _: () = assert!(core::mem::size_of::<PioGrantOut>() == 16);
+pub(super) const DEFAULT_HOSTNAME: &[u8] = b"nonos";

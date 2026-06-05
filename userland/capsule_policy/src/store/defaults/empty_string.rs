@@ -14,13 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct PioGrantOut {
-    pub port_base: u16,
-    pub port_count: u16,
-    pub _pad: u32,
-    pub grant_id: u64,
-}
+use crate::store::types::{StringField, STRING_CAP};
 
-const _: () = assert!(core::mem::size_of::<PioGrantOut>() == 16);
+pub(super) const fn empty_string() -> StringField {
+    StringField { bytes: [0u8; STRING_CAP], len: 0 }
+}
