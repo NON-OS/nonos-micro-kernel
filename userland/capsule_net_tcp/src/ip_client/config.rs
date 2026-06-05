@@ -22,7 +22,7 @@ use super::wire::{IP_HDR_LEN, OP_GET_CONFIG};
 
 const BODY_LEN: usize = 17;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ConfigError {
     Send,
     BadResponse,

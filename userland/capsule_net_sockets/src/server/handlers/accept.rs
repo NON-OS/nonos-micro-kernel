@@ -19,7 +19,7 @@ use crate::protocol::{E_NO_HANDLE, E_NO_TRANSPORT, E_OK, E_TABLE_FULL, OP_ACCEPT
 use crate::server::handlers::io::u32_at;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
-use crate::sockets::{Family, Kind, SocketKey, SOCKETS};
+use crate::sockets::{Kind, SocketKey, SOCKETS};
 use crate::state;
 
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
@@ -34,7 +34,7 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         Ok(h) => h,
         Err(_) => return status(pid, req, E_NO_TRANSPORT, tx),
     };
-    let Some(key) = SOCKETS.open(pid, Family::Inet4, Kind::Stream) else {
+    let Some(key) = SOCKETS.open(pid, Kind::Stream) else {
         return status(pid, req, E_TABLE_FULL, tx);
     };
     SOCKETS.with(key, |s| {
@@ -42,7 +42,7 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         s.bound = true;
     });
     tx[20..24].copy_from_slice(&key.handle.to_le_bytes());
-            respond(pid, OP_ACCEPT, E_OK, req.request_id, 4, tx);
+    respond(pid, OP_ACCEPT, E_OK, req.request_id, 4, tx);
 }
 
 fn status(pid: u32, req: &Request, errno: u16, tx: &mut [u8]) {

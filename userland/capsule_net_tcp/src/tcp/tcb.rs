@@ -16,16 +16,13 @@
 
 use super::state::State;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Endpoint4 {
     pub ip: [u8; 4],
     pub port: u16,
 }
 
-// Send-side sequence variables. Names match RFC 793 directly so
-// the receive path's RFC quotes line up against the field names
-// without translation.
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct SendVars {
     pub una: u32,
     pub nxt: u32,
@@ -33,15 +30,14 @@ pub struct SendVars {
     pub iss: u32,
 }
 
-// Receive-side sequence variables.
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct RecvVars {
     pub nxt: u32,
     pub wnd: u16,
     pub irs: u32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Tcb {
     pub local: Endpoint4,
     pub remote: Endpoint4,

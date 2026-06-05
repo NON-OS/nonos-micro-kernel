@@ -16,17 +16,16 @@
 
 use super::header::{HDR_LEN, MAGIC, VERSION};
 
-// Write the v1 envelope into the head of `out`. The caller has
-// already appended the payload past `HDR_LEN`; this just fills
-// the header and returns the total wire length.
 pub fn write_header(
     out: &mut [u8],
     op: u16,
     errno: u16,
     request_id: u32,
     payload_len: u32,
-) -> usize {
-    debug_assert!(out.len() >= HDR_LEN);
+) -> Option<usize> {
+    if out.len() < HDR_LEN {
+        return None;
+    }
     out[0..4].copy_from_slice(&MAGIC.to_le_bytes());
     out[4..6].copy_from_slice(&VERSION.to_le_bytes());
     out[6..8].copy_from_slice(&op.to_le_bytes());
@@ -34,5 +33,5 @@ pub fn write_header(
     out[10..12].copy_from_slice(&0u16.to_le_bytes());
     out[12..16].copy_from_slice(&request_id.to_le_bytes());
     out[16..20].copy_from_slice(&payload_len.to_le_bytes());
-    HDR_LEN + payload_len as usize
+    Some(HDR_LEN + payload_len as usize)
 }

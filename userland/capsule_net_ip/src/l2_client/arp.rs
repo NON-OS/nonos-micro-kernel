@@ -20,7 +20,7 @@ use super::header::{parse_response, write_request};
 use super::seq;
 use super::wire::{L2_HDR_LEN, OP_ARP_RESOLVE};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ArpError {
     SendFailed,
     BadResponse,

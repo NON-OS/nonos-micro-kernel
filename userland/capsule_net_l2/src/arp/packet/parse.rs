@@ -14,26 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::ethernet::MacAddress;
-
-pub const PACKET_LEN: usize = 28;
-
-pub const HW_ETHERNET: u16 = 1;
-pub const PROTO_IPV4: u16 = 0x0800;
-pub const HLEN_MAC: u8 = 6;
-pub const PLEN_IPV4: u8 = 4;
-
-pub const OPER_REQUEST: u16 = 1;
-pub const OPER_REPLY: u16 = 2;
-
-#[derive(Clone, Copy, Debug)]
-pub struct ArpPacket {
-    pub oper: u16,
-    pub sender_mac: MacAddress,
-    pub sender_ip: [u8; 4],
-    pub target_mac: MacAddress,
-    pub target_ip: [u8; 4],
-}
+use super::constants::{HLEN_MAC, HW_ETHERNET, PACKET_LEN, PLEN_IPV4, PROTO_IPV4};
+use super::packet_type::ArpPacket;
 
 impl ArpPacket {
     pub fn parse(bytes: &[u8]) -> Option<Self> {
@@ -59,18 +41,5 @@ impl ArpPacket {
         target_mac.copy_from_slice(&bytes[18..24]);
         target_ip.copy_from_slice(&bytes[24..28]);
         Some(Self { oper, sender_mac, sender_ip, target_mac, target_ip })
-    }
-
-    pub fn write(&self, out: &mut [u8]) {
-        debug_assert!(out.len() >= PACKET_LEN);
-        out[0..2].copy_from_slice(&HW_ETHERNET.to_be_bytes());
-        out[2..4].copy_from_slice(&PROTO_IPV4.to_be_bytes());
-        out[4] = HLEN_MAC;
-        out[5] = PLEN_IPV4;
-        out[6..8].copy_from_slice(&self.oper.to_be_bytes());
-        out[8..14].copy_from_slice(&self.sender_mac);
-        out[14..18].copy_from_slice(&self.sender_ip);
-        out[18..24].copy_from_slice(&self.target_mac);
-        out[24..28].copy_from_slice(&self.target_ip);
     }
 }

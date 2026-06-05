@@ -22,32 +22,44 @@ use super::header::{parse_response, write_request};
 use super::seq;
 use super::wire::{NIC_HDR_LEN, OP_TX_PACKET};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TxError {
     SendFailed,
     BadResponse,
     Refused,
 }
 
-// Send one ethernet frame to the NIC capsule for TX. The payload
-// is the raw frame (including ethernet header); the NIC handler
-// prepends its own virtio_net header as needed.
 pub fn send_frame(nic_port: u32, frame: &[u8]) -> Result<(), TxError> {
     let total = NIC_HDR_LEN + frame.len();
     let mut req = vec![0u8; total];
     let rid = seq::next();
-    write_request(&mut req, OP_TX_PACKET, rid, frame.len() as u32);
+    if write_request(&mut req, OP_TX_PACKET, rid, frame.len() as u32).is_none() {
+        return Err(TxError::BadResponse);
+    }
     req[NIC_HDR_LEN..total].copy_from_slice(frame);
     let mut resp = [0u8; NIC_HDR_LEN + 4];
     let n = mk_ipc_call(nic_port as u64, req.as_ptr(), total, resp.as_mut_ptr(), resp.len());
     if n < 0 {
         return Err(TxError::SendFailed);
     }
-    let (op, _, plen) = parse_response(&resp).ok_or(TxError::BadResponse)?;
+    let got = n as usize;
+    if got > resp.len() {
+        return Err(TxError::BadResponse);
+    }
+    let view = &resp[..got];
+    let (op, _, plen) = parse_response(view).ok_or(TxError::BadResponse)?;
     if op != OP_TX_PACKET || plen as usize != 4 {
         return Err(TxError::BadResponse);
     }
-    let status = i32::from_le_bytes(resp[NIC_HDR_LEN..NIC_HDR_LEN + 4].try_into().unwrap());
+    if view.len() < NIC_HDR_LEN + 4 {
+        return Err(TxError::BadResponse);
+    }
+    let status = i32::from_le_bytes([
+        view[NIC_HDR_LEN],
+        view[NIC_HDR_LEN + 1],
+        view[NIC_HDR_LEN + 2],
+        view[NIC_HDR_LEN + 3],
+    ]);
     if status < 0 {
         Err(TxError::Refused)
     } else {

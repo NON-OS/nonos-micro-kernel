@@ -21,9 +21,6 @@ pub const VERSION_4: u8 = 4;
 pub const DEFAULT_TTL: u8 = 64;
 pub const PROTO_UDP: u8 = 17;
 
-// Build a 20-byte IPv4 header into `out` for a DHCP datagram.
-// total_len is the IPv4 + UDP + BOOTP byte count. Identification
-// is caller-managed; DHCP picks a fresh value per DISCOVER.
 pub fn write(
     out: &mut [u8],
     src: &[u8; 4],
@@ -32,12 +29,14 @@ pub fn write(
     identification: u16,
     total_len: u16,
 ) -> usize {
-    debug_assert!(out.len() >= HDR_LEN);
+    if out.len() < HDR_LEN {
+        return 0;
+    }
     out[0] = (VERSION_4 << 4) | 5;
     out[1] = 0;
     out[2..4].copy_from_slice(&total_len.to_be_bytes());
     out[4..6].copy_from_slice(&identification.to_be_bytes());
-    out[6] = 0x40; // Don't Fragment
+    out[6] = 0x40;
     out[7] = 0;
     out[8] = DEFAULT_TTL;
     out[9] = proto;
@@ -50,8 +49,6 @@ pub fn write(
     HDR_LEN
 }
 
-// Returns (src, dst, protocol, header_len) on a well-formed IPv4
-// header, or None.
 pub fn parse(bytes: &[u8]) -> Option<([u8; 4], [u8; 4], u8, usize)> {
     if bytes.len() < HDR_LEN {
         return None;

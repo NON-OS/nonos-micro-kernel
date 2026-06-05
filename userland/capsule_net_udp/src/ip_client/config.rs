@@ -23,7 +23,7 @@ use super::wire::{IP_HDR_LEN, OP_GET_CONFIG};
 // Response body: 6 MAC + 4 IPv4 + 1 prefix + 4 gateway + 2 MTU.
 const BODY_LEN: usize = 17;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ConfigError {
     SendFailed,
     BadResponse,

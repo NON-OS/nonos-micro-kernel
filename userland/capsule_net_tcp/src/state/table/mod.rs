@@ -18,4 +18,4 @@ mod lookup;
 mod mutate;
 mod types;
 
-pub use types::{Table, TableError, TABLE, TABLE_CAP};
+pub use types::TABLE;

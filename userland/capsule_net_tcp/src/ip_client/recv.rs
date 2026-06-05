@@ -23,14 +23,14 @@ use super::header::{parse_response, write_request};
 use super::seq;
 use super::wire::{IP_HDR_LEN, IP_PROTO_TCP, OP_POLL_PACKET};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct IpPacket {
     pub src: [u8; 4],
     pub dst: [u8; 4],
     pub segment: Vec<u8>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum RecvError {
     Send,
     BadResponse,

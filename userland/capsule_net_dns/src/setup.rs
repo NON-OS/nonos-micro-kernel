@@ -21,7 +21,7 @@ use crate::udp_client;
 
 const UDP_NAME: &str = "net.udp";
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SetupError {
     UdpMissing,
     BindFailed,

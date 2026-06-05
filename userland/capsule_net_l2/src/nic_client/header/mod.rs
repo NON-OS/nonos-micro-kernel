@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const SERVICE_PORT: u32 = 4460;
-pub const REPLY_PORT: u32 = 4461;
-pub const SERVICE_NAME: &str = "net.sockets";
-pub const REPLY_INBOX: &str = "endpoint.net.sockets.reply";
+mod parse_response;
+mod write_request;
+
+pub use parse_response::parse_response;
+pub use write_request::write_request;

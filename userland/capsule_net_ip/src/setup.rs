@@ -24,7 +24,7 @@ use nonos_libc::mk_service_lookup;
 use crate::l2_client::{read_mac, MacError};
 use crate::state::IFACE;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SetupError {
     L2NotFound,
     L2MacFailed,

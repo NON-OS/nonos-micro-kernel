@@ -28,6 +28,6 @@ mod verify;
 pub use parse::install;
 pub use select::route;
 pub use status::current as status;
-pub use store::{meta, ready};
 pub use directory::DirectoryMeta;
-pub use types::{Node, Role, RouteError, TopologyError, TopologyStatus, NODE_WIRE_LEN, ROUTE_HOPS};
+pub use store::meta;
+pub use types::{Node, Role, TopologyError, TopologyStatus, ROUTE_HOPS};

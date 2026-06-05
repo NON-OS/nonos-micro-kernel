@@ -21,7 +21,7 @@ pub use discover::{first_available, DiscoverError};
 use crate::nic_client::{read_mac, MacError};
 use crate::state::STATE;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SetupError {
     NoNic,
     MacFailed,

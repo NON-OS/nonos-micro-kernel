@@ -31,16 +31,4 @@ impl Table {
         }
         false
     }
-
-    pub fn close_all_for_pid(&self, pid: u32) -> usize {
-        let mut g = self.inner.lock();
-        let mut n = 0;
-        for slot in g.iter_mut() {
-            if slot.as_ref().map_or(false, |s| s.key.pid == pid) {
-                *slot = None;
-                n += 1;
-            }
-        }
-        n
-    }
 }

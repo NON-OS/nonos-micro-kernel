@@ -21,7 +21,7 @@ pub const TYPE_ECHO_REQUEST: u8 = 8;
 
 pub const CHECKSUM_OFFSET: usize = 2;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct IcmpHeader {
     pub icmp_type: u8,
     pub code: u8,

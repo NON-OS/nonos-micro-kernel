@@ -24,22 +24,3 @@ pub fn set_gateway(port: u32, ip: [u8; 4], gw_port: u16) -> Result<(), u16> {
     body[6] = 1;
     call(port, MAGIC, SET_GATEWAY, &body, &mut []).map(|_| ())
 }
-
-pub fn set_authority(port: u32, authority: &[u8; 32]) -> Result<(), u16> {
-    call(port, MAGIC, SET_AUTHORITY, authority, &mut []).map(|_| ())
-}
-
-pub fn set_topology(port: u32, topology: &[u8]) -> Result<(), u16> {
-    call(port, MAGIC, SET_TOPOLOGY, topology, &mut []).map(|_| ())
-}
-
-pub fn set_credential(port: u32, credential: &[u8]) -> Result<(), u16> {
-    call(port, MAGIC, SET_CREDENTIAL, credential, &mut []).map(|_| ())
-}
-
-pub fn set_timing(port: u32, cover_burst: u16, jitter_ms: u16) -> Result<(), u16> {
-    let mut body = [0u8; 4];
-    body[0..2].copy_from_slice(&cover_burst.to_le_bytes());
-    body[2..4].copy_from_slice(&jitter_ms.to_le_bytes());
-    call(port, MAGIC, SET_TIMING, &body, &mut []).map(|_| ())
-}

@@ -18,7 +18,7 @@ use super::header::{FLAG_RD, HDR_LEN};
 use super::name::{encode as encode_name, NameError};
 use super::types::{CLASS_IN, TYPE_A, TYPE_AAAA};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BuildError {
     OutputTooSmall,
     NameInvalid,
@@ -33,9 +33,6 @@ impl From<NameError> for BuildError {
     }
 }
 
-// Build a standard recursive A or AAAA query. Returns the wire
-// length on success. The transaction ID lets the caller match
-// the response against the outstanding query map.
 pub fn build_a_query(xid: u16, name: &str, out: &mut [u8]) -> Result<usize, BuildError> {
     build_query(xid, name, TYPE_A, out)
 }

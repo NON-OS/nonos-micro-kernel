@@ -18,5 +18,4 @@ mod entry;
 mod hash;
 mod ops;
 
-pub use entry::{Cache, CacheEntry, ENTRY_CAP, NAME_BYTES};
-pub use hash::hash;
+pub use entry::Cache;

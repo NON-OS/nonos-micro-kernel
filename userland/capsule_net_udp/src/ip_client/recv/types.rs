@@ -18,14 +18,14 @@ use alloc::vec::Vec;
 
 pub const MAX_PACKET: usize = 1500;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct UdpInbound {
     pub src: [u8; 4],
     pub dst: [u8; 4],
     pub segment: Vec<u8>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum RecvError {
     SendFailed,
     BadResponse,

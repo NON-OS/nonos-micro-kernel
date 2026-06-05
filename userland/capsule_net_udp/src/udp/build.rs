@@ -17,7 +17,7 @@
 use super::checksum::compute;
 use super::header::{CHECKSUM_OFFSET, HDR_LEN};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct BuildRequest<'a> {
     pub src: [u8; 4],
     pub dst: [u8; 4],
@@ -26,7 +26,7 @@ pub struct BuildRequest<'a> {
     pub payload: &'a [u8],
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BuildError {
     OutputTooSmall,
     PayloadTooLarge,

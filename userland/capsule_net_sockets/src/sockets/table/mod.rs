@@ -19,4 +19,4 @@ mod lookup;
 mod open;
 mod types;
 
-pub use types::{Socket, Table, SOCKETS, TABLE_CAP};
+pub use types::{Socket, SOCKETS};

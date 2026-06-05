@@ -21,7 +21,7 @@ use crate::state::{set_ip_port, set_local_ip};
 
 const IP_NAME: &str = "net.ip";
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SetupError {
     IpMissing,
     ConfigMissing,

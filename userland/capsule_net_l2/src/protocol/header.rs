@@ -33,7 +33,7 @@ pub const VERSION: u16 = 1;
 
 pub const HDR_LEN: usize = 20;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Request {
     pub op: u16,
     pub request_id: u32,

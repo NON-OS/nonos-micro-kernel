@@ -17,7 +17,7 @@
 use super::checksum;
 use super::header::{Ipv4Header, HDR_LEN_MIN, VERSION_4};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ParseError {
     TooShort,
     BadVersion,

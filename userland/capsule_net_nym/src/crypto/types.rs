@@ -21,7 +21,7 @@ pub const TAG_BYTES: usize = 16;
 pub type Key = [u8; KEY_BYTES];
 pub type Nonce = [u8; NONCE_BYTES];
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum CryptoError {
     Random,
     Hash,

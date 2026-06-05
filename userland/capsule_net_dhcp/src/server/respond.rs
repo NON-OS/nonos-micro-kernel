@@ -19,9 +19,18 @@ use nonos_libc::mk_ipc_reply;
 use crate::protocol::MAGIC;
 
 const HDR_LEN: usize = 20;
+const EMSGSIZE: i64 = -90;
 
-pub fn write_header(out: &mut [u8], op: u16, errno: u16, request_id: u32, payload_len: u32) {
-    debug_assert!(out.len() >= HDR_LEN);
+pub fn write_header(
+    out: &mut [u8],
+    op: u16,
+    errno: u16,
+    request_id: u32,
+    payload_len: u32,
+) -> Option<usize> {
+    if out.len() < HDR_LEN {
+        return None;
+    }
     out[0..4].copy_from_slice(&MAGIC.to_le_bytes());
     out[4..6].copy_from_slice(&1u16.to_le_bytes());
     out[6..8].copy_from_slice(&op.to_le_bytes());
@@ -29,6 +38,7 @@ pub fn write_header(out: &mut [u8], op: u16, errno: u16, request_id: u32, payloa
     out[10..12].copy_from_slice(&0u16.to_le_bytes());
     out[12..16].copy_from_slice(&request_id.to_le_bytes());
     out[16..20].copy_from_slice(&payload_len.to_le_bytes());
+    Some(HDR_LEN + payload_len as usize)
 }
 
 pub fn respond(
@@ -39,6 +49,11 @@ pub fn respond(
     payload_len: u32,
     tx: &mut [u8],
 ) -> i64 {
-    write_header(tx, op, errno, request_id, payload_len);
-    mk_ipc_reply(sender_pid, tx.as_ptr(), HDR_LEN + payload_len as usize)
+    let Some(total) = write_header(tx, op, errno, request_id, payload_len) else {
+        return EMSGSIZE;
+    };
+    if total > tx.len() {
+        return EMSGSIZE;
+    }
+    mk_ipc_reply(sender_pid, tx.as_ptr(), total)
 }

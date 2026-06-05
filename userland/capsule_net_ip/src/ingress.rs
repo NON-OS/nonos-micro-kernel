@@ -27,7 +27,7 @@ use crate::icmp::try_reply as icmp_try_reply;
 use crate::ipv4::{parse as ipv4_parse, Ipv4Addr};
 use crate::state::IFACE;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Inbound {
     pub src: Ipv4Addr,
     pub dst: Ipv4Addr,
@@ -35,7 +35,7 @@ pub struct Inbound {
     pub payload: Vec<u8>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum IngressError {
     NotIpv4,
     BadFrame,

@@ -21,14 +21,14 @@ use nonos_libc::mk_ipc_call;
 
 use super::header::{parse, write, HDR_LEN, OP_RECV};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct UdpDatagram {
     pub src: [u8; 4],
     pub src_port: u16,
     pub payload: Vec<u8>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum UdpRecvError {
     Send,
     BadResponse,

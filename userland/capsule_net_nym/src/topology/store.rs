@@ -58,10 +58,6 @@ pub fn snapshot() -> Result<Vec<Node>, RouteError> {
     Ok(guard.nodes.clone())
 }
 
-pub fn ready() -> bool {
-    snapshot().is_ok()
-}
-
 pub fn meta() -> Option<DirectoryMeta> {
     STORE.lock().meta
 }

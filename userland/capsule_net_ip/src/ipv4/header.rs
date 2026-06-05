@@ -25,7 +25,7 @@ pub const CHECKSUM_OFFSET: usize = 10;
 // fields the data path needs (src + dst + protocol). Other wire
 // fields are validated during parse and then discarded; the egress
 // path rebuilds them from scratch on each TX.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Ipv4Header {
     pub protocol: u8,
     pub src: Ipv4Addr,

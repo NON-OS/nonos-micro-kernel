@@ -19,7 +19,7 @@ use core::sync::atomic::AtomicU32;
 pub const ENTRY_CAP: usize = 128;
 pub const NAME_BYTES: usize = 64;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct CacheEntry {
     pub name_hash: u64,
     pub name: [u8; NAME_BYTES],

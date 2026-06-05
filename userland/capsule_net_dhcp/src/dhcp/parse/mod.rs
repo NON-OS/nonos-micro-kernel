@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const SERVICE_PORT: u32 = 4470;
-pub const REPLY_PORT: u32 = 4471;
-pub const SERVICE_NAME: &str = "net.nym";
-pub const REPLY_INBOX: &str = "endpoint.net.nym.reply";
+mod error;
+mod parse;
+mod parse_fixed;
+mod parse_options;
+
+pub use parse::parse;

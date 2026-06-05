@@ -21,7 +21,7 @@ pub const NODE_CAP: usize = 128;
 pub const NODE_WIRE_LEN: usize = 74;
 pub const ROUTE_HOPS: usize = 5;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Role {
     EntryGateway,
     Mix,
@@ -39,7 +39,7 @@ pub struct Node {
     pub packet_key: [u8; 32],
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TopologyError {
     BadLength,
     BadMagic,
@@ -54,14 +54,14 @@ pub enum TopologyError {
     UntrustedAuthority,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum RouteError {
     Empty,
     Expired,
     MissingHop,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TopologyStatus {
     Missing,
     Ready,

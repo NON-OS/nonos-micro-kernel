@@ -17,25 +17,21 @@
 use super::errno::{E_BAD_LEN, E_BAD_MAGIC, E_BAD_VERSION};
 use super::header::{Request, HDR_LEN, MAGIC, VERSION};
 
-// Parse the v1 envelope. Returns the request descriptor on
-// success or a wire errno the caller writes back on the
-// response header. The payload buffer is returned by slicing
-// the input at the header boundary.
 pub fn parse(bytes: &[u8]) -> Result<(Request, &[u8]), u16> {
     if bytes.len() < HDR_LEN {
         return Err(E_BAD_LEN);
     }
-    let magic = u32::from_le_bytes(bytes[0..4].try_into().unwrap());
+    let magic = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
     if magic != MAGIC {
         return Err(E_BAD_MAGIC);
     }
-    let version = u16::from_le_bytes(bytes[4..6].try_into().unwrap());
+    let version = u16::from_le_bytes([bytes[4], bytes[5]]);
     if version != VERSION {
         return Err(E_BAD_VERSION);
     }
-    let op = u16::from_le_bytes(bytes[6..8].try_into().unwrap());
-    let request_id = u32::from_le_bytes(bytes[12..16].try_into().unwrap());
-    let payload_len = u32::from_le_bytes(bytes[16..20].try_into().unwrap()) as usize;
+    let op = u16::from_le_bytes([bytes[6], bytes[7]]);
+    let request_id = u32::from_le_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]);
+    let payload_len = u32::from_le_bytes([bytes[16], bytes[17], bytes[18], bytes[19]]) as usize;
     let want = HDR_LEN + payload_len;
     if bytes.len() < want {
         return Err(E_BAD_LEN);

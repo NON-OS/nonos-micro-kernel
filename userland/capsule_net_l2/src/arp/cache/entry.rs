@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const SERVICE_PORT: u32 = 4450;
-pub const REPLY_PORT: u32 = 4451;
-pub const SERVICE_NAME: &str = "net.dns";
-pub const REPLY_INBOX: &str = "endpoint.net.dns.reply";
+use crate::ethernet::MacAddress;
+
+#[derive(Clone, Copy)]
+pub(super) struct Entry {
+    pub(super) ipv4: [u8; 4],
+    pub(super) mac: MacAddress,
+    pub(super) age_ticks: u32,
+}

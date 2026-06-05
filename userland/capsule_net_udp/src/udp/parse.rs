@@ -17,7 +17,7 @@
 use super::checksum::compute;
 use super::header::{UdpHeader, HDR_LEN};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ParseError {
     TooShort,
     LengthMismatch,

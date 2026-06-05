@@ -18,7 +18,7 @@ use super::types::MacAddress;
 
 pub const HDR_LEN: usize = 14;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct EthHeader {
     pub dst: MacAddress,
     pub src: MacAddress,
@@ -38,11 +38,14 @@ impl EthHeader {
         Some(Self { dst, src, ethertype })
     }
 
-    pub fn write(&self, out: &mut [u8]) {
-        debug_assert!(out.len() >= HDR_LEN);
+    pub fn write(&self, out: &mut [u8]) -> bool {
+        if out.len() < HDR_LEN {
+            return false;
+        }
         out[0..6].copy_from_slice(&self.dst);
         out[6..12].copy_from_slice(&self.src);
         out[12..14].copy_from_slice(&self.ethertype.to_be_bytes());
+        true
     }
 }
 

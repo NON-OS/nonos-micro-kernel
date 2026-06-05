@@ -17,27 +17,18 @@
 pub const HDR_LEN: usize = 12;
 
 pub const FLAG_QR: u16 = 0x8000;
-pub const FLAG_AA: u16 = 0x0400;
-pub const FLAG_TC: u16 = 0x0200;
 pub const FLAG_RD: u16 = 0x0100;
-pub const FLAG_RA: u16 = 0x0080;
 pub const RCODE_MASK: u16 = 0x000F;
 
 pub const RCODE_NO_ERROR: u16 = 0;
-pub const RCODE_FORMAT: u16 = 1;
-pub const RCODE_SERVFAIL: u16 = 2;
 pub const RCODE_NXDOMAIN: u16 = 3;
-pub const RCODE_NOTIMP: u16 = 4;
-pub const RCODE_REFUSED: u16 = 5;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct Header {
     pub id: u16,
     pub flags: u16,
     pub qdcount: u16,
     pub ancount: u16,
-    pub nscount: u16,
-    pub arcount: u16,
 }
 
 impl Header {
@@ -50,8 +41,6 @@ impl Header {
             flags: u16::from_be_bytes([message[2], message[3]]),
             qdcount: u16::from_be_bytes([message[4], message[5]]),
             ancount: u16::from_be_bytes([message[6], message[7]]),
-            nscount: u16::from_be_bytes([message[8], message[9]]),
-            arcount: u16::from_be_bytes([message[10], message[11]]),
         })
     }
 

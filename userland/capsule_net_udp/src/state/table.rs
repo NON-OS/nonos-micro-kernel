@@ -59,7 +59,7 @@ impl BindTable {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TableError {
     InUse,
     Full,

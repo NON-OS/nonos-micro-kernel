@@ -18,6 +18,6 @@ mod entry;
 mod globals;
 mod table;
 
-pub use entry::{Entry, RX_DEPTH};
+pub use entry::Entry;
 pub use globals::{ip_port, local_ip, next_ephemeral, set_ip_port, set_local_ip};
-pub use table::{Table, TableError, TABLE};
+pub use table::TABLE;

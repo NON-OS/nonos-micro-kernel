@@ -25,7 +25,7 @@ use super::wire::{L2_HDR_LEN, OP_POLL_FRAME};
 
 pub const MAX_FRAME: usize = 1514;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum RxError {
     SendFailed,
     BadResponse,

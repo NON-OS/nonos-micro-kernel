@@ -14,31 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::cache_type::Cache;
+use super::entry::Entry;
 use crate::ethernet::MacAddress;
 
-pub const ENTRY_CAP: usize = 64;
-
-#[derive(Clone, Copy, Debug)]
-pub struct Entry {
-    pub ipv4: [u8; 4],
-    pub mac: MacAddress,
-    pub age_ticks: u32,
-}
-
-pub struct Cache {
-    entries: [Option<Entry>; ENTRY_CAP],
-    len: usize,
-}
-
 impl Cache {
-    pub const fn new() -> Self {
-        Self { entries: [None; ENTRY_CAP], len: 0 }
-    }
-
-    pub fn lookup(&self, ipv4: &[u8; 4]) -> Option<MacAddress> {
-        self.entries.iter().filter_map(|e| e.as_ref()).find(|e| e.ipv4 == *ipv4).map(|e| e.mac)
-    }
-
     pub fn insert(&mut self, ipv4: [u8; 4], mac: MacAddress) {
         for slot in &mut self.entries {
             if let Some(e) = slot {
@@ -58,23 +38,6 @@ impl Cache {
         if let Some(slot) = self.entries.iter_mut().find(|e| e.is_none()) {
             *slot = Some(Entry { ipv4, mac, age_ticks: 0 });
             self.len += 1;
-        }
-    }
-
-    fn evict_oldest(&mut self) {
-        let mut oldest_idx = None;
-        let mut oldest_age = 0u32;
-        for (i, slot) in self.entries.iter().enumerate() {
-            if let Some(e) = slot {
-                if e.age_ticks >= oldest_age {
-                    oldest_age = e.age_ticks;
-                    oldest_idx = Some(i);
-                }
-            }
-        }
-        if let Some(i) = oldest_idx {
-            self.entries[i] = None;
-            self.len -= 1;
         }
     }
 }

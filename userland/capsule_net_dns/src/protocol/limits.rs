@@ -14,6 +14,5 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const NAME_QUERY_MAX: usize = 255;
-pub const RESPONSE_MAX: usize = 512;
+const RESPONSE_MAX: usize = 512;
 pub const IPC_PAYLOAD_MAX: usize = RESPONSE_MAX + 64;

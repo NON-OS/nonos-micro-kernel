@@ -17,7 +17,7 @@
 pub const HDR_LEN: usize = 8;
 pub(super) const CHECKSUM_OFFSET: usize = 6;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct UdpHeader {
     pub src_port: u16,
     pub dst_port: u16,

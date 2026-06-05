@@ -21,12 +21,8 @@ mod parse;
 mod state;
 mod tcb;
 
-pub use build::{build, BuildError, BuildRequest};
-pub use checksum::compute;
-pub use header::{
-    TcpHeader, CHECKSUM_OFFSET, FLAG_ACK, FLAG_CWR, FLAG_ECE, FLAG_FIN, FLAG_PSH, FLAG_RST,
-    FLAG_SYN, FLAG_URG, HDR_LEN_MAX, HDR_LEN_MIN,
-};
-pub use parse::{parse, ParseError};
+pub use build::{build, BuildRequest};
+pub use header::{TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_PSH, FLAG_RST, FLAG_SYN};
+pub use parse::parse;
 pub use state::State;
-pub use tcb::{Endpoint4, RecvVars, SendVars, Tcb};
+pub use tcb::{Endpoint4, Tcb};

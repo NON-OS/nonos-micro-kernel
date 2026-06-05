@@ -18,7 +18,7 @@ use nonos_libc::mk_ipc_call;
 
 use super::header::{parse, write, HDR_LEN, OP_BIND};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum UdpBindError {
     Send,
     BadResponse,
