@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_yield;
-
 use crate::orchestrator::enumerate::enumerate;
 use crate::protocol::{HDR_LEN, IPC_PAYLOAD_MAX};
 use crate::server::pump_once;
@@ -43,6 +41,5 @@ pub fn run(xhci_port: u32) -> ! {
             refresh_endpoints(xhci_port, &mut eps);
             idle_polls = 0;
         }
-        mk_yield();
     }
 }
