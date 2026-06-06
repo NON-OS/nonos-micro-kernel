@@ -1,0 +1,38 @@
+name: ci-tests
+
+# Reusable host test proof. `nonos-verify tests` runs the property suite (the
+# trust-chain decoders never panic and never false-accept arbitrary input) and
+# the crypto known-answer tests (BLAKE3 reference vectors), and folds the
+# pass/fail counts into the attestation.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-tests-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4  # TODO: pin to commit SHA
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/nonos-setup
+        with:
+          module: tests
+      - name: nonos-verify tests
+        run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- tests
+      - name: Upload tests artifacts
+        if: always()
+        uses: actions/upload-artifact@v4  # TODO: pin to commit SHA
+        with:
+          name: ci-reports-tests
+          path: ci-reports/
+          retention-days: 14

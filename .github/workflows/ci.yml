@@ -29,12 +29,15 @@ jobs:
   adversarial:
     uses: ./.github/workflows/ci-adversarial.yml
 
+  tests:
+    uses: ./.github/workflows/ci-tests.yml
+
   # Heavy QEMU lane: only spend it once the build is known good.
   runtime:
     needs: build
     uses: ./.github/workflows/ci-runtime.yml
 
   attestation:
-    needs: [build, supply-chain, trust-chain, adversarial, runtime]
+    needs: [build, supply-chain, trust-chain, adversarial, tests, runtime]
     if: always()
     uses: ./.github/workflows/ci-attestation.yml
