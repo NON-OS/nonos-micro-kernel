@@ -19,7 +19,8 @@ use super::fill::fill_rect;
 use super::layout::{bottom_dock_rect, TASKBAR_ENTRY_W};
 use crate::state::{Context, LAUNCHER_APPS};
 
-const ICON_SIZE: u32 = 16;
+// Bottom-dock glyphs run 22% larger than the side launcher icons.
+const ICON_SIZE: u32 = 20;
 
 pub fn paint_bottom_taskbar(ctx: &Context) {
     let dock = bottom_dock_rect(ctx.width, ctx.height);

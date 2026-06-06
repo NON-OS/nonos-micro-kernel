@@ -19,7 +19,9 @@ use crate::state::spotlight::{SPOTLIGHT_HEIGHT, SPOTLIGHT_WIDTH};
 pub const MENUBAR_HEIGHT: u32 = 28;
 pub const SIDE_DOCK_WIDTH: u32 = 152;
 pub const SIDE_DOCK_TOP_INSET: u32 = MENUBAR_HEIGHT + 40;
-pub const SIDE_DOCK_HEIGHT: u32 = 220;
+// Hugs the seven launcher entries (top pad + 7 * (entry + gap)) so the
+// bordered panel has no dead space below the last item.
+pub const SIDE_DOCK_HEIGHT: u32 = 202;
 pub const SIDE_ENTRY_H: u32 = 22;
 pub const SIDE_ENTRY_PAD: u32 = 6;
 pub const BOTTOM_DOCK_WIDTH: u32 = 620;
