@@ -19,7 +19,6 @@ pub const E_BAD_MAGIC: u16 = 1;
 pub const E_BAD_VERSION: u16 = 2;
 pub const E_BAD_OP: u16 = 3;
 pub const E_BAD_LEN: u16 = 4;
-pub const E_NO_UPSTREAM: u16 = 5;
 pub const E_TIMEOUT: u16 = 6;
 pub const E_NXDOMAIN: u16 = 7;
 pub const E_SERVFAIL: u16 = 8;

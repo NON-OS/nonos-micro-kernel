@@ -18,4 +18,4 @@ mod header;
 mod seed;
 mod sphinx;
 
-pub use header::{build, ROUTE_HEADER_LEN};
+pub use header::build;

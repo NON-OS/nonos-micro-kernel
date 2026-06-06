@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Default verifier. Refuses every signature, regardless of input.
-//! The capsule ships with this verifier wired in until a real
-//! Ed25519 backend (likely an extension to capsule_crypto)
-//! replaces it; the conservative default keeps `install_ready`
-//! at `false` everywhere a real signature would otherwise be
-//! checked, which is the correct trust posture for a system
-//! that has not yet been told whose signatures to honour.
-
 use super::trait_def::{Verdict, Verifier};
 
 pub struct RejectAll;

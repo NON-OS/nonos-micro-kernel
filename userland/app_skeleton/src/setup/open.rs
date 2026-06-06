@@ -29,29 +29,36 @@ pub fn open_window(
     request_id: &mut u32,
 ) -> Result<WindowBinding, &'static str> {
     let (backing_va, stride, byte_len) = alloc_backing(manifest.width, manifest.height)?;
-    let surface_handle = match register_and_share(
-        backing_va,
-        manifest.width,
-        manifest.height,
-        stride,
-        byte_len,
-    ) {
-        Ok(handle) => handle,
+    let surface_handle =
+        match register_and_share(backing_va, manifest.width, manifest.height, stride, byte_len) {
+            Ok(handle) => handle,
+            Err(e) => {
+                if mk_munmap(backing_va as *mut u8, byte_len as usize) < 0 {
+                    return Err("backing munmap failed");
+                }
+                return Err(e);
+            }
+        };
+    let placement = match announce(peers, manifest, surface_handle, request_id) {
+        Ok(p) => p,
         Err(e) => {
+            if mk_surface_release(surface_handle) < 0 {
+                return Err("surface release failed");
+            }
             if mk_munmap(backing_va as *mut u8, byte_len as usize) < 0 {
                 return Err("backing munmap failed");
             }
             return Err(e);
         }
     };
-    if let Err(e) = announce(peers, manifest, surface_handle, request_id) {
-        if mk_surface_release(surface_handle) < 0 {
-            return Err("surface release failed");
-        }
-        if mk_munmap(backing_va as *mut u8, byte_len as usize) < 0 {
-            return Err("backing munmap failed");
-        }
-        return Err(e);
-    }
-    Ok(WindowBinding { surface_handle, backing_va, stride_words: manifest.width, byte_len })
+    Ok(WindowBinding {
+        surface_handle,
+        backing_va,
+        x: placement.x,
+        y: placement.y,
+        width: placement.width,
+        height: placement.height,
+        stride_words: manifest.width,
+        byte_len,
+    })
 }

@@ -14,19 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Install readiness rules. The verdict is the AND of nine checks;
-//! `install_ready` is `true` only when every check holds. The
-//! function takes the supporting state by reference and never
-//! mutates it; callers can compute the verdict for any release the
-//! store currently holds without side effects.
-
 use nonos_marketplace_abi::{CapsuleRelease, InstallReadiness, ValidationStatus};
 
 use super::arch::RUNNING_ARCH;
 
-/// Lowest kernel ABI this build understands. Bump alongside any
-/// change in `abi/syscalls.toml`'s `nonos-sys-v*` revision; the
-/// release's `kernel_abi_min` must be at or below this number.
 pub const RUNNING_KERNEL_ABI: u32 = 1;
 
 pub fn evaluate(

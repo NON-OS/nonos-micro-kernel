@@ -14,8 +14,4 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const OP_LOAD_INDEX: u16 = 1;
 pub const OP_LIST_APPS: u16 = 2;
-pub const OP_GET_APP: u16 = 3;
-pub const OP_GET_RELEASE: u16 = 4;
-pub const OP_INSTALL_READY: u16 = 5;

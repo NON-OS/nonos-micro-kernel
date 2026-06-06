@@ -42,7 +42,8 @@ pub fn theme_get(port: u32, request_id: u32) -> Result<Theme, &'static str> {
     request.extend_from_slice(&request_id.to_le_bytes());
     request.extend_from_slice(&0u32.to_le_bytes());
     let mut reply = [0u8; HDR_LEN + THEME_PAYLOAD_LEN];
-    let rc = mk_ipc_call(port as u64, request.as_ptr(), request.len(), reply.as_mut_ptr(), reply.len());
+    let rc =
+        mk_ipc_call(port as u64, request.as_ptr(), request.len(), reply.as_mut_ptr(), reply.len());
     if rc < (HDR_LEN + THEME_PAYLOAD_LEN) as i64 {
         return Err("toolkit theme_get short reply");
     }

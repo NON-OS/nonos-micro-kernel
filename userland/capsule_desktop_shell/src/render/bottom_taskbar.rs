@@ -14,19 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::fill::fill_rect;
 use super::draw_app_icon;
+use super::fill::fill_rect;
 use super::layout::{bottom_dock_rect, TASKBAR_ENTRY_W};
-use super::text::draw_overlay_text;
 use crate::state::{Context, LAUNCHER_APPS};
+
+const ICON_SIZE: u32 = 16;
 
 pub fn paint_bottom_taskbar(ctx: &Context) {
     let dock = bottom_dock_rect(ctx.width, ctx.height);
+    let box_top = dock.y + 10;
+    let box_h = dock.height - 20;
     let mut x = dock.x + 12;
     for app in LAUNCHER_APPS.iter() {
-        fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, x, dock.y + 10, TASKBAR_ENTRY_W, dock.height - 20, 0x2241_5164);
-        draw_app_icon(ctx, x + 8, dock.y + 14, app.icon, 16);
-        draw_overlay_text(ctx, x + 28, dock.y + 24, app.label, 0xFFDA_EAF9);
+        fill_rect(
+            ctx.backing_va,
+            ctx.stride,
+            ctx.width,
+            ctx.height,
+            x,
+            box_top,
+            TASKBAR_ENTRY_W,
+            box_h,
+            0x2241_5164,
+        );
+        let icon_x = x + (TASKBAR_ENTRY_W - ICON_SIZE) / 2;
+        let icon_y = box_top + (box_h - ICON_SIZE) / 2;
+        draw_app_icon(ctx, icon_x, icon_y, app.icon, ICON_SIZE);
         x += TASKBAR_ENTRY_W + 6;
     }
 }

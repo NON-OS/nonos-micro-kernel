@@ -18,7 +18,7 @@ use crate::ipv4::seal_at;
 
 use super::types::{CHECKSUM_OFFSET, HDR_LEN};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BuildError {
     OutputTooSmall,
 }

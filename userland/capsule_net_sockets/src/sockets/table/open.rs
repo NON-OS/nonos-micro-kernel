@@ -16,18 +16,18 @@
 
 use core::sync::atomic::Ordering;
 
-use crate::sockets::{Family, Kind, SocketKey};
+use crate::sockets::{Kind, SocketKey};
 
 use super::types::{Socket, Table};
 
 impl Table {
-    pub fn open(&self, pid: u32, family: Family, kind: Kind) -> Option<SocketKey> {
+    pub fn open(&self, pid: u32, kind: Kind) -> Option<SocketKey> {
         let handle = self.next_handle.fetch_add(1, Ordering::Relaxed);
         let key = SocketKey { pid, handle };
         let mut g = self.inner.lock();
         for slot in g.iter_mut() {
             if slot.is_none() {
-                *slot = Some(Socket::new(key, family, kind));
+                *slot = Some(Socket::new(key, kind));
                 return Some(key);
             }
         }
@@ -36,10 +36,9 @@ impl Table {
 }
 
 impl Socket {
-    pub fn new(key: SocketKey, family: Family, kind: Kind) -> Self {
+    pub fn new(key: SocketKey, kind: Kind) -> Self {
         Self {
             key,
-            family,
             kind,
             local: None,
             remote: None,

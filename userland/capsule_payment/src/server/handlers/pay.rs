@@ -63,7 +63,7 @@ pub fn pay(state: &mut State, req: Request<'_>) -> Vec<u8> {
         Err(e) => return encode_response(req.seq, e, &[]),
     };
     if !state.push_receipt(build_record(&f, &signed)) {
-        return encode_response(req.seq, EINVAL, &[]);
+        return encode_response(req.seq, EAGAIN, &[]);
     }
     encode_response(req.seq, 0, &signed.struct_hash)
 }

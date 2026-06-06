@@ -16,6 +16,7 @@
 mod claim;
 mod driver;
 mod irq_bind;
+mod layout;
 mod mmio_map;
 mod require_window;
 mod sequence;

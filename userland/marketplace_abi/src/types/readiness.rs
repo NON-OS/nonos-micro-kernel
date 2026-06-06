@@ -19,7 +19,7 @@
 //! report carries which ones tripped so a UI can explain the
 //! refusal precisely.
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct InstallReadiness {
     /// Final answer: install allowed iff all five flags are true.
     pub install_ready: bool,

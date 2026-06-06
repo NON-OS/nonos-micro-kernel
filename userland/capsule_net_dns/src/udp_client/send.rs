@@ -20,7 +20,7 @@ use nonos_libc::mk_ipc_call;
 
 use super::header::{parse, write, HDR_LEN, OP_SEND};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum UdpSendError {
     Send,
     BadResponse,

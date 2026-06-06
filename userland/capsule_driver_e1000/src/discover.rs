@@ -22,7 +22,7 @@ const MAX_DEVICES: usize = 32;
 const PCI_CLASS_NETWORK: u8 = 0x02;
 const PCI_SUBCLASS_ETHERNET: u8 = 0x00;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Found {
     pub device_id: u64,
     pub irq_line: u8,

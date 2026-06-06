@@ -18,7 +18,7 @@ use crate::protocol::{E_BAD_LEN, E_BAD_MAGIC, E_BAD_VERSION, MAGIC};
 
 pub const HDR_LEN: usize = 20;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Request {
     pub op: u16,
     pub request_id: u32,

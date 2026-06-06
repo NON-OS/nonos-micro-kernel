@@ -16,6 +16,8 @@
 
 pub mod attach_map;
 mod dump;
+#[cfg(feature = "input-probe-inject")]
+pub mod inject;
 pub mod input_ring;
 pub mod release;
 pub mod share;
@@ -25,7 +27,7 @@ pub mod vsync;
 
 pub use attach_map::lookup as lookup_attached_va;
 pub use dump::dump_surface_accounting;
-pub use input_ring::{drain_input, post_input};
+pub use input_ring::{arm_input_waiter, clear_input_waiter, drain_input, input_seq, post_input};
 pub use release::{release_owned_by_pid, release_surface};
 pub use share::{attach_surface, share_surface};
 pub use table::{lookup_owned, register_surface};

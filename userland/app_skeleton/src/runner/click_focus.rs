@@ -14,15 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::input::{InputEvent, InputKind};
 use crate::clients::wm;
+use crate::input::{InputEvent, InputKind};
 
-pub(super) fn handle(
-    event: InputEvent,
-    wm_port: u32,
-    window_id: u32,
-    request_id: &mut u32,
-) {
+pub(super) fn handle(event: InputEvent, wm_port: u32, window_id: u32, request_id: &mut u32) {
     if event.kind != InputKind::ButtonDown {
         return;
     }

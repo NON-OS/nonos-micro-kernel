@@ -28,7 +28,7 @@ pub(crate) struct OpenFrame<'a> {
     pub(crate) ciphertext: &'a [u8],
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum FrameError {
     Short,
     OversizeAad,

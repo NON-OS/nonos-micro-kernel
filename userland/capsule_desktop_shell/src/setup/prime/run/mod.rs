@@ -15,8 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod apply_wallpaper_policy;
+mod build_context;
+mod commit_overlay;
+mod healthcheck_peers;
+mod input_mask;
+mod register_overlay;
 mod require_status;
 mod run;
+mod subscribe_input;
 mod subscribe_input_router;
+mod subscribe_wm;
 
 pub use run::run;

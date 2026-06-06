@@ -15,23 +15,23 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::app::AppManifest;
-use crate::clients::{compositor, input_router, wm};
+use crate::clients::wm;
+use crate::clients::wm::WindowPlacement;
 use crate::discover::Peers;
-use nonos_libc::{mk_debug, mk_yield};
 
-const APP_LAYER_Z: u32 = 2;
-const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
-const INPUT_TOUCH_BIT: u32 = 1 << 7;
-const SUBSCRIBE_ATTEMPTS: usize = 4;
+use super::input_mask::input_mask;
+use super::request_id::bump;
+use super::submit_scene::submit_scene;
+use super::subscribe_input::subscribe_input;
 
 pub(super) fn announce(
     peers: &Peers,
     manifest: &AppManifest,
     surface_handle: u64,
     request_id: &mut u32,
-) -> Result<(), &'static str> {
+) -> Result<WindowPlacement, &'static str> {
     let rid = bump(request_id);
-    wm::window_open(
+    let placement = wm::window_open(
         peers.wm,
         rid,
         manifest.window_id,
@@ -41,40 +41,10 @@ pub(super) fn announce(
         manifest.width,
         manifest.height,
     )?;
-    let rid = bump(request_id);
-    compositor::scene_submit(
-        peers.compositor,
-        rid,
-        surface_handle,
-        manifest.initial_x,
-        manifest.initial_y,
-        manifest.width,
-        manifest.height,
-        APP_LAYER_Z,
-    )?;
-    if subscribe_input(peers.input_router, request_id, input_mask(manifest)).is_err() {
-        mk_debug(b"input subscribe deferred\n".as_ptr(), 24);
+    if let Err(e) = submit_scene(peers, surface_handle, request_id, placement) {
+        let _ = wm::window_close(peers.wm, bump(request_id), manifest.window_id);
+        return Err(e);
     }
-    Ok(())
-}
-
-fn input_mask(manifest: &AppManifest) -> u32 {
-    manifest.input_kind_mask | INPUT_BUTTON_DOWN_BIT | INPUT_TOUCH_BIT
-}
-
-fn subscribe_input(port: u32, request_id: &mut u32, kind_mask: u32) -> Result<(), &'static str> {
-    for _ in 0..SUBSCRIBE_ATTEMPTS {
-        let rid = bump(request_id);
-        if input_router::subscribe(port, rid, kind_mask).is_ok() {
-            return Ok(());
-        }
-        mk_yield();
-    }
-    Err("input subscribe deferred")
-}
-
-fn bump(slot: &mut u32) -> u32 {
-    let id = *slot;
-    *slot = slot.wrapping_add(1).max(1);
-    id
+    let _ = subscribe_input(peers.input_router, request_id, input_mask(manifest));
+    Ok(placement)
 }

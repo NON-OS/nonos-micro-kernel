@@ -14,6 +14,4 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Reply inbox for `driver.rtl8169_0`.
-
 pub const KERNEL_REPLY_ENDPOINT: u64 = 0x1_0000_000E;

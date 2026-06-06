@@ -16,17 +16,9 @@
 
 mod config;
 mod constants;
-mod directory;
-mod reply;
 mod session;
-mod status;
-mod timing;
 mod transfer;
 
-pub use config::{set_authority, set_credential, set_gateway, set_timing, set_topology};
-pub use directory::{resync_directory, sync_directory};
-pub use reply::{create_surb, create_surb_with_ttl, send_reply};
+pub use config::set_gateway;
 pub use session::{close, open};
-pub use status::{topology_status, TopologyStatus};
-pub use timing::{timing_status, TimingStatus};
-pub use transfer::{cover, cover_all, recv, send};
+pub use transfer::{cover, recv, send};

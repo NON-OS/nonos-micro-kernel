@@ -16,17 +16,30 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::constants::{LINE_HEIGHT, TEXT_LEFT, TOP_PADDING};
+use super::constants::{BODY_TOP, FOOTER_H, LINE_HEIGHT, TEXT_LEFT};
 use super::draw_input_line::draw_input_line;
+use super::fetch::draw_fetch;
+use super::footer::draw_footer;
+use super::header::draw_header;
 use crate::term::state::State;
 use crate::term::theme::{BACKGROUND, FOREGROUND};
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
-    let mut y = TOP_PADDING;
-    for row in state.scrollback.visible().rows() {
-        fb.text(TEXT_LEFT, y, row, FOREGROUND);
-        y += LINE_HEIGHT;
+    draw_header(state, fb);
+    let input_y = fb.height.saturating_sub(FOOTER_H + LINE_HEIGHT);
+    if state.fresh {
+        draw_fetch(state, fb);
+    } else {
+        let mut y = BODY_TOP;
+        for row in state.scrollback.visible().rows() {
+            if y + LINE_HEIGHT > input_y {
+                break;
+            }
+            fb.text(TEXT_LEFT, y, row, FOREGROUND);
+            y += LINE_HEIGHT;
+        }
     }
-    draw_input_line(state, fb, y);
+    draw_input_line(state, fb, input_y);
+    draw_footer(fb);
 }

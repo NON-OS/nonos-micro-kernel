@@ -16,6 +16,8 @@
 
 use nonos_libc::mk_ipc_call_timeout;
 
+use crate::protocol::read_i32;
+
 const MAGIC: u32 = 0x4E57_4D50;
 const VERSION: u16 = 1;
 const HDR_LEN: usize = 20;
@@ -30,11 +32,20 @@ pub fn lifecycle_subscribe(port: u32, request_id: u32) -> Result<(), &'static st
     tx[6..8].copy_from_slice(&OP.to_le_bytes());
     tx[12..16].copy_from_slice(&request_id.to_le_bytes());
     let mut rx = [0u8; HDR_LEN + STATUS_LEN];
-    let rc = mk_ipc_call_timeout(port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len(), REPLY_TIMEOUT_MS);
+    let rc = mk_ipc_call_timeout(
+        port as u64,
+        tx.as_ptr(),
+        tx.len(),
+        rx.as_mut_ptr(),
+        rx.len(),
+        REPLY_TIMEOUT_MS,
+    );
     if rc < (HDR_LEN + STATUS_LEN) as i64 {
         return Err("wm lifecycle_subscribe failed");
     }
-    let status = i32::from_le_bytes(rx[HDR_LEN..HDR_LEN + STATUS_LEN].try_into().unwrap());
+    let Some(status) = read_i32(&rx, HDR_LEN) else {
+        return Err("wm short lifecycle response");
+    };
     if status != 0 {
         return Err("wm rejected lifecycle_subscribe");
     }

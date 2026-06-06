@@ -25,7 +25,7 @@ use nonos_libc::mk_service_lookup;
 use crate::ip_client::{read_ipv4, ConfigError};
 use crate::state::STATE;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SetupError {
     IpNotFound,
     IpConfigFailed,

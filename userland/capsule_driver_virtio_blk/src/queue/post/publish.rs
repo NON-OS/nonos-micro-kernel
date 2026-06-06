@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use core::ptr::{read_volatile, write_volatile};
 use crate::queue::layout::Queue;
+use core::ptr::{read_volatile, write_volatile};
 impl Queue {
     pub(super) unsafe fn publish_avail(&self) {
         let avail = self.region_va.add(self.avail_offset).cast::<u16>();

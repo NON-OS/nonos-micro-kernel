@@ -23,6 +23,8 @@ pub struct Context {
     pub drainer: Drainer,
     pub mouse: MouseParser,
     pub mouse_ring: MouseRing,
+    pub last_kbd_seq: u64,
+    pub last_aux_seq: u64,
 }
 impl Context {
     pub fn new(driver: Driver) -> Self {
@@ -32,6 +34,8 @@ impl Context {
             drainer: Drainer::new(),
             mouse: MouseParser::new(),
             mouse_ring: MouseRing::new(),
+            last_kbd_seq: 0,
+            last_aux_seq: 0,
         }
     }
 }

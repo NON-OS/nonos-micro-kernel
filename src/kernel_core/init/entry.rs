@@ -50,6 +50,10 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     if let Err(e) = crate::memory::unified::init_unified_vm() {
         fatal("memory: init_unified_vm failed", e);
     }
+    match crate::arch::x86_64::interrupt::ioapic::init_from_acpi() {
+        Ok(_) => boot_log::ok("NONOS", "broker IO-APIC routing ready"),
+        Err(_) => crate::sys::serial::println(b"[NONOS] broker IO-APIC init failed"),
+    }
     crate::process::init_process_management();
     crate::elf::loader::init_elf_loader();
     crate::crypto::kernel_keys::init();

@@ -15,8 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod close_chrome_windows;
-mod overlay;
 mod open_chrome_windows;
+mod overlay;
 mod peers;
 mod register;
 mod run;

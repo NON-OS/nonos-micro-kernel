@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::term::cwd::Cwd;
 use crate::term::history::History;
 use crate::term::line::Line;
 use crate::term::scrollback::Scrollback;
@@ -22,4 +23,8 @@ pub struct State {
     pub line: Line,
     pub history: History,
     pub scrollback: Scrollback,
+    pub cwd: Cwd,
+    pub owner_pid: u32,
+    pub fresh: bool,
+    pub start_ms: u64,
 }

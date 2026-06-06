@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{announce_live_gui, App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
 
 use super::event::on_event;
 use super::manifest::manifest;
@@ -23,12 +23,11 @@ use super::state::State;
 
 pub struct ProcessManager {
     state: State,
-    announced: bool,
 }
 
 impl ProcessManager {
     pub fn new() -> Self {
-        ProcessManager { state: State::new(), announced: false }
+        ProcessManager { state: State::new() }
     }
 }
 
@@ -43,9 +42,5 @@ impl App for ProcessManager {
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
         paint(&self.state, fb);
-        if !self.announced {
-            announce_live_gui(b"process_manager visible");
-            self.announced = true;
-        }
     }
 }

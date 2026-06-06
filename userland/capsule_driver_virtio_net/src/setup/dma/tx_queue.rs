@@ -14,15 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_dma_map, DmaMapOut, IrqBindOut, MmioMapOut};
+use nonos_libc::{mk_dma_map, DmaMapOut, IrqBindOut};
 
+use super::super::registers::RegisterGrant;
 use super::rollback;
 use crate::constants::VQ_REGION_SIZE;
 
 pub fn map_tx_queue(
     device_id: u64,
     claim_epoch: u64,
-    mmio: &MmioMapOut,
+    reg: &RegisterGrant,
     irq: &IrqBindOut,
     rx_queue: &DmaMapOut,
     rx_buffer: &DmaMapOut,
@@ -32,7 +33,7 @@ pub fn map_tx_queue(
     if r >= 0 {
         return Ok(out);
     }
-    if !rollback::after(device_id, mmio, irq, &[rx_buffer.grant_id, rx_queue.grant_id]) {
+    if !rollback::after(device_id, reg, irq, &[rx_buffer.grant_id, rx_queue.grant_id]) {
         return Err("dma rollback failed (tx queue)");
     }
     Err("dma map failed (tx queue)")

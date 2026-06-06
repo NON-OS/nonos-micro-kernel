@@ -31,7 +31,7 @@ const USERSPACE_MAX: u64 = 0x0000_7FFF_FFFF_FFFF;
 
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum HeapError {
     AlreadyInitialized,
     MmapFailed,

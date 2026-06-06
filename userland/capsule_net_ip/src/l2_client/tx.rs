@@ -22,7 +22,7 @@ use super::header::{parse_response, write_request};
 use super::seq;
 use super::wire::{L2_HDR_LEN, OP_SEND_FRAME};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TxError {
     SendFailed,
     BadResponse,

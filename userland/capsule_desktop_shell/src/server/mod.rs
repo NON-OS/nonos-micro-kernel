@@ -14,9 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod dispatch;
 pub mod handlers;
 mod input;
+mod paint_initial;
+mod ready_to_block;
 pub mod respond;
+mod retry_input_subscription;
+mod retry_wm_subscription;
 pub mod runner;
 mod wm_notify;
 

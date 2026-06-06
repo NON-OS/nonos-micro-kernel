@@ -20,4 +20,4 @@ mod parse;
 mod types;
 
 pub(crate) use parse::{parse_open, parse_seal};
-pub(crate) use types::{FrameError, OpenFrame, SealFrame};
+pub(crate) use types::FrameError;

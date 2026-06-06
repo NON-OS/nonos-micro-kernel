@@ -38,7 +38,8 @@ fn publish_buttons(previous: u8, current: u8) -> bool {
     for bit in 0..3u8 {
         let mask = 1u8 << bit;
         if changed & mask != 0 {
-            let kind = if current & mask != 0 { INPUT_KIND_BUTTON_DOWN } else { INPUT_KIND_BUTTON_UP };
+            let kind =
+                if current & mask != 0 { INPUT_KIND_BUTTON_DOWN } else { INPUT_KIND_BUTTON_UP };
             ok &= post(kind, 0, u32::from(bit) + 1, 0, 0);
         }
     }
@@ -46,6 +47,7 @@ fn publish_buttons(previous: u8, current: u8) -> bool {
 }
 
 fn post(kind: u16, flags: u16, code: u32, dx: i32, dy: i32) -> bool {
-    let ev = InputEvent { kind, flags, code, x: 0, y: 0, delta_x: dx, delta_y: dy, timestamp_ns: 0 };
+    let ev =
+        InputEvent { kind, flags, code, x: 0, y: 0, delta_x: dx, delta_y: dy, timestamp_ns: 0 };
     mk_input_event_post(&ev) >= 0
 }

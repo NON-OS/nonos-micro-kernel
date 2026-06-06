@@ -15,9 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_libc::mk_ipc_call_timeout;
-use nonos_policy_proto::{
-    Field, Header, E_OK, HDR_LEN, IPC_PAYLOAD_MAX, KIND_U8, OP_GET,
-};
+use nonos_policy_proto::{Field, Header, E_OK, HDR_LEN, IPC_PAYLOAD_MAX, KIND_U8, OP_GET};
 
 const REPLY_TIMEOUT_MS: u64 = 200;
 

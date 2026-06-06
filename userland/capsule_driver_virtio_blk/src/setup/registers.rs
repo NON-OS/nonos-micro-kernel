@@ -13,12 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use crate::discover::Found;
+use crate::regs::Regs;
 use nonos_libc::{
     mk_device_release, mk_mmio_map, mk_mmio_unmap, mk_pio_grant, mk_pio_release, MmioMapOut,
     PioGrantOut, BAR_KIND_MMIO, BAR_KIND_PIO,
 };
-use crate::discover::Found;
-use crate::regs::Regs;
 const PAGE_MASK: u64 = 0xFFF;
 #[derive(Clone, Copy)]
 pub enum RegisterGrant {

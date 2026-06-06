@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod fetch_chunk;
 pub mod fetch_image;
 pub mod fetch_size;
 pub mod lookup;

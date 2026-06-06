@@ -15,7 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::catalog_client::lookup_catalog;
-use crate::debug;
 use crate::policy_client::{get_wallpaper, lookup_policy};
 use crate::state::Context;
 
@@ -47,7 +46,5 @@ pub fn tick(ctx: &mut Context) {
     }
     if apply(ctx, wanted) {
         ctx.applied_wallpaper = Some(wanted);
-    } else {
-        debug::marker(b"apply failed");
     }
 }

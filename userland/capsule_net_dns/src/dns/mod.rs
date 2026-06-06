@@ -21,15 +21,9 @@ mod query;
 mod response;
 mod types;
 
-pub use cache::{hash, Cache, CacheEntry, ENTRY_CAP, NAME_BYTES};
-pub use header::{
-    Header, FLAG_AA, FLAG_QR, FLAG_RA, FLAG_RD, FLAG_TC, HDR_LEN, RCODE_FORMAT, RCODE_MASK,
-    RCODE_NOTIMP, RCODE_NO_ERROR, RCODE_NXDOMAIN, RCODE_REFUSED, RCODE_SERVFAIL,
-};
-pub use name::{encode, skip, NameError};
-pub use query::{build_a_query, build_aaaa_query, BuildError};
-pub use response::{first_address, Answer, ParseError};
-pub use types::{
-    Question, ResourceRecord, CLASS_IN, LABEL_MAX, NAME_MAX, POINTER_MASK, TYPE_A, TYPE_AAAA,
-    TYPE_CNAME, TYPE_MX, TYPE_NS, TYPE_PTR, TYPE_TXT,
-};
+pub use cache::Cache;
+pub use header::{Header, HDR_LEN, RCODE_NO_ERROR, RCODE_NXDOMAIN};
+pub use name::{skip, NameError};
+pub use query::{build_a_query, build_aaaa_query};
+pub use response::{first_address, Answer};
+pub use types::{LABEL_MAX, NAME_MAX, POINTER_MASK, TYPE_A, TYPE_AAAA};

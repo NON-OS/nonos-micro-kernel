@@ -20,7 +20,7 @@ pub const DEVICE_FLAG_CLAIMED: u32 = 1 << 0;
 pub const DEVICE_FLAG_DISABLED: u32 = 1 << 1;
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct DeviceRecord {
     pub device_id: u64,
     pub bus_kind: u8,
@@ -42,9 +42,21 @@ pub struct DeviceRecord {
 impl DeviceRecord {
     pub const fn empty() -> Self {
         Self {
-            device_id: 0, bus_kind: 0, pci_class: 0, pci_subclass: 0, pci_progif: 0,
-            class: 0, vendor: 0, device: 0, flags: 0, bar_count: 0, irq_line: 0xFF,
-            irq_pin: 0, _pad1: [0; 1], irq_source: 0, bars: [Bar::empty(); 6],
+            device_id: 0,
+            bus_kind: 0,
+            pci_class: 0,
+            pci_subclass: 0,
+            pci_progif: 0,
+            class: 0,
+            vendor: 0,
+            device: 0,
+            flags: 0,
+            bar_count: 0,
+            irq_line: 0xFF,
+            irq_pin: 0,
+            _pad1: [0; 1],
+            irq_source: 0,
+            bars: [Bar::empty(); 6],
         }
     }
 }

@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Top-level index decoder. Splits the input into `signed_bytes`
-//! (everything up to the trailing signature) and the signature
-//! itself; the caller verifies the signature against the operator
-//! pubkey and only trusts the parsed `MarketplaceIndex` when that
-//! check returns true.
-
 extern crate alloc;
 
 use alloc::vec::Vec;
@@ -33,11 +27,8 @@ use crate::types::{MarketplaceEntry, MarketplaceIndex};
 
 const SUPPORTED_SCHEMA: u32 = 1;
 
-#[derive(Debug)]
 pub struct DecodedIndex<'a> {
     pub index: MarketplaceIndex,
-    /// The exact byte range whose signature must verify against
-    /// `index.operator_pubkey`. Lifetime tied to the input buffer.
     pub signed_bytes: &'a [u8],
 }
 

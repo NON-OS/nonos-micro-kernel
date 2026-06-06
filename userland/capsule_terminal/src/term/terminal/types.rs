@@ -18,5 +18,4 @@ use crate::term::state::State;
 
 pub struct Terminal {
     pub(crate) state: State,
-    pub(crate) announced: bool,
 }

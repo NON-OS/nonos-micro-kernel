@@ -21,4 +21,4 @@ mod stream;
 mod topology_gate;
 mod types;
 
-pub use types::{Table, TableError, TABLE, TABLE_CAP};
+pub use types::{TableError, TABLE};

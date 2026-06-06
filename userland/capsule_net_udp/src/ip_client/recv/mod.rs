@@ -18,4 +18,4 @@ mod poll;
 mod types;
 
 pub use poll::poll_segment;
-pub use types::{RecvError, UdpInbound, MAX_PACKET};
+pub use types::{RecvError, UdpInbound};

@@ -14,9 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{DmaMapOut, IrqBindOut, MmioMapOut};
+use nonos_libc::{DmaMapOut, IrqBindOut};
 
 use super::dma;
+use super::registers::RegisterGrant;
 
 pub struct DmaSet {
     pub rx_queue: DmaMapOut,
@@ -28,13 +29,13 @@ pub struct DmaSet {
 pub fn map(
     device_id: u64,
     claim_epoch: u64,
-    mmio: &MmioMapOut,
+    reg: &RegisterGrant,
     irq: &IrqBindOut,
 ) -> Result<DmaSet, &'static str> {
-    let rx_queue = dma::map_rx_queue(device_id, claim_epoch, mmio, irq)?;
-    let rx_buffer = dma::map_rx_buffers(device_id, claim_epoch, mmio, irq, &rx_queue)?;
-    let tx_queue = dma::map_tx_queue(device_id, claim_epoch, mmio, irq, &rx_queue, &rx_buffer)?;
+    let rx_queue = dma::map_rx_queue(device_id, claim_epoch, reg, irq)?;
+    let rx_buffer = dma::map_rx_buffers(device_id, claim_epoch, reg, irq, &rx_queue)?;
+    let tx_queue = dma::map_tx_queue(device_id, claim_epoch, reg, irq, &rx_queue, &rx_buffer)?;
     let tx_buffer =
-        dma::map_tx_buffer(device_id, claim_epoch, mmio, irq, &rx_queue, &rx_buffer, &tx_queue)?;
+        dma::map_tx_buffer(device_id, claim_epoch, reg, irq, &rx_queue, &rx_buffer, &tx_queue)?;
     Ok(DmaSet { rx_queue, rx_buffer, tx_queue, tx_buffer })
 }

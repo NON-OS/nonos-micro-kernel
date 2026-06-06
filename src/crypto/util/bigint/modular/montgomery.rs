@@ -19,14 +19,16 @@ use super::super::BigUint;
 use alloc::vec::Vec;
 
 impl BigUint {
-    pub(crate) fn montgomery_inverse(m0: u64) -> u64 {
-        debug_assert!(m0 & 1 == 1);
+    pub(crate) fn montgomery_inverse(m0: u64) -> Option<u64> {
+        if m0 & 1 != 1 {
+            return None;
+        }
 
         let mut y = 1u64;
         for _ in 0..6 {
             y = y.wrapping_mul(2u64.wrapping_sub(m0.wrapping_mul(y)));
         }
-        y.wrapping_neg()
+        Some(y.wrapping_neg())
     }
 
     pub(crate) fn montgomery_reduce(t: &Self, modulus: &Self, m_inv: u64) -> Self {

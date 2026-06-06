@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_ipc_send;
 use crate::constants::{
     STATUS_AUX_DATA, STATUS_OFFSET, STATUS_OUTPUT_FULL, STATUS_PARITY, STATUS_TIMEOUT,
 };
@@ -24,6 +23,7 @@ use crate::protocol::{
 };
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
+use nonos_libc::mk_ipc_send;
 pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
     let status = match read_port(ctx.driver.pio_grant_id, STATUS_OFFSET) {
         Some(v) => v,

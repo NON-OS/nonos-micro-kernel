@@ -14,14 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use core::mem::ManuallyDrop;
 use spin::{RwLockReadGuard, RwLockWriteGuard};
 
 pub struct IrqRwLockReadGuard<'a, T> {
-    pub(super) inner: Option<RwLockReadGuard<'a, T>>,
+    pub(super) inner: ManuallyDrop<RwLockReadGuard<'a, T>>,
     pub(super) restore: bool,
 }
 
 pub struct IrqRwLockWriteGuard<'a, T> {
-    pub(super) inner: Option<RwLockWriteGuard<'a, T>>,
+    pub(super) inner: ManuallyDrop<RwLockWriteGuard<'a, T>>,
     pub(super) restore: bool,
 }

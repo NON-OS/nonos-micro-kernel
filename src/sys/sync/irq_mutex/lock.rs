@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::arch::x86_64::idt::{are_enabled, disable};
+use core::mem::ManuallyDrop;
 
 use super::guard::IrqMutexGuard;
 use super::state::IrqMutex;
@@ -26,6 +27,6 @@ impl<T> IrqMutex<T> {
             disable();
         }
         let guard = self.inner.lock();
-        IrqMutexGuard { inner: Some(guard), restore: were_enabled }
+        IrqMutexGuard { inner: ManuallyDrop::new(guard), restore: were_enabled }
     }
 }

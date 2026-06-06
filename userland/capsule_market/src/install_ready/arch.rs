@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Running-arch identifier. Compile-time constant; resolves to one
-//! of the canonical triples documented in
-//! `abi/capsule_package.schema.json`. A future port will gain a
-//! new branch here, never an edit to a runtime probe.
-
 #[cfg(target_arch = "x86_64")]
 pub const RUNNING_ARCH: &str = "x86_64-nonos";
 
@@ -28,11 +23,7 @@ pub const RUNNING_ARCH: &str = "aarch64-nonos";
 #[cfg(target_arch = "riscv64")]
 pub const RUNNING_ARCH: &str = "riscv64-nonos";
 
-#[cfg(not(any(
-    target_arch = "x86_64",
-    target_arch = "aarch64",
-    target_arch = "riscv64"
-)))]
+#[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64", target_arch = "riscv64")))]
 compile_error!(
     "capsule_market: running arch has no canonical NONOS triple; \
      update arch.rs alongside the new arch port"

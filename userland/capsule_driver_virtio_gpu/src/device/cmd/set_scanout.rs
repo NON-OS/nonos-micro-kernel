@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::constants::{VG_CMD_SET_SCANOUT, VG_MAX_SCANOUTS, VG_RESP_OK_NODATA};
-use crate::device::virtqueue::ControlQueue;
 use super::hdr::{Hdr, HDR_LEN, RESP_HDR_LEN};
 use super::transfer_to_host_2d::Rect;
+use crate::constants::{VG_CMD_SET_SCANOUT, VG_MAX_SCANOUTS, VG_RESP_OK_NODATA};
+use crate::device::virtqueue::ControlQueue;
 const BODY_LEN: usize = 24;
 const REQ_LEN: usize = HDR_LEN + BODY_LEN;
 pub fn set_scanout(

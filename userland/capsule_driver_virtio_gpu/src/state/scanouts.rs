@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use core::cell::Cell;
 use crate::constants::VG_MAX_SCANOUTS;
+use core::cell::Cell;
 #[derive(Clone, Copy, Default)]
 pub struct Scanout {
     pub x: u32,

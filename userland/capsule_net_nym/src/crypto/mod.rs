@@ -26,4 +26,4 @@ pub use ecdh::{x25519_public, x25519_shared};
 pub use hash::blake3;
 pub use kdf::{hkdf_sha256, hmac_sha256};
 pub use random::fill_random;
-pub use types::{CryptoError, Key, Nonce, KEY_BYTES, NONCE_BYTES, TAG_BYTES};
+pub use types::{Key, Nonce, TAG_BYTES};

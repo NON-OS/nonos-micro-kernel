@@ -24,9 +24,7 @@ use super::layout::VALUE_LEFT;
 
 pub fn paint_value_enum(fb: &mut PaintBuffer, y: u32, field: Field, value: Option<u8>) {
     fb.text(VALUE_LEFT, y, b"<", VALUE_FG);
-    let label: &[u8] = value
-        .and_then(|v| enum_label(field, v))
-        .unwrap_or(b"...");
+    let label: &[u8] = value.and_then(|v| enum_label(field, v)).unwrap_or(b"...");
     fb.text(VALUE_LEFT + 18, y, label, VALUE_FG);
     fb.text(VALUE_LEFT + 180, y, b">", VALUE_FG);
     if let (Some(v), Some(table)) = (value, enum_table(field)) {

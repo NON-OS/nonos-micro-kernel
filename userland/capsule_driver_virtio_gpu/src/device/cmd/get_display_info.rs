@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use super::hdr::{Hdr, HDR_LEN, RESP_HDR_LEN};
 use crate::constants::{VG_CMD_GET_DISPLAY_INFO, VG_MAX_SCANOUTS, VG_RESP_OK_DISPLAY_INFO};
 use crate::device::virtqueue::ControlQueue;
 use crate::protocol::le_u32;
-use super::hdr::{Hdr, HDR_LEN, RESP_HDR_LEN};
 const DISPLAY_ONE_LEN: usize = 24;
 const RESP_LEN: usize = RESP_HDR_LEN + DISPLAY_ONE_LEN * VG_MAX_SCANOUTS;
 #[derive(Clone, Copy, Default)]

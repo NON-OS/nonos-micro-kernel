@@ -18,7 +18,7 @@ use crate::protocol::{E_BAD_LEN, E_BAD_MAGIC, E_BAD_VERSION, MAGIC};
 
 pub const HDR_LEN: usize = 20;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Request {
     pub op: u16,
     pub request_id: u32,
@@ -28,15 +28,15 @@ pub fn parse(buf: &[u8]) -> Result<(Request, &[u8]), u16> {
     if buf.len() < HDR_LEN {
         return Err(E_BAD_LEN);
     }
-    if u32::from_le_bytes(buf[0..4].try_into().unwrap()) != MAGIC {
+    if u32::from_le_bytes([buf[0], buf[1], buf[2], buf[3]]) != MAGIC {
         return Err(E_BAD_MAGIC);
     }
-    if u16::from_le_bytes(buf[4..6].try_into().unwrap()) != 1 {
+    if u16::from_le_bytes([buf[4], buf[5]]) != 1 {
         return Err(E_BAD_VERSION);
     }
-    let op = u16::from_le_bytes(buf[6..8].try_into().unwrap());
-    let request_id = u32::from_le_bytes(buf[12..16].try_into().unwrap());
-    let payload_len = u32::from_le_bytes(buf[16..20].try_into().unwrap()) as usize;
+    let op = u16::from_le_bytes([buf[6], buf[7]]);
+    let request_id = u32::from_le_bytes([buf[12], buf[13], buf[14], buf[15]]);
+    let payload_len = u32::from_le_bytes([buf[16], buf[17], buf[18], buf[19]]) as usize;
     let want = HDR_LEN + payload_len;
     if buf.len() < want {
         return Err(E_BAD_LEN);

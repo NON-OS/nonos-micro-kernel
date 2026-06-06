@@ -23,6 +23,7 @@ use crate::term::state::State;
 use crate::term::util::copy_into;
 
 pub fn on_enter(state: &mut State) -> EventOutcome {
+    state.fresh = false;
     let body = state.line.as_bytes();
     let mut entered = [0u8; COLS];
     let n = body.len();
@@ -34,7 +35,7 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
     state.scrollback.push_line(&echo[..k]);
     state.history.push(&entered[..n]);
     let argv = command::parse(&entered[..n]);
-    let outcome = command::run(&mut state.history, &mut state.scrollback, &argv);
+    let outcome = command::run(state, &argv);
     state.line.clear();
     state.scrollback.jump_bottom();
     match outcome {

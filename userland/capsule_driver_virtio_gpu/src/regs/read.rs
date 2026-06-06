@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use core::ptr::read_volatile;
 use super::io::RegIo;
 use super::pio;
 use super::state::Regs;
+use core::ptr::read_volatile;
 impl Regs {
     #[inline]
     pub unsafe fn r8(self, offset: usize) -> u8 {

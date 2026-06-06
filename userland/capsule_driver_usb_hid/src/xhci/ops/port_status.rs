@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! PORT_STATUS call. Request: empty body. Reply payload (after
-//! status): `[0]=port_count, [1..4]=resv`, then `port_count` 8-byte
-//! entries each `[0]=port_id,[1..4]=resv,[4..8]=portsc_raw`.
-//! Mirrors `xhci/server/handlers/port_status.rs`.
-
 use crate::xhci::call::{call, XhciClientError};
 use crate::xhci::wire::{HDR_LEN, OP_PORT_STATUS, STATUS_LEN};
 
@@ -51,7 +46,7 @@ pub fn port_status(
     for i in 0..count {
         out[i] = PortSnapshot {
             port_id: resp[o],
-            portsc_raw: u32::from_le_bytes([resp[o+4], resp[o+5], resp[o+6], resp[o+7]]),
+            portsc_raw: u32::from_le_bytes([resp[o + 4], resp[o + 5], resp[o + 6], resp[o + 7]]),
         };
         o += ENTRY;
     }

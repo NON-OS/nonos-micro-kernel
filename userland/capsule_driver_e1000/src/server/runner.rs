@@ -14,19 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `driver.e1000_0` service loop. One in-flight request at a time.
-//! The receive buffer holds the 20-byte envelope plus a TX payload;
-//! the transmit buffer holds the envelope plus the largest possible
-//! RX reply.
-
 use alloc::vec;
 
 use nonos_libc::mk_ipc_recv;
 
 use crate::constants::MAX_ETHERNET_FRAME;
 use crate::protocol::{
-    decode_request, E_INVAL, HDR_LEN, OP_HEALTHCHECK, OP_LINK_STATUS, OP_MAC_ADDRESS, OP_RX_PACKET,
-    OP_STATS, OP_TX_PACKET, RESP_HDR_LEN, RX_PAYLOAD_PREFIX_LEN, STATS_PAYLOAD_LEN, STATUS_LEN,
+    decode_request, E_INVAL, E_MSGSIZE, HDR_LEN, OP_HEALTHCHECK, OP_LINK_STATUS, OP_MAC_ADDRESS,
+    OP_RX_PACKET, OP_STATS, OP_TX_PACKET, RESP_HDR_LEN, RX_PAYLOAD_PREFIX_LEN, STATS_PAYLOAD_LEN,
+    STATUS_LEN,
 };
 use crate::server::error::{reply_decode_failed, reply_with_status};
 use crate::server::handlers;
@@ -55,7 +51,12 @@ pub fn run(driver: &mut Driver) -> ! {
                 continue;
             }
         };
-        let body = &rx[HDR_LEN..len];
+        let body_end = HDR_LEN.saturating_add(req.payload_len as usize);
+        if body_end != len {
+            reply_with_status(&mut tx, &req, E_MSGSIZE);
+            continue;
+        }
+        let body = &rx[HDR_LEN..body_end];
         match req.op {
             OP_HEALTHCHECK => handlers::health::handle(&req, &mut tx),
             OP_LINK_STATUS => handlers::link_status::handle(driver, &req, &mut tx),

@@ -19,7 +19,6 @@
 
 extern crate alloc;
 
-mod debug;
 mod clients;
 mod protocol;
 mod route;
@@ -34,6 +33,5 @@ pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
-    debug::marker(b"boot");
     server::run();
 }

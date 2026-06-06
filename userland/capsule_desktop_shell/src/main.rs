@@ -20,7 +20,6 @@
 extern crate alloc;
 
 mod compositor_client;
-mod debug;
 mod input_router_client;
 mod market_client;
 mod protocol;
@@ -28,38 +27,17 @@ mod render;
 mod server;
 mod setup;
 mod state;
+mod wait_for_setup;
 mod wallpaper_client;
 mod wm_client;
 
-use nonos_libc::{heap_init, mk_exit, mk_yield};
+use nonos_libc::{heap_init, mk_exit};
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
-    debug::marker(b"start");
     if heap_init().is_err() {
-        debug::marker(b"heap fail");
         mk_exit(1);
     }
-    debug::marker(b"boot");
-    let ctx = wait_for_setup();
-    debug::marker(b"overlay attached");
+    let ctx = wait_for_setup::wait_for_setup();
     server::run(ctx);
-}
-
-fn wait_for_setup() -> crate::state::Context {
-    let mut last: &'static str = "";
-    loop {
-        match setup::run() {
-            Ok(ctx) => return ctx,
-            Err(e) => {
-                if e != last {
-                    debug::marker(e.as_bytes());
-                    last = e;
-                }
-                for _ in 0..64 {
-                    mk_yield();
-                }
-            }
-        }
-    }
 }

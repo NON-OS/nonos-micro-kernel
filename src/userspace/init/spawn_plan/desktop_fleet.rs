@@ -15,13 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub(super) fn spawn() {
-    spawn_input_router();
-    spawn_compositor();
+    spawn_gui_core();
     spawn_wm();
     spawn_wallpaper_catalog();
     spawn_wallpaper();
     spawn_shell();
     super::desktop_services::spawn();
+}
+
+pub(super) fn spawn_gui_core() {
+    spawn_input_router();
+    spawn_compositor();
 }
 
 #[cfg(feature = "nonos-capsule-wallpaper-catalog")]
@@ -40,6 +44,9 @@ fn spawn_wallpaper_catalog() {}
 #[cfg(feature = "nonos-capsule-input-router")]
 fn spawn_input_router() {
     use crate::userspace::capsule_input_router as c;
+    if c::shared_state().is_alive() {
+        return;
+    }
     super::boot::capsule(
         "INPUT-ROUTER",
         "input_router",
@@ -53,6 +60,9 @@ fn spawn_input_router() {}
 #[cfg(feature = "nonos-capsule-compositor")]
 fn spawn_compositor() {
     use crate::userspace::capsule_compositor as c;
+    if c::shared_state().is_alive() {
+        return;
+    }
     super::boot::capsule("COMPOSITOR", "compositor", c::spawn_compositor_capsule, c::shared_state);
 }
 #[cfg(not(feature = "nonos-capsule-compositor"))]

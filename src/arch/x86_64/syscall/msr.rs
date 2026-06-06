@@ -82,15 +82,22 @@ pub fn write_msr(msr_addr: u32, value: u64) {
 //   SYSRET SS = (user_data_raw - 8) + 8 | 3 = user_data_raw | 3
 //   SYSRET CS = (user_data_raw - 8) + 16 | 3 = user_data_raw + 8 | 3
 // which spells USER_DATA (0x1B) and USER_CODE (0x23).
-pub fn setup_star(kernel_code_raw: u16, user_data_raw: u16) {
-    debug_assert!(kernel_code_raw & 0x7 == 0, "kernel CS not RPL=0/aligned");
-    debug_assert!(user_data_raw & 0x7 == 0, "user data not RPL=0/aligned");
-    debug_assert!(user_data_raw >= 8, "user data must be > null + 8");
+pub fn setup_star(kernel_code_raw: u16, user_data_raw: u16) -> Result<(), &'static str> {
+    if kernel_code_raw & 0x7 != 0 {
+        return Err("kernel CS selector is not RPL0 aligned");
+    }
+    if user_data_raw & 0x7 != 0 {
+        return Err("user data selector is not RPL0 aligned");
+    }
+    if user_data_raw < 8 {
+        return Err("user data selector is below SYSRET base");
+    }
 
     let sysret_base = (user_data_raw - 8) as u64;
     let syscall_field = (kernel_code_raw as u64) << 32;
     let sysret_field = sysret_base << 48;
     write_msr(IA32_STAR, syscall_field | sysret_field);
+    Ok(())
 }
 
 pub fn setup_lstar(entry_point: u64) {

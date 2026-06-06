@@ -23,7 +23,7 @@ use crate::sockets::{Kind, LocalAddr4, SocketKey, SOCKETS};
 use crate::state;
 
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
-    let (handle, ip, port) = match parse_body(body) {
+    let (handle, port) = match parse_body(body) {
         Ok(v) => v,
         Err(e) => return status(pid, req, e, tx),
     };
@@ -32,15 +32,17 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         if s.kind == Kind::Datagram && udp::bind(state::udp(), port).is_err() {
             return E_NO_TRANSPORT;
         }
-        s.local = Some(LocalAddr4 { ip, port });
+        s.local = Some(LocalAddr4 { port });
         s.bound = true;
         E_OK
     });
     status(pid, req, result.map_or(E_NO_HANDLE, |errno| errno), tx);
 }
 
-fn parse_body(body: &[u8]) -> Result<(u32, [u8; 4], u16), u16> {
-    Ok((u32_at(body, 0)?, ip4_at(body, 4)?, u16_at(body, 8)?))
+fn parse_body(body: &[u8]) -> Result<(u32, u16), u16> {
+    let handle = u32_at(body, 0)?;
+    let _ = ip4_at(body, 4)?;
+    Ok((handle, u16_at(body, 8)?))
 }
 
 fn status(pid: u32, req: &Request, errno: u16, tx: &mut [u8]) {

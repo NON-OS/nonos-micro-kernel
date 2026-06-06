@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
 pub struct Rect {
     pub x: u32,
     pub y: u32,
@@ -28,5 +28,12 @@ impl Rect {
             && py >= self.y
             && px < self.x.saturating_add(self.width)
             && py < self.y.saturating_add(self.height)
+    }
+
+    pub fn overlaps(&self, other: &Rect) -> bool {
+        self.x < other.x.saturating_add(other.width)
+            && self.x.saturating_add(self.width) > other.x
+            && self.y < other.y.saturating_add(other.height)
+            && self.y.saturating_add(self.height) > other.y
     }
 }

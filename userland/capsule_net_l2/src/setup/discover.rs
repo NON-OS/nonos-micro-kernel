@@ -22,13 +22,13 @@ use nonos_libc::mk_service_lookup;
 const NIC_CANDIDATES: &[&str] =
     &["driver.virtio_net0", "driver.e1000_0", "driver.rtl8169_0", "driver.rtl8139_0"];
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Nic {
     pub port: u32,
     pub pid: u32,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum DiscoverError {
     NotFound,
 }

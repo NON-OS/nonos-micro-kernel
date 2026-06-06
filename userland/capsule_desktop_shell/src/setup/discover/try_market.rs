@@ -15,7 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use core::sync::atomic::Ordering;
-use nonos_libc::mk_debug;
 
 pub fn try_market() -> u32 {
     if super::constants::MARKET_DISABLED.load(Ordering::Relaxed) {
@@ -25,10 +24,6 @@ pub fn try_market() -> u32 {
         Ok(port) => port,
         Err(_) => {
             super::constants::MARKET_DISABLED.store(true, Ordering::Relaxed);
-            mk_debug(
-                super::constants::MARKET_UNAVAILABLE.as_ptr(),
-                super::constants::MARKET_UNAVAILABLE_LEN,
-            );
             0
         }
     }

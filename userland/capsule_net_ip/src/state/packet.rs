@@ -18,7 +18,7 @@ use alloc::vec::Vec;
 
 use crate::ipv4::Ipv4Addr;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Packet {
     pub src: Ipv4Addr,
     pub dst: Ipv4Addr,

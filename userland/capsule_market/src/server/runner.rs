@@ -14,10 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `market.index` service loop. One in-flight request at a time;
-//! the receive buffer carries the full marketplace index inline on
-//! `OP_LOAD_INDEX`, so it is sized for that case.
-
 extern crate alloc;
 
 use alloc::vec;
@@ -25,8 +21,8 @@ use alloc::vec;
 use nonos_libc::mk_ipc_recv;
 
 use crate::protocol::{
-    decode_request, HDR_LEN, OP_GET_APP, OP_GET_RELEASE, OP_HEALTHCHECK, OP_INSTALL_READY,
-    OP_LIST_APPS, OP_LOAD_INDEX, RX_BUF_LEN, TX_BUF_LEN, E_INVAL, E_MSGSIZE,
+    decode_request, E_INVAL, E_MSGSIZE, HDR_LEN, OP_GET_APP, OP_GET_RELEASE, OP_HEALTHCHECK,
+    OP_INSTALL_READY, OP_LIST_APPS, OP_LOAD_INDEX, RX_BUF_LEN, TX_BUF_LEN,
 };
 use crate::server::error::{reply_decode_failed, reply_status};
 use crate::server::handlers;

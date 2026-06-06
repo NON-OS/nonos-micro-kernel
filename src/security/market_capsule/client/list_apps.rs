@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `OP_LIST_APPS`. Returns the count of accepted listings; the
-//! kernel client does not parse listing fields here. A caller that
-//! needs the full record uses [`super::get_app::get_app`] with the
-//! listing id it cares about.
-
 use super::super::capability::gate_call;
 use super::super::error::MarketError;
 use super::super::protocol::{encode_request, OP_LIST_APPS};
@@ -38,6 +33,6 @@ pub fn list_apps() -> Result<u32, MarketError> {
     if resp.body.len() < 4 {
         return Err(MarketError::ProtocolMismatch);
     }
-    let count = u32::from_le_bytes(resp.body[0..4].try_into().unwrap());
+    let count = u32::from_le_bytes([resp.body[0], resp.body[1], resp.body[2], resp.body[3]]);
     Ok(count)
 }

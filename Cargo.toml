@@ -74,6 +74,8 @@ nonos-capsule-compositor        = []
 nonos-capsule-desktop-shell     = []
 nonos-capsule-input-router      = []
 nonos-capsule-input-proof       = []
+nonos-capsule-input-probe       = []
+nonos-capsule-setup-wizard      = []
 nonos-capsule-wm                = []
 nonos-capsule-toolkit           = []
 nonos-capsule-login             = []
@@ -158,6 +160,10 @@ nonos-dev-unverified-capsules = []
 # this on; production builds keep it off so the audit cost stays
 # bounded to the lanes that watch serial.
 nonos-user-entry-proof = []
+
+# Arms the kernel-side synthetic scancode injector consumed by the
+# input-probe harness. Off by default; opt-in on the injection lane.
+input-probe-inject = []
 
 # Boot smoketests. Each one drives a real round trip on the boot
 # serial and emits PASS/FAIL markers consumed by the matching
@@ -466,6 +472,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-driver-virtio-net",
   "nonos-capsule-driver-ps2-input",
   "nonos-capsule-driver-xhci",
+  "nonos-capsule-driver-usb-hid",
   "nonos-capsule-net-l2",
   "nonos-capsule-net-ip",
   "nonos-capsule-net-udp",
@@ -664,6 +671,28 @@ microkernel-input-e2e-xhci = [
   "nonos-capsule-toolkit",
   "nonos-capsule-power",
   "nonos-capsule-input-proof",
+]
+
+# Minimal input-probe fleet (Task 0.4). The narrowest set that can
+# prove a keystroke reaching a focused capsule: PS/2 + virtio-gpu
+# drivers, input_router, compositor, and the input_probe surface.
+# NO window manager, shell, or other GUI apps — the probe is the sole
+# focusable window, so input never starves behind the full fleet.
+microkernel-input-probe = [
+  "microkernel-core",
+  "nonos-production",
+  "nonos-user-entry-proof",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-driver-ps2-input",
+  "nonos-capsule-input-router",
+  "nonos-capsule-driver-virtio-gpu",
+  "nonos-capsule-compositor",
+  "nonos-capsule-input-probe",
+]
+
+microkernel-setup-wizard = [
+  "microkernel-desktop-gui",
+  "nonos-capsule-setup-wizard",
 ]
 
 microkernel-driver-e1000-smoketest = [

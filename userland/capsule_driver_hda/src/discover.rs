@@ -22,7 +22,7 @@ const MAX_DEVICES: usize = 32;
 const PCI_CLASS_MULTIMEDIA: u8 = 0x04;
 const PCI_SUBCLASS_HDA: u8 = 0x03;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Found {
     pub device_id: u64,
     pub irq_line: u8,

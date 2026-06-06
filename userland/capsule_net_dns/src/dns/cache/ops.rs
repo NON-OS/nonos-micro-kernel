@@ -25,12 +25,16 @@ impl Cache {
         self.entries
             .iter()
             .flatten()
-            .find_map(|e| (e.name_hash == h && now_ms < e.expires_ms).then_some(e.ipv4))
+            .find_map(|e| {
+                let n = e.name_len as usize;
+                let same = n == name.len() && e.name[..n] == *name.as_bytes();
+                (e.name_hash == h && same && now_ms < e.expires_ms).then_some(e.ipv4)
+            })
     }
 
     pub fn insert(&mut self, name: &str, ipv4: [u8; 4], ttl_ms: u64, now_ms: u64) {
         let entry = entry_for(name, ipv4, ttl_ms, now_ms);
-        if let Some(slot) = self.find_slot(entry.name_hash) {
+        if let Some(slot) = self.find_slot(&entry) {
             *slot = Some(entry);
             return;
         }
@@ -46,8 +50,10 @@ impl Cache {
         }
     }
 
-    fn find_slot(&mut self, h: u64) -> Option<&mut Option<CacheEntry>> {
-        self.entries.iter_mut().find(|e| e.as_ref().map_or(true, |x| x.name_hash == h))
+    fn find_slot(&mut self, entry: &CacheEntry) -> Option<&mut Option<CacheEntry>> {
+        self.entries.iter_mut().find(|e| {
+            e.as_ref().map_or(true, |x| x.name_hash == entry.name_hash && x.name == entry.name)
+        })
     }
 }
 

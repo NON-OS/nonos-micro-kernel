@@ -15,7 +15,5 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod bytes;
-mod len;
 
 pub use bytes::PROMPT_BYTES;
-pub use len::prompt_len;

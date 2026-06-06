@@ -39,7 +39,7 @@ impl Table {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TableError {
     Full,
     NotFound,

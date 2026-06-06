@@ -53,8 +53,12 @@ impl DmaEngine {
     fn do_alloc(&mut self, size: usize, coherent: bool) -> PciResult<DmaBuffer> {
         let phys = crate::memory::dma::allocate_dma_buffer(size)
             .map_err(|_| PciError::DmaAllocationFailed { size })?;
+        let Some(virt_addr) = crate::memory::phys_to_virt(phys) else {
+            let _ = crate::memory::dma::free_dma_buffer(phys, size);
+            return Err(PciError::DmaAllocationFailed { size });
+        };
         Ok(DmaBuffer {
-            virt_addr: crate::memory::phys_to_virt(phys),
+            virt_addr,
             phys_addr: phys,
             size,
             coherent,

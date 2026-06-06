@@ -14,12 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use core::mem::ManuallyDrop;
 use spin::MutexGuard;
 
-// Drop semantics live in `drop.rs`: release the inner spin lock first
-// (so peer CPUs can grab it) then restore the prior local IF state if
-// it was on when lock() ran.
 pub struct IrqMutexGuard<'a, T> {
-    pub(super) inner: Option<MutexGuard<'a, T>>,
+    pub(super) inner: ManuallyDrop<MutexGuard<'a, T>>,
     pub(super) restore: bool,
 }

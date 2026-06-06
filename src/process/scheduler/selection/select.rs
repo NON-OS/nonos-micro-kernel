@@ -86,52 +86,24 @@ pub fn select_next_process() -> Option<u32> {
 
 fn select_by_priority(pids: &[u32], last: u32, current: u32, prio: Priority) -> Option<u32> {
     use crate::process::nonos_core::{ProcessState, PROCESS_TABLE};
-    // Round-robin anchor: resume the scan just after the last-scheduled pid. The
-    // running pid is pulled out of the queue while it runs, so `last` is usually
-    // absent; falling back to 0 there would restart every scan at the front and
-    // starve pids near the tail. Continue at the first pid past `last` instead so
-    // the rotation keeps advancing across the whole queue.
-    let start = match pids.iter().position(|&p| p == last) {
-        Some(i) => i + 1,
-        None => pids.iter().position(|&p| p > last).unwrap_or(0),
-    };
-    for &pid in pids[start..].iter().chain(pids[..start].iter()) {
+    let mut after: Option<u32> = None;
+    let mut lowest: Option<u32> = None;
+    for &pid in pids.iter() {
         if pid == current {
             continue;
         }
-        if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
-            let state = *pcb.state.lock();
-            let proc_prio = *pcb.priority.lock();
-            if (pid == 0x17 || pid == 9) && prio == Priority::Normal {
-                static SHOWN_TGT: AtomicU32 = AtomicU32::new(0);
-                if SHOWN_TGT.fetch_add(1, Ordering::Relaxed) < 60 {
-                    let state_tag: &[u8] = match state {
-                        ProcessState::New => b"new",
-                        ProcessState::Ready => b"ready",
-                        ProcessState::Running => b"running",
-                        ProcessState::Sleeping => b"sleeping",
-                        ProcessState::Stopped => b"stopped",
-                        ProcessState::Zombie(_) => b"zombie",
-                        ProcessState::Terminated(_) => b"terminated",
-                    };
-                    let prio_match: &[u8] = if proc_prio == prio { b"prio=ok" } else { b"prio=mismatch" };
-                    crate::sys::serial::trace(b"[SEL] pid=");
-                    crate::sys::serial::trace_hex(pid as u64);
-                    crate::sys::serial::trace(b" state=");
-                    crate::sys::serial::trace(state_tag);
-                    crate::sys::serial::trace(b" ");
-                    crate::sys::serial::trace(prio_match);
-                    crate::sys::serial::trace(b" current=");
-                    crate::sys::serial::trace_hex(current as u64);
-                    crate::sys::serial::traceln(b"");
-                }
-            }
-            if state == ProcessState::Ready && proc_prio == prio {
-                return Some(pid);
-            }
+        let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) else {
+            continue;
+        };
+        if *pcb.state.lock() != ProcessState::Ready || *pcb.priority.lock() != prio {
+            continue;
+        }
+        lowest = Some(lowest.map_or(pid, |m| core::cmp::min(m, pid)));
+        if pid > last {
+            after = Some(after.map_or(pid, |m| core::cmp::min(m, pid)));
         }
     }
-    None
+    after.or(lowest)
 }
 
 fn select_fallback(pids: &[u32], current: u32) -> Option<u32> {

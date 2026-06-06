@@ -23,6 +23,7 @@ use crate::syscall::microkernel::errnos::{
     ERRNO_BUSY, ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOENT, ERRNO_NOMEM,
 };
 
+use super::correlation::take_for_reply;
 use super::reply_inbox;
 
 fn trace(caller_pid: u32, dest_pid: u64, label: &[u8], rc: i64, inbox: &str) {
@@ -64,13 +65,14 @@ pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {
     let caller_pid = current_pid().unwrap_or(0);
     let dest = reply_inbox::for_pid(dest_pid as u32);
     let from = alloc::format!("proc.{}", caller_pid);
-    let msg = match IpcMessage::new(&from, &dest, &data) {
+    let mut msg = match IpcMessage::new(&from, &dest, &data) {
         Ok(msg) => msg,
         Err(_) => {
             trace(caller_pid, dest_pid, b"message", ERRNO_NOMEM, &dest);
             return ERRNO_NOMEM;
         }
     };
+    msg.correlation = take_for_reply(dest_pid as u32);
     let rc = match try_enqueue_strict(&dest, msg) {
         Ok(()) => {
             crate::sched::wake_process(dest_pid as u32);

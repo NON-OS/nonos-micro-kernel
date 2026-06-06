@@ -20,5 +20,4 @@ mod parse;
 mod record;
 
 pub use answer::Answer;
-pub use error::ParseError;
 pub use parse::first_address;

@@ -16,5 +16,5 @@
 
 pub const COLS: usize = 96;
 pub const SCROLLBACK_ROWS: usize = 256;
-pub const VISIBLE_ROWS: usize = 22;
+pub const VISIBLE_ROWS: usize = 15;
 pub const HISTORY_DEPTH: usize = 32;

@@ -14,31 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! RFC 793 connection states. Stored in the per-connection control
-//! block and inspected by the segment receive path to decide how
-//! to handle SYN / ACK / FIN / RST inputs.
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum State {
-    Closed,
     Listen,
     SynSent,
     SynReceived,
     Established,
-    FinWait1,
-    FinWait2,
     CloseWait,
-    Closing,
-    LastAck,
-    TimeWait,
 }
 
 impl State {
-    pub fn is_synchronised(self) -> bool {
-        !matches!(self, Self::Closed | Self::Listen | Self::SynSent | Self::SynReceived)
-    }
-
     pub fn accepts_data(self) -> bool {
-        matches!(self, Self::Established | Self::FinWait1 | Self::FinWait2)
+        matches!(self, Self::Established)
     }
 }

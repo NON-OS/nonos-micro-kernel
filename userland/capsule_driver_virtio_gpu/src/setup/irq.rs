@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_irq_bind, IrqBindOut, MK_IRQ_BIND_MSIX};
 use super::mmio::RegisterGrant;
 use crate::discover::Found;
+use nonos_libc::{mk_irq_bind, IrqBindOut, MK_IRQ_BIND_MSIX};
 pub fn bind(
     dev: Found,
     claim_epoch: u64,
@@ -29,12 +29,9 @@ pub fn bind(
     if intx >= 0 {
         return Ok(out);
     }
-    crate::debug::marker(b"irq bind: intx failed");
     let msix = mk_irq_bind(dev.device_id, claim_epoch, 0, MK_IRQ_BIND_MSIX, 1, &mut out);
     if msix >= 0 {
-        crate::debug::marker(b"irq bind: msix");
         return Ok(out);
     }
-    crate::debug::marker(b"irq bind: none");
     Ok(out)
 }

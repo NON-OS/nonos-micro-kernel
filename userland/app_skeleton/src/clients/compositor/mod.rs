@@ -15,11 +15,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod damage_commit;
+mod display_info;
 mod healthcheck;
 mod scene_remove;
 mod scene_submit;
 
 pub use damage_commit::damage_commit;
+pub use display_info::display_info;
 pub use healthcheck::healthcheck;
 pub use scene_remove::scene_remove;
 pub use scene_submit::scene_submit;

@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::protocol::{read_u16, read_u32};
 use crate::state::{Context, SIDE_DOCK_WINDOW_ID, TASKBAR_WINDOW_ID};
 use crate::wm_client;
 
@@ -23,16 +24,18 @@ const VERSION: u16 = 1;
 const FRAME_LEN: usize = 28;
 
 pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
-    if buf.len() != FRAME_LEN || u32::from_le_bytes(buf[0..4].try_into().unwrap()) != MAGIC {
+    if buf.len() != FRAME_LEN || read_u32(buf, 0) != Some(MAGIC) {
         return false;
     }
-    if u16::from_le_bytes(buf[4..6].try_into().unwrap()) != VERSION {
+    if read_u16(buf, 4) != Some(VERSION) {
         return true;
     }
-    if u32::from_le_bytes(buf[8..12].try_into().unwrap()) != OPENED {
+    if read_u32(buf, 8) != Some(OPENED) {
         return true;
     }
-    let window_id = u32::from_le_bytes(buf[16..20].try_into().unwrap());
+    let Some(window_id) = read_u32(buf, 16) else {
+        return true;
+    };
     if window_id == SIDE_DOCK_WINDOW_ID || window_id == TASKBAR_WINDOW_ID {
         return true;
     }

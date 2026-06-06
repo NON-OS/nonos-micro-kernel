@@ -30,7 +30,7 @@ pub struct SlotResources {
     pub int_ring: Option<TransferRing>,
     pub int_buf: Option<DmaRegion>,
     pub int_dci: u8,
-    pub int_armed: Option<u64>, // issued TRB phys while a read is outstanding
+    pub int_armed: Option<u64>,
 }
 impl SlotResources {
     pub fn allocate(

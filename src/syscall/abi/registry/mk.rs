@@ -34,8 +34,11 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     e(b"MUMP", SyscallNumber::MkMunmap, "MkMunmap"),
     e(b"MSPN", SyscallNumber::MkSpawn, "MkSpawn"),
     e(b"MEXT", SyscallNumber::MkExit, "MkExit"),
+    e(b"MPAL", SyscallNumber::MkPidAlive, "MkPidAlive"),
     e(b"MYLD", SyscallNumber::MkYield, "MkYield"),
     e(b"MTMS", SyscallNumber::MkTimeMillis, "MkTimeMillis"),
+    e(b"MTRT", SyscallNumber::MkTimeRtc, "MkTimeRtc"),
+    e(b"MBAT", SyscallNumber::MkBatteryStatus, "MkBatteryStatus"),
     e(b"MCGT", SyscallNumber::MkCapGrant, "MkCapGrant"),
     e(b"MCRV", SyscallNumber::MkCapRevoke, "MkCapRevoke"),
     e(b"MCCK", SyscallNumber::MkCapCheck, "MkCapCheck"),
@@ -48,6 +51,7 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     e(b"MIRU", SyscallNumber::MkIrqUnbind, "MkIrqUnbind"),
     e(b"MIRA", SyscallNumber::MkIrqAck, "MkIrqAck"),
     e(b"MIRP", SyscallNumber::MkIrqPoll, "MkIrqPoll"),
+    e(b"MIRW", SyscallNumber::MkIrqWait, "MkIrqWait"),
     e(b"MDMM", SyscallNumber::MkDmaMap, "MkDmaMap"),
     e(b"MDMU", SyscallNumber::MkDmaUnmap, "MkDmaUnmap"),
     e(b"MPCR", SyscallNumber::MkPciConfigRead, "MkPciConfigRead"),
@@ -65,6 +69,7 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     e(b"MDVW", SyscallNumber::MkDisplayVsyncWait, "MkDisplayVsyncWait"),
     e(b"MIEP", SyscallNumber::MkInputEventPost, "MkInputEventPost"),
     e(b"MIED", SyscallNumber::MkInputEventDrain, "MkInputEventDrain"),
+    e(b"MIEW", SyscallNumber::MkInputEventWait, "MkInputEventWait"),
 ];
 
 const fn e(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {

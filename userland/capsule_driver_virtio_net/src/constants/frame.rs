@@ -29,6 +29,6 @@ pub const MAX_ETHERNET_FRAME: usize = MTU + ETH_HEADER_LEN;
 
 
 
-pub const VIRTIO_NET_HDR_LEN: usize = 12;
+pub const VIRTIO_NET_HDR_LEN: usize = 10;
 
 pub const MAC_LEN: usize = 6;

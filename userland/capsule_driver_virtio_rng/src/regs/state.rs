@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use core::ptr::{read_volatile, write_volatile};
 use super::io::RegIo;
 use super::pio;
+use core::ptr::{read_volatile, write_volatile};
 #[derive(Debug, Clone, Copy)]
 pub struct Regs {
     io: RegIo,

@@ -22,8 +22,5 @@ use crate::syscall::{call_raw, N_MK_SERVICE_REGISTER};
 // wire-side endpoint number. Returns 0 on success or a negative errno.
 #[no_mangle]
 pub extern "C" fn mk_service_register(name: *const u8, name_len: usize, port: u32) -> i64 {
-    call_raw(
-        N_MK_SERVICE_REGISTER,
-        [name as u64, name_len as u64, port as u64, 0, 0, 0],
-    )
+    call_raw(N_MK_SERVICE_REGISTER, [name as u64, name_len as u64, port as u64, 0, 0, 0])
 }

@@ -17,7 +17,6 @@
 use crate::frame_pacer::composite;
 
 use crate::gfx_client;
-use crate::debug;
 use crate::state::Context;
 use core::sync::atomic::{fence, Ordering};
 
@@ -25,16 +24,7 @@ pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
     let Some(rect) = ctx.damage.drain() else {
         return Ok(());
     };
-    debug::marker(b"tick: damage drained");
-    if !ctx.first_scanout_done {
-        debug::marker(b"first frame");
-        debug::marker_u64(b"damage w", rect.width as u64);
-        debug::marker_u64(b"damage h", rect.height as u64);
-    }
     composite::paint(ctx, rect);
-    if !ctx.first_scanout_done {
-        debug::marker(b"paint ok");
-    }
     fence(Ordering::Release);
     let req_a = ctx.issue_request_id();
     let pixel_offset = (rect.y as u64) * (ctx.stride as u64) + (rect.x as u64) * 4;
@@ -49,9 +39,6 @@ pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
         pixel_offset,
     )?;
     if !ctx.first_scanout_done {
-        debug::marker(b"xfer ok");
-    }
-    if !ctx.first_scanout_done {
         let req_b = ctx.issue_request_id();
         gfx_client::set_scanout(
             ctx.gfx_port,
@@ -64,7 +51,6 @@ pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
             ctx.height,
         )?;
         ctx.first_scanout_done = true;
-        debug::marker(b"scanout ok");
     }
     let req_c = ctx.issue_request_id();
     gfx_client::resource_flush(
@@ -76,8 +62,5 @@ pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
         rect.width,
         rect.height,
     )?;
-    if ctx.first_scanout_done {
-        debug::marker(b"flush ok");
-    }
     Ok(())
 }

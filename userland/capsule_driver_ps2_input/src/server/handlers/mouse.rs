@@ -13,13 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_ipc_send, mk_irq_ack};
 use crate::poll::drain;
 use crate::protocol::{
     encode_response_header, write_status, Request, KERNEL_REPLY_ENDPOINT, MAX_POLL_EVENTS,
     MOUSE_EVENT_WIRE_LEN, MOUSE_POLL_PAYLOAD_PREFIX_LEN, RESP_HDR_LEN,
 };
 use crate::server::context::Context;
+use nonos_libc::{mk_ipc_send, mk_irq_ack};
 pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
     drain(
         ctx.driver.pio_grant_id,

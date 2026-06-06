@@ -17,7 +17,7 @@
 use alloc::{vec, vec::Vec};
 
 use crate::discover::lookup_service;
-use crate::wire::HDR_LEN;
+use crate::wire::{read_u32, HDR_LEN};
 
 pub fn write_file(owner_pid: u32, path: &[u8], data: &[u8]) -> Result<(), &'static str> {
     let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
@@ -31,7 +31,7 @@ pub fn write_file(owner_pid: u32, path: &[u8], data: &[u8]) -> Result<(), &'stat
     if status != 0 || total < HDR_LEN + 8 {
         return Err("vfs open failed");
     }
-    let fd = u32::from_le_bytes(rx[HDR_LEN + 4..HDR_LEN + 8].try_into().unwrap());
+    let fd = read_u32(&rx, HDR_LEN + 4)?;
     let mut write = Vec::with_capacity(8 + data.len());
     write.extend_from_slice(&owner_pid.to_le_bytes());
     write.extend_from_slice(&fd.to_le_bytes());
@@ -44,7 +44,7 @@ pub fn write_file(owner_pid: u32, path: &[u8], data: &[u8]) -> Result<(), &'stat
     if status != 0 || total < HDR_LEN + 8 {
         return Err("vfs write failed");
     }
-    let wrote = u32::from_le_bytes(rx[HDR_LEN + 4..HDR_LEN + 8].try_into().unwrap()) as usize;
+    let wrote = read_u32(&rx, HDR_LEN + 4)? as usize;
     if wrote != data.len() {
         return Err("vfs short write");
     }

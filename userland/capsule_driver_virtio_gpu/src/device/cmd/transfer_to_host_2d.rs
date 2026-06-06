@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use super::hdr::{Hdr, HDR_LEN, RESP_HDR_LEN};
 use crate::constants::{VG_CMD_TRANSFER_TO_HOST_2D, VG_RESP_OK_NODATA};
 use crate::device::virtqueue::ControlQueue;
-use super::hdr::{Hdr, HDR_LEN, RESP_HDR_LEN};
 const BODY_LEN: usize = 32;
 const REQ_LEN: usize = HDR_LEN + BODY_LEN;
 #[derive(Clone, Copy)]

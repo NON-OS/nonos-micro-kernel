@@ -22,10 +22,6 @@ const DS_MSG_MAC: &str = "NONOS:IPC:MAC:v1";
 
 static IPC_SECRET: Once<[u8; 32]> = Once::new();
 
-// Must be called after `crypto::util::rng::init_rng` has succeeded.
-// Returns `Err` if the RNG fails to fill 32 bytes; the caller is
-// expected to treat that as fatal so an all-zero MAC key never gets
-// derived.
 pub fn init_ipc_secret() -> Result<(), &'static str> {
     let mut bytes = [0u8; 32];
     if crate::crypto::random_api::get_bytes_secure(&mut bytes).is_err() {
@@ -38,22 +34,20 @@ pub fn init_ipc_secret() -> Result<(), &'static str> {
 }
 
 #[inline]
-fn get_ipc_secret() -> &'static [u8; 32] {
-    IPC_SECRET
-        .get()
-        .expect("init_ipc_secret was never called; IPC MAC key uninitialised")
+fn get_ipc_secret() -> Result<&'static [u8; 32], &'static str> {
+    IPC_SECRET.get().ok_or("IPC MAC key is not initialized")
 }
 
 #[inline]
-pub fn compute_channel_key(from: &str, to: &str) -> u64 {
-    let secret = get_ipc_secret();
+pub fn compute_channel_key(from: &str, to: &str) -> Result<u64, &'static str> {
+    let secret = get_ipc_secret()?;
     let h = blake3::Hasher::new_derive_key(DS_CHANNEL_KEY)
         .update(secret)
         .update(from.as_bytes())
         .update(&[0x00])
         .update(to.as_bytes())
         .finalize();
-    u64::from_le_bytes([
+    Ok(u64::from_le_bytes([
         h.as_bytes()[0],
         h.as_bytes()[1],
         h.as_bytes()[2],
@@ -62,12 +56,17 @@ pub fn compute_channel_key(from: &str, to: &str) -> u64 {
         h.as_bytes()[5],
         h.as_bytes()[6],
         h.as_bytes()[7],
-    ])
+    ]))
 }
 
 #[inline]
-pub fn compute_checksum(from: &str, to: &str, data: &[u8], ts_ms: u64) -> u64 {
-    let secret = get_ipc_secret();
+pub fn compute_checksum(
+    from: &str,
+    to: &str,
+    data: &[u8],
+    ts_ms: u64,
+) -> Result<u64, &'static str> {
+    let secret = get_ipc_secret()?;
     let mac = blake3::Hasher::new_keyed(secret)
         .update(DS_MSG_MAC.as_bytes())
         .update(from.as_bytes())
@@ -77,7 +76,7 @@ pub fn compute_checksum(from: &str, to: &str, data: &[u8], ts_ms: u64) -> u64 {
         .update(data)
         .finalize();
     let b = mac.as_bytes();
-    u64::from_le_bytes([b[24], b[25], b[26], b[27], b[28], b[29], b[30], b[31]])
+    Ok(u64::from_le_bytes([b[24], b[25], b[26], b[27], b[28], b[29], b[30], b[31]]))
 }
 
 #[inline]
@@ -88,7 +87,7 @@ pub(super) fn verify_checksum(
     ts_ms: u64,
     expected: u64,
 ) -> bool {
-    let computed = compute_checksum(from, to, data, ts_ms);
+    let Ok(computed) = compute_checksum(from, to, data, ts_ms) else { return false };
     let mut diff = 0u64;
     diff |= computed ^ expected;
     diff == 0

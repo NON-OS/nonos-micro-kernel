@@ -21,6 +21,6 @@ mod send;
 mod seq;
 mod wire;
 
-pub use config::{read_ipv4, ConfigError};
-pub use recv::{poll_segment, IpPacket, RecvError};
-pub use send::{send_segment, SendError};
+pub use config::read_ipv4;
+pub use recv::{poll_segment, RecvError};
+pub use send::send_segment;

@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::arch::x86_64::idt::{are_enabled, disable};
+use core::mem::ManuallyDrop;
 
 use super::guard::IrqRwLockWriteGuard;
 use super::state::IrqRwLock;
@@ -26,6 +27,6 @@ impl<T> IrqRwLock<T> {
             disable();
         }
         let guard = self.inner.write();
-        IrqRwLockWriteGuard { inner: Some(guard), restore: were_enabled }
+        IrqRwLockWriteGuard { inner: ManuallyDrop::new(guard), restore: were_enabled }
     }
 }

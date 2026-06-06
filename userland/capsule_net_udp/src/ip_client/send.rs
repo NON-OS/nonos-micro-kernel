@@ -22,7 +22,7 @@ use super::header::{parse_response, write_request};
 use super::seq;
 use super::wire::{IP_HDR_LEN, IP_PROTO_UDP, OP_SEND_PACKET};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SendError {
     SendFailed,
     BadResponse,

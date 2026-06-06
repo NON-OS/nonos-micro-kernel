@@ -18,14 +18,14 @@ use crate::protocol::{E_BAD_FAMILY, E_BAD_KIND, E_OK, E_TABLE_FULL, OP_SOCKET};
 use crate::server::handlers::io::u16_at;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
-use crate::sockets::{Family, Kind, SOCKETS};
+use crate::sockets::{Kind, SOCKETS};
 
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
-    let family = match u16_at(body, 0) {
-        Ok(4) => Family::Inet4,
+    match u16_at(body, 0) {
+        Ok(4) => {}
         Ok(_) => return status(pid, req, E_BAD_FAMILY, tx),
         Err(e) => return status(pid, req, e, tx),
-    };
+    }
     let kind = match u16_at(body, 2) {
         Ok(1) => Kind::Stream,
         Ok(2) => Kind::Datagram,
@@ -33,7 +33,7 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         Ok(_) => return status(pid, req, E_BAD_KIND, tx),
         Err(e) => return status(pid, req, e, tx),
     };
-    match SOCKETS.open(pid, family, kind) {
+    match SOCKETS.open(pid, kind) {
         Some(key) => {
             tx[20..24].copy_from_slice(&key.handle.to_le_bytes());
             respond(pid, OP_SOCKET, E_OK, req.request_id, 4, tx);

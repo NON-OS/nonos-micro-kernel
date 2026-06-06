@@ -13,13 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use core::ptr::write_volatile;
 use super::direction::Direction;
 use crate::constants::{
     HEADER_OFFSET, SECTOR_SIZE, STATUS_OFFSET, VQ_DESC_OFFSET, VRING_DESC_F_NEXT,
     VRING_DESC_F_WRITE,
 };
 use crate::queue::layout::Queue;
+use core::ptr::write_volatile;
 const DESC_SIZE: usize = 16;
 const HEADER_LEN: u32 = 16;
 const STATUS_LEN: u32 = 1;

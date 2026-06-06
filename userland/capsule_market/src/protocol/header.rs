@@ -14,18 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Twenty-byte v1 envelope shared with the other userland service
-//! capsules (entropy/crypto/vfs/ramfs/keyring/driver_virtio_rng).
-//! Same shape lets a single kernel-side transport serve every
-//! endpoint.
-
-pub(in super::super) const MAGIC: u32 = 0x4E4D_4B54; // "NMKT" — NONOS Marketplace
+pub(in super::super) const MAGIC: u32 = 0x4E4D_4B54;
 pub(in super::super) const VERSION: u16 = 1;
 
 pub(in super::super) const HDR_LEN: usize = 20;
 pub(in super::super) const RESP_HDR_LEN: usize = HDR_LEN;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Request {
     pub op: u16,
     pub flags: u16,

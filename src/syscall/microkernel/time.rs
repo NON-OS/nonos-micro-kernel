@@ -16,6 +16,43 @@
 
 use core::sync::atomic::Ordering;
 
+use super::errnos::ERRNO_FAULT;
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RtcTimeAbi {
+    pub year: u16,
+    pub month: u8,
+    pub day: u8,
+    pub hour: u8,
+    pub minute: u8,
+    pub second: u8,
+    pub _pad: u8,
+}
+
+pub fn sys_time_rtc(out_ptr: u64) -> i64 {
+    let t = match crate::arch::x86_64::time::rtc::read_rtc_checked() {
+        Ok(t) => t,
+        Err(_) => return -61,
+    };
+    let abi = RtcTimeAbi {
+        year: t.year,
+        month: t.month,
+        day: t.day,
+        hour: t.hour,
+        minute: t.minute,
+        second: t.second,
+        _pad: 0,
+    };
+    if crate::usercopy::validate_user_write(out_ptr, core::mem::size_of::<RtcTimeAbi>()).is_err() {
+        return ERRNO_FAULT;
+    }
+    match crate::usercopy::write_user_value(out_ptr, &abi) {
+        Ok(()) => 0,
+        Err(_) => ERRNO_FAULT,
+    }
+}
+
 pub fn sys_time_millis() -> i64 {
     if !clock_ready() {
         return -61;

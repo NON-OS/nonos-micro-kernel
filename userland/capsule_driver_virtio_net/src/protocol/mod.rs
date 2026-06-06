@@ -16,7 +16,6 @@
 
 mod decode;
 mod encode;
-mod endpoint;
 mod errno;
 mod header;
 mod limits;
@@ -24,7 +23,6 @@ mod ops;
 
 pub use decode::decode_request;
 pub use encode::{encode_response_header, write_status};
-pub use endpoint::KERNEL_REPLY_ENDPOINT;
 pub use errno::{E_AGAIN, E_INVAL, E_IO, E_MSGSIZE};
 pub use header::{Request, HDR_LEN, RESP_HDR_LEN};
 pub use limits::{

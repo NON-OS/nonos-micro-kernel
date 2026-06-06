@@ -17,6 +17,7 @@
 pub mod apps;
 pub mod chrome;
 pub mod context;
+pub mod indicators;
 pub mod notify;
 pub mod spotlight;
 pub mod tray;

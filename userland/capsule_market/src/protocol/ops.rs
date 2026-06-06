@@ -14,10 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Op discriminants. Adding a new op means a new constant here, a
-//! handler under `server/handlers/`, and a kernel-side client; no
-//! code path uses anything but these constants for routing.
-
 pub(in super::super) const OP_LOAD_INDEX: u16 = 1;
 pub(in super::super) const OP_LIST_APPS: u16 = 2;
 pub(in super::super) const OP_GET_APP: u16 = 3;

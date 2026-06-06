@@ -13,19 +13,17 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use alloc::vec;
-use nonos_libc::mk_ipc_recv;
-use crate::controller::{ack_irq, drain_events};
 use crate::protocol::{
     decode_request, E_INVAL, HDR_LEN, MAX_PORTS_REPORTED, MAX_REQUEST_PAYLOAD_LEN,
-    OP_ADDRESS_DEVICE, OP_ALLOC_TRANSFER_RING, OP_CONTROL_TRANSFER, OP_CONTROLLER_STATUS, OP_DISABLE_SLOT, OP_ENABLE_SLOT,
-    OP_HEALTHCHECK, OP_GET_CONFIG_DESCRIPTOR, OP_GET_DEVICE_DESCRIPTOR, OP_INTERRUPT_IN, OP_PORT_STATUS, PORT_ENTRY_BYTES,
-    PORT_STATUS_HEADER_BYTES, RESP_HDR_LEN, STATUS_LEN,
+    PORT_ENTRY_BYTES, PORT_STATUS_HEADER_BYTES, RESP_HDR_LEN, STATUS_LEN,
 };
 use crate::server::context::Context;
+use crate::server::dispatch::dispatch;
 use crate::server::error::{reply_decode_failed, reply_with_status};
-use crate::server::handlers;
+use crate::server::service_interrupts::service_interrupts;
 use crate::setup::Driver;
+use alloc::vec;
+use nonos_libc::mk_ipc_recv;
 const TX_LEN: usize =
     RESP_HDR_LEN + STATUS_LEN + PORT_STATUS_HEADER_BYTES + MAX_PORTS_REPORTED * PORT_ENTRY_BYTES;
 pub fn run(driver: Driver) -> ! {
@@ -33,9 +31,7 @@ pub fn run(driver: Driver) -> ! {
     let mut tx = vec![0u8; TX_LEN];
     let mut ctx = Context::new(driver);
     loop {
-        let batch = drain_events(ctx.driver.layout.primary_intr_base, &mut ctx.driver.event_ring);
-        ctx.events_drained_total = ctx.events_drained_total.wrapping_add(batch.count as u64);
-        ack_irq(ctx.driver.layout.primary_intr_base, ctx.driver.handles.irq_grant_id());
+        service_interrupts(&mut ctx);
         let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx.len(), 0);
         if n <= 0 {
             continue;
@@ -54,33 +50,6 @@ pub fn run(driver: Driver) -> ! {
             continue;
         }
         let body = &rx[HDR_LEN..len];
-        match req.op {
-            OP_HEALTHCHECK if body.is_empty() => handlers::health::handle(&req, &mut tx),
-            OP_CONTROLLER_STATUS if body.is_empty() => {
-                handlers::controller_status::handle(&ctx, &req, &mut tx)
-            }
-            OP_PORT_STATUS if body.is_empty() => handlers::port_status::handle(&ctx, &req, &mut tx),
-            OP_ENABLE_SLOT if body.is_empty() => {
-                handlers::enable_slot::handle(&mut ctx, &req, &mut tx)
-            }
-            OP_DISABLE_SLOT => handlers::disable_slot::handle(&mut ctx, &req, body, &mut tx),
-            OP_ADDRESS_DEVICE => handlers::address_device::handle(&mut ctx, &req, body, &mut tx),
-            OP_GET_DEVICE_DESCRIPTOR => {
-                handlers::device_descriptor::handle(&mut ctx, &req, body, &mut tx)
-            }
-            OP_GET_CONFIG_DESCRIPTOR => {
-                handlers::config_descriptor::handle(&mut ctx, &req, body, &mut tx)
-            }
-            OP_CONTROL_TRANSFER => {
-                handlers::control_transfer::handle(&mut ctx, &req, body, &mut tx)
-            }
-            OP_ALLOC_TRANSFER_RING => {
-                handlers::alloc_transfer_ring::handle(&mut ctx, &req, body, &mut tx)
-            }
-            OP_INTERRUPT_IN => {
-                handlers::interrupt_in::handle(&mut ctx, &req, body, &mut tx)
-            }
-            _ => reply_with_status(&mut tx, &req, E_INVAL),
-        }
+        dispatch(&mut ctx, &req, body, &mut tx);
     }
 }

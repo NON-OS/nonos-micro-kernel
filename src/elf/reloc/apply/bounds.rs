@@ -42,9 +42,9 @@ pub(super) fn resolve_resolver_addr(image: &ElfImage, base: u64, addend: i64) ->
 fn in_segment(image: &ElfImage, addr: u64, size: usize, executable: bool) -> bool {
     image.segments.iter().any(|segment| {
         let start = segment.vaddr.as_u64();
-        let end = start.checked_add(segment.size as u64);
-        let addr_end = addr.checked_add(size as u64);
+        let Some(end) = start.checked_add(segment.size as u64) else { return false };
+        let Some(addr_end) = addr.checked_add(size as u64) else { return false };
         let exec_ok = !executable || segment.is_executable();
-        exec_ok && end.is_some() && addr_end.is_some() && addr >= start && addr_end.unwrap() <= end.unwrap()
+        exec_ok && addr >= start && addr_end <= end
     })
 }

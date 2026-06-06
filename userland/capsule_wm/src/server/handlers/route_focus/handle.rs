@@ -28,13 +28,13 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
         }
         return;
     }
-    let Some(owner_pid) = super::super::u32_at(body, 0) else {
+    let Some(owner_pid) = super::super::u32_at::u32_at(body, 0) else {
         if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
             return;
         }
         return;
     };
-    let Some(window_id) = super::super::u32_at(body, 4) else {
+    let Some(window_id) = super::super::u32_at::u32_at(body, 4) else {
         if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
             return;
         }
@@ -52,7 +52,8 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
         }
         return;
     }
-    if !matches!(ctx.focus.current(), Some(f) if f.owner_pid == owner_pid && f.window_id == window_id) {
+    if !matches!(ctx.focus.current(), Some(f) if f.owner_pid == owner_pid && f.window_id == window_id)
+    {
         let rid = ctx.issue_request_id();
         if push_focus_set(ctx.compositor_port, rid, owner_pid).is_err() {
             if respond::status(sender_pid, req, E_INVAL, tx) < 0 {

@@ -13,9 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::constants::{
-    TRB_IDT, TRB_TYPE_SETUP_STAGE, TRT_IN_DATA, TRT_NO_DATA, TRT_OUT_DATA,
-};
+use crate::constants::{TRB_IDT, TRB_TYPE_SETUP_STAGE, TRT_IN_DATA, TRT_NO_DATA, TRT_OUT_DATA};
 use crate::trb::Trb;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SetupDir {
@@ -33,9 +31,7 @@ pub fn setup_stage(
     cycle: bool,
 ) -> Trb {
     let mut trb = Trb::zero();
-    trb.d0 = (bm_request_type as u32)
-        | ((b_request as u32) << 8)
-        | ((w_value as u32) << 16);
+    trb.d0 = (bm_request_type as u32) | ((b_request as u32) << 8) | ((w_value as u32) << 16);
     trb.d1 = (w_index as u32) | ((w_length as u32) << 16);
     trb.d2 = 8 | trt_bits(dir);
     trb.d3 = TRB_IDT;

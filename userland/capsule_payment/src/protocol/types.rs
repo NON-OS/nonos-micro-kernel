@@ -16,6 +16,7 @@
 
 pub const OP_HEALTHCHECK: u16 = 1;
 pub const OP_PAY: u16 = 2;
+pub const OP_DRAIN_RECEIPTS: u16 = 3;
 
 pub const KERNEL_REPLY_ENDPOINT: u64 = 0x1_0000_0010;
 

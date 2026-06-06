@@ -26,7 +26,6 @@
 //! to iretq. Production builds compile this path out; smoketest
 //! profiles enable `nonos-user-entry-proof`.
 
-use super::print_hex::print_hex_u64;
 use crate::arch::x86_64::gdt::{
     constants::{IST_DOUBLE_FAULT, IST_GP, IST_PAGE_FAULT},
     get_ist, get_kernel_stack,
@@ -89,15 +88,6 @@ pub fn assert_user_entry(cr3: u64, user_rip: u64, user_rsp: u64, cpu_id: u32) ->
     if let Some(leaf) = page_walk::leaf_for(cr3, user_rip) {
         entry_bytes::print(user_rip, leaf);
     }
-    report::ok(
-        cr3,
-        user_rip,
-        user_rsp,
-        rsp0,
-        gs,
-        ist_df,
-        ist_pf,
-        ist_gp,
-    );
+    report::ok(cr3, user_rip, user_rsp, rsp0, gs, ist_df, ist_pf, ist_gp);
     true
 }

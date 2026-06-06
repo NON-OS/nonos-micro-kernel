@@ -19,9 +19,6 @@ use super::ipv4::PROTO_UDP;
 
 pub const HDR_LEN: usize = 8;
 
-// Write an 8-byte UDP header followed by the payload bytes into
-// `out`, then seal the RFC 768 pseudo-header checksum. Returns the
-// total UDP segment length written.
 pub fn write(
     out: &mut [u8],
     src: &[u8; 4],
@@ -31,7 +28,9 @@ pub fn write(
     payload: &[u8],
 ) -> usize {
     let total = HDR_LEN + payload.len();
-    debug_assert!(out.len() >= total);
+    if out.len() < total {
+        return 0;
+    }
     out[0..2].copy_from_slice(&src_port.to_be_bytes());
     out[2..4].copy_from_slice(&dst_port.to_be_bytes());
     out[4..6].copy_from_slice(&(total as u16).to_be_bytes());
@@ -42,9 +41,6 @@ pub fn write(
     total
 }
 
-// Returns (src_port, dst_port, payload_offset, segment_len) on a
-// well-formed UDP segment. Checksum verification is left to the
-// caller because DHCP servers sometimes send checksum=0.
 pub fn parse(bytes: &[u8]) -> Option<(u16, u16, usize)> {
     if bytes.len() < HDR_LEN {
         return None;

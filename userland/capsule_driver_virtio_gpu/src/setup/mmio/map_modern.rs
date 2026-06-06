@@ -26,21 +26,16 @@ const PAGE_SIZE: u64 = 4096;
 const PAGE_MASK: u64 = PAGE_SIZE - 1;
 
 pub fn map_modern(dev: Found, epoch: u64) -> Result<RegisterGrant, &'static str> {
-    crate::debug::marker(b"map_modern: scan caps");
     let caps = modern_caps::read(dev.device_id, epoch)?;
-    crate::debug::marker(b"map_modern: map common");
     let common = map_region(dev, epoch, caps.common).map_err(errno_label)?;
-    crate::debug::marker(b"map_modern: map notify");
     let notify = match map_region(dev, epoch, caps.notify) {
         Ok(region) => region,
         Err(code) => return rollback_one(dev, common.out, errno_label(code)),
     };
-    crate::debug::marker(b"map_modern: map device");
     let device = match map_region(dev, epoch, caps.device) {
         Ok(region) => region,
         Err(code) => return rollback_two(dev, common.out, notify.out, errno_label(code)),
     };
-    crate::debug::marker(b"map_modern: done");
     Ok(RegisterGrant::Modern(ModernGrant {
         common: common.out,
         common_offset: common.offset,

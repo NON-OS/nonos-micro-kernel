@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_dma_unmap;
 use super::region::DmaRegion;
+use nonos_libc::mk_dma_unmap;
 impl Drop for DmaRegion {
     fn drop(&mut self) {
         let _ = mk_dma_unmap(self.grant_id);

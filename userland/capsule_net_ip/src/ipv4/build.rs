@@ -18,7 +18,7 @@ use super::addr::Ipv4Addr;
 use super::checksum::seal_at;
 use super::header::{CHECKSUM_OFFSET, DEFAULT_TTL, HDR_LEN_MIN, VERSION_4};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct BuildRequest<'a> {
     pub src: Ipv4Addr,
     pub dst: Ipv4Addr,
@@ -28,7 +28,7 @@ pub struct BuildRequest<'a> {
     pub payload: &'a [u8],
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BuildError {
     OutputTooSmall,
     PayloadTooLarge,

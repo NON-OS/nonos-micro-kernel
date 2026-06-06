@@ -15,9 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod app;
+mod ctrl_copy;
+mod ctrl_open;
+mod ctrl_paste;
+mod ctrl_save;
 mod event;
 mod manifest;
+mod on_ctrl;
 mod paint;
+mod resolve_owner_pid;
 mod state;
 mod theme;
 

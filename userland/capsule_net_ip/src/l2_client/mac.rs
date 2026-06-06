@@ -20,7 +20,7 @@ use super::header::{parse_response, write_request};
 use super::seq;
 use super::wire::{L2_HDR_LEN, OP_GET_MAC};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MacError {
     SendFailed,
     BadResponse,

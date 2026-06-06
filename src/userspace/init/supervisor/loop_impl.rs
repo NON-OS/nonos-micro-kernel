@@ -24,11 +24,20 @@ const TICK_INTERVAL_MS: u64 = 1000;
 
 pub(crate) fn init_loop() -> ! {
     let mut last_tick = 0u64;
+    #[cfg(feature = "microkernel-setup-wizard")]
+    let mut desktop_started = false;
     loop {
         let now = crate::time::timestamp_millis();
         if now >= last_tick + TICK_INTERVAL_MS {
             crate::services::lifecycle::tick();
             last_tick = now;
+        }
+        #[cfg(feature = "microkernel-setup-wizard")]
+        if !desktop_started
+            && !crate::userspace::capsule_setup_wizard::shared_state().is_alive()
+        {
+            super::super::spawn_plan::spawn_post_wizard();
+            desktop_started = true;
         }
         crate::sched::yield_now();
     }

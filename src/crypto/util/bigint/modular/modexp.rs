@@ -29,7 +29,7 @@ impl BigUint {
         }
 
         if modulus.is_odd() && modulus.bits() >= 64 {
-            return Some(self.mod_pow_montgomery_ct(exp, modulus));
+            return self.mod_pow_montgomery_ct(exp, modulus);
         }
 
         self.mod_pow_ct(exp, modulus)
@@ -55,15 +55,17 @@ impl BigUint {
         Some(result)
     }
 
-    pub(crate) fn mod_pow_montgomery_ct(&self, exp: &Self, modulus: &Self) -> Self {
-        debug_assert!(modulus.is_odd());
+    pub(crate) fn mod_pow_montgomery_ct(&self, exp: &Self, modulus: &Self) -> Option<Self> {
+        if !modulus.is_odd() || modulus.is_zero() {
+            return None;
+        }
 
         let n = modulus.limbs.len();
         let r_bits = n * LIMB_BITS;
 
         let r = Self::one().shl_bits(r_bits) % modulus;
         let r2 = r.square() % modulus;
-        let m_inv = Self::montgomery_inverse(modulus.limbs[0]);
+        let m_inv = Self::montgomery_inverse(modulus.limbs[0])?;
 
         let mut base = self % modulus;
         base = Self::montgomery_reduce(&(&base * &r2), modulus, m_inv);
@@ -84,6 +86,6 @@ impl BigUint {
             r1 = Self::ct_select(mask, &r1_squared, &r0_times_r1);
         }
 
-        Self::montgomery_reduce(&r0, modulus, m_inv)
+        Some(Self::montgomery_reduce(&r0, modulus, m_inv))
     }
 }

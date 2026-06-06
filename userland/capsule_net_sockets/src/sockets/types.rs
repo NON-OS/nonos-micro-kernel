@@ -14,32 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Family {
-    Inet4,
-    Inet6,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Stream,
     Datagram,
     Mixnet,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct SocketKey {
     pub pid: u32,
     pub handle: u32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct LocalAddr4 {
-    pub ip: [u8; 4],
     pub port: u16,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct RemoteAddr4 {
     pub ip: [u8; 4],
     pub port: u16,

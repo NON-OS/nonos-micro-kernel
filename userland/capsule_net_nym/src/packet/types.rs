@@ -32,7 +32,7 @@ pub struct Decoded<'a> {
     pub ciphertext: &'a [u8],
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum PacketError {
     Short,
     BadMagic,

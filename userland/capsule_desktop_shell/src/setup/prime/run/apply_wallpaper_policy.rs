@@ -13,13 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::debug;
 use crate::wallpaper_client;
 pub(super) fn apply_wallpaper_policy(port: u32) -> Result<(), &'static str> {
     if port == 0 {
         return Err("wallpaper service not announced");
     }
-    wallpaper_client::queue_policy(port, 3, 0)?;
-    debug::marker(b"wallpaper policy deferred");
+    wallpaper_client::set_policy(port, 3, 0)?;
     Ok(())
 }

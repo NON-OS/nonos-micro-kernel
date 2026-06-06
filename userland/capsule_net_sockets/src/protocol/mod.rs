@@ -14,16 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod endpoint;
 mod errno;
 mod header;
 mod ops;
 
-pub use endpoint::{REPLY_INBOX, REPLY_PORT, SERVICE_NAME, SERVICE_PORT};
 pub use errno::{
     E_BAD_FAMILY, E_BAD_KIND, E_BAD_LEN, E_BAD_MAGIC, E_BAD_OP, E_BAD_VERSION, E_NOT_BOUND,
-    E_NOT_CONNECTED, E_NOT_LISTENING, E_NO_HANDLE, E_NO_TRANSPORT, E_OK, E_REFUSED, E_RX_EMPTY,
-    E_TABLE_FULL, E_TIMEOUT,
+    E_NOT_CONNECTED, E_NO_HANDLE, E_NO_TRANSPORT, E_OK, E_TABLE_FULL,
 };
 pub use header::MAGIC;
 pub use ops::{

@@ -17,12 +17,10 @@
 use alloc::vec;
 
 use super::loop_once::loop_once;
-use crate::debug;
 use crate::driver::Driver;
 use crate::protocol::{HDR_LEN, IPC_PAYLOAD_MAX};
 
 pub fn run(driver: Driver) -> ! {
-    debug::marker(b"server enter");
     let mut rx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut tx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     loop_once(driver, &mut rx, &mut tx);

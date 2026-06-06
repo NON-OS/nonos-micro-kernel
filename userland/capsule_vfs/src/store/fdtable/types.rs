@@ -27,6 +27,9 @@ pub enum StoreError {
     BadFd,
     Full,
     AccessDenied,
+    Exists,
+    NotEmpty,
+    IsDir,
 }
 
 pub(super) type StoreResult<T> = Result<T, StoreError>;
@@ -34,6 +37,7 @@ pub(super) type StoreResult<T> = Result<T, StoreError>;
 pub(super) struct File {
     pub(super) name: String,
     pub(super) data: Vec<u8>,
+    pub(super) is_dir: bool,
 }
 
 pub(super) struct OpenFd {

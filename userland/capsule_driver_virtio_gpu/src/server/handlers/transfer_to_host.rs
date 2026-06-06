@@ -41,7 +41,8 @@ pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, body: &[u8], tx: 
         return;
     }
     let fence_id = driver.fences.issue();
-    if cmd::transfer_to_host_2d(&driver.control_queue, fence_id, resource_id, rect, offset).is_err() {
+    if cmd::transfer_to_host_2d(&driver.control_queue, fence_id, resource_id, rect, offset).is_err()
+    {
         respond::status(sender_pid, req, E_DEVICE, tx);
         return;
     }

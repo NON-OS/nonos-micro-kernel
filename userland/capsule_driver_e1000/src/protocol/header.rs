@@ -14,27 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! 20-byte v1 envelope. Same shape as the other userland service
-//! capsules; the per-driver `MAGIC` is the only thing that lets the
-//! kernel-side network client tell an e1000 reply from a virtio-net
-//! reply when the two are configured in parallel.
-//!
-//!   u32 magic
-//!   u16 version
-//!   u16 op
-//!   u16 flags
-//!   u16 _reserved
-//!   u32 request_id
-//!   u32 payload_len
-//! = 20 bytes.
-
-pub const MAGIC: u32 = 0x4E45_3130; // "NE10" — NONOS / E1000 driver
+pub const MAGIC: u32 = 0x4E45_3130;
 pub const VERSION: u16 = 1;
 
 pub const HDR_LEN: usize = 20;
 pub const RESP_HDR_LEN: usize = HDR_LEN;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Request {
     pub op: u16,
     pub flags: u16,

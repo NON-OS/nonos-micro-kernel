@@ -22,9 +22,9 @@ mod enable_slot;
 mod interrupt_in;
 mod port_status;
 
-pub use address_device::{address_device, AddressedDevice};
+pub use address_device::address_device;
 pub use alloc_transfer_ring::alloc_transfer_ring;
-pub use config_descriptor::{get_config_descriptor, MAX_DESCRIPTOR_LEN};
+pub use config_descriptor::get_config_descriptor;
 pub use control_transfer::control_transfer;
 pub use enable_slot::enable_slot;
 pub use interrupt_in::interrupt_in;

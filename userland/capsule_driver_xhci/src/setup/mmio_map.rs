@@ -13,17 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_mmio_map, MmioMapOut};
 use crate::error::{XhciError, XhciResult};
+use nonos_libc::{mk_mmio_map, MmioMapOut};
 const BAR_INDEX: u32 = 0;
 const REGISTER_WINDOW_LEN: u64 = 0x3000;
 pub fn mmio_map(device_id: u64, claim_epoch: u64, bar0_size: u64) -> XhciResult<MmioMapOut> {
     let mut out = MmioMapOut { user_va: 0, length: 0, grant_id: 0 };
-    let length = if bar0_size < REGISTER_WINDOW_LEN {
-        bar0_size
-    } else {
-        REGISTER_WINDOW_LEN
-    };
+    let length = if bar0_size < REGISTER_WINDOW_LEN { bar0_size } else { REGISTER_WINDOW_LEN };
     let r = mk_mmio_map(device_id, claim_epoch, BAR_INDEX, 0, 0, length, &mut out);
     if r < 0 {
         return Err(XhciError::BrokerCallFailed(r));

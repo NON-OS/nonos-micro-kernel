@@ -16,7 +16,7 @@
 
 use crate::dns::NameError;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ParseError {
     Truncated,
     BadName,

@@ -17,6 +17,7 @@
 pub mod handlers;
 pub mod notify_fanout;
 pub mod respond;
+pub mod respond_window_opened;
 pub mod runner;
 
 pub use runner::run;

@@ -19,7 +19,7 @@ use nonos_libc::mk_service_lookup;
 
 static TCP_PORT: AtomicU32 = AtomicU32::new(0);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SetupError {
     TcpMissing,
 }

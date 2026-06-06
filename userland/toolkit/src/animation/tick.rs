@@ -14,10 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! TOOLKIT_OP_ANIMATION_TICK handler. Optional 8-byte payload
-//! specifies a delta. With no payload, one frame is advanced. The
-//! response payload is the new tick value as little-endian u64.
-
 use crate::protocol::STATUS_OK;
 
 use super::store::advance;

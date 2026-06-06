@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Strict request decoder. Matches the v1 envelope used by every
-//! other userland service capsule; an envelope whose magic or
-//! version does not align with this build is refused before any
-//! handler runs.
-
 use super::header::{Request, HDR_LEN, MAGIC, VERSION};
 
 pub(in super::super) fn decode_request(buf: &[u8]) -> Option<Request> {
@@ -35,7 +30,6 @@ pub(in super::super) fn decode_request(buf: &[u8]) -> Option<Request> {
     }
     let op = u16::from_le_bytes(buf[6..8].try_into().ok()?);
     let flags = u16::from_le_bytes(buf[8..10].try_into().ok()?);
-    // bytes 10..12 reserved
     let request_id = u32::from_le_bytes(buf[12..16].try_into().ok()?);
     let payload_len = u32::from_le_bytes(buf[16..20].try_into().ok()?);
     Some(Request { op, flags, request_id, payload_len })

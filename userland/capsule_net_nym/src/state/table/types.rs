@@ -30,7 +30,7 @@ pub struct Table {
     pub(super) stream_rx: Vec<u8>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TableError {
     NoGateway,
     NoTopology,

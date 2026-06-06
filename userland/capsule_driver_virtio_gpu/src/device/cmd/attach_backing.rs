@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use super::hdr::{Hdr, HDR_LEN, RESP_HDR_LEN};
 use crate::constants::{VG_CMD_RESOURCE_ATTACH_BACKING, VG_RESP_OK_NODATA};
 use crate::device::virtqueue::ControlQueue;
-use super::hdr::{Hdr, HDR_LEN, RESP_HDR_LEN};
 const ENTRY_LEN: usize = 16;
 const BODY_LEN: usize = 8 + ENTRY_LEN;
 const REQ_LEN: usize = HDR_LEN + BODY_LEN;

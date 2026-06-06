@@ -35,7 +35,7 @@ pub fn init() -> Result<(), &'static str> {
     if INITIALIZED.swap(true, Ordering::SeqCst) {
         return Err("syscall already initialized");
     }
-    msr::setup_star(SEL_KERNEL_CODE_RAW, SEL_USER_DATA_RAW);
+    msr::setup_star(SEL_KERNEL_CODE_RAW, SEL_USER_DATA_RAW)?;
     msr::setup_lstar(syscall_entry_asm as *const () as u64);
     msr::setup_fmask();
     msr::enable_sce();

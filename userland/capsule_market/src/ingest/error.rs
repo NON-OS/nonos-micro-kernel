@@ -14,27 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Failures the ingest path can surface. Each variant maps to a
-//! distinct errno on the IPC reply so a caller can tell a malformed
-//! blob from a stale serial from a refused signature without
-//! parsing free-form text.
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum IngestError {
-    /// Length cap exceeded, premature end, or non-canonical
-    /// encoding. Surfaces every `DecodeError` from the ABI codec.
     Malformed,
-    /// Index serial is at or below the last serial accepted by
-    /// the store. A snapshot from an older publish is refused so
-    /// a compromised mirror cannot revive a revoked listing.
     StaleSerial,
-    /// Index signature did not validate against the operator
-    /// pubkey. The default verifier returns this for every input
-    /// until a real Ed25519 backend lands.
     SignatureRefused,
-    /// Embedded `operator_pubkey` is not present in the bake-in
-    /// trust list. The blob may be perfectly well-formed and
-    /// self-consistent — it just was not signed by an operator the
-    /// kernel image trusts.
     UntrustedOperator,
 }

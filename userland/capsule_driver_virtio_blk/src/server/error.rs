@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_ipc_send;
 use crate::protocol::{
     encode_response_header, write_status, Request, KERNEL_REPLY_ENDPOINT, RESP_HDR_LEN, STATUS_LEN,
 };
+use nonos_libc::mk_ipc_send;
 pub fn reply_with_status(tx: &mut [u8], req: &Request, status: i32) -> bool {
     encode_response_header(tx, req, STATUS_LEN as u32);
     write_status(&mut tx[RESP_HDR_LEN..], status);

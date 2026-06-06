@@ -26,7 +26,7 @@ use alloc::vec::Vec;
 
 use super::validation::ValidationReport;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CapsuleRelease {
     /// Marketplace-assigned release identifier. Stable across
     /// re-publishes of the same artifact bytes.

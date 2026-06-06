@@ -1,0 +1,15 @@
+[package]
+name = "nonos_capsule_input_probe"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "input_probe"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+
+[features]
+default = []

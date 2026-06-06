@@ -20,9 +20,9 @@ use super::guard::IrqMutexGuard;
 
 impl<'a, T> Drop for IrqMutexGuard<'a, T> {
     fn drop(&mut self) {
-        // Release the inner spin lock first so a peer CPU can grab it,
-        // then restore the prior local IF state if it was on at lock().
-        self.inner.take();
+        unsafe {
+            core::mem::ManuallyDrop::drop(&mut self.inner);
+        }
         if self.restore {
             enable();
         }

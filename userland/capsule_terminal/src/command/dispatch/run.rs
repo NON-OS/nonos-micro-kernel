@@ -18,10 +18,10 @@ use super::outcome::Outcome;
 use crate::command::builtin;
 use crate::command::output::Output;
 use crate::command::parse::Argv;
-use crate::term::history::History;
-use crate::term::scrollback::Scrollback;
+use crate::term::state::State;
 
-pub fn run(history: &mut History, sb: &mut Scrollback, argv: &Argv<'_>) -> Outcome {
+pub fn run(state: &mut State, argv: &Argv<'_>) -> Outcome {
+    const HELP: &[u8] = b"help";
     if argv.argc == 0 {
         return Outcome::Repaint;
     }
@@ -30,20 +30,25 @@ pub fn run(history: &mut History, sb: &mut Scrollback, argv: &Argv<'_>) -> Outco
         return Outcome::Exit;
     }
     match args[0] {
-        b"help" | b"?" => builtin::help::run(&mut Output::new(sb), args),
-        b"version" | b"ver" => builtin::version::run(&mut Output::new(sb), args),
-        b"echo" => builtin::echo::run(&mut Output::new(sb), args),
-        b"clear" | b"cls" => builtin::clear::run(sb, args),
-        b"history" => builtin::history_cmd::run(&mut Output::new(sb), history, args),
-        b"service" | b"lookup" => builtin::service::run(&mut Output::new(sb), args),
-        b"capsules" | b"ps" | b"services" => builtin::capsules::run(&mut Output::new(sb), args),
-        b"ping" => builtin::ping::run(&mut Output::new(sb), args),
-        b"display" => builtin::display::run(&mut Output::new(sb), args),
-        b"market" | b"apps" => builtin::market::run(&mut Output::new(sb), args),
-        b"motd" | b"banner" => builtin::motd::run(sb, args),
-        b"whoami" | b"id" => builtin::whoami::run(&mut Output::new(sb), args),
-        b"about" => builtin::about::run(&mut Output::new(sb), args),
-        other => builtin::unknown::run(&mut Output::new(sb), other),
+        b"nox" => return builtin::nox::dispatch(state, &args[1..]),
+        b"help" => return builtin::nox::dispatch(state, &[HELP]),
+        b"about" => builtin::about::run(&mut Output::new(&mut state.scrollback), args),
+        b"version" => builtin::version::run(&mut Output::new(&mut state.scrollback), args),
+        b"whoami" => builtin::whoami::run(&mut Output::new(&mut state.scrollback), args),
+        b"capsules" | b"caps" => builtin::capsules::run(&mut Output::new(&mut state.scrollback), args),
+        b"clear" => builtin::clear::run(&mut state.scrollback, args),
+        b"display" => builtin::display::run(&mut Output::new(&mut state.scrollback), args),
+        b"echo" => builtin::echo::run(&mut Output::new(&mut state.scrollback), args),
+        b"history" => builtin::history_cmd::run(
+            &mut Output::new(&mut state.scrollback),
+            &mut state.history,
+            args,
+        ),
+        b"market" => builtin::market::run(&mut Output::new(&mut state.scrollback), args),
+        b"motd" => builtin::motd::run(&mut state.scrollback, args),
+        b"ping" => builtin::ping::run(&mut Output::new(&mut state.scrollback), args),
+        b"service" | b"svc" => builtin::service::run(&mut Output::new(&mut state.scrollback), args),
+        _ => return builtin::nox::dispatch(state, args),
     }
     Outcome::Repaint
 }

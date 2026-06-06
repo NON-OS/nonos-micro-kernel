@@ -13,9 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use alloc::vec;
-use nonos_libc::mk_ipc_recv;
-use crate::debug::marker;
 use crate::protocol::{
     decode_request, CONTROLLER_STATUS_PAYLOAD_LEN, EVENT_WIRE_LEN, E_INVAL, HDR_LEN,
     MAX_POLL_EVENTS, MOUSE_EVENT_WIRE_LEN, MOUSE_POLL_PAYLOAD_PREFIX_LEN, OP_CONTROLLER_STATUS,
@@ -25,7 +22,13 @@ use crate::protocol::{
 use crate::server::context::Context;
 use crate::server::error::{reply_decode_failed, reply_with_status};
 use crate::server::handlers;
+use crate::server::pump::pump;
 use crate::setup::Driver;
+use alloc::vec;
+use nonos_libc::mk_ipc_recv;
+
+const POLL_IDLE_MS: u64 = 4;
+
 pub fn run(driver: Driver) -> ! {
     let rx_len = HDR_LEN;
     let poll_tx_len = RESP_HDR_LEN + POLL_PAYLOAD_PREFIX_LEN + MAX_POLL_EVENTS * EVENT_WIRE_LEN;
@@ -40,9 +43,10 @@ pub fn run(driver: Driver) -> ! {
     let mut rx = vec![0u8; rx_len];
     let mut tx = vec![0u8; tx_len];
     let mut ctx = Context::new(driver);
-    marker(b"endpoint driver.ps2_kbd0 ready");
+    let mut prev_buttons = 0u8;
     loop {
-        let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, 0);
+        pump(&mut ctx, &mut prev_buttons);
+        let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, POLL_IDLE_MS);
         if n <= 0 {
             continue;
         }

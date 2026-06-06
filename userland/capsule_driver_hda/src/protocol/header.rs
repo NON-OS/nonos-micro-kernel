@@ -19,7 +19,7 @@ pub const VERSION: u16 = 1;
 pub const HDR_LEN: usize = 20;
 pub const RESP_HDR_LEN: usize = HDR_LEN;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Request {
     pub op: u16,
     pub flags: u16,

@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_ipc_send;
 use crate::protocol::{
     encode_response_header, write_status, Request, E_AGAIN, E_IO, INTERRUPT_IN_REPLY_PREFIX,
     KERNEL_REPLY_ENDPOINT, RESP_HDR_LEN, STATUS_LEN,
@@ -21,6 +20,7 @@ use crate::protocol::{
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
 use crate::slots::SlotResources;
+use nonos_libc::mk_ipc_send;
 pub fn reply_pending(tx: &mut [u8], req: &Request) {
     let plen = (STATUS_LEN + INTERRUPT_IN_REPLY_PREFIX) as u32;
     encode_response_header(tx, req, plen);

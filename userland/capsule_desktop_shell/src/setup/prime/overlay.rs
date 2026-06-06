@@ -40,17 +40,10 @@ pub fn allocate(compositor_port: u32, request_id: u32) -> Result<Overlay, &'stat
     }
     let display = display.ok_or("compositor call failed")?;
     let stride = display.stride;
-    let byte_len = (stride as u64)
-        .checked_mul(display.height as u64)
-        .ok_or("overlay size overflow")?;
-    let base = mk_mmap(
-        core::ptr::null_mut(),
-        byte_len as usize,
-        PROT_READ_WRITE,
-        MAP_PRIVATE_ANON,
-        -1,
-        0,
-    );
+    let byte_len =
+        (stride as u64).checked_mul(display.height as u64).ok_or("overlay size overflow")?;
+    let base =
+        mk_mmap(core::ptr::null_mut(), byte_len as usize, PROT_READ_WRITE, MAP_PRIVATE_ANON, -1, 0);
     if (base as isize) <= 0 {
         return Err("overlay mmap failed");
     }

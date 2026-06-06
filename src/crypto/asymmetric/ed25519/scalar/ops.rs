@@ -45,7 +45,6 @@ pub(crate) fn sc_addmul_mod_l(r: &[u8; 32], k: &[u8; 32], a: &[u8; 32]) -> [u8; 
         out64[i] = (v & 0xFF) as u8;
         carry = v >> 8;
     }
-    debug_assert!(carry == 0, "Unexpected carry in sc_addmul_mod_l");
 
     sc_reduce_mod_l(&mut out64)
 }

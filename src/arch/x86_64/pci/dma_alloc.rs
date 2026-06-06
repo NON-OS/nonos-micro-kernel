@@ -22,7 +22,10 @@ impl DmaEngine {
     pub fn alloc_coherent(&mut self, size: usize) -> PciResult<&DmaBuffer> {
         let phys_addr = crate::memory::dma::allocate_dma_buffer(size)
             .map_err(|_| PciError::DmaAllocationFailed { size })?;
-        let virt_addr = crate::memory::phys_to_virt(phys_addr);
+        let Some(virt_addr) = crate::memory::phys_to_virt(phys_addr) else {
+            let _ = crate::memory::dma::free_dma_buffer(phys_addr, size);
+            return Err(PciError::DmaAllocationFailed { size });
+        };
         let buffer = DmaBuffer { virt_addr, phys_addr, size, coherent: true };
         self.coherent_buffers.push(buffer);
         self.coherent_buffers.last().ok_or(PciError::DmaAllocationFailed { size })
@@ -31,7 +34,10 @@ impl DmaEngine {
     pub fn alloc_streaming(&mut self, size: usize) -> PciResult<&DmaBuffer> {
         let phys_addr = crate::memory::dma::allocate_dma_buffer(size)
             .map_err(|_| PciError::DmaAllocationFailed { size })?;
-        let virt_addr = crate::memory::phys_to_virt(phys_addr);
+        let Some(virt_addr) = crate::memory::phys_to_virt(phys_addr) else {
+            let _ = crate::memory::dma::free_dma_buffer(phys_addr, size);
+            return Err(PciError::DmaAllocationFailed { size });
+        };
         let buffer = DmaBuffer { virt_addr, phys_addr, size, coherent: false };
         self.streaming_buffers.push(buffer);
         self.streaming_buffers.last().ok_or(PciError::DmaAllocationFailed { size })

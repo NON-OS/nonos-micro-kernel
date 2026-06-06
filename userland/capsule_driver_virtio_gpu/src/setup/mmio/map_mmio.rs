@@ -13,16 +13,24 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::{mk_device_release, mk_mmio_map, MmioMapOut};
 use super::labels::errno_label;
 use super::state::RegisterGrant;
 use crate::constants::BAR_OFFSET;
 use crate::discover::Found;
+use nonos_libc::{mk_device_release, mk_mmio_map, MmioMapOut};
 const PAGE_MASK: u64 = 0xFFF;
 pub fn map_mmio(dev: Found, claim_epoch: u64) -> Result<RegisterGrant, &'static str> {
     let mut out = MmioMapOut { user_va: 0, length: 0, grant_id: 0 };
     let length = (dev.register_size + PAGE_MASK) & !PAGE_MASK;
-    let r = mk_mmio_map(dev.device_id, claim_epoch, dev.register_bar as u32, 0, BAR_OFFSET, length, &mut out);
+    let r = mk_mmio_map(
+        dev.device_id,
+        claim_epoch,
+        dev.register_bar as u32,
+        0,
+        BAR_OFFSET,
+        length,
+        &mut out,
+    );
     if r < 0 {
         if mk_device_release(dev.device_id) < 0 {
             return Err("virtio-gpu: release failed after mmio map failure");

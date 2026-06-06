@@ -25,7 +25,9 @@ pub fn dispatch(ctx: &mut Context, sender_pid: u32, req: Request, body: &[u8], t
     match req.op {
         OP_HEALTHCHECK if body.is_empty() => handlers::health::handle(sender_pid, &req, tx),
         OP_SET_WALLPAPER => handlers::set_wallpaper::handle(ctx, sender_pid, &req, body, tx),
-        OP_GET_WALLPAPER if body.is_empty() => handlers::get_wallpaper::handle(ctx, sender_pid, &req, tx),
+        OP_GET_WALLPAPER if body.is_empty() => {
+            handlers::get_wallpaper::handle(ctx, sender_pid, &req, tx)
+        }
         OP_SET_POLICY => handlers::set_policy::handle(ctx, sender_pid, &req, body, tx),
         OP_FADE => handlers::fade::handle(ctx, sender_pid, &req, body, tx),
         _ if body.is_empty() => {

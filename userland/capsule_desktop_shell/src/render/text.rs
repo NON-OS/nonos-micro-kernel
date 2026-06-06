@@ -23,3 +23,9 @@ pub fn draw_overlay_text(ctx: &Context, x: u32, y: u32, text: &[u8], color: u32)
     let pixels = unsafe { core::slice::from_raw_parts_mut(ctx.backing_va as *mut u32, words) };
     draw_text(pixels, (ctx.stride / 4) as usize, ctx.width, ctx.height, x, y, text, color);
 }
+
+pub fn draw_status(ctx: &Context, x: u32, y: u32, bytes: &[u8], argb: u32) {
+    let words = (ctx.stride / 4) as usize * ctx.height as usize;
+    let pixels = unsafe { core::slice::from_raw_parts_mut(ctx.backing_va as *mut u32, words) };
+    draw_text(pixels, (ctx.stride / 4) as usize, ctx.width, ctx.height, x, y, bytes, argb);
+}

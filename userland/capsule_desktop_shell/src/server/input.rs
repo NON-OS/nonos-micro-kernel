@@ -14,40 +14,39 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicBool, Ordering};
-
-use nonos_libc::{INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS};
+use nonos_libc::{INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS, INPUT_KIND_TOUCH};
 
 use crate::compositor_client::push_damage_commit;
-use crate::debug;
+use crate::protocol::{read_i32, read_u16, read_u32};
 use crate::render::paint_chrome;
 use crate::server::handlers::launcher_focus;
 use crate::state::Context;
 
 const CURSOR_SIZE: u32 = 12;
-static POINTER_LOGGED: AtomicBool = AtomicBool::new(false);
-static BUTTON_LOGGED: AtomicBool = AtomicBool::new(false);
 
 pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
-    if buf.len() < 40 || u32::from_le_bytes(buf[0..4].try_into().unwrap()) != 0x4E49_4E50 {
+    if buf.len() < 40 || read_u32(buf, 0) != Some(0x4E49_4E50) {
         return false;
     }
-    if u16::from_le_bytes(buf[4..6].try_into().unwrap()) != 1 {
+    if read_u16(buf, 4) != Some(1) {
         return true;
     }
-    let kind = u16::from_le_bytes(buf[8..10].try_into().unwrap());
-    let x = i32::from_le_bytes(buf[16..20].try_into().unwrap());
-    let y = i32::from_le_bytes(buf[20..24].try_into().unwrap());
+    let Some(kind) = read_u16(buf, 8) else {
+        return true;
+    };
+    let Some(x) = read_i32(buf, 16) else {
+        return true;
+    };
+    let Some(y) = read_i32(buf, 20) else {
+        return true;
+    };
     if x >= 0 && y >= 0 {
         if kind == INPUT_KIND_POINTER_ABS {
-            if !POINTER_LOGGED.swap(true, Ordering::Relaxed) {
-                debug::marker(b"pointer abs received");
-            }
             repaint_cursor(ctx, x as u32, y as u32);
+        } else if kind == INPUT_KIND_TOUCH {
+            repaint_cursor(ctx, x as u32, y as u32);
+            launcher_focus::handle(ctx, x as u32, y as u32);
         } else if kind == INPUT_KIND_BUTTON_DOWN {
-            if !BUTTON_LOGGED.swap(true, Ordering::Relaxed) {
-                debug::marker(b"button down received");
-            }
             launcher_focus::handle(ctx, x as u32, y as u32);
         }
     }

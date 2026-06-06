@@ -14,21 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! xHCI IPC client for usb_hid. Mirrors `capsule_net_l2/nic_client/`.
-//! Call `lookup::lookup()` to resolve the port, then use the typed
-//! wrappers from `ops::*`. The generic `call::call` is available for
-//! future ops not yet wrapped.
-
 mod call;
 mod lookup;
 mod ops;
 mod seq;
 mod wire;
 
-pub use call::XhciClientError;
 pub use lookup::lookup;
 pub use ops::{
-    address_device, AddressedDevice, alloc_transfer_ring, control_transfer,
-    enable_slot, get_config_descriptor, interrupt_in, port_status,
-    PortSnapshot, MAX_DESCRIPTOR_LEN,
+    address_device, alloc_transfer_ring, control_transfer, enable_slot, get_config_descriptor,
+    interrupt_in, port_status, PortSnapshot,
 };

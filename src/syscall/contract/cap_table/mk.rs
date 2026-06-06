@@ -20,8 +20,11 @@ use crate::syscall::numbers::SyscallNumber;
 pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<bool> {
     Some(match number {
         SyscallNumber::MkExit
+        | SyscallNumber::MkPidAlive
         | SyscallNumber::MkYield
         | SyscallNumber::MkTimeMillis
+        | SyscallNumber::MkTimeRtc
+        | SyscallNumber::MkBatteryStatus
         | SyscallNumber::MkCapCheck => caps.is_valid(),
 
         SyscallNumber::MkMmap => caps.can_allocate_memory(),
@@ -45,7 +48,8 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkIrqBind
         | SyscallNumber::MkIrqUnbind
         | SyscallNumber::MkIrqAck
-        | SyscallNumber::MkIrqPoll => caps.can_irq(),
+        | SyscallNumber::MkIrqPoll
+        | SyscallNumber::MkIrqWait => caps.can_irq(),
         SyscallNumber::MkDmaMap | SyscallNumber::MkDmaUnmap => caps.can_dma(),
         SyscallNumber::MkPciConfigRead | SyscallNumber::MkPciConfigWrite => caps.can_driver(),
         SyscallNumber::MkPioGrant
@@ -63,6 +67,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkDisplayVsyncWait => caps.can_display_query(),
         SyscallNumber::MkInputEventPost => caps.can_input_source(),
         SyscallNumber::MkInputEventDrain => caps.can_ipc(),
+        SyscallNumber::MkInputEventWait => caps.can_ipc(),
 
         _ => return None,
     })

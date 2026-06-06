@@ -18,6 +18,7 @@ use nonos_libc::mk_ipc_call;
 
 use super::builder::build_request;
 use super::constants::HDR_LEN;
+use super::read_i32::read_i32;
 
 pub fn call_payload(
     port: u32,
@@ -32,7 +33,7 @@ pub fn call_payload(
     if rc <= 0 || (rc as usize) < HDR_LEN + 4 {
         return Err("ipc call failed");
     }
-    let status = i32::from_le_bytes(rx[HDR_LEN..HDR_LEN + 4].try_into().unwrap());
+    let status = read_i32(rx, HDR_LEN)?;
     if status != 0 {
         return Err("service returned error");
     }

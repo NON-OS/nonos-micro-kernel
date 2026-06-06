@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod endpoint;
 mod errno;
 mod header;
 mod limits;
 mod ops;
 
-pub use endpoint::{REPLY_INBOX, REPLY_PORT, SERVICE_NAME, SERVICE_PORT};
 pub use errno::{
     E_AUTHORITY_MISSING, E_AUTHORITY_UNTRUSTED, E_BAD_LEN, E_BAD_MAGIC, E_BAD_OP, E_BAD_VERSION,
     E_CREDENTIAL_EXPIRED, E_CRYPTO, E_DIRECTORY_PROTO, E_DIRECTORY_SOURCE, E_GATEWAY_PROTO,

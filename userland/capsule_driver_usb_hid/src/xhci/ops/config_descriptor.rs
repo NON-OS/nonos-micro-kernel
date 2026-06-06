@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! GET_CONFIG_DESCRIPTOR call. Request body (4 bytes): `[0]=slot,
-//! [1]=resv,[2..4]=length_le`. Reply payload (after status): 4-byte
-//! prefix `[0..2]=actual_len_le,[2..4]=resv`, then descriptor bytes.
-//! Mirrors `xhci/server/handlers/config_descriptor.rs`.
-
 use crate::xhci::call::{call, XhciClientError};
 use crate::xhci::wire::{HDR_LEN, OP_GET_CONFIG_DESCRIPTOR, STATUS_LEN};
 

@@ -21,7 +21,7 @@ pub const BAR_FLAG_PREFETCH: u8 = 1 << 0;
 pub const BAR_FLAG_MEM64: u8 = 1 << 1;
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Bar {
     pub base: u64,
     pub size: u64,

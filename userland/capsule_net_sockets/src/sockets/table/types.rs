@@ -17,14 +17,13 @@
 use core::sync::atomic::AtomicU32;
 use spin::Mutex;
 
-use crate::sockets::{Family, Kind, LocalAddr4, RemoteAddr4, SocketKey};
+use crate::sockets::{Kind, LocalAddr4, RemoteAddr4, SocketKey};
 
 pub const TABLE_CAP: usize = 256;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Socket {
     pub key: SocketKey,
-    pub family: Family,
     pub kind: Kind,
     pub local: Option<LocalAddr4>,
     pub remote: Option<RemoteAddr4>,

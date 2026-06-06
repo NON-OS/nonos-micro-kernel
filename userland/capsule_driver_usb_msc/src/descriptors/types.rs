@@ -16,7 +16,7 @@
 
 use crate::protocol::MAX_BINDINGS;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct MscBinding {
     pub interface: u8,
     pub bulk_in: u8,

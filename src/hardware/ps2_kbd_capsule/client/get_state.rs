@@ -21,11 +21,7 @@ use super::seq::next_request_id;
 use super::status_map::lift;
 use super::transport::round_trip;
 
-/// Diagnostic counters the capsule exposes. `events_seen` covers
-/// every byte the IRQ drainer absorbed; `events_dropped` increments
-/// when the bounded ring overflows; `parity_errors` and
-/// `timeout_errors` reflect i8042 status-register flags.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct RingState {
     pub events_seen: u64,
     pub events_dropped: u64,
@@ -47,10 +43,18 @@ pub fn get_state() -> Result<RingState, DriverPs2Error> {
     if resp.body.len() < STATE_PAYLOAD_LEN {
         return Err(DriverPs2Error::ProtocolMismatch);
     }
+    let mut seen = [0u8; 8];
+    let mut dropped = [0u8; 8];
+    let mut parity = [0u8; 8];
+    let mut timeout = [0u8; 8];
+    seen.copy_from_slice(&resp.body[0..8]);
+    dropped.copy_from_slice(&resp.body[8..16]);
+    parity.copy_from_slice(&resp.body[16..24]);
+    timeout.copy_from_slice(&resp.body[24..32]);
     Ok(RingState {
-        events_seen: u64::from_le_bytes(resp.body[0..8].try_into().unwrap()),
-        events_dropped: u64::from_le_bytes(resp.body[8..16].try_into().unwrap()),
-        parity_errors: u64::from_le_bytes(resp.body[16..24].try_into().unwrap()),
-        timeout_errors: u64::from_le_bytes(resp.body[24..32].try_into().unwrap()),
+        events_seen: u64::from_le_bytes(seen),
+        events_dropped: u64::from_le_bytes(dropped),
+        parity_errors: u64::from_le_bytes(parity),
+        timeout_errors: u64::from_le_bytes(timeout),
     })
 }

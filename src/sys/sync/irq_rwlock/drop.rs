@@ -20,7 +20,9 @@ use super::guard::{IrqRwLockReadGuard, IrqRwLockWriteGuard};
 
 impl<'a, T> Drop for IrqRwLockReadGuard<'a, T> {
     fn drop(&mut self) {
-        self.inner.take();
+        unsafe {
+            core::mem::ManuallyDrop::drop(&mut self.inner);
+        }
         if self.restore {
             enable();
         }
@@ -29,7 +31,9 @@ impl<'a, T> Drop for IrqRwLockReadGuard<'a, T> {
 
 impl<'a, T> Drop for IrqRwLockWriteGuard<'a, T> {
     fn drop(&mut self) {
-        self.inner.take();
+        unsafe {
+            core::mem::ManuallyDrop::drop(&mut self.inner);
+        }
         if self.restore {
             enable();
         }

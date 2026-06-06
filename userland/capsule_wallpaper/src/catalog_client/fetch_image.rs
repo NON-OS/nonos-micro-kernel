@@ -16,12 +16,10 @@
 
 use alloc::vec::Vec;
 
-use nonos_libc::mk_ipc_call_timeout;
-
+use super::fetch_chunk::fetch_chunk;
 use super::fetch_size::fetch_size;
-use super::proto::{Header, CHUNK_MAX, E_OK, HDR_LEN, IPC_PAYLOAD_MAX, OP_GET_CHUNK};
+use super::proto::{CHUNK_MAX, HDR_LEN, IPC_PAYLOAD_MAX};
 
-const REPLY_TIMEOUT_MS: u64 = 500;
 const MAX_IMAGE_BYTES: u32 = 2_000_000;
 const MAX_CHUNKS: u32 = (MAX_IMAGE_BYTES / CHUNK_MAX as u32) + 2;
 
@@ -39,37 +37,9 @@ pub fn fetch_image(catalog_port: u32, index: u32) -> Option<Vec<u8>> {
         if iterations > MAX_CHUNKS {
             return None;
         }
-        let req = Header { op: OP_GET_CHUNK, status: 0, index, offset, payload_len: 0 };
-        req.encode(&mut buf[..HDR_LEN]);
-        let n = mk_ipc_call_timeout(
-            catalog_port as u64,
-            buf.as_ptr(),
-            HDR_LEN,
-            buf.as_mut_ptr(),
-            buf.len(),
-            REPLY_TIMEOUT_MS,
-        );
-        if n <= 0 || (n as usize) < HDR_LEN {
-            return None;
-        }
-        let hdr = Header::decode(&buf[..HDR_LEN])?;
-        if hdr.status != E_OK || hdr.op != OP_GET_CHUNK {
-            return None;
-        }
-        if hdr.index != index || hdr.offset != offset {
-            return None;
-        }
-        if hdr.payload_len as usize > CHUNK_MAX {
-            return None;
-        }
-        let body_end = HDR_LEN + hdr.payload_len as usize;
-        if body_end > n as usize {
-            return None;
-        }
-        if hdr.payload_len == 0 {
-            return None;
-        }
-        let new_offset = offset.checked_add(hdr.payload_len)?;
+        let payload_len = fetch_chunk(catalog_port, index, offset, &mut buf)?;
+        let body_end = HDR_LEN + payload_len as usize;
+        let new_offset = offset.checked_add(payload_len)?;
         if new_offset > size {
             return None;
         }

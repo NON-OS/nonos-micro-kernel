@@ -18,7 +18,7 @@ use crate::ipv4::fold;
 
 use super::types::{IcmpHeader, HDR_LEN};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ParseError {
     TooShort,
     BadChecksum,

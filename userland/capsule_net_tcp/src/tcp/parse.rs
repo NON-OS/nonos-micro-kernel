@@ -17,7 +17,7 @@
 use super::checksum::compute;
 use super::header::{TcpHeader, HDR_LEN_MIN};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ParseError {
     TooShort,
     BadDataOffset,
@@ -48,11 +48,7 @@ pub fn parse<'a>(
         dst_port: u16::from_be_bytes([segment[2], segment[3]]),
         seq: be32(segment, 4),
         ack: be32(segment, 8),
-        data_offset_words,
         flags: segment[13],
-        window: u16::from_be_bytes([segment[14], segment[15]]),
-        checksum: u16::from_be_bytes([segment[16], segment[17]]),
-        urgent_ptr: u16::from_be_bytes([segment[18], segment[19]]),
     };
     Ok((hdr, &segment[header_len..]))
 }

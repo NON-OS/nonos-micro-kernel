@@ -17,5 +17,5 @@
 mod table;
 mod types;
 
-pub use table::{Socket, Table, SOCKETS, TABLE_CAP};
-pub use types::{Family, Kind, LocalAddr4, RemoteAddr4, SocketKey};
+pub use table::{Socket, SOCKETS};
+pub use types::{Kind, LocalAddr4, RemoteAddr4, SocketKey};

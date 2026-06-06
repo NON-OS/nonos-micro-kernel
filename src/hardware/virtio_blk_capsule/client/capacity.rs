@@ -21,9 +21,6 @@ use super::seq::next_request_id;
 use super::status_map::lift;
 use super::transport::round_trip;
 
-/// Returns the device capacity in 512-byte sectors. The userland
-/// capsule reads this from the legacy device-config window once
-/// at setup; the call is cheap and does no MMIO of its own.
 pub fn capacity() -> Result<u64, DriverBlkError> {
     let _caller = gate_call()?;
     let body: [u8; 0] = [];
@@ -36,5 +33,14 @@ pub fn capacity() -> Result<u64, DriverBlkError> {
     if resp.body.len() < 8 {
         return Err(DriverBlkError::ProtocolMismatch);
     }
-    Ok(u64::from_le_bytes(resp.body[0..8].try_into().unwrap()))
+    Ok(u64::from_le_bytes([
+        resp.body[0],
+        resp.body[1],
+        resp.body[2],
+        resp.body[3],
+        resp.body[4],
+        resp.body[5],
+        resp.body[6],
+        resp.body[7],
+    ]))
 }

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{Request, E_INVAL};
+use crate::protocol::{read_u32, Request, E_INVAL};
 use crate::server::respond;
 use crate::state::Context;
 
@@ -26,7 +26,10 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
         let _ = respond::status(sender_pid, req, E_INVAL, tx);
         return;
     }
-    let kind_mask = u32::from_le_bytes(body[0..4].try_into().unwrap());
+    let Some(kind_mask) = read_u32(body, 0) else {
+        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        return;
+    };
     if kind_mask == 0 {
         let _ = respond::status(sender_pid, req, E_INVAL, tx);
         return;

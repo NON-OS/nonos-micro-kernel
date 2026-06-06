@@ -18,5 +18,6 @@ mod buffer;
 mod clear;
 mod fill_rect;
 mod text;
+mod text_scaled;
 
 pub use buffer::PaintBuffer;

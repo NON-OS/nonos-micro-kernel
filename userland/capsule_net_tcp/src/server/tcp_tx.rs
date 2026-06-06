@@ -36,14 +36,3 @@ pub fn send(tcb: Tcb, flags: u8, payload: &[u8]) -> Result<(), &'static str> {
     let n = build(&req, &mut seg).map_err(|_| "tcp build failed")?;
     send_segment(ip_port(), tcb.remote.ip, &seg[..n]).map_err(|_| "tcp send failed")
 }
-
-pub fn sequence_delta(flags: u8, payload_len: usize) -> u32 {
-    let mut n = payload_len as u32;
-    if flags & crate::tcp::FLAG_SYN != 0 {
-        n += 1;
-    }
-    if flags & crate::tcp::FLAG_FIN != 0 {
-        n += 1;
-    }
-    n
-}

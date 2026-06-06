@@ -18,6 +18,6 @@ mod iface;
 mod packet;
 mod rx_queue;
 
-pub use iface::{InterfaceConfig, IFACE};
+pub use iface::IFACE;
 pub use packet::Packet;
-pub use rx_queue::{pop_any, pop_for_protocol, push, RX_DEPTH};
+pub use rx_queue::{pop_any, pop_for_protocol, push};

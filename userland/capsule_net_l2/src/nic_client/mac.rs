@@ -20,31 +20,38 @@ use super::header::{parse_response, write_request};
 use super::seq;
 use super::wire::{NIC_HDR_LEN, OP_MAC_ADDRESS};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MacError {
     SendFailed,
     BadResponse,
     BadLength,
 }
 
-// Ask the NIC capsule for its MAC. Sends a 20-byte v1 request
-// with empty payload, expects a 4-byte i32 status followed by 6
-// MAC bytes per the existing virtio_net handler contract.
 pub fn read_mac(nic_port: u32) -> Result<[u8; 6], MacError> {
     let mut req = [0u8; NIC_HDR_LEN];
     let rid = seq::next();
-    write_request(&mut req, OP_MAC_ADDRESS, rid, 0);
+    if write_request(&mut req, OP_MAC_ADDRESS, rid, 0).is_none() {
+        return Err(MacError::BadResponse);
+    }
     let mut resp = [0u8; NIC_HDR_LEN + 4 + 6];
     let n = mk_ipc_call(nic_port as u64, req.as_ptr(), NIC_HDR_LEN, resp.as_mut_ptr(), resp.len());
     if n < 0 {
         return Err(MacError::SendFailed);
     }
-    let (op, _rid_back, plen) = parse_response(&resp).ok_or(MacError::BadResponse)?;
+    let got = n as usize;
+    if got > resp.len() {
+        return Err(MacError::BadResponse);
+    }
+    let view = &resp[..got];
+    let (op, _rid_back, plen) = parse_response(view).ok_or(MacError::BadResponse)?;
     if op != OP_MAC_ADDRESS || plen as usize != 4 + 6 {
+        return Err(MacError::BadLength);
+    }
+    if view.len() < NIC_HDR_LEN + 4 + 6 {
         return Err(MacError::BadLength);
     }
     let mac_start = NIC_HDR_LEN + 4;
     let mut mac = [0u8; 6];
-    mac.copy_from_slice(&resp[mac_start..mac_start + 6]);
+    mac.copy_from_slice(&view[mac_start..mac_start + 6]);
     Ok(mac)
 }

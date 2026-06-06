@@ -16,7 +16,6 @@
 
 use nonos_libc::{mk_surface_attach, mk_surface_release, SurfaceDescriptor};
 
-use crate::debug;
 use crate::sw_blitter::Surface;
 
 pub const MAX_ATTACH: usize = 32;
@@ -45,14 +44,17 @@ impl AttachCache {
             return Some(s.surface);
         }
         let mut desc = SurfaceDescriptor::default();
-        debug::marker(b"attach call");
         let rc = mk_surface_attach(handle, &mut desc);
         if rc <= 0 {
             return None;
         }
-        debug::marker(b"attach ok");
-        let surface =
-            Surface { base_va: rc as u64, stride: desc.stride, width: desc.width, height: desc.height, byte_len: desc.byte_len };
+        let surface = Surface {
+            base_va: rc as u64,
+            stride: desc.stride,
+            width: desc.width,
+            height: desc.height,
+            byte_len: desc.byte_len,
+        };
         if let Some(slot) = self.slots.iter_mut().find(|s| !s.in_use) {
             *slot = Slot { handle, surface, in_use: true };
         }

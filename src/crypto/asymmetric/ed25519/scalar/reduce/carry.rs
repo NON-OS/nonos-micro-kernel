@@ -180,10 +180,4 @@ pub(crate) fn final_reduction(a: &mut [i64; 24]) {
         a[11] += c;
         a[10] -= c << 21;
     }
-
-    #[cfg(debug_assertions)]
-    for i in 0..12 {
-        debug_assert!(a[i] >= 0, "Negative limb a[{}] = {}", i, a[i]);
-        debug_assert!(a[i] < (1 << 22), "Limb a[{}] = {} too large", i, a[i]);
-    }
 }

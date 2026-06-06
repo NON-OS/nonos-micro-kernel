@@ -17,7 +17,7 @@
 use super::build::{build as icmp_build, BuildError};
 use super::types::{IcmpHeader, TYPE_ECHO_REPLY, TYPE_ECHO_REQUEST};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Echo<'a> {
     pub identifier: u16,
     pub sequence: u16,

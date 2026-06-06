@@ -22,7 +22,7 @@ use nonos_libc::{
 use super::overlay::Overlay;
 use crate::compositor_client::push_scene_submit;
 
-const OVERLAY_Z: u32 = 16;
+const OVERLAY_Z: u32 = 1_000_000;
 
 pub fn register_overlay(
     compositor_port: u32,

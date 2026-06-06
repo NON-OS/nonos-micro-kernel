@@ -21,5 +21,5 @@ mod raise;
 
 pub use close::window_close;
 pub use focus::window_focus;
-pub use open::window_open;
+pub use open::{window_open, WindowPlacement};
 pub use raise::window_raise;

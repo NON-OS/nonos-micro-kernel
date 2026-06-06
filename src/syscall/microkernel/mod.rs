@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod battery;
 pub mod capability;
 pub mod debug;
 #[cfg(feature = "nonos-user-entry-proof")]
@@ -47,4 +48,5 @@ pub use numbers::*;
 pub use pci::sys_pci_config_write;
 pub use pio::{sys_pio_grant, sys_pio_read, sys_pio_release, sys_pio_write};
 pub use process::{sys_exit, sys_spawn, sys_yield};
-pub use time::sys_time_millis;
+pub use battery::sys_battery_status;
+pub use time::{sys_time_millis, sys_time_rtc};

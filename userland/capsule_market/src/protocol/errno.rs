@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Status values the response carries in the first four payload
-//! bytes. Negative values mirror Linux errnos so a kernel-side
-//! client can route them through the same mapper used by the
-//! other capsules.
-
 pub(in super::super) const E_INVAL: i32 = -22;
 pub(in super::super) const E_NODATA: i32 = -61;
 pub(in super::super) const E_KEYREJECTED: i32 = -129;

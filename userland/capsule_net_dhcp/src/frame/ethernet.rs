@@ -18,18 +18,16 @@ pub const HDR_LEN: usize = 14;
 pub const ETHERTYPE_IPV4: u16 = 0x0800;
 pub const BROADCAST: [u8; 6] = [0xFF; 6];
 
-// Write a 14-byte Ethernet II header into `out`. Returns the
-// number of bytes written. Caller is responsible for sizing.
 pub fn write(out: &mut [u8], dst_mac: &[u8; 6], src_mac: &[u8; 6], ethertype: u16) -> usize {
-    debug_assert!(out.len() >= HDR_LEN);
+    if out.len() < HDR_LEN {
+        return 0;
+    }
     out[0..6].copy_from_slice(dst_mac);
     out[6..12].copy_from_slice(src_mac);
     out[12..14].copy_from_slice(&ethertype.to_be_bytes());
     HDR_LEN
 }
 
-// Returns (dst_mac, src_mac, ethertype) if the slice is long
-// enough to host an Ethernet II header.
 pub fn parse(bytes: &[u8]) -> Option<([u8; 6], [u8; 6], u16)> {
     if bytes.len() < HDR_LEN {
         return None;

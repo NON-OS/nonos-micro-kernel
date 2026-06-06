@@ -19,7 +19,6 @@
 
 extern crate alloc;
 
-mod debug;
 mod frame_pacer;
 mod gfx_client;
 mod protocol;
@@ -27,8 +26,9 @@ mod server;
 mod setup;
 mod state;
 mod sw_blitter;
+mod wait_for_setup;
 
-use nonos_libc::{heap_init, mk_exit, mk_service_register, mk_yield};
+use nonos_libc::{heap_init, mk_exit, mk_service_register};
 
 const SERVICE_NAME: &[u8] = b"compositor";
 const SERVICE_PORT: u32 = 4310;
@@ -38,35 +38,9 @@ pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
-    debug::marker(b"start");
-    let ctx = wait_for_setup();
-    debug::marker(b"setup ok");
+    let ctx = wait_for_setup::wait_for_setup();
     if mk_service_register(SERVICE_NAME.as_ptr(), SERVICE_NAME.len(), SERVICE_PORT) < 0 {
-        debug::marker(b"service register failed");
         mk_exit(1);
     }
-    debug::marker(b"service registered");
     server::run(ctx);
-}
-
-fn wait_for_setup() -> crate::state::Context {
-    let mut last: &'static str = "";
-    loop {
-        match setup::run() {
-            Ok(ctx) => return ctx,
-            Err(e) => {
-                if e != last {
-                    debug::marker(e.as_bytes());
-                    last = e;
-                }
-                wait_after_error();
-            }
-        }
-    }
-}
-
-fn wait_after_error() {
-    for _ in 0..64 {
-        mk_yield();
-    }
 }

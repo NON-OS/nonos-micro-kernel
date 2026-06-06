@@ -19,27 +19,6 @@ pub const LABEL_MAX: usize = 63;
 pub const POINTER_MASK: u8 = 0xC0;
 
 pub const TYPE_A: u16 = 1;
-pub const TYPE_NS: u16 = 2;
-pub const TYPE_CNAME: u16 = 5;
-pub const TYPE_PTR: u16 = 12;
-pub const TYPE_MX: u16 = 15;
-pub const TYPE_TXT: u16 = 16;
 pub const TYPE_AAAA: u16 = 28;
 
 pub const CLASS_IN: u16 = 1;
-
-#[derive(Clone, Copy, Debug)]
-pub struct Question<'a> {
-    pub qname: &'a [u8],
-    pub qtype: u16,
-    pub qclass: u16,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct ResourceRecord<'a> {
-    pub name: &'a [u8],
-    pub rtype: u16,
-    pub rclass: u16,
-    pub ttl: u32,
-    pub rdata: &'a [u8],
-}

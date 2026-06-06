@@ -20,9 +20,18 @@ mod control;
 mod decorations;
 mod dispatch;
 mod drain_ipc;
+mod ensure_primed;
 mod entry;
+mod fail;
+mod fail_boot;
+mod paint_close_button;
 mod paint_frame;
+mod paint_once;
+mod prime_frame;
+mod refresh_input;
+mod repaint;
 mod request_id;
+mod service_frame;
 mod teardown;
 
 pub use entry::run;

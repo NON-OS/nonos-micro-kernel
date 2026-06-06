@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Entry point. Heap init -> broker setup (claim, mmio_map,
-//! irq_bind, four DMA grants) -> hardware bring-up (reset, EEPROM
-//! MAC, RAL/RAH, MTA clear, RX + TX ring program) -> service loop.
-//! The kernel-side embed/spawn glue lands in 5C.1.6; until then
-//! Capsule.parked keeps the kernel from launching this binary.
-
 #![no_std]
 #![no_main]
 

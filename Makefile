@@ -30,7 +30,7 @@
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
 .PHONY: nonos-mk-run nonos-mk-run-serial nonos-mk-debug nonos-mk-plan-a-runtime
 .PHONY: nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-mk-boot-entropy nonos-mk-boot-crypto-hash nonos-mk-boot-vfs nonos-mk-boot-ps2-input nonos-mk-boot-xhci nonos-mk-boot-desktop-gui
-.PHONY: nonos-mk-input-e2e-ps2-test nonos-mk-input-e2e-ps2-esp nonos-mk-input-e2e-xhci-test nonos-mk-input-e2e-xhci-esp nonos-mk-boot-input-e2e-ps2 nonos-mk-boot-input-e2e-xhci
+.PHONY: nonos-mk-input-e2e-ps2-test nonos-mk-input-e2e-ps2-esp nonos-mk-input-e2e-xhci-test nonos-mk-input-e2e-xhci-esp nonos-mk-boot-input-e2e-ps2 nonos-mk-boot-input-e2e-xhci nonos-mk-input-probe-test nonos-mk-input-probe-esp nonos-mk-input-probe-run nonos-mk-input-probe-run-serial nonos-mk-input-probe-inject-test nonos-mk-input-probe-inject-esp nonos-mk-input-probe-inject-run-serial
 .PHONY: nonos-mk-static nonos-mk-scan
 .PHONY: nonos-mk-verify nonos-mk-verify-fast
 .PHONY: nonos-mk-test nonos-mk-host-test
@@ -154,7 +154,7 @@ QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
 QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::$(QEMU_HOST_SSH_PORT)-:22,hostfwd=tcp::$(QEMU_HOST_HTTP_PORT)-:80
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
 QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=1024,yres=768
-QEMU_USB := -device qemu-xhci,id=xhci -device usb-tablet,bus=xhci.0
+QEMU_USB := -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-mouse,bus=xhci.0
 QEMU_RNG := -device virtio-rng-pci
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -298,7 +298,8 @@ nonos-mk-host-trust-elfs: $(USERLAND_LIBC) $(MARKETPLACE_ABI_LIB) \
 		$(proof-io_BIN) $(ramfs_BIN) $(keyring_BIN) $(entropy_BIN) \
 		$(crypto_BIN) $(vfs_BIN) $(market_BIN) $(driver-virtio-rng_BIN) \
 		$(driver-virtio-gpu_BIN) $(driver-ps2-input_BIN) $(driver-virtio-blk_BIN) \
-		$(driver-virtio-net_BIN) $(driver-xhci_BIN) $(driver-e1000_BIN) \
+		$(driver-virtio-net_BIN) $(driver-xhci_BIN) $(driver-usb-hid_BIN) \
+		$(driver-e1000_BIN) \
 		$(net-l2_BIN) $(net-ip_BIN) $(net-udp_BIN) $(net-dhcp_BIN) \
 		$(input-router_BIN) $(compositor_BIN) $(wm_BIN) $(desktop-shell_BIN) \
 		$(image-codec_BIN) $(clipboard_BIN) $(login_BIN) $(wallpaper_BIN) \
@@ -356,6 +357,8 @@ include userland/capsule_crypto/Capsule.mk
 include userland/compositor/Capsule.mk
 include userland/capsule_input_router/Capsule.mk
 include userland/capsule_input_proof/Capsule.mk
+include userland/capsule_input_probe/Capsule.mk
+include userland/capsule_setup_wizard/Capsule.mk
 include userland/capsule_wm/Capsule.mk
 include userland/capsule_desktop_shell/Capsule.mk
 include userland/capsule_image_codec/Capsule.mk
@@ -413,6 +416,7 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(driver-virtio-rng_VERIFY) $(driver-virtio-blk_VERIFY) \
 	$(driver-virtio-gpu_VERIFY) $(driver-virtio-net_VERIFY) \
 	$(driver-ps2-input_VERIFY) $(driver-xhci_VERIFY) \
+	$(driver-usb-hid_VERIFY) \
 	$(net-l2_VERIFY) $(net-ip_VERIFY) $(net-udp_VERIFY) \
 	$(net-dhcp_VERIFY) $(net-tcp_VERIFY) $(net-dns_VERIFY) \
 	$(net-sockets_VERIFY) $(net-nym_VERIFY) \
@@ -713,6 +717,86 @@ nonos-mk-input-e2e-ps2-test: $(NONOS_INPUT_E2E_ARTIFACTS) \
 nonos-mk-input-e2e-ps2-esp: nonos-mk-input-e2e-ps2-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
 	$(call NONOS_INPUT_E2E_ESP,input-e2e-ps2)
 
+NONOS_INPUT_PROBE_ARTIFACTS := $(proof-io_ARTIFACTS) \
+	$(driver-ps2-input_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
+	$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
+	$(input-probe_ARTIFACTS)
+
+nonos-mk-input-probe-test: $(NONOS_INPUT_PROBE_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-input-probe)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-input-probe
+
+nonos-mk-input-probe-esp: nonos-mk-input-probe-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
+	$(call NONOS_INPUT_E2E_ESP,input-probe)
+
+nonos-mk-input-probe-inject-test: $(NONOS_INPUT_PROBE_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-input-probe,input-probe-inject)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-input-probe,input-probe-inject
+
+nonos-mk-input-probe-inject-esp: nonos-mk-input-probe-inject-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
+	$(call NONOS_INPUT_E2E_ESP,input-probe-inject)
+
+nonos-mk-input-probe-inject-run-serial: nonos-mk-input-probe-inject-esp $(QEMU_OVMF_VARS_RW)
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-input-probe-inject" \
+		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial mon:stdio -display none -no-reboot
+
+nonos-mk-input-probe-run: nonos-mk-input-probe-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
+	@echo "Booting NONOS input-probe in QEMU (GPU window + serial)..."
+	@echo "  Quit: Ctrl+A then X"
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-input-probe" \
+		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
+		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial mon:stdio -vga none -no-reboot
+
+nonos-mk-input-probe-run-serial: nonos-mk-input-probe-esp $(QEMU_OVMF_VARS_RW)
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-input-probe" \
+		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial mon:stdio -display none -no-reboot
+
+nonos-mk-setup-wizard-esp: nonos-mk-setup-wizard-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
+	$(call NONOS_INPUT_E2E_ESP,setup-wizard)
+
+nonos-mk-setup-wizard-run-serial: nonos-mk-setup-wizard-esp $(QEMU_OVMF_VARS_RW)
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-setup-wizard" \
+		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial mon:stdio -display none -no-reboot
+
+nonos-mk-setup-wizard-run: nonos-mk-setup-wizard-esp $(QEMU_OVMF_VARS_RW)
+	@echo "Booting NONOS setup wizard (GUI) in QEMU..."
+	@echo "  Drive it with the host keyboard; Quit: Ctrl+A then X"
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-setup-wizard" \
+		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial mon:stdio -vga none -no-reboot
+
+nonos-mk-setup-wizard-inject-esp: nonos-mk-setup-wizard-inject-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
+	$(call NONOS_INPUT_E2E_ESP,setup-wizard-inject)
+
+nonos-mk-setup-wizard-inject-run-serial: nonos-mk-setup-wizard-inject-esp $(QEMU_OVMF_VARS_RW)
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-setup-wizard-inject" \
+		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial mon:stdio -display none -no-reboot
+
 nonos-mk-input-e2e-xhci-test: $(NONOS_INPUT_E2E_ARTIFACTS) \
 		$(driver-xhci_ARTIFACTS) $(driver-usb-hid_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
@@ -1004,7 +1088,8 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
 		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
 		$(driver-virtio-net_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
-		$(driver-xhci_ARTIFACTS) $(net-l2_ARTIFACTS) \
+		$(driver-xhci_ARTIFACTS) $(driver-usb-hid_ARTIFACTS) \
+		$(net-l2_ARTIFACTS) \
 		$(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) \
 		$(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) \
 		$(net-nym_ARTIFACTS) \
@@ -1025,6 +1110,60 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-desktop-gui
+
+nonos-mk-setup-wizard-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
+		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
+		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
+		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
+		$(driver-virtio-net_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
+		$(driver-xhci_ARTIFACTS) $(net-l2_ARTIFACTS) \
+		$(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) \
+		$(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) \
+		$(net-nym_ARTIFACTS) \
+		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
+		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
+		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
+		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
+		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
+		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(terminal_ARTIFACTS) \
+		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
+		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
+		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
+		$(setup-wizard_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-setup-wizard)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-setup-wizard
+
+nonos-mk-setup-wizard-inject-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
+		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
+		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
+		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
+		$(driver-virtio-net_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
+		$(driver-xhci_ARTIFACTS) $(net-l2_ARTIFACTS) \
+		$(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) \
+		$(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) \
+		$(net-nym_ARTIFACTS) \
+		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
+		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
+		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
+		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
+		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
+		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(terminal_ARTIFACTS) \
+		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
+		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
+		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
+		$(setup-wizard_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-setup-wizard + inject)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-setup-wizard,input-probe-inject
 
 nonos-mk-toolkit-prod: nonos-mk-desktop-gui-prod
 nonos-mk-about-prod: nonos-mk-desktop-gui-prod

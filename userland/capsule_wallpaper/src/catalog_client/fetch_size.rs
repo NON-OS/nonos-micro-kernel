@@ -42,10 +42,5 @@ pub fn fetch_size(catalog_port: u32, index: u32) -> Option<u32> {
     if (hdr.payload_len as usize) < 4 {
         return None;
     }
-    Some(u32::from_le_bytes([
-        buf[HDR_LEN],
-        buf[HDR_LEN + 1],
-        buf[HDR_LEN + 2],
-        buf[HDR_LEN + 3],
-    ]))
+    Some(u32::from_le_bytes([buf[HDR_LEN], buf[HDR_LEN + 1], buf[HDR_LEN + 2], buf[HDR_LEN + 3]]))
 }

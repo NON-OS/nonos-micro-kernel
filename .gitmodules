@@ -16,3 +16,9 @@
 [submodule "nonos-data"]
 	path = nonos-data
 	url = https://github.com/NON-OS/nonos-trust-keystore.git
+[submodule "docs"]
+	path = docs
+	url = https://github.com/NON-OS/nonos-docs.git
+[submodule "assets/wallpapers"]
+	path = wallpapers
+	url = https://github.com/NON-OS/nonos-wallpapers.git

@@ -16,7 +16,7 @@
 
 use crate::ipv4::Ipv4Addr;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Route {
     pub network: Ipv4Addr,
     pub prefix: u8,

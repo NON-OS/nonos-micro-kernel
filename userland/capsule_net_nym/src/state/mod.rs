@@ -33,8 +33,7 @@ pub use credential::{
 };
 pub use directory::{get as directory_source, install as install_directory_source};
 pub use gateway::{Gateway, Transport};
-pub use replay::ReplayWindow;
-pub use session::{Session, RX_DEPTH};
+pub use session::Session;
 pub use surb::{consume as consume_surb, create as create_surb, default_ttl_ms as surb_ttl_ms};
 pub use table::{TableError, TABLE};
 pub use timing::{

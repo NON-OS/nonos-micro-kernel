@@ -23,10 +23,6 @@ use crate::syscall::{call_raw, N_CRYPTO_SECP256K1_SIGN};
 /// The secret is consumed and zeroized inside the kernel; it is never
 /// returned. Returns 65 on success, negative errno otherwise.
 #[no_mangle]
-pub extern "C" fn crypto_secp256k1_sign(
-    sk: *const u8,
-    digest: *const u8,
-    out: *mut u8,
-) -> i64 {
+pub extern "C" fn crypto_secp256k1_sign(sk: *const u8, digest: *const u8, out: *mut u8) -> i64 {
     call_raw(N_CRYPTO_SECP256K1_SIGN, [sk as u64, digest as u64, out as u64, 0, 0, 0])
 }

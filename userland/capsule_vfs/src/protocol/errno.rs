@@ -17,6 +17,9 @@
 pub const ENOENT: i32 = -2;
 pub const EBADF: i32 = -9;
 pub const EACCES: i32 = -13;
+pub const EEXIST: i32 = -17;
+pub const EISDIR: i32 = -21;
 pub const EINVAL: i32 = -22;
 pub const ENOSPC: i32 = -28;
+pub const ENOTEMPTY: i32 = -39;
 pub const EMSGSIZE: i32 = -90;

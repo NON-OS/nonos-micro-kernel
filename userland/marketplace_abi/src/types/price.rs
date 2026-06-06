@@ -17,7 +17,7 @@
 //! Price model. The capsule never moves money; it only carries the
 //! shape so the future capsule_payment knows what to charge for.
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum PriceKind {
     Free = 0,
@@ -37,7 +37,7 @@ impl PriceKind {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct PriceModel {
     pub kind: PriceKind,
     /// Price expressed in the smallest unit of the carrying token

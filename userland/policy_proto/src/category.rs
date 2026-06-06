@@ -16,7 +16,7 @@
 
 use super::field::Field;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Category {
     User,
     Kernel,

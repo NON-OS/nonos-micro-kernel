@@ -34,14 +34,8 @@ pub fn allocate(compositor_port: u32, request_id: u32) -> Result<Backing, &'stat
     let byte_len = (display.stride as u64)
         .checked_mul(display.height as u64)
         .ok_or("surface size overflow")?;
-    let base = mk_mmap(
-        core::ptr::null_mut(),
-        byte_len as usize,
-        PROT_READ_WRITE,
-        MAP_PRIVATE_ANON,
-        -1,
-        0,
-    );
+    let base =
+        mk_mmap(core::ptr::null_mut(), byte_len as usize, PROT_READ_WRITE, MAP_PRIVATE_ANON, -1, 0);
     if (base as isize) <= 0 {
         return Err("backing mmap failed");
     }

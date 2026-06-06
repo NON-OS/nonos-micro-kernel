@@ -13,9 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+mod enable_keyboard;
 mod enable_mouse;
 mod enable_scanning;
 mod flush_output;
+pub use enable_keyboard::enable_keyboard;
 pub use enable_mouse::enable_mouse;
 pub use enable_scanning::enable_scanning;
 pub use flush_output::flush_output;

@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! CONTROL_TRANSFER call. Request body (10 bytes):
-//! `[0]=slot,[1]=resv,[2]=bmRequestType,[3]=bRequest,
-//!  [4..6]=wValue_le,[6..8]=wIndex_le,[8..10]=wLength_le`.
-//! Reply payload (after status): `[0..2]=actual_len_le`, then data.
-//! Mirrors `xhci/server/handlers/control_transfer.rs`.
-
 use crate::xhci::call::{call, XhciClientError};
 use crate::xhci::wire::{HDR_LEN, OP_CONTROL_TRANSFER, STATUS_LEN};
 

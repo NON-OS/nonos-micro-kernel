@@ -18,8 +18,8 @@ use alloc::vec::Vec;
 
 use super::handlers;
 use crate::protocol::{
-    encode_response, Request, EINVAL, OP_CLOSE, OP_HEALTHCHECK, OP_LIST, OP_OPEN, OP_READ,
-    OP_STAT, OP_WRITE,
+    encode_response, Request, EINVAL, OP_CLOSE, OP_HEALTHCHECK, OP_LIST, OP_MKDIR, OP_OPEN,
+    OP_READ, OP_RENAME, OP_STAT, OP_UNLINK, OP_WRITE,
 };
 use crate::store::Store;
 
@@ -31,6 +31,9 @@ pub fn dispatch(store: &mut Store, req: Request<'_>) -> Vec<u8> {
         OP_WRITE => handlers::write(store, req),
         OP_STAT => handlers::stat(store, req),
         OP_LIST => handlers::list(store, req),
+        OP_MKDIR => handlers::mkdir(store, req),
+        OP_UNLINK => handlers::unlink(store, req),
+        OP_RENAME => handlers::rename(store, req),
         OP_HEALTHCHECK => handlers::healthcheck(req),
         _ => encode_response(req.op, req.flags, req.request_id, EINVAL, &[]),
     }

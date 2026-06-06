@@ -15,10 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod adjust;
+pub mod adjust_i8;
+pub mod adjust_u8;
+pub mod clamp_u8;
 pub mod commit_bool;
 pub mod commit_string;
 pub mod next_category;
 pub mod on_event;
+pub mod on_event_browsing;
+pub mod on_event_editing;
+pub mod on_pointer;
 pub mod prev_category;
 pub mod push_text_char;
 pub mod report;

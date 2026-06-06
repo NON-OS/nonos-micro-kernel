@@ -19,9 +19,9 @@ use alloc::vec::Vec;
 use super::types::{Store, StoreError};
 
 impl Store {
-    pub fn stat(&self, path: &str) -> Result<u64, StoreError> {
+    pub fn stat(&self, path: &str) -> Result<(u64, bool), StoreError> {
         match self.find(path) {
-            Some(i) => Ok(self.files[i].data.len() as u64),
+            Some(i) => Ok((self.files[i].data.len() as u64, self.files[i].is_dir)),
             None => Err(StoreError::NotFound),
         }
     }
@@ -32,15 +32,15 @@ impl Store {
             if !f.name.starts_with(prefix) {
                 continue;
             }
-            let nb = f.name.as_bytes();
-            if nb.len() > 255 {
+            let mut nb = Vec::from(f.name.as_bytes());
+            if f.is_dir {
+                nb.push(b'/');
+            }
+            if nb.len() > 255 || out.len() + 1 + nb.len() > max_bytes {
                 continue;
             }
-            if out.len() + 1 + nb.len() > max_bytes {
-                break;
-            }
             out.push(nb.len() as u8);
-            out.extend_from_slice(nb);
+            out.extend_from_slice(&nb);
         }
         out
     }

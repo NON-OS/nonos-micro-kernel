@@ -18,10 +18,10 @@
 //! short failure line. The orchestrator owns the policy; this
 //! module owns the bytes.
 
-use super::gs_state::GsState;
 use super::super::print_hex::print_hex_u64;
+use super::gs_state::GsState;
 
-pub fn fail(reason: &[u8], v: u64) {
+pub(super) fn fail(reason: &[u8], v: u64) {
     crate::sys::serial::print(b"[USER-PROOF] FAIL ");
     crate::sys::serial::print(reason);
     crate::sys::serial::print(b" v=");
@@ -29,7 +29,7 @@ pub fn fail(reason: &[u8], v: u64) {
     crate::sys::serial::println(b"");
 }
 
-pub fn ok(cr3: u64, rip: u64, rsp: u64, rsp0: u64, gs: GsState, df: u64, pf: u64, gp: u64) {
+pub(super) fn ok(cr3: u64, rip: u64, rsp: u64, rsp0: u64, gs: GsState, df: u64, pf: u64, gp: u64) {
     crate::sys::serial::print(b"[USER-PROOF] OK cr3=");
     print_hex_u64(cr3);
     crate::sys::serial::print(b" rip=");
