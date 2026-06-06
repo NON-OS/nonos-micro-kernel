@@ -38,14 +38,6 @@ pub fn teardown(pid: Pid, exit_code: i32, _by_signal: bool) {
     crate::hardware::broker::dma_release_all_for_pid(pid, current);
     crate::hardware::broker::pio_release_all_for_pid(pid);
 
-    if current {
-        crate::process::address_space::lifecycle::release(&pcb);
-    } else if let Some(asid) = crate::memory::paging::manager::lookup_asid_for_process(pid) {
-        if crate::memory::paging::manager::cleanup_address_space(asid).is_err() {
-            crate::sys::serial::print(b"[EXIT] address_space_cleanup_failed\n");
-        }
-    }
-
     crate::kernel_core::process_spawn::defer_kernel_stack_release(pid);
 
     pcb.exit_code.store(exit_code, Ordering::Release);
