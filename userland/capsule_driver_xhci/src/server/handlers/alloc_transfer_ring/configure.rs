@@ -39,6 +39,7 @@ pub(super) fn do_configure(
         res.int_ring = Some(ring);
         res.int_buf = Some(buf);
         res.int_dci = dci;
+        res.int_armed = None;
         write_configure_endpoint_input(
             &res.input_context,
             ctx.driver.layout.context_size,
@@ -46,6 +47,8 @@ pub(super) fn do_configure(
             ring_phys,
             max_packet,
             interval,
+            res.speed,
+            res.port_id,
         );
         res.input_context.phys()
     };

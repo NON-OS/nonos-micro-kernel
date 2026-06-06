@@ -17,6 +17,8 @@ use crate::dma::DmaRegion;
 const INPUT_CONTROL_INDEX: usize = 0;
 const SLOT_CTX_INDEX: usize = 1;
 const CONTEXT_ENTRIES_SHIFT: u32 = 27;
+const SPEED_SHIFT: u32 = 20;
+const ROOT_PORT_SHIFT: u32 = 16;
 const ADD_SLOT_FLAG: u32 = 1;
 const EP_TYPE_INTERRUPT_IN: u32 = 7;
 const CERR: u32 = 3;
@@ -28,11 +30,15 @@ pub fn write_configure_endpoint_input(
     ring_phys: u64,
     max_packet: u16,
     interval: u8,
+    speed: u8,
+    root_port: u8,
 ) {
     region.zero();
     write_dw(region, context_size, INPUT_CONTROL_INDEX, 1, ADD_SLOT_FLAG | (1 << dci));
-    write_dw(region, context_size, SLOT_CTX_INDEX, 0, (dci as u32) << CONTEXT_ENTRIES_SHIFT);
-    write_endpoint(region, context_size, dci as usize, ring_phys, max_packet, interval);
+    let slot_dw0 = ((speed as u32) << SPEED_SHIFT) | ((dci as u32) << CONTEXT_ENTRIES_SHIFT);
+    write_dw(region, context_size, SLOT_CTX_INDEX, 0, slot_dw0);
+    write_dw(region, context_size, SLOT_CTX_INDEX, 1, (root_port as u32) << ROOT_PORT_SHIFT);
+    write_endpoint(region, context_size, dci as usize + 1, ring_phys, max_packet, interval);
 }
 fn write_endpoint(
     region: &DmaRegion,
@@ -48,7 +54,7 @@ fn write_endpoint(
     write_dw(region, context_size, dci, 1, dw1);
     write_dw(region, context_size, dci, 2, (ring_phys as u32) | DCS);
     write_dw(region, context_size, dci, 3, (ring_phys >> 32) as u32);
-    write_dw(region, context_size, dci, 4, max_packet as u32);
+    write_dw(region, context_size, dci, 4, (max_packet as u32) | ((max_packet as u32) << 16));
 }
 fn write_dw(region: &DmaRegion, context_size: u8, context: usize, dword: usize, value: u32) {
     let byte = context * context_size as usize + dword * core::mem::size_of::<u32>();
