@@ -27,32 +27,47 @@ pub enum LauncherIcon {
 
 pub struct LauncherApp {
     pub icon: LauncherIcon,
+    pub launch_id: u16,
     pub label: &'static [u8],
     pub service: &'static [u8],
 }
 
 pub const LAUNCHER_APPS: [LauncherApp; 7] = [
-    LauncherApp { icon: LauncherIcon::Terminal, label: b"terminal", service: b"app.terminal" },
+    LauncherApp {
+        icon: LauncherIcon::Terminal,
+        launch_id: 1,
+        label: b"Terminal",
+        service: b"app.terminal",
+    },
     LauncherApp {
         icon: LauncherIcon::FileManager,
-        label: b"file_manager",
+        launch_id: 2,
+        label: b"Files",
         service: b"app.file_manager",
     },
     LauncherApp {
         icon: LauncherIcon::TextEditor,
-        label: b"text_editor",
+        launch_id: 3,
+        label: b"Editor",
         service: b"app.text_editor",
     },
-    LauncherApp { icon: LauncherIcon::Settings, label: b"settings", service: b"app.settings" },
+    LauncherApp {
+        icon: LauncherIcon::Settings,
+        launch_id: 4,
+        label: b"Settings",
+        service: b"app.settings",
+    },
     LauncherApp {
         icon: LauncherIcon::ProcessManager,
-        label: b"process_manager",
+        launch_id: 5,
+        label: b"Processes",
         service: b"app.process_manager",
     },
-    LauncherApp { icon: LauncherIcon::About, label: b"about", service: b"app.about" },
+    LauncherApp { icon: LauncherIcon::About, launch_id: 6, label: b"About", service: b"app.about" },
     LauncherApp {
         icon: LauncherIcon::Calculator,
-        label: b"calculator",
+        launch_id: 7,
+        label: b"Calculator",
         service: b"app.calculator",
     },
 ];

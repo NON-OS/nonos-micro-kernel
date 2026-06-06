@@ -16,10 +16,10 @@
 
 use crate::state::Context;
 
-pub fn process_manager(ctx: &Context, x: u32, y: u32) {
+pub fn process_manager(ctx: &Context, x: u32, y: u32, size: u32) {
     let fg = super::constants::ICON_FG;
-    super::paint::paint(ctx, x + 3, y + 10, 2, 2, fg);
-    super::paint::paint(ctx, x + 6, y + 7, 2, 5, fg);
-    super::paint::paint(ctx, x + 9, y + 5, 2, 7, fg);
-    super::paint::paint(ctx, x + 12, y + 3, 2, 9, fg);
+    super::paint::paint_u(ctx, x, y, size, 3, 10, 2, 2, fg);
+    super::paint::paint_u(ctx, x, y, size, 6, 7, 2, 5, fg);
+    super::paint::paint_u(ctx, x, y, size, 9, 5, 2, 7, fg);
+    super::paint::paint_u(ctx, x, y, size, 12, 3, 2, 9, fg);
 }

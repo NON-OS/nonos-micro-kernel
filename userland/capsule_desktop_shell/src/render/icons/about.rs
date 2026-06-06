@@ -16,14 +16,14 @@
 
 use crate::state::Context;
 
-pub fn about(ctx: &Context, x: u32, y: u32) {
+pub fn about(ctx: &Context, x: u32, y: u32, size: u32) {
     let fg = super::constants::ICON_FG;
     let bg = super::constants::ICON_BG;
-    super::paint::paint(ctx, x + 4, y + 2, 6, 2, fg);
-    super::paint::paint(ctx, x + 3, y + 4, 2, 6, fg);
-    super::paint::paint(ctx, x + 10, y + 4, 2, 6, fg);
-    super::paint::paint(ctx, x + 4, y + 10, 6, 2, fg);
-    super::paint::paint(ctx, x + 5, y + 5, 2, 2, bg);
-    super::paint::paint(ctx, x + 6, y + 6, 2, 2, fg);
-    super::paint::paint(ctx, x + 8, y + 8, 2, 2, fg);
+    super::paint::paint_u(ctx, x, y, size, 4, 2, 6, 2, fg);
+    super::paint::paint_u(ctx, x, y, size, 3, 4, 2, 6, fg);
+    super::paint::paint_u(ctx, x, y, size, 10, 4, 2, 6, fg);
+    super::paint::paint_u(ctx, x, y, size, 4, 10, 6, 2, fg);
+    super::paint::paint_u(ctx, x, y, size, 5, 5, 2, 2, bg);
+    super::paint::paint_u(ctx, x, y, size, 6, 6, 2, 2, fg);
+    super::paint::paint_u(ctx, x, y, size, 8, 8, 2, 2, fg);
 }

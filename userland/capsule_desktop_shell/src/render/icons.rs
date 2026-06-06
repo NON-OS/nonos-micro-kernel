@@ -41,12 +41,12 @@ pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u3
         constants::ICON_BG,
     );
     match icon {
-        LauncherIcon::Terminal => terminal::terminal(ctx, x, y),
-        LauncherIcon::FileManager => file_manager::file_manager(ctx, x, y),
-        LauncherIcon::TextEditor => text_editor::text_editor(ctx, x, y),
-        LauncherIcon::Settings => settings::settings(ctx, x, y),
-        LauncherIcon::ProcessManager => process_manager::process_manager(ctx, x, y),
-        LauncherIcon::About => about::about(ctx, x, y),
-        LauncherIcon::Calculator => calculator::calculator(ctx, x, y),
+        LauncherIcon::Terminal => terminal::terminal(ctx, x, y, size),
+        LauncherIcon::FileManager => file_manager::file_manager(ctx, x, y, size),
+        LauncherIcon::TextEditor => text_editor::text_editor(ctx, x, y, size),
+        LauncherIcon::Settings => settings::settings(ctx, x, y, size),
+        LauncherIcon::ProcessManager => process_manager::process_manager(ctx, x, y, size),
+        LauncherIcon::About => about::about(ctx, x, y, size),
+        LauncherIcon::Calculator => calculator::calculator(ctx, x, y, size),
     }
 }

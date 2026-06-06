@@ -16,14 +16,14 @@
 
 use crate::state::Context;
 
-pub fn terminal(ctx: &Context, x: u32, y: u32) {
+pub fn terminal(ctx: &Context, x: u32, y: u32, size: u32) {
     let fg = super::constants::ICON_FG;
-    super::paint::paint(ctx, x + 2, y + 3, 12, 1, fg);
-    super::paint::paint(ctx, x + 2, y + 4, 1, 8, fg);
-    super::paint::paint(ctx, x + 13, y + 4, 1, 8, fg);
-    super::paint::paint(ctx, x + 3, y + 11, 10, 1, fg);
-    super::paint::paint(ctx, x + 5, y + 6, 2, 2, fg);
-    super::paint::paint(ctx, x + 7, y + 8, 2, 1, fg);
-    super::paint::paint(ctx, x + 9, y + 9, 2, 1, fg);
-    super::paint::paint(ctx, x + 8, y + 10, 3, 1, fg);
+    super::paint::paint_u(ctx, x, y, size, 2, 3, 12, 1, fg);
+    super::paint::paint_u(ctx, x, y, size, 2, 4, 1, 8, fg);
+    super::paint::paint_u(ctx, x, y, size, 13, 4, 1, 8, fg);
+    super::paint::paint_u(ctx, x, y, size, 3, 11, 10, 1, fg);
+    super::paint::paint_u(ctx, x, y, size, 5, 6, 2, 2, fg);
+    super::paint::paint_u(ctx, x, y, size, 7, 8, 2, 1, fg);
+    super::paint::paint_u(ctx, x, y, size, 9, 9, 2, 1, fg);
+    super::paint::paint_u(ctx, x, y, size, 8, 10, 3, 1, fg);
 }

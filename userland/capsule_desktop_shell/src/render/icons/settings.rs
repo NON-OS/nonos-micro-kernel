@@ -16,12 +16,12 @@
 
 use crate::state::Context;
 
-pub fn settings(ctx: &Context, x: u32, y: u32) {
+pub fn settings(ctx: &Context, x: u32, y: u32, size: u32) {
     let fg = super::constants::ICON_FG;
-    super::paint::paint(ctx, x + 3, y + 4, 10, 1, fg);
-    super::paint::paint(ctx, x + 3, y + 7, 10, 1, fg);
-    super::paint::paint(ctx, x + 3, y + 10, 10, 1, fg);
-    super::paint::paint(ctx, x + 6, y + 3, 2, 3, fg);
-    super::paint::paint(ctx, x + 9, y + 6, 2, 3, fg);
-    super::paint::paint(ctx, x + 5, y + 9, 2, 3, fg);
+    super::paint::paint_u(ctx, x, y, size, 3, 4, 10, 1, fg);
+    super::paint::paint_u(ctx, x, y, size, 3, 7, 10, 1, fg);
+    super::paint::paint_u(ctx, x, y, size, 3, 10, 10, 1, fg);
+    super::paint::paint_u(ctx, x, y, size, 6, 3, 2, 3, fg);
+    super::paint::paint_u(ctx, x, y, size, 9, 6, 2, 3, fg);
+    super::paint::paint_u(ctx, x, y, size, 5, 9, 2, 3, fg);
 }

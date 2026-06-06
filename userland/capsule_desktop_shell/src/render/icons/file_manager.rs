@@ -16,11 +16,11 @@
 
 use crate::state::Context;
 
-pub fn file_manager(ctx: &Context, x: u32, y: u32) {
+pub fn file_manager(ctx: &Context, x: u32, y: u32, size: u32) {
     let fg = super::constants::ICON_FG;
     let bg = super::constants::ICON_BG;
-    super::paint::paint(ctx, x + 2, y + 5, 12, 7, fg);
-    super::paint::paint(ctx, x + 4, y + 3, 4, 2, fg);
-    super::paint::paint(ctx, x + 3, y + 6, 10, 1, bg);
-    super::paint::paint(ctx, x + 3, y + 8, 8, 1, bg);
+    super::paint::paint_u(ctx, x, y, size, 2, 5, 12, 7, fg);
+    super::paint::paint_u(ctx, x, y, size, 4, 3, 4, 2, fg);
+    super::paint::paint_u(ctx, x, y, size, 3, 6, 10, 1, bg);
+    super::paint::paint_u(ctx, x, y, size, 3, 8, 8, 1, bg);
 }

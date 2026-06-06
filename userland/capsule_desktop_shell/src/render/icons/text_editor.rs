@@ -16,14 +16,14 @@
 
 use crate::state::Context;
 
-pub fn text_editor(ctx: &Context, x: u32, y: u32) {
+pub fn text_editor(ctx: &Context, x: u32, y: u32, size: u32) {
     let fg = super::constants::ICON_FG;
     let bg = super::constants::ICON_BG;
-    super::paint::paint(ctx, x + 3, y + 2, 9, 12, fg);
-    super::paint::paint(ctx, x + 9, y + 2, 3, 3, bg);
-    super::paint::paint(ctx, x + 5, y + 5, 5, 1, bg);
-    super::paint::paint(ctx, x + 5, y + 7, 4, 1, bg);
-    super::paint::paint(ctx, x + 5, y + 9, 5, 1, bg);
-    super::paint::paint(ctx, x + 10, y + 9, 3, 1, super::constants::ACCENT);
-    super::paint::paint(ctx, x + 11, y + 10, 2, 1, super::constants::ACCENT);
+    super::paint::paint_u(ctx, x, y, size, 3, 2, 9, 12, fg);
+    super::paint::paint_u(ctx, x, y, size, 9, 2, 3, 3, bg);
+    super::paint::paint_u(ctx, x, y, size, 5, 5, 5, 1, bg);
+    super::paint::paint_u(ctx, x, y, size, 5, 7, 4, 1, bg);
+    super::paint::paint_u(ctx, x, y, size, 5, 9, 5, 1, bg);
+    super::paint::paint_u(ctx, x, y, size, 10, 9, 3, 1, super::constants::ACCENT);
+    super::paint::paint_u(ctx, x, y, size, 11, 10, 2, 1, super::constants::ACCENT);
 }

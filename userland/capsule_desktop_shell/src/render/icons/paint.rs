@@ -17,6 +17,23 @@
 use crate::render::fill::fill_rect;
 use crate::state::Context;
 
-pub fn paint(ctx: &Context, x: u32, y: u32, w: u32, h: u32, argb: u32) {
-    fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, x, y, w, h, argb);
+/// Paint one rect of a glyph designed on a 16-unit grid, scaled to `size`
+/// pixels. The same art renders at any icon size, so the bottom dock can run
+/// larger than the side launcher without redrawing the glyphs.
+pub fn paint_u(
+    ctx: &Context,
+    x0: u32,
+    y0: u32,
+    size: u32,
+    dx: u32,
+    dy: u32,
+    dw: u32,
+    dh: u32,
+    argb: u32,
+) {
+    let px = x0 + dx * size / 16;
+    let py = y0 + dy * size / 16;
+    let pw = core::cmp::max(1, dw * size / 16);
+    let ph = core::cmp::max(1, dh * size / 16);
+    fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, px, py, pw, ph, argb);
 }

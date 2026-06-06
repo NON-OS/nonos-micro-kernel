@@ -16,13 +16,13 @@
 
 use crate::state::Context;
 
-pub fn calculator(ctx: &Context, x: u32, y: u32) {
+pub fn calculator(ctx: &Context, x: u32, y: u32, size: u32) {
     let fg = super::constants::ICON_FG;
     let bg = super::constants::ICON_BG;
-    super::paint::paint(ctx, x + 3, y + 2, 10, 12, fg);
-    super::paint::paint(ctx, x + 5, y + 4, 6, 2, bg);
-    super::paint::paint(ctx, x + 5, y + 8, 2, 2, bg);
-    super::paint::paint(ctx, x + 8, y + 8, 2, 2, bg);
-    super::paint::paint(ctx, x + 5, y + 11, 2, 2, bg);
-    super::paint::paint(ctx, x + 8, y + 11, 2, 2, bg);
+    super::paint::paint_u(ctx, x, y, size, 3, 2, 10, 12, fg);
+    super::paint::paint_u(ctx, x, y, size, 5, 4, 6, 2, bg);
+    super::paint::paint_u(ctx, x, y, size, 5, 8, 2, 2, bg);
+    super::paint::paint_u(ctx, x, y, size, 8, 8, 2, 2, bg);
+    super::paint::paint_u(ctx, x, y, size, 5, 11, 2, 2, bg);
+    super::paint::paint_u(ctx, x, y, size, 8, 11, 2, 2, bg);
 }
