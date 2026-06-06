@@ -21,3 +21,8 @@ pub fn send(kind: u16, flags: u16, code: u32, dx: i32, dy: i32) -> bool {
         InputEvent { kind, flags, code, x: 0, y: 0, delta_x: dx, delta_y: dy, timestamp_ns: 0 };
     mk_input_event_post(&ev) >= 0
 }
+
+pub fn send_abs(kind: u16, x: i32, y: i32) -> bool {
+    let ev = InputEvent { kind, flags: 0, code: 0, x, y, delta_x: 0, delta_y: 0, timestamp_ns: 0 };
+    mk_input_event_post(&ev) >= 0
+}

@@ -27,6 +27,7 @@ pub const EP_TRANSFER_INTERRUPT: u8 = 0x03;
 pub enum HidKind {
     Keyboard = 1,
     Mouse = 2,
+    Tablet = 3,
 }
 
 #[derive(Debug, Clone, Copy)]

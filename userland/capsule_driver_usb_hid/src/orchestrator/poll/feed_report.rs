@@ -38,5 +38,8 @@ pub(super) fn feed_report(
             state.mouse.feed(&buf[..n]);
             state.mouse_reports = state.mouse_reports.wrapping_add(1);
         }
+        HidKind::Tablet => {
+            state.tablet.feed(&buf[..n]);
+        }
     }
 }
