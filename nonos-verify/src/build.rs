@@ -11,20 +11,15 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     let out = Path::new(root).join("build");
     std::fs::create_dir_all(&out)?;
 
-    // rustfmt on the host crates the engine owns. The kernel tree is not
-    // checked here: rustfmt cannot resolve its cfg-gated arch modules, which is
-    // a rustfmt limitation, not a real defect.
-    let f1 = run_logged(
-        "cargo",
-        &["fmt", "--manifest-path", "nonos-sign/Cargo.toml", "--", "--check"],
-        &out.join("rustfmt-nonos-sign.txt"),
-    );
-    let f2 = run_logged(
+    // rustfmt on nonos-verify, the crate the engine owns. The kernel tree is
+    // not checked here (rustfmt cannot resolve its cfg-gated arch modules), and
+    // nonos-sign's formatting is gated by its own repo CI with its own config.
+    let f = run_logged(
         "cargo",
         &["fmt", "--manifest-path", "nonos-verify/Cargo.toml", "--", "--check"],
         &out.join("rustfmt-nonos-verify.txt"),
     );
-    rpt.check("rustfmt", st(f1 && f2), "cargo fmt --check (nonos-sign, nonos-verify)");
+    rpt.check("rustfmt", st(f), "cargo fmt --check (nonos-verify)");
 
     let ok = run_logged(
         "cargo",
