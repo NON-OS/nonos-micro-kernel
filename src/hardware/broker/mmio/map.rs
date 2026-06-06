@@ -84,17 +84,20 @@ pub fn map_for_caller(pid: u32, req: MmioMapRequest) -> Result<MmioMapResult, Mm
     crate::sys::serial::println(b"[MMIO] reserve");
     let msix = pci_index::lookup(req.device_id).and_then(|h| h.msix);
     crate::sys::serial::println(b"[MMIO] msix");
-    msix_exclusion::validate(msix.as_ref(), req.bar_index, req.offset, req.length)?;
+    let length = msix_exclusion::safe_length(msix.as_ref(), req.bar_index, req.offset, req.length);
+    if length == 0 {
+        return Err(MmioMapError::WouldExposeMsixTable);
+    }
     crate::sys::serial::println(b"[MMIO] msix ok");
-    let pages = req.length / PAGE_SIZE;
+    let pages = length / PAGE_SIZE;
     let user_va = grant::reserve_user_va(pages).ok_or(MmioMapError::NoVaSpace)?;
     crate::sys::serial::println(b"[MMIO] va");
-    let user_va_end = user_va.as_u64().checked_add(req.length).ok_or(MmioMapError::Overflow)?;
+    let user_va_end = user_va.as_u64().checked_add(length).ok_or(MmioMapError::Overflow)?;
     if user_va.as_u64() < USER_MMIO_BASE || user_va_end > USER_MMIO_END {
         return Err(MmioMapError::NoVaSpace);
     }
     crate::sys::serial::println(b"[MMIO] map");
-    if crate::memory::paging::map_user_mmio(user_va, PhysAddr::new(phys_start), req.length as usize)
+    if crate::memory::paging::map_user_mmio(user_va, PhysAddr::new(phys_start), length as usize)
         .is_err()
     {
         return Err(MmioMapError::MapFailed);
@@ -109,8 +112,8 @@ pub fn map_for_caller(pid: u32, req: MmioMapRequest) -> Result<MmioMapResult, Mm
         bar_index: req.bar_index,
         physical_start: phys_start,
         user_va: user_va.as_u64(),
-        length: req.length,
+        length,
         flags: req.flags,
     });
-    Ok(MmioMapResult { user_va: user_va.as_u64(), length: req.length, grant_id })
+    Ok(MmioMapResult { user_va: user_va.as_u64(), length, grant_id })
 }
