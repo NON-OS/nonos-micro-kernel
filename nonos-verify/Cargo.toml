@@ -1,0 +1,17 @@
+[package]
+name = "nonos-verify"
+version = "0.1.0"
+edition = "2021"
+description = "NONOS verification engine. Build, trust-chain, adversarial, runtime, supply-chain, and attestation checks in typed Rust; the GitHub workflows only invoke its subcommands."
+
+[[bin]]
+name = "nonos-verify"
+path = "src/main.rs"
+
+[dependencies]
+# The host trust-chain library the kernel's spawn gate mirrors. The engine
+# decodes and verifies the real on-disk capsule artifacts through this crate.
+nonos-sign = { path = "../nonos-sign" }
+blake3 = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

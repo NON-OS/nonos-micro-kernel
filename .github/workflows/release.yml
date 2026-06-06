@@ -1,0 +1,33 @@
+name: release
+
+# Release-candidate pipeline. Runs the deterministic, artifact-producing lanes
+# (build, trust-chain, supply-chain) and fuses one signed attestation for the
+# tag. Triggered by hand or on a version tag.
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/ci-build.yml
+
+  trust-chain:
+    uses: ./.github/workflows/ci-trust-chain.yml
+
+  supply-chain:
+    uses: ./.github/workflows/ci-supply-chain.yml
+
+  attestation:
+    needs: [build, trust-chain, supply-chain]
+    if: always()
+    uses: ./.github/workflows/ci-attestation.yml

@@ -1,0 +1,44 @@
+name: ci-attestation
+
+# Reusable aggregator. Downloads every module's report, then `nonos-verify
+# attest` fuses them into one ci-attestation.json + a GitHub job summary and
+# fails if any blocking module failed. This is the single reviewable proof for
+# the commit.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-attestation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  attestation:
+    name: attestation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4  # TODO: pin to commit SHA
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/nonos-setup
+        with:
+          module: attest
+      - name: Download all module reports
+        uses: actions/download-artifact@v4  # TODO: pin to commit SHA
+        with:
+          pattern: ci-reports-*
+          merge-multiple: true
+          path: ci-reports
+      - name: nonos-verify attest
+        run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- attest
+      - name: Upload attestation
+        if: always()
+        uses: actions/upload-artifact@v4  # TODO: pin to commit SHA
+        with:
+          name: ci-attestation
+          path: ci-reports/attest/
+          retention-days: 30

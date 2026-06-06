@@ -1,0 +1,38 @@
+name: ci-trust-chain
+
+# Reusable trust-chain attestation. `nonos-verify trust-chain` decodes and
+# verifies every embedded capsule's cert + manifest against the baked
+# trust-anchor policy through nonos_capsule_sign, the same chain the kernel runs
+# at spawn, and emits trust-attestation.json + capsule measurements.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-trust-chain-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  trust-chain:
+    name: trust-chain
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4  # TODO: pin to commit SHA
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/nonos-setup
+        with:
+          module: trust-chain
+      - name: nonos-verify trust-chain
+        run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- trust-chain
+      - name: Upload trust-chain artifacts
+        if: always()
+        uses: actions/upload-artifact@v4  # TODO: pin to commit SHA
+        with:
+          name: ci-reports-trust-chain
+          path: ci-reports/
+          retention-days: 14

@@ -1,0 +1,160 @@
+name: nonos-setup
+description: >-
+  Shared NONOS CI setup. Installs the pinned nightly toolchain from
+  rust-toolchain.toml, adds requested targets, installs requested cargo tools
+  and (when qemu=true) the QEMU/OVMF/lld system deps, exports the
+  deterministic build env (SOURCE_DATE_EPOCH from the commit time,
+  CARGO_TERM_COLOR, RUST_BACKTRACE), and restores/saves the rustup + cargo +
+  target caches.
+
+inputs:
+  targets:
+    description: "CSV of rustup targets to add (e.g. x86_64-nonos,x86_64-unknown-uefi)."
+    required: false
+    default: "x86_64-nonos"
+  tools:
+    description: "CSV subset of: audit,deny,fuzz,nextest. Empty installs none."
+    required: false
+    default: ""
+  qemu:
+    description: "When 'true', install qemu-system-x86, ovmf, lld, llvm and boot helpers."
+    required: false
+    default: "false"
+  module:
+    description: "Module name; used to key the target cache so modules do not collide."
+    required: false
+    default: "shared"
+
+runs:
+  using: composite
+  steps:
+    - name: Read pinned toolchain
+      id: pin
+      shell: bash
+      run: |
+        set -euo pipefail
+        # The single source of truth for the channel is rust-toolchain.toml.
+        toml="rust-toolchain.toml"
+        if [ ! -f "${toml}" ]; then
+          echo "::error::rust-toolchain.toml not found at repo root"
+          exit 1
+        fi
+        channel="$(grep -E '^[[:space:]]*channel[[:space:]]*=' "${toml}" \
+          | head -n1 | sed -E 's/.*=[[:space:]]*"([^"]+)".*/\1/')"
+        if [ -z "${channel}" ]; then
+          echo "::error::could not parse channel from rust-toolchain.toml"
+          exit 1
+        fi
+        echo "channel=${channel}" >> "$GITHUB_OUTPUT"
+        echo "Pinned toolchain channel: ${channel}"
+
+    - name: Export deterministic build env
+      shell: bash
+      run: |
+        set -euo pipefail
+        # Commit time, not wall-clock, so signed/embedded artifacts and the
+        # repro lane are byte-stable across re-runs.
+        epoch="$(git log -1 --format=%ct)"
+        {
+          echo "SOURCE_DATE_EPOCH=${epoch}"
+          echo "CARGO_TERM_COLOR=always"
+          echo "CARGO_INCREMENTAL=0"
+          echo "RUST_BACKTRACE=1"
+          echo "RUSTUP_TOOLCHAIN=${{ steps.pin.outputs.channel }}"
+        } >> "$GITHUB_ENV"
+        echo "SOURCE_DATE_EPOCH=${epoch}"
+
+    - name: Install pinned toolchain
+      shell: bash
+      run: |
+        set -euo pipefail
+        channel="${{ steps.pin.outputs.channel }}"
+        if ! command -v rustup >/dev/null 2>&1; then
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+            | sh -s -- -y --default-toolchain "${channel}" --profile minimal
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.cargo/bin:$PATH"
+        fi
+        rustup toolchain install "${channel}" --profile minimal \
+          --component rust-src --component llvm-tools-preview \
+          --component clippy --component rustfmt
+        rustup override set "${channel}"
+        rustup show
+
+    - name: Add rustup targets
+      shell: bash
+      run: |
+        set -euo pipefail
+        IFS=',' read -ra tgts <<< "${{ inputs.targets }}"
+        for t in "${tgts[@]}"; do
+          t="$(echo "${t}" | xargs)"
+          [ -z "${t}" ] && continue
+          # x86_64-nonos is a JSON build-std target, not a rustup target.
+          # Only `rustup target add` the registered tier-2/3 targets.
+          case "${t}" in
+            x86_64-nonos|x86_64-nonos-user) echo "skip rustup target add ${t} (json build-std target)"; continue ;;
+          esac
+          echo "rustup target add ${t}"
+          rustup target add "${t}"
+        done
+
+    - name: Restore rustup + cargo cache
+      uses: actions/cache@v4  # TODO: pin to commit SHA
+      with:
+        path: |
+          ~/.cargo/registry/index
+          ~/.cargo/registry/cache
+          ~/.cargo/git/db
+        key: ${{ runner.os }}-${{ steps.pin.outputs.channel }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ steps.pin.outputs.channel }}-cargo-
+
+    - name: Restore target cache
+      uses: actions/cache@v4  # TODO: pin to commit SHA
+      with:
+        path: |
+          target
+          nonos-sign/target
+          userland/libc/target
+        key: ${{ runner.os }}-${{ steps.pin.outputs.channel }}-target-${{ inputs.module }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ steps.pin.outputs.channel }}-target-${{ inputs.module }}-
+
+    - name: Install cargo tools
+      shell: bash
+      run: |
+        set -euo pipefail
+        tools="${{ inputs.tools }}"
+        [ -z "${tools}" ] && { echo "no cargo tools requested"; exit 0; }
+        IFS=',' read -ra want <<< "${tools}"
+        for tool in "${want[@]}"; do
+          tool="$(echo "${tool}" | xargs)"
+          [ -z "${tool}" ] && continue
+          case "${tool}" in
+            audit)   bin=cargo-audit;   crate=cargo-audit   ;;
+            deny)    bin=cargo-deny;    crate=cargo-deny    ;;
+            fuzz)    bin=cargo-fuzz;    crate=cargo-fuzz    ;;
+            nextest) bin=cargo-nextest; crate=cargo-nextest ;;
+            *) echo "::error::unknown cargo tool '${tool}' (want audit|deny|fuzz|nextest)"; exit 1 ;;
+          esac
+          if command -v "${bin}" >/dev/null 2>&1; then
+            echo "${bin} already present"
+          else
+            echo "cargo install --locked ${crate}"
+            cargo install --locked "${crate}"
+          fi
+        done
+
+    - name: Install QEMU + OVMF + boot helpers
+      if: inputs.qemu == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get update
+        sudo apt-get install -y \
+          qemu-system-x86 ovmf lld llvm \
+          python3 python3-pip xorriso gdisk mtools binutils netcat-openbsd
+        # pynacl backs the host signing helpers used by the boot lanes.
+        pip3 install --user pynacl
+        echo "OVMF / edk2 firmware visible to the runner:"
+        find /usr/share -name 'OVMF*.fd' -o -name 'edk2*.fd' 2>/dev/null | sort || true

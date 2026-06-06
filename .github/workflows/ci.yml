@@ -1,0 +1,40 @@
+name: ci
+
+# Top-level NONOS verification gate. Composes the reusable modules into one DAG.
+# Each module is the `nonos-verify` Rust engine; the attestation job fuses their
+# reports and fails the run if any blocking module failed.
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/ci-build.yml
+
+  supply-chain:
+    uses: ./.github/workflows/ci-supply-chain.yml
+
+  trust-chain:
+    uses: ./.github/workflows/ci-trust-chain.yml
+
+  adversarial:
+    uses: ./.github/workflows/ci-adversarial.yml
+
+  # Heavy QEMU lane: only spend it once the build is known good.
+  runtime:
+    needs: build
+    uses: ./.github/workflows/ci-runtime.yml
+
+  attestation:
+    needs: [build, supply-chain, trust-chain, adversarial, runtime]
+    if: always()
+    uses: ./.github/workflows/ci-attestation.yml

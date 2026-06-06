@@ -1,0 +1,39 @@
+name: nightly
+
+# Scheduled deep run: the full module set including the heavy QEMU lane and the
+# supply-chain reproducibility inputs. The long-running fuzz and extended
+# red-team lanes attach here as they land (tracked as gaps in the attestation).
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/ci-build.yml
+
+  trust-chain:
+    uses: ./.github/workflows/ci-trust-chain.yml
+
+  adversarial:
+    uses: ./.github/workflows/ci-adversarial.yml
+
+  supply-chain:
+    uses: ./.github/workflows/ci-supply-chain.yml
+
+  runtime:
+    needs: build
+    uses: ./.github/workflows/ci-runtime.yml
+
+  attestation:
+    needs: [build, trust-chain, adversarial, supply-chain, runtime]
+    if: always()
+    uses: ./.github/workflows/ci-attestation.yml

@@ -1,0 +1,38 @@
+name: ci-build
+
+# Reusable build/compile proof. Formatting, clippy, the production desktop GUI
+# profile, section sizes, and a binary symbol scan on the built release ELF.
+# Logic is the `nonos-verify build` subcommand; this workflow only invokes it.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4  # TODO: pin to commit SHA
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/nonos-setup
+        with:
+          targets: x86_64-nonos,x86_64-unknown-uefi
+          module: build
+      - name: nonos-verify build
+        run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- build
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4  # TODO: pin to commit SHA
+        with:
+          name: ci-reports-build
+          path: ci-reports/
+          retention-days: 14

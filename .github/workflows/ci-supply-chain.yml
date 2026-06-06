@@ -1,0 +1,39 @@
+name: ci-supply-chain
+
+# Reusable supply-chain proof. `nonos-verify supply-chain` runs cargo-audit and
+# cargo-deny, captures the duplicate dependency surface, verifies submodule pin
+# integrity, generates an SBOM where tooling allows, and records the
+# reproducibility inputs (the full double-build compare runs nightly).
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-supply-chain-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  supply-chain:
+    name: supply-chain
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4  # TODO: pin to commit SHA
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/nonos-setup
+        with:
+          tools: audit,deny
+          module: supply-chain
+      - name: nonos-verify supply-chain
+        run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- supply-chain
+      - name: Upload supply-chain artifacts
+        if: always()
+        uses: actions/upload-artifact@v4  # TODO: pin to commit SHA
+        with:
+          name: ci-reports-supply-chain
+          path: ci-reports/
+          retention-days: 14
