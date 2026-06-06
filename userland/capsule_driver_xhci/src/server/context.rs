@@ -16,10 +16,9 @@
 use crate::setup::Driver;
 pub struct Context {
     pub driver: Driver,
-    pub events_drained_total: u64,
 }
 impl Context {
     pub fn new(driver: Driver) -> Self {
-        Self { driver, events_drained_total: 0 }
+        Self { driver }
     }
 }

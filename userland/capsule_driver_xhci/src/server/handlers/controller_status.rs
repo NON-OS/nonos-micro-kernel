@@ -25,7 +25,7 @@ pub fn handle(ctx: &Context, req: &Request, tx: &mut [u8]) {
     let usbcmd = usbcmd_read(ctx.driver.layout.op_base);
     let iman = iman_read(ctx.driver.layout.primary_intr_base);
     let cmd_cycle = ctx.driver.command_ring.cycle();
-    let events_total = ctx.events_drained_total;
+    let events_total = ctx.driver.event_ring.drained_total();
     let dcbaa_phys = ctx.driver.dcbaa.phys();
     let scratchpad_phys = ctx.driver.scratchpads.array_phys();
     let scratchpad_pages = ctx.driver.scratchpads.page_count();

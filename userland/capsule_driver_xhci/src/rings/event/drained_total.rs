@@ -13,10 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::controller::{ack_irq, drain_events};
-use crate::server::context::Context;
-
-pub fn service_interrupts(ctx: &mut Context) {
-    let _ = drain_events(ctx.driver.layout.primary_intr_base, &mut ctx.driver.event_ring);
-    ack_irq(ctx.driver.layout.primary_intr_base, ctx.driver.handles.irq_grant_id());
+use super::state::EventRing;
+impl EventRing {
+    pub fn drained_total(&self) -> u64 {
+        self.drained_total
+    }
 }
