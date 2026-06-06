@@ -16,11 +16,10 @@
 use crate::controller::{get_device_descriptor, DEVICE_DESCRIPTOR_LEN};
 use crate::protocol::{
     encode_response_header, write_status, Request, DEVICE_DESCRIPTOR_REPLY_LEN,
-    DEVICE_DESCRIPTOR_REQUEST_LEN, E_INVAL, E_IO, KERNEL_REPLY_ENDPOINT, RESP_HDR_LEN, STATUS_LEN,
+    DEVICE_DESCRIPTOR_REQUEST_LEN, E_INVAL, E_IO, RESP_HDR_LEN, STATUS_LEN,
 };
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
-use nonos_libc::mk_ipc_send;
 pub fn handle(ctx: &mut Context, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != DEVICE_DESCRIPTOR_REQUEST_LEN {
         reply_with_status(tx, req, E_INVAL);
@@ -66,5 +65,5 @@ fn reply_descriptor(tx: &mut [u8], req: &Request, out: &crate::dma::DmaRegion) {
             tx[offset + i] = core::ptr::read_volatile(out.as_mut_ptr::<u8>().add(i));
         }
     }
-    let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), RESP_HDR_LEN + payload_len as usize);
+    crate::server::reply::send(tx.as_ptr(), RESP_HDR_LEN + payload_len as usize);
 }

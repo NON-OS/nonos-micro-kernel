@@ -15,10 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use crate::dma::DmaRegion;
 use crate::protocol::{
-    encode_response_header, write_status, Request, CONFIG_DESCRIPTOR_REPLY_PREFIX,
-    KERNEL_REPLY_ENDPOINT, RESP_HDR_LEN, STATUS_LEN,
+    encode_response_header, write_status, Request, CONFIG_DESCRIPTOR_REPLY_PREFIX, RESP_HDR_LEN,
+    STATUS_LEN,
 };
-use nonos_libc::mk_ipc_send;
 
 pub(super) fn reply_config(tx: &mut [u8], req: &Request, out: &DmaRegion, actual: usize) {
     let payload_len = (STATUS_LEN + CONFIG_DESCRIPTOR_REPLY_PREFIX + actual) as u32;
@@ -33,5 +32,5 @@ pub(super) fn reply_config(tx: &mut [u8], req: &Request, out: &DmaRegion, actual
                 core::ptr::read_volatile(out.as_mut_ptr::<u8>().add(i));
         }
     }
-    let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), RESP_HDR_LEN + payload_len as usize);
+    crate::server::reply::send(tx.as_ptr(), RESP_HDR_LEN + payload_len as usize);
 }

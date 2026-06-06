@@ -15,12 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use crate::controller::{issue_disable_slot, issue_enable_slot};
 use crate::protocol::{
-    encode_response_header, write_status, Request, E_IO, E_NODEV, KERNEL_REPLY_ENDPOINT,
-    RESP_HDR_LEN, SLOT_ENABLE_PAYLOAD_LEN, STATUS_LEN,
+    encode_response_header, write_status, Request, E_IO, E_NODEV, RESP_HDR_LEN,
+    SLOT_ENABLE_PAYLOAD_LEN, STATUS_LEN,
 };
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
-use nonos_libc::mk_ipc_send;
 pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
     let slot_id = match issue_enable_slot(
         ctx.driver.layout.doorbell_base,
@@ -50,5 +49,5 @@ pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
     write_status(&mut tx[RESP_HDR_LEN..], 0);
     tx[RESP_HDR_LEN + STATUS_LEN] = slot_id;
     tx[RESP_HDR_LEN + STATUS_LEN + 1..RESP_HDR_LEN + STATUS_LEN + 4].fill(0);
-    let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), RESP_HDR_LEN + payload_len as usize);
+    crate::server::reply::send(tx.as_ptr(), RESP_HDR_LEN + payload_len as usize);
 }
