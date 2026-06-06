@@ -12,6 +12,6 @@ CAPSULE_FEATURE          := nonos-capsule-driver-usb-hid
 CAPSULE_NAMESPACE        := systems.nonos.driver.usb_hid0
 CAPSULE_SERVICE_ENDPOINT := service:4222:driver.usb_hid0
 CAPSULE_REPLY_ENDPOINT   := reply:4223:endpoint.4294967314
-CAPSULE_REQUIRED_CAPS    := 0x200019
+CAPSULE_REQUIRED_CAPS    := 0x200119
 
 include nonos-mk/capsule.mk

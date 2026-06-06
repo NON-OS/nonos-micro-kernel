@@ -29,7 +29,7 @@
 .PHONY: nonos-mk-userland-clean
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
 .PHONY: nonos-mk-run nonos-mk-run-serial nonos-mk-debug nonos-mk-plan-a-runtime
-.PHONY: nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-mk-boot-entropy nonos-mk-boot-crypto-hash nonos-mk-boot-vfs nonos-mk-boot-ps2-input nonos-mk-boot-xhci nonos-mk-boot-desktop-gui
+.PHONY: nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-mk-boot-entropy nonos-mk-boot-crypto-hash nonos-mk-boot-vfs nonos-mk-boot-ps2-input nonos-mk-boot-xhci nonos-mk-boot-usb-hid nonos-mk-boot-desktop-gui
 .PHONY: nonos-mk-input-e2e-ps2-test nonos-mk-input-e2e-ps2-esp nonos-mk-input-e2e-xhci-test nonos-mk-input-e2e-xhci-esp nonos-mk-boot-input-e2e-ps2 nonos-mk-boot-input-e2e-xhci nonos-mk-input-probe-test nonos-mk-input-probe-esp nonos-mk-input-probe-run nonos-mk-input-probe-run-serial nonos-mk-input-probe-inject-test nonos-mk-input-probe-inject-esp nonos-mk-input-probe-inject-run-serial
 .PHONY: nonos-mk-static nonos-mk-scan
 .PHONY: nonos-mk-verify nonos-mk-verify-fast
@@ -1304,6 +1304,9 @@ nonos-mk-boot-ps2-input:
 
 nonos-mk-boot-xhci:
 	@./tests/boot/xhci_round_trip.sh
+
+nonos-mk-boot-usb-hid:
+	@./tests/boot/usb_hid_enum.sh
 
 nonos-mk-boot-input-e2e-ps2:
 	@./tests/boot/input_e2e_ps2.sh
