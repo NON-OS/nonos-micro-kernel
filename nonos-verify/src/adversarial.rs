@@ -5,7 +5,9 @@
 
 use crate::report::{Report, Status};
 use nonos_capsule_sign::algs::AlgId;
-use nonos_capsule_sign::verify::decode::{decode_cert, decode_manifest, decode_trust_anchor_policy};
+use nonos_capsule_sign::verify::decode::{
+    decode_cert, decode_manifest, decode_trust_anchor_policy,
+};
 use nonos_capsule_sign::verify::{verify_cert, verify_manifest};
 use serde::Serialize;
 use std::path::Path;
@@ -33,10 +35,13 @@ fn verify_chain(
     now_ms: u64,
     algs: &[AlgId],
 ) -> Result<(), String> {
-    let policy = decode_trust_anchor_policy(policy_bytes).map_err(|e| format!("policy decode: {e:?}"))?;
+    let policy =
+        decode_trust_anchor_policy(policy_bytes).map_err(|e| format!("policy decode: {e:?}"))?;
     let cert = decode_cert(cert_bytes).map_err(|e| format!("cert decode: {e:?}"))?;
-    verify_cert(&cert, cert_bytes, &policy, algs, Some(now_ms)).map_err(|e| format!("cert verify: {e:?}"))?;
-    let manifest = decode_manifest(manifest_bytes).map_err(|e| format!("manifest decode: {e:?}"))?;
+    verify_cert(&cert, cert_bytes, &policy, algs, Some(now_ms))
+        .map_err(|e| format!("cert verify: {e:?}"))?;
+    let manifest =
+        decode_manifest(manifest_bytes).map_err(|e| format!("manifest decode: {e:?}"))?;
     verify_manifest(&manifest, manifest_bytes, &cert, cert_bytes, &policy, algs)
         .map_err(|e| format!("manifest verify: {e:?}"))?;
     Ok(())
@@ -74,8 +79,10 @@ pub fn run(root: &str) -> std::io::Result<Status> {
             .collect();
         names.sort();
         for name in names {
-            let c = std::fs::read(Path::new(CAPSULE_DIR).join(format!("{name}.nonos_id_cert.bin"))).unwrap_or_default();
-            let m = std::fs::read(Path::new(CAPSULE_DIR).join(format!("{name}.manifest.bin"))).unwrap_or_default();
+            let c = std::fs::read(Path::new(CAPSULE_DIR).join(format!("{name}.nonos_id_cert.bin")))
+                .unwrap_or_default();
+            let m = std::fs::read(Path::new(CAPSULE_DIR).join(format!("{name}.manifest.bin")))
+                .unwrap_or_default();
             if verify_chain(&c, &m, &policy_bytes, NOW_MS, REQUIRED_ALGS).is_ok() {
                 pairs.push((name, c, m));
             }
@@ -87,7 +94,10 @@ pub fn run(root: &str) -> std::io::Result<Status> {
 
     if pairs.is_empty() {
         rpt.check("baseline", Status::Gap, "no capsule verifies cleanly to attack from");
-        rpt.gap("attack baseline", "a built+signed capsule set so the verifier has a valid victim to tamper");
+        rpt.gap(
+            "attack baseline",
+            "a built+signed capsule set so the verifier has a valid victim to tamper",
+        );
         return rpt.finish(root);
     }
 
@@ -181,7 +191,11 @@ pub fn run(root: &str) -> std::io::Result<Status> {
                 });
             }
             Ok(()) => {
-                rpt.check(&format!("attack:{name}"), Status::Fail, "ACCEPTED a tampered artifact (vulnerability)");
+                rpt.check(
+                    &format!("attack:{name}"),
+                    Status::Fail,
+                    "ACCEPTED a tampered artifact (vulnerability)",
+                );
                 results.push(AttackResult {
                     attack: name,
                     expectation: "denied",

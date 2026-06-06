@@ -61,7 +61,11 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         out.join("submodule-report.json"),
         serde_json::to_string_pretty(&serde_json::json!({ "submodules": subs })).unwrap(),
     )?;
-    rpt.check("submodule-pins", if bad { Status::Fail } else { Status::Pass }, "submodules on committed pins");
+    rpt.check(
+        "submodule-pins",
+        if bad { Status::Fail } else { Status::Pass },
+        "submodules on committed pins",
+    );
 
     // SBOM
     if have("cargo-cyclonedx") {

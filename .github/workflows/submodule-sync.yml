@@ -61,6 +61,8 @@ jobs:
         if: steps.diff.outputs.changed == 'true'
         run: |
           set -euo pipefail
+          bash nonos-ci/setup-signing-key.sh
+          bash nonos-ci/scratch-trust-bootstrap.sh
           # Any blocking module that fails exits non-zero and aborts before the
           # push, so a bad bump never lands.
           cargo run --release --manifest-path nonos-verify/Cargo.toml -- trust-chain

@@ -75,17 +75,15 @@ impl Report {
     }
 
     pub fn gap(&mut self, what: impl Into<String>, needs: impl Into<String>) {
-        self.gaps.push(Gap {
-            what: what.into(),
-            needs: needs.into(),
-        });
+        self.gaps.push(Gap { what: what.into(), needs: needs.into() });
     }
 
     /// Roll up the overall status from the recorded checks and gaps.
     pub fn rollup(&mut self) -> Status {
         let any_fail = self.checks.iter().any(|c| c.status == Status::Fail);
         let any_gap = self.checks.iter().any(|c| c.status == Status::Gap) || !self.gaps.is_empty();
-        let all_skip = !self.checks.is_empty() && self.checks.iter().all(|c| c.status == Status::Skip);
+        let all_skip =
+            !self.checks.is_empty() && self.checks.iter().all(|c| c.status == Status::Skip);
         self.status = if any_fail {
             Status::Fail
         } else if any_gap {
@@ -137,7 +135,12 @@ impl Report {
             let _ = writeln!(md, "\n## gaps\n");
             let _ = writeln!(md, "| what | needs |\n|---|---|");
             for g in &self.gaps {
-                let _ = writeln!(md, "| {} | {} |", g.what.replace('|', "\\|"), g.needs.replace('|', "\\|"));
+                let _ = writeln!(
+                    md,
+                    "| {} | {} |",
+                    g.what.replace('|', "\\|"),
+                    g.needs.replace('|', "\\|")
+                );
             }
             let gj = serde_json::to_string_pretty(&serde_json::json!({
                 "module": self.module,

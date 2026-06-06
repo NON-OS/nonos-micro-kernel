@@ -5,7 +5,9 @@
 
 use crate::report::{Report, Status};
 use nonos_capsule_sign::algs::AlgId;
-use nonos_capsule_sign::verify::decode::{decode_cert, decode_manifest, decode_trust_anchor_policy};
+use nonos_capsule_sign::verify::decode::{
+    decode_cert, decode_manifest, decode_trust_anchor_policy,
+};
 use nonos_capsule_sign::verify::{verify_cert, verify_manifest};
 use serde::Serialize;
 use std::path::Path;
@@ -41,7 +43,10 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         Ok(b) => b,
         Err(e) => {
             rpt.check("policy-present", Status::Fail, format!("{POLICY_PATH}: {e}"));
-            rpt.gap("baked trust-anchor policy", format!("build the signed policy at {POLICY_PATH}"));
+            rpt.gap(
+                "baked trust-anchor policy",
+                format!("build the signed policy at {POLICY_PATH}"),
+            );
             return rpt.finish(root);
         }
     };
@@ -72,8 +77,15 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     manifests.sort();
 
     if manifests.is_empty() {
-        rpt.check("capsule-inventory", Status::Gap, format!("no *.manifest.bin under {CAPSULE_DIR}"));
-        rpt.gap("signed capsule artifacts", "run the signing lane (make nonos-mk-...-sign) to populate nonos-data/trust/capsules");
+        rpt.check(
+            "capsule-inventory",
+            Status::Gap,
+            format!("no *.manifest.bin under {CAPSULE_DIR}"),
+        );
+        rpt.gap(
+            "signed capsule artifacts",
+            "run the signing lane (make nonos-mk-...-sign) to populate nonos-data/trust/capsules",
+        );
         return rpt.finish(root);
     }
 
@@ -112,7 +124,8 @@ pub fn run(root: &str) -> std::io::Result<Status> {
             verify_cert(&cert, &cert_bytes, &policy, REQUIRED_ALGS, Some(NOW_MS))
                 .map_err(|e| format!("cert verify: {e:?}"))?;
             m.cert_verified = true;
-            let manifest = decode_manifest(&manifest_bytes).map_err(|e| format!("manifest decode: {e:?}"))?;
+            let manifest =
+                decode_manifest(&manifest_bytes).map_err(|e| format!("manifest decode: {e:?}"))?;
             m.manifest_decoded = true;
             verify_manifest(&manifest, &manifest_bytes, &cert, &cert_bytes, &policy, REQUIRED_ALGS)
                 .map_err(|e| format!("manifest verify: {e:?}"))?;
@@ -123,7 +136,11 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         match verdict {
             Ok(()) => {
                 ok += 1;
-                rpt.check(&format!("chain:{bin_name}"), Status::Pass, "cert+manifest verified against baked anchor");
+                rpt.check(
+                    &format!("chain:{bin_name}"),
+                    Status::Pass,
+                    "cert+manifest verified against baked anchor",
+                );
             }
             Err(e) => {
                 bad += 1;
@@ -155,10 +172,7 @@ pub fn run(root: &str) -> std::io::Result<Status> {
 
     let status = rpt.finish(root)?;
     // copy the report as the named attestation artifact
-    let _ = std::fs::copy(
-        out.join("trust-chain-report.json"),
-        out.join("trust-attestation.json"),
-    );
+    let _ = std::fs::copy(out.join("trust-chain-report.json"), out.join("trust-attestation.json"));
     eprintln!("verify-trust: {ok} verified, {bad} failed -> {}", status_str(status));
     Ok(status)
 }

@@ -28,19 +28,38 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         if observed {
             rpt.check(&format!("boot-{name}"), Status::Pass, format!("marker '{marker}' observed"));
         } else if !ok {
-            rpt.check(&format!("boot-{name}"), Status::Fail, format!("harness failed and '{marker}' absent"));
+            rpt.check(
+                &format!("boot-{name}"),
+                Status::Fail,
+                format!("harness failed and '{marker}' absent"),
+            );
         } else {
-            rpt.check(&format!("boot-{name}"), Status::Fail, format!("marker '{marker}' not observed"));
+            rpt.check(
+                &format!("boot-{name}"),
+                Status::Fail,
+                format!("marker '{marker}' not observed"),
+            );
         }
     }
 
     // Subsystem round-trips that already have scripts.
-    for s in ["entropy_round_trip", "crypto_hash_round_trip", "vfs_round_trip", "ps2_input_round_trip", "virtio_blk_round_trip", "market_round_trip"] {
+    for s in [
+        "entropy_round_trip",
+        "crypto_hash_round_trip",
+        "vfs_round_trip",
+        "ps2_input_round_trip",
+        "virtio_blk_round_trip",
+        "market_round_trip",
+    ] {
         let script = format!("tests/boot/{s}.sh");
         if Path::new(&script).exists() {
             let log = traces.join(format!("{s}.log"));
             let ok = run_logged("timeout", &["300", "bash", &script], &log);
-            rpt.check(&format!("rt-{s}"), if ok { Status::Pass } else { Status::Fail }, "round-trip script");
+            rpt.check(
+                &format!("rt-{s}"),
+                if ok { Status::Pass } else { Status::Fail },
+                "round-trip script",
+            );
         } else {
             rpt.check(&format!("rt-{s}"), Status::Skip, "round-trip script absent");
         }

@@ -11,10 +11,8 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     let out = Path::new(root).join("tests");
     std::fs::create_dir_all(&out)?;
 
-    let (ok, output) = capture(
-        "cargo",
-        &["test", "--manifest-path", "nonos-verify/Cargo.toml", "--tests"],
-    );
+    let (ok, output) =
+        capture("cargo", &["test", "--manifest-path", "nonos-verify/Cargo.toml", "--tests"]);
     std::fs::write(out.join("cargo-test.txt"), &output)?;
 
     // Sum the libtest "test result: ok. N passed; M failed; ..." lines.
@@ -36,11 +34,7 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         }
     }
 
-    let status = if ok && failed == 0 {
-        Status::Pass
-    } else {
-        Status::Fail
-    };
+    let status = if ok && failed == 0 { Status::Pass } else { Status::Fail };
     rpt.check("property-and-kat", status, format!("{passed} passed, {failed} failed"));
     rpt.finish(root)
 }

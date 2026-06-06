@@ -33,7 +33,9 @@ fn main() {
             eprintln!("usage: nonos-verify <subcommand>\n");
             eprintln!("  build          compile profile, section sizes, binary symbol scan");
             eprintln!("  trust-chain    decode + verify every capsule against the baked anchor");
-            eprintln!("  adversarial    tamper valid artifacts and assert the verifier rejects them");
+            eprintln!(
+                "  adversarial    tamper valid artifacts and assert the verifier rejects them"
+            );
             eprintln!("  runtime        boot the kernel in QEMU and assert readiness markers");
             eprintln!("  supply-chain   advisories, license policy, submodule pins, SBOM");
             eprintln!("  tests          host property tests and crypto known-answer tests");

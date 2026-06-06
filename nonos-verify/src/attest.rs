@@ -16,7 +16,8 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     let mut blocking_fail = false;
 
     if let Ok(rd) = std::fs::read_dir(root_path) {
-        let mut dirs: Vec<_> = rd.filter_map(|e| e.ok().map(|e| e.path())).filter(|p| p.is_dir()).collect();
+        let mut dirs: Vec<_> =
+            rd.filter_map(|e| e.ok().map(|e| e.path())).filter(|p| p.is_dir()).collect();
         dirs.sort();
         for d in dirs {
             let name = d.file_name().and_then(|n| n.to_str()).unwrap_or("").to_string();
@@ -29,7 +30,8 @@ pub fn run(root: &str) -> std::io::Result<Status> {
             }
             let bytes = std::fs::read(&report).unwrap_or_default();
             let hash = blake3::hash(&bytes).to_hex().to_string();
-            let v: serde_json::Value = serde_json::from_slice(&bytes).unwrap_or(serde_json::Value::Null);
+            let v: serde_json::Value =
+                serde_json::from_slice(&bytes).unwrap_or(serde_json::Value::Null);
             let status = v.get("status").and_then(|s| s.as_str()).unwrap_or("unknown");
             let blocking = v.get("blocking").and_then(|b| b.as_bool()).unwrap_or(true);
             if status == "fail" && blocking {
@@ -56,7 +58,10 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         "gaps": gaps,
         "blocking_failure": blocking_fail,
     });
-    std::fs::write(out.join("ci-attestation.json"), serde_json::to_string_pretty(&attestation).unwrap())?;
+    std::fs::write(
+        out.join("ci-attestation.json"),
+        serde_json::to_string_pretty(&attestation).unwrap(),
+    )?;
 
     let mut md = String::new();
     let _ = writeln!(md, "# NONOS verification attestation\n");

@@ -2,7 +2,9 @@
 // artifact is an error, never a panic and never a false accept. proptest throws
 // thousands of arbitrary byte strings at each decoder.
 
-use nonos_capsule_sign::verify::decode::{decode_cert, decode_manifest, decode_trust_anchor_policy};
+use nonos_capsule_sign::verify::decode::{
+    decode_cert, decode_manifest, decode_trust_anchor_policy,
+};
 use proptest::prelude::*;
 
 proptest! {

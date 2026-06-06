@@ -27,6 +27,11 @@ jobs:
         with:
           targets: x86_64-nonos,x86_64-unknown-uefi
           module: build
+      - name: Provision CI signing key and scratch trust anchor
+        run: |
+          set -euo pipefail
+          bash nonos-ci/setup-signing-key.sh
+          bash nonos-ci/scratch-trust-bootstrap.sh
       - name: nonos-verify build
         run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- build
       - name: Upload build artifacts
