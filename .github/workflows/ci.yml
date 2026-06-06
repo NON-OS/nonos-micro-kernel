@@ -32,12 +32,11 @@ jobs:
   tests:
     uses: ./.github/workflows/ci-tests.yml
 
-  # Heavy QEMU lane: only spend it once the build is known good.
-  runtime:
-    needs: build
-    uses: ./.github/workflows/ci-runtime.yml
-
+  # The heavy QEMU boot lane (cold-compiles the ZK proving toolchain, then boots
+  # each kernel under QEMU) runs on the nightly schedule, not per push. Every
+  # push is gated by the deterministic build, trust-chain, adversarial, tests,
+  # and supply-chain proofs; the boot proof lands in nightly.yml.
   attestation:
-    needs: [build, supply-chain, trust-chain, adversarial, tests, runtime]
+    needs: [build, supply-chain, trust-chain, adversarial, tests]
     if: always()
     uses: ./.github/workflows/ci-attestation.yml
