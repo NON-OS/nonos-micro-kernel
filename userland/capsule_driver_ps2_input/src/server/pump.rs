@@ -25,17 +25,16 @@ pub fn pump(ctx: &mut Context, prev_buttons: &mut u8) {
     let kbd = poll_seq(ctx.driver.irq_grant_id);
     let aux = poll_seq(ctx.driver.aux_irq_grant_id);
     let fired = kbd != ctx.last_kbd_seq || aux != ctx.last_aux_seq;
-    let unbound = ctx.driver.irq_grant_id == 0 && ctx.driver.aux_irq_grant_id == 0;
-    if fired || unbound {
-        drain(
-            ctx.driver.pio_grant_id,
-            &mut ctx.drainer,
-            &mut ctx.ring,
-            &mut ctx.mouse,
-            &mut ctx.mouse_ring,
-        );
-        ctx.last_kbd_seq = poll_seq(ctx.driver.irq_grant_id);
-        ctx.last_aux_seq = poll_seq(ctx.driver.aux_irq_grant_id);
+    drain(
+        ctx.driver.pio_grant_id,
+        &mut ctx.drainer,
+        &mut ctx.ring,
+        &mut ctx.mouse,
+        &mut ctx.mouse_ring,
+    );
+    ctx.last_kbd_seq = kbd;
+    ctx.last_aux_seq = aux;
+    if fired {
         let _ = mk_irq_ack(ctx.driver.irq_grant_id);
         let _ = mk_irq_ack(ctx.driver.aux_irq_grant_id);
     }
