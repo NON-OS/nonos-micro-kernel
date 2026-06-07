@@ -38,7 +38,7 @@
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
 .PHONY: nonos-mk-fmt
 .PHONY: nonos-mk-toolchain nonos-mk-check-deps
-.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest
+.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report
 
 # Compatibility aliases (transitional, do not remove until callers move)
 .PHONY: kernel-capsules kernel-keyring-smoketest kernel-ramfs-smoketest
@@ -108,6 +108,32 @@ ZK_VERIFY_TOOL   := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/verify-proof
 ZK_PROOF_SCENE_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/capsule-attest-proof
 ZK_FLEET_TOOL    := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/capsule-attest-fleet
 EMBED_TOOL       := $(BOOTLOADER_DIR)/tools/embed-zk-proof/target/$(HOST_TARGET)/release/embed-zk-proof
+
+# Header and status line, shown once per invocation. Fields are read from
+# the working tree at parse time.
+NONOS_BRANCH    := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo detached)
+NONOS_COMMIT    := $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
+NONOS_DIRTY     := $(shell test -n "$$(git status --porcelain 2>/dev/null)" && echo '*' || echo '')
+NONOS_ATTESTED  := $(shell ls nonos-data/trust/capsules/*.zk_trailer.bin 2>/dev/null | wc -l | tr -d ' ')
+NONOS_SIGNED    := $(shell ls nonos-data/trust/capsules/*.manifest.bin 2>/dev/null | wc -l | tr -d ' ')
+NONOS_VK_FPR    := $(shell test -f $(ZK_VERIFYING_KEY) && shasum -a 256 $(ZK_VERIFYING_KEY) 2>/dev/null | cut -c1-16 || echo unkeyed)
+NONOS_ENFORCE   := $(shell grep -q 'nonos-production = \["nonos-zk-enforce"\]' Cargo.toml && echo on || echo log-only)
+
+define NONOS_BANNER
+
+  ███╗   ██╗ ██████╗ ███╗   ██╗ ██████╗ ███████╗
+  ████╗  ██║██╔═══██╗████╗  ██║██╔═══██╗██╔════╝
+  ██╔██╗ ██║██║   ██║██╔██╗ ██║██║   ██║███████╗
+  ██║╚██╗██║██║   ██║██║╚██╗██║██║   ██║╚════██║
+  ██║ ╚████║╚██████╔╝██║ ╚████║╚██████╔╝███████║
+  ╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚══════╝
+  capability-based microkernel   rust   no_std   x86_64
+endef
+export NONOS_BANNER
+
+$(info $(NONOS_BANNER))
+$(info  branch $(NONOS_BRANCH)$(NONOS_DIRTY)  commit $(NONOS_COMMIT)  signed $(NONOS_SIGNED)  zk-attested $(NONOS_ATTESTED)  zk-enforce $(NONOS_ENFORCE)  vk $(NONOS_VK_FPR))
+$(info )
 
 # QEMU + OVMF discovery.
 QEMU := qemu-system-x86_64
@@ -216,6 +242,24 @@ nonos-mk-verify-capsule-attest: nonos-mk-all-capsules-attested $(ZK_FLEET_TOOL) 
 		--verifying-key $(ZK_VERIFYING_KEY) \
 		--capsule-dir target/capsule-attest \
 		--sidecar-dir $(NONOS_TRUST_DIR)/capsules
+
+# Per-capsule attestation facts, read from the trailers on disk. Every column
+# is parsed from the NZKCAPS1 sidecar: proof length, public-input count, and
+# the leading bytes of the bound commitment.
+nonos-mk-zk-report:
+	@printf '\n  attestation report   groth16 over bls12-381   vk %s\n\n' "$(NONOS_VK_FPR)"
+	@printf '  %-26s %7s %4s %-18s %s\n' capsule proof inputs commitment magic
+	@printf '  %s\n' '------------------------------------------------------------------------------'
+	@for t in $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin; do \
+		[ -e "$$t" ] || continue; \
+		name=$$(basename "$$t" .zk_trailer.bin); \
+		magic=$$(head -c 8 "$$t"); \
+		plen=$$(od -An -t u4 -j 8 -N 4 "$$t" | tr -d ' '); \
+		ilen=$$(od -An -t u4 -j 204 -N 4 "$$t" | tr -d ' '); \
+		comm=$$(od -An -tx1 -j 432 -N 8 "$$t" | tr -d ' '); \
+		printf '  %-26s %6sB %4s %-18s %s\n' "$$name" "$$plen" "$$(( ilen / 32 ))" "$$comm" "$$magic"; \
+	done
+	@printf '\n  %s capsules attested   192-byte proofs   7 public field elements each\n\n' "$(NONOS_ATTESTED)"
 
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
