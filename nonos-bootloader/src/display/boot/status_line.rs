@@ -14,19 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod crypto;
-mod error;
-mod handoff;
-mod init;
-mod logo;
-mod progress;
-mod stage;
-mod status_line;
+use crate::display::constants::{COLOR_SUCCESS, COLOR_WARNING};
+use crate::display::font::draw_string;
+use crate::display::gop::is_initialized;
 
-pub use crypto::{animate_hash_reveal, show_crypto_verification, BootCryptoState};
-pub use error::show_error_screen;
-pub use handoff::show_handoff_message;
-pub use init::{init_boot_screen, reset_animation, tick_animation};
-pub use progress::draw_boot_progress;
-pub use stage::{get_boot_progress_percent, update_stage, StageStatus};
-pub use status_line::draw_status_line;
+pub fn draw_status_line(secure_boot: bool, measured: bool, attested: bool) {
+    if !is_initialized() {
+        return;
+    }
+    draw_flag(40, 122, b"SecureBoot", secure_boot);
+    draw_flag(200, 122, b"Measured", measured);
+    draw_flag(360, 122, b"Attested", attested);
+}
+
+fn draw_flag(x: u32, y: u32, label: &[u8], ok: bool) {
+    let color = if ok { COLOR_SUCCESS } else { COLOR_WARNING };
+    draw_string(x, y, label, color);
+}

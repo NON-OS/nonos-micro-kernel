@@ -22,7 +22,7 @@ pub mod log_panel;
 pub mod security;
 
 pub use boot::{
-    animate_hash_reveal, draw_boot_progress, init_boot_screen, reset_animation,
+    animate_hash_reveal, draw_boot_progress, draw_status_line, init_boot_screen, reset_animation,
     show_crypto_verification, show_error_screen, show_handoff_message, tick_animation,
     update_stage, BootCryptoState, StageStatus,
 };

@@ -15,7 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use uefi::prelude::*;
-use crate::display::{draw_boot_progress, update_stage, StageStatus, STAGE_COMPLETE, STAGE_HANDOFF};
+use crate::display::{
+    draw_boot_progress, draw_status_line, update_stage, StageStatus, STAGE_COMPLETE, STAGE_HANDOFF,
+};
 use crate::firmware::get_firmware_handoff;
 use crate::handoff::exit_and_jump;
 use crate::loader::KernelImage;
@@ -31,6 +33,9 @@ pub fn run_handoff_prepare(st: SystemTable<Boot>, ki: &KernelImage, p: HandoffPa
     log_info("handoff", "starting handoff preparation");
     update_stage(STAGE_HANDOFF, StageStatus::Running);
     draw_boot_progress(10, TOTAL_BOOT_STAGES);
+    if gop {
+        draw_status_line(p.secure_boot, p.tpm_measured, p.zk_result.zk_verified);
+    }
     let rng_seed = collect_entropy(&mut st, gop);
     let (crypto_handoff, firmware_handoff) = (build_crypto_handoff(&p), get_firmware_handoff());
     let _quote = generate_boot_attestation(&rng_seed, gop);
