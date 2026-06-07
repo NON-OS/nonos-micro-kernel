@@ -38,7 +38,7 @@
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
 .PHONY: nonos-mk-fmt
 .PHONY: nonos-mk-toolchain nonos-mk-check-deps
-.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony
+.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live
 
 # Compatibility aliases (transitional, do not remove until callers move)
 .PHONY: kernel-capsules kernel-keyring-smoketest kernel-ramfs-smoketest
@@ -233,7 +233,11 @@ $(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_
 # contributors. The bootloader embeds the verifying key (signature.sig is host
 # provenance, not consumed at boot), so the four authority VKs are copies of
 # the attestation VK.
-$(ZK_PROVING_KEY): $(ZK_CEREMONY_TOOL) $(SIGNING_KEY)
+# Order-only prerequisites: the tool and signing key must exist, but their
+# timestamps must NOT invalidate the keys. The ceremony runs once; rebuilding
+# the tool must never silently regenerate keys and strand already-attested
+# capsules. Use nonos-mk-zk-ceremony to deliberately re-run it.
+$(ZK_PROVING_KEY): | $(ZK_CEREMONY_TOOL) $(SIGNING_KEY)
 	@echo "Running Groth16 phase-2 ceremony (seedless, $(ZK_CEREMONY_ROUNDS) rounds)..."
 	@mkdir -p $(ZK_KEYS_DIR) $(ZK_CEREMONY_DIR)
 	@$(ZK_CEREMONY_TOOL) init --circuit attestation --output $(ZK_CEREMONY_DIR)/params_0.bin
@@ -294,6 +298,28 @@ nonos-mk-zk-report:
 		printf '  %-22s  0x%-16s  %-18s  %-18s\n' "$$name" "$$caps" "$$chash" "$$comm"; \
 	done
 	@printf '\n  %s capsules   every row distinct   each proof binds these inputs in zero knowledge\n\n' "$(NONOS_ATTESTED)"
+
+# Run a real Groth16 pairing check on every bundled capsule, one at a time,
+# against the current verifying key. This is the actual math, not a parse:
+# each line is a full verification as it completes. Needs a build first
+# (target/capsule-attest/*.capsule.zk), and exits non-zero if any proof fails.
+nonos-mk-zk-verify-live: $(ZK_VERIFY_TOOL) $(ZK_VERIFYING_KEY)
+	@printf '\n  live groth16 verification   bls12-381   vk %s\n\n' "$(NONOS_VK_FPR)"
+	@pass=0; fail=0; \
+	any=0; \
+	for z in target/capsule-attest/*.capsule.zk; do \
+		[ -e "$$z" ] || { printf '  no bundled capsules found; build first: make nonos-mk-desktop-gui-prod\n\n'; exit 1; }; \
+		any=1; \
+		name=$$(basename "$$z" .capsule.zk); \
+		printf '  verifying %-24s ' "$$name"; \
+		if $(ZK_VERIFY_TOOL) --verifying-key $(ZK_VERIFYING_KEY) --capsule "$$z" >/dev/null 2>&1; then \
+			printf 'PASS\n'; pass=$$((pass + 1)); \
+		else \
+			printf 'FAIL\n'; fail=$$((fail + 1)); \
+		fi; \
+	done; \
+	printf '\n  %s passed   %s failed   real pairing checks against vk %s\n\n' "$$pass" "$$fail" "$(NONOS_VK_FPR)"; \
+	[ "$$fail" -eq 0 ]
 
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
