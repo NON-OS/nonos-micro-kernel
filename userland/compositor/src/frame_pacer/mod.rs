@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod composite;
+pub mod cursor;
 pub mod tick;
 pub mod vsync;
 

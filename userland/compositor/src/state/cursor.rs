@@ -40,4 +40,8 @@ impl CursorTracker {
         self.state = CursorState { x, y, visible };
         prev
     }
+
+    pub fn current(&self) -> CursorState {
+        self.state
+    }
 }
