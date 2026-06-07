@@ -38,7 +38,7 @@
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
 .PHONY: nonos-mk-fmt
 .PHONY: nonos-mk-toolchain nonos-mk-check-deps
-.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report
+.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony
 
 # Compatibility aliases (transitional, do not remove until callers move)
 .PHONY: kernel-capsules kernel-keyring-smoketest kernel-ramfs-smoketest
@@ -259,6 +259,16 @@ $(ZK_VERIFYING_KEY): $(ZK_PROVING_KEY)
 
 nonos-mk-ensure-zk-keys: $(ZK_PROVING_KEY) $(ZK_VERIFYING_KEY)
 nonos-mk-zk-tools: $(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_TOOL)
+
+# Force a fresh trusted-setup ceremony, discarding the existing keys. Use this
+# to re-run the phase-2 rounds on demand; `nonos-mk-ensure-zk-keys` only runs
+# when the keys are absent. Re-attests nothing on its own: rebuild the capsules
+# afterwards so their trailers match the new verifying key.
+nonos-mk-zk-ceremony: $(ZK_CEREMONY_TOOL) $(SIGNING_KEY)
+	@rm -f $(ZK_PROVING_KEY) $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_*.bin
+	@rm -rf $(ZK_CEREMONY_DIR)
+	@$(MAKE) --no-print-directory $(ZK_PROVING_KEY)
+	@$(MAKE) --no-print-directory nonos-mk-zk-report
 
 nonos-mk-verify-capsule-attest: nonos-mk-all-capsules-attested $(ZK_FLEET_TOOL) $(ZK_VERIFYING_KEY)
 	@$(ZK_FLEET_TOOL) \
