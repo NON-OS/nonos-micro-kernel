@@ -154,7 +154,10 @@ QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
 QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::$(QEMU_HOST_SSH_PORT)-:22,hostfwd=tcp::$(QEMU_HOST_HTTP_PORT)-:80
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
 QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=1024,yres=768
-QEMU_USB := -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-mouse,bus=xhci.0
+# Keyboard/mouse via the q35 i8042 (PS/2). USB HID interrupt-IN transfers
+# are not serviced under macOS hvf, so usb-kbd/usb-mouse never deliver input
+# there; the xHCI controller stays for the USB stack/storage paths.
+QEMU_USB := -device qemu-xhci,id=xhci
 QEMU_RNG := -device virtio-rng-pci
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -1239,6 +1242,16 @@ nonos-mk-run: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial mon:stdio -vga none -no-reboot
 
+nonos-mk-run-wizard: nonos-mk-setup-wizard-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
+	@echo "Booting NONOS (first-boot setup wizard) in QEMU..."
+	@echo "  Drive it with the host keyboard; Quit: Ctrl+A then X"
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-setup-wizard" \
+		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
+		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial mon:stdio -vga none -no-reboot
+
 nonos-mk-terminal-only-run: nonos-mk-terminal-only-prod nonos-mk-esp $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS terminal-only in QEMU..."
 	@echo "  Quit: Ctrl+A then X"
@@ -1452,6 +1465,7 @@ help:
 	@echo
 	@echo "Run:"
 	@echo "  make nonos-mk-run             QEMU + OVMF (SSH:2222, HTTP:8080)"
+	@echo "  make nonos-mk-run-wizard      QEMU + OVMF, first-boot setup wizard"
 	@echo "  make nonos-mk-run-serial      headless serial-only"
 	@echo "  make nonos-mk-debug           QEMU + GDB on :1234"
 	@echo
