@@ -14,25 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![cfg(feature = "zk-groth16")]
+// Per-capsule zero-knowledge attestation. Before a capsule is mapped or
+// scheduled, the kernel verifies its embedded Groth16 proof and binds it to the
+// capsule's real bytes and the capabilities about to be granted. A capsule that
+// does not carry a valid, correctly bound proof is refused. This mirrors the
+// bootloader's kernel attestation, applied per capsule on the same BLS12-381
+// curve.
 
-pub mod attestation_vk;
-pub mod deserialize;
-pub mod error;
-pub mod params;
-mod verifier;
-mod verifier_bls12_381;
+mod error;
+mod layout;
+mod registry;
+mod trailer;
+mod verify;
 
-#[cfg(test)]
-#[cfg(not(feature = "std"))]
-#[cfg(test)]
-mod tests;
-
-pub const MAX_VK_BYTES: usize = 16 * 1024 * 1024;
-pub const MAX_PROOF_BYTES: usize = 1 * 1024 * 1024;
-pub const MAX_PUBLIC_INPUTS: usize = 262_000;
-
-pub use attestation_vk::{verify_attestation, ATTESTATION_VK};
-pub use error::Groth16Error;
-pub use verifier::{groth16_verify_bn254, Groth16Verifier};
-pub use verifier_bls12_381::groth16_verify_bls12_381;
+pub use error::AttestError;
+pub use registry::trailer_for;
+pub use verify::verify_capsule_attestation;

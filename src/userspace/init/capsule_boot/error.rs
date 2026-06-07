@@ -33,5 +33,8 @@ pub(super) fn message(prefix: &str, err: SpawnError) -> alloc::string::String {
         }
         SpawnError::NonosIdCertRejected(reason) => super::cert_reason::message(prefix, reason),
         SpawnError::ManifestRejected(reason) => super::manifest_reason::message(prefix, reason),
+        SpawnError::AttestationRejected => {
+            alloc::format!("{}: capsule ZK attestation failed", prefix)
+        }
     }
 }

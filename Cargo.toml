@@ -145,6 +145,9 @@ nonos-selftest = []
 # this feature. Mutex with `nonos-dev-unverified-capsules` is
 # enforced by the `compile_error!` in `lib.rs`.
 nonos-production = []
+# When set, a capsule that carries an attestation trailer must verify it or the
+# spawn is refused. Off by default during rollout: the result is only logged.
+nonos-zk-enforce = []
 
 # Escape hatch for development that still needs the legacy
 # unverified spawn path. Mutually exclusive with `nonos-production`
@@ -195,6 +198,7 @@ microkernel-core = [
   "sched",
   "sha3",
   "crypto-ed25519-int",
+  "zk-groth16",
 ]
 
 # Runtime baseline: core + the three live capsule embeds.
@@ -741,7 +745,7 @@ mldsa5    = []
 
 # Zero-knowledge proof systems. Source paths: src/crypto/zk/groth16/*,
 # src/crypto/zk/halo2/*.
-zk-groth16 = ["ark-bn254", "ark-groth16", "ark-serialize", "ark-ff", "ark-ec", "ark-std"]
+zk-groth16 = ["ark-bn254", "ark-bls12-381", "ark-groth16", "ark-serialize", "ark-ff", "ark-ec", "ark-std"]
 zk-halo2   = ["halo2_proofs", "halo2curves"]
 
 # Legacy hash, retained for Git object hashes / TOTP only.
@@ -783,6 +787,7 @@ smoltcp = { version = "0.11", default-features = false, features = ["alloc", "so
 
 # Zero-knowledge — arkworks (Groth16).
 ark-bn254     = { version = "0.4", default-features = false, features = ["curve"], optional = true }
+ark-bls12-381 = { version = "0.4", default-features = false, features = ["curve"], optional = true }
 ark-groth16   = { version = "0.4", default-features = false, optional = true }
 ark-serialize = { version = "0.4", default-features = false, features = ["derive"], optional = true }
 ark-ff        = { version = "0.4", default-features = false, optional = true }

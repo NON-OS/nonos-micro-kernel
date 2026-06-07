@@ -50,6 +50,7 @@ pub enum SpawnError {
     EndpointCollision,
     NonosIdCertRejected(IdCertVerifyError),
     ManifestRejected(ManifestVerifyError),
+    AttestationRejected,
 }
 
 impl From<IdCertVerifyError> for SpawnError {
