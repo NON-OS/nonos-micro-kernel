@@ -33,6 +33,7 @@ fn main() {
     match args[1].as_str() {
         "init" => cmd_init(&args[2..]),
         "contribute" => cmd_contribute(&args[2..]),
+        "assemble" => cmd_assemble(&args[2..]),
         "finalize" => cmd_finalize(&args[2..]),
         "extract-vk" => cmd_extract_vk(&args[2..]),
         "verify" => cmd_verify(&args[2..]),
@@ -221,6 +222,66 @@ fn cmd_contribute(args: &[String]) {
             std::process::exit(1);
         }
     }
+}
+
+// Build the CeremonyTranscript finalize expects from the init metadata and the
+// per-round contribution records, so the flow needs no external JSON tooling.
+// Usage: assemble --meta <init.meta.json> --output <transcript.json> <rec1.json> ...
+fn cmd_assemble(args: &[String]) {
+    let mut meta = String::new();
+    let mut output = String::new();
+    let mut records: Vec<String> = Vec::new();
+
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--meta" | "-m" => {
+                meta = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            "--output" | "-o" => {
+                output = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            rec => {
+                records.push(rec.to_string());
+                i += 1;
+            }
+        }
+    }
+
+    if meta.is_empty() || output.is_empty() || records.is_empty() {
+        eprintln!("ERROR: assemble needs --meta, --output, and at least one record file");
+        std::process::exit(1);
+    }
+
+    let metadata: ceremony::CeremonyMetadata =
+        serde_json::from_str(&fs::read_to_string(&meta).expect("read metadata"))
+            .expect("parse ceremony metadata");
+
+    let mut contributions: Vec<ceremony::ContributionRecord> = records
+        .iter()
+        .map(|r| {
+            serde_json::from_str(&fs::read_to_string(r).expect("read contribution record"))
+                .expect("parse contribution record")
+        })
+        .collect();
+    contributions.sort_by_key(|c| c.round);
+
+    let transcript = ceremony::CeremonyTranscript {
+        metadata,
+        contributions,
+        final_vk_hash: None,
+        verification_passed: false,
+    };
+
+    fs::write(&output, serde_json::to_string_pretty(&transcript).expect("serialize transcript"))
+        .expect("write transcript");
+    eprintln!(
+        "[assemble] transcript written: {} ({} contributions)",
+        output,
+        transcript.contributions.len()
+    );
 }
 
 fn cmd_finalize(args: &[String]) {
