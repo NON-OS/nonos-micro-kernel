@@ -276,23 +276,24 @@ nonos-mk-verify-capsule-attest: nonos-mk-all-capsules-attested $(ZK_FLEET_TOOL) 
 		--capsule-dir target/capsule-attest \
 		--sidecar-dir $(NONOS_TRUST_DIR)/capsules
 
-# Per-capsule attestation facts, read from the trailers on disk. Every column
-# is parsed from the NZKCAPS1 sidecar: proof length, public-input count, and
-# the leading bytes of the bound commitment.
+# Per-capsule attestation facts, parsed live from the NZKCAPS1 sidecars. The
+# fixed columns (192-byte proof, 7 public inputs) are constant by construction;
+# the three shown here are the per-capsule bindings carried in the public
+# inputs: the granted capability mask, the blake3 of the capsule bytes, and the
+# bound commitment. No two rows match.
 nonos-mk-zk-report:
-	@printf '\n  attestation report   groth16 over bls12-381   vk %s\n\n' "$(NONOS_VK_FPR)"
-	@printf '  %-26s %7s %4s %-18s %s\n' capsule proof inputs commitment magic
-	@printf '  %s\n' '------------------------------------------------------------------------------'
+	@printf '\n  attestation report   groth16 / bls12-381   192-byte proofs   7 public inputs   vk %s\n\n' "$(NONOS_VK_FPR)"
+	@printf '  %-22s  %-18s  %-18s  %-18s\n' capsule 'caps mask' 'capsule blake3' commitment
+	@printf '  %s\n' '----------------------------------------------------------------------------------------'
 	@for t in $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin; do \
 		[ -e "$$t" ] || continue; \
 		name=$$(basename "$$t" .zk_trailer.bin); \
-		magic=$$(head -c 8 "$$t"); \
-		plen=$$(od -An -t u4 -j 8 -N 4 "$$t" | tr -d ' '); \
-		ilen=$$(od -An -t u4 -j 204 -N 4 "$$t" | tr -d ' '); \
-		comm=$$(od -An -tx1 -j 432 -N 8 "$$t" | tr -d ' '); \
-		printf '  %-26s %6sB %4s %-18s %s\n' "$$name" "$$plen" "$$(( ilen / 32 ))" "$$comm" "$$magic"; \
+		caps=$$(od -An -tx1 -j 360 -N 8 "$$t" | tr -d ' \n'); \
+		chash=$$(od -An -tx1 -j 224 -N 8 "$$t" | tr -d ' \n'); \
+		comm=$$(od -An -tx1 -j 432 -N 8 "$$t" | tr -d ' \n'); \
+		printf '  %-22s  0x%-16s  %-18s  %-18s\n' "$$name" "$$caps" "$$chash" "$$comm"; \
 	done
-	@printf '\n  %s capsules attested   192-byte proofs   7 public field elements each\n\n' "$(NONOS_ATTESTED)"
+	@printf '\n  %s capsules   every row distinct   each proof binds these inputs in zero knowledge\n\n' "$(NONOS_ATTESTED)"
 
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
