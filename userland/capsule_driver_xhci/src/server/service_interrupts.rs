@@ -17,7 +17,6 @@ use crate::controller::{ack_irq, drain_events};
 use crate::server::context::Context;
 
 pub fn service_interrupts(ctx: &mut Context) {
-    let batch = drain_events(ctx.driver.layout.primary_intr_base, &mut ctx.driver.event_ring);
-    ctx.events_drained_total = ctx.events_drained_total.wrapping_add(batch.count as u64);
+    let _ = drain_events(ctx.driver.layout.primary_intr_base, &mut ctx.driver.event_ring);
     ack_irq(ctx.driver.layout.primary_intr_base, ctx.driver.handles.irq_grant_id());
 }

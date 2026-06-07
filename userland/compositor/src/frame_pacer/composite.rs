@@ -58,4 +58,16 @@ pub fn paint(ctx: &mut Context, rect: Rect) {
     for &handle in dropped.iter().take(n_dropped) {
         let _ = ctx.attach.forget(handle);
     }
+    let cursor = ctx.cursor.current();
+    if cursor.visible {
+        super::cursor::blit(
+            ctx.backing_va,
+            ctx.stride,
+            ctx.width,
+            ctx.height,
+            cursor.x,
+            cursor.y,
+            rect,
+        );
+    }
 }

@@ -28,8 +28,8 @@ pub fn setup_stage_get_descriptor_typed(
     let value = ((desc_type as u16) << 8) | desc_index as u16;
     trb.d0 = 0x80 | (0x06 << 8) | ((value as u32) << 16);
     trb.d1 = (length as u32) << 16;
-    trb.d2 = 8 | TRT_IN_DATA;
-    trb.d3 = TRB_IDT;
+    trb.d2 = 8;
+    trb.d3 = TRB_IDT | TRT_IN_DATA;
     trb.set_type(TRB_TYPE_SETUP_STAGE);
     trb.set_cycle(cycle);
     trb

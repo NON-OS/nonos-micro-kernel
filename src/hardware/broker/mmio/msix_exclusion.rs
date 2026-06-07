@@ -19,26 +19,35 @@
 //! kernel programs both regions on the capsule's behalf through the
 //! MSI-X bind path and `MkPciConfigWrite`; exposing them via mmap
 //! would let a capsule short-circuit the allowlist.
+//!
+//! Rather than reject a request that overlaps either region, the
+//! mapping is clamped to end at the page boundary below the first
+//! protected region. A device whose registers share a BAR with its
+//! MSI-X table (e.g. xHCI) still maps everything up to the table; a
+//! request that starts inside a protected region clamps to zero and
+//! is refused by the caller.
 
 use crate::drivers::pci::constants::MSIX_ENTRY_SIZE;
 use crate::drivers::pci::types::MsixInfo;
 
-use super::types::MmioMapError;
+const PAGE_SIZE: u64 = 4096;
 
-pub fn validate(
-    msix: Option<&MsixInfo>,
-    bar_index: u8,
-    offset: u64,
-    length: u64,
-) -> Result<(), MmioMapError> {
-    let Some(m) = msix else { return Ok(()) };
-    if bar_index == m.table_bar && overlaps(offset, length, table_region(m)) {
-        return Err(MmioMapError::WouldExposeMsixTable);
+pub fn safe_length(msix: Option<&MsixInfo>, bar_index: u8, offset: u64, length: u64) -> u64 {
+    let Some(m) = msix else { return length };
+    let mut end = offset.saturating_add(length);
+    if bar_index == m.table_bar {
+        let region = table_region(m);
+        if overlaps(offset, length, region) {
+            end = end.min(region.0 & !(PAGE_SIZE - 1));
+        }
     }
-    if bar_index == m.pba_bar && overlaps(offset, length, pba_region(m)) {
-        return Err(MmioMapError::WouldExposePba);
+    if bar_index == m.pba_bar {
+        let region = pba_region(m);
+        if overlaps(offset, length, region) {
+            end = end.min(region.0 & !(PAGE_SIZE - 1));
+        }
     }
-    Ok(())
+    end.saturating_sub(offset)
 }
 
 fn table_region(m: &MsixInfo) -> (u64, u64) {

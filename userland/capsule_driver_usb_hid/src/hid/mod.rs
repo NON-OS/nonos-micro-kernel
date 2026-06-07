@@ -23,6 +23,8 @@ mod post_key;
 mod post_mouse;
 mod post_wire;
 mod punctuation;
+mod tablet;
 
 pub use keyboard::Keyboard;
 pub use mouse::Mouse;
+pub use tablet::Tablet;

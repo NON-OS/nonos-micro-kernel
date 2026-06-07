@@ -16,7 +16,7 @@
 
 use alloc::vec::Vec;
 
-use crate::descriptors::HidBinding;
+use crate::descriptors::{HidBinding, HidKind};
 use crate::xhci::{alloc_transfer_ring, control_transfer};
 
 use super::enumerate::HidEndpoint;
@@ -27,9 +27,11 @@ pub fn configure_binding(
     binding: HidBinding,
     out: &mut Vec<HidEndpoint>,
 ) {
-    let iface = binding.interface_number as u16;
-    let mut dummy = [0u8; 0];
-    let _ = control_transfer(xhci_port, slot, 0x21, 0x0B, 0, iface, 0, &mut dummy);
+    if matches!(binding.kind, HidKind::Keyboard | HidKind::Mouse) {
+        let iface = binding.interface_number as u16;
+        let mut dummy = [0u8; 0];
+        let _ = control_transfer(xhci_port, slot, 0x21, 0x0B, 0, iface, 0, &mut dummy);
+    }
     let Ok(dci) = alloc_transfer_ring(
         xhci_port,
         slot,

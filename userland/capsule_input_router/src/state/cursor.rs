@@ -16,6 +16,8 @@
 
 use nonos_libc::{InputEvent, INPUT_KIND_POINTER_ABS, INPUT_KIND_POINTER_REL, INPUT_KIND_TOUCH};
 
+const ABS_RANGE_MAX: i64 = 0x7FFF;
+
 pub struct CursorState {
     pub x: i32,
     pub y: i32,
@@ -43,8 +45,8 @@ impl CursorState {
             self.y = self.y.saturating_add(ev.delta_y);
         }
         if ev.kind == INPUT_KIND_POINTER_ABS || ev.kind == INPUT_KIND_TOUCH {
-            self.x = ev.x;
-            self.y = ev.y;
+            self.x = (ev.x as i64 * self.max_x as i64 / ABS_RANGE_MAX) as i32;
+            self.y = (ev.y as i64 * self.max_y as i64 / ABS_RANGE_MAX) as i32;
         }
         self.clamp();
         (self.x as u32, self.y as u32)

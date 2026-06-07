@@ -9,10 +9,12 @@
 use crate::process::core::{Pid, PROCESS_TABLE};
 
 pub(super) fn finalize_teardown(pid: Pid) {
-    if PROCESS_TABLE.find_by_pid(pid).is_none() {
-        return;
-    }
+    let pcb = match PROCESS_TABLE.find_by_pid(pid) {
+        Some(p) => p,
+        None => return,
+    };
 
+    crate::process::address_space::lifecycle::release(&pcb);
     let _ = crate::hardware::broker::release_all_for_pid(pid, false);
     let _ = crate::hardware::broker::irq_release_all_for_pid(pid);
     let _ = crate::hardware::broker::dma_release_all_for_pid(pid, false);

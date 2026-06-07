@@ -23,12 +23,13 @@ use super::types::{Endpoint, Interface, DT_CONFIGURATION, DT_ENDPOINT, DT_INTERF
 
 pub fn hid_bindings(raw: &[u8]) -> Result<Vec<HidBinding>, ()> {
     validate_config(raw)?;
+    let total = u16::from_le_bytes([raw[2], raw[3]]) as usize;
     let mut out = Vec::new();
     let mut iface = None;
     let mut i = 9usize;
-    while i + 2 <= raw.len() {
+    while i + 2 <= total {
         let len = raw[i] as usize;
-        if len < 2 || i + len > raw.len() {
+        if len < 2 || i + len > total {
             return Err(());
         }
         match raw[i + 1] {

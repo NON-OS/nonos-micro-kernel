@@ -22,6 +22,7 @@ pub struct EventRing {
     pub(super) erst: DmaRegion,
     pub(super) consumer_cycle: u8,
     pub(super) dequeue_index: usize,
+    pub(super) drained_total: u64,
 }
 impl EventRing {
     pub fn new(pool: &DmaPool) -> XhciResult<Self> {
@@ -38,6 +39,6 @@ impl EventRing {
             core::ptr::write_volatile(erst_va.add(2), EVENT_RING_SEGMENT_TRBS as u32);
             core::ptr::write_volatile(erst_va.add(3), 0);
         }
-        Ok(Self { segment, erst, consumer_cycle: 1, dequeue_index: 0 })
+        Ok(Self { segment, erst, consumer_cycle: 1, dequeue_index: 0, drained_total: 0 })
     }
 }

@@ -13,15 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::protocol::{
-    encode_response_header, write_status, Request, RESP_HDR_LEN, STATUS_LEN,
-};
-pub fn reply_with_status(tx: &mut [u8], req: &Request, status: i32) {
-    encode_response_header(tx, req, STATUS_LEN as u32);
-    write_status(&mut tx[RESP_HDR_LEN..], status);
-    crate::server::reply::send(tx.as_ptr(), RESP_HDR_LEN + STATUS_LEN);
-}
-pub fn reply_decode_failed(tx: &mut [u8], status: i32) {
-    let req = Request { op: 0, flags: 0, request_id: 0, payload_len: 0 };
-    reply_with_status(tx, &req, status);
+use super::state::EventRing;
+impl EventRing {
+    pub fn drained_total(&self) -> u64 {
+        self.drained_total
+    }
 }

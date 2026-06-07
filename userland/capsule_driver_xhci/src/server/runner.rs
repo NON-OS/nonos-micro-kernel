@@ -23,7 +23,7 @@ use crate::server::error::{reply_decode_failed, reply_with_status};
 use crate::server::service_interrupts::service_interrupts;
 use crate::setup::Driver;
 use alloc::vec;
-use nonos_libc::mk_ipc_recv;
+use nonos_libc::mk_ipc_recv_from;
 const TX_LEN: usize =
     RESP_HDR_LEN + STATUS_LEN + PORT_STATUS_HEADER_BYTES + MAX_PORTS_REPORTED * PORT_ENTRY_BYTES;
 pub fn run(driver: Driver) -> ! {
@@ -32,7 +32,9 @@ pub fn run(driver: Driver) -> ! {
     let mut ctx = Context::new(driver);
     loop {
         service_interrupts(&mut ctx);
-        let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx.len(), 0);
+        let mut sender_pid: u32 = 0;
+        let n = mk_ipc_recv_from(0, rx.as_mut_ptr(), rx.len(), 0, &mut sender_pid);
+        crate::server::reply::set_sender(sender_pid);
         if n <= 0 {
             continue;
         }

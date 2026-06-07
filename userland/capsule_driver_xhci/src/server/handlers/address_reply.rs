@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use crate::protocol::{
-    encode_response_header, write_status, Request, ADDRESS_DEVICE_REPLY_LEN, KERNEL_REPLY_ENDPOINT,
-    RESP_HDR_LEN, STATUS_LEN,
+    encode_response_header, write_status, Request, ADDRESS_DEVICE_REPLY_LEN, RESP_HDR_LEN,
+    STATUS_LEN,
 };
-use nonos_libc::mk_ipc_send;
 pub fn reply_ok(tx: &mut [u8], req: &Request, slot: u8, port: u8, speed: u8, max_packet: u16) {
     let payload_len = (STATUS_LEN + ADDRESS_DEVICE_REPLY_LEN) as u32;
     encode_response_header(tx, req, payload_len);
@@ -30,5 +29,5 @@ pub fn reply_ok(tx: &mut [u8], req: &Request, slot: u8, port: u8, speed: u8, max
     tx[o + 4..o + 6].copy_from_slice(&max_packet.to_le_bytes());
     tx[o + 6..o + ADDRESS_DEVICE_REPLY_LEN].fill(0);
     let len = RESP_HDR_LEN + payload_len as usize;
-    let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), len);
+    crate::server::reply::send(tx.as_ptr(), len);
 }

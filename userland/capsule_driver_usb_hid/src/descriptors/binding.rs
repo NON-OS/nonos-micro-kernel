@@ -30,16 +30,17 @@ pub struct HidBinding {
 
 impl HidBinding {
     pub fn from_pair(iface: Interface, ep: Endpoint) -> Option<Self> {
-        if iface.class != CLASS_HID || iface.subclass != SUBCLASS_BOOT {
+        if iface.class != CLASS_HID || !is_interrupt_in(ep) {
             return None;
         }
-        if !is_interrupt_in(ep) {
-            return None;
-        }
-        let kind = match iface.protocol {
-            PROTOCOL_KEYBOARD => HidKind::Keyboard,
-            PROTOCOL_MOUSE => HidKind::Mouse,
-            _ => return None,
+        let kind = if iface.subclass == SUBCLASS_BOOT {
+            match iface.protocol {
+                PROTOCOL_KEYBOARD => HidKind::Keyboard,
+                PROTOCOL_MOUSE => HidKind::Mouse,
+                _ => return None,
+            }
+        } else {
+            HidKind::Tablet
         };
         Some(Self {
             kind,

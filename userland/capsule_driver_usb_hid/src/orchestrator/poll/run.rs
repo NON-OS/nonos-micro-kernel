@@ -30,7 +30,13 @@ pub fn run(xhci_port: u32) -> ! {
     let mut rx = alloc::vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut tx = alloc::vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut idle_polls = 0u32;
+    let mut announced = false;
     loop {
+        if !announced && !eps.is_empty() {
+            const MSG: &[u8] = b"[USB-HID-ENUM] tablet bound\n";
+            let _ = nonos_libc::mk_debug(MSG.as_ptr(), MSG.len());
+            announced = true;
+        }
         let _ = pump_once(&mut state, &mut rx, &mut tx);
         if drain_endpoints(&mut state, &eps, &mut buf) {
             idle_polls = 0;

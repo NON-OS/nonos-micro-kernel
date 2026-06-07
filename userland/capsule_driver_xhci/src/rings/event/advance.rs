@@ -20,6 +20,7 @@ impl EventRing {
     pub fn advance(&mut self) {
         let va = self.segment.user_va() + (self.dequeue_index as u64) * (TRB_BYTES as u64);
         write_volatile_at(va, Trb::zero());
+        self.drained_total = self.drained_total.wrapping_add(1);
         self.dequeue_index += 1;
         if self.dequeue_index == EVENT_RING_SEGMENT_TRBS {
             self.dequeue_index = 0;
