@@ -28,6 +28,7 @@ pub fn run_init() -> ! {
     spawn_plan::spawn_network();
     spawn_plan::spawn_desktop();
     spawn_plan::spawn_market();
+    spawn_plan::spawn_apps();
     spawn_plan::run_smoketests();
     boot_log::ok("INIT", "Capsules spawned");
     lower_init_priority();
