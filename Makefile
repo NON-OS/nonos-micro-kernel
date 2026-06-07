@@ -107,6 +107,9 @@ ZK_PROOF_TOOL    := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/generate-pro
 ZK_VERIFY_TOOL   := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/verify-proof
 ZK_PROOF_SCENE_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/capsule-attest-proof
 ZK_FLEET_TOOL    := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/capsule-attest-fleet
+ZK_CEREMONY_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/run_ceremony
+ZK_CEREMONY_DIR  := $(ZK_KEYS_DIR)/ceremony
+ZK_CEREMONY_ROUNDS := 5
 EMBED_TOOL       := $(BOOTLOADER_DIR)/tools/embed-zk-proof/target/$(HOST_TARGET)/release/embed-zk-proof
 
 # Header and status line, shown once per invocation. Fields are read from
@@ -218,15 +221,35 @@ nonos-mk-ensure-signing-key: $(SIGNING_KEY)
 
 # ZK attestation: ceremony tools + ceremony keys + embed tool
 
-$(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_TOOL): nonos-mk-check-deps
+$(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_TOOL) $(ZK_CEREMONY_TOOL): nonos-mk-check-deps
 	@echo "Building ZK attestation tools..."
 	@cd $(ZK_CIRCUIT_DIR) && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build --release --bin generate-keys --bin generate-proof --bin verify-proof --bin capsule-attest-proof --bin capsule-attest-fleet --target $(HOST_TARGET)
+		$(CARGO) build --release --bin generate-keys --bin generate-proof --bin verify-proof --bin capsule-attest-proof --bin capsule-attest-fleet --bin run_ceremony --target $(HOST_TARGET)
 
-$(ZK_PROVING_KEY): $(ZK_TOOL) $(SIGNING_KEY)
-	@echo "Running trusted setup for ZK circuit..."
-	@mkdir -p $(ZK_KEYS_DIR)
-	@$(ZK_TOOL) generate --output $(ZK_KEYS_DIR) --seed "$(ZK_KEY_SEED)" --sign-key $(SIGNING_KEY) --print-program-hash
+# Trusted setup via the Groth16 phase-2 (BGM17) ceremony: no seed, real OS
+# entropy per round, each contribution's secret destroyed. The composed delta
+# is unknown as long as one round is honest. The local build runs a bootstrap
+# of $(ZK_CEREMONY_ROUNDS) rounds; a production setup adds independent external
+# contributors. The bootloader embeds the verifying key (signature.sig is host
+# provenance, not consumed at boot), so the four authority VKs are copies of
+# the attestation VK.
+$(ZK_PROVING_KEY): $(ZK_CEREMONY_TOOL) $(SIGNING_KEY)
+	@echo "Running Groth16 phase-2 ceremony (seedless, $(ZK_CEREMONY_ROUNDS) rounds)..."
+	@mkdir -p $(ZK_KEYS_DIR) $(ZK_CEREMONY_DIR)
+	@$(ZK_CEREMONY_TOOL) init --circuit attestation --output $(ZK_CEREMONY_DIR)/params_0.bin
+	@prev=$(ZK_CEREMONY_DIR)/params_0.bin; \
+	for n in $$(seq 1 $(ZK_CEREMONY_ROUNDS)); do \
+		$(ZK_CEREMONY_TOOL) contribute --input $$prev \
+			--output $(ZK_CEREMONY_DIR)/params_$$n.bin \
+			--name "NONOS:bootstrap:round$$n" --entropy system || exit 1; \
+		prev=$(ZK_CEREMONY_DIR)/params_$$n.bin; \
+	done
+	@$(ZK_CEREMONY_TOOL) assemble --meta $(ZK_CEREMONY_DIR)/params_0.bin.meta.json \
+		--output $(ZK_CEREMONY_DIR)/transcript.json \
+		$(foreach n,$(shell seq 1 $(ZK_CEREMONY_ROUNDS)),$(ZK_CEREMONY_DIR)/params_$(n).bin.contribution.json)
+	@$(ZK_CEREMONY_TOOL) finalize --input $(ZK_CEREMONY_DIR)/params_$(ZK_CEREMONY_ROUNDS).bin \
+		--output $(ZK_KEYS_DIR) --transcript $(ZK_CEREMONY_DIR)/transcript.json
+	@$(ZK_CEREMONY_TOOL) verify --transcript $(ZK_KEYS_DIR)/ceremony_transcript.json
 	@cp $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_attestation_program.bin
 	@cp $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_boot_authority.bin
 	@cp $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_update_authority.bin
