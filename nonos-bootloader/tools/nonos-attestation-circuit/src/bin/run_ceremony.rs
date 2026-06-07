@@ -196,7 +196,13 @@ fn cmd_contribute(args: &[String]) {
         &entropy_source,
         &external_randomness,
     ) {
-        Ok((new_params, record)) => {
+        Ok((new_params, mut record)) => {
+            // The contribution secret (tau/alpha/beta) lives only inside
+            // contribute_randomness and is dropped when it returns; it is never
+            // written to disk. Attest that destruction so finalize, which
+            // refuses any contribution without it, can verify the chain.
+            ceremony::add_destruction_attestation(&mut record, "ephemeral-process-memory", 0, None);
+
             let new_data = new_params.serialize().expect("serialize");
             fs::write(&output, &new_data).expect("write output");
 
@@ -269,6 +275,21 @@ fn cmd_finalize(args: &[String]) {
             let mut vk_buf = Vec::new();
             vk.serialize_with_mode(&mut vk_buf, Compress::Yes).expect("serialize VK");
             fs::write(&vk_path, &vk_buf).expect("write VK");
+
+            // Emit the attestation key pair in the exact format the prover
+            // (generate-proof) and the kernel embed (embed-zk-proof) consume,
+            // so the ceremony replaces the seeded generate path one-for-one.
+            // finalize does not re-randomize, so final_params.pk.vk == vk.
+            let pk_path = Path::new(&output_dir).join("attestation_proving_key.bin");
+            let mut pk_buf = Vec::new();
+            final_params
+                .pk
+                .serialize_with_mode(&mut pk_buf, Compress::Yes)
+                .expect("serialize PK");
+            fs::write(&pk_path, &pk_buf).expect("write attestation proving key");
+
+            let avk_path = Path::new(&output_dir).join("attestation_verifying_key.bin");
+            fs::write(&avk_path, &vk_buf).expect("write attestation verifying key");
 
             let transcript_path = Path::new(&output_dir).join("ceremony_transcript.json");
             let transcript_json =
