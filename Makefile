@@ -38,7 +38,7 @@
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
 .PHONY: nonos-mk-fmt
 .PHONY: nonos-mk-toolchain nonos-mk-check-deps
-.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools
+.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest
 
 # Compatibility aliases (transitional, do not remove until callers move)
 .PHONY: kernel-capsules kernel-keyring-smoketest kernel-ramfs-smoketest
@@ -103,6 +103,10 @@ ZK_PROVING_KEY   := $(ZK_KEYS_DIR)/attestation_proving_key.bin
 ZK_VERIFYING_KEY := $(ZK_KEYS_DIR)/attestation_verifying_key.bin
 ZK_KEY_SEED      := nonos-production-attestation-v1-2026
 ZK_TOOL          := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/generate-keys
+ZK_PROOF_TOOL    := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/generate-proof
+ZK_VERIFY_TOOL   := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/verify-proof
+ZK_PROOF_SCENE_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/capsule-attest-proof
+ZK_FLEET_TOOL    := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/capsule-attest-fleet
 EMBED_TOOL       := $(BOOTLOADER_DIR)/tools/embed-zk-proof/target/$(HOST_TARGET)/release/embed-zk-proof
 
 # QEMU + OVMF discovery.
@@ -188,10 +192,10 @@ nonos-mk-ensure-signing-key: $(SIGNING_KEY)
 
 # ZK attestation: ceremony tools + ceremony keys + embed tool
 
-$(ZK_TOOL): nonos-mk-check-deps
+$(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_TOOL): nonos-mk-check-deps
 	@echo "Building ZK attestation tools..."
 	@cd $(ZK_CIRCUIT_DIR) && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build --release --bin generate-keys --bin generate-proof --target $(HOST_TARGET)
+		$(CARGO) build --release --bin generate-keys --bin generate-proof --bin verify-proof --bin capsule-attest-proof --bin capsule-attest-fleet --target $(HOST_TARGET)
 
 $(ZK_PROVING_KEY): $(ZK_TOOL) $(SIGNING_KEY)
 	@echo "Running trusted setup for ZK circuit..."
@@ -205,7 +209,13 @@ $(ZK_PROVING_KEY): $(ZK_TOOL) $(SIGNING_KEY)
 $(ZK_VERIFYING_KEY): $(ZK_PROVING_KEY)
 
 nonos-mk-ensure-zk-keys: $(ZK_PROVING_KEY) $(ZK_VERIFYING_KEY)
-nonos-mk-zk-tools: $(ZK_TOOL)
+nonos-mk-zk-tools: $(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_TOOL)
+
+nonos-mk-verify-capsule-attest: nonos-mk-all-capsules-attested $(ZK_FLEET_TOOL) $(ZK_VERIFYING_KEY)
+	@$(ZK_FLEET_TOOL) \
+		--verifying-key $(ZK_VERIFYING_KEY) \
+		--capsule-dir target/capsule-attest \
+		--sidecar-dir $(NONOS_TRUST_DIR)/capsules
 
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
@@ -379,6 +389,8 @@ include userland/capsule_settings/Capsule.mk
 include userland/capsule_process_manager/Capsule.mk
 include userland/capsule_vfs/Capsule.mk
 include userland/capsule_market/Capsule.mk
+include userland/capsule_payment/Capsule.mk
+include userland/capsule_installer/Capsule.mk
 include userland/capsule_driver_virtio_rng/Capsule.mk
 include userland/capsule_driver_ps2_input/Capsule.mk
 include userland/capsule_driver_virtio_blk/Capsule.mk
@@ -412,6 +424,9 @@ include userland/capsule_power/Capsule.mk
 # triple. Smoke and test targets that need proof_io plus another
 # capsule depend on `$(proof-io_ARTIFACTS)` directly.
 NONOS_VERIFIED_ARTIFACTS = $(foreach slug,$(NONOS_VERIFIED_CAPSULES),$($(slug)_ARTIFACTS))
+
+nonos-mk-all-capsules-attested: $(NONOS_VERIFIED_ARTIFACTS)
+	@echo "Signed and attested $(words $(NONOS_VERIFIED_CAPSULES)) included capsules."
 
 NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(proof-io_VERIFY) $(ramfs_VERIFY) $(keyring_VERIFY) \
