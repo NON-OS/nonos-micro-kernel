@@ -9,7 +9,7 @@ mod proto;
 mod scene;
 mod surface;
 
-use nonos_libc::{heap_init, mk_exit, mk_surface_release, mk_yield};
+use nonos_libc::{heap_init, mk_attest_status, mk_exit, mk_surface_release, mk_yield, AttestStatus};
 
 const DWELL_YIELDS: u32 = 60_000;
 
@@ -37,7 +37,9 @@ fn run() -> i32 {
         Some(s) => s,
         None => return 5,
     };
-    paint::splash(base, w, h, stride);
+    let mut att = AttestStatus::default();
+    let badge = if mk_attest_status(&mut att) == 0 { Some(att.zk_verified == 1) } else { None };
+    paint::splash(base, w, h, stride, badge);
     if scene::submit(port, 3, handle, w, h).is_err() {
         let _ = mk_surface_release(handle);
         return 6;

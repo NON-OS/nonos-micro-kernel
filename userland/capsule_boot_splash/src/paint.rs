@@ -20,9 +20,11 @@ use nonos_toolkit::font::render::{draw_text, draw_text_scaled};
 const BG: u32 = 0xFF00_0000;
 const FG: u32 = 0xFFE8_F0F8;
 const ACCENT: u32 = 0xFF00_D4AA;
+const OK: u32 = 0xFF00_CC66;
+const WARN: u32 = 0xFFFF_AA00;
 const TITLE_SCALE: u32 = 5;
 
-pub(crate) fn splash(base: u64, w: u32, h: u32, stride: u32) {
+pub(crate) fn splash(base: u64, w: u32, h: u32, stride: u32, attested: Option<bool>) {
     let spx = stride as usize / 4;
     let buf = unsafe { core::slice::from_raw_parts_mut(base as *mut u32, spx * h as usize) };
     for p in buf.iter_mut() {
@@ -35,4 +37,10 @@ pub(crate) fn splash(base: u64, w: u32, h: u32, stride: u32) {
     let sub = b"initializing...";
     let sx = w.saturating_sub(atlas.text_width(sub)) / 2;
     draw_text(buf, spx, w, h, sx, h / 2 + 24, sub, FG);
+    if let Some(ok) = attested {
+        let (text, color): (&[u8], u32) =
+            if ok { (b"ATTESTED", OK) } else { (b"UNVERIFIED", WARN) };
+        let bx = w.saturating_sub(atlas.text_width(text)) / 2;
+        draw_text(buf, spx, w, h, bx, h / 2 + 56, text, color);
+    }
 }
