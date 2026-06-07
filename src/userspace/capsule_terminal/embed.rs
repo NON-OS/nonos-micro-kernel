@@ -26,6 +26,10 @@ pub(crate) const TERMINAL_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const TERMINAL_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/terminal.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-terminal")]
+pub(crate) const TERMINAL_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/terminal.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-terminal"))]
 pub(crate) const TERMINAL_ELF: &[u8] = &[];
 
@@ -34,3 +38,6 @@ pub(crate) const TERMINAL_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-terminal"))]
 pub(crate) const TERMINAL_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-terminal"))]
+pub(crate) const TERMINAL_ATTESTATION_BYTES: &[u8] = &[];

@@ -21,7 +21,7 @@
 //! crypto math lives behind that boundary.
 
 use super::client::REPLY_INBOX;
-use super::embed::{MARKET_ELF, MARKET_MANIFEST_BYTES, MARKET_NONOS_ID_CERT_BYTES};
+use super::embed::{MARKET_ELF, MARKET_MANIFEST_BYTES, MARKET_NONOS_ID_CERT_BYTES, MARKET_ATTESTATION_BYTES};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
@@ -49,6 +49,7 @@ pub fn spawn_market_capsule() -> Result<(), SpawnError> {
         elf: MARKET_ELF,
         nonos_id_cert_bytes: MARKET_NONOS_ID_CERT_BYTES,
         manifest_bytes: MARKET_MANIFEST_BYTES,
+        attestation_trailer: MARKET_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit() | Capability::Memory.bit(),
         debug_tag: b"[MARKET-DEBUG] load_elf_executable error:",

@@ -31,6 +31,9 @@ pub(super) const DRIVER_PS2_INPUT_NONOS_ID_CERT_BYTES: &[u8] = include_bytes!(".
 #[cfg(feature = "nonos-capsule-driver-ps2-input")]
 pub(super) const DRIVER_PS2_INPUT_MANIFEST_BYTES: &[u8] = include_bytes!("../../../nonos-data/trust/capsules/driver_ps2_input.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-driver-ps2-input")]
+pub(super) const DRIVER_PS2_INPUT_ATTESTATION_BYTES: &[u8] = include_bytes!("../../../nonos-data/trust/capsules/driver_ps2_input.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-driver-ps2-input"))]
 pub(super) const DRIVER_PS2_INPUT_ELF: &[u8] = &[];
 
@@ -39,3 +42,6 @@ pub(super) const DRIVER_PS2_INPUT_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-ps2-input"))]
 pub(super) const DRIVER_PS2_INPUT_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-driver-ps2-input"))]
+pub(super) const DRIVER_PS2_INPUT_ATTESTATION_BYTES: &[u8] = &[];

@@ -27,6 +27,10 @@ pub(crate) const IMAGE_CODEC_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const IMAGE_CODEC_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/image_codec.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-image-codec")]
+pub(crate) const IMAGE_CODEC_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/image_codec.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-image-codec"))]
 pub(crate) const IMAGE_CODEC_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(crate) const IMAGE_CODEC_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-image-codec"))]
 pub(crate) const IMAGE_CODEC_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-image-codec"))]
+pub(crate) const IMAGE_CODEC_ATTESTATION_BYTES: &[u8] = &[];

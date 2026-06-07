@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    INPUT_ROUTER_ELF, INPUT_ROUTER_MANIFEST_BYTES, INPUT_ROUTER_NONOS_ID_CERT_BYTES,
+    INPUT_ROUTER_ELF, INPUT_ROUTER_MANIFEST_BYTES, INPUT_ROUTER_ATTESTATION_BYTES, INPUT_ROUTER_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -44,6 +44,7 @@ pub fn spawn_input_router_capsule() -> Result<(), SpawnError> {
         elf: INPUT_ROUTER_ELF,
         nonos_id_cert_bytes: INPUT_ROUTER_NONOS_ID_CERT_BYTES,
         manifest_bytes: INPUT_ROUTER_MANIFEST_BYTES,
+        attestation_trailer: INPUT_ROUTER_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

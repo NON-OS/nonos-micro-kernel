@@ -26,6 +26,10 @@ pub(crate) const PROOF_IO_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const PROOF_IO_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/proof_io.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-proof-io")]
+pub(crate) const PROOF_IO_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/proof_io.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-proof-io"))]
 pub(crate) const PROOF_IO_ELF: &[u8] = &[];
 
@@ -34,5 +38,8 @@ pub(crate) const PROOF_IO_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-proof-io"))]
 pub(crate) const PROOF_IO_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-proof-io"))]
+pub(crate) const PROOF_IO_ATTESTATION_BYTES: &[u8] = &[];
 
 pub(crate) const PROOF_IO_PATH: &str = "/capsules/proof_io";

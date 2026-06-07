@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    WALLPAPER_CATALOG_ELF, WALLPAPER_CATALOG_MANIFEST_BYTES, WALLPAPER_CATALOG_NONOS_ID_CERT_BYTES,
+    WALLPAPER_CATALOG_ELF, WALLPAPER_CATALOG_MANIFEST_BYTES, WALLPAPER_CATALOG_ATTESTATION_BYTES, WALLPAPER_CATALOG_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified, SpawnError};
@@ -40,6 +40,7 @@ pub fn spawn_wallpaper_catalog_capsule() -> Result<(), SpawnError> {
         elf: WALLPAPER_CATALOG_ELF,
         nonos_id_cert_bytes: WALLPAPER_CATALOG_NONOS_ID_CERT_BYTES,
         manifest_bytes: WALLPAPER_CATALOG_MANIFEST_BYTES,
+        attestation_trailer: WALLPAPER_CATALOG_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: REQUIRED_CAPS,
         debug_tag: b"",

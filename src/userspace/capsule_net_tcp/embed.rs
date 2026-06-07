@@ -26,6 +26,10 @@ pub(super) const NET_TCP_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const NET_TCP_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/net_tcp.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-net-tcp")]
+pub(super) const NET_TCP_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/net_tcp.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-net-tcp"))]
 pub(super) const NET_TCP_ELF: &[u8] = &[];
 
@@ -34,3 +38,6 @@ pub(super) const NET_TCP_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-net-tcp"))]
 pub(super) const NET_TCP_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-net-tcp"))]
+pub(super) const NET_TCP_ATTESTATION_BYTES: &[u8] = &[];

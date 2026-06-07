@@ -31,6 +31,10 @@ pub(super) const NET_DHCP_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const NET_DHCP_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/net_dhcp.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-net-dhcp")]
+pub(super) const NET_DHCP_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/net_dhcp.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-net-dhcp"))]
 pub(super) const NET_DHCP_ELF: &[u8] = &[];
 
@@ -39,3 +43,6 @@ pub(super) const NET_DHCP_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-net-dhcp"))]
 pub(super) const NET_DHCP_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-net-dhcp"))]
+pub(super) const NET_DHCP_ATTESTATION_BYTES: &[u8] = &[];

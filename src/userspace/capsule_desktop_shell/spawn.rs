@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    DESKTOP_SHELL_ELF, DESKTOP_SHELL_MANIFEST_BYTES, DESKTOP_SHELL_NONOS_ID_CERT_BYTES,
+    DESKTOP_SHELL_ELF, DESKTOP_SHELL_MANIFEST_BYTES, DESKTOP_SHELL_ATTESTATION_BYTES, DESKTOP_SHELL_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -44,6 +44,7 @@ pub fn spawn_desktop_shell_capsule() -> Result<(), SpawnError> {
         elf: DESKTOP_SHELL_ELF,
         nonos_id_cert_bytes: DESKTOP_SHELL_NONOS_ID_CERT_BYTES,
         manifest_bytes: DESKTOP_SHELL_MANIFEST_BYTES,
+        attestation_trailer: DESKTOP_SHELL_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

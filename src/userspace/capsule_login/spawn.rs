@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{LOGIN_ELF, LOGIN_MANIFEST_BYTES, LOGIN_NONOS_ID_CERT_BYTES};
+use super::embed::{LOGIN_ELF, LOGIN_MANIFEST_BYTES, LOGIN_NONOS_ID_CERT_BYTES, LOGIN_ATTESTATION_BYTES};
 use super::state;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
 use crate::security::nonos_id_cert::IdCertVerifyError;
@@ -42,6 +42,7 @@ pub fn spawn_login_capsule() -> Result<(), SpawnError> {
         elf: LOGIN_ELF,
         nonos_id_cert_bytes: LOGIN_NONOS_ID_CERT_BYTES,
         manifest_bytes: LOGIN_MANIFEST_BYTES,
+        attestation_trailer: LOGIN_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: REQUIRED_CAPS,
         debug_tag: b"",

@@ -29,6 +29,11 @@ pub(super) const DRIVER_RTL8169_MANIFEST_BYTES: &[u8] = include_bytes!(
     "../../../nonos-data/trust/capsules/driver_rtl8169.manifest.bin"
 );
 
+#[cfg(feature = "nonos-capsule-driver-rtl8169")]
+pub(super) const DRIVER_RTL8169_ATTESTATION_BYTES: &[u8] = include_bytes!(
+    "../../../nonos-data/trust/capsules/driver_rtl8169.zk_trailer.bin"
+);
+
 #[cfg(not(feature = "nonos-capsule-driver-rtl8169"))]
 pub(super) const DRIVER_RTL8169_ELF: &[u8] = &[];
 
@@ -37,3 +42,6 @@ pub(super) const DRIVER_RTL8169_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-rtl8169"))]
 pub(super) const DRIVER_RTL8169_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-driver-rtl8169"))]
+pub(super) const DRIVER_RTL8169_ATTESTATION_BYTES: &[u8] = &[];

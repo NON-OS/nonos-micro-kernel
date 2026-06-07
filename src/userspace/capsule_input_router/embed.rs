@@ -27,6 +27,10 @@ pub(super) const INPUT_ROUTER_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const INPUT_ROUTER_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/input_router.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-input-router")]
+pub(super) const INPUT_ROUTER_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/input_router.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-input-router"))]
 pub(super) const INPUT_ROUTER_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(super) const INPUT_ROUTER_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-input-router"))]
 pub(super) const INPUT_ROUTER_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-input-router"))]
+pub(super) const INPUT_ROUTER_ATTESTATION_BYTES: &[u8] = &[];

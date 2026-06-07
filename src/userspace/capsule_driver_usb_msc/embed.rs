@@ -27,6 +27,10 @@ pub(super) const DRIVER_USB_MSC_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const DRIVER_USB_MSC_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/driver_usb_msc.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-driver-usb-msc")]
+pub(super) const DRIVER_USB_MSC_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/driver_usb_msc.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-driver-usb-msc"))]
 pub(super) const DRIVER_USB_MSC_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(super) const DRIVER_USB_MSC_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-usb-msc"))]
 pub(super) const DRIVER_USB_MSC_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-driver-usb-msc"))]
+pub(super) const DRIVER_USB_MSC_ATTESTATION_BYTES: &[u8] = &[];

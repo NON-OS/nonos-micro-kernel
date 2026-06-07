@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::client::REPLY_INBOX;
-use super::embed::{RAMFS_ELF, RAMFS_MANIFEST_BYTES, RAMFS_NONOS_ID_CERT_BYTES};
+use super::embed::{RAMFS_ELF, RAMFS_MANIFEST_BYTES, RAMFS_NONOS_ID_CERT_BYTES, RAMFS_ATTESTATION_BYTES};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
@@ -42,6 +42,7 @@ pub fn spawn_ramfs_capsule() -> Result<(), SpawnError> {
         elf: RAMFS_ELF,
         nonos_id_cert_bytes: RAMFS_NONOS_ID_CERT_BYTES,
         manifest_bytes: RAMFS_MANIFEST_BYTES,
+        attestation_trailer: RAMFS_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit() | Capability::Memory.bit() | Capability::Crypto.bit(),
         debug_tag: b"[RAMFS-DEBUG] load_elf_executable error:",

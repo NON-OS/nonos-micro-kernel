@@ -27,6 +27,10 @@ pub(super) const DRIVER_NVME_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const DRIVER_NVME_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/driver_nvme.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-driver-nvme")]
+pub(super) const DRIVER_NVME_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/driver_nvme.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-driver-nvme"))]
 pub(super) const DRIVER_NVME_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(super) const DRIVER_NVME_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-nvme"))]
 pub(super) const DRIVER_NVME_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-driver-nvme"))]
+pub(super) const DRIVER_NVME_ATTESTATION_BYTES: &[u8] = &[];

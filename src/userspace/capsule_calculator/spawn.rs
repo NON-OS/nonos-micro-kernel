@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{CALCULATOR_ELF, CALCULATOR_MANIFEST_BYTES, CALCULATOR_NONOS_ID_CERT_BYTES};
+use super::embed::{CALCULATOR_ELF, CALCULATOR_MANIFEST_BYTES, CALCULATOR_NONOS_ID_CERT_BYTES, CALCULATOR_ATTESTATION_BYTES};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
@@ -42,6 +42,7 @@ pub fn spawn_calculator_capsule() -> Result<(), SpawnError> {
         elf: CALCULATOR_ELF,
         nonos_id_cert_bytes: CALCULATOR_NONOS_ID_CERT_BYTES,
         manifest_bytes: CALCULATOR_MANIFEST_BYTES,
+        attestation_trailer: CALCULATOR_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

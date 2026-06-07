@@ -32,6 +32,10 @@ pub(super) const NET_L2_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const NET_L2_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/net_l2.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-net-l2")]
+pub(super) const NET_L2_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/net_l2.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-net-l2"))]
 pub(super) const NET_L2_ELF: &[u8] = &[];
 
@@ -40,3 +44,6 @@ pub(super) const NET_L2_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-net-l2"))]
 pub(super) const NET_L2_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-net-l2"))]
+pub(super) const NET_L2_ATTESTATION_BYTES: &[u8] = &[];

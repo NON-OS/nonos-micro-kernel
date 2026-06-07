@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{NET_SOCKETS_ELF, NET_SOCKETS_MANIFEST_BYTES, NET_SOCKETS_NONOS_ID_CERT_BYTES};
+use super::embed::{NET_SOCKETS_ELF, NET_SOCKETS_MANIFEST_BYTES, NET_SOCKETS_NONOS_ID_CERT_BYTES, NET_SOCKETS_ATTESTATION_BYTES};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
@@ -42,6 +42,7 @@ pub fn spawn_net_sockets_capsule() -> Result<(), SpawnError> {
         elf: NET_SOCKETS_ELF,
         nonos_id_cert_bytes: NET_SOCKETS_NONOS_ID_CERT_BYTES,
         manifest_bytes: NET_SOCKETS_MANIFEST_BYTES,
+        attestation_trailer: NET_SOCKETS_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit() | Capability::Memory.bit(),
         debug_tag: b"[NET-SOCKETS] load_elf_executable error:",

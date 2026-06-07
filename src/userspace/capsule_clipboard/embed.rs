@@ -27,6 +27,10 @@ pub(crate) const CLIPBOARD_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const CLIPBOARD_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/clipboard.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-clipboard")]
+pub(crate) const CLIPBOARD_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/clipboard.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-clipboard"))]
 pub(crate) const CLIPBOARD_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(crate) const CLIPBOARD_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-clipboard"))]
 pub(crate) const CLIPBOARD_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-clipboard"))]
+pub(crate) const CLIPBOARD_ATTESTATION_BYTES: &[u8] = &[];

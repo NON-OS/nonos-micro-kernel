@@ -32,6 +32,10 @@ pub(super) const DRIVER_XHCI_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const DRIVER_XHCI_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/driver_xhci.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-driver-xhci")]
+pub(super) const DRIVER_XHCI_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/driver_xhci.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-driver-xhci"))]
 pub(super) const DRIVER_XHCI_ELF: &[u8] = &[];
 
@@ -40,3 +44,6 @@ pub(super) const DRIVER_XHCI_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-xhci"))]
 pub(super) const DRIVER_XHCI_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-driver-xhci"))]
+pub(super) const DRIVER_XHCI_ATTESTATION_BYTES: &[u8] = &[];

@@ -144,9 +144,10 @@ nonos-selftest = []
 # that go through `spawn_verified` (proof_io today) compile under
 # this feature. Mutex with `nonos-dev-unverified-capsules` is
 # enforced by the `compile_error!` in `lib.rs`.
-nonos-production = []
-# When set, a capsule that carries an attestation trailer must verify it or the
-# spawn is refused. Off by default during rollout: the result is only logged.
+# Production posture: verified-only spawn path, and ZK attestation enforced.
+nonos-production = ["nonos-zk-enforce"]
+# When set, a capsule must carry a valid, correctly bound attestation trailer or
+# the spawn is refused. Implied by nonos-production; standalone for staged tests.
 nonos-zk-enforce = []
 
 # Escape hatch for development that still needs the legacy

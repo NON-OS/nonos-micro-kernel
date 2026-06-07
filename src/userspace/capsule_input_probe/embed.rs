@@ -27,6 +27,10 @@ pub(crate) const INPUT_PROBE_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const INPUT_PROBE_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/input_probe.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-input-probe")]
+pub(crate) const INPUT_PROBE_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/input_probe.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-input-probe"))]
 pub(crate) const INPUT_PROBE_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(crate) const INPUT_PROBE_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-input-probe"))]
 pub(crate) const INPUT_PROBE_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-input-probe"))]
+pub(crate) const INPUT_PROBE_ATTESTATION_BYTES: &[u8] = &[];

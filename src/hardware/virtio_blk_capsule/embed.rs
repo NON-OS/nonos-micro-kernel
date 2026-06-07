@@ -31,6 +31,9 @@ pub(super) const DRIVER_VIRTIO_BLK_NONOS_ID_CERT_BYTES: &[u8] = include_bytes!("
 #[cfg(feature = "nonos-capsule-driver-virtio-blk")]
 pub(super) const DRIVER_VIRTIO_BLK_MANIFEST_BYTES: &[u8] = include_bytes!("../../../nonos-data/trust/capsules/driver_virtio_blk.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-driver-virtio-blk")]
+pub(super) const DRIVER_VIRTIO_BLK_ATTESTATION_BYTES: &[u8] = include_bytes!("../../../nonos-data/trust/capsules/driver_virtio_blk.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-driver-virtio-blk"))]
 pub(super) const DRIVER_VIRTIO_BLK_ELF: &[u8] = &[];
 
@@ -39,3 +42,6 @@ pub(super) const DRIVER_VIRTIO_BLK_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-virtio-blk"))]
 pub(super) const DRIVER_VIRTIO_BLK_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-driver-virtio-blk"))]
+pub(super) const DRIVER_VIRTIO_BLK_ATTESTATION_BYTES: &[u8] = &[];

@@ -19,6 +19,10 @@ pub(super) const DRIVER_I2C_PCI_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const DRIVER_I2C_PCI_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/driver_i2c_pci.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-driver-i2c-pci")]
+pub(super) const DRIVER_I2C_PCI_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/driver_i2c_pci.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-driver-i2c-pci"))]
 pub(super) const DRIVER_I2C_PCI_ELF: &[u8] = &[];
 
@@ -27,4 +31,7 @@ pub(super) const DRIVER_I2C_PCI_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-i2c-pci"))]
 pub(super) const DRIVER_I2C_PCI_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-driver-i2c-pci"))]
+pub(super) const DRIVER_I2C_PCI_ATTESTATION_BYTES: &[u8] = &[];
 
