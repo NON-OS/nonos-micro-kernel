@@ -1,0 +1,9 @@
+{
+  "gaps": [
+    {
+      "needs": "expose DecodedManifest fields (caps, endpoints, target_triple) so they can be diffed against each Capsule.mk",
+      "what": "per-capsule field assertions"
+    }
+  ],
+  "module": "trust-chain"
+}

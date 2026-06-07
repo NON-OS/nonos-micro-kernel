@@ -1,0 +1,3 @@
+PASS: kernel ELF carries no .dynamic entries
+PASS: kernel ELF carries no relocations
+PASS: extended symbol scan clean for target/x86_64-nonos/release/nonos-kernel

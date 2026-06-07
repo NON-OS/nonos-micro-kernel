@@ -1,0 +1,16 @@
+{
+  "module": "tests",
+  "commit": "e6a31389c56c40e094c188264ab84b8b1479510a",
+  "toolchain": "nightly-2026-01-16",
+  "status": "pass",
+  "blocking": true,
+  "checks": [
+    {
+      "name": "property-and-kat",
+      "status": "pass",
+      "detail": "6 passed, 0 failed",
+      "artifact": ""
+    }
+  ],
+  "gaps": []
+}

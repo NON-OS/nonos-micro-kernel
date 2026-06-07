@@ -1,0 +1,39 @@
+{
+  "blocking_failure": false,
+  "commit": "e6a31389c56c40e094c188264ab84b8b1479510a",
+  "gaps": [
+    {
+      "needs": "a aarch64-nonos.json kernel target + a make build target (only userland/aarch64-nonos-user.json exists today)",
+      "what": "kernel build lane for aarch64"
+    },
+    {
+      "needs": "a riscv64-nonos.json kernel target + a make build target (only userland/riscv64-nonos-user.json exists today)",
+      "what": "kernel build lane for riscv64"
+    },
+    {
+      "needs": "expose DecodedManifest fields (caps, endpoints, target_triple) so they can be diffed against each Capsule.mk",
+      "what": "per-capsule field assertions"
+    }
+  ],
+  "modules": [
+    {
+      "blocking": true,
+      "module": "build",
+      "report_blake3": "878ebdd3b8fb7db77c72f2717497829d7be5645afd76208582c180ea1aaccec4",
+      "status": "gap"
+    },
+    {
+      "blocking": true,
+      "module": "tests",
+      "report_blake3": "100b9d0cd4c10ef0f7f804ed207544571cfdad0e776f9a0af070c0aa1bba6633",
+      "status": "pass"
+    },
+    {
+      "blocking": true,
+      "module": "trust-chain",
+      "report_blake3": "ccc147e7ce04d65a8b0f432119a8690664e7b3cb972483e19f020adfcd72ad4d",
+      "status": "gap"
+    }
+  ],
+  "toolchain": "nightly-2026-01-16"
+}

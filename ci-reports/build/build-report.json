@@ -1,0 +1,49 @@
+{
+  "module": "build",
+  "commit": "e6a31389c56c40e094c188264ab84b8b1479510a",
+  "toolchain": "nightly-2026-01-16",
+  "status": "gap",
+  "blocking": true,
+  "checks": [
+    {
+      "name": "rustfmt",
+      "status": "pass",
+      "detail": "cargo fmt --check (nonos-verify)",
+      "artifact": ""
+    },
+    {
+      "name": "clippy-nonos-sign",
+      "status": "pass",
+      "detail": "clippy -D warnings (nonos-sign)",
+      "artifact": ""
+    },
+    {
+      "name": "build-x86_64-capsules",
+      "status": "pass",
+      "detail": "make nonos-mk-capsules",
+      "artifact": ""
+    },
+    {
+      "name": "section-size",
+      "status": "pass",
+      "detail": "size + readelf -S captured on release ELF",
+      "artifact": ""
+    },
+    {
+      "name": "symbol-scan",
+      "status": "pass",
+      "detail": "binary symbol scan (nonos-ci/scan-microkernel-symbols.sh)",
+      "artifact": ""
+    }
+  ],
+  "gaps": [
+    {
+      "what": "kernel build lane for aarch64",
+      "needs": "a aarch64-nonos.json kernel target + a make build target (only userland/aarch64-nonos-user.json exists today)"
+    },
+    {
+      "what": "kernel build lane for riscv64",
+      "needs": "a riscv64-nonos.json kernel target + a make build target (only userland/riscv64-nonos-user.json exists today)"
+    }
+  ]
+}

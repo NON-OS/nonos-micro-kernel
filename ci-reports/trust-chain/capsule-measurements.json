@@ -1,0 +1,45 @@
+{
+  "capsules": [
+    {
+      "cert_decoded": true,
+      "cert_present": true,
+      "cert_sha256": "acb5f83256c53d223f05480923781f94a6d704e0f924eb8096f60bfc6762c6a4",
+      "cert_verified": true,
+      "error": null,
+      "manifest_decoded": true,
+      "manifest_sha256": "1e3d7899e2e867200192d7d232eddf0335c971e5b6e20e73fcdb245268593055",
+      "manifest_verified": true,
+      "name": "keyring"
+    },
+    {
+      "cert_decoded": true,
+      "cert_present": true,
+      "cert_sha256": "3382246b175d432fd31b277efe6ed00cff4b63cddb5e6fe5fa4072912f7dd0c4",
+      "cert_verified": true,
+      "error": null,
+      "manifest_decoded": true,
+      "manifest_sha256": "ead4e058fbd71b78c999831d2e43f32829f9fcef23d6829fbdbd6508eb1eba08",
+      "manifest_verified": true,
+      "name": "proof_io"
+    },
+    {
+      "cert_decoded": true,
+      "cert_present": true,
+      "cert_sha256": "afd2701a85898a85ea8ed513b76002069f5115693776bc2a6dcf86ce70912480",
+      "cert_verified": true,
+      "error": null,
+      "manifest_decoded": true,
+      "manifest_sha256": "7aaeda7f37a6a5ab090599d3b569549fee7b9f3011beb2aa8de66a750700790c",
+      "manifest_verified": true,
+      "name": "ramfs"
+    }
+  ],
+  "commit": "e6a31389c56c40e094c188264ab84b8b1479510a",
+  "failed": 0,
+  "now_ms": 1778025600000,
+  "required_algs": [
+    "Ed25519",
+    "MlDsa65"
+  ],
+  "verified": 3
+}

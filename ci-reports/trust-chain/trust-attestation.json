@@ -1,0 +1,39 @@
+{
+  "module": "trust-chain",
+  "commit": "e6a31389c56c40e094c188264ab84b8b1479510a",
+  "toolchain": "nightly-2026-01-16",
+  "status": "gap",
+  "blocking": true,
+  "checks": [
+    {
+      "name": "policy-decode",
+      "status": "pass",
+      "detail": "baked trust-anchor policy decoded",
+      "artifact": ""
+    },
+    {
+      "name": "chain:keyring",
+      "status": "pass",
+      "detail": "cert+manifest verified against baked anchor",
+      "artifact": ""
+    },
+    {
+      "name": "chain:proof_io",
+      "status": "pass",
+      "detail": "cert+manifest verified against baked anchor",
+      "artifact": ""
+    },
+    {
+      "name": "chain:ramfs",
+      "status": "pass",
+      "detail": "cert+manifest verified against baked anchor",
+      "artifact": ""
+    }
+  ],
+  "gaps": [
+    {
+      "what": "per-capsule field assertions",
+      "needs": "expose DecodedManifest fields (caps, endpoints, target_triple) so they can be diffed against each Capsule.mk"
+    }
+  ]
+}

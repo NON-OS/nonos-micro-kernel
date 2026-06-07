@@ -1,0 +1,13 @@
+{
+  "gaps": [
+    {
+      "needs": "a aarch64-nonos.json kernel target + a make build target (only userland/aarch64-nonos-user.json exists today)",
+      "what": "kernel build lane for aarch64"
+    },
+    {
+      "needs": "a riscv64-nonos.json kernel target + a make build target (only userland/riscv64-nonos-user.json exists today)",
+      "what": "kernel build lane for riscv64"
+    }
+  ],
+  "module": "build"
+}
