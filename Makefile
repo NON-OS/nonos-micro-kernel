@@ -1242,6 +1242,16 @@ nonos-mk-run: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial mon:stdio -vga none -no-reboot
 
+nonos-mk-run-wizard: nonos-mk-setup-wizard-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
+	@echo "Booting NONOS (first-boot setup wizard) in QEMU..."
+	@echo "  Drive it with the host keyboard; Quit: Ctrl+A then X"
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-setup-wizard" \
+		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
+		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial mon:stdio -vga none -no-reboot
+
 nonos-mk-terminal-only-run: nonos-mk-terminal-only-prod nonos-mk-esp $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS terminal-only in QEMU..."
 	@echo "  Quit: Ctrl+A then X"
@@ -1455,6 +1465,7 @@ help:
 	@echo
 	@echo "Run:"
 	@echo "  make nonos-mk-run             QEMU + OVMF (SSH:2222, HTTP:8080)"
+	@echo "  make nonos-mk-run-wizard      QEMU + OVMF, first-boot setup wizard"
 	@echo "  make nonos-mk-run-serial      headless serial-only"
 	@echo "  make nonos-mk-debug           QEMU + GDB on :1234"
 	@echo
