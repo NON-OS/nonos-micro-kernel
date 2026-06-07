@@ -250,7 +250,7 @@ $(ZK_PROVING_KEY): | $(ZK_CEREMONY_TOOL) $(SIGNING_KEY)
 	done
 	@$(ZK_CEREMONY_TOOL) assemble --meta $(ZK_CEREMONY_DIR)/params_0.bin.meta.json \
 		--output $(ZK_CEREMONY_DIR)/transcript.json \
-		$(foreach n,$(shell seq 1 $(ZK_CEREMONY_ROUNDS)),$(ZK_CEREMONY_DIR)/params_$(n).bin.contribution.json)
+		$(ZK_CEREMONY_DIR)/params_*.bin.contribution.json
 	@$(ZK_CEREMONY_TOOL) finalize --input $(ZK_CEREMONY_DIR)/params_$(ZK_CEREMONY_ROUNDS).bin \
 		--output $(ZK_KEYS_DIR) --transcript $(ZK_CEREMONY_DIR)/transcript.json
 	@$(ZK_CEREMONY_TOOL) verify --transcript $(ZK_KEYS_DIR)/ceremony_transcript.json
@@ -264,14 +264,15 @@ $(ZK_VERIFYING_KEY): $(ZK_PROVING_KEY)
 nonos-mk-ensure-zk-keys: $(ZK_PROVING_KEY) $(ZK_VERIFYING_KEY)
 nonos-mk-zk-tools: $(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_TOOL)
 
-# Force a fresh trusted-setup ceremony, discarding the existing keys. Use this
-# to re-run the phase-2 rounds on demand; `nonos-mk-ensure-zk-keys` only runs
-# when the keys are absent. Re-attests nothing on its own: rebuild the capsules
-# afterwards so their trailers match the new verifying key.
+# Force a fresh trusted-setup ceremony, discarding the existing keys. The
+# capsule trailers are invalid after the VK changes, so this target deletes
+# stale proofs, re-attests the full fleet, verifies it, then prints the report.
 nonos-mk-zk-ceremony: $(ZK_CEREMONY_TOOL) $(SIGNING_KEY)
 	@rm -f $(ZK_PROVING_KEY) $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_*.bin
-	@rm -rf $(ZK_CEREMONY_DIR)
+	@rm -rf $(ZK_CEREMONY_DIR) $(TARGET_DIR)/capsule-attest
+	@rm -f $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin
 	@$(MAKE) --no-print-directory $(ZK_PROVING_KEY)
+	@$(MAKE) --no-print-directory nonos-mk-verify-capsule-attest
 	@$(MAKE) --no-print-directory nonos-mk-zk-report
 
 nonos-mk-verify-capsule-attest: nonos-mk-all-capsules-attested $(ZK_FLEET_TOOL) $(ZK_VERIFYING_KEY)
@@ -303,7 +304,7 @@ nonos-mk-zk-report:
 # against the current verifying key. This is the actual math, not a parse:
 # each line is a full verification as it completes. Needs a build first
 # (target/capsule-attest/*.capsule.zk), and exits non-zero if any proof fails.
-nonos-mk-zk-verify-live: $(ZK_VERIFY_TOOL) $(ZK_VERIFYING_KEY)
+nonos-mk-zk-verify-live: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_VERIFYING_KEY)
 	@printf '\n  live groth16 verification   bls12-381   vk %s\n\n' "$(NONOS_VK_FPR)"
 	@pass=0; fail=0; \
 	any=0; \
