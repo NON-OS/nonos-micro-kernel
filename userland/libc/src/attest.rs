@@ -13,13 +13,20 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use super::tag::tag4;
 
-pub(crate) const N_MK_MMAP: i64 = tag4(b"MMAP");
-pub(crate) const N_MK_EXIT: i64 = tag4(b"MEXT");
-pub(crate) const N_MK_PID_ALIVE: i64 = tag4(b"MPAL");
-pub(crate) const N_MK_YIELD: i64 = tag4(b"MYLD");
-pub(crate) const N_MK_TIME_MILLIS: i64 = tag4(b"MTMS");
-pub(crate) const N_MK_TIME_RTC: i64 = tag4(b"MTRT");
-pub(crate) const N_MK_BATTERY_STATUS: i64 = tag4(b"MBAT");
-pub(crate) const N_MK_ATTEST_STATUS: i64 = tag4(b"MAST");
+use crate::syscall::{call_raw, N_MK_ATTEST_STATUS};
+
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub struct AttestStatus {
+    pub zk_verified: u8,
+    pub kernel_sig_ok: u8,
+    pub secure_boot: u8,
+    pub zk_attestation_ok: u8,
+    pub kernel_blake3: [u8; 32],
+    pub program_hash: [u8; 32],
+}
+
+pub extern "C" fn mk_attest_status(out: *mut AttestStatus) -> i64 {
+    call_raw(N_MK_ATTEST_STATUS, [out as u64, 0, 0, 0, 0, 0])
+}
