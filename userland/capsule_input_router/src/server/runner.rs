@@ -18,6 +18,7 @@ use alloc::vec;
 
 use nonos_libc::{mk_input_event_wait, InputEvent};
 
+use crate::clients::compositor;
 use crate::protocol::{HDR_LEN, IPC_PAYLOAD_MAX};
 use crate::route::route_event;
 use crate::sources::{drain_batch, kernel_ring::MAX_BATCH};
@@ -43,6 +44,17 @@ pub fn run() -> ! {
         let n = drain_batch(&mut batch);
         for ev in batch.iter().take(n) {
             route_event(&mut ctx, ev);
+        }
+        if ctx.cursor_dirty {
+            let rid = ctx.issue_request_id();
+            let _ = compositor::cursor_update(
+                &mut ctx.compositor_port,
+                rid,
+                ctx.cursor_x,
+                ctx.cursor_y,
+                true,
+            );
+            ctx.cursor_dirty = false;
         }
         if n == 0 {
             let mut seq = last_seq;

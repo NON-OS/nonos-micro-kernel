@@ -24,6 +24,7 @@ mod ensure_primed;
 mod entry;
 mod fail;
 mod fail_boot;
+mod idle;
 mod paint_close_button;
 mod paint_frame;
 mod paint_once;

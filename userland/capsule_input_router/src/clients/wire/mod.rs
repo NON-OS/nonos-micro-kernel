@@ -19,9 +19,11 @@ mod call;
 mod constants;
 mod lookup_pid;
 mod lookup_port;
+mod send_to;
 mod u32_at;
 
 pub use call::call;
 pub use lookup_pid::lookup_pid;
 pub use lookup_port::lookup_port;
+pub use send_to::send_to;
 pub use u32_at::u32_at;

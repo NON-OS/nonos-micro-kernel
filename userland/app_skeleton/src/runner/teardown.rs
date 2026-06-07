@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_exit, mk_munmap, mk_surface_release};
+use nonos_libc::{mk_munmap, mk_surface_release};
 
 use crate::clients::{compositor, input_router, wm};
 use crate::discover::Peers;
@@ -27,21 +27,21 @@ pub(super) fn close(
     window_id: u32,
     binding: &WindowBinding,
     request_id: &mut u32,
-) -> ! {
+) -> bool {
     let rid = next(request_id);
     if compositor::scene_remove(peers.compositor, rid, 0).is_err() {
-        mk_exit(12);
+        return false;
     }
     let _ = input_router::subscribe(peers.input_router, next(request_id), 0);
     if mk_surface_release(binding.surface_handle) < 0 {
-        mk_exit(13);
+        return false;
     }
     if mk_munmap(binding.backing_va as *mut u8, binding.byte_len as usize) < 0 {
-        mk_exit(14);
+        return false;
     }
     let rid = next(request_id);
     if wm::window_close(peers.wm, rid, window_id).is_err() {
-        mk_exit(11);
+        return false;
     }
-    mk_exit(0)
+    true
 }

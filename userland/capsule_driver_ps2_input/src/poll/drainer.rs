@@ -16,9 +16,10 @@
 pub struct Drainer {
     pub(super) pending_e0: bool,
     pub(super) pending_e1: bool,
+    pub(super) mods: u16,
 }
 impl Drainer {
     pub const fn new() -> Self {
-        Self { pending_e0: false, pending_e1: false }
+        Self { pending_e0: false, pending_e1: false, mods: 0 }
     }
 }

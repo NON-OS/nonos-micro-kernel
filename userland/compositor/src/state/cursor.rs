@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Compositor-side cursor position. The driver-managed cursor plane
-// arrives with the gfx capsule's UPDATE_CURSOR command later; the
-// position itself is policy and stays here so input_router and wm
-// observe a single source of truth.
-
 #[derive(Clone, Copy, Default)]
 pub struct CursorState {
     pub x: u32,
@@ -31,8 +26,8 @@ pub struct CursorTracker {
 }
 
 impl CursorTracker {
-    pub const fn new() -> Self {
-        Self { state: CursorState { x: 0, y: 0, visible: false } }
+    pub const fn at(x: u32, y: u32) -> Self {
+        Self { state: CursorState { x, y, visible: true } }
     }
 
     pub fn update(&mut self, x: u32, y: u32, visible: bool) -> CursorState {

@@ -23,6 +23,11 @@ pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, tx: &mut [u8]) {
     for sid in 0..VG_MAX_SCANOUTS as u32 {
         let Some(s) = driver.scanouts.get(sid) else { break };
         let off = body_off + emitted * MODE_LIST_ENTRY_LEN;
+        // Never write past the reply buffer: the payload area only holds
+        // IPC_PAYLOAD_MAX bytes, fewer entries than VG_MAX_SCANOUTS.
+        if off + MODE_LIST_ENTRY_LEN > tx.len() {
+            break;
+        }
         tx[off..off + 4].copy_from_slice(&sid.to_le_bytes());
         tx[off + 4..off + 8].copy_from_slice(&(s.enabled as u32).to_le_bytes());
         tx[off + 8..off + 12].copy_from_slice(&s.width.to_le_bytes());

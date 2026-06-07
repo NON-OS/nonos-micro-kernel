@@ -16,19 +16,24 @@
 
 use super::{Grab, GrabTable};
 
+const KEYBOARD_BITS: u32 = 0b0000_0011;
+const POINTER_BITS: u32 = 0b1111_1100;
+
 impl GrabTable {
     pub fn request(&mut self, pid: u32, kind_mask: u32) -> bool {
-        if kind_mask & 0b0000_0011 != 0 {
+        if kind_mask & KEYBOARD_BITS != 0 {
             if self.keyboard.holder_pid != 0 && self.keyboard.holder_pid != pid {
                 return false;
             }
-            self.keyboard = Grab { holder_pid: pid, kind_mask };
+            // Store only the keyboard bits so holder_for cannot cross-match a
+            // pointer kind against this grab if the caller passed a mixed mask.
+            self.keyboard = Grab { holder_pid: pid, kind_mask: kind_mask & KEYBOARD_BITS };
         }
-        if kind_mask & 0b1111_1100 != 0 {
+        if kind_mask & POINTER_BITS != 0 {
             if self.pointer.holder_pid != 0 && self.pointer.holder_pid != pid {
                 return false;
             }
-            self.pointer = Grab { holder_pid: pid, kind_mask };
+            self.pointer = Grab { holder_pid: pid, kind_mask: kind_mask & POINTER_BITS };
         }
         true
     }

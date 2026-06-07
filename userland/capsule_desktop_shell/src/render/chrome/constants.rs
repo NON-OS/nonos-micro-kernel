@@ -15,8 +15,5 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const TRANSPARENT: u32 = 0x0000_0000;
-pub const CURSOR_ARGB: u32 = 0xFFF7_FBFF;
-pub const CURSOR_SHADOW_ARGB: u32 = 0xFF0A_0D12;
-pub const CURSOR_SIZE: u32 = 12;
 pub const NOTIFY_BADGE: u32 = 8;
 pub const NOTIFY_RIGHT_INSET: u32 = 12;

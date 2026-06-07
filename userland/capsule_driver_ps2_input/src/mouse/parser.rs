@@ -14,17 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use super::packet::{parse, PACKET_LEN};
-use super::post;
 use super::ring::MouseRing;
 pub struct MouseParser {
     buf: [u8; PACKET_LEN],
     index: usize,
-    previous_buttons: u8,
 }
 impl MouseParser {
     pub const fn new() -> Self {
-        Self { buf: [0; PACKET_LEN], index: 0, previous_buttons: 0 }
+        Self { buf: [0; PACKET_LEN], index: 0 }
     }
+    // Assemble 3-byte packets and queue them on the ring. Posting to the kernel
+    // input ring is done once, by the pump loop draining this ring; absorbing
+    // must not also post or every event reaches the kernel twice.
     pub fn absorb(&mut self, byte: u8, ring: &mut MouseRing) {
         if self.index == 0 && byte & 0x08 == 0 {
             ring.sync_errors = ring.sync_errors.wrapping_add(1);
@@ -35,14 +36,7 @@ impl MouseParser {
         if self.index == PACKET_LEN {
             self.index = 0;
             match parse(self.buf) {
-                Some(ev) => {
-                    let previous = self.previous_buttons;
-                    self.previous_buttons = ev.buttons;
-                    ring.push(ev);
-                    if !post::publish(ev, previous) {
-                        ring.sync_errors = ring.sync_errors.wrapping_add(1);
-                    }
-                }
+                Some(ev) => ring.push(ev),
                 None => ring.sync_errors = ring.sync_errors.wrapping_add(1),
             }
         }

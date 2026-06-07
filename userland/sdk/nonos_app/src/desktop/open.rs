@@ -19,6 +19,8 @@ use super::backing::alloc_backing;
 use super::register::register_share;
 use super::require_peers::require_peers;
 use super::types::DesktopWindow;
+use nonos_runtime::munmap;
+use nonos_surface::destroy;
 
 impl DesktopWindow {
     pub(crate) fn open(width: u32, height: u32, window_id: u32) -> Option<DesktopWindow> {
@@ -26,6 +28,8 @@ impl DesktopWindow {
         let handle = register_share(base, width, height, stride, byte_len)?;
         let peers = require_peers()?;
         if !announce(&peers, window_id, handle, width, height) {
+            let _ = destroy(handle);
+            let _ = munmap(base as *mut u8, byte_len as usize);
             return None;
         }
         Some(DesktopWindow {

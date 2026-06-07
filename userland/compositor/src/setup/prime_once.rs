@@ -65,7 +65,7 @@ pub fn run_virtio_once() -> Result<Context, &'static str> {
         scene: SceneTable::new(),
         damage,
         focus: FocusTable::new(),
-        cursor: CursorTracker::new(),
+        cursor: CursorTracker::at(desc.width / 2, desc.height / 2),
         attach: AttachCache::new(),
     })
 }

@@ -14,17 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_desktop::{scene_remove, window_close};
-use nonos_runtime::munmap;
-use nonos_surface::destroy;
+use alloc::vec::Vec;
 
-use super::types::DesktopWindow;
+use nonos_libc::mk_ipc_send_to_pid;
 
-impl DesktopWindow {
-    pub(crate) fn close(self) {
-        let _ = scene_remove(self.peers.compositor, self.rid, 0);
-        let _ = destroy(self.handle);
-        let _ = munmap(self.backing as *mut u8, self.byte_len as usize);
-        let _ = window_close(self.peers.wm, self.rid.wrapping_add(1).max(1), self.window_id);
-    }
+use super::build::build;
+use super::constants::HDR_LEN;
+
+pub fn send_to(pid: u32, magic: u32, op: u16, request_id: u32, payload: &[u8]) -> bool {
+    let mut tx = Vec::with_capacity(HDR_LEN + payload.len());
+    build(&mut tx, magic, op, request_id, payload);
+    mk_ipc_send_to_pid(pid, tx.as_ptr(), tx.len()) >= 0
 }

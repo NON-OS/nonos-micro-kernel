@@ -29,6 +29,9 @@ impl Context {
             next_request_id: 1,
             delivered_count: 0,
             dropped_count: 0,
+            cursor_x: 0,
+            cursor_y: 0,
+            cursor_dirty: false,
         }
     }
 }

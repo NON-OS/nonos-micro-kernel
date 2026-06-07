@@ -14,17 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_desktop::{scene_remove, window_close};
-use nonos_runtime::munmap;
-use nonos_surface::destroy;
-
-use super::types::DesktopWindow;
-
-impl DesktopWindow {
-    pub(crate) fn close(self) {
-        let _ = scene_remove(self.peers.compositor, self.rid, 0);
-        let _ = destroy(self.handle);
-        let _ = munmap(self.backing as *mut u8, self.byte_len as usize);
-        let _ = window_close(self.peers.wm, self.rid.wrapping_add(1).max(1), self.window_id);
-    }
-}
+pub const MAGIC: u32 = 0x4E43_4D50;
+pub const OP_CURSOR_UPDATE: u16 = 0x0006;
+pub const OP_DISPLAY_INFO: u16 = 0x0008;
+pub const SERVICE: &[u8] = b"compositor";

@@ -20,7 +20,6 @@ use crate::state::Context;
 
 mod clear_overlay;
 mod constants;
-mod paint_cursor;
 mod paint_notify_badge;
 mod paint_rect;
 
@@ -45,5 +44,4 @@ pub fn paint_chrome(ctx: &Context) {
     if ctx.spotlight.visible {
         paint_rect::paint_rect(ctx, spotlight_rect(ctx.width, ctx.height), SPOTLIGHT_ARGB);
     }
-    paint_cursor::paint_cursor(ctx);
 }

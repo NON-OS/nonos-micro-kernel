@@ -42,6 +42,13 @@ pub(super) fn absorb(drainer: &mut Drainer, ring: &mut Ring, byte: u8) {
     }
     ring.push(Event { scancode: byte, flags });
     if let Some(t) = keymap::translate(byte, flags) {
-        let _ = keymap::publish(t);
+        if let Some(bit) = keymap::modifier_bit(t.keycode) {
+            if t.is_release {
+                drainer.mods &= !bit;
+            } else {
+                drainer.mods |= bit;
+            }
+        }
+        let _ = keymap::publish(t, drainer.mods);
     }
 }

@@ -25,9 +25,10 @@ use super::boot::boot;
 use super::dispatch::DELIVERY_LEN;
 use super::fail::fail;
 use super::fail_boot::fail_boot;
+use super::idle;
 use super::service_frame::service_frame;
 
-pub fn run<A: App, F: FnOnce() -> A>(build: F) -> ! {
+pub fn run<A: App, F: Fn() -> A>(build: F) -> ! {
     match heap_init() {
         Ok(()) | Err(HeapError::AlreadyInitialized) => {}
         Err(_) => fail(1, b"[app] heap fail\n"),
@@ -36,15 +37,16 @@ pub fn run<A: App, F: FnOnce() -> A>(build: F) -> ! {
         Ok(p) => p,
         Err(_) => fail(2, b"[app] peers fail\n"),
     };
-    let app = build();
-    let manifest = app.manifest();
     let mut request_id: u32 = 1;
-    let mut booted = match boot(app, &peers, &mut request_id) {
-        Ok(b) => b,
-        Err(e) => fail_boot(3, manifest.title, e),
-    };
     let mut rx = vec![0u8; DELIVERY_LEN.max(256)];
     loop {
-        service_frame(&mut booted, &mut rx, &peers, &mut request_id);
+        idle::wait(&mut rx);
+        let app = build();
+        let manifest = app.manifest();
+        let mut booted = match boot(app, &peers, &mut request_id) {
+            Ok(b) => b,
+            Err(e) => fail_boot(3, manifest.title, e),
+        };
+        while !service_frame(&mut booted, &mut rx, &peers, &mut request_id) {}
     }
 }

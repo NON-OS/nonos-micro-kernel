@@ -53,5 +53,18 @@ pub fn run() -> Result<Context, &'static str> {
     }
     let rid = ctx.issue_request_id();
     register::register_wallpaper(compositor_port, rid, &backing)?;
+
+    // Load the policy-selected wallpaper now, during setup, instead of letting
+    // the subscriber fetch+decode it a few seconds into the live session. That
+    // first decode plus a full-screen recomposite would otherwise stall the
+    // single core and freeze the cursor right after boot. Marking it applied
+    // keeps the subscriber from repeating the work unless the user changes it.
+    if let Some(policy_port) = ctx.policy_port {
+        if let Some(wanted) = crate::policy_client::get_wallpaper(policy_port) {
+            if crate::subscriber::apply::apply(&mut ctx, wanted) {
+                ctx.applied_wallpaper = Some(wanted);
+            }
+        }
+    }
     Ok(ctx)
 }

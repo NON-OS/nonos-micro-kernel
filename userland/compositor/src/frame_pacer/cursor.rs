@@ -16,48 +16,31 @@
 
 use crate::state::damage::Rect;
 
-const BLACK: u32 = 0xFF00_0000;
-const WHITE: u32 = 0xFFFF_FFFF;
-
-const ARROW: [&[u8]; 16] = [
-    b"#",
-    b"##",
-    b"#.#",
-    b"#..#",
-    b"#...#",
-    b"#....#",
-    b"#.....#",
-    b"#......#",
-    b"#.......#",
-    b"#........#",
-    b"#....#####",
-    b"#..#..#",
-    b"#.# #..#",
-    b"##  #..#",
-    b"#    #..#",
-    b"     ###",
-];
+const FG: u32 = 0xFFFF_FFFF;
+const SHADOW: u32 = 0xFF00_0000;
+const SIZE: u32 = 14;
+const THICK: u32 = 2;
 
 pub fn blit(base_va: u64, stride: u32, sw: u32, sh: u32, cx: u32, cy: u32, clip: Rect) {
     let clip_x1 = clip.x + clip.width;
     let clip_y1 = clip.y + clip.height;
-    for (row, line) in ARROW.iter().enumerate() {
-        let py = cy + row as u32;
-        if py >= sh || py < clip.y || py >= clip_y1 {
-            continue;
+    let put = |px: u32, py: u32, argb: u32| {
+        if px >= sw || py >= sh || px < clip.x || px >= clip_x1 || py < clip.y || py >= clip_y1 {
+            return;
         }
-        for (col, &cell) in line.iter().enumerate() {
-            let argb = match cell {
-                b'.' => WHITE,
-                b'#' => BLACK,
-                _ => continue,
-            };
-            let px = cx + col as u32;
-            if px >= sw || px < clip.x || px >= clip_x1 {
-                continue;
-            }
-            let va = base_va as usize + py as usize * stride as usize + px as usize * 4;
-            unsafe { core::ptr::write_volatile(va as *mut u32, argb) };
+        let va = base_va as usize + py as usize * stride as usize + px as usize * 4;
+        unsafe { core::ptr::write_volatile(va as *mut u32, argb) };
+    };
+    for i in 0..SIZE {
+        for t in 0..THICK {
+            put(cx + 1 + t, cy + i, SHADOW);
+            put(cx + i, cy + 1 + t, SHADOW);
+        }
+    }
+    for i in 0..SIZE {
+        for t in 0..THICK {
+            put(cx + t, cy + i, FG);
+            put(cx + i, cy + t, FG);
         }
     }
 }

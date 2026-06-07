@@ -14,32 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::wire::{call, lookup_port, u32_at};
-
-const SERVICE: &[u8] = b"compositor";
-const MAGIC: u32 = 0x4E43_4D50;
-const OP_DISPLAY_INFO: u16 = 0x0008;
-const OP_CURSOR_UPDATE: u16 = 0x0006;
-
-pub fn cursor_update(port_slot: &mut u32, request_id: u32, x: u32, y: u32, visible: bool) -> bool {
-    if *port_slot == 0 {
-        match lookup_port(SERVICE) {
-            Some(p) => *port_slot = p,
-            None => return false,
-        }
-    }
-    let mut payload = [0u8; 16];
-    payload[0..4].copy_from_slice(&x.to_le_bytes());
-    payload[4..8].copy_from_slice(&y.to_le_bytes());
-    payload[8..12].copy_from_slice(&(visible as u32).to_le_bytes());
-    match call(*port_slot, MAGIC, OP_CURSOR_UPDATE, request_id, &payload, &mut []) {
-        Ok(status) => status == 0,
-        Err(_) => {
-            *port_slot = 0;
-            false
-        }
-    }
-}
+use super::super::wire::{call, lookup_port, u32_at};
+use super::constants::{MAGIC, OP_DISPLAY_INFO, SERVICE};
 
 pub fn display_size(port_slot: &mut u32, request_id: u32) -> Option<(u32, u32)> {
     if *port_slot == 0 {

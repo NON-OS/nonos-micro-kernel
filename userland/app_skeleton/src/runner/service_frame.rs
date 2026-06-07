@@ -30,11 +30,11 @@ pub(super) fn service_frame<A: App>(
     rx: &mut [u8],
     peers: &Peers,
     request_id: &mut u32,
-) {
+) -> bool {
     refresh_input(booted, peers, request_id);
     if !ensure_primed(booted, peers, request_id) {
         let _ = mk_display_vsync_wait(0);
-        return;
+        return false;
     }
     let result = drain(
         &mut booted.app,
@@ -45,10 +45,11 @@ pub(super) fn service_frame<A: App>(
         request_id,
     );
     if result.close {
-        close(peers, booted.manifest.window_id, &booted.binding, request_id);
+        return close(peers, booted.manifest.window_id, &booted.binding, request_id);
     }
     if result.repaint {
         repaint(booted, peers, request_id);
     }
     let _ = mk_display_vsync_wait(0);
+    false
 }

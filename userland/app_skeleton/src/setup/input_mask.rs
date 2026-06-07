@@ -16,6 +16,8 @@
 
 use crate::app::AppManifest;
 
+const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
+const INPUT_KEY_UP_BIT: u32 = 1 << 1;
 const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
 const INPUT_WHEEL_BIT: u32 = 1 << 4;
 const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
@@ -23,10 +25,16 @@ const INPUT_BUTTON_UP_BIT: u32 = 1 << 6;
 const INPUT_TOUCH_BIT: u32 = 1 << 7;
 
 pub(super) fn input_mask(manifest: &AppManifest) -> u32 {
-    manifest.input_kind_mask
+    let mut mask = manifest.input_kind_mask
         | INPUT_POINTER_ABS_BIT
         | INPUT_WHEEL_BIT
         | INPUT_BUTTON_DOWN_BIT
         | INPUT_BUTTON_UP_BIT
-        | INPUT_TOUCH_BIT
+        | INPUT_TOUCH_BIT;
+    // An app that listens for key-down should also receive key-up, the same way
+    // button-down and button-up are paired above.
+    if mask & INPUT_KEY_DOWN_BIT != 0 {
+        mask |= INPUT_KEY_UP_BIT;
+    }
+    mask
 }

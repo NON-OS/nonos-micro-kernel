@@ -17,5 +17,5 @@ pub mod post;
 pub mod set1;
 pub mod set1_e0;
 pub mod translate;
-pub use post::publish;
+pub use post::{modifier_bit, publish};
 pub use translate::translate;

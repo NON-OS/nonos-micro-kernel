@@ -33,6 +33,9 @@ impl Mouse {
     }
 
     pub fn feed(&mut self, report: &[u8]) {
+        if report.len() < 3 {
+            return;
+        }
         let previous_buttons = self.buttons;
         let buttons = report[0] & 0x1f;
         let dx = report[1] as i8 as i16;

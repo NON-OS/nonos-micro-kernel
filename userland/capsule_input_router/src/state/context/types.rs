@@ -26,4 +26,7 @@ pub struct Context {
     pub next_request_id: u32,
     pub delivered_count: u64,
     pub dropped_count: u64,
+    pub cursor_x: u32,
+    pub cursor_y: u32,
+    pub cursor_dirty: bool,
 }

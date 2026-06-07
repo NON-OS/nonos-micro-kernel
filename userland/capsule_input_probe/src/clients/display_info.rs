@@ -45,7 +45,9 @@ pub fn query_display_info(port: u32, request_id: u32) -> Result<DisplayInfo, i32
     let width = read_u32(&rx, HDR_LEN + 4)?;
     let height = read_u32(&rx, HDR_LEN + 8)?;
     let stride = read_u32(&rx, HDR_LEN + 12)?;
-    if width == 0 || height == 0 || stride == 0 {
+    // Reject a stride that cannot hold a full ARGB8888 row, otherwise the fill
+    // loop would write past the mapped surface.
+    if width == 0 || height == 0 || stride == 0 || (stride as u64) < (width as u64) * 4 {
         return Err(-22);
     }
     Ok(DisplayInfo { width, height, stride })

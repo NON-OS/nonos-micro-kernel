@@ -17,11 +17,13 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use nonos_libc::mk_ipc_call;
+use nonos_libc::mk_ipc_call_timeout;
 
 use super::build::build;
 use super::constants::HDR_LEN;
 use super::u32_at::u32_at;
+
+const GUI_CALL_TIMEOUT_MS: u64 = 16;
 
 pub fn call(
     port: u32,
@@ -34,7 +36,14 @@ pub fn call(
     let mut tx = Vec::with_capacity(HDR_LEN + payload.len());
     build(&mut tx, magic, op, request_id, payload);
     let mut rx = vec![0u8; HDR_LEN + 4 + body.len()];
-    let rc = mk_ipc_call(port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len());
+    let rc = mk_ipc_call_timeout(
+        port as u64,
+        tx.as_ptr(),
+        tx.len(),
+        rx.as_mut_ptr(),
+        rx.len(),
+        GUI_CALL_TIMEOUT_MS,
+    );
     if rc < (HDR_LEN + 4 + body.len()) as i64 || u32_at(&rx, 0)? != magic {
         return Err("service call failed");
     }
