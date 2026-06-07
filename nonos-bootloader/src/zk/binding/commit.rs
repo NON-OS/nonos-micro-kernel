@@ -36,15 +36,18 @@ pub fn compute_commit(binding: BindingInput<'_>) -> [u8; 32] {
 
 pub fn compute_capsule_commitment(
     kernel_hash: &[u8; 32],
-    boot_nonce: &[u8; 32],
-    machine_id: &[u8; 32],
+    _boot_nonce: &[u8; 32],
+    _machine_id: &[u8; 32],
     program_hash: &[u8; 32],
 ) -> [u8; 32] {
+    // Must match the prover (embed-zk-proof create_circuit_params): the kernel
+    // commitment binds kernel_hash, program_hash, and a zero capability mask,
+    // the same shape as a per-capsule commitment. Boot nonce and machine id are
+    // no longer part of the preimage.
     let mut hasher = blake3::Hasher::new_derive_key(DS_COMMITMENT);
     hasher.update(kernel_hash);
-    hasher.update(boot_nonce);
-    hasher.update(machine_id);
     hasher.update(program_hash);
+    hasher.update(&0u64.to_be_bytes());
     *hasher.finalize().as_bytes()
 }
 
