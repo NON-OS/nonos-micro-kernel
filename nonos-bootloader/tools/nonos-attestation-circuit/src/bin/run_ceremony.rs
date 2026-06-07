@@ -19,7 +19,6 @@ use ark_serialize::{CanonicalSerialize, Compress};
 use nonos_attestation_circuit::{ceremony, NonosAttestationCircuit};
 use std::env;
 use std::fs;
-use std::io::Write;
 use std::path::Path;
 
 fn main() {
@@ -419,17 +418,12 @@ fn cmd_extract_vk(args: &[String]) {
 
 fn cmd_verify(args: &[String]) {
     let mut transcript = String::new();
-    let mut vk_dir = String::new();
 
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
             "--transcript" | "-t" => {
                 transcript = args.get(i + 1).cloned().unwrap_or_default();
-                i += 2;
-            }
-            "--vk-dir" | "-v" => {
-                vk_dir = args.get(i + 1).cloned().unwrap_or_default();
                 i += 2;
             }
             _ => i += 1,
