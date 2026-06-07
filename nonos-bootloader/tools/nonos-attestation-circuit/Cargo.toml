@@ -26,6 +26,18 @@ path = "src/bin/generate_proof.rs"
 name = "capture-provenance"
 path = "src/bin/capture_provenance.rs"
 
+[[bin]]
+name = "verify-proof"
+path = "src/bin/verify_proof.rs"
+
+[[bin]]
+name = "capsule-attest-proof"
+path = "src/bin/capsule_attest_demo.rs"
+
+[[bin]]
+name = "capsule-attest-fleet"
+path = "src/bin/capsule_attest_fleet.rs"
+
 [dependencies]
 # Arkworks with std for the key generator binary
 ark-std             = { version = "0.5" }

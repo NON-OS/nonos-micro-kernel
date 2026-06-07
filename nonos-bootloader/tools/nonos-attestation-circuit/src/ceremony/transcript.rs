@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use serde::{Deserialize, Serialize};
 use super::metadata::CeremonyMetadata;
 use super::record::ContributionRecord;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct CeremonyTranscript {

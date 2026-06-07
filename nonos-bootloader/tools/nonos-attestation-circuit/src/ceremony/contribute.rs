@@ -14,26 +14,59 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use ark_bls12_381::Fr;
-use ark_ff::UniformRand;
-use ark_std::rand::{rngs::StdRng, SeedableRng};
 use super::constants::DS_CONTRIBUTION;
 use super::error::CeremonyError;
 use super::hash::hash_params;
 use super::params::CeremonyParams;
 use super::record::ContributionRecord;
 use super::tau::apply_powers_of_tau;
+use ark_bls12_381::Fr;
+use ark_ff::UniformRand;
+use ark_std::rand::{rngs::StdRng, SeedableRng};
 
-pub fn contribute_randomness(prev: &CeremonyParams, id: &str, contact: &str, loc: &str, src: &str, ext: &[u8]) -> Result<(CeremonyParams, ContributionRecord), CeremonyError> {
+pub fn contribute_randomness(
+    prev: &CeremonyParams,
+    id: &str,
+    contact: &str,
+    loc: &str,
+    src: &str,
+    ext: &[u8],
+) -> Result<(CeremonyParams, ContributionRecord), CeremonyError> {
     let prev_hash = hash_params(&prev.pk);
-    if prev_hash != prev.params_hash { return Err(CeremonyError::HashMismatch); }
-    let seed = { let mut h = blake3::Hasher::new_derive_key(DS_CONTRIBUTION); h.update(&prev_hash); h.update(id.as_bytes()); h.update(ext); h.update(&std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos().to_le_bytes()); *h.finalize().as_bytes() };
+    if prev_hash != prev.params_hash {
+        return Err(CeremonyError::HashMismatch);
+    }
+    let seed = {
+        let mut h = blake3::Hasher::new_derive_key(DS_CONTRIBUTION);
+        h.update(&prev_hash);
+        h.update(id.as_bytes());
+        h.update(ext);
+        h.update(
+            &std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+                .to_le_bytes(),
+        );
+        *h.finalize().as_bytes()
+    };
     let rc = blake3::hash(&seed);
     let mut rng = StdRng::from_seed(seed);
     let (tau, alpha, beta) = (Fr::rand(&mut rng), Fr::rand(&mut rng), Fr::rand(&mut rng));
     let new_pk = apply_powers_of_tau(&prev.pk, tau, alpha, beta)?;
     let new_hash = hash_params(&new_pk);
     let ts = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-    let record = ContributionRecord { round: prev.round + 1, contributor_id: id.to_string(), contributor_contact: contact.to_string(), location: loc.to_string(), randomness_source: src.to_string(), previous_params_hash: prev_hash, new_params_hash: new_hash, randomness_commitment: *rc.as_bytes(), contribution_timestamp: ts, destruction_attestation: None };
+    let record = ContributionRecord {
+        round: prev.round + 1,
+        contributor_id: id.to_string(),
+        contributor_contact: contact.to_string(),
+        location: loc.to_string(),
+        randomness_source: src.to_string(),
+        previous_params_hash: prev_hash,
+        new_params_hash: new_hash,
+        randomness_commitment: *rc.as_bytes(),
+        contribution_timestamp: ts,
+        destruction_attestation: None,
+    };
     Ok((CeremonyParams { pk: new_pk, round: prev.round + 1, params_hash: new_hash }, record))
 }

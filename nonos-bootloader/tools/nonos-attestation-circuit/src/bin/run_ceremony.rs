@@ -100,10 +100,7 @@ fn cmd_init(args: &[String]) {
         ceremony_id = format!(
             "nonos-{}-{}",
             circuit_name,
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()
         );
     }
 
@@ -122,9 +119,13 @@ fn cmd_init(args: &[String]) {
 
             eprintln!("[init] Parameters: {} ({} bytes)", output, params_data.len());
             eprintln!("[init] Metadata: {}", meta_path);
-            eprintln!("[init] Params hash: {:02x}{:02x}{:02x}{:02x}...",
-                params.params_hash[0], params.params_hash[1],
-                params.params_hash[2], params.params_hash[3]);
+            eprintln!(
+                "[init] Params hash: {:02x}{:02x}{:02x}{:02x}...",
+                params.params_hash[0],
+                params.params_hash[1],
+                params.params_hash[2],
+                params.params_hash[3]
+            );
             println!("ceremony_initialized=true");
         }
         Err(e) => {
@@ -145,12 +146,30 @@ fn cmd_contribute(args: &[String]) {
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
-            "--input" | "-i" => { input = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
-            "--output" | "-o" => { output = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
-            "--name" | "-n" => { name = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
-            "--contact" => { contact = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
-            "--location" => { location = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
-            "--entropy" => { entropy_source = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
+            "--input" | "-i" => {
+                input = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            "--output" | "-o" => {
+                output = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            "--name" | "-n" => {
+                name = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            "--contact" => {
+                contact = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            "--location" => {
+                location = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            "--entropy" => {
+                entropy_source = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
             _ => i += 1,
         }
     }
@@ -170,7 +189,12 @@ fn cmd_contribute(args: &[String]) {
     let external_randomness = gather_entropy(&entropy_source);
 
     match ceremony::contribute_randomness(
-        &prev_params, &name, &contact, &location, &entropy_source, &external_randomness
+        &prev_params,
+        &name,
+        &contact,
+        &location,
+        &entropy_source,
+        &external_randomness,
     ) {
         Ok((new_params, record)) => {
             let new_data = new_params.serialize().expect("serialize");
@@ -201,9 +225,18 @@ fn cmd_finalize(args: &[String]) {
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
-            "--input" | "-i" => { input = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
-            "--output" | "-o" => { output_dir = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
-            "--transcript" | "-t" => { transcript = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
+            "--input" | "-i" => {
+                input = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            "--output" | "-o" => {
+                output_dir = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            "--transcript" | "-t" => {
+                transcript = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
             _ => i += 1,
         }
     }
@@ -222,7 +255,11 @@ fn cmd_finalize(args: &[String]) {
     let contributions = load_contributions(&transcript);
 
     if contributions.len() < ceremony::MIN_PARTICIPANTS {
-        eprintln!("ERROR: Need at least {} contributions, got {}", ceremony::MIN_PARTICIPANTS, contributions.len());
+        eprintln!(
+            "ERROR: Need at least {} contributions, got {}",
+            ceremony::MIN_PARTICIPANTS,
+            contributions.len()
+        );
         std::process::exit(1);
     }
 
@@ -234,14 +271,19 @@ fn cmd_finalize(args: &[String]) {
             fs::write(&vk_path, &vk_buf).expect("write VK");
 
             let transcript_path = Path::new(&output_dir).join("ceremony_transcript.json");
-            let transcript_json = serde_json::to_string_pretty(&transcript_data).expect("serialize");
+            let transcript_json =
+                serde_json::to_string_pretty(&transcript_data).expect("serialize");
             fs::write(&transcript_path, &transcript_json).expect("write transcript");
 
             let vk_hash = blake3::hash(&vk_buf);
             eprintln!("[finalize] VK extracted: {} ({} bytes)", vk_path.display(), vk_buf.len());
-            eprintln!("[finalize] VK hash: {:02x}{:02x}{:02x}{:02x}...",
-                vk_hash.as_bytes()[0], vk_hash.as_bytes()[1],
-                vk_hash.as_bytes()[2], vk_hash.as_bytes()[3]);
+            eprintln!(
+                "[finalize] VK hash: {:02x}{:02x}{:02x}{:02x}...",
+                vk_hash.as_bytes()[0],
+                vk_hash.as_bytes()[1],
+                vk_hash.as_bytes()[2],
+                vk_hash.as_bytes()[3]
+            );
             eprintln!("[finalize] Transcript: {}", transcript_path.display());
             println!("ceremony_finalized=true");
             println!("vk_path={}", vk_path.display());
@@ -260,8 +302,14 @@ fn cmd_extract_vk(args: &[String]) {
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
-            "--params" | "-p" => { params_path = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
-            "--output" | "-o" => { output = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
+            "--params" | "-p" => {
+                params_path = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            "--output" | "-o" => {
+                output = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
             _ => i += 1,
         }
     }
@@ -280,8 +328,10 @@ fn cmd_extract_vk(args: &[String]) {
 
     let fp = compute_vk_fingerprint(&vk_buf);
     eprintln!("[extract] VK: {} ({} bytes)", output, vk_buf.len());
-    eprintln!("[extract] Fingerprint: {:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-        fp[0], fp[1], fp[2], fp[3], fp[4], fp[5], fp[6], fp[7]);
+    eprintln!(
+        "[extract] Fingerprint: {:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+        fp[0], fp[1], fp[2], fp[3], fp[4], fp[5], fp[6], fp[7]
+    );
     println!("vk_extracted=true");
 }
 
@@ -292,8 +342,14 @@ fn cmd_verify(args: &[String]) {
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
-            "--transcript" | "-t" => { transcript = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
-            "--vk-dir" | "-v" => { vk_dir = args.get(i + 1).cloned().unwrap_or_default(); i += 2; }
+            "--transcript" | "-t" => {
+                transcript = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            "--vk-dir" | "-v" => {
+                vk_dir = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
             _ => i += 1,
         }
     }
@@ -317,12 +373,19 @@ fn cmd_verify(args: &[String]) {
             eprintln!("[verify] WARNING: Contribution {} missing destruction attestation", i + 1);
             all_valid = false;
         }
-        eprintln!("[verify] {} Round {} by {} - destruction: {}",
+        eprintln!(
+            "[verify] {} Round {} by {} - destruction: {}",
             if has_destruction { "✓" } else { "✗" },
-            contrib.round, contrib.contributor_id, has_destruction);
+            contrib.round,
+            contrib.contributor_id,
+            has_destruction
+        );
     }
 
-    if data.contributions.len() >= ceremony::MIN_PARTICIPANTS && all_valid && data.verification_passed {
+    if data.contributions.len() >= ceremony::MIN_PARTICIPANTS
+        && all_valid
+        && data.verification_passed
+    {
         eprintln!("[verify] Ceremony VALID");
         println!("ceremony_valid=true");
     } else {
@@ -346,10 +409,8 @@ fn gather_entropy(source: &str) -> Vec<u8> {
         }
     }
 
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
+    let timestamp =
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
     entropy.extend_from_slice(&timestamp.to_le_bytes());
 
     entropy

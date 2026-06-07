@@ -21,7 +21,11 @@ pub mod kernel;
 pub mod prove;
 
 pub use args::Args;
-pub use embed::{assemble_attested_image, create_zk_block, AttestedImage, ZkBlockParams, ZK_PROOF_MAGIC};
+pub use embed::{
+    assemble_attested_image, create_zk_block, AttestedImage, ZkBlockParams, ZK_PROOF_MAGIC,
+};
 pub use footer::{create_image_footer, FOOTER_MAGIC, FOOTER_SIZE};
-pub use kernel::{compute_capsule_commitment, compute_kernel_hash, load_signed_kernel, SignedKernel};
+pub use kernel::{
+    compute_capsule_commitment, compute_kernel_hash, load_signed_kernel, SignedKernel,
+};
 pub use prove::{create_circuit_params, extract_public_inputs, generate_proof, load_proving_key};

@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::constants::DS_CEREMONY;
 use ark_bls12_381::Bls12_381;
 use ark_groth16::ProvingKey;
 use ark_serialize::{CanonicalSerialize, Compress};
-use super::constants::DS_CEREMONY;
 
 pub fn hash_params(pk: &ProvingKey<Bls12_381>) -> [u8; 32] {
     let mut buf = Vec::new();

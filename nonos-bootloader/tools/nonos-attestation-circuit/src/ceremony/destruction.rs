@@ -16,8 +16,19 @@
 
 use super::record::{ContributionRecord, DestructionAttestation};
 
-pub fn add_destruction_attestation(record: &mut ContributionRecord, method: &str, witness_count: usize, video_hash: Option<[u8; 32]>) {
-    let attestation_data = format!("{}:{}:{}:{}", record.contributor_id, record.round, method, witness_count);
+pub fn add_destruction_attestation(
+    record: &mut ContributionRecord,
+    method: &str,
+    witness_count: usize,
+    video_hash: Option<[u8; 32]>,
+) {
+    let attestation_data =
+        format!("{}:{}:{}:{}", record.contributor_id, record.round, method, witness_count);
     let attestation_hash = *blake3::hash(attestation_data.as_bytes()).as_bytes();
-    record.destruction_attestation = Some(DestructionAttestation { method: method.to_string(), witness_count, attestation_hash, video_hash });
+    record.destruction_attestation = Some(DestructionAttestation {
+        method: method.to_string(),
+        witness_count,
+        attestation_hash,
+        video_hash,
+    });
 }

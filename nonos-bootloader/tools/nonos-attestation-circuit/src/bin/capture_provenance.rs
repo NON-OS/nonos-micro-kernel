@@ -231,24 +231,14 @@ fn main() {
     );
 
     let composite_hash = provenance.compute_composite_hash();
-    eprintln!(
-        "  composite provenance hash: {}",
-        hex::encode(composite_hash)
-    );
+    eprintln!("  composite provenance hash: {}", hex::encode(composite_hash));
 
     let provenance_bytes = provenance.to_bytes();
 
     let mut output = fs::File::create(output_path).expect("failed to create output file");
-    output
-        .write_all(&provenance_bytes)
-        .expect("failed to write provenance bytes");
-    output
-        .write_all(&composite_hash)
-        .expect("failed to write composite hash");
+    output.write_all(&provenance_bytes).expect("failed to write provenance bytes");
+    output.write_all(&composite_hash).expect("failed to write composite hash");
 
     eprintln!("wrote provenance to {}", output_path.display());
-    eprintln!(
-        "  total bytes: {}",
-        provenance_bytes.len() + composite_hash.len()
-    );
+    eprintln!("  total bytes: {}", provenance_bytes.len() + composite_hash.len());
 }

@@ -16,7 +16,8 @@
 
 use ark_bls12_381::Fr;
 use nonos_attestation_circuit::{
-    expected_program_hash_bytes, NonosAttestationCircuit, MIN_HW_LEVEL, PCR_PREIMAGE_LEN,
+    compute_capsule_commitment, expected_program_hash_bytes, NonosAttestationCircuit, MIN_HW_LEVEL,
+    PCR_PREIMAGE_LEN,
 };
 
 pub struct CircuitParams {
@@ -47,12 +48,11 @@ pub fn create_circuit_params(
     pcr_preimage[..32].copy_from_slice(hash.as_bytes());
     pcr_preimage[32..].copy_from_slice(hash.as_bytes());
 
-    let mut commitment_hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    commitment_hasher.update(&kernel_hash);
-    commitment_hasher.update(boot_nonce);
-    commitment_hasher.update(machine_id);
-    commitment_hasher.update(&program_hash);
-    let capsule_commitment = *commitment_hasher.finalize().as_bytes();
+    let mut public_input_seed = Vec::with_capacity(72);
+    public_input_seed.extend_from_slice(&kernel_hash);
+    public_input_seed.extend_from_slice(&program_hash);
+    public_input_seed.extend_from_slice(&0u64.to_be_bytes());
+    let capsule_commitment = compute_capsule_commitment(&public_input_seed);
 
     CircuitParams {
         kernel_hash,
@@ -68,10 +68,9 @@ pub fn create_circuit_params(
 pub fn build_circuit(params: &CircuitParams) -> NonosAttestationCircuit<Fr> {
     NonosAttestationCircuit::new(
         params.kernel_hash,
-        params.boot_nonce,
-        params.machine_id,
-        params.capsule_commitment,
         params.program_hash,
+        0,
+        params.capsule_commitment,
         params.pcr_preimage,
         params.hardware_attestation,
     )

@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::error::CeremonyError;
 use ark_bls12_381::Bls12_381;
 use ark_groth16::ProvingKey;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Compress, Validate};
-use super::error::CeremonyError;
 
 pub struct CeremonyParams {
     pub pk: ProvingKey<Bls12_381>,
@@ -30,18 +30,25 @@ impl CeremonyParams {
         let mut buf = Vec::new();
         buf.extend_from_slice(&self.round.to_le_bytes());
         buf.extend_from_slice(&self.params_hash);
-        self.pk.serialize_with_mode(&mut buf, Compress::Yes)
+        self.pk
+            .serialize_with_mode(&mut buf, Compress::Yes)
             .map_err(|e| CeremonyError::SerializationError(e.to_string()))?;
         Ok(buf)
     }
 
     pub fn deserialize(data: &[u8]) -> Result<Self, CeremonyError> {
-        if data.len() < 36 { return Err(CeremonyError::InvalidPreviousParams); }
+        if data.len() < 36 {
+            return Err(CeremonyError::InvalidPreviousParams);
+        }
         let round = u32::from_le_bytes(data[0..4].try_into().unwrap());
         let mut params_hash = [0u8; 32];
         params_hash.copy_from_slice(&data[4..36]);
-        let pk = ProvingKey::<Bls12_381>::deserialize_with_mode(&data[36..], Compress::Yes, Validate::Yes)
-            .map_err(|e| CeremonyError::SerializationError(e.to_string()))?;
+        let pk = ProvingKey::<Bls12_381>::deserialize_with_mode(
+            &data[36..],
+            Compress::Yes,
+            Validate::Yes,
+        )
+        .map_err(|e| CeremonyError::SerializationError(e.to_string()))?;
         Ok(Self { pk, round, params_hash })
     }
 }

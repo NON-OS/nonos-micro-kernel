@@ -29,10 +29,7 @@ use serde_json::Value as JsonValue;
 use nonos_attestation_circuit::{expected_program_hash_bytes, NonosAttestationCircuit};
 
 #[derive(Parser, Debug)]
-#[command(
-    name = "generate-keys",
-    about = "NONOS attestation keys (Groth16, BLS12-381)"
-)]
+#[command(name = "generate-keys", about = "NONOS attestation keys (Groth16, BLS12-381)")]
 struct Args {
     #[command(subcommand)]
     cmd: Cmd,
@@ -67,11 +64,7 @@ enum Cmd {
         #[arg(long, value_name = "PATH")]
         pk: PathBuf,
 
-        #[arg(
-            long,
-            value_name = "PATH",
-            default_value = "attestation_verifying_key.bin"
-        )]
+        #[arg(long, value_name = "PATH", default_value = "attestation_verifying_key.bin")]
         out: PathBuf,
     },
 
@@ -121,10 +114,8 @@ fn main() -> Result<(), String> {
                 Some(ref s) => (parse_seed(s), s.clone()),
                 None => {
                     use std::time::{SystemTime, UNIX_EPOCH};
-                    let now = SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .expect("time")
-                        .as_nanos();
+                    let now =
+                        SystemTime::now().duration_since(UNIX_EPOCH).expect("time").as_nanos();
                     let entropy = format!("{:x}{:x}", now, std::process::id());
                     let hash = blake3::hash(entropy.as_bytes());
                     let val = u64::from_le_bytes(hash.as_bytes()[..8].try_into().unwrap());
@@ -161,11 +152,8 @@ fn main() -> Result<(), String> {
             let commit = std::env::var("GIT_COMMIT").ok().or_else(git_commit_hash);
             let ts = chrono::Utc::now().to_rfc3339();
 
-            let (ceremony_json, contributors) = if let Some(dir) = ceremony_dir {
-                read_ceremony_dir(&dir)?
-            } else {
-                (None, None)
-            };
+            let (ceremony_json, contributors) =
+                if let Some(dir) = ceremony_dir { read_ceremony_dir(&dir)? } else { (None, None) };
 
             let metadata = Metadata {
                 tool,
@@ -187,16 +175,8 @@ fn main() -> Result<(), String> {
             write_bin(&out_dir.join("metadata.json"), &metadata_json)?;
 
             println!("NONOS attestation keys generated");
-            println!(
-                "proving_key:   {} ({} bytes)",
-                pk_path.display(),
-                pk_bytes.len()
-            );
-            println!(
-                "verifying_key: {} ({} bytes)",
-                vk_path.display(),
-                vk_bytes.len()
-            );
+            println!("proving_key:   {} ({} bytes)", pk_path.display(), pk_bytes.len());
+            println!("verifying_key: {} ({} bytes)", vk_path.display(), vk_bytes.len());
             println!("vk_blake3:     {}", fp);
             println!("public_inputs_expected: {}", inputs);
 
@@ -244,11 +224,7 @@ fn main() -> Result<(), String> {
             let fp = blake3_hex(&vk_bytes);
             let inputs = vk.gamma_abc_g1.len().saturating_sub(1);
 
-            println!(
-                "verifying_key_written: {} ({} bytes)",
-                out.display(),
-                vk_bytes.len()
-            );
+            println!("verifying_key_written: {} ({} bytes)", out.display(), vk_bytes.len());
             println!("vk_blake3: {}", fp);
             println!("public_inputs_expected: {}", inputs);
             Ok(())
@@ -295,14 +271,7 @@ fn read_ceremony_dir(dir: &PathBuf) -> Result<(Option<JsonValue>, Option<Vec<Jso
             }
         }
     }
-    Ok((
-        ceremony_meta,
-        if contributors.is_empty() {
-            None
-        } else {
-            Some(contributors)
-        },
-    ))
+    Ok((ceremony_meta, if contributors.is_empty() { None } else { Some(contributors) }))
 }
 
 fn write_bin(path: &PathBuf, bytes: &[u8]) -> Result<(), String> {
@@ -315,8 +284,7 @@ fn write_bin(path: &PathBuf, bytes: &[u8]) -> Result<(), String> {
         }
     }
     let mut f = File::create(path).map_err(|e| format!("create {}: {e}", path.display()))?;
-    f.write_all(bytes)
-        .map_err(|e| format!("write {}: {e}", path.display()))
+    f.write_all(bytes).map_err(|e| format!("write {}: {e}", path.display()))
 }
 
 fn read_vk_any(path: &PathBuf) -> Result<VerifyingKey<Bls12_381>, String> {

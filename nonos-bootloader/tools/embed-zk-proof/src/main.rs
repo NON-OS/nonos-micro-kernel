@@ -78,11 +78,13 @@ fn generate_boot_nonce(seed: &str, kernel_hash: &[u8; 32]) -> [u8; 32] {
     let mut hasher = blake3::Hasher::new_derive_key("NONOS:BOOT:NONCE:v1");
     hasher.update(seed.as_bytes());
     hasher.update(kernel_hash);
-    hasher.update(&std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos()
-        .to_le_bytes());
+    hasher.update(
+        &std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+            .to_le_bytes(),
+    );
     *hasher.finalize().as_bytes()
 }
 

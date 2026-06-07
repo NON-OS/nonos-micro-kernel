@@ -53,12 +53,7 @@ impl BuildProvenance {
         rustc_version_hash: [u8; 32],
         build_config_hash: [u8; 32],
     ) -> Self {
-        Self {
-            source_tree_hash,
-            cargo_lock_hash,
-            rustc_version_hash,
-            build_config_hash,
-        }
+        Self { source_tree_hash, cargo_lock_hash, rustc_version_hash, build_config_hash }
     }
 
     pub fn compute_composite_hash(&self) -> [u8; 32] {
@@ -88,12 +83,7 @@ impl BuildProvenance {
         cargo_lock_hash.copy_from_slice(&bytes[32..64]);
         rustc_version_hash.copy_from_slice(&bytes[64..96]);
         build_config_hash.copy_from_slice(&bytes[96..128]);
-        Self {
-            source_tree_hash,
-            cargo_lock_hash,
-            rustc_version_hash,
-            build_config_hash,
-        }
+        Self { source_tree_hash, cargo_lock_hash, rustc_version_hash, build_config_hash }
     }
 }
 

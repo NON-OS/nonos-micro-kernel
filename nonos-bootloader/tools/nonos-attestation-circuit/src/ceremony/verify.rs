@@ -19,12 +19,24 @@ use super::hash::hash_params;
 use super::params::CeremonyParams;
 use super::record::ContributionRecord;
 
-pub fn verify_contribution(prev: &CeremonyParams, new: &CeremonyParams, rec: &ContributionRecord) -> Result<bool, CeremonyError> {
-    if new.round != prev.round + 1 { return Err(CeremonyError::InvalidRound); }
+pub fn verify_contribution(
+    prev: &CeremonyParams,
+    new: &CeremonyParams,
+    rec: &ContributionRecord,
+) -> Result<bool, CeremonyError> {
+    if new.round != prev.round + 1 {
+        return Err(CeremonyError::InvalidRound);
+    }
     let prev_hash = hash_params(&prev.pk);
-    if prev_hash != rec.previous_params_hash { return Err(CeremonyError::HashMismatch); }
+    if prev_hash != rec.previous_params_hash {
+        return Err(CeremonyError::HashMismatch);
+    }
     let new_hash = hash_params(&new.pk);
-    if new_hash != rec.new_params_hash { return Err(CeremonyError::HashMismatch); }
-    if new.pk.vk.gamma_abc_g1.len() != prev.pk.vk.gamma_abc_g1.len() { return Err(CeremonyError::InvalidContribution); }
+    if new_hash != rec.new_params_hash {
+        return Err(CeremonyError::HashMismatch);
+    }
+    if new.pk.vk.gamma_abc_g1.len() != prev.pk.vk.gamma_abc_g1.len() {
+        return Err(CeremonyError::InvalidContribution);
+    }
     Ok(true)
 }
