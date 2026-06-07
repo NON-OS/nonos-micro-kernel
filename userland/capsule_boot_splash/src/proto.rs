@@ -50,8 +50,7 @@ pub(crate) fn call_status(port: u32, tx: &[u8]) -> Result<(), i32> {
     }
 }
 
-pub(crate) fn lookup_compositor() -> Option<u32> {
-    let name: &[u8] = b"compositor";
+pub(crate) fn lookup(name: &[u8]) -> Option<u32> {
     let mut pid: u32 = 0;
     let mut port: u32 = 0;
     let rc = mk_service_lookup(name.as_ptr(), name.len(), &mut port, &mut pid);
