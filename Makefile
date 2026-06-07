@@ -154,7 +154,10 @@ QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
 QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::$(QEMU_HOST_SSH_PORT)-:22,hostfwd=tcp::$(QEMU_HOST_HTTP_PORT)-:80
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
 QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=1024,yres=768
-QEMU_USB := -device qemu-xhci,id=xhci -device usb-kbd,bus=xhci.0 -device usb-mouse,bus=xhci.0
+# Keyboard/mouse via the q35 i8042 (PS/2). USB HID interrupt-IN transfers
+# are not serviced under macOS hvf, so usb-kbd/usb-mouse never deliver input
+# there; the xHCI controller stays for the USB stack/storage paths.
+QEMU_USB := -device qemu-xhci,id=xhci
 QEMU_RNG := -device virtio-rng-pci
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
