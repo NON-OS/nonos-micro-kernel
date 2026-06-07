@@ -16,6 +16,7 @@
 
 use nonos_libc::InputEvent;
 
+use crate::clients::compositor;
 use crate::state::Context;
 
 use super::mirror_shell_pointer::mirror_shell_pointer;
@@ -28,6 +29,8 @@ use super::topmost_target::topmost_target;
 pub fn route_pointer(ctx: &mut Context, event: &InputEvent) -> u32 {
     refresh_display(ctx);
     let (x, y) = ctx.cursor.apply(event);
+    let rid = ctx.issue_request_id();
+    let _ = compositor::cursor_update(&mut ctx.compositor_port, rid, x, y, true);
     let delivered = mirror_shell_pointer(ctx, event, x, y)
         + match topmost_target(ctx, x, y) {
             None => route_to_shell(ctx, event, x, y),
