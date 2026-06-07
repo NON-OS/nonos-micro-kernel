@@ -396,18 +396,27 @@ fn cmd_verify(args: &[String]) {
 }
 
 fn gather_entropy(source: &str) -> Vec<u8> {
+    // The contribution's secret randomness (the toxic waste) is derived from
+    // this. If it is weak or zero the trapdoor becomes recoverable, so the
+    // ceremony fails closed rather than ever contribute with degenerate entropy.
     let mut entropy = vec![0u8; 64];
 
     if source == "system" || source == "/dev/random" || source == "/dev/urandom" {
-        if let Ok(mut file) = fs::File::open("/dev/urandom") {
-            use std::io::Read;
-            let _ = file.read_exact(&mut entropy);
-        }
+        use std::io::Read;
+        let mut file = fs::File::open("/dev/urandom")
+            .expect("ceremony: cannot open /dev/urandom for contribution entropy");
+        file.read_exact(&mut entropy)
+            .expect("ceremony: failed to read 64 bytes of OS entropy");
     } else if Path::new(source).exists() {
-        if let Ok(data) = fs::read(source) {
-            entropy = data;
-        }
+        entropy = fs::read(source).expect("ceremony: cannot read entropy file");
+    } else {
+        panic!("ceremony: entropy source '{source}' is not 'system' nor a readable file");
     }
+
+    assert!(
+        entropy.len() >= 32 && entropy.iter().any(|&b| b != 0),
+        "ceremony: refusing to contribute with weak/zero entropy from source '{source}'"
+    );
 
     let timestamp =
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
