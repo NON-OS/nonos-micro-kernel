@@ -21,6 +21,7 @@
 // to the rollout policy in preflight. New capsules are added one line at a time
 // as their sidecars are reconciled.
 
+#[allow(unused_macros)]
 macro_rules! trailer {
     ($file:literal) => {
         include_bytes!(concat!(
@@ -33,11 +34,13 @@ macro_rules! trailer {
 }
 
 // Return the embedded attestation trailer for a capsule spawn name, or None when
-// the capsule has no sidecar yet.
+// the capsule has no sidecar yet. Each arm is gated by the same feature that
+// embeds the capsule itself: the sidecar is generated alongside the capsule
+// binary, so a build that does not embed the capsule must not embed its trailer.
 pub fn trailer_for(name: &str) -> Option<&'static [u8]> {
-    let bytes: &'static [u8] = match name {
-        "app.terminal" => trailer!("terminal"),
-        _ => return None,
-    };
-    Some(bytes)
+    match name {
+        #[cfg(feature = "nonos-capsule-terminal")]
+        "app.terminal" => Some(trailer!("terminal")),
+        _ => None,
+    }
 }
