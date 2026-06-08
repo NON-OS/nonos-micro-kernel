@@ -14,11 +14,10 @@ mod surface;
 mod vignette;
 
 use nonos_libc::{
-    heap_init, mk_attest_status, mk_exit, mk_ipc_recv_from, mk_surface_release, mk_time_millis,
-    mk_yield, AttestStatus, INPUT_KIND_KEY_DOWN,
+    heap_init, mk_attest_status, mk_exit, mk_ipc_recv_from, mk_surface_release, mk_yield,
+    AttestStatus, INPUT_KIND_KEY_DOWN,
 };
 
-const DWELL_MS: u64 = 2500;
 const DWELL_SPINS: u32 = 300_000;
 const READY_ATTEMPTS: u32 = 256;
 
@@ -78,14 +77,13 @@ fn wait_compositor() -> Option<u32> {
 }
 
 fn interact(comp: u32, base: u64, w: u32, h: u32, stride: u32, att: &AttestStatus, badge: Option<bool>) {
-    let start = mk_time_millis();
     let spx = stride as usize / 4;
     let mut rx = [0u8; 64];
     let mut sender = 0u32;
     let mut show_detail = false;
     let mut spins: u32 = 0;
     let mut frame: u32 = 0;
-    while show_detail || !dwell_done(start, spins) {
+    while show_detail || spins < DWELL_SPINS {
         spins = spins.saturating_add(1);
         let n = mk_ipc_recv_from(0, rx.as_mut_ptr(), rx.len(), 16, &mut sender);
         if n <= 0 {
@@ -114,11 +112,3 @@ fn interact(comp: u32, base: u64, w: u32, h: u32, stride: u32, att: &AttestStatu
     }
 }
 
-fn dwell_done(start: i64, spins: u32) -> bool {
-    let now = mk_time_millis();
-    if start >= 0 && now >= 0 {
-        (now - start) as u64 >= DWELL_MS
-    } else {
-        spins >= DWELL_SPINS
-    }
-}
