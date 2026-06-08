@@ -35,7 +35,6 @@ fn commit(ctx: &Context) {
     if ctx.host_len > 0 {
         let _ = policy::set_str(p, Field::Hostname as u32, &ctx.host_buf[..ctx.host_len]);
     }
-    let _ = policy::set_bool(p, Field::SystemKeysGenerated as u32, true);
 }
 
 pub fn on_key(ctx: &mut Context, code: u32) -> Outcome {
