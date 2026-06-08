@@ -38,7 +38,7 @@
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
 .PHONY: nonos-mk-fmt
 .PHONY: nonos-mk-toolchain nonos-mk-check-deps
-.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live nonos-mk-zk-demo nonos-mk-zk-demo-all
+.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live nonos-mk-attestation
 
 # Compatibility aliases (transitional, do not remove until callers move)
 .PHONY: kernel-capsules kernel-keyring-smoketest kernel-ramfs-smoketest
@@ -322,66 +322,56 @@ nonos-mk-zk-verify-live: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_V
 	printf '\n  %s passed   %s failed   real pairing checks against vk %s\n\n' "$$pass" "$$fail" "$(NONOS_VK_FPR)"; \
 	[ "$$fail" -eq 0 ]
 
-# Step through the real Groth16 verification of one capsule, slowly, showing
-# the actual proof points and public inputs before the live pairing check.
-# CAP selects the capsule (default terminal); SLOW sets the per-step delay.
-CAP  ?= terminal
+# Verify capsule attestation with the real Groth16 pairing checks, live.
+# Default: walk every capsule. CAP=<name>: full single-capsule view (proof
+# points and all seven public inputs). SLOW sets the per-step delay.
+CAP  ?=
 SLOW ?= 0.5
-nonos-mk-zk-demo: $(ZK_VERIFY_TOOL) $(ZK_VERIFYING_KEY)
-	@t=$(NONOS_TRUST_DIR)/capsules/$(CAP).zk_trailer.bin; \
-	z=target/capsule-attest/$(CAP).capsule.zk; \
-	{ [ -e "$$t" ] && [ -e "$$z" ]; } || { printf '\n  no artifacts for %s; build first: make nonos-mk-desktop-gui-prod\n\n' "$(CAP)"; exit 1; }; \
-	printf '\n  groth16 attestation, step by step   capsule %s   bls12-381\n\n' "$(CAP)"; sleep $(SLOW); \
-	printf '  proof pi-A  (G1, 48 bytes)\n    %s\n' "$$(od -An -tx1 -j 12 -N 48 "$$t" | tr -d ' \n')"; sleep $(SLOW); \
-	printf '  proof pi-B  (G2, 96 bytes)\n    %s\n' "$$(od -An -tx1 -j 60 -N 96 "$$t" | tr -d ' \n')"; sleep $(SLOW); \
-	printf '  proof pi-C  (G1, 48 bytes)\n    %s\n\n' "$$(od -An -tx1 -j 156 -N 48 "$$t" | tr -d ' \n')"; sleep $(SLOW); \
-	printf '  public inputs (7 field elements bound by the proof):\n'; \
-	i=0; for l in capsule_hash_hi capsule_hash_lo program_hash_hi program_hash_lo capability_mask commitment_hi commitment_lo; do \
-		off=$$((208 + i * 32)); \
-		v=$$(od -An -tx1 -j $$off -N 32 "$$t" | tr -d ' \n'); \
-		printf '    [%d] %-16s %s\n' "$$i" "$$l" "$$v"; \
-		i=$$((i + 1)); sleep $(SLOW); \
-	done; \
-	printf '\n  verifier equation:  e(A,B) == e(alpha,beta) . e(L,gamma) . e(C,delta)\n'; sleep $(SLOW); \
-	printf '  L is the public-input combination over the gamma_abc bases\n\n'; sleep $(SLOW); \
-	printf '  computing the pairings on the real points ... '; sleep $(SLOW); \
-	if $(ZK_VERIFY_TOOL) --verifying-key $(ZK_VERIFYING_KEY) --capsule "$$z" >/dev/null 2>&1; then \
-		printf 'PASS\n\n  the proof satisfies the pairing equation under vk %s\n\n' "$(NONOS_VK_FPR)"; \
-	else \
-		printf 'FAIL\n\n'; exit 1; \
-	fi
-
-# The full walk over every capsule, live: for each one print its proof point
-# and bound inputs, then run the real pairing check. SLOW sets the per-capsule
-# delay. Exits non-zero if any proof fails.
-nonos-mk-zk-demo-all: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_VERIFYING_KEY)
-	@total=$$(ls $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin 2>/dev/null | wc -l | tr -d ' '); \
-	printf '\n  groth16 attestation walk   %s capsules   bls12-381   vk %s\n' "$$total" "$(NONOS_VK_FPR)"; \
-	n=0; pass=0; fail=0; \
-	for t in $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin; do \
-		[ -e "$$t" ] || continue; \
-		name=$$(basename "$$t" .zk_trailer.bin); \
-		z=target/capsule-attest/$$name.capsule.zk; \
-		n=$$((n + 1)); \
-		a=$$(od -An -tx1 -j 12 -N 24 "$$t" | tr -d ' \n'); \
-		caps=$$(od -An -tx1 -j 360 -N 8 "$$t" | tr -d ' \n'); \
-		chash=$$(od -An -tx1 -j 224 -N 16 "$$t" | tr -d ' \n'); \
-		comm=$$(od -An -tx1 -j 432 -N 16 "$$t" | tr -d ' \n'); \
-		printf '\n  [%2d/%s] %s\n' "$$n" "$$total" "$$name"; \
-		printf '         proof-A   %s..\n' "$$a"; \
-		printf '         caps      0x%s\n' "$$caps"; \
-		printf '         hash      %s..\n' "$$chash"; \
-		printf '         commit    %s..\n' "$$comm"; \
-		printf '         e(A,B)==e(a,b).e(L,g).e(C,d)  ... '; \
+nonos-mk-attestation: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_VERIFYING_KEY)
+	@if [ -n "$(CAP)" ]; then \
+		t=$(NONOS_TRUST_DIR)/capsules/$(CAP).zk_trailer.bin; \
+		z=target/capsule-attest/$(CAP).capsule.zk; \
+		{ [ -e "$$t" ] && [ -e "$$z" ]; } || { printf '\n  no artifacts for %s; build first: make nonos-mk-desktop-gui-prod\n\n' "$(CAP)"; exit 1; }; \
+		printf '\n  groth16 capsule attestation   %s   bls12-381   vk %s\n\n' "$(CAP)" "$(NONOS_VK_FPR)"; sleep $(SLOW); \
+		printf '  proof pi-A  (G1, 48 bytes)\n    %s\n' "$$(od -An -tx1 -j 12 -N 48 "$$t" | tr -d ' \n')"; sleep $(SLOW); \
+		printf '  proof pi-B  (G2, 96 bytes)\n    %s\n' "$$(od -An -tx1 -j 60 -N 96 "$$t" | tr -d ' \n')"; sleep $(SLOW); \
+		printf '  proof pi-C  (G1, 48 bytes)\n    %s\n\n' "$$(od -An -tx1 -j 156 -N 48 "$$t" | tr -d ' \n')"; sleep $(SLOW); \
+		printf '  public inputs (7 field elements bound by the proof):\n'; \
+		i=0; for l in capsule_hash_hi capsule_hash_lo program_hash_hi program_hash_lo capability_mask commitment_hi commitment_lo; do \
+			off=$$((208 + i * 32)); \
+			v=$$(od -An -tx1 -j $$off -N 32 "$$t" | tr -d ' \n'); \
+			printf '    [%d] %-16s %s\n' "$$i" "$$l" "$$v"; \
+			i=$$((i + 1)); sleep $(SLOW); \
+		done; \
+		printf '\n  e(A,B) == e(alpha,beta) . e(L,gamma) . e(C,delta)   ... '; sleep $(SLOW); \
 		if $(ZK_VERIFY_TOOL) --verifying-key $(ZK_VERIFYING_KEY) --capsule "$$z" >/dev/null 2>&1; then \
-			printf 'PASS\n'; pass=$$((pass + 1)); \
-		else \
-			printf 'FAIL\n'; fail=$$((fail + 1)); \
-		fi; \
-		sleep $(SLOW); \
-	done; \
-	printf '\n  %s proofs verified   %s failed   every capsule, real pairing checks\n\n' "$$pass" "$$fail"; \
-	[ "$$fail" -eq 0 ]
+			printf 'PASS\n\n  the proof satisfies the pairing equation under vk %s\n\n' "$(NONOS_VK_FPR)"; \
+		else printf 'FAIL\n\n'; exit 1; fi; \
+	else \
+		total=$$(ls $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin 2>/dev/null | wc -l | tr -d ' '); \
+		printf '\n  groth16 capsule attestation   %s capsules   bls12-381   vk %s\n' "$$total" "$(NONOS_VK_FPR)"; \
+		n=0; pass=0; fail=0; \
+		for t in $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin; do \
+			[ -e "$$t" ] || continue; \
+			name=$$(basename "$$t" .zk_trailer.bin); \
+			z=target/capsule-attest/$$name.capsule.zk; \
+			n=$$((n + 1)); \
+			a=$$(od -An -tx1 -j 12 -N 24 "$$t" | tr -d ' \n'); \
+			caps=$$(od -An -tx1 -j 360 -N 8 "$$t" | tr -d ' \n'); \
+			chash=$$(od -An -tx1 -j 224 -N 16 "$$t" | tr -d ' \n'); \
+			comm=$$(od -An -tx1 -j 432 -N 16 "$$t" | tr -d ' \n'); \
+			printf '\n  [%2d/%s] %s\n' "$$n" "$$total" "$$name"; \
+			printf '         proof-A %s..   caps 0x%s\n' "$$a" "$$caps"; \
+			printf '         hash %s..   commit %s..\n' "$$chash" "$$comm"; \
+			printf '         e(A,B)==e(a,b).e(L,g).e(C,d)  ... '; \
+			if $(ZK_VERIFY_TOOL) --verifying-key $(ZK_VERIFYING_KEY) --capsule "$$z" >/dev/null 2>&1; then \
+				printf 'PASS\n'; pass=$$((pass + 1)); \
+			else printf 'FAIL\n'; fail=$$((fail + 1)); fi; \
+			sleep $(SLOW); \
+		done; \
+		printf '\n  %s proofs verified   %s failed   every capsule, real pairing checks\n\n' "$$pass" "$$fail"; \
+		[ "$$fail" -eq 0 ]; \
+	fi
 
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
