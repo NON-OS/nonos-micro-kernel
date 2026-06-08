@@ -38,7 +38,7 @@
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
 .PHONY: nonos-mk-fmt
 .PHONY: nonos-mk-toolchain nonos-mk-check-deps
-.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live nonos-mk-zk-demo
+.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live nonos-mk-zk-demo nonos-mk-zk-demo-all
 
 # Compatibility aliases (transitional, do not remove until callers move)
 .PHONY: kernel-capsules kernel-keyring-smoketest kernel-ramfs-smoketest
@@ -350,6 +350,38 @@ nonos-mk-zk-demo: $(ZK_VERIFY_TOOL) $(ZK_VERIFYING_KEY)
 	else \
 		printf 'FAIL\n\n'; exit 1; \
 	fi
+
+# The full walk over every capsule, live: for each one print its proof point
+# and bound inputs, then run the real pairing check. SLOW sets the per-capsule
+# delay. Exits non-zero if any proof fails.
+nonos-mk-zk-demo-all: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_VERIFYING_KEY)
+	@total=$$(ls $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin 2>/dev/null | wc -l | tr -d ' '); \
+	printf '\n  groth16 attestation walk   %s capsules   bls12-381   vk %s\n' "$$total" "$(NONOS_VK_FPR)"; \
+	n=0; pass=0; fail=0; \
+	for t in $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin; do \
+		[ -e "$$t" ] || continue; \
+		name=$$(basename "$$t" .zk_trailer.bin); \
+		z=target/capsule-attest/$$name.capsule.zk; \
+		n=$$((n + 1)); \
+		a=$$(od -An -tx1 -j 12 -N 24 "$$t" | tr -d ' \n'); \
+		caps=$$(od -An -tx1 -j 360 -N 8 "$$t" | tr -d ' \n'); \
+		chash=$$(od -An -tx1 -j 224 -N 16 "$$t" | tr -d ' \n'); \
+		comm=$$(od -An -tx1 -j 432 -N 16 "$$t" | tr -d ' \n'); \
+		printf '\n  [%2d/%s] %s\n' "$$n" "$$total" "$$name"; \
+		printf '         proof-A   %s..\n' "$$a"; \
+		printf '         caps      0x%s\n' "$$caps"; \
+		printf '         hash      %s..\n' "$$chash"; \
+		printf '         commit    %s..\n' "$$comm"; \
+		printf '         e(A,B)==e(a,b).e(L,g).e(C,d)  ... '; \
+		if $(ZK_VERIFY_TOOL) --verifying-key $(ZK_VERIFYING_KEY) --capsule "$$z" >/dev/null 2>&1; then \
+			printf 'PASS\n'; pass=$$((pass + 1)); \
+		else \
+			printf 'FAIL\n'; fail=$$((fail + 1)); \
+		fi; \
+		sleep $(SLOW); \
+	done; \
+	printf '\n  %s proofs verified   %s failed   every capsule, real pairing checks\n\n' "$$pass" "$$fail"; \
+	[ "$$fail" -eq 0 ]
 
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
