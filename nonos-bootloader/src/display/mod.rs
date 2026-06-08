@@ -22,9 +22,10 @@ pub mod log_panel;
 pub mod security;
 
 pub use boot::{
-    animate_hash_reveal, draw_boot_progress, draw_status_line, draw_vignette, init_boot_screen,
-    reset_animation, show_crypto_verification, show_error_screen, show_handoff_message,
-    tick_animation, update_stage, BootCryptoState, StageStatus,
+    animate_hash_reveal, draw_boot_progress, draw_panel, draw_status_line, draw_vignette,
+    draw_wordmark, init_boot_screen, panel_line, reset_animation, show_crypto_verification,
+    show_error_screen, show_handoff_message, tick_animation, update_stage, BootCryptoState,
+    StageStatus,
 };
 pub use constants::*;
 pub use gop::init_gop;

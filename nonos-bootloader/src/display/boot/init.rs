@@ -14,23 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::logo::{LOGO, LOGO_LINE_HEIGHT};
-use crate::display::constants::{COLOR_ACCENT, COLOR_TEXT_DIM, COLOR_TEXT_WHITE};
+use crate::display::constants::COLOR_TEXT_DIM;
 use crate::display::font::draw_string;
-use crate::display::gop::{get_dimensions, is_initialized};
+use crate::display::gop::is_initialized;
 
 pub fn init_boot_screen() {
-    if !is_initialized() { return; }
-    super::vignette::draw_vignette();
-    let (w, _) = get_dimensions();
-    let x = (w.saturating_sub(240)) / 2;
-    for (i, line) in LOGO.iter().enumerate() {
-        let y = 24 + (i as u32) * LOGO_LINE_HEIGHT;
-        let color = if i < 5 { COLOR_ACCENT } else { COLOR_TEXT_DIM };
-        draw_string(x, y, line, color);
+    if !is_initialized() {
+        return;
     }
-    draw_string(40, 140, b"Boot Log:", COLOR_TEXT_WHITE);
-    draw_string(40, 156, b"---------", COLOR_TEXT_DIM);
+    super::vignette::draw_vignette();
+    super::wordmark::draw_wordmark(40, 24);
+    draw_string(40, 62, b"secure attestation boot", COLOR_TEXT_DIM);
 }
 
 pub fn reset_animation() {}

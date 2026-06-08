@@ -14,13 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const LOGO: [&[u8]; 6] = [
-    b" _   _  ___  _   _  ___  ___",
-    b"| \\ | |/ _ \\| \\ | |/ _ \\/ __|",
-    b"|  \\| | | | |  \\| | | | \\__ \\",
-    b"| |\\  | |_| | |\\  | |_| |__) |",
-    b"|_| \\_|\\___/|_| \\_|\\___/____/",
-    b"    Secure Attestation Boot",
-];
+use crate::display::constants::{COLOR_ACCENT, COLOR_ACCENT_DIM};
+use crate::display::font::draw_string_2x;
+use crate::display::gop::is_initialized;
 
-pub const LOGO_LINE_HEIGHT: u32 = 16;
+const WORD: &[u8] = b"N\xd8NOS";
+
+pub fn draw_wordmark(x: u32, y: u32) {
+    if !is_initialized() {
+        return;
+    }
+    draw_string_2x(x.saturating_sub(1), y, WORD, COLOR_ACCENT_DIM);
+    draw_string_2x(x + 1, y, WORD, COLOR_ACCENT_DIM);
+    draw_string_2x(x, y.saturating_sub(1), WORD, COLOR_ACCENT_DIM);
+    draw_string_2x(x, y, WORD, COLOR_ACCENT);
+}
