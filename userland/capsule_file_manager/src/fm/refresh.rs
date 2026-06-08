@@ -25,15 +25,6 @@ pub fn refresh(state: &mut State) {
     if state.owner_pid == 0 {
         state.owner_pid = lookup_service(b"app.file_manager").map(|peer| peer.pid).unwrap_or(0);
     }
-    if state.owner_pid == 0 {
-        if state.entries.is_empty() {
-            state.cursor = 0;
-            state.status = b"vfs unavailable";
-        } else {
-            state.status = b"refresh deferred";
-        }
-        return;
-    }
     match list_paths(state.owner_pid, state.prefix.as_bytes()) {
         Ok(paths) => {
             state.entries = build_entries(state.prefix.as_str(), &paths);
