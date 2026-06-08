@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,19 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::display::constants::COLOR_TEXT_DIM;
-use crate::display::font::draw_string;
-use crate::display::gop::is_initialized;
+use crate::services::lifecycle::CapsuleState;
 
-pub fn init_boot_screen() {
-    if !is_initialized() {
-        return;
-    }
-    super::vignette::draw_vignette();
-    super::wordmark::draw_wordmark(40, 24);
-    draw_string(40, 62, b"secure attestation boot", COLOR_TEXT_DIM);
+static STATE: CapsuleState = CapsuleState::new();
+
+pub(super) fn set_alive(pid: u32) {
+    STATE.set_alive(pid);
 }
 
-pub fn reset_animation() {}
-
-pub fn tick_animation() {}
+pub fn shared_state() -> &'static CapsuleState {
+    &STATE
+}

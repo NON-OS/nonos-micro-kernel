@@ -35,4 +35,4 @@ pub fn draw_panel_header(x: u32, y: u32, w: u32) {
 }
 
 pub fn clear_menu_area() { let (px, py, pw, ph) = get_panel_bounds(); fill_rect(px, py, pw, ph, brand::BG_PRIMARY); }
-pub fn clear_screen() { let (w, h) = get_dimensions(); fill_rect(0, 0, w, h, brand::BG_PRIMARY); }
+pub fn clear_screen() { crate::display::draw_vignette(); }

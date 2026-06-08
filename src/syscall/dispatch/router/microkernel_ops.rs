@@ -37,6 +37,7 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkTimeMillis
             | MkTimeRtc
             | MkBatteryStatus
+            | MkAttestStatus
             | MkCapGrant
             | MkCapRevoke
             | MkCapCheck

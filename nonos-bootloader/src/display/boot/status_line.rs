@@ -14,19 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::display::constants::COLOR_TEXT_DIM;
-use crate::display::font::draw_string;
+use super::chips::draw_chip;
 use crate::display::gop::is_initialized;
 
-pub fn init_boot_screen() {
+pub fn draw_status_line(secure_boot: bool, measured: bool, attested: bool) {
     if !is_initialized() {
         return;
     }
-    super::vignette::draw_vignette();
-    super::wordmark::draw_wordmark(40, 24);
-    draw_string(40, 62, b"secure attestation boot", COLOR_TEXT_DIM);
+    let mut x = 40;
+    x = draw_chip(x, 96, b"SecureBoot", secure_boot as u8 * 2);
+    x = draw_chip(x, 96, b"Measured", measured as u8 * 2);
+    let _ = draw_chip(x, 96, b"Attested", attested as u8 * 2);
 }
-
-pub fn reset_animation() {}
-
-pub fn tick_animation() {}

@@ -30,6 +30,9 @@ pub fn boot_entry(_handle: Handle, mut st: SystemTable<Boot>) -> Status {
         Ok(mode) => mode,
         Err(status) => return status,
     };
+    if gop {
+        nonos_boot::display::init_boot_screen();
+    }
     let security = run_security_checks(&mut st, gop);
     initialize_zk_replay_protection(&st);
     let _hw = run_hardware_discovery(&mut st, gop);

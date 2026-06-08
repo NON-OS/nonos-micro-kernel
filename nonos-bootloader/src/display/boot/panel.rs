@@ -14,19 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::display::constants::COLOR_TEXT_DIM;
+use crate::display::constants::{COLOR_ACCENT, COLOR_BORDER};
 use crate::display::font::draw_string;
-use crate::display::gop::is_initialized;
+use crate::display::gop::{draw_rect, hline};
 
-pub fn init_boot_screen() {
-    if !is_initialized() {
-        return;
-    }
-    super::vignette::draw_vignette();
-    super::wordmark::draw_wordmark(40, 24);
-    draw_string(40, 62, b"secure attestation boot", COLOR_TEXT_DIM);
+pub fn draw_panel(x: u32, y: u32, w: u32, h: u32, title: &[u8]) {
+    draw_rect(x, y, w, h, COLOR_BORDER);
+    draw_string(x + 8, y + 4, title, COLOR_ACCENT);
+    hline(x, y + 22, w, COLOR_BORDER);
 }
 
-pub fn reset_animation() {}
-
-pub fn tick_animation() {}
+pub fn panel_line(x: u32, y: u32, prefix: &[u8], prefix_color: u32, text: &[u8], text_color: u32) {
+    draw_string(x + 8, y, prefix, prefix_color);
+    draw_string(x + 40, y, text, text_color);
+}

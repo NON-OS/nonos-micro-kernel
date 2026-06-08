@@ -28,6 +28,7 @@
 
 pub mod capsule_about;
 pub mod capsule_attest;
+pub mod capsule_boot_splash;
 pub mod capsule_calculator;
 pub mod capsule_clipboard;
 pub mod capsule_compositor;

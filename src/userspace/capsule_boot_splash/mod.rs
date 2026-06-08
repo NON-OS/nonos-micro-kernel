@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,13 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const LOGO: [&[u8]; 6] = [
-    b" _   _  ___  _   _  ___  ___",
-    b"| \\ | |/ _ \\| \\ | |/ _ \\/ __|",
-    b"|  \\| | | | |  \\| | | | \\__ \\",
-    b"| |\\  | |_| | |\\  | |_| |__) |",
-    b"|_| \\_|\\___/|_| \\_|\\___/____/",
-    b"    Secure Attestation Boot",
-];
+mod embed;
+mod spawn;
+mod state;
 
-pub const LOGO_LINE_HEIGHT: u32 = 16;
+pub use spawn::spawn_boot_splash_capsule;
+pub use state::shared_state;

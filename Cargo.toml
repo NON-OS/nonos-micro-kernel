@@ -84,6 +84,7 @@ nonos-capsule-attest            = []
 nonos-capsule-power             = []
 nonos-capsule-image-codec       = []
 nonos-capsule-about             = []
+nonos-capsule-boot-splash       = []
 nonos-capsule-calculator        = []
 nonos-capsule-terminal          = []
 nonos-capsule-file-manager      = []
@@ -497,6 +498,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-wallpaper-catalog",
   "nonos-capsule-toolkit",
   "nonos-capsule-about",
+  "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
   "nonos-capsule-terminal",
   "nonos-capsule-file-manager",

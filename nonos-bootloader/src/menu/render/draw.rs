@@ -26,12 +26,10 @@ pub use super::panel::{clear_menu_area, clear_screen};
 
 pub fn draw_logo() {
     let (sw, _) = get_dimensions();
-    let logo_w = brand::LOGO[0].len() as u32 * 8;
     let cx = (sw - PANEL_WIDTH - MARGIN * 2) / 2;
-    let x = cx.saturating_sub(logo_w / 2);
-    for (i, line) in brand::LOGO.iter().enumerate() { draw_string(x, 80 + i as u32 * 18, line, brand::ACCENT_PRIMARY); }
+    crate::display::draw_wordmark(cx.saturating_sub(40), 120);
     let tw = brand::TAGLINE.len() as u32 * 8;
-    draw_string(cx.saturating_sub(tw / 2), 190, brand::TAGLINE, brand::TEXT_SECONDARY);
+    draw_string(cx.saturating_sub(tw / 2), 172, brand::TAGLINE, brand::TEXT_SECONDARY);
 }
 
 pub fn render_menu(state: &MenuState) {
