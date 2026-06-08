@@ -17,10 +17,9 @@
 use crate::protocol::{E_OK, OP_FLUSH_CACHE};
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
-use crate::state::{now_ms, CACHE};
+use crate::state::CACHE;
 
 pub fn handle(sender_pid: u32, req: &Request, tx: &mut [u8]) {
     CACHE.lock().tick(u64::MAX);
-    let _ = now_ms();
     let _ = respond(sender_pid, OP_FLUSH_CACHE, E_OK, req.request_id, 0, tx);
 }
