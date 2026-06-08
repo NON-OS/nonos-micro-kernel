@@ -24,20 +24,20 @@ use crate::protocol::{
 };
 use crate::store::Store;
 
-pub fn dispatch(store: &mut Store, req: Request<'_>) -> Vec<u8> {
+pub fn dispatch(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
     match req.op {
-        OP_STORE => handlers::store(store, req),
-        OP_RETRIEVE => handlers::retrieve(store, req),
-        OP_DELETE => handlers::delete(store, req),
-        OP_LOCK => handlers::lock(store, req),
-        OP_UNLOCK => handlers::unlock(store, req),
-        OP_METADATA => handlers::metadata(store, req),
-        OP_COUNT => handlers::count(store, req),
-        OP_WALLET_IMPORT => handlers::wallet_import(store, req),
-        OP_WALLET_GENERATE => handlers::wallet_generate(store, req),
-        OP_WALLET_ADDRESS => handlers::wallet_address(store, req),
-        OP_SIGN_NOX_RECEIPT => handlers::sign_receipt(store, req),
-        OP_SIGN_NOX_APPROVE => handlers::sign_approve(store, req),
+        OP_STORE => handlers::store(store, req, sender_pid),
+        OP_RETRIEVE => handlers::retrieve(store, req, sender_pid),
+        OP_DELETE => handlers::delete(store, req, sender_pid),
+        OP_LOCK => handlers::lock(store, req, sender_pid),
+        OP_UNLOCK => handlers::unlock(store, req, sender_pid),
+        OP_METADATA => handlers::metadata(store, req, sender_pid),
+        OP_COUNT => handlers::count(store, req, sender_pid),
+        OP_WALLET_IMPORT => handlers::wallet_import(store, req, sender_pid),
+        OP_WALLET_GENERATE => handlers::wallet_generate(store, req, sender_pid),
+        OP_WALLET_ADDRESS => handlers::wallet_address(store, req, sender_pid),
+        OP_SIGN_NOX_RECEIPT => handlers::sign_receipt(store, req, sender_pid),
+        OP_SIGN_NOX_APPROVE => handlers::sign_approve(store, req, sender_pid),
         _ => encode_response(req.seq, EINVAL, &[]),
     }
 }

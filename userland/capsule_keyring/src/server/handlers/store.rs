@@ -16,17 +16,21 @@
 
 use alloc::vec::Vec;
 
-use crate::protocol::{encode_response, Request, EINVAL, ENOSPC};
+use crate::protocol::{encode_response, Request, EACCES, EINVAL, ENOSPC};
 use crate::store::{KeyType, Store, StoreError};
 
 const HDR: usize = 4 + 8 + 8 + 1 + 2;
 
-pub fn store(store: &mut Store, req: Request<'_>) -> Vec<u8> {
+pub fn store(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
     if req.payload.len() < HDR {
         return encode_response(req.seq, EINVAL, &[]);
     }
     let p = req.payload;
-    let caller_pid = u32::from_le_bytes([p[0], p[1], p[2], p[3]]);
+    let payload_pid = u32::from_le_bytes([p[0], p[1], p[2], p[3]]);
+    let caller_pid = match super::super::caller::resolve_caller(payload_pid, sender_pid) {
+        Some(pid) => pid,
+        None => return encode_response(req.seq, EACCES, &[]),
+    };
     let now = u64::from_le_bytes([p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11]]);
     let expires_at = u64::from_le_bytes([p[12], p[13], p[14], p[15], p[16], p[17], p[18], p[19]]);
     let key_type = match KeyType::from_u8(p[20]) {

@@ -19,12 +19,16 @@ use alloc::vec::Vec;
 use crate::protocol::{encode_response, Request, EACCES, EBUSY, EINVAL, ENOENT};
 use crate::store::{Store, StoreError};
 
-pub fn retrieve(store: &mut Store, req: Request<'_>) -> Vec<u8> {
+pub fn retrieve(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
     if req.payload.len() != 8 {
         return encode_response(req.seq, EINVAL, &[]);
     }
     let p = req.payload;
-    let caller_pid = u32::from_le_bytes([p[0], p[1], p[2], p[3]]);
+    let payload_pid = u32::from_le_bytes([p[0], p[1], p[2], p[3]]);
+    let caller_pid = match super::super::caller::resolve_caller(payload_pid, sender_pid) {
+        Some(pid) => pid,
+        None => return encode_response(req.seq, EACCES, &[]),
+    };
     let id = u32::from_le_bytes([p[4], p[5], p[6], p[7]]);
     match store.retrieve(id, caller_pid) {
         Ok(data) => encode_response(req.seq, 0, &data),
