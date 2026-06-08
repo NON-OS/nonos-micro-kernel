@@ -23,10 +23,8 @@
 
 mod error;
 mod layout;
-mod registry;
 mod trailer;
 mod verify;
 
 pub use error::AttestError;
-pub use registry::trailer_for;
 pub use verify::verify_capsule_attestation;
