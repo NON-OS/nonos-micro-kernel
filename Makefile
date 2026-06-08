@@ -38,7 +38,7 @@
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
 .PHONY: nonos-mk-fmt
 .PHONY: nonos-mk-toolchain nonos-mk-check-deps
-.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live
+.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live nonos-mk-zk-demo
 
 # Compatibility aliases (transitional, do not remove until callers move)
 .PHONY: kernel-capsules kernel-keyring-smoketest kernel-ramfs-smoketest
@@ -321,6 +321,35 @@ nonos-mk-zk-verify-live: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_V
 	done; \
 	printf '\n  %s passed   %s failed   real pairing checks against vk %s\n\n' "$$pass" "$$fail" "$(NONOS_VK_FPR)"; \
 	[ "$$fail" -eq 0 ]
+
+# Step through the real Groth16 verification of one capsule, slowly, showing
+# the actual proof points and public inputs before the live pairing check.
+# CAP selects the capsule (default terminal); SLOW sets the per-step delay.
+CAP  ?= terminal
+SLOW ?= 0.5
+nonos-mk-zk-demo: $(ZK_VERIFY_TOOL) $(ZK_VERIFYING_KEY)
+	@t=$(NONOS_TRUST_DIR)/capsules/$(CAP).zk_trailer.bin; \
+	z=target/capsule-attest/$(CAP).capsule.zk; \
+	{ [ -e "$$t" ] && [ -e "$$z" ]; } || { printf '\n  no artifacts for %s; build first: make nonos-mk-desktop-gui-prod\n\n' "$(CAP)"; exit 1; }; \
+	printf '\n  groth16 attestation, step by step   capsule %s   bls12-381\n\n' "$(CAP)"; sleep $(SLOW); \
+	printf '  proof pi-A  (G1, 48 bytes)\n    %s\n' "$$(od -An -tx1 -j 12 -N 48 "$$t" | tr -d ' \n')"; sleep $(SLOW); \
+	printf '  proof pi-B  (G2, 96 bytes)\n    %s\n' "$$(od -An -tx1 -j 60 -N 96 "$$t" | tr -d ' \n')"; sleep $(SLOW); \
+	printf '  proof pi-C  (G1, 48 bytes)\n    %s\n\n' "$$(od -An -tx1 -j 156 -N 48 "$$t" | tr -d ' \n')"; sleep $(SLOW); \
+	printf '  public inputs (7 field elements bound by the proof):\n'; \
+	i=0; for l in capsule_hash_hi capsule_hash_lo program_hash_hi program_hash_lo capability_mask commitment_hi commitment_lo; do \
+		off=$$((208 + i * 32)); \
+		v=$$(od -An -tx1 -j $$off -N 32 "$$t" | tr -d ' \n'); \
+		printf '    [%d] %-16s %s\n' "$$i" "$$l" "$$v"; \
+		i=$$((i + 1)); sleep $(SLOW); \
+	done; \
+	printf '\n  verifier equation:  e(A,B) == e(alpha,beta) . e(L,gamma) . e(C,delta)\n'; sleep $(SLOW); \
+	printf '  L is the public-input combination over the gamma_abc bases\n\n'; sleep $(SLOW); \
+	printf '  computing the pairings on the real points ... '; sleep $(SLOW); \
+	if $(ZK_VERIFY_TOOL) --verifying-key $(ZK_VERIFYING_KEY) --capsule "$$z" >/dev/null 2>&1; then \
+		printf 'PASS\n\n  the proof satisfies the pairing equation under vk %s\n\n' "$(NONOS_VK_FPR)"; \
+	else \
+		printf 'FAIL\n\n'; exit 1; \
+	fi
 
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
