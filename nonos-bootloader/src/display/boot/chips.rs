@@ -14,15 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::chips::draw_chip;
-use crate::display::gop::is_initialized;
+use crate::display::constants::{COLOR_BORDER, COLOR_SUCCESS, COLOR_TEXT_DIM, COLOR_WARNING};
+use crate::display::font::draw_string;
+use crate::display::gop::draw_rect;
 
-pub fn draw_status_line(secure_boot: bool, measured: bool, attested: bool) {
-    if !is_initialized() {
-        return;
-    }
-    let mut x = 40;
-    x = draw_chip(x, 96, b"SecureBoot", secure_boot as u8 * 2);
-    x = draw_chip(x, 96, b"Measured", measured as u8 * 2);
-    let _ = draw_chip(x, 96, b"Attested", attested as u8 * 2);
+pub fn draw_chip(x: u32, y: u32, label: &[u8], state: u8) -> u32 {
+    let color = match state {
+        2 => COLOR_SUCCESS,
+        1 => COLOR_WARNING,
+        _ => COLOR_TEXT_DIM,
+    };
+    let w = label.len() as u32 * 8 + 12;
+    draw_rect(x, y, w, 18, COLOR_BORDER);
+    draw_string(x + 6, y + 1, label, color);
+    x + w + 8
 }
