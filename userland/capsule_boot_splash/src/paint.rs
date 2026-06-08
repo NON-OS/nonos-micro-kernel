@@ -17,30 +17,59 @@
 use nonos_toolkit::font::atlas::FontAtlas;
 use nonos_toolkit::font::render::{draw_text, draw_text_scaled};
 
-const BG: u32 = 0xFF00_0000;
-const FG: u32 = 0xFFE8_F0F8;
+use crate::chrome::panel;
+
+const DIM: u32 = 0xFF5B_6B78;
 const ACCENT: u32 = 0xFF00_D4AA;
+const ACCENT_DIM: u32 = 0xFF00_5544;
 const OK: u32 = 0xFF00_CC66;
 const WARN: u32 = 0xFFFF_AA00;
+const BAND: u32 = 0xFF03_0D0B;
 const TITLE_SCALE: u32 = 5;
+const SPIN: &[u8] = b"|/-\\";
 
 pub(crate) fn splash(base: u64, w: u32, h: u32, stride: u32, attested: Option<bool>) {
     let spx = stride as usize / 4;
     let buf = unsafe { core::slice::from_raw_parts_mut(base as *mut u32, spx * h as usize) };
-    for p in buf.iter_mut() {
-        *p = BG;
+    crate::vignette::fill(buf, spx, w, h);
+    let atlas = FontAtlas::default();
+    let title = b"N\xd8NOS";
+    let tw = atlas.text_width(title) * TITLE_SCALE;
+    let tx = w.saturating_sub(tw) / 2;
+    let ty = h / 2 - 96;
+    draw_text_scaled(buf, spx, w, h, tx.saturating_sub(1), ty, title, ACCENT_DIM, TITLE_SCALE);
+    draw_text_scaled(buf, spx, w, h, tx, ty, title, ACCENT, TITLE_SCALE);
+    attest_panel(buf, spx, w, h, attested);
+    status(buf, spx, w, h, 0);
+}
+
+fn attest_panel(buf: &mut [u32], spx: usize, w: u32, h: u32, attested: Option<bool>) {
+    let pw = 300;
+    let px = w.saturating_sub(pw) / 2;
+    let py = h / 2;
+    panel(buf, spx, w, h, px, py, pw, 86, b"boot-chain attestation");
+    draw_text(buf, spx, w, h, px + 10, py + 30, b"[+] kernel  blake3 ok", OK);
+    draw_text(buf, spx, w, h, px + 10, py + 48, b"[#] zk      groth16 ok", ACCENT);
+    if let Some(ok) = attested {
+        let (t, c): (&[u8], u32) = if ok { (b"ATTESTED", OK) } else { (b"UNVERIFIED", WARN) };
+        draw_text(buf, spx, w, h, px + 10, py + 66, t, c);
+    }
+}
+
+pub(crate) fn status(buf: &mut [u32], spx: usize, w: u32, h: u32, frame: u32) {
+    let y = h / 2 + 116;
+    for row in y..y + 16 {
+        let base = row as usize * spx;
+        for col in 0..w as usize {
+            buf[base + col] = BAND;
+        }
     }
     let atlas = FontAtlas::default();
-    let title = b"NONOS";
-    let tw = atlas.text_width(title) * TITLE_SCALE;
-    draw_text_scaled(buf, spx, w, h, w.saturating_sub(tw) / 2, h / 2 - 48, title, ACCENT, TITLE_SCALE);
-    let sub = b"initializing...";
-    let sx = w.saturating_sub(atlas.text_width(sub)) / 2;
-    draw_text(buf, spx, w, h, sx, h / 2 + 24, sub, FG);
-    if let Some(ok) = attested {
-        let (text, color): (&[u8], u32) =
-            if ok { (b"ATTESTED", OK) } else { (b"UNVERIFIED", WARN) };
-        let bx = w.saturating_sub(atlas.text_width(text)) / 2;
-        draw_text(buf, spx, w, h, bx, h / 2 + 56, text, color);
-    }
+    let sp = [SPIN[(frame % 4) as usize]];
+    let cur: &[u8] = if frame & 1 == 0 { b"_" } else { b" " };
+    let label = b"initializing";
+    let x = w.saturating_sub(atlas.text_width(label) + 24) / 2;
+    draw_text(buf, spx, w, h, x, y, &sp, ACCENT);
+    draw_text(buf, spx, w, h, x + 16, y, label, DIM);
+    draw_text(buf, spx, w, h, x + 16 + atlas.text_width(label) + 4, y, cur, ACCENT);
 }
