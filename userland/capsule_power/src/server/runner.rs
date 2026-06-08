@@ -16,7 +16,7 @@
 
 use alloc::vec;
 
-use nonos_libc::{mk_ipc_recv, mk_ipc_send, mk_yield};
+use nonos_libc::{mk_ipc_recv_from, mk_ipc_reply, mk_yield};
 
 use super::handlers::route;
 use crate::protocol::IPC_PAYLOAD_MAX;
@@ -30,19 +30,21 @@ pub fn run() -> ! {
     let mut out_buf = vec![0u8; IPC_PAYLOAD_MAX];
     let mut state = PowerState::new();
     loop {
-        let received = mk_ipc_recv(
+        let mut sender_pid = 0u32;
+        let received = mk_ipc_recv_from(
             SERVICE_PORT,
             in_buf.as_mut_ptr(),
             in_buf.len(),
             RECV_TIMEOUT_MS,
+            &mut sender_pid,
         );
-        if received <= 0 {
+        if received <= 0 || sender_pid == 0 {
             mk_yield();
             continue;
         }
         let n = route(&mut state, &in_buf[..received as usize], &mut out_buf);
         if n > 0 {
-            let _ = mk_ipc_send(SERVICE_PORT, out_buf.as_ptr(), n);
+            let _ = mk_ipc_reply(sender_pid, out_buf.as_ptr(), n);
         }
     }
 }
