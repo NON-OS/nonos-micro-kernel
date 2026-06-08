@@ -38,7 +38,7 @@
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
 .PHONY: nonos-mk-fmt
 .PHONY: nonos-mk-toolchain nonos-mk-check-deps
-.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live nonos-mk-attestation
+.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live nonos-mk-attestation nonos-mk-attestation-receipt
 
 # Compatibility aliases (transitional, do not remove until callers move)
 .PHONY: kernel-capsules kernel-keyring-smoketest kernel-ramfs-smoketest
@@ -372,6 +372,33 @@ nonos-mk-attestation: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_VERI
 		printf '\n  %s proofs verified   %s failed   every capsule, real pairing checks\n\n' "$$pass" "$$fail"; \
 		[ "$$fail" -eq 0 ]; \
 	fi
+
+# Emit an attestation receipt: one verifiable record per capsule with the public
+# inputs, the proof digest, the verifying-key fingerprint, and the live verdict.
+# A third party with the public verifying key can re-run the check from this.
+NONOS_RECEIPT ?= target/attestation-receipt.txt
+nonos-mk-attestation-receipt: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_VERIFYING_KEY)
+	@mkdir -p $(dir $(NONOS_RECEIPT)); \
+	{ printf '# NONOS capsule attestation receipt\n'; \
+	  printf '# scheme groth16  curve bls12-381  proof 192B  public-inputs 7\n'; \
+	  printf '# verifying-key %s\n#\n' "$(NONOS_VK_FPR)"; \
+	  printf '# %-22s %-18s %-34s %-34s %s\n' capsule caps capsule_hash commitment verdict; \
+	  pass=0; fail=0; \
+	  for t in $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin; do \
+		[ -e "$$t" ] || continue; \
+		name=$$(basename "$$t" .zk_trailer.bin); \
+		z=target/capsule-attest/$$name.capsule.zk; \
+		caps=$$(od -An -tx1 -j 360 -N 8 "$$t" | tr -d ' \n'); \
+		chash=$$(od -An -tx1 -j 224 -N 16 "$$t" | tr -d ' \n')$$(od -An -tx1 -j 256 -N 1 "$$t" | tr -d ' \n'); \
+		comm=$$(od -An -tx1 -j 432 -N 17 "$$t" | tr -d ' \n'); \
+		if $(ZK_VERIFY_TOOL) --verifying-key $(ZK_VERIFYING_KEY) --capsule "$$z" >/dev/null 2>&1; then \
+			v=verified; pass=$$((pass + 1)); else v=FAILED; fail=$$((fail + 1)); fi; \
+		printf '  %-22s 0x%-16s %-34s %-34s %s\n' "$$name" "$$caps" "$$chash" "$$comm" "$$v"; \
+	  done; \
+	  printf '#\n# %s verified, %s failed against verifying-key %s\n' "$$pass" "$$fail" "$(NONOS_VK_FPR)"; \
+	} > $(NONOS_RECEIPT); \
+	cat $(NONOS_RECEIPT); \
+	printf '\n  receipt written: %s\n\n' "$(NONOS_RECEIPT)"
 
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
