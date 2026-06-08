@@ -18,10 +18,14 @@ const CORE: u32 = 0xFF06_201C;
 const BG: u32 = 0xFF00_0000;
 
 pub(crate) fn fill(buf: &mut [u32], spx: usize, w: u32, h: u32) {
+    fill_band(buf, spx, w, h, 0, h);
+}
+
+pub(crate) fn fill_band(buf: &mut [u32], spx: usize, w: u32, h: u32, y0: u32, rows: u32) {
     let cx = w as i64 / 2;
     let cy = h as i64 * 38 / 100;
     let r2 = ((w as i64 * w as i64) / 3).max(1);
-    for y in 0..h as i64 {
+    for y in y0 as i64..(y0 + rows) as i64 {
         for x in 0..w as i64 {
             let dx = x - cx;
             let dy = (y - cy) * 12 / 10;

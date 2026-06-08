@@ -24,7 +24,6 @@ const ACCENT: u32 = 0xFF00_D4AA;
 const ACCENT_DIM: u32 = 0xFF00_5544;
 const OK: u32 = 0xFF00_CC66;
 const WARN: u32 = 0xFFFF_AA00;
-const BAND: u32 = 0xFF03_0D0B;
 const TITLE_SCALE: u32 = 5;
 const SPIN: &[u8] = b"|/-\\";
 
@@ -58,12 +57,7 @@ fn attest_panel(buf: &mut [u32], spx: usize, w: u32, h: u32, attested: Option<bo
 
 pub(crate) fn status(buf: &mut [u32], spx: usize, w: u32, h: u32, frame: u32) {
     let y = h / 2 + 116;
-    for row in y..y + 16 {
-        let base = row as usize * spx;
-        for col in 0..w as usize {
-            buf[base + col] = BAND;
-        }
-    }
+    crate::vignette::fill_band(buf, spx, w, h, y, 16);
     let atlas = FontAtlas::default();
     let sp = [SPIN[(frame % 4) as usize]];
     let cur: &[u8] = if frame & 1 == 0 { b"_" } else { b" " };
