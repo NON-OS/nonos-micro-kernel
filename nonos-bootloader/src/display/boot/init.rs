@@ -17,11 +17,11 @@
 use super::logo::{LOGO, LOGO_LINE_HEIGHT};
 use crate::display::constants::{COLOR_ACCENT, COLOR_TEXT_DIM, COLOR_TEXT_WHITE};
 use crate::display::font::draw_string;
-use crate::display::gop::{clear_screen, get_dimensions, is_initialized};
+use crate::display::gop::{get_dimensions, is_initialized};
 
 pub fn init_boot_screen() {
     if !is_initialized() { return; }
-    clear_screen(0xFF000000);
+    super::vignette::draw_vignette();
     let (w, _) = get_dimensions();
     let x = (w.saturating_sub(240)) / 2;
     for (i, line) in LOGO.iter().enumerate() {
