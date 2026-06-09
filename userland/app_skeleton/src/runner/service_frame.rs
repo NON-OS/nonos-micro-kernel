@@ -22,6 +22,7 @@ use nonos_libc::mk_display_vsync_wait;
 use super::boot::BootedApp;
 use super::drain_ipc::drain;
 use super::ensure_primed::ensure_primed;
+use super::maximize;
 use super::refresh_input::refresh_input;
 use super::repaint::repaint;
 use super::request_id::next;
@@ -41,7 +42,7 @@ pub(super) fn service_frame<A: App>(
     let result = drain(
         &mut booted.app,
         rx,
-        booted.manifest.width,
+        booted.binding.width,
         peers.wm,
         booted.manifest.window_id,
         request_id,
@@ -51,6 +52,11 @@ pub(super) fn service_frame<A: App>(
     }
     if result.minimize {
         let _ = wm::window_minimize(peers.wm, next(request_id), booted.manifest.window_id);
+        let _ = mk_display_vsync_wait(0);
+        return false;
+    }
+    if result.maximize {
+        maximize::toggle(booted, peers, request_id);
         let _ = mk_display_vsync_wait(0);
         return false;
     }

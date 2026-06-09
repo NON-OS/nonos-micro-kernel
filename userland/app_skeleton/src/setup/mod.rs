@@ -22,9 +22,11 @@ mod input_mask;
 mod open;
 mod register;
 mod request_id;
+mod resize;
 mod submit_scene;
 mod subscribe_input;
 
 pub use binding::WindowBinding;
 pub(crate) use ensure_input_subscription::ensure_input_subscription;
 pub use open::open_window;
+pub use resize::reopen_surface;

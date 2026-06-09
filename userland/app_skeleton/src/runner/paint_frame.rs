@@ -20,6 +20,7 @@ use crate::paint::PaintBuffer;
 use crate::setup::WindowBinding;
 
 use super::paint_close_button::paint_close_button;
+use super::paint_maximize_button::paint_maximize_button;
 use super::paint_minimize_button::paint_minimize_button;
 use super::request_id::next;
 
@@ -40,22 +41,24 @@ pub(super) fn paint<A: App>(
         let mut fb = PaintBuffer {
             pixels,
             stride_words: binding.stride_words,
-            width: manifest.width,
-            height: manifest.height,
+            width: binding.width,
+            height: binding.height,
         };
         app.paint(&mut fb);
-        fb.fill_rect(0, 0, manifest.width, TITLEBAR_FILL_H, TITLEBAR_FILL_ARGB);
+        fb.fill_rect(0, 0, binding.width, TITLEBAR_FILL_H, TITLEBAR_FILL_ARGB);
     }
     let rid = next(request_id);
     let result = toolkit::ui_frame(
         toolkit_port,
         rid,
         binding.surface_handle,
-        manifest.width,
+        binding.width,
         manifest.title,
     );
     let _ = next(request_id);
-    paint_close_button(pixels, binding.stride_words as usize, manifest.width);
-    paint_minimize_button(pixels, binding.stride_words as usize, manifest.width);
+    let stride = binding.stride_words as usize;
+    paint_close_button(pixels, stride, binding.width);
+    paint_minimize_button(pixels, stride, binding.width);
+    paint_maximize_button(pixels, stride, binding.width);
     result
 }

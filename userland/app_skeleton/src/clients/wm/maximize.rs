@@ -14,28 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod boot;
-mod click_focus;
-mod control;
-mod decorations;
-mod dispatch;
-mod drain_ipc;
-mod ensure_primed;
-mod entry;
-mod fail;
-mod fail_boot;
-mod idle;
-mod maximize;
-mod paint_close_button;
-mod paint_frame;
-mod paint_maximize_button;
-mod paint_minimize_button;
-mod paint_once;
-mod prime_frame;
-mod refresh_input;
-mod repaint;
-mod request_id;
-mod service_frame;
-mod teardown;
+use crate::wire::{call_status, NWMP_MAGIC};
 
-pub use entry::run;
+const OP: u16 = 0x000E;
+const BODY_LEN: usize = 24;
+
+pub fn window_maximize(
+    port: u32,
+    request_id: u32,
+    window_id: u32,
+    x: u32,
+    y: u32,
+    w: u32,
+    h: u32,
+) -> Result<(), &'static str> {
+    let mut body = [0u8; BODY_LEN];
+    body[0..4].copy_from_slice(&window_id.to_le_bytes());
+    body[8..12].copy_from_slice(&x.to_le_bytes());
+    body[12..16].copy_from_slice(&y.to_le_bytes());
+    body[16..20].copy_from_slice(&w.to_le_bytes());
+    body[20..24].copy_from_slice(&h.to_le_bytes());
+    let status = call_status(port, NWMP_MAGIC, OP, request_id, &body)?;
+    if status != 0 {
+        return Err("wm rejected window_maximize");
+    }
+    Ok(())
+}

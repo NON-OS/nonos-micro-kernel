@@ -32,6 +32,7 @@ pub(super) fn handle(width: u32, event: InputEvent) -> Option<EventOutcome> {
     match hit_test(width, event.x as u32, event.y as u32) {
         DecorationHit::CloseButton => Some(EventOutcome::Close),
         DecorationHit::MinimizeButton => Some(EventOutcome::Minimize),
+        DecorationHit::MaximizeButton => Some(EventOutcome::Maximize),
         _ => None,
     }
 }

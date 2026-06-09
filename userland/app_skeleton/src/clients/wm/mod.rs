@@ -16,12 +16,14 @@
 
 mod close;
 mod focus;
+mod maximize;
 mod minimize;
 mod open;
 mod raise;
 
 pub use close::window_close;
 pub use focus::window_focus;
+pub use maximize::window_maximize;
 pub use minimize::{window_minimize, window_restore};
 pub use open::{window_open, WindowPlacement};
 pub use raise::window_raise;

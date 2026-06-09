@@ -20,4 +20,5 @@ pub enum EventOutcome {
     Repaint,
     Close,
     Minimize,
+    Maximize,
 }

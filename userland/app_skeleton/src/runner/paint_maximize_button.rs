@@ -14,28 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod boot;
-mod click_focus;
-mod control;
-mod decorations;
-mod dispatch;
-mod drain_ipc;
-mod ensure_primed;
-mod entry;
-mod fail;
-mod fail_boot;
-mod idle;
-mod maximize;
-mod paint_close_button;
-mod paint_frame;
-mod paint_maximize_button;
-mod paint_minimize_button;
-mod paint_once;
-mod prime_frame;
-mod refresh_input;
-mod repaint;
-mod request_id;
-mod service_frame;
-mod teardown;
+use nonos_toolkit::decorations::{draw_maximize_button, maximize_button_rect};
 
-pub use entry::run;
+const MAX_FILL_ARGB: u32 = 0xFF3F_B950;
+const MAX_GLYPH_ARGB: u32 = 0xFF10_2010;
+
+pub(super) fn paint_maximize_button(pixels: &mut [u32], stride_words: usize, width: u32) {
+    let rect = maximize_button_rect(width);
+    draw_maximize_button(pixels, stride_words, width, &rect, MAX_FILL_ARGB, MAX_GLYPH_ARGB);
+}

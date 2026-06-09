@@ -27,6 +27,7 @@ pub(super) struct DrainResult {
     pub repaint: bool,
     pub close: bool,
     pub minimize: bool,
+    pub maximize: bool,
 }
 
 pub(super) fn drain<A: App>(
@@ -43,7 +44,7 @@ pub(super) fn drain<A: App>(
         let n =
             mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), RECV_NOWAIT, &mut sender);
         if n <= 0 {
-            return DrainResult { repaint, close: false, minimize: false };
+            return DrainResult { repaint, close: false, minimize: false, maximize: false };
         }
         if handle_control(&rx[..n as usize], sender, wm_port, window_id, request_id) {
             continue;
@@ -52,16 +53,23 @@ pub(super) fn drain<A: App>(
         let event = decorations::normalize(event);
         click_focus::handle(event, wm_port, window_id, request_id);
         match decorations::handle(width, event) {
-            Some(EventOutcome::Close) => return DrainResult { repaint, close: true, minimize: false },
+            Some(EventOutcome::Close) => {
+                return DrainResult { repaint, close: true, minimize: false, maximize: false }
+            }
             Some(EventOutcome::Minimize) => {
-                return DrainResult { repaint, close: false, minimize: true }
+                return DrainResult { repaint, close: false, minimize: true, maximize: false }
+            }
+            Some(EventOutcome::Maximize) => {
+                return DrainResult { repaint, close: false, minimize: false, maximize: true }
             }
             _ => {}
         }
         match app.on_event(event) {
-            EventOutcome::Idle | EventOutcome::Minimize => {}
+            EventOutcome::Idle | EventOutcome::Minimize | EventOutcome::Maximize => {}
             EventOutcome::Repaint => repaint = true,
-            EventOutcome::Close => return DrainResult { repaint, close: true, minimize: false },
+            EventOutcome::Close => {
+                return DrainResult { repaint, close: true, minimize: false, maximize: false }
+            }
         }
     }
 }
