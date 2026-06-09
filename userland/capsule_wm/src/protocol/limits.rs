@@ -27,6 +27,7 @@ pub const WINDOW_FOCUS_REQ_LEN: usize = 8;
 pub const WINDOW_RAISE_REQ_LEN: usize = 8;
 pub const WINDOW_MINIMIZE_REQ_LEN: usize = 8;
 pub const WINDOW_RESTORE_REQ_LEN: usize = 8;
+pub const WINDOW_MAXIMIZE_REQ_LEN: usize = 24;
 pub const QUERY_TOPMOST_REQ_LEN: usize = 8;
 pub const QUERY_TOPMOST_RESP_LEN: usize = 16;
 pub const ROUTE_FOCUS_REQ_LEN: usize = 8;

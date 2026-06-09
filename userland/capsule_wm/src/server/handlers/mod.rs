@@ -22,6 +22,7 @@ pub mod route_focus;
 pub(crate) mod u32_at;
 pub mod window_close;
 pub mod window_focus;
+pub mod window_maximize;
 pub mod window_minimize;
 pub mod window_move;
 pub mod window_open;
