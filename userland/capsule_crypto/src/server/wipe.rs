@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod handlers;
-mod runner;
-mod wipe;
+use core::sync::atomic::{compiler_fence, Ordering};
 
-pub use runner::run;
+pub(super) fn wipe(buf: &mut [u8]) {
+    for byte in buf.iter_mut() {
+        unsafe { core::ptr::write_volatile(byte, 0) };
+    }
+    compiler_fence(Ordering::SeqCst);
+}
