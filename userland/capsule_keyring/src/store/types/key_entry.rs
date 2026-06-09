@@ -26,3 +26,9 @@ pub(in crate::store) struct KeyEntry {
     pub(in crate::store) use_count: u64,
     pub(in crate::store) locked: bool,
 }
+
+impl Drop for KeyEntry {
+    fn drop(&mut self) {
+        crate::store::wipe::secure_wipe(&mut self.data);
+    }
+}
