@@ -17,11 +17,16 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use crate::handles::HandleTable;
-use crate::protocol::{encode_response, read_u64_le, Request, EINVAL, EIO, ENOENT};
+use crate::handles::{HandleError, HandleTable};
+use crate::protocol::{encode_response, read_u64_le, Request, EACCES, EINVAL, EIO, ENOENT};
 use crate::store::{Store, StoreError};
 
-pub fn write(store: &mut Store, handles: &HandleTable, req: Request<'_>) -> Vec<u8> {
+pub fn write(
+    store: &mut Store,
+    handles: &HandleTable,
+    req: Request<'_>,
+    sender_pid: u32,
+) -> Vec<u8> {
     if req.payload.len() < 16 {
         return encode_response(req.seq, EINVAL, &[]);
     }
@@ -34,9 +39,10 @@ pub fn write(store: &mut Store, handles: &HandleTable, req: Request<'_>) -> Vec<
         None => return encode_response(req.seq, EINVAL, &[]),
     };
     let data = &req.payload[16..];
-    let path = match handles.path_of(h) {
-        Some(p) => String::from(p),
-        None => return encode_response(req.seq, ENOENT, &[]),
+    let path = match handles.path_for(h, sender_pid) {
+        Ok(p) => String::from(p),
+        Err(HandleError::Denied) => return encode_response(req.seq, EACCES, &[]),
+        Err(HandleError::NotFound) => return encode_response(req.seq, ENOENT, &[]),
     };
     match store.write_at(&path, offset, data) {
         Ok(n) => encode_response(req.seq, n as i32, &[]),
