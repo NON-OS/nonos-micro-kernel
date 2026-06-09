@@ -20,6 +20,9 @@ use core::sync::atomic::{AtomicU32, Ordering};
 
 pub static LAST_SCHEDULED_PID: AtomicU32 = AtomicU32::new(0);
 
+static LAST_PER_BAND: [AtomicU32; 5] =
+    [AtomicU32::new(0), AtomicU32::new(0), AtomicU32::new(0), AtomicU32::new(0), AtomicU32::new(0)];
+
 pub fn select_next_process() -> Option<u32> {
     use crate::process::nonos_core::CURRENT_PID;
     let current = CURRENT_PID.load(Ordering::Relaxed);
@@ -65,10 +68,14 @@ pub fn select_next_process() -> Option<u32> {
             crate::sys::serial::traceln(b"]");
         }
     }
-    for prio in
+    for (idx, prio) in
         [Priority::RealTime, Priority::High, Priority::Normal, Priority::Low, Priority::Idle]
+            .into_iter()
+            .enumerate()
     {
-        if let Some(pid) = select_by_priority(&runnable, last, current, prio) {
+        let band_last = LAST_PER_BAND[idx].load(Ordering::Relaxed);
+        if let Some(pid) = select_by_priority(&runnable, band_last, current, prio) {
+            LAST_PER_BAND[idx].store(pid, Ordering::Relaxed);
             LAST_SCHEDULED_PID.store(pid, Ordering::Relaxed);
             {
                 static PICKED_SHOWN: AtomicU32 = AtomicU32::new(0);
