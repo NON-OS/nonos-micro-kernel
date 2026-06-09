@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::InputEvent;
+use nonos_libc::{
+    InputEvent, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP, INPUT_KIND_TOUCH, INPUT_KIND_WHEEL,
+};
 
 use crate::state::Context;
 
@@ -31,12 +33,21 @@ pub fn route_pointer(ctx: &mut Context, event: &InputEvent) -> u32 {
     ctx.cursor_x = x;
     ctx.cursor_y = y;
     ctx.cursor_dirty = true;
-    let delivered = mirror_shell_pointer(ctx, event, x, y)
-        + match topmost_target(ctx, x, y) {
+    let mut delivered = mirror_shell_pointer(ctx, event, x, y);
+    if needs_hit_test(event.kind) {
+        delivered += match topmost_target(ctx, x, y) {
             None => route_to_shell(ctx, event, x, y),
             Some(target) if target.owner_pid == shell_pid(ctx) => route_to_shell(ctx, event, x, y),
             Some(target) => route_to_window(ctx, event, target),
         };
+    }
     ctx.record(delivered);
     delivered
+}
+
+fn needs_hit_test(kind: u16) -> bool {
+    matches!(
+        kind,
+        INPUT_KIND_BUTTON_DOWN | INPUT_KIND_BUTTON_UP | INPUT_KIND_TOUCH | INPUT_KIND_WHEEL
+    )
 }
