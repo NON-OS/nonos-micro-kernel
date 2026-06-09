@@ -30,7 +30,7 @@ pub(super) fn repaint<A: App>(booted: &mut BootedApp<A>, peers: &Peers, request_
         rid,
         0,
         0,
-        booted.manifest.width,
-        booted.manifest.height,
+        booted.binding.width,
+        booted.binding.height,
     );
 }

@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_toolkit::decorations::draw_border;
+
 use crate::app::{App, AppManifest};
 use crate::clients::toolkit;
 use crate::paint::PaintBuffer;
@@ -26,6 +28,7 @@ use super::request_id::next;
 
 const TITLEBAR_FILL_H: u32 = 28;
 const TITLEBAR_FILL_ARGB: u32 = 0xFF1A_2030;
+const BORDER_ARGB: u32 = 0xFF55_6677;
 
 pub(super) fn paint<A: App>(
     app: &mut A,
@@ -60,5 +63,6 @@ pub(super) fn paint<A: App>(
     paint_close_button(pixels, stride, binding.width);
     paint_minimize_button(pixels, stride, binding.width);
     paint_maximize_button(pixels, stride, binding.width);
+    draw_border(pixels, stride, binding.width, binding.height, BORDER_ARGB);
     result
 }
