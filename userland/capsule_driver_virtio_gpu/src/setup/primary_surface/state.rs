@@ -20,4 +20,6 @@ pub struct Primary {
     pub width: u32,
     pub height: u32,
     pub stride: u32,
+    pub backing_addr: u64,
+    pub backing_len: u64,
 }

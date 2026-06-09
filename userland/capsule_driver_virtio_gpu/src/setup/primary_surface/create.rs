@@ -67,5 +67,7 @@ pub fn create(
         width: scanout.width,
         height: scanout.height,
         stride: geom.stride,
+        backing_addr: dma.device_addr,
+        backing_len: dma.length,
     }))
 }

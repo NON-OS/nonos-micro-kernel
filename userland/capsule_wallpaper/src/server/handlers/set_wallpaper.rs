@@ -14,14 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_libc::mk_service_lookup;
+
 use crate::compositor_client::push_damage_commit;
 use crate::decode_client::decode_and_paint;
 use crate::paint::fill_argb;
-use crate::protocol::{read_u32, Request, E_INVAL, SET_WALLPAPER_REQ_LEN};
+use crate::protocol::{read_u32, Request, E_ACCES, E_INVAL, SET_WALLPAPER_REQ_LEN};
 use crate::server::respond;
 use crate::state::Context;
 
+const SETTERS: [&[u8]; 2] = [b"desktop_shell", b"policy"];
+
+fn lookup_pid(name: &[u8]) -> Option<u32> {
+    let mut pid = 0u32;
+    let mut port = 0u32;
+    let rc = mk_service_lookup(name.as_ptr(), name.len(), &mut port, &mut pid);
+    if rc < 0 || pid == 0 {
+        None
+    } else {
+        Some(pid)
+    }
+}
+
+fn is_trusted_setter(sender_pid: u32) -> bool {
+    SETTERS.iter().any(|name| lookup_pid(name) == Some(sender_pid))
+}
+
 pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    if !is_trusted_setter(sender_pid) {
+        let _ = respond::status(sender_pid, req, E_ACCES, tx);
+        return;
+    }
     if body.len() == SET_WALLPAPER_REQ_LEN {
         let Some(argb) = read_u32(body, 0) else {
             let _ = respond::status(sender_pid, req, E_INVAL, tx);

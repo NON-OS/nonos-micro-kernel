@@ -21,7 +21,7 @@ mod types;
 
 pub use decode::{decode_request, read_u16_le, read_u32_le, read_u64_le};
 pub use encode::encode_response;
-pub use errno::{EINVAL, EIO, EMFILE, ENOENT};
+pub use errno::{EACCES, EINVAL, EIO, EMFILE, ENOENT};
 pub use types::{
     Request, KERNEL_REPLY_ENDPOINT, OPEN_FLAG_CREATE, OPEN_FLAG_TRUNCATE, OP_CLOSE, OP_OPEN,
     OP_READ, OP_TRUNCATE, OP_WRITE,

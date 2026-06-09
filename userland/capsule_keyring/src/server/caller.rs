@@ -14,23 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod decode;
-mod encode;
-mod errno;
-mod header;
-mod limits;
-mod ops;
-mod read_u16;
-mod read_u32;
-
-pub use decode::parse;
-pub use encode::{response_header, write_status};
-pub use errno::{E_ACCES, E_BAD_LEN, E_BAD_MAGIC, E_BAD_OP, E_BAD_VERSION, E_INVAL};
-pub use header::{Request, HDR_LEN, MAGIC, VERSION};
-pub use limits::{
-    FADE_REQ_LEN, GET_WALLPAPER_RESP_LEN, IPC_PAYLOAD_MAX, SET_POLICY_REQ_LEN,
-    SET_WALLPAPER_REQ_LEN, STATUS_LEN,
-};
-pub use ops::{OP_FADE, OP_GET_WALLPAPER, OP_HEALTHCHECK, OP_SET_POLICY, OP_SET_WALLPAPER};
-pub use read_u16::read_u16;
-pub use read_u32::read_u32;
+pub(super) fn resolve_caller(payload_pid: u32, sender_pid: u32) -> Option<u32> {
+    if sender_pid == 0 {
+        return Some(payload_pid);
+    }
+    if payload_pid == sender_pid {
+        return Some(sender_pid);
+    }
+    None
+}

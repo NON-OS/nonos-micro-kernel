@@ -21,8 +21,8 @@ use crate::protocol::{encode_response, Request, EINVAL, EMSGSIZE, MAX_DATA_BYTES
 use crate::store::Store;
 
 // Payload: u32 caller_pid, u32 fd, data bytes.
-pub fn write(store: &mut Store, req: Request<'_>) -> Vec<u8> {
-    let (pid, rest) = match split_caller(req.payload) {
+pub fn write(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
+    let (pid, rest) = match split_caller(req.payload, sender_pid) {
         Ok(v) => v,
         Err(s) => return encode_response(OP_WRITE, req.flags, req.request_id, s, &[]),
     };

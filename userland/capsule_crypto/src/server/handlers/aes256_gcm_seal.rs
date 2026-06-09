@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use aes_gcm::aead::{Aead, KeyInit, Payload};
 use aes_gcm::{Aes256Gcm, Key, Nonce};
 
-use super::aead_frame::{parse_seal, FrameError};
+use super::aead_frame::{nonce_is_degenerate, parse_seal, FrameError};
 use crate::protocol::{encode_response, Request, EINVAL, EIO, EMSGSIZE, OP_AES256_GCM_SEAL};
 
 pub fn aes256_gcm_seal(req: Request<'_>) -> Vec<u8> {
@@ -38,6 +38,9 @@ pub fn aes256_gcm_seal(req: Request<'_>) -> Vec<u8> {
             );
         }
     };
+    if nonce_is_degenerate(frame.nonce) {
+        return encode_response(OP_AES256_GCM_SEAL, req.flags, req.request_id, EINVAL, &[]);
+    }
     let key = Key::<Aes256Gcm>::from_slice(frame.key);
     let nonce = Nonce::<aes_gcm::aes::cipher::consts::U12>::from_slice(frame.nonce);
     let cipher = Aes256Gcm::new(key);

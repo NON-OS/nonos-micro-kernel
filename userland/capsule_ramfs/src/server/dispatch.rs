@@ -23,13 +23,18 @@ use crate::protocol::{
 };
 use crate::store::Store;
 
-pub fn dispatch(store: &mut Store, handles: &mut HandleTable, req: Request<'_>) -> Vec<u8> {
+pub fn dispatch(
+    store: &mut Store,
+    handles: &mut HandleTable,
+    req: Request<'_>,
+    sender_pid: u32,
+) -> Vec<u8> {
     match req.op {
-        OP_OPEN => handlers::open(store, handles, req),
-        OP_READ => handlers::read(store, handles, req),
-        OP_WRITE => handlers::write(store, handles, req),
-        OP_TRUNCATE => handlers::truncate(store, handles, req),
-        OP_CLOSE => handlers::close(handles, req),
+        OP_OPEN => handlers::open(store, handles, req, sender_pid),
+        OP_READ => handlers::read(store, handles, req, sender_pid),
+        OP_WRITE => handlers::write(store, handles, req, sender_pid),
+        OP_TRUNCATE => handlers::truncate(store, handles, req, sender_pid),
+        OP_CLOSE => handlers::close(handles, req, sender_pid),
         _ => encode_response(req.seq, EINVAL, &[]),
     }
 }

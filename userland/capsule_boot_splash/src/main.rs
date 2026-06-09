@@ -51,18 +51,21 @@ fn run() -> i32 {
         return 6;
     }
     let _ = scene::damage(comp, 4, w, h);
-    let router = proto::lookup(b"input_router");
-    if let Some(rp) = router {
-        let _ = input::subscribe(rp, 10);
-        let _ = input::grab(rp, 11);
-    }
-    interact(comp, base, w, h, stride, &att, badge);
-    if let Some(rp) = router {
-        let _ = input::release(rp, 12);
-    }
+    grabbed_interact(comp, base, w, h, stride, &att, badge);
     let _ = scene::remove(comp, 5);
     let _ = mk_surface_release(handle);
     0
+}
+
+fn grabbed_interact(comp: u32, base: u64, w: u32, h: u32, stride: u32, att: &AttestStatus, badge: Option<bool>) {
+    let router = match proto::lookup(b"input_router") {
+        Some(rp) => rp,
+        None => return interact(comp, base, w, h, stride, att, badge),
+    };
+    let _ = input::subscribe(router, 10);
+    let _ = input::grab(router, 11);
+    interact(comp, base, w, h, stride, att, badge);
+    let _ = input::release(router, 12);
 }
 
 fn wait_compositor() -> Option<u32> {

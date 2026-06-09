@@ -19,6 +19,7 @@ use alloc::vec;
 use nonos_libc::{mk_ipc_recv, mk_ipc_send};
 
 use super::dispatch::dispatch;
+use super::wipe::wipe;
 use crate::protocol::{
     decode_request, encode_response, EINVAL, HDR_LEN, KERNEL_REPLY_ENDPOINT, MAX_PAYLOAD_BYTES,
 };
@@ -38,5 +39,6 @@ pub fn run() -> ! {
             Err(_) => encode_response(0, 0, 0, EINVAL, &[]),
         };
         let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, resp.as_ptr(), resp.len());
+        wipe(&mut buf[..n]);
     }
 }

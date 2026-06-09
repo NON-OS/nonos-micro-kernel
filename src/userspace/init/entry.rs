@@ -21,8 +21,8 @@ pub fn run_init() -> ! {
     boot_log::ok("INIT", "Starting");
     run_user_entry_proof();
     spawn_plan::spawn_ramfs();
-    spawn_plan::run_ramfs_smoketest();
     spawn_plan::spawn_core_after_ramfs();
+    spawn_plan::run_ramfs_smoketest();
     spawn_plan::spawn_drivers();
     spawn_plan::spawn_vfs();
     spawn_plan::spawn_network();
