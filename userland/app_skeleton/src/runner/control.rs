@@ -37,6 +37,7 @@ pub(super) fn handle_control(
         return true;
     }
     if op == OP_FOCUS_SELF {
+        let _ = wm::window_restore(wm_port, next(request_id), window_id);
         let _ = wm::window_raise(wm_port, next(request_id), window_id);
         let _ = wm::window_focus(wm_port, next(request_id), window_id);
     }

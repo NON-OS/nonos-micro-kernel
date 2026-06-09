@@ -20,6 +20,7 @@ use crate::paint::PaintBuffer;
 use crate::setup::WindowBinding;
 
 use super::paint_close_button::paint_close_button;
+use super::paint_minimize_button::paint_minimize_button;
 use super::request_id::next;
 
 pub(super) fn paint<A: App>(
@@ -52,6 +53,7 @@ pub(super) fn paint<A: App>(
     let _ = next(request_id);
     if result.is_ok() {
         paint_close_button(pixels, binding.stride_words as usize, manifest.width);
+        paint_minimize_button(pixels, binding.stride_words as usize, manifest.width);
     }
     result
 }

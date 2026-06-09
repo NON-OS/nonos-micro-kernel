@@ -14,14 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod close;
-mod focus;
-mod minimize;
-mod open;
-mod raise;
+use nonos_toolkit::decorations::{draw_minimize_button, minimize_button_rect};
 
-pub use close::window_close;
-pub use focus::window_focus;
-pub use minimize::{window_minimize, window_restore};
-pub use open::{window_open, WindowPlacement};
-pub use raise::window_raise;
+const MIN_FILL_ARGB: u32 = 0xFF4B_5563;
+const MIN_GLYPH_ARGB: u32 = 0xFFE6_EDF3;
+
+pub(super) fn paint_minimize_button(pixels: &mut [u32], stride_words: usize, width: u32) {
+    let rect = minimize_button_rect(width);
+    draw_minimize_button(pixels, stride_words, width, &rect, MIN_FILL_ARGB, MIN_GLYPH_ARGB);
+}

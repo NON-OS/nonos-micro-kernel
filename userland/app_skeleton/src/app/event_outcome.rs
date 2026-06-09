@@ -19,4 +19,5 @@ pub enum EventOutcome {
     Idle,
     Repaint,
     Close,
+    Minimize,
 }

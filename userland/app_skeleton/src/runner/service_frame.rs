@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::app::App;
+use crate::clients::wm;
 use crate::discover::Peers;
 use nonos_libc::mk_display_vsync_wait;
 
@@ -23,6 +24,7 @@ use super::drain_ipc::drain;
 use super::ensure_primed::ensure_primed;
 use super::refresh_input::refresh_input;
 use super::repaint::repaint;
+use super::request_id::next;
 use super::teardown::close;
 
 pub(super) fn service_frame<A: App>(
@@ -46,6 +48,11 @@ pub(super) fn service_frame<A: App>(
     );
     if result.close {
         return close(peers, booted.manifest.window_id, &booted.binding, request_id);
+    }
+    if result.minimize {
+        let _ = wm::window_minimize(peers.wm, next(request_id), booted.manifest.window_id);
+        let _ = mk_display_vsync_wait(0);
+        return false;
     }
     if result.repaint {
         repaint(booted, peers, request_id);

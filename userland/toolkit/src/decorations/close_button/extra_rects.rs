@@ -13,15 +13,20 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use crate::decorations::metrics::{BUTTON_GAP, CLOSE_BUTTON_SIZE, TITLEBAR_HEIGHT, TITLEBAR_PADDING};
 
-mod close;
-mod focus;
-mod minimize;
-mod open;
-mod raise;
+use super::types::CloseRect;
 
-pub use close::window_close;
-pub use focus::window_focus;
-pub use minimize::{window_minimize, window_restore};
-pub use open::{window_open, WindowPlacement};
-pub use raise::window_raise;
+pub fn maximize_button_rect(width: u32) -> CloseRect {
+    let size = CLOSE_BUTTON_SIZE;
+    let y = (TITLEBAR_HEIGHT - size) / 2;
+    let x = width.saturating_sub(TITLEBAR_PADDING + 2 * size + BUTTON_GAP);
+    CloseRect { x, y, size }
+}
+
+pub fn minimize_button_rect(width: u32) -> CloseRect {
+    let size = CLOSE_BUTTON_SIZE;
+    let y = (TITLEBAR_HEIGHT - size) / 2;
+    let x = width.saturating_sub(TITLEBAR_PADDING + 3 * size + 2 * BUTTON_GAP);
+    CloseRect { x, y, size }
+}

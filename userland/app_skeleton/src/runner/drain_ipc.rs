@@ -26,6 +26,7 @@ const RECV_NOWAIT: u64 = 1;
 pub(super) struct DrainResult {
     pub repaint: bool,
     pub close: bool,
+    pub minimize: bool,
 }
 
 pub(super) fn drain<A: App>(
@@ -42,7 +43,7 @@ pub(super) fn drain<A: App>(
         let n =
             mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), RECV_NOWAIT, &mut sender);
         if n <= 0 {
-            return DrainResult { repaint, close: false };
+            return DrainResult { repaint, close: false, minimize: false };
         }
         if handle_control(&rx[..n as usize], sender, wm_port, window_id, request_id) {
             continue;
@@ -50,13 +51,17 @@ pub(super) fn drain<A: App>(
         let Some(event) = parse_delivery(&rx[..n as usize]) else { continue };
         let event = decorations::normalize(event);
         click_focus::handle(event, wm_port, window_id, request_id);
-        if let Some(EventOutcome::Close) = decorations::handle(width, event) {
-            return DrainResult { repaint, close: true };
+        match decorations::handle(width, event) {
+            Some(EventOutcome::Close) => return DrainResult { repaint, close: true, minimize: false },
+            Some(EventOutcome::Minimize) => {
+                return DrainResult { repaint, close: false, minimize: true }
+            }
+            _ => {}
         }
         match app.on_event(event) {
-            EventOutcome::Idle => {}
+            EventOutcome::Idle | EventOutcome::Minimize => {}
             EventOutcome::Repaint => repaint = true,
-            EventOutcome::Close => return DrainResult { repaint, close: true },
+            EventOutcome::Close => return DrainResult { repaint, close: true, minimize: false },
         }
     }
 }

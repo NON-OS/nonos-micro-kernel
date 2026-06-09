@@ -27,6 +27,7 @@ mod fail_boot;
 mod idle;
 mod paint_close_button;
 mod paint_frame;
+mod paint_minimize_button;
 mod paint_once;
 mod prime_frame;
 mod refresh_input;

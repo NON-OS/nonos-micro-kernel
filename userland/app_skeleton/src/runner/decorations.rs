@@ -29,8 +29,9 @@ pub(super) fn handle(width: u32, event: InputEvent) -> Option<EventOutcome> {
     if event.kind != InputKind::ButtonDown || event.x < 0 || event.y < 0 {
         return None;
     }
-    if hit_test(width, event.x as u32, event.y as u32) == DecorationHit::CloseButton {
-        return Some(EventOutcome::Close);
+    match hit_test(width, event.x as u32, event.y as u32) {
+        DecorationHit::CloseButton => Some(EventOutcome::Close),
+        DecorationHit::MinimizeButton => Some(EventOutcome::Minimize),
+        _ => None,
     }
-    None
 }
