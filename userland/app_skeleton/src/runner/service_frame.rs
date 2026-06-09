@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::app::App;
-use crate::clients::wm;
+use crate::clients::{compositor, wm};
 use crate::discover::Peers;
 use nonos_libc::mk_display_vsync_wait;
 
@@ -27,6 +27,8 @@ use super::refresh_input::refresh_input;
 use super::repaint::repaint;
 use super::request_id::next;
 use super::teardown::close;
+
+const APP_LAYER_Z: u32 = 2;
 
 pub(super) fn service_frame<A: App>(
     booted: &mut BootedApp<A>,
@@ -52,8 +54,24 @@ pub(super) fn service_frame<A: App>(
     }
     if result.minimize {
         let _ = wm::window_minimize(peers.wm, next(request_id), booted.manifest.window_id);
+        let _ = compositor::scene_remove(peers.compositor, next(request_id), 0);
+        booted.minimized = true;
         let _ = mk_display_vsync_wait(0);
         return false;
+    }
+    if result.restore && booted.minimized {
+        let _ = compositor::scene_submit(
+            peers.compositor,
+            next(request_id),
+            booted.binding.surface_handle,
+            booted.binding.x,
+            booted.binding.y,
+            booted.binding.width,
+            booted.binding.height,
+            APP_LAYER_Z,
+        );
+        booted.minimized = false;
+        repaint(booted, peers, request_id);
     }
     if result.maximize {
         maximize::toggle(booted, peers, request_id);

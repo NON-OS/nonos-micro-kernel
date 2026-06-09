@@ -29,6 +29,7 @@ pub(super) struct BootedApp<A: App> {
     pub input_ready: bool,
     pub primed: bool,
     pub maximized: bool,
+    pub minimized: bool,
     pub saved: (u32, u32, u32, u32),
 }
 
@@ -41,5 +42,14 @@ pub(super) fn boot<A: App>(
     let binding = open_window(peers, &manifest, request_id)?;
     let input_ready = ensure_input_subscription(peers.input_router, &manifest, request_id);
     let primed = prime_frame(&mut app, &manifest, &binding, peers, request_id);
-    Ok(BootedApp { app, manifest, binding, input_ready, primed, maximized: false, saved: (0, 0, 0, 0) })
+    Ok(BootedApp {
+        app,
+        manifest,
+        binding,
+        input_ready,
+        primed,
+        maximized: false,
+        minimized: false,
+        saved: (0, 0, 0, 0),
+    })
 }
