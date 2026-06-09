@@ -27,7 +27,7 @@ use crate::setup::Driver;
 use alloc::vec;
 use nonos_libc::mk_ipc_recv;
 
-const POLL_IDLE_MS: u64 = 4;
+const POLL_IDLE_MS: u64 = 1;
 
 pub fn run(driver: Driver) -> ! {
     let rx_len = HDR_LEN;
