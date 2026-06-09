@@ -25,13 +25,10 @@ pub(super) fn paint_once<A: App>(
     app: &mut A,
     manifest: &AppManifest,
     binding: &WindowBinding,
-    toolkit_port: u32,
     compositor_port: u32,
     request_id: &mut u32,
 ) -> bool {
-    if paint(app, manifest, binding, toolkit_port, request_id).is_err() {
-        return false;
-    }
+    paint(app, manifest, binding);
     let rid = next(request_id);
     compositor::damage_commit(compositor_port, rid, 0, 0, manifest.width, manifest.height).is_ok()
 }

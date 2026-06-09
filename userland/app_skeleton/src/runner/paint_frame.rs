@@ -14,29 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::decorations::draw_border;
+use nonos_toolkit::decorations::{draw_border, draw_titlebar};
 
 use crate::app::{App, AppManifest};
-use crate::clients::toolkit;
 use crate::paint::PaintBuffer;
 use crate::setup::WindowBinding;
 
 use super::paint_close_button::paint_close_button;
 use super::paint_maximize_button::paint_maximize_button;
 use super::paint_minimize_button::paint_minimize_button;
-use super::request_id::next;
 
 const TITLEBAR_FILL_H: u32 = 28;
 const TITLEBAR_FILL_ARGB: u32 = 0xFF1A_2030;
+const TITLE_TEXT_ARGB: u32 = 0xFFD8_DEE8;
 const BORDER_ARGB: u32 = 0xFF55_6677;
 
-pub(super) fn paint<A: App>(
-    app: &mut A,
-    manifest: &AppManifest,
-    binding: &WindowBinding,
-    toolkit_port: u32,
-    request_id: &mut u32,
-) -> Result<(), &'static str> {
+pub(super) fn paint<A: App>(app: &mut A, manifest: &AppManifest, binding: &WindowBinding) {
     let words = (binding.byte_len / 4) as usize;
     let pixels: &mut [u32] =
         unsafe { core::slice::from_raw_parts_mut(binding.backing_va as *mut u32, words) };
@@ -50,19 +43,18 @@ pub(super) fn paint<A: App>(
         app.paint(&mut fb);
         fb.fill_rect(0, 0, binding.width, TITLEBAR_FILL_H, TITLEBAR_FILL_ARGB);
     }
-    let rid = next(request_id);
-    let result = toolkit::ui_frame(
-        toolkit_port,
-        rid,
-        binding.surface_handle,
+    let stride = binding.stride_words as usize;
+    draw_titlebar(
+        pixels,
+        stride,
         binding.width,
+        binding.height,
+        TITLEBAR_FILL_ARGB,
+        TITLE_TEXT_ARGB,
         manifest.title,
     );
-    let _ = next(request_id);
-    let stride = binding.stride_words as usize;
     paint_close_button(pixels, stride, binding.width);
     paint_minimize_button(pixels, stride, binding.width);
     paint_maximize_button(pixels, stride, binding.width);
     draw_border(pixels, stride, binding.width, binding.height, BORDER_ARGB);
-    result
 }
