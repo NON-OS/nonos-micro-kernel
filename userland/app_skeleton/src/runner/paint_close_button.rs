@@ -16,8 +16,8 @@
 
 use nonos_toolkit::decorations::{close_button_rect, draw_close_button};
 
-const CLOSE_FILL_ARGB: u32 = 0xFF4B_5563;
-const CLOSE_GLYPH_ARGB: u32 = 0xFFE6_EDF3;
+const CLOSE_FILL_ARGB: u32 = 0xFFD0_4B4B;
+const CLOSE_GLYPH_ARGB: u32 = 0xFFFF_FFFF;
 
 pub(super) fn paint_close_button(pixels: &mut [u32], stride_words: usize, width: u32) {
     let rect = close_button_rect(width);

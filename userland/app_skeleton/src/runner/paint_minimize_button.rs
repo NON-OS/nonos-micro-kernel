@@ -16,8 +16,8 @@
 
 use nonos_toolkit::decorations::{draw_minimize_button, minimize_button_rect};
 
-const MIN_FILL_ARGB: u32 = 0xFF4B_5563;
-const MIN_GLYPH_ARGB: u32 = 0xFFE6_EDF3;
+const MIN_FILL_ARGB: u32 = 0xFFD9_A441;
+const MIN_GLYPH_ARGB: u32 = 0xFF1A_2030;
 
 pub(super) fn paint_minimize_button(pixels: &mut [u32], stride_words: usize, width: u32) {
     let rect = minimize_button_rect(width);

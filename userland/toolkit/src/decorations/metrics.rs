@@ -18,5 +18,5 @@ pub const BORDER_PX: u32 = 1;
 pub const TITLEBAR_HEIGHT: u32 = 26;
 pub const TITLEBAR_PADDING: u32 = 10;
 pub const TITLE_TEXT_Y: u32 = 9;
-pub const CLOSE_BUTTON_SIZE: u32 = 16;
+pub const CLOSE_BUTTON_SIZE: u32 = 18;
 pub const BUTTON_GAP: u32 = 6;
