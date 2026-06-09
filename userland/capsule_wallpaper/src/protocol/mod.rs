@@ -25,7 +25,7 @@ mod read_u32;
 
 pub use decode::parse;
 pub use encode::{response_header, write_status};
-pub use errno::{E_BAD_LEN, E_BAD_MAGIC, E_BAD_OP, E_BAD_VERSION, E_INVAL};
+pub use errno::{E_ACCES, E_BAD_LEN, E_BAD_MAGIC, E_BAD_OP, E_BAD_VERSION, E_INVAL};
 pub use header::{Request, HDR_LEN, MAGIC, VERSION};
 pub use limits::{
     FADE_REQ_LEN, GET_WALLPAPER_RESP_LEN, IPC_PAYLOAD_MAX, SET_POLICY_REQ_LEN,
