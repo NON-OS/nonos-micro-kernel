@@ -20,6 +20,10 @@ pub fn decode_request(buf: &[u8]) -> Option<Request<'_>> {
     if buf.len() < HDR_LEN {
         return None;
     }
+    let reserved = u16::from_le_bytes([buf[6], buf[7]]);
+    if reserved != 0 {
+        return None;
+    }
     let seq = u32::from_le_bytes([buf[0], buf[1], buf[2], buf[3]]);
     let op = u16::from_le_bytes([buf[4], buf[5]]);
     Some(Request { seq, op, payload: &buf[HDR_LEN..] })
