@@ -19,5 +19,5 @@ mod constants;
 mod parse;
 mod types;
 
-pub(crate) use parse::{parse_open, parse_seal};
+pub(crate) use parse::{nonce_is_degenerate, parse_open, parse_seal};
 pub(crate) use types::FrameError;

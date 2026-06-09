@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use chacha20poly1305::aead::{Aead, KeyInit, Payload};
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 
-use super::aead_frame::{parse_seal, FrameError};
+use super::aead_frame::{nonce_is_degenerate, parse_seal, FrameError};
 use crate::protocol::{encode_response, Request, EINVAL, EIO, EMSGSIZE, OP_CHACHA20_POLY1305_SEAL};
 
 pub fn chacha20_poly1305_seal(req: Request<'_>) -> Vec<u8> {
@@ -44,6 +44,15 @@ pub fn chacha20_poly1305_seal(req: Request<'_>) -> Vec<u8> {
             );
         }
     };
+    if nonce_is_degenerate(frame.nonce) {
+        return encode_response(
+            OP_CHACHA20_POLY1305_SEAL,
+            req.flags,
+            req.request_id,
+            EINVAL,
+            &[],
+        );
+    }
     let key = Key::from_slice(frame.key);
     let nonce = Nonce::from_slice(frame.nonce);
     let cipher = ChaCha20Poly1305::new(key);
