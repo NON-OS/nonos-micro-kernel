@@ -31,13 +31,28 @@ pub(super) fn map_store_err(e: StoreError) -> i32 {
     }
 }
 
-// Caller pid is delivered as the first 4 bytes of every payload
-// (kernel-side client embeds `state::pid()`-trusted caller pid).
-// Returns `(pid, rest)` or EINVAL on a too-short payload.
-pub(super) fn split_caller(payload: &[u8]) -> Result<(u32, &[u8]), i32> {
+fn resolve_caller(payload_pid: u32, sender_pid: u32) -> Option<u32> {
+    if sender_pid == 0 {
+        return Some(payload_pid);
+    }
+    if payload_pid == sender_pid {
+        return Some(sender_pid);
+    }
+    None
+}
+
+// Caller pid is the first 4 bytes of every payload. For a CPL=3 sender
+// (`sender_pid != 0`) the payload pid must match the kernel-attested
+// sender pid; the kernel-side mirror (`sender_pid == 0`) is the TCB and
+// keeps the payload pid. Returns `(attested_pid, rest)`, EINVAL on a
+// too-short payload, or EACCES on an impersonation attempt.
+pub(super) fn split_caller(payload: &[u8], sender_pid: u32) -> Result<(u32, &[u8]), i32> {
     if payload.len() < 4 {
         return Err(EINVAL);
     }
-    let pid = u32::from_le_bytes([payload[0], payload[1], payload[2], payload[3]]);
-    Ok((pid, &payload[4..]))
+    let payload_pid = u32::from_le_bytes([payload[0], payload[1], payload[2], payload[3]]);
+    match resolve_caller(payload_pid, sender_pid) {
+        Some(pid) => Ok((pid, &payload[4..])),
+        None => Err(EACCES),
+    }
 }

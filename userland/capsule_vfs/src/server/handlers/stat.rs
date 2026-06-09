@@ -23,8 +23,8 @@ use crate::store::Store;
 
 // Payload: u32 caller_pid, u8 path_len, path bytes.
 // Reply body: u64 size, u32 flags (flags reserved for M3-2 routing).
-pub fn stat(store: &mut Store, req: Request<'_>) -> Vec<u8> {
-    let (_pid, rest) = match split_caller(req.payload) {
+pub fn stat(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
+    let (_pid, rest) = match split_caller(req.payload, sender_pid) {
         Ok(v) => v,
         Err(s) => return encode_response(OP_STAT, req.flags, req.request_id, s, &[]),
     };

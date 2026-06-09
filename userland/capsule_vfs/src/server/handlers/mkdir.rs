@@ -21,8 +21,8 @@ use super::util::{map_store_err, split_caller};
 use crate::protocol::{encode_response, Request, EINVAL, MAX_PATH_BYTES, OP_MKDIR};
 use crate::store::Store;
 
-pub fn mkdir(store: &mut Store, req: Request<'_>) -> Vec<u8> {
-    let (_pid, rest) = match split_caller(req.payload) {
+pub fn mkdir(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
+    let (_pid, rest) = match split_caller(req.payload, sender_pid) {
         Ok(v) => v,
         Err(s) => return encode_response(OP_MKDIR, req.flags, req.request_id, s, &[]),
     };
