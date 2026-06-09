@@ -172,7 +172,7 @@ input-probe-inject = []
 # Boot smoketests. Each one drives a real round trip on the boot
 # serial and emits PASS/FAIL markers consumed by the matching
 # `tests/boot/*.sh` harness.
-nonos-ramfs-smoketest             = ["nonos-capsule-ramfs", "nonos-user-entry-proof"]
+nonos-ramfs-smoketest             = ["nonos-capsule-ramfs", "nonos-capsule-entropy", "nonos-capsule-crypto", "nonos-user-entry-proof"]
 nonos-keyring-smoketest           = ["nonos-capsule-keyring", "nonos-user-entry-proof"]
 nonos-entropy-smoketest           = ["nonos-capsule-entropy", "nonos-user-entry-proof"]
 nonos-crypto-hash-smoketest       = ["nonos-capsule-crypto", "nonos-user-entry-proof"]

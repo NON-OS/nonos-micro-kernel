@@ -580,6 +580,7 @@ nonos-mk-driver-virtio-rng-test: $(proof-io_ARTIFACTS) $(driver-virtio-rng_ARTIF
 		--no-default-features --features microkernel-driver-virtio-rng-smoketest
 
 nonos-mk-ramfs-test: $(proof-io_ARTIFACTS) $(ramfs_BIN) \
+		$(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (ramfs smoketest)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
