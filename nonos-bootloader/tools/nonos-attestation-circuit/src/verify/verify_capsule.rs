@@ -14,34 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use clap::Parser;
+use std::path::Path;
 
-use nonos_attestation_circuit::verify::{
-    binding, parse_public_inputs, read_capsule, read_vk, verify_groth16,
-};
-use nonos_attestation_circuit::GROTH16_PROOF_SIZE;
+use crate::constants::GROTH16_PROOF_SIZE;
 
-use super::args::Args;
-use super::read_file_input::read_file_input;
+use super::binding::binding;
+use super::parse_public_inputs::parse_public_inputs;
+use super::read_capsule::read_capsule;
+use super::read_vk::read_vk;
+use super::verify_groth16::verify_groth16;
 
-pub fn run() -> Result<(), String> {
-    let args = Args::parse();
-    let vk = read_vk(&args.verifying_key)?;
-    let input = match &args.capsule {
-        Some(path) => read_capsule(path)?,
-        None => read_file_input(&args)?,
-    };
+pub fn verify_capsule(vk_path: &Path, capsule_path: &Path) -> Result<(), String> {
+    let vk = read_vk(vk_path)?;
+    let input = read_capsule(capsule_path)?;
     if input.proof.len() != GROTH16_PROOF_SIZE {
         return Err(format!("proof size {} != {}", input.proof.len(), GROTH16_PROOF_SIZE));
     }
     let fields = parse_public_inputs(&input.public_inputs)?;
     binding(&input.public_inputs, input.body_hash, input.trailer_commitment)?;
     if !verify_groth16(&vk, &input.proof, &fields)? {
-        println!("RESULT: FAIL");
         return Err("groth16 verification failed".into());
     }
-    println!("RESULT: PASS");
-    println!("proof_bytes: {}", input.proof.len());
-    println!("public_inputs: {}", fields.len());
     Ok(())
 }

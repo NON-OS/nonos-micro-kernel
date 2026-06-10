@@ -14,8 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use ark_bls12_381::Fr;
+use ark_ff::PrimeField;
 
-pub use run::run;
+use super::constants::PUBLIC_INPUT_BYTES;
+use super::validate_public_input_layout::validate_public_input_layout;
+
+pub fn parse_public_inputs(bytes: &[u8]) -> Result<Vec<Fr>, String> {
+    if bytes.len() != PUBLIC_INPUT_BYTES {
+        return Err(format!("public input bytes {} != {}", bytes.len(), PUBLIC_INPUT_BYTES));
+    }
+    validate_public_input_layout(bytes)?;
+    Ok(bytes.chunks_exact(32).map(Fr::from_be_bytes_mod_order).collect())
+}

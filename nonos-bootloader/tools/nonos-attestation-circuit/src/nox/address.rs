@@ -14,8 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+pub fn validate_address(address: &str) -> Result<(), String> {
+    if address.len() != 42 || !address.starts_with("0x") {
+        return Err("contributor must be a 20-byte 0x address".into());
+    }
+    if !address[2..].chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err("contributor address contains non-hex characters".into());
+    }
+    Ok(())
+}
 
-pub use run::run;
+pub fn address_bytes(address: &str) -> Result<[u8; 20], String> {
+    validate_address(address)?;
+    let raw = hex::decode(&address[2..]).map_err(|e| e.to_string())?;
+    let mut out = [0u8; 20];
+    out.copy_from_slice(&raw);
+    Ok(out)
+}

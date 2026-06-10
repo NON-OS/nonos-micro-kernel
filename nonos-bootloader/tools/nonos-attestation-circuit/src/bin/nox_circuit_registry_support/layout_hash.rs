@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use nonos_attestation_circuit::verify::PUBLIC_INPUT_LAYOUT;
 
-pub use run::run;
+pub fn layout_hash() -> [u8; 32] {
+    let mut h = blake3::Hasher::new_derive_key("NONOS:NOX:ZK:LAYOUT:v1");
+    h.update(PUBLIC_INPUT_LAYOUT.as_bytes());
+    *h.finalize().as_bytes()
+}

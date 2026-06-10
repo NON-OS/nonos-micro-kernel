@@ -14,8 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use clap::Parser;
 
-pub use run::run;
+#[derive(Parser)]
+pub struct Args {
+    #[arg(long)]
+    pub claims: String,
+    #[arg(long)]
+    pub out_dir: String,
+}
+
+pub fn parse() -> Args {
+    Args::parse()
+}

@@ -14,8 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use sha3::{Digest, Keccak256};
 
-pub use run::run;
+pub fn keccak256(data: &[u8]) -> [u8; 32] {
+    let mut out = [0u8; 32];
+    out.copy_from_slice(&Keccak256::digest(data));
+    out
+}
+
+pub fn hash_pair(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
+    let (lo, hi) = if a <= b { (a, b) } else { (b, a) };
+    let mut buf = [0u8; 64];
+    buf[..32].copy_from_slice(lo);
+    buf[32..].copy_from_slice(hi);
+    keccak256(&buf)
+}

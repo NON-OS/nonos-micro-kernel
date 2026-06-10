@@ -14,8 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use sha2::{Digest, Sha256};
+use std::path::Path;
 
-pub use run::run;
+pub fn hash_file(path: &Path) -> Result<[u8; 32], Box<dyn std::error::Error>> {
+    let data = std::fs::read(path)?;
+    let out = Sha256::digest(&data);
+    let mut hash = [0u8; 32];
+    hash.copy_from_slice(&out);
+    Ok(hash)
+}

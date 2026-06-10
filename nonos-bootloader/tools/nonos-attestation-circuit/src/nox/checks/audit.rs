@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
-
-pub use run::run;
+pub fn check_audit(report: &[u8]) -> Result<(), String> {
+    if report.is_empty() {
+        return Err("audit report is empty".into());
+    }
+    Ok(())
+}

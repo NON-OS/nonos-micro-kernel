@@ -15,7 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod args;
-mod read_file_input;
+mod entry;
+mod git_hash;
+mod layout_hash;
 mod run;
 
 pub use run::run;

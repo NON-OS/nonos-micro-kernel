@@ -14,8 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use std::{fs, path::Path};
 
-pub use run::run;
+use ark_bls12_381::Bls12_381;
+use ark_groth16::VerifyingKey;
+use ark_serialize::{CanonicalDeserialize, Compress, Validate};
+
+pub fn read_vk(path: &Path) -> Result<VerifyingKey<Bls12_381>, String> {
+    let bytes = fs::read(path).map_err(|e| format!("read vk: {e}"))?;
+    VerifyingKey::<Bls12_381>::deserialize_with_mode(&bytes[..], Compress::Yes, Validate::Yes)
+        .or_else(|_| {
+            VerifyingKey::<Bls12_381>::deserialize_with_mode(
+                &bytes[..],
+                Compress::No,
+                Validate::Yes,
+            )
+        })
+        .map_err(|e| format!("read vk: {e}"))
+}

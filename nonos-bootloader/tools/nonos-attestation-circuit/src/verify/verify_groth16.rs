@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,21 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use std::{fs, path::Path};
-
-use ark_bls12_381::Bls12_381;
-use ark_groth16::VerifyingKey;
+use ark_bls12_381::{Bls12_381, Fr};
+use ark_groth16::{Groth16, Proof, VerifyingKey};
 use ark_serialize::{CanonicalDeserialize, Compress, Validate};
+use ark_snark::SNARK;
 
-pub fn read_vk(path: &Path) -> Result<VerifyingKey<Bls12_381>, String> {
-    let bytes = fs::read(path).map_err(|e| format!("read vk: {e}"))?;
-    VerifyingKey::<Bls12_381>::deserialize_with_mode(&bytes[..], Compress::Yes, Validate::Yes)
-        .or_else(|_| {
-            VerifyingKey::<Bls12_381>::deserialize_with_mode(
-                &bytes[..],
-                Compress::No,
-                Validate::Yes,
-            )
-        })
-        .map_err(|e| format!("read vk: {e}"))
+pub fn verify_groth16(
+    vk: &VerifyingKey<Bls12_381>,
+    proof: &[u8],
+    inputs: &[Fr],
+) -> Result<bool, String> {
+    let proof = Proof::<Bls12_381>::deserialize_with_mode(proof, Compress::Yes, Validate::Yes)
+        .map_err(|e| format!("read proof: {e}"))?;
+    Groth16::<Bls12_381>::verify(vk, inputs, &proof).map_err(|e| format!("verify: {e}"))
 }

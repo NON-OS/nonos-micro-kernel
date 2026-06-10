@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use std::path::Path;
 
-pub use run::run;
+use crate::verify::verify_capsule;
+
+pub fn check_capsule(vk_path: &Path, capsule_path: &Path) -> Result<(), String> {
+    verify_capsule(vk_path, capsule_path)
+}

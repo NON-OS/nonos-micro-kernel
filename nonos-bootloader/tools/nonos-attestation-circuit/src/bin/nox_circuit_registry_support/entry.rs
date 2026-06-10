@@ -14,8 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use serde::Serialize;
 
-pub use run::run;
+#[derive(Serialize)]
+pub struct RegistryEntry {
+    pub schema_version: u32,
+    pub circuit_name: String,
+    pub circuit_id: String,
+    pub source_tree_hash: String,
+    pub cargo_lock_hash: String,
+    pub public_input_layout_hash: String,
+    pub vk_sha256: String,
+    pub transcript_sha256: String,
+    pub policy_epoch: u64,
+    pub status: &'static str,
+    pub uri: String,
+}

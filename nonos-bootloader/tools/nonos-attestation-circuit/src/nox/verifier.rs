@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
-
-pub use run::run;
+pub fn verifier_hash(receipt_id: &[u8; 32], evidence: &[u8; 32]) -> [u8; 32] {
+    let mut h = blake3::Hasher::new_derive_key("NONOS:NOX:ZK:VERIFIER:v1");
+    h.update(receipt_id);
+    h.update(evidence);
+    h.update(b"PASS");
+    *h.finalize().as_bytes()
+}

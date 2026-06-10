@@ -14,8 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use nonos_attestation_circuit::{CeremonyTranscript, ContributionRecord};
 
-pub use run::run;
+pub fn find_record(
+    tx: &CeremonyTranscript,
+    round: u32,
+) -> Result<ContributionRecord, Box<dyn std::error::Error>> {
+    if !tx.metadata.finalized || !tx.verification_passed {
+        return Err("ceremony transcript is not finalized and verified".into());
+    }
+    tx.contributions
+        .iter()
+        .find(|r| r.round == round)
+        .cloned()
+        .ok_or_else(|| format!("round {round} not found in transcript").into())
+}

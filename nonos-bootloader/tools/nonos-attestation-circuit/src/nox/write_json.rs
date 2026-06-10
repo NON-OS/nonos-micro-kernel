@@ -14,8 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use serde::Serialize;
+use std::io::Write;
+use std::path::Path;
 
-pub use run::run;
+pub fn write_json<T: Serialize>(path: &Path, value: &T) -> Result<(), Box<dyn std::error::Error>> {
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let mut file = std::fs::File::create(path)?;
+    serde_json::to_writer_pretty(&mut file, value)?;
+    file.write_all(b"\n")?;
+    Ok(())
+}

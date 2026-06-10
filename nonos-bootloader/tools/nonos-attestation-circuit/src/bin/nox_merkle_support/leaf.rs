@@ -14,8 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use super::keccak::keccak256;
 
-pub use run::run;
+pub fn claim_leaf(
+    contributor: &[u8; 20],
+    receipt_id: &[u8; 32],
+    circuit_id: &[u8; 32],
+    amount: &[u8; 32],
+    epoch: u64,
+    pool_id: &[u8; 32],
+) -> [u8; 32] {
+    let mut encoded = [0u8; 192];
+    encoded[12..32].copy_from_slice(contributor);
+    encoded[32..64].copy_from_slice(receipt_id);
+    encoded[64..96].copy_from_slice(circuit_id);
+    encoded[96..128].copy_from_slice(amount);
+    encoded[152..160].copy_from_slice(&epoch.to_be_bytes());
+    encoded[160..192].copy_from_slice(pool_id);
+    keccak256(&keccak256(&encoded))
+}

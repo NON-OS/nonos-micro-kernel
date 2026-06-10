@@ -14,8 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
-
-pub use run::run;
+pub(super) fn validate_public_input_layout(bytes: &[u8]) -> Result<(), String> {
+    let ranges = [
+        (0usize, 16usize, "capsule hash high prefix"),
+        (32, 48, "capsule hash low prefix"),
+        (96, 120, "policy epoch prefix"),
+        (128, 152, "capability mask prefix"),
+        (160, 176, "commitment high prefix"),
+        (192, 208, "commitment low prefix"),
+    ];
+    for (start, end, label) in ranges {
+        if bytes[start..end].iter().any(|byte| *byte != 0) {
+            return Err(format!("{label} must be zero"));
+        }
+    }
+    Ok(())
+}

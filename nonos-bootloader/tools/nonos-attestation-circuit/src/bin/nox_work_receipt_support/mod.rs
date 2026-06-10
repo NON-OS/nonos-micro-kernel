@@ -15,7 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod args;
-mod read_file_input;
+mod build_receipt;
+mod load_circuit_name;
+mod receipt;
 mod run;
 
 pub use run::run;

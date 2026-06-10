@@ -14,8 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
-
-pub use run::run;
+pub(super) fn take<'a>(data: &'a [u8], pos: &mut usize, len: usize) -> Result<&'a [u8], String> {
+    let end = pos.checked_add(len).ok_or("offset overflow")?;
+    if end > data.len() {
+        return Err("truncated capsule ZK trailer".into());
+    }
+    let out = &data[*pos..end];
+    *pos = end;
+    Ok(out)
+}

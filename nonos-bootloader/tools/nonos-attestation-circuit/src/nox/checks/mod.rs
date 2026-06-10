@@ -14,8 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+mod audit;
+mod boot_log;
+mod capsule;
+mod fleet;
 
-pub use run::run;
+pub use audit::check_audit;
+pub use boot_log::check_boot_log;
+pub use capsule::check_capsule;
+pub use fleet::check_fleet;

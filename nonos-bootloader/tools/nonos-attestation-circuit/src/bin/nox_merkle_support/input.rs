@@ -14,8 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use serde::Deserialize;
 
-pub use run::run;
+#[derive(Deserialize)]
+pub struct ClaimsInput {
+    pub epoch: u64,
+    pub pool_id: String,
+    pub claims: Vec<ClaimInput>,
+}
+
+#[derive(Deserialize)]
+pub struct ClaimInput {
+    pub receipt: String,
+    pub amount: String,
+}

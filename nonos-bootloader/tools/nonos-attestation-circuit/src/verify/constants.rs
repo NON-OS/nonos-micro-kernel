@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -16,4 +16,4 @@
 
 pub const CAPSULE_ZK_MAGIC: &[u8; 8] = b"NZKCAPS1";
 pub const PUBLIC_INPUT_BYTES: usize = 7 * 32;
-pub const GROTH16_PROOF_SIZE: usize = 192;
+pub const PUBLIC_INPUT_LAYOUT: &str = "capsule_hash_hi,capsule_hash_lo,policy_root,policy_epoch,capability_mask,commitment_hi,commitment_lo:7x32be";

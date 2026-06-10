@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,16 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use ark_bls12_381::Fr;
-use ark_ff::PrimeField;
+mod amount;
+mod args;
+mod input;
+mod keccak;
+mod leaf;
+mod output;
+mod read_claim;
+mod run;
+mod tree;
 
-use super::constants::PUBLIC_INPUT_BYTES;
-use super::validate_public_input_layout::validate_public_input_layout;
-
-pub fn parse_public_inputs(bytes: &[u8]) -> Result<Vec<Fr>, String> {
-    if bytes.len() != PUBLIC_INPUT_BYTES {
-        return Err(format!("public input bytes {} != {}", bytes.len(), PUBLIC_INPUT_BYTES));
-    }
-    validate_public_input_layout(bytes)?;
-    Ok(bytes.chunks_exact(32).map(Fr::from_be_bytes_mod_order).collect())
-}
+pub use run::run;

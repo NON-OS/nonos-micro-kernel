@@ -14,8 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
-
-pub use run::run;
+pub fn check_boot_log(log: &str) -> Result<u64, String> {
+    if log.contains("[ZK-ATTEST] FAIL") {
+        return Err("boot log contains a failed attestation".into());
+    }
+    let ok = log.matches("[ZK-ATTEST] ok").count() as u64;
+    if ok == 0 {
+        return Err("boot log contains no successful attestation".into());
+    }
+    Ok(ok)
+}

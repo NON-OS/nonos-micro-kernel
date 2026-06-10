@@ -14,8 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use serde::Serialize;
 
-pub use run::run;
+#[derive(Serialize)]
+pub struct WorkReceipt {
+    pub schema_version: u32,
+    pub kind: &'static str,
+    pub chain_id: u64,
+    pub circuit_name: String,
+    pub circuit_id: String,
+    pub contributor_address: String,
+    pub claim_epoch: u64,
+    pub policy_epoch: u64,
+    pub vk_sha256: String,
+    pub transcript_sha256: String,
+    pub artifact_name: String,
+    pub artifact_sha256: String,
+    pub attested_count: u64,
+    pub evidence_hash: String,
+    pub receipt_id: String,
+    pub uri: String,
+}

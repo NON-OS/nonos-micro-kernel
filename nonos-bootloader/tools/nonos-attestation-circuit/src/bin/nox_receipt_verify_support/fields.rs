@@ -14,8 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use serde_json::Value;
 
-pub use run::run;
+pub fn text<'a>(receipt: &'a Value, name: &str) -> Result<&'a str, String> {
+    receipt
+        .get(name)
+        .and_then(Value::as_str)
+        .ok_or_else(|| format!("receipt is missing field {name}"))
+}
+
+pub fn number(receipt: &Value, name: &str) -> Result<u64, String> {
+    receipt
+        .get(name)
+        .and_then(Value::as_u64)
+        .ok_or_else(|| format!("receipt is missing field {name}"))
+}
+
+pub fn expect(name: &str, got: &str, want: &str) -> Result<(), String> {
+    if got == want {
+        Ok(())
+    } else {
+        Err(format!("{name} mismatch: receipt {got}, recomputed {want}"))
+    }
+}

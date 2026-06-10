@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,12 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn take<'a>(data: &'a [u8], pos: &mut usize, len: usize) -> Result<&'a [u8], String> {
-    let end = pos.checked_add(len).ok_or("offset overflow")?;
-    if end > data.len() {
-        return Err("truncated capsule ZK trailer".into());
-    }
-    let out = &data[*pos..end];
-    *pos = end;
-    Ok(out)
+use super::take::take;
+
+pub(super) fn read_u32(data: &[u8], pos: &mut usize) -> Result<u32, String> {
+    let bytes = take(data, pos, 4)?;
+    Ok(u32::from_le_bytes(bytes.try_into().map_err(|_| "u32")?))
 }

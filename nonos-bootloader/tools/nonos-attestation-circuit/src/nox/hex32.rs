@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
-
-pub use run::run;
+pub fn hex32(bytes: &[u8; 32]) -> String {
+    let mut s = String::with_capacity(66);
+    s.push_str("0x");
+    s.push_str(&hex::encode(bytes));
+    s
+}

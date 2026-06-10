@@ -14,8 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use serde::Serialize;
 
-pub use run::run;
+#[derive(Serialize)]
+pub struct RootOutput {
+    pub epoch: u64,
+    pub pool_id: String,
+    pub root: String,
+    pub leaf_count: usize,
+}
+
+#[derive(Serialize)]
+pub struct ClaimOutput {
+    pub contributor: String,
+    pub receipt_id: String,
+    pub circuit_id: String,
+    pub amount: String,
+    pub epoch: u64,
+    pub pool_id: String,
+    pub leaf: String,
+    pub proof: Vec<String>,
+}

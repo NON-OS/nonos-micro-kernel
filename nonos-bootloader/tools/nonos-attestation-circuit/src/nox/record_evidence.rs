@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::take::take;
+use serde::Serialize;
 
-pub fn read_u32(data: &[u8], pos: &mut usize) -> Result<u32, String> {
-    let bytes = take(data, pos, 4)?;
-    Ok(u32::from_le_bytes(bytes.try_into().map_err(|_| "u32")?))
+pub fn record_evidence_hash<T: Serialize>(record: &T) -> Result<[u8; 32], serde_json::Error> {
+    let bytes = serde_json::to_vec(record)?;
+    let mut hasher = blake3::Hasher::new_derive_key("NONOS:NOX:ZK:RECORD:v1");
+    hasher.update(&bytes);
+    Ok(*hasher.finalize().as_bytes())
 }

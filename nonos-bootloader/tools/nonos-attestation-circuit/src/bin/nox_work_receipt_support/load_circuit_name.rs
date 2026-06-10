@@ -14,8 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+use std::path::Path;
 
-pub use run::run;
+use nonos_attestation_circuit::CeremonyTranscript;
+
+pub fn load_circuit_name(path: &Path) -> Result<String, Box<dyn std::error::Error>> {
+    let bytes = std::fs::read(path)?;
+    let tx: CeremonyTranscript = serde_json::from_slice(&bytes)?;
+    if !tx.metadata.finalized || !tx.verification_passed {
+        return Err("ceremony transcript is not finalized and verified".into());
+    }
+    Ok(tx.metadata.circuit_name)
+}

@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
-
-pub use run::run;
+pub fn work_evidence_hash(kind: &str, artifact: &[u8]) -> [u8; 32] {
+    let mut h = blake3::Hasher::new_derive_key("NONOS:NOX:ZK:EVIDENCE:v1");
+    h.update(kind.as_bytes());
+    h.update(artifact);
+    *h.finalize().as_bytes()
+}

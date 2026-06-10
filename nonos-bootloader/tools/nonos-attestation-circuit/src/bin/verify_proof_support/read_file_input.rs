@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -16,8 +16,9 @@
 
 use std::fs;
 
+use nonos_attestation_circuit::verify::ProofInput;
+
 use super::args::Args;
-use super::input::ProofInput;
 
 pub fn read_file_input(args: &Args) -> Result<ProofInput, String> {
     let proof = args.proof.as_ref().ok_or("missing --proof")?;

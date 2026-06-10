@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,19 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_attestation_circuit::compute_capsule_commitment;
+use crate::constants::compute_capsule_commitment;
 
 pub fn binding(
     public_inputs: &[u8],
     body_hash: Option<[u8; 32]>,
     trailer_commitment: Option<[u8; 32]>,
 ) -> Result<(), String> {
-    let capsule = [&public_inputs[16..32], &public_inputs[48..64]].concat();
-    let program = [&public_inputs[80..96], &public_inputs[112..128]].concat();
-    let caps: [u8; 8] = public_inputs[152..160].try_into().map_err(|_| "caps")?;
-    let commitment = [&public_inputs[176..192], &public_inputs[208..224]].concat();
+    let hi = public_inputs.get(16..32).ok_or("capsule hash high")?;
+    let lo = public_inputs.get(48..64).ok_or("capsule hash low")?;
+    let capsule = [hi, lo].concat();
+    let policy_root = public_inputs.get(64..96).ok_or("policy root")?;
+    let epoch = public_inputs.get(120..128).ok_or("policy epoch")?;
+    let caps = public_inputs.get(152..160).ok_or("capability mask")?;
+    let commit_hi = public_inputs.get(176..192).ok_or("commitment high")?;
+    let commit_lo = public_inputs.get(208..224).ok_or("commitment low")?;
+    let commitment = [commit_hi, commit_lo].concat();
     let expected =
-        compute_capsule_commitment(&[capsule.as_slice(), program.as_slice(), &caps].concat());
+        compute_capsule_commitment(&[capsule.as_slice(), policy_root, epoch, caps].concat());
     if let Some(hash) = body_hash {
         if capsule.as_slice() != hash.as_slice() {
             return Err("capsule hash mismatch".into());

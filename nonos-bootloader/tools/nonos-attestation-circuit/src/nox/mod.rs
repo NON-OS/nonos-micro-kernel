@@ -14,8 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod read_file_input;
-mod run;
+mod address;
+mod check_work;
+mod evidence;
+mod hash_file;
+mod hex32;
+mod ids;
+mod kind;
+mod record_evidence;
+mod verifier;
+mod write_json;
 
-pub use run::run;
+pub mod checks;
+
+pub use address::{address_bytes, validate_address};
+pub use check_work::check_work;
+pub use evidence::work_evidence_hash;
+pub use hash_file::hash_file;
+pub use hex32::hex32;
+pub use ids::{circuit_id, receipt_id, work_receipt_id};
+pub use kind::WorkKind;
+pub use record_evidence::record_evidence_hash;
+pub use verifier::verifier_hash;
+pub use write_json::write_json;
