@@ -14,13 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(super) const FE: usize = 32;
-pub(super) const PI_COUNT: usize = 7;
-pub(super) const PROOF_LEN: usize = 192;
-pub(super) const POLICY_EPOCH: u64 = 1;
+use super::commitment::commitment;
+use super::error::AttestError;
+use super::layout::POLICY_EPOCH;
 
-pub(super) const FI_CAPSULE_HASH_HI: usize = 0;
-pub(super) const FI_POLICY_ROOT: usize = 2;
-pub(super) const FI_POLICY_EPOCH: usize = 3;
-pub(super) const FI_CAP_MASK: usize = 4;
-pub(super) const FI_COMMITMENT_HI: usize = 5;
+pub(super) fn check_commitment(
+    capsule: &[u8; 32],
+    policy: &[u8; 32],
+    caps: u64,
+    trailer: &[u8; 32],
+    public: &[u8; 32],
+) -> Result<(), AttestError> {
+    if trailer != public {
+        return Err(AttestError::CommitmentMismatch);
+    }
+    if &commitment(capsule, policy, POLICY_EPOCH, caps) != public {
+        return Err(AttestError::CommitmentMismatch);
+    }
+    Ok(())
+}

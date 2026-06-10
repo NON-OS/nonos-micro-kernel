@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(super) const FE: usize = 32;
-pub(super) const PI_COUNT: usize = 7;
-pub(super) const PROOF_LEN: usize = 192;
-pub(super) const POLICY_EPOCH: u64 = 1;
+const DS_COMMITMENT: &str = "NONOS:CAPSULE:COMMITMENT:v1";
 
-pub(super) const FI_CAPSULE_HASH_HI: usize = 0;
-pub(super) const FI_POLICY_ROOT: usize = 2;
-pub(super) const FI_POLICY_EPOCH: usize = 3;
-pub(super) const FI_CAP_MASK: usize = 4;
-pub(super) const FI_COMMITMENT_HI: usize = 5;
+pub(super) fn commitment(capsule: &[u8; 32], policy: &[u8; 32], epoch: u64, caps: u64) -> [u8; 32] {
+    let mut hasher = blake3::Hasher::new_derive_key(DS_COMMITMENT);
+    hasher.update(capsule);
+    hasher.update(policy);
+    hasher.update(&epoch.to_be_bytes());
+    hasher.update(&caps.to_be_bytes());
+    *hasher.finalize().as_bytes()
+}

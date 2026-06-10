@@ -33,3 +33,9 @@ pub const G2_COMPRESSED_SIZE: usize = 64;
 pub const G1_UNCOMPRESSED_SIZE: usize = 64;
 
 pub const G2_UNCOMPRESSED_SIZE: usize = 128;
+
+pub const MAX_VK_BYTES: usize = 16 * 1024 * 1024;
+
+pub const MAX_PROOF_BYTES: usize = 1024 * 1024;
+
+pub const MAX_PUBLIC_INPUTS: usize = 262_000;

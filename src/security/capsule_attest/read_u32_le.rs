@@ -14,13 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(super) const FE: usize = 32;
-pub(super) const PI_COUNT: usize = 7;
-pub(super) const PROOF_LEN: usize = 192;
-pub(super) const POLICY_EPOCH: u64 = 1;
-
-pub(super) const FI_CAPSULE_HASH_HI: usize = 0;
-pub(super) const FI_POLICY_ROOT: usize = 2;
-pub(super) const FI_POLICY_EPOCH: usize = 3;
-pub(super) const FI_CAP_MASK: usize = 4;
-pub(super) const FI_COMMITMENT_HI: usize = 5;
+pub(super) fn read_u32_le(buf: &[u8], off: usize) -> Option<usize> {
+    let b = buf.get(off..off + 4)?;
+    Some(u32::from_le_bytes([b[0], b[1], b[2], b[3]]) as usize)
+}

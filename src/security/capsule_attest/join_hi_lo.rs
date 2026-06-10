@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(super) const FE: usize = 32;
-pub(super) const PI_COUNT: usize = 7;
-pub(super) const PROOF_LEN: usize = 192;
-pub(super) const POLICY_EPOCH: u64 = 1;
+use super::field::field;
 
-pub(super) const FI_CAPSULE_HASH_HI: usize = 0;
-pub(super) const FI_POLICY_ROOT: usize = 2;
-pub(super) const FI_POLICY_EPOCH: usize = 3;
-pub(super) const FI_CAP_MASK: usize = 4;
-pub(super) const FI_COMMITMENT_HI: usize = 5;
+pub(super) fn join_hi_lo(pubins: &[u8], hi_idx: usize) -> Option<[u8; 32]> {
+    let hi = field(pubins, hi_idx)?;
+    let lo = field(pubins, hi_idx + 1)?;
+    let mut out = [0u8; 32];
+    out[0..16].copy_from_slice(&hi[16..32]);
+    out[16..32].copy_from_slice(&lo[16..32]);
+    Some(out)
+}
