@@ -175,19 +175,24 @@ make nonos-mk-bootloader      # UEFI bootloader only
 
 ## Verify it yourself
 
-Do not take this README on faith. The same tree that builds the OS
-re-proves it:
+Do not take this README on faith. From a fresh clone, with no signing
+keys and nothing rebuilt, re-prove every shipped capsule:
 
 ```sh
-make nonos-mk-attestation-receipt
+make nonos-mk-verify-attestation
 ```
 
-That runs a real BLS12-381 pairing check on every bundled capsule
-against the ceremony verifying key (fingerprint 6cd2015037ea6181) and
-writes a receipt you can re-check independently. As of this writing
-the fleet stands at 59 capsules verified, 0 failed, and the runtime
-gate enforces all of them at every boot. Cold-started on a 2-core
-box, clone to verified canonical ceremony takes about four minutes.
+That runs a real BLS12-381 pairing check on every committed capsule
+proof trailer against the public verifying key (fingerprint
+6cd2015037ea6181). As of this writing the fleet stands at 59 capsules
+verified, 0 failed, and the runtime gate enforces all of them at every
+boot. It needs only the toolchain and the trust keystore that comes
+with the clone, no keys of your own.
+
+(`make nonos-mk-attestation-receipt` is the heavier developer path: it
+rebuilds and re-attests every capsule from source with your own
+scratch keys, then verifies. Use it when changing capsules, not just
+to check the release.)
 
 More verification entry points:
 
@@ -270,7 +275,8 @@ contract addresses and the frozen on-chain interface live in
                nonos-mk-check, nonos-mk-bootloader, nonos-mk-esp
   run          nonos-mk-run, nonos-mk-run-serial, nonos-mk-run-wizard,
                nonos-mk-debug
-  verify       nonos-mk-attestation-receipt, nonos-mk-zk-verify-live,
+  verify       nonos-mk-verify-attestation (no keys, nothing rebuilt),
+               nonos-mk-attestation-receipt, nonos-mk-zk-verify-live,
                nonos-mk-attestation CAP=<name>, nonos-mk-verify-trust,
                nonos-mk-host-trust-test, nonos-mk-check-trust-manifest
   test         nonos-mk-verify, nonos-mk-test, nonos-mk-boot-*,

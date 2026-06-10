@@ -389,6 +389,33 @@ nonos-mk-attestation: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_VERI
 		[ "$$fail" -eq 0 ]; \
 	fi
 
+# Verify-only: re-run a real Groth16 pairing check on every committed
+# capsule proof trailer against the committed public verifying key. This
+# is the path a fresh clone runs to check the official release: it needs
+# no signing keys, builds nothing, and re-signs nothing. Each trailer
+# carries the 192-byte proof at offset 12 and the 7 public inputs at
+# offset 208, the layout the kernel and the bootloader both parse.
+NONOS_DIST_VK := $(NONOS_TRUST_DIR)/zk/attestation_verifying_key.bin
+nonos-mk-verify-attestation: $(ZK_VERIFY_TOOL)
+	@test -f $(NONOS_DIST_VK) || { printf '\n  committed verifying key missing: %s\n  clone with --recursive so the trust keystore is present.\n\n' "$(NONOS_DIST_VK)"; exit 1; }
+	@fpr=$$(shasum -a 256 $(NONOS_DIST_VK) | cut -c1-16); \
+	printf '\n  verifying the committed fleet against the public key %s\n  groth16 / bls12-381, no signing keys, nothing rebuilt\n\n' "$$fpr"; \
+	pass=0; fail=0; any=0; tmp=$$(mktemp -d); \
+	for t in $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin; do \
+		[ -e "$$t" ] || continue; any=1; \
+		name=$$(basename "$$t" .zk_trailer.bin); \
+		dd if="$$t" of="$$tmp/p" bs=1 skip=12 count=192 2>/dev/null; \
+		dd if="$$t" of="$$tmp/pi" bs=1 skip=208 count=224 2>/dev/null; \
+		printf '  %-26s ' "$$name"; \
+		if $(ZK_VERIFY_TOOL) --verifying-key $(NONOS_DIST_VK) --proof "$$tmp/p" --public-inputs "$$tmp/pi" >/dev/null 2>&1; then \
+			printf 'verified\n'; pass=$$((pass + 1)); \
+		else printf 'FAILED\n'; fail=$$((fail + 1)); fi; \
+	done; \
+	rm -rf "$$tmp"; \
+	[ "$$any" -eq 1 ] || { printf '\n  no committed trailers found under %s\n\n' "$(NONOS_TRUST_DIR)/capsules"; exit 1; }; \
+	printf '\n  %s verified, %s failed against verifying-key %s\n\n' "$$pass" "$$fail" "$$fpr"; \
+	[ "$$fail" -eq 0 ]
+
 # Emit an attestation receipt: one verifiable record per capsule with the public
 # inputs, the proof digest, the verifying-key fingerprint, and the live verdict.
 # A third party with the public verifying key can re-run the check from this.
