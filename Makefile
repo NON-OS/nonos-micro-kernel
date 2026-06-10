@@ -398,8 +398,12 @@ nonos-mk-attestation: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_VERI
 NONOS_DIST_VK := $(NONOS_TRUST_DIR)/zk/attestation_verifying_key.bin
 nonos-mk-verify-attestation: $(ZK_VERIFY_TOOL)
 	@test -f $(NONOS_DIST_VK) || { printf '\n  committed verifying key missing: %s\n  clone with --recursive so the trust keystore is present.\n\n' "$(NONOS_DIST_VK)"; exit 1; }
-	@fpr=$$(shasum -a 256 $(NONOS_DIST_VK) | cut -c1-16); \
+	@mkdir -p $(dir $(NONOS_RECEIPT)); \
+	fpr=$$(shasum -a 256 $(NONOS_DIST_VK) | cut -c1-16); \
 	printf '\n  verifying the committed fleet against the public key %s\n  groth16 / bls12-381, no signing keys, nothing rebuilt\n\n' "$$fpr"; \
+	{ printf '# NONOS capsule attestation receipt\n'; \
+	  printf '# scheme groth16  curve bls12-381  proof 192B  public-inputs 7\n'; \
+	  printf '# verifying-key %s\n#\n' "$$fpr"; } > $(NONOS_RECEIPT); \
 	pass=0; fail=0; any=0; tmp=$$(mktemp -d); \
 	for t in $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin; do \
 		[ -e "$$t" ] || continue; any=1; \
@@ -408,12 +412,13 @@ nonos-mk-verify-attestation: $(ZK_VERIFY_TOOL)
 		dd if="$$t" of="$$tmp/pi" bs=1 skip=208 count=224 2>/dev/null; \
 		printf '  %-26s ' "$$name"; \
 		if $(ZK_VERIFY_TOOL) --verifying-key $(NONOS_DIST_VK) --proof "$$tmp/p" --public-inputs "$$tmp/pi" >/dev/null 2>&1; then \
-			printf 'verified\n'; pass=$$((pass + 1)); \
-		else printf 'FAILED\n'; fail=$$((fail + 1)); fi; \
+			printf 'verified\n'; printf '  %-26s verified\n' "$$name" >> $(NONOS_RECEIPT); pass=$$((pass + 1)); \
+		else printf 'FAILED\n'; printf '  %-26s FAILED\n' "$$name" >> $(NONOS_RECEIPT); fail=$$((fail + 1)); fi; \
 	done; \
 	rm -rf "$$tmp"; \
 	[ "$$any" -eq 1 ] || { printf '\n  no committed trailers found under %s\n\n' "$(NONOS_TRUST_DIR)/capsules"; exit 1; }; \
-	printf '\n  %s verified, %s failed against verifying-key %s\n\n' "$$pass" "$$fail" "$$fpr"; \
+	printf '#\n# %s verified, %s failed against verifying-key %s\n' "$$pass" "$$fail" "$$fpr" >> $(NONOS_RECEIPT); \
+	printf '\n  %s verified, %s failed against verifying-key %s\n  receipt: %s\n\n' "$$pass" "$$fail" "$$fpr" "$(NONOS_RECEIPT)"; \
 	[ "$$fail" -eq 0 ]
 
 # Emit an attestation receipt: one verifiable record per capsule with the public
@@ -533,8 +538,8 @@ nonos-mk-nox-registry: $(NOX_REGISTRY_TOOL) nonos-mk-ensure-zk-keys
 # registry entry. Everything lands under target/nox/.
 nonos-mk-nox:
 	@test -n "$(CONTRIB)" || { printf '\n  usage: make nonos-mk-nox CONTRIB=0x<your reward address> [EPOCH=%s]\n\n' "$(EPOCH)"; exit 1; }
-	@printf '\n  NONOS x NOX contributor run   groth16 / bls12-381   vk %s\n\n' "$(NONOS_VK_FPR)"
-	@$(MAKE) nonos-mk-attestation-receipt
+	@printf '\n  NONOS x NOX contributor run   groth16 / bls12-381\n\n'
+	@$(MAKE) nonos-mk-verify-attestation
 	@$(MAKE) nonos-mk-nox-receipt CONTRIB=$(CONTRIB) KIND=FLEET_VERIFICATION ARTIFACT=$(NONOS_RECEIPT) EPOCH=$(EPOCH)
 	@$(MAKE) nonos-mk-nox-verify RECEIPT=$(NOX_DIR)/receipts/FLEET_VERIFICATION-epoch$(EPOCH).json ARTIFACT=$(NONOS_RECEIPT)
 	@$(MAKE) nonos-mk-nox-registry
