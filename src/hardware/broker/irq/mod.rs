@@ -35,6 +35,8 @@ mod release;
 mod slots;
 #[cfg(target_arch = "x86_64")]
 mod validate;
+#[cfg(target_arch = "x86_64")]
+mod wait;
 
 #[cfg(target_arch = "x86_64")]
 pub use bind::bind;
@@ -42,16 +44,24 @@ pub use bind::bind;
 pub use poll::poll;
 #[cfg(target_arch = "x86_64")]
 pub use release::{ack_grant, release_all_for_pid, release_for_device, unmap_grant};
+#[cfg(target_arch = "x86_64")]
+pub use wait::{wait_arm, wait_disarm};
 
 #[cfg(target_arch = "aarch64")]
 mod aarch64;
 #[cfg(target_arch = "aarch64")]
-pub use aarch64::{ack_grant, bind, poll, release_all_for_pid, release_for_device, unmap_grant};
+pub use aarch64::{
+    ack_grant, bind, poll, release_all_for_pid, release_for_device, unmap_grant, wait_arm,
+    wait_disarm,
+};
 
 #[cfg(target_arch = "riscv64")]
 mod riscv64;
 #[cfg(target_arch = "riscv64")]
-pub use riscv64::{ack_grant, bind, poll, release_all_for_pid, release_for_device, unmap_grant};
+pub use riscv64::{
+    ack_grant, bind, poll, release_all_for_pid, release_for_device, unmap_grant, wait_arm,
+    wait_disarm,
+};
 
 pub use types::{
     IrqBindError, IrqBindRequest, IrqBindResult, IrqError, IrqGrant, IrqGrantKind, IrqPollResult,

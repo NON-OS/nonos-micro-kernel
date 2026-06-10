@@ -14,21 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// aarch64 GIC-backed IRQ broker. SPIs only (intid 32..1019). PPIs and
-// SGIs are kernel-owned and not delegatable to capsules. MSI-X is not
-// part of the GICv3 substrate this kernel speaks.
-#![cfg(target_arch = "aarch64")]
+//! Blocking IRQ wait is not implemented on the GIC backend yet;
+//! capsules fall back to `MkIrqPoll`.
 
-mod ack;
-mod bind;
-mod pending;
-mod poll;
-mod release;
-mod trampoline;
-mod wait;
+use crate::hardware::broker::irq::types::IrqError;
 
-pub use ack::ack_grant;
-pub use bind::bind;
-pub use poll::poll;
-pub use release::{release_all_for_pid, release_for_device, unmap_grant};
-pub use wait::{wait_arm, wait_disarm};
+pub fn wait_arm(_pid: u32, _grant_id: u64) -> Result<u64, IrqError> {
+    Err(IrqError::PlatformError)
+}
+
+pub fn wait_disarm(_pid: u32, _grant_id: u64) -> Result<u64, IrqError> {
+    Err(IrqError::PlatformError)
+}

@@ -15,10 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! Hard-IRQ dispatcher. Each broker vector ISR tail-calls
-//! `on_vector`. The dispatcher must not allocate, must not take
-//! contended locks, must not touch IPC, paging, or the scheduler.
-//! It bumps the per-grant counter, masks the GSI at the IO-APIC,
-//! and EOIs the LAPIC. The capsule sees the increment via
+//! `on_vector`. The dispatcher must not allocate eagerly, must not
+//! take locks of its own, and must not touch IPC or paging. It
+//! bumps the per-grant counter, masks the GSI at the IO-APIC,
+//! wakes the slot's registered `MkIrqWait` waiter if one is armed,
+//! and EOIs the LAPIC. The wake reuses `sched::wake_process` — the
+//! same scheduler entry the timer ISR exercises every tick, safe
+//! here because syscalls run with IF=0 (SFMASK) and ISRs do not
+//! nest, so no lock holder can ever be interrupted mid-section.
+//! Capsules without an armed waiter see the increment via
 //! `MkIrqPoll` from normal syscall context.
 
 use core::sync::atomic::Ordering;
@@ -53,6 +58,11 @@ pub fn on_vector(vector: u8) {
     let prev = slot.seq.fetch_add(1, Ordering::AcqRel);
     if prev >= SEQ_SATURATION {
         slot.overflow.fetch_add(1, Ordering::AcqRel);
+    }
+
+    let waiter = slot.waiter.swap(0, Ordering::AcqRel);
+    if waiter != 0 {
+        crate::sched::wake_process(waiter);
     }
 
     crate::interrupts::apic::send_eoi();
