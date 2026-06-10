@@ -24,6 +24,7 @@ pub(crate) const N_MK_IRQ_BIND: i64 = tag4(b"MIRB");
 pub(crate) const N_MK_IRQ_UNBIND: i64 = tag4(b"MIRU");
 pub(crate) const N_MK_IRQ_ACK: i64 = tag4(b"MIRA");
 pub(crate) const N_MK_IRQ_POLL: i64 = tag4(b"MIRP");
+pub(crate) const N_MK_IRQ_WAIT: i64 = tag4(b"MIRW");
 pub(crate) const N_MK_DMA_MAP: i64 = tag4(b"MDMM");
 pub(crate) const N_MK_DMA_UNMAP: i64 = tag4(b"MDMU");
 pub(crate) const N_MK_PIO_GRANT: i64 = tag4(b"MPGT");
