@@ -14,12 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::draw::fill_rect;
 use super::state::{DISPLAY_ENABLED, LOG_Y, MIN_LOG_Y};
+use crate::kernel_core::init::framebuffer::framebuffer_state;
 use core::sync::atomic::Ordering;
 
-pub fn init_after_fb(cursor_y: u32) {
-    LOG_Y.store(cursor_y, Ordering::SeqCst);
-    MIN_LOG_Y.store(160, Ordering::SeqCst);
+const TOP: u32 = 24;
+
+pub fn init_after_fb(_cursor_y: u32) {
+    match framebuffer_state() {
+        Some(fb) => {
+            crate::sys::serial::println(b"[fbconsole] framebuffer present, clearing");
+            fill_rect(fb, 0, 0, fb.width, fb.height, 0x0000_0000);
+        }
+        None => crate::sys::serial::println(b"[fbconsole] NO framebuffer mapped"),
+    }
+    LOG_Y.store(TOP, Ordering::SeqCst);
+    MIN_LOG_Y.store(TOP, Ordering::SeqCst);
     DISPLAY_ENABLED.store(true, Ordering::Release);
 }
 

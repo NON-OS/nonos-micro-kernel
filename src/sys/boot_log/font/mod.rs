@@ -14,12 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod draw;
-mod font;
-mod init;
-mod output;
-mod render;
-mod state;
+mod lookup;
+mod lower;
+mod num;
+mod special;
+mod sym;
+mod upper;
 
-pub use init::{disable_display, init_after_fb};
-pub use output::{error, info, ok, stage, test_fail, test_header, test_pass, test_skip, warn};
+pub use lookup::get_char_bitmap;

@@ -110,6 +110,16 @@ fn init_arch_firmware(handoff: &KernelHandoff) {
 }
 
 pub fn microkernel_main() -> ! {
+    boot_log::ok("NONOS", "boot log held; starting userspace");
+    let start = clock::uptime_ms();
+    let mut guard: u64 = 0;
+    while clock::uptime_ms().wrapping_sub(start) < 2500 {
+        core::hint::spin_loop();
+        guard = guard.wrapping_add(1);
+        if guard > 3_000_000_000 {
+            break;
+        }
+    }
     boot_log::ok("UKERNEL", "Creating init");
     let init_pid = match create_process("init", ProcessState::Running, Priority::High) {
         Ok(pid) => pid,

@@ -1,5 +1,5 @@
-// NONOS Operating System
-// Copyright (C) 2026 NONOS Contributors
+// NØNOS Operating System
+// Copyright (C) 2026 NØNOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,12 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod draw;
-mod font;
-mod init;
-mod output;
-mod render;
-mod state;
+pub fn get_oslash() -> [u8; 16] {
+    [0, 0x3E, 0x63, 0x67, 0x6F, 0x7B, 0x73, 0x3E, 0, 0, 0, 0, 0, 0, 0, 0]
+}
 
-pub use init::{disable_display, init_after_fb};
-pub use output::{error, info, ok, stage, test_fail, test_header, test_pass, test_skip, warn};
+pub fn get_default() -> [u8; 16] {
+    [0, 0x7E, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7E, 0, 0, 0, 0, 0, 0, 0, 0]
+}
