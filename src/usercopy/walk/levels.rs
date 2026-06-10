@@ -18,9 +18,9 @@
 //! the directmap so the user virtual address itself is never
 //! dereferenced. Honours 1 GiB and 2 MiB huge pages.
 
+use super::bounds::{directmap_of, leaf_in_directmap};
 use super::leaf::UserLeaf;
 use super::root::page_table_root;
-use crate::memory::layout::DIRECTMAP_BASE;
 use crate::memory::paging::constants::{PTE_ADDR_MASK, PTE_HUGE_PAGE, PTE_PRESENT};
 use crate::usercopy::error::UsercopyError;
 
@@ -39,6 +39,9 @@ const PAGE_1G_ADDR_MASK: u64 = 0x000F_FFFF_C000_0000;
 // usercopy tree may use; this routine has no `pub(crate)` exposure.
 pub(super) fn walk_to_leaf(va: u64) -> Result<UserLeaf, UsercopyError> {
     let pt_root = page_table_root()?;
+    if pt_root == 0 || pt_root & PAGE_4K_MASK != 0 {
+        return Err(UsercopyError::PageTableCorrupt);
+    }
     walk(pt_root, va)
 }
 
@@ -48,48 +51,44 @@ fn walk(pt_root: u64, va: u64) -> Result<UserLeaf, UsercopyError> {
     let i2 = (va >> 21) & PAGE_TABLE_INDEX_MASK;
     let i1 = (va >> 12) & PAGE_TABLE_INDEX_MASK;
 
-    let e4 = read_pte(directmap_of(pt_root), i4);
+    let e4 = read_pte(directmap_of(pt_root)?, i4);
     if e4 & PTE_PRESENT == 0 {
         return Err(UsercopyError::PageNotMapped);
     }
-    let e3 = read_pte(directmap_of(e4 & PTE_ADDR_MASK), i3);
+    let e3 = read_pte(directmap_of(e4 & PTE_ADDR_MASK)?, i3);
     if e3 & PTE_PRESENT == 0 {
         return Err(UsercopyError::PageNotMapped);
     }
     if e3 & PTE_HUGE_PAGE != 0 {
-        return Ok(UserLeaf {
+        return leaf_in_directmap(UserLeaf {
             entry: e3,
             phys_base: e3 & PAGE_1G_ADDR_MASK,
             offset: va & PAGE_1G_MASK,
             size: PAGE_1G_SIZE,
         });
     }
-    let e2 = read_pte(directmap_of(e3 & PTE_ADDR_MASK), i2);
+    let e2 = read_pte(directmap_of(e3 & PTE_ADDR_MASK)?, i2);
     if e2 & PTE_PRESENT == 0 {
         return Err(UsercopyError::PageNotMapped);
     }
     if e2 & PTE_HUGE_PAGE != 0 {
-        return Ok(UserLeaf {
+        return leaf_in_directmap(UserLeaf {
             entry: e2,
             phys_base: e2 & PAGE_2M_ADDR_MASK,
             offset: va & PAGE_2M_MASK,
             size: PAGE_2M_SIZE,
         });
     }
-    let e1 = read_pte(directmap_of(e2 & PTE_ADDR_MASK), i1);
+    let e1 = read_pte(directmap_of(e2 & PTE_ADDR_MASK)?, i1);
     if e1 & PTE_PRESENT == 0 {
         return Err(UsercopyError::PageNotMapped);
     }
-    Ok(UserLeaf {
+    leaf_in_directmap(UserLeaf {
         entry: e1,
         phys_base: e1 & PTE_ADDR_MASK,
         offset: va & PAGE_4K_MASK,
         size: PAGE_4K_SIZE,
     })
-}
-
-fn directmap_of(phys: u64) -> u64 {
-    DIRECTMAP_BASE + phys
 }
 
 fn read_pte(table_virt: u64, index: u64) -> u64 {
