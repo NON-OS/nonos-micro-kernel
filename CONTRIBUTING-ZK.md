@@ -98,10 +98,17 @@ Export the circuit registry entry:
 
 ## How settlement works
 
-1. You produce work and a receipt, and submit both (receipt plus a link
-   to the artifact) to the project.
-2. An authorizer independently re-runs nox-receipt-verify against your
-   artifact. Only receipts that re-verify are accepted.
+1. You produce work and a receipt. make nonos-mk-nox submits it for
+   you, artifact included; the submission endpoint re-runs the same
+   verification library before accepting anything and answers with
+   your verifier hash. If the endpoint is unreachable the receipt
+   stays local and one command resends it:
+
+       make nonos-mk-nox-submit RECEIPT=path ARTIFACT=path
+
+2. An authorizer reviews the accepted spool; mechanical validity was
+   already enforced at the door, so human judgment is only spent on
+   audits and edge cases.
 3. Accepted receipts for an epoch go into a Merkle tree built by
    nox-merkle. Each leaf binds your address, the receipt id, the circuit
    id, the amount, the epoch and the pool id.
