@@ -28,8 +28,8 @@ pub(super) fn repaint<A: App>(booted: &mut BootedApp<A>, peers: &Peers, request_
     let _ = compositor::damage_commit(
         peers.compositor,
         rid,
-        0,
-        0,
+        booted.binding.x,
+        booted.binding.y,
         booted.binding.width,
         booted.binding.height,
     );

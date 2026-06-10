@@ -30,5 +30,6 @@ pub(super) fn paint_once<A: App>(
 ) -> bool {
     paint(app, manifest, binding);
     let rid = next(request_id);
-    compositor::damage_commit(compositor_port, rid, 0, 0, manifest.width, manifest.height).is_ok()
+    compositor::damage_commit(compositor_port, rid, binding.x, binding.y, binding.width, binding.height)
+        .is_ok()
 }
