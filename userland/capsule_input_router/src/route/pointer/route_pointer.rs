@@ -18,10 +18,11 @@ use nonos_libc::{
     InputEvent, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP, INPUT_KIND_TOUCH, INPUT_KIND_WHEEL,
 };
 
-use crate::state::Context;
+use crate::state::{Context, Press};
 
 use super::mirror_shell_pointer::mirror_shell_pointer;
 use super::refresh_display::refresh_display;
+use super::route_to_press::route_to_press;
 use super::route_to_shell::route_to_shell;
 use super::route_to_window::route_to_window;
 use super::shell_pid::shell_pid;
@@ -34,11 +35,28 @@ pub fn route_pointer(ctx: &mut Context, event: &InputEvent) -> u32 {
     ctx.cursor_y = y;
     ctx.cursor_dirty = true;
     let mut delivered = mirror_shell_pointer(ctx, event, x, y);
+    if ctx.press.is_some() {
+        delivered += route_to_press(ctx, event, x, y);
+        if event.kind == INPUT_KIND_BUTTON_UP {
+            ctx.press = None;
+        }
+        ctx.record(delivered);
+        return delivered;
+    }
     if needs_hit_test(event.kind) {
         delivered += match topmost_target(ctx, x, y) {
             None => route_to_shell(ctx, event, x, y),
             Some(target) if target.owner_pid == shell_pid(ctx) => route_to_shell(ctx, event, x, y),
-            Some(target) => route_to_window(ctx, event, target),
+            Some(target) => {
+                if event.kind == INPUT_KIND_BUTTON_DOWN {
+                    ctx.press = Some(Press {
+                        pid: target.owner_pid,
+                        origin_x: x as i32 - target.local_x as i32,
+                        origin_y: y as i32 - target.local_y as i32,
+                    });
+                }
+                route_to_window(ctx, event, target)
+            }
         };
     }
     ctx.record(delivered);

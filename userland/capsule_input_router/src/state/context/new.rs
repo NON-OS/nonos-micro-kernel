@@ -22,6 +22,7 @@ impl Context {
         Self {
             subscriptions: SubscriptionTable::new(),
             grabs: GrabTable::new(),
+            press: None,
             cursor: CursorState::new(),
             compositor_port: 0,
             wm_port: 0,

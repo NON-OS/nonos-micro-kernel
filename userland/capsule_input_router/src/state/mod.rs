@@ -17,9 +17,11 @@
 pub mod context;
 pub mod cursor;
 pub mod grabs;
+pub mod press;
 pub mod subscriptions;
 
 pub use context::Context;
 pub use cursor::CursorState;
 pub use grabs::GrabTable;
+pub use press::Press;
 pub use subscriptions::SubscriptionTable;

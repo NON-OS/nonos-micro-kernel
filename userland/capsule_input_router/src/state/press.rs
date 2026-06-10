@@ -14,15 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constants;
-mod mirror_shell_pointer;
-mod refresh_display;
-mod route_pointer;
-mod route_to_press;
-mod route_to_shell;
-mod route_to_window;
-mod shell_pid;
-mod topmost_target;
-
-pub use route_pointer::route_pointer;
-pub(super) use shell_pid::shell_pid;
+// Implicit pointer grab armed by a button press inside a window. The
+// origin is the window's screen position frozen at press time, so the
+// grab holder receives motion in a coordinate frame where deltas equal
+// screen deltas even while it moves itself.
+#[derive(Clone, Copy)]
+pub struct Press {
+    pub pid: u32,
+    pub origin_x: i32,
+    pub origin_y: i32,
+}
