@@ -14,18 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod close;
-mod focus;
-mod maximize;
-mod minimize;
-mod move_window;
-mod open;
-mod raise;
+use crate::wire::{call_status, NWMP_MAGIC};
 
-pub use close::window_close;
-pub use focus::window_focus;
-pub use maximize::window_maximize;
-pub use minimize::{window_minimize, window_restore};
-pub use move_window::window_move;
-pub use open::{window_open, WindowPlacement};
-pub use raise::window_raise;
+const OP_MOVE: u16 = 0x0004;
+const BODY_LEN: usize = 16;
+
+pub fn window_move(
+    port: u32,
+    request_id: u32,
+    window_id: u32,
+    x: u32,
+    y: u32,
+) -> Result<(), &'static str> {
+    let mut body = [0u8; BODY_LEN];
+    body[0..4].copy_from_slice(&window_id.to_le_bytes());
+    body[8..12].copy_from_slice(&x.to_le_bytes());
+    body[12..16].copy_from_slice(&y.to_le_bytes());
+    let status = call_status(port, NWMP_MAGIC, OP_MOVE, request_id, &body)?;
+    if status != 0 {
+        return Err("wm rejected window_move");
+    }
+    Ok(())
+}

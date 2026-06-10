@@ -23,6 +23,7 @@ use super::boot::BootedApp;
 use super::drain_ipc::drain;
 use super::ensure_primed::ensure_primed;
 use super::maximize;
+use super::move_window::apply_move;
 use super::refresh_input::refresh_input;
 use super::repaint::repaint;
 use super::request_id::next;
@@ -43,12 +44,18 @@ pub(super) fn service_frame<A: App>(
     }
     let result = drain(
         &mut booted.app,
+        &mut booted.drag,
         rx,
         booted.binding.width,
+        booted.binding.x,
+        booted.binding.y,
         peers.wm,
         booted.manifest.window_id,
         request_id,
     );
+    if let Some((mx, my)) = result.move_to {
+        apply_move(booted, peers, request_id, mx, my);
+    }
     if result.close {
         return close(peers, booted.manifest.window_id, &booted.binding, request_id);
     }

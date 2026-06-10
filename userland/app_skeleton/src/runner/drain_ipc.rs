@@ -19,6 +19,7 @@ use nonos_libc::mk_ipc_recv_from;
 use crate::app::{App, EventOutcome};
 
 use super::control::{handle_control, ControlOutcome};
+use super::drag::{self, DragState};
 use super::{click_focus, decorations, dispatch::parse_delivery};
 
 const SERVICE_INBOX: u64 = 0;
@@ -30,24 +31,29 @@ pub(super) struct DrainResult {
     pub minimize: bool,
     pub maximize: bool,
     pub restore: bool,
+    pub move_to: Option<(u32, u32)>,
 }
 
 pub(super) fn drain<A: App>(
     app: &mut A,
+    drag_state: &mut DragState,
     rx: &mut [u8],
     width: u32,
+    win_x: u32,
+    win_y: u32,
     wm_port: u32,
     window_id: u32,
     request_id: &mut u32,
 ) -> DrainResult {
     let mut repaint = false;
     let mut restore = false;
+    let mut move_to = None;
     loop {
         let mut sender = 0u32;
         let n =
             mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), RECV_NOWAIT, &mut sender);
         if n <= 0 {
-            return DrainResult { repaint, close: false, minimize: false, maximize: false, restore };
+            return DrainResult { repaint, close: false, minimize: false, maximize: false, restore, move_to };
         }
         match handle_control(&rx[..n as usize], sender, wm_port, window_id, request_id) {
             ControlOutcome::FocusSelf => {
@@ -62,21 +68,25 @@ pub(super) fn drain<A: App>(
         click_focus::handle(event, wm_port, window_id, request_id);
         match decorations::handle(width, event) {
             Some(EventOutcome::Close) => {
-                return DrainResult { repaint, close: true, minimize: false, maximize: false, restore }
+                return DrainResult { repaint, close: true, minimize: false, maximize: false, restore, move_to }
             }
             Some(EventOutcome::Minimize) => {
-                return DrainResult { repaint, close: false, minimize: true, maximize: false, restore }
+                return DrainResult { repaint, close: false, minimize: true, maximize: false, restore, move_to }
             }
             Some(EventOutcome::Maximize) => {
-                return DrainResult { repaint, close: false, minimize: false, maximize: true, restore }
+                return DrainResult { repaint, close: false, minimize: false, maximize: true, restore, move_to }
             }
             _ => {}
+        }
+        if let Some(target) = drag::handle(drag_state, width, win_x, win_y, &event) {
+            move_to = Some(target);
+            continue;
         }
         match app.on_event(event) {
             EventOutcome::Idle | EventOutcome::Minimize | EventOutcome::Maximize => {}
             EventOutcome::Repaint => repaint = true,
             EventOutcome::Close => {
-                return DrainResult { repaint, close: true, minimize: false, maximize: false, restore }
+                return DrainResult { repaint, close: true, minimize: false, maximize: false, restore, move_to }
             }
         }
     }
