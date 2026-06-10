@@ -21,6 +21,7 @@ use nonos_attestation_circuit::nox::{hex32, write_json};
 
 use super::amount::parse_amount;
 use super::args::parse;
+use super::deployment::load_deployment;
 use super::input::ClaimsInput;
 use super::leaf::claim_leaf;
 use super::output::{ClaimOutput, RootOutput};
@@ -33,6 +34,10 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     if input.claims.is_empty() {
         return Err("claims input is empty".into());
     }
+    let deployment = match &args.deployment {
+        Some(path) => Some(load_deployment(Path::new(path))?),
+        None => None,
+    };
     let pool_id = hex32_bytes(&input.pool_id)?;
     let mut seen = BTreeSet::new();
     let mut rows = Vec::with_capacity(input.claims.len());
@@ -80,6 +85,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
             pool_id: input.pool_id.clone(),
             root: hex32(&root),
             leaf_count: leaves.len(),
+            chain_id: deployment.as_ref().map(|d| d.chain_id),
+            reward_pool: deployment.as_ref().map(|d| d.contracts.reward_pool.clone()),
+            reward_root_manager: deployment
+                .as_ref()
+                .map(|d| d.contracts.reward_root_manager.clone()),
         },
     )?;
     write_json(&out_dir.join("claims.json"), &claims_out)?;

@@ -22,6 +22,8 @@ pub struct Args {
     pub claims: String,
     #[arg(long)]
     pub out_dir: String,
+    #[arg(long)]
+    pub deployment: Option<String>,
 }
 
 pub fn parse() -> Args {

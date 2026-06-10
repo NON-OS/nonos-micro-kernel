@@ -22,6 +22,12 @@ pub struct RootOutput {
     pub pool_id: String,
     pub root: String,
     pub leaf_count: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chain_id: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reward_pool: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reward_root_manager: Option<String>,
 }
 
 #[derive(Serialize)]

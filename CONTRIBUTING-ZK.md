@@ -8,10 +8,11 @@ receipt and the amount.
 
 What is live today: the 5-contributor external trusted-setup ceremony,
 the Groth16 attestation of every capsule (verifying key fingerprint
-6cd2015037ea6181), the enforced runtime attestation gate, and the receipt
-tooling described here. Reward pools and the on-chain settlement
-contracts are built and tested but not yet deployed to mainnet; until
-they are, receipts accumulate toward the first epoch.
+6cd2015037ea6181), the enforced runtime attestation gate, the receipt
+tooling described here, and the reward contracts on Ethereum mainnet
+under a 3/5 Safe (addresses in abi/nox_deployment.json, custody and
+audit record in abi/NOX_CONTRACTS.md). Receipts accumulate toward the
+first epoch root; the pool pays only NOX that demand revenue funded.
 
 ## The one command
 
@@ -77,8 +78,9 @@ Export the circuit registry entry:
    nox-merkle. Each leaf binds your address, the receipt id, the circuit
    id, the amount, the epoch and the pool id.
 4. The root is published on-chain and finalized. You claim from
-   NoxRewardPool with the proof from claims.json. The pool pays only
-   NOX it was funded with; nothing is minted.
+   NoxRewardPool with the proof from claims.json, whose root.json
+   names the chain and the deployed pool and root-manager addresses.
+   The pool pays only NOX it was funded with; nothing is minted.
 
 The receipt and schema formats are frozen in abi/ (
 nox_zk_contribution_receipt.schema.json and

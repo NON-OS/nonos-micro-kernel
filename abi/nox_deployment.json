@@ -1,0 +1,19 @@
+{
+  "chain_id": 1,
+  "network": "ethereum-mainnet",
+  "safe": "0x3a52ea60F61036Afbbec25F46a64485Ac4477Ccc",
+  "nox_token": "0x0a26c80Be4E060e688d7C23aDdB92cBb5D2C9eCA",
+  "contracts": {
+    "zk_circuit_registry": "0x6DFfb5D99cd0dcD3B37B1C62E8eF6C4C4142b2E7",
+    "contribution_registry": "0x6d7e47c3f5ba68C3eD92FDca2D1818ef5Fd67CD4",
+    "reward_root_manager": "0xfc2dC45fa4273bedF3FBfDD6C9992e21DbdcA9f0",
+    "reward_pool": "0xF31540565074a12E3327145592aB6118029880fD",
+    "treasury": "0x056cD20Fb4ec1f5A4b14eD227ba1908D4340734c",
+    "capsule_registry": "0x05527a86Fe152839935F0BE163F304dD330BD228",
+    "publisher_bond": "0x2bA3b28Fa3765Bcb568FEfB25789A31861F42E9e",
+    "marketplace_settlement": "0xEb84F1a40512fF91978baAa43750eb8fdAA51C90"
+  },
+  "leaf": "keccak256(keccak256(abi.encode(address contributor, bytes32 receiptId, bytes32 circuitId, uint256 amount, uint256 epoch, bytes32 poolId)))",
+  "proofs": "openzeppelin sorted-pair keccak256",
+  "verifying_key_sha256_prefix": "6cd2015037ea6181"
+}

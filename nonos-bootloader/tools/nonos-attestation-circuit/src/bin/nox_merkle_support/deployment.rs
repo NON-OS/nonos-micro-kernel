@@ -14,15 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod amount;
-mod args;
-mod deployment;
-mod input;
-mod keccak;
-mod leaf;
-mod output;
-mod read_claim;
-mod run;
-mod tree;
+use std::path::Path;
 
-pub use run::run;
+use serde::Deserialize;
+
+#[derive(Deserialize, Clone)]
+pub struct Deployment {
+    pub chain_id: u64,
+    pub contracts: DeployedContracts,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct DeployedContracts {
+    pub reward_pool: String,
+    pub reward_root_manager: String,
+}
+
+pub fn load_deployment(path: &Path) -> Result<Deployment, Box<dyn std::error::Error>> {
+    let d: Deployment = serde_json::from_slice(&std::fs::read(path)?)?;
+    Ok(d)
+}

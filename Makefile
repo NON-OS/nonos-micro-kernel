@@ -469,7 +469,8 @@ nonos-mk-nox-verify: $(NOX_VERIFY_TOOL) nonos-mk-ensure-zk-keys
 nonos-mk-nox-merkle: $(NOX_MERKLE_TOOL)
 	@test -n "$(CLAIMS)" || { printf '\n  usage: make nonos-mk-nox-merkle CLAIMS=allocations.json [EPOCH=%s]\n\n' "$(EPOCH)"; exit 1; }
 	@mkdir -p $(NOX_DIR)/epoch$(EPOCH)
-	@$(NOX_MERKLE_TOOL) --claims $(CLAIMS) --out-dir $(NOX_DIR)/epoch$(EPOCH)
+	@$(NOX_MERKLE_TOOL) --claims $(CLAIMS) --out-dir $(NOX_DIR)/epoch$(EPOCH) \
+		--deployment abi/nox_deployment.json
 	@printf '\n  root and claims written: %s/\n\n' "$(NOX_DIR)/epoch$(EPOCH)"
 
 # Export the canonical circuit registry entry for NoxZkCircuitRegistry.
