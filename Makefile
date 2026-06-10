@@ -541,7 +541,11 @@ $(TARGET_DIR)/.nonos-toolchain.stamp:
 	@test -f $(RUSTUP) || { echo "rustup not found. Install from https://rustup.rs"; exit 1; }
 	@$(RUSTUP) toolchain install $(TOOLCHAIN) 2>/dev/null || true
 	@$(RUSTUP) target add x86_64-unknown-uefi --toolchain $(TOOLCHAIN) 2>/dev/null || true
-	@$(RUSTUP) component add rust-src clippy rustfmt --toolchain $(TOOLCHAIN) 2>/dev/null || true
+	@# rust-src is mandatory: -Zbuild-std cannot build core/alloc without it.
+	@$(RUSTUP) component add rust-src --toolchain $(TOOLCHAIN) || { \
+		echo "::error::failed to add rust-src to $(TOOLCHAIN); -Zbuild-std needs it"; exit 1; }
+	@# clippy and rustfmt are best-effort (lint/format only).
+	@$(RUSTUP) component add clippy rustfmt --toolchain $(TOOLCHAIN) 2>/dev/null || true
 	@touch $@
 
 $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
@@ -592,7 +596,11 @@ NONOS_CERT_VALID_UNTIL_MS := 1893456000000
 
 CAPSULE_SIGN_BIN := nonos-sign/target/release/capsule-sign
 
-$(USERLAND_LIBC): $(USERLAND_LIBC_SRCS)
+# Order-only dependency on the toolchain stamp: -Zbuild-std needs the
+# rust-src component, and a make-level RUSTUP_TOOLCHAIN override skips the
+# component list in rust-toolchain.toml, so the stamp must install it
+# before the first userland build a fresh checkout ever runs.
+$(USERLAND_LIBC): $(USERLAND_LIBC_SRCS) | $(TARGET_DIR)/.nonos-toolchain.stamp
 	@echo "Building userland libc..."
 	@cd $(USERLAND_DIR)/libc && \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \

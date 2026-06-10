@@ -7,7 +7,11 @@ the living reference for this guide. Budget an afternoon the first
 time; the build tooling does all the security work for you.
 
 Prerequisites: rustup (the repo pins its own toolchain), QEMU, and
-make. macOS and Linux both work.
+make. macOS and Linux both work. The build installs the toolchain and
+its `rust-src` component for you on first run; if you ever see a
+`-Zbuild-std` / missing `rust-src` error, the build's toolchain step
+will install it, or you can add it directly with
+`rustup component add rust-src --toolchain nightly-2026-01-16`.
 
 Clone with submodules; the trust keystore and the build includes come
 along, including the canonical ceremony keys your proofs verify
