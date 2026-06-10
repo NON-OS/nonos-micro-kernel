@@ -32,5 +32,8 @@ impl Context {
         if self.shell_pid == pid {
             self.shell_pid = 0;
         }
+        if self.last_focus_pid == pid {
+            self.last_focus_pid = 0;
+        }
     }
 }
