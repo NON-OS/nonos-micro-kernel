@@ -17,15 +17,16 @@
 use nonos_app_skeleton::{clients::vfs, EventOutcome};
 
 use super::resolve_owner_pid::resolve_owner_pid;
-use super::state::{State, PATH};
+use super::state::State;
 
 pub(super) fn ctrl_save(state: &mut State) -> EventOutcome {
     if !resolve_owner_pid(state) {
         state.status = b"save failed";
         return EventOutcome::Repaint;
     }
-    state.status = if vfs::write_file(state.owner_pid, PATH, &state.buf[..state.len]).is_ok() {
-        b"saved /notes.txt"
+    let path = state.path[..state.path_len].to_vec();
+    state.status = if vfs::write_file(state.owner_pid, &path, &state.buf[..state.len]).is_ok() {
+        b"saved"
     } else {
         b"save failed"
     };

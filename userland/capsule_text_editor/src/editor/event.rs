@@ -17,11 +17,15 @@
 use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_BACKSPACE, KEY_ENTER, KEY_ESC, MOD_CTRL};
 
 use super::on_ctrl::on_ctrl;
+use super::path_prompt;
 use super::state::State;
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     if !event.is_key_down() {
         return EventOutcome::Idle;
+    }
+    if state.prompt.is_some() {
+        return path_prompt::on_key(state, event);
     }
     if event.flags & MOD_CTRL != 0 {
         return on_ctrl(state, event.code);
@@ -40,7 +44,7 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
         _ => false,
     };
     if changed {
-        state.status = b"edited /notes.txt";
+        state.status = b"edited";
         EventOutcome::Repaint
     } else {
         EventOutcome::Idle

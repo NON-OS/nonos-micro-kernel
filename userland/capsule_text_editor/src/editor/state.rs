@@ -17,20 +17,34 @@
 pub const CAPACITY: usize = 4096;
 pub const PATH: &[u8] = b"/notes.txt";
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum PromptOp {
+    Open,
+    Save,
+}
+
 pub struct State {
     pub owner_pid: u32,
     pub buf: [u8; CAPACITY],
     pub len: usize,
     pub status: &'static [u8],
+    pub path: [u8; 256],
+    pub path_len: usize,
+    pub prompt: Option<PromptOp>,
 }
 
 impl State {
     pub fn new() -> Self {
+        let mut path = [0u8; 256];
+        path[..PATH.len()].copy_from_slice(PATH);
         State {
             owner_pid: 0,
             buf: [0; CAPACITY],
             len: 0,
             status: b"Ctrl-O open  Ctrl-S save  Ctrl-C copy  Ctrl-V paste",
+            path,
+            path_len: PATH.len(),
+            prompt: None,
         }
     }
 
