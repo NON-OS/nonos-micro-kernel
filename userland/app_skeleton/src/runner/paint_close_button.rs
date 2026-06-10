@@ -17,9 +17,16 @@
 use nonos_toolkit::decorations::{close_button_rect, draw_close_button};
 
 const CLOSE_FILL_ARGB: u32 = 0xFFD0_4B4B;
+const CLOSE_HOVER_ARGB: u32 = 0xFFE8_7070;
 const CLOSE_GLYPH_ARGB: u32 = 0xFFFF_FFFF;
 
-pub(super) fn paint_close_button(pixels: &mut [u32], stride_words: usize, width: u32) {
+pub(super) fn paint_close_button(
+    pixels: &mut [u32],
+    stride_words: usize,
+    width: u32,
+    hovered: bool,
+) {
     let rect = close_button_rect(width);
-    draw_close_button(pixels, stride_words, width, &rect, CLOSE_FILL_ARGB, CLOSE_GLYPH_ARGB);
+    let fill = if hovered { CLOSE_HOVER_ARGB } else { CLOSE_FILL_ARGB };
+    draw_close_button(pixels, stride_words, width, &rect, fill, CLOSE_GLYPH_ARGB);
 }

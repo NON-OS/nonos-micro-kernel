@@ -17,9 +17,16 @@
 use nonos_toolkit::decorations::{draw_maximize_button, maximize_button_rect};
 
 const MAX_FILL_ARGB: u32 = 0xFF3F_B950;
+const MAX_HOVER_ARGB: u32 = 0xFF66_D478;
 const MAX_GLYPH_ARGB: u32 = 0xFF10_2010;
 
-pub(super) fn paint_maximize_button(pixels: &mut [u32], stride_words: usize, width: u32) {
+pub(super) fn paint_maximize_button(
+    pixels: &mut [u32],
+    stride_words: usize,
+    width: u32,
+    hovered: bool,
+) {
     let rect = maximize_button_rect(width);
-    draw_maximize_button(pixels, stride_words, width, &rect, MAX_FILL_ARGB, MAX_GLYPH_ARGB);
+    let fill = if hovered { MAX_HOVER_ARGB } else { MAX_FILL_ARGB };
+    draw_maximize_button(pixels, stride_words, width, &rect, fill, MAX_GLYPH_ARGB);
 }

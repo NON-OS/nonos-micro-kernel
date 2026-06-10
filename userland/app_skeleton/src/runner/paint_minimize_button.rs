@@ -17,9 +17,16 @@
 use nonos_toolkit::decorations::{draw_minimize_button, minimize_button_rect};
 
 const MIN_FILL_ARGB: u32 = 0xFFD9_A441;
+const MIN_HOVER_ARGB: u32 = 0xFFEC_C06A;
 const MIN_GLYPH_ARGB: u32 = 0xFF1A_2030;
 
-pub(super) fn paint_minimize_button(pixels: &mut [u32], stride_words: usize, width: u32) {
+pub(super) fn paint_minimize_button(
+    pixels: &mut [u32],
+    stride_words: usize,
+    width: u32,
+    hovered: bool,
+) {
     let rect = minimize_button_rect(width);
-    draw_minimize_button(pixels, stride_words, width, &rect, MIN_FILL_ARGB, MIN_GLYPH_ARGB);
+    let fill = if hovered { MIN_HOVER_ARGB } else { MIN_FILL_ARGB };
+    draw_minimize_button(pixels, stride_words, width, &rect, fill, MIN_GLYPH_ARGB);
 }

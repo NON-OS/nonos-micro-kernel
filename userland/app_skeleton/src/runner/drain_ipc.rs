@@ -19,7 +19,7 @@ use nonos_libc::mk_ipc_recv_from;
 use crate::app::{App, EventOutcome};
 
 use super::control::{handle_control, ControlOutcome};
-use super::drag::{self, DragState};
+use super::drag::{self, DragState, PointerAction};
 use super::{click_focus, decorations, dispatch::parse_delivery};
 
 const SERVICE_INBOX: u64 = 0;
@@ -78,9 +78,16 @@ pub(super) fn drain<A: App>(
             }
             _ => {}
         }
-        if let Some(target) = drag::handle(drag_state, width, win_x, win_y, &event) {
-            move_to = Some(target);
-            continue;
+        match drag::handle(drag_state, width, win_x, win_y, &event) {
+            PointerAction::MoveTo(mx, my) => {
+                move_to = Some((mx, my));
+                continue;
+            }
+            PointerAction::HoverChanged => {
+                repaint = true;
+                continue;
+            }
+            PointerAction::None => {}
         }
         match app.on_event(event) {
             EventOutcome::Idle | EventOutcome::Minimize | EventOutcome::Maximize => {}

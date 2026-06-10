@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::decorations::{draw_border, draw_titlebar};
+use nonos_toolkit::decorations::{draw_border, draw_titlebar, DecorationHit};
 
 use crate::app::{App, AppManifest};
 use crate::paint::PaintBuffer;
@@ -29,7 +29,12 @@ const TITLEBAR_FILL_ARGB: u32 = 0xFF1A_2030;
 const TITLE_TEXT_ARGB: u32 = 0xFFD8_DEE8;
 const BORDER_ARGB: u32 = 0xFF55_6677;
 
-pub(super) fn paint<A: App>(app: &mut A, manifest: &AppManifest, binding: &WindowBinding) {
+pub(super) fn paint<A: App>(
+    app: &mut A,
+    manifest: &AppManifest,
+    binding: &WindowBinding,
+    hover: DecorationHit,
+) {
     let words = (binding.byte_len / 4) as usize;
     let pixels: &mut [u32] =
         unsafe { core::slice::from_raw_parts_mut(binding.backing_va as *mut u32, words) };
@@ -53,8 +58,8 @@ pub(super) fn paint<A: App>(app: &mut A, manifest: &AppManifest, binding: &Windo
         TITLE_TEXT_ARGB,
         manifest.title,
     );
-    paint_close_button(pixels, stride, binding.width);
-    paint_minimize_button(pixels, stride, binding.width);
-    paint_maximize_button(pixels, stride, binding.width);
+    paint_close_button(pixels, stride, binding.width, hover == DecorationHit::CloseButton);
+    paint_minimize_button(pixels, stride, binding.width, hover == DecorationHit::MinimizeButton);
+    paint_maximize_button(pixels, stride, binding.width, hover == DecorationHit::MaximizeButton);
     draw_border(pixels, stride, binding.width, binding.height, BORDER_ARGB);
 }

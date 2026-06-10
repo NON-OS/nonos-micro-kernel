@@ -25,6 +25,7 @@ const MENUBAR_H: i64 = 28;
 // even after this window has already moved mid-drag.
 pub(super) struct DragState {
     pub active: bool,
+    pub hover: DecorationHit,
     press_x: i32,
     press_y: i32,
     base_x: u32,
@@ -33,8 +34,14 @@ pub(super) struct DragState {
 
 impl DragState {
     pub(super) const fn new() -> Self {
-        Self { active: false, press_x: 0, press_y: 0, base_x: 0, base_y: 0 }
+        Self { active: false, hover: DecorationHit::None, press_x: 0, press_y: 0, base_x: 0, base_y: 0 }
     }
+}
+
+pub(super) enum PointerAction {
+    None,
+    MoveTo(u32, u32),
+    HoverChanged,
 }
 
 pub(super) fn handle(
@@ -43,7 +50,7 @@ pub(super) fn handle(
     win_x: u32,
     win_y: u32,
     event: &InputEvent,
-) -> Option<(u32, u32)> {
+) -> PointerAction {
     match event.kind {
         InputKind::ButtonDown => {
             if event.x >= 0
@@ -52,23 +59,48 @@ pub(super) fn handle(
             {
                 *state = DragState {
                     active: true,
+                    hover: state.hover,
                     press_x: event.x,
                     press_y: event.y,
                     base_x: win_x,
                     base_y: win_y,
                 };
             }
-            None
+            PointerAction::None
         }
         InputKind::ButtonUp => {
             state.active = false;
-            None
+            PointerAction::None
         }
         InputKind::PointerAbs if state.active => {
             let nx = state.base_x as i64 + (event.x - state.press_x) as i64;
             let ny = state.base_y as i64 + (event.y - state.press_y) as i64;
-            Some((nx.max(0) as u32, ny.max(MENUBAR_H) as u32))
+            PointerAction::MoveTo(nx.max(0) as u32, ny.max(MENUBAR_H) as u32)
         }
-        _ => None,
+        InputKind::PointerAbs => {
+            let hit = if event.x >= 0 && event.y >= 0 {
+                hit_test(width, event.x as u32, event.y as u32)
+            } else {
+                DecorationHit::None
+            };
+            if hit == state.hover {
+                return PointerAction::None;
+            }
+            let was = state.hover;
+            state.hover = hit;
+            if is_button(hit) || is_button(was) {
+                PointerAction::HoverChanged
+            } else {
+                PointerAction::None
+            }
+        }
+        _ => PointerAction::None,
     }
+}
+
+fn is_button(hit: DecorationHit) -> bool {
+    matches!(
+        hit,
+        DecorationHit::CloseButton | DecorationHit::MinimizeButton | DecorationHit::MaximizeButton
+    )
 }
