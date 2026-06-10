@@ -23,10 +23,10 @@ const CONTROL_MAGIC: u32 = u32::from_le_bytes(*b"NCTL");
 const CONTROL_VERSION: u16 = 1;
 const OP_FOCUS_SELF: u16 = 1;
 
-pub fn request(app: &LauncherApp) {
-    let Some(pid) = lookup_pid(app.service) else { return };
+pub fn request(app: &LauncherApp) -> bool {
+    let Some(pid) = lookup_pid(app.service) else { return false };
     let frame = focus_frame();
-    let _ = mk_ipc_send_to_pid(pid, frame.as_ptr(), frame.len());
+    mk_ipc_send_to_pid(pid, frame.as_ptr(), frame.len()) >= 0
 }
 
 fn lookup_pid(service: &[u8]) -> Option<u32> {
