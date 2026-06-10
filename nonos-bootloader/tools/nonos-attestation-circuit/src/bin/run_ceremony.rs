@@ -342,10 +342,7 @@ fn cmd_finalize(args: &[String]) {
             // finalize does not re-randomize, so final_params.pk.vk == vk.
             let pk_path = Path::new(&output_dir).join("attestation_proving_key.bin");
             let mut pk_buf = Vec::new();
-            final_params
-                .pk
-                .serialize_with_mode(&mut pk_buf, Compress::Yes)
-                .expect("serialize PK");
+            final_params.pk.serialize_with_mode(&mut pk_buf, Compress::Yes).expect("serialize PK");
             fs::write(&pk_path, &pk_buf).expect("write attestation proving key");
 
             let avk_path = Path::new(&output_dir).join("attestation_verifying_key.bin");
@@ -481,8 +478,7 @@ fn gather_entropy(source: &str) -> Vec<u8> {
         use std::io::Read;
         let mut file = fs::File::open("/dev/urandom")
             .expect("ceremony: cannot open /dev/urandom for contribution entropy");
-        file.read_exact(&mut entropy)
-            .expect("ceremony: failed to read 64 bytes of OS entropy");
+        file.read_exact(&mut entropy).expect("ceremony: failed to read 64 bytes of OS entropy");
     } else if Path::new(source).exists() {
         entropy = fs::read(source).expect("ceremony: cannot read entropy file");
     } else {

@@ -14,13 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn print_header() {
-    println!("NØNOS capsule attestation fleet verification");
-    println!("curve: BLS12-381");
-    println!("proof_system: Groth16");
-    println!("proof_size: 192 bytes");
-    println!("public_inputs: 7 BLS12-381 field elements");
-    println!("layout: capsule_hash_hi, capsule_hash_lo, policy_root, policy_epoch, caps, commitment_hi, commitment_lo");
-    println!("binding: proof public inputs + blake3(real capsule bytes) + exact cap mask");
-    println!("capsules:");
+use std::{fs, path::Path};
+
+use super::entry::Entry;
+use super::parse_caps::parse_caps;
+
+pub fn read_policy(path: &Path) -> Result<Vec<Entry>, String> {
+    let data = fs::read_to_string(path).map_err(|e| format!("policy file: {e}"))?;
+    let mut out = Vec::new();
+    for line in data.lines() {
+        let parts = line.split_whitespace().collect::<Vec<_>>();
+        if parts.is_empty() {
+            continue;
+        }
+        if parts.len() != 3 {
+            return Err("policy entry must be: name path caps".into());
+        }
+        out.push(Entry { capsule: parts[1].into(), caps: parse_caps(parts[2])? });
+    }
+    Ok(out)
 }

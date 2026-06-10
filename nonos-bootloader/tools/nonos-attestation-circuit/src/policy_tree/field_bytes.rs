@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn print_header() {
-    println!("NØNOS capsule attestation fleet verification");
-    println!("curve: BLS12-381");
-    println!("proof_system: Groth16");
-    println!("proof_size: 192 bytes");
-    println!("public_inputs: 7 BLS12-381 field elements");
-    println!("layout: capsule_hash_hi, capsule_hash_lo, policy_root, policy_epoch, caps, commitment_hi, commitment_lo");
-    println!("binding: proof public inputs + blake3(real capsule bytes) + exact cap mask");
-    println!("capsules:");
+use ark_ff::{BigInteger, PrimeField};
+
+pub fn field_bytes<F: PrimeField>(value: &F) -> [u8; 32] {
+    let raw = value.into_bigint().to_bytes_be();
+    let mut out = [0u8; 32];
+    let start = raw.len().saturating_sub(32);
+    let bytes = &raw[start..];
+    out[32 - bytes.len()..32].copy_from_slice(bytes);
+    out
 }

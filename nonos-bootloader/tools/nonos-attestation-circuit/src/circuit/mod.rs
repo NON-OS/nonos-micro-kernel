@@ -15,12 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod default;
+mod enforce_basics;
+mod enforce_epoch;
+mod enforce_policy;
 mod entropy;
 mod generate_constraints;
 mod half_to_field;
 mod new;
 mod nonzero;
+mod public_vars;
 mod split_hash;
 mod types;
+mod witness_vars;
 
 pub use types::NonosAttestationCircuit;

@@ -18,15 +18,19 @@ use super::constants::PUBLIC_INPUT_BYTES;
 
 pub fn public_inputs(
     capsule: &[u8; 32],
-    program: &[u8; 32],
+    policy_root: &[u8; 32],
+    policy_epoch: u64,
     caps: u64,
     commitment: &[u8; 32],
 ) -> Vec<u8> {
     let mut out = Vec::with_capacity(PUBLIC_INPUT_BYTES);
-    for half in [&capsule[..16], &capsule[16..], &program[..16], &program[16..]] {
+    for half in [&capsule[..16], &capsule[16..]] {
         out.extend_from_slice(&[0u8; 16]);
         out.extend_from_slice(half);
     }
+    out.extend_from_slice(policy_root);
+    out.extend_from_slice(&[0u8; 24]);
+    out.extend_from_slice(&policy_epoch.to_be_bytes());
     out.extend_from_slice(&[0u8; 24]);
     out.extend_from_slice(&caps.to_be_bytes());
     for half in [&commitment[..16], &commitment[16..]] {

@@ -20,6 +20,7 @@ use ark_ff::PrimeField;
 
 use super::types::NonosAttestationCircuit;
 use crate::constants::{MIN_HW_LEVEL, MIN_PCR_ENTROPY_BYTES, PCR_PREIMAGE_LEN};
+use crate::policy_tree::{POLICY_EPOCH, POLICY_TREE_DEPTH};
 
 impl<F: PrimeField> Default for NonosAttestationCircuit<F> {
     fn default() -> Self {
@@ -30,11 +31,13 @@ impl<F: PrimeField> Default for NonosAttestationCircuit<F> {
         Self {
             capsule_hash_hi: Some(F::from(1u64)),
             capsule_hash_lo: Some(F::from(2u64)),
-            program_hash_hi: Some(F::from(3u64)),
-            program_hash_lo: Some(F::from(4u64)),
+            policy_root: Some(F::from(3u64)),
+            policy_epoch: Some(F::from(POLICY_EPOCH)),
             capability_mask: Some(F::from(5u64)),
             commitment_hi: Some(F::from(6u64)),
             commitment_lo: Some(F::from(7u64)),
+            policy_path: Some(vec![F::from(8u64); POLICY_TREE_DEPTH]),
+            policy_dirs: Some(vec![false; POLICY_TREE_DEPTH]),
             pcr_preimage: Some(pcr),
             hardware_attestation: Some(MIN_HW_LEVEL + 1),
             phantom: PhantomData,

@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn parse_hash(value: &str) -> Result<[u8; 32], String> {
-    let bytes = hex::decode(value).map_err(|e| format!("program hash hex: {e}"))?;
-    if bytes.len() != 32 {
-        return Err("program hash must be 32 bytes".into());
-    }
-    let mut out = [0u8; 32];
-    out.copy_from_slice(&bytes);
-    Ok(out)
+use ark_crypto_primitives::sponge::poseidon::traits::find_poseidon_ark_and_mds;
+use ark_crypto_primitives::sponge::poseidon::PoseidonConfig;
+use ark_ff::PrimeField;
+
+pub fn params<F: PrimeField>() -> PoseidonConfig<F> {
+    let rate = 3;
+    let (ark, mds) = find_poseidon_ark_and_mds::<F>(F::MODULUS_BIT_SIZE as u64, rate, 8, 56, 0);
+    PoseidonConfig { full_rounds: 8, partial_rounds: 56, alpha: 5, ark, mds, rate, capacity: 1 }
 }

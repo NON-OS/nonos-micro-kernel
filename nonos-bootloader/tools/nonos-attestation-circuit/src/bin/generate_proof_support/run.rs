@@ -21,8 +21,8 @@ use super::args::Args;
 use super::commitment::commitment;
 use super::hash_file::hash_file;
 use super::parse_caps::parse_caps;
-use super::parse_hash::parse_hash;
 use super::pcr::pcr;
+use super::policy_witness::policy_witness;
 use super::proof::proof;
 use super::public_inputs::public_inputs;
 use super::read_key::read_key;
@@ -33,22 +33,27 @@ pub fn run() -> Result<(), String> {
     let args = Args::parse();
     let key = read_key(&args.proving_key)?;
     let (capsule_hash, capsule_bytes) = hash_file(&args.capsule)?;
-    let program_hash = match &args.program_hash {
-        Some(value) => parse_hash(value)?,
-        None => capsule_hash,
-    };
     let caps = parse_caps(&args.capability_mask)?;
-    let commitment = commitment(&capsule_hash, &program_hash, caps);
+    let (policy, policy_root) = policy_witness(&args, capsule_hash, caps)?;
+    let commitment =
+        commitment(&capsule_hash, &policy_root, nonos_attestation_circuit::POLICY_EPOCH, caps);
     let pcr = pcr(&args.seed, &capsule_hash, &commitment);
     let circuit = NonosAttestationCircuit::new(
         capsule_hash,
-        program_hash,
+        policy,
+        nonos_attestation_circuit::POLICY_EPOCH,
         caps,
         commitment,
         pcr,
         MIN_HW_LEVEL + 0x1000,
     );
-    let seed = public_inputs(&capsule_hash, &program_hash, caps, &commitment);
+    let seed = public_inputs(
+        &capsule_hash,
+        &policy_root,
+        nonos_attestation_circuit::POLICY_EPOCH,
+        caps,
+        &commitment,
+    );
     let proof = proof(&key, circuit, &seed)?;
     let trailer = trailer(&proof, &seed, &commitment);
     write_outputs(&args, &proof, &seed, &trailer, &capsule_bytes)?;
@@ -56,7 +61,7 @@ pub fn run() -> Result<(), String> {
     println!("proof_bytes: {}", proof.len());
     println!("public_inputs: {}", seed.len() / 32);
     println!("capsule_hash: {}", hex::encode(capsule_hash));
-    println!("program_hash: {}", hex::encode(program_hash));
+    println!("policy_root: {}", hex::encode(policy_root));
     println!("commitment: {}", hex::encode(commitment));
     Ok(())
 }

@@ -14,13 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn print_header() {
-    println!("NØNOS capsule attestation fleet verification");
-    println!("curve: BLS12-381");
-    println!("proof_system: Groth16");
-    println!("proof_size: 192 bytes");
-    println!("public_inputs: 7 BLS12-381 field elements");
-    println!("layout: capsule_hash_hi, capsule_hash_lo, policy_root, policy_epoch, caps, commitment_hi, commitment_lo");
-    println!("binding: proof public inputs + blake3(real capsule bytes) + exact cap mask");
-    println!("capsules:");
-}
+mod constants;
+mod field_bytes;
+mod hash_leaf;
+mod hash_pair;
+mod params;
+mod split_hash;
+mod types;
+mod witness;
+
+pub use constants::{POLICY_EPOCH, POLICY_TREE_DEPTH, POLICY_TREE_LEAVES};
+pub use field_bytes::field_bytes;
+pub use hash_leaf::hash_leaf;
+pub use hash_pair::hash_pair;
+pub use params::params;
+pub use split_hash::split_hash;
+pub use types::PolicyWitness;
+pub use witness::witness;

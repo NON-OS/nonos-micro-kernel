@@ -113,6 +113,7 @@ dependencies = [
  "ark-crypto-primitives-macros",
  "ark-ec",
  "ark-ff",
+ "ark-r1cs-std",
  "ark-relations",
  "ark-serialize",
  "ark-snark",
@@ -124,6 +125,7 @@ dependencies = [
  "merlin",
  "rayon",
  "sha2",
+ "tracing",
 ]
 
 [[package]]
