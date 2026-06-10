@@ -115,8 +115,23 @@ make nonos-mk-hello-sign     # manifest + NONOS-ID cert + ZK proof
 
 The sign target emits the signed manifest, mints your capsule's
 NONOS-ID certificate, and generates the Groth16 attestation proof that
-binds the capsule hash, capability mask and policy root. Verify it
-yourself the way the kernel will:
+binds the capsule hash, capability mask and policy root. What lands
+where:
+
+```
+  your crate                          nonos-data/trust/capsules/
+  -----------                         --------------------------
+  hello (ELF) ---------+
+                       |              hello.manifest.bin
+  .keys/hello_*.seed --+--- sign ---> hello.nonos_id_cert.bin
+   (yours, private)    |              hello.zk_trailer.bin
+                       |
+  ceremony keys -------+              target/capsule-attest/
+   (canonical, public)                hello.capsule.zk  <- ELF + proof,
+                                      what the kernel actually loads
+```
+
+Verify it yourself the way the kernel will:
 
 ```sh
 make nonos-mk-attestation-receipt

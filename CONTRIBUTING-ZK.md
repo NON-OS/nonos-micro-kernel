@@ -68,6 +68,34 @@ Export the circuit registry entry:
 
     make nonos-mk-nox-registry
 
+## The loop in one picture
+
+```
+            you                          the project                Ethereum mainnet
+   ----------------------       --------------------------    ------------------------
+   do verifiable work
+   (fleet run, boot
+    witness, audit,
+    ceremony round)
+        |
+        v
+   nox-work-receipt              nox-receipt-verify
+   validates the artifact,  -->  re-checks everything   -->   accepted receipts enter
+   refuses bad evidence,         from the raw artifacts        the epoch allocation
+   binds it to your addr         and prints the
+        |                        verifier hash
+        |                                                      nox-merkle builds the
+        |                                                      tree; root published +
+        |                                                      finalized on the
+        |                                                      RewardRootManager
+        v                                                            |
+   claims.json names the                                             v
+   chain, the pool and    <----------------------------------  you claim from
+   your Merkle proof                                           NoxRewardPool; the pool
+                                                               pays only NOX that
+                                                               demand revenue funded
+```
+
 ## How settlement works
 
 1. You produce work and a receipt, and submit both (receipt plus a link
