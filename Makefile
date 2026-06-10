@@ -38,7 +38,7 @@
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
 .PHONY: nonos-mk-fmt
 .PHONY: nonos-mk-toolchain nonos-mk-check-deps
-.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live nonos-mk-attestation nonos-mk-attestation-receipt
+.PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live nonos-mk-live-production-proof nonos-mk-attestation nonos-mk-attestation-receipt
 
 # Compatibility aliases (transitional, do not remove until callers move)
 .PHONY: kernel-capsules kernel-keyring-smoketest kernel-ramfs-smoketest
@@ -95,6 +95,7 @@ endif
 
 # Signing key. Auto-generated on first use.
 SIGNING_KEY ?= $(KEYS_DIR)/signing_key_v1.bin
+NONOS_TRUST_DIR := nonos-data/trust
 
 # ZK ceremony paths.
 ZK_CIRCUIT_DIR   := $(BOOTLOADER_DIR)/tools/nonos-attestation-circuit
@@ -108,8 +109,11 @@ ZK_VERIFY_TOOL   := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/verify-proof
 ZK_PROOF_SCENE_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/capsule-attest-proof
 ZK_FLEET_TOOL    := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/capsule-attest-fleet
 ZK_CEREMONY_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/run_ceremony
+ZK_POLICY_TOOL   := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/policy-root
 ZK_CEREMONY_DIR  := $(ZK_KEYS_DIR)/ceremony
 ZK_CEREMONY_ROUNDS := 5
+ZK_POLICY_FILE   := $(TARGET_DIR)/capsule-attest/policy.tsv
+ZK_POLICY_ROOT   = $(NONOS_TRUST_DIR)/policy/zk_capsule_policy_root.bin
 EMBED_TOOL       := $(BOOTLOADER_DIR)/tools/embed-zk-proof/target/$(HOST_TARGET)/release/embed-zk-proof
 
 # Header and status line, shown once per invocation. Fields are read from
@@ -130,13 +134,10 @@ define NONOS_BANNER
   ██║╚██╗██║██║   ██║██║╚██╗██║██║   ██║╚════██║
   ██║ ╚████║╚██████╔╝██║ ╚████║╚██████╔╝███████║
   ╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚══════╝
-  capability-based microkernel   rust   no_std   x86_64
 endef
 export NONOS_BANNER
 
 $(info $(NONOS_BANNER))
-$(info  branch $(NONOS_BRANCH)$(NONOS_DIRTY)  commit $(NONOS_COMMIT)  signed $(NONOS_SIGNED)  zk-attested $(NONOS_ATTESTED)  zk-enforce $(NONOS_ENFORCE)  vk $(NONOS_VK_FPR))
-$(info )
 
 # QEMU + OVMF discovery.
 QEMU := qemu-system-x86_64
@@ -221,10 +222,10 @@ nonos-mk-ensure-signing-key: $(SIGNING_KEY)
 
 # ZK attestation: ceremony tools + ceremony keys + embed tool
 
-$(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_TOOL) $(ZK_CEREMONY_TOOL): nonos-mk-check-deps
+$(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_TOOL) $(ZK_CEREMONY_TOOL) $(ZK_POLICY_TOOL): nonos-mk-check-deps
 	@echo "Building ZK attestation tools..."
 	@cd $(ZK_CIRCUIT_DIR) && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build --release --bin generate-keys --bin generate-proof --bin verify-proof --bin capsule-attest-proof --bin capsule-attest-fleet --bin run_ceremony --target $(HOST_TARGET)
+		$(CARGO) build --release --bin generate-keys --bin generate-proof --bin verify-proof --bin capsule-attest-proof --bin capsule-attest-fleet --bin run_ceremony --bin policy-root --target $(HOST_TARGET)
 
 # Trusted setup via the Groth16 phase-2 (BGM17) ceremony: no seed, real OS
 # entropy per round, each contribution's secret destroyed. The composed delta
@@ -262,7 +263,7 @@ $(ZK_PROVING_KEY): | $(ZK_CEREMONY_TOOL) $(SIGNING_KEY)
 $(ZK_VERIFYING_KEY): $(ZK_PROVING_KEY)
 
 nonos-mk-ensure-zk-keys: $(ZK_PROVING_KEY) $(ZK_VERIFYING_KEY)
-nonos-mk-zk-tools: $(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_TOOL)
+nonos-mk-zk-tools: $(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_TOOL) $(ZK_POLICY_TOOL)
 
 # Force a fresh trusted-setup ceremony, discarding the existing keys. The
 # capsule trailers are invalid after the VK changes, so this target deletes
@@ -270,6 +271,7 @@ nonos-mk-zk-tools: $(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCEN
 nonos-mk-zk-ceremony: $(ZK_CEREMONY_TOOL) $(SIGNING_KEY)
 	@rm -f $(ZK_PROVING_KEY) $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_*.bin
 	@rm -rf $(ZK_CEREMONY_DIR) $(TARGET_DIR)/capsule-attest
+	@rm -f $(ZK_POLICY_ROOT)
 	@rm -f $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin
 	@$(MAKE) --no-print-directory $(ZK_PROVING_KEY)
 	@$(MAKE) --no-print-directory nonos-mk-verify-capsule-attest
@@ -286,17 +288,18 @@ nonos-mk-verify-capsule-attest: nonos-mk-all-capsules-attested $(ZK_FLEET_TOOL) 
 # the three shown here are the per-capsule bindings carried in the public
 # inputs: the granted capability mask, the blake3 of the capsule bytes, and the
 # bound commitment. No two rows match.
-nonos-mk-zk-report:
+nonos-mk-zk-report: nonos-mk-all-capsules-attested $(ZK_VERIFYING_KEY) $(ZK_POLICY_ROOT)
 	@printf '\n  attestation report   groth16 / bls12-381   192-byte proofs   7 public inputs   vk %s\n\n' "$(NONOS_VK_FPR)"
-	@printf '  %-22s  %-18s  %-18s  %-18s\n' capsule 'caps mask' 'capsule blake3' commitment
-	@printf '  %s\n' '----------------------------------------------------------------------------------------'
+	@printf '  %-22s  %-18s  %-18s  %-18s  %-18s\n' capsule 'caps mask' 'capsule blake3' 'policy root' commitment
+	@printf '  %s\n' '-------------------------------------------------------------------------------------------------------------'
 	@for t in $(NONOS_TRUST_DIR)/capsules/*.zk_trailer.bin; do \
 		[ -e "$$t" ] || continue; \
 		name=$$(basename "$$t" .zk_trailer.bin); \
 		caps=$$(od -An -tx1 -j 360 -N 8 "$$t" | tr -d ' \n'); \
 		chash=$$(od -An -tx1 -j 224 -N 8 "$$t" | tr -d ' \n'); \
+		proot=$$(od -An -tx1 -j 272 -N 8 "$$t" | tr -d ' \n'); \
 		comm=$$(od -An -tx1 -j 432 -N 8 "$$t" | tr -d ' \n'); \
-		printf '  %-22s  0x%-16s  %-18s  %-18s\n' "$$name" "$$caps" "$$chash" "$$comm"; \
+		printf '  %-22s  0x%-16s  %-18s  %-18s  %-18s\n' "$$name" "$$caps" "$$chash" "$$proot" "$$comm"; \
 	done
 	@printf '\n  %s capsules   every row distinct   each proof binds these inputs in zero knowledge\n\n' "$(NONOS_ATTESTED)"
 
@@ -322,6 +325,9 @@ nonos-mk-zk-verify-live: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_V
 	printf '\n  %s passed   %s failed   real pairing checks against vk %s\n\n' "$$pass" "$$fail" "$(NONOS_VK_FPR)"; \
 	[ "$$fail" -eq 0 ]
 
+nonos-mk-live-production-proof: nonos-mk-zk-verify-live nonos-mk-zk-report
+	@echo "Production proof ready: full capsule fleet signed, attested, and pairing-verified."
+
 # Verify capsule attestation with the real Groth16 pairing checks, live.
 # Default: walk every capsule. CAP=<name>: full single-capsule view (proof
 # points and all seven public inputs). SLOW sets the per-step delay.
@@ -337,7 +343,7 @@ nonos-mk-attestation: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $(ZK_VERI
 		printf '  proof pi-B  (G2, 96 bytes)\n    %s\n' "$$(od -An -tx1 -j 60 -N 96 "$$t" | tr -d ' \n')"; sleep $(SLOW); \
 		printf '  proof pi-C  (G1, 48 bytes)\n    %s\n\n' "$$(od -An -tx1 -j 156 -N 48 "$$t" | tr -d ' \n')"; sleep $(SLOW); \
 		printf '  public inputs (7 field elements bound by the proof):\n'; \
-		i=0; for l in capsule_hash_hi capsule_hash_lo program_hash_hi program_hash_lo capability_mask commitment_hi commitment_lo; do \
+		i=0; for l in capsule_hash_hi capsule_hash_lo policy_root policy_epoch capability_mask commitment_hi commitment_lo; do \
 			off=$$((208 + i * 32)); \
 			v=$$(od -An -tx1 -j $$off -N 32 "$$t" | tr -d ' \n'); \
 			printf '    [%d] %-16s %s\n' "$$i" "$$l" "$$v"; \
@@ -400,6 +406,89 @@ nonos-mk-attestation-receipt: nonos-mk-all-capsules-attested $(ZK_VERIFY_TOOL) $
 	cat $(NONOS_RECEIPT); \
 	printf '\n  receipt written: %s\n\n' "$(NONOS_RECEIPT)"
 
+# NOX contribution rail: canonical receipts for verifiable work, an
+# independent re-checker, epoch claim trees, and the circuit registry
+# export. nonos-mk-nox is the contributor entry point: one command from
+# a clean tree to a verified, claimable receipt.
+NOX_RECEIPT_TOOL  := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/nox-zk-receipt
+NOX_WORK_TOOL     := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/nox-work-receipt
+NOX_VERIFY_TOOL   := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/nox-receipt-verify
+NOX_MERKLE_TOOL   := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/nox-merkle
+NOX_REGISTRY_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/nox-circuit-registry
+ZK_TRANSCRIPT     := $(ZK_KEYS_DIR)/ceremony_transcript.json
+NOX_DIR           := $(TARGET_DIR)/nox
+CONTRIB  ?=
+EPOCH    ?= 1
+KIND     ?= FLEET_VERIFICATION
+ARTIFACT ?= $(NONOS_RECEIPT)
+URI      ?=
+
+$(NOX_RECEIPT_TOOL) $(NOX_WORK_TOOL) $(NOX_VERIFY_TOOL) $(NOX_MERKLE_TOOL) $(NOX_REGISTRY_TOOL): nonos-mk-check-deps
+	@echo "Building NOX receipt tools..."
+	@cd $(ZK_CIRCUIT_DIR) && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build --release --bin nox-zk-receipt --bin nox-work-receipt --bin nox-receipt-verify --bin nox-merkle --bin nox-circuit-registry --target $(HOST_TARGET)
+
+nonos-mk-nox-tools: $(NOX_WORK_TOOL)
+
+# Emit one receipt for verifiable work. KIND selects the evidence the
+# emitter validates before issuing anything: FLEET_VERIFICATION (the
+# attestation receipt), RUNTIME_BOOT / HARDWARE_BOOT (a serial boot log
+# with enforced [ZK-ATTEST] lines), CIRCUIT_AUDIT / CAPSULE_AUDIT (a
+# written report), CAPSULE_BUILD (a bundled capsule, re-proved live).
+nonos-mk-nox-receipt: $(NOX_WORK_TOOL) nonos-mk-ensure-zk-keys
+	@test -n "$(CONTRIB)" || { printf '\n  usage: make nonos-mk-nox-receipt CONTRIB=0x<your address> [KIND=%s] [ARTIFACT=path] [EPOCH=%s]\n\n' "$(KIND)" "$(EPOCH)"; exit 1; }
+	@mkdir -p $(NOX_DIR)/receipts
+	@$(NOX_WORK_TOOL) --kind $(KIND) --artifact $(ARTIFACT) \
+		--verifying-key $(ZK_VERIFYING_KEY) --transcript $(ZK_TRANSCRIPT) \
+		--contributor $(CONTRIB) --epoch $(EPOCH) --uri "$(URI)" \
+		--out $(NOX_DIR)/receipts/$(KIND)-epoch$(EPOCH).json
+	@printf '\n  receipt written: %s\n\n' "$(NOX_DIR)/receipts/$(KIND)-epoch$(EPOCH).json"
+
+# Re-check a receipt from the raw artifacts, the way an authorizer does
+# before signing anything. Prints the verifier hash on success.
+nonos-mk-nox-verify: $(NOX_VERIFY_TOOL) nonos-mk-ensure-zk-keys
+	@test -n "$(RECEIPT)" || { printf '\n  usage: make nonos-mk-nox-verify RECEIPT=path [ARTIFACT=path]\n\n'; exit 1; }
+	@$(NOX_VERIFY_TOOL) --receipt $(RECEIPT) \
+		--verifying-key $(ZK_VERIFYING_KEY) --transcript $(ZK_TRANSCRIPT) \
+		$(if $(ARTIFACT),--artifact $(ARTIFACT),)
+
+# Build the epoch claim tree from accepted receipts. CLAIMS is a JSON
+# allocation file: {"epoch":N,"pool_id":"0x..","claims":[{"receipt":path,
+# "amount":"wei"}]}. Writes root.json and claims.json with Merkle proofs
+# that NoxRewardPool.claim verifies on-chain.
+nonos-mk-nox-merkle: $(NOX_MERKLE_TOOL)
+	@test -n "$(CLAIMS)" || { printf '\n  usage: make nonos-mk-nox-merkle CLAIMS=allocations.json [EPOCH=%s]\n\n' "$(EPOCH)"; exit 1; }
+	@mkdir -p $(NOX_DIR)/epoch$(EPOCH)
+	@$(NOX_MERKLE_TOOL) --claims $(CLAIMS) --out-dir $(NOX_DIR)/epoch$(EPOCH)
+	@printf '\n  root and claims written: %s/\n\n' "$(NOX_DIR)/epoch$(EPOCH)"
+
+# Export the canonical circuit registry entry for NoxZkCircuitRegistry.
+nonos-mk-nox-registry: $(NOX_REGISTRY_TOOL) nonos-mk-ensure-zk-keys
+	@mkdir -p $(NOX_DIR)
+	@$(NOX_REGISTRY_TOOL) --circuit-dir $(ZK_CIRCUIT_DIR) \
+		--cargo-lock $(ZK_CIRCUIT_DIR)/Cargo.lock \
+		--verifying-key $(ZK_VERIFYING_KEY) --transcript $(ZK_TRANSCRIPT) \
+		--uri "$(URI)" --out $(NOX_DIR)/circuit.json
+	@printf '\n  registry entry written: %s\n\n' "$(NOX_DIR)/circuit.json"
+
+# The contributor command. One invocation from a clean checkout: builds
+# the toolchain and every capsule, runs the live Groth16 pairing check on
+# the whole fleet, issues a FLEET_VERIFICATION receipt for your address,
+# re-verifies that receipt independently, and exports the circuit
+# registry entry. Everything lands under target/nox/.
+nonos-mk-nox:
+	@test -n "$(CONTRIB)" || { printf '\n  usage: make nonos-mk-nox CONTRIB=0x<your reward address> [EPOCH=%s]\n\n' "$(EPOCH)"; exit 1; }
+	@printf '\n  NONOS x NOX contributor run   groth16 / bls12-381   vk %s\n\n' "$(NONOS_VK_FPR)"
+	@$(MAKE) nonos-mk-attestation-receipt
+	@$(MAKE) nonos-mk-nox-receipt CONTRIB=$(CONTRIB) KIND=FLEET_VERIFICATION ARTIFACT=$(NONOS_RECEIPT) EPOCH=$(EPOCH)
+	@$(MAKE) nonos-mk-nox-verify RECEIPT=$(NOX_DIR)/receipts/FLEET_VERIFICATION-epoch$(EPOCH).json ARTIFACT=$(NONOS_RECEIPT)
+	@$(MAKE) nonos-mk-nox-registry
+	@printf '\n  done. your receipt: %s\n' "$(NOX_DIR)/receipts/FLEET_VERIFICATION-epoch$(EPOCH).json"
+	@printf '  registry entry:    %s\n' "$(NOX_DIR)/circuit.json"
+	@printf '  next: submit the receipt for the epoch root. see CONTRIBUTING-ZK.md\n\n'
+
+.PHONY: nonos-mk-nox nonos-mk-nox-tools nonos-mk-nox-receipt nonos-mk-nox-verify nonos-mk-nox-merkle nonos-mk-nox-registry
+
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
 	@cd $(BOOTLOADER_DIR)/tools/embed-zk-proof && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
@@ -459,7 +548,6 @@ USERLAND_LIBC_SRCS := $(shell find $(USERLAND_DIR)/libc/src -name '*.rs') \
 #   .keys/                   gitignored; holds *.seed only
 #   nonos-data/trust/keys/   committed; holds *.pub
 #   nonos-data/trust/policy/ committed; holds the sealed policy
-NONOS_TRUST_DIR         := nonos-data/trust
 NONOS_TA_ED25519_SEED   := .keys/nonos_trust_anchor_ed25519.seed
 NONOS_TA_ED25519_PUB    := $(NONOS_TRUST_DIR)/keys/nonos_trust_anchor_ed25519.pub
 NONOS_TA_MLDSA65_SEED   := .keys/nonos_trust_anchor_mldsa65.seed
@@ -607,6 +695,17 @@ include userland/capsule_power/Capsule.mk
 # triple. Smoke and test targets that need proof_io plus another
 # capsule depend on `$(proof-io_ARTIFACTS)` directly.
 NONOS_VERIFIED_ARTIFACTS = $(foreach slug,$(NONOS_VERIFIED_CAPSULES),$($(slug)_ARTIFACTS))
+NONOS_ZK_POLICY_INPUTS = $(foreach slug,$(NONOS_VERIFIED_CAPSULES),$($(slug)_BIN) $($(slug)_CAPSULE_MK))
+
+$(ZK_POLICY_FILE): $(NONOS_ZK_POLICY_INPUTS)
+	@mkdir -p $(dir $@)
+	@{ \
+	$(foreach slug,$(NONOS_VERIFIED_CAPSULES),printf '%s\t%s\t%s\n' '$($(slug)_BIN_NAME)' '$($(slug)_BIN)' '$($(slug)_REQUIRED_CAPS)';) \
+	} > $@
+
+$(ZK_POLICY_ROOT): $(ZK_POLICY_FILE) $(ZK_POLICY_TOOL)
+	@mkdir -p $(dir $@)
+	@$(ZK_POLICY_TOOL) --policy-file $(ZK_POLICY_FILE) --output $@ >/dev/null
 
 nonos-mk-all-capsules-attested: $(NONOS_VERIFIED_ARTIFACTS)
 	@echo "Signed and attested $(words $(NONOS_VERIFIED_CAPSULES)) included capsules."
@@ -1428,7 +1527,7 @@ $(QEMU_OVMF_VARS_RW): $(OVMF_VARS)
 	@[ -n "$(OVMF_VARS)" ] || { echo "::error::OVMF_VARS not found"; exit 1; }
 	@cp "$(OVMF_VARS)" "$@"
 
-nonos-mk-run: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
+nonos-mk-run: nonos-mk-live-production-proof nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS in QEMU..."
 	@echo "  SSH:  ssh -p $(QEMU_HOST_SSH_PORT) localhost"
 	@echo "  HTTP: http://localhost:$(QEMU_HOST_HTTP_PORT)"
@@ -1438,7 +1537,7 @@ nonos-mk-run: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF
 		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
 		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
-		-serial mon:stdio -vga none -no-reboot
+		-serial mon:stdio -vga none -display cocoa,zoom-to-fit=on -no-reboot
 
 nonos-mk-run-wizard: nonos-mk-setup-wizard-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS (first-boot setup wizard) in QEMU..."
