@@ -27,6 +27,7 @@ const MAX_MSG: usize = 65556;
 pub fn run() -> ! {
     let mut buf = vec![0u8; MAX_MSG];
     let mut store = Store::new();
+    store.seed();
     loop {
         let mut sender_pid: u32 = 0;
         let n = mk_ipc_recv_from(0, buf.as_mut_ptr(), MAX_MSG, 0, &mut sender_pid);
