@@ -54,19 +54,14 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
     }
     if !matches!(ctx.focus.current(), Some(f) if f.owner_pid == owner_pid && f.window_id == window_id)
     {
-        let rid = ctx.issue_request_id();
-        if push_focus_set(ctx.compositor_port, rid, owner_pid).is_err() {
-            if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
-                return;
-            }
-            return;
-        }
         if !ctx.focus.set(owner_pid, window_id) {
             if respond::status(sender_pid, req, E_INVAL, tx) < 0 {
                 return;
             }
             return;
         }
+        let rid = ctx.issue_request_id();
+        let _ = push_focus_set(ctx.compositor_port, rid, owner_pid);
     }
     if respond::status(sender_pid, req, 0, tx) < 0 {
         return;
