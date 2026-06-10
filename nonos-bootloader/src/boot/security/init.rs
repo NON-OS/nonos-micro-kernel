@@ -18,7 +18,16 @@ use crate::entropy::rdrand64;
 use crate::security::{audit, init_canaries, AuditEvent};
 
 pub fn init_security_primitives() {
-    let entropy = rdrand64().unwrap_or(0xDEADBEEF_CAFEBABE);
+    let entropy = match rdrand64() {
+        Some(v) => v,
+        None => {
+            let (lo, hi): (u32, u32);
+            unsafe {
+                core::arch::asm!("rdtsc", out("eax") lo, out("edx") hi, options(nomem, nostack, preserves_flags));
+            }
+            (((hi as u64) << 32) | lo as u64).rotate_left(17) ^ 0x9E37_79B9_7F4A_7C15
+        }
+    };
     init_canaries(entropy);
     audit(AuditEvent::BootStart, 0, b"security init");
 }
