@@ -25,6 +25,26 @@ pub fn pump(ctx: &mut Context, prev_buttons: &mut u8) {
     let kbd = poll_seq(ctx.driver.irq_grant_id);
     let aux = poll_seq(ctx.driver.aux_irq_grant_id);
     let fired = kbd != ctx.last_kbd_seq || aux != ctx.last_aux_seq;
+    drain_ports(ctx);
+    ctx.last_kbd_seq = kbd;
+    ctx.last_aux_seq = aux;
+    if fired {
+        let _ = mk_irq_ack(ctx.driver.irq_grant_id);
+        let _ = mk_irq_ack(ctx.driver.aux_irq_grant_id);
+        drain_ports(ctx);
+    }
+    while let Some(ev) = ctx.mouse_ring.pop() {
+        let _ = publish_mouse(ev, *prev_buttons);
+        *prev_buttons = ev.buttons;
+    }
+}
+
+// A byte that lands between the pre-ack drain and the IO-APIC
+// unmask raises its edge while the line is still masked, and a
+// masked edge is dropped, not latched — sweep the output buffer
+// again after the unmask so that byte cannot sit in the i8042
+// holding the line high with no further edge to wake us.
+fn drain_ports(ctx: &mut Context) {
     drain(
         ctx.driver.pio_grant_id,
         &mut ctx.drainer,
@@ -32,14 +52,4 @@ pub fn pump(ctx: &mut Context, prev_buttons: &mut u8) {
         &mut ctx.mouse,
         &mut ctx.mouse_ring,
     );
-    ctx.last_kbd_seq = kbd;
-    ctx.last_aux_seq = aux;
-    if fired {
-        let _ = mk_irq_ack(ctx.driver.irq_grant_id);
-        let _ = mk_irq_ack(ctx.driver.aux_irq_grant_id);
-    }
-    while let Some(ev) = ctx.mouse_ring.pop() {
-        let _ = publish_mouse(ev, *prev_buttons);
-        *prev_buttons = ev.buttons;
-    }
 }

@@ -25,9 +25,10 @@ use crate::server::handlers;
 use crate::server::pump::pump;
 use crate::setup::Driver;
 use alloc::vec;
-use nonos_libc::mk_ipc_recv;
+use nonos_libc::{mk_ipc_recv, mk_irq_wait};
 
 const POLL_IDLE_MS: u64 = 1;
+const IRQ_WAIT_MS: u64 = 100;
 
 pub fn run(driver: Driver) -> ! {
     let rx_len = HDR_LEN;
@@ -44,10 +45,12 @@ pub fn run(driver: Driver) -> ! {
     let mut tx = vec![0u8; tx_len];
     let mut ctx = Context::new(driver);
     let mut prev_buttons = 0u8;
+    let mut wait_seq = 0u64;
     loop {
         pump(&mut ctx, &mut prev_buttons);
         let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, POLL_IDLE_MS);
         if n <= 0 {
+            let _ = mk_irq_wait(0, wait_seq, IRQ_WAIT_MS, &mut wait_seq);
             continue;
         }
         let len = n as usize;
