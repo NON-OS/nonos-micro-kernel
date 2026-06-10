@@ -14,7 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod run;
+use clap::Parser;
 
-pub use run::run;
+#[derive(Parser)]
+pub struct Args {
+    #[arg(long, default_value = "0.0.0.0:8484")]
+    pub listen: String,
+    #[arg(long)]
+    pub verifying_key: String,
+    #[arg(long)]
+    pub transcript: String,
+    #[arg(long)]
+    pub spool: String,
+    #[arg(long, default_value_t = 16 * 1024 * 1024)]
+    pub max_bytes: usize,
+}
+
+pub fn parse() -> Args {
+    Args::parse()
+}

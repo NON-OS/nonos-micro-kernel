@@ -14,7 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod run;
+use serde::Deserialize;
+use serde_json::Value;
 
-pub use run::run;
+#[derive(Deserialize)]
+pub struct Submission {
+    pub receipt: Value,
+    #[serde(default)]
+    pub artifact_b64: String,
+}

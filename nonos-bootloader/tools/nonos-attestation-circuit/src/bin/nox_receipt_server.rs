@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod run;
+mod nox_receipt_server_support;
 
-pub use run::run;
+fn main() {
+    if let Err(e) = nox_receipt_server_support::run() {
+        eprintln!("nox-receipt-server: {e}");
+        std::process::exit(1);
+    }
+}

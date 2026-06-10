@@ -427,6 +427,7 @@ NOX_MERKLE_TOOL   := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/nox-merkle
 NOX_REGISTRY_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/nox-circuit-registry
 ZK_TRANSCRIPT     := $(ZK_KEYS_DIR)/ceremony_transcript.json
 NOX_DIR           := $(TARGET_DIR)/nox
+NOX_SUBMIT_URL    ?= http://146.103.41.45:8484/submit
 CONTRIB  ?=
 EPOCH    ?= 1
 KIND     ?= FLEET_VERIFICATION
@@ -473,6 +474,22 @@ nonos-mk-nox-merkle: $(NOX_MERKLE_TOOL)
 		--deployment abi/nox_deployment.json
 	@printf '\n  root and claims written: %s/\n\n' "$(NOX_DIR)/epoch$(EPOCH)"
 
+# Send a receipt and its artifact to the submission endpoint, which
+# re-runs the same verification library before accepting anything.
+# Failure is never fatal: the receipt stays local and can be resent.
+nonos-mk-nox-submit:
+	@test -n "$(RECEIPT)" || { printf '\n  usage: make nonos-mk-nox-submit RECEIPT=path ARTIFACT=path\n\n'; exit 1; }
+	@command -v curl >/dev/null || { printf '  curl not found; submit later\n'; exit 0; }
+	@tmp=$$(mktemp); \
+	{ printf '{"receipt":'; cat $(RECEIPT); printf ',"artifact_b64":"'; \
+	  test -n "$(ARTIFACT)" && base64 < $(ARTIFACT) | tr -d '\n'; printf '"}'; } > $$tmp; \
+	resp=$$(curl -s --max-time 60 -X POST --data-binary @$$tmp $(NOX_SUBMIT_URL)) || resp=unreachable; \
+	rm -f $$tmp; \
+	case "$$resp" in \
+	*'"accepted":true'*) printf '\n  receipt submitted and verified: %s\n\n' "$$resp";; \
+	*) printf '\n  submission not accepted (endpoint said: %s)\n  your receipt is safe locally; retry with:\n    make nonos-mk-nox-submit RECEIPT=$(RECEIPT) ARTIFACT=$(ARTIFACT)\n\n' "$$resp";; \
+	esac
+
 # Export the canonical circuit registry entry for NoxZkCircuitRegistry.
 nonos-mk-nox-registry: $(NOX_REGISTRY_TOOL) nonos-mk-ensure-zk-keys
 	@mkdir -p $(NOX_DIR)
@@ -494,11 +511,12 @@ nonos-mk-nox:
 	@$(MAKE) nonos-mk-nox-receipt CONTRIB=$(CONTRIB) KIND=FLEET_VERIFICATION ARTIFACT=$(NONOS_RECEIPT) EPOCH=$(EPOCH)
 	@$(MAKE) nonos-mk-nox-verify RECEIPT=$(NOX_DIR)/receipts/FLEET_VERIFICATION-epoch$(EPOCH).json ARTIFACT=$(NONOS_RECEIPT)
 	@$(MAKE) nonos-mk-nox-registry
+	@$(MAKE) nonos-mk-nox-submit RECEIPT=$(NOX_DIR)/receipts/FLEET_VERIFICATION-epoch$(EPOCH).json ARTIFACT=$(NONOS_RECEIPT)
 	@printf '\n  done. your receipt: %s\n' "$(NOX_DIR)/receipts/FLEET_VERIFICATION-epoch$(EPOCH).json"
 	@printf '  registry entry:    %s\n' "$(NOX_DIR)/circuit.json"
-	@printf '  next: submit the receipt for the epoch root. see CONTRIBUTING-ZK.md\n\n'
+	@printf '  the receipt was also submitted for the epoch root. see CONTRIBUTING-ZK.md\n\n'
 
-.PHONY: nonos-mk-nox nonos-mk-nox-tools nonos-mk-nox-receipt nonos-mk-nox-verify nonos-mk-nox-merkle nonos-mk-nox-registry
+.PHONY: nonos-mk-nox nonos-mk-nox-tools nonos-mk-nox-receipt nonos-mk-nox-verify nonos-mk-nox-merkle nonos-mk-nox-registry nonos-mk-nox-submit
 
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
