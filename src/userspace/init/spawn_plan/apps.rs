@@ -17,6 +17,7 @@
 pub(super) fn spawn() {
     spawn_input_proof();
     spawn_about();
+    spawn_hello();
     spawn_calculator();
     spawn_terminal();
     spawn_file_manager();
@@ -43,6 +44,14 @@ fn spawn_about() {
 }
 #[cfg(not(feature = "nonos-capsule-about"))]
 fn spawn_about() {}
+
+#[cfg(feature = "nonos-capsule-hello")]
+fn spawn_hello() {
+    use crate::userspace::capsule_hello as c;
+    super::boot::capsule("APP-HELLO", "app_hello", c::spawn_hello_capsule, c::shared_state);
+}
+#[cfg(not(feature = "nonos-capsule-hello"))]
+fn spawn_hello() {}
 
 #[cfg(feature = "nonos-capsule-calculator")]
 fn spawn_calculator() {
