@@ -30,7 +30,7 @@ use super::error::DriverPs2Error;
 use super::state;
 
 const TAG: &[u8] = b"[DRIVER-PS2-TEST] ";
-const POLL_ATTEMPTS: u32 = 64;
+const POLL_WINDOW_MS: u64 = 30_000;
 const POLL_YIELD_BETWEEN: u32 = 32;
 
 pub fn run() {
@@ -54,7 +54,8 @@ pub fn run() {
     mark(b"get_state ok");
 
     let mut total_events: u32 = 0;
-    for _ in 0..POLL_ATTEMPTS {
+    let deadline = crate::time::timestamp_millis().saturating_add(POLL_WINDOW_MS);
+    while crate::time::timestamp_millis() < deadline {
         match client::poll_events() {
             Ok(events) => {
                 total_events = total_events.saturating_add(events.len() as u32);
