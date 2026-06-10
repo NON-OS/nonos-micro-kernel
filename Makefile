@@ -229,36 +229,46 @@ $(ZK_TOOL) $(ZK_PROOF_TOOL) $(ZK_VERIFY_TOOL) $(ZK_PROOF_SCENE_TOOL) $(ZK_FLEET_
 
 # Trusted setup via the Groth16 phase-2 (BGM17) ceremony: no seed, real OS
 # entropy per round, each contribution's secret destroyed. The composed delta
-# is unknown as long as one round is honest. The local build runs a bootstrap
-# of $(ZK_CEREMONY_ROUNDS) rounds; a production setup adds independent external
-# contributors. The bootloader embeds the verifying key (signature.sig is host
-# provenance, not consumed at boot), so the four authority VKs are copies of
-# the attestation VK.
+# is unknown as long as one round is honest.
+# A fresh checkout installs the canonical ceremony from the trust keystore
+# (nonos-data/zk, distributed with the submodule) and re-verifies its
+# transcript, so every clone proves against the same verifying key. The
+# local bootstrap ceremony only runs when no canonical bundle exists, which
+# is the new-circuit maintainer path. Use nonos-mk-zk-ceremony to
+# deliberately re-run a setup.
 # Order-only prerequisites: the tool and signing key must exist, but their
 # timestamps must NOT invalidate the keys. The ceremony runs once; rebuilding
 # the tool must never silently regenerate keys and strand already-attested
-# capsules. Use nonos-mk-zk-ceremony to deliberately re-run it.
+# capsules.
+NONOS_ZK_DIST := nonos-data/trust/zk
 $(ZK_PROVING_KEY): | $(ZK_CEREMONY_TOOL) $(SIGNING_KEY)
-	@echo "Running Groth16 phase-2 ceremony (seedless, $(ZK_CEREMONY_ROUNDS) rounds)..."
-	@mkdir -p $(ZK_KEYS_DIR) $(ZK_CEREMONY_DIR)
-	@$(ZK_CEREMONY_TOOL) init --circuit attestation --output $(ZK_CEREMONY_DIR)/params_0.bin
-	@prev=$(ZK_CEREMONY_DIR)/params_0.bin; \
-	for n in $$(seq 1 $(ZK_CEREMONY_ROUNDS)); do \
-		$(ZK_CEREMONY_TOOL) contribute --input $$prev \
-			--output $(ZK_CEREMONY_DIR)/params_$$n.bin \
-			--name "NONOS:bootstrap:round$$n" --entropy system || exit 1; \
-		prev=$(ZK_CEREMONY_DIR)/params_$$n.bin; \
-	done
-	@$(ZK_CEREMONY_TOOL) assemble --meta $(ZK_CEREMONY_DIR)/params_0.bin.meta.json \
-		--output $(ZK_CEREMONY_DIR)/transcript.json \
-		$(ZK_CEREMONY_DIR)/params_*.bin.contribution.json
-	@$(ZK_CEREMONY_TOOL) finalize --input $(ZK_CEREMONY_DIR)/params_$(ZK_CEREMONY_ROUNDS).bin \
-		--output $(ZK_KEYS_DIR) --transcript $(ZK_CEREMONY_DIR)/transcript.json
-	@$(ZK_CEREMONY_TOOL) verify --transcript $(ZK_KEYS_DIR)/ceremony_transcript.json
-	@cp $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_attestation_program.bin
-	@cp $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_boot_authority.bin
-	@cp $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_update_authority.bin
-	@cp $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_recovery_key.bin
+	@if [ -f $(NONOS_ZK_DIST)/attestation_proving_key.bin ]; then \
+		echo "Installing canonical ceremony keys from the trust keystore..."; \
+		mkdir -p $(ZK_KEYS_DIR); \
+		cp -R $(NONOS_ZK_DIST)/. $(ZK_KEYS_DIR)/; \
+		$(ZK_CEREMONY_TOOL) verify --transcript $(ZK_KEYS_DIR)/ceremony_transcript.json; \
+	else \
+		echo "Running Groth16 phase-2 ceremony (seedless, $(ZK_CEREMONY_ROUNDS) rounds)..."; \
+		mkdir -p $(ZK_KEYS_DIR) $(ZK_CEREMONY_DIR); \
+		$(ZK_CEREMONY_TOOL) init --circuit attestation --output $(ZK_CEREMONY_DIR)/params_0.bin; \
+		prev=$(ZK_CEREMONY_DIR)/params_0.bin; \
+		for n in $$(seq 1 $(ZK_CEREMONY_ROUNDS)); do \
+			$(ZK_CEREMONY_TOOL) contribute --input $$prev \
+				--output $(ZK_CEREMONY_DIR)/params_$$n.bin \
+				--name "NONOS:bootstrap:round$$n" --entropy system || exit 1; \
+			prev=$(ZK_CEREMONY_DIR)/params_$$n.bin; \
+		done; \
+		$(ZK_CEREMONY_TOOL) assemble --meta $(ZK_CEREMONY_DIR)/params_0.bin.meta.json \
+			--output $(ZK_CEREMONY_DIR)/transcript.json \
+			$(ZK_CEREMONY_DIR)/params_*.bin.contribution.json; \
+		$(ZK_CEREMONY_TOOL) finalize --input $(ZK_CEREMONY_DIR)/params_$(ZK_CEREMONY_ROUNDS).bin \
+			--output $(ZK_KEYS_DIR) --transcript $(ZK_CEREMONY_DIR)/transcript.json; \
+		$(ZK_CEREMONY_TOOL) verify --transcript $(ZK_KEYS_DIR)/ceremony_transcript.json; \
+		cp $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_attestation_program.bin; \
+		cp $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_boot_authority.bin; \
+		cp $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_update_authority.bin; \
+		cp $(ZK_VERIFYING_KEY) $(ZK_KEYS_DIR)/vk_recovery_key.bin; \
+	fi
 
 $(ZK_VERIFYING_KEY): $(ZK_PROVING_KEY)
 

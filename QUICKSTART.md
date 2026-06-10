@@ -9,6 +9,14 @@ time; the build tooling does all the security work for you.
 Prerequisites: rustup (the repo pins its own toolchain), QEMU, and
 make. macOS and Linux both work.
 
+Clone with submodules; the trust keystore and the build includes come
+along, including the canonical ceremony keys your proofs verify
+against (verifying key fingerprint 6cd2015037ea6181):
+
+```sh
+git clone --recursive https://github.com/NON-OS/nonos-micro-kernel.git
+```
+
 ## 1. Write the app
 
 A capsule is a normal Cargo crate. Copy the shape of
