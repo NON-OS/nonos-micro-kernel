@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::state::State;
+use super::state::{Mode, State};
 use super::theme::{BACKGROUND, DIRECTORY, FOREGROUND, MUTED, SELECTED};
 
 const TEXT_LEFT: u32 = 16;
@@ -28,6 +28,9 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.text(TEXT_LEFT, 18, b"file_manager", FOREGROUND);
     fb.text(TEXT_LEFT, 38, state.prefix.as_bytes(), MUTED);
     fb.text(TEXT_LEFT, 232, state.status, MUTED);
+    if !matches!(state.mode, Mode::Browse) {
+        fb.text(TEXT_LEFT + 9 * state.status.len() as u32, 232, state.input.as_bytes(), FOREGROUND);
+    }
     let mut y = FIRST_ROW_Y;
     for (i, entry) in state.entries.iter().enumerate() {
         let color = if entry.is_dir { DIRECTORY } else { FOREGROUND };

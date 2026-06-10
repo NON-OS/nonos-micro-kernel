@@ -20,6 +20,20 @@ use alloc::{string::String, vec::Vec};
 
 use super::entries::Entry;
 
+#[derive(Clone, Copy)]
+pub enum Mode {
+    Browse,
+    Prompt(PromptKind),
+}
+
+#[derive(Clone, Copy)]
+pub enum PromptKind {
+    NewFile,
+    MkDir,
+    Rename,
+    Delete,
+}
+
 pub struct State {
     pub owner_pid: u32,
     pub prefix: String,
@@ -27,6 +41,8 @@ pub struct State {
     pub cursor: usize,
     pub preview: Option<String>,
     pub status: &'static [u8],
+    pub mode: Mode,
+    pub input: String,
 }
 
 impl State {
@@ -38,6 +54,8 @@ impl State {
             cursor: 0,
             preview: None,
             status: b"loading...",
+            mode: Mode::Browse,
+            input: String::new(),
         }
     }
 }
