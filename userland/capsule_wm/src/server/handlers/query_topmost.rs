@@ -39,8 +39,9 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
     };
     let hit = topmost_hit_at(&ctx.windows, x, y);
     let off = HDR_LEN + STATUS_LEN;
-    let values =
-        hit.map(|h| [h.owner_pid, h.window_id, h.local_x, h.local_y]).unwrap_or([0, 0, 0, 0]);
+    let values = hit
+        .map(|h| [h.owner_pid, h.window_id, h.local_x, h.local_y, h.win_x, h.win_y, h.win_w, h.win_h])
+        .unwrap_or([0; 8]);
     for (idx, value) in values.iter().enumerate() {
         let start = off + idx * 4;
         tx[start..start + 4].copy_from_slice(&value.to_le_bytes());

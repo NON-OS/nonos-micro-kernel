@@ -21,6 +21,10 @@ pub struct HitTarget {
     pub window_id: u32,
     pub local_x: u32,
     pub local_y: u32,
+    pub win_x: u32,
+    pub win_y: u32,
+    pub win_w: u32,
+    pub win_h: u32,
 }
 
 pub fn topmost_hit_at(table: &WindowTable, px: u32, py: u32) -> Option<HitTarget> {
@@ -46,5 +50,9 @@ pub fn topmost_hit_at(table: &WindowTable, px: u32, py: u32) -> Option<HitTarget
         window_id: w.window_id,
         local_x: px.saturating_sub(w.rect.x),
         local_y: py.saturating_sub(w.rect.y),
+        win_x: w.rect.x,
+        win_y: w.rect.y,
+        win_w: w.rect.width,
+        win_h: w.rect.height,
     })
 }
