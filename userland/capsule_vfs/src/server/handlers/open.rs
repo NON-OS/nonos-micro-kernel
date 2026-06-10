@@ -24,8 +24,8 @@ use crate::protocol::{
 use crate::store::Store;
 
 // Payload: u32 caller_pid, u8 path_len, path bytes, u32 flags.
-pub fn open(store: &mut Store, req: Request<'_>) -> Vec<u8> {
-    let (pid, rest) = match split_caller(req.payload) {
+pub fn open(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
+    let (pid, rest) = match split_caller(req.payload, sender_pid) {
         Ok(v) => v,
         Err(s) => return encode_response(OP_OPEN, req.flags, req.request_id, s, &[]),
     };

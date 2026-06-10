@@ -28,6 +28,13 @@ impl Store {
                 return Err(StoreError::NotEmpty);
             }
         }
+        for slot in self.fds.iter_mut() {
+            match slot {
+                Some(fd) if fd.file_idx == idx => *slot = None,
+                Some(fd) if fd.file_idx > idx => fd.file_idx -= 1,
+                _ => {}
+            }
+        }
         self.files.remove(idx);
         Ok(())
     }

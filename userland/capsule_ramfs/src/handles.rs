@@ -19,8 +19,9 @@ use alloc::string::String;
 
 pub const MAX_HANDLES: usize = 1024;
 
-pub struct Handle {
-    pub path: String,
+struct Handle {
+    path: String,
+    owner_pid: u32,
 }
 
 pub struct HandleTable {
@@ -33,21 +34,37 @@ impl HandleTable {
         Self { next_id: 1, table: BTreeMap::new() }
     }
 
-    pub fn insert(&mut self, path: String) -> Option<u64> {
+    pub fn insert(&mut self, path: String, owner_pid: u32) -> Option<u64> {
         if self.table.len() >= MAX_HANDLES {
             return None;
         }
         let id = self.next_id;
         self.next_id = self.next_id.wrapping_add(1);
-        self.table.insert(id, Handle { path });
+        self.table.insert(id, Handle { path, owner_pid });
         Some(id)
     }
 
-    pub fn path_of(&self, id: u64) -> Option<&str> {
-        self.table.get(&id).map(|h| h.path.as_str())
+    pub fn path_for(&self, id: u64, sender_pid: u32) -> Result<&str, HandleError> {
+        let h = self.table.get(&id).ok_or(HandleError::NotFound)?;
+        if sender_pid != 0 && h.owner_pid != sender_pid {
+            return Err(HandleError::Denied);
+        }
+        Ok(h.path.as_str())
     }
 
-    pub fn remove(&mut self, id: u64) -> bool {
-        self.table.remove(&id).is_some()
+    pub fn remove(&mut self, id: u64, sender_pid: u32) -> Result<(), HandleError> {
+        match self.table.get(&id) {
+            None => Err(HandleError::NotFound),
+            Some(h) if sender_pid != 0 && h.owner_pid != sender_pid => Err(HandleError::Denied),
+            Some(_) => {
+                self.table.remove(&id);
+                Ok(())
+            }
+        }
     }
+}
+
+pub enum HandleError {
+    NotFound,
+    Denied,
 }

@@ -27,3 +27,4 @@ pub const OP_WINDOW_RESTORE: u16 = 0x000A;
 pub const OP_QUERY_TOPMOST: u16 = 0x000B;
 pub const OP_ROUTE_FOCUS: u16 = 0x000C;
 pub const OP_QUERY_FOCUS: u16 = 0x000D;
+pub const OP_WINDOW_MAXIMIZE: u16 = 0x000E;

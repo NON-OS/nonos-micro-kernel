@@ -15,11 +15,28 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use core::sync::atomic::Ordering;
 
-use nonos_libc::crypto_random;
-
 use crate::protocol::MAX_RANDOM_BYTES;
 
 use super::types::Pool;
+
+#[target_feature(enable = "rdrand")]
+unsafe fn rdrand_fill(out: &mut [u8]) -> bool {
+    let mut filled = 0;
+    while filled < out.len() {
+        let mut word: u64 = 0;
+        let mut tries = 0;
+        while core::arch::x86_64::_rdrand64_step(&mut word) != 1 {
+            tries += 1;
+            if tries >= 32 {
+                return false;
+            }
+        }
+        let take = core::cmp::min(8, out.len() - filled);
+        out[filled..filled + take].copy_from_slice(&word.to_le_bytes()[..take]);
+        filled += take;
+    }
+    true
+}
 
 impl Pool {
     pub fn fill(&self, out: &mut [u8]) -> i64 {
@@ -28,13 +45,12 @@ impl Pool {
         if want == 0 {
             return 0;
         }
-        let n = crypto_random(out.as_mut_ptr(), want);
         self.requests.fetch_add(1, Ordering::Relaxed);
-        if n < 0 {
+        if !unsafe { rdrand_fill(&mut out[..want]) } {
             self.source_failures.fetch_add(1, Ordering::Relaxed);
-            return n;
+            return -5;
         }
-        self.bytes_served.fetch_add(n as u64, Ordering::Relaxed);
-        n
+        self.bytes_served.fetch_add(want as u64, Ordering::Relaxed);
+        want as i64
     }
 }

@@ -26,8 +26,8 @@ use crate::store::Store;
 // Payload: u32 caller_pid, u8 prefix_len, prefix bytes.
 // Reply body: concatenated `<u8 name_len><name bytes>` entries, capped
 // at MAX_LIST_BYTES.
-pub fn list(store: &mut Store, req: Request<'_>) -> Vec<u8> {
-    let (_pid, rest) = match split_caller(req.payload) {
+pub fn list(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
+    let (_pid, rest) = match split_caller(req.payload, sender_pid) {
         Ok(v) => v,
         Err(s) => return encode_response(OP_LIST, req.flags, req.request_id, s, &[]),
     };

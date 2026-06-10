@@ -18,6 +18,7 @@ use alloc::vec::Vec;
 use x25519_dalek::{PublicKey, StaticSecret};
 
 use crate::protocol::{encode_response, Request, EINVAL, OP_X25519_SHARED, X25519_KEY_BYTES};
+use crate::server::wipe::wipe;
 
 pub fn x25519_shared(req: Request<'_>) -> Vec<u8> {
     if req.payload.len() != X25519_KEY_BYTES * 2 {
@@ -30,5 +31,7 @@ pub fn x25519_shared(req: Request<'_>) -> Vec<u8> {
     let secret = StaticSecret::from(private);
     let peer = PublicKey::from(public);
     let shared = secret.diffie_hellman(&peer);
-    encode_response(OP_X25519_SHARED, req.flags, req.request_id, 0, shared.as_bytes())
+    let resp = encode_response(OP_X25519_SHARED, req.flags, req.request_id, 0, shared.as_bytes());
+    wipe(&mut private);
+    resp
 }

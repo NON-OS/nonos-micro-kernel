@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod constants;
+mod hover_motion;
 mod mirror_shell_pointer;
 mod refresh_display;
 mod route_pointer;
+mod route_to_press;
 mod route_to_shell;
 mod route_to_window;
 mod shell_pid;

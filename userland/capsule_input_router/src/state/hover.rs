@@ -14,26 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::{CHROME_H, KIND_LABEL, KIND_PANEL, LABEL_X, LABEL_Y};
-use super::render_component::render_component;
+// Cached topmost-window rect so pointer motion inside it routes without
+// a WM round-trip per event. The cache is dropped on press (the window
+// may move itself during a drag) and when the cursor exits the rect.
+#[derive(Clone, Copy)]
+pub struct Hover {
+    pub pid: u32,
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
+}
 
-pub fn ui_frame(
-    port: u32,
-    request_id: u32,
-    surface_handle: u64,
-    width: u32,
-    title: &[u8],
-) -> Result<(), &'static str> {
-    render_component(port, request_id, surface_handle, 0, 0, width, CHROME_H, KIND_PANEL, b"")?;
-    render_component(
-        port,
-        request_id.wrapping_add(1),
-        surface_handle,
-        LABEL_X,
-        LABEL_Y,
-        width.saturating_sub(LABEL_X.saturating_mul(2)),
-        14,
-        KIND_LABEL,
-        title,
-    )
+impl Hover {
+    pub fn contains(&self, px: u32, py: u32) -> bool {
+        px >= self.x && px < self.x + self.w && py >= self.y && py < self.y + self.h
+    }
 }

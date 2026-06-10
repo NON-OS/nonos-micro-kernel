@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_toolkit::decorations::DecorationHit;
+
 use crate::app::{App, AppManifest};
 use crate::clients::compositor;
 use crate::setup::WindowBinding;
@@ -25,13 +27,11 @@ pub(super) fn paint_once<A: App>(
     app: &mut A,
     manifest: &AppManifest,
     binding: &WindowBinding,
-    toolkit_port: u32,
     compositor_port: u32,
     request_id: &mut u32,
 ) -> bool {
-    if paint(app, manifest, binding, toolkit_port, request_id).is_err() {
-        return false;
-    }
+    paint(app, manifest, binding, DecorationHit::None);
     let rid = next(request_id);
-    compositor::damage_commit(compositor_port, rid, 0, 0, manifest.width, manifest.height).is_ok()
+    compositor::damage_commit(compositor_port, rid, binding.x, binding.y, binding.width, binding.height)
+        .is_ok()
 }

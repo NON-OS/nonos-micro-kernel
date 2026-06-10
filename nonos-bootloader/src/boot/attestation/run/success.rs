@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::display::{log_hash, log_ok, BootCryptoState};
+use crate::display::{
+    draw_panel, log_hash, panel_line, BootCryptoState, COLOR_ACCENT, COLOR_TEXT_PRIMARY,
+};
 use crate::log::logger::log_info;
 use crate::security::extend_boot_measurements;
 use crate::zk::BootAttestationResult;
@@ -34,8 +36,15 @@ pub fn display_success(
     tpm: bool,
 ) {
     if gop {
-        log_ok(b"Groth16/BLS12-381 VERIFIED");
-        log_ok(b"Kernel binding VERIFIED");
+        draw_panel(40, 122, 540, 50, b"attestation");
+        panel_line(
+            40,
+            150,
+            b"[#]",
+            COLOR_ACCENT,
+            b"groth16/bls12-381 VERIFIED + kernel-bound",
+            COLOR_TEXT_PRIMARY,
+        );
         log_hash(b"ZK prog ", &r.program_hash);
         log_hash(b"capsule ", &r.capsule_commitment);
     }

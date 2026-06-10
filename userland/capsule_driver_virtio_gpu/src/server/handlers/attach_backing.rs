@@ -46,6 +46,10 @@ pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, body: &[u8], tx: 
         respond::status(sender_pid, req, E_BUSY, tx);
         return;
     }
+    if !owns_backing(driver, backing_addr, backing_len) {
+        respond::status(sender_pid, req, E_INVAL, tx);
+        return;
+    }
     let fence_id = driver.fences.issue();
     if cmd::attach_backing(
         &driver.control_queue,
@@ -64,4 +68,16 @@ pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, body: &[u8], tx: 
         r.backing_len = backing_len as u32;
     });
     respond::status(sender_pid, req, 0, tx);
+}
+fn owns_backing(driver: &Driver, addr: u64, len: u64) -> bool {
+    let Some(primary) = driver.primary.as_ref() else {
+        return false;
+    };
+    let Some(req_end) = addr.checked_add(len) else {
+        return false;
+    };
+    let Some(owned_end) = primary.backing_addr.checked_add(primary.backing_len) else {
+        return false;
+    };
+    addr >= primary.backing_addr && req_end <= owned_end
 }

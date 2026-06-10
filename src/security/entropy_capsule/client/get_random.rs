@@ -14,17 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::capability::gate_read;
 use super::super::error::EntropyCapsuleError;
 use super::super::protocol::{encode_request, MAX_RANDOM_BYTES, OP_GET_RANDOM};
 use super::seq::next_request_id;
 use super::transport::round_trip;
 
 // Fill `out` with random bytes from the entropy capsule. Returns the
-// count written on success. Cap-gated by `CAP_ENTROPY`; over-sized
-// requests are rejected without round-tripping.
+// count written on success. Authorization is the caller's CAP_CRYPTO at
+// the CryptoRandom syscall gate; over-sized requests are rejected
+// without round-tripping.
 pub fn get_random(out: &mut [u8]) -> Result<usize, EntropyCapsuleError> {
-    let _caller = gate_read()?;
     if out.len() > MAX_RANDOM_BYTES as usize {
         return Err(EntropyCapsuleError::OversizedRequest);
     }

@@ -15,9 +15,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 mod close_button_rect;
 mod draw_close_button;
+mod draw_extra;
+mod extra_rects;
 mod fill_box;
 mod plot;
 mod types;
 
 pub use close_button_rect::close_button_rect;
 pub use draw_close_button::draw_close_button;
+pub use draw_extra::{draw_maximize_button, draw_minimize_button};
+pub use extra_rects::{maximize_button_rect, minimize_button_rect};

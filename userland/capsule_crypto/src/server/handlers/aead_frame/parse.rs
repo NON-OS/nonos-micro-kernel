@@ -26,6 +26,14 @@ pub(crate) fn parse_seal(payload: &[u8]) -> Result<SealFrame<'_>, FrameError> {
     Ok(SealFrame { key: parts.key, nonce: parts.nonce, aad: parts.aad, plaintext: parts.body })
 }
 
+pub(crate) fn nonce_is_degenerate(nonce: &[u8]) -> bool {
+    let mut acc: u8 = 0;
+    for byte in nonce {
+        acc |= *byte;
+    }
+    acc == 0
+}
+
 pub(crate) fn parse_open(payload: &[u8]) -> Result<OpenFrame<'_>, FrameError> {
     let parts = parse_common(payload)?;
     if parts.body.len() < TAG_LEN {

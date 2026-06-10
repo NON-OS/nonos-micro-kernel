@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,13 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const LOGO: [&[u8]; 6] = [
-    b" _   _  ___  _   _  ___  ___",
-    b"| \\ | |/ _ \\| \\ | |/ _ \\/ __|",
-    b"|  \\| | | | |  \\| | | | \\__ \\",
-    b"| |\\  | |_| | |\\  | |_| |__) |",
-    b"|_| \\_|\\___/|_| \\_|\\___/____/",
-    b"    Secure Attestation Boot",
-];
+use nonos_toolkit::decorations::{draw_minimize_button, minimize_button_rect};
 
-pub const LOGO_LINE_HEIGHT: u32 = 16;
+const MIN_FILL_ARGB: u32 = 0xFFD9_A441;
+const MIN_HOVER_ARGB: u32 = 0xFFEC_C06A;
+const MIN_GLYPH_ARGB: u32 = 0xFF1A_2030;
+
+pub(super) fn paint_minimize_button(
+    pixels: &mut [u32],
+    stride_words: usize,
+    width: u32,
+    hovered: bool,
+) {
+    let rect = minimize_button_rect(width);
+    let fill = if hovered { MIN_HOVER_ARGB } else { MIN_FILL_ARGB };
+    draw_minimize_button(pixels, stride_words, width, &rect, fill, MIN_GLYPH_ARGB);
+}

@@ -24,7 +24,12 @@ use crate::protocol::{
 };
 use crate::store::Store;
 
-pub fn open(store: &mut Store, handles: &mut HandleTable, req: Request<'_>) -> Vec<u8> {
+pub fn open(
+    store: &mut Store,
+    handles: &mut HandleTable,
+    req: Request<'_>,
+    sender_pid: u32,
+) -> Vec<u8> {
     if req.payload.len() < 6 {
         return encode_response(req.seq, EINVAL, &[]);
     }
@@ -54,7 +59,7 @@ pub fn open(store: &mut Store, handles: &mut HandleTable, req: Request<'_>) -> V
     if flags & OPEN_FLAG_TRUNCATE != 0 && store.truncate(&path, 0).is_err() {
         return encode_response(req.seq, EIO, &[]);
     }
-    match handles.insert(path) {
+    match handles.insert(path, sender_pid) {
         Some(id) => encode_response(req.seq, 0, &id.to_le_bytes()),
         None => encode_response(req.seq, EMFILE, &[]),
     }

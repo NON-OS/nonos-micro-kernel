@@ -21,7 +21,12 @@ mod metrics;
 mod titlebar;
 
 pub use border::draw_border;
-pub use close_button::{close_button_rect, draw_close_button};
+pub use close_button::{
+    close_button_rect, draw_close_button, draw_maximize_button, draw_minimize_button,
+    maximize_button_rect, minimize_button_rect,
+};
 pub use hit_test::{hit_test, DecorationHit};
-pub use metrics::{BORDER_PX, CLOSE_BUTTON_SIZE, TITLEBAR_HEIGHT, TITLEBAR_PADDING, TITLE_TEXT_Y};
+pub use metrics::{
+    BORDER_PX, BUTTON_GAP, CLOSE_BUTTON_SIZE, TITLEBAR_HEIGHT, TITLEBAR_PADDING, TITLE_TEXT_Y,
+};
 pub use titlebar::draw_titlebar;

@@ -16,5 +16,6 @@
 
 pub const ENOENT: i32 = -2;
 pub const EIO: i32 = -5;
+pub const EACCES: i32 = -13;
 pub const EINVAL: i32 = -22;
 pub const EMFILE: i32 = -24;

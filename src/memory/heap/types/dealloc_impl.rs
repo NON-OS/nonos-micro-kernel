@@ -54,7 +54,9 @@ pub(super) unsafe fn dealloc_impl(allocator: &SecureHeapAllocator, ptr: *mut u8,
         let align = layout.align().max(MIN_ALIGNMENT);
         if let Ok(adjusted_layout) = Layout::from_size_align(total_size, align) {
             super::super::manager::HEAP_STATS.record_deallocation(layout.size());
-            allocator.inner.dealloc(raw_ptr, adjusted_layout);
+            crate::arch::x86_64::idt::without_interrupts(|| {
+                allocator.inner.dealloc(raw_ptr, adjusted_layout)
+            });
         }
     }
 }

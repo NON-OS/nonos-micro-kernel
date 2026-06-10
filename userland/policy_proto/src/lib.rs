@@ -40,7 +40,7 @@ pub mod wallpaper_labels;
 pub use category::Category;
 pub use enum_label::enum_label;
 pub use enum_table::enum_table;
-pub use errno::{E_BAD_LEN, E_INVAL, E_NOT_FOUND, E_OK, E_WRONG_KIND};
+pub use errno::{E_ACCES, E_BAD_LEN, E_INVAL, E_NOT_FOUND, E_OK, E_WRONG_KIND};
 pub use field::Field;
 pub use field_decode::decode as decode_field;
 pub use field_kind::kind_of;

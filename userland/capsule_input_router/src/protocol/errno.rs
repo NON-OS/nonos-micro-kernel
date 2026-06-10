@@ -15,4 +15,5 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const E_INVAL: i32 = -22;
+pub const E_ACCES: i32 = -13;
 pub const E_BAD_OP: i32 = -38;

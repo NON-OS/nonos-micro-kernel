@@ -16,10 +16,10 @@
 
 use alloc::vec::Vec;
 
-use crate::handles::HandleTable;
-use crate::protocol::{encode_response, read_u64_le, Request, EINVAL, ENOENT};
+use crate::handles::{HandleError, HandleTable};
+use crate::protocol::{encode_response, read_u64_le, Request, EACCES, EINVAL, ENOENT};
 
-pub fn close(handles: &mut HandleTable, req: Request<'_>) -> Vec<u8> {
+pub fn close(handles: &mut HandleTable, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
     if req.payload.len() < 8 {
         return encode_response(req.seq, EINVAL, &[]);
     }
@@ -27,9 +27,9 @@ pub fn close(handles: &mut HandleTable, req: Request<'_>) -> Vec<u8> {
         Some(v) => v,
         None => return encode_response(req.seq, EINVAL, &[]),
     };
-    if handles.remove(h) {
-        encode_response(req.seq, 0, &[])
-    } else {
-        encode_response(req.seq, ENOENT, &[])
+    match handles.remove(h, sender_pid) {
+        Ok(()) => encode_response(req.seq, 0, &[]),
+        Err(HandleError::Denied) => encode_response(req.seq, EACCES, &[]),
+        Err(HandleError::NotFound) => encode_response(req.seq, ENOENT, &[]),
     }
 }

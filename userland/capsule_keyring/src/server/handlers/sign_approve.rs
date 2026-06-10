@@ -22,13 +22,17 @@ use super::super::zeroize::zeroize32;
 use crate::protocol::{encode_response, Request, EACCES, EINVAL};
 use crate::store::{Store, StoreError};
 
-pub fn sign_approve(store: &mut Store, req: Request<'_>) -> Vec<u8> {
+pub fn sign_approve(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
     const HDR: usize = 4 + 4 + 32 * 5;
     if req.payload.len() != HDR {
         return encode_response(req.seq, EINVAL, &[]);
     }
     let p = req.payload;
-    let caller_pid = u32::from_le_bytes([p[0], p[1], p[2], p[3]]);
+    let payload_pid = u32::from_le_bytes([p[0], p[1], p[2], p[3]]);
+    let caller_pid = match crate::server::caller::resolve_caller(payload_pid, sender_pid) {
+        Some(pid) => pid,
+        None => return encode_response(req.seq, EACCES, &[]),
+    };
     let id = u32::from_le_bytes([p[4], p[5], p[6], p[7]]);
     let mut secret = match store.eth_secret(id, caller_pid) {
         Ok(s) => s,

@@ -16,6 +16,7 @@
 
 pub(super) fn spawn() {
     spawn_gui_core();
+    spawn_boot_splash();
     spawn_wm();
     spawn_wallpaper_catalog();
     spawn_wallpaper();
@@ -27,6 +28,19 @@ pub(super) fn spawn_gui_core() {
     spawn_input_router();
     spawn_compositor();
 }
+
+#[cfg(feature = "nonos-capsule-boot-splash")]
+fn spawn_boot_splash() {
+    use crate::userspace::capsule_boot_splash as c;
+    super::boot::capsule(
+        "BOOT-SPLASH",
+        "boot_splash",
+        c::spawn_boot_splash_capsule,
+        c::shared_state,
+    );
+}
+#[cfg(not(feature = "nonos-capsule-boot-splash"))]
+fn spawn_boot_splash() {}
 
 #[cfg(feature = "nonos-capsule-wallpaper-catalog")]
 fn spawn_wallpaper_catalog() {

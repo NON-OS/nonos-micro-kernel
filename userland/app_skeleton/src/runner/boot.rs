@@ -18,6 +18,7 @@ use crate::app::{App, AppManifest};
 use crate::discover::Peers;
 use crate::setup::{ensure_input_subscription, open_window, WindowBinding};
 
+use super::drag::DragState;
 use super::prime_frame::prime_frame;
 
 pub(super) const INITIAL_PAINT_ATTEMPTS: usize = 256;
@@ -28,6 +29,10 @@ pub(super) struct BootedApp<A: App> {
     pub binding: WindowBinding,
     pub input_ready: bool,
     pub primed: bool,
+    pub maximized: bool,
+    pub minimized: bool,
+    pub saved: (u32, u32, u32, u32),
+    pub drag: DragState,
 }
 
 pub(super) fn boot<A: App>(
@@ -39,5 +44,15 @@ pub(super) fn boot<A: App>(
     let binding = open_window(peers, &manifest, request_id)?;
     let input_ready = ensure_input_subscription(peers.input_router, &manifest, request_id);
     let primed = prime_frame(&mut app, &manifest, &binding, peers, request_id);
-    Ok(BootedApp { app, manifest, binding, input_ready, primed })
+    Ok(BootedApp {
+        app,
+        manifest,
+        binding,
+        input_ready,
+        primed,
+        maximized: false,
+        minimized: false,
+        saved: (0, 0, 0, 0),
+        drag: DragState::new(),
+    })
 }
