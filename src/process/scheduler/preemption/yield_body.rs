@@ -96,15 +96,33 @@ pub(crate) fn perform_yield_inline() {
     }
     CURRENT_TIME_SLICE.store(0, Ordering::Relaxed);
 
-    if let Some(next) = select_next_process() {
-        if next != pid {
-            trace(b"switch away", pid);
-            switch_to_process(next);
-        } else if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
-            let mut state = pcb.state.lock();
-            if matches!(*state, ProcessState::Ready) {
-                *state = ProcessState::Running;
+    loop {
+        if let Some(next) = select_next_process() {
+            if next != pid {
+                trace(b"switch away", pid);
+                switch_to_process(next);
+            } else if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
+                let mut state = pcb.state.lock();
+                if matches!(*state, ProcessState::Ready) {
+                    *state = ProcessState::Running;
+                }
             }
+            return;
         }
+        idle_until_interrupt();
+    }
+}
+
+// Nothing is runnable: every process is parked on a timeout or an
+// IRQ/IPC wake. Yield used to plain-return here, which sent the
+// caller's recv/wait loop spinning at CPL=0 with IF=0 (SFMASK) —
+// the timer could never fire, so time froze and no sleeper could
+// ever wake. The `sti; hlt` pair is the canonical race-free idle:
+// STI's one-instruction shadow means a wake that is already
+// pending still lands inside the HLT, and the handler (timer tick
+// or broker IRQ) refills the run queue before control returns.
+fn idle_until_interrupt() {
+    unsafe {
+        core::arch::asm!("sti", "hlt", "cli", options(nomem, nostack));
     }
 }
