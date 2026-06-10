@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod panic;
+mod profile;
 mod watchdog;
 
 pub use panic::{

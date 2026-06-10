@@ -37,6 +37,9 @@ zerocopy = "0.6"
 sha2 = { version = "0.10", default-features = false, features = ["force-soft"] }
 blake3 = { version = "1.5", default-features = false, features = ["pure"] }
 
+# Anti-aliased monospace font glyphs (OFL Noto Sans Mono, pure data, no_std)
+noto-sans-mono-bitmap = { version = "0.3", default-features = false, features = ["regular", "size_16", "size_20", "size_24", "size_32", "unicode-basic-latin", "unicode-specials"] }
+
 # Misc utilities
 bitflags = "2.4"
 uuid = { version = "1.6", default-features = false, features = ["macro-diagnostics"] }
@@ -90,10 +93,7 @@ zk-groth16 = [
 
 zk-vk-provisioned = []
 zk-bind-manifest = []
-zk-testvectors = []
-host-tests = []
 zk-zeroize = ["zeroize"]
-mock-proof = []
 zk-snark = ["zk-groth16"]
 
 [build-dependencies]
