@@ -68,6 +68,10 @@ pub(super) fn count_msix_for_device(device_id: u64) -> usize {
         .count()
 }
 
+pub(super) fn vectors_for_pid(pid: u32) -> Vec<u8> {
+    RECORDS.lock().iter().filter(|g| g.pid == pid).map(|g| g.vector).collect()
+}
+
 pub(super) fn lookup(grant_id: u64) -> Option<IrqGrant> {
     RECORDS.lock().iter().find(|g| g.grant_id == grant_id).copied()
 }

@@ -25,8 +25,10 @@ mod pending;
 mod poll;
 mod release;
 mod trampoline;
+mod wait;
 
 pub use ack::ack_grant;
 pub use bind::bind;
 pub use poll::poll;
 pub use release::{release_all_for_pid, release_for_device, unmap_grant};
+pub use wait::{wait_arm, wait_disarm};

@@ -27,7 +27,9 @@
 //!     `0..vector_count`.
 
 use super::types::{IrqBindOut, IrqPollOut};
-use crate::syscall::{call_raw, N_MK_IRQ_ACK, N_MK_IRQ_BIND, N_MK_IRQ_POLL, N_MK_IRQ_UNBIND};
+use crate::syscall::{
+    call_raw, N_MK_IRQ_ACK, N_MK_IRQ_BIND, N_MK_IRQ_POLL, N_MK_IRQ_UNBIND, N_MK_IRQ_WAIT,
+};
 
 pub const MK_IRQ_BIND_MSIX: u32 = 1 << 0;
 
@@ -59,4 +61,19 @@ pub extern "C" fn mk_irq_ack(grant_id: u64) -> i64 {
 #[no_mangle]
 pub extern "C" fn mk_irq_poll(grant_id: u64, out: *mut IrqPollOut) -> i64 {
     call_raw(N_MK_IRQ_POLL, [grant_id, out as u64, 0, 0, 0, 0])
+}
+
+// Blocks until any IRQ delivery moves the seq past `last_seq`, the
+// timeout lapses (0 = kernel default), or an unrelated wake lands —
+// spurious returns are expected, callers loop. `grant_id` 0 waits
+// on every grant this capsule owns; `out_seq` receives the value to
+// pass back as the next `last_seq`.
+#[no_mangle]
+pub extern "C" fn mk_irq_wait(
+    grant_id: u64,
+    last_seq: u64,
+    timeout_ms: u64,
+    out_seq: *mut u64,
+) -> i64 {
+    call_raw(N_MK_IRQ_WAIT, [grant_id, last_seq, timeout_ms, out_seq as u64, 0, 0])
 }

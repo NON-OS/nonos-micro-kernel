@@ -26,8 +26,10 @@ mod errno_map;
 mod out;
 mod poll;
 mod unbind;
+mod wait;
 
 pub use ack::sys_irq_ack;
 pub use bind::sys_irq_bind;
 pub use poll::sys_irq_poll;
 pub use unbind::sys_irq_unbind;
+pub use wait::sys_irq_wait;

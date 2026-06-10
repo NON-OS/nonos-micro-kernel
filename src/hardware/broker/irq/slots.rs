@@ -35,6 +35,7 @@ pub(super) struct IrqSlot {
     pub overflow: AtomicU64,
     pub grant_id: AtomicU64,
     pub gsi: AtomicU32,
+    pub waiter: AtomicU32,
 }
 
 impl IrqSlot {
@@ -45,6 +46,7 @@ impl IrqSlot {
             overflow: AtomicU64::new(0),
             grant_id: AtomicU64::new(0),
             gsi: AtomicU32::new(0),
+            waiter: AtomicU32::new(0),
         }
     }
 }
@@ -142,6 +144,20 @@ pub(super) fn deactivate(slot_idx: usize) {
     slot.active.store(false, Ordering::Release);
     slot.grant_id.store(0, Ordering::Relaxed);
     slot.gsi.store(0, Ordering::Relaxed);
+    slot.waiter.store(0, Ordering::Release);
+}
+
+pub(super) fn arm_waiter(slot_idx: usize, pid: u32) {
+    SLOTS[slot_idx].waiter.store(pid, Ordering::Release);
+}
+
+pub(super) fn disarm_waiter(slot_idx: usize, pid: u32) {
+    let _ = SLOTS[slot_idx].waiter.compare_exchange(
+        pid,
+        0,
+        Ordering::AcqRel,
+        Ordering::Acquire,
+    );
 }
 
 pub(super) fn read_counters(slot_idx: usize) -> (u64, u64) {
@@ -158,5 +174,6 @@ pub(crate) fn reset_for_test() {
         slot.gsi.store(0, Ordering::SeqCst);
         slot.seq.store(0, Ordering::SeqCst);
         slot.overflow.store(0, Ordering::SeqCst);
+        slot.waiter.store(0, Ordering::SeqCst);
     }
 }

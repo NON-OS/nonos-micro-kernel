@@ -19,7 +19,7 @@ use super::irq::{bind as irq_bind, bind_raw as irq_bind_raw};
 use super::pio::grant as pio_grant;
 use crate::discover::{find_ps2_aux, find_ps2_kbd};
 use crate::init::{enable_keyboard, enable_mouse, flush_output};
-use nonos_libc::mk_device_release;
+use nonos_libc::{mk_device_release, mk_irq_ack};
 
 pub fn run() -> Result<Driver, &'static str> {
     let dev = find_ps2_kbd().ok_or("ps2 keyboard not present in device list")?;
@@ -36,7 +36,18 @@ pub fn run() -> Result<Driver, &'static str> {
     flush_output(pio_grant_id);
     enable_keyboard(pio_grant_id)?;
     let mouse_enabled = aux_irq_grant_id != 0 && enable_mouse(pio_grant_id).is_ok();
+    open_line(irq_grant_id);
+    open_line(aux_irq_grant_id);
     Ok(Driver { pio_grant_id, irq_grant_id, aux_irq_grant_id, mouse_enabled })
+}
+
+// `mk_irq_bind` leaves the GSI masked until the capsule signals it
+// is ready; without this opening ack the line never delivers and
+// the first IRQ can never arrive to make the pump ack it.
+fn open_line(grant_id: u64) {
+    if grant_id != 0 {
+        let _ = mk_irq_ack(grant_id);
+    }
 }
 
 fn setup_aux() -> u64 {

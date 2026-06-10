@@ -49,8 +49,8 @@ pub use grant::{GrantError, MmioGrant};
 pub use irq::{
     ack_grant as irq_ack_grant, bind as irq_bind, poll as irq_poll,
     release_all_for_pid as irq_release_all_for_pid, release_for_device as irq_release_for_device,
-    unmap_grant as irq_unmap_grant, IrqBindError, IrqBindRequest, IrqBindResult, IrqError,
-    IrqPollResult,
+    unmap_grant as irq_unmap_grant, wait_arm as irq_wait_arm, wait_disarm as irq_wait_disarm,
+    IrqBindError, IrqBindRequest, IrqBindResult, IrqError, IrqPollResult,
 };
 pub use mmio::{
     map_for_caller, release_all_for_pid, release_for_device, unmap_grant, MmioMapError,

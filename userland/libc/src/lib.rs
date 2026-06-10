@@ -38,7 +38,7 @@ pub use admin::{mk_admin_policy_push, mk_admin_reboot, mk_admin_shutdown};
 pub use attest::{mk_attest_status, AttestStatus};
 pub use broker::{
     mk_device_claim, mk_device_list, mk_device_release, mk_dma_map, mk_dma_unmap, mk_irq_ack,
-    mk_irq_bind, mk_irq_poll, mk_irq_unbind, mk_mmio_map, mk_mmio_unmap,
+    mk_irq_bind, mk_irq_poll, mk_irq_unbind, mk_irq_wait, mk_mmio_map, mk_mmio_unmap,
     mk_pci_config_read,
     mk_pci_config_write, mk_pio_grant, mk_pio_read, mk_pio_release, mk_pio_write, Bar,
     DeviceRecord, DmaMapOut, IrqBindOut, IrqPollOut, MmioMapOut, PioGrantOut, BAR_KIND_MMIO,
