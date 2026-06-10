@@ -14,23 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::Context;
+use crate::wire::{call_status, NWMP_MAGIC};
 
-impl Context {
-    pub fn forget_pid(&mut self, pid: u32) {
-        if pid == 0 {
-            return;
-        }
-        self.subscriptions.remove_pid(pid);
-        if self.press.is_some_and(|p| p.pid == pid) {
-            self.press = None;
-        }
-        if self.hover.is_some_and(|h| h.pid == pid) {
-            self.hover = None;
-        }
-        self.grabs.release(pid);
-        if self.shell_pid == pid {
-            self.shell_pid = 0;
-        }
+const OP: u16 = 0x000E;
+const BODY_LEN: usize = 24;
+
+pub fn window_maximize(
+    port: u32,
+    request_id: u32,
+    window_id: u32,
+    x: u32,
+    y: u32,
+    w: u32,
+    h: u32,
+) -> Result<(), &'static str> {
+    let mut body = [0u8; BODY_LEN];
+    body[0..4].copy_from_slice(&window_id.to_le_bytes());
+    body[8..12].copy_from_slice(&x.to_le_bytes());
+    body[12..16].copy_from_slice(&y.to_le_bytes());
+    body[16..20].copy_from_slice(&w.to_le_bytes());
+    body[20..24].copy_from_slice(&h.to_le_bytes());
+    let status = call_status(port, NWMP_MAGIC, OP, request_id, &body)?;
+    if status != 0 {
+        return Err("wm rejected window_maximize");
     }
+    Ok(())
 }

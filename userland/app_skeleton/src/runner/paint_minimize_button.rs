@@ -14,26 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::{CHROME_H, KIND_LABEL, KIND_PANEL, LABEL_X, LABEL_Y};
-use super::render_component::render_component;
+use nonos_toolkit::decorations::{draw_minimize_button, minimize_button_rect};
 
-pub fn ui_frame(
-    port: u32,
-    request_id: u32,
-    surface_handle: u64,
+const MIN_FILL_ARGB: u32 = 0xFFD9_A441;
+const MIN_HOVER_ARGB: u32 = 0xFFEC_C06A;
+const MIN_GLYPH_ARGB: u32 = 0xFF1A_2030;
+
+pub(super) fn paint_minimize_button(
+    pixels: &mut [u32],
+    stride_words: usize,
     width: u32,
-    title: &[u8],
-) -> Result<(), &'static str> {
-    render_component(port, request_id, surface_handle, 0, 0, width, CHROME_H, KIND_PANEL, b"")?;
-    render_component(
-        port,
-        request_id.wrapping_add(1),
-        surface_handle,
-        LABEL_X,
-        LABEL_Y,
-        width.saturating_sub(LABEL_X.saturating_mul(2)),
-        14,
-        KIND_LABEL,
-        title,
-    )
+    hovered: bool,
+) {
+    let rect = minimize_button_rect(width);
+    let fill = if hovered { MIN_HOVER_ARGB } else { MIN_FILL_ARGB };
+    draw_minimize_button(pixels, stride_words, width, &rect, fill, MIN_GLYPH_ARGB);
 }

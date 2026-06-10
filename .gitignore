@@ -76,6 +76,7 @@ coverage/
 # AI assistant instruction files (local overrides, not for version control)
 .claude/
 CLAUDE.md
+CONTEXT.md
 .cursorrules
 .cursorignore
 .aider*

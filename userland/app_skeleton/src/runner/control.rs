@@ -25,22 +25,30 @@ const CONTROL_VERSION: u16 = 1;
 const DESKTOP_SHELL: &[u8] = b"desktop_shell";
 const OP_FOCUS_SELF: u16 = 1;
 
+pub(super) enum ControlOutcome {
+    NotControl,
+    Handled,
+    FocusSelf,
+}
+
 pub(super) fn handle_control(
     buf: &[u8],
     sender_pid: u32,
     wm_port: u32,
     window_id: u32,
     request_id: &mut u32,
-) -> bool {
-    let Some(op) = control_op(buf) else { return false };
+) -> ControlOutcome {
+    let Some(op) = control_op(buf) else { return ControlOutcome::NotControl };
     if !from_desktop_shell(sender_pid) {
-        return true;
+        return ControlOutcome::Handled;
     }
     if op == OP_FOCUS_SELF {
+        let _ = wm::window_restore(wm_port, next(request_id), window_id);
         let _ = wm::window_raise(wm_port, next(request_id), window_id);
         let _ = wm::window_focus(wm_port, next(request_id), window_id);
+        return ControlOutcome::FocusSelf;
     }
-    true
+    ControlOutcome::Handled
 }
 
 fn control_op(buf: &[u8]) -> Option<u16> {

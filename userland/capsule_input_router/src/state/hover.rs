@@ -14,13 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(super) const NOTK_MAGIC: u32 = 0x4E4F_544B;
-pub(super) const HDR_LEN: usize = 16;
-pub(super) const TOOLKIT_OP_COMPONENT_RENDER: u16 = 0x0003;
-pub(super) const STATUS_OK: u16 = 0;
-pub(super) const KIND_PANEL: u16 = 0;
-pub(super) const KIND_LABEL: u16 = 2;
-pub(super) const CHROME_H: u32 = 28;
-pub(super) const LABEL_X: u32 = 10;
-pub(super) const LABEL_Y: u32 = 8;
-pub(super) const MAX_LABEL_BYTES: usize = 96;
+// Cached topmost-window rect so pointer motion inside it routes without
+// a WM round-trip per event. The cache is dropped on press (the window
+// may move itself during a drag) and when the cursor exits the rect.
+#[derive(Clone, Copy)]
+pub struct Hover {
+    pub pid: u32,
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
+}
+
+impl Hover {
+    pub fn contains(&self, px: u32, py: u32) -> bool {
+        px >= self.x && px < self.x + self.w && py >= self.y && py < self.y + self.h
+    }
+}

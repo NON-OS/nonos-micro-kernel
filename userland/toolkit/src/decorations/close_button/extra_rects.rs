@@ -13,24 +13,20 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use crate::decorations::metrics::{BUTTON_GAP, CLOSE_BUTTON_SIZE, TITLEBAR_HEIGHT, TITLEBAR_PADDING};
 
-use super::Context;
+use super::types::CloseRect;
 
-impl Context {
-    pub fn forget_pid(&mut self, pid: u32) {
-        if pid == 0 {
-            return;
-        }
-        self.subscriptions.remove_pid(pid);
-        if self.press.is_some_and(|p| p.pid == pid) {
-            self.press = None;
-        }
-        if self.hover.is_some_and(|h| h.pid == pid) {
-            self.hover = None;
-        }
-        self.grabs.release(pid);
-        if self.shell_pid == pid {
-            self.shell_pid = 0;
-        }
-    }
+pub fn maximize_button_rect(width: u32) -> CloseRect {
+    let size = CLOSE_BUTTON_SIZE;
+    let y = (TITLEBAR_HEIGHT - size) / 2;
+    let x = width.saturating_sub(TITLEBAR_PADDING + 2 * size + BUTTON_GAP);
+    CloseRect { x, y, size }
+}
+
+pub fn minimize_button_rect(width: u32) -> CloseRect {
+    let size = CLOSE_BUTTON_SIZE;
+    let y = (TITLEBAR_HEIGHT - size) / 2;
+    let x = width.saturating_sub(TITLEBAR_PADDING + 3 * size + 2 * BUTTON_GAP);
+    CloseRect { x, y, size }
 }

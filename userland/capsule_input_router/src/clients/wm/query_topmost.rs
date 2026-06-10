@@ -25,7 +25,7 @@ pub fn query_topmost(port_slot: &mut u32, request_id: u32, x: u32, y: u32) -> Op
     let mut req = [0u8; 8];
     req[0..4].copy_from_slice(&x.to_le_bytes());
     req[4..8].copy_from_slice(&y.to_le_bytes());
-    let mut body = [0u8; 16];
+    let mut body = [0u8; 32];
     if call(*port_slot, MAGIC, OP_QUERY_TOPMOST, request_id, &req, &mut body).ok()? != 0 {
         *port_slot = 0;
         return None;
@@ -35,5 +35,9 @@ pub fn query_topmost(port_slot: &mut u32, request_id: u32, x: u32, y: u32) -> Op
         window_id: u32_at(&body, 4).ok()?,
         local_x: u32_at(&body, 8).ok()?,
         local_y: u32_at(&body, 12).ok()?,
+        win_x: u32_at(&body, 16).ok()?,
+        win_y: u32_at(&body, 20).ok()?,
+        win_w: u32_at(&body, 24).ok()?,
+        win_h: u32_at(&body, 28).ok()?,
     })
 }

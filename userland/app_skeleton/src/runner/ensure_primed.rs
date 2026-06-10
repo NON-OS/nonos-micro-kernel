@@ -32,7 +32,6 @@ pub(super) fn ensure_primed<A: App>(
         &mut booted.app,
         &booted.manifest,
         &booted.binding,
-        peers.toolkit,
         peers.compositor,
         request_id,
     );

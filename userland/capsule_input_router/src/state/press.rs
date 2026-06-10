@@ -14,23 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::Context;
-
-impl Context {
-    pub fn forget_pid(&mut self, pid: u32) {
-        if pid == 0 {
-            return;
-        }
-        self.subscriptions.remove_pid(pid);
-        if self.press.is_some_and(|p| p.pid == pid) {
-            self.press = None;
-        }
-        if self.hover.is_some_and(|h| h.pid == pid) {
-            self.hover = None;
-        }
-        self.grabs.release(pid);
-        if self.shell_pid == pid {
-            self.shell_pid = 0;
-        }
-    }
+// Implicit pointer grab armed by a button press inside a window. The
+// origin is the window's screen position frozen at press time, so the
+// grab holder receives motion in a coordinate frame where deltas equal
+// screen deltas even while it moves itself.
+#[derive(Clone, Copy)]
+pub struct Press {
+    pub pid: u32,
+    pub origin_x: i32,
+    pub origin_y: i32,
 }

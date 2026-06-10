@@ -14,11 +14,34 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_policy_proto::{kind_of, Field, KIND_BOOL, KIND_I8, KIND_STR, KIND_U8};
+use nonos_libc::mk_service_lookup;
+use nonos_policy_proto::{kind_of, Field, E_ACCES, KIND_BOOL, KIND_I8, KIND_STR, KIND_U8, OP_SET};
 
 use super::handlers::{set_bool, set_i8, set_str, set_u8};
+use super::respond;
+
+const SETTERS: [&[u8]; 2] = [b"app.settings", b"app.setup_wizard"];
+
+fn lookup_pid(name: &[u8]) -> Option<u32> {
+    let mut port = 0u32;
+    let mut pid = 0u32;
+    let rc = mk_service_lookup(name.as_ptr(), name.len(), &mut port, &mut pid);
+    if rc < 0 || pid == 0 {
+        None
+    } else {
+        Some(pid)
+    }
+}
+
+fn is_trusted_setter(sender: u32) -> bool {
+    SETTERS.iter().any(|name| lookup_pid(name) == Some(sender))
+}
 
 pub fn dispatch(pid: u32, field: Field, payload: &[u8]) {
+    if !is_trusted_setter(pid) {
+        respond::err(pid, OP_SET, field as u32, kind_of(field), E_ACCES);
+        return;
+    }
     match kind_of(field) {
         KIND_BOOL => set_bool::handle(pid, field, payload),
         KIND_U8 => set_u8::handle(pid, field, payload),

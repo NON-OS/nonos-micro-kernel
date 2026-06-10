@@ -14,11 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::state::{CursorState, GrabTable, SubscriptionTable};
+use crate::state::{CursorState, GrabTable, Hover, Press, SubscriptionTable};
 
 pub struct Context {
     pub subscriptions: SubscriptionTable,
     pub grabs: GrabTable,
+    pub press: Option<Press>,
+    pub hover: Option<Hover>,
+    pub hover_tick: u32,
     pub cursor: CursorState,
     pub compositor_port: u32,
     pub wm_port: u32,

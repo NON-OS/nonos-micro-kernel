@@ -24,6 +24,7 @@ use crate::syscall::microkernel::errnos::{
 };
 
 use super::correlation::take_for_reply;
+use super::pending_reply;
 use super::reply_inbox;
 
 fn trace(caller_pid: u32, dest_pid: u64, label: &[u8], rc: i64, inbox: &str) {
@@ -81,6 +82,9 @@ pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {
         Err(StrictEnqueueError::MissingInbox) | Err(StrictEnqueueError::DeadOwner) => ERRNO_NOENT,
         Err(StrictEnqueueError::QueueFull(_)) => ERRNO_BUSY,
     };
+    if rc == 0 {
+        pending_reply::remove(caller_pid, &dest);
+    }
     let mut woke = false;
     if rc == 0 && crate::sched::is_sleeping(dest_pid as u32) {
         crate::sched::wake_process(dest_pid as u32);
