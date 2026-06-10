@@ -14,8 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use crate::fwui::chrome::statusline;
+use crate::fwui::data::Sys;
+use crate::fwui::layout::Layout;
+use crate::fwui::render::center;
+use crate::fwui::section::Row;
+use crate::fwui::state::Section;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn draw_body(lay: &Layout, sys: &Sys, section: Section, rows: &[Row], cursor: usize) {
+    center(lay, section, rows, cursor);
+    let desc = rows.get(cursor).map(|r| r.desc).unwrap_or(b"");
+    statusline(lay, sys, desc);
+}

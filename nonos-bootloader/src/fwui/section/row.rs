@@ -14,8 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use crate::fwui::settings::Edit;
+use crate::menu::MenuAction;
+use alloc::string::String;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub struct Row {
+    pub label: &'static [u8],
+    pub value: String,
+    pub vcolor: u32,
+    pub desc: &'static [u8],
+    pub action: Option<MenuAction>,
+    pub edit: Option<Edit>,
+}

@@ -14,8 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::weekday::weekday;
+use alloc::format;
+use alloc::string::String;
+use uefi::table::runtime::Time;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn fmt_date(t: &Time) -> String {
+    format!(
+        "{} {:02}/{:02}/{:04}",
+        weekday(t.year(), t.month(), t.day()),
+        t.month(),
+        t.day(),
+        t.year()
+    )
+}

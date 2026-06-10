@@ -14,8 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::cpuid::cpuid;
+use alloc::string::String;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub unsafe fn brand_string() -> String {
+    let mut bytes = [0u8; 48];
+    for (i, leaf) in [0x8000_0002u32, 0x8000_0003, 0x8000_0004].iter().enumerate() {
+        let (a, b, c, d) = cpuid(*leaf);
+        let off = i * 16;
+        bytes[off..off + 4].copy_from_slice(&a.to_le_bytes());
+        bytes[off + 4..off + 8].copy_from_slice(&b.to_le_bytes());
+        bytes[off + 8..off + 12].copy_from_slice(&c.to_le_bytes());
+        bytes[off + 12..off + 16].copy_from_slice(&d.to_le_bytes());
+    }
+    let end = bytes.iter().position(|&b| b == 0).unwrap_or(48);
+    String::from_utf8_lossy(&bytes[..end]).into_owned()
+}

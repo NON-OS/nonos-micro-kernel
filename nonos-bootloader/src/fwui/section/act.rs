@@ -14,8 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::row::Row;
+use crate::menu::MenuAction;
+use alloc::string::ToString;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn act(
+    label: &'static [u8],
+    value: &str,
+    vcolor: u32,
+    desc: &'static [u8],
+    action: MenuAction,
+) -> Row {
+    Row { label, value: value.to_string(), vcolor, desc, action: Some(action), edit: None }
+}

@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use uefi::prelude::*;
+use uefi::table::runtime::Time;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn read_time(st: &SystemTable<Boot>) -> Time {
+    st.runtime_services().get_time().unwrap_or_else(|_| unsafe { core::mem::zeroed() })
+}

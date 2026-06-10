@@ -14,8 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::row::Row;
+use crate::fwui::settings::Edit;
+use crate::fwui::theme;
+use alloc::string::String;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn set(label: &'static [u8], value: String, desc: &'static [u8], edit: Edit) -> Row {
+    Row { label, value, vcolor: theme::ACCENT, desc, action: None, edit: Some(edit) }
+}

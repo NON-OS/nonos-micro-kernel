@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::text::text;
+use crate::fwui::metrics::advance;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn text_right(right: u32, y: u32, s: &[u8], c: u32) {
+    let w = s.len() as u32 * advance();
+    text(right.saturating_sub(w), y, s, c);
+}

@@ -14,8 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::edit::Edit;
+use super::mode::next_mode;
+use super::state::Settings;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn apply(s: &mut Settings, e: Edit) {
+    match e {
+        Edit::Mode => s.default_mode = next_mode(s.default_mode),
+        Edit::Timeout => s.timeout_s = if s.timeout_s >= 30 { 0 } else { s.timeout_s + 5 },
+        Edit::Enforce => s.enforce_sb = !s.enforce_sb,
+    }
+}

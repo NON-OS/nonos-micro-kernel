@@ -14,8 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
+#[cfg(target_arch = "x86_64")]
+mod brand;
+#[cfg(target_arch = "x86_64")]
+mod cpuid;
+mod read;
 mod types;
+#[cfg(target_arch = "x86_64")]
+mod vendor;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub use read::read;
+pub use types::CpuId;

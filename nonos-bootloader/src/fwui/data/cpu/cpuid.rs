@@ -14,8 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
-
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub unsafe fn cpuid(leaf: u32) -> (u32, u32, u32, u32) {
+    let (eax, ebx, ecx, edx): (u32, u32, u32, u32);
+    core::arch::asm!(
+        "push rbx", "cpuid", "mov {ebx_out:e}, ebx", "pop rbx",
+        inout("eax") leaf => eax, ebx_out = out(reg) ebx,
+        out("ecx") ecx, out("edx") edx, options(nostack, preserves_flags)
+    );
+    (eax, ebx, ecx, edx)
+}

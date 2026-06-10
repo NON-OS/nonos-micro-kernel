@@ -14,8 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::cpuid::cpuid;
+use alloc::string::String;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub unsafe fn vendor_string() -> String {
+    let (_, ebx, ecx, edx) = cpuid(0);
+    let mut bytes = [0u8; 12];
+    bytes[0..4].copy_from_slice(&ebx.to_le_bytes());
+    bytes[4..8].copy_from_slice(&edx.to_le_bytes());
+    bytes[8..12].copy_from_slice(&ecx.to_le_bytes());
+    String::from_utf8_lossy(&bytes).into_owned()
+}

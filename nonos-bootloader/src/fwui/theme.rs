@@ -14,8 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
-
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub const BG: u32 = 0xFF010608;
+pub const FRAME: u32 = 0xFF0E3A42;
+pub const ROWLINE: u32 = 0xFF08201E;
+pub const SEL_BG: u32 = 0xFF052E36;
+pub const TEXT: u32 = 0xFFB8F0F2;
+pub const DIM: u32 = 0xFF4FB8C0;
+pub const MUTE: u32 = 0xFF236A72;
+pub const ACCENT: u32 = 0xFF45E8E8;
+pub const OK: u32 = 0xFF45E8E8;
+pub const WARN: u32 = 0xFF49B7BE;
+pub const ERR: u32 = 0xFF236A72;

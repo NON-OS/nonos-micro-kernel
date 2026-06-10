@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::ptr;
 use core::sync::atomic::{compiler_fence, Ordering};
 
 pub fn secure_cleanup_before_jump() {
@@ -40,4 +39,3 @@ fn wipe_signing_keys() {
 fn wipe_entropy_pools() {
     crate::entropy::wipe_entropy_state();
 }
-

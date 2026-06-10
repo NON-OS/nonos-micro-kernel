@@ -14,8 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::types::CpuId;
+use alloc::string::String;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+#[cfg(target_arch = "x86_64")]
+pub fn read() -> CpuId {
+    use super::brand::brand_string;
+    use super::cpuid::cpuid;
+    use super::vendor::vendor_string;
+    unsafe {
+        let (max_ext, _, _, _) = cpuid(0x8000_0000);
+        let brand = if max_ext >= 0x8000_0004 { brand_string() } else { String::new() };
+        let (_, ebx1, _, _) = cpuid(1);
+        CpuId { brand: brand.trim().into(), vendor: vendor_string(), logical: (ebx1 >> 16) & 0xFF }
+    }
+}
+
+#[cfg(not(target_arch = "x86_64"))]
+pub fn read() -> CpuId {
+    CpuId { brand: String::new(), vendor: String::new(), logical: 0 }
+}

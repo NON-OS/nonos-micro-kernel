@@ -14,16 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
-use nonos_boot::menu::{run_boot_menu, MenuState, SecurityMode};
 use super::action::resolve_action;
+use nonos_boot::fwui;
+use nonos_boot::hardware::HardwareInfo;
+use nonos_boot::menu::SecurityMode;
+use nonos_boot::security::SecurityContext;
+use uefi::prelude::*;
 
-pub fn select_security_mode(st: &mut SystemTable<Boot>, dev_override: bool) -> Result<SecurityMode, Status> {
+pub fn select_security_mode(
+    st: &mut SystemTable<Boot>,
+    dev_override: bool,
+    security: &SecurityContext,
+    hw: &HardwareInfo,
+) -> Result<SecurityMode, Status> {
     if dev_override {
         let _ = st.stdout().output_string(uefi::cstr16!("[WARN] DEV MODE - SECURITY BYPASSED\r\n"));
         return Ok(SecurityMode::Development);
     }
-    let mut menu_state = MenuState::default();
-    let menu_action = run_boot_menu(st.boot_services(), &mut menu_state);
-    resolve_action(st, menu_action)
+    let action = fwui::run(st, security, hw);
+    resolve_action(st, action)
 }

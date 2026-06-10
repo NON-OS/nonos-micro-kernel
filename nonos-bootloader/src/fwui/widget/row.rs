@@ -14,8 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use crate::fwui::draw::{fill_rect, hline};
+use crate::fwui::metrics::{advance, glyph_h, line, pad};
+use crate::fwui::text::text;
+use crate::fwui::theme;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn row(x: u32, y: u32, w: u32, label: &[u8], value: &[u8], vcolor: u32, selected: bool) {
+    let h = line();
+    if selected {
+        fill_rect(x, y, w, h, theme::SEL_BG);
+        fill_rect(x, y, 2, h, theme::ACCENT);
+    }
+    let ty = y + (h - glyph_h()) / 2;
+    text(x + pad(), ty, label, if selected { theme::TEXT } else { theme::DIM });
+    let vw = value.len() as u32 * advance();
+    text(x + w - pad() - vw, ty, value, if selected { theme::ACCENT } else { vcolor });
+    hline(x, y + h - 1, w, theme::ROWLINE);
+}

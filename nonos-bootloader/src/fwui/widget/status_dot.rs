@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use crate::fwui::draw::fill_rect;
+use crate::fwui::text::text;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn status_dot(x: u32, y: u32, dot: u32, label: &[u8], lcolor: u32) {
+    fill_rect(x, y + 10, 10, 10, dot);
+    text(x + 26, y, label, lcolor);
+}

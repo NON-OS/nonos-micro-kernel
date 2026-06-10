@@ -14,8 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+mod chrome;
+mod data;
+mod draw;
+mod font;
+mod input;
+mod layout;
+mod metrics;
+mod render;
+mod run;
+mod section;
+mod settings;
+mod state;
+mod text;
+mod theme;
+mod widget;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub use run::run;

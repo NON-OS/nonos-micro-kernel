@@ -14,8 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use crate::menu::SecurityMode;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn mode_from(v: u8) -> SecurityMode {
+    match v {
+        2 => SecurityMode::Hardened,
+        3 => SecurityMode::SafeMode,
+        4 => SecurityMode::NetworkIsolated,
+        5 => SecurityMode::Recovery,
+        _ => SecurityMode::Standard,
+    }
+}
+
+pub fn next_mode(v: u8) -> u8 {
+    if v >= 5 {
+        1
+    } else {
+        v + 1
+    }
+}
+
+pub fn mode_name(v: u8) -> &'static str {
+    mode_from(v).label()
+}

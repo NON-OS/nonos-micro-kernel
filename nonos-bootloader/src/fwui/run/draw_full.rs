@@ -14,8 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use crate::fwui::chrome::{clock, frame, nav};
+use crate::fwui::data::Sys;
+use crate::fwui::layout::Layout;
+use crate::fwui::state::Section;
+use uefi::table::runtime::Time;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn draw_full(lay: &Layout, sys: &Sys, time: &Time, active: Section) {
+    frame(lay);
+    nav(lay, active);
+    clock(lay, sys, time);
+}

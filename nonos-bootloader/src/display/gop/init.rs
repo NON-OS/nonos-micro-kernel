@@ -43,23 +43,34 @@ fn try_init(bs: &uefi::table::boot::BootServices, h: Handle) -> bool {
         Ok(g) => g,
         Err(_) => return false,
     };
-    if latch_current_mode(&mut gop) {
-        return true;
-    }
+    let mut best: Option<(u32, usize)> = None;
     let mode_count = gop.modes().len();
     for idx in 0..mode_count {
         let mode = match gop.query_mode(idx as u32) {
             Ok(mode) => mode,
             Err(_) => continue,
         };
-        if linear_bgr(mode.info()).is_none() {
+        let info = mode.info();
+        if linear_bgr(info).is_none() {
             continue;
         }
-        if gop.set_mode(&mode).is_ok() && latch_current_mode(&mut gop) {
-            return true;
+        let (w, ht) = info.resolution();
+        if w > 1920 || ht > 1080 {
+            continue;
+        }
+        let area = w.saturating_mul(ht);
+        if best.map_or(true, |(_, a)| area > a) {
+            best = Some((idx as u32, area));
         }
     }
-    false
+    if let Some((idx, _)) = best {
+        if let Ok(mode) = gop.query_mode(idx) {
+            if gop.set_mode(&mode).is_ok() && latch_current_mode(&mut gop) {
+                return true;
+            }
+        }
+    }
+    latch_current_mode(&mut gop)
 }
 
 fn latch_current_mode(gop: &mut GraphicsOutput) -> bool {

@@ -14,8 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::row::Row;
+use crate::fwui::data::Sys;
+use crate::fwui::settings::Settings;
+use crate::fwui::state::Section;
+use alloc::vec::Vec;
+use uefi::table::runtime::Time;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn rows_for(section: Section, sys: &Sys, settings: &Settings, time: &Time) -> Vec<Row> {
+    match section {
+        Section::Main => super::main::main(sys, time),
+        Section::Boot => super::boot::boot(),
+        Section::Setup => super::setup::setup(settings),
+        Section::Security => super::security::security(sys),
+        Section::Monitor => super::monitor::monitor(sys),
+        Section::Advanced => super::advanced::advanced(sys),
+        Section::Tool => super::tool::tool(),
+    }
+}

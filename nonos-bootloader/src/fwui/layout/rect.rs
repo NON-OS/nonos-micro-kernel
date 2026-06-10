@@ -14,8 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+#[derive(Clone, Copy)]
+pub struct Rect {
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
+}
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+impl Rect {
+    pub const fn new(x: u32, y: u32, w: u32, h: u32) -> Self {
+        Self { x, y, w, h }
+    }
+    pub const fn right(&self) -> u32 {
+        self.x + self.w
+    }
+    pub const fn bottom(&self) -> u32 {
+        self.y + self.h
+    }
+}

@@ -14,8 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::guid::VENDOR;
+use super::state::Settings;
+use uefi::cstr16;
+use uefi::prelude::*;
+use uefi::table::runtime::VariableAttributes;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn save(st: &SystemTable<Boot>, s: &Settings) {
+    let data = [s.default_mode, s.timeout_s, s.enforce_sb as u8];
+    let attrs = VariableAttributes::NON_VOLATILE
+        | VariableAttributes::BOOTSERVICE_ACCESS
+        | VariableAttributes::RUNTIME_ACCESS;
+    let _ = st.runtime_services().set_variable(cstr16!("NonosSetup"), &VENDOR, attrs, &data);
+}

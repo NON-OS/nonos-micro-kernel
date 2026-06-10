@@ -14,8 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::guid::VENDOR;
+use super::state::Settings;
+use uefi::cstr16;
+use uefi::prelude::*;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn load(st: &SystemTable<Boot>) -> Settings {
+    let mut buf = [0u8; 3];
+    match st.runtime_services().get_variable(cstr16!("NonosSetup"), &VENDOR, &mut buf) {
+        Ok(_) => Settings {
+            default_mode: if (1..=5).contains(&buf[0]) { buf[0] } else { 1 },
+            timeout_s: if buf[1] <= 30 { buf[1] } else { 5 },
+            enforce_sb: buf[2] != 0,
+        },
+        Err(_) => Settings::fallback(),
+    }
+}

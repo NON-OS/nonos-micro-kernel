@@ -14,8 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use super::state::{convert_color, is_initialized, FB_HEIGHT, FB_PTR, FB_STRIDE, FB_WIDTH};
+use core::sync::atomic::Ordering;
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn get_pixel(x: u32, y: u32) -> u32 {
+    if !is_initialized() {
+        return 0;
+    }
+    let (w, h, s) = (
+        FB_WIDTH.load(Ordering::Relaxed),
+        FB_HEIGHT.load(Ordering::Relaxed),
+        FB_STRIDE.load(Ordering::Relaxed),
+    );
+    if x >= w || y >= h {
+        return 0;
+    }
+    let fb = FB_PTR.load(Ordering::Relaxed) as *const u32;
+    let native = unsafe { fb.offset((y * s + x) as isize).read_volatile() };
+    convert_color(native)
+}

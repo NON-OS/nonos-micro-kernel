@@ -14,8 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+pub struct Settings {
+    pub default_mode: u8,
+    pub timeout_s: u8,
+    pub enforce_sb: bool,
+}
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+impl Settings {
+    pub fn fallback() -> Self {
+        Self { default_mode: 1, timeout_s: 5, enforce_sb: false }
+    }
+}

@@ -14,8 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+const WEEKDAYS: [&str; 7] = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn weekday(y: u16, m: u8, d: u8) -> &'static str {
+    let t = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
+    let mut yy = y as i32;
+    if m < 3 {
+        yy -= 1;
+    }
+    let mi = (m as usize).clamp(1, 12) - 1;
+    let idx = (yy + yy / 4 - yy / 100 + yy / 400 + t[mi] + d as i32).rem_euclid(7);
+    WEEKDAYS[idx as usize]
+}

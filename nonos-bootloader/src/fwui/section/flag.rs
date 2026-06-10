@@ -14,8 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
+use crate::fwui::theme;
+use alloc::string::{String, ToString};
 
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+pub fn flag(on: bool, yes: &str, no: &str, no_warn: bool) -> (String, u32) {
+    if on {
+        (yes.to_string(), theme::OK)
+    } else {
+        (no.to_string(), if no_warn { theme::MUTE } else { theme::ERR })
+    }
+}

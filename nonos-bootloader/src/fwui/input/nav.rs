@@ -14,8 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dev_check;
-mod types;
-
-pub use dev_check::check_dev_key_held;
-pub use types::{MenuAction, SecurityMode};
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Nav {
+    Up,
+    Down,
+    Left,
+    Right,
+    Enter,
+    Back,
+    BootNow,
+    None,
+}
