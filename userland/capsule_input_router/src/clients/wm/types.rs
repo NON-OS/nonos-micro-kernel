@@ -20,4 +20,8 @@ pub struct Target {
     pub window_id: u32,
     pub local_x: u32,
     pub local_y: u32,
+    pub win_x: u32,
+    pub win_y: u32,
+    pub win_w: u32,
+    pub win_h: u32,
 }

@@ -23,6 +23,8 @@ impl Context {
             subscriptions: SubscriptionTable::new(),
             grabs: GrabTable::new(),
             press: None,
+            hover: None,
+            hover_tick: 0,
             cursor: CursorState::new(),
             compositor_port: 0,
             wm_port: 0,

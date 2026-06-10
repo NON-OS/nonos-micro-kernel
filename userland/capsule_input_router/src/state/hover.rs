@@ -14,23 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::Context;
+// Cached topmost-window rect so pointer motion inside it routes without
+// a WM round-trip per event. The cache is dropped on press (the window
+// may move itself during a drag) and when the cursor exits the rect.
+#[derive(Clone, Copy)]
+pub struct Hover {
+    pub pid: u32,
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
+}
 
-impl Context {
-    pub fn forget_pid(&mut self, pid: u32) {
-        if pid == 0 {
-            return;
-        }
-        self.subscriptions.remove_pid(pid);
-        if self.press.is_some_and(|p| p.pid == pid) {
-            self.press = None;
-        }
-        if self.hover.is_some_and(|h| h.pid == pid) {
-            self.hover = None;
-        }
-        self.grabs.release(pid);
-        if self.shell_pid == pid {
-            self.shell_pid = 0;
-        }
+impl Hover {
+    pub fn contains(&self, px: u32, py: u32) -> bool {
+        px >= self.x && px < self.x + self.w && py >= self.y && py < self.y + self.h
     }
 }
