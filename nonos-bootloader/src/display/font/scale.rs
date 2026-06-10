@@ -14,29 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::display::boot::layout::{log_line_width, log_origin, panel_rows};
+use super::bitmap::get_char_bitmap;
+use super::CHAR_WIDTH;
+use crate::display::gop::fill_rect;
 
-pub const MAX_LOG_LINES: usize = 256;
-pub const LOG_LINE_LEN: usize = 120;
-pub const LINE_HEIGHT: u32 = 16;
-
-pub fn get_log_area() -> (u32, u32) {
-    log_origin()
+pub fn draw_char_4x(x: u32, y: u32, ch: u8, c: u32) {
+    for (row, &b) in get_char_bitmap(ch).iter().enumerate() {
+        for col in 0..8u32 {
+            if (b >> (7 - col)) & 1 == 1 {
+                fill_rect(x + col * 4, y + (row as u32) * 4, 4, 4, c);
+            }
+        }
+    }
 }
 
-pub fn max_visible_lines() -> usize {
-    (panel_rows() as usize).min(MAX_LOG_LINES)
-}
-
-pub fn line_clear_width() -> u32 {
-    log_line_width()
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum LogLevel {
-    Info,
-    Ok,
-    Warn,
-    Error,
-    Security,
+pub fn draw_string_4x(x: u32, y: u32, s: &[u8], c: u32) {
+    let mut cx = x;
+    for &ch in s {
+        if ch != b'\n' {
+            draw_char_4x(cx, y, ch, c);
+            cx += CHAR_WIDTH * 4;
+        }
+    }
 }

@@ -14,17 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::layout::splash;
+use super::panel::draw_panel;
 use crate::display::constants::COLOR_TEXT_DIM;
 use crate::display::font::draw_string;
-use crate::display::gop::is_initialized;
+use crate::display::gop::{get_dimensions, is_initialized};
+
+const SUBTITLE: &[u8] = b"secure attestation boot";
 
 pub fn init_boot_screen() {
     if !is_initialized() {
         return;
     }
     super::vignette::draw_vignette();
-    super::wordmark::draw_wordmark(40, 24);
-    draw_string(40, 62, b"secure attestation boot", COLOR_TEXT_DIM);
+    let lay = splash();
+    super::wordmark::draw_wordmark(0, lay.wordmark_y);
+    let (w, _) = get_dimensions();
+    let sx = (w.saturating_sub(SUBTITLE.len() as u32 * 8)) / 2;
+    draw_string(sx, lay.subtitle_y, SUBTITLE, COLOR_TEXT_DIM);
+    draw_panel(lay.panel_x, lay.panel_y, lay.panel_w, lay.panel_h, b"verified boot");
+    crate::display::log_panel::redraw_all();
 }
 
 pub fn reset_animation() {}

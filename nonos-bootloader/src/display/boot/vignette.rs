@@ -24,7 +24,7 @@ pub fn draw_vignette() {
         return;
     }
     let (w, h) = get_dimensions();
-    let (cx, cy) = (w as i64 / 2, h as i64 * 38 / 100);
+    let (cx, cy) = (w as i64 / 2, h as i64 * 30 / 100);
     let r2 = ((w as i64 * w as i64) / 3).max(1);
     for y in 0..h as i64 {
         for x in 0..w as i64 {

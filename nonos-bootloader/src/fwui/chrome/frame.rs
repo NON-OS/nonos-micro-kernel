@@ -43,7 +43,7 @@ pub fn frame(lay: &Layout) {
         theme::ACCENT,
     );
     let by = f.bottom().saturating_sub(g / 2);
-    let left = b"NO OS PRESENT    UEFI x86_64";
+    let left = b"BOOTX64.EFI    UEFI x86_64";
     fill_rect(f.x + pad(), by, (left.len() as u32 + 2) * adv, g, theme::BG);
     text(f.x + pad() * 2, by, left, theme::MUTE);
     let help = b"UP/DN ITEM    LF/RT SCREEN    ENTER SELECT    F10 BOOT";

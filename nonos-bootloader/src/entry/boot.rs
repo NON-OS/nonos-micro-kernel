@@ -21,7 +21,7 @@ use super::pipeline::run_verified_boot;
 use nonos_boot::boot::{
     initialize_zk_replay_protection, run_hardware_discovery, run_security_checks, run_uefi_init,
 };
-use nonos_boot::display::init_boot_screen;
+use nonos_boot::display::{draw_status_line, init_boot_screen};
 use uefi::prelude::*;
 
 pub fn boot_entry(_handle: Handle, mut st: SystemTable<Boot>) -> Status {
@@ -37,6 +37,7 @@ pub fn boot_entry(_handle: Handle, mut st: SystemTable<Boot>) -> Status {
     };
     if gop {
         init_boot_screen();
+        draw_status_line(security.secure_boot_enabled, security.measured_boot_active, false);
     }
     initialize_zk_replay_protection(&st);
     run_verified_boot(st, gop, security, security_mode);

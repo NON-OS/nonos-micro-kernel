@@ -23,5 +23,5 @@ pub const DIM: u32 = 0xFF4FB8C0;
 pub const MUTE: u32 = 0xFF236A72;
 pub const ACCENT: u32 = 0xFF00D4AA;
 pub const OK: u32 = 0xFF00D4AA;
-pub const WARN: u32 = 0xFF49B7BE;
-pub const ERR: u32 = 0xFF236A72;
+pub const WARN: u32 = 0xFFE8A33D;
+pub const ERR: u32 = 0xFFE05544;
