@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::memory::encryption::{init_memory_encryption as detect_and_init, MemEncryption};
+use crate::memory::encryption::{
+    init_memory_encryption as detect_and_init, MemEncryption, MemEncryptionError,
+};
 use crate::sys::serial;
 
 pub(crate) fn init_memory_encryption() {
@@ -36,8 +38,15 @@ pub(crate) fn init_memory_encryption() {
         Ok(MemEncryption::IntelMktme) => {
             serial::println(b"[NONOS] memory encryption: Intel MKTME active");
         }
+        Err(MemEncryptionError::NotSupported) => {
+            serial::println(b"[NONOS] memory encryption: disabled by firmware");
+        }
         Err(_) => {
-            serial::println(b"[NONOS] memory encryption: init failed; continuing plaintext");
+            // Hardware advertised encryption, enabling it failed.
+            // Running plaintext on a machine in that state is a silent
+            // downgrade, so stop here.
+            serial::println(b"[FATAL] memory encryption: hardware fault during enable");
+            crate::arch::halt_loop();
         }
     }
 }

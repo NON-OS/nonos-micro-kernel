@@ -32,8 +32,12 @@ pub fn init_memory_encryption() -> MemEncryptionResult<MemEncryption> {
     let enc_type = cap.best_available();
     match enc_type {
         MemEncryption::AmdSme | MemEncryption::AmdSev => {
-            if init_sme(cap).is_err() {
-                return Ok(MemEncryption::None);
+            // Firmware left SME off: plaintext is the configured state,
+            // not a fault. Anything else propagates.
+            match init_sme(cap) {
+                Ok(()) => {}
+                Err(MemEncryptionError::NotSupported) => return Ok(MemEncryption::None),
+                Err(e) => return Err(e),
             }
             let mask = enable_sme(cap)?;
             validate_c_bit_position(cap.c_bit_position)?;
