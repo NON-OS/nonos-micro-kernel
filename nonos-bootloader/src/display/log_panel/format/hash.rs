@@ -22,18 +22,42 @@ use crate::display::log_panel::types::LogLevel;
 pub fn log_hash(prefix: &[u8], hash: &[u8]) {
     let mut buf = [0u8; 58];
     let mut p = copy_prefix(&mut buf, prefix);
-    for &b in hash.iter().take(16) { if p + 2 > buf.len() { break; } buf[p] = HEX[(b >> 4) as usize]; buf[p + 1] = HEX[(b & 0xF) as usize]; p += 2; }
+    for &b in hash.iter().take(16) {
+        if p + 2 > buf.len() {
+            break;
+        }
+        buf[p] = HEX[(b >> 4) as usize];
+        buf[p + 1] = HEX[(b & 0xF) as usize];
+        p += 2;
+    }
     log(LogLevel::Ok, &buf[..p]);
     if hash.len() > 16 {
-        let mut b2 = [0u8; 58]; b2[0..6].copy_from_slice(b"      "); let mut p2 = 6;
-        for &b in hash.iter().skip(16) { if p2 + 2 > b2.len() { break; } b2[p2] = HEX[(b >> 4) as usize]; b2[p2 + 1] = HEX[(b & 0xF) as usize]; p2 += 2; }
+        let mut b2 = [0u8; 58];
+        b2[0..6].copy_from_slice(b"      ");
+        let mut p2 = 6;
+        for &b in hash.iter().skip(16) {
+            if p2 + 2 > b2.len() {
+                break;
+            }
+            b2[p2] = HEX[(b >> 4) as usize];
+            b2[p2 + 1] = HEX[(b & 0xF) as usize];
+            p2 += 2;
+        }
         log(LogLevel::Info, &b2[..p2]);
     }
 }
 
 pub fn log_hash_full(label: &[u8], hash: &[u8]) {
     log(LogLevel::Ok, label);
-    let mut buf = [0u8; 72]; buf[0..4].copy_from_slice(b"  0x"); let mut p = 4;
-    for &b in hash { if p + 2 <= buf.len() { buf[p] = HEX[(b >> 4) as usize]; buf[p + 1] = HEX[(b & 0xF) as usize]; p += 2; } }
+    let mut buf = [0u8; 72];
+    buf[0..4].copy_from_slice(b"  0x");
+    let mut p = 4;
+    for &b in hash {
+        if p + 2 <= buf.len() {
+            buf[p] = HEX[(b >> 4) as usize];
+            buf[p + 1] = HEX[(b & 0xF) as usize];
+            p += 2;
+        }
+    }
     log(LogLevel::Info, &buf[..p]);
 }

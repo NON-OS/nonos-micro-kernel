@@ -21,9 +21,17 @@ use super::util::constant_time_eq;
 
 impl KeystoreV2 {
     pub fn add_key(&mut self, key: TrustedKey) -> Result<(), &'static str> {
-        if self.key_count >= MAX_TRUSTED_KEYS { return Err("keystore full"); }
-        if self.is_revoked(&key.key_id) { return Err("key is revoked"); }
-        for i in 0..self.key_count { if constant_time_eq(&self.keys[i].key_id, &key.key_id) { return Err("key already exists"); } }
+        if self.key_count >= MAX_TRUSTED_KEYS {
+            return Err("keystore full");
+        }
+        if self.is_revoked(&key.key_id) {
+            return Err("key is revoked");
+        }
+        for i in 0..self.key_count {
+            if constant_time_eq(&self.keys[i].key_id, &key.key_id) {
+                return Err("key already exists");
+            }
+        }
         self.keys[self.key_count] = key;
         self.key_count += 1;
         Ok(())

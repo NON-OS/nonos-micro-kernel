@@ -28,11 +28,13 @@ pub fn compute_vk_fingerprint(vk_bytes: &[u8]) -> [u8; 32] {
 pub fn verify_vk_fingerprint(vk_bytes: &[u8], expected: &[u8; 32]) -> bool {
     let computed = compute_vk_fingerprint(vk_bytes);
     let mut diff = 0u8;
-    for i in 0..32 { diff |= computed[i] ^ expected[i]; }
+    for i in 0..32 {
+        diff |= computed[i] ^ expected[i];
+    }
     diff == 0
 }
 
 #[cfg(feature = "zk-groth16")]
-pub use super::program_hash::{VK_FINGERPRINT_BOOT_AUTHORITY, VK_FINGERPRINT_UPDATE_AUTHORITY};
-#[cfg(feature = "zk-groth16")]
 pub use super::program_hash::VK_FINGERPRINT_RECOVERY_KEY;
+#[cfg(feature = "zk-groth16")]
+pub use super::program_hash::{VK_FINGERPRINT_BOOT_AUTHORITY, VK_FINGERPRINT_UPDATE_AUTHORITY};

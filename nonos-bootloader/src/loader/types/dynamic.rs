@@ -123,11 +123,8 @@ impl DynamicInfo {
     }
 
     pub fn jmprel_count(&self) -> usize {
-        let ent_size = if self.pltrel_type == dyn_tag::DT_RELA {
-            self.rela_ent
-        } else {
-            self.rel_ent
-        };
+        let ent_size =
+            if self.pltrel_type == dyn_tag::DT_RELA { self.rela_ent } else { self.rel_ent };
         if ent_size > 0 {
             self.jmprel_size / ent_size
         } else {

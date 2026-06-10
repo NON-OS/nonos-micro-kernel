@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use super::types::AttestationQuote;
+use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
 impl AttestationQuote {
     pub fn verify(&self, attestation_public_key: &[u8; 32]) -> bool {

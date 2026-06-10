@@ -18,11 +18,7 @@ use crate::loader::*;
 
 #[test]
 fn test_rela64_parsing() {
-    let rela = reloc::Rela64 {
-        r_offset: 0x1000,
-        r_info: (10u64 << 32) | 8,
-        r_addend: -100,
-    };
+    let rela = reloc::Rela64 { r_offset: 0x1000, r_info: (10u64 << 32) | 8, r_addend: -100 };
 
     assert_eq!(rela.reloc_type(), reloc::reloc_type::R_X86_64_RELATIVE);
     assert_eq!(rela.symbol_index(), 10);

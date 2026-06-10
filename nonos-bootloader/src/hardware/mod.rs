@@ -25,7 +25,10 @@ mod types;
 
 pub use acpi::{discover_acpi_rsdp, get_cpu_count_from_acpi};
 pub use cpu::detect_cpu_features;
-pub use devices::{enumerate_graphics, enumerate_network, enumerate_pci, enumerate_storage, detect_dual_gpu, needs_safe_exit};
+pub use devices::{
+    detect_dual_gpu, enumerate_graphics, enumerate_network, enumerate_pci, enumerate_storage,
+    needs_safe_exit,
+};
 pub use discover::discover_system_hardware;
 pub use display::display_hardware_summary;
 pub use memory::discover_memory_size;

@@ -32,16 +32,35 @@ mod tpm_types;
 mod types;
 mod verify;
 
-pub use anti_rollback::{check_kernel_version, init_anti_rollback, update_kernel_version, RollbackError};
-pub use attestation::{generate_attestation_quote, init_attestation, set_kernel_measurement, set_bootloader_measurement, set_zk_attestation, set_signature_attestation, verify_attestation_quote, AttestationQuote};
-pub use audit::{audit, audit_alert, seal_audit_log, get_audit_hash, verify_audit_integrity, AuditEvent};
-pub use check::{check_hardware_rng, check_measured_boot, check_platform_key, check_secure_boot, check_signature_db};
+pub use anti_rollback::{
+    check_kernel_version, init_anti_rollback, update_kernel_version, RollbackError,
+};
+pub use attestation::{
+    generate_attestation_quote, init_attestation, set_bootloader_measurement,
+    set_kernel_measurement, set_signature_attestation, set_zk_attestation,
+    verify_attestation_quote, AttestationQuote,
+};
+pub use audit::{
+    audit, audit_alert, get_audit_hash, seal_audit_log, verify_audit_integrity, AuditEvent,
+};
+pub use check::{
+    check_hardware_rng, check_measured_boot, check_platform_key, check_secure_boot,
+    check_signature_db,
+};
 pub use crypto::{blake3_selftest, ed25519_selftest, run_all_selftests};
-pub use enforce::{detect_secure_boot_bypass, enforce_security_policy, extend_boot_measurements, verify_kernel_version, verify_secure_boot_chain, EnforcementResult, SecurityPolicy};
-pub use hardware::{check_minimum_requirements, check_recommended_requirements, detect_hardware_capabilities, verify_platform_security, HardwareCapabilities, PlatformVerification, RequirementCheck};
+pub use enforce::{
+    detect_secure_boot_bypass, enforce_security_policy, extend_boot_measurements,
+    verify_kernel_version, verify_secure_boot_chain, EnforcementResult, SecurityPolicy,
+};
+pub use hardware::{
+    check_minimum_requirements, check_recommended_requirements, detect_hardware_capabilities,
+    verify_platform_security, HardwareCapabilities, PlatformVerification, RequirementCheck,
+};
 pub use init::{assess_security_posture, initialize_security_subsystem};
-pub use memory::{init_canaries, verify_stack_canary, verify_heap_canary, SecureBuffer, SecureKey, zeroize_slice};
+pub use memory::{
+    init_canaries, verify_heap_canary, verify_stack_canary, zeroize_slice, SecureBuffer, SecureKey,
+};
 pub use tpm_extend::{extend_pcr_measurement, measure_boot_components};
-pub use tpm_types::{PCR_BOOTLOADER, PCR_KERNEL, PCR_CAPSULE, EV_POST_CODE};
+pub use tpm_types::{EV_POST_CODE, PCR_BOOTLOADER, PCR_CAPSULE, PCR_KERNEL};
 pub use types::SecurityContext;
 pub use verify::{verify_kernel_signature_advanced, verify_signature};

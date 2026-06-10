@@ -14,15 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::hardware::tpm::constants::{TPM_STS, TPM_STS_READY, TPM_STS_GO, TPM_DATA_FIFO};
+use crate::hardware::tpm::constants::{TPM_DATA_FIFO, TPM_STS, TPM_STS_GO, TPM_STS_READY};
 use crate::hardware::tpm::state::TpmState;
 use crate::hardware::tpm::types::TpmError;
 
 pub fn send_command_impl(state: &TpmState, cmd: &[u8]) -> Result<(), TpmError> {
-    if !state.initialized { return Err(TpmError::NotPresent); }
+    if !state.initialized {
+        return Err(TpmError::NotPresent);
+    }
     state.write_reg8(TPM_STS, TPM_STS_READY);
     state.wait_for_status(TPM_STS_READY, TPM_STS_READY)?;
-    for byte in cmd { state.write_reg8(TPM_DATA_FIFO, *byte); }
+    for byte in cmd {
+        state.write_reg8(TPM_DATA_FIFO, *byte);
+    }
     state.write_reg8(TPM_STS, TPM_STS_GO);
     Ok(())
 }

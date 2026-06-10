@@ -15,15 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use alloc::format;
-use uefi::prelude::*;
-use crate::log::logger::log_info;
 use super::acpi::{discover_acpi_rsdp, get_cpu_count_from_acpi};
 use super::cpu::detect_cpu_features;
 use super::devices::{enumerate_graphics, enumerate_network, enumerate_pci, enumerate_storage};
 use super::display::display_hardware_summary;
 use super::memory::discover_memory_size;
 use super::types::HardwareInfo;
+use crate::log::logger::log_info;
+use alloc::format;
+use uefi::prelude::*;
 
 pub fn discover_system_hardware(system_table: &mut SystemTable<Boot>) -> HardwareInfo {
     let mut hw = HardwareInfo::default();
@@ -37,7 +37,13 @@ pub fn discover_system_hardware(system_table: &mut SystemTable<Boot>) -> Hardwar
     hw.graphics_devices = enumerate_graphics(system_table);
     hw.pci_devices = enumerate_pci(system_table);
     let cpu_flags = detect_cpu_features();
-    log_info("cpu", &format!("NXE={} SMEP={} SMAP={} UMIP={}", cpu_flags.nxe, cpu_flags.smep, cpu_flags.smap, cpu_flags.umip));
+    log_info(
+        "cpu",
+        &format!(
+            "NXE={} SMEP={} SMAP={} UMIP={}",
+            cpu_flags.nxe, cpu_flags.smep, cpu_flags.smap, cpu_flags.umip
+        ),
+    );
     display_hardware_summary(&hw, system_table);
     hw
 }

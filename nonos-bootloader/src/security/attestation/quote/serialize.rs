@@ -16,8 +16,8 @@
 
 extern crate alloc;
 
-use alloc::vec::Vec;
 use super::types::AttestationQuote;
+use alloc::vec::Vec;
 
 impl AttestationQuote {
     pub fn to_bytes(&self) -> Vec<u8> {

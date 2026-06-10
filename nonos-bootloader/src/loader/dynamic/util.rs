@@ -28,11 +28,8 @@ pub fn relocation_count(info: &DynamicInfo) -> usize {
     }
 
     if info.jmprel_addr.is_some() {
-        let ent_size = if info.pltrel_type == dyn_tag::DT_RELA {
-            info.rela_ent
-        } else {
-            info.rel_ent
-        };
+        let ent_size =
+            if info.pltrel_type == dyn_tag::DT_RELA { info.rela_ent } else { info.rel_ent };
         if ent_size > 0 {
             count += info.jmprel_size / ent_size;
         }

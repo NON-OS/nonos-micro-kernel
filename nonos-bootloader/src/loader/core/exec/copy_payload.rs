@@ -25,9 +25,5 @@
 //   - `[dst_phys, dst_phys + len)` must lie within that allocation.
 //   - `src_off + len <= payload.len()`.
 pub unsafe fn copy_payload(payload: &[u8], src_off: usize, dst_phys: u64, len: usize) {
-    core::ptr::copy_nonoverlapping(
-        payload.as_ptr().add(src_off),
-        dst_phys as *mut u8,
-        len,
-    );
+    core::ptr::copy_nonoverlapping(payload.as_ptr().add(src_off), dst_phys as *mut u8, len);
 }

@@ -27,5 +27,7 @@ pub fn init_boot_services(st: &mut SystemTable<Boot>) {
 }
 
 fn halt() -> ! {
-    loop { core::hint::spin_loop(); }
+    loop {
+        core::hint::spin_loop();
+    }
 }

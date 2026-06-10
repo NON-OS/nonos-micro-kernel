@@ -17,8 +17,14 @@
 use crate::hardware::tpm::state::TpmState;
 use crate::hardware::tpm::types::TpmError;
 
-pub fn pcr_extend_impl(state: &TpmState, pcr_index: u32, digest: &[u8; 32]) -> Result<(), TpmError> {
-    if !state.initialized { return Err(TpmError::NotPresent); }
+pub fn pcr_extend_impl(
+    state: &TpmState,
+    pcr_index: u32,
+    digest: &[u8; 32],
+) -> Result<(), TpmError> {
+    if !state.initialized {
+        return Err(TpmError::NotPresent);
+    }
     state.request_locality()?;
     let mut cmd = [0u8; 51];
     cmd[0..2].copy_from_slice(&0x8001u16.to_be_bytes());
@@ -32,8 +38,12 @@ pub fn pcr_extend_impl(state: &TpmState, pcr_index: u32, digest: &[u8; 32]) -> R
     let mut response = [0u8; 32];
     let len = state.receive_response(&mut response)?;
     state.release_locality();
-    if len < 10 { return Err(TpmError::InvalidResponse); }
+    if len < 10 {
+        return Err(TpmError::InvalidResponse);
+    }
     let rc = u32::from_be_bytes([response[6], response[7], response[8], response[9]]);
-    if rc != 0 { return Err(TpmError::CommandFailed(rc)); }
+    if rc != 0 {
+        return Err(TpmError::CommandFailed(rc));
+    }
     Ok(())
 }

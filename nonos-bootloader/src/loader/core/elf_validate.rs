@@ -23,7 +23,9 @@ use crate::loader::errors::{LoaderError, LoaderResult};
 use crate::log::logger::{log_debug, log_error, log_info};
 
 use super::constants::MAX_LOADS;
-use super::segment_check::{compute_segment_bounds, finalize_bounds, validate_kernel_size, validate_single_segment};
+use super::segment_check::{
+    compute_segment_bounds, finalize_bounds, validate_kernel_size, validate_single_segment,
+};
 use super::types::{ValidatedSegment, ValidationResult};
 
 pub fn validate_elf(payload: &[u8]) -> LoaderResult<ValidationResult<'_>> {
@@ -35,8 +37,13 @@ pub fn validate_elf(payload: &[u8]) -> LoaderResult<ValidationResult<'_>> {
         return Err(LoaderError::ElfParseError("payload too small"));
     }
     if &payload[0..4] != b"\x7fELF" {
-        log_error("loader", &format!("Invalid ELF magic: {:02x}{:02x}{:02x}{:02x}",
-            payload[0], payload[1], payload[2], payload[3]));
+        log_error(
+            "loader",
+            &format!(
+                "Invalid ELF magic: {:02x}{:02x}{:02x}{:02x}",
+                payload[0], payload[1], payload[2], payload[3]
+            ),
+        );
         return Err(LoaderError::ElfParseError("invalid ELF magic"));
     }
 
@@ -48,15 +55,7 @@ pub fn validate_elf(payload: &[u8]) -> LoaderResult<ValidationResult<'_>> {
 
     let (loads, load_count, min_addr, max_addr) = validate_segments(&elf, payload, is_exec)?;
 
-    Ok(ValidationResult {
-        elf,
-        loads,
-        load_count,
-        min_addr,
-        max_addr,
-        is_exec,
-        is_dyn,
-    })
+    Ok(ValidationResult { elf, loads, load_count, min_addr, max_addr, is_exec, is_dyn })
 }
 
 fn parse_elf_header(payload: &[u8]) -> LoaderResult<Elf<'_>> {
@@ -101,10 +100,7 @@ fn validate_elf_type(elf: &Elf) -> LoaderResult<(bool, bool)> {
         return Err(LoaderError::UnsupportedElf("unsupported e_type"));
     }
 
-    log_info(
-        "loader",
-        &format!("ELF type: {}", if is_exec { "ET_EXEC" } else { "ET_DYN" }),
-    );
+    log_info("loader", &format!("ELF type: {}", if is_exec { "ET_EXEC" } else { "ET_DYN" }));
     Ok((is_exec, is_dyn))
 }
 

@@ -54,18 +54,22 @@ pub use lookup_error::LookupError;
 #[cfg(feature = "zk-groth16")]
 pub use lookup_verified::{lookup, lookup_verified};
 #[cfg(feature = "zk-groth16")]
-pub use program_hash::{PROGRAM_HASH_ATTESTATION_PROGRAM, PROGRAM_HASH_BOOT_AUTHORITY, PROGRAM_HASH_RECOVERY_KEY};
+pub use program_hash::{
+    PROGRAM_HASH_ATTESTATION_PROGRAM, PROGRAM_HASH_BOOT_AUTHORITY, PROGRAM_HASH_RECOVERY_KEY,
+};
 #[cfg(feature = "zk-groth16")]
 pub use program_hash::{PROGRAM_HASH_UPDATE_AUTHORITY, ZK_REGISTRY_FINGERPRINT};
 #[cfg(feature = "zk-groth16")]
 pub use program_hash::{ZK_BUILD_TIMESTAMP, ZK_FROM_CEREMONY, ZK_REGISTRY_VERSION};
 #[cfg(feature = "zk-groth16")]
-pub use vk_data::{vk_attestation_program, vk_boot_authority, vk_recovery_key, vk_update_authority};
+pub use validate::{get_registry_info, validate_registry_metadata};
+#[cfg(feature = "zk-groth16")]
+pub use vk_data::{
+    vk_attestation_program, vk_boot_authority, vk_recovery_key, vk_update_authority,
+};
+#[cfg(feature = "zk-groth16")]
+pub use vk_fingerprint::VK_FINGERPRINT_UPDATE_AUTHORITY;
 #[cfg(feature = "zk-groth16")]
 pub use vk_fingerprint::{compute_vk_fingerprint, verify_vk_fingerprint};
 #[cfg(feature = "zk-groth16")]
 pub use vk_fingerprint::{VK_FINGERPRINT_BOOT_AUTHORITY, VK_FINGERPRINT_RECOVERY_KEY};
-#[cfg(feature = "zk-groth16")]
-pub use vk_fingerprint::VK_FINGERPRINT_UPDATE_AUTHORITY;
-#[cfg(feature = "zk-groth16")]
-pub use validate::{get_registry_info, validate_registry_metadata};

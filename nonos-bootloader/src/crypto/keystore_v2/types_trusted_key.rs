@@ -14,23 +14,66 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::crypto::keys::{derive_keyid, KeyId, PK_LEN};
 use super::types_key::KeyType;
 use super::types_result::KeyValidationResult;
+use crate::crypto::keys::{derive_keyid, KeyId, PK_LEN};
 
 #[derive(Clone, Copy)]
-pub struct TrustedKey { pub key_id: KeyId, pub public_key: [u8; PK_LEN], pub version: u32, pub added_at: u64, pub valid_from: u64, pub valid_until: u64, pub key_type: KeyType, pub active: bool }
+pub struct TrustedKey {
+    pub key_id: KeyId,
+    pub public_key: [u8; PK_LEN],
+    pub version: u32,
+    pub added_at: u64,
+    pub valid_from: u64,
+    pub valid_until: u64,
+    pub key_type: KeyType,
+    pub active: bool,
+}
 
 impl TrustedKey {
-    pub const fn empty() -> Self { Self { key_id: [0u8; 32], public_key: [0u8; 32], version: 0, added_at: 0, valid_from: 0, valid_until: 0, key_type: KeyType::Primary, active: false } }
-    pub fn new(public_key: [u8; PK_LEN], version: u32, valid_from: u64, valid_until: u64, key_type: KeyType) -> Self {
-        Self { key_id: derive_keyid(&public_key), public_key, version, added_at: 0, valid_from, valid_until, key_type, active: true }
+    pub const fn empty() -> Self {
+        Self {
+            key_id: [0u8; 32],
+            public_key: [0u8; 32],
+            version: 0,
+            added_at: 0,
+            valid_from: 0,
+            valid_until: 0,
+            key_type: KeyType::Primary,
+            active: false,
+        }
+    }
+    pub fn new(
+        public_key: [u8; PK_LEN],
+        version: u32,
+        valid_from: u64,
+        valid_until: u64,
+        key_type: KeyType,
+    ) -> Self {
+        Self {
+            key_id: derive_keyid(&public_key),
+            public_key,
+            version,
+            added_at: 0,
+            valid_from,
+            valid_until,
+            key_type,
+            active: true,
+        }
     }
     pub fn is_valid_at(&self, timestamp: u64, min_ver: u32) -> KeyValidationResult {
-        if !self.active { return KeyValidationResult::Revoked; }
-        if timestamp < self.valid_from { return KeyValidationResult::NotYetValid; }
-        if self.valid_until > 0 && timestamp > self.valid_until { return KeyValidationResult::Expired; }
-        if self.version < min_ver { return KeyValidationResult::VersionTooOld; }
+        if !self.active {
+            return KeyValidationResult::Revoked;
+        }
+        if timestamp < self.valid_from {
+            return KeyValidationResult::NotYetValid;
+        }
+        if self.valid_until > 0 && timestamp > self.valid_until {
+            return KeyValidationResult::Expired;
+        }
+        if self.version < min_ver {
+            return KeyValidationResult::VersionTooOld;
+        }
         KeyValidationResult::Valid
     }
 

@@ -21,9 +21,9 @@ pub mod security;
 pub mod storage;
 pub mod types;
 
-pub use core::{TmpDevice, TmpError, TmpResult, initialize_tpm};
-pub use crypto::{extend_pcr, read_pcr, get_random, compute_hash};
+pub use core::{initialize_tpm, TmpDevice, TmpError, TmpResult};
+pub use crypto::{compute_hash, extend_pcr, get_random, read_pcr};
 pub use hardware::{acquire_locality, release_locality, send_command};
-pub use security::{create_attestation, verify_quote, create_session};
-pub use storage::{nv_read, nv_write, create_key, load_key};
-pub use types::{NvIndex, PcrBank, Quote, TmpHandle, Session};
+pub use security::{create_attestation, create_session, verify_quote};
+pub use storage::{create_key, load_key, nv_read, nv_write};
+pub use types::{NvIndex, PcrBank, Quote, Session, TmpHandle};

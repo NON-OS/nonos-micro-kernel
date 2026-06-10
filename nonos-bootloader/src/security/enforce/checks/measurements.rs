@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
 use crate::log::logger::{log_info, log_warn};
-use crate::security::{extend_pcr_measurement, PCR_KERNEL, PCR_CAPSULE};
+use crate::security::{extend_pcr_measurement, PCR_CAPSULE, PCR_KERNEL};
+use uefi::prelude::*;
 
 pub fn extend_boot_measurements(
     system_table: &mut SystemTable<Boot>,
@@ -29,8 +29,11 @@ pub fn extend_boot_measurements(
     composite[32..96].copy_from_slice(signature);
     composite[96..128].copy_from_slice(zk_proof_hash);
     let extended = extend_pcr_measurement(system_table, PCR_KERNEL, &composite);
-    if extended { log_info("enforce", "measurements extended to PCR9"); }
-    else { log_warn("enforce", "TPM not available"); }
+    if extended {
+        log_info("enforce", "measurements extended to PCR9");
+    } else {
+        log_warn("enforce", "TPM not available");
+    }
     let _ = extend_pcr_measurement(system_table, PCR_CAPSULE, zk_proof_hash);
     extended
 }

@@ -86,11 +86,8 @@ pub fn load_graphics_mode(rt: &uefi::table::runtime::RuntimeServices) -> Option<
 pub fn load_bool_variable(rt: &uefi::table::runtime::RuntimeServices, name: &CStr16) -> bool {
     let mut buffer = [0u8; 1];
 
-    match rt.get_variable(
-        name,
-        &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE,
-        &mut buffer,
-    ) {
+    match rt.get_variable(name, &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE, &mut buffer)
+    {
         Ok(_) => buffer[0] != 0,
         Err(_) => false,
     }

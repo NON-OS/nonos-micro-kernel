@@ -20,4 +20,4 @@ mod registers;
 
 pub use command::send_command;
 pub use locality::{acquire_locality, release_locality};
-pub use registers::{read_status, write_data, read_data};
+pub use registers::{read_data, read_status, write_data};

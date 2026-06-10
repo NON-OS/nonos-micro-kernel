@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod read_public;
-mod send;
 mod receive;
+mod send;
 
 pub use read_public::get_ek_public_impl;

@@ -27,6 +27,13 @@ pub struct KeyStore {
 
 impl KeyStore {
     pub const fn new() -> Self {
-        Self { keys: [[0u8; 32]; MAX_KEYS], versions: [0u32; MAX_KEYS], count: 0, revoked: [RevocationEntry::empty(); MAX_REVOKED], revoked_count: 0, minimum_version: 1 }
+        Self {
+            keys: [[0u8; 32]; MAX_KEYS],
+            versions: [0u32; MAX_KEYS],
+            count: 0,
+            revoked: [RevocationEntry::empty(); MAX_REVOKED],
+            revoked_count: 0,
+            minimum_version: 1,
+        }
     }
 }

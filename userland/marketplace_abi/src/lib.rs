@@ -57,8 +57,8 @@ pub use codec::{decode_index, release_signing_bytes, DecodeError};
 pub use codec::{encode_and_sign, encode_index, EncodedIndex};
 pub use limits::{
     MAX_ARCHES, MAX_CAPABILITIES, MAX_DESCRIPTION, MAX_ENTRIES, MAX_NAME, MAX_PUBLISHER,
-    MAX_RELEASES, MAX_SIGNATURE, MAX_SUPPORTED_ARCH_LEN, MAX_TOKEN_SYMBOL, MAX_URL,
-    PUBKEY_LEN, SIG_LEN, SHA256_LEN,
+    MAX_RELEASES, MAX_SIGNATURE, MAX_SUPPORTED_ARCH_LEN, MAX_TOKEN_SYMBOL, MAX_URL, PUBKEY_LEN,
+    SHA256_LEN, SIG_LEN,
 };
 pub use types::{
     CapsuleRelease, InstallReadiness, MarketplaceEntry, MarketplaceIndex, PriceKind, PriceModel,

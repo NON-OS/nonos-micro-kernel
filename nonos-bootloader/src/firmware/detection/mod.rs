@@ -18,6 +18,8 @@ mod compatibility;
 mod hardware;
 pub mod version;
 
-pub use compatibility::{check_firmware_compatibility, FirmwareRequirements, CompatibilityResult};
-pub use hardware::{detect_hardware_devices, probe_device, HardwareDevice, DeviceType, ProbeResult};
-pub use version::{parse_firmware_version, compare_versions, FirmwareVersion, VersionComparison};
+pub use compatibility::{check_firmware_compatibility, CompatibilityResult, FirmwareRequirements};
+pub use hardware::{
+    detect_hardware_devices, probe_device, DeviceType, HardwareDevice, ProbeResult,
+};
+pub use version::{compare_versions, parse_firmware_version, FirmwareVersion, VersionComparison};

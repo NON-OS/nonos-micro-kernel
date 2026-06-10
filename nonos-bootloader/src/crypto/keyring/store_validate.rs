@@ -21,9 +21,17 @@ use super::util::{constant_time_eq, derive_keyid};
 impl KeyStore {
     pub fn validate_key(&self, pubkey: &[u8; PK_LEN], version: u32) -> KeyStatus {
         let key_id = derive_keyid(pubkey);
-        if self.is_revoked(&key_id) { return KeyStatus::Revoked; }
-        if version < self.minimum_version { return KeyStatus::VersionTooOld; }
-        for i in 0..self.count { if constant_time_eq(&self.keys[i], pubkey) { return KeyStatus::Valid; } }
+        if self.is_revoked(&key_id) {
+            return KeyStatus::Revoked;
+        }
+        if version < self.minimum_version {
+            return KeyStatus::VersionTooOld;
+        }
+        for i in 0..self.count {
+            if constant_time_eq(&self.keys[i], pubkey) {
+                return KeyStatus::Valid;
+            }
+        }
         KeyStatus::Unknown
     }
 }

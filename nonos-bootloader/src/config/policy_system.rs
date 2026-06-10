@@ -30,9 +30,7 @@ pub fn apply_hardware_settings(
     if config.cpu_optimizations && hardware.cpu_count > 1 {
         system_table
             .stdout()
-            .output_string(cstr16!(
-                "   [INFO] CPU optimizations enabled for multi-core system\r\n"
-            ))
+            .output_string(cstr16!("   [INFO] CPU optimizations enabled for multi-core system\r\n"))
             .unwrap_or(());
         log_info("config", "CPU optimizations enabled");
     }
@@ -43,27 +41,21 @@ pub fn apply_memory_settings(config: &BootloaderConfig, system_table: &mut Syste
         MemoryManagementMode::Secure => {
             system_table
                 .stdout()
-                .output_string(cstr16!(
-                    "   [INFO] Secure memory management mode active\r\n"
-                ))
+                .output_string(cstr16!("   [INFO] Secure memory management mode active\r\n"))
                 .unwrap_or(());
             log_info("config", "Secure memory management mode applied");
         }
         MemoryManagementMode::Efficient => {
             system_table
                 .stdout()
-                .output_string(cstr16!(
-                    "   [INFO] Efficient memory management mode active\r\n"
-                ))
+                .output_string(cstr16!("   [INFO] Efficient memory management mode active\r\n"))
                 .unwrap_or(());
             log_info("config", "Efficient memory management mode applied");
         }
         MemoryManagementMode::Legacy => {
             system_table
                 .stdout()
-                .output_string(cstr16!(
-                    "   [INFO] Legacy memory management mode active\r\n"
-                ))
+                .output_string(cstr16!("   [INFO] Legacy memory management mode active\r\n"))
                 .unwrap_or(());
             log_info("config", "Legacy memory management mode applied");
         }

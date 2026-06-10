@@ -15,10 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use alloc::vec::Vec;
 use super::core::TpmState;
 use crate::hardware::tpm::ek::get_ek_public_impl;
+use alloc::vec::Vec;
 
 impl TpmState {
-    pub fn get_ek_public(&self) -> Result<Vec<u8>, &'static str> { get_ek_public_impl(self) }
+    pub fn get_ek_public(&self) -> Result<Vec<u8>, &'static str> {
+        get_ek_public_impl(self)
+    }
 }

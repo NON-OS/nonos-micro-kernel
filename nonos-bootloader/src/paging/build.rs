@@ -38,10 +38,7 @@ use super::verify::verify_kernel_pml4;
 // Returns the new PML4's physical address. Caller switches CR3 to
 // this value via `switch_to_kernel_pml4` after ExitBootServices has
 // been called and the memory map is finalized.
-pub fn build_kernel_pml4(
-    bs: &BootServices,
-    image: &KernelImage,
-) -> Result<u64, &'static str> {
+pub fn build_kernel_pml4(bs: &BootServices, image: &KernelImage) -> Result<u64, &'static str> {
     let pml4_phys = alloc_pt_frame(bs)?;
     let pml4 = PageTable::from_phys(pml4_phys);
 

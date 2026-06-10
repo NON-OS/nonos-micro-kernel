@@ -19,19 +19,33 @@ use crate::security::anti_rollback::types::RollbackError;
 
 impl AntiRollbackState {
     pub fn check_kernel_version(&self, kernel_version: u64) -> Result<(), RollbackError> {
-        if !self.initialized && !self.tpm_available { return Err(RollbackError::TpmNotAvailable); }
-        if kernel_version == 0 { return Err(RollbackError::InvalidVersion); }
+        if !self.initialized && !self.tpm_available {
+            return Err(RollbackError::TpmNotAvailable);
+        }
+        if kernel_version == 0 {
+            return Err(RollbackError::InvalidVersion);
+        }
         if self.initialized && kernel_version < self.state.minimum_kernel {
-            return Err(RollbackError::KernelVersionTooOld { kernel: kernel_version, minimum: self.state.minimum_kernel });
+            return Err(RollbackError::KernelVersionTooOld {
+                kernel: kernel_version,
+                minimum: self.state.minimum_kernel,
+            });
         }
         Ok(())
     }
 
     pub fn check_bootloader_version(&self, bootloader_version: u64) -> Result<(), RollbackError> {
-        if !self.initialized && !self.tpm_available { return Err(RollbackError::TpmNotAvailable); }
-        if bootloader_version == 0 { return Err(RollbackError::InvalidVersion); }
+        if !self.initialized && !self.tpm_available {
+            return Err(RollbackError::TpmNotAvailable);
+        }
+        if bootloader_version == 0 {
+            return Err(RollbackError::InvalidVersion);
+        }
         if self.initialized && bootloader_version < self.state.minimum_bootloader {
-            return Err(RollbackError::BootloaderVersionTooOld { current: bootloader_version, minimum: self.state.minimum_bootloader });
+            return Err(RollbackError::BootloaderVersionTooOld {
+                current: bootloader_version,
+                minimum: self.state.minimum_bootloader,
+            });
         }
         Ok(())
     }

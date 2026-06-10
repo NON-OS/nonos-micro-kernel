@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
 use super::gpu::detect_dual_gpu;
+use uefi::prelude::*;
 
 pub fn needs_safe_exit(system_table: &mut SystemTable<Boot>) -> bool {
     detect_dual_gpu(system_table)

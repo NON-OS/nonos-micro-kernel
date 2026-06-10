@@ -15,14 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use uefi::prelude::*;
-use uefi::proto::media::file::{File, FileMode, FileAttribute};
+use uefi::proto::media::file::{File, FileAttribute, FileMode};
 use uefi::proto::media::fs::SimpleFileSystem;
 use uefi::table::boot::SearchType;
 use uefi::Identify;
 
 pub fn launch_shell(bs: &BootServices, path: &uefi::CStr16) -> Status {
     let handles = match bs.locate_handle_buffer(SearchType::ByProtocol(&SimpleFileSystem::GUID)) {
-        Ok(h) => h, Err(_) => return Status::NOT_FOUND,
+        Ok(h) => h,
+        Err(_) => return Status::NOT_FOUND,
     };
     for handle in handles.iter() {
         if let Ok(mut fs) = bs.open_protocol_exclusive::<SimpleFileSystem>(*handle) {

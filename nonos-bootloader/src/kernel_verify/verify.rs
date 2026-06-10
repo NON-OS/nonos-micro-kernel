@@ -17,8 +17,13 @@
 use uefi::prelude::*;
 
 use super::delay::mini_delay;
-use super::display_status::{print_kernel_size, print_verification_failure, print_verification_success};
-use super::helpers::{compute_and_display_hash, initialize_crypto_if_needed, validate_kernel_size, verify_and_display_signature};
+use super::display_status::{
+    print_kernel_size, print_verification_failure, print_verification_success,
+};
+use super::helpers::{
+    compute_and_display_hash, initialize_crypto_if_needed, validate_kernel_size,
+    verify_and_display_signature,
+};
 use super::types::CryptoVerifyResult;
 use crate::image_format::{has_production_footer, validate_image};
 use crate::log::logger::{log_error, log_info};

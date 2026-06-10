@@ -28,7 +28,9 @@ pub struct RsdpDescriptor {
     pub reserved: [u8; 3],
 }
 
-impl RsdpDescriptor { pub const SIGNATURE: &'static [u8; 8] = b"RSD PTR "; }
+impl RsdpDescriptor {
+    pub const SIGNATURE: &'static [u8; 8] = b"RSD PTR ";
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct HardwareInfo {
@@ -43,4 +45,9 @@ pub struct HardwareInfo {
 }
 
 #[derive(Debug, Default, Clone, Copy)]
-pub struct CpuFeatureFlags { pub nxe: bool, pub smep: bool, pub smap: bool, pub umip: bool }
+pub struct CpuFeatureFlags {
+    pub nxe: bool,
+    pub smep: bool,
+    pub smap: bool,
+    pub umip: bool,
+}

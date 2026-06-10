@@ -15,4 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum KeyValidationResult { Valid, NotYetValid, Expired, Revoked, VersionTooOld, NotFound, RequiresCoSignature }
+pub enum KeyValidationResult {
+    Valid,
+    NotYetValid,
+    Expired,
+    Revoked,
+    VersionTooOld,
+    NotFound,
+    RequiresCoSignature,
+}

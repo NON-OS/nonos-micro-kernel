@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
 use crate::log::logger::{log_info, log_warn};
+use uefi::prelude::*;
 
 #[cfg(target_arch = "x86_64")]
 use crate::security::cpuid::cpu_rng_supported;
@@ -23,10 +23,16 @@ use crate::security::cpuid::cpu_rng_supported;
 pub fn check_hardware_rng(st: &mut SystemTable<Boot>) -> bool {
     let bs = st.boot_services();
     if let Ok(handles) = bs.find_handles::<uefi::proto::rng::Rng>() {
-        if !handles.is_empty() { log_info("rng", "EFI RNG protocol detected"); return true; }
+        if !handles.is_empty() {
+            log_info("rng", "EFI RNG protocol detected");
+            return true;
+        }
     }
     #[cfg(target_arch = "x86_64")]
-    if cpu_rng_supported() { log_info("rng", "CPU RDRAND/RDSEED available"); return true; }
+    if cpu_rng_supported() {
+        log_info("rng", "CPU RDRAND/RDSEED available");
+        return true;
+    }
     log_warn("rng", "No hardware RNG found");
     false
 }

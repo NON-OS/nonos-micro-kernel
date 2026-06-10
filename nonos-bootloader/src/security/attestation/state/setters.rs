@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::security::attestation::pcr::PcrIndex;
 use super::types::AttestationState;
+use crate::security::attestation::pcr::PcrIndex;
 
 impl AttestationState {
     pub fn set_kernel_hash(&mut self, hash: [u8; 32]) {
@@ -35,5 +35,7 @@ impl AttestationState {
         self.extend_pcr_hash(PcrIndex::ZkProof, &ph);
     }
 
-    pub fn set_signature_verified(&mut self, verified: bool) { self.sig_verified = verified; }
+    pub fn set_signature_verified(&mut self, verified: bool) {
+        self.sig_verified = verified;
+    }
 }

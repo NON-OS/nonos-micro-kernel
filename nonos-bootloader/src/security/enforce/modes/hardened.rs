@@ -17,8 +17,8 @@
 use crate::log::logger::log_info;
 use crate::security::enforce::policy::EnforcementResult;
 use crate::security::enforce::requirements::{
-    enforce_hardware_rng, enforce_measured_boot, enforce_platform_key,
-    enforce_secure_boot, enforce_signature_db,
+    enforce_hardware_rng, enforce_measured_boot, enforce_platform_key, enforce_secure_boot,
+    enforce_signature_db,
 };
 use crate::security::types::SecurityContext;
 

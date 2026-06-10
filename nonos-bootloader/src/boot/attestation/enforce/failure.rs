@@ -14,11 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
-use crate::display::{log_error as panel_error, show_error_screen};
 use super::super::super::util::fatal_reset;
+use crate::display::{log_error as panel_error, show_error_screen};
+use uefi::prelude::*;
 
 pub fn binding_failure(st: &mut SystemTable<Boot>, gop: bool, msg: &'static str) -> ! {
-    if gop { panel_error(b"ZK BINDING FAILED"); show_error_screen(msg.as_bytes()); }
+    if gop {
+        panel_error(b"ZK BINDING FAILED");
+        show_error_screen(msg.as_bytes());
+    }
     fatal_reset(st, msg);
 }

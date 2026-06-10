@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::error::BindingError;
 use super::super::replay::ZkPublicInputs;
+use super::error::BindingError;
 
 pub fn verify_kernel_binding(
     public_inputs: &ZkPublicInputs,

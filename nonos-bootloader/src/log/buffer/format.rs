@@ -33,13 +33,7 @@ pub fn format_log_message_with_tick(
     category: &str,
     message: &str,
 ) -> String {
-    format!(
-        "[{:>8}] [{}] {}: {}\r\n",
-        tick,
-        level.as_str(),
-        category,
-        message
-    )
+    format!("[{:>8}] [{}] {}: {}\r\n", tick, level.as_str(), category, message)
 }
 
 /// Format a simple status message
@@ -73,16 +67,8 @@ pub fn format_hex_bytes(bytes: &[u8]) -> String {
     for &b in bytes.iter().take(32) {
         let hi = (b >> 4) & 0xF;
         let lo = b & 0xF;
-        s.push(if hi < 10 {
-            (b'0' + hi) as char
-        } else {
-            (b'a' + hi - 10) as char
-        });
-        s.push(if lo < 10 {
-            (b'0' + lo) as char
-        } else {
-            (b'a' + lo - 10) as char
-        });
+        s.push(if hi < 10 { (b'0' + hi) as char } else { (b'a' + hi - 10) as char });
+        s.push(if lo < 10 { (b'0' + lo) as char } else { (b'a' + lo - 10) as char });
     }
     if bytes.len() > 32 {
         s.push_str("...");
@@ -96,31 +82,15 @@ pub fn format_hash_short(hash: &[u8; 32]) -> String {
     for &b in &hash[..4] {
         let hi = (b >> 4) & 0xF;
         let lo = b & 0xF;
-        s.push(if hi < 10 {
-            (b'0' + hi) as char
-        } else {
-            (b'a' + hi - 10) as char
-        });
-        s.push(if lo < 10 {
-            (b'0' + lo) as char
-        } else {
-            (b'a' + lo - 10) as char
-        });
+        s.push(if hi < 10 { (b'0' + hi) as char } else { (b'a' + hi - 10) as char });
+        s.push(if lo < 10 { (b'0' + lo) as char } else { (b'a' + lo - 10) as char });
     }
     s.push_str("...");
     for &b in &hash[28..32] {
         let hi = (b >> 4) & 0xF;
         let lo = b & 0xF;
-        s.push(if hi < 10 {
-            (b'0' + hi) as char
-        } else {
-            (b'a' + hi - 10) as char
-        });
-        s.push(if lo < 10 {
-            (b'0' + lo) as char
-        } else {
-            (b'a' + lo - 10) as char
-        });
+        s.push(if hi < 10 { (b'0' + hi) as char } else { (b'a' + hi - 10) as char });
+        s.push(if lo < 10 { (b'0' + lo) as char } else { (b'a' + lo - 10) as char });
     }
     s
 }

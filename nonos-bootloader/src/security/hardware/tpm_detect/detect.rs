@@ -14,12 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::mmio::{read_mmio_u32, read_mmio_u8, TPM_BASE_ADDR, TPM_DID_VID_OFFSET, TPM_INTF_CAP_OFFSET, TPM_RID_OFFSET};
+use super::mmio::{
+    read_mmio_u32, read_mmio_u8, TPM_BASE_ADDR, TPM_DID_VID_OFFSET, TPM_INTF_CAP_OFFSET,
+    TPM_RID_OFFSET,
+};
 use super::types::TpmCapabilities;
 
 pub fn detect_tpm_capabilities() -> TpmCapabilities {
     let mut caps = TpmCapabilities::default();
-    if !probe_presence() { return caps; }
+    if !probe_presence() {
+        return caps;
+    }
     caps.present = true;
     read_identity(&mut caps);
     read_interface(&mut caps);

@@ -19,9 +19,13 @@ use crate::display::font::draw_string;
 use crate::display::gop::{fill_rect, get_dimensions, is_initialized};
 
 pub fn show_error_screen(msg: &[u8]) {
-    if !is_initialized() { return; }
+    if !is_initialized() {
+        return;
+    }
     let (w, h) = get_dimensions();
-    if w == 0 || h == 0 { return; }
+    if w == 0 || h == 0 {
+        return;
+    }
     fill_rect(0, 0, w, h, 0xFF100000);
     let x = 40;
     let y = h / 2 - 40;

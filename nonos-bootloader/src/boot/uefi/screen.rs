@@ -14,12 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
-use crate::display::{draw_boot_progress, init_boot_screen, log_hex, log_ok, log_u32, update_stage, StageStatus, STAGE_UEFI};
 use super::TOTAL_BOOT_STAGES;
+use crate::display::{
+    draw_boot_progress, init_boot_screen, log_hex, log_ok, log_u32, update_stage, StageStatus,
+    STAGE_UEFI,
+};
+use uefi::prelude::*;
 
 pub fn run_boot_screen_init(st: &mut SystemTable<Boot>, gop: bool) {
-    if !gop { return; }
+    if !gop {
+        return;
+    }
     init_boot_screen();
     draw_boot_progress(1, TOTAL_BOOT_STAGES);
     log_ok(b"GOP framebuffer initialized");

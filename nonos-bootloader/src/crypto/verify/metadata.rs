@@ -30,6 +30,15 @@ pub struct CapsuleMetadata {
 
 impl Default for CapsuleMetadata {
     fn default() -> Self {
-        Self { offset_sig: 0, len_sig: 0, offset_payload: 0, len_payload: 0, signer_keyid: None, payload_hash: [0u8; 32], header_version: 0, header_timestamp: 0 }
+        Self {
+            offset_sig: 0,
+            len_sig: 0,
+            offset_payload: 0,
+            len_payload: 0,
+            signer_keyid: None,
+            payload_hash: [0u8; 32],
+            header_version: 0,
+            header_timestamp: 0,
+        }
     }
 }

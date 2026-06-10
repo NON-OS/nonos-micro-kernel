@@ -40,11 +40,6 @@ pub enum BootStage {
 
 impl ChainLink {
     pub const fn empty() -> Self {
-        Self {
-            stage: BootStage::Init,
-            measurement: [0u8; 32],
-            cumulative: [0u8; 32],
-            timestamp: 0,
-        }
+        Self { stage: BootStage::Init, measurement: [0u8; 32], cumulative: [0u8; 32], timestamp: 0 }
     }
 }

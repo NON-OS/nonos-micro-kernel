@@ -37,16 +37,8 @@ impl fmt::Display for LoaderError {
             }
             LoaderError::InvalidSegmentAlignment => write!(f, "invalid segment alignment"),
 
-            LoaderError::AllocationFailed {
-                addr,
-                pages,
-                status,
-            } => {
-                write!(
-                    f,
-                    "allocation failed at 0x{:x} ({} pages): {:?}",
-                    addr, pages, status
-                )
+            LoaderError::AllocationFailed { addr, pages, status } => {
+                write!(f, "allocation failed at 0x{:x} ({} pages): {:?}", addr, pages, status)
             }
             LoaderError::AllocationTableFull => write!(f, "allocation table full"),
             LoaderError::OutOfMemory => write!(f, "out of memory"),

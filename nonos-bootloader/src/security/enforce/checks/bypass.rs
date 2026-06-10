@@ -14,23 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::log::logger::log_warn;
 use uefi::cstr16;
 use uefi::prelude::*;
-use crate::log::logger::log_warn;
 
 pub fn detect_secure_boot_bypass(system_table: &mut SystemTable<Boot>) -> bool {
     let rt = system_table.runtime_services();
     let mut setup_mode = [0u8; 1];
     if let Ok(_) = rt.get_variable(
-        cstr16!("SetupMode"), &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE, &mut setup_mode,
+        cstr16!("SetupMode"),
+        &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE,
+        &mut setup_mode,
     ) {
-        if setup_mode[0] == 1 { log_warn("enforce", "UEFI in SetupMode"); return true; }
+        if setup_mode[0] == 1 {
+            log_warn("enforce", "UEFI in SetupMode");
+            return true;
+        }
     }
     let mut audit_mode = [0u8; 1];
     if let Ok(_) = rt.get_variable(
-        cstr16!("AuditMode"), &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE, &mut audit_mode,
+        cstr16!("AuditMode"),
+        &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE,
+        &mut audit_mode,
     ) {
-        if audit_mode[0] == 1 { log_warn("enforce", "UEFI in AuditMode"); return true; }
+        if audit_mode[0] == 1 {
+            log_warn("enforce", "UEFI in AuditMode");
+            return true;
+        }
     }
     false
 }

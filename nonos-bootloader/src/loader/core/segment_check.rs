@@ -34,43 +34,27 @@ pub fn validate_single_segment(
     let p_flags = ph.p_flags;
 
     if p_memsz < p_filesz {
-        log_error(
-            "loader",
-            "SECURITY: Segment has p_memsz < p_filesz (malformed ELF)",
-        );
+        log_error("loader", "SECURITY: Segment has p_memsz < p_filesz (malformed ELF)");
         return Err(LoaderError::InvalidSegmentSize);
     }
 
     let file_end = p_offset.checked_add(p_filesz).ok_or_else(|| {
-        log_error(
-            "loader",
-            "SECURITY: Integer overflow in segment offset+size",
-        );
+        log_error("loader", "SECURITY: Integer overflow in segment offset+size");
         LoaderError::IntegerOverflow
     })?;
 
     if file_end > payload.len() {
-        log_error(
-            "loader",
-            "ELF program header indicates file data outside payload bounds.",
-        );
+        log_error("loader", "ELF program header indicates file data outside payload bounds.");
         return Err(LoaderError::SegmentOutOfBounds);
     }
 
     let is_writable = (p_flags & elf_flags::PF_W) != 0;
     let is_executable = (p_flags & elf_flags::PF_X) != 0;
     if is_writable && is_executable {
-        log_warn(
-            "loader",
-            "WARNING: Segment has W+X permissions (W^X violation)",
-        );
+        log_warn("loader", "WARNING: Segment has W+X permissions (W^X violation)");
     }
 
-    let target = if ph.p_paddr != 0 {
-        ph.p_paddr
-    } else {
-        ph.p_vaddr
-    } as u64;
+    let target = if ph.p_paddr != 0 { ph.p_paddr } else { ph.p_vaddr } as u64;
 
     if target == 0 && is_exec {
         log_error("loader", "ET_EXEC PT_LOAD has no placement address.");
@@ -111,10 +95,7 @@ pub fn compute_segment_bounds(seg: &ValidatedSegment, is_exec: bool) -> LoaderRe
     // virt target is not a placement at all, so the check does not
     // apply.
     if is_exec && !memory::is_upper_half(seg.target) && seg_end > memory::MAX_LOAD_ADDRESS {
-        log_error(
-            "loader",
-            "SECURITY: Segment extends beyond maximum load address",
-        );
+        log_error("loader", "SECURITY: Segment extends beyond maximum load address");
         return Err(LoaderError::AddressOutOfRange);
     }
 
@@ -123,17 +104,11 @@ pub fn compute_segment_bounds(seg: &ValidatedSegment, is_exec: bool) -> LoaderRe
 
 pub fn finalize_bounds(min_addr: Option<u64>, max_addr: Option<u64>) -> LoaderResult<(u64, u64)> {
     let base = min_addr.ok_or_else(|| {
-        log_error(
-            "loader",
-            "Internal error: min_addr not set after segment processing",
-        );
+        log_error("loader", "Internal error: min_addr not set after segment processing");
         LoaderError::MalformedElf("min_addr computation failed")
     })?;
     let end = max_addr.ok_or_else(|| {
-        log_error(
-            "loader",
-            "Internal error: max_addr not set after segment processing",
-        );
+        log_error("loader", "Internal error: max_addr not set after segment processing");
         LoaderError::MalformedElf("max_addr computation failed")
     })?;
     Ok((base, end))
@@ -146,10 +121,7 @@ pub fn validate_kernel_size(base: u64, end: u64) -> LoaderResult<()> {
     })? as usize;
 
     if total_bytes > memory::MAX_KERNEL_SIZE {
-        log_error(
-            "loader",
-            "SECURITY: Kernel size exceeds maximum allowed (512 MiB)",
-        );
+        log_error("loader", "SECURITY: Kernel size exceeds maximum allowed (512 MiB)");
         return Err(LoaderError::KernelTooLarge);
     }
 

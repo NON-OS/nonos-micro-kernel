@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
 use super::types::MemTestResult;
+use uefi::prelude::*;
 
 pub fn print_results(st: &mut SystemTable<Boot>, r: &MemTestResult) {
     let _ = st.stdout().output_string(uefi::cstr16!("  [MEMTEST] Complete - "));

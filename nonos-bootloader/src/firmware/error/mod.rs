@@ -18,6 +18,6 @@ mod recovery;
 mod reporting;
 mod types;
 
-pub use recovery::{attempt_error_recovery, RecoveryStrategy, RecoveryResult, ErrorRecovery};
-pub use reporting::{report_error, format_error_message, ErrorReport, ReportingLevel};
-pub use types::{FirmwareError, ErrorSeverity, ErrorCategory, ErrorContext};
+pub use recovery::{attempt_error_recovery, ErrorRecovery, RecoveryResult, RecoveryStrategy};
+pub use reporting::{format_error_message, report_error, ErrorReport, ReportingLevel};
+pub use types::{ErrorCategory, ErrorContext, ErrorSeverity, FirmwareError};

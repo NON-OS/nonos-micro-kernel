@@ -15,13 +15,29 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SecurityPolicy { Development, Standard, Hardened }
+pub enum SecurityPolicy {
+    Development,
+    Standard,
+    Hardened,
+}
 
 impl SecurityPolicy {
     pub fn from_build() -> Self {
-        #[cfg(feature = "hardened")] { return SecurityPolicy::Hardened; }
-        #[cfg(feature = "standard")] { return SecurityPolicy::Standard; }
+        #[cfg(feature = "hardened")]
+        {
+            return SecurityPolicy::Hardened;
+        }
+        #[cfg(feature = "standard")]
+        {
+            return SecurityPolicy::Standard;
+        }
         #[cfg(not(any(feature = "standard", feature = "hardened")))]
-        { if cfg!(debug_assertions) { SecurityPolicy::Development } else { SecurityPolicy::Standard } }
+        {
+            if cfg!(debug_assertions) {
+                SecurityPolicy::Development
+            } else {
+                SecurityPolicy::Standard
+            }
+        }
     }
 }

@@ -16,4 +16,9 @@
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
-pub enum KeyType { Primary = 0x01, Secondary = 0x02, Emergency = 0x03, PreAuthorized = 0x04 }
+pub enum KeyType {
+    Primary = 0x01,
+    Secondary = 0x02,
+    Emergency = 0x03,
+    PreAuthorized = 0x04,
+}

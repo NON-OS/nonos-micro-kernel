@@ -31,6 +31,8 @@ pub unsafe fn cpuid_addr_sizes() -> u32 {
 #[cfg(target_arch = "x86_64")]
 pub fn check_tme() -> bool {
     let ecx: u32;
-    unsafe { core::arch::asm!("push rbx", "cpuid", "pop rbx", in("eax") 7u32, in("ecx") 0u32, lateout("ecx") ecx, lateout("eax") _, lateout("edx") _, options(preserves_flags)); }
+    unsafe {
+        core::arch::asm!("push rbx", "cpuid", "pop rbx", in("eax") 7u32, in("ecx") 0u32, lateout("ecx") ecx, lateout("eax") _, lateout("edx") _, options(preserves_flags));
+    }
     (ecx & (1 << 13)) != 0
 }

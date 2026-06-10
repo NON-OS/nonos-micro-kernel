@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::paths::SHELL_PATHS;
 use uefi::prelude::*;
-use uefi::proto::media::file::{File, FileMode, FileAttribute};
+use uefi::proto::media::file::{File, FileAttribute, FileMode};
 use uefi::proto::media::fs::SimpleFileSystem;
 use uefi::table::boot::SearchType;
 use uefi::Identify;
-use super::paths::SHELL_PATHS;
 
 pub fn find_shell(bs: &BootServices) -> Option<&'static uefi::CStr16> {
     let handles = bs.locate_handle_buffer(SearchType::ByProtocol(&SimpleFileSystem::GUID)).ok()?;

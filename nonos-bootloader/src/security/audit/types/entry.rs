@@ -27,7 +27,13 @@ pub struct AuditEntry {
 
 impl AuditEntry {
     pub const fn empty() -> Self {
-        Self { event: AuditEvent::BootStart, timestamp: 0, message: [0u8; AUDIT_MSG_LEN], msg_len: 0, chain_hash: [0u8; 32] }
+        Self {
+            event: AuditEvent::BootStart,
+            timestamp: 0,
+            message: [0u8; AUDIT_MSG_LEN],
+            msg_len: 0,
+            chain_hash: [0u8; 32],
+        }
     }
 
     pub fn to_bytes(&self) -> [u8; 64] {

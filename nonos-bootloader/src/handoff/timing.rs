@@ -38,7 +38,9 @@ pub fn get_uefi_time_epoch(st: &SystemTable<Boot>) -> u64 {
             days += if (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0) { 366 } else { 365 };
         }
         days += DAYS_BEFORE[(month - 1) as usize];
-        if is_leap && month > 2 { days += 1; }
+        if is_leap && month > 2 {
+            days += 1;
+        }
         days += day - 1;
         (days * 86400 + hour * 3600 + minute * 60 + second) * 1000
     } else {

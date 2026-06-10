@@ -16,9 +16,9 @@
 
 extern crate alloc;
 
-use alloc::vec::Vec;
 use crate::loader::errors::{LoaderError, LoaderResult};
 use crate::loader::types::{memory, LoadedSegment};
+use alloc::vec::Vec;
 
 pub fn calculate_memory_bounds(
     segments: &[Option<LoadedSegment>],
@@ -28,9 +28,7 @@ pub fn calculate_memory_bounds(
 
     for segment in segments.iter().flatten() {
         let start = segment.target_addr;
-        let end = start
-            .checked_add(segment.mem_size)
-            .ok_or(LoaderError::IntegerOverflow)?;
+        let end = start.checked_add(segment.mem_size).ok_or(LoaderError::IntegerOverflow)?;
 
         min_addr = min_addr.min(start);
         max_addr = max_addr.max(end);
@@ -40,9 +38,7 @@ pub fn calculate_memory_bounds(
         return Err(LoaderError::NoLoadableSegments);
     }
 
-    let total_size = max_addr
-        .checked_sub(min_addr)
-        .ok_or(LoaderError::IntegerOverflow)? as usize;
+    let total_size = max_addr.checked_sub(min_addr).ok_or(LoaderError::IntegerOverflow)? as usize;
 
     Ok((min_addr, max_addr, total_size))
 }

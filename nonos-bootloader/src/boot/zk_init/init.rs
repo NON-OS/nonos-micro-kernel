@@ -36,7 +36,9 @@ pub fn initialize_zk_replay_protection(st: &SystemTable<Boot>) {
 fn verify_initialization() {
     if !is_nonce_initialized() {
         crate::log::logger::log_critical("zk_init", "ZK boot nonce not initialized - secure halt");
-        loop { core::hint::spin_loop(); }
+        loop {
+            core::hint::spin_loop();
+        }
     }
 
     if !is_machine_id_initialized() {

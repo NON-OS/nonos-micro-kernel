@@ -20,10 +20,14 @@ use uefi::table::cfg::{SMBIOS3_GUID, SMBIOS_GUID};
 /// Find SMBIOS entry point from UEFI config table. Prefers SMBIOS 3.0. Returns 0 if not found.
 pub fn get_smbios_entry(st: &SystemTable<Boot>) -> u64 {
     for entry in st.config_table() {
-        if entry.guid == SMBIOS3_GUID { return entry.address as u64; }
+        if entry.guid == SMBIOS3_GUID {
+            return entry.address as u64;
+        }
     }
     for entry in st.config_table() {
-        if entry.guid == SMBIOS_GUID { return entry.address as u64; }
+        if entry.guid == SMBIOS_GUID {
+            return entry.address as u64;
+        }
     }
     0
 }

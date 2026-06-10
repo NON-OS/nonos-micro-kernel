@@ -23,14 +23,30 @@ pub static FB_HEIGHT: AtomicU32 = AtomicU32::new(0);
 pub static FB_STRIDE: AtomicU32 = AtomicU32::new(0);
 pub static FB_FORMAT_BGR: AtomicBool = AtomicBool::new(true);
 
-#[inline] pub fn is_initialized() -> bool { FB_INITIALIZED.load(Ordering::Relaxed) }
-#[inline] pub fn get_dimensions() -> (u32, u32) { (FB_WIDTH.load(Ordering::Relaxed), FB_HEIGHT.load(Ordering::Relaxed)) }
-#[inline] pub fn get_stride() -> u32 { FB_STRIDE.load(Ordering::Relaxed) }
+#[inline]
+pub fn is_initialized() -> bool {
+    FB_INITIALIZED.load(Ordering::Relaxed)
+}
+#[inline]
+pub fn get_dimensions() -> (u32, u32) {
+    (FB_WIDTH.load(Ordering::Relaxed), FB_HEIGHT.load(Ordering::Relaxed))
+}
+#[inline]
+pub fn get_stride() -> u32 {
+    FB_STRIDE.load(Ordering::Relaxed)
+}
 
 #[inline]
 pub fn convert_color(argb: u32) -> u32 {
-    if FB_FORMAT_BGR.load(Ordering::Relaxed) { argb }
-    else { let (a, r, g, b) = ((argb >> 24) & 0xFF, (argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF); (a << 24) | (b << 16) | (g << 8) | r }
+    if FB_FORMAT_BGR.load(Ordering::Relaxed) {
+        argb
+    } else {
+        let (a, r, g, b) =
+            ((argb >> 24) & 0xFF, (argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF);
+        (a << 24) | (b << 16) | (g << 8) | r
+    }
 }
 
-pub fn shutdown_for_exit() { FB_INITIALIZED.store(false, Ordering::SeqCst); }
+pub fn shutdown_for_exit() {
+    FB_INITIALIZED.store(false, Ordering::SeqCst);
+}

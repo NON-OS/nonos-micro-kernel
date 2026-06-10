@@ -80,10 +80,7 @@ pub struct SecurityCheckResult {
 
 impl SecurityCheckResult {
     pub fn pass() -> Self {
-        Self {
-            passed: true,
-            ..Default::default()
-        }
+        Self { passed: true, ..Default::default() }
     }
 
     pub fn has_violations(&self) -> bool {

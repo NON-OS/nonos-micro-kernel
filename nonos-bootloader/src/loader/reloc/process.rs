@@ -118,10 +118,7 @@ pub fn process_elf_relocations(
 ) -> Result<usize, LoaderError> {
     use goblin::elf::program_header::PT_DYNAMIC;
 
-    let dynamic_ph = elf
-        .program_headers
-        .iter()
-        .find(|ph| ph.p_type == PT_DYNAMIC);
+    let dynamic_ph = elf.program_headers.iter().find(|ph| ph.p_type == PT_DYNAMIC);
 
     let dynamic_ph = match dynamic_ph {
         Some(ph) => ph,

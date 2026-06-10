@@ -15,14 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use alloc::vec::Vec;
-use uefi::prelude::*;
-use crate::display::{draw_boot_progress, log_error as panel_error, show_error_screen, update_stage, StageStatus, STAGE_KERNEL_LOAD};
-use crate::loader::load_kernel_binary;
-use crate::log::logger::{log_error, log_info};
 use super::super::uefi::TOTAL_BOOT_STAGES;
 use super::super::util::fatal_reset;
 use super::display::display_kernel_info;
+use crate::display::{
+    draw_boot_progress, log_error as panel_error, show_error_screen, update_stage, StageStatus,
+    STAGE_KERNEL_LOAD,
+};
+use crate::loader::load_kernel_binary;
+use crate::log::logger::{log_error, log_info};
+use alloc::vec::Vec;
+use uefi::prelude::*;
 
 pub fn run_kernel_load(st: &mut SystemTable<Boot>, gop: bool) -> Vec<u8> {
     update_stage(STAGE_KERNEL_LOAD, StageStatus::Running);
@@ -32,13 +35,18 @@ pub fn run_kernel_load(st: &mut SystemTable<Boot>, gop: bool) -> Vec<u8> {
             log_info("loader", "kernel binary loaded");
             update_stage(STAGE_KERNEL_LOAD, StageStatus::Success);
             draw_boot_progress(5, TOTAL_BOOT_STAGES);
-            if gop { display_kernel_info(&data); }
+            if gop {
+                display_kernel_info(&data);
+            }
             data
         }
         Err(_) => {
             log_error("loader", "kernel load failed");
             update_stage(STAGE_KERNEL_LOAD, StageStatus::Failed);
-            if gop { panel_error(b"FATAL: kernel.bin not found"); show_error_screen(b"Kernel not found"); }
+            if gop {
+                panel_error(b"FATAL: kernel.bin not found");
+                show_error_screen(b"Kernel not found");
+            }
             fatal_reset(st, "kernel not found");
         }
     }

@@ -14,15 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::convert::TryInto;
-use ed25519_dalek::{Signature, Verifier, VerifyingKey};
-use crate::crypto::keys::{derive_keyid, is_initialized, KeyId, KeyStatus, KEYSTORE};
 use super::error::VerifyError;
 use super::SIG_LEN;
+use crate::crypto::keys::{derive_keyid, is_initialized, KeyId, KeyStatus, KEYSTORE};
+use core::convert::TryInto;
+use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
 pub fn verify_signature_bytes(data: &[u8], sig_bytes: &[u8]) -> Result<KeyId, VerifyError> {
-    if sig_bytes.len() != SIG_LEN { return Err(VerifyError::MalformedSignature); }
-    if !is_initialized() { return Err(VerifyError::NotInitialized); }
+    if sig_bytes.len() != SIG_LEN {
+        return Err(VerifyError::MalformedSignature);
+    }
+    if !is_initialized() {
+        return Err(VerifyError::NotInitialized);
+    }
     let sig_arr: [u8; 64] = sig_bytes.try_into().map_err(|_| VerifyError::MalformedSignature)?;
     let sig = Signature::from_bytes(&sig_arr);
     let store = KEYSTORE.lock();

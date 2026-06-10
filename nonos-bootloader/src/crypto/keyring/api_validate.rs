@@ -17,4 +17,6 @@
 use super::api_state::KEYSTORE;
 use super::types::{KeyStatus, PK_LEN};
 
-pub fn validate_key(pubkey: &[u8; PK_LEN], version: u32) -> KeyStatus { KEYSTORE.lock().validate_key(pubkey, version) }
+pub fn validate_key(pubkey: &[u8; PK_LEN], version: u32) -> KeyStatus {
+    KEYSTORE.lock().validate_key(pubkey, version)
+}

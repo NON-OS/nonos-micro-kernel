@@ -27,7 +27,9 @@ pub fn draw_entry_at(line_num: usize, entry_idx: usize) {
     let y = log_y + (line_num as u32) * LINE_HEIGHT;
     clear_line(line_num);
     if let Some(entry) = get_entry(entry_idx) {
-        if entry.len == 0 { return; }
+        if entry.len == 0 {
+            return;
+        }
         let (prefix, color) = match entry.level {
             LogLevel::Info => (b"    " as &[u8], COLOR_INFO),
             LogLevel::Ok => (b"[+] " as &[u8], COLOR_SUCCESS),

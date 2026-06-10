@@ -40,8 +40,12 @@ impl RollbackError {
 impl core::fmt::Display for RollbackError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::KernelVersionTooOld { kernel, minimum } => write!(f, "kernel {} < minimum {}", kernel, minimum),
-            Self::BootloaderVersionTooOld { current, minimum } => write!(f, "bootloader {} < minimum {}", current, minimum),
+            Self::KernelVersionTooOld { kernel, minimum } => {
+                write!(f, "kernel {} < minimum {}", kernel, minimum)
+            }
+            Self::BootloaderVersionTooOld { current, minimum } => {
+                write!(f, "bootloader {} < minimum {}", current, minimum)
+            }
             Self::NvramReadFailed => write!(f, "NVRAM read failed"),
             Self::NvramWriteFailed => write!(f, "NVRAM write failed"),
             Self::TpmNotAvailable => write!(f, "TPM not available"),

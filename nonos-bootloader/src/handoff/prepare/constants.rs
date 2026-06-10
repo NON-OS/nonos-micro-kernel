@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::mem::size_of;
 use crate::handoff::jump::MemoryMapEntry;
+use core::mem::size_of;
 
 pub const MAX_MMAP_ENTRIES: usize = 1024;
 pub const MMAP_PAGES: usize = (MAX_MMAP_ENTRIES * size_of::<MemoryMapEntry>() + 0xFFF) / 0x1000;

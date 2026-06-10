@@ -101,10 +101,7 @@ impl KernelImage {
     }
 
     pub fn total_allocated_pages(&self) -> usize {
-        self.allocations[..self.alloc_count]
-            .iter()
-            .map(|(_, pages)| *pages)
-            .sum()
+        self.allocations[..self.alloc_count].iter().map(|(_, pages)| *pages).sum()
     }
 
     /// Range-check the entry point. Upper-half images compare against

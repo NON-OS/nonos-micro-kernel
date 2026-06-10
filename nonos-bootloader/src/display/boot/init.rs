@@ -20,7 +20,9 @@ use crate::display::font::draw_string;
 use crate::display::gop::{clear_screen, get_dimensions, is_initialized};
 
 pub fn init_boot_screen() {
-    if !is_initialized() { return; }
+    if !is_initialized() {
+        return;
+    }
     clear_screen(0xFF000000);
     let (w, _) = get_dimensions();
     let x = (w.saturating_sub(240)) / 2;

@@ -32,8 +32,7 @@ pub fn parse_footer_bytes(bytes: &[u8]) -> Result<ImageFooter, ParseError> {
     let reserved0 = u16::from_le_bytes([bytes[14], bytes[15]]);
 
     let total_image_size = u64::from_le_bytes([
-        bytes[16], bytes[17], bytes[18], bytes[19],
-        bytes[20], bytes[21], bytes[22], bytes[23],
+        bytes[16], bytes[17], bytes[18], bytes[19], bytes[20], bytes[21], bytes[22], bytes[23],
     ]);
 
     let kernel_offset = u32::from_le_bytes([bytes[24], bytes[25], bytes[26], bytes[27]]);

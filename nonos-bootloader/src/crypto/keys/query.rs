@@ -14,15 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::{BUILD_TIMESTAMP, KEY_FINGERPRINT, KEYSTORE, NONOS_KEY_ID, NONOS_PUBLIC_KEY};
+use super::state::{BUILD_TIMESTAMP, KEYSTORE, KEY_FINGERPRINT, NONOS_KEY_ID, NONOS_PUBLIC_KEY};
 use super::types::{KeyStatus, PK_LEN};
 
-pub fn key_count() -> usize { KEYSTORE.lock().count }
-pub fn get_minimum_version() -> u32 { KEYSTORE.lock().minimum_version }
-pub fn get_nonos_key() -> &'static [u8; 32] { &NONOS_PUBLIC_KEY }
-pub fn get_nonos_key_id() -> &'static [u8; 32] { &NONOS_KEY_ID }
-pub fn get_key_fingerprint() -> &'static str { KEY_FINGERPRINT }
-pub fn get_build_timestamp() -> u64 { BUILD_TIMESTAMP }
+pub fn key_count() -> usize {
+    KEYSTORE.lock().count
+}
+pub fn get_minimum_version() -> u32 {
+    KEYSTORE.lock().minimum_version
+}
+pub fn get_nonos_key() -> &'static [u8; 32] {
+    &NONOS_PUBLIC_KEY
+}
+pub fn get_nonos_key_id() -> &'static [u8; 32] {
+    &NONOS_KEY_ID
+}
+pub fn get_key_fingerprint() -> &'static str {
+    KEY_FINGERPRINT
+}
+pub fn get_build_timestamp() -> u64 {
+    BUILD_TIMESTAMP
+}
 
 pub fn validate_key(pubkey: &[u8; PK_LEN], version: u32) -> KeyStatus {
     KEYSTORE.lock().validate_key(pubkey, version)
@@ -34,5 +46,7 @@ pub fn set_minimum_version(version: u32) -> bool {
         store.minimum_version = version;
         crate::log::logger::log_info("crypto", "minimum version updated");
         true
-    } else { false }
+    } else {
+        false
+    }
 }

@@ -24,11 +24,13 @@ mod key;
 mod signature;
 mod size;
 mod types;
-mod verify_error;
 mod verify;
+mod verify_error;
 
 pub use delay::mini_delay;
 pub use display::{byte_to_hex, print, print_hex_bytes, print_hex_char};
-pub use display_status::{print_kernel_size, print_verification_failure, print_verification_success};
+pub use display_status::{
+    print_kernel_size, print_verification_failure, print_verification_success,
+};
 pub use types::{CryptoVerifyResult, MIN_KERNEL_SIZE, SIGNATURE_SIZE};
 pub use verify::verify_kernel_crypto;

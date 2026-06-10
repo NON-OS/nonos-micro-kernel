@@ -17,5 +17,8 @@
 mod chain;
 pub mod types;
 
-pub use chain::{get_boot_integrity_hash, record_stage, seal_chain, verify_integrity, IntegrityChain, INTEGRITY_CHAIN};
+pub use chain::{
+    get_boot_integrity_hash, record_stage, seal_chain, verify_integrity, IntegrityChain,
+    INTEGRITY_CHAIN,
+};
 pub use types::{BootStage, ChainLink};

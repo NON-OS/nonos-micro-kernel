@@ -15,7 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::display::gop::fill_rect;
-use crate::display::log_panel::types::{get_log_area, max_visible_lines, LINE_HEIGHT, LOG_LINE_LEN};
+use crate::display::log_panel::types::{
+    get_log_area, max_visible_lines, LINE_HEIGHT, LOG_LINE_LEN,
+};
 
 const BG_COLOR: u32 = 0xFF000000;
 const LOG_LINE_WIDTH: u32 = (LOG_LINE_LEN as u32 + 4) * 8;

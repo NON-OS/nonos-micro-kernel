@@ -21,9 +21,15 @@ pub struct SecureBuffer<const N: usize> {
 }
 
 impl<const N: usize> SecureBuffer<N> {
-    pub const fn new() -> Self { Self { data: [0u8; N] } }
-    pub fn as_slice(&self) -> &[u8] { &self.data }
-    pub fn as_mut_slice(&mut self) -> &mut [u8] { &mut self.data }
+    pub const fn new() -> Self {
+        Self { data: [0u8; N] }
+    }
+    pub fn as_slice(&self) -> &[u8] {
+        &self.data
+    }
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
 
     pub fn copy_from(&mut self, src: &[u8]) {
         let len = src.len().min(N);
@@ -32,5 +38,7 @@ impl<const N: usize> SecureBuffer<N> {
 }
 
 impl<const N: usize> Drop for SecureBuffer<N> {
-    fn drop(&mut self) { zeroize_slice(&mut self.data); }
+    fn drop(&mut self) {
+        zeroize_slice(&mut self.data);
+    }
 }

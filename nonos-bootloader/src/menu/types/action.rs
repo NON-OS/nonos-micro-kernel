@@ -17,16 +17,42 @@
 use super::mode::SecurityMode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MenuAction { Boot(SecurityMode), Recovery, Diagnostics, SecurityStatus, SafeMode, MemoryTest, NetworkIsolated, UefiShell, Continue, Timeout, Shutdown }
+pub enum MenuAction {
+    Boot(SecurityMode),
+    Recovery,
+    Diagnostics,
+    SecurityStatus,
+    SafeMode,
+    MemoryTest,
+    NetworkIsolated,
+    UefiShell,
+    Continue,
+    Timeout,
+    Shutdown,
+}
 
 impl MenuAction {
     pub const fn label(&self) -> &'static str {
         match self {
-            Self::Boot(SecurityMode::Development) => "Boot (Dev - INSECURE)", Self::Boot(SecurityMode::Standard) => "Boot (Standard Mode)", Self::Boot(SecurityMode::Hardened) => "Boot (Hardened Mode)", Self::Boot(SecurityMode::SafeMode) => "Boot (Safe Mode)",
-            Self::Boot(SecurityMode::NetworkIsolated) => "Boot (Air-Gapped)", Self::Boot(SecurityMode::Recovery) => "Boot (Recovery)", Self::Recovery => "Recovery Mode", Self::Diagnostics => "Hardware Diagnostics",
-            Self::SecurityStatus => "Security Status", Self::SafeMode => "Safe Mode (Minimal)", Self::MemoryTest => "Memory Test", Self::NetworkIsolated => "Air-Gapped Mode",
-            Self::UefiShell => "UEFI Shell", Self::Continue => "Continue Boot", Self::Timeout => "Boot (Default)", Self::Shutdown => "Shutdown",
+            Self::Boot(SecurityMode::Development) => "Boot (Dev - INSECURE)",
+            Self::Boot(SecurityMode::Standard) => "Boot (Standard Mode)",
+            Self::Boot(SecurityMode::Hardened) => "Boot (Hardened Mode)",
+            Self::Boot(SecurityMode::SafeMode) => "Boot (Safe Mode)",
+            Self::Boot(SecurityMode::NetworkIsolated) => "Boot (Air-Gapped)",
+            Self::Boot(SecurityMode::Recovery) => "Boot (Recovery)",
+            Self::Recovery => "Recovery Mode",
+            Self::Diagnostics => "Hardware Diagnostics",
+            Self::SecurityStatus => "Security Status",
+            Self::SafeMode => "Safe Mode (Minimal)",
+            Self::MemoryTest => "Memory Test",
+            Self::NetworkIsolated => "Air-Gapped Mode",
+            Self::UefiShell => "UEFI Shell",
+            Self::Continue => "Continue Boot",
+            Self::Timeout => "Boot (Default)",
+            Self::Shutdown => "Shutdown",
         }
     }
-    pub const fn requires_verification(&self) -> bool { matches!(self, Self::Boot(SecurityMode::Standard) | Self::Boot(SecurityMode::Hardened)) }
+    pub const fn requires_verification(&self) -> bool {
+        matches!(self, Self::Boot(SecurityMode::Standard) | Self::Boot(SecurityMode::Hardened))
+    }
 }

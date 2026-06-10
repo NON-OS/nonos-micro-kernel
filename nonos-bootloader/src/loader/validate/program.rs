@@ -40,10 +40,7 @@ pub fn validate_program_header(
         return Err(LoaderError::InvalidSegmentSize);
     }
 
-    let file_end = phdr
-        .p_offset
-        .checked_add(phdr.p_filesz)
-        .ok_or(LoaderError::IntegerOverflow)?;
+    let file_end = phdr.p_offset.checked_add(phdr.p_filesz).ok_or(LoaderError::IntegerOverflow)?;
 
     if file_end as usize > file_size {
         return Err(LoaderError::SegmentOutOfBounds);
@@ -64,9 +61,7 @@ pub fn validate_program_header(
         return Err(LoaderError::AddressOutOfRange);
     }
 
-    let seg_end = target
-        .checked_add(phdr.p_memsz)
-        .ok_or(LoaderError::IntegerOverflow)?;
+    let seg_end = target.checked_add(phdr.p_memsz).ok_or(LoaderError::IntegerOverflow)?;
 
     if !upper_half_target && seg_end > memory::MAX_LOAD_ADDRESS {
         return Err(LoaderError::AddressOutOfRange);
@@ -121,10 +116,8 @@ pub fn validate_program_headers(
     }
 
     if ctx.min_addr != u64::MAX {
-        ctx.total_size = ctx
-            .max_addr
-            .checked_sub(ctx.min_addr)
-            .ok_or(LoaderError::IntegerOverflow)? as usize;
+        ctx.total_size =
+            ctx.max_addr.checked_sub(ctx.min_addr).ok_or(LoaderError::IntegerOverflow)? as usize;
     }
 
     if ctx.total_size > memory::MAX_KERNEL_SIZE {

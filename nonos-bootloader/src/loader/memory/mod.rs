@@ -24,4 +24,6 @@ pub use allocate::{allocate_anywhere, allocate_at_address, allocate_below_4gb};
 pub use free::{free_all, to_array};
 pub use record::{AllocationRecord, MemoryRegion};
 pub use table::AllocationTable;
-pub use util::{copy_memory, is_page_aligned, page_align_down, page_align_up, pages_for_size, zero_memory};
+pub use util::{
+    copy_memory, is_page_aligned, page_align_down, page_align_up, pages_for_size, zero_memory,
+};

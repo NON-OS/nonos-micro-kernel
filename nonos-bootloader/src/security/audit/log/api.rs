@@ -16,8 +16,8 @@
 
 use spin::Mutex;
 
-use crate::security::audit::types::AuditEvent;
 use super::state::AuditLog;
+use crate::security::audit::types::AuditEvent;
 
 pub static AUDIT_LOG: Mutex<AuditLog> = Mutex::new(AuditLog::new());
 
@@ -30,6 +30,15 @@ pub fn audit_alert(timestamp: u64, message: &[u8]) {
     audit(AuditEvent::SecurityAlert, timestamp, message);
 }
 
-pub fn seal_audit_log() { let mut log = AUDIT_LOG.lock(); log.seal(); }
-pub fn verify_audit_integrity() -> bool { let log = AUDIT_LOG.lock(); log.verify_integrity() }
-pub fn get_audit_hash() -> [u8; 32] { let log = AUDIT_LOG.lock(); log.get_final_hash() }
+pub fn seal_audit_log() {
+    let mut log = AUDIT_LOG.lock();
+    log.seal();
+}
+pub fn verify_audit_integrity() -> bool {
+    let log = AUDIT_LOG.lock();
+    log.verify_integrity()
+}
+pub fn get_audit_hash() -> [u8; 32] {
+    let log = AUDIT_LOG.lock();
+    log.get_final_hash()
+}

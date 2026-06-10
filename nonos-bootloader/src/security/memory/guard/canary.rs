@@ -25,11 +25,21 @@ pub fn init_canaries(entropy: u64) {
     HEAP_CANARY.store(CANARY_MAGIC ^ entropy.rotate_left(32), Ordering::Release);
 }
 
-pub fn get_stack_canary() -> u64 { STACK_CANARY.load(Ordering::Acquire) }
-pub fn get_heap_canary() -> u64 { HEAP_CANARY.load(Ordering::Acquire) }
+pub fn get_stack_canary() -> u64 {
+    STACK_CANARY.load(Ordering::Acquire)
+}
+pub fn get_heap_canary() -> u64 {
+    HEAP_CANARY.load(Ordering::Acquire)
+}
 
 #[inline(never)]
-fn constant_time_eq_u64(a: u64, b: u64) -> bool { (a ^ b) == 0 }
+fn constant_time_eq_u64(a: u64, b: u64) -> bool {
+    (a ^ b) == 0
+}
 
-pub fn verify_stack_canary(expected: u64) -> bool { constant_time_eq_u64(STACK_CANARY.load(Ordering::Acquire), expected) }
-pub fn verify_heap_canary(expected: u64) -> bool { constant_time_eq_u64(HEAP_CANARY.load(Ordering::Acquire), expected) }
+pub fn verify_stack_canary(expected: u64) -> bool {
+    constant_time_eq_u64(STACK_CANARY.load(Ordering::Acquire), expected)
+}
+pub fn verify_heap_canary(expected: u64) -> bool {
+    constant_time_eq_u64(HEAP_CANARY.load(Ordering::Acquire), expected)
+}

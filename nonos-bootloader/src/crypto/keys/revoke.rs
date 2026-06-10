@@ -14,12 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::log::logger::{log_error, log_warn};
 use super::state::KEYSTORE;
 use super::types::{RevocationReason, PK_LEN};
 use super::util::derive_keyid;
+use crate::log::logger::{log_error, log_warn};
 
-pub fn revoke_key_by_pubkey(pubkey: &[u8; PK_LEN], reason: RevocationReason, timestamp: u64) -> bool {
+pub fn revoke_key_by_pubkey(
+    pubkey: &[u8; PK_LEN],
+    reason: RevocationReason,
+    timestamp: u64,
+) -> bool {
     let key_id = derive_keyid(pubkey);
     let mut store = KEYSTORE.lock();
     if store.revoke_key(key_id, reason, timestamp) {

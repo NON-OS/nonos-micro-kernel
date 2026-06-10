@@ -28,6 +28,8 @@ pub fn compute_entry_hash(running_hash: &[u8; 32], entry: &AuditEntry) -> [u8; 3
 #[inline(never)]
 pub fn constant_time_eq_32(a: &[u8; 32], b: &[u8; 32]) -> bool {
     let mut diff = 0u8;
-    for i in 0..32 { diff |= a[i] ^ b[i]; }
+    for i in 0..32 {
+        diff |= a[i] ^ b[i];
+    }
     diff == 0
 }

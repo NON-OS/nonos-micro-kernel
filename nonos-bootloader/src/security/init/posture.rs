@@ -24,10 +24,22 @@ pub fn assess_security_posture(ctx: &SecurityContext, st: &mut SystemTable<Boot>
     let score = ctx.security_score();
     let _ = st.stdout().output_string(cstr16!("   [INFO] Security posture assessment:\r\n"));
     match score {
-        80..=100 => { output_excellent(st); log_info("security", "Security posture: EXCELLENT"); }
-        60..=79 => { output_good(st); log_info("security", "Security posture: GOOD"); }
-        40..=59 => { output_moderate(st); log_warn("security", "Security posture: MODERATE"); }
-        _ => { output_low(st); log_error("security", "Security posture: LOW"); }
+        80..=100 => {
+            output_excellent(st);
+            log_info("security", "Security posture: EXCELLENT");
+        }
+        60..=79 => {
+            output_good(st);
+            log_info("security", "Security posture: GOOD");
+        }
+        40..=59 => {
+            output_moderate(st);
+            log_warn("security", "Security posture: MODERATE");
+        }
+        _ => {
+            output_low(st);
+            log_error("security", "Security posture: LOW");
+        }
     }
     score
 }

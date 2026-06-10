@@ -18,7 +18,9 @@ use crate::display::{log_hash, log_size};
 use crate::kernel_verify::CryptoVerifyResult;
 
 pub fn display_elf_info(elf: &[u8], crypto: &CryptoVerifyResult, gop: bool) {
-    if !gop { return; }
+    if !gop {
+        return;
+    }
     log_size(b"ELF len   ", elf.len());
     log_size(b"code_size ", crypto.kernel_code_size);
     if elf.len() >= 8 {

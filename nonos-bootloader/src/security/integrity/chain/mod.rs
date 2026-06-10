@@ -19,5 +19,7 @@ mod hash;
 mod state;
 mod verify;
 
-pub use api::{get_boot_integrity_hash, record_stage, seal_chain, verify_integrity, INTEGRITY_CHAIN};
+pub use api::{
+    get_boot_integrity_hash, record_stage, seal_chain, verify_integrity, INTEGRITY_CHAIN,
+};
 pub use state::IntegrityChain;

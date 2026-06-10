@@ -14,15 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::security::integrity::types::ChainLink;
 use super::hash::{chain_hash, constant_time_eq_32};
+use crate::security::integrity::types::ChainLink;
 
 pub fn verify_chain_links(links: &[ChainLink], count: usize) -> bool {
     let mut prev = [0u8; 32];
     for i in 0..count {
         let link = &links[i];
         let expected = chain_hash(&prev, &link.measurement, link.stage as u8);
-        if !constant_time_eq_32(&expected, &link.cumulative) { return false; }
+        if !constant_time_eq_32(&expected, &link.cumulative) {
+            return false;
+        }
         prev = link.cumulative;
     }
     true

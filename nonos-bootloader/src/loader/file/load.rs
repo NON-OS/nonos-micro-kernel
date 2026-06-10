@@ -30,9 +30,7 @@ use super::types::{FileLoadError, FileResult};
 pub fn load_file_from_esp(system_table: &SystemTable<Boot>, path: &CStr16) -> FileResult<Vec<u8>> {
     let bs = system_table.boot_services();
 
-    let handles = bs
-        .find_handles::<SimpleFileSystem>()
-        .map_err(|_| FileLoadError::NoFilesystem)?;
+    let handles = bs.find_handles::<SimpleFileSystem>().map_err(|_| FileLoadError::NoFilesystem)?;
 
     if handles.is_empty() {
         log_error("file", "No filesystem handles found");
@@ -107,10 +105,7 @@ pub fn file_exists(system_table: &SystemTable<Boot>, path: &CStr16) -> bool {
         for &handle in handles.iter() {
             if let Ok(mut fs) = bs.open_protocol_exclusive::<SimpleFileSystem>(handle) {
                 if let Ok(mut root) = fs.open_volume() {
-                    if root
-                        .open(path, FileMode::Read, FileAttribute::empty())
-                        .is_ok()
-                    {
+                    if root.open(path, FileMode::Read, FileAttribute::empty()).is_ok() {
                         return true;
                     }
                 }

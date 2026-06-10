@@ -18,6 +18,8 @@ mod compare;
 mod guard;
 mod jitter;
 
-pub use compare::{constant_time_compare, constant_time_eq_u8, constant_time_is_zero, constant_time_select};
+pub use compare::{
+    constant_time_compare, constant_time_eq_u8, constant_time_is_zero, constant_time_select,
+};
 pub use guard::TimingGuard;
 pub use jitter::{add_fixed_delay, add_random_delay, init_jitter};

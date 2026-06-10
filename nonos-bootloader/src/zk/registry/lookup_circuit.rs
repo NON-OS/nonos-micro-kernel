@@ -17,9 +17,9 @@
 #[cfg(feature = "zk-groth16")]
 use super::entries::core_circuits;
 #[cfg(feature = "zk-groth16")]
-use super::types_entry::CircuitEntry;
-#[cfg(feature = "zk-groth16")]
 use super::types_category::CircuitCategory;
+#[cfg(feature = "zk-groth16")]
+use super::types_entry::CircuitEntry;
 #[cfg(feature = "zk-groth16")]
 use super::types_permission::CircuitPermission;
 #[cfg(feature = "zk-groth16")]
@@ -29,7 +29,12 @@ use crate::zk::verify::ct_eq32;
 pub fn lookup_circuit(program_hash: &[u8; 32]) -> Option<CircuitEntry> {
     for entry in core_circuits() {
         if ct_eq32(&entry.program_hash, program_hash) {
-            if entry.category == CircuitCategory::Core && entry.signature.is_some() && !entry.has_valid_signature() { return None; }
+            if entry.category == CircuitCategory::Core
+                && entry.signature.is_some()
+                && !entry.has_valid_signature()
+            {
+                return None;
+            }
             return Some(entry);
         }
     }

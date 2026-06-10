@@ -79,10 +79,7 @@ fn generate_keys() {
     });
 
     if key_data.len() < 32 {
-        panic!(
-            "Signing key must be at least 32 bytes, got {}",
-            key_data.len()
-        );
+        panic!("Signing key must be at least 32 bytes, got {}", key_data.len());
     }
 
     let seed: [u8; 32] = key_data[..32].try_into().expect("seed length");
@@ -220,13 +217,15 @@ fn generate_zk_registry() {
     use std::io::Write;
 
     for (const_name, hash) in &program_hashes {
-        writeln!(file, "pub const PROGRAM_HASH_{}: [u8; 32] = [", const_name.to_uppercase()).unwrap();
+        writeln!(file, "pub const PROGRAM_HASH_{}: [u8; 32] = [", const_name.to_uppercase())
+            .unwrap();
         write_byte_array(&mut file, hash);
         writeln!(file, "];").unwrap();
     }
 
     for (const_name, fp) in &vk_fingerprints {
-        writeln!(file, "pub const VK_FINGERPRINT_{}: [u8; 32] = [", const_name.to_uppercase()).unwrap();
+        writeln!(file, "pub const VK_FINGERPRINT_{}: [u8; 32] = [", const_name.to_uppercase())
+            .unwrap();
         write_byte_array(&mut file, fp);
         writeln!(file, "];").unwrap();
     }
@@ -246,7 +245,8 @@ fn generate_zk_registry() {
     writeln!(file, "pub const VK_ALL_BYTES: &[u8] = include_bytes!(concat!(env!(\"OUT_DIR\"), \"/vk_all.bin\"));").unwrap();
 
     for (const_name, offset, len) in &offsets {
-        writeln!(file, "pub const VK_{}_OFFSET: usize = {};", const_name.to_uppercase(), offset).unwrap();
+        writeln!(file, "pub const VK_{}_OFFSET: usize = {};", const_name.to_uppercase(), offset)
+            .unwrap();
         writeln!(file, "pub const VK_{}_LEN: usize = {};", const_name.to_uppercase(), len).unwrap();
     }
 
@@ -281,7 +281,10 @@ fn compute_vk_fingerprint(vk_bytes: &[u8]) -> [u8; 32] {
     *hasher.finalize().as_bytes()
 }
 
-fn compute_overall_fingerprint(hashes: &[(String, [u8; 32])], fps: &[(String, [u8; 32])]) -> [u8; 32] {
+fn compute_overall_fingerprint(
+    hashes: &[(String, [u8; 32])],
+    fps: &[(String, [u8; 32])],
+) -> [u8; 32] {
     let mut hasher = blake3::Hasher::new_derive_key("NONOS:ZK:REGISTRY:v1");
     for (_, h) in hashes {
         hasher.update(h);
@@ -320,7 +323,9 @@ fn resolve_ceremony_dir() -> String {
             path
         }
         _ if production_mode() => {
-            panic!("production bootloader requires NONOS_ZK_CEREMONY_DIR and must not generate VKs");
+            panic!(
+                "production bootloader requires NONOS_ZK_CEREMONY_DIR and must not generate VKs"
+            );
         }
         _ => {
             let default = "zk/ceremony";
@@ -358,7 +363,9 @@ fn write_byte_array(file: &mut fs::File, bytes: &[u8; 32]) {
     write!(file, "    ").unwrap();
     for (i, byte) in bytes.iter().enumerate() {
         write!(file, "0x{:02x}", byte).unwrap();
-        if i < 31 { write!(file, ", ").unwrap(); }
+        if i < 31 {
+            write!(file, ", ").unwrap();
+        }
         if (i + 1) % 8 == 0 && i < 31 {
             writeln!(file).unwrap();
             write!(file, "    ").unwrap();
@@ -381,7 +388,9 @@ fn compute_key_id(public_key: &[u8; 32]) -> [u8; 32] {
 
 fn configure_uefi() {
     let target = env::var("TARGET").unwrap_or_default();
-    if !target.contains("uefi") { return; }
+    if !target.contains("uefi") {
+        return;
+    }
     println!("cargo:rustc-link-arg=-nostdlib");
     println!("cargo:rustc-link-arg=-zmax-page-size=0x1000");
     println!("cargo:rustc-link-arg=-static");
@@ -393,7 +402,9 @@ fn configure_uefi() {
 
 fn configure_optimization() {
     let target = env::var("TARGET").unwrap_or_default();
-    if !target.contains("uefi") { return; }
+    if !target.contains("uefi") {
+        return;
+    }
     let profile = env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
     if profile == "release" {
         println!("cargo:rustc-env=CARGO_CFG_LTO=fat");
@@ -418,7 +429,9 @@ fn configure_crypto() {
 
 fn configure_security() {
     let target = env::var("TARGET").unwrap_or_default();
-    if !target.contains("uefi") { return; }
+    if !target.contains("uefi") {
+        return;
+    }
     if cfg!(feature = "nonos-cet") {
         println!("cargo:rustc-link-arg=-fcf-protection=full");
         println!("cargo:rustc-env=NONOS_CET_ENABLED=1");
@@ -435,9 +448,8 @@ fn embed_build_info() {
 
     println!("cargo:rustc-env=NONOS_BUILD_TIME={build_time}");
 
-    if let Ok(output) = std::process::Command::new("git")
-        .args(["rev-parse", "--short", "HEAD"])
-        .output()
+    if let Ok(output) =
+        std::process::Command::new("git").args(["rev-parse", "--short", "HEAD"]).output()
     {
         let commit = String::from_utf8_lossy(&output.stdout).trim().to_string();
         println!("cargo:rustc-env=NONOS_GIT_COMMIT={commit}");
@@ -466,7 +478,10 @@ fn generate_background_image() {
     let wallpaper_path = Path::new("boot-splash.png");
 
     if !wallpaper_path.exists() {
-        eprintln!("NOTE: Wallpaper not found at {:?}, generating gradient fallback", wallpaper_path);
+        eprintln!(
+            "NOTE: Wallpaper not found at {:?}, generating gradient fallback",
+            wallpaper_path
+        );
         generate_gradient_fallback(&dest_path);
         return;
     }
@@ -500,7 +515,8 @@ fn generate_background_image() {
         let mut run = 1u8;
         while run < 255 && i + (run as usize * 4) < pixels.len() {
             let ni = i + (run as usize * 4);
-            if pixels[ni] == r && pixels[ni + 1] == g && pixels[ni + 2] == b && pixels[ni + 3] == a {
+            if pixels[ni] == r && pixels[ni + 1] == g && pixels[ni + 2] == b && pixels[ni + 3] == a
+            {
                 run += 1;
             } else {
                 break;
@@ -508,7 +524,7 @@ fn generate_background_image() {
         }
 
         compressed.push(run);
-        compressed.push(b);  /* BGR order for framebuffer */
+        compressed.push(b); /* BGR order for framebuffer */
         compressed.push(g);
         compressed.push(r);
         compressed.push(a);
@@ -516,8 +532,10 @@ fn generate_background_image() {
         i += run as usize * 4;
     }
 
-    eprintln!("Background: {}x{}, raw {}KB, compressed {}KB ({:.1}% ratio)",
-        target_w, target_h,
+    eprintln!(
+        "Background: {}x{}, raw {}KB, compressed {}KB ({:.1}% ratio)",
+        target_w,
+        target_h,
         (target_w * target_h * 4) / 1024,
         compressed.len() / 1024,
         (compressed.len() as f64 / (target_w * target_h * 4) as f64) * 100.0
@@ -571,7 +589,7 @@ fn generate_gradient_fallback(dest_path: &Path) {
             let g = (30.0 + t * 60.0) as u8;
             let b = (20.0 + t * 50.0) as u8;
 
-            compressed.push(1);  /* run length 1 */
+            compressed.push(1); /* run length 1 */
             compressed.push(b);
             compressed.push(g);
             compressed.push(r);

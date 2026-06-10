@@ -27,10 +27,14 @@ pub fn enforce_policy(security: &SecurityContext, st: &mut SystemTable<Boot>, go
     if !enforcement.allow_boot {
         log_error("security", enforcement.reason);
         update_stage(STAGE_SECURITY, StageStatus::Failed);
-        if gop { show_error_screen(b"Security policy enforcement failed"); }
+        if gop {
+            show_error_screen(b"Security policy enforcement failed");
+        }
         fatal_reset(st, enforcement.reason);
     }
-    if gop { log_ok(b"Security policy: ALLOW_BOOT"); }
+    if gop {
+        log_ok(b"Security policy: ALLOW_BOOT");
+    }
 }
 
 pub fn verify_chain(security: &SecurityContext, st: &mut SystemTable<Boot>) {

@@ -28,7 +28,11 @@ pub struct HardwareCapabilities {
 
 impl HardwareCapabilities {
     pub fn is_production_ready(&self) -> bool {
-        self.cpu.smep && self.cpu.smap && self.cpu.nx_bit && self.memory.dep_enabled && self.security_score >= 70
+        self.cpu.smep
+            && self.cpu.smap
+            && self.cpu.nx_bit
+            && self.memory.dep_enabled
+            && self.security_score >= 70
     }
 
     pub fn has_measured_boot_support(&self) -> bool {

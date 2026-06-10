@@ -27,7 +27,9 @@ pub fn get_log_area() -> (u32, u32) {
 
 pub fn max_visible_lines() -> usize {
     let (_, height) = crate::display::gop::get_dimensions();
-    if height == 0 { return MAX_LOG_LINES; }
+    if height == 0 {
+        return MAX_LOG_LINES;
+    }
     let available = height.saturating_sub(LOG_START_Y).saturating_sub(BOTTOM_MARGIN);
     let lines = (available / LINE_HEIGHT) as usize;
     lines.min(MAX_LOG_LINES)

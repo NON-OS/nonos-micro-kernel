@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::log::logger::log_error;
 use uefi::prelude::*;
 use uefi::table::runtime::ResetType;
-use crate::log::logger::log_error;
 
 /// Log allocation failure and cold reset. Called when critical handoff allocation fails.
 pub fn fatal_alloc_error(st: &SystemTable<Boot>, resource: &str) -> ! {
     log_error("handoff", resource);
-    for _ in 0..1_000_000 { core::hint::spin_loop(); }
+    for _ in 0..1_000_000 {
+        core::hint::spin_loop();
+    }
     st.runtime_services().reset(ResetType::COLD, Status::OUT_OF_RESOURCES, None);
 }

@@ -19,7 +19,9 @@ use crate::display::font::draw_string;
 use crate::display::gop::{get_dimensions, is_initialized};
 
 pub fn show_handoff_message() {
-    if !is_initialized() { return; }
+    if !is_initialized() {
+        return;
+    }
     let (_, h) = get_dimensions();
     let y = h - 40;
     draw_string(40, y, b"Handoff to kernel...", COLOR_SUCCESS);

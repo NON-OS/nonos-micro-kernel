@@ -33,4 +33,3 @@ pub fn validate_signature_size(
 
     Ok(())
 }
-

@@ -26,11 +26,7 @@ use super::constants::PAGE_SIZE;
 // identity-mapping means it doubles as a writable VA while Boot
 // Services are still active.
 pub fn alloc_pt_frame(bs: &BootServices) -> Result<u64, &'static str> {
-    let r = bs.allocate_pages(
-        AllocateType::MaxAddress(0xFFFF_FFFF),
-        MemoryType::LOADER_DATA,
-        1,
-    );
+    let r = bs.allocate_pages(AllocateType::MaxAddress(0xFFFF_FFFF), MemoryType::LOADER_DATA, 1);
     let addr = r.map_err(|_| "alloc_pt_frame: UEFI allocate_pages failed")?;
     if addr & (PAGE_SIZE - 1) != 0 {
         return Err("alloc_pt_frame: UEFI returned misaligned frame");

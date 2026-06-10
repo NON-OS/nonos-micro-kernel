@@ -15,15 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use alloc::vec::Vec;
-use crate::hardware::tpm::state::TpmState;
-use super::send::send_read_public;
 use super::receive::receive_read_public;
+use super::send::send_read_public;
+use crate::hardware::tpm::state::TpmState;
+use alloc::vec::Vec;
 
 const EK_HANDLE: u32 = 0x8101_0001;
 
 pub fn get_ek_public_impl(state: &TpmState) -> Result<Vec<u8>, &'static str> {
-    if !state.initialized { return Err("TPM not initialized"); }
+    if !state.initialized {
+        return Err("TPM not initialized");
+    }
     state.request_locality().map_err(|_| "locality request failed")?;
     let mut cmd = [0u8; 14];
     cmd[0..2].copy_from_slice(&0x8001u16.to_be_bytes());

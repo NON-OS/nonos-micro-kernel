@@ -39,13 +39,6 @@ pub struct ValidationResult<'a> {
 
 impl Default for ValidatedSegment {
     fn default() -> Self {
-        Self {
-            p_offset: 0,
-            p_filesz: 0,
-            p_memsz: 0,
-            target: 0,
-            p_align: 0,
-            p_flags: 0,
-        }
+        Self { p_offset: 0, p_filesz: 0, p_memsz: 0, target: 0, p_align: 0, p_flags: 0 }
     }
 }

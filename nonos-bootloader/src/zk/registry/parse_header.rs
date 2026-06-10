@@ -18,11 +18,20 @@ use super::types_section::{CircuitSectionHeader, CIRCUIT_SECTION_MAGIC};
 use core::mem::size_of;
 
 pub fn validate_header(section: &[u8]) -> Result<(u32, usize, [u8; 64], [u8; 32]), &'static str> {
-    if section.len() < size_of::<CircuitSectionHeader>() { return Err("circuit: section too small"); }
-    if &section[0..4] != CIRCUIT_SECTION_MAGIC { return Err("circuit: invalid magic"); }
-    let version = u32::from_le_bytes(section[4..8].try_into().map_err(|_| "circuit: version parse failed")?);
-    if version != 1 { return Err("circuit: unsupported version"); }
-    let count = u32::from_le_bytes(section[8..12].try_into().map_err(|_| "circuit: count parse failed")?) as usize;
+    if section.len() < size_of::<CircuitSectionHeader>() {
+        return Err("circuit: section too small");
+    }
+    if &section[0..4] != CIRCUIT_SECTION_MAGIC {
+        return Err("circuit: invalid magic");
+    }
+    let version =
+        u32::from_le_bytes(section[4..8].try_into().map_err(|_| "circuit: version parse failed")?);
+    if version != 1 {
+        return Err("circuit: unsupported version");
+    }
+    let count =
+        u32::from_le_bytes(section[8..12].try_into().map_err(|_| "circuit: count parse failed")?)
+            as usize;
     let mut signature = [0u8; 64];
     signature.copy_from_slice(&section[16..80]);
     let mut signer = [0u8; 32];

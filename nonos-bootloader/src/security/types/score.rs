@@ -17,21 +17,40 @@
 use super::context::SecurityContext;
 
 impl SecurityContext {
-    pub fn is_secure(&self) -> bool { self.production_keys_loaded && self.ed25519_selftest_ok && self.blake3_selftest_ok }
+    pub fn is_secure(&self) -> bool {
+        self.production_keys_loaded && self.ed25519_selftest_ok && self.blake3_selftest_ok
+    }
 
     pub fn is_fully_secure(&self) -> bool {
-        self.is_secure() && self.secure_boot_enabled && self.platform_key_verified && self.signature_database_valid
+        self.is_secure()
+            && self.secure_boot_enabled
+            && self.platform_key_verified
+            && self.signature_database_valid
     }
 
     pub fn security_score(&self) -> u32 {
         let mut score: u32 = 0;
-        if self.production_keys_loaded { score += 20; }
-        if self.ed25519_selftest_ok && self.blake3_selftest_ok { score += 20; }
-        if self.secure_boot_enabled { score += 15; }
-        if self.platform_key_verified { score += 10; }
-        if self.signature_database_valid { score += 10; }
-        if self.hardware_rng_available { score += 5; }
-        if self.measured_boot_active { score += 20; }
+        if self.production_keys_loaded {
+            score += 20;
+        }
+        if self.ed25519_selftest_ok && self.blake3_selftest_ok {
+            score += 20;
+        }
+        if self.secure_boot_enabled {
+            score += 15;
+        }
+        if self.platform_key_verified {
+            score += 10;
+        }
+        if self.signature_database_valid {
+            score += 10;
+        }
+        if self.hardware_rng_available {
+            score += 5;
+        }
+        if self.measured_boot_active {
+            score += 20;
+        }
         score
     }
 }

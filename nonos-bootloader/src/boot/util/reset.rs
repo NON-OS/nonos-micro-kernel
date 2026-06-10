@@ -14,16 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::log::logger::log_error;
 use uefi::prelude::*;
 use uefi::table::runtime::ResetType;
-use crate::log::logger::log_error;
 
 pub fn fatal_reset(st: &mut SystemTable<Boot>, reason: &str) -> ! {
     log_error("fatal", reason);
     let _ = st.stdout().reset(false);
     let _ = st.stdout().output_string(cstr16!("\r\n[FATAL] "));
-    if let Ok(s) = uefi::CString16::try_from(reason) { let _ = st.stdout().output_string(&s); }
+    if let Ok(s) = uefi::CString16::try_from(reason) {
+        let _ = st.stdout().output_string(&s);
+    }
     let _ = st.stdout().output_string(cstr16!("\r\nSystem will restart...\r\n"));
-    for _ in 0..10_000_000 { core::hint::spin_loop(); }
+    for _ in 0..10_000_000 {
+        core::hint::spin_loop();
+    }
     st.runtime_services().reset(ResetType::WARM, Status::LOAD_ERROR, Some(reason.as_bytes()))
 }

@@ -19,6 +19,10 @@ use crate::hardware::tpm::nv::{nv_read_impl, nv_write_impl};
 use crate::hardware::tpm::types::{NvIndex, TpmError};
 
 impl TpmState {
-    pub fn nv_read(&self, index: &NvIndex, buf: &mut [u8]) -> Result<usize, TpmError> { nv_read_impl(self, index, buf) }
-    pub fn nv_write(&self, index: &NvIndex, data: &[u8]) -> Result<(), TpmError> { nv_write_impl(self, index, data) }
+    pub fn nv_read(&self, index: &NvIndex, buf: &mut [u8]) -> Result<usize, TpmError> {
+        nv_read_impl(self, index, buf)
+    }
+    pub fn nv_write(&self, index: &NvIndex, data: &[u8]) -> Result<(), TpmError> {
+        nv_write_impl(self, index, data)
+    }
 }

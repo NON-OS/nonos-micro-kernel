@@ -15,17 +15,25 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use alloc::vec::Vec;
 use super::parse_entry::parse_single_entry;
 use super::parse_header::validate_header;
 use super::parse_verify::verify_section_signature;
 use super::types_entry::DynamicCircuitEntry;
+use alloc::vec::Vec;
 
-pub fn parse_circuit_section(section: &[u8], verify_signature: bool, trusted_signers: &[[u8; 32]]) -> Result<Vec<DynamicCircuitEntry>, &'static str> {
+pub fn parse_circuit_section(
+    section: &[u8],
+    verify_signature: bool,
+    trusted_signers: &[[u8; 32]],
+) -> Result<Vec<DynamicCircuitEntry>, &'static str> {
     let (_version, count, signature, signer) = validate_header(section)?;
-    if verify_signature { verify_section_signature(section, &signature, &signer, trusted_signers)?; }
+    if verify_signature {
+        verify_section_signature(section, &signature, &signer, trusted_signers)?;
+    }
     let mut entries = Vec::with_capacity(count);
     let mut offset = 112;
-    for _ in 0..count { entries.push(parse_single_entry(section, &mut offset)?); }
+    for _ in 0..count {
+        entries.push(parse_single_entry(section, &mut offset)?);
+    }
     Ok(entries)
 }

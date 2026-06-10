@@ -32,13 +32,7 @@ pub struct LogRingBuffer<const N: usize = DEFAULT_RING_CAPACITY> {
 impl<const N: usize> LogRingBuffer<N> {
     /// Create a new empty ring buffer
     pub const fn new() -> Self {
-        Self {
-            entries: [CompactLogEntry::new(); N],
-            head: 0,
-            tail: 0,
-            count: 0,
-            overflow_count: 0,
-        }
+        Self { entries: [CompactLogEntry::new(); N], head: 0, tail: 0, count: 0, overflow_count: 0 }
     }
 
     /// Push a log entry (overwrites oldest if full)
@@ -127,16 +121,12 @@ impl<const N: usize> LogRingBuffer<N> {
 
     /// Iterate over entries from oldest to newest
     pub fn iter(&self) -> LogRingIterator<'_, N> {
-        LogRingIterator {
-            buffer: self,
-            current: 0,
-        }
+        LogRingIterator { buffer: self, current: 0 }
     }
 
     /// Get entries filtered by minimum level
     pub fn filter_by_level(&self, min_level: LogLevel) -> impl Iterator<Item = &CompactLogEntry> {
-        self.iter()
-            .filter(move |e| e.log_level().should_log(min_level))
+        self.iter().filter(move |e| e.log_level().should_log(min_level))
     }
 }
 
@@ -145,4 +135,3 @@ impl<const N: usize> Default for LogRingBuffer<N> {
         Self::new()
     }
 }
-

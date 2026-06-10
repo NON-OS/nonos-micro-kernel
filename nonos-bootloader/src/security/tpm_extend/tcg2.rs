@@ -28,12 +28,33 @@ pub fn locate_tcg2_protocol(bs: &uefi::table::boot::BootServices) -> Option<*mut
     Some(ptr)
 }
 
-pub fn extend_pcr_via_tcg2(tcg2: *mut Tcg2Protocol, pcr_index: u32, digest: &[u8; 32]) -> Result<(), &'static str> {
-    if tcg2.is_null() { return Err("null TCG2 handle"); }
-    let header = Tcg2EventHeader { header_size: core::mem::size_of::<Tcg2EventHeader>() as u32, header_version: 1, pcr_index, event_type: EV_POST_CODE };
+pub fn extend_pcr_via_tcg2(
+    tcg2: *mut Tcg2Protocol,
+    pcr_index: u32,
+    digest: &[u8; 32],
+) -> Result<(), &'static str> {
+    if tcg2.is_null() {
+        return Err("null TCG2 handle");
+    }
+    let header = Tcg2EventHeader {
+        header_size: core::mem::size_of::<Tcg2EventHeader>() as u32,
+        header_version: 1,
+        pcr_index,
+        event_type: EV_POST_CODE,
+    };
     const PE_COFF_IMAGE: u64 = 0x10;
     unsafe {
-        let status = ((*tcg2).hash_log_extend_event)(tcg2, PE_COFF_IMAGE, digest.as_ptr(), digest.len() as u64, &header);
-        if status.is_success() { Ok(()) } else { Err("TCG2 extend failed") }
+        let status = ((*tcg2).hash_log_extend_event)(
+            tcg2,
+            PE_COFF_IMAGE,
+            digest.as_ptr(),
+            digest.len() as u64,
+            &header,
+        );
+        if status.is_success() {
+            Ok(())
+        } else {
+            Err("TCG2 extend failed")
+        }
     }
 }

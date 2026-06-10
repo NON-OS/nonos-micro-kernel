@@ -18,6 +18,8 @@ mod health;
 mod metrics;
 mod status;
 
-pub use health::{check_firmware_health, HealthStatus, HealthCheck, HealthResult, PerformanceMetrics};
-pub use metrics::{collect_metrics, FirmwareMetrics, MetricType, MetricValue, update_metric};
+pub use health::{
+    check_firmware_health, HealthCheck, HealthResult, HealthStatus, PerformanceMetrics,
+};
+pub use metrics::{collect_metrics, update_metric, FirmwareMetrics, MetricType, MetricValue};
 pub use status::{get_firmware_status, update_status, FirmwareStatus, StatusFlag, StatusMonitor};

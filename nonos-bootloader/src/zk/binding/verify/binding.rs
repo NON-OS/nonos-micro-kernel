@@ -14,10 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::super::replay::{get_boot_nonce_checked, get_machine_id_checked, ZkPublicInputs};
 use super::error::BindingError;
-use super::super::replay::{
-    get_boot_nonce_checked, get_machine_id_checked, ZkPublicInputs,
-};
 
 const MAX_PROOF_AGE_SECONDS: u64 = 300;
 

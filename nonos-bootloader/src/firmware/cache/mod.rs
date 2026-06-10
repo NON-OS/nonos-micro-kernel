@@ -18,6 +18,6 @@ mod memory;
 mod optimize;
 mod storage;
 
-pub use memory::{MemoryCache, cache_firmware, invalidate_cache, CacheResult, CachePolicy};
+pub use memory::{cache_firmware, invalidate_cache, CachePolicy, CacheResult, MemoryCache};
 pub use optimize::{compress_firmware, decompress_firmware, optimize_layout, CompressionType};
-pub use storage::{StorageCache, persist_cache, load_cache, CacheEntry, StorageResult};
+pub use storage::{load_cache, persist_cache, CacheEntry, StorageCache, StorageResult};

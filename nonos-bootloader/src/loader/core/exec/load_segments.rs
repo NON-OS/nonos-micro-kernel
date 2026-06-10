@@ -49,10 +49,7 @@ pub fn load_segments(
         let dst_phys = phys_base + (virt - virt_min);
 
         if seg.p_align > 1 && (dst_phys as usize & (seg.p_align - 1)) != 0 {
-            log_warn(
-                "loader",
-                &format!("Segment misaligned at phys 0x{:x}", dst_phys),
-            );
+            log_warn("loader", &format!("Segment misaligned at phys 0x{:x}", dst_phys));
         }
 
         let rwx = format!(
@@ -63,7 +60,9 @@ pub fn load_segments(
         );
 
         if seg.p_filesz > 0 {
-            unsafe { copy_payload(payload, seg.p_offset, dst_phys, seg.p_filesz); }
+            unsafe {
+                copy_payload(payload, seg.p_offset, dst_phys, seg.p_filesz);
+            }
             log_info(
                 "loader",
                 &format!(
@@ -73,7 +72,9 @@ pub fn load_segments(
             );
         }
 
-        unsafe { zero_tail(dst_phys, seg.p_filesz as u64, seg.p_memsz as u64); }
+        unsafe {
+            zero_tail(dst_phys, seg.p_filesz as u64, seg.p_memsz as u64);
+        }
         if seg.p_memsz > seg.p_filesz {
             log_info(
                 "loader",

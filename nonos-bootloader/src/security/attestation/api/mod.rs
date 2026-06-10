@@ -19,7 +19,12 @@ mod pcr_ops;
 mod quote_gen;
 mod state;
 
-pub use measurements::{set_bootloader_measurement, set_kernel_measurement, set_signature_attestation, set_zk_attestation};
+pub use measurements::{
+    set_bootloader_measurement, set_kernel_measurement, set_signature_attestation,
+    set_zk_attestation,
+};
 pub use pcr_ops::{extend_pcr, extend_pcr_hash, get_boot_measurement};
-pub use quote_gen::{generate_attestation_quote, generate_signed_quote_with_aik, verify_attestation_quote};
+pub use quote_gen::{
+    generate_attestation_quote, generate_signed_quote_with_aik, verify_attestation_quote,
+};
 pub use state::{init_attestation, ATTESTATION_STATE};

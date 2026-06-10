@@ -18,7 +18,9 @@ use crate::display::{log_hex, log_ok, log_size, log_u32};
 use crate::loader::KernelImage;
 
 pub fn display_loaded_image(image: &KernelImage, gop: bool) {
-    if !gop { return; }
+    if !gop {
+        return;
+    }
     log_ok(b"ELF64 parsed successfully");
     log_hex(b"entry   ", image.entry_point as u64);
     log_hex(b"base    ", image.address as u64);

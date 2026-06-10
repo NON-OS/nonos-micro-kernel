@@ -21,20 +21,13 @@ use crate::config::types::BootloaderConfig;
 use crate::log::logger::{log_error, log_info};
 
 pub fn save_configuration(config: &BootloaderConfig, system_table: &mut SystemTable<Boot>) -> bool {
-    system_table
-        .stdout()
-        .output_string(cstr16!("=== Saving Configuration ===\r\n"))
-        .unwrap_or(());
+    system_table.stdout().output_string(cstr16!("=== Saving Configuration ===\r\n")).unwrap_or(());
 
     let mut save_successful = true;
 
     let policy_saved = {
         let rt = system_table.runtime_services();
-        save_u8_variable(
-            rt,
-            cstr16!("NonosSecurityPolicy"),
-            config.security_policy.to_u8(),
-        )
+        save_u8_variable(rt, cstr16!("NonosSecurityPolicy"), config.security_policy.to_u8())
     };
     if policy_saved {
         system_table
@@ -53,11 +46,7 @@ pub fn save_configuration(config: &BootloaderConfig, system_table: &mut SystemTa
 
     let network_policy_saved = {
         let rt = system_table.runtime_services();
-        save_u8_variable(
-            rt,
-            cstr16!("NonosNetworkPolicy"),
-            config.network_policy.to_u8(),
-        )
+        save_u8_variable(rt, cstr16!("NonosNetworkPolicy"), config.network_policy.to_u8())
     };
     if network_policy_saved {
         system_table
@@ -74,10 +63,7 @@ pub fn save_configuration(config: &BootloaderConfig, system_table: &mut SystemTa
         save_successful = false;
     }
 
-    system_table
-        .stdout()
-        .output_string(cstr16!("=============================\r\n"))
-        .unwrap_or(());
+    system_table.stdout().output_string(cstr16!("=============================\r\n")).unwrap_or(());
 
     if save_successful {
         log_info("config", "Configuration saved successfully");
@@ -98,11 +84,6 @@ pub fn save_u8_variable(
         | uefi::table::runtime::VariableAttributes::BOOTSERVICE_ACCESS
         | uefi::table::runtime::VariableAttributes::RUNTIME_ACCESS;
 
-    rt.set_variable(
-        name,
-        &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE,
-        attributes,
-        &data,
-    )
-    .is_ok()
+    rt.set_variable(name, &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE, attributes, &data)
+        .is_ok()
 }

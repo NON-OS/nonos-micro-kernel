@@ -14,16 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::handoff::jump::{jump_to_kernel, validate_entry_address, validate_handoff_address, validate_stack_address};
+use crate::handoff::jump::{
+    jump_to_kernel, validate_entry_address, validate_handoff_address, validate_stack_address,
+};
 
-pub struct JumpAddresses { pub entry: u64, pub stack: u64, pub handoff: u64 }
+pub struct JumpAddresses {
+    pub entry: u64,
+    pub stack: u64,
+    pub handoff: u64,
+}
 
 /// Validate addresses and jump to kernel. POST codes on failure: E1=entry, E2=stack, E3=handoff
 pub fn validate_and_jump(addrs: JumpAddresses) -> ! {
     com1_byte(b'V');
-    if !validate_entry_address(addrs.entry) { com1_byte(b'1'); halt_with_code(0xE1); }
-    if !validate_stack_address(addrs.stack) { com1_byte(b'2'); halt_with_code(0xE2); }
-    if !validate_handoff_address(addrs.handoff) { com1_byte(b'3'); halt_with_code(0xE3); }
+    if !validate_entry_address(addrs.entry) {
+        com1_byte(b'1');
+        halt_with_code(0xE1);
+    }
+    if !validate_stack_address(addrs.stack) {
+        com1_byte(b'2');
+        halt_with_code(0xE2);
+    }
+    if !validate_handoff_address(addrs.handoff) {
+        com1_byte(b'3');
+        halt_with_code(0xE3);
+    }
     com1_byte(b'>');
     com1_byte(b'\n');
     // SAFETY: all addresses validated above
@@ -31,12 +46,18 @@ pub fn validate_and_jump(addrs: JumpAddresses) -> ! {
 }
 
 fn com1_byte(b: u8) {
-    unsafe { core::arch::asm!("out dx, al", in("dx") 0x3F8u16, in("al") b, options(nomem, nostack, preserves_flags)); }
+    unsafe {
+        core::arch::asm!("out dx, al", in("dx") 0x3F8u16, in("al") b, options(nomem, nostack, preserves_flags));
+    }
 }
 
 /// Output POST code to port 0x80 and halt. Visible on POST card or debug hardware.
 fn halt_with_code(code: u8) -> ! {
     // SAFETY: port 0x80 is the standard POST debug port, write-only
-    unsafe { core::arch::asm!("out 0x80, al", in("al") code, options(nomem, nostack)); }
-    loop { core::hint::spin_loop(); }
+    unsafe {
+        core::arch::asm!("out 0x80, al", in("al") code, options(nomem, nostack));
+    }
+    loop {
+        core::hint::spin_loop();
+    }
 }

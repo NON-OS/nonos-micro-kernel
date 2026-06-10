@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
 use crate::display::{log_hash, log_ok, BootCryptoState};
 use crate::log::logger::log_info;
 use crate::security::extend_boot_measurements;
 use crate::zk::BootAttestationResult;
+use uefi::prelude::*;
 
 pub fn update_crypto_state(state: &mut BootCryptoState, result: &BootAttestationResult) {
     state.zk_present = true;
@@ -26,7 +26,13 @@ pub fn update_crypto_state(state: &mut BootCryptoState, result: &BootAttestation
     state.zk_verified = result.zk_verified;
 }
 
-pub fn display_success(st: &mut SystemTable<Boot>, r: &BootAttestationResult, kh: &[u8; 32], gop: bool, tpm: bool) {
+pub fn display_success(
+    st: &mut SystemTable<Boot>,
+    r: &BootAttestationResult,
+    kh: &[u8; 32],
+    gop: bool,
+    tpm: bool,
+) {
     if gop {
         log_ok(b"Groth16/BLS12-381 VERIFIED");
         log_ok(b"Kernel binding VERIFIED");

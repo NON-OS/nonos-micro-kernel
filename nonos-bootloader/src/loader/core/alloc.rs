@@ -46,18 +46,10 @@ pub fn free_all(
             continue;
         }
         match bs.free_pages(addr, pages) {
-            Ok(_) => log_info(
-                "loader",
-                &format!("Freed pages at 0x{:x} ({} pages)", addr, pages),
-            ),
+            Ok(_) => log_info("loader", &format!("Freed pages at 0x{:x} ({} pages)", addr, pages)),
             Err(e) => log_error(
                 "loader",
-                &format!(
-                    "free_pages failed for 0x{:x} ({}): {:?}",
-                    addr,
-                    pages,
-                    e.status()
-                ),
+                &format!("free_pages failed for 0x{:x} ({}): {:?}", addr, pages, e.status()),
             ),
         }
     }

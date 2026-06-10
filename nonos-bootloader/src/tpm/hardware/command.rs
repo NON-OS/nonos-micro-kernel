@@ -17,35 +17,65 @@
 use crate::tpm::core::{TmpDevice, TmpError, TmpResult};
 
 pub fn send_command(device: &mut TmpDevice, command: &[u8]) -> TmpResult<[u8; 4096]> {
-    if !device.active { return Err(TmpError::DeviceNotFound); }
-    if command.len() < 10 || command.len() > 4096 { return Err(TmpError::BadParameter); }
+    if !device.active {
+        return Err(TmpError::DeviceNotFound);
+    }
+    if command.len() < 10 || command.len() > 4096 {
+        return Err(TmpError::BadParameter);
+    }
     let base = device.base_addr + (device.locality as u64 * 0x1000);
-    wait_ready(base)?; write_command(base, command)?; execute(base)?; wait_done(base)?; read_response(base)
+    wait_ready(base)?;
+    write_command(base, command)?;
+    execute(base)?;
+    wait_done(base)?;
+    read_response(base)
 }
 
 fn wait_ready(base: u64) -> TmpResult<()> {
-    for _ in 0..1000 { let status = unsafe { core::ptr::read_volatile((base + 0x18) as *const u32) };
-        if (status & 0x40) != 0 { return Ok(()); } core::hint::spin_loop(); } Err(TmpError::CommandTimeout)
+    for _ in 0..1000 {
+        let status = unsafe { core::ptr::read_volatile((base + 0x18) as *const u32) };
+        if (status & 0x40) != 0 {
+            return Ok(());
+        }
+        core::hint::spin_loop();
+    }
+    Err(TmpError::CommandTimeout)
 }
 
 fn write_command(base: u64, data: &[u8]) -> TmpResult<()> {
     for chunk in data.chunks(4) {
-        let mut word = [0u8; 4]; word[..chunk.len()].copy_from_slice(chunk);
-        unsafe { core::ptr::write_volatile((base + 0x24) as *mut u32, u32::from_le_bytes(word)); }
-    } Ok(())
+        let mut word = [0u8; 4];
+        word[..chunk.len()].copy_from_slice(chunk);
+        unsafe {
+            core::ptr::write_volatile((base + 0x24) as *mut u32, u32::from_le_bytes(word));
+        }
+    }
+    Ok(())
 }
 
 fn execute(base: u64) -> TmpResult<()> {
-    unsafe { core::ptr::write_volatile((base + 0x18) as *mut u32, 0x20); } Ok(())
+    unsafe {
+        core::ptr::write_volatile((base + 0x18) as *mut u32, 0x20);
+    }
+    Ok(())
 }
 
 fn wait_done(base: u64) -> TmpResult<()> {
-    for _ in 0..10000 { let status = unsafe { core::ptr::read_volatile((base + 0x18) as *const u32) };
-        if (status & 0x90) != 0 { return Ok(()); } core::hint::spin_loop(); } Err(TmpError::CommandTimeout)
+    for _ in 0..10000 {
+        let status = unsafe { core::ptr::read_volatile((base + 0x18) as *const u32) };
+        if (status & 0x90) != 0 {
+            return Ok(());
+        }
+        core::hint::spin_loop();
+    }
+    Err(TmpError::CommandTimeout)
 }
 
 fn read_response(base: u64) -> TmpResult<[u8; 4096]> {
     let mut response = [0u8; 4096];
-    for i in (0..4096).step_by(4) { let value = unsafe { core::ptr::read_volatile((base + 0x24) as *const u32) };
-        response[i..i+4].copy_from_slice(&value.to_le_bytes()); } Ok(response)
+    for i in (0..4096).step_by(4) {
+        let value = unsafe { core::ptr::read_volatile((base + 0x24) as *const u32) };
+        response[i..i + 4].copy_from_slice(&value.to_le_bytes());
+    }
+    Ok(response)
 }

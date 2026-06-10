@@ -25,10 +25,14 @@ pub fn dev_override(st: &mut SystemTable<Boot>) -> bool {
         return false;
     }
     if secure_boot_enabled(st) {
-        let _ = st.stdout().output_string(uefi::cstr16!("[SECURITY] F12 dev mode blocked: Secure Boot is enabled\r\n"));
+        let _ = st.stdout().output_string(uefi::cstr16!(
+            "[SECURITY] F12 dev mode blocked: Secure Boot is enabled\r\n"
+        ));
         return false;
     }
-    let _ = st.stdout().output_string(uefi::cstr16!("[WARN] F12 pressed - development mode (Secure Boot disabled)\r\n"));
+    let _ = st.stdout().output_string(uefi::cstr16!(
+        "[WARN] F12 pressed - development mode (Secure Boot disabled)\r\n"
+    ));
     true
 }
 

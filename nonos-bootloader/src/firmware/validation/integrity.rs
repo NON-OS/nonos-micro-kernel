@@ -17,18 +17,34 @@
 use super::checksum::{verify_checksum, ChecksumType};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum IntegrityResult { Valid, InvalidMagic, InvalidChecksum, InvalidSize, Corrupted }
+pub enum IntegrityResult {
+    Valid,
+    InvalidMagic,
+    InvalidChecksum,
+    InvalidSize,
+    Corrupted,
+}
 
 pub fn validate_firmware_integrity(data: &[u8], expected_checksum: &[u8]) -> IntegrityResult {
-    if data.len() < 16 { return IntegrityResult::InvalidSize; }
-    if !verify_header_magic(data) { return IntegrityResult::InvalidMagic; }
-    if !verify_checksum(data, expected_checksum, ChecksumType::Sha256) { return IntegrityResult::InvalidChecksum; }
-    if detect_corruption(data) { return IntegrityResult::Corrupted; }
+    if data.len() < 16 {
+        return IntegrityResult::InvalidSize;
+    }
+    if !verify_header_magic(data) {
+        return IntegrityResult::InvalidMagic;
+    }
+    if !verify_checksum(data, expected_checksum, ChecksumType::Sha256) {
+        return IntegrityResult::InvalidChecksum;
+    }
+    if detect_corruption(data) {
+        return IntegrityResult::Corrupted;
+    }
     IntegrityResult::Valid
 }
 
 pub fn verify_header_magic(data: &[u8]) -> bool {
-    if data.len() < 4 { return false; }
+    if data.len() < 4 {
+        return false;
+    }
     let magic = &data[0..4];
     matches!(magic, b"\x7fELF" | b"UEFI" | b"ACPI" | b"INTL" | b"RTK\x00")
 }

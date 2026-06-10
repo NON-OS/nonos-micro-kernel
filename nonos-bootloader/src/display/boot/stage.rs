@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::progress::get_progress;
-use crate::display::log_panel::{log_ok, log_error, log_info};
+use crate::display::log_panel::{log_error, log_info, log_ok};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum StageStatus {
@@ -26,16 +26,22 @@ pub enum StageStatus {
 }
 
 static STAGE_NAMES: [&[u8]; 11] = [
-    b"init", b"uefi", b"security", b"hardware", b"kernel_load",
-    b"blake3", b"ed25519", b"zk_verify", b"elf_parse", b"handoff", b"complete",
+    b"init",
+    b"uefi",
+    b"security",
+    b"hardware",
+    b"kernel_load",
+    b"blake3",
+    b"ed25519",
+    b"zk_verify",
+    b"elf_parse",
+    b"handoff",
+    b"complete",
 ];
 
 pub fn update_stage(stage: u8, status: StageStatus) {
-    let name = if (stage as usize) < STAGE_NAMES.len() {
-        STAGE_NAMES[stage as usize]
-    } else {
-        b"unknown"
-    };
+    let name =
+        if (stage as usize) < STAGE_NAMES.len() { STAGE_NAMES[stage as usize] } else { b"unknown" };
     match status {
         StageStatus::Pending => {}
         StageStatus::Running => log_info(name),
@@ -46,6 +52,8 @@ pub fn update_stage(stage: u8, status: StageStatus) {
 
 pub fn get_boot_progress_percent() -> u8 {
     let (current, total) = get_progress();
-    if total == 0 { return 0; }
+    if total == 0 {
+        return 0;
+    }
     ((current as u32 * 100) / total as u32) as u8
 }

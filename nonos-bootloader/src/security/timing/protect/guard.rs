@@ -16,18 +16,27 @@
 
 use super::jitter::add_random_delay;
 
-pub struct TimingGuard { min_cycles: u64, start: u64 }
+pub struct TimingGuard {
+    min_cycles: u64,
+    start: u64,
+}
 
 impl TimingGuard {
-    pub fn new(min_microseconds: u64) -> Self { Self { min_cycles: min_microseconds * 2000, start: read_tsc() } }
-    fn elapsed(&self) -> u64 { read_tsc().saturating_sub(self.start) }
+    pub fn new(min_microseconds: u64) -> Self {
+        Self { min_cycles: min_microseconds * 2000, start: read_tsc() }
+    }
+    fn elapsed(&self) -> u64 {
+        read_tsc().saturating_sub(self.start)
+    }
 }
 
 impl Drop for TimingGuard {
     fn drop(&mut self) {
         let elapsed = self.elapsed();
         if elapsed < self.min_cycles {
-            for _ in 0..(self.min_cycles - elapsed) { core::hint::spin_loop(); }
+            for _ in 0..(self.min_cycles - elapsed) {
+                core::hint::spin_loop();
+            }
         }
         add_random_delay();
     }
@@ -35,7 +44,11 @@ impl Drop for TimingGuard {
 
 fn read_tsc() -> u64 {
     #[cfg(target_arch = "x86_64")]
-    unsafe { core::arch::x86_64::_rdtsc() }
+    unsafe {
+        core::arch::x86_64::_rdtsc()
+    }
     #[cfg(not(target_arch = "x86_64"))]
-    { 0 }
+    {
+        0
+    }
 }

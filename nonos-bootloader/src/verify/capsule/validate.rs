@@ -68,10 +68,7 @@ pub fn validate_capsule(capsule: &[u8]) -> (CapsuleStatus, Option<CapsuleMetadat
     }
     let len_payload = offset_sig - offset_payload;
 
-    if offset_payload
-        .checked_add(len_payload)
-        .map_or(true, |v| v > tot)
-    {
+    if offset_payload.checked_add(len_payload).map_or(true, |v| v > tot) {
         log_error("capsule", "payload bounds invalid");
         return (CapsuleStatus::InvalidFormat, None);
     }

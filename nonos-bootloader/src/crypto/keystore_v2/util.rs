@@ -15,4 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[inline(never)]
-pub fn constant_time_eq(a: &[u8; 32], b: &[u8; 32]) -> bool { let mut diff = 0u8; for i in 0..32 { diff |= a[i] ^ b[i]; } diff == 0 }
+pub fn constant_time_eq(a: &[u8; 32], b: &[u8; 32]) -> bool {
+    let mut diff = 0u8;
+    for i in 0..32 {
+        diff |= a[i] ^ b[i];
+    }
+    diff == 0
+}

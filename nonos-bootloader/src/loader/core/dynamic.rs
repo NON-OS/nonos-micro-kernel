@@ -47,17 +47,25 @@ pub fn load_dyn_kernel(
     let mut allocations: [(u64, usize); MAX_ALLOCS] = [(0, 0); MAX_ALLOCS];
     let mut alloc_count: usize = 0;
 
-    let alloc_addr = match bs.allocate_pages(AllocateType::AnyPages, MemoryType::LOADER_DATA, pages_needed) {
-        Ok(addr) => {
-            record_alloc(&mut allocations, &mut alloc_count, addr, pages_needed)?;
-            log_info("loader", &format!("Allocated {} pages at 0x{:x} (ET_DYN)", pages_needed, addr));
-            addr
-        }
-        Err(e) => {
-            log_error("loader", &format!("ET_DYN allocation failed: {:?}", e.status()));
-            return Err(LoaderError::AllocationFailed { addr: 0, pages: pages_needed, status: e.status() });
-        }
-    };
+    let alloc_addr =
+        match bs.allocate_pages(AllocateType::AnyPages, MemoryType::LOADER_DATA, pages_needed) {
+            Ok(addr) => {
+                record_alloc(&mut allocations, &mut alloc_count, addr, pages_needed)?;
+                log_info(
+                    "loader",
+                    &format!("Allocated {} pages at 0x{:x} (ET_DYN)", pages_needed, addr),
+                );
+                addr
+            }
+            Err(e) => {
+                log_error("loader", &format!("ET_DYN allocation failed: {:?}", e.status()));
+                return Err(LoaderError::AllocationFailed {
+                    addr: 0,
+                    pages: pages_needed,
+                    status: e.status(),
+                });
+            }
+        };
 
     let base_phys = alloc_addr as u64;
     load_segments_relocated(payload, v, base, base_phys);
@@ -67,8 +75,10 @@ pub fn load_dyn_kernel(
 
     let entry_virt = v.elf.header.e_entry as u64;
     let entry_offset = entry_virt.saturating_sub(base);
-    let entry_phys = base_phys.checked_add(entry_offset)
-        .ok_or(LoaderError::UefiError { desc: "entry overflow", status: Status::OUT_OF_RESOURCES })? as usize;
+    let entry_phys = base_phys.checked_add(entry_offset).ok_or(LoaderError::UefiError {
+        desc: "entry overflow",
+        status: Status::OUT_OF_RESOURCES,
+    })? as usize;
 
     let image = KernelImage {
         address: base_phys as usize,
@@ -78,14 +88,26 @@ pub fn load_dyn_kernel(
         segments: [KernelSegmentLayout::default(); MAX_KERNEL_SEGMENTS],
         segment_count: 0,
         metadata: CapsuleMetadata {
-            offset_sig: 0, len_sig: 0, offset_payload: 0, len_payload: payload.len(),
-            signer_keyid: None, payload_hash: [0u8; 32], header_version: 1, header_timestamp: 0,
+            offset_sig: 0,
+            len_sig: 0,
+            offset_payload: 0,
+            len_payload: payload.len(),
+            signer_keyid: None,
+            payload_hash: [0u8; 32],
+            header_version: 1,
+            header_timestamp: 0,
         },
         allocations: [(0, 0); memory::MAX_ALLOCATIONS],
         alloc_count: 0,
     };
 
-    log_info("loader", &format!("ET_DYN loaded: 0x{:x} size=0x{:x} entry=0x{:x}", image.address, image.size, image.entry_point));
+    log_info(
+        "loader",
+        &format!(
+            "ET_DYN loaded: 0x{:x} size=0x{:x} entry=0x{:x}",
+            image.address, image.size, image.entry_point
+        ),
+    );
     Ok(image)
 }
 
@@ -97,13 +119,21 @@ fn load_segments_relocated(payload: &[u8], v: &ValidationResult, base: u64, base
 
         if seg.p_filesz > 0 {
             unsafe {
-                core::ptr::copy_nonoverlapping(payload.as_ptr().add(seg.p_offset), dst as *mut u8, seg.p_filesz);
+                core::ptr::copy_nonoverlapping(
+                    payload.as_ptr().add(seg.p_offset),
+                    dst as *mut u8,
+                    seg.p_filesz,
+                );
             }
         }
 
         if seg.p_memsz > seg.p_filesz {
             unsafe {
-                core::ptr::write_bytes((dst + seg.p_filesz) as *mut u8, 0, seg.p_memsz - seg.p_filesz);
+                core::ptr::write_bytes(
+                    (dst + seg.p_filesz) as *mut u8,
+                    0,
+                    seg.p_memsz - seg.p_filesz,
+                );
             }
         }
     }

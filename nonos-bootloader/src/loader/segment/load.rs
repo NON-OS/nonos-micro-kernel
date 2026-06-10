@@ -21,10 +21,8 @@ use crate::log::logger::log_debug;
 use super::types::SegmentLoadInfo;
 
 pub unsafe fn load_segment(source: &[u8], info: &SegmentLoadInfo) -> LoaderResult<()> {
-    let source_end = info
-        .source_offset
-        .checked_add(info.source_size)
-        .ok_or(LoaderError::IntegerOverflow)?;
+    let source_end =
+        info.source_offset.checked_add(info.source_size).ok_or(LoaderError::IntegerOverflow)?;
 
     if source_end > source.len() {
         return Err(LoaderError::SegmentOutOfBounds);

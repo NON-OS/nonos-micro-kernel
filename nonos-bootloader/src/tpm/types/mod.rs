@@ -21,5 +21,5 @@ mod session;
 
 pub use handles::TmpHandle;
 pub use index::NvIndex;
-pub use quote::{Quote, PcrBank};
+pub use quote::{PcrBank, Quote};
 pub use session::Session;

@@ -50,11 +50,7 @@ pub fn read_regular_file(
 
     let pages = (file_size + 4095) / 4096;
     let buffer_addr = bs
-        .allocate_pages(
-            uefi::table::boot::AllocateType::AnyPages,
-            MemoryType::LOADER_DATA,
-            pages,
-        )
+        .allocate_pages(uefi::table::boot::AllocateType::AnyPages, MemoryType::LOADER_DATA, pages)
         .map_err(|_| {
             log_error("file", "Failed to allocate buffer for file");
             FileLoadError::AllocationFailed

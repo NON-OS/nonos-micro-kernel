@@ -15,8 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use alloc::format;
 use crate::log::logger::log_info;
+use alloc::format;
 
 pub fn log_hex(tag: &str, data: &[u8]) {
     let hex: alloc::string::String = data.iter().map(|b| format!("{:02x}", b)).collect();

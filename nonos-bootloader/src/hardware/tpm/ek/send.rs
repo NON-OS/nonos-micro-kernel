@@ -14,16 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::hardware::tpm::constants::{TPM_STS, TPM_STS_READY, TPM_STS_GO, TPM_DATA_FIFO};
+use crate::hardware::tpm::constants::{TPM_DATA_FIFO, TPM_STS, TPM_STS_GO, TPM_STS_READY};
 use crate::hardware::tpm::state::TpmState;
 
 pub fn send_read_public(state: &TpmState, cmd: &[u8]) -> Result<(), &'static str> {
     state.write_reg8(TPM_STS, TPM_STS_READY);
     for _ in 0..10000 {
-        if (state.read_reg8(TPM_STS) & TPM_STS_READY) != 0 { break; }
+        if (state.read_reg8(TPM_STS) & TPM_STS_READY) != 0 {
+            break;
+        }
         core::hint::spin_loop();
     }
-    for byte in cmd { state.write_reg8(TPM_DATA_FIFO, *byte); }
+    for byte in cmd {
+        state.write_reg8(TPM_DATA_FIFO, *byte);
+    }
     state.write_reg8(TPM_STS, TPM_STS_GO);
     Ok(())
 }

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::security::attestation::pcr::DS_ATTESTATION;
 use super::types::AttestationState;
+use crate::security::attestation::pcr::DS_ATTESTATION;
 
 impl AttestationState {
     pub fn compute_composite_hash(&self) -> [u8; 32] {

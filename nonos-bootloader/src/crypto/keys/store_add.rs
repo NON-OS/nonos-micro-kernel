@@ -21,15 +21,23 @@ use super::util::{constant_time_eq, derive_keyid};
 impl KeyStore {
     pub fn add_key(&mut self, pubkey: &[u8; PK_LEN], version: u32) -> Result<KeyId, &'static str> {
         let id = derive_keyid(pubkey);
-        if self.is_revoked(&id) { return Err("key revoked"); }
-        if version < self.minimum_version { return Err("version too old"); }
+        if self.is_revoked(&id) {
+            return Err("key revoked");
+        }
+        if version < self.minimum_version {
+            return Err("version too old");
+        }
         for i in 0..self.count {
             if constant_time_eq(&self.keys[i], pubkey) {
-                if version > self.versions[i] { self.versions[i] = version; }
+                if version > self.versions[i] {
+                    self.versions[i] = version;
+                }
                 return Ok(id);
             }
         }
-        if self.count >= MAX_KEYS { return Err("keystore full"); }
+        if self.count >= MAX_KEYS {
+            return Err("keystore full");
+        }
         self.keys[self.count] = *pubkey;
         self.versions[self.count] = version;
         self.count += 1;

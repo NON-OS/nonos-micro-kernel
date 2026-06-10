@@ -17,25 +17,55 @@
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SignatureResult { Valid, InvalidSignature, InvalidKey, UnsupportedAlgorithm, MissingSignature }
+pub enum SignatureResult {
+    Valid,
+    InvalidSignature,
+    InvalidKey,
+    UnsupportedAlgorithm,
+    MissingSignature,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SignatureAlgorithm { RsaPkcs1v15, RsaPss, EcdsaP256, EcdsaP384, Ed25519 }
+pub enum SignatureAlgorithm {
+    RsaPkcs1v15,
+    RsaPss,
+    EcdsaP256,
+    EcdsaP384,
+    Ed25519,
+}
 
-pub fn verify_signature(data: &[u8], signature: &[u8], public_key: &[u8], algorithm: SignatureAlgorithm) -> SignatureResult {
-    if signature.is_empty() { return SignatureResult::MissingSignature; }
+pub fn verify_signature(
+    data: &[u8],
+    signature: &[u8],
+    public_key: &[u8],
+    algorithm: SignatureAlgorithm,
+) -> SignatureResult {
+    if signature.is_empty() {
+        return SignatureResult::MissingSignature;
+    }
     match algorithm {
-        SignatureAlgorithm::RsaPkcs1v15 | SignatureAlgorithm::RsaPss => SignatureResult::UnsupportedAlgorithm,
-        SignatureAlgorithm::EcdsaP256 | SignatureAlgorithm::EcdsaP384 => SignatureResult::UnsupportedAlgorithm,
+        SignatureAlgorithm::RsaPkcs1v15 | SignatureAlgorithm::RsaPss => {
+            SignatureResult::UnsupportedAlgorithm
+        }
+        SignatureAlgorithm::EcdsaP256 | SignatureAlgorithm::EcdsaP384 => {
+            SignatureResult::UnsupportedAlgorithm
+        }
         SignatureAlgorithm::Ed25519 => verify_ed25519(data, signature, public_key),
     }
 }
 
 pub fn extract_public_key(cert_data: &[u8]) -> Option<&[u8]> {
-    if cert_data.len() < 256 { return None; }
-    if &cert_data[0..4] != b"CERT" { return None; }
-    let key_offset = u32::from_le_bytes([cert_data[4], cert_data[5], cert_data[6], cert_data[7]]) as usize;
-    if key_offset + 256 > cert_data.len() { return None; }
+    if cert_data.len() < 256 {
+        return None;
+    }
+    if &cert_data[0..4] != b"CERT" {
+        return None;
+    }
+    let key_offset =
+        u32::from_le_bytes([cert_data[4], cert_data[5], cert_data[6], cert_data[7]]) as usize;
+    if key_offset + 256 > cert_data.len() {
+        return None;
+    }
     Some(&cert_data[key_offset..key_offset + 256])
 }
 

@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
 use crate::log::logger::log_info;
+use uefi::prelude::*;
 
 pub fn detect_dual_gpu(system_table: &mut SystemTable<Boot>) -> bool {
     let bs = system_table.boot_services();
-    let gop_count = bs.find_handles::<uefi::proto::console::gop::GraphicsOutput>()
-        .map(|h| h.len()).unwrap_or(0);
+    let gop_count = bs
+        .find_handles::<uefi::proto::console::gop::GraphicsOutput>()
+        .map(|h| h.len())
+        .unwrap_or(0);
     if gop_count > 1 {
         log_info("gpu", "dual GPU detected (multiple GOP handles)");
         return true;

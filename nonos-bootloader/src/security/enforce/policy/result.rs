@@ -27,12 +27,24 @@ pub struct EnforcementResult {
 
 impl EnforcementResult {
     pub fn new(policy: SecurityPolicy) -> Self {
-        Self { allow_boot: true, reason: "checks passed", warnings: [None; 8], warning_count: 0, policy }
+        Self {
+            allow_boot: true,
+            reason: "checks passed",
+            warnings: [None; 8],
+            warning_count: 0,
+            policy,
+        }
     }
 
-    pub fn deny(&mut self, reason: &'static str) { self.allow_boot = false; self.reason = reason; }
+    pub fn deny(&mut self, reason: &'static str) {
+        self.allow_boot = false;
+        self.reason = reason;
+    }
 
     pub fn warn(&mut self, warning: &'static str) {
-        if self.warning_count < 8 { self.warnings[self.warning_count] = Some(warning); self.warning_count += 1; }
+        if self.warning_count < 8 {
+            self.warnings[self.warning_count] = Some(warning);
+            self.warning_count += 1;
+        }
     }
 }

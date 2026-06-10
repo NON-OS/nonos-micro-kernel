@@ -18,7 +18,10 @@ use uefi::table::boot::{AllocateType, BootServices, MemoryType};
 
 /// Allocate and copy kernel command line. Returns 0 on failure or if no cmdline.
 pub fn allocate_cmdline(bs: &BootServices, cmdline: Option<&str>) -> u64 {
-    let s = match cmdline { Some(s) => s, None => return 0 };
+    let s = match cmdline {
+        Some(s) => s,
+        None => return 0,
+    };
     let cmd_bytes = s.as_bytes();
     let cmd_len = cmd_bytes.len() + 1;
     let cmd_pages = (cmd_len + 0xFFF) / 0x1000;
@@ -32,6 +35,6 @@ pub fn allocate_cmdline(bs: &BootServices, cmdline: Option<&str>) -> u64 {
             }
             cmd_addr
         }
-        Err(_) => 0
+        Err(_) => 0,
     }
 }
