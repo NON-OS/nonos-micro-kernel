@@ -23,7 +23,7 @@ pub mod spotlight;
 pub mod tray;
 
 pub use apps::LAUNCHER_APPS;
-pub use chrome::{SIDE_DOCK_WINDOW_ID, TASKBAR_WINDOW_ID};
+pub use chrome::TASKBAR_WINDOW_ID;
 pub use context::Context;
 pub use notify::NotifyLevel;
 pub use spotlight::SpotlightState;

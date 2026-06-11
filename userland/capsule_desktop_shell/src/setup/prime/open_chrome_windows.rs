@@ -14,24 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::render::layout::{bottom_dock_rect, side_dock_rect};
-use crate::state::{Context, SIDE_DOCK_WINDOW_ID, TASKBAR_WINDOW_ID};
+use crate::render::layout::bottom_dock_rect;
+use crate::state::{Context, TASKBAR_WINDOW_ID};
 use crate::wm_client;
 use nonos_libc::mk_yield;
 
 const WINDOW_KIND_POPUP: u32 = 3;
 const OPEN_RETRIES: usize = 16;
 
+// The left side dock duplicated the bottom dock's launcher entries, so it
+// is no longer opened. Only the bottom dock chrome window is created;
+// launching happens entirely from the bottom dock.
 pub fn open_chrome_windows(ctx: &mut Context) -> Result<(), &'static str> {
-    let side = side_dock_rect(ctx.width, ctx.height);
     let bottom = bottom_dock_rect(ctx.width, ctx.height);
-    open_retry(ctx, SIDE_DOCK_WINDOW_ID, side.x, side.y, side.width, side.height)?;
-    if open_retry(ctx, TASKBAR_WINDOW_ID, bottom.x, bottom.y, bottom.width, bottom.height).is_err()
-    {
-        let _ = wm_client::window_close(ctx.wm_port, ctx.issue_request_id(), SIDE_DOCK_WINDOW_ID);
-        return Err("wm rejected taskbar window_open");
-    }
-    Ok(())
+    open_retry(ctx, TASKBAR_WINDOW_ID, bottom.x, bottom.y, bottom.width, bottom.height)
+        .map_err(|_| "wm rejected taskbar window_open")
 }
 
 fn open_retry(

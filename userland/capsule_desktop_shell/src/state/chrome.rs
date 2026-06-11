@@ -14,5 +14,4 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const SIDE_DOCK_WINDOW_ID: u32 = 0x5344_4F43;
 pub const TASKBAR_WINDOW_ID: u32 = 0x5442_4152;

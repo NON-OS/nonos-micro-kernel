@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::protocol::{read_u16, read_u32};
-use crate::state::{Context, SIDE_DOCK_WINDOW_ID, TASKBAR_WINDOW_ID};
+use crate::state::{Context, TASKBAR_WINDOW_ID};
 use crate::wm_client;
 
 const OPENED: u32 = 0;
@@ -36,10 +36,9 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     let Some(window_id) = read_u32(buf, 16) else {
         return true;
     };
-    if window_id == SIDE_DOCK_WINDOW_ID || window_id == TASKBAR_WINDOW_ID {
+    if window_id == TASKBAR_WINDOW_ID {
         return true;
     }
-    let _ = wm_client::window_raise(ctx.wm_port, ctx.issue_request_id(), SIDE_DOCK_WINDOW_ID);
     let _ = wm_client::window_raise(ctx.wm_port, ctx.issue_request_id(), TASKBAR_WINDOW_ID);
     true
 }
