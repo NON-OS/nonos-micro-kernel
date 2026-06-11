@@ -35,23 +35,53 @@ pub struct PmpConfig {
 
 impl PmpConfig {
     pub const fn new() -> Self {
-        Self { read: false, write: false, execute: false, address_mode: PmpAddressMode::Off, locked: false }
+        Self {
+            read: false,
+            write: false,
+            execute: false,
+            address_mode: PmpAddressMode::Off,
+            locked: false,
+        }
     }
 
     pub const fn rwx() -> Self {
-        Self { read: true, write: true, execute: true, address_mode: PmpAddressMode::Napot, locked: false }
+        Self {
+            read: true,
+            write: true,
+            execute: true,
+            address_mode: PmpAddressMode::Napot,
+            locked: false,
+        }
     }
 
     pub const fn ro() -> Self {
-        Self { read: true, write: false, execute: false, address_mode: PmpAddressMode::Napot, locked: false }
+        Self {
+            read: true,
+            write: false,
+            execute: false,
+            address_mode: PmpAddressMode::Napot,
+            locked: false,
+        }
     }
 
     pub const fn rx() -> Self {
-        Self { read: true, write: false, execute: true, address_mode: PmpAddressMode::Napot, locked: false }
+        Self {
+            read: true,
+            write: false,
+            execute: true,
+            address_mode: PmpAddressMode::Napot,
+            locked: false,
+        }
     }
 
     pub const fn rw() -> Self {
-        Self { read: true, write: true, execute: false, address_mode: PmpAddressMode::Napot, locked: false }
+        Self {
+            read: true,
+            write: true,
+            execute: false,
+            address_mode: PmpAddressMode::Napot,
+            locked: false,
+        }
     }
 
     pub fn to_cfg_byte(&self) -> u8 {

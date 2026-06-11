@@ -14,22 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-
-
-
-
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct UserEntry {
-
     pub entry: u64,
 
     pub user_sp: u64,
 
     pub spsr: u64,
-
 
     pub kernel_sp: u64,
 
@@ -42,14 +34,9 @@ impl UserEntry {
     }
 }
 
-
-
-
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct SavedUser {
-
     pub gprs: [u64; 31],
 
     pub sp_el0: u64,

@@ -20,9 +20,6 @@ extern "C" {
     fn aarch64_fpu_save(ctx: *mut FpSimdContext);
 }
 
-
-
-
 pub unsafe fn save(ctx: &mut FpSimdContext) {
     unsafe { aarch64_fpu_save(ctx as *mut FpSimdContext) }
 }

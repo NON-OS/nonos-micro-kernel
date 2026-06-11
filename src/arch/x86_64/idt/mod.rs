@@ -35,7 +35,9 @@ pub use entry::PageFaultError;
 pub use entry::{ExceptionHandler, ExceptionHandlerWithError, FnPtr, IdtEntry, InterruptFrame};
 pub use error::IdtError;
 pub use ops::{are_enabled, disable, disable_pic, enable, get_pic_masks, get_stats};
-pub use ops::{get_vector_count, init, is_initialized, load_on_ap, register_handler, register_irq_handler};
+pub use ops::{
+    get_vector_count, init, is_initialized, load_on_ap, register_handler, register_irq_handler,
+};
 pub use ops::{register_syscall_handler, remap_pic, set_pic_masks, unregister_irq_handler};
 pub use ops::{without_interrupts, IdtStats};
 pub use table::{Idt, IdtPtr};

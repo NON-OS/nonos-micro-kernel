@@ -16,9 +16,7 @@
 
 use core::sync::atomic::Ordering;
 
-use super::state::{
-    IRQ_HANDLERS, IRQ_OWNERS, MAX_INTID, OWNER_CAPSULE, OWNER_FREE, OWNER_KERNEL,
-};
+use super::state::{IRQ_HANDLERS, IRQ_OWNERS, MAX_INTID, OWNER_CAPSULE, OWNER_FREE, OWNER_KERNEL};
 
 #[derive(Debug, Clone, Copy)]
 pub enum GicIrqError {
@@ -27,13 +25,9 @@ pub enum GicIrqError {
     NotOwner,
 }
 
-
-
 pub fn register(intid: u32, handler: fn(u32)) -> Result<(), GicIrqError> {
     claim(intid, handler, OWNER_KERNEL)
 }
-
-
 
 pub fn register_for_capsule(intid: u32, handler: fn(u32)) -> Result<(), GicIrqError> {
     claim(intid, handler, OWNER_CAPSULE)
@@ -57,9 +51,6 @@ fn claim(intid: u32, handler: fn(u32), owner: u8) -> Result<(), GicIrqError> {
     IRQ_HANDLERS[intid as usize].store(handler as *mut (), Ordering::Release);
     Ok(())
 }
-
-
-
 
 fn release(intid: u32, expected: u8) -> Result<(), GicIrqError> {
     if intid >= MAX_INTID {

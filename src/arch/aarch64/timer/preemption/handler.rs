@@ -17,11 +17,7 @@
 use crate::arch::aarch64::timer::set_timer;
 use crate::process::scheduler::preemption::tick::tick;
 
-
-
 pub(super) const TICK_PERIOD_NS: u64 = 10_000_000;
-
-
 
 pub(super) fn timer_tick(_intid: u32) {
     set_timer(TICK_PERIOD_NS);

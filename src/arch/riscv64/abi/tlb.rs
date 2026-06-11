@@ -18,8 +18,6 @@ use core::arch::asm;
 
 use crate::memory::addr::VirtAddr;
 
-
-
 #[inline(always)]
 pub(super) unsafe fn flush_one(addr: VirtAddr) {
     asm!(

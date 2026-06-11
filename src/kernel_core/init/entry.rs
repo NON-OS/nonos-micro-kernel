@@ -15,8 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::framebuffer::init_framebuffer;
-#[cfg(target_arch = "x86_64")]
-use super::memory::init_memory;
 use crate::boot::handoff::{ArchSpecificHandoff, KernelHandoff};
 use crate::memory::paging::manager::api::create_address_space;
 use crate::process::core::{create_process, Priority, ProcessState, CURRENT_PID};
@@ -50,7 +48,12 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     if let Err(e) = crate::memory::unified::init_unified_vm() {
         fatal("memory: init_unified_vm failed", e);
     }
-    match crate::arch::x86_64::interrupt::ioapic::init_from_acpi() {
+    // The framebuffer is MMIO-mapped only now: mapping it needs the paging
+    // manager, which init_unified_vm brings up. Doing it in the early
+    // memory/framebuffer step failed to map on real GOP framebuffers
+    // because the page-table machinery was not ready yet.
+    init_arch_framebuffer(handoff);
+    match crate::arch::init_broker_irq_routing() {
         Ok(_) => boot_log::ok("NONOS", "broker IO-APIC routing ready"),
         Err(_) => crate::sys::serial::println(b"[NONOS] broker IO-APIC init failed"),
     }
@@ -92,8 +95,15 @@ fn fatal(stage: &str, detail: &str) -> ! {
 fn init_arch_memory_and_framebuffer(handoff: &KernelHandoff) {
     match handoff.arch {
         ArchSpecificHandoff::X86_64 { v1 } => {
-            #[cfg(target_arch = "x86_64")]
-            init_memory(v1);
+            crate::arch::init_boot_memory(v1);
+        }
+    }
+}
+
+// Map the handoff framebuffer once the paging manager is initialized.
+fn init_arch_framebuffer(handoff: &KernelHandoff) {
+    match handoff.arch {
+        ArchSpecificHandoff::X86_64 { v1 } => {
             init_framebuffer(v1);
         }
     }

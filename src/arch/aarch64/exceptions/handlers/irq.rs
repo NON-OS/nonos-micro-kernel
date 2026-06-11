@@ -20,10 +20,6 @@ use crate::arch::aarch64::gic::{acknowledge_interrupt, dispatch_irq, end_interru
 
 use super::fatal::fatal;
 
-
-
-
-
 #[no_mangle]
 pub extern "C" fn aarch64_exc_irq_current(frame: *mut ExceptionFrame) {
     let frame = unsafe { &*frame };
@@ -33,9 +29,6 @@ pub extern "C" fn aarch64_exc_irq_current(frame: *mut ExceptionFrame) {
 #[no_mangle]
 pub extern "C" fn aarch64_exc_irq_lower(frame: *mut ExceptionFrame) {
     let frame = unsafe { &*frame };
-
-
-
 
     save_user_frame(frame);
     handle(frame, b"IRQ EL0")

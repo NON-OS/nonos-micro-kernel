@@ -37,7 +37,9 @@ pub fn dispatch(code: InterruptCode, frame: &mut TrapFrame) {
         InterruptCode::MachineSoftware
         | InterruptCode::MachineTimer
         | InterruptCode::MachineExternal => fatal(),
-        InterruptCode::UserSoftware | InterruptCode::UserTimer | InterruptCode::UserExternal => fatal(),
+        InterruptCode::UserSoftware | InterruptCode::UserTimer | InterruptCode::UserExternal => {
+            fatal()
+        }
         InterruptCode::Unknown(_) => fatal(),
     }
 }

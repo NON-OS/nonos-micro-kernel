@@ -28,7 +28,9 @@ pub(super) fn project(frame: &TrapFrame) -> TrapCause {
 fn exception(code: ExceptionCode, frame: &TrapFrame) -> TrapCause {
     match code {
         ExceptionCode::LoadPageFault => TrapCause::PageFault(page_fault(frame, FaultAccess::Read)),
-        ExceptionCode::StorePageFault => TrapCause::PageFault(page_fault(frame, FaultAccess::Write)),
+        ExceptionCode::StorePageFault => {
+            TrapCause::PageFault(page_fault(frame, FaultAccess::Write))
+        }
         ExceptionCode::InstructionPageFault => {
             TrapCause::PageFault(page_fault(frame, FaultAccess::InstructionFetch))
         }

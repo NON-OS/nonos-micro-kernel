@@ -23,13 +23,27 @@ pub struct PageTable {
 }
 
 impl PageTable {
-    pub const fn new() -> Self { Self { entries: [0; 512] } }
-    pub fn entry(&self, index: usize) -> u64 { self.entries[index] }
-    pub fn set_entry(&mut self, index: usize, entry: u64) { self.entries[index] = entry; }
-    pub fn clear_entry(&mut self, index: usize) { self.entries[index] = 0; }
-    pub fn is_valid(&self, index: usize) -> bool { self.entries[index] & PteFlags::V != 0 }
-    pub fn is_leaf(&self, index: usize) -> bool { is_leaf_entry(self.entries[index]) }
-    pub fn is_branch(&self, index: usize) -> bool { is_branch_entry(self.entries[index]) }
+    pub const fn new() -> Self {
+        Self { entries: [0; 512] }
+    }
+    pub fn entry(&self, index: usize) -> u64 {
+        self.entries[index]
+    }
+    pub fn set_entry(&mut self, index: usize, entry: u64) {
+        self.entries[index] = entry;
+    }
+    pub fn clear_entry(&mut self, index: usize) {
+        self.entries[index] = 0;
+    }
+    pub fn is_valid(&self, index: usize) -> bool {
+        self.entries[index] & PteFlags::V != 0
+    }
+    pub fn is_leaf(&self, index: usize) -> bool {
+        is_leaf_entry(self.entries[index])
+    }
+    pub fn is_branch(&self, index: usize) -> bool {
+        is_branch_entry(self.entries[index])
+    }
 
     pub fn next_table_ppn(&self, index: usize) -> Option<u64> {
         self.is_branch(index).then(|| Sv39::pte_ppn(self.entries[index]))
@@ -47,14 +61,24 @@ impl PageTable {
         self.entries[index] = Sv39::make_pte(phys_ppn, attrs.to_pte_flags());
     }
 
-    pub fn as_ptr(&self) -> *const u64 { self.entries.as_ptr() }
-    pub fn as_mut_ptr(&mut self) -> *mut u64 { self.entries.as_mut_ptr() }
-    pub fn physical_address(&self) -> u64 { self.entries.as_ptr() as u64 }
-    pub fn ppn(&self) -> u64 { self.physical_address() >> 12 }
+    pub fn as_ptr(&self) -> *const u64 {
+        self.entries.as_ptr()
+    }
+    pub fn as_mut_ptr(&mut self) -> *mut u64 {
+        self.entries.as_mut_ptr()
+    }
+    pub fn physical_address(&self) -> u64 {
+        self.entries.as_ptr() as u64
+    }
+    pub fn ppn(&self) -> u64 {
+        self.physical_address() >> 12
+    }
 }
 
 impl Default for PageTable {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 fn is_leaf_entry(entry: u64) -> bool {

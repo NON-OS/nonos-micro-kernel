@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern "C" {
-    pub fn _start() -> !;
+pub(crate) fn init_boot_memory(handoff: &crate::boot::handoff::BootHandoffV1) {
+    #[cfg(target_arch = "x86_64")]
+    crate::kernel_core::init::memory::init_memory(handoff);
+
+    #[cfg(not(target_arch = "x86_64"))]
+    let _ = handoff;
 }

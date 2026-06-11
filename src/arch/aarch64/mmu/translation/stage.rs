@@ -38,10 +38,18 @@ fn translate(virt: u64, mode: &str) -> Result<u64, TranslationFault> {
     let par: u64;
     unsafe {
         match mode {
-            "s1e1w" => asm!("at s1e1w, {0}", "isb", "mrs {1}, par_el1", in(reg) virt, out(reg) par, options(nostack)),
-            "s1e0r" => asm!("at s1e0r, {0}", "isb", "mrs {1}, par_el1", in(reg) virt, out(reg) par, options(nostack)),
-            "s1e0w" => asm!("at s1e0w, {0}", "isb", "mrs {1}, par_el1", in(reg) virt, out(reg) par, options(nostack)),
-            _ => asm!("at s1e1r, {0}", "isb", "mrs {1}, par_el1", in(reg) virt, out(reg) par, options(nostack)),
+            "s1e1w" => {
+                asm!("at s1e1w, {0}", "isb", "mrs {1}, par_el1", in(reg) virt, out(reg) par, options(nostack))
+            }
+            "s1e0r" => {
+                asm!("at s1e0r, {0}", "isb", "mrs {1}, par_el1", in(reg) virt, out(reg) par, options(nostack))
+            }
+            "s1e0w" => {
+                asm!("at s1e0w, {0}", "isb", "mrs {1}, par_el1", in(reg) virt, out(reg) par, options(nostack))
+            }
+            _ => {
+                asm!("at s1e1r, {0}", "isb", "mrs {1}, par_el1", in(reg) virt, out(reg) par, options(nostack))
+            }
         }
     }
     parse_par(par, virt)

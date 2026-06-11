@@ -20,13 +20,6 @@ use crate::process::core::{CURRENT_PID, PROCESS_TABLE};
 
 use super::slot::FpSimdSlot;
 
-
-
-
-
-
-
-
 pub fn slot_mut() -> Option<&'static mut FpSimdSlot> {
     let pid = CURRENT_PID.load(Ordering::Acquire);
     if pid == 0 {
@@ -34,9 +27,6 @@ pub fn slot_mut() -> Option<&'static mut FpSimdSlot> {
     }
     let pcb = PROCESS_TABLE.find_by_pid(pid)?;
     let ptr = pcb.arch_fpu.slot_ptr();
-
-
-
 
     Some(unsafe { &mut *ptr })
 }

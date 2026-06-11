@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern "C" {
-    pub fn _start() -> !;
+pub(crate) fn active_page_table_root() -> u64 {
+    #[cfg(target_arch = "x86_64")]
+    return crate::arch::x86_64::paging::read_cr3();
+
+    #[cfg(not(target_arch = "x86_64"))]
+    return 0;
 }

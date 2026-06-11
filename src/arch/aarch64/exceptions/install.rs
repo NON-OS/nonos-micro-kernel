@@ -18,9 +18,6 @@ use core::arch::asm;
 
 use crate::arch::aarch64::asm::vectors_el1_addr;
 
-
-
-
 pub fn install_vbar_el1() {
     let vbar = vectors_el1_addr();
 

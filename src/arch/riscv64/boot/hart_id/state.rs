@@ -16,7 +16,4 @@
 
 use core::sync::atomic::AtomicU64;
 
-
-
-
 pub(super) static BOOT_HART_ID: AtomicU64 = AtomicU64::new(u64::MAX);

@@ -16,10 +16,6 @@
 
 use super::context::FpSimdContext;
 
-
-
-
-
 #[repr(C)]
 pub struct FpSimdSlot {
     pub ctx: FpSimdContext,

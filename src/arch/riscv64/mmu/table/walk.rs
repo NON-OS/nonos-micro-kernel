@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::page_table::PageTable;
 use super::super::attributes::PteFlags;
 use super::super::sv39::Sv39;
+use super::page_table::PageTable;
 
 pub fn walk_page_tables(root: &PageTable, va: usize) -> Option<(u64, usize)> {
     let mut table = root;

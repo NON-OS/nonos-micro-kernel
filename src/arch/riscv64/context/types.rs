@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct UserEntry {
@@ -31,9 +29,6 @@ impl UserEntry {
         Self { entry: 0, user_sp: 0, sstatus: 0, kernel_sp: 0, args: [0; 8] }
     }
 }
-
-
-
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default)]

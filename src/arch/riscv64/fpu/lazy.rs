@@ -20,31 +20,19 @@ use super::current::slot_mut;
 use super::enable::{enable_initial, mark_dirty};
 use super::restore::restore;
 
-
-
-
-
 pub fn try_enable_for_current_task(frame: &mut TrapFrame) -> bool {
     let slot = match slot_mut() {
         Some(s) => s,
         None => return false,
     };
 
-
-
     enable_initial();
-
 
     unsafe { restore(&slot.ctx) };
 
-
-
     mark_dirty();
 
-
-
-    frame.sstatus = (frame.sstatus
-        & !crate::arch::riscv64::cpu::csr::SSTATUS_FS_MASK)
+    frame.sstatus = (frame.sstatus & !crate::arch::riscv64::cpu::csr::SSTATUS_FS_MASK)
         | crate::arch::riscv64::cpu::csr::SSTATUS_FS_DIRTY;
 
     slot.enabled = true;

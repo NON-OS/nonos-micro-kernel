@@ -23,11 +23,27 @@ pub fn probe_extension(ext: Extension) -> Result<bool, SbiError> {
     probe_extension_base(ext.eid())
 }
 
-pub fn has_timer() -> Result<bool, SbiError> { probe_extension(Extension::Timer) }
-pub fn has_ipi() -> Result<bool, SbiError> { probe_extension(Extension::Ipi) }
-pub fn has_rfence() -> Result<bool, SbiError> { probe_extension(Extension::Rfence) }
-pub fn has_hsm() -> Result<bool, SbiError> { probe_extension(Extension::Hsm) }
-pub fn has_srst() -> Result<bool, SbiError> { probe_extension(Extension::Srst) }
-pub fn has_pmu() -> Result<bool, SbiError> { probe_extension(Extension::Pmu) }
-pub fn has_dbcn() -> Result<bool, SbiError> { probe_extension(Extension::Dbcn) }
-pub fn has_susp() -> Result<bool, SbiError> { probe_extension(Extension::Susp) }
+pub fn has_timer() -> Result<bool, SbiError> {
+    probe_extension(Extension::Timer)
+}
+pub fn has_ipi() -> Result<bool, SbiError> {
+    probe_extension(Extension::Ipi)
+}
+pub fn has_rfence() -> Result<bool, SbiError> {
+    probe_extension(Extension::Rfence)
+}
+pub fn has_hsm() -> Result<bool, SbiError> {
+    probe_extension(Extension::Hsm)
+}
+pub fn has_srst() -> Result<bool, SbiError> {
+    probe_extension(Extension::Srst)
+}
+pub fn has_pmu() -> Result<bool, SbiError> {
+    probe_extension(Extension::Pmu)
+}
+pub fn has_dbcn() -> Result<bool, SbiError> {
+    probe_extension(Extension::Dbcn)
+}
+pub fn has_susp() -> Result<bool, SbiError> {
+    probe_extension(Extension::Susp)
+}

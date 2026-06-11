@@ -15,7 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::error::PsciError;
-use super::super::function::{PSCI_SYSTEM_OFF, PSCI_SYSTEM_RESET, PSCI_SYSTEM_RESET2_64, PSCI_SYSTEM_SUSPEND_64};
+use super::super::function::{
+    PSCI_SYSTEM_OFF, PSCI_SYSTEM_RESET, PSCI_SYSTEM_RESET2_64, PSCI_SYSTEM_SUSPEND_64,
+};
 use super::super::raw::{psci_call0, psci_call2};
 
 pub fn system_off() -> ! {

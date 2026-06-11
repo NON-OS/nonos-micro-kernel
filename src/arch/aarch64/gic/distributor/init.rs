@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::{CTLR_ARE_NS, CTLR_ARE_S, CTLR_ENABLE_G0, CTLR_ENABLE_G1NS, GICD_CTLR, GICD_ICENABLER, GICD_ICPENDR, GICD_IGROUPR, GICD_IPRIORITYR};
+use super::constants::{
+    CTLR_ARE_NS, CTLR_ARE_S, CTLR_ENABLE_G0, CTLR_ENABLE_G1NS, GICD_CTLR, GICD_ICENABLER,
+    GICD_ICPENDR, GICD_IGROUPR, GICD_IPRIORITYR,
+};
 use super::device::GicDistributor;
 
 impl GicDistributor {

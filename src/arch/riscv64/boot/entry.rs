@@ -16,10 +16,6 @@
 
 use super::info::BootInfo;
 
-
-
-
-
 #[no_mangle]
 pub extern "C" fn kernel_entry(dtb_ptr: u64) -> ! {
     let mut info = BootInfo::default();

@@ -19,7 +19,10 @@ mod count;
 mod freq;
 mod offset;
 
-pub use convert::{microseconds_to_ticks, milliseconds_to_ticks, nanoseconds_to_ticks, ticks_to_microseconds, ticks_to_milliseconds, ticks_to_nanoseconds};
+pub use convert::{
+    microseconds_to_ticks, milliseconds_to_ticks, nanoseconds_to_ticks, ticks_to_microseconds,
+    ticks_to_milliseconds, ticks_to_nanoseconds,
+};
 pub use count::{current_count, virtual_count};
 pub use freq::frequency;
 pub use offset::{physical_to_virtual, virtual_offset, virtual_to_physical};

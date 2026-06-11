@@ -20,10 +20,6 @@ use crate::arch::aarch64::timer::set_timer;
 use super::handler::{timer_tick, TICK_PERIOD_NS};
 use super::state::phys_intid;
 
-
-
-
-
 pub fn install_on_cpu() -> Result<(), &'static str> {
     let intid = phys_intid();
     if intid == 0 {

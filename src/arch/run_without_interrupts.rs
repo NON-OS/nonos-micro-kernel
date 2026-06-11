@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern "C" {
-    pub fn _start() -> !;
+pub(crate) fn run_without_interrupts<F, R>(f: F) -> R
+where
+    F: FnOnce() -> R,
+{
+    #[cfg(target_arch = "x86_64")]
+    return crate::arch::x86_64::idt::without_interrupts(f);
+
+    #[cfg(not(target_arch = "x86_64"))]
+    return f();
 }

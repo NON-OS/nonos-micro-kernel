@@ -64,9 +64,7 @@ pub(super) fn try_resume(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
     }
     percpu::set_kernel_stack(kstack);
 
-    if pcb.cr3.load(Ordering::Relaxed) != 0
-        && switch_to_process_address_space(pid).is_err()
-    {
+    if pcb.cr3.load(Ordering::Relaxed) != 0 && switch_to_process_address_space(pid).is_err() {
         *pcb.state.lock() = ProcessState::Terminated(-1);
         return true;
     }

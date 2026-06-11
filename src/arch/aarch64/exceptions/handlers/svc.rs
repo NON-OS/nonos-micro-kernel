@@ -19,14 +19,11 @@ use crate::syscall::contract::{dispatch as contract_dispatch, SyscallArgs};
 use crate::syscall::numbers::SyscallNumber;
 use crate::syscall::types::errnos;
 
-
-
-
-
 pub(super) fn dispatch(frame: &mut ExceptionFrame) {
     let result_word = match SyscallNumber::from_u64(frame.x8) {
         Some(sc) => {
-            let args = SyscallArgs::new([frame.x0, frame.x1, frame.x2, frame.x3, frame.x4, frame.x5]);
+            let args =
+                SyscallArgs::new([frame.x0, frame.x1, frame.x2, frame.x3, frame.x4, frame.x5]);
             contract_dispatch(sc, args).value as u64
         }
         None => (-(errnos::ENOSYS as i64)) as u64,

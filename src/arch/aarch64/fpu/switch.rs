@@ -19,11 +19,6 @@ use super::enable::{disable, enable};
 use super::restore::restore;
 use super::save::save;
 
-
-
-
-
-
 pub fn save_outgoing() {
     let slot = match slot_mut() {
         Some(s) => s,
@@ -33,8 +28,6 @@ pub fn save_outgoing() {
         }
     };
     if slot.enabled && slot.dirty {
-
-
         unsafe { save(&mut slot.ctx) };
         slot.valid = true;
         slot.dirty = false;
@@ -42,10 +35,6 @@ pub fn save_outgoing() {
     disable();
     slot.enabled = false;
 }
-
-
-
-
 
 pub fn prepare_incoming() {
     let slot = match slot_mut() {

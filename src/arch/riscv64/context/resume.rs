@@ -27,10 +27,6 @@ pub enum ResumeError {
     NotFromUMode,
 }
 
-
-
-
-
 pub unsafe fn resume_user(saved: &SavedUser) -> Result<core::convert::Infallible, ResumeError> {
     if saved.kernel_sp == 0 {
         return Err(ResumeError::NoKernelStack);

@@ -20,8 +20,6 @@ extern "C" {
     fn riscv64_fpu_save(ctx: *mut FpContext);
 }
 
-
-
 pub unsafe fn save(ctx: &mut FpContext) {
     unsafe { riscv64_fpu_save(ctx as *mut FpContext) }
 }

@@ -17,10 +17,7 @@
 use crate::arch::aarch64::cpu;
 use crate::arch::aarch64::exceptions::frame::ExceptionFrame;
 
-
-
 pub fn fatal(_tag: &[u8], _frame: &ExceptionFrame) -> ! {
-
     unsafe {
         core::arch::asm!("msr daifset, #0xf", options(nostack));
     }
