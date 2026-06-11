@@ -34,6 +34,7 @@ pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
         last_notify_level: None,
         toasts: ToastQueue::new(),
         toast_layer_live: false,
+        net_was_online: false,
         next_request_id: 2,
     }
 }

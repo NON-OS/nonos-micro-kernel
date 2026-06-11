@@ -32,6 +32,7 @@ pub struct Context {
     pub last_notify_level: Option<NotifyLevel>,
     pub toasts: ToastQueue,
     pub toast_layer_live: bool,
+    pub net_was_online: bool,
     pub next_request_id: u32,
 }
 

@@ -36,7 +36,8 @@ pub fn run(mut ctx: Context) -> ! {
         let now = mk_time_millis();
         if now.wrapping_sub(last_clock_ms) >= CLOCK_REFRESH_MS as i64 {
             refresh_clock(&mut ctx);
-            if ctx.toasts.expire(now) || ctx.toast_layer_live {
+            ctx.toasts.expire(now);
+            if !ctx.toasts.is_empty() || ctx.toast_layer_live {
                 sync_toast_layer(&mut ctx);
             }
             last_clock_ms = now;
