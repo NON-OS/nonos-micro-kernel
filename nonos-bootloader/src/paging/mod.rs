@@ -21,6 +21,7 @@ mod map_directmap;
 mod map_identity;
 mod map_kernel_text;
 mod mapper;
+mod page1g;
 mod phys_to_directmap;
 mod seg_flags;
 mod switch;
