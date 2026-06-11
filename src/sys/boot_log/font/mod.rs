@@ -21,4 +21,4 @@ mod special;
 mod sym;
 mod upper;
 
-pub use lookup::get_char_bitmap;
+pub(super) use lookup::get_char_bitmap;

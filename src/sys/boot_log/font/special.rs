@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn get_oslash() -> [u8; 16] {
+pub(super) fn get_oslash() -> [u8; 16] {
     [0, 0x3E, 0x63, 0x67, 0x6F, 0x7B, 0x73, 0x3E, 0, 0, 0, 0, 0, 0, 0, 0]
 }
 
-pub fn get_default() -> [u8; 16] {
+pub(super) fn get_default() -> [u8; 16] {
     [0, 0x7E, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7E, 0, 0, 0, 0, 0, 0, 0, 0]
 }

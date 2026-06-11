@@ -16,7 +16,7 @@
 
 use super::{lower, num, special, sym, upper};
 
-pub fn get_char_bitmap(ch: u8) -> [u8; 16] {
+pub(in crate::sys::boot_log) fn get_char_bitmap(ch: u8) -> [u8; 16] {
     match ch {
         b'A'..=b'Z' => upper::get(ch),
         b'a'..=b'z' => lower::get(ch),

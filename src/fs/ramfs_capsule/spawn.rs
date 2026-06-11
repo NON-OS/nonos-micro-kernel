@@ -15,12 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::client::REPLY_INBOX;
-use super::embed::{RAMFS_ELF, RAMFS_MANIFEST_BYTES, RAMFS_NONOS_ID_CERT_BYTES, RAMFS_ATTESTATION_BYTES};
+use super::embed::{
+    RAMFS_ATTESTATION_BYTES, RAMFS_ELF, RAMFS_MANIFEST_BYTES, RAMFS_NONOS_ID_CERT_BYTES,
+};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
 use crate::security::nonos_id_cert::IdCertVerifyError;
-use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY};
+use crate::security::nonos_trust_anchor::{
+    decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
+};
 
 pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 
@@ -30,9 +34,8 @@ const REPLY_PORT: u32 = 4097;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
 
 pub fn spawn_ramfs_capsule() -> Result<(), SpawnError> {
-    let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY).map_err(|_| {
-        SpawnError::NonosIdCertRejected(IdCertVerifyError::TrustAnchorPolicy)
-    })?;
+    let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
+        .map_err(|_| SpawnError::NonosIdCertRejected(IdCertVerifyError::TrustAnchorPolicy))?;
 
     let spec = CapsuleSpecVerified {
         name: SERVICE_NAME,
