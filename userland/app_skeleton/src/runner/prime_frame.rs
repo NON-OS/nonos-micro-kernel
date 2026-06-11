@@ -30,7 +30,7 @@ pub(super) fn prime_frame<A: App>(
     request_id: &mut u32,
 ) -> bool {
     for _ in 0..INITIAL_PAINT_ATTEMPTS {
-        if paint_once(app, manifest, binding, peers.compositor, request_id) {
+        if paint_once(app, manifest, binding, peers, request_id) {
             return true;
         }
         mk_yield();

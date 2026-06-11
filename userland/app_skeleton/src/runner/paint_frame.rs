@@ -17,6 +17,7 @@
 use nonos_toolkit::decorations::{draw_border, draw_titlebar, DecorationHit};
 
 use crate::app::{App, AppManifest};
+use crate::clients::toolkit;
 use crate::paint::PaintBuffer;
 use crate::setup::WindowBinding;
 
@@ -33,8 +34,17 @@ pub(super) fn paint<A: App>(
     app: &mut A,
     manifest: &AppManifest,
     binding: &WindowBinding,
+    toolkit_port: u32,
+    request_id: u32,
     hover: DecorationHit,
 ) {
+    let _ = toolkit::ui_frame(
+        toolkit_port,
+        request_id,
+        binding.surface_handle,
+        binding.width,
+        binding.height,
+    );
     let words = (binding.byte_len / 4) as usize;
     let pixels: &mut [u32] =
         unsafe { core::slice::from_raw_parts_mut(binding.backing_va as *mut u32, words) };

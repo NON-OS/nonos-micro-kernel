@@ -24,6 +24,10 @@ pub struct Context {
     pub stride: u32,
     pub backing_len: u64,
     pub backing_va: u64,
+    // GOP mode presents through MkSurfacePresent (kernel blit to the UEFI
+    // framebuffer) instead of the virtio-gpu transfer/scanout/flush ops.
+    pub gop_mode: bool,
+    pub surface_handle: u64,
     pub first_scanout_done: bool,
     pub scanout_error_reported: bool,
     pub next_request_id: u32,

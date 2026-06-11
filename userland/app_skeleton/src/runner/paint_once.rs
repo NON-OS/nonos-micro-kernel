@@ -18,6 +18,7 @@ use nonos_toolkit::decorations::DecorationHit;
 
 use crate::app::{App, AppManifest};
 use crate::clients::compositor;
+use crate::discover::Peers;
 use crate::setup::WindowBinding;
 
 use super::paint_frame::paint;
@@ -27,11 +28,19 @@ pub(super) fn paint_once<A: App>(
     app: &mut A,
     manifest: &AppManifest,
     binding: &WindowBinding,
-    compositor_port: u32,
+    peers: &Peers,
     request_id: &mut u32,
 ) -> bool {
-    paint(app, manifest, binding, DecorationHit::None);
+    let toolkit_rid = next(request_id);
+    paint(app, manifest, binding, peers.toolkit, toolkit_rid, DecorationHit::None);
     let rid = next(request_id);
-    compositor::damage_commit(compositor_port, rid, binding.x, binding.y, binding.width, binding.height)
-        .is_ok()
+    compositor::damage_commit(
+        peers.compositor,
+        rid,
+        binding.x,
+        binding.y,
+        binding.width,
+        binding.height,
+    )
+    .is_ok()
 }

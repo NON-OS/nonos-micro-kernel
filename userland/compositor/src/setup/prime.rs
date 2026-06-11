@@ -18,7 +18,7 @@ use nonos_libc::mk_yield;
 
 use crate::state::Context;
 
-pub fn run() -> Result<Context, &'static str> {
+pub fn run_virtio() -> Result<Context, &'static str> {
     match super::prime_once::run_virtio_once() {
         Ok(ctx) => Ok(ctx),
         Err(e) => {
