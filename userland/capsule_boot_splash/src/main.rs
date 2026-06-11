@@ -18,7 +18,7 @@ use nonos_libc::{
     mk_yield, AttestStatus, INPUT_KIND_KEY_DOWN,
 };
 
-const DWELL_MS: i64 = 2500;
+const DWELL_MS: i64 = 6000;
 const MAX_ITERS: u32 = 8_000_000;
 const READY_ATTEMPTS: u32 = 256;
 

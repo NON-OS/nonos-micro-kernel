@@ -35,33 +35,39 @@ pub(crate) fn splash(base: u64, w: u32, h: u32, stride: u32, attested: Option<bo
     let title = b"N\xd8NOS";
     let tw = atlas.text_width(title) * TITLE_SCALE;
     let tx = w.saturating_sub(tw) / 2;
-    let ty = h / 2 - 96;
+    let ty = h / 2 - 132;
     draw_text_scaled(buf, spx, w, h, tx.saturating_sub(1), ty, title, ACCENT_DIM, TITLE_SCALE);
     draw_text_scaled(buf, spx, w, h, tx, ty, title, ACCENT, TITLE_SCALE);
+    let sub = b"zero-state attestation boot";
+    let sx = w.saturating_sub(atlas.text_width(sub)) / 2;
+    draw_text(buf, spx, w, h, sx, ty + TITLE_SCALE * 8 + 10, sub, DIM);
     attest_panel(buf, spx, w, h, attested);
     status(buf, spx, w, h, 0);
 }
 
 fn attest_panel(buf: &mut [u32], spx: usize, w: u32, h: u32, attested: Option<bool>) {
-    let pw = 300;
+    let pw = 380;
     let px = w.saturating_sub(pw) / 2;
-    let py = h / 2;
-    panel(buf, spx, w, h, px, py, pw, 86, b"boot-chain attestation");
-    draw_text(buf, spx, w, h, px + 10, py + 30, b"[+] kernel  blake3 ok", OK);
-    draw_text(buf, spx, w, h, px + 10, py + 48, b"[#] zk      groth16 ok", ACCENT);
-    if let Some(ok) = attested {
-        let (t, c): (&[u8], u32) = if ok { (b"ATTESTED", OK) } else { (b"UNVERIFIED", WARN) };
-        draw_text(buf, spx, w, h, px + 10, py + 66, t, c);
-    }
+    let py = h / 2 - 24;
+    panel(buf, spx, w, h, px, py, pw, 112, b"boot-chain attestation");
+    draw_text(buf, spx, w, h, px + 14, py + 32, b"[+] bootloader  ed25519 verified", OK);
+    draw_text(buf, spx, w, h, px + 14, py + 52, b"[+] kernel      blake3 verified", OK);
+    draw_text(buf, spx, w, h, px + 14, py + 72, b"[#] capsules    groth16 attested", ACCENT);
+    let (t, c): (&[u8], u32) = match attested {
+        Some(true) => (b"ATTESTED", OK),
+        Some(false) => (b"UNVERIFIED", WARN),
+        None => (b"verifying", DIM),
+    };
+    draw_text(buf, spx, w, h, px + 14, py + 92, t, c);
 }
 
 pub(crate) fn status(buf: &mut [u32], spx: usize, w: u32, h: u32, frame: u32) {
-    let y = h / 2 + 116;
+    let y = h / 2 + 132;
     crate::vignette::fill_band(buf, spx, w, h, y, 16);
     let atlas = FontAtlas::default();
     let sp = [SPIN[(frame % 4) as usize]];
     let cur: &[u8] = if frame & 1 == 0 { b"_" } else { b" " };
-    let label = b"initializing";
+    let label = b"initializing zero-state";
     let x = w.saturating_sub(atlas.text_width(label) + 24) / 2;
     draw_text(buf, spx, w, h, x, y, &sp, ACCENT);
     draw_text(buf, spx, w, h, x + 16, y, label, DIM);

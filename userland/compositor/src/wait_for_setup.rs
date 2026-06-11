@@ -20,7 +20,7 @@ use nonos_libc::mk_yield;
 // falling back to the GOP framebuffer path, so a machine that has
 // virtio-gpu always uses it and only real hardware / hypervisors
 // without it take the GOP route.
-const VIRTIO_ATTEMPTS_BEFORE_GOP: u32 = 16;
+const VIRTIO_ATTEMPTS_BEFORE_GOP: u32 = 6;
 
 pub fn wait_for_setup() -> crate::state::Context {
     let mut attempt: u32 = 0;
