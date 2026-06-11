@@ -47,6 +47,24 @@ pub fn convert_color(argb: u32) -> u32 {
     }
 }
 
+// The linear framebuffer the display module latched and the splash drew
+// to, returned as (ptr, width, height, stride_bytes, bgr). FB_STRIDE is
+// kept in pixels here, so it is converted to bytes for the handoff and
+// the kernel, which both expect a byte stride. The MMIO address stays
+// valid across ExitBootServices, so the handoff prefers this proven
+// framebuffer over re-querying GOP, which is fragile after mode setup.
+pub fn latched_linear_fb() -> Option<(u64, u32, u32, u32, bool)> {
+    let ptr = FB_PTR.load(Ordering::Acquire);
+    let width = FB_WIDTH.load(Ordering::Acquire);
+    let height = FB_HEIGHT.load(Ordering::Acquire);
+    let stride_px = FB_STRIDE.load(Ordering::Acquire);
+    if ptr == 0 || width == 0 || height == 0 || stride_px < width {
+        return None;
+    }
+    let stride_bytes = stride_px.saturating_mul(4);
+    Some((ptr, width, height, stride_bytes, FB_FORMAT_BGR.load(Ordering::Acquire)))
+}
+
 pub fn shutdown_for_exit() {
     FB_INITIALIZED.store(false, Ordering::SeqCst);
 }

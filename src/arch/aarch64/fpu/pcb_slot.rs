@@ -18,20 +18,10 @@ use core::cell::UnsafeCell;
 
 use super::slot::FpSimdSlot;
 
-
-
-
-
-
 #[repr(transparent)]
 pub struct PcbArchFpu {
     inner: UnsafeCell<FpSimdSlot>,
 }
-
-
-
-
-
 
 unsafe impl Sync for PcbArchFpu {}
 
@@ -39,8 +29,6 @@ impl PcbArchFpu {
     pub const fn zeroed() -> Self {
         Self { inner: UnsafeCell::new(FpSimdSlot::zeroed()) }
     }
-
-
 
     pub fn slot_ptr(&self) -> *mut FpSimdSlot {
         self.inner.get()

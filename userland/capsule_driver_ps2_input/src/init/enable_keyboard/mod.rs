@@ -16,8 +16,8 @@
 mod cmd;
 mod data;
 mod enable;
+mod pio_write;
 mod read_byte;
 mod reset;
 mod wait_clear;
-mod write;
 pub use enable::enable_keyboard;

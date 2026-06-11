@@ -13,11 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use super::pio_write::pio_write;
 use super::wait_input_clear::wait_input_clear;
-use super::write::write;
 use crate::constants::DATA_OFFSET;
 
 pub(super) fn write_data(grant_id: u64, value: u8) -> Result<(), &'static str> {
     wait_input_clear(grant_id)?;
-    write(grant_id, DATA_OFFSET, value)
+    pio_write(grant_id, DATA_OFFSET, value)
 }

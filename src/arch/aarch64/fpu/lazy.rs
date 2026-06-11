@@ -18,24 +18,16 @@ use super::current::slot_mut;
 use super::enable::enable;
 use super::restore::restore;
 
-
-
-
-
 pub fn try_enable_for_current_task() -> bool {
     let slot = match slot_mut() {
         Some(s) => s,
         None => return false,
     };
 
-
-
     enable();
-
 
     unsafe { restore(&slot.ctx) };
     slot.enabled = true;
-
 
     slot.dirty = true;
     true

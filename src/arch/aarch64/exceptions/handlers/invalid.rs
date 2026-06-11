@@ -18,19 +18,14 @@ use crate::arch::aarch64::exceptions::frame::ExceptionFrame;
 
 use super::fatal::fatal;
 
-
-
 #[no_mangle]
 pub extern "C" fn aarch64_exc_invalid_sp0(frame: *mut ExceptionFrame) -> ! {
-
     let frame = unsafe { &*frame };
     fatal(b"SP_EL0 vector", frame)
 }
 
-
 #[no_mangle]
 pub extern "C" fn aarch64_exc_invalid_aarch32(frame: *mut ExceptionFrame) -> ! {
-
     let frame = unsafe { &*frame };
     fatal(b"AArch32 vector", frame)
 }

@@ -18,18 +18,14 @@ use crate::arch::aarch64::exceptions::frame::ExceptionFrame;
 
 use super::fatal::fatal;
 
-
-
 #[no_mangle]
 pub extern "C" fn aarch64_exc_fiq_current(frame: *mut ExceptionFrame) -> ! {
-
     let frame = unsafe { &*frame };
     fatal(b"FIQ EL1", frame)
 }
 
 #[no_mangle]
 pub extern "C" fn aarch64_exc_fiq_lower(frame: *mut ExceptionFrame) -> ! {
-
     let frame = unsafe { &*frame };
     fatal(b"FIQ EL0", frame)
 }

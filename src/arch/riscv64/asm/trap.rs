@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 extern "C" {
     static __riscv64_trap_entry: u8;
 }
 
 #[inline]
 pub fn trap_entry_addr() -> usize {
-
     unsafe { &__riscv64_trap_entry as *const u8 as usize }
 }

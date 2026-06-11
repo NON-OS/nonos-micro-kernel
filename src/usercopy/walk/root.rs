@@ -19,7 +19,7 @@
 //! fallback when the per-CPU execution-context mirror has not been
 //! populated. There is no inline asm at this layer.
 
-use crate::arch::x86_64::paging::read_cr3;
+use crate::arch::active_page_table_root;
 use crate::context::{get_current_context, ExecutionContext};
 use crate::memory::paging::constants::PTE_ADDR_MASK;
 use crate::usercopy::error::UsercopyError;
@@ -32,5 +32,5 @@ pub(super) fn page_table_root() -> Result<u64, UsercopyError> {
 }
 
 fn active_cr3_root() -> u64 {
-    read_cr3() & PTE_ADDR_MASK
+    active_page_table_root() & PTE_ADDR_MASK
 }

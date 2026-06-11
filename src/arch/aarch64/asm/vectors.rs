@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 extern "C" {
     static __aarch64_vectors_el1: u8;
 }
 
 #[inline]
 pub fn vectors_el1_addr() -> u64 {
-
     unsafe { &__aarch64_vectors_el1 as *const u8 as u64 }
 }

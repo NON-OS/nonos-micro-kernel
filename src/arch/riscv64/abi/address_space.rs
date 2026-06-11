@@ -18,9 +18,6 @@ use crate::memory::addr::PhysAddr;
 
 use super::super::mmu::{make_satp, mmu_mode, write_satp};
 
-
-
-
 #[inline(always)]
 pub(super) unsafe fn switch(root: PhysAddr) {
     let mode = mmu_mode();

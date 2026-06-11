@@ -24,7 +24,7 @@
 use super::error::UsercopyError;
 use super::policy::check_range;
 use super::walk::translate_read;
-use crate::arch::x86_64::idt::without_interrupts;
+use crate::arch::run_without_interrupts;
 use crate::memory::layout::DIRECTMAP_BASE;
 
 const MAX_STRING_LEN: usize = 4096;
@@ -38,21 +38,15 @@ pub fn read_user_string(
         return Ok(alloc::string::String::new());
     }
     let mut buf = alloc::vec![0u8; safe_len];
-    let actual_len = without_interrupts(|| scan_until_nul(user_ptr, safe_len, &mut buf))?;
+    let actual_len = run_without_interrupts(|| scan_until_nul(user_ptr, safe_len, &mut buf))?;
     buf.truncate(actual_len);
     alloc::string::String::from_utf8(buf).map_err(|_| UsercopyError::InvalidUtf8)
 }
 
-fn scan_until_nul(
-    user_ptr: u64,
-    safe_len: usize,
-    buf: &mut [u8],
-) -> Result<usize, UsercopyError> {
+fn scan_until_nul(user_ptr: u64, safe_len: usize, buf: &mut [u8]) -> Result<usize, UsercopyError> {
     let mut cursor = 0usize;
     while cursor < safe_len {
-        let va = user_ptr
-            .checked_add(cursor as u64)
-            .ok_or(UsercopyError::AddressOverflow)?;
+        let va = user_ptr.checked_add(cursor as u64).ok_or(UsercopyError::AddressOverflow)?;
         let leaf = translate_read(va)?;
         let bytes_in_page = leaf.bytes_remaining_in_page() as usize;
         let take = bytes_in_page.min(safe_len - cursor);

@@ -16,15 +16,26 @@
 
 use nonos_libc::mk_yield;
 
+// Give a virtio-gpu driver time to announce its gfx service before
+// falling back to the GOP framebuffer path, so a machine that has
+// virtio-gpu always uses it and only real hardware / hypervisors
+// without it take the GOP route.
+const VIRTIO_ATTEMPTS_BEFORE_GOP: u32 = 16;
+
 pub fn wait_for_setup() -> crate::state::Context {
+    let mut attempt: u32 = 0;
     loop {
-        match crate::setup::run() {
-            Ok(ctx) => return ctx,
-            Err(_) => {
-                for _ in 0..64 {
-                    mk_yield();
-                }
+        if let Ok(ctx) = crate::setup::run_virtio() {
+            return ctx;
+        }
+        if attempt >= VIRTIO_ATTEMPTS_BEFORE_GOP {
+            if let Ok(ctx) = crate::setup::run_gop() {
+                return ctx;
             }
+        }
+        attempt = attempt.saturating_add(1);
+        for _ in 0..64 {
+            mk_yield();
         }
     }
 }

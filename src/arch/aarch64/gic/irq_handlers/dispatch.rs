@@ -18,9 +18,6 @@ use core::sync::atomic::Ordering;
 
 use super::state::{IRQ_HANDLERS, MAX_INTID};
 
-
-
-
 pub fn dispatch(intid: u32) -> bool {
     if intid >= MAX_INTID {
         return false;

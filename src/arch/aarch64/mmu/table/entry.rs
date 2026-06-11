@@ -61,6 +61,7 @@ impl PageTable {
     }
 
     pub fn set_page(&mut self, index: usize, phys_addr: u64, attrs: &PageAttributes) {
-        self.entries[index] = (phys_addr & PTE_ADDR_MASK) | attrs.to_descriptor_bits() | PTE_PAGE | PTE_VALID;
+        self.entries[index] =
+            (phys_addr & PTE_ADDR_MASK) | attrs.to_descriptor_bits() | PTE_PAGE | PTE_VALID;
     }
 }

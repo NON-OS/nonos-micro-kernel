@@ -15,11 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod abi;
+mod active_page_table_root;
 pub mod context;
 pub mod cpu;
 #[cfg(any(target_arch = "aarch64", target_arch = "riscv64"))]
 pub mod fdt;
 pub mod halt;
+mod init_boot_memory;
+mod init_broker_irq_routing;
+mod run_without_interrupts;
 pub mod trap;
 
 #[cfg(target_arch = "x86_64")]
@@ -38,13 +42,15 @@ pub mod riscv64;
 mod tests;
 
 pub use abi::ArchOps;
-pub use cpu::{cpu_yield, disable_interrupts, enable_interrupts, get_cpu_id, idle_cpu};
+pub(crate) use active_page_table_root::active_page_table_root;
 #[cfg(target_arch = "x86_64")]
 pub use cpu::init_cpu_features;
+pub use cpu::{cpu_yield, disable_interrupts, enable_interrupts, get_cpu_id, idle_cpu};
 pub use halt::halt_loop;
+pub(crate) use init_boot_memory::init_boot_memory;
+pub(crate) use init_broker_irq_routing::init_broker_irq_routing;
+pub(crate) use run_without_interrupts::run_without_interrupts;
 
-// Active architecture backend. Generic kernel code reaches leaf
-// primitives via `<Arch as ArchOps>::method()`.
 #[cfg(target_arch = "x86_64")]
 pub type Arch = x86_64::abi::X86_64;
 #[cfg(target_arch = "aarch64")]

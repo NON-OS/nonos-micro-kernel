@@ -113,13 +113,16 @@ fn bind_msix(pid: u32, req: IrqBindRequest, epoch: u64) -> Result<IrqBindResult,
         view.as_ref(),
         records::has_msix_grant_for(pid, req.device_id),
     )?;
-    let handle = handle.expect("validate_msix_request rejects None handle");
+    // validate_msix_request already rejects a None handle / no-MSI-X device;
+    // these guards keep a future change to the validator from turning a
+    // broken invariant into a kernel panic on the trusted hardware path.
+    // Resolve both before allocating vectors so no error path leaks a slot.
+    let handle = handle.ok_or(IrqBindError::NoDeviceHandle)?;
+    let msix = handle.msix.ok_or(IrqBindError::NoMsixCap)?;
 
     let n = req.vector_count as usize;
     let base_slot = slots::try_alloc_contiguous(n).ok_or(IrqBindError::NoVector)?;
     let base_vector = vector_of(base_slot).ok_or(IrqBindError::NoVector)?;
-
-    let msix = handle.msix.expect("validate_msix_request rejects no-MSI-X");
     let dest_apic_id = crate::arch::interrupt::apic::id() as u8;
     if let Err(e) = current_ops().program_run(
         &handle.address,

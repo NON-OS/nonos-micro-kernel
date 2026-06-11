@@ -25,7 +25,10 @@ pub enum AffinityState {
     OnPending,
 }
 
-pub fn affinity_info(target_affinity: u64, lowest_affinity_level: u64) -> Result<AffinityState, PsciError> {
+pub fn affinity_info(
+    target_affinity: u64,
+    lowest_affinity_level: u64,
+) -> Result<AffinityState, PsciError> {
     let ret = psci_call2(PSCI_AFFINITY_INFO_64, target_affinity, lowest_affinity_level);
     if ret < 0 {
         PsciError::from_ret(ret as i32)?;

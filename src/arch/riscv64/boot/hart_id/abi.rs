@@ -16,8 +16,6 @@
 
 use super::store::store;
 
-
-
 #[no_mangle]
 pub extern "C" fn riscv64_store_boot_hart(hart_id: u64) {
     store(hart_id);

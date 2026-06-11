@@ -123,9 +123,10 @@ paranoid mechanism available.
                      learning anything else. Contributor receipts bind
                      to an address you choose.
 
-  our reach ........ none. There is no telemetry, no analytics, no
-                     update phone-home anywhere in this tree. The OS
-                     has nothing to report and nobody to report to.
+  our reach ........ limited by design. Default QEMU boots attach no
+                     NIC, and network boots are explicit. Packet-capture
+                     evidence is still required before claiming no
+                     telemetry for a release.
 ```
 
 ## Requirements
@@ -161,11 +162,15 @@ make nonos-mk-run
 
 The first build compiles the pinned toolchain targets, the bootloader,
 the kernel, all capsules, then signs and attests each one before
-booting. Expect a long first run; everything after is incremental.
+booting. The default QEMU boot attaches no NIC; use a `*-net` target
+when testing network-capable capsules. Expect a long first run;
+everything after is incremental.
 Useful variants:
 
 ```sh
 make nonos-mk-run-serial      # headless, serial console only
+make nonos-mk-run-net         # explicit QEMU user-network host forwarding
+make nonos-mk-run-serial-net  # serial console plus explicit host forwarding
 make nonos-mk-run-wizard      # first-boot setup wizard flow
 make nonos-mk-debug           # QEMU paused with GDB on :1234
 make nonos-mk                 # build the runtime baseline, no QEMU

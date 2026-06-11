@@ -27,11 +27,7 @@ pub enum SetupError {
     NonUserStack,
 }
 
-pub fn setup_initial_user_pcb(
-    pid: u32,
-    entry: u64,
-    user_sp: u64,
-) -> Result<(), SetupError> {
+pub fn setup_initial_user_pcb(pid: u32, entry: u64, user_sp: u64) -> Result<(), SetupError> {
     #[cfg(target_arch = "x86_64")]
     {
         crate::arch::x86_64::context::setup_initial_user_pcb_x86_64(pid, entry, user_sp)

@@ -22,17 +22,17 @@
 use super::direct::{copy_from_user_directmap, copy_to_user_directmap};
 use super::error::UsercopyError;
 use super::validate::{validate_user_read, validate_user_write};
-use crate::arch::x86_64::idt::without_interrupts;
+use crate::arch::run_without_interrupts;
 
 pub fn copy_from_user(user_ptr: u64, dst: &mut [u8]) -> Result<(), UsercopyError> {
-    without_interrupts(|| {
+    run_without_interrupts(|| {
         validate_user_read(user_ptr, dst.len())?;
         copy_from_user_directmap(user_ptr, dst)
     })
 }
 
 pub fn copy_to_user(user_ptr: u64, src: &[u8]) -> Result<(), UsercopyError> {
-    without_interrupts(|| {
+    run_without_interrupts(|| {
         validate_user_write(user_ptr, src.len())?;
         copy_to_user_directmap(user_ptr, src)
     })

@@ -15,10 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod entry;
-mod start_secondary;
 pub(crate) mod framebuffer;
+mod start_secondary;
 
 #[cfg(target_arch = "x86_64")]
-mod memory;
+pub(crate) mod memory;
 
 pub use entry::{microkernel_init, microkernel_main};

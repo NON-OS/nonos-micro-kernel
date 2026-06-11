@@ -16,7 +16,6 @@
 
 use core::arch::asm;
 
-
 #[inline(always)]
 pub(super) fn current() -> u32 {
     let mpidr: u64;

@@ -26,6 +26,14 @@ pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
     };
     composite::paint(ctx, rect);
     fence(Ordering::Release);
+    if ctx.gop_mode {
+        // The composed pixels already live in the registered surface; the
+        // kernel blits it to the UEFI framebuffer. No virtio resource ops.
+        if nonos_libc::mk_surface_present(ctx.surface_handle) < 0 {
+            return Err("gop present rejected");
+        }
+        return Ok(());
+    }
     let req_a = ctx.issue_request_id();
     let pixel_offset = (rect.y as u64) * (ctx.stride as u64) + (rect.x as u64) * 4;
     gfx_client::transfer_to_host(

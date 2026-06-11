@@ -15,7 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::kind::CpuFeature;
-use super::registers::{read_aa64isar0, read_aa64isar1, read_aa64pfr0, read_aa64pfr1, read_aa64zfr0};
+use super::registers::{
+    read_aa64isar0, read_aa64isar1, read_aa64pfr0, read_aa64pfr1, read_aa64zfr0,
+};
 
 pub fn has_feature(feature: CpuFeature) -> bool {
     let aa64isar0 = read_aa64isar0();

@@ -16,7 +16,7 @@
 
 const D: [u8; 16] = [0, 0x7E, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7E, 0, 0, 0, 0, 0, 0, 0, 0];
 
-pub fn get_basic(c: u8) -> [u8; 16] {
+pub(super) fn get_basic(c: u8) -> [u8; 16] {
     match c {
         b' ' => [0; 16],
         b'!' => [0, 0x18, 0x18, 0x18, 0x18, 0x18, 0, 0x18, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -32,7 +32,7 @@ pub fn get_basic(c: u8) -> [u8; 16] {
     }
 }
 
-pub fn get_math(c: u8) -> [u8; 16] {
+pub(super) fn get_math(c: u8) -> [u8; 16] {
     match c {
         b'*' => [0, 0, 0x66, 0x3C, 0xFF, 0x3C, 0x66, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         b'+' => [0, 0, 0x18, 0x18, 0x7E, 0x18, 0x18, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -44,7 +44,7 @@ pub fn get_math(c: u8) -> [u8; 16] {
     }
 }
 
-pub fn get_punct(c: u8) -> [u8; 16] {
+pub(super) fn get_punct(c: u8) -> [u8; 16] {
     match c {
         b':' => [0, 0, 0x18, 0x18, 0, 0x18, 0x18, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         b';' => [0, 0, 0x18, 0x18, 0, 0x18, 0x18, 0x30, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -57,7 +57,7 @@ pub fn get_punct(c: u8) -> [u8; 16] {
     }
 }
 
-pub fn get_bracket(c: u8) -> [u8; 16] {
+pub(super) fn get_bracket(c: u8) -> [u8; 16] {
     match c {
         b'[' => [0, 0x3C, 0x30, 0x30, 0x30, 0x30, 0x30, 0x3C, 0, 0, 0, 0, 0, 0, 0, 0],
         b'\\' => [0, 0xC0, 0x60, 0x30, 0x18, 0x0C, 0x06, 0, 0, 0, 0, 0, 0, 0, 0, 0],

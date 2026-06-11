@@ -16,7 +16,6 @@
 
 use core::arch::asm;
 
-
 #[inline(always)]
 pub(super) fn halt() -> ! {
     unsafe {

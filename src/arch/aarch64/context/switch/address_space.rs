@@ -21,18 +21,11 @@ use crate::arch::ArchOps;
 use crate::memory::addr::PhysAddr;
 use crate::process::core::ProcessControlBlock;
 
-
-
-
-
-
 pub(super) fn swap_address_space(pcb: &Arc<ProcessControlBlock>) -> Result<(), ()> {
     let root = pcb.cr3.load(Ordering::Relaxed);
     if root == 0 {
         return Ok(());
     }
-
-
 
     unsafe {
         <crate::arch::Arch as ArchOps>::switch_address_space(PhysAddr::new(root));

@@ -34,6 +34,10 @@ pub(super) struct Slot {
     pub(super) format: u32,
     pub(super) flags: u64,
     pub(super) byte_len: u64,
+    // The VA the owner registered the surface at. The owner already has
+    // it mapped, so a self-attach returns this directly instead of
+    // remapping the frames at a fresh VA.
+    pub(super) owner_base_va: u64,
     pub(super) frames: Vec<PhysAddr>,
 }
 
@@ -71,6 +75,7 @@ pub fn register_surface(
                 format: desc.format,
                 flags: desc.flags,
                 byte_len: desc.byte_len,
+                owner_base_va: desc.base_va,
                 frames,
             });
             return Ok((i as u64, encode_handle(i as u32, epoch)));

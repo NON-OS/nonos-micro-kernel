@@ -13,10 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+mod assemble;
 mod claim;
 mod driver;
 mod irq_bind;
 mod layout;
+mod marker;
 mod mmio_map;
 mod require_window;
 mod sequence;

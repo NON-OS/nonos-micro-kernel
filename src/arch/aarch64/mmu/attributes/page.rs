@@ -29,7 +29,15 @@ pub struct PageAttributes {
 }
 
 impl PageAttributes {
-    pub const fn new(memory_type: MemoryType, write: bool, execute: bool, user: bool, global: bool, accessed: bool, dirty: bool) -> Self {
+    pub const fn new(
+        memory_type: MemoryType,
+        write: bool,
+        execute: bool,
+        user: bool,
+        global: bool,
+        accessed: bool,
+        dirty: bool,
+    ) -> Self {
         Self { memory_type, write, execute, user, global, accessed, dirty, contiguous: false }
     }
 }

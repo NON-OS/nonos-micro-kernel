@@ -16,8 +16,8 @@
 
 use core::arch::asm;
 
-use crate::arch::riscv64::sbi::SbiError;
 use crate::arch::riscv64::sbi::base as sbi_base;
+use crate::arch::riscv64::sbi::SbiError;
 
 pub fn cpu_id() -> usize {
     hart_id()
@@ -71,4 +71,6 @@ impl HartInfo {
         }
     }
 }
-pub fn is_primary_hart() -> bool { hart_id() == 0 }
+pub fn is_primary_hart() -> bool {
+    hart_id() == 0
+}

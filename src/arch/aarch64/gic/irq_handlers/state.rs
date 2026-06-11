@@ -16,19 +16,12 @@
 
 use core::sync::atomic::{AtomicPtr, AtomicU8};
 
-
-
 pub const MAX_INTID: u32 = 1020;
-
-
 
 pub(super) static IRQ_HANDLERS: [AtomicPtr<()>; MAX_INTID as usize] = {
     const INIT: AtomicPtr<()> = AtomicPtr::new(core::ptr::null_mut());
     [INIT; MAX_INTID as usize]
 };
-
-
-
 
 pub(super) const OWNER_FREE: u8 = 0;
 pub(super) const OWNER_KERNEL: u8 = 1;

@@ -27,10 +27,8 @@ pub type Pl011ConfigResult<T> = Result<T, Pl011ConfigError>;
 
 impl Pl011 {
     pub fn init(&self, baud: u32, clock: u32) -> Pl011ConfigResult<()> {
-        let denom = 16u64
-            .checked_mul(baud as u64)
-            .ok_or(Pl011ConfigError::InvalidBaud)?;
-        if denom == 0 || clock as u64 < denom {
+        let denom = 16u64.checked_mul(baud as u64).ok_or(Pl011ConfigError::InvalidBaud)?;
+        if denom == 0 || (clock as u64) < denom {
             return Err(Pl011ConfigError::InvalidClock);
         }
         let mut integer = clock as u64 / denom;

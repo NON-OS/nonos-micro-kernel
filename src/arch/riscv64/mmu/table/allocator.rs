@@ -26,7 +26,10 @@ pub struct PageTableAllocator {
 impl PageTableAllocator {
     pub fn new(start: u64, size: usize) -> Self {
         let tables = size / core::mem::size_of::<PageTable>();
-        Self { next_table: start as *mut PageTable, end: (start as *mut PageTable).wrapping_add(tables) }
+        Self {
+            next_table: start as *mut PageTable,
+            end: (start as *mut PageTable).wrapping_add(tables),
+        }
     }
 
     pub fn alloc(&mut self) -> Option<NonNull<PageTable>> {
@@ -35,7 +38,9 @@ impl PageTableAllocator {
         }
         let table = self.next_table;
         self.next_table = self.next_table.wrapping_add(1);
-        unsafe { core::ptr::write_bytes(table, 0, 1); }
+        unsafe {
+            core::ptr::write_bytes(table, 0, 1);
+        }
         NonNull::new(table)
     }
 

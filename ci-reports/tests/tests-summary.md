@@ -5,11 +5,11 @@
 | module | tests |
 | status | pass |
 | blocking | true |
-| commit | e6a31389c56c40e094c188264ab84b8b1479510a |
+| commit | 69b7f2f55445b52a5cd0b779e11f33785fb0a4b8 |
 | toolchain | nightly-2026-01-16 |
 
 ## checks
 
 | name | status | detail | artifact |
 |---|---|---|---|
-| property-and-kat | pass | 6 passed, 0 failed |  |
+| property-and-kat | pass | 10 passed, 0 failed |  |

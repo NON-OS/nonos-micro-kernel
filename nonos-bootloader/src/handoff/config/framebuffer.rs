@@ -14,14 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::gop_handle::try_gop_handle;
+use super::gop_handle::{try_gop_handle, PIXEL_FORMAT_BGRX, PIXEL_FORMAT_RGBX};
 use crate::handoff::types::FramebufferInfo;
 use uefi::proto::console::gop::GraphicsOutput;
 use uefi::table::boot::BootServices;
 use uefi::Identify;
 
-/// Get framebuffer info from GOP. Tries all handles for multi-GPU systems (Optimus).
+/// Get framebuffer info for the kernel handoff.
+///
+/// Prefer the framebuffer the display module already latched and drew the
+/// splash to. It is the proven-good linear framebuffer for this machine and
+/// its MMIO address stays valid across ExitBootServices, whereas re-opening
+/// GOP here is fragile after mode setup and yields no usable framebuffer on
+/// some firmware. The GOP re-query remains as a fallback for the headless
+/// path where the splash never initialized.
 pub fn get_framebuffer_info(bs: &BootServices) -> FramebufferInfo {
+    if let Some((ptr, width, height, stride, bgr)) = crate::display::gop::latched_linear_fb() {
+        return FramebufferInfo {
+            ptr,
+            size: (stride as u64).saturating_mul(height as u64),
+            width,
+            height,
+            stride,
+            pixel_format: if bgr { PIXEL_FORMAT_BGRX } else { PIXEL_FORMAT_RGBX },
+            cursor_y: crate::display::get_cursor_y(),
+            reserved: 0,
+        };
+    }
     if let Ok(handles) =
         bs.locate_handle_buffer(uefi::table::boot::SearchType::ByProtocol(&GraphicsOutput::GUID))
     {

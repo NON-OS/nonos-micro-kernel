@@ -32,7 +32,5 @@ pub(crate) fn switch_to_user_pcb_aarch64(pid: u32) {
         return;
     }
 
-
-
     *pcb.state.lock() = ProcessState::Ready;
 }

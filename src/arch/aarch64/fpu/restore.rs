@@ -20,9 +20,6 @@ extern "C" {
     fn aarch64_fpu_restore(ctx: *const FpSimdContext);
 }
 
-
-
-
 pub unsafe fn restore(ctx: &FpSimdContext) {
     unsafe { aarch64_fpu_restore(ctx as *const FpSimdContext) }
 }

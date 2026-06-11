@@ -16,10 +16,6 @@
 
 use core::sync::atomic::{AtomicU32, Ordering};
 
-
-
-
-
 static PHYS_INTID: AtomicU32 = AtomicU32::new(0);
 
 pub fn configure(intid: u32) {

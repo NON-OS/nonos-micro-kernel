@@ -13,12 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use nonos_libc::mk_pio_write;
 
-pub(super) fn write(grant_id: u64, offset: u16, value: u8) -> Result<(), &'static str> {
-    if mk_pio_write(grant_id, offset, 1, value as u32) < 0 {
-        Err("ps2 write failed")
-    } else {
-        Ok(())
-    }
+pub(crate) fn active_page_table_root() -> u64 {
+    #[cfg(target_arch = "x86_64")]
+    return crate::arch::x86_64::paging::read_cr3();
+
+    #[cfg(not(target_arch = "x86_64"))]
+    return 0;
 }

@@ -19,7 +19,8 @@ use super::table::PageTable;
 const TABLE_POOL_COUNT: usize = 256;
 
 static mut ROOT_TABLE: PageTable = PageTable::new();
-static mut TABLE_POOL: [PageTable; TABLE_POOL_COUNT] = [const { PageTable::new() }; TABLE_POOL_COUNT];
+static mut TABLE_POOL: [PageTable; TABLE_POOL_COUNT] =
+    [const { PageTable::new() }; TABLE_POOL_COUNT];
 static mut NEXT_TABLE: usize = 0;
 
 pub unsafe fn root_table() -> &'static mut PageTable {

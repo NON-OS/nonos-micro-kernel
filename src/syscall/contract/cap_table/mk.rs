@@ -49,8 +49,8 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkIrqBind
         | SyscallNumber::MkIrqUnbind
         | SyscallNumber::MkIrqAck
-        | SyscallNumber::MkIrqPoll
-        | SyscallNumber::MkIrqWait => caps.can_irq(),
+        | SyscallNumber::MkIrqPoll => caps.can_irq(),
+        SyscallNumber::MkIrqWait => caps.can_irq(),
         SyscallNumber::MkDmaMap | SyscallNumber::MkDmaUnmap => caps.can_dma(),
         SyscallNumber::MkPciConfigRead | SyscallNumber::MkPciConfigWrite => caps.can_driver(),
         SyscallNumber::MkPioGrant

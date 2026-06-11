@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn get(ch: u8) -> [u8; 16] {
+pub(super) fn get(ch: u8) -> [u8; 16] {
     match ch {
         b'0' => [0, 0x3C, 0x66, 0x6E, 0x76, 0x66, 0x66, 0x66, 0x3C, 0, 0, 0, 0, 0, 0, 0],
         b'1' => [0, 0x18, 0x38, 0x18, 0x18, 0x18, 0x18, 0x18, 0x7E, 0, 0, 0, 0, 0, 0, 0],

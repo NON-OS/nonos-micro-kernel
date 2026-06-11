@@ -16,29 +16,11 @@
 
 use super::types::UserEntry;
 
-
 extern "C" {
     fn aarch64_enter_user(ctx: *const UserEntry) -> !;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 pub const SPSR_EL0T_INITIAL: u64 = 0;
-
-
 
 const USER_VA_MAX: u64 = 0x0000_FFFF_FFFF_FFFF;
 
@@ -48,16 +30,6 @@ pub enum EnterError {
     NonUserStack,
     NoKernelStack,
 }
-
-
-
-
-
-
-
-
-
-
 
 pub unsafe fn enter_user(ctx: &UserEntry) -> Result<core::convert::Infallible, EnterError> {
     if ctx.entry == 0 || ctx.entry > USER_VA_MAX {

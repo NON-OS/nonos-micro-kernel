@@ -26,11 +26,6 @@ use crate::process::scheduler::smp::api::init_ap_scheduler;
 
 use super::state::CPUS_ONLINE;
 
-
-
-
-
-
 #[no_mangle]
 pub extern "C" fn aarch64_ap_entry() -> ! {
     install_vbar_el1();

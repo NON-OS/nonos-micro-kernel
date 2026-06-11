@@ -18,18 +18,13 @@ use core::arch::asm;
 
 use crate::arch::riscv64::cpu::csr::{SSTATUS_FS_DIRTY, SSTATUS_FS_INITIAL, SSTATUS_FS_MASK};
 
-
-
 pub fn enable_initial() {
     set_fs(SSTATUS_FS_INITIAL);
 }
 
-
 pub fn disable() {
     set_fs(0);
 }
-
-
 
 pub fn mark_dirty() {
     set_fs(SSTATUS_FS_DIRTY);

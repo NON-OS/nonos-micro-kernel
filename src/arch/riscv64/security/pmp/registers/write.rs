@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::super::entry::PmpEntry;
+use super::super::error::PmpResult;
 use super::addr::write_addr;
 use super::cfg::write_cfg;
 use super::validate::check_index;
-use super::super::entry::PmpEntry;
-use super::super::error::PmpResult;
 
 pub fn write_entry(index: usize, entry: &PmpEntry) -> PmpResult<()> {
     check_index(index)?;

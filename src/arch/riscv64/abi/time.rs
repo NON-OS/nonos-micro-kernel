@@ -16,8 +16,6 @@
 
 use core::arch::asm;
 
-
-
 #[inline(always)]
 pub(super) fn counter() -> u64 {
     let t: u64;

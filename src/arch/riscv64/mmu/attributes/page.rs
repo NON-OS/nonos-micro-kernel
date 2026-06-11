@@ -52,11 +52,21 @@ impl PageAttributes {
 
     pub fn to_pte_flags(&self) -> PteFlags {
         let mut flags = PteFlags::new().valid().accessed();
-        if self.read { flags = flags.readable(); }
-        if self.write { flags = flags.writable().dirty(); }
-        if self.execute { flags = flags.executable(); }
-        if self.user { flags = flags.user(); }
-        if self.global { flags = flags.global(); }
+        if self.read {
+            flags = flags.readable();
+        }
+        if self.write {
+            flags = flags.writable().dirty();
+        }
+        if self.execute {
+            flags = flags.executable();
+        }
+        if self.user {
+            flags = flags.user();
+        }
+        if self.global {
+            flags = flags.global();
+        }
         flags
     }
 }

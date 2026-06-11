@@ -20,10 +20,6 @@ use crate::arch::trap::contract::{FaultAccess, PageFaultInfo, TrapCause};
 
 use super::page_fault;
 
-
-
-
-
 pub(super) fn project(frame: &ExceptionFrame) -> TrapCause {
     let ec = ExceptionClass::from(((frame.esr >> 26) & 0x3F) as u8);
     match ec {
@@ -40,9 +36,9 @@ pub(super) fn project(frame: &ExceptionFrame) -> TrapCause {
         | ExceptionClass::SveAccess
         | ExceptionClass::Fp32
         | ExceptionClass::Fp64 => TrapCause::DeviceNotAvailable,
-        ExceptionClass::Pac
-        | ExceptionClass::EretEretaa
-        | ExceptionClass::BranchTarget => TrapCause::OtherException(ec as u8),
+        ExceptionClass::Pac | ExceptionClass::EretEretaa | ExceptionClass::BranchTarget => {
+            TrapCause::OtherException(ec as u8)
+        }
         ExceptionClass::Unknown
         | ExceptionClass::WfeWfi
         | ExceptionClass::Cp15Mcr

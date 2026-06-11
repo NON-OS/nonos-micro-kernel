@@ -35,9 +35,6 @@ pub fn map_device(domain: DomainId, bus: u8, device: u8, function: u8) -> Result
     if state.bindings.iter().any(|binding| binding.source == source) {
         return Err(VtdError::DeviceAlreadyAttached);
     }
-    state
-        .bindings
-        .push(DeviceBinding { source, domain })
-        .map_err(|_| VtdError::DomainTableFull)?;
+    state.bindings.push(DeviceBinding { source, domain }).map_err(|_| VtdError::DomainTableFull)?;
     Ok(())
 }

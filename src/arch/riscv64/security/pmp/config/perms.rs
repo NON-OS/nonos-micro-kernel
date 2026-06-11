@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{PmpAddressMode, PmpConfig};
 use super::super::constants::{PMP_A_NA4, PMP_A_NAPOT, PMP_A_OFF, PMP_A_TOR};
 use super::super::constants::{PMP_L, PMP_R, PMP_W, PMP_X};
+use super::{PmpAddressMode, PmpConfig};
 
 impl PmpConfig {
     pub(super) fn perms(&self) -> u8 {
@@ -36,6 +36,10 @@ impl PmpConfig {
     }
 
     pub(super) fn lock_bits(&self) -> u8 {
-        if self.locked { PMP_L } else { 0 }
+        if self.locked {
+            PMP_L
+        } else {
+            0
+        }
     }
 }

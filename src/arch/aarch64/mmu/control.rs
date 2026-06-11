@@ -17,7 +17,8 @@
 use core::arch::asm;
 
 pub(super) fn configure_mair() {
-    let mair = (0x00 << 0) | (0x04 << 8) | (0x0C << 16) | (0x44 << 24) | (0xFF << 32) | (0xBB << 40);
+    let mair =
+        (0x00 << 0) | (0x04 << 8) | (0x0C << 16) | (0x44 << 24) | (0xFF << 32) | (0xBB << 40);
     unsafe {
         asm!("msr mair_el1, {0}", "isb", in(reg) mair, options(nostack));
     }

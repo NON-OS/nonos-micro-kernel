@@ -28,12 +28,13 @@
 .PHONY: nonos-mk-libc nonos-mk-proof-io nonos-mk-proof-io-sign nonos-mk-check-trust-keys nonos-mk-check-trust-manifest nonos-mk-trust-policy nonos-mk-host-trust-test nonos-mk-verify-trust nonos-mk-ramfs nonos-mk-ramfs-sign nonos-mk-keyring nonos-mk-entropy nonos-mk-crypto nonos-mk-vfs nonos-mk-virtio-rng nonos-mk-virtio-rng-sign nonos-mk-check-virtio-rng-keys nonos-mk-virtio-blk nonos-mk-virtio-blk-sign nonos-mk-check-virtio-blk-keys nonos-mk-driver-virtio-gpu nonos-mk-driver-virtio-gpu-sign nonos-mk-check-driver-virtio-gpu-keys nonos-mk-virtio-net nonos-mk-virtio-net-sign nonos-mk-check-virtio-net-keys nonos-mk-driver-iwlwifi nonos-mk-driver-iwlwifi-sign nonos-mk-check-driver-iwlwifi-keys nonos-mk-driver-i2c-pci nonos-mk-driver-i2c-pci-sign nonos-mk-check-driver-i2c-pci-keys nonos-mk-driver-i2c-hid nonos-mk-driver-i2c-hid-sign nonos-mk-check-driver-i2c-hid-keys nonos-mk-ps2-input nonos-mk-ps2-input-sign nonos-mk-check-ps2-input-keys nonos-mk-xhci nonos-mk-xhci-sign nonos-mk-check-xhci-keys nonos-mk-driver-usb-msc nonos-mk-driver-usb-msc-sign nonos-mk-check-driver-usb-msc-keys nonos-mk-driver-e1000 nonos-mk-driver-e1000-sign nonos-mk-check-driver-e1000-keys nonos-mk-driver-rtl8139 nonos-mk-driver-rtl8139-sign nonos-mk-check-driver-rtl8139-keys nonos-mk-driver-rtl8169 nonos-mk-driver-rtl8169-sign nonos-mk-check-driver-rtl8169-keys nonos-mk-driver-ahci nonos-mk-driver-ahci-sign nonos-mk-check-driver-ahci-keys nonos-mk-driver-hda nonos-mk-driver-hda-sign nonos-mk-check-driver-hda-keys nonos-mk-driver-nvme nonos-mk-driver-nvme-sign nonos-mk-check-driver-nvme-keys nonos-mk-wallpaper nonos-mk-marketplace-abi nonos-mk-market nonos-mk-marketplace-index-tool
 .PHONY: nonos-mk-userland-clean
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
-.PHONY: nonos-mk-run nonos-mk-run-serial nonos-mk-debug nonos-mk-plan-a-runtime
+.PHONY: nonos-mk-run nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-net nonos-mk-run-serial-log nonos-mk-debug nonos-mk-plan-a-runtime
 .PHONY: nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-mk-boot-entropy nonos-mk-boot-crypto-hash nonos-mk-boot-vfs nonos-mk-boot-ps2-input nonos-mk-boot-xhci nonos-mk-boot-usb-hid nonos-mk-boot-desktop-gui
 .PHONY: nonos-mk-input-e2e-ps2-test nonos-mk-input-e2e-ps2-esp nonos-mk-input-e2e-xhci-test nonos-mk-input-e2e-xhci-esp nonos-mk-boot-input-e2e-ps2 nonos-mk-boot-input-e2e-xhci nonos-mk-input-probe-test nonos-mk-input-probe-esp nonos-mk-input-probe-run nonos-mk-input-probe-run-serial nonos-mk-input-probe-inject-test nonos-mk-input-probe-inject-esp nonos-mk-input-probe-inject-run-serial
 .PHONY: nonos-mk-static nonos-mk-scan
 .PHONY: nonos-mk-verify nonos-mk-verify-fast
-.PHONY: nonos-mk-test nonos-mk-host-test
+.PHONY: nonos-mk-test nonos-mk-host-test nonos-mk-release-audit nonos-mk-claims-check nonos-mk-qemu-net-audit
+.PHONY: ci-fast ci-security ci-release ci-soak nonos-mk-no-telemetry-capture nonos-mk-boot-evidence
 .PHONY: nonos-mk-release
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
 .PHONY: nonos-mk-fmt
@@ -183,9 +184,11 @@ QEMU_CPU := max
 QEMU_SMP := 2
 QEMU_HOST_SSH_PORT ?= 2222
 QEMU_HOST_HTTP_PORT ?= 8080
+QEMU_NET_MODE ?= off
+QEMU_NET_CAPTURE ?=
+QEMU_SERIAL_LOG ?= $(TARGET_DIR)/qemu-serial.log
 QEMU_BLK_IMG := $(TARGET_DIR)/qemu-virtio-blk.img
 QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
-QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::$(QEMU_HOST_SSH_PORT)-:22,hostfwd=tcp::$(QEMU_HOST_HTTP_PORT)-:80
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
 QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=1024,yres=768
 # Keyboard/mouse via the q35 i8042 (PS/2). USB HID interrupt-IN transfers
@@ -193,6 +196,20 @@ QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=1024,yres=768
 # there; the xHCI controller stays for the USB stack/storage paths.
 QEMU_USB := -device qemu-xhci,id=xhci
 QEMU_RNG := -device virtio-rng-pci
+
+ifeq ($(QEMU_NET_MODE),off)
+    QEMU_NET :=
+    QEMU_NET_DESC := disabled
+else ifeq ($(QEMU_NET_MODE),hostfwd)
+    QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::$(QEMU_HOST_SSH_PORT)-:22,hostfwd=tcp::$(QEMU_HOST_HTTP_PORT)-:80
+    QEMU_NET_DESC := hostfwd ssh=$(QEMU_HOST_SSH_PORT) http=$(QEMU_HOST_HTTP_PORT)
+    ifneq ($(QEMU_NET_CAPTURE),)
+        QEMU_NET += -object filter-dump,id=net0dump,netdev=net0,file=$(QEMU_NET_CAPTURE)
+        QEMU_NET_DESC := $(QEMU_NET_DESC) capture=$(QEMU_NET_CAPTURE)
+    endif
+else
+    $(error Unsupported QEMU_NET_MODE=$(QEMU_NET_MODE). Use off or hostfwd)
+endif
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 
@@ -1601,8 +1618,7 @@ $(QEMU_OVMF_VARS_RW): $(OVMF_VARS)
 
 nonos-mk-run: nonos-mk-live-production-proof nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS in QEMU..."
-	@echo "  SSH:  ssh -p $(QEMU_HOST_SSH_PORT) localhost"
-	@echo "  HTTP: http://localhost:$(QEMU_HOST_HTTP_PORT)"
+	@echo "  Network: $(QEMU_NET_DESC)"
 	@echo "  Quit: Ctrl+A then X"
 	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
@@ -1611,8 +1627,12 @@ nonos-mk-run: nonos-mk-live-production-proof nonos-mk-desktop-gui-prod nonos-mk-
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial mon:stdio -vga none -display cocoa,zoom-to-fit=on -no-reboot
 
+nonos-mk-run-net:
+	@$(MAKE) --no-print-directory QEMU_NET_MODE=hostfwd nonos-mk-run
+
 nonos-mk-run-wizard: nonos-mk-setup-wizard-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS (first-boot setup wizard) in QEMU..."
+	@echo "  Network: $(QEMU_NET_DESC)"
 	@echo "  Drive it with the host keyboard; Quit: Ctrl+A then X"
 	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
 		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-setup-wizard" \
@@ -1632,11 +1652,27 @@ nonos-mk-terminal-only-run: nonos-mk-terminal-only-prod nonos-mk-esp $(QEMU_OVMF
 		-serial mon:stdio -no-reboot
 
 nonos-mk-run-serial: nonos-mk-desktop-gui-prod nonos-mk-esp
+	@echo "Booting NONOS serial console in QEMU..."
+	@echo "  Network: $(QEMU_NET_DESC)"
 	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
 		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial mon:stdio -display none -no-reboot
+
+nonos-mk-run-serial-net:
+	@$(MAKE) --no-print-directory QEMU_NET_MODE=hostfwd nonos-mk-run-serial
+
+nonos-mk-run-serial-log: nonos-mk-desktop-gui-prod nonos-mk-esp
+	@mkdir -p $(dir $(QEMU_SERIAL_LOG))
+	@echo "Booting NONOS serial console in QEMU..."
+	@echo "  Network: $(QEMU_NET_DESC)"
+	@echo "  Serial log: $(QEMU_SERIAL_LOG)"
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
+		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial "file:$(QEMU_SERIAL_LOG)" -display none -no-reboot
 
 nonos-mk-debug: nonos-mk-desktop-gui-prod nonos-mk-esp
 	@echo "QEMU listening for GDB on :1234   (gdb -ex 'target remote :1234')"
@@ -1759,6 +1795,34 @@ nonos-mk-verify: nonos-mk-static
 # Full test: verify + required QEMU boot harnesses.
 nonos-mk-test: nonos-mk-verify nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-mk-boot-desktop-gui
 
+# CI-friendly security evidence checks.
+nonos-mk-release-audit:
+	@bash scripts/audit_release_profile.sh
+
+nonos-mk-claims-check:
+	@bash scripts/validate_claims_registry.sh
+
+nonos-mk-qemu-net-audit:
+	@bash scripts/audit_qemu_network_mode.sh
+
+ci-fast:
+	@RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) test --manifest-path nonos-verify/Cargo.toml --tests
+	@$(MAKE) nonos-mk-claims-check
+
+ci-security: ci-fast nonos-mk-release-audit nonos-mk-qemu-net-audit
+
+ci-release: ci-security
+	@echo "ci-release: heavy reproducibility check is explicit; run scripts/repro_build_check.sh for release candidates"
+
+nonos-mk-no-telemetry-capture:
+	@bash scripts/no_telemetry_qemu_capture.sh
+
+nonos-mk-boot-evidence:
+	@bash scripts/qemu_boot_evidence.sh
+
+ci-soak:
+	@echo "ci-soak: run nonos-mk-boot-evidence, nonos-mk-no-telemetry-capture, scripts/zero_state_forensic_qemu.sh, and hardware dossier collection"
+
 # Host-mode crate tests (currently flaky on TSC; tracked in
 # docs/production-roadmap/master-execution-checklist.md F1).
 nonos-mk-host-test:
@@ -1833,9 +1897,12 @@ help:
 	@echo "  make nonos-mk-esp             EFI System Partition for QEMU"
 	@echo
 	@echo "Run:"
-	@echo "  make nonos-mk-run             QEMU + OVMF (SSH:2222, HTTP:8080)"
+	@echo "  make nonos-mk-run             QEMU + OVMF, network disabled by default"
+	@echo "  make nonos-mk-run-net         QEMU + OVMF with explicit hostfwd network"
 	@echo "  make nonos-mk-run-wizard      QEMU + OVMF, first-boot setup wizard"
 	@echo "  make nonos-mk-run-serial      headless serial-only"
+	@echo "  make nonos-mk-run-serial-net  headless serial with explicit hostfwd network"
+	@echo "  make nonos-mk-run-serial-log  headless serial with file log"
 	@echo "  make nonos-mk-debug           QEMU + GDB on :1234"
 	@echo
 	@echo "Verify:"
@@ -1852,9 +1919,18 @@ help:
 	@echo "  make nonos-mk-boot-input-e2e-xhci input stack e2e proof (xHCI HID) under QEMU"
 	@echo "  make nonos-mk-test            verify + both boot harnesses"
 	@echo "  make nonos-mk-host-test       host-mode cargo tests (flaky; see roadmap)"
+	@echo "  make nonos-mk-release-audit   release-profile safety audit"
+	@echo "  make nonos-mk-claims-check    claims registry schema/status check"
+	@echo "  make nonos-mk-qemu-net-audit  QEMU default/no-NIC command audit"
+	@echo "  make nonos-mk-no-telemetry-capture bounded QEMU packet-capture harness"
+	@echo "  make nonos-mk-boot-evidence   bounded no-network QEMU serial boot evidence"
+	@echo "  make ci-fast                  host security tests + claims check"
+	@echo "  make ci-security              ci-fast + release-profile audit"
 	@echo
 	@echo "Release:"
 	@echo "  make nonos-mk-release         (paused; see message)"
+	@echo "  make ci-release               release evidence gate (heavy repro explicit)"
+	@echo "  make ci-soak                  prints soak/forensic harness guidance"
 	@echo
 	@echo "Clean:"
 	@echo "  make nonos-mk-clean           kernel artefacts only (preserve userland)"

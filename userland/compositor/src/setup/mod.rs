@@ -16,6 +16,8 @@
 
 mod discover;
 mod prime;
+mod prime_gop;
 mod prime_once;
 
-pub use prime::run;
+pub use prime::run_virtio;
+pub use prime_gop::run_gop_once as run_gop;

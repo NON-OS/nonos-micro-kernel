@@ -24,9 +24,6 @@ use crate::process::scheduler::preemption::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLI
 
 use super::address_space::swap_address_space;
 
-
-
-
 pub(super) fn try_first_entry(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
     let mut entry = match pcb.pending_user_entry.lock().take() {
         Some(e) => e,
@@ -38,7 +35,6 @@ pub(super) fn try_first_entry(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool 
         *pcb.state.lock() = ProcessState::Terminated(-1);
         return true;
     }
-
 
     if entry.kernel_sp == 0 {
         entry.kernel_sp = kstack;
@@ -56,12 +52,7 @@ pub(super) fn try_first_entry(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool 
     CURRENT_PID.store(pid, Ordering::SeqCst);
     CURRENT_TIME_SLICE.store(DEFAULT_TIME_SLICE, Ordering::SeqCst);
 
-
-
-
-
     fpu::prepare_incoming();
-
 
     if unsafe { enter_user(&entry) }.is_err() {
         *pcb.state.lock() = ProcessState::Terminated(-1);

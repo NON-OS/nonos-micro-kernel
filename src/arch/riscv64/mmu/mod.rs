@@ -15,16 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod attributes;
-mod branch;
 mod boot_map;
+mod branch;
 mod constants;
-pub mod sv39;
-pub mod sv48;
-pub mod table;
 mod map;
 mod mode;
 mod satp;
 mod state;
+pub mod sv39;
+pub mod sv48;
+pub mod table;
 mod tlb;
 mod unmap;
 
