@@ -18,6 +18,7 @@ use super::info::info;
 use super::row::Row;
 use crate::fwui::data::Sys;
 use crate::fwui::theme;
+use crate::paging::supports_1gib_pages;
 use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
@@ -34,10 +35,28 @@ pub fn advanced(sys: &Sys) -> Vec<Row> {
     let (smep, smepc) = f(sys.feat.smep);
     let (smap, smapc) = f(sys.feat.smap);
     let (umip, umipc) = f(sys.feat.umip);
+    let g1 = supports_1gib_pages();
+    let (pages, pagesc) = if g1 {
+        ("1 GiB + 2 MiB".to_string(), theme::OK)
+    } else {
+        ("2 MiB only".to_string(), theme::ACCENT)
+    };
     vec![
         info(b"NX / XD", nx, nxc, b"No-Execute page protection (CPUID 80000001 EDX bit 20)."),
         info(b"SMEP", smep, smepc, b"Supervisor Mode Execution Prevention (CPUID 7 EBX bit 7)."),
         info(b"SMAP", smap, smapc, b"Supervisor Mode Access Prevention (CPUID 7 EBX bit 20)."),
         info(b"UMIP", umip, umipc, b"User-Mode Instruction Prevention (CPUID 7 ECX bit 2)."),
+        info(
+            b"1 GIB PAGES",
+            if g1 { "SUPPORTED".to_string() } else { "ABSENT".to_string() },
+            pagesc,
+            b"CPUID 80000001 EDX bit 26. Loader falls back to 2 MiB when absent.",
+        ),
+        info(
+            b"PAGING LEAVES",
+            pages,
+            pagesc,
+            b"Hugepage sizes the loader maps the identity range and directmap with.",
+        ),
     ]
 }

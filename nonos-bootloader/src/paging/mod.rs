@@ -29,5 +29,6 @@ mod table;
 mod verify;
 
 pub use build::build_kernel_pml4;
+pub use page1g::supports_1gib_pages;
 pub use phys_to_directmap::phys_to_directmap_virt;
 pub use switch::switch_to_kernel_pml4;

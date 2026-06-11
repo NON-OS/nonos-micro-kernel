@@ -27,6 +27,20 @@ use uefi::table::runtime::Time;
 pub fn main(sys: &Sys, time: &Time) -> Vec<Row> {
     let cpu = if sys.cpu.brand.is_empty() { sys.cpu.vendor.clone() } else { sys.cpu.brand.clone() };
     let logical = if sys.cpu.logical > 0 { sys.cpu.logical as usize } else { sys.cpu_count };
+    let mut prot: Vec<&str> = Vec::new();
+    if sys.feat.nxe {
+        prot.push("NX");
+    }
+    if sys.feat.smep {
+        prot.push("SMEP");
+    }
+    if sys.feat.smap {
+        prot.push("SMAP");
+    }
+    if sys.feat.umip {
+        prot.push("UMIP");
+    }
+    let protections = if prot.is_empty() { "none reported".to_string() } else { prot.join(" ") };
     vec![
         info(
             b"FIRMWARE VENDOR",
@@ -49,10 +63,16 @@ pub fn main(sys: &Sys, time: &Time) -> Vec<Row> {
         info(
             b"BOOTLOADER",
             format!("v{}", sys.boot_ver),
-            theme::TEXT,
+            theme::ACCENT,
             b"NONOS stage-0 UEFI loader version.",
         ),
         info(b"PROCESSOR", cpu, theme::TEXT, b"CPU brand string from CPUID extended leaves."),
+        info(
+            b"VENDOR",
+            sys.cpu.vendor.clone(),
+            theme::TEXT,
+            b"CPU vendor identification string from CPUID leaf 0.",
+        ),
         info(
             b"LOGICAL CPUS",
             format!("{}", logical),
@@ -60,10 +80,46 @@ pub fn main(sys: &Sys, time: &Time) -> Vec<Row> {
             b"Logical processors visible to the platform.",
         ),
         info(
+            b"CPU PROTECTIONS",
+            protections,
+            theme::ACCENT,
+            b"Hardware protection features the loader confirmed active.",
+        ),
+        info(
             b"TOTAL MEMORY",
             format!("{} MB", sys.mem_mib()),
             theme::TEXT,
             b"Usable RAM summed from the UEFI memory map.",
+        ),
+        info(
+            b"ACPI",
+            if sys.acpi { "present".to_string() } else { "absent".to_string() },
+            theme::TEXT,
+            b"Whether the firmware exposes ACPI configuration tables.",
+        ),
+        info(
+            b"PCI DEVICES",
+            format!("{}", sys.pci),
+            theme::TEXT,
+            b"PCI functions enumerated on the platform bus.",
+        ),
+        info(
+            b"STORAGE",
+            format!("{}", sys.storage),
+            theme::TEXT,
+            b"Block storage controllers seen during enumeration.",
+        ),
+        info(
+            b"NETWORK",
+            format!("{}", sys.net),
+            theme::TEXT,
+            b"Network interfaces seen during enumeration.",
+        ),
+        info(
+            b"GRAPHICS",
+            format!("{}", sys.gpu),
+            theme::TEXT,
+            b"Display adapters seen during enumeration.",
         ),
         info(
             b"SYSTEM DATE",
