@@ -24,6 +24,16 @@ pub(super) fn spawn() {
     super::desktop_services::spawn();
 }
 
+// The display core (input router, compositor, boot-splash) is brought up
+// before the driver and network fleets so the boot-splash attestation
+// screen appears immediately after the loader hands off, and holds while
+// the rest of the capsules spawn behind it. `spawn` re-invokes these
+// later; every one is idempotent through its `is_alive` guard.
+pub(super) fn spawn_early_display() {
+    spawn_gui_core();
+    spawn_boot_splash();
+}
+
 pub(super) fn spawn_gui_core() {
     spawn_input_router();
     spawn_compositor();
@@ -32,6 +42,9 @@ pub(super) fn spawn_gui_core() {
 #[cfg(feature = "nonos-capsule-boot-splash")]
 fn spawn_boot_splash() {
     use crate::userspace::capsule_boot_splash as c;
+    if c::shared_state().is_alive() {
+        return;
+    }
     super::boot::capsule(
         "BOOT-SPLASH",
         "boot_splash",

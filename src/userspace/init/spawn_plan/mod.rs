@@ -43,8 +43,8 @@ mod smoketests_services;
 
 pub(super) use app_orchestrator::spawn_apps;
 pub(super) use orchestrator::{
-    run_ramfs_smoketest, run_smoketests, spawn_core_after_ramfs, spawn_desktop, spawn_drivers,
-    spawn_market, spawn_network, spawn_ramfs, spawn_vfs,
+    run_ramfs_smoketest, run_smoketests, spawn_core_after_ramfs, spawn_desktop, spawn_display_core,
+    spawn_drivers, spawn_market, spawn_network, spawn_ramfs, spawn_vfs,
 };
 
 #[cfg(feature = "microkernel-setup-wizard")]

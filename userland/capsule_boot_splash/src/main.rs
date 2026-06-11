@@ -18,7 +18,12 @@ use nonos_libc::{
     mk_yield, AttestStatus, INPUT_KIND_KEY_DOWN,
 };
 
-const DWELL_MS: i64 = 6000;
+// Linger on the splash until the desktop shell registers (the desktop is
+// coming up), then a short settle so it paints behind this overlay before
+// we hand off. MAX_DWELL is a hard cap so the splash never hangs if the
+// shell fails to appear.
+const SETTLE_MS: i64 = 1000;
+const MAX_DWELL_MS: i64 = 30_000;
 const MAX_ITERS: u32 = 8_000_000;
 const READY_ATTEMPTS: u32 = 256;
 
@@ -88,13 +93,19 @@ fn interact(comp: u32, base: u64, w: u32, h: u32, stride: u32, att: &AttestStatu
     let mut iters: u32 = 0;
     let mut frame: u32 = u32::MAX;
     let mut start = mk_time_millis();
+    let mut desktop_up_at: i64 = -1;
     loop {
         let now = mk_time_millis();
         if start < 0 {
             start = now;
         }
         let el = if start >= 0 && now >= start { now - start } else { 0 };
-        if (!show_detail && el >= DWELL_MS) || iters >= MAX_ITERS {
+        if desktop_up_at < 0 && proto::lookup(b"desktop_shell").is_some() {
+            desktop_up_at = now;
+        }
+        let handed_off =
+            desktop_up_at >= 0 && now >= desktop_up_at && now - desktop_up_at >= SETTLE_MS;
+        if (!show_detail && (handed_off || el >= MAX_DWELL_MS)) || iters >= MAX_ITERS {
             break;
         }
         iters = iters.saturating_add(1);
