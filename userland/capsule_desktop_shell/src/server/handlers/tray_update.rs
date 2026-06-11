@@ -16,7 +16,7 @@
 
 use crate::compositor_client::push_damage_commit;
 use crate::protocol::{Request, E_INVAL, E_NOENT, TRAY_LABEL_MAX, TRAY_UPDATE_REQ_LEN};
-use crate::render::{menubar_rect, paint_chrome};
+use crate::render::{menubar_rect, paint_chrome, sync_toast_layer};
 use crate::server::respond;
 use crate::state::Context;
 
@@ -52,5 +52,6 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
     let r = menubar_rect(ctx.width);
     let rid = ctx.issue_request_id();
     let _ = push_damage_commit(ctx.compositor_port, rid, r.x, r.y, r.width, r.height);
+    sync_toast_layer(ctx);
     let _ = respond::status(sender_pid, req, 0, tx);
 }

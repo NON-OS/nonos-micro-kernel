@@ -22,6 +22,7 @@ pub mod layout;
 mod side_launchers;
 pub mod status;
 pub mod text;
+pub mod toasts;
 
 pub use bottom_taskbar::paint_bottom_taskbar;
 pub use chrome::paint_chrome;
@@ -30,3 +31,4 @@ pub use layout::{menubar_rect, spotlight_rect};
 pub use side_launchers::paint_side_launchers;
 pub use status::paint_status;
 pub use text::draw_overlay_text;
+pub use toasts::sync_toast_layer;

@@ -34,7 +34,7 @@ impl NotifyLevel {
 
     pub fn tint(self) -> u32 {
         match self {
-            Self::Info => 0xFF1B_2030,
+            Self::Info => 0xFF2A_5FAF,
             Self::Warn => 0xFFB8_8A20,
             Self::Error => 0xFFB8_2030,
         }

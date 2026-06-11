@@ -22,6 +22,7 @@ use super::constants::CLOCK_REFRESH_MS;
 use super::drain::drain;
 use super::refresh_clock::refresh_clock;
 use crate::protocol::{HDR_LEN, IPC_PAYLOAD_MAX};
+use crate::render::sync_toast_layer;
 use crate::state::Context;
 
 pub fn run(mut ctx: Context) -> ! {
@@ -35,6 +36,9 @@ pub fn run(mut ctx: Context) -> ! {
         let now = mk_time_millis();
         if now.wrapping_sub(last_clock_ms) >= CLOCK_REFRESH_MS as i64 {
             refresh_clock(&mut ctx);
+            if ctx.toasts.expire(now) || ctx.toast_layer_live {
+                sync_toast_layer(&mut ctx);
+            }
             last_clock_ms = now;
         }
         let _ = mk_display_vsync_wait(0);

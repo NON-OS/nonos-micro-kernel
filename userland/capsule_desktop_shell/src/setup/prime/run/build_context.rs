@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::setup::prime::{overlay::Overlay, peers::Peers};
-use crate::state::{Context, SpotlightState, TrayTable};
+use crate::state::{Context, SpotlightState, ToastQueue, TrayTable};
 
 pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
     Context {
@@ -32,6 +32,8 @@ pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
         tray: TrayTable::new(),
         spotlight: SpotlightState::new(),
         last_notify_level: None,
+        toasts: ToastQueue::new(),
+        toast_layer_live: false,
         next_request_id: 2,
     }
 }

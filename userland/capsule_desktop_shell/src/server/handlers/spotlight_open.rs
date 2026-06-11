@@ -16,7 +16,7 @@
 
 use crate::compositor_client::push_damage_commit;
 use crate::protocol::Request;
-use crate::render::{paint_chrome, spotlight_rect};
+use crate::render::{paint_chrome, spotlight_rect, sync_toast_layer};
 use crate::server::respond;
 use crate::state::Context;
 
@@ -26,5 +26,6 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, tx: &mut [u8]) 
     let r = spotlight_rect(ctx.width, ctx.height);
     let rid = ctx.issue_request_id();
     let _ = push_damage_commit(ctx.compositor_port, rid, r.x, r.y, r.width, r.height);
+    sync_toast_layer(ctx);
     let _ = respond::status(sender_pid, req, 0, tx);
 }
