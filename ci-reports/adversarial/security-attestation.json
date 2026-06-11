@@ -1,0 +1,57 @@
+{
+  "attacks_denied": 7,
+  "attacks_total": 7,
+  "commit": "69b7f2f55445b52a5cd0b779e11f33785fb0a4b8",
+  "results": [
+    {
+      "attack": "cert-bitflip",
+      "contained": true,
+      "detail": "cert verify: VerifyTrustAnchorBadSig(\"mldsa65\")",
+      "expectation": "denied",
+      "outcome": "denied"
+    },
+    {
+      "attack": "manifest-bitflip",
+      "contained": true,
+      "detail": "manifest verify: VerifyPublisherBadSig(\"mldsa65\")",
+      "expectation": "denied",
+      "outcome": "denied"
+    },
+    {
+      "attack": "policy-bitflip",
+      "contained": true,
+      "detail": "cert verify: VerifyTrustAnchorBadSig(\"mldsa65\")",
+      "expectation": "denied",
+      "outcome": "denied"
+    },
+    {
+      "attack": "cert-expired",
+      "contained": true,
+      "detail": "cert verify: VerifyExpired",
+      "expectation": "denied",
+      "outcome": "denied"
+    },
+    {
+      "attack": "cert-premature",
+      "contained": true,
+      "detail": "cert verify: VerifyNotYetValid",
+      "expectation": "denied",
+      "outcome": "denied"
+    },
+    {
+      "attack": "cert-truncated",
+      "contained": true,
+      "detail": "cert decode: KeyFileShape(\"unexpected eof in decode\")",
+      "expectation": "denied",
+      "outcome": "denied"
+    },
+    {
+      "attack": "cross-binding",
+      "contained": true,
+      "detail": "manifest verify: VerifyNonosIdCertIdMismatch",
+      "expectation": "denied",
+      "outcome": "denied"
+    }
+  ],
+  "victim": "about"
+}
