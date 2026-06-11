@@ -15,9 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use nonos_libc::mk_pio_write;
 
-pub(super) fn write(grant_id: u64, offset: u16, value: u8) -> Result<(), &'static str> {
+pub(super) fn pio_write(grant_id: u64, offset: u16, value: u8) -> Result<(), &'static str> {
     if mk_pio_write(grant_id, offset, 1, value as u32) < 0 {
-        Err("ps2 write failed")
+        Err("kbd write failed")
     } else {
         Ok(())
     }

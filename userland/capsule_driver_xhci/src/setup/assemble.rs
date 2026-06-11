@@ -13,11 +13,31 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use super::pio_write::pio_write;
-use super::wait_input_clear::wait_input_clear;
-use crate::constants::DATA_OFFSET;
 
-pub(super) fn write_data(grant_id: u64, value: u8) -> Result<(), &'static str> {
-    wait_input_clear(grant_id)?;
-    pio_write(grant_id, DATA_OFFSET, value)
+use super::driver::Driver;
+use crate::controller::{ControllerLayout, Scratchpads};
+use crate::dma::{DmaPool, DmaRegion};
+use crate::handles::BrokerHandles;
+use crate::rings::{command::CommandRing, event::EventRing};
+use crate::slots::SlotTable;
+
+pub(super) fn assemble(
+    handles: BrokerHandles,
+    dcbaa: DmaRegion,
+    scratchpads: Scratchpads,
+    dma_pool: DmaPool,
+    command_ring: CommandRing,
+    event_ring: EventRing,
+    layout: ControllerLayout,
+) -> Driver {
+    Driver {
+        handles,
+        dcbaa,
+        scratchpads,
+        dma_pool,
+        command_ring,
+        event_ring,
+        layout,
+        slots: SlotTable::new(),
+    }
 }

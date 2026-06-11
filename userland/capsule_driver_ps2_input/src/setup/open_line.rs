@@ -13,11 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use super::pio_write::pio_write;
-use super::wait_input_clear::wait_input_clear;
-use crate::constants::DATA_OFFSET;
 
-pub(super) fn write_data(grant_id: u64, value: u8) -> Result<(), &'static str> {
-    wait_input_clear(grant_id)?;
-    pio_write(grant_id, DATA_OFFSET, value)
+pub(super) fn open_line(grant_id: u64) {
+    if grant_id != 0 {
+        let _ = nonos_libc::mk_irq_ack(grant_id);
+    }
 }

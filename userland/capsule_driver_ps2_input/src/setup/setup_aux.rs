@@ -13,11 +13,23 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use super::pio_write::pio_write;
-use super::wait_input_clear::wait_input_clear;
-use crate::constants::DATA_OFFSET;
 
-pub(super) fn write_data(grant_id: u64, value: u8) -> Result<(), &'static str> {
-    wait_input_clear(grant_id)?;
-    pio_write(grant_id, DATA_OFFSET, value)
+use super::claim::claim;
+use super::irq::bind_raw as irq_bind_raw;
+use crate::discover::find_ps2_aux;
+
+pub(super) fn setup_aux() -> u64 {
+    let Some(aux) = find_ps2_aux() else {
+        return 0;
+    };
+    let Ok(epoch) = claim(aux.device_id) else {
+        return 0;
+    };
+    match irq_bind_raw(aux, epoch) {
+        Ok(out) => out.grant_id,
+        Err(_) => {
+            let _ = nonos_libc::mk_device_release(aux.device_id);
+            0
+        }
+    }
 }
