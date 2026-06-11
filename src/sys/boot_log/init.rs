@@ -14,24 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::draw::fill_rect;
 use super::state::{DISPLAY_ENABLED, LOG_Y, MIN_LOG_Y};
-use crate::kernel_core::init::framebuffer::framebuffer_state;
 use core::sync::atomic::Ordering;
 
 const TOP: u32 = 24;
 
 pub fn init_after_fb(_cursor_y: u32) {
-    match framebuffer_state() {
-        Some(fb) => {
-            crate::sys::serial::println(b"[fbconsole] framebuffer present, clearing");
-            fill_rect(fb, 0, 0, fb.width, fb.height, 0x0000_0000);
-        }
-        None => crate::sys::serial::println(b"[fbconsole] NO framebuffer mapped"),
-    }
+    // The on-screen kernel text console stays off by design. The
+    // bootloader leaves its verified-boot splash in the framebuffer, and
+    // the compositor then brings up the boot-splash capsule and the
+    // desktop over it. Drawing a scrolling green-on-black kernel log here
+    // would clobber that sequence, so the kernel log goes to serial only
+    // and the framebuffer is left intact for the compositor.
+    crate::sys::serial::println(b"[fbconsole] on-screen log disabled; serial only");
     LOG_Y.store(TOP, Ordering::SeqCst);
     MIN_LOG_Y.store(TOP, Ordering::SeqCst);
-    DISPLAY_ENABLED.store(true, Ordering::Release);
+    DISPLAY_ENABLED.store(false, Ordering::Release);
 }
 
 pub fn disable_display() {
