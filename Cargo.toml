@@ -511,6 +511,29 @@ microkernel-desktop-gui = [
   "nonos-capsule-power",
 ]
 
+# Full desktop image. The desktop-gui set plus every production hardware
+# driver capsule (storage, NIC, audio, USB MSC, I2C HID) and the market,
+# setup-wizard, and input-proof capsules. Excludes only the input-probe
+# injection harness, which exists to fake input during tests. Every
+# capsule here is already in the verified-capsule policy root.
+microkernel-full-gui = [
+  "microkernel-desktop-gui",
+  "nonos-capsule-driver-ahci",
+  "nonos-capsule-driver-nvme",
+  "nonos-capsule-driver-e1000",
+  "nonos-capsule-driver-rtl8139",
+  "nonos-capsule-driver-rtl8169",
+  "nonos-capsule-driver-iwlwifi",
+  "nonos-capsule-driver-hda",
+  "nonos-capsule-driver-usb-msc",
+  "nonos-capsule-driver-i2c-pci",
+  "nonos-capsule-driver-i2c-hid",
+  "nonos-capsule-market",
+  "nonos-capsule-setup-wizard",
+  "nonos-capsule-input-proof",
+  "nonos-capsule-hello",
+]
+
 microkernel-toolkit = ["microkernel-desktop-gui"]
 microkernel-about = ["microkernel-desktop-gui"]
 microkernel-calculator = ["microkernel-desktop-gui"]
