@@ -500,7 +500,6 @@ microkernel-desktop-gui = [
   "nonos-capsule-wallpaper-catalog",
   "nonos-capsule-toolkit",
   "nonos-capsule-about",
-  "nonos-capsule-hello",
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
   "nonos-capsule-terminal",
@@ -729,9 +728,7 @@ microkernel-wallpaper-smoketest = [
 microkernel = ["microkernel-capsules"]
 
 # Mid-refactor cfg gates referenced from src.
-nonos-arch-hardening = []   # src/arch/x86_64/security/{kpti,stack,spectre}
 nonos-arch-iommu     = []   # src/arch/x86_64/iommu/*
-nonos-fs-locking     = []   # src/fs/locking/*
 
 # In-tree crypto, audit-anchored constant-time implementations.
 crypto-ed25519-int   = []
