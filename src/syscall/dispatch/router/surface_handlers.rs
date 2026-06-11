@@ -33,8 +33,7 @@ use super::surface_ops::{map_err, EFAULT, EINVAL, ESRCH};
 static VSYNC_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn trace_surface(op: &[u8], label: &[u8], pid: u32) {
-    if !matches!(pid, 0x17 | 0x26 | 0x27)
-        || VSYNC_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80
+    if !matches!(pid, 0x17 | 0x26 | 0x27) || VSYNC_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80
     {
         return;
     }
@@ -129,17 +128,20 @@ pub(super) fn do_present(handle: u64) -> SyscallResult {
         Some(p) => p,
         None => return errno(ESRCH),
     };
-    let (base_va, _byte_len) = match lookup_attached_va(pid, handle) {
+    let (base_va, byte_len) = match lookup_attached_va(pid, handle) {
         Some(v) => v,
         None => return errno(EINVAL),
     };
-    super::graphics_present::handle(0, base_va)
+    super::graphics_present::handle(0, base_va, byte_len as usize)
 }
 
 pub(super) fn do_vsync_wait(display: u64) -> SyscallResult {
-    let pid = current_pid().unwrap_or(0);
+    let pid = match current_pid() {
+        Some(p) => p,
+        None => return errno(ESRCH),
+    };
     trace_surface(b"vsync", b"enter", pid);
-    match wait_for_vsync(display as u32) {
+    match wait_for_vsync(display as u32, pid) {
         Ok(deadline) => {
             trace_surface(b"vsync", b"ok", pid);
             SyscallResult::success_audited(deadline as i64)

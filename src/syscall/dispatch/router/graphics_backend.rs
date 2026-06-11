@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Graphics syscall backend. Only the display-dimensions query survives
-//! in the kernel; surface create/map/present moved to the MkSurface path
-//! served by the surface registry and the compositor capsule. The
-//! `surface_span_for_id` helper stays because the live MkSurfacePresent
-//! handler (`graphics_present`) shares it.
-
 use crate::syscall::numbers::SyscallNumber;
 use crate::syscall::SyscallResult;
 use crate::usercopy::write_user_value;
@@ -61,25 +55,4 @@ fn handle_display_dimensions(display: u64, out_w: u64, out_h: u64) -> SyscallRes
         return super::super::util::errno(EFAULT);
     }
     SyscallResult::success_audited(0)
-}
-
-/// Resolve a surface id (its base VA) to the length of the mapping that
-/// backs it. Shared with `graphics_present`, which serves the live
-/// MkSurfacePresent path.
-pub(super) fn surface_span_for_id(id: u64) -> Result<usize, i32> {
-    if id == 0 {
-        return Err(EINVAL);
-    }
-    let Some(proc) = crate::process::current_process() else {
-        return Err(ENOTSUP);
-    };
-    let mem = proc.memory.lock();
-    let Some(vma) = mem.vmas.iter().find(|v| v.start.as_u64() == id) else {
-        return Err(EINVAL);
-    };
-    let len = vma.end.as_u64().saturating_sub(vma.start.as_u64()) as usize;
-    if len == 0 {
-        return Err(EINVAL);
-    }
-    Ok(len)
 }
