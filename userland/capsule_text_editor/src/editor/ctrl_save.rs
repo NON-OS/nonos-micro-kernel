@@ -25,10 +25,10 @@ pub(super) fn ctrl_save(state: &mut State) -> EventOutcome {
         return EventOutcome::Repaint;
     }
     let path = state.path[..state.path_len].to_vec();
-    state.status = if vfs::write_file(state.owner_pid, &path, &state.buf[..state.len]).is_ok() {
-        b"saved"
-    } else {
-        b"save failed"
-    };
+    let ok = vfs::write_file(state.owner_pid, &path, &state.buf[..state.len]).is_ok();
+    if ok {
+        super::notify::notify_saved(state);
+    }
+    state.status = if ok { b"saved" } else { b"save failed" };
     EventOutcome::Repaint
 }

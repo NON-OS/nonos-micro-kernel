@@ -18,6 +18,7 @@ pub mod call;
 pub mod error;
 pub mod hydrate;
 pub mod lookup;
+pub mod notify_shell;
 pub mod op_get;
 pub mod op_set_bool;
 pub mod op_set_i8;

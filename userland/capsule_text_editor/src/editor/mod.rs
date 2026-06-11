@@ -21,6 +21,7 @@ mod ctrl_paste;
 mod ctrl_save;
 mod event;
 mod manifest;
+mod notify;
 mod on_ctrl;
 mod paint;
 mod path_prompt;
