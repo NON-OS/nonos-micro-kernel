@@ -13,14 +13,23 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use super::tag::tag4;
 
-pub(crate) const N_MK_MMAP: i64 = tag4(b"MMAP");
-pub(crate) const N_MK_EXIT: i64 = tag4(b"MEXT");
-pub(crate) const N_MK_PID_ALIVE: i64 = tag4(b"MPAL");
-pub(crate) const N_MK_YIELD: i64 = tag4(b"MYLD");
-pub(crate) const N_MK_TIME_MILLIS: i64 = tag4(b"MTMS");
-pub(crate) const N_MK_TIME_RTC: i64 = tag4(b"MTRT");
-pub(crate) const N_MK_BATTERY_STATUS: i64 = tag4(b"MBAT");
-pub(crate) const N_MK_PROC_STAT: i64 = tag4(b"MPST");
-pub(crate) const N_MK_ATTEST_STATUS: i64 = tag4(b"MAST");
+use core::sync::atomic::{AtomicU64, Ordering};
+
+pub const PROC_TICK_SLOTS: usize = 256;
+
+static PROC_TICKS: [AtomicU64; PROC_TICK_SLOTS] = [const { AtomicU64::new(0) }; PROC_TICK_SLOTS];
+
+pub fn charge_tick(pid: u32) {
+    if pid != 0 {
+        PROC_TICKS[(pid as usize) % PROC_TICK_SLOTS].fetch_add(1, Ordering::Relaxed);
+    }
+}
+
+pub fn ticks_for(pid: u32) -> u64 {
+    PROC_TICKS[(pid as usize) % PROC_TICK_SLOTS].load(Ordering::Relaxed)
+}
+
+pub fn clear(pid: u32) {
+    PROC_TICKS[(pid as usize) % PROC_TICK_SLOTS].store(0, Ordering::Relaxed);
+}

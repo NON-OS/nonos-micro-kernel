@@ -65,6 +65,7 @@ fn kind(nr: u64) -> &'static [u8] {
         SYS_TIME_MILLIS => b"MkTimeMillis",
         SYS_TIME_RTC => b"MkTimeRtc",
         SYS_BATTERY_STATUS => b"MkBatteryStatus",
+        SYS_PROC_STAT => b"MkProcStat",
         SYS_ATTEST_STATUS => b"MkAttestStatus",
         SYS_SPAWN => b"MkSpawn",
         SYS_IRQ_WAIT => b"MkIrqWait",

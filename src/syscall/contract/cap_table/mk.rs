@@ -25,6 +25,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkTimeMillis
         | SyscallNumber::MkTimeRtc
         | SyscallNumber::MkBatteryStatus
+        | SyscallNumber::MkProcStat
         | SyscallNumber::MkAttestStatus
         | SyscallNumber::MkCapCheck => caps.is_valid(),
 

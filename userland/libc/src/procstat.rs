@@ -13,14 +13,26 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use super::tag::tag4;
 
-pub(crate) const N_MK_MMAP: i64 = tag4(b"MMAP");
-pub(crate) const N_MK_EXIT: i64 = tag4(b"MEXT");
-pub(crate) const N_MK_PID_ALIVE: i64 = tag4(b"MPAL");
-pub(crate) const N_MK_YIELD: i64 = tag4(b"MYLD");
-pub(crate) const N_MK_TIME_MILLIS: i64 = tag4(b"MTMS");
-pub(crate) const N_MK_TIME_RTC: i64 = tag4(b"MTRT");
-pub(crate) const N_MK_BATTERY_STATUS: i64 = tag4(b"MBAT");
-pub(crate) const N_MK_PROC_STAT: i64 = tag4(b"MPST");
-pub(crate) const N_MK_ATTEST_STATUS: i64 = tag4(b"MAST");
+use crate::syscall::{call_raw, N_MK_PROC_STAT};
+
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub struct ProcStatEntry {
+    pub pid: u32,
+    pub state: u8,
+    pub _pad: [u8; 3],
+    pub run_ticks: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub struct ProcStatHeader {
+    pub total_ticks: u64,
+    pub count: u32,
+    pub _pad: u32,
+}
+
+pub extern "C" fn mk_proc_stat(buf: *mut u8, max_entries: u32) -> i64 {
+    call_raw(N_MK_PROC_STAT, [buf as u64, max_entries as u64, 0, 0, 0, 0])
+}

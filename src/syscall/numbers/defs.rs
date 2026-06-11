@@ -56,6 +56,7 @@ pub enum SyscallNumber {
     MkTimeMillis = tag4(b"MTMS"),
     MkTimeRtc = tag4(b"MTRT"),
     MkBatteryStatus = tag4(b"MBAT"),
+    MkProcStat = tag4(b"MPST"),
     MkAttestStatus = tag4(b"MAST"),
     MkCapGrant = tag4(b"MCGT"),
     MkCapRevoke = tag4(b"MCRV"),
