@@ -14,25 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod delay;
-mod display;
-mod display_status;
-mod elf;
-mod footer;
-mod hash;
-mod helpers;
-mod key;
-mod signature;
-mod size;
-mod types;
-mod verify;
-mod verify_error;
+use uefi::prelude::*;
 
-pub use delay::mini_delay;
-pub use display::{byte_to_hex, print, print_hex_bytes, print_hex_char};
-pub use display_status::{
-    print_kernel_size, print_verification_failure, print_verification_success,
-};
-pub use footer::handle_missing_footer;
-pub use types::{CryptoVerifyResult, MIN_KERNEL_SIZE, SIGNATURE_SIZE};
-pub use verify::verify_kernel_crypto;
+use super::helpers::compute_and_display_hash;
+use super::types::CryptoVerifyResult;
+use crate::log::logger::log_info;
+
+pub fn handle_missing_footer(
+    kernel_data: &[u8],
+    result: &mut CryptoVerifyResult,
+    st: &mut SystemTable<Boot>,
+) {
+    log_info("kernel_verify", "No production footer - computing raw hash");
+    result.kernel_code_size = kernel_data.len();
+    result.signature_present = false;
+    compute_and_display_hash(kernel_data, result, st);
+}
