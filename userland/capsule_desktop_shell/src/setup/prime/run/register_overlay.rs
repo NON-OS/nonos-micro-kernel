@@ -22,9 +22,6 @@ use crate::state::Context;
 pub fn register_overlay(ctx: &mut Context, overlay: &Overlay) -> Result<(), &'static str> {
     let rid = ctx.issue_request_id();
     if let Err(e) = register::register_overlay(ctx.compositor_port, rid, overlay) {
-        if e == "compositor call failed" {
-            return Ok(());
-        }
         close_chrome_windows::close_chrome_windows(ctx);
         if mk_munmap(overlay.backing_va as *mut u8, overlay.byte_len as usize) < 0 {
             return Err("overlay munmap failed");

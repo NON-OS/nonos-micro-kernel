@@ -22,8 +22,6 @@ pub fn paint_rect(ctx: &Context, r: Rect, argb: u32) {
     fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, r.x, r.y, r.width, r.height, argb);
 }
 
-/// Draw a `t`-pixel border on the inside edge of `r`. Used to give the chrome
-/// panels a crisp outer edge instead of a hard cut against the wallpaper.
 pub fn paint_border(ctx: &Context, r: Rect, argb: u32, t: u32) {
     let t = t.min(r.width).min(r.height);
     if t == 0 {

@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{INPUT_KIND_BUTTON_DOWN, INPUT_KIND_TOUCH};
+use nonos_libc::{mk_time_millis, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_TOUCH};
 
 use crate::protocol::{read_i32, read_u16, read_u32};
+use crate::render::layout::bottom_dock_rect;
 use crate::server::handlers::launcher_focus;
-use crate::state::Context;
+use crate::server::refresh_taskbar::refresh_taskbar;
+use crate::state::{reveal_taskbar, Context};
 
 pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     if buf.len() < 40 || read_u32(buf, 0) != Some(0x4E49_4E50) {
@@ -36,8 +38,17 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     let Some(y) = read_i32(buf, 20) else {
         return true;
     };
-    if x >= 0 && y >= 0 && matches!(kind, INPUT_KIND_TOUCH | INPUT_KIND_BUTTON_DOWN) {
-        launcher_focus::handle(ctx, x as u32, y as u32);
+    if x < 0 || y < 0 || !matches!(kind, INPUT_KIND_TOUCH | INPUT_KIND_BUTTON_DOWN) {
+        return true;
     }
+    if !ctx.taskbar.visible {
+        let dock = bottom_dock_rect(ctx.width, ctx.height);
+        if y as u32 >= dock.y.saturating_sub(18) {
+            reveal_taskbar(&mut ctx.taskbar, mk_time_millis());
+            refresh_taskbar(ctx);
+        }
+        return true;
+    }
+    launcher_focus::handle(ctx, x as u32, y as u32);
     true
 }

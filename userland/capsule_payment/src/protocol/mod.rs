@@ -21,5 +21,6 @@ mod types;
 pub use decode::decode_request;
 pub use encode::encode_response;
 pub use types::{
-    Request, EAGAIN, EINVAL, KERNEL_REPLY_ENDPOINT, OP_DRAIN_RECEIPTS, OP_HEALTHCHECK, OP_PAY,
+    Request, EAGAIN, EINVAL, KERNEL_REPLY_ENDPOINT, OP_DRAIN_RECEIPTS, OP_HEALTHCHECK,
+    OP_LIST_TOKENS, OP_PAY,
 };

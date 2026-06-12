@@ -23,6 +23,7 @@ pub enum LauncherIcon {
     ProcessManager,
     About,
     Calculator,
+    Wallet,
 }
 
 pub struct LauncherApp {
@@ -31,27 +32,11 @@ pub struct LauncherApp {
     pub service: &'static [u8],
 }
 
-pub const LAUNCHER_APPS: [LauncherApp; 7] = [
-    LauncherApp {
-        icon: LauncherIcon::Terminal,
-        label: b"Terminal",
-        service: b"app.terminal",
-    },
-    LauncherApp {
-        icon: LauncherIcon::FileManager,
-        label: b"Files",
-        service: b"app.file_manager",
-    },
-    LauncherApp {
-        icon: LauncherIcon::TextEditor,
-        label: b"Editor",
-        service: b"app.text_editor",
-    },
-    LauncherApp {
-        icon: LauncherIcon::Settings,
-        label: b"Settings",
-        service: b"app.settings",
-    },
+pub const LAUNCHER_APPS: [LauncherApp; 8] = [
+    LauncherApp { icon: LauncherIcon::Terminal, label: b"Terminal", service: b"app.terminal" },
+    LauncherApp { icon: LauncherIcon::FileManager, label: b"Files", service: b"app.file_manager" },
+    LauncherApp { icon: LauncherIcon::TextEditor, label: b"Editor", service: b"app.text_editor" },
+    LauncherApp { icon: LauncherIcon::Settings, label: b"Settings", service: b"app.settings" },
     LauncherApp {
         icon: LauncherIcon::ProcessManager,
         label: b"Processes",
@@ -63,4 +48,5 @@ pub const LAUNCHER_APPS: [LauncherApp; 7] = [
         label: b"Calculator",
         service: b"app.calculator",
     },
+    LauncherApp { icon: LauncherIcon::Wallet, label: b"Wallet", service: b"app.nonos_wallet" },
 ];

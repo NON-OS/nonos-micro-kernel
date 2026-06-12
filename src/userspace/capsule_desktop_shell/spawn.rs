@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    DESKTOP_SHELL_ELF, DESKTOP_SHELL_MANIFEST_BYTES, DESKTOP_SHELL_ATTESTATION_BYTES, DESKTOP_SHELL_NONOS_ID_CERT_BYTES,
+    DESKTOP_SHELL_ATTESTATION_BYTES, DESKTOP_SHELL_ELF, DESKTOP_SHELL_MANIFEST_BYTES,
+    DESKTOP_SHELL_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;

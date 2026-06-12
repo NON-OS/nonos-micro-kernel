@@ -23,6 +23,7 @@ mod field32;
 mod handlers;
 mod rlp;
 mod runner;
+mod wallet_rail;
 mod wipe;
 mod zeroize;
 

@@ -16,10 +16,12 @@
 
 mod count;
 mod delete;
+mod list_wallet_rails;
 mod lock;
 mod metadata;
 mod retrieve;
 mod sign_approve;
+mod sign_eth_transfer;
 mod sign_receipt;
 mod store;
 mod unlock;
@@ -29,10 +31,12 @@ mod wallet_import;
 
 pub(super) use count::count;
 pub(super) use delete::delete;
+pub(super) use list_wallet_rails::list_wallet_rails;
 pub(super) use lock::lock;
 pub(super) use metadata::metadata;
 pub(super) use retrieve::retrieve;
 pub(super) use sign_approve::sign_approve;
+pub(super) use sign_eth_transfer::sign_eth_transfer;
 pub(super) use sign_receipt::sign_receipt;
 pub(super) use store::store;
 pub(super) use unlock::unlock;

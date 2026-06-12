@@ -19,11 +19,14 @@ pub mod handlers;
 mod input;
 mod paint_initial;
 mod ready_to_block;
+mod refresh_taskbar;
 pub mod respond;
 mod retry_input_subscription;
 mod retry_wm_subscription;
 pub mod runner;
 mod wm_notify;
+mod wm_notify_app_index;
 mod wm_notify_label;
+mod wm_notify_toast;
 
 pub use runner::run;

@@ -22,9 +22,6 @@ use nonos_libc::mk_yield;
 const WINDOW_KIND_POPUP: u32 = 3;
 const OPEN_RETRIES: usize = 16;
 
-// The left side dock duplicated the bottom dock's launcher entries, so it
-// is no longer opened. Only the bottom dock chrome window is created;
-// launching happens entirely from the bottom dock.
 pub fn open_chrome_windows(ctx: &mut Context) -> Result<(), &'static str> {
     let bottom = bottom_dock_rect(ctx.width, ctx.height);
     open_retry(ctx, TASKBAR_WINDOW_ID, bottom.x, bottom.y, bottom.width, bottom.height)

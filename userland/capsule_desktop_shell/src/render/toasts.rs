@@ -51,7 +51,14 @@ pub fn sync_toast_layer(ctx: &mut Context) {
             return;
         }
         fill_rect(
-            ctx.backing_va, ctx.stride, ctx.width, ctx.height, r.x, r.y, r.width, r.height,
+            ctx.backing_va,
+            ctx.stride,
+            ctx.width,
+            ctx.height,
+            r.x,
+            r.y,
+            r.width,
+            r.height,
             TRANSPARENT,
         );
         ctx.toast_layer_live = false;

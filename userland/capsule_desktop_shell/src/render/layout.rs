@@ -17,7 +17,7 @@
 use crate::state::spotlight::{SPOTLIGHT_HEIGHT, SPOTLIGHT_WIDTH};
 
 pub const MENUBAR_HEIGHT: u32 = 28;
-pub const BOTTOM_DOCK_WIDTH: u32 = 620;
+pub const BOTTOM_DOCK_WIDTH: u32 = 710;
 pub const BOTTOM_DOCK_HEIGHT: u32 = 64;
 pub const BOTTOM_DOCK_BOTTOM_INSET: u32 = 24;
 pub const TASKBAR_ENTRY_W: u32 = 80;

@@ -23,6 +23,7 @@ use super::drain::drain;
 use super::refresh_clock::refresh_clock;
 use crate::protocol::{HDR_LEN, IPC_PAYLOAD_MAX};
 use crate::render::sync_toast_layer;
+use crate::server::refresh_taskbar::refresh_taskbar;
 use crate::state::Context;
 
 pub fn run(mut ctx: Context) -> ! {
@@ -47,6 +48,11 @@ pub fn run(mut ctx: Context) -> ! {
             ctx.toasts.expire(now);
             if !ctx.toasts.is_empty() || ctx.toast_layer_live {
                 sync_toast_layer(&mut ctx);
+            }
+            let pulse_dirty = crate::state::expire_taskbar_pulses(&mut ctx.taskbar, now);
+            let reveal_dirty = crate::state::expire_taskbar_visibility(&mut ctx.taskbar, now);
+            if pulse_dirty || reveal_dirty {
+                refresh_taskbar(&mut ctx);
             }
             last_clock_ms = now;
         }

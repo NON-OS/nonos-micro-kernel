@@ -56,9 +56,6 @@ pub fn register_overlay(
         overlay.height,
         OVERLAY_Z,
     ) {
-        if e == "compositor call failed" {
-            return Err(e);
-        }
         if mk_surface_release(handle as u64) < 0 {
             return Err("overlay surface release rejected");
         }

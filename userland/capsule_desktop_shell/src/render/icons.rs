@@ -27,6 +27,7 @@ mod process_manager;
 mod settings;
 mod terminal;
 mod text_editor;
+mod wallet;
 
 pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u32) {
     fill_rect(
@@ -48,5 +49,6 @@ pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u3
         LauncherIcon::ProcessManager => process_manager::process_manager(ctx, x, y, size),
         LauncherIcon::About => about::about(ctx, x, y, size),
         LauncherIcon::Calculator => calculator::calculator(ctx, x, y, size),
+        LauncherIcon::Wallet => wallet::wallet(ctx, x, y, size),
     }
 }
