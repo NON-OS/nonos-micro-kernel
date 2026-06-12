@@ -1,0 +1,23 @@
+[package]
+name = "nonos_capsule_std_proof"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "Proof capsule importing the NONOS sovereign standard library"
+
+[[bin]]
+name = "std_proof"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_std = { package = "nonos-std", path = "../sdk/nonos_std" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
