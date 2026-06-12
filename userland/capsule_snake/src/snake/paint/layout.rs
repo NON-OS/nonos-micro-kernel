@@ -14,31 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+use crate::snake::grid::{BOARD_Y, COLS, MARGIN, ROWS};
 
-use super::layout::Layout;
-use crate::snake::grid::TITLEBAR_H;
-use crate::snake::state::Game;
-
-const LABEL: u32 = 0xFF9A_A4B2;
-const VALUE: u32 = 0xFF6A_D47A;
-
-pub fn paint(game: &Game, layout: &Layout, fb: &mut PaintBuffer) {
-    let mut buf = [0u8; 10];
-    let digits = itoa(game.score, &mut buf);
-    fb.text_scaled(layout.x, TITLEBAR_H + 10, b"SCORE", LABEL, 2);
-    fb.text_scaled(layout.x + 104, TITLEBAR_H + 10, digits, VALUE, 2);
+pub struct Layout {
+    pub cell: u32,
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
 }
 
-fn itoa(mut value: u32, buf: &mut [u8; 10]) -> &[u8] {
-    let mut i = buf.len();
-    loop {
-        i -= 1;
-        buf[i] = b'0' + (value % 10) as u8;
-        value /= 10;
-        if value == 0 {
-            break;
-        }
+impl Layout {
+    pub fn inset(&self) -> u32 {
+        (self.cell / 16).max(1)
     }
-    &buf[i..]
+}
+
+pub fn compute(width: u32, height: u32) -> Layout {
+    let avail_w = width.saturating_sub(2 * MARGIN).max(COLS as u32);
+    let avail_h = height.saturating_sub(BOARD_Y + MARGIN).max(ROWS as u32);
+    let cell = (avail_w / COLS as u32).min(avail_h / ROWS as u32).max(4);
+    let w = cell * COLS as u32;
+    let h = cell * ROWS as u32;
+    let x = width.saturating_sub(w) / 2;
+    let y = BOARD_Y + avail_h.saturating_sub(h) / 2;
+    Layout { cell, x, y, w, h }
 }

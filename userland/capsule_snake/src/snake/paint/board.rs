@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::snake::grid::{BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL};
+use super::layout::Layout;
 use crate::snake::state::Game;
 
 const BOARD_BG: u32 = 0xFF18_2024;
@@ -24,17 +24,18 @@ const BODY: u32 = 0xFF3F_A34D;
 const HEAD: u32 = 0xFF6A_D47A;
 const FOOD: u32 = 0xFFE0_533D;
 
-pub fn paint(game: &Game, fb: &mut PaintBuffer) {
-    fb.fill_rect(BOARD_X, BOARD_Y, BOARD_W, BOARD_H, BOARD_BG);
-    cell(fb, game.food, FOOD);
+pub fn paint(game: &Game, layout: &Layout, fb: &mut PaintBuffer) {
+    fb.fill_rect(layout.x, layout.y, layout.w, layout.h, BOARD_BG);
+    cell(fb, layout, game.food, FOOD);
     for segment in game.body.iter().skip(1) {
-        cell(fb, *segment, BODY);
+        cell(fb, layout, *segment, BODY);
     }
-    cell(fb, game.body[0], HEAD);
+    cell(fb, layout, game.body[0], HEAD);
 }
 
-fn cell(fb: &mut PaintBuffer, at: (i16, i16), argb: u32) {
-    let px = BOARD_X + at.0 as u32 * CELL;
-    let py = BOARD_Y + at.1 as u32 * CELL;
-    fb.fill_rect(px + 1, py + 1, CELL - 2, CELL - 2, argb);
+fn cell(fb: &mut PaintBuffer, layout: &Layout, at: (i16, i16), argb: u32) {
+    let inset = layout.inset();
+    let px = layout.x + at.0 as u32 * layout.cell + inset;
+    let py = layout.y + at.1 as u32 * layout.cell + inset;
+    fb.fill_rect(px, py, layout.cell - 2 * inset, layout.cell - 2 * inset, argb);
 }

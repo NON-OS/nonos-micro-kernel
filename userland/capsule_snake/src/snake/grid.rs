@@ -20,7 +20,6 @@ pub const ROWS: i16 = 18;
 pub const MARGIN: u32 = 15;
 pub const TITLEBAR_H: u32 = 28;
 pub const HEADER_H: u32 = 36;
-pub const BOARD_X: u32 = MARGIN;
 pub const BOARD_Y: u32 = TITLEBAR_H + HEADER_H;
 pub const BOARD_W: u32 = COLS as u32 * CELL;
 pub const BOARD_H: u32 = ROWS as u32 * CELL;

@@ -16,6 +16,7 @@
 
 mod board;
 mod header;
+mod layout;
 mod overlay;
 
 use nonos_app_skeleton::PaintBuffer;
@@ -25,13 +26,14 @@ use super::state::{Game, Phase};
 const BG: u32 = 0xFF10_1418;
 
 pub fn paint(game: &Game, fb: &mut PaintBuffer) {
+    let layout = layout::compute(fb.width, fb.height);
     fb.clear(BG);
-    header::paint(game, fb);
-    board::paint(game, fb);
+    header::paint(game, &layout, fb);
+    board::paint(game, &layout, fb);
     match game.phase {
-        Phase::Ready => overlay::ready(fb),
-        Phase::Paused => overlay::paused(fb),
-        Phase::GameOver => overlay::game_over(fb),
+        Phase::Ready => overlay::ready(&layout, fb),
+        Phase::Paused => overlay::paused(&layout, fb),
+        Phase::GameOver => overlay::game_over(&layout, fb),
         Phase::Running => {}
     }
 }
