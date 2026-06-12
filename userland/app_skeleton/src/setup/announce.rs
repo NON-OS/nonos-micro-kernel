@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_libc::mk_yield;
+
 use crate::app::AppManifest;
 use crate::clients::wm;
 use crate::clients::wm::WindowPlacement;
@@ -30,21 +32,38 @@ pub(super) fn announce(
     surface_handle: u64,
     request_id: &mut u32,
 ) -> Result<WindowPlacement, &'static str> {
-    let rid = bump(request_id);
-    let placement = wm::window_open(
-        peers.wm,
-        rid,
-        manifest.window_id,
-        manifest.kind as u32,
-        manifest.initial_x,
-        manifest.initial_y,
-        manifest.width,
-        manifest.height,
-    )?;
+    let placement = open_with_retry(peers, manifest, request_id)?;
     if let Err(e) = submit_scene(peers, surface_handle, request_id, placement) {
         let _ = wm::window_close(peers.wm, bump(request_id), manifest.window_id);
         return Err(e);
     }
     let _ = subscribe_input(peers.input_router, request_id, input_mask(manifest));
     Ok(placement)
+}
+
+fn open_with_retry(
+    peers: &Peers,
+    manifest: &AppManifest,
+    request_id: &mut u32,
+) -> Result<WindowPlacement, &'static str> {
+    let mut last = "wm open failed";
+    for attempt in 0..3 {
+        if attempt > 0 {
+            mk_yield();
+        }
+        match wm::window_open(
+            peers.wm,
+            bump(request_id),
+            manifest.window_id,
+            manifest.kind as u32,
+            manifest.initial_x,
+            manifest.initial_y,
+            manifest.width,
+            manifest.height,
+        ) {
+            Ok(p) => return Ok(p),
+            Err(e) => last = e,
+        }
+    }
+    Err(last)
 }
