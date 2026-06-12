@@ -14,15 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod from_vfs;
-mod runner;
-mod spec;
+use alloc::boxed::Box;
+use alloc::string::String;
+use alloc::vec::Vec;
 
-#[cfg(not(feature = "nonos-production"))]
-pub use runner::spawn;
-pub use runner::spawn_verified;
-#[cfg(not(feature = "nonos-production"))]
-pub use spec::CapsuleSpec;
-pub use spec::{CapsuleSpecVerified, SpawnError};
-// Runtime capsule loading from the VFS store, driven by the install syscall.
-pub use from_vfs::{load_capsule_from_vfs, CapsuleArtifacts, LoadError};
+// A loaded capsule's artifacts must outlive the spawn call and stay valid for
+// the life of the process, exactly as `include_bytes!` data does. The bytes
+// are intentionally leaked: they are never freed while the capsule runs.
+pub(super) fn leak_bytes(v: Vec<u8>) -> &'static [u8] {
+    Box::leak(v.into_boxed_slice())
+}
+
+pub(super) fn leak_str(s: &str) -> &'static str {
+    Box::leak(String::from(s).into_boxed_str())
+}
