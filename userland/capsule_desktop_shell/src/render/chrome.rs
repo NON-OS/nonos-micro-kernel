@@ -32,10 +32,17 @@ const PANEL_BORDER_ARGB: u32 = 0xFF2A_3446;
 pub fn paint_chrome(ctx: &Context) {
     clear_overlay::clear_overlay(ctx);
     paint_rect::paint_rect(ctx, menubar_rect(ctx.width), MENUBAR_ARGB);
-    paint_rect::paint_rect(ctx, bottom_dock_rect(ctx.width, ctx.height), BOTTOM_DOCK_ARGB);
-    paint_rect::paint_border(ctx, bottom_dock_rect(ctx.width, ctx.height), PANEL_BORDER_ARGB, 1);
     draw_overlay_text(ctx, 16, 10, b"NONOS launcher", TITLE_FG);
-    paint_bottom_taskbar(ctx);
+    if ctx.taskbar.visible {
+        paint_rect::paint_rect(ctx, bottom_dock_rect(ctx.width, ctx.height), BOTTOM_DOCK_ARGB);
+        paint_rect::paint_border(
+            ctx,
+            bottom_dock_rect(ctx.width, ctx.height),
+            PANEL_BORDER_ARGB,
+            1,
+        );
+        paint_bottom_taskbar(ctx);
+    }
     paint_notify_badge::paint_notify_badge(ctx);
     if ctx.spotlight.visible {
         paint_rect::paint_rect(ctx, spotlight_rect(ctx.width, ctx.height), SPOTLIGHT_ARGB);

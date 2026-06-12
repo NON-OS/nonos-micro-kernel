@@ -23,7 +23,7 @@ mod protocol;
 mod server;
 mod store;
 
-use nonos_libc::{mk_exit, heap_init};
+use nonos_libc::{heap_init, mk_exit};
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {

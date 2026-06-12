@@ -26,6 +26,8 @@ pub const OP_WALLET_GENERATE: u16 = 9;
 pub const OP_WALLET_ADDRESS: u16 = 10;
 pub const OP_SIGN_NOX_RECEIPT: u16 = 11;
 pub const OP_SIGN_NOX_APPROVE: u16 = 12;
+pub const OP_SIGN_ETH_TRANSFER: u16 = 13;
+pub const OP_LIST_WALLET_RAILS: u16 = 14;
 
 pub const KERNEL_REPLY_ENDPOINT: u64 = 0x1_0000_0002;
 

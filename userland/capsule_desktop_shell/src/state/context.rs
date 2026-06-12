@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{NotifyLevel, SpotlightState, ToastQueue, TrayTable};
+use super::{NotifyLevel, SpotlightState, TaskbarState, ToastQueue, TrayTable};
 
 pub struct Context {
     pub compositor_port: u32,
@@ -28,6 +28,7 @@ pub struct Context {
     pub stride: u32,
     pub backing_va: u64,
     pub tray: TrayTable,
+    pub taskbar: TaskbarState,
     pub spotlight: SpotlightState,
     pub last_notify_level: Option<NotifyLevel>,
     pub toasts: ToastQueue,

@@ -739,6 +739,7 @@ include userland/capsule_about/Capsule.mk
 include userland/capsule_hello/Capsule.mk
 include userland/capsule_boot_splash/Capsule.mk
 include userland/capsule_calculator/Capsule.mk
+include userland/capsule_wallet_nonos/Capsule.mk
 include userland/capsule_terminal/Capsule.mk
 include userland/capsule_file_manager/Capsule.mk
 include userland/capsule_text_editor/Capsule.mk
@@ -812,7 +813,8 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(input-router_VERIFY) $(compositor_VERIFY) $(wm_VERIFY) \
 	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
 	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
-	$(boot-splash_VERIFY) $(about_VERIFY) $(calculator_VERIFY) $(terminal_VERIFY) \
+	$(boot-splash_VERIFY) $(about_VERIFY) $(calculator_VERIFY) \
+	$(wallet-nonos_VERIFY) $(terminal_VERIFY) \
 	$(file-manager_VERIFY) $(text-editor_VERIFY) $(settings_VERIFY) \
 	$(process-manager_VERIFY) $(attest_VERIFY) $(power_VERIFY)
 
@@ -1488,7 +1490,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(terminal_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(wallet-nonos_ARTIFACTS) $(terminal_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
 		$(attest_ARTIFACTS) $(power_ARTIFACTS) \

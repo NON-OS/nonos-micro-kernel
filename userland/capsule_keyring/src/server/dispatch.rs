@@ -18,9 +18,9 @@ use alloc::vec::Vec;
 
 use super::handlers;
 use crate::protocol::{
-    encode_response, Request, EINVAL, OP_COUNT, OP_DELETE, OP_LOCK, OP_METADATA, OP_RETRIEVE,
-    OP_SIGN_NOX_APPROVE, OP_SIGN_NOX_RECEIPT, OP_STORE, OP_UNLOCK, OP_WALLET_ADDRESS,
-    OP_WALLET_GENERATE, OP_WALLET_IMPORT,
+    encode_response, Request, EINVAL, OP_COUNT, OP_DELETE, OP_LIST_WALLET_RAILS, OP_LOCK,
+    OP_METADATA, OP_RETRIEVE, OP_SIGN_ETH_TRANSFER, OP_SIGN_NOX_APPROVE, OP_SIGN_NOX_RECEIPT,
+    OP_STORE, OP_UNLOCK, OP_WALLET_ADDRESS, OP_WALLET_GENERATE, OP_WALLET_IMPORT,
 };
 use crate::store::Store;
 
@@ -38,6 +38,8 @@ pub fn dispatch(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8>
         OP_WALLET_ADDRESS => handlers::wallet_address(store, req, sender_pid),
         OP_SIGN_NOX_RECEIPT => handlers::sign_receipt(store, req, sender_pid),
         OP_SIGN_NOX_APPROVE => handlers::sign_approve(store, req, sender_pid),
+        OP_SIGN_ETH_TRANSFER => handlers::sign_eth_transfer(store, req, sender_pid),
+        OP_LIST_WALLET_RAILS => handlers::list_wallet_rails(req),
         _ => encode_response(req.seq, EINVAL, &[]),
     }
 }

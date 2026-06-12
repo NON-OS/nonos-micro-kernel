@@ -17,7 +17,7 @@
 use nonos_libc::mk_time_millis;
 
 use crate::compositor_client::push_damage_commit;
-use crate::render::{menubar_rect, paint_chrome, paint_status};
+use crate::render::{paint_chrome, paint_status};
 use crate::state::indicators::{net, policy};
 use crate::state::{Context, NotifyLevel};
 
@@ -32,7 +32,6 @@ pub(super) fn refresh_clock(ctx: &mut Context) {
     ctx.net_was_online = net_now;
     paint_chrome(ctx);
     paint_status(ctx, net_now);
-    let r = menubar_rect(ctx.width);
     let rid = ctx.issue_request_id();
-    let _ = push_damage_commit(ctx.compositor_port, rid, r.x, r.y, r.width, r.height);
+    let _ = push_damage_commit(ctx.compositor_port, rid, 0, 0, ctx.width, ctx.height);
 }
