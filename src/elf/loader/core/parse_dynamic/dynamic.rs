@@ -36,7 +36,10 @@ pub(in crate::elf::loader::core) fn parse_dynamic_section(
     }
     if !state.needed_offsets.is_empty() {
         let strtab = state.dynamic_info.string_table.ok_or(ElfError::StringTableError)?;
-        let relative = strtab.as_u64().checked_sub(base_addr.as_u64()).ok_or(ElfError::StringTableOutOfBounds)?;
+        let relative = strtab
+            .as_u64()
+            .checked_sub(base_addr.as_u64())
+            .ok_or(ElfError::StringTableOutOfBounds)?;
         let strtab_offset = file_offset_for_vaddr(program_headers, relative)?;
         append_needed_libraries(
             elf_data,
@@ -52,8 +55,12 @@ pub(in crate::elf::loader::core) fn parse_dynamic_section(
 fn section_range(ph: &ProgramHeader, elf_len: usize) -> Result<(usize, usize), ElfError> {
     let offset = usize::try_from(ph.p_offset).map_err(|_| ElfError::DynamicSectionError)?;
     let size = usize::try_from(ph.p_filesz).map_err(|_| ElfError::DynamicSectionError)?;
-    if size % DynamicEntry::SIZE != 0 { return Err(ElfError::DynamicSectionError); }
+    if size % DynamicEntry::SIZE != 0 {
+        return Err(ElfError::DynamicSectionError);
+    }
     let end = offset.checked_add(size).ok_or(ElfError::DynamicSectionError)?;
-    if end > elf_len { return Err(ElfError::DynamicSectionError); }
+    if end > elf_len {
+        return Err(ElfError::DynamicSectionError);
+    }
     Ok((offset, size / DynamicEntry::SIZE))
 }

@@ -17,7 +17,11 @@
 use crate::elf::errors::ElfResult;
 use crate::memory::addr::VirtAddr;
 
-use super::{info::InitArrayInfo, invoke::{invoke_addr, invoke_array_info}, validate::{validate_addr, validate_array}};
+use super::{
+    info::InitArrayInfo,
+    invoke::{invoke_addr, invoke_array_info},
+    validate::{validate_addr, validate_array},
+};
 
 pub fn run_init_array(addr: VirtAddr, size: usize) -> ElfResult<usize> {
     let info = InitArrayInfo::new(addr, size);

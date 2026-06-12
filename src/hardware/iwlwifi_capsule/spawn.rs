@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    DRIVER_IWLWIFI_ELF, DRIVER_IWLWIFI_MANIFEST_BYTES, DRIVER_IWLWIFI_ATTESTATION_BYTES, DRIVER_IWLWIFI_NONOS_ID_CERT_BYTES,
+    DRIVER_IWLWIFI_ATTESTATION_BYTES, DRIVER_IWLWIFI_ELF, DRIVER_IWLWIFI_MANIFEST_BYTES,
+    DRIVER_IWLWIFI_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;

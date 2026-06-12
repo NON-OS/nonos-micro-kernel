@@ -19,13 +19,19 @@ use alloc::string::String;
 use super::state::InterpreterInfo;
 
 impl Default for InterpreterInfo {
-    fn default() -> Self { Self { path: String::new() } }
+    fn default() -> Self {
+        Self { path: String::new() }
+    }
 }
 
 impl From<String> for InterpreterInfo {
-    fn from(path: String) -> Self { Self::new(path) }
+    fn from(path: String) -> Self {
+        Self::new(path)
+    }
 }
 
 impl From<&str> for InterpreterInfo {
-    fn from(path: &str) -> Self { Self::new(path.into()) }
+    fn from(path: &str) -> Self {
+        Self::new(path.into())
+    }
 }

@@ -28,15 +28,42 @@ fn test_parse_dynamic_maps_strtab_vaddr_to_file_offset() {
     push(&mut elf, 0, 0);
     elf.resize(0x40, 0);
     elf.extend_from_slice(b"libdemo.so\0");
-    let dynamic = ProgramHeader { p_type: phdr_type::PT_DYNAMIC, p_flags: 0, p_offset: 0, p_vaddr: 0x3000, p_paddr: 0, p_filesz: 64, p_memsz: 64, p_align: 8 };
-    let load = ProgramHeader { p_type: phdr_type::PT_LOAD, p_flags: 0, p_offset: 0x30, p_vaddr: 0x2000, p_paddr: 0, p_filesz: 0x20, p_memsz: 0x20, p_align: 0x1000 };
+    let dynamic = ProgramHeader {
+        p_type: phdr_type::PT_DYNAMIC,
+        p_flags: 0,
+        p_offset: 0,
+        p_vaddr: 0x3000,
+        p_paddr: 0,
+        p_filesz: 64,
+        p_memsz: 64,
+        p_align: 8,
+    };
+    let load = ProgramHeader {
+        p_type: phdr_type::PT_LOAD,
+        p_flags: 0,
+        p_offset: 0x30,
+        p_vaddr: 0x2000,
+        p_paddr: 0,
+        p_filesz: 0x20,
+        p_memsz: 0x20,
+        p_align: 0x1000,
+    };
     let info = parse_dynamic_section(&elf, &dynamic, &[load], VirtAddr::new(0x400000)).unwrap();
     assert_eq!(info.needed_libraries, ["libdemo.so"]);
 }
 
 #[test]
 fn test_parse_dynamic_rejects_misaligned_entry_size() {
-    let dynamic = ProgramHeader { p_type: phdr_type::PT_DYNAMIC, p_flags: 0, p_offset: 0, p_vaddr: 0, p_paddr: 0, p_filesz: 17, p_memsz: 17, p_align: 8 };
+    let dynamic = ProgramHeader {
+        p_type: phdr_type::PT_DYNAMIC,
+        p_flags: 0,
+        p_offset: 0,
+        p_vaddr: 0,
+        p_paddr: 0,
+        p_filesz: 17,
+        p_memsz: 17,
+        p_align: 8,
+    };
     assert!(parse_dynamic_section(&[0; 17], &dynamic, &[], VirtAddr::new(0)).is_err());
 }
 

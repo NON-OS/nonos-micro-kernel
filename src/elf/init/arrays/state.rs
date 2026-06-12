@@ -25,12 +25,25 @@ pub struct InitArrayRunner {
 }
 
 impl InitArrayRunner {
-    pub fn new() -> Self { Self { preinit_array: None, init_fn: None, init_array: None } }
-    pub fn with_preinit_array(mut self, info: PreInitArrayInfo) -> Self { self.preinit_array = Some(info); self }
-    pub fn with_init_fn(mut self, addr: VirtAddr) -> Self { self.init_fn = Some(addr); self }
-    pub fn with_init_array(mut self, info: InitArrayInfo) -> Self { self.init_array = Some(info); self }
+    pub fn new() -> Self {
+        Self { preinit_array: None, init_fn: None, init_array: None }
+    }
+    pub fn with_preinit_array(mut self, info: PreInitArrayInfo) -> Self {
+        self.preinit_array = Some(info);
+        self
+    }
+    pub fn with_init_fn(mut self, addr: VirtAddr) -> Self {
+        self.init_fn = Some(addr);
+        self
+    }
+    pub fn with_init_array(mut self, info: InitArrayInfo) -> Self {
+        self.init_array = Some(info);
+        self
+    }
 }
 
 impl Default for InitArrayRunner {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

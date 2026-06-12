@@ -24,7 +24,12 @@ use crate::syscall::SyscallResult;
 const MAX_FRAME: usize = 784;
 const MAX_OUT: usize = 512;
 
-pub fn handle_hkdf_sha256(frame_ptr: u64, frame_len: u64, out_ptr: u64, out_len: u64) -> SyscallResult {
+pub fn handle_hkdf_sha256(
+    frame_ptr: u64,
+    frame_len: u64,
+    out_ptr: u64,
+    out_len: u64,
+) -> SyscallResult {
     if let Err(e) = require_capability(Capability::Crypto) {
         return e;
     }

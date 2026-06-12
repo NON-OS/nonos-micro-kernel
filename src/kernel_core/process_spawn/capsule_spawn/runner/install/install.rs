@@ -16,8 +16,8 @@
 
 extern crate alloc;
 
-use super::params::InstallParams;
 use super::super::super::spec::SpawnError;
+use super::params::InstallParams;
 use crate::capabilities::Capability;
 use crate::ipc::nonos_inbox;
 use crate::kernel_core::process_spawn::{
@@ -41,8 +41,7 @@ pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
         .ok_or(SpawnError::ProcessCreation)?;
     nonos_inbox::register_inbox(&format!("proc.{}", pid), pid)
         .map_err(|_| SpawnError::ProcessCreation)?;
-    let entry =
-        super::load_elf_into_pid::load_elf_into_pid(params.elf, pid, params.debug_tag)?;
+    let entry = super::load_elf_into_pid::load_elf_into_pid(params.elf, pid, params.debug_tag)?;
     let caps = params.caps_bits | crate::capabilities::smoke::debug_grant();
     super::install_caps::install_caps(pid, caps)?;
     let _kernel_stack = allocate_kernel_stack(pid).map_err(|_| SpawnError::AddressSpace)?;

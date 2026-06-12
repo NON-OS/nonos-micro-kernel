@@ -19,8 +19,7 @@ use alloc::vec::Vec;
 use super::super::capability::gate_call;
 use super::super::error::DriverHdaError;
 use super::super::protocol::{
-    encode_request, MAX_STREAMS, OP_STREAM_LAYOUT, STREAM_ENTRY_BYTES,
-    STREAM_LAYOUT_HEADER_BYTES,
+    encode_request, MAX_STREAMS, OP_STREAM_LAYOUT, STREAM_ENTRY_BYTES, STREAM_LAYOUT_HEADER_BYTES,
 };
 use super::seq::next_request_id;
 use super::status_map::lift;

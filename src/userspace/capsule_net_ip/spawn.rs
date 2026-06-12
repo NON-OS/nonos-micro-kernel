@@ -19,7 +19,9 @@
 //! through the kernel) and serves `net.ip` to upstream transport
 //! capsules (UDP, TCP) and the ICMP responder.
 
-use super::embed::{NET_IP_ELF, NET_IP_MANIFEST_BYTES, NET_IP_NONOS_ID_CERT_BYTES, NET_IP_ATTESTATION_BYTES};
+use super::embed::{
+    NET_IP_ATTESTATION_BYTES, NET_IP_ELF, NET_IP_MANIFEST_BYTES, NET_IP_NONOS_ID_CERT_BYTES,
+};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};

@@ -18,12 +18,28 @@ use super::state::Symbol;
 use crate::elf::types::{sym_bind, sym_type};
 
 impl Symbol {
-    pub fn binding(&self) -> u8 { self.st_info >> 4 }
-    pub fn sym_type(&self) -> u8 { self.st_info & 0x0F }
-    pub fn is_local(&self) -> bool { self.binding() == sym_bind::STB_LOCAL }
-    pub fn is_global(&self) -> bool { self.binding() == sym_bind::STB_GLOBAL }
-    pub fn is_weak(&self) -> bool { self.binding() == sym_bind::STB_WEAK }
-    pub fn is_function(&self) -> bool { self.sym_type() == sym_type::STT_FUNC }
-    pub fn is_object(&self) -> bool { self.sym_type() == sym_type::STT_OBJECT }
-    pub fn is_undefined(&self) -> bool { self.st_shndx == 0 }
+    pub fn binding(&self) -> u8 {
+        self.st_info >> 4
+    }
+    pub fn sym_type(&self) -> u8 {
+        self.st_info & 0x0F
+    }
+    pub fn is_local(&self) -> bool {
+        self.binding() == sym_bind::STB_LOCAL
+    }
+    pub fn is_global(&self) -> bool {
+        self.binding() == sym_bind::STB_GLOBAL
+    }
+    pub fn is_weak(&self) -> bool {
+        self.binding() == sym_bind::STB_WEAK
+    }
+    pub fn is_function(&self) -> bool {
+        self.sym_type() == sym_type::STT_FUNC
+    }
+    pub fn is_object(&self) -> bool {
+        self.sym_type() == sym_type::STT_OBJECT
+    }
+    pub fn is_undefined(&self) -> bool {
+        self.st_shndx == 0
+    }
 }

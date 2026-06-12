@@ -19,6 +19,9 @@ use crate::test::framework::{TestCase, TestSuite};
 
 pub fn register(s: &mut TestSuite) {
     s.add(TestCase::new("numbers::active_round_trip", t::test_active_numbers_round_trip));
-    s.add(TestCase::new("numbers::unassigned_returns_none", t::test_unassigned_numbers_return_none));
+    s.add(TestCase::new(
+        "numbers::unassigned_returns_none",
+        t::test_unassigned_numbers_return_none,
+    ));
     s.add(TestCase::new("numbers::mk_debug_tag", t::test_mk_debug_tag));
 }

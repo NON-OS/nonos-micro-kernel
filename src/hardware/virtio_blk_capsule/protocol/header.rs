@@ -28,8 +28,7 @@ pub(in super::super) const SECTOR_SIZE: usize = 512;
 // Per-request ceiling, matches `MAX_SECTORS_PER_REQUEST` in the
 // userland capsule (64 sectors → 32 KiB).
 pub(in super::super) const MAX_SECTORS_PER_REQUEST: u32 = 64;
-pub(in super::super) const MAX_RW_PAYLOAD_BYTES: u32 =
-    MAX_SECTORS_PER_REQUEST * SECTOR_SIZE as u32;
+pub(in super::super) const MAX_RW_PAYLOAD_BYTES: u32 = MAX_SECTORS_PER_REQUEST * SECTOR_SIZE as u32;
 
 // Response cap. Read replies carry up to MAX_RW_PAYLOAD_BYTES of
 // data after a 4-byte status; that bound plus header slack is

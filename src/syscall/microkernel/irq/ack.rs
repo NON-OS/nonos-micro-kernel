@@ -22,9 +22,7 @@ use core::sync::atomic::{AtomicU32, Ordering};
 static IRQ_ACK_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn trace(label: &[u8], pid: u32) {
-    if !matches!(pid, 7 | 8 | 0x1c)
-        || IRQ_ACK_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 32
-    {
+    if !matches!(pid, 7 | 8 | 0x1c) || IRQ_ACK_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 32 {
         return;
     }
     crate::sys::serial::print(b"[IRQ-ACK] ");

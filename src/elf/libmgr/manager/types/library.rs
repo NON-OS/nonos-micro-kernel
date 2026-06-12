@@ -36,11 +36,40 @@ pub struct LoadedLibrary {
 }
 
 impl LoadedLibrary {
-    pub fn new(name: String, image: ElfImage) -> Self { Self { id: next_library_id(), name, soname: None, image, state: LibraryState::Loading, ref_count: 1, dependencies: Vec::new(), dependents: Vec::new(), init_called: false, fini_called: false } }
-    pub fn with_soname(mut self, soname: String) -> Self { self.soname = Some(soname); self }
-    pub fn acquire(&mut self) { self.ref_count += 1; }
-    pub fn release(&mut self) -> bool { if self.ref_count > 0 { self.ref_count -= 1; } self.ref_count == 0 }
-    pub fn is_ready(&self) -> bool { self.state == LibraryState::Ready }
-    pub fn base_addr(&self) -> VirtAddr { self.image.base_addr }
-    pub fn entry_point(&self) -> VirtAddr { self.image.entry_point }
+    pub fn new(name: String, image: ElfImage) -> Self {
+        Self {
+            id: next_library_id(),
+            name,
+            soname: None,
+            image,
+            state: LibraryState::Loading,
+            ref_count: 1,
+            dependencies: Vec::new(),
+            dependents: Vec::new(),
+            init_called: false,
+            fini_called: false,
+        }
+    }
+    pub fn with_soname(mut self, soname: String) -> Self {
+        self.soname = Some(soname);
+        self
+    }
+    pub fn acquire(&mut self) {
+        self.ref_count += 1;
+    }
+    pub fn release(&mut self) -> bool {
+        if self.ref_count > 0 {
+            self.ref_count -= 1;
+        }
+        self.ref_count == 0
+    }
+    pub fn is_ready(&self) -> bool {
+        self.state == LibraryState::Ready
+    }
+    pub fn base_addr(&self) -> VirtAddr {
+        self.image.base_addr
+    }
+    pub fn entry_point(&self) -> VirtAddr {
+        self.image.entry_point
+    }
 }

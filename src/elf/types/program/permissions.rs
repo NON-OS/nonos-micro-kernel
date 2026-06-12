@@ -18,11 +18,21 @@ use super::state::ProgramHeader;
 use crate::elf::types::{phdr_flags, phdr_type};
 
 impl ProgramHeader {
-    pub fn is_load(&self) -> bool { self.p_type == phdr_type::PT_LOAD }
-    pub fn is_readable(&self) -> bool { self.p_flags & phdr_flags::PF_R != 0 }
-    pub fn is_writable(&self) -> bool { self.p_flags & phdr_flags::PF_W != 0 }
-    pub fn is_executable(&self) -> bool { self.p_flags & phdr_flags::PF_X != 0 }
-    pub fn bss_size(&self) -> u64 { self.p_memsz.saturating_sub(self.p_filesz) }
+    pub fn is_load(&self) -> bool {
+        self.p_type == phdr_type::PT_LOAD
+    }
+    pub fn is_readable(&self) -> bool {
+        self.p_flags & phdr_flags::PF_R != 0
+    }
+    pub fn is_writable(&self) -> bool {
+        self.p_flags & phdr_flags::PF_W != 0
+    }
+    pub fn is_executable(&self) -> bool {
+        self.p_flags & phdr_flags::PF_X != 0
+    }
+    pub fn bss_size(&self) -> u64 {
+        self.p_memsz.saturating_sub(self.p_filesz)
+    }
 
     pub fn flags_str(&self) -> &'static str {
         match (self.is_readable(), self.is_writable(), self.is_executable()) {

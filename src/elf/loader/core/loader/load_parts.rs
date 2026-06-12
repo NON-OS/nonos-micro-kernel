@@ -33,7 +33,8 @@ pub(super) fn load(
     base_addr: VirtAddr,
     target_asid: u32,
 ) -> Result<LoadedParts, ElfError> {
-    let mut parts = LoadedParts { segments: Vec::new(), dynamic_info: None, tls_info: None, interpreter: None };
+    let mut parts =
+        LoadedParts { segments: Vec::new(), dynamic_info: None, tls_info: None, interpreter: None };
     for ph in program_headers {
         match ph.p_type {
             phdr_type::PT_LOAD => {
@@ -45,7 +46,12 @@ pub(super) fn load(
                 )?);
             }
             phdr_type::PT_DYNAMIC => {
-                let info = super::super::parse_dynamic::parse_dynamic_section(elf_data, ph, program_headers, base_addr)?;
+                let info = super::super::parse_dynamic::parse_dynamic_section(
+                    elf_data,
+                    ph,
+                    program_headers,
+                    base_addr,
+                )?;
                 set_once(&mut parts.dynamic_info, info, ElfError::DynamicSectionError)?;
             }
             phdr_type::PT_TLS => {
@@ -63,7 +69,9 @@ pub(super) fn load(
 }
 
 fn set_once<T>(slot: &mut Option<T>, value: T, error: ElfError) -> Result<(), ElfError> {
-    if slot.is_some() { return Err(error); }
+    if slot.is_some() {
+        return Err(error);
+    }
     *slot = Some(value);
     Ok(())
 }

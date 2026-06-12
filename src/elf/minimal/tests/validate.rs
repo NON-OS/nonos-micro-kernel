@@ -20,10 +20,14 @@ use crate::elf::errors::ElfError;
 use crate::elf::types::{elf_class, elf_data};
 
 #[test]
-fn test_validate_elf_valid() { assert!(validate_elf(&make_valid_elf_header())); }
+fn test_validate_elf_valid() {
+    assert!(validate_elf(&make_valid_elf_header()));
+}
 
 #[test]
-fn test_validate_elf_too_small() { assert!(!validate_elf(&[0u8; 8])); }
+fn test_validate_elf_too_small() {
+    assert!(!validate_elf(&[0u8; 8]));
+}
 
 #[test]
 fn test_validate_elf_bad_magic() {
@@ -47,7 +51,9 @@ fn test_validate_elf_bad_endian() {
 }
 
 #[test]
-fn test_validate_elf_detailed() { assert!(validate_elf_detailed(&make_valid_elf_header()).is_ok()); }
+fn test_validate_elf_detailed() {
+    assert!(validate_elf_detailed(&make_valid_elf_header()).is_ok());
+}
 
 #[test]
 fn test_validate_elf_detailed_bad_version() {
@@ -57,7 +63,9 @@ fn test_validate_elf_detailed_bad_version() {
 }
 
 #[test]
-fn test_validate_elf_x86_64() { assert!(validate_elf_x86_64(&make_valid_elf_header()).is_ok()); }
+fn test_validate_elf_x86_64() {
+    assert!(validate_elf_x86_64(&make_valid_elf_header()).is_ok());
+}
 
 #[test]
 fn test_validate_elf_x86_64_bad_machine() {

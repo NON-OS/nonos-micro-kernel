@@ -15,8 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::drivers::pci::types::{PciBar, PciDevice};
-use crate::hardware::broker::{classify_pci, Bar, BarKind, BusKind, DeviceRecord};
 use crate::hardware::broker::device::{BAR_FLAG_MEM64, BAR_FLAG_PREFETCH};
+use crate::hardware::broker::{classify_pci, Bar, BarKind, BusKind, DeviceRecord};
 
 pub(super) fn record_from_pci(device_id: u64, dev: &PciDevice) -> DeviceRecord {
     let mut bars = [Bar::empty(); 6];
@@ -59,8 +59,12 @@ fn bar_from_pci(b: &PciBar) -> Bar {
 
 fn mem_bar(b: &PciBar) -> Bar {
     let mut flags = 0u8;
-    if b.is_prefetchable() { flags |= BAR_FLAG_PREFETCH; }
-    if b.is_64bit() { flags |= BAR_FLAG_MEM64; }
+    if b.is_prefetchable() {
+        flags |= BAR_FLAG_PREFETCH;
+    }
+    if b.is_64bit() {
+        flags |= BAR_FLAG_MEM64;
+    }
     let base = b.address().map(|p| p.as_u64()).unwrap_or(0);
     Bar { base, size: b.size(), kind: BarKind::Mmio as u8, flags, _pad: [0; 6] }
 }

@@ -18,7 +18,10 @@ use core::ptr;
 
 use crate::memory::addr::VirtAddr;
 
-use super::{constants::{FiniFn, FINI_FN_SIZE}, info::FiniArrayInfo};
+use super::{
+    constants::{FiniFn, FINI_FN_SIZE},
+    info::FiniArrayInfo,
+};
 
 pub(super) unsafe fn invoke_addr(addr: VirtAddr) {
     let fini_fn: FiniFn = unsafe { core::mem::transmute(addr.as_u64()) };

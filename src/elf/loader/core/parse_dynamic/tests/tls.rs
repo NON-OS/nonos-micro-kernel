@@ -21,12 +21,30 @@ use crate::memory::addr::VirtAddr;
 
 #[test]
 fn test_parse_tls_rejects_mem_smaller_than_template() {
-    let ph = ProgramHeader { p_type: phdr_type::PT_TLS, p_flags: 0, p_offset: 0, p_vaddr: 0, p_paddr: 0, p_filesz: 64, p_memsz: 32, p_align: 16 };
+    let ph = ProgramHeader {
+        p_type: phdr_type::PT_TLS,
+        p_flags: 0,
+        p_offset: 0,
+        p_vaddr: 0,
+        p_paddr: 0,
+        p_filesz: 64,
+        p_memsz: 32,
+        p_align: 16,
+    };
     assert!(matches!(parse_tls_section(&ph, VirtAddr::new(0)), Err(ElfError::TlsSectionError)));
 }
 
 #[test]
 fn test_parse_tls_rejects_invalid_alignment() {
-    let ph = ProgramHeader { p_type: phdr_type::PT_TLS, p_flags: 0, p_offset: 0, p_vaddr: 0, p_paddr: 0, p_filesz: 32, p_memsz: 64, p_align: 24 };
+    let ph = ProgramHeader {
+        p_type: phdr_type::PT_TLS,
+        p_flags: 0,
+        p_offset: 0,
+        p_vaddr: 0,
+        p_paddr: 0,
+        p_filesz: 32,
+        p_memsz: 64,
+        p_align: 24,
+    };
     assert!(matches!(parse_tls_section(&ph, VirtAddr::new(0)), Err(ElfError::AlignmentError)));
 }

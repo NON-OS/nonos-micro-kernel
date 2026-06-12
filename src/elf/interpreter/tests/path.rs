@@ -26,12 +26,18 @@ fn test_interpreter_info_new() {
 
 #[test]
 fn test_interpreter_info_as_str() {
-    assert_eq!(InterpreterInfo::new("/lib64/ld-linux-x86-64.so.2".into()).as_str(), "/lib64/ld-linux-x86-64.so.2");
+    assert_eq!(
+        InterpreterInfo::new("/lib64/ld-linux-x86-64.so.2".into()).as_str(),
+        "/lib64/ld-linux-x86-64.so.2"
+    );
 }
 
 #[test]
 fn test_filename() {
-    assert_eq!(InterpreterInfo::new("/lib64/ld-linux-x86-64.so.2".into()).filename(), "ld-linux-x86-64.so.2");
+    assert_eq!(
+        InterpreterInfo::new("/lib64/ld-linux-x86-64.so.2".into()).filename(),
+        "ld-linux-x86-64.so.2"
+    );
     assert_eq!(InterpreterInfo::new("ld.so".into()).filename(), "ld.so");
 }
 
@@ -49,7 +55,9 @@ fn test_directory() {
 }
 
 #[test]
-fn test_default() { assert!(InterpreterInfo::default().path.is_empty()); }
+fn test_default() {
+    assert!(InterpreterInfo::default().path.is_empty());
+}
 
 #[test]
 fn test_from_string() {

@@ -21,5 +21,7 @@ pub struct RelocationProcessor {
 }
 
 impl RelocationProcessor {
-    pub fn new(base_addr: VirtAddr) -> Self { Self { base_addr } }
+    pub fn new(base_addr: VirtAddr) -> Self {
+        Self { base_addr }
+    }
 }

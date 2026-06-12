@@ -29,8 +29,8 @@ pub use super::super::core::api::{
     secure_random_u8, secure_zero, sig, verify_plonk_proof, verify_signature, SignatureAlgorithm,
 };
 pub use super::super::core::syscall::{sign_message, verify_signature_syscall, SyscallCryptoError};
-#[cfg(any(feature = "mldsa2", feature = "mldsa3", feature = "mldsa5"))]
-pub use super::super::core::traits::MlDsa65Sig;
 #[cfg(any(feature = "mlkem512", feature = "mlkem768", feature = "mlkem1024"))]
 pub use super::super::core::traits::KyberKem;
+#[cfg(any(feature = "mldsa2", feature = "mldsa3", feature = "mldsa5"))]
+pub use super::super::core::traits::MlDsa65Sig;
 pub use super::super::core::traits::{Ed25519Sig, Kem, Sig};

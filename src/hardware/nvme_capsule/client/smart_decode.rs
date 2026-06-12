@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::read::{i16_at, u128_at, u16_at, u32_at};
-use super::smart_health::NvmeSmartHealth;
 use super::super::error::DriverNvmeError;
 use super::super::protocol::SMART_HEALTH_PAYLOAD_LEN;
+use super::read::{i16_at, u128_at, u16_at, u32_at};
+use super::smart_health::NvmeSmartHealth;
 
 pub(super) fn decode(body: &[u8]) -> Result<NvmeSmartHealth, DriverNvmeError> {
     if body.len() < SMART_HEALTH_PAYLOAD_LEN {

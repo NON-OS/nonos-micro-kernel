@@ -19,7 +19,5 @@ use crate::kernel_core::surface_registry::types::SurfaceHandle;
 
 pub fn lookup(pid: u32, handle: SurfaceHandle) -> Option<(u64, u64)> {
     let v = ATTACHES.lock();
-    v.iter()
-        .find(|r| r.pid == pid && r.handle == handle)
-        .map(|r| (r.base_va, r.byte_len))
+    v.iter().find(|r| r.pid == pid && r.handle == handle).map(|r| (r.base_va, r.byte_len))
 }

@@ -19,15 +19,10 @@ use crate::kernel_core::surface_registry::types::{
     decode_handle, RegistryError, SurfaceDescriptor, SurfaceHandle,
 };
 
-pub(super) fn descriptor(
-    handle: SurfaceHandle,
-) -> Result<SurfaceDescriptor, RegistryError> {
+pub(super) fn descriptor(handle: SurfaceHandle) -> Result<SurfaceDescriptor, RegistryError> {
     let (idx, epoch) = decode_handle(handle);
     let slots = SLOTS.lock();
-    let slot = slots
-        .get(idx as usize)
-        .and_then(|s| s.as_ref())
-        .ok_or(RegistryError::BadHandle)?;
+    let slot = slots.get(idx as usize).and_then(|s| s.as_ref()).ok_or(RegistryError::BadHandle)?;
     if slot.epoch != epoch {
         return Err(RegistryError::BadHandle);
     }

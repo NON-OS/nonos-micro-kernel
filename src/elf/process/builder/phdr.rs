@@ -28,7 +28,8 @@ impl<'a> ProcessBuilder<'a> {
         let phdrs = parse_program_headers(elf_data, &header)?;
         let span = phdr_span(&header)?;
         for (segment, header) in image.segments.iter().zip(phdrs.iter().filter(is_load)) {
-            let seg_file_end = header.p_offset.checked_add(header.p_filesz).ok_or(ElfError::AddressOverflow)?;
+            let seg_file_end =
+                header.p_offset.checked_add(header.p_filesz).ok_or(ElfError::AddressOverflow)?;
             if span.0 >= header.p_offset && span.1 <= seg_file_end {
                 return Ok(segment.vaddr + (span.0 - header.p_offset));
             }
@@ -51,9 +52,6 @@ fn phdr_span(header: &crate::elf::types::ElfHeader) -> ElfResult<(u64, u64)> {
     let table_bytes = (header.e_phentsize as u64)
         .checked_mul(header.e_phnum as u64)
         .ok_or(ElfError::AddressOverflow)?;
-    let table_end = header
-        .e_phoff
-        .checked_add(table_bytes)
-        .ok_or(ElfError::AddressOverflow)?;
+    let table_end = header.e_phoff.checked_add(table_bytes).ok_or(ElfError::AddressOverflow)?;
     Ok((header.e_phoff, table_end))
 }

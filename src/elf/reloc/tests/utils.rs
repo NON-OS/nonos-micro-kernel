@@ -55,7 +55,11 @@ fn test_count_supported() {
 
 #[test]
 fn test_rela_entry_methods() {
-    let entry = RelaEntry { r_offset: 0x1000, r_info: (5u64 << 32) | reloc_type::R_X86_64_RELATIVE as u64, r_addend: 0x100 };
+    let entry = RelaEntry {
+        r_offset: 0x1000,
+        r_info: (5u64 << 32) | reloc_type::R_X86_64_RELATIVE as u64,
+        r_addend: 0x100,
+    };
     assert_eq!(entry.reloc_type(), reloc_type::R_X86_64_RELATIVE);
     assert_eq!(entry.symbol_index(), 5);
 }

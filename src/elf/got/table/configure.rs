@@ -25,9 +25,19 @@ impl GlobalOffsetTable {
         self
     }
 
-    pub fn base(&self) -> VirtAddr { self.base }
-    pub fn entry_count(&self) -> usize { self.entry_count }
-    pub fn plt_entry_count(&self) -> usize { self.plt_entry_count }
-    pub fn unresolved_count(&self) -> usize { self.entries.iter().filter(|entry| !entry.resolved).count() }
-    pub fn iter(&self) -> impl Iterator<Item = &super::entry::GotEntry> { self.entries.iter() }
+    pub fn base(&self) -> VirtAddr {
+        self.base
+    }
+    pub fn entry_count(&self) -> usize {
+        self.entry_count
+    }
+    pub fn plt_entry_count(&self) -> usize {
+        self.plt_entry_count
+    }
+    pub fn unresolved_count(&self) -> usize {
+        self.entries.iter().filter(|entry| !entry.resolved).count()
+    }
+    pub fn iter(&self) -> impl Iterator<Item = &super::entry::GotEntry> {
+        self.entries.iter()
+    }
 }

@@ -15,9 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-login")]
-pub(crate) const LOGIN_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_login/target/x86_64-nonos-user/release/login",
-);
+pub(crate) const LOGIN_ELF: &[u8] =
+    include_bytes!("../../../userland/capsule_login/target/x86_64-nonos-user/release/login",);
 
 #[cfg(feature = "nonos-capsule-login")]
 pub(crate) const LOGIN_NONOS_ID_CERT_BYTES: &[u8] =

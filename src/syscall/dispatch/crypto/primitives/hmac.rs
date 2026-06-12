@@ -15,12 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::copy;
-use alloc::vec::Vec;
 use crate::capabilities::Capability;
 use crate::security::crypto_capsule::client;
 use crate::syscall::dispatch::crypto::error::{map_capsule_error, CryptoErrorContext};
 use crate::syscall::dispatch::require_capability;
 use crate::syscall::SyscallResult;
+use alloc::vec::Vec;
 
 const MAX_KEY: usize = 256;
 const MAX_DATA: usize = 65536;

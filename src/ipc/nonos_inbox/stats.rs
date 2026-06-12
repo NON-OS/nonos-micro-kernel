@@ -63,7 +63,6 @@ impl InboxStats {
     pub(super) fn record_dropped(&self) {
         self.dropped_full.fetch_add(1, Ordering::Relaxed);
     }
-
 }
 
 /// Snapshot of inbox statistics

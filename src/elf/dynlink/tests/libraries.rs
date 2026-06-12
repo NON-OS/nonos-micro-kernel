@@ -28,7 +28,9 @@ fn test_dyn_link_info_new() {
 }
 
 #[test]
-fn test_dyn_link_info_default() { assert!(DynLinkInfo::default().is_empty()); }
+fn test_dyn_link_info_default() {
+    assert!(DynLinkInfo::default().is_empty());
+}
 
 #[test]
 fn test_needs_libraries() {

@@ -25,8 +25,12 @@ use super::{cached::CachedImage, state::ImageCache};
 
 impl ImageCache {
     pub fn insert(&mut self, name: String, image: ElfImage) -> ElfResult<usize> {
-        if self.name_index.contains_key(&name) { return Err(ElfError::LibraryAlreadyLoaded); }
-        if self.images.len() >= self.max_entries { self.evict_unreferenced()?; }
+        if self.name_index.contains_key(&name) {
+            return Err(ElfError::LibraryAlreadyLoaded);
+        }
+        if self.images.len() >= self.max_entries {
+            self.evict_unreferenced()?;
+        }
         let cached = CachedImage::new(name.clone(), image);
         let id = cached.id;
         self.name_index.insert(name, id);
@@ -35,9 +39,18 @@ impl ImageCache {
         Ok(id)
     }
 
-    pub fn acquire(&mut self, id: usize) -> ElfResult<()> { self.images.get_mut(&id).ok_or(ElfError::LibraryNotFound)?.acquire(); Ok(()) }
-    pub fn acquire_by_name(&mut self, name: &str) -> ElfResult<usize> { let id = *self.name_index.get(name).ok_or(ElfError::LibraryNotFound)?; self.acquire(id)?; Ok(id) }
-    pub fn release(&mut self, id: usize) -> ElfResult<bool> { Ok(self.images.get_mut(&id).ok_or(ElfError::LibraryNotFound)?.release()) }
+    pub fn acquire(&mut self, id: usize) -> ElfResult<()> {
+        self.images.get_mut(&id).ok_or(ElfError::LibraryNotFound)?.acquire();
+        Ok(())
+    }
+    pub fn acquire_by_name(&mut self, name: &str) -> ElfResult<usize> {
+        let id = *self.name_index.get(name).ok_or(ElfError::LibraryNotFound)?;
+        self.acquire(id)?;
+        Ok(id)
+    }
+    pub fn release(&mut self, id: usize) -> ElfResult<bool> {
+        Ok(self.images.get_mut(&id).ok_or(ElfError::LibraryNotFound)?.release())
+    }
 
     pub fn remove(&mut self, id: usize) -> ElfResult<CachedImage> {
         let cached = self.images.remove(&id).ok_or(ElfError::LibraryNotFound)?;
@@ -47,20 +60,38 @@ impl ImageCache {
     }
 
     pub fn remove_if_unreferenced(&mut self, id: usize) -> ElfResult<Option<CachedImage>> {
-        if self.images.get(&id).is_some_and(|cached| !cached.is_referenced()) { self.remove(id).map(Some) } else { Ok(None) }
+        if self.images.get(&id).is_some_and(|cached| !cached.is_referenced()) {
+            self.remove(id).map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     fn evict_unreferenced(&mut self) -> ElfResult<()> {
-        let ids: Vec<usize> = self.images.iter().filter(|(_, image)| !image.is_referenced()).map(|(&id, _)| id).collect();
-        if ids.is_empty() { return Err(ElfError::CacheFull); }
+        let ids: Vec<usize> = self
+            .images
+            .iter()
+            .filter(|(_, image)| !image.is_referenced())
+            .map(|(&id, _)| id)
+            .collect();
+        if ids.is_empty() {
+            return Err(ElfError::CacheFull);
+        }
         self.remove(ids[0]).map(|_| ())
     }
 
     pub fn clear_unreferenced(&mut self) -> usize {
-        let ids: Vec<usize> = self.images.iter().filter(|(_, image)| !image.is_referenced()).map(|(&id, _)| id).collect();
+        let ids: Vec<usize> = self
+            .images
+            .iter()
+            .filter(|(_, image)| !image.is_referenced())
+            .map(|(&id, _)| id)
+            .collect();
         let mut cleared = 0;
         for id in ids {
-            if self.remove(id).is_ok() { cleared += 1; }
+            if self.remove(id).is_ok() {
+                cleared += 1;
+            }
         }
         cleared
     }

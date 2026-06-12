@@ -33,19 +33,27 @@ pub(super) fn page<'a>(
     page_index: usize,
 ) -> Result<PageCopy<'a>, ElfError> {
     let page_off = (page_index as u64).checked_mul(PAGE as u64).ok_or(ElfError::AddressOverflow)?;
-    let page_va = VirtAddr::new(plan.aligned_start.checked_add(page_off).ok_or(ElfError::AddressOverflow)?);
+    let page_va =
+        VirtAddr::new(plan.aligned_start.checked_add(page_off).ok_or(ElfError::AddressOverflow)?);
     let dst_off = if page_index == 0 { plan.intra } else { 0 };
     let consumed_segment = if page_index == 0 {
         0
     } else {
-        page_index.checked_mul(PAGE).ok_or(ElfError::AddressOverflow)?
-            .checked_sub(plan.intra).ok_or(ElfError::AddressOverflow)?
+        page_index
+            .checked_mul(PAGE)
+            .ok_or(ElfError::AddressOverflow)?
+            .checked_sub(plan.intra)
+            .ok_or(ElfError::AddressOverflow)?
     };
     let bytes_in_page = PAGE - dst_off;
     let src = if consumed_segment >= plan.file_size {
         &[]
     } else {
-        let take = plan.file_size.checked_sub(consumed_segment).ok_or(ElfError::AddressOverflow)?.min(bytes_in_page);
+        let take = plan
+            .file_size
+            .checked_sub(consumed_segment)
+            .ok_or(ElfError::AddressOverflow)?
+            .min(bytes_in_page);
         let end = consumed_segment.checked_add(take).ok_or(ElfError::AddressOverflow)?;
         &file_bytes[consumed_segment..end]
     };

@@ -21,8 +21,7 @@
 use super::errnos::{ERRNO_INVAL, ERRNO_NODEV, ERRNO_PERM, ERRNO_STALE};
 use crate::capabilities::Capability;
 use crate::hardware::broker::{
-    pci_config_read, pci_config_write, PciReadError, PciReadRequest, PciWriteError,
-    PciWriteRequest,
+    pci_config_read, pci_config_write, PciReadError, PciReadRequest, PciWriteError, PciWriteRequest,
 };
 use crate::process::{caps, current_pid};
 

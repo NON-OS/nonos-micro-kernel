@@ -25,6 +25,12 @@ pub struct LinkMapEntry {
 
 impl LinkMapEntry {
     pub fn new(base_addr: u64, name_ptr: *const u8, dynamic_addr: u64) -> Self {
-        Self { l_addr: base_addr, l_name: name_ptr, l_ld: dynamic_addr, l_next: core::ptr::null_mut(), l_prev: core::ptr::null_mut() }
+        Self {
+            l_addr: base_addr,
+            l_name: name_ptr,
+            l_ld: dynamic_addr,
+            l_next: core::ptr::null_mut(),
+            l_prev: core::ptr::null_mut(),
+        }
     }
 }

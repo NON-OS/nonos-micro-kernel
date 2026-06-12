@@ -34,4 +34,3 @@ pub(super) const DRIVER_I2C_PCI_MANIFEST_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-i2c-pci"))]
 pub(super) const DRIVER_I2C_PCI_ATTESTATION_BYTES: &[u8] = &[];
-

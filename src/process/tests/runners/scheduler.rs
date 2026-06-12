@@ -29,15 +29,36 @@ pub fn register(s: &mut TestSuite) {
     s.add(TestCase::new("sched_attr_is_realtime_fifo", t::sched_attr_is_realtime_fifo));
     s.add(TestCase::new("sched_attr_is_realtime_rr", t::sched_attr_is_realtime_rr));
     s.add(TestCase::new("sched_attr_is_not_realtime", t::sched_attr_is_not_realtime));
-    s.add(TestCase::new("sched_attr_effective_priority_normal", t::sched_attr_effective_priority_normal));
-    s.add(TestCase::new("sched_attr_effective_priority_normal_with_nice", t::sched_attr_effective_priority_normal_with_nice));
-    s.add(TestCase::new("sched_attr_effective_priority_fifo", t::sched_attr_effective_priority_fifo));
+    s.add(TestCase::new(
+        "sched_attr_effective_priority_normal",
+        t::sched_attr_effective_priority_normal,
+    ));
+    s.add(TestCase::new(
+        "sched_attr_effective_priority_normal_with_nice",
+        t::sched_attr_effective_priority_normal_with_nice,
+    ));
+    s.add(TestCase::new(
+        "sched_attr_effective_priority_fifo",
+        t::sched_attr_effective_priority_fifo,
+    ));
     s.add(TestCase::new("sched_attr_effective_priority_rr", t::sched_attr_effective_priority_rr));
-    s.add(TestCase::new("sched_attr_effective_priority_deadline", t::sched_attr_effective_priority_deadline));
-    s.add(TestCase::new("sched_attr_effective_priority_idle", t::sched_attr_effective_priority_idle));
-    s.add(TestCase::new("sched_attr_effective_priority_batch", t::sched_attr_effective_priority_batch));
+    s.add(TestCase::new(
+        "sched_attr_effective_priority_deadline",
+        t::sched_attr_effective_priority_deadline,
+    ));
+    s.add(TestCase::new(
+        "sched_attr_effective_priority_idle",
+        t::sched_attr_effective_priority_idle,
+    ));
+    s.add(TestCase::new(
+        "sched_attr_effective_priority_batch",
+        t::sched_attr_effective_priority_batch,
+    ));
     s.add(TestCase::new("sched_attr_can_run_on_cpu", t::sched_attr_can_run_on_cpu));
-    s.add(TestCase::new("sched_attr_can_run_on_cpu_high_cpu", t::sched_attr_can_run_on_cpu_high_cpu));
+    s.add(TestCase::new(
+        "sched_attr_can_run_on_cpu_high_cpu",
+        t::sched_attr_can_run_on_cpu_high_cpu,
+    ));
     s.add(TestCase::new("sched_attr_get_timeslice_fifo", t::sched_attr_get_timeslice_fifo));
     s.add(TestCase::new("sched_attr_get_timeslice_rr", t::sched_attr_get_timeslice_rr));
     s.add(TestCase::new("sched_attr_get_timeslice_normal", t::sched_attr_get_timeslice_normal));

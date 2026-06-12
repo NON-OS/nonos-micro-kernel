@@ -15,9 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-policy")]
-pub(crate) const POLICY_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_policy/target/x86_64-nonos-user/release/policy",
-);
+pub(crate) const POLICY_ELF: &[u8] =
+    include_bytes!("../../../userland/capsule_policy/target/x86_64-nonos-user/release/policy",);
 
 #[cfg(feature = "nonos-capsule-policy")]
 pub(crate) const POLICY_NONOS_ID_CERT_BYTES: &[u8] =

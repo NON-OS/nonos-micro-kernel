@@ -21,8 +21,8 @@ mod state;
 #[cfg(test)]
 mod test_api;
 
-pub(super) use init::register_platform_device;
 pub use init::init_from_pci;
+pub(super) use init::register_platform_device;
 pub(super) use list::class_of;
 pub use list::{contains, list, list_by_class};
 #[cfg(test)]

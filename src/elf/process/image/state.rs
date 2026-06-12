@@ -44,7 +44,8 @@ pub struct ProcessImage {
 
 impl ProcessImage {
     pub fn new(executable: ElfImage, interpreter: Option<ElfImage>, stack: StackLayout) -> Self {
-        let entry_point = interpreter.as_ref().map_or(executable.entry_point, |image| image.entry_point);
+        let entry_point =
+            interpreter.as_ref().map_or(executable.entry_point, |image| image.entry_point);
         let brk_start = calculate_brk(&executable);
         Self {
             executable,

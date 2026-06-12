@@ -24,14 +24,20 @@ impl ElfLoader {
     ) -> Result<VirtAddr, ElfError> {
         let header = super::super::parse_header::parse_elf_header(elf_data)?;
         super::super::parse_header::validate_elf(&header)?;
-        let (_, _, ph_count) = super::super::parse_header::program_header_bounds(elf_data, &header)?;
+        let (_, _, ph_count) =
+            super::super::parse_header::program_header_bounds(elf_data, &header)?;
         let base_addr = base_addr::load_base(&header, &mut self.aslr_manager);
         for index in 0..ph_count {
-            let header_at = super::super::parse_header::parse_program_header_at(elf_data, &header, index)?;
+            let header_at =
+                super::super::parse_header::parse_program_header_at(elf_data, &header, index)?;
             map_load_segment(elf_data, &header_at, base_addr, target_asid)?;
         }
         super::super::relocate::apply_relative_relocations(
-            elf_data, &header, ph_count, base_addr, target_asid,
+            elf_data,
+            &header,
+            ph_count,
+            base_addr,
+            target_asid,
         )?;
         Ok(base_addr::entry_point(&header, base_addr))
     }

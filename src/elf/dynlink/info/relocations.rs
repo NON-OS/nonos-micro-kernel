@@ -19,7 +19,13 @@ use crate::elf::types::RelaEntry;
 use super::state::DynLinkInfo;
 
 impl DynLinkInfo {
-    pub fn rela_count(&self) -> usize { self.rela_size / RelaEntry::SIZE }
-    pub fn plt_rela_count(&self) -> usize { self.plt_rela_size / RelaEntry::SIZE }
-    pub fn total_relocation_count(&self) -> usize { self.rela_count() + self.plt_rela_count() }
+    pub fn rela_count(&self) -> usize {
+        self.rela_size / RelaEntry::SIZE
+    }
+    pub fn plt_rela_count(&self) -> usize {
+        self.plt_rela_size / RelaEntry::SIZE
+    }
+    pub fn total_relocation_count(&self) -> usize {
+        self.rela_count() + self.plt_rela_count()
+    }
 }

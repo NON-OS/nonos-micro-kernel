@@ -19,7 +19,11 @@ use core::ptr;
 use crate::elf::errors::ElfResult;
 use crate::memory::addr::VirtAddr;
 
-use super::{constants::GOT_ENTRY_SIZE, entry::{GotEntry, GotEntryType}, state::GlobalOffsetTable};
+use super::{
+    constants::GOT_ENTRY_SIZE,
+    entry::{GotEntry, GotEntryType},
+    state::GlobalOffsetTable,
+};
 
 impl GlobalOffsetTable {
     pub fn initialize(&mut self) -> ElfResult<()> {
@@ -27,7 +31,12 @@ impl GlobalOffsetTable {
         for index in 0..self.entry_count {
             let address = VirtAddr::new(self.base.as_u64() + (index * GOT_ENTRY_SIZE) as u64);
             let value = unsafe { ptr::read(address.as_u64() as *const u64) };
-            let entry_type = match index { 0 => GotEntryType::Dynamic, 1 => GotEntryType::LinkMap, 2 => GotEntryType::PltResolver, _ => GotEntryType::Symbol(index - 3) };
+            let entry_type = match index {
+                0 => GotEntryType::Dynamic,
+                1 => GotEntryType::LinkMap,
+                2 => GotEntryType::PltResolver,
+                _ => GotEntryType::Symbol(index - 3),
+            };
             self.entries.push(GotEntry::new(index, address, value, entry_type));
         }
         Ok(())

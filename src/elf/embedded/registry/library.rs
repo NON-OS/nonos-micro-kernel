@@ -31,13 +31,34 @@ pub struct EmbeddedLibrary {
 
 impl EmbeddedLibrary {
     pub fn new(name: impl Into<String>, data: &'static [u8]) -> Self {
-        Self { name: name.into(), soname: None, data, version: LibraryVersion::new(0, 0, 0), dependencies: Vec::new() }
+        Self {
+            name: name.into(),
+            soname: None,
+            data,
+            version: LibraryVersion::new(0, 0, 0),
+            dependencies: Vec::new(),
+        }
     }
 
-    pub fn with_name(data: &'static [u8], name: String) -> Self { Self::new(name, data) }
-    pub fn with_soname(mut self, soname: String) -> Self { self.soname = Some(soname); self }
-    pub fn with_version(mut self, version: LibraryVersion) -> Self { self.version = version; self }
-    pub fn with_dependencies(mut self, deps: Vec<String>) -> Self { self.dependencies = deps; self }
-    pub fn size(&self) -> usize { self.data.len() }
-    pub fn as_ptr(&self) -> *const u8 { self.data.as_ptr() }
+    pub fn with_name(data: &'static [u8], name: String) -> Self {
+        Self::new(name, data)
+    }
+    pub fn with_soname(mut self, soname: String) -> Self {
+        self.soname = Some(soname);
+        self
+    }
+    pub fn with_version(mut self, version: LibraryVersion) -> Self {
+        self.version = version;
+        self
+    }
+    pub fn with_dependencies(mut self, deps: Vec<String>) -> Self {
+        self.dependencies = deps;
+        self
+    }
+    pub fn size(&self) -> usize {
+        self.data.len()
+    }
+    pub fn as_ptr(&self) -> *const u8 {
+        self.data.as_ptr()
+    }
 }

@@ -22,5 +22,7 @@ pub struct InterpreterInfo {
 }
 
 impl InterpreterInfo {
-    pub fn new(path: String) -> Self { Self { path } }
+    pub fn new(path: String) -> Self {
+        Self { path }
+    }
 }

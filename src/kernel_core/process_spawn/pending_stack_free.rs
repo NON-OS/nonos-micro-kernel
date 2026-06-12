@@ -33,8 +33,7 @@ use crate::process::core::{Pid, PROCESS_TABLE};
 use crate::process::userspace::constants::KERNEL_STACK_SIZE;
 use crate::smp::MAX_CPUS;
 
-static PENDING: [Mutex<Vec<u64>>; MAX_CPUS] =
-    [const { Mutex::new(Vec::new()) }; MAX_CPUS];
+static PENDING: [Mutex<Vec<u64>>; MAX_CPUS] = [const { Mutex::new(Vec::new()) }; MAX_CPUS];
 
 #[inline]
 fn slot() -> &'static Mutex<Vec<u64>> {

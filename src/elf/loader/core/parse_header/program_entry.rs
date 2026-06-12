@@ -26,11 +26,7 @@ pub(crate) fn parse_program_header_at(
         return Err(ElfError::ProgramHeadersOutOfBounds);
     }
     let off = ph_offset
-        .checked_add(
-            ph_size
-                .checked_mul(index)
-                .ok_or(ElfError::ProgramHeadersOutOfBounds)?,
-        )
+        .checked_add(ph_size.checked_mul(index).ok_or(ElfError::ProgramHeadersOutOfBounds)?)
         .ok_or(ElfError::ProgramHeadersOutOfBounds)?;
     unsafe { Ok(ptr::read_unaligned(elf_data[off..].as_ptr() as *const ProgramHeader)) }
 }

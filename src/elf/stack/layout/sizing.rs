@@ -47,7 +47,9 @@ impl StackConfig {
     }
 
     pub fn pointers_size(&self) -> usize {
-        POINTER_SIZE + (self.args.len() + 1) * POINTER_SIZE + (self.env.len() + 1) * POINTER_SIZE
+        POINTER_SIZE
+            + (self.args.len() + 1) * POINTER_SIZE
+            + (self.env.len() + 1) * POINTER_SIZE
             + self.auxv.len() * AuxEntry::SIZE
     }
 

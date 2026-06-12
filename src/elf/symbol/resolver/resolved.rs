@@ -30,8 +30,16 @@ pub struct ResolvedSymbol {
 }
 
 impl ResolvedSymbol {
-    pub fn is_function(&self) -> bool { self.sym_type == sym_type::STT_FUNC }
-    pub fn is_object(&self) -> bool { self.sym_type == sym_type::STT_OBJECT }
-    pub fn is_global(&self) -> bool { self.binding == sym_bind::STB_GLOBAL }
-    pub fn is_weak(&self) -> bool { self.binding == sym_bind::STB_WEAK }
+    pub fn is_function(&self) -> bool {
+        self.sym_type == sym_type::STT_FUNC
+    }
+    pub fn is_object(&self) -> bool {
+        self.sym_type == sym_type::STT_OBJECT
+    }
+    pub fn is_global(&self) -> bool {
+        self.binding == sym_bind::STB_GLOBAL
+    }
+    pub fn is_weak(&self) -> bool {
+        self.binding == sym_bind::STB_WEAK
+    }
 }

@@ -30,8 +30,7 @@ fn is_traced(pid: u32) -> bool {
 }
 
 fn trace(label: &[u8], pid: u32) {
-    if !is_traced(pid) || RECV_FROM_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80
-    {
+    if !is_traced(pid) || RECV_FROM_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80 {
         return;
     }
     crate::sys::serial::trace(b"[IPC-RF] pid=");

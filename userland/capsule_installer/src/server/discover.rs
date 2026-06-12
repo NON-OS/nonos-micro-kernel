@@ -21,7 +21,8 @@ use super::consts::PAYMENT_SERVICE;
 pub fn payment_port() -> Option<u32> {
     let mut port: u32 = 0;
     let mut pid: u32 = 0;
-    let rc = mk_service_lookup(PAYMENT_SERVICE.as_ptr(), PAYMENT_SERVICE.len(), &mut port, &mut pid);
+    let rc =
+        mk_service_lookup(PAYMENT_SERVICE.as_ptr(), PAYMENT_SERVICE.len(), &mut port, &mut pid);
     if rc != 0 {
         return None;
     }

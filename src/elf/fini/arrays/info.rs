@@ -25,9 +25,19 @@ pub struct FiniArrayInfo {
 }
 
 impl FiniArrayInfo {
-    pub fn new(addr: VirtAddr, size: usize) -> Self { Self { addr, size } }
-    pub fn count(&self) -> usize { self.size / FINI_FN_SIZE }
-    pub fn is_empty(&self) -> bool { self.size == 0 }
-    pub fn is_entry_aligned(&self) -> bool { self.size % FINI_FN_SIZE == 0 }
-    pub fn end_addr(&self) -> Option<u64> { self.addr.as_u64().checked_add(self.size as u64) }
+    pub fn new(addr: VirtAddr, size: usize) -> Self {
+        Self { addr, size }
+    }
+    pub fn count(&self) -> usize {
+        self.size / FINI_FN_SIZE
+    }
+    pub fn is_empty(&self) -> bool {
+        self.size == 0
+    }
+    pub fn is_entry_aligned(&self) -> bool {
+        self.size % FINI_FN_SIZE == 0
+    }
+    pub fn end_addr(&self) -> Option<u64> {
+        self.addr.as_u64().checked_add(self.size as u64)
+    }
 }

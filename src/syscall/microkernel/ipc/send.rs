@@ -48,12 +48,7 @@ pub fn sys_ipc_send(endpoint: u64, buf: u64, len: usize) -> i64 {
     send_with_correlation(endpoint, buf, len, 0)
 }
 
-pub(super) fn send_with_correlation(
-    endpoint: u64,
-    buf: u64,
-    len: usize,
-    correlation: u64,
-) -> i64 {
+pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correlation: u64) -> i64 {
     if len == 0 {
         return ERRNO_INVAL;
     }

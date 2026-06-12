@@ -91,6 +91,12 @@ pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {
         crate::sched::wake_process(dest_pid as u32);
         woke = true;
     }
-    trace(caller_pid, dest_pid, if woke { b"enqueue wake=1" } else { b"enqueue wake=0" }, rc, &dest);
+    trace(
+        caller_pid,
+        dest_pid,
+        if woke { b"enqueue wake=1" } else { b"enqueue wake=0" },
+        rc,
+        &dest,
+    );
     rc
 }

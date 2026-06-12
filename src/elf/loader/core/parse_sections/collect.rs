@@ -32,11 +32,13 @@ pub(in crate::elf::loader::core) fn parse_section_headers(
     let mut sections = Vec::with_capacity(table.count);
     for index in 0..table.count {
         let off = table.offset + index * table.entry_size;
-        let header = unsafe {
-            ptr::read_unaligned(elf_data[off..].as_ptr() as *const SectionHeader)
-        };
+        let header =
+            unsafe { ptr::read_unaligned(elf_data[off..].as_ptr() as *const SectionHeader) };
         if header.sh_type != shdr_type::SHT_NOBITS {
-            let end = header.sh_offset.checked_add(header.sh_size).ok_or(ElfError::SectionHeadersOutOfBounds)?;
+            let end = header
+                .sh_offset
+                .checked_add(header.sh_size)
+                .ok_or(ElfError::SectionHeadersOutOfBounds)?;
             if end > elf_data.len() as u64 {
                 return Err(ElfError::SectionHeadersOutOfBounds);
             }

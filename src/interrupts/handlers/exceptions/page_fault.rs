@@ -32,12 +32,7 @@ pub fn handle(frame: InterruptStackFrame, error_code: u64) {
     let _ctx = set_interrupt_context();
 
     let accessed_address = Cr2::read().as_u64();
-    crate::arch::x86_64::diag::dump_trap(
-        b"PF",
-        &frame,
-        Some(error_code),
-        Some(accessed_address),
-    );
+    crate::arch::x86_64::diag::dump_trap(b"PF", &frame, Some(error_code), Some(accessed_address));
     let exception = ExceptionContext::from_frame(&frame);
     let error = PageFaultErrorCode::from_bits(error_code);
 

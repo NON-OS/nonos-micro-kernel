@@ -21,9 +21,8 @@ use crate::syscall::numbers::SyscallNumber;
 // kernel; surface create/map/present and the cursor/display-list calls
 // were retired in favor of the MkSurface* path served by the surface
 // registry and the compositor capsule.
-pub(super) const ENTRIES: &[AbiEntry] = &[
-    r(b"GDIM", SyscallNumber::GraphicsDisplayDimensions, "GraphicsDisplayDimensions"),
-];
+pub(super) const ENTRIES: &[AbiEntry] =
+    &[r(b"GDIM", SyscallNumber::GraphicsDisplayDimensions, "GraphicsDisplayDimensions")];
 
 const fn r(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {
     AbiEntry {

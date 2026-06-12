@@ -30,7 +30,11 @@ pub struct SymbolResolver {
 
 impl SymbolResolver {
     pub fn new() -> Self {
-        Self { global_symbols: BTreeMap::new(), weak_symbols: BTreeMap::new(), library_order: Vec::new() }
+        Self {
+            global_symbols: BTreeMap::new(),
+            weak_symbols: BTreeMap::new(),
+            library_order: Vec::new(),
+        }
     }
 
     pub fn clear(&mut self) {
@@ -41,5 +45,7 @@ impl SymbolResolver {
 }
 
 impl Default for SymbolResolver {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

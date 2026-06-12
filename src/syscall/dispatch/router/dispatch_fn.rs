@@ -57,9 +57,7 @@ pub(super) fn dispatch_syscall(
         | SyscallNumber::MkDisplayVsyncWait => surface_ops::handle(syscall, a0, a1, a2, a3, a4, a5),
         SyscallNumber::MkInputEventPost
         | SyscallNumber::MkInputEventDrain
-        | SyscallNumber::MkInputEventWait => {
-            input_ops::handle(syscall, a0, a1, a2, a3, a4, a5)
-        }
+        | SyscallNumber::MkInputEventWait => input_ops::handle(syscall, a0, a1, a2, a3, a4, a5),
         _ => {
             #[cfg(feature = "nonos-user-entry-proof")]
             super::unknown_diag::log_first_per_pid(syscall);

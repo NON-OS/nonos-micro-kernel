@@ -19,9 +19,15 @@ use crate::elf::errors::{ElfError, ElfResult};
 use super::state::{EmbeddedLibraryLoader, LoadedEmbeddedLibrary};
 
 impl<'a> EmbeddedLibraryLoader<'a> {
-    pub fn get_loaded(&self, name: &str) -> Option<&LoadedEmbeddedLibrary> { self.find_loaded(name).map(|idx| &self.loaded_images[idx]) }
-    pub fn loaded_count(&self) -> usize { self.loaded_images.len() }
-    pub fn loaded_libraries(&self) -> &[LoadedEmbeddedLibrary] { &self.loaded_images }
+    pub fn get_loaded(&self, name: &str) -> Option<&LoadedEmbeddedLibrary> {
+        self.find_loaded(name).map(|idx| &self.loaded_images[idx])
+    }
+    pub fn loaded_count(&self) -> usize {
+        self.loaded_images.len()
+    }
+    pub fn loaded_libraries(&self) -> &[LoadedEmbeddedLibrary] {
+        &self.loaded_images
+    }
 
     pub fn unload(&mut self, name: &str) -> ElfResult<()> {
         let idx = self.find_loaded(name).ok_or(ElfError::LibraryNotFound)?;

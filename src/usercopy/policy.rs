@@ -46,8 +46,5 @@ pub(super) fn check_range(addr: u64, len: usize) -> Result<Option<UserRange>, Us
     if end > USER_SPACE_END {
         return Err(UsercopyError::InvalidAddress);
     }
-    Ok(Some(UserRange {
-        start_page: addr & !0xFFF,
-        end_page: end & !0xFFF,
-    }))
+    Ok(Some(UserRange { start_page: addr & !0xFFF, end_page: end & !0xFFF }))
 }

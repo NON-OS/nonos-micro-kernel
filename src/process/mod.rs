@@ -41,10 +41,10 @@ pub use core as nonos_core;
 pub use core::{
     allocate_tid, clear_fpu_state, clear_interrupt_context, context_switch, create_process,
     current_pid, current_process, get_process_stats, get_process_table, has_saved_fpu_state,
-    init_fpu, init_process_management, is_process_active, is_process_active_by_id,
-    isolate_process, restore_fpu_state, save_fpu_state, save_interrupt_context, suspend_process,
-    Pid, Priority, ProcessControlBlock, ProcessCredentials, ProcessManagementStats,
-    ProcessMemoryInfo, ProcessState, ProcessTable, ProcessTimeInfo, ThreadGroup, CURRENT_PID,
+    init_fpu, init_process_management, is_process_active, is_process_active_by_id, isolate_process,
+    restore_fpu_state, save_fpu_state, save_interrupt_context, suspend_process, Pid, Priority,
+    ProcessControlBlock, ProcessCredentials, ProcessManagementStats, ProcessMemoryInfo,
+    ProcessState, ProcessTable, ProcessTimeInfo, ThreadGroup, CURRENT_PID,
     INTERRUPT_SAVED_CONTEXTS, INTERRUPT_SAVED_FPU_STATES, PROCESS_TABLE,
 };
 pub use manager::{

@@ -18,7 +18,10 @@ use core::ptr;
 
 use crate::memory::addr::VirtAddr;
 
-use super::{constants::{InitFn, INIT_FN_SIZE}, info::{InitArrayInfo, PreInitArrayInfo}};
+use super::{
+    constants::{InitFn, INIT_FN_SIZE},
+    info::{InitArrayInfo, PreInitArrayInfo},
+};
 
 pub(super) unsafe fn invoke_addr(addr: VirtAddr) {
     let init_fn: InitFn = unsafe { core::mem::transmute(addr.as_u64()) };
@@ -36,5 +39,9 @@ pub(super) unsafe fn invoke_array_info(addr: VirtAddr, count: usize) {
     }
 }
 
-pub(super) unsafe fn invoke_init_array(info: &InitArrayInfo) { unsafe { invoke_array_info(info.addr, info.count()) } }
-pub(super) unsafe fn invoke_preinit_array(info: &PreInitArrayInfo) { unsafe { invoke_array_info(info.addr, info.count()) } }
+pub(super) unsafe fn invoke_init_array(info: &InitArrayInfo) {
+    unsafe { invoke_array_info(info.addr, info.count()) }
+}
+pub(super) unsafe fn invoke_preinit_array(info: &PreInitArrayInfo) {
+    unsafe { invoke_array_info(info.addr, info.count()) }
+}

@@ -18,8 +18,16 @@ use super::state::SectionHeader;
 use crate::elf::types::{shdr_flags, shdr_type};
 
 impl SectionHeader {
-    pub fn is_alloc(&self) -> bool { self.sh_flags & shdr_flags::SHF_ALLOC != 0 }
-    pub fn is_writable(&self) -> bool { self.sh_flags & shdr_flags::SHF_WRITE != 0 }
-    pub fn is_executable(&self) -> bool { self.sh_flags & shdr_flags::SHF_EXECINSTR != 0 }
-    pub fn is_bss(&self) -> bool { self.sh_type == shdr_type::SHT_NOBITS }
+    pub fn is_alloc(&self) -> bool {
+        self.sh_flags & shdr_flags::SHF_ALLOC != 0
+    }
+    pub fn is_writable(&self) -> bool {
+        self.sh_flags & shdr_flags::SHF_WRITE != 0
+    }
+    pub fn is_executable(&self) -> bool {
+        self.sh_flags & shdr_flags::SHF_EXECINSTR != 0
+    }
+    pub fn is_bss(&self) -> bool {
+        self.sh_type == shdr_type::SHT_NOBITS
+    }
 }

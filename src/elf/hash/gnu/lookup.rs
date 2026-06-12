@@ -50,6 +50,10 @@ impl GnuHashTable {
         }
     }
 
-    pub fn bucket_count(&self) -> u32 { self.header.nbuckets }
-    pub fn sym_offset(&self) -> u32 { self.header.symoffset }
+    pub fn bucket_count(&self) -> u32 {
+        self.header.nbuckets
+    }
+    pub fn sym_offset(&self) -> u32 {
+        self.header.symoffset
+    }
 }

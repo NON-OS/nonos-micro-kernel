@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
 #[cfg(feature = "input-probe-inject")]
 use core::sync::atomic::AtomicBool;
+use core::sync::atomic::{AtomicU64, Ordering};
 use spin::Mutex;
 
 use super::types::{InputEvent, RegistryError, INPUT_RING_CAP};

@@ -17,7 +17,8 @@ use crate::elf::loader::ElfImage;
 
 impl ElfLoader {
     pub fn load_executable(&mut self, elf_data: &[u8]) -> Result<ElfImage, ElfError> {
-        let active = crate::memory::paging::manager::active_asid().ok_or(ElfError::NotInitialized)?;
+        let active =
+            crate::memory::paging::manager::active_asid().ok_or(ElfError::NotInitialized)?;
         self.load_executable_into(elf_data, active)
     }
 

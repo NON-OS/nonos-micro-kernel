@@ -19,7 +19,9 @@
 //! the wire (every datagram is independent); the small per-bind
 //! ring buffer lives inside the capsule.
 
-use super::embed::{NET_UDP_ELF, NET_UDP_MANIFEST_BYTES, NET_UDP_NONOS_ID_CERT_BYTES, NET_UDP_ATTESTATION_BYTES};
+use super::embed::{
+    NET_UDP_ATTESTATION_BYTES, NET_UDP_ELF, NET_UDP_MANIFEST_BYTES, NET_UDP_NONOS_ID_CERT_BYTES,
+};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};

@@ -24,7 +24,8 @@ impl InterpreterInfo {
         if ph.p_type != phdr_type::PT_INTERP {
             return Err(ElfError::InterpreterNotFound);
         }
-        let file_offset = usize::try_from(ph.p_offset).map_err(|_| ElfError::InterpreterNotFound)?;
+        let file_offset =
+            usize::try_from(ph.p_offset).map_err(|_| ElfError::InterpreterNotFound)?;
         let size = usize::try_from(ph.p_filesz).map_err(|_| ElfError::InterpreterNotFound)?;
         let end = file_offset.checked_add(size).ok_or(ElfError::InterpreterNotFound)?;
         if size == 0 || size > MAX_INTERP_PATH_LEN {
@@ -38,7 +39,8 @@ impl InterpreterInfo {
             return Err(ElfError::Other("PT_INTERP missing NUL terminator"));
         }
         let null_pos = path_bytes.iter().position(|&byte| byte == 0).unwrap_or(path_bytes.len());
-        let path = core::str::from_utf8(&path_bytes[..null_pos]).map_err(|_| ElfError::InterpreterInvalidUtf8)?;
+        let path = core::str::from_utf8(&path_bytes[..null_pos])
+            .map_err(|_| ElfError::InterpreterInvalidUtf8)?;
         if path.is_empty() {
             return Err(ElfError::InterpreterNotFound);
         }

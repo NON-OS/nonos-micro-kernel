@@ -24,7 +24,9 @@ pub(super) fn allocate_virtual_pages(page_count: usize) -> PageAllocResult<VirtA
         buddy_alloc::BuddyAllocError::InvalidPageCount => PageAllocError::InvalidSize,
         buddy_alloc::BuddyAllocError::AllocationTooLarge => PageAllocError::TooManyPages,
         buddy_alloc::BuddyAllocError::OutOfVirtualMemory => PageAllocError::OutOfVirtualSpace,
-        buddy_alloc::BuddyAllocError::FrameAllocationFailed => PageAllocError::FrameAllocationFailed,
+        buddy_alloc::BuddyAllocError::FrameAllocationFailed => {
+            PageAllocError::FrameAllocationFailed
+        }
         buddy_alloc::BuddyAllocError::MappingFailed => PageAllocError::MappingFailed,
         buddy_alloc::BuddyAllocError::NotInitialized => PageAllocError::NotInitialized,
         _ => PageAllocError::TranslationFailed,

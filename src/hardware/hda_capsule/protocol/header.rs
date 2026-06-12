@@ -26,5 +26,6 @@ pub(in super::super) const CODEC_ENTRY_BYTES: usize = 8;
 pub(in super::super) const MAX_STREAMS: usize = 64;
 pub(in super::super) const MAX_CODECS: usize = 15;
 
-const MAX_STREAM_LAYOUT_BYTES: usize = STREAM_LAYOUT_HEADER_BYTES + MAX_STREAMS * STREAM_ENTRY_BYTES;
+const MAX_STREAM_LAYOUT_BYTES: usize =
+    STREAM_LAYOUT_HEADER_BYTES + MAX_STREAMS * STREAM_ENTRY_BYTES;
 pub(in super::super) const MAX_PAYLOAD_BYTES: u32 = MAX_STREAM_LAYOUT_BYTES as u32;

@@ -19,6 +19,6 @@ mod finalize;
 mod pending;
 mod teardown;
 
-pub(crate) use pending::drain as drain_pending_teardowns;
 pub use exit_and_yield::exit_and_yield;
+pub(crate) use pending::drain as drain_pending_teardowns;
 pub use teardown::teardown;

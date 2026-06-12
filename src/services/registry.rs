@@ -43,10 +43,7 @@ pub fn register_endpoint(name: &str, port: u32, pid: u32, caps: u64) -> Result<(
         return Err(RegError::PermissionDenied);
     }
     let mut eps = ENDPOINTS.lock();
-    if eps
-        .iter()
-        .any(|e| e.name == name && e.port == port && e.pid == pid)
-    {
+    if eps.iter().any(|e| e.name == name && e.port == port && e.pid == pid) {
         return Ok(());
     }
     if eps.iter().any(|e| e.name == name || e.port == port) {

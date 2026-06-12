@@ -12,4 +12,3 @@ mod state;
 
 pub use spawn::{spawn_driver_i2c_pci_capsule, SpawnError};
 pub use state::shared_state;
-

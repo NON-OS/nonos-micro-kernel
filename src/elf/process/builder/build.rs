@@ -18,8 +18,8 @@ use crate::elf::auxv::AuxvBuilder;
 use crate::elf::errors::ElfResult;
 use crate::elf::stack::{setup_user_stack, StackConfig};
 
-use super::state::ProcessBuilder;
 use super::super::image::ProcessImage;
+use super::state::ProcessBuilder;
 
 impl<'a> ProcessBuilder<'a> {
     pub fn build(mut self, elf_data: &[u8]) -> ElfResult<ProcessImage> {

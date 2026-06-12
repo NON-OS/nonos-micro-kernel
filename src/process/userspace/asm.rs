@@ -74,7 +74,7 @@ pub unsafe fn return_to_usermode(frame: *const InterruptFrame) -> ! {
         if FIRST_ENTRY_SHOWN.fetch_add(1, Ordering::Relaxed) < 64 {
             crate::sys::serial::print(b"[USER-FIRST] pid=");
             crate::arch::x86_64::diag::print_hex_u64(
-                crate::process::current_pid().unwrap_or(0) as u64,
+                crate::process::current_pid().unwrap_or(0) as u64
             );
             crate::sys::serial::print(b" rip=");
             crate::arch::x86_64::diag::print_hex_u64(f.rip);
@@ -187,11 +187,11 @@ pub unsafe extern "C" fn restore_user_context_iretq(ctx: *const UserContext) -> 
     core::arch::naked_asm!(
         // Build iretq 5-tuple on the current kernel stack: ss, rsp, rflags, cs, rip
         // (pushed in reverse so the last push is rip, which the CPU pops first).
-        "push qword ptr [rdi + 152]",   // ss
-        "push qword ptr [rdi + 144]",   // user rsp
-        "push qword ptr [rdi + 136]",   // rflags
-        "push qword ptr [rdi + 128]",   // cs
-        "push qword ptr [rdi + 120]",   // rip
+        "push qword ptr [rdi + 152]", // ss
+        "push qword ptr [rdi + 144]", // user rsp
+        "push qword ptr [rdi + 136]", // rflags
+        "push qword ptr [rdi + 128]", // cs
+        "push qword ptr [rdi + 120]", // rip
         // Restore GPRs. rdi must be restored last because we are still
         // using it as the context pointer.
         "mov r15, [rdi + 0]",
@@ -208,7 +208,7 @@ pub unsafe extern "C" fn restore_user_context_iretq(ctx: *const UserContext) -> 
         "mov rdx, [rdi + 96]",
         "mov rcx, [rdi + 104]",
         "mov rax, [rdi + 112]",
-        "mov rdi, [rdi + 64]",          // restore rdi LAST
+        "mov rdi, [rdi + 64]", // restore rdi LAST
         // Returning to CPL=3 means the CS we just pushed has RPL bits
         // set. Test the saved CS at [rsp+8] (rip is at [rsp+0]).
         "test byte ptr [rsp + 8], 3",

@@ -3,9 +3,9 @@
 
 use core::mem::size_of;
 
+use super::super::test_result::TestResult;
 use crate::boot::handoff::api::{validate_security, HandoffError};
 use crate::boot::handoff::types::MemoryMapEntry;
-use super::super::test_result::TestResult;
 
 use super::helpers::{baseline, baseline_with_mmap};
 

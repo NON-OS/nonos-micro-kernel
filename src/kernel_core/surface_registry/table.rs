@@ -51,10 +51,7 @@ pub fn register_surface(
     if desc.format != FMT_ARGB8888 || desc.width == 0 || desc.height == 0 {
         return Err(RegistryError::InvalidArg);
     }
-    let min_stride = desc
-        .width
-        .checked_mul(PIXEL_BYTES)
-        .ok_or(RegistryError::InvalidArg)?;
+    let min_stride = desc.width.checked_mul(PIXEL_BYTES).ok_or(RegistryError::InvalidArg)?;
     if desc.stride < min_stride {
         return Err(RegistryError::InvalidArg);
     }
@@ -87,10 +84,7 @@ pub fn register_surface(
 pub fn lookup_owned(owner_pid: u32, sid: SurfaceSid) -> Result<SurfaceHandle, RegistryError> {
     let slots = SLOTS.lock();
     let idx = sid as usize;
-    let slot = slots
-        .get(idx)
-        .and_then(|s| s.as_ref())
-        .ok_or(RegistryError::NotFound)?;
+    let slot = slots.get(idx).and_then(|s| s.as_ref()).ok_or(RegistryError::NotFound)?;
     if slot.owner_pid != owner_pid {
         return Err(RegistryError::NotOwner);
     }

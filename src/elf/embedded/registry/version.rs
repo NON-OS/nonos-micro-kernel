@@ -22,7 +22,9 @@ pub struct LibraryVersion {
 }
 
 impl LibraryVersion {
-    pub const fn new(major: u32, minor: u32, patch: u32) -> Self { Self { major, minor, patch } }
+    pub const fn new(major: u32, minor: u32, patch: u32) -> Self {
+        Self { major, minor, patch }
+    }
 
     pub fn is_compatible(&self, required: &LibraryVersion) -> bool {
         self.major == required.major && self.minor >= required.minor

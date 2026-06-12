@@ -15,7 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::client::REPLY_INBOX;
-use super::embed::{DRIVER_XHCI_ELF, DRIVER_XHCI_MANIFEST_BYTES, DRIVER_XHCI_NONOS_ID_CERT_BYTES, DRIVER_XHCI_ATTESTATION_BYTES};
+use super::embed::{
+    DRIVER_XHCI_ATTESTATION_BYTES, DRIVER_XHCI_ELF, DRIVER_XHCI_MANIFEST_BYTES,
+    DRIVER_XHCI_NONOS_ID_CERT_BYTES,
+};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};

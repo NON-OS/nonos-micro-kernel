@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::read::{u16_at, u32_at};
 use super::super::capability::gate_call;
 use super::super::error::DriverNvmeError;
 use super::super::protocol::{
     encode_request, IDENTIFY_CONTROLLER_PAYLOAD_LEN, OP_IDENTIFY_CONTROLLER,
 };
+use super::read::{u16_at, u32_at};
 use super::seq::next_request_id;
 use super::status_map::lift;
 use super::transport::round_trip;

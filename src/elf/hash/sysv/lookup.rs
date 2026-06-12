@@ -40,7 +40,13 @@ impl SysvHashTable {
         None
     }
 
-    pub fn bucket_count(&self) -> u32 { self.header.nbuckets }
-    pub fn chain_count(&self) -> u32 { self.header.nchains }
-    pub fn symbol_count(&self) -> usize { usize::try_from(self.header.nchains).unwrap_or(0) }
+    pub fn bucket_count(&self) -> u32 {
+        self.header.nbuckets
+    }
+    pub fn chain_count(&self) -> u32 {
+        self.header.nchains
+    }
+    pub fn symbol_count(&self) -> usize {
+        usize::try_from(self.header.nchains).unwrap_or(0)
+    }
 }

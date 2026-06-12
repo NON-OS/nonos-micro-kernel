@@ -18,9 +18,7 @@ extern crate alloc;
 
 use crate::ipc::nonos_inbox;
 use crate::process::current_pid;
-use crate::syscall::microkernel::errnos::{
-    ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOENT, ERRNO_TIMEDOUT,
-};
+use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOENT, ERRNO_TIMEDOUT};
 use core::sync::atomic::{AtomicU32, Ordering};
 
 use super::inbox_name::resolve_for_recv;

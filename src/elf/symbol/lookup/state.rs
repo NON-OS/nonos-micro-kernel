@@ -25,7 +25,13 @@ pub struct SymbolLookup {
 }
 
 impl SymbolLookup {
-    pub fn new(symtab: VirtAddr, strtab: VirtAddr, strtab_size: usize, sym_count: usize, base_addr: VirtAddr) -> Self {
+    pub fn new(
+        symtab: VirtAddr,
+        strtab: VirtAddr,
+        strtab_size: usize,
+        sym_count: usize,
+        base_addr: VirtAddr,
+    ) -> Self {
         Self { symtab, strtab, strtab_size, sym_count, base_addr }
     }
 }
