@@ -25,6 +25,8 @@ pub struct Context {
     pub cursor: CursorState,
     pub compositor_port: u32,
     pub wm_port: u32,
+    pub policy_port: u32,
+    pub last_policy_ms: i64,
     pub shell_pid: u32,
     pub last_focus_pid: u32,
     pub next_request_id: u32,

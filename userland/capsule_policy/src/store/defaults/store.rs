@@ -21,7 +21,7 @@ use crate::store::types::Store;
 pub const fn store() -> Store {
     Store {
         brightness: 80,
-        mouse_sensitivity: 5,
+        mouse_sensitivity: 2,
         sound_enabled: true,
         anonymous_mode: true,
         nym_enabled: false,

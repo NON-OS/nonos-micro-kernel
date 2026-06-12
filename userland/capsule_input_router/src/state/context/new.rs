@@ -28,6 +28,8 @@ impl Context {
             cursor: CursorState::new(),
             compositor_port: 0,
             wm_port: 0,
+            policy_port: 0,
+            last_policy_ms: 0,
             shell_pid: 0,
             last_focus_pid: 0,
             next_request_id: 1,

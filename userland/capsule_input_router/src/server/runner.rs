@@ -40,6 +40,13 @@ pub fn run() -> ! {
         sweep_ticks = sweep_ticks.wrapping_add(1);
         if sweep_ticks & 0x3f == 0 {
             ctx.purge_dead();
+            let now_ms = nonos_libc::mk_time_millis();
+            if now_ms.wrapping_sub(ctx.last_policy_ms) >= 2000 {
+                ctx.last_policy_ms = now_ms;
+                if let Some(v) = crate::clients::policy::mouse_sensitivity(&mut ctx.policy_port) {
+                    ctx.cursor.mult_x2 = v.clamp(1, 4) as i32;
+                }
+            }
         }
         let n = drain_batch(&mut batch);
         for ev in batch.iter().take(n) {

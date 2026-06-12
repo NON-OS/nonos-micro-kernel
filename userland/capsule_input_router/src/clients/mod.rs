@@ -15,5 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod compositor;
+pub mod policy;
 pub mod wire;
 pub mod wm;
