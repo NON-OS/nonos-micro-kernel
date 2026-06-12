@@ -21,4 +21,4 @@ mod peers;
 mod register;
 mod run;
 
-pub use run::run;
+pub use run::{run, subscribe_input, subscribe_wm};

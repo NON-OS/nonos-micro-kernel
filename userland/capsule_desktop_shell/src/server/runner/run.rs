@@ -36,6 +36,14 @@ pub fn run(mut ctx: Context) -> ! {
         let now = mk_time_millis();
         if now.wrapping_sub(last_clock_ms) >= CLOCK_REFRESH_MS as i64 {
             refresh_clock(&mut ctx);
+            if !ctx.input_ready {
+                let port = ctx.input_router_port;
+                crate::setup::subscribe_input(&mut ctx, port);
+            }
+            if !ctx.wm_notify_ready {
+                let port = ctx.wm_port;
+                crate::setup::subscribe_wm(&mut ctx, port);
+            }
             ctx.toasts.expire(now);
             if !ctx.toasts.is_empty() || ctx.toast_layer_live {
                 sync_toast_layer(&mut ctx);
