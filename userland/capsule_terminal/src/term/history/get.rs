@@ -17,16 +17,16 @@
 use super::types::History;
 
 impl History {
-    pub fn prev(&mut self) -> Option<&[u8]> {
-        if self.count == 0 {
-            return None;
+    // Number of stored entries, oldest at index 0.
+    pub fn count(&self) -> usize {
+        self.count
+    }
+
+    // Entry at `index` (oldest first), or an empty slice when out of range.
+    pub fn get(&self, index: usize) -> &[u8] {
+        if index >= self.count {
+            return &[];
         }
-        let next = match self.cursor {
-            None => self.count - 1,
-            Some(0) => 0,
-            Some(i) => i - 1,
-        };
-        self.cursor = Some(next);
-        Some(&self.entries[next][..self.lengths[next]])
+        &self.entries[index][..self.lengths[index]]
     }
 }

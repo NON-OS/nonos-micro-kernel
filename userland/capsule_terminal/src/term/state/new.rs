@@ -33,6 +33,7 @@ impl State {
             vars: alloc::vec::Vec::new(),
             last_status: true,
             aliases: alloc::vec::Vec::new(),
+            hist_prefix: alloc::vec::Vec::new(),
         }
     }
 }

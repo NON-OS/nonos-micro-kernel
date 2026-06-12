@@ -17,18 +17,21 @@
 use super::types::History;
 
 impl History {
-    pub fn next(&mut self) -> Option<&[u8]> {
-        match self.cursor {
-            None => None,
-            Some(i) if i + 1 >= self.count => {
-                self.cursor = None;
-                Some(&[])
-            }
-            Some(i) => {
-                let next = i + 1;
-                self.cursor = Some(next);
-                Some(&self.entries[next][..self.lengths[next]])
+    // Walk towards newer entries from the cursor and return the first one that
+    // starts with `prefix`. When none remain, clear the cursor and return an
+    // empty slice so the caller can restore the line being typed. Returns None
+    // only when no history navigation is in progress.
+    pub fn next_matching(&mut self, prefix: &[u8]) -> Option<&[u8]> {
+        let mut i = self.cursor?;
+        while i + 1 < self.count {
+            i += 1;
+            let len = self.lengths[i];
+            if self.entries[i][..len].starts_with(prefix) {
+                self.cursor = Some(i);
+                return Some(&self.entries[i][..len]);
             }
         }
+        self.cursor = None;
+        Some(&[])
     }
 }

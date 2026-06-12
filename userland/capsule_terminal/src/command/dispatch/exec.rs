@@ -38,11 +38,9 @@ pub(super) fn exec(state: &mut State, args: &[&[u8]]) -> Outcome {
         b"clear" => builtin::clear::run(&mut state.scrollback, args),
         b"display" => builtin::display::run(&mut Output::new(&mut state.scrollback), args),
         b"echo" => builtin::echo::run(&mut Output::new(&mut state.scrollback), args),
-        b"history" => builtin::history_cmd::run(
-            &mut Output::new(&mut state.scrollback),
-            &mut state.history,
-            args,
-        ),
+        b"history" => {
+            builtin::history_cmd::run(&mut Output::new(&mut state.scrollback), &state.history, args)
+        }
         b"market" => builtin::market::run(&mut Output::new(&mut state.scrollback), args),
         b"motd" => builtin::motd::run(&mut state.scrollback, args),
         b"ping" => builtin::ping::run(&mut Output::new(&mut state.scrollback), args),

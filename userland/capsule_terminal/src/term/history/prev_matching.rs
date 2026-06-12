@@ -14,28 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::command::output::Output;
-use crate::term::dimensions::COLS;
-use crate::term::history::History;
-use crate::term::util::format_u64;
+use super::types::History;
 
-pub fn run(out: &mut Output<'_>, history: &History, _argv: &[&[u8]]) {
-    for i in 0..history.count() {
-        let mut numbuf = [0u8; 4];
-        let nn = format_u64(i as u64, &mut numbuf);
-        let p = nn.min(3);
-        let mut line = [0u8; COLS];
-        let mut o = 0;
-        for k in 0..p {
-            line[o] = numbuf[nn - p + k];
-            o += 1;
+impl History {
+    // Walk towards older entries from the cursor and return the first one that
+    // starts with `prefix`, leaving the cursor on it. An empty prefix matches
+    // every entry, which reproduces plain previous-line recall. Returns None
+    // when there is no older match, leaving the cursor where it was.
+    pub fn prev_matching(&mut self, prefix: &[u8]) -> Option<&[u8]> {
+        let mut i = self.cursor.unwrap_or(self.count);
+        while i > 0 {
+            i -= 1;
+            let len = self.lengths[i];
+            if self.entries[i][..len].starts_with(prefix) {
+                self.cursor = Some(i);
+                return Some(&self.entries[i][..len]);
+            }
         }
-        line[o] = b':';
-        line[o + 1] = b' ';
-        o += 2;
-        let body = history.get(i);
-        let take = body.len().min(COLS - o);
-        line[o..o + take].copy_from_slice(&body[..take]);
-        out.writeln(&line[..o + take]);
+        None
     }
 }

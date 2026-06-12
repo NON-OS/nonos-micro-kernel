@@ -37,4 +37,8 @@ pub struct State {
     // Command aliases, defined with `alias NAME EXPANSION`. The first word
     // of a line is replaced by its expansion before the line is run.
     pub aliases: Vec<(Vec<u8>, Vec<u8>)>,
+    // The text typed when history navigation began. Up and Down recall only
+    // entries that start with it, and restore it when the search runs off
+    // the newest entry.
+    pub hist_prefix: Vec<u8>,
 }

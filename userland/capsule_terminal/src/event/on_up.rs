@@ -19,10 +19,17 @@ use nonos_app_skeleton::EventOutcome;
 use crate::term::state::State;
 
 pub fn on_up(state: &mut State) -> EventOutcome {
-    if let Some(prev) = state.history.prev() {
-        state.line.replace(prev);
-        EventOutcome::Repaint
-    } else {
-        EventOutcome::Idle
+    // Starting a fresh search captures what is typed so far as the prefix;
+    // a search already in progress keeps the prefix it began with.
+    if !state.history.searching() {
+        state.hist_prefix.clear();
+        state.hist_prefix.extend_from_slice(state.line.as_bytes());
+    }
+    match state.history.prev_matching(&state.hist_prefix) {
+        Some(entry) => {
+            state.line.replace(entry);
+            EventOutcome::Repaint
+        }
+        None => EventOutcome::Idle,
     }
 }

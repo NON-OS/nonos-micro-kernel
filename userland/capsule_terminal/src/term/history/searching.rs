@@ -14,13 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod get;
-mod new;
-mod next_matching;
-mod prev_matching;
-mod push;
-mod reset_cursor;
-mod searching;
-mod types;
+use super::types::History;
 
-pub use types::History;
+impl History {
+    // True while the cursor is parked on a recalled entry, meaning the active
+    // search prefix should be kept rather than recaptured from the line.
+    pub fn searching(&self) -> bool {
+        self.cursor.is_some()
+    }
+}
