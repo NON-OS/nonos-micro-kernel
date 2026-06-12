@@ -28,6 +28,7 @@ pub fn run(out: &mut Output<'_>) {
     out.writeln(b"  rm <path>        remove a file or empty dir");
     out.writeln(b"  mv <a> <b>       move or rename");
     out.writeln(b"  stat <path>      metadata");
+    out.writeln(b"  cat/cd/pwd/mkdir aliases for read/in/where/mk");
     out.writeln(b"  caps             running capsules");
     out.writeln(b"  svc <name>       resolve a service");
     out.writeln(b"  id               identity");

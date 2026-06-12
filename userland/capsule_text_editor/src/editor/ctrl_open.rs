@@ -17,18 +17,25 @@
 use nonos_app_skeleton::{clients::vfs, EventOutcome};
 
 use super::resolve_owner_pid::resolve_owner_pid;
-use super::state::{State, CAPACITY, PATH};
+use super::state::{State, CAPACITY};
 
 pub(super) fn ctrl_open(state: &mut State) -> EventOutcome {
     if !resolve_owner_pid(state) {
         state.status = b"open failed";
         return EventOutcome::Repaint;
     }
-    match vfs::read_file(state.owner_pid, PATH, CAPACITY as u32) {
+    let path = state.path[..state.path_len].to_vec();
+    if let Ok((size, _)) = vfs::stat(state.owner_pid, &path) {
+        if size > CAPACITY as u64 {
+            state.status = b"file too large";
+            return EventOutcome::Repaint;
+        }
+    }
+    match vfs::read_file(state.owner_pid, &path, CAPACITY as u32) {
         Ok(bytes) if core::str::from_utf8(&bytes).is_ok() && bytes.len() <= CAPACITY => {
             state.buf[..bytes.len()].copy_from_slice(&bytes);
             state.len = bytes.len();
-            state.status = b"opened /notes.txt";
+            state.status = b"opened";
         }
         Ok(_) => state.status = b"file is not valid utf-8",
         Err(_) => state.status = b"open failed",

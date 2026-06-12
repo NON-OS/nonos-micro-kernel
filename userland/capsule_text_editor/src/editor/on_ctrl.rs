@@ -17,16 +17,15 @@
 use nonos_app_skeleton::EventOutcome;
 
 use super::ctrl_copy::ctrl_copy;
-use super::ctrl_open::ctrl_open;
 use super::ctrl_paste::ctrl_paste;
-use super::ctrl_save::ctrl_save;
-use super::state::State;
+use super::path_prompt;
+use super::state::{PromptOp, State};
 
 pub(super) fn on_ctrl(state: &mut State, code: u32) -> EventOutcome {
     match code {
         c if matches!(c, 0x43 | 0x63) => ctrl_copy(state),
-        c if matches!(c, 0x4F | 0x6F) => ctrl_open(state),
-        c if matches!(c, 0x53 | 0x73) => ctrl_save(state),
+        c if matches!(c, 0x4F | 0x6F) => path_prompt::start(state, PromptOp::Open),
+        c if matches!(c, 0x53 | 0x73) => path_prompt::start(state, PromptOp::Save),
         c if matches!(c, 0x56 | 0x76) => ctrl_paste(state),
         _ => EventOutcome::Idle,
     }

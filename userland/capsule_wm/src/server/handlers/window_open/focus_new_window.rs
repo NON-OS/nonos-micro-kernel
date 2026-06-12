@@ -25,9 +25,8 @@ pub(super) fn focus_new_window(ctx: &mut Context, sender_pid: u32, window_id: u3
     if unchanged {
         return true;
     }
+    let changed = ctx.focus.set(sender_pid, window_id);
     let rid = ctx.issue_request_id();
-    if push_focus_set(ctx.compositor_port, rid, sender_pid).is_err() {
-        return false;
-    }
-    ctx.focus.set(sender_pid, window_id)
+    let _ = push_focus_set(ctx.compositor_port, rid, sender_pid);
+    changed
 }

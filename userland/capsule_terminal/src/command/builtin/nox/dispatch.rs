@@ -30,12 +30,16 @@ pub fn dispatch(state: &mut State, args: &[&[u8]]) -> Outcome {
     let rest = &args[1..];
     match args[0] {
         b"where" => whereis::run(state),
+        b"pwd" => whereis::run(state),
         b"in" => enter::run(state, rest),
+        b"cd" => enter::run(state, rest),
         b"ls" => ls::run(state, rest),
         b"read" => read::run(state, rest),
+        b"cat" => read::run(state, rest),
         b"write" => write::run(state, rest),
         b"copy" => copy::run(state, rest),
         b"mk" => mk::run(state, rest),
+        b"mkdir" => mk::run(state, rest),
         b"rm" => rm::run(state, rest),
         b"mv" => mv::run(state, rest),
         b"stat" => stat::run(state, rest),

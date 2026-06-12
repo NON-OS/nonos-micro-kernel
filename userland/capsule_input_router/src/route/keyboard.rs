@@ -24,7 +24,14 @@ use super::pointer::shell_pid;
 
 pub fn route_keyboard(ctx: &mut Context, event: &InputEvent) -> u32 {
     let rid = ctx.issue_request_id();
-    let pid = wm::query_focus(&mut ctx.wm_port, rid).unwrap_or_else(|| shell_pid(ctx));
+    let pid = match wm::query_focus(&mut ctx.wm_port, rid) {
+        Some(focused) => {
+            ctx.last_focus_pid = focused;
+            focused
+        }
+        None if ctx.last_focus_pid != 0 => ctx.last_focus_pid,
+        None => shell_pid(ctx),
+    };
     if !ctx.subscriptions.allows(pid, event.kind) {
         ctx.record(0);
         return 0;

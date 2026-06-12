@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::state::{State, PATH};
+use super::state::State;
 use super::theme::{BACKGROUND, FOREGROUND, MUTED, TITLE};
 
 const WRAP_COLS: u32 = 48;
@@ -28,7 +28,10 @@ const FIRST_LINE_Y: u32 = 76;
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
     fb.text(TEXT_LEFT, 18, b"text_editor", TITLE);
-    fb.text(TEXT_LEFT, 38, PATH, MUTED);
+    fb.text(TEXT_LEFT, 38, &state.path[..state.path_len], MUTED);
+    if state.prompt.is_some() {
+        fb.text(TEXT_LEFT + state.path_len as u32 * GLYPH_ADVANCE, 38, b"_", FOREGROUND);
+    }
     fb.text(TEXT_LEFT, 58, state.status, MUTED);
     let mut y = FIRST_LINE_Y;
     let mut col: u32 = 0;

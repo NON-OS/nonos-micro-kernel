@@ -19,6 +19,7 @@ mod entries;
 mod event;
 mod manifest;
 mod paint;
+mod prompt;
 mod refresh;
 mod state;
 mod theme;

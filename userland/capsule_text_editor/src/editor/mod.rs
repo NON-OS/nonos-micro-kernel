@@ -23,6 +23,7 @@ mod event;
 mod manifest;
 mod on_ctrl;
 mod paint;
+mod path_prompt;
 mod resolve_owner_pid;
 mod state;
 mod theme;

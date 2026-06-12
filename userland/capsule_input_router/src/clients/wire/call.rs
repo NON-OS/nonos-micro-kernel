@@ -23,7 +23,7 @@ use super::build::build;
 use super::constants::HDR_LEN;
 use super::u32_at::u32_at;
 
-const GUI_CALL_TIMEOUT_MS: u64 = 16;
+const GUI_CALL_TIMEOUT_MS: u64 = 150;
 
 pub fn call(
     port: u32,

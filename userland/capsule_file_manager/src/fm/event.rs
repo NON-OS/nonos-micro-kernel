@@ -16,17 +16,21 @@
 
 use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_BACKSPACE, KEY_ENTER, KEY_ESC, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT};
 
+use super::prompt;
 use super::refresh::refresh;
-use super::state::State;
+use super::state::{Mode, PromptKind, State};
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     if event.kind == InputKind::ButtonDown {
         let row = ((event.y - 60) / 22) as isize;
-        if row >= 0 && (row as usize) < state.entries.len() {
+        if row >= 0 && (row as usize) < state.entries.len() && matches!(state.mode, Mode::Browse) {
             state.cursor = row as usize;
         }
     } else if !event.is_key_down() {
         return EventOutcome::Idle;
+    }
+    if !matches!(state.mode, Mode::Browse) {
+        return prompt::on_key(state, event);
     }
     match if event.kind == InputKind::ButtonDown { KEY_ENTER } else { event.code } {
         KEY_ESC => EventOutcome::Close,
@@ -66,6 +70,17 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
         code if code == b'k' as u32 => on_event(state, InputEvent { code: KEY_UP, ..event }),
         code if code == b'h' as u32 => on_event(state, InputEvent { code: KEY_LEFT, ..event }),
         code if code == b'l' as u32 => on_event(state, InputEvent { code: KEY_ENTER, ..event }),
+        code if code == b'n' as u32 => start_prompt(state, PromptKind::NewFile, b"new file: "),
+        code if code == b'm' as u32 => start_prompt(state, PromptKind::MkDir, b"mkdir: "),
+        code if code == b'r' as u32 => start_prompt(state, PromptKind::Rename, b"rename to: "),
+        code if code == b'd' as u32 => start_prompt(state, PromptKind::Delete, b"delete? type y + Enter: "),
         _ => EventOutcome::Idle,
     }
+}
+
+fn start_prompt(state: &mut State, kind: PromptKind, status: &'static [u8]) -> EventOutcome {
+    state.mode = Mode::Prompt(kind);
+    state.input = alloc::string::String::new();
+    state.status = status;
+    EventOutcome::Repaint
 }

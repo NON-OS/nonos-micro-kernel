@@ -22,6 +22,7 @@ mod open;
 mod query;
 mod read;
 mod rename;
+mod seed;
 mod types;
 mod unlink;
 mod write;
