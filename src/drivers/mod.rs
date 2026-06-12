@@ -42,4 +42,3 @@ pub use virtio_rng::init_virtio_rng;
 // audio, GPU, TPM, I2C, the legacy console, plus the orchestrators
 // that drive them. Off in every microkernel profile. These are the
 // drivers slated for capsule migration or deletion.
-

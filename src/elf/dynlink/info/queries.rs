@@ -19,16 +19,33 @@ use crate::memory::addr::VirtAddr;
 use super::state::DynLinkInfo;
 
 impl DynLinkInfo {
-    pub fn has_relocations(&self) -> bool { self.rela_table.is_some() || self.plt_relocations.is_some() }
-    pub fn has_symbols(&self) -> bool { self.symtab.is_some() }
-    pub fn has_strings(&self) -> bool { self.strtab.is_some() && self.strtab_size > 0 }
-    pub fn has_init(&self) -> bool { self.init.is_some() || self.init_array.is_some() }
-    pub fn has_fini(&self) -> bool { self.fini.is_some() || self.fini_array.is_some() }
-    pub fn string_table_end(&self) -> Option<VirtAddr> { self.strtab.map(|addr| addr + self.strtab_size as u64) }
+    pub fn has_relocations(&self) -> bool {
+        self.rela_table.is_some() || self.plt_relocations.is_some()
+    }
+    pub fn has_symbols(&self) -> bool {
+        self.symtab.is_some()
+    }
+    pub fn has_strings(&self) -> bool {
+        self.strtab.is_some() && self.strtab_size > 0
+    }
+    pub fn has_init(&self) -> bool {
+        self.init.is_some() || self.init_array.is_some()
+    }
+    pub fn has_fini(&self) -> bool {
+        self.fini.is_some() || self.fini_array.is_some()
+    }
+    pub fn string_table_end(&self) -> Option<VirtAddr> {
+        self.strtab.map(|addr| addr + self.strtab_size as u64)
+    }
 
     pub fn is_empty(&self) -> bool {
-        self.needed_libraries.is_empty() && self.symtab.is_none() && self.rela_table.is_none()
-            && self.plt_relocations.is_none() && self.init.is_none() && self.fini.is_none()
-            && self.init_array.is_none() && self.fini_array.is_none()
+        self.needed_libraries.is_empty()
+            && self.symtab.is_none()
+            && self.rela_table.is_none()
+            && self.plt_relocations.is_none()
+            && self.init.is_none()
+            && self.fini.is_none()
+            && self.init_array.is_none()
+            && self.fini_array.is_none()
     }
 }

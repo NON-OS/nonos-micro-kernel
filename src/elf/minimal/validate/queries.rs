@@ -15,17 +15,34 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::elf::errors::ElfResult;
-use crate::elf::types::ElfHeader;
 use crate::elf::types::elf_type;
+use crate::elf::types::ElfHeader;
 
 use super::{checks::validate_elf_detailed, parse::parse_header};
 
-fn parse_valid_header(bytes: &[u8]) -> ElfResult<ElfHeader> { validate_elf_detailed(bytes)?; parse_header(bytes) }
+fn parse_valid_header(bytes: &[u8]) -> ElfResult<ElfHeader> {
+    validate_elf_detailed(bytes)?;
+    parse_header(bytes)
+}
 
-pub fn get_elf_type(bytes: &[u8]) -> ElfResult<u16> { Ok(parse_valid_header(bytes)?.e_type) }
-pub fn get_elf_machine(bytes: &[u8]) -> ElfResult<u16> { Ok(parse_valid_header(bytes)?.e_machine) }
-pub fn is_pie(bytes: &[u8]) -> ElfResult<bool> { Ok(get_elf_type(bytes)? == elf_type::ET_DYN) }
-pub fn get_phoff(bytes: &[u8]) -> ElfResult<u64> { Ok(parse_valid_header(bytes)?.e_phoff) }
-pub fn get_shoff(bytes: &[u8]) -> ElfResult<u64> { Ok(parse_valid_header(bytes)?.e_shoff) }
-pub fn get_phnum(bytes: &[u8]) -> ElfResult<u16> { Ok(parse_valid_header(bytes)?.e_phnum) }
-pub fn get_shnum(bytes: &[u8]) -> ElfResult<u16> { Ok(parse_valid_header(bytes)?.e_shnum) }
+pub fn get_elf_type(bytes: &[u8]) -> ElfResult<u16> {
+    Ok(parse_valid_header(bytes)?.e_type)
+}
+pub fn get_elf_machine(bytes: &[u8]) -> ElfResult<u16> {
+    Ok(parse_valid_header(bytes)?.e_machine)
+}
+pub fn is_pie(bytes: &[u8]) -> ElfResult<bool> {
+    Ok(get_elf_type(bytes)? == elf_type::ET_DYN)
+}
+pub fn get_phoff(bytes: &[u8]) -> ElfResult<u64> {
+    Ok(parse_valid_header(bytes)?.e_phoff)
+}
+pub fn get_shoff(bytes: &[u8]) -> ElfResult<u64> {
+    Ok(parse_valid_header(bytes)?.e_shoff)
+}
+pub fn get_phnum(bytes: &[u8]) -> ElfResult<u16> {
+    Ok(parse_valid_header(bytes)?.e_phnum)
+}
+pub fn get_shnum(bytes: &[u8]) -> ElfResult<u16> {
+    Ok(parse_valid_header(bytes)?.e_shnum)
+}

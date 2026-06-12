@@ -17,9 +17,54 @@
 use super::state::ElfError;
 
 impl ElfError {
-    pub const fn is_validation_error(&self) -> bool { matches!(self, Self::InvalidMagic | Self::InvalidClass | Self::InvalidEndian | Self::InvalidVersion | Self::InvalidMachine | Self::InvalidType | Self::InvalidHeaderSize | Self::InvalidProgramHeaderSize | Self::InvalidSectionHeaderSize) }
-    pub const fn is_bounds_error(&self) -> bool { matches!(self, Self::FileTooSmall | Self::ProgramHeadersOutOfBounds | Self::SectionHeadersOutOfBounds | Self::SegmentDataOutOfBounds | Self::StringTableOutOfBounds) }
-    pub const fn is_memory_error(&self) -> bool { matches!(self, Self::MemoryAllocationFailed | Self::MemoryMappingFailed | Self::AddressOverflow) }
-    pub const fn is_dynamic_error(&self) -> bool { matches!(self, Self::RelocationFailed | Self::UnsupportedRelocation(_) | Self::DynamicSectionError | Self::SymbolTableError | Self::SymbolNotFound | Self::StringTableError) }
-    pub const fn is_library_error(&self) -> bool { matches!(self, Self::LibraryNotFound | Self::LibraryAlreadyLoaded | Self::CircularDependency | Self::CacheFull) }
+    pub const fn is_validation_error(&self) -> bool {
+        matches!(
+            self,
+            Self::InvalidMagic
+                | Self::InvalidClass
+                | Self::InvalidEndian
+                | Self::InvalidVersion
+                | Self::InvalidMachine
+                | Self::InvalidType
+                | Self::InvalidHeaderSize
+                | Self::InvalidProgramHeaderSize
+                | Self::InvalidSectionHeaderSize
+        )
+    }
+    pub const fn is_bounds_error(&self) -> bool {
+        matches!(
+            self,
+            Self::FileTooSmall
+                | Self::ProgramHeadersOutOfBounds
+                | Self::SectionHeadersOutOfBounds
+                | Self::SegmentDataOutOfBounds
+                | Self::StringTableOutOfBounds
+        )
+    }
+    pub const fn is_memory_error(&self) -> bool {
+        matches!(
+            self,
+            Self::MemoryAllocationFailed | Self::MemoryMappingFailed | Self::AddressOverflow
+        )
+    }
+    pub const fn is_dynamic_error(&self) -> bool {
+        matches!(
+            self,
+            Self::RelocationFailed
+                | Self::UnsupportedRelocation(_)
+                | Self::DynamicSectionError
+                | Self::SymbolTableError
+                | Self::SymbolNotFound
+                | Self::StringTableError
+        )
+    }
+    pub const fn is_library_error(&self) -> bool {
+        matches!(
+            self,
+            Self::LibraryNotFound
+                | Self::LibraryAlreadyLoaded
+                | Self::CircularDependency
+                | Self::CacheFull
+        )
+    }
 }

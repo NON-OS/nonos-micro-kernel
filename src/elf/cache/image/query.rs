@@ -19,15 +19,37 @@ use crate::memory::addr::VirtAddr;
 use super::{cached::CachedImage, state::ImageCache};
 
 impl ImageCache {
-    pub fn get(&self, id: usize) -> Option<&CachedImage> { self.images.get(&id) }
-    pub fn get_mut(&mut self, id: usize) -> Option<&mut CachedImage> { self.images.get_mut(&id) }
-    pub fn get_by_name(&self, name: &str) -> Option<&CachedImage> { self.name_index.get(name).and_then(|id| self.images.get(id)) }
-    pub fn get_by_name_mut(&mut self, name: &str) -> Option<&mut CachedImage> { self.name_index.get(name).copied().and_then(|id| self.images.get_mut(&id)) }
-    pub fn get_by_addr(&self, addr: VirtAddr) -> Option<&CachedImage> { self.addr_index.get(&addr.as_u64()).and_then(|id| self.images.get(id)) }
-    pub fn contains(&self, name: &str) -> bool { self.name_index.contains_key(name) }
-    pub fn contains_addr(&self, addr: VirtAddr) -> bool { self.addr_index.contains_key(&addr.as_u64()) }
-    pub fn count(&self) -> usize { self.images.len() }
-    pub fn referenced_count(&self) -> usize { self.images.values().filter(|image| image.is_referenced()).count() }
-    pub fn unreferenced_count(&self) -> usize { self.images.values().filter(|image| !image.is_referenced()).count() }
-    pub fn iter(&self) -> impl Iterator<Item = &CachedImage> { self.images.values() }
+    pub fn get(&self, id: usize) -> Option<&CachedImage> {
+        self.images.get(&id)
+    }
+    pub fn get_mut(&mut self, id: usize) -> Option<&mut CachedImage> {
+        self.images.get_mut(&id)
+    }
+    pub fn get_by_name(&self, name: &str) -> Option<&CachedImage> {
+        self.name_index.get(name).and_then(|id| self.images.get(id))
+    }
+    pub fn get_by_name_mut(&mut self, name: &str) -> Option<&mut CachedImage> {
+        self.name_index.get(name).copied().and_then(|id| self.images.get_mut(&id))
+    }
+    pub fn get_by_addr(&self, addr: VirtAddr) -> Option<&CachedImage> {
+        self.addr_index.get(&addr.as_u64()).and_then(|id| self.images.get(id))
+    }
+    pub fn contains(&self, name: &str) -> bool {
+        self.name_index.contains_key(name)
+    }
+    pub fn contains_addr(&self, addr: VirtAddr) -> bool {
+        self.addr_index.contains_key(&addr.as_u64())
+    }
+    pub fn count(&self) -> usize {
+        self.images.len()
+    }
+    pub fn referenced_count(&self) -> usize {
+        self.images.values().filter(|image| image.is_referenced()).count()
+    }
+    pub fn unreferenced_count(&self) -> usize {
+        self.images.values().filter(|image| !image.is_referenced()).count()
+    }
+    pub fn iter(&self) -> impl Iterator<Item = &CachedImage> {
+        self.images.values()
+    }
 }

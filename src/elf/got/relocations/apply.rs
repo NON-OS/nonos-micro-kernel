@@ -20,7 +20,13 @@ use crate::memory::addr::VirtAddr;
 
 use super::{dispatch::dispatch_relocation, types::ResolvedSymbolValue};
 
-pub fn apply_single_relocation(target: VirtAddr, rel_type: u32, symbol_value: u64, addend: i64, base_addr: VirtAddr) -> ElfResult<()> {
+pub fn apply_single_relocation(
+    target: VirtAddr,
+    rel_type: u32,
+    symbol_value: u64,
+    addend: i64,
+    base_addr: VirtAddr,
+) -> ElfResult<()> {
     if rel_type != reloc_type::R_X86_64_NONE
         && rel_type != reloc_type::R_X86_64_64
         && rel_type != reloc_type::R_X86_64_GLOB_DAT
@@ -28,8 +34,10 @@ pub fn apply_single_relocation(target: VirtAddr, rel_type: u32, symbol_value: u6
         && rel_type != reloc_type::R_X86_64_RELATIVE
         && rel_type != reloc_type::R_X86_64_TPOFF64
     {
-        return dispatch_relocation(rel_type, target.as_u64(), None, addend, base_addr.as_u64()).map(|_| ());
+        return dispatch_relocation(rel_type, target.as_u64(), None, addend, base_addr.as_u64())
+            .map(|_| ());
     }
     let symbol = ResolvedSymbolValue { value: symbol_value, size: 0 };
-    dispatch_relocation(rel_type, target.as_u64(), Some(symbol), addend, base_addr.as_u64()).map(|_| ())
+    dispatch_relocation(rel_type, target.as_u64(), Some(symbol), addend, base_addr.as_u64())
+        .map(|_| ())
 }

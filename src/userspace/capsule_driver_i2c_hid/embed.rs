@@ -34,4 +34,3 @@ pub(super) const DRIVER_I2C_HID_MANIFEST_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-i2c-hid"))]
 pub(super) const DRIVER_I2C_HID_ATTESTATION_BYTES: &[u8] = &[];
-

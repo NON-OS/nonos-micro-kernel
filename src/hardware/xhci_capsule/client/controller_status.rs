@@ -61,9 +61,7 @@ pub fn controller_status() -> Result<ControllerStatus, DriverXhciError> {
         events_drained_total: u64::from_le_bytes([
             b[28], b[29], b[30], b[31], b[32], b[33], b[34], b[35],
         ]),
-        dcbaa_phys: u64::from_le_bytes([
-            b[36], b[37], b[38], b[39], b[40], b[41], b[42], b[43],
-        ]),
+        dcbaa_phys: u64::from_le_bytes([b[36], b[37], b[38], b[39], b[40], b[41], b[42], b[43]]),
         scratchpad_array_phys: u64::from_le_bytes([
             b[44], b[45], b[46], b[47], b[48], b[49], b[50], b[51],
         ]),

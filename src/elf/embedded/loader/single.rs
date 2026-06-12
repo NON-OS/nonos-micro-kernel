@@ -24,12 +24,20 @@ impl<'a> EmbeddedLibraryLoader<'a> {
     pub(super) fn load_single(&mut self, library: &EmbeddedLibrary) -> ElfResult<usize> {
         let image = self.elf_loader.load_library(library.data)?;
         let load_order = self.loaded_images.len();
-        self.loaded_images.push(LoadedEmbeddedLibrary { name: library.name.clone(), image, load_order });
+        self.loaded_images.push(LoadedEmbeddedLibrary {
+            name: library.name.clone(),
+            image,
+            load_order,
+        });
         Ok(load_order)
     }
 }
 
-pub fn load_embedded_library(registry: &EmbeddedLibraryRegistry, loader: &mut ElfLoader, name: &str) -> ElfResult<ElfImage> {
+pub fn load_embedded_library(
+    registry: &EmbeddedLibraryRegistry,
+    loader: &mut ElfLoader,
+    name: &str,
+) -> ElfResult<ElfImage> {
     let library = registry.get(name).ok_or(ElfError::LibraryNotFound)?;
     loader.load_library(library.data)
 }

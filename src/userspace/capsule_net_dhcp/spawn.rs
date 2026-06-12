@@ -20,7 +20,9 @@
 //! is available) and installs the lease into `net.ip` via
 //! `OP_SET_CONFIG` once the server acknowledges.
 
-use super::embed::{NET_DHCP_ELF, NET_DHCP_MANIFEST_BYTES, NET_DHCP_NONOS_ID_CERT_BYTES, NET_DHCP_ATTESTATION_BYTES};
+use super::embed::{
+    NET_DHCP_ATTESTATION_BYTES, NET_DHCP_ELF, NET_DHCP_MANIFEST_BYTES, NET_DHCP_NONOS_ID_CERT_BYTES,
+};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};

@@ -26,13 +26,16 @@ pub(super) const DRIVER_VIRTIO_NET_ELF: &[u8] = include_bytes!(
 );
 
 #[cfg(feature = "nonos-capsule-driver-virtio-net")]
-pub(super) const DRIVER_VIRTIO_NET_NONOS_ID_CERT_BYTES: &[u8] = include_bytes!("../../../nonos-data/trust/capsules/driver_virtio_net.nonos_id_cert.bin");
+pub(super) const DRIVER_VIRTIO_NET_NONOS_ID_CERT_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/driver_virtio_net.nonos_id_cert.bin");
 
 #[cfg(feature = "nonos-capsule-driver-virtio-net")]
-pub(super) const DRIVER_VIRTIO_NET_MANIFEST_BYTES: &[u8] = include_bytes!("../../../nonos-data/trust/capsules/driver_virtio_net.manifest.bin");
+pub(super) const DRIVER_VIRTIO_NET_MANIFEST_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/driver_virtio_net.manifest.bin");
 
 #[cfg(feature = "nonos-capsule-driver-virtio-net")]
-pub(super) const DRIVER_VIRTIO_NET_ATTESTATION_BYTES: &[u8] = include_bytes!("../../../nonos-data/trust/capsules/driver_virtio_net.zk_trailer.bin");
+pub(super) const DRIVER_VIRTIO_NET_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/driver_virtio_net.zk_trailer.bin");
 
 #[cfg(not(feature = "nonos-capsule-driver-virtio-net"))]
 pub(super) const DRIVER_VIRTIO_NET_ELF: &[u8] = &[];

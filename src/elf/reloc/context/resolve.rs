@@ -27,8 +27,9 @@ impl<'a> RelocationContext<'a> {
         }
         let symtab = self.symbol_table?;
         unsafe {
-            let sym_ptr = symtab.as_u64().checked_add(u64::from(sym_index) * SymbolEntry::SIZE as u64)?
-                as *const SymbolEntry;
+            let sym_ptr =
+                symtab.as_u64().checked_add(u64::from(sym_index) * SymbolEntry::SIZE as u64)?
+                    as *const SymbolEntry;
             let sym = core::ptr::read(sym_ptr);
             if sym.is_undefined() {
                 return self.resolve_undefined_symbol(sym);

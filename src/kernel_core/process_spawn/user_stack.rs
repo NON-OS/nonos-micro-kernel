@@ -31,7 +31,9 @@
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use crate::memory::frame_alloc;
 use crate::memory::paging::constants::KERNEL_ASID;
-use crate::memory::paging::manager::{map_page, switch_address_space, switch_to_process_address_space};
+use crate::memory::paging::manager::{
+    map_page, switch_address_space, switch_to_process_address_space,
+};
 use crate::memory::paging::types::PagePermissions;
 use crate::process::core::Pid;
 use crate::process::userspace::constants::{USER_STACK_BASE, USER_STACK_SIZE};

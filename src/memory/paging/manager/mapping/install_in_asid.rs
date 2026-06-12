@@ -26,11 +26,7 @@ fn alloc_table(entry: &mut u64) -> PagingResult<()> {
     let new = frame_alloc::allocate_frame().ok_or(PagingError::FrameAllocationFailed)?;
     *entry = new.as_u64() | PTE_TABLE_FLAGS;
     unsafe {
-        core::ptr::write_bytes(
-            (layout::DIRECTMAP_BASE + new.as_u64()) as *mut u8,
-            0,
-            PAGE_SIZE_4K,
-        );
+        core::ptr::write_bytes((layout::DIRECTMAP_BASE + new.as_u64()) as *mut u8, 0, PAGE_SIZE_4K);
     }
     Ok(())
 }
@@ -47,18 +43,12 @@ impl PagingManager {
         pa: PhysAddr,
         flags: u64,
     ) -> PagingResult<()> {
-        let address_space = self
-            .address_spaces
-            .get(&asid)
-            .ok_or(PagingError::AddressSpaceNotFound)?;
+        let address_space =
+            self.address_spaces.get(&asid).ok_or(PagingError::AddressSpaceNotFound)?;
         let cr3 = address_space.cr3_value;
         let va_val = va.as_u64();
-        let (l4_idx, l3_idx, l2_idx, l1_idx) = (
-            pml4_index(va_val),
-            pdpt_index(va_val),
-            pd_index(va_val),
-            pt_index(va_val),
-        );
+        let (l4_idx, l3_idx, l2_idx, l1_idx) =
+            (pml4_index(va_val), pdpt_index(va_val), pd_index(va_val), pt_index(va_val));
 
         // SAFETY: eK@nonos.systems — cr3 is one of ours, page tables
         // go through the directmap.

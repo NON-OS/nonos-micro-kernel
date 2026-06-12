@@ -24,9 +24,5 @@ use super::AbiEntry;
 // Source of truth for the active NØNOS syscall ABI, organized by
 // domain. The aggregator is a slice-of-slices so each domain's table
 // is owned by its own file; `lookup_id` flattens.
-pub const REGISTRY: &[&[AbiEntry]] = &[
-    mk::ENTRIES,
-    crypto::ENTRIES,
-    admin::ENTRIES,
-    graphics::ENTRIES,
-];
+pub const REGISTRY: &[&[AbiEntry]] =
+    &[mk::ENTRIES, crypto::ENTRIES, admin::ENTRIES, graphics::ENTRIES];

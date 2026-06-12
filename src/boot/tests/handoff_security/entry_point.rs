@@ -1,9 +1,9 @@
 // NONOS Operating System
 // Copyright (C) 2026 NONOS Contributors
 
+use super::super::test_result::TestResult;
 use crate::boot::handoff::api::{validate_security, HandoffError};
 use crate::memory::layout::constants::KERNEL_BASE;
-use super::super::test_result::TestResult;
 
 use super::helpers::baseline;
 

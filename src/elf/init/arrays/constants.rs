@@ -15,5 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub type InitFn = unsafe extern "C" fn();
-pub type InitFnWithArgs = unsafe extern "C" fn(argc: i32, argv: *const *const u8, envp: *const *const u8);
+pub type InitFnWithArgs =
+    unsafe extern "C" fn(argc: i32, argv: *const *const u8, envp: *const *const u8);
 pub const INIT_FN_SIZE: usize = 8;

@@ -19,7 +19,7 @@ mod manager;
 #[cfg(test)]
 mod tests;
 
-pub use manager::state::AslrManager;
 pub use manager::constants::{
     EXEC_RANDOMIZATION_RANGE, HEAP_RANDOMIZATION_RANGE, STACK_RANDOMIZATION_RANGE,
 };
+pub use manager::state::AslrManager;

@@ -24,9 +24,7 @@ pub(super) fn check_session_binding(
     token: &CapabilityToken,
     ctx: &ResolveContext,
 ) -> Result<(), ResolverError> {
-    let live = ctx
-        .boot_session_nonce
-        .ok_or(ResolverError::BootSessionNotLatched)?;
+    let live = ctx.boot_session_nonce.ok_or(ResolverError::BootSessionNotLatched)?;
     if !ct_eq_16(&token.boot_session_nonce, &live) {
         return Err(ResolverError::BootSessionMismatch);
     }

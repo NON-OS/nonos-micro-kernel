@@ -19,7 +19,9 @@ use super::state::ElfError;
 impl core::fmt::Display for ElfError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::UnsupportedRelocation(reloc_type) => write!(f, "Unsupported relocation type: {}", reloc_type),
+            Self::UnsupportedRelocation(reloc_type) => {
+                write!(f, "Unsupported relocation type: {}", reloc_type)
+            }
             Self::Other(msg) => write!(f, "{}", msg),
             _ => write!(f, "{}", self.as_str()),
         }
@@ -27,5 +29,7 @@ impl core::fmt::Display for ElfError {
 }
 
 impl From<&'static str> for ElfError {
-    fn from(value: &'static str) -> Self { ElfError::Other(value) }
+    fn from(value: &'static str) -> Self {
+        ElfError::Other(value)
+    }
 }

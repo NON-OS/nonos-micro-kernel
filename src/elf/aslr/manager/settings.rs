@@ -17,19 +17,47 @@
 use super::{entropy::gather_entropy, state::AslrManager};
 
 impl AslrManager {
-    pub fn new() -> Self { Self::with_settings(true, true, true) }
-    pub fn with_settings(stack: bool, heap: bool, executable: bool) -> Self {
-        Self { entropy_pool: gather_entropy(), stack_randomization: stack, heap_randomization: heap, executable_randomization: executable }
+    pub fn new() -> Self {
+        Self::with_settings(true, true, true)
     }
-    pub fn disabled() -> Self { Self { entropy_pool: 0, stack_randomization: false, heap_randomization: false, executable_randomization: false } }
-    pub fn is_executable_randomization_enabled(&self) -> bool { self.executable_randomization }
-    pub fn is_stack_randomization_enabled(&self) -> bool { self.stack_randomization }
-    pub fn is_heap_randomization_enabled(&self) -> bool { self.heap_randomization }
-    pub fn set_executable_randomization(&mut self, enabled: bool) { self.executable_randomization = enabled; }
-    pub fn set_stack_randomization(&mut self, enabled: bool) { self.stack_randomization = enabled; }
-    pub fn set_heap_randomization(&mut self, enabled: bool) { self.heap_randomization = enabled; }
+    pub fn with_settings(stack: bool, heap: bool, executable: bool) -> Self {
+        Self {
+            entropy_pool: gather_entropy(),
+            stack_randomization: stack,
+            heap_randomization: heap,
+            executable_randomization: executable,
+        }
+    }
+    pub fn disabled() -> Self {
+        Self {
+            entropy_pool: 0,
+            stack_randomization: false,
+            heap_randomization: false,
+            executable_randomization: false,
+        }
+    }
+    pub fn is_executable_randomization_enabled(&self) -> bool {
+        self.executable_randomization
+    }
+    pub fn is_stack_randomization_enabled(&self) -> bool {
+        self.stack_randomization
+    }
+    pub fn is_heap_randomization_enabled(&self) -> bool {
+        self.heap_randomization
+    }
+    pub fn set_executable_randomization(&mut self, enabled: bool) {
+        self.executable_randomization = enabled;
+    }
+    pub fn set_stack_randomization(&mut self, enabled: bool) {
+        self.stack_randomization = enabled;
+    }
+    pub fn set_heap_randomization(&mut self, enabled: bool) {
+        self.heap_randomization = enabled;
+    }
 }
 
 impl Default for AslrManager {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

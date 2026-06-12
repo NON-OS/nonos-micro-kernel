@@ -24,7 +24,12 @@ use super::{resolved::ResolvedSymbol, state::SymbolResolver, string::read_symbol
 
 impl SymbolResolver {
     pub fn parse_symbols(
-        &mut self, symtab: VirtAddr, strtab: VirtAddr, strtab_size: usize, sym_count: usize, base_addr: VirtAddr,
+        &mut self,
+        symtab: VirtAddr,
+        strtab: VirtAddr,
+        strtab_size: usize,
+        sym_count: usize,
+        base_addr: VirtAddr,
         library_id: usize,
     ) -> ElfResult<usize> {
         let mut registered = 0;
@@ -34,7 +39,9 @@ impl SymbolResolver {
                 let sym = ptr::read(sym_ptr);
                 let binding = sym.binding();
                 let sym_kind = sym.sym_type();
-                if sym.is_undefined() || (binding != sym_bind::STB_GLOBAL && binding != sym_bind::STB_WEAK) {
+                if sym.is_undefined()
+                    || (binding != sym_bind::STB_GLOBAL && binding != sym_bind::STB_WEAK)
+                {
                     continue;
                 }
                 let Ok(name_offset) = usize::try_from(sym.st_name) else {
@@ -48,8 +55,19 @@ impl SymbolResolver {
                 if name.is_empty() {
                     continue;
                 }
-                let address = if sym_kind == sym_type::STT_TLS { VirtAddr::new(sym.st_value) } else { base_addr + sym.st_value };
-                self.register_symbol(ResolvedSymbol { name, address, size: sym.st_size, binding, sym_type: sym_kind, library_id });
+                let address = if sym_kind == sym_type::STT_TLS {
+                    VirtAddr::new(sym.st_value)
+                } else {
+                    base_addr + sym.st_value
+                };
+                self.register_symbol(ResolvedSymbol {
+                    name,
+                    address,
+                    size: sym.st_size,
+                    binding,
+                    sym_type: sym_kind,
+                    library_id,
+                });
                 registered += 1;
             }
         }

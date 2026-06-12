@@ -20,8 +20,8 @@ use crate::elf::embedded::EmbeddedLibraryRegistry;
 use crate::memory::addr::VirtAddr;
 use alloc::string::String;
 
-use super::state::ProcessBuilder;
 use super::super::image::ProcessConfig;
+use super::state::ProcessBuilder;
 
 impl<'a> ProcessBuilder<'a> {
     pub fn with_config(mut self, config: ProcessConfig) -> Self {

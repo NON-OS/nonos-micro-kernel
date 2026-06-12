@@ -25,18 +25,35 @@ pub enum HashTable {
 }
 
 impl HashTable {
-    pub fn gnu(hash_addr: VirtAddr, symtab: VirtAddr, strtab: VirtAddr, strtab_size: usize) -> ElfResult<Self> {
+    pub fn gnu(
+        hash_addr: VirtAddr,
+        symtab: VirtAddr,
+        strtab: VirtAddr,
+        strtab_size: usize,
+    ) -> ElfResult<Self> {
         Ok(Self::Gnu(GnuHashTable::new(hash_addr, symtab, strtab, strtab_size)?))
     }
 
-    pub fn sysv(hash_addr: VirtAddr, symtab: VirtAddr, strtab: VirtAddr, strtab_size: usize) -> ElfResult<Self> {
+    pub fn sysv(
+        hash_addr: VirtAddr,
+        symtab: VirtAddr,
+        strtab: VirtAddr,
+        strtab_size: usize,
+    ) -> ElfResult<Self> {
         Ok(Self::Sysv(SysvHashTable::new(hash_addr, symtab, strtab, strtab_size)?))
     }
 
     pub fn lookup(&self, name: &str) -> Option<usize> {
-        match self { Self::Gnu(table) => table.lookup(name), Self::Sysv(table) => table.lookup(name) }
+        match self {
+            Self::Gnu(table) => table.lookup(name),
+            Self::Sysv(table) => table.lookup(name),
+        }
     }
 
-    pub fn is_gnu(&self) -> bool { matches!(self, Self::Gnu(_)) }
-    pub fn is_sysv(&self) -> bool { matches!(self, Self::Sysv(_)) }
+    pub fn is_gnu(&self) -> bool {
+        matches!(self, Self::Gnu(_))
+    }
+    pub fn is_sysv(&self) -> bool {
+        matches!(self, Self::Sysv(_))
+    }
 }

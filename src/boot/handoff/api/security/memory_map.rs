@@ -25,10 +25,7 @@ pub(super) fn check(handoff: &BootHandoffV1) -> Result<(), HandoffError> {
     }
     let expected = size_of::<MemoryMapEntry>() as u32;
     if handoff.mmap.entry_size != expected {
-        return Err(HandoffError::MemoryMapEntrySize {
-            expected,
-            got: handoff.mmap.entry_size,
-        });
+        return Err(HandoffError::MemoryMapEntrySize { expected, got: handoff.mmap.entry_size });
     }
     Ok(())
 }

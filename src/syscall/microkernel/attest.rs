@@ -44,7 +44,8 @@ pub fn sys_attest_status(out_ptr: u64) -> i64 {
         kernel_blake3: h.meas.kernel_blake3,
         program_hash: h.zk.program_hash,
     };
-    if crate::usercopy::validate_user_write(out_ptr, core::mem::size_of::<AttestStatusAbi>()).is_err()
+    if crate::usercopy::validate_user_write(out_ptr, core::mem::size_of::<AttestStatusAbi>())
+        .is_err()
     {
         return ERRNO_FAULT;
     }

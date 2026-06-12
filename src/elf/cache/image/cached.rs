@@ -22,7 +22,12 @@ use crate::memory::addr::VirtAddr;
 use super::id::next_cache_id;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CacheEntryState { Loading, Ready, Failed, Unloading }
+pub enum CacheEntryState {
+    Loading,
+    Ready,
+    Failed,
+    Unloading,
+}
 
 #[derive(Debug)]
 pub struct CachedImage {
@@ -35,11 +40,36 @@ pub struct CachedImage {
 }
 
 impl CachedImage {
-    pub fn new(name: String, image: ElfImage) -> Self { Self { id: next_cache_id(), name, image, ref_count: 1, state: CacheEntryState::Ready, load_time: 0 } }
-    pub fn with_load_time(mut self, time: u64) -> Self { self.load_time = time; self }
-    pub fn acquire(&mut self) { self.ref_count += 1; }
-    pub fn release(&mut self) -> bool { if self.ref_count > 0 { self.ref_count -= 1; } self.ref_count == 0 }
-    pub fn is_referenced(&self) -> bool { self.ref_count > 0 }
-    pub fn base_addr(&self) -> VirtAddr { self.image.base_addr }
-    pub fn entry_point(&self) -> VirtAddr { self.image.entry_point }
+    pub fn new(name: String, image: ElfImage) -> Self {
+        Self {
+            id: next_cache_id(),
+            name,
+            image,
+            ref_count: 1,
+            state: CacheEntryState::Ready,
+            load_time: 0,
+        }
+    }
+    pub fn with_load_time(mut self, time: u64) -> Self {
+        self.load_time = time;
+        self
+    }
+    pub fn acquire(&mut self) {
+        self.ref_count += 1;
+    }
+    pub fn release(&mut self) -> bool {
+        if self.ref_count > 0 {
+            self.ref_count -= 1;
+        }
+        self.ref_count == 0
+    }
+    pub fn is_referenced(&self) -> bool {
+        self.ref_count > 0
+    }
+    pub fn base_addr(&self) -> VirtAddr {
+        self.image.base_addr
+    }
+    pub fn entry_point(&self) -> VirtAddr {
+        self.image.entry_point
+    }
 }

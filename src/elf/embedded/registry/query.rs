@@ -20,19 +20,37 @@ use super::{library::EmbeddedLibrary, registry::EmbeddedLibraryRegistry, version
 
 impl EmbeddedLibraryRegistry {
     pub fn get(&self, name: &str) -> Option<&EmbeddedLibrary> {
-        self.libraries.get(name).or_else(|| self.soname_index.get(name).and_then(|library| self.libraries.get(library)))
+        self.libraries
+            .get(name)
+            .or_else(|| self.soname_index.get(name).and_then(|library| self.libraries.get(library)))
     }
 
     pub fn get_by_soname(&self, soname: &str) -> Option<&EmbeddedLibrary> {
         self.soname_index.get(soname).and_then(|name| self.libraries.get(name))
     }
 
-    pub fn contains(&self, name: &str) -> bool { self.libraries.contains_key(name) || self.soname_index.contains_key(name) }
-    pub fn count(&self) -> usize { self.libraries.len() }
-    pub fn iter(&self) -> impl Iterator<Item = (&String, &EmbeddedLibrary)> { self.libraries.iter() }
-    pub fn names(&self) -> impl Iterator<Item = &String> { self.libraries.keys() }
-    pub fn total_size(&self) -> usize { self.libraries.values().map(|library| library.size()).sum() }
-    pub fn find_compatible(&self, name: &str, required: &LibraryVersion) -> Option<&EmbeddedLibrary> { self.get(name).filter(|lib| lib.version.is_compatible(required)) }
+    pub fn contains(&self, name: &str) -> bool {
+        self.libraries.contains_key(name) || self.soname_index.contains_key(name)
+    }
+    pub fn count(&self) -> usize {
+        self.libraries.len()
+    }
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &EmbeddedLibrary)> {
+        self.libraries.iter()
+    }
+    pub fn names(&self) -> impl Iterator<Item = &String> {
+        self.libraries.keys()
+    }
+    pub fn total_size(&self) -> usize {
+        self.libraries.values().map(|library| library.size()).sum()
+    }
+    pub fn find_compatible(
+        &self,
+        name: &str,
+        required: &LibraryVersion,
+    ) -> Option<&EmbeddedLibrary> {
+        self.get(name).filter(|lib| lib.version.is_compatible(required))
+    }
 
     pub fn remove(&mut self, name: &str) -> Option<EmbeddedLibrary> {
         let library = self.libraries.remove(name)?;

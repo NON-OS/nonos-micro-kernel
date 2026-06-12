@@ -60,4 +60,3 @@ pub use timer::{
     unix_timestamp, unix_timestamp_ms, unregister_callback, uptime_ms, uptime_seconds, uptime_us,
     us_to_ticks, Stopwatch, TimerCallback,
 };
-

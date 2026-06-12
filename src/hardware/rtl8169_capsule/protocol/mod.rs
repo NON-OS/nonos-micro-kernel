@@ -19,9 +19,7 @@ mod header;
 mod ops;
 
 pub(super) use codec::{decode_response, encode_request};
-pub(super) use header::{
-    MAC_LEN, MAX_TX_PAYLOAD_BYTES, MIN_ETHERNET_FRAME, STATS_PAYLOAD_LEN,
-};
+pub(super) use header::{MAC_LEN, MAX_TX_PAYLOAD_BYTES, MIN_ETHERNET_FRAME, STATS_PAYLOAD_LEN};
 pub(super) use ops::{
     OP_HEALTHCHECK, OP_LINK_STATUS, OP_MAC_ADDRESS, OP_RX_PACKET, OP_STATS, OP_TX_PACKET,
 };

@@ -26,7 +26,9 @@
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 
 #[cfg(not(target_arch = "x86_64"))]
-compile_error!("Developer Preview 1.0 supports only x86_64; other arch trees are not release targets.");
+compile_error!(
+    "Developer Preview 1.0 supports only x86_64; other arch trees are not release targets."
+);
 
 #[cfg(all(feature = "nonos-production", feature = "nonos-dev-unverified-capsules"))]
 compile_error!(

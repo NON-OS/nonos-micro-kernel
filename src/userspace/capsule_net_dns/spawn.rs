@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{NET_DNS_ELF, NET_DNS_MANIFEST_BYTES, NET_DNS_NONOS_ID_CERT_BYTES, NET_DNS_ATTESTATION_BYTES};
+use super::embed::{
+    NET_DNS_ATTESTATION_BYTES, NET_DNS_ELF, NET_DNS_MANIFEST_BYTES, NET_DNS_NONOS_ID_CERT_BYTES,
+};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};

@@ -39,8 +39,7 @@ pub(super) fn seed_kernel_half_pdpts(kernel_cr3: PhysAddr) -> PagingResult<()> {
         if pml4[i] & PTE_PRESENT != 0 {
             continue;
         }
-        let pdpt_frame =
-            frame_alloc::allocate_frame().ok_or(PagingError::FrameAllocationFailed)?;
+        let pdpt_frame = frame_alloc::allocate_frame().ok_or(PagingError::FrameAllocationFailed)?;
         let pdpt_va = phys_to_virt_checked(pdpt_frame).ok_or(PagingError::NoActivePageTable)?;
         let pdpt = unsafe { &mut *(pdpt_va.as_u64() as *mut [u64; PAGE_TABLE_ENTRIES]) };
         for entry in pdpt.iter_mut() {

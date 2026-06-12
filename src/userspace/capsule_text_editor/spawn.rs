@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{TEXT_EDITOR_ELF, TEXT_EDITOR_MANIFEST_BYTES, TEXT_EDITOR_NONOS_ID_CERT_BYTES, TEXT_EDITOR_ATTESTATION_BYTES};
+use super::embed::{
+    TEXT_EDITOR_ATTESTATION_BYTES, TEXT_EDITOR_ELF, TEXT_EDITOR_MANIFEST_BYTES,
+    TEXT_EDITOR_NONOS_ID_CERT_BYTES,
+};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};

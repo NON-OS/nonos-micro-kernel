@@ -22,9 +22,17 @@ pub struct DualHashLookup {
 }
 
 impl DualHashLookup {
-    pub fn new() -> Self { Self { gnu: None, sysv: None } }
-    pub fn with_gnu(mut self, table: GnuHashTable) -> Self { self.gnu = Some(table); self }
-    pub fn with_sysv(mut self, table: SysvHashTable) -> Self { self.sysv = Some(table); self }
+    pub fn new() -> Self {
+        Self { gnu: None, sysv: None }
+    }
+    pub fn with_gnu(mut self, table: GnuHashTable) -> Self {
+        self.gnu = Some(table);
+        self
+    }
+    pub fn with_sysv(mut self, table: SysvHashTable) -> Self {
+        self.sysv = Some(table);
+        self
+    }
 
     pub fn lookup(&self, name: &str) -> Option<usize> {
         if let Some(gnu) = &self.gnu {
@@ -35,10 +43,16 @@ impl DualHashLookup {
         self.sysv.as_ref().and_then(|table| table.lookup(name))
     }
 
-    pub fn has_gnu(&self) -> bool { self.gnu.is_some() }
-    pub fn has_sysv(&self) -> bool { self.sysv.is_some() }
+    pub fn has_gnu(&self) -> bool {
+        self.gnu.is_some()
+    }
+    pub fn has_sysv(&self) -> bool {
+        self.sysv.is_some()
+    }
 }
 
 impl Default for DualHashLookup {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

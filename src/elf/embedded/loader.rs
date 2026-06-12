@@ -19,5 +19,5 @@ mod query;
 mod single;
 mod state;
 
-pub use state::{EmbeddedLibraryLoader, LoadedEmbeddedLibrary};
 pub use single::load_embedded_library;
+pub use state::{EmbeddedLibraryLoader, LoadedEmbeddedLibrary};

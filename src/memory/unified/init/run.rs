@@ -65,9 +65,7 @@ pub fn init_unified_vm() -> Result<(), &'static str> {
         crate::sys::serial::print(b"[VM-INIT] kernel half empty; CR3=");
         print_hex_u64(active.as_u64());
         crate::sys::serial::println(b"");
-        return Err(
-            "init_unified_vm: bootloader CR3 has no kernel-half PML4 entries (256..511)",
-        );
+        return Err("init_unified_vm: bootloader CR3 has no kernel-half PML4 entries (256..511)");
     }
     crate::sys::serial::print(b"[VM-INIT] kernel half populated entries: ");
     print_dec_usize(kernel_half_populated);

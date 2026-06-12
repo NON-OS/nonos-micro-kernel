@@ -18,8 +18,8 @@ mod core;
 mod global;
 mod image;
 
-pub use self::core::{ElfLoader, ParsedSection};
 pub(crate) use self::core::{parse_elf_header, parse_program_headers, validate_elf};
+pub use self::core::{ElfLoader, ParsedSection};
 pub use self::global::{
     get_elf_loader, init_elf_loader, is_initialized, load_elf_entry_into, load_elf_executable,
     load_elf_executable_into,

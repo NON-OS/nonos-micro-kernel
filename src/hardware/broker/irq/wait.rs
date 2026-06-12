@@ -44,8 +44,7 @@ fn owned_slots(pid: u32, grant_id: u64) -> Result<Vec<usize>, IrqError> {
         let idx = slot_of(g.vector).ok_or(IrqError::UnknownGrant)?;
         return Ok(alloc::vec![idx]);
     }
-    let idxs: Vec<usize> =
-        records::vectors_for_pid(pid).into_iter().filter_map(slot_of).collect();
+    let idxs: Vec<usize> = records::vectors_for_pid(pid).into_iter().filter_map(slot_of).collect();
     if idxs.is_empty() {
         return Err(IrqError::UnknownGrant);
     }

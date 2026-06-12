@@ -25,9 +25,7 @@ use super::shutdown::shutdown;
 pub(in crate::syscall::dispatch::router) fn matches(nr: SyscallNumber) -> bool {
     matches!(
         nr,
-        SyscallNumber::AdminReboot
-            | SyscallNumber::AdminShutdown
-            | SyscallNumber::AdminPolicyPush
+        SyscallNumber::AdminReboot | SyscallNumber::AdminShutdown | SyscallNumber::AdminPolicyPush
     )
 }
 

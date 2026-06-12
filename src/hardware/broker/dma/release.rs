@@ -27,8 +27,8 @@
 //! space would walk the wrong page tables; the AS reaper drops
 //! those PTEs wholesale.
 
-use super::records;
 use super::pool;
+use super::records;
 use super::types::{DmaError, DmaGrant};
 use crate::memory::addr::VirtAddr;
 use crate::memory::layout::DIRECTMAP_BASE;

@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{WALLPAPER_ELF, WALLPAPER_MANIFEST_BYTES, WALLPAPER_NONOS_ID_CERT_BYTES, WALLPAPER_ATTESTATION_BYTES};
+use super::embed::{
+    WALLPAPER_ATTESTATION_BYTES, WALLPAPER_ELF, WALLPAPER_MANIFEST_BYTES,
+    WALLPAPER_NONOS_ID_CERT_BYTES,
+};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};

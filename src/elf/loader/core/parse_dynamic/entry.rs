@@ -23,7 +23,8 @@ pub(in crate::elf::loader::core::parse_dynamic) fn parse_dynamic_entry(
     base_addr: VirtAddr,
     state: &mut DynamicParseState,
 ) -> Result<bool, ElfError> {
-    let entry = unsafe { ptr::read_unaligned(elf_data[entry_offset..].as_ptr() as *const DynamicEntry) };
+    let entry =
+        unsafe { ptr::read_unaligned(elf_data[entry_offset..].as_ptr() as *const DynamicEntry) };
     match entry.d_tag {
         0 => Ok(false),
         1 => {

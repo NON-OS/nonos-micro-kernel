@@ -21,11 +21,11 @@ mod protocol;
 mod spawn;
 mod state;
 
+pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 pub use client::{
     feed_keyboard_report, feed_mouse_report, get_state, healthcheck, poll_keys, poll_mouse,
     probe_config, HidBinding, HidKind, KeyEvent, MouseEvent, UsbHidState,
 };
 pub use error::UsbHidError;
-pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 pub use spawn::spawn_driver_usb_hid_capsule;
 pub use state::shared_state;

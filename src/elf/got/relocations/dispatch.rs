@@ -17,26 +17,67 @@
 use crate::elf::errors::{ElfError, ElfResult};
 use crate::elf::types::reloc_type;
 
-use super::{types::ResolvedSymbolValue, write::{copy_symbol, write_u64}};
+use super::{
+    types::ResolvedSymbolValue,
+    write::{copy_symbol, write_u64},
+};
 
-pub(super) fn dispatch_relocation(rel_type: u32, target_addr: u64, symbol: Option<ResolvedSymbolValue>, addend: i64, base_addr: u64) -> ElfResult<bool> {
+pub(super) fn dispatch_relocation(
+    rel_type: u32,
+    target_addr: u64,
+    symbol: Option<ResolvedSymbolValue>,
+    addend: i64,
+    base_addr: u64,
+) -> ElfResult<bool> {
     match rel_type {
         reloc_type::R_X86_64_NONE => Ok(false),
-        reloc_type::R_X86_64_64 | reloc_type::R_X86_64_TPOFF64 | reloc_type::R_X86_64_DTPOFF64 => match symbol {
-            Some(symbol) => { unsafe { write_u64(target_addr, symbol.value.wrapping_add(addend as u64)); } Ok(true) }
-            None => Ok(false),
-        },
+        reloc_type::R_X86_64_64 | reloc_type::R_X86_64_TPOFF64 | reloc_type::R_X86_64_DTPOFF64 => {
+            match symbol {
+                Some(symbol) => {
+                    unsafe {
+                        write_u64(target_addr, symbol.value.wrapping_add(addend as u64));
+                    }
+                    Ok(true)
+                }
+                None => Ok(false),
+            }
+        }
         reloc_type::R_X86_64_GLOB_DAT | reloc_type::R_X86_64_JUMP_SLOT => match symbol {
-            Some(symbol) => { unsafe { write_u64(target_addr, symbol.value); } Ok(true) }
+            Some(symbol) => {
+                unsafe {
+                    write_u64(target_addr, symbol.value);
+                }
+                Ok(true)
+            }
             None => Ok(false),
         },
-        reloc_type::R_X86_64_RELATIVE => { unsafe { write_u64(target_addr, base_addr.wrapping_add(addend as u64)); } Ok(true) }
+        reloc_type::R_X86_64_RELATIVE => {
+            unsafe {
+                write_u64(target_addr, base_addr.wrapping_add(addend as u64));
+            }
+            Ok(true)
+        }
         reloc_type::R_X86_64_COPY => match symbol {
-            Some(symbol) => { unsafe { copy_symbol(target_addr, symbol.value, symbol.size); } Ok(true) }
+            Some(symbol) => {
+                unsafe {
+                    copy_symbol(target_addr, symbol.value, symbol.size);
+                }
+                Ok(true)
+            }
             None => Ok(false),
         },
-        reloc_type::R_X86_64_DTPMOD64 => { unsafe { write_u64(target_addr, 1); } Ok(true) }
-        reloc_type::R_X86_64_IRELATIVE => { unsafe { write_u64(target_addr, base_addr.wrapping_add(addend as u64)); } Ok(true) }
+        reloc_type::R_X86_64_DTPMOD64 => {
+            unsafe {
+                write_u64(target_addr, 1);
+            }
+            Ok(true)
+        }
+        reloc_type::R_X86_64_IRELATIVE => {
+            unsafe {
+                write_u64(target_addr, base_addr.wrapping_add(addend as u64));
+            }
+            Ok(true)
+        }
         _ => Err(ElfError::UnsupportedRelocation(rel_type)),
     }
 }

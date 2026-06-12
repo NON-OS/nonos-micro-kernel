@@ -39,8 +39,8 @@ pub fn rx_packet() -> Result<RxPacket, DriverNetError> {
     if resp.body.len() < 4 {
         return Err(DriverNetError::ProtocolMismatch);
     }
-    let declared = u32::from_le_bytes([resp.body[0], resp.body[1], resp.body[2], resp.body[3]])
-        as usize;
+    let declared =
+        u32::from_le_bytes([resp.body[0], resp.body[1], resp.body[2], resp.body[3]]) as usize;
     let frame_bytes = &resp.body[4..];
     if frame_bytes.len() < declared {
         return Err(DriverNetError::ProtocolMismatch);

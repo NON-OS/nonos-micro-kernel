@@ -27,6 +27,9 @@ pub fn is_address_mapped(va: VirtAddr) -> bool {
     manager::is_mapped(va)
 }
 
-pub fn handle_unified_page_fault(fault_addr: VirtAddr, error_code: u64) -> Result<(), &'static str> {
+pub fn handle_unified_page_fault(
+    fault_addr: VirtAddr,
+    error_code: u64,
+) -> Result<(), &'static str> {
     manager::handle_page_fault(fault_addr, error_code).map_err(|_| "Page fault handling failed")
 }

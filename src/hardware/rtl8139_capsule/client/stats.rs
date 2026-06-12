@@ -56,12 +56,7 @@ fn decode_stats(body: &[u8]) -> Result<Rtl8139Stats, DriverRtl8139Error> {
         rcr: read_u32(body, 12),
         tcr: read_u32(body, 16),
         capr: read_u32(body, 20),
-        tx_status: [
-            read_u32(body, 24),
-            read_u32(body, 28),
-            read_u32(body, 32),
-            read_u32(body, 36),
-        ],
+        tx_status: [read_u32(body, 24), read_u32(body, 28), read_u32(body, 32), read_u32(body, 36)],
         rx_offset: read_u32(body, 40),
         tx_cur: read_u32(body, 44),
     })

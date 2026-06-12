@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    DRIVER_VIRTIO_GPU_ELF, DRIVER_VIRTIO_GPU_MANIFEST_BYTES, DRIVER_VIRTIO_GPU_ATTESTATION_BYTES, DRIVER_VIRTIO_GPU_NONOS_ID_CERT_BYTES,
+    DRIVER_VIRTIO_GPU_ATTESTATION_BYTES, DRIVER_VIRTIO_GPU_ELF, DRIVER_VIRTIO_GPU_MANIFEST_BYTES,
+    DRIVER_VIRTIO_GPU_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;

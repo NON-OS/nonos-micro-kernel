@@ -49,14 +49,19 @@ pub fn map_huge_page(
     size: PageSize,
 ) -> PagingResult<()> {
     without_interrupts(|| {
-        PAGING_MANAGER
-            .lock()
-            .map_page(virtual_addr, physical_addr, permissions, size, &PAGING_STATS)
+        PAGING_MANAGER.lock().map_page(
+            virtual_addr,
+            physical_addr,
+            permissions,
+            size,
+            &PAGING_STATS,
+        )
     })
 }
 
 pub fn unmap_page(virtual_addr: VirtAddr) -> PagingResult<PhysAddr> {
-    let (phys, perms, size) = without_interrupts(|| PAGING_MANAGER.lock().unmap_page(virtual_addr))?;
+    let (phys, perms, size) =
+        without_interrupts(|| PAGING_MANAGER.lock().unmap_page(virtual_addr))?;
     PAGING_STATS.record_unmapping(perms, size);
     Ok(phys)
 }

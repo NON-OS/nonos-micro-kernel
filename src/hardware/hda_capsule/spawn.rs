@@ -15,12 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::client::REPLY_INBOX;
-use super::embed::{DRIVER_HDA_ELF, DRIVER_HDA_MANIFEST_BYTES, DRIVER_HDA_NONOS_ID_CERT_BYTES, DRIVER_HDA_ATTESTATION_BYTES};
+use super::embed::{
+    DRIVER_HDA_ATTESTATION_BYTES, DRIVER_HDA_ELF, DRIVER_HDA_MANIFEST_BYTES,
+    DRIVER_HDA_NONOS_ID_CERT_BYTES,
+};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
 use crate::security::nonos_id_cert::IdCertVerifyError;
-use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY};
+use crate::security::nonos_trust_anchor::{
+    decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
+};
 
 pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 

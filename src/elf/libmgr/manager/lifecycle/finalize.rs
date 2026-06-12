@@ -22,12 +22,18 @@ use super::super::{core::LibraryManager, types::LibraryState};
 impl LibraryManager {
     pub fn finalize(&mut self, id: usize) -> ElfResult<()> {
         let library = self.libraries.get_mut(&id).ok_or(ElfError::LibraryNotFound)?;
-        if library.fini_called { return Ok(()); }
+        if library.fini_called {
+            return Ok(());
+        }
         library.state = LibraryState::Finalizing;
         if let Some(dynlink) = &library.image.dynlink_info {
             let mut runner = FiniArrayRunner::new();
-            if let Some((addr, size)) = dynlink.fini_array { runner = runner.with_fini_array(FiniArrayInfo::new(addr, size)); }
-            if let Some(fini_addr) = dynlink.fini { runner = runner.with_fini_fn(fini_addr); }
+            if let Some((addr, size)) = dynlink.fini_array {
+                runner = runner.with_fini_array(FiniArrayInfo::new(addr, size));
+            }
+            if let Some(fini_addr) = dynlink.fini {
+                runner = runner.with_fini_fn(fini_addr);
+            }
             runner.run_all()?;
         }
         library.fini_called = true;

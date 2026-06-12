@@ -19,7 +19,10 @@ use crate::memory::addr::VirtAddr;
 
 #[test]
 fn test_tls_info_effective_alignment() {
-    assert_eq!(TlsInfo::new(VirtAddr::new(0x1000), 256, 256, 8).effective_alignment(), DEFAULT_TLS_ALIGNMENT);
+    assert_eq!(
+        TlsInfo::new(VirtAddr::new(0x1000), 256, 256, 8).effective_alignment(),
+        DEFAULT_TLS_ALIGNMENT
+    );
     assert_eq!(TlsInfo::new(VirtAddr::new(0x1000), 256, 256, 64).effective_alignment(), 64);
 }
 
@@ -31,13 +34,21 @@ fn test_tls_info_allocation_size() {
 
 #[test]
 fn test_tls_info_total_size_with_tcb() {
-    assert_eq!(TlsInfo::new(VirtAddr::new(0x1000), 128, 128, 16).total_size_with_tcb(), 128 + TCB_SIZE);
+    assert_eq!(
+        TlsInfo::new(VirtAddr::new(0x1000), 128, 128, 16).total_size_with_tcb(),
+        128 + TCB_SIZE
+    );
 }
 
 #[test]
 fn test_tls_info_template_end() {
-    assert_eq!(TlsInfo::new(VirtAddr::new(0x1000), 256, 512, 16).template_end(), VirtAddr::new(0x1100));
+    assert_eq!(
+        TlsInfo::new(VirtAddr::new(0x1000), 256, 512, 16).template_end(),
+        VirtAddr::new(0x1100)
+    );
 }
 
 #[test]
-fn test_tls_info_zero_alignment() { assert_eq!(TlsInfo::new(VirtAddr::new(0x1000), 256, 256, 0).alignment, 1); }
+fn test_tls_info_zero_alignment() {
+    assert_eq!(TlsInfo::new(VirtAddr::new(0x1000), 256, 256, 0).alignment, 1);
+}

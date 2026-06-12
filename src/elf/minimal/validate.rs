@@ -21,4 +21,6 @@ mod queries;
 
 pub use checks::{validate_elf, validate_elf_detailed, validate_elf_x86_64};
 pub use entry::entry_from_bytes;
-pub use queries::{get_elf_machine, get_elf_type, get_phnum, get_phoff, get_shnum, get_shoff, is_pie};
+pub use queries::{
+    get_elf_machine, get_elf_type, get_phnum, get_phoff, get_shnum, get_shoff, is_pie,
+};

@@ -13,8 +13,8 @@
 
 use crate::elf::errors::ElfError;
 use crate::elf::types::{ElfHeader, SectionHeader};
-use core::ptr;
 use core::mem::size_of;
+use core::ptr;
 
 pub(in crate::elf::loader::core::parse_sections) struct SectionTable {
     pub offset: usize,
@@ -30,7 +30,8 @@ pub(in crate::elf::loader::core::parse_sections) fn section_table(
     if header.e_shoff == 0 || header.e_shnum == 0 {
         return Ok(None);
     }
-    let offset = usize::try_from(header.e_shoff).map_err(|_| ElfError::SectionHeadersOutOfBounds)?;
+    let offset =
+        usize::try_from(header.e_shoff).map_err(|_| ElfError::SectionHeadersOutOfBounds)?;
     let entry_size = usize::from(header.e_shentsize);
     let count = usize::from(header.e_shnum);
     if entry_size != size_of::<SectionHeader>() {
@@ -41,7 +42,8 @@ pub(in crate::elf::loader::core::parse_sections) fn section_table(
     if table_end > elf_data.len() {
         return Err(ElfError::SectionHeadersOutOfBounds);
     }
-    let string_table = string_table(elf_data, offset, entry_size, count, usize::from(header.e_shstrndx))?;
+    let string_table =
+        string_table(elf_data, offset, entry_size, count, usize::from(header.e_shstrndx))?;
     Ok(Some(SectionTable { offset, entry_size, count, string_table }))
 }
 
@@ -55,10 +57,16 @@ fn string_table(
     if string_index >= count || string_index == 0 {
         return Ok(None);
     }
-    let off = offset.checked_add(string_index.checked_mul(entry_size).ok_or(ElfError::SectionHeadersOutOfBounds)?).ok_or(ElfError::SectionHeadersOutOfBounds)?;
+    let off = offset
+        .checked_add(
+            string_index.checked_mul(entry_size).ok_or(ElfError::SectionHeadersOutOfBounds)?,
+        )
+        .ok_or(ElfError::SectionHeadersOutOfBounds)?;
     let header = unsafe { ptr::read_unaligned(elf_data[off..].as_ptr() as *const SectionHeader) };
-    let table_offset = usize::try_from(header.sh_offset).map_err(|_| ElfError::StringTableOutOfBounds)?;
-    let table_size = usize::try_from(header.sh_size).map_err(|_| ElfError::StringTableOutOfBounds)?;
+    let table_offset =
+        usize::try_from(header.sh_offset).map_err(|_| ElfError::StringTableOutOfBounds)?;
+    let table_size =
+        usize::try_from(header.sh_size).map_err(|_| ElfError::StringTableOutOfBounds)?;
     let table_end = table_offset.checked_add(table_size).ok_or(ElfError::StringTableOutOfBounds)?;
     if table_end > elf_data.len() {
         return Err(ElfError::StringTableOutOfBounds);

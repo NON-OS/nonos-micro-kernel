@@ -38,7 +38,12 @@ pub(super) fn round_trip(
 ) -> Result<ResponseBytes, DriverRtl8139Error> {
     let _guard = TRANSPORT_LOCK.lock();
     let resp = transport::round_trip(
-        request_id, &request, SENDER_NAME, REPLY_INBOX, state::shared_state(), decode_response,
+        request_id,
+        &request,
+        SENDER_NAME,
+        REPLY_INBOX,
+        state::shared_state(),
+        decode_response,
     )
     .map_err(map_err)?;
     Ok(ResponseBytes { status: resp.status, body: resp.body })

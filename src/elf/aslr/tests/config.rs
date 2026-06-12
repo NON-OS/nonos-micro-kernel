@@ -52,7 +52,9 @@ fn test_set_randomization() {
 }
 
 #[test]
-fn test_default() { assert!(AslrManager::default().is_executable_randomization_enabled()); }
+fn test_default() {
+    assert!(AslrManager::default().is_executable_randomization_enabled());
+}
 
 #[test]
 fn test_constants() {

@@ -49,10 +49,5 @@ fn decode_reply(body: &[u8]) -> Result<AddressedDevice, DriverXhciError> {
         return Err(DriverXhciError::ShortReply);
     }
     let max_packet_size = u16::from_le_bytes([body[4], body[5]]);
-    Ok(AddressedDevice {
-        slot_id: body[0],
-        port_id: body[1],
-        speed: body[2],
-        max_packet_size,
-    })
+    Ok(AddressedDevice { slot_id: body[0], port_id: body[1], speed: body[2], max_packet_size })
 }

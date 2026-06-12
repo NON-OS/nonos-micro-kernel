@@ -3,7 +3,9 @@ use crate::security::capsule_manifest::{verify_with_publisher, DeclaredEndpoint,
 use crate::security::nonos_id_cert::{
     decode as decode_id_cert, verify as verify_id_cert, NONOS_PRODUCTION_POLICY,
 };
-use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY};
+use crate::security::nonos_trust_anchor::{
+    decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
+};
 
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
 

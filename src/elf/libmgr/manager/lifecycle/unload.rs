@@ -25,7 +25,9 @@ impl LibraryManager {
             self.finalize(id)?;
             if let Some(library) = self.libraries.remove(&id) {
                 self.name_index.remove(&library.name);
-                if let Some(soname) = &library.soname { self.soname_index.remove(soname); }
+                if let Some(soname) = &library.soname {
+                    self.soname_index.remove(soname);
+                }
                 self.addr_index.remove(&library.base_addr().as_u64());
                 self.load_order.retain(|&entry| entry != id);
             }

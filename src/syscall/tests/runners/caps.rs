@@ -18,8 +18,14 @@ use crate::syscall::tests::caps as t;
 use crate::test::framework::{TestCase, TestSuite};
 
 pub fn register(s: &mut TestSuite) {
-    s.add(TestCase::new("caps::can_exit_requires_core_exec", t::test_capability_token_can_exit_requires_core_exec));
-    s.add(TestCase::new("caps::can_exit_without_core_exec", t::test_capability_token_can_exit_without_core_exec));
+    s.add(TestCase::new(
+        "caps::can_exit_requires_core_exec",
+        t::test_capability_token_can_exit_requires_core_exec,
+    ));
+    s.add(TestCase::new(
+        "caps::can_exit_without_core_exec",
+        t::test_capability_token_can_exit_without_core_exec,
+    ));
     s.add(TestCase::new("caps::can_getpid", t::test_capability_token_can_getpid));
     s.add(TestCase::new("caps::can_fork", t::test_capability_token_can_fork));
     s.add(TestCase::new("caps::can_exec", t::test_capability_token_can_exec));
@@ -35,14 +41,23 @@ pub fn register(s: &mut TestSuite) {
     s.add(TestCase::new("caps::can_modify_dirs", t::test_capability_token_can_modify_dirs));
     s.add(TestCase::new("caps::can_unlink", t::test_capability_token_can_unlink));
     s.add(TestCase::new("caps::can_allocate_memory", t::test_capability_token_can_allocate_memory));
-    s.add(TestCase::new("caps::can_deallocate_memory", t::test_capability_token_can_deallocate_memory));
+    s.add(TestCase::new(
+        "caps::can_deallocate_memory",
+        t::test_capability_token_can_deallocate_memory,
+    ));
     s.add(TestCase::new("caps::can_network", t::test_capability_token_can_network));
     s.add(TestCase::new("caps::can_ipc", t::test_capability_token_can_ipc));
     s.add(TestCase::new("caps::can_crypto", t::test_capability_token_can_crypto));
     s.add(TestCase::new("caps::can_hardware", t::test_capability_token_can_hardware));
     s.add(TestCase::new("caps::can_debug", t::test_capability_token_can_debug));
     s.add(TestCase::new("caps::can_admin", t::test_capability_token_can_admin));
-    s.add(TestCase::new("caps::empty_cannot_do_anything", t::test_capability_token_empty_cannot_do_anything));
-    s.add(TestCase::new("caps::multiple_capabilities", t::test_capability_token_multiple_capabilities));
+    s.add(TestCase::new(
+        "caps::empty_cannot_do_anything",
+        t::test_capability_token_empty_cannot_do_anything,
+    ));
+    s.add(TestCase::new(
+        "caps::multiple_capabilities",
+        t::test_capability_token_multiple_capabilities,
+    ));
     s.add(TestCase::new("caps::all_capabilities", t::test_capability_token_all_capabilities));
 }

@@ -16,10 +16,16 @@
 
 use crate::elf::errors::ElfResult;
 
-use super::{invoke::{invoke_addr, invoke_array}, state::FiniArrayRunner, validate::{validate_addr, validate_array}};
+use super::{
+    invoke::{invoke_addr, invoke_array},
+    state::FiniArrayRunner,
+    validate::{validate_addr, validate_array},
+};
 
 impl FiniArrayRunner {
-    pub fn run_all(&self) -> ElfResult<usize> { Ok(self.run_fini_array()? + self.run_fini_fn()?) }
+    pub fn run_all(&self) -> ElfResult<usize> {
+        Ok(self.run_fini_array()? + self.run_fini_fn()?)
+    }
     pub fn run_fini_array(&self) -> ElfResult<usize> {
         let Some(info) = self.fini_array.as_ref() else { return Ok(0) };
         validate_array(info)?;
@@ -32,5 +38,7 @@ impl FiniArrayRunner {
         unsafe { invoke_addr(addr) };
         Ok(1)
     }
-    pub fn total_fini_count(&self) -> usize { self.fini_array.map(|info| info.count()).unwrap_or(0) + usize::from(self.fini_fn.is_some()) }
+    pub fn total_fini_count(&self) -> usize {
+        self.fini_array.map(|info| info.count()).unwrap_or(0) + usize::from(self.fini_fn.is_some())
+    }
 }

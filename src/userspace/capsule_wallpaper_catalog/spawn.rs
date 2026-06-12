@@ -15,12 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    WALLPAPER_CATALOG_ELF, WALLPAPER_CATALOG_MANIFEST_BYTES, WALLPAPER_CATALOG_ATTESTATION_BYTES, WALLPAPER_CATALOG_NONOS_ID_CERT_BYTES,
+    WALLPAPER_CATALOG_ATTESTATION_BYTES, WALLPAPER_CATALOG_ELF, WALLPAPER_CATALOG_MANIFEST_BYTES,
+    WALLPAPER_CATALOG_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified, SpawnError};
 use crate::security::nonos_id_cert::IdCertVerifyError;
-use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY};
+use crate::security::nonos_trust_anchor::{
+    decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
+};
 
 const SERVICE_NAME: &str = "wallpaper_catalog";
 const SERVICE_PORT: u32 = 4110;

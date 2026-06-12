@@ -46,9 +46,8 @@ pub(super) unsafe fn alloc_impl(allocator: &SecureHeapAllocator, layout: Layout)
             Err(_) => return null_mut(),
         };
 
-        let raw_ptr = crate::arch::x86_64::idt::without_interrupts(|| {
-            allocator.inner.alloc(adjusted_layout)
-        });
+        let raw_ptr =
+            crate::arch::x86_64::idt::without_interrupts(|| allocator.inner.alloc(adjusted_layout));
         if raw_ptr.is_null() {
             return null_mut();
         }

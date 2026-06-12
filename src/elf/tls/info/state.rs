@@ -26,7 +26,12 @@ pub struct TlsInfo {
 }
 
 impl TlsInfo {
-    pub fn new(template_addr: VirtAddr, template_size: usize, memory_size: usize, alignment: usize) -> Self {
+    pub fn new(
+        template_addr: VirtAddr,
+        template_size: usize,
+        memory_size: usize,
+        alignment: usize,
+    ) -> Self {
         Self { template_addr, template_size, memory_size, alignment: alignment.max(1) }
     }
 
@@ -62,6 +67,11 @@ impl TlsInfo {
 
 impl Default for TlsInfo {
     fn default() -> Self {
-        Self { template_addr: VirtAddr::new(0), template_size: 0, memory_size: 0, alignment: DEFAULT_TLS_ALIGNMENT }
+        Self {
+            template_addr: VirtAddr::new(0),
+            template_size: 0,
+            memory_size: 0,
+            alignment: DEFAULT_TLS_ALIGNMENT,
+        }
     }
 }

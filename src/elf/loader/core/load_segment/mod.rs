@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod plan;
 mod populate_page;
 mod pte_flags;
 mod result;
 mod run;
 mod source;
-mod plan;
-mod validate;
 #[cfg(test)]
 mod tests;
+mod validate;
 
 pub(in crate::elf::loader::core) use run::load_segment;

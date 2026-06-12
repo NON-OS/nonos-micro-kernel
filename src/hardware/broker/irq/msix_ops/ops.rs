@@ -18,7 +18,9 @@ use crate::drivers::pci::types::{MsixInfo, PciAddress, PciBar};
 
 use super::super::types::IrqBindError;
 
-pub(in crate::hardware::broker::irq) trait MsixOps: Send + Sync {
+pub(in crate::hardware::broker::irq) trait MsixOps:
+    Send + Sync
+{
     fn program_run(
         &self,
         address: &PciAddress,

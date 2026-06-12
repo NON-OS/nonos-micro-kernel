@@ -21,7 +21,9 @@
 //! crypto math lives behind that boundary.
 
 use super::client::REPLY_INBOX;
-use super::embed::{MARKET_ELF, MARKET_MANIFEST_BYTES, MARKET_NONOS_ID_CERT_BYTES, MARKET_ATTESTATION_BYTES};
+use super::embed::{
+    MARKET_ATTESTATION_BYTES, MARKET_ELF, MARKET_MANIFEST_BYTES, MARKET_NONOS_ID_CERT_BYTES,
+};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};

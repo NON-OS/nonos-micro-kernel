@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    PROCESS_MANAGER_ELF, PROCESS_MANAGER_MANIFEST_BYTES, PROCESS_MANAGER_ATTESTATION_BYTES, PROCESS_MANAGER_NONOS_ID_CERT_BYTES,
+    PROCESS_MANAGER_ATTESTATION_BYTES, PROCESS_MANAGER_ELF, PROCESS_MANAGER_MANIFEST_BYTES,
+    PROCESS_MANAGER_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;

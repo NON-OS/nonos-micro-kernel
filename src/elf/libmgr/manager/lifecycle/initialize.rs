@@ -22,13 +22,21 @@ use super::super::{core::LibraryManager, types::LibraryState};
 impl LibraryManager {
     pub fn initialize(&mut self, id: usize) -> ElfResult<()> {
         let library = self.libraries.get_mut(&id).ok_or(ElfError::LibraryNotFound)?;
-        if library.init_called { return Ok(()); }
-        if library.state != LibraryState::Ready { return Err(ElfError::InvalidState); }
+        if library.init_called {
+            return Ok(());
+        }
+        if library.state != LibraryState::Ready {
+            return Err(ElfError::InvalidState);
+        }
         library.state = LibraryState::Initializing;
         if let Some(dynlink) = &library.image.dynlink_info {
             let mut runner = InitArrayRunner::new();
-            if let Some(init_addr) = dynlink.init { runner = runner.with_init_fn(init_addr); }
-            if let Some((addr, size)) = dynlink.init_array { runner = runner.with_init_array(InitArrayInfo::new(addr, size)); }
+            if let Some(init_addr) = dynlink.init {
+                runner = runner.with_init_fn(init_addr);
+            }
+            if let Some((addr, size)) = dynlink.init_array {
+                runner = runner.with_init_array(InitArrayInfo::new(addr, size));
+            }
             runner.run_all()?;
         }
         library.init_called = true;

@@ -20,7 +20,11 @@ use super::parse::parse_header;
 
 pub fn entry_from_bytes(bytes: &[u8]) -> ElfResult<u64> {
     let header = parse_header(bytes)?;
-    if !header.is_valid_magic() { return Err(ElfError::InvalidMagic); }
-    if header.e_entry == 0 { return Err(ElfError::Other("Invalid entry point")); }
+    if !header.is_valid_magic() {
+        return Err(ElfError::InvalidMagic);
+    }
+    if header.e_entry == 0 {
+        return Err(ElfError::Other("Invalid entry point"));
+    }
     Ok(header.e_entry)
 }

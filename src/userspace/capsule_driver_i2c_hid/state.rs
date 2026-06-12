@@ -17,4 +17,3 @@ pub(super) fn set_alive(pid: u32) {
 pub fn shared_state() -> &'static CapsuleState {
     &STATE
 }
-

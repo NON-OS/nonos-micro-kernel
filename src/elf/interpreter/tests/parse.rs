@@ -21,7 +21,16 @@ use crate::elf::errors::ElfError;
 use crate::elf::types::{phdr_type, ProgramHeader};
 
 fn program_header(offset: u64, size: u64) -> ProgramHeader {
-    ProgramHeader { p_type: phdr_type::PT_INTERP, p_flags: 0, p_offset: offset, p_vaddr: 0, p_paddr: 0, p_filesz: size, p_memsz: size, p_align: 1 }
+    ProgramHeader {
+        p_type: phdr_type::PT_INTERP,
+        p_flags: 0,
+        p_offset: offset,
+        p_vaddr: 0,
+        p_paddr: 0,
+        p_filesz: size,
+        p_memsz: size,
+        p_align: 1,
+    }
 }
 
 #[test]
@@ -29,7 +38,8 @@ fn test_from_elf_valid() {
     let mut elf_data = vec![0u8; 100];
     let path = b"/lib64/ld-linux-x86-64.so.2\0";
     elf_data[10..10 + path.len()].copy_from_slice(path);
-    let info = InterpreterInfo::from_elf(&elf_data, &program_header(10, path.len() as u64)).unwrap();
+    let info =
+        InterpreterInfo::from_elf(&elf_data, &program_header(10, path.len() as u64)).unwrap();
     assert_eq!(info.path, "/lib64/ld-linux-x86-64.so.2");
 }
 

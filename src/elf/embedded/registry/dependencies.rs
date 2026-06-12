@@ -22,14 +22,22 @@ use super::{library::EmbeddedLibrary, registry::EmbeddedLibraryRegistry};
 use crate::elf::errors::{ElfError, ElfResult};
 
 impl EmbeddedLibraryRegistry {
-    pub fn resolve_dependencies<'a>(&'a self, library: &'a EmbeddedLibrary) -> ElfResult<Vec<&'a EmbeddedLibrary>> {
+    pub fn resolve_dependencies<'a>(
+        &'a self,
+        library: &'a EmbeddedLibrary,
+    ) -> ElfResult<Vec<&'a EmbeddedLibrary>> {
         let mut resolved = Vec::new();
         let mut visited = Vec::new();
         self.resolve_deps_recursive(library, &mut resolved, &mut visited)?;
         Ok(resolved)
     }
 
-    fn resolve_deps_recursive<'a>(&'a self, library: &'a EmbeddedLibrary, resolved: &mut Vec<&'a EmbeddedLibrary>, visited: &mut Vec<String>) -> ElfResult<()> {
+    fn resolve_deps_recursive<'a>(
+        &'a self,
+        library: &'a EmbeddedLibrary,
+        resolved: &mut Vec<&'a EmbeddedLibrary>,
+        visited: &mut Vec<String>,
+    ) -> ElfResult<()> {
         if visited.contains(&library.name) {
             return Err(ElfError::CircularDependency);
         }

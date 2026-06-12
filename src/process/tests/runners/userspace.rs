@@ -46,7 +46,10 @@ pub fn register(s: &mut TestSuite) {
     s.add(TestCase::new("block_reason_signal", t::test_block_reason_signal));
     s.add(TestCase::new("block_reason_ipc", t::test_block_reason_ipc));
     s.add(TestCase::new("block_reason_futex_equality", t::test_block_reason_futex_equality));
-    s.add(TestCase::new("block_reason_different_variants", t::test_block_reason_different_variants));
+    s.add(TestCase::new(
+        "block_reason_different_variants",
+        t::test_block_reason_different_variants,
+    ));
     s.add(TestCase::new("block_reason_clone", t::test_block_reason_clone));
     s.add(TestCase::new("fpu_state_default", t::test_fpu_state_default));
     s.add(TestCase::new("fpu_state_size", t::test_fpu_state_size));
@@ -68,7 +71,10 @@ pub fn register(s: &mut TestSuite) {
     s.add(TestCase::new("stack_sizes_power_of_two", t::test_stack_sizes_power_of_two));
     s.add(TestCase::new("kernel_stack_smaller_than_user", t::test_kernel_stack_smaller_than_user));
     s.add(TestCase::new("thread_state_all_variants", t::test_thread_state_all_variants));
-    s.add(TestCase::new("block_reason_all_simple_variants", t::test_block_reason_all_simple_variants));
+    s.add(TestCase::new(
+        "block_reason_all_simple_variants",
+        t::test_block_reason_all_simple_variants,
+    ));
     s.add(TestCase::new("interrupt_frame_fields", t::test_interrupt_frame_fields));
     s.add(TestCase::new("user_context_all_registers", t::test_user_context_all_registers));
     s.add(TestCase::new("segment_selector_gdt_index", t::test_segment_selector_gdt_index));

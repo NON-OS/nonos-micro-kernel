@@ -17,8 +17,16 @@
 use super::state::SymbolResolver;
 
 impl SymbolResolver {
-    pub fn symbol_count(&self) -> usize { self.global_symbols.len() + self.weak_symbols.len() }
-    pub fn global_count(&self) -> usize { self.global_symbols.len() }
-    pub fn weak_count(&self) -> usize { self.weak_symbols.len() }
-    pub fn library_count(&self) -> usize { self.library_order.len() }
+    pub fn symbol_count(&self) -> usize {
+        self.global_symbols.len() + self.weak_symbols.len()
+    }
+    pub fn global_count(&self) -> usize {
+        self.global_symbols.len()
+    }
+    pub fn weak_count(&self) -> usize {
+        self.weak_symbols.len()
+    }
+    pub fn library_count(&self) -> usize {
+        self.library_order.len()
+    }
 }

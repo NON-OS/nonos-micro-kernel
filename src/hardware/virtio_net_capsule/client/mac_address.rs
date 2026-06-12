@@ -21,7 +21,7 @@
 
 use super::super::capability::gate_call;
 use super::super::error::DriverNetError;
-use super::super::protocol::{encode_request, OP_MAC_ADDRESS, MAC_LEN};
+use super::super::protocol::{encode_request, MAC_LEN, OP_MAC_ADDRESS};
 use super::seq::next_request_id;
 use super::status_map::lift;
 use super::transport::round_trip;

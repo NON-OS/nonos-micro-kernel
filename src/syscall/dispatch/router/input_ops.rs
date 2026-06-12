@@ -70,9 +70,7 @@ fn do_drain(out_ptr: u64, max_events: u64) -> SyscallResult {
         return SyscallResult::success_audited(0);
     }
     let bytes = n * core::mem::size_of::<InputEvent>();
-    let src = unsafe {
-        core::slice::from_raw_parts(scratch.as_ptr() as *const u8, bytes)
-    };
+    let src = unsafe { core::slice::from_raw_parts(scratch.as_ptr() as *const u8, bytes) };
     if copy_to_user(out_ptr, src).is_err() {
         return errno(EFAULT);
     }

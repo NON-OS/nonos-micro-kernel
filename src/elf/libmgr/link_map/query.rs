@@ -19,8 +19,19 @@ use crate::memory::addr::VirtAddr;
 use super::{entry::LinkMapEntry, state::LinkMap};
 
 impl LinkMap {
-    pub fn find(&self, base_addr: VirtAddr) -> Option<&LinkMapEntry> { self.entries.iter().find(|entry| entry.l_addr == base_addr.as_u64()).map(|entry| entry.as_ref()) }
-    pub fn head(&self) -> *mut LinkMapEntry { self.head }
-    pub fn count(&self) -> usize { self.entries.len() }
-    pub fn iter(&self) -> impl Iterator<Item = &LinkMapEntry> { self.entries.iter().map(|entry| entry.as_ref()) }
+    pub fn find(&self, base_addr: VirtAddr) -> Option<&LinkMapEntry> {
+        self.entries
+            .iter()
+            .find(|entry| entry.l_addr == base_addr.as_u64())
+            .map(|entry| entry.as_ref())
+    }
+    pub fn head(&self) -> *mut LinkMapEntry {
+        self.head
+    }
+    pub fn count(&self) -> usize {
+        self.entries.len()
+    }
+    pub fn iter(&self) -> impl Iterator<Item = &LinkMapEntry> {
+        self.entries.iter().map(|entry| entry.as_ref())
+    }
 }

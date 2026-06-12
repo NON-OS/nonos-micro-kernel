@@ -17,7 +17,11 @@
 use crate::elf::errors::ElfResult;
 use crate::memory::addr::VirtAddr;
 
-use super::{info::FiniArrayInfo, invoke::{invoke_addr, invoke_array}, validate::{validate_addr, validate_array}};
+use super::{
+    info::FiniArrayInfo,
+    invoke::{invoke_addr, invoke_array},
+    validate::{validate_addr, validate_array},
+};
 
 pub fn run_fini_array(addr: VirtAddr, size: usize) -> ElfResult<usize> {
     let info = FiniArrayInfo::new(addr, size);

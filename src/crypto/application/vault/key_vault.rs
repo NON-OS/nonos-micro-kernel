@@ -51,10 +51,7 @@ pub fn get_public_key(key_id: u32) -> Option<[u8; 32]> {
 }
 
 fn store_keypair(key_id: u32, private_key: &[u8], public_key: &[u8]) -> CryptoResult<()> {
-    let entry = KeyEntry {
-        private_key: private_key.to_vec(),
-        public_key: public_key.to_vec(),
-    };
+    let entry = KeyEntry { private_key: private_key.to_vec(), public_key: public_key.to_vec() };
     KEY_VAULT.write().insert(key_id, entry);
     Ok(())
 }

@@ -21,11 +21,20 @@ use super::super::{core::LibraryManager, types::LibraryState};
 impl LibraryManager {
     pub fn relocate(&mut self, id: usize) -> ElfResult<()> {
         let library = self.libraries.get_mut(&id).ok_or(ElfError::LibraryNotFound)?;
-        if library.state != LibraryState::Loading { return Ok(()); }
+        if library.state != LibraryState::Loading {
+            return Ok(());
+        }
         library.state = LibraryState::Relocating;
         if let Some(dynlink) = &library.image.dynlink_info {
             if let (Some(symtab), Some(strtab)) = (dynlink.symtab, dynlink.strtab) {
-                self.symbol_resolver.parse_symbols(symtab, strtab, dynlink.strtab_size, dynlink.sym_count, library.image.base_addr, id)?;
+                self.symbol_resolver.parse_symbols(
+                    symtab,
+                    strtab,
+                    dynlink.strtab_size,
+                    dynlink.sym_count,
+                    library.image.base_addr,
+                    id,
+                )?;
             }
         }
         library.state = LibraryState::Ready;

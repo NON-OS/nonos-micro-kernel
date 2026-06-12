@@ -17,7 +17,7 @@
 use super::super::validate_elf_detailed;
 use super::support::make_valid_elf_header;
 use crate::elf::errors::ElfError;
-use crate::elf::types::{ProgramHeader, SectionHeader, ElfHeader};
+use crate::elf::types::{ElfHeader, ProgramHeader, SectionHeader};
 
 #[test]
 fn test_validate_elf_rejects_invalid_header_size() {
