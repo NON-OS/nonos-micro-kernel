@@ -16,7 +16,7 @@
 
 use alloc::vec;
 
-use nonos_libc::{heap_init, HeapError};
+use nonos_libc::{heap_init, mk_time_millis, HeapError};
 
 use crate::app::App;
 use crate::discover::require_peers;
@@ -26,6 +26,7 @@ use super::dispatch::DELIVERY_LEN;
 use super::fail::fail;
 use super::fail_boot::fail_boot;
 use super::idle;
+use super::repaint::repaint;
 use super::service_frame::service_frame;
 
 pub fn run<A: App, F: Fn() -> A>(build: F) -> ! {
@@ -47,6 +48,23 @@ pub fn run<A: App, F: Fn() -> A>(build: F) -> ! {
             Ok(b) => b,
             Err(e) => fail_boot(3, manifest.title, e),
         };
-        while !service_frame(&mut booted, &mut rx, &peers, &mut request_id) {}
+        let mut last_tick_ms: i64 = 0;
+        let mut frames: u32 = 0;
+        loop {
+            if service_frame(&mut booted, &mut rx, &peers, &mut request_id) {
+                break;
+            }
+            frames = frames.wrapping_add(1);
+            if frames & 0x1F != 0 {
+                continue;
+            }
+            let now = mk_time_millis();
+            if now.wrapping_sub(last_tick_ms) >= 1000 {
+                last_tick_ms = now;
+                if booted.app.on_tick() && !booted.minimized {
+                    repaint(&mut booted, &peers, &mut request_id);
+                }
+            }
+        }
     }
 }
