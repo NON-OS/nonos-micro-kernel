@@ -15,10 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::realtime;
+use super::proc_ticks;
 use super::state::{CURRENT_TIME_SLICE, NEED_RESCHEDULE, SCHEDULER_STATS};
 use core::sync::atomic::Ordering;
 
 pub fn tick() {
+    proc_ticks::charge_tick(crate::process::CURRENT_PID.load(Ordering::Relaxed));
     SCHEDULER_STATS.tick_count.fetch_add(1, Ordering::SeqCst);
     let remaining = CURRENT_TIME_SLICE.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |v| {
         if v > 0 {

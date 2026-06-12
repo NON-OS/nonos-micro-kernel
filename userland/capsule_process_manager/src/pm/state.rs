@@ -16,43 +16,68 @@
 
 use nonos_app_skeleton::discover::lookup_service;
 
+pub const HISTORY: usize = 30;
+
+#[derive(Clone, Copy)]
+pub struct CpuSample {
+    pub percent: [u8; HISTORY],
+    pub head: usize,
+}
+
+impl CpuSample {
+    pub const ZERO: CpuSample = CpuSample { percent: [0; HISTORY], head: 0 };
+}
+
 #[derive(Clone, Copy)]
 pub struct Row {
     pub label: &'static [u8],
     pub service: &'static [u8],
     pub pid: u32,
     pub online: bool,
+    pub cpu: CpuSample,
 }
 
-const EMPTY_ROW: Row = Row { label: b"", service: b"", pid: 0, online: false };
+const EMPTY_ROW: Row =
+    Row { label: b"", service: b"", pid: 0, online: false, cpu: CpuSample::ZERO };
 const KNOWN: [Row; 8] = [
-    Row { label: b"terminal", service: b"app.terminal", pid: 0, online: false },
-    Row { label: b"file_manager", service: b"app.file_manager", pid: 0, online: false },
-    Row { label: b"text_editor", service: b"app.text_editor", pid: 0, online: false },
-    Row { label: b"settings", service: b"app.settings", pid: 0, online: false },
-    Row { label: b"process_manager", service: b"app.process_manager", pid: 0, online: false },
-    Row { label: b"about", service: b"app.about", pid: 0, online: false },
-    Row { label: b"calculator", service: b"app.calculator", pid: 0, online: false },
-    Row { label: b"desktop_shell", service: b"desktop_shell", pid: 0, online: false },
+    Row { label: b"terminal", service: b"app.terminal", ..EMPTY_ROW },
+    Row { label: b"file_manager", service: b"app.file_manager", ..EMPTY_ROW },
+    Row { label: b"text_editor", service: b"app.text_editor", ..EMPTY_ROW },
+    Row { label: b"settings", service: b"app.settings", ..EMPTY_ROW },
+    Row { label: b"process_manager", service: b"app.process_manager", ..EMPTY_ROW },
+    Row { label: b"about", service: b"app.about", ..EMPTY_ROW },
+    Row { label: b"calculator", service: b"app.calculator", ..EMPTY_ROW },
+    Row { label: b"desktop_shell", service: b"desktop_shell", ..EMPTY_ROW },
 ];
 
 pub struct State {
     pub rows: [Row; 8],
     pub refreshes: u32,
     pub status: &'static [u8],
+    pub last_total_ticks: u64,
+    pub last_ticks: [u64; 8],
 }
 
 impl State {
     pub fn new() -> Self {
-        let mut state = State { rows: [EMPTY_ROW; 8], refreshes: 0, status: b"lookup pending" };
+        let mut state = State {
+            rows: [EMPTY_ROW; 8],
+            refreshes: 0,
+            status: b"lookup pending",
+            last_total_ticks: 0,
+            last_ticks: [0; 8],
+        };
         state.refresh();
         state
     }
 
     pub fn refresh(&mut self) {
         self.refreshes = self.refreshes.wrapping_add(1);
-        self.rows = KNOWN;
-        for row in self.rows.iter_mut() {
+        for (row, known) in self.rows.iter_mut().zip(KNOWN.iter()) {
+            row.label = known.label;
+            row.service = known.service;
+            row.pid = 0;
+            row.online = false;
             if let Some(peer) = lookup_service(row.service) {
                 row.pid = peer.pid;
                 row.online = true;

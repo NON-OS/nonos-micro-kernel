@@ -27,3 +27,5 @@ mod subscribe_input_router;
 mod subscribe_wm;
 
 pub use run::run;
+pub use subscribe_input::subscribe_input;
+pub use subscribe_wm::subscribe_wm;

@@ -24,11 +24,12 @@ pub struct CursorState {
     max_x: i32,
     max_y: i32,
     pub configured: bool,
+    pub mult_x2: i32,
 }
 
 impl CursorState {
     pub const fn new() -> Self {
-        Self { x: 512, y: 384, max_x: 1023, max_y: 767, configured: false }
+        Self { x: 512, y: 384, max_x: 1023, max_y: 767, configured: false, mult_x2: 2 }
     }
 
     pub fn configure(&mut self, width: u32, height: u32) {
@@ -41,8 +42,8 @@ impl CursorState {
 
     pub fn apply(&mut self, ev: &InputEvent) -> (u32, u32) {
         if ev.kind == INPUT_KIND_POINTER_REL {
-            self.x = self.x.saturating_add(ev.delta_x);
-            self.y = self.y.saturating_add(ev.delta_y);
+            self.x = self.x.saturating_add(ev.delta_x.saturating_mul(self.mult_x2) / 2);
+            self.y = self.y.saturating_add(ev.delta_y.saturating_mul(self.mult_x2) / 2);
         }
         if ev.kind == INPUT_KIND_POINTER_ABS || ev.kind == INPUT_KIND_TOUCH {
             self.x = (ev.x as i64 * self.max_x as i64 / ABS_RANGE_MAX) as i32;

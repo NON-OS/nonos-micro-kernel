@@ -24,5 +24,6 @@ mod retry_input_subscription;
 mod retry_wm_subscription;
 pub mod runner;
 mod wm_notify;
+mod wm_notify_label;
 
 pub use runner::run;

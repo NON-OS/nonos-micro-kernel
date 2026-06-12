@@ -29,6 +29,14 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
         let _ = respond::status(sender_pid, req, E_INVAL, tx);
         return;
     };
+    if let Some(existing) = ctx.windows.find(sender_pid, window_id) {
+        let existing_rect = existing.rect;
+        if kind == Kind::Normal {
+            let _ = focus_new_window(ctx, sender_pid, window_id);
+        }
+        let _ = respond_window_opened::window_opened(sender_pid, req, 0, existing_rect, tx);
+        return;
+    }
     let rect = place(ctx, kind, requested);
     let z = ctx.z.allocate();
     let window = Window {

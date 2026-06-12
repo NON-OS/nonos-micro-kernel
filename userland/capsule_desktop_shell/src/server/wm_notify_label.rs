@@ -14,19 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod ctrl_copy;
-mod ctrl_open;
-mod ctrl_paste;
-mod ctrl_save;
-mod event;
-mod manifest;
-mod notify;
-mod on_ctrl;
-mod paint;
-mod path_prompt;
-mod resolve_owner_pid;
-mod state;
-mod theme;
+use nonos_libc::mk_service_lookup;
 
-pub use app::Editor;
+use crate::state::LAUNCHER_APPS;
+
+pub(super) fn resolve_label(owner_pid: u32) -> Option<&'static [u8]> {
+    for app in LAUNCHER_APPS.iter() {
+        if service_pid(app.service) == Some(owner_pid) {
+            return Some(app.label);
+        }
+    }
+    None
+}
+
+fn service_pid(service: &[u8]) -> Option<u32> {
+    let mut port = 0u32;
+    let mut pid = 0u32;
+    let rc = mk_service_lookup(
+        service.as_ptr(),
+        service.len(),
+        &mut port as *mut u32,
+        &mut pid as *mut u32,
+    );
+    if rc < 0 || pid == 0 {
+        return None;
+    }
+    Some(pid)
+}

@@ -28,6 +28,7 @@ pub mod ipc;
 pub mod mem;
 mod panic;
 pub mod process;
+pub mod procstat;
 pub mod surface_registry;
 mod syscall;
 pub mod time;
@@ -72,6 +73,7 @@ pub use surface_registry::{
     INPUT_KIND_TOUCH, INPUT_KIND_WHEEL, SURFACE_FORMAT_ARGB8888,
 };
 pub use battery::mk_battery_status;
+pub use procstat::{mk_proc_stat, ProcStatEntry, ProcStatHeader};
 pub use syscall::call_raw as mk_syscall_raw;
 pub use time::{mk_time_millis, mk_time_rtc, RtcTime};
 pub use unistd::{mk_exit, mk_yield};

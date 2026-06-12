@@ -23,7 +23,7 @@ pub fn max_of(field: Field) -> u8 {
     }
     match field {
         Field::Brightness => 100,
-        Field::MouseSensitivity => 10,
+        Field::MouseSensitivity => 4,
         Field::ScreenTimeout => 240,
         Field::AutoLockTimeout => 240,
         _ => 0,

@@ -47,6 +47,7 @@ pub struct Store {
     pub animations_enabled: bool,
     pub cursor_size: u8,
     pub wallpaper: u8,
+    pub clock_format24: bool,
     pub kernel_aslr: bool,
     pub kernel_stack_guard: bool,
     pub kernel_nx_bit: bool,

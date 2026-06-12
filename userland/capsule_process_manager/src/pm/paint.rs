@@ -17,10 +17,14 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::format::u32_decimal;
-use super::state::State;
+use super::manifest::WIDTH;
+use super::state::{CpuSample, State, HISTORY};
 use super::theme::{BACKGROUND, FOREGROUND, MUTED, WARNING};
 
 const TEXT_LEFT: u32 = 16;
+const SPARK_X: u32 = WIDTH - 30 - 56;
+const SPARK_H: u32 = 12;
+const PCT_X: u32 = WIDTH - 48;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
@@ -44,6 +48,20 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
             fb.text(TEXT_LEFT + 140, y, b"offline", MUTED);
             fb.text(TEXT_LEFT + 220, y, b"unavailable", MUTED);
         }
+        paint_spark(fb, y, &row.cpu);
+        let newest = row.cpu.percent[(row.cpu.head + HISTORY - 1) % HISTORY];
+        let n = u32_decimal(newest as u32, &mut digits);
+        fb.text(PCT_X, y, &digits[..n], FOREGROUND);
         y += 18;
+    }
+}
+
+fn paint_spark(fb: &mut PaintBuffer, y: u32, cpu: &CpuSample) {
+    let base = y + SPARK_H;
+    for j in 0..HISTORY {
+        let pct = cpu.percent[(cpu.head + j) % HISTORY] as u32;
+        let h = (pct * SPARK_H / 100).max(1);
+        let color = if pct == 0 { MUTED } else { FOREGROUND };
+        fb.fill_rect(SPARK_X + j as u32, base.saturating_sub(h), 1, h, color);
     }
 }

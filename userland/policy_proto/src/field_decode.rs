@@ -41,6 +41,7 @@ pub fn decode(id: u32) -> Option<Field> {
         0x0115 => Field::AnimationsEnabled,
         0x0116 => Field::CursorSize,
         0x0117 => Field::Wallpaper,
+        0x0118 => Field::ClockFormat24,
         0x0201 => Field::KernelAslr,
         0x0202 => Field::KernelStackGuard,
         0x0203 => Field::KernelNxBit,

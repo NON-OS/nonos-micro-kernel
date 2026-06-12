@@ -22,4 +22,8 @@ pub trait App {
     fn manifest(&self) -> AppManifest;
     fn on_event(&mut self, event: InputEvent) -> EventOutcome;
     fn paint(&mut self, fb: &mut PaintBuffer);
+
+    fn on_tick(&mut self) -> bool {
+        false
+    }
 }

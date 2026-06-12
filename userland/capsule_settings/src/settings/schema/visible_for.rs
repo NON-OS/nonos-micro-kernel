@@ -26,6 +26,7 @@ const DISPLAY_FIELDS: &[Field] = &[
     Field::Wallpaper,
     Field::ScreenTimeout,
     Field::AnimationsEnabled,
+    Field::ClockFormat24,
 ];
 
 const NETWORK_FIELDS: &[Field] = &[

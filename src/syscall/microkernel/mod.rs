@@ -34,6 +34,7 @@ pub mod numbers;
 pub mod pci;
 pub mod pio;
 pub mod process;
+pub mod procstat;
 pub mod time;
 
 pub use capability::{sys_cap_check, sys_cap_grant, sys_cap_revoke};
@@ -51,4 +52,5 @@ pub use pio::{sys_pio_grant, sys_pio_read, sys_pio_release, sys_pio_write};
 pub use process::{sys_exit, sys_spawn, sys_yield};
 pub use attest::sys_attest_status;
 pub use battery::sys_battery_status;
+pub use procstat::sys_proc_stat;
 pub use time::{sys_time_millis, sys_time_rtc};

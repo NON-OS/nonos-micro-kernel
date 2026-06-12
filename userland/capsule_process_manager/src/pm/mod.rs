@@ -19,6 +19,7 @@ mod event;
 mod format;
 mod manifest;
 mod paint;
+mod sample;
 mod state;
 mod theme;
 

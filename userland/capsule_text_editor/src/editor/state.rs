@@ -31,6 +31,7 @@ pub struct State {
     pub path: [u8; 256],
     pub path_len: usize,
     pub prompt: Option<PromptOp>,
+    pub shell_port: u32,
 }
 
 impl State {
@@ -45,6 +46,7 @@ impl State {
             path,
             path_len: PATH.len(),
             prompt: None,
+            shell_port: 0,
         }
     }
 

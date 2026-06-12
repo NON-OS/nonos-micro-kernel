@@ -14,19 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod ctrl_copy;
-mod ctrl_open;
-mod ctrl_paste;
-mod ctrl_save;
-mod event;
-mod manifest;
-mod notify;
-mod on_ctrl;
-mod paint;
-mod path_prompt;
-mod resolve_owner_pid;
-mod state;
-mod theme;
+use core::sync::atomic::{AtomicU64, Ordering};
 
-pub use app::Editor;
+pub const PROC_TICK_SLOTS: usize = 256;
+
+static PROC_TICKS: [AtomicU64; PROC_TICK_SLOTS] = [const { AtomicU64::new(0) }; PROC_TICK_SLOTS];
+
+pub fn charge_tick(pid: u32) {
+    if pid != 0 {
+        PROC_TICKS[(pid as usize) % PROC_TICK_SLOTS].fetch_add(1, Ordering::Relaxed);
+    }
+}
+
+pub fn ticks_for(pid: u32) -> u64 {
+    PROC_TICKS[(pid as usize) % PROC_TICK_SLOTS].load(Ordering::Relaxed)
+}
+
+pub fn clear(pid: u32) {
+    PROC_TICKS[(pid as usize) % PROC_TICK_SLOTS].store(0, Ordering::Relaxed);
+}

@@ -14,19 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod ctrl_copy;
-mod ctrl_open;
-mod ctrl_paste;
-mod ctrl_save;
-mod event;
-mod manifest;
-mod notify;
-mod on_ctrl;
-mod paint;
-mod path_prompt;
-mod resolve_owner_pid;
-mod state;
-mod theme;
+use crate::syscall::{call_raw, N_MK_PROC_STAT};
 
-pub use app::Editor;
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub struct ProcStatEntry {
+    pub pid: u32,
+    pub state: u8,
+    pub _pad: [u8; 3],
+    pub run_ticks: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub struct ProcStatHeader {
+    pub total_ticks: u64,
+    pub count: u32,
+    pub _pad: u32,
+}
+
+pub extern "C" fn mk_proc_stat(buf: *mut u8, max_entries: u32) -> i64 {
+    call_raw(N_MK_PROC_STAT, [buf as u64, max_entries as u64, 0, 0, 0, 0])
+}

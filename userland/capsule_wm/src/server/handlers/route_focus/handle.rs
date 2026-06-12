@@ -22,7 +22,7 @@ use crate::state::Context;
 use super::is_input_router::is_input_router;
 
 pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
-    if body.len() != ROUTE_FOCUS_REQ_LEN || !is_input_router(sender_pid) {
+    if body.len() != ROUTE_FOCUS_REQ_LEN || !is_input_router(ctx, sender_pid) {
         if respond::status(sender_pid, req, E_PERM, tx) < 0 {
             return;
         }

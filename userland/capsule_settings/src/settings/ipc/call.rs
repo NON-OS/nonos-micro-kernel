@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_libc::mk_ipc_call_timeout;
-use nonos_policy_proto::{Header, E_OK, HDR_LEN, IPC_PAYLOAD_MAX};
+use nonos_policy_proto::{Header, E_OK, HDR_LEN, IPC_PAYLOAD_MAX, OP_SET};
 
 use super::error::IpcError;
 use super::timeout::REPLY_TIMEOUT_MS;
@@ -69,6 +69,9 @@ pub fn call<'a>(
     }
     if header.status != E_OK {
         return Err(IpcError::Status(header.status));
+    }
+    if op == OP_SET {
+        super::notify_shell::notify_applied();
     }
     Ok(Reply { header, payload: &rx[HDR_LEN..body_end] })
 }

@@ -18,7 +18,7 @@ use super::Context;
 
 impl Context {
     pub fn forget_pid(&mut self, pid: u32) {
-        if pid == 0 {
+        if pid == 0 || nonos_libc::mk_pid_alive(pid) {
             return;
         }
         self.subscriptions.remove_pid(pid);

@@ -19,15 +19,17 @@ use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer
 use super::event::on_event;
 use super::manifest::manifest;
 use super::paint::paint;
+use super::sample::sample;
 use super::state::State;
 
 pub struct ProcessManager {
     state: State,
+    ticks: u32,
 }
 
 impl ProcessManager {
     pub fn new() -> Self {
-        ProcessManager { state: State::new() }
+        ProcessManager { state: State::new(), ticks: 0 }
     }
 }
 
@@ -42,5 +44,14 @@ impl App for ProcessManager {
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
         paint(&self.state, fb);
+    }
+
+    fn on_tick(&mut self) -> bool {
+        if self.ticks % 5 == 0 {
+            self.state.refresh();
+        }
+        self.ticks = self.ticks.wrapping_add(1);
+        sample(&mut self.state);
+        true
     }
 }

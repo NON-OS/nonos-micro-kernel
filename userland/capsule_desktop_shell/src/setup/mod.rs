@@ -17,4 +17,4 @@
 mod discover;
 mod prime;
 
-pub use prime::run;
+pub use prime::{run, subscribe_input, subscribe_wm};

@@ -16,7 +16,7 @@
 
 use super::layout::menubar_rect;
 use super::text::draw_status;
-use crate::state::indicators::{battery, clock, net};
+use crate::state::indicators::{battery, clock};
 use crate::state::Context;
 
 const STATUS_ARGB: u32 = 0xFFCF_E6E9;
@@ -25,16 +25,16 @@ const RIGHT_PAD: u32 = 12;
 const TEXT_Y_PAD: u32 = 8;
 const GAP_GLYPHS: u32 = 2;
 
-pub fn paint_status(ctx: &Context) {
+pub fn paint_status(ctx: &Context, net_online: bool) {
     let bar = menubar_rect(ctx.width);
     let mut bbuf = [0u8; 4];
     let blen = battery::label(&mut bbuf);
     let battery: &[u8] = &bbuf[..blen];
-    let network: &[u8] = if net::online() { b"NET" } else { b"OFF" };
+    let network: &[u8] = if net_online { b"NET" } else { b"OFF" };
     let mut dbuf = [b'-'; 10];
     let date: &[u8] = if clock::ymd(&mut dbuf) { &dbuf } else { b"----------" };
     let mut tbuf = [b' '; 5];
-    let time: &[u8] = if clock::hhmm(&mut tbuf) { &tbuf } else { b"--:--" };
+    let time: &[u8] = if clock::hhmm(&mut tbuf, ctx.clock_24h) { &tbuf } else { b"--:--" };
     let segments: [&[u8]; 4] = [battery, network, date, time];
 
     let mut glyphs = 0u32;

@@ -16,11 +16,24 @@
 
 use nonos_libc::mk_service_lookup;
 
+use crate::state::Context;
+
 const INPUT_ROUTER: &[u8] = b"input_router";
 
-pub fn is_input_router(sender_pid: u32) -> bool {
+fn lookup_router_pid() -> u32 {
     let mut port = 0u32;
     let mut pid = 0u32;
     let rc = mk_service_lookup(INPUT_ROUTER.as_ptr(), INPUT_ROUTER.len(), &mut port, &mut pid);
-    rc >= 0 && pid == sender_pid && port != 0
+    if rc >= 0 && port != 0 {
+        pid
+    } else {
+        0
+    }
+}
+
+pub fn is_input_router(ctx: &mut Context, sender_pid: u32) -> bool {
+    if ctx.input_router_pid != sender_pid {
+        ctx.input_router_pid = lookup_router_pid();
+    }
+    ctx.input_router_pid != 0 && ctx.input_router_pid == sender_pid
 }

@@ -20,6 +20,7 @@ pub mod context;
 pub mod indicators;
 pub mod notify;
 pub mod spotlight;
+pub mod toasts;
 pub mod tray;
 
 pub use apps::LAUNCHER_APPS;
@@ -27,4 +28,5 @@ pub use chrome::TASKBAR_WINDOW_ID;
 pub use context::Context;
 pub use notify::NotifyLevel;
 pub use spotlight::SpotlightState;
+pub use toasts::ToastQueue;
 pub use tray::{TrayEntry, TrayTable};

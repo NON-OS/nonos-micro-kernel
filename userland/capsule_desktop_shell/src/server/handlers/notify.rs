@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_libc::mk_time_millis;
+
 use crate::compositor_client::push_damage_commit;
 use crate::protocol::{Request, E_INVAL, NOTIFY_BODY_MAX, NOTIFY_REQ_LEN};
-use crate::render::{menubar_rect, paint_chrome};
+use crate::render::{menubar_rect, paint_chrome, sync_toast_layer};
 use crate::server::respond;
 use crate::state::{Context, NotifyLevel};
 
@@ -42,9 +44,12 @@ pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, body: &[u8], tx
         return;
     }
     ctx.last_notify_level = Some(level);
+    let text_end = (8 + body_len as usize).min(body.len());
+    ctx.toasts.push(&body[8..text_end], level, mk_time_millis());
     paint_chrome(ctx);
     let r = menubar_rect(ctx.width);
     let rid = ctx.issue_request_id();
     let _ = push_damage_commit(ctx.compositor_port, rid, r.x, r.y, r.width, r.height);
+    sync_toast_layer(ctx);
     let _ = respond::status(sender_pid, req, 0, tx);
 }
