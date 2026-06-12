@@ -21,7 +21,10 @@ use nonos_libc::{mk_ipc_recv, mk_ipc_send};
 use super::dispatch::dispatch;
 use crate::protocol::{decode_request, KERNEL_REPLY_ENDPOINT};
 
-const MAX_MSG: usize = 4096;
+// Large enough to receive an OP_LOAD_FROM_STORE request that inlines a
+// capsule's four artifacts (each bounded by the VFS read limit) plus the small
+// fixed header. Well under the 1 MiB kernel IPC message ceiling.
+const MAX_MSG: usize = 512 * 1024;
 
 pub fn run() -> ! {
     let mut buf = vec![0u8; MAX_MSG];

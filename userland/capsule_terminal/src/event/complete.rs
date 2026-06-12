@@ -70,6 +70,7 @@ const COMMANDS: &[&[u8]] = &[
     b"sort",
     b"uniq",
     b"nl",
+    b"install",
 ];
 
 pub(super) fn command_candidates(prefix: &[u8]) -> Vec<&'static [u8]> {
