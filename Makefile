@@ -190,7 +190,9 @@ QEMU_SERIAL_LOG ?= $(TARGET_DIR)/qemu-serial.log
 QEMU_BLK_IMG := $(TARGET_DIR)/qemu-virtio-blk.img
 QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
-QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=1920,yres=1080
+QEMU_XRES ?= 1680
+QEMU_YRES ?= 1050
+QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=$(QEMU_XRES),yres=$(QEMU_YRES)
 # Keyboard/mouse via the q35 i8042 (PS/2). USB HID interrupt-IN transfers
 # are not serviced under macOS hvf, so usb-kbd/usb-mouse never deliver input
 # there; the xHCI controller stays for the USB stack/storage paths.
@@ -673,7 +675,7 @@ nonos-mk-host-trust-elfs: $(USERLAND_LIBC) $(MARKETPLACE_ABI_LIB) \
 		$(net-l2_BIN) $(net-ip_BIN) $(net-udp_BIN) $(net-dhcp_BIN) \
 		$(input-router_BIN) $(compositor_BIN) $(wm_BIN) $(desktop-shell_BIN) \
 		$(image-codec_BIN) $(clipboard_BIN) $(login_BIN) $(wallpaper_BIN) \
-		$(toolkit_BIN) $(about_BIN) $(calculator_BIN) $(terminal_BIN) \
+		$(toolkit_BIN) $(about_BIN) $(calculator_BIN) $(snake_BIN) $(terminal_BIN) \
 		$(file-manager_BIN) $(text-editor_BIN) $(settings_BIN) $(process-manager_BIN)
 	@echo "Capsule ELFs built for the host-trust artifact proof."
 
@@ -739,6 +741,7 @@ include userland/capsule_about/Capsule.mk
 include userland/capsule_hello/Capsule.mk
 include userland/capsule_boot_splash/Capsule.mk
 include userland/capsule_calculator/Capsule.mk
+include userland/capsule_snake/Capsule.mk
 include userland/capsule_terminal/Capsule.mk
 include userland/capsule_file_manager/Capsule.mk
 include userland/capsule_text_editor/Capsule.mk
@@ -812,7 +815,7 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(input-router_VERIFY) $(compositor_VERIFY) $(wm_VERIFY) \
 	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
 	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
-	$(boot-splash_VERIFY) $(about_VERIFY) $(calculator_VERIFY) $(terminal_VERIFY) \
+	$(boot-splash_VERIFY) $(about_VERIFY) $(calculator_VERIFY) $(snake_VERIFY) $(terminal_VERIFY) \
 	$(file-manager_VERIFY) $(text-editor_VERIFY) $(settings_VERIFY) \
 	$(process-manager_VERIFY) $(attest_VERIFY) $(power_VERIFY)
 
@@ -1488,7 +1491,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(terminal_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(snake_ARTIFACTS) $(terminal_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
 		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
@@ -1524,7 +1527,7 @@ nonos-mk-setup-wizard-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(terminal_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(snake_ARTIFACTS) $(terminal_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
 		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
@@ -1551,7 +1554,7 @@ nonos-mk-setup-wizard-inject-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(terminal_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(snake_ARTIFACTS) $(terminal_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
 		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
@@ -1566,6 +1569,7 @@ nonos-mk-setup-wizard-inject-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 nonos-mk-toolkit-prod: nonos-mk-desktop-gui-prod
 nonos-mk-about-prod: nonos-mk-desktop-gui-prod
 nonos-mk-calculator-prod: nonos-mk-desktop-gui-prod
+nonos-mk-snake-prod: nonos-mk-desktop-gui-prod
 nonos-mk-terminal-prod: nonos-mk-desktop-gui-prod
 nonos-mk-file-manager-prod: nonos-mk-desktop-gui-prod
 
