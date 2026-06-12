@@ -25,6 +25,7 @@ mod file_manager;
 mod paint;
 mod process_manager;
 mod settings;
+mod snake;
 mod terminal;
 mod text_editor;
 
@@ -48,5 +49,6 @@ pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u3
         LauncherIcon::ProcessManager => process_manager::process_manager(ctx, x, y, size),
         LauncherIcon::About => about::about(ctx, x, y, size),
         LauncherIcon::Calculator => calculator::calculator(ctx, x, y, size),
+        LauncherIcon::Snake => snake::snake(ctx, x, y, size),
     }
 }

@@ -23,6 +23,7 @@ pub enum LauncherIcon {
     ProcessManager,
     About,
     Calculator,
+    Snake,
 }
 
 pub struct LauncherApp {
@@ -31,7 +32,7 @@ pub struct LauncherApp {
     pub service: &'static [u8],
 }
 
-pub const LAUNCHER_APPS: [LauncherApp; 7] = [
+pub const LAUNCHER_APPS: [LauncherApp; 8] = [
     LauncherApp {
         icon: LauncherIcon::Terminal,
         label: b"Terminal",
@@ -63,4 +64,5 @@ pub const LAUNCHER_APPS: [LauncherApp; 7] = [
         label: b"Calculator",
         service: b"app.calculator",
     },
+    LauncherApp { icon: LauncherIcon::Snake, label: b"Snake", service: b"app.snake" },
 ];
