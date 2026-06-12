@@ -14,15 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod from_vfs;
-mod runner;
-mod spec;
+use crate::kernel_core::process_spawn::capsule_spawn::LoadError;
+use crate::syscall::microkernel::errnos::{ERRNO_ACCES, ERRNO_INVAL};
 
-#[cfg(not(feature = "nonos-production"))]
-pub use runner::spawn;
-pub use runner::spawn_verified;
-#[cfg(not(feature = "nonos-production"))]
-pub use spec::CapsuleSpec;
-pub use spec::{CapsuleSpecVerified, SpawnError};
-// Runtime capsule loading from the VFS store, driven by the install syscall.
-pub use from_vfs::{load_capsule_from_vfs, CapsuleArtifacts, LoadError};
+// Map a loader failure to the negative errno the syscall returns. A malformed
+// manifest is an invalid argument; a rejected signature, manifest, or
+// attestation, and a trust-anchor decode failure, surface as access denied.
+pub(super) fn load_errno(e: LoadError) -> i64 {
+    match e {
+        LoadError::Manifest => ERRNO_INVAL,
+        LoadError::TrustAnchor | LoadError::Spawn(_) => ERRNO_ACCES,
+    }
+}

@@ -14,15 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod from_vfs;
-mod runner;
-mod spec;
+mod artifacts;
+mod error;
+mod leak;
+mod load;
 
-#[cfg(not(feature = "nonos-production"))]
-pub use runner::spawn;
-pub use runner::spawn_verified;
-#[cfg(not(feature = "nonos-production"))]
-pub use spec::CapsuleSpec;
-pub use spec::{CapsuleSpecVerified, SpawnError};
-// Runtime capsule loading from the VFS store, driven by the install syscall.
-pub use from_vfs::{load_capsule_from_vfs, CapsuleArtifacts, LoadError};
+pub use artifacts::CapsuleArtifacts;
+pub use error::LoadError;
+pub use load::load_capsule_from_vfs;

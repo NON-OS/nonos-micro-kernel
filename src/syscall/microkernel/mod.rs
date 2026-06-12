@@ -17,6 +17,7 @@
 pub mod attest;
 pub mod battery;
 pub mod capability;
+pub mod capsule_load;
 pub mod debug;
 #[cfg(feature = "nonos-user-entry-proof")]
 mod debug_diag;
@@ -37,6 +38,8 @@ pub mod process;
 pub mod procstat;
 pub mod time;
 
+pub use attest::sys_attest_status;
+pub use battery::sys_battery_status;
 pub use capability::{sys_cap_check, sys_cap_grant, sys_cap_revoke};
 pub use debug::sys_mk_debug;
 pub use device::{sys_device_claim, sys_device_list, sys_device_release};
@@ -50,7 +53,5 @@ pub use numbers::*;
 pub use pci::sys_pci_config_write;
 pub use pio::{sys_pio_grant, sys_pio_read, sys_pio_release, sys_pio_write};
 pub use process::{sys_exit, sys_spawn, sys_yield};
-pub use attest::sys_attest_status;
-pub use battery::sys_battery_status;
 pub use procstat::sys_proc_stat;
 pub use time::{sys_time_millis, sys_time_rtc};

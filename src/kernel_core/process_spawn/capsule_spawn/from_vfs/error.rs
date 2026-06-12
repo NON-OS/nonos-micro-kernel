@@ -14,15 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod from_vfs;
-mod runner;
-mod spec;
+use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 
-#[cfg(not(feature = "nonos-production"))]
-pub use runner::spawn;
-pub use runner::spawn_verified;
-#[cfg(not(feature = "nonos-production"))]
-pub use spec::CapsuleSpec;
-pub use spec::{CapsuleSpecVerified, SpawnError};
-// Runtime capsule loading from the VFS store, driven by the install syscall.
-pub use from_vfs::{load_capsule_from_vfs, CapsuleArtifacts, LoadError};
+// Why a runtime capsule load failed inside the loader. Spawn carries the verdict
+// from the existing verified spawn path, so a store-sourced capsule is rejected
+// for exactly the same reasons a baked one is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LoadError {
+    Manifest,
+    TrustAnchor,
+    Spawn(SpawnError),
+}

@@ -14,15 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod from_vfs;
-mod runner;
-mod spec;
+use alloc::vec::Vec;
 
-#[cfg(not(feature = "nonos-production"))]
-pub use runner::spawn;
-pub use runner::spawn_verified;
-#[cfg(not(feature = "nonos-production"))]
-pub use spec::CapsuleSpec;
-pub use spec::{CapsuleSpecVerified, SpawnError};
-// Runtime capsule loading from the VFS store, driven by the install syscall.
-pub use from_vfs::{load_capsule_from_vfs, CapsuleArtifacts, LoadError};
+// The four bytes blobs that make up a capsule, copied out of user memory by the
+// load syscall. They are owned here and promoted to a static lifetime before
+// the verified spawn, exactly as the embedded artifacts are.
+pub struct CapsuleArtifacts {
+    pub elf: Vec<u8>,
+    pub cert: Vec<u8>,
+    pub manifest: Vec<u8>,
+    pub trailer: Vec<u8>,
+}

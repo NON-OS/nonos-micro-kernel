@@ -14,15 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod from_vfs;
-mod runner;
-mod spec;
+use alloc::vec::Vec;
 
-#[cfg(not(feature = "nonos-production"))]
-pub use runner::spawn;
-pub use runner::spawn_verified;
-#[cfg(not(feature = "nonos-production"))]
-pub use spec::CapsuleSpec;
-pub use spec::{CapsuleSpecVerified, SpawnError};
-// Runtime capsule loading from the VFS store, driven by the install syscall.
-pub use from_vfs::{load_capsule_from_vfs, CapsuleArtifacts, LoadError};
+use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL};
+
+const MAX_ARTIFACT: usize = 16 * 1024 * 1024;
+
+// Copy one artifact blob out of user memory after bounds-checking the length and
+// validating the user range. Returns a negative errno on a bad length or fault.
+pub(super) fn read_blob(ptr: u64, len: u32) -> Result<Vec<u8>, i64> {
+    let n = len as usize;
+    if n == 0 || n > MAX_ARTIFACT {
+        return Err(ERRNO_INVAL);
+    }
+    if crate::usercopy::validate_user_read(ptr, n).is_err() {
+        return Err(ERRNO_FAULT);
+    }
+    crate::usercopy::read_user_bytes(ptr, n).map_err(|_| ERRNO_FAULT)
+}
