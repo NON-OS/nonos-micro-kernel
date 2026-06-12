@@ -17,8 +17,10 @@ use crate::constants::VG_MAX_SCANOUTS;
 use crate::device::cmd;
 use crate::device::virtqueue::ControlQueue;
 use crate::state::{FenceCounter, Scanout, ScanoutTable};
-const DEFAULT_SCANOUT_WIDTH: u32 = 1024;
-const DEFAULT_SCANOUT_HEIGHT: u32 = 768;
+const DEFAULT_SCANOUT_WIDTH: u32 = 1920;
+const DEFAULT_SCANOUT_HEIGHT: u32 = 1080;
+const MIN_SCANOUT_WIDTH: u32 = 1280;
+const MIN_SCANOUT_HEIGHT: u32 = 720;
 pub fn seed(
     q: &ControlQueue,
     table: &ScanoutTable,
@@ -31,13 +33,18 @@ pub fn seed(
         if s.enabled == 0 || s.width == 0 || s.height == 0 {
             continue;
         }
+        let (width, height) = if s.width < MIN_SCANOUT_WIDTH || s.height < MIN_SCANOUT_HEIGHT {
+            (DEFAULT_SCANOUT_WIDTH, DEFAULT_SCANOUT_HEIGHT)
+        } else {
+            (s.width, s.height)
+        };
         if !table.record(
             i as u32,
             Scanout {
                 x: s.x,
                 y: s.y,
-                width: s.width,
-                height: s.height,
+                width,
+                height,
                 current_resource_id: 0,
                 enabled: true,
             },
