@@ -46,6 +46,7 @@ impl Dir {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Phase {
+    Ready,
     Running,
     Paused,
     GameOver,
@@ -70,7 +71,7 @@ impl Game {
             pending: Dir::Right,
             food: (0, 0),
             score: 0,
-            phase: Phase::Running,
+            phase: Phase::Ready,
             interval_ms: START_INTERVAL_MS,
             rng: mk_time_millis() as u64 | 1,
         };
@@ -87,7 +88,7 @@ impl Game {
         self.dir = Dir::Right;
         self.pending = Dir::Right;
         self.score = 0;
-        self.phase = Phase::Running;
+        self.phase = Phase::Ready;
         self.interval_ms = START_INTERVAL_MS;
         self.food = rng::place_food(&mut self.rng, &self.body);
     }

@@ -29,6 +29,7 @@ pub fn paint(game: &Game, fb: &mut PaintBuffer) {
     header::paint(game, fb);
     board::paint(game, fb);
     match game.phase {
+        Phase::Ready => overlay::ready(fb),
         Phase::Paused => overlay::paused(fb),
         Phase::GameOver => overlay::game_over(fb),
         Phase::Running => {}

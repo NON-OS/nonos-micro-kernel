@@ -45,10 +45,22 @@ fn direction(code: u32) -> Option<Dir> {
 }
 
 fn steer(game: &mut Game, dir: Dir) -> EventOutcome {
-    if game.phase == Phase::Running && dir != game.dir.opposite() {
-        game.pending = dir;
+    if dir == game.dir.opposite() {
+        return EventOutcome::Idle;
     }
-    EventOutcome::Idle
+    match game.phase {
+        Phase::Ready => {
+            game.dir = dir;
+            game.pending = dir;
+            game.phase = Phase::Running;
+            EventOutcome::Repaint
+        }
+        Phase::Running => {
+            game.pending = dir;
+            EventOutcome::Idle
+        }
+        Phase::Paused | Phase::GameOver => EventOutcome::Idle,
+    }
 }
 
 fn restart(game: &mut Game) -> EventOutcome {
@@ -63,6 +75,7 @@ fn toggle_pause(game: &mut Game) -> EventOutcome {
     game.phase = match game.phase {
         Phase::Running => Phase::Paused,
         Phase::Paused => Phase::Running,
+        Phase::Ready => Phase::Ready,
         Phase::GameOver => Phase::GameOver,
     };
     EventOutcome::Repaint

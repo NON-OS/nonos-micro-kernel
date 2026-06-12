@@ -22,6 +22,11 @@ const SCRIM: u32 = 0xFF20_262E;
 const TEXT: u32 = 0xFFEC_EFF4;
 const SUB: u32 = 0xFF9A_A4B2;
 
+pub fn ready(fb: &mut PaintBuffer) {
+    banner(fb);
+    centered(fb, b"PRESS A DIRECTION KEY", BOARD_Y + BOARD_H / 2 - 8, SUB, 2);
+}
+
 pub fn paused(fb: &mut PaintBuffer) {
     banner(fb);
     centered(fb, b"PAUSED", BOARD_Y + BOARD_H / 2 - 12, TEXT, 3);
