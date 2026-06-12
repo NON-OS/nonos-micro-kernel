@@ -23,15 +23,19 @@ use crate::term::state::State;
 const CTRL_A: u32 = 0x41;
 const CTRL_C: u32 = 0x43;
 const CTRL_E: u32 = 0x45;
+const CTRL_K: u32 = 0x4B;
 const CTRL_L: u32 = 0x4C;
 const CTRL_U: u32 = 0x55;
 const CTRL_V: u32 = 0x56;
+const CTRL_W: u32 = 0x57;
 const CTRL_A_LO: u32 = 0x61;
 const CTRL_C_LO: u32 = 0x63;
 const CTRL_E_LO: u32 = 0x65;
+const CTRL_K_LO: u32 = 0x6B;
 const CTRL_L_LO: u32 = 0x6C;
 const CTRL_U_LO: u32 = 0x75;
 const CTRL_V_LO: u32 = 0x76;
+const CTRL_W_LO: u32 = 0x77;
 
 pub fn on_ctrl(state: &mut State, code: u32, flags: u16) -> Option<EventOutcome> {
     let shift = flags & MOD_SHIFT != 0;
@@ -52,6 +56,14 @@ pub fn on_ctrl(state: &mut State, code: u32, flags: u16) -> Option<EventOutcome>
         }
         CTRL_U | CTRL_U_LO => {
             state.line.clear();
+            Some(EventOutcome::Repaint)
+        }
+        CTRL_W | CTRL_W_LO => {
+            state.line.delete_word();
+            Some(EventOutcome::Repaint)
+        }
+        CTRL_K | CTRL_K_LO => {
+            state.line.kill_to_end();
             Some(EventOutcome::Repaint)
         }
         CTRL_A | CTRL_A_LO => {

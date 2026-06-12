@@ -58,8 +58,7 @@ pub fn sha1(data: &[u8]) -> [u8; 20] {
                 0..=19 => ((b & c) | (!b & d), 0x5A827999),
                 20..=39 => (b ^ c ^ d, 0x6ED9EBA1),
                 40..=59 => ((b & c) | (b & d) | (c & d), 0x8F1BBCDC),
-                60..=79 => (b ^ c ^ d, 0xCA62C1D6),
-                _ => unreachable!(),
+                _ => (b ^ c ^ d, 0xCA62C1D6),
             };
 
             let temp =

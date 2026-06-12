@@ -14,25 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::{Argv, MAX_ARGS};
-use crate::term::util::is_space;
+use super::types::Line;
 
-pub fn parse(input: &[u8]) -> Argv<'_> {
-    let mut out = Argv { argv: [b""; MAX_ARGS], argc: 0 };
-    let mut i = 0;
-    while i < input.len() && out.argc < MAX_ARGS {
-        while i < input.len() && is_space(input[i]) {
-            i += 1;
+impl Line {
+    // Delete from the cursor to the end of the line (Ctrl-K).
+    pub fn kill_to_end(&mut self) -> bool {
+        if self.cursor >= self.len {
+            return false;
         }
-        if i >= input.len() {
-            break;
-        }
-        let start = i;
-        while i < input.len() && !is_space(input[i]) {
-            i += 1;
-        }
-        out.argv[out.argc] = &input[start..i];
-        out.argc += 1;
+        self.len = self.cursor;
+        true
     }
-    out
 }

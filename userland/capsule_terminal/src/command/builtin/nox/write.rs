@@ -21,9 +21,10 @@ use super::ensure_pid::ensure_pid;
 use crate::term::cwd::resolve;
 use crate::term::state::State;
 
-pub fn run(state: &mut State, args: &[&[u8]]) {
+pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     if args.len() < 2 {
-        return state.scrollback.push_line(b"usage: nox write <file> <text>");
+        state.scrollback.push_error(b"usage: nox write <file> <text>");
+        return false;
     }
     let pid = ensure_pid(state);
     let path = resolve(state.cwd.as_bytes(), args[0]);
@@ -36,7 +37,13 @@ pub fn run(state: &mut State, args: &[&[u8]]) {
     }
     data.push(b'\n');
     match write_file(pid, &path, &data) {
-        Ok(()) => state.scrollback.push_line(b"ok"),
-        Err(e) => state.scrollback.push_line(e.as_bytes()),
+        Ok(()) => {
+            state.scrollback.push_line(b"ok");
+            true
+        }
+        Err(e) => {
+            state.scrollback.push_error(e.as_bytes());
+            false
+        }
     }
 }

@@ -23,5 +23,5 @@ pub fn run(state: &mut State, verb: &[u8]) {
     line.extend_from_slice(b"nox: unknown verb '");
     line.extend_from_slice(verb);
     line.extend_from_slice(b"' (try: nox help)");
-    state.scrollback.push_line(&line);
+    state.scrollback.push_error(&line);
 }

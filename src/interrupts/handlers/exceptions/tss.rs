@@ -35,12 +35,15 @@ impl TssErrorCode {
     }
 
     pub const fn descriptor_table(&self) -> DescriptorTable {
+        // The mask yields exactly 0..=3, all matched below. The final arm
+        // is unreachable in practice but returns a benign value rather
+        // than panicking: this runs inside the Invalid-TSS exception
+        // handler, where a panic could escalate to a double fault.
         match (self.bits >> 1) & 0x03 {
             0 => DescriptorTable::Gdt,
             1 => DescriptorTable::Idt,
             2 => DescriptorTable::Ldt,
-            3 => DescriptorTable::Idt,
-            _ => unreachable!(),
+            _ => DescriptorTable::Idt,
         }
     }
 

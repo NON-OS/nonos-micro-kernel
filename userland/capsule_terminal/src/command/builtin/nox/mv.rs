@@ -20,15 +20,22 @@ use super::ensure_pid::ensure_pid;
 use crate::term::cwd::resolve;
 use crate::term::state::State;
 
-pub fn run(state: &mut State, args: &[&[u8]]) {
+pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     if args.len() < 2 {
-        return state.scrollback.push_line(b"usage: nox mv <old> <new>");
+        state.scrollback.push_error(b"usage: nox mv <old> <new>");
+        return false;
     }
     let pid = ensure_pid(state);
     let old = resolve(state.cwd.as_bytes(), args[0]);
     let new = resolve(state.cwd.as_bytes(), args[1]);
     match rename(pid, &old, &new) {
-        Ok(()) => state.scrollback.push_line(b"ok"),
-        Err(e) => state.scrollback.push_line(e.as_bytes()),
+        Ok(()) => {
+            state.scrollback.push_line(b"ok");
+            true
+        }
+        Err(e) => {
+            state.scrollback.push_error(e.as_bytes());
+            false
+        }
     }
 }

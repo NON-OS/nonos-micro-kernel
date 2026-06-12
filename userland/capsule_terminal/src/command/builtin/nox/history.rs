@@ -20,5 +20,5 @@ use crate::term::state::State;
 
 pub fn run(state: &mut State, args: &[&[u8]]) {
     let mut out = Output::new(&mut state.scrollback);
-    history_cmd::run(&mut out, &mut state.history, args);
+    history_cmd::run(&mut out, &state.history, args);
 }

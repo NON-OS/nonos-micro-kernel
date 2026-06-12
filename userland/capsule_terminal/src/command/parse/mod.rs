@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod parse;
+mod split;
 mod types;
 
-pub use parse::parse;
+pub use split::parse;
 pub use types::Argv;

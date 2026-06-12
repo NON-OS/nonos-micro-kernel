@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod alias;
 mod apps;
 mod caps;
 mod children;
 mod clear;
 mod copy;
-mod display;
 mod dispatch;
+mod display;
 mod echo;
 mod ensure_pid;
 mod enter;
@@ -34,10 +35,14 @@ mod mv;
 mod ping;
 mod read;
 mod rm;
+mod run;
+mod set;
 mod stat;
 mod svc;
 mod sysinfo;
+mod unalias;
 mod unknown;
+mod unset;
 mod whereis;
 mod write;
 

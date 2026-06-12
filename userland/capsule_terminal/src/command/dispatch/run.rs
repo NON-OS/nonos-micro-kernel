@@ -14,14 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::exec::exec;
 use super::outcome::Outcome;
+use super::pipeline::run_pipeline;
+use super::redirect::{split, Plan};
+use super::write_redirect::write_redirect;
 use crate::command::builtin;
-use crate::command::output::Output;
 use crate::command::parse::Argv;
 use crate::term::state::State;
 
 pub fn run(state: &mut State, argv: &Argv<'_>) -> Outcome {
-    const HELP: &[u8] = b"help";
     if argv.argc == 0 {
         return Outcome::Repaint;
     }
@@ -29,26 +31,32 @@ pub fn run(state: &mut State, argv: &Argv<'_>) -> Outcome {
     if builtin::exit_check::want_exit(args) {
         return Outcome::Exit;
     }
-    match args[0] {
-        b"nox" => return builtin::nox::dispatch(state, &args[1..]),
-        b"help" => return builtin::nox::dispatch(state, &[HELP]),
-        b"about" => builtin::about::run(&mut Output::new(&mut state.scrollback), args),
-        b"version" => builtin::version::run(&mut Output::new(&mut state.scrollback), args),
-        b"whoami" => builtin::whoami::run(&mut Output::new(&mut state.scrollback), args),
-        b"capsules" | b"caps" => builtin::capsules::run(&mut Output::new(&mut state.scrollback), args),
-        b"clear" => builtin::clear::run(&mut state.scrollback, args),
-        b"display" => builtin::display::run(&mut Output::new(&mut state.scrollback), args),
-        b"echo" => builtin::echo::run(&mut Output::new(&mut state.scrollback), args),
-        b"history" => builtin::history_cmd::run(
-            &mut Output::new(&mut state.scrollback),
-            &mut state.history,
-            args,
-        ),
-        b"market" => builtin::market::run(&mut Output::new(&mut state.scrollback), args),
-        b"motd" => builtin::motd::run(&mut state.scrollback, args),
-        b"ping" => builtin::ping::run(&mut Output::new(&mut state.scrollback), args),
-        b"service" | b"svc" => builtin::service::run(&mut Output::new(&mut state.scrollback), args),
-        _ => return builtin::nox::dispatch(state, args),
+    let (cmd, redir) = match split(args) {
+        Plan::Plain => (args, None),
+        Plan::Redirect { cmd_len, append, path } => (&args[..cmd_len], Some((append, path))),
+        Plan::Error(msg) => {
+            state.scrollback.push_line(msg);
+            return Outcome::Repaint;
+        }
+    };
+    let piped = cmd.iter().any(|a| *a == b"|");
+    if !piped && redir.is_none() {
+        return exec(state, cmd);
+    }
+    let lines = if piped {
+        run_pipeline(state, cmd)
+    } else {
+        state.scrollback.begin_capture();
+        let _ = exec(state, cmd);
+        state.scrollback.end_capture()
+    };
+    match redir {
+        Some((append, path)) => write_redirect(state, &lines, append, path),
+        None => {
+            for line in &lines {
+                state.scrollback.push_line(line);
+            }
+        }
     }
     Outcome::Repaint
 }

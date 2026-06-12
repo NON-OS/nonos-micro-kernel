@@ -14,8 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod alias_expand;
+mod exec;
+mod expand;
+mod filter;
 mod outcome;
+mod pipeline;
+mod redirect;
 mod run;
+mod statements;
+mod write_redirect;
 
+pub use alias_expand::alias_expand;
+pub use expand::expand;
 pub use outcome::Outcome;
 pub use run::run;
+pub use statements::{split_program, Conn};

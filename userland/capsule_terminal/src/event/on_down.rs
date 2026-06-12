@@ -19,14 +19,16 @@ use nonos_app_skeleton::EventOutcome;
 use crate::term::state::State;
 
 pub fn on_down(state: &mut State) -> EventOutcome {
-    match state.history.next() {
-        Some(next) => {
-            state.line.replace(next);
+    match state.history.next_matching(&state.hist_prefix) {
+        // Ran past the newest match: restore the text the search began from.
+        Some([]) => {
+            state.line.replace(&state.hist_prefix);
             EventOutcome::Repaint
         }
-        None => {
-            state.line.clear();
+        Some(entry) => {
+            state.line.replace(entry);
             EventOutcome::Repaint
         }
+        None => EventOutcome::Idle,
     }
 }

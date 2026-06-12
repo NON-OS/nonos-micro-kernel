@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod get;
 mod new;
-mod next;
-mod prev;
+mod next_matching;
+mod prev_matching;
 mod push;
 mod reset_cursor;
+mod searching;
 mod types;
 
 pub use types::History;

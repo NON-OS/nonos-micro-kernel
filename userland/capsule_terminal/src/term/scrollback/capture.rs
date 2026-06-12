@@ -14,21 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::History;
+use alloc::vec::Vec;
 
-impl History {
-    pub fn next(&mut self) -> Option<&[u8]> {
-        match self.cursor {
-            None => None,
-            Some(i) if i + 1 >= self.count => {
-                self.cursor = None;
-                Some(&[])
-            }
-            Some(i) => {
-                let next = i + 1;
-                self.cursor = Some(next);
-                Some(&self.entries[next][..self.lengths[next]])
-            }
-        }
+use super::types::Scrollback;
+
+impl Scrollback {
+    // Begin diverting `push_line` output into a buffer instead of the
+    // visible ring, so a command's output can be redirected to a file.
+    pub fn begin_capture(&mut self) {
+        self.capture = Some(Vec::new());
+    }
+
+    // Stop capturing and return the buffered lines. Returns an empty
+    // vector if capture was not active.
+    pub fn end_capture(&mut self) -> Vec<Vec<u8>> {
+        self.capture.take().unwrap_or_default()
     }
 }

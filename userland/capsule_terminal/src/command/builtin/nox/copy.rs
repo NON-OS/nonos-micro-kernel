@@ -22,19 +22,29 @@ use crate::term::state::State;
 
 const MAX: u32 = 65536;
 
-pub fn run(state: &mut State, args: &[&[u8]]) {
+pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     if args.len() < 2 {
-        return state.scrollback.push_line(b"usage: nox copy <src> <dst>");
+        state.scrollback.push_error(b"usage: nox copy <src> <dst>");
+        return false;
     }
     let pid = ensure_pid(state);
     let src = resolve(state.cwd.as_bytes(), args[0]);
     let dst = resolve(state.cwd.as_bytes(), args[1]);
     let data = match read_file(pid, &src, MAX) {
         Ok(d) => d,
-        Err(e) => return state.scrollback.push_line(e.as_bytes()),
+        Err(e) => {
+            state.scrollback.push_error(e.as_bytes());
+            return false;
+        }
     };
     match write_file(pid, &dst, &data) {
-        Ok(()) => state.scrollback.push_line(b"ok"),
-        Err(e) => state.scrollback.push_line(e.as_bytes()),
+        Ok(()) => {
+            state.scrollback.push_line(b"ok");
+            true
+        }
+        Err(e) => {
+            state.scrollback.push_error(e.as_bytes());
+            false
+        }
     }
 }

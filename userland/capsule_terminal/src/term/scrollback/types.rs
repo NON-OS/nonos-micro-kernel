@@ -14,12 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec::Vec;
+
+use super::role::Role;
 use crate::term::dimensions::{COLS, SCROLLBACK_ROWS};
 
 pub struct Scrollback {
     pub(super) rows: [[u8; COLS]; SCROLLBACK_ROWS],
     pub(super) lengths: [u16; SCROLLBACK_ROWS],
+    pub(super) roles: [Role; SCROLLBACK_ROWS],
     pub(super) head: usize,
     pub(super) count: usize,
     pub(super) view_offset: usize,
+    // When `Some`, `push_line` diverts each line here instead of the
+    // visible ring. Used to capture a command's output for redirection
+    // (`cmd > file`) without showing it on screen.
+    pub(super) capture: Option<Vec<Vec<u8>>>,
 }

@@ -14,19 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::History;
-
-impl History {
-    pub fn prev(&mut self) -> Option<&[u8]> {
-        if self.count == 0 {
-            return None;
-        }
-        let next = match self.cursor {
-            None => self.count - 1,
-            Some(0) => 0,
-            Some(i) => i - 1,
-        };
-        self.cursor = Some(next);
-        Some(&self.entries[next][..self.lengths[next]])
-    }
+// How a stored scrollback line should be rendered. Ordinary output is
+// Normal; command failures and usage messages are tagged Error so the
+// painter can give them the error colour.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Role {
+    Normal,
+    Error,
 }

@@ -34,8 +34,27 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
     k += copy_into(&mut echo[k..], &entered[..n]);
     state.scrollback.push_line(&echo[..k]);
     state.history.push(&entered[..n]);
-    let argv = command::parse(&entered[..n]);
-    let outcome = command::run(state, &argv);
+    let mut outcome = command::Outcome::Repaint;
+    let mut prev_ok = true;
+    for (conn, stmt) in command::split_program(&entered[..n]) {
+        let go = match conn {
+            command::Conn::Always => true,
+            command::Conn::And => prev_ok,
+            command::Conn::Or => !prev_ok,
+        };
+        if !go {
+            continue;
+        }
+        state.last_status = true;
+        let aliased = command::alias_expand(stmt, &state.aliases);
+        let expanded = command::expand(&aliased, &state.vars);
+        let argv = command::parse(&expanded);
+        if let command::Outcome::Exit = command::run(state, &argv) {
+            outcome = command::Outcome::Exit;
+            break;
+        }
+        prev_ok = state.last_status;
+    }
     state.line.clear();
     state.scrollback.jump_bottom();
     match outcome {

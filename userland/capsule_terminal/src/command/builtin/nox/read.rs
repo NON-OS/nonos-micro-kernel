@@ -22,9 +22,10 @@ use crate::term::state::State;
 
 const MAX: u32 = 65536;
 
-pub fn run(state: &mut State, args: &[&[u8]]) {
+pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     if args.is_empty() {
-        return state.scrollback.push_line(b"usage: nox read <file>");
+        state.scrollback.push_error(b"usage: nox read <file>");
+        return false;
     }
     let pid = ensure_pid(state);
     let path = resolve(state.cwd.as_bytes(), args[0]);
@@ -33,7 +34,11 @@ pub fn run(state: &mut State, args: &[&[u8]]) {
             for line in data.split(|&c| c == b'\n') {
                 state.scrollback.push_line(line);
             }
+            true
         }
-        Err(e) => state.scrollback.push_line(e.as_bytes()),
+        Err(e) => {
+            state.scrollback.push_error(e.as_bytes());
+            false
+        }
     }
 }

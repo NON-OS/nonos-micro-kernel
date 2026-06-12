@@ -20,14 +20,21 @@ use super::ensure_pid::ensure_pid;
 use crate::term::cwd::resolve;
 use crate::term::state::State;
 
-pub fn run(state: &mut State, args: &[&[u8]]) {
+pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     if args.is_empty() {
-        return state.scrollback.push_line(b"usage: nox mk <dir>");
+        state.scrollback.push_error(b"usage: nox mk <dir>");
+        return false;
     }
     let pid = ensure_pid(state);
     let path = resolve(state.cwd.as_bytes(), args[0]);
     match mkdir(pid, &path) {
-        Ok(()) => state.scrollback.push_line(b"ok"),
-        Err(e) => state.scrollback.push_line(e.as_bytes()),
+        Ok(()) => {
+            state.scrollback.push_line(b"ok");
+            true
+        }
+        Err(e) => {
+            state.scrollback.push_error(e.as_bytes());
+            false
+        }
     }
 }

@@ -30,6 +30,10 @@ impl State {
             owner_pid: 0,
             fresh: true,
             start_ms: 0,
+            vars: alloc::vec::Vec::new(),
+            last_status: true,
+            aliases: alloc::vec::Vec::new(),
+            hist_prefix: alloc::vec::Vec::new(),
         }
     }
 }

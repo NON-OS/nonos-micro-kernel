@@ -21,20 +21,29 @@ use super::ensure_pid::ensure_pid;
 use crate::term::cwd::resolve;
 use crate::term::state::State;
 
-pub fn run(state: &mut State, args: &[&[u8]]) {
+pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     if args.is_empty() {
         state.cwd.set(vec![b'/']);
-        return;
+        return true;
     }
     let pid = ensure_pid(state);
     let target = resolve(state.cwd.as_bytes(), args[0]);
     if target == b"/" {
         state.cwd.set(target);
-        return;
+        return true;
     }
     match stat(pid, &target) {
-        Ok((_, true)) => state.cwd.set(target),
-        Ok((_, false)) => state.scrollback.push_line(b"nox in: not a directory"),
-        Err(e) => state.scrollback.push_line(e.as_bytes()),
+        Ok((_, true)) => {
+            state.cwd.set(target);
+            true
+        }
+        Ok((_, false)) => {
+            state.scrollback.push_error(b"nox in: not a directory");
+            false
+        }
+        Err(e) => {
+            state.scrollback.push_error(e.as_bytes());
+            false
+        }
     }
 }

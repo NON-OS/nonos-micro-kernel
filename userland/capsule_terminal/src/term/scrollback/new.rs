@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::role::Role;
 use super::types::Scrollback;
 use crate::term::dimensions::{COLS, SCROLLBACK_ROWS};
 
@@ -22,9 +23,11 @@ impl Scrollback {
         Self {
             rows: [[0; COLS]; SCROLLBACK_ROWS],
             lengths: [0; SCROLLBACK_ROWS],
+            roles: [Role::Normal; SCROLLBACK_ROWS],
             head: 0,
             count: 0,
             view_offset: 0,
+            capture: None,
         }
     }
 }
