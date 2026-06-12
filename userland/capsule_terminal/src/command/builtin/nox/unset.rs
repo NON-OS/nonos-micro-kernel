@@ -14,27 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::clients::vfs::mkdir;
-
-use super::ensure_pid::ensure_pid;
-use crate::term::cwd::resolve;
 use crate::term::state::State;
 
-pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
+// Remove a shell variable.
+pub fn run(state: &mut State, args: &[&[u8]]) {
     if args.is_empty() {
-        state.scrollback.push_line(b"usage: nox mk <dir>");
-        return false;
+        return state.scrollback.push_line(b"usage: unset <name>");
     }
-    let pid = ensure_pid(state);
-    let path = resolve(state.cwd.as_bytes(), args[0]);
-    match mkdir(pid, &path) {
-        Ok(()) => {
-            state.scrollback.push_line(b"ok");
-            true
-        }
-        Err(e) => {
-            state.scrollback.push_line(e.as_bytes());
-            false
-        }
-    }
+    let name = args[0];
+    state.vars.retain(|(k, _)| k.as_slice() != name);
 }

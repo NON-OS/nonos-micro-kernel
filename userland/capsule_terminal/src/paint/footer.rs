@@ -22,5 +22,10 @@ use crate::term::theme::{DIM, FOOTER_BG};
 pub fn draw_footer(fb: &mut PaintBuffer) {
     let y = fb.height.saturating_sub(FOOTER_H);
     fb.fill_rect(0, y, fb.width, FOOTER_H, FOOTER_BG);
-    fb.text(TEXT_LEFT, y + 4, b"nox help    Ctrl-L clear    Ctrl-C cancel", DIM);
+    fb.text(
+        TEXT_LEFT,
+        y + 4,
+        b"Tab complete   | pipe   > redirect   Ctrl-W/K edit   Ctrl-L clear   nox help",
+        DIM,
+    );
 }

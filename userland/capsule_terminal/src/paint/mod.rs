@@ -22,7 +22,7 @@ mod fetch_palette;
 mod fetch_row;
 mod fetch_uptime;
 mod footer;
+mod compose;
 mod header;
-mod paint;
 
-pub use paint::paint;
+pub use compose::paint;

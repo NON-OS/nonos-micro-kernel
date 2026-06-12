@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod bool_to_outcome;
+mod complete;
 mod copy_line;
 mod on_ctrl;
 mod on_down;
@@ -22,6 +23,7 @@ mod on_enter;
 mod on_event;
 mod on_key;
 mod on_printable;
+mod on_tab;
 mod on_up;
 mod paste_clipboard;
 

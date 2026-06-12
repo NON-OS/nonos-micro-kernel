@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec::Vec;
+
 use crate::term::cwd::Cwd;
 use crate::term::history::History;
 use crate::term::line::Line;
@@ -27,4 +29,12 @@ pub struct State {
     pub owner_pid: u32,
     pub fresh: bool,
     pub start_ms: u64,
+    // Shell variables, set with `set NAME VALUE` and expanded as $NAME.
+    pub vars: Vec<(Vec<u8>, Vec<u8>)>,
+    // Exit status of the last command: true on success. Fallible commands
+    // clear it on error; `&&` and `||` gate the next statement on it.
+    pub last_status: bool,
+    // Command aliases, defined with `alias NAME EXPANSION`. The first word
+    // of a line is replaced by its expansion before the line is run.
+    pub aliases: Vec<(Vec<u8>, Vec<u8>)>,
 }

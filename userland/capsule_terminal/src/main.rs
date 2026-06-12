@@ -26,6 +26,11 @@ mod term;
 
 use nonos_app_skeleton::run;
 
+/// # Safety
+///
+/// This is the capsule entry point. The loader calls it exactly once on a
+/// freshly initialized stack with no live Rust state, and it never returns.
+/// It must not be called from Rust code.
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     run(term::Terminal::new)

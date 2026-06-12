@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::{
     EventOutcome, InputEvent, KEY_BACKSPACE, KEY_DELETE, KEY_DOWN, KEY_END, KEY_ENTER, KEY_ESC,
-    KEY_HOME, KEY_LEFT, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_RIGHT, KEY_UP, MOD_CTRL,
+    KEY_HOME, KEY_LEFT, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_RIGHT, KEY_TAB, KEY_UP, MOD_CTRL,
 };
 
 use super::bool_to_outcome::bool_to_outcome;
@@ -24,6 +24,7 @@ use super::on_ctrl::on_ctrl;
 use super::on_down::on_down;
 use super::on_enter::on_enter;
 use super::on_printable::on_printable;
+use super::on_tab::on_tab;
 use super::on_up::on_up;
 use crate::term::dimensions::VISIBLE_ROWS;
 use crate::term::state::State;
@@ -59,6 +60,7 @@ pub fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
             state.scrollback.scroll_down(VISIBLE_ROWS - 2);
             EventOutcome::Repaint
         }
+        KEY_TAB => on_tab(state),
         code if (0x20..=0x7E).contains(&code) => on_printable(state, code as u8),
         _ => EventOutcome::Idle,
     }

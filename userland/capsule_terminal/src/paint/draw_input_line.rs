@@ -18,20 +18,33 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::constants::{CELL_WIDTH, TEXT_LEFT};
 use super::draw_cursor::draw_cursor;
-use crate::term::dimensions::COLS;
 use crate::term::state::State;
 use crate::term::theme::{FOREGROUND, PATH, PROMPT};
 
 pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32) {
-    fb.text(TEXT_LEFT, y, b"\xd8", PROMPT);
+    // Character cells that fit between the left inset and an equal right margin.
+    let total_cells = (fb.width.saturating_sub(TEXT_LEFT * 2) / CELL_WIDTH) as usize;
+    // Prompt is glyph + path + trailing space; cap the path to a third of the
+    // line so a deep cwd never starves the area left to type in.
     let cwd = state.cwd.as_bytes();
-    let take = cwd.len().min(40);
-    let start = cwd.len() - take;
-    fb.text(TEXT_LEFT + CELL_WIDTH, y, &cwd[start..], PATH);
+    let take = cwd.len().min((total_cells / 3).max(1));
     let prompt_cells = 1 + take + 1;
-    let px = TEXT_LEFT + prompt_cells as u32 * CELL_WIDTH;
+    fb.text(TEXT_LEFT, y, b"\xd8", PROMPT);
+    fb.text(TEXT_LEFT + CELL_WIDTH, y, &cwd[cwd.len() - take..], PATH);
+
+    // Horizontal scroll: slide a body_cells-wide window so the cursor is always
+    // on screen, showing the start of the line whenever it fits.
     let body = state.line.as_bytes();
-    let btake = body.len().min(COLS);
-    fb.text(px, y, &body[..btake], FOREGROUND);
-    draw_cursor(fb, prompt_cells, state.line.cursor, y + 1);
+    let cursor = state.line.cursor.min(body.len());
+    let body_cells = total_cells.saturating_sub(prompt_cells).max(1);
+    let scroll = if cursor < body_cells {
+        0
+    } else {
+        cursor - body_cells + 1
+    };
+    let end = (scroll + body_cells).min(body.len());
+    let px = TEXT_LEFT + prompt_cells as u32 * CELL_WIDTH;
+    fb.text(px, y, &body[scroll..end], FOREGROUND);
+    let under = body.get(cursor).copied().unwrap_or(0);
+    draw_cursor(fb, prompt_cells, cursor - scroll, y + 1, under);
 }

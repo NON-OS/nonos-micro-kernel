@@ -14,27 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::clients::vfs::mkdir;
+use super::types::Line;
 
-use super::ensure_pid::ensure_pid;
-use crate::term::cwd::resolve;
-use crate::term::state::State;
-
-pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
-    if args.is_empty() {
-        state.scrollback.push_line(b"usage: nox mk <dir>");
-        return false;
-    }
-    let pid = ensure_pid(state);
-    let path = resolve(state.cwd.as_bytes(), args[0]);
-    match mkdir(pid, &path) {
-        Ok(()) => {
-            state.scrollback.push_line(b"ok");
-            true
+impl Line {
+    // Delete from the cursor to the end of the line (Ctrl-K).
+    pub fn kill_to_end(&mut self) -> bool {
+        if self.cursor >= self.len {
+            return false;
         }
-        Err(e) => {
-            state.scrollback.push_line(e.as_bytes());
-            false
-        }
+        self.len = self.cursor;
+        true
     }
 }

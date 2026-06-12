@@ -14,25 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::{Argv, MAX_ARGS};
-use crate::term::util::is_space;
+use alloc::vec::Vec;
 
-pub fn parse(input: &[u8]) -> Argv<'_> {
-    let mut out = Argv { argv: [b""; MAX_ARGS], argc: 0 };
-    let mut i = 0;
-    while i < input.len() && out.argc < MAX_ARGS {
-        while i < input.len() && is_space(input[i]) {
-            i += 1;
-        }
-        if i >= input.len() {
-            break;
-        }
-        let start = i;
-        while i < input.len() && !is_space(input[i]) {
-            i += 1;
-        }
-        out.argv[out.argc] = &input[start..i];
-        out.argc += 1;
+use super::types::Scrollback;
+
+impl Scrollback {
+    // Begin diverting `push_line` output into a buffer instead of the
+    // visible ring, so a command's output can be redirected to a file.
+    pub fn begin_capture(&mut self) {
+        self.capture = Some(Vec::new());
     }
-    out
+
+    // Stop capturing and return the buffered lines. Returns an empty
+    // vector if capture was not active.
+    pub fn end_capture(&mut self) -> Vec<Vec<u8>> {
+        self.capture.take().unwrap_or_default()
+    }
 }

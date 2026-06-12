@@ -35,7 +35,7 @@ pub fn draw_fetch(state: &State, fb: &mut PaintBuffer) {
     y += 17;
     fetch_row(fb, ix, y, b"os", b"NONOS RAM-resident");
     y += 16;
-    fetch_row(fb, ix, y, b"kernel", b"microkernel 0.8.4");
+    fetch_row(fb, ix, y, b"kernel", b"microkernel 0.8.10");
     y += 16;
     fetch_row(fb, ix, y, b"shell", b"nox");
     y += 16;

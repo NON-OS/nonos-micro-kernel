@@ -22,9 +22,10 @@ use crate::term::cwd::resolve;
 use crate::term::state::State;
 use crate::term::util::format_u64;
 
-pub fn run(state: &mut State, args: &[&[u8]]) {
+pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     if args.is_empty() {
-        return state.scrollback.push_line(b"usage: nox stat <path>");
+        state.scrollback.push_line(b"usage: nox stat <path>");
+        return false;
     }
     let pid = ensure_pid(state);
     let path = resolve(state.cwd.as_bytes(), args[0]);
@@ -38,7 +39,11 @@ pub fn run(state: &mut State, args: &[&[u8]]) {
             line.extend_from_slice(b" bytes  ");
             line.extend_from_slice(&path);
             state.scrollback.push_line(&line);
+            true
         }
-        Err(e) => state.scrollback.push_line(e.as_bytes()),
+        Err(e) => {
+            state.scrollback.push_line(e.as_bytes());
+            false
+        }
     }
 }

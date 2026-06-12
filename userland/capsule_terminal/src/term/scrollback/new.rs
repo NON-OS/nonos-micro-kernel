@@ -25,6 +25,7 @@ impl Scrollback {
             head: 0,
             count: 0,
             view_offset: 0,
+            capture: None,
         }
     }
 }

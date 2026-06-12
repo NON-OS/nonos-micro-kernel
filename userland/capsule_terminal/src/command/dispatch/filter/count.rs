@@ -14,27 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::clients::vfs::mkdir;
+use alloc::vec;
+use alloc::vec::Vec;
 
-use super::ensure_pid::ensure_pid;
-use crate::term::cwd::resolve;
-use crate::term::state::State;
+use crate::term::util::format_u64;
 
-pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
-    if args.is_empty() {
-        state.scrollback.push_line(b"usage: nox mk <dir>");
-        return false;
-    }
-    let pid = ensure_pid(state);
-    let path = resolve(state.cwd.as_bytes(), args[0]);
-    match mkdir(pid, &path) {
-        Ok(()) => {
-            state.scrollback.push_line(b"ok");
-            true
-        }
-        Err(e) => {
-            state.scrollback.push_line(e.as_bytes());
-            false
-        }
-    }
+pub(super) fn wc(input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+    let mut buf = [0u8; 24];
+    let n = format_u64(input.len() as u64, &mut buf);
+    vec![buf[..n].to_vec()]
+}
+
+pub(super) fn head(arg: Option<&&[u8]>, input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+    input.into_iter().take(parse_n(arg)).collect()
+}
+
+pub(super) fn tail(arg: Option<&&[u8]>, input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+    let skip = input.len().saturating_sub(parse_n(arg));
+    input.into_iter().skip(skip).collect()
+}
+
+fn parse_n(arg: Option<&&[u8]>) -> usize {
+    arg.and_then(|a| core::str::from_utf8(a).ok())
+        .and_then(|s| s.parse::<usize>().ok())
+        .unwrap_or(10)
 }

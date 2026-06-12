@@ -14,27 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::clients::vfs::mkdir;
+mod count;
+mod text;
 
-use super::ensure_pid::ensure_pid;
-use crate::term::cwd::resolve;
-use crate::term::state::State;
+use alloc::vec;
+use alloc::vec::Vec;
 
-pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
-    if args.is_empty() {
-        state.scrollback.push_line(b"usage: nox mk <dir>");
-        return false;
-    }
-    let pid = ensure_pid(state);
-    let path = resolve(state.cwd.as_bytes(), args[0]);
-    match mkdir(pid, &path) {
-        Ok(()) => {
-            state.scrollback.push_line(b"ok");
-            true
-        }
-        Err(e) => {
-            state.scrollback.push_line(e.as_bytes());
-            false
+// Apply one pipe-stage filter to the previous stage's output lines.
+pub(super) fn apply(seg: &[&[u8]], input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+    match seg.first().copied().unwrap_or(b"") {
+        b"grep" => text::grep(&seg[1..], input),
+        b"sort" => text::sort(input),
+        b"uniq" => text::uniq(input),
+        b"nl" => text::nl(input),
+        b"wc" => count::wc(input),
+        b"head" => count::head(seg.get(1), input),
+        b"tail" => count::tail(seg.get(1), input),
+        other => {
+            let mut msg = Vec::new();
+            msg.extend_from_slice(b"pipe: unknown filter ");
+            msg.extend_from_slice(other);
+            vec![msg]
         }
     }
 }
