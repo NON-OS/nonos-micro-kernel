@@ -65,6 +65,10 @@ pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {
     }
     let caller_pid = current_pid().unwrap_or(0);
     let dest = reply_inbox::for_pid(dest_pid as u32);
+    if !pending_reply::remove(caller_pid, &dest) {
+        trace(caller_pid, dest_pid, b"drop no-call", 0, &dest);
+        return 0;
+    }
     let from = alloc::format!("proc.{}", caller_pid);
     let mut msg = match IpcMessage::new(&from, &dest, &data) {
         Ok(msg) => msg,
@@ -82,9 +86,6 @@ pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {
         Err(StrictEnqueueError::MissingInbox) | Err(StrictEnqueueError::DeadOwner) => ERRNO_NOENT,
         Err(StrictEnqueueError::QueueFull(_)) => ERRNO_BUSY,
     };
-    if rc == 0 {
-        pending_reply::remove(caller_pid, &dest);
-    }
     let mut woke = false;
     if rc == 0 && crate::sched::is_sleeping(dest_pid as u32) {
         crate::sched::wake_process(dest_pid as u32);
