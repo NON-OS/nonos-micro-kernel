@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types_trusted_key::TrustedKey;
 use super::types_consts::MAX_TRUSTED_KEYS;
+use super::types_trusted_key::TrustedKey;
 
 pub struct KeystoreV2 {
     pub(super) keys: [TrustedKey; MAX_TRUSTED_KEYS],
@@ -28,6 +28,13 @@ pub struct KeystoreV2 {
 
 impl KeystoreV2 {
     pub const fn new() -> Self {
-        Self { keys: [TrustedKey::empty(); MAX_TRUSTED_KEYS], key_count: 0, minimum_version: 1, revocations: [[0u8; 32]; 16], revocation_count: 0, require_cosign: false }
+        Self {
+            keys: [TrustedKey::empty(); MAX_TRUSTED_KEYS],
+            key_count: 0,
+            minimum_version: 1,
+            revocations: [[0u8; 32]; 16],
+            revocation_count: 0,
+            require_cosign: false,
+        }
     }
 }

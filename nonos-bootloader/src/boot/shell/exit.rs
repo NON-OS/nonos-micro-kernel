@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
 use super::find::find_shell;
 use super::launch::launch_shell;
+use uefi::prelude::*;
 
 pub fn exit_to_shell(st: &mut SystemTable<Boot>) -> Status {
     let _ = st.stdout().output_string(uefi::cstr16!("  [SHELL] Searching for UEFI Shell...\r\n"));
@@ -27,7 +27,9 @@ pub fn exit_to_shell(st: &mut SystemTable<Boot>) -> Status {
         let _ = st.stdout().output_string(uefi::cstr16!("\r\n"));
         return launch_shell(st.boot_services(), path);
     }
-    let _ = st.stdout().output_string(uefi::cstr16!("  [SHELL] Not found. Returning to firmware menu.\r\n"));
+    let _ = st
+        .stdout()
+        .output_string(uefi::cstr16!("  [SHELL] Not found. Returning to firmware menu.\r\n"));
     st.boot_services().stall(2_000_000);
     Status::NOT_FOUND
 }

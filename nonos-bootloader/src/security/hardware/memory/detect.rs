@@ -21,7 +21,9 @@ use super::types::MemoryProtection;
 pub fn detect_memory_protection() -> MemoryProtection {
     let mut prot = MemoryProtection::default();
     #[cfg(target_arch = "x86_64")]
-    unsafe { detect_x86(&mut prot); }
+    unsafe {
+        detect_x86(&mut prot);
+    }
     prot
 }
 

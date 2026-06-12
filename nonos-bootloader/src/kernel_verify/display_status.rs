@@ -17,8 +17,8 @@
 use uefi::cstr16;
 use uefi::prelude::*;
 
-use crate::boot::util::print_u64;
 use super::display::print;
+use crate::boot::util::print_u64;
 
 pub fn print_kernel_size(st: &mut SystemTable<Boot>, size: usize) {
     print(st, cstr16!("  [CRYPTO] Kernel bytes: "));

@@ -48,9 +48,7 @@ pub(super) fn try_resume(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
     CURRENT_PID.store(pid, Ordering::SeqCst);
     CURRENT_TIME_SLICE.store(DEFAULT_TIME_SLICE, Ordering::SeqCst);
 
-
     fpu::prepare_incoming();
-
 
     if unsafe { resume_user(&saved) }.is_err() {
         *pcb.state.lock() = ProcessState::Terminated(-1);

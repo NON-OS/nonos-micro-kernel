@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::output::output_status;
+use crate::security::types::SecurityContext;
 use uefi::cstr16;
 use uefi::prelude::*;
-use crate::security::types::SecurityContext;
-use super::output::output_status;
 
 pub fn display_security_status(ctx: &SecurityContext, st: &mut SystemTable<Boot>) {
     let _ = st.stdout().output_string(cstr16!("=== Security Status ===\r\n"));

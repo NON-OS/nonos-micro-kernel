@@ -22,9 +22,13 @@ pub fn discover_memory_size(system_table: &mut SystemTable<Boot>) -> u64 {
     let map_info = bs.memory_map_size();
     let buf_size = map_info.map_size + (map_info.entry_size * 8);
     let pages_needed = buf_size.div_ceil(4096);
-    let Ok(ptr) = bs.allocate_pages(AllocateType::AnyPages, MemoryType::LOADER_DATA, pages_needed) else { return 0; };
+    let Ok(ptr) = bs.allocate_pages(AllocateType::AnyPages, MemoryType::LOADER_DATA, pages_needed)
+    else {
+        return 0;
+    };
     let buf = unsafe { core::slice::from_raw_parts_mut(ptr as *mut u8, buf_size) };
-    let total = bs.memory_map(buf).map(|m| m.entries().map(|d| d.page_count * 4096).sum()).unwrap_or(0);
+    let total =
+        bs.memory_map(buf).map(|m| m.entries().map(|d| d.page_count * 4096).sum()).unwrap_or(0);
     let _ = bs.free_pages(ptr, pages_needed);
     total
 }

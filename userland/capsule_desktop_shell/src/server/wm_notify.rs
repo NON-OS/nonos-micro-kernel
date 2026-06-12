@@ -18,7 +18,7 @@ use nonos_libc::mk_time_millis;
 
 use super::wm_notify_label::resolve_label;
 use crate::protocol::{read_u16, read_u32};
-use crate::state::{Context, NotifyLevel, SIDE_DOCK_WINDOW_ID, TASKBAR_WINDOW_ID};
+use crate::state::{Context, NotifyLevel, TASKBAR_WINDOW_ID};
 use crate::wm_client;
 
 const OPENED: u32 = 0;
@@ -42,11 +42,10 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     if event_kind != OPENED && event_kind != CLOSED {
         return true;
     }
-    if window_id == SIDE_DOCK_WINDOW_ID || window_id == TASKBAR_WINDOW_ID {
+    if window_id == TASKBAR_WINDOW_ID {
         return true;
     }
     if event_kind == OPENED {
-        let _ = wm_client::window_raise(ctx.wm_port, ctx.issue_request_id(), SIDE_DOCK_WINDOW_ID);
         let _ = wm_client::window_raise(ctx.wm_port, ctx.issue_request_id(), TASKBAR_WINDOW_ID);
     }
     toast_window_event(ctx, event_kind, owner_pid);

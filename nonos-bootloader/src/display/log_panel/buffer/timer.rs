@@ -25,9 +25,13 @@ pub fn init_log_timer() {
 
 pub fn read_tsc() -> u64 {
     #[cfg(target_arch = "x86_64")]
-    unsafe { core::arch::x86_64::_rdtsc() }
+    unsafe {
+        core::arch::x86_64::_rdtsc()
+    }
     #[cfg(not(target_arch = "x86_64"))]
-    { 0 }
+    {
+        0
+    }
 }
 
 pub fn boot_timestamp() -> u64 {

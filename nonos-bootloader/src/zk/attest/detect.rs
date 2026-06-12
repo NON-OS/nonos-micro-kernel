@@ -24,16 +24,11 @@ pub fn has_zk_proof(kernel_data: &[u8]) -> bool {
     }
 
     // Calculate likely offset (before signature)
-    let sig_offset = kernel_data
-        .len()
-        .saturating_sub(64 + ZK_PROOF_HEADER_SIZE + GROTH16_PROOF_SIZE);
+    let sig_offset =
+        kernel_data.len().saturating_sub(64 + ZK_PROOF_HEADER_SIZE + GROTH16_PROOF_SIZE);
 
     // Check common locations first
-    for offset in [
-        sig_offset,
-        sig_offset.saturating_sub(256),
-        sig_offset.saturating_add(64),
-    ] {
+    for offset in [sig_offset, sig_offset.saturating_sub(256), sig_offset.saturating_add(64)] {
         if offset + 4 <= kernel_data.len() {
             if &kernel_data[offset..offset + 4] == &ZK_PROOF_MAGIC {
                 return true;

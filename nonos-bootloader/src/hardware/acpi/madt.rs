@@ -19,6 +19,8 @@ use super::parse::parse_madt_cpu_count;
 
 pub fn get_cpu_count_from_acpi(rsdp_address: u64) -> usize {
     let madt_addr = find_madt_table(rsdp_address);
-    if madt_addr == 0 { return 1; }
+    if madt_addr == 0 {
+        return 1;
+    }
     parse_madt_cpu_count(madt_addr)
 }

@@ -16,7 +16,6 @@
 
 use core::arch::asm;
 
-
 #[inline(always)]
 pub(super) fn enabled() -> bool {
     let daif: u64;

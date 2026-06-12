@@ -25,7 +25,9 @@ pub(crate) fn read_from_nvram() -> Result<VersionState, RollbackError> {
         Ok(48) => {
             let state = VersionState::from_bytes(&buf);
             let stored_hash = read_nvram_hash()?;
-            if !constant_time_eq_32(&stored_hash, &state.compute_hash()) { return Err(RollbackError::NvramReadFailed); }
+            if !constant_time_eq_32(&stored_hash, &state.compute_hash()) {
+                return Err(RollbackError::NvramReadFailed);
+            }
             Ok(state)
         }
         _ => Err(RollbackError::NvramReadFailed),
@@ -35,5 +37,8 @@ pub(crate) fn read_from_nvram() -> Result<VersionState, RollbackError> {
 fn read_nvram_hash() -> Result<[u8; 32], RollbackError> {
     let index = NvIndex::new(NVRAM_VERSION_INDEX + 1);
     let mut buf = [0u8; 32];
-    match nv_read(&index, &mut buf) { Ok(32) => Ok(buf), _ => Err(RollbackError::NvramReadFailed) }
+    match nv_read(&index, &mut buf) {
+        Ok(32) => Ok(buf),
+        _ => Err(RollbackError::NvramReadFailed),
+    }
 }

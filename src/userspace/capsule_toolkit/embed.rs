@@ -26,6 +26,10 @@ pub(crate) const TOOLKIT_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const TOOLKIT_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/toolkit.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-toolkit")]
+pub(crate) const TOOLKIT_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/toolkit.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-toolkit"))]
 pub(crate) const TOOLKIT_ELF: &[u8] = &[];
 
@@ -34,3 +38,6 @@ pub(crate) const TOOLKIT_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-toolkit"))]
 pub(crate) const TOOLKIT_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-toolkit"))]
+pub(crate) const TOOLKIT_ATTESTATION_BYTES: &[u8] = &[];

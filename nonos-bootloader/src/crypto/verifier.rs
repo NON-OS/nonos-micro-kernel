@@ -14,24 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use ed25519_dalek::VerifyingKey;
 use super::keys::{init_production_keys, NONOS_SIGNING_KEY};
 use super::verify::{verify_signature_bytes, SignatureStatus, VerifyError};
+use ed25519_dalek::VerifyingKey;
 
-pub struct SignatureVerifier { initialized: bool }
+pub struct SignatureVerifier {
+    initialized: bool,
+}
 
 impl SignatureVerifier {
-    pub const fn new() -> Self { Self { initialized: false } }
+    pub const fn new() -> Self {
+        Self { initialized: false }
+    }
 
     pub fn init(&mut self) -> Result<(), &'static str> {
-        if self.initialized { return Ok(()); }
+        if self.initialized {
+            return Ok(());
+        }
         init_production_keys()?;
         self.initialized = true;
         Ok(())
     }
 
     pub fn verify(&self, data: &[u8], signature: &[u8]) -> SignatureStatus {
-        if !self.initialized { return SignatureStatus::Error; }
+        if !self.initialized {
+            return SignatureStatus::Error;
+        }
         match verify_signature_bytes(data, signature) {
             Ok(_) => SignatureStatus::Valid,
             Err(VerifyError::InvalidSignature) => SignatureStatus::Invalid,
@@ -41,7 +49,11 @@ impl SignatureVerifier {
 }
 
 pub fn perform_crypto_self_test() -> bool {
-    let blake3_ok = { let h1 = blake3::hash(b"NONOS-crypto-selftest"); let h2 = blake3::hash(b"NONOS-crypto-selftest"); h1.as_bytes() == h2.as_bytes() };
+    let blake3_ok = {
+        let h1 = blake3::hash(b"NONOS-crypto-selftest");
+        let h2 = blake3::hash(b"NONOS-crypto-selftest");
+        h1.as_bytes() == h2.as_bytes()
+    };
     let ed25519_ok = VerifyingKey::from_bytes(NONOS_SIGNING_KEY).is_ok();
     blake3_ok && ed25519_ok
 }

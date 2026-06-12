@@ -26,17 +26,26 @@ use crate::security::{check_kernel_version, update_kernel_version};
 use super::super::util::fatal_reset;
 
 pub fn check_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMode, gop: bool) {
-    if !has_production_footer(data) { return; }
+    if !has_production_footer(data) {
+        return;
+    }
     let version = match parse_image_footer(data) {
         Ok(parsed) => parsed.footer.image_version as u64,
         Err(_) => return,
     };
     match check_kernel_version(version) {
-        Ok(()) => { log_info("rollback", "kernel version acceptable"); if gop { log_ok(b"Anti-rollback check PASSED"); } }
+        Ok(()) => {
+            log_info("rollback", "kernel version acceptable");
+            if gop {
+                log_ok(b"Anti-rollback check PASSED");
+            }
+        }
         Err(e) => {
             if mode.requires_signature() {
                 log_error("rollback", "kernel version rollback detected");
-                if gop { show_error_screen(b"Rollback attack detected"); }
+                if gop {
+                    show_error_screen(b"Rollback attack detected");
+                }
                 fatal_reset(st, e.as_str());
             }
             log_info("rollback", "rollback detected but dev mode - continuing");
@@ -45,7 +54,9 @@ pub fn check_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMod
 }
 
 pub fn commit_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMode, gop: bool) {
-    if !has_production_footer(data) { return; }
+    if !has_production_footer(data) {
+        return;
+    }
     let version = match parse_image_footer(data) {
         Ok(parsed) => parsed.footer.image_version as u64,
         Err(e) => {
@@ -58,11 +69,18 @@ pub fn commit_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMo
     };
     let timestamp = get_uefi_time_epoch(st);
     match update_kernel_version(version, timestamp) {
-        Ok(()) => { log_info("rollback", "kernel version committed"); if gop { log_ok(b"Anti-rollback commit PASSED"); } }
+        Ok(()) => {
+            log_info("rollback", "kernel version committed");
+            if gop {
+                log_ok(b"Anti-rollback commit PASSED");
+            }
+        }
         Err(e) => {
             if mode.requires_signature() {
                 log_error("rollback", "kernel version commit failed");
-                if gop { show_error_screen(b"Rollback state update failed"); }
+                if gop {
+                    show_error_screen(b"Rollback state update failed");
+                }
                 fatal_reset(st, e.as_str());
             }
             log_info("rollback", "rollback commit failed but dev mode - continuing");

@@ -14,16 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
+use nonos_boot::boot::prepare::HandoffParams;
 use nonos_boot::boot::{
     commit_rollback, run_crypto_verification, run_elf_parse, run_handoff_prepare, run_kernel_load,
     run_zk_attestation,
 };
-use nonos_boot::boot::prepare::HandoffParams;
 use nonos_boot::kernel_verify::CryptoVerifyResult;
 use nonos_boot::menu::SecurityMode;
 use nonos_boot::security::SecurityContext;
 use nonos_boot::zk::BootAttestationResult;
+use uefi::prelude::*;
 
 pub fn run_verified_boot(
     mut st: SystemTable<Boot>,

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use spin::Mutex;
 use crate::security::attestation::state::AttestationState;
+use spin::Mutex;
 
 pub static ATTESTATION_STATE: Mutex<AttestationState> = Mutex::new(AttestationState::new());
 

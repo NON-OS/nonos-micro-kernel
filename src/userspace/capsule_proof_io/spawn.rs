@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{PROOF_IO_ELF, PROOF_IO_MANIFEST_BYTES, PROOF_IO_NONOS_ID_CERT_BYTES};
+use super::embed::{PROOF_IO_ELF, PROOF_IO_MANIFEST_BYTES, PROOF_IO_NONOS_ID_CERT_BYTES, PROOF_IO_ATTESTATION_BYTES};
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
 use crate::security::nonos_id_cert::IdCertVerifyError;
@@ -42,6 +42,7 @@ pub fn spawn_proof_io_capsule() -> Result<(), SpawnError> {
         elf: PROOF_IO_ELF,
         nonos_id_cert_bytes: PROOF_IO_NONOS_ID_CERT_BYTES,
         manifest_bytes: PROOF_IO_MANIFEST_BYTES,
+        attestation_trailer: PROOF_IO_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

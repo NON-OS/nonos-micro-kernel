@@ -21,6 +21,7 @@ mod map_directmap;
 mod map_identity;
 mod map_kernel_text;
 mod mapper;
+mod page1g;
 mod phys_to_directmap;
 mod seg_flags;
 mod switch;
@@ -28,5 +29,6 @@ mod table;
 mod verify;
 
 pub use build::build_kernel_pml4;
+pub use page1g::supports_1gib_pages;
 pub use phys_to_directmap::phys_to_directmap_virt;
 pub use switch::switch_to_kernel_pml4;

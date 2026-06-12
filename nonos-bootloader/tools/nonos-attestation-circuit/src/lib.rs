@@ -19,6 +19,9 @@ extern crate alloc;
 pub mod ceremony;
 pub mod circuit;
 pub mod constants;
+pub mod nox;
+pub mod policy_tree;
+pub mod verify;
 
 pub use ceremony::{
     add_destruction_attestation, ceremony_finalize, ceremony_init, contribute_randomness,
@@ -33,3 +36,4 @@ pub use constants::{
     DS_CARGO_LOCK, DS_COMMITMENT, DS_PROGRAM, DS_RUSTC_VERSION, DS_SOURCE_TREE, GROTH16_PROOF_SIZE,
     MIN_HW_LEVEL, MIN_PCR_ENTROPY_BYTES, PCR_PREIMAGE_LEN,
 };
+pub use policy_tree::POLICY_EPOCH;

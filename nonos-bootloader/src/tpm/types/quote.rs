@@ -32,7 +32,13 @@ pub struct PcrBank {
 }
 
 impl PcrBank {
-    pub fn sha256() -> Self { Self { algorithm: 0x000B, digest_size: 32, pcr_count: 24 } }
-    pub fn sha1() -> Self { Self { algorithm: 0x0004, digest_size: 20, pcr_count: 24 } }
-    pub fn sha384() -> Self { Self { algorithm: 0x000C, digest_size: 48, pcr_count: 24 } }
+    pub fn sha256() -> Self {
+        Self { algorithm: 0x000B, digest_size: 32, pcr_count: 24 }
+    }
+    pub fn sha1() -> Self {
+        Self { algorithm: 0x0004, digest_size: 20, pcr_count: 24 }
+    }
+    pub fn sha384() -> Self {
+        Self { algorithm: 0x000C, digest_size: 48, pcr_count: 24 }
+    }
 }

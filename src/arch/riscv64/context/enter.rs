@@ -21,16 +21,7 @@ extern "C" {
     fn riscv64_enter_user(ctx: *const UserEntry) -> !;
 }
 
-
-
-
-
-
-
 pub const SSTATUS_USER_INITIAL: u64 = SSTATUS_SPIE as u64;
-
-
-
 
 const USER_VA_MAX_SV39: u64 = (1u64 << 38) - 1;
 
@@ -41,9 +32,6 @@ pub enum EnterError {
     NoKernelStack,
     SstatusWouldStayInSMode,
 }
-
-
-
 
 pub unsafe fn enter_user(ctx: &UserEntry) -> Result<core::convert::Infallible, EnterError> {
     if ctx.entry == 0 || ctx.entry > USER_VA_MAX_SV39 {

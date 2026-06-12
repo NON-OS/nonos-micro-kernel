@@ -21,6 +21,5 @@ mod query;
 pub use capabilities::SbiCapabilities;
 pub use extension::Extension;
 pub use query::{
-    has_dbcn, has_hsm, has_ipi, has_pmu, has_rfence, has_srst, has_susp, has_timer,
-    probe_extension,
+    has_dbcn, has_hsm, has_ipi, has_pmu, has_rfence, has_srst, has_susp, has_timer, probe_extension,
 };

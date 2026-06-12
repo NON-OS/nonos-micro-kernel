@@ -16,7 +16,6 @@
 
 use core::arch::asm;
 
-
 #[inline(always)]
 pub(super) unsafe fn enable() {
     asm!("csrsi sstatus, 2", options(nostack));

@@ -15,7 +15,18 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SignatureStatus { Valid, Invalid, NotSigned, Error }
+pub enum SignatureStatus {
+    Valid,
+    Invalid,
+    NotSigned,
+    Error,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CertificateStatus { Trusted, Untrusted, Revoked, Expired, NotFound }
+pub enum CertificateStatus {
+    Trusted,
+    Untrusted,
+    Revoked,
+    Expired,
+    NotFound,
+}

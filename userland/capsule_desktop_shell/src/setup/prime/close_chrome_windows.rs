@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::state::{Context, SIDE_DOCK_WINDOW_ID, TASKBAR_WINDOW_ID};
+use crate::state::{Context, TASKBAR_WINDOW_ID};
 use crate::wm_client;
 
 pub fn close_chrome_windows(ctx: &mut Context) {
     let _ = wm_client::window_close(ctx.wm_port, ctx.issue_request_id(), TASKBAR_WINDOW_ID);
-    let _ = wm_client::window_close(ctx.wm_port, ctx.issue_request_id(), SIDE_DOCK_WINDOW_ID);
 }

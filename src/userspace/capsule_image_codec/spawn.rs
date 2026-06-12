@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    IMAGE_CODEC_ELF, IMAGE_CODEC_MANIFEST_BYTES, IMAGE_CODEC_NONOS_ID_CERT_BYTES,
+    IMAGE_CODEC_ELF, IMAGE_CODEC_MANIFEST_BYTES, IMAGE_CODEC_ATTESTATION_BYTES, IMAGE_CODEC_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
@@ -44,6 +44,7 @@ pub fn spawn_image_codec_capsule() -> Result<(), SpawnError> {
         elf: IMAGE_CODEC_ELF,
         nonos_id_cert_bytes: IMAGE_CODEC_NONOS_ID_CERT_BYTES,
         manifest_bytes: IMAGE_CODEC_MANIFEST_BYTES,
+        attestation_trailer: IMAGE_CODEC_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: REQUIRED_CAPS,
         debug_tag: b"",

@@ -95,15 +95,9 @@ pub fn secure_reset() -> ! {
 }
 
 fn clear_sensitive_memory() {
-    /*
-     * In production, this would zeroize:
-     * - Signing key buffers
-     * - ZK witness data
-     * - Boot nonces
-     * - TPM session data
-     *
-     * Placeholder for integration with memory module.
-     */
+    crate::crypto::keystore_v2::wipe_all_keys();
+    crate::crypto::sig::wipe_signing_state();
+    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -126,10 +120,6 @@ pub enum PanicCategory {
 impl PanicInfo {
     pub fn capture(category: PanicCategory, line: u32) -> Self {
         record_panic(line);
-        Self {
-            line,
-            count: panic_count(),
-            category,
-        }
+        Self { line, count: panic_count(), category }
     }
 }

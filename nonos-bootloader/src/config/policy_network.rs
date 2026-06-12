@@ -43,10 +43,7 @@ pub fn apply_network_policy(
                         "   [WARN] Secured network policy requires HTTPS support\r\n"
                     ))
                     .unwrap_or(());
-                log_warn(
-                    "config",
-                    "Secured network policy requirements not fully met",
-                );
+                log_warn("config", "Secured network policy requirements not fully met");
                 return false;
             }
             system_table
@@ -63,9 +60,7 @@ pub fn apply_network_policy(
         NetworkPolicy::Unrestricted => {
             system_table
                 .stdout()
-                .output_string(cstr16!(
-                    "   [INFO] Unrestricted network policy enforced\r\n"
-                ))
+                .output_string(cstr16!("   [INFO] Unrestricted network policy enforced\r\n"))
                 .unwrap_or(());
         }
     }

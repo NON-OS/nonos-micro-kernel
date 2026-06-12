@@ -23,20 +23,16 @@ pub mod asm;
 pub mod boot;
 pub mod context;
 pub mod cpu;
+pub mod diag;
 pub mod gdt;
 pub mod idt;
 pub mod interrupt;
 #[cfg(feature = "nonos-arch-iommu")]
 pub mod iommu;
-// PS/2 + USB HID keyboard subtree. Not on the microkernel boot path
-// (no input capsule yet); off in microkernel-core.
-pub mod diag;
 pub mod multiboot;
 pub mod paging;
 pub mod pci;
 pub mod port;
-#[cfg(feature = "nonos-arch-hardening")]
-pub mod security;
 pub mod serial;
 pub mod smm;
 pub mod syscall;
@@ -68,14 +64,6 @@ pub use vga::{clear, print_critical, set_color, write_byte, write_str, Color, Co
 #[cfg(feature = "nonos-arch-iommu")]
 pub use iommu::types::{
     DomainId as IommuDomainId, IommuPageFlags, SourceId as IommuSourceId, VtdError as IommuVtdError,
-};
-
-#[cfg(feature = "nonos-arch-hardening")]
-pub use security::{
-    detect_vulnerabilities, disable_ibrs, disable_ssbd, disable_stibp, enable_ibrs, enable_ssbd,
-    enable_stibp, ibpb, is_ibpb_supported, is_ibrs_supported, is_ssbd_supported,
-    is_stibp_supported, map_kernel_to_user, retpoline_call, setup_user_page_table,
-    switch_to_kernel, switch_to_user, unmap_kernel_from_user, SpectreVulnerabilities,
 };
 
 #[cfg(test)]

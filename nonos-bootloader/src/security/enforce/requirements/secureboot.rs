@@ -19,13 +19,22 @@ use crate::security::enforce::policy::EnforcementResult;
 use crate::security::types::SecurityContext;
 
 pub fn enforce_secure_boot(ctx: &SecurityContext, result: &mut EnforcementResult) {
-    if !ctx.secure_boot_enabled { result.deny("SecureBoot required"); log_error("enforce", "BLOCKED: SecureBoot required"); }
+    if !ctx.secure_boot_enabled {
+        result.deny("SecureBoot required");
+        log_error("enforce", "BLOCKED: SecureBoot required");
+    }
 }
 
 pub fn enforce_platform_key(ctx: &SecurityContext, result: &mut EnforcementResult) {
-    if !ctx.platform_key_verified { result.deny("PlatformKey required"); log_error("enforce", "BLOCKED: PlatformKey required"); }
+    if !ctx.platform_key_verified {
+        result.deny("PlatformKey required");
+        log_error("enforce", "BLOCKED: PlatformKey required");
+    }
 }
 
 pub fn enforce_signature_db(ctx: &SecurityContext, result: &mut EnforcementResult) {
-    if !ctx.signature_database_valid { result.deny("SignatureDB required"); log_error("enforce", "BLOCKED: SignatureDB required"); }
+    if !ctx.signature_database_valid {
+        result.deny("SignatureDB required");
+        log_error("enforce", "BLOCKED: SignatureDB required");
+    }
 }

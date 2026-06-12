@@ -7,7 +7,8 @@
 // (at your option) any later version.
 
 use super::embed::{
-    DRIVER_I2C_HID_ELF, DRIVER_I2C_HID_MANIFEST_BYTES, DRIVER_I2C_HID_NONOS_ID_CERT_BYTES,
+    DRIVER_I2C_HID_ATTESTATION_BYTES, DRIVER_I2C_HID_ELF, DRIVER_I2C_HID_MANIFEST_BYTES,
+    DRIVER_I2C_HID_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -36,8 +37,11 @@ pub fn spawn_driver_i2c_hid_capsule() -> Result<(), SpawnError> {
         elf: DRIVER_I2C_HID_ELF,
         nonos_id_cert_bytes: DRIVER_I2C_HID_NONOS_ID_CERT_BYTES,
         manifest_bytes: DRIVER_I2C_HID_MANIFEST_BYTES,
+        attestation_trailer: DRIVER_I2C_HID_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit() | Capability::Memory.bit(),
+        requested_caps: Capability::IPC.bit()
+            | Capability::Memory.bit()
+            | Capability::InputSource.bit(),
         debug_tag: b"[DRIVER-I2C-HID] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

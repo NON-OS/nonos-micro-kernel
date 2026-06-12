@@ -19,11 +19,23 @@ use crate::security::enforce::policy::EnforcementResult;
 use crate::security::types::SecurityContext;
 
 pub fn enforce_crypto_selftests(ctx: &SecurityContext, result: &mut EnforcementResult) {
-    if !ctx.blake3_selftest_ok { result.deny("BLAKE3 selftest failed"); log_error("enforce", "BLAKE3 selftest FAILED"); }
-    if !ctx.ed25519_selftest_ok { result.deny("Ed25519 selftest failed"); log_error("enforce", "Ed25519 selftest FAILED"); }
+    if !ctx.blake3_selftest_ok {
+        result.deny("BLAKE3 selftest failed");
+        log_error("enforce", "BLAKE3 selftest FAILED");
+    }
+    if !ctx.ed25519_selftest_ok {
+        result.deny("Ed25519 selftest failed");
+        log_error("enforce", "Ed25519 selftest FAILED");
+    }
 }
 
 pub fn enforce_keys_loaded(ctx: &SecurityContext, result: &mut EnforcementResult) {
-    if !ctx.production_keys_loaded { result.deny("signing keys not loaded"); log_error("enforce", "no signing keys"); }
-    if ctx.key_count == 0 { result.deny("zero signing keys"); log_error("enforce", "key count is zero"); }
+    if !ctx.production_keys_loaded {
+        result.deny("signing keys not loaded");
+        log_error("enforce", "no signing keys");
+    }
+    if ctx.key_count == 0 {
+        result.deny("zero signing keys");
+        log_error("enforce", "key count is zero");
+    }
 }

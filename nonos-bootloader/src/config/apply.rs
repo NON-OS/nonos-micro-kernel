@@ -59,9 +59,7 @@ pub fn apply_configuration(
     if !apply_network_policy(config, system_table, network) {
         system_table
             .stdout()
-            .output_string(cstr16!(
-                "   [WARN] Network policy application had issues\r\n"
-            ))
+            .output_string(cstr16!("   [WARN] Network policy application had issues\r\n"))
             .unwrap_or(());
         log_warn("config", "Network policy application had issues");
     } else {
@@ -84,10 +82,7 @@ pub fn apply_configuration(
     if application_successful {
         log_info("config", "All configuration applied successfully");
     } else {
-        log_warn(
-            "config",
-            "Configuration application completed with some issues",
-        );
+        log_warn("config", "Configuration application completed with some issues");
     }
 
     application_successful

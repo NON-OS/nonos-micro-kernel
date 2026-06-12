@@ -38,9 +38,7 @@ pub fn read_u64_le(b: &[u8]) -> Option<u64> {
     if b.len() < 8 {
         return None;
     }
-    Some(u64::from_le_bytes([
-        b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
-    ]))
+    Some(u64::from_le_bytes([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]]))
 }
 
 pub fn hex_nibble(v: u8) -> char {

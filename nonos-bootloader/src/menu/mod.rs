@@ -14,14 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod brand;
-pub mod input;
-pub mod render;
-pub mod types;
-
 mod dev_check;
-mod run;
+mod types;
 
 pub use dev_check::check_dev_key_held;
-pub use run::run_boot_menu;
-pub use types::{MenuAction, MenuState, SecurityMode};
+pub use types::{MenuAction, SecurityMode};

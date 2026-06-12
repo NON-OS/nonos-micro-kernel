@@ -32,11 +32,7 @@ pub enum LoaderError {
     InvalidSegmentSize,
     InvalidSegmentAlignment,
 
-    AllocationFailed {
-        addr: u64,
-        pages: usize,
-        status: Status,
-    },
+    AllocationFailed { addr: u64, pages: usize, status: Status },
     AllocationTableFull,
     OutOfMemory,
 
@@ -57,10 +53,7 @@ pub enum LoaderError {
     UnsupportedRelocation(u32),
     SymbolNotFound,
 
-    UefiError {
-        desc: &'static str,
-        status: Status,
-    },
+    UefiError { desc: &'static str, status: Status },
     BootServicesUnavailable,
 
     InvalidDynamic,
@@ -75,9 +68,6 @@ pub type LoaderResult<T> = core::result::Result<T, LoaderError>;
 
 impl From<uefi::Error> for LoaderError {
     fn from(e: uefi::Error) -> Self {
-        LoaderError::UefiError {
-            desc: "UEFI operation failed",
-            status: e.status(),
-        }
+        LoaderError::UefiError { desc: "UEFI operation failed", status: e.status() }
     }
 }

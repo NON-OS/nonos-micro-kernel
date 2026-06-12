@@ -14,15 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::chips::draw_chip;
-use crate::display::gop::is_initialized;
+use super::chips::{chip_width, draw_chip};
+use super::layout::splash;
+use crate::display::gop::{get_dimensions, is_initialized};
+
+const LABELS: [&[u8]; 3] = [b"SECURE BOOT", b"MEASURED", b"ATTESTED"];
 
 pub fn draw_status_line(secure_boot: bool, measured: bool, attested: bool) {
     if !is_initialized() {
         return;
     }
-    let mut x = 40;
-    x = draw_chip(x, 96, b"SecureBoot", secure_boot as u8 * 2);
-    x = draw_chip(x, 96, b"Measured", measured as u8 * 2);
-    let _ = draw_chip(x, 96, b"Attested", attested as u8 * 2);
+    let (w, _) = get_dimensions();
+    let total: u32 = LABELS.iter().map(|l| chip_width(l)).sum::<u32>() + 20;
+    let mut x = (w.saturating_sub(total)) / 2;
+    let y = splash().chips_y;
+    let states = [secure_boot, measured, attested];
+    for (label, on) in LABELS.iter().zip(states) {
+        x = draw_chip(x, y, label, on as u8 * 2);
+    }
 }

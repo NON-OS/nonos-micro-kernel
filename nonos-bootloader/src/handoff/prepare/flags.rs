@@ -17,16 +17,40 @@
 use crate::handoff::types::{flags, CryptoHandoff};
 
 /// Build handoff flags bitmask from detected hardware and security features.
-pub fn build_handoff_flags(fb_available: bool, acpi_available: bool, crypto: &CryptoHandoff, tpm_measured: bool, smep: bool, smap: bool, umip: bool) -> u64 {
+pub fn build_handoff_flags(
+    fb_available: bool,
+    acpi_available: bool,
+    crypto: &CryptoHandoff,
+    tpm_measured: bool,
+    smep: bool,
+    smap: bool,
+    umip: bool,
+) -> u64 {
     let mut f: u64 = 0;
-    if fb_available { f |= flags::FB_AVAILABLE; }
-    if acpi_available { f |= flags::ACPI_AVAILABLE; }
-    if crypto.secure_boot { f |= flags::SECURE_BOOT; }
-    if crypto.zk_attested { f |= flags::ZK_ATTESTED; }
-    if tpm_measured { f |= flags::TPM_MEASURED; }
-    if smep { f |= flags::SMEP; }
-    if smap { f |= flags::SMAP; }
-    if umip { f |= flags::UMIP; }
+    if fb_available {
+        f |= flags::FB_AVAILABLE;
+    }
+    if acpi_available {
+        f |= flags::ACPI_AVAILABLE;
+    }
+    if crypto.secure_boot {
+        f |= flags::SECURE_BOOT;
+    }
+    if crypto.zk_attested {
+        f |= flags::ZK_ATTESTED;
+    }
+    if tpm_measured {
+        f |= flags::TPM_MEASURED;
+    }
+    if smep {
+        f |= flags::SMEP;
+    }
+    if smap {
+        f |= flags::SMAP;
+    }
+    if umip {
+        f |= flags::UMIP;
+    }
     f |= flags::WX;
     f |= flags::NXE;
     f |= flags::IDMAP_PRESERVED;

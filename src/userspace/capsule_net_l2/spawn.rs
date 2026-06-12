@@ -19,7 +19,7 @@
 //! the virtio-net (or e1000) driver capsule; this service reaches
 //! the NIC through the service registry, never through the kernel.
 
-use super::embed::{NET_L2_ELF, NET_L2_MANIFEST_BYTES, NET_L2_NONOS_ID_CERT_BYTES};
+use super::embed::{NET_L2_ELF, NET_L2_MANIFEST_BYTES, NET_L2_NONOS_ID_CERT_BYTES, NET_L2_ATTESTATION_BYTES};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
@@ -48,6 +48,7 @@ pub fn spawn_net_l2_capsule() -> Result<(), SpawnError> {
         elf: NET_L2_ELF,
         nonos_id_cert_bytes: NET_L2_NONOS_ID_CERT_BYTES,
         manifest_bytes: NET_L2_MANIFEST_BYTES,
+        attestation_trailer: NET_L2_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit() | Capability::Memory.bit(),
         debug_tag: b"[NET-L2] load_elf_executable error:",

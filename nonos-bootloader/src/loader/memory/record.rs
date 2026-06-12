@@ -18,19 +18,40 @@ use crate::loader::types::memory;
 use uefi::table::boot::MemoryType;
 
 #[derive(Debug, Clone, Copy, Default)]
-pub struct AllocationRecord { pub address: u64, pub pages: usize, pub memory_type: u32 }
+pub struct AllocationRecord {
+    pub address: u64,
+    pub pages: usize,
+    pub memory_type: u32,
+}
 
 impl AllocationRecord {
-    pub fn new(address: u64, pages: usize) -> Self { Self { address, pages, memory_type: MemoryType::LOADER_DATA.0 } }
-    pub fn is_valid(&self) -> bool { self.address != 0 && self.pages > 0 }
-    pub fn size_bytes(&self) -> usize { self.pages * memory::PAGE_SIZE }
+    pub fn new(address: u64, pages: usize) -> Self {
+        Self { address, pages, memory_type: MemoryType::LOADER_DATA.0 }
+    }
+    pub fn is_valid(&self) -> bool {
+        self.address != 0 && self.pages > 0
+    }
+    pub fn size_bytes(&self) -> usize {
+        self.pages * memory::PAGE_SIZE
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct MemoryRegion { pub start: u64, pub size: usize, pub writable: bool, pub executable: bool }
+pub struct MemoryRegion {
+    pub start: u64,
+    pub size: usize,
+    pub writable: bool,
+    pub executable: bool,
+}
 
 impl MemoryRegion {
-    pub fn end(&self) -> u64 { self.start + self.size as u64 }
-    pub fn contains(&self, addr: u64) -> bool { addr >= self.start && addr < self.end() }
-    pub fn overlaps(&self, other: &MemoryRegion) -> bool { self.start < other.end() && other.start < self.end() }
+    pub fn end(&self) -> u64 {
+        self.start + self.size as u64
+    }
+    pub fn contains(&self, addr: u64) -> bool {
+        addr >= self.start && addr < self.end()
+    }
+    pub fn overlaps(&self, other: &MemoryRegion) -> bool {
+        self.start < other.end() && other.start < self.end()
+    }
 }

@@ -14,24 +14,51 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
-use uefi::table::boot::BootServices;
 use super::handoff_init::HandoffInitParams;
+use crate::firmware::FirmwareHandoff;
 use crate::handoff::config::{get_acpi_rsdp, get_framebuffer_info, get_smbios_entry};
-use crate::handoff::prepare::{build_handoff_flags, detect_cpu_security_features, estimate_tsc_frequency, HandoffAllocations};
+use crate::handoff::prepare::{
+    build_handoff_flags, detect_cpu_security_features, estimate_tsc_frequency, HandoffAllocations,
+};
 use crate::handoff::timing::get_uefi_time_epoch;
 use crate::handoff::types::CryptoHandoff;
-use crate::firmware::FirmwareHandoff;
 use crate::loader::KernelImage;
+use uefi::prelude::*;
+use uefi::table::boot::BootServices;
 
 /// Collect all system info needed for kernel handoff before ExitBootServices.
-pub fn gather_system_info(st: &SystemTable<Boot>, bs: &BootServices, kernel: &KernelImage, crypto: &CryptoHandoff, firmware: FirmwareHandoff, tpm_measured: bool, allocs: &HandoffAllocations, rng_seed: [u8; 32]) -> HandoffInitParams {
+pub fn gather_system_info(
+    st: &SystemTable<Boot>,
+    bs: &BootServices,
+    kernel: &KernelImage,
+    crypto: &CryptoHandoff,
+    firmware: FirmwareHandoff,
+    tpm_measured: bool,
+    allocs: &HandoffAllocations,
+    rng_seed: [u8; 32],
+) -> HandoffInitParams {
     let fb_info = get_framebuffer_info(bs);
     let (smep, smap, umip) = detect_cpu_security_features();
     let acpi_rsdp = get_acpi_rsdp(st);
     HandoffInitParams {
-        fb_info, acpi_rsdp, smbios_entry: get_smbios_entry(st), unix_epoch_ms: get_uefi_time_epoch(st), tsc_hz: estimate_tsc_frequency(bs),
-        handoff_flags: build_handoff_flags(fb_info.ptr != 0, acpi_rsdp != 0, crypto, tpm_measured, smep, smap, umip),
-        entry_point: kernel.entry_point as u64, cmdline_addr: allocs.cmdline_addr, crypto: *crypto, firmware, rng_seed,
+        fb_info,
+        acpi_rsdp,
+        smbios_entry: get_smbios_entry(st),
+        unix_epoch_ms: get_uefi_time_epoch(st),
+        tsc_hz: estimate_tsc_frequency(bs),
+        handoff_flags: build_handoff_flags(
+            fb_info.ptr != 0,
+            acpi_rsdp != 0,
+            crypto,
+            tpm_measured,
+            smep,
+            smap,
+            umip,
+        ),
+        entry_point: kernel.entry_point as u64,
+        cmdline_addr: allocs.cmdline_addr,
+        crypto: *crypto,
+        firmware,
+        rng_seed,
     }
 }

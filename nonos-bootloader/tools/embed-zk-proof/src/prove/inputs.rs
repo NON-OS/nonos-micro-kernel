@@ -22,7 +22,7 @@ use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem};
 use super::circuit::{build_circuit, CircuitParams};
 
 pub fn extract_public_inputs(params: &CircuitParams) -> Result<Vec<u8>> {
-    let circuit = build_circuit(params);
+    let circuit = build_circuit(params).map_err(anyhow::Error::msg)?;
     let cs = ConstraintSystem::<Fr>::new_ref();
 
     circuit

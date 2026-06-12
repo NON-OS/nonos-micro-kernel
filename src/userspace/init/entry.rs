@@ -23,6 +23,7 @@ pub fn run_init() -> ! {
     spawn_plan::spawn_ramfs();
     spawn_plan::spawn_core_after_ramfs();
     spawn_plan::run_ramfs_smoketest();
+    spawn_plan::spawn_display_core();
     spawn_plan::spawn_drivers();
     spawn_plan::spawn_vfs();
     spawn_plan::spawn_network();

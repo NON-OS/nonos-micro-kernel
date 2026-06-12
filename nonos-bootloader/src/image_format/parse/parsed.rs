@@ -81,7 +81,14 @@ fn extract_image_regions<'a>(
     let sig_bytes = &data[footer.signature_offset as usize..s_end];
     let proof_bytes = extract_proof_bytes(data, &footer, footer_start)?;
 
-    Ok(ParsedImage { footer, kernel_bytes, signature_bytes: sig_bytes, proof_bytes, hash_algorithm: hash_alg, signature_algorithm: sig_alg })
+    Ok(ParsedImage {
+        footer,
+        kernel_bytes,
+        signature_bytes: sig_bytes,
+        proof_bytes,
+        hash_algorithm: hash_alg,
+        signature_algorithm: sig_alg,
+    })
 }
 
 fn extract_proof_bytes<'a>(

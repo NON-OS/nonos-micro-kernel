@@ -21,18 +21,26 @@ const EFAULT: i32 = 14;
 const EINVAL: i32 = 22;
 const ENOTSUP: i32 = 95;
 
-pub(super) fn handle(display: u64, surface: u64) -> SyscallResult {
-    blit(display, surface, 0, 0, 0, 0, true)
+pub(super) fn handle(display: u64, surface: u64, span: usize) -> SyscallResult {
+    blit(display, surface, span, 0, 0, 0, 0, true)
 }
 
-fn blit(display: u64, surface: u64, x: u64, y: u64, w: u64, h: u64, full: bool) -> SyscallResult {
+fn blit(
+    display: u64,
+    surface: u64,
+    span: usize,
+    x: u64,
+    y: u64,
+    w: u64,
+    h: u64,
+    full: bool,
+) -> SyscallResult {
     if display != 0 {
         return super::super::util::errno(EINVAL);
     }
-    let span = match super::graphics_backend::surface_span_for_id(surface) {
-        Ok(v) => v,
-        Err(e) => return super::super::util::errno(e),
-    };
+    // `span` is the surface byte length from the attach record. Userland
+    // mappings are not tracked in proc VMAs, so the size comes from the
+    // surface registry; copy_from_user validates each source page below.
     let Some(fb) = crate::kernel_core::init::framebuffer::framebuffer_state() else {
         return super::super::util::errno(ENOTSUP);
     };

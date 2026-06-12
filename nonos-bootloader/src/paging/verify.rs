@@ -28,10 +28,7 @@ use super::table::PageTable;
 // `expects_kernel_text` is true for upper-half kernels — they must
 // have PML4[511] populated by `map_kernel_text`. Legacy low-half
 // images execute through PML4[0]'s identity branch and do not.
-pub fn verify_kernel_pml4(
-    pml4: PageTable,
-    expects_kernel_text: bool,
-) -> Result<(), &'static str> {
+pub fn verify_kernel_pml4(pml4: PageTable, expects_kernel_text: bool) -> Result<(), &'static str> {
     unsafe {
         let low = pml4.read_entry(PML4_INDEX_LOW_IDENTITY);
         if low & PTE_P == 0 {

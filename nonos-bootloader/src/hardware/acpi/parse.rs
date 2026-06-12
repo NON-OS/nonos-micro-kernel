@@ -27,13 +27,21 @@ pub fn parse_madt_cpu_count(madt_addr: u64) -> usize {
         while offset + 2 <= hdr.length as usize {
             let entry_type = *((madt_addr + offset as u64) as *const u8);
             let entry_len = *((madt_addr + offset as u64 + 1) as *const u8) as usize;
-            if entry_len < 2 { break; }
+            if entry_len < 2 {
+                break;
+            }
             if entry_type == LAPIC_ENTRY_TYPE && entry_len >= 8 {
                 let flags = *((madt_addr + offset as u64 + 4) as *const u32);
-                if flags & LAPIC_FLAGS_ENABLED != 0 { cpu_count += 1; }
+                if flags & LAPIC_FLAGS_ENABLED != 0 {
+                    cpu_count += 1;
+                }
             }
             offset += entry_len;
         }
-        if cpu_count == 0 { 1 } else { cpu_count }
+        if cpu_count == 0 {
+            1
+        } else {
+            cpu_count
+        }
     }
 }

@@ -30,18 +30,49 @@ static RTL8852A: &[u8] = include_bytes!("../../firmware/realtek/rtw8852a_fw.bin"
 static RTL8852B: &[u8] = include_bytes!("../../firmware/realtek/rtw8852b_fw.bin");
 static RTL8852C: &[u8] = include_bytes!("../../firmware/realtek/rtw8852c_fw.bin");
 
-const FIRMWARE_TABLE: &[(FirmwareType, &[u8])] = &[(FirmwareType::IntelAx200, INTEL_AX200), (FirmwareType::IntelAx210, INTEL_AX210), (FirmwareType::Intel8265, INTEL_8265), (FirmwareType::Intel9260, INTEL_9260), (FirmwareType::Intel7265, INTEL_7265), (FirmwareType::Rtl8821c, RTL8821C), (FirmwareType::Rtl8822b, RTL8822B), (FirmwareType::Rtl8822c, RTL8822C), (FirmwareType::Rtl8723d, RTL8723D), (FirmwareType::Rtl8851b, RTL8851B), (FirmwareType::Rtl8852a, RTL8852A), (FirmwareType::Rtl8852b, RTL8852B), (FirmwareType::Rtl8852c, RTL8852C)];
+const FIRMWARE_TABLE: &[(FirmwareType, &[u8])] = &[
+    (FirmwareType::IntelAx200, INTEL_AX200),
+    (FirmwareType::IntelAx210, INTEL_AX210),
+    (FirmwareType::Intel8265, INTEL_8265),
+    (FirmwareType::Intel9260, INTEL_9260),
+    (FirmwareType::Intel7265, INTEL_7265),
+    (FirmwareType::Rtl8821c, RTL8821C),
+    (FirmwareType::Rtl8822b, RTL8822B),
+    (FirmwareType::Rtl8822c, RTL8822C),
+    (FirmwareType::Rtl8723d, RTL8723D),
+    (FirmwareType::Rtl8851b, RTL8851B),
+    (FirmwareType::Rtl8852a, RTL8852A),
+    (FirmwareType::Rtl8852b, RTL8852B),
+    (FirmwareType::Rtl8852c, RTL8852C),
+];
 
 pub fn get_firmware_handoff() -> FirmwareHandoff {
     let mut handoff = FirmwareHandoff::new();
     for (fw_type, data) in FIRMWARE_TABLE {
         if handoff.count < MAX_FIRMWARE_ENTRIES {
-            handoff.entries[handoff.count] = FirmwareEntry { fw_type: *fw_type, ptr: data.as_ptr() as u64, size: data.len() as u32, reserved: 0 };
+            handoff.entries[handoff.count] = FirmwareEntry {
+                fw_type: *fw_type,
+                ptr: data.as_ptr() as u64,
+                size: data.len() as u32,
+                reserved: 0,
+            };
             handoff.count += 1;
         }
-    } handoff
+    }
+    handoff
 }
 
-pub fn get_firmware(fw_type: FirmwareType) -> Option<&'static [u8]> { for (t, data) in FIRMWARE_TABLE { if *t == fw_type { return Some(*data); } } None }
-pub fn has_embedded_firmware() -> bool { true }
-pub fn firmware_count() -> usize { FIRMWARE_TABLE.len() }
+pub fn get_firmware(fw_type: FirmwareType) -> Option<&'static [u8]> {
+    for (t, data) in FIRMWARE_TABLE {
+        if *t == fw_type {
+            return Some(*data);
+        }
+    }
+    None
+}
+pub fn has_embedded_firmware() -> bool {
+    true
+}
+pub fn firmware_count() -> usize {
+    FIRMWARE_TABLE.len()
+}

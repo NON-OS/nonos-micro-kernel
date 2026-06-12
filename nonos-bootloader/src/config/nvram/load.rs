@@ -40,9 +40,7 @@ pub fn load_bootloader_config(system_table: &mut SystemTable<Boot>) -> Bootloade
         config.security_policy = policy;
         system_table
             .stdout()
-            .output_string(cstr16!(
-                "   [SUCCESS] Security policy loaded from NVRAM\r\n"
-            ))
+            .output_string(cstr16!("   [SUCCESS] Security policy loaded from NVRAM\r\n"))
             .unwrap_or(());
         log_info("config", "Security policy loaded from NVRAM");
     } else {

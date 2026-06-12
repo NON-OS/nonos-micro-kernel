@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    SETUP_WIZARD_ELF, SETUP_WIZARD_MANIFEST_BYTES, SETUP_WIZARD_NONOS_ID_CERT_BYTES,
+    SETUP_WIZARD_ELF, SETUP_WIZARD_MANIFEST_BYTES, SETUP_WIZARD_ATTESTATION_BYTES, SETUP_WIZARD_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -44,6 +44,7 @@ pub fn spawn_setup_wizard_capsule() -> Result<(), SpawnError> {
         elf: SETUP_WIZARD_ELF,
         nonos_id_cert_bytes: SETUP_WIZARD_NONOS_ID_CERT_BYTES,
         manifest_bytes: SETUP_WIZARD_MANIFEST_BYTES,
+        attestation_trailer: SETUP_WIZARD_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

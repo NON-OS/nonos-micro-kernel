@@ -54,6 +54,8 @@ pub fn verify_machine_id(claimed: &[u8; 32]) -> bool {
 #[inline]
 fn ct_eq32(a: &[u8; 32], b: &[u8; 32]) -> bool {
     let mut x = 0u8;
-    for i in 0..32 { x |= a[i] ^ b[i]; }
+    for i in 0..32 {
+        x |= a[i] ^ b[i];
+    }
     x == 0
 }

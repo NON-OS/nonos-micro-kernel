@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -15,17 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod args;
-mod binding;
-mod constants;
-mod input;
-mod parse_public_inputs;
-mod read_capsule;
 mod read_file_input;
-mod read_u32;
-mod read_vk;
 mod run;
-mod take;
-mod validate_public_input_layout;
-mod verify_groth16;
 
 pub use run::run;

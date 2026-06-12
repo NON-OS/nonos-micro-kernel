@@ -16,16 +16,26 @@
 
 extern crate alloc;
 
+use crate::log::logger::{log_error, log_info};
 use alloc::format;
 use uefi::cstr16;
 use uefi::prelude::*;
-use crate::log::logger::{log_error, log_info};
 
 pub fn check_signature_db(st: &mut SystemTable<Boot>) -> bool {
     let rt = st.runtime_services();
     let mut buf = [0u8; 4096];
-    match rt.get_variable(cstr16!("db"), &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE, &mut buf) {
-        Ok(_) => { log_info("security", "Signature DB present"); buf.iter().any(|&b| b != 0) }
-        Err(e) => { log_error("security", &format!("Signature DB missing: {:?}", e.status())); false }
+    match rt.get_variable(
+        cstr16!("db"),
+        &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE,
+        &mut buf,
+    ) {
+        Ok(_) => {
+            log_info("security", "Signature DB present");
+            buf.iter().any(|&b| b != 0)
+        }
+        Err(e) => {
+            log_error("security", &format!("Signature DB missing: {:?}", e.status()));
+            false
+        }
     }
 }

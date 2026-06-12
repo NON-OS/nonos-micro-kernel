@@ -19,9 +19,15 @@ use crate::security::enforce::policy::EnforcementResult;
 use crate::security::types::SecurityContext;
 
 pub fn enforce_hardware_rng(ctx: &SecurityContext, result: &mut EnforcementResult) {
-    if !ctx.hardware_rng_available { result.deny("HW RNG required"); log_error("enforce", "BLOCKED: HW RNG required"); }
+    if !ctx.hardware_rng_available {
+        result.deny("HW RNG required");
+        log_error("enforce", "BLOCKED: HW RNG required");
+    }
 }
 
 pub fn enforce_measured_boot(ctx: &SecurityContext, result: &mut EnforcementResult) {
-    if !ctx.measured_boot_active { result.deny("TPM required"); log_error("enforce", "BLOCKED: TPM required"); }
+    if !ctx.measured_boot_active {
+        result.deny("TPM required");
+        log_error("enforce", "BLOCKED: TPM required");
+    }
 }

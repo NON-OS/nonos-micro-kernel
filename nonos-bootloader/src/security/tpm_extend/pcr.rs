@@ -20,20 +20,35 @@ use alloc::format;
 use sha2::{Digest, Sha256};
 use uefi::prelude::*;
 
-use crate::log::logger::{log_debug, log_error, log_info, log_warn};
 use super::tcg2::{extend_pcr_via_tcg2, locate_tcg2_protocol};
+use crate::log::logger::{log_debug, log_error, log_info, log_warn};
 
 pub fn extend_pcr_measurement(st: &mut SystemTable<Boot>, pcr_index: u32, data: &[u8]) -> bool {
-    if data.is_empty() { log_warn("security", "empty data for PCR"); return false; }
-    if pcr_index > 23 { log_error("security", "invalid PCR index"); return false; }
+    if data.is_empty() {
+        log_warn("security", "empty data for PCR");
+        return false;
+    }
+    if pcr_index > 23 {
+        log_error("security", "invalid PCR index");
+        return false;
+    }
     let mut hasher = Sha256::new();
     hasher.update(data);
     let measurement: [u8; 32] = hasher.finalize().into();
     match locate_tcg2_protocol(st.boot_services()) {
         Some(tcg2) => match extend_pcr_via_tcg2(tcg2, pcr_index, &measurement) {
-            Ok(()) => { log_info("security", &format!("PCR{} extended", pcr_index)); true }
-            Err(e) => { log_warn("security", &format!("PCR extend failed: {}", e)); false }
+            Ok(()) => {
+                log_info("security", &format!("PCR{} extended", pcr_index));
+                true
+            }
+            Err(e) => {
+                log_warn("security", &format!("PCR extend failed: {}", e));
+                false
+            }
         },
-        None => { log_debug("security", "no TPM2 available"); false }
+        None => {
+            log_debug("security", "no TPM2 available");
+            false
+        }
     }
 }

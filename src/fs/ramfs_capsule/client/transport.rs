@@ -50,8 +50,7 @@ fn map_err(e: transport::TransportError) -> CapsuleFsError {
     match e {
         transport::TransportError::Dead => CapsuleFsError::Dead,
         transport::TransportError::Stale => CapsuleFsError::StaleGeneration,
-        transport::TransportError::TransportFailure | transport::TransportError::ProtocolMismatch => {
-            CapsuleFsError::TransportFailure
-        }
+        transport::TransportError::TransportFailure
+        | transport::TransportError::ProtocolMismatch => CapsuleFsError::TransportFailure,
     }
 }

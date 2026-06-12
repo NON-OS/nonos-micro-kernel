@@ -57,7 +57,9 @@ fn verify_backend(p: &mut ZkProof) -> ZkVerifyResult {
     let vk_bytes = match registry::lookup(&p.program_hash) {
         Some(v) if !v.is_empty() => v,
         Some(_) => return finalize(p, ZkVerifyResult::Error(ZkError::VerifyingKeyEmpty.as_str())),
-        None => return finalize(p, ZkVerifyResult::Unsupported(ZkError::UnknownProgramHash.as_str())),
+        None => {
+            return finalize(p, ZkVerifyResult::Unsupported(ZkError::UnknownProgramHash.as_str()))
+        }
     };
 
     let result = match groth16_verify(vk_bytes, &p.proof_blob, &p.public_inputs) {

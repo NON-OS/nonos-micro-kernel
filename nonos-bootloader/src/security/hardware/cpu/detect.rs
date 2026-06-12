@@ -21,7 +21,9 @@ use super::types::CpuSecurityFeatures;
 pub fn detect_cpu_security_features() -> CpuSecurityFeatures {
     let mut f = CpuSecurityFeatures::default();
     #[cfg(target_arch = "x86_64")]
-    unsafe { detect_x86(&mut f); }
+    unsafe {
+        detect_x86(&mut f);
+    }
     f
 }
 

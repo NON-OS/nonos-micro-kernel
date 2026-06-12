@@ -7,7 +7,7 @@
 // (at your option) any later version.
 
 use super::embed::{
-    DRIVER_I2C_PCI_ELF, DRIVER_I2C_PCI_MANIFEST_BYTES, DRIVER_I2C_PCI_NONOS_ID_CERT_BYTES,
+    DRIVER_I2C_PCI_ELF, DRIVER_I2C_PCI_MANIFEST_BYTES, DRIVER_I2C_PCI_ATTESTATION_BYTES, DRIVER_I2C_PCI_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -36,6 +36,7 @@ pub fn spawn_driver_i2c_pci_capsule() -> Result<(), SpawnError> {
         elf: DRIVER_I2C_PCI_ELF,
         nonos_id_cert_bytes: DRIVER_I2C_PCI_NONOS_ID_CERT_BYTES,
         manifest_bytes: DRIVER_I2C_PCI_MANIFEST_BYTES,
+        attestation_trailer: DRIVER_I2C_PCI_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit()
             | Capability::Memory.bit()

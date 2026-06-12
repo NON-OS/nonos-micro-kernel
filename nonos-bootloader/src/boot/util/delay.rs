@@ -15,9 +15,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub fn mini_delay() {
-    for _ in 0..8_000_000 { core::hint::spin_loop(); }
+    for _ in 0..8_000_000 {
+        core::hint::spin_loop();
+    }
 }
 
 pub fn micro_delay() {
-    for _ in 0..1_500_000 { core::hint::spin_loop(); }
+    for _ in 0..1_500_000 {
+        core::hint::spin_loop();
+    }
 }

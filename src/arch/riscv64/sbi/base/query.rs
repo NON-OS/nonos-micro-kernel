@@ -33,11 +33,21 @@ pub fn sbi_version() -> Result<(u32, u32), SbiError> {
     Ok((((raw >> 24) & 0x7F) as u32, (raw & 0xFF_FFFF) as u32))
 }
 
-pub fn impl_id() -> Result<usize, SbiError> { value(FID_GET_IMPL_ID, 0) }
-pub fn impl_version() -> Result<usize, SbiError> { value(FID_GET_IMPL_VERSION, 0) }
-pub fn mvendorid() -> Result<usize, SbiError> { value(FID_GET_MVENDORID, 0) }
-pub fn marchid() -> Result<usize, SbiError> { value(FID_GET_MARCHID, 0) }
-pub fn mimpid() -> Result<usize, SbiError> { value(FID_GET_MIMPID, 0) }
+pub fn impl_id() -> Result<usize, SbiError> {
+    value(FID_GET_IMPL_ID, 0)
+}
+pub fn impl_version() -> Result<usize, SbiError> {
+    value(FID_GET_IMPL_VERSION, 0)
+}
+pub fn mvendorid() -> Result<usize, SbiError> {
+    value(FID_GET_MVENDORID, 0)
+}
+pub fn marchid() -> Result<usize, SbiError> {
+    value(FID_GET_MARCHID, 0)
+}
+pub fn mimpid() -> Result<usize, SbiError> {
+    value(FID_GET_MIMPID, 0)
+}
 
 pub fn probe_extension_base(eid: usize) -> Result<bool, SbiError> {
     value(FID_PROBE_EXTENSION, eid).map(|v| v != 0)

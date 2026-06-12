@@ -19,8 +19,6 @@ use super::mte::init_mte;
 use super::pac::{init_pac, PacResult};
 use super::spectre::init_spectre_mitigations;
 
-
-
 pub fn init_all() -> PacResult<()> {
     init_pac()?;
     init_bti();

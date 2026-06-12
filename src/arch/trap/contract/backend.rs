@@ -17,12 +17,12 @@
 use super::cause::TrapCause;
 use super::frame::TrapFrame;
 
-#[cfg(target_arch = "x86_64")]
-use super::backend_x86_64 as imp;
 #[cfg(target_arch = "aarch64")]
 use super::backend_aarch64 as imp;
 #[cfg(target_arch = "riscv64")]
 use super::backend_riscv64 as imp;
+#[cfg(target_arch = "x86_64")]
+use super::backend_x86_64 as imp;
 
 pub(super) fn report_fatal<F: TrapFrame>(frame: &F, cause: &TrapCause) {
     imp::report_fatal(frame, cause)

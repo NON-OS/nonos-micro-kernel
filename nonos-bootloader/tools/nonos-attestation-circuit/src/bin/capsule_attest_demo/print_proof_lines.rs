@@ -19,7 +19,8 @@ pub fn print_proof_lines(text: &str) {
         if line.contains("proof_bytes")
             || line.contains("public_inputs")
             || line.contains("capsule_hash")
-            || line.contains("program_hash")
+            || line.contains("policy_root")
+            || line.contains("policy_epoch")
             || line.contains("commitment")
         {
             println!("  {line}");

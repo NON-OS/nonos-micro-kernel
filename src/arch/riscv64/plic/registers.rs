@@ -26,7 +26,9 @@ mod plic;
 mod priority;
 mod state;
 
-pub use api::{claim_interrupt, complete_interrupt, disable_irq, enable_irq, set_priority, set_threshold};
+pub use api::{
+    claim_interrupt, complete_interrupt, disable_irq, enable_irq, set_priority, set_threshold,
+};
 pub use error::{PlicError, PlicResult};
 pub use init::init_plic;
 pub use plic::Plic;

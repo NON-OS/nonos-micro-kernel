@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    INPUT_PROOF_ELF, INPUT_PROOF_MANIFEST_BYTES, INPUT_PROOF_NONOS_ID_CERT_BYTES,
+    INPUT_PROOF_ELF, INPUT_PROOF_MANIFEST_BYTES, INPUT_PROOF_ATTESTATION_BYTES, INPUT_PROOF_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -44,6 +44,7 @@ pub fn spawn_input_proof_capsule() -> Result<(), SpawnError> {
         elf: INPUT_PROOF_ELF,
         nonos_id_cert_bytes: INPUT_PROOF_NONOS_ID_CERT_BYTES,
         manifest_bytes: INPUT_PROOF_MANIFEST_BYTES,
+        attestation_trailer: INPUT_PROOF_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

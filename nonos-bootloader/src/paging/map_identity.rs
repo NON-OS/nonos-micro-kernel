@@ -16,8 +16,9 @@
 
 use uefi::table::boot::BootServices;
 
-use super::constants::{HUGE_1G, IDENTITY_LOW_BYTES, PTE_RW};
-use super::mapper::map_huge_1g_run;
+use super::constants::{HUGE_1G, HUGE_2M, IDENTITY_LOW_BYTES, PTE_RW};
+use super::mapper::{map_huge_1g_run, map_huge_2m_run};
+use super::page1g::supports_1gib_pages;
 use super::table::PageTable;
 
 // Identity-map the low memory region [0, IDENTITY_LOW_BYTES). The
@@ -31,9 +32,16 @@ use super::table::PageTable;
 // `jump_to_kernel` without a fault. The window must reach the
 // firmware's image load phys (OVMF/QEMU 10.2.0 places it > 4 GiB).
 //
-// 1 GiB hugepages: IDENTITY_LOW_BYTES / 1 GiB entries in PML4[0]'s
-// single PDPT (cap 512 GiB) cover the whole region.
+// Leaf granularity follows CPU support: 1 GiB hugepages where the CPU
+// reports PDPE1GB (QEMU, modern bare metal), otherwise 2 MiB hugepages
+// (VirtualBox's default profile and other CPUs without 1 GiB pages,
+// where a 1 GiB PDPTE would reserved-bit fault on first access).
 pub fn map_identity_low(bs: &BootServices, pml4: PageTable) -> Result<(), &'static str> {
-    let count = (IDENTITY_LOW_BYTES / HUGE_1G) as usize;
-    map_huge_1g_run(bs, pml4, 0, 0, count, PTE_RW)
+    if supports_1gib_pages() {
+        let count = (IDENTITY_LOW_BYTES / HUGE_1G) as usize;
+        map_huge_1g_run(bs, pml4, 0, 0, count, PTE_RW)
+    } else {
+        let count = (IDENTITY_LOW_BYTES / HUGE_2M) as usize;
+        map_huge_2m_run(bs, pml4, 0, 0, count, PTE_RW)
+    }
 }

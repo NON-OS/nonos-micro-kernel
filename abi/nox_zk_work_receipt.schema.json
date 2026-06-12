@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nonos/abi/nox_zk_work_receipt.schema.json",
+  "title": "NOX ZK work receipt",
+  "description": "Canonical off-chain receipt for verifiable NØNOS work other than ceremony rounds: fleet verification runs, boot witnesses, audits and capsule builds. The emitter validates the artifact before issuing; nox-receipt-verify re-checks it independently. The receipt is evidence, not a payout promise.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "chain_id",
+    "circuit_name",
+    "circuit_id",
+    "contributor_address",
+    "claim_epoch",
+    "policy_epoch",
+    "vk_sha256",
+    "transcript_sha256",
+    "artifact_name",
+    "artifact_sha256",
+    "attested_count",
+    "evidence_hash",
+    "receipt_id",
+    "uri"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "FLEET_VERIFICATION",
+        "RUNTIME_BOOT",
+        "HARDWARE_BOOT",
+        "CIRCUIT_AUDIT",
+        "CAPSULE_AUDIT",
+        "CAPSULE_BUILD"
+      ]
+    },
+    "chain_id": { "type": "integer", "const": 1 },
+    "circuit_name": { "type": "string", "minLength": 1 },
+    "circuit_id": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "contributor_address": { "type": "string", "pattern": "^0x[0-9a-f]{40}$" },
+    "claim_epoch": { "type": "integer", "minimum": 1 },
+    "policy_epoch": { "type": "integer", "minimum": 1 },
+    "vk_sha256": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "transcript_sha256": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "artifact_name": { "type": "string", "minLength": 1 },
+    "artifact_sha256": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "attested_count": { "type": "integer", "minimum": 0 },
+    "evidence_hash": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "receipt_id": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "uri": { "type": "string" }
+  }
+}

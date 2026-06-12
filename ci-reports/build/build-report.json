@@ -1,6 +1,6 @@
 {
   "module": "build",
-  "commit": "e6a31389c56c40e094c188264ab84b8b1479510a",
+  "commit": "5a44935e326ff4ebf36a5d3564a911d164eb8ccf",
   "toolchain": "nightly-2026-01-16",
   "status": "gap",
   "blocking": true,

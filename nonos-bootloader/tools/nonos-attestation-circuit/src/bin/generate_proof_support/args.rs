@@ -35,8 +35,10 @@ pub struct Args {
     pub capsule: PathBuf,
     #[arg(long, value_name = "MASK")]
     pub capability_mask: String,
-    #[arg(long, value_name = "HEX")]
-    pub program_hash: Option<String>,
+    #[arg(long, value_name = "FILE")]
+    pub policy_file: Option<PathBuf>,
+    #[arg(long, value_name = "NAME")]
+    pub policy_name: Option<String>,
     #[arg(long, default_value = "nonos-capsule-attestation")]
     pub seed: String,
 }

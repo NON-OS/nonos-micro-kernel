@@ -14,23 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::render::layout::{
-    bottom_dock_rect, side_dock_rect, SIDE_ENTRY_H, SIDE_ENTRY_PAD, TASKBAR_ENTRY_W,
-};
+use crate::render::layout::{bottom_dock_rect, TASKBAR_ENTRY_W};
 use crate::server::handlers::launcher_request;
 use crate::state::{Context, LAUNCHER_APPS};
 
 pub fn handle(ctx: &mut Context, x: u32, y: u32) {
-    let side = side_dock_rect(ctx.width, ctx.height);
-    let mut row_y = side.y + SIDE_ENTRY_PAD;
-    for app in LAUNCHER_APPS.iter() {
-        if x >= side.x + 6 && x < side.x + side.width - 6 && y >= row_y && y < row_y + SIDE_ENTRY_H
-        {
-            launcher_request::request(app);
-            return;
-        }
-        row_y += SIDE_ENTRY_H + SIDE_ENTRY_PAD;
-    }
     let bottom = bottom_dock_rect(ctx.width, ctx.height);
     let mut row_x = bottom.x + 12;
     for app in LAUNCHER_APPS.iter() {

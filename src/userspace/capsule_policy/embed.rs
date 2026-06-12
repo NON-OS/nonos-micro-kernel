@@ -27,6 +27,10 @@ pub(crate) const POLICY_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const POLICY_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/policy.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-policy")]
+pub(crate) const POLICY_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/policy.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-policy"))]
 pub(crate) const POLICY_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(crate) const POLICY_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-policy"))]
 pub(crate) const POLICY_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-policy"))]
+pub(crate) const POLICY_ATTESTATION_BYTES: &[u8] = &[];

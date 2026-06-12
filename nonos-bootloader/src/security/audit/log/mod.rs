@@ -19,5 +19,7 @@ mod hash;
 mod state;
 mod verify;
 
-pub use api::{audit, audit_alert, get_audit_hash, seal_audit_log, verify_audit_integrity, AUDIT_LOG};
+pub use api::{
+    audit, audit_alert, get_audit_hash, seal_audit_log, verify_audit_integrity, AUDIT_LOG,
+};
 pub use state::AuditLog;

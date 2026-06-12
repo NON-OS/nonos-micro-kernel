@@ -22,14 +22,22 @@ pub struct SecureKey {
 }
 
 impl SecureKey {
-    pub const fn empty() -> Self { Self { key: [0u8; 32], active: false } }
+    pub const fn empty() -> Self {
+        Self { key: [0u8; 32], active: false }
+    }
 
     pub fn load(&mut self, key_bytes: &[u8; 32]) {
         self.key.copy_from_slice(key_bytes);
         self.active = true;
     }
 
-    pub fn get(&self) -> Option<&[u8; 32]> { if self.active { Some(&self.key) } else { None } }
+    pub fn get(&self) -> Option<&[u8; 32]> {
+        if self.active {
+            Some(&self.key)
+        } else {
+            None
+        }
+    }
 
     pub fn clear(&mut self) {
         zeroize_32(&mut self.key);
@@ -38,5 +46,7 @@ impl SecureKey {
 }
 
 impl Drop for SecureKey {
-    fn drop(&mut self) { self.clear(); }
+    fn drop(&mut self) {
+        self.clear();
+    }
 }

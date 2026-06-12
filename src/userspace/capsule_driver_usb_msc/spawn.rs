@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    DRIVER_USB_MSC_ELF, DRIVER_USB_MSC_MANIFEST_BYTES, DRIVER_USB_MSC_NONOS_ID_CERT_BYTES,
+    DRIVER_USB_MSC_ELF, DRIVER_USB_MSC_MANIFEST_BYTES, DRIVER_USB_MSC_ATTESTATION_BYTES, DRIVER_USB_MSC_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -45,6 +45,7 @@ pub fn spawn_driver_usb_msc_capsule() -> Result<(), SpawnError> {
         elf: DRIVER_USB_MSC_ELF,
         nonos_id_cert_bytes: DRIVER_USB_MSC_NONOS_ID_CERT_BYTES,
         manifest_bytes: DRIVER_USB_MSC_MANIFEST_BYTES,
+        attestation_trailer: DRIVER_USB_MSC_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

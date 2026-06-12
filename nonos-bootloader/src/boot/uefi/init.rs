@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
 use crate::config::load_bootloader_config;
 use crate::display::{init_boot_screen, init_gop};
 use crate::firmware::detect_firmware_quirks;
 use crate::log::logger::{init_logger, log_info};
+use uefi::prelude::*;
 
-pub struct UefiInitResult { pub gop_available: bool }
+pub struct UefiInitResult {
+    pub gop_available: bool,
+}
 
 pub fn run_uefi_init(st: &mut SystemTable<Boot>) -> UefiInitResult {
     let gop_available = init_gop(st);
@@ -29,6 +31,8 @@ pub fn run_uefi_init(st: &mut SystemTable<Boot>) -> UefiInitResult {
     let _config = load_bootloader_config(st);
     let _quirks = detect_firmware_quirks(st);
     log_info("firmware", "detected firmware quirks");
-    if gop_available { init_boot_screen(); }
+    if gop_available {
+        init_boot_screen();
+    }
     UefiInitResult { gop_available }
 }

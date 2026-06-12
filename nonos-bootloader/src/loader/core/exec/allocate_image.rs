@@ -38,11 +38,8 @@ pub fn allocate_image(
     allocations: &mut [(u64, usize); MAX_ALLOCS],
     alloc_count: &mut usize,
 ) -> LoaderResult<u64> {
-    let alloc_type = if upper_half {
-        AllocateType::AnyPages
-    } else {
-        AllocateType::Address(virt_min)
-    };
+    let alloc_type =
+        if upper_half { AllocateType::AnyPages } else { AllocateType::Address(virt_min) };
 
     match bs.allocate_pages(alloc_type, MemoryType::LOADER_DATA, pages_needed) {
         Ok(addr) => {
@@ -72,4 +69,3 @@ pub fn allocate_image(
         }
     }
 }
-

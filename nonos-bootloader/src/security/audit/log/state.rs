@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::security::audit::types::{AuditEntry, AuditEvent, AUDIT_MSG_LEN};
 use super::hash::compute_entry_hash;
 use super::verify::verify_log_entries;
+use crate::security::audit::types::{AuditEntry, AuditEvent, AUDIT_MSG_LEN};
 
 const MAX_ENTRIES: usize = 64;
 
@@ -28,10 +28,19 @@ pub struct AuditLog {
 }
 
 impl AuditLog {
-    pub const fn new() -> Self { Self { entries: [AuditEntry::empty(); MAX_ENTRIES], count: 0, running_hash: [0u8; 32], sealed: false } }
+    pub const fn new() -> Self {
+        Self {
+            entries: [AuditEntry::empty(); MAX_ENTRIES],
+            count: 0,
+            running_hash: [0u8; 32],
+            sealed: false,
+        }
+    }
 
     pub fn record(&mut self, event: AuditEvent, ts: u64, msg: &[u8]) {
-        if self.sealed || self.count >= MAX_ENTRIES { return; }
+        if self.sealed || self.count >= MAX_ENTRIES {
+            return;
+        }
         let mut e = AuditEntry::empty();
         e.event = event;
         e.timestamp = ts;
@@ -43,9 +52,19 @@ impl AuditLog {
         self.count += 1;
     }
 
-    pub fn seal(&mut self) { self.sealed = true; }
-    pub fn get_final_hash(&self) -> [u8; 32] { self.running_hash }
-    pub fn get_count(&self) -> usize { self.count }
-    pub fn get_entry(&self, i: usize) -> Option<&AuditEntry> { self.entries.get(i).filter(|_| i < self.count) }
-    pub fn verify_integrity(&self) -> bool { verify_log_entries(&self.entries, self.count) }
+    pub fn seal(&mut self) {
+        self.sealed = true;
+    }
+    pub fn get_final_hash(&self) -> [u8; 32] {
+        self.running_hash
+    }
+    pub fn get_count(&self) -> usize {
+        self.count
+    }
+    pub fn get_entry(&self, i: usize) -> Option<&AuditEntry> {
+        self.entries.get(i).filter(|_| i < self.count)
+    }
+    pub fn verify_integrity(&self) -> bool {
+        verify_log_entries(&self.entries, self.count)
+    }
 }

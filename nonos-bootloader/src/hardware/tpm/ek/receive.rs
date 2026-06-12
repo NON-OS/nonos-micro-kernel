@@ -15,22 +15,30 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use alloc::vec::Vec;
-use crate::hardware::tpm::constants::{TPM_STS, TPM_STS_DATA_AVAIL, TPM_DATA_FIFO};
+use crate::hardware::tpm::constants::{TPM_DATA_FIFO, TPM_STS, TPM_STS_DATA_AVAIL};
 use crate::hardware::tpm::state::TpmState;
+use alloc::vec::Vec;
 
 pub fn receive_read_public(state: &TpmState) -> Result<Vec<u8>, &'static str> {
     for _ in 0..10000 {
-        if (state.read_reg8(TPM_STS) & TPM_STS_DATA_AVAIL) != 0 { break; }
+        if (state.read_reg8(TPM_STS) & TPM_STS_DATA_AVAIL) != 0 {
+            break;
+        }
         core::hint::spin_loop();
     }
     let mut response = Vec::with_capacity(512);
     for _ in 0..512 {
-        if (state.read_reg8(TPM_STS) & TPM_STS_DATA_AVAIL) == 0 { break; }
+        if (state.read_reg8(TPM_STS) & TPM_STS_DATA_AVAIL) == 0 {
+            break;
+        }
         response.push(state.read_reg8(TPM_DATA_FIFO));
     }
-    if response.len() < 10 { return Err("invalid TPM response"); }
+    if response.len() < 10 {
+        return Err("invalid TPM response");
+    }
     let rc = u32::from_be_bytes([response[6], response[7], response[8], response[9]]);
-    if rc != 0 { return Err("TPM command failed"); }
+    if rc != 0 {
+        return Err("TPM command failed");
+    }
     Ok(response)
 }

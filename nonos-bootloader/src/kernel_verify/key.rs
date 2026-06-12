@@ -17,9 +17,9 @@
 use uefi::cstr16;
 use uefi::prelude::*;
 
+use super::display::print;
 use crate::crypto::sig::{init_production_keys, is_initialized};
 use crate::log::logger::log_error;
-use super::display::print;
 
 pub fn initialize_crypto_if_needed(st: &mut SystemTable<Boot>) -> bool {
     if is_initialized() {

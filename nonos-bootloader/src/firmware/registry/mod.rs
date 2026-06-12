@@ -18,6 +18,6 @@ mod database;
 mod metadata;
 mod search;
 
-pub use database::{register_firmware, lookup_firmware, FirmwareDatabase, DatabaseResult};
-pub use metadata::{FirmwareMetadata, extract_metadata, validate_metadata, MetadataField};
-pub use search::{search_firmware, SearchQuery, SearchResult, SearchFilter};
+pub use database::{lookup_firmware, register_firmware, DatabaseResult, FirmwareDatabase};
+pub use metadata::{extract_metadata, validate_metadata, FirmwareMetadata, MetadataField};
+pub use search::{search_firmware, SearchFilter, SearchQuery, SearchResult};

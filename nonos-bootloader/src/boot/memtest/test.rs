@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::{PATTERN_A, PATTERN_5};
+use super::constants::{PATTERN_5, PATTERN_A};
 
 pub fn test_region(addr: u64, pages: u64) -> u32 {
     let test_pages = pages.min(16);
@@ -34,6 +34,10 @@ fn test_location(ptr: *mut u64) -> u32 {
         core::ptr::write_volatile(ptr, PATTERN_5);
         let r2 = core::ptr::read_volatile(ptr);
         core::ptr::write_volatile(ptr, backup);
-        if r1 != PATTERN_A || r2 != PATTERN_5 { 1 } else { 0 }
+        if r1 != PATTERN_A || r2 != PATTERN_5 {
+            1
+        } else {
+            0
+        }
     }
 }

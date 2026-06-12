@@ -16,8 +16,14 @@
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TpmError {
-    NotPresent, NotReady, Timeout, InvalidResponse,
-    NvIndexNotFound, NvAccessDenied, NvSizeMismatch, CommandFailed(u32),
+    NotPresent,
+    NotReady,
+    Timeout,
+    InvalidResponse,
+    NvIndexNotFound,
+    NvAccessDenied,
+    NvSizeMismatch,
+    CommandFailed(u32),
 }
 
 impl core::fmt::Display for TpmError {
@@ -36,8 +42,14 @@ impl core::fmt::Display for TpmError {
 }
 
 #[derive(Clone, Copy)]
-pub struct NvIndex { index: u32 }
+pub struct NvIndex {
+    index: u32,
+}
 impl NvIndex {
-    pub const fn new(index: u32) -> Self { Self { index } }
-    pub fn raw(&self) -> u32 { self.index }
+    pub const fn new(index: u32) -> Self {
+        Self { index }
+    }
+    pub fn raw(&self) -> u32 {
+        self.index
+    }
 }

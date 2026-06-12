@@ -15,17 +15,20 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "zk-groth16")]
-use super::program_hash::{VK_ALL_BYTES, VK_ATTESTATION_PROGRAM_OFFSET, VK_ATTESTATION_PROGRAM_LEN};
+use super::program_hash::{
+    VK_ALL_BYTES, VK_ATTESTATION_PROGRAM_LEN, VK_ATTESTATION_PROGRAM_OFFSET,
+};
 #[cfg(feature = "zk-groth16")]
-use super::program_hash::{VK_BOOT_AUTHORITY_OFFSET, VK_BOOT_AUTHORITY_LEN};
+use super::program_hash::{VK_BOOT_AUTHORITY_LEN, VK_BOOT_AUTHORITY_OFFSET};
 #[cfg(feature = "zk-groth16")]
-use super::program_hash::{VK_UPDATE_AUTHORITY_OFFSET, VK_UPDATE_AUTHORITY_LEN};
+use super::program_hash::{VK_RECOVERY_KEY_LEN, VK_RECOVERY_KEY_OFFSET};
 #[cfg(feature = "zk-groth16")]
-use super::program_hash::{VK_RECOVERY_KEY_OFFSET, VK_RECOVERY_KEY_LEN};
+use super::program_hash::{VK_UPDATE_AUTHORITY_LEN, VK_UPDATE_AUTHORITY_OFFSET};
 
 #[cfg(feature = "zk-groth16")]
 pub fn vk_attestation_program() -> &'static [u8] {
-    &VK_ALL_BYTES[VK_ATTESTATION_PROGRAM_OFFSET..VK_ATTESTATION_PROGRAM_OFFSET + VK_ATTESTATION_PROGRAM_LEN]
+    &VK_ALL_BYTES
+        [VK_ATTESTATION_PROGRAM_OFFSET..VK_ATTESTATION_PROGRAM_OFFSET + VK_ATTESTATION_PROGRAM_LEN]
 }
 
 #[cfg(feature = "zk-groth16")]

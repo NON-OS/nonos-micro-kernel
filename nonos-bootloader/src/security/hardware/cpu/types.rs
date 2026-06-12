@@ -30,7 +30,13 @@ pub struct CpuSecurityFeatures {
 }
 
 impl CpuSecurityFeatures {
-    pub fn has_hardware_rng(&self) -> bool { self.rdrand || self.rdseed }
-    pub fn has_exploit_mitigations(&self) -> bool { self.smep && self.smap && self.nx_bit }
-    pub fn has_spectre_mitigations(&self) -> bool { self.ibrs && self.stibp }
+    pub fn has_hardware_rng(&self) -> bool {
+        self.rdrand || self.rdseed
+    }
+    pub fn has_exploit_mitigations(&self) -> bool {
+        self.smep && self.smap && self.nx_bit
+    }
+    pub fn has_spectre_mitigations(&self) -> bool {
+        self.ibrs && self.stibp
+    }
 }

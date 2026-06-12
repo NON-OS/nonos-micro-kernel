@@ -27,5 +27,7 @@ impl AntiRollbackState {
         Self { state: VersionState::new(), initialized: false, tpm_available: false }
     }
 
-    pub fn get_state(&self) -> &VersionState { &self.state }
+    pub fn get_state(&self) -> &VersionState {
+        &self.state
+    }
 }

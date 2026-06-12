@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
 use crate::log::logger::{log_debug, log_info};
 use crate::security::{extend_pcr_measurement, PCR_BOOTLOADER};
+use uefi::prelude::*;
 
 pub fn check_measured_boot(st: &mut SystemTable<Boot>) -> bool {
     let test_data = b"NONOS:TPM:PROBE:v1";

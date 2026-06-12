@@ -28,7 +28,7 @@
 
 [package]
 name        = "nonos_kernel"
-version     = "0.8.4"
+version     = "0.8.9"
 edition     = "2021"
 publish     = false
 license     = "AGPL-3.0"
@@ -84,6 +84,7 @@ nonos-capsule-attest            = []
 nonos-capsule-power             = []
 nonos-capsule-image-codec       = []
 nonos-capsule-about             = []
+nonos-capsule-hello             = []
 nonos-capsule-boot-splash       = []
 nonos-capsule-calculator        = []
 nonos-capsule-terminal          = []
@@ -145,9 +146,10 @@ nonos-selftest = []
 # that go through `spawn_verified` (proof_io today) compile under
 # this feature. Mutex with `nonos-dev-unverified-capsules` is
 # enforced by the `compile_error!` in `lib.rs`.
-nonos-production = []
-# When set, a capsule that carries an attestation trailer must verify it or the
-# spawn is refused. Off by default during rollout: the result is only logged.
+# Production posture: verified-only spawn path, and ZK attestation enforced.
+nonos-production = ["nonos-zk-enforce"]
+# When set, a capsule must carry a valid, correctly bound attestation trailer or
+# the spawn is refused. Implied by nonos-production; standalone for staged tests.
 nonos-zk-enforce = []
 
 # Escape hatch for development that still needs the legacy
@@ -509,6 +511,29 @@ microkernel-desktop-gui = [
   "nonos-capsule-power",
 ]
 
+# Full desktop image. The desktop-gui set plus every production hardware
+# driver capsule (storage, NIC, audio, USB MSC, I2C HID) and the market,
+# setup-wizard, and input-proof capsules. Excludes only the input-probe
+# injection harness, which exists to fake input during tests. Every
+# capsule here is already in the verified-capsule policy root.
+microkernel-full-gui = [
+  "microkernel-desktop-gui",
+  "nonos-capsule-driver-ahci",
+  "nonos-capsule-driver-nvme",
+  "nonos-capsule-driver-e1000",
+  "nonos-capsule-driver-rtl8139",
+  "nonos-capsule-driver-rtl8169",
+  "nonos-capsule-driver-iwlwifi",
+  "nonos-capsule-driver-hda",
+  "nonos-capsule-driver-usb-msc",
+  "nonos-capsule-driver-i2c-pci",
+  "nonos-capsule-driver-i2c-hid",
+  "nonos-capsule-market",
+  "nonos-capsule-setup-wizard",
+  "nonos-capsule-input-proof",
+  "nonos-capsule-hello",
+]
+
 microkernel-toolkit = ["microkernel-desktop-gui"]
 microkernel-about = ["microkernel-desktop-gui"]
 microkernel-calculator = ["microkernel-desktop-gui"]
@@ -726,9 +751,7 @@ microkernel-wallpaper-smoketest = [
 microkernel = ["microkernel-capsules"]
 
 # Mid-refactor cfg gates referenced from src.
-nonos-arch-hardening = []   # src/arch/x86_64/security/{kpti,stack,spectre}
 nonos-arch-iommu     = []   # src/arch/x86_64/iommu/*
-nonos-fs-locking     = []   # src/fs/locking/*
 
 # In-tree crypto, audit-anchored constant-time implementations.
 crypto-ed25519-int   = []

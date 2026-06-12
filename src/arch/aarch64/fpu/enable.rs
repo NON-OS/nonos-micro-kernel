@@ -16,7 +16,6 @@
 
 use core::arch::asm;
 
-
 const CPACR_FPEN_FULL: u64 = 0b11 << 20;
 const CPACR_FPEN_TRAP: u64 = 0b00 << 20;
 const CPACR_FPEN_MASK: u64 = 0b11 << 20;

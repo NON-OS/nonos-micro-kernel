@@ -26,6 +26,10 @@ pub(super) const ENTROPY_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const ENTROPY_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/entropy.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-entropy")]
+pub(super) const ENTROPY_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/entropy.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-entropy"))]
 pub(super) const ENTROPY_ELF: &[u8] = &[];
 
@@ -34,3 +38,6 @@ pub(super) const ENTROPY_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-entropy"))]
 pub(super) const ENTROPY_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-entropy"))]
+pub(super) const ENTROPY_ATTESTATION_BYTES: &[u8] = &[];

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{SETTINGS_ELF, SETTINGS_MANIFEST_BYTES, SETTINGS_NONOS_ID_CERT_BYTES};
+use super::embed::{SETTINGS_ELF, SETTINGS_MANIFEST_BYTES, SETTINGS_NONOS_ID_CERT_BYTES, SETTINGS_ATTESTATION_BYTES};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
@@ -42,6 +42,7 @@ pub fn spawn_settings_capsule() -> Result<(), SpawnError> {
         elf: SETTINGS_ELF,
         nonos_id_cert_bytes: SETTINGS_NONOS_ID_CERT_BYTES,
         manifest_bytes: SETTINGS_MANIFEST_BYTES,
+        attestation_trailer: SETTINGS_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

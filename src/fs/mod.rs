@@ -24,8 +24,6 @@ pub mod cryptofs;
 // ext4 needs `crate::drivers::block`, sysfs scans the device-driver
 // inventory; all three target legacy-only.
 pub mod fd;
-#[cfg(feature = "nonos-fs-locking")]
-pub mod locking;
 pub mod path;
 pub mod pipe;
 pub mod procfs;
@@ -110,4 +108,3 @@ pub use api::{
     pread, pwrite, register_pipe_reader, register_pipe_writer, set_cloexec, set_pipe_buffer_size,
     unregister_pipe_fd, FdInfo,
 };
-

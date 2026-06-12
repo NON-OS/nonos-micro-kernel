@@ -15,9 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod pcr;
-mod send;
 mod receive;
+mod send;
 
 pub use pcr::pcr_extend_impl;
-pub use send::send_command_impl;
 pub use receive::receive_response_impl;
+pub use send::send_command_impl;

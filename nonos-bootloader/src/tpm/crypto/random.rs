@@ -17,20 +17,26 @@
 use crate::tpm::core::{TmpDevice, TmpError, TmpResult};
 
 pub fn get_random(device: &mut TmpDevice, length: u16) -> TmpResult<[u8; 32]> {
-    if !device.active { return Err(TmpError::DeviceNotFound); }
-    if length == 0 || length > 32 { return Err(TmpError::BadParameter); }
+    if !device.active {
+        return Err(TmpError::DeviceNotFound);
+    }
+    if length == 0 || length > 32 {
+        return Err(TmpError::BadParameter);
+    }
 
     let mut cmd = [0u8; 12];
     cmd[0..10].copy_from_slice(&[0x80, 0x01, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x01, 0x7B]);
     cmd[10..12].copy_from_slice(&length.to_be_bytes());
 
     let response = crate::tpm::hardware::send_command(device, &cmd)?;
-    if response.len() < (12 + length as usize) { return Err(TmpError::InvalidResponse); }
+    if response.len() < (12 + length as usize) {
+        return Err(TmpError::InvalidResponse);
+    }
 
     let mut random_data = [0u8; 32];
     let actual_length = u16::from_be_bytes([response[10], response[11]]) as usize;
     if actual_length > 0 && actual_length <= 32 {
-        random_data[..actual_length].copy_from_slice(&response[12..12+actual_length]);
+        random_data[..actual_length].copy_from_slice(&response[12..12 + actual_length]);
     }
     Ok(random_data)
 }

@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::store_core::KeyStore;
 use core::sync::atomic::{AtomicBool, AtomicU32};
 use spin::Mutex;
-use super::store_core::KeyStore;
 
 include!(concat!(env!("OUT_DIR"), "/keys_generated.rs"));
 

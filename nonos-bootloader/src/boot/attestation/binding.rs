@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::zk::BootAttestationResult;
 use crate::zk::attest::types::ZkProofBlock;
+use crate::zk::BootAttestationResult;
 
 pub fn verify_kernel_in_proof(
     _result: &BootAttestationResult,

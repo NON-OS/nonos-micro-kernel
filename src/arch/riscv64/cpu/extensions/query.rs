@@ -14,8 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn has_vector() -> bool { super::super::caps::has_v() }
-pub fn has_compressed() -> bool { super::super::caps::has_c() }
-pub fn has_atomics() -> bool { super::super::caps::has_a() }
-pub fn has_float() -> bool { super::super::caps::has_f() }
-pub fn has_double() -> bool { super::super::caps::has_d() }
+pub fn has_vector() -> bool {
+    super::super::caps::has_v()
+}
+pub fn has_compressed() -> bool {
+    super::super::caps::has_c()
+}
+pub fn has_atomics() -> bool {
+    super::super::caps::has_a()
+}
+pub fn has_float() -> bool {
+    super::super::caps::has_f()
+}
+pub fn has_double() -> bool {
+    super::super::caps::has_d()
+}

@@ -16,25 +16,46 @@
 
 extern crate alloc;
 
+use crate::log::logger::{log_error, log_info};
 use alloc::format;
 use uefi::cstr16;
 use uefi::prelude::*;
-use crate::log::logger::{log_error, log_info};
 
 pub fn check_secure_boot(st: &mut SystemTable<Boot>) -> bool {
     let rt = st.runtime_services();
     let mut buf = [0u8; 1];
-    match rt.get_variable(cstr16!("SecureBoot"), &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE, &mut buf) {
-        Ok(_) => { let on = buf[0] == 1; log_info("security", if on { "SecureBoot ENABLED" } else { "SecureBoot DISABLED" }); on }
-        Err(e) => { log_error("security", &format!("Cannot read SecureBoot: {:?}", e.status())); false }
+    match rt.get_variable(
+        cstr16!("SecureBoot"),
+        &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE,
+        &mut buf,
+    ) {
+        Ok(_) => {
+            let on = buf[0] == 1;
+            log_info("security", if on { "SecureBoot ENABLED" } else { "SecureBoot DISABLED" });
+            on
+        }
+        Err(e) => {
+            log_error("security", &format!("Cannot read SecureBoot: {:?}", e.status()));
+            false
+        }
     }
 }
 
 pub fn check_platform_key(st: &mut SystemTable<Boot>) -> bool {
     let rt = st.runtime_services();
     let mut buf = [0u8; 2048];
-    match rt.get_variable(cstr16!("PK"), &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE, &mut buf) {
-        Ok(_) => { log_info("security", "Platform Key present"); buf.iter().any(|&b| b != 0) }
-        Err(e) => { log_error("security", &format!("Platform Key missing: {:?}", e.status())); false }
+    match rt.get_variable(
+        cstr16!("PK"),
+        &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE,
+        &mut buf,
+    ) {
+        Ok(_) => {
+            log_info("security", "Platform Key present");
+            buf.iter().any(|&b| b != 0)
+        }
+        Err(e) => {
+            log_error("security", &format!("Platform Key missing: {:?}", e.status()));
+            false
+        }
     }
 }

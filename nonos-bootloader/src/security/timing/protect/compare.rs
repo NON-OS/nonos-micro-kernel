@@ -35,9 +35,14 @@ pub fn constant_time_eq_u8(a: u8, b: u8) -> bool {
 
 #[inline(never)]
 pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
-    if a.len() != b.len() { add_random_delay(); return false; }
+    if a.len() != b.len() {
+        add_random_delay();
+        return false;
+    }
     let mut diff = 0u8;
-    for i in 0..a.len() { diff |= a[i] ^ b[i]; }
+    for i in 0..a.len() {
+        diff |= a[i] ^ b[i];
+    }
     add_random_delay();
     diff == 0
 }

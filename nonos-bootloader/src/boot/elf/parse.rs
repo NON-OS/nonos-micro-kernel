@@ -15,8 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use alloc::format;
-use uefi::prelude::*;
 use super::display::{display_elf_info, display_load_failure, display_loaded_image};
 use super::extract::extract_kernel_payload;
 use crate::boot::uefi::TOTAL_BOOT_STAGES;
@@ -25,8 +23,15 @@ use crate::display::{draw_boot_progress, update_stage, StageStatus, STAGE_ELF_PA
 use crate::kernel_verify::CryptoVerifyResult;
 use crate::loader::{load_kernel, KernelImage};
 use crate::log::logger::{log_error, log_info};
+use alloc::format;
+use uefi::prelude::*;
 
-pub fn run_elf_parse(st: &mut SystemTable<Boot>, data: &[u8], crypto: &CryptoVerifyResult, gop: bool) -> KernelImage {
+pub fn run_elf_parse(
+    st: &mut SystemTable<Boot>,
+    data: &[u8],
+    crypto: &CryptoVerifyResult,
+    gop: bool,
+) -> KernelImage {
     update_stage(STAGE_ELF_PARSE, StageStatus::Running);
     draw_boot_progress(8, TOTAL_BOOT_STAGES);
     let elf = extract_kernel_payload(data, st);

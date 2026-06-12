@@ -20,4 +20,4 @@ mod signature;
 
 pub use checksum::{calculate_crc32, calculate_sha256, verify_checksum, ChecksumType};
 pub use integrity::{validate_firmware_integrity, verify_header_magic, IntegrityResult};
-pub use signature::{verify_signature, extract_public_key, SignatureResult, SignatureAlgorithm};
+pub use signature::{extract_public_key, verify_signature, SignatureAlgorithm, SignatureResult};

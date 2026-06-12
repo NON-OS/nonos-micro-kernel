@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::hardware::tpm::commands::{pcr_extend_impl, receive_response_impl, send_command_impl};
 use crate::hardware::tpm::constants::TPM_MMIO_BASE;
 use crate::hardware::tpm::types::TpmError;
-use crate::hardware::tpm::commands::{send_command_impl, receive_response_impl, pcr_extend_impl};
 
 pub struct TpmState {
     pub(crate) base: u64,
@@ -25,8 +25,16 @@ pub struct TpmState {
 }
 
 impl TpmState {
-    pub const fn new() -> Self { Self { base: TPM_MMIO_BASE, initialized: false, version: 0 } }
-    pub fn send_command(&self, cmd: &[u8]) -> Result<(), TpmError> { send_command_impl(self, cmd) }
-    pub fn receive_response(&self, buf: &mut [u8]) -> Result<usize, TpmError> { receive_response_impl(self, buf) }
-    pub fn pcr_extend(&self, pcr_index: u32, digest: &[u8; 32]) -> Result<(), TpmError> { pcr_extend_impl(self, pcr_index, digest) }
+    pub const fn new() -> Self {
+        Self { base: TPM_MMIO_BASE, initialized: false, version: 0 }
+    }
+    pub fn send_command(&self, cmd: &[u8]) -> Result<(), TpmError> {
+        send_command_impl(self, cmd)
+    }
+    pub fn receive_response(&self, buf: &mut [u8]) -> Result<usize, TpmError> {
+        receive_response_impl(self, buf)
+    }
+    pub fn pcr_extend(&self, pcr_index: u32, digest: &[u8; 32]) -> Result<(), TpmError> {
+        pcr_extend_impl(self, pcr_index, digest)
+    }
 }

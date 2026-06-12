@@ -32,6 +32,10 @@ pub(super) const MARKET_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const MARKET_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/market.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-market")]
+pub(super) const MARKET_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/market.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-market"))]
 pub(super) const MARKET_ELF: &[u8] = &[];
 
@@ -40,3 +44,6 @@ pub(super) const MARKET_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-market"))]
 pub(super) const MARKET_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-market"))]
+pub(super) const MARKET_ATTESTATION_BYTES: &[u8] = &[];

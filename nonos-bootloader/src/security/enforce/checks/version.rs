@@ -16,12 +16,15 @@
 
 extern crate alloc;
 
-use alloc::format;
 use crate::log::logger::{log_error, log_info};
+use alloc::format;
 
 pub fn verify_kernel_version(embedded_version: u32, minimum_version: u32) -> bool {
     if embedded_version < minimum_version {
-        log_error("enforce", &format!("version {} < minimum {}", embedded_version, minimum_version));
+        log_error(
+            "enforce",
+            &format!("version {} < minimum {}", embedded_version, minimum_version),
+        );
         return false;
     }
     log_info("enforce", &format!("version {} accepted", embedded_version));

@@ -15,13 +15,21 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use alloc::format;
 use crate::display::{log_error as panel_error, log_size, show_error_screen};
 use crate::kernel_verify::CryptoVerifyResult;
 use crate::loader::errors::LoaderError;
+use alloc::format;
 
-pub fn display_load_failure(elf: &[u8], crypto: &CryptoVerifyResult, full: &[u8], gop: bool, e: &LoaderError) {
-    if !gop { return; }
+pub fn display_load_failure(
+    elf: &[u8],
+    crypto: &CryptoVerifyResult,
+    full: &[u8],
+    gop: bool,
+    e: &LoaderError,
+) {
+    if !gop {
+        return;
+    }
     log_size(b"FAIL len  ", elf.len());
     log_size(b"FAIL code ", crypto.kernel_code_size);
     log_size(b"FAIL full ", full.len());

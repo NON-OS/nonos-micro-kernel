@@ -14,13 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::types::HardwareInfo;
 use uefi::cstr16;
 use uefi::prelude::*;
-use super::types::HardwareInfo;
 
 pub fn display_hardware_summary(h: &HardwareInfo, st: &mut SystemTable<Boot>) {
     let _ = st.stdout().output_string(cstr16!("=== HW Summary ===\r\n"));
-    let _ = st.stdout().output_string(if h.acpi_available { cstr16!("ACPI: available\r\n") } else { cstr16!("ACPI: not found\r\n") });
+    let _ = st.stdout().output_string(if h.acpi_available {
+        cstr16!("ACPI: available\r\n")
+    } else {
+        cstr16!("ACPI: not found\r\n")
+    });
     let _ = st.stdout().output_string(cstr16!("Memory: reported\r\n"));
     let _ = st.stdout().output_string(cstr16!("CPUs: detected\r\n"));
     let _ = st.stdout().output_string(cstr16!("Storage: counted\r\n"));

@@ -31,12 +31,24 @@ impl VersionState {
 
     pub fn from_bytes(buf: &[u8; 48]) -> Self {
         Self {
-            kernel_version: u64::from_le_bytes([buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]]),
-            bootloader_version: u64::from_le_bytes([buf[8], buf[9], buf[10], buf[11], buf[12], buf[13], buf[14], buf[15]]),
-            minimum_kernel: u64::from_le_bytes([buf[16], buf[17], buf[18], buf[19], buf[20], buf[21], buf[22], buf[23]]),
-            minimum_bootloader: u64::from_le_bytes([buf[24], buf[25], buf[26], buf[27], buf[28], buf[29], buf[30], buf[31]]),
-            last_boot_timestamp: u64::from_le_bytes([buf[32], buf[33], buf[34], buf[35], buf[36], buf[37], buf[38], buf[39]]),
-            boot_count: u64::from_le_bytes([buf[40], buf[41], buf[42], buf[43], buf[44], buf[45], buf[46], buf[47]]),
+            kernel_version: u64::from_le_bytes([
+                buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7],
+            ]),
+            bootloader_version: u64::from_le_bytes([
+                buf[8], buf[9], buf[10], buf[11], buf[12], buf[13], buf[14], buf[15],
+            ]),
+            minimum_kernel: u64::from_le_bytes([
+                buf[16], buf[17], buf[18], buf[19], buf[20], buf[21], buf[22], buf[23],
+            ]),
+            minimum_bootloader: u64::from_le_bytes([
+                buf[24], buf[25], buf[26], buf[27], buf[28], buf[29], buf[30], buf[31],
+            ]),
+            last_boot_timestamp: u64::from_le_bytes([
+                buf[32], buf[33], buf[34], buf[35], buf[36], buf[37], buf[38], buf[39],
+            ]),
+            boot_count: u64::from_le_bytes([
+                buf[40], buf[41], buf[42], buf[43], buf[44], buf[45], buf[46], buf[47],
+            ]),
         }
     }
 

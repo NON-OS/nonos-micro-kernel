@@ -19,8 +19,14 @@ use crate::crypto::sig::{is_initialized as crypto_initialized, verify_signature_
 use crate::log::logger::log_error;
 
 pub fn verify_signature(data: &[u8], signature: &[u8]) -> bool {
-    if !crypto_initialized() { log_error("security", "Cannot verify - crypto not initialized"); return false; }
-    if signature.len() != SIGNATURE_SIZE { log_error("security", "Invalid signature size"); return false; }
+    if !crypto_initialized() {
+        log_error("security", "Cannot verify - crypto not initialized");
+        return false;
+    }
+    if signature.len() != SIGNATURE_SIZE {
+        log_error("security", "Invalid signature size");
+        return false;
+    }
     match verify_signature_bytes(data, signature) {
         Ok(_) => true,
         Err(_) => false,

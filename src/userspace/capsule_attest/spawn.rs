@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{ATTEST_ELF, ATTEST_MANIFEST_BYTES, ATTEST_NONOS_ID_CERT_BYTES};
+use super::embed::{ATTEST_ELF, ATTEST_MANIFEST_BYTES, ATTEST_NONOS_ID_CERT_BYTES, ATTEST_ATTESTATION_BYTES};
 use super::state;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
 use crate::security::nonos_id_cert::IdCertVerifyError;
@@ -42,6 +42,7 @@ pub fn spawn_attest_capsule() -> Result<(), SpawnError> {
         elf: ATTEST_ELF,
         nonos_id_cert_bytes: ATTEST_NONOS_ID_CERT_BYTES,
         manifest_bytes: ATTEST_MANIFEST_BYTES,
+        attestation_trailer: ATTEST_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: REQUIRED_CAPS,
         debug_tag: b"",

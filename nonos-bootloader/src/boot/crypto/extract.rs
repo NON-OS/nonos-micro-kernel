@@ -18,7 +18,9 @@ use crate::display::{log_hash, log_ok, BootCryptoState};
 use crate::image_format::{has_production_footer, parse_image_footer};
 
 pub fn extract_signature_for_display(data: &[u8], state: &mut BootCryptoState, gop: bool) {
-    if !has_production_footer(data) { return; }
+    if !has_production_footer(data) {
+        return;
+    }
     if let Ok(parsed) = parse_image_footer(data) {
         let sig = parsed.signature_bytes;
         if sig.len() >= 64 {

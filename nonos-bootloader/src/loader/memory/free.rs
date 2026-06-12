@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::loader::types::memory;
 use super::table::AllocationTable;
+use crate::loader::types::memory;
 
 pub fn to_array(table: &AllocationTable) -> ([(u64, usize); memory::MAX_ALLOCATIONS], usize) {
     let mut arr = [(0u64, 0usize); memory::MAX_ALLOCATIONS];

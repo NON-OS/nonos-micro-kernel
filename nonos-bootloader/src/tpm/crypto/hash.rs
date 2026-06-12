@@ -17,20 +17,25 @@
 use crate::tpm::core::{TmpDevice, TmpError, TmpResult};
 
 pub fn compute_hash(device: &mut TmpDevice, data: &[u8], algorithm: u16) -> TmpResult<[u8; 32]> {
-    if !device.active { return Err(TmpError::DeviceNotFound); }
-    if data.len() > 1024 { return Err(TmpError::BadParameter); }
+    if !device.active {
+        return Err(TmpError::DeviceNotFound);
+    }
+    if data.len() > 1024 {
+        return Err(TmpError::BadParameter);
+    }
 
     let mut cmd = [0u8; 1024];
     cmd[0..10].copy_from_slice(&[0x80, 0x01, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x01, 0x7D]);
     cmd[10..12].copy_from_slice(&algorithm.to_be_bytes());
     cmd[12..14].copy_from_slice(&(data.len() as u16).to_be_bytes());
-    cmd[14..14+data.len()].copy_from_slice(data);
+    cmd[14..14 + data.len()].copy_from_slice(data);
 
-    let response = crate::tpm::hardware::send_command(device, &cmd[..14+data.len()])?;
-    if response.len() < 44 { return Err(TmpError::InvalidResponse); }
+    let response = crate::tpm::hardware::send_command(device, &cmd[..14 + data.len()])?;
+    if response.len() < 44 {
+        return Err(TmpError::InvalidResponse);
+    }
 
     let mut hash = [0u8; 32];
     hash.copy_from_slice(&response[12..44]);
     Ok(hash)
 }
-

@@ -32,10 +32,7 @@ pub fn check_wx_policy(
     for segment in segments.iter().flatten() {
         if segment.has_wx() {
             violations += 1;
-            log_warn(
-                "security",
-                "W^X violation: segment is both writable and executable",
-            );
+            log_warn("security", "W^X violation: segment is both writable and executable");
         }
     }
 
@@ -53,27 +50,19 @@ pub fn check_address_bounds(
 ) -> LoaderResult<()> {
     for segment in segments.iter().flatten() {
         let start = segment.target_addr;
-        let end = start
-            .checked_add(segment.mem_size)
-            .ok_or(LoaderError::IntegerOverflow)?;
+        let end = start.checked_add(segment.mem_size).ok_or(LoaderError::IntegerOverflow)?;
 
         if start == 0 {
             continue;
         }
 
         if start < policy.min_load_address {
-            log_error(
-                "security",
-                "SECURITY: Segment address below minimum allowed",
-            );
+            log_error("security", "SECURITY: Segment address below minimum allowed");
             return Err(LoaderError::AddressOutOfRange);
         }
 
         if end > policy.max_load_address {
-            log_error(
-                "security",
-                "SECURITY: Segment extends beyond maximum allowed address",
-            );
+            log_error("security", "SECURITY: Segment extends beyond maximum allowed address");
             return Err(LoaderError::AddressOutOfRange);
         }
     }
@@ -97,10 +86,7 @@ pub fn check_size_policy(total_size: usize, policy: &SecurityPolicy) -> LoaderRe
 
 pub fn check_pie_policy(ctx: &ValidationContext, policy: &SecurityPolicy) -> LoaderResult<()> {
     if policy.require_pie && !ctx.is_pie {
-        log_error(
-            "security",
-            "SECURITY: PIE required but kernel is not position-independent",
-        );
+        log_error("security", "SECURITY: PIE required but kernel is not position-independent");
         return Err(LoaderError::UnsupportedElf("PIE required"));
     }
 
@@ -124,10 +110,7 @@ pub fn check_critical_memory(segments: &[Option<LoadedSegment>]) -> LoaderResult
 
         for (crit_start, crit_end, _name) in CRITICAL_REGIONS {
             if seg_start < *crit_end && *crit_start < seg_end {
-                log_error(
-                    "security",
-                    "SECURITY: Segment overlaps critical memory region",
-                );
+                log_error("security", "SECURITY: Segment overlaps critical memory region");
                 return Err(LoaderError::AddressOutOfRange);
             }
         }
@@ -161,4 +144,3 @@ pub fn validate_security(
 
     Ok(result)
 }
-

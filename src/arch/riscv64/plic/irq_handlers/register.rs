@@ -16,9 +16,7 @@
 
 use core::sync::atomic::Ordering;
 
-use super::state::{
-    IRQ_HANDLERS, IRQ_OWNERS, MAX_IRQ, OWNER_CAPSULE, OWNER_FREE, OWNER_KERNEL,
-};
+use super::state::{IRQ_HANDLERS, IRQ_OWNERS, MAX_IRQ, OWNER_CAPSULE, OWNER_FREE, OWNER_KERNEL};
 
 #[derive(Debug, Clone, Copy)]
 pub enum PlicIrqError {

@@ -28,9 +28,14 @@ mod util;
 
 pub use add::{add_key, add_key_versioned};
 pub use init::{init_nonos_keys, init_production_keys, is_initialized};
-pub use query::{get_build_timestamp, get_key_fingerprint, get_minimum_version, get_nonos_key, get_nonos_key_id, key_count, set_minimum_version, validate_key};
+pub use query::{
+    get_build_timestamp, get_key_fingerprint, get_minimum_version, get_nonos_key, get_nonos_key_id,
+    key_count, set_minimum_version, validate_key,
+};
 pub use revoke::revoke_key_by_pubkey;
 pub use state::{KEYSTORE, NONOS_SIGNING_KEY};
 pub use store::KeyStore;
-pub use types::{KeyId, KeyStatus, RevocationEntry, RevocationReason, MAX_KEYS, MAX_REVOKED, PK_LEN};
+pub use types::{
+    KeyId, KeyStatus, RevocationEntry, RevocationReason, MAX_KEYS, MAX_REVOKED, PK_LEN,
+};
 pub use util::derive_keyid;

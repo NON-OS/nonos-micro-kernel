@@ -16,8 +16,6 @@
 
 mod action;
 mod mode;
-mod state;
 
 pub use action::MenuAction;
 pub use mode::SecurityMode;
-pub use state::MenuState;

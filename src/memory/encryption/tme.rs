@@ -41,7 +41,8 @@ pub fn enable_tme(_cap: &EncryptionCapability) -> MemEncryptionResult<()> {
         if (activate & TME_ENABLE_BIT) != 0 {
             return Ok(());
         }
-        return Err(MemEncryptionError::AlreadyEnabled);
+        // Firmware locked the activate MSR with TME off.
+        return Err(MemEncryptionError::NotSupported);
     }
     let new_value = activate | TME_ENABLE_BIT | TME_LOCKED_BIT;
     wrmsr(MSR_IA32_TME_ACTIVATE, new_value);

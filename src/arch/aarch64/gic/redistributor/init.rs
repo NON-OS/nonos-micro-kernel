@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::{GICR_ICENABLER0, GICR_IGROUPR0, GICR_IGRPMODR0, GICR_IPRIORITYR, GICR_ISENABLER0};
+use super::constants::{
+    GICR_ICENABLER0, GICR_IGROUPR0, GICR_IGRPMODR0, GICR_IPRIORITYR, GICR_ISENABLER0,
+};
 use super::device::GicRedistributor;
 
 impl GicRedistributor {

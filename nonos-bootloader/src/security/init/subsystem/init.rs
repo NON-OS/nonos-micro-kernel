@@ -14,12 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
 use super::keys::load_production_keys;
-use crate::security::check::{check_hardware_rng, check_measured_boot, check_platform_key, check_secure_boot, check_signature_db};
+use crate::security::check::{
+    check_hardware_rng, check_measured_boot, check_platform_key, check_secure_boot,
+    check_signature_db,
+};
 use crate::security::crypto::{blake3_selftest, ed25519_selftest};
 use crate::security::init::display::display_security_status;
 use crate::security::types::SecurityContext;
+use uefi::prelude::*;
 
 pub fn initialize_security_subsystem(st: &mut SystemTable<Boot>) -> SecurityContext {
     let mut ctx = SecurityContext::new();

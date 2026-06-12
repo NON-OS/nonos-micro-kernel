@@ -29,6 +29,10 @@ pub(super) const NET_UDP_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const NET_UDP_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/net_udp.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-net-udp")]
+pub(super) const NET_UDP_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/net_udp.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-net-udp"))]
 pub(super) const NET_UDP_ELF: &[u8] = &[];
 
@@ -37,3 +41,6 @@ pub(super) const NET_UDP_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-net-udp"))]
 pub(super) const NET_UDP_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-net-udp"))]
+pub(super) const NET_UDP_ATTESTATION_BYTES: &[u8] = &[];

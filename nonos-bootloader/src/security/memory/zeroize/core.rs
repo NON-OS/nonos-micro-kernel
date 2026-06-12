@@ -19,24 +19,40 @@ use core::sync::atomic::{compiler_fence, Ordering};
 
 #[inline(never)]
 pub fn zeroize_slice(data: &mut [u8]) {
-    for b in data.iter_mut() { unsafe { ptr::write_volatile(b, 0); } }
+    for b in data.iter_mut() {
+        unsafe {
+            ptr::write_volatile(b, 0);
+        }
+    }
     compiler_fence(Ordering::SeqCst);
 }
 
 #[inline(never)]
 pub fn zeroize_32(data: &mut [u8; 32]) {
-    for b in data.iter_mut() { unsafe { ptr::write_volatile(b, 0); } }
+    for b in data.iter_mut() {
+        unsafe {
+            ptr::write_volatile(b, 0);
+        }
+    }
     compiler_fence(Ordering::SeqCst);
 }
 
 #[inline(never)]
 pub fn zeroize_64(data: &mut [u8; 64]) {
-    for b in data.iter_mut() { unsafe { ptr::write_volatile(b, 0); } }
+    for b in data.iter_mut() {
+        unsafe {
+            ptr::write_volatile(b, 0);
+        }
+    }
     compiler_fence(Ordering::SeqCst);
 }
 
 #[inline(never)]
 pub fn zeroize_128(data: &mut [u8; 128]) {
-    for b in data.iter_mut() { unsafe { ptr::write_volatile(b, 0); } }
+    for b in data.iter_mut() {
+        unsafe {
+            ptr::write_volatile(b, 0);
+        }
+    }
     compiler_fence(Ordering::SeqCst);
 }

@@ -742,7 +742,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_kernel"
-version = "0.8.4"
+version = "0.8.9"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",

@@ -15,15 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "zk-groth16")]
-use super::program_hash::{PROGRAM_HASH_BOOT_AUTHORITY, PROGRAM_HASH_RECOVERY_KEY};
-#[cfg(feature = "zk-groth16")]
 use super::program_hash::PROGRAM_HASH_UPDATE_AUTHORITY;
+#[cfg(feature = "zk-groth16")]
+use super::program_hash::{PROGRAM_HASH_BOOT_AUTHORITY, PROGRAM_HASH_RECOVERY_KEY};
 #[cfg(feature = "zk-groth16")]
 use super::vk_data::{vk_boot_authority, vk_recovery_key, vk_update_authority};
 #[cfg(feature = "zk-groth16")]
-use super::vk_fingerprint::{VK_FINGERPRINT_BOOT_AUTHORITY, VK_FINGERPRINT_RECOVERY_KEY};
-#[cfg(feature = "zk-groth16")]
 use super::vk_fingerprint::VK_FINGERPRINT_UPDATE_AUTHORITY;
+#[cfg(feature = "zk-groth16")]
+use super::vk_fingerprint::{VK_FINGERPRINT_BOOT_AUTHORITY, VK_FINGERPRINT_RECOVERY_KEY};
 
 #[cfg(feature = "zk-groth16")]
 pub fn entries_with_fingerprint() -> [([u8; 32], &'static [u8], [u8; 32]); 3] {

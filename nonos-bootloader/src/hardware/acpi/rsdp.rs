@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
 use crate::hardware::types::RsdpDescriptor;
+use uefi::prelude::*;
 
 pub fn discover_acpi_rsdp(system_table: &mut SystemTable<Boot>) -> Option<u64> {
     for entry in system_table.config_table() {

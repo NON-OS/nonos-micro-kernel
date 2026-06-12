@@ -14,19 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Per-capsule zero-knowledge attestation. Before a capsule is mapped or
-// scheduled, the kernel verifies its embedded Groth16 proof and binds it to the
-// capsule's real bytes and the capabilities about to be granted. A capsule that
-// does not carry a valid, correctly bound proof is refused. This mirrors the
-// bootloader's kernel attestation, applied per capsule on the same BLS12-381
-// curve.
-
+mod commitment;
+mod check_commitment;
 mod error;
+mod field;
+mod join_hi_lo;
 mod layout;
-mod registry;
+mod policy_root;
+mod read_u32_le;
 mod trailer;
 mod verify;
 
 pub use error::AttestError;
-pub use registry::trailer_for;
 pub use verify::verify_capsule_attestation;

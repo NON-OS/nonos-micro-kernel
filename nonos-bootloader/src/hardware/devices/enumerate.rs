@@ -15,34 +15,40 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
+use crate::log::logger::log_info;
 use alloc::format;
 use uefi::prelude::*;
-use crate::log::logger::log_info;
 
 pub fn enumerate_storage(system_table: &mut SystemTable<Boot>) -> usize {
     let bs = system_table.boot_services();
-    let count = bs.find_handles::<uefi::proto::media::block::BlockIO>().map(|h| h.len()).unwrap_or(0);
+    let count =
+        bs.find_handles::<uefi::proto::media::block::BlockIO>().map(|h| h.len()).unwrap_or(0);
     log_info("storage", &format!("Storage devices: {}", count));
     count
 }
 
 pub fn enumerate_network(system_table: &mut SystemTable<Boot>) -> usize {
     let bs = system_table.boot_services();
-    let count = bs.find_handles::<uefi::proto::network::snp::SimpleNetwork>().map(|h| h.len()).unwrap_or(0);
+    let count =
+        bs.find_handles::<uefi::proto::network::snp::SimpleNetwork>().map(|h| h.len()).unwrap_or(0);
     log_info("network", &format!("Network interfaces: {}", count));
     count
 }
 
 pub fn enumerate_graphics(system_table: &mut SystemTable<Boot>) -> usize {
     let bs = system_table.boot_services();
-    let count = bs.find_handles::<uefi::proto::console::gop::GraphicsOutput>().map(|h| h.len()).unwrap_or(0);
+    let count = bs
+        .find_handles::<uefi::proto::console::gop::GraphicsOutput>()
+        .map(|h| h.len())
+        .unwrap_or(0);
     log_info("graphics", &format!("Graphics devices: {}", count));
     count
 }
 
 pub fn enumerate_pci(system_table: &mut SystemTable<Boot>) -> usize {
     let bs = system_table.boot_services();
-    let count = bs.find_handles::<uefi::proto::device_path::DevicePath>().map(|h| h.len()).unwrap_or(0);
+    let count =
+        bs.find_handles::<uefi::proto::device_path::DevicePath>().map(|h| h.len()).unwrap_or(0);
     log_info("pci", &format!("PCI devices: {}", count));
     count
 }

@@ -76,11 +76,7 @@ pub fn validate_header(header: &Elf64Header) -> LoaderResult<ValidationContext> 
             ctx.is_executable = true;
             ctx.is_pie = true;
         }
-        _ => {
-            return Err(LoaderError::UnsupportedElf(
-                "not executable or shared object",
-            ))
-        }
+        _ => return Err(LoaderError::UnsupportedElf("not executable or shared object")),
     }
 
     if header.e_machine != elf_machine::EM_X86_64 {

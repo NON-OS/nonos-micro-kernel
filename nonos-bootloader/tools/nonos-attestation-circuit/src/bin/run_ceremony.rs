@@ -19,7 +19,6 @@ use ark_serialize::{CanonicalSerialize, Compress};
 use nonos_attestation_circuit::{ceremony, NonosAttestationCircuit};
 use std::env;
 use std::fs;
-use std::io::Write;
 use std::path::Path;
 
 fn main() {
@@ -33,6 +32,7 @@ fn main() {
     match args[1].as_str() {
         "init" => cmd_init(&args[2..]),
         "contribute" => cmd_contribute(&args[2..]),
+        "assemble" => cmd_assemble(&args[2..]),
         "finalize" => cmd_finalize(&args[2..]),
         "extract-vk" => cmd_extract_vk(&args[2..]),
         "verify" => cmd_verify(&args[2..]),
@@ -196,7 +196,13 @@ fn cmd_contribute(args: &[String]) {
         &entropy_source,
         &external_randomness,
     ) {
-        Ok((new_params, record)) => {
+        Ok((new_params, mut record)) => {
+            // The contribution secret (tau/alpha/beta) lives only inside
+            // contribute_randomness and is dropped when it returns; it is never
+            // written to disk. Attest that destruction so finalize, which
+            // refuses any contribution without it, can verify the chain.
+            ceremony::add_destruction_attestation(&mut record, "ephemeral-process-memory", 0, None);
+
             let new_data = new_params.serialize().expect("serialize");
             fs::write(&output, &new_data).expect("write output");
 
@@ -215,6 +221,66 @@ fn cmd_contribute(args: &[String]) {
             std::process::exit(1);
         }
     }
+}
+
+// Build the CeremonyTranscript finalize expects from the init metadata and the
+// per-round contribution records, so the flow needs no external JSON tooling.
+// Usage: assemble --meta <init.meta.json> --output <transcript.json> <rec1.json> ...
+fn cmd_assemble(args: &[String]) {
+    let mut meta = String::new();
+    let mut output = String::new();
+    let mut records: Vec<String> = Vec::new();
+
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--meta" | "-m" => {
+                meta = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            "--output" | "-o" => {
+                output = args.get(i + 1).cloned().unwrap_or_default();
+                i += 2;
+            }
+            rec => {
+                records.push(rec.to_string());
+                i += 1;
+            }
+        }
+    }
+
+    if meta.is_empty() || output.is_empty() || records.is_empty() {
+        eprintln!("ERROR: assemble needs --meta, --output, and at least one record file");
+        std::process::exit(1);
+    }
+
+    let metadata: ceremony::CeremonyMetadata =
+        serde_json::from_str(&fs::read_to_string(&meta).expect("read metadata"))
+            .expect("parse ceremony metadata");
+
+    let mut contributions: Vec<ceremony::ContributionRecord> = records
+        .iter()
+        .map(|r| {
+            serde_json::from_str(&fs::read_to_string(r).expect("read contribution record"))
+                .expect("parse contribution record")
+        })
+        .collect();
+    contributions.sort_by_key(|c| c.round);
+
+    let transcript = ceremony::CeremonyTranscript {
+        metadata,
+        contributions,
+        final_vk_hash: None,
+        verification_passed: false,
+    };
+
+    fs::write(&output, serde_json::to_string_pretty(&transcript).expect("serialize transcript"))
+        .expect("write transcript");
+    eprintln!(
+        "[assemble] transcript written: {} ({} contributions)",
+        output,
+        transcript.contributions.len()
+    );
 }
 
 fn cmd_finalize(args: &[String]) {
@@ -269,6 +335,18 @@ fn cmd_finalize(args: &[String]) {
             let mut vk_buf = Vec::new();
             vk.serialize_with_mode(&mut vk_buf, Compress::Yes).expect("serialize VK");
             fs::write(&vk_path, &vk_buf).expect("write VK");
+
+            // Emit the attestation key pair in the exact format the prover
+            // (generate-proof) and the kernel embed (embed-zk-proof) consume,
+            // so the ceremony replaces the seeded generate path one-for-one.
+            // finalize does not re-randomize, so final_params.pk.vk == vk.
+            let pk_path = Path::new(&output_dir).join("attestation_proving_key.bin");
+            let mut pk_buf = Vec::new();
+            final_params.pk.serialize_with_mode(&mut pk_buf, Compress::Yes).expect("serialize PK");
+            fs::write(&pk_path, &pk_buf).expect("write attestation proving key");
+
+            let avk_path = Path::new(&output_dir).join("attestation_verifying_key.bin");
+            fs::write(&avk_path, &vk_buf).expect("write attestation verifying key");
 
             let transcript_path = Path::new(&output_dir).join("ceremony_transcript.json");
             let transcript_json =
@@ -337,17 +415,12 @@ fn cmd_extract_vk(args: &[String]) {
 
 fn cmd_verify(args: &[String]) {
     let mut transcript = String::new();
-    let mut vk_dir = String::new();
 
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
             "--transcript" | "-t" => {
                 transcript = args.get(i + 1).cloned().unwrap_or_default();
-                i += 2;
-            }
-            "--vk-dir" | "-v" => {
-                vk_dir = args.get(i + 1).cloned().unwrap_or_default();
                 i += 2;
             }
             _ => i += 1,
@@ -396,18 +469,26 @@ fn cmd_verify(args: &[String]) {
 }
 
 fn gather_entropy(source: &str) -> Vec<u8> {
+    // The contribution's secret randomness (the toxic waste) is derived from
+    // this. If it is weak or zero the trapdoor becomes recoverable, so the
+    // ceremony fails closed rather than ever contribute with degenerate entropy.
     let mut entropy = vec![0u8; 64];
 
     if source == "system" || source == "/dev/random" || source == "/dev/urandom" {
-        if let Ok(mut file) = fs::File::open("/dev/urandom") {
-            use std::io::Read;
-            let _ = file.read_exact(&mut entropy);
-        }
+        use std::io::Read;
+        let mut file = fs::File::open("/dev/urandom")
+            .expect("ceremony: cannot open /dev/urandom for contribution entropy");
+        file.read_exact(&mut entropy).expect("ceremony: failed to read 64 bytes of OS entropy");
     } else if Path::new(source).exists() {
-        if let Ok(data) = fs::read(source) {
-            entropy = data;
-        }
+        entropy = fs::read(source).expect("ceremony: cannot read entropy file");
+    } else {
+        panic!("ceremony: entropy source '{source}' is not 'system' nor a readable file");
     }
+
+    assert!(
+        entropy.len() >= 32 && entropy.iter().any(|&b| b != 0),
+        "ceremony: refusing to contribute with weak/zero entropy from source '{source}'"
+    );
 
     let timestamp =
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();

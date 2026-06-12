@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::client::REPLY_INBOX;
-use super::embed::{ENTROPY_ELF, ENTROPY_MANIFEST_BYTES, ENTROPY_NONOS_ID_CERT_BYTES};
+use super::embed::{ENTROPY_ELF, ENTROPY_MANIFEST_BYTES, ENTROPY_NONOS_ID_CERT_BYTES, ENTROPY_ATTESTATION_BYTES};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
@@ -47,6 +47,7 @@ pub fn spawn_entropy_capsule() -> Result<(), SpawnError> {
         elf: ENTROPY_ELF,
         nonos_id_cert_bytes: ENTROPY_NONOS_ID_CERT_BYTES,
         manifest_bytes: ENTROPY_MANIFEST_BYTES,
+        attestation_trailer: ENTROPY_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit() | Capability::Memory.bit() | Capability::Crypto.bit(),
         debug_tag: b"[ENTROPY-DEBUG] load_elf_executable error:",

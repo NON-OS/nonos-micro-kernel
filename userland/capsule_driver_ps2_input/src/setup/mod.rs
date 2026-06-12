@@ -16,7 +16,10 @@
 mod claim;
 mod driver;
 mod irq;
+mod marker;
+mod open_line;
 mod pio;
 mod sequence;
+mod setup_aux;
 pub use driver::Driver;
 pub use sequence::run;

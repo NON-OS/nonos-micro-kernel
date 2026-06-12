@@ -23,7 +23,10 @@ mod frequency;
 mod interrupt;
 mod read;
 
-pub use clint::{clear_ipi, clear_timer_interrupt, is_ipi_pending, read_mtime, send_ipi, set_clint_base, set_timer_interrupt, Clint};
+pub use clint::{
+    clear_ipi, clear_timer_interrupt, is_ipi_pending, read_mtime, send_ipi, set_clint_base,
+    set_timer_interrupt, Clint,
+};
 pub use convert::{current_time_ns, current_time_us, ns_to_ticks, ticks_to_ns};
 pub use deadline::{init_timer, init_timer_hart, set_next_timer};
 pub use delay::{delay_ms, delay_ns, delay_us};

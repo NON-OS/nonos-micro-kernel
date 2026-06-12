@@ -17,10 +17,19 @@
 use super::state::{DISPLAY_ENABLED, LOG_Y, MIN_LOG_Y};
 use core::sync::atomic::Ordering;
 
-pub fn init_after_fb(cursor_y: u32) {
-    LOG_Y.store(cursor_y, Ordering::SeqCst);
-    MIN_LOG_Y.store(160, Ordering::SeqCst);
-    DISPLAY_ENABLED.store(true, Ordering::Release);
+const TOP: u32 = 24;
+
+pub fn init_after_fb(_cursor_y: u32) {
+    // The on-screen kernel text console stays off by design. The
+    // bootloader leaves its verified-boot splash in the framebuffer, and
+    // the compositor then brings up the boot-splash capsule and the
+    // desktop over it. Drawing a scrolling green-on-black kernel log here
+    // would clobber that sequence, so the kernel log goes to serial only
+    // and the framebuffer is left intact for the compositor.
+    crate::sys::serial::println(b"[fbconsole] on-screen log disabled; serial only");
+    LOG_Y.store(TOP, Ordering::SeqCst);
+    MIN_LOG_Y.store(TOP, Ordering::SeqCst);
+    DISPLAY_ENABLED.store(false, Ordering::Release);
 }
 
 pub fn disable_display() {

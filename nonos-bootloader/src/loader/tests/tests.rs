@@ -127,10 +127,7 @@ fn test_wx_detection() {
 #[test]
 fn test_error_categories() {
     assert_eq!(errors::LoaderError::InvalidMagic.category(), "parse");
-    assert_eq!(
-        errors::LoaderError::NoLoadableSegments.category(),
-        "segment"
-    );
+    assert_eq!(errors::LoaderError::NoLoadableSegments.category(), "segment");
     assert_eq!(errors::LoaderError::OutOfMemory.category(), "memory");
     assert_eq!(errors::LoaderError::WxViolation.category(), "security");
     assert_eq!(errors::LoaderError::CapsuleInvalid.category(), "capsule");

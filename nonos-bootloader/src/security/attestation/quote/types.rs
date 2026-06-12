@@ -32,16 +32,28 @@ pub struct AttestationQuote {
 impl AttestationQuote {
     pub fn new(nonce: [u8; 32], timestamp: u64) -> Self {
         Self {
-            pcr_values: [(0, [0u8; 32]); 12], pcr_count: 0, kernel_hash: [0u8; 32],
-            bootloader_hash: [0u8; 32], zk_proof_verified: false, signature_verified: false,
-            program_hash: [0u8; 32], capsule_commitment: [0u8; 32], nonce, timestamp,
+            pcr_values: [(0, [0u8; 32]); 12],
+            pcr_count: 0,
+            kernel_hash: [0u8; 32],
+            bootloader_hash: [0u8; 32],
+            zk_proof_verified: false,
+            signature_verified: false,
+            program_hash: [0u8; 32],
+            capsule_commitment: [0u8; 32],
+            nonce,
+            timestamp,
             quote_signature: [0u8; 64],
         }
     }
 
     pub fn add_pcr(&mut self, index: u8, value: [u8; 32]) {
-        if self.pcr_count < 12 { self.pcr_values[self.pcr_count] = (index, value); self.pcr_count += 1; }
+        if self.pcr_count < 12 {
+            self.pcr_values[self.pcr_count] = (index, value);
+            self.pcr_count += 1;
+        }
     }
 
-    pub fn has_valid_measurements(&self) -> bool { self.zk_proof_verified && self.signature_verified }
+    pub fn has_valid_measurements(&self) -> bool {
+        self.zk_proof_verified && self.signature_verified
+    }
 }

@@ -16,8 +16,8 @@
 
 use ark_bls12_381::Fr;
 use nonos_attestation_circuit::{
-    compute_capsule_commitment, expected_program_hash_bytes, NonosAttestationCircuit, MIN_HW_LEVEL,
-    PCR_PREIMAGE_LEN,
+    compute_capsule_commitment, expected_program_hash_bytes, policy_tree, NonosAttestationCircuit,
+    MIN_HW_LEVEL, PCR_PREIMAGE_LEN, POLICY_EPOCH,
 };
 
 pub struct CircuitParams {
@@ -65,13 +65,16 @@ pub fn create_circuit_params(
     }
 }
 
-pub fn build_circuit(params: &CircuitParams) -> NonosAttestationCircuit<Fr> {
-    NonosAttestationCircuit::new(
+pub fn build_circuit(params: &CircuitParams) -> Result<NonosAttestationCircuit<Fr>, String> {
+    let (hi, lo) = policy_tree::split_hash(&params.kernel_hash);
+    let policy = policy_tree::witness(&[(hi, lo, 0)], 0)?;
+    Ok(NonosAttestationCircuit::new(
         params.kernel_hash,
-        params.program_hash,
+        policy,
+        POLICY_EPOCH,
         0,
         params.capsule_commitment,
         params.pcr_preimage,
         params.hardware_attestation,
-    )
+    ))
 }

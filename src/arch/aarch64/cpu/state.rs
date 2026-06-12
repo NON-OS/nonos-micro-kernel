@@ -19,5 +19,8 @@ mod registers;
 mod snapshot;
 
 pub use exception_level::{current_el, is_el1, is_el2, is_el3, ExceptionLevel};
-pub use registers::{read_daif, read_elr_el1, read_esr_el1, read_far_el1, read_lr, read_nzcv, read_pc, read_sp, read_spsr_el1};
+pub use registers::{
+    read_daif, read_elr_el1, read_esr_el1, read_far_el1, read_lr, read_nzcv, read_pc, read_sp,
+    read_spsr_el1,
+};
 pub use snapshot::CpuState;

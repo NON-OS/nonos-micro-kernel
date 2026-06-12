@@ -120,6 +120,5 @@ impl StageGuard {
 }
 
 impl Drop for StageGuard {
-    fn drop(&mut self) {
-    }
+    fn drop(&mut self) {}
 }

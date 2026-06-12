@@ -28,5 +28,9 @@ pub use cpu::init_gic_cpu;
 pub use device::Gic;
 pub use distributor::GicDistributor;
 pub use icc::{acknowledge_interrupt, end_interrupt, set_priority_mask};
-pub use irq_handlers::{dispatch as dispatch_irq, register as register_irq_handler, register_for_capsule as register_irq_handler_for_capsule, unregister_for_capsule as unregister_irq_handler_for_capsule};
+pub use irq_handlers::{
+    dispatch as dispatch_irq, register as register_irq_handler,
+    register_for_capsule as register_irq_handler_for_capsule,
+    unregister_for_capsule as unregister_irq_handler_for_capsule,
+};
 pub use redistributor::GicRedistributor;

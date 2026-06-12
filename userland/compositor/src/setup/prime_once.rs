@@ -59,6 +59,8 @@ pub fn run_virtio_once() -> Result<Context, &'static str> {
         stride: desc.stride,
         backing_len: desc.byte_len,
         backing_va: rc as u64,
+        gop_mode: false,
+        surface_handle: primary.handle,
         first_scanout_done: false,
         scanout_error_reported: false,
         next_request_id: 2,

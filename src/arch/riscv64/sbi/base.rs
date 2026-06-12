@@ -22,5 +22,7 @@ mod ret;
 
 pub use call::sbi_call;
 pub use name::impl_name;
-pub use query::{impl_id, impl_version, marchid, mimpid, mvendorid, probe_extension_base, sbi_version};
+pub use query::{
+    impl_id, impl_version, marchid, mimpid, mvendorid, probe_extension_base, sbi_version,
+};
 pub use ret::SbiRet;

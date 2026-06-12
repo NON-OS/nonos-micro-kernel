@@ -60,11 +60,7 @@ pub(in crate::fs::ramfs_capsule) fn encode_write(
     out
 }
 
-pub(in crate::fs::ramfs_capsule) fn encode_truncate(
-    seq: u32,
-    handle: u64,
-    length: u64,
-) -> Vec<u8> {
+pub(in crate::fs::ramfs_capsule) fn encode_truncate(seq: u32, handle: u64, length: u64) -> Vec<u8> {
     let mut out = header(seq, OP_TRUNCATE);
     out.extend_from_slice(&handle.to_le_bytes());
     out.extend_from_slice(&length.to_le_bytes());

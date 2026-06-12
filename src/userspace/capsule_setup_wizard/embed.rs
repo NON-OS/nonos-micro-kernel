@@ -27,6 +27,10 @@ pub(crate) const SETUP_WIZARD_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const SETUP_WIZARD_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/setup_wizard.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-setup-wizard")]
+pub(crate) const SETUP_WIZARD_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/setup_wizard.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-setup-wizard"))]
 pub(crate) const SETUP_WIZARD_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(crate) const SETUP_WIZARD_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-setup-wizard"))]
 pub(crate) const SETUP_WIZARD_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-setup-wizard"))]
+pub(crate) const SETUP_WIZARD_ATTESTATION_BYTES: &[u8] = &[];

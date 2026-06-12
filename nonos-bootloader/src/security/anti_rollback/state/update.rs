@@ -19,21 +19,35 @@ use crate::security::anti_rollback::nvram::write_to_nvram;
 use crate::security::anti_rollback::types::RollbackError;
 
 impl AntiRollbackState {
-    pub fn update_kernel_version(&mut self, kernel_version: u64, timestamp: u64) -> Result<(), RollbackError> {
-        if !self.initialized && !self.tpm_available { return Err(RollbackError::TpmNotAvailable); }
+    pub fn update_kernel_version(
+        &mut self,
+        kernel_version: u64,
+        timestamp: u64,
+    ) -> Result<(), RollbackError> {
+        if !self.initialized && !self.tpm_available {
+            return Err(RollbackError::TpmNotAvailable);
+        }
         self.check_kernel_version(kernel_version)?;
-        if kernel_version > self.state.kernel_version { self.state.kernel_version = kernel_version; }
-        if kernel_version > self.state.minimum_kernel { self.state.minimum_kernel = kernel_version; }
+        if kernel_version > self.state.kernel_version {
+            self.state.kernel_version = kernel_version;
+        }
+        if kernel_version > self.state.minimum_kernel {
+            self.state.minimum_kernel = kernel_version;
+        }
         self.state.last_boot_timestamp = timestamp;
         self.state.boot_count += 1;
-        if self.tpm_available { write_to_nvram(&self.state)?; }
+        if self.tpm_available {
+            write_to_nvram(&self.state)?;
+        }
         Ok(())
     }
 
     pub fn set_minimum_kernel_version(&mut self, version: u64) -> Result<(), RollbackError> {
         if version > self.state.minimum_kernel {
             self.state.minimum_kernel = version;
-            if self.tpm_available { write_to_nvram(&self.state)?; }
+            if self.tpm_available {
+                write_to_nvram(&self.state)?;
+            }
         }
         Ok(())
     }

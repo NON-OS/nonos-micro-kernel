@@ -54,7 +54,10 @@ impl ZkPublicInputs {
     }
 }
 
-pub fn build_public_inputs(kernel_hash: [u8; 32], timestamp: u64) -> Result<ZkPublicInputs, &'static str> {
+pub fn build_public_inputs(
+    kernel_hash: [u8; 32],
+    timestamp: u64,
+) -> Result<ZkPublicInputs, &'static str> {
     Ok(ZkPublicInputs {
         kernel_hash,
         boot_nonce: get_boot_nonce(),

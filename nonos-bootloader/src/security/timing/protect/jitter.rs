@@ -18,7 +18,9 @@ use core::sync::atomic::{AtomicU64, Ordering};
 
 static JITTER_SEED: AtomicU64 = AtomicU64::new(0);
 
-pub fn init_jitter(entropy: u64) { JITTER_SEED.store(entropy, Ordering::Release); }
+pub fn init_jitter(entropy: u64) {
+    JITTER_SEED.store(entropy, Ordering::Release);
+}
 
 pub(super) fn next_jitter() -> u64 {
     let seed = JITTER_SEED.load(Ordering::Acquire);
@@ -29,9 +31,13 @@ pub(super) fn next_jitter() -> u64 {
 
 pub fn add_random_delay() {
     let jitter = next_jitter() & 0xFFFF;
-    for _ in 0..jitter { core::hint::spin_loop(); }
+    for _ in 0..jitter {
+        core::hint::spin_loop();
+    }
 }
 
 pub fn add_fixed_delay(iterations: u32) {
-    for _ in 0..iterations { core::hint::spin_loop(); }
+    for _ in 0..iterations {
+        core::hint::spin_loop();
+    }
 }

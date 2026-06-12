@@ -1931,6 +1931,7 @@ dependencies = [
  "heapless",
  "image",
  "log",
+ "noto-sans-mono-bitmap",
  "r-efi 4.5.0",
  "sha2",
  "snarkvm",
@@ -1948,6 +1949,12 @@ name = "noop_proc_macro"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0676bb32a98c1a483ce53e500a81ad9c3d5b3f7c920c28c24e9cb0980d0b5bc8"
+
+[[package]]
+name = "noto-sans-mono-bitmap"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f102c477fd4ec864c149803bf606ecc23bc9329602ec0f99073a728abf454abc"
 
 [[package]]
 name = "num-bigint"

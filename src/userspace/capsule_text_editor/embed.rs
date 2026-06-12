@@ -27,6 +27,10 @@ pub(crate) const TEXT_EDITOR_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const TEXT_EDITOR_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/text_editor.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-text-editor")]
+pub(crate) const TEXT_EDITOR_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/text_editor.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-text-editor"))]
 pub(crate) const TEXT_EDITOR_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(crate) const TEXT_EDITOR_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-text-editor"))]
 pub(crate) const TEXT_EDITOR_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-text-editor"))]
+pub(crate) const TEXT_EDITOR_ATTESTATION_BYTES: &[u8] = &[];

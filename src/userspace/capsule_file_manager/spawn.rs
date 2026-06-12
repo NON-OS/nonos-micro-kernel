@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    FILE_MANAGER_ELF, FILE_MANAGER_MANIFEST_BYTES, FILE_MANAGER_NONOS_ID_CERT_BYTES,
+    FILE_MANAGER_ELF, FILE_MANAGER_MANIFEST_BYTES, FILE_MANAGER_ATTESTATION_BYTES, FILE_MANAGER_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -44,6 +44,7 @@ pub fn spawn_file_manager_capsule() -> Result<(), SpawnError> {
         elf: FILE_MANAGER_ELF,
         nonos_id_cert_bytes: FILE_MANAGER_NONOS_ID_CERT_BYTES,
         manifest_bytes: FILE_MANAGER_MANIFEST_BYTES,
+        attestation_trailer: FILE_MANAGER_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

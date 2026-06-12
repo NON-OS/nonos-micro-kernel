@@ -72,11 +72,18 @@ pub(crate) fn run(
 // capsule with no trailer yet is passed through to the existing checks.
 #[cfg(feature = "zk-groth16")]
 fn attest_gate(spec: &CapsuleSpecVerified, install_caps: u64) -> Result<(), SpawnError> {
-    use crate::security::capsule_attest::{trailer_for, verify_capsule_attestation};
+    use crate::security::capsule_attest::verify_capsule_attestation;
 
-    let Some(trailer) = trailer_for(spec.name) else {
+    let trailer = spec.attestation_trailer;
+    if trailer.is_empty() {
+        crate::sys::serial::print(b"[ZK-ATTEST] none ");
+        crate::sys::serial::print(spec.name.as_bytes());
+        crate::sys::serial::print(b"\n");
+        #[cfg(feature = "nonos-zk-enforce")]
+        return Err(SpawnError::AttestationRejected);
+        #[cfg(not(feature = "nonos-zk-enforce"))]
         return Ok(());
-    };
+    }
     match verify_capsule_attestation(trailer, spec.elf, install_caps) {
         Ok(()) => {
             crate::sys::serial::print(b"[ZK-ATTEST] ok ");

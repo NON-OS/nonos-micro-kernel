@@ -17,10 +17,10 @@
 use uefi::cstr16;
 use uefi::prelude::*;
 
-use crate::log::logger::log_debug;
 use super::delay::mini_delay;
 use super::display::{print, print_hex_bytes};
 use super::types::CryptoVerifyResult;
+use crate::log::logger::log_debug;
 
 pub fn compute_and_display_hash(
     kernel_code: &[u8],

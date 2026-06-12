@@ -26,6 +26,10 @@ pub(crate) const WM_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const WM_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/wm.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-wm")]
+pub(crate) const WM_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/wm.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-wm"))]
 pub(crate) const WM_ELF: &[u8] = &[];
 
@@ -34,3 +38,6 @@ pub(crate) const WM_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-wm"))]
 pub(crate) const WM_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-wm"))]
+pub(crate) const WM_ATTESTATION_BYTES: &[u8] = &[];

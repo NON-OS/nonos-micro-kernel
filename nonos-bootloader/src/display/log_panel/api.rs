@@ -23,16 +23,31 @@ pub fn log(level: LogLevel, msg: &[u8]) {
     render_after_log(count);
 }
 
-pub fn log_info(msg: &[u8]) { log(LogLevel::Info, msg); }
+pub fn log_info(msg: &[u8]) {
+    log(LogLevel::Info, msg);
+}
 
-pub fn log_ok(msg: &[u8]) { log(LogLevel::Ok, msg); }
+pub fn log_ok(msg: &[u8]) {
+    log(LogLevel::Ok, msg);
+}
 
-pub fn log_warn(msg: &[u8]) { log(LogLevel::Warn, msg); }
+pub fn log_warn(msg: &[u8]) {
+    log(LogLevel::Warn, msg);
+}
 
-pub fn log_error(msg: &[u8]) { log(LogLevel::Error, msg); }
+pub fn log_error(msg: &[u8]) {
+    log(LogLevel::Error, msg);
+}
 
-pub fn log_security(msg: &[u8]) { log(LogLevel::Security, msg); }
+pub fn log_security(msg: &[u8]) {
+    log(LogLevel::Security, msg);
+}
 
-pub fn clear() { clear_buffer(); clear_display(); }
+pub fn clear() {
+    clear_buffer();
+    clear_display();
+}
 
-pub fn refresh() { redraw_all(); }
+pub fn refresh() {
+    redraw_all();
+}

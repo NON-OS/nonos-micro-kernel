@@ -18,11 +18,12 @@
 // mapper module; only the two public mapping entry points
 // (`map_4k_run`, `map_huge_1g_run`) escape via re-export.
 
-mod ensure_pdpt;
 mod ensure_pd;
+mod ensure_pdpt;
 mod ensure_pt;
 mod map_4k_run;
 mod map_huge_1g_run;
+mod map_huge_2m_run;
 mod pd_index;
 mod pdpt_index;
 mod pml4_index;
@@ -30,3 +31,4 @@ mod pt_index;
 
 pub use map_4k_run::map_4k_run;
 pub use map_huge_1g_run::map_huge_1g_run;
+pub use map_huge_2m_run::map_huge_2m_run;

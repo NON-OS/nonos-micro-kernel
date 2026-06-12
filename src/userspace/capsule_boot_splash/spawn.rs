@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    BOOT_SPLASH_ELF, BOOT_SPLASH_MANIFEST_BYTES, BOOT_SPLASH_NONOS_ID_CERT_BYTES,
+    BOOT_SPLASH_ATTESTATION_BYTES, BOOT_SPLASH_ELF, BOOT_SPLASH_MANIFEST_BYTES,
+    BOOT_SPLASH_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -44,6 +45,7 @@ pub fn spawn_boot_splash_capsule() -> Result<(), SpawnError> {
         elf: BOOT_SPLASH_ELF,
         nonos_id_cert_bytes: BOOT_SPLASH_NONOS_ID_CERT_BYTES,
         manifest_bytes: BOOT_SPLASH_MANIFEST_BYTES,
+        attestation_trailer: BOOT_SPLASH_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

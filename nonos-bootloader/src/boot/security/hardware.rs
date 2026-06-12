@@ -18,7 +18,9 @@ use uefi::prelude::*;
 
 use crate::display::{show_error_screen, update_stage, StageStatus, STAGE_SECURITY};
 use crate::log::logger::log_error;
-use crate::security::{check_minimum_requirements, detect_hardware_capabilities, HardwareCapabilities};
+use crate::security::{
+    check_minimum_requirements, detect_hardware_capabilities, HardwareCapabilities,
+};
 
 use super::super::util::fatal_reset;
 
@@ -28,7 +30,9 @@ pub fn verify_hardware_requirements(st: &mut SystemTable<Boot>, gop: bool) -> Ha
     if !hw_reqs.passed {
         log_error("security", "Hardware requirements not met");
         update_stage(STAGE_SECURITY, StageStatus::Failed);
-        if gop { show_error_screen(b"Hardware requirements not met"); }
+        if gop {
+            show_error_screen(b"Hardware requirements not met");
+        }
         fatal_reset(st, "Hardware requirements not met");
     }
     hw_caps

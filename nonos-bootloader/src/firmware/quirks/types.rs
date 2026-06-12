@@ -23,11 +23,18 @@ impl QuirkFlags {
     pub const EBS_RETRY_NEEDED: Self = Self(1 << 1);
     pub const GOP_BROKEN: Self = Self(1 << 2);
     pub const TIMER_BROKEN: Self = Self(1 << 3);
-    pub fn contains(&self, other: Self) -> bool { (self.0 & other.0) == other.0 }
-    pub fn union(&self, other: Self) -> Self { Self(self.0 | other.0) }
+    pub fn contains(&self, other: Self) -> bool {
+        (self.0 & other.0) == other.0
+    }
+    pub fn union(&self, other: Self) -> Self {
+        Self(self.0 | other.0)
+    }
 }
 
-pub struct FirmwareQuirk { pub vendor: &'static str, pub flags: QuirkFlags, }
+pub struct FirmwareQuirk {
+    pub vendor: &'static str,
+    pub flags: QuirkFlags,
+}
 
 pub const KNOWN_QUIRKS: &[FirmwareQuirk] = &[
     FirmwareQuirk { vendor: "American Megatrends", flags: QuirkFlags::MMAP_UNSTABLE },

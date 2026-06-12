@@ -14,14 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::Ordering;
 use super::state::{CURRENT_VERSION, INIT_DONE, KEYSTORE};
 use super::types::{KeyId, PK_LEN};
+use core::sync::atomic::Ordering;
 
 pub fn add_key_versioned(pubkey: &[u8; PK_LEN], version: u32) -> Result<KeyId, &'static str> {
     let mut store = KEYSTORE.lock();
     let result = store.add_key(pubkey, version);
-    if result.is_ok() { INIT_DONE.store(true, Ordering::SeqCst); }
+    if result.is_ok() {
+        INIT_DONE.store(true, Ordering::SeqCst);
+    }
     result
 }
 

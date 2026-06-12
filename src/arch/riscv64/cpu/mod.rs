@@ -24,7 +24,9 @@ pub mod irq;
 pub mod setup;
 
 pub use csr::{clear_csr, read_csr, set_csr, write_csr};
-pub use fence::{fence, fence_i, sfence_vma, sfence_vma_addr, sfence_vma_addr_asid, sfence_vma_asid};
+pub use fence::{
+    fence, fence_i, sfence_vma, sfence_vma_addr, sfence_vma_addr_asid, sfence_vma_asid,
+};
 pub use halt::{halt, wait_for_interrupt};
 pub use id::{cpu_id, hart_id, marchid, mimpid, mvendorid};
 pub use irq::{disable_interrupts, enable_interrupts, interrupts_enabled};

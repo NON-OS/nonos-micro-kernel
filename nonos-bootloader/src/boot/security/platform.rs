@@ -18,14 +18,22 @@ use uefi::prelude::*;
 
 use crate::display::{log_info as panel_info, log_ok};
 use crate::security::{audit, init_anti_rollback, init_attestation, initialize_security_subsystem};
-use crate::security::{verify_platform_security, AuditEvent, HardwareCapabilities, SecurityContext};
+use crate::security::{
+    verify_platform_security, AuditEvent, HardwareCapabilities, SecurityContext,
+};
 
 pub fn verify_platform(hw_caps: &HardwareCapabilities, gop: bool) {
     let platform = verify_platform_security(hw_caps);
     if gop {
-        if platform.exploit_mitigations { log_ok(b"CPU mitigations: SMEP+SMAP+NX"); }
-        if platform.hardware_rng { log_ok(b"Hardware RNG available"); }
-        if platform.tpm_attestation { log_ok(b"TPM2 attestation ready"); }
+        if platform.exploit_mitigations {
+            log_ok(b"CPU mitigations: SMEP+SMAP+NX");
+        }
+        if platform.hardware_rng {
+            log_ok(b"Hardware RNG available");
+        }
+        if platform.tpm_attestation {
+            log_ok(b"TPM2 attestation ready");
+        }
     }
 }
 
@@ -34,13 +42,21 @@ pub fn init_subsystems(st: &mut SystemTable<Boot>, gop: bool) -> SecurityContext
     init_attestation();
     let _ = init_anti_rollback(security.measured_boot_active);
     audit(AuditEvent::TpmInit, 0, b"subsystems ready");
-    if gop { display_subsystem_status(&security); }
+    if gop {
+        display_subsystem_status(&security);
+    }
     security
 }
 
 fn display_subsystem_status(security: &SecurityContext) {
-    if security.secure_boot_enabled { log_ok(b"SecureBoot ENABLED"); }
-    else { panel_info(b"SecureBoot disabled"); }
-    if security.measured_boot_active { log_ok(b"TPM2 MeasuredBoot active"); }
-    else { panel_info(b"TPM2 not available"); }
+    if security.secure_boot_enabled {
+        log_ok(b"SecureBoot ENABLED");
+    } else {
+        panel_info(b"SecureBoot disabled");
+    }
+    if security.measured_boot_active {
+        log_ok(b"TPM2 MeasuredBoot active");
+    } else {
+        panel_info(b"TPM2 not available");
+    }
 }

@@ -18,8 +18,6 @@ use core::arch::asm;
 
 use crate::memory::addr::PhysAddr;
 
-
-
 #[inline(always)]
 pub(super) unsafe fn switch(root: PhysAddr) {
     asm!(

@@ -14,12 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_boot::boot::{exit_to_shell, run_memory_test};
+use nonos_boot::menu::{MenuAction, SecurityMode};
 use uefi::prelude::*;
 use uefi::table::runtime::ResetType;
-use nonos_boot::boot::{run_memory_test, exit_to_shell};
-use nonos_boot::menu::{MenuAction, SecurityMode};
 
-pub fn resolve_action(st: &mut SystemTable<Boot>, action: MenuAction) -> Result<SecurityMode, Status> {
+pub fn resolve_action(
+    st: &mut SystemTable<Boot>,
+    action: MenuAction,
+) -> Result<SecurityMode, Status> {
     match action {
         MenuAction::Boot(mode) => Ok(mode),
         MenuAction::Timeout | MenuAction::Continue => Ok(SecurityMode::Standard),

@@ -16,16 +16,26 @@
 
 extern crate alloc;
 
-use alloc::format;
-use crate::crypto::sig::{get_build_timestamp, get_key_fingerprint, get_nonos_key_id, init_production_keys};
 use crate::crypto::get_keystore_fingerprint;
+use crate::crypto::sig::{
+    get_build_timestamp, get_key_fingerprint, get_nonos_key_id, init_production_keys,
+};
 use crate::log::logger::{log_error, log_info};
 use crate::security::types::SecurityContext;
+use alloc::format;
 
 pub fn load_production_keys(ctx: &mut SecurityContext) -> bool {
     match init_production_keys() {
-        Ok(count) => { ctx.key_count = count; log_key_info(); true }
-        Err(_) => { ctx.key_count = 0; log_error("security", "Failed to load production keys"); false }
+        Ok(count) => {
+            ctx.key_count = count;
+            log_key_info();
+            true
+        }
+        Err(_) => {
+            ctx.key_count = 0;
+            log_error("security", "Failed to load production keys");
+            false
+        }
     }
 }
 
@@ -33,6 +43,9 @@ fn log_key_info() {
     log_info("security", &format!("Key fingerprint: {}", get_key_fingerprint()));
     log_info("security", &format!("Build timestamp: {}", get_build_timestamp()));
     let kid = get_nonos_key_id();
-    log_info("security", &format!("Key ID: {:02x}{:02x}{:02x}{:02x}", kid[0], kid[1], kid[2], kid[3]));
+    log_info(
+        "security",
+        &format!("Key ID: {:02x}{:02x}{:02x}{:02x}", kid[0], kid[1], kid[2], kid[3]),
+    );
     log_info("security", &format!("Keystore: {}", get_keystore_fingerprint()));
 }

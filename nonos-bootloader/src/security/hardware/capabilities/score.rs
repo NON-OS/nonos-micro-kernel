@@ -18,16 +18,38 @@ use crate::security::hardware::cpu::CpuSecurityFeatures;
 use crate::security::hardware::memory::MemoryProtection;
 use crate::security::hardware::tpm_detect::TpmCapabilities;
 
-pub fn calculate_security_score(cpu: &CpuSecurityFeatures, mem: &MemoryProtection, tpm: &TpmCapabilities) -> u8 {
+pub fn calculate_security_score(
+    cpu: &CpuSecurityFeatures,
+    mem: &MemoryProtection,
+    tpm: &TpmCapabilities,
+) -> u8 {
     let mut s: u8 = 0;
-    if cpu.smep { s = s.saturating_add(15); }
-    if cpu.smap { s = s.saturating_add(15); }
-    if cpu.nx_bit { s = s.saturating_add(10); }
-    if cpu.aes_ni { s = s.saturating_add(5); }
-    if cpu.rdrand { s = s.saturating_add(10); }
-    if mem.dep_enabled { s = s.saturating_add(10); }
-    if mem.aslr_supported { s = s.saturating_add(10); }
-    if tpm.present { s = s.saturating_add(15); }
-    if tpm.version_2_0 { s = s.saturating_add(10); }
+    if cpu.smep {
+        s = s.saturating_add(15);
+    }
+    if cpu.smap {
+        s = s.saturating_add(15);
+    }
+    if cpu.nx_bit {
+        s = s.saturating_add(10);
+    }
+    if cpu.aes_ni {
+        s = s.saturating_add(5);
+    }
+    if cpu.rdrand {
+        s = s.saturating_add(10);
+    }
+    if mem.dep_enabled {
+        s = s.saturating_add(10);
+    }
+    if mem.aslr_supported {
+        s = s.saturating_add(10);
+    }
+    if tpm.present {
+        s = s.saturating_add(15);
+    }
+    if tpm.version_2_0 {
+        s = s.saturating_add(10);
+    }
     s
 }

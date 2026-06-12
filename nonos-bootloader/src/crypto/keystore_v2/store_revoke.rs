@@ -14,23 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::crypto::keys::KeyId;
 use super::store_core::KeystoreV2;
 use super::util::constant_time_eq;
+use crate::crypto::keys::KeyId;
 
 impl KeystoreV2 {
     pub fn revoke_key(&mut self, key_id: &KeyId) -> bool {
-        if self.revocation_count >= 16 { return false; }
-        for i in 0..self.key_count { if constant_time_eq(&self.keys[i].key_id, key_id) { self.keys[i].active = false; } }
+        if self.revocation_count >= 16 {
+            return false;
+        }
+        for i in 0..self.key_count {
+            if constant_time_eq(&self.keys[i].key_id, key_id) {
+                self.keys[i].active = false;
+            }
+        }
         self.revocations[self.revocation_count] = *key_id;
         self.revocation_count += 1;
         true
     }
 
     pub fn is_revoked(&self, key_id: &KeyId) -> bool {
-        for i in 0..self.revocation_count { if constant_time_eq(&self.revocations[i], key_id) { return true; } }
+        for i in 0..self.revocation_count {
+            if constant_time_eq(&self.revocations[i], key_id) {
+                return true;
+            }
+        }
         false
     }
 
-    pub fn set_minimum_version(&mut self, version: u32) { if version > self.minimum_version { self.minimum_version = version; } }
+    pub fn set_minimum_version(&mut self, version: u32) {
+        if version > self.minimum_version {
+            self.minimum_version = version;
+        }
+    }
 }

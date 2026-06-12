@@ -34,6 +34,31 @@ pub fn attach_surface(
         return Ok(base_va);
     }
     let (idx, epoch) = decode_handle(handle);
+    // A self-attach (the owner attaching its own surface) needs no new
+    // mapping: the surface already lives at the VA the owner registered
+    // it at. Returning that VA keeps the owner's existing VMA, which the
+    // present path resolves against. Remapping would create a second VA
+    // with no backing VMA and break MkSurfacePresent.
+    {
+        let slots = SLOTS.lock();
+        let slot = slots
+            .get(idx as usize)
+            .and_then(|s| s.as_ref())
+            .ok_or(RegistryError::BadHandle)?;
+        if slot.epoch != epoch {
+            return Err(RegistryError::BadHandle);
+        }
+        if slot.owner_pid == receiver_pid && slot.owner_base_va != 0 {
+            let base_va = slot.owner_base_va;
+            let byte_len = slot.byte_len;
+            drop(slots);
+            *out_desc = super::descriptor::descriptor(handle)?;
+            out_desc.base_va = base_va;
+            out_desc.byte_len = byte_len;
+            super::super::attach_map::record(receiver_pid, handle, base_va, byte_len);
+            return Ok(base_va);
+        }
+    }
     let frames = {
         let mut slots = SLOTS.lock();
         let slot = slots

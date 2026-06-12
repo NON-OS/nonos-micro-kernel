@@ -18,7 +18,9 @@ use crate::hardware::tpm::state::TpmState;
 use crate::hardware::tpm::types::{NvIndex, TpmError};
 
 pub fn nv_read_impl(state: &TpmState, index: &NvIndex, buf: &mut [u8]) -> Result<usize, TpmError> {
-    if !state.initialized { return Err(TpmError::NotPresent); }
+    if !state.initialized {
+        return Err(TpmError::NotPresent);
+    }
     state.request_locality()?;
     let mut cmd = [0u8; 22];
     cmd[0..2].copy_from_slice(&0x8001u16.to_be_bytes());
@@ -32,12 +34,20 @@ pub fn nv_read_impl(state: &TpmState, index: &NvIndex, buf: &mut [u8]) -> Result
     let mut response = [0u8; 256];
     let len = state.receive_response(&mut response)?;
     state.release_locality();
-    if len < 10 { return Err(TpmError::InvalidResponse); }
+    if len < 10 {
+        return Err(TpmError::InvalidResponse);
+    }
     let rc = u32::from_be_bytes([response[6], response[7], response[8], response[9]]);
-    if rc != 0 { return Err(TpmError::CommandFailed(rc)); }
-    if len < 12 { return Err(TpmError::InvalidResponse); }
+    if rc != 0 {
+        return Err(TpmError::CommandFailed(rc));
+    }
+    if len < 12 {
+        return Err(TpmError::InvalidResponse);
+    }
     let data_len = u16::from_be_bytes([response[10], response[11]]) as usize;
-    if data_len > buf.len() || 12 + data_len > len { return Err(TpmError::NvSizeMismatch); }
+    if data_len > buf.len() || 12 + data_len > len {
+        return Err(TpmError::NvSizeMismatch);
+    }
     buf[..data_len].copy_from_slice(&response[12..12 + data_len]);
     Ok(data_len)
 }

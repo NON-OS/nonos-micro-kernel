@@ -18,18 +18,10 @@ use core::cell::UnsafeCell;
 
 use super::slot::FpSlot;
 
-
-
-
-
 #[repr(transparent)]
 pub struct PcbArchFpu {
     inner: UnsafeCell<FpSlot>,
 }
-
-
-
-
 
 unsafe impl Sync for PcbArchFpu {}
 

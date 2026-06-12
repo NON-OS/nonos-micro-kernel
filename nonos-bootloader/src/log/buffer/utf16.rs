@@ -26,10 +26,7 @@ pub struct Utf16Buffer {
 impl Utf16Buffer {
     /// Create a new empty buffer
     pub const fn new() -> Self {
-        Self {
-            data: [0u16; UTF16_BUFFER_SIZE],
-            len: 0,
-        }
+        Self { data: [0u16; UTF16_BUFFER_SIZE], len: 0 }
     }
 
     /// Clear the buffer

@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicUsize, Ordering};
 use super::timer::boot_timestamp;
 use crate::display::log_panel::entry::LogEntry;
 use crate::display::log_panel::types::{LogLevel, MAX_LOG_LINES};
+use core::sync::atomic::{AtomicUsize, Ordering};
 
 static mut LOG_BUFFER: [LogEntry; MAX_LOG_LINES] = [LogEntry::empty(); MAX_LOG_LINES];
 static LOG_COUNT: AtomicUsize = AtomicUsize::new(0);
@@ -26,16 +26,24 @@ pub fn push_entry(level: LogLevel, msg: &[u8]) -> usize {
     let count = LOG_COUNT.load(Ordering::Relaxed);
     let idx = count % MAX_LOG_LINES;
     let ts = boot_timestamp();
-    unsafe { LOG_BUFFER[idx].set(level, msg, ts); }
+    unsafe {
+        LOG_BUFFER[idx].set(level, msg, ts);
+    }
     LOG_COUNT.store(count + 1, Ordering::Release);
     count + 1
 }
 
-pub fn get_count() -> usize { LOG_COUNT.load(Ordering::Relaxed) }
+pub fn get_count() -> usize {
+    LOG_COUNT.load(Ordering::Relaxed)
+}
 
 pub fn get_entry(idx: usize) -> Option<LogEntry> {
-    if idx >= MAX_LOG_LINES { return None; }
+    if idx >= MAX_LOG_LINES {
+        return None;
+    }
     unsafe { Some(LOG_BUFFER[idx]) }
 }
 
-pub fn clear_buffer() { LOG_COUNT.store(0, Ordering::Release); }
+pub fn clear_buffer() {
+    LOG_COUNT.store(0, Ordering::Release);
+}

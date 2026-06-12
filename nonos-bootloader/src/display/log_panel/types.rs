@@ -14,23 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::display::boot::layout::{log_line_width, log_origin, panel_rows};
+
 pub const MAX_LOG_LINES: usize = 256;
 pub const LOG_LINE_LEN: usize = 120;
 pub const LINE_HEIGHT: u32 = 16;
-pub const LOG_START_Y: u32 = 180;
-pub const LOG_START_X: u32 = 40;
-pub const BOTTOM_MARGIN: u32 = 50;
 
 pub fn get_log_area() -> (u32, u32) {
-    (LOG_START_X, LOG_START_Y)
+    log_origin()
 }
 
 pub fn max_visible_lines() -> usize {
-    let (_, height) = crate::display::gop::get_dimensions();
-    if height == 0 { return MAX_LOG_LINES; }
-    let available = height.saturating_sub(LOG_START_Y).saturating_sub(BOTTOM_MARGIN);
-    let lines = (available / LINE_HEIGHT) as usize;
-    lines.min(MAX_LOG_LINES)
+    (panel_rows() as usize).min(MAX_LOG_LINES)
+}
+
+pub fn line_clear_width() -> u32 {
+    log_line_width()
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

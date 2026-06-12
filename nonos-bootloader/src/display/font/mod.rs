@@ -17,7 +17,11 @@
 pub mod bitmap;
 mod draw;
 mod metrics;
+mod scale;
 
 pub use bitmap::get_char_bitmap;
-pub use draw::{draw_char, draw_char_2x, draw_hash_bytes, draw_hex_byte, draw_string, draw_string_2x};
+pub use draw::{
+    draw_char, draw_char_2x, draw_hash_bytes, draw_hex_byte, draw_string, draw_string_2x,
+};
 pub use metrics::{CHAR_HEIGHT, CHAR_WIDTH};
+pub use scale::{draw_char_4x, draw_string_4x};

@@ -22,7 +22,12 @@ use crate::menu::SecurityMode;
 use super::error::{handle_invalid_signature, handle_no_signature};
 use super::valid::handle_valid_signature;
 
-pub fn verify_signature(st: &mut SystemTable<Boot>, res: &CryptoVerifyResult, mode: SecurityMode, gop: bool) {
+pub fn verify_signature(
+    st: &mut SystemTable<Boot>,
+    res: &CryptoVerifyResult,
+    mode: SecurityMode,
+    gop: bool,
+) {
     if !res.signature_present {
         handle_no_signature(st, mode, gop);
     } else if !res.signature_valid {

@@ -17,10 +17,10 @@
 mod accept;
 mod stats;
 
-use super::{hpet, pit, rtc, timer as nonos_timer, tsc};
-use super::{RtcError, RtcTime};
 use self::accept::{accept_pit, accept_rtc, accept_tsc};
 pub use self::stats::get_all_stats;
+use super::{hpet, pit, rtc, timer as nonos_timer, tsc};
+use super::{RtcError, RtcTime};
 
 #[inline(always)]
 pub fn rdtsc() -> u64 {

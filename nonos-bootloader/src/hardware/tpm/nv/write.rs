@@ -18,7 +18,9 @@ use crate::hardware::tpm::state::TpmState;
 use crate::hardware::tpm::types::{NvIndex, TpmError};
 
 pub fn nv_write_impl(state: &TpmState, index: &NvIndex, data: &[u8]) -> Result<(), TpmError> {
-    if !state.initialized { return Err(TpmError::NotPresent); }
+    if !state.initialized {
+        return Err(TpmError::NotPresent);
+    }
     state.request_locality()?;
     let cmd_len = 22 + data.len();
     let mut cmd = [0u8; 256];
@@ -34,8 +36,12 @@ pub fn nv_write_impl(state: &TpmState, index: &NvIndex, data: &[u8]) -> Result<(
     let mut response = [0u8; 32];
     let len = state.receive_response(&mut response)?;
     state.release_locality();
-    if len < 10 { return Err(TpmError::InvalidResponse); }
+    if len < 10 {
+        return Err(TpmError::InvalidResponse);
+    }
     let rc = u32::from_be_bytes([response[6], response[7], response[8], response[9]]);
-    if rc != 0 { return Err(TpmError::CommandFailed(rc)); }
+    if rc != 0 {
+        return Err(TpmError::CommandFailed(rc));
+    }
     Ok(())
 }

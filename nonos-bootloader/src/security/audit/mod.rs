@@ -17,5 +17,7 @@
 mod log;
 pub mod types;
 
-pub use log::{audit, audit_alert, get_audit_hash, seal_audit_log, verify_audit_integrity, AuditLog, AUDIT_LOG};
+pub use log::{
+    audit, audit_alert, get_audit_hash, seal_audit_log, verify_audit_integrity, AuditLog, AUDIT_LOG,
+};
 pub use types::{AuditEntry, AuditEvent, AUDIT_MSG_LEN};

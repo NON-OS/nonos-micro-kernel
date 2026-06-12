@@ -27,8 +27,12 @@ pub struct VersionState {
 impl VersionState {
     pub const fn new() -> Self {
         Self {
-            kernel_version: 0, bootloader_version: 0, minimum_kernel: 0,
-            minimum_bootloader: 0, last_boot_timestamp: 0, boot_count: 0,
+            kernel_version: 0,
+            bootloader_version: 0,
+            minimum_kernel: 0,
+            minimum_bootloader: 0,
+            last_boot_timestamp: 0,
+            boot_count: 0,
         }
     }
 }

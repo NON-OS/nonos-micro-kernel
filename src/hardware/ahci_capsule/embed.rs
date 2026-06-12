@@ -27,6 +27,10 @@ pub(super) const DRIVER_AHCI_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const DRIVER_AHCI_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/driver_ahci.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-driver-ahci")]
+pub(super) const DRIVER_AHCI_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/driver_ahci.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-driver-ahci"))]
 pub(super) const DRIVER_AHCI_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(super) const DRIVER_AHCI_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-ahci"))]
 pub(super) const DRIVER_AHCI_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-driver-ahci"))]
+pub(super) const DRIVER_AHCI_ATTESTATION_BYTES: &[u8] = &[];

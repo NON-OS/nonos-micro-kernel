@@ -31,6 +31,6 @@ pub use constants::*;
 pub use gop::init_gop;
 pub use log_panel::{
     get_cursor_y, log_error, log_hash, log_hash_full, log_hex, log_info, log_mem, log_ok,
-    log_size, log_u32, log_warn,
+    log_security, log_size, log_u32, log_warn,
 };
 pub use security::display_enforcement_result;

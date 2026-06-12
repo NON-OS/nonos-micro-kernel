@@ -28,7 +28,6 @@ pub fn sleep_until(pid: u32, wake_time_ms: u64) {
         *pcb.state.lock() = ProcessState::Sleeping;
     }
     remove_from_run_queue(pid);
-    crate::log_debug!("Process {} sleeping until {} ms", pid, wake_time_ms);
 }
 
 pub fn wake_process(pid: u32) {
@@ -45,7 +44,6 @@ pub fn wake_process(pid: u32) {
     if woke {
         add_to_run_queue(pid);
         SCHEDULER_STATS.wakeups.fetch_add(1, Ordering::Relaxed);
-        crate::log_debug!("Process {} woken up", pid);
     }
 }
 

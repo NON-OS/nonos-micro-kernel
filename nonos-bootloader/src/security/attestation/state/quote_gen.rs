@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::types::AttestationState;
 use crate::security::attestation::pcr::PcrIndex;
 use crate::security::attestation::quote::AttestationQuote;
-use super::types::AttestationState;
 
 impl AttestationState {
     pub fn generate_quote(&self, nonce: [u8; 32], ts: u64) -> AttestationQuote {
@@ -35,7 +35,12 @@ impl AttestationState {
         q
     }
 
-    pub fn generate_signed_quote(&self, nonce: [u8; 32], ts: u64, key: &ed25519_dalek::SigningKey) -> AttestationQuote {
+    pub fn generate_signed_quote(
+        &self,
+        nonce: [u8; 32],
+        ts: u64,
+        key: &ed25519_dalek::SigningKey,
+    ) -> AttestationQuote {
         use ed25519_dalek::Signer;
         let mut q = self.generate_quote(nonce, ts);
         q.quote_signature = key.sign(&q.compute_quote_hash()).to_bytes();

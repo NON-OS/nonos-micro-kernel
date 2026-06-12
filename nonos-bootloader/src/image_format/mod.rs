@@ -20,6 +20,6 @@ pub mod types;
 pub mod validate;
 
 pub use footer::{ImageFooter, FOOTER_MAGIC, FOOTER_SIZE, FOOTER_VERSION};
-pub use parse::{has_production_footer, parse_image_footer, ParsedImage, ParseError};
+pub use parse::{has_production_footer, parse_image_footer, ParseError, ParsedImage};
 pub use types::{flags as image_flags, HashAlgorithm, ImageFormat, SignatureAlgorithm};
 pub use validate::{validate_image, ImageValidationError};

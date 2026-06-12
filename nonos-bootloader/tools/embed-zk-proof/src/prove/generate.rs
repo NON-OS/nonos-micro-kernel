@@ -24,10 +24,12 @@ use ark_std::rand::{rngs::StdRng, SeedableRng};
 use super::circuit::{build_circuit, CircuitParams};
 
 pub fn generate_proof(pk: &ProvingKey<Bls12_381>, params: &CircuitParams) -> Result<Vec<u8>> {
-    let circuit = build_circuit(params);
+    let circuit = build_circuit(params).map_err(anyhow::Error::msg)?;
 
     let seed_hash = blake3::hash(&params.capsule_commitment);
-    let seed_u64 = u64::from_le_bytes(seed_hash.as_bytes()[..8].try_into().unwrap());
+    let mut seed = [0u8; 8];
+    seed.copy_from_slice(&seed_hash.as_bytes()[..8]);
+    let seed_u64 = u64::from_le_bytes(seed);
     let mut rng = StdRng::seed_from_u64(seed_u64);
 
     let proof: Proof<Bls12_381> = Groth16::<Bls12_381>::prove(pk, circuit, &mut rng)

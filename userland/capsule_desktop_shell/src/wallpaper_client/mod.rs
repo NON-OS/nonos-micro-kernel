@@ -55,3 +55,7 @@ pub fn set_policy(port: u32, request_id: u32, policy: u32) -> Result<i32, &'stat
     };
     Ok(i32::from_le_bytes(bytes))
 }
+
+pub fn queue_policy(port: u32, request_id: u32, policy: u32) -> Result<i32, &'static str> {
+    set_policy(port, request_id, policy)
+}

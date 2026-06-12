@@ -35,6 +35,11 @@ pub(super) const DRIVER_E1000_MANIFEST_BYTES: &[u8] = include_bytes!(
     "../../../nonos-data/trust/capsules/driver_e1000.manifest.bin"
 );
 
+#[cfg(feature = "nonos-capsule-driver-e1000")]
+pub(super) const DRIVER_E1000_ATTESTATION_BYTES: &[u8] = include_bytes!(
+    "../../../nonos-data/trust/capsules/driver_e1000.zk_trailer.bin"
+);
+
 #[cfg(not(feature = "nonos-capsule-driver-e1000"))]
 pub(super) const DRIVER_E1000_ELF: &[u8] = &[];
 
@@ -43,3 +48,6 @@ pub(super) const DRIVER_E1000_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-e1000"))]
 pub(super) const DRIVER_E1000_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-driver-e1000"))]
+pub(super) const DRIVER_E1000_ATTESTATION_BYTES: &[u8] = &[];

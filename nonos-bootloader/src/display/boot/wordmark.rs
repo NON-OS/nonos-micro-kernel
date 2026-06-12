@@ -15,17 +15,35 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::display::constants::{COLOR_ACCENT, COLOR_ACCENT_DIM};
-use crate::display::font::draw_string_2x;
-use crate::display::gop::is_initialized;
+use crate::display::font::draw_string_4x;
+use crate::display::gop::{get_dimensions, is_initialized};
 
 const WORD: &[u8] = b"N\xd8NOS";
+const GLOW_OUTER: u32 = 0xFF0A3A30;
 
-pub fn draw_wordmark(x: u32, y: u32) {
+pub fn wordmark_width() -> u32 {
+    WORD.len() as u32 * 8 * 4
+}
+
+pub fn draw_wordmark(_x: u32, y: u32) {
     if !is_initialized() {
         return;
     }
-    draw_string_2x(x.saturating_sub(1), y, WORD, COLOR_ACCENT_DIM);
-    draw_string_2x(x + 1, y, WORD, COLOR_ACCENT_DIM);
-    draw_string_2x(x, y.saturating_sub(1), WORD, COLOR_ACCENT_DIM);
-    draw_string_2x(x, y, WORD, COLOR_ACCENT);
+    let (w, _) = get_dimensions();
+    let x = (w.saturating_sub(wordmark_width())) / 2;
+    for (dx, dy) in [(2i32, 0i32), (-2, 0), (0, 2), (0, -2)] {
+        draw_string_4x(offset(x, dx), offset(y, dy), WORD, GLOW_OUTER);
+    }
+    for (dx, dy) in [(1i32, 0i32), (-1, 0), (0, 1), (0, -1)] {
+        draw_string_4x(offset(x, dx), offset(y, dy), WORD, COLOR_ACCENT_DIM);
+    }
+    draw_string_4x(x, y, WORD, COLOR_ACCENT);
+}
+
+fn offset(v: u32, d: i32) -> u32 {
+    if d < 0 {
+        v.saturating_sub(d.unsigned_abs())
+    } else {
+        v + d as u32
+    }
 }

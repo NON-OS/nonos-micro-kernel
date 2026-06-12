@@ -26,6 +26,10 @@ pub(crate) const ATTEST_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const ATTEST_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/attest.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-attest")]
+pub(crate) const ATTEST_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/attest.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-attest"))]
 pub(crate) const ATTEST_ELF: &[u8] = &[];
 
@@ -34,3 +38,6 @@ pub(crate) const ATTEST_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-attest"))]
 pub(crate) const ATTEST_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-attest"))]
+pub(crate) const ATTEST_ATTESTATION_BYTES: &[u8] = &[];

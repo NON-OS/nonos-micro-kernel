@@ -28,12 +28,8 @@ fn test_allocation_record() {
 
 #[test]
 fn test_memory_region() {
-    let region = memory::MemoryRegion {
-        start: 0x100000,
-        size: 0x10000,
-        writable: true,
-        executable: false,
-    };
+    let region =
+        memory::MemoryRegion { start: 0x100000, size: 0x10000, writable: true, executable: false };
 
     assert!(region.contains(0x100000));
     assert!(region.contains(0x10FFFF));

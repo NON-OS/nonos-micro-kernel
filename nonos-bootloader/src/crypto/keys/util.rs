@@ -29,12 +29,18 @@ pub fn derive_keyid(pubkey: &[u8; PK_LEN]) -> KeyId {
 #[inline(never)]
 pub fn constant_time_eq(a: &[u8; 32], b: &[u8; 32]) -> bool {
     let mut diff = 0u8;
-    for i in 0..32 { diff |= a[i] ^ b[i]; }
+    for i in 0..32 {
+        diff |= a[i] ^ b[i];
+    }
     diff == 0
 }
 
 pub fn is_zero_key(key: &[u8; 32]) -> bool {
     let mut zero = true;
-    for byte in key.iter() { if *byte != 0 { zero = false; } }
+    for byte in key.iter() {
+        if *byte != 0 {
+            zero = false;
+        }
+    }
     zero
 }

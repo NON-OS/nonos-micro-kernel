@@ -20,22 +20,30 @@ use crate::hardware::tpm::types::TpmError;
 
 impl TpmState {
     pub fn request_locality(&self) -> Result<(), TpmError> {
-        if !self.initialized { return Err(TpmError::NotPresent); }
+        if !self.initialized {
+            return Err(TpmError::NotPresent);
+        }
         self.write_reg8(TPM_ACCESS, TPM_ACCESS_REQUEST);
         for _ in 0..1000 {
-            if (self.read_reg8(TPM_ACCESS) & TPM_ACCESS_ACTIVE) != 0 { return Ok(()); }
+            if (self.read_reg8(TPM_ACCESS) & TPM_ACCESS_ACTIVE) != 0 {
+                return Ok(());
+            }
             core::hint::spin_loop();
         }
         Err(TpmError::Timeout)
     }
 
     pub fn release_locality(&self) {
-        if self.initialized { self.write_reg8(TPM_ACCESS, TPM_ACCESS_ACTIVE); }
+        if self.initialized {
+            self.write_reg8(TPM_ACCESS, TPM_ACCESS_ACTIVE);
+        }
     }
 
     pub(crate) fn wait_for_status(&self, mask: u8, expected: u8) -> Result<(), TpmError> {
         for _ in 0..10000 {
-            if (self.read_reg8(TPM_STS) & mask) == expected { return Ok(()); }
+            if (self.read_reg8(TPM_STS) & mask) == expected {
+                return Ok(());
+            }
             core::hint::spin_loop();
         }
         Err(TpmError::Timeout)

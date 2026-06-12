@@ -19,7 +19,9 @@ use crate::display::log_panel::buffer::get_count;
 use crate::display::log_panel::types::{max_visible_lines, MAX_LOG_LINES};
 
 fn redraw_all_visible(total: usize) {
-    if total == 0 { return; }
+    if total == 0 {
+        return;
+    }
     let max_lines = max_visible_lines();
     let visible_count = total.min(max_lines);
     let start_entry = if total > max_lines { total - max_lines } else { 0 };
@@ -31,18 +33,25 @@ fn redraw_all_visible(total: usize) {
 
 pub fn redraw_all() {
     let count = get_count();
-    if count > 0 { redraw_all_visible(count); }
+    if count > 0 {
+        redraw_all_visible(count);
+    }
 }
 
 fn log_delay() {
-    for _ in 0..300_000 { core::hint::spin_loop(); }
+    for _ in 0..300_000 {
+        core::hint::spin_loop();
+    }
 }
 
 pub fn render_after_log(count: usize) {
-    if count == 0 { return; }
+    if count == 0 {
+        return;
+    }
     let max_lines = max_visible_lines();
-    if count > max_lines { redraw_all_visible(count); }
-    else {
+    if count > max_lines {
+        redraw_all_visible(count);
+    } else {
         let line_num = count - 1;
         draw_entry_at(line_num, line_num);
     }

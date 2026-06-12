@@ -20,5 +20,5 @@ mod rollback;
 mod run;
 mod signature;
 
-pub use run::run_crypto_verification;
 pub use rollback::commit_rollback;
+pub use run::run_crypto_verification;

@@ -18,4 +18,6 @@ mod buffer;
 mod canary;
 
 pub use buffer::GuardedBuffer;
-pub use canary::{get_heap_canary, get_stack_canary, init_canaries, verify_heap_canary, verify_stack_canary};
+pub use canary::{
+    get_heap_canary, get_stack_canary, init_canaries, verify_heap_canary, verify_stack_canary,
+};

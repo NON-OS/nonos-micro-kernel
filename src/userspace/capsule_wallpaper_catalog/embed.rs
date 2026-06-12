@@ -27,6 +27,10 @@ pub(crate) const WALLPAPER_CATALOG_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const WALLPAPER_CATALOG_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/wallpaper_catalog.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-wallpaper-catalog")]
+pub(crate) const WALLPAPER_CATALOG_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/wallpaper_catalog.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-wallpaper-catalog"))]
 pub(crate) const WALLPAPER_CATALOG_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(crate) const WALLPAPER_CATALOG_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-wallpaper-catalog"))]
 pub(crate) const WALLPAPER_CATALOG_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-wallpaper-catalog"))]
+pub(crate) const WALLPAPER_CATALOG_ATTESTATION_BYTES: &[u8] = &[];

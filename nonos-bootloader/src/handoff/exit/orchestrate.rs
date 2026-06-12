@@ -40,9 +40,8 @@ pub fn exit_and_jump(
 ) -> ! {
     let bs = st.boot_services();
     let allocs = allocate_handoff_resources(&st, cmdline);
-    let params = gather_system_info(
-        &st, bs, kernel, &crypto, firmware, tpm_measured, &allocs, rng_seed,
-    );
+    let params =
+        gather_system_info(&st, bs, kernel, &crypto, firmware, tpm_measured, &allocs, rng_seed);
     let bh_ptr = allocs.boothandoff_addr as *mut BootHandoffV1;
     unsafe { init_boothandoff(bh_ptr, &params) };
 

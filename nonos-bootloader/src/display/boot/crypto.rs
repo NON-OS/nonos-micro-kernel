@@ -31,7 +31,19 @@ pub struct BootCryptoState {
 
 impl BootCryptoState {
     pub const fn new() -> Self {
-        Self { hash_verified: false, sig_verified: false, zk_verified: false, zk_present: false, signature_valid: None, hash: [0u8; 32], pubkey: [0u8; 32], kernel_hash: [0u8; 32], signature_r: [0u8; 32], signature_s: [0u8; 32], zk_program_hash: [0u8; 32] }
+        Self {
+            hash_verified: false,
+            sig_verified: false,
+            zk_verified: false,
+            zk_present: false,
+            signature_valid: None,
+            hash: [0u8; 32],
+            pubkey: [0u8; 32],
+            kernel_hash: [0u8; 32],
+            signature_r: [0u8; 32],
+            signature_s: [0u8; 32],
+            zk_program_hash: [0u8; 32],
+        }
     }
 }
 

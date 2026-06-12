@@ -17,7 +17,9 @@
 use core::arch::asm;
 
 use super::{CsrError, CsrResult};
-use super::{CYCLE, INSTRET, SATP, SCAUSE, SCOUNTEREN, SEPC, SIE, SIP, SSCRATCH, SSTATUS, STVAL, STVEC, TIME};
+use super::{
+    CYCLE, INSTRET, SATP, SCAUSE, SCOUNTEREN, SEPC, SIE, SIP, SSCRATCH, SSTATUS, STVAL, STVEC, TIME,
+};
 
 pub fn read_csr(csr: usize) -> CsrResult<usize> {
     let value: usize;
@@ -40,9 +42,21 @@ pub fn read_csr(csr: usize) -> CsrResult<usize> {
     Ok(value)
 }
 
-pub fn read_sstatus() -> CsrResult<usize> { read_csr(SSTATUS) }
-pub fn read_sepc() -> CsrResult<usize> { read_csr(SEPC) }
-pub fn read_scause() -> CsrResult<usize> { read_csr(SCAUSE) }
-pub fn read_stval() -> CsrResult<usize> { read_csr(STVAL) }
-pub fn read_time() -> CsrResult<u64> { read_csr(TIME).map(|v| v as u64) }
-pub fn read_cycle() -> CsrResult<u64> { read_csr(CYCLE).map(|v| v as u64) }
+pub fn read_sstatus() -> CsrResult<usize> {
+    read_csr(SSTATUS)
+}
+pub fn read_sepc() -> CsrResult<usize> {
+    read_csr(SEPC)
+}
+pub fn read_scause() -> CsrResult<usize> {
+    read_csr(SCAUSE)
+}
+pub fn read_stval() -> CsrResult<usize> {
+    read_csr(STVAL)
+}
+pub fn read_time() -> CsrResult<u64> {
+    read_csr(TIME).map(|v| v as u64)
+}
+pub fn read_cycle() -> CsrResult<u64> {
+    read_csr(CYCLE).map(|v| v as u64)
+}

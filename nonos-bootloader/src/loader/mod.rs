@@ -66,10 +66,10 @@ pub use security::{
     SecurityCheckResult, SecurityPolicy,
 };
 
+pub use dynamic::{
+    estimate_symbol_count, needs_relocations, parse_dynamic_section, relocation_count,
+};
 pub use reloc::{
     dyn_tag as reloc_dyn_tag, process_elf_relocations, process_relocations, reloc_type, Dyn64,
     Rela64, RelocationContext,
-};
-pub use dynamic::{
-    estimate_symbol_count, needs_relocations, parse_dynamic_section, relocation_count,
 };

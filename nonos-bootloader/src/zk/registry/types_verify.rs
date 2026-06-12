@@ -14,12 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use ed25519_dalek::{Signature, VerifyingKey};
 use super::types_category::CircuitCategory;
+use ed25519_dalek::{Signature, VerifyingKey};
 
 pub const DS_CIRCUIT_SIGN: &str = "NONOS:CIRCUIT:SIGN:v1";
 
-pub fn compute_circuit_signing_data(hash: &[u8; 32], vk: &[u8], name: &str, version: &str, perms: u32, cat: CircuitCategory) -> [u8; 32] {
+pub fn compute_circuit_signing_data(
+    hash: &[u8; 32],
+    vk: &[u8],
+    name: &str,
+    version: &str,
+    perms: u32,
+    cat: CircuitCategory,
+) -> [u8; 32] {
     let mut h = blake3::Hasher::new_derive_key(DS_CIRCUIT_SIGN);
     h.update(hash);
     h.update(vk);

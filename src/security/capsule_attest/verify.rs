@@ -16,18 +16,17 @@
 
 use crate::crypto::zk::groth16::verify_attestation;
 
+use super::check_commitment::check_commitment;
 use super::error::AttestError;
-use super::layout::{fe, join_hi_lo, FE, FI_CAPSULE_HASH_HI, FI_CAP_MASK, FI_COMMITMENT_HI};
+use super::field::field;
+use super::join_hi_lo::join_hi_lo;
+use super::layout::{
+    FE, FI_CAPSULE_HASH_HI, FI_CAP_MASK, FI_COMMITMENT_HI, FI_POLICY_EPOCH, FI_POLICY_ROOT,
+    POLICY_EPOCH,
+};
+use super::policy_root;
 use super::trailer::parse;
 
-// Verify a capsule's embedded attestation. `trailer` is the capsule's ZK trailer
-// bytes, `elf` the capsule payload about to run, and `granted_caps` the
-// capability mask the kernel is about to install. Returns Ok(()) only when the
-// proof is cryptographically valid AND binds to exactly these bytes and caps.
-//
-// The kernel does not recompute the commitment hash, so this stays independent
-// of the proving side's commitment scheme. Soundness comes from the proof plus
-// the two reality bindings below.
 #[must_use = "a capsule must not be spawned unless its attestation verifies"]
 pub fn verify_capsule_attestation(
     trailer: &[u8],
@@ -36,12 +35,8 @@ pub fn verify_capsule_attestation(
 ) -> Result<(), AttestError> {
     let t = parse(trailer)?;
 
-    // 1. Cryptographic verification against the kernel's embedded verifying key.
-    //    The proof binds all public inputs, including the commitment.
     verify_attestation(t.proof, t.public_inputs).map_err(|_| AttestError::ProofInvalid)?;
 
-    // 2. Bind to the real capsule bytes: the capsule hash in the proof must
-    //    equal blake3 of the payload that is about to be mapped.
     let capsule_hash =
         join_hi_lo(t.public_inputs, FI_CAPSULE_HASH_HI).ok_or(AttestError::Malformed)?;
     let actual = blake3::hash(elf);
@@ -49,21 +44,29 @@ pub fn verify_capsule_attestation(
         return Err(AttestError::HashMismatch);
     }
 
-    // 3. Bind to policy: the capability mask in the proof must equal the grant.
-    let cap_fe = fe(t.public_inputs, FI_CAP_MASK).ok_or(AttestError::Malformed)?;
+    let policy_fe = field(t.public_inputs, FI_POLICY_ROOT).ok_or(AttestError::Malformed)?;
+    let expected_policy = policy_root::root().ok_or(AttestError::PolicyRootMismatch)?;
+    if policy_fe != expected_policy {
+        return Err(AttestError::PolicyRootMismatch);
+    }
+
+    let epoch_fe = field(t.public_inputs, FI_POLICY_EPOCH).ok_or(AttestError::Malformed)?;
+    let mut epoch_be = [0u8; FE];
+    epoch_be[24..32].copy_from_slice(&POLICY_EPOCH.to_be_bytes());
+    if epoch_fe != epoch_be {
+        return Err(AttestError::PolicyEpochMismatch);
+    }
+
+    let cap_fe = field(t.public_inputs, FI_CAP_MASK).ok_or(AttestError::Malformed)?;
     let mut cap_be = [0u8; FE];
     cap_be[24..32].copy_from_slice(&granted_caps.to_be_bytes());
     if cap_fe != cap_be {
         return Err(AttestError::CapabilityMismatch);
     }
 
-    // 4. Trailer integrity: the commitment carried in the trailer must equal the
-    //    commitment the proof binds in its public inputs.
     let commitment_pi =
         join_hi_lo(t.public_inputs, FI_COMMITMENT_HI).ok_or(AttestError::Malformed)?;
-    if t.commitment != commitment_pi {
-        return Err(AttestError::CommitmentMismatch);
-    }
+    check_commitment(&capsule_hash, &policy_fe, granted_caps, &t.commitment, &commitment_pi)?;
 
     Ok(())
 }

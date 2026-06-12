@@ -17,32 +17,44 @@
 use crate::tpm::core::{TmpDevice, TmpError, TmpResult};
 
 pub fn read_status(device: &TmpDevice) -> TmpResult<u32> {
-    if !device.active { return Err(TmpError::DeviceNotFound); }
+    if !device.active {
+        return Err(TmpError::DeviceNotFound);
+    }
     let base = device.base_addr + (device.locality as u64 * 0x1000);
     Ok(unsafe { core::ptr::read_volatile((base + 0x18) as *const u32) })
 }
 
 pub fn write_data(device: &TmpDevice, data: &[u8]) -> TmpResult<()> {
-    if !device.active { return Err(TmpError::DeviceNotFound); }
-    if data.len() > 4096 { return Err(TmpError::BadParameter); }
+    if !device.active {
+        return Err(TmpError::DeviceNotFound);
+    }
+    if data.len() > 4096 {
+        return Err(TmpError::BadParameter);
+    }
     let base = device.base_addr + (device.locality as u64 * 0x1000);
     for chunk in data.chunks(4) {
         let mut word = [0u8; 4];
         word[..chunk.len()].copy_from_slice(chunk);
-        unsafe { core::ptr::write_volatile((base + 0x24) as *mut u32, u32::from_le_bytes(word)); }
+        unsafe {
+            core::ptr::write_volatile((base + 0x24) as *mut u32, u32::from_le_bytes(word));
+        }
     }
     Ok(())
 }
 
 pub fn read_data(device: &TmpDevice, length: usize) -> TmpResult<[u8; 4096]> {
-    if !device.active { return Err(TmpError::DeviceNotFound); }
-    if length > 4096 { return Err(TmpError::BadParameter); }
+    if !device.active {
+        return Err(TmpError::DeviceNotFound);
+    }
+    if length > 4096 {
+        return Err(TmpError::BadParameter);
+    }
     let base = device.base_addr + (device.locality as u64 * 0x1000);
     let mut data = [0u8; 4096];
     for i in (0..length).step_by(4) {
         let value = unsafe { core::ptr::read_volatile((base + 0x24) as *const u32) };
         let end = core::cmp::min(i + 4, length);
-        data[i..end].copy_from_slice(&value.to_le_bytes()[..end-i]);
+        data[i..end].copy_from_slice(&value.to_le_bytes()[..end - i]);
     }
     Ok(data)
 }

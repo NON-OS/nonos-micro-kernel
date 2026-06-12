@@ -15,8 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::framebuffer::init_framebuffer;
-#[cfg(target_arch = "x86_64")]
-use super::memory::init_memory;
 use crate::boot::handoff::{ArchSpecificHandoff, KernelHandoff};
 use crate::memory::paging::manager::api::create_address_space;
 use crate::process::core::{create_process, Priority, ProcessState, CURRENT_PID};
@@ -50,7 +48,12 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     if let Err(e) = crate::memory::unified::init_unified_vm() {
         fatal("memory: init_unified_vm failed", e);
     }
-    match crate::arch::x86_64::interrupt::ioapic::init_from_acpi() {
+    // The framebuffer is MMIO-mapped only now: mapping it needs the paging
+    // manager, which init_unified_vm brings up. Doing it in the early
+    // memory/framebuffer step failed to map on real GOP framebuffers
+    // because the page-table machinery was not ready yet.
+    init_arch_framebuffer(handoff);
+    match crate::arch::init_broker_irq_routing() {
         Ok(_) => boot_log::ok("NONOS", "broker IO-APIC routing ready"),
         Err(_) => crate::sys::serial::println(b"[NONOS] broker IO-APIC init failed"),
     }
@@ -92,8 +95,15 @@ fn fatal(stage: &str, detail: &str) -> ! {
 fn init_arch_memory_and_framebuffer(handoff: &KernelHandoff) {
     match handoff.arch {
         ArchSpecificHandoff::X86_64 { v1 } => {
-            #[cfg(target_arch = "x86_64")]
-            init_memory(v1);
+            crate::arch::init_boot_memory(v1);
+        }
+    }
+}
+
+// Map the handoff framebuffer once the paging manager is initialized.
+fn init_arch_framebuffer(handoff: &KernelHandoff) {
+    match handoff.arch {
+        ArchSpecificHandoff::X86_64 { v1 } => {
             init_framebuffer(v1);
         }
     }
@@ -110,6 +120,16 @@ fn init_arch_firmware(handoff: &KernelHandoff) {
 }
 
 pub fn microkernel_main() -> ! {
+    boot_log::ok("NONOS", "boot log held; starting userspace");
+    let start = clock::uptime_ms();
+    let mut guard: u64 = 0;
+    while clock::uptime_ms().wrapping_sub(start) < 2500 {
+        core::hint::spin_loop();
+        guard = guard.wrapping_add(1);
+        if guard > 3_000_000_000 {
+            break;
+        }
+    }
     boot_log::ok("UKERNEL", "Creating init");
     let init_pid = match create_process("init", ProcessState::Running, Priority::High) {
         Ok(pid) => pid,

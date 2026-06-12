@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::Ordering;
-use crate::log::logger::{log_error, log_info, log_warn};
-use super::state::{INIT_DONE, KEY_VERSION, KEYSTORE, NONOS_KEY_ID, NONOS_PUBLIC_KEY};
+use super::state::{INIT_DONE, KEYSTORE, KEY_VERSION, NONOS_KEY_ID, NONOS_PUBLIC_KEY};
 use super::util::{constant_time_eq, is_zero_key};
+use crate::log::logger::{log_error, log_info, log_warn};
+use core::sync::atomic::Ordering;
 
 pub fn init_nonos_keys() -> Result<usize, &'static str> {
     if INIT_DONE.load(Ordering::SeqCst) {
@@ -37,11 +37,16 @@ pub fn init_nonos_keys() -> Result<usize, &'static str> {
             }
             log_info("crypto", "NONOS signing key loaded");
         }
-        Err(e) => { log_error("crypto", "failed to load signing key"); return Err(e); }
+        Err(e) => {
+            log_error("crypto", "failed to load signing key");
+            return Err(e);
+        }
     }
     log_info("crypto", "keystore ready");
     Ok(1)
 }
 
-pub fn is_initialized() -> bool { INIT_DONE.load(Ordering::SeqCst) }
+pub fn is_initialized() -> bool {
+    INIT_DONE.load(Ordering::SeqCst)
+}
 pub use init_nonos_keys as init_production_keys;

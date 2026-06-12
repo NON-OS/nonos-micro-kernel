@@ -34,11 +34,7 @@ fn read_u32(section: &[u8], off: usize) -> Result<u32, ZkError> {
     if off + 4 > section.len() {
         return Err(ZkError::HeaderTruncated);
     }
-    Ok(u32::from_le_bytes(
-        section[off..off + 4]
-            .try_into()
-            .map_err(|_| ZkError::HeaderTruncated)?,
-    ))
+    Ok(u32::from_le_bytes(section[off..off + 4].try_into().map_err(|_| ZkError::HeaderTruncated)?))
 }
 
 /// Read raw header from section

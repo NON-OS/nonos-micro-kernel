@@ -14,25 +14,46 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::prelude::*;
-use crate::log::logger::{log_error, log_info};
-use crate::zk::binding::compute_capsule_commitment;
-use crate::zk::{parse_zk_proof, BootAttestationResult};
 use super::super::binding::{verify_commitment_binding, verify_kernel_in_proof};
 use super::debug::log_hex;
 use super::failure::binding_failure;
+use crate::log::logger::{log_error, log_info};
+use crate::zk::binding::compute_capsule_commitment;
+use crate::zk::{parse_zk_proof, BootAttestationResult};
+use uefi::prelude::*;
 
-pub fn enforce_zk_binding(st: &mut SystemTable<Boot>, r: &BootAttestationResult, kb: &[u8], kh: &[u8; 32], gop: bool) {
+pub fn enforce_zk_binding(
+    st: &mut SystemTable<Boot>,
+    r: &BootAttestationResult,
+    kb: &[u8],
+    kh: &[u8; 32],
+    gop: bool,
+) {
     let (proof_block, _) = match parse_zk_proof(kb) {
         Ok(pb) => pb,
-        Err(e) => { log_error("zk_bind", "Failed to parse proof"); log_error("zk_bind", e); binding_failure(st, gop, e); }
+        Err(e) => {
+            log_error("zk_bind", "Failed to parse proof");
+            log_error("zk_bind", e);
+            binding_failure(st, gop, e);
+        }
     };
-    if let Err(e) = verify_kernel_in_proof(r, kh, &proof_block) { log_error("zk_bind", e); binding_failure(st, gop, e); }
-    let expected = compute_capsule_commitment(kh, &proof_block.boot_nonce, &proof_block.machine_id, &proof_block.program_hash);
+    if let Err(e) = verify_kernel_in_proof(r, kh, &proof_block) {
+        log_error("zk_bind", e);
+        binding_failure(st, gop, e);
+    }
+    let expected = compute_capsule_commitment(
+        kh,
+        &proof_block.boot_nonce,
+        &proof_block.machine_id,
+        &proof_block.program_hash,
+    );
     log_info("zk_bind", "comparing commitments");
     log_hex("stored", &r.capsule_commitment[..8]);
     log_hex("expect", &expected[..8]);
     log_hex("kh_act", &kh[..8]);
     log_hex("kh_blk", &proof_block.kernel_hash[..8]);
-    if let Err(e) = verify_commitment_binding(&r.capsule_commitment, &expected) { log_error("zk_bind", e); binding_failure(st, gop, e); }
+    if let Err(e) = verify_commitment_binding(&r.capsule_commitment, &expected) {
+        log_error("zk_bind", e);
+        binding_failure(st, gop, e);
+    }
 }

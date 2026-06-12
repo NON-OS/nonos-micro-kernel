@@ -17,8 +17,8 @@
 use uefi::cstr16;
 use uefi::prelude::*;
 
-use crate::crypto::sig::VerifyError;
 use super::display::print;
+use crate::crypto::sig::VerifyError;
 
 pub fn display_verification_error(e: VerifyError, st: &mut SystemTable<Boot>) {
     match e {

@@ -16,8 +16,8 @@
 
 use spin::Mutex;
 
-use crate::security::integrity::types::BootStage;
 use super::state::IntegrityChain;
+use crate::security::integrity::types::BootStage;
 
 pub static INTEGRITY_CHAIN: Mutex<IntegrityChain> = Mutex::new(IntegrityChain::new());
 

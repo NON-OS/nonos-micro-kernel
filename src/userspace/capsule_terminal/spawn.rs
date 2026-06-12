@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{TERMINAL_ELF, TERMINAL_MANIFEST_BYTES, TERMINAL_NONOS_ID_CERT_BYTES};
+use super::embed::{TERMINAL_ELF, TERMINAL_MANIFEST_BYTES, TERMINAL_NONOS_ID_CERT_BYTES, TERMINAL_ATTESTATION_BYTES};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
@@ -42,6 +42,7 @@ pub fn spawn_terminal_capsule() -> Result<(), SpawnError> {
         elf: TERMINAL_ELF,
         nonos_id_cert_bytes: TERMINAL_NONOS_ID_CERT_BYTES,
         manifest_bytes: TERMINAL_MANIFEST_BYTES,
+        attestation_trailer: TERMINAL_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

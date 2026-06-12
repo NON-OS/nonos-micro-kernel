@@ -23,15 +23,28 @@ pub struct GuardedBuffer<const N: usize> {
 }
 
 impl<const N: usize> GuardedBuffer<N> {
-    pub fn new() -> Self { Self { guard_front: STACK_GUARD_PATTERN, data: [0u8; N], guard_back: STACK_GUARD_PATTERN } }
-    pub fn as_slice(&self) -> &[u8] { &self.data }
-    pub fn as_mut_slice(&mut self) -> &mut [u8] { &mut self.data }
-    pub fn verify_guards(&self) -> bool { self.guard_front == STACK_GUARD_PATTERN && self.guard_back == STACK_GUARD_PATTERN }
+    pub fn new() -> Self {
+        Self { guard_front: STACK_GUARD_PATTERN, data: [0u8; N], guard_back: STACK_GUARD_PATTERN }
+    }
+    pub fn as_slice(&self) -> &[u8] {
+        &self.data
+    }
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+    pub fn verify_guards(&self) -> bool {
+        self.guard_front == STACK_GUARD_PATTERN && self.guard_back == STACK_GUARD_PATTERN
+    }
 
     pub fn check_and_panic(&self) {
         if !self.verify_guards() {
-            crate::log::logger::log_critical("security", "SECURITY: Buffer overflow detected - secure halt");
-            loop { core::hint::spin_loop(); }
+            crate::log::logger::log_critical(
+                "security",
+                "SECURITY: Buffer overflow detected - secure halt",
+            );
+            loop {
+                core::hint::spin_loop();
+            }
         }
     }
 }

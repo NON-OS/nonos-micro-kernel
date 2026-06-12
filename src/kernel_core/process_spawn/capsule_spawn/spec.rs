@@ -36,6 +36,9 @@ pub struct CapsuleSpecVerified {
     pub elf: &'static [u8],
     pub nonos_id_cert_bytes: &'static [u8],
     pub manifest_bytes: &'static [u8],
+    // Per-capsule ZK attestation trailer (NZKCAPS1), embedded alongside the
+    // manifest. Empty when the capsule has no sidecar in this build.
+    pub attestation_trailer: &'static [u8],
     pub target_triple: &'static str,
     pub requested_caps: u64,
     pub debug_tag: &'static [u8],

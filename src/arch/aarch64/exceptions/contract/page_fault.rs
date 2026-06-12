@@ -17,8 +17,6 @@
 use crate::arch::aarch64::exceptions::frame::ExceptionFrame;
 use crate::arch::trap::contract::{FaultAccess, PageFaultInfo};
 
-
-
 pub(super) fn decode_data(frame: &ExceptionFrame) -> PageFaultInfo {
     let iss = (frame.esr & 0x01FF_FFFF) as u32;
     let wnr = (iss & (1 << 6)) != 0;
@@ -41,9 +39,6 @@ pub(super) fn decode_instruction(frame: &ExceptionFrame) -> PageFaultInfo {
         user: frame.is_from_el0(),
     }
 }
-
-
-
 
 #[inline]
 fn is_translation_fault(fsc: u8) -> bool {

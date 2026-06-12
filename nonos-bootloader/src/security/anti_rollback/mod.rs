@@ -25,4 +25,6 @@ pub use api::{
     ANTI_ROLLBACK,
 };
 pub use state::AntiRollbackState;
-pub use types::{RollbackError, VersionState, DS_ROLLBACK, NVRAM_BOOTLOADER_INDEX, NVRAM_VERSION_INDEX};
+pub use types::{
+    RollbackError, VersionState, DS_ROLLBACK, NVRAM_BOOTLOADER_INDEX, NVRAM_VERSION_INDEX,
+};

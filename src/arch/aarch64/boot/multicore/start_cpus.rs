@@ -24,8 +24,6 @@ use crate::arch::aarch64::psci;
 
 use super::state::CPUS_ONLINE;
 
-
-
 pub fn start_secondary_cpus(boot_info: &BootInfo) {
     for cpu in 1..boot_info.cpu_count {
         let Some(stack_top) = get_kernel_stack(cpu as usize) else {

@@ -24,7 +24,9 @@ pub fn get_char_bitmap(ch: u8) -> [u8; 16] {
         b' ' | b'!' | b'"' | b'#' | b'$' | b'%' | b'&' | b'\'' | b'(' | b')' => sym::get_basic(ch),
         b'*' | b'+' | b',' | b'-' | b'.' | b'/' => sym::get_math(ch),
         b':' | b';' | b'<' | b'=' | b'>' | b'?' | b'@' => sym::get_punct(ch),
-        b'[' | b'\\' | b']' | b'^' | b'_' | b'`' | b'{' | b'|' | b'}' | b'~' => sym::get_bracket(ch),
+        b'[' | b'\\' | b']' | b'^' | b'_' | b'`' | b'{' | b'|' | b'}' | b'~' => {
+            sym::get_bracket(ch)
+        }
         0xD8 => special::get_oslash(),
         _ => special::get_default(),
     }

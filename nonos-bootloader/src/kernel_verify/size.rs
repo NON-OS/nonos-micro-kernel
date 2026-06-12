@@ -17,9 +17,9 @@
 use uefi::cstr16;
 use uefi::prelude::*;
 
-use crate::log::logger::log_error;
 use super::display::print;
 use super::types::MIN_KERNEL_SIZE;
+use crate::log::logger::log_error;
 
 pub fn validate_kernel_size(kernel_data: &[u8], st: &mut SystemTable<Boot>) -> bool {
     if kernel_data.len() >= MIN_KERNEL_SIZE {

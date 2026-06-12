@@ -19,9 +19,9 @@ use super::error::CeremonyError;
 use super::hash::hash_params;
 use super::params::CeremonyParams;
 use super::record::ContributionRecord;
-use super::tau::apply_powers_of_tau;
+use super::tau::apply_phase2_contribution;
 use ark_bls12_381::Fr;
-use ark_ff::UniformRand;
+use ark_ff::{UniformRand, Zero};
 use ark_std::rand::{rngs::StdRng, SeedableRng};
 
 pub fn contribute_randomness(
@@ -52,8 +52,13 @@ pub fn contribute_randomness(
     };
     let rc = blake3::hash(&seed);
     let mut rng = StdRng::from_seed(seed);
-    let (tau, alpha, beta) = (Fr::rand(&mut rng), Fr::rand(&mut rng), Fr::rand(&mut rng));
-    let new_pk = apply_powers_of_tau(&prev.pk, tau, alpha, beta)?;
+    // Phase-2 secret: a single nonzero delta. It is dropped at the end of this
+    // function and never persisted; that is the toxic waste being destroyed.
+    let mut delta = Fr::rand(&mut rng);
+    while delta.is_zero() {
+        delta = Fr::rand(&mut rng);
+    }
+    let new_pk = apply_phase2_contribution(&prev.pk, delta)?;
     let new_hash = hash_params(&new_pk);
     let ts = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
     let record = ContributionRecord {

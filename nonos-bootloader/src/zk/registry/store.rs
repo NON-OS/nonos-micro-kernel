@@ -15,22 +15,38 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
+use super::types_entry::DynamicCircuitEntry;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use super::types_entry::DynamicCircuitEntry;
 
-pub struct DynamicCircuitStore { entries: BTreeMap<[u8; 32], DynamicCircuitEntry> }
+pub struct DynamicCircuitStore {
+    entries: BTreeMap<[u8; 32], DynamicCircuitEntry>,
+}
 
 impl DynamicCircuitStore {
-    pub const fn new() -> Self { Self { entries: BTreeMap::new() } }
+    pub const fn new() -> Self {
+        Self { entries: BTreeMap::new() }
+    }
     pub fn register(&mut self, entry: DynamicCircuitEntry) -> Result<(), &'static str> {
-        if entry.vk_bytes.is_empty() { return Err("circuit: empty VK"); }
-        if self.entries.contains_key(&entry.program_hash) { return Err("circuit: duplicate program hash"); }
+        if entry.vk_bytes.is_empty() {
+            return Err("circuit: empty VK");
+        }
+        if self.entries.contains_key(&entry.program_hash) {
+            return Err("circuit: duplicate program hash");
+        }
         self.entries.insert(entry.program_hash, entry);
         Ok(())
     }
-    pub fn unregister(&mut self, program_hash: &[u8; 32]) -> bool { self.entries.remove(program_hash).is_some() }
-    pub fn lookup(&self, program_hash: &[u8; 32]) -> Option<&DynamicCircuitEntry> { self.entries.get(program_hash) }
-    pub fn count(&self) -> usize { self.entries.len() }
-    pub fn list_hashes(&self) -> Vec<[u8; 32]> { self.entries.keys().cloned().collect() }
+    pub fn unregister(&mut self, program_hash: &[u8; 32]) -> bool {
+        self.entries.remove(program_hash).is_some()
+    }
+    pub fn lookup(&self, program_hash: &[u8; 32]) -> Option<&DynamicCircuitEntry> {
+        self.entries.get(program_hash)
+    }
+    pub fn count(&self) -> usize {
+        self.entries.len()
+    }
+    pub fn list_hashes(&self) -> Vec<[u8; 32]> {
+        self.entries.keys().cloned().collect()
+    }
 }

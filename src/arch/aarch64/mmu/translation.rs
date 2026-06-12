@@ -22,4 +22,6 @@ mod stage;
 pub use address::{kernel_phys_to_virt, phys_to_virt, virt_to_phys};
 pub use asid::{current_asid, set_asid};
 pub use fault::TranslationFault;
-pub use stage::{translate_stage1_read, translate_stage1_write, translate_user_read, translate_user_write};
+pub use stage::{
+    translate_stage1_read, translate_stage1_write, translate_user_read, translate_user_write,
+};

@@ -26,6 +26,10 @@ pub(crate) const COMPOSITOR_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const COMPOSITOR_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/compositor.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-compositor")]
+pub(crate) const COMPOSITOR_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/compositor.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-compositor"))]
 pub(crate) const COMPOSITOR_ELF: &[u8] = &[];
 
@@ -34,3 +38,6 @@ pub(crate) const COMPOSITOR_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-compositor"))]
 pub(crate) const COMPOSITOR_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-compositor"))]
+pub(crate) const COMPOSITOR_ATTESTATION_BYTES: &[u8] = &[];

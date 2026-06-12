@@ -27,6 +27,10 @@ pub(crate) const CALCULATOR_NONOS_ID_CERT_BYTES: &[u8] =
 pub(crate) const CALCULATOR_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/calculator.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-calculator")]
+pub(crate) const CALCULATOR_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/calculator.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-calculator"))]
 pub(crate) const CALCULATOR_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(crate) const CALCULATOR_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-calculator"))]
 pub(crate) const CALCULATOR_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-calculator"))]
+pub(crate) const CALCULATOR_ATTESTATION_BYTES: &[u8] = &[];

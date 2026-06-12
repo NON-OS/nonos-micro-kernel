@@ -25,14 +25,27 @@ pub mod security;
 mod types;
 pub mod validation;
 
-pub use cache::{MemoryCache, cache_firmware, compress_firmware, CacheResult, CompressionType};
-pub use detection::{detect_hardware_devices, check_firmware_compatibility, parse_firmware_version, HardwareDevice, CompatibilityResult};
-pub use error::{attempt_error_recovery, report_error, FirmwareError, ErrorSeverity, RecoveryStrategy};
+pub use cache::{cache_firmware, compress_firmware, CacheResult, CompressionType, MemoryCache};
+pub use detection::{
+    check_firmware_compatibility, detect_hardware_devices, parse_firmware_version,
+    CompatibilityResult, HardwareDevice,
+};
+pub use error::{
+    attempt_error_recovery, report_error, ErrorSeverity, FirmwareError, RecoveryStrategy,
+};
 pub use loader::{firmware_count, get_firmware, get_firmware_handoff, has_embedded_firmware};
-pub use monitor::{check_firmware_health, collect_metrics, get_firmware_status, HealthStatus, FirmwareMetrics};
+pub use monitor::{
+    check_firmware_health, collect_metrics, get_firmware_status, FirmwareMetrics, HealthStatus,
+};
 pub use quirks::{apply_mmap_quirks, detect_firmware_quirks, FirmwareQuirk, QuirkFlags};
-pub use registry::{register_firmware, search_firmware, FirmwareDatabase, FirmwareMetadata, SearchQuery};
-pub use security::{detect_threats, create_firmware_sandbox, log_security_event, ThreatLevel, SandboxConfig};
+pub use registry::{
+    register_firmware, search_firmware, FirmwareDatabase, FirmwareMetadata, SearchQuery,
+};
+pub use security::{
+    create_firmware_sandbox, detect_threats, log_security_event, SandboxConfig, ThreatLevel,
+};
 pub use types::{FirmwareEntry, FirmwareHandoff, FirmwareType, MAX_FIRMWARE_ENTRIES};
-pub use validation::{validate_firmware_integrity, verify_signature, calculate_sha256, IntegrityResult, SignatureResult};
-
+pub use validation::{
+    calculate_sha256, validate_firmware_integrity, verify_signature, IntegrityResult,
+    SignatureResult,
+};

@@ -18,8 +18,12 @@ use crate::tpm::core::{TmpDevice, TmpError, TmpResult};
 use crate::tpm::types::Session;
 
 pub fn create_session(device: &mut TmpDevice, session_type: u8) -> TmpResult<Session> {
-    if !device.active { return Err(TmpError::DeviceNotFound); }
-    if device.session_count >= device.max_sessions { return Err(TmpError::ResourceUnavailable); }
+    if !device.active {
+        return Err(TmpError::DeviceNotFound);
+    }
+    if device.session_count >= device.max_sessions {
+        return Err(TmpError::ResourceUnavailable);
+    }
 
     let mut cmd = [0u8; 30];
     cmd[0..10].copy_from_slice(&[0x80, 0x01, 0x00, 0x00, 0x00, 0x1E, 0x00, 0x00, 0x01, 0x76]);
@@ -29,18 +33,17 @@ pub fn create_session(device: &mut TmpDevice, session_type: u8) -> TmpResult<Ses
     cmd[19..21].copy_from_slice(&0x0010u16.to_be_bytes());
     cmd[21..23].copy_from_slice(&0x000Bu16.to_be_bytes());
     cmd[23..25].copy_from_slice(&16u16.to_be_bytes());
-    for i in 25..30 { cmd[i] = (i - 25) as u8; }
+    for i in 25..30 {
+        cmd[i] = (i - 25) as u8;
+    }
 
     let response = crate::tpm::hardware::send_command(device, &cmd)?;
-    if response.len() < 20 { return Err(TmpError::InvalidResponse); }
+    if response.len() < 20 {
+        return Err(TmpError::InvalidResponse);
+    }
 
     let handle = u32::from_be_bytes([response[10], response[11], response[12], response[13]]);
     device.session_count += 1;
 
-    Ok(Session {
-        handle: handle.into(),
-        session_type,
-        active: true,
-        policy_digest: [0u8; 32],
-    })
+    Ok(Session { handle: handle.into(), session_type, active: true, policy_digest: [0u8; 32] })
 }

@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::security::integrity::types::{BootStage, ChainLink};
 use super::hash::{chain_hash, compute_measurement};
 use super::verify::verify_chain_links;
+use crate::security::integrity::types::{BootStage, ChainLink};
 
 const MAX_LINKS: usize = 16;
 
@@ -27,10 +27,14 @@ pub struct IntegrityChain {
 }
 
 impl IntegrityChain {
-    pub const fn new() -> Self { Self { links: [ChainLink::empty(); MAX_LINKS], count: 0, sealed: false } }
+    pub const fn new() -> Self {
+        Self { links: [ChainLink::empty(); MAX_LINKS], count: 0, sealed: false }
+    }
 
     pub fn extend(&mut self, stage: BootStage, data: &[u8], ts: u64) -> Option<[u8; 32]> {
-        if self.sealed || self.count >= MAX_LINKS { return None; }
+        if self.sealed || self.count >= MAX_LINKS {
+            return None;
+        }
         let m = compute_measurement(data);
         let p = if self.count > 0 { self.links[self.count - 1].cumulative } else { [0u8; 32] };
         let c = chain_hash(&p, &m, stage as u8);
@@ -39,7 +43,17 @@ impl IntegrityChain {
         Some(c)
     }
 
-    pub fn seal(&mut self) { self.sealed = true; }
-    pub fn get_final_hash(&self) -> Option<[u8; 32]> { if self.count == 0 { None } else { Some(self.links[self.count - 1].cumulative) } }
-    pub fn verify_chain(&self) -> bool { verify_chain_links(&self.links, self.count) }
+    pub fn seal(&mut self) {
+        self.sealed = true;
+    }
+    pub fn get_final_hash(&self) -> Option<[u8; 32]> {
+        if self.count == 0 {
+            None
+        } else {
+            Some(self.links[self.count - 1].cumulative)
+        }
+    }
+    pub fn verify_chain(&self) -> bool {
+        verify_chain_links(&self.links, self.count)
+    }
 }

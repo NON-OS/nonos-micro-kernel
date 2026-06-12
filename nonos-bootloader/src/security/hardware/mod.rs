@@ -24,6 +24,8 @@ mod verify;
 pub use capabilities::{detect_hardware_capabilities, HardwareCapabilities};
 pub use cpu::{detect_cpu_security_features, CpuSecurityFeatures};
 pub use memory::{detect_memory_protection, MemoryProtection};
-pub use requirements::{check_minimum_requirements, check_recommended_requirements, RequirementCheck};
+pub use requirements::{
+    check_minimum_requirements, check_recommended_requirements, RequirementCheck,
+};
 pub use tpm_detect::{detect_tpm_capabilities, TpmCapabilities};
 pub use verify::{verify_platform_security, PlatformVerification};

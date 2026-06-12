@@ -14,13 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::api_state::{
+    BUILD_TIMESTAMP, INIT_DONE, KEYSTORE, KEY_FINGERPRINT, NONOS_KEY_ID, NONOS_PUBLIC_KEY,
+};
 use core::sync::atomic::Ordering;
-use super::api_state::{BUILD_TIMESTAMP, INIT_DONE, KEY_FINGERPRINT, KEYSTORE, NONOS_KEY_ID, NONOS_PUBLIC_KEY};
 
-pub fn is_initialized() -> bool { INIT_DONE.load(Ordering::SeqCst) }
-pub fn key_count() -> usize { KEYSTORE.lock().count }
-pub fn get_minimum_version() -> u32 { KEYSTORE.lock().minimum_version }
-pub fn get_nonos_key() -> &'static [u8; 32] { &NONOS_PUBLIC_KEY }
-pub fn get_nonos_key_id() -> &'static [u8; 32] { &NONOS_KEY_ID }
-pub fn get_key_fingerprint() -> &'static str { KEY_FINGERPRINT }
-pub fn get_build_timestamp() -> u64 { BUILD_TIMESTAMP }
+pub fn is_initialized() -> bool {
+    INIT_DONE.load(Ordering::SeqCst)
+}
+pub fn key_count() -> usize {
+    KEYSTORE.lock().count
+}
+pub fn get_minimum_version() -> u32 {
+    KEYSTORE.lock().minimum_version
+}
+pub fn get_nonos_key() -> &'static [u8; 32] {
+    &NONOS_PUBLIC_KEY
+}
+pub fn get_nonos_key_id() -> &'static [u8; 32] {
+    &NONOS_KEY_ID
+}
+pub fn get_key_fingerprint() -> &'static str {
+    KEY_FINGERPRINT
+}
+pub fn get_build_timestamp() -> u64 {
+    BUILD_TIMESTAMP
+}

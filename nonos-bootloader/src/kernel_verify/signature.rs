@@ -17,12 +17,12 @@
 use uefi::cstr16;
 use uefi::prelude::*;
 
-use crate::crypto::sig::verify_signature_bytes;
-use crate::log::logger::{log_error, log_info};
 use super::delay::mini_delay;
 use super::display::{print, print_hex_bytes};
 use super::types::CryptoVerifyResult;
 use super::verify_error::display_verification_error;
+use crate::crypto::sig::verify_signature_bytes;
+use crate::log::logger::{log_error, log_info};
 
 pub fn verify_and_display_signature(
     kernel_code: &[u8],

@@ -25,10 +25,10 @@ pub mod crypto;
 pub mod display;
 pub mod entropy;
 pub mod firmware;
+pub mod fwui;
 pub mod handoff;
 pub mod hardware;
 pub mod image_format;
-pub mod tpm;
 pub mod kernel_verify;
 pub mod loader;
 pub mod log;
@@ -37,7 +37,6 @@ pub mod network;
 pub mod paging;
 pub mod safety;
 pub mod security;
+pub mod tpm;
 pub mod verify;
 pub mod zk;
-
-

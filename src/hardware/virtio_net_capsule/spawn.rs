@@ -23,7 +23,7 @@
 
 use super::client::REPLY_INBOX;
 use super::embed::{
-    DRIVER_VIRTIO_NET_ELF, DRIVER_VIRTIO_NET_MANIFEST_BYTES,
+    DRIVER_VIRTIO_NET_ELF, DRIVER_VIRTIO_NET_MANIFEST_BYTES, DRIVER_VIRTIO_NET_ATTESTATION_BYTES,
     DRIVER_VIRTIO_NET_NONOS_ID_CERT_BYTES,
 };
 use super::state;
@@ -52,6 +52,7 @@ pub fn spawn_driver_virtio_net_capsule() -> Result<(), SpawnError> {
         elf: DRIVER_VIRTIO_NET_ELF,
         nonos_id_cert_bytes: DRIVER_VIRTIO_NET_NONOS_ID_CERT_BYTES,
         manifest_bytes: DRIVER_VIRTIO_NET_MANIFEST_BYTES,
+        attestation_trailer: DRIVER_VIRTIO_NET_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit()
             | Capability::Memory.bit()

@@ -21,7 +21,9 @@ const ACCESS_REQUEST_USE: u8 = 0x02;
 const ACCESS_ACTIVE_LOCALITY: u8 = 0x20;
 
 pub fn acquire_locality(device: &mut TmpDevice, locality: u8) -> TmpResult<()> {
-    if locality > 4 { return Err(TmpError::BadParameter); }
+    if locality > 4 {
+        return Err(TmpError::BadParameter);
+    }
 
     let locality_base = device.base_addr + (locality as u64 * 0x1000);
     request_locality(locality_base)?;
@@ -32,20 +34,29 @@ pub fn acquire_locality(device: &mut TmpDevice, locality: u8) -> TmpResult<()> {
 
 pub fn release_locality(device: &mut TmpDevice) -> TmpResult<()> {
     let locality_base = device.base_addr + (device.locality as u64 * 0x1000);
-    unsafe { core::ptr::write_volatile((locality_base + 0x008) as *mut u8, ACCESS_ACTIVE_LOCALITY); }
+    unsafe {
+        core::ptr::write_volatile((locality_base + 0x008) as *mut u8, ACCESS_ACTIVE_LOCALITY);
+    }
     device.locality = 0xFF;
     Ok(())
 }
 
 fn request_locality(base: u64) -> TmpResult<()> {
-    unsafe { core::ptr::write_volatile((base + 0x008) as *mut u8, ACCESS_REQUEST_USE); }
+    unsafe {
+        core::ptr::write_volatile((base + 0x008) as *mut u8, ACCESS_REQUEST_USE);
+    }
     Ok(())
 }
 
 fn wait_for_locality(base: u64) -> TmpResult<()> {
     for _ in 0..1000 {
         let access = unsafe { core::ptr::read_volatile((base + 0x008) as *const u8) };
-        if (access & ACCESS_VALID) != 0 && (access & ACCESS_ACTIVE_LOCALITY) != 0 { return Ok(()); }
-        for _ in 0..1000 { core::hint::spin_loop(); }
-    } Err(TmpError::LocalityTimeout)
+        if (access & ACCESS_VALID) != 0 && (access & ACCESS_ACTIVE_LOCALITY) != 0 {
+            return Ok(());
+        }
+        for _ in 0..1000 {
+            core::hint::spin_loop();
+        }
+    }
+    Err(TmpError::LocalityTimeout)
 }

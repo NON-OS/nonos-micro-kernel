@@ -16,7 +16,7 @@
 
 use super::client::REPLY_INBOX;
 use super::embed::{
-    DRIVER_RTL8169_ELF, DRIVER_RTL8169_MANIFEST_BYTES, DRIVER_RTL8169_NONOS_ID_CERT_BYTES,
+    DRIVER_RTL8169_ELF, DRIVER_RTL8169_MANIFEST_BYTES, DRIVER_RTL8169_ATTESTATION_BYTES, DRIVER_RTL8169_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -43,6 +43,7 @@ pub fn spawn_driver_rtl8169_capsule() -> Result<(), SpawnError> {
         elf: DRIVER_RTL8169_ELF,
         nonos_id_cert_bytes: DRIVER_RTL8169_NONOS_ID_CERT_BYTES,
         manifest_bytes: DRIVER_RTL8169_MANIFEST_BYTES,
+        attestation_trailer: DRIVER_RTL8169_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit()
             | Capability::Memory.bit()

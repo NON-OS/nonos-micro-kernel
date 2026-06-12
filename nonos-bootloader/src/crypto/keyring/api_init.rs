@@ -14,19 +14,34 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::Ordering;
-use crate::log::logger::{log_error, log_info, log_warn};
 use super::api_add::add_key_versioned;
 use super::api_state::{INIT_DONE, KEYSTORE, KEY_VERSION, NONOS_KEY_ID, NONOS_PUBLIC_KEY};
 use super::util::{constant_time_eq, is_zero_key};
+use crate::log::logger::{log_error, log_info, log_warn};
+use core::sync::atomic::Ordering;
 
 pub fn init_nonos_keys() -> Result<usize, &'static str> {
-    if INIT_DONE.load(Ordering::SeqCst) { log_warn("crypto", "keystore already initialized"); return Ok(KEYSTORE.lock().count); }
+    if INIT_DONE.load(Ordering::SeqCst) {
+        log_warn("crypto", "keystore already initialized");
+        return Ok(KEYSTORE.lock().count);
+    }
     log_info("crypto", "initializing NONOS keystore");
-    if is_zero_key(&NONOS_PUBLIC_KEY) { log_error("crypto", "CRITICAL: signing key is zero"); return Err("invalid signing key"); }
+    if is_zero_key(&NONOS_PUBLIC_KEY) {
+        log_error("crypto", "CRITICAL: signing key is zero");
+        return Err("invalid signing key");
+    }
     match add_key_versioned(&NONOS_PUBLIC_KEY, KEY_VERSION) {
-        Ok(id) => { if !constant_time_eq(&id, &NONOS_KEY_ID) { log_error("crypto", "key ID mismatch"); return Err("key verification failed"); } log_info("crypto", "NONOS signing key loaded"); }
-        Err(e) => { log_error("crypto", "failed to load signing key"); return Err(e); }
+        Ok(id) => {
+            if !constant_time_eq(&id, &NONOS_KEY_ID) {
+                log_error("crypto", "key ID mismatch");
+                return Err("key verification failed");
+            }
+            log_info("crypto", "NONOS signing key loaded");
+        }
+        Err(e) => {
+            log_error("crypto", "failed to load signing key");
+            return Err(e);
+        }
     }
     log_info("crypto", "keystore ready");
     Ok(1)

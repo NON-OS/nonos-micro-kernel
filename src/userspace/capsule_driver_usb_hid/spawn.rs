@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    DRIVER_USB_HID_ELF, DRIVER_USB_HID_MANIFEST_BYTES, DRIVER_USB_HID_NONOS_ID_CERT_BYTES,
+    DRIVER_USB_HID_ATTESTATION_BYTES, DRIVER_USB_HID_ELF, DRIVER_USB_HID_MANIFEST_BYTES,
+    DRIVER_USB_HID_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -45,12 +46,12 @@ pub fn spawn_driver_usb_hid_capsule() -> Result<(), SpawnError> {
         elf: DRIVER_USB_HID_ELF,
         nonos_id_cert_bytes: DRIVER_USB_HID_NONOS_ID_CERT_BYTES,
         manifest_bytes: DRIVER_USB_HID_MANIFEST_BYTES,
+        attestation_trailer: DRIVER_USB_HID_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
             | Capability::Memory.bit()
-            | Capability::InputSource.bit()
-            | Capability::Debug.bit(),
+            | Capability::InputSource.bit(),
         debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

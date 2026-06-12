@@ -19,6 +19,7 @@ mod crypto;
 mod error;
 mod handoff;
 mod init;
+pub mod layout;
 mod panel;
 mod progress;
 mod stage;

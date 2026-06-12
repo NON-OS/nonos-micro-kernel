@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::display::constants::{COLOR_ACCENT, COLOR_BORDER};
+use crate::display::constants::{COLOR_ACCENT, COLOR_BORDER, COLOR_BOX_BG, COLOR_TEXT_MUTED};
 use crate::display::font::draw_string;
-use crate::display::gop::{draw_rect, hline};
+use crate::display::gop::{draw_rect, fill_rect, hline};
 
 pub fn draw_panel(x: u32, y: u32, w: u32, h: u32, title: &[u8]) {
+    fill_rect(x, y, w, h, COLOR_BOX_BG);
     draw_rect(x, y, w, h, COLOR_BORDER);
-    draw_string(x + 8, y + 4, title, COLOR_ACCENT);
+    fill_rect(x + 12, y + 7, 6, 6, COLOR_ACCENT);
+    draw_string(x + 26, y + 2, title, COLOR_TEXT_MUTED);
     hline(x, y + 22, w, COLOR_BORDER);
 }
 

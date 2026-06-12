@@ -27,6 +27,10 @@ pub(super) const DRIVER_USB_HID_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const DRIVER_USB_HID_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/driver_usb_hid.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-driver-usb-hid")]
+pub(super) const DRIVER_USB_HID_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/driver_usb_hid.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-driver-usb-hid"))]
 pub(super) const DRIVER_USB_HID_ELF: &[u8] = &[];
 
@@ -35,3 +39,6 @@ pub(super) const DRIVER_USB_HID_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-driver-usb-hid"))]
 pub(super) const DRIVER_USB_HID_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-driver-usb-hid"))]
+pub(super) const DRIVER_USB_HID_ATTESTATION_BYTES: &[u8] = &[];

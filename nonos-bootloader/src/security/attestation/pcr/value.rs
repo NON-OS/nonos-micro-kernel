@@ -17,10 +17,16 @@
 use super::constants::DS_ATTESTATION;
 
 #[derive(Clone, Copy)]
-pub struct PcrValue { pub index: u8, pub value: [u8; 32], pub extended: bool }
+pub struct PcrValue {
+    pub index: u8,
+    pub value: [u8; 32],
+    pub extended: bool,
+}
 
 impl PcrValue {
-    pub const fn empty(index: u8) -> Self { Self { index, value: [0u8; 32], extended: false } }
+    pub const fn empty(index: u8) -> Self {
+        Self { index, value: [0u8; 32], extended: false }
+    }
 
     pub fn extend(&mut self, data: &[u8]) {
         let mut hasher = blake3::Hasher::new_derive_key(DS_ATTESTATION);

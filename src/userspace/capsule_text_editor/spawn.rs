@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::embed::{TEXT_EDITOR_ELF, TEXT_EDITOR_MANIFEST_BYTES, TEXT_EDITOR_NONOS_ID_CERT_BYTES};
+use super::embed::{TEXT_EDITOR_ELF, TEXT_EDITOR_MANIFEST_BYTES, TEXT_EDITOR_NONOS_ID_CERT_BYTES, TEXT_EDITOR_ATTESTATION_BYTES};
 use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
@@ -42,6 +42,7 @@ pub fn spawn_text_editor_capsule() -> Result<(), SpawnError> {
         elf: TEXT_EDITOR_ELF,
         nonos_id_cert_bytes: TEXT_EDITOR_NONOS_ID_CERT_BYTES,
         manifest_bytes: TEXT_EDITOR_MANIFEST_BYTES,
+        attestation_trailer: TEXT_EDITOR_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

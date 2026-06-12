@@ -19,7 +19,6 @@ use crate::process::core::{Pid, PROCESS_TABLE};
 use super::enter::SPSR_EL0T_INITIAL;
 use super::types::UserEntry;
 
-
 const USER_VA_MAX: u64 = 0x0000_FFFF_FFFF_FFFF;
 
 #[derive(Debug, Clone, Copy)]
@@ -28,13 +27,6 @@ pub enum SetupError {
     NonUserEntry,
     NonUserStack,
 }
-
-
-
-
-
-
-
 
 pub fn setup_initial_user_pcb_aarch64(
     pid: Pid,
@@ -48,13 +40,8 @@ pub fn setup_initial_user_pcb_aarch64(
         return Err(SetupError::NonUserStack);
     }
     let pcb = PROCESS_TABLE.find_by_pid(pid).ok_or(SetupError::NoSuchProcess)?;
-    let entry_ctx = UserEntry {
-        entry,
-        user_sp,
-        spsr: SPSR_EL0T_INITIAL,
-        kernel_sp: 0,
-        args: [0; 8],
-    };
+    let entry_ctx =
+        UserEntry { entry, user_sp, spsr: SPSR_EL0T_INITIAL, kernel_sp: 0, args: [0; 8] };
     *pcb.pending_user_entry.lock() = Some(entry_ctx);
     Ok(())
 }

@@ -16,9 +16,6 @@
 
 use super::context::FpContext;
 
-
-
-
 #[repr(C)]
 pub struct FpSlot {
     pub ctx: FpContext,

@@ -20,10 +20,14 @@ use uefi::table::cfg::{ACPI2_GUID, ACPI_GUID};
 /// Find ACPI RSDP address from UEFI config table. Prefers ACPI 2.0. Returns 0 if not found.
 pub fn get_acpi_rsdp(st: &SystemTable<Boot>) -> u64 {
     for entry in st.config_table() {
-        if entry.guid == ACPI2_GUID { return entry.address as u64; }
+        if entry.guid == ACPI2_GUID {
+            return entry.address as u64;
+        }
     }
     for entry in st.config_table() {
-        if entry.guid == ACPI_GUID { return entry.address as u64; }
+        if entry.guid == ACPI_GUID {
+            return entry.address as u64;
+        }
     }
     0
 }

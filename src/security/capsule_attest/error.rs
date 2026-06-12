@@ -14,22 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Reasons a capsule attestation can be rejected. Every variant is a refusal to
-// spawn; none of these are recoverable at runtime.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AttestError {
-    // No attestation trailer present on the capsule.
     Missing,
-    // Trailer bytes are malformed or truncated.
     Malformed,
-    // The Groth16 proof failed cryptographic verification.
     ProofInvalid,
-    // The commitment public input does not match the recomputed commitment.
     CommitmentMismatch,
-    // The capsule hash in the proof does not match the real capsule bytes.
     HashMismatch,
-    // The capability mask in the proof does not match the granted capabilities.
     CapabilityMismatch,
+    PolicyRootMismatch,
+    PolicyEpochMismatch,
 }
 
 impl AttestError {
@@ -41,6 +35,8 @@ impl AttestError {
             AttestError::CommitmentMismatch => "capsule attestation commitment mismatch",
             AttestError::HashMismatch => "capsule attestation hash does not bind to bytes",
             AttestError::CapabilityMismatch => "capsule attestation caps do not bind to grant",
+            AttestError::PolicyRootMismatch => "capsule attestation policy root mismatch",
+            AttestError::PolicyEpochMismatch => "capsule attestation policy epoch mismatch",
         }
     }
 }

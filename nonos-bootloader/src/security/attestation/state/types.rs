@@ -31,17 +31,42 @@ impl AttestationState {
     pub const fn new() -> Self {
         Self {
             pcrs: [
-                PcrValue::empty(0), PcrValue::empty(1), PcrValue::empty(2), PcrValue::empty(3),
-                PcrValue::empty(4), PcrValue::empty(5), PcrValue::empty(6), PcrValue::empty(7),
-                PcrValue::empty(8), PcrValue::empty(9), PcrValue::empty(10), PcrValue::empty(11),
-                PcrValue::empty(12), PcrValue::empty(13), PcrValue::empty(14), PcrValue::empty(15),
-                PcrValue::empty(16), PcrValue::empty(17), PcrValue::empty(18), PcrValue::empty(19),
-                PcrValue::empty(20), PcrValue::empty(21), PcrValue::empty(22), PcrValue::empty(23),
+                PcrValue::empty(0),
+                PcrValue::empty(1),
+                PcrValue::empty(2),
+                PcrValue::empty(3),
+                PcrValue::empty(4),
+                PcrValue::empty(5),
+                PcrValue::empty(6),
+                PcrValue::empty(7),
+                PcrValue::empty(8),
+                PcrValue::empty(9),
+                PcrValue::empty(10),
+                PcrValue::empty(11),
+                PcrValue::empty(12),
+                PcrValue::empty(13),
+                PcrValue::empty(14),
+                PcrValue::empty(15),
+                PcrValue::empty(16),
+                PcrValue::empty(17),
+                PcrValue::empty(18),
+                PcrValue::empty(19),
+                PcrValue::empty(20),
+                PcrValue::empty(21),
+                PcrValue::empty(22),
+                PcrValue::empty(23),
             ],
-            kernel_hash: [0u8; 32], bootloader_hash: [0u8; 32], zk_verified: false, sig_verified: false,
-            program_hash: [0u8; 32], capsule_commitment: [0u8; 32], initialized: false,
+            kernel_hash: [0u8; 32],
+            bootloader_hash: [0u8; 32],
+            zk_verified: false,
+            sig_verified: false,
+            program_hash: [0u8; 32],
+            capsule_commitment: [0u8; 32],
+            initialized: false,
         }
     }
 
-    pub fn init(&mut self) { self.initialized = true; }
+    pub fn init(&mut self) {
+        self.initialized = true;
+    }
 }

@@ -23,7 +23,15 @@ use super::paint_frame::paint;
 use super::request_id::next;
 
 pub(super) fn repaint<A: App>(booted: &mut BootedApp<A>, peers: &Peers, request_id: &mut u32) {
-    paint(&mut booted.app, &booted.manifest, &booted.binding, booted.drag.hover);
+    let toolkit_rid = next(request_id);
+    paint(
+        &mut booted.app,
+        &booted.manifest,
+        &booted.binding,
+        peers.toolkit,
+        toolkit_rid,
+        booted.drag.hover,
+    );
     let rid = next(request_id);
     let _ = compositor::damage_commit(
         peers.compositor,

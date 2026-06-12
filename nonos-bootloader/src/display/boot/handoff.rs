@@ -14,13 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::display::constants::COLOR_SUCCESS;
-use crate::display::font::draw_string;
-use crate::display::gop::{get_dimensions, is_initialized};
+use crate::display::gop::is_initialized;
+use crate::display::log_panel::log_ok;
 
 pub fn show_handoff_message() {
-    if !is_initialized() { return; }
-    let (_, h) = get_dimensions();
-    let y = h - 40;
-    draw_string(40, y, b"Handoff to kernel...", COLOR_SUCCESS);
+    if !is_initialized() {
+        return;
+    }
+    log_ok(b"handoff to kernel");
 }

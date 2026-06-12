@@ -17,13 +17,6 @@
 use crate::state::spotlight::{SPOTLIGHT_HEIGHT, SPOTLIGHT_WIDTH};
 
 pub const MENUBAR_HEIGHT: u32 = 28;
-pub const SIDE_DOCK_WIDTH: u32 = 152;
-pub const SIDE_DOCK_TOP_INSET: u32 = MENUBAR_HEIGHT + 40;
-// Hugs the seven launcher entries (top pad + 7 * (entry + gap)) so the
-// bordered panel has no dead space below the last item.
-pub const SIDE_DOCK_HEIGHT: u32 = 202;
-pub const SIDE_ENTRY_H: u32 = 22;
-pub const SIDE_ENTRY_PAD: u32 = 6;
 pub const BOTTOM_DOCK_WIDTH: u32 = 620;
 pub const BOTTOM_DOCK_HEIGHT: u32 = 64;
 pub const BOTTOM_DOCK_BOTTOM_INSET: u32 = 24;
@@ -39,12 +32,6 @@ pub struct Rect {
 
 pub fn menubar_rect(display_width: u32) -> Rect {
     Rect { x: 0, y: 0, width: display_width, height: MENUBAR_HEIGHT }
-}
-
-pub fn side_dock_rect(_display_width: u32, display_height: u32) -> Rect {
-    let height =
-        core::cmp::min(SIDE_DOCK_HEIGHT, display_height.saturating_sub(SIDE_DOCK_TOP_INSET));
-    Rect { x: 12, y: SIDE_DOCK_TOP_INSET, width: SIDE_DOCK_WIDTH, height }
 }
 
 pub fn bottom_dock_rect(display_width: u32, display_height: u32) -> Rect {

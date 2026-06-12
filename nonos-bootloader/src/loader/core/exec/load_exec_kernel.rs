@@ -59,14 +59,8 @@ pub fn load_exec_kernel(
     let mut allocations: [(u64, usize); MAX_ALLOCS] = [(0, 0); MAX_ALLOCS];
     let mut alloc_count: usize = 0;
 
-    let phys_base = allocate_image(
-        bs,
-        virt_min,
-        pages_needed,
-        upper_half,
-        &mut allocations,
-        &mut alloc_count,
-    )?;
+    let phys_base =
+        allocate_image(bs, virt_min, pages_needed, upper_half, &mut allocations, &mut alloc_count)?;
 
     let (segments, segment_count) = load_segments(payload, v, phys_base, virt_min);
 

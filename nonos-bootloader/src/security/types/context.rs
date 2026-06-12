@@ -30,9 +30,15 @@ pub struct SecurityContext {
 impl SecurityContext {
     pub const fn new() -> Self {
         Self {
-            secure_boot_enabled: false, platform_key_verified: false, signature_database_valid: false,
-            hardware_rng_available: false, ed25519_selftest_ok: false, blake3_selftest_ok: false,
-            production_keys_loaded: false, key_count: 0, measured_boot_active: false,
+            secure_boot_enabled: false,
+            platform_key_verified: false,
+            signature_database_valid: false,
+            hardware_rng_available: false,
+            ed25519_selftest_ok: false,
+            blake3_selftest_ok: false,
+            production_keys_loaded: false,
+            key_count: 0,
+            measured_boot_active: false,
         }
     }
 }

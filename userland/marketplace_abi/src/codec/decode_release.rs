@@ -23,8 +23,8 @@ use super::error::DecodeError;
 use super::reader::Reader;
 use super::strings::{bounded_bytes, bounded_count, bounded_string};
 use crate::limits::{
-    MAX_ARCHES, MAX_CAPABILITIES, MAX_NAME, MAX_PUBLISHER, MAX_SIGNATURE,
-    MAX_SUPPORTED_ARCH_LEN, MAX_URL,
+    MAX_ARCHES, MAX_CAPABILITIES, MAX_NAME, MAX_PUBLISHER, MAX_SIGNATURE, MAX_SUPPORTED_ARCH_LEN,
+    MAX_URL,
 };
 use crate::types::CapsuleRelease;
 

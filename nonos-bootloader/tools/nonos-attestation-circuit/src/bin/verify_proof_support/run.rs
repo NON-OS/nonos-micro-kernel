@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -16,14 +16,13 @@
 
 use clap::Parser;
 
+use nonos_attestation_circuit::verify::{
+    binding, parse_public_inputs, read_capsule, read_vk, verify_groth16,
+};
+use nonos_attestation_circuit::GROTH16_PROOF_SIZE;
+
 use super::args::Args;
-use super::binding::binding;
-use super::constants::GROTH16_PROOF_SIZE;
-use super::parse_public_inputs::parse_public_inputs;
-use super::read_capsule::read_capsule;
 use super::read_file_input::read_file_input;
-use super::read_vk::read_vk;
-use super::verify_groth16::verify_groth16;
 
 pub fn run() -> Result<(), String> {
     let args = Args::parse();

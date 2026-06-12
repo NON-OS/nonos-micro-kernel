@@ -26,6 +26,10 @@ pub(super) const CRYPTO_NONOS_ID_CERT_BYTES: &[u8] =
 pub(super) const CRYPTO_MANIFEST_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/crypto.manifest.bin");
 
+#[cfg(feature = "nonos-capsule-crypto")]
+pub(super) const CRYPTO_ATTESTATION_BYTES: &[u8] =
+    include_bytes!("../../../nonos-data/trust/capsules/crypto.zk_trailer.bin");
+
 #[cfg(not(feature = "nonos-capsule-crypto"))]
 pub(super) const CRYPTO_ELF: &[u8] = &[];
 
@@ -34,3 +38,6 @@ pub(super) const CRYPTO_NONOS_ID_CERT_BYTES: &[u8] = &[];
 
 #[cfg(not(feature = "nonos-capsule-crypto"))]
 pub(super) const CRYPTO_MANIFEST_BYTES: &[u8] = &[];
+
+#[cfg(not(feature = "nonos-capsule-crypto"))]
+pub(super) const CRYPTO_ATTESTATION_BYTES: &[u8] = &[];

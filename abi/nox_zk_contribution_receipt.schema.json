@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nonos/abi/nox_zk_contribution_receipt.schema.json",
+  "title": "NOX ZK contribution receipt",
+  "description": "Canonical off-chain receipt for verifiable NØNOS ZK work. Contracts may reward these receipts after governance, operator, or Merkle-root acceptance. The receipt itself is evidence, not a payout promise.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "chain_id",
+    "circuit_name",
+    "circuit_id",
+    "contributor",
+    "contributor_address",
+    "round",
+    "policy_epoch",
+    "vk_sha256",
+    "transcript_sha256",
+    "transcript_final_vk_hash",
+    "previous_params_hash",
+    "new_params_hash",
+    "randomness_commitment",
+    "contribution_timestamp",
+    "evidence_hash",
+    "receipt_id",
+    "uri"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "kind": { "type": "string", "const": "CEREMONY_ROUND" },
+    "chain_id": { "type": "integer", "const": 1 },
+    "circuit_name": { "type": "string", "minLength": 1 },
+    "circuit_id": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "contributor": { "type": "string", "minLength": 1 },
+    "contributor_address": { "type": "string", "pattern": "^0x[0-9a-f]{40}$" },
+    "round": { "type": "integer", "minimum": 1 },
+    "policy_epoch": { "type": "integer", "minimum": 1 },
+    "vk_sha256": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "transcript_sha256": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "transcript_final_vk_hash": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "previous_params_hash": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "new_params_hash": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "randomness_commitment": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "destruction_attestation_hash": {
+      "anyOf": [
+        { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "contribution_timestamp": { "type": "integer", "minimum": 1 },
+    "evidence_hash": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "receipt_id": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "uri": { "type": "string" }
+  }
+}

@@ -16,7 +16,9 @@
 
 use uefi::prelude::*;
 
-use crate::display::{log_warn, show_error_screen, update_stage, StageStatus, STAGE_ED25519_VERIFY};
+use crate::display::{
+    log_warn, show_error_screen, update_stage, StageStatus, STAGE_ED25519_VERIFY,
+};
 use crate::log::logger::log_error;
 use crate::menu::SecurityMode;
 
@@ -26,10 +28,15 @@ pub fn handle_no_signature(st: &mut SystemTable<Boot>, mode: SecurityMode, gop: 
     if mode.requires_signature() {
         log_error("crypto", "kernel has no signature - refusing to boot");
         update_stage(STAGE_ED25519_VERIFY, StageStatus::Failed);
-        if gop { crate::display::log_error(b"Kernel UNSIGNED"); show_error_screen(b"Kernel not signed"); }
+        if gop {
+            crate::display::log_error(b"Kernel UNSIGNED");
+            show_error_screen(b"Kernel not signed");
+        }
         fatal_reset(st, "kernel not signed");
     } else {
-        if gop { log_warn(b"Ed25519 signature SKIPPED (dev mode)"); }
+        if gop {
+            log_warn(b"Ed25519 signature SKIPPED (dev mode)");
+        }
         update_stage(STAGE_ED25519_VERIFY, StageStatus::Success);
     }
 }
@@ -38,10 +45,15 @@ pub fn handle_invalid_signature(st: &mut SystemTable<Boot>, mode: SecurityMode, 
     if mode.requires_signature() {
         log_error("crypto", "kernel signature verification FAILED");
         update_stage(STAGE_ED25519_VERIFY, StageStatus::Failed);
-        if gop { crate::display::log_error(b"Ed25519 INVALID"); show_error_screen(b"Signature invalid"); }
+        if gop {
+            crate::display::log_error(b"Ed25519 INVALID");
+            show_error_screen(b"Signature invalid");
+        }
         fatal_reset(st, "kernel signature invalid");
     } else {
-        if gop { log_warn(b"Ed25519 signature INVALID (dev mode - continuing)"); }
+        if gop {
+            log_warn(b"Ed25519 signature INVALID (dev mode - continuing)");
+        }
         update_stage(STAGE_ED25519_VERIFY, StageStatus::Success);
     }
 }

@@ -33,7 +33,9 @@ pub unsafe extern "C" fn getrandom(buf: *mut u8, len: usize, _flags: u32) -> isi
     // Add TSC jitter entropy
     for i in 0..4 {
         let t1 = rdtsc_serialized();
-        for _ in 0..100 { core::hint::spin_loop(); }
+        for _ in 0..100 {
+            core::hint::spin_loop();
+        }
         let t2 = rdtsc_serialized();
         let delta = t2.wrapping_sub(t1);
         entropy[32 + i * 8..40 + i * 8].copy_from_slice(&delta.to_le_bytes());

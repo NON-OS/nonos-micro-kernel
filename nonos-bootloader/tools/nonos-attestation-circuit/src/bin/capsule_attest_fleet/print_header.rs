@@ -20,7 +20,7 @@ pub fn print_header() {
     println!("proof_system: Groth16");
     println!("proof_size: 192 bytes");
     println!("public_inputs: 7 BLS12-381 field elements");
-    println!("layout: capsule_hash_hi, capsule_hash_lo, program_hash_hi, program_hash_lo, caps, commitment_hi, commitment_lo");
+    println!("layout: capsule_hash_hi, capsule_hash_lo, policy_root, policy_epoch, caps, commitment_hi, commitment_lo");
     println!("binding: proof public inputs + blake3(real capsule bytes) + exact cap mask");
     println!("capsules:");
 }

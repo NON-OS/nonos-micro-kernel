@@ -14,27 +14,39 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::crypto::keys::{KeyId, PK_LEN};
 use super::store_core::KeystoreV2;
 use super::types_key::KeyType;
 use super::types_result::KeyValidationResult;
 use super::types_trusted_key::TrustedKey;
 use super::util::constant_time_eq;
+use crate::crypto::keys::{KeyId, PK_LEN};
 
 impl KeystoreV2 {
     pub fn find_key(&self, key_id: &KeyId) -> Option<&TrustedKey> {
-        for i in 0..self.key_count { if constant_time_eq(&self.keys[i].key_id, key_id) { return Some(&self.keys[i]); } }
+        for i in 0..self.key_count {
+            if constant_time_eq(&self.keys[i].key_id, key_id) {
+                return Some(&self.keys[i]);
+            }
+        }
         None
     }
 
     pub fn find_key_by_pubkey(&self, pubkey: &[u8; PK_LEN]) -> Option<&TrustedKey> {
-        for i in 0..self.key_count { if constant_time_eq(&self.keys[i].public_key, pubkey) { return Some(&self.keys[i]); } }
+        for i in 0..self.key_count {
+            if constant_time_eq(&self.keys[i].public_key, pubkey) {
+                return Some(&self.keys[i]);
+            }
+        }
         None
     }
 
     pub fn get_active_keys(&self, timestamp: u64) -> impl Iterator<Item = &TrustedKey> {
-        self.keys[..self.key_count].iter().filter(move |k| k.is_valid_at(timestamp, self.minimum_version) == KeyValidationResult::Valid)
+        self.keys[..self.key_count].iter().filter(move |k| {
+            k.is_valid_at(timestamp, self.minimum_version) == KeyValidationResult::Valid
+        })
     }
 
-    pub fn get_primary_key(&self, timestamp: u64) -> Option<&TrustedKey> { self.get_active_keys(timestamp).find(|k| k.key_type == KeyType::Primary) }
+    pub fn get_primary_key(&self, timestamp: u64) -> Option<&TrustedKey> {
+        self.get_active_keys(timestamp).find(|k| k.key_type == KeyType::Primary)
+    }
 }

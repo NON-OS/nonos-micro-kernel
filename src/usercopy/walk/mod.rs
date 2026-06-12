@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod access;
+mod bounds;
 mod leaf;
 mod levels;
 mod root;
