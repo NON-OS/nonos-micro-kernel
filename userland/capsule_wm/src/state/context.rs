@@ -28,6 +28,7 @@ pub struct Context {
     pub z: ZStack,
     pub subscriptions: SubscriptionList,
     pub next_request_id: u32,
+    pub input_router_pid: u32,
 }
 
 impl Context {

@@ -46,5 +46,6 @@ fn run_once() -> Result<Context, &'static str> {
         z: ZStack::new(),
         subscriptions: SubscriptionList::new(),
         next_request_id: 3,
+        input_router_pid: 0,
     })
 }
