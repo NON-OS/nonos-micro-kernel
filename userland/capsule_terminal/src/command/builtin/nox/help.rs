@@ -34,6 +34,7 @@ pub fn run(out: &mut Output<'_>) {
     out.writeln(b"  sys              version and identity");
     out.writeln(b"  apps             marketplace catalog");
     out.writeln(b"  run (open) <app> launch an app: files editor settings calc about procs");
+    out.writeln(b"  install <name>   verify and load a capsule from /capsules/<name>.*");
     out.writeln(b"  set [name val]   list or define a variable (use as $name)");
     out.writeln(b"  unset <name>     remove a variable");
     out.writeln(b"  alias [n exp]    list or define a command alias");

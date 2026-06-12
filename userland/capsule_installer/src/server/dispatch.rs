@@ -17,12 +17,15 @@
 use alloc::vec::Vec;
 
 use super::handlers;
-use crate::protocol::{encode_response, Request, EINVAL, OP_HEALTHCHECK, OP_INSTALL};
+use crate::protocol::{
+    encode_response, Request, EINVAL, OP_HEALTHCHECK, OP_INSTALL, OP_LOAD_FROM_STORE,
+};
 
 pub fn dispatch(req: Request<'_>) -> Vec<u8> {
     match req.op {
         OP_HEALTHCHECK => handlers::health(req),
         OP_INSTALL => handlers::install(req),
+        OP_LOAD_FROM_STORE => handlers::load_store(req),
         _ => encode_response(req.seq, EINVAL, &[]),
     }
 }

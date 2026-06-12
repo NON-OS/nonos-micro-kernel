@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod health;
-mod install;
-mod load_store;
+mod artifacts;
+mod call;
+mod emit;
+mod run;
 
-pub(super) use health::health;
-pub(super) use install::install;
-pub(super) use load_store::load_store;
+pub use run::run;
