@@ -24,7 +24,6 @@ use crate::discover::require_peers;
 use super::boot::boot;
 use super::dispatch::DELIVERY_LEN;
 use super::fail::fail;
-use super::fail_boot::fail_boot;
 use super::idle;
 use super::repaint::repaint;
 use super::service_frame::service_frame;
@@ -43,10 +42,9 @@ pub fn run<A: App, F: Fn() -> A>(build: F) -> ! {
     loop {
         idle::wait(&mut rx);
         let app = build();
-        let manifest = app.manifest();
         let mut booted = match boot(app, &peers, &mut request_id) {
             Ok(b) => b,
-            Err(e) => fail_boot(3, manifest.title, e),
+            Err(_) => continue,
         };
         let mut last_tick_ms: i64 = 0;
         let mut frames: u32 = 0;
