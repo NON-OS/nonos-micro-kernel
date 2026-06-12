@@ -19,20 +19,30 @@ use crate::elf::errors::{ElfError, ElfResult};
 use super::info::{InitArrayInfo, PreInitArrayInfo};
 
 pub(super) fn validate_addr(addr: u64) -> ElfResult<()> {
-    if addr == 0 { return Err(ElfError::InvalidAddress); }
+    if addr == 0 {
+        return Err(ElfError::InvalidAddress);
+    }
     Ok(())
 }
 
 pub(super) fn validate_array(info: &InitArrayInfo) -> ElfResult<()> {
-    if info.is_empty() { return Ok(()); }
+    if info.is_empty() {
+        return Ok(());
+    }
     validate_addr(info.addr.as_u64())?;
-    if !info.is_entry_aligned() { return Err(ElfError::AlignmentError); }
+    if !info.is_entry_aligned() {
+        return Err(ElfError::AlignmentError);
+    }
     info.end_addr().ok_or(ElfError::AddressOverflow).map(|_| ())
 }
 
 pub(super) fn validate_preinit_array(info: &PreInitArrayInfo) -> ElfResult<()> {
-    if info.is_empty() { return Ok(()); }
+    if info.is_empty() {
+        return Ok(());
+    }
     validate_addr(info.addr.as_u64())?;
-    if !info.is_entry_aligned() { return Err(ElfError::AlignmentError); }
+    if !info.is_entry_aligned() {
+        return Err(ElfError::AlignmentError);
+    }
     info.end_addr().ok_or(ElfError::AddressOverflow).map(|_| ())
 }

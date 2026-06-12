@@ -34,5 +34,9 @@ pub fn tx_packet(frame: &[u8]) -> Result<(), DriverRtl8169Error> {
     let request_id = next_request_id();
     let frame_req = encode_request(OP_TX_PACKET, 0, request_id, frame);
     let resp = round_trip(request_id, frame_req)?;
-    if resp.status == 0 { Ok(()) } else { Err(lift(resp.status)) }
+    if resp.status == 0 {
+        Ok(())
+    } else {
+        Err(lift(resp.status))
+    }
 }

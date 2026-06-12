@@ -19,7 +19,8 @@ pub(crate) fn program_header_bounds(
     elf_data: &[u8],
     header: &ElfHeader,
 ) -> Result<(usize, usize, usize), ElfError> {
-    let ph_offset = usize::try_from(header.e_phoff).map_err(|_| ElfError::ProgramHeadersOutOfBounds)?;
+    let ph_offset =
+        usize::try_from(header.e_phoff).map_err(|_| ElfError::ProgramHeadersOutOfBounds)?;
     let ph_size = usize::from(header.e_phentsize);
     let ph_count = usize::from(header.e_phnum);
     if ph_count == 0 {
@@ -28,12 +29,9 @@ pub(crate) fn program_header_bounds(
     if ph_size != size_of::<ProgramHeader>() {
         return Err(ElfError::InvalidProgramHeaderSize);
     }
-    let table_bytes = ph_size
-        .checked_mul(ph_count)
-        .ok_or(ElfError::ProgramHeadersOutOfBounds)?;
-    let table_end = ph_offset
-        .checked_add(table_bytes)
-        .ok_or(ElfError::ProgramHeadersOutOfBounds)?;
+    let table_bytes = ph_size.checked_mul(ph_count).ok_or(ElfError::ProgramHeadersOutOfBounds)?;
+    let table_end =
+        ph_offset.checked_add(table_bytes).ok_or(ElfError::ProgramHeadersOutOfBounds)?;
     if table_end > elf_data.len() {
         return Err(ElfError::ProgramHeadersOutOfBounds);
     }

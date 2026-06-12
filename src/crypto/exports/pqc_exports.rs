@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(any(feature = "mldsa2", feature = "mldsa3", feature = "mldsa5"))]
-pub use super::super::pqc::ml_dsa_65;
 #[cfg(any(feature = "mlkem512", feature = "mlkem768", feature = "mlkem1024"))]
 pub use super::super::pqc::kyber;
 pub use super::super::pqc::mceliece;
+#[cfg(any(feature = "mldsa2", feature = "mldsa3", feature = "mldsa5"))]
+pub use super::super::pqc::ml_dsa_65;
 pub use super::super::pqc::ntru;
 pub use super::super::pqc::quantum;
 pub use super::super::pqc::sphincs;

@@ -80,7 +80,8 @@ pub fn bind(pid: u32, req: IrqBindRequest) -> Result<IrqBindResult, IrqBindError
         e.source.store(0, core::sync::atomic::Ordering::Release);
         return Err(IrqBindError::PlatformError);
     }
-    plic::set_priority(req.irq_source, DEFAULT_PRIORITY).map_err(|_| IrqBindError::PlatformError)?;
+    plic::set_priority(req.irq_source, DEFAULT_PRIORITY)
+        .map_err(|_| IrqBindError::PlatformError)?;
     plic::enable_irq(req.irq_source).map_err(|_| IrqBindError::PlatformError)?;
 
     Ok(IrqBindResult { grant_id, vector: 0 })

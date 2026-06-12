@@ -19,10 +19,14 @@ use super::support::make_valid_elf_header;
 use crate::elf::types::{elf_machine, elf_type};
 
 #[test]
-fn test_get_elf_type() { assert_eq!(get_elf_type(&make_valid_elf_header()).unwrap(), elf_type::ET_EXEC); }
+fn test_get_elf_type() {
+    assert_eq!(get_elf_type(&make_valid_elf_header()).unwrap(), elf_type::ET_EXEC);
+}
 
 #[test]
-fn test_get_elf_machine() { assert_eq!(get_elf_machine(&make_valid_elf_header()).unwrap(), elf_machine::EM_X86_64); }
+fn test_get_elf_machine() {
+    assert_eq!(get_elf_machine(&make_valid_elf_header()).unwrap(), elf_machine::EM_X86_64);
+}
 
 #[test]
 fn test_is_pie() {
@@ -34,7 +38,11 @@ fn test_is_pie() {
 }
 
 #[test]
-fn test_get_phoff() { assert_eq!(get_phoff(&make_valid_elf_header()).unwrap(), 64); }
+fn test_get_phoff() {
+    assert_eq!(get_phoff(&make_valid_elf_header()).unwrap(), 64);
+}
 
 #[test]
-fn test_get_phnum() { assert_eq!(get_phnum(&make_valid_elf_header()).unwrap(), 3); }
+fn test_get_phnum() {
+    assert_eq!(get_phnum(&make_valid_elf_header()).unwrap(), 3);
+}

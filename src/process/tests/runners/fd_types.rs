@@ -19,7 +19,10 @@ use crate::test::framework::{TestCase, TestSuite};
 
 pub fn register(s: &mut TestSuite) {
     s.add(TestCase::new("fd_type_variants", t::fd_type_variants));
-    s.add(TestCase::new("fd_type_not_equal_different_variants", t::fd_type_not_equal_different_variants));
+    s.add(TestCase::new(
+        "fd_type_not_equal_different_variants",
+        t::fd_type_not_equal_different_variants,
+    ));
     s.add(TestCase::new("fd_entry_new", t::fd_entry_new));
     s.add(TestCase::new("fd_entry_with_pipe_read", t::fd_entry_with_pipe_read));
     s.add(TestCase::new("fd_entry_with_pipe_write", t::fd_entry_with_pipe_write));
@@ -43,14 +46,32 @@ pub fn register(s: &mut TestSuite) {
     s.add(TestCase::new("process_fd_table_dup", t::process_fd_table_dup));
     s.add(TestCase::new("process_fd_table_dup2", t::process_fd_table_dup2));
     s.add(TestCase::new("process_fd_table_dup2_same_fd", t::process_fd_table_dup2_same_fd));
-    s.add(TestCase::new("process_fd_table_dup2_replaces_existing", t::process_fd_table_dup2_replaces_existing));
+    s.add(TestCase::new(
+        "process_fd_table_dup2_replaces_existing",
+        t::process_fd_table_dup2_replaces_existing,
+    ));
     s.add(TestCase::new("process_fd_table_close_cloexec", t::process_fd_table_close_cloexec));
     s.add(TestCase::new("process_fd_table_fork", t::process_fd_table_fork));
     s.add(TestCase::new("process_fd_table_stats", t::process_fd_table_stats));
-    s.add(TestCase::new("process_fd_table_allocate_at_invalid", t::process_fd_table_allocate_at_invalid));
-    s.add(TestCase::new("process_fd_table_allocate_min_invalid", t::process_fd_table_allocate_min_invalid));
-    s.add(TestCase::new("process_fd_table_dup2_invalid_new_fd", t::process_fd_table_dup2_invalid_new_fd));
+    s.add(TestCase::new(
+        "process_fd_table_allocate_at_invalid",
+        t::process_fd_table_allocate_at_invalid,
+    ));
+    s.add(TestCase::new(
+        "process_fd_table_allocate_min_invalid",
+        t::process_fd_table_allocate_min_invalid,
+    ));
+    s.add(TestCase::new(
+        "process_fd_table_dup2_invalid_new_fd",
+        t::process_fd_table_dup2_invalid_new_fd,
+    ));
     s.add(TestCase::new("process_fd_table_dup_nonexistent", t::process_fd_table_dup_nonexistent));
-    s.add(TestCase::new("process_fd_table_set_cloexec_nonexistent", t::process_fd_table_set_cloexec_nonexistent));
-    s.add(TestCase::new("process_fd_table_set_status_flags_nonexistent", t::process_fd_table_set_status_flags_nonexistent));
+    s.add(TestCase::new(
+        "process_fd_table_set_cloexec_nonexistent",
+        t::process_fd_table_set_cloexec_nonexistent,
+    ));
+    s.add(TestCase::new(
+        "process_fd_table_set_status_flags_nonexistent",
+        t::process_fd_table_set_status_flags_nonexistent,
+    ));
 }

@@ -18,9 +18,9 @@ mod interpreter;
 mod offset;
 mod state;
 mod string;
-mod tls;
 #[cfg(test)]
 mod tests;
+mod tls;
 
 pub(in crate::elf::loader::core) use dynamic::parse_dynamic_section;
 pub(in crate::elf::loader::core) use interpreter::parse_interpreter;

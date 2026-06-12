@@ -32,6 +32,14 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkMmap => caps.can_allocate_memory(),
         SyscallNumber::MkMunmap => caps.can_deallocate_memory(),
 
+        // Loading a capsule from the store is gated like MkSpawn on the IPC
+        // capability the installer already holds. The real protection is the
+        // full verified-spawn path the kernel runs on the artifacts; an
+        // unsigned or unattested capsule cannot load regardless of the caller.
+        SyscallNumber::MkCapsuleLoad => caps.can_ipc(),
+
+        SyscallNumber::MkGetPid => caps.can_getpid(),
+
         SyscallNumber::MkSpawn
         | SyscallNumber::MkIpcCall
         | SyscallNumber::MkIpcRecv

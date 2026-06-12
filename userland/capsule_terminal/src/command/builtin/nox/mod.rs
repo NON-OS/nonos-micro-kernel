@@ -28,6 +28,7 @@ mod enter;
 mod help;
 mod history;
 mod id;
+mod install;
 mod ls;
 mod mk;
 mod motd;

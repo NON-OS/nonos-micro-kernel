@@ -25,5 +25,9 @@ pub fn healthcheck() -> Result<(), DriverRtl8139Error> {
     let request_id = next_request_id();
     let frame = encode_request(OP_HEALTHCHECK, 0, request_id, &[]);
     let resp = round_trip(request_id, frame)?;
-    if resp.status == 0 { Ok(()) } else { Err(DriverRtl8139Error::DeviceFailure) }
+    if resp.status == 0 {
+        Ok(())
+    } else {
+        Err(DriverRtl8139Error::DeviceFailure)
+    }
 }

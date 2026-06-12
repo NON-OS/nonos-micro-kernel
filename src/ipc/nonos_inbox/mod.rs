@@ -38,7 +38,7 @@ pub use registry::{
     capacity, clear, exists, get_default_capacity, get_global_stats, get_inbox_stats, inbox_count,
     is_empty, is_full, len, list_inboxes, peek, register_inbox, register_inbox_with_capacity,
     register_or_get_bootstrap_inbox, set_default_capacity, try_dequeue_existing,
-    try_enqueue_strict, unregister_for_pid, unregister_inbox, DEFAULT_INBOX_CAPACITY,
-    KERNEL_OWNER, MAX_INBOX_CAPACITY, MIN_INBOX_CAPACITY,
+    try_enqueue_strict, unregister_for_pid, unregister_inbox, DEFAULT_INBOX_CAPACITY, KERNEL_OWNER,
+    MAX_INBOX_CAPACITY, MIN_INBOX_CAPACITY,
 };
 pub use stats::InboxStatsSnapshot;

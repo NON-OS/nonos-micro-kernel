@@ -19,8 +19,8 @@
 // device table and the eventual claim/grant primitives. Today the
 // table is read-only; claim/grant land in a follow-up slice.
 
-pub mod broker;
 pub mod ahci_capsule;
+pub mod broker;
 pub mod e1000_capsule;
 pub mod hda_capsule;
 pub mod i2c_pci_capsule;

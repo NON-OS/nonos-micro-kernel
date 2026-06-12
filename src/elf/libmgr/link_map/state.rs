@@ -28,12 +28,26 @@ pub struct LinkMap {
 }
 
 impl LinkMap {
-    pub fn new() -> Self { Self { entries: Vec::new(), names: Vec::new(), head: core::ptr::null_mut(), tail: core::ptr::null_mut() } }
-    pub fn clear(&mut self) { self.entries.clear(); self.names.clear(); self.head = core::ptr::null_mut(); self.tail = core::ptr::null_mut(); }
+    pub fn new() -> Self {
+        Self {
+            entries: Vec::new(),
+            names: Vec::new(),
+            head: core::ptr::null_mut(),
+            tail: core::ptr::null_mut(),
+        }
+    }
+    pub fn clear(&mut self) {
+        self.entries.clear();
+        self.names.clear();
+        self.head = core::ptr::null_mut();
+        self.tail = core::ptr::null_mut();
+    }
 }
 
 impl Default for LinkMap {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 unsafe impl Send for LinkMap {}

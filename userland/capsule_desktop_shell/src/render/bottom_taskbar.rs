@@ -17,9 +17,8 @@
 use super::draw_app_icon;
 use super::fill::fill_rect;
 use super::layout::{bottom_dock_rect, TASKBAR_ENTRY_W};
-use crate::state::{Context, LAUNCHER_APPS};
+use crate::state::{Context, LAUNCHER_APPS, TASKBAR_NO_ACTIVE};
 
-// Bottom-dock glyphs run 22% larger than the side launcher icons.
 const ICON_SIZE: u32 = 20;
 
 pub fn paint_bottom_taskbar(ctx: &Context) {
@@ -27,7 +26,20 @@ pub fn paint_bottom_taskbar(ctx: &Context) {
     let box_top = dock.y + 10;
     let box_h = dock.height - 20;
     let mut x = dock.x + 12;
-    for app in LAUNCHER_APPS.iter() {
+    for (index, app) in LAUNCHER_APPS.iter().enumerate() {
+        let open = ctx.taskbar.open[index];
+        let active =
+            ctx.taskbar.active != TASKBAR_NO_ACTIVE && ctx.taskbar.active as usize == index;
+        let pulsing = ctx.taskbar.pulse_until_ms[index] > 0;
+        let bg = if active {
+            0x2F66_7F92
+        } else if pulsing {
+            0x2B5F_7468
+        } else if open {
+            0x294C_5F70
+        } else {
+            0x2241_5164
+        };
         fill_rect(
             ctx.backing_va,
             ctx.stride,
@@ -37,8 +49,22 @@ pub fn paint_bottom_taskbar(ctx: &Context) {
             box_top,
             TASKBAR_ENTRY_W,
             box_h,
-            0x2241_5164,
+            bg,
         );
+        if open || active || pulsing {
+            let indicator = if active { 0xFF76_D98A } else { 0xFF76_C7D7 };
+            fill_rect(
+                ctx.backing_va,
+                ctx.stride,
+                ctx.width,
+                ctx.height,
+                x + 18,
+                box_top + box_h - 3,
+                TASKBAR_ENTRY_W - 36,
+                3,
+                indicator,
+            );
+        }
         let icon_x = x + (TASKBAR_ENTRY_W - ICON_SIZE) / 2;
         let icon_y = box_top + (box_h - ICON_SIZE) / 2;
         draw_app_icon(ctx, icon_x, icon_y, app.icon, ICON_SIZE);

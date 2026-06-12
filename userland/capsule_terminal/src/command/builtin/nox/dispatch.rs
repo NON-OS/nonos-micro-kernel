@@ -15,8 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::{
-    alias, apps, caps, clear, copy, display, echo, enter, help, history, id, ls, mk, motd, mv,
-    ping, read, rm, run, set, stat, svc, sysinfo, unalias, unknown, unset, whereis, write,
+    alias, apps, caps, clear, copy, display, echo, enter, help, history, id, install, ls, mk, motd,
+    mv, ping, read, rm, run, set, stat, svc, sysinfo, unalias, unknown, unset, whereis, write,
 };
 use crate::command::output::Output;
 use crate::command::Outcome;
@@ -73,6 +73,7 @@ pub fn dispatch(state: &mut State, args: &[&[u8]]) -> Outcome {
             true
         }
         b"run" | b"open" => run::run(state, rest),
+        b"install" => install::run(state, rest),
         b"set" => {
             set::run(state, rest);
             true

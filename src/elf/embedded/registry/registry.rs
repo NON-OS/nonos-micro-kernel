@@ -27,7 +27,9 @@ pub struct EmbeddedLibraryRegistry {
 }
 
 impl EmbeddedLibraryRegistry {
-    pub fn new() -> Self { Self { libraries: BTreeMap::new(), soname_index: BTreeMap::new() } }
+    pub fn new() -> Self {
+        Self { libraries: BTreeMap::new(), soname_index: BTreeMap::new() }
+    }
 
     pub fn register(&mut self, library: EmbeddedLibrary) -> ElfResult<()> {
         if self.libraries.contains_key(&library.name) {
@@ -47,5 +49,7 @@ impl EmbeddedLibraryRegistry {
 }
 
 impl Default for EmbeddedLibraryRegistry {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

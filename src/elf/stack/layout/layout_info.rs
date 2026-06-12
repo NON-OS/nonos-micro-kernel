@@ -29,14 +29,23 @@ pub struct StackLayout {
 
 impl StackLayout {
     pub fn stack_size(&self) -> usize {
-        match usize::try_from(self.stack_top.as_u64() - self.stack_bottom.as_u64()) { Ok(value) => value, Err(_) => usize::MAX }
+        match usize::try_from(self.stack_top.as_u64() - self.stack_bottom.as_u64()) {
+            Ok(value) => value,
+            Err(_) => usize::MAX,
+        }
     }
 
     pub fn used_size(&self) -> usize {
-        match usize::try_from(self.stack_top.as_u64() - self.stack_pointer.as_u64()) { Ok(value) => value, Err(_) => usize::MAX }
+        match usize::try_from(self.stack_top.as_u64() - self.stack_pointer.as_u64()) {
+            Ok(value) => value,
+            Err(_) => usize::MAX,
+        }
     }
 
     pub fn available_size(&self) -> usize {
-        match usize::try_from(self.stack_pointer.as_u64() - self.stack_bottom.as_u64()) { Ok(value) => value, Err(_) => usize::MAX }
+        match usize::try_from(self.stack_pointer.as_u64() - self.stack_bottom.as_u64()) {
+            Ok(value) => value,
+            Err(_) => usize::MAX,
+        }
     }
 }

@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    IMAGE_CODEC_ELF, IMAGE_CODEC_MANIFEST_BYTES, IMAGE_CODEC_ATTESTATION_BYTES, IMAGE_CODEC_NONOS_ID_CERT_BYTES,
+    IMAGE_CODEC_ATTESTATION_BYTES, IMAGE_CODEC_ELF, IMAGE_CODEC_MANIFEST_BYTES,
+    IMAGE_CODEC_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};

@@ -88,6 +88,7 @@ nonos-capsule-hello             = []
 nonos-capsule-boot-splash       = []
 nonos-capsule-calculator        = []
 nonos-capsule-snake             = []
+nonos-capsule-wallet-nonos      = []
 nonos-capsule-terminal          = []
 nonos-capsule-file-manager      = []
 nonos-capsule-text-editor       = []
@@ -504,6 +505,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
   "nonos-capsule-snake",
+  "nonos-capsule-wallet-nonos",
   "nonos-capsule-terminal",
   "nonos-capsule-file-manager",
   "nonos-capsule-text-editor",

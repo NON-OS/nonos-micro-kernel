@@ -20,6 +20,7 @@ pub(super) fn spawn() {
     spawn_hello();
     spawn_calculator();
     spawn_snake();
+    spawn_wallet_nonos();
     spawn_terminal();
     spawn_file_manager();
     super::apps_tools::spawn();
@@ -66,6 +67,19 @@ fn spawn_calculator() {
 }
 #[cfg(not(feature = "nonos-capsule-calculator"))]
 fn spawn_calculator() {}
+
+#[cfg(feature = "nonos-capsule-wallet-nonos")]
+fn spawn_wallet_nonos() {
+    use crate::userspace::capsule_wallet_nonos as c;
+    super::boot::capsule(
+        "APP-NONOS-WALLET",
+        "app_nonos_wallet",
+        c::spawn_wallet_nonos_capsule,
+        c::shared_state,
+    );
+}
+#[cfg(not(feature = "nonos-capsule-wallet-nonos"))]
+fn spawn_wallet_nonos() {}
 
 #[cfg(feature = "nonos-capsule-terminal")]
 fn spawn_terminal() {

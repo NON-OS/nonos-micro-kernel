@@ -24,11 +24,21 @@ pub struct FiniArrayRunner {
 }
 
 impl FiniArrayRunner {
-    pub fn new() -> Self { Self { fini_array: None, fini_fn: None } }
-    pub fn with_fini_array(mut self, info: FiniArrayInfo) -> Self { self.fini_array = Some(info); self }
-    pub fn with_fini_fn(mut self, addr: VirtAddr) -> Self { self.fini_fn = Some(addr); self }
+    pub fn new() -> Self {
+        Self { fini_array: None, fini_fn: None }
+    }
+    pub fn with_fini_array(mut self, info: FiniArrayInfo) -> Self {
+        self.fini_array = Some(info);
+        self
+    }
+    pub fn with_fini_fn(mut self, addr: VirtAddr) -> Self {
+        self.fini_fn = Some(addr);
+        self
+    }
 }
 
 impl Default for FiniArrayRunner {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

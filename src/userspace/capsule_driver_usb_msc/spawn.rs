@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    DRIVER_USB_MSC_ELF, DRIVER_USB_MSC_MANIFEST_BYTES, DRIVER_USB_MSC_ATTESTATION_BYTES, DRIVER_USB_MSC_NONOS_ID_CERT_BYTES,
+    DRIVER_USB_MSC_ATTESTATION_BYTES, DRIVER_USB_MSC_ELF, DRIVER_USB_MSC_MANIFEST_BYTES,
+    DRIVER_USB_MSC_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;

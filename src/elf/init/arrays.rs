@@ -16,8 +16,8 @@
 
 mod api;
 mod constants;
-mod invoke;
 mod info;
+mod invoke;
 mod run;
 mod state;
 mod validate;

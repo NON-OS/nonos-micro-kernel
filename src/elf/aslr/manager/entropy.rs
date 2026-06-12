@@ -16,27 +16,41 @@
 
 use core::arch::x86_64::_rdrand64_step;
 
-use super::{constants::{FALLBACK_SEED, LCG_INCREMENT, LCG_MULTIPLIER}, state::AslrManager};
+use super::{
+    constants::{FALLBACK_SEED, LCG_INCREMENT, LCG_MULTIPLIER},
+    state::AslrManager,
+};
 
 pub(super) fn gather_entropy() -> u64 {
     unsafe {
         let mut value = 0u64;
-        if _rdrand64_step(&mut value) == 1 { value } else { FALLBACK_SEED }
+        if _rdrand64_step(&mut value) == 1 {
+            value
+        } else {
+            FALLBACK_SEED
+        }
     }
 }
 
 impl AslrManager {
     pub fn random_offset(&mut self, max_offset: u64) -> u64 {
-        if max_offset == 0 { return 0; }
+        if max_offset == 0 {
+            return 0;
+        }
         let mut rand = 0u64;
         if unsafe { _rdrand64_step(&mut rand) } == 1 {
             self.entropy_pool ^= rand;
         } else {
-            self.entropy_pool = self.entropy_pool.wrapping_mul(LCG_MULTIPLIER).wrapping_add(LCG_INCREMENT);
+            self.entropy_pool =
+                self.entropy_pool.wrapping_mul(LCG_MULTIPLIER).wrapping_add(LCG_INCREMENT);
         }
         (self.entropy_pool >> 16) % max_offset
     }
 
-    pub fn reseed(&mut self) { self.entropy_pool ^= gather_entropy(); }
-    pub fn entropy(&self) -> u64 { self.entropy_pool }
+    pub fn reseed(&mut self) {
+        self.entropy_pool ^= gather_entropy();
+    }
+    pub fn entropy(&self) -> u64 {
+        self.entropy_pool
+    }
 }

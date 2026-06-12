@@ -21,10 +21,14 @@ use crate::elf::errors::ElfResult;
 use crate::elf::loader::ElfLoader;
 use alloc::string::String;
 
-use super::state::ProcessBuilder;
 use super::super::image::ProcessImage;
+use super::state::ProcessBuilder;
 
-pub fn create_process(loader: &mut ElfLoader, name: String, elf_data: &[u8]) -> ElfResult<ProcessImage> {
+pub fn create_process(
+    loader: &mut ElfLoader,
+    name: String,
+    elf_data: &[u8],
+) -> ElfResult<ProcessImage> {
     ProcessBuilder::new(loader, name).build(elf_data)
 }
 

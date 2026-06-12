@@ -41,10 +41,8 @@ pub fn attach_surface(
     // with no backing VMA and break MkSurfacePresent.
     {
         let slots = SLOTS.lock();
-        let slot = slots
-            .get(idx as usize)
-            .and_then(|s| s.as_ref())
-            .ok_or(RegistryError::BadHandle)?;
+        let slot =
+            slots.get(idx as usize).and_then(|s| s.as_ref()).ok_or(RegistryError::BadHandle)?;
         if slot.epoch != epoch {
             return Err(RegistryError::BadHandle);
         }
@@ -61,10 +59,8 @@ pub fn attach_surface(
     }
     let frames = {
         let mut slots = SLOTS.lock();
-        let slot = slots
-            .get_mut(idx as usize)
-            .and_then(|s| s.as_mut())
-            .ok_or(RegistryError::BadHandle)?;
+        let slot =
+            slots.get_mut(idx as usize).and_then(|s| s.as_mut()).ok_or(RegistryError::BadHandle)?;
         if slot.epoch != epoch {
             return Err(RegistryError::BadHandle);
         }

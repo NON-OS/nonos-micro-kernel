@@ -20,5 +20,5 @@ mod fields;
 mod signed;
 mod unsigned;
 
-pub use signed::signed_tx;
-pub use unsigned::unsigned_payload;
+pub use signed::{signed_eth_transfer_tx, signed_nox_approve_tx};
+pub use unsigned::{unsigned_eth_transfer_payload, unsigned_nox_approve_payload};

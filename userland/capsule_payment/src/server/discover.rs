@@ -21,7 +21,8 @@ use super::consts::KEYRING_SERVICE;
 pub fn keyring_port() -> Option<u32> {
     let mut port: u32 = 0;
     let mut pid: u32 = 0;
-    let rc = mk_service_lookup(KEYRING_SERVICE.as_ptr(), KEYRING_SERVICE.len(), &mut port, &mut pid);
+    let rc =
+        mk_service_lookup(KEYRING_SERVICE.as_ptr(), KEYRING_SERVICE.len(), &mut port, &mut pid);
     if rc != 0 {
         return None;
     }

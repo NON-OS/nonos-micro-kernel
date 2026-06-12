@@ -24,7 +24,8 @@ pub fn zero_frame(addr: PhysAddr) {
         return;
     }
     let va = DIRECTMAP_BASE.wrapping_add(pa);
-    if va < DIRECTMAP_BASE || va.wrapping_add(FRAME_SIZE) > DIRECTMAP_BASE.wrapping_add(DIRECTMAP_SIZE)
+    if va < DIRECTMAP_BASE
+        || va.wrapping_add(FRAME_SIZE) > DIRECTMAP_BASE.wrapping_add(DIRECTMAP_SIZE)
     {
         return;
     }

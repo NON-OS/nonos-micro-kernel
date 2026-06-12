@@ -21,12 +21,30 @@ use crate::memory::addr::VirtAddr;
 
 #[test]
 fn test_build_rejects_invalid_alignment() {
-    let ph = ProgramHeader { p_type: phdr_type::PT_LOAD, p_flags: 0, p_offset: 0, p_vaddr: 0, p_paddr: 0, p_filesz: 0, p_memsz: 0, p_align: 24 };
+    let ph = ProgramHeader {
+        p_type: phdr_type::PT_LOAD,
+        p_flags: 0,
+        p_offset: 0,
+        p_vaddr: 0,
+        p_paddr: 0,
+        p_filesz: 0,
+        p_memsz: 0,
+        p_align: 24,
+    };
     assert!(matches!(build(&[], &ph, VirtAddr::new(0)), Err(ElfError::AlignmentError)));
 }
 
 #[test]
 fn test_build_rejects_vaddr_offset_alignment_mismatch() {
-    let ph = ProgramHeader { p_type: phdr_type::PT_LOAD, p_flags: 0, p_offset: 0x1000, p_vaddr: 0x1800, p_paddr: 0, p_filesz: 0, p_memsz: 0, p_align: 0x1000 };
+    let ph = ProgramHeader {
+        p_type: phdr_type::PT_LOAD,
+        p_flags: 0,
+        p_offset: 0x1000,
+        p_vaddr: 0x1800,
+        p_paddr: 0,
+        p_filesz: 0,
+        p_memsz: 0,
+        p_align: 0x1000,
+    };
     assert!(matches!(build(&[], &ph, VirtAddr::new(0)), Err(ElfError::AlignmentError)));
 }

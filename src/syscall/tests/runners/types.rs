@@ -21,17 +21,41 @@ pub fn register(s: &mut TestSuite) {
     s.add(TestCase::new("types::syscall_result_success", t::test_syscall_result_success));
     s.add(TestCase::new("types::syscall_result_success_zero", t::test_syscall_result_success_zero));
     s.add(TestCase::new("types::syscall_result_success_max", t::test_syscall_result_success_max));
-    s.add(TestCase::new("types::syscall_result_success_audited", t::test_syscall_result_success_audited));
+    s.add(TestCase::new(
+        "types::syscall_result_success_audited",
+        t::test_syscall_result_success_audited,
+    ));
     s.add(TestCase::new("types::syscall_result_error", t::test_syscall_result_error));
-    s.add(TestCase::new("types::syscall_result_error_value_is_negated", t::test_syscall_result_error_value_is_negated));
-    s.add(TestCase::new("types::syscall_result_is_error_positive", t::test_syscall_result_is_error_positive));
-    s.add(TestCase::new("types::syscall_result_is_error_zero", t::test_syscall_result_is_error_zero));
-    s.add(TestCase::new("types::syscall_result_is_error_negative", t::test_syscall_result_is_error_negative));
-    s.add(TestCase::new("types::syscall_result_errno_none_for_success", t::test_syscall_result_errno_none_for_success));
-    s.add(TestCase::new("types::syscall_result_errno_some_for_error", t::test_syscall_result_errno_some_for_error));
+    s.add(TestCase::new(
+        "types::syscall_result_error_value_is_negated",
+        t::test_syscall_result_error_value_is_negated,
+    ));
+    s.add(TestCase::new(
+        "types::syscall_result_is_error_positive",
+        t::test_syscall_result_is_error_positive,
+    ));
+    s.add(TestCase::new(
+        "types::syscall_result_is_error_zero",
+        t::test_syscall_result_is_error_zero,
+    ));
+    s.add(TestCase::new(
+        "types::syscall_result_is_error_negative",
+        t::test_syscall_result_is_error_negative,
+    ));
+    s.add(TestCase::new(
+        "types::syscall_result_errno_none_for_success",
+        t::test_syscall_result_errno_none_for_success,
+    ));
+    s.add(TestCase::new(
+        "types::syscall_result_errno_some_for_error",
+        t::test_syscall_result_errno_some_for_error,
+    ));
     s.add(TestCase::new("types::errno_helper", t::test_errno_helper));
     s.add(TestCase::new("types::errno_helper_eperm", t::test_errno_helper_eperm));
     s.add(TestCase::new("types::errno_helper_enoent", t::test_errno_helper_enoent));
-    s.add(TestCase::new("types::syscall_result_const_success", t::test_syscall_result_const_success));
+    s.add(TestCase::new(
+        "types::syscall_result_const_success",
+        t::test_syscall_result_const_success,
+    ));
     s.add(TestCase::new("types::syscall_result_const_error", t::test_syscall_result_const_error));
 }

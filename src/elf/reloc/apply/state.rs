@@ -18,8 +18,8 @@ use crate::elf::errors::ElfError;
 use crate::elf::loader::ElfImage;
 use crate::elf::types::{reloc_type, RelaEntry};
 
-use super::bounds::{ensure_target_range, resolve_resolver_addr};
 use super::super::context::RelocationContext;
+use super::bounds::{ensure_target_range, resolve_resolver_addr};
 
 #[derive(Clone, Copy)]
 pub(super) struct RelocationValues {
@@ -38,16 +38,12 @@ impl RelocationValues {
         rela: &RelaEntry,
         context: &RelocationContext,
     ) -> Result<Self, ElfError> {
-        let target_addr = image
-            .base_addr
-            .as_u64()
-            .checked_add(rela.r_offset)
-            .ok_or(ElfError::AddressOverflow)?;
+        let target_addr =
+            image.base_addr.as_u64().checked_add(rela.r_offset).ok_or(ElfError::AddressOverflow)?;
         let reloc_type = rela.reloc_type();
         ensure_target_range(image, target_addr, reloc_type)?;
-        let symbol_value = context
-            .resolve_symbol(rela.symbol_index(), image.base_addr)
-            .unwrap_or(0);
+        let symbol_value =
+            context.resolve_symbol(rela.symbol_index(), image.base_addr).unwrap_or(0);
         let resolver_addr = if reloc_type == reloc_type::R_X86_64_IRELATIVE {
             Some(resolve_resolver_addr(image, image.base_addr.as_u64(), rela.r_addend)?)
         } else {

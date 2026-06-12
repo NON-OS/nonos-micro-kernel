@@ -17,6 +17,7 @@
 pub mod class;
 pub mod data;
 pub mod dyn_tag;
+mod elf_magic;
 pub mod elf_osabi;
 pub mod elf_type;
 pub mod ident;
@@ -28,7 +29,6 @@ pub mod shdr_flags;
 pub mod shdr_type;
 pub mod sym_bind;
 pub mod sym_type;
-mod elf_magic;
 
 pub use class as elf_class;
 pub use data as elf_data;

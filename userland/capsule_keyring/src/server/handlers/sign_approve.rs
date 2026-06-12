@@ -16,7 +16,7 @@
 
 use alloc::vec::Vec;
 
-use super::super::eip1559::{signed_tx, unsigned_payload};
+use super::super::eip1559::{signed_nox_approve_tx, unsigned_nox_approve_payload};
 use super::super::field32::field32;
 use super::super::zeroize::zeroize32;
 use crate::protocol::{encode_response, Request, EACCES, EINVAL};
@@ -44,7 +44,7 @@ pub fn sign_approve(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec
     let max_fee = field32(p, 72);
     let gas = field32(p, 104);
     let amount = field32(p, 136);
-    let unsigned = unsigned_payload(&nonce, &max_priority, &max_fee, &gas, &amount);
+    let unsigned = unsigned_nox_approve_payload(&nonce, &max_priority, &max_fee, &gas, &amount);
     let mut digest = [0u8; 32];
     if nonos_libc::crypto_keccak256(unsigned.as_ptr(), unsigned.len(), digest.as_mut_ptr(), 32)
         != 32
@@ -62,6 +62,11 @@ pub fn sign_approve(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec
     let mut s = [0u8; 32];
     r.copy_from_slice(&sig[0..32]);
     s.copy_from_slice(&sig[32..64]);
-    let raw = signed_tx((&nonce, &max_priority, &max_fee, &gas, &amount), sig[64] - 27, &r, &s);
+    let raw = signed_nox_approve_tx(
+        (&nonce, &max_priority, &max_fee, &gas, &amount),
+        sig[64] - 27,
+        &r,
+        &s,
+    );
     encode_response(req.seq, 0, &raw)
 }

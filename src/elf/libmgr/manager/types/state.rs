@@ -16,5 +16,10 @@
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LibraryState {
-    Loading, Relocating, Initializing, Ready, Finalizing, Unloaded,
+    Loading,
+    Relocating,
+    Initializing,
+    Ready,
+    Finalizing,
+    Unloaded,
 }

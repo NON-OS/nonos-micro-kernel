@@ -23,7 +23,9 @@ use super::{
 };
 
 impl InitArrayRunner {
-    pub fn run_all(&self) -> ElfResult<usize> { Ok(self.run_preinit_array()? + self.run_init_fn()? + self.run_init_array()?) }
+    pub fn run_all(&self) -> ElfResult<usize> {
+        Ok(self.run_preinit_array()? + self.run_init_fn()? + self.run_init_array()?)
+    }
     pub fn run_preinit_array(&self) -> ElfResult<usize> {
         let Some(info) = self.preinit_array.as_ref() else { return Ok(0) };
         validate_preinit_array(info)?;
@@ -42,5 +44,9 @@ impl InitArrayRunner {
         unsafe { invoke_init_array(info) };
         Ok(info.count())
     }
-    pub fn total_init_count(&self) -> usize { self.preinit_array.map(|info| info.count()).unwrap_or(0) + usize::from(self.init_fn.is_some()) + self.init_array.map(|info| info.count()).unwrap_or(0) }
+    pub fn total_init_count(&self) -> usize {
+        self.preinit_array.map(|info| info.count()).unwrap_or(0)
+            + usize::from(self.init_fn.is_some())
+            + self.init_array.map(|info| info.count()).unwrap_or(0)
+    }
 }

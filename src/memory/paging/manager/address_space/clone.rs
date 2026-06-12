@@ -40,10 +40,8 @@ impl PagingManager {
         for entry in page_table.iter_mut() {
             *entry = 0;
         }
-        let kernel_space = self
-            .address_spaces
-            .get(&KERNEL_ASID)
-            .ok_or(PagingError::NoActivePageTable)?;
+        let kernel_space =
+            self.address_spaces.get(&KERNEL_ASID).ok_or(PagingError::NoActivePageTable)?;
         let kernel_table_va =
             phys_to_virt_checked(kernel_space.cr3_value).ok_or(PagingError::NoActivePageTable)?;
         let kernel_table =

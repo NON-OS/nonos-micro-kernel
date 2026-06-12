@@ -20,7 +20,9 @@ use alloc::vec;
 
 use crate::process::current_pid;
 use crate::services::registry::{register_endpoint, RegError};
-use crate::syscall::microkernel::errnos::{ERRNO_BUSY, ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOMEM, ERRNO_PERM};
+use crate::syscall::microkernel::errnos::{
+    ERRNO_BUSY, ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOMEM, ERRNO_PERM,
+};
 
 const NAME_MAX: usize = 64;
 

@@ -36,7 +36,8 @@ impl SymbolLookup {
                     continue;
                 };
                 best_distance = target - sym_addr;
-                best_match = Some((self.name_or_empty(name_offset), VirtAddr::new(sym_addr), sym.st_size));
+                best_match =
+                    Some((self.name_or_empty(name_offset), VirtAddr::new(sym_addr), sym.st_size));
             }
         }
         best_match

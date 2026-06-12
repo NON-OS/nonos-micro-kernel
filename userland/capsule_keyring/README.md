@@ -63,6 +63,10 @@ return protocol errors. The kernel never mirrors key bytes for recovery.
 
 - Owns key records in a capsule-local store.
 - Supports store, retrieve, metadata, delete, count, lock, and unlock flows.
+- Supports Ethereum wallet import, generation, address derivation, NOX receipt
+  signing, NOX ERC-20 approval signing, and native ETH EIP-1559 transfer signing.
+- Lists wallet rails so UI and policy can distinguish enabled NONOS Wallet rails
+  from reserved external wallet tracks.
 - Is embedded, spawned, and smoke-tested through the kernel mirror.
 - Keeps key storage out of kernel memory.
 
@@ -71,6 +75,36 @@ return protocol errors. The kernel never mirrors key bytes for recovery.
 The keyring protocol carries operation id, caller-owned key handle or label,
 metadata fields, and optional key bytes. Replies carry status, metadata, or key
 bytes depending on the operation. Layout ownership lives in `src/protocol`.
+
+Wallet operations:
+
+| Operation | Input | Output |
+|---|---|---|
+| `OP_WALLET_IMPORT` | caller pid, 32-byte secp256k1 secret | wallet id |
+| `OP_WALLET_GENERATE` | caller pid | wallet id |
+| `OP_WALLET_ADDRESS` | caller pid, wallet id | Ethereum address |
+| `OP_SIGN_NOX_RECEIPT` | caller pid, wallet id, receipt fields | recoverable EIP-712 signature |
+| `OP_SIGN_NOX_APPROVE` | caller pid, wallet id, nonce/fee/gas/amount | raw signed EIP-1559 NOX approval transaction |
+| `OP_SIGN_ETH_TRANSFER` | caller pid, wallet id, recipient, nonce/fee/gas/value | raw signed EIP-1559 ETH transfer transaction |
+| `OP_LIST_WALLET_RAILS` | none | supported and reserved wallet rails |
+
+`OP_LIST_WALLET_RAILS` returns:
+
+```text
+u32 count
+repeat count:
+  u8  symbol_len
+  u8  family
+  u16 status
+  u32 flags
+  u64 chain_id
+  u8  contract_address[20]
+  u8  symbol[symbol_len]
+```
+
+Enabled rails are ETH and NOX. PR is config-required. SAL is a separate
+Salvium wallet track and is reported reserved until the native Salvium wallet
+core capsule is ported and tested.
 
 ## State ownership
 

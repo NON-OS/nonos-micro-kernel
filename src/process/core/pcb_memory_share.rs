@@ -50,8 +50,7 @@ impl ProcessControlBlock {
             end: VirtAddr::new(va.as_u64() + length as u64),
             flags: map_flags,
         });
-        mem.resident_pages
-            .fetch_add(pages as u64, Ordering::Relaxed);
+        mem.resident_pages.fetch_add(pages as u64, Ordering::Relaxed);
         mem.next_va = align_up(va.as_u64() + length as u64, 0x1000);
         Ok(va)
     }

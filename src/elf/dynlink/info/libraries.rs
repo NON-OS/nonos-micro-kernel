@@ -19,8 +19,16 @@ use alloc::string::String;
 use super::state::DynLinkInfo;
 
 impl DynLinkInfo {
-    pub fn add_needed(&mut self, name: String) { self.needed_libraries.push(name); }
-    pub fn needs_libraries(&self) -> bool { !self.needed_libraries.is_empty() }
-    pub fn library_count(&self) -> usize { self.needed_libraries.len() }
-    pub fn needs_library(&self, name: &str) -> bool { self.needed_libraries.iter().any(|library| library == name) }
+    pub fn add_needed(&mut self, name: String) {
+        self.needed_libraries.push(name);
+    }
+    pub fn needs_libraries(&self) -> bool {
+        !self.needed_libraries.is_empty()
+    }
+    pub fn library_count(&self) -> usize {
+        self.needed_libraries.len()
+    }
+    pub fn needs_library(&self, name: &str) -> bool {
+        self.needed_libraries.iter().any(|library| library == name)
+    }
 }

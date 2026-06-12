@@ -32,7 +32,12 @@ pub struct GnuHashTable {
 }
 
 impl GnuHashTable {
-    pub fn new(hash_addr: VirtAddr, symtab: VirtAddr, strtab: VirtAddr, strtab_size: usize) -> ElfResult<Self> {
+    pub fn new(
+        hash_addr: VirtAddr,
+        symtab: VirtAddr,
+        strtab: VirtAddr,
+        strtab_size: usize,
+    ) -> ElfResult<Self> {
         let header = unsafe { ptr::read(hash_addr.as_u64() as *const GnuHashHeader) };
         if header.nbuckets == 0 {
             return Err(ElfError::InvalidHash);

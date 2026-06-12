@@ -42,7 +42,8 @@ pub fn poll_events() -> Result<Vec<KeyEvent>, DriverPs2Error> {
     if resp.body.len() < 4 {
         return Err(DriverPs2Error::ProtocolMismatch);
     }
-    let count = u32::from_le_bytes([resp.body[0], resp.body[1], resp.body[2], resp.body[3]]) as usize;
+    let count =
+        u32::from_le_bytes([resp.body[0], resp.body[1], resp.body[2], resp.body[3]]) as usize;
     let needed = 4 + count * EVENT_WIRE_LEN;
     if resp.body.len() < needed {
         return Err(DriverPs2Error::ProtocolMismatch);
@@ -50,10 +51,7 @@ pub fn poll_events() -> Result<Vec<KeyEvent>, DriverPs2Error> {
     let mut out = Vec::with_capacity(count);
     let mut off = 4;
     for _ in 0..count {
-        out.push(KeyEvent {
-            scancode: resp.body[off],
-            flags: resp.body[off + 1],
-        });
+        out.push(KeyEvent { scancode: resp.body[off], flags: resp.body[off + 1] });
         off += EVENT_WIRE_LEN;
     }
     Ok(out)

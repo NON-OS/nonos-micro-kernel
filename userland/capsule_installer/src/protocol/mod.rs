@@ -20,4 +20,6 @@ mod types;
 
 pub use decode::decode_request;
 pub use encode::encode_response;
-pub use types::{Request, EAGAIN, EINVAL, KERNEL_REPLY_ENDPOINT, OP_HEALTHCHECK, OP_INSTALL};
+pub use types::{
+    Request, EAGAIN, EINVAL, KERNEL_REPLY_ENDPOINT, OP_HEALTHCHECK, OP_INSTALL, OP_LOAD_FROM_STORE,
+};

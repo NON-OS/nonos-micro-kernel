@@ -33,9 +33,7 @@ pub(crate) fn init_loop() -> ! {
             last_tick = now;
         }
         #[cfg(feature = "microkernel-setup-wizard")]
-        if !desktop_started
-            && !crate::userspace::capsule_setup_wizard::shared_state().is_alive()
-        {
+        if !desktop_started && !crate::userspace::capsule_setup_wizard::shared_state().is_alive() {
             super::super::spawn_plan::spawn_post_wizard();
             desktop_started = true;
         }

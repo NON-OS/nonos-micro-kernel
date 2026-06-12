@@ -3,12 +3,12 @@
 
 use core::mem::size_of;
 
+use super::super::test_result::TestResult;
 use crate::boot::handoff::api::validate_security;
 use crate::boot::handoff::types::{
     flags, pixel_format, BootHandoffV1, FramebufferInfo, MemoryMapEntry,
 };
 use crate::memory::layout::constants::KERNEL_BASE;
-use super::super::test_result::TestResult;
 
 pub(super) const VALID_ENTRY: u64 = KERNEL_BASE + 0x1000;
 

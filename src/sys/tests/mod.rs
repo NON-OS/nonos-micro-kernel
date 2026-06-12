@@ -372,7 +372,6 @@ pub fn run_all() -> bool {
         serial_tests::test_serial_related_ports,
     ));
 
-
     // timer_tests (43 tests)
     suite.add(TestCase::new("timer::rdtsc_returns_value", timer_tests::test_rdtsc_returns_value));
     suite.add(TestCase::new("timer::rdtsc_increases", timer_tests::test_rdtsc_increases));

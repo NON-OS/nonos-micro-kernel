@@ -23,10 +23,7 @@ pub fn teardown(pid: Pid, exit_code: i32, _by_signal: bool) {
         Some(p) => p,
         None => return,
     };
-    if matches!(
-        *pcb.state.lock(),
-        ProcessState::Zombie(_) | ProcessState::Terminated(_)
-    ) {
+    if matches!(*pcb.state.lock(), ProcessState::Zombie(_) | ProcessState::Terminated(_)) {
         return;
     }
 

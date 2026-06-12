@@ -39,11 +39,9 @@ pub mod capsule_driver_usb_msc;
 pub mod capsule_file_manager;
 pub mod capsule_hello;
 pub mod capsule_image_codec;
-pub mod capsule_input_proof;
 #[cfg(feature = "nonos-capsule-input-probe")]
 pub mod capsule_input_probe;
-#[cfg(feature = "nonos-capsule-setup-wizard")]
-pub mod capsule_setup_wizard;
+pub mod capsule_input_proof;
 pub mod capsule_input_router;
 pub mod capsule_login;
 pub mod capsule_net_dhcp;
@@ -58,10 +56,13 @@ pub mod capsule_policy;
 pub mod capsule_process_manager;
 pub mod capsule_proof_io;
 pub mod capsule_settings;
+#[cfg(feature = "nonos-capsule-setup-wizard")]
+pub mod capsule_setup_wizard;
 pub mod capsule_snake;
 pub mod capsule_terminal;
 pub mod capsule_text_editor;
 pub mod capsule_toolkit;
+pub mod capsule_wallet_nonos;
 pub mod capsule_wallpaper;
 pub mod capsule_wallpaper_catalog;
 pub mod capsule_wm;

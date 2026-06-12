@@ -17,7 +17,13 @@
 use super::state::RelaEntry;
 
 impl RelaEntry {
-    pub fn reloc_type(&self) -> u32 { (self.r_info & 0xFFFF_FFFF) as u32 }
-    pub fn symbol_index(&self) -> u32 { (self.r_info >> 32) as u32 }
-    pub fn make_info(sym: u32, typ: u32) -> u64 { ((sym as u64) << 32) | (typ as u64) }
+    pub fn reloc_type(&self) -> u32 {
+        (self.r_info & 0xFFFF_FFFF) as u32
+    }
+    pub fn symbol_index(&self) -> u32 {
+        (self.r_info >> 32) as u32
+    }
+    pub fn make_info(sym: u32, typ: u32) -> u64 {
+        ((sym as u64) << 32) | (typ as u64)
+    }
 }

@@ -38,12 +38,25 @@ pub struct DynLinkInfo {
 impl DynLinkInfo {
     pub fn new() -> Self {
         Self {
-            needed_libraries: Vec::new(), symtab: None, strtab: None, strtab_size: 0, sym_count: 0, rela_table: None,
-            rela_size: 0, plt_relocations: None, plt_rela_size: 0, init: None, fini: None, init_array: None, fini_array: None,
+            needed_libraries: Vec::new(),
+            symtab: None,
+            strtab: None,
+            strtab_size: 0,
+            sym_count: 0,
+            rela_table: None,
+            rela_size: 0,
+            plt_relocations: None,
+            plt_rela_size: 0,
+            init: None,
+            fini: None,
+            init_array: None,
+            fini_array: None,
         }
     }
 }
 
 impl Default for DynLinkInfo {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

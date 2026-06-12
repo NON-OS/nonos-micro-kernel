@@ -27,9 +27,7 @@ use super::out::IrqPollOut;
 static IRQ_POLL_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn trace(label: &[u8], pid: u32) {
-    if !matches!(pid, 7 | 8 | 0x1c)
-        || IRQ_POLL_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 48
-    {
+    if !matches!(pid, 7 | 8 | 0x1c) || IRQ_POLL_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 48 {
         return;
     }
     crate::sys::serial::print(b"[IRQ-POLL] ");

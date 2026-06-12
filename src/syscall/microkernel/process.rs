@@ -16,7 +16,7 @@
 
 extern crate alloc;
 
-use super::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOMEM};
+use super::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOMEM, ERRNO_PERM};
 use crate::process::core::{create_process, Priority, ProcessState};
 use crate::process::current_pid;
 use core::sync::atomic::{AtomicU32, Ordering};
@@ -78,4 +78,11 @@ pub fn sys_pid_alive(pid: u32) -> i64 {
 pub fn sys_yield() -> i64 {
     crate::sched::yield_now();
     0
+}
+
+pub fn sys_getpid() -> i64 {
+    match current_pid() {
+        Some(pid) => pid as i64,
+        None => ERRNO_PERM,
+    }
 }

@@ -25,6 +25,7 @@ mod handlers;
 mod record;
 mod runner;
 mod sign_call;
+mod token;
 mod u64_word;
 mod word32;
 

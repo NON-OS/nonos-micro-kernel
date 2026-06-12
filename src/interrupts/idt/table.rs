@@ -41,8 +41,7 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
     // onto the kernel per-CPU base so its terminate path does not fault on
     // gs-relative state. Address is a stable naked fn in kernel text.
     unsafe {
-        idt.divide_error
-            .set_handler_addr(VirtAddr::new(isr::de_trampoline as *const () as u64));
+        idt.divide_error.set_handler_addr(VirtAddr::new(isr::de_trampoline as *const () as u64));
     }
     // SAFETY: #DB is CPL=3-reachable; the naked `db_trampoline` swapgs-es
     // onto the kernel per-CPU base, then iretqs back (the handler resumes).
@@ -68,10 +67,8 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
     // onto the kernel per-CPU base so the handler does not fault on gs-relative
     // state. Addresses are stable naked fns in kernel text.
     unsafe {
-        idt.breakpoint
-            .set_handler_addr(VirtAddr::new(isr::bp_trampoline as *const () as u64));
-        idt.overflow
-            .set_handler_addr(VirtAddr::new(isr::of_trampoline as *const () as u64));
+        idt.breakpoint.set_handler_addr(VirtAddr::new(isr::bp_trampoline as *const () as u64));
+        idt.overflow.set_handler_addr(VirtAddr::new(isr::of_trampoline as *const () as u64));
     }
     // SAFETY: #BR and #UD are CPL=3-reachable; their naked trampolines
     // swapgs onto the kernel per-CPU base so the terminate path does not
@@ -79,8 +76,7 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
     unsafe {
         idt.bound_range_exceeded
             .set_handler_addr(VirtAddr::new(isr::br_trampoline as *const () as u64));
-        idt.invalid_opcode
-            .set_handler_addr(VirtAddr::new(isr::ud_trampoline as *const () as u64));
+        idt.invalid_opcode.set_handler_addr(VirtAddr::new(isr::ud_trampoline as *const () as u64));
     }
     idt.device_not_available.set_handler_fn(isr::isr_device_na);
 
@@ -124,8 +120,7 @@ fn configure_exceptions(idt: &mut InterruptDescriptorTable) {
     // the kernel per-CPU base (and discards the CPU-pushed error code before
     // iretq). Address is a stable naked fn in kernel text.
     unsafe {
-        idt.alignment_check
-            .set_handler_addr(VirtAddr::new(isr::ac_trampoline as *const () as u64));
+        idt.alignment_check.set_handler_addr(VirtAddr::new(isr::ac_trampoline as *const () as u64));
     }
 
     // SAFETY: Machine check uses dedicated IST stack for critical hardware errors

@@ -44,8 +44,10 @@ pub(super) fn build(
     let pages = total_bytes.checked_add(PAGE - 1).ok_or(ElfError::AddressOverflow)? / PAGE;
     let span = (pages as u64).checked_mul(PAGE as u64).ok_or(ElfError::AddressOverflow)?;
     let aligned_off = header.p_vaddr.checked_sub(intra as u64).ok_or(ElfError::AddressOverflow)?;
-    let seg_start = base_addr.as_u64().checked_add(header.p_vaddr).ok_or(ElfError::AddressOverflow)?;
-    let aligned_start = base_addr.as_u64().checked_add(aligned_off).ok_or(ElfError::AddressOverflow)?;
+    let seg_start =
+        base_addr.as_u64().checked_add(header.p_vaddr).ok_or(ElfError::AddressOverflow)?;
+    let aligned_start =
+        base_addr.as_u64().checked_add(aligned_off).ok_or(ElfError::AddressOverflow)?;
     let span_end = aligned_start.checked_add(span).ok_or(ElfError::AddressOverflow)?;
     if seg_start > USER_VA_MAX || span_end == 0 || span_end > USER_VA_MAX {
         return Err(ElfError::InvalidAddress);

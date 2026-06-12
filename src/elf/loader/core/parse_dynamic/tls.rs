@@ -23,11 +23,17 @@ pub(in crate::elf::loader::core) fn parse_tls_section(
     let template_size = usize::try_from(ph.p_filesz).map_err(|_| ElfError::TlsSectionError)?;
     let memory_size = usize::try_from(ph.p_memsz).map_err(|_| ElfError::TlsSectionError)?;
     let alignment = usize::try_from(ph.p_align).map_err(|_| ElfError::AlignmentError)?;
-    let template_addr = base_addr.as_u64().checked_add(ph.p_vaddr).ok_or(ElfError::AddressOverflow)?;
-    if memory_size < template_size { return Err(ElfError::TlsSectionError); }
-    if ph.p_align > 1 && !ph.p_align.is_power_of_two() { return Err(ElfError::AlignmentError); }
+    let template_addr =
+        base_addr.as_u64().checked_add(ph.p_vaddr).ok_or(ElfError::AddressOverflow)?;
+    if memory_size < template_size {
+        return Err(ElfError::TlsSectionError);
+    }
+    if ph.p_align > 1 && !ph.p_align.is_power_of_two() {
+        return Err(ElfError::AlignmentError);
+    }
     let effective_alignment = alignment.max(1).max(DEFAULT_TLS_ALIGNMENT);
-    let alloc_size = memory_size.checked_add(effective_alignment - 1).ok_or(ElfError::TlsSectionError)?;
+    let alloc_size =
+        memory_size.checked_add(effective_alignment - 1).ok_or(ElfError::TlsSectionError)?;
     let alloc_size = alloc_size & !(effective_alignment - 1);
     template_addr.checked_add(template_size as u64).ok_or(ElfError::AddressOverflow)?;
     alloc_size.checked_add(TCB_SIZE).ok_or(ElfError::TlsSectionError)?;

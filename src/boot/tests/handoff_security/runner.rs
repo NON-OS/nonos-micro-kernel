@@ -13,10 +13,7 @@ const TESTS: &[Test] = &[
         "rejects_mmap_entry_size_mismatch",
         memory_map::test_validate_security_rejects_mmap_entry_size_mismatch,
     ),
-    (
-        "skips_mmap_when_ptr_zero",
-        memory_map::test_validate_security_skips_mmap_when_ptr_zero,
-    ),
+    ("skips_mmap_when_ptr_zero", memory_map::test_validate_security_skips_mmap_when_ptr_zero),
     ("rejects_fb_zero_width", framebuffer::test_validate_security_rejects_fb_zero_width),
     ("rejects_fb_zero_height", framebuffer::test_validate_security_rejects_fb_zero_height),
     ("rejects_fb_zero_stride", framebuffer::test_validate_security_rejects_fb_zero_stride),
@@ -28,10 +25,7 @@ const TESTS: &[Test] = &[
         "rejects_fb_area_exceeds_size",
         framebuffer::test_validate_security_rejects_fb_area_exceeds_size,
     ),
-    (
-        "skips_fb_when_unavailable",
-        framebuffer::test_validate_security_skips_fb_when_unavailable,
-    ),
+    ("skips_fb_when_unavailable", framebuffer::test_validate_security_skips_fb_when_unavailable),
     (
         "rejects_entry_point_below_base",
         entry_point::test_validate_security_rejects_entry_point_below_base,

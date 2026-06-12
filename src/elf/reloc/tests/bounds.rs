@@ -25,15 +25,30 @@ use x86_64::structures::paging::PageTableFlags;
 
 #[test]
 fn test_relocation_rejects_target_outside_loaded_segments() {
-    let image = image_with(LoadedSegment { vaddr: VirtAddr::new(0x401000), size: 0x100, flags: PageTableFlags::PRESENT | PageTableFlags::NO_EXECUTE, segment_type: 1 });
-    let rela = [RelaEntry { r_offset: 0x800, r_info: reloc_type::R_X86_64_RELATIVE as u64, r_addend: 0 }];
+    let image = image_with(LoadedSegment {
+        vaddr: VirtAddr::new(0x401000),
+        size: 0x100,
+        flags: PageTableFlags::PRESENT | PageTableFlags::NO_EXECUTE,
+        segment_type: 1,
+    });
+    let rela =
+        [RelaEntry { r_offset: 0x800, r_info: reloc_type::R_X86_64_RELATIVE as u64, r_addend: 0 }];
     assert!(matches!(run(&image, &rela), Err(ElfError::RelocationFailed)));
 }
 
 #[test]
 fn test_irelative_rejects_resolver_outside_executable_segment() {
-    let image = image_with(LoadedSegment { vaddr: VirtAddr::new(0x400000), size: 8, flags: PageTableFlags::PRESENT | PageTableFlags::NO_EXECUTE, segment_type: 1 });
-    let rela = [RelaEntry { r_offset: 0, r_info: reloc_type::R_X86_64_IRELATIVE as u64, r_addend: 0x2000 }];
+    let image = image_with(LoadedSegment {
+        vaddr: VirtAddr::new(0x400000),
+        size: 8,
+        flags: PageTableFlags::PRESENT | PageTableFlags::NO_EXECUTE,
+        segment_type: 1,
+    });
+    let rela = [RelaEntry {
+        r_offset: 0,
+        r_info: reloc_type::R_X86_64_IRELATIVE as u64,
+        r_addend: 0x2000,
+    }];
     assert!(matches!(run(&image, &rela), Err(ElfError::RelocationFailed)));
 }
 

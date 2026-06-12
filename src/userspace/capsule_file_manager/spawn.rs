@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    FILE_MANAGER_ELF, FILE_MANAGER_MANIFEST_BYTES, FILE_MANAGER_ATTESTATION_BYTES, FILE_MANAGER_NONOS_ID_CERT_BYTES,
+    FILE_MANAGER_ATTESTATION_BYTES, FILE_MANAGER_ELF, FILE_MANAGER_MANIFEST_BYTES,
+    FILE_MANAGER_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;

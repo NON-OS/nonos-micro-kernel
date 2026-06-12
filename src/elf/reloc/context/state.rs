@@ -30,6 +30,12 @@ pub struct RelocationContext<'a> {
 
 impl<'a> RelocationContext<'a> {
     pub fn empty(cache: &'a BTreeMap<String, VirtAddr>) -> Self {
-        Self { symbol_table: None, string_table: None, string_table_size: 0, got_base: None, symbol_cache: cache }
+        Self {
+            symbol_table: None,
+            string_table: None,
+            string_table_size: 0,
+            got_base: None,
+            symbol_cache: cache,
+        }
     }
 }

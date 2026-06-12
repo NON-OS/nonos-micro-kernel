@@ -152,12 +152,7 @@ pub(super) fn arm_waiter(slot_idx: usize, pid: u32) {
 }
 
 pub(super) fn disarm_waiter(slot_idx: usize, pid: u32) {
-    let _ = SLOTS[slot_idx].waiter.compare_exchange(
-        pid,
-        0,
-        Ordering::AcqRel,
-        Ordering::Acquire,
-    );
+    let _ = SLOTS[slot_idx].waiter.compare_exchange(pid, 0, Ordering::AcqRel, Ordering::Acquire);
 }
 
 pub(super) fn read_counters(slot_idx: usize) -> (u64, u64) {

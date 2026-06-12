@@ -15,17 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::kernel_core::surface_registry::table::SLOTS;
-use crate::kernel_core::surface_registry::types::{
-    decode_handle, RegistryError, SurfaceHandle,
-};
+use crate::kernel_core::surface_registry::types::{decode_handle, RegistryError, SurfaceHandle};
 
-pub fn share_surface(owner_pid: u32, handle: SurfaceHandle) -> Result<SurfaceHandle, RegistryError> {
+pub fn share_surface(
+    owner_pid: u32,
+    handle: SurfaceHandle,
+) -> Result<SurfaceHandle, RegistryError> {
     let (idx, epoch) = decode_handle(handle);
     let mut slots = SLOTS.lock();
-    let slot = slots
-        .get_mut(idx as usize)
-        .and_then(|s| s.as_mut())
-        .ok_or(RegistryError::BadHandle)?;
+    let slot =
+        slots.get_mut(idx as usize).and_then(|s| s.as_mut()).ok_or(RegistryError::BadHandle)?;
     if slot.epoch != epoch {
         return Err(RegistryError::BadHandle);
     }

@@ -1,13 +1,16 @@
 // NONOS Operating System
 // Copyright (C) 2026 NONOS Contributors
 
+use super::super::test_result::TestResult;
 use crate::boot::handoff::api::{validate_security, FbGeometryReason, HandoffError};
 use crate::boot::handoff::types::flags;
-use super::super::test_result::TestResult;
 
 use super::helpers::{baseline, baseline_with_fb};
 
-fn expect_geometry(h: &crate::boot::handoff::types::BootHandoffV1, want: FbGeometryReason) -> TestResult {
+fn expect_geometry(
+    h: &crate::boot::handoff::types::BootHandoffV1,
+    want: FbGeometryReason,
+) -> TestResult {
     match validate_security(h) {
         Err(HandoffError::FramebufferGeometry { reason }) if reason == want => TestResult::Pass,
         _ => TestResult::Fail,

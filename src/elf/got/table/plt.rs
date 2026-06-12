@@ -20,7 +20,9 @@ use super::{constants::PLT_ENTRY_SIZE, state::GlobalOffsetTable};
 
 impl GlobalOffsetTable {
     pub fn plt_entry_address(&self, plt_index: usize) -> Option<VirtAddr> {
-        self.plt_base.filter(|_| plt_index < self.plt_entry_count).map(|base| VirtAddr::new(base.as_u64() + (plt_index * PLT_ENTRY_SIZE) as u64))
+        self.plt_base
+            .filter(|_| plt_index < self.plt_entry_count)
+            .map(|base| VirtAddr::new(base.as_u64() + (plt_index * PLT_ENTRY_SIZE) as u64))
     }
 
     pub fn got_entry_for_plt(&self, plt_index: usize) -> Option<usize> {

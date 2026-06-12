@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_time_millis;
-
-use super::wm_notify_label::resolve_label;
+use super::refresh_taskbar::refresh_taskbar;
+use super::wm_notify_app_index::resolve_app_index;
+use super::wm_notify_toast::toast_window_event;
 use crate::protocol::{read_u16, read_u32};
-use crate::state::{Context, NotifyLevel, TASKBAR_WINDOW_ID};
+use crate::state::{set_taskbar_open, Context, TASKBAR_WINDOW_ID};
 use crate::wm_client;
 
 const OPENED: u32 = 0;
@@ -45,21 +45,14 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     if window_id == TASKBAR_WINDOW_ID {
         return true;
     }
-    if event_kind == OPENED {
+    let opened = event_kind == OPENED;
+    if opened {
         let _ = wm_client::window_raise(ctx.wm_port, ctx.issue_request_id(), TASKBAR_WINDOW_ID);
     }
-    toast_window_event(ctx, event_kind, owner_pid);
+    if let Some(index) = resolve_app_index(owner_pid) {
+        set_taskbar_open(&mut ctx.taskbar, index, opened);
+        refresh_taskbar(ctx);
+    }
+    toast_window_event(ctx, opened, owner_pid);
     true
-}
-
-fn toast_window_event(ctx: &mut Context, event_kind: u32, owner_pid: u32) {
-    let Some(label) = resolve_label(owner_pid) else {
-        return;
-    };
-    let verb: &[u8] = if event_kind == OPENED { b" opened" } else { b" closed" };
-    let mut text = [0u8; 48];
-    let n = label.len().min(40);
-    text[..n].copy_from_slice(&label[..n]);
-    text[n..n + verb.len()].copy_from_slice(verb);
-    ctx.toasts.push(&text[..n + verb.len()], NotifyLevel::Info, mk_time_millis());
 }

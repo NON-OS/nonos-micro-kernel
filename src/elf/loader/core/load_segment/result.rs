@@ -29,10 +29,5 @@ pub(super) fn loaded_segment(plan: &SegmentPlan, header: &ProgramHeader) -> Load
     if !header.is_executable() {
         flags |= PageTableFlags::NO_EXECUTE;
     }
-    LoadedSegment {
-        vaddr: plan.seg_va,
-        size: plan.seg_size,
-        flags,
-        segment_type: header.p_type,
-    }
+    LoadedSegment { vaddr: plan.seg_va, size: plan.seg_size, flags, segment_type: header.p_type }
 }

@@ -33,6 +33,12 @@ pub struct GlobalOffsetTable {
 impl GlobalOffsetTable {
     pub fn new(base: VirtAddr, size: usize) -> Self {
         let entry_count = size / GOT_ENTRY_SIZE;
-        Self { base, entry_count, entries: Vec::with_capacity(entry_count), plt_base: None, plt_entry_count: 0 }
+        Self {
+            base,
+            entry_count,
+            entries: Vec::with_capacity(entry_count),
+            plt_base: None,
+            plt_entry_count: 0,
+        }
     }
 }

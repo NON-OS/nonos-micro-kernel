@@ -32,9 +32,27 @@ fn test_duplicate_tls_segment_is_rejected() {
 }
 
 fn dynamic_phdr() -> ProgramHeader {
-    ProgramHeader { p_type: phdr_type::PT_DYNAMIC, p_flags: 0, p_offset: 0, p_vaddr: 0, p_paddr: 0, p_filesz: 0, p_memsz: 0, p_align: 8 }
+    ProgramHeader {
+        p_type: phdr_type::PT_DYNAMIC,
+        p_flags: 0,
+        p_offset: 0,
+        p_vaddr: 0,
+        p_paddr: 0,
+        p_filesz: 0,
+        p_memsz: 0,
+        p_align: 8,
+    }
 }
 
 fn tls_phdr() -> ProgramHeader {
-    ProgramHeader { p_type: phdr_type::PT_TLS, p_flags: 0, p_offset: 0, p_vaddr: 0, p_paddr: 0, p_filesz: 0, p_memsz: 0, p_align: 8 }
+    ProgramHeader {
+        p_type: phdr_type::PT_TLS,
+        p_flags: 0,
+        p_offset: 0,
+        p_vaddr: 0,
+        p_paddr: 0,
+        p_filesz: 0,
+        p_memsz: 0,
+        p_align: 8,
+    }
 }

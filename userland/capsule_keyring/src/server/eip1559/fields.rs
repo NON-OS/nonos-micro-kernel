@@ -20,22 +20,55 @@ use super::super::rlp::{rlp_list, rlp_string, rlp_uint_be};
 use super::approve_data::approve_calldata;
 use super::consts::{CHAIN_ID, NOX_TOKEN};
 
-pub fn base_fields(
+pub fn tx_fields(
+    chain_id: &[u8],
+    nonce: &[u8; 32],
+    max_priority: &[u8; 32],
+    max_fee: &[u8; 32],
+    gas: &[u8; 32],
+    to: &[u8; 20],
+    value: &[u8; 32],
+    data: &[u8],
+) -> Vec<Vec<u8>> {
+    let mut f = Vec::with_capacity(9);
+    f.push(rlp_uint_be(chain_id));
+    f.push(rlp_uint_be(nonce));
+    f.push(rlp_uint_be(max_priority));
+    f.push(rlp_uint_be(max_fee));
+    f.push(rlp_uint_be(gas));
+    f.push(rlp_string(to));
+    f.push(rlp_uint_be(value));
+    f.push(rlp_string(data));
+    f.push(rlp_list(&[]));
+    f
+}
+
+pub fn nox_approve_fields(
     nonce: &[u8; 32],
     max_priority: &[u8; 32],
     max_fee: &[u8; 32],
     gas: &[u8; 32],
     amount: &[u8; 32],
 ) -> Vec<Vec<u8>> {
-    let mut f = Vec::with_capacity(9);
-    f.push(rlp_uint_be(&[CHAIN_ID]));
-    f.push(rlp_uint_be(nonce));
-    f.push(rlp_uint_be(max_priority));
-    f.push(rlp_uint_be(max_fee));
-    f.push(rlp_uint_be(gas));
-    f.push(rlp_string(&NOX_TOKEN));
-    f.push(rlp_uint_be(&[]));
-    f.push(rlp_string(&approve_calldata(amount)));
-    f.push(rlp_list(&[]));
-    f
+    tx_fields(
+        &[CHAIN_ID],
+        nonce,
+        max_priority,
+        max_fee,
+        gas,
+        &NOX_TOKEN,
+        &[0u8; 32],
+        &approve_calldata(amount),
+    )
+}
+
+pub fn eth_transfer_fields(
+    nonce: &[u8; 32],
+    max_priority: &[u8; 32],
+    max_fee: &[u8; 32],
+    gas: &[u8; 32],
+    to: &[u8; 20],
+    value: &[u8; 32],
+) -> Vec<Vec<u8>> {
+    tx_fields(&[CHAIN_ID], nonce, max_priority, max_fee, gas, to, value, &[])
 }

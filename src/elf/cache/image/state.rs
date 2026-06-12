@@ -28,9 +28,16 @@ pub struct ImageCache {
 }
 
 impl ImageCache {
-    pub fn new() -> Self { Self::with_capacity(256) }
+    pub fn new() -> Self {
+        Self::with_capacity(256)
+    }
     pub fn with_capacity(max_entries: usize) -> Self {
-        Self { images: BTreeMap::new(), name_index: BTreeMap::new(), addr_index: BTreeMap::new(), max_entries }
+        Self {
+            images: BTreeMap::new(),
+            name_index: BTreeMap::new(),
+            addr_index: BTreeMap::new(),
+            max_entries,
+        }
     }
 
     pub fn clear(&mut self) {
@@ -41,5 +48,7 @@ impl ImageCache {
 }
 
 impl Default for ImageCache {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

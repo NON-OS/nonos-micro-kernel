@@ -20,6 +20,4 @@ mod ops;
 
 pub(super) use codec::{decode_response, encode_request};
 pub(super) use header::{MAX_RW_PAYLOAD_BYTES, SECTOR_SIZE};
-pub(super) use ops::{
-    OP_CAPACITY, OP_FLUSH, OP_HEALTHCHECK, OP_READ_BLOCKS, OP_WRITE_BLOCKS,
-};
+pub(super) use ops::{OP_CAPACITY, OP_FLUSH, OP_HEALTHCHECK, OP_READ_BLOCKS, OP_WRITE_BLOCKS};

@@ -17,7 +17,9 @@
 use super::super::AslrManager;
 
 #[test]
-fn test_random_offset_zero_max() { assert_eq!(AslrManager::new().random_offset(0), 0); }
+fn test_random_offset_zero_max() {
+    assert_eq!(AslrManager::new().random_offset(0), 0);
+}
 
 #[test]
 fn test_random_offset_within_range() {
@@ -28,13 +30,19 @@ fn test_random_offset_within_range() {
 }
 
 #[test]
-fn test_randomize_base_disabled() { assert_eq!(AslrManager::disabled().randomize_base(0x400000), 0x400000); }
+fn test_randomize_base_disabled() {
+    assert_eq!(AslrManager::disabled().randomize_base(0x400000), 0x400000);
+}
 
 #[test]
-fn test_randomize_base_page_aligned() { assert_eq!(AslrManager::new().randomize_base(0x400000) & 0xFFF, 0); }
+fn test_randomize_base_page_aligned() {
+    assert_eq!(AslrManager::new().randomize_base(0x400000) & 0xFFF, 0);
+}
 
 #[test]
-fn test_randomize_stack_disabled() { assert_eq!(AslrManager::disabled().randomize_stack(0x7FFF_FFFF_E000), 0x7FFF_FFFF_E000); }
+fn test_randomize_stack_disabled() {
+    assert_eq!(AslrManager::disabled().randomize_stack(0x7FFF_FFFF_E000), 0x7FFF_FFFF_E000);
+}
 
 #[test]
 fn test_randomize_stack_below_base() {
@@ -44,7 +52,9 @@ fn test_randomize_stack_below_base() {
 }
 
 #[test]
-fn test_randomize_heap_disabled() { assert_eq!(AslrManager::disabled().randomize_heap(0x1000_0000), 0x1000_0000); }
+fn test_randomize_heap_disabled() {
+    assert_eq!(AslrManager::disabled().randomize_heap(0x1000_0000), 0x1000_0000);
+}
 
 #[test]
 fn test_randomize_heap_above_base() {

@@ -24,11 +24,5 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
 ];
 
 const fn r(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {
-    AbiEntry {
-        id: tag4(tag),
-        variant,
-        name,
-        domain: AbiDomain::Admin,
-        status: AbiStatus::Routed,
-    }
+    AbiEntry { id: tag4(tag), variant, name, domain: AbiDomain::Admin, status: AbiStatus::Routed }
 }

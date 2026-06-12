@@ -17,8 +17,7 @@
 use super::args::Args;
 use crate::syscall::microkernel::ipc::{
     sys_ipc_call, sys_ipc_recv, sys_ipc_recv_from, sys_ipc_reply, sys_ipc_send,
-    sys_ipc_send_to_pid,
-    sys_service_lookup, sys_service_register,
+    sys_ipc_send_to_pid, sys_service_lookup, sys_service_register,
 };
 use crate::syscall::microkernel::numbers::*;
 

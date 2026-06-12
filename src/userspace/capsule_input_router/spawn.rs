@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    INPUT_ROUTER_ELF, INPUT_ROUTER_MANIFEST_BYTES, INPUT_ROUTER_ATTESTATION_BYTES, INPUT_ROUTER_NONOS_ID_CERT_BYTES,
+    INPUT_ROUTER_ATTESTATION_BYTES, INPUT_ROUTER_ELF, INPUT_ROUTER_MANIFEST_BYTES,
+    INPUT_ROUTER_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;

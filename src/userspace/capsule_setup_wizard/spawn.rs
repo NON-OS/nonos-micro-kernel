@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    SETUP_WIZARD_ELF, SETUP_WIZARD_MANIFEST_BYTES, SETUP_WIZARD_ATTESTATION_BYTES, SETUP_WIZARD_NONOS_ID_CERT_BYTES,
+    SETUP_WIZARD_ATTESTATION_BYTES, SETUP_WIZARD_ELF, SETUP_WIZARD_MANIFEST_BYTES,
+    SETUP_WIZARD_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;

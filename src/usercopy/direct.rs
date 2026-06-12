@@ -24,10 +24,7 @@ use super::error::UsercopyError;
 use super::walk::{translate_read, translate_write, UserLeaf};
 use crate::memory::layout::DIRECTMAP_BASE;
 
-pub(super) fn copy_from_user_directmap(
-    user_ptr: u64,
-    dst: &mut [u8],
-) -> Result<(), UsercopyError> {
+pub(super) fn copy_from_user_directmap(user_ptr: u64, dst: &mut [u8]) -> Result<(), UsercopyError> {
     transfer(user_ptr, dst.len(), translate_read, |leaf, off, n| {
         let src = (DIRECTMAP_BASE + leaf.phys_base + leaf.offset) as *const u8;
         // SAFETY: ek@nonos.systems — `leaf` came from `translate_read`
@@ -54,9 +51,7 @@ where
 {
     let mut cursor = 0usize;
     while cursor < len {
-        let va = user_ptr
-            .checked_add(cursor as u64)
-            .ok_or(UsercopyError::AddressOverflow)?;
+        let va = user_ptr.checked_add(cursor as u64).ok_or(UsercopyError::AddressOverflow)?;
         let leaf = translate(va)?;
         let remaining = leaf.bytes_remaining_in_page() as usize;
         let n = remaining.min(len - cursor);

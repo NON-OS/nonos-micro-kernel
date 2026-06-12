@@ -165,9 +165,7 @@ pub fn try_enqueue_strict(module: &str, msg: IpcMessage) -> Result<(), StrictEnq
     let reg = REGISTRY.read();
     let inbox = reg.map.get(module).ok_or(StrictEnqueueError::MissingInbox)?;
     let owner = inbox.owner();
-    if owner != KERNEL_OWNER
-        && crate::process::get_process_table().find_by_pid(owner).is_none()
-    {
+    if owner != KERNEL_OWNER && crate::process::get_process_table().find_by_pid(owner).is_none() {
         return Err(StrictEnqueueError::DeadOwner);
     }
     inbox.try_enqueue(msg).map_err(StrictEnqueueError::QueueFull)
