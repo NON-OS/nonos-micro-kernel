@@ -14,8 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::syscall::{call_raw, N_MK_PID_ALIVE};
+use crate::syscall::{call_raw, N_MK_GETPID, N_MK_PID_ALIVE};
 
 pub extern "C" fn mk_pid_alive(pid: u32) -> bool {
     call_raw(N_MK_PID_ALIVE, [pid as u64, 0, 0, 0, 0, 0]) == 1
+}
+
+pub extern "C" fn mk_getpid() -> u32 {
+    let rc = call_raw(N_MK_GETPID, [0, 0, 0, 0, 0, 0]);
+    if rc < 0 {
+        0
+    } else {
+        rc as u32
+    }
 }
