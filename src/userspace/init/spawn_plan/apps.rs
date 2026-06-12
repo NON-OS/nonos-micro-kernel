@@ -19,6 +19,7 @@ pub(super) fn spawn() {
     spawn_about();
     spawn_hello();
     spawn_calculator();
+    spawn_snake();
     spawn_terminal();
     spawn_file_manager();
     super::apps_tools::spawn();
@@ -91,3 +92,11 @@ fn spawn_file_manager() {
 }
 #[cfg(not(feature = "nonos-capsule-file-manager"))]
 fn spawn_file_manager() {}
+
+#[cfg(feature = "nonos-capsule-snake")]
+fn spawn_snake() {
+    use crate::userspace::capsule_snake as c;
+    super::boot::capsule("APP-SNAKE", "app_snake", c::spawn_snake_capsule, c::shared_state);
+}
+#[cfg(not(feature = "nonos-capsule-snake"))]
+fn spawn_snake() {}
