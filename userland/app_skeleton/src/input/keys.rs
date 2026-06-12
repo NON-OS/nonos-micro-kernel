@@ -19,12 +19,14 @@ pub const KEY_TAB: u32 = 0x09;
 pub const KEY_ENTER: u32 = 0x0D;
 pub const KEY_ESC: u32 = 0x1B;
 
-pub const KEY_LEFT: u32 = 0xE000;
-pub const KEY_RIGHT: u32 = 0xE001;
-pub const KEY_UP: u32 = 0xE002;
-pub const KEY_DOWN: u32 = 0xE003;
-pub const KEY_HOME: u32 = 0xE004;
-pub const KEY_END: u32 = 0xE005;
-pub const KEY_DELETE: u32 = 0xE006;
-pub const KEY_PAGE_UP: u32 = 0xE007;
-pub const KEY_PAGE_DOWN: u32 = 0xE008;
+// Navigation codes mirror the PS/2 driver's published keycode table
+// (capsule_driver_ps2_input keymap/set1/keycodes.rs) — hand-synced.
+pub const KEY_UP: u32 = 0x1201;
+pub const KEY_DOWN: u32 = 0x1202;
+pub const KEY_LEFT: u32 = 0x1203;
+pub const KEY_RIGHT: u32 = 0x1204;
+pub const KEY_HOME: u32 = 0x1205;
+pub const KEY_END: u32 = 0x1206;
+pub const KEY_PAGE_UP: u32 = 0x1207;
+pub const KEY_PAGE_DOWN: u32 = 0x1208;
+pub const KEY_DELETE: u32 = 0x120A;
