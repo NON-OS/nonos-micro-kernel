@@ -33,6 +33,7 @@ pub fn get(field: Field) -> Option<bool> {
         Field::HighContrast => s.high_contrast,
         Field::WifiAutoconnect => s.wifi_autoconnect,
         Field::AnimationsEnabled => s.animations_enabled,
+        Field::ClockFormat24 => s.clock_format24,
         Field::KernelAslr => s.kernel_aslr,
         Field::KernelStackGuard => s.kernel_stack_guard,
         Field::KernelNxBit => s.kernel_nx_bit,

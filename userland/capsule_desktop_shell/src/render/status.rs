@@ -34,7 +34,7 @@ pub fn paint_status(ctx: &Context, net_online: bool) {
     let mut dbuf = [b'-'; 10];
     let date: &[u8] = if clock::ymd(&mut dbuf) { &dbuf } else { b"----------" };
     let mut tbuf = [b' '; 5];
-    let time: &[u8] = if clock::hhmm(&mut tbuf) { &tbuf } else { b"--:--" };
+    let time: &[u8] = if clock::hhmm(&mut tbuf, ctx.clock_24h) { &tbuf } else { b"--:--" };
     let segments: [&[u8]; 4] = [battery, network, date, time];
 
     let mut glyphs = 0u32;

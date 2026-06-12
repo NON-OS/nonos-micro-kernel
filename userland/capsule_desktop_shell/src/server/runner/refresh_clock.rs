@@ -18,10 +18,13 @@ use nonos_libc::mk_time_millis;
 
 use crate::compositor_client::push_damage_commit;
 use crate::render::{menubar_rect, paint_chrome, paint_status};
-use crate::state::indicators::net;
+use crate::state::indicators::{net, policy};
 use crate::state::{Context, NotifyLevel};
 
 pub(super) fn refresh_clock(ctx: &mut Context) {
+    if let Some(v) = policy::clock_24h(&mut ctx.policy_port) {
+        ctx.clock_24h = v;
+    }
     let net_now = net::online();
     if net_now && !ctx.net_was_online {
         ctx.toasts.push(b"network connected", NotifyLevel::Info, mk_time_millis());

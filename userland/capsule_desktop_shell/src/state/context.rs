@@ -33,6 +33,8 @@ pub struct Context {
     pub toasts: ToastQueue,
     pub toast_layer_live: bool,
     pub net_was_online: bool,
+    pub clock_24h: bool,
+    pub policy_port: u32,
     pub next_request_id: u32,
 }
 

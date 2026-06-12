@@ -33,6 +33,7 @@ pub fn set(field: Field, value: bool) -> bool {
         Field::HighContrast => s.high_contrast = value,
         Field::WifiAutoconnect => s.wifi_autoconnect = value,
         Field::AnimationsEnabled => s.animations_enabled = value,
+        Field::ClockFormat24 => s.clock_format24 = value,
         Field::KernelAslr => s.kernel_aslr = value,
         Field::KernelStackGuard => s.kernel_stack_guard = value,
         Field::KernelNxBit => s.kernel_nx_bit = value,

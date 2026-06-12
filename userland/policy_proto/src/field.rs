@@ -40,6 +40,7 @@ pub enum Field {
     AnimationsEnabled = 0x0115,
     CursorSize = 0x0116,
     Wallpaper = 0x0117,
+    ClockFormat24 = 0x0118,
     KernelAslr = 0x0201,
     KernelStackGuard = 0x0202,
     KernelNxBit = 0x0203,

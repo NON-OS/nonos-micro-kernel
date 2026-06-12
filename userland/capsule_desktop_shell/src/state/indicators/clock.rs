@@ -16,13 +16,21 @@
 
 use nonos_libc::{mk_time_rtc, RtcTime};
 
-pub fn hhmm(buf: &mut [u8; 5]) -> bool {
+pub fn hhmm(buf: &mut [u8; 5], h24: bool) -> bool {
     let mut t = RtcTime::default();
     if mk_time_rtc(&mut t as *mut RtcTime) != 0 {
         return false;
     }
-    buf[0] = b'0' + (t.hour / 10) % 10;
-    buf[1] = b'0' + t.hour % 10;
+    let hour = if h24 {
+        t.hour
+    } else {
+        match t.hour % 12 {
+            0 => 12,
+            h => h,
+        }
+    };
+    buf[0] = b'0' + (hour / 10) % 10;
+    buf[1] = b'0' + hour % 10;
     buf[2] = b':';
     buf[3] = b'0' + (t.minute / 10) % 10;
     buf[4] = b'0' + t.minute % 10;

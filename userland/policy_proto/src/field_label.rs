@@ -41,6 +41,7 @@ pub fn label_of(field: Field) -> &'static [u8] {
         Field::WifiAutoconnect => b"Wi-Fi auto-connect",
         Field::AnimationsEnabled => b"UI animations",
         Field::CursorSize => b"Cursor size",
+        Field::ClockFormat24 => b"24-hour clock",
         Field::KernelAslr => b"Kernel ASLR",
         Field::KernelStackGuard => b"Stack guard pages",
         Field::KernelNxBit => b"NX bit enforcement",

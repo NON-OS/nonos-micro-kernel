@@ -40,6 +40,7 @@ pub const ALL_FIELDS: &[Field] = &[
     Field::AnimationsEnabled,
     Field::CursorSize,
     Field::Wallpaper,
+    Field::ClockFormat24,
     Field::KernelAslr,
     Field::KernelStackGuard,
     Field::KernelNxBit,
