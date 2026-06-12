@@ -1,0 +1,33 @@
+# NONOS userland: capsule_snake
+#
+# Classic snake on a 28x18 grid. Owned state, no globals. Keyboard
+# input (arrows/WASD steer, Space/P pause, Enter restarts). Real
+# production capsule built on `nonos_app_skeleton`.
+
+[package]
+name = "nonos_snake"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+description = "NONOS snake game capsule"
+
+[[bin]]
+name = "snake"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_app_skeleton = { path = "../app_skeleton" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
+
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true
