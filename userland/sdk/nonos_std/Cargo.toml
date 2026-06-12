@@ -1,0 +1,22 @@
+# NØNOS sovereign standard library
+# eK@nonos.systems
+#
+# A std-shaped standard library implemented entirely on NØNOS primitives.
+# NØNOS depends on no external std: this crate is the platform's own. Crates
+# are ported to it by using `nonos_std` in place of `std`.
+
+[package]
+name = "nonos-std"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NØNOS sovereign standard library"
+
+[lib]
+name = "nonos_std"
+path = "src/lib.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../../libc" }
