@@ -16,11 +16,13 @@
 
 use nonos_policy_proto::Category;
 
+use crate::settings::schema::ALL_FIELDS;
+
 use super::cache::FieldValue;
 use super::edit_buffer::EditBuffer;
 use super::status::Status;
 
-pub const FIELD_SLOTS: usize = 37;
+pub const FIELD_SLOTS: usize = ALL_FIELDS.len();
 
 pub struct State {
     pub policy_port: u32,
