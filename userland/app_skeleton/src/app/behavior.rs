@@ -26,4 +26,8 @@ pub trait App {
     fn on_tick(&mut self) -> bool {
         false
     }
+
+    fn tick_interval_ms(&self) -> i64 {
+        1000
+    }
 }

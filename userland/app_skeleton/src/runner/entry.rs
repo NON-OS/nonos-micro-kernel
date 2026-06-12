@@ -47,17 +47,12 @@ pub fn run<A: App, F: Fn() -> A>(build: F) -> ! {
             Err(_) => continue,
         };
         let mut last_tick_ms: i64 = 0;
-        let mut frames: u32 = 0;
         loop {
             if service_frame(&mut booted, &mut rx, &peers, &mut request_id) {
                 break;
             }
-            frames = frames.wrapping_add(1);
-            if frames & 0x1F != 0 {
-                continue;
-            }
             let now = mk_time_millis();
-            if now.wrapping_sub(last_tick_ms) >= 1000 {
+            if now.wrapping_sub(last_tick_ms) >= booted.app.tick_interval_ms() {
                 last_tick_ms = now;
                 if booted.app.on_tick() && !booted.minimized {
                     repaint(&mut booted, &peers, &mut request_id);
