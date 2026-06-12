@@ -37,11 +37,7 @@ pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32) {
     let body = state.line.as_bytes();
     let cursor = state.line.cursor.min(body.len());
     let body_cells = total_cells.saturating_sub(prompt_cells).max(1);
-    let scroll = if cursor < body_cells {
-        0
-    } else {
-        cursor - body_cells + 1
-    };
+    let scroll = if cursor < body_cells { 0 } else { cursor - body_cells + 1 };
     let end = (scroll + body_cells).min(body.len());
     let px = TEXT_LEFT + prompt_cells as u32 * CELL_WIDTH;
     fb.text(px, y, &body[scroll..end], FOREGROUND);

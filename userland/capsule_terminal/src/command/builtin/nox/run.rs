@@ -28,9 +28,9 @@ const OP_FOCUS_SELF: u16 = 1;
 // app's window forward.
 pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     if args.is_empty() {
-        state.scrollback.push_line(
-            b"usage: run <app>  (files editor settings calc about procs term)",
-        );
+        state
+            .scrollback
+            .push_line(b"usage: run <app>  (files editor settings calc about procs term)");
         return false;
     }
     let service = resolve_service(args[0]);
@@ -38,7 +38,7 @@ pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     let mut pid = 0u32;
     let rc = mk_service_lookup(service.as_ptr(), service.len(), &mut port, &mut pid);
     if rc < 0 || pid == 0 {
-        state.scrollback.push_line(b"run: no such app");
+        state.scrollback.push_error(b"run: no such app");
         return false;
     }
     let mut frame = [0u8; 8];
@@ -49,7 +49,7 @@ pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
         state.scrollback.push_line(b"launched");
         true
     } else {
-        state.scrollback.push_line(b"run: launch failed");
+        state.scrollback.push_error(b"run: launch failed");
         false
     }
 }

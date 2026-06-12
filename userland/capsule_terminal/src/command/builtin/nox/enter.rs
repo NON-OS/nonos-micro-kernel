@@ -38,11 +38,11 @@ pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
             true
         }
         Ok((_, false)) => {
-            state.scrollback.push_line(b"nox in: not a directory");
+            state.scrollback.push_error(b"nox in: not a directory");
             false
         }
         Err(e) => {
-            state.scrollback.push_line(e.as_bytes());
+            state.scrollback.push_error(e.as_bytes());
             false
         }
     }

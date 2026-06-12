@@ -44,11 +44,8 @@ pub fn draw_fetch(state: &State, fb: &mut PaintBuffer) {
     fetch_row(fb, ix, y, b"arch", b"x86_64");
     y += 16;
     let now = mk_time_millis();
-    let elapsed = if now > 0 && now as u64 >= state.start_ms {
-        now as u64 - state.start_ms
-    } else {
-        0
-    };
+    let elapsed =
+        if now > 0 && now as u64 >= state.start_ms { now as u64 - state.start_ms } else { 0 };
     let mut buf = [0u8; 24];
     let n = uptime_str(elapsed, &mut buf);
     fetch_row(fb, ix, y, b"uptime", &buf[..n]);

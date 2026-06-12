@@ -14,28 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::clients::vfs::rename;
+use super::role::Role;
+use super::types::Scrollback;
+use crate::term::dimensions::{COLS, SCROLLBACK_ROWS};
 
-use super::ensure_pid::ensure_pid;
-use crate::term::cwd::resolve;
-use crate::term::state::State;
-
-pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
-    if args.len() < 2 {
-        state.scrollback.push_error(b"usage: nox mv <old> <new>");
-        return false;
-    }
-    let pid = ensure_pid(state);
-    let old = resolve(state.cwd.as_bytes(), args[0]);
-    let new = resolve(state.cwd.as_bytes(), args[1]);
-    match rename(pid, &old, &new) {
-        Ok(()) => {
-            state.scrollback.push_line(b"ok");
-            true
+impl Scrollback {
+    // Append one line to the visible ring, tagged with its render role, and
+    // reset the scroll view to the bottom. Shared by push_line and push_error.
+    pub(super) fn push_raw(&mut self, line: &[u8], role: Role) {
+        let slot = (self.head + self.count) % SCROLLBACK_ROWS;
+        let n = line.len().min(COLS);
+        self.rows[slot][..n].copy_from_slice(&line[..n]);
+        self.lengths[slot] = n as u16;
+        self.roles[slot] = role;
+        if self.count == SCROLLBACK_ROWS {
+            self.head = (self.head + 1) % SCROLLBACK_ROWS;
+        } else {
+            self.count += 1;
         }
-        Err(e) => {
-            state.scrollback.push_error(e.as_bytes());
-            false
-        }
+        self.view_offset = 0;
     }
 }

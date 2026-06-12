@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::role::Role;
 use super::types::Scrollback;
 use crate::term::dimensions::SCROLLBACK_ROWS;
 
@@ -24,14 +25,15 @@ pub struct ScrollbackView<'a> {
 }
 
 impl<'a> ScrollbackView<'a> {
-    pub fn rows(&self) -> impl Iterator<Item = &'a [u8]> + '_ {
+    pub fn rows(&self) -> impl Iterator<Item = (&'a [u8], Role)> + '_ {
         let head = self.sb.head;
         let lengths = &self.sb.lengths;
         let rows = &self.sb.rows;
+        let roles = &self.sb.roles;
         (self.start..self.end).map(move |logical| {
             let slot = (head + logical) % SCROLLBACK_ROWS;
             let n = lengths[slot] as usize;
-            &rows[slot][..n]
+            (&rows[slot][..n], roles[slot])
         })
     }
 }

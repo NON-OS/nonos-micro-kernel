@@ -16,8 +16,8 @@
 
 use alloc::vec::Vec;
 
+use super::role::Role;
 use super::types::Scrollback;
-use crate::term::dimensions::{COLS, SCROLLBACK_ROWS};
 
 impl Scrollback {
     pub fn push_line(&mut self, line: &[u8]) {
@@ -25,15 +25,6 @@ impl Scrollback {
             buf.push(Vec::from(line));
             return;
         }
-        let slot = (self.head + self.count) % SCROLLBACK_ROWS;
-        let n = line.len().min(COLS);
-        self.rows[slot][..n].copy_from_slice(&line[..n]);
-        self.lengths[slot] = n as u16;
-        if self.count == SCROLLBACK_ROWS {
-            self.head = (self.head + 1) % SCROLLBACK_ROWS;
-        } else {
-            self.count += 1;
-        }
-        self.view_offset = 0;
+        self.push_raw(line, Role::Normal);
     }
 }

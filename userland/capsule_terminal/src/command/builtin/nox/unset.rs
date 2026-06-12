@@ -19,7 +19,7 @@ use crate::term::state::State;
 // Remove a shell variable.
 pub fn run(state: &mut State, args: &[&[u8]]) {
     if args.is_empty() {
-        return state.scrollback.push_line(b"usage: unset <name>");
+        return state.scrollback.push_error(b"usage: unset <name>");
     }
     let name = args[0];
     state.vars.retain(|(k, _)| k.as_slice() != name);

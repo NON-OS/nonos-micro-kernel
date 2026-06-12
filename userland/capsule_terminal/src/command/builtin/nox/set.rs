@@ -36,7 +36,7 @@ pub fn run(state: &mut State, args: &[&[u8]]) {
         return;
     }
     if args.len() < 2 {
-        return state.scrollback.push_line(b"usage: set <name> <value>");
+        return state.scrollback.push_error(b"usage: set <name> <value>");
     }
     let name = args[0];
     let mut value = Vec::new();

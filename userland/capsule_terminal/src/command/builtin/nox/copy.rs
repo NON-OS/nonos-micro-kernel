@@ -24,7 +24,7 @@ const MAX: u32 = 65536;
 
 pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     if args.len() < 2 {
-        state.scrollback.push_line(b"usage: nox copy <src> <dst>");
+        state.scrollback.push_error(b"usage: nox copy <src> <dst>");
         return false;
     }
     let pid = ensure_pid(state);
@@ -33,7 +33,7 @@ pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     let data = match read_file(pid, &src, MAX) {
         Ok(d) => d,
         Err(e) => {
-            state.scrollback.push_line(e.as_bytes());
+            state.scrollback.push_error(e.as_bytes());
             return false;
         }
     };
@@ -43,7 +43,7 @@ pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
             true
         }
         Err(e) => {
-            state.scrollback.push_line(e.as_bytes());
+            state.scrollback.push_error(e.as_bytes());
             false
         }
     }

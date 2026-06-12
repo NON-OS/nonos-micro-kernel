@@ -14,28 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::clients::vfs::rename;
+use super::role::Role;
+use super::types::Scrollback;
 
-use super::ensure_pid::ensure_pid;
-use crate::term::cwd::resolve;
-use crate::term::state::State;
-
-pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
-    if args.len() < 2 {
-        state.scrollback.push_error(b"usage: nox mv <old> <new>");
-        return false;
-    }
-    let pid = ensure_pid(state);
-    let old = resolve(state.cwd.as_bytes(), args[0]);
-    let new = resolve(state.cwd.as_bytes(), args[1]);
-    match rename(pid, &old, &new) {
-        Ok(()) => {
-            state.scrollback.push_line(b"ok");
-            true
+impl Scrollback {
+    // Append an error line, rendered in the error colour. While a capture is
+    // active the text is redirected as ordinary bytes through push_line, so a
+    // file never receives colour metadata.
+    pub fn push_error(&mut self, line: &[u8]) {
+        if self.capture.is_some() {
+            self.push_line(line);
+            return;
         }
-        Err(e) => {
-            state.scrollback.push_error(e.as_bytes());
-            false
-        }
+        self.push_raw(line, Role::Error);
     }
 }

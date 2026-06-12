@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod compose;
 mod constants;
 mod draw_cursor;
 mod draw_input_line;
@@ -22,7 +23,6 @@ mod fetch_palette;
 mod fetch_row;
 mod fetch_uptime;
 mod footer;
-mod compose;
 mod header;
 
 pub use compose::paint;

@@ -24,7 +24,7 @@ use crate::term::util::format_u64;
 
 pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     if args.is_empty() {
-        state.scrollback.push_line(b"usage: nox stat <path>");
+        state.scrollback.push_error(b"usage: nox stat <path>");
         return false;
     }
     let pid = ensure_pid(state);
@@ -42,7 +42,7 @@ pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
             true
         }
         Err(e) => {
-            state.scrollback.push_line(e.as_bytes());
+            state.scrollback.push_error(e.as_bytes());
             false
         }
     }

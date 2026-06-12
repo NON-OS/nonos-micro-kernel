@@ -21,8 +21,9 @@ use super::draw_input_line::draw_input_line;
 use super::fetch::draw_fetch;
 use super::footer::draw_footer;
 use super::header::draw_header;
+use crate::term::scrollback::Role;
 use crate::term::state::State;
-use crate::term::theme::{BACKGROUND, FOREGROUND};
+use crate::term::theme::{BACKGROUND, ERROR, FOREGROUND};
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
@@ -32,11 +33,15 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
         draw_fetch(state, fb);
     } else {
         let mut y = BODY_TOP;
-        for row in state.scrollback.visible().rows() {
+        for (row, role) in state.scrollback.visible().rows() {
             if y + LINE_HEIGHT > input_y {
                 break;
             }
-            fb.text(TEXT_LEFT, y, row, FOREGROUND);
+            let color = match role {
+                Role::Error => ERROR,
+                Role::Normal => FOREGROUND,
+            };
+            fb.text(TEXT_LEFT, y, row, color);
             y += LINE_HEIGHT;
         }
     }

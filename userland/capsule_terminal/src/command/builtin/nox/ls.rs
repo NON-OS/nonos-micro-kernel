@@ -31,7 +31,7 @@ pub fn run(state: &mut State, args: &[&[u8]]) {
     let prefix = dir_prefix(&base);
     let prefix_str = match core::str::from_utf8(&prefix) {
         Ok(s) => s,
-        Err(_) => return state.scrollback.push_line(b"nox ls: bad path"),
+        Err(_) => return state.scrollback.push_error(b"nox ls: bad path"),
     };
     match list_paths(pid, &prefix) {
         Ok(paths) => {
@@ -43,6 +43,6 @@ pub fn run(state: &mut State, args: &[&[u8]]) {
                 state.scrollback.push_line(k.as_bytes());
             }
         }
-        Err(e) => state.scrollback.push_line(e.as_bytes()),
+        Err(e) => state.scrollback.push_error(e.as_bytes()),
     }
 }

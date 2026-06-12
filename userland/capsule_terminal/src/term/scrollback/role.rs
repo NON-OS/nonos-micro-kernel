@@ -14,28 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::clients::vfs::rename;
-
-use super::ensure_pid::ensure_pid;
-use crate::term::cwd::resolve;
-use crate::term::state::State;
-
-pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
-    if args.len() < 2 {
-        state.scrollback.push_error(b"usage: nox mv <old> <new>");
-        return false;
-    }
-    let pid = ensure_pid(state);
-    let old = resolve(state.cwd.as_bytes(), args[0]);
-    let new = resolve(state.cwd.as_bytes(), args[1]);
-    match rename(pid, &old, &new) {
-        Ok(()) => {
-            state.scrollback.push_line(b"ok");
-            true
-        }
-        Err(e) => {
-            state.scrollback.push_error(e.as_bytes());
-            false
-        }
-    }
+// How a stored scrollback line should be rendered. Ordinary output is
+// Normal; command failures and usage messages are tagged Error so the
+// painter can give them the error colour.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Role {
+    Normal,
+    Error,
 }

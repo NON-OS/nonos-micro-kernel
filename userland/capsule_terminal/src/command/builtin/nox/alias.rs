@@ -35,7 +35,7 @@ pub fn run(state: &mut State, args: &[&[u8]]) {
         return;
     }
     if args.len() < 2 {
-        return state.scrollback.push_line(b"usage: alias <name> <expansion>");
+        return state.scrollback.push_error(b"usage: alias <name> <expansion>");
     }
     let name = args[0];
     let mut exp = Vec::new();

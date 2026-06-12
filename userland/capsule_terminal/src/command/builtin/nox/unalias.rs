@@ -19,7 +19,7 @@ use crate::term::state::State;
 // Remove a command alias.
 pub fn run(state: &mut State, args: &[&[u8]]) {
     if args.is_empty() {
-        return state.scrollback.push_line(b"usage: unalias <name>");
+        return state.scrollback.push_error(b"usage: unalias <name>");
     }
     let name = args[0];
     state.aliases.retain(|(k, _)| k.as_slice() != name);
