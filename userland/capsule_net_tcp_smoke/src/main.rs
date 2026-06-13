@@ -17,17 +17,42 @@
 #![no_std]
 #![no_main]
 
-use nonos_libc::{heap_init, mk_debug, mk_exit};
+extern crate alloc;
 
-const BOOT: &[u8] = b"[TCP] SMOKE BOOT\n";
-const FAIL: &[u8] = b"[TCP] FAIL not-implemented\n";
+mod client;
+mod lifecycle;
+mod netup;
+mod siphash;
+
+use nonos_libc::{heap_init, mk_debug, mk_exit, mk_yield};
+
+const ISS_KEY: [u64; 2] = [0x0706_0504_0302_0100, 0x0f0e_0d0c_0b0a_0908];
+const ISS_KAT: u64 = 0xa129_ca61_49be_45e5;
+
+fn iss_ok() {
+    let data: [u8; 15] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+    if siphash::siphash24(ISS_KEY, &data) == ISS_KAT {
+        let m = b"[TCP] ISS-OK\n";
+        let _ = mk_debug(m.as_ptr(), m.len());
+    }
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
-    let _ = mk_debug(BOOT.as_ptr(), BOOT.len());
-    let _ = mk_debug(FAIL.as_ptr(), FAIL.len());
+    iss_ok();
+    let mut up = false;
+    for _ in 0..6000 {
+        if netup::online() {
+            up = true;
+            break;
+        }
+        mk_yield();
+    }
+    if up {
+        lifecycle::run();
+    }
     mk_exit(0)
 }

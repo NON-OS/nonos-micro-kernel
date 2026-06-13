@@ -46,7 +46,7 @@ pub fn spawn_net_tcp_smoke_capsule() -> Result<(), SpawnError> {
         manifest_bytes: NET_TCP_SMOKE_MANIFEST_BYTES,
         attestation_trailer: NET_TCP_SMOKE_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit() | Capability::Memory.bit(),
+        requested_caps: Capability::IPC.bit() | Capability::Memory.bit() | Capability::Debug.bit(),
         debug_tag: b"[TCP-SMOKE] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
