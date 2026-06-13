@@ -21,10 +21,19 @@ pub enum State {
     SynReceived,
     Established,
     CloseWait,
+    FinWait1,
+    FinWait2,
+    Closing,
+    TimeWait,
+    LastAck,
 }
 
 impl State {
     pub fn accepts_data(self) -> bool {
         matches!(self, Self::Established)
+    }
+
+    pub fn is_closing(self) -> bool {
+        matches!(self, Self::FinWait1 | Self::FinWait2 | Self::Closing | Self::TimeWait | Self::LastAck)
     }
 }
