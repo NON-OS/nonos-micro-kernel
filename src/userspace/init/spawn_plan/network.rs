@@ -20,6 +20,7 @@ pub(super) fn spawn() {
     spawn_udp();
     spawn_dhcp();
     spawn_tcp();
+    spawn_tcp_smoke();
     spawn_dns();
     spawn_nym();
     spawn_sockets();
@@ -69,6 +70,20 @@ fn spawn_tcp() {
 
 #[cfg(not(feature = "nonos-capsule-net-tcp"))]
 fn spawn_tcp() {}
+
+#[cfg(feature = "nonos-capsule-net-tcp-smoke")]
+fn spawn_tcp_smoke() {
+    use crate::userspace::capsule_net_tcp_smoke as c;
+    super::boot::capsule(
+        "NET-TCP-SMOKE",
+        "net_tcp_smoke",
+        c::spawn_net_tcp_smoke_capsule,
+        c::shared_state,
+    );
+}
+
+#[cfg(not(feature = "nonos-capsule-net-tcp-smoke"))]
+fn spawn_tcp_smoke() {}
 
 #[cfg(feature = "nonos-capsule-net-dns")]
 fn spawn_dns() {
