@@ -25,4 +25,7 @@ mod types;
 pub use hydrate::hydrate;
 pub use new::new_state;
 pub use record_tx::record_tx;
-pub use types::{Rail, State, MAX_RAILS};
+pub use types::{
+    Rail, State, MAX_RAILS, SEND_FIELD_AMOUNT, SEND_FIELD_NONCE, SEND_FIELD_TO, VIEW_HOME,
+    VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND,
+};

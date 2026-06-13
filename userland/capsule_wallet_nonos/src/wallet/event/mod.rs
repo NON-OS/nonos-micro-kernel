@@ -14,8 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod edit_amount;
+mod edit_nonce;
+mod eth_value;
 mod generate;
+mod hex_digit;
 mod on_event;
+mod on_key;
+mod on_pointer;
+mod probe_net;
+mod recipient;
+mod send_input;
 mod sign_both;
 mod sign_eth;
 mod sign_nox;

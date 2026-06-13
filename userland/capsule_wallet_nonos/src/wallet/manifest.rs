@@ -18,15 +18,20 @@ use nonos_app_skeleton::{AppManifest, WindowKind};
 
 use super::theme::{HEIGHT, WIDTH};
 
+const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
+const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
+const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
+const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_POINTER_ABS_BIT | INPUT_BUTTON_DOWN_BIT;
+
 pub fn manifest() -> AppManifest {
     AppManifest {
         title: b"NONOS Wallet",
         window_id: 0x5741_4C4E,
         kind: WindowKind::Normal,
-        initial_x: 650,
-        initial_y: 112,
+        initial_x: 370,
+        initial_y: 128,
         width: WIDTH,
         height: HEIGHT,
-        input_kind_mask: 1 << 0,
+        input_kind_mask: INPUT_MASK,
     }
 }

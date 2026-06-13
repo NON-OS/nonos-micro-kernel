@@ -1,0 +1,48 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use nonos_app_skeleton::EventOutcome;
+
+use crate::wallet::state::{hydrate, State, VIEW_HOME, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND};
+
+pub fn on_key(state: &mut State, code: u32) -> EventOutcome {
+    if code == b'r' as u32 || code == b'R' as u32 {
+        hydrate(state);
+        return EventOutcome::Repaint;
+    }
+    match code {
+        code if code == b'h' as u32 => view(state, VIEW_HOME),
+        code if code == b'v' as u32 => view(state, VIEW_RECEIVE),
+        code if code == b's' as u32 => view(state, VIEW_SEND),
+        code if code == b'p' as u32 => view(state, VIEW_PROOF),
+        code if code == b'1' as u32 => view(state, VIEW_HOME),
+        code if code == b'2' as u32 => view(state, VIEW_RECEIVE),
+        code if code == b'3' as u32 => view(state, VIEW_SEND),
+        code if code == b'4' as u32 => view(state, VIEW_PROOF),
+        code if code == b'g' as u32 || code == b'G' as u32 => super::generate::generate(state),
+        code if state.view == VIEW_SEND => super::send_input::send_input(state, code).unwrap_or(EventOutcome::Idle),
+        code if code == b'E' as u32 => super::sign_eth::sign_eth(state),
+        code if code == b'n' as u32 || code == b'N' as u32 => super::sign_nox::sign_nox(state),
+        code if code == b'P' as u32 => super::sign_both::sign_both(state),
+        code if code == b'w' as u32 || code == b'W' as u32 => super::probe_net::probe_net(state),
+        _ => EventOutcome::Idle,
+    }
+}
+
+fn view(state: &mut State, view: u8) -> EventOutcome {
+    state.view = view;
+    EventOutcome::Repaint
+}

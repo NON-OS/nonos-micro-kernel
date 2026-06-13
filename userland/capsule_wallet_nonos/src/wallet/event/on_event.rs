@@ -16,24 +16,13 @@
 
 use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_ESC};
 
-use crate::wallet::state::{hydrate, State};
+use crate::wallet::state::State;
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
-    if event.kind != InputKind::KeyDown {
-        return EventOutcome::Idle;
-    }
-    if event.code == KEY_ESC {
-        return EventOutcome::Close;
-    }
-    if event.code == b'r' as u32 || event.code == b'R' as u32 {
-        hydrate(state);
-        return EventOutcome::Repaint;
-    }
-    match event.code {
-        code if code == b'g' as u32 || code == b'G' as u32 => super::generate::generate(state),
-        code if code == b'e' as u32 || code == b'E' as u32 => super::sign_eth::sign_eth(state),
-        code if code == b'n' as u32 || code == b'N' as u32 => super::sign_nox::sign_nox(state),
-        code if code == b'p' as u32 || code == b'P' as u32 => super::sign_both::sign_both(state),
+    match event.kind {
+        InputKind::KeyDown if event.code == KEY_ESC => EventOutcome::Close,
+        InputKind::KeyDown => super::on_key::on_key(state, event.code),
+        InputKind::ButtonDown => super::on_pointer::on_pointer(state, event.x, event.y),
         _ => EventOutcome::Idle,
     }
 }

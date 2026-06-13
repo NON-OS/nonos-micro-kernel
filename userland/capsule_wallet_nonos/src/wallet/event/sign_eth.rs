@@ -24,6 +24,21 @@ pub fn sign_eth(state: &mut State) -> EventOutcome {
         state.status = b"generate wallet first";
         return EventOutcome::Repaint;
     }
-    let raw = sign_eth_transfer(state.keyring_port, state.owner_pid, state.wallet_id);
+    let Some(to) = super::recipient::recipient(state) else {
+        state.status = b"recipient incomplete";
+        return EventOutcome::Repaint;
+    };
+    let Some(value) = super::eth_value::eth_value_wei(state.send_amount_milli_eth) else {
+        state.status = b"amount too large";
+        return EventOutcome::Repaint;
+    };
+    let raw = sign_eth_transfer(
+        state.keyring_port,
+        state.owner_pid,
+        state.wallet_id,
+        to,
+        state.send_nonce,
+        value,
+    );
     super::sign_result::sign_result(state, b"ETH", raw)
 }

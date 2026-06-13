@@ -14,7 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::wallet::net::NetStatus;
+
 pub const MAX_RAILS: usize = 8;
+pub const VIEW_HOME: u8 = 0;
+pub const VIEW_RECEIVE: u8 = 1;
+pub const VIEW_SEND: u8 = 2;
+pub const VIEW_PROOF: u8 = 3;
+pub const SEND_FIELD_TO: u8 = 0;
+pub const SEND_FIELD_AMOUNT: u8 = 1;
+pub const SEND_FIELD_NONCE: u8 = 2;
 
 #[derive(Clone, Copy)]
 pub struct Rail {
@@ -33,11 +42,22 @@ pub struct State {
     pub wallet_id: u32,
     pub address: [u8; 20],
     pub address_ready: bool,
+    pub view: u8,
+    pub send_focus: u8,
+    pub send_to_hex: [u8; 40],
+    pub send_to_len: usize,
+    pub send_amount_milli_eth: u32,
+    pub send_nonce: u64,
     pub tx_hash: [u8; 32],
     pub tx_len: u32,
     pub tx_ready: bool,
     pub tx_kind: &'static [u8],
     pub proof_count: u8,
+    pub proof_eth_hash: [u8; 32],
+    pub proof_eth_len: u32,
+    pub proof_nox_hash: [u8; 32],
+    pub proof_nox_len: u32,
+    pub net: NetStatus,
     pub rails: [Rail; MAX_RAILS],
     pub rail_count: usize,
     pub status: &'static [u8],

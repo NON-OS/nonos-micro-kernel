@@ -16,6 +16,7 @@
 
 use super::empty_rail::empty_rail;
 use super::types::{State, MAX_RAILS};
+use crate::wallet::net::NetStatus;
 
 pub fn new_state() -> State {
     State {
@@ -24,11 +25,30 @@ pub fn new_state() -> State {
         wallet_id: 0,
         address: [0; 20],
         address_ready: false,
+        view: super::types::VIEW_HOME,
+        send_focus: super::types::SEND_FIELD_TO,
+        send_to_hex: [0; 40],
+        send_to_len: 0,
+        send_amount_milli_eth: 1,
+        send_nonce: 0,
         tx_hash: [0; 32],
         tx_len: 0,
         tx_ready: false,
         tx_kind: b"none",
         proof_count: 0,
+        proof_eth_hash: [0; 32],
+        proof_eth_len: 0,
+        proof_nox_hash: [0; 32],
+        proof_nox_len: 0,
+        net: NetStatus {
+            dns_ok: false,
+            sockets_ok: false,
+            nym_ok: false,
+            route_ready: false,
+            rpc_tcp_ok: false,
+            rpc_codec_ok: false,
+            status: b"net unchecked",
+        },
         rails: [empty_rail(); MAX_RAILS],
         rail_count: 0,
         status: b"keyring pending",

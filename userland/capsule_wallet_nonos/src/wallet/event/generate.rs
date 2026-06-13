@@ -26,6 +26,7 @@ pub fn generate(state: &mut State) -> EventOutcome {
                 state.wallet_id = id;
                 state.address = addr;
                 state.address_ready = true;
+                state.view = crate::wallet::state::VIEW_RECEIVE;
                 state.status = b"wallet generated";
                 EventOutcome::Repaint
             }
