@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod action;
-mod drain;
-mod existing;
-mod transitions;
+use alloc::vec::Vec;
 
-pub use action::RxAction;
-pub use drain::drain_one;
+use crate::tcp::{Endpoint4, Tcb};
+
+pub enum RxAction {
+    None,
+    Reply(Tcb, u8, Vec<u8>),
+    Rst { local: Endpoint4, remote: Endpoint4, seq: u32, ack: u32 },
+    Reap(u32),
+}

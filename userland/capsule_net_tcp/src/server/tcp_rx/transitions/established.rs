@@ -14,11 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod action;
-mod drain;
-mod existing;
-mod transitions;
+use alloc::vec::Vec;
 
-pub use action::RxAction;
-pub use drain::drain_one;
+use crate::server::tcp_rx::action::RxAction;
+use crate::state::Entry;
+use crate::tcp::{State, TcpHeader, FLAG_ACK, FLAG_FIN};
+
+pub fn step(e: &mut Entry, hdr: &TcpHeader, payload: &[u8]) -> RxAction {
+    if !payload.is_empty() && hdr.seq == e.tcb.recv.nxt {
+        let _ = e.push_rx(payload);
+        e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(payload.len() as u32);
+    }
+    if hdr.has_flag(FLAG_FIN) {
+        e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(1);
+        e.tcb.state = State::CloseWait;
+    }
+    RxAction::Reply(e.tcb, FLAG_ACK, Vec::new())
+}

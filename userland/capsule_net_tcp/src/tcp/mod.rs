@@ -30,3 +30,9 @@ pub use parse::parse;
 pub use siphash::siphash24;
 pub use state::State;
 pub use tcb::{Endpoint4, Tcb};
+
+pub const MSL_MS: u64 = if cfg!(feature = "tcp-short-msl") { 2_000 } else { 30_000 };
+
+pub fn msl_2_ms() -> u64 {
+    2 * MSL_MS
+}

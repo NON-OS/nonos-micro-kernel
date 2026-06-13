@@ -18,7 +18,7 @@ use crate::ip_client::{poll_segment, RecvError};
 use crate::state::ip_port;
 use crate::tcp::{parse, Endpoint4, FLAG_ACK, FLAG_RST, FLAG_SYN};
 
-use super::{accept, existing};
+use super::{accept, existing, RxAction};
 use crate::server::tcp_tx;
 
 pub fn drain_one() -> bool {
@@ -32,9 +32,13 @@ pub fn drain_one() -> bool {
     if hdr.has_flag(FLAG_RST) {
         return true;
     }
-    if let Some(plan) = existing::update(local, remote, hdr, payload) {
-        let _ = tcp_tx::send(plan.0, plan.1, &plan.2);
-        return true;
+    match existing::update(local, remote, hdr, payload) {
+        RxAction::Reply(tcb, flags, payload) => {
+            let _ = tcp_tx::send(tcb, flags, &payload);
+            return true;
+        }
+        RxAction::Rst { .. } => return true,
+        RxAction::Reap(_) | RxAction::None => {}
     }
     if hdr.has_flag(FLAG_SYN) && !hdr.has_flag(FLAG_ACK) {
         if let Some(plan) = accept::syn(local, remote, hdr.seq) {
