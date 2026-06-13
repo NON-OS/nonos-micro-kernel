@@ -22,6 +22,8 @@ mod about;
 mod calculator;
 mod constants;
 mod file_manager;
+mod nonos_logo;
+mod nonos_logo_bits;
 mod paint;
 mod process_manager;
 mod settings;

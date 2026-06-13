@@ -16,8 +16,19 @@
 
 use crate::compositor_client::push_damage_commit;
 use crate::state::Context;
+use nonos_libc::mk_yield;
 
-pub fn commit_overlay(ctx: &mut Context) {
-    let rid = ctx.issue_request_id();
-    let _ = push_damage_commit(ctx.compositor_port, rid, 0, 0, ctx.width, ctx.height);
+const COMMIT_RETRIES: usize = 16;
+
+pub fn commit_overlay(ctx: &mut Context) -> Result<(), &'static str> {
+    let mut last = "compositor rejected damage_commit";
+    for _ in 0..COMMIT_RETRIES {
+        let rid = ctx.issue_request_id();
+        match push_damage_commit(ctx.compositor_port, rid, 0, 0, ctx.width, ctx.height) {
+            Ok(()) => return Ok(()),
+            Err(e) => last = e,
+        }
+        mk_yield();
+    }
+    Err(last)
 }

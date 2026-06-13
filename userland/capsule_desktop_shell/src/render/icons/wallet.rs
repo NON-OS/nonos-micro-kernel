@@ -17,11 +17,5 @@
 use crate::state::Context;
 
 pub fn wallet(ctx: &Context, x: u32, y: u32, size: u32) {
-    let fg = super::constants::ICON_FG;
-    let ac = super::constants::ACCENT;
-    super::paint::paint_u(ctx, x, y, size, 3, 4, 10, 8, fg);
-    super::paint::paint_u(ctx, x, y, size, 4, 5, 8, 6, super::constants::ICON_BG);
-    super::paint::paint_u(ctx, x, y, size, 9, 7, 4, 3, ac);
-    super::paint::paint_u(ctx, x, y, size, 10, 8, 1, 1, fg);
-    super::paint::paint_u(ctx, x, y, size, 5, 3, 6, 2, ac);
+    super::nonos_logo::paint(ctx, x, y, size, 0xFF66_FFFF);
 }
