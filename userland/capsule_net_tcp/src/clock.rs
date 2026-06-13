@@ -14,37 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use nonos_libc::mk_time_millis;
 
-extern crate alloc;
-
-mod clock;
-mod ip_client;
-mod protocol;
-mod server;
-mod setup;
-mod state;
-mod tcp;
-
-use nonos_libc::{heap_init, mk_exit, mk_yield};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    wait_for_setup();
-    server::run();
-}
-
-fn wait_for_setup() {
-    loop {
-        if setup::run().is_ok() {
-            return;
-        }
-        for _ in 0..64 {
-            mk_yield();
-        }
+pub fn now_ms() -> u64 {
+    let t = mk_time_millis();
+    if t < 0 {
+        0
+    } else {
+        t as u64
     }
 }
