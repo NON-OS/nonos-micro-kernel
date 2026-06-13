@@ -30,11 +30,12 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     let mut table = TABLE.lock();
     let info = table.owned_mut(sender_pid, handle).map(|e| {
         let prev = e.tcb.state;
+        let fin_tcb = e.tcb;
         if prev == State::Established || prev == State::CloseWait {
             e.tcb.send.nxt = e.tcb.send.nxt.wrapping_add(1);
             e.tcb.state = if prev == State::Established { State::FinWait1 } else { State::LastAck };
         }
-        (prev, e.tcb)
+        (prev, fin_tcb)
     });
     match info {
         None => {
