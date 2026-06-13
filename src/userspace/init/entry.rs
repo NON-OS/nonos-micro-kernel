@@ -20,6 +20,7 @@ use crate::sys::boot_log;
 pub fn run_init() -> ! {
     boot_log::ok("INIT", "Starting");
     run_user_entry_proof();
+    run_std_proof();
     spawn_plan::spawn_ramfs();
     spawn_plan::spawn_core_after_ramfs();
     spawn_plan::run_ramfs_smoketest();
@@ -45,6 +46,14 @@ fn run_user_entry_proof() {
 
 #[cfg(not(feature = "nonos-user-entry-proof"))]
 fn run_user_entry_proof() {}
+
+#[cfg(feature = "nonos-capsule-std-proof")]
+fn run_std_proof() {
+    let _ = crate::userspace::capsule_std_proof::spawn_std_proof_capsule();
+}
+
+#[cfg(not(feature = "nonos-capsule-std-proof"))]
+fn run_std_proof() {}
 
 fn lower_init_priority() {
     use crate::process::core::{Priority, CURRENT_PID, PROCESS_TABLE};

@@ -20,8 +20,9 @@
 extern crate alloc;
 
 use nonos_libc::{heap_init, mk_exit};
-use nonos_std::collections::BTreeMap;
+use nonos_std::collections::{BTreeMap, HashMap};
 use nonos_std::fs;
+use nonos_std::sync::{Arc, Mutex};
 use nonos_std::time::Instant;
 use nonos_std::vec::Vec;
 
@@ -37,9 +38,23 @@ pub unsafe extern "C" fn _start() -> ! {
     let mut counts: BTreeMap<&str, u32> = BTreeMap::new();
     counts.insert("nonos", items.iter().copied().sum());
     let total = counts.get("nonos").copied().unwrap_or(0);
+    let mut seen: HashMap<&str, u32> = HashMap::default();
+    for word in ["nonos", "std", "nonos"] {
+        *seen.entry(word).or_insert(0) += 1;
+    }
+    let hits = seen.get("nonos").copied().unwrap_or(0);
+    let shared = Arc::new(Mutex::new(0u32));
+    {
+        let mut guard = shared.lock().unwrap();
+        *guard = total + hits;
+    }
+    let locked = *shared.lock().unwrap();
     let _ = fs::write(b"/std_proof.txt", b"nonos_std fs works\n");
     let stored = fs::read(b"/std_proof.txt").map(|d| d.len()).unwrap_or(0);
     let elapsed = start.elapsed().as_millis();
-    nonos_std::println!("nonos_std live: total {total}, file {stored} bytes, {elapsed} ms");
+    let pid = nonos_std::process::id();
+    nonos_std::println!(
+        "nonos_std live: total {total}, hits {hits}, locked {locked}, pid {pid}, file {stored} bytes, {elapsed} ms"
+    );
     mk_exit(0)
 }
