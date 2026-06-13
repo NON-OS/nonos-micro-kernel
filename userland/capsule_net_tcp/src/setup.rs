@@ -44,6 +44,9 @@ pub fn run() -> Result<(), SetupError> {
         return Err(SetupError::IpMissing);
     }
     let ip = read_ipv4(port).map_err(|_| SetupError::ConfigMissing)?;
+    if ip == [0, 0, 0, 0] {
+        return Err(SetupError::ConfigMissing);
+    }
     set_ip_port(port);
     set_local_ip(ip);
     Ok(())
