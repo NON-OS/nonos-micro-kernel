@@ -169,7 +169,9 @@ Useful variants:
 
 ```sh
 make nonos-mk-run-serial      # headless, serial console only
+make nonos-mk-run-nat         # QEMU outbound NAT for wallet/RPC demos
 make nonos-mk-run-net         # explicit QEMU user-network host forwarding
+make nonos-mk-run-serial-nat  # serial console plus outbound NAT
 make nonos-mk-run-serial-net  # serial console plus explicit host forwarding
 make nonos-mk-run-wizard      # first-boot setup wizard flow
 make nonos-mk-debug           # QEMU paused with GDB on :1234
