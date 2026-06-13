@@ -26,6 +26,7 @@ use crate::protocol::{
 use super::handlers;
 use super::parse_req::{parse, HDR_LEN};
 use super::respond::respond;
+use super::tick::{recv_budget, tick};
 
 const SERVICE_INBOX: u64 = 0;
 
@@ -33,8 +34,10 @@ pub fn run() -> ! {
     let mut rx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut tx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     loop {
+        tick();
+        let budget = recv_budget();
         let mut sender_pid = 0u32;
-        let n = mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), 0, &mut sender_pid);
+        let n = mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), budget, &mut sender_pid);
         if n <= 0 || sender_pid == 0 {
             continue;
         }
