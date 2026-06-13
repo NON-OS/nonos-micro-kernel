@@ -86,3 +86,26 @@ pub fn sys_getpid() -> i64 {
         None => ERRNO_PERM,
     }
 }
+
+pub fn sys_args(buf: u64, len: usize) -> i64 {
+    let Some(pid) = current_pid() else {
+        return ERRNO_PERM;
+    };
+    let Some(pcb) = crate::process::get_process_table().find_by_pid(pid) else {
+        return ERRNO_INVAL;
+    };
+    let mut blob: alloc::vec::Vec<u8> = alloc::vec::Vec::new();
+    for (i, arg) in pcb.argv.lock().iter().enumerate() {
+        if i > 0 {
+            blob.push(0);
+        }
+        blob.extend_from_slice(arg.as_bytes());
+    }
+    if buf == 0 || len < blob.len() {
+        return blob.len() as i64;
+    }
+    if crate::usercopy::copy_to_user(buf, &blob).is_err() {
+        return ERRNO_FAULT;
+    }
+    blob.len() as i64
+}

@@ -44,6 +44,11 @@ fn run(req_ptr: u64) -> Result<i64, i64> {
         manifest: read_blob(req.manifest_ptr, req.manifest_len)?,
         trailer: read_blob(req.trailer_ptr, req.trailer_len)?,
     };
-    let pid = load_capsule_from_vfs(artifacts, req.requested_caps).map_err(load_errno)?;
+    let args = if req.args_len == 0 {
+        alloc::vec::Vec::new()
+    } else {
+        read_blob(req.args_ptr, req.args_len)?
+    };
+    let pid = load_capsule_from_vfs(artifacts, req.requested_caps, &args).map_err(load_errno)?;
     Ok(pid as i64)
 }

@@ -54,6 +54,7 @@ pub enum SyscallNumber {
     MkExit = tag4(b"MEXT"),
     MkPidAlive = tag4(b"MPAL"),
     MkGetPid = tag4(b"MGPD"),
+    MkArgs = tag4(b"MKAR"),
     MkYield = tag4(b"MYLD"),
     MkTimeMillis = tag4(b"MTMS"),
     MkTimeRtc = tag4(b"MTRT"),

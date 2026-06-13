@@ -101,5 +101,6 @@ fn err_tag(e: UsercopyError) -> &'static [u8] {
         UsercopyError::NoProcessContext => b"NoProcessContext",
         UsercopyError::SizeTooLarge => b"SizeTooLarge",
         UsercopyError::InvalidUtf8 => b"InvalidUtf8",
+        UsercopyError::PageTableCorrupt => b"PageTableCorrupt",
     }
 }

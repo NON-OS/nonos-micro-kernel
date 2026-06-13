@@ -50,10 +50,12 @@ pub fn load_store(req: Request<'_>) -> Vec<u8> {
         manifest_ptr: p[after_cert..after_manifest].as_ptr() as u64,
         trailer_ptr: p[after_manifest..total].as_ptr() as u64,
         requested_caps: u64::from_le_bytes([p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]]),
+        args_ptr: 0,
         elf_len: elf_len as u32,
         cert_len: cert_len as u32,
         manifest_len: manifest_len as u32,
         trailer_len: trailer_len as u32,
+        args_len: 0,
     };
     let rc = mk_capsule_load(&load as *const CapsuleLoadRequest);
     if rc < 0 {

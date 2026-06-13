@@ -32,6 +32,7 @@ use crate::security::nonos_trust_anchor::{decode as decode_trust, BAKED_TRUST_AN
 pub fn load_capsule_from_vfs(
     artifacts: CapsuleArtifacts,
     requested_caps: u64,
+    args: &[u8],
 ) -> Result<u32, LoadError> {
     let manifest = decode_manifest(&artifacts.manifest).map_err(|_| LoadError::Manifest)?;
     let (service_name, service_port) = endpoint(&manifest, EndpointKind::Service)?;
@@ -56,7 +57,16 @@ pub fn load_capsule_from_vfs(
     // temporal check rather than rejecting every certificate.
     let now = crate::time::timestamp_millis();
     let now_ms = if now == 0 { None } else { Some(now) };
-    spawn_verified(&spec, &trust, now_ms).map_err(LoadError::Spawn)
+    let pid = spawn_verified(&spec, &trust, now_ms).map_err(LoadError::Spawn)?;
+    if !args.is_empty() {
+        let argv: alloc::vec::Vec<alloc::string::String> = args
+            .split(|&b| b == 0)
+            .filter(|s| !s.is_empty())
+            .map(|s| alloc::string::String::from_utf8_lossy(s).into_owned())
+            .collect();
+        crate::process::with_process(pid, |pcb| *pcb.argv.lock() = argv);
+    }
+    Ok(pid)
 }
 
 fn endpoint(m: &CapsuleManifest, kind: EndpointKind) -> Result<(&str, u32), LoadError> {
