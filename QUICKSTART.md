@@ -168,8 +168,9 @@ make nonos-mk-run
 ```
 
 QEMU boots the verified chain and your window comes up on the desktop.
-The default boot attaches no NIC. Use `make nonos-mk-run-net` only when
-you are testing network-capable capsules and want QEMU host forwarding.
+The default boot attaches no NIC. Use `make nonos-mk-run-nat` for outbound
+network tests such as wallet RPC, or `make nonos-mk-run-net` when you also
+need QEMU host forwarding.
 
 ## What you never had to do
 
