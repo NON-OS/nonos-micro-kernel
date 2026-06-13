@@ -14,19 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod build;
-mod checksum;
-mod header;
-mod iss;
-mod parse;
-mod siphash;
-mod state;
-mod tcb;
+use crate::clock::now_ms;
+use crate::tcp::siphash24;
 
-pub use build::{build, BuildRequest};
-pub use header::{TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_PSH, FLAG_RST, FLAG_SYN};
-pub use iss::iss_for;
-pub use parse::parse;
-pub use siphash::siphash24;
-pub use state::State;
-pub use tcb::{Endpoint4, Tcb};
+pub fn iss_for(
+    key: [u64; 2],
+    local_ip: [u8; 4],
+    local_port: u16,
+    remote_ip: [u8; 4],
+    remote_port: u16,
+) -> u32 {
+    let mut buf = [0u8; 12];
+    buf[0..4].copy_from_slice(&local_ip);
+    buf[4..6].copy_from_slice(&local_port.to_be_bytes());
+    buf[6..10].copy_from_slice(&remote_ip);
+    buf[10..12].copy_from_slice(&remote_port.to_be_bytes());
+    let hash = siphash24(key, &buf) as u32;
+    (now_ms() as u32).wrapping_add(hash)
+}

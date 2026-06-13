@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_service_lookup;
+use nonos_libc::{crypto_random, mk_service_lookup};
 
 use crate::ip_client::read_ipv4;
-use crate::state::{set_ip_port, set_local_ip};
+use crate::state::{set_ip_port, set_local_ip, TABLE};
 
 const IP_NAME: &str = "net.ip";
 
@@ -27,7 +27,16 @@ pub enum SetupError {
     ConfigMissing,
 }
 
+fn seed_iss_key() {
+    let mut raw = [0u8; 16];
+    let _ = crypto_random(raw.as_mut_ptr(), raw.len());
+    let k0 = u64::from_le_bytes([raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7]]);
+    let k1 = u64::from_le_bytes([raw[8], raw[9], raw[10], raw[11], raw[12], raw[13], raw[14], raw[15]]);
+    TABLE.lock().seed_iss([k0, k1]);
+}
+
 pub fn run() -> Result<(), SetupError> {
+    seed_iss_key();
     let mut port = 0u32;
     let mut pid = 0u32;
     let rc = mk_service_lookup(IP_NAME.as_ptr(), IP_NAME.len(), &mut port, &mut pid);

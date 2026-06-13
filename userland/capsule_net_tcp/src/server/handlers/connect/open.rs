@@ -19,10 +19,11 @@ use crate::tcp::{Endpoint4, State, Tcb};
 
 pub fn connection(owner: u32, dst: [u8; 4], dst_port: u16) -> Option<(u32, Tcb)> {
     let mut table = TABLE.lock();
-    let iss = table.next_iss();
     let local = Endpoint4 { ip: local_ip(), port: next_ephemeral() };
+    let remote = Endpoint4 { ip: dst, port: dst_port };
+    let iss = table.iss_for_pair(local, remote);
     let mut tcb = Tcb::listen(local);
-    tcb.remote = Endpoint4 { ip: dst, port: dst_port };
+    tcb.remote = remote;
     tcb.state = State::SynSent;
     tcb.send.iss = iss;
     tcb.send.nxt = iss;

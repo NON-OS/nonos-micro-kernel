@@ -23,7 +23,7 @@ pub fn syn(local: Endpoint4, remote: Endpoint4, seq: u32) -> Option<Tcb> {
         let l = table.listener_for_mut(local.port)?;
         (l.owner_pid, l.handle)
     };
-    let iss = table.next_iss();
+    let iss = table.iss_for_pair(local, remote);
     let mut tcb = Tcb::listen(local);
     tcb.remote = remote;
     tcb.state = State::SynReceived;

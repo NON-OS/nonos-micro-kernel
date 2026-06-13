@@ -19,6 +19,7 @@ use spin::Mutex;
 
 use crate::state::Entry;
 use crate::state::Timers;
+use crate::tcp::{iss_for, Endpoint4};
 
 pub const TABLE_CAP: usize = 256;
 pub static TABLE: Mutex<Table> = Mutex::new(Table::new());
@@ -40,8 +41,12 @@ impl Table {
         }
     }
 
-    pub fn next_iss(&mut self) -> u32 {
-        0x7000_0000
+    pub fn seed_iss(&mut self, key: [u64; 2]) {
+        self.iss_key = key;
+    }
+
+    pub fn iss_for_pair(&self, local: Endpoint4, remote: Endpoint4) -> u32 {
+        iss_for(self.iss_key, local.ip, local.port, remote.ip, remote.port)
     }
 }
 
