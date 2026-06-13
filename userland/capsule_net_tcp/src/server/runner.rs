@@ -20,7 +20,7 @@ use nonos_libc::mk_ipc_recv_from;
 
 use crate::protocol::{
     E_BAD_OP, IPC_PAYLOAD_MAX, OP_ACCEPT, OP_CLOSE, OP_CONNECT, OP_HEALTHCHECK, OP_LISTEN, OP_RECV,
-    OP_SEND, OP_SHUTDOWN,
+    OP_SEND, OP_SHUTDOWN, OP_STATE,
 };
 
 use super::handlers;
@@ -50,6 +50,7 @@ pub fn run() -> ! {
             OP_SEND => handlers::send::handle(sender_pid, &req, body, &mut tx),
             OP_RECV => handlers::recv::handle(sender_pid, &req, body, &mut tx),
             OP_CLOSE | OP_SHUTDOWN => handlers::close::handle(sender_pid, &req, body, &mut tx),
+            OP_STATE => handlers::state::handle(sender_pid, &req, body, &mut tx),
             _ => {
                 let _ = respond(sender_pid, req.op, E_BAD_OP, req.request_id, 0, &mut tx);
             }
