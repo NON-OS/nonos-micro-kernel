@@ -14,13 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const TASKBAR_APP_MAX: usize = crate::state::apps::LAUNCHER_APPS.len();
-pub const TASKBAR_NO_ACTIVE: u8 = 0xFF;
+use super::grid::{COLS, ROWS};
 
-pub struct TaskbarState {
-    pub open: [bool; TASKBAR_APP_MAX],
-    pub pulse_until_ms: [i64; TASKBAR_APP_MAX],
-    pub reveal_until_ms: i64,
-    pub active: u8,
-    pub visible: bool,
+pub fn next(state: &mut u64) -> u64 {
+    let mut x = *state;
+    x ^= x << 13;
+    x ^= x >> 7;
+    x ^= x << 17;
+    *state = x;
+    x
+}
+
+pub fn place_food(state: &mut u64, body: &[(i16, i16)]) -> (i16, i16) {
+    for _ in 0..64 {
+        let r = next(state);
+        let cell = ((r % COLS as u64) as i16, ((r >> 16) % ROWS as u64) as i16);
+        if !body.contains(&cell) {
+            return cell;
+        }
+    }
+    first_free(body)
+}
+
+fn first_free(body: &[(i16, i16)]) -> (i16, i16) {
+    for y in 0..ROWS {
+        for x in 0..COLS {
+            if !body.contains(&(x, y)) {
+                return (x, y);
+            }
+        }
+    }
+    (0, 0)
 }

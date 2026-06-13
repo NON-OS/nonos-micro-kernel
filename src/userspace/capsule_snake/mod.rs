@@ -14,13 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const TASKBAR_APP_MAX: usize = crate::state::apps::LAUNCHER_APPS.len();
-pub const TASKBAR_NO_ACTIVE: u8 = 0xFF;
+mod embed;
+mod spawn;
+mod state;
 
-pub struct TaskbarState {
-    pub open: [bool; TASKBAR_APP_MAX],
-    pub pulse_until_ms: [i64; TASKBAR_APP_MAX],
-    pub reveal_until_ms: i64,
-    pub active: u8,
-    pub visible: bool,
-}
+pub use spawn::spawn_snake_capsule;
+pub use state::shared_state;

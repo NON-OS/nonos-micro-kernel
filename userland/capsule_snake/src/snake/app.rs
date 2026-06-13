@@ -14,20 +14,38 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{AppManifest, EventOutcome};
-use crate::input::InputEvent;
-use crate::paint::PaintBuffer;
+use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
 
-pub trait App {
-    fn manifest(&self) -> AppManifest;
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome;
-    fn paint(&mut self, fb: &mut PaintBuffer);
+use super::input::on_event;
+use super::manifest::manifest;
+use super::paint::paint;
+use super::state::Game;
+use super::step::step;
 
-    fn on_tick(&mut self) -> bool {
-        false
+pub struct SnakeApp {
+    game: Game,
+}
+
+impl SnakeApp {
+    pub fn new() -> Self {
+        SnakeApp { game: Game::new() }
     }
+}
 
+impl App for SnakeApp {
+    fn manifest(&self) -> AppManifest {
+        manifest()
+    }
+    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
+        on_event(&mut self.game, event)
+    }
+    fn paint(&mut self, fb: &mut PaintBuffer) {
+        paint(&self.game, fb);
+    }
+    fn on_tick(&mut self) -> bool {
+        step(&mut self.game)
+    }
     fn tick_interval_ms(&self) -> i64 {
-        1000
+        self.game.interval_ms
     }
 }

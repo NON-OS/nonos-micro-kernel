@@ -14,13 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const TASKBAR_APP_MAX: usize = crate::state::apps::LAUNCHER_APPS.len();
-pub const TASKBAR_NO_ACTIVE: u8 = 0xFF;
+use crate::snake::grid::{BOARD_Y, COLS, MARGIN, ROWS};
 
-pub struct TaskbarState {
-    pub open: [bool; TASKBAR_APP_MAX],
-    pub pulse_until_ms: [i64; TASKBAR_APP_MAX],
-    pub reveal_until_ms: i64,
-    pub active: u8,
-    pub visible: bool,
+pub struct Layout {
+    pub cell: u32,
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
+}
+
+impl Layout {
+    pub fn inset(&self) -> u32 {
+        (self.cell / 16).max(1)
+    }
+}
+
+pub fn compute(width: u32, height: u32) -> Layout {
+    let avail_w = width.saturating_sub(2 * MARGIN).max(COLS as u32);
+    let avail_h = height.saturating_sub(BOARD_Y + MARGIN).max(ROWS as u32);
+    let cell = (avail_w / COLS as u32).min(avail_h / ROWS as u32).max(4);
+    let w = cell * COLS as u32;
+    let h = cell * ROWS as u32;
+    let x = width.saturating_sub(w) / 2;
+    let y = BOARD_Y + avail_h.saturating_sub(h) / 2;
+    Layout { cell, x, y, w, h }
 }

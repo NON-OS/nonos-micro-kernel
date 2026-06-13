@@ -14,13 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const TASKBAR_APP_MAX: usize = crate::state::apps::LAUNCHER_APPS.len();
-pub const TASKBAR_NO_ACTIVE: u8 = 0xFF;
+use nonos_app_skeleton::PaintBuffer;
 
-pub struct TaskbarState {
-    pub open: [bool; TASKBAR_APP_MAX],
-    pub pulse_until_ms: [i64; TASKBAR_APP_MAX],
-    pub reveal_until_ms: i64,
-    pub active: u8,
-    pub visible: bool,
+use super::layout::Layout;
+use crate::snake::grid::TITLEBAR_H;
+use crate::snake::state::Game;
+
+const LABEL: u32 = 0xFF9A_A4B2;
+const VALUE: u32 = 0xFF6A_D47A;
+
+pub fn paint(game: &Game, layout: &Layout, fb: &mut PaintBuffer) {
+    let mut buf = [0u8; 10];
+    let digits = itoa(game.score, &mut buf);
+    fb.text_scaled(layout.x, TITLEBAR_H + 10, b"SCORE", LABEL, 2);
+    fb.text_scaled(layout.x + 104, TITLEBAR_H + 10, digits, VALUE, 2);
+}
+
+fn itoa(mut value: u32, buf: &mut [u8; 10]) -> &[u8] {
+    let mut i = buf.len();
+    loop {
+        i -= 1;
+        buf[i] = b'0' + (value % 10) as u8;
+        value /= 10;
+        if value == 0 {
+            break;
+        }
+    }
+    &buf[i..]
 }

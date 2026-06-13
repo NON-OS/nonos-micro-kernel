@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const TASKBAR_APP_MAX: usize = crate::state::apps::LAUNCHER_APPS.len();
-pub const TASKBAR_NO_ACTIVE: u8 = 0xFF;
+use crate::state::Context;
 
-pub struct TaskbarState {
-    pub open: [bool; TASKBAR_APP_MAX],
-    pub pulse_until_ms: [i64; TASKBAR_APP_MAX],
-    pub reveal_until_ms: i64,
-    pub active: u8,
-    pub visible: bool,
+pub fn snake(ctx: &Context, x: u32, y: u32, size: u32) {
+    let fg = super::constants::ICON_FG;
+    super::paint::paint_u(ctx, x, y, size, 4, 3, 8, 2, fg);
+    super::paint::paint_u(ctx, x, y, size, 4, 5, 2, 2, fg);
+    super::paint::paint_u(ctx, x, y, size, 4, 7, 8, 2, fg);
+    super::paint::paint_u(ctx, x, y, size, 10, 9, 2, 2, fg);
+    super::paint::paint_u(ctx, x, y, size, 4, 11, 8, 2, fg);
 }

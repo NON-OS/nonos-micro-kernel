@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const TASKBAR_APP_MAX: usize = crate::state::apps::LAUNCHER_APPS.len();
-pub const TASKBAR_NO_ACTIVE: u8 = 0xFF;
-
-pub struct TaskbarState {
-    pub open: [bool; TASKBAR_APP_MAX],
-    pub pulse_until_ms: [i64; TASKBAR_APP_MAX],
-    pub reveal_until_ms: i64,
-    pub active: u8,
-    pub visible: bool,
-}
+pub const CELL: u32 = 16;
+pub const COLS: i16 = 28;
+pub const ROWS: i16 = 18;
+pub const MARGIN: u32 = 15;
+pub const TITLEBAR_H: u32 = 28;
+pub const HEADER_H: u32 = 36;
+pub const BOARD_Y: u32 = TITLEBAR_H + HEADER_H;
+pub const BOARD_W: u32 = COLS as u32 * CELL;
+pub const BOARD_H: u32 = ROWS as u32 * CELL;
+pub const WIN_W: u32 = BOARD_W + 2 * MARGIN;
+pub const WIN_H: u32 = BOARD_Y + BOARD_H + MARGIN;

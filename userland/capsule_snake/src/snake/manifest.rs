@@ -14,13 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const TASKBAR_APP_MAX: usize = crate::state::apps::LAUNCHER_APPS.len();
-pub const TASKBAR_NO_ACTIVE: u8 = 0xFF;
+use nonos_app_skeleton::{AppManifest, WindowKind};
 
-pub struct TaskbarState {
-    pub open: [bool; TASKBAR_APP_MAX],
-    pub pulse_until_ms: [i64; TASKBAR_APP_MAX],
-    pub reveal_until_ms: i64,
-    pub active: u8,
-    pub visible: bool,
+use super::grid::{WIN_H, WIN_W};
+
+const WINDOW_ID: u32 = 0x534E_414B;
+const TITLE: &[u8] = b"Snake";
+const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
+const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
+const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
+const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_POINTER_ABS_BIT | INPUT_BUTTON_DOWN_BIT;
+
+pub fn manifest() -> AppManifest {
+    AppManifest {
+        title: TITLE,
+        window_id: WINDOW_ID,
+        kind: WindowKind::Normal,
+        initial_x: 280,
+        initial_y: 120,
+        width: WIN_W,
+        height: WIN_H,
+        input_kind_mask: INPUT_MASK,
+    }
 }

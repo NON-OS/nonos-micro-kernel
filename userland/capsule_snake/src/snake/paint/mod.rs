@@ -14,13 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const TASKBAR_APP_MAX: usize = crate::state::apps::LAUNCHER_APPS.len();
-pub const TASKBAR_NO_ACTIVE: u8 = 0xFF;
+mod board;
+mod header;
+mod layout;
+mod overlay;
 
-pub struct TaskbarState {
-    pub open: [bool; TASKBAR_APP_MAX],
-    pub pulse_until_ms: [i64; TASKBAR_APP_MAX],
-    pub reveal_until_ms: i64,
-    pub active: u8,
-    pub visible: bool,
+use nonos_app_skeleton::PaintBuffer;
+
+use super::state::{Game, Phase};
+
+const BG: u32 = 0xFF10_1418;
+
+pub fn paint(game: &Game, fb: &mut PaintBuffer) {
+    let layout = layout::compute(fb.width, fb.height);
+    fb.clear(BG);
+    header::paint(game, &layout, fb);
+    board::paint(game, &layout, fb);
+    match game.phase {
+        Phase::Ready => overlay::ready(&layout, fb),
+        Phase::Paused => overlay::paused(&layout, fb),
+        Phase::GameOver => overlay::game_over(&layout, fb),
+        Phase::Running => {}
+    }
 }
