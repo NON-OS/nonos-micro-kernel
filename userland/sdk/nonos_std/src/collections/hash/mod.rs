@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+mod hasher;
+mod seed;
 
-pub mod consts;
+pub use hasher::SeededState;
 
-pub use args::{args, Args};
+pub type HashMap<K, V> = hashbrown::HashMap<K, V, SeededState>;
+pub type HashSet<T> = hashbrown::HashSet<T, SeededState>;

@@ -15,10 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod api;
+mod dir;
 mod file;
 mod frame;
+mod meta;
+mod options;
 mod rw;
 mod session;
 
-pub use api::{read, write};
+pub use api::{read, read_to_string, write};
+pub use dir::{create_dir, read_dir, remove_file, DirEntry};
 pub use file::File;
+pub use meta::{metadata, Metadata};
+pub use options::OpenOptions;

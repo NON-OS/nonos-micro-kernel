@@ -14,8 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+use crate::io::Result;
+use crate::net::addr::{resolve, ToSocketAddrs};
+use crate::net::socket::{Socket, KIND_DGRAM};
 
-pub mod consts;
+pub struct UdpSocket {
+    inner: Socket,
+}
 
-pub use args::{args, Args};
+impl UdpSocket {
+    pub fn bind<A: ToSocketAddrs>(addr: A) -> Result<Self> {
+        let (ip, port) = resolve(addr)?;
+        let inner = Socket::open(KIND_DGRAM)?;
+        inner.bind(ip, port)?;
+        Ok(Self { inner })
+    }
+
+    pub fn connect<A: ToSocketAddrs>(&self, addr: A) -> Result<()> {
+        let (ip, port) = resolve(addr)?;
+        self.inner.connect(ip, port)
+    }
+
+    pub fn send(&self, buf: &[u8]) -> Result<usize> {
+        self.inner.send(buf)
+    }
+
+    pub fn recv(&self, buf: &mut [u8]) -> Result<usize> {
+        self.inner.recv(buf)
+    }
+}

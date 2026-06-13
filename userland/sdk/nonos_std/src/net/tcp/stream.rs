@@ -14,27 +14,39 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
-use alloc::vec::Vec;
-
-use super::file::File;
 use crate::io::{Read, Result, Write};
+use crate::net::addr::{resolve, ToSocketAddrs};
+use crate::net::socket::{Socket, KIND_STREAM};
 
-pub fn read(path: &[u8]) -> Result<Vec<u8>> {
-    let mut file = File::open(path)?;
-    let mut out = Vec::new();
-    file.read_to_end(&mut out)?;
-    Ok(out)
+pub struct TcpStream {
+    inner: Socket,
 }
 
-pub fn read_to_string(path: &[u8]) -> Result<String> {
-    let mut file = File::open(path)?;
-    let mut out = String::new();
-    file.read_to_string(&mut out)?;
-    Ok(out)
+impl TcpStream {
+    pub fn connect<A: ToSocketAddrs>(addr: A) -> Result<Self> {
+        let (ip, port) = resolve(addr)?;
+        let inner = Socket::open(KIND_STREAM)?;
+        inner.connect(ip, port)?;
+        Ok(Self { inner })
+    }
+
+    pub(crate) fn from_socket(inner: Socket) -> Self {
+        Self { inner }
+    }
 }
 
-pub fn write(path: &[u8], data: &[u8]) -> Result<()> {
-    let mut file = File::create(path)?;
-    file.write_all(data)
+impl Read for TcpStream {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+        self.inner.recv(buf)
+    }
+}
+
+impl Write for TcpStream {
+    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+        self.inner.send(buf)
+    }
+
+    fn flush(&mut self) -> Result<()> {
+        Ok(())
+    }
 }

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+use crate::io::{Error, ErrorKind};
 
-pub mod consts;
-
-pub use args::{args, Args};
+pub(super) fn invalid() -> Error {
+    Error::new(ErrorKind::InvalidInput, "invalid address")
+}

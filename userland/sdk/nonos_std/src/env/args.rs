@@ -15,26 +15,35 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::string::String;
-use alloc::vec::Vec;
+use alloc::vec;
+use alloc::vec::{IntoIter, Vec};
 
-use super::file::File;
-use crate::io::{Read, Result, Write};
-
-pub fn read(path: &[u8]) -> Result<Vec<u8>> {
-    let mut file = File::open(path)?;
-    let mut out = Vec::new();
-    file.read_to_end(&mut out)?;
-    Ok(out)
+pub struct Args {
+    inner: IntoIter<String>,
 }
 
-pub fn read_to_string(path: &[u8]) -> Result<String> {
-    let mut file = File::open(path)?;
-    let mut out = String::new();
-    file.read_to_string(&mut out)?;
-    Ok(out)
+impl Iterator for Args {
+    type Item = String;
+
+    fn next(&mut self) -> Option<String> {
+        self.inner.next()
+    }
 }
 
-pub fn write(path: &[u8], data: &[u8]) -> Result<()> {
-    let mut file = File::create(path)?;
-    file.write_all(data)
+pub fn args() -> Args {
+    Args { inner: collect().into_iter() }
+}
+
+fn collect() -> Vec<String> {
+    let needed = nonos_libc::mk_args(core::ptr::null_mut(), 0);
+    if needed <= 0 {
+        return Vec::new();
+    }
+    let mut buf = vec![0u8; needed as usize];
+    let n = nonos_libc::mk_args(buf.as_mut_ptr(), buf.len());
+    if n <= 0 {
+        return Vec::new();
+    }
+    buf.truncate(n as usize);
+    buf.split(|&b| b == 0).map(|s| String::from_utf8_lossy(s).into_owned()).collect()
 }

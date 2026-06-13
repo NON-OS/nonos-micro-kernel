@@ -14,8 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+pub fn exit(code: i32) -> ! {
+    nonos_libc::mk_exit(code)
+}
 
-pub mod consts;
+pub fn abort() -> ! {
+    nonos_libc::mk_exit(134)
+}
 
-pub use args::{args, Args};
+pub fn id() -> u32 {
+    nonos_libc::mk_getpid()
+}

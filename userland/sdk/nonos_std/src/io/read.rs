@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::string::String;
 use alloc::vec::Vec;
 
 use super::error::{Error, ErrorKind, Result};
@@ -42,5 +43,17 @@ pub trait Read {
             }
         }
         Ok(())
+    }
+
+    fn read_to_string(&mut self, out: &mut String) -> Result<usize> {
+        let mut bytes = Vec::new();
+        let n = self.read_to_end(&mut bytes)?;
+        match String::from_utf8(bytes) {
+            Ok(s) => {
+                out.push_str(&s);
+                Ok(n)
+            }
+            Err(_) => Err(Error::new(ErrorKind::InvalidData, "stream did not contain valid utf-8")),
+        }
     }
 }

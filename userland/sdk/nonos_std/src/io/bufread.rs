@@ -18,11 +18,19 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use super::error::{Error, ErrorKind, Result};
+use super::lines::Lines;
 use super::read::Read;
 
 pub trait BufRead: Read {
     fn fill_buf(&mut self) -> Result<&[u8]>;
     fn consume(&mut self, amt: usize);
+
+    fn lines(self) -> Lines<Self>
+    where
+        Self: Sized,
+    {
+        Lines::new(self)
+    }
 
     fn read_until(&mut self, delim: u8, out: &mut Vec<u8>) -> Result<usize> {
         let mut total = 0;

@@ -15,26 +15,37 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::string::String;
-use alloc::vec::Vec;
 
-use super::file::File;
-use crate::io::{Read, Result, Write};
+use super::bufread::BufRead;
+use super::error::Result;
 
-pub fn read(path: &[u8]) -> Result<Vec<u8>> {
-    let mut file = File::open(path)?;
-    let mut out = Vec::new();
-    file.read_to_end(&mut out)?;
-    Ok(out)
+pub struct Lines<B> {
+    buf: B,
 }
 
-pub fn read_to_string(path: &[u8]) -> Result<String> {
-    let mut file = File::open(path)?;
-    let mut out = String::new();
-    file.read_to_string(&mut out)?;
-    Ok(out)
+impl<B: BufRead> Lines<B> {
+    pub(super) fn new(buf: B) -> Self {
+        Self { buf }
+    }
 }
 
-pub fn write(path: &[u8], data: &[u8]) -> Result<()> {
-    let mut file = File::create(path)?;
-    file.write_all(data)
+impl<B: BufRead> Iterator for Lines<B> {
+    type Item = Result<String>;
+
+    fn next(&mut self) -> Option<Result<String>> {
+        let mut line = String::new();
+        match self.buf.read_line(&mut line) {
+            Ok(0) => None,
+            Ok(_) => {
+                if line.ends_with('\n') {
+                    line.pop();
+                    if line.ends_with('\r') {
+                        line.pop();
+                    }
+                }
+                Some(Ok(line))
+            }
+            Err(e) => Some(Err(e)),
+        }
+    }
 }

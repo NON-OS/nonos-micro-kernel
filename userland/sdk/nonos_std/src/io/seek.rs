@@ -14,8 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+use super::error::Result;
 
-pub mod consts;
+#[derive(Clone, Copy, Debug)]
+pub enum SeekFrom {
+    Start(u64),
+    End(i64),
+    Current(i64),
+}
 
-pub use args::{args, Args};
+pub trait Seek {
+    fn seek(&mut self, pos: SeekFrom) -> Result<u64>;
+
+    fn stream_position(&mut self) -> Result<u64> {
+        self.seek(SeekFrom::Current(0))
+    }
+
+    fn rewind(&mut self) -> Result<()> {
+        self.seek(SeekFrom::Start(0)).map(|_| ())
+    }
+}

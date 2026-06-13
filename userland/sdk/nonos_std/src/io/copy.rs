@@ -14,8 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+use super::error::Result;
+use super::read::Read;
+use super::write::Write;
 
-pub mod consts;
-
-pub use args::{args, Args};
+pub fn copy<R: Read + ?Sized, W: Write + ?Sized>(reader: &mut R, writer: &mut W) -> Result<u64> {
+    let mut buf = [0u8; 8192];
+    let mut total = 0u64;
+    loop {
+        let n = reader.read(&mut buf)?;
+        if n == 0 {
+            return Ok(total);
+        }
+        writer.write_all(&buf[..n])?;
+        total += n as u64;
+    }
+}

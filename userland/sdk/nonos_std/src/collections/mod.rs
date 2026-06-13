@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+mod hash;
 
-pub mod consts;
-
-pub use args::{args, Args};
+pub use alloc::collections::{BTreeMap, BTreeSet, BinaryHeap, LinkedList, VecDeque};
+pub use hash::{HashMap, HashSet, SeededState};

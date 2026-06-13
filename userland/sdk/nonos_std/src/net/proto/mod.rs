@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+mod session;
+mod wire;
 
-pub mod consts;
-
-pub use args::{args, Args};
+pub(crate) use session::{call, port};
+pub(crate) use wire::{
+    BODY_OFF, OP_ACCEPT, OP_BIND, OP_CLOSE, OP_CONNECT, OP_LISTEN, OP_RECV, OP_SEND, OP_SOCKET,
+};
