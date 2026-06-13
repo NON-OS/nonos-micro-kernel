@@ -59,6 +59,7 @@ pub mod capsule_settings;
 #[cfg(feature = "nonos-capsule-setup-wizard")]
 pub mod capsule_setup_wizard;
 pub mod capsule_snake;
+pub mod capsule_std_proof;
 pub mod capsule_terminal;
 pub mod capsule_text_editor;
 pub mod capsule_toolkit;
