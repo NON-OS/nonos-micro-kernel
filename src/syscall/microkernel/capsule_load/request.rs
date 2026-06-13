@@ -29,8 +29,10 @@ pub(super) struct CapsuleLoadRequest {
     pub manifest_ptr: u64,
     pub trailer_ptr: u64,
     pub requested_caps: u64,
+    pub args_ptr: u64,
     pub elf_len: u32,
     pub cert_len: u32,
     pub manifest_len: u32,
     pub trailer_len: u32,
+    pub args_len: u32,
 }
