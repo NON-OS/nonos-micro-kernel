@@ -18,7 +18,7 @@ use alloc::vec;
 
 use crate::ip_client::send_segment;
 use crate::state::ip_port;
-use crate::tcp::{build, BuildRequest, Tcb};
+use crate::tcp::{build, BuildRequest, Endpoint4, Tcb, FLAG_ACK, FLAG_RST};
 
 pub fn send(tcb: Tcb, flags: u8, payload: &[u8]) -> Result<(), &'static str> {
     let mut seg = vec![0u8; 20 + payload.len()];
@@ -35,4 +35,21 @@ pub fn send(tcb: Tcb, flags: u8, payload: &[u8]) -> Result<(), &'static str> {
     };
     let n = build(&req, &mut seg).map_err(|_| "tcp build failed")?;
     send_segment(ip_port(), tcb.remote.ip, &seg[..n]).map_err(|_| "tcp send failed")
+}
+
+pub fn send_rst(local: Endpoint4, remote: Endpoint4, seq: u32, ack: u32) -> Result<(), &'static str> {
+    let mut seg = vec![0u8; 20];
+    let req = BuildRequest {
+        src: local.ip,
+        dst: remote.ip,
+        src_port: local.port,
+        dst_port: remote.port,
+        seq,
+        ack,
+        flags: FLAG_RST | FLAG_ACK,
+        window: 0,
+        payload: &[],
+    };
+    let n = build(&req, &mut seg).map_err(|_| "tcp build failed")?;
+    send_segment(ip_port(), remote.ip, &seg[..n]).map_err(|_| "tcp send failed")
 }

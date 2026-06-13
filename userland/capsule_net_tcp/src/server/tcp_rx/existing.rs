@@ -15,9 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::action::RxAction;
+use super::rst;
 use super::transitions::{closing, established, handshake};
 use crate::state::{TimerKind, TABLE};
-use crate::tcp::{Endpoint4, State, TcpHeader, FLAG_ACK};
+use crate::tcp::{Endpoint4, State, TcpHeader, FLAG_ACK, FLAG_RST};
 
 pub fn update(local: Endpoint4, remote: Endpoint4, hdr: TcpHeader, payload: &[u8]) -> RxAction {
     let now = crate::clock::now_ms();
@@ -25,9 +26,16 @@ pub fn update(local: Endpoint4, remote: Endpoint4, hdr: TcpHeader, payload: &[u8
     let mut arm: Option<(u32, u64)> = None;
     let mut accepted: Option<(u32, u32)> = None;
     let action = match table.connection_match_mut(local, remote) {
-        None => return RxAction::Rst { local, remote, seq: 0, ack: hdr.seq.wrapping_add(1) },
+        None => {
+            if hdr.has_flag(FLAG_RST) {
+                return RxAction::None;
+            }
+            return RxAction::Rst { local, remote, seq: 0, ack: hdr.seq.wrapping_add(1) };
+        }
         Some(e) => {
-            if e.tcb.state == State::SynSent {
+            if hdr.has_flag(FLAG_RST) {
+                if rst::in_window(e, hdr.seq) { RxAction::Reap(e.handle) } else { RxAction::None }
+            } else if e.tcb.state == State::SynSent {
                 handshake::step(e, &hdr)
             } else if e.tcb.state == State::SynReceived && hdr.has_flag(FLAG_ACK) {
                 e.tcb.state = State::Established;

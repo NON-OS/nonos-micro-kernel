@@ -27,15 +27,31 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         Ok(h) => h,
         Err(_) => return status(sender_pid, req, E_BAD_LEN, tx),
     };
-    let tcb = TABLE.lock().owned_mut(sender_pid, handle).map(|e| e.tcb);
-    if let Some(tcb) = tcb {
-        if tcb.state == State::Established {
-            let _ = tcp_tx::send(tcb, FLAG_ACK | FLAG_FIN, &[]);
+    let mut table = TABLE.lock();
+    let info = table.owned_mut(sender_pid, handle).map(|e| {
+        let prev = e.tcb.state;
+        if prev == State::Established || prev == State::CloseWait {
+            e.tcb.send.nxt = e.tcb.send.nxt.wrapping_add(1);
+            e.tcb.state = if prev == State::Established { State::FinWait1 } else { State::LastAck };
         }
-        let _ = TABLE.lock().remove(sender_pid, handle);
-        let _ = respond(sender_pid, OP_CLOSE, E_OK, req.request_id, 0, tx);
-    } else {
-        status(sender_pid, req, E_NO_SOCKET, tx);
+        (prev, e.tcb)
+    });
+    match info {
+        None => {
+            drop(table);
+            status(sender_pid, req, E_NO_SOCKET, tx);
+        }
+        Some((prev, tcb)) => {
+            let closing = prev == State::Established || prev == State::CloseWait;
+            if !closing {
+                let _ = table.remove(sender_pid, handle);
+            }
+            drop(table);
+            if closing {
+                let _ = tcp_tx::send(tcb, FLAG_ACK | FLAG_FIN, &[]);
+            }
+            let _ = respond(sender_pid, OP_CLOSE, E_OK, req.request_id, 0, tx);
+        }
     }
 }
 

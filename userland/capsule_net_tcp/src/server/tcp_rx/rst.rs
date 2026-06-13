@@ -14,12 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod action;
-mod drain;
-mod existing;
-pub(super) mod rst;
-mod transitions;
+use crate::state::Entry;
 
-pub use action::RxAction;
-pub use drain::drain_one;
+pub fn in_window(e: &Entry, seq: u32) -> bool {
+    let wnd = (e.tcb.recv.wnd as u32).max(1);
+    seq.wrapping_sub(e.tcb.recv.nxt) < wnd
+}
