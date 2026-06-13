@@ -97,6 +97,7 @@ fn err_tag(e: UsercopyError) -> &'static [u8] {
         UsercopyError::PageNotMapped => b"PageNotMapped",
         UsercopyError::PageNotUser => b"PageNotUser",
         UsercopyError::PageNotWritable => b"PageNotWritable",
+        UsercopyError::PageTableCorrupt => b"PageTableCorrupt",
         UsercopyError::PageFault => b"PageFault",
         UsercopyError::NoProcessContext => b"NoProcessContext",
         UsercopyError::SizeTooLarge => b"SizeTooLarge",
