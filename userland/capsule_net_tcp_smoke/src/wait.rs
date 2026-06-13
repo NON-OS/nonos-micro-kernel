@@ -14,35 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use nonos_libc::{mk_time_millis, mk_yield};
 
-extern crate alloc;
+const STEP_MS: i64 = 100;
 
-mod client;
-mod lifecycle;
-mod siphash;
-mod wait;
-
-use nonos_libc::{heap_init, mk_debug, mk_exit};
-
-const ISS_KEY: [u64; 2] = [0x0706_0504_0302_0100, 0x0f0e_0d0c_0b0a_0908];
-const ISS_KAT: u64 = 0xa129_ca61_49be_45e5;
-
-fn iss_ok() {
-    let data: [u8; 15] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
-    if siphash::siphash24(ISS_KEY, &data) == ISS_KAT {
-        let m = b"[TCP] ISS-OK\n";
-        let _ = mk_debug(m.as_ptr(), m.len());
+pub fn poll_until<F: FnMut() -> bool>(timeout_ms: u64, mut f: F) -> bool {
+    let start = mk_time_millis();
+    loop {
+        if f() {
+            return true;
+        }
+        let now = mk_time_millis();
+        if (now - start) as u64 >= timeout_ms {
+            return false;
+        }
+        let next = now + STEP_MS;
+        while mk_time_millis() < next {
+            mk_yield();
+        }
     }
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    iss_ok();
-    lifecycle::run();
-    mk_exit(0)
 }

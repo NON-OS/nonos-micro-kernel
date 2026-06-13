@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_yield;
-
 use super::ops::{close, mark, recv, state, E_NO_SOCKET, E_OK, S_TIMEWAIT};
 use crate::client;
+use crate::wait::poll_until;
 
 pub fn echo(port: u32, handle: u32) {
     let mut body = [0u8; 8];
@@ -28,14 +27,12 @@ pub fn echo(port: u32, handle: u32) {
         return;
     }
     let mut buf = [0u8; client::HDR_LEN + 64];
-    for _ in 0..64 {
-        if let Some((E_OK, n)) = recv(port, handle, &mut buf) {
-            if n >= 4 && &buf[client::HDR_LEN..client::HDR_LEN + 4] == b"ping" {
-                mark(b"[TCP] ECHO OK\n");
-                return;
-            }
-        }
-        mk_yield();
+    let ok = poll_until(10_000, || match recv(port, handle, &mut buf) {
+        Some((E_OK, n)) => n >= 4 && &buf[client::HDR_LEN..client::HDR_LEN + 4] == b"ping",
+        _ => false,
+    });
+    if ok {
+        mark(b"[TCP] ECHO OK\n");
     }
 }
 
@@ -49,21 +46,13 @@ pub fn close_active(port: u32, handle: u32) -> bool {
 }
 
 pub fn timewait(port: u32, handle: u32) {
-    for _ in 0..6000 {
-        if let Some((E_OK, S_TIMEWAIT)) = state(port, handle) {
-            mark(b"[TCP] TIMEWAIT\n");
-            return;
-        }
-        mk_yield();
+    if poll_until(15_000, || matches!(state(port, handle), Some((E_OK, S_TIMEWAIT)))) {
+        mark(b"[TCP] TIMEWAIT\n");
     }
 }
 
 pub fn closed(port: u32, handle: u32) {
-    for _ in 0..12000 {
-        if let Some((E_NO_SOCKET, _)) = state(port, handle) {
-            mark(b"[TCP] CLOSED\n");
-            return;
-        }
-        mk_yield();
+    if poll_until(75_000, || matches!(state(port, handle), Some((E_NO_SOCKET, _)))) {
+        mark(b"[TCP] CLOSED\n");
     }
 }

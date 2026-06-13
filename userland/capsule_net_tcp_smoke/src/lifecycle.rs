@@ -19,16 +19,29 @@ mod closeflow;
 mod ops;
 
 use crate::client;
+use crate::wait::poll_until;
 use ops::{connect, mark};
 
 const SRV: [u8; 4] = [10, 0, 2, 200];
 
 pub fn run() {
-    let port = match client::lookup() {
-        Some(p) => p,
-        None => return,
-    };
-    let handle = match connect(port, SRV, 7) {
+    let mut port = 0u32;
+    let found = poll_until(40_000, || match client::lookup() {
+        Some(p) => {
+            port = p;
+            true
+        }
+        None => false,
+    });
+    if !found {
+        return;
+    }
+    let mut handle = None;
+    poll_until(40_000, || {
+        handle = connect(port, SRV, 7);
+        handle.is_some()
+    });
+    let handle = match handle {
         Some(h) => h,
         None => return,
     };
