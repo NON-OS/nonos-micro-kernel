@@ -14,8 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+mod any;
+mod ip;
+mod parse;
+mod tosock;
+mod v4;
 
-pub mod consts;
+pub use any::SocketAddr;
+pub use ip::Ipv4Addr;
+pub use tosock::ToSocketAddrs;
+pub use v4::SocketAddrV4;
 
-pub use args::{args, Args};
+pub(crate) use tosock::resolve;

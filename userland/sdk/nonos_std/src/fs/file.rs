@@ -36,7 +36,7 @@ impl File {
     }
 }
 
-fn open_with(path: &[u8], flags: u32) -> Result<File> {
+pub(super) fn open_with(path: &[u8], flags: u32) -> Result<File> {
     if path.is_empty() || path.len() > 255 {
         return Err(Error::new(ErrorKind::InvalidInput, "bad path"));
     }

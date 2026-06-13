@@ -14,8 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
-pub mod consts;
+static SEED: AtomicU64 = AtomicU64::new(0);
+static READY: AtomicBool = AtomicBool::new(false);
 
-pub use args::{args, Args};
+pub(super) fn process_seed() -> u64 {
+    if READY.load(Ordering::Acquire) {
+        return SEED.load(Ordering::Relaxed);
+    }
+    let mut buf = [0u8; 8];
+    let _ = nonos_libc::crypto_random(buf.as_mut_ptr(), buf.len());
+    let seed = u64::from_le_bytes(buf) | 1;
+    SEED.store(seed, Ordering::Relaxed);
+    READY.store(true, Ordering::Release);
+    seed
+}

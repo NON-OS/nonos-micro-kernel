@@ -26,6 +26,17 @@ pub(super) struct Vfs {
     pub pid: u32,
 }
 
+pub(super) fn path_body(pid: u32, path: &[u8]) -> Result<Vec<u8>> {
+    if path.is_empty() || path.len() > 255 {
+        return Err(Error::new(ErrorKind::InvalidInput, "bad path"));
+    }
+    let mut body = Vec::with_capacity(5 + path.len());
+    body.extend_from_slice(&pid.to_le_bytes());
+    body.push(path.len() as u8);
+    body.extend_from_slice(path);
+    Ok(body)
+}
+
 pub(super) fn connect() -> Result<Vfs> {
     let mut port = 0u32;
     let mut owner = 0u32;

@@ -16,30 +16,33 @@
 
 use alloc::vec::Vec;
 
-pub(super) const MAGIC: u32 = 0x4E4F_5646;
-pub(super) const VERSION: u16 = 1;
-pub(super) const STATUS_OFF: usize = 20;
-pub(super) const BODY_OFF: usize = 24;
-pub(super) const OP_OPEN: u16 = 1;
-pub(super) const OP_CLOSE: u16 = 2;
-pub(super) const OP_READ: u16 = 3;
-pub(super) const OP_WRITE: u16 = 4;
-pub(super) const OP_STAT: u16 = 5;
-pub(super) const OP_LIST: u16 = 6;
-pub(super) const OP_MKDIR: u16 = 8;
-pub(super) const OP_UNLINK: u16 = 9;
-pub(super) const O_CREATE: u32 = 1;
-pub(super) const O_TRUNC: u32 = 1 << 1;
+pub(crate) const MAGIC: u32 = 0x4E53_4B54;
+pub(crate) const VERSION: u16 = 1;
+pub(crate) const HDR_LEN: usize = 20;
+pub(crate) const ERRNO_OFF: usize = 8;
+pub(crate) const BODY_OFF: usize = 20;
 
-pub(super) fn frame(op: u16, body: &[u8]) -> Vec<u8> {
-    let mut f = Vec::with_capacity(STATUS_OFF + body.len());
+pub(crate) const OP_SOCKET: u16 = 2;
+pub(crate) const OP_BIND: u16 = 3;
+pub(crate) const OP_LISTEN: u16 = 4;
+pub(crate) const OP_ACCEPT: u16 = 5;
+pub(crate) const OP_CONNECT: u16 = 6;
+pub(crate) const OP_SEND: u16 = 7;
+pub(crate) const OP_RECV: u16 = 8;
+pub(crate) const OP_CLOSE: u16 = 9;
+
+pub(crate) fn frame(op: u16, body: &[u8]) -> Vec<u8> {
+    let mut f = Vec::with_capacity(HDR_LEN + body.len());
     f.extend_from_slice(&MAGIC.to_le_bytes());
     f.extend_from_slice(&VERSION.to_le_bytes());
     f.extend_from_slice(&op.to_le_bytes());
-    f.extend_from_slice(&0u16.to_le_bytes());
-    f.extend_from_slice(&0u16.to_le_bytes());
+    f.extend_from_slice(&0u32.to_le_bytes());
     f.extend_from_slice(&0u32.to_le_bytes());
     f.extend_from_slice(&(body.len() as u32).to_le_bytes());
     f.extend_from_slice(body);
     f
+}
+
+pub(crate) fn errno(buf: &[u8]) -> u16 {
+    u16::from_le_bytes([buf[ERRNO_OFF], buf[ERRNO_OFF + 1]])
 }

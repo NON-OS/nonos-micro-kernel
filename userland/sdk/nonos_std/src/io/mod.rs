@@ -16,16 +16,27 @@
 
 mod bufread;
 mod bufreader;
+mod bufwriter;
+mod copy;
+mod cursor;
 mod error;
+mod lines;
 mod macros;
 mod read;
+mod seek;
 mod slice;
 mod stdio;
 mod write;
+mod writevec;
 
 pub use bufread::BufRead;
 pub use bufreader::BufReader;
+pub use bufwriter::BufWriter;
+pub use copy::copy;
+pub use cursor::Cursor;
 pub use error::{Error, ErrorKind, Result};
+pub use lines::Lines;
 pub use read::Read;
+pub use seek::{Seek, SeekFrom};
 pub use stdio::{stderr, stdout, Stderr, Stdout};
 pub use write::Write;

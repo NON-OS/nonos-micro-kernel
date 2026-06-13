@@ -14,8 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+use alloc::vec::Vec;
 
-pub mod consts;
+use super::super::error::Result;
+use super::super::write::Write;
+use super::Cursor;
 
-pub use args::{args, Args};
+impl Write for Cursor<Vec<u8>> {
+    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+        let pos = self.pos as usize;
+        if pos > self.inner.len() {
+            self.inner.resize(pos, 0);
+        }
+        let end = pos + buf.len();
+        if end > self.inner.len() {
+            self.inner.resize(end, 0);
+        }
+        self.inner[pos..end].copy_from_slice(buf);
+        self.pos = end as u64;
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> Result<()> {
+        Ok(())
+    }
+}

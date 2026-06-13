@@ -14,8 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+use core::fmt;
 
-pub mod consts;
+use super::v4::SocketAddrV4;
 
-pub use args::{args, Args};
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum SocketAddr {
+    V4(SocketAddrV4),
+}
+
+impl SocketAddr {
+    pub const fn port(&self) -> u16 {
+        match self {
+            SocketAddr::V4(a) => a.port(),
+        }
+    }
+
+    pub(crate) fn v4_parts(&self) -> ([u8; 4], u16) {
+        match self {
+            SocketAddr::V4(a) => (a.ip().octets(), a.port()),
+        }
+    }
+}
+
+impl fmt::Display for SocketAddr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SocketAddr::V4(a) => a.fmt(f),
+        }
+    }
+}

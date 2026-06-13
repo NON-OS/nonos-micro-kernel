@@ -14,8 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
+use super::stream::TcpStream;
+use crate::io::Result;
+use crate::net::addr::{resolve, ToSocketAddrs};
+use crate::net::socket::{Socket, KIND_STREAM};
 
-pub mod consts;
+pub struct TcpListener {
+    inner: Socket,
+}
 
-pub use args::{args, Args};
+impl TcpListener {
+    pub fn bind<A: ToSocketAddrs>(addr: A) -> Result<Self> {
+        let (ip, port) = resolve(addr)?;
+        let inner = Socket::open(KIND_STREAM)?;
+        inner.bind(ip, port)?;
+        inner.listen()?;
+        Ok(Self { inner })
+    }
+
+    pub fn accept(&self) -> Result<TcpStream> {
+        let child = self.inner.accept()?;
+        Ok(TcpStream::from_socket(child))
+    }
+}
