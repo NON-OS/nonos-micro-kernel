@@ -1070,8 +1070,11 @@ nonos-mk-driver-xhci-test: $(proof-io_ARTIFACTS) $(driver-xhci_BIN) \
 # the microkernel-tcp-smoketest profile; the harness at
 # tests/boot/tcp_lifecycle.sh asserts the full RFC 793 lifecycle via
 # serial markers. Goes red now; turns green once Tasks 2-10 land.
-nonos-mk-tcp-lifecycle: $(proof-io_ARTIFACTS) $(net-tcp-smoke_ARTIFACTS) \
+nonos-mk-tcp-lifecycle: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
+		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
+		$(net-dhcp_ARTIFACTS) $(net-tcp_ARTIFACTS) $(net-tcp-smoke_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	$(MAKE) nonos-mk-live-production-proof
 	@echo "Building kernel (microkernel-tcp-smoketest)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
