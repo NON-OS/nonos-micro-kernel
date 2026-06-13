@@ -20,16 +20,23 @@ use super::call::keyring_call;
 use super::constants::{HDR_LEN, OP_SIGN_ETH_TRANSFER};
 use super::push_word::push_word;
 
-pub fn sign_eth_transfer(port: u32, owner_pid: u32, wallet_id: u32) -> Result<Vec<u8>, i32> {
+pub fn sign_eth_transfer(
+    port: u32,
+    owner_pid: u32,
+    wallet_id: u32,
+    to: [u8; 20],
+    nonce: u64,
+    value_wei: u64,
+) -> Result<Vec<u8>, i32> {
     let mut payload = Vec::with_capacity(188);
     payload.extend_from_slice(&owner_pid.to_le_bytes());
     payload.extend_from_slice(&wallet_id.to_le_bytes());
-    payload.extend_from_slice(&[0u8; 20]);
-    push_word(&mut payload, 0);
+    payload.extend_from_slice(&to);
+    push_word(&mut payload, nonce as u128);
     push_word(&mut payload, 1_500_000_000);
     push_word(&mut payload, 30_000_000_000);
     push_word(&mut payload, 21_000);
-    push_word(&mut payload, 1_000_000_000_000_000);
+    push_word(&mut payload, value_wei as u128);
     let rx = keyring_call(port, OP_SIGN_ETH_TRANSFER, &payload, 256)?;
     if rx.len() <= HDR_LEN {
         return Err(-11);

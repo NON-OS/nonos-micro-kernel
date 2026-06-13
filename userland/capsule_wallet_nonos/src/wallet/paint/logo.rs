@@ -18,13 +18,19 @@ use nonos_app_skeleton::PaintBuffer;
 
 pub fn logo(fb: &mut PaintBuffer, x: u32, y: u32, s: u32) {
     let c = 0xFF66_FFFF;
-    let bg = 0xFF0D_1218;
-    fb.fill_rect(x + s / 5, y, s * 3 / 5, s / 8, c);
-    fb.fill_rect(x + s / 5, y + s * 7 / 8, s * 3 / 5, s / 8, c);
-    fb.fill_rect(x, y + s / 5, s / 8, s * 3 / 5, c);
-    fb.fill_rect(x + s * 7 / 8, y + s / 5, s / 8, s * 3 / 5, c);
-    fb.fill_rect(x + s / 4, y + s / 4, s / 2, s / 2, bg);
-    for i in 0..7 {
-        fb.fill_rect(x + s / 5 + i * s / 12, y + s * 3 / 4 - i * s / 12, s / 8, s / 8, c);
+    for row in 0..super::logo_bits::LOGO_H {
+        let (left, right) = super::logo_bits::LOGO_ROWS[row as usize];
+        for col in 0..super::logo_bits::LOGO_W {
+            let bits = if col < 32 { left } else { right };
+            let bit = if col < 32 { 31 - col } else { 63 - col };
+            if bits & (1 << bit) == 0 {
+                continue;
+            }
+            let px = x + col * s / super::logo_bits::LOGO_W;
+            let py = y + row * s / super::logo_bits::LOGO_H;
+            let nx = x + (col + 1) * s / super::logo_bits::LOGO_W;
+            let ny = y + (row + 1) * s / super::logo_bits::LOGO_H;
+            fb.fill_rect(px, py, nx.saturating_sub(px).max(1), ny.saturating_sub(py).max(1), c);
+        }
     }
 }

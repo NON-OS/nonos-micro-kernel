@@ -1,0 +1,56 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+pub const LOGO_W: u32 = 64;
+pub const LOGO_H: u32 = 71;
+pub const LOGO_ROWS: [(u32, u32); 71] = [
+    (0x003FFFFF, 0xFFFFFC00), (0x01FFFFFF, 0xFFFFFF80),
+    (0x07FFFFFF, 0xFFFFFFE0), (0x0FFFFFFF, 0xFFFFFFF0),
+    (0x1FFFFFFF, 0xFFFFFFF8), (0x3FFFFFFF, 0xFFFFFFFC),
+    (0x3FFFFFFF, 0xFFFFFFFC), (0x7FFFFFFF, 0xFFFFFFFE),
+    (0x7FFFFFFF, 0xFFFFFFFE), (0x7FFFFFFF, 0xFFFFFFFE),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0xFFFFFFFF, 0xFFFFFFFF),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0xFFFFFFFF, 0xFFFFFFFF),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0xFFFFFFFF, 0xFFFFFFFF),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0xFFFFFFFF, 0xFFFFFFFF),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0xFFFFFFFF, 0xFFFFFFFF),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0xFFFFFFF8, 0x1FFFFFFF),
+    (0xFFFFFFC0, 0x03CFFFFF), (0xFFFFFF00, 0x0187FFFF),
+    (0xFFFFFE07, 0xC00FFFFF), (0xFFFFFC1F, 0xF81FFFFF),
+    (0xFFFFF87F, 0xFC3FFFFF), (0xFFFFF87F, 0xF81FFFFF),
+    (0xFFFFF0FF, 0xF01FFFFF), (0xFFFFF1FF, 0xE10FFFFF),
+    (0xFFFFF1FF, 0xC30FFFFF), (0xFFFFE1FF, 0xC38FFFFF),
+    (0xFFFFE1FF, 0x878FFFFF), (0xFFFFE3FF, 0x0F8FFFFF),
+    (0xFFFFE3FE, 0x1F8FFFFF), (0xFFFFE3FC, 0x3F87FFFF),
+    (0xFFFFE3F8, 0x7F8FFFFF), (0xFFFFE3F0, 0xFF8FFFFF),
+    (0xFFFFE1E1, 0xFF8FFFFF), (0xFFFFE1C3, 0xFF8FFFFF),
+    (0xFFFFF187, 0xFF0FFFFF), (0xFFFFF00F, 0xFF0FFFFF),
+    (0xFFFFF00F, 0xFE1FFFFF), (0xFFFFF81F, 0xFE1FFFFF),
+    (0xFFFFF83F, 0xFC3FFFFF), (0xFFFFF81F, 0xF87FFFFF),
+    (0xFFFFF003, 0xC0FFFFFF), (0xFFFFE100, 0x01FFFFFF),
+    (0xFFFFF3C0, 0x03FFFFFF), (0xFFFFFFF8, 0x3FFFFFFF),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0xFFFFFFFF, 0xFFFFFFFF),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0xFFFFFFFF, 0xFFFFFFFF),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0xFFFFFFFF, 0xFFFFFFFF),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0xFFFFFFFF, 0xFFFFFFFF),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0xFFFFFFFF, 0xFFFFFFFF),
+    (0xFFFFFFFF, 0xFFFFFFFF), (0x7FFFFFFF, 0xFFFFFFFE),
+    (0x7FFFFFFF, 0xFFFFFFFE), (0x7FFFFFFF, 0xFFFFFFFE),
+    (0x3FFFFFFF, 0xFFFFFFFC), (0x3FFFFFFF, 0xFFFFFFFC),
+    (0x1FFFFFFF, 0xFFFFFFF8), (0x0FFFFFFF, 0xFFFFFFF0),
+    (0x07FFFFFF, 0xFFFFFFE0), (0x01FFFFFF, 0xFFFFFF80),
+    (0x003FFFFF, 0xFFFFFC00),
+];

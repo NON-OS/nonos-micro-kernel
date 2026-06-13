@@ -36,6 +36,7 @@ pub fn sign_result(
         return EventOutcome::Repaint;
     }
     record_tx(state, kind, &raw, hash);
+    state.view = crate::wallet::state::VIEW_PROOF;
     state.status = b"transaction signed";
     EventOutcome::Repaint
 }

@@ -20,20 +20,20 @@ use crate::wallet::state::State;
 use crate::wallet::theme::{ACCENT, FG, MUTED};
 
 pub fn paint_tx(state: &State, fb: &mut PaintBuffer) {
-    fb.text(340, 324, b"Signed tx", MUTED);
+    if state.proof_count >= 2 {
+        return;
+    }
+    fb.text(368, 532, b"Signed tx", MUTED);
     if !state.tx_ready {
-        fb.text(340, 344, b"No transaction", FG);
+        fb.text(368, 560, b"No transaction", FG);
         return;
     }
     let mut len = [0u8; 10];
     let n = super::format_u32::format_u32(state.tx_len, &mut len);
     let mut hash = [0u8; 66];
     super::hex_hash::hex_hash(&state.tx_hash, &mut hash);
-    fb.text(340, 344, state.tx_kind, FG);
-    fb.text(384, 344, &len[..n], FG);
-    fb.text(340, 366, &hash[..34], ACCENT);
-    fb.text(340, 384, &hash[34..], ACCENT);
-    if state.proof_count != 0 {
-        fb.text(452, 344, b"proofs", MUTED);
-    }
+    fb.text(368, 560, state.tx_kind, FG);
+    fb.text(432, 560, &len[..n], FG);
+    fb.text(368, 596, &hash[..34], ACCENT);
+    fb.text(368, 620, &hash[34..], ACCENT);
 }
