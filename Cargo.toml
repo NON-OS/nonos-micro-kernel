@@ -68,6 +68,7 @@ sched = []
 # named capsule binary and arms the kernel-side spawner. Every name
 # below maps 1:1 to a capsule directory under `userland/`.
 nonos-capsule-proof-io          = []
+nonos-capsule-std-proof         = []
 nonos-capsule-ramfs             = []
 nonos-capsule-wallpaper         = []
 nonos-capsule-compositor        = []

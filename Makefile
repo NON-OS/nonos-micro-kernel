@@ -28,7 +28,7 @@
 .PHONY: nonos-mk-libc nonos-mk-proof-io nonos-mk-proof-io-sign nonos-mk-check-trust-keys nonos-mk-check-trust-manifest nonos-mk-trust-policy nonos-mk-host-trust-test nonos-mk-verify-trust nonos-mk-ramfs nonos-mk-ramfs-sign nonos-mk-keyring nonos-mk-entropy nonos-mk-crypto nonos-mk-vfs nonos-mk-virtio-rng nonos-mk-virtio-rng-sign nonos-mk-check-virtio-rng-keys nonos-mk-virtio-blk nonos-mk-virtio-blk-sign nonos-mk-check-virtio-blk-keys nonos-mk-driver-virtio-gpu nonos-mk-driver-virtio-gpu-sign nonos-mk-check-driver-virtio-gpu-keys nonos-mk-virtio-net nonos-mk-virtio-net-sign nonos-mk-check-virtio-net-keys nonos-mk-driver-iwlwifi nonos-mk-driver-iwlwifi-sign nonos-mk-check-driver-iwlwifi-keys nonos-mk-driver-i2c-pci nonos-mk-driver-i2c-pci-sign nonos-mk-check-driver-i2c-pci-keys nonos-mk-driver-i2c-hid nonos-mk-driver-i2c-hid-sign nonos-mk-check-driver-i2c-hid-keys nonos-mk-ps2-input nonos-mk-ps2-input-sign nonos-mk-check-ps2-input-keys nonos-mk-xhci nonos-mk-xhci-sign nonos-mk-check-xhci-keys nonos-mk-driver-usb-msc nonos-mk-driver-usb-msc-sign nonos-mk-check-driver-usb-msc-keys nonos-mk-driver-e1000 nonos-mk-driver-e1000-sign nonos-mk-check-driver-e1000-keys nonos-mk-driver-rtl8139 nonos-mk-driver-rtl8139-sign nonos-mk-check-driver-rtl8139-keys nonos-mk-driver-rtl8169 nonos-mk-driver-rtl8169-sign nonos-mk-check-driver-rtl8169-keys nonos-mk-driver-ahci nonos-mk-driver-ahci-sign nonos-mk-check-driver-ahci-keys nonos-mk-driver-hda nonos-mk-driver-hda-sign nonos-mk-check-driver-hda-keys nonos-mk-driver-nvme nonos-mk-driver-nvme-sign nonos-mk-check-driver-nvme-keys nonos-mk-wallpaper nonos-mk-marketplace-abi nonos-mk-market nonos-mk-marketplace-index-tool
 .PHONY: nonos-mk-userland-clean
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
-.PHONY: nonos-mk-run nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-net nonos-mk-run-serial-log nonos-mk-debug nonos-mk-plan-a-runtime
+.PHONY: nonos-mk-run nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-run-serial-log nonos-mk-debug nonos-mk-plan-a-runtime
 .PHONY: nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-mk-boot-entropy nonos-mk-boot-crypto-hash nonos-mk-boot-vfs nonos-mk-boot-ps2-input nonos-mk-boot-xhci nonos-mk-boot-usb-hid nonos-mk-boot-desktop-gui
 .PHONY: nonos-mk-input-e2e-ps2-test nonos-mk-input-e2e-ps2-esp nonos-mk-input-e2e-xhci-test nonos-mk-input-e2e-xhci-esp nonos-mk-boot-input-e2e-ps2 nonos-mk-boot-input-e2e-xhci nonos-mk-input-probe-test nonos-mk-input-probe-esp nonos-mk-input-probe-run nonos-mk-input-probe-run-serial nonos-mk-input-probe-inject-test nonos-mk-input-probe-inject-esp nonos-mk-input-probe-inject-run-serial
 .PHONY: nonos-mk-static nonos-mk-scan
@@ -200,6 +200,13 @@ QEMU_RNG := -device virtio-rng-pci
 ifeq ($(QEMU_NET_MODE),off)
     QEMU_NET :=
     QEMU_NET_DESC := disabled
+else ifeq ($(QEMU_NET_MODE),nat)
+    QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0
+    QEMU_NET_DESC := nat outbound virtio-net
+    ifneq ($(QEMU_NET_CAPTURE),)
+        QEMU_NET += -object filter-dump,id=net0dump,netdev=net0,file=$(QEMU_NET_CAPTURE)
+        QEMU_NET_DESC := $(QEMU_NET_DESC) capture=$(QEMU_NET_CAPTURE)
+    endif
 else ifeq ($(QEMU_NET_MODE),hostfwd)
     QEMU_NET := -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::$(QEMU_HOST_SSH_PORT)-:22,hostfwd=tcp::$(QEMU_HOST_HTTP_PORT)-:80
     QEMU_NET_DESC := hostfwd ssh=$(QEMU_HOST_SSH_PORT) http=$(QEMU_HOST_HTTP_PORT)
@@ -208,7 +215,7 @@ else ifeq ($(QEMU_NET_MODE),hostfwd)
         QEMU_NET_DESC := $(QEMU_NET_DESC) capture=$(QEMU_NET_CAPTURE)
     endif
 else
-    $(error Unsupported QEMU_NET_MODE=$(QEMU_NET_MODE). Use off or hostfwd)
+    $(error Unsupported QEMU_NET_MODE=$(QEMU_NET_MODE). Use off, nat, or hostfwd)
 endif
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -720,6 +727,7 @@ nonos-mk-trust-policy: $(NONOS_TRUST_ANCHOR_POLICY_BIN)
 #   nonos-mk-<slug>-sign      sign cert + manifest
 #   nonos-mk-check-<slug>-keys assert publisher seeds + pubs exist
 include userland/capsule_proof_io/Capsule.mk
+include userland/capsule_std_proof/Capsule.mk
 include userland/capsule_ramfs/Capsule.mk
 include userland/capsule_keyring/Capsule.mk
 include userland/capsule_entropy/Capsule.mk
@@ -1228,6 +1236,13 @@ nonos-mk-proof-io-prod: $(proof-io_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensur
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-proof-io
 
+nonos-mk-std-proof-prod: $(proof-io_ARTIFACTS) $(std-proof_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-proof-io + std_proof)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-proof-io,nonos-capsule-std-proof
+
 nonos-mk-ramfs-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-ramfs)..."
@@ -1641,6 +1656,9 @@ nonos-mk-run: nonos-mk-live-production-proof nonos-mk-desktop-gui-prod nonos-mk-
 nonos-mk-run-net:
 	@$(MAKE) --no-print-directory QEMU_NET_MODE=hostfwd nonos-mk-run
 
+nonos-mk-run-nat:
+	@$(MAKE) --no-print-directory QEMU_NET_MODE=nat nonos-mk-run
+
 nonos-mk-run-wizard: nonos-mk-setup-wizard-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS (first-boot setup wizard) in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
@@ -1673,6 +1691,9 @@ nonos-mk-run-serial: nonos-mk-desktop-gui-prod nonos-mk-esp
 
 nonos-mk-run-serial-net:
 	@$(MAKE) --no-print-directory QEMU_NET_MODE=hostfwd nonos-mk-run-serial
+
+nonos-mk-run-serial-nat:
+	@$(MAKE) --no-print-directory QEMU_NET_MODE=nat nonos-mk-run-serial
 
 nonos-mk-run-serial-log: nonos-mk-desktop-gui-prod nonos-mk-esp
 	@mkdir -p $(dir $(QEMU_SERIAL_LOG))
@@ -1909,9 +1930,11 @@ help:
 	@echo
 	@echo "Run:"
 	@echo "  make nonos-mk-run             QEMU + OVMF, network disabled by default"
+	@echo "  make nonos-mk-run-nat         QEMU + OVMF with outbound NAT network"
 	@echo "  make nonos-mk-run-net         QEMU + OVMF with explicit hostfwd network"
 	@echo "  make nonos-mk-run-wizard      QEMU + OVMF, first-boot setup wizard"
 	@echo "  make nonos-mk-run-serial      headless serial-only"
+	@echo "  make nonos-mk-run-serial-nat  headless serial with outbound NAT network"
 	@echo "  make nonos-mk-run-serial-net  headless serial with explicit hostfwd network"
 	@echo "  make nonos-mk-run-serial-log  headless serial with file log"
 	@echo "  make nonos-mk-debug           QEMU + GDB on :1234"
@@ -1984,7 +2007,7 @@ nonos-mk-cargo-to-capsule-test:
 # with wallpaper, shell, and the SDK/App Kit apps. The capture variant boots
 # headless and saves a framebuffer screenshot + a bounded serial log.
 .PHONY: nonos-mk-run-gui-demo nonos-mk-gui-demo-capture
-nonos-mk-run-gui-demo: nonos-mk-run
+nonos-mk-run-gui-demo: nonos-mk-run-nat
 
 nonos-mk-gui-demo-capture: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@bash tests/boot/gui_demo_capture.sh
