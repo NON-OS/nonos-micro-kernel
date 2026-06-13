@@ -17,7 +17,9 @@
 mod entry;
 mod globals;
 mod table;
+mod timers;
 
 pub use entry::Entry;
 pub use globals::{ip_port, local_ip, next_ephemeral, set_ip_port, set_local_ip};
 pub use table::TABLE;
+pub use timers::{TimerKind, Timers};

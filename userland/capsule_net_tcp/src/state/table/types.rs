@@ -18,6 +18,7 @@ use alloc::vec::Vec;
 use spin::Mutex;
 
 use crate::state::Entry;
+use crate::state::Timers;
 
 pub const TABLE_CAP: usize = 256;
 pub static TABLE: Mutex<Table> = Mutex::new(Table::new());
@@ -25,17 +26,22 @@ pub static TABLE: Mutex<Table> = Mutex::new(Table::new());
 pub struct Table {
     pub(super) entries: Vec<Entry>,
     pub(super) next_handle: u32,
-    pub(super) next_iss: u32,
+    pub(crate) timers: Timers,
+    pub(super) iss_key: [u64; 2],
 }
 
 impl Table {
     pub const fn new() -> Self {
-        Self { entries: Vec::new(), next_handle: 1, next_iss: 0x7000_0000 }
+        Self {
+            entries: Vec::new(),
+            next_handle: 1,
+            timers: Timers::new(),
+            iss_key: [0, 0],
+        }
     }
 
     pub fn next_iss(&mut self) -> u32 {
-        self.next_iss = self.next_iss.wrapping_add(0x10001);
-        self.next_iss
+        0x7000_0000
     }
 }
 
