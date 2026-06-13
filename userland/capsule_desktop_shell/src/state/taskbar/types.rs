@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const TASKBAR_APP_MAX: usize = 8;
+pub const TASKBAR_APP_MAX: usize = crate::state::apps::LAUNCHER_APPS.len();
 pub const TASKBAR_NO_ACTIVE: u8 = 0xFF;
 
 pub struct TaskbarState {
