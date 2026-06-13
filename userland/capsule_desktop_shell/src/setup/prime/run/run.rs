@@ -25,10 +25,10 @@ pub fn run() -> Result<Context, &'static str> {
     let overlay = overlay::allocate(peers.compositor_port, 1)?;
     let mut ctx = super::build_context::build_context(&peers, &overlay);
     paint_chrome(&ctx);
+    super::register_overlay::register_overlay(&mut ctx, &overlay)?;
+    super::commit_overlay::commit_overlay(&mut ctx)?;
     open_chrome_windows::open_chrome_windows(&mut ctx)?;
     super::subscribe_wm::subscribe_wm(&mut ctx, peers.wm_port);
-    super::register_overlay::register_overlay(&mut ctx, &overlay)?;
-    super::commit_overlay::commit_overlay(&mut ctx);
     super::subscribe_input::subscribe_input(&mut ctx, peers.input_router_port);
     Ok(ctx)
 }
