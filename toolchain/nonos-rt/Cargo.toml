@@ -1,0 +1,20 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Startup runtime for std binaries on NONOS: provides `_start`, which calls
+# the rustc-emitted `main` and exits via the MEXT syscall. Linked by the
+# cargo->capsule build the way a libc crt0 is on a hosted target, so the
+# application source stays unmodified.
+
+[package]
+name = "nonos_rt"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS std startup runtime (_start)"
+
+[lib]
+name = "nonos_rt"
+path = "src/lib.rs"
