@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_time_millis, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_TOUCH};
+use nonos_libc::{
+    mk_time_millis, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS, INPUT_KIND_TOUCH,
+};
+
+const HOVER_REVEAL_BAND: u32 = 4;
 
 use crate::protocol::{read_i32, read_u16, read_u32};
 use crate::render::layout::bottom_dock_rect;
@@ -38,7 +42,14 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     let Some(y) = read_i32(buf, 20) else {
         return true;
     };
-    if x < 0 || y < 0 || !matches!(kind, INPUT_KIND_TOUCH | INPUT_KIND_BUTTON_DOWN) {
+    if x < 0 || y < 0 {
+        return true;
+    }
+    if kind == INPUT_KIND_POINTER_ABS {
+        hover_reveal(ctx, x as u32, y as u32);
+        return true;
+    }
+    if !matches!(kind, INPUT_KIND_TOUCH | INPUT_KIND_BUTTON_DOWN) {
         return true;
     }
     if !ctx.taskbar.visible {
@@ -51,4 +62,22 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     }
     launcher_focus::handle(ctx, x as u32, y as u32);
     true
+}
+
+fn hover_reveal(ctx: &mut Context, x: u32, y: u32) {
+    if !ctx.taskbar.visible {
+        if y >= ctx.height.saturating_sub(HOVER_REVEAL_BAND) {
+            reveal_taskbar(&mut ctx.taskbar, mk_time_millis());
+            refresh_taskbar(ctx);
+        }
+        return;
+    }
+    let dock = bottom_dock_rect(ctx.width, ctx.height);
+    let inside = x >= dock.x
+        && x < dock.x + dock.width
+        && y >= dock.y
+        && y < dock.y + dock.height;
+    if inside {
+        reveal_taskbar(&mut ctx.taskbar, mk_time_millis());
+    }
 }
