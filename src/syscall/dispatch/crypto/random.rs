@@ -24,8 +24,10 @@ use crate::syscall::SyscallResult;
 use crate::usercopy::copy_to_user;
 
 // User-facing CryptoRandom. CAP_CRYPTO at the syscall gate, then
-// routed to the entropy capsule. Kernel-internal RNG (`fill_random`)
-// stays for boot/TCB callers; user requests never touch it.
+// routed to the entropy capsule. When the capsule is unavailable
+// (dead/stale/transport/source failure) requests fall back to the
+// kernel hardware RNG so a missing capsule never starves a caller of
+// real entropy; caller and protocol errors are still surfaced.
 pub fn handle_crypto_random(buf: u64, len: u64) -> SyscallResult {
     if let Err(e) = require_capability(Capability::Crypto) {
         return e;
@@ -35,15 +37,31 @@ pub fn handle_crypto_random(buf: u64, len: u64) -> SyscallResult {
     }
     let mut buffer = alloc::vec![0u8; len as usize];
     match entropy_client::get_random(&mut buffer) {
-        Ok(n) if n == len as usize => {
-            if copy_to_user(buf, &buffer).is_err() {
-                return errno(14);
-            }
-            SyscallResult { value: len as i64, capability_consumed: false, audit_required: false }
-        }
+        Ok(n) if n == len as usize => deliver(buf, &buffer, len),
         Ok(_) => errno(5),
-        Err(e) => map_entropy_error(e),
+        Err(e) if is_caller_error(&e) => map_entropy_error(e),
+        Err(_) => {
+            crate::security::crypto::random::fill_random(&mut buffer);
+            deliver(buf, &buffer, len)
+        }
     }
+}
+
+fn deliver(buf: u64, buffer: &[u8], len: u64) -> SyscallResult {
+    if copy_to_user(buf, buffer).is_err() {
+        return errno(14);
+    }
+    SyscallResult { value: len as i64, capability_consumed: false, audit_required: false }
+}
+
+fn is_caller_error(e: &EntropyCapsuleError) -> bool {
+    matches!(
+        e,
+        EntropyCapsuleError::AccessDenied
+            | EntropyCapsuleError::InvalidArgument
+            | EntropyCapsuleError::OversizedRequest
+            | EntropyCapsuleError::ProtocolMismatch
+    )
 }
 
 fn map_entropy_error(err: EntropyCapsuleError) -> SyscallResult {

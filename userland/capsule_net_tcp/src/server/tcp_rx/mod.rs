@@ -15,7 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod accept;
+mod action;
 mod drain;
 mod existing;
+pub(super) mod rst;
+mod transitions;
 
+pub use action::RxAction;
 pub use drain::drain_one;

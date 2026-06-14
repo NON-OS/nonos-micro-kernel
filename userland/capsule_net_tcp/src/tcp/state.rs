@@ -15,16 +15,26 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
 pub enum State {
-    Listen,
-    SynSent,
-    SynReceived,
-    Established,
-    CloseWait,
+    Listen = 0,
+    SynSent = 1,
+    SynReceived = 2,
+    Established = 3,
+    CloseWait = 4,
+    FinWait1 = 5,
+    FinWait2 = 6,
+    Closing = 7,
+    TimeWait = 8,
+    LastAck = 9,
 }
 
 impl State {
     pub fn accepts_data(self) -> bool {
         matches!(self, Self::Established)
+    }
+
+    pub fn is_closing(self) -> bool {
+        matches!(self, Self::FinWait1 | Self::FinWait2 | Self::Closing | Self::TimeWait | Self::LastAck)
     }
 }

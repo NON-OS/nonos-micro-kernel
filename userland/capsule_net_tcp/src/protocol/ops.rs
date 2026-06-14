@@ -22,3 +22,4 @@ pub const OP_SEND: u16 = 5;
 pub const OP_RECV: u16 = 6;
 pub const OP_CLOSE: u16 = 7;
 pub const OP_SHUTDOWN: u16 = 8;
+pub const OP_STATE: u16 = 9;

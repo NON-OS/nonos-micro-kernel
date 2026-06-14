@@ -17,12 +17,22 @@
 mod build;
 mod checksum;
 mod header;
+mod iss;
 mod parse;
+mod siphash;
 mod state;
 mod tcb;
 
 pub use build::{build, BuildRequest};
 pub use header::{TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_PSH, FLAG_RST, FLAG_SYN};
+pub use iss::iss_for;
 pub use parse::parse;
+pub use siphash::siphash24;
 pub use state::State;
 pub use tcb::{Endpoint4, Tcb};
+
+pub const MSL_MS: u64 = 30_000;
+
+pub fn msl_2_ms() -> u64 {
+    2 * MSL_MS
+}

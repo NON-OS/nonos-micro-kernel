@@ -39,6 +39,7 @@ pub const VQ_REGION_SIZE: usize = 12288;
 
 
 pub const RX_DESC_COUNT: u16 = QUEUE_SIZE;
+pub const TX_DESC_COUNT: u16 = QUEUE_SIZE;
 
 
 

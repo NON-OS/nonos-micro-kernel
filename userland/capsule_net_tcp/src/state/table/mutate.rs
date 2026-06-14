@@ -39,4 +39,12 @@ impl Table {
         self.entries.swap_remove(idx);
         Ok(())
     }
+
+    pub fn remove_by_handle(&mut self, handle: u32) {
+        self.entries.retain(|e| e.handle != handle);
+    }
+
+    pub fn is_idle(&self) -> bool {
+        self.entries.is_empty() && self.timers.is_empty()
+    }
 }

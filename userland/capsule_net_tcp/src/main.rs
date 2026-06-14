@@ -19,6 +19,7 @@
 
 extern crate alloc;
 
+mod clock;
 mod ip_client;
 mod protocol;
 mod server;

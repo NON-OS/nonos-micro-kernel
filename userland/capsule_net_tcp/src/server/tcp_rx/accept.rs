@@ -19,11 +19,19 @@ use crate::tcp::{Endpoint4, State, Tcb};
 
 pub fn syn(local: Endpoint4, remote: Endpoint4, seq: u32) -> Option<Tcb> {
     let mut table = TABLE.lock();
+    if let Some(e) = table.connection_match_mut(local, remote) {
+        if e.tcb.state == State::SynReceived {
+            let mut resend = e.tcb;
+            resend.send.nxt = resend.send.iss;
+            return Some(resend);
+        }
+        return None;
+    }
     let (owner, parent) = {
         let l = table.listener_for_mut(local.port)?;
         (l.owner_pid, l.handle)
     };
-    let iss = table.next_iss();
+    let iss = table.iss_for_pair(local, remote);
     let mut tcb = Tcb::listen(local);
     tcb.remote = remote;
     tcb.state = State::SynReceived;

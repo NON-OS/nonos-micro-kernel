@@ -30,6 +30,7 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         return status(sender_pid, req, E_TIMEOUT, tx);
     };
     if tcp_tx::send(tcb, FLAG_SYN, &[]).is_err() || !wait::established(sender_pid, handle) {
+        crate::state::TABLE.lock().remove_by_handle(handle);
         return status(sender_pid, req, E_TIMEOUT, tx);
     }
     tx[20..24].copy_from_slice(&handle.to_le_bytes());

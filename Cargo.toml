@@ -123,6 +123,7 @@ nonos-capsule-net-ip            = []
 nonos-capsule-net-udp           = []
 nonos-capsule-net-dhcp          = []
 nonos-capsule-net-tcp           = []
+nonos-capsule-net-tcp-smoke     = []
 nonos-capsule-net-dns           = []
 nonos-capsule-net-sockets       = []
 nonos-capsule-net-nym           = []
@@ -190,6 +191,7 @@ nonos-driver-xhci-smoketest       = ["nonos-capsule-driver-xhci", "nonos-user-en
 nonos-driver-e1000-smoketest      = ["nonos-capsule-driver-e1000", "nonos-user-entry-proof"]
 nonos-market-smoketest            = ["nonos-capsule-market", "nonos-user-entry-proof"]
 nonos-wallpaper-smoketest         = ["nonos-capsule-wallpaper", "nonos-user-entry-proof"]
+nonos-tcp-smoketest               = ["nonos-capsule-driver-virtio-net", "nonos-capsule-net-l2", "nonos-capsule-net-ip", "nonos-capsule-net-udp", "nonos-capsule-net-dhcp", "nonos-capsule-net-tcp", "nonos-capsule-net-tcp-smoke", "nonos-user-entry-proof"]
 
 # Brutal-minimum kernel profile. Each entry closes a real boundary:
 #   kernel, standalone   no-std bootstrap and panic handler routing
@@ -633,6 +635,12 @@ microkernel-driver-xhci-smoketest = [
   "nonos-capsule-proof-io",
   "nonos-capsule-driver-xhci",
   "nonos-driver-xhci-smoketest",
+]
+
+microkernel-tcp-smoketest = [
+  "microkernel-core",
+  "nonos-capsule-proof-io",
+  "nonos-tcp-smoketest",
 ]
 
 # Input stack end-to-end proof (Deliverable 2). Trimmed desktop fleet:
