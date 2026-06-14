@@ -50,6 +50,29 @@ pub fn create_process_with_mem(
     Ok(pid)
 }
 
+/// Create a new schedulable thread inside the current process. The thread
+/// shares the parent's address space (inherited CR3) and capabilities, with a
+/// caller-provided user entry point and stack pointer, and joins the parent's
+/// thread group. Returns the new thread id. The thread has no VMAs of its own,
+/// so its teardown frees nothing of the shared address space.
+pub fn spawn_thread(entry: u64, stack: u64) -> Result<Pid, &'static str> {
+    let parent_pid = CURRENT_PID.load(Ordering::Relaxed);
+    let parent = PROCESS_TABLE.find_by_pid(parent_pid).ok_or("no current process")?;
+    let tid = NEXT_PID.fetch_add(1, Ordering::Relaxed);
+    let caps = compute_inherited_caps(tid, parent_pid);
+    let pcb = build_pcb(tid, parent_pid, "thread", ProcessState::Ready, Priority::Normal, 0, caps)?;
+    crate::process::address_space::lifecycle::inherit(&pcb, &parent);
+    pcb.tgid.store(parent.tgid.load(Ordering::Relaxed), Ordering::Relaxed);
+    crate::process::caps::rebind_address_space(&pcb).ok_or("boot session nonce missing")?;
+    PROCESS_TABLE.add(pcb);
+    crate::kernel_core::process_spawn::allocate_kernel_stack(tid)
+        .map_err(|_| "thread kernel stack")?;
+    crate::kernel_core::process_spawn::setup_initial_user_context(tid, entry, stack)
+        .map_err(|_| "thread user context")?;
+    crate::sched::add_to_run_queue(tid);
+    Ok(tid)
+}
+
 fn build_pcb(
     pid: Pid,
     ppid: Pid,
