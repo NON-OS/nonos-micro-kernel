@@ -14,13 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_time_millis, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_TOUCH};
-
+use nonos_libc::{
+    mk_time_millis, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS, INPUT_KIND_TOUCH,
+};
 use crate::protocol::{read_i32, read_u16, read_u32};
 use crate::render::layout::bottom_dock_rect;
 use crate::server::handlers::launcher_focus;
 use crate::server::refresh_taskbar::refresh_taskbar;
-use crate::state::{reveal_taskbar, Context};
+use crate::state::{collapse_taskbar, reveal_taskbar, Context};
+
+const HOVER_REVEAL_BAND: u32 = 4;
 
 pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     if buf.len() < 40 || read_u32(buf, 0) != Some(0x4E49_4E50) {
@@ -38,7 +41,14 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     let Some(y) = read_i32(buf, 20) else {
         return true;
     };
-    if x < 0 || y < 0 || !matches!(kind, INPUT_KIND_TOUCH | INPUT_KIND_BUTTON_DOWN) {
+    if x < 0 || y < 0 {
+        return true;
+    }
+    if kind == INPUT_KIND_POINTER_ABS {
+        hover_reveal(ctx, y as u32);
+        return true;
+    }
+    if !matches!(kind, INPUT_KIND_TOUCH | INPUT_KIND_BUTTON_DOWN) {
         return true;
     }
     if !ctx.taskbar.visible {
@@ -51,4 +61,25 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     }
     launcher_focus::handle(ctx, x as u32, y as u32);
     true
+}
+
+fn hover_reveal(ctx: &mut Context, y: u32) {
+    if ctx.height == 0 {
+        return;
+    }
+    if !ctx.taskbar.visible {
+        if y >= ctx.height.saturating_sub(HOVER_REVEAL_BAND) {
+            reveal_taskbar(&mut ctx.taskbar, mk_time_millis());
+            refresh_taskbar(ctx);
+        }
+        return;
+    }
+    if y >= bottom_dock_rect(ctx.width, ctx.height).y {
+        reveal_taskbar(&mut ctx.taskbar, mk_time_millis());
+        return;
+    }
+    if ctx.taskbar.open.iter().any(|open| *open) {
+        collapse_taskbar(&mut ctx.taskbar);
+        refresh_taskbar(ctx);
+    }
 }

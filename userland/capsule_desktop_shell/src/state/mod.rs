@@ -30,8 +30,8 @@ pub use context::Context;
 pub use notify::NotifyLevel;
 pub use spotlight::SpotlightState;
 pub use taskbar::{
-    expire_taskbar_pulses, expire_taskbar_visibility, mark_taskbar_launch, new_taskbar_state,
-    reveal_taskbar, set_taskbar_open, TaskbarState, TASKBAR_NO_ACTIVE,
+    collapse_taskbar, expire_taskbar_pulses, expire_taskbar_visibility, mark_taskbar_launch,
+    new_taskbar_state, reveal_taskbar, set_taskbar_open, TaskbarState, TASKBAR_NO_ACTIVE,
 };
 pub use toasts::ToastQueue;
 pub use tray::{TrayEntry, TrayTable};
