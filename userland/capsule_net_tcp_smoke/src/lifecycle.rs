@@ -17,6 +17,7 @@
 mod activeflow;
 mod closeflow;
 mod ops;
+mod serverflow;
 
 use crate::client;
 use crate::wait::poll_until;
@@ -36,6 +37,8 @@ pub fn run() {
     if !found {
         return;
     }
+    serverflow::passive_server(port);
+    serverflow::active_server(port);
     let mut handle = None;
     poll_until(40_000, || {
         handle = connect(port, SRV, 7);
@@ -47,10 +50,6 @@ pub fn run() {
     };
     mark(b"[TCP] CONNECT OK\n");
     activeflow::echo(port, handle);
-    if activeflow::close_active(port, handle) {
-        activeflow::timewait(port, handle);
-        activeflow::closed(port, handle);
-    }
-    closeflow::passive_close(port, SRV);
+    activeflow::close_active(port, handle);
     closeflow::rst_refused(port, SRV);
 }

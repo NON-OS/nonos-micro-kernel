@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::ops::{close, mark, recv, state, E_NO_SOCKET, E_OK, S_TIMEWAIT};
+use super::ops::{close, mark, recv, E_OK};
 use crate::client;
 use crate::wait::poll_until;
 
@@ -42,17 +42,5 @@ pub fn close_active(port: u32, handle: u32) -> bool {
         true
     } else {
         false
-    }
-}
-
-pub fn timewait(port: u32, handle: u32) {
-    if poll_until(15_000, || matches!(state(port, handle), Some((E_OK, S_TIMEWAIT)))) {
-        mark(b"[TCP] TIMEWAIT\n");
-    }
-}
-
-pub fn closed(port: u32, handle: u32) {
-    if poll_until(75_000, || matches!(state(port, handle), Some((E_NO_SOCKET, _)))) {
-        mark(b"[TCP] CLOSED\n");
     }
 }

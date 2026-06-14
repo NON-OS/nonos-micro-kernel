@@ -71,3 +71,35 @@ pub fn close(port: u32, handle: u32) -> bool {
     let mut resp = [0u8; client::HDR_LEN];
     client::call(port, 7, &b, &mut resp) == Some((E_OK, 0))
 }
+
+fn handle_at(resp: &[u8], n: usize) -> Option<u32> {
+    if n < 4 {
+        return None;
+    }
+    Some(u32::from_le_bytes([
+        resp[client::HDR_LEN],
+        resp[client::HDR_LEN + 1],
+        resp[client::HDR_LEN + 2],
+        resp[client::HDR_LEN + 3],
+    ]))
+}
+
+pub fn listen(port: u32, listen_port: u16) -> Option<u32> {
+    let body = listen_port.to_le_bytes();
+    let mut resp = [0u8; client::HDR_LEN + 4];
+    let (errno, n) = client::call(port, 2, &body, &mut resp)?;
+    if errno != E_OK {
+        return None;
+    }
+    handle_at(&resp, n)
+}
+
+pub fn accept(port: u32, listener: u32) -> Option<u32> {
+    let body = listener.to_le_bytes();
+    let mut resp = [0u8; client::HDR_LEN + 4];
+    let (errno, n) = client::call(port, 4, &body, &mut resp)?;
+    if errno != E_OK {
+        return None;
+    }
+    handle_at(&resp, n)
+}
