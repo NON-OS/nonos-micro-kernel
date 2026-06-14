@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec::Vec;
+
 use super::action::RxAction;
 use super::rst;
 use super::transitions::{closing, established, handshake};
 use crate::state::{TimerKind, TABLE};
-use crate::tcp::{Endpoint4, State, TcpHeader, FLAG_ACK, FLAG_RST};
+use crate::tcp::{Endpoint4, State, TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_RST, FLAG_SYN};
 
 pub fn update(local: Endpoint4, remote: Endpoint4, hdr: TcpHeader, payload: &[u8]) -> RxAction {
     let now = crate::clock::now_ms();
@@ -28,6 +30,12 @@ pub fn update(local: Endpoint4, remote: Endpoint4, hdr: TcpHeader, payload: &[u8
     let action = match table.connection_match_mut(local, remote) {
         None => {
             if hdr.has_flag(FLAG_RST) {
+                return RxAction::None;
+            }
+            if hdr.has_flag(FLAG_SYN)
+                && !hdr.has_flag(FLAG_ACK)
+                && table.listener_for_mut(local.port).is_some()
+            {
                 return RxAction::None;
             }
             if hdr.has_flag(FLAG_ACK) {
@@ -43,7 +51,13 @@ pub fn update(local: Endpoint4, remote: Endpoint4, hdr: TcpHeader, payload: &[u8
             } else if e.tcb.state == State::SynReceived && hdr.has_flag(FLAG_ACK) {
                 e.tcb.state = State::Established;
                 accepted = Some((e.parent, e.handle));
-                RxAction::None
+                if hdr.has_flag(FLAG_FIN) {
+                    e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(1);
+                    e.tcb.state = State::CloseWait;
+                    RxAction::Reply(e.tcb, FLAG_ACK, Vec::new())
+                } else {
+                    RxAction::None
+                }
             } else if e.tcb.state.is_closing() {
                 let (a, deadline) = closing::step(e, &hdr, now);
                 if let Some(d) = deadline {
