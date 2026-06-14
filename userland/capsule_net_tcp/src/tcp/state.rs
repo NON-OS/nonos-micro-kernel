@@ -17,16 +17,16 @@
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum State {
-    Listen,
-    SynSent,
-    SynReceived,
-    Established,
-    CloseWait,
-    FinWait1,
-    FinWait2,
-    Closing,
-    TimeWait,
-    LastAck,
+    Listen = 0,
+    SynSent = 1,
+    SynReceived = 2,
+    Established = 3,
+    CloseWait = 4,
+    FinWait1 = 5,
+    FinWait2 = 6,
+    Closing = 7,
+    TimeWait = 8,
+    LastAck = 9,
 }
 
 impl State {
