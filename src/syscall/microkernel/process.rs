@@ -108,6 +108,8 @@ pub fn sys_args(buf: u64, len: usize) -> i64 {
         return ERRNO_FAULT;
     }
     blob.len() as i64
+}
+
 pub fn sys_thread_spawn(entry: u64, stack: u64) -> i64 {
     if entry == 0 || stack == 0 {
         return ERRNO_INVAL;
