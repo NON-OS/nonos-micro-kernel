@@ -14,20 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod collapse;
-mod expire_pulses;
-mod expire_visibility;
-mod mark_launch;
-mod new;
-mod reveal;
-mod set_open;
-mod types;
+use super::types::TaskbarState;
 
-pub use collapse::collapse_taskbar;
-pub use expire_pulses::expire_taskbar_pulses;
-pub use expire_visibility::expire_taskbar_visibility;
-pub use mark_launch::mark_taskbar_launch;
-pub use new::new_taskbar_state;
-pub use reveal::reveal_taskbar;
-pub use set_open::set_taskbar_open;
-pub use types::{TaskbarState, TASKBAR_NO_ACTIVE};
+pub fn collapse_taskbar(state: &mut TaskbarState) {
+    state.visible = false;
+    state.reveal_until_ms = 0;
+}
