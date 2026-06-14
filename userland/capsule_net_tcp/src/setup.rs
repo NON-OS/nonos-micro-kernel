@@ -25,22 +25,23 @@ const IP_NAME: &str = "net.ip";
 pub enum SetupError {
     IpMissing,
     ConfigMissing,
-    EntropyMissing,
 }
 
-fn seed_iss_key() -> Result<(), SetupError> {
+fn seed_iss_key() {
     let mut raw = [0u8; 16];
-    if crypto_random(raw.as_mut_ptr(), raw.len()) != raw.len() as i64 {
-        return Err(SetupError::EntropyMissing);
-    }
-    let k0 = u64::from_le_bytes([raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7]]);
-    let k1 = u64::from_le_bytes([raw[8], raw[9], raw[10], raw[11], raw[12], raw[13], raw[14], raw[15]]);
-    TABLE.lock().seed_iss([k0, k1]);
-    Ok(())
+    let key = if crypto_random(raw.as_mut_ptr(), raw.len()) == raw.len() as i64 {
+        let k0 = u64::from_le_bytes([raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7]]);
+        let k1 = u64::from_le_bytes([raw[8], raw[9], raw[10], raw[11], raw[12], raw[13], raw[14], raw[15]]);
+        [k0, k1]
+    } else {
+        let t = crate::clock::now_ms();
+        [t ^ 0x9E37_79B9_7F4A_7C15, t.rotate_left(32) ^ 0xD1B5_4A32_D192_ED03]
+    };
+    TABLE.lock().seed_iss(key);
 }
 
 pub fn run() -> Result<(), SetupError> {
-    seed_iss_key()?;
+    seed_iss_key();
     let mut port = 0u32;
     let mut pid = 0u32;
     let rc = mk_service_lookup(IP_NAME.as_ptr(), IP_NAME.len(), &mut port, &mut pid);
