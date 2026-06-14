@@ -21,8 +21,7 @@ use crate::syscall::microkernel::capsule_load::sys_capsule_load;
 use crate::syscall::microkernel::memory::{sys_mmap, sys_munmap};
 use crate::syscall::microkernel::numbers::*;
 use crate::syscall::microkernel::process::{
-    sys_args, sys_exit, sys_getpid, sys_pid_alive, sys_spawn, sys_yield,
-    sys_exit, sys_getpid, sys_pid_alive, sys_spawn, sys_thread_spawn, sys_yield,
+    sys_args, sys_exit, sys_getpid, sys_pid_alive, sys_spawn, sys_thread_spawn, sys_yield,
 };
 use crate::syscall::microkernel::procstat::sys_proc_stat;
 use crate::syscall::microkernel::time::{sys_time_millis, sys_time_rtc};
