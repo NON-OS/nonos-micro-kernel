@@ -17,14 +17,13 @@
 use nonos_libc::{
     mk_time_millis, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS, INPUT_KIND_TOUCH,
 };
-
-const HOVER_REVEAL_BAND: u32 = 4;
-
 use crate::protocol::{read_i32, read_u16, read_u32};
 use crate::render::layout::bottom_dock_rect;
 use crate::server::handlers::launcher_focus;
 use crate::server::refresh_taskbar::refresh_taskbar;
 use crate::state::{reveal_taskbar, Context};
+
+const HOVER_REVEAL_BAND: u32 = 4;
 
 pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     if buf.len() < 40 || read_u32(buf, 0) != Some(0x4E49_4E50) {
@@ -65,6 +64,9 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
 }
 
 fn hover_reveal(ctx: &mut Context, x: u32, y: u32) {
+    if ctx.height == 0 {
+        return;
+    }
     if !ctx.taskbar.visible {
         if y >= ctx.height.saturating_sub(HOVER_REVEAL_BAND) {
             reveal_taskbar(&mut ctx.taskbar, mk_time_millis());
