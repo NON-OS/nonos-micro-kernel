@@ -19,12 +19,12 @@ use nonos_libc::{mk_time_millis, mk_yield};
 const STEP_MS: i64 = 100;
 
 pub fn poll_until<F: FnMut() -> bool>(timeout_ms: u64, mut f: F) -> bool {
-    let start = mk_time_millis();
+    let start = mk_time_millis().max(0);
     loop {
         if f() {
             return true;
         }
-        let now = mk_time_millis();
+        let now = mk_time_millis().max(0);
         if (now - start) as u64 >= timeout_ms {
             return false;
         }
