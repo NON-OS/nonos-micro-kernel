@@ -46,9 +46,12 @@ pub(super) fn try_first_entry(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool 
     }
     percpu::set_kernel_stack(kstack);
 
-    if pcb.cr3.load(Ordering::Relaxed) != 0 && switch_to_process_address_space(pid).is_err() {
-        *pcb.state.lock() = ProcessState::Terminated(-1);
-        return true;
+    let cr3v = pcb.cr3.load(Ordering::Relaxed);
+    if cr3v != 0 && switch_to_process_address_space(pid).is_err() {
+        // A thread shares its parent's inherited address space and has no
+        // ASID entry of its own, so the per-pid lookup misses. Load the
+        // inherited CR3 directly (single-core: no per-asid TLB scoping).
+        crate::memory::paging::tlb::set_cr3(crate::memory::PhysAddr::new(cr3v));
     }
 
     *pcb.state.lock() = ProcessState::Running;
