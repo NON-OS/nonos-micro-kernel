@@ -39,6 +39,7 @@ pub fn send(tcb: Tcb, flags: u8, payload: &[u8]) -> Result<(), &'static str> {
 
 pub fn send_rst(local: Endpoint4, remote: Endpoint4, seq: u32, ack: u32) -> Result<(), &'static str> {
     let mut seg = vec![0u8; 20];
+    let flags = if ack == 0 { FLAG_RST } else { FLAG_RST | FLAG_ACK };
     let req = BuildRequest {
         src: local.ip,
         dst: remote.ip,
@@ -46,7 +47,7 @@ pub fn send_rst(local: Endpoint4, remote: Endpoint4, seq: u32, ack: u32) -> Resu
         dst_port: remote.port,
         seq,
         ack,
-        flags: FLAG_RST | FLAG_ACK,
+        flags,
         window: 0,
         payload: &[],
     };

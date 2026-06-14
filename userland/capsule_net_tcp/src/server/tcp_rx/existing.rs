@@ -30,6 +30,9 @@ pub fn update(local: Endpoint4, remote: Endpoint4, hdr: TcpHeader, payload: &[u8
             if hdr.has_flag(FLAG_RST) {
                 return RxAction::None;
             }
+            if hdr.has_flag(FLAG_ACK) {
+                return RxAction::Rst { local, remote, seq: hdr.ack, ack: 0 };
+            }
             return RxAction::Rst { local, remote, seq: 0, ack: hdr.seq.wrapping_add(1) };
         }
         Some(e) => {
