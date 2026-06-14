@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::constants::{QUEUE_SIZE, TX_BUFFER_LEN};
+use crate::constants::{QUEUE_SIZE, TX_BUFFER_LEN, TX_DESC_COUNT};
 
 #[derive(Debug, Clone, Copy)]
 pub struct TxQueue {
@@ -23,6 +23,8 @@ pub struct TxQueue {
     pub buf_va: *mut u8,
     pub buf_phys: u64,
     pub buf_len: u32,
+    pub buf_count: u16,
+    pub next_avail: u16,
     pub last_used: u16,
 }
 
@@ -34,6 +36,8 @@ impl TxQueue {
             buf_va: buf_va as *mut u8,
             buf_phys,
             buf_len: TX_BUFFER_LEN,
+            buf_count: TX_DESC_COUNT,
+            next_avail: 0,
             last_used: 0,
         }
     }

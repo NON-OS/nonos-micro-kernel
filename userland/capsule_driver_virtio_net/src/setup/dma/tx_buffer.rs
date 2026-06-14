@@ -18,7 +18,7 @@ use nonos_libc::{mk_dma_map, DmaMapOut, IrqBindOut};
 
 use super::super::registers::RegisterGrant;
 use super::rollback;
-use crate::constants::TX_BUFFER_LEN;
+use crate::constants::{QUEUE_SIZE, TX_BUFFER_LEN};
 
 pub fn map_tx_buffer(
     device_id: u64,
@@ -30,7 +30,7 @@ pub fn map_tx_buffer(
     tx_queue: &DmaMapOut,
 ) -> Result<DmaMapOut, &'static str> {
     let mut out = DmaMapOut { user_va: 0, device_addr: 0, length: 0, grant_id: 0 };
-    let len = (TX_BUFFER_LEN as u64 + 0xFFF) & !0xFFF;
+    let len = (TX_BUFFER_LEN as u64 * QUEUE_SIZE as u64 + 0xFFF) & !0xFFF;
     let r = mk_dma_map(device_id, claim_epoch, len, 0, &mut out);
     if r >= 0 {
         return Ok(out);

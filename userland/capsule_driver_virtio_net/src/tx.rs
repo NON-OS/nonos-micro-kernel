@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_irq_ack, mk_irq_poll, mk_yield, IrqPollOut};
+use nonos_libc::{mk_irq_ack, mk_yield};
 
-use crate::constants::{LEG_QUEUE_NOTIFY, Q_TX, VIRTIO_NET_HDR_LEN};
+use crate::constants::{LEG_QUEUE_NOTIFY, MIN_ETHERNET_FRAME, Q_TX, VIRTIO_NET_HDR_LEN};
 use crate::queue::TxQueue;
 use crate::regs::Regs;
 
@@ -25,32 +25,41 @@ const MAX_YIELDS: u32 = 200_000;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TxError {
     IrqAck,
-    IrqPoll,
     Timeout,
 }
 
 pub fn send(regs: Regs, tx: &mut TxQueue, irq_grant: u64, frame: &[u8]) -> Result<(), TxError> {
-    let total = (VIRTIO_NET_HDR_LEN + frame.len()) as u32;
+    let eth_len = if frame.len() < MIN_ETHERNET_FRAME {
+        MIN_ETHERNET_FRAME
+    } else {
+        frame.len()
+    };
+    let total = (VIRTIO_NET_HDR_LEN + eth_len) as u32;
+    let mut tries = 0u32;
+    while tx.next_avail.wrapping_sub(tx.used_idx()) >= tx.buf_count {
+        if tries >= MAX_YIELDS {
+            return Err(TxError::Timeout);
+        }
+        mk_yield();
+        tries = tries.wrapping_add(1);
+    }
+    let slot = tx.next_avail % tx.buf_count;
     unsafe {
-        let buf = tx.buffer_mut(total);
-        for b in buf[..VIRTIO_NET_HDR_LEN].iter_mut() {
+        let buf = tx.buffer_mut(slot, total);
+        for b in buf.iter_mut() {
             *b = 0;
         }
-        buf[VIRTIO_NET_HDR_LEN..].copy_from_slice(frame);
+        buf[VIRTIO_NET_HDR_LEN..VIRTIO_NET_HDR_LEN + frame.len()].copy_from_slice(frame);
     }
-    tx.post_packet(total);
+    tx.post_packet(slot, total);
     unsafe {
         regs.w16(LEG_QUEUE_NOTIFY, Q_TX);
     }
-
-    let prev_seq = read_seq(irq_grant)?;
-    let target = tx.last_used.wrapping_add(1);
-    let mut tries = 0u32;
+    let target = tx.next_avail.wrapping_add(1);
+    tx.next_avail = target;
+    tries = 0;
     loop {
         if tx.used_idx() == target {
-            break;
-        }
-        if read_seq(irq_grant)? != prev_seq {
             break;
         }
         if tries >= MAX_YIELDS {
@@ -64,12 +73,4 @@ pub fn send(regs: Regs, tx: &mut TxQueue, irq_grant: u64, frame: &[u8]) -> Resul
         return Err(TxError::IrqAck);
     }
     Ok(())
-}
-
-fn read_seq(grant: u64) -> Result<u64, TxError> {
-    let mut out = IrqPollOut { seq: 0, overflow: 0 };
-    if mk_irq_poll(grant, &mut out as *mut _) < 0 {
-        return Err(TxError::IrqPoll);
-    }
-    Ok(out.seq)
 }

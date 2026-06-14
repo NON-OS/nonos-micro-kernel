@@ -43,8 +43,9 @@ impl TxQueue {
         unsafe { read_volatile(self.region_va.add(VQ_USED_OFFSET + USED_IDX_OFFSET).cast()) }
     }
 
-    pub unsafe fn buffer_mut(&self, len: u32) -> &mut [u8] {
+    pub unsafe fn buffer_mut(&self, slot: u16, len: u32) -> &mut [u8] {
         let n = core::cmp::min(len, self.buf_len) as usize;
-        core::slice::from_raw_parts_mut(self.buf_va, n)
+        let base = self.buf_va.add(self.buf_len as usize * slot as usize);
+        core::slice::from_raw_parts_mut(base, n)
     }
 }
