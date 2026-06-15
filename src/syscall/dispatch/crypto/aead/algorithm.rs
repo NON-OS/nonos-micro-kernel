@@ -27,11 +27,12 @@ pub(super) fn seal(
     algo: u64,
     key: &[u8; 32],
     nonce: &[u8; 12],
+    aad: &[u8],
     plaintext: &[u8],
 ) -> Result<Vec<u8>, CryptoCapsuleError> {
     match algo {
-        ALGO_CHACHA20_POLY1305 => crypto_client::chacha20_poly1305_seal(key, nonce, &[], plaintext),
-        ALGO_AES256_GCM => crypto_client::aes256_gcm_seal(key, nonce, &[], plaintext),
+        ALGO_CHACHA20_POLY1305 => crypto_client::chacha20_poly1305_seal(key, nonce, aad, plaintext),
+        ALGO_AES256_GCM => crypto_client::aes256_gcm_seal(key, nonce, aad, plaintext),
         _ => Err(CryptoCapsuleError::InvalidArgument),
     }
 }
@@ -40,13 +41,14 @@ pub(super) fn open(
     algo: u64,
     key: &[u8; 32],
     nonce: &[u8; 12],
+    aad: &[u8],
     ciphertext: &[u8],
 ) -> Result<Vec<u8>, CryptoCapsuleError> {
     match algo {
         ALGO_CHACHA20_POLY1305 => {
-            crypto_client::chacha20_poly1305_open(key, nonce, &[], ciphertext)
+            crypto_client::chacha20_poly1305_open(key, nonce, aad, ciphertext)
         }
-        ALGO_AES256_GCM => crypto_client::aes256_gcm_open(key, nonce, &[], ciphertext),
+        ALGO_AES256_GCM => crypto_client::aes256_gcm_open(key, nonce, aad, ciphertext),
         _ => Err(CryptoCapsuleError::InvalidArgument),
     }
 }

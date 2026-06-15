@@ -23,19 +23,19 @@ pub fn paint_home(state: &State, fb: &mut PaintBuffer) {
     let w = fb.width.saturating_sub(368);
     let left_w = (w / 2).saturating_sub(20);
     let right_x = 336 + w / 2 + 8;
-    super::panel::panel(fb, 336, 128, left_w, 232);
-    super::panel::panel(fb, right_x, 128, left_w, 232);
-    super::panel::panel(fb, 336, 388, w.saturating_sub(32), fb.height.saturating_sub(470));
+    super::panel::panel(fb, 336, 128, left_w, 332);
+    super::panel::panel(fb, right_x, 128, left_w, 332);
+    super::panel::panel(fb, 336, 488, w.saturating_sub(32), fb.height.saturating_sub(570));
     super::paint_account_card::paint_account_card(state, fb);
     super::paint_network_card::paint_network_card(state, fb, right_x + 32);
-    fb.text(368, 420, b"Enabled rails", MUTED);
+    fb.text(368, 520, b"Enabled rails", MUTED);
     let gap = 32;
     let rail_w = core::cmp::max(128, w.saturating_sub(128) / 3);
-    super::paint_rail_card::paint_rail_card(fb, 368, 456, rail_w, b"ETH", b"native", CYAN);
+    super::paint_rail_card::paint_rail_card(fb, 368, 556, rail_w, b"ETH", b"native", CYAN);
     super::paint_rail_card::paint_rail_card(
         fb,
         368 + rail_w + gap,
-        456,
+        556,
         rail_w,
         b"NOX",
         b"ERC-20",
@@ -44,7 +44,7 @@ pub fn paint_home(state: &State, fb: &mut PaintBuffer) {
     super::paint_rail_card::paint_rail_card(
         fb,
         368 + (rail_w + gap) * 2,
-        456,
+        556,
         rail_w,
         b"PR",
         b"reserved",

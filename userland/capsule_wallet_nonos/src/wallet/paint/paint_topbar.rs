@@ -45,7 +45,7 @@ pub fn paint_topbar(state: &State, fb: &mut PaintBuffer) {
     fb.text(
         x + 202,
         58,
-        if state.net.rpc_tcp_ok { b"tcp 443" } else { b"TLS pending" },
+        if state.net.rpc_chain_ok { b"chain 0x1" } else if state.net.tls_client_finished_ok { b"client fin" } else if state.net.tls_finished_ok { b"TLS Finished" } else if state.net.tls_validity_ok { b"cert time" } else if state.net.tls_hostname_ok { b"host match" } else if state.net.tls_certificate_ok { b"cert chain" } else if state.net.tls_record_ok { b"TLS record" } else if state.net.tls_server_ok { b"TLS hello" } else if state.net.rpc_tcp_ok { b"tcp 443" } else { b"TLS pending" },
         WARN,
     );
     if !compact {

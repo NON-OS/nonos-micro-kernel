@@ -20,6 +20,6 @@ pub fn append_hex_bytes(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(b"0x");
     for b in bytes {
         out.push(super::hex_digit::hex_digit(b >> 4));
-        out.push(super::hex_digit::hex_digit(*b));
+        out.push(super::hex_digit::hex_digit(*b & 15));
     }
 }

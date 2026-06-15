@@ -15,8 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod decrypt;
+mod decrypt_aad;
 mod ed25519_verify;
 mod encrypt;
+mod encrypt_aad;
 mod hash;
 mod keccak256;
 mod prf;
@@ -26,8 +28,10 @@ mod secp256k1_sign;
 mod x25519;
 
 pub use decrypt::crypto_decrypt;
+pub use decrypt_aad::crypto_decrypt_aad;
 pub use ed25519_verify::crypto_ed25519_verify;
 pub use encrypt::crypto_encrypt;
+pub use encrypt_aad::crypto_encrypt_aad;
 pub use hash::crypto_hash;
 pub use keccak256::crypto_keccak256;
 pub use prf::{crypto_hkdf_sha256, crypto_hmac_sha256};

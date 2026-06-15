@@ -18,7 +18,12 @@ mod algorithm;
 mod constants;
 mod copy;
 mod decrypt;
+mod decrypt_aad;
 mod encrypt;
+mod encrypt_aad;
+mod frame;
 
 pub use decrypt::handle_crypto_decrypt;
+pub use decrypt_aad::handle_crypto_decrypt_aad;
 pub use encrypt::handle_crypto_encrypt;
+pub use encrypt_aad::handle_crypto_encrypt_aad;

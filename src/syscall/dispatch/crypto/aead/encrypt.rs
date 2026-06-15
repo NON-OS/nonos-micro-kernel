@@ -46,7 +46,7 @@ pub fn handle_crypto_encrypt(
         Ok(v) => v,
         Err(e) => return e,
     };
-    match algorithm::seal(algo, &key, &nonce, &plaintext) {
+    match algorithm::seal(algo, &key, &nonce, &[], &plaintext) {
         Ok(ct) => copy::write_result(ciphertext_ptr, &ct),
         Err(e) => map_capsule_error(e, CryptoErrorContext::Authenticated),
     }

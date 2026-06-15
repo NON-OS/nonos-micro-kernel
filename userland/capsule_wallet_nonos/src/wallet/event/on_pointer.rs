@@ -36,6 +36,9 @@ pub fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if state.view == VIEW_SEND {
         return send(state, x, y);
     }
+    if state.view == VIEW_PROOF && hit(x, y, 368, 674, 190, 42) {
+        return super::broadcast::broadcast(state);
+    }
     EventOutcome::Idle
 }
 

@@ -40,7 +40,7 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
     if right_w > 240 {
         fb.text(right_x, 164, b"Route", MUTED);
         fb.text(right_x, 214, b"PublicNode Ethereum RPC", CYAN);
-        fb.text(right_x, 258, if state.net.rpc_tcp_ok { b"TCP ready, TLS pending" } else { b"TLS pending" }, WARN);
+        fb.text(right_x, 258, super::paint_send_route_label::paint_send_route_label(state), WARN);
     }
     super::paint_tx::paint_tx(state, fb);
 }
@@ -52,11 +52,8 @@ fn field(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &[u8], active: boo
 }
 
 fn to_value(state: &State, fb: &mut PaintBuffer, x: u32, y: u32) {
-    if state.send_to_len == 0 {
-        fb.text(x, y, b"40 hex characters", FG);
-    } else {
-        fb.text(x, y, &state.send_to_hex[..state.send_to_len], FG);
-    }
+    let text: &[u8] = if state.send_to_len == 0 { b"40 hex characters" } else { &state.send_to_hex[..state.send_to_len] };
+    fb.text(x, y, text, FG);
 }
 
 fn num_value(fb: &mut PaintBuffer, x: u32, y: u32, value: u64) {

@@ -37,6 +37,7 @@ pub fn on_key(state: &mut State, code: u32) -> EventOutcome {
         code if code == b'E' as u32 => super::sign_eth::sign_eth(state),
         code if code == b'n' as u32 || code == b'N' as u32 => super::sign_nox::sign_nox(state),
         code if code == b'P' as u32 => super::sign_both::sign_both(state),
+        code if code == b'b' as u32 || code == b'B' as u32 => super::broadcast::broadcast(state),
         code if code == b'w' as u32 || code == b'W' as u32 => super::probe_net::probe_net(state),
         _ => EventOutcome::Idle,
     }

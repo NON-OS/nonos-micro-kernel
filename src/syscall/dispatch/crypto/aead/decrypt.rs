@@ -50,7 +50,7 @@ pub fn handle_crypto_decrypt(
         Ok(v) => v,
         Err(e) => return e,
     };
-    match algorithm::open(algo, &key, &nonce, &ciphertext) {
+    match algorithm::open(algo, &key, &nonce, &[], &ciphertext) {
         Ok(pt) => copy::write_result(plaintext_ptr, &pt),
         Err(e) => map_capsule_error(e, CryptoErrorContext::Authenticated),
     }
