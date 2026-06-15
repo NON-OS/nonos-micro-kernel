@@ -30,6 +30,8 @@ chacha20poly1305 = { version = "0.10", default-features = false, features = ["al
 aes-gcm          = { version = "0.10", default-features = false, features = ["alloc", "aes"] }
 ed25519-dalek    = { version = "2.1.1", default-features = false, features = ["alloc", "zeroize"] }
 x25519-dalek     = { version = "2", default-features = false, features = ["static_secrets", "zeroize"] }
+p256             = { version = "0.13", default-features = false, features = ["ecdsa"] }
+p384             = { version = "0.13", default-features = false, features = ["ecdsa"] }
 
 [profile.release]
 panic    = "abort"

@@ -14,18 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{algorithm, constants::MAX_AEAD_PLAINTEXT, copy};
+use super::{algorithm, constants::MAX_AEAD_PLAINTEXT, copy, frame};
 use crate::capabilities::Capability;
 use crate::syscall::dispatch::crypto::error::{map_capsule_error, CryptoErrorContext};
 use crate::syscall::dispatch::require_capability;
 use crate::syscall::SyscallResult;
 
-pub fn handle_crypto_encrypt(
+pub fn handle_crypto_encrypt_aad(
     algo: u64,
     key_ptr: u64,
     nonce_ptr: u64,
-    plaintext_ptr: u64,
-    plaintext_len: u64,
+    frame_ptr: u64,
+    frame_len: u64,
     ciphertext_ptr: u64,
 ) -> SyscallResult {
     if let Err(e) = require_capability(Capability::Crypto) {
@@ -34,19 +34,11 @@ pub fn handle_crypto_encrypt(
     if let Err(e) = algorithm::require_known(algo) {
         return e;
     }
-    let key = match copy::read_array::<32>(key_ptr) {
-        Ok(v) => v,
-        Err(e) => return e,
-    };
-    let nonce = match copy::read_array::<12>(nonce_ptr) {
-        Ok(v) => v,
-        Err(e) => return e,
-    };
-    let plaintext = match copy::read_vec(plaintext_ptr, plaintext_len, MAX_AEAD_PLAINTEXT) {
-        Ok(v) => v,
-        Err(e) => return e,
-    };
-    match algorithm::seal(algo, &key, &nonce, &[], &plaintext) {
+    let key = match copy::read_array::<32>(key_ptr) { Ok(v) => v, Err(e) => return e };
+    let nonce = match copy::read_array::<12>(nonce_ptr) { Ok(v) => v, Err(e) => return e };
+    let raw = match copy::read_vec(frame_ptr, frame_len, MAX_AEAD_PLAINTEXT + 260) { Ok(v) => v, Err(e) => return e };
+    let (aad, plaintext) = match frame::split(&raw) { Ok(v) => v, Err(e) => return e };
+    match algorithm::seal(algo, &key, &nonce, aad, plaintext) {
         Ok(ct) => copy::write_result(ciphertext_ptr, &ct),
         Err(e) => map_capsule_error(e, CryptoErrorContext::Authenticated),
     }

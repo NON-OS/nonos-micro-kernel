@@ -15,10 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::syscall::dispatch::crypto::{
-    handle_crypto_decrypt, handle_crypto_ed25519_verify, handle_crypto_encrypt, handle_crypto_hash,
-    handle_crypto_keccak256, handle_crypto_random, handle_crypto_secp256k1_pubkey,
-    handle_crypto_secp256k1_sign, handle_hkdf_sha256, handle_hmac_sha256, handle_x25519_public,
-    handle_x25519_shared,
+    handle_crypto_decrypt, handle_crypto_decrypt_aad, handle_crypto_ed25519_verify,
+    handle_crypto_encrypt, handle_crypto_encrypt_aad, handle_crypto_hash, handle_crypto_keccak256,
+    handle_crypto_random, handle_crypto_secp256k1_pubkey, handle_crypto_secp256k1_sign,
+    handle_hkdf_sha256, handle_hmac_sha256, handle_x25519_public, handle_x25519_shared,
 };
 use crate::syscall::dispatch::util::errno;
 use crate::syscall::numbers::SyscallNumber;
@@ -38,6 +38,8 @@ pub(super) fn dispatch_crypto(
         SyscallNumber::CryptoHash => handle_crypto_hash(a0, a1, a2, a3, a4),
         SyscallNumber::CryptoEncrypt => handle_crypto_encrypt(a0, a1, a2, a3, a4, _a5),
         SyscallNumber::CryptoDecrypt => handle_crypto_decrypt(a0, a1, a2, a3, a4, _a5),
+        SyscallNumber::CryptoEncryptAad => handle_crypto_encrypt_aad(a0, a1, a2, a3, a4, _a5),
+        SyscallNumber::CryptoDecryptAad => handle_crypto_decrypt_aad(a0, a1, a2, a3, a4, _a5),
         SyscallNumber::CryptoEd25519Verify => handle_crypto_ed25519_verify(a0, a1, a2, a3),
         SyscallNumber::CryptoX25519Public => handle_x25519_public(a0, a1),
         SyscallNumber::CryptoX25519Shared => handle_x25519_shared(a0, a1, a2),

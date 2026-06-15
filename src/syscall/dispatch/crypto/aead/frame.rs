@@ -14,17 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const OP_X25519_PUBLIC: u16 = 14;
-pub const OP_X25519_SHARED: u16 = 15;
-pub const OP_HMAC_SHA256: u16 = 16;
-pub const OP_HKDF_SHA256: u16 = 17;
-pub const OP_P256_ECDSA_VERIFY: u16 = 18;
-pub const OP_P384_ECDSA_VERIFY: u16 = 19;
-pub const OP_SHA384_HASH: u16 = 20;
+use crate::syscall::dispatch::errno;
+use crate::syscall::SyscallResult;
 
-pub const X25519_KEY_BYTES: usize = 32;
-pub const P256_VERIFY_BYTES: usize = 65 + 64 + 32;
-pub const P384_VERIFY_BYTES: usize = 97 + 96 + 48;
-pub const HMAC_KEY_MAX: usize = 256;
-pub const HKDF_PART_MAX: usize = 256;
-pub const HKDF_OUT_MAX: usize = 512;
+const MAX_AAD: usize = 256;
+
+pub(super) fn split(frame: &[u8]) -> Result<(&[u8], &[u8]), SyscallResult> {
+    if frame.len() < 4 {
+        return Err(errno(22));
+    }
+    let aad_len = u32::from_le_bytes([frame[0], frame[1], frame[2], frame[3]]) as usize;
+    if aad_len > MAX_AAD || 4 + aad_len > frame.len() {
+        return Err(errno(22));
+    }
+    Ok((&frame[4..4 + aad_len], &frame[4 + aad_len..]))
+}

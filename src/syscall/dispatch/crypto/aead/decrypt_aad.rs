@@ -14,19 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{algorithm, constants::MAX_AEAD_PLAINTEXT, copy};
+use super::{algorithm, constants::MAX_AEAD_PLAINTEXT, constants::TAG_LEN, copy, frame};
 use crate::capabilities::Capability;
 use crate::syscall::dispatch::crypto::error::{map_capsule_error, CryptoErrorContext};
-use crate::syscall::dispatch::require_capability;
+use crate::syscall::dispatch::{errno, require_capability};
 use crate::syscall::SyscallResult;
 
-pub fn handle_crypto_encrypt(
+pub fn handle_crypto_decrypt_aad(
     algo: u64,
     key_ptr: u64,
     nonce_ptr: u64,
+    frame_ptr: u64,
+    frame_len: u64,
     plaintext_ptr: u64,
-    plaintext_len: u64,
-    ciphertext_ptr: u64,
 ) -> SyscallResult {
     if let Err(e) = require_capability(Capability::Crypto) {
         return e;
@@ -34,20 +34,15 @@ pub fn handle_crypto_encrypt(
     if let Err(e) = algorithm::require_known(algo) {
         return e;
     }
-    let key = match copy::read_array::<32>(key_ptr) {
-        Ok(v) => v,
-        Err(e) => return e,
-    };
-    let nonce = match copy::read_array::<12>(nonce_ptr) {
-        Ok(v) => v,
-        Err(e) => return e,
-    };
-    let plaintext = match copy::read_vec(plaintext_ptr, plaintext_len, MAX_AEAD_PLAINTEXT) {
-        Ok(v) => v,
-        Err(e) => return e,
-    };
-    match algorithm::seal(algo, &key, &nonce, &[], &plaintext) {
-        Ok(ct) => copy::write_result(ciphertext_ptr, &ct),
+    let key = match copy::read_array::<32>(key_ptr) { Ok(v) => v, Err(e) => return e };
+    let nonce = match copy::read_array::<12>(nonce_ptr) { Ok(v) => v, Err(e) => return e };
+    let raw = match copy::read_vec(frame_ptr, frame_len, MAX_AEAD_PLAINTEXT + TAG_LEN + 260) { Ok(v) => v, Err(e) => return e };
+    let (aad, ciphertext) = match frame::split(&raw) { Ok(v) => v, Err(e) => return e };
+    if ciphertext.len() <= TAG_LEN {
+        return errno(22);
+    }
+    match algorithm::open(algo, &key, &nonce, aad, ciphertext) {
+        Ok(pt) => copy::write_result(plaintext_ptr, &pt),
         Err(e) => map_capsule_error(e, CryptoErrorContext::Authenticated),
     }
 }

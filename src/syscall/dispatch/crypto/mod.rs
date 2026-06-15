@@ -24,7 +24,10 @@ mod secp256k1_pubkey;
 mod secp256k1_sign;
 mod verify;
 
-pub use aead::{handle_crypto_decrypt, handle_crypto_encrypt};
+pub use aead::{
+    handle_crypto_decrypt, handle_crypto_decrypt_aad, handle_crypto_encrypt,
+    handle_crypto_encrypt_aad,
+};
 pub use hash::handle_crypto_hash;
 pub use keccak::handle_crypto_keccak256;
 pub use primitives::{

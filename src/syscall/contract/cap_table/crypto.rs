@@ -23,6 +23,8 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::CryptoHash
         | SyscallNumber::CryptoEncrypt
         | SyscallNumber::CryptoDecrypt
+        | SyscallNumber::CryptoEncryptAad
+        | SyscallNumber::CryptoDecryptAad
         | SyscallNumber::CryptoEd25519Verify
         | SyscallNumber::CryptoX25519Public
         | SyscallNumber::CryptoX25519Shared

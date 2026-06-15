@@ -14,17 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const OP_X25519_PUBLIC: u16 = 14;
-pub const OP_X25519_SHARED: u16 = 15;
-pub const OP_HMAC_SHA256: u16 = 16;
-pub const OP_HKDF_SHA256: u16 = 17;
-pub const OP_P256_ECDSA_VERIFY: u16 = 18;
-pub const OP_P384_ECDSA_VERIFY: u16 = 19;
-pub const OP_SHA384_HASH: u16 = 20;
+use crate::syscall::{call_raw, N_CRYPTO_ENCRYPT_AAD};
 
-pub const X25519_KEY_BYTES: usize = 32;
-pub const P256_VERIFY_BYTES: usize = 65 + 64 + 32;
-pub const P384_VERIFY_BYTES: usize = 97 + 96 + 48;
-pub const HMAC_KEY_MAX: usize = 256;
-pub const HKDF_PART_MAX: usize = 256;
-pub const HKDF_OUT_MAX: usize = 512;
+#[no_mangle]
+pub extern "C" fn crypto_encrypt_aad(
+    algo: u64,
+    key: *const u8,
+    nonce: *const u8,
+    frame: *const u8,
+    frame_len: usize,
+    ciphertext: *mut u8,
+) -> i64 {
+    call_raw(
+        N_CRYPTO_ENCRYPT_AAD,
+        [algo, key as u64, nonce as u64, frame as u64, frame_len as u64, ciphertext as u64],
+    )
+}
