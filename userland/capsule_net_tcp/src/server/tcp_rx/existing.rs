@@ -48,7 +48,10 @@ pub fn update(local: Endpoint4, remote: Endpoint4, hdr: TcpHeader, payload: &[u8
                 if rst::in_window(e, hdr.seq) { RxAction::Reap(e.handle) } else { RxAction::None }
             } else if e.tcb.state == State::SynSent {
                 handshake::step(e, &hdr)
-            } else if e.tcb.state == State::SynReceived && hdr.has_flag(FLAG_ACK) {
+            } else if e.tcb.state == State::SynReceived
+                && hdr.has_flag(FLAG_ACK)
+                && hdr.ack == e.tcb.send.nxt
+            {
                 e.tcb.state = State::Established;
                 accepted = Some((e.parent, e.handle));
                 if hdr.has_flag(FLAG_FIN) {
