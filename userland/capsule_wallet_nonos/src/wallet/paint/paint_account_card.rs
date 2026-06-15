@@ -34,5 +34,23 @@ pub fn paint_account_card(state: &State, fb: &mut PaintBuffer) {
         if state.address_ready { b"Receive address ready" } else { b"Generate wallet to start" },
         ACCENT,
     );
-    super::paint_button::paint_button(fb, 368, 300, 180, b"Generate");
+    fb.text(368, 286, if state.balance_ready { b"Balance live" } else { b"Balance pending" }, MUTED);
+    paint_u64(fb, 520, 286, lower_u64(&state.balance_wei));
+    fb.text(368, 322, if state.nonce_ready { b"Nonce" } else { b"Nonce pending" }, MUTED);
+    paint_u64(fb, 520, 322, state.live_nonce);
+    fb.text(368, 358, if state.fee_ready { b"Gas wei" } else { b"Gas pending" }, MUTED);
+    paint_u64(fb, 520, 358, state.fee_wei);
+    super::paint_button::paint_button(fb, 368, 394, 180, b"Generate");
+}
+
+fn paint_u64(fb: &mut PaintBuffer, x: u32, y: u32, value: u64) {
+    let mut out = [0u8; 20];
+    let n = super::format_u64::format_u64(value, &mut out);
+    fb.text(x, y, &out[..n], FG);
+}
+
+fn lower_u64(value: &[u8; 32]) -> u64 {
+    u64::from_be_bytes([
+        value[24], value[25], value[26], value[27], value[28], value[29], value[30], value[31],
+    ])
 }

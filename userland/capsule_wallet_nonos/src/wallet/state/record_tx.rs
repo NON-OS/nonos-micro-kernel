@@ -19,6 +19,10 @@ use super::State;
 pub fn record_tx(state: &mut State, kind: &'static [u8], raw: &[u8], hash: [u8; 32]) {
     state.tx_kind = kind;
     state.tx_len = raw.len() as u32;
+    state.tx_raw.clear();
+    state.tx_raw.extend_from_slice(raw);
     state.tx_hash = hash;
     state.tx_ready = true;
+    state.broadcast_ready = false;
+    state.receipt_ready = false;
 }

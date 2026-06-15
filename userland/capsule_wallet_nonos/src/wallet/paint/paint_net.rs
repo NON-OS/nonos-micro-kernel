@@ -29,5 +29,5 @@ pub fn paint_net(state: &State, fb: &mut PaintBuffer) {
     fb.text(340, 280, b"chain", MUTED);
     fb.text(392, 280, b"0x1", FG);
     fb.text(444, 280, if state.net.route_ready { b"route ok" } else { b"blocked" }, FG);
-    fb.text(552, 280, if state.net.rpc_tcp_ok { b"tcp 443" } else { b"tls" }, FG);
+    fb.text(552, 280, if state.net.rpc_chain_ok { b"chain 0x1" } else if state.net.tls_client_finished_ok { b"client fin" } else if state.net.tls_finished_ok { b"tls finish" } else if state.net.tls_validity_ok { b"cert time" } else if state.net.tls_hostname_ok { b"host ok" } else if state.net.tls_certificate_ok { b"cert chain" } else if state.net.tls_record_ok { b"tls record" } else if state.net.tls_server_ok { b"tls hello" } else if state.net.rpc_tcp_ok { b"tcp 443" } else { b"tls" }, FG);
 }

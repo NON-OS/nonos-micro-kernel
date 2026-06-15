@@ -21,19 +21,8 @@ use crate::wallet::theme::{CYAN, FG, MUTED, WARN};
 
 pub fn paint_network_card(state: &State, fb: &mut PaintBuffer, x: u32) {
     fb.text(x, 160, b"Network privacy", MUTED);
-    fb.text_scaled(
-        x,
-        198,
-        if state.net.route_ready { b"Route ready" } else { b"Local mode" },
-        FG,
-        2,
-    );
-    fb.text(x, 250, if state.net.rpc_codec_ok { b"RPC codec ready" } else { b"RPC codec blocked" }, CYAN);
-    fb.text(
-        x,
-        286,
-        if state.net.rpc_tcp_ok { b"TCP ready, TLS pending" } else { b"TCP route pending" },
-        WARN,
-    );
+    fb.text_scaled(x, 198, if state.net.route_ready { b"Route ready" } else { b"Local mode" }, FG, 2);
+    fb.text(x, 250, super::paint_network_labels::primary(state), CYAN);
+    fb.text(x, 286, super::paint_network_labels::secondary(state), WARN);
     super::paint_button::paint_button(fb, x, 326, 170, b"Probe route");
 }

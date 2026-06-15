@@ -14,14 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn probe_rpc_tcp(dns_port: u32, sockets_port: u32) -> bool {
+#[derive(Clone, Copy)]
+pub struct TcpProbe {
+    pub resolve: bool,
+    pub socket: bool,
+    pub connect: bool,
+}
+
+pub fn probe_rpc_tcp(dns_port: u32, sockets_port: u32) -> TcpProbe {
     let Ok(ip) = super::resolve_eth::resolve_eth(dns_port) else {
-        return false;
+        return TcpProbe { resolve: false, socket: false, connect: false };
     };
     let Ok(handle) = super::socket_open::socket_open(sockets_port) else {
-        return false;
+        return TcpProbe { resolve: true, socket: false, connect: false };
     };
-    let ok = super::socket_connect::socket_connect(sockets_port, handle, ip, 443).is_ok();
+    let connect = super::socket_connect::socket_connect(sockets_port, handle, ip, 443).is_ok();
     let _ = super::socket_close::socket_close(sockets_port, handle);
-    ok
+    TcpProbe { resolve: true, socket: true, connect }
 }

@@ -24,6 +24,7 @@ mod paint;
 mod rpc;
 mod state;
 mod theme;
+mod tls13;
 mod tx_hash;
 
 pub use app::Wallet;

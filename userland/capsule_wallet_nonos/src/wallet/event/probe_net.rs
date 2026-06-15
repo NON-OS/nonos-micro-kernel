@@ -21,6 +21,15 @@ use crate::wallet::state::State;
 
 pub fn probe_net(state: &mut State) -> EventOutcome {
     state.net = probe_network();
+    if state.address_ready && state.net.rpc_chain_ok {
+        let account = crate::wallet::net::probe_account(&state.address);
+        state.balance_ready = account.balance_ready;
+        state.balance_wei = account.balance_wei;
+        state.nonce_ready = account.nonce_ready;
+        state.live_nonce = account.nonce;
+        state.fee_ready = account.fee_ready;
+        state.fee_wei = account.fee_wei;
+    }
     state.status = state.net.status;
     EventOutcome::Repaint
 }

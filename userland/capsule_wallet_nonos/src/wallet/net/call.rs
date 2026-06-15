@@ -19,7 +19,7 @@ use nonos_libc::mk_ipc_call;
 const HDR_LEN: usize = 20;
 
 pub fn call(port: u32, magic: u32, op: u16, body: &[u8], rx: &mut [u8]) -> Result<usize, ()> {
-    let mut tx = [0u8; 300];
+    let mut tx = [0u8; 1536];
     let len = HDR_LEN.checked_add(body.len()).ok_or(())?;
     if len > tx.len() {
         return Err(());

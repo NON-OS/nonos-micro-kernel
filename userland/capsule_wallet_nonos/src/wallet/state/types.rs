@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec::Vec;
 use crate::wallet::net::NetStatus;
 
 pub const MAX_RAILS: usize = 8;
-pub const VIEW_HOME: u8 = 0;
-pub const VIEW_RECEIVE: u8 = 1;
-pub const VIEW_SEND: u8 = 2;
-pub const VIEW_PROOF: u8 = 3;
+pub const VIEW_HOME: u8 = 0; pub const VIEW_RECEIVE: u8 = 1; pub const VIEW_SEND: u8 = 2; pub const VIEW_PROOF: u8 = 3;
 pub const SEND_FIELD_TO: u8 = 0;
 pub const SEND_FIELD_AMOUNT: u8 = 1;
 pub const SEND_FIELD_NONCE: u8 = 2;
@@ -42,6 +40,12 @@ pub struct State {
     pub wallet_id: u32,
     pub address: [u8; 20],
     pub address_ready: bool,
+    pub balance_ready: bool,
+    pub balance_wei: [u8; 32],
+    pub nonce_ready: bool,
+    pub live_nonce: u64,
+    pub fee_ready: bool,
+    pub fee_wei: u64,
     pub view: u8,
     pub send_focus: u8,
     pub send_to_hex: [u8; 40],
@@ -50,8 +54,13 @@ pub struct State {
     pub send_nonce: u64,
     pub tx_hash: [u8; 32],
     pub tx_len: u32,
+    pub tx_raw: Vec<u8>,
     pub tx_ready: bool,
     pub tx_kind: &'static [u8],
+    pub broadcast_ready: bool,
+    pub broadcast_hash: [u8; 32],
+    pub receipt_ready: bool,
+    pub receipt_ok: bool,
     pub proof_count: u8,
     pub proof_eth_hash: [u8; 32],
     pub proof_eth_len: u32,

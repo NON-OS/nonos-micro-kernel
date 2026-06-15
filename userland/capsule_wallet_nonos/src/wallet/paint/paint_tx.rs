@@ -36,4 +36,18 @@ pub fn paint_tx(state: &State, fb: &mut PaintBuffer) {
     fb.text(432, 560, &len[..n], FG);
     fb.text(368, 596, &hash[..34], ACCENT);
     fb.text(368, 620, &hash[34..], ACCENT);
+    fb.text(368, 652, broadcast_text(state), MUTED);
+    super::paint_button::paint_button(fb, 368, 674, 190, b"Broadcast");
+}
+
+fn broadcast_text(state: &State) -> &'static [u8] {
+    if state.receipt_ready && state.receipt_ok {
+        b"Receipt confirmed"
+    } else if state.receipt_ready {
+        b"Receipt pending"
+    } else if state.broadcast_ready {
+        b"Broadcast accepted"
+    } else {
+        b"Not broadcast"
+    }
 }

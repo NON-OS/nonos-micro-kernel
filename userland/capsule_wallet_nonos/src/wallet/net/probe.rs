@@ -26,16 +26,42 @@ pub fn probe_network() -> NetStatus {
     let dns_ok = dns_port != 0 && super::health::health(dns_port, DNS_MAGIC);
     let sockets_ok = sockets_port != 0 && super::health::health(sockets_port, SOCKETS_MAGIC);
     let nym_ok = nym_port != 0 && super::health::health(nym_port, NYM_MAGIC);
-    let route_ready = dns_ok && sockets_ok && nym_ok;
-    let rpc_tcp_ok = dns_ok && sockets_ok && super::probe_rpc_tcp::probe_rpc_tcp(dns_port, sockets_port);
+    let route_ready = dns_ok && sockets_ok;
+    let tcp = if dns_ok && sockets_ok {
+        super::probe_rpc_tcp::probe_rpc_tcp(dns_port, sockets_port)
+    } else {
+        super::probe_rpc_tcp::TcpProbe { resolve: false, socket: false, connect: false }
+    };
+    let rpc_tcp_ok = tcp.connect;
     let rpc_codec_ok = super::super::rpc::self_check();
+    let tls13_ok = super::super::tls13::self_check();
+    let tls = if rpc_tcp_ok {
+        super::probe_tls_rpc::probe_tls_rpc(dns_port, sockets_port)
+    } else {
+        super::probe_tls_rpc::TlsProbe::blocked()
+    };
     NetStatus {
         dns_ok,
         sockets_ok,
         nym_ok,
         route_ready,
+        rpc_resolve_ok: tcp.resolve,
+        rpc_socket_ok: tcp.socket,
+        rpc_connect_ok: tcp.connect,
         rpc_tcp_ok,
         rpc_codec_ok,
-        status: if rpc_tcp_ok { b"rpc tcp ready" } else if route_ready { b"route ready" } else { b"route blocked" },
+        tls13_ok,
+        tls_server_ok: tls.server_hello,
+        tls_record_ok: tls.encrypted_record,
+        tls_certificate_ok: tls.certificate,
+        tls_chain_ok: tls.chain,
+        tls_anchor_ok: tls.anchor,
+        tls_signature_ok: tls.signature,
+        tls_hostname_ok: tls.hostname,
+        tls_validity_ok: tls.validity,
+        tls_finished_ok: tls.finished,
+        tls_client_finished_ok: tls.client_finished,
+        rpc_chain_ok: tls.chain_id,
+        status: super::probe_status::probe_status(&tls, rpc_tcp_ok, route_ready),
     }
 }

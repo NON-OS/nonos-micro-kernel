@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod empty_rail;
+mod default_net;
 mod filter_rails;
 mod hydrate;
 mod new;
@@ -23,6 +24,7 @@ mod record_tx;
 mod types;
 
 pub use hydrate::hydrate;
+pub use default_net::default_net;
 pub use new::new_state;
 pub use record_tx::record_tx;
 pub use types::{
