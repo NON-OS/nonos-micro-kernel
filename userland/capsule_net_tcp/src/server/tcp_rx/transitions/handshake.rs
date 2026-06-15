@@ -21,7 +21,9 @@ use crate::state::Entry;
 use crate::tcp::{State, TcpHeader, FLAG_ACK, FLAG_SYN};
 
 pub fn step(e: &mut Entry, hdr: &TcpHeader) -> RxAction {
-    if hdr.flags & (FLAG_SYN | FLAG_ACK) == FLAG_SYN | FLAG_ACK {
+    if hdr.flags & (FLAG_SYN | FLAG_ACK) == FLAG_SYN | FLAG_ACK
+        && hdr.ack == e.tcb.send.nxt
+    {
         e.tcb.recv.nxt = hdr.seq.wrapping_add(1);
         e.tcb.send.una = hdr.ack;
         e.tcb.state = State::Established;
