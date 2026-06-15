@@ -25,6 +25,7 @@ pub struct RxQueue {
     pub buf_len: u32,
     pub buf_count: u16,
     pub last_used: u16,
+    pub pending_refill: Option<u16>,
 }
 
 impl RxQueue {
@@ -37,6 +38,7 @@ impl RxQueue {
             buf_len: RX_BUFFER_LEN,
             buf_count: RX_DESC_COUNT,
             last_used: 0,
+            pending_refill: None,
         }
     }
 
