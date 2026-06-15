@@ -20,23 +20,25 @@ use crate::ethernet::MacAddress;
 
 impl Cache {
     pub fn insert(&mut self, ipv4: [u8; 4], mac: MacAddress) {
+        let seq = self.next_seq;
+        self.next_seq = self.next_seq.wrapping_add(1);
         for slot in &mut self.entries {
             if let Some(e) = slot {
                 if e.ipv4 == ipv4 {
                     e.mac = mac;
-                    e.age_ticks = 0;
+                    e.seq = seq;
                     return;
                 }
             }
         }
         if let Some(slot) = self.entries.iter_mut().find(|e| e.is_none()) {
-            *slot = Some(Entry { ipv4, mac, age_ticks: 0 });
+            *slot = Some(Entry { ipv4, mac, seq });
             self.len += 1;
             return;
         }
         self.evict_oldest();
         if let Some(slot) = self.entries.iter_mut().find(|e| e.is_none()) {
-            *slot = Some(Entry { ipv4, mac, age_ticks: 0 });
+            *slot = Some(Entry { ipv4, mac, seq });
             self.len += 1;
         }
     }

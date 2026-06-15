@@ -20,4 +20,5 @@ use super::entry::Entry;
 pub struct Cache {
     pub(super) entries: [Option<Entry>; ENTRY_CAP],
     pub(super) len: usize,
+    pub(super) next_seq: u64,
 }
