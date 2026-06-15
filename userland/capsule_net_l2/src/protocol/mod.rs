@@ -28,4 +28,5 @@ pub use header::{Request, HDR_LEN};
 pub use limits::IPC_PAYLOAD_MAX;
 pub use ops::{
     OP_ARP_RESOLVE, OP_GET_LINK, OP_GET_MAC, OP_HEALTHCHECK, OP_POLL_FRAME, OP_SEND_FRAME,
+    OP_SET_IP,
 };
