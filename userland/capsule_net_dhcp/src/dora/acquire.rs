@@ -38,6 +38,7 @@ pub fn acquire() -> Result<(), AcquireError> {
     *STATE.client_state.lock() = ClientState::Requesting;
     let ack = request(l2, &msg, &offer).map_err(|e| reset(map_request(e)))?;
     let prefix = install(ip, &ack).map_err(|_| reset(AcquireError::NoLink))?;
+    let _ = crate::l2_client::set_ip(l2, ack.yiaddr);
     *STATE.lease.lock() = Lease {
         ipv4: ack.yiaddr,
         prefix,

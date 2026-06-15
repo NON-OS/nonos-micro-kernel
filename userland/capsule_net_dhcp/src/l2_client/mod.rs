@@ -18,9 +18,11 @@ mod header;
 mod mac;
 mod rx;
 mod seq;
+mod set_ip;
 mod tx;
 mod wire;
 
 pub use mac::{read_mac, MacError};
 pub use rx::{poll_frame, RxError};
+pub use set_ip::set_ip;
 pub use tx::{send_frame, TxError};

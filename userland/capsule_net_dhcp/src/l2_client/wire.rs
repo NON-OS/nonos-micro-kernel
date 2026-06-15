@@ -26,3 +26,4 @@ pub const L2_HDR_LEN: usize = 20;
 pub const OP_GET_MAC: u16 = 2;
 pub const OP_SEND_FRAME: u16 = 4;
 pub const OP_POLL_FRAME: u16 = 5;
+pub const OP_SET_IP: u16 = 7;
