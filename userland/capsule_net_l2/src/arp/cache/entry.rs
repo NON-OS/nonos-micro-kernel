@@ -20,5 +20,5 @@ use crate::ethernet::MacAddress;
 pub(super) struct Entry {
     pub(super) ipv4: [u8; 4],
     pub(super) mac: MacAddress,
-    pub(super) age_ticks: u32,
+    pub(super) seq: u64,
 }

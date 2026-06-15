@@ -19,6 +19,6 @@ use super::constants::ENTRY_CAP;
 
 impl Cache {
     pub const fn new() -> Self {
-        Self { entries: [None; ENTRY_CAP], len: 0 }
+        Self { entries: [None; ENTRY_CAP], len: 0, next_seq: 0 }
     }
 }

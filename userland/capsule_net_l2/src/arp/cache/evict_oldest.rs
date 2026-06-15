@@ -19,11 +19,11 @@ use super::cache_type::Cache;
 impl Cache {
     pub(super) fn evict_oldest(&mut self) {
         let mut oldest_idx = None;
-        let mut oldest_age = 0u32;
+        let mut oldest_seq = u64::MAX;
         for (i, slot) in self.entries.iter().enumerate() {
             if let Some(e) = slot {
-                if e.age_ticks >= oldest_age {
-                    oldest_age = e.age_ticks;
+                if e.seq < oldest_seq {
+                    oldest_seq = e.seq;
                     oldest_idx = Some(i);
                 }
             }
