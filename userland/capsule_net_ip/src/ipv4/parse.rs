@@ -24,6 +24,7 @@ pub enum ParseError {
     BadIhl,
     TotalLengthMismatch,
     BadChecksum,
+    Fragmented,
 }
 
 // Validate and parse an IPv4 packet. On success returns the header
@@ -53,6 +54,10 @@ pub fn parse(bytes: &[u8]) -> Result<(Ipv4Header, &[u8]), ParseError> {
     }
     if checksum::fold(&bytes[..header_len]) != 0 {
         return Err(ParseError::BadChecksum);
+    }
+    let flags_frag = u16::from_be_bytes([bytes[6], bytes[7]]);
+    if flags_frag & 0x3FFF != 0 {
+        return Err(ParseError::Fragmented);
     }
     let protocol = bytes[9];
     let mut src = [0u8; 4];
