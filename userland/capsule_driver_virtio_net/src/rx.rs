@@ -35,6 +35,9 @@ pub struct Frame<'a> {
 
 
 pub unsafe fn take_one(rx: &mut RxQueue) -> Option<Frame<'static>> {
+    if let Some(prev) = rx.pending_refill.take() {
+        rx.refill(prev);
+    }
     let used = rx.used_idx();
     if used == rx.last_used {
         return None;
@@ -58,7 +61,7 @@ pub unsafe fn take_one(rx: &mut RxQueue) -> Option<Frame<'static>> {
     };
 
     rx.last_used = rx.last_used.wrapping_add(1);
-    rx.refill(desc_id as u16);
+    rx.pending_refill = Some(desc_id as u16);
 
     if payload_len == 0 {
         return Some(Frame { bytes: &[] });
