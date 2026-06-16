@@ -42,6 +42,8 @@ pub const MSL_MS: u64 = 30_000;
 
 pub const MAX_RETX: u8 = 8;
 
+pub const REASM_MAX_SEGS: usize = 32;
+
 pub const RTO_MIN_MS: u32 = 200;
 pub const RTO_MAX_MS: u32 = 60_000;
 pub const RTO_INIT_MS: u32 = 1_000;

@@ -16,12 +16,14 @@
 
 mod entry;
 mod globals;
+mod reasm;
 mod retx;
 mod table;
 mod timers;
 
 pub use entry::{Entry, RX_DEPTH};
 pub use globals::{ip_port, local_ip, next_ephemeral, set_ip_port, set_local_ip};
+pub use reasm::Reasm;
 pub use retx::{RetxQueue, RetxSeg};
 pub use table::TABLE;
 pub use timers::{TimerKind, Timers};

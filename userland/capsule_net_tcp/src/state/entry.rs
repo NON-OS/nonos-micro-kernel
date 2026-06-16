@@ -31,6 +31,7 @@ pub struct Entry {
     pub snd_buf: VecDeque<u8>,
     pub retx: crate::state::RetxQueue,
     pub rtt: crate::tcp::rtt::Rtt,
+    pub reasm: crate::state::Reasm,
 }
 
 impl Entry {
@@ -45,6 +46,7 @@ impl Entry {
             snd_buf: VecDeque::new(),
             retx: crate::state::RetxQueue::new(),
             rtt: crate::tcp::rtt::Rtt::new(),
+            reasm: crate::state::Reasm::new(),
         }
     }
 

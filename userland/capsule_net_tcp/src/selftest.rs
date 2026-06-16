@@ -35,7 +35,21 @@ pub fn run() -> u32 {
     if retx_kat() {
         bits |= 1 << 4;
     }
+    if reasm_kat() {
+        bits |= 1 << 5;
+    }
     bits
+}
+
+fn reasm_kat() -> bool {
+    use crate::state::Reasm;
+    let mut r = Reasm::new();
+    r.insert(110, alloc::vec![1u8; 10]);
+    if !r.drain_contiguous(100).is_empty() {
+        return false;
+    }
+    r.insert(100, alloc::vec![0u8; 10]);
+    r.drain_contiguous(100).len() == 20
 }
 
 fn retx_kat() -> bool {
