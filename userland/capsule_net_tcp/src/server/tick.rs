@@ -22,7 +22,9 @@ const MIN_TICK_MS: u64 = 10;
 const IDLE_CAP_MS: u64 = 250;
 
 pub fn tick() {
-    reap_timers(now_ms());
+    let now = now_ms();
+    reap_timers(now);
+    crate::server::retransmit::scan(now);
     while drain_one() {}
 }
 

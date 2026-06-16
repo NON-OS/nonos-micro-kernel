@@ -47,4 +47,8 @@ impl Table {
     pub fn is_idle(&self) -> bool {
         self.entries.is_empty() && self.timers.is_empty()
     }
+
+    pub fn entries_mut(&mut self) -> &mut [Entry] {
+        &mut self.entries
+    }
 }
