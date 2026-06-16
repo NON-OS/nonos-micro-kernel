@@ -13,18 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use super::tag::tag4;
 
-pub(crate) const N_MK_MMAP: i64 = tag4(b"MMAP");
-pub(crate) const N_MK_CAPSULE_LOAD: i64 = tag4(b"MCLD");
-pub(crate) const N_MK_EXIT: i64 = tag4(b"MEXT");
-pub(crate) const N_MK_PID_ALIVE: i64 = tag4(b"MPAL");
-pub(crate) const N_MK_GETPID: i64 = tag4(b"MGPD");
-pub(crate) const N_MK_ARGS: i64 = tag4(b"MKAR");
-pub(crate) const N_MK_YIELD: i64 = tag4(b"MYLD");
-pub(crate) const N_MK_TIME_MILLIS: i64 = tag4(b"MTMS");
-pub(crate) const N_MK_TIME_RTC: i64 = tag4(b"MTRT");
-pub(crate) const N_MK_BATTERY_STATUS: i64 = tag4(b"MBAT");
-pub(crate) const N_MK_PROC_STAT: i64 = tag4(b"MPST");
-pub(crate) const N_MK_PROC_OUTPUT: i64 = tag4(b"MOUT");
-pub(crate) const N_MK_ATTEST_STATUS: i64 = tag4(b"MAST");
+use crate::syscall::{call_raw, N_MK_PROC_OUTPUT};
+
+// Drain one stdout line a child capsule mirrored into its proc.<pid>
+// inbox. Returns bytes copied, 0 when empty, or a negative errno.
+pub extern "C" fn mk_proc_output(pid: u32, buf: *mut u8, len: usize) -> i64 {
+    call_raw(N_MK_PROC_OUTPUT, [pid as u64, buf as u64, len as u64, 0, 0, 0])
+}
