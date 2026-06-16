@@ -14,15 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const OP_HEALTHCHECK: u16 = 1;
-pub const OP_LISTEN: u16 = 2;
-pub const OP_CONNECT: u16 = 3;
-pub const OP_ACCEPT: u16 = 4;
-pub const OP_SEND: u16 = 5;
-pub const OP_RECV: u16 = 6;
-pub const OP_CLOSE: u16 = 7;
-pub const OP_SHUTDOWN: u16 = 8;
-pub const OP_STATE: u16 = 9;
+#![cfg(feature = "tcp-selftest")]
 
-#[cfg(feature = "tcp-selftest")]
-pub const OP_SELFTEST: u16 = 0x7F;
+use crate::tcp::seq;
+
+pub fn run() -> u32 {
+    let mut bits = 0u32;
+    if seq_kat() {
+        bits |= 1 << 0;
+    }
+    bits
+}
+
+fn seq_kat() -> bool {
+    seq::lt(1, 2)
+        && !seq::lt(2, 1)
+        && seq::lt(0xFFFF_FFFF, 0)
+        && seq::leq(5, 5)
+        && seq::gt(6, 5)
+        && seq::between(5, 1, 10)
+        && !seq::between(10, 1, 10)
+}

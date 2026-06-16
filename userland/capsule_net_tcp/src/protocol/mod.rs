@@ -29,3 +29,5 @@ pub use ops::{
     OP_ACCEPT, OP_CLOSE, OP_CONNECT, OP_HEALTHCHECK, OP_LISTEN, OP_RECV, OP_SEND, OP_SHUTDOWN,
     OP_STATE,
 };
+#[cfg(feature = "tcp-selftest")]
+pub use ops::OP_SELFTEST;
