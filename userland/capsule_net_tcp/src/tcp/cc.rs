@@ -35,7 +35,7 @@ impl Cc {
         if self.cwnd < self.ssthresh {
             self.cwnd = self.cwnd.saturating_add(mss);
         } else {
-            self.cwnd = self.cwnd.saturating_add((mss * mss) / self.cwnd.max(1));
+            self.cwnd = self.cwnd.saturating_add((mss * mss / self.cwnd.max(1)).max(1));
         }
     }
     pub fn on_rto(&mut self) {
@@ -52,6 +52,9 @@ impl Cc {
             self.cwnd = self.ssthresh.saturating_add(3 * mss);
             true
         } else {
+            if self.dupacks > crate::tcp::DUP_ACK_THRESH {
+                self.cwnd = self.cwnd.saturating_add(MSS as u32);
+            }
             false
         }
     }

@@ -54,6 +54,7 @@ pub fn step(e: &mut Entry, hdr: &TcpHeader, payload: &[u8]) -> RxAction {
         crate::server::sender::drain_send(e);
     } else if hdr.has_flag(FLAG_ACK)
         && hdr.ack == e.tcb.send.una
+        && hdr.window == e.tcb.send.wnd
         && payload.is_empty()
         && !e.retx.is_empty()
     {
