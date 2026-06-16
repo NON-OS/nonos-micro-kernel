@@ -16,21 +16,36 @@
 
 use nonos_libc::mk_yield;
 
+use crate::clock::now_ms;
 use crate::server::tcp_rx;
 use crate::state::TABLE;
 use crate::tcp::State;
 
-const WAIT_TRIES: usize = 128;
+const FALLBACK_TRIES: usize = 8192;
+const WAIT_MS: u64 = 8000;
 
 pub fn established(owner: u32, handle: u32) -> bool {
-    for _ in 0..WAIT_TRIES {
+    let start = now_ms();
+    let mut fallback = 0;
+    loop {
         tcp_rx::drain_one();
         let ready =
             TABLE.lock().owned_mut(owner, handle).map(|e| e.tcb.state == State::Established);
         if ready.map_or(false, |state| state) {
             return true;
         }
+        if expired(start, &mut fallback) {
+            return false;
+        }
         mk_yield();
     }
-    false
+}
+
+fn expired(start: u64, fallback: &mut usize) -> bool {
+    let now = now_ms();
+    if start != 0 || now != 0 {
+        return now.saturating_sub(start) >= WAIT_MS;
+    }
+    *fallback += 1;
+    *fallback >= FALLBACK_TRIES
 }
