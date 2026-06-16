@@ -23,7 +23,19 @@ pub fn run() -> u32 {
     if seq_kat() {
         bits |= 1 << 0;
     }
+    if accept_kat() {
+        bits |= 1 << 1;
+    }
     bits
+}
+
+fn accept_kat() -> bool {
+    seq::acceptable(100, 0, 100, 8)
+        && seq::acceptable(100, 5, 100, 8)
+        && !seq::acceptable(50, 0, 100, 8)
+        && !seq::acceptable(200, 1, 100, 8)
+        && seq::acceptable(100, 0, 100, 0)
+        && !seq::acceptable(101, 0, 100, 0)
 }
 
 fn seq_kat() -> bool {

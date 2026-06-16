@@ -33,3 +33,20 @@ pub fn geq(a: u32, b: u32) -> bool {
 pub fn between(x: u32, lo: u32, hi: u32) -> bool {
     leq(lo, x) && lt(x, hi)
 }
+
+pub fn acceptable(seg_seq: u32, seg_len: u32, rcv_nxt: u32, rcv_wnd: u16) -> bool {
+    let wnd = rcv_wnd as u32;
+    if seg_len == 0 {
+        if wnd == 0 {
+            seg_seq == rcv_nxt
+        } else {
+            between(seg_seq, rcv_nxt, rcv_nxt.wrapping_add(wnd))
+        }
+    } else if wnd == 0 {
+        false
+    } else {
+        let end = rcv_nxt.wrapping_add(wnd);
+        between(seg_seq, rcv_nxt, end)
+            || between(seg_seq.wrapping_add(seg_len).wrapping_sub(1), rcv_nxt, end)
+    }
+}
