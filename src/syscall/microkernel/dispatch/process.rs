@@ -20,6 +20,7 @@ use crate::syscall::microkernel::battery::sys_battery_status;
 use crate::syscall::microkernel::capsule_load::sys_capsule_load;
 use crate::syscall::microkernel::memory::{sys_mmap, sys_munmap};
 use crate::syscall::microkernel::numbers::*;
+use crate::syscall::microkernel::proc_output::sys_proc_output;
 use crate::syscall::microkernel::process::{
     sys_args, sys_exit, sys_getpid, sys_pid_alive, sys_spawn, sys_thread_spawn, sys_yield,
 };
@@ -42,6 +43,7 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_TIME_RTC => sys_time_rtc(a.a0),
         SYS_BATTERY_STATUS => sys_battery_status(),
         SYS_PROC_STAT => sys_proc_stat(a.a0, a.a1),
+        SYS_PROC_OUTPUT => sys_proc_output(a.a0, a.a1, a.a2 as usize),
         SYS_ATTEST_STATUS => sys_attest_status(a.a0),
         _ => return None,
     })

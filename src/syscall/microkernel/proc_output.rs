@@ -1,0 +1,37 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+//! Drain one stdout line a child capsule mirrored into its `proc.<pid>`
+//! inbox (see the MkDebug handler). A launcher polls this to show a
+//! loaded capsule's output in its own window. Returns the number of
+//! bytes copied, 0 when the inbox is empty, or a negative errno.
+
+use super::errnos::{ERRNO_FAULT, ERRNO_INVAL};
+
+pub fn sys_proc_output(pid: u64, buf_ptr: u64, buf_len: usize) -> i64 {
+    if buf_ptr == 0 || buf_len == 0 {
+        return ERRNO_INVAL;
+    }
+    let name = alloc::format!("proc.{}", pid as u32);
+    let Some(msg) = crate::ipc::nonos_inbox::try_dequeue_existing(&name) else {
+        return 0;
+    };
+    let n = msg.data.len().min(buf_len);
+    if crate::usercopy::copy_to_user(buf_ptr, &msg.data[..n]).is_err() {
+        return ERRNO_FAULT;
+    }
+    n as i64
+}
