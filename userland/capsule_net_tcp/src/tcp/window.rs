@@ -14,35 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod build;
-mod checksum;
-mod header;
-mod iss;
-mod parse;
-pub mod rtt;
-pub mod seq;
-mod siphash;
-mod state;
-mod tcb;
-pub mod window;
+use super::seq;
 
-pub use build::{build, BuildRequest};
-pub use header::{TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_PSH, FLAG_RST, FLAG_SYN};
-pub use iss::iss_for;
-pub use parse::parse;
-pub use siphash::siphash24;
-pub use state::State;
-pub use tcb::{Endpoint4, Tcb};
-
-pub const MSS: usize = crate::protocol::SEGMENT_PAYLOAD_MAX;
-pub const RWND_MAX: u16 = 32 * 1460;
-
-pub const MSL_MS: u64 = 30_000;
-
-pub const RTO_MIN_MS: u32 = 200;
-pub const RTO_MAX_MS: u32 = 60_000;
-pub const RTO_INIT_MS: u32 = 1_000;
-
-pub fn msl_2_ms() -> u64 {
-    2 * MSL_MS
+pub fn should_update(snd_wl1: u32, snd_wl2: u32, seg_seq: u32, _snd_una: u32, seg_ack: u32) -> bool {
+    seq::lt(snd_wl1, seg_seq) || (snd_wl1 == seg_seq && seq::leq(snd_wl2, seg_ack))
 }

@@ -29,7 +29,17 @@ pub fn run() -> u32 {
     if rtt_kat() {
         bits |= 1 << 2;
     }
+    if window_kat() {
+        bits |= 1 << 3;
+    }
     bits
+}
+
+fn window_kat() -> bool {
+    use crate::tcp::window;
+    window::should_update(100, 200, 110, 100, 199)
+        && window::should_update(100, 200, 100, 100, 210)
+        && !window::should_update(110, 200, 100, 100, 199)
 }
 
 fn rtt_kat() -> bool {
