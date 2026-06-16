@@ -42,6 +42,11 @@ impl Entry {
         }
     }
 
+    pub fn rwnd(&self) -> u16 {
+        let used = (self.rx.len() * crate::tcp::MSS).min(crate::tcp::RWND_MAX as usize);
+        (crate::tcp::RWND_MAX as usize - used) as u16
+    }
+
     pub fn push_rx(&mut self, payload: &[u8]) -> bool {
         if self.rx.len() >= RX_DEPTH {
             return false;
