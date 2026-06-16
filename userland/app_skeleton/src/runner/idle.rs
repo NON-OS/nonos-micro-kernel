@@ -29,8 +29,7 @@ const RECV_BLOCK: u64 = 0;
 pub(super) fn wait(rx: &mut [u8]) {
     loop {
         let mut sender = 0u32;
-        let n =
-            mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), RECV_BLOCK, &mut sender);
+        let n = mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), RECV_BLOCK, &mut sender);
         if n as usize == CONTROL_LEN {
             let frame = &rx[..CONTROL_LEN];
             let magic = u32::from_le_bytes([frame[0], frame[1], frame[2], frame[3]]);
@@ -40,7 +39,11 @@ pub(super) fn wait(rx: &mut [u8]) {
                 Some(peer) => peer.pid == sender,
                 None => false,
             };
-            if magic == CONTROL_MAGIC && version == CONTROL_VERSION && op == OP_FOCUS_SELF && sender_ok {
+            if magic == CONTROL_MAGIC
+                && version == CONTROL_VERSION
+                && op == OP_FOCUS_SELF
+                && sender_ok
+            {
                 return;
             }
         }

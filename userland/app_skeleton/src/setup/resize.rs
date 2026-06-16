@@ -42,5 +42,14 @@ pub fn reopen_surface(
     submit_scene(peers, surface_handle, request_id, WindowPlacement { x, y, width: w, height: h })?;
     let _ = mk_surface_release(old.surface_handle);
     let _ = mk_munmap(old.backing_va as *mut u8, old.byte_len as usize);
-    Ok(WindowBinding { surface_handle, backing_va, x, y, width: w, height: h, stride_words: w, byte_len })
+    Ok(WindowBinding {
+        surface_handle,
+        backing_va,
+        x,
+        y,
+        width: w,
+        height: h,
+        stride_words: w,
+        byte_len,
+    })
 }

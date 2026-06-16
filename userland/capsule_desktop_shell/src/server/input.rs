@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{
-    mk_time_millis, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS, INPUT_KIND_TOUCH,
-};
 use crate::protocol::{read_i32, read_u16, read_u32};
 use crate::render::layout::bottom_dock_rect;
 use crate::server::handlers::launcher_focus;
 use crate::server::refresh_taskbar::refresh_taskbar;
 use crate::state::{collapse_taskbar, reveal_taskbar, Context};
+use nonos_libc::{
+    mk_time_millis, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_POINTER_ABS, INPUT_KIND_TOUCH,
+};
 
 const HOVER_REVEAL_BAND: u32 = 4;
 
