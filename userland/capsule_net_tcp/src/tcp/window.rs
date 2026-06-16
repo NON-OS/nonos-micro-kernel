@@ -19,3 +19,9 @@ use super::seq;
 pub fn should_update(snd_wl1: u32, snd_wl2: u32, seg_seq: u32, _snd_una: u32, seg_ack: u32) -> bool {
     seq::lt(snd_wl1, seg_seq) || (snd_wl1 == seg_seq && seq::leq(snd_wl2, seg_ack))
 }
+
+pub fn usable(snd_una: u32, snd_nxt: u32, snd_wnd: u32, cwnd: u32) -> u32 {
+    let allowed = snd_wnd.min(cwnd);
+    let in_flight = snd_nxt.wrapping_sub(snd_una);
+    allowed.saturating_sub(in_flight)
+}

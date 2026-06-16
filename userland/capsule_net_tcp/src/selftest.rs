@@ -40,6 +40,9 @@ fn window_kat() -> bool {
     window::should_update(100, 200, 110, 100, 199)
         && window::should_update(100, 200, 100, 100, 210)
         && !window::should_update(110, 200, 100, 100, 199)
+        && window::usable(1000, 1000, 5000, 5000) == 5000
+        && window::usable(1000, 4000, 5000, 5000) == 2000
+        && window::usable(1000, 6000, 5000, 5000) == 0
 }
 
 fn rtt_kat() -> bool {
