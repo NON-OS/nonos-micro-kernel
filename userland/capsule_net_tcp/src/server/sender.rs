@@ -23,7 +23,7 @@ pub fn drain_send(e: &mut Entry) {
             e.tcb.send.una,
             e.tcb.send.nxt,
             e.tcb.send.wnd as u32,
-            u32::MAX,
+            e.cc.cwnd(),
         );
         if usable == 0 || e.snd_buf.is_empty() {
             break;

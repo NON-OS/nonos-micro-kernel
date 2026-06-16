@@ -44,6 +44,7 @@ pub fn scan(now: u64) {
                 abort.push(e.handle);
             }
         }
+        e.cc.on_rto();
         e.rtt.backoff();
     }
     for h in abort {
