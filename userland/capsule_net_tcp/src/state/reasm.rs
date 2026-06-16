@@ -28,6 +28,10 @@ impl Reasm {
         Reasm { segs: BTreeMap::new() }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.segs.is_empty()
+    }
+
     pub fn insert(&mut self, s: u32, data: Vec<u8>) {
         if data.is_empty() || self.segs.len() >= REASM_MAX_SEGS {
             return;

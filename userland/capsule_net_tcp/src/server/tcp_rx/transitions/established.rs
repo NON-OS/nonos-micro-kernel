@@ -66,7 +66,7 @@ pub fn step(e: &mut Entry, hdr: &TcpHeader, payload: &[u8]) -> RxAction {
             e.reasm.insert(hdr.seq, payload.to_vec());
         }
     }
-    if hdr.has_flag(FLAG_FIN) {
+    if hdr.has_flag(FLAG_FIN) && e.reasm.is_empty() && seq::leq(hdr.seq, e.tcb.recv.nxt) {
         e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(1);
         e.tcb.state = State::CloseWait;
     }
