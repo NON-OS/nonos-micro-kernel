@@ -49,6 +49,7 @@ pub fn parse<'a>(
         seq: be32(segment, 4),
         ack: be32(segment, 8),
         flags: segment[13],
+        window: u16::from_be_bytes([segment[14], segment[15]]),
     };
     Ok((hdr, &segment[header_len..]))
 }
