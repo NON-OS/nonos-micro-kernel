@@ -21,6 +21,7 @@ pub fn run_init() -> ! {
     boot_log::ok("INIT", "Starting");
     run_user_entry_proof();
     run_std_proof();
+    run_ripgrep();
     spawn_plan::spawn_ramfs();
     spawn_plan::spawn_core_after_ramfs();
     spawn_plan::run_ramfs_smoketest();
@@ -49,11 +50,25 @@ fn run_user_entry_proof() {}
 
 #[cfg(feature = "nonos-capsule-std-proof")]
 fn run_std_proof() {
-    let _ = crate::userspace::capsule_std_proof::spawn_std_proof_capsule();
+    match crate::userspace::capsule_std_proof::spawn_std_proof_capsule() {
+        Ok(()) => boot_log::ok("STD-PROOF", "capsule spawned"),
+        Err(_) => boot_log::error("STD-PROOF capsule spawn failed"),
+    }
 }
 
 #[cfg(not(feature = "nonos-capsule-std-proof"))]
 fn run_std_proof() {}
+
+#[cfg(feature = "nonos-capsule-ripgrep")]
+fn run_ripgrep() {
+    match crate::userspace::capsule_ripgrep::spawn_ripgrep_capsule() {
+        Ok(()) => boot_log::ok("RIPGREP", "capsule spawned"),
+        Err(_) => boot_log::error("RIPGREP capsule spawn failed"),
+    }
+}
+
+#[cfg(not(feature = "nonos-capsule-ripgrep"))]
+fn run_ripgrep() {}
 
 fn lower_init_priority() {
     use crate::process::core::{Priority, CURRENT_PID, PROCESS_TABLE};

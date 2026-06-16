@@ -18,6 +18,7 @@ pub(super) fn spawn() {
     spawn_image_codec();
     spawn_clipboard();
     spawn_attest();
+    spawn_installer();
     spawn_login();
     spawn_toolkit();
 }
@@ -29,6 +30,14 @@ fn spawn_attest() {
 }
 #[cfg(not(feature = "nonos-capsule-attest"))]
 fn spawn_attest() {}
+
+#[cfg(feature = "nonos-capsule-installer")]
+fn spawn_installer() {
+    use crate::userspace::capsule_installer as c;
+    super::boot::capsule("INSTALLER", "installer", c::spawn_installer_capsule, c::shared_state);
+}
+#[cfg(not(feature = "nonos-capsule-installer"))]
+fn spawn_installer() {}
 
 #[cfg(feature = "nonos-capsule-image-codec")]
 fn spawn_image_codec() {

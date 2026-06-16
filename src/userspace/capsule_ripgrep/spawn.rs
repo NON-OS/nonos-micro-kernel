@@ -15,8 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    STD_PROOF_ATTESTATION_BYTES, STD_PROOF_ELF, STD_PROOF_MANIFEST_BYTES,
-    STD_PROOF_NONOS_ID_CERT_BYTES,
+    RIPGREP_ATTESTATION_BYTES, RIPGREP_ELF, RIPGREP_MANIFEST_BYTES, RIPGREP_NONOS_ID_CERT_BYTES,
 };
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified, SpawnError};
@@ -25,13 +24,13 @@ use crate::security::nonos_trust_anchor::{
     decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
 };
 
-const SERVICE_NAME: &str = "std_proof";
-const SERVICE_PORT: u32 = 4502;
-const REPLY_INBOX: &str = "endpoint.std_proof.reply";
-const REPLY_PORT: u32 = 4503;
+const SERVICE_NAME: &str = "tool.ripgrep";
+const SERVICE_PORT: u32 = 4820;
+const REPLY_INBOX: &str = "endpoint.tool.ripgrep.reply";
+const REPLY_PORT: u32 = 4821;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
 
-pub fn spawn_std_proof_capsule() -> Result<(), SpawnError> {
+pub fn spawn_ripgrep_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
         .map_err(|_| SpawnError::NonosIdCertRejected(IdCertVerifyError::TrustAnchorPolicy))?;
 
@@ -40,10 +39,10 @@ pub fn spawn_std_proof_capsule() -> Result<(), SpawnError> {
         service_port: SERVICE_PORT,
         reply_inbox: REPLY_INBOX,
         reply_port: REPLY_PORT,
-        elf: STD_PROOF_ELF,
-        nonos_id_cert_bytes: STD_PROOF_NONOS_ID_CERT_BYTES,
-        manifest_bytes: STD_PROOF_MANIFEST_BYTES,
-        attestation_trailer: STD_PROOF_ATTESTATION_BYTES,
+        elf: RIPGREP_ELF,
+        nonos_id_cert_bytes: RIPGREP_NONOS_ID_CERT_BYTES,
+        manifest_bytes: RIPGREP_MANIFEST_BYTES,
+        attestation_trailer: RIPGREP_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()

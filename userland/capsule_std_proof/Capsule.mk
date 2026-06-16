@@ -1,8 +1,10 @@
-# std_proof — userland capsule built against nonos_std, the sovereign
-# standard library. Its `_start` exercises a seeded HashMap, Arc<Mutex>,
-# time, and process on the verified spawn path, then prints one serial
-# line. Booting it proves a nonos_std capsule runs end to end. IPC and
-# Memory only; no drivers, no broker resources.
+# std_proof — proof that an unmodified crates.io crate runs on NONOS
+# through the std platform layer. `main` parses JSON with serde_json,
+# pulled straight from crates.io with no source edits, and prints one
+# serial line. Built with -Zbuild-std=std and linked against the
+# nonos-rt _start shim. IPC and Memory only; no drivers.
+
+CAPSULE_BUILD_STD          := std,panic_abort
 
 CAPSULE_SLUG               := std-proof
 CAPSULE_HANDLE             := std_proof

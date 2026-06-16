@@ -626,9 +626,18 @@ nonos-mk-bootloader: $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_
 
 USERLAND_DIR  := userland
 USERLAND_LIBC := $(USERLAND_DIR)/libc/target/x86_64-nonos-user/release/libnonos_libc.a
+# The std startup object lives in the build tree, not /tmp. It must be an
+# absolute path because capsules build from their own subdirectories and pass
+# it to the linker as -Clink-arg. cargo clean removes it; the rule below
+# rebuilds it. Override NONOS_RT_OBJ only if you have a reason to.
+NONOS_RT_OBJ  ?= $(abspath $(TARGET_DIR))/nonos_rt.o
 USERLAND_LIBC_SRCS := $(shell find $(USERLAND_DIR)/libc/src -name '*.rs') \
                       $(USERLAND_DIR)/libc/Cargo.toml \
                       $(USERLAND_DIR)/x86_64-nonos-user.json
+NONOS_RT_SRCS := $(shell find toolchain/nonos-rt/src -name '*.rs' 2>/dev/null) \
+                 toolchain/nonos-rt/Cargo.toml \
+                 toolchain/nonos-rt/Cargo.lock \
+                 $(USERLAND_DIR)/x86_64-nonos-user.json
 
 # Trust-anchor inputs — global to all signed capsules. The two
 # pubkeys (Ed25519 + ML-DSA-65) are sealed into a policy blob and
@@ -667,6 +676,51 @@ $(USERLAND_LIBC): $(USERLAND_LIBC_SRCS) | $(TARGET_DIR)/.nonos-toolchain.stamp
 	@touch $@
 
 nonos-mk-libc: $(USERLAND_LIBC)
+
+$(NONOS_RT_OBJ): $(NONOS_RT_SRCS) | $(TARGET_DIR)/.nonos-toolchain.stamp
+	@echo "Building NONOS std startup object..."
+	@cd toolchain/nonos-rt && \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) rustc --release --target ../../userland/x86_64-nonos-user.json \
+		-Zbuild-std=core -- --emit obj=$(NONOS_RT_OBJ)
+
+# std platform layer: patch the pinned rust-src so -Zbuild-std=std turns
+# unmodified `use std::...` crates into NONOS binaries. Stamped and keyed on
+# the PAL sources + apply.sh, so a clean checkout (or a rustup update that
+# reset rust-src) re-applies it before any std capsule builds. Without this
+# the patch was a manual prerequisite — hidden state that broke fresh trees.
+NONOS_STD_PAL_SRCS  := $(shell find toolchain/nonos-std -type f 2>/dev/null)
+NONOS_STD_PAL_STAMP := $(TARGET_DIR)/.nonos-std-pal.stamp
+$(NONOS_STD_PAL_STAMP): $(NONOS_STD_PAL_SRCS) | $(TARGET_DIR)/.nonos-toolchain.stamp
+	@echo "Applying NONOS std platform layer to rust-src..."
+	@PATH="$(HOME)/.cargo/bin:$$PATH" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		toolchain/nonos-std/apply.sh
+	@mkdir -p $(TARGET_DIR)
+	@touch $@
+
+.PHONY: nonos-mk-apply-std
+nonos-mk-apply-std: $(NONOS_STD_PAL_STAMP)
+
+# Unmodified crates.io binaries, built for the NONOS target through the std
+# PAL + nonos-rt start object. This is the reproducible source of the
+# ripgrep ELF the kernel mirror and the VFS bootstrap store embed; it
+# replaces a hand-built prebuilt that had no rule (so `cargo clean` bricked
+# the tree). cargo install pulls the pinned version from crates.io and runs
+# its own upstream main; no source is patched.
+UPSTREAM_RIPGREP_VERSION := 14.1.1
+UPSTREAM_RIPGREP_BIN     := $(TARGET_DIR)/upstream-ripgrep/rg
+$(UPSTREAM_RIPGREP_BIN): $(NONOS_RT_OBJ) $(NONOS_STD_PAL_STAMP) \
+		userland/x86_64-nonos-user.json | $(TARGET_DIR)/.nonos-toolchain.stamp
+	@echo "Building upstream ripgrep $(UPSTREAM_RIPGREP_VERSION) for NONOS (unmodified crates.io source)..."
+	@RUSTUP_TOOLCHAIN=$(TOOLCHAIN) RUSTFLAGS="-Clink-arg=$(abspath $(NONOS_RT_OBJ))" \
+		$(CARGO) install ripgrep --version $(UPSTREAM_RIPGREP_VERSION) \
+		--target $(abspath userland/x86_64-nonos-user.json) \
+		-Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem \
+		--root $(abspath $(TARGET_DIR)/upstream-ripgrep) --no-track --force --bin rg
+	@cp $(TARGET_DIR)/upstream-ripgrep/bin/rg $@
+
+.PHONY: nonos-mk-upstream-ripgrep
+nonos-mk-upstream-ripgrep: $(UPSTREAM_RIPGREP_BIN)
 
 $(CAPSULE_SIGN_BIN):
 	@echo "Building capsule-sign host tool..."
@@ -730,6 +784,7 @@ nonos-mk-trust-policy: $(NONOS_TRUST_ANCHOR_POLICY_BIN)
 #   nonos-mk-check-<slug>-keys assert publisher seeds + pubs exist
 include userland/capsule_proof_io/Capsule.mk
 include userland/capsule_std_proof/Capsule.mk
+include userland/capsule_ripgrep/Capsule.mk
 include userland/capsule_ramfs/Capsule.mk
 include userland/capsule_keyring/Capsule.mk
 include userland/capsule_entropy/Capsule.mk
@@ -812,7 +867,8 @@ nonos-mk-all-capsules-attested: $(NONOS_VERIFIED_ARTIFACTS)
 	@echo "Signed and attested $(words $(NONOS_VERIFIED_CAPSULES)) included capsules."
 
 NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
-	$(proof-io_VERIFY) $(ramfs_VERIFY) $(keyring_VERIFY) \
+	$(proof-io_VERIFY) $(std-proof_VERIFY) $(ripgrep_VERIFY) \
+	$(ramfs_VERIFY) $(keyring_VERIFY) \
 	$(entropy_VERIFY) $(crypto_VERIFY) $(vfs_VERIFY) \
 	$(driver-virtio-rng_VERIFY) $(driver-virtio-blk_VERIFY) \
 	$(driver-virtio-gpu_VERIFY) $(driver-virtio-net_VERIFY) \
@@ -822,6 +878,7 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(net-dhcp_VERIFY) $(net-tcp_VERIFY) $(net-dns_VERIFY) \
 	$(net-sockets_VERIFY) $(net-nym_VERIFY) \
 	$(policy_VERIFY) $(wallpaper_catalog_VERIFY) \
+	$(installer_VERIFY) \
 	$(input-router_VERIFY) $(compositor_VERIFY) $(wm_VERIFY) \
 	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
 	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
@@ -864,6 +921,21 @@ nonos-mk-market-smoke: $(USERLAND_LIBC) $(MARKETPLACE_ABI_LIB)
 		$(CARGO) build --release --target ../x86_64-nonos-user.json \
 		--features smoketest-trust \
 		-Zbuild-std=core,alloc -Zbuild-std-features=compiler-builtins-mem
+
+ECOSYSTEM_GUI_SMOKE_FEATURES := terminal_CARGO_FEATURES=nonos-autorun-rg desktop-shell_CARGO_FEATURES=autofocus-terminal
+
+.PHONY: nonos-mk-terminal-autorun-rg nonos-mk-desktop-shell-autofocus nonos-mk-ecosystem-gui-smoke-capsules nonos-mk-ecosystem-gui-smoke-prod
+nonos-mk-terminal-autorun-rg:
+	@$(MAKE) -B terminal_CARGO_FEATURES=nonos-autorun-rg nonos-mk-terminal
+
+nonos-mk-desktop-shell-autofocus:
+	@$(MAKE) -B desktop-shell_CARGO_FEATURES=autofocus-terminal nonos-mk-desktop-shell
+
+nonos-mk-ecosystem-gui-smoke-capsules:
+	@$(MAKE) -B $(ECOSYSTEM_GUI_SMOKE_FEATURES) nonos-mk-terminal-sign nonos-mk-desktop-shell-sign
+
+nonos-mk-ecosystem-gui-smoke-prod: nonos-mk-ecosystem-gui-smoke-capsules
+	@$(MAKE) $(ECOSYSTEM_GUI_SMOKE_FEATURES) nonos-mk-desktop-gui-prod
 
 # Host-side marketplace-index CLI. This is the bridge an operator
 # runs offline: read JSON, encode canonical binary, sign with the
@@ -1512,7 +1584,8 @@ nonos-mk-net-sockets-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) 
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-net-sockets
 
-nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
+nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
+		$(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
 		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
 		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
@@ -1523,6 +1596,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) \
 		$(net-nym_ARTIFACTS) \
 		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
+		$(installer_ARTIFACTS) \
 		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
 		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
@@ -1791,6 +1865,14 @@ nonos-mk-boot-input-e2e-xhci:
 
 nonos-mk-boot-desktop-gui:
 	@./tests/boot/desktop_gui_boot.sh
+
+.PHONY: nonos-mk-boot-ecosystem-gui-smoke
+nonos-mk-boot-ecosystem-gui-smoke:
+	@DESKTOP_GUI_BUILD_TARGET=nonos-mk-ecosystem-gui-smoke-prod \
+		DESKTOP_GUI_REQUIRE_ECOSYSTEM_SMOKE=1 \
+		BOOT_TEST_TIMEOUT=300 \
+		BOOT_TEST_SETTLE=60 \
+		./tests/boot/desktop_gui_boot.sh
 
 nonos-mk-plan-a-runtime: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@QEMU="$(QEMU)" OVMF="$(OVMF)" OVMF_VARS="$(OVMF_VARS)" \

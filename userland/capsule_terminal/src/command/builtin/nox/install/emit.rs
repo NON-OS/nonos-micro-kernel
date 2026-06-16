@@ -31,8 +31,21 @@ pub(super) fn emit_ok(state: &mut State, stem: &[u8], pid: u32) {
     state.scrollback.push_line(&line);
 }
 
-// Failure line: "install failed: <reason>" with the negative status.
+// Failure line. Map the load path's coarse errnos to a precise reason; a
+// tampered artifact whose hash no longer matches its manifest lands here as
+// a verification rejection, refused before execution.
 pub(super) fn emit_err(state: &mut State, status: i32) {
+    let reason: &[u8] = match status {
+        -11 => b"install rejected: installer not ready, try again",
+        -13 => b"install rejected: signature, manifest, or attestation failed verification",
+        -16 => b"install rejected: installer busy",
+        -22 => b"install rejected: malformed manifest or artifacts",
+        _ => b"",
+    };
+    if !reason.is_empty() {
+        state.scrollback.push_error(reason);
+        return;
+    }
     let mut num = [0u8; 24];
     let k = format_u64((-status) as u64, &mut num);
     let mut line = Vec::with_capacity(20 + k);

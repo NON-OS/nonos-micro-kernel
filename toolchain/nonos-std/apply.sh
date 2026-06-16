@@ -8,7 +8,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 TC="${RUSTUP_TOOLCHAIN:-nightly-2026-01-16}"
-SR="$(RUSTUP_TOOLCHAIN="$TC" rustc --print sysroot)"
+SR="$(rustup run "$TC" rustc --print sysroot)"
 STD="$SR/lib/rustlib/src/rust/library/std"
 SYS="$STD/src/sys"
 

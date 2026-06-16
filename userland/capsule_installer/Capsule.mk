@@ -15,6 +15,6 @@ CAPSULE_SERVICE_ENDPOINT := service:4112:installer
 CAPSULE_REPLY_ENDPOINT   := reply:4113:endpoint.4294967313
 # CoreExec | IPC | Memory = 0x01 | 0x08 | 0x10 = 0x19
 CAPSULE_REQUIRED_CAPS    := 0x19
-CAPSULE_KERNEL_MIRROR    := src/security/installer_capsule
+CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_installer
 
 include nonos-mk/capsule.mk

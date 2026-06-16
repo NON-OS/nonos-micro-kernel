@@ -20,7 +20,7 @@ use crate::protocol::{encode_response, Request, EINVAL};
 use nonos_libc::{mk_capsule_load, CapsuleLoadRequest};
 
 pub fn load_store(req: Request<'_>) -> Vec<u8> {
-    const HEAD_LEN: usize = 24;
+    const HEAD_LEN: usize = 28;
     if req.payload.len() < HEAD_LEN {
         return encode_response(req.seq, EINVAL, &[]);
     }
@@ -29,6 +29,7 @@ pub fn load_store(req: Request<'_>) -> Vec<u8> {
     let cert_len = u32::from_le_bytes([p[12], p[13], p[14], p[15]]) as usize;
     let manifest_len = u32::from_le_bytes([p[16], p[17], p[18], p[19]]) as usize;
     let trailer_len = u32::from_le_bytes([p[20], p[21], p[22], p[23]]) as usize;
+    let args_len = u32::from_le_bytes([p[24], p[25], p[26], p[27]]) as usize;
     let Some(after_elf) = HEAD_LEN.checked_add(elf_len) else {
         return encode_response(req.seq, EINVAL, &[]);
     };
@@ -38,7 +39,10 @@ pub fn load_store(req: Request<'_>) -> Vec<u8> {
     let Some(after_manifest) = after_cert.checked_add(manifest_len) else {
         return encode_response(req.seq, EINVAL, &[]);
     };
-    let Some(total) = after_manifest.checked_add(trailer_len) else {
+    let Some(after_trailer) = after_manifest.checked_add(trailer_len) else {
+        return encode_response(req.seq, EINVAL, &[]);
+    };
+    let Some(total) = after_trailer.checked_add(args_len) else {
         return encode_response(req.seq, EINVAL, &[]);
     };
     if p.len() != total {
@@ -48,18 +52,22 @@ pub fn load_store(req: Request<'_>) -> Vec<u8> {
         elf_ptr: p[HEAD_LEN..after_elf].as_ptr() as u64,
         cert_ptr: p[after_elf..after_cert].as_ptr() as u64,
         manifest_ptr: p[after_cert..after_manifest].as_ptr() as u64,
-        trailer_ptr: p[after_manifest..total].as_ptr() as u64,
+        trailer_ptr: p[after_manifest..after_trailer].as_ptr() as u64,
         requested_caps: u64::from_le_bytes([p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]]),
-        args_ptr: 0,
+        args_ptr: arg_ptr(p, after_trailer, total),
         elf_len: elf_len as u32,
         cert_len: cert_len as u32,
         manifest_len: manifest_len as u32,
         trailer_len: trailer_len as u32,
-        args_len: 0,
+        args_len: args_len as u32,
     };
     let rc = mk_capsule_load(&load as *const CapsuleLoadRequest);
     if rc < 0 {
         return encode_response(req.seq, rc as i32, &[]);
     }
     encode_response(req.seq, 0, &(rc as u32).to_le_bytes())
+}
+
+fn arg_ptr(p: &[u8], start: usize, total: usize) -> u64 {
+    if start == total { 0 } else { p[start..total].as_ptr() as u64 }
 }
