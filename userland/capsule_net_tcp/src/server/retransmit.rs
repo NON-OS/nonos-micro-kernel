@@ -17,13 +17,13 @@
 use alloc::vec::Vec;
 
 use crate::state::TABLE;
-use crate::tcp::{State, MAX_RETX};
+use crate::tcp::MAX_RETX;
 
 pub fn scan(now: u64) {
     let mut t = TABLE.lock();
     let mut abort: Vec<u32> = Vec::new();
     for e in t.entries_mut() {
-        if e.tcb.state != State::Established || e.retx.is_empty() {
+        if e.retx.is_empty() {
             continue;
         }
         let rto = e.rtt.rto_ms() as u64;

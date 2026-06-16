@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec::Vec;
+
 use crate::protocol::{E_BAD_LEN, E_NO_SOCKET, E_OK, OP_CLOSE};
 use crate::server::handlers::io::u32_at;
 use crate::server::parse_req::Request;
@@ -34,6 +36,7 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         if prev == State::Established || prev == State::CloseWait {
             e.tcb.send.nxt = e.tcb.send.nxt.wrapping_add(1);
             e.tcb.state = if prev == State::Established { State::FinWait1 } else { State::LastAck };
+            e.retx_push(fin_tcb.send.nxt, FLAG_ACK | FLAG_FIN, Vec::new());
         }
         (prev, fin_tcb)
     });

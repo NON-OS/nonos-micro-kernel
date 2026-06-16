@@ -17,7 +17,7 @@
 use alloc::collections::VecDeque;
 use alloc::vec::Vec;
 
-use crate::tcp::seq;
+use crate::tcp::{seq, FLAG_FIN};
 
 pub struct RetxSeg {
     pub seq: u32,
@@ -51,7 +51,8 @@ impl RetxQueue {
     pub fn ack(&mut self, una: u32) -> usize {
         let mut acked = 0;
         while let Some(front) = self.segs.front() {
-            let end = front.seq.wrapping_add(front.data.len() as u32);
+            let fin = if front.flags & FLAG_FIN != 0 { 1 } else { 0 };
+            let end = front.seq.wrapping_add(front.data.len() as u32).wrapping_add(fin);
             if seq::leq(end, una) {
                 self.segs.pop_front();
                 acked += 1;
