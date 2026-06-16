@@ -14,42 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+//! Deterministic inbound TCP fault injector, compiled in ONLY under
+//! the `tcp-chaos` feature. It drops a fixed set of inbound TCP
+//! segments so the guest reliability machinery (RTO retransmit, peer
+//! retransmit + dedup/reassembly) is forced to recover. The whole
+//! module is feature-gated; with the feature off it is absent and the
+//! normal ingress path is byte-for-byte unchanged.
 
-extern crate alloc;
+use core::sync::atomic::{AtomicU32, Ordering};
 
-#[cfg(feature = "tcp-chaos")]
-mod chaos;
-mod egress;
-mod icmp;
-mod ingress;
-mod ipv4;
-mod l2_client;
-mod protocol;
-mod route;
-mod server;
-mod setup;
-mod state;
+static SEEN: AtomicU32 = AtomicU32::new(0);
 
-use nonos_libc::{heap_init, mk_exit, mk_yield};
+const DROP_AT: &[u32] = &[3, 6];
 
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    wait_for_setup();
-    server::run();
-}
-
-fn wait_for_setup() {
-    loop {
-        if setup::run().is_ok() {
-            return;
-        }
-        for _ in 0..64 {
-            mk_yield();
-        }
-    }
+pub fn should_drop_tcp() -> bool {
+    let n = SEEN.fetch_add(1, Ordering::Relaxed) + 1;
+    DROP_AT.contains(&n)
 }
