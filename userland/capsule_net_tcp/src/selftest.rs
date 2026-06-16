@@ -32,6 +32,8 @@ fn seq_kat() -> bool {
         && seq::lt(0xFFFF_FFFF, 0)
         && seq::leq(5, 5)
         && seq::gt(6, 5)
+        && seq::geq(5, 5)
+        && seq::geq(6, 5)
         && seq::between(5, 1, 10)
         && !seq::between(10, 1, 10)
 }

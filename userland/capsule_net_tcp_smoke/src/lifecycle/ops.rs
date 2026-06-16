@@ -28,9 +28,12 @@ pub fn mark(msg: &[u8]) {
 }
 
 #[cfg(feature = "tcp-selftest")]
+const OP_SELFTEST: u16 = 0x7F;
+
+#[cfg(feature = "tcp-selftest")]
 pub fn selftest(port: u32) {
     let mut resp = [0u8; client::HDR_LEN + 4];
-    let Some((errno, n)) = client::call(port, 0x7F, &[], &mut resp) else {
+    let Some((errno, n)) = client::call(port, OP_SELFTEST, &[], &mut resp) else {
         return;
     };
     if errno != E_OK || n < 4 {
