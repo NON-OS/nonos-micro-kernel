@@ -32,6 +32,7 @@ pub struct Entry {
     pub retx: crate::state::RetxQueue,
     pub rtt: crate::tcp::rtt::Rtt,
     pub reasm: crate::state::Reasm,
+    pub cc: crate::tcp::cc::Cc,
 }
 
 impl Entry {
@@ -47,6 +48,7 @@ impl Entry {
             retx: crate::state::RetxQueue::new(),
             rtt: crate::tcp::rtt::Rtt::new(),
             reasm: crate::state::Reasm::new(),
+            cc: crate::tcp::cc::Cc::new(),
         }
     }
 

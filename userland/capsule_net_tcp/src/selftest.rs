@@ -38,7 +38,26 @@ pub fn run() -> u32 {
     if reasm_kat() {
         bits |= 1 << 5;
     }
+    if cc_kat() {
+        bits |= 1 << 6;
+    }
     bits
+}
+
+fn cc_kat() -> bool {
+    use crate::tcp::cc::Cc;
+    let mss = crate::tcp::MSS as u32;
+    let mut c = Cc::new();
+    if c.cwnd() != crate::tcp::INIT_CWND {
+        return false;
+    }
+    let before = c.cwnd();
+    c.on_new_ack();
+    if c.cwnd() != before + mss {
+        return false;
+    }
+    c.on_rto();
+    c.cwnd() == mss
 }
 
 fn reasm_kat() -> bool {

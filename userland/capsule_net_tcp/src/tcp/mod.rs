@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod build;
+pub mod cc;
 mod checksum;
 mod header;
 mod iss;
@@ -43,6 +44,9 @@ pub const MSL_MS: u64 = 30_000;
 pub const MAX_RETX: u8 = 8;
 
 pub const REASM_MAX_SEGS: usize = 32;
+
+pub const INIT_CWND: u32 = 3 * MSS as u32;
+pub const DUP_ACK_THRESH: u8 = 3;
 
 pub const RTO_MIN_MS: u32 = 200;
 pub const RTO_MAX_MS: u32 = 60_000;
