@@ -27,6 +27,26 @@ pub fn mark(msg: &[u8]) {
     let _ = mk_debug(msg.as_ptr(), msg.len());
 }
 
+#[cfg(feature = "tcp-selftest")]
+pub fn selftest(port: u32) {
+    let mut resp = [0u8; client::HDR_LEN + 4];
+    let Some((errno, n)) = client::call(port, 0x7F, &[], &mut resp) else {
+        return;
+    };
+    if errno != E_OK || n < 4 {
+        return;
+    }
+    let bits = u32::from_le_bytes([
+        resp[client::HDR_LEN],
+        resp[client::HDR_LEN + 1],
+        resp[client::HDR_LEN + 2],
+        resp[client::HDR_LEN + 3],
+    ]);
+    if bits & 1 != 0 {
+        mark(b"[TCP] SEQ-KAT OK\n");
+    }
+}
+
 pub fn connect_errno(port: u32, dst: [u8; 4], dport: u16) -> Option<(u16, u32)> {
     let mut body = [0u8; 6];
     body[0..4].copy_from_slice(&dst);

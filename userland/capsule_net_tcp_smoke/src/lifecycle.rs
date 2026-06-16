@@ -37,6 +37,8 @@ pub fn run() {
     if !found {
         return;
     }
+    #[cfg(feature = "tcp-selftest")]
+    ops::selftest(port);
     serverflow::passive_server(port);
     serverflow::active_server(port);
     let mut handle = None;
