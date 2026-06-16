@@ -39,19 +39,17 @@ pub fn run() {
     }
     #[cfg(feature = "tcp-selftest")]
     ops::selftest(port);
-    serverflow::passive_server(port);
-    serverflow::active_server(port);
     let mut handle = None;
     poll_until(40_000, || {
         handle = connect(port, SRV, 7);
         handle.is_some()
     });
-    let handle = match handle {
-        Some(h) => h,
-        None => return,
-    };
-    mark(b"[TCP] CONNECT OK\n");
-    activeflow::echo(port, handle);
-    activeflow::close_active(port, handle);
+    if let Some(handle) = handle {
+        mark(b"[TCP] CONNECT OK\n");
+        activeflow::echo(port, handle);
+        activeflow::close_active(port, handle);
+    }
     closeflow::rst_refused(port, SRV);
+    serverflow::passive_server(port);
+    serverflow::active_server(port);
 }
