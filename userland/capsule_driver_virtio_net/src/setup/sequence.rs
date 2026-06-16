@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_irq_ack;
+use nonos_libc::{mk_debug, mk_irq_ack};
 
 use super::driver::Driver;
 use super::{claim, config, dma_set, irq, queues, registers};
@@ -24,23 +24,36 @@ use crate::init::{driver_ok, negotiate};
 
 const MSIX_CONFIG_SHIFT: usize = 4;
 
+fn stage(s: &str) {
+    mk_debug(s.as_ptr(), s.len());
+}
+
 pub fn run() -> Result<Driver, &'static str> {
+    stage("[net-setup] find");
     let dev = find_virtio_net().ok_or("no virtio-net device")?;
+    stage("[net-setup] claim");
     let claim_epoch = claim::claim(dev.device_id)?;
+    stage("[net-setup] regmap");
     let register = registers::map(dev, claim_epoch)?;
+    stage("[net-setup] irq");
     let (irq_grant, msix) = irq::bind(dev, claim_epoch, &register)?;
+    stage("[net-setup] dma");
     let dma = dma_set::map(dev.device_id, claim_epoch, &register, &irq_grant)?;
     let regs = register.regs();
+    stage("[net-setup] negotiate");
     let negotiated = negotiate(regs)?;
     let status_supported = config::feature_enabled(negotiated, VIRTIO_NET_F_STATUS);
     let config_base = if msix { LEG_MAC + MSIX_CONFIG_SHIFT } else { LEG_MAC };
     let mac = config::read_mac(regs, negotiated, config_base);
+    stage("[net-setup] queues");
     let (rx, tx) = queues::build(regs, &dma)?;
     rx.prime();
     driver_ok(regs);
+    stage("[net-setup] irq-ack");
     if mk_irq_ack(irq_grant.grant_id) < 0 {
         return Err("virtio-net: irq ack failed");
     }
+    stage("[net-setup] done");
 
     Ok(Driver {
         device_id: dev.device_id,

@@ -29,7 +29,13 @@ pub fn find_virtio_net() -> Option<Found> {
     }
     let count = core::cmp::min(n as usize, MAX_DEVICES);
     for r in &buf[..count] {
-        if !is_match(r) || r.irq_pin == 0 || r.irq_line == 0xFF {
+        // Match on identity and a usable register BAR only. Legacy INTx
+        // routing (irq_pin / irq_line) is not required: q35 firmware often
+        // leaves irq_line at 0xFF, and irq::bind prefers MSI-X anyway,
+        // falling back to the legacy line when one is present. Filtering on
+        // those fields here discarded MSI-X-capable NICs before bind could
+        // run, which left setup looping forever on q35.
+        if !is_match(r) {
             continue;
         }
         if let Some((idx, kind, size)) = first_register_bar(r) {
