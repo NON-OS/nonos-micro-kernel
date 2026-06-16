@@ -36,6 +36,7 @@ pub use tcb::{Endpoint4, Tcb};
 
 pub const MSS: usize = crate::protocol::SEGMENT_PAYLOAD_MAX;
 pub const RWND_MAX: u16 = (crate::state::RX_DEPTH * MSS) as u16;
+pub const SND_BUF_MAX: usize = 64 * 1024;
 
 pub const MSL_MS: u64 = 30_000;
 

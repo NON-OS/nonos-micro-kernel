@@ -28,6 +28,7 @@ pub struct Entry {
     pub tcb: Tcb,
     pub rx: VecDeque<Vec<u8>>,
     pub accept: VecDeque<u32>,
+    pub snd_buf: VecDeque<u8>,
 }
 
 impl Entry {
@@ -39,7 +40,16 @@ impl Entry {
             tcb,
             rx: VecDeque::with_capacity(RX_DEPTH),
             accept: VecDeque::with_capacity(RX_DEPTH),
+            snd_buf: VecDeque::new(),
         }
+    }
+
+    pub fn enqueue_send(&mut self, data: &[u8]) -> bool {
+        if self.snd_buf.len() + data.len() > crate::tcp::SND_BUF_MAX {
+            return false;
+        }
+        self.snd_buf.extend(data.iter().copied());
+        true
     }
 
     pub fn rwnd(&self) -> u16 {
