@@ -57,6 +57,9 @@ pub fn selftest(port: u32) {
     if bits & 8 != 0 {
         mark(b"[TCP] WND-KAT OK\n");
     }
+    if bits & 16 != 0 {
+        mark(b"[TCP] RETX-KAT OK\n");
+    }
 }
 
 pub fn connect_errno(port: u32, dst: [u8; 4], dport: u16) -> Option<(u16, u32)> {

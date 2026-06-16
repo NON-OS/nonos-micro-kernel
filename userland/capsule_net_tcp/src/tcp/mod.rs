@@ -40,6 +40,8 @@ pub const SND_BUF_MAX: usize = 64 * 1024;
 
 pub const MSL_MS: u64 = 30_000;
 
+pub const MAX_RETX: u8 = 8;
+
 pub const RTO_MIN_MS: u32 = 200;
 pub const RTO_MAX_MS: u32 = 60_000;
 pub const RTO_INIT_MS: u32 = 1_000;

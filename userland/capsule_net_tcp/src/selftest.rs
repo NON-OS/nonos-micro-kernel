@@ -32,7 +32,18 @@ pub fn run() -> u32 {
     if window_kat() {
         bits |= 1 << 3;
     }
+    if retx_kat() {
+        bits |= 1 << 4;
+    }
     bits
+}
+
+fn retx_kat() -> bool {
+    use crate::state::{RetxQueue, RetxSeg};
+    let mut q = RetxQueue::new();
+    q.push(RetxSeg { seq: 100, flags: 0, data: alloc::vec![0u8; 10], sent_ms: 0, xmits: 1 });
+    q.push(RetxSeg { seq: 110, flags: 0, data: alloc::vec![0u8; 10], sent_ms: 0, xmits: 1 });
+    q.ack(105) == 0 && q.ack(110) == 1 && q.ack(120) == 1 && q.is_empty()
 }
 
 fn window_kat() -> bool {

@@ -29,6 +29,8 @@ pub struct Entry {
     pub rx: VecDeque<Vec<u8>>,
     pub accept: VecDeque<u32>,
     pub snd_buf: VecDeque<u8>,
+    pub retx: crate::state::RetxQueue,
+    pub rtt: crate::tcp::rtt::Rtt,
 }
 
 impl Entry {
@@ -41,7 +43,19 @@ impl Entry {
             rx: VecDeque::with_capacity(RX_DEPTH),
             accept: VecDeque::with_capacity(RX_DEPTH),
             snd_buf: VecDeque::new(),
+            retx: crate::state::RetxQueue::new(),
+            rtt: crate::tcp::rtt::Rtt::new(),
         }
+    }
+
+    pub fn retx_push(&mut self, seq: u32, flags: u8, data: alloc::vec::Vec<u8>) {
+        self.retx.push(crate::state::RetxSeg {
+            seq,
+            flags,
+            data,
+            sent_ms: crate::clock::now_ms(),
+            xmits: 1,
+        });
     }
 
     pub fn enqueue_send(&mut self, data: &[u8]) -> bool {

@@ -29,8 +29,10 @@ pub fn drain_send(e: &mut Entry) {
             break;
         }
         let n = (usable as usize).min(MSS).min(e.snd_buf.len());
+        let seg_seq = e.tcb.send.nxt;
         let chunk: alloc::vec::Vec<u8> = e.snd_buf.drain(..n).collect();
         let _ = crate::server::tcp_tx::send(e.tcb, FLAG_ACK | FLAG_PSH, &chunk);
         e.tcb.send.nxt = e.tcb.send.nxt.wrapping_add(n as u32);
+        e.retx_push(seg_seq, FLAG_ACK | FLAG_PSH, chunk);
     }
 }
