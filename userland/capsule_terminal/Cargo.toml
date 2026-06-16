@@ -18,6 +18,11 @@ description = "NONOS terminal capsule"
 name = "terminal"
 path = "src/main.rs"
 
+[features]
+# Smoke build: auto-run a real install command after boot so a headless
+# run proves a loaded capsule's output reaches the terminal.
+nonos-autorun-rg = []
+
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }

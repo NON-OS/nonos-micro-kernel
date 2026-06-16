@@ -5,15 +5,16 @@ edition = "2021"
 publish = false
 license = "AGPL-3.0"
 authors = ["eK@nonos.systems"]
-description = "Proof capsule importing the NONOS sovereign standard library"
+description = "Proof capsule: an unmodified crates.io crate on NONOS via the std PAL"
 
 [[bin]]
 name = "std_proof"
 path = "src/main.rs"
 
 [dependencies]
-nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
-nonos_std = { package = "nonos-std", path = "../sdk/nonos_std" }
+base64 = "0.22"
+regex = "1"
+serde_json = "1"
 
 [profile.release]
 panic = "abort"

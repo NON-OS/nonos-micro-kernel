@@ -69,6 +69,7 @@ sched = []
 # below maps 1:1 to a capsule directory under `userland/`.
 nonos-capsule-proof-io          = []
 nonos-capsule-std-proof         = []
+nonos-capsule-ripgrep           = []
 nonos-capsule-ramfs             = []
 nonos-capsule-wallpaper         = []
 nonos-capsule-compositor        = []
@@ -101,6 +102,7 @@ nonos-capsule-keyring           = []
 nonos-capsule-entropy           = []
 nonos-capsule-crypto            = []
 nonos-capsule-vfs               = []
+nonos-capsule-installer         = []
 nonos-capsule-driver-virtio-rng = []
 nonos-capsule-driver-virtio-blk = []
 nonos-capsule-driver-virtio-gpu = []
@@ -473,11 +475,14 @@ microkernel-desktop-gui = [
   "microkernel-core",
   "nonos-production",
   "nonos-capsule-proof-io",
+  "nonos-capsule-std-proof",
+  "nonos-capsule-ripgrep",
   "nonos-capsule-ramfs",
   "nonos-capsule-keyring",
   "nonos-capsule-entropy",
   "nonos-capsule-crypto",
   "nonos-capsule-vfs",
+  "nonos-capsule-installer",
   "nonos-capsule-driver-virtio-rng",
   "nonos-capsule-driver-virtio-blk",
   "nonos-capsule-driver-virtio-gpu",

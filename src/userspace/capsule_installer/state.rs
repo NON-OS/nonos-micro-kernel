@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod health;
-mod install;
-mod load_by_name;
-mod load_store;
+use crate::services::lifecycle::CapsuleState;
 
-pub(super) use health::health;
-pub(super) use install::install;
-pub(super) use load_by_name::load_by_name;
-pub(super) use load_store::load_store;
+static STATE: CapsuleState = CapsuleState::new();
+
+pub(super) fn set_alive(pid: u32) {
+    STATE.set_alive(pid);
+}
+
+pub fn shared_state() -> &'static CapsuleState {
+    &STATE
+}

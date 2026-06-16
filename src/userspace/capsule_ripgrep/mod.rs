@@ -14,12 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod health;
-mod install;
-mod load_by_name;
-mod load_store;
+mod embed;
+mod spawn;
 
-pub(super) use health::health;
-pub(super) use install::install;
-pub(super) use load_by_name::load_by_name;
-pub(super) use load_store::load_store;
+pub use spawn::spawn_ripgrep_capsule;

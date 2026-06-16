@@ -43,6 +43,7 @@ pub mod capsule_image_codec;
 pub mod capsule_input_probe;
 pub mod capsule_input_proof;
 pub mod capsule_input_router;
+pub mod capsule_installer;
 pub mod capsule_login;
 pub mod capsule_net_dhcp;
 pub mod capsule_net_dns;
@@ -56,6 +57,7 @@ pub mod capsule_net_udp;
 pub mod capsule_policy;
 pub mod capsule_process_manager;
 pub mod capsule_proof_io;
+pub mod capsule_ripgrep;
 pub mod capsule_settings;
 #[cfg(feature = "nonos-capsule-setup-wizard")]
 pub mod capsule_setup_wizard;

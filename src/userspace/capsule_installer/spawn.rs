@@ -15,41 +15,40 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    STD_PROOF_ATTESTATION_BYTES, STD_PROOF_ELF, STD_PROOF_MANIFEST_BYTES,
-    STD_PROOF_NONOS_ID_CERT_BYTES,
+    INSTALLER_ATTESTATION_BYTES, INSTALLER_ELF, INSTALLER_MANIFEST_BYTES,
+    INSTALLER_NONOS_ID_CERT_BYTES,
 };
-use crate::capabilities::Capability;
+use super::state;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified, SpawnError};
 use crate::security::nonos_id_cert::IdCertVerifyError;
 use crate::security::nonos_trust_anchor::{
     decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
 };
 
-const SERVICE_NAME: &str = "std_proof";
-const SERVICE_PORT: u32 = 4502;
-const REPLY_INBOX: &str = "endpoint.std_proof.reply";
-const REPLY_PORT: u32 = 4503;
+const SERVICE_NAME: &str = "installer";
+const SERVICE_PORT: u32 = 4112;
+const REPLY_INBOX: &str = "endpoint.4294967313";
+const REPLY_PORT: u32 = 4113;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const REQUIRED_CAPS: u64 = 0x19;
 
-pub fn spawn_std_proof_capsule() -> Result<(), SpawnError> {
+pub fn spawn_installer_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
         .map_err(|_| SpawnError::NonosIdCertRejected(IdCertVerifyError::TrustAnchorPolicy))?;
-
     let spec = CapsuleSpecVerified {
         name: SERVICE_NAME,
         service_port: SERVICE_PORT,
         reply_inbox: REPLY_INBOX,
         reply_port: REPLY_PORT,
-        elf: STD_PROOF_ELF,
-        nonos_id_cert_bytes: STD_PROOF_NONOS_ID_CERT_BYTES,
-        manifest_bytes: STD_PROOF_MANIFEST_BYTES,
-        attestation_trailer: STD_PROOF_ATTESTATION_BYTES,
+        elf: INSTALLER_ELF,
+        nonos_id_cert_bytes: INSTALLER_NONOS_ID_CERT_BYTES,
+        manifest_bytes: INSTALLER_MANIFEST_BYTES,
+        attestation_trailer: INSTALLER_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::CoreExec.bit()
-            | Capability::IPC.bit()
-            | Capability::Memory.bit(),
+        requested_caps: REQUIRED_CAPS,
         debug_tag: b"",
     };
-    capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
+    let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
+    state::set_alive(pid);
     Ok(())
 }
