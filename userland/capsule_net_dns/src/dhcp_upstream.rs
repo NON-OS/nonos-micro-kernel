@@ -14,28 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_service_lookup;
+mod lookup;
+mod status;
 
-use crate::state::{local_port, set_udp_port};
-use crate::udp_client;
+use crate::state::set_upstream;
 
-const UDP_NAME: &str = "net.udp";
+pub const DHCP_MAGIC: u32 = 0x4E44_4843;
+pub const OP_LEASE_STATUS: u16 = 3;
+pub const SERVICE: &[u8] = b"net.dhcp.client";
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum SetupError {
-    UdpMissing,
-    BindFailed,
-}
-
-pub fn run() -> Result<(), SetupError> {
-    let mut port = 0u32;
-    let mut pid = 0u32;
-    let rc = mk_service_lookup(UDP_NAME.as_ptr(), UDP_NAME.len(), &mut port, &mut pid);
-    if rc != 0 || port == 0 {
-        return Err(SetupError::UdpMissing);
+pub fn apply() {
+    let Some(port) = lookup::lookup() else { return };
+    let Some(dns) = status::status(port) else { return };
+    if dns != [0; 4] {
+        set_upstream(dns);
     }
-    udp_client::bind(port, local_port()).map_err(|_| SetupError::BindFailed)?;
-    set_udp_port(port);
-    crate::dhcp_upstream::apply();
-    Ok(())
 }
