@@ -14,13 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod handlers;
-mod parse_req;
-mod respond;
-mod runner;
-pub mod sender;
-mod tcp_rx;
-mod tcp_tx;
-mod tick;
+use crate::state::Entry;
+use crate::tcp::{window, FLAG_ACK, FLAG_PSH, MSS};
 
-pub use runner::run;
+pub fn drain_send(e: &mut Entry) {
+    loop {
+        let usable = window::usable(
+            e.tcb.send.una,
+            e.tcb.send.nxt,
+            e.tcb.send.wnd as u32,
+            u32::MAX,
+        );
+        if usable == 0 || e.snd_buf.is_empty() {
+            break;
+        }
+        let n = (usable as usize).min(MSS).min(e.snd_buf.len());
+        let chunk: alloc::vec::Vec<u8> = e.snd_buf.drain(..n).collect();
+        let _ = crate::server::tcp_tx::send(e.tcb, FLAG_ACK | FLAG_PSH, &chunk);
+        e.tcb.send.nxt = e.tcb.send.nxt.wrapping_add(n as u32);
+    }
+}

@@ -30,16 +30,22 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         Err(_) => return status(sender_pid, req, E_BAD_LEN, tx),
     };
     let payload = &body[4..];
-    let mut table = TABLE.lock();
-    let e = match table.owned_mut(sender_pid, handle) {
-        Some(e) if e.tcb.state == State::Established => e,
-        Some(_) => return status(sender_pid, req, E_CLOSED, tx),
-        None => return status(sender_pid, req, E_NO_SOCKET, tx),
+    let errno = {
+        let mut table = TABLE.lock();
+        match table.owned_mut(sender_pid, handle) {
+            Some(e) if e.tcb.state == State::Established => {
+                if e.enqueue_send(payload) {
+                    crate::server::sender::drain_send(e);
+                    E_OK
+                } else {
+                    E_TIMEOUT
+                }
+            }
+            Some(_) => E_CLOSED,
+            None => E_NO_SOCKET,
+        }
     };
-    if !e.enqueue_send(payload) {
-        return status(sender_pid, req, E_TIMEOUT, tx);
-    }
-    let _ = respond(sender_pid, OP_SEND, E_OK, req.request_id, 0, tx);
+    let _ = respond(sender_pid, OP_SEND, errno, req.request_id, 0, tx);
 }
 
 fn status(sender_pid: u32, req: &Request, errno: u16, tx: &mut [u8]) {
