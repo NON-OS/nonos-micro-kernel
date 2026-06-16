@@ -14,26 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod build;
-mod checksum;
-mod header;
-mod iss;
-mod parse;
-pub mod seq;
-mod siphash;
-mod state;
-mod tcb;
+pub fn lt(a: u32, b: u32) -> bool {
+    (a.wrapping_sub(b) as i32) < 0
+}
 
-pub use build::{build, BuildRequest};
-pub use header::{TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_PSH, FLAG_RST, FLAG_SYN};
-pub use iss::iss_for;
-pub use parse::parse;
-pub use siphash::siphash24;
-pub use state::State;
-pub use tcb::{Endpoint4, Tcb};
+pub fn leq(a: u32, b: u32) -> bool {
+    (a.wrapping_sub(b) as i32) <= 0
+}
 
-pub const MSL_MS: u64 = 30_000;
+pub fn gt(a: u32, b: u32) -> bool {
+    lt(b, a)
+}
 
-pub fn msl_2_ms() -> u64 {
-    2 * MSL_MS
+pub fn geq(a: u32, b: u32) -> bool {
+    leq(b, a)
+}
+
+pub fn between(x: u32, lo: u32, hi: u32) -> bool {
+    leq(lo, x) && lt(x, hi)
 }
