@@ -52,9 +52,19 @@ pub fn step(e: &mut Entry, hdr: &TcpHeader, payload: &[u8]) -> RxAction {
         }
         crate::server::sender::drain_send(e);
     }
-    if !payload.is_empty() && hdr.seq == e.tcb.recv.nxt {
-        let _ = e.push_rx(payload);
-        e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(payload.len() as u32);
+    if !payload.is_empty() {
+        if hdr.seq == e.tcb.recv.nxt {
+            let _ = e.push_rx(payload);
+            e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(payload.len() as u32);
+            let more = e.reasm.drain_contiguous(e.tcb.recv.nxt);
+            if !more.is_empty() {
+                let n = more.len() as u32;
+                let _ = e.push_rx(&more);
+                e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(n);
+            }
+        } else if seq::gt(hdr.seq, e.tcb.recv.nxt) {
+            e.reasm.insert(hdr.seq, payload.to_vec());
+        }
     }
     if hdr.has_flag(FLAG_FIN) {
         e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(1);
