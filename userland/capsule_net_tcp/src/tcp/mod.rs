@@ -19,6 +19,7 @@ mod checksum;
 mod header;
 mod iss;
 mod parse;
+pub mod rtt;
 pub mod seq;
 mod siphash;
 mod state;
@@ -33,6 +34,10 @@ pub use state::State;
 pub use tcb::{Endpoint4, Tcb};
 
 pub const MSL_MS: u64 = 30_000;
+
+pub const RTO_MIN_MS: u32 = 200;
+pub const RTO_MAX_MS: u32 = 60_000;
+pub const RTO_INIT_MS: u32 = 1_000;
 
 pub fn msl_2_ms() -> u64 {
     2 * MSL_MS

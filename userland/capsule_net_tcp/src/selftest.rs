@@ -26,7 +26,25 @@ pub fn run() -> u32 {
     if accept_kat() {
         bits |= 1 << 1;
     }
+    if rtt_kat() {
+        bits |= 1 << 2;
+    }
     bits
+}
+
+fn rtt_kat() -> bool {
+    use crate::tcp::rtt::Rtt;
+    let mut r = Rtt::new();
+    if r.rto_ms() != crate::tcp::RTO_INIT_MS {
+        return false;
+    }
+    r.on_sample(100);
+    if r.rto_ms() < crate::tcp::RTO_MIN_MS || r.rto_ms() > crate::tcp::RTO_MAX_MS {
+        return false;
+    }
+    let a = r.rto_ms();
+    r.backoff();
+    r.rto_ms() == a.saturating_mul(2).min(crate::tcp::RTO_MAX_MS)
 }
 
 fn accept_kat() -> bool {
