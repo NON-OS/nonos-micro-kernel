@@ -39,6 +39,7 @@ pub fn step(e: &mut Entry, hdr: &TcpHeader, payload: &[u8]) -> RxAction {
         }
         e.tcb.send.una = hdr.ack;
         e.retx.ack(hdr.ack);
+        e.cc.on_new_ack();
         if crate::tcp::window::should_update(
             e.tcb.send.wl1,
             e.tcb.send.wl2,
@@ -51,6 +52,19 @@ pub fn step(e: &mut Entry, hdr: &TcpHeader, payload: &[u8]) -> RxAction {
             e.tcb.send.wl2 = hdr.ack;
         }
         crate::server::sender::drain_send(e);
+    } else if hdr.has_flag(FLAG_ACK)
+        && hdr.ack == e.tcb.send.una
+        && payload.is_empty()
+        && !e.retx.is_empty()
+    {
+        if e.cc.on_dup_ack() {
+            let mut t = e.tcb;
+            if let Some(seg) = e.retx.oldest_mut() {
+                t.send.nxt = seg.seq;
+                let _ = crate::server::tcp_tx::send(t, seg.flags, &seg.data);
+                seg.sent_ms = crate::clock::now_ms();
+            }
+        }
     }
     if !payload.is_empty() {
         if hdr.seq == e.tcb.recv.nxt {

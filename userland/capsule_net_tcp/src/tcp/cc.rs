@@ -44,4 +44,15 @@ impl Cc {
         self.cwnd = mss;
         self.dupacks = 0;
     }
+    pub fn on_dup_ack(&mut self) -> bool {
+        self.dupacks = self.dupacks.saturating_add(1);
+        if self.dupacks == crate::tcp::DUP_ACK_THRESH {
+            let mss = MSS as u32;
+            self.ssthresh = (self.cwnd / 2).max(2 * mss);
+            self.cwnd = self.ssthresh.saturating_add(3 * mss);
+            true
+        } else {
+            false
+        }
+    }
 }

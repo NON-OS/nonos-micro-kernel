@@ -58,6 +58,10 @@ fn cc_kat() -> bool {
     }
     c.on_rto();
     c.cwnd() == mss
+        && {
+            let mut d = Cc::new();
+            !d.on_dup_ack() && !d.on_dup_ack() && d.on_dup_ack()
+        }
 }
 
 fn reasm_kat() -> bool {
