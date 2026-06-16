@@ -53,7 +53,14 @@ pub(super) fn drain<A: App>(
         let n =
             mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), RECV_NOWAIT, &mut sender);
         if n <= 0 {
-            return DrainResult { repaint, close: false, minimize: false, maximize: false, restore, move_to };
+            return DrainResult {
+                repaint,
+                close: false,
+                minimize: false,
+                maximize: false,
+                restore,
+                move_to,
+            };
         }
         match handle_control(&rx[..n as usize], sender, wm_port, window_id, request_id) {
             ControlOutcome::FocusSelf => {
@@ -68,13 +75,34 @@ pub(super) fn drain<A: App>(
         click_focus::handle(event, wm_port, window_id, request_id);
         match decorations::handle(width, event) {
             Some(EventOutcome::Close) => {
-                return DrainResult { repaint, close: true, minimize: false, maximize: false, restore, move_to }
+                return DrainResult {
+                    repaint,
+                    close: true,
+                    minimize: false,
+                    maximize: false,
+                    restore,
+                    move_to,
+                }
             }
             Some(EventOutcome::Minimize) => {
-                return DrainResult { repaint, close: false, minimize: true, maximize: false, restore, move_to }
+                return DrainResult {
+                    repaint,
+                    close: false,
+                    minimize: true,
+                    maximize: false,
+                    restore,
+                    move_to,
+                }
             }
             Some(EventOutcome::Maximize) => {
-                return DrainResult { repaint, close: false, minimize: false, maximize: true, restore, move_to }
+                return DrainResult {
+                    repaint,
+                    close: false,
+                    minimize: false,
+                    maximize: true,
+                    restore,
+                    move_to,
+                }
             }
             _ => {}
         }
@@ -93,7 +121,14 @@ pub(super) fn drain<A: App>(
             EventOutcome::Idle | EventOutcome::Minimize | EventOutcome::Maximize => {}
             EventOutcome::Repaint => repaint = true,
             EventOutcome::Close => {
-                return DrainResult { repaint, close: true, minimize: false, maximize: false, restore, move_to }
+                return DrainResult {
+                    repaint,
+                    close: true,
+                    minimize: false,
+                    maximize: false,
+                    restore,
+                    move_to,
+                }
             }
         }
     }

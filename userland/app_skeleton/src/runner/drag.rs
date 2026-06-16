@@ -34,7 +34,14 @@ pub(super) struct DragState {
 
 impl DragState {
     pub(super) const fn new() -> Self {
-        Self { active: false, hover: DecorationHit::None, press_x: 0, press_y: 0, base_x: 0, base_y: 0 }
+        Self {
+            active: false,
+            hover: DecorationHit::None,
+            press_x: 0,
+            press_y: 0,
+            base_x: 0,
+            base_y: 0,
+        }
     }
 }
 

@@ -18,8 +18,7 @@ use crate::state::spotlight::{SPOTLIGHT_HEIGHT, SPOTLIGHT_WIDTH};
 use crate::state::LAUNCHER_APPS;
 
 pub const MENUBAR_HEIGHT: u32 = 28;
-pub const BOTTOM_DOCK_WIDTH: u32 =
-    LAUNCHER_APPS.len() as u32 * (TASKBAR_ENTRY_W + 6) - 6 + 24;
+pub const BOTTOM_DOCK_WIDTH: u32 = LAUNCHER_APPS.len() as u32 * (TASKBAR_ENTRY_W + 6) - 6 + 24;
 pub const BOTTOM_DOCK_HEIGHT: u32 = 64;
 pub const BOTTOM_DOCK_BOTTOM_INSET: u32 = 24;
 pub const TASKBAR_ENTRY_W: u32 = 80;
