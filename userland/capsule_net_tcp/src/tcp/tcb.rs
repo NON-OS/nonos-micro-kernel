@@ -28,6 +28,8 @@ pub struct SendVars {
     pub nxt: u32,
     pub wnd: u16,
     pub iss: u32,
+    pub wl1: u32,
+    pub wl2: u32,
 }
 
 #[derive(Clone, Copy, Default)]

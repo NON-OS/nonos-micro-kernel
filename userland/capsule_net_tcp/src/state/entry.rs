@@ -28,6 +28,11 @@ pub struct Entry {
     pub tcb: Tcb,
     pub rx: VecDeque<Vec<u8>>,
     pub accept: VecDeque<u32>,
+    pub snd_buf: VecDeque<u8>,
+    pub retx: crate::state::RetxQueue,
+    pub rtt: crate::tcp::rtt::Rtt,
+    pub reasm: crate::state::Reasm,
+    pub cc: crate::tcp::cc::Cc,
 }
 
 impl Entry {
@@ -39,7 +44,35 @@ impl Entry {
             tcb,
             rx: VecDeque::with_capacity(RX_DEPTH),
             accept: VecDeque::with_capacity(RX_DEPTH),
+            snd_buf: VecDeque::new(),
+            retx: crate::state::RetxQueue::new(),
+            rtt: crate::tcp::rtt::Rtt::new(),
+            reasm: crate::state::Reasm::new(),
+            cc: crate::tcp::cc::Cc::new(),
         }
+    }
+
+    pub fn retx_push(&mut self, seq: u32, flags: u8, data: alloc::vec::Vec<u8>) {
+        self.retx.push(crate::state::RetxSeg {
+            seq,
+            flags,
+            data,
+            sent_ms: crate::clock::now_ms(),
+            xmits: 1,
+        });
+    }
+
+    pub fn enqueue_send(&mut self, data: &[u8]) -> bool {
+        if self.snd_buf.len() + data.len() > crate::tcp::SND_BUF_MAX {
+            return false;
+        }
+        self.snd_buf.extend(data.iter().copied());
+        true
+    }
+
+    pub fn rwnd(&self) -> u16 {
+        let used = (self.rx.len() * crate::tcp::MSS).min(crate::tcp::RWND_MAX as usize);
+        (crate::tcp::RWND_MAX as usize - used) as u16
     }
 
     pub fn push_rx(&mut self, payload: &[u8]) -> bool {

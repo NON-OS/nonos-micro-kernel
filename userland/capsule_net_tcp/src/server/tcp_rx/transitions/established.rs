@@ -18,16 +18,73 @@ use alloc::vec::Vec;
 
 use crate::server::tcp_rx::action::RxAction;
 use crate::state::Entry;
-use crate::tcp::{State, TcpHeader, FLAG_ACK, FLAG_FIN};
+use crate::tcp::{seq, State, TcpHeader, FLAG_ACK, FLAG_FIN};
 
 pub fn step(e: &mut Entry, hdr: &TcpHeader, payload: &[u8]) -> RxAction {
-    if !payload.is_empty() && hdr.seq == e.tcb.recv.nxt {
-        let _ = e.push_rx(payload);
-        e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(payload.len() as u32);
+    if !seq::acceptable(hdr.seq, payload.len() as u32, e.tcb.recv.nxt, e.tcb.recv.wnd) {
+        e.tcb.recv.wnd = e.rwnd();
+        return RxAction::Reply(e.tcb, FLAG_ACK, Vec::new());
     }
-    if hdr.has_flag(FLAG_FIN) {
+    if hdr.has_flag(FLAG_ACK)
+        && seq::gt(hdr.ack, e.tcb.send.una)
+        && seq::leq(hdr.ack, e.tcb.send.nxt)
+    {
+        if let Some(oldest) = e.retx.oldest_mut() {
+            if oldest.xmits == 1 {
+                let r = crate::clock::now_ms()
+                    .saturating_sub(oldest.sent_ms)
+                    .min(crate::tcp::RTO_MAX_MS as u64) as u32;
+                e.rtt.on_sample(r);
+            }
+        }
+        e.tcb.send.una = hdr.ack;
+        e.retx.ack(hdr.ack);
+        e.cc.on_new_ack();
+        if crate::tcp::window::should_update(
+            e.tcb.send.wl1,
+            e.tcb.send.wl2,
+            hdr.seq,
+            e.tcb.send.una,
+            hdr.ack,
+        ) {
+            e.tcb.send.wnd = hdr.window;
+            e.tcb.send.wl1 = hdr.seq;
+            e.tcb.send.wl2 = hdr.ack;
+        }
+        crate::server::sender::drain_send(e);
+    } else if hdr.has_flag(FLAG_ACK)
+        && hdr.ack == e.tcb.send.una
+        && hdr.window == e.tcb.send.wnd
+        && payload.is_empty()
+        && !e.retx.is_empty()
+    {
+        if e.cc.on_dup_ack() {
+            let mut t = e.tcb;
+            if let Some(seg) = e.retx.oldest_mut() {
+                t.send.nxt = seg.seq;
+                let _ = crate::server::tcp_tx::send(t, seg.flags, &seg.data);
+                seg.sent_ms = crate::clock::now_ms();
+            }
+        }
+    }
+    if !payload.is_empty() {
+        if hdr.seq == e.tcb.recv.nxt {
+            let _ = e.push_rx(payload);
+            e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(payload.len() as u32);
+            let more = e.reasm.drain_contiguous(e.tcb.recv.nxt);
+            if !more.is_empty() {
+                let n = more.len() as u32;
+                let _ = e.push_rx(&more);
+                e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(n);
+            }
+        } else if seq::gt(hdr.seq, e.tcb.recv.nxt) {
+            e.reasm.insert(hdr.seq, payload.to_vec());
+        }
+    }
+    if hdr.has_flag(FLAG_FIN) && e.reasm.is_empty() && seq::leq(hdr.seq, e.tcb.recv.nxt) {
         e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(1);
         e.tcb.state = State::CloseWait;
     }
+    e.tcb.recv.wnd = e.rwnd();
     RxAction::Reply(e.tcb, FLAG_ACK, Vec::new())
 }

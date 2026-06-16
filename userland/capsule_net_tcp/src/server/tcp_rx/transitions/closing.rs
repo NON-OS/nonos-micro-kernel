@@ -18,9 +18,15 @@ use alloc::vec::Vec;
 
 use crate::server::tcp_rx::action::RxAction;
 use crate::state::Entry;
-use crate::tcp::{State, TcpHeader, FLAG_ACK, FLAG_FIN};
+use crate::tcp::{seq, State, TcpHeader, FLAG_ACK, FLAG_FIN};
 
 pub fn step(e: &mut Entry, hdr: &TcpHeader, now_ms: u64) -> (RxAction, Option<u64>) {
+    let seg_len = if hdr.has_flag(FLAG_FIN) { 1 } else { 0 };
+    let rwnd = e.rwnd();
+    e.tcb.recv.wnd = rwnd;
+    if !seq::acceptable(hdr.seq, seg_len, e.tcb.recv.nxt, e.tcb.recv.wnd) {
+        return (RxAction::Reply(e.tcb, FLAG_ACK, Vec::new()), None);
+    }
     let acks_fin = hdr.has_flag(FLAG_ACK) && hdr.ack == e.tcb.send.nxt;
     let has_fin = hdr.has_flag(FLAG_FIN);
     if acks_fin {

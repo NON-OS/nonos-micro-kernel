@@ -14,42 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use crate::state::Entry;
+use crate::tcp::{window, FLAG_ACK, FLAG_PSH, MSS};
 
-extern crate alloc;
-
-#[cfg(feature = "tcp-chaos")]
-mod chaos;
-mod egress;
-mod icmp;
-mod ingress;
-mod ipv4;
-mod l2_client;
-mod protocol;
-mod route;
-mod server;
-mod setup;
-mod state;
-
-use nonos_libc::{heap_init, mk_exit, mk_yield};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    wait_for_setup();
-    server::run();
-}
-
-fn wait_for_setup() {
+pub fn drain_send(e: &mut Entry) {
     loop {
-        if setup::run().is_ok() {
-            return;
+        let usable = window::usable(
+            e.tcb.send.una,
+            e.tcb.send.nxt,
+            e.tcb.send.wnd as u32,
+            e.cc.cwnd(),
+        );
+        if usable == 0 || e.snd_buf.is_empty() {
+            break;
         }
-        for _ in 0..64 {
-            mk_yield();
-        }
+        let n = (usable as usize).min(MSS).min(e.snd_buf.len());
+        let seg_seq = e.tcb.send.nxt;
+        let chunk: alloc::vec::Vec<u8> = e.snd_buf.drain(..n).collect();
+        let _ = crate::server::tcp_tx::send(e.tcb, FLAG_ACK | FLAG_PSH, &chunk);
+        e.tcb.send.nxt = e.tcb.send.nxt.wrapping_add(n as u32);
+        e.retx_push(seg_seq, FLAG_ACK | FLAG_PSH, chunk);
     }
 }

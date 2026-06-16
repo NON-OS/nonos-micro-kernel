@@ -18,6 +18,9 @@ description = "NONOS userland TCP lifecycle smoketest capsule"
 name = "net_tcp_smoke"
 path = "src/main.rs"
 
+[features]
+tcp-selftest = []
+
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 

@@ -17,7 +17,9 @@
 pub mod handlers;
 mod parse_req;
 mod respond;
+pub mod retransmit;
 mod runner;
+pub mod sender;
 mod tcp_rx;
 mod tcp_tx;
 mod tick;

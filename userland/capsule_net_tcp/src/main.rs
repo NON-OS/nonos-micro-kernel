@@ -22,6 +22,8 @@ extern crate alloc;
 mod clock;
 mod ip_client;
 mod protocol;
+#[cfg(feature = "tcp-selftest")]
+mod selftest;
 mod server;
 mod setup;
 mod state;

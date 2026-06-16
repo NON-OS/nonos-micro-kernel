@@ -30,6 +30,7 @@ pub struct TcpHeader {
     pub seq: u32,
     pub ack: u32,
     pub flags: u8,
+    pub window: u16,
 }
 
 impl TcpHeader {

@@ -61,5 +61,9 @@ pub fn from_frame(frame: &[u8]) -> Result<Inbound, IngressError> {
     if icmp_try_reply(&hdr.src, hdr.protocol, payload) {
         return Err(IngressError::Absorbed);
     }
+    #[cfg(feature = "tcp-chaos")]
+    if hdr.protocol == 6 && crate::chaos::should_drop_tcp() {
+        return Err(IngressError::Absorbed);
+    }
     Ok(Inbound { src: hdr.src, dst: hdr.dst, protocol: hdr.protocol, payload: payload.to_vec() })
 }

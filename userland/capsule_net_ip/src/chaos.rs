@@ -14,16 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod entry;
-mod globals;
-mod reasm;
-mod retx;
-mod table;
-mod timers;
+//! Deterministic inbound TCP fault injector, compiled in ONLY under
+//! the `tcp-chaos` feature. It drops a fixed set of inbound TCP
+//! segments so the guest reliability machinery (RTO retransmit, peer
+//! retransmit + dedup/reassembly) is forced to recover. The whole
+//! module is feature-gated; with the feature off it is absent and the
+//! normal ingress path is byte-for-byte unchanged.
 
-pub use entry::{Entry, RX_DEPTH};
-pub use globals::{ip_port, local_ip, next_ephemeral, set_ip_port, set_local_ip};
-pub use reasm::Reasm;
-pub use retx::{RetxQueue, RetxSeg};
-pub use table::TABLE;
-pub use timers::{TimerKind, Timers};
+use core::sync::atomic::{AtomicU32, Ordering};
+
+static SEEN: AtomicU32 = AtomicU32::new(0);
+
+const DROP_AT: &[u32] = &[3, 6];
+
+pub fn should_drop_tcp() -> bool {
+    let n = SEEN.fetch_add(1, Ordering::Relaxed) + 1;
+    DROP_AT.contains(&n)
+}

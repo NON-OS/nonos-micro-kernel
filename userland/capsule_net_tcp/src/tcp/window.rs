@@ -14,16 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod entry;
-mod globals;
-mod reasm;
-mod retx;
-mod table;
-mod timers;
+use super::seq;
 
-pub use entry::{Entry, RX_DEPTH};
-pub use globals::{ip_port, local_ip, next_ephemeral, set_ip_port, set_local_ip};
-pub use reasm::Reasm;
-pub use retx::{RetxQueue, RetxSeg};
-pub use table::TABLE;
-pub use timers::{TimerKind, Timers};
+pub fn should_update(snd_wl1: u32, snd_wl2: u32, seg_seq: u32, _snd_una: u32, seg_ack: u32) -> bool {
+    seq::lt(snd_wl1, seg_seq) || (snd_wl1 == seg_seq && seq::leq(snd_wl2, seg_ack))
+}
+
+pub fn usable(snd_una: u32, snd_nxt: u32, snd_wnd: u32, cwnd: u32) -> u32 {
+    let allowed = snd_wnd.min(cwnd);
+    let in_flight = snd_nxt.wrapping_sub(snd_una);
+    allowed.saturating_sub(in_flight)
+}
