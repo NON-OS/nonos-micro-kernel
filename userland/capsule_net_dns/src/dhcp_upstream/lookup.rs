@@ -16,26 +16,9 @@
 
 use nonos_libc::mk_service_lookup;
 
-use crate::state::{local_port, set_udp_port};
-use crate::udp_client;
-
-const UDP_NAME: &str = "net.udp";
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum SetupError {
-    UdpMissing,
-    BindFailed,
-}
-
-pub fn run() -> Result<(), SetupError> {
+pub fn lookup() -> Option<u32> {
     let mut port = 0u32;
     let mut pid = 0u32;
-    let rc = mk_service_lookup(UDP_NAME.as_ptr(), UDP_NAME.len(), &mut port, &mut pid);
-    if rc != 0 || port == 0 {
-        return Err(SetupError::UdpMissing);
-    }
-    udp_client::bind(port, local_port()).map_err(|_| SetupError::BindFailed)?;
-    set_udp_port(port);
-    crate::dhcp_upstream::apply();
-    Ok(())
+    let rc = mk_service_lookup(super::SERVICE.as_ptr(), super::SERVICE.len(), &mut port, &mut pid);
+    if rc == 0 && port != 0 { Some(port) } else { None }
 }

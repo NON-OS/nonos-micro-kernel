@@ -20,6 +20,7 @@
 extern crate alloc;
 
 mod dns;
+mod dhcp_upstream;
 mod protocol;
 mod server;
 mod setup;
