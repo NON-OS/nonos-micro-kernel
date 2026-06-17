@@ -14,14 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::tcp::Tcb;
+use crate::tcp::{Tcb, MAX_CONN_PER_PID};
 
 use super::types::{Table, TableError, TABLE_CAP};
 use crate::state::Entry;
 
+pub fn quota_ok(owner_count: usize, cap: usize) -> bool {
+    owner_count < cap
+}
+
 impl Table {
+    pub fn count_owned(&self, owner: u32) -> usize {
+        self.entries.iter().filter(|e| e.owner_pid == owner).count()
+    }
+
     pub fn insert(&mut self, owner: u32, parent: u32, tcb: Tcb) -> Result<u32, TableError> {
         if self.entries.len() >= TABLE_CAP {
+            return Err(TableError::Full);
+        }
+        if !quota_ok(self.count_owned(owner), MAX_CONN_PER_PID) {
             return Err(TableError::Full);
         }
         let handle = self.next_handle;

@@ -66,6 +66,9 @@ pub fn selftest(port: u32) {
     if bits & 64 != 0 {
         mark(b"[TCP] CC-KAT OK\n");
     }
+    if bits & 128 != 0 {
+        mark(b"[TCP] QUOTA-KAT OK\n");
+    }
 }
 
 pub fn connect_errno(port: u32, dst: [u8; 4], dport: u16) -> Option<(u16, u32)> {

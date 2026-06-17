@@ -41,7 +41,33 @@ pub fn run() -> u32 {
     if cc_kat() {
         bits |= 1 << 6;
     }
+    if quota_kat() {
+        bits |= 1 << 7;
+    }
     bits
+}
+
+fn quota_kat() -> bool {
+    use crate::state::{quota_ok, Table};
+    use crate::tcp::{Endpoint4, Tcb, MAX_CONN_PER_PID};
+    if !(quota_ok(0, MAX_CONN_PER_PID)
+        && quota_ok(MAX_CONN_PER_PID - 1, MAX_CONN_PER_PID)
+        && !quota_ok(MAX_CONN_PER_PID, MAX_CONN_PER_PID))
+    {
+        return false;
+    }
+    let a = 0xAAAA_AAAA;
+    let b = 0xBBBB_BBBB;
+    let mut t = Table::new();
+    let mk = || Tcb::listen(Endpoint4 { ip: [0; 4], port: 0 });
+    for _ in 0..MAX_CONN_PER_PID {
+        if t.insert(a, 0, mk()).is_err() {
+            return false;
+        }
+    }
+    t.insert(a, 0, mk()).is_err()
+        && t.count_owned(a) == MAX_CONN_PER_PID
+        && t.insert(b, 0, mk()).is_ok()
 }
 
 fn cc_kat() -> bool {

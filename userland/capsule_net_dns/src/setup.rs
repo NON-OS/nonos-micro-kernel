@@ -34,7 +34,8 @@ pub fn run() -> Result<(), SetupError> {
     if rc != 0 || port == 0 {
         return Err(SetupError::UdpMissing);
     }
-    udp_client::bind(port, local_port()).map_err(|_| SetupError::BindFailed)?;
+    let lport = local_port().ok_or(SetupError::BindFailed)?;
+    udp_client::bind(port, lport).map_err(|_| SetupError::BindFailed)?;
     set_udp_port(port);
     crate::dhcp_upstream::apply();
     Ok(())

@@ -14,5 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(super) const ENTRY_CAP: usize = 64;
-pub(super) const PENDING_CAP: usize = 8;
+use super::cache_type::Cache;
+use super::constants::PENDING_CAP;
+
+impl Cache {
+    pub fn note_pending(&mut self, ipv4: [u8; 4]) {
+        if self.pending.iter().any(|p| *p == Some(ipv4)) {
+            return;
+        }
+        self.pending[self.pending_head] = Some(ipv4);
+        self.pending_head = (self.pending_head + 1) % PENDING_CAP;
+    }
+
+    pub fn is_pending(&mut self, ipv4: [u8; 4]) -> bool {
+        if let Some(slot) = self.pending.iter_mut().find(|p| **p == Some(ipv4)) {
+            *slot = None;
+            return true;
+        }
+        false
+    }
+}

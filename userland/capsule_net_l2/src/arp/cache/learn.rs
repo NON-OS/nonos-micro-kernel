@@ -14,5 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(super) const ENTRY_CAP: usize = 64;
-pub(super) const PENDING_CAP: usize = 8;
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum Learn {
+    Insert,
+    Refresh,
+    Reject,
+}
+
+pub fn decide(existing_mac: Option<[u8; 6]>, sender_mac: [u8; 6], solicited: bool) -> Learn {
+    match existing_mac {
+        Some(m) if m == sender_mac => Learn::Refresh,
+        Some(_) => Learn::Reject,
+        None if solicited => Learn::Insert,
+        None => Learn::Reject,
+    }
+}

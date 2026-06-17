@@ -41,7 +41,13 @@ pub fn handle(sender_pid: u32, req: &Request, tx: &mut [u8]) {
         return;
     }
     *STATE.client_state.lock() = ClientState::Renewing;
-    let xid = STATE.next_xid();
+    let xid = match STATE.next_xid() {
+        Some(x) => x,
+        None => {
+            let _ = respond(sender_pid, OP_LEASE_RENEW, E_NO_LINK, req.request_id, 0, tx);
+            return;
+        }
+    };
     let mut msg = Message::new_request(&mac, xid);
     msg.ciaddr = prior.ipv4;
     let synthetic_offer = Message { yiaddr: prior.ipv4, server_id: prior.server_id, ..msg };

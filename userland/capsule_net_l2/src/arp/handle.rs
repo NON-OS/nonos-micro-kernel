@@ -27,14 +27,24 @@ pub struct ReplyFrame {
     pub bytes: [u8; HDR_LEN + PACKET_LEN],
 }
 
-// Consume an inbound ARP packet payload. Always update the cache
-// with the sender's claim. If the packet is a request for our own
+// Consume an inbound ARP packet payload. Apply the learn policy
+// before touching the cache: refresh a matching binding, reject a
+// MAC rebind, and insert a new binding only when the packet is
+// solicited (a reply to our own outstanding request, or a request
+// that directly targets us). If the packet is a request for our own
 // IPv4 address, build and return the reply frame so the caller can
 // hand it to the NIC client. Returns `None` when the packet does
 // not require a response.
 pub fn on_inbound(iface: &Iface, cache: &mut Cache, payload: &[u8]) -> Option<ReplyFrame> {
     let pkt = ArpPacket::parse(payload)?;
-    cache.insert(pkt.sender_ip, pkt.sender_mac);
+    let solicited = cache.is_pending(pkt.sender_ip)
+        || (pkt.oper == OPER_REQUEST && pkt.target_ip == iface.ipv4);
+    match crate::arp::cache::decide(cache.lookup(&pkt.sender_ip), pkt.sender_mac, solicited) {
+        crate::arp::cache::Learn::Insert | crate::arp::cache::Learn::Refresh => {
+            cache.insert(pkt.sender_ip, pkt.sender_mac);
+        }
+        crate::arp::cache::Learn::Reject => {}
+    }
     if pkt.oper != OPER_REQUEST || pkt.target_ip != iface.ipv4 {
         return None;
     }

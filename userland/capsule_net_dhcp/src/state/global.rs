@@ -24,7 +24,6 @@ pub struct Global {
     pub l2_port: AtomicU32,
     pub ip_port: AtomicU32,
     pub mac: Mutex<[u8; 6]>,
-    pub xid: AtomicU32,
     pub client_state: Mutex<ClientState>,
     pub lease: Mutex<Lease>,
 }
@@ -35,19 +34,14 @@ impl Global {
             l2_port: AtomicU32::new(0),
             ip_port: AtomicU32::new(0),
             mac: Mutex::new([0; 6]),
-            xid: AtomicU32::new(1),
             client_state: Mutex::new(ClientState::Init),
             lease: Mutex::new(Lease::empty()),
         }
     }
 
-    pub fn next_xid(&self) -> u32 {
-        let v = self.xid.fetch_add(1, Ordering::Relaxed);
-        if v == 0 {
-            self.xid.fetch_add(1, Ordering::Relaxed)
-        } else {
-            v
-        }
+    pub fn next_xid(&self) -> Option<u32> {
+        let v = rand_u32()?;
+        Some(if v == 0 { 1 } else { v })
     }
 
     pub fn l2(&self) -> u32 {
@@ -57,6 +51,15 @@ impl Global {
     pub fn ip(&self) -> u32 {
         self.ip_port.load(Ordering::Acquire)
     }
+}
+
+fn rand_u32() -> Option<u32> {
+    let mut b = [0u8; 4];
+    let n = nonos_libc::crypto_random(b.as_mut_ptr(), 4);
+    if n != 4i64 {
+        return None;
+    }
+    Some(u32::from_le_bytes(b))
 }
 
 pub static STATE: Global = Global::new();

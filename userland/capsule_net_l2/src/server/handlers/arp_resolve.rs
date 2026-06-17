@@ -43,6 +43,7 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         return;
     }
     let iface = Iface { mac: *STATE.mac.lock(), ipv4: *STATE.ipv4.lock() };
+    STATE.arp.lock().note_pending(target);
     let req_frame = build_request(&iface, target);
     let _ = nic_send(nic, &req_frame);
     let _ = respond(sender_pid, OP_ARP_RESOLVE, E_NO_NEIGHBOUR, req.request_id, 0, tx);

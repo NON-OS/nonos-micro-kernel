@@ -32,11 +32,15 @@ pub fn acquire() -> Result<(), AcquireError> {
     if l2 == 0 || ip == 0 || mac == [0; 6] {
         return Err(AcquireError::NoLink);
     }
-    let msg = Message::new_request(&mac, STATE.next_xid());
+    let xid = STATE.next_xid().ok_or(AcquireError::NoLink)?;
+    let msg = Message::new_request(&mac, xid);
     *STATE.client_state.lock() = ClientState::Selecting;
     let offer = discover(l2, &msg).map_err(|e| reset(map_discover(e)))?;
     *STATE.client_state.lock() = ClientState::Requesting;
     let ack = request(l2, &msg, &offer).map_err(|e| reset(map_request(e)))?;
+    if ack.yiaddr == [0; 4] {
+        return Err(reset(AcquireError::Nak));
+    }
     let prefix = install(ip, &ack).map_err(|_| reset(AcquireError::NoLink))?;
     let _ = crate::l2_client::set_ip(l2, ack.yiaddr);
     *STATE.lease.lock() = Lease {
