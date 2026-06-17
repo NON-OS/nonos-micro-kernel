@@ -475,8 +475,6 @@ microkernel-desktop-gui = [
   "microkernel-core",
   "nonos-production",
   "nonos-capsule-proof-io",
-  "nonos-capsule-std-proof",
-  "nonos-capsule-ripgrep",
   "nonos-capsule-ramfs",
   "nonos-capsule-keyring",
   "nonos-capsule-entropy",
