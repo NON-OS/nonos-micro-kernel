@@ -37,12 +37,24 @@ pub(super) unsafe fn dealloc_impl(allocator: &SecureHeapAllocator, ptr: *mut u8,
 
         let header = ptr::read_volatile(header_ptr);
         if !header.is_valid() || header.size != layout.size() {
+            // Header is corrupt, already-freed, or freed with a mismatched
+            // layout. Surface it rather than silently dropping the free: this
+            // is the detector signal for double-free / heap corruption.
+            crate::sys::serial::println(
+                b"[HEAP-GUARD] invalid allocation header on free (double-free or corruption)",
+            );
             return;
         }
 
         let canary_ptr = ptr.add(header.canary_offset) as *const u64;
         let canary = ptr::read_volatile(canary_ptr);
         if canary != allocator.canary_value {
+            // The trailing redzone was overwritten: a write ran past the end of
+            // this allocation. Report it; the block is intentionally not
+            // returned to the free list so the corruptor cannot reuse it.
+            crate::sys::serial::println(
+                b"[HEAP-GUARD] redzone canary overwrite on free (heap buffer overflow)",
+            );
             return;
         }
 
