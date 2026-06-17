@@ -19,7 +19,10 @@ mod constants;
 mod entry;
 mod evict_oldest;
 mod insert;
+mod learn;
 mod lookup;
 mod new;
+mod pending;
 
 pub use cache_type::Cache;
+pub use learn::{decide, Learn};

@@ -15,10 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::cache_type::Cache;
-use super::constants::ENTRY_CAP;
+use super::constants::{ENTRY_CAP, PENDING_CAP};
 
 impl Cache {
     pub const fn new() -> Self {
-        Self { entries: [None; ENTRY_CAP], len: 0, next_seq: 0 }
+        Self {
+            entries: [None; ENTRY_CAP],
+            len: 0,
+            next_seq: 0,
+            pending: [None; PENDING_CAP],
+            pending_head: 0,
+        }
     }
 }

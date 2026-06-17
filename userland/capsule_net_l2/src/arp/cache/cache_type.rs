@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::ENTRY_CAP;
+use super::constants::{ENTRY_CAP, PENDING_CAP};
 use super::entry::Entry;
 
 pub struct Cache {
     pub(super) entries: [Option<Entry>; ENTRY_CAP],
     pub(super) len: usize,
     pub(super) next_seq: u64,
+    pub(super) pending: [Option<[u8; 4]>; PENDING_CAP],
+    pub(super) pending_head: usize,
 }
