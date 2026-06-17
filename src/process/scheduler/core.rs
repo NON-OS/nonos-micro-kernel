@@ -18,7 +18,6 @@ use super::realtime;
 use super::runqueue::RunQueue;
 use super::task::Task;
 use super::types::Scheduler;
-use core::ptr::addr_of_mut;
 use spin::{Mutex, Once};
 
 static RUNQUEUE: Once<Mutex<RunQueue>> = Once::new();
@@ -31,12 +30,13 @@ pub(crate) fn pending_task_count() -> usize {
     get_queue().lock().len()
 }
 
-static mut GLOBAL_SCHEDULER: Option<Scheduler> = None;
+// Initialized once on the BSP and read-only thereafter. A `Once` removes the
+// former `static mut`, which was a data race the moment a second CPU touched
+// scheduler state.
+static GLOBAL_SCHEDULER: Once<Scheduler> = Once::new();
 
 pub fn init() {
-    unsafe {
-        GLOBAL_SCHEDULER = Some(Scheduler { running_tasks: 0 });
-    }
+    GLOBAL_SCHEDULER.call_once(|| Scheduler { running_tasks: 0 });
     get_queue().lock().clear();
     realtime::init();
     super::deadline::init();
@@ -44,11 +44,7 @@ pub fn init() {
 }
 
 pub fn get() -> Option<&'static Scheduler> {
-    // SAFETY: Read-only access after initialization.
-    unsafe {
-        let ptr = addr_of_mut!(GLOBAL_SCHEDULER);
-        (*ptr).as_ref()
-    }
+    GLOBAL_SCHEDULER.get()
 }
 
 pub fn spawn(task: Task) {
@@ -66,11 +62,15 @@ pub fn run() -> ! {
         super::deadline::run_deadline_tasks();
         realtime::run_realtime_tasks();
 
-        let mut rq = get_queue().lock();
-        if let Some(mut task) = rq.pop() {
+        // Pop under the lock, then release it before running the task. Holding
+        // the run-queue lock across task.run() serialized every other CPU for a
+        // whole quantum and self-deadlocked any task that spawned or woke
+        // another (re-entrant lock on the same CPU).
+        let next = get_queue().lock().pop();
+        if let Some(mut task) = next {
             task.run();
             if !task.is_complete() {
-                rq.push(task);
+                get_queue().lock().push(task);
             }
         } else {
             crate::arch::idle_cpu();

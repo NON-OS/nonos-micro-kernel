@@ -28,45 +28,7 @@ pub fn select_next_process() -> Option<u32> {
     let current = CURRENT_PID.load(Ordering::Relaxed);
     let runnable = get_runnable_pids();
     if runnable.is_empty() {
-        static EMPTY_SHOWN: AtomicU32 = AtomicU32::new(0);
-        if EMPTY_SHOWN.fetch_add(1, Ordering::Relaxed) < 2 {
-            crate::sys::serial::traceln(b"[SCHED] runnable empty");
-        }
         return None;
-    }
-    {
-        static RUNNABLE_SHOWN: AtomicU32 = AtomicU32::new(0);
-        if RUNNABLE_SHOWN.fetch_add(1, Ordering::Relaxed) < 2 {
-            crate::sys::serial::trace(b"[SCHED] runnable count=");
-            crate::sys::serial::trace_hex(runnable.len() as u64);
-            crate::sys::serial::traceln(b"");
-        }
-    }
-    let last = LAST_SCHEDULED_PID.load(Ordering::Relaxed);
-    {
-        use crate::process::nonos_core::PROCESS_TABLE;
-        static QDUMP: AtomicU32 = AtomicU32::new(0);
-        if current == 0x1F && QDUMP.fetch_add(1, Ordering::Relaxed) < 40 {
-            crate::sys::serial::trace(b"[QDUMP] last=");
-            crate::sys::serial::trace_hex(last as u64);
-            crate::sys::serial::trace(b" rq=[");
-            for &p in runnable.iter() {
-                crate::sys::serial::trace_hex(p as u64);
-                if let Some(pcb) = PROCESS_TABLE.find_by_pid(p) {
-                    let s = *pcb.state.lock();
-                    let tag: &[u8] = match s {
-                        crate::process::nonos_core::ProcessState::Ready => b":R,",
-                        crate::process::nonos_core::ProcessState::Running => b":U,",
-                        crate::process::nonos_core::ProcessState::Sleeping => b":S,",
-                        _ => b":?,",
-                    };
-                    crate::sys::serial::trace(tag);
-                } else {
-                    crate::sys::serial::trace(b":?,");
-                }
-            }
-            crate::sys::serial::traceln(b"]");
-        }
     }
     for (idx, prio) in
         [Priority::RealTime, Priority::High, Priority::Normal, Priority::Low, Priority::Idle]
@@ -77,14 +39,6 @@ pub fn select_next_process() -> Option<u32> {
         if let Some(pid) = select_by_priority(&runnable, band_last, current, prio) {
             LAST_PER_BAND[idx].store(pid, Ordering::Relaxed);
             LAST_SCHEDULED_PID.store(pid, Ordering::Relaxed);
-            {
-                static PICKED_SHOWN: AtomicU32 = AtomicU32::new(0);
-                if PICKED_SHOWN.fetch_add(1, Ordering::Relaxed) < 4000 {
-                    crate::sys::serial::trace(b"[SCHED] picked pid=");
-                    crate::sys::serial::trace_hex(pid as u64);
-                    crate::sys::serial::traceln(b"");
-                }
-            }
             return Some(pid);
         }
     }
