@@ -15,13 +15,19 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::directory_sync;
-use crate::protocol::{E_DIRECTORY_PROTO, E_DIRECTORY_SOURCE, E_NO_TCP, E_OK, OP_SYNC_DIRECTORY};
+use crate::protocol::{
+    E_DIRECTORY_PROTO, E_DIRECTORY_SOURCE, E_NO_TCP, E_OK, E_PERM, OP_SYNC_DIRECTORY,
+};
+use crate::server::authz::admin;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::state::TABLE;
 use crate::{setup, topology};
 
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    if !admin(pid) {
+        return respond(pid, OP_SYNC_DIRECTORY, E_PERM, req.request_id, 0, tx);
+    }
     let tcp = setup::tcp_port();
     if tcp == 0 {
         return respond(pid, OP_SYNC_DIRECTORY, E_NO_TCP, req.request_id, 0, tx);

@@ -37,3 +37,4 @@ pub const E_AUTHORITY_UNTRUSTED: u16 = 19;
 pub const E_DIRECTORY_PROTO: u16 = 20;
 pub const E_DIRECTORY_SOURCE: u16 = 21;
 pub const E_TOPOLOGY_EXPIRED: u16 = 22;
+pub const E_PERM: u16 = 23;
