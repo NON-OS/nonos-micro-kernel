@@ -15,13 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::Context;
-use crate::state::{CursorState, GrabTable, SubscriptionTable};
+use crate::state::{CursorState, GrabTable, KeyTargets, SubscriptionTable};
 
 impl Context {
     pub const fn new() -> Self {
         Self {
             subscriptions: SubscriptionTable::new(),
             grabs: GrabTable::new(),
+            key_targets: KeyTargets::new(),
             press: None,
             hover: None,
             hover_tick: 0,
