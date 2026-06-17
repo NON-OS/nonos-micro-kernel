@@ -36,10 +36,11 @@ pub fn handle(sender_pid: u32, req: &Request, tx: &mut [u8]) {
     };
     let prior = *STATE.lease.lock();
     if prior.ipv4 != [0; 4] {
-        let xid = STATE.next_xid();
-        let mut msg = Message::new_request(&mac, xid);
-        msg.ciaddr = prior.ipv4;
-        let _ = release(l2, &msg, prior.server_id);
+        if let Some(xid) = STATE.next_xid() {
+            let mut msg = Message::new_request(&mac, xid);
+            msg.ciaddr = prior.ipv4;
+            let _ = release(l2, &msg, prior.server_id);
+        }
         let _ = clear_lease(ip);
     }
     *STATE.lease.lock() = Lease::empty();
