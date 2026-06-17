@@ -26,3 +26,4 @@ pub const E_NO_LINK: u16 = 5;
 pub const E_NO_NEIGHBOUR: u16 = 6;
 pub const E_TX_BUSY: u16 = 7;
 pub const E_RX_EMPTY: u16 = 8;
+pub const E_PERM: u16 = 9;

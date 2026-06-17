@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::gateway_client;
-use crate::protocol::{E_GATEWAY_PROTO, E_NO_TCP, E_OK, OP_SET_GATEWAY};
+use crate::protocol::{E_GATEWAY_PROTO, E_NO_TCP, E_OK, E_PERM, OP_SET_GATEWAY};
+use crate::server::authz::admin;
 use crate::server::handlers::io::{ip4_at, u16_at};
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
@@ -23,6 +24,9 @@ use crate::setup;
 use crate::state::{Gateway, Transport, TABLE};
 
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    if !admin(pid) {
+        return respond(pid, OP_SET_GATEWAY, E_PERM, req.request_id, 0, tx);
+    }
     let gateway = match parse_gateway(body) {
         Ok(g) => g,
         Err(e) => return respond(pid, OP_SET_GATEWAY, e, req.request_id, 0, tx),

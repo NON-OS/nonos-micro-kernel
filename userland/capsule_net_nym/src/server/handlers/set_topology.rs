@@ -14,13 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{E_OK, OP_SET_TOPOLOGY};
+use crate::protocol::{E_OK, E_PERM, OP_SET_TOPOLOGY};
+use crate::server::authz::admin;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::state::TABLE;
 use crate::topology;
 
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    if !admin(pid) {
+        return respond(pid, OP_SET_TOPOLOGY, E_PERM, req.request_id, 0, tx);
+    }
     if let Err(e) = topology::install(body) {
         let errno = super::topology_errno::map(e);
         return respond(pid, OP_SET_TOPOLOGY, errno, req.request_id, 0, tx);

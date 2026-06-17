@@ -14,12 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{E_BAD_LEN, E_OK, OP_SET_UPSTREAM};
+use crate::protocol::{E_BAD_LEN, E_OK, E_PERM, OP_SET_UPSTREAM};
+use crate::server::authz::admin;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::state::set_upstream;
 
 pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    if !admin(sender_pid) {
+        let _ = respond(sender_pid, OP_SET_UPSTREAM, E_PERM, req.request_id, 0, tx);
+        return;
+    }
     if body.len() != 4 {
         let _ = respond(sender_pid, OP_SET_UPSTREAM, E_BAD_LEN, req.request_id, 0, tx);
         return;

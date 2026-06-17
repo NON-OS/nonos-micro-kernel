@@ -14,12 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{E_OK, OP_ROUTE_CLEAR};
+use crate::protocol::{E_OK, E_PERM, OP_ROUTE_CLEAR};
 use crate::route::ROUTES;
+use crate::server::authz::admin;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 
 pub fn handle(sender_pid: u32, req: &Request, tx: &mut [u8]) {
+    if !admin(sender_pid) {
+        let _ = respond(sender_pid, OP_ROUTE_CLEAR, E_PERM, req.request_id, 0, tx);
+        return;
+    }
     ROUTES.clear();
     let _ = respond(sender_pid, OP_ROUTE_CLEAR, E_OK, req.request_id, 0, tx);
 }

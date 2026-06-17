@@ -15,11 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::nic_client::send_frame as nic_send;
-use crate::protocol::{Request, E_NO_LINK, E_OK, E_TX_BUSY, OP_SEND_FRAME};
+use crate::protocol::{Request, E_NO_LINK, E_OK, E_PERM, E_TX_BUSY, OP_SEND_FRAME};
+use crate::server::authz::authorized_any;
 use crate::server::respond::respond_status_only;
 use crate::state::STATE;
 
 pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    if !authorized_any(sender_pid, &[b"net.ip", b"net.dhcp.client"]) {
+        let _ = respond_status_only(sender_pid, OP_SEND_FRAME, E_PERM, req.request_id, tx);
+        return;
+    }
     let nic = STATE.nic_port();
     if nic == 0 {
         let _ = respond_status_only(sender_pid, OP_SEND_FRAME, E_NO_LINK, req.request_id, tx);

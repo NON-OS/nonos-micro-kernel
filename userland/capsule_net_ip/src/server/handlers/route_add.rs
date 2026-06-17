@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{E_BAD_LEN, E_OK, E_TABLE_FULL, OP_ROUTE_ADD};
+use crate::protocol::{E_BAD_LEN, E_OK, E_PERM, E_TABLE_FULL, OP_ROUTE_ADD};
 use crate::route::{Route, ROUTES};
+use crate::server::authz::admin;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 
@@ -23,6 +24,10 @@ use crate::server::respond::respond;
 // [0;4] means "on-link". Route metric is not on the wire today —
 // longest-prefix-match alone selects the route.
 pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    if !admin(sender_pid) {
+        let _ = respond(sender_pid, OP_ROUTE_ADD, E_PERM, req.request_id, 0, tx);
+        return;
+    }
     if body.len() != 9 {
         let _ = respond(sender_pid, OP_ROUTE_ADD, E_BAD_LEN, req.request_id, 0, tx);
         return;

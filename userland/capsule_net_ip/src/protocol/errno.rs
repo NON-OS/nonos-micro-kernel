@@ -31,3 +31,4 @@ pub const E_L2_FAULT: u16 = 8;
 pub const E_BAD_PACKET: u16 = 9;
 pub const E_RX_EMPTY: u16 = 10;
 pub const E_TABLE_FULL: u16 = 11;
+pub const E_PERM: u16 = 12;
