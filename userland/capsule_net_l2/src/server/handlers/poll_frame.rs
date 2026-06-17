@@ -16,7 +16,8 @@
 
 use crate::ingress::observe;
 use crate::nic_client::{poll_frame as nic_poll, RxError};
-use crate::protocol::{Request, E_NO_LINK, E_OK, E_RX_EMPTY, HDR_LEN, OP_POLL_FRAME};
+use crate::protocol::{Request, E_NO_LINK, E_OK, E_PERM, E_RX_EMPTY, HDR_LEN, OP_POLL_FRAME};
+use crate::server::authz::authorized_any;
 use crate::server::respond::respond;
 use crate::state::STATE;
 
@@ -25,6 +26,10 @@ use crate::state::STATE;
 // observer so ARP replies seed the neighbour cache without the
 // upstream consumer having to know what an ARP packet looks like.
 pub fn handle(sender_pid: u32, req: &Request, tx: &mut [u8]) {
+    if !authorized_any(sender_pid, &[b"net.ip", b"net.dhcp.client"]) {
+        let _ = respond(sender_pid, OP_POLL_FRAME, E_PERM, req.request_id, 0, tx);
+        return;
+    }
     let nic = STATE.nic_port();
     if nic == 0 {
         let _ = respond(sender_pid, OP_POLL_FRAME, E_NO_LINK, req.request_id, 0, tx);

@@ -14,9 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod authz;
-mod handlers;
-mod respond;
-mod runner;
+//! Control-op authorization. A sensitive op is allowed only when the
+//! kernel-attested `sender_pid` matches the owner pid the registry
+//! bound to an authorized caller service. Lookup miss or pid 0 rejects.
 
-pub use runner::run;
+use nonos_libc::mk_service_lookup;
+
+fn owner_pid(service: &[u8]) -> Option<u32> {
+    let mut pid: u32 = 0;
+    let rc = mk_service_lookup(service.as_ptr(), service.len(), core::ptr::null_mut(), &mut pid);
+    if rc != 0 || pid == 0 {
+        return None;
+    }
+    Some(pid)
+}
+
+pub fn authorized(sender_pid: u32, service: &[u8]) -> bool {
+    owner_pid(service) == Some(sender_pid)
+}
+
+pub fn authorized_any(sender_pid: u32, services: &[&[u8]]) -> bool {
+    services.iter().any(|s| authorized(sender_pid, s))
+}
