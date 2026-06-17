@@ -16,8 +16,9 @@
 
 use core::sync::atomic::Ordering;
 
-use crate::protocol::{E_BAD_LEN, E_OK, OP_SET_CONFIG};
+use crate::protocol::{E_BAD_LEN, E_OK, E_PERM, OP_SET_CONFIG};
 use crate::route::{Route, ROUTES};
+use crate::server::authz::authorized;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::state::IFACE;
@@ -25,6 +26,10 @@ use crate::state::IFACE;
 // Body: 4 IPv4 + 1 prefix + 4 gateway = 9 bytes. Installs the
 // lease and seeds a default route through the gateway.
 pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    if !authorized(sender_pid, b"net.dhcp.client") {
+        let _ = respond(sender_pid, OP_SET_CONFIG, E_PERM, req.request_id, 0, tx);
+        return;
+    }
     if body.len() != 9 {
         let _ = respond(sender_pid, OP_SET_CONFIG, E_BAD_LEN, req.request_id, 0, tx);
         return;
