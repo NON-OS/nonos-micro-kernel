@@ -19,6 +19,9 @@
 // malformed server reply.
 pub fn mask_to_prefix(mask: &[u8; 4]) -> Option<u8> {
     let bits = u32::from_be_bytes(*mask);
+    if bits == 0 {
+        return None;
+    }
     let prefix = bits.leading_ones();
     let trailing = bits.trailing_zeros();
     if prefix + trailing == 32 {
