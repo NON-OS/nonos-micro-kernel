@@ -37,7 +37,8 @@ pub struct ReplyFrame {
 // not require a response.
 pub fn on_inbound(iface: &Iface, cache: &mut Cache, payload: &[u8]) -> Option<ReplyFrame> {
     let pkt = ArpPacket::parse(payload)?;
-    let solicited = cache.is_pending(pkt.sender_ip) || pkt.target_ip == iface.ipv4;
+    let solicited = cache.is_pending(pkt.sender_ip)
+        || (pkt.oper == OPER_REQUEST && pkt.target_ip == iface.ipv4);
     match crate::arp::cache::decide(cache.lookup(&pkt.sender_ip), pkt.sender_mac, solicited) {
         crate::arp::cache::Learn::Insert | crate::arp::cache::Learn::Refresh => {
             cache.insert(pkt.sender_ip, pkt.sender_mac);
