@@ -45,6 +45,8 @@ pub const MAX_RETX: u8 = 8;
 
 pub const REASM_MAX_SEGS: usize = 32;
 
+pub const MAX_CONN_PER_PID: usize = 32;
+
 pub const INIT_CWND: u32 = 3 * MSS as u32;
 pub const DUP_ACK_THRESH: u8 = 3;
 
