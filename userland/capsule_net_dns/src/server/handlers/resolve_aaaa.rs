@@ -25,7 +25,10 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         Ok(v) => v,
         Err(e) => return status(sender_pid, req, e, tx),
     };
-    let xid = xid();
+    let xid = match xid() {
+        Some(v) => v,
+        None => return status(sender_pid, req, E_SERVFAIL, tx),
+    };
     let mut query = [0u8; 512];
     let len = match build_aaaa_query(xid, qname, &mut query) {
         Ok(n) => n,

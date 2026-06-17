@@ -34,9 +34,10 @@ pub fn name(body: &[u8]) -> Result<&str, u16> {
 
 pub fn exchange(query: &[u8], xid: u16) -> Result<Answer, u16> {
     let upstream = upstream();
-    send_to(udp_port(), local_port(), upstream, DNS_PORT, query).map_err(|_| E_TIMEOUT)?;
+    let lport = local_port().ok_or(E_TIMEOUT)?;
+    send_to(udp_port(), lport, upstream, DNS_PORT, query).map_err(|_| E_TIMEOUT)?;
     for _ in 0..RECV_TRIES {
-        match recv_from(udp_port(), local_port()) {
+        match recv_from(udp_port(), lport) {
             Ok(d) if d.src == upstream && d.src_port == DNS_PORT => {
                 match parse_response(query, &d.payload, xid) {
                     Err(E_TIMEOUT) => mk_yield(),
@@ -52,7 +53,7 @@ pub fn exchange(query: &[u8], xid: u16) -> Result<Answer, u16> {
     Err(E_TIMEOUT)
 }
 
-pub fn xid() -> u16 {
+pub fn xid() -> Option<u16> {
     next_xid()
 }
 

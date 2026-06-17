@@ -30,7 +30,10 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     if let Some(ip) = CACHE.lock().lookup(qname, now) {
         return answer(sender_pid, req, ip, tx);
     }
-    let xid = xid();
+    let xid = match xid() {
+        Some(v) => v,
+        None => return status(sender_pid, req, E_SERVFAIL, tx),
+    };
     let mut query = [0u8; 512];
     let len = match build_a_query(xid, qname, &mut query) {
         Ok(n) => n,
