@@ -21,6 +21,7 @@ mod constants;
 mod cpu;
 mod init;
 mod ipi_handler;
+mod ipi_idt;
 mod preempt;
 mod state;
 mod stats;

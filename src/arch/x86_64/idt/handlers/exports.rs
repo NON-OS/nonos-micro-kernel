@@ -34,3 +34,8 @@ pub(crate) use super::isr_irqs::{
     isr_irq2 as isr_34, isr_irq3 as isr_35, isr_irq4 as isr_36, isr_irq5 as isr_37,
     isr_irq6 as isr_38, isr_irq7 as isr_39, isr_irq8 as isr_40, isr_irq9 as isr_41, isr_syscall,
 };
+
+pub(crate) use super::isr_irqs::{
+    isr_ipi_64 as isr_64, isr_ipi_65 as isr_65, isr_ipi_66 as isr_66, isr_ipi_67 as isr_67,
+    isr_ipi_68 as isr_68,
+};

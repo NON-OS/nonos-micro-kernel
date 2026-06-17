@@ -34,6 +34,10 @@ pub fn init_bsp() -> Result<(), &'static str> {
     let cpu_count = topology::detect_cpus();
     CPU_COUNT.store(cpu_count, Ordering::Release);
     percpu::init_bsp();
+    // Bind the IPI vectors now so cross-CPU TLB shootdown, panic, stop, and
+    // call-function delivery work the moment APs come online. Harmless on a
+    // single-CPU boot: nothing sends IPIs until APs start.
+    super::super::ipi_idt::register_ipi_handlers();
 
     crate::log_info!("[SMP] BSP initialized: APIC ID={}, {} CPUs detected", bsp_apic, cpu_count);
 

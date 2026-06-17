@@ -22,6 +22,7 @@ pub(super) mod regs;
 mod state;
 mod stop_timer;
 mod timer;
+mod x2apic;
 
 pub use constants::{LAPIC_PHYS_BASE, TIMER_VECTOR};
 pub use eoi::eoi;
