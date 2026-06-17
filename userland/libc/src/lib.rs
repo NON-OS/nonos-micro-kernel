@@ -23,6 +23,7 @@ pub mod broker;
 pub mod capsule_load;
 pub mod crypto;
 pub mod debug;
+pub mod fuzz;
 pub mod graphics;
 pub mod heap;
 pub mod ipc;
@@ -80,4 +81,4 @@ pub use surface_registry::{
 };
 pub use syscall::call_raw as mk_syscall_raw;
 pub use time::{mk_time_millis, mk_time_rtc, RtcTime};
-pub use unistd::{mk_exit, mk_yield};
+pub use unistd::{mk_exit, mk_sleep_ms, mk_yield};
