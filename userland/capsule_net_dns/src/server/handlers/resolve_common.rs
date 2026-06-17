@@ -18,7 +18,7 @@ use core::str;
 
 use nonos_libc::mk_yield;
 
-use crate::dns::{first_address, Answer, RCODE_NO_ERROR, RCODE_NXDOMAIN};
+use crate::dns::{first_address, question_matches, Answer, RCODE_NO_ERROR, RCODE_NXDOMAIN};
 use crate::protocol::{E_NAME_INVALID, E_NXDOMAIN, E_SERVFAIL, E_TIMEOUT};
 use crate::state::{local_port, next_xid, udp_port, upstream, DNS_PORT};
 use crate::udp_client::{recv_from, send_to, UdpRecvError};
@@ -38,7 +38,10 @@ pub fn exchange(query: &[u8], xid: u16) -> Result<Answer, u16> {
     for _ in 0..RECV_TRIES {
         match recv_from(udp_port(), local_port()) {
             Ok(d) if d.src == upstream && d.src_port == DNS_PORT => {
-                return parse_response(&d.payload, xid);
+                match parse_response(query, &d.payload, xid) {
+                    Err(E_TIMEOUT) => mk_yield(),
+                    other => return other,
+                };
             }
             Ok(_) | Err(UdpRecvError::Empty) => {
                 mk_yield();
@@ -53,9 +56,9 @@ pub fn xid() -> u16 {
     next_xid()
 }
 
-fn parse_response(payload: &[u8], xid: u16) -> Result<Answer, u16> {
+fn parse_response(query: &[u8], payload: &[u8], xid: u16) -> Result<Answer, u16> {
     let (hdr, answer) = first_address(payload).map_err(|_| E_SERVFAIL)?;
-    if hdr.id != xid {
+    if hdr.id != xid || !question_matches(query, payload) {
         return Err(E_TIMEOUT);
     }
     if hdr.rcode() == RCODE_NXDOMAIN {
