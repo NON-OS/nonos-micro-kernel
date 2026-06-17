@@ -29,6 +29,7 @@ impl Context {
             self.hover = None;
         }
         self.grabs.release(pid);
+        self.key_targets.forget_pid(pid);
         if self.shell_pid == pid {
             self.shell_pid = 0;
         }

@@ -18,6 +18,7 @@ pub mod context;
 pub mod cursor;
 pub mod grabs;
 pub mod hover;
+pub mod key_targets;
 pub mod press;
 pub mod subscriptions;
 
@@ -25,5 +26,6 @@ pub use context::Context;
 pub use cursor::CursorState;
 pub use grabs::GrabTable;
 pub use hover::Hover;
+pub use key_targets::KeyTargets;
 pub use press::Press;
 pub use subscriptions::SubscriptionTable;
