@@ -29,6 +29,23 @@ impl PagingManager {
         virtual_addr: VirtAddr,
         stats: &PagingStatistics,
     ) -> PagingResult<()> {
+        // Only user-space addresses may be demand-backed. A not-present fault
+        // in the kernel half is never a legitimate lazy mapping; backing it
+        // silently would hand a capsule kernel-range memory. Surface it as an
+        // unhandled fault so the fault path kills the offender (user) or traps
+        // the real kernel bug, instead of papering over it.
+        if !layout::in_user_space(virtual_addr.as_u64()) {
+            return Err(PagingError::UnhandledPageFault);
+        }
+
+        // Charge the page against the faulting process's demand budget. A
+        // runaway capsule is refused here and killed by the fault path instead
+        // of exhausting physical memory.
+        let pid = crate::process::current_pid().unwrap_or(0);
+        if !super::demand_cap::charge(pid) {
+            return Err(PagingError::UnhandledPageFault);
+        }
+
         let new_frame = frame_alloc::allocate_frame().ok_or(PagingError::FrameAllocationFailed)?;
 
         unsafe {
