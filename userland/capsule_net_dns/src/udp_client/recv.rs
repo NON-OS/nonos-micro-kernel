@@ -56,6 +56,9 @@ pub fn recv_from(udp_port: u32, local_port: u16) -> Result<UdpDatagram, UdpRecvE
         return Err(UdpRecvError::Refused(errno));
     }
     let end = HDR_LEN + len as usize;
+    if end > resp.len() {
+        return Err(UdpRecvError::BadResponse);
+    }
     let mut src = [0u8; 4];
     src.copy_from_slice(&resp[HDR_LEN..HDR_LEN + 4]);
     let src_port = u16::from_le_bytes([resp[HDR_LEN + 4], resp[HDR_LEN + 5]]);
