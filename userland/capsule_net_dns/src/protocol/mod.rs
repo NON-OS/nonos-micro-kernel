@@ -20,7 +20,7 @@ mod limits;
 mod ops;
 
 pub use errno::{
-    E_BAD_LEN, E_BAD_MAGIC, E_BAD_OP, E_BAD_VERSION, E_NAME_INVALID, E_NXDOMAIN, E_OK,
+    E_BAD_LEN, E_BAD_MAGIC, E_BAD_OP, E_BAD_VERSION, E_NAME_INVALID, E_NXDOMAIN, E_OK, E_PERM,
     E_SERVFAIL, E_TIMEOUT,
 };
 pub use header::MAGIC;

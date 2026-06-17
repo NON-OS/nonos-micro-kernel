@@ -23,3 +23,4 @@ pub const E_TIMEOUT: u16 = 6;
 pub const E_NXDOMAIN: u16 = 7;
 pub const E_SERVFAIL: u16 = 8;
 pub const E_NAME_INVALID: u16 = 9;
+pub const E_PERM: u16 = 10;

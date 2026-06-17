@@ -14,12 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{E_OK, OP_FLUSH_CACHE};
+use crate::protocol::{E_OK, E_PERM, OP_FLUSH_CACHE};
+use crate::server::authz::admin;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::state::CACHE;
 
 pub fn handle(sender_pid: u32, req: &Request, tx: &mut [u8]) {
+    if !admin(sender_pid) {
+        let _ = respond(sender_pid, OP_FLUSH_CACHE, E_PERM, req.request_id, 0, tx);
+        return;
+    }
     CACHE.lock().tick(u64::MAX);
     let _ = respond(sender_pid, OP_FLUSH_CACHE, E_OK, req.request_id, 0, tx);
 }
