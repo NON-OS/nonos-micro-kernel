@@ -41,4 +41,12 @@ irq_entry!(isr_irq13, 45);
 irq_entry!(isr_irq14, 46);
 irq_entry!(isr_irq15, 47);
 irq_entry!(isr_generic_48, 48);
+// Inter-processor interrupt vectors (0x40-0x44). Without these gates the first
+// IPI sent once SMP is enabled faults the target CPU; the handlers route
+// through the registered other-handlers and signal LAPIC EOI.
+irq_entry!(isr_ipi_64, 64);
+irq_entry!(isr_ipi_65, 65);
+irq_entry!(isr_ipi_66, 66);
+irq_entry!(isr_ipi_67, 67);
+irq_entry!(isr_ipi_68, 68);
 irq_entry!(isr_syscall, 0x80);

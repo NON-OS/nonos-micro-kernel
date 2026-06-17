@@ -36,5 +36,14 @@ pub unsafe fn setup_irqs(idt: &mut Idt) {
     idt.entries[45] = IdtEntry::interrupt_gate(isr_45, KERNEL_CS, 0, DPL_KERNEL);
     idt.entries[46] = IdtEntry::interrupt_gate(isr_46, KERNEL_CS, 0, DPL_KERNEL);
     idt.entries[47] = IdtEntry::interrupt_gate(isr_47, KERNEL_CS, 0, DPL_KERNEL);
+    // Inter-processor interrupt vectors 0x40-0x44 (decimal 64-68). Installed
+    // unconditionally: the handlers only fire once SMP sends IPIs, but having
+    // the gates present also stops a stray vector in this range from
+    // escalating to a fault.
+    idt.entries[64] = IdtEntry::interrupt_gate(isr_64, KERNEL_CS, 0, DPL_KERNEL);
+    idt.entries[65] = IdtEntry::interrupt_gate(isr_65, KERNEL_CS, 0, DPL_KERNEL);
+    idt.entries[66] = IdtEntry::interrupt_gate(isr_66, KERNEL_CS, 0, DPL_KERNEL);
+    idt.entries[67] = IdtEntry::interrupt_gate(isr_67, KERNEL_CS, 0, DPL_KERNEL);
+    idt.entries[68] = IdtEntry::interrupt_gate(isr_68, KERNEL_CS, 0, DPL_KERNEL);
     idt.entries[0x80] = IdtEntry::trap_gate(isr_syscall, KERNEL_CS, 0, DPL_USER);
 }

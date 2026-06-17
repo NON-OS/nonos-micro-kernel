@@ -32,6 +32,10 @@ pub fn init_local_apic() {
     }
     serial::println(b"[APIC] Initializing Local APIC...");
 
+    // Detect x2APIC hand-off before touching any register: if firmware left
+    // the APIC in x2APIC mode the accessors below must use MSRs, not MMIO.
+    super::x2apic::detect_mode();
+
     unsafe {
         // Boot phase: still on identity-mapped physical. VM init will
         // republish to the kernel-half UC virtual page via rebind.

@@ -28,3 +28,9 @@ pub(super) static LAPIC_BASE: AtomicU64 = AtomicU64::new(LOCAL_APIC_DEFAULT_BASE
 // Init guard for the surface; readers in eoi() and timer fast path
 // skip work when this is false rather than risk poking an uninit base.
 pub static LAPIC_INIT: AtomicBool = AtomicBool::new(false);
+
+// True when firmware handed off with the local APIC already in x2APIC mode.
+// In that mode the MMIO window is disabled and registers are MSRs, so the
+// register accessors route through rdmsr/wrmsr. Latched once at init; never
+// forced on, so an xAPIC machine (QEMU included) keeps the MMIO path.
+pub(in crate::sys::apic) static LAPIC_X2: AtomicBool = AtomicBool::new(false);
