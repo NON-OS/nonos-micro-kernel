@@ -24,9 +24,14 @@ pub const DEFAULT_UPSTREAM: [u8; 4] = [1, 1, 1, 1];
 
 pub static CACHE: Mutex<Cache> = Mutex::new(Cache::new());
 pub static UDP_PORT: AtomicU32 = AtomicU32::new(0);
-static LOCAL_PORT: AtomicU16 = AtomicU16::new(53535);
-static XID: AtomicU16 = AtomicU16::new(0x3011);
+static LOCAL_PORT: AtomicU16 = AtomicU16::new(0);
 static UPSTREAM: Mutex<[u8; 4]> = Mutex::new(DEFAULT_UPSTREAM);
+
+fn rand_u16() -> u16 {
+    let mut b = [0u8; 2];
+    let _ = nonos_libc::crypto_random(b.as_mut_ptr(), 2);
+    u16::from_le_bytes(b)
+}
 
 pub fn udp_port() -> u32 {
     UDP_PORT.load(Ordering::Acquire)
@@ -37,11 +42,19 @@ pub fn set_udp_port(port: u32) {
 }
 
 pub fn local_port() -> u16 {
-    LOCAL_PORT.load(Ordering::Acquire)
+    let current = LOCAL_PORT.load(Ordering::Acquire);
+    if current != 0 {
+        return current;
+    }
+    let port = 49152u16 + (rand_u16() as u32 % 16384) as u16;
+    match LOCAL_PORT.compare_exchange(0, port, Ordering::AcqRel, Ordering::Acquire) {
+        Ok(_) => port,
+        Err(existing) => existing,
+    }
 }
 
 pub fn next_xid() -> u16 {
-    XID.fetch_add(1, Ordering::AcqRel).wrapping_add(1)
+    rand_u16()
 }
 
 pub fn now_ms() -> u64 {
