@@ -1,0 +1,96 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use nonos_libc::{heap_init, mk_debug, mk_exit, mk_yield, HeapError};
+
+use crate::term::state::State;
+use crate::term::util::copy_into;
+
+const READY_ATTEMPTS: u32 = 100_000;
+
+// Headless capsule entry for the autorun-selftest build: bring up the heap,
+// wait until vfs answers, drive the unproven shell paths, then exit. No
+// surface, no compositor, no focus handoff -- this grades shell logic, not
+// the GUI app loop.
+pub fn main() -> ! {
+    match heap_init() {
+        Ok(()) | Err(HeapError::AlreadyInitialized) => {}
+        Err(_) => exit_fail(b"[TERMINAL-TEST] FAIL heap\n"),
+    }
+    let mut state = State::new();
+    let mut attempts = 0u32;
+    while !ready(&mut state) {
+        attempts += 1;
+        if attempts >= READY_ATTEMPTS {
+            exit_fail(b"[TERMINAL-TEST] FAIL vfs never ready\n");
+        }
+        mk_yield();
+    }
+    run(&mut state);
+    mk_exit(0);
+}
+
+fn exit_fail(msg: &[u8]) -> ! {
+    let _ = mk_debug(msg.as_ptr(), msg.len());
+    mk_exit(1);
+}
+
+// True once `read` of a vfs-seeded file succeeds, so the assertions only
+// run after the capsule stack has settled and vfs is answering.
+fn ready(state: &mut State) -> bool {
+    run_cmd(state, b"read /readme.txt");
+    state.last_status
+}
+
+// Drive the previously unproven shell paths through the normal submit
+// path and emit one serial marker per step so a headless boot grades
+// itself: echo, a vfs write/read round trip, a pipe, and `||` gating.
+fn run(state: &mut State) {
+    run_cmd(state, b"echo selfcheck");
+    mark(b"echo", visible_has(state, b"selfcheck"));
+
+    run_cmd(state, b"write /st.txt smoke123");
+    run_cmd(state, b"read /st.txt");
+    mark(b"vfs", visible_has(state, b"smoke123"));
+
+    run_cmd(state, b"echo a b c | wc");
+    mark(b"pipe", visible_has(state, b"1"));
+
+    run_cmd(state, b"read /nope.txt || echo recovered");
+    mark(b"statement", visible_has(state, b"recovered"));
+
+    let pass = b"[TERMINAL-TEST] PASS\n";
+    let _ = mk_debug(pass.as_ptr(), pass.len());
+}
+
+fn run_cmd(state: &mut State, cmd: &[u8]) {
+    state.scrollback.clear();
+    state.line.replace(cmd);
+    let _ = crate::event::on_enter(state);
+}
+
+fn visible_has(state: &State, needle: &[u8]) -> bool {
+    state.scrollback.visible().rows().any(|(row, _)| row == needle)
+}
+
+fn mark(step: &[u8], ok: bool) {
+    let mut buf = [0u8; 64];
+    let mut n = 0;
+    n += copy_into(&mut buf[n..], b"[TERMINAL-TEST] ");
+    n += copy_into(&mut buf[n..], step);
+    n += copy_into(&mut buf[n..], if ok { b" ok\n" } else { b" FAIL\n" });
+    let _ = mk_debug(buf.as_ptr(), n);
+}

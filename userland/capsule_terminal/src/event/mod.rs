@@ -27,6 +27,6 @@ mod on_tab;
 mod on_up;
 mod paste_clipboard;
 
-#[cfg(feature = "nonos-autorun-rg")]
+#[cfg(any(feature = "nonos-autorun-rg", feature = "nonos-autorun-selftest"))]
 pub use on_enter::on_enter;
 pub use on_event::on_event;
