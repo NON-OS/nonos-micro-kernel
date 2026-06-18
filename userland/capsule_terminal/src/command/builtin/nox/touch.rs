@@ -14,42 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod alias;
-mod apps;
-mod caps;
-mod children;
-mod clear;
-mod copy;
-mod date;
-mod dispatch;
-mod display;
-mod du;
-mod echo;
-mod ensure_pid;
-mod enter;
-mod find;
-mod help;
-mod history;
-mod id;
-mod install;
-mod ls;
-mod mk;
-mod motd;
-mod mv;
-mod pathname;
-mod ping;
-mod read;
-mod rm;
-mod run;
-mod set;
-mod stat;
-mod touch;
-mod svc;
-mod sysinfo;
-mod unalias;
-mod unknown;
-mod unset;
-mod whereis;
-mod write;
+use nonos_app_skeleton::clients::vfs::{stat, write_file};
 
-pub use dispatch::dispatch;
+use super::ensure_pid::ensure_pid;
+use crate::term::cwd::resolve;
+use crate::term::state::State;
+
+pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
+    if args.is_empty() {
+        state.scrollback.push_error(b"usage: touch <file>");
+        return false;
+    }
+    let pid = ensure_pid(state);
+    let path = resolve(state.cwd.as_bytes(), args[0]);
+    if stat(pid, &path).is_ok() {
+        return true;
+    }
+    match write_file(pid, &path, b"") {
+        Ok(()) => true,
+        Err(e) => {
+            state.scrollback.push_error(e.as_bytes());
+            false
+        }
+    }
+}

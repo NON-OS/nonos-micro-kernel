@@ -15,8 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::{
-    alias, apps, caps, clear, copy, display, echo, enter, help, history, id, install, ls, mk, motd,
-    mv, ping, read, rm, run, set, stat, svc, sysinfo, unalias, unknown, unset, whereis, write,
+    alias, apps, caps, clear, copy, date, display, du, echo, enter, find, help, history, id,
+    install, ls, mk, motd, mv, pathname, ping, read, rm, run, set, stat, svc, sysinfo, touch,
+    unalias, unknown, unset, whereis, write,
 };
 use crate::command::output::Output;
 use crate::command::Outcome;
@@ -48,7 +49,17 @@ pub fn dispatch(state: &mut State, args: &[&[u8]]) -> Outcome {
         b"rm" | b"del" => rm::run(state, rest),
         b"mv" | b"move" => mv::run(state, rest),
         b"stat" => stat::run(state, rest),
-        b"caps" => {
+        b"find" => find::run(state, rest),
+        b"du" => du::run(state, rest),
+        b"touch" => touch::run(state, rest),
+        b"basename" => pathname::basename(state, rest),
+        b"dirname" => pathname::dirname(state, rest),
+        b"date" => date::run(state),
+        b"env" => {
+            set::run(state, &[]);
+            true
+        }
+        b"caps" | b"ps" => {
             caps::run(state);
             true
         }

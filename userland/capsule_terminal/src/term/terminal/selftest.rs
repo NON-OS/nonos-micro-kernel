@@ -72,14 +72,44 @@ fn run(state: &mut State) {
     run_cmd(state, b"read /nope.txt || echo recovered");
     mark(b"statement", visible_has(state, b"recovered"));
 
+    run_ext(state);
+
     let pass = b"[TERMINAL-TEST] PASS\n";
     let _ = mk_debug(pass.as_ptr(), pass.len());
+}
+
+// Grade the commands added for the Warp/coreutils pass: path utilities,
+// the cut filter, touch+&&, recursive find, and clock/size queries that
+// only assert success because their output is not deterministic.
+fn run_ext(state: &mut State) {
+    run_cmd(state, b"basename /a/b/file.txt");
+    mark(b"basename", visible_has(state, b"file.txt"));
+
+    run_cmd(state, b"dirname /a/b/file.txt");
+    mark(b"dirname", visible_has(state, b"/a/b"));
+
+    run_cmd(state, b"echo a:b:c | cut -d: -f2");
+    mark(b"cut", visible_has(state, b"b"));
+
+    run_cmd(state, b"touch /tt.txt && echo created");
+    mark(b"touch", visible_has(state, b"created"));
+
+    run_cmd(state, b"find /");
+    mark(b"find", visible_has(state, b"/readme.txt"));
+
+    mark(b"du", ok_cmd(state, b"du /"));
+    mark(b"date", ok_cmd(state, b"date"));
 }
 
 fn run_cmd(state: &mut State, cmd: &[u8]) {
     state.scrollback.clear();
     state.line.replace(cmd);
     let _ = crate::event::on_enter(state);
+}
+
+fn ok_cmd(state: &mut State, cmd: &[u8]) -> bool {
+    run_cmd(state, cmd);
+    state.last_status
 }
 
 fn visible_has(state: &State, needle: &[u8]) -> bool {
