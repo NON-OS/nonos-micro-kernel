@@ -91,6 +91,10 @@ fn run_ext(state: &mut State) {
     run_cmd(state, b"echo a:b:c | cut -d: -f2");
     mark(b"cut", visible_has(state, b"b"));
 
+    run_cmd(state, b"write /rin.txt redirin");
+    run_cmd(state, b"grep redirin < /rin.txt");
+    mark(b"redir-in", visible_has(state, b"redirin"));
+
     run_cmd(state, b"touch /tt.txt && echo created");
     mark(b"touch", visible_has(state, b"created"));
 
@@ -99,6 +103,12 @@ fn run_ext(state: &mut State) {
 
     mark(b"du", ok_cmd(state, b"du /"));
     mark(b"date", ok_cmd(state, b"date"));
+
+    run_cmd(state, b"ifconfig");
+    mark(b"ifconfig", visible_has(state, b"net0: down"));
+
+    run_cmd(state, b"nslookup nonos.test");
+    mark(b"nslookup", visible_has(state, b"nslookup: dns unavailable"));
 }
 
 fn run_cmd(state: &mut State, cmd: &[u8]) {
