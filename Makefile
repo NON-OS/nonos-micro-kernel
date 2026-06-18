@@ -1885,7 +1885,10 @@ nonos-mk-boot-desktop-gui:
 
 .PHONY: nonos-mk-boot-terminal
 nonos-mk-boot-terminal:
-	@./tests/boot/terminal_round_trip.sh
+	@./tests/boot/terminal_round_trip.sh; rc=$$?; \
+		echo "Restoring GUI terminal capsule (undo autorun-selftest artifact)..."; \
+		$(MAKE) -B nonos-mk-terminal-sign >/dev/null 2>&1; \
+		exit $$rc
 
 .PHONY: nonos-mk-boot-ecosystem-gui-smoke
 nonos-mk-boot-ecosystem-gui-smoke:
