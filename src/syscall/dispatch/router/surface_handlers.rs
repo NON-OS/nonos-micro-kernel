@@ -53,10 +53,15 @@ pub(super) fn do_register(desc_ptr: u64) -> SyscallResult {
         Ok(v) => v,
         Err(_) => return errno(EFAULT),
     };
-    let pages = ((desc.byte_len as usize) + 4095) / 4096;
-    if pages == 0 || (desc.base_va & 0xFFF) != 0 {
+    // Bound the user-supplied length before deriving a page count: an
+    // unbounded byte_len would force a huge Vec allocation and a near-infinite
+    // translate loop in the kernel. 64 MiB covers any realistic surface
+    // (4K BGRA is ~33 MiB) while capping the work at 16384 pages.
+    const MAX_SURFACE_BYTES: u64 = 64 * 1024 * 1024;
+    if desc.byte_len == 0 || desc.byte_len > MAX_SURFACE_BYTES || (desc.base_va & 0xFFF) != 0 {
         return errno(EINVAL);
     }
+    let pages = ((desc.byte_len as usize) + 4095) / 4096;
     let mut frames = Vec::with_capacity(pages);
     for i in 0..pages {
         let va = VirtAddr::new(desc.base_va + (i as u64) * 4096);

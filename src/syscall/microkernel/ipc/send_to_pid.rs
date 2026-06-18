@@ -42,7 +42,7 @@ fn trace(caller_pid: u32, dest_pid: u64, len: usize) {
 // registry. The kernel still records the sender in the message
 // envelope so the receiver can chain a follow-up reply.
 pub fn sys_ipc_send_to_pid(dest_pid: u64, buf: u64, len: usize) -> i64 {
-    if len == 0 {
+    if len == 0 || len > crate::ipc::channel::MAX_MESSAGE_SIZE {
         return ERRNO_INVAL;
     }
     if dest_pid == 0 || dest_pid > u32::MAX as u64 {
