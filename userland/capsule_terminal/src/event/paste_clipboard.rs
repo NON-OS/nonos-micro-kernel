@@ -22,7 +22,7 @@ use crate::term::state::State;
 pub fn paste_clipboard(state: &mut State) -> EventOutcome {
     let mut buf = [0u8; COLS];
     let n = match clipboard_paste(&mut buf) {
-        Ok(n) => n,
+        Ok(n) => n.min(buf.len()),
         Err(_) => return EventOutcome::Idle,
     };
     let mut changed = false;
