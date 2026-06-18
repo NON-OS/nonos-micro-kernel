@@ -41,15 +41,19 @@ pub fn wait_for_vsync(display_id: u32, pid: u32) -> Result<u64, super::types::Re
     }
     let period = vsync_period_ns(display_id);
     let now = crate::time::now_ns();
-    let last = LAST_VBLANK_NS.load(Ordering::Acquire);
-    let mut deadline = if last == 0 { now + period } else { last + period };
-    while deadline <= now {
-        deadline += period;
-    }
+    // Next vblank on a fixed phase grid derived from absolute time. Every
+    // surface that waits within the same frame lands on the same boundary and
+    // wakes together. The previous version advanced one shared running
+    // deadline per waiter, so the compositor, wm, shell, and cursor were each
+    // pushed a full period past the last caller and ended up refreshing at
+    // target_hz / number_of_waiters, which is what made the desktop feel slow.
+    let deadline = (now / period + 1) * period;
     while crate::time::now_ns() < deadline {
         crate::sched::sleep_until(pid, deadline_ms(deadline));
         crate::sched::yield_now();
     }
-    LAST_VBLANK_NS.store(deadline, Ordering::Release);
+    // Published only as a monotonic vblank timestamp for readers; it no longer
+    // feeds back into the next deadline, so waiters can never serialize.
+    LAST_VBLANK_NS.fetch_max(deadline, Ordering::AcqRel);
     Ok(deadline)
 }
