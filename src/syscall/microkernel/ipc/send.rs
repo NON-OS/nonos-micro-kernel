@@ -49,7 +49,10 @@ pub fn sys_ipc_send(endpoint: u64, buf: u64, len: usize) -> i64 {
 }
 
 pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correlation: u64) -> i64 {
-    if len == 0 {
+    // Reject oversize before allocating: len is validated against the 64 MiB
+    // usercopy ceiling downstream, but the message itself is capped at 1 MiB,
+    // so bound it here to avoid a capsule forcing huge transient allocations.
+    if len == 0 || len > crate::ipc::channel::MAX_MESSAGE_SIZE {
         return ERRNO_INVAL;
     }
     if crate::usercopy::validate_user_read(buf, len).is_err() {
