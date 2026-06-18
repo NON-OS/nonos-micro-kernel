@@ -33,7 +33,7 @@ pub(super) struct ResponseBytes {
 }
 
 pub(super) fn round_trip(request_id: u32, request: Vec<u8>) -> Result<ResponseBytes, UsbHidError> {
-    let _guard = TRANSPORT_LOCK.lock();
+    let _guard = transport::lock_yielding(&TRANSPORT_LOCK);
     let resp = transport::round_trip(
         request_id,
         &request,

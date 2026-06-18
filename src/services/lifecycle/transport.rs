@@ -27,11 +27,28 @@ use alloc::format;
 use alloc::vec::Vec;
 use core::sync::atomic::{AtomicU32, Ordering};
 
+use spin::{Mutex, MutexGuard};
+
 use super::state::CapsuleState;
 use crate::ipc::nonos_channel::IpcMessage;
 use crate::ipc::nonos_inbox;
 
 const RECV_YIELDS: u32 = 50_000;
+
+/// Acquire a per-capsule transport lock without busy-spinning. `round_trip`
+/// yields the CPU while it waits for the reply, so the holder is off-core for
+/// the whole exchange; a contending caller must yield too rather than spin, or
+/// on a single CPU with interrupts disabled it pins the core and the holder
+/// can never run to release the lock (the deadlock involuntary preemption now
+/// makes reachable). On contention, hand the CPU to the holder and retry.
+pub fn lock_yielding(lock: &'static Mutex<()>) -> MutexGuard<'static, ()> {
+    loop {
+        if let Some(guard) = lock.try_lock() {
+            return guard;
+        }
+        crate::sched::yield_now();
+    }
+}
 
 /// Bump a per-capsule request-id counter, skipping zero so callers can
 /// reserve `0` for "no request in flight". The atomic is owned by
