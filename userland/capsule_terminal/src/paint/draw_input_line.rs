@@ -16,12 +16,19 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::constants::{CELL_WIDTH, TEXT_LEFT};
+use super::constants::{CELL_WIDTH, LINE_HEIGHT, TEXT_LEFT};
 use super::draw_cursor::draw_cursor;
 use crate::term::state::State;
-use crate::term::theme::{FOREGROUND, PATH, PROMPT};
+use crate::term::theme::{ACCENT, FOREGROUND, INPUT_BG, PATH, PROMPT};
 
 pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32) {
+    // Warp-style input bar: an inset panel behind the prompt with a left
+    // accent stripe, drawn first so the prompt and text land on top.
+    let bar_x = TEXT_LEFT / 2;
+    let bar_w = fb.width.saturating_sub(TEXT_LEFT);
+    let bar_y = y.saturating_sub(3);
+    fb.fill_rect(bar_x, bar_y, bar_w, LINE_HEIGHT + 4, INPUT_BG);
+    fb.fill_rect(bar_x, bar_y, 2, LINE_HEIGHT + 4, ACCENT);
     // Character cells that fit between the left inset and an equal right margin.
     let total_cells = (fb.width.saturating_sub(TEXT_LEFT * 2) / CELL_WIDTH) as usize;
     // Prompt is glyph + path + trailing space; cap the path to a third of the
@@ -29,7 +36,7 @@ pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32) {
     let cwd = state.cwd.as_bytes();
     let take = cwd.len().min((total_cells / 3).max(1));
     let prompt_cells = 1 + take + 1;
-    fb.text(TEXT_LEFT, y, b"\xd8", PROMPT);
+    fb.text(TEXT_LEFT, y, b"\x10", PROMPT);
     fb.text(TEXT_LEFT + CELL_WIDTH, y, &cwd[cwd.len() - take..], PATH);
 
     // Horizontal scroll: slide a body_cells-wide window so the cursor is always

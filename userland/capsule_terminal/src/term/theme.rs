@@ -25,3 +25,4 @@ pub const DIM: u32 = 0xFF5C6370;
 pub const HEADER_BG: u32 = 0xFF21252B;
 pub const HEADER_RULE: u32 = 0xFF3E4451;
 pub const FOOTER_BG: u32 = 0xFF21252B;
+pub const INPUT_BG: u32 = 0xFF272B33;
