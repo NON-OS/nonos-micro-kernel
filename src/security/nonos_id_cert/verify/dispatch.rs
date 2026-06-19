@@ -25,12 +25,18 @@ pub(super) fn run(
     cert: &NonosIdCertificate,
     signed_region: &[u8],
     policy: &NonosTrustAnchorPolicy,
+    now_ms: Option<u64>,
 ) -> Result<(), IdCertVerifyError> {
     let sig = match cert.trust_anchor_signatures.iter().find(|s| s.algorithm == alg) {
         Some(s) => s,
         None => return Err(IdCertVerifyError::TrustAnchorPolicy),
     };
     for key in policy.keys_for(alg) {
+        if let Some(ts) = now_ms {
+            if ts < key.valid_from_ms || ts >= key.valid_until_ms {
+                continue;
+            }
+        }
         if let Ok(true) = alg_verify(alg, key.pubkey_bytes(), signed_region, sig.sig_bytes()) {
             return Ok(());
         }

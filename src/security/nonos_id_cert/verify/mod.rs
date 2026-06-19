@@ -35,7 +35,7 @@ pub fn verify(
     checks::run(&cert, policy, now_ms)?;
     let signed = signed_region::compute(&cert, bytes)?;
     for alg in sig_policy.required.iter().copied() {
-        dispatch::run(alg, &cert, signed, policy)?;
+        dispatch::run(alg, &cert, signed, policy, now_ms)?;
     }
     Ok(VerifiedNonosId {
         nonos_id: cert.nonos_id,
