@@ -36,6 +36,18 @@ compile_error!(
      production builds must not enable the unverified capsule spawn path."
 );
 
+#[cfg(all(feature = "nonos-production", feature = "nonos-zk-rollout"))]
+compile_error!(
+    "nonos-production and nonos-zk-rollout are mutually exclusive: production \
+     builds must enforce attestation, not log-and-continue on a failed proof."
+);
+
+#[cfg(all(feature = "nonos-production", not(feature = "zk-groth16")))]
+compile_error!(
+    "nonos-production requires the zk-groth16 attestation verifier: the \
+     per-capsule attestation gate is compiled out without it."
+);
+
 #[macro_use]
 extern crate alloc;
 

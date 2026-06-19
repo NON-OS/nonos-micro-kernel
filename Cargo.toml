@@ -142,9 +142,14 @@ dbg-ring = []
 # enforced by the `compile_error!` in `lib.rs`.
 # Production posture: verified-only spawn path, and ZK attestation enforced.
 nonos-production = ["nonos-zk-enforce"]
-# When set, a capsule must carry a valid, correctly bound attestation trailer or
-# the spawn is refused. Implied by nonos-production; standalone for staged rollout.
-nonos-zk-enforce = []
+# Pulls in the attestation verifier so enforcement can never silently compile the
+# gate out. With the gate compiled in, a missing or failed attestation is fatal by
+# default; `nonos-zk-rollout` is the only way to downgrade it.
+nonos-zk-enforce = ["zk-groth16"]
+# Staged-rollout escape hatch: when set, a missing or failing attestation is logged
+# but the spawn proceeds. Mutually exclusive with `nonos-production` (enforced by
+# the `compile_error!` in lib.rs). Opt-in only, never part of any profile.
+nonos-zk-rollout = []
 
 # Escape hatch for development that still needs the legacy
 # unverified spawn path. Mutually exclusive with `nonos-production`
