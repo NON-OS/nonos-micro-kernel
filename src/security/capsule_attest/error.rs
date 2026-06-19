@@ -18,12 +18,8 @@
 pub enum AttestError {
     Missing,
     Malformed,
-    ProofInvalid,
-    CommitmentMismatch,
-    HashMismatch,
-    CapabilityMismatch,
-    PolicyRootMismatch,
-    PolicyEpochMismatch,
+    RootUnavailable,
+    Rejected,
 }
 
 impl AttestError {
@@ -31,12 +27,8 @@ impl AttestError {
         match self {
             AttestError::Missing => "capsule attestation trailer missing",
             AttestError::Malformed => "capsule attestation trailer malformed",
-            AttestError::ProofInvalid => "capsule attestation proof invalid",
-            AttestError::CommitmentMismatch => "capsule attestation commitment mismatch",
-            AttestError::HashMismatch => "capsule attestation hash does not bind to bytes",
-            AttestError::CapabilityMismatch => "capsule attestation caps do not bind to grant",
-            AttestError::PolicyRootMismatch => "capsule attestation policy root mismatch",
-            AttestError::PolicyEpochMismatch => "capsule attestation policy epoch mismatch",
+            AttestError::RootUnavailable => "capsule attestation policy root unavailable",
+            AttestError::Rejected => "capsule attestation rejected",
         }
     }
 }
