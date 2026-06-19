@@ -28,6 +28,7 @@
 
 extern crate alloc;
 
+mod attest;
 mod constants;
 mod equality;
 mod field;
@@ -53,6 +54,7 @@ pub use field::FieldElement;
 pub use utils::{constant_time_eq, zeroize};
 
 // Re-export proof types
+pub use attest::{prove_enrolled, verify_enrolled, EnrolledSecretProof};
 pub use equality::EqualityProof;
 pub use membership::MembershipProof;
 pub use pedersen::PedersenCommitment;

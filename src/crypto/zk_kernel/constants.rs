@@ -37,6 +37,12 @@ pub const DOM_SIGMA: &[u8] = b"NONOS_ZK_SIGMA_V1";
 /// Domain separator for PLONK proofs.
 pub const DOM_PLONK: &[u8] = b"NONOS_ZK_PLONK_V1";
 
+/// Domain separator for enrolled-secret attestation challenges.
+pub(crate) const DOM_ATTEST: &[u8] = b"NONOS_ZK_ATTEST_V1";
+
+/// Domain separator for attestation Merkle leaves.
+pub(crate) const DOM_MERKLE_LEAF: &[u8] = b"NONOS_ZK_MERKLE_LEAF_V1";
+
 /// The L scalar field modulus (curve25519 group order).
 pub const L: [u8; 32] = [
     0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x1e, 0x8d, 0xce, 0x4c, 0xcd, 0x65, 0xa0, 0x2f, 0x8a, 0x01,
