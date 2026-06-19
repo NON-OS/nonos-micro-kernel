@@ -18,7 +18,6 @@ pub mod api;
 pub mod asm;
 pub mod constants;
 pub mod context;
-pub mod memory;
 pub mod transitions;
 pub mod types;
 
@@ -31,7 +30,6 @@ pub use context::{
     clac, enable_smap, enable_smep, read_fs_base, stac, switch_context, switch_to_new_thread,
     with_user_access, write_fs_base, write_gs_base, write_kernel_gs_base,
 };
-pub use memory::*;
 pub use transitions::{
     enable_smap as transitions_enable_smap, enable_smep as transitions_enable_smep, exec_process,
     jump_to_usermode, restore_user_context_iretq, return_to_usermode, sysret_to_usermode,
