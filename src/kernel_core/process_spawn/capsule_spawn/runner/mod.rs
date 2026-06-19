@@ -17,11 +17,11 @@
 #[cfg(feature = "zk-groth16")]
 mod attest_gate;
 mod install;
-#[cfg(not(feature = "nonos-production"))]
+#[cfg(feature = "nonos-dev-unverified-capsules")]
 mod legacy;
 pub(crate) mod preflight;
 mod verified;
 
-#[cfg(not(feature = "nonos-production"))]
+#[cfg(feature = "nonos-dev-unverified-capsules")]
 pub use legacy::spawn;
 pub use verified::spawn_verified;

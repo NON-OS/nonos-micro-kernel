@@ -18,10 +18,10 @@ mod from_vfs;
 mod runner;
 mod spec;
 
-#[cfg(not(feature = "nonos-production"))]
+#[cfg(feature = "nonos-dev-unverified-capsules")]
 pub use runner::spawn;
 pub use runner::spawn_verified;
-#[cfg(not(feature = "nonos-production"))]
+#[cfg(feature = "nonos-dev-unverified-capsules")]
 pub use spec::CapsuleSpec;
 pub use spec::{CapsuleSpecVerified, SpawnError};
 // Runtime capsule loading from the VFS store, driven by the install syscall.

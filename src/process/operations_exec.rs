@@ -21,27 +21,23 @@ use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::sync::atomic::Ordering;
 
-#[cfg(not(feature = "nonos-production"))]
+#[cfg(feature = "nonos-dev-unverified-capsules")]
 use crate::memory::addr::VirtAddr;
 
 use super::core::{current_process, ProcessControlBlock, ProcessState, PROCESS_TABLE};
-#[cfg(not(feature = "nonos-production"))]
+#[cfg(feature = "nonos-dev-unverified-capsules")]
 use super::userspace::constants::{USER_STACK_BASE, USER_STACK_SIZE};
 
-#[cfg(feature = "nonos-production")]
+#[cfg(not(feature = "nonos-dev-unverified-capsules"))]
 pub fn exec_process(
     _path: &str,
     _argv: &[String],
     _envp: &[String],
 ) -> Result<core::convert::Infallible, &'static str> {
-    // The unsigned exec path bypasses the dual-signature manifest
-    // check that `capsule_spawn::spawn_verified` runs. In production
-    // builds the only legitimate user-mode entry is the verified
-    // spawn pipeline.
-    Err("exec_process is disabled in production; use spawn_verified")
+    Err("exec_process is disabled; the only user-mode entry is capsule_spawn::spawn_verified")
 }
 
-#[cfg(not(feature = "nonos-production"))]
+#[cfg(feature = "nonos-dev-unverified-capsules")]
 pub fn exec_process(
     path: &str,
     argv: &[String],
@@ -50,7 +46,7 @@ pub fn exec_process(
     exec_process_inner(path, argv, envp)
 }
 
-#[cfg(not(feature = "nonos-production"))]
+#[cfg(feature = "nonos-dev-unverified-capsules")]
 fn exec_process_inner(
     path: &str,
     argv: &[String],

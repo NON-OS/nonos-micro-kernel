@@ -17,7 +17,7 @@
 use crate::security::capsule_manifest::ManifestVerifyError;
 use crate::security::nonos_id_cert::IdCertVerifyError;
 
-#[cfg(not(feature = "nonos-production"))]
+#[cfg(feature = "nonos-dev-unverified-capsules")]
 pub struct CapsuleSpec {
     pub name: &'static str,
     pub service_port: u32,
