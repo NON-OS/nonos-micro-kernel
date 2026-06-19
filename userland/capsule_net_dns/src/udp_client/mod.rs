@@ -20,5 +20,5 @@ mod recv;
 mod send;
 
 pub use bind::bind;
-pub use recv::{recv_from, UdpRecvError};
+pub use recv::recv_from;
 pub use send::send_to;

@@ -21,7 +21,7 @@ use nonos_libc::mk_yield;
 use crate::dns::{first_address, question_matches, Answer, RCODE_NO_ERROR, RCODE_NXDOMAIN};
 use crate::protocol::{E_NAME_INVALID, E_NXDOMAIN, E_SERVFAIL, E_TIMEOUT};
 use crate::state::{local_port, next_xid, udp_port, upstream, DNS_PORT};
-use crate::udp_client::{recv_from, send_to, UdpRecvError};
+use crate::udp_client::{recv_from, send_to};
 
 const RECV_TRIES: usize = 96;
 
@@ -35,19 +35,21 @@ pub fn name(body: &[u8]) -> Result<&str, u16> {
 pub fn exchange(query: &[u8], xid: u16) -> Result<Answer, u16> {
     let upstream = upstream();
     let lport = local_port().ok_or(E_TIMEOUT)?;
-    send_to(udp_port(), lport, upstream, DNS_PORT, query).map_err(|_| E_TIMEOUT)?;
+    let mut sent = false;
     for _ in 0..RECV_TRIES {
+        if !sent {
+            sent = send_to(udp_port(), lport, upstream, DNS_PORT, query).is_ok();
+        }
         match recv_from(udp_port(), lport) {
-            Ok(d) if d.src == upstream && d.src_port == DNS_PORT => {
+            Ok(d) if sent && d.src == upstream && d.src_port == DNS_PORT => {
                 match parse_response(query, &d.payload, xid) {
                     Err(E_TIMEOUT) => mk_yield(),
                     other => return other,
                 };
             }
-            Ok(_) | Err(UdpRecvError::Empty) => {
+            _ => {
                 mk_yield();
             }
-            Err(_) => return Err(E_TIMEOUT),
         }
     }
     Err(E_TIMEOUT)

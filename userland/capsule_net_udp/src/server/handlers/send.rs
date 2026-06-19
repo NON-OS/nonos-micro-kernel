@@ -16,7 +16,7 @@
 
 use alloc::vec;
 
-use crate::ip_client::{send_segment, SendError};
+use crate::ip_client::{read_ipv4, send_segment, SendError};
 use crate::protocol::{E_BAD_LEN, E_NO_IP_LINK, E_NO_PORT, E_OK, OP_SEND, UDP_PAYLOAD_MAX};
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
@@ -47,7 +47,7 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         let _ = respond(sender_pid, OP_SEND, E_NO_IP_LINK, req.request_id, 0, tx);
         return;
     }
-    let src = *STATE.local_ipv4.lock();
+    let src = source_ipv4(ip_port);
     let mut seg = vec![0u8; UDP_HDR_LEN + payload.len()];
     let n = match build(&BuildRequest { src, dst, src_port, dst_port, payload }, &mut seg) {
         Ok(n) => n,
@@ -63,4 +63,18 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         }
     };
     let _ = respond(sender_pid, OP_SEND, errno, req.request_id, 0, tx);
+}
+
+fn source_ipv4(ip_port: u32) -> [u8; 4] {
+    let cached = *STATE.local_ipv4.lock();
+    if cached != [0; 4] {
+        return cached;
+    }
+    match read_ipv4(ip_port) {
+        Ok(addr) => {
+            *STATE.local_ipv4.lock() = addr;
+            addr
+        }
+        Err(_) => cached,
+    }
 }
