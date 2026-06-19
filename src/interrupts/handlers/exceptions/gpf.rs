@@ -17,6 +17,7 @@
 use x86_64::structures::idt::InterruptStackFrame;
 
 use super::context::{log_exception_with_code, ExceptionContext};
+use super::rip_probe::rip_byte_range_mapped;
 use crate::interrupts::idt::halt_loop;
 use crate::interrupts::stats;
 
@@ -83,8 +84,18 @@ fn analyze_gpf(ctx: &ExceptionContext, error: &GpfErrorCode) {
 }
 
 fn log_instruction_context(ctx: &ExceptionContext) {
-    // SAFETY: Reading instruction bytes for diagnostic purposes
-    let ptr = ctx.instruction_pointer as *const u8;
+    // A user fault's RIP is attacker-controlled, so never dereference it here;
+    // even a kernel RIP can be unmapped, so prove the range first.
+    if ctx.is_user_mode() {
+        crate::log::logger::log_error!("Instruction at fault: <user RIP>");
+        return;
+    }
+    let rip = ctx.instruction_pointer;
+    if !rip_byte_range_mapped(rip, 8) {
+        crate::log::logger::log_error!("Instruction at fault: <RIP unmapped>");
+        return;
+    }
+    let ptr = rip as *const u8;
     let bytes: [u8; 8] = unsafe {
         let mut buf = [0u8; 8];
         for i in 0..8 {
