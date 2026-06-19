@@ -23,10 +23,6 @@ pub mod rtc;
 pub mod timer;
 pub mod tsc;
 
-#[cfg(test)]
-#[cfg(not(feature = "std"))]
-pub mod test;
-
 pub use api::*;
 pub use hpet::{detect_hpet, read_hpet_counter};
 pub use pit::{

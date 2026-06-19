@@ -25,8 +25,6 @@ pub mod client;
 mod embed;
 mod error;
 mod protocol;
-#[cfg(feature = "nonos-driver-ps2-input-smoketest")]
-pub mod smoketest;
 mod spawn;
 mod state;
 

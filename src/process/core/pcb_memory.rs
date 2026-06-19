@@ -136,43 +136,20 @@ impl ProcessControlBlock {
     }
 }
 
-#[cfg(not(test))]
 fn allocate_physical_page() -> Option<PhysAddr> {
     crate::memory::phys::alloc(crate::memory::phys::AllocFlags::empty())
         .map(|f| crate::memory::addr::PhysAddr::new(f.0))
 }
 
-#[cfg(not(test))]
 fn map_page_to_phys(page_va: VirtAddr, phys: PhysAddr, _flags: PageTableFlags) -> Result<(), ()> {
     use crate::memory::paging::types::PagePermissions;
     let perms = PagePermissions::READ | PagePermissions::WRITE;
     crate::memory::paging::manager::map_page(page_va, phys, perms).map_err(|_| ())
 }
 
-#[cfg(not(test))]
 fn unmap_range(addr: VirtAddr, len: usize) -> Result<(), ()> {
     crate::memory::paging::manager::unmap_range(addr, len).map_err(|_| ())
 }
 
-#[cfg(test)]
-static mut MOCK_NEXT_PHYS: u64 = 0x1000_0000;
 
-#[cfg(test)]
-fn allocate_physical_page() -> Option<PhysAddr> {
-    // SAFETY: Test-only mock, single-threaded test execution.
-    unsafe {
-        let p = PhysAddr::new(MOCK_NEXT_PHYS);
-        MOCK_NEXT_PHYS += 0x1000;
-        Some(p)
-    }
-}
 
-#[cfg(test)]
-fn map_page_to_phys(_page_va: VirtAddr, _phys: PhysAddr, _flags: PageTableFlags) -> Result<(), ()> {
-    Ok(())
-}
-
-#[cfg(test)]
-fn unmap_range(_addr: VirtAddr, _len: usize) -> Result<(), ()> {
-    Ok(())
-}

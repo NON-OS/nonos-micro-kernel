@@ -47,6 +47,11 @@ impl VirtualFileSystem {
 
     pub fn unlink(&self, path: &str) -> VfsResult<()> {
         validate_path(path)?;
+        if let Some(rel) = super::data_rel::data_rel(path) {
+            crate::fs::blockfs_volume::remove(rel).map_err(super::map_volume_err::map_volume_err)?;
+            self.inner.lock().vfs_stats.unlink_ops += 1;
+            return Ok(());
+        }
         crate::fs::ramfs::NONOS_FILESYSTEM.delete_file(path)?;
         self.inner.lock().vfs_stats.unlink_ops += 1;
         Ok(())
@@ -55,6 +60,10 @@ impl VirtualFileSystem {
     pub fn write_file(&self, path: &str, data: &[u8]) -> VfsResult<()> {
         validate_path(path)?;
         let _lock = VFS_OP_LOCK.lock();
+        if let Some(rel) = super::data_rel::data_rel(path) {
+            return crate::fs::blockfs_volume::write_or_create(rel, data)
+                .map_err(super::map_volume_err::map_volume_err);
+        }
         self.ensure_parent_dirs(path)?;
         crate::fs::ramfs::NONOS_FILESYSTEM.write_or_create(path, data)?;
         Ok(())
@@ -63,6 +72,9 @@ impl VirtualFileSystem {
     pub fn stat(&self, path: &str) -> VfsResult<FileMetadata> {
         validate_path(path)?;
         let _lock = VFS_OP_LOCK.lock();
+        if let Some(rel) = super::data_rel::data_rel(path) {
+            return super::data_stat::data_stat(path, rel);
+        }
         let is_dir = path.ends_with('/') || path.ends_with("/.dir");
         let size = if is_dir {
             0

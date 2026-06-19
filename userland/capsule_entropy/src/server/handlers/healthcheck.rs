@@ -20,7 +20,7 @@ use crate::protocol::{encode_response, Request, OP_HEALTHCHECK};
 
 // HealthCheck: zero-input, zero-output. Reaching this handler proves
 // the request decoder accepted the envelope and the dispatcher routed
-// the op. Used by smoke tests as a structural liveness probe.
+// the op. Used by validation checks as a structural liveness probe.
 pub fn healthcheck(req: Request<'_>) -> Vec<u8> {
     encode_response(OP_HEALTHCHECK, req.flags, req.request_id, 0, &[])
 }

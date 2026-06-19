@@ -31,7 +31,7 @@ pub use constant_time::{
     aes_ct, ct_compare, ct_copy_bounded, ct_eq_u32, ct_eq_u64, ct_gt_u32, ct_hmac_verify,
     ct_lt_u32, ct_lt_u64, ct_max_u32, ct_min_u32, ct_select_slice, ct_select_u32, ct_select_u64,
     ct_select_u8, ct_signature_verify, ct_swap_slices, ct_verify, ct_zero, ct_zero_u64, ed25519_ct,
-    init as constant_time_init, x25519_ct, CtVerifyResult, SelfTestResult, TimingMode,
+    init as constant_time_init, x25519_ct, CtVerifyResult, SelfCheckResult, TimingMode,
 };
 
 pub use random::{

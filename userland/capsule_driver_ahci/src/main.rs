@@ -22,6 +22,7 @@ extern crate alloc;
 mod constants;
 mod controller;
 mod discover;
+mod engine;
 mod error;
 mod handles;
 mod protocol;
@@ -39,10 +40,10 @@ pub unsafe extern "C" fn _start() -> ! {
         mk_exit(1);
     }
 
-    let driver = match setup::run() {
+    let mut driver = match setup::run() {
         Ok(driver) => driver,
         Err(e) => mk_exit(exit_code(e)),
     };
 
-    server::run(driver);
+    server::run(&mut driver);
 }

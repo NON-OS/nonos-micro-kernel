@@ -125,7 +125,7 @@ to the higher-level HID runtime without kernel-resident input policy.
 - Static gates confirm brokered MMIO/IRQ authority and endpoint ownership.
 - Kernel profile `microkernel-driver-i2c-pci` resolves signed artifacts.
 - Controller identity and timing registers are readable on supported hardware.
-- Bounded write-read transaction smoke passes without storing input history.
+- Bounded write-read transaction validation passes without storing input history.
 
 ## Explicit non-goals today
 

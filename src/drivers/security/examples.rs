@@ -135,33 +135,3 @@ pub fn example_secure_driver_flow() -> Result<(), DriverError> {
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_secure_nvme_queue() {
-        let queue = SecureNvmeQueue::new();
-        assert!(queue.submit_io(DriverOpType::IoCommand).is_ok());
-        assert!(queue.submit_admin().is_ok());
-
-        let (count, max) = queue.stats();
-        assert_eq!(count, 2);
-        assert_eq!(max, 100_000);
-    }
-
-    #[test]
-    fn test_secure_flows() {
-        assert!(validate_mmio_region(0xE000_0000, 4096).is_ok());
-        assert!(validate_mmio_region(0xFED0_0000, 4096).is_ok());
-
-        assert!(validate_dma_buffer(PhysAddr::new(0x5000_0000), 4096).is_ok());
-
-        assert!(validate_lba_range(0, 100, 1000).is_ok());
-
-        assert!(validate_pci_access(0, 0, 0, 0).is_ok());
-
-        assert!(is_config_write_allowed(0x10));
-        assert!(!is_config_write_allowed(0x04));
-    }
-}

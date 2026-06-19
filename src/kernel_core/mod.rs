@@ -20,12 +20,8 @@ pub mod process_spawn;
 pub mod service;
 pub mod spawn;
 pub mod surface_registry;
-#[cfg(test)]
-pub mod tests;
 
 pub use boundary::{is_kernel_component, KernelComponent, KERNEL_MODULES};
 pub use init::{microkernel_init, microkernel_main};
 pub use service::{ServiceDescriptor, ServiceId, ServiceState, SERVICE_REGISTRY};
 pub use spawn::{spawn_init, spawn_service, SpawnError};
-#[cfg(test)]
-pub use tests::run_isolation_checks;

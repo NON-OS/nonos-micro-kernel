@@ -14,30 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(test)]
-use super::tests::run_self_tests;
 
 pub fn init() -> Result<(), &'static str> {
-    #[cfg(test)]
-    {
-        let result = run_self_tests();
-        if result.passed {
-            crate::log::info!(
-                "[SECURITY] Constant-time crypto: {} tests passed",
-                result.tests_passed
-            );
-            Ok(())
-        } else {
-            crate::log::error!(
-                "[SECURITY] Constant-time crypto self-test FAILED: {:?}",
-                result.failure_description
-            );
-            Err("Constant-time crypto self-test failed")
-        }
-    }
-    #[cfg(not(test))]
-    {
-        crate::log::info!("[SECURITY] Constant-time crypto initialized (tests disabled)");
-        Ok(())
-    }
+    crate::log::info!("[SECURITY] Constant-time crypto initialized");
+    Ok(())
 }

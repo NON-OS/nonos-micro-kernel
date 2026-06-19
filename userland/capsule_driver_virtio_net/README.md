@@ -100,14 +100,14 @@ packet buffer beyond broker mappings.
 ## Release target
 
 The finished virtio-net capsule is a signed raw-frame NIC service with stable
-RX/TX queue refill, interrupt recovery, link/MAC reporting, QEMU smoke, and
+RX/TX queue refill, interrupt recovery, link/MAC reporting, QEMU validation, and
 delivery into `net.l2`. It remains protocol-blind: no ARP, IP, sockets,
 firewall, or packet history is allowed in the driver.
 
 ## Release evidence
 
 Release requires QEMU `virtio-net` frame round trip, `net.l2` ARP proof,
-teardown DMA revocation proof, and host-network smoke with packet boundaries
+teardown DMA revocation proof, and host-network validation with packet boundaries
 intact.
 
 ## Release checklist

@@ -61,7 +61,7 @@ errors. The service must not fabricate entropy to satisfy callers.
 
 - Owns a userland entropy pool.
 - Exposes request/response protocol handlers.
-- Is embedded, spawned, and smoke-tested through the kernel mirror.
+- Is embedded, spawned, and validation-covered through the kernel mirror.
 - Removes user-facing entropy policy from the kernel.
 
 ## Wire format
@@ -86,18 +86,18 @@ Hardware drivers own collection. The kernel owns no user entropy pool.
 
 The finished entropy capsule accepts approved entropy sources, tracks source
 health, reseeds on policy, returns bounded responses, fails closed when source
-quality is insufficient, and is covered by smoke tests for request, reseed, and
+quality is insufficient, and is covered by validation checks for request, reseed, and
 failure paths. Hardware collection remains in driver capsules.
 
 ## Release evidence
 
-Release evidence is entropy smoke coverage for request, reseed, exhausted-source
+Release evidence is entropy validation coverage for request, reseed, exhausted-source
 failure, and syscall routing proof that user random requests do not call kernel
 RNG shims.
 
 ## Release checklist
 
-- Request and reseed smoke passes.
+- Request and reseed validation passes.
 - Exhausted-source failure is covered.
 - Static gate confirms user random requests route through the capsule.
 - No persistent seed path exists without a dedicated design.
@@ -110,7 +110,7 @@ source, cryptographic API, or key generation policy lives here.
 ## Verification
 
 - Build: `make -B nonos-mk-entropy`
-- Smoke: `nonos-mk-entropy-test`
+- Validation: `nonos-mk-entropy-test`
 - Static gate: `bash nonos-ci/run-static-checks.sh`
 - Architecture check: user-facing random requests must route through this
   capsule path, not a kernel RNG shim.

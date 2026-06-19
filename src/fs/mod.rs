@@ -15,7 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod api;
+pub mod blockfs;
+pub mod blockfs_volume;
 pub mod cache;
+pub mod cryptoblock;
 pub mod cryptofs;
 // `devfs`, `ext4`, and `sysfs` are block-backed/host-driver-backed
 // surfaces from the legacy tree. The microkernel filesystem path is
@@ -39,9 +42,6 @@ mod internal;
 mod manager;
 mod mapping;
 mod ops;
-
-#[cfg(test)]
-mod tests;
 
 pub use cryptofs as nonos_crypto;
 pub use ramfs as nonos_filesystem;

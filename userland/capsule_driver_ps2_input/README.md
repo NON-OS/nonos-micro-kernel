@@ -263,7 +263,7 @@ Evidence required for release:
 - Signed manifest and kernel mirror are present.
 - `make -B nonos-mk-driver-ps2-input` passes.
 - Static checks pass for broker-only PIO and AUX IRQ12 wiring.
-- QEMU keyboard and mouse input smoke passes.
+- QEMU keyboard and mouse input validation passes.
 - Event overflow and packet sync-loss counters are observable.
 - Real hardware proof is attached to the release record.
 

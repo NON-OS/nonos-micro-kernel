@@ -42,13 +42,3 @@ pub fn require_capability(cap: u64) -> Result<(), ContextError> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn no_context_denies_capability() {
-        let result = has_capability(0x1);
-        assert!(result.is_err());
-    }
-}

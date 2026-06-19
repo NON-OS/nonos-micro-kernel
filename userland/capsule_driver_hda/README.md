@@ -129,7 +129,7 @@ the controller driver.
 
 ## Release evidence
 
-Release requires QEMU `intel-hda` controller proof, codec verb transport smoke,
+Release requires QEMU `intel-hda` controller proof, codec verb transport validation,
 stream DMA playback proof, IRQ completion proof, and teardown revocation proof.
 
 ## Release checklist
@@ -137,7 +137,7 @@ stream DMA playback proof, IRQ completion proof, and teardown revocation proof.
 - Signed manifest and kernel mirror present.
 - QEMU HDA controller probe passes.
 - Codec verb round trip works through CORB/RIRB.
-- Playback DMA smoke produces completion interrupts.
+- Playback DMA validation produces completion interrupts.
 - Teardown proof shows no leaked MMIO/IRQ/DMA grants.
 
 ## Explicit non-goals today

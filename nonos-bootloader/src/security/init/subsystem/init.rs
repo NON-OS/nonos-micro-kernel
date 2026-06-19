@@ -19,7 +19,7 @@ use crate::security::check::{
     check_hardware_rng, check_measured_boot, check_platform_key, check_secure_boot,
     check_signature_db,
 };
-use crate::security::crypto::{blake3_selftest, ed25519_selftest};
+use crate::security::crypto::{blake3_health_check, ed25519_health_check};
 use crate::security::init::display::display_security_status;
 use crate::security::types::SecurityContext;
 use uefi::prelude::*;
@@ -31,8 +31,8 @@ pub fn initialize_security_subsystem(st: &mut SystemTable<Boot>) -> SecurityCont
     ctx.platform_key_verified = check_platform_key(st);
     ctx.signature_database_valid = check_signature_db(st);
     ctx.hardware_rng_available = check_hardware_rng(st);
-    ctx.blake3_selftest_ok = blake3_selftest();
-    ctx.ed25519_selftest_ok = ed25519_selftest();
+    ctx.blake3_health_ok = blake3_health_check();
+    ctx.ed25519_health_ok = ed25519_health_check();
     ctx.measured_boot_active = check_measured_boot(st);
     display_security_status(&ctx, st);
     ctx

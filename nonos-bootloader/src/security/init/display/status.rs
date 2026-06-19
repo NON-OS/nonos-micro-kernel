@@ -27,7 +27,7 @@ pub fn display_security_status(ctx: &SecurityContext, st: &mut SystemTable<Boot>
     output_status(st, "SignatureDB", ctx.signature_database_valid);
     output_status(st, "HW RNG", ctx.hardware_rng_available);
     output_status(st, "Measured Boot", ctx.measured_boot_active);
-    output_status(st, "Ed25519", ctx.ed25519_selftest_ok);
-    output_status(st, "BLAKE3", ctx.blake3_selftest_ok);
+    output_status(st, "Ed25519", ctx.ed25519_health_ok);
+    output_status(st, "BLAKE3", ctx.blake3_health_ok);
     let _ = st.stdout().output_string(cstr16!("=======================\r\n"));
 }

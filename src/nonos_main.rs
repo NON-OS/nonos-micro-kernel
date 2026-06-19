@@ -76,7 +76,5 @@ fn boot_microkernel(handoff: &nonos_kernel::boot::handoff::BootHandoffV1) -> ! {
     let kernel_handoff = nonos_kernel::boot::handoff::KernelHandoff::from_x86_64(handoff);
     nonos_kernel::kernel_core::microkernel_init(&kernel_handoff);
 
-    // Tests disabled for production boot
-
     nonos_kernel::kernel_core::microkernel_main()
 }

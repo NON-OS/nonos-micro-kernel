@@ -76,7 +76,7 @@ not kernel events.
 - Keeps packet protocol state above the NIC driver boundary.
 - Reports command, PHY, interrupt, config, ring-size, and software cursor state
   without reading counters that clear on access.
-- Is ready for kernel mirror and smoke-test wiring.
+- Is ready for kernel mirror and validation wiring.
 
 ## Wire format
 
@@ -106,12 +106,12 @@ protocol interpretation.
 The finished RTL8169 capsule is a signed gigabit raw-frame service with MMIO
 register ownership, DMA descriptor lifecycle, interrupt recovery, link/MAC
 reporting, side-effect-free telemetry, and frame delivery to `net.l2`.
-Promotion requires kernel mirror, spawn, QEMU smoke, and compatible hardware
+Promotion requires kernel mirror, spawn, QEMU validation, and compatible hardware
 proof.
 
 ## Release evidence
 
-Release requires RTL8169-compatible hardware proof, emulator smoke where
+Release requires RTL8169-compatible hardware proof, emulator validation where
 available, `net.l2` frame round trip, teardown grant proof, and link-change
 behavior.
 

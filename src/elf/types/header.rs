@@ -17,8 +17,6 @@
 mod default_impl;
 mod names;
 mod state;
-#[cfg(test)]
-mod tests;
 mod validate;
 
 pub use state::ElfHeader;

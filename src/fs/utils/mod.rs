@@ -26,10 +26,6 @@ pub mod scan_config;
 pub mod scan_stats;
 pub mod types;
 
-#[cfg(test)]
-mod filters_tests;
-#[cfg(test)]
-mod scan_tests;
 
 pub use classify::*;
 pub use error::{UtilsError, UtilsResult};

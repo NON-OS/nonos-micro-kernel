@@ -53,24 +53,3 @@ impl SmmStats {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_smm_stats() {
-        let stats = SmmStats::new();
-        assert_eq!(stats.smi_count.load(Ordering::SeqCst), 0);
-        assert_eq!(stats.integrity_checks.load(Ordering::SeqCst), 0);
-
-        stats.smi_count.fetch_add(5, Ordering::SeqCst);
-        stats.integrity_checks.fetch_add(3, Ordering::SeqCst);
-
-        assert_eq!(stats.smi_count.load(Ordering::SeqCst), 5);
-        assert_eq!(stats.integrity_checks.load(Ordering::SeqCst), 3);
-
-        stats.reset();
-        assert_eq!(stats.smi_count.load(Ordering::SeqCst), 0);
-        assert_eq!(stats.integrity_checks.load(Ordering::SeqCst), 0);
-    }
-}

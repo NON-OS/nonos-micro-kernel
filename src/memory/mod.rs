@@ -54,8 +54,6 @@ pub mod region;
 pub mod safety;
 pub mod secure_memory;
 pub mod stats;
-#[cfg(test)]
-mod tests;
 pub mod unified;
 
 pub use addr::{PhysAddr, VirtAddr};

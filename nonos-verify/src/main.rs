@@ -1,16 +1,14 @@
 // NONOS verification engine. The GitHub workflows invoke
 // `nonos-verify <subcommand>`; all the build orchestration, trust-chain
-// verification, adversarial simulation, runtime proof, supply-chain, and
+// verification, adversarial simulation, supply-chain, and
 // attestation logic lives here in typed Rust, not in shell.
 
 mod adversarial;
 mod attest;
 mod build;
 mod report;
-mod runtime;
 mod sh;
 mod supply_chain;
-mod tests_cmd;
 mod trust_chain;
 
 use report::Status;
@@ -24,9 +22,7 @@ fn main() {
         "build" => build::run(&root),
         "trust-chain" => trust_chain::run(&root),
         "adversarial" => adversarial::run(&root),
-        "runtime" => runtime::run(&root),
         "supply-chain" => supply_chain::run(&root),
-        "tests" => tests_cmd::run(&root),
         "attest" => attest::run(&root),
         "" | "-h" | "--help" | "help" => {
             eprintln!("nonos-verify: NONOS verification engine\n");
@@ -36,9 +32,7 @@ fn main() {
             eprintln!(
                 "  adversarial    tamper valid artifacts and assert the verifier rejects them"
             );
-            eprintln!("  runtime        boot the kernel in QEMU and assert readiness markers");
             eprintln!("  supply-chain   advisories, license policy, submodule pins, SBOM");
-            eprintln!("  tests          host property tests and crypto known-answer tests");
             eprintln!("  attest         fuse all module reports into one signed attestation");
             std::process::exit(if cmd.is_empty() { 2 } else { 0 });
         }

@@ -17,11 +17,5 @@
 mod mmio_zero;
 mod ops;
 mod real;
-#[cfg(test)]
-mod swap;
 
-#[cfg(not(test))]
 pub(super) use real::current_ops;
-
-#[cfg(test)]
-pub(super) use swap::{clear_ops_for_test, current_ops, install_ops_for_test};

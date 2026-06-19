@@ -43,7 +43,7 @@ Testing (local)
    - memory-map allocation and ExitBootServices success
    - BootHandoffV1 allocation and `magic`/`entry_point` lines (early kernel should print them)
 
-CI / smoke test
+CI / validation check
 We will add a GitHub Actions job that:
   - Builds bootloader and kernel for the UEFI target.
   - Creates the FAT image and boots QEMU+OVMF headless.
@@ -61,7 +61,7 @@ PR / commit checklist
 - Use commit prefix `handoff:` for changes in this directory.
 - Ensure `size_of::<BootHandoffV1>()` static parity:
 - Add a quick build-time check in both loader and kernel if possible.
-- Add or update a QEMU smoke test that demonstrates the handoff and kernel entry.
+- Add or update a QEMU validation check that demonstrates the handoff and kernel entry.
 - Every `unsafe` has a one-line invariant comment.
 - Add a line in the PR body describing how you manually tested (serial.log snippet or link to recorded run).
 - Sign commits (`git commit -S`) for provenance.

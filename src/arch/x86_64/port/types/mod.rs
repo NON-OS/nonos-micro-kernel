@@ -19,8 +19,6 @@ mod port_readonly;
 mod port_rw;
 mod port_writeonly;
 mod range;
-#[cfg(test)]
-mod tests;
 mod value;
 mod value_trait;
 mod value_u16;

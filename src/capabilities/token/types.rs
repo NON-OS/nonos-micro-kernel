@@ -55,7 +55,7 @@ impl CapabilityToken {
             delegation_depth: 0,
         }
     }
-    /// Test / fixture constructor. Binds no boot session nonce so it
+    /// Empty-token constructor. Binds no boot session nonce so it
     /// never accidentally lends an empty token live boot authority.
     pub fn with_caps(caps: &[Capability]) -> Self {
         Self {

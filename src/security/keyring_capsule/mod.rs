@@ -19,12 +19,11 @@ pub mod client;
 mod embed;
 mod error;
 mod protocol;
-#[cfg(feature = "nonos-keyring-smoketest")]
-pub mod smoketest;
 mod spawn;
 mod state;
 mod types;
 
+pub use client::{retrieve, store};
 pub use error::KeyringCapsuleError;
 pub use spawn::{spawn_keyring_capsule, SpawnError};
 pub use state::shared_state;

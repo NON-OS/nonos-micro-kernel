@@ -16,7 +16,7 @@
 
 use super::ffi;
 
-#[cfg(all(target_arch = "x86_64", not(test), not(feature = "std")))]
+#[cfg(all(target_arch = "x86_64", not(feature = "std")))]
 mod dedicated {
     use super::ffi;
     use spin::Mutex;
@@ -79,7 +79,7 @@ mod dedicated {
     }
 }
 
-#[cfg(any(not(target_arch = "x86_64"), test, feature = "std"))]
+#[cfg(any(not(target_arch = "x86_64"), feature = "std"))]
 mod dedicated {
     use super::ffi;
 

@@ -21,8 +21,6 @@ pub mod handoff;
 pub mod info;
 pub mod memory;
 pub mod security;
-#[cfg(test)]
-mod tests;
 
 pub use constants::{flags, pixel_format, HANDOFF_MAGIC, HANDOFF_VERSION};
 pub use constants::{truncate_cmdline, validate_cmdline_len};

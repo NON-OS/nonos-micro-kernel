@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_boot::boot::{exit_to_shell, run_memory_test};
+use nonos_boot::boot::exit_to_shell;
 use nonos_boot::menu::{MenuAction, SecurityMode};
 use uefi::prelude::*;
 use uefi::table::runtime::ResetType;
@@ -37,11 +37,6 @@ pub fn resolve_action(
         MenuAction::Recovery => {
             let _ = st.stdout().output_string(uefi::cstr16!("[BOOT] Recovery Mode\r\n"));
             Ok(SecurityMode::Recovery)
-        }
-        MenuAction::MemoryTest => {
-            let _ = st.stdout().output_string(uefi::cstr16!("[DIAG] Memory Test\r\n"));
-            let _ = run_memory_test(st);
-            Ok(SecurityMode::Standard)
         }
         MenuAction::UefiShell => {
             let _ = st.stdout().output_string(uefi::cstr16!("[BOOT] UEFI Shell\r\n"));

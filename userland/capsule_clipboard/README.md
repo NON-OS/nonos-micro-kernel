@@ -209,7 +209,7 @@ must produce a signed ELF whose SHA matches the embedded manifest
 
 - `nonos-ci/run-static-checks.sh` clean (per-capsule one-function-per-file
   enforcement, capability mask, README contract sections).
-- `cd nonos-sign && cargo test --release --test artifacts` round-trips
+- `make nonos-mk-host-trust-verify` verifies
   the baked `clipboard.manifest.bin` against the trust anchor.
 - Kernel cargo check matrix passes with `nonos-capsule-clipboard` on
   top of `microkernel-core,nonos-production`.

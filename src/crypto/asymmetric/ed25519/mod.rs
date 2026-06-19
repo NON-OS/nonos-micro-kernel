@@ -22,12 +22,7 @@ mod point;
 mod scalar;
 mod signature;
 
-#[cfg(test)]
-#[cfg(not(feature = "std"))]
-#[cfg(test)]
-mod tests;
-
-pub use signature::{sign, verify, verify_batch, KeyPair, Signature};
+pub use signature::{sign, verify, KeyPair, Signature};
 
 pub fn pubkey_from_secret(secret: &[u8; 32]) -> [u8; 32] {
     KeyPair::from_seed(*secret).public

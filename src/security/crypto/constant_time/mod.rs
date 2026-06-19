@@ -20,8 +20,6 @@ pub mod ed25519;
 pub mod init;
 pub mod memory;
 pub mod ops;
-#[cfg(test)]
-pub mod tests;
 pub mod types;
 pub mod x25519;
 
@@ -34,9 +32,7 @@ pub use memory::{ct_hmac_verify, ct_signature_verify, ct_zero, ct_zero_u64};
 pub use ops::{
     ct_copy_bounded, ct_eq_u32, ct_eq_u64, ct_gt_u32, ct_lt_u32, ct_lt_u64, ct_max_u32, ct_min_u32,
 };
-#[cfg(test)]
-pub use tests::run_self_tests;
-pub use types::{CtVerifyResult, SelfTestResult, TimingMode};
+pub use types::{CtVerifyResult, SelfCheckResult, TimingMode};
 
 pub mod ed25519_ct {
     pub use super::ed25519::*;

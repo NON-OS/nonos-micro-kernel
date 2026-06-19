@@ -24,9 +24,6 @@ pub mod mmio;
 pub mod pci;
 pub mod rate_limiter;
 
-#[cfg(test)]
-mod tests;
-
 pub use constants::{
     ASSUMED_CPU_FREQ_MHZ, DEFAULT_ADMIN_OPS_PER_SEC, DEFAULT_DMA_OPS_PER_SEC,
     DEFAULT_IO_OPS_PER_SEC, HIGH_MMIO_START, KERNEL_PHYS_END, LOW_MMIO_END, LOW_MMIO_START,

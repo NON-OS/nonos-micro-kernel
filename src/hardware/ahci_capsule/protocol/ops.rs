@@ -17,3 +17,7 @@
 pub(in super::super) const OP_HEALTHCHECK: u16 = 1;
 pub(in super::super) const OP_CONTROLLER_INFO: u16 = 2;
 pub(in super::super) const OP_PORT_LIST: u16 = 3;
+pub(in super::super) const OP_CAPACITY: u16 = 4;
+pub(in super::super) const OP_READ_BLOCKS: u16 = 5;
+pub(in super::super) const OP_WRITE_BLOCKS: u16 = 6;
+pub(in super::super) const OP_FLUSH: u16 = 7;

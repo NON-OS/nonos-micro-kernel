@@ -2,20 +2,17 @@
 
 ## Role
 
-`capsule_wallpaper` is a parked graphics smoketest capsule. It exists to prove
-that a userland process can call the graphics syscall surface, create a
-surface, map it, fill pixels, present, destroy the surface, and report PASS.
-
-It is not a normal production service capsule today.
+`capsule_wallpaper` is a production desktop capsule. It owns wallpaper surface
+creation and presentation policy above the graphics syscall surface.
 
 ```text
-wallpaper smoketest
+wallpaper service
     |
     | graphics Mk calls
     v
 surface create -> map -> fill -> present -> destroy
     |
-    `-- MkDebug PASS/FAIL markers
+    `-- transient desktop background surface
 ```
 
 ## Microkernel contract
@@ -27,11 +24,9 @@ The capsule calls the graphics surface API exposed through libc:
 - surface map
 - full-surface present
 - surface destroy
-- `MkDebug` for PASS/FAIL markers
 - `MkExit` for completion status
 
-`Capsule.parked` records that this is smoketest-only. It has no production
-spawn path and no production manifest until graphics promotion is complete.
+The kernel-side spawn path is feature gated through `nonos-capsule-wallpaper`.
 
 ## Interface contract
 
@@ -39,13 +34,12 @@ spawn path and no production manifest until graphics promotion is complete.
 |---|---|
 | display dimensions | discover framebuffer dimensions |
 | surface create/map/present/destroy | exercise the graphics surface lifecycle |
-| `MkDebug` / `MkExit` | emit smoke markers and status |
+| `MkExit` | completion status |
 
 ## Authority
 
-There is no production `CAPSULE_REQUIRED_CAPS` mask in this directory today
-because the capsule is parked. A future production version must declare only
-the graphics, IPC, and memory authority needed by the graphics contract.
+The capsule must declare only the graphics, IPC, and memory authority needed by
+the graphics contract.
 
 ## Privacy and persistence
 
@@ -55,21 +49,17 @@ display state.
 
 ## Runtime lifecycle
 
-The capsule runs only under the wallpaper smoke profile, creates one surface,
-fills it, presents it, destroys it, emits PASS/FAIL markers, and exits.
+The capsule creates one background surface, fills it, presents it, and exits
+after handing the desktop a stable background.
 
 ## Failure model
 
-Graphics `ENOTSUP` is treated as parked and exits cleanly. Any failed surface
-operation emits a specific failure marker and exits non-zero.
+Graphics `ENOTSUP` exits cleanly. Any failed surface operation exits non-zero.
 
 ## Current implemented surface
 
-- Parked smoketest source exists.
-- Exercises the graphics syscall surface when the wallpaper smoke profile is
-  enabled.
-- Emits PASS/FAIL markers over the debug channel.
-- Exits after the smoke run.
+- Creates, maps, fills, presents, and destroys a graphics surface.
+- Exits after the wallpaper presentation path completes.
 
 ## Wire format
 
@@ -86,11 +76,11 @@ persisted.
 
 - Treat `ENOTSUP` as parked graphics, not success of rendering.
 - Destroy the surface on every mapped failure path.
-- Do not add desktop policy to this smoke capsule.
+- Do not add desktop policy to this validation capsule.
 
 ## Release target
 
-The finished wallpaper capsule, if retained, is a signed graphics smoke
+The finished wallpaper capsule, if retained, is a signed graphics validation
 artifact with an explicit manifest, feature-gated spawn, deterministic surface
 lifecycle, and no desktop policy. If a real wallpaper service is needed, it
 should be promoted as a separate UI capsule with storage and permissions
@@ -98,12 +88,12 @@ defined up front.
 
 ## Release evidence
 
-Release evidence is the graphics smoke marker sequence, surface lifecycle
+Release evidence is the graphics validation marker sequence, surface lifecycle
 proof, and static proof that framebuffer mapping remains kernel-owned.
 
 ## Release checklist
 
-- Surface create/map/present/destroy smoke passes.
+- Surface create/map/present/destroy validation passes.
 - Failure markers identify the failed graphics step.
 - Static gate confirms no direct framebuffer mapping in userland.
 - Parked status is removed only with a real manifest and spawn contract.
@@ -116,7 +106,7 @@ here.
 
 ## Verification
 
-- Build/smoke target: `nonos-mk-wallpaper-test` when the graphics smoke slice
+- Build/validation target: `nonos-mk-wallpaper-test` when the graphics validation slice
   is active.
 - Static gate: `bash nonos-ci/run-static-checks.sh`
 - Promotion check: this capsule must stay marked parked until it has a real

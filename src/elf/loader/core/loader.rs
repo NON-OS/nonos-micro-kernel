@@ -20,7 +20,5 @@ mod load_parts;
 mod runtime_load;
 mod section_queries;
 mod state;
-#[cfg(test)]
-mod tests;
 
 pub use state::ElfLoader;

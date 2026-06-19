@@ -104,18 +104,18 @@ all interpretation above sector reads and writes.
 
 The finished virtio-blk capsule is a signed block-device service with stable
 capacity reporting, read/write/flush semantics, queue reset recovery,
-teardown-safe DMA handling, QEMU smoke, and hardware-equivalent virtio proof.
+teardown-safe DMA handling, QEMU validation, and hardware-equivalent virtio proof.
 It exposes sectors only; all filesystems and storage policy remain above it.
 
 ## Release evidence
 
-Release requires QEMU read/write/flush smoke, bounds tests for request length,
+Release requires QEMU read/write/flush validation, bounds tests for request length,
 teardown DMA revocation proof, and a filesystem capsule test mounted above it.
 
 ## Release checklist
 
 - Signed manifest and kernel mirror present.
-- QEMU read/write/flush smoke passes.
+- QEMU read/write/flush validation passes.
 - Request length and capacity bounds are tested.
 - Teardown proof shows all DMA grants are revoked.
 - VFS/filesystem test works above the block endpoint.

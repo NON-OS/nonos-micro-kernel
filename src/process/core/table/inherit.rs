@@ -28,9 +28,6 @@
 //!     DeviceEnum, Mmio, Irq, Dma, Pio), Admin, Debug, and the
 //!     graphics caps are never ambient. They must be granted by
 //!     each capsule's spawn spec.
-//!   - `debug_grant()`: a smoketest-only OR over the ambient set
-//!     so `MkDebug` is reachable from init under the proof feature.
-//!
 //! A compile-time assertion below proves `AMBIENT_CAPS` carries
 //! none of the forbidden bits.
 
@@ -38,7 +35,6 @@ use core::sync::atomic::Ordering;
 
 use super::super::types::Pid;
 use super::types::PROCESS_TABLE;
-use crate::capabilities::smoke::debug_grant;
 use crate::capabilities::Capability;
 
 // Every process needs these to live: invoke core lifecycle syscalls
@@ -53,9 +49,7 @@ const AMBIENT_CAPS: u64 =
 
 // Bits that must never appear in `AMBIENT_CAPS` in any production
 // build. Hardware authority and graphics flow through explicit
-// grants only; Admin and Debug are out of the ambient set entirely
-// (Debug is added at runtime by `debug_grant()` under smoketest
-// features only).
+// grants only; Admin and Debug are out of the ambient set entirely.
 const FORBIDDEN_AMBIENT: u64 = Capability::Admin.bit()
     | Capability::Driver.bit()
     | Capability::DeviceEnum.bit()
@@ -85,10 +79,9 @@ pub(super) fn compute_inherited_caps(pid: Pid, parent_pid: Pid) -> u64 {
 }
 
 // Sole producer of inherited caps. Both `compute_inherited_caps`
-// and the fork/clone path go through here; `debug_grant()` is the
-// shared smoke overlay used by `init_caps_bits`.
+// and the fork/clone path go through here.
 pub(crate) fn apply_inherit_bound(parent_caps: u64) -> u64 {
-    (parent_caps & inheritable_bound()) | debug_grant()
+    parent_caps & inheritable_bound()
 }
 
 // Children inherit only the small ambient set. Hardware and admin

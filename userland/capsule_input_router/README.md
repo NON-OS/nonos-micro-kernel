@@ -147,7 +147,7 @@ must compile clean.
 - `nonos-ci/run-static-checks.sh` clean (kernel input modules remain
   ingest-only; routing/focus/compositor policy lives in compositor
   protocol + handlers).
-- `cd nonos-sign && cargo test --release --test artifacts` round-trips
+- `make nonos-mk-host-trust-verify` verifies
   the baked `input_router.manifest.bin` against the trust anchor.
 - Kernel cargo check matrix passes with `nonos-capsule-input-router`
   on top of `microkernel-core,nonos-production`.

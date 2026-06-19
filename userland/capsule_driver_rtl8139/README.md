@@ -75,7 +75,7 @@ hardware read/write.
 - Keeps protocol handling above the driver boundary.
 - Reports command, link, interrupt, RX, TX, and software cursor state without
   reading counters that clear on access.
-- Is ready for boot-smoke wiring against the network capsule stack.
+- Is ready for boot validation wiring against the network capsule stack.
 
 ## Wire format
 
@@ -105,17 +105,17 @@ the Ethernet frame boundary.
 The finished RTL8139 capsule is a signed raw-frame NIC service with port-BAR
 PIO access through the broker, RX/TX buffer management, interrupt recovery,
 link/MAC reporting, side-effect-free telemetry, and frame delivery to `net.l2`.
-It must pass QEMU and hardware smoke before being promoted beyond build-only.
+It must pass QEMU and hardware validation before being promoted beyond build-only.
 
 ## Release evidence
 
-Release requires QEMU `rtl8139` round trip, broker PIO proof, RX/TX smoke
+Release requires QEMU `rtl8139` round trip, broker PIO proof, RX/TX validation
 through `net.l2`, teardown grant proof, and one compatible hardware boot.
 
 ## Release checklist
 
 - Signed manifest and kernel mirror present.
-- QEMU RTL8139 TX/RX smoke passes through `net.l2`.
+- QEMU RTL8139 TX/RX validation passes through `net.l2`.
 - PIO gate proves no inline port assembly.
 - Teardown proof shows PIO/IRQ/DMA/device claim revocation.
 - Hardware boot records link, MAC, RX, and TX behavior.

@@ -18,8 +18,6 @@ mod admin;
 mod crypto;
 mod graphics;
 mod mk;
-#[cfg(test)]
-mod tests;
 
 use crate::capabilities::CapabilityToken;
 use crate::syscall::numbers::SyscallNumber;

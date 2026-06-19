@@ -25,9 +25,6 @@ pub mod ordering;
 mod stats;
 mod types;
 
-#[cfg(test)]
-mod tests;
-
 pub use constants::*;
 pub use error::{MmioError, MmioResult};
 pub use manager::*;

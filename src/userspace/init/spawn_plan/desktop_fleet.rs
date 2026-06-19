@@ -103,12 +103,12 @@ fn spawn_wm() {
 #[cfg(not(feature = "nonos-capsule-wm"))]
 fn spawn_wm() {}
 
-#[cfg(all(feature = "nonos-capsule-wallpaper", not(feature = "nonos-wallpaper-smoketest")))]
+#[cfg(feature = "nonos-capsule-wallpaper")]
 fn spawn_wallpaper() {
     use crate::userspace::capsule_wallpaper as c;
     super::boot::capsule("WALLPAPER", "wallpaper", c::spawn_wallpaper_capsule, c::shared_state);
 }
-#[cfg(not(all(feature = "nonos-capsule-wallpaper", not(feature = "nonos-wallpaper-smoketest"))))]
+#[cfg(not(feature = "nonos-capsule-wallpaper"))]
 fn spawn_wallpaper() {}
 
 #[cfg(feature = "nonos-capsule-desktop-shell")]

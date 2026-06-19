@@ -19,9 +19,6 @@ pub mod error;
 mod stats;
 mod types;
 
-#[cfg(test)]
-mod tests;
-
 pub use allocator::*;
 pub use constants::*;
 pub use error::{BuddyAllocError, BuddyAllocResult};

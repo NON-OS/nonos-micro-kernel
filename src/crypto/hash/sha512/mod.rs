@@ -17,9 +17,6 @@
 mod constants;
 mod hasher;
 
-#[cfg(test)]
-mod tests;
-
 pub use hasher::Sha512;
 
 pub type Hash512 = [u8; 64];

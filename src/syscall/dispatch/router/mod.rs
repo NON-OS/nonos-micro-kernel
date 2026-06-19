@@ -25,7 +25,4 @@ mod microkernel_ops;
 mod surface_handlers;
 mod surface_ops;
 
-#[cfg(feature = "nonos-user-entry-proof")]
-mod unknown_diag;
-
 pub(crate) use entry::handle_syscall_dispatch;

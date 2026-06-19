@@ -15,14 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::types::AllocationHeader;
-use super::globals::get_timestamp;
+use super::globals::{get_timestamp, KERNEL_HEAP};
 use crate::memory::layout;
 use core::{mem, ptr};
 
-#[cfg(not(test))]
-use super::globals::KERNEL_HEAP;
-
-#[cfg(not(test))]
 pub fn verify_heap_integrity() -> bool {
     if !KERNEL_HEAP.is_initialized() {
         return false;
@@ -56,10 +52,5 @@ pub fn verify_heap_integrity() -> bool {
             }
         }
     }
-    true
-}
-
-#[cfg(test)]
-pub fn verify_heap_integrity() -> bool {
     true
 }

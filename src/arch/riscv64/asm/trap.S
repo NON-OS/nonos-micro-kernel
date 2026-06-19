@@ -3,7 +3,7 @@
  * Dispatcher: riscv64_trap_dispatch(*mut TrapFrame).
  * sscratch convention: 0 in S-mode, per-task kernel-sp top in U-mode.
  * user_sp=0 is legal U-mode state, so the first-swap `bnez sp` is the
- * authoritative from-user/from-kernel test. */
+ * authoritative from-user/from-kernel discriminator. */
 
 .section .text.trap, "ax", %progbits
 

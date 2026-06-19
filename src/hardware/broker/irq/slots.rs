@@ -160,15 +160,3 @@ pub(super) fn read_counters(slot_idx: usize) -> (u64, u64) {
     (slot.seq.load(Ordering::Acquire), slot.overflow.load(Ordering::Acquire))
 }
 
-#[cfg(test)]
-pub(crate) fn reset_for_test() {
-    SLOT_BITMAP.store(0, Ordering::SeqCst);
-    for slot in SLOTS.iter() {
-        slot.active.store(false, Ordering::SeqCst);
-        slot.grant_id.store(0, Ordering::SeqCst);
-        slot.gsi.store(0, Ordering::SeqCst);
-        slot.seq.store(0, Ordering::SeqCst);
-        slot.overflow.store(0, Ordering::SeqCst);
-        slot.waiter.store(0, Ordering::SeqCst);
-    }
-}

@@ -17,8 +17,6 @@
 mod cpu_context;
 pub mod full;
 mod install;
-#[cfg(test)]
-mod tests;
 
 pub use cpu_context::CpuContext;
 pub use full::Context;

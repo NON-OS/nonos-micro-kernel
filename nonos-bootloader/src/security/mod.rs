@@ -47,7 +47,7 @@ pub use check::{
     check_hardware_rng, check_measured_boot, check_platform_key, check_secure_boot,
     check_signature_db,
 };
-pub use crypto::{blake3_selftest, ed25519_selftest, run_all_selftests};
+pub use crypto::{blake3_health_check, ed25519_health_check, run_all_crypto_health_checks};
 pub use enforce::{
     detect_secure_boot_bypass, enforce_security_policy, extend_boot_measurements,
     verify_kernel_version, verify_secure_boot_chain, EnforcementResult, SecurityPolicy,

@@ -25,9 +25,13 @@ mod ops;
 pub use decode::decode_request;
 pub use encode::{encode_response_header, write_status};
 pub use endpoint::{KERNEL_REPLY_ENDPOINT, SERVICE_NAME};
-pub use errno::{E_INVAL, E_OK};
+pub use errno::{E_INVAL, E_IO, E_MSGSIZE, E_NODEV, E_NXIO, E_OK};
 pub use header::{Request, HDR_LEN, RESP_HDR_LEN};
 pub use limits::{
-    CONTROLLER_INFO_PAYLOAD_LEN, PORT_ENTRY_BYTES, PORT_LIST_HEADER_BYTES, STATUS_LEN,
+    CAPACITY_PAYLOAD_LEN, CONTROLLER_INFO_PAYLOAD_LEN, MAX_RW_PAYLOAD_BYTES, PORT_ENTRY_BYTES,
+    PORT_LIST_HEADER_BYTES, READ_REQ_LEN, RW_HEADER_LEN, STATUS_LEN,
 };
-pub use ops::{OP_CONTROLLER_INFO, OP_HEALTHCHECK, OP_PORT_LIST};
+pub use ops::{
+    OP_CAPACITY, OP_CONTROLLER_INFO, OP_FLUSH, OP_HEALTHCHECK, OP_PORT_LIST, OP_READ_BLOCKS,
+    OP_WRITE_BLOCKS,
+};

@@ -25,7 +25,6 @@ mod mmio;
 mod pio;
 mod process;
 mod route;
-mod trace;
 mod unpack;
 
 pub use route::dispatch_microkernel_syscall;

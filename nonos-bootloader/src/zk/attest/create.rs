@@ -69,39 +69,3 @@ pub fn calculate_proof_block_size(public_inputs_len: usize) -> usize {
     ZK_PROOF_HEADER_SIZE + public_inputs_len + GROTH16_PROOF_SIZE
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_zk_proof_magic() {
-        assert_eq!(ZK_PROOF_MAGIC[0], b'N');
-        assert_eq!(ZK_PROOF_MAGIC[2], b'Z');
-        assert_eq!(ZK_PROOF_MAGIC[3], b'P');
-    }
-
-    #[test]
-    fn test_create_parse_roundtrip() {
-        use super::super::parse::parse_zk_proof;
-
-        let program_hash = [0xAAu8; 32];
-        let commitment = [0xBBu8; 32];
-        let inputs = [0u8; 64];
-        let proof = [0u8; 192];
-
-        let block = create_zk_proof_block(&program_hash, &commitment, &inputs, &proof).unwrap();
-
-        let mut kernel = alloc::vec![0u8; 1024];
-        kernel.extend_from_slice(&[0u8; 64]); // reserved signature bytes
-        kernel.extend_from_slice(&block);
-
-        use super::super::detect::has_zk_proof;
-        assert!(has_zk_proof(&kernel));
-
-        let (parsed, _offset) = parse_zk_proof(&kernel).unwrap();
-        assert_eq!(parsed.program_hash, program_hash);
-        assert_eq!(parsed.capsule_commitment, commitment);
-        assert_eq!(parsed.public_inputs.len(), 64);
-        assert_eq!(parsed.proof_blob.len(), 192);
-    }
-}

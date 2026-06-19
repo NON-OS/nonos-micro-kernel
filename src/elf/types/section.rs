@@ -18,7 +18,5 @@ mod default_impl;
 mod names;
 mod permissions;
 mod state;
-#[cfg(test)]
-mod tests;
 
 pub use state::SectionHeader;

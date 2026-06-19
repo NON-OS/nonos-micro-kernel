@@ -123,12 +123,8 @@ pub(super) fn remove(pid: u32, grant_id: u64) -> Result<MmioGrant, GrantError> {
     Ok(grants.remove(idx))
 }
 
-// Snapshot for diagnostics and tests. The lock is dropped before the
+// Snapshot for diagnostics. The lock is dropped before the
 // caller sees the data.
-#[cfg(test)]
-pub(crate) fn snapshot() -> Vec<MmioGrant> {
-    GRANTS.lock().clone()
-}
 
 // User MMIO virtual-address allocator. Each grant gets a fresh
 // region inside `[USER_MMIO_BASE, USER_MMIO_END)`; the bumping
@@ -155,11 +151,4 @@ pub(super) fn reserve_user_va(pages: u64) -> Option<VirtAddr> {
         return None;
     }
     Some(VirtAddr::new(base))
-}
-
-#[cfg(test)]
-pub(crate) fn reset_for_test() {
-    GRANTS.lock().clear();
-    NEXT_GRANT_ID.store(1, Ordering::SeqCst);
-    NEXT_USER_MMIO_VA.store(USER_MMIO_BASE, Ordering::SeqCst);
 }

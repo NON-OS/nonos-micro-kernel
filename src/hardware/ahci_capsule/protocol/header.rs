@@ -21,6 +21,11 @@ pub(in super::super) const CONTROLLER_INFO_PAYLOAD_LEN: usize = 24;
 pub(in super::super) const PORT_LIST_HEADER_BYTES: usize = 4;
 pub(in super::super) const PORT_ENTRY_BYTES: usize = 36;
 pub(in super::super) const MAX_PORTS: usize = 32;
+pub(in super::super) const SECTOR_SIZE: usize = 512;
+pub(in super::super) const MAX_SECTORS: u32 = 64;
+pub(in super::super) const MAX_RW_PAYLOAD_BYTES: u32 = MAX_SECTORS * SECTOR_SIZE as u32;
+pub(in super::super) const CAPACITY_PAYLOAD_LEN: usize = 8;
 
 const PORT_LIST_PAYLOAD_LEN: usize = PORT_LIST_HEADER_BYTES + MAX_PORTS * PORT_ENTRY_BYTES;
-pub(in super::super) const MAX_PAYLOAD_BYTES: u32 = PORT_LIST_PAYLOAD_LEN as u32;
+const _: () = assert!(MAX_RW_PAYLOAD_BYTES as usize > PORT_LIST_PAYLOAD_LEN);
+pub(in super::super) const MAX_PAYLOAD_BYTES: u32 = MAX_RW_PAYLOAD_BYTES;

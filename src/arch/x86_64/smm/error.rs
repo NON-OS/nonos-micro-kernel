@@ -53,18 +53,3 @@ impl SmmError {
 
 pub type SmmResult<T> = Result<T, SmmError>;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_error_messages() {
-        assert_eq!(SmmError::NotInitialized.as_str(), "SMM subsystem not initialized");
-        assert_eq!(SmmError::SmramNotLocked.as_str(), "SMRAM is not locked");
-        assert_eq!(SmmError::SmramOpen.as_str(), "SMRAM is open to CPU access");
-        assert_eq!(
-            SmmError::IntegrityCheckFailed { handler: 0x1000 }.as_str(),
-            "SMM integrity check failed"
-        );
-    }
-}

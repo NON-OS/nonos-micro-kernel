@@ -62,7 +62,7 @@ on behalf of the capsule.
 
 - Owns the userland file descriptor table logic.
 - Exposes VFS protocol handlers over IPC.
-- Is embedded, spawned, and smoke-tested through the kernel mirror.
+- Is embedded, spawned, and validation-covered through the kernel mirror.
 - Keeps file policy out of kernel process state.
 
 ## Wire format
@@ -88,17 +88,17 @@ descriptor table.
 
 The finished VFS capsule owns descriptor routing, mount-table policy, path
 normalization, per-caller handle isolation, and IPC dispatch to backing
-filesystem capsules. It has smoke coverage for open/read/write/close/error
+filesystem capsules. It has validation coverage for open/read/write/close/error
 paths and keeps file policy out of kernel PCB state.
 
 ## Release evidence
 
-Release evidence is VFS smoke coverage for open/read/write/close/error paths
+Release evidence is VFS validation coverage for open/read/write/close/error paths
 and static proof that file policy is absent from kernel PCB state.
 
 ## Release checklist
 
-- Open/read/write/close smoke passes.
+- Open/read/write/close validation passes.
 - Invalid descriptor and missing route errors are covered.
 - Backing filesystem routing is tested.
 - Static gate confirms kernel PCB has no file policy table.
@@ -111,6 +111,6 @@ network filesystem, user database, or device node policy lives directly here.
 ## Verification
 
 - Build: `make -B nonos-mk-vfs`
-- Smoke: `nonos-mk-vfs-test`
+- Validation: `nonos-mk-vfs-test`
 - Static gate: `bash nonos-ci/run-static-checks.sh`
 - Architecture check: VFS policy must remain a userland capsule service.
