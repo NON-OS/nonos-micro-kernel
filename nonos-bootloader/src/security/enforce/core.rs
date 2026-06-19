@@ -21,7 +21,7 @@ use uefi::prelude::*;
 
 use super::modes::{enforce_development, enforce_hardened, enforce_standard};
 use super::policy::{EnforcementResult, SecurityPolicy};
-use super::requirements::{enforce_crypto_selftests, enforce_keys_loaded};
+use super::requirements::{enforce_crypto_health, enforce_keys_loaded};
 use crate::display::display_enforcement_result;
 use crate::log::logger::log_info;
 use crate::security::types::SecurityContext;
@@ -35,7 +35,7 @@ pub fn enforce_security_policy(
 
     log_info("enforce", &format!("policy: {:?}", policy));
 
-    enforce_crypto_selftests(ctx, &mut result);
+    enforce_crypto_health(ctx, &mut result);
     enforce_keys_loaded(ctx, &mut result);
 
     match policy {

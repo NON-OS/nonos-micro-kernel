@@ -17,6 +17,8 @@
 mod allocate;
 mod constants;
 mod cq0_head;
+mod create_cq;
+mod create_sq;
 mod identify_controller;
 mod identify_namespace;
 mod log;

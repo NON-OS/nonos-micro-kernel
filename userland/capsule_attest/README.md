@@ -147,7 +147,7 @@ must compile clean.
 ## Verification
 
 - `nonos-ci/run-static-checks.sh` clean.
-- `cd nonos-sign && cargo test --release --test artifacts` round-trips
+- `make nonos-mk-host-trust-verify` verifies
   the baked `attest.manifest.bin` (once the signing rule is added).
 - Kernel cargo check matrix passes with `nonos-capsule-attest`.
 

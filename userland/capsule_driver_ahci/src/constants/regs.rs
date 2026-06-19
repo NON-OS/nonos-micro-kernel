@@ -25,14 +25,34 @@ pub const GHC_AE: u32 = 1 << 31;
 
 pub const PORT_BASE: u32 = 0x100;
 pub const PORT_STRIDE: u32 = 0x80;
+pub const PORT_CLB: u32 = 0x00;
+pub const PORT_CLBU: u32 = 0x04;
+pub const PORT_FB: u32 = 0x08;
+pub const PORT_FBU: u32 = 0x0c;
 pub const PORT_IS: u32 = 0x10;
+pub const PORT_IE: u32 = 0x14;
 pub const PORT_CMD: u32 = 0x18;
 pub const PORT_TFD: u32 = 0x20;
 pub const PORT_SIG: u32 = 0x24;
 pub const PORT_SSTS: u32 = 0x28;
+pub const PORT_SCTL: u32 = 0x2c;
 pub const PORT_SERR: u32 = 0x30;
 pub const PORT_SACT: u32 = 0x34;
 pub const PORT_CI: u32 = 0x38;
+
+pub const CMD_ST: u32 = 1 << 0;
+pub const CMD_FRE: u32 = 1 << 4;
+pub const CMD_FR: u32 = 1 << 14;
+pub const CMD_CR: u32 = 1 << 15;
+pub const CMD_POD: u32 = 1 << 2;
+pub const CMD_SUD: u32 = 1 << 1;
+
+pub const TFD_ERR: u32 = 1 << 0;
+pub const TFD_DRQ: u32 = 1 << 3;
+pub const TFD_BSY: u32 = 1 << 7;
+pub const IS_ERR_MASK: u32 = 1 << 30 | 1 << 29 | 1 << 28 | 1 << 27;
+pub const SCTL_IPM_DISABLE: u32 = 7 << 8;
+pub const PORT_IE_DEFAULT: u32 = 0b1_0111;
 
 pub const SIG_SATA: u32 = 0x0000_0101;
 pub const SIG_ATAPI: u32 = 0xeb14_0101;

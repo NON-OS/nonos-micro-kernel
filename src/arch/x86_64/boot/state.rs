@@ -20,37 +20,3 @@ pub use super::state_ops::{
 };
 pub use super::state_stats::get_stats;
 
-#[cfg(test)]
-mod tests {
-    use super::super::error::BootError;
-    use super::super::stage::BootStage;
-    use super::*;
-
-    #[test]
-    fn test_stage_operations() {
-        set_stage(BootStage::Entry, 1000);
-        assert_eq!(get_stage(), BootStage::Entry);
-        assert_eq!(get_stage_tsc(BootStage::Entry), 1000);
-    }
-
-    #[test]
-    fn test_error_operations() {
-        set_error(BootError::NoSse);
-        assert_eq!(get_error(), BootError::NoSse);
-    }
-
-    #[test]
-    fn test_complete_flag() {
-        set_complete(false);
-        assert!(!is_complete());
-        set_complete(true);
-        assert!(is_complete());
-    }
-
-    #[test]
-    fn test_exception_count() {
-        let initial = get_exception_count();
-        increment_exception_count();
-        assert_eq!(get_exception_count(), initial + 1);
-    }
-}

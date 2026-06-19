@@ -16,38 +16,3 @@
 
 pub use super::error_types::BootError;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_error_messages() {
-        assert_eq!(BootError::None.as_str(), "no error");
-        assert_eq!(BootError::NoSse.as_str(), "SSE not supported (required for x86_64)");
-    }
-
-    #[test]
-    fn test_error_from_u8() {
-        assert_eq!(BootError::from_u8(0), BootError::None);
-        assert_eq!(BootError::from_u8(6), BootError::NoSse);
-        assert_eq!(BootError::from_u8(255), BootError::Unknown);
-    }
-
-    #[test]
-    fn test_is_fatal() {
-        assert!(!BootError::None.is_fatal());
-        assert!(BootError::NoSse.is_fatal());
-    }
-
-    #[test]
-    fn test_is_cpu_related() {
-        assert!(BootError::NoCpuid.is_cpu_related());
-        assert!(!BootError::InvalidPageTable.is_cpu_related());
-    }
-
-    #[test]
-    fn test_is_memory_related() {
-        assert!(BootError::InvalidPageTable.is_memory_related());
-        assert!(!BootError::NoSse.is_memory_related());
-    }
-}

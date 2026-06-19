@@ -17,6 +17,7 @@
 use x86_64::structures::idt::InterruptStackFrame;
 
 use super::context::{log_exception, ExceptionContext};
+use super::rip_probe::rip_byte_range_mapped;
 use crate::interrupts::idt::halt_loop;
 use crate::interrupts::stats;
 
@@ -36,8 +37,18 @@ pub fn handle(frame: InterruptStackFrame) {
 }
 
 fn log_instruction_bytes(ctx: &ExceptionContext) {
-    // SAFETY: Reading instruction bytes from code segment for diagnostic purposes
-    let ptr = ctx.instruction_pointer as *const u8;
+    // A user fault's RIP is attacker-controlled, so never dereference it here;
+    // even a kernel RIP can be unmapped, so prove the range first.
+    if ctx.is_user_mode() {
+        crate::log::logger::log_error!("Instruction bytes: <user RIP>");
+        return;
+    }
+    let rip = ctx.instruction_pointer;
+    if !rip_byte_range_mapped(rip, 16) {
+        crate::log::logger::log_error!("Instruction bytes: <RIP unmapped>");
+        return;
+    }
+    let ptr = rip as *const u8;
     let bytes: [u8; 16] = unsafe {
         let mut buf = [0u8; 16];
         for i in 0..16 {

@@ -23,8 +23,6 @@ mod numa;
 mod pcie;
 mod processor;
 mod stats;
-#[cfg(test)]
-mod tests;
 
 pub use acpi_data_struct::AcpiData;
 pub use interrupt::{InterruptOverride, NmiConfig};

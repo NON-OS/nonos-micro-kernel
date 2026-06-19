@@ -4,7 +4,7 @@
 
 `capsule_input_proof` is the input end-to-end proof capsule. It runs as a
 CPL=3 capsule, subscribes to the input router, and exercises the full
-pointer and keyboard delivery path so a boot smoke can assert that a
+pointer and keyboard delivery path so a boot validation can assert that a
 hardware event observed by a driver capsule reaches a focused client
 unaltered. It owns no hardware and renders nothing; its only product is a
 sequence of `MkDebug` markers and a PASS / FAIL verdict on the proof

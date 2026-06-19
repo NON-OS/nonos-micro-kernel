@@ -100,21 +100,21 @@ cryptographic use of entropy.
 ## Release target
 
 The finished virtio-rng capsule is a signed entropy-source service with
-startup health checks, refill handling, interrupt recovery, QEMU smoke,
+startup health checks, refill handling, interrupt recovery, QEMU validation,
 hardware-equivalent virtio proof, and strict delivery to the entropy service.
 It provides source bytes only and never becomes the system CSPRNG or key
 generator.
 
 ## Release evidence
 
-Release requires QEMU fill smoke, entropy-service handoff proof, request-bound
+Release requires QEMU fill validation, entropy-service handoff proof, request-bound
 tests, teardown DMA revocation proof, and no fallback path that fabricates
 entropy.
 
 ## Release checklist
 
 - Signed manifest and kernel mirror present.
-- QEMU fill smoke passes.
+- QEMU fill validation passes.
 - Entropy capsule consumes the source through IPC.
 - Bounds tests reject oversized requests.
 - Teardown proof shows DMA/IRQ/MMIO/device claim revocation.

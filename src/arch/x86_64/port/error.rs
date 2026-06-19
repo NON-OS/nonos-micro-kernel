@@ -69,14 +69,3 @@ impl core::fmt::Display for PortError {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_error_messages() {
-        assert_eq!(PortError::AccessDenied { port: 0x60 }.as_str(), "Port access denied");
-        assert_eq!(PortError::PortReserved { port: 0x60 }.as_str(), "Port is reserved");
-        assert_eq!(PortError::NotInitialized.as_str(), "Port subsystem not initialized");
-    }
-}

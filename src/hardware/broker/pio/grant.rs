@@ -98,8 +98,3 @@ pub(super) fn drain_for_device(pid: u32, device_id: u64) -> Vec<PioGrant> {
     taken
 }
 
-#[cfg(test)]
-pub(crate) fn reset_for_test() {
-    GRANTS.lock().clear();
-    NEXT_GRANT_ID.store(1, Ordering::SeqCst);
-}

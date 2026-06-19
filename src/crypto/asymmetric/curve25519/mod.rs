@@ -28,13 +28,8 @@ mod util;
 // `X25519_BASEPOINT`, and `x25519_clamp`). Compile the module only when
 // the dalek-backed feature is on or when the legacy tree is selected.
 
-#[cfg(test)]
-#[cfg(not(feature = "std"))]
-#[cfg(test)]
-mod tests;
 
-pub use ed25519::*;
-
+pub use ed25519::EdwardsPoint;
 pub use field::FieldElement;
 
 pub(crate) use util::{load_u64_le, store_u64_le, SQRT_M1};

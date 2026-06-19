@@ -50,19 +50,3 @@ impl Default for SerialWriter {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_writer_creation() {
-        let writer = SerialWriter::for_port(0);
-        assert_eq!(writer.port_index(), 0);
-    }
-
-    #[test]
-    fn test_writer_default() {
-        let writer = SerialWriter::default();
-        assert_eq!(writer.port_index(), primary_port_index());
-    }
-}

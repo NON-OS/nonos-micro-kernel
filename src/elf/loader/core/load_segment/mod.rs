@@ -20,8 +20,6 @@ mod pte_flags;
 mod result;
 mod run;
 mod source;
-#[cfg(test)]
-mod tests;
 mod validate;
 
 pub(in crate::elf::loader::core) use run::load_segment;

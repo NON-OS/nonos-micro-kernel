@@ -19,3 +19,7 @@ pub const CONTROLLER_INFO_PAYLOAD_LEN: usize = 52;
 pub const IDENTIFY_CONTROLLER_PAYLOAD_LEN: usize = 88;
 pub const IDENTIFY_NAMESPACE_PAYLOAD_LEN: usize = 36;
 pub const SMART_HEALTH_PAYLOAD_LEN: usize = 177;
+pub const RW_HEADER_LEN: usize = 12;
+pub const READ_REQ_LEN: usize = RW_HEADER_LEN;
+pub const CAPACITY_PAYLOAD_LEN: usize = 8;
+pub const MAX_RW_PAYLOAD_BYTES: u32 = crate::nvm::MAX_SECTORS * crate::nvm::SECTOR_SIZE as u32;

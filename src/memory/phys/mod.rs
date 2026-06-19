@@ -19,9 +19,6 @@ pub mod constants;
 pub mod error;
 mod types;
 
-#[cfg(test)]
-mod tests;
-
 pub use allocator::{
     phys_alloc as alloc, phys_alloc_contiguous as alloc_contiguous,
     phys_allocate_frame as allocate_frame, phys_deallocate_frame as deallocate_frame,

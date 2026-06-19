@@ -18,6 +18,6 @@ mod crypto;
 mod hardware;
 mod secureboot;
 
-pub use crypto::{enforce_crypto_selftests, enforce_keys_loaded};
+pub use crypto::{enforce_crypto_health, enforce_keys_loaded};
 pub use hardware::{enforce_hardware_rng, enforce_measured_boot};
 pub use secureboot::{enforce_platform_key, enforce_secure_boot, enforce_signature_db};

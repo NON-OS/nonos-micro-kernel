@@ -25,6 +25,7 @@ mod register;
 mod reply;
 mod reply_inbox;
 mod send;
+mod send_caps;
 mod send_to_pid;
 mod sender_pid;
 

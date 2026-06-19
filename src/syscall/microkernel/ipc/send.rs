@@ -21,7 +21,7 @@ use core::sync::atomic::{AtomicU32, Ordering};
 use crate::ipc::kernel_ipc::kernel_route_ipc_corr;
 use crate::process::current_pid;
 use crate::services::registry::{lookup_port, lookup_service};
-use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL};
+use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_PERM};
 
 static SEND_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
@@ -64,6 +64,9 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
     }
     let pid = current_pid().unwrap_or(0);
     let target = redirect_reply(pid, resolve_send_target(endpoint));
+    if !super::send_caps::caller_satisfies_endpoint(endpoint, &target) {
+        return ERRNO_PERM;
+    }
     trace(pid, endpoint, &target, len);
     match kernel_route_ipc_corr(pid, &target, &data, correlation) {
         Ok(()) => 0,

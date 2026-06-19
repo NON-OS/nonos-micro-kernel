@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::args::Args;
-use super::{capability, debug, device, dma, ipc, irq, mmio, pio, process, trace};
+use super::{capability, debug, device, dma, ipc, irq, mmio, pio, process};
 
 pub fn dispatch_microkernel_syscall(
     nr: u64,
@@ -26,11 +26,8 @@ pub fn dispatch_microkernel_syscall(
     a4: u64,
     a5: u64,
 ) -> i64 {
-    trace::enter(nr, a0);
     let args = Args::new(a0, a1, a2, a3, a4, a5);
-    let result = route(nr, args);
-    trace::exit(nr, result);
-    result
+    route(nr, args)
 }
 
 fn route(nr: u64, args: Args) -> i64 {
@@ -65,6 +62,5 @@ fn route_tail(nr: u64, args: Args) -> i64 {
     if let Some(result) = debug::handle(nr, args) {
         return result;
     }
-    trace::unknown(nr);
     -1
 }

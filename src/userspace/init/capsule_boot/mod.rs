@@ -18,31 +18,5 @@ mod cert_reason;
 mod error;
 mod manifest_reason;
 mod run;
-#[cfg(any(
-    feature = "nonos-keyring-smoketest",
-    feature = "nonos-entropy-smoketest",
-    feature = "nonos-crypto-hash-smoketest",
-    feature = "nonos-driver-virtio-rng-smoketest",
-    feature = "nonos-driver-virtio-blk-smoketest",
-    feature = "nonos-driver-virtio-net-smoketest",
-    feature = "nonos-driver-ps2-input-smoketest",
-    feature = "nonos-driver-xhci-smoketest",
-    feature = "nonos-vfs-smoketest",
-    feature = "nonos-market-smoketest",
-))]
-mod smoketest;
 
 pub(crate) use run::boot;
-#[cfg(any(
-    feature = "nonos-keyring-smoketest",
-    feature = "nonos-entropy-smoketest",
-    feature = "nonos-crypto-hash-smoketest",
-    feature = "nonos-driver-virtio-rng-smoketest",
-    feature = "nonos-driver-virtio-blk-smoketest",
-    feature = "nonos-driver-virtio-net-smoketest",
-    feature = "nonos-driver-ps2-input-smoketest",
-    feature = "nonos-driver-xhci-smoketest",
-    feature = "nonos-vfs-smoketest",
-    feature = "nonos-market-smoketest",
-))]
-pub(crate) use smoketest::run_smoketest;

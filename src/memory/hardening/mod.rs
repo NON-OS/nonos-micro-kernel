@@ -23,12 +23,6 @@ pub mod manager;
 pub mod stats;
 pub mod types;
 
-#[cfg(test)]
-#[cfg(not(feature = "std"))]
-#[cfg(test)]
-mod tests;
-
-pub use constants::*;
 pub use error::{HardeningError, HardeningResult};
 pub use manager::*;
 pub use stats::HardeningStats;

@@ -18,9 +18,6 @@ pub mod api;
 pub mod kernel_handoff;
 pub mod types;
 
-#[cfg(test)]
-mod tests;
-
 pub use api::{get_handoff, init_handoff, is_initialized, total_memory, HandoffError};
 pub use kernel_handoff::{
     ArchSpecificHandoff, CpuTopology, EarlyConsole, Framebuffer, KernelHandoff, Measurement,

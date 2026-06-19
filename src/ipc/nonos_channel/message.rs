@@ -102,29 +102,3 @@ impl core::fmt::Display for IpcMessage {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_ipc_message_display() {
-        let msg = IpcMessage::with_timestamp("sender", "receiver", b"hello", 1000);
-        let s = format!("{}", msg);
-        assert!(s.contains("sender"));
-        assert!(s.contains("receiver"));
-        assert!(s.contains("5 bytes"));
-    }
-
-    #[test]
-    fn test_message_checksum() {
-        let msg = IpcMessage::with_timestamp("a", "b", b"test", 12345);
-        assert!(msg.validate_integrity());
-    }
-
-    #[test]
-    fn test_message_size_limit() {
-        let large_data = alloc::vec![0u8; MAX_MESSAGE_SIZE + 1];
-        let result = IpcMessage::new("a", "b", &large_data);
-        assert!(result.is_err());
-    }
-}

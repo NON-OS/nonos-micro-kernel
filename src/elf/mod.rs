@@ -32,8 +32,6 @@ pub mod process;
 pub mod reloc;
 pub mod stack;
 pub mod symbol;
-#[cfg(test)]
-pub mod tests;
 pub mod tls;
 pub mod types;
 

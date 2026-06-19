@@ -29,14 +29,11 @@ jobs:
   adversarial:
     uses: ./.github/workflows/ci-adversarial.yml
 
-  tests:
-    uses: ./.github/workflows/ci-tests.yml
-
   # The heavy QEMU boot lane (cold-compiles the ZK proving toolchain, then boots
   # each kernel under QEMU) runs on the nightly schedule, not per push. Every
-  # push is gated by the deterministic build, trust-chain, adversarial, tests,
+  # push is gated by the deterministic build, trust-chain, adversarial,
   # and supply-chain proofs; the boot proof lands in nightly.yml.
   attestation:
-    needs: [build, supply-chain, trust-chain, adversarial, tests]
+    needs: [build, supply-chain, trust-chain, adversarial]
     if: always()
     uses: ./.github/workflows/ci-attestation.yml

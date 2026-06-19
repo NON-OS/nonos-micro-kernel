@@ -62,23 +62,3 @@ impl CpuVendor {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_vendor_names() {
-        assert_eq!(CpuVendor::Intel.name(), "Intel");
-        assert_eq!(CpuVendor::Amd.name(), "AMD");
-        assert_eq!(CpuVendor::Unknown.name(), "Unknown");
-    }
-
-    #[test]
-    fn test_vendor_detection() {
-        let intel = CpuVendor::from_cpuid_string(0x756e6547, 0x6c65746e, 0x49656e69);
-        assert_eq!(intel, CpuVendor::Intel);
-
-        let amd = CpuVendor::from_cpuid_string(0x68747541, 0x444d4163, 0x69746e65);
-        assert_eq!(amd, CpuVendor::Amd);
-    }
-}

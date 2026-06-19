@@ -94,13 +94,13 @@ The compositor owns scene and focus. The kernel owns no settings state.
 
 The release version is a signed application capsule with `Capsule.mk`, signed
 manifest, feature gated spawn, toolkit only UI rendering, an explicit storage
-contract for any persistent toggles, and smoke proof that settings policy
+contract for any persistent toggles, and validation evidence that settings policy
 stays out of the kernel.
 
 ## Release checklist
 
 - `Capsule.mk` and signed manifest exist.
-- Toolkit IPC smoke passes.
+- Toolkit IPC validation passes.
 - Feature gated spawn is present.
 - Static gate confirms no kernel app UI exports.
 
@@ -115,4 +115,4 @@ framebuffer authority belongs in this directory.
 - Build: `cargo build --manifest-path userland/capsule_settings/Cargo.toml`
 - Static gate: `bash nonos-ci/run-static-checks.sh`
 - Promotion check: add `Capsule.mk`, manifest signing, feature gated spawn,
-  and smoke proof before claiming production app status.
+  and validation evidence before claiming production app status.

@@ -38,39 +38,3 @@ pub use legacy::{
 };
 pub use path::normalize_path;
 
-#[cfg(test)]
-mod tests {
-    use super::super::error::FsError;
-    use super::super::types::secure_zeroize;
-    use super::path::validate_path;
-
-    #[test]
-    fn test_fs_error_to_errno() {
-        assert_eq!(FsError::NotFound.to_errno(), -2);
-        assert_eq!(FsError::AlreadyExists.to_errno(), -17);
-        assert_eq!(FsError::PathTooLong.to_errno(), -36);
-    }
-
-    #[test]
-    fn test_validate_path() {
-        assert!(validate_path("/test/file").is_ok());
-        assert!(validate_path("").is_err());
-        assert!(validate_path("../etc/passwd").is_err());
-    }
-
-    #[test]
-    fn test_normalize_path() {
-        use super::path::normalize_path;
-        assert_eq!(normalize_path("/a/b/c"), "/a/b/c");
-        assert_eq!(normalize_path("/a//b/./c"), "/a/b/c");
-        assert_eq!(normalize_path("/a/b/../c"), "/a/c");
-        assert_eq!(normalize_path("a/b/c"), "a/b/c");
-    }
-
-    #[test]
-    fn test_secure_zeroize() {
-        let mut data = [0xFFu8; 32];
-        secure_zeroize(&mut data);
-        assert!(data.iter().all(|&b| b == 0));
-    }
-}

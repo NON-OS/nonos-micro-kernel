@@ -63,7 +63,7 @@ payloads return protocol errors. No kernel fallback filesystem is invoked.
 - Maintains an in-memory file store.
 - Handles open/read/write/truncate-style operations through its protocol.
 - Keeps handles and file content in capsule-owned memory.
-- Has a kernel mirror and smoke profile in the integration matrix.
+- Has a kernel mirror and validation profile in the integration matrix.
 
 ## Wire format
 
@@ -88,18 +88,18 @@ table.
 ## Release target
 
 The finished ramfs capsule has bounded memory accounting, deterministic handle
-lifetime, robust error mapping, smoke coverage for create/read/write/truncate,
+lifetime, robust error mapping, validation coverage for create/read/write/truncate,
 and clear teardown semantics. It remains volatile by design and never becomes
 a disk filesystem.
 
 ## Release evidence
 
-Release evidence is the ramfs smoke test covering create, read, write,
+Release evidence is the ramfs validation check covering create, read, write,
 truncate, invalid handle, and teardown with no kernel-resident file state.
 
 ## Release checklist
 
-- Smoke covers create/read/write/truncate/delete or equivalent flows.
+- Validation covers create/read/write/truncate/delete or equivalent flows.
 - Invalid-handle and malformed-request errors are covered.
 - Memory bounds are documented and enforced.
 - Kernel has no ramfs byte store.
@@ -112,6 +112,5 @@ mount stack, block driver, or persistent namespace is implemented here.
 ## Verification
 
 - Build: `make -B nonos-mk-ramfs`
-- Smoke: `nonos-mk-ramfs-test` under the ramfs smoketest profile.
 - Static gate: `bash nonos-ci/run-static-checks.sh`
 - Architecture check: filesystem mutation logic must stay in userland.

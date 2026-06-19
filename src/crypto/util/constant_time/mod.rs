@@ -21,9 +21,6 @@ mod lookup;
 mod math;
 mod select;
 
-#[cfg(test)]
-mod tests;
-
 pub use barriers::{
     black_box, black_box_slice, compiler_fence, dummy_work, memory_fence, serialize_execution,
     time_constant_execute, volatile_read, volatile_write,

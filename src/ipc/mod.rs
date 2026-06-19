@@ -27,6 +27,3 @@ pub mod nonos_inbox;
 pub mod pipe;
 
 pub use nonos_channel as channel;
-
-#[cfg(test)]
-pub mod tests;

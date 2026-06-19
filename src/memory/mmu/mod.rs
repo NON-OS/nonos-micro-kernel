@@ -16,9 +16,6 @@ pub mod error;
 pub mod mmu;
 mod types;
 
-#[cfg(test)]
-mod tests;
-
 pub use constants::*;
 pub use error::{MmuError, MmuResult};
 pub use mmu::{

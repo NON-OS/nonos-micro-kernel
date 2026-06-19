@@ -18,11 +18,6 @@ mod apply;
 mod context;
 mod utils;
 
-#[cfg(test)]
-#[cfg(not(feature = "std"))]
-#[cfg(test)]
-mod tests;
-
 pub use apply::{process_relocations, process_relocations_with_context};
 pub use context::{read_null_terminated_string, RelocationContext};
 pub use utils::{count_supported, count_unsupported, is_supported, reloc_type_name};

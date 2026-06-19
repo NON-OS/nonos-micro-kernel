@@ -125,8 +125,8 @@ separate storage capsules.
 
 ## Release evidence
 
-Release requires an `ich9-ahci` boot smoke, port signature proof, teardown
-grant-revocation proof, and a read/write smoke once command DMA lands.
+Release requires an `ich9-ahci` boot validation, port signature proof, teardown
+grant-revocation proof, and a read/write validation once command DMA lands.
 
 ## Release checklist
 

@@ -18,6 +18,8 @@
 pub enum AhciError {
     DeviceNotFound,
     BrokerCallFailed(i64),
+    CommandFailed,
+    Timeout,
 }
 
 pub type AhciResult<T> = Result<T, AhciError>;
@@ -26,5 +28,7 @@ pub fn exit_code(e: AhciError) -> i32 {
     match e {
         AhciError::DeviceNotFound => 2,
         AhciError::BrokerCallFailed(_) => 3,
+        AhciError::CommandFailed => 4,
+        AhciError::Timeout => 5,
     }
 }

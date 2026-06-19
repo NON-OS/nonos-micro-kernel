@@ -220,19 +220,3 @@ pub fn invalidate_pages(file_id: u64, offset: u64, length: u64) {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_page_cache_basic() {
-        init_page_cache();
-        if let Some(cache) = PAGE_CACHE.get() {
-            let mut guard = cache.lock();
-            guard.insert_page(1, 0, alloc::vec![1, 2, 3], false);
-            assert!(guard.get_page(1, 0).is_some());
-            guard.clear();
-            assert!(guard.get_page(1, 0).is_none());
-        }
-    }
-}

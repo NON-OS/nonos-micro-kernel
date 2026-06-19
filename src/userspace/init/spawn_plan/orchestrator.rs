@@ -18,10 +18,6 @@ pub(in crate::userspace::init) fn spawn_ramfs() {
     super::core::spawn_ramfs();
 }
 
-pub(in crate::userspace::init) fn run_ramfs_smoketest() {
-    super::smoketests::run_ramfs();
-}
-
 pub(in crate::userspace::init) fn spawn_core_after_ramfs() {
     super::core::spawn_after_ramfs();
 }
@@ -81,7 +77,3 @@ pub(in crate::userspace::init) fn spawn_market() {
 }
 #[cfg(feature = "microkernel-setup-wizard")]
 pub(in crate::userspace::init) fn spawn_market() {}
-
-pub(in crate::userspace::init) fn run_smoketests() {
-    super::smoketests::run_all();
-}

@@ -15,14 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::constants::BOOTSTRAP_HEAP_SIZE;
-use super::globals::{BOOTSTRAP_HEAP_MEMORY, HEAP_STATS, USING_BOOTSTRAP};
+use super::globals::{BOOTSTRAP_HEAP_MEMORY, HEAP_STATS, KERNEL_HEAP, USING_BOOTSTRAP};
 use core::ptr::addr_of_mut;
 use core::sync::atomic::Ordering;
 
-#[cfg(not(test))]
-use super::globals::KERNEL_HEAP;
-
-#[cfg(not(test))]
 pub fn init_bootstrap() {
     if !KERNEL_HEAP.is_initialized() {
         let heap_start = unsafe {
@@ -37,8 +33,6 @@ pub fn init_bootstrap() {
     }
 }
 
-#[cfg(test)]
-pub fn init_bootstrap() {}
 
 #[inline]
 pub fn is_using_bootstrap() -> bool {

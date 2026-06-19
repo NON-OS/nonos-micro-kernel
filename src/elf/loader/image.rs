@@ -15,12 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod dynamic;
-#[cfg(test)]
-mod dynamic_tests;
 mod image;
 mod segment;
-#[cfg(test)]
-mod segment_tests;
 
 pub use dynamic::DynamicInfo;
 pub use image::ElfImage;

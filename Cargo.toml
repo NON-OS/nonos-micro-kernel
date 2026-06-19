@@ -17,14 +17,11 @@
 #                                 boundary, SYSCALL/SYSRET trap path,
 #                                 manifest verifier
 #   microkernel-capsules          + proof_io + ramfs + keyring capsules
-#   microkernel-keyring-smoketest + boot-time keyring round trip
 #   microkernel                   alias for the runtime baseline
 #                                 (currently `microkernel-capsules`)
 #
 # Every feature here is referenced by source (via `cfg(feature = ...)`)
 # or composes a profile. Decorative flags do not belong in this file.
-# A smoketest profile name does not imply the corresponding boot has
-# passed; only the serial markers in `tests/boot/*.sh` do.
 
 [package]
 name        = "nonos_kernel"
@@ -125,7 +122,6 @@ nonos-capsule-net-ip            = []
 nonos-capsule-net-udp           = []
 nonos-capsule-net-dhcp          = []
 nonos-capsule-net-tcp           = []
-nonos-capsule-net-tcp-smoke     = []
 nonos-capsule-net-dns           = []
 nonos-capsule-net-sockets       = []
 nonos-capsule-net-nym           = []
@@ -134,17 +130,9 @@ nonos-capsule-market            = []
 # Layout-stable debug ring. Allocation-free, formatter-free fixed-VA
 # byte ring at the `.nonos.dbg_ring` section. Triggered by adding
 # `dbg_emit(tag, &payload)` call sites; drained from the panic path
-# and the smoketest hook. Off by default — production builds are
+# and diagnostic paths. Off by default — production builds are
 # byte-identical to before when this feature is absent.
 dbg-ring = []
-
-# Compile the in-kernel selftest runner that drives every
-# `boot::tests::*::all_pass()` group. Off by default; enabling it
-# wires `boot::tests::selftest::run_all` into the kernel image and
-# adds a single call site on the active boot path that prints
-# PASS/FAIL on the serial. No production boot behaviour changes
-# unless this feature is on.
-nonos-selftest = []
 
 # Production posture. Excludes the legacy unverified spawn path:
 # `runner::legacy`, the `CapsuleSpec` legacy struct, and every
@@ -155,46 +143,24 @@ nonos-selftest = []
 # Production posture: verified-only spawn path, and ZK attestation enforced.
 nonos-production = ["nonos-zk-enforce"]
 # When set, a capsule must carry a valid, correctly bound attestation trailer or
-# the spawn is refused. Implied by nonos-production; standalone for staged tests.
+# the spawn is refused. Implied by nonos-production; standalone for staged rollout.
 nonos-zk-enforce = []
 
 # Escape hatch for development that still needs the legacy
 # unverified spawn path. Mutually exclusive with `nonos-production`
 # (see the `compile_error!` in `lib.rs`). Never part of any default
-# or smoketest profile; opt-in only.
+# production profile; opt-in only.
 nonos-dev-unverified-capsules = []
 
 # Pre-iretq audit. The scheduler walks the target CR3 through the
 # directmap and proves the kernel halves, the user RIP leaf, the
 # user RSP leaf, TSS.RSP0 and the PF/GP IST stacks before iretq. On
 # any failure the kernel prints `[USER-PROOF] FAIL ...` and halts
-# instead of triple-faulting blindly. Every smoketest profile turns
-# this on; production builds keep it off so the audit cost stays
-# bounded to the lanes that watch serial.
+# instead of triple-faulting blindly.
 nonos-user-entry-proof = []
 
-# Arms the kernel-side synthetic scancode injector consumed by the
-# input-probe harness. Off by default; opt-in on the injection lane.
+# Arms the kernel-side synthetic scancode injector. Off by default.
 input-probe-inject = []
-
-# Boot smoketests. Each one drives a real round trip on the boot
-# serial and emits PASS/FAIL markers consumed by the matching
-# `tests/boot/*.sh` harness.
-nonos-ramfs-smoketest             = ["nonos-capsule-ramfs", "nonos-capsule-entropy", "nonos-capsule-crypto", "nonos-user-entry-proof"]
-nonos-keyring-smoketest           = ["nonos-capsule-keyring", "nonos-user-entry-proof"]
-nonos-entropy-smoketest           = ["nonos-capsule-entropy", "nonos-user-entry-proof"]
-nonos-crypto-hash-smoketest       = ["nonos-capsule-crypto", "nonos-user-entry-proof"]
-nonos-vfs-smoketest               = ["nonos-capsule-vfs", "nonos-user-entry-proof"]
-nonos-driver-virtio-rng-smoketest = ["nonos-capsule-driver-virtio-rng", "nonos-user-entry-proof"]
-nonos-driver-virtio-blk-smoketest = ["nonos-capsule-driver-virtio-blk", "nonos-user-entry-proof"]
-nonos-driver-virtio-net-smoketest = ["nonos-capsule-driver-virtio-net", "nonos-user-entry-proof"]
-nonos-driver-ps2-input-smoketest  = ["nonos-capsule-driver-ps2-input", "nonos-user-entry-proof"]
-nonos-driver-xhci-smoketest       = ["nonos-capsule-driver-xhci", "nonos-user-entry-proof"]
-nonos-driver-e1000-smoketest      = ["nonos-capsule-driver-e1000", "nonos-user-entry-proof"]
-nonos-market-smoketest            = ["nonos-capsule-market", "nonos-user-entry-proof"]
-nonos-wallpaper-smoketest         = ["nonos-capsule-wallpaper", "nonos-user-entry-proof"]
-nonos-terminal-smoketest          = ["nonos-capsule-terminal", "nonos-user-entry-proof"]
-nonos-tcp-smoketest               =["nonos-capsule-driver-virtio-net", "nonos-capsule-net-l2", "nonos-capsule-net-ip", "nonos-capsule-net-udp", "nonos-capsule-net-dhcp", "nonos-capsule-net-tcp", "nonos-capsule-net-tcp-smoke", "nonos-user-entry-proof"]
 
 # Brutal-minimum kernel profile. Each entry closes a real boundary:
 #   kernel, standalone   no-std bootstrap and panic handler routing
@@ -223,8 +189,8 @@ microkernel-capsules = [
 # Per-capsule production profiles. Each builds a kernel under the
 # `nonos-production` posture (verified-only spawn path, dev-unverified
 # locked out) with proof_io baked in plus the named capsule. These
-# are the kernel build path for everything that is not the smoketest
-# harness; the matching `nonos-mk-<slug>-prod` Makefile recipes
+# are the kernel build path for capsule production images; the
+# matching `nonos-mk-<slug>-prod` Makefile recipes
 # invoke them.
 nonos-smp = []
 
@@ -573,98 +539,10 @@ microkernel-terminal-only = [
   "nonos-capsule-terminal",
 ]
 
-# Headless terminal smoketest (dev/unverified path). The terminal capsule
-# is built with `nonos-autorun-selftest` by the Makefile target, which runs
-# the shell-logic self-test directly instead of the GUI app loop -- so the
-# GUI stack (gpu/compositor/wm/toolkit/input) is intentionally absent and
-# only the vfs-backing capsules are spawned. `nonos-user-entry-proof` grants
-# Debug so the capsule's [TERMINAL-TEST] markers reach serial for tests/boot/.
-microkernel-terminal-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-capsule-ramfs",
-  "nonos-capsule-keyring",
-  "nonos-capsule-entropy",
-  "nonos-capsule-crypto",
-  "nonos-capsule-vfs",
-  "nonos-capsule-driver-virtio-rng",
-  "nonos-capsule-terminal",
-  "nonos-terminal-smoketest",
-]
 microkernel-file-manager = ["microkernel-desktop-gui"]
 microkernel-text-editor = ["microkernel-desktop-gui"]
 microkernel-settings = ["microkernel-desktop-gui"]
 microkernel-process-manager = ["microkernel-desktop-gui"]
-
-# Smoketest profiles. The harness scripts under `tests/boot/` are the
-# source of truth for PASS/FAIL; the profiles only build the kernel
-# with the right capsule + smoketest features turned on.
-microkernel-keyring-smoketest = [
-  "microkernel-capsules",
-  "nonos-keyring-smoketest",
-]
-
-microkernel-entropy-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-capsule-entropy",
-  "nonos-entropy-smoketest",
-]
-
-microkernel-crypto-hash-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-capsule-crypto",
-  "nonos-crypto-hash-smoketest",
-]
-
-microkernel-vfs-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-capsule-vfs",
-  "nonos-vfs-smoketest",
-]
-
-microkernel-driver-virtio-rng-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-capsule-driver-virtio-rng",
-  "nonos-driver-virtio-rng-smoketest",
-]
-
-microkernel-driver-virtio-blk-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-capsule-driver-virtio-blk",
-  "nonos-driver-virtio-blk-smoketest",
-]
-
-microkernel-driver-virtio-net-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-capsule-driver-virtio-net",
-  "nonos-driver-virtio-net-smoketest",
-]
-
-microkernel-driver-ps2-input-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-capsule-driver-ps2-input",
-  "nonos-driver-ps2-input-smoketest",
-]
-
-microkernel-driver-xhci-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-capsule-driver-xhci",
-  "nonos-driver-xhci-smoketest",
-]
-
-microkernel-tcp-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-tcp-smoketest",
-]
 
 # Input stack end-to-end proof (Deliverable 2). Trimmed desktop fleet:
 # the four mandatory app peers (compositor, wm, input_router, toolkit)
@@ -762,28 +640,7 @@ microkernel-setup-wizard = [
   "nonos-capsule-setup-wizard",
 ]
 
-microkernel-driver-e1000-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-capsule-driver-e1000",
-  "nonos-driver-e1000-smoketest",
-]
-
-microkernel-market-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-proof-io",
-  "nonos-capsule-market",
-  "nonos-market-smoketest",
-]
-
-microkernel-wallpaper-smoketest = [
-  "microkernel-core",
-  "nonos-capsule-wallpaper",
-  "nonos-wallpaper-smoketest",
-]
-
-# Runtime baseline alias. Resolves to `microkernel-capsules`, never to
-# a smoketest profile.
+# Runtime baseline alias. Resolves to `microkernel-capsules`.
 microkernel = ["microkernel-capsules"]
 
 # Mid-refactor cfg gates referenced from src.

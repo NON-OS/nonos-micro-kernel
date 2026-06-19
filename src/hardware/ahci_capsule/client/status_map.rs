@@ -17,10 +17,18 @@
 use super::super::error::DriverAhciError;
 
 const E_INVAL: i32 = -22;
+const E_IO: i32 = -5;
+const E_NXIO: i32 = -6;
+const E_NODEV: i32 = -19;
+const E_MSGSIZE: i32 = -90;
 
 pub(super) fn lift(status: i32) -> DriverAhciError {
     match status {
         E_INVAL => DriverAhciError::InvalidArgument,
+        E_IO => DriverAhciError::DeviceFailure,
+        E_NXIO => DriverAhciError::OutOfRange,
+        E_NODEV => DriverAhciError::Unsupported,
+        E_MSGSIZE => DriverAhciError::OversizedRequest,
         _ => DriverAhciError::DeviceFailure,
     }
 }

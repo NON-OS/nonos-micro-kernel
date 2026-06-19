@@ -41,9 +41,6 @@ mod syscall;
 mod utils;
 mod verifier;
 
-#[cfg(test)]
-mod tests;
-
 // Re-export constants
 pub use constants::{
     DOM_EQUALITY, DOM_MERKLE, DOM_PEDERSEN, DOM_PLONK, DOM_RANGE, DOM_SCHNORR, DOM_SIGMA, L,

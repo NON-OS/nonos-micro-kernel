@@ -27,6 +27,3 @@ pub use reasm::Reasm;
 pub use retx::{RetxQueue, RetxSeg};
 pub use table::TABLE;
 pub use timers::{TimerKind, Timers};
-
-#[cfg(feature = "tcp-selftest")]
-pub use table::{quota_ok, Table};

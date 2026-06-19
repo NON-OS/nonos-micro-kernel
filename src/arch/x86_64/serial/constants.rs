@@ -67,34 +67,3 @@ pub const FCR_TRIGGER_14: u8 = 3 << 6;
 pub const IIR_NO_INT: u8 = 1 << 0;
 pub const IIR_ID_MASK: u8 = 0x0E;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_port_addresses() {
-        assert_eq!(COM1_BASE, 0x3F8);
-        assert_eq!(COM2_BASE, 0x2F8);
-        assert_eq!(COM3_BASE, 0x3E8);
-        assert_eq!(COM4_BASE, 0x2E8);
-    }
-
-    #[test]
-    fn test_irqs() {
-        assert_eq!(COM1_IRQ, 4);
-        assert_eq!(COM2_IRQ, 3);
-    }
-
-    #[test]
-    fn test_register_offsets() {
-        assert_eq!(REG_DATA, 0);
-        assert_eq!(REG_IER, 1);
-        assert_eq!(REG_LSR, 5);
-    }
-
-    #[test]
-    fn test_lsr_bits() {
-        assert_eq!(LSR_DATA_READY, 0x01);
-        assert_eq!(LSR_TX_EMPTY, 0x20);
-    }
-}

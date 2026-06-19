@@ -14,21 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod capacity;
 mod controller_info;
+mod flush;
 mod healthcheck;
 mod identify_controller;
 mod identify_namespace;
 mod read;
+mod read_blocks;
 mod seq;
 mod smart_decode;
 mod smart_health;
 mod status_map;
 mod transport;
+mod write_blocks;
 
 pub(super) use transport::REPLY_INBOX;
 
+pub use capacity::capacity;
 pub use controller_info::{controller_info, NvmeControllerInfo};
+pub use flush::flush;
 pub use healthcheck::healthcheck;
 pub use identify_controller::{identify_controller, NvmeControllerIdentity};
 pub use identify_namespace::{identify_namespace, NvmeNamespaceIdentity};
+pub use read_blocks::read_blocks;
 pub use smart_health::{smart_health, NvmeSmartHealth};
+pub use write_blocks::write_blocks;

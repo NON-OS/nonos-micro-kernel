@@ -16,6 +16,7 @@
 
 use crate::constants::MAX_PORTS;
 use crate::controller::{ControllerInfo, PortInfo};
+use crate::engine::Port;
 use crate::handles::BrokerHandles;
 use crate::regs::Regs;
 
@@ -24,4 +25,5 @@ pub struct Driver {
     pub regs: Regs,
     pub info: ControllerInfo,
     pub ports: [PortInfo; MAX_PORTS],
+    pub block: Option<Port>,
 }

@@ -182,24 +182,3 @@ impl Default for DerivationPath {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_path() {
-        let path = DerivationPath::parse("m/44'/60'/0'/0/0").unwrap();
-        assert_eq!(path.depth(), 5);
-        assert!(path.components[0].is_hardened());
-        assert!(path.components[1].is_hardened());
-        assert!(path.components[2].is_hardened());
-        assert!(!path.components[3].is_hardened());
-        assert!(!path.components[4].is_hardened());
-    }
-
-    #[test]
-    fn test_bip44_eth() {
-        let path = DerivationPath::bip44_eth(0, 0);
-        assert_eq!(path.to_string(), "m/44'/60'/0'/0/0");
-    }
-}

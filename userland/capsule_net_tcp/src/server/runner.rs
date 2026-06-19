@@ -51,25 +51,9 @@ pub fn run() -> ! {
             OP_RECV => handlers::recv::handle(sender_pid, &req, body, &mut tx),
             OP_CLOSE | OP_SHUTDOWN => handlers::close::handle(sender_pid, &req, body, &mut tx),
             OP_STATE => handlers::state::handle(sender_pid, &req, body, &mut tx),
-            #[cfg(feature = "tcp-selftest")]
-            crate::protocol::OP_SELFTEST => selftest_reply(sender_pid, &req, &mut tx),
             _ => {
                 let _ = respond(sender_pid, req.op, E_BAD_OP, req.request_id, 0, &mut tx);
             }
         }
     }
-}
-
-#[cfg(feature = "tcp-selftest")]
-fn selftest_reply(sender_pid: u32, req: &super::parse_req::Request, tx: &mut [u8]) {
-    let bits = crate::selftest::run();
-    tx[HDR_LEN..HDR_LEN + 4].copy_from_slice(&bits.to_le_bytes());
-    let _ = respond(
-        sender_pid,
-        crate::protocol::OP_SELFTEST,
-        crate::protocol::E_OK,
-        req.request_id,
-        4,
-        tx,
-    );
 }

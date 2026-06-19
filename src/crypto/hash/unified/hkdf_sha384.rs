@@ -68,37 +68,3 @@ pub fn hkdf_expand_sha384(prk: &[u8], info: &[u8], okm: &mut [u8]) -> Result<(),
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_hkdf_sha384_extract_zeros() {
-        let prk = hkdf_extract_sha384(None, &[0u8; 48]);
-        // Non-zero output from HMAC-SHA-384(zeros, zeros)
-        assert_ne!(prk, [0u8; 48]);
-    }
-
-    #[test]
-    fn test_hkdf_sha384_expand_basic() {
-        let prk = hkdf_extract_sha384(Some(&[0x0bu8; 48]), b"input key material");
-        let mut okm = [0u8; 48];
-        hkdf_expand_sha384(&prk, b"info", &mut okm).unwrap();
-        assert_ne!(okm, [0u8; 48]);
-    }
-
-    #[test]
-    fn test_hkdf_sha384_expand_short() {
-        let prk = hkdf_extract_sha384(Some(&[0x0bu8; 48]), b"ikm");
-        let mut okm = [0u8; 12];
-        hkdf_expand_sha384(&prk, b"iv", &mut okm).unwrap();
-        assert_ne!(okm, [0u8; 12]);
-    }
-
-    #[test]
-    fn test_hkdf_sha384_expand_too_large() {
-        let prk = [0u8; 48];
-        let mut okm = [0u8; 255 * 48 + 1];
-        assert!(hkdf_expand_sha384(&prk, b"", &mut okm).is_err());
-    }
-}

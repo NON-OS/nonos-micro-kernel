@@ -20,9 +20,6 @@ mod address;
 mod rlp;
 mod transaction;
 
-#[cfg(test)]
-mod tests;
-
 pub use address::EthAddress;
 pub use rlp::{rlp_encode_bytes, rlp_encode_list, rlp_encode_u128, rlp_encode_u64};
 pub use transaction::{

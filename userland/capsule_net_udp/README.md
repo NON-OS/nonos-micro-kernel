@@ -95,13 +95,13 @@ transport service rather than duplicating UDP logic.
 
 ## Release evidence
 
-Release evidence is bind/send/receive smoke, port-collision test, checksum
+Release evidence is bind/send/receive validation, port-collision test, checksum
 failure test, and DHCP/DNS clients using this capsule instead of duplicating
 UDP parsing.
 
 ## Release checklist
 
-- Bind/send/receive smoke passes.
+- Bind/send/receive validation passes.
 - Port collision returns deterministic error.
 - Checksum failure is tested.
 - DHCP and DNS route through this capsule.

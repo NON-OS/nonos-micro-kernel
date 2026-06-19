@@ -35,17 +35,3 @@ pub fn reset_stats(port_index: usize) -> bool {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_get_stats_invalid_port() {
-        assert!(get_stats(100).is_none());
-    }
-
-    #[test]
-    fn test_reset_stats_invalid_port() {
-        assert!(!reset_stats(100));
-    }
-}

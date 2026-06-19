@@ -72,7 +72,6 @@ impl MsixOps for RealMsixOps {
 
 static REAL_OPS: RealMsixOps = RealMsixOps;
 
-#[cfg(not(test))]
 pub(in crate::hardware::broker::irq) fn current_ops() -> &'static dyn MsixOps {
     &REAL_OPS
 }

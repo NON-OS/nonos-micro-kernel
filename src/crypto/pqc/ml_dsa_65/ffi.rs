@@ -14,32 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(test)]
-pub(super) unsafe fn keypair(_pk: *mut u8, _sk: *mut u8) -> i32 {
-    -1
-}
-#[cfg(test)]
-pub(super) unsafe fn sign(
-    _sig: *mut u8,
-    _siglen: *mut usize,
-    _m: *const u8,
-    _mlen: usize,
-    _sk: *const u8,
-) -> i32 {
-    -1
-}
-#[cfg(test)]
-pub(super) unsafe fn verify(
-    _sig: *const u8,
-    _siglen: usize,
-    _m: *const u8,
-    _mlen: usize,
-    _pk: *const u8,
-) -> i32 {
-    -1
-}
 
-#[cfg(all(not(test), feature = "mldsa2", not(feature = "mldsa3"), not(feature = "mldsa5")))]
+#[cfg(all(feature = "mldsa2", not(feature = "mldsa3"), not(feature = "mldsa5")))]
 extern "C" {
     fn PQCLEAN_MLDSA44_CLEAN_crypto_sign_keypair(pk: *mut u8, sk: *mut u8) -> i32;
     fn PQCLEAN_MLDSA44_CLEAN_crypto_sign_signature(
@@ -58,11 +34,11 @@ extern "C" {
     ) -> i32;
 }
 
-#[cfg(all(not(test), feature = "mldsa2", not(feature = "mldsa3"), not(feature = "mldsa5")))]
+#[cfg(all(feature = "mldsa2", not(feature = "mldsa3"), not(feature = "mldsa5")))]
 pub(super) unsafe fn keypair(pk: *mut u8, sk: *mut u8) -> i32 {
     unsafe { PQCLEAN_MLDSA44_CLEAN_crypto_sign_keypair(pk, sk) }
 }
-#[cfg(all(not(test), feature = "mldsa2", not(feature = "mldsa3"), not(feature = "mldsa5")))]
+#[cfg(all(feature = "mldsa2", not(feature = "mldsa3"), not(feature = "mldsa5")))]
 pub(super) unsafe fn sign(
     sig: *mut u8,
     siglen: *mut usize,
@@ -72,7 +48,7 @@ pub(super) unsafe fn sign(
 ) -> i32 {
     unsafe { PQCLEAN_MLDSA44_CLEAN_crypto_sign_signature(sig, siglen, m, mlen, sk) }
 }
-#[cfg(all(not(test), feature = "mldsa2", not(feature = "mldsa3"), not(feature = "mldsa5")))]
+#[cfg(all(feature = "mldsa2", not(feature = "mldsa3"), not(feature = "mldsa5")))]
 pub(super) unsafe fn verify(
     sig: *const u8,
     siglen: usize,
@@ -83,7 +59,7 @@ pub(super) unsafe fn verify(
     unsafe { PQCLEAN_MLDSA44_CLEAN_crypto_sign_verify(sig, siglen, m, mlen, pk) }
 }
 
-#[cfg(all(not(test), feature = "mldsa3", not(feature = "mldsa2"), not(feature = "mldsa5")))]
+#[cfg(all(feature = "mldsa3", not(feature = "mldsa2"), not(feature = "mldsa5")))]
 extern "C" {
     fn PQCLEAN_MLDSA65_CLEAN_crypto_sign_keypair(pk: *mut u8, sk: *mut u8) -> i32;
     fn PQCLEAN_MLDSA65_CLEAN_crypto_sign_signature(
@@ -102,11 +78,11 @@ extern "C" {
     ) -> i32;
 }
 
-#[cfg(all(not(test), feature = "mldsa3", not(feature = "mldsa2"), not(feature = "mldsa5")))]
+#[cfg(all(feature = "mldsa3", not(feature = "mldsa2"), not(feature = "mldsa5")))]
 pub(super) unsafe fn keypair(pk: *mut u8, sk: *mut u8) -> i32 {
     unsafe { PQCLEAN_MLDSA65_CLEAN_crypto_sign_keypair(pk, sk) }
 }
-#[cfg(all(not(test), feature = "mldsa3", not(feature = "mldsa2"), not(feature = "mldsa5")))]
+#[cfg(all(feature = "mldsa3", not(feature = "mldsa2"), not(feature = "mldsa5")))]
 pub(super) unsafe fn sign(
     sig: *mut u8,
     siglen: *mut usize,
@@ -116,7 +92,7 @@ pub(super) unsafe fn sign(
 ) -> i32 {
     unsafe { PQCLEAN_MLDSA65_CLEAN_crypto_sign_signature(sig, siglen, m, mlen, sk) }
 }
-#[cfg(all(not(test), feature = "mldsa3", not(feature = "mldsa2"), not(feature = "mldsa5")))]
+#[cfg(all(feature = "mldsa3", not(feature = "mldsa2"), not(feature = "mldsa5")))]
 pub(super) unsafe fn verify(
     sig: *const u8,
     siglen: usize,
@@ -127,7 +103,7 @@ pub(super) unsafe fn verify(
     unsafe { PQCLEAN_MLDSA65_CLEAN_crypto_sign_verify(sig, siglen, m, mlen, pk) }
 }
 
-#[cfg(all(not(test), feature = "mldsa5", not(feature = "mldsa2"), not(feature = "mldsa3")))]
+#[cfg(all(feature = "mldsa5", not(feature = "mldsa2"), not(feature = "mldsa3")))]
 extern "C" {
     fn PQCLEAN_MLDSA87_CLEAN_crypto_sign_keypair(pk: *mut u8, sk: *mut u8) -> i32;
     fn PQCLEAN_MLDSA87_CLEAN_crypto_sign_signature(
@@ -146,11 +122,11 @@ extern "C" {
     ) -> i32;
 }
 
-#[cfg(all(not(test), feature = "mldsa5", not(feature = "mldsa2"), not(feature = "mldsa3")))]
+#[cfg(all(feature = "mldsa5", not(feature = "mldsa2"), not(feature = "mldsa3")))]
 pub(super) unsafe fn keypair(pk: *mut u8, sk: *mut u8) -> i32 {
     unsafe { PQCLEAN_MLDSA87_CLEAN_crypto_sign_keypair(pk, sk) }
 }
-#[cfg(all(not(test), feature = "mldsa5", not(feature = "mldsa2"), not(feature = "mldsa3")))]
+#[cfg(all(feature = "mldsa5", not(feature = "mldsa2"), not(feature = "mldsa3")))]
 pub(super) unsafe fn sign(
     sig: *mut u8,
     siglen: *mut usize,
@@ -160,7 +136,7 @@ pub(super) unsafe fn sign(
 ) -> i32 {
     unsafe { PQCLEAN_MLDSA87_CLEAN_crypto_sign_signature(sig, siglen, m, mlen, sk) }
 }
-#[cfg(all(not(test), feature = "mldsa5", not(feature = "mldsa2"), not(feature = "mldsa3")))]
+#[cfg(all(feature = "mldsa5", not(feature = "mldsa2"), not(feature = "mldsa3")))]
 pub(super) unsafe fn verify(
     sig: *const u8,
     siglen: usize,
@@ -171,7 +147,7 @@ pub(super) unsafe fn verify(
     unsafe { PQCLEAN_MLDSA87_CLEAN_crypto_sign_verify(sig, siglen, m, mlen, pk) }
 }
 
-#[cfg(all(not(test), not(feature = "mldsa2"), not(feature = "mldsa3"), not(feature = "mldsa5")))]
+#[cfg(all(not(feature = "mldsa2"), not(feature = "mldsa3"), not(feature = "mldsa5")))]
 extern "C" {
     fn PQCLEAN_MLDSA65_CLEAN_crypto_sign_keypair(pk: *mut u8, sk: *mut u8) -> i32;
     fn PQCLEAN_MLDSA65_CLEAN_crypto_sign_signature(
@@ -190,11 +166,11 @@ extern "C" {
     ) -> i32;
 }
 
-#[cfg(all(not(test), not(feature = "mldsa2"), not(feature = "mldsa3"), not(feature = "mldsa5")))]
+#[cfg(all(not(feature = "mldsa2"), not(feature = "mldsa3"), not(feature = "mldsa5")))]
 pub(super) unsafe fn keypair(pk: *mut u8, sk: *mut u8) -> i32 {
     unsafe { PQCLEAN_MLDSA65_CLEAN_crypto_sign_keypair(pk, sk) }
 }
-#[cfg(all(not(test), not(feature = "mldsa2"), not(feature = "mldsa3"), not(feature = "mldsa5")))]
+#[cfg(all(not(feature = "mldsa2"), not(feature = "mldsa3"), not(feature = "mldsa5")))]
 pub(super) unsafe fn sign(
     sig: *mut u8,
     siglen: *mut usize,
@@ -204,7 +180,7 @@ pub(super) unsafe fn sign(
 ) -> i32 {
     unsafe { PQCLEAN_MLDSA65_CLEAN_crypto_sign_signature(sig, siglen, m, mlen, sk) }
 }
-#[cfg(all(not(test), not(feature = "mldsa2"), not(feature = "mldsa3"), not(feature = "mldsa5")))]
+#[cfg(all(not(feature = "mldsa2"), not(feature = "mldsa3"), not(feature = "mldsa5")))]
 pub(super) unsafe fn verify(
     sig: *const u8,
     siglen: usize,

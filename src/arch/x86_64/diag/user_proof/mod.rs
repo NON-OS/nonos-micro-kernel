@@ -23,8 +23,7 @@
 //! slots used by #DF, #PF, #GP) is non-zero.
 //!
 //! On any failure prints `[USER-PROOF] FAIL <reason>` and refuses
-//! to iretq. Production builds compile this path out; smoketest
-//! profiles enable `nonos-user-entry-proof`.
+//! to iretq.
 
 use crate::arch::x86_64::gdt::{
     constants::{IST_DOUBLE_FAULT, IST_GP, IST_PAGE_FAULT},

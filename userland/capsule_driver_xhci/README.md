@@ -142,15 +142,15 @@ separate USB class capsules.
 
 ## Release evidence
 
-Release requires QEMU `qemu-xhci` smoke, No-op completion proof, Enable Slot
-/ Disable Slot proof, port-change proof, endpoint-zero GetDescriptor smoke,
+Release requires QEMU `qemu-xhci` validation, No-op completion proof, Enable Slot
+/ Disable Slot proof, port-change proof, endpoint-zero GetDescriptor validation,
 teardown DMA revocation, and class capsule handoff tests.
 
 ## Release checklist
 
 - Signed manifest and kernel mirror present.
-- QEMU xHCI No-op smoke passes.
-- Slot enable/disable, port-change, and GetDescriptor smoke pass.
+- QEMU xHCI No-op validation passes.
+- Slot enable/disable, port-change, and GetDescriptor validation pass.
 - Teardown proof shows DMA/IRQ/MMIO/device claim revocation.
 - HID or mass-storage class capsule handoff is proven over IPC.
 

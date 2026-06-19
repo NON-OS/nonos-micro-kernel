@@ -27,11 +27,6 @@ pub(super) fn set_alive(pid: u32) {
     STATE.set_alive(pid);
 }
 
-#[cfg(feature = "nonos-market-smoketest")]
-pub(super) fn is_alive() -> bool {
-    STATE.is_alive()
-}
-
 pub fn shared_state() -> &'static CapsuleState {
     &STATE
 }

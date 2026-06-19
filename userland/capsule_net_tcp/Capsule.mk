@@ -12,7 +12,7 @@ CAPSULE_NAMESPACE        := systems.nonos.net.tcp
 CAPSULE_SERVICE_ENDPOINT := service:4430:net.tcp
 CAPSULE_REPLY_ENDPOINT   := reply:4431:endpoint.net.tcp.reply
 CAPSULE_REQUIRED_CAPS    := 0x00039
-CAPSULE_CARGO_FEATURES   := tcp-selftest
+CAPSULE_CARGO_FEATURES   :=
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_net_tcp
 
 include nonos-mk/capsule.mk

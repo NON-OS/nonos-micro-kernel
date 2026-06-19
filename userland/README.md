@@ -27,24 +27,24 @@ Three things cross the line and nothing else: the `SYSCALL` instruction (one sit
 
 ## Capsule status
 
-| Capsule | Class | Build | Kernel mirror | Spawn site wired | Boot-test proven |
+| Capsule | Class | Build | Kernel mirror | Spawn site wired | Runtime status |
 |---|---|---|---|---|---|
-| capsule_proof_io | one-shot | yes | `crate::userspace::capsule_proof_io` | yes (`init::run_init`) | yes (boot run prints marker) |
-| capsule_ramfs | server | yes | `src/fs/ramfs_capsule/` | yes (`init::run_init`) | yes (`tests/boot/ramfs_round_trip.sh`) |
-| capsule_keyring | server | yes | `src/security/keyring_capsule/` | yes (`init::run_init`) | yes (`tests/boot/keyring_round_trip.sh`) |
-| capsule_entropy | server | yes | `src/security/entropy_capsule/` | yes (`init::run_init`) | yes (`tests/boot/entropy_round_trip.sh`) |
-| capsule_crypto | server | yes | `src/security/crypto_capsule/` | yes (`init::run_init`) | yes (`tests/boot/crypto_hash_round_trip.sh`) |
-| capsule_vfs | server | yes | `src/fs/vfs_capsule/` | yes (`init::run_init`) | yes (`tests/boot/vfs_round_trip.sh`) |
-| capsule_market | server | yes | `src/security/market_capsule/` | yes (`init::run_init`, cfg-gated) | yes (`tests/boot/market_round_trip.sh`) |
-| capsule_driver_virtio_rng | server | yes | `src/hardware/virtio_rng_capsule/` | yes (`init::run_init`, cfg-gated) | yes (`tests/boot/virtio_rng_round_trip.sh`) |
-| capsule_driver_virtio_blk | server | yes | `src/hardware/virtio_blk_capsule/` | yes (`init::run_init`, cfg-gated) | yes (`tests/boot/virtio_blk_round_trip.sh`) |
-| capsule_driver_virtio_net | server | yes | `src/hardware/virtio_net_capsule/` | yes (`init::run_init`, cfg-gated) | yes (`tests/boot/virtio_net_round_trip.sh`) |
-| capsule_driver_xhci | server | yes | `src/hardware/xhci_capsule/` | yes (`init::run_init`, cfg-gated) | yes (`tests/boot/xhci_round_trip.sh`) |
-| capsule_driver_e1000 | server | yes | `src/hardware/e1000_capsule/` | yes (`init::run_init`, cfg-gated) | no boot script present |
-| capsule_driver_ps2_input | server | yes | `src/hardware/ps2_kbd_capsule/` | yes (`init::run_init`, cfg-gated) | yes (`tests/boot/ps2_input_round_trip.sh`) |
-| capsule_driver_ahci | server | yes | none yet | none | none |
-| capsule_driver_hda | server | yes | none yet | none | none |
-| capsule_driver_nvme | server | yes | none yet | none | none |
+| capsule_proof_io | one-shot | yes | `crate::userspace::capsule_proof_io` | yes (`init::run_init`) | local diagnostic capsule |
+| capsule_ramfs | server | yes | `src/fs/ramfs_capsule/` | yes (`init::run_init`) | RAM-backed encrypted file store |
+| capsule_keyring | server | yes | `src/security/keyring_capsule/` | yes (`init::run_init`) | volatile key service |
+| capsule_entropy | server | yes | `src/security/entropy_capsule/` | yes (`init::run_init`) | runtime entropy service |
+| capsule_crypto | server | yes | `src/security/crypto_capsule/` | yes (`init::run_init`) | user crypto service |
+| capsule_vfs | server | yes | `src/fs/vfs_capsule/` | yes (`init::run_init`) | volatile namespace router |
+| capsule_market | server | yes | `src/security/market_capsule/` | yes (`init::run_init`, cfg-gated) | signed index service |
+| capsule_driver_virtio_rng | server | yes | `src/hardware/virtio_rng_capsule/` | yes (`init::run_init`, cfg-gated) | virtio entropy driver |
+| capsule_driver_virtio_blk | server | yes | `src/hardware/virtio_blk_capsule/` | yes (`init::run_init`, cfg-gated) | sector read/write/flush IPC |
+| capsule_driver_virtio_net | server | yes | `src/hardware/virtio_net_capsule/` | yes (`init::run_init`, cfg-gated) | raw frame IPC |
+| capsule_driver_xhci | server | yes | `src/hardware/xhci_capsule/` | yes (`init::run_init`, cfg-gated) | USB controller service |
+| capsule_driver_e1000 | server | yes | `src/hardware/e1000_capsule/` | yes (`init::run_init`, cfg-gated) | raw frame IPC |
+| capsule_driver_ps2_input | server | yes | `src/hardware/ps2_kbd_capsule/` | yes (`init::run_init`, cfg-gated) | PS/2 input service |
+| capsule_driver_ahci | server | yes | `src/hardware/ahci_capsule/` | yes (`init::run_init`, cfg-gated) | controller status only; no block I/O |
+| capsule_driver_hda | server | yes | `src/hardware/hda_capsule/` | yes (`init::run_init`, cfg-gated) | audio controller service |
+| capsule_driver_nvme | server | yes | `src/hardware/nvme_capsule/` | yes (`init::run_init`, cfg-gated) | admin identify/SMART only; no block I/O |
 | capsule_wallpaper | one-shot | yes | none | none | none |
 
 `marketplace_abi/` is a library crate, not a capsule; it ships the wire-form types `capsule_market` and the host `marketplace-index` CLI both speak.
@@ -441,8 +441,6 @@ The kernel toggles capsule embed sites via Cargo features in the kernel `Cargo.t
 | `nonos-capsule-market` | `capsule_market` | server via `spawn_market_capsule` |
 | `nonos-capsule-driver-virtio-rng` | `capsule_driver_virtio_rng` | server via `spawn_driver_virtio_rng_capsule` |
 | `nonos-capsule-driver-virtio-blk` | `capsule_driver_virtio_blk` | server via `spawn_driver_virtio_blk_capsule` |
-| `nonos-ramfs-smoketest` | adds `crate::fs::ramfs_capsule::smoketest::run()` after spawn | n/a |
-| `nonos-keyring-smoketest` / `nonos-entropy-smoketest` / `nonos-crypto-hash-smoketest` / `nonos-vfs-smoketest` / `nonos-market-smoketest` / `nonos-driver-virtio-rng-smoketest` / `nonos-driver-virtio-blk-smoketest` | runs the matching `smoketest::run()` after spawn | n/a |
 
 When a feature is off, the kernel-side `embed.rs` resolves the binary slice to `&[]`, and `spawn_*_capsule()` returns `Err(FeatureDisabled)` immediately. The kernel still builds.
 
@@ -461,7 +459,6 @@ make nonos-mk-crypto                builds capsule_crypto
 make nonos-mk-vfs                   builds capsule_vfs
 make nonos-mk-market                builds capsule_market (production)
 make nonos-mk-market-dev            same, with the offline dev fixture
-make nonos-mk-market-smoke          same, with the smoketest-trust feature
 make nonos-mk-virtio-rng            builds capsule_driver_virtio_rng
 make nonos-mk-virtio-blk            builds capsule_driver_virtio_blk
 make nonos-mk-marketplace-index-tool  builds the host marketplace-index CLI
@@ -476,7 +473,7 @@ make nonos-mk-ramfs nonos-mk-capsules
 make nonos-mk-keyring nonos-mk-capsules
 ```
 
-`nonos-mk-capsules` turns on the runtime baseline (`microkernel-capsules` = proof_io + ramfs + keyring). Newer capsules (entropy, crypto, vfs, market, virtio_rng, virtio_blk) ride their own smoketest profiles: `nonos-mk-entropy-test`, `nonos-mk-crypto-hash-test`, `nonos-mk-vfs-test`, `nonos-mk-market-test`, `nonos-mk-driver-virtio-rng-test`, `nonos-mk-driver-virtio-blk-test`. Each profile builds the kernel with the matching capsule embed plus its boot smoke arm.
+`nonos-mk-capsules` turns on the runtime baseline (`microkernel-capsules` = proof_io + ramfs + keyring).
 
 ## Adding a new capsule
 

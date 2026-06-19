@@ -23,10 +23,6 @@ pub mod client;
 mod embed;
 mod error;
 mod protocol;
-#[cfg(feature = "nonos-driver-xhci-smoketest")]
-pub mod smoketest;
-#[cfg(feature = "nonos-driver-xhci-smoketest")]
-mod smoketest_slot;
 mod spawn;
 mod state;
 

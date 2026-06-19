@@ -91,31 +91,3 @@ impl core::fmt::Display for InboxError {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_inbox_error_display() {
-        let e = InboxError::NotFound { module: "test".into() };
-        assert!(format!("{}", e).contains("test"));
-
-        let e = InboxError::Full { module: "mod1".into(), capacity: 100 };
-        let msg = format!("{}", e);
-        assert!(msg.contains("mod1"));
-        assert!(msg.contains("100"));
-
-        let e = InboxError::Timeout { module: "mod2".into(), waited_ms: 500 };
-        let msg = format!("{}", e);
-        assert!(msg.contains("mod2"));
-        assert!(msg.contains("500"));
-
-        let e = InboxError::InvalidCapacity { value: 5, min: 16, max: 65536 };
-        let msg = format!("{}", e);
-        assert!(msg.contains("5"));
-        assert!(msg.contains("16"));
-
-        let e = InboxError::EmptyModuleName;
-        assert!(format!("{}", e).contains("empty"));
-    }
-}

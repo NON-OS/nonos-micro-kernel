@@ -60,5 +60,19 @@ pub fn run() -> NvmeResult<Driver> {
         let data = admin.smart_health(regs, info.doorbell_stride())?;
         SmartHealth::parse(data)
     };
-    Ok(Driver { _admin: admin, handles, regs, identity, namespace, health })
+    let io = if namespace.nsid != 0 && namespace.lba_size == 512 && namespace.size_lba > 0 {
+        crate::nvm::bring_up(
+            dev.device_id,
+            claim_epoch,
+            regs,
+            info.doorbell_stride(),
+            &mut admin,
+            namespace.nsid,
+            namespace.size_lba,
+        )
+        .ok()
+    } else {
+        None
+    };
+    Ok(Driver { _admin: admin, handles, regs, identity, namespace, health, io })
 }

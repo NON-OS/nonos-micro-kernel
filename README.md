@@ -24,7 +24,7 @@ i2c and PS/2. One command builds it, proves it and boots it.
 - [Requirements](#requirements)
 - [Build and run](#build-and-run)
 - [Verify it yourself](#verify-it-yourself)
-- [Testing](#testing)
+- [Verification](#verification)
 - [Build your own capsule](#build-your-own-capsule)
 - [Earning NOX for securing NONOS](#earning-nox-for-securing-nonos)
 - [Command reference](#command-reference)
@@ -163,7 +163,7 @@ make nonos-mk-run
 The first build compiles the pinned toolchain targets, the bootloader,
 the kernel, all capsules, then signs and attests each one before
 booting. The default QEMU boot attaches no NIC; use a `*-net` target
-when testing network-capable capsules. Expect a long first run;
+when exercising network-capable capsules. Expect a long first run;
 everything after is incremental.
 Useful variants:
 
@@ -206,24 +206,17 @@ More verification entry points:
 ```sh
 make nonos-mk-zk-verify-live    # watch each pairing check, one per capsule
 make nonos-mk-attestation CAP=terminal   # deep-dive one capsule's proof
-make nonos-mk-host-trust-test   # host trust chain against the baked policy
+make nonos-mk-host-trust-verify # host trust chain against the baked policy
 make nonos-mk-check-trust-manifest      # keystore ledger integrity
 ```
 
-## Testing
+## Verification
 
 ```sh
 make nonos-mk-verify          # static gates + capsule build + symbol scan
-make nonos-mk-test            # verify + QEMU boot round trips
-make nonos-mk-boot-vfs        # individual subsystem round trips under QEMU:
-make nonos-mk-boot-keyring    #   vfs, keyring, entropy, crypto-hash, ramfs
-make nonos-mk-boot-input-e2e-ps2    # input stack end to end, PS/2
-make nonos-mk-boot-input-e2e-xhci   # input stack end to end, xHCI HID
+make nonos-mk-verify-trust    # signed capsule manifest and trust ledger checks
+make nonos-mk-verify-attestation # committed capsule attestation receipt checks
 ```
-
-Driver smoketests exist per device (`nonos-mk-driver-virtio-blk-test`,
-`-virtio-net-test`, `-xhci-test`, and friends); `make help` lists the
-full set.
 
 ## Build your own capsule
 
@@ -285,9 +278,7 @@ contract addresses and the frozen on-chain interface live in
   verify       nonos-mk-verify-attestation (no keys, nothing rebuilt),
                nonos-mk-attestation-receipt, nonos-mk-zk-verify-live,
                nonos-mk-attestation CAP=<name>, nonos-mk-verify-trust,
-               nonos-mk-host-trust-test, nonos-mk-check-trust-manifest
-  test         nonos-mk-verify, nonos-mk-test, nonos-mk-boot-*,
-               nonos-mk-driver-*-test, nonos-mk-static
+               nonos-mk-host-trust-verify, nonos-mk-check-trust-manifest
   zk           nonos-mk-zk-report, nonos-mk-zk-tools,
                nonos-mk-zk-ceremony (deliberately re-run a setup)
   nox          nonos-mk-nox CONTRIB=0x..., nonos-mk-nox-receipt,
