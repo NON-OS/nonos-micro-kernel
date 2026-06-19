@@ -59,7 +59,6 @@ pub(crate) fn run(
     )?;
     let install_caps = verification.1;
 
-    #[cfg(feature = "zk-groth16")]
     super::attest_gate::attest_gate(spec, install_caps)?;
 
     Ok(Preflighted { install_caps })
