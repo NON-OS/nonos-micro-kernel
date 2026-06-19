@@ -14,26 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod correlation;
-mod inbox_name;
-mod lookup;
-mod pending_reply;
-mod recv;
-mod recv_from;
-mod register;
-mod reply;
-mod reply_inbox;
-mod send;
-mod send_caps;
-mod send_to_pid;
-mod sender_pid;
+use crate::capabilities::caps_to_bits;
+use crate::services::registry::{lookup_port, lookup_service};
+use crate::syscall::caps::current_caps_or_default;
 
-pub use call::sys_ipc_call;
-pub use lookup::sys_service_lookup;
-pub use recv::sys_ipc_recv;
-pub use recv_from::sys_ipc_recv_from;
-pub use register::sys_service_register;
-pub use reply::sys_ipc_reply;
-pub use send::sys_ipc_send;
-pub use send_to_pid::sys_ipc_send_to_pid;
+// A service may register an endpoint with required capability bits. The send
+// path must refuse a caller that does not hold them; an endpoint with no
+// requirement (caps_required == 0) is open to any IPC sender.
+pub(super) fn caller_satisfies_endpoint(endpoint: u64, target: &str) -> bool {
+    let required = lookup_service(target)
+        .or_else(|| lookup_port(endpoint as u32))
+        .map(|ep| ep.caps_required)
+        .unwrap_or(0);
+    if required == 0 {
+        return true;
+    }
+    caps_to_bits(&current_caps_or_default().permissions) & required == required
+}
