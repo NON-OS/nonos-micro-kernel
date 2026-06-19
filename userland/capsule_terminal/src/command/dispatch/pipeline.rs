@@ -46,3 +46,20 @@ pub(super) fn run_pipeline(state: &mut State, args: &[&[u8]]) -> Vec<Vec<u8>> {
     }
     lines
 }
+
+// Apply a `a | b | c` filter chain to pre-seeded input lines with no
+// producer command: used when `< file` supplies the input instead of a
+// leading command's captured output.
+pub(super) fn run_filters(seed: Vec<Vec<u8>>, args: &[&[u8]]) -> Vec<Vec<u8>> {
+    let mut lines = seed;
+    let mut start = 0;
+    for i in 0..=args.len() {
+        if i == args.len() || args[i] == b"|" {
+            if i > start {
+                lines = apply(&args[start..i], lines);
+            }
+            start = i + 1;
+        }
+    }
+    lines
+}

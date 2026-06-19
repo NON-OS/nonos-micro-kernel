@@ -60,7 +60,7 @@ fn drain_output(state: &mut State, pid: u32) {
     loop {
         let n = mk_proc_output(pid, buf.as_mut_ptr(), buf.len());
         if n > 0 {
-            state.scrollback.push_line(&buf[..n as usize]);
+            state.scrollback.push_line(&buf[..(n as usize).min(buf.len())]);
             mark_output_drained(&mut saw_output);
             continue;
         }
@@ -70,7 +70,7 @@ fn drain_output(state: &mut State, pid: u32) {
                 if m <= 0 {
                     break;
                 }
-                state.scrollback.push_line(&buf[..m as usize]);
+                state.scrollback.push_line(&buf[..(m as usize).min(buf.len())]);
                 mark_output_drained(&mut saw_output);
             }
             break;

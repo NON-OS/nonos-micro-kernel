@@ -14,30 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{clipboard_paste, EventOutcome};
+use nonos_app_skeleton::clients::vfs::list_paths;
 
-use crate::term::dimensions::COLS;
+use super::ensure_pid::ensure_pid;
+use crate::term::cwd::{dir_prefix, resolve};
 use crate::term::state::State;
 
-pub fn paste_clipboard(state: &mut State) -> EventOutcome {
-    let mut buf = [0u8; COLS];
-    let n = match clipboard_paste(&mut buf) {
-        Ok(n) => n.min(buf.len()),
-        Err(_) => return EventOutcome::Idle,
+pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
+    let pid = ensure_pid(state);
+    let base = if args.is_empty() {
+        state.cwd.as_bytes().to_vec()
+    } else {
+        resolve(state.cwd.as_bytes(), args[0])
     };
-    let mut changed = false;
-    for &b in &buf[..n] {
-        if (0x20..=0x7E).contains(&b) {
-            if !state.line.insert(b) {
-                break;
+    let prefix = dir_prefix(&base);
+    match list_paths(pid, &prefix) {
+        Ok(paths) => {
+            if paths.is_empty() {
+                state.scrollback.push_line(b"(empty)");
             }
-            changed = true;
+            for p in &paths {
+                state.scrollback.push_line(p.as_bytes());
+            }
+            true
+        }
+        Err(e) => {
+            state.scrollback.push_error(e.as_bytes());
+            false
         }
     }
-    if !changed {
-        return EventOutcome::Idle;
-    }
-    state.history.reset_cursor();
-    state.scrollback.jump_bottom();
-    EventOutcome::Repaint
 }

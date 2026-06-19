@@ -26,6 +26,7 @@ pub(super) fn apply(seg: &[&[u8]], input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
         b"grep" => text::grep(&seg[1..], input),
         b"sort" => text::sort(input),
         b"uniq" => text::uniq(input),
+        b"cut" => text::cut(&seg[1..], input),
         b"nl" => text::nl(input),
         b"wc" => count::wc(input),
         b"head" => count::head(seg.get(1), input),

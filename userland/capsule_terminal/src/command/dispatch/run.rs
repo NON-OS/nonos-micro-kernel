@@ -14,14 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec::Vec;
+use nonos_app_skeleton::clients::vfs::read_file;
+use nonos_app_skeleton::discover::lookup_service;
+
 use super::exec::exec;
 use super::outcome::Outcome;
-use super::pipeline::run_pipeline;
-use super::redirect::{split, Plan};
+use super::pipeline::{run_filters, run_pipeline};
+use super::redirect::{split, split_input, Plan};
 use super::write_redirect::write_redirect;
 use crate::command::builtin;
 use crate::command::parse::Argv;
+use crate::term::cwd::resolve;
 use crate::term::state::State;
+
+const MAX_INPUT: u32 = 65536;
 
 pub fn run(state: &mut State, argv: &Argv<'_>) -> Outcome {
     if argv.argc == 0 {
@@ -31,19 +38,29 @@ pub fn run(state: &mut State, argv: &Argv<'_>) -> Outcome {
     if builtin::exit_check::want_exit(args) {
         return Outcome::Exit;
     }
-    let (cmd, redir) = match split(args) {
-        Plan::Plain => (args, None),
-        Plan::Redirect { cmd_len, append, path } => (&args[..cmd_len], Some((append, path))),
+    let (args_in, in_path) = match split_input(args) {
+        Ok(v) => v,
+        Err(msg) => {
+            state.scrollback.push_line(msg);
+            return Outcome::Repaint;
+        }
+    };
+    let (cmd, redir) = match split(&args_in) {
+        Plan::Plain => (&args_in[..], None),
+        Plan::Redirect { cmd_len, append, path } => (&args_in[..cmd_len], Some((append, path))),
         Plan::Error(msg) => {
             state.scrollback.push_line(msg);
             return Outcome::Repaint;
         }
     };
     let piped = cmd.iter().any(|a| *a == b"|");
-    if !piped && redir.is_none() {
+    if in_path.is_none() && !piped && redir.is_none() {
         return exec(state, cmd);
     }
-    let lines = if piped {
+    let lines = if let Some(p) = in_path {
+        let seed = read_input(state, p);
+        run_filters(seed, cmd)
+    } else if piped {
         run_pipeline(state, cmd)
     } else {
         state.scrollback.begin_capture();
@@ -59,4 +76,18 @@ pub fn run(state: &mut State, argv: &Argv<'_>) -> Outcome {
         }
     }
     Outcome::Repaint
+}
+
+fn read_input(state: &mut State, path_arg: &[u8]) -> Vec<Vec<u8>> {
+    if state.owner_pid == 0 {
+        state.owner_pid = lookup_service(b"app.terminal").map(|p| p.pid).unwrap_or(0);
+    }
+    let path = resolve(state.cwd.as_bytes(), path_arg);
+    match read_file(state.owner_pid, &path, MAX_INPUT) {
+        Ok(data) => data.split(|&b| b == b'\n').map(<[u8]>::to_vec).collect(),
+        Err(e) => {
+            state.scrollback.push_line(e.as_bytes());
+            Vec::new()
+        }
+    }
 }

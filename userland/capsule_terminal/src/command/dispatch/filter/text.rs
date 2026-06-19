@@ -63,6 +63,36 @@ pub(super) fn nl(input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
     out
 }
 
+// cut -d<delim> -f<n>: emit the n-th delim-separated field of each line
+// (1-based; default delimiter space, default field 1). Missing field -> "".
+pub(super) fn cut(args: &[&[u8]], input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+    let mut delim = b' ';
+    let mut field = 1usize;
+    for a in args {
+        if let Some(d) = a.strip_prefix(b"-d") {
+            if let Some(&c) = d.first() {
+                delim = c;
+            }
+        } else if let Some(f) = a.strip_prefix(b"-f") {
+            field = field_index(f);
+        }
+    }
+    input
+        .into_iter()
+        .map(|l| l.split(|&b| b == delim).nth(field - 1).map(<[u8]>::to_vec).unwrap_or_default())
+        .collect()
+}
+
+fn field_index(digits: &[u8]) -> usize {
+    let mut n = 0usize;
+    for &c in digits {
+        if c.is_ascii_digit() {
+            n = n.saturating_mul(10).saturating_add((c - b'0') as usize);
+        }
+    }
+    n.max(1)
+}
+
 fn contains(hay: &[u8], needle: &[u8], ci: bool) -> bool {
     if needle.is_empty() {
         return true;

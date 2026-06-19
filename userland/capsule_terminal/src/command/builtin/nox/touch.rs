@@ -14,19 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod bool_to_outcome;
-mod complete;
-mod copy_line;
-mod on_ctrl;
-mod on_down;
-mod on_enter;
-mod on_event;
-mod on_key;
-mod on_printable;
-mod on_tab;
-mod on_up;
-mod paste_clipboard;
+use nonos_app_skeleton::clients::vfs::{stat, write_file};
 
-#[cfg(any(feature = "nonos-autorun-rg", feature = "nonos-autorun-selftest"))]
-pub use on_enter::on_enter;
-pub use on_event::on_event;
+use super::ensure_pid::ensure_pid;
+use crate::term::cwd::resolve;
+use crate::term::state::State;
+
+pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
+    if args.is_empty() {
+        state.scrollback.push_error(b"usage: touch <file>");
+        return false;
+    }
+    let pid = ensure_pid(state);
+    let path = resolve(state.cwd.as_bytes(), args[0]);
+    if stat(pid, &path).is_ok() {
+        return true;
+    }
+    match write_file(pid, &path, b"") {
+        Ok(()) => true,
+        Err(e) => {
+            state.scrollback.push_error(e.as_bytes());
+            false
+        }
+    }
+}

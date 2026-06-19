@@ -193,7 +193,8 @@ nonos-driver-xhci-smoketest       = ["nonos-capsule-driver-xhci", "nonos-user-en
 nonos-driver-e1000-smoketest      = ["nonos-capsule-driver-e1000", "nonos-user-entry-proof"]
 nonos-market-smoketest            = ["nonos-capsule-market", "nonos-user-entry-proof"]
 nonos-wallpaper-smoketest         = ["nonos-capsule-wallpaper", "nonos-user-entry-proof"]
-nonos-tcp-smoketest               = ["nonos-capsule-driver-virtio-net", "nonos-capsule-net-l2", "nonos-capsule-net-ip", "nonos-capsule-net-udp", "nonos-capsule-net-dhcp", "nonos-capsule-net-tcp", "nonos-capsule-net-tcp-smoke", "nonos-user-entry-proof"]
+nonos-terminal-smoketest          = ["nonos-capsule-terminal", "nonos-user-entry-proof"]
+nonos-tcp-smoketest               =["nonos-capsule-driver-virtio-net", "nonos-capsule-net-l2", "nonos-capsule-net-ip", "nonos-capsule-net-udp", "nonos-capsule-net-dhcp", "nonos-capsule-net-tcp", "nonos-capsule-net-tcp-smoke", "nonos-user-entry-proof"]
 
 # Brutal-minimum kernel profile. Each entry closes a real boundary:
 #   kernel, standalone   no-std bootstrap and panic handler routing
@@ -570,6 +571,25 @@ microkernel-terminal-only = [
   "nonos-capsule-wm",
   "nonos-capsule-toolkit",
   "nonos-capsule-terminal",
+]
+
+# Headless terminal smoketest (dev/unverified path). The terminal capsule
+# is built with `nonos-autorun-selftest` by the Makefile target, which runs
+# the shell-logic self-test directly instead of the GUI app loop -- so the
+# GUI stack (gpu/compositor/wm/toolkit/input) is intentionally absent and
+# only the vfs-backing capsules are spawned. `nonos-user-entry-proof` grants
+# Debug so the capsule's [TERMINAL-TEST] markers reach serial for tests/boot/.
+microkernel-terminal-smoketest = [
+  "microkernel-core",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-ramfs",
+  "nonos-capsule-keyring",
+  "nonos-capsule-entropy",
+  "nonos-capsule-crypto",
+  "nonos-capsule-vfs",
+  "nonos-capsule-driver-virtio-rng",
+  "nonos-capsule-terminal",
+  "nonos-terminal-smoketest",
 ]
 microkernel-file-manager = ["microkernel-desktop-gui"]
 microkernel-text-editor = ["microkernel-desktop-gui"]
