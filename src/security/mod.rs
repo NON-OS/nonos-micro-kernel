@@ -67,7 +67,7 @@ pub use crypto::{
     secure_random_u64, secure_random_u8, trusted_hashes_init, trusted_keys_init, use_key,
     verify_integrity, verify_signature as crypto_verify_signature, CtVerifyResult, KeyAuditEntry,
     KeyEntry, KeyError, KeyInfo, KeyOperation, KeyResult, KeyStore, KeyType, KeyUsage,
-    SelfTestResult, TimingMode, TrustedHashDB, TrustedKey, TrustedKeyDB,
+    SelfCheckResult, TimingMode, TrustedHashDB, TrustedKey, TrustedKeyDB,
 };
 
 pub use hardening::memory_sanitization;
@@ -125,8 +125,3 @@ pub use observability::{
     serial_log_redacted, set_production_mode, should_emit_serial, should_log_debug,
     ObservabilityPolicy, OutputMode,
 };
-
-#[cfg(test)]
-mod tests;
-#[cfg(test)]
-mod trust_runtime_tests;

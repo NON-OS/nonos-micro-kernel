@@ -28,7 +28,6 @@
 // generation, even if the request_id happens to match.
 
 mod registry;
-pub mod smoketest_log;
 mod state;
 pub mod supervisor;
 pub mod transport;

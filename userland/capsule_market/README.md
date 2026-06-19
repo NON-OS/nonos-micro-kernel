@@ -94,12 +94,12 @@ never fetches unauthenticated code or bypasses the capsule loader.
 
 ## Release evidence
 
-Release evidence is marketplace-index smoke for valid index, mutated body,
+Release evidence is marketplace-index validation for valid index, mutated body,
 untrusted operator, rollback selection, and install-ready refusal paths.
 
 ## Release checklist
 
-- Valid signed index smoke passes.
+- Valid signed index validation passes.
 - Mutated body is rejected.
 - Untrusted operator is rejected.
 - Rollback and platform checks are covered.

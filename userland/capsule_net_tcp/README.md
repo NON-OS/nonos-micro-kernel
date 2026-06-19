@@ -94,19 +94,19 @@ handles. The kernel owns no TCP state.
 
 The finished TCP capsule owns listener tables, active connection TCBs,
 handshake, data transfer, retransmit timers, close, reset handling, and
-backpressure across `net.ip`. It has smoke proof for connect, accept, send,
+backpressure across `net.ip`. It has validation evidence for connect, accept, send,
 receive, close, timeout, and reset without adding socket syscalls to the
 kernel.
 
 ## Release evidence
 
-Release evidence is handshake smoke, listener accept smoke, send/receive
+Release evidence is handshake validation, listener accept validation, send/receive
 transfer, FIN close, timeout, reset handling, and static proof that no kernel
 TCP or socket syscall path exists.
 
 ## Release checklist
 
-- Connect and accept smoke passes.
+- Connect and accept validation passes.
 - Send/receive transfer passes.
 - FIN close, reset, and timeout are tested.
 - Buffer bounds are enforced.

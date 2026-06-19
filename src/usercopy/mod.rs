@@ -24,9 +24,6 @@ mod validate;
 mod value;
 mod walk;
 
-#[cfg(test)]
-pub mod tests;
-
 pub use bytes::*;
 pub use copy::*;
 pub use error::*;

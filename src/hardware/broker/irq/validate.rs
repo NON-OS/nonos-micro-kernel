@@ -17,8 +17,7 @@
 //! Pure validation routines used by the `MkIrqBind` MSI-X path.
 //! Everything in this module is a function over plain inputs — no
 //! globals, no MMIO, no allocation. The bind path runs the
-//! validators after looking up the kernel-side state, which keeps
-//! the test surface small enough to verify in a host-side crate.
+//! validators after looking up the kernel-side state.
 //!
 //! Errors are returned in a fixed priority order so a capsule
 //! gets a deterministic explanation for a malformed request:
@@ -40,7 +39,7 @@
 use super::types::{IrqBindError, IrqBindRequest, BIND_MSIX, FLAGS_KNOWN};
 
 /// Snapshot of the kernel-side per-device state the validator needs.
-/// Builders (production and tests) construct one of these from the
+/// Builders construct one of these from the
 /// real `pci_index` entry; the validator itself only inspects the
 /// fields and never goes back to the kernel.
 #[derive(Clone, Copy, Debug)]
@@ -118,10 +117,7 @@ pub(super) fn validate_msix_request(
 }
 
 /// Validate the INTx branch. The MSI-X bind path must not call
-/// this; the regular `bind_intx` flow does, and the validator's
-/// presence here lets the host test crate cover the INTx-side
-/// rejections (`NotIntx`, `NotDeviceIrq`, `BadVectorCount`) as
-/// pure functions too.
+/// this; the regular `bind_intx` flow does.
 pub(super) fn validate_intx_request(
     req: &IrqBindRequest,
     irq_pin: u8,

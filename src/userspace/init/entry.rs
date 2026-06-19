@@ -24,7 +24,6 @@ pub fn run_init() -> ! {
     run_ripgrep();
     spawn_plan::spawn_ramfs();
     spawn_plan::spawn_core_after_ramfs();
-    spawn_plan::run_ramfs_smoketest();
     spawn_plan::spawn_display_core();
     spawn_plan::spawn_drivers();
     spawn_plan::spawn_vfs();
@@ -32,7 +31,6 @@ pub fn run_init() -> ! {
     spawn_plan::spawn_desktop();
     spawn_plan::spawn_market();
     spawn_plan::spawn_apps();
-    spawn_plan::run_smoketests();
     boot_log::ok("INIT", "Capsules spawned");
     lower_init_priority();
     yield_after_spawns();
@@ -85,12 +83,6 @@ fn yield_after_spawns() {
     }
 }
 
-#[cfg(feature = "nonos-wallpaper-smoketest")]
-fn launch_final_payload() {
-    let _ = crate::userspace::capsule_wallpaper::spawn_wallpaper_capsule();
-}
-
-#[cfg(not(feature = "nonos-wallpaper-smoketest"))]
 fn launch_final_payload() {
     let _ = crate::userspace::capsule_proof_io::spawn_proof_io_capsule();
 }

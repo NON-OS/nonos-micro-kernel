@@ -18,7 +18,6 @@ use super::super::constants::BOOTSTRAP_HEAP_SIZE;
 use super::super::types::{BootstrapHeapMemory, HeapStatistics, SecureHeapAllocator};
 use core::sync::atomic::AtomicBool;
 
-#[cfg(not(test))]
 #[global_allocator]
 pub(crate) static KERNEL_HEAP: SecureHeapAllocator = SecureHeapAllocator::new();
 

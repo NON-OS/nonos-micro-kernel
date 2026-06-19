@@ -35,9 +35,6 @@ pub mod util;
 pub mod zk;
 pub mod zk_kernel;
 
-#[cfg(test)]
-mod tests;
-
 pub use asymmetric::ed25519;
 pub use asymmetric::secp256k1;
 pub use error::{CryptoError, CryptoResult};

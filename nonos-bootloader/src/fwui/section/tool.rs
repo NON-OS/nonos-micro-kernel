@@ -31,13 +31,6 @@ pub fn tool() -> Vec<Row> {
             MenuAction::UefiShell,
         ),
         act(
-            b"MEMORY TEST",
-            ">",
-            theme::TEXT,
-            b"Run a destructive RAM integrity test.",
-            MenuAction::MemoryTest,
-        ),
-        act(
             b"HW DIAGNOSTICS",
             ">",
             theme::TEXT,

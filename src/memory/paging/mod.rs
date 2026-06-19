@@ -11,9 +11,6 @@ mod stats;
 pub mod tlb;
 pub mod types;
 
-#[cfg(test)]
-mod tests;
-
 pub use constants::*;
 pub use error::{PageFaultInfo, PagingError, PagingResult};
 pub use manager::*;

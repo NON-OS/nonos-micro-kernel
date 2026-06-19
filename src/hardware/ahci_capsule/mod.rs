@@ -16,9 +16,10 @@
 
 //! Kernel-side glue for the AHCI userland driver capsule.
 //! The kernel embeds and spawns the signed controller capsule, then
-//! speaks only the controller inventory IPC contract. ABAR mapping,
-//! AHCI-mode enable, IRQ acking, and port register reads stay inside
-//! `driver.ahci0`.
+//! speaks the controller inventory and block I/O IPC contract
+//! (capacity, read_blocks, write_blocks, flush). ABAR mapping,
+//! AHCI-mode enable, the command engine, IRQ acking, and port
+//! register access stay inside `driver.ahci0`.
 
 mod capability;
 pub mod client;
@@ -28,7 +29,10 @@ mod protocol;
 mod spawn;
 mod state;
 
-pub use client::{controller_info, healthcheck, port_list, AhciControllerInfo, AhciPortInfo};
+pub use client::{
+    capacity, controller_info, flush, healthcheck, port_list, read_blocks, write_blocks,
+    AhciControllerInfo, AhciPortInfo,
+};
 pub use error::DriverAhciError;
 pub use spawn::{spawn_driver_ahci_capsule, SpawnError};
 pub use state::shared_state;

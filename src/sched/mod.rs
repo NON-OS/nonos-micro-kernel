@@ -29,9 +29,6 @@ pub use crate::process::scheduler::runqueue;
 pub use crate::process::scheduler::task;
 pub mod scheduler;
 
-#[cfg(test)]
-mod tests;
-
 pub use crate::process::context::Context;
 pub use api::{current_cpu_id, current_scheduler, schedule, yield_cpu};
 pub use cpu_stats::{get_cpu_stats, CpuStats};

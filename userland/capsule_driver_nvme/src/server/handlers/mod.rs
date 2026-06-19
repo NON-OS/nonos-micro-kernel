@@ -14,8 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod capacity;
 pub mod controller_info;
+pub mod flush;
 pub mod health;
 pub mod identify_controller;
 pub mod identify_namespace;
+pub mod read;
+mod rw_parse;
 pub mod smart_health;
+pub mod write;

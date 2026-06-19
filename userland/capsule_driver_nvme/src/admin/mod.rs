@@ -28,5 +28,5 @@ pub use identity::ControllerIdentity;
 pub use namespace::NamespaceIdentity;
 pub use queue::AdminQueue;
 
-use command::Submission;
-use completion::Completion;
+pub(crate) use command::Submission;
+pub(crate) use completion::Completion;

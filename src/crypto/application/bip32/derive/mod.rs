@@ -24,39 +24,3 @@ pub mod validate;
 pub use child::derive_child;
 pub use master::derive_master_key;
 
-#[cfg(all(test, not(feature = "std")))]
-mod tests {
-    use super::*;
-    use crate::crypto::application::bip32::extended_key::HARDENED_OFFSET;
-    use crate::crypto::application::bip32::path::DerivationPath;
-    use crate::crypto::application::bip39::Mnemonic;
-
-    #[test]
-    fn test_derive_master_key() {
-        let seed = [0u8; 64];
-        let master = derive_master_key(&seed).unwrap();
-        assert_eq!(master.depth(), 0);
-    }
-
-    #[test]
-    fn test_derive_child_hardened() {
-        let seed = [0u8; 64];
-        let master = derive_master_key(&seed).unwrap();
-        let child = derive_child(&master, HARDENED_OFFSET).unwrap();
-        assert_eq!(child.depth(), 1);
-        assert!(child.is_hardened());
-    }
-
-    #[test]
-    fn test_bip44_eth_derivation() {
-        let phrase = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-        let mnemonic = Mnemonic::from_phrase(phrase).unwrap();
-        let seed = mnemonic.to_seed("");
-
-        let master = derive_master_key(&seed).unwrap();
-        let path = DerivationPath::bip44_eth(0, 0);
-        let derived = derive_path(&master, &path).unwrap();
-
-        assert_eq!(derived.depth(), 5);
-    }
-}

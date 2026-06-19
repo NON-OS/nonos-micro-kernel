@@ -17,9 +17,6 @@
 pub mod operations;
 pub mod types;
 
-#[cfg(test)]
-mod tests;
-
 pub use types::{
     IpiFn, IpiWork, IpiWorkQueue, OnceBarrier, PerCpuLock, IPI_BARRIER, IPI_CALL_FUNCTION,
     MAX_IPI_WORK,

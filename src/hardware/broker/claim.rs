@@ -82,21 +82,5 @@ pub fn lookup(device_id: u64) -> Option<Claim> {
     CLAIMS.lock().iter().find(|c| c.device_id == device_id).copied()
 }
 
-#[cfg(test)]
-pub(crate) fn snapshot() -> Vec<Claim> {
-    CLAIMS.lock().clone()
-}
 
-#[cfg(test)]
-pub(crate) fn reset_for_test() {
-    CLAIMS.lock().clear();
-    EPOCH.store(1, Ordering::SeqCst);
-}
 
-#[cfg(test)]
-pub(crate) fn install_for_test(pid: u32, device_id: u64) -> u64 {
-    let mut claims = CLAIMS.lock();
-    let epoch = EPOCH.fetch_add(1, Ordering::SeqCst);
-    claims.push(Claim { pid, device_id, epoch });
-    epoch
-}

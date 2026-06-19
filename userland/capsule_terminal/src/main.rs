@@ -24,7 +24,6 @@ mod event;
 mod paint;
 mod term;
 
-#[cfg(not(feature = "nonos-autorun-selftest"))]
 use nonos_app_skeleton::run;
 
 /// # Safety
@@ -34,12 +33,5 @@ use nonos_app_skeleton::run;
 /// It must not be called from Rust code.
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
-    #[cfg(feature = "nonos-autorun-selftest")]
-    {
-        term::terminal::selftest::main()
-    }
-    #[cfg(not(feature = "nonos-autorun-selftest"))]
-    {
-        run(term::Terminal::new)
-    }
+    run(term::Terminal::new)
 }

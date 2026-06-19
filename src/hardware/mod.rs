@@ -14,16 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Kernel-side hardware boundary. Drivers run as userland capsules and
-// reach hardware only through the broker. This module owns the
-// device table and the eventual claim/grant primitives. Today the
-// table is read-only; claim/grant land in a follow-up slice.
-
 pub mod ahci_capsule;
+pub mod block_device;
 pub mod broker;
 pub mod e1000_capsule;
 pub mod hda_capsule;
 pub mod i2c_pci_capsule;
+pub mod inventory;
 pub mod iwlwifi_capsule;
 pub mod nvme_capsule;
 pub mod ps2_kbd_capsule;

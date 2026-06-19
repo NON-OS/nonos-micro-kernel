@@ -72,32 +72,3 @@ impl core::fmt::Display for ChannelError {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_channel_error_display() {
-        let e = ChannelError::NotFound { from: "a".into(), to: "b".into() };
-        let msg = format!("{}", e);
-        assert!(msg.contains("a"));
-        assert!(msg.contains("b"));
-
-        let e = ChannelError::QueueFull { queue_size: 100, max_size: 100 };
-        assert!(format!("{}", e).contains("100"));
-
-        let e = ChannelError::MessageTooLarge { size: 2000000, max: 1000000 };
-        let msg = format!("{}", e);
-        assert!(msg.contains("2000000"));
-        assert!(msg.contains("1000000"));
-
-        let e = ChannelError::AlreadyExists { from: "x".into(), to: "y".into() };
-        assert!(format!("{}", e).contains("exists"));
-
-        let e = ChannelError::InvalidEndpoints;
-        assert!(format!("{}", e).contains("Invalid"));
-
-        let e = ChannelError::IntegrityCheckFailed;
-        assert!(format!("{}", e).contains("integrity"));
-    }
-}

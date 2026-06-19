@@ -84,6 +84,10 @@ impl VirtualFileSystem {
 
     pub fn read_file(&self, path: &str) -> VfsResult<Vec<u8>> {
         validate_path(path)?;
+        if let Some(rel) = super::data_rel::data_rel(path) {
+            return crate::fs::blockfs_volume::read_all(rel)
+                .map_err(super::map_volume_err::map_volume_err);
+        }
         crate::fs::ramfs::NONOS_FILESYSTEM.read_file(path).map_err(super::error::VfsError::from)
     }
 

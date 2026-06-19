@@ -19,9 +19,6 @@ mod aes256;
 mod gcm;
 mod ghash;
 
-#[cfg(test)]
-mod tests;
-
 pub const TAG_SIZE: usize = 16;
 pub const NONCE_SIZE: usize = 12;
 

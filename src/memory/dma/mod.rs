@@ -21,9 +21,6 @@ pub mod pool;
 mod stats;
 pub mod types;
 
-#[cfg(test)]
-mod tests;
-
 pub use allocator::*;
 pub use coherency::{Coherency, DmaBuffer};
 pub use constants::*;

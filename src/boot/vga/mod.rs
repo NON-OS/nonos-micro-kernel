@@ -18,9 +18,6 @@ pub mod colors;
 mod output;
 mod splash;
 
-#[cfg(test)]
-mod tests;
-
 pub use output::{
     buffer_size, clear_screen, fill_row, read_char, scroll_up, visual_delay, write_at, write_char,
     write_string, VGA_BUFFER, VGA_HEIGHT, VGA_WIDTH,

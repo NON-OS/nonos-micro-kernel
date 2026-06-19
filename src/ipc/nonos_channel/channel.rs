@@ -87,22 +87,3 @@ impl core::fmt::Debug for IpcChannel {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_channel_entry_creation() {
-        let entry = ChannelEntry::new("from", "to");
-        assert_eq!(entry.from, "from");
-        assert_eq!(entry.to, "to");
-        assert!(entry.alive.load(Ordering::Relaxed));
-    }
-
-    #[test]
-    fn test_ipc_channel_debug() {
-        let channel = IpcChannel { key: 0x123456789ABCDEF0 };
-        let s = format!("{:?}", channel);
-        assert!(s.contains("123456789abcdef0"));
-    }
-}

@@ -102,15 +102,15 @@ applications a familiar API shape while keeping kernel syscalls native Mk-only.
 
 ## Release evidence
 
-Release evidence is UDP socket smoke, TCP connect/accept smoke, Nym mixnet
-session smoke, close cleanup, per-pid isolation test, transport failure mapping,
+Release evidence is UDP socket validation, TCP connect/accept validation, Nym mixnet
+session validation, close cleanup, per-pid isolation test, transport failure mapping,
 and static proof that the kernel has no socket syscall surface.
 
 ## Release checklist
 
-- UDP socket smoke passes.
-- TCP connect/accept smoke passes.
-- Nym mixnet socket connect/send/recv/cover option smoke passes.
+- UDP socket validation passes.
+- TCP connect/accept validation passes.
+- Nym mixnet socket connect/send/recv/cover option validation passes.
 - Close cleanup releases handle state.
 - Per-pid isolation is tested.
 - Static gate confirms kernel syscall surface stays Mk-only.

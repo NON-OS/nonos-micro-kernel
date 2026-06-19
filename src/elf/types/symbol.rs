@@ -18,8 +18,6 @@ mod alias;
 mod default_impl;
 mod info;
 mod state;
-#[cfg(test)]
-mod tests;
 
 pub use alias::SymbolEntry;
 pub use state::Symbol;

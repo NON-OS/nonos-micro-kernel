@@ -50,7 +50,3 @@ pub fn tick() {
     }
 }
 
-#[cfg(test)]
-pub fn snapshot() -> Vec<Capsule> {
-    REGISTRY.lock().clone()
-}

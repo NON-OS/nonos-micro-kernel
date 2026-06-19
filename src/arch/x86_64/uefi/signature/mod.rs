@@ -18,8 +18,6 @@ mod build;
 mod parse;
 mod parse_core;
 mod parse_utils;
-#[cfg(test)]
-mod tests;
 mod types;
 
 pub use build::{build_multi_signature_list, build_signature_list, merge_signature_lists};

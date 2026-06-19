@@ -151,6 +151,6 @@ must compile clean.
 - `nonos-ci/run-static-checks.sh` clean (desktop shell policy
   ownership markers live in userland; render path routes through
   compositor IPC; kernel source free of desktop-shell state markers).
-- `cd nonos-sign && cargo test --release --test artifacts` round-trips
+- `make nonos-mk-host-trust-verify` verifies
   the baked `desktop_shell.manifest.bin`.
 - Kernel cargo check matrix passes with `nonos-capsule-desktop-shell`.

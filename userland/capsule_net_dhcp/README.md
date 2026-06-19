@@ -98,13 +98,13 @@ runtime memory and produces deterministic errors for no-link and timeout.
 
 ## Release evidence
 
-Release evidence is DISCOVER/OFFER/REQUEST/ACK smoke, NAK path, renew path,
+Release evidence is DISCOVER/OFFER/REQUEST/ACK validation, NAK path, renew path,
 release path, timeout path, and proof that accepted leases install through
 `net.ip`.
 
 ## Release checklist
 
-- DISCOVER/OFFER/REQUEST/ACK smoke passes.
+- DISCOVER/OFFER/REQUEST/ACK validation passes.
 - NAK, timeout, renew, and release paths are tested.
 - Accepted lease installs into `net.ip`.
 - Rejected lease leaves prior config unchanged.

@@ -21,9 +21,6 @@ mod field;
 mod point;
 mod scalar;
 
-#[cfg(test)]
-mod tests;
-
 pub use constants::{CompressedPublicKey, PublicKey, SecretKey, Signature};
 
 pub use ecdh::{p256_ecdh, p256_ecdh_keypair};

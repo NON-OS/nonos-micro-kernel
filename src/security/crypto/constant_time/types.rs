@@ -28,9 +28,9 @@ pub enum TimingMode {
 }
 
 #[derive(Debug)]
-pub struct SelfTestResult {
+pub struct SelfCheckResult {
     pub passed: bool,
-    pub tests_run: u32,
-    pub tests_passed: u32,
+    pub checks_run: u32,
+    pub checks_passed: u32,
     pub failure_description: Option<&'static str>,
 }

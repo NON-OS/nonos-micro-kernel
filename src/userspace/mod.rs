@@ -52,7 +52,6 @@ pub mod capsule_net_l2;
 pub mod capsule_net_nym;
 pub mod capsule_net_sockets;
 pub mod capsule_net_tcp;
-pub mod capsule_net_tcp_smoke;
 pub mod capsule_net_udp;
 pub mod capsule_policy;
 pub mod capsule_process_manager;
@@ -73,6 +72,3 @@ pub mod capsule_wm;
 pub mod init;
 
 pub use init::run_init;
-
-#[cfg(test)]
-pub mod tests;

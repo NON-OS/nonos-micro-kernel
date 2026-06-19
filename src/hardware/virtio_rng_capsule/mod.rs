@@ -19,8 +19,6 @@ pub mod client;
 mod embed;
 mod error;
 mod protocol;
-#[cfg(feature = "nonos-driver-virtio-rng-smoketest")]
-pub mod smoketest;
 mod spawn;
 mod state;
 

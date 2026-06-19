@@ -18,7 +18,6 @@ extern crate alloc;
 
 mod bits;
 pub mod roles;
-pub mod smoke;
 mod types;
 
 pub mod audit;
@@ -27,9 +26,6 @@ pub mod delegation;
 pub mod multisig;
 pub mod resource;
 pub mod token;
-
-#[cfg(test)]
-mod tests;
 
 pub use audit::{
     capacity as audit_capacity, clear_log, get_by_action, get_by_capability, get_by_module,

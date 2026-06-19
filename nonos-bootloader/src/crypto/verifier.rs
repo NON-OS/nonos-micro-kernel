@@ -48,10 +48,10 @@ impl SignatureVerifier {
     }
 }
 
-pub fn perform_crypto_self_test() -> bool {
+pub fn perform_crypto_health_check() -> bool {
     let blake3_ok = {
-        let h1 = blake3::hash(b"NONOS-crypto-selftest");
-        let h2 = blake3::hash(b"NONOS-crypto-selftest");
+        let h1 = blake3::hash(b"NONOS-crypto-health-check");
+        let h2 = blake3::hash(b"NONOS-crypto-health-check");
         h1.as_bytes() == h2.as_bytes()
     };
     let ed25519_ok = VerifyingKey::from_bytes(NONOS_SIGNING_KEY).is_ok();

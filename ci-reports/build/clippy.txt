@@ -1,1 +1,2 @@
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
+    Checking nonos-sign v0.1.0 (/Users/ek/kernel/nonos-sign)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.84s

@@ -95,13 +95,13 @@ store query history or move resolver policy into the kernel.
 
 ## Release evidence
 
-Release evidence is A/AAAA resolve smoke, cache hit by TTL, cache flush,
+Release evidence is A/AAAA resolve validation, cache hit by TTL, cache flush,
 timeout behavior, NXDOMAIN/SERVFAIL behavior, and static proof that DNS parsing
 stays in userland.
 
 ## Release checklist
 
-- A and AAAA resolve smoke passes.
+- A and AAAA resolve validation passes.
 - TTL cache hit and flush behavior are tested.
 - NXDOMAIN, SERVFAIL, timeout, and invalid-name errors are tested.
 - Static gate confirms no kernel DNS parser.

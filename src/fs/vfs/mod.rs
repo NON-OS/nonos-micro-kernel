@@ -14,8 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod data_rel;
+mod data_stat;
 pub mod error;
 pub mod fd_ops;
+mod map_volume_err;
 pub mod open_file;
 pub mod path_validate;
 pub mod table;
@@ -25,8 +28,6 @@ pub mod vfs_dir;
 pub mod vfs_file;
 pub mod vfs_global;
 
-#[cfg(test)]
-mod fd_tests;
 
 pub use error::*;
 pub use fd_ops::*;

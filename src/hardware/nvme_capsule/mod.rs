@@ -16,8 +16,9 @@
 
 //! Kernel-side glue for the NVMe userland driver capsule.
 //! The kernel embeds and spawns the signed capsule, then speaks the
-//! admin/status IPC contract. PCIe claim, BAR0 mapping, MSI-X, admin
-//! queue DMA, Identify, and SMART log reads stay inside `driver.nvme0`.
+//! admin/status and block I/O IPC contract (capacity, read_blocks,
+//! write_blocks, flush). PCIe claim, BAR0 mapping, MSI-X, admin and
+//! NVM I/O queue DMA, and the command path stay inside `driver.nvme0`.
 
 mod capability;
 pub mod client;
@@ -28,8 +29,9 @@ mod spawn;
 mod state;
 
 pub use client::{
-    controller_info, healthcheck, identify_controller, identify_namespace, smart_health,
-    NvmeControllerIdentity, NvmeControllerInfo, NvmeNamespaceIdentity, NvmeSmartHealth,
+    capacity, controller_info, flush, healthcheck, identify_controller, identify_namespace,
+    read_blocks, smart_health, write_blocks, NvmeControllerIdentity, NvmeControllerInfo,
+    NvmeNamespaceIdentity, NvmeSmartHealth,
 };
 pub use error::DriverNvmeError;
 pub use spawn::{spawn_driver_nvme_capsule, SpawnError};

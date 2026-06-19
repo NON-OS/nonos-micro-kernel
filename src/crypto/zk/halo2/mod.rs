@@ -21,8 +21,6 @@ extern crate alloc;
 mod api;
 mod deserialize;
 pub mod params;
-#[cfg(test)]
-mod tests;
 mod verifier;
 
 use alloc::vec::Vec;

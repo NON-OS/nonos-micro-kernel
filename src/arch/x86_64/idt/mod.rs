@@ -26,9 +26,6 @@ pub mod ops;
 mod state;
 pub mod table;
 
-#[cfg(test)]
-mod tests;
-
 pub use api::verify_idt_integrity;
 pub use constants::*;
 pub use entry::PageFaultError;

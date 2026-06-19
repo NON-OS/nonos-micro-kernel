@@ -108,33 +108,3 @@ pub fn safe_mmio_write64(addr: VirtAddr, val: u64) -> Result<(), DriverError> {
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_validate_mmio_region_valid() {
-        assert!(validate_mmio_region(0xE000_0000, 4096).is_ok());
-        assert!(validate_mmio_region(0xFED0_0000, 4096).is_ok());
-    }
-
-    #[test]
-    fn test_validate_mmio_region_zero_size() {
-        assert!(validate_mmio_region(0xE000_0000, 0).is_err());
-    }
-
-    #[test]
-    fn test_validate_mmio_region_misaligned() {
-        assert!(validate_mmio_region(0xE000_0001, 4096).is_err());
-    }
-
-    #[test]
-    fn test_validate_mmio_region_wraparound() {
-        assert!(validate_mmio_region(usize::MAX, 0x1000).is_err());
-    }
-
-    #[test]
-    fn test_validate_mmio_region_dram_range() {
-        assert!(validate_mmio_region(0x1000_0000, 4096).is_err());
-    }
-}

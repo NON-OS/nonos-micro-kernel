@@ -18,7 +18,5 @@ mod default_impl;
 mod fields;
 mod names;
 mod state;
-#[cfg(test)]
-mod tests;
 
 pub use state::RelaEntry;

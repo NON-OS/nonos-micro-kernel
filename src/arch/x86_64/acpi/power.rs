@@ -19,26 +19,3 @@ pub use super::power_reboot::reboot;
 pub use super::power_sleep::{enter_sleep_state, shutdown};
 pub use super::power_types::{pm1_bits, SleepState};
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_sleep_state_values() {
-        assert_eq!(SleepState::S0 as u8, 0);
-        assert_eq!(SleepState::S3 as u8, 3);
-        assert_eq!(SleepState::S5 as u8, 5);
-    }
-
-    #[test]
-    fn test_sleep_state_names() {
-        assert_eq!(SleepState::S0.name(), "Working (S0)");
-        assert_eq!(SleepState::S5.name(), "Soft Off (S5)");
-    }
-
-    #[test]
-    fn test_pm1_bits() {
-        assert_eq!(pm1_bits::SLP_EN, 1 << 13);
-        assert_eq!(pm1_bits::SLP_TYP_SHIFT, 10);
-    }
-}

@@ -3,9 +3,9 @@
 | field | value |
 |---|---|
 | module | build |
-| status | gap |
+| status | fail |
 | blocking | true |
-| commit | 5a44935e326ff4ebf36a5d3564a911d164eb8ccf |
+| commit | c8dd9f4744b20d51492d8650ec0cd16240d8d3c0 |
 | toolchain | nightly-2026-01-16 |
 
 ## checks
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | rustfmt | pass | cargo fmt --check (nonos-verify) |  |
 | clippy-nonos-sign | pass | clippy -D warnings (nonos-sign) |  |
-| build-x86_64-capsules | pass | make nonos-mk-capsules |  |
+| build-x86_64-capsules | fail | make nonos-mk-capsules |  |
 | section-size | pass | size + readelf -S captured on release ELF |  |
 | symbol-scan | pass | binary symbol scan (nonos-ci/scan-microkernel-symbols.sh) |  |
 

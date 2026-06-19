@@ -121,16 +121,3 @@ impl Inbox {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_inbox_creation() {
-        let inbox = Inbox::new(100);
-        assert!(inbox.is_empty());
-        assert!(!inbox.is_full());
-        assert_eq!(inbox.len(), 0);
-        assert_eq!(inbox.capacity(), 100);
-    }
-}

@@ -16,6 +16,7 @@
 
 use crate::admin::{AdminQueue, ControllerIdentity, NamespaceIdentity, SmartHealth};
 use crate::handles::BrokerHandles;
+use crate::nvm::IoQueue;
 use crate::regs::Regs;
 
 pub struct Driver {
@@ -25,4 +26,5 @@ pub struct Driver {
     pub identity: ControllerIdentity,
     pub namespace: NamespaceIdentity,
     pub health: SmartHealth,
+    pub io: Option<IoQueue>,
 }

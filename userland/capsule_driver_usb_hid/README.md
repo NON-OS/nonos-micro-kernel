@@ -169,7 +169,7 @@ Live interrupt endpoint feed from `driver.xhci0` is the next runtime proof.
 - Kernel profile `microkernel-driver-usb-hid` resolves with the capsule client.
 - Descriptor parser rejects malformed lengths and oversized payloads.
 - Keyboard and mouse report feeds produce bounded event batches.
-- QEMU xHCI live interrupt-report smoke passes.
+- QEMU xHCI live interrupt-report validation passes.
 
 ## Explicit non-goals today
 

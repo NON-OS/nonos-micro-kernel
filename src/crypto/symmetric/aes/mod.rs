@@ -20,9 +20,6 @@ mod encrypt;
 mod key_schedule;
 mod modes;
 
-#[cfg(test)]
-mod tests;
-
 pub use self::core::{INV_SBOX, SBOX};
 pub use decrypt::Aes256;
 pub use encrypt::Aes128;

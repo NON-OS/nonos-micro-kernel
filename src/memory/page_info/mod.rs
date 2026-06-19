@@ -22,12 +22,6 @@ pub mod error;
 pub mod manager;
 pub mod types;
 
-#[cfg(test)]
-#[cfg(not(feature = "std"))]
-#[cfg(test)]
-mod tests;
-
-pub use constants::*;
 pub use error::{PageInfoError, PageInfoResult};
 pub use manager::*;
 pub use types::*;

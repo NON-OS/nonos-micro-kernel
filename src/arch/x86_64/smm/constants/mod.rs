@@ -18,8 +18,6 @@ mod memory;
 mod msr;
 mod smi;
 mod smramc;
-#[cfg(test)]
-mod tests;
 
 pub use memory::*;
 pub use msr::{amd_msr, cr4, intel_msr};

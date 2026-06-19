@@ -1,8 +1,8 @@
 {
   "module": "build",
-  "commit": "5a44935e326ff4ebf36a5d3564a911d164eb8ccf",
+  "commit": "c8dd9f4744b20d51492d8650ec0cd16240d8d3c0",
   "toolchain": "nightly-2026-01-16",
-  "status": "gap",
+  "status": "fail",
   "blocking": true,
   "checks": [
     {
@@ -19,7 +19,7 @@
     },
     {
       "name": "build-x86_64-capsules",
-      "status": "pass",
+      "status": "fail",
       "detail": "make nonos-mk-capsules",
       "artifact": ""
     },

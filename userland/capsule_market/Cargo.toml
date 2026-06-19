@@ -33,13 +33,6 @@ default = []
 # not embed capsule_crypto; every signed index ends up refused,
 # which keeps install readiness honest in the offline build.
 offline-verify = []
-# Adds a *publicly-known* test operator pubkey to the
-# bootstrap-trust list so the kernel-side market smoketest can
-# load fixture-signed blobs. The corresponding seed is
-# 0x42-repeated-32, which is by definition not secret; a
-# production build must NOT enable this feature.
-smoketest-trust = []
-
 [profile.release]
 panic = "abort"
 opt-level = 2

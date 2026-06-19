@@ -39,7 +39,7 @@ fn init_qemu_tcg_features() -> Result<(), MultibootError> {
     crate::log::info!("  - Reduced timer frequency for software emulation");
     crate::log::info!("  - Virtio device detection enabled");
 
-    // SAFETY: Testing debug port availability by writing zero byte
+    // SAFETY: Probes debug port availability by writing one zero byte.
     unsafe {
         x86_64::instructions::port::Port::<u8>::new(0x402).write(0);
     }

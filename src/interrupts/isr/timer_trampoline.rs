@@ -65,7 +65,7 @@ const TIMER_IRQ_LINE: u8 = 0;
 pub unsafe extern "C" fn timer_trampoline() {
     core::arch::naked_asm!(
         // Iretq frame is at: rip[0], cs[8], rflags[16], rsp[24], ss[32].
-        // Test the saved CS for RPL=3 to decide swapgs.
+        // Inspect the saved CS for RPL=3 to decide swapgs.
         "test byte ptr [rsp + 8], 3",
         "jz 1f",
         "swapgs",
@@ -121,7 +121,7 @@ pub unsafe extern "C" fn timer_trampoline() {
         "pop rdx",
         "pop rcx",
         "pop rax",
-        // After 15 pops, rsp is back to the iretq frame. Test the CS
+        // After 15 pops, rsp is back to the iretq frame. Inspect the CS
         // again — it can have been overwritten by a different value
         // if a handler chose to redirect, but for the same-PCB return
         // case it is still the original CS we entered with.

@@ -19,3 +19,7 @@ pub const OP_CONTROLLER_INFO: u16 = 0x0002;
 pub const OP_IDENTIFY_CONTROLLER: u16 = 0x0003;
 pub const OP_IDENTIFY_NAMESPACE: u16 = 0x0004;
 pub const OP_SMART_HEALTH: u16 = 0x0005;
+pub const OP_CAPACITY: u16 = 0x0006;
+pub const OP_READ_BLOCKS: u16 = 0x0007;
+pub const OP_WRITE_BLOCKS: u16 = 0x0008;
+pub const OP_FLUSH: u16 = 0x0009;

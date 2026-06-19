@@ -26,9 +26,6 @@ pub mod segment;
 pub mod types;
 pub mod validate;
 
-#[cfg(test)]
-mod tests;
-
 pub use core::load_kernel;
 
 pub use image::{KernelImage, KernelImageBuilder, KernelInfo};

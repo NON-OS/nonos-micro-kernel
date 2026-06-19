@@ -18,14 +18,6 @@ mod aead;
 mod chacha20;
 mod poly1305;
 
-#[cfg(test)]
-#[cfg(not(feature = "std"))]
-#[cfg(test)]
-mod tests;
-
-pub use aead::{
-    aead_decrypt, aead_decrypt_in_place, aead_encrypt, aead_encrypt_in_place, KEY_SIZE, NONCE_SIZE,
-    TAG_SIZE,
-};
+pub use aead::{aead_decrypt, aead_decrypt_in_place, aead_encrypt, aead_encrypt_in_place};
 pub use chacha20::{chacha20_block, CHACHA20_BLOCK_SIZE};
 pub use poly1305::poly1305_mac;

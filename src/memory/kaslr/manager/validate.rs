@@ -56,18 +56,18 @@ pub fn verify_slide_integrity() -> bool {
         return false;
     }
 
-    let mut test_buffer = [0u8; INTEGRITY_CHECK_BUFFER_SIZE];
-    if derive_subkey(INTEGRITY_CHECK_LABEL, &mut test_buffer).is_err() {
+    let mut integrity_buffer = [0u8; INTEGRITY_CHECK_BUFFER_SIZE];
+    if derive_subkey(INTEGRITY_CHECK_LABEL, &mut integrity_buffer).is_err() {
         return false;
     }
 
-    for byte in test_buffer.iter() {
+    for byte in integrity_buffer.iter() {
         if *byte == 0 {
             return false;
         }
     }
 
-    let entropy_check = test_buffer.iter().fold(0u8, |acc, &x| acc ^ x);
+    let entropy_check = integrity_buffer.iter().fold(0u8, |acc, &x| acc ^ x);
     if entropy_check == 0 || entropy_check == 0xFF {
         return false;
     }

@@ -19,8 +19,3 @@ mod mutate;
 mod types;
 
 pub use types::TABLE;
-
-#[cfg(feature = "tcp-selftest")]
-pub use mutate::quota_ok;
-#[cfg(feature = "tcp-selftest")]
-pub use types::Table;

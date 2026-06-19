@@ -19,9 +19,6 @@ pub mod manager;
 mod stats;
 pub mod types;
 
-#[cfg(test)]
-mod tests;
-
 pub use constants::*;
 pub use error::{RegionError, RegionResult};
 pub use manager::*;

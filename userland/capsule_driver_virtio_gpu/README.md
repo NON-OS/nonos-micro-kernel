@@ -111,7 +111,7 @@ driver.virtio_gpu0 -> display runtime -> compositor -> wm/toolkit/apps
 
 The next runtime slice is controlq command posting for GET_DISPLAY_INFO,
 RESOURCE_CREATE_2D, ATTACH_BACKING, SET_SCANOUT, TRANSFER_TO_HOST_2D, and
-RESOURCE_FLUSH, followed by QEMU virtio-gpu scanout smoke.
+RESOURCE_FLUSH, followed by QEMU virtio-gpu scanout validation.
 
 ## Release evidence
 
@@ -124,8 +124,8 @@ scanout 0, and compositor presentation through the display runtime.
 - Capsule builds with zero warnings.
 - Static gates confirm brokered MMIO/IRQ/DMA authority and endpoint.
 - Kernel profile `microkernel-driver-virtio-gpu` resolves signed artifacts.
-- QEMU controlq GET_DISPLAY_INFO smoke passes.
-- QEMU resource flush smoke presents visible pixels.
+- QEMU controlq GET_DISPLAY_INFO validation passes.
+- QEMU resource flush validation presents visible pixels.
 
 ## Explicit non-goals today
 

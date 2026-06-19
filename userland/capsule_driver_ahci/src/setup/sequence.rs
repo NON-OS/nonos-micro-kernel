@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{claim, irq, mmio, pci};
+use super::{block_port, claim, irq, mmio, pci};
 use crate::controller::{enable_ahci, scan_ports, ControllerInfo};
 use crate::discover::find_ahci;
 use crate::error::{AhciError, AhciResult};
@@ -40,6 +40,7 @@ pub fn run() -> AhciResult<Driver> {
     enable_ahci(regs);
     let info = ControllerInfo::read(regs);
     let ports = scan_ports(regs, info.pi, info.port_count);
+    let block = block_port::bring_up(dev.device_id, claim_epoch, regs, &ports);
 
-    Ok(Driver { handles, regs, info, ports })
+    Ok(Driver { handles, regs, info, ports, block })
 }

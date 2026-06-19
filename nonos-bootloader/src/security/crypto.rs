@@ -21,16 +21,16 @@ use ed25519_dalek::VerifyingKey;
 
 use crate::log::logger::log_debug;
 
-pub fn blake3_selftest() -> bool {
-    let test = b"NONOS-bootloader-blake3-test";
-    let h = blake3::hash(test);
-    let expected = blake3::hash(test);
+pub fn blake3_health_check() -> bool {
+    let probe = b"NONOS-bootloader-blake3-health";
+    let h = blake3::hash(probe);
+    let expected = blake3::hash(probe);
     let ok = h.as_bytes() == expected.as_bytes();
-    log_debug("crypto", &format!("BLAKE3 selftest: {}", ok));
+    log_debug("crypto", &format!("BLAKE3 health check: {}", ok));
     ok
 }
 
-pub fn ed25519_selftest() -> bool {
+pub fn ed25519_health_check() -> bool {
     let pk_bytes: [u8; 32] = [
         0xd7, 0x5a, 0x98, 0x01, 0x82, 0xb1, 0x0a, 0xb7, 0xd5, 0x4b, 0xfe, 0xd3, 0xc9, 0x64, 0x07,
         0x3a, 0x0e, 0xe1, 0x72, 0xf3, 0xda, 0xa6, 0x23, 0x25, 0xaf, 0x02, 0x1a, 0x68, 0xf7, 0x07,
@@ -39,12 +39,12 @@ pub fn ed25519_selftest() -> bool {
 
     let pk_result = VerifyingKey::from_bytes(&pk_bytes);
     let ok = pk_result.is_ok();
-    log_debug("crypto", &format!("Ed25519 selftest: {}", ok));
+    log_debug("crypto", &format!("Ed25519 health check: {}", ok));
     ok
 }
 
-pub fn run_all_selftests() -> (bool, bool) {
-    let blake3_ok = blake3_selftest();
-    let ed25519_ok = ed25519_selftest();
+pub fn run_all_crypto_health_checks() -> (bool, bool) {
+    let blake3_ok = blake3_health_check();
+    let ed25519_ok = ed25519_health_check();
     (blake3_ok, ed25519_ok)
 }

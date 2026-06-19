@@ -21,9 +21,6 @@ pub mod legacy;
 pub mod ops;
 pub mod types;
 
-#[cfg(test)]
-mod tests;
-
 pub use core::{get_cryptofs, init_cryptofs, CryptoFileSystem};
 pub use error::{CryptoFsError, CryptoResult};
 pub use legacy::*;

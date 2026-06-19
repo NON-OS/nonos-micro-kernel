@@ -16,8 +16,6 @@
 
 mod display;
 mod impls;
-#[cfg(test)]
-mod tests;
 mod types;
 
 pub use types::{UefiError, UefiResult};

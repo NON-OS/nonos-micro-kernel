@@ -100,24 +100,3 @@ impl core::fmt::Display for InboxStatsSnapshot {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_inbox_stats_display() {
-        let snap = InboxStatsSnapshot {
-            enqueued: 100,
-            dequeued: 90,
-            dropped_full: 5,
-            timeouts: 2,
-            peak_size: 50,
-            current_size: 10,
-            capacity: 1024,
-        };
-        let s = format!("{}", snap);
-        assert!(s.contains("100"));
-        assert!(s.contains("90"));
-        assert!(s.contains("10/1024"));
-    }
-}

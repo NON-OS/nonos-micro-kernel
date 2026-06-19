@@ -134,7 +134,7 @@ filesystems, encryption headers, or application data.
 
 ## Release evidence
 
-Release requires QEMU `-device nvme` identify smoke, IO queue creation smoke,
+Release requires QEMU `-device nvme` identify validation, IO queue creation validation,
 single read/write/flush proof, PRP/SGL boundary tests, teardown DMA revocation,
 and one real NVMe controller boot.
 
@@ -142,8 +142,8 @@ and one real NVMe controller boot.
 
 - Signed manifest and publisher trust entries present.
 - Kernel mirror embeds and feature-gates `driver.nvme0`.
-- QEMU identify smoke reports controller and NSID 1.
-- IO queue creation and single read/write/flush smoke pass.
+- QEMU identify validation reports controller and NSID 1.
+- IO queue creation and single read/write/flush validation pass.
 - PRP/SGL boundary tests pass.
 - Teardown proof shows admin and IO DMA grants are revoked.
 

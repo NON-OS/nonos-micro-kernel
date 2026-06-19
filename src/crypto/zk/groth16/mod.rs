@@ -24,12 +24,7 @@ mod read_proof_bls12_381;
 mod verifier;
 mod verifier_bls12_381;
 
-#[cfg(test)]
-#[cfg(not(feature = "std"))]
-#[cfg(test)]
-mod tests;
-
-pub use attestation_vk::{verify_attestation, ATTESTATION_VK};
+pub use attestation_vk::verify_attestation;
 pub use error::Groth16Error;
 pub use params::{MAX_PROOF_BYTES, MAX_PUBLIC_INPUTS, MAX_VK_BYTES};
 pub use verifier::{groth16_verify_bn254, Groth16Verifier};

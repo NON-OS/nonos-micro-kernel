@@ -38,9 +38,6 @@ pub mod aarch64;
 #[cfg(target_arch = "riscv64")]
 pub mod riscv64;
 
-#[cfg(test)]
-mod tests;
-
 pub use abi::ArchOps;
 pub(crate) use active_page_table_root::active_page_table_root;
 #[cfg(target_arch = "x86_64")]

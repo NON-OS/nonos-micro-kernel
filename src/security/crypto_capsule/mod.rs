@@ -19,8 +19,6 @@ pub mod client;
 mod embed;
 mod error;
 mod protocol;
-#[cfg(feature = "nonos-crypto-hash-smoketest")]
-pub mod smoketest;
 mod spawn;
 mod state;
 

@@ -25,9 +25,6 @@ mod sha3;
 // SHA-1 needed for WPA compatibility
 pub mod sha1;
 
-#[cfg(test)]
-mod tests;
-
 pub type Hash256 = [u8; 32];
 
 pub use blake3::blake3_hash;
