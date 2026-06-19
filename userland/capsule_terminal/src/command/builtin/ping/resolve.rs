@@ -14,10 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constants;
-mod encode_header;
-mod market_op;
+use super::lookup::resolve_dns;
+use super::parse::parse_ipv4;
 
-pub use constants::HDR_LEN;
-pub use encode_header::encode_header;
-pub use market_op::OP_LIST_APPS;
+pub enum Resolved {
+    Ip([u8; 4]),
+    NoService,
+    Timeout,
+    ServFail,
+    Unknown,
+}
+
+pub fn resolve(host: &[u8]) -> Resolved {
+    if let Some(ip) = parse_ipv4(host) {
+        return Resolved::Ip(ip);
+    }
+    resolve_dns(host)
+}
