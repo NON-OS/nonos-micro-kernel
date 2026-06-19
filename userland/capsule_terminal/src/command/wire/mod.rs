@@ -16,10 +16,8 @@
 
 mod constants;
 mod encode_header;
-mod encode_healthcheck_header;
 mod market_op;
 
 pub use constants::HDR_LEN;
 pub use encode_header::encode_header;
-pub use encode_healthcheck_header::encode_healthcheck_header;
 pub use market_op::OP_LIST_APPS;

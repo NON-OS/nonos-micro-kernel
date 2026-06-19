@@ -14,13 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::{HDR_LEN, NCMP_MAGIC, NCMP_VERSION, OP_HEALTHCHECK};
-
-pub fn encode_healthcheck_header(buf: &mut [u8; HDR_LEN]) {
-    buf[0..4].copy_from_slice(&NCMP_MAGIC.to_le_bytes());
-    buf[4..6].copy_from_slice(&NCMP_VERSION.to_le_bytes());
-    buf[6..8].copy_from_slice(&OP_HEALTHCHECK.to_le_bytes());
-    buf[8..10].copy_from_slice(&0u16.to_le_bytes());
-    buf[12..16].copy_from_slice(&1u32.to_le_bytes());
-    buf[16..20].copy_from_slice(&0u32.to_le_bytes());
+pub fn parse_ipv4(s: &[u8]) -> Option<[u8; 4]> {
+    let mut out = [0u8; 4];
+    let mut idx = 0usize;
+    let mut val: u32 = 0;
+    let mut have = false;
+    for &c in s {
+        if c == b'.' {
+            if !have || idx >= 3 {
+                return None;
+            }
+            out[idx] = val as u8;
+            idx += 1;
+            val = 0;
+            have = false;
+        } else if c.is_ascii_digit() {
+            val = val * 10 + (c - b'0') as u32;
+            if val > 255 {
+                return None;
+            }
+            have = true;
+        } else {
+            return None;
+        }
+    }
+    if !have || idx != 3 {
+        return None;
+    }
+    out[3] = val as u8;
+    Some(out)
 }

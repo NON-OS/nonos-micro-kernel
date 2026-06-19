@@ -21,6 +21,8 @@ use nonos_libc::mk_ipc_call;
 
 use super::header::{parse, write, HDR_LEN, OP_RECV};
 
+const UDP_E_RX_EMPTY: u16 = 8;
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct UdpDatagram {
     pub src: [u8; 4],
@@ -49,7 +51,7 @@ pub fn recv_from(udp_port: u32, local_port: u16) -> Result<UdpDatagram, UdpRecvE
     if op != OP_RECV {
         return Err(UdpRecvError::BadResponse);
     }
-    if errno == 11 {
+    if errno == UDP_E_RX_EMPTY {
         return Err(UdpRecvError::Empty);
     }
     if errno != 0 || len < 6 {

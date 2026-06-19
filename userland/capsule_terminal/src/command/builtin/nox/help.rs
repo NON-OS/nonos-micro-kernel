@@ -39,7 +39,7 @@ pub fn run(out: &mut Output<'_>) {
     out.writeln(b"  unset <name>     remove a variable");
     out.writeln(b"  alias [n exp]    list or define a command alias");
     out.writeln(b"  unalias <name>   remove an alias");
-    out.writeln(b"  ping <name>      probe a service");
+    out.writeln(b"  ping <host>      ICMP echo a host");
     out.writeln(b"  display          display info");
     out.writeln(b"  history          command history");
     out.writeln(b"  motd             banner");

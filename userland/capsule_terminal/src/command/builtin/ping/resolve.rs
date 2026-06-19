@@ -14,11 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod bind;
-mod header;
-mod recv;
-mod send;
+use super::lookup::resolve_dns;
+use super::parse::parse_ipv4;
 
-pub use bind::bind;
-pub use recv::recv_from;
-pub use send::send_to;
+pub enum Resolved {
+    Ip([u8; 4]),
+    NoService,
+    Timeout,
+    ServFail,
+    Unknown,
+}
+
+pub fn resolve(host: &[u8]) -> Resolved {
+    if let Some(ip) = parse_ipv4(host) {
+        return Resolved::Ip(ip);
+    }
+    resolve_dns(host)
+}

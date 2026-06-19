@@ -17,4 +17,3 @@
 pub const NCMP_MAGIC: u32 = 0x4E434D50;
 pub const NCMP_VERSION: u16 = 1;
 pub const HDR_LEN: usize = 20;
-pub const OP_HEALTHCHECK: u16 = 0x0001;
