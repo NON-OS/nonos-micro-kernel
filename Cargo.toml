@@ -140,12 +140,10 @@ dbg-ring = []
 # that go through `spawn_verified` (proof_io today) compile under
 # this feature. Mutex with `nonos-dev-unverified-capsules` is
 # enforced by the `compile_error!` in `lib.rs`.
-# Production posture: verified-only spawn path, and ZK attestation enforced.
-nonos-production = ["nonos-zk-enforce"]
-# Pulls in the attestation verifier so enforcement can never silently compile the
-# gate out. With the gate compiled in, a missing or failed attestation is fatal by
-# default; `nonos-zk-rollout` is the only way to downgrade it.
-nonos-zk-enforce = ["zk-groth16"]
+# Production posture: verified-only spawn path. Capsule attestation is enforced
+# unconditionally by the always-compiled transparent verifier; a missing or failed
+# proof is fatal unless `nonos-zk-rollout` is set.
+nonos-production = []
 # Staged-rollout escape hatch: when set, a missing or failing attestation is logged
 # but the spawn proceeds. Mutually exclusive with `nonos-production` (enforced by
 # the `compile_error!` in lib.rs). Opt-in only, never part of any profile.
@@ -180,7 +178,6 @@ microkernel-core = [
   "sched",
   "sha3",
   "crypto-ed25519-int",
-  "zk-groth16",
 ]
 
 # Runtime baseline: core + the three live capsule embeds.
@@ -666,9 +663,7 @@ mldsa2    = []
 mldsa3    = []
 mldsa5    = []
 
-# Zero-knowledge proof systems. Source paths: src/crypto/zk/groth16/*,
-# src/crypto/zk/halo2/*.
-zk-groth16 = ["ark-bn254", "ark-bls12-381", "ark-groth16", "ark-serialize", "ark-ff", "ark-ec", "ark-std"]
+# Zero-knowledge proof systems. Source path: src/crypto/zk/halo2/*.
 zk-halo2   = ["halo2_proofs", "halo2curves"]
 
 # Legacy hash, retained for Git object hashes / TOTP only.
@@ -707,15 +702,6 @@ volatile = { version = "0.4", default-features = false }
 
 # Network stack used by the virtio-net interface bridge.
 smoltcp = { version = "0.11", default-features = false, features = ["alloc", "socket-raw", "socket-udp", "socket-tcp", "proto-ipv4", "proto-ipv6", "medium-ethernet"] }
-
-# Zero-knowledge — arkworks (Groth16).
-ark-bn254     = { version = "0.4", default-features = false, features = ["curve"], optional = true }
-ark-bls12-381 = { version = "0.4", default-features = false, features = ["curve"], optional = true }
-ark-groth16   = { version = "0.4", default-features = false, optional = true }
-ark-serialize = { version = "0.4", default-features = false, features = ["derive"], optional = true }
-ark-ff        = { version = "0.4", default-features = false, optional = true }
-ark-ec        = { version = "0.4", default-features = false, optional = true }
-ark-std       = { version = "0.4", default-features = false, optional = true }
 
 # Zero-knowledge — halo2.
 halo2_proofs = { version = "0.3", default-features = false, optional = true }

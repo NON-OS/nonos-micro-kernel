@@ -16,10 +16,6 @@
 
 pub use super::super::zk::nonos_zk;
 
-#[cfg(feature = "zk-groth16")]
-pub use super::super::zk::groth16::{
-    groth16_verify_bls12_381, groth16_verify_bn254, Groth16Error, Groth16Verifier,
-};
 #[cfg(feature = "zk-halo2")]
 pub use super::super::zk::halo2::{halo2_verify, Halo2Error, Halo2Verifier};
 

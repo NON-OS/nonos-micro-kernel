@@ -18,7 +18,6 @@ extern crate alloc;
 
 pub mod boot;
 pub mod boot_session;
-#[cfg(feature = "zk-groth16")]
 pub mod capsule_attest;
 pub mod capsule_manifest;
 pub mod crypto;

@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(feature = "zk-groth16")]
-pub mod groth16;
 #[cfg(feature = "zk-halo2")]
 pub mod halo2;
 pub mod nonos_zk;

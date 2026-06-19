@@ -42,12 +42,6 @@ compile_error!(
      builds must enforce attestation, not log-and-continue on a failed proof."
 );
 
-#[cfg(all(feature = "nonos-production", not(feature = "zk-groth16")))]
-compile_error!(
-    "nonos-production requires the zk-groth16 attestation verifier: the \
-     per-capsule attestation gate is compiled out without it."
-);
-
 #[macro_use]
 extern crate alloc;
 
