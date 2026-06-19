@@ -1,6 +1,3 @@
-[submodule "tests"]
-	path = tests
-	url = https://github.com/NON-OS/micro-kernel-only-tests
 [submodule "nonos-ci"]
 	path = nonos-ci
 	url = https://github.com/NON-OS/nonos-ci.git

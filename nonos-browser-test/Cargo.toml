@@ -1,7 +1,0 @@
-[package]
-name = "browser_nav_test"
-version = "0.1.0"
-edition = "2021"
-
-[lib]
-path = "src/lib.rs"
