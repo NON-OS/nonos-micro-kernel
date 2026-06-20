@@ -17,9 +17,10 @@
 use super::role::Role;
 use super::types::Scrollback;
 use crate::term::dimensions::{COLS, SCROLLBACK_ROWS};
+use crate::term::grid::types::Grid;
 
 impl Scrollback {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             rows: [[0; COLS]; SCROLLBACK_ROWS],
             lengths: [0; SCROLLBACK_ROWS],
@@ -28,6 +29,7 @@ impl Scrollback {
             count: 0,
             view_offset: 0,
             capture: None,
+            grid: Grid::new(),
         }
     }
 }
