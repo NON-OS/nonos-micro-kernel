@@ -15,4 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod color;
+pub mod csi_cursor;
+pub mod csi_edit;
 pub mod parser;
+pub mod state;
