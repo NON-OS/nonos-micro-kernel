@@ -62,94 +62,122 @@ fn ready(state: &mut State) -> bool {
 // itself: echo, a vfs write/read round trip, a pipe, and `||` gating.
 pub fn vt_selftest() {
     mark(b"vt-skeleton", true);
-    let ok = crate::term::vt::color::ansi_to_argb(1) == 0xFF80_0000
-        && crate::term::vt::color::ansi_to_argb(15) == 0xFFFF_FFFF;
-    mark(b"vt-color", ok);
-    let g = crate::term::grid::types::Grid::new();
-    let ok = g.cells.len() == crate::term::dimensions::COLS * crate::term::dimensions::VISIBLE_ROWS
-        && g.cells[0].ch == b' ' && g.x == 0 && g.y == 0;
-    mark(b"vt-grid", ok);
-    let mut g = crate::term::grid::types::Grid::new();
-    for &b in b"AB" { g.put_char(b); }
-    g.carriage_return();
-    g.put_char(b'C');
-    let row0_ok = g.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'C'
-        && g.cells[crate::term::grid::types::Grid::idx(1, 0)].ch == b'B';
-    for _ in 0..crate::term::dimensions::VISIBLE_ROWS { g.line_feed(); }
-    let scrolled_ok = g.hist_count >= 1;
-    g.put_char(b'Z');
-    g.erase_display(2);
-    let cleared_ok = g.cells[0].ch == b' ' && g.x == 0 && g.y == 0;
-    mark(b"vt-grid-ops", row0_ok && scrolled_ok && cleared_ok);
-    struct Rec { prints: alloc::vec::Vec<u8>, execs: alloc::vec::Vec<u8>, csis: alloc::vec::Vec<(u8, i64)> }
-    impl crate::term::vt::parser::Perform for Rec {
-        fn print(&mut self, c: u8) { self.prints.push(c); }
-        fn execute(&mut self, b: u8) { self.execs.push(b); }
-        fn csi(&mut self, c: u8, params: &[i64], _inter: &[u8]) { self.csis.push((c, params.first().copied().unwrap_or(-1))); }
-        fn esc(&mut self, _c: u8, _inter: &[u8]) {}
-        fn osc(&mut self, _data: &[u8]) {}
-    }
-    let mut rec = Rec { prints: alloc::vec::Vec::new(), execs: alloc::vec::Vec::new(), csis: alloc::vec::Vec::new() };
-    let mut parser = crate::term::vt::parser::Parser::new();
-    for &b in b"A\x1b[31mB\x1b[0m\n\x1b[2J" { parser.advance(&mut rec, b); }
-    let ok = rec.prints == b"AB"
-        && rec.execs == [0x0Au8]
-        && rec.csis == [(b'm', 31), (b'm', 0), (b'J', 2)];
-    mark(b"vt-parser", ok);
-    let mut g2 = crate::term::grid::types::Grid::new();
-    let mut parser2 = crate::term::vt::parser::Parser::new();
     {
-        let mut vt = crate::term::vt::state::VtState { g: &mut g2 };
-        for &b in b"\x1b[5;3HX" { parser2.advance(&mut vt, b); }
+        let ok = crate::term::vt::color::ansi_to_argb(1) == 0xFF80_0000
+            && crate::term::vt::color::ansi_to_argb(15) == 0xFFFF_FFFF;
+        mark(b"vt-color", ok);
     }
-    let csi_pos_ok = g2.cells[crate::term::grid::types::Grid::idx(2, 4)].ch == b'X';
     {
-        let mut vt = crate::term::vt::state::VtState { g: &mut g2 };
-        for &b in b"\x1b[2J" { parser2.advance(&mut vt, b); }
+        let g = crate::term::grid::types::Grid::new();
+        let ok = g.cells.len() == crate::term::dimensions::COLS * crate::term::dimensions::VISIBLE_ROWS
+            && g.cells[0].ch == b' ' && g.x == 0 && g.y == 0;
+        mark(b"vt-grid", ok);
     }
-    let csi_clr_ok = g2.cells[0].ch == b' ' && g2.x == 0 && g2.y == 0;
-    mark(b"vt-csi", csi_pos_ok && csi_clr_ok);
-    let mut g4 = crate::term::grid::types::Grid::new();
-    let mut p4 = crate::term::vt::parser::Parser::new();
     {
-        let mut vt = crate::term::vt::state::VtState { g: &mut g4 };
-        for &b in b"\x1b[1;31mZ" { p4.advance(&mut vt, b); }
+        let mut g = crate::term::grid::types::Grid::new();
+        for &b in b"AB" { g.put_char(b); }
+        g.carriage_return();
+        g.put_char(b'C');
+        let row0_ok = g.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'C'
+            && g.cells[crate::term::grid::types::Grid::idx(1, 0)].ch == b'B';
+        for _ in 0..crate::term::dimensions::VISIBLE_ROWS { g.line_feed(); }
+        let scrolled_ok = g.hist_count >= 1;
+        g.put_char(b'Z');
+        g.erase_display(2);
+        let cleared_ok = g.cells[0].ch == b' ' && g.x == 0 && g.y == 0;
+        mark(b"vt-grid-ops", row0_ok && scrolled_ok && cleared_ok);
     }
-    let z = g4.cells[crate::term::grid::types::Grid::idx(0, 0)];
-    let sgr_set_ok = (z.flags & crate::term::grid::cell::F_BOLD) != 0 && z.fg == 1 && z.ch == b'Z';
     {
-        let mut vt = crate::term::vt::state::VtState { g: &mut g4 };
-        for &b in b"\x1b[0mY" { p4.advance(&mut vt, b); }
+        struct Rec { prints: alloc::vec::Vec<u8>, execs: alloc::vec::Vec<u8>, csis: alloc::vec::Vec<(u8, i64)> }
+        impl crate::term::vt::parser::Perform for Rec {
+            fn print(&mut self, c: u8) { self.prints.push(c); }
+            fn execute(&mut self, b: u8) { self.execs.push(b); }
+            fn csi(&mut self, c: u8, params: &[i64], _inter: &[u8]) { self.csis.push((c, params.first().copied().unwrap_or(-1))); }
+            fn esc(&mut self, _c: u8, _inter: &[u8]) {}
+            fn osc(&mut self, _data: &[u8]) {}
+        }
+        let mut rec = Rec { prints: alloc::vec::Vec::new(), execs: alloc::vec::Vec::new(), csis: alloc::vec::Vec::new() };
+        let mut parser = crate::term::vt::parser::Parser::new();
+        for &b in b"A\x1b[31mB\x1b[0m\n\x1b[2J" { parser.advance(&mut rec, b); }
+        let ok = rec.prints == b"AB"
+            && rec.execs == [0x0Au8]
+            && rec.csis == [(b'm', 31), (b'm', 0), (b'J', 2)];
+        mark(b"vt-parser", ok);
     }
-    let y = g4.cells[crate::term::grid::types::Grid::idx(1, 0)];
-    let sgr_reset_ok = y.flags == 0 && y.fg == crate::term::vt::color::DEFAULT_FG && y.ch == b'Y';
-    mark(b"vt-sgr", sgr_set_ok && sgr_reset_ok);
-    let mut g5 = crate::term::grid::types::Grid::new();
-    g5.feed(b"hi\x1b[32m!\n");
-    let feed_ok = g5.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'h'
-        && g5.cells[crate::term::grid::types::Grid::idx(1, 0)].ch == b'i'
-        && g5.cells[crate::term::grid::types::Grid::idx(2, 0)].ch == b'!'
-        && g5.cells[crate::term::grid::types::Grid::idx(2, 0)].fg == 2
-        && g5.y == 1
-        && g5.x == 0;
-    mark(b"vt-feed", feed_ok);
-    let mut sb = crate::term::scrollback::Scrollback::new();
-    sb.push_line(b"MIR");
-    let mirror_ok = sb.grid.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'M';
-    mark(b"vt-mirror", mirror_ok);
-    let mut gh = crate::term::grid::types::Grid::new();
-    let mut i = 0u8;
-    while i < crate::term::dimensions::VISIBLE_ROWS as u8 + 5 {
-        gh.feed(&[b'A' + i % 26]);
-        gh.feed(b"\n");
-        i += 1;
+    {
+        let mut g2 = crate::term::grid::types::Grid::new();
+        let mut parser2 = crate::term::vt::parser::Parser::new();
+        {
+            let mut vt = crate::term::vt::state::VtState { g: &mut g2 };
+            for &b in b"\x1b[5;3HX" { parser2.advance(&mut vt, b); }
+        }
+        let csi_pos_ok = g2.cells[crate::term::grid::types::Grid::idx(2, 4)].ch == b'X';
+        {
+            let mut vt = crate::term::vt::state::VtState { g: &mut g2 };
+            for &b in b"\x1b[2J" { parser2.advance(&mut vt, b); }
+        }
+        let csi_clr_ok = g2.cells[0].ch == b' ' && g2.x == 0 && g2.y == 0;
+        mark(b"vt-csi", csi_pos_ok && csi_clr_ok);
     }
-    let has_hist = gh.hist_count >= 5;
-    gh.scroll_view_up(1);
-    let off1 = gh.view_offset == 1;
-    gh.jump_view_bottom();
-    let off0 = gh.view_offset == 0;
-    mark(b"vt-history", has_hist && off1 && off0);
+    {
+        let mut g4 = crate::term::grid::types::Grid::new();
+        let mut p4 = crate::term::vt::parser::Parser::new();
+        {
+            let mut vt = crate::term::vt::state::VtState { g: &mut g4 };
+            for &b in b"\x1b[1;31mZ" { p4.advance(&mut vt, b); }
+        }
+        let z = g4.cells[crate::term::grid::types::Grid::idx(0, 0)];
+        let sgr_set_ok = (z.flags & crate::term::grid::cell::F_BOLD) != 0 && z.fg == 1 && z.ch == b'Z';
+        {
+            let mut vt = crate::term::vt::state::VtState { g: &mut g4 };
+            for &b in b"\x1b[0mY" { p4.advance(&mut vt, b); }
+        }
+        let y = g4.cells[crate::term::grid::types::Grid::idx(1, 0)];
+        let sgr_reset_ok = y.flags == 0 && y.fg == crate::term::vt::color::DEFAULT_FG && y.ch == b'Y';
+        mark(b"vt-sgr", sgr_set_ok && sgr_reset_ok);
+    }
+    {
+        let mut g5 = crate::term::grid::types::Grid::new();
+        g5.feed(b"hi\x1b[32m!\n");
+        let feed_ok = g5.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'h'
+            && g5.cells[crate::term::grid::types::Grid::idx(1, 0)].ch == b'i'
+            && g5.cells[crate::term::grid::types::Grid::idx(2, 0)].ch == b'!'
+            && g5.cells[crate::term::grid::types::Grid::idx(2, 0)].fg == 2
+            && g5.y == 1
+            && g5.x == 0;
+        mark(b"vt-feed", feed_ok);
+    }
+    {
+        let mut sb = crate::term::scrollback::Scrollback::new();
+        sb.push_line(b"MIR");
+        let mirror_ok = sb.grid.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'M';
+        mark(b"vt-mirror", mirror_ok);
+    }
+    {
+        let mut gh = crate::term::grid::types::Grid::new();
+        let mut i = 0u8;
+        while i < crate::term::dimensions::VISIBLE_ROWS as u8 + 5 {
+            gh.feed(&[b'A' + i % 26]);
+            gh.feed(b"\n");
+            i += 1;
+        }
+        let has_hist = gh.hist_count >= 5;
+        gh.scroll_view_up(1);
+        let off1 = gh.view_offset == 1;
+        gh.jump_view_bottom();
+        let off0 = gh.view_offset == 0;
+        mark(b"vt-history", has_hist && off1 && off0);
+    }
+    {
+        let mut ga = crate::term::grid::types::Grid::new();
+        ga.feed(b"MAIN");
+        ga.feed(b"\x1b[?1049h");
+        let in_alt = ga.alternate && ga.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b' ';
+        ga.feed(b"ALT");
+        ga.feed(b"\x1b[?1049l");
+        let back = !ga.alternate && ga.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'M';
+        mark(b"vt-altscreen", in_alt && back);
+    }
 }
 
 fn run(state: &mut State) {
