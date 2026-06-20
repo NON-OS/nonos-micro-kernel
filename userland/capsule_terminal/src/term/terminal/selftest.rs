@@ -107,6 +107,21 @@ pub fn vt_selftest() {
     }
     let csi_clr_ok = g2.cells[0].ch == b' ' && g2.x == 0 && g2.y == 0;
     mark(b"vt-csi", csi_pos_ok && csi_clr_ok);
+    let mut g4 = crate::term::grid::types::Grid::new();
+    let mut p4 = crate::term::vt::parser::Parser::new();
+    {
+        let mut vt = crate::term::vt::state::VtState { g: &mut g4 };
+        for &b in b"\x1b[1;31mZ" { p4.advance(&mut vt, b); }
+    }
+    let z = g4.cells[crate::term::grid::types::Grid::idx(0, 0)];
+    let sgr_set_ok = (z.flags & crate::term::grid::cell::F_BOLD) != 0 && z.fg == 1 && z.ch == b'Z';
+    {
+        let mut vt = crate::term::vt::state::VtState { g: &mut g4 };
+        for &b in b"\x1b[0mY" { p4.advance(&mut vt, b); }
+    }
+    let y = g4.cells[crate::term::grid::types::Grid::idx(1, 0)];
+    let sgr_reset_ok = y.flags == 0 && y.fg == crate::term::vt::color::DEFAULT_FG && y.ch == b'Y';
+    mark(b"vt-sgr", sgr_set_ok && sgr_reset_ok);
 }
 
 fn run(state: &mut State) {

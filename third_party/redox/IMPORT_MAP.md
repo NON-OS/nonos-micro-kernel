@@ -25,7 +25,7 @@ progress) · `translated` (port landed, donor no longer needed) · `reference`
 
 | donor file | sha256 | nonos target | status |
 |------------|--------|--------------|--------|
-| ransid/src/lib.rs | e4ce6348d3fa4161883b3869150c9ea57014da265ba05b6114f8f6b64bc275e9 | userland/capsule_terminal/src/term/vt/ | vendored |
+| ransid/src/lib.rs | e4ce6348d3fa4161883b3869150c9ea57014da265ba05b6114f8f6b64bc275e9 | userland/capsule_terminal/src/term/vt/ | translating |
 | ransid/src/color.rs | a04bf6c2e1ac71ad7f3e42e32bede785c7ce809d9484ed459f33cb2604d19cb4 | userland/capsule_terminal/src/term/vt/color.rs | translated |
 | orbterm/src/console.rs | a7398fb40daae5b07a55473ccd766e71ba5514ce92a946be2f2ea2fc49d3a56e | userland/capsule_terminal (grid model) | reference |
 | orbterm/src/handle.rs | 7432140a690e25d52f3f1f42ebff45fa37974250bd830ccf7f9663265dbcdd86 | userland/capsule_terminal (pty/output) | reference |
