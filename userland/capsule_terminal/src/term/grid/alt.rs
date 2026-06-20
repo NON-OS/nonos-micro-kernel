@@ -14,16 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod cell;
-pub mod types;
-pub mod new;
-pub mod put;
-pub mod scroll;
-pub mod erase;
-pub mod move_cells;
-pub mod feed;
-pub mod view;
-pub mod scroll_view;
-pub mod alt;
+use crate::term::grid::types::Grid;
 
-pub use types::Grid;
+impl Grid {
+    pub fn enter_alt(&mut self, clear: bool) {
+        if !self.alternate {
+            core::mem::swap(&mut self.cells, &mut self.alt);
+            self.alternate = true;
+        }
+        if clear {
+            self.clear();
+        }
+    }
+
+    pub fn leave_alt(&mut self) {
+        if self.alternate {
+            core::mem::swap(&mut self.cells, &mut self.alt);
+            self.alternate = false;
+        }
+    }
+}
