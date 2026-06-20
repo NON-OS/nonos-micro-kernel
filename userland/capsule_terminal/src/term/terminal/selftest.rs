@@ -60,6 +60,9 @@ fn ready(state: &mut State) -> bool {
 // itself: echo, a vfs write/read round trip, a pipe, and `||` gating.
 pub fn vt_selftest() {
     mark(b"vt-skeleton", true);
+    let ok = crate::term::vt::color::ansi_to_argb(1) == 0xFF80_0000
+        && crate::term::vt::color::ansi_to_argb(15) == 0xFFFF_FFFF;
+    mark(b"vt-color", ok);
 }
 
 fn run(state: &mut State) {
