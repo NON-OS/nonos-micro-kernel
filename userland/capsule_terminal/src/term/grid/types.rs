@@ -18,6 +18,7 @@ use alloc::vec::Vec;
 
 use crate::term::grid::cell::Cell;
 use crate::term::dimensions::COLS;
+use crate::term::vt::parser::Parser;
 
 pub struct Grid {
     pub cells: Vec<Cell>,
@@ -32,6 +33,7 @@ pub struct Grid {
     pub fg: u8,
     pub bg: u8,
     pub flags: u8,
+    pub parser: Parser,
 }
 
 impl Grid {

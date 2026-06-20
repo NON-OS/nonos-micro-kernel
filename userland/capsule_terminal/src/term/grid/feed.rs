@@ -14,30 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec;
-
-use crate::term::grid::cell::Cell;
 use crate::term::grid::types::Grid;
-use crate::term::dimensions::{COLS, VISIBLE_ROWS, SCROLLBACK_ROWS};
-use crate::term::vt::color::{DEFAULT_FG, DEFAULT_BG};
 use crate::term::vt::parser::Parser;
+use crate::term::vt::state::VtState;
 
 impl Grid {
-    pub fn new() -> Grid {
-        Grid {
-            cells: vec![Cell::blank(); COLS * VISIBLE_ROWS],
-            alt: vec![Cell::blank(); COLS * VISIBLE_ROWS],
-            history: vec![Cell::blank(); COLS * SCROLLBACK_ROWS],
-            hist_head: 0,
-            hist_count: 0,
-            view_offset: 0,
-            alternate: false,
-            x: 0,
-            y: 0,
-            fg: DEFAULT_FG,
-            bg: DEFAULT_BG,
-            flags: 0,
-            parser: Parser::new(),
+    pub fn feed(&mut self, bytes: &[u8]) {
+        let mut parser = core::mem::replace(&mut self.parser, Parser::new());
+        {
+            let mut vt = VtState { g: self };
+            for &b in bytes {
+                parser.advance(&mut vt, b);
+            }
         }
+        self.parser = parser;
     }
 }

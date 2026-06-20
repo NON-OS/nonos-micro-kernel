@@ -21,5 +21,6 @@ pub mod put;
 pub mod scroll;
 pub mod erase;
 pub mod move_cells;
+pub mod feed;
 
 pub use types::Grid;

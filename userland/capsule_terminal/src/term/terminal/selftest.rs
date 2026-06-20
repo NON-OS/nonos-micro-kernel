@@ -122,6 +122,15 @@ pub fn vt_selftest() {
     let y = g4.cells[crate::term::grid::types::Grid::idx(1, 0)];
     let sgr_reset_ok = y.flags == 0 && y.fg == crate::term::vt::color::DEFAULT_FG && y.ch == b'Y';
     mark(b"vt-sgr", sgr_set_ok && sgr_reset_ok);
+    let mut g5 = crate::term::grid::types::Grid::new();
+    g5.feed(b"hi\x1b[32m!\n");
+    let feed_ok = g5.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'h'
+        && g5.cells[crate::term::grid::types::Grid::idx(1, 0)].ch == b'i'
+        && g5.cells[crate::term::grid::types::Grid::idx(2, 0)].ch == b'!'
+        && g5.cells[crate::term::grid::types::Grid::idx(2, 0)].fg == 2
+        && g5.y == 1
+        && g5.x == 0;
+    mark(b"vt-feed", feed_ok);
 }
 
 fn run(state: &mut State) {
