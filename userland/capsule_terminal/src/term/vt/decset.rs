@@ -14,31 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec;
-
-use crate::term::grid::cell::Cell;
 use crate::term::grid::types::Grid;
-use crate::term::dimensions::{COLS, VISIBLE_ROWS, SCROLLBACK_ROWS};
-use crate::term::vt::color::{DEFAULT_FG, DEFAULT_BG};
-use crate::term::vt::parser::Parser;
 
-impl Grid {
-    pub fn new() -> Grid {
-        Grid {
-            cells: vec![Cell::blank(); COLS * VISIBLE_ROWS],
-            alt: vec![Cell::blank(); COLS * VISIBLE_ROWS],
-            history: vec![Cell::blank(); COLS * SCROLLBACK_ROWS],
-            hist_head: 0,
-            hist_count: 0,
-            view_offset: 0,
-            alternate: false,
-            cursor_visible: true,
-            x: 0,
-            y: 0,
-            fg: DEFAULT_FG,
-            bg: DEFAULT_BG,
-            flags: 0,
-            parser: Parser::new(),
+pub fn decset(g: &mut Grid, params: &[i64], inter: &[u8], set: bool) {
+    if !inter.contains(&b'?') {
+        return;
+    }
+    match params.first().copied().unwrap_or(0) {
+        25 => g.cursor_visible = set,
+        47 | 1047 => {
+            if set {
+                g.enter_alt(false);
+            } else {
+                g.leave_alt();
+            }
         }
+        1049 => {
+            if set {
+                g.enter_alt(true);
+            } else {
+                g.leave_alt();
+            }
+        }
+        _ => {}
     }
 }

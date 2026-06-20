@@ -42,13 +42,15 @@ impl<'a> Perform for VtState<'a> {
         }
     }
 
-    fn csi(&mut self, c: u8, params: &[i64], _inter: &[u8]) {
+    fn csi(&mut self, c: u8, params: &[i64], inter: &[u8]) {
         match c {
             b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'f' | b'd' | b'S' | b'T' => {
                 csi_cursor(self.g, c, params);
             }
             b'J' | b'K' | b'P' | b'@' => { csi_edit(self.g, c, params); }
             b'm' => crate::term::vt::sgr::sgr(self.g, params),
+            b'h' => crate::term::vt::decset::decset(self.g, params, inter, true),
+            b'l' => crate::term::vt::decset::decset(self.g, params, inter, false),
             _ => {}
         }
     }

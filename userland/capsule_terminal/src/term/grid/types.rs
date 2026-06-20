@@ -28,6 +28,7 @@ pub struct Grid {
     pub hist_count: usize,
     pub view_offset: usize,
     pub alternate: bool,
+    pub cursor_visible: bool,
     pub x: usize,
     pub y: usize,
     pub fg: u8,
