@@ -16,17 +16,9 @@
 
 use alloc::vec::Vec;
 
-use super::role::Role;
-use crate::term::dimensions::{COLS, SCROLLBACK_ROWS};
 use crate::term::grid::types::Grid;
 
 pub struct Scrollback {
-    pub(super) rows: [[u8; COLS]; SCROLLBACK_ROWS],
-    pub(super) lengths: [u16; SCROLLBACK_ROWS],
-    pub(super) roles: [Role; SCROLLBACK_ROWS],
-    pub(super) head: usize,
-    pub(super) count: usize,
-    pub(super) view_offset: usize,
     pub(super) capture: Option<Vec<Vec<u8>>>,
     pub grid: Grid,
 }
