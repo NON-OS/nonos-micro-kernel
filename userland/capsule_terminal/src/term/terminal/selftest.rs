@@ -16,6 +16,8 @@
 
 use nonos_libc::{heap_init, mk_debug, mk_exit, mk_yield, HeapError};
 
+use crate::term::dimensions::{COLS, VISIBLE_ROWS};
+use crate::term::grid::types::Grid;
 use crate::term::state::State;
 use crate::term::util::copy_into;
 
@@ -216,7 +218,25 @@ fn ok_cmd(state: &mut State, cmd: &[u8]) -> bool {
 }
 
 fn visible_has(state: &State, needle: &[u8]) -> bool {
-    state.scrollback.visible().rows().any(|(row, _)| row == needle)
+    let g = &state.scrollback.grid;
+    let mut row = 0;
+    while row < VISIBLE_ROWS {
+        let mut end = COLS;
+        while end > 0 && g.cells[Grid::idx(end - 1, row)].ch == b' ' {
+            end -= 1;
+        }
+        let mut buf = [0u8; COLS];
+        let mut c = 0;
+        while c < end {
+            buf[c] = g.cells[Grid::idx(c, row)].ch;
+            c += 1;
+        }
+        if &buf[..end] == needle {
+            return true;
+        }
+        row += 1;
+    }
+    false
 }
 
 fn mark(step: &[u8], ok: bool) {
