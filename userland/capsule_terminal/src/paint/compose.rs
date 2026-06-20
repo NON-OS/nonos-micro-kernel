@@ -17,13 +17,13 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::constants::{BODY_TOP, FOOTER_H, LINE_HEIGHT, TEXT_LEFT};
+use super::draw_grid::draw_grid;
 use super::draw_input_line::draw_input_line;
 use super::fetch::draw_fetch;
 use super::footer::draw_footer;
 use super::header::draw_header;
-use crate::term::scrollback::Role;
 use crate::term::state::State;
-use crate::term::theme::{BACKGROUND, ERROR, FOREGROUND};
+use crate::term::theme::BACKGROUND;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
@@ -32,18 +32,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     if state.fresh {
         draw_fetch(state, fb);
     } else {
-        let mut y = BODY_TOP;
-        for (row, role) in state.scrollback.visible().rows() {
-            if y + LINE_HEIGHT > input_y {
-                break;
-            }
-            let color = match role {
-                Role::Error => ERROR,
-                Role::Normal => FOREGROUND,
-            };
-            fb.text(TEXT_LEFT, y, row, color);
-            y += LINE_HEIGHT;
-        }
+        draw_grid(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP, input_y);
     }
     draw_input_line(state, fb, input_y);
     draw_footer(fb);

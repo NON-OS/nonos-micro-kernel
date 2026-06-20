@@ -17,6 +17,7 @@
 mod compose;
 mod constants;
 mod draw_cursor;
+mod draw_grid;
 mod draw_input_line;
 mod fetch;
 mod fetch_palette;
