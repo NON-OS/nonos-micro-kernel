@@ -94,6 +94,19 @@ pub fn vt_selftest() {
         && rec.execs == [0x0Au8]
         && rec.csis == [(b'm', 31), (b'm', 0), (b'J', 2)];
     mark(b"vt-parser", ok);
+    let mut g2 = crate::term::grid::types::Grid::new();
+    let mut parser2 = crate::term::vt::parser::Parser::new();
+    {
+        let mut vt = crate::term::vt::state::VtState { g: &mut g2 };
+        for &b in b"\x1b[5;3HX" { parser2.advance(&mut vt, b); }
+    }
+    let csi_pos_ok = g2.cells[crate::term::grid::types::Grid::idx(2, 4)].ch == b'X';
+    {
+        let mut vt = crate::term::vt::state::VtState { g: &mut g2 };
+        for &b in b"\x1b[2J" { parser2.advance(&mut vt, b); }
+    }
+    let csi_clr_ok = g2.cells[0].ch == b' ' && g2.x == 0 && g2.y == 0;
+    mark(b"vt-csi", csi_pos_ok && csi_clr_ok);
 }
 
 fn run(state: &mut State) {
