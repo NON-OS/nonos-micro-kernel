@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::super::pedersen::PedersenCommitment;
+use super::super::utils::constant_time_eq;
 use super::challenge::challenge;
 use super::merkle::fold_root;
 use super::types::EnrolledSecretProof;
-use super::super::pedersen::PedersenCommitment;
-use super::super::utils::constant_time_eq;
 use crate::crypto::curve25519::EdwardsPoint;
 
 pub fn verify(proof: &EnrolledSecretProof, root: &[u8; 32], ctx: &[u8]) -> bool {
@@ -39,13 +39,20 @@ pub fn verify(proof: &EnrolledSecretProof, root: &[u8; 32], ctx: &[u8]) -> bool 
     valid &= a_point.is_some() as u8;
     let c_pt = c_point.unwrap_or_else(EdwardsPoint::identity);
     let a_pt = a_point.unwrap_or_else(EdwardsPoint::identity);
-    valid &= (!c_pt.is_identity()) as u8;
-    valid &= (!a_pt.is_identity()) as u8;
+    valid &= (!c_pt.double().double().double().is_identity()) as u8;
+    valid &= (!a_pt.double().double().double().is_identity()) as u8;
 
     let computed = fold_root(&proof.commitment, &proof.siblings, &proof.directions);
     valid &= constant_time_eq(&computed, root) as u8;
 
-    let c = challenge(root, ctx, &proof.commitment, &proof.nonce_point, &proof.siblings, &proof.directions);
+    let c = challenge(
+        root,
+        ctx,
+        &proof.commitment,
+        &proof.nonce_point,
+        &proof.siblings,
+        &proof.directions,
+    );
     let lhs = g.scalar_mul(&proof.z_x).add(&h.scalar_mul(&proof.z_r));
     let rhs = a_pt.add(&c_pt.scalar_mul(&c.to_bytes()));
     valid &= constant_time_eq(&lhs.compress(), &rhs.compress()) as u8;
