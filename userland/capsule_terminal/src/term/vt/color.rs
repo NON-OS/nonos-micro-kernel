@@ -51,3 +51,19 @@ pub fn ansi_to_argb(index: u8) -> u32 {
         }
     }
 }
+
+pub fn argb_nearest_ansi(r: u8, g: u8, b: u8) -> u8 {
+    let idx = |c: u8| -> u8 {
+        let levels = [0u8, 95, 135, 175, 215, 255];
+        let mut best = 0u8;
+        let mut bestd = 256i32;
+        let mut k = 0u8;
+        while (k as usize) < levels.len() {
+            let d = (c as i32 - levels[k as usize] as i32).abs();
+            if d < bestd { bestd = d; best = k; }
+            k += 1;
+        }
+        best
+    };
+    16 + 36 * idx(r) + 6 * idx(g) + idx(b)
+}
