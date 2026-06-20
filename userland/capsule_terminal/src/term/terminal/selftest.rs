@@ -131,6 +131,10 @@ pub fn vt_selftest() {
         && g5.y == 1
         && g5.x == 0;
     mark(b"vt-feed", feed_ok);
+    let mut sb = crate::term::scrollback::Scrollback::new();
+    sb.push_line(b"MIR");
+    let mirror_ok = sb.grid.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'M';
+    mark(b"vt-mirror", mirror_ok);
 }
 
 fn run(state: &mut State) {
