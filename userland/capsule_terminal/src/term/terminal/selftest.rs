@@ -135,6 +135,19 @@ pub fn vt_selftest() {
     sb.push_line(b"MIR");
     let mirror_ok = sb.grid.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'M';
     mark(b"vt-mirror", mirror_ok);
+    let mut gh = crate::term::grid::types::Grid::new();
+    let mut i = 0u8;
+    while i < crate::term::dimensions::VISIBLE_ROWS as u8 + 5 {
+        gh.feed(&[b'A' + i % 26]);
+        gh.feed(b"\n");
+        i += 1;
+    }
+    let has_hist = gh.hist_count >= 5;
+    gh.scroll_view_up(1);
+    let off1 = gh.view_offset == 1;
+    gh.jump_view_bottom();
+    let off0 = gh.view_offset == 0;
+    mark(b"vt-history", has_hist && off1 && off0);
 }
 
 fn run(state: &mut State) {
