@@ -48,6 +48,7 @@ impl<'a> Perform for VtState<'a> {
                 csi_cursor(self.g, c, params);
             }
             b'J' | b'K' | b'P' | b'@' => { csi_edit(self.g, c, params); }
+            b'm' => crate::term::vt::sgr::sgr(self.g, params),
             _ => {}
         }
     }

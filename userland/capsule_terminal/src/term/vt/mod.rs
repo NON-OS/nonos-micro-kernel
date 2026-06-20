@@ -18,4 +18,5 @@ pub mod color;
 pub mod csi_cursor;
 pub mod csi_edit;
 pub mod parser;
+pub mod sgr;
 pub mod state;
