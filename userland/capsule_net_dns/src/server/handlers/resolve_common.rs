@@ -16,14 +16,15 @@
 
 use core::str;
 
-use nonos_libc::mk_yield;
+use nonos_libc::{mk_time_millis, mk_yield};
 
 use crate::dns::{first_address, question_matches, Answer, RCODE_NO_ERROR, RCODE_NXDOMAIN};
 use crate::protocol::{E_NAME_INVALID, E_NXDOMAIN, E_SERVFAIL, E_TIMEOUT};
 use crate::state::{local_port, next_xid, udp_port, upstream, DNS_PORT};
 use crate::udp_client::{recv_from, send_to};
 
-const RECV_TRIES: usize = 96;
+const DEADLINE_MS: i64 = 3000;
+const RESEND_MS: i64 = 400;
 
 pub fn name(body: &[u8]) -> Result<&str, u16> {
     if body.is_empty() || body.len() > 255 {
@@ -35,13 +36,16 @@ pub fn name(body: &[u8]) -> Result<&str, u16> {
 pub fn exchange(query: &[u8], xid: u16) -> Result<Answer, u16> {
     let upstream = upstream();
     let lport = local_port().ok_or(E_TIMEOUT)?;
-    let mut sent = false;
-    for _ in 0..RECV_TRIES {
-        if !sent {
-            sent = send_to(udp_port(), lport, upstream, DNS_PORT, query).is_ok();
+    let t0 = mk_time_millis();
+    let mut last_send = t0 - RESEND_MS;
+    while mk_time_millis().wrapping_sub(t0) <= DEADLINE_MS {
+        if mk_time_millis().wrapping_sub(last_send) >= RESEND_MS {
+            if send_to(udp_port(), lport, upstream, DNS_PORT, query).is_ok() {
+                last_send = mk_time_millis();
+            }
         }
         match recv_from(udp_port(), lport) {
-            Ok(d) if sent && d.src == upstream && d.src_port == DNS_PORT => {
+            Ok(d) if d.src == upstream && d.src_port == DNS_PORT => {
                 match parse_response(query, &d.payload, xid) {
                     Err(E_TIMEOUT) => mk_yield(),
                     other => return other,
