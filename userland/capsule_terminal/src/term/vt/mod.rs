@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::Scrollback;
-use crate::term::grid::types::Grid;
-
-impl Scrollback {
-    pub fn new() -> Self {
-        Self { capture: None, grid: Grid::new() }
-    }
-}
+pub mod color;
+pub mod csi_cursor;
+pub mod csi_edit;
+pub mod decset;
+pub mod parser;
+pub mod sgr;
+pub mod state;

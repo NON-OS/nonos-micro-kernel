@@ -17,34 +17,30 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::constants::{BODY_TOP, FOOTER_H, LINE_HEIGHT, TEXT_LEFT};
+use super::draw_grid::{draw_grid, draw_grid_cursor};
 use super::draw_input_line::draw_input_line;
 use super::fetch::draw_fetch;
 use super::footer::draw_footer;
 use super::header::draw_header;
-use crate::term::scrollback::Role;
 use crate::term::state::State;
-use crate::term::theme::{BACKGROUND, ERROR, FOREGROUND};
+use crate::term::theme::BACKGROUND;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
     draw_header(state, fb);
+    let alt = state.scrollback.grid.alternate;
     let input_y = fb.height.saturating_sub(FOOTER_H + LINE_HEIGHT);
-    if state.fresh {
+    if alt {
+        let body_max = fb.height.saturating_sub(FOOTER_H);
+        draw_grid(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP, body_max);
+        draw_grid_cursor(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP);
+    } else if state.fresh {
         draw_fetch(state, fb);
     } else {
-        let mut y = BODY_TOP;
-        for (row, role) in state.scrollback.visible().rows() {
-            if y + LINE_HEIGHT > input_y {
-                break;
-            }
-            let color = match role {
-                Role::Error => ERROR,
-                Role::Normal => FOREGROUND,
-            };
-            fb.text(TEXT_LEFT, y, row, color);
-            y += LINE_HEIGHT;
-        }
+        draw_grid(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP, input_y);
     }
-    draw_input_line(state, fb, input_y);
+    if !alt {
+        draw_input_line(state, fb, input_y);
+    }
     draw_footer(fb);
 }

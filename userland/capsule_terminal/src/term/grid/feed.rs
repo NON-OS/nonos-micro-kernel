@@ -14,11 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::Scrollback;
 use crate::term::grid::types::Grid;
+use crate::term::vt::parser::Parser;
+use crate::term::vt::state::VtState;
 
-impl Scrollback {
-    pub fn new() -> Self {
-        Self { capture: None, grid: Grid::new() }
+impl Grid {
+    pub fn feed(&mut self, bytes: &[u8]) {
+        let mut parser = core::mem::replace(&mut self.parser, Parser::new());
+        {
+            let mut vt = VtState { g: self };
+            for &b in bytes {
+                parser.advance(&mut vt, b);
+            }
+        }
+        self.parser = parser;
     }
 }

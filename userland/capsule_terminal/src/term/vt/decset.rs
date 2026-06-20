@@ -14,11 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::Scrollback;
 use crate::term::grid::types::Grid;
 
-impl Scrollback {
-    pub fn new() -> Self {
-        Self { capture: None, grid: Grid::new() }
+pub fn decset(g: &mut Grid, params: &[i64], inter: &[u8], set: bool) {
+    if !inter.contains(&b'?') {
+        return;
+    }
+    match params.first().copied().unwrap_or(0) {
+        25 => g.cursor_visible = set,
+        47 | 1047 => {
+            if set {
+                g.enter_alt(false);
+            } else {
+                g.leave_alt();
+            }
+        }
+        1049 => {
+            if set {
+                g.enter_alt(true);
+            } else {
+                g.leave_alt();
+            }
+        }
+        _ => {}
     }
 }

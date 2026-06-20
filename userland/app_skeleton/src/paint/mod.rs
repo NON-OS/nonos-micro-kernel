@@ -17,6 +17,7 @@
 mod buffer;
 mod clear;
 mod fill_rect;
+mod glyph_advance;
 mod text;
 mod text_scaled;
 

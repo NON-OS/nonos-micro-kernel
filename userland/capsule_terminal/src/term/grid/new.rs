@@ -14,11 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::Scrollback;
-use crate::term::grid::types::Grid;
+use alloc::vec;
 
-impl Scrollback {
-    pub fn new() -> Self {
-        Self { capture: None, grid: Grid::new() }
+use crate::term::grid::cell::Cell;
+use crate::term::grid::types::Grid;
+use crate::term::dimensions::{COLS, VISIBLE_ROWS, SCROLLBACK_ROWS};
+use crate::term::vt::color::{DEFAULT_FG, DEFAULT_BG};
+use crate::term::vt::parser::Parser;
+
+impl Grid {
+    pub fn new() -> Grid {
+        Grid {
+            cells: vec![Cell::blank(); COLS * VISIBLE_ROWS],
+            alt: vec![Cell::blank(); COLS * VISIBLE_ROWS],
+            history: vec![Cell::blank(); COLS * SCROLLBACK_ROWS],
+            hist_head: 0,
+            hist_count: 0,
+            view_offset: 0,
+            alternate: false,
+            cursor_visible: true,
+            x: 0,
+            y: 0,
+            fg: DEFAULT_FG,
+            bg: DEFAULT_BG,
+            flags: 0,
+            parser: Parser::new(),
+        }
     }
 }

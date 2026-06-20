@@ -14,11 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::Scrollback;
 use crate::term::grid::types::Grid;
 
-impl Scrollback {
-    pub fn new() -> Self {
-        Self { capture: None, grid: Grid::new() }
+impl Grid {
+    pub fn enter_alt(&mut self, clear: bool) {
+        if !self.alternate {
+            core::mem::swap(&mut self.cells, &mut self.alt);
+            self.alternate = true;
+        }
+        if clear {
+            self.clear();
+        }
+    }
+
+    pub fn leave_alt(&mut self) {
+        if self.alternate {
+            core::mem::swap(&mut self.cells, &mut self.alt);
+            self.alternate = false;
+        }
     }
 }

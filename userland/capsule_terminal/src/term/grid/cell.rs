@@ -14,11 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::Scrollback;
-use crate::term::grid::types::Grid;
+pub const F_BOLD: u8 = 1;
+pub const F_UNDERLINE: u8 = 2;
+pub const F_REVERSE: u8 = 4;
 
-impl Scrollback {
-    pub fn new() -> Self {
-        Self { capture: None, grid: Grid::new() }
+#[derive(Clone, Copy)]
+pub struct Cell {
+    pub ch: u8,
+    pub fg: u8,
+    pub bg: u8,
+    pub flags: u8,
+}
+
+impl Cell {
+    pub const fn blank() -> Cell {
+        Cell { ch: b' ', fg: 7, bg: 0, flags: 0 }
     }
 }

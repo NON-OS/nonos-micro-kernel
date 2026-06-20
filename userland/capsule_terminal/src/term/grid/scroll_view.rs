@@ -14,15 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::Scrollback;
-use super::view::ScrollbackView;
-use crate::term::dimensions::VISIBLE_ROWS;
+use crate::term::grid::types::Grid;
 
-impl Scrollback {
-    pub fn visible(&self) -> ScrollbackView<'_> {
-        let total_visible = self.count.min(VISIBLE_ROWS);
-        let end_row_logical = self.count.saturating_sub(self.view_offset);
-        let start_row_logical = end_row_logical.saturating_sub(total_visible);
-        ScrollbackView { sb: self, start: start_row_logical, end: end_row_logical }
+impl Grid {
+    pub fn scroll_view_up(&mut self, lines: usize) {
+        self.view_offset = (self.view_offset + lines).min(self.hist_count);
+    }
+    pub fn scroll_view_down(&mut self, lines: usize) {
+        self.view_offset = self.view_offset.saturating_sub(lines);
+    }
+    pub fn jump_view_bottom(&mut self) {
+        self.view_offset = 0;
     }
 }

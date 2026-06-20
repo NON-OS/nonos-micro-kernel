@@ -18,8 +18,6 @@ use super::types::Scrollback;
 
 impl Scrollback {
     pub fn clear(&mut self) {
-        self.count = 0;
-        self.head = 0;
-        self.view_offset = 0;
+        self.grid.clear();
     }
 }
