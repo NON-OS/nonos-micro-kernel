@@ -18,6 +18,6 @@ use super::types::Scrollback;
 
 impl Scrollback {
     pub fn scroll_down(&mut self, lines: usize) {
-        self.view_offset = self.view_offset.saturating_sub(lines);
+        self.grid.scroll_view_down(lines);
     }
 }
