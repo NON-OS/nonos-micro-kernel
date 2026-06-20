@@ -33,5 +33,16 @@ impl Scrollback {
             self.count += 1;
         }
         self.view_offset = 0;
+        match role {
+            Role::Error => {
+                self.grid.feed(b"\x1b[31m");
+                self.grid.feed(line);
+                self.grid.feed(b"\x1b[0m\n");
+            }
+            Role::Normal => {
+                self.grid.feed(line);
+                self.grid.feed(b"\n");
+            }
+        }
     }
 }

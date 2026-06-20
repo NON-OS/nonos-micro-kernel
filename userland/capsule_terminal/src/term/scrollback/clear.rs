@@ -21,5 +21,6 @@ impl Scrollback {
         self.count = 0;
         self.head = 0;
         self.view_offset = 0;
+        self.grid.clear();
     }
 }
