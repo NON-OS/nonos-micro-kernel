@@ -67,6 +67,18 @@ pub fn vt_selftest() {
     let ok = g.cells.len() == crate::term::dimensions::COLS * crate::term::dimensions::VISIBLE_ROWS
         && g.cells[0].ch == b' ' && g.x == 0 && g.y == 0;
     mark(b"vt-grid", ok);
+    let mut g = crate::term::grid::types::Grid::new();
+    for &b in b"AB" { g.put_char(b); }
+    g.carriage_return();
+    g.put_char(b'C');
+    let row0_ok = g.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'C'
+        && g.cells[crate::term::grid::types::Grid::idx(1, 0)].ch == b'B';
+    for _ in 0..crate::term::dimensions::VISIBLE_ROWS { g.line_feed(); }
+    let scrolled_ok = g.hist_count >= 1;
+    g.put_char(b'Z');
+    g.erase_display(2);
+    let cleared_ok = g.cells[0].ch == b' ' && g.x == 0 && g.y == 0;
+    mark(b"vt-grid-ops", row0_ok && scrolled_ok && cleared_ok);
 }
 
 fn run(state: &mut State) {
