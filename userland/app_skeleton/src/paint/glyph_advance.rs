@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod buffer;
-mod clear;
-mod fill_rect;
-mod glyph_advance;
-mod text;
-mod text_scaled;
+use nonos_toolkit::font::atlas::FontAtlas;
 
-pub use buffer::PaintBuffer;
+use super::buffer::PaintBuffer;
+
+impl<'a> PaintBuffer<'a> {
+    pub fn glyph_advance(&self) -> u32 {
+        let atlas = FontAtlas::default();
+        atlas.glyph_width as u32 + atlas.letter_spacing as u32
+    }
+}
