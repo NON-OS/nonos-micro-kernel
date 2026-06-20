@@ -29,8 +29,9 @@ pub fn draw_grid(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, max_y: u32) {
         if y + LINE_HEIGHT > max_y {
             break;
         }
+        let rowcells = g.visible_row(row);
         for col in 0..COLS {
-            let cell = g.cells[Grid::idx(col, row)];
+            let cell = rowcells[col];
             let x = ox + col as u32 * adv;
             let mut fg = ansi_to_argb(cell.fg);
             let mut bg = ansi_to_argb(cell.bg);
