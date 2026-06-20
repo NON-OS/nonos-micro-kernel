@@ -79,6 +79,21 @@ pub fn vt_selftest() {
     g.erase_display(2);
     let cleared_ok = g.cells[0].ch == b' ' && g.x == 0 && g.y == 0;
     mark(b"vt-grid-ops", row0_ok && scrolled_ok && cleared_ok);
+    struct Rec { prints: alloc::vec::Vec<u8>, execs: alloc::vec::Vec<u8>, csis: alloc::vec::Vec<(u8, i64)> }
+    impl crate::term::vt::parser::Perform for Rec {
+        fn print(&mut self, c: u8) { self.prints.push(c); }
+        fn execute(&mut self, b: u8) { self.execs.push(b); }
+        fn csi(&mut self, c: u8, params: &[i64], _inter: &[u8]) { self.csis.push((c, params.first().copied().unwrap_or(-1))); }
+        fn esc(&mut self, _c: u8, _inter: &[u8]) {}
+        fn osc(&mut self, _data: &[u8]) {}
+    }
+    let mut rec = Rec { prints: alloc::vec::Vec::new(), execs: alloc::vec::Vec::new(), csis: alloc::vec::Vec::new() };
+    let mut parser = crate::term::vt::parser::Parser::new();
+    for &b in b"A\x1b[31mB\x1b[0m\n\x1b[2J" { parser.advance(&mut rec, b); }
+    let ok = rec.prints == b"AB"
+        && rec.execs == [0x0Au8]
+        && rec.csis == [(b'm', 31), (b'm', 0), (b'J', 2)];
+    mark(b"vt-parser", ok);
 }
 
 fn run(state: &mut State) {
