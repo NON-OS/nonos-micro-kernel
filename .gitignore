@@ -1,3 +1,8 @@
+# Redox donor source — local reference only, not redistributed.
+# Ignore the vendored source but keep the audit manifest tracked.
+third_party/redox/*
+!third_party/redox/IMPORT_MAP.md
+
 # Build outputs
 target/
 *.iso
