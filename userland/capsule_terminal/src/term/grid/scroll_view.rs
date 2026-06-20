@@ -14,15 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod cell;
-pub mod types;
-pub mod new;
-pub mod put;
-pub mod scroll;
-pub mod erase;
-pub mod move_cells;
-pub mod feed;
-pub mod view;
-pub mod scroll_view;
+use crate::term::grid::types::Grid;
 
-pub use types::Grid;
+impl Grid {
+    pub fn scroll_view_up(&mut self, lines: usize) {
+        self.view_offset = (self.view_offset + lines).min(self.hist_count);
+    }
+    pub fn scroll_view_down(&mut self, lines: usize) {
+        self.view_offset = self.view_offset.saturating_sub(lines);
+    }
+    pub fn jump_view_bottom(&mut self) {
+        self.view_offset = 0;
+    }
+}

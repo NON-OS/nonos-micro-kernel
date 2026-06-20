@@ -52,5 +52,6 @@ impl Grid {
         for i in 0..self.cells.len() { self.cells[i] = blank; }
         self.x = 0;
         self.y = 0;
+        self.view_offset = 0;
     }
 }
