@@ -14,8 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod cell;
-pub mod types;
-pub mod new;
+use alloc::vec::Vec;
 
-pub use types::Grid;
+use crate::term::grid::cell::Cell;
+use crate::term::dimensions::COLS;
+
+pub struct Grid {
+    pub cells: Vec<Cell>,
+    pub alt: Vec<Cell>,
+    pub history: Vec<Cell>,
+    pub hist_head: usize,
+    pub hist_count: usize,
+    pub view_offset: usize,
+    pub alternate: bool,
+    pub x: usize,
+    pub y: usize,
+    pub fg: u8,
+    pub bg: u8,
+    pub flags: u8,
+}
+
+impl Grid {
+    pub fn idx(x: usize, y: usize) -> usize {
+        y * COLS + x
+    }
+}

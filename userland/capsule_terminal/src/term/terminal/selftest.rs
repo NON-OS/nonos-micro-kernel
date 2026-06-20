@@ -63,6 +63,10 @@ pub fn vt_selftest() {
     let ok = crate::term::vt::color::ansi_to_argb(1) == 0xFF80_0000
         && crate::term::vt::color::ansi_to_argb(15) == 0xFFFF_FFFF;
     mark(b"vt-color", ok);
+    let g = crate::term::grid::types::Grid::new();
+    let ok = g.cells.len() == crate::term::dimensions::COLS * crate::term::dimensions::VISIBLE_ROWS
+        && g.cells[0].ch == b' ' && g.x == 0 && g.y == 0;
+    mark(b"vt-grid", ok);
 }
 
 fn run(state: &mut State) {

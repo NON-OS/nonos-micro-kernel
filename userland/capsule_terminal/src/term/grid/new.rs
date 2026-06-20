@@ -14,8 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod cell;
-pub mod types;
-pub mod new;
+use alloc::vec;
 
-pub use types::Grid;
+use crate::term::grid::cell::Cell;
+use crate::term::grid::types::Grid;
+use crate::term::dimensions::{COLS, VISIBLE_ROWS, SCROLLBACK_ROWS};
+use crate::term::vt::color::{DEFAULT_FG, DEFAULT_BG};
+
+impl Grid {
+    pub fn new() -> Grid {
+        Grid {
+            cells: vec![Cell::blank(); COLS * VISIBLE_ROWS],
+            alt: vec![Cell::blank(); COLS * VISIBLE_ROWS],
+            history: vec![Cell::blank(); COLS * SCROLLBACK_ROWS],
+            hist_head: 0,
+            hist_count: 0,
+            view_offset: 0,
+            alternate: false,
+            x: 0,
+            y: 0,
+            fg: DEFAULT_FG,
+            bg: DEFAULT_BG,
+            flags: 0,
+        }
+    }
+}
