@@ -20,7 +20,22 @@ use super::constants::LINE_HEIGHT;
 use crate::term::dimensions::{COLS, VISIBLE_ROWS};
 use crate::term::grid::cell::F_REVERSE;
 use crate::term::grid::types::Grid;
+use crate::term::theme::{BACKGROUND, CURSOR};
 use crate::term::vt::color::{ansi_to_argb, DEFAULT_BG};
+
+pub fn draw_grid_cursor(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32) {
+    if !g.cursor_visible {
+        return;
+    }
+    let adv = fb.glyph_advance();
+    let x = ox + g.x as u32 * adv;
+    let y = oy + g.y as u32 * LINE_HEIGHT;
+    fb.fill_rect(x, y, adv, LINE_HEIGHT, CURSOR);
+    let ch = g.cells[Grid::idx(g.x, g.y)].ch;
+    if ch != b' ' {
+        fb.text(x, y, &[ch], BACKGROUND);
+    }
+}
 
 pub fn draw_grid(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, max_y: u32) {
     let adv = fb.glyph_advance();
