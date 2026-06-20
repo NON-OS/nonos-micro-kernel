@@ -58,7 +58,12 @@ fn ready(state: &mut State) -> bool {
 // Drive the previously unproven shell paths through the normal submit
 // path and emit one serial marker per step so a headless boot grades
 // itself: echo, a vfs write/read round trip, a pipe, and `||` gating.
+pub fn vt_selftest() {
+    mark(b"vt-skeleton", true);
+}
+
 fn run(state: &mut State) {
+    vt_selftest();
     run_cmd(state, b"echo selfcheck");
     mark(b"echo", visible_has(state, b"selfcheck"));
 
