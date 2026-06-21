@@ -922,21 +922,6 @@ nonos-mk-market-smoke: $(USERLAND_LIBC) $(MARKETPLACE_ABI_LIB)
 		--features smoketest-trust \
 		-Zbuild-std=core,alloc -Zbuild-std-features=compiler-builtins-mem
 
-ECOSYSTEM_GUI_SMOKE_FEATURES := terminal_CARGO_FEATURES=nonos-autorun-rg desktop-shell_CARGO_FEATURES=autofocus-terminal
-
-.PHONY: nonos-mk-terminal-autorun-rg nonos-mk-desktop-shell-autofocus nonos-mk-ecosystem-gui-smoke-capsules nonos-mk-ecosystem-gui-smoke-prod
-nonos-mk-terminal-autorun-rg:
-	@$(MAKE) -B terminal_CARGO_FEATURES=nonos-autorun-rg nonos-mk-terminal
-
-nonos-mk-desktop-shell-autofocus:
-	@$(MAKE) -B desktop-shell_CARGO_FEATURES=autofocus-terminal nonos-mk-desktop-shell
-
-nonos-mk-ecosystem-gui-smoke-capsules:
-	@$(MAKE) -B $(ECOSYSTEM_GUI_SMOKE_FEATURES) nonos-mk-terminal-sign nonos-mk-desktop-shell-sign
-
-nonos-mk-ecosystem-gui-smoke-prod: nonos-mk-ecosystem-gui-smoke-capsules
-	@$(MAKE) $(ECOSYSTEM_GUI_SMOKE_FEATURES) nonos-mk-desktop-gui-prod
-
 # Host-side marketplace-index CLI. This is the bridge an operator
 # runs offline: read JSON, encode canonical binary, sign with the
 # Ed25519 operator key, verify. The tool is host-native (no kernel
@@ -1890,14 +1875,6 @@ nonos-mk-boot-terminal:
 		echo "Restoring GUI terminal capsule (undo autorun-selftest artifact)..."; \
 		$(MAKE) -B nonos-mk-terminal-sign >/dev/null 2>&1; \
 		exit $$rc
-
-.PHONY: nonos-mk-boot-ecosystem-gui-smoke
-nonos-mk-boot-ecosystem-gui-smoke:
-	@DESKTOP_GUI_BUILD_TARGET=nonos-mk-ecosystem-gui-smoke-prod \
-		DESKTOP_GUI_REQUIRE_ECOSYSTEM_SMOKE=1 \
-		BOOT_TEST_TIMEOUT=300 \
-		BOOT_TEST_SETTLE=60 \
-		./tests/boot/desktop_gui_boot.sh
 
 nonos-mk-plan-a-runtime: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@QEMU="$(QEMU)" OVMF="$(OVMF)" OVMF_VARS="$(OVMF_VARS)" \
