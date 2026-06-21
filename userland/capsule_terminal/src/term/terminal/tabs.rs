@@ -42,14 +42,14 @@ impl Terminal {
         Some(EventOutcome::Repaint)
     }
 
-    fn open_tab(&mut self) {
+    pub(super) fn open_tab(&mut self) {
         if self.tabs.len() < MAX_TABS {
             self.tabs.push(State::new());
             self.active = self.tabs.len() - 1;
         }
     }
 
-    fn close_tab(&mut self) -> EventOutcome {
+    pub(super) fn close_tab(&mut self) -> EventOutcome {
         if self.tabs.len() <= 1 {
             return EventOutcome::Close;
         }

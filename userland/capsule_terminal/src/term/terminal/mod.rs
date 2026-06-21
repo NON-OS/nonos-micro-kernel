@@ -21,6 +21,7 @@ mod app_impl_paint;
 mod new;
 #[cfg(feature = "nonos-autorun-selftest")]
 pub mod selftest;
+mod tab_click;
 mod tabs;
 mod types;
 
