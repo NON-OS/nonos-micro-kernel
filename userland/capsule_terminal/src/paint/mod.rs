@@ -26,5 +26,8 @@ mod fetch_row;
 mod fetch_uptime;
 mod footer;
 mod header;
+mod tabstrip;
 
 pub use compose::paint;
+pub use compose::paint_tabs;
+pub use tabstrip::draw_tabstrip;

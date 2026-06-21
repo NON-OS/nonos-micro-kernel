@@ -26,6 +26,11 @@ use super::header::draw_header;
 use crate::term::state::State;
 use crate::term::theme::BACKGROUND;
 
+pub fn paint_tabs(tabs: &[State], active: usize, fb: &mut PaintBuffer) {
+    paint(&tabs[active], fb);
+    crate::paint::draw_tabstrip(tabs, active, fb);
+}
+
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
     draw_header(state, fb);

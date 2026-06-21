@@ -18,5 +18,5 @@ pub const LINE_HEIGHT: u32 = 15;
 pub const TEXT_LEFT: u32 = 14;
 pub const HEADER_H: u32 = 28;
 pub const FOOTER_H: u32 = 16;
-pub const BODY_TOP: u32 = HEADER_H + 6;
+pub const BODY_TOP: u32 = HEADER_H + 6 + 16;
 pub const CELL_WIDTH: u32 = 9;
