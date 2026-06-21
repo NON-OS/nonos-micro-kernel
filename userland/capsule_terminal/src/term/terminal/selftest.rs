@@ -202,6 +202,14 @@ pub fn vt_selftest() {
         let f = crate::term::rtc::fmt_hms(9, 5, 42);
         mark(b"block-ts", &f == b"09:05:42");
     }
+    {
+        let mut st = crate::term::state::State::new();
+        st.line.replace(b"echo hi");
+        let _ = crate::event::on_enter(&mut st);
+        let opened = st.blocks.len() == 1;
+        let ok = st.blocks[0].status == crate::term::block::Status::Ok;
+        mark(b"block-capture", opened && ok);
+    }
 }
 
 fn run(state: &mut State) {

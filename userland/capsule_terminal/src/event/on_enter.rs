@@ -24,6 +24,7 @@ use crate::term::util::copy_into;
 
 pub fn on_enter(state: &mut State) -> EventOutcome {
     state.fresh = false;
+    state.open_block(crate::term::rtc::rtc_hms());
     let body = state.line.as_bytes();
     let mut entered = [0u8; COLS];
     let n = body.len();
@@ -55,6 +56,8 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
         }
         prev_ok = state.last_status;
     }
+    state.close_block(state.last_status);
+    state.evict_blocks();
     state.line.clear();
     state.scrollback.jump_bottom();
     match outcome {
