@@ -897,6 +897,51 @@ nonos-mk-marketplace-abi: $(MARKETPLACE_ABI_LIB)
 # rebuilt before market when the ABI changes.
 $(market_BIN): $(MARKETPLACE_ABI_LIB)
 
+# Marketplace capsule built with the publicly-known smoketest
+# trust pubkey baked in. The kernel-side market smoke loads
+# fixtures signed by the matching seed; without this feature
+# bootstrap-trust would refuse every fixture. Production builds
+# must NOT enable this feature.
+nonos-mk-market-smoke: $(USERLAND_LIBC) $(MARKETPLACE_ABI_LIB)
+	@echo "Building marketplace capsule (smoketest-trust)..."
+	@cd $(USERLAND_DIR)/capsule_market && \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build --release --target ../x86_64-nonos-user.json \
+		--features smoketest-trust \
+		-Zbuild-std=core,alloc -Zbuild-std-features=compiler-builtins-mem
+
+# Host-side marketplace-index CLI. This is the bridge an operator
+# runs offline: read JSON, encode canonical binary, sign with the
+# Ed25519 operator key, verify. The tool is host-native (no kernel
+# target), pinned to the same toolchain as the rest of the tree so
+# CI gets a deterministic build.
+MARKETPLACE_INDEX_TOOL := nonos-mk/target/$(HOST_TARGET)/release/marketplace-index
+
+$(MARKETPLACE_INDEX_TOOL):
+	@echo "Building host marketplace-index CLI..."
+	@cd nonos-mk && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build --release --bin marketplace-index --target $(HOST_TARGET)
+
+nonos-mk-marketplace-index-tool: $(MARKETPLACE_INDEX_TOOL)
+
+# Generate the four signed fixtures the kernel-side market smoke
+# embeds. Depends on the host marketplace-index CLI. The trusted
+# seed is `0x42`-repeated-32 (publicly known); the matching
+# pubkey is gated into capsule_market via the `smoketest-trust`
+# feature. The untrusted blob is signed by `0xAA`-repeated-32 so
+# the runtime can prove the trust list refuses unknown operators.
+TEST_MARKET_DIR := target/test-market
+TEST_MARKET_FIXTURES := \
+	$(TEST_MARKET_DIR)/empty.bin \
+	$(TEST_MARKET_DIR)/preview.bin \
+	$(TEST_MARKET_DIR)/mutated.bin \
+	$(TEST_MARKET_DIR)/untrusted.bin
+
+$(TEST_MARKET_FIXTURES): $(MARKETPLACE_INDEX_TOOL) nonos-ci/build-market-fixtures.sh
+	@bash nonos-ci/build-market-fixtures.sh $(TEST_MARKET_DIR) $(MARKETPLACE_INDEX_TOOL)
+
+nonos-mk-market-fixtures: $(TEST_MARKET_FIXTURES)
+
 nonos-mk-userland-clean:
 	@echo "Removing userland build state..."
 	@rm -rf $(USERLAND_DIR)/libc/target \
@@ -1264,6 +1309,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
 		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
+		$(ZK_POLICY_ROOT) \
 		nonos-mk-verify-desktop-gui-capsules \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-desktop-gui)..."
@@ -1488,6 +1534,48 @@ nonos-mk-tamper-run:
 		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
 		$(QEMU_NET) $(QEMU_RNG) \
 		-serial mon:stdio -vga std -no-reboot
+
+# Boot-test harnesses
+
+nonos-mk-boot-ramfs:
+	@./tests/boot/ramfs_round_trip.sh
+
+nonos-mk-boot-keyring:
+	@./tests/boot/keyring_round_trip.sh
+
+nonos-mk-boot-entropy:
+	@./tests/boot/entropy_round_trip.sh
+
+nonos-mk-boot-crypto-hash:
+	@./tests/boot/crypto_hash_round_trip.sh
+
+nonos-mk-boot-vfs:
+	@./tests/boot/vfs_round_trip.sh
+
+nonos-mk-boot-ps2-input:
+	@./tests/boot/ps2_input_round_trip.sh
+
+nonos-mk-boot-xhci:
+	@./tests/boot/xhci_round_trip.sh
+
+nonos-mk-boot-usb-hid:
+	@./tests/boot/usb_hid_enum.sh
+
+nonos-mk-boot-input-e2e-ps2:
+	@./tests/boot/input_e2e_ps2.sh
+
+nonos-mk-boot-input-e2e-xhci:
+	@./tests/boot/input_e2e_xhci.sh
+
+nonos-mk-boot-desktop-gui:
+	@./tests/boot/desktop_gui_boot.sh
+
+.PHONY: nonos-mk-boot-terminal
+nonos-mk-boot-terminal:
+	@./tests/boot/terminal_round_trip.sh; rc=$$?; \
+		echo "Restoring GUI terminal capsule (undo autorun-selftest artifact)..."; \
+		$(MAKE) -B nonos-mk-terminal-sign >/dev/null 2>&1; \
+		exit $$rc
 
 nonos-mk-plan-a-runtime: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@QEMU="$(QEMU)" OVMF="$(OVMF)" OVMF_VARS="$(OVMF_VARS)" \

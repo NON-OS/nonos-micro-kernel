@@ -14,11 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::Scrollback;
+use crate::term::grid::cell::Cell;
 use crate::term::grid::types::Grid;
+use crate::term::dimensions::{COLS, VISIBLE_ROWS};
 
-impl Scrollback {
-    pub fn new() -> Self {
-        Self { capture: None, grid: Grid::new() }
+impl Grid {
+    pub fn blank_cell(&self) -> Cell {
+        Cell { ch: b' ', fg: self.fg, bg: self.bg, flags: 0 }
+    }
+    pub fn put_char(&mut self, c: u8) {
+        let i = Grid::idx(self.x, self.y);
+        self.cells[i] = Cell { ch: c, fg: self.fg, bg: self.bg, flags: self.flags };
+        self.x += 1;
+        if self.x >= COLS {
+            self.x = 0;
+            self.line_feed();
+        }
+    }
+    pub fn line_feed(&mut self) {
+        self.y += 1;
+        if self.y >= VISIBLE_ROWS {
+            self.scroll_up_one();
+            self.y = VISIBLE_ROWS - 1;
+        }
+    }
+    pub fn carriage_return(&mut self) {
+        self.x = 0;
     }
 }

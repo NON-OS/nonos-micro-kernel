@@ -19,7 +19,10 @@ name = "terminal"
 path = "src/main.rs"
 
 [features]
-nonos-autorun-rg = []
+# Self-test build: once vfs answers, auto-run the unproven shell paths
+# (echo, vfs round trip, pipe, statement gating) and emit graded
+# [TERMINAL-TEST] serial markers for the boot harness.
+nonos-autorun-selftest = []
 
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }

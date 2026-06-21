@@ -18,8 +18,4 @@ use crate::term::state::State;
 
 pub struct Terminal {
     pub(crate) state: State,
-    #[cfg(feature = "nonos-autorun-rg")]
-    pub(crate) autorun_ticks: u32,
-    #[cfg(feature = "nonos-autorun-rg")]
-    pub(crate) autorun_done: bool,
 }

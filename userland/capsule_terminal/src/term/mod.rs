@@ -17,6 +17,7 @@
 pub mod banner;
 pub mod cwd;
 pub mod dimensions;
+pub mod grid;
 pub mod history;
 pub mod line;
 pub mod manifest;
@@ -26,5 +27,6 @@ pub mod state;
 pub mod terminal;
 pub mod theme;
 pub mod util;
+pub mod vt;
 
 pub use terminal::Terminal;

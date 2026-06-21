@@ -14,11 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::Scrollback;
-use crate::term::grid::types::Grid;
+use alloc::vec::Vec;
 
-impl Scrollback {
-    pub fn new() -> Self {
-        Self { capture: None, grid: Grid::new() }
+use crate::term::grid::cell::Cell;
+use crate::term::dimensions::COLS;
+use crate::term::vt::parser::Parser;
+
+pub struct Grid {
+    pub cells: Vec<Cell>,
+    pub alt: Vec<Cell>,
+    pub history: Vec<Cell>,
+    pub hist_head: usize,
+    pub hist_count: usize,
+    pub view_offset: usize,
+    pub alternate: bool,
+    pub cursor_visible: bool,
+    pub x: usize,
+    pub y: usize,
+    pub fg: u8,
+    pub bg: u8,
+    pub flags: u8,
+    pub parser: Parser,
+}
+
+impl Grid {
+    pub fn idx(x: usize, y: usize) -> usize {
+        y * COLS + x
     }
 }

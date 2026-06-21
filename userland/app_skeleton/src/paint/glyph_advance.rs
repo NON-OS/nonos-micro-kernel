@@ -14,26 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::role::Role;
-use super::types::Scrollback;
-use crate::term::dimensions::SCROLLBACK_ROWS;
+use nonos_toolkit::font::atlas::FontAtlas;
 
-pub struct ScrollbackView<'a> {
-    pub(super) sb: &'a Scrollback,
-    pub(super) start: usize,
-    pub(super) end: usize,
-}
+use super::buffer::PaintBuffer;
 
-impl<'a> ScrollbackView<'a> {
-    pub fn rows(&self) -> impl Iterator<Item = (&'a [u8], Role)> + '_ {
-        let head = self.sb.head;
-        let lengths = &self.sb.lengths;
-        let rows = &self.sb.rows;
-        let roles = &self.sb.roles;
-        (self.start..self.end).map(move |logical| {
-            let slot = (head + logical) % SCROLLBACK_ROWS;
-            let n = lengths[slot] as usize;
-            (&rows[slot][..n], roles[slot])
-        })
+impl<'a> PaintBuffer<'a> {
+    pub fn glyph_advance(&self) -> u32 {
+        let atlas = FontAtlas::default();
+        atlas.glyph_width as u32 + atlas.letter_spacing as u32
     }
 }

@@ -15,11 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::types::Scrollback;
-use crate::term::dimensions::VISIBLE_ROWS;
 
 impl Scrollback {
     pub fn scroll_up(&mut self, lines: usize) {
-        let max = self.count.saturating_sub(VISIBLE_ROWS);
-        self.view_offset = (self.view_offset + lines).min(max);
+        self.grid.scroll_view_up(lines);
     }
 }

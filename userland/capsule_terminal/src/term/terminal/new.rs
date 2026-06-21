@@ -20,12 +20,6 @@ use crate::term::state::State;
 impl Terminal {
     pub fn new() -> Self {
         let state = State::new();
-        Self {
-            state,
-            #[cfg(feature = "nonos-autorun-rg")]
-            autorun_ticks: 0,
-            #[cfg(feature = "nonos-autorun-rg")]
-            autorun_done: false,
-        }
+        Self { state }
     }
 }

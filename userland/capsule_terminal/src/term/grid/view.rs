@@ -14,11 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::Scrollback;
+use crate::term::dimensions::{COLS, SCROLLBACK_ROWS, VISIBLE_ROWS};
+use crate::term::grid::cell::Cell;
 use crate::term::grid::types::Grid;
 
-impl Scrollback {
-    pub fn new() -> Self {
-        Self { capture: None, grid: Grid::new() }
+impl Grid {
+    pub fn visible_row(&self, i: usize) -> &[Cell] {
+        let ci = (self.hist_count + i).saturating_sub(self.view_offset);
+        if ci < self.hist_count {
+            let slot = (self.hist_head + ci) % SCROLLBACK_ROWS;
+            &self.history[slot * COLS..slot * COLS + COLS]
+        } else {
+            let live = (ci - self.hist_count).min(VISIBLE_ROWS - 1);
+            &self.cells[live * COLS..live * COLS + COLS]
+        }
     }
 }
