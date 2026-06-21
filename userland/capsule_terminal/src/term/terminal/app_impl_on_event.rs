@@ -21,6 +21,9 @@ use crate::event::on_event;
 
 impl Terminal {
     pub(super) fn on_event_inner(&mut self, event: InputEvent) -> EventOutcome {
+        if let Some(outcome) = self.tab_command(event) {
+            return outcome;
+        }
         on_event(self.cur(), event)
     }
 }
