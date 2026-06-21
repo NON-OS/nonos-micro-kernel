@@ -179,6 +179,16 @@ pub fn vt_selftest() {
         mark(b"vt-altscreen", in_alt && back);
     }
     {
+        let mut st = crate::term::state::State::new();
+        st.open_block(*b"12:34:56");
+        st.close_block(false);
+        let one = st.blocks.len() == 1;
+        let err = st.blocks[0].status == crate::term::block::Status::Err;
+        let ts = &st.blocks[0].ts == b"12:34:56";
+        let found = st.block_at(st.blocks[0].start_abs).is_some();
+        mark(b"block-model", one && err && ts && found);
+    }
+    {
         let mut gb = crate::term::grid::types::Grid::new();
         let start = gb.current_abs_line();
         for _ in 0..(crate::term::dimensions::VISIBLE_ROWS + 3) {

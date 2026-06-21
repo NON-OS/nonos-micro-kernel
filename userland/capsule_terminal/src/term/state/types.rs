@@ -16,6 +16,7 @@
 
 use alloc::vec::Vec;
 
+use crate::term::block::Block;
 use crate::term::cwd::Cwd;
 use crate::term::history::History;
 use crate::term::line::Line;
@@ -41,4 +42,5 @@ pub struct State {
     // entries that start with it, and restore it when the search runs off
     // the newest entry.
     pub hist_prefix: Vec<u8>,
+    pub blocks: Vec<Block>,
 }

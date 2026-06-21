@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod banner;
+pub mod block;
 pub mod cwd;
 pub mod dimensions;
 pub mod grid;
