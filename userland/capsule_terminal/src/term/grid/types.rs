@@ -35,6 +35,7 @@ pub struct Grid {
     pub bg: u8,
     pub flags: u8,
     pub parser: Parser,
+    pub total_scrolled: u64,
 }
 
 impl Grid {

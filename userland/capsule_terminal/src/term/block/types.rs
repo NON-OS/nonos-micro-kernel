@@ -14,27 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::State;
-use crate::term::cwd::Cwd;
-use crate::term::history::History;
-use crate::term::line::Line;
-use crate::term::scrollback::Scrollback;
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Status {
+    Running,
+    Ok,
+    Err,
+}
 
-impl State {
-    pub fn new() -> Self {
-        Self {
-            line: Line::new(),
-            history: History::new(),
-            scrollback: Scrollback::new(),
-            cwd: Cwd::new(),
-            owner_pid: 0,
-            fresh: true,
-            start_ms: 0,
-            vars: alloc::vec::Vec::new(),
-            last_status: true,
-            aliases: alloc::vec::Vec::new(),
-            hist_prefix: alloc::vec::Vec::new(),
-            blocks: alloc::vec::Vec::new(),
-        }
-    }
+#[derive(Clone, Copy)]
+pub struct Block {
+    pub start_abs: u64,
+    pub ts: [u8; 8],
+    pub status: Status,
 }

@@ -16,6 +16,7 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::block_chrome::draw_block_chrome;
 use super::constants::{BODY_TOP, FOOTER_H, LINE_HEIGHT, TEXT_LEFT};
 use super::draw_grid::{draw_grid, draw_grid_cursor};
 use super::draw_input_line::draw_input_line;
@@ -24,6 +25,11 @@ use super::footer::draw_footer;
 use super::header::draw_header;
 use crate::term::state::State;
 use crate::term::theme::BACKGROUND;
+
+pub fn paint_tabs(tabs: &[State], active: usize, fb: &mut PaintBuffer) {
+    paint(&tabs[active], fb);
+    crate::paint::draw_tabstrip(tabs, active, fb);
+}
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
@@ -37,6 +43,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     } else if state.fresh {
         draw_fetch(state, fb);
     } else {
+        draw_block_chrome(state, fb, TEXT_LEFT, BODY_TOP, input_y);
         draw_grid(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP, input_y);
     }
     if !alt {

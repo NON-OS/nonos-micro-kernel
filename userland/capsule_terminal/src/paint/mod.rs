@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod block_chrome;
 mod compose;
 mod constants;
 mod draw_cursor;
@@ -25,5 +26,8 @@ mod fetch_row;
 mod fetch_uptime;
 mod footer;
 mod header;
+pub mod tabstrip;
 
 pub use compose::paint;
+pub use compose::paint_tabs;
+pub use tabstrip::draw_tabstrip;

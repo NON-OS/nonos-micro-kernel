@@ -14,27 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::State;
-use crate::term::cwd::Cwd;
-use crate::term::history::History;
-use crate::term::line::Line;
-use crate::term::scrollback::Scrollback;
+use crate::term::grid::types::Grid;
 
-impl State {
-    pub fn new() -> Self {
-        Self {
-            line: Line::new(),
-            history: History::new(),
-            scrollback: Scrollback::new(),
-            cwd: Cwd::new(),
-            owner_pid: 0,
-            fresh: true,
-            start_ms: 0,
-            vars: alloc::vec::Vec::new(),
-            last_status: true,
-            aliases: alloc::vec::Vec::new(),
-            hist_prefix: alloc::vec::Vec::new(),
-            blocks: alloc::vec::Vec::new(),
-        }
+impl Grid {
+    pub fn current_abs_line(&self) -> u64 {
+        self.total_scrolled + self.y as u64
+    }
+
+    pub fn abs_base(&self) -> u64 {
+        self.total_scrolled - self.hist_count as u64
+    }
+
+    pub fn abs_of_visible_row(&self, row: usize) -> u64 {
+        self.total_scrolled + row as u64 - self.view_offset as u64
     }
 }

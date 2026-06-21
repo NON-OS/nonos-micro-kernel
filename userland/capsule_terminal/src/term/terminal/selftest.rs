@@ -178,6 +178,38 @@ pub fn vt_selftest() {
         let back = !ga.alternate && ga.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'M';
         mark(b"vt-altscreen", in_alt && back);
     }
+    {
+        let mut st = crate::term::state::State::new();
+        st.open_block(*b"12:34:56");
+        st.close_block(false);
+        let one = st.blocks.len() == 1;
+        let err = st.blocks[0].status == crate::term::block::Status::Err;
+        let ts = &st.blocks[0].ts == b"12:34:56";
+        let found = st.block_at(st.blocks[0].start_abs).is_some();
+        mark(b"block-model", one && err && ts && found);
+    }
+    {
+        let mut gb = crate::term::grid::types::Grid::new();
+        let start = gb.current_abs_line();
+        for _ in 0..(crate::term::dimensions::VISIBLE_ROWS + 3) {
+            gb.feed(b"x\n");
+        }
+        let scrolled = gb.total_scrolled == 4 && gb.abs_base() == 4 - gb.hist_count as u64;
+        let row_abs = gb.abs_of_visible_row(0) == gb.total_scrolled - gb.view_offset as u64;
+        mark(b"block-absline", start == 0 && scrolled && row_abs);
+    }
+    {
+        let f = crate::term::rtc::fmt_hms(9, 5, 42);
+        mark(b"block-ts", &f == b"09:05:42");
+    }
+    {
+        let mut st = crate::term::state::State::new();
+        st.line.replace(b"echo hi");
+        let _ = crate::event::on_enter(&mut st);
+        let opened = st.blocks.len() == 1;
+        let ok = st.blocks[0].status == crate::term::block::Status::Ok;
+        mark(b"block-capture", opened && ok);
+    }
 }
 
 fn run(state: &mut State) {

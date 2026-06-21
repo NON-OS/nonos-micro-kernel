@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod banner;
+pub mod block;
 pub mod cwd;
 pub mod dimensions;
 pub mod grid;
@@ -22,6 +23,7 @@ pub mod history;
 pub mod line;
 pub mod manifest;
 pub mod prompt;
+pub mod rtc;
 pub mod scrollback;
 pub mod state;
 pub mod terminal;

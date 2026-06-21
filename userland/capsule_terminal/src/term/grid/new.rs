@@ -39,6 +39,7 @@ impl Grid {
             bg: DEFAULT_BG,
             flags: 0,
             parser: Parser::new(),
+            total_scrolled: 0,
         }
     }
 }

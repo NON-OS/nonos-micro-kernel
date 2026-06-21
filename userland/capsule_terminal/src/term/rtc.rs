@@ -14,27 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::State;
-use crate::term::cwd::Cwd;
-use crate::term::history::History;
-use crate::term::line::Line;
-use crate::term::scrollback::Scrollback;
+use nonos_libc::{mk_time_rtc, RtcTime};
 
-impl State {
-    pub fn new() -> Self {
-        Self {
-            line: Line::new(),
-            history: History::new(),
-            scrollback: Scrollback::new(),
-            cwd: Cwd::new(),
-            owner_pid: 0,
-            fresh: true,
-            start_ms: 0,
-            vars: alloc::vec::Vec::new(),
-            last_status: true,
-            aliases: alloc::vec::Vec::new(),
-            hist_prefix: alloc::vec::Vec::new(),
-            blocks: alloc::vec::Vec::new(),
-        }
+pub fn fmt_hms(h: u8, m: u8, s: u8) -> [u8; 8] {
+    let mut out = *b"00:00:00";
+    out[0] = b'0' + (h / 10) % 10;
+    out[1] = b'0' + h % 10;
+    out[3] = b'0' + (m / 10) % 10;
+    out[4] = b'0' + m % 10;
+    out[6] = b'0' + (s / 10) % 10;
+    out[7] = b'0' + s % 10;
+    out
+}
+
+pub fn rtc_hms() -> [u8; 8] {
+    let mut t = RtcTime::default();
+    if mk_time_rtc(&mut t as *mut RtcTime) == 0 {
+        fmt_hms(t.hour, t.minute, t.second)
+    } else {
+        *b"--:--:--"
     }
 }

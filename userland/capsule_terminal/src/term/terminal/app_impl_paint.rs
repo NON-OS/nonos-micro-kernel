@@ -18,16 +18,14 @@ use nonos_app_skeleton::PaintBuffer;
 use nonos_libc::mk_time_millis;
 
 use super::types::Terminal;
-use crate::paint::paint;
-
 impl Terminal {
     pub(super) fn paint_inner(&mut self, fb: &mut PaintBuffer) {
-        if self.state.start_ms == 0 {
+        if self.cur_ref().start_ms == 0 {
             let now = mk_time_millis();
             if now > 0 {
-                self.state.start_ms = now as u64;
+                self.cur().start_ms = now as u64;
             }
         }
-        paint(&self.state, fb);
+        crate::paint::paint_tabs(&self.tabs, self.active, fb);
     }
 }

@@ -19,6 +19,7 @@ pub mod types;
 pub mod new;
 pub mod put;
 pub mod scroll;
+pub mod absline;
 pub mod erase;
 pub mod move_cells;
 pub mod feed;

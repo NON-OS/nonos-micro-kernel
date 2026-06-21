@@ -29,6 +29,7 @@ impl Grid {
         } else {
             self.hist_head = (self.hist_head + 1) % SCROLLBACK_ROWS;
         }
+        self.total_scrolled += 1;
         self.cells.copy_within(COLS..VISIBLE_ROWS * COLS, 0);
         let blank = self.blank_cell();
         for x in 0..COLS {

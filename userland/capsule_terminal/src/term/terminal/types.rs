@@ -14,8 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec::Vec;
+
 use crate::term::state::State;
 
 pub struct Terminal {
-    pub(crate) state: State,
+    pub(crate) tabs: Vec<State>,
+    pub(crate) active: usize,
+}
+
+impl Terminal {
+    pub(crate) fn cur(&mut self) -> &mut State {
+        &mut self.tabs[self.active]
+    }
+    pub(crate) fn cur_ref(&self) -> &State {
+        &self.tabs[self.active]
+    }
 }
