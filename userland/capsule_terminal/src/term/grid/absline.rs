@@ -14,17 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod cell;
-pub mod types;
-pub mod new;
-pub mod put;
-pub mod scroll;
-pub mod absline;
-pub mod erase;
-pub mod move_cells;
-pub mod feed;
-pub mod view;
-pub mod scroll_view;
-pub mod alt;
+use crate::term::grid::types::Grid;
 
-pub use types::Grid;
+impl Grid {
+    pub fn current_abs_line(&self) -> u64 {
+        self.total_scrolled + self.y as u64
+    }
+
+    pub fn abs_base(&self) -> u64 {
+        self.total_scrolled - self.hist_count as u64
+    }
+
+    pub fn abs_of_visible_row(&self, row: usize) -> u64 {
+        self.total_scrolled + row as u64 - self.view_offset as u64
+    }
+}

@@ -178,6 +178,16 @@ pub fn vt_selftest() {
         let back = !ga.alternate && ga.cells[crate::term::grid::types::Grid::idx(0, 0)].ch == b'M';
         mark(b"vt-altscreen", in_alt && back);
     }
+    {
+        let mut gb = crate::term::grid::types::Grid::new();
+        let start = gb.current_abs_line();
+        for _ in 0..(crate::term::dimensions::VISIBLE_ROWS + 3) {
+            gb.feed(b"x\n");
+        }
+        let scrolled = gb.total_scrolled == 4 && gb.abs_base() == 4 - gb.hist_count as u64;
+        let row_abs = gb.abs_of_visible_row(0) == gb.total_scrolled - gb.view_offset as u64;
+        mark(b"block-absline", start == 0 && scrolled && row_abs);
+    }
 }
 
 fn run(state: &mut State) {
