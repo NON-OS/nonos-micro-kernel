@@ -16,6 +16,7 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::block_chrome::draw_block_chrome;
 use super::constants::{BODY_TOP, FOOTER_H, LINE_HEIGHT, TEXT_LEFT};
 use super::draw_grid::{draw_grid, draw_grid_cursor};
 use super::draw_input_line::draw_input_line;
@@ -37,6 +38,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     } else if state.fresh {
         draw_fetch(state, fb);
     } else {
+        draw_block_chrome(state, fb, TEXT_LEFT, BODY_TOP, input_y);
         draw_grid(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP, input_y);
     }
     if !alt {
