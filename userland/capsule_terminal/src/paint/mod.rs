@@ -27,5 +27,4 @@ mod fetch_uptime;
 mod footer;
 mod header;
 
-pub use block_chrome::draw_block_chrome;
 pub use compose::paint;
