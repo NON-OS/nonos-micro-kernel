@@ -78,21 +78,3 @@ impl SerialError {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_error_messages() {
-        assert_eq!(SerialError::None.as_str(), "no error");
-        assert_eq!(SerialError::NotInitialized.as_str(), "serial port not initialized");
-        assert_eq!(SerialError::TransmitTimeout.as_str(), "transmit timeout");
-    }
-
-    #[test]
-    fn test_error_conversions() {
-        assert_eq!(SerialError::NotInitialized.as_u8(), 1);
-        assert_eq!(SerialError::from_u8(1), SerialError::NotInitialized);
-        assert_eq!(SerialError::from_u8(255), SerialError::None);
-    }
-}

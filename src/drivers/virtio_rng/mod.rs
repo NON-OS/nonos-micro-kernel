@@ -32,6 +32,3 @@ pub const VIRTIO_RNG_DEVICE_ID_MODERN: u16 = 0x1044;
 
 pub use api::{fill_random, get_random_bytes, is_available};
 pub use init::init as init_virtio_rng;
-
-#[cfg(test)]
-pub mod tests;

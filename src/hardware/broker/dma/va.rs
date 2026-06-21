@@ -41,7 +41,3 @@ pub(super) fn reserve(pages: u64) -> Option<VirtAddr> {
     Some(VirtAddr::new(base))
 }
 
-#[cfg(test)]
-pub(crate) fn reset_for_test() {
-    NEXT_USER_DMA_VA.store(USER_DMA_BASE, Ordering::SeqCst);
-}

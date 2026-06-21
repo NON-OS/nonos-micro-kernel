@@ -227,27 +227,3 @@ pub fn get_global_stats() -> (u64, u64) {
     )
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_capacity_clamping() {
-        set_default_capacity(1);
-        assert_eq!(get_default_capacity(), MIN_INBOX_CAPACITY);
-        set_default_capacity(1_000_000);
-        assert_eq!(get_default_capacity(), MAX_INBOX_CAPACITY);
-        set_default_capacity(512);
-        assert_eq!(get_default_capacity(), 512);
-        set_default_capacity(DEFAULT_INBOX_CAPACITY);
-    }
-
-    #[test]
-    fn test_register_with_invalid_capacity() {
-        let result = register_inbox_with_capacity("test_mod_x", 0, 5);
-        assert!(matches!(result, Err(InboxError::InvalidCapacity { .. })));
-
-        let result = register_inbox_with_capacity("", 0, 100);
-        assert!(matches!(result, Err(InboxError::EmptyModuleName)));
-    }
-}

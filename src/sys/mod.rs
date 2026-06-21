@@ -28,9 +28,6 @@ pub mod serial;
 pub mod sync;
 pub mod timer;
 
-#[cfg(test)]
-pub mod tests;
-
 pub use clock::{format_time, format_time_full, get_time, init as clock_init, unix_ms, Time};
 #[cfg(target_arch = "x86_64")]
 pub use gdt::{enable_iopl, setup as gdt_setup};

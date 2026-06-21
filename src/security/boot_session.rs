@@ -22,7 +22,7 @@
 //! token carried across a reboot. The API returns `Option` so mint
 //! sites are forced to handle the not-yet-initialized case; the
 //! production boot path halts if init fails (see `core_init.rs`).
-//! Explicit empty / test tokens (`CapabilityToken::empty`,
+//! Explicit empty tokens (`CapabilityToken::empty`,
 //! `CapabilityToken::with_caps`) bind a literal zero nonce and do
 //! not go through this API.
 

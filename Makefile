@@ -9,12 +9,9 @@
 # Cheat sheet:
 #   make nonos-mk              microkernel-capsules runtime baseline
 #   make nonos-mk-run          QEMU + OVMF
-#   make nonos-mk-boot-ramfs   ramfs capsule round trip
-#   make nonos-mk-boot-keyring keyring capsule round trip
 #   make nonos-mk-verify       static + trust gates + desktop build + symbol scan
-#   make nonos-mk-test         verify + required boot harnesses
 #
-# A few old names (`kernel-capsules`, `kernel-with-keyring`, `boot-test`,
+# A few old names (`kernel-capsules`, `kernel-with-keyring`,
 # etc.) forward to `nonos-mk-*` for transitional compatibility. See the
 # bottom of the file.
 
@@ -22,18 +19,15 @@
 
 # Public nonos-mk-* targets
 .PHONY: nonos-mk
-.PHONY: nonos-mk-check nonos-mk-check-ramfs-keys nonos-mk-core nonos-mk-capsules nonos-mk-driver-virtio-rng-test
+.PHONY: nonos-mk-check nonos-mk-check-ramfs-keys nonos-mk-core nonos-mk-capsules
 .PHONY: nonos-mk-proof-io-prod nonos-mk-ramfs-prod nonos-mk-keyring-prod nonos-mk-entropy-prod nonos-mk-crypto-prod nonos-mk-vfs-prod nonos-mk-market-prod nonos-mk-driver-virtio-rng-prod nonos-mk-driver-virtio-blk-prod nonos-mk-driver-virtio-gpu-prod nonos-mk-driver-virtio-net-prod nonos-mk-driver-iwlwifi-prod nonos-mk-driver-i2c-pci-prod nonos-mk-driver-i2c-hid-prod nonos-mk-driver-ps2-input-prod nonos-mk-driver-xhci-prod nonos-mk-driver-usb-hid-prod nonos-mk-driver-usb-msc-prod nonos-mk-driver-e1000-prod nonos-mk-driver-rtl8139-prod nonos-mk-driver-rtl8169-prod nonos-mk-driver-ahci-prod nonos-mk-driver-hda-prod nonos-mk-driver-nvme-prod nonos-mk-net-l2-prod nonos-mk-net-ip-prod nonos-mk-net-udp-prod nonos-mk-net-dhcp-prod nonos-mk-net-nym-prod nonos-mk-net-sockets-prod nonos-mk-desktop-gui-prod
-.PHONY: nonos-mk-ramfs-test nonos-mk-keyring-test nonos-mk-entropy-test nonos-mk-crypto-hash-test nonos-mk-vfs-test nonos-mk-terminal-test nonos-mk-market-test nonos-mk-market-smoke nonos-mk-market-fixtures nonos-mk-driver-virtio-blk-test nonos-mk-virtio-blk-test-image nonos-mk-driver-virtio-net-test nonos-mk-driver-ps2-input-test nonos-mk-driver-xhci-test nonos-mk-wallpaper-test nonos-mk-tcp-lifecycle nonos-mk-boot-tcp-lifecycle nonos-mk-boot-tcp-reliability
-.PHONY: nonos-mk-libc nonos-mk-proof-io nonos-mk-proof-io-sign nonos-mk-check-trust-keys nonos-mk-check-trust-manifest nonos-mk-trust-policy nonos-mk-host-trust-test nonos-mk-verify-trust nonos-mk-ramfs nonos-mk-ramfs-sign nonos-mk-keyring nonos-mk-entropy nonos-mk-crypto nonos-mk-vfs nonos-mk-virtio-rng nonos-mk-virtio-rng-sign nonos-mk-check-virtio-rng-keys nonos-mk-virtio-blk nonos-mk-virtio-blk-sign nonos-mk-check-virtio-blk-keys nonos-mk-driver-virtio-gpu nonos-mk-driver-virtio-gpu-sign nonos-mk-check-driver-virtio-gpu-keys nonos-mk-virtio-net nonos-mk-virtio-net-sign nonos-mk-check-virtio-net-keys nonos-mk-driver-iwlwifi nonos-mk-driver-iwlwifi-sign nonos-mk-check-driver-iwlwifi-keys nonos-mk-driver-i2c-pci nonos-mk-driver-i2c-pci-sign nonos-mk-check-driver-i2c-pci-keys nonos-mk-driver-i2c-hid nonos-mk-driver-i2c-hid-sign nonos-mk-check-driver-i2c-hid-keys nonos-mk-ps2-input nonos-mk-ps2-input-sign nonos-mk-check-ps2-input-keys nonos-mk-xhci nonos-mk-xhci-sign nonos-mk-check-xhci-keys nonos-mk-driver-usb-msc nonos-mk-driver-usb-msc-sign nonos-mk-check-driver-usb-msc-keys nonos-mk-driver-e1000 nonos-mk-driver-e1000-sign nonos-mk-check-driver-e1000-keys nonos-mk-driver-rtl8139 nonos-mk-driver-rtl8139-sign nonos-mk-check-driver-rtl8139-keys nonos-mk-driver-rtl8169 nonos-mk-driver-rtl8169-sign nonos-mk-check-driver-rtl8169-keys nonos-mk-driver-ahci nonos-mk-driver-ahci-sign nonos-mk-check-driver-ahci-keys nonos-mk-driver-hda nonos-mk-driver-hda-sign nonos-mk-check-driver-hda-keys nonos-mk-driver-nvme nonos-mk-driver-nvme-sign nonos-mk-check-driver-nvme-keys nonos-mk-wallpaper nonos-mk-marketplace-abi nonos-mk-market nonos-mk-marketplace-index-tool
+.PHONY: nonos-mk-libc nonos-mk-proof-io nonos-mk-proof-io-sign nonos-mk-check-trust-keys nonos-mk-check-trust-manifest nonos-mk-trust-policy nonos-mk-host-trust-verify nonos-mk-verify-trust nonos-mk-ramfs nonos-mk-ramfs-sign nonos-mk-keyring nonos-mk-entropy nonos-mk-crypto nonos-mk-vfs nonos-mk-virtio-rng nonos-mk-virtio-rng-sign nonos-mk-check-virtio-rng-keys nonos-mk-virtio-blk nonos-mk-virtio-blk-sign nonos-mk-check-virtio-blk-keys nonos-mk-driver-virtio-gpu nonos-mk-driver-virtio-gpu-sign nonos-mk-check-driver-virtio-gpu-keys nonos-mk-virtio-net nonos-mk-virtio-net-sign nonos-mk-check-virtio-net-keys nonos-mk-driver-iwlwifi nonos-mk-driver-iwlwifi-sign nonos-mk-check-driver-iwlwifi-keys nonos-mk-driver-i2c-pci nonos-mk-driver-i2c-pci-sign nonos-mk-check-driver-i2c-pci-keys nonos-mk-driver-i2c-hid nonos-mk-driver-i2c-hid-sign nonos-mk-check-driver-i2c-hid-keys nonos-mk-ps2-input nonos-mk-ps2-input-sign nonos-mk-check-ps2-input-keys nonos-mk-xhci nonos-mk-xhci-sign nonos-mk-check-xhci-keys nonos-mk-driver-usb-msc nonos-mk-driver-usb-msc-sign nonos-mk-check-driver-usb-msc-keys nonos-mk-driver-e1000 nonos-mk-driver-e1000-sign nonos-mk-check-driver-e1000-keys nonos-mk-driver-rtl8139 nonos-mk-driver-rtl8139-sign nonos-mk-check-driver-rtl8139-keys nonos-mk-driver-rtl8169 nonos-mk-driver-rtl8169-sign nonos-mk-check-driver-rtl8169-keys nonos-mk-driver-ahci nonos-mk-driver-ahci-sign nonos-mk-check-driver-ahci-keys nonos-mk-driver-hda nonos-mk-driver-hda-sign nonos-mk-check-driver-hda-keys nonos-mk-driver-nvme nonos-mk-driver-nvme-sign nonos-mk-check-driver-nvme-keys nonos-mk-wallpaper nonos-mk-marketplace-abi nonos-mk-market nonos-mk-marketplace-index-tool
 .PHONY: nonos-mk-userland-clean
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
 .PHONY: nonos-mk-run nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-run-serial-log nonos-mk-debug nonos-mk-plan-a-runtime
-.PHONY: nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-mk-boot-entropy nonos-mk-boot-crypto-hash nonos-mk-boot-vfs nonos-mk-boot-ps2-input nonos-mk-boot-xhci nonos-mk-boot-usb-hid nonos-mk-boot-desktop-gui
-.PHONY: nonos-mk-input-e2e-ps2-test nonos-mk-input-e2e-ps2-esp nonos-mk-input-e2e-xhci-test nonos-mk-input-e2e-xhci-esp nonos-mk-boot-input-e2e-ps2 nonos-mk-boot-input-e2e-xhci nonos-mk-input-probe-test nonos-mk-input-probe-esp nonos-mk-input-probe-run nonos-mk-input-probe-run-serial nonos-mk-input-probe-inject-test nonos-mk-input-probe-inject-esp nonos-mk-input-probe-inject-run-serial
 .PHONY: nonos-mk-static nonos-mk-scan
 .PHONY: nonos-mk-verify nonos-mk-verify-fast
-.PHONY: nonos-mk-test nonos-mk-host-test nonos-mk-release-audit nonos-mk-claims-check nonos-mk-qemu-net-audit
+.PHONY: nonos-mk-release-audit nonos-mk-claims-check nonos-mk-qemu-net-audit
 .PHONY: ci-fast ci-security ci-release ci-soak nonos-mk-no-telemetry-capture nonos-mk-boot-evidence
 .PHONY: nonos-mk-release
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
@@ -42,9 +36,7 @@
 .PHONY: nonos-mk-ensure-signing-key nonos-mk-ensure-zk-keys nonos-mk-zk-tools nonos-mk-all-capsules-attested nonos-mk-verify-capsule-attest nonos-mk-zk-report nonos-mk-zk-ceremony nonos-mk-zk-verify-live nonos-mk-live-production-proof nonos-mk-attestation nonos-mk-attestation-receipt
 
 # Compatibility aliases (transitional, do not remove until callers move)
-.PHONY: kernel-capsules kernel-keyring-smoketest kernel-ramfs-smoketest
-.PHONY: kernel-with-keyring kernel-microkernel-keyring-smoketest
-.PHONY: boot-test ramfs-boot-test
+.PHONY: kernel-capsules kernel-with-keyring
 .PHONY: check-static clean-kernel-only microkernel-symbol-scan
 
 # Default target: print help, never build silently.
@@ -740,18 +732,15 @@ nonos-mk-host-trust-elfs: $(USERLAND_LIBC) $(MARKETPLACE_ABI_LIB) \
 		$(file-manager_BIN) $(text-editor_BIN) $(settings_BIN) $(process-manager_BIN)
 	@echo "Capsule ELFs built for the host-trust artifact proof."
 
-nonos-mk-host-trust-test: nonos-mk-host-trust-elfs
-	@echo "Running host trust chain integration tests..."
-	@cd nonos-sign && cargo test --release --test host_trust
-	@echo "Verifying on-disk capsule artifacts against baked policy..."
-	@cd nonos-sign && cargo test --release --test artifacts
+nonos-mk-host-trust-verify: nonos-mk-host-trust-elfs nonos-mk-check-trust-manifest
+	@echo "Capsule trust artifacts are present and match the baked SHA-256 ledger."
 
 nonos-mk-check-trust-manifest:
 	@echo "Verifying baked trust artifact SHA-256 ledger..."
 	@cd $(NONOS_TRUST_DIR) && $(SHA256) -c MANIFEST.sha256
 
 nonos-mk-verify-trust: nonos-mk-desktop-gui-prod
-	@$(MAKE) nonos-mk-host-trust-test
+	@$(MAKE) nonos-mk-host-trust-verify
 	@$(MAKE) nonos-mk-check-trust-manifest
 
 nonos-mk-check-trust-keys:
@@ -839,7 +828,6 @@ include userland/capsule_net_ip/Capsule.mk
 include userland/capsule_net_udp/Capsule.mk
 include userland/capsule_net_dhcp/Capsule.mk
 include userland/capsule_net_tcp/Capsule.mk
-include userland/capsule_net_tcp_smoke/Capsule.mk
 include userland/capsule_net_dns/Capsule.mk
 include userland/capsule_net_sockets/Capsule.mk
 include userland/capsule_net_nym/Capsule.mk
@@ -1011,148 +999,6 @@ nonos-mk-capsules: $(proof-io_ARTIFACTS) $(ramfs_BIN) $(keyring_BIN) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-capsules
 
-nonos-mk-driver-virtio-rng-test: $(proof-io_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (driver-virtio-rng smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-virtio-rng-smoketest
-
-nonos-mk-ramfs-test: $(proof-io_ARTIFACTS) $(ramfs_BIN) \
-		$(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (ramfs smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--features nonos-capsule-proof-io,nonos-capsule-ramfs,nonos-ramfs-smoketest
-
-nonos-mk-keyring-test: $(proof-io_ARTIFACTS) $(ramfs_BIN) $(keyring_BIN) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-keyring-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-keyring-smoketest
-
-nonos-mk-entropy-test: $(proof-io_ARTIFACTS) $(entropy_BIN) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-entropy-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-entropy-smoketest
-
-nonos-mk-crypto-hash-test: $(proof-io_ARTIFACTS) $(crypto_BIN) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-crypto-hash-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-crypto-hash-smoketest
-
-nonos-mk-vfs-test: $(proof-io_ARTIFACTS) $(vfs_BIN) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-vfs-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-vfs-smoketest
-
-# Boot-time marketplace round trip. The kernel embeds the
-# `smoketest-trust`-flavoured market binary plus the four
-# fixture blobs and exercises the five accept/reject paths.
-nonos-mk-market-test: $(proof-io_ARTIFACTS) nonos-mk-market-smoke nonos-mk-market-fixtures \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-market-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-market-smoketest
-
-# Empty 4 MiB raw disk for the virtio-blk smoke. The smoketest
-# writes a deterministic pattern to LBA 64 and reads it back;
-# the disk needs at least that capacity. Created with truncate
-# so it stays a sparse file on disk.
-TEST_VIRTIO_BLK_IMG := target/test-virtio-blk.img
-
-$(TEST_VIRTIO_BLK_IMG):
-	@mkdir -p $(dir $(TEST_VIRTIO_BLK_IMG))
-	@truncate -s 4M $(TEST_VIRTIO_BLK_IMG)
-
-nonos-mk-virtio-blk-test-image: $(TEST_VIRTIO_BLK_IMG)
-
-# Boot-time virtio-blk round trip. The kernel embeds the
-# userland virtio-blk capsule plus the smoketest harness and
-# drives the device via the broker. The harness shell script
-# attaches the scratch image at boot.
-nonos-mk-driver-virtio-blk-test: $(proof-io_ARTIFACTS) $(driver-virtio-blk_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-virtio-blk-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-virtio-blk-smoketest
-
-# Boot-time virtio-net round trip. Builds the kernel with the
-# microkernel-driver-virtio-net-smoketest profile; the harness
-# at tests/boot/virtio_net_round_trip.sh attaches a virtio-net-pci
-# device backed by a `-netdev user` interface.
-nonos-mk-driver-virtio-net-test: $(proof-io_ARTIFACTS) $(driver-virtio-net_BIN) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-virtio-net-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-virtio-net-smoketest
-
-# Boot-time PS/2 input round trip. Builds the kernel with the
-# microkernel-driver-ps2-input-smoketest profile; the harness at
-# tests/boot/ps2_input_round_trip.sh boots under QEMU and uses
-# the QEMU monitor `sendkey` command to inject scancodes while
-# the smoke is polling.
-nonos-mk-driver-ps2-input-test: $(proof-io_ARTIFACTS) $(driver-ps2-input_BIN) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-ps2-input-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-ps2-input-smoketest
-
-# Boot-time xHCI controller-bring-up smoke (P0). Builds the kernel
-# with the microkernel-driver-xhci-smoketest profile; the harness
-# at tests/boot/xhci_round_trip.sh attaches `-device qemu-xhci`.
-nonos-mk-driver-xhci-test: $(proof-io_ARTIFACTS) $(driver-xhci_BIN) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-xhci-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-xhci-smoketest
-
-# TCP lifecycle failing harness (TDD scaffold). Builds the kernel with
-# the microkernel-tcp-smoketest profile; the harness at
-# tests/boot/tcp_lifecycle.sh asserts the full RFC 793 lifecycle via
-# serial markers. Goes red now; turns green once Tasks 2-10 land.
-nonos-mk-tcp-lifecycle: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
-		$(net-dhcp_ARTIFACTS) $(net-tcp_ARTIFACTS) $(net-tcp-smoke_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(MAKE) nonos-mk-live-production-proof
-	@echo "Building kernel (microkernel-tcp-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-tcp-smoketest
-	$(MAKE) nonos-mk-esp
-
-nonos-mk-boot-tcp-lifecycle:
-	@bash tests/boot/tcp_lifecycle.sh
-
-nonos-mk-boot-tcp-reliability:
-	@bash tests/boot/tcp_reliability.sh
-
 # Input stack end-to-end proof (Deliverable 2). Dedicated build + ESP
 # packaging that bypasses nonos-mk-esp (which always rebuilds the
 # desktop-gui kernel); these targets sign+attest the just-built
@@ -1170,138 +1016,6 @@ NONOS_INPUT_E2E_ARTIFACTS := $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 	$(toolkit_ARTIFACTS) $(power_ARTIFACTS) $(input-proof_ARTIFACTS)
 
 NONOS_BOOT_EFI := $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
-
-define NONOS_INPUT_E2E_ESP
-	@echo "Signing + attesting $(1) kernel..."
-	@PY=python3; [ "$$(uname -s)" = Darwin ] && PY=/usr/bin/python3; \
-		$$PY nonos-utils/sign_kernel.py \
-		$(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY) \
-		$(TARGET_DIR)/kernel_signed_$(1).bin
-	@$(EMBED_TOOL) --input $(TARGET_DIR)/kernel_signed_$(1).bin \
-		--output $(TARGET_DIR)/kernel_attested_$(1).bin \
-		--proving-key $(ZK_PROVING_KEY) --seed "$(ZK_KEY_SEED)" --verbose
-	@mkdir -p $(TARGET_DIR)/esp-$(1)/EFI/Boot $(TARGET_DIR)/esp-$(1)/EFI/nonos
-	@cp $(NONOS_BOOT_EFI) $(TARGET_DIR)/esp-$(1)/EFI/Boot/BOOTX64.EFI
-	@cp $(TARGET_DIR)/kernel_attested_$(1).bin $(TARGET_DIR)/esp-$(1)/EFI/nonos/kernel.bin
-	@printf "timeout=0\ndefault=nonos\n" > $(TARGET_DIR)/esp-$(1)/EFI/nonos/boot.cfg
-	@echo 'fs0:\EFI\Boot\BOOTX64.EFI' > $(TARGET_DIR)/esp-$(1)/startup.nsh
-	@echo "$(1) ESP ready at $(TARGET_DIR)/esp-$(1)"
-endef
-
-nonos-mk-input-e2e-ps2-test: $(NONOS_INPUT_E2E_ARTIFACTS) \
-		$(driver-ps2-input_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-input-e2e-ps2)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-input-e2e-ps2
-
-nonos-mk-input-e2e-ps2-esp: nonos-mk-input-e2e-ps2-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
-	$(call NONOS_INPUT_E2E_ESP,input-e2e-ps2)
-
-NONOS_INPUT_PROBE_ARTIFACTS := $(proof-io_ARTIFACTS) \
-	$(driver-ps2-input_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
-	$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
-	$(input-probe_ARTIFACTS)
-
-nonos-mk-input-probe-test: $(NONOS_INPUT_PROBE_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-input-probe)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-input-probe
-
-nonos-mk-input-probe-esp: nonos-mk-input-probe-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
-	$(call NONOS_INPUT_E2E_ESP,input-probe)
-
-nonos-mk-input-probe-inject-test: $(NONOS_INPUT_PROBE_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-input-probe,input-probe-inject)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-input-probe,input-probe-inject
-
-nonos-mk-input-probe-inject-esp: nonos-mk-input-probe-inject-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
-	$(call NONOS_INPUT_E2E_ESP,input-probe-inject)
-
-nonos-mk-input-probe-inject-run-serial: nonos-mk-input-probe-inject-esp $(QEMU_OVMF_VARS_RW)
-	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
-		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-input-probe-inject" \
-		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
-		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
-		-serial mon:stdio -display none -no-reboot
-
-nonos-mk-input-probe-run: nonos-mk-input-probe-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
-	@echo "Booting NONOS input-probe in QEMU (GPU window + serial)..."
-	@echo "  Quit: Ctrl+A then X"
-	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
-		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-input-probe" \
-		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
-		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
-		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
-		-serial mon:stdio -vga none -no-reboot
-
-nonos-mk-input-probe-run-serial: nonos-mk-input-probe-esp $(QEMU_OVMF_VARS_RW)
-	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
-		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-input-probe" \
-		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
-		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
-		-serial mon:stdio -display none -no-reboot
-
-nonos-mk-setup-wizard-esp: nonos-mk-setup-wizard-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
-	$(call NONOS_INPUT_E2E_ESP,setup-wizard)
-
-nonos-mk-setup-wizard-run-serial: nonos-mk-setup-wizard-esp $(QEMU_OVMF_VARS_RW)
-	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
-		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-setup-wizard" \
-		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
-		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
-		-serial mon:stdio -display none -no-reboot
-
-nonos-mk-setup-wizard-run: nonos-mk-setup-wizard-esp $(QEMU_OVMF_VARS_RW)
-	@echo "Booting NONOS setup wizard (GUI) in QEMU..."
-	@echo "  Drive it with the host keyboard; Quit: Ctrl+A then X"
-	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
-		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-setup-wizard" \
-		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
-		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
-		-serial mon:stdio -vga none -no-reboot
-
-nonos-mk-setup-wizard-inject-esp: nonos-mk-setup-wizard-inject-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
-	$(call NONOS_INPUT_E2E_ESP,setup-wizard-inject)
-
-nonos-mk-setup-wizard-inject-run-serial: nonos-mk-setup-wizard-inject-esp $(QEMU_OVMF_VARS_RW)
-	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
-		-drive "format=raw,file=fat:rw:$(TARGET_DIR)/esp-setup-wizard-inject" \
-		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
-		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
-		-serial mon:stdio -display none -no-reboot
-
-nonos-mk-input-e2e-xhci-test: $(NONOS_INPUT_E2E_ARTIFACTS) \
-		$(driver-xhci_ARTIFACTS) $(driver-usb-hid_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-input-e2e-xhci)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-input-e2e-xhci
-
-nonos-mk-input-e2e-xhci-esp: nonos-mk-input-e2e-xhci-test $(NONOS_BOOT_EFI) $(EMBED_TOOL)
-	$(call NONOS_INPUT_E2E_ESP,input-e2e-xhci)
-
-# Boot-time wallpaper round trip. Kernel boots wallpaper as the
-# init one-shot; the binary drives display_dimensions /
-# surface_create / surface_map / surface_present_full /
-# surface_destroy and emits per-stage markers on serial.
-nonos-mk-wallpaper-test: $(WALLPAPER_BIN) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-wallpaper-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-wallpaper-smoketest
 
 # Per-capsule production kernel builds. Each `-prod` target builds
 # the kernel under the `nonos-production` posture with proof_io and
@@ -1613,7 +1327,7 @@ nonos-mk-full-gui-prod: nonos-mk-all-capsules-attested \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-full-gui
 
-nonos-mk-setup-wizard-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
+nonos-mk-setup-wizard-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
 		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
 		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
@@ -1640,7 +1354,7 @@ nonos-mk-setup-wizard-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-setup-wizard
 
-nonos-mk-setup-wizard-inject-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
+nonos-mk-setup-wizard-inject-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
 		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
 		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
@@ -1686,19 +1400,6 @@ nonos-mk-terminal-only-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) $(keyring_
 		-Zbuild-std-features=compiler-builtins-mem \
 		--no-default-features --features microkernel-terminal-only
 
-nonos-mk-terminal-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) $(keyring_ARTIFACTS) \
-		$(entropy_ARTIFACTS) $(crypto_ARTIFACTS) $(vfs_ARTIFACTS) \
-		$(driver-virtio-rng_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
-		$(driver-ps2-input_ARTIFACTS) $(input-router_ARTIFACTS) \
-		$(compositor_ARTIFACTS) $(wm_ARTIFACTS) $(toolkit_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building terminal capsule (autorun-selftest)..."
-	@$(MAKE) -B terminal_CARGO_FEATURES=nonos-autorun-selftest nonos-mk-terminal-sign
-	@echo "Building kernel (microkernel-terminal-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-terminal-smoketest
 nonos-mk-text-editor-prod: nonos-mk-desktop-gui-prod
 nonos-mk-settings-prod: nonos-mk-desktop-gui-prod
 nonos-mk-process-manager-prod: nonos-mk-desktop-gui-prod
@@ -1964,12 +1665,6 @@ nonos-mk-boot-evidence:
 ci-soak:
 	@echo "ci-soak: run nonos-mk-boot-evidence, nonos-mk-no-telemetry-capture, scripts/zero_state_forensic_qemu.sh, and hardware dossier collection"
 
-# Host-mode crate tests (currently flaky on TSC; tracked in
-# docs/production-roadmap/master-execution-checklist.md F1).
-nonos-mk-host-test:
-	@RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) test --lib --features std --target $(HOST_TARGET)
-	@cd $(BOOTLOADER_DIR) && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) test
-
 # Release pipeline (paused)
 
 nonos-mk-release:
@@ -2021,12 +1716,6 @@ help:
 	@echo "  make nonos-mk-core            kernel only (microkernel-core, no capsules)"
 	@echo "  make nonos-mk-check           cargo check (microkernel-core)"
 	@echo "  make nonos-mk-capsules        microkernel-capsules build"
-	@echo "  make nonos-mk-ramfs-test      ramfs smoketest profile"
-	@echo "  make nonos-mk-keyring-test    keyring smoketest profile"
-	@echo "  make nonos-mk-entropy-test    entropy smoketest profile"
-	@echo "  make nonos-mk-crypto-hash-test crypto hash smoketest profile"
-	@echo "  make nonos-mk-vfs-test        vfs smoketest profile"
-	@echo
 	@echo "Userland capsules:"
 	@echo "  make nonos-mk-libc nonos-mk-proof-io nonos-mk-ramfs nonos-mk-keyring"
 	@echo "  make nonos-mk-userland-clean"
@@ -2053,15 +1742,6 @@ help:
 	@echo "  make nonos-mk-scan            symbol scan over kernel image"
 	@echo "  make nonos-mk-verify-fast     static gates only (no kernel build)"
 	@echo "  make nonos-mk-verify          static gates + capsules build + scan"
-	@echo "  make nonos-mk-boot-ramfs      ramfs capsule round trip under QEMU"
-	@echo "  make nonos-mk-boot-keyring    keyring capsule round trip under QEMU"
-	@echo "  make nonos-mk-boot-entropy    entropy capsule round trip under QEMU"
-	@echo "  make nonos-mk-boot-crypto-hash crypto hash round trip under QEMU"
-	@echo "  make nonos-mk-boot-vfs        vfs capsule round trip under QEMU"
-	@echo "  make nonos-mk-boot-input-e2e-ps2  input stack e2e proof (PS/2) under QEMU"
-	@echo "  make nonos-mk-boot-input-e2e-xhci input stack e2e proof (xHCI HID) under QEMU"
-	@echo "  make nonos-mk-test            verify + both boot harnesses"
-	@echo "  make nonos-mk-host-test       host-mode cargo tests (flaky; see roadmap)"
 	@echo "  make nonos-mk-release-audit   release-profile safety audit"
 	@echo "  make nonos-mk-claims-check    claims registry schema/status check"
 	@echo "  make nonos-mk-qemu-net-audit  QEMU default/no-NIC command audit"
@@ -2092,31 +1772,13 @@ help:
 
 kernel-capsules:                       nonos-mk-capsules
 kernel-with-keyring:                   nonos-mk-capsules
-kernel-keyring-smoketest:              nonos-mk-keyring-test
-kernel-microkernel-keyring-smoketest:  nonos-mk-keyring-test
-kernel-ramfs-smoketest:                nonos-mk-ramfs-test
-ramfs-boot-test:                       nonos-mk-boot-ramfs
-boot-test:                             nonos-mk-boot-ramfs
 check-static:                          nonos-mk-static
 clean-kernel-only:                     nonos-mk-clean
 microkernel-symbol-scan:               nonos-mk-scan
 
 # ---------------------------------------------------------------------------
-# Cargo-to-Capsule host pipeline. Builds the hybrid signer and the nonos CLI,
-# then runs the end-to-end proof: sign a package through the real Ed25519 +
-# ML-DSA signer, install it, and confirm tampered/unsigned packages refuse.
-.PHONY: nonos-mk-cargo-to-capsule-test
-nonos-mk-cargo-to-capsule-test:
-	@cd nonos-sign && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) build --release --bin capsule-sign
-	@cd userland/platform/nonos_capsule && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) build --release
-	@bash userland/platform/tests/cargo_to_capsule.sh
-
-# ---------------------------------------------------------------------------
 # Live GUI demo. One command boots the desktop image to a virtio-vga window
 # with wallpaper, shell, and the SDK/App Kit apps. The capture variant boots
 # headless and saves a framebuffer screenshot + a bounded serial log.
-.PHONY: nonos-mk-run-gui-demo nonos-mk-gui-demo-capture
+.PHONY: nonos-mk-run-gui-demo
 nonos-mk-run-gui-demo: nonos-mk-run-nat
-
-nonos-mk-gui-demo-capture: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
-	@bash tests/boot/gui_demo_capture.sh

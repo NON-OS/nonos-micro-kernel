@@ -14,10 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `MkPciConfigWrite` orchestration. Ownership and handle lookup
-//! live in `ownership.rs` so the host tests can drive them; this
-//! file only wires the result through the read-validate-write
-//! sequence against real PCI config space.
+//! `MkPciConfigWrite` orchestration.
 
 use crate::drivers::pci::config::ConfigSpace;
 use crate::drivers::pci::constants::CFG_COMMAND;

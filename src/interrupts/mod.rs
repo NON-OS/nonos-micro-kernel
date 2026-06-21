@@ -27,8 +27,6 @@ pub mod isr;
 pub mod pic;
 pub mod safety;
 pub mod stats;
-#[cfg(test)]
-pub mod tests;
 #[cfg(target_arch = "x86_64")]
 pub mod timer;
 

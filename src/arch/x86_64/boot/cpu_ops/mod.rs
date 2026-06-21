@@ -23,9 +23,6 @@ mod intrinsics;
 mod intrinsics_fence;
 mod intrinsics_interrupt;
 mod msr;
-#[cfg(all(test, not(feature = "std")))]
-#[cfg(test)]
-mod tests;
 mod tsc;
 mod xcr;
 

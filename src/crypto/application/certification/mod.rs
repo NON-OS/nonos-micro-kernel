@@ -18,18 +18,16 @@ extern crate alloc;
 
 mod kat;
 mod metadata;
-mod selftest;
 
 pub use kat::*;
 pub use metadata::*;
-pub use selftest::*;
 
 use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CertificationStatus {
     Certified,
-    NotTested,
+    NotVerified,
     Failed,
     Degraded,
 }
@@ -50,9 +48,9 @@ pub struct CryptoState {
     pub rng: AtomicBool,
     pub sphincs: AtomicBool,
     pub ntru: AtomicBool,
-    pub overall_tests_run: AtomicBool,
-    pub tests_passed: AtomicU32,
-    pub tests_failed: AtomicU32,
+    pub overall_checks_run: AtomicBool,
+    pub checks_passed: AtomicU32,
+    pub checks_failed: AtomicU32,
 }
 
 impl CryptoState {
@@ -65,9 +63,9 @@ impl CryptoState {
             rng: AtomicBool::new(false),
             sphincs: AtomicBool::new(false),
             ntru: AtomicBool::new(false),
-            overall_tests_run: AtomicBool::new(false),
-            tests_passed: AtomicU32::new(0),
-            tests_failed: AtomicU32::new(0),
+            overall_checks_run: AtomicBool::new(false),
+            checks_passed: AtomicU32::new(0),
+            checks_failed: AtomicU32::new(0),
         }
     }
 }
@@ -75,12 +73,12 @@ impl CryptoState {
 pub static CRYPTO_STATE: CryptoState = CryptoState::new();
 
 pub fn get_certification_status() -> CertificationStatus {
-    if !CRYPTO_STATE.overall_tests_run.load(Ordering::SeqCst) {
-        return CertificationStatus::NotTested;
+    if !CRYPTO_STATE.overall_checks_run.load(Ordering::SeqCst) {
+        return CertificationStatus::NotVerified;
     }
 
-    let failed = CRYPTO_STATE.tests_failed.load(Ordering::SeqCst);
-    let passed = CRYPTO_STATE.tests_passed.load(Ordering::SeqCst);
+    let failed = CRYPTO_STATE.checks_failed.load(Ordering::SeqCst);
+    let passed = CRYPTO_STATE.checks_passed.load(Ordering::SeqCst);
 
     if failed > 0 && passed > 0 {
         CertificationStatus::Degraded

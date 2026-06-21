@@ -62,7 +62,7 @@ silent fallback to syscall-side crypto shims.
 
 - Owns the user-facing crypto protocol.
 - Dispatches supported operations through modular server handlers.
-- Is embedded, spawned, and smoke-tested for the hash surface.
+- Is embedded, spawned, and validation-covered for the hash surface.
 - Keeps user crypto off the syscall fast path inside the kernel.
 
 ## Wire format
@@ -88,20 +88,20 @@ serve user crypto requests directly.
 
 The finished crypto capsule exposes the approved hash, signature, verification,
 and AEAD operations through one audited IPC surface, with fixed wire layouts,
-bounded input sizes, zero persistent plaintext/key storage, and smoke coverage
+bounded input sizes, zero persistent plaintext/key storage, and validation coverage
 per operation family.
 
 ## Release evidence
 
-Release evidence is operation-family smoke coverage, request-size boundary
+Release evidence is operation-family validation coverage, request-size boundary
 tests, and static proof that user-facing crypto syscalls route through the
 capsule client.
 
 ## Release checklist
 
-- Hash smoke passes.
-- Signature verify smoke passes when promoted.
-- AEAD smoke passes when promoted.
+- Hash validation passes.
+- Signature verify validation passes when promoted.
+- AEAD validation passes when promoted.
 - Boundary tests cover oversized input and malformed payloads.
 - Static gate confirms no user-facing kernel crypto shim.
 
@@ -113,7 +113,7 @@ driver, network protocol, or persistent audit log lives in this capsule.
 ## Verification
 
 - Build: `make -B nonos-mk-crypto`
-- Smoke: `nonos-mk-crypto-hash-test`
+- Validation: `nonos-mk-crypto-hash-test`
 - Static gate: `bash nonos-ci/run-static-checks.sh`
 - Architecture check: user-facing hash and AEAD syscall paths must route
   through the capsule client rather than kernel shims.

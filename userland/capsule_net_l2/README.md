@@ -101,14 +101,14 @@ without kernel packet parsing.
 
 ## Release evidence
 
-Release evidence is a QEMU ARP request/reply smoke, neighbour-cache snapshot,
+Release evidence is a QEMU ARP request/reply validation, neighbour-cache snapshot,
 raw frame send/poll proof, and static proof that the kernel parses no Ethernet
 or ARP state.
 
 ## Release checklist
 
 - NIC client wiring selects one driver endpoint.
-- ARP request/reply smoke passes.
+- ARP request/reply validation passes.
 - Neighbour cache snapshot is bounded.
 - Raw frame send/poll works through a driver capsule.
 - Static gate confirms no kernel Ethernet/ARP parser.

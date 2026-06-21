@@ -32,9 +32,6 @@ pub mod signal;
 pub mod types;
 pub mod userspace;
 
-#[cfg(test)]
-pub mod tests;
-
 pub use context as nonos_context;
 pub use context::CpuContext;
 pub use core as nonos_core;

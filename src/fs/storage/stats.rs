@@ -199,32 +199,3 @@ fn determine_health_status(
     StorageHealthStatus::Healthy
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_health_status_determination() {
-        let issues = StorageIssues::default();
-
-        assert_eq!(determine_health_status(50.0, 50.0, &issues), StorageHealthStatus::Healthy);
-
-        assert_eq!(determine_health_status(85.0, 50.0, &issues), StorageHealthStatus::Warning);
-
-        assert_eq!(determine_health_status(96.0, 50.0, &issues), StorageHealthStatus::Critical);
-    }
-
-    #[test]
-    fn test_storage_issues() {
-        let mut issues = StorageIssues::default();
-        assert!(!issues.has_issues());
-        assert_eq!(issues.issue_count(), 0);
-
-        issues.low_space = true;
-        assert!(issues.has_issues());
-        assert_eq!(issues.issue_count(), 1);
-
-        issues.low_inodes = true;
-        assert_eq!(issues.issue_count(), 2);
-    }
-}

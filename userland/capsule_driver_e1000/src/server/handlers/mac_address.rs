@@ -16,7 +16,7 @@
 
 //! `OP_MAC_ADDRESS`. Returns the 6 bytes the driver cached at
 //! bring-up. The kernel client treats an all-zero MAC as a hard
-//! error so a misprogrammed RAL/RAH never silently passes a smoke.
+//! error so a misprogrammed RAL/RAH never silently passes a validation.
 
 use nonos_libc::mk_ipc_send;
 

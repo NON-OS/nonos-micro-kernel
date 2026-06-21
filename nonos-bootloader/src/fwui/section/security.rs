@@ -37,8 +37,8 @@ pub fn security(sys: &Sys) -> Vec<Row> {
         info(b"PLATFORM KEY", pk, pkc, b"Presence of the UEFI Platform Key."),
         info(b"SIGNATURE DB", db, dbc, b"Validity of the loaded signature database."),
         info(b"HARDWARE RNG", rng, rngc, b"RDRAND/RDSEED entropy source availability."),
-        info(b"ED25519 SELFTEST", ed, edc, b"Signature primitive power-on self test."),
-        info(b"BLAKE3 SELFTEST", bl, blc, b"Hash primitive power-on self test."),
+        info(b"ED25519 HEALTH", ed, edc, b"Signature primitive power-on health check."),
+        info(b"BLAKE3 HEALTH", bl, blc, b"Hash primitive power-on health check."),
         info(
             b"PRODUCTION KEYS",
             format!("{}", sys.keys),

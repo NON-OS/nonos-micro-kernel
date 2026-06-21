@@ -18,7 +18,7 @@ use super::context::SecurityContext;
 
 impl SecurityContext {
     pub fn is_secure(&self) -> bool {
-        self.production_keys_loaded && self.ed25519_selftest_ok && self.blake3_selftest_ok
+        self.production_keys_loaded && self.ed25519_health_ok && self.blake3_health_ok
     }
 
     pub fn is_fully_secure(&self) -> bool {
@@ -33,7 +33,7 @@ impl SecurityContext {
         if self.production_keys_loaded {
             score += 20;
         }
-        if self.ed25519_selftest_ok && self.blake3_selftest_ok {
+        if self.ed25519_health_ok && self.blake3_health_ok {
             score += 20;
         }
         if self.secure_boot_enabled {

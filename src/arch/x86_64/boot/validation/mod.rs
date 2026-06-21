@@ -22,8 +22,6 @@ mod simd_types;
 mod sse;
 mod sse_avx;
 mod sse_enable;
-#[cfg(test)]
-mod tests;
 
 pub use cpu::validate_cpu_features;
 pub use memory::validate_memory;

@@ -28,7 +28,7 @@ ABI / compatibility
 - Do not change the public KernelImage fields without coordinating kernel changes.
 - Add build-time checks if possible to assert size_of types between loader and kernel.
 
-Tests & smoke checks (local) We will add the files needed.
+Tests & validation checks (local) We will add the files needed.
 1. Build:
    cargo build --release --target x86_64-unknown-uefi
 2. Create FAT uefi image following repo scripts (place BOOTX64.EFI and kernel ELF where loader expects).
@@ -41,14 +41,14 @@ Tests & smoke checks (local) We will add the files needed.
    - allocation lines from loader,
    - "Kernel loaded" line and kernel banner after the handoff.
 
-CI / smoke test
+CI / validation check
 - Add a GitHub Actions job that:
   - Builds loader + kernel for x86_64 UEFI target.
   - Assembles uefi.img and boots QEMU+OVMF headless.
   - Greps serial.log for loader messages and kernel banner.
 
 Review checklist (PRs touching loader)
-- [ ] All changes are covered by a quick local smoke test (serial.log attached).
+- [ ] All changes are covered by a quick local validation check (serial.log attached).
 - [ ] All unsafe blocks have invariant comments.
 - [ ] LoaderError variants communicate actionable reasons.
 - [ ] No heap usage in hot path (no Vec in loader.rs).

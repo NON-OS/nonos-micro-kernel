@@ -19,9 +19,6 @@ use crate::syscall::SyscallResult;
 
 use super::{admin, crypto, graphics_backend, input_ops, microkernel_ops, surface_ops};
 
-// Graphics is served by the in-kernel backend until a capsule takes
-// over; all other unrouted numbers return ENOSYS. Smoke builds log a
-// one-shot per pid via unknown_diag to catch capsule ABI drift.
 pub(super) fn dispatch_syscall(
     syscall: SyscallNumber,
     a0: u64,
@@ -60,10 +57,6 @@ pub(super) fn dispatch_syscall(
         SyscallNumber::MkInputEventPost
         | SyscallNumber::MkInputEventDrain
         | SyscallNumber::MkInputEventWait => input_ops::handle(syscall, a0, a1, a2, a3, a4, a5),
-        _ => {
-            #[cfg(feature = "nonos-user-entry-proof")]
-            super::unknown_diag::log_first_per_pid(syscall);
-            crate::syscall::dispatch::util::errno(38)
-        }
+        _ => crate::syscall::dispatch::util::errno(38),
     }
 }

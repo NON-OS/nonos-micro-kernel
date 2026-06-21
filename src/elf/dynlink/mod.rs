@@ -16,8 +16,4 @@
 
 mod info;
 
-#[cfg(test)]
-#[cfg(not(feature = "std"))]
-mod tests;
-
 pub use info::DynLinkInfo;

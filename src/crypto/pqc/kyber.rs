@@ -87,20 +87,8 @@ pub struct KyberKeyPair {
     pub secret_key: KyberSecretKey,
 }
 
-#[cfg(test)]
-mod ffi {
-    pub unsafe fn keypair(_pk: *mut u8, _sk: *mut u8) -> i32 {
-        -1
-    }
-    pub unsafe fn encaps(_ct: *mut u8, _ss: *mut u8, _pk: *const u8) -> i32 {
-        -1
-    }
-    pub unsafe fn decaps(_ss: *mut u8, _ct: *const u8, _sk: *const u8) -> i32 {
-        -1
-    }
-}
 
-#[cfg(all(not(test), feature = "mlkem768", not(feature = "mlkem512"), not(feature = "mlkem1024")))]
+#[cfg(all(feature = "mlkem768", not(feature = "mlkem512"), not(feature = "mlkem1024")))]
 mod ffi {
     extern "C" {
         pub(super) fn PQCLEAN_MLKEM768_CLEAN_crypto_kem_keypair(pk: *mut u8, sk: *mut u8) -> i32;
@@ -126,7 +114,7 @@ mod ffi {
     }
 }
 
-#[cfg(all(not(test), feature = "mlkem512"))]
+#[cfg(feature = "mlkem512")]
 mod ffi {
     extern "C" {
         pub fn PQCLEAN_MLKEM512_CLEAN_crypto_kem_keypair(pk: *mut u8, sk: *mut u8) -> i32;
@@ -152,7 +140,7 @@ mod ffi {
     }
 }
 
-#[cfg(all(not(test), feature = "mlkem1024"))]
+#[cfg(feature = "mlkem1024")]
 mod ffi {
     extern "C" {
         pub fn PQCLEAN_MLKEM1024_CLEAN_crypto_kem_keypair(pk: *mut u8, sk: *mut u8) -> i32;
@@ -179,7 +167,6 @@ mod ffi {
 }
 
 #[cfg(all(
-    not(test),
     not(feature = "mlkem512"),
     not(feature = "mlkem768"),
     not(feature = "mlkem1024")

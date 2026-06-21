@@ -30,9 +30,7 @@
 //!     capsule never sees the table address and never writes to
 //!     it; it only receives the base grant id and base vector.
 //!
-//! All hardware-touching steps go through the `MsixOps` indirection
-//! so the host test crate can swap in a fake programmer without
-//! touching real MMIO.
+//! All hardware-touching steps go through the `MsixOps` indirection.
 
 extern crate alloc;
 

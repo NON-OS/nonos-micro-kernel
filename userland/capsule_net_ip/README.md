@@ -96,17 +96,17 @@ own transport state.
 
 The finished IP capsule owns IPv4 configuration, route lookup, checksum
 validation, ICMP echo, transport demux to UDP/TCP, and L2 delivery through ARP.
-It has smoke proof for address setup, ICMP round trip, route miss, checksum
+It has validation evidence for address setup, ICMP round trip, route miss, checksum
 failure, and no kernel IP parser.
 
 ## Release evidence
 
-Release evidence is ICMP echo smoke, route miss test, checksum failure test,
+Release evidence is ICMP echo validation, route miss test, checksum failure test,
 configuration update proof, and static proof that no kernel IP parser exists.
 
 ## Release checklist
 
-- Address/gateway configuration smoke passes.
+- Address/gateway configuration validation passes.
 - ICMP echo round trip passes through `net.l2`.
 - Route miss and checksum failure are tested.
 - Fragment/options rejection is tested.

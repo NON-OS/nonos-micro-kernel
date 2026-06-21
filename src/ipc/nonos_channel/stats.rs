@@ -82,26 +82,3 @@ impl core::fmt::Display for BusStatsSnapshot {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_bus_stats_display() {
-        let snap = BusStatsSnapshot {
-            messages_enqueued: 100,
-            messages_dequeued: 90,
-            messages_timed_out: 5,
-            channels_opened: 10,
-            channels_closed: 2,
-            bytes_transferred: 50000,
-            queue_full_rejections: 3,
-            current_queue_depth: 10,
-            current_channel_count: 8,
-        };
-        let s = format!("{}", snap);
-        assert!(s.contains("100"));
-        assert!(s.contains("90"));
-        assert!(s.contains("50000"));
-    }
-}

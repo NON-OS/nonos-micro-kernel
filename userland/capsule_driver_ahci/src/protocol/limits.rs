@@ -18,3 +18,7 @@ pub const STATUS_LEN: usize = 4;
 pub const CONTROLLER_INFO_PAYLOAD_LEN: usize = 24;
 pub const PORT_LIST_HEADER_BYTES: usize = 4;
 pub const PORT_ENTRY_BYTES: usize = 36;
+pub const RW_HEADER_LEN: usize = 12;
+pub const READ_REQ_LEN: usize = RW_HEADER_LEN;
+pub const CAPACITY_PAYLOAD_LEN: usize = 8;
+pub const MAX_RW_PAYLOAD_BYTES: u32 = crate::constants::ata::DATA_BUF_BYTES as u32;

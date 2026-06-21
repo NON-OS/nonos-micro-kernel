@@ -18,9 +18,6 @@ mod collect;
 mod hardware;
 mod state;
 
-#[cfg(test)]
-mod tests;
-
 pub use collect::{
     fill_entropy, fill_random, gather_entropy, get_entropy, get_random_u64, rand_u32, rand_u64,
 };

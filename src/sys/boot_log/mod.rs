@@ -22,4 +22,4 @@ mod render;
 mod state;
 
 pub use init::{disable_display, init_after_fb};
-pub use output::{error, info, ok, stage, test_fail, test_header, test_pass, test_skip, warn};
+pub use output::{error, info, ok, stage, warn};

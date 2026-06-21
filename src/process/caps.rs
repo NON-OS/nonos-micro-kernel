@@ -79,7 +79,7 @@ pub fn bits(pid: u32) -> Option<u64> {
     with_process(pid, |pcb| pcb.caps_bits.load(Ordering::Acquire))
 }
 
-/// Test whether `pid` holds every bit in `mask`. Fail-closed on an
+/// Checks whether `pid` holds every bit in `mask`. Fail-closed on an
 /// unknown pid.
 pub fn has(pid: u32, mask: u64) -> bool {
     bits(pid).map(|b| (b & mask) == mask).unwrap_or(false)

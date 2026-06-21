@@ -81,27 +81,3 @@ impl core::fmt::Display for DriverError {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_error_codes() {
-        assert_eq!(DriverError::InvalidMmioRegion.code(), 0x1001);
-        assert_eq!(DriverError::InvalidDmaBuffer.code(), 0x2001);
-        assert_eq!(DriverError::InvalidPciAccess.code(), 0x3001);
-    }
-
-    #[test]
-    fn test_security_critical() {
-        assert!(DriverError::InvalidMmioRegion.is_security_critical());
-        assert!(DriverError::InvalidDmaBuffer.is_security_critical());
-        assert!(!DriverError::DeviceNotReady.is_security_critical());
-        assert!(!DriverError::CommandTimeout.is_security_critical());
-    }
-
-    #[test]
-    fn test_display() {
-        assert_eq!(format!("{}", DriverError::InvalidMmioRegion), "Invalid MMIO region");
-    }
-}

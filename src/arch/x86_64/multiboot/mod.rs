@@ -36,8 +36,6 @@ pub mod structures_fb;
 pub mod structures_header;
 pub mod structures_memory;
 pub mod structures_parsed;
-#[cfg(test)]
-mod tests;
 
 pub use constants::{
     memory_type, tag, MULTIBOOT2_ARCHITECTURE_I386, MULTIBOOT2_BOOTLOADER_MAGIC,

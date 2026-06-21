@@ -14,12 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Ownership + handle resolution for `MkPciConfigWrite`. Split out
-//! of `write.rs` so the host test crate can drive the four early
-//! rejection paths (`NotClaimed` for missing claim, `NotClaimed`
-//! for wrong pid, `StaleEpoch`, `NoDeviceHandle`) against the real
-//! production code without needing to fake the PCI config-space
-//! port I/O the rest of `write.rs` does.
+//! Ownership + handle resolution for `MkPciConfigWrite`.
 
 use crate::hardware::broker::claim;
 use crate::hardware::broker::pci_index::{self, PciHandle};

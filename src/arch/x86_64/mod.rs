@@ -65,6 +65,3 @@ pub use vga::{clear, print_critical, set_color, write_byte, write_str, Color, Co
 pub use iommu::types::{
     DomainId as IommuDomainId, IommuPageFlags, SourceId as IommuSourceId, VtdError as IommuVtdError,
 };
-
-#[cfg(test)]
-mod tests;

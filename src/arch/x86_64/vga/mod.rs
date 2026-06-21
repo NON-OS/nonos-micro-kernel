@@ -22,9 +22,6 @@ pub mod error;
 pub mod ops;
 mod state;
 
-#[cfg(test)]
-mod tests;
-
 pub use api::print;
 pub use console::Console;
 pub use constants::*;

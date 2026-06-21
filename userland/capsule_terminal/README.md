@@ -96,13 +96,13 @@ state.
 
 The release version is a signed application capsule with `Capsule.mk`, signed
 manifest, feature gated spawn, toolkit only UI rendering, an explicit
-capability for any shell execution surface, and smoke proof that terminal
+capability for any shell execution surface, and validation evidence that terminal
 policy stays out of the kernel.
 
 ## Release checklist
 
 - `Capsule.mk` and signed manifest exist.
-- Toolkit IPC smoke passes.
+- Toolkit IPC validation passes.
 - Feature gated spawn is present.
 - Static gate confirms no kernel app UI exports.
 
@@ -117,4 +117,4 @@ authority belongs in this directory.
 - Build: `cargo build --manifest-path userland/capsule_terminal/Cargo.toml`
 - Static gate: `bash nonos-ci/run-static-checks.sh`
 - Promotion check: add `Capsule.mk`, manifest signing, feature gated spawn,
-  and smoke proof before claiming production app status.
+  and validation evidence before claiming production app status.

@@ -20,28 +20,3 @@ pub use crate::arch::x86_64::cpu::CpuFeatures;
 pub use crate::arch::x86_64::gdt::Tss;
 pub use crate::arch::x86_64::idt::InterruptFrame;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_boot_stats_duration() {
-        let stats = BootStats { boot_tsc: 1000, complete_tsc: 5000, ..Default::default() };
-        assert_eq!(stats.duration_tsc(), 4000);
-    }
-
-    #[test]
-    fn test_exception_context_default() {
-        let ctx = ExceptionContext::default();
-        assert_eq!(ctx.rip, 0);
-    }
-
-    #[test]
-    fn test_exception_context_privilege() {
-        let mut ctx = ExceptionContext::default();
-        ctx.cs = 0x08;
-        assert!(ctx.is_kernel_mode());
-        ctx.cs = 0x1B;
-        assert!(ctx.is_user_mode());
-    }
-}

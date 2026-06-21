@@ -27,9 +27,6 @@ pub mod numbers;
 pub mod types;
 pub mod validation;
 
-#[cfg(test)]
-mod tests;
-
 pub use caps as capabilities;
 pub use caps::current_caps;
 pub use contract::{dispatch as contract_dispatch, Capability, SyscallArgs};

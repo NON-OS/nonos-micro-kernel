@@ -1,7 +1,0 @@
-parked: smoketest-only, no spawn path
-
-Status: graphics smoke capsule used by the wallpaper smoketest only. Has no
-in-kernel `spawn.rs` and is launched via `userspace/init/entry.rs` only when
-`nonos-wallpaper-smoketest` is enabled. Not a candidate for a verified spawn
-path; if it stays in the tree long-term it will need a CapsuleManifest v3
-gated to the smoketest profile alone.

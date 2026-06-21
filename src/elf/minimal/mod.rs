@@ -16,9 +16,6 @@
 
 mod validate;
 
-#[cfg(test)]
-mod tests;
-
 pub use validate::{
     entry_from_bytes, get_elf_machine, get_elf_type, get_phnum, get_phoff, get_shnum, get_shoff,
     is_pie, validate_elf, validate_elf_detailed, validate_elf_x86_64,

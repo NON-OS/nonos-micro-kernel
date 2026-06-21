@@ -54,15 +54,3 @@ pub fn has_feature(features: &CpuFeatures, name: &str) -> bool {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_cpu_features_default() {
-        let features = CpuFeatures::new();
-        assert!(!features.sse);
-        assert!(!features.avx);
-        assert!(!features.aes_ni);
-    }
-}

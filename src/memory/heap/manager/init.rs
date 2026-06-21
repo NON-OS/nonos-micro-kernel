@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::error::{HeapError, HeapResult};
-use super::globals::{HEAP_STATS, USING_BOOTSTRAP};
+use super::globals::{HEAP_STATS, KERNEL_HEAP, USING_BOOTSTRAP};
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use crate::memory::paging::manager;
 use crate::memory::paging::types::PagePermissions;
@@ -23,10 +23,6 @@ use crate::memory::{frame_alloc, layout};
 use alloc::vec::Vec;
 use core::sync::atomic::Ordering;
 
-#[cfg(not(test))]
-use super::globals::KERNEL_HEAP;
-
-#[cfg(not(test))]
 pub fn init() -> HeapResult<()> {
     if KERNEL_HEAP.is_initialized() {
         return Ok(());
@@ -40,11 +36,6 @@ pub fn init() -> HeapResult<()> {
     }
     HEAP_STATS.set_total_size(heap_size);
     USING_BOOTSTRAP.store(false, Ordering::Release);
-    Ok(())
-}
-
-#[cfg(test)]
-pub fn init() -> HeapResult<()> {
     Ok(())
 }
 

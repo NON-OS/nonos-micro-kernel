@@ -17,10 +17,18 @@
 use super::super::error::DriverNvmeError;
 
 const E_INVAL: i32 = -22;
+const E_IO: i32 = -5;
+const E_NXIO: i32 = -6;
+const E_NODEV: i32 = -19;
+const E_MSGSIZE: i32 = -90;
 
 pub(super) fn lift(status: i32) -> DriverNvmeError {
     match status {
         E_INVAL => DriverNvmeError::InvalidArgument,
+        E_IO => DriverNvmeError::DeviceFailure,
+        E_NXIO => DriverNvmeError::OutOfRange,
+        E_NODEV => DriverNvmeError::Unsupported,
+        E_MSGSIZE => DriverNvmeError::OversizedRequest,
         _ => DriverNvmeError::DeviceFailure,
     }
 }

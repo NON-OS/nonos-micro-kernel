@@ -111,7 +111,7 @@ The kernel owns only grant records and interrupt delivery.
 ## Release target
 
 The finished e1000 capsule is a signed, embedded, spawned raw-frame NIC service
-with QEMU and hardware smoke coverage. It owns link bring-up, interrupt
+with QEMU and hardware validation coverage. It owns link bring-up, interrupt
 recovery, RX/TX ring refill, side-effect-free register telemetry, and frame
 delivery to `net.l2`. It never grows ARP, IP, sockets, firewall, or capture
 policy.
@@ -125,7 +125,7 @@ moving through `net.l2`.
 ## Release checklist
 
 - Signed manifest and kernel mirror present.
-- QEMU e1000 TX/RX smoke passes through `net.l2`.
+- QEMU e1000 TX/RX validation passes through `net.l2`.
 - Link state changes are visible over IPC.
 - DMA teardown proof shows descriptor and packet buffers are revoked.
 - Hardware boot records MAC, link, RX, and TX without kernel packet parsing.

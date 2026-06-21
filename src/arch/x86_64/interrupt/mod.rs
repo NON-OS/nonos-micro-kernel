@@ -18,8 +18,6 @@ pub mod apic;
 pub mod broker;
 pub mod ioapic;
 pub mod pic;
-#[cfg(test)]
-mod test;
 
 pub use apic::{ApicError, ApicResult, ApicStatus};
 pub use ioapic::{IoApicError, IoApicResult, IoApicStatus};

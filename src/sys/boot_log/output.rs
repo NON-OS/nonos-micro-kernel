@@ -61,31 +61,3 @@ pub fn stage(tag: &str, msg: &str) {
     serial::print(b"\r\n");
     write_line(tag, msg, TAG_STAGE);
 }
-
-pub fn test_pass(name: &str) {
-    serial::print(b"  [PASS] ");
-    serial::print_str(name);
-    serial::print(b"\r\n");
-    write_line("PASS", name, TAG_OK);
-}
-
-pub fn test_fail(name: &str) {
-    serial::print(b"  [FAIL] ");
-    serial::print_str(name);
-    serial::print(b"\r\n");
-    write_line("FAIL", name, TAG_ERR);
-}
-
-pub fn test_skip(name: &str) {
-    serial::print(b"  [SKIP] ");
-    serial::print_str(name);
-    serial::print(b"\r\n");
-    write_line("SKIP", name, TAG_WARN);
-}
-
-pub fn test_header(title: &str) {
-    serial::print(b"--- ");
-    serial::print_str(title);
-    serial::print(b" ---\r\n");
-    write_line("TEST", title, TAG_INFO);
-}

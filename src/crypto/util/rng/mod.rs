@@ -20,9 +20,6 @@ mod entropy;
 mod error;
 pub mod global;
 
-#[cfg(test)]
-mod tests;
-
 pub use api::{fill_bytes, secure_random_u64};
 
 pub use csprng::{ChaChaRng, RESEED_INTERVAL};

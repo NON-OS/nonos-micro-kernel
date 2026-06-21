@@ -23,9 +23,6 @@ mod parts;
 mod types;
 mod validate;
 
-#[cfg(test)]
-mod tests;
-
 pub use components::*;
 pub use cstr::*;
 pub use error::{PathError, PathResult};

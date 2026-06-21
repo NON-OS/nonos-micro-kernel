@@ -14,15 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod capacity;
 mod controller_info;
+mod flush;
 mod healthcheck;
 mod port_list;
+mod read_blocks;
 mod seq;
 mod status_map;
 mod transport;
+mod write_blocks;
 
 pub(super) use transport::REPLY_INBOX;
 
+pub use capacity::capacity;
 pub use controller_info::{controller_info, AhciControllerInfo};
+pub use flush::flush;
 pub use healthcheck::healthcheck;
 pub use port_list::{port_list, AhciPortInfo};
+pub use read_blocks::read_blocks;
+pub use write_blocks::write_blocks;

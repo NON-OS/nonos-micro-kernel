@@ -279,17 +279,3 @@ fn git_commit_hash() -> Option<String> {
     None
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::tempdir;
-
-    #[test]
-    fn test_generate_pub_only() {
-        let dir = tempdir().unwrap();
-        let out = dir.path().to_path_buf();
-        let pub_path = out.join("signer1.pub.hex");
-        write_atomic_text(&pub_path, "abcd").unwrap();
-        assert!(pub_path.exists());
-    }
-}

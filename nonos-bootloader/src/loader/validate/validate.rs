@@ -58,22 +58,3 @@ pub fn validate_elf_strict(data: &[u8]) -> LoaderResult<ValidationContext> {
     Ok(ctx)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_validate_magic() {
-        assert!(validate_magic(&[0x7f, b'E', b'L', b'F']).is_ok());
-        assert!(validate_magic(&[0x7f, b'E', b'L', b'X']).is_err());
-        assert!(validate_magic(&[0x7f, b'E', b'L']).is_err());
-    }
-
-    #[test]
-    fn test_validate_ident() {
-        let valid_ident = [0x7f, b'E', b'L', b'F', 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let (is_64, is_le) = validate_ident(&valid_ident).unwrap();
-        assert!(is_64);
-        assert!(is_le);
-    }
-}

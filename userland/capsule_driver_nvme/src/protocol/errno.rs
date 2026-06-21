@@ -15,3 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const E_INVAL: i32 = -22;
+pub const E_IO: i32 = -5;
+pub const E_NXIO: i32 = -6;
+pub const E_NODEV: i32 = -19;
+pub const E_MSGSIZE: i32 = -90;

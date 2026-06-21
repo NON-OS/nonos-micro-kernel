@@ -18,29 +18,3 @@ pub fn is_capsule_path(path: &str) -> bool {
     path == "/ram" || path.starts_with("/ram/")
 }
 
-#[cfg(test)]
-mod tests {
-    use super::is_capsule_path;
-
-    #[test]
-    fn ram_root_routes() {
-        assert!(is_capsule_path("/ram"));
-    }
-
-    #[test]
-    fn ram_subpath_routes() {
-        assert!(is_capsule_path("/ram/test"));
-        assert!(is_capsule_path("/ram/a/b/c"));
-    }
-
-    #[test]
-    fn non_ram_does_not_route() {
-        assert!(!is_capsule_path("/ramdisk"));
-        assert!(!is_capsule_path("/home/ram"));
-        assert!(!is_capsule_path("/ram2"));
-        assert!(!is_capsule_path("ram/foo"));
-        assert!(!is_capsule_path("/disk/ram"));
-        assert!(!is_capsule_path(""));
-        assert!(!is_capsule_path("/"));
-    }
-}

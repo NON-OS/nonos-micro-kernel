@@ -163,7 +163,7 @@ bounded READ(10) transfer through the xHCI bulk-transfer service.
 - Descriptor parser rejects malformed record lengths and missing bulk endpoints.
 - CBW builders emit fixed-length, bounded BOT command wrappers.
 - CSW validator rejects bad signatures, bad status values, and tag drift.
-- QEMU xHCI USB storage smoke passes INQUIRY, capacity, and bounded read.
+- QEMU xHCI USB storage validation passes INQUIRY, capacity, and bounded read.
 
 ## Explicit non-goals today
 

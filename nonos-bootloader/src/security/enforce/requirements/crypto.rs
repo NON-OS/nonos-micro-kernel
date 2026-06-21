@@ -18,14 +18,14 @@ use crate::log::logger::log_error;
 use crate::security::enforce::policy::EnforcementResult;
 use crate::security::types::SecurityContext;
 
-pub fn enforce_crypto_selftests(ctx: &SecurityContext, result: &mut EnforcementResult) {
-    if !ctx.blake3_selftest_ok {
-        result.deny("BLAKE3 selftest failed");
-        log_error("enforce", "BLAKE3 selftest FAILED");
+pub fn enforce_crypto_health(ctx: &SecurityContext, result: &mut EnforcementResult) {
+    if !ctx.blake3_health_ok {
+        result.deny("BLAKE3 health check failed");
+        log_error("enforce", "BLAKE3 health check FAILED");
     }
-    if !ctx.ed25519_selftest_ok {
-        result.deny("Ed25519 selftest failed");
-        log_error("enforce", "Ed25519 selftest FAILED");
+    if !ctx.ed25519_health_ok {
+        result.deny("Ed25519 health check failed");
+        log_error("enforce", "Ed25519 health check FAILED");
     }
 }
 

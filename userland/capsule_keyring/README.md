@@ -67,7 +67,7 @@ return protocol errors. The kernel never mirrors key bytes for recovery.
   signing, NOX ERC-20 approval signing, and native ETH EIP-1559 transfer signing.
 - Lists wallet rails so UI and policy can distinguish enabled NONOS Wallet rails
   from reserved external wallet tracks.
-- Is embedded, spawned, and smoke-tested through the kernel mirror.
+- Is embedded, spawned, and validation-covered through the kernel mirror.
 - Keeps key storage out of kernel memory.
 
 ## Wire format
@@ -121,18 +121,18 @@ kernel owns neither key bytes nor key handles.
 ## Release target
 
 The finished keyring capsule has caller-scoped key ownership, locked-state
-enforcement, bounded storage, zeroization on delete and teardown, smoke tests
+enforcement, bounded storage, zeroization on delete and teardown, validation checks
 for every operation, and no kernel-resident secret table. Persistence, if added
 later, must be explicit and sealed by a separate storage policy.
 
 ## Release evidence
 
-Release evidence is smoke coverage for store/retrieve/delete/count/lock/unlock,
+Release evidence is validation coverage for store/retrieve/delete/count/lock/unlock,
 plus teardown proof that key records do not persist in kernel state.
 
 ## Release checklist
 
-- Store/retrieve/delete/count/lock/unlock smoke passes.
+- Store/retrieve/delete/count/lock/unlock validation passes.
 - Locked-state denial is tested.
 - Teardown clears volatile records.
 - Static gate confirms no kernel key table exists.
@@ -146,7 +146,7 @@ inside this capsule.
 ## Verification
 
 - Build: `make -B nonos-mk-keyring`
-- Smoke: `nonos-mk-keyring-test`
+- Validation: `nonos-mk-keyring-test`
 - Static gate: `bash nonos-ci/run-static-checks.sh`
 - Privacy check: key data must stay in capsule-owned memory and never move
   into kernel-resident service state.

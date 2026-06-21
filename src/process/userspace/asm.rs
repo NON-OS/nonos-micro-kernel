@@ -210,7 +210,7 @@ pub unsafe extern "C" fn restore_user_context_iretq(ctx: *const UserContext) -> 
         "mov rax, [rdi + 112]",
         "mov rdi, [rdi + 64]", // restore rdi LAST
         // Returning to CPL=3 means the CS we just pushed has RPL bits
-        // set. Test the saved CS at [rsp+8] (rip is at [rsp+0]).
+        // set. Inspect the saved CS at [rsp+8] (rip is at [rsp+0]).
         "test byte ptr [rsp + 8], 3",
         "jz 1f",
         "swapgs",

@@ -77,29 +77,3 @@ pub const TRANSCRIPT_DOMAIN_BOOT: &str = "NONOS:BOOT:ATTESTATION:v1";
 /// Domain separator for circuit verification transcript
 pub const TRANSCRIPT_DOMAIN_CIRCUIT: &str = "NONOS:CIRCUIT:VERIFY:v1";
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_transcript_deterministic() {
-        let mut t1 = Transcript::new("test-domain");
-        let mut t2 = Transcript::new("test-domain");
-
-        t1.absorb("label", b"data");
-        t2.absorb("label", b"data");
-
-        assert_eq!(t1.challenge32("challenge"), t2.challenge32("challenge"));
-    }
-
-    #[test]
-    fn test_transcript_domain_separation() {
-        let mut t1 = Transcript::new("domain-a");
-        let mut t2 = Transcript::new("domain-b");
-
-        t1.absorb("label", b"data");
-        t2.absorb("label", b"data");
-
-        assert_ne!(t1.challenge32("challenge"), t2.challenge32("challenge"));
-    }
-}

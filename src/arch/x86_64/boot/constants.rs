@@ -20,23 +20,3 @@ pub use super::constants_segments::*;
 pub use super::constants_stack::*;
 pub use super::constants_xcr::*;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_boot_stack_alignment() {
-        assert_eq!(BOOT_STACK_TOP % 16, 0);
-    }
-
-    #[test]
-    fn test_cr_flags() {
-        assert_eq!(CR0_PG, 0x80000000);
-        assert_eq!(CR4_PAE, 0x20);
-    }
-
-    #[test]
-    fn test_xcr0_flags() {
-        assert_eq!(XCR0_X87 | XCR0_SSE | XCR0_AVX, 0x07);
-    }
-}

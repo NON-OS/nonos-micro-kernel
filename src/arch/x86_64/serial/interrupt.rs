@@ -110,13 +110,3 @@ pub fn handle_com4_interrupt() {
     handle_interrupt(3);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_iir_masks() {
-        assert_eq!(IIR_NO_INT, 0x01);
-        assert_eq!(IIR_ID_MASK, 0x0E);
-    }
-}

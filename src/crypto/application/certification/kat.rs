@@ -29,25 +29,25 @@ pub fn kat_sha3_256() -> AlgorithmStatus {
 
     if result == expected {
         CRYPTO_STATE.sha3_256.store(true, Ordering::SeqCst);
-        CRYPTO_STATE.tests_passed.fetch_add(1, Ordering::SeqCst);
+        CRYPTO_STATE.checks_passed.fetch_add(1, Ordering::SeqCst);
         AlgorithmStatus::Pass
     } else {
-        CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+        CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
         AlgorithmStatus::Fail
     }
 }
 
 pub fn kat_blake3() -> AlgorithmStatus {
-    let input = b"NONOS KAT Test Vector";
+    let input = b"NONOS KAT Known Answer Vector";
     let result1 = crate::crypto::blake3::blake3_hash(input);
     let result2 = crate::crypto::blake3::blake3_hash(input);
 
     if result1 == result2 && result1 != [0u8; 32] {
         CRYPTO_STATE.blake3.store(true, Ordering::SeqCst);
-        CRYPTO_STATE.tests_passed.fetch_add(1, Ordering::SeqCst);
+        CRYPTO_STATE.checks_passed.fetch_add(1, Ordering::SeqCst);
         AlgorithmStatus::Pass
     } else {
-        CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+        CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
         AlgorithmStatus::Fail
     }
 }
@@ -68,21 +68,21 @@ pub fn kat_chacha20poly1305() -> AlgorithmStatus {
                 Ok(decrypted) => {
                     if decrypted == plaintext {
                         CRYPTO_STATE.chacha20poly1305.store(true, Ordering::SeqCst);
-                        CRYPTO_STATE.tests_passed.fetch_add(1, Ordering::SeqCst);
+                        CRYPTO_STATE.checks_passed.fetch_add(1, Ordering::SeqCst);
                         AlgorithmStatus::Pass
                     } else {
-                        CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+                        CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
                         AlgorithmStatus::Fail
                     }
                 }
                 Err(_) => {
-                    CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+                    CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
                     AlgorithmStatus::Fail
                 }
             }
         }
         Err(_) => {
-            CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+            CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
             AlgorithmStatus::Fail
         }
     }
@@ -101,10 +101,10 @@ pub fn kat_ed25519() -> AlgorithmStatus {
 
     if valid && !wrong_valid {
         CRYPTO_STATE.ed25519.store(true, Ordering::SeqCst);
-        CRYPTO_STATE.tests_passed.fetch_add(1, Ordering::SeqCst);
+        CRYPTO_STATE.checks_passed.fetch_add(1, Ordering::SeqCst);
         AlgorithmStatus::Pass
     } else {
-        CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+        CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
         AlgorithmStatus::Fail
     }
 }
@@ -122,10 +122,10 @@ pub fn kat_rng() -> AlgorithmStatus {
 
     if !buf1_zero && !buf2_zero && !same {
         CRYPTO_STATE.rng.store(true, Ordering::SeqCst);
-        CRYPTO_STATE.tests_passed.fetch_add(1, Ordering::SeqCst);
+        CRYPTO_STATE.checks_passed.fetch_add(1, Ordering::SeqCst);
         AlgorithmStatus::Pass
     } else {
-        CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+        CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
         AlgorithmStatus::Fail
     }
 }
@@ -144,15 +144,15 @@ pub fn kat_sphincs() -> AlgorithmStatus {
 
                 if valid {
                     CRYPTO_STATE.sphincs.store(true, Ordering::SeqCst);
-                    CRYPTO_STATE.tests_passed.fetch_add(1, Ordering::SeqCst);
+                    CRYPTO_STATE.checks_passed.fetch_add(1, Ordering::SeqCst);
                     AlgorithmStatus::Pass
                 } else {
-                    CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+                    CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
                     AlgorithmStatus::Fail
                 }
             }
             Err(_) => {
-                CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+                CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
                 AlgorithmStatus::Fail
             }
         },
@@ -168,21 +168,21 @@ pub fn kat_ntru() -> AlgorithmStatus {
                     Ok(shared_secret2) => {
                         if shared_secret1 == shared_secret2 {
                             CRYPTO_STATE.ntru.store(true, Ordering::SeqCst);
-                            CRYPTO_STATE.tests_passed.fetch_add(1, Ordering::SeqCst);
+                            CRYPTO_STATE.checks_passed.fetch_add(1, Ordering::SeqCst);
                             AlgorithmStatus::Pass
                         } else {
-                            CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+                            CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
                             AlgorithmStatus::Fail
                         }
                     }
                     Err(_) => {
-                        CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+                        CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
                         AlgorithmStatus::Fail
                     }
                 }
             }
             Err(_) => {
-                CRYPTO_STATE.tests_failed.fetch_add(1, Ordering::SeqCst);
+                CRYPTO_STATE.checks_failed.fetch_add(1, Ordering::SeqCst);
                 AlgorithmStatus::Fail
             }
         },

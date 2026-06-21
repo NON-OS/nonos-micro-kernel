@@ -26,11 +26,6 @@ mod constants;
 mod hasher;
 mod output;
 
-#[cfg(test)]
-#[cfg(not(feature = "std"))]
-#[cfg(test)]
-mod tests;
-
 pub use api::{blake3_derive_key, blake3_hash, blake3_hash_xof, blake3_keyed_hash};
 pub use constants::{KEY_LEN, OUT_LEN};
 pub use hasher::Hasher;

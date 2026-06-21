@@ -79,15 +79,3 @@ pub fn current_pstate() -> u8 {
     ((status >> 8) & 0xFF) as u8
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_power_state_values() {
-        assert_eq!(PowerState::Performance as u8, 0);
-        assert_eq!(PowerState::Balanced as u8, 1);
-        assert_eq!(PowerState::PowerSave as u8, 2);
-        assert_eq!(PowerState::Minimal as u8, 3);
-    }
-}

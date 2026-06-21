@@ -29,6 +29,7 @@ pub mod nmi;
 pub mod opcode;
 pub mod overflow;
 pub mod page_fault;
+pub mod rip_probe;
 pub mod segment;
 pub mod stack;
 pub mod tss;

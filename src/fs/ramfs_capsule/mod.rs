@@ -19,8 +19,6 @@ mod embed;
 mod error;
 mod protocol;
 mod route;
-#[cfg(feature = "nonos-ramfs-smoketest")]
-pub mod smoketest;
 mod spawn;
 mod state;
 

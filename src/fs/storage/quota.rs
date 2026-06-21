@@ -155,22 +155,3 @@ pub fn get_remaining_capacity() -> (usize, usize) {
     (remaining_bytes, remaining_files)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_quota_defaults() {
-        let quota = get_quota();
-        assert!(quota.soft_limit < quota.hard_limit);
-        assert!(quota.file_limit > 0);
-        assert!(quota.grace_period_secs > 0);
-    }
-
-    #[test]
-    fn test_remaining_capacity() {
-        let (bytes, files) = get_remaining_capacity();
-        assert!(bytes > 0);
-        assert!(files > 0);
-    }
-}

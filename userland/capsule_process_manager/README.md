@@ -96,12 +96,12 @@ process manager state.
 The release version is a signed application capsule with `Capsule.mk`, signed
 manifest, feature gated spawn, toolkit only UI rendering, an explicit
 capability for whatever kernel statistics surface eventually exists, and
-smoke proof that process manager policy stays out of the kernel.
+validation evidence that process manager policy stays out of the kernel.
 
 ## Release checklist
 
 - `Capsule.mk` and signed manifest exist.
-- Toolkit IPC smoke passes.
+- Toolkit IPC validation passes.
 - Feature gated spawn is present.
 - Static gate confirms no kernel app UI exports.
 
@@ -116,4 +116,4 @@ or direct framebuffer authority belongs in this directory.
 - Build: `cargo build --manifest-path userland/capsule_process_manager/Cargo.toml`
 - Static gate: `bash nonos-ci/run-static-checks.sh`
 - Promotion check: add `Capsule.mk`, manifest signing, feature gated spawn,
-  and smoke proof before claiming production app status.
+  and validation evidence before claiming production app status.
