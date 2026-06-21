@@ -198,6 +198,10 @@ pub fn vt_selftest() {
         let row_abs = gb.abs_of_visible_row(0) == gb.total_scrolled - gb.view_offset as u64;
         mark(b"block-absline", start == 0 && scrolled && row_abs);
     }
+    {
+        let f = crate::term::rtc::fmt_hms(9, 5, 42);
+        mark(b"block-ts", &f == b"09:05:42");
+    }
 }
 
 fn run(state: &mut State) {

@@ -14,21 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod banner;
-pub mod block;
-pub mod cwd;
-pub mod dimensions;
-pub mod grid;
-pub mod history;
-pub mod line;
-pub mod manifest;
-pub mod prompt;
-pub mod rtc;
-pub mod scrollback;
-pub mod state;
-pub mod terminal;
-pub mod theme;
-pub mod util;
-pub mod vt;
+use nonos_libc::{mk_time_rtc, RtcTime};
 
-pub use terminal::Terminal;
+pub fn fmt_hms(h: u8, m: u8, s: u8) -> [u8; 8] {
+    let mut out = *b"00:00:00";
+    out[0] = b'0' + (h / 10) % 10;
+    out[1] = b'0' + h % 10;
+    out[3] = b'0' + (m / 10) % 10;
+    out[4] = b'0' + m % 10;
+    out[6] = b'0' + (s / 10) % 10;
+    out[7] = b'0' + s % 10;
+    out
+}
+
+pub fn rtc_hms() -> [u8; 8] {
+    let mut t = RtcTime::default();
+    if mk_time_rtc(&mut t as *mut RtcTime) == 0 {
+        fmt_hms(t.hour, t.minute, t.second)
+    } else {
+        *b"--:--:--"
+    }
+}
