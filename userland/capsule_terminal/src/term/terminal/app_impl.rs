@@ -32,8 +32,9 @@ impl App for Terminal {
     }
 
     // Smoke build only: once services have settled, run a real command
-    // through the normal submit path so a headless boot proves an installed
-    // capsule's output flows back into the terminal.
+    // through the normal submit path so a headless boot proves command output
+    // flows back into the terminal grid. Searches the seeded /docs/demo.txt for
+    // a known term so the result is deterministic.
     #[cfg(feature = "nonos-autorun-rg")]
     fn on_tick(&mut self) -> bool {
         if self.autorun_done {
@@ -44,10 +45,10 @@ impl App for Terminal {
             return false;
         }
         self.autorun_done = true;
-        debug_marker(b"[TERMINAL-AUTORUN] install rg start\n");
-        self.state.line.replace(b"install rg nonos /docs/demo.txt");
+        debug_marker(b"[TERMINAL-AUTORUN] grep demo start\n");
+        self.state.line.replace(b"grep nonos < /docs/demo.txt");
         crate::event::on_enter(&mut self.state);
-        debug_marker(b"[TERMINAL-AUTORUN] install rg returned\n");
+        debug_marker(b"[TERMINAL-AUTORUN] grep demo returned\n");
         true
     }
 }
