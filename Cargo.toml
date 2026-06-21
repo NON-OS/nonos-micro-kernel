@@ -162,6 +162,8 @@ nonos-user-entry-proof = []
 # Arms the kernel-side synthetic scancode injector. Off by default.
 input-probe-inject = []
 
+nonos-terminal-smoketest = ["nonos-capsule-terminal", "nonos-user-entry-proof"]
+
 # Brutal-minimum kernel profile. Each entry closes a real boundary:
 #   kernel, standalone   no-std bootstrap and panic handler routing
 #   arch-x86_64          target arch
@@ -537,6 +539,22 @@ microkernel-terminal-only = [
   "nonos-capsule-wm",
   "nonos-capsule-toolkit",
   "nonos-capsule-terminal",
+]
+
+# Headless terminal smoketest. The terminal capsule is built with
+# `nonos-autorun-selftest` by the Makefile target; the GUI stack is
+# absent and only vfs-backing capsules are spawned.
+microkernel-terminal-smoketest = [
+  "microkernel-core",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-ramfs",
+  "nonos-capsule-keyring",
+  "nonos-capsule-entropy",
+  "nonos-capsule-crypto",
+  "nonos-capsule-vfs",
+  "nonos-capsule-driver-virtio-rng",
+  "nonos-capsule-terminal",
+  "nonos-terminal-smoketest",
 ]
 
 microkernel-file-manager = ["microkernel-desktop-gui"]

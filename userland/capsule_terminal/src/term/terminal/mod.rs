@@ -19,6 +19,8 @@ mod app_impl_manifest;
 mod app_impl_on_event;
 mod app_impl_paint;
 mod new;
+#[cfg(feature = "nonos-autorun-selftest")]
+pub mod selftest;
 mod types;
 
 pub use types::Terminal;
