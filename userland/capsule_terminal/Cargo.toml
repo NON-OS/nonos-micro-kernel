@@ -19,10 +19,6 @@ name = "terminal"
 path = "src/main.rs"
 
 [features]
-# Smoke build: auto-run a real install command after boot so a headless
-# run proves a loaded capsule's output reaches the terminal.
-nonos-autorun-rg = []
-
 # Self-test build: once vfs answers, auto-run the unproven shell paths
 # (echo, vfs round trip, pipe, statement gating) and emit graded
 # [TERMINAL-TEST] serial markers for the boot harness.

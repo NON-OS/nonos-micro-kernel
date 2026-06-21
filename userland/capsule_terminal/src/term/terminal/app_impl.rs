@@ -30,30 +30,4 @@ impl App for Terminal {
     fn paint(&mut self, fb: &mut PaintBuffer) {
         self.paint_inner(fb)
     }
-
-    // Smoke build only: once services have settled, run a real command
-    // through the normal submit path so a headless boot proves command output
-    // flows back into the terminal grid. Searches the seeded /docs/demo.txt for
-    // a known term so the result is deterministic.
-    #[cfg(feature = "nonos-autorun-rg")]
-    fn on_tick(&mut self) -> bool {
-        if self.autorun_done {
-            return false;
-        }
-        self.autorun_ticks += 1;
-        if self.autorun_ticks < 6 {
-            return false;
-        }
-        self.autorun_done = true;
-        debug_marker(b"[TERMINAL-AUTORUN] grep demo start\n");
-        self.state.line.replace(b"grep nonos < /docs/demo.txt");
-        crate::event::on_enter(&mut self.state);
-        debug_marker(b"[TERMINAL-AUTORUN] grep demo returned\n");
-        true
-    }
-}
-
-#[cfg(feature = "nonos-autorun-rg")]
-fn debug_marker(msg: &[u8]) {
-    let _ = nonos_libc::mk_debug(msg.as_ptr(), msg.len());
 }

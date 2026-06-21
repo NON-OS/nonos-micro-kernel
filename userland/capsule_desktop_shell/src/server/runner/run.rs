@@ -32,29 +32,9 @@ pub fn run(mut ctx: Context) -> ! {
     let mut tx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut last_clock_ms: i64 = 0;
     refresh_clock(&mut ctx);
-    #[cfg(feature = "autofocus-terminal")]
-    let autofocus_start = mk_time_millis();
-    #[cfg(feature = "autofocus-terminal")]
-    let mut autofocus_done = false;
     loop {
         drain(&mut ctx, &mut rx, &mut tx);
         let now = mk_time_millis();
-        // Smoke build only: focus the terminal once after the apps have
-        // registered, so a headless boot drives the same focus path a user
-        // click would, letting the terminal tick.
-        #[cfg(feature = "autofocus-terminal")]
-        if !autofocus_done && now.wrapping_sub(autofocus_start) > 5000 {
-            let sent = crate::server::handlers::launcher_request::request(
-                &crate::state::apps::LAUNCHER_APPS[0],
-            );
-            if sent {
-                autofocus_done = true;
-                debug_marker(b"[DESKTOP-SHELL] autofocus terminal sent\n");
-            } else if now.wrapping_sub(autofocus_start) > 30000 {
-                autofocus_done = true;
-                debug_marker(b"[DESKTOP-SHELL] autofocus terminal failed\n");
-            }
-        }
         if now.wrapping_sub(last_clock_ms) >= CLOCK_REFRESH_MS as i64 {
             refresh_clock(&mut ctx);
             if !ctx.input_ready {
@@ -78,9 +58,4 @@ pub fn run(mut ctx: Context) -> ! {
         }
         let _ = mk_display_vsync_wait(0);
     }
-}
-
-#[cfg(feature = "autofocus-terminal")]
-fn debug_marker(msg: &[u8]) {
-    let _ = nonos_libc::mk_debug(msg.as_ptr(), msg.len());
 }
