@@ -21,6 +21,6 @@ use crate::event::on_event;
 
 impl Terminal {
     pub(super) fn on_event_inner(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
+        on_event(self.cur(), event)
     }
 }

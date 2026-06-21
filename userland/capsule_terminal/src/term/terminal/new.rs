@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec;
+
 use super::types::Terminal;
 use crate::term::state::State;
 
 impl Terminal {
     pub fn new() -> Self {
-        let state = State::new();
-        Self { state }
+        Self { tabs: vec![State::new()], active: 0 }
     }
 }
