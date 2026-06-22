@@ -14,7 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constants;
-mod point;
+extern crate alloc;
 
-pub use point::EdwardsPoint;
+use super::ZkError;
+use crate::crypto::zk_kernel::plonk::plonk_prove;
+use alloc::vec::Vec;
+
+pub fn syscall_zk_prove_plonk(witness: &[[u8; 32]]) -> Result<Vec<u8>, ZkError> {
+    match plonk_prove(witness) {
+        Ok(proof) => Ok(proof.to_bytes()),
+        Err(_) => Err(ZkError::InternalError),
+    }
+}

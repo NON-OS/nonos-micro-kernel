@@ -14,7 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constants;
-mod point;
+use crate::crypto::zk_kernel::syscall::ZkError;
+use crate::crypto::zk_kernel::{KernelZkVerifier, ZkResult};
 
-pub use point::EdwardsPoint;
+pub(super) fn verify_commitment(
+    verifier: &mut KernelZkVerifier,
+    proof_data: &[u8],
+    public_input: &[u8],
+) -> Result<ZkResult, ZkError> {
+    if proof_data.len() < 32 || public_input.len() < 64 {
+        return Err(ZkError::MalformedInput);
+    }
+    let mut commitment = [0u8; 32];
+    let mut value = [0u8; 32];
+    let mut blinding = [0u8; 32];
+    commitment.copy_from_slice(&proof_data[..32]);
+    value.copy_from_slice(&public_input[..32]);
+    blinding.copy_from_slice(&public_input[32..64]);
+    Ok(verifier.verify_commitment(&commitment, &value, &blinding))
+}

@@ -22,6 +22,7 @@ mod point;
 mod scalar;
 mod signature;
 
+pub(crate) use scalar::sc_reduce_mod_l;
 pub use signature::{sign, verify, KeyPair, Signature};
 
 pub fn pubkey_from_secret(secret: &[u8; 32]) -> [u8; 32] {

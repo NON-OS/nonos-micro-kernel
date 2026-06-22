@@ -14,7 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constants;
-mod point;
+use super::{KernelZkVerifier, ZkResult};
+use crate::crypto::zk_kernel::pedersen::PedersenCommitment;
 
-pub use point::EdwardsPoint;
+impl KernelZkVerifier {
+    pub fn verify_commitment(
+        &mut self,
+        commitment: &[u8; 32],
+        value: &[u8; 32],
+        blinding: &[u8; 32],
+    ) -> ZkResult {
+        let comm = PedersenCommitment { commitment: *commitment };
+        self.proofs_verified += 1;
+        if comm.verify(value, blinding) {
+            self.proofs_valid += 1;
+            ZkResult::Valid
+        } else {
+            self.proofs_invalid += 1;
+            ZkResult::Invalid
+        }
+    }
+}

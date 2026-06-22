@@ -14,7 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constants;
-mod point;
+use super::ZkError;
+use crate::crypto::rng::get_random_bytes;
+use crate::crypto::zk_kernel::pedersen::PedersenCommitment;
 
-pub use point::EdwardsPoint;
+pub fn syscall_zk_commit(value: &[u8; 32]) -> Result<([u8; 32], [u8; 32]), ZkError> {
+    let blinding = get_random_bytes();
+    let comm = PedersenCommitment::commit(value, &blinding);
+    Ok((comm.commitment, blinding))
+}

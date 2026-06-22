@@ -14,7 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constants;
-mod point;
+extern crate alloc;
 
-pub use point::EdwardsPoint;
+use super::ZkError;
+use crate::crypto::zk_kernel::range::RangeProof;
+use alloc::vec::Vec;
+
+pub fn syscall_zk_prove_range(value: u64, bits: u8) -> Result<Vec<u8>, ZkError> {
+    match RangeProof::prove(value, bits) {
+        Ok(proof) => {
+            let mut result = Vec::with_capacity(1 + 32 + proof.bit_commitments.len() * 32);
+            result.push(proof.bits);
+            result.extend_from_slice(&proof.response);
+            for comm in &proof.bit_commitments {
+                result.extend_from_slice(comm);
+            }
+            Ok(result)
+        }
+        Err(_) => Err(ZkError::InternalError),
+    }
+}

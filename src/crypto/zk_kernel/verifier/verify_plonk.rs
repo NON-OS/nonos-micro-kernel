@@ -14,7 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constants;
-mod point;
+use super::{KernelZkVerifier, ZkResult};
+use crate::crypto::zk_kernel::plonk::PlonkProof;
 
-pub use point::EdwardsPoint;
+impl KernelZkVerifier {
+    pub fn verify_plonk(&mut self, proof_bytes: &[u8], public_inputs: &[[u8; 32]]) -> ZkResult {
+        let proof = match PlonkProof::from_bytes(proof_bytes) {
+            Ok(p) => p,
+            Err(_) => return ZkResult::MalformedProof,
+        };
+        self.proofs_verified += 1;
+        if proof.verify(public_inputs) {
+            self.proofs_valid += 1;
+            ZkResult::Valid
+        } else {
+            self.proofs_invalid += 1;
+            ZkResult::Invalid
+        }
+    }
+}

@@ -23,13 +23,11 @@ use crate::crypto::sha512::sha512;
 
 use crate::crypto::asymmetric::ed25519::field::ct_eq_32;
 use crate::crypto::asymmetric::ed25519::point::{
-    conditional_select, convert_p1p1_to_p2, double_scalar_mult, ensure_precomp, ge_add,
-    ge_has_large_order, ge_identity, ge_p1p1_to_p3, ge_pack, ge_scalarmult_base_ct, ge_to_cached,
-    ge_unpack, get_basepoint, get_curve_constants, new_cached, new_p2_identity, point_double,
-    precompute_table, scalarmult_vartime, GeCached, GeP1P1,
+    ensure_precomp, ge_add, ge_has_large_order, ge_p1p1_to_p3, ge_pack, ge_scalarmult_base_ct,
+    ge_to_cached, ge_unpack, scalarmult_vartime,
 };
 use crate::crypto::asymmetric::ed25519::scalar::{
-    clamp_scalar, sc_addmul_mod_l, sc_ge, sc_mul, sc_reduce_mod_l, L,
+    clamp_scalar, sc_addmul_mod_l, sc_ge, sc_reduce_mod_l, L,
 };
 
 #[derive(Debug, Clone)]
@@ -154,87 +152,4 @@ pub fn verify(public: &[u8; 32], msg: &[u8], sig: &Signature) -> bool {
     let Rp3 = ge_p1p1_to_p3(&Rp);
 
     ct_eq_32(&ge_pack(&SB), &ge_pack(&Rp3))
-}
-
-pub fn verify_batch(items: &[([u8; 32], &[u8], Signature)]) -> bool {
-    if items.is_empty() {
-        return true;
-    }
-    ensure_precomp();
-
-    let _ = precompute_table();
-    let _ = get_basepoint();
-    let (d, d2) = get_curve_constants();
-    let _ = (d, d2);
-
-    let mut aggL = ge_identity();
-    let mut aggR = ge_identity();
-
-    for (Aenc, msg, sig) in items.iter() {
-        let A = match ge_unpack(Aenc) {
-            Some(p) => p,
-            None => return false,
-        };
-        let R = match ge_unpack(&sig.R) {
-            Some(p) => p,
-            None => return false,
-        };
-
-        if sc_ge(&sig.S, &L) {
-            return false;
-        }
-
-        let mut kin = Vec::with_capacity(64 + msg.len());
-        kin.extend_from_slice(&sig.R);
-        kin.extend_from_slice(Aenc);
-        kin.extend_from_slice(msg);
-        let mut k64 = sha512(&kin);
-        let k = sc_reduce_mod_l(&mut k64);
-
-        let mut ci64 = [0u8; 64];
-        let rnd = get_random_bytes();
-        ci64[..32].copy_from_slice(&rnd);
-        let ci = sc_reduce_mod_l(&mut ci64);
-
-        let ciSi = sc_mul(&ci, &sig.S);
-        let termL = ge_scalarmult_base_ct(&ciSi);
-        let addL = ge_add(&aggL, &ge_to_cached(&termL));
-        aggL = ge_p1p1_to_p3(&addL);
-
-        let termR = scalarmult_vartime(&R, &ci);
-        let addR1 = ge_add(&aggR, &ge_to_cached(&termR));
-        aggR = ge_p1p1_to_p3(&addR1);
-
-        let cik = sc_mul(&ci, &k);
-        let termRA = scalarmult_vartime(&A, &cik);
-        let addR2 = ge_add(&aggR, &ge_to_cached(&termRA));
-        aggR = ge_p1p1_to_p3(&addR2);
-
-        let doubled = point_double(&aggL);
-        let _ = doubled;
-
-        let dsm = double_scalar_mult(&ci, &A, &sig.S);
-        let _ = dsm;
-
-        let selected = conditional_select(1, &aggL, &aggR);
-        let _ = selected;
-
-        let cached = new_cached();
-        let _ = cached;
-
-        let p1p1 = GeP1P1::identity();
-        let p2 = convert_p1p1_to_p2(&p1p1);
-        let _ = p2;
-
-        let from_p2 = GeP1P1::from_p2(&p2);
-        let _ = from_p2;
-
-        let cached_id = GeCached::identity();
-        let _ = cached_id;
-
-        let p2_id = new_p2_identity();
-        let _ = p2_id;
-    }
-
-    ct_eq_32(&ge_pack(&aggL), &ge_pack(&aggR))
 }

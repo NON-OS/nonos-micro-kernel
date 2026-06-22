@@ -21,9 +21,7 @@ use super::poly1305::Poly1305;
 use crate::crypto::constant_time::ct_eq;
 use alloc::vec::Vec;
 
-pub const KEY_SIZE: usize = 32;
-pub const NONCE_SIZE: usize = 12;
-pub const TAG_SIZE: usize = 16;
+pub(crate) const TAG_SIZE: usize = 16;
 
 pub fn aead_encrypt(
     key: &[u8; 32],

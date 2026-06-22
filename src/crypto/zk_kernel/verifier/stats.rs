@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constants;
-mod point;
+use super::KernelZkVerifier;
 
-pub use point::EdwardsPoint;
+impl KernelZkVerifier {
+    pub fn stats(&self) -> (u64, u64, u64) {
+        (self.proofs_verified, self.proofs_valid, self.proofs_invalid)
+    }
+}

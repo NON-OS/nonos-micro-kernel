@@ -14,31 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::BASEPOINT;
-use crate::crypto::entropy::get_entropy;
-use crate::crypto::sha512::sha512;
+extern crate alloc;
 
-pub type PrivateKey = [u8; 32];
-pub type PublicKey = [u8; 32];
+use crate::crypto::zk_kernel::syscall::ZkError;
+use crate::crypto::zk_kernel::{KernelZkVerifier, ZkResult};
+use alloc::vec::Vec;
 
-pub fn keypair_from_seed(seed: &[u8; 32]) -> (PublicKey, PrivateKey) {
-    let h = sha512(seed);
-
-    let mut s = [0u8; 32];
-    s.copy_from_slice(&h[..32]);
-    s[0] &= 248;
-    s[31] &= 127;
-    s[31] |= 64;
-
-    let public_point = BASEPOINT.scalar_mul(&s);
-    let public = public_point.compress();
-
-    (public, *seed)
-}
-
-pub fn generate_keypair() -> (PublicKey, PrivateKey) {
-    let entropy = get_entropy(32);
-    let mut seed = [0u8; 32];
-    seed.copy_from_slice(&entropy);
-    keypair_from_seed(&seed)
+pub(super) fn verify_plonk(
+    verifier: &mut KernelZkVerifier,
+    proof_data: &[u8],
+    public_input: &[u8],
+) -> Result<ZkResult, ZkError> {
+    if proof_data.len() < 384 {
+        return Err(ZkError::MalformedInput);
+    }
+    let mut pub_inputs = Vec::with_capacity(public_input.len() / 32);
+    for chunk in public_input.chunks_exact(32) {
+        let mut inp = [0u8; 32];
+        inp.copy_from_slice(chunk);
+        pub_inputs.push(inp);
+    }
+    Ok(verifier.verify_plonk(proof_data, &pub_inputs))
 }

@@ -19,5 +19,5 @@ mod ops;
 mod reduce;
 
 pub(crate) use constants::{clamp_scalar, L};
-pub(crate) use ops::{sc_addmul_mod_l, sc_ge, sc_mul};
+pub(crate) use ops::{sc_addmul_mod_l, sc_ge};
 pub(crate) use reduce::sc_reduce_mod_l;

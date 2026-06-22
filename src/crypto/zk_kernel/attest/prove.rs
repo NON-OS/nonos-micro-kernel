@@ -18,11 +18,11 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 
+use super::super::field::FieldElement;
+use super::super::pedersen::PedersenCommitment;
 use super::challenge::challenge;
 use super::directions::directions_from_index;
 use super::types::EnrolledSecretProof;
-use super::super::field::FieldElement;
-use super::super::pedersen::PedersenCommitment;
 use crate::crypto::rng::get_random_bytes;
 
 pub fn prove(

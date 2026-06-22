@@ -18,22 +18,27 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 
-use super::super::constants::DOM_MERKLE_LEAF;
+use super::super::constants::{DOM_MERKLE_LEAF, DOM_MERKLE_NODE};
 use crate::crypto::hash::blake3_hash;
 
-pub(super) fn fold_root(commitment: &[u8; 32], siblings: &[[u8; 32]], directions: &[u8]) -> [u8; 32] {
+pub(super) fn fold_root(
+    commitment: &[u8; 32],
+    siblings: &[[u8; 32]],
+    directions: &[u8],
+) -> [u8; 32] {
     let mut leaf = Vec::with_capacity(DOM_MERKLE_LEAF.len() + 32);
     leaf.extend_from_slice(DOM_MERKLE_LEAF);
     leaf.extend_from_slice(commitment);
     let mut current = blake3_hash(&leaf);
     for (sibling, direction) in siblings.iter().zip(directions.iter()) {
-        let mut buf = [0u8; 64];
+        let mut buf = Vec::with_capacity(DOM_MERKLE_NODE.len() + 64);
+        buf.extend_from_slice(DOM_MERKLE_NODE);
         if *direction == 0 {
-            buf[..32].copy_from_slice(&current);
-            buf[32..].copy_from_slice(sibling);
+            buf.extend_from_slice(&current);
+            buf.extend_from_slice(sibling);
         } else {
-            buf[..32].copy_from_slice(sibling);
-            buf[32..].copy_from_slice(&current);
+            buf.extend_from_slice(sibling);
+            buf.extend_from_slice(&current);
         }
         current = blake3_hash(&buf);
     }
