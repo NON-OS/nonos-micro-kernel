@@ -2,10 +2,10 @@
 
 NONOS is a privacy-first microkernel operating system in Rust where
 nothing runs unless it can prove itself. Every application is a signed,
-sandboxed capsule carrying a Groth16 zero-knowledge proof of exactly
+sandboxed capsule carrying a transparent enrolled-secret proof of exactly
 what it is and what it is allowed to touch, and the kernel re-verifies
-that proof at every single spawn. There is no override, no debug flag,
-no unsigned path. The boot chain, the kernel, the drivers and the
+that proof at every spawn. There is no override, no debug flag,
+no unsigned default path. The boot chain, the kernel, the drivers and the
 desktop all hold to the same rule: verify, then run.
 
 This is not a design document. The system boots to a real desktop with
@@ -79,7 +79,7 @@ every arrow below is a cryptographic check that fails closed.
       v
   kernel image ................ signature and hash verified before
       |                         a single instruction executes
-      |  Groth16 / BLS12-381
+      |  transparent enrolled-secret ZK proof
       v
   capsule spawn gate .......... every capsule's proof re-verified
       |                         at runtime, every boot; no proof,
@@ -90,11 +90,9 @@ every arrow below is a cryptographic check that fails closed.
                                 the kernel's
 ```
 
-The proofs bind each capsule's exact hash, its capability mask and the
-policy root it was built under, over BLS12-381 with 192-byte proofs
-and seven public inputs. The verifying key comes from a
-five-contributor external trusted-setup ceremony whose transcript
-ships in this repo; nobody, including us, holds the trapdoor.
+The proofs bind each capsule's exact hash, its capability mask, its
+epoch and the policy root it was enrolled under. There is no trusted
+setup, proving key or ceremony trapdoor in the capsule attestation path.
 
 ## Privacy by architecture
 
@@ -146,8 +144,8 @@ does.
 
 ## Build and run
 
-Clone with submodules; the canonical ceremony keys arrive with the
-trust keystore and re-verify on your machine during the first build:
+Clone with submodules; the trust keystore and build includes arrive
+with the tree:
 
 ```sh
 git clone --recursive https://github.com/NON-OS/nonos-micro-kernel.git
@@ -182,30 +180,16 @@ make nonos-mk-bootloader      # UEFI bootloader only
 
 ## Verify it yourself
 
-Do not take this README on faith. From a fresh clone, with no signing
-keys and nothing rebuilt, re-prove every shipped capsule:
-
-```sh
-make nonos-mk-verify-attestation
-```
-
-That runs a real BLS12-381 pairing check on every committed capsule
-proof trailer against the public verifying key (fingerprint
-6cd2015037ea6181). As of this writing the fleet stands at 59 capsules
-verified, 0 failed, and the runtime gate enforces all of them at every
-boot. It needs only the toolchain and the trust keystore that comes
-with the clone, no keys of your own.
-
-(`make nonos-mk-attestation-receipt` is the heavier developer path: it
-rebuilds and re-attests every capsule from source with your own
-scratch keys, then verifies. Use it when changing capsules, not just
-to check the release.)
+Do not take this README on faith. The current source path builds the
+transparent attestation tools, regenerates capsule trailers from an
+enrollment seed and compiles the capsule kernel profile with those
+trailers embedded:
 
 More verification entry points:
 
 ```sh
-make nonos-mk-zk-verify-live    # watch each pairing check, one per capsule
-make nonos-mk-attestation CAP=terminal   # deep-dive one capsule's proof
+make nonos-mk-capsules          # capsule kernel profile, no QEMU
+make nonos-mk-all-capsules-attested      # rebuild signed and attested capsules
 make nonos-mk-host-trust-verify # host trust chain against the baked policy
 make nonos-mk-check-trust-manifest      # keystore ledger integrity
 ```
@@ -215,7 +199,7 @@ make nonos-mk-check-trust-manifest      # keystore ledger integrity
 ```sh
 make nonos-mk-verify          # static gates + capsule build + symbol scan
 make nonos-mk-verify-trust    # signed capsule manifest and trust ledger checks
-make nonos-mk-verify-attestation # committed capsule attestation receipt checks
+make nonos-mk-capsules        # compile capsule profile with embedded trailers
 ```
 
 ## Build your own capsule
@@ -239,32 +223,10 @@ contract is language-neutral even though Rust is the paved road.
 
 ## Earning NOX for securing NONOS
 
-Verifiable security work earns receipts, and accepted receipts settle
-on Ethereum mainnet from reward pools funded only by real demand
-revenue. No minting, no yield; usage finances security.
-
-```
-        work                    receipt                  settlement
-   ----------------       ------------------       -------------------
-   run the fleet           nox-work-receipt          epoch Merkle root
-   verification    ---->   validates the    ---->    published and
-   boot a witness          artifact, binds           finalized on-chain;
-   audit a capsule         it to your addr           claim pays from
-   join a ceremony                                   NoxRewardPool
-```
-
-Start with one command and your reward address:
-
-```sh
-make nonos-mk-nox CONTRIB=0x<your address>
-```
-
-It rebuilds the system, runs all 59 pairing checks on your machine,
-issues a receipt bound to your address and re-verifies it the way an
-authorizer would. The loop, the receipt kinds and the claim flow are
-documented in [CONTRIBUTING-ZK.md](CONTRIBUTING-ZK.md); the deployed
-contract addresses and the frozen on-chain interface live in
-`abi/nox_deployment.json` and `abi/NOX_CONTRACTS.md`.
+The old Groth16-based NOX receipt lane has been removed from the active
+build. [CONTRIBUTING-ZK.md](CONTRIBUTING-ZK.md) now tracks the
+transparent-attestation receipt work that must land before reward
+claims are advertised again.
 
 ## Command reference
 
@@ -275,15 +237,11 @@ contract addresses and the frozen on-chain interface live in
                nonos-mk-check, nonos-mk-bootloader, nonos-mk-esp
   run          nonos-mk-run, nonos-mk-run-serial, nonos-mk-run-wizard,
                nonos-mk-debug
-  verify       nonos-mk-verify-attestation (no keys, nothing rebuilt),
-               nonos-mk-attestation-receipt, nonos-mk-zk-verify-live,
-               nonos-mk-attestation CAP=<name>, nonos-mk-verify-trust,
+  verify       nonos-mk-static, nonos-mk-scan, nonos-mk-verify-fast,
+               nonos-mk-verify, nonos-mk-verify-trust,
                nonos-mk-host-trust-verify, nonos-mk-check-trust-manifest
-  zk           nonos-mk-zk-report, nonos-mk-zk-tools,
-               nonos-mk-zk-ceremony (deliberately re-run a setup)
-  nox          nonos-mk-nox CONTRIB=0x..., nonos-mk-nox-receipt,
-               nonos-mk-nox-verify RECEIPT=..., nonos-mk-nox-merkle
-               CLAIMS=..., nonos-mk-nox-registry
+  zk           nonos-mk-zk-tools, nonos-mk-zk-report,
+               nonos-mk-zk-verify-live
   capsules     nonos-mk-<slug>, nonos-mk-<slug>-sign per capsule;
                nonos-mk-userland-clean
   hygiene      nonos-mk-fmt, nonos-mk-clean
@@ -300,8 +258,7 @@ contract addresses and the frozen on-chain interface live in
                          stack), the SDK family, app skeleton,
                          toolkit, libc
    nonos-data/           trust keystore (submodule): publisher keys,
-                         signed manifests, proof trailers, the
-                         ceremony transcript and verifying key
+                         signed manifests and proof trailers
    abi/                  machine-readable contracts: syscalls, wire
                          format, schemas, the mainnet deployment
    nonos-mk/             capsule build include (submodule)

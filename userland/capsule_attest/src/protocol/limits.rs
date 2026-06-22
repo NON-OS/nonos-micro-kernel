@@ -15,5 +15,4 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const STATUS_LEN: usize = 4;
-pub const MAX_PROOF_CAPSULES: usize = 64;
 pub const IPC_PAYLOAD_MAX: usize = 64 * 1024;

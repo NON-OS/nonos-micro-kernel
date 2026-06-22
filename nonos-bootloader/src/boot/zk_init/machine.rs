@@ -20,6 +20,12 @@ use crate::hardware::tpm::get_tpm_ek_public;
 use crate::log::logger::{log_info, log_warn};
 use crate::zk::init_machine_id;
 
+#[cfg(not(feature = "production"))]
+use super::machine_fallback_dev::init_fallback_machine_id;
+
+#[cfg(feature = "production")]
+use super::machine_fallback_production::init_fallback_machine_id;
+
 pub fn init_zk_machine_id(st: &SystemTable<Boot>) -> Result<(), &'static str> {
     match get_tpm_ek_public(st) {
         Ok(ek_public) => {
@@ -28,21 +34,9 @@ pub fn init_zk_machine_id(st: &SystemTable<Boot>) -> Result<(), &'static str> {
             Ok(())
         }
         Err(e) => {
-            log_warn("zk_init", "TPM EK unavailable, using fallback machine ID");
+            log_warn("zk_init", "TPM EK unavailable");
             log_warn("zk_init", e);
-            init_fallback_machine_id(st);
-            Ok(())
+            init_fallback_machine_id(st)
         }
     }
-}
-
-fn init_fallback_machine_id(st: &SystemTable<Boot>) {
-    let mut fallback = [0u8; 64];
-    let vendor = st.firmware_vendor();
-    for (i, ch) in vendor.iter().take(32).enumerate() {
-        fallback[i] = u16::from(*ch) as u8;
-    }
-    let rev = st.firmware_revision();
-    fallback[32..36].copy_from_slice(&rev.to_le_bytes());
-    init_machine_id(&fallback);
 }

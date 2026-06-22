@@ -16,7 +16,8 @@
 
 use super::detect::find_zk_proof_offset;
 use super::types::{
-    ZkProofBlock, GROTH16_PROOF_SIZE, ZK_PROOF_HEADER_SIZE, ZK_PROOF_MAGIC, ZK_PROOF_VERSION,
+    ZkProofBlock, RUNTIME_BOOT_PUBLIC_INPUTS_LEN, STATIC_BOOT_PUBLIC_INPUTS_LEN,
+    TRANSPARENT_MIN_PROOF_SIZE, ZK_PROOF_HEADER_SIZE, ZK_PROOF_MAGIC, ZK_PROOF_VERSION,
 };
 
 pub fn parse_zk_proof(kernel_data: &[u8]) -> Result<(ZkProofBlock, usize), &'static str> {
@@ -59,11 +60,13 @@ pub fn parse_zk_proof(kernel_data: &[u8]) -> Result<(ZkProofBlock, usize), &'sta
     if public_inputs_len > 256 * 1024 {
         return Err("public inputs too large");
     }
-    if proof_blob_len != GROTH16_PROOF_SIZE {
-        return Err("invalid Groth16 proof size");
+    if proof_blob_len < TRANSPARENT_MIN_PROOF_SIZE {
+        return Err("transparent proof too small");
     }
-    if public_inputs_len % 32 != 0 {
-        return Err("public inputs not 32-byte aligned");
+    if public_inputs_len != STATIC_BOOT_PUBLIC_INPUTS_LEN
+        && public_inputs_len != RUNTIME_BOOT_PUBLIC_INPUTS_LEN
+    {
+        return Err("transparent public inputs size invalid");
     }
 
     let data_start = ZK_PROOF_HEADER_SIZE;
@@ -76,6 +79,17 @@ pub fn parse_zk_proof(kernel_data: &[u8]) -> Result<(ZkProofBlock, usize), &'sta
     let proof_blob = block
         [data_start + public_inputs_len..data_start + public_inputs_len + proof_blob_len]
         .to_vec();
+    if &public_inputs[0..32] != kernel_hash.as_slice() {
+        return Err("kernel hash public input mismatch");
+    }
+    if public_inputs_len == RUNTIME_BOOT_PUBLIC_INPUTS_LEN {
+        if &public_inputs[32..64] != boot_nonce.as_slice() {
+            return Err("boot nonce public input mismatch");
+        }
+        if &public_inputs[72..104] != machine_id.as_slice() {
+            return Err("machine id public input mismatch");
+        }
+    }
 
     Ok((
         ZkProofBlock {

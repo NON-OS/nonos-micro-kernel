@@ -76,4 +76,3 @@ pub const TRANSCRIPT_DOMAIN_BOOT: &str = "NONOS:BOOT:ATTESTATION:v1";
 
 /// Domain separator for circuit verification transcript
 pub const TRANSCRIPT_DOMAIN_CIRCUIT: &str = "NONOS:CIRCUIT:VERIFY:v1";
-

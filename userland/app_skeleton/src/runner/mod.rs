@@ -24,7 +24,6 @@ mod drain_ipc;
 mod ensure_primed;
 mod entry;
 mod fail;
-mod fail_boot;
 mod idle;
 mod maximize;
 mod move_window;

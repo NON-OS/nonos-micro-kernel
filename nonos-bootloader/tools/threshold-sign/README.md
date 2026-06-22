@@ -194,7 +194,6 @@ Standard Ed25519 format. Works with any Ed25519 verifier.
 
 The bootloader will verify FROST signatures on:
 - Kernel binaries (replacing current multi-sig)
-- VK bundles from zk-ceremony
 - Configuration updates
 
 A single `group_public_key` gets embedded in the bootloader. At runtime, it verifies that the signature was created by at least t of the n authorized parties - without needing to know who specifically signed.

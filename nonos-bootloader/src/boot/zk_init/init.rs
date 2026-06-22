@@ -42,7 +42,10 @@ fn verify_initialization() {
     }
 
     if !is_machine_id_initialized() {
-        crate::log::logger::log_warn("zk_init", "Machine ID fallback active");
+        crate::log::logger::log_critical("zk_init", "ZK machine ID not initialized - secure halt");
+        loop {
+            core::hint::spin_loop();
+        }
     }
 
     log_info("zk_init", "ZK replay protection READY");

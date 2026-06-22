@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,15 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::display::constants::{COLOR_ACCENT, COLOR_ACCENT_DIM};
-use crate::display::font::draw_string_4x;
+use crate::display::font::CHAR_WIDTH;
+use crate::display::fx::bloom_char;
 use crate::display::gop::{get_dimensions, is_initialized};
 
-const WORD: &[u8] = b"N\xd8NOS";
-const GLOW_OUTER: u32 = 0xFF0A3A30;
+const WORD: [u8; 5] = [b'N', 0xD8, b'N', b'O', b'S'];
+const TRACK: u32 = 10;
+const TITLE: u32 = 0xFFEAFDFA;
+const GLOW: u32 = 0xFF00F5D4;
+
+fn advance() -> u32 {
+    CHAR_WIDTH * 3 + TRACK
+}
 
 pub fn wordmark_width() -> u32 {
-    WORD.len() as u32 * 8 * 4
+    WORD.len() as u32 * advance() - TRACK
 }
 
 pub fn draw_wordmark(_x: u32, y: u32) {
@@ -30,20 +36,9 @@ pub fn draw_wordmark(_x: u32, y: u32) {
         return;
     }
     let (w, _) = get_dimensions();
-    let x = (w.saturating_sub(wordmark_width())) / 2;
-    for (dx, dy) in [(2i32, 0i32), (-2, 0), (0, 2), (0, -2)] {
-        draw_string_4x(offset(x, dx), offset(y, dy), WORD, GLOW_OUTER);
-    }
-    for (dx, dy) in [(1i32, 0i32), (-1, 0), (0, 1), (0, -1)] {
-        draw_string_4x(offset(x, dx), offset(y, dy), WORD, COLOR_ACCENT_DIM);
-    }
-    draw_string_4x(x, y, WORD, COLOR_ACCENT);
-}
-
-fn offset(v: u32, d: i32) -> u32 {
-    if d < 0 {
-        v.saturating_sub(d.unsigned_abs())
-    } else {
-        v + d as u32
+    let mut x = w.saturating_sub(wordmark_width()) / 2;
+    for &ch in WORD.iter() {
+        bloom_char(x, y, ch, 3, TITLE, GLOW);
+        x += advance();
     }
 }

@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::action::resolve_action;
-use nonos_boot::fwui;
+use nonos_boot::bootmenu;
 use nonos_boot::hardware::HardwareInfo;
 use nonos_boot::menu::SecurityMode;
 use nonos_boot::security::SecurityContext;
@@ -31,6 +31,6 @@ pub fn select_security_mode(
         let _ = st.stdout().output_string(uefi::cstr16!("[WARN] DEV MODE - SECURITY BYPASSED\r\n"));
         return Ok(SecurityMode::Development);
     }
-    let action = fwui::run(st, security, hw);
+    let action = bootmenu::run(st, security, hw);
     resolve_action(st, action)
 }

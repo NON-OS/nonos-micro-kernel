@@ -15,13 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::types::FieldElement;
+use crate::crypto::asymmetric::ed25519::sc_reduce_mod_l;
 use crate::crypto::rng::fill_random_bytes;
 
 impl FieldElement {
     pub fn from_bytes(bytes: &[u8; 32]) -> Self {
-        let mut fe = Self { bytes: *bytes };
-        fe.reduce();
-        fe
+        let mut wide = [0u8; 64];
+        wide[..32].copy_from_slice(bytes);
+        Self {
+            bytes: sc_reduce_mod_l(&mut wide),
+        }
     }
 
     // SECURITY: Constant-time Barrett reduction for 64-byte input.

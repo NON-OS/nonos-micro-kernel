@@ -48,14 +48,6 @@ heapless = { version = "0.8", default-features = false }
 spin = "0.9"
 goblin = { version = "0.7", default-features = false, features = ["elf32", "elf64", "alloc", "endian_fd"] }
 
-# ZK backend (arkworks Groth16); only compiled with `zk-groth16`
-# Note: arkworks 0.4 has alloc support via no default-features
-ark-std = { version = "0.4", default-features = false, optional = true }
-ark-ff = { version = "0.4", default-features = false, optional = true }
-ark-serialize = { version = "0.4", default-features = false, optional = true }
-ark-bls12-381 = { version = "0.4", default-features = false, features = ["curve"], optional = true }
-ark-groth16 = { version = "0.4", default-features = false, optional = true }
-
 # Optional: zeroize buffers after verification (defense-in-depth)
 zeroize = { version = "1.5", default-features = false, features = ["alloc"], optional = true }
 
@@ -69,7 +61,7 @@ ed25519-dalek = { version = "2.1.1", default-features = false, features = ["allo
 curve25519-dalek = { version = "4.1.3", default-features = false, features = ["alloc", "zeroize"] }
 
 [features]
-default = ["logging", "zk-groth16", "zk-vk-provisioned", "zk-zeroize"]
+default = ["logging", "zk-transparent", "zk-vk-provisioned", "zk-zeroize"]
 
 logging = []
 standard = []
@@ -83,18 +75,10 @@ efi-rng = []
 nonos-syscall-msr = []
 nonos-cet = []
 
-zk-groth16 = [
-  "ark-std",
-  "ark-ff",
-  "ark-serialize",
-  "ark-bls12-381",
-  "ark-groth16",
-]
-
 zk-vk-provisioned = []
 zk-bind-manifest = []
 zk-zeroize = ["zeroize"]
-zk-snark = ["zk-groth16"]
+zk-transparent = []
 
 [build-dependencies]
 cc = "1.0"

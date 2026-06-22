@@ -24,6 +24,7 @@ pub mod security;
 pub mod shell;
 pub mod uefi;
 pub mod util;
+pub mod zk_challenge;
 pub mod zk_init;
 
 pub use attestation::run_zk_attestation;

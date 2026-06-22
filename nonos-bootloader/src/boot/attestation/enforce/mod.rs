@@ -17,5 +17,6 @@
 mod binding;
 mod debug;
 mod failure;
+mod proof_binding;
 
 pub use binding::enforce_zk_binding;

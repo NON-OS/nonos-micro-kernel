@@ -20,7 +20,6 @@ mod error;
 mod handoff;
 mod init;
 pub mod layout;
-mod panel;
 mod progress;
 mod stage;
 mod status_line;
@@ -31,9 +30,7 @@ pub use crypto::{animate_hash_reveal, show_crypto_verification, BootCryptoState}
 pub use error::show_error_screen;
 pub use handoff::show_handoff_message;
 pub use init::{init_boot_screen, reset_animation, tick_animation};
-pub use panel::{draw_panel, panel_line};
 pub use progress::draw_boot_progress;
 pub use stage::{get_boot_progress_percent, update_stage, StageStatus};
 pub use status_line::draw_status_line;
-pub use vignette::draw_vignette;
 pub use wordmark::draw_wordmark;

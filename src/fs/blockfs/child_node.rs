@@ -16,7 +16,7 @@
 
 use super::BlockFsNode;
 
-pub fn child_node(generation: u64, mode: u16) -> BlockFsNode {
+pub(crate) fn child_node(generation: u64, mode: u16) -> BlockFsNode {
     BlockFsNode {
         generation,
         mode,

@@ -17,7 +17,7 @@
 use super::constants::FIRST_ALLOC_LBA;
 use super::BlockFsError;
 
-pub fn validate_geometry() -> Result<u64, BlockFsError> {
+pub(crate) fn validate_geometry() -> Result<u64, BlockFsError> {
     let geometry = crate::hardware::block_device::geometry().map_err(BlockFsError::BlockDevice)?;
     if geometry.sector_size != crate::fs::cryptoblock::SECTOR_BYTES as u32 {
         return Err(BlockFsError::InvalidGeometry);

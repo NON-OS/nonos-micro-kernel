@@ -39,7 +39,8 @@ The kernel-side spawn path is feature gated through `nonos-capsule-wallpaper`.
 ## Authority
 
 The capsule must declare only the graphics, IPC, and memory authority needed by
-the graphics contract.
+the graphics contract. The current manifest declares `CAPSULE_REQUIRED_CAPS =
+0x1819`.
 
 ## Privacy and persistence
 

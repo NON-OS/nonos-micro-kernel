@@ -14,12 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod circuit;
-mod generate;
-mod inputs;
-mod keys;
+mod boot_proof;
+mod boot_proof_runtime;
+mod boot_proof_static;
+mod challenge_file;
+mod commitments;
+mod ctx;
+mod ctx_static;
+mod explicit_challenge;
+mod hex32;
+mod public_inputs;
+mod public_inputs_static;
+mod root_file;
+mod scalar;
+mod types;
 
-pub use circuit::{create_circuit_params, CircuitParams};
-pub use generate::generate_proof;
-pub use inputs::extract_public_inputs;
-pub use keys::load_proving_key;
+pub use boot_proof::create_transparent_boot_proof;
+pub use types::TransparentBootProof;

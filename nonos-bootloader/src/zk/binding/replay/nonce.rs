@@ -28,8 +28,13 @@ pub fn init_boot_nonce(entropy: &[u8; 64]) {
     *guard = Some(nonce);
 }
 
-pub fn get_boot_nonce() -> [u8; 32] {
-    BOOT_NONCE.lock().unwrap_or([0u8; 32])
+pub fn init_boot_nonce_value(nonce: [u8; 32]) {
+    let mut guard = BOOT_NONCE.lock();
+    *guard = Some(nonce);
+}
+
+pub fn get_boot_nonce() -> Result<[u8; 32], &'static str> {
+    BOOT_NONCE.lock().ok_or("Boot nonce not initialized")
 }
 
 pub fn get_boot_nonce_checked() -> Option<[u8; 32]> {

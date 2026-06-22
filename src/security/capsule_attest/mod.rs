@@ -14,14 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod check_commitment;
-mod commitment;
 mod error;
-mod field;
-mod join_hi_lo;
 mod layout;
 mod policy_root;
-mod read_u32_le;
 mod trailer;
 mod verify;
 

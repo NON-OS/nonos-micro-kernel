@@ -23,7 +23,7 @@ pub use machine::{
     is_machine_id_initialized, verify_machine_id,
 };
 pub use nonce::{
-    get_boot_nonce, get_boot_nonce_checked, init_boot_nonce, is_nonce_initialized,
-    verify_nonce_freshness,
+    get_boot_nonce, get_boot_nonce_checked, init_boot_nonce, init_boot_nonce_value,
+    is_nonce_initialized, verify_nonce_freshness,
 };
 pub use public_inputs::{build_public_inputs, ZkPublicInputs};

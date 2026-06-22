@@ -48,20 +48,3 @@ pub(crate) fn sc_addmul_mod_l(r: &[u8; 32], k: &[u8; 32], a: &[u8; 32]) -> [u8; 
 
     sc_reduce_mod_l(&mut out64)
 }
-
-pub(crate) fn sc_mul(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
-    let mut wide = [0u64; 64];
-    for i in 0..32 {
-        for j in 0..32 {
-            wide[i + j] += (a[i] as u64) * (b[j] as u64);
-        }
-    }
-    let mut out64 = [0u8; 64];
-    let mut carry = 0u64;
-    for i in 0..64 {
-        let v = wide[i] + carry;
-        out64[i] = (v & 0xFF) as u8;
-        carry = v >> 8;
-    }
-    sc_reduce_mod_l(&mut out64)
-}

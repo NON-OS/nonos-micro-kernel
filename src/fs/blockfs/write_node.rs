@@ -17,7 +17,7 @@
 use super::serialize_node::serialize_node;
 use super::{BlockFsError, BlockFsNode};
 
-pub fn write_node(key: &[u8; 32], lba: u64, node: &BlockFsNode) -> Result<(), BlockFsError> {
+pub(crate) fn write_node(key: &[u8; 32], lba: u64, node: &BlockFsNode) -> Result<(), BlockFsError> {
     let payload = serialize_node(node);
     crate::fs::cryptoblock::write(key, lba, &payload).map_err(BlockFsError::CryptoBlock)
 }

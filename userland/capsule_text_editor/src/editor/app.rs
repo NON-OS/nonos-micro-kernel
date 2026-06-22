@@ -41,6 +41,6 @@ impl App for Editor {
     }
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&self.state, fb);
+        paint(&mut self.state, fb);
     }
 }

@@ -26,10 +26,6 @@ pub fn gt(a: u32, b: u32) -> bool {
     lt(b, a)
 }
 
-pub fn geq(a: u32, b: u32) -> bool {
-    leq(b, a)
-}
-
 pub fn between(x: u32, lo: u32, hi: u32) -> bool {
     leq(lo, x) && lt(x, hi)
 }

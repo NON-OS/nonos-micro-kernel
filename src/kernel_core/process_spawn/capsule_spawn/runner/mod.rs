@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod attest_gate;
 mod install;
-#[cfg(not(feature = "nonos-production"))]
+#[cfg(feature = "nonos-dev-unverified-capsules")]
 mod legacy;
 pub(crate) mod preflight;
 mod verified;
 
-#[cfg(not(feature = "nonos-production"))]
+#[cfg(feature = "nonos-dev-unverified-capsules")]
 pub use legacy::spawn;
 pub use verified::spawn_verified;

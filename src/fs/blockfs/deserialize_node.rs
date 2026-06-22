@@ -21,7 +21,7 @@ use super::read_u32::read_u32;
 use super::read_u64::read_u64;
 use super::{BlockFsError, BlockFsNode};
 
-pub fn deserialize_node(buf: &[u8]) -> Result<BlockFsNode, BlockFsError> {
+pub(crate) fn deserialize_node(buf: &[u8]) -> Result<BlockFsNode, BlockFsError> {
     if buf.len() < NODE_BYTES || buf[0..8] != NODE_MAGIC[..] || read_u64(buf, 8) != VERSION {
         return Err(BlockFsError::InvalidSuperblock);
     }

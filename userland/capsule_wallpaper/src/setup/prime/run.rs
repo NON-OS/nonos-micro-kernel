@@ -24,7 +24,7 @@ use crate::state::{Context, FadeTimeline, Policy};
 
 const DEFAULT_ARGB: u32 = 0xFF00_80FF;
 const EMBEDDED_WALLPAPER: &[u8] =
-    include_bytes!("../../../../../nonos-data/wallpapers/special-variant-12.jpg");
+    include_bytes!("../../../../../nonos-data/wallpapers/special-variant-6-1080p.jpg");
 
 pub fn run() -> Result<Context, &'static str> {
     let compositor_port = discover::lookup_compositor_port()?;

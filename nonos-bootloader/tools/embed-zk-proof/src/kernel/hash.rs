@@ -18,8 +18,10 @@ pub fn compute_kernel_hash(kernel_bytes: &[u8]) -> [u8; 32] {
     *blake3::hash(kernel_bytes).as_bytes()
 }
 
-pub fn compute_capsule_commitment(kernel_bytes: &[u8]) -> [u8; 32] {
+pub fn compute_capsule_commitment(kernel_hash: &[u8; 32], program_hash: &[u8; 32]) -> [u8; 32] {
     let mut hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    hasher.update(kernel_bytes);
+    hasher.update(kernel_hash);
+    hasher.update(program_hash);
+    hasher.update(&0u64.to_be_bytes());
     *hasher.finalize().as_bytes()
 }

@@ -16,6 +16,10 @@
 
 mod init;
 mod machine;
+#[cfg(not(feature = "production"))]
+mod machine_fallback_dev;
+#[cfg(feature = "production")]
+mod machine_fallback_production;
 mod nonce;
 
 pub use init::initialize_zk_replay_protection;

@@ -42,7 +42,7 @@ pub const fn store() -> Store {
         wifi_autoconnect: true,
         animations_enabled: true,
         cursor_size: 1,
-        wallpaper: 0,
+        wallpaper: 52,
         clock_format24: true,
         kernel_aslr: true,
         kernel_stack_guard: true,

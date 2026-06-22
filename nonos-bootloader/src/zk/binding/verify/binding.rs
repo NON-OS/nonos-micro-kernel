@@ -16,8 +16,10 @@
 
 use super::super::replay::{get_boot_nonce_checked, get_machine_id_checked, ZkPublicInputs};
 use super::error::BindingError;
+use crate::zk::verify::ct_eq32;
 
 const MAX_PROOF_AGE_SECONDS: u64 = 300;
+const MAX_FUTURE_SKEW_SECONDS: u64 = 30;
 
 pub fn verify_proof_binding(
     public_inputs: &ZkPublicInputs,
@@ -55,18 +57,13 @@ fn verify_machine_id(pi: &ZkPublicInputs) -> Result<(), BindingError> {
 }
 
 fn verify_timestamp(pi: &ZkPublicInputs, current: u64) -> Result<(), BindingError> {
+    let future = pi.timestamp.saturating_sub(current);
+    if future > MAX_FUTURE_SKEW_SECONDS {
+        return Err(BindingError::TimestampInFuture);
+    }
     let age = current.saturating_sub(pi.timestamp);
     if age > MAX_PROOF_AGE_SECONDS {
         return Err(BindingError::TimestampExpired);
     }
     Ok(())
-}
-
-#[inline]
-fn ct_eq32(a: &[u8; 32], b: &[u8; 32]) -> bool {
-    let mut x = 0u8;
-    for i in 0..32 {
-        x |= a[i] ^ b[i];
-    }
-    x == 0
 }

@@ -17,5 +17,5 @@
 mod invariants;
 mod product;
 
-pub use invariants::{Invariant, INVARIANTS};
+pub use invariants::INVARIANTS;
 pub use product::{PRODUCT_NAME, PRODUCT_TAGLINE, PRODUCT_VERSION};

@@ -25,7 +25,9 @@ pub const ZK_PROOF_VERSION: u32 = 2;
 
 pub const ZK_PROOF_HEADER_SIZE: usize = 176;
 
-pub const GROTH16_PROOF_SIZE: usize = 192;
+pub const TRANSPARENT_MIN_PROOF_SIZE: usize = 129;
+pub const STATIC_BOOT_PUBLIC_INPUTS_LEN: usize = 32;
+pub const RUNTIME_BOOT_PUBLIC_INPUTS_LEN: usize = 104;
 
 #[derive(Debug, Clone)]
 pub struct BootAttestationResult {
@@ -111,11 +113,17 @@ pub struct ZkProofBlock {
 
 impl ZkProofBlock {
     pub fn is_valid(&self) -> bool {
-        self.public_inputs.len() % 32 == 0 && self.proof_blob.len() == GROTH16_PROOF_SIZE
+        (self.public_inputs.len() == STATIC_BOOT_PUBLIC_INPUTS_LEN
+            || self.public_inputs.len() == RUNTIME_BOOT_PUBLIC_INPUTS_LEN)
+            && self.proof_blob.len() >= TRANSPARENT_MIN_PROOF_SIZE
     }
 
     pub fn kernel_hash_matches(&self, actual: &[u8; 32]) -> bool {
         ct_eq32(&self.kernel_hash, actual)
+    }
+
+    pub fn is_runtime(&self) -> bool {
+        self.public_inputs.len() == RUNTIME_BOOT_PUBLIC_INPUTS_LEN
     }
 }
 

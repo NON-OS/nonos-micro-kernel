@@ -27,9 +27,9 @@ use crate::security::nonos_trust_anchor::{
 };
 
 const SERVICE_NAME: &str = "app.nonos_wallet";
-const SERVICE_PORT: u32 = 4730;
+const SERVICE_PORT: u32 = 4734;
 const REPLY_INBOX: &str = "endpoint.app.nonos_wallet.reply";
-const REPLY_PORT: u32 = 4731;
+const REPLY_PORT: u32 = 4735;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
 
 pub fn spawn_wallet_nonos_capsule() -> Result<(), SpawnError> {

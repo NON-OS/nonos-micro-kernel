@@ -15,13 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod constants;
-mod keygen;
 mod point;
-mod scalar;
-mod sign;
-mod verify;
 
-pub use keygen::{generate_keypair, keypair_from_seed, PrivateKey, PublicKey};
 pub use point::EdwardsPoint;
-pub use sign::{sign, Signature};
-pub use verify::verify;

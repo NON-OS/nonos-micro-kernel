@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const E_INVAL: i32 = -22;
 pub const E_BAD_OP: i32 = -38;
-pub const E_NOTSUP: i32 = -95;
 pub const E_BAD_MAGIC: i32 = -71;
 pub const E_BAD_LEN: i32 = -90;
 pub const E_BAD_VERSION: i32 = -93;

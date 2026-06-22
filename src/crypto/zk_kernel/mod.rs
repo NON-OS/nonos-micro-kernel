@@ -18,8 +18,6 @@
 //!
 //! Provides:
 //! - Pedersen commitments
-//! - Schnorr proofs
-//! - Sigma protocols
 //! - Range proofs
 //! - Equality proofs
 //! - Merkle membership proofs
@@ -28,6 +26,7 @@
 
 extern crate alloc;
 
+mod attest;
 mod constants;
 mod equality;
 mod field;
@@ -35,16 +34,12 @@ mod membership;
 mod pedersen;
 mod plonk;
 mod range;
-mod schnorr;
-mod sigma;
 mod syscall;
 mod utils;
 mod verifier;
 
 // Re-export constants
-pub use constants::{
-    DOM_EQUALITY, DOM_MERKLE, DOM_PEDERSEN, DOM_PLONK, DOM_RANGE, DOM_SCHNORR, DOM_SIGMA, L,
-};
+pub use constants::{DOM_EQUALITY, DOM_MERKLE, DOM_PEDERSEN, DOM_PLONK, DOM_RANGE, L};
 
 // Re-export field element
 pub use field::FieldElement;
@@ -53,18 +48,16 @@ pub use field::FieldElement;
 pub use utils::{constant_time_eq, zeroize};
 
 // Re-export proof types
+pub use attest::{prove_enrolled, verify_enrolled, EnrolledSecretProof};
 pub use equality::EqualityProof;
 pub use membership::MembershipProof;
 pub use pedersen::PedersenCommitment;
 pub use plonk::{plonk_prove, plonk_verify, PlonkCircuit, PlonkEvaluations, PlonkProof};
-pub use schnorr::SchnorrProof;
-pub use sigma::{proof_types, SigmaProof};
 
 // Re-export verifier
 pub use verifier::{KernelZkVerifier, ProofSystem, ZkResult, KERNEL_ZK_VERIFIER};
 
 // Re-export syscall interface
 pub use syscall::{
-    syscall_zk_commit, syscall_zk_prove_plonk, syscall_zk_prove_range, syscall_zk_prove_schnorr,
-    syscall_zk_verify, ZkError,
+    syscall_zk_commit, syscall_zk_prove_plonk, syscall_zk_prove_range, syscall_zk_verify, ZkError,
 };

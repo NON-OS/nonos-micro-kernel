@@ -59,50 +59,7 @@ pub(crate) fn run(
     )?;
     let install_caps = verification.1;
 
-    #[cfg(feature = "zk-groth16")]
-    attest_gate(spec, install_caps)?;
+    super::attest_gate::attest_gate(spec, install_caps)?;
 
     Ok(Preflighted { install_caps })
-}
-
-// Per-capsule zero-knowledge attestation gate. After the signatures and manifest
-// have verified, a capsule that carries an attestation trailer must prove it.
-// During rollout the result is logged but not enforced; under nonos-zk-enforce a
-// failed or mismatched proof refuses the spawn before any mapping happens. A
-// capsule with no trailer yet is passed through to the existing checks.
-#[cfg(feature = "zk-groth16")]
-fn attest_gate(spec: &CapsuleSpecVerified, install_caps: u64) -> Result<(), SpawnError> {
-    use crate::security::capsule_attest::verify_capsule_attestation;
-
-    let trailer = spec.attestation_trailer;
-    if trailer.is_empty() {
-        crate::sys::serial::print(b"[ZK-ATTEST] none ");
-        crate::sys::serial::print(spec.name.as_bytes());
-        crate::sys::serial::print(b"\n");
-        #[cfg(feature = "nonos-zk-enforce")]
-        return Err(SpawnError::AttestationRejected);
-        #[cfg(not(feature = "nonos-zk-enforce"))]
-        return Ok(());
-    }
-    match verify_capsule_attestation(trailer, spec.elf, install_caps) {
-        Ok(()) => {
-            crate::sys::serial::print(b"[ZK-ATTEST] ok ");
-            crate::sys::serial::print(spec.name.as_bytes());
-            crate::sys::serial::print(b"\n");
-            Ok(())
-        }
-        Err(e) => {
-            crate::sys::serial::print(b"[ZK-ATTEST] FAIL ");
-            crate::sys::serial::print(spec.name.as_bytes());
-            crate::sys::serial::print(b": ");
-            crate::sys::serial::print(e.as_str().as_bytes());
-            crate::sys::serial::print(b"\n");
-            #[cfg(feature = "nonos-zk-enforce")]
-            {
-                return Err(SpawnError::AttestationRejected);
-            }
-            #[cfg(not(feature = "nonos-zk-enforce"))]
-            Ok(())
-        }
-    }
 }

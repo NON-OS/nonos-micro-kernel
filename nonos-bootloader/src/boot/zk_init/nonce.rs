@@ -16,11 +16,17 @@
 
 use uefi::prelude::*;
 
+use crate::boot::zk_challenge::read_pending_nonce;
 use crate::entropy::collect_boot_entropy_64;
 use crate::log::logger::{log_error, log_info};
-use crate::zk::init_boot_nonce;
+use crate::zk::{init_boot_nonce, init_boot_nonce_value};
 
 pub fn init_zk_nonce(st: &SystemTable<Boot>) -> Result<(), &'static str> {
+    if let Some(nonce) = read_pending_nonce(st) {
+        init_boot_nonce_value(nonce);
+        log_info("zk_init", "Boot nonce restored from pending ZK challenge");
+        return Ok(());
+    }
     let entropy = collect_boot_entropy_64(st)?;
     init_boot_nonce(&entropy);
     log_info("zk_init", "Boot nonce initialized from hardware entropy");

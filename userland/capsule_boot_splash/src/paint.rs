@@ -52,7 +52,7 @@ fn attest_panel(buf: &mut [u32], spx: usize, w: u32, h: u32, attested: Option<bo
     panel(buf, spx, w, h, px, py, pw, 112, b"boot-chain attestation");
     draw_text(buf, spx, w, h, px + 14, py + 32, b"[+] bootloader  ed25519 verified", OK);
     draw_text(buf, spx, w, h, px + 14, py + 52, b"[+] kernel      blake3 verified", OK);
-    draw_text(buf, spx, w, h, px + 14, py + 72, b"[#] capsules    groth16 attested", ACCENT);
+    draw_text(buf, spx, w, h, px + 14, py + 72, b"[#] capsules    zk attested", ACCENT);
     let (t, c): (&[u8], u32) = match attested {
         Some(true) => (b"ATTESTED", OK),
         Some(false) => (b"UNVERIFIED", WARN),

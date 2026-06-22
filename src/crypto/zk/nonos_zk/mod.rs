@@ -49,16 +49,3 @@ pub mod halo2_range {
     }
 }
 
-#[cfg(feature = "zk-groth16")]
-pub mod groth16_range {
-    use crate::crypto::zk::groth16::{groth16_verify_bn254, Groth16Error};
-
-    pub fn verify(
-        vk_bytes: &[u8],
-        proof_bytes: &[u8],
-        public_inputs_fr_le32: &[[u8; 32]],
-    ) -> Result<(), Groth16Error> {
-        groth16_verify_bn254(vk_bytes, proof_bytes, public_inputs_fr_le32)
-    }
-}
-

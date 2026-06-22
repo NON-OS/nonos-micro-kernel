@@ -25,7 +25,6 @@ pub struct ZkProof {
     pub capsule_commitment: [u8; 32],
     pub public_inputs: Vec<u8>,
     pub proof_blob: Vec<u8>,
-    /// Serialized proof blob (192 bytes for Groth16)
     pub manifest: Option<Vec<u8>>,
 }
 

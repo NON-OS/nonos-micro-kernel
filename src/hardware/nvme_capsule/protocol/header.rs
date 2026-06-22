@@ -24,6 +24,5 @@ pub(in super::super) const SMART_HEALTH_PAYLOAD_LEN: usize = 177;
 pub(in super::super) const SECTOR_SIZE: usize = 512;
 pub(in super::super) const MAX_SECTORS: u32 = 64;
 pub(in super::super) const MAX_RW_PAYLOAD_BYTES: u32 = MAX_SECTORS * SECTOR_SIZE as u32;
-pub(in super::super) const CAPACITY_PAYLOAD_LEN: usize = 8;
 const _: () = assert!(MAX_RW_PAYLOAD_BYTES as usize > SMART_HEALTH_PAYLOAD_LEN);
 pub(in super::super) const MAX_PAYLOAD_BYTES: u32 = MAX_RW_PAYLOAD_BYTES;

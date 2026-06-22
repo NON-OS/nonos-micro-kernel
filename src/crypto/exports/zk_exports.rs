@@ -16,10 +16,6 @@
 
 pub use super::super::zk::nonos_zk;
 
-#[cfg(feature = "zk-groth16")]
-pub use super::super::zk::groth16::{
-    groth16_verify_bls12_381, groth16_verify_bn254, Groth16Error, Groth16Verifier,
-};
 #[cfg(feature = "zk-halo2")]
 pub use super::super::zk::halo2::{halo2_verify, Halo2Error, Halo2Verifier};
 
@@ -28,11 +24,10 @@ pub use super::super::zk::nonos_zk::{
     verify_commitment, verify_credential, zeroize_array, zeroize_mut, AttestationProof, Credential,
 };
 pub use super::super::zk_kernel::{
-    plonk_prove, plonk_verify, syscall_zk_commit, syscall_zk_prove_plonk, syscall_zk_prove_schnorr,
-    syscall_zk_verify, zeroize as zk_zeroize,
+    plonk_prove, plonk_verify, syscall_zk_commit, syscall_zk_prove_plonk, syscall_zk_verify,
+    zeroize as zk_zeroize,
 };
 pub use super::super::zk_kernel::{
     EqualityProof, FieldElement, KernelZkVerifier, MembershipProof, PedersenCommitment,
-    PlonkCircuit, PlonkEvaluations, PlonkProof, ProofSystem, SchnorrProof, SigmaProof, ZkError,
-    ZkResult, KERNEL_ZK_VERIFIER,
+    PlonkCircuit, PlonkEvaluations, PlonkProof, ProofSystem, ZkError, ZkResult, KERNEL_ZK_VERIFIER,
 };

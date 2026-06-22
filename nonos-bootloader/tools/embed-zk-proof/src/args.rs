@@ -21,7 +21,7 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(
     name = "embed-zk-proof",
-    about = "Generate and embed Groth16 ZK attestation into signed NONOS kernel"
+    about = "Generate and embed transparent ZK attestation into signed NONOS kernel"
 )]
 pub struct Args {
     #[arg(short, long, value_name = "FILE")]
@@ -30,12 +30,39 @@ pub struct Args {
     #[arg(short, long, value_name = "FILE")]
     pub output: PathBuf,
 
-    #[arg(short = 'k', long, value_name = "FILE")]
-    pub proving_key: PathBuf,
+    #[arg(long, value_name = "FILE")]
+    pub root: PathBuf,
 
-    #[arg(long, default_value = "nonos-production-attestation")]
-    pub seed: String,
+    #[arg(long)]
+    pub secret_x: String,
+
+    #[arg(long)]
+    pub secret_r: String,
+
+    #[arg(long, value_name = "FILE")]
+    pub commitments: PathBuf,
+
+    #[arg(long)]
+    pub index: usize,
+
+    #[arg(long)]
+    pub boot_nonce: Option<String>,
+
+    #[arg(long)]
+    pub machine_id: Option<String>,
+
+    #[arg(long)]
+    pub timestamp: Option<u64>,
+
+    #[arg(long, value_name = "FILE")]
+    pub challenge: Option<PathBuf>,
+
+    #[arg(long)]
+    pub nonce_seed: String,
 
     #[arg(short, long, action = clap::ArgAction::SetTrue)]
     pub verbose: bool,
+
+    #[arg(long, action = clap::ArgAction::SetTrue)]
+    pub sidecar: bool,
 }

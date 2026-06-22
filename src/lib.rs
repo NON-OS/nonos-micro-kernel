@@ -36,6 +36,12 @@ compile_error!(
      production builds must not enable the unverified capsule spawn path."
 );
 
+#[cfg(all(feature = "nonos-production", feature = "nonos-zk-rollout"))]
+compile_error!(
+    "nonos-production and nonos-zk-rollout are mutually exclusive: production \
+     builds must enforce attestation, not log-and-continue on a failed proof."
+);
+
 #[macro_use]
 extern crate alloc;
 

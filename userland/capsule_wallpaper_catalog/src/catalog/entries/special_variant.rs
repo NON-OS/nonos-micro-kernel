@@ -24,7 +24,7 @@ pub(super) const SPECIAL_VARIANT: &[Entry] = &[
     Entry { slug: b"special-variant-3", bytes: include_bytes!("../../../../../nonos-data/wallpapers/special-variant-3.jpg") },
     Entry { slug: b"special-variant-4", bytes: include_bytes!("../../../../../nonos-data/wallpapers/special-variant-4.jpg") },
     Entry { slug: b"special-variant-5", bytes: include_bytes!("../../../../../nonos-data/wallpapers/special-variant-5.jpg") },
-    Entry { slug: b"special-variant-6", bytes: include_bytes!("../../../../../nonos-data/wallpapers/special-variant-6.jpg") },
+    Entry { slug: b"special-variant-6", bytes: include_bytes!("../../../../../nonos-data/wallpapers/special-variant-6-1080p.jpg") },
     Entry { slug: b"special-variant-7", bytes: include_bytes!("../../../../../nonos-data/wallpapers/special-variant-7.jpg") },
     Entry { slug: b"special-variant-8", bytes: include_bytes!("../../../../../nonos-data/wallpapers/special-variant-8.jpg") },
     Entry { slug: b"special-variant-9", bytes: include_bytes!("../../../../../nonos-data/wallpapers/special-variant-9.jpg") },

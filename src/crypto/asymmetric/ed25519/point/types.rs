@@ -45,12 +45,6 @@ impl GeCached {
     }
 }
 
-impl GeP2 {
-    pub(crate) fn identity() -> Self {
-        Self { X: Fe::zero(), Y: Fe::one(), Z: Fe::one() }
-    }
-}
-
 impl GeP3 {
     pub(crate) fn identity() -> Self {
         Self { X: Fe::zero(), Y: Fe::one(), Z: Fe::one(), T: Fe::zero() }
@@ -67,16 +61,6 @@ pub(crate) struct GeP1P1 {
     pub(crate) Y: Fe,
     pub(crate) Z: Fe,
     pub(crate) T: Fe,
-}
-
-impl GeP1P1 {
-    pub(crate) fn identity() -> Self {
-        Self { X: Fe::zero(), Y: Fe::one(), Z: Fe::one(), T: Fe::one() }
-    }
-
-    pub(crate) fn from_p2(p: &GeP2) -> Self {
-        Self { X: p.X, Y: p.Y, Z: p.Z, T: Fe::one() }
-    }
 }
 
 pub(crate) const D: Fe = Fe([
