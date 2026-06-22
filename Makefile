@@ -120,6 +120,43 @@ ZK_CAPSULE_NONCE_SEED ?=
 ZK_CAPSULE_EPOCH ?= 1
 EMBED_TOOL       := $(BOOTLOADER_DIR)/tools/embed-zk-proof/target/$(HOST_TARGET)/release/embed-zk-proof
 
+# Developer evaluation bootstrap (NOT production custody).
+#
+# A clean checkout has no enrolled device identity: device_secrets.txt and
+# device_root.bin are gitignored on purpose, because attestation proves
+# knowledge of that secret and shipping it would let anyone forge proofs.
+# Set NONOS_DEV=1 (or use the nonos-mk-dev-* targets) to mint a clearly
+# marked throwaway identity from a fixed public seed so the image boots out
+# of the box. Production deployers leave NONOS_DEV unset and pass their own
+# enrolled secrets; with it unset none of the assignments below apply and the
+# build stays fail-closed.
+ifeq ($(NONOS_DEV),1)
+ifeq ($(strip $(ZK_BOOT_ENROLL_SEED)),)
+ZK_BOOT_ENROLL_SEED := nonos-public-dev-enroll-seed-not-for-production
+endif
+ifeq ($(strip $(ZK_CAPSULE_ENROLL_SEED)),)
+ZK_CAPSULE_ENROLL_SEED := nonos-public-dev-capsule-enroll-not-for-production
+endif
+ifeq ($(strip $(ZK_CAPSULE_NONCE_SEED)),)
+ZK_CAPSULE_NONCE_SEED := nonos-public-dev-capsule-nonce-not-for-production
+endif
+ifeq ($(strip $(ZK_BOOT_NONCE_SEED)),)
+ZK_BOOT_NONCE_SEED := deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef
+endif
+ifeq ($(strip $(ZK_BOOT_INDEX)),)
+ZK_BOOT_INDEX := 0
+endif
+# Read the boot secret back from the enrolled identity file so it always
+# matches the generated root, whatever seed produced it. Lazy (=) so it
+# resolves after the enroll rule has written the file.
+ifeq ($(strip $(ZK_BOOT_SECRET_X)),)
+ZK_BOOT_SECRET_X = $(shell awk 'NR==1{print $$2}' $(ZK_BOOT_SECRETS) 2>/dev/null)
+endif
+ifeq ($(strip $(ZK_BOOT_SECRET_R)),)
+ZK_BOOT_SECRET_R = $(shell awk 'NR==1{print $$3}' $(ZK_BOOT_SECRETS) 2>/dev/null)
+endif
+endif
+
 # Header and status line, shown once per invocation. Fields are read from
 # the working tree at parse time.
 NONOS_BRANCH    := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo detached)
@@ -232,6 +269,7 @@ nonos-mk: nonos-mk-capsules
 	@echo "Built microkernel-capsules ($(VERSION))."
 	@echo "  make nonos-mk-esp           package the ESP for QEMU"
 	@echo "  make nonos-mk-run           boot under QEMU + OVMF"
+	@echo "  make nonos-mk-dev-run       clean-clone: mint a dev identity then boot"
 	@echo "  make nonos-mk-verify        static gates + symbol scan"
 	@echo "  make nonos-mk-test          verify + both boot harnesses"
 
@@ -1224,6 +1262,19 @@ $(QEMU_OVMF_VARS_RW): $(OVMF_VARS)
 	@mkdir -p $(dir $@)
 	@[ -n "$(OVMF_VARS)" ] || { echo "::error::OVMF_VARS not found"; exit 1; }
 	@cp "$(OVMF_VARS)" "$@"
+
+# Mint a throwaway developer identity so a clean checkout can attest and boot.
+# Public seed, no custody: never use the resulting image for production.
+nonos-mk-dev-enroll:
+	@test "$(NONOS_DEV)" = 1 || { echo "use: make NONOS_DEV=1 nonos-mk-dev-enroll"; exit 1; }
+	@printf "\n  *** NONOS dev identity: public seed, no custody, not for production ***\n\n"
+	@$(MAKE) --no-print-directory NONOS_DEV=1 $(ZK_BOOT_ROOT) $(ZK_BOOT_COMMITMENTS) $(ZK_BOOT_SECRETS)
+	@printf "  dev boot identity ready: root %s\n\n" "$$(shasum -a 256 $(ZK_BOOT_ROOT) | cut -c1-16)"
+
+# One command for a clean checkout: enroll a dev identity, then build and boot.
+nonos-mk-dev-run:
+	@$(MAKE) --no-print-directory NONOS_DEV=1 nonos-mk-dev-enroll
+	@$(MAKE) --no-print-directory NONOS_DEV=1 nonos-mk-run
 
 nonos-mk-run: nonos-mk-live-production-proof nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS in QEMU..."
