@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,23 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod chips;
-mod crypto;
-mod error;
-mod handoff;
-mod init;
-pub mod layout;
-mod progress;
-mod stage;
-mod status_line;
-mod vignette;
-mod wordmark;
+use crate::menu::{MenuAction, SecurityMode};
 
-pub use crypto::{animate_hash_reveal, show_crypto_verification, BootCryptoState};
-pub use error::show_error_screen;
-pub use handoff::show_handoff_message;
-pub use init::{init_boot_screen, reset_animation, tick_animation};
-pub use progress::draw_boot_progress;
-pub use stage::{get_boot_progress_percent, update_stage, StageStatus};
-pub use status_line::draw_status_line;
-pub use wordmark::draw_wordmark;
+// Hardened is index 0 so it is both the highlighted default and the
+// timeout selection. Development is intentionally absent: an unsigned,
+// unattested boot is only reachable through the explicit dev override,
+// never from this menu.
+pub(super) const ENTRIES: [MenuAction; 6] = [
+    MenuAction::Boot(SecurityMode::Hardened),
+    MenuAction::Boot(SecurityMode::Standard),
+    MenuAction::SafeMode,
+    MenuAction::NetworkIsolated,
+    MenuAction::Recovery,
+    MenuAction::Shutdown,
+];

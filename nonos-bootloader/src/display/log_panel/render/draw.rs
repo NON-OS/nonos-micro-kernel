@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -15,12 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::clear::clear_line;
-use crate::display::constants::{COLOR_ACCENT, COLOR_ERROR, COLOR_SUCCESS, COLOR_WARNING};
 use crate::display::font::draw_string;
+use crate::display::fx::blend_rect;
+use crate::display::gop::fill_rect;
 use crate::display::log_panel::buffer::get_entry;
 use crate::display::log_panel::types::{get_log_area, line_clear_width, LogLevel, LINE_HEIGHT};
 
-const COLOR_INFO: u32 = 0xFF6B7280;
+const CYAN: u32 = 0xFF00F5D4;
+const TEXT_DONE: u32 = 0xFFBED6D4;
+const DIM: u32 = 0xFF4F666A;
+const AMBER: u32 = 0xFFE8A33D;
+const RED: u32 = 0xFFE0554A;
 
 pub fn draw_entry_at(line_num: usize, entry_idx: usize) {
     let (log_x, log_y) = get_log_area();
@@ -30,15 +35,20 @@ pub fn draw_entry_at(line_num: usize, entry_idx: usize) {
         if entry.len == 0 {
             return;
         }
-        let (prefix, color) = match entry.level {
-            LogLevel::Info => (b"    " as &[u8], COLOR_INFO),
-            LogLevel::Ok => (b"[+] " as &[u8], COLOR_SUCCESS),
-            LogLevel::Warn => (b"[!] " as &[u8], COLOR_WARNING),
-            LogLevel::Error => (b"[X] " as &[u8], COLOR_ERROR),
-            LogLevel::Security => (b"[S] " as &[u8], COLOR_ACCENT),
+        let (mark, text, led) = match entry.level {
+            LogLevel::Ok => (CYAN, TEXT_DONE, true),
+            LogLevel::Info => (DIM, DIM, false),
+            LogLevel::Warn => (AMBER, AMBER, true),
+            LogLevel::Error => (RED, RED, true),
+            LogLevel::Security => (CYAN, CYAN, true),
         };
+        if led {
+            blend_rect(log_x.saturating_sub(1), y + 3, 11, 11, mark, 22);
+            fill_rect(log_x + 1, y + 5, 7, 7, mark);
+        } else {
+            fill_rect(log_x + 3, y + 7, 3, 3, mark);
+        }
         let max_chars = (line_clear_width().saturating_sub(40) / 8) as usize;
-        draw_string(log_x, y, prefix, color);
-        draw_string(log_x + 32, y, &entry.text[..entry.len.min(max_chars)], color);
+        draw_string(log_x + 24, y, &entry.text[..entry.len.min(max_chars)], text);
     }
 }

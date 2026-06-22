@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,23 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod chips;
-mod crypto;
-mod error;
-mod handoff;
-mod init;
-pub mod layout;
-mod progress;
-mod stage;
-mod status_line;
-mod vignette;
-mod wordmark;
+use super::fmt::status_line;
+use super::theme::STATUS;
+use crate::display::font::{draw_string, CHAR_WIDTH};
 
-pub use crypto::{animate_hash_reveal, show_crypto_verification, BootCryptoState};
-pub use error::show_error_screen;
-pub use handoff::show_handoff_message;
-pub use init::{init_boot_screen, reset_animation, tick_animation};
-pub use progress::draw_boot_progress;
-pub use stage::{get_boot_progress_percent, update_stage, StageStatus};
-pub use status_line::draw_status_line;
-pub use wordmark::draw_wordmark;
+pub(super) fn draw_footer(w: u32, y: u32, remaining_s: u32) {
+    let mut buf = [0u8; 64];
+    let msg = status_line(&mut buf, remaining_s);
+    let mw = msg.len() as u32 * CHAR_WIDTH;
+    draw_string(w.saturating_sub(mw) / 2, y, msg, STATUS);
+}

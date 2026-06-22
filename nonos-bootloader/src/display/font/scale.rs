@@ -18,6 +18,26 @@ use super::bitmap::get_char_bitmap;
 use super::CHAR_WIDTH;
 use crate::display::gop::fill_rect;
 
+pub fn draw_char_3x(x: u32, y: u32, ch: u8, c: u32) {
+    for (row, &b) in get_char_bitmap(ch).iter().enumerate() {
+        for col in 0..8u32 {
+            if (b >> (7 - col)) & 1 == 1 {
+                fill_rect(x + col * 3, y + (row as u32) * 3, 3, 3, c);
+            }
+        }
+    }
+}
+
+pub fn draw_string_3x(x: u32, y: u32, s: &[u8], c: u32) {
+    let mut cx = x;
+    for &ch in s {
+        if ch != b'\n' {
+            draw_char_3x(cx, y, ch, c);
+            cx += CHAR_WIDTH * 3;
+        }
+    }
+}
+
 pub fn draw_char_4x(x: u32, y: u32, ch: u8, c: u32) {
     for (row, &b) in get_char_bitmap(ch).iter().enumerate() {
         for col in 0..8u32 {

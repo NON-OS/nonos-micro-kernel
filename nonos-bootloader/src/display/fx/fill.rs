@@ -14,31 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::display::font::CHAR_WIDTH;
-use crate::display::fx::bloom_char;
-use crate::display::gop::{get_dimensions, is_initialized};
+use super::bg::bg_at;
+use crate::display::gop::{get_dimensions, put_pixel};
 
-const WORD: [u8; 5] = [b'N', 0xD8, b'N', b'O', b'S'];
-const TRACK: u32 = 10;
-const TITLE: u32 = 0xFFEAFDFA;
-const GLOW: u32 = 0xFF00F5D4;
-
-fn advance() -> u32 {
-    CHAR_WIDTH * 3 + TRACK
-}
-
-pub fn wordmark_width() -> u32 {
-    WORD.len() as u32 * advance() - TRACK
-}
-
-pub fn draw_wordmark(_x: u32, y: u32) {
-    if !is_initialized() {
-        return;
+pub fn fill_atmosphere() {
+    let (w, h) = get_dimensions();
+    for y in 0..h {
+        for x in 0..w {
+            put_pixel(x, y, bg_at(x, y, w, h));
+        }
     }
-    let (w, _) = get_dimensions();
-    let mut x = w.saturating_sub(wordmark_width()) / 2;
-    for &ch in WORD.iter() {
-        bloom_char(x, y, ch, 3, TITLE, GLOW);
-        x += advance();
+}
+
+// Repaint just a rectangle of the atmosphere, so log lines clear back to the
+// background instead of a solid box.
+pub fn clear_region(x: u32, y: u32, rw: u32, rh: u32) {
+    let (w, h) = get_dimensions();
+    for dy in 0..rh {
+        let py = y + dy;
+        if py >= h {
+            break;
+        }
+        for dx in 0..rw {
+            let px = x + dx;
+            if px >= w {
+                break;
+            }
+            put_pixel(px, py, bg_at(px, py, w, h));
+        }
     }
 }

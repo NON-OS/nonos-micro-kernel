@@ -14,31 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::display::font::CHAR_WIDTH;
-use crate::display::fx::bloom_char;
-use crate::display::gop::{get_dimensions, is_initialized};
+use super::footer::draw_footer;
+use super::header::draw_header;
+use super::list::draw_list;
+use crate::display::fx::fill_atmosphere;
+use crate::display::gop::get_dimensions;
+use crate::security::SecurityContext;
 
-const WORD: [u8; 5] = [b'N', 0xD8, b'N', b'O', b'S'];
-const TRACK: u32 = 10;
-const TITLE: u32 = 0xFFEAFDFA;
-const GLOW: u32 = 0xFF00F5D4;
+pub(super) fn render(sel: usize, remaining_s: u32, _sec: &SecurityContext) {
+    let (w, h) = get_dimensions();
+    fill_atmosphere();
 
-fn advance() -> u32 {
-    CHAR_WIDTH * 3 + TRACK
-}
+    // Vertically center the title + list + status as one block.
+    let title_y = h.saturating_sub(360) / 2 + 24;
+    let list_top = title_y + 116;
+    let status_y = list_top + 6 * 50 + 30;
 
-pub fn wordmark_width() -> u32 {
-    WORD.len() as u32 * advance() - TRACK
-}
-
-pub fn draw_wordmark(_x: u32, y: u32) {
-    if !is_initialized() {
-        return;
-    }
-    let (w, _) = get_dimensions();
-    let mut x = w.saturating_sub(wordmark_width()) / 2;
-    for &ch in WORD.iter() {
-        bloom_char(x, y, ch, 3, TITLE, GLOW);
-        x += advance();
-    }
+    draw_header(w, title_y);
+    draw_list(w, list_top, sel);
+    draw_footer(w, status_y, remaining_s);
 }

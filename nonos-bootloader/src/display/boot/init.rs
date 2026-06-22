@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -15,24 +15,31 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::layout::splash;
-use super::panel::draw_panel;
-use crate::display::constants::COLOR_TEXT_DIM;
-use crate::display::font::draw_string;
+use crate::display::font::{draw_char, CHAR_WIDTH};
+use crate::display::fx::fill_atmosphere;
 use crate::display::gop::{get_dimensions, is_initialized};
 
-const SUBTITLE: &[u8] = b"secure attestation boot";
+const SUBTITLE: &[u8] = b"VERIFIED BOOT";
+const SUB_TRACK: u32 = 6;
+const SUB_COLOR: u32 = 0xFF46AEB6;
 
 pub fn init_boot_screen() {
     if !is_initialized() {
         return;
     }
-    super::vignette::draw_vignette();
+    fill_atmosphere();
     let lay = splash();
     super::wordmark::draw_wordmark(0, lay.wordmark_y);
+
     let (w, _) = get_dimensions();
-    let sx = (w.saturating_sub(SUBTITLE.len() as u32 * 8)) / 2;
-    draw_string(sx, lay.subtitle_y, SUBTITLE, COLOR_TEXT_DIM);
-    draw_panel(lay.panel_x, lay.panel_y, lay.panel_w, lay.panel_h, b"verified boot");
+    let adv = CHAR_WIDTH + SUB_TRACK;
+    let sw = SUBTITLE.len() as u32 * adv - SUB_TRACK;
+    let mut sx = w.saturating_sub(sw) / 2;
+    for &ch in SUBTITLE {
+        draw_char(sx, lay.subtitle_y, ch, SUB_COLOR);
+        sx += adv;
+    }
+
     crate::display::log_panel::redraw_all();
 }
 

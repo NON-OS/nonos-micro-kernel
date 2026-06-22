@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,23 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod chips;
-mod crypto;
-mod error;
-mod handoff;
-mod init;
-pub mod layout;
-mod progress;
-mod stage;
-mod status_line;
-mod vignette;
-mod wordmark;
-
-pub use crypto::{animate_hash_reveal, show_crypto_verification, BootCryptoState};
-pub use error::show_error_screen;
-pub use handoff::show_handoff_message;
-pub use init::{init_boot_screen, reset_animation, tick_animation};
-pub use progress::draw_boot_progress;
-pub use stage::{get_boot_progress_percent, update_stage, StageStatus};
-pub use status_line::draw_status_line;
-pub use wordmark::draw_wordmark;
+pub(super) const TITLE: u32 = 0xFFEAFDFA;
+pub(super) const CYAN: u32 = 0xFF00F5D4;
+pub(super) const CYAN_HOT: u32 = 0xFF9BFFF1;
+pub(super) const DIM: u32 = 0xFF4F666A;
+pub(super) const STATUS: u32 = 0xFF46AEB6;
