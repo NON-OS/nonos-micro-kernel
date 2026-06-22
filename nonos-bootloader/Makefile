@@ -45,7 +45,6 @@ TOOL_KEYGEN := $(TOOLS_DIR)/keygen
 TOOL_SIGN := $(TOOLS_DIR)/sign-kernel
 TOOL_THRESHOLD := $(TOOLS_DIR)/threshold-sign
 TOOL_EMBED_ZK := $(TOOLS_DIR)/embed-zk-proof
-TOOL_ZK_EMBED := $(TOOLS_DIR)/zk-embed
 TOOL_CIRCUIT := $(TOOLS_DIR)/nonos-attestation-circuit
 
 # Default target
@@ -101,7 +100,7 @@ production prod: check-deps
 
 # Build all signing and ZK tools
 .PHONY: tools
-tools: tools-keygen tools-sign tools-threshold tools-embed-zk tools-zk-embed tools-circuit
+tools: tools-keygen tools-sign tools-threshold tools-embed-zk tools-circuit
 	@echo -e "$(GREEN)✓ All tools built$(NC)"
 
 .PHONY: tools-keygen
@@ -127,12 +126,6 @@ tools-embed-zk:
 	@echo -e "$(BLUE)Building embed-zk-proof tool...$(NC)"
 	cd $(TOOL_EMBED_ZK) && $(CARGO) build --release
 	@echo -e "$(GREEN)✓ embed-zk-proof built$(NC)"
-
-.PHONY: tools-zk-embed
-tools-zk-embed:
-	@echo -e "$(BLUE)Building zk-embed tool...$(NC)"
-	cd $(TOOL_ZK_EMBED) && $(CARGO) build --release
-	@echo -e "$(GREEN)✓ zk-embed built$(NC)"
 
 .PHONY: tools-circuit
 tools-circuit:
@@ -350,7 +343,6 @@ help:
 	@echo "  make tools-sign      - Build kernel signing tool"
 	@echo "  make tools-threshold - Build threshold signing tool (FROST)"
 	@echo "  make tools-embed-zk  - Build ZK proof embedding tool"
-	@echo "  make tools-zk-embed  - Build ZK embed tool"
 	@echo "  make tools-circuit   - Build attestation circuit"
 	@echo ""
 	@echo "Quality assurance:"
