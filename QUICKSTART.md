@@ -14,8 +14,7 @@ will install it, or you can add it directly with
 `rustup component add rust-src --toolchain nightly-2026-01-16`.
 
 Clone with submodules; the trust keystore and the build includes come
-along, including the canonical ceremony keys your proofs verify
-against (verifying key fingerprint 6cd2015037ea6181):
+along with the tree:
 
 ```sh
 git clone --recursive https://github.com/NON-OS/nonos-micro-kernel.git
@@ -118,8 +117,9 @@ make nonos-mk-hello-sign     # manifest + NONOS-ID cert + ZK proof
 ```
 
 The sign target emits the signed manifest, mints your capsule's
-NONOS-ID certificate, and generates the Groth16 attestation proof that
-binds the capsule hash, capability mask and policy root. What lands
+NONOS-ID certificate, and generates the transparent enrolled-secret
+attestation proof that binds the capsule hash, capability mask, epoch
+and policy root. What lands
 where:
 
 ```
@@ -130,20 +130,20 @@ where:
   .keys/hello_*.seed --+--- sign ---> hello.nonos_id_cert.bin
    (yours, private)    |              hello.zk_trailer.bin
                        |
-  ceremony keys -------+              target/capsule-attest/
-   (canonical, public)                hello.capsule.zk  <- ELF + proof,
-                                      what the kernel actually loads
+  enrollment seed -----+              target/capsule-attest/
+   (private)                          generated proof inputs
 ```
 
 Verify it yourself the way the kernel will:
 
 ```sh
-make nonos-mk-attestation-receipt
+make nonos-mk-capsules
 ```
 
-Your capsule appears in the receipt with a live pairing-check verdict.
-If the proof does not verify, nothing downstream will accept the
-capsule; there is no bypass to forget.
+The capsule kernel profile embeds the proof trailer and compiles only
+when every referenced trust artifact is present. If the proof does not
+verify at spawn time, the runtime gate refuses the capsule; there is no
+bypass to forget.
 
 ## 5. Let the kernel spawn it
 
@@ -175,7 +175,7 @@ need QEMU host forwarding.
 ## What you never had to do
 
 Touch kernel internals, hand-roll signing, manage certificates,
-understand Groth16, or ask anyone for permission. The pipeline refuses
+understand trusted setup, or ask anyone for permission. The pipeline refuses
 to produce an unsigned or unattested capsule, so the secure path and
 the easy path are the same path.
 

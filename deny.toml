@@ -22,8 +22,8 @@ yanked = "deny"
 # build-time or off-trusted-path transitives.
 ignore = [
     { id = "RUSTSEC-2025-0056", reason = "adler 1.0.2 — unmaintained. Path: nonos_kernel -> miniz_oxide -> adler. miniz_oxide is the gzip codec used for kernel image compression in build artefacts; not on the microkernel runtime path. Drop when miniz_oxide releases against adler2." },
-    { id = "RUSTSEC-2024-0388", reason = "derivative 2.2.0 — unmaintained. Path: nonos_kernel -> ark-poly -> derivative (and the rest of the arkworks tree). Build-time only; the microkernel does not invoke arkworks at runtime. Drop when arkworks ships without derivative." },
-    { id = "RUSTSEC-2024-0436", reason = "paste 1.0.15 — unmaintained. Path: nonos_kernel -> halo2curves -> paste, and nonos_kernel -> ark-ff -> paste. Build-time macro only. Drop when halo2/arkworks drop paste." },
+    { id = "RUSTSEC-2024-0388", reason = "derivative 2.2.0 — unmaintained legacy transitive. Not on the microkernel runtime path. Drop once the dependency graph no longer pulls it." },
+    { id = "RUSTSEC-2024-0436", reason = "paste 1.0.15 — unmaintained. Path includes halo2curves. Build-time macro only. Drop when the curve dependency stops pulling paste." },
     { id = "RUSTSEC-2026-0097", reason = "rand 0.8.5 — unsound only when rand::rng() is called with a custom logger. Path: nonos_kernel -> halo2curves -> pasta_curves -> rand. The kernel never installs a custom logger and the transitive use goes through the deterministic seed APIs. Drop when halo2curves migrates to rand 0.9." },
 ]
 
