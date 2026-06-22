@@ -22,7 +22,7 @@ mod ops;
 
 pub use decode::parse;
 pub use encode::{response_header, write_status};
-pub use errno::{E_BAD_LEN, E_BAD_MAGIC, E_BAD_OP, E_BAD_VERSION, E_INVAL, E_NOTSUP};
+pub use errno::{E_BAD_LEN, E_BAD_MAGIC, E_BAD_OP, E_BAD_VERSION};
 pub use header::{Request, HDR_LEN, MAGIC, STATUS_LEN, VERSION};
 pub use ops::{OP_HEALTHCHECK, OP_REBOOT, OP_SHUTDOWN};
 

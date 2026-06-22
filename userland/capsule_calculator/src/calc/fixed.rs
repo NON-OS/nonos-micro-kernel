@@ -17,17 +17,4 @@
 pub type Fixed = i128;
 
 pub const FRAC: Fixed = 100_000_000;
-pub const MAX_INTEGER_DIGITS: u32 = 16;
 pub const MAX_FRACTION_DIGITS: u32 = 8;
-
-pub fn from_digit(d: u8) -> Fixed {
-    (d as Fixed) * FRAC
-}
-
-pub fn integer_part(value: Fixed) -> Fixed {
-    value / FRAC
-}
-
-pub fn fraction_part(value: Fixed) -> Fixed {
-    (value % FRAC).abs()
-}

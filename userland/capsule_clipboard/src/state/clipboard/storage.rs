@@ -36,9 +36,6 @@ impl Clipboard {
     pub fn get_by_index(&self, index: usize) -> Option<&Entry> {
         self.items.get(index)
     }
-    pub fn len(&self) -> usize {
-        self.items.len()
-    }
     pub fn iter(&self) -> impl Iterator<Item = &Entry> {
         self.items.iter()
     }

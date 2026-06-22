@@ -13,7 +13,7 @@ CAPSULE_FEATURE          := nonos-capsule-driver-ahci
 CAPSULE_NAMESPACE        := systems.nonos.driver.ahci0
 CAPSULE_SERVICE_ENDPOINT := service:4216:driver.ahci0
 CAPSULE_REPLY_ENDPOINT   := reply:4217:endpoint.4294967311
-# IPC|Memory|Driver|DeviceEnum|Mmio|Irq = 0x78019
-CAPSULE_REQUIRED_CAPS    := 0x78019
+# IPC|Memory|Driver|DeviceEnum|Mmio|Irq|Dma = 0xf8019
+CAPSULE_REQUIRED_CAPS    := 0xf8019
 
 include nonos-mk/capsule.mk

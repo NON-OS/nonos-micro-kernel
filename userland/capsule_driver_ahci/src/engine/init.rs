@@ -30,7 +30,7 @@ pub fn init_port(device_id: u64, claim_epoch: u64, regs: Regs, index: u8) -> Ahc
     super::stop::stop(regs, base);
     super::program::program(regs, base, clb.device_addr(), fb.device_addr(), ctba.device_addr(), clb.user_va());
     super::start::start(regs, base);
-    let mut port = Port { clb, ctba, fb, data, base, capacity_sectors: 0 };
+    let mut port = Port { clb, ctba, _fb: fb, data, base, capacity_sectors: 0 };
     super::identify::identify(&mut port, regs)?;
     Ok(port)
 }

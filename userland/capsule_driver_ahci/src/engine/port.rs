@@ -19,7 +19,7 @@ use super::region::DmaRegion;
 pub struct Port {
     pub(crate) clb: DmaRegion,
     pub(crate) ctba: DmaRegion,
-    pub(crate) fb: DmaRegion,
+    pub(crate) _fb: DmaRegion,
     pub(crate) data: DmaRegion,
     pub(crate) base: u32,
     pub(crate) capacity_sectors: u64,
