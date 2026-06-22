@@ -14,20 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const BACKGROUND: u32 = 0xFF1E2127;
-pub const FOREGROUND: u32 = 0xFFC5C9D3;
+pub const BACKGROUND: u32 = 0xFF181A1F;
+pub const FOREGROUND: u32 = 0xFFCBD0D8;
 pub const ERROR: u32 = 0xFFE06C75;
 pub const PROMPT: u32 = 0xFF98C379;
-pub const CURSOR: u32 = 0xFF61AFEF;
-pub const ACCENT: u32 = 0xFF61AFEF;
-pub const PATH: u32 = 0xFF56B6C2;
-pub const DIM: u32 = 0xFF5C6370;
-pub const HEADER_BG: u32 = 0xFF21252B;
-pub const HEADER_RULE: u32 = 0xFF3E4451;
-pub const FOOTER_BG: u32 = 0xFF21252B;
-pub const INPUT_BG: u32 = 0xFF272B33;
+pub const CURSOR: u32 = 0xFF5FB0C9;
+pub const ACCENT: u32 = 0xFF5FB0C9;
+pub const PATH: u32 = 0xFF7FC9A0;
+pub const DIM: u32 = 0xFF707682;
+pub const HEADER_BG: u32 = 0xFF1F2228;
+pub const HEADER_RULE: u32 = 0xFF2A2E37;
+pub const FOOTER_BG: u32 = 0xFF1F2228;
+pub const INPUT_BG: u32 = 0xFF1F2228;
 pub const BLOCK_OK: u32 = 0xFF98C379;
 pub const BLOCK_ERR: u32 = 0xFFE06C75;
-pub const BLOCK_RUN: u32 = 0xFF5C6370;
-pub const BLOCK_TINT_A: u32 = 0xFF21252B;
-pub const BLOCK_TINT_B: u32 = 0xFF262B33;
+pub const BLOCK_RUN: u32 = 0xFF707682;
+pub const BLOCK_TINT_A: u32 = 0xFF1C1F25;
+pub const BLOCK_TINT_B: u32 = 0xFF222631;
