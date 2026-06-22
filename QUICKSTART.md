@@ -163,7 +163,20 @@ refused; you will see it in the serial log as `[ZK-ATTEST]`.
 
 ## 6. Run it
 
+From a clean clone you have no enrolled device identity yet (the secret is
+gitignored, because attestation proves knowledge of it). One command mints a
+throwaway developer identity from a fixed public seed and boots:
+
 ```sh
+make nonos-mk-dev-run
+```
+
+That identity is for evaluation only: public seed, no custody, never ship it.
+For a real build you enroll your own identity and pass its secret, then:
+
+```sh
+ZK_BOOT_INDEX=0 ZK_BOOT_SECRET_X=... ZK_BOOT_SECRET_R=... \
+ZK_BOOT_NONCE_SEED=... ZK_CAPSULE_ENROLL_SEED=... ZK_CAPSULE_NONCE_SEED=... \
 make nonos-mk-run
 ```
 
