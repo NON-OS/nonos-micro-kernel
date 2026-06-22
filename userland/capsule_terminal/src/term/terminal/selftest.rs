@@ -210,6 +210,13 @@ pub fn vt_selftest() {
         let ok = st.blocks[0].status == crate::term::block::Status::Ok;
         mark(b"block-capture", opened && ok);
     }
+    {
+        let (a, an) = crate::term::dur::fmt_dur(1800);
+        let (b, bn) = crate::term::dur::fmt_dur(250);
+        let (c, cn) = crate::term::dur::fmt_dur(125_000);
+        let ok = &a[..an] == b"1.8s" && &b[..bn] == b"250ms" && &c[..cn] == b"2m05s";
+        mark(b"dur-fmt", ok);
+    }
 }
 
 fn run(state: &mut State) {
