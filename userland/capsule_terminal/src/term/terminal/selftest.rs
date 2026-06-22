@@ -181,12 +181,20 @@ pub fn vt_selftest() {
     {
         let mut st = crate::term::state::State::new();
         st.open_block(*b"12:34:56");
-        st.close_block(false);
+        st.close_block(false, 0);
         let one = st.blocks.len() == 1;
         let err = st.blocks[0].status == crate::term::block::Status::Err;
         let ts = &st.blocks[0].ts == b"12:34:56";
         let found = st.block_at(st.blocks[0].start_abs).is_some();
         mark(b"block-model", one && err && ts && found);
+    }
+    {
+        let mut st = crate::term::state::State::new();
+        st.open_block(*b"00:00:00");
+        st.close_block(true, 1500);
+        let ok = st.blocks[0].dur_ms == 1500
+            && st.blocks[0].status == crate::term::block::Status::Ok;
+        mark(b"block-dur", ok);
     }
     {
         let mut gb = crate::term::grid::types::Grid::new();

@@ -26,4 +26,5 @@ pub struct Block {
     pub start_abs: u64,
     pub ts: [u8; 8],
     pub status: Status,
+    pub dur_ms: u32,
 }
