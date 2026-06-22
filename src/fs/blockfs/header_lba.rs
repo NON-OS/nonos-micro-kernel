@@ -16,6 +16,6 @@
 
 use super::constants::HEADER_RING_SECTORS;
 
-pub fn header_lba(generation: u64) -> u64 {
+pub(crate) fn header_lba(generation: u64) -> u64 {
     generation % HEADER_RING_SECTORS
 }

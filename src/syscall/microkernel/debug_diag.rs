@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,16 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::FIRST_ALLOC_LBA;
-use super::BlockFsError;
-
-pub(crate) fn validate_geometry() -> Result<u64, BlockFsError> {
-    let geometry = crate::hardware::block_device::geometry().map_err(BlockFsError::BlockDevice)?;
-    if geometry.sector_size != crate::fs::cryptoblock::SECTOR_BYTES as u32 {
-        return Err(BlockFsError::InvalidGeometry);
-    }
-    if geometry.sectors <= FIRST_ALLOC_LBA + 1 {
-        return Err(BlockFsError::InvalidGeometry);
-    }
-    Ok(geometry.sectors)
+pub fn emit_debug_diag(code: u64) {
+    crate::sys::serial::print(b"[MkDebug-DIAG ");
+    crate::sys::serial::print_hex(code);
+    crate::sys::serial::println(b"]");
 }

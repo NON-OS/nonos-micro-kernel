@@ -19,7 +19,7 @@ use super::digest::digest;
 use super::read_u64::read_u64;
 use super::{BlockFsError, BlockFsSuperblock};
 
-pub fn deserialize(buf: &[u8]) -> Result<BlockFsSuperblock, BlockFsError> {
+pub(crate) fn deserialize(buf: &[u8]) -> Result<BlockFsSuperblock, BlockFsError> {
     if buf.len() < SUPERBLOCK_BYTES || buf[0..8] != MAGIC[..] || read_u64(buf, 8) != VERSION {
         return Err(BlockFsError::InvalidSuperblock);
     }

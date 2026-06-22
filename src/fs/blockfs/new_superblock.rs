@@ -17,7 +17,7 @@
 use super::constants::FIRST_ALLOC_LBA;
 use super::BlockFsSuperblock;
 
-pub fn new_superblock(sectors: u64, uuid: [u8; 16]) -> BlockFsSuperblock {
+pub(crate) fn new_superblock(sectors: u64, uuid: [u8; 16]) -> BlockFsSuperblock {
     BlockFsSuperblock {
         generation: 1,
         sectors,

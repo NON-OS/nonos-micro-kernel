@@ -84,15 +84,7 @@ pub fn sys_mmap(addr: u64, length: usize, prot: u32, _flags: u32) -> i64 {
             }
             return ERRNO_NOMEM;
         }
-        // POSIX mmap hands back zeroed memory. The frame allocator only zeroes
-        // on free, so a first-use frame still holds stale RAM; zero it through
-        // the directmap so callers (notably the std PAL dlmalloc heap) never
-        // read garbage as live data — that was corrupting dlmalloc chunk
-        // headers and sending capsules into an allocator spin.
-        unsafe {
-            let dm = (crate::memory::layout::DIRECTMAP_BASE + frame.as_u64()) as *mut u8;
-            core::ptr::write_bytes(dm, 0, PAGE_SIZE);
-        }
+        crate::memory::frame_alloc::zero_frame(frame);
     }
     record_mmap(pid, length, base);
     base as i64

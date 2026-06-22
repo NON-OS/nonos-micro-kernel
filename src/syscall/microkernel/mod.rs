@@ -19,8 +19,12 @@ pub mod battery;
 pub mod capability;
 pub mod capsule_load;
 pub mod debug;
+#[cfg(feature = "nonos-user-entry-proof")]
+pub mod debug_diag;
 pub mod device;
 pub mod dispatch;
+#[cfg(feature = "nonos-user-entry-proof")]
+pub mod dispatch_trace;
 pub mod dma;
 pub mod errnos;
 pub mod ipc;

@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const SECTOR_BYTES: usize = 512;
-pub const NONCE_BYTES: usize = 12;
-pub const TAG_BYTES: usize = 16;
+pub(crate) const NONCE_BYTES: usize = 12;
+pub(crate) const TAG_BYTES: usize = 16;
 pub const PLAIN_BLOCK_BYTES: usize = SECTOR_BYTES - NONCE_BYTES - TAG_BYTES;
-pub const AAD_PREFIX: &[u8; 16] = b"NONOSCRYPTBLK001";
+pub(crate) const AAD_PREFIX: &[u8; 16] = b"NONOSCRYPTBLK001";

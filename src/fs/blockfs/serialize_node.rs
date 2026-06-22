@@ -22,7 +22,7 @@ use super::write_u64::write_u64;
 use super::BlockFsNode;
 use crate::fs::cryptoblock::PLAIN_BLOCK_BYTES;
 
-pub fn serialize_node(node: &BlockFsNode) -> [u8; PLAIN_BLOCK_BYTES] {
+pub(crate) fn serialize_node(node: &BlockFsNode) -> [u8; PLAIN_BLOCK_BYTES] {
     let mut out = [0u8; PLAIN_BLOCK_BYTES];
     out[0..8].copy_from_slice(&NODE_MAGIC);
     write_u64(&mut out, 8, VERSION);

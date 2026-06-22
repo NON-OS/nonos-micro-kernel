@@ -24,7 +24,6 @@ pub(in super::super) const MAX_PORTS: usize = 32;
 pub(in super::super) const SECTOR_SIZE: usize = 512;
 pub(in super::super) const MAX_SECTORS: u32 = 64;
 pub(in super::super) const MAX_RW_PAYLOAD_BYTES: u32 = MAX_SECTORS * SECTOR_SIZE as u32;
-pub(in super::super) const CAPACITY_PAYLOAD_LEN: usize = 8;
 
 const PORT_LIST_PAYLOAD_LEN: usize = PORT_LIST_HEADER_BYTES + MAX_PORTS * PORT_ENTRY_BYTES;
 const _: () = assert!(MAX_RW_PAYLOAD_BYTES as usize > PORT_LIST_PAYLOAD_LEN);

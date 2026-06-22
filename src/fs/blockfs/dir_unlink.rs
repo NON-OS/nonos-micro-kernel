@@ -23,7 +23,7 @@ use super::write_node::write_node;
 use super::write_u32::write_u32;
 use super::{BlockFsError, BlockFsNode};
 
-pub fn unlink(key: &[u8; 32], dir_lba: u64, dir: &mut BlockFsNode, name: &[u8]) -> Result<(), BlockFsError> {
+pub(crate) fn unlink(key: &[u8; 32], dir_lba: u64, dir: &mut BlockFsNode, name: &[u8]) -> Result<(), BlockFsError> {
     if dir.first_record_lba == 0 {
         return Err(BlockFsError::NotFound);
     }
