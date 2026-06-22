@@ -22,15 +22,16 @@ const MAX_BLOCKS: usize = 256;
 impl State {
     pub fn open_block(&mut self, ts: [u8; 8]) {
         let start_abs = self.scrollback.grid.current_abs_line();
-        self.blocks.push(Block { start_abs, ts, status: Status::Running });
+        self.blocks.push(Block { start_abs, ts, status: Status::Running, dur_ms: 0 });
         if self.blocks.len() > MAX_BLOCKS {
             self.blocks.remove(0);
         }
     }
 
-    pub fn close_block(&mut self, ok: bool) {
+    pub fn close_block(&mut self, ok: bool, dur_ms: u32) {
         if let Some(b) = self.blocks.last_mut() {
             b.status = if ok { Status::Ok } else { Status::Err };
+            b.dur_ms = dur_ms;
         }
     }
 

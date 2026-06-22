@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod block_chrome;
+mod block_meta;
 mod compose;
 mod constants;
 mod draw_cursor;

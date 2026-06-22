@@ -16,11 +16,12 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::constants::{CELL_WIDTH, LINE_HEIGHT, TEXT_LEFT};
+use super::block_meta::draw_meta;
+use super::constants::LINE_HEIGHT;
 use crate::term::block::Status;
 use crate::term::dimensions::VISIBLE_ROWS;
 use crate::term::state::State;
-use crate::term::theme::{BLOCK_ERR, BLOCK_OK, BLOCK_RUN, BLOCK_TINT_A, BLOCK_TINT_B, PATH};
+use crate::term::theme::{BLOCK_ERR, BLOCK_OK, BLOCK_RUN, BLOCK_TINT_A, BLOCK_TINT_B};
 
 const STRIPE_W: u32 = 3;
 const STRIPE_GAP: u32 = 8;
@@ -47,9 +48,7 @@ pub fn draw_block_chrome(state: &State, fb: &mut PaintBuffer, ox: u32, oy: u32, 
         fb.fill_rect(ox.saturating_sub(STRIPE_GAP), y, STRIPE_W, LINE_HEIGHT, stripe);
         if let Some(b) = state.block_at(abs) {
             if b.start_abs == abs {
-                let tx = fb.width.saturating_sub(8 * CELL_WIDTH + TEXT_LEFT);
-                fb.text(tx, y + 1, &b.ts, PATH);
-                fb.fill_rect(ox.saturating_sub(STRIPE_GAP), y + LINE_HEIGHT / 2 - 2, 4, 4, stripe);
+                draw_meta(fb, b, stripe, y);
             }
         }
     }

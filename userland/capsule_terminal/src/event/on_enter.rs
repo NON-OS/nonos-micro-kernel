@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::EventOutcome;
+use nonos_libc::mk_time_millis;
 
 use crate::command;
 use crate::term::dimensions::COLS;
@@ -24,6 +25,7 @@ use crate::term::util::copy_into;
 
 pub fn on_enter(state: &mut State) -> EventOutcome {
     state.fresh = false;
+    let started = mk_time_millis();
     state.open_block(crate::term::rtc::rtc_hms());
     let body = state.line.as_bytes();
     let mut entered = [0u8; COLS];
@@ -56,7 +58,8 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
         }
         prev_ok = state.last_status;
     }
-    state.close_block(state.last_status);
+    let dur = (mk_time_millis() - started).clamp(0, u32::MAX as i64) as u32;
+    state.close_block(state.last_status, dur);
     state.evict_blocks();
     state.line.clear();
     state.scrollback.jump_bottom();
