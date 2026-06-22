@@ -16,7 +16,9 @@
 
 use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_BACKSPACE, KEY_ENTER, KEY_ESC, MOD_CTRL};
 
+use super::follow_end::follow_end;
 use super::on_ctrl::on_ctrl;
+use super::on_nav::on_nav;
 use super::path_prompt;
 use super::state::State;
 
@@ -29,6 +31,10 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     }
     if event.flags & MOD_CTRL != 0 {
         return on_ctrl(state, event.code);
+    }
+    let rows = state.visible_rows;
+    if let Some(outcome) = on_nav(state, event.code, rows) {
+        return outcome;
     }
     let changed = match event.code {
         KEY_ESC => return EventOutcome::Close,
@@ -45,6 +51,7 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     };
     if changed {
         state.status = b"edited";
+        follow_end(state, rows);
         EventOutcome::Repaint
     } else {
         EventOutcome::Idle

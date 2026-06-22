@@ -14,33 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
-
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::paint;
+use super::clamp_scroll::clamp_scroll;
 use super::state::State;
 
-pub struct Editor {
-    state: State,
-}
-
-impl Editor {
-    pub fn new() -> Self {
-        Editor { state: State::new() }
-    }
-}
-
-impl App for Editor {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&mut self.state, fb);
-    }
+pub(super) fn scroll_down(state: &mut State, rows: u32, visible: u32) {
+    state.scroll_line = state.scroll_line.saturating_add(rows);
+    clamp_scroll(state, visible);
 }

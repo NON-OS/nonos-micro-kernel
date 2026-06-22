@@ -14,33 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
-
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::paint;
-use super::state::State;
-
-pub struct Editor {
-    state: State,
-}
-
-impl Editor {
-    pub fn new() -> Self {
-        Editor { state: State::new() }
-    }
-}
-
-impl App for Editor {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&mut self.state, fb);
-    }
+pub(super) const FIRST_LINE_Y: u32 = 76;
+pub(super) const GLYPH_ADVANCE: u32 = 9;
+pub(super) const LINE_HEIGHT: u32 = 20;
+pub(super) const TEXT_LEFT: u32 = 16;
+pub(super) fn wrap_cols(width: u32) -> u32 {
+    width.saturating_sub(TEXT_LEFT * 2).saturating_div(GLYPH_ADVANCE).clamp(32, 160)
 }

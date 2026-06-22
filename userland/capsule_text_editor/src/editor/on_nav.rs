@@ -14,33 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use nonos_app_skeleton::{
+    EventOutcome, KEY_DOWN, KEY_END, KEY_HOME, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_UP,
+};
 
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::paint;
+use super::follow_end::follow_end;
+use super::scroll_down::scroll_down;
+use super::scroll_up::scroll_up;
 use super::state::State;
 
-pub struct Editor {
-    state: State,
-}
-
-impl Editor {
-    pub fn new() -> Self {
-        Editor { state: State::new() }
+pub(super) fn on_nav(state: &mut State, code: u32, rows: u32) -> Option<EventOutcome> {
+    match code {
+        KEY_UP => scroll_up(state, 1),
+        KEY_DOWN => scroll_down(state, 1, rows),
+        KEY_PAGE_UP => scroll_up(state, rows.saturating_sub(1).max(1)),
+        KEY_PAGE_DOWN => scroll_down(state, rows.saturating_sub(1).max(1), rows),
+        KEY_HOME => state.scroll_line = 0,
+        KEY_END => follow_end(state, rows),
+        _ => return None,
     }
-}
-
-impl App for Editor {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&mut self.state, fb);
-    }
+    Some(EventOutcome::Repaint)
 }

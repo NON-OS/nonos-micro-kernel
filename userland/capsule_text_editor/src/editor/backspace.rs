@@ -14,33 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
-
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::paint;
 use super::state::State;
 
-pub struct Editor {
-    state: State,
-}
-
-impl Editor {
-    pub fn new() -> Self {
-        Editor { state: State::new() }
-    }
-}
-
-impl App for Editor {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&mut self.state, fb);
+impl State {
+    pub fn backspace(&mut self) -> bool {
+        while self.len > 0 {
+            self.len -= 1;
+            if self.buf[self.len] & 0b1100_0000 != 0b1000_0000 {
+                return true;
+            }
+        }
+        false
     }
 }

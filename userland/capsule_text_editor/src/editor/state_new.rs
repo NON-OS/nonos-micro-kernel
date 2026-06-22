@@ -14,33 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use super::state::{State, PATH};
 
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::paint;
-use super::state::State;
-
-pub struct Editor {
-    state: State,
-}
-
-impl Editor {
+impl State {
     pub fn new() -> Self {
-        Editor { state: State::new() }
-    }
-}
-
-impl App for Editor {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&mut self.state, fb);
+        let mut path = [0u8; 256];
+        path[..PATH.len()].copy_from_slice(PATH);
+        State {
+            owner_pid: 0,
+            buf: [0; super::state::CAPACITY],
+            len: 0,
+            scroll_line: 0,
+            visible_rows: 1,
+            wrap_cols: 80,
+            status: b"Ctrl-O open  Ctrl-S save  Ctrl-C copy  Ctrl-V paste",
+            path,
+            path_len: PATH.len(),
+            prompt: None,
+            shell_port: 0,
+        }
     }
 }

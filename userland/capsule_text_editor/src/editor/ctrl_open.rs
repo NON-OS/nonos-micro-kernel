@@ -16,6 +16,7 @@
 
 use nonos_app_skeleton::{clients::vfs, EventOutcome};
 
+use super::follow_end::follow_end;
 use super::resolve_owner_pid::resolve_owner_pid;
 use super::state::{State, CAPACITY};
 
@@ -36,6 +37,8 @@ pub(super) fn ctrl_open(state: &mut State) -> EventOutcome {
             state.buf[..bytes.len()].copy_from_slice(&bytes);
             state.len = bytes.len();
             state.status = b"opened";
+            let rows = state.visible_rows;
+            follow_end(state, rows);
         }
         Ok(_) => state.status = b"file is not valid utf-8",
         Err(_) => state.status = b"open failed",

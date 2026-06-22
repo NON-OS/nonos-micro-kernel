@@ -14,33 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
-
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::paint;
-use super::state::State;
-
-pub struct Editor {
-    state: State,
-}
-
-impl Editor {
-    pub fn new() -> Self {
-        Editor { state: State::new() }
+pub(super) fn end_position(bytes: &[u8], wrap_cols: u32) -> (u32, u32) {
+    let mut line = 0;
+    let mut col = 0;
+    let text = core::str::from_utf8(bytes).unwrap_or("");
+    for ch in text.chars() {
+        if ch == '\n' {
+            line += 1;
+            col = 0;
+        } else {
+            if col == wrap_cols {
+                line += 1;
+                col = 0;
+            }
+            col += 1;
+        }
     }
-}
-
-impl App for Editor {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&mut self.state, fb);
+    if col == wrap_cols {
+        (line + 1, 0)
+    } else {
+        (line, col)
     }
 }

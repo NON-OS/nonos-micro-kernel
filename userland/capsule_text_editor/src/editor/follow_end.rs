@@ -14,33 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
-
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::paint;
+use super::max_scroll::max_scroll;
 use super::state::State;
+use super::visual_lines::visual_lines;
 
-pub struct Editor {
-    state: State,
-}
-
-impl Editor {
-    pub fn new() -> Self {
-        Editor { state: State::new() }
-    }
-}
-
-impl App for Editor {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&mut self.state, fb);
-    }
+pub(super) fn follow_end(state: &mut State, rows: u32) {
+    let total = visual_lines(&state.buf[..state.len], state.wrap_cols);
+    state.scroll_line = max_scroll(total, rows);
 }

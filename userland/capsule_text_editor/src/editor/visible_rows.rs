@@ -14,33 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use super::layout::{FIRST_LINE_Y, LINE_HEIGHT};
 
-use super::event::on_event;
-use super::manifest::manifest;
-use super::paint::paint;
-use super::state::State;
-
-pub struct Editor {
-    state: State,
-}
-
-impl Editor {
-    pub fn new() -> Self {
-        Editor { state: State::new() }
-    }
-}
-
-impl App for Editor {
-    fn manifest(&self) -> AppManifest {
-        manifest()
-    }
-
-    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
-    }
-
-    fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&mut self.state, fb);
-    }
+pub(super) fn visible_rows(height: u32) -> u32 {
+    height.saturating_sub(FIRST_LINE_Y).saturating_div(LINE_HEIGHT).max(1)
 }
