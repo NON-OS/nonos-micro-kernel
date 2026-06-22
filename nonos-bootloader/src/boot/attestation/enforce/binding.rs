@@ -17,6 +17,7 @@
 use super::super::binding::{verify_commitment_binding, verify_kernel_in_proof};
 use super::debug::log_hex;
 use super::failure::binding_failure;
+use super::proof_binding::verify_boot_proof_binding;
 use crate::log::logger::{log_error, log_info};
 use crate::zk::binding::compute_capsule_commitment;
 use crate::zk::{parse_zk_proof, BootAttestationResult};
@@ -38,6 +39,10 @@ pub fn enforce_zk_binding(
         }
     };
     if let Err(e) = verify_kernel_in_proof(r, kh, &proof_block) {
+        log_error("zk_bind", e);
+        binding_failure(st, gop, e);
+    }
+    if let Err(e) = verify_boot_proof_binding(st, kh, &proof_block) {
         log_error("zk_bind", e);
         binding_failure(st, gop, e);
     }

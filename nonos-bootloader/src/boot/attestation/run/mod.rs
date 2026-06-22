@@ -15,8 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod failed;
+mod invalid_sidecar;
 mod no_proof;
 mod orchestrate;
+mod require_runtime;
+mod runtime_required;
 mod success;
 
 pub use orchestrate::run_zk_attestation;

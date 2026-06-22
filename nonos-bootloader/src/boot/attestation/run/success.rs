@@ -34,7 +34,7 @@ pub fn display_success(
     tpm: bool,
 ) {
     if gop {
-        log_security(b"groth16/bls12-381 VERIFIED kernel-bound");
+        log_security(b"transparent ZK VERIFIED kernel-bound");
         log_hash(b"ZK prog ", &r.program_hash);
         log_hash(b"capsule ", &r.capsule_commitment);
     }

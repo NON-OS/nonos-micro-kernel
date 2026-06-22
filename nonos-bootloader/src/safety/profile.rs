@@ -24,8 +24,5 @@ compile_error!(
     "dev-mode compiles in the F12 verification override; not allowed in shipping profiles"
 );
 
-#[cfg(all(feature = "production", not(feature = "zk-groth16")))]
-compile_error!("production requires the real proof backend (zk-groth16)");
-
-#[cfg(all(feature = "production", not(feature = "zk-vk-provisioned")))]
-compile_error!("production requires ceremony verifying keys (zk-vk-provisioned)");
+#[cfg(all(feature = "production", not(feature = "zk-transparent")))]
+compile_error!("production requires the transparent proof backend");

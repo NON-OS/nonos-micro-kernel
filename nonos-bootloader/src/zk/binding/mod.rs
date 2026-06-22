@@ -23,8 +23,9 @@ pub mod verify;
 pub use commit::{compute_capsule_commitment, compute_commit, verify_commitment};
 pub use replay::{
     build_public_inputs, derive_machine_id, get_boot_nonce, get_boot_nonce_checked, get_machine_id,
-    get_machine_id_checked, init_boot_nonce, init_machine_id, is_machine_id_initialized,
-    is_nonce_initialized, verify_machine_id, verify_nonce_freshness, ZkPublicInputs,
+    get_machine_id_checked, init_boot_nonce, init_boot_nonce_value, init_machine_id,
+    is_machine_id_initialized, is_nonce_initialized, verify_machine_id, verify_nonce_freshness,
+    ZkPublicInputs,
 };
 pub use select::{is_manifest_binding_enabled, select_binding};
 pub use types::{BindingInput, DS_COMMITMENT, MAX_MANIFEST_SIZE};

@@ -17,6 +17,8 @@
 mod binding;
 mod enforce;
 mod run;
+mod source;
 
 pub use enforce::enforce_zk_binding;
 pub use run::run_zk_attestation;
+pub use source::{proof_source_bytes, select_zk_proof_source, ProofSource};

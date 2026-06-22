@@ -17,15 +17,9 @@
 use crate::zk::errors::ZkError;
 
 use super::constants::{MAX_INPUT_SIZE, MAX_PROOF_SIZE};
+use super::transparent::verify_transparent;
 use super::types::{ZkProof, ZkVerifyResult};
 use super::util::zeroize_proof;
-
-#[cfg(feature = "zk-groth16")]
-use super::constants::GROTH16_PROOF_LEN;
-#[cfg(feature = "zk-groth16")]
-use super::groth16::groth16_verify;
-#[cfg(feature = "zk-groth16")]
-use crate::zk::registry;
 
 pub fn verify_proof(p: &mut ZkProof) -> ZkVerifyResult {
     if let Err(e) = validate_proof_bounds(p) {
@@ -42,37 +36,15 @@ fn validate_proof_bounds(p: &ZkProof) -> Result<(), ZkVerifyResult> {
     if p.public_inputs.len() > MAX_INPUT_SIZE {
         return Err(ZkVerifyResult::Unsupported(ZkError::InputsTooLarge.as_str()));
     }
-    if p.public_inputs.len() % 32 != 0 {
-        return Err(ZkVerifyResult::Invalid(ZkError::InputsMisaligned.as_str()));
-    }
-    #[cfg(feature = "zk-groth16")]
-    if p.proof_blob.len() != GROTH16_PROOF_LEN {
-        return Err(ZkVerifyResult::Invalid(ZkError::ProofSizeInvalid.as_str()));
-    }
     Ok(())
 }
 
-#[cfg(feature = "zk-groth16")]
 fn verify_backend(p: &mut ZkProof) -> ZkVerifyResult {
-    let vk_bytes = match registry::lookup(&p.program_hash) {
-        Some(v) if !v.is_empty() => v,
-        Some(_) => return finalize(p, ZkVerifyResult::Error(ZkError::VerifyingKeyEmpty.as_str())),
-        None => {
-            return finalize(p, ZkVerifyResult::Unsupported(ZkError::UnknownProgramHash.as_str()))
-        }
-    };
-
-    let result = match groth16_verify(vk_bytes, &p.proof_blob, &p.public_inputs) {
-        Ok(true) => ZkVerifyResult::Valid,
-        Ok(false) => ZkVerifyResult::Invalid(ZkError::BackendVerifyFailed.as_str()),
-        Err(e) => ZkVerifyResult::Error(e.as_str()),
+    let result = match verify_transparent(&p.program_hash, &p.public_inputs, &p.proof_blob) {
+        Ok(()) => ZkVerifyResult::Valid,
+        Err(e) => ZkVerifyResult::Invalid(e),
     };
     finalize(p, result)
-}
-
-#[cfg(not(feature = "zk-groth16"))]
-fn verify_backend(p: &mut ZkProof) -> ZkVerifyResult {
-    finalize(p, ZkVerifyResult::Unsupported(ZkError::BackendUnsupported.as_str()))
 }
 
 fn finalize(p: &mut ZkProof, result: ZkVerifyResult) -> ZkVerifyResult {

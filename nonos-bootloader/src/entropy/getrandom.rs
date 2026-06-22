@@ -16,7 +16,7 @@
 
 use super::sources::{collect_hw_rng_bytes, rdtsc_serialized};
 
-/// C ABI getrandom implementation for libraries that need it (like arkworks).
+/// C ABI getrandom implementation for host-side libraries that need it.
 /// Uses hardware RNG (RDRAND/RDSEED) and TSC jitter for entropy.
 #[no_mangle]
 pub unsafe extern "C" fn getrandom(buf: *mut u8, len: usize, _flags: u32) -> isize {

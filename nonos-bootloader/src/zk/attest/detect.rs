@@ -14,21 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::{GROTH16_PROOF_SIZE, ZK_PROOF_HEADER_SIZE, ZK_PROOF_MAGIC};
+use super::types::{TRANSPARENT_MIN_PROOF_SIZE, ZK_PROOF_HEADER_SIZE, ZK_PROOF_MAGIC};
 
-/// Check if kernel data contains a ZK proof block
 pub fn has_zk_proof(kernel_data: &[u8]) -> bool {
-    // Minimum size check: signature + header + proof + some margin
-    if kernel_data.len() < 64 + ZK_PROOF_HEADER_SIZE + GROTH16_PROOF_SIZE + 100 {
+    if kernel_data.len() < ZK_PROOF_HEADER_SIZE + TRANSPARENT_MIN_PROOF_SIZE {
         return false;
     }
 
-    // Calculate likely offset (before signature)
     let sig_offset =
-        kernel_data.len().saturating_sub(64 + ZK_PROOF_HEADER_SIZE + GROTH16_PROOF_SIZE);
+        kernel_data.len().saturating_sub(64 + ZK_PROOF_HEADER_SIZE + TRANSPARENT_MIN_PROOF_SIZE);
 
-    // Check common locations first
-    for offset in [sig_offset, sig_offset.saturating_sub(256), sig_offset.saturating_add(64)] {
+    for offset in [0, sig_offset, sig_offset.saturating_sub(256), sig_offset.saturating_add(64)] {
         if offset + 4 <= kernel_data.len() {
             if &kernel_data[offset..offset + 4] == &ZK_PROOF_MAGIC {
                 return true;
@@ -36,16 +32,14 @@ pub fn has_zk_proof(kernel_data: &[u8]) -> bool {
         }
     }
 
-    // Scan backwards from end (limited to 4KB)
-    for i in (64..kernel_data.len().saturating_sub(ZK_PROOF_HEADER_SIZE)).rev() {
-        if kernel_data.len() - i < ZK_PROOF_HEADER_SIZE + GROTH16_PROOF_SIZE {
+    for i in (0..=kernel_data.len().saturating_sub(ZK_PROOF_HEADER_SIZE)).rev() {
+        if kernel_data.len() - i < ZK_PROOF_HEADER_SIZE + TRANSPARENT_MIN_PROOF_SIZE {
             continue;
         }
         if &kernel_data[i..i + 4] == &ZK_PROOF_MAGIC {
             return true;
         }
-        // Limit scan range
-        if kernel_data.len() - i > 4096 {
+        if kernel_data.len() - i > 8192 {
             break;
         }
     }
@@ -53,10 +47,14 @@ pub fn has_zk_proof(kernel_data: &[u8]) -> bool {
     false
 }
 
-/// Find the offset of ZK proof magic in kernel data
 pub fn find_zk_proof_offset(kernel_data: &[u8]) -> Option<usize> {
-    // Scan backwards from end (limited to 8KB)
-    for i in (64..kernel_data.len().saturating_sub(ZK_PROOF_HEADER_SIZE)).rev() {
+    if kernel_data.len() < ZK_PROOF_HEADER_SIZE + TRANSPARENT_MIN_PROOF_SIZE {
+        return None;
+    }
+    if &kernel_data[0..4] == &ZK_PROOF_MAGIC {
+        return Some(0);
+    }
+    for i in (0..=kernel_data.len().saturating_sub(ZK_PROOF_HEADER_SIZE)).rev() {
         if &kernel_data[i..i + 4] == &ZK_PROOF_MAGIC {
             return Some(i);
         }

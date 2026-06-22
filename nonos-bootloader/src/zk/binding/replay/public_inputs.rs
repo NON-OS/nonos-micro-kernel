@@ -60,7 +60,7 @@ pub fn build_public_inputs(
 ) -> Result<ZkPublicInputs, &'static str> {
     Ok(ZkPublicInputs {
         kernel_hash,
-        boot_nonce: get_boot_nonce(),
+        boot_nonce: get_boot_nonce()?,
         timestamp,
         machine_id: get_machine_id()?,
     })

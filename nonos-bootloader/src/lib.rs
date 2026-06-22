@@ -20,12 +20,12 @@ extern crate alloc;
 
 pub mod arch;
 pub mod boot;
+pub mod bootmenu;
 pub mod config;
 pub mod crypto;
 pub mod display;
 pub mod entropy;
 pub mod firmware;
-pub mod fwui;
 pub mod handoff;
 pub mod hardware;
 pub mod image_format;

@@ -14,51 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-/// ZK verification error types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ZkError {
-    // Proof size and format errors
     ProofTooLarge,
     ProofSizeInvalid,
-
-    // Public inputs errors
     InputsTooLarge,
     InputsMisaligned,
     InputsCountMismatch,
-
-    // Manifest errors
     ManifestMissing,
     ManifestTooLarge,
-
-    // Commitment errors
     CommitmentMismatch,
-
-    // Verifying key errors
-    UnknownProgramHash,
-    VerifyingKeyEmpty,
-    VerifyingKeyDeserialize,
-
-    // Proof deserialization errors
-    ProofDeserializeA,
-    ProofDeserializeB,
-    ProofDeserializeC,
-
-    // Backend errors
     BackendVerifyFailed,
     BackendUnsupported,
-
-    // Parse errors
     SectionTooSmall,
     HeaderTruncated,
     OffsetRange,
     HashOffsets,
-
-    // Internal errors
     Internal,
 }
 
 impl ZkError {
-    /// Get human-readable error message
     pub fn as_str(self) -> &'static str {
         use ZkError::*;
         match self {
@@ -70,14 +45,8 @@ impl ZkError {
             ManifestMissing => "zk: manifest missing for binding",
             ManifestTooLarge => "zk: manifest too large",
             CommitmentMismatch => "zk: commitment mismatch",
-            UnknownProgramHash => "zk: unknown program hash (no VK)",
-            VerifyingKeyEmpty => "zk: VK empty",
-            VerifyingKeyDeserialize => "zk: VK deserialize failed",
-            ProofDeserializeA => "zk: A deserialize failed",
-            ProofDeserializeB => "zk: B deserialize failed",
-            ProofDeserializeC => "zk: C deserialize failed",
-            BackendVerifyFailed => "zk: groth16 verify failed",
-            BackendUnsupported => "zk: no backend (enable zk-groth16)",
+            BackendVerifyFailed => "zk: transparent verify failed",
+            BackendUnsupported => "zk: no backend (enable zk-transparent)",
             SectionTooSmall => "zk: section too small",
             HeaderTruncated => "zk: header truncated",
             OffsetRange => "zk: offset range invalid",
@@ -86,7 +55,6 @@ impl ZkError {
         }
     }
 
-    /// Get error category for logging
     pub fn category(self) -> &'static str {
         use ZkError::*;
         match self {
@@ -94,21 +62,16 @@ impl ZkError {
             InputsTooLarge | InputsMisaligned | InputsCountMismatch => "inputs",
             ManifestMissing | ManifestTooLarge => "manifest",
             CommitmentMismatch => "commitment",
-            UnknownProgramHash | VerifyingKeyEmpty | VerifyingKeyDeserialize => "vk",
-            ProofDeserializeA | ProofDeserializeB | ProofDeserializeC => "deserialize",
             BackendVerifyFailed | BackendUnsupported => "backend",
             SectionTooSmall | HeaderTruncated | OffsetRange | HashOffsets => "parse",
             Internal => "internal",
         }
     }
 
-    /// Check if error is recoverable
     pub fn is_recoverable(self) -> bool {
         use ZkError::*;
         match self {
-            // These might be recoverable with retry or different inputs
-            UnknownProgramHash | ManifestMissing => true,
-            // Most errors are not recoverable
+            ManifestMissing => true,
             _ => false,
         }
     }

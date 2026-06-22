@@ -24,7 +24,6 @@ pub use create::{calculate_proof_block_size, compute_capsule_commitment, create_
 pub use detect::{find_zk_proof_offset, has_zk_proof};
 pub use parse::parse_zk_proof;
 pub use types::{
-    BootAttestationResult, ZkProofBlock, GROTH16_PROOF_SIZE, ZK_PROOF_HEADER_SIZE, ZK_PROOF_MAGIC,
-    ZK_PROOF_VERSION,
+    BootAttestationResult, ZkProofBlock, ZK_PROOF_HEADER_SIZE, ZK_PROOF_MAGIC, ZK_PROOF_VERSION,
 };
 pub use verify::{verify_boot_attestation, verify_boot_attestation_with_manifest};

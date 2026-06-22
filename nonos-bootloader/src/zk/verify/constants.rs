@@ -20,7 +20,4 @@ pub const DS_PROGRAM_HASH: &str = "NONOS:ZK:PROGRAM:v1";
 pub const MAX_PROOF_SIZE: usize = 2 * 1024 * 1024;
 /// ** Maximum public inputs size (256 KB) **
 pub const MAX_INPUT_SIZE: usize = 256 * 1024;
-/// ** Groth16 proof size (G1 + G2 + G1 = 48 + 96 + 48) **
-#[cfg(feature = "zk-groth16")]
-pub const GROTH16_PROOF_LEN: usize = 48 + 96 + 48;
 const _: () = assert!(MAX_INPUT_SIZE % 32 == 0);
