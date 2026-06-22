@@ -14,14 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn compute_kernel_hash(kernel_bytes: &[u8]) -> [u8; 32] {
-    *blake3::hash(kernel_bytes).as_bytes()
+use clap::Parser;
+use nonos_attestation_circuit::transparent::verify;
+use std::fs;
+use std::path::PathBuf;
+
+#[derive(Parser)]
+struct Args {
+    #[arg(long)]
+    root: PathBuf,
+    #[arg(long)]
+    ctx: PathBuf,
+    #[arg(long)]
+    proof: PathBuf,
 }
 
-pub fn compute_capsule_commitment(kernel_hash: &[u8; 32], program_hash: &[u8; 32]) -> [u8; 32] {
-    let mut hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    hasher.update(kernel_hash);
-    hasher.update(program_hash);
-    hasher.update(&0u64.to_be_bytes());
-    *hasher.finalize().as_bytes()
+fn main() -> Result<(), String> {
+    let args = Args::parse();
+    let root_bytes = fs::read(&args.root).map_err(|e| e.to_string())?;
+    let root: [u8; 32] =
+        root_bytes.get(..32).ok_or("root too short")?.try_into().map_err(|_| "root")?;
+    let ctx = fs::read(&args.ctx).map_err(|e| e.to_string())?;
+    let proof = fs::read(&args.proof).map_err(|e| e.to_string())?;
+    verify(&root, &ctx, &proof)?;
+    println!("RESULT: PASS");
+    Ok(())
 }

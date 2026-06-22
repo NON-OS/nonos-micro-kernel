@@ -14,14 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn compute_kernel_hash(kernel_bytes: &[u8]) -> [u8; 32] {
-    *blake3::hash(kernel_bytes).as_bytes()
-}
+use std::fs;
+use std::path::Path;
 
-pub fn compute_capsule_commitment(kernel_hash: &[u8; 32], program_hash: &[u8; 32]) -> [u8; 32] {
-    let mut hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    hasher.update(kernel_hash);
-    hasher.update(program_hash);
-    hasher.update(&0u64.to_be_bytes());
-    *hasher.finalize().as_bytes()
+use anyhow::{bail, Context, Result};
+
+pub fn commitments(path: &Path) -> Result<Vec<[u8; 32]>> {
+    let raw = fs::read(path).with_context(|| format!("failed to read {}", path.display()))?;
+    if raw.is_empty() || raw.len() % 32 != 0 {
+        bail!("commitments file must contain 32-byte commitments");
+    }
+    let mut out = Vec::with_capacity(raw.len() / 32);
+    for chunk in raw.chunks_exact(32) {
+        let mut commitment = [0u8; 32];
+        commitment.copy_from_slice(chunk);
+        out.push(commitment);
+    }
+    Ok(out)
 }

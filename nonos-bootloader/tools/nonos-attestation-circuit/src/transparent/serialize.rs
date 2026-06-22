@@ -14,14 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn compute_kernel_hash(kernel_bytes: &[u8]) -> [u8; 32] {
-    *blake3::hash(kernel_bytes).as_bytes()
-}
+use super::pack_dirs::pack_dirs;
 
-pub fn compute_capsule_commitment(kernel_hash: &[u8; 32], program_hash: &[u8; 32]) -> [u8; 32] {
-    let mut hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    hasher.update(kernel_hash);
-    hasher.update(program_hash);
-    hasher.update(&0u64.to_be_bytes());
-    *hasher.finalize().as_bytes()
+pub fn serialize(
+    c: &[u8; 32],
+    a: &[u8; 32],
+    zx: &[u8; 32],
+    zr: &[u8; 32],
+    siblings: &[[u8; 32]],
+    dirs: &[u8],
+) -> Vec<u8> {
+    let packed_dirs = pack_dirs(dirs);
+    let mut out = Vec::with_capacity(129 + siblings.len() * 32 + packed_dirs.len());
+    out.extend_from_slice(c);
+    out.extend_from_slice(a);
+    out.extend_from_slice(zx);
+    out.extend_from_slice(zr);
+    out.push(siblings.len() as u8);
+    for sibling in siblings {
+        out.extend_from_slice(sibling);
+    }
+    out.extend_from_slice(&packed_dirs);
+    out
 }

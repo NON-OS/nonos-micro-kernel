@@ -14,14 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn compute_kernel_hash(kernel_bytes: &[u8]) -> [u8; 32] {
-    *blake3::hash(kernel_bytes).as_bytes()
-}
+use super::dir::dir;
+use super::leaf::leaf;
+use super::node::node;
+use super::take32::take32;
+use super::types::ParsedProof;
 
-pub fn compute_capsule_commitment(kernel_hash: &[u8; 32], program_hash: &[u8; 32]) -> [u8; 32] {
-    let mut hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    hasher.update(kernel_hash);
-    hasher.update(program_hash);
-    hasher.update(&0u64.to_be_bytes());
-    *hasher.finalize().as_bytes()
+pub fn verify_membership(root: &[u8; 32], proof: &ParsedProof<'_>) -> Result<(), String> {
+    let mut acc = leaf(proof.commitment);
+    for i in 0..proof.depth as usize {
+        let sibling = take32(proof.siblings, i * 32).ok_or("transparent sibling malformed")?;
+        acc = if dir(proof.dirs, i)? == 0 { node(&acc, sibling) } else { node(sibling, &acc) };
+    }
+    if &acc == root {
+        Ok(())
+    } else {
+        Err("transparent merkle root mismatch".into())
+    }
 }

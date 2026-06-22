@@ -14,14 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn compute_kernel_hash(kernel_bytes: &[u8]) -> [u8; 32] {
-    *blake3::hash(kernel_bytes).as_bytes()
-}
+use anyhow::Result;
 
-pub fn compute_capsule_commitment(kernel_hash: &[u8; 32], program_hash: &[u8; 32]) -> [u8; 32] {
-    let mut hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    hasher.update(kernel_hash);
-    hasher.update(program_hash);
-    hasher.update(&0u64.to_be_bytes());
-    *hasher.finalize().as_bytes()
+use crate::Args;
+
+use super::hex32::hex32;
+
+pub fn explicit_challenge(args: &Args) -> Result<([u8; 32], [u8; 32], u64)> {
+    let boot_nonce = hex32(
+        "boot_nonce",
+        args.boot_nonce.as_deref().ok_or_else(|| anyhow::anyhow!("boot_nonce required"))?,
+    )?;
+    let machine_id = hex32(
+        "machine_id",
+        args.machine_id.as_deref().ok_or_else(|| anyhow::anyhow!("machine_id required"))?,
+    )?;
+    let timestamp = args.timestamp.ok_or_else(|| anyhow::anyhow!("timestamp required"))?;
+    Ok((boot_nonce, machine_id, timestamp))
 }

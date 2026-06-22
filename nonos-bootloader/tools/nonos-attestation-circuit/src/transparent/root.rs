@@ -14,14 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn compute_kernel_hash(kernel_bytes: &[u8]) -> [u8; 32] {
-    *blake3::hash(kernel_bytes).as_bytes()
-}
+use super::leaf::leaf;
+use super::node::node;
 
-pub fn compute_capsule_commitment(kernel_hash: &[u8; 32], program_hash: &[u8; 32]) -> [u8; 32] {
-    let mut hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    hasher.update(kernel_hash);
-    hasher.update(program_hash);
-    hasher.update(&0u64.to_be_bytes());
-    *hasher.finalize().as_bytes()
+pub fn root(commitments: &[[u8; 32]]) -> [u8; 32] {
+    let mut level: Vec<[u8; 32]> = commitments.iter().map(leaf).collect();
+    if level.is_empty() {
+        return leaf(&[0u8; 32]);
+    }
+    while level.len() > 1 {
+        let mut next = Vec::new();
+        for pair in level.chunks(2) {
+            let right = if pair.len() == 2 { pair[1] } else { pair[0] };
+            next.push(node(&pair[0], &right));
+        }
+        level = next;
+    }
+    level[0]
 }

@@ -14,14 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn compute_kernel_hash(kernel_bytes: &[u8]) -> [u8; 32] {
-    *blake3::hash(kernel_bytes).as_bytes()
-}
+use std::fs;
+use std::path::Path;
 
-pub fn compute_capsule_commitment(kernel_hash: &[u8; 32], program_hash: &[u8; 32]) -> [u8; 32] {
-    let mut hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    hasher.update(kernel_hash);
-    hasher.update(program_hash);
-    hasher.update(&0u64.to_be_bytes());
-    *hasher.finalize().as_bytes()
+use anyhow::{bail, Context, Result};
+
+pub fn challenge_file(path: &Path, kernel_hash: &[u8; 32]) -> Result<([u8; 32], [u8; 32], u64)> {
+    let raw = fs::read(path).with_context(|| format!("failed to read {}", path.display()))?;
+    if raw.len() != 104 {
+        bail!("challenge file must be exactly 104 bytes");
+    }
+    if &raw[0..32] != kernel_hash.as_slice() {
+        bail!("challenge kernel hash mismatch");
+    }
+    let mut nonce = [0u8; 32];
+    let mut machine = [0u8; 32];
+    nonce.copy_from_slice(&raw[32..64]);
+    machine.copy_from_slice(&raw[64..96]);
+    let timestamp = u64::from_be_bytes(raw[96..104].try_into()?);
+    Ok((nonce, machine, timestamp))
 }

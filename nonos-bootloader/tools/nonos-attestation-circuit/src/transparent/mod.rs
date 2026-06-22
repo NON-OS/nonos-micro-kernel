@@ -14,14 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn compute_kernel_hash(kernel_bytes: &[u8]) -> [u8; 32] {
-    *blake3::hash(kernel_bytes).as_bytes()
-}
+mod challenge;
+mod commitment;
+mod constants;
+mod derive_scalar;
+mod dir;
+mod enroll_secret;
+mod generator_h;
+mod leaf;
+mod node;
+mod pack_dirs;
+mod parse;
+mod point;
+mod proof_path;
+mod prove;
+mod root;
+mod scalar_from;
+mod serialize;
+mod take32;
+mod types;
+mod verify;
+mod verify_membership;
 
-pub fn compute_capsule_commitment(kernel_hash: &[u8; 32], program_hash: &[u8; 32]) -> [u8; 32] {
-    let mut hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    hasher.update(kernel_hash);
-    hasher.update(program_hash);
-    hasher.update(&0u64.to_be_bytes());
-    *hasher.finalize().as_bytes()
-}
+pub use commitment::commitment;
+pub use enroll_secret::enroll_secret;
+pub use proof_path::proof_path;
+pub use prove::prove;
+pub use root::root;
+pub use types::EnrolledSecret;
+pub use verify::verify;

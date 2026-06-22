@@ -14,14 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn compute_kernel_hash(kernel_bytes: &[u8]) -> [u8; 32] {
-    *blake3::hash(kernel_bytes).as_bytes()
-}
+use super::leaf::leaf;
+use super::node::node;
 
-pub fn compute_capsule_commitment(kernel_hash: &[u8; 32], program_hash: &[u8; 32]) -> [u8; 32] {
-    let mut hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    hasher.update(kernel_hash);
-    hasher.update(program_hash);
-    hasher.update(&0u64.to_be_bytes());
-    *hasher.finalize().as_bytes()
+pub fn proof_path(commitments: &[[u8; 32]], mut index: usize) -> (Vec<[u8; 32]>, Vec<u8>) {
+    let mut level: Vec<[u8; 32]> = commitments.iter().map(leaf).collect();
+    let mut siblings = Vec::new();
+    let mut dirs = Vec::new();
+    while level.len() > 1 {
+        let sibling = if index ^ 1 < level.len() { level[index ^ 1] } else { level[index] };
+        siblings.push(sibling);
+        dirs.push((index & 1) as u8);
+        let mut next = Vec::new();
+        for pair in level.chunks(2) {
+            let right = if pair.len() == 2 { pair[1] } else { pair[0] };
+            next.push(node(&pair[0], &right));
+        }
+        index /= 2;
+        level = next;
+    }
+    (siblings, dirs)
 }

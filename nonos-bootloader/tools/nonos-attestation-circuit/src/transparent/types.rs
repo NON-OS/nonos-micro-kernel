@@ -14,14 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn compute_kernel_hash(kernel_bytes: &[u8]) -> [u8; 32] {
-    *blake3::hash(kernel_bytes).as_bytes()
+use curve25519_dalek::scalar::Scalar;
+
+pub struct EnrolledSecret {
+    pub x: Scalar,
+    pub r: Scalar,
 }
 
-pub fn compute_capsule_commitment(kernel_hash: &[u8; 32], program_hash: &[u8; 32]) -> [u8; 32] {
-    let mut hasher = blake3::Hasher::new_derive_key("NONOS:CAPSULE:COMMITMENT:v1");
-    hasher.update(kernel_hash);
-    hasher.update(program_hash);
-    hasher.update(&0u64.to_be_bytes());
-    *hasher.finalize().as_bytes()
+pub struct ParsedProof<'a> {
+    pub commitment: &'a [u8; 32],
+    pub nonce_point: &'a [u8; 32],
+    pub z_x: &'a [u8; 32],
+    pub z_r: &'a [u8; 32],
+    pub depth: u8,
+    pub siblings: &'a [u8],
+    pub dirs: &'a [u8],
 }
