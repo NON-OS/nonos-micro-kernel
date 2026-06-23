@@ -40,6 +40,7 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     e(b"MKAR", SyscallNumber::MkArgs, "MkArgs"),
     e(b"MTSP", SyscallNumber::MkThreadSpawn, "MkThreadSpawn"),
     e(b"MYLD", SyscallNumber::MkYield, "MkYield"),
+    e(b"MSLP", SyscallNumber::MkSleepMs, "MkSleepMs"),
     e(b"MTMS", SyscallNumber::MkTimeMillis, "MkTimeMillis"),
     e(b"MTRT", SyscallNumber::MkTimeRtc, "MkTimeRtc"),
     e(b"MBAT", SyscallNumber::MkBatteryStatus, "MkBatteryStatus"),
