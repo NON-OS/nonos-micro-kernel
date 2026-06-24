@@ -23,7 +23,7 @@ const EMPTY_HASH: [u8; 32] = [
 
 pub fn handshake_keys(shared: &[u8; 32], transcript: &[u8]) -> Option<TrafficKeys> {
     let zero = [0u8; 32];
-    let early = super::hkdf::extract(&zero, &[])?;
+    let early = super::hkdf::extract(&zero, &zero)?;
     let derived = secret(&early, b"derived", &EMPTY_HASH)?;
     let handshake = super::hkdf::extract(&derived, shared)?;
     let th = super::hash_sha256::hash_sha256(transcript)?;
