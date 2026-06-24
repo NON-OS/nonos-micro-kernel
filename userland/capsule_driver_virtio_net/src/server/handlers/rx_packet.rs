@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::constants::{LEG_QUEUE_NOTIFY, Q_RX};
 use crate::protocol::{
     encode_response_header, write_status, Request, E_AGAIN, RESP_HDR_LEN, RX_PAYLOAD_PREFIX_LEN,
     STATUS_LEN,
@@ -24,6 +25,9 @@ use crate::setup::Driver;
 
 pub fn handle(sender_pid: u32, driver: &mut Driver, req: &Request, tx: &mut [u8]) -> bool {
     let frame = unsafe { take_one(&mut driver.rx) };
+    unsafe {
+        driver.regs.w16(LEG_QUEUE_NOTIFY, Q_RX);
+    }
     let frame = match frame {
         Some(f) => f,
         None => {
