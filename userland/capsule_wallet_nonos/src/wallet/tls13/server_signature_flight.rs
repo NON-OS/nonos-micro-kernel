@@ -32,9 +32,9 @@ pub fn server_signature_flight(client: &ClientFlight, bytes: &[u8]) -> bool {
             if super::scan_signatures::scan(msgs) {
                 return true;
             }
+            seq += 1;
         }
         pos = end;
-        seq += 1;
     }
     false
 }

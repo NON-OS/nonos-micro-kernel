@@ -16,25 +16,44 @@
 
 use alloc::vec::Vec;
 
+const FIRST_WAIT: u32 = 4000;
+const IDLE_AFTER_DATA: u32 = 48;
+const YIELD_BURST: u32 = 400;
+
 pub fn read_tls_flight(sockets_port: u32, handle: u32) -> Result<Vec<u8>, ()> {
     let mut out = Vec::new();
-    for _ in 0..8 {
+    let mut idle = 0u32;
+    loop {
         let mut chunk = [0u8; 4096];
-        let n = match super::socket_recv::socket_recv(sockets_port, handle, &mut chunk) {
-            Ok(n) => n,
-            Err(()) if !out.is_empty() => break,
-            Err(()) => return Err(()),
-        };
-        if n == 0 {
-            break;
-        }
-        out.extend_from_slice(&chunk[..n]);
-        if super::super::tls13::server_finished_flight_ready(&out) {
-            break;
-        }
-        if out.len() > 24 * 1024 {
-            return Err(());
+        match super::socket_recv::socket_recv(sockets_port, handle, &mut chunk) {
+            Ok(n) if n > 0 => {
+                idle = 0;
+                out.extend_from_slice(&chunk[..n]);
+                if super::super::tls13::server_finished_flight_ready(&out) {
+                    break;
+                }
+                if out.len() > 24 * 1024 {
+                    return Err(());
+                }
+            }
+            _ => {
+                if super::super::tls13::server_finished_flight_ready(&out) {
+                    break;
+                }
+                idle += 1;
+                let budget = if out.is_empty() { FIRST_WAIT } else { IDLE_AFTER_DATA };
+                if idle >= budget {
+                    break;
+                }
+                for _ in 0..YIELD_BURST {
+                    nonos_libc::mk_yield();
+                }
+            }
         }
     }
-    Ok(out)
+    if out.is_empty() {
+        Err(())
+    } else {
+        Ok(out)
+    }
 }

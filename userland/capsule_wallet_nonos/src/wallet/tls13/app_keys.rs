@@ -18,8 +18,7 @@ use super::traffic_keys::TrafficKeys;
 
 pub fn app_keys(handshake: &TrafficKeys, transcript: &[u8]) -> Option<TrafficKeys> {
     let zero = [0u8; 32];
-    let empty = super::hash_sha256::hash_sha256(&[])?;
-    let derived = super::schedule::secret(&handshake.handshake_secret, b"derived", &empty)?;
+    let derived = super::schedule::secret(&handshake.handshake_secret, b"derived", &super::schedule::EMPTY_HASH)?;
     let master = super::hkdf::extract(&derived, &zero)?;
     let th = super::hash_sha256::hash_sha256(transcript)?;
     let client_secret = super::schedule::secret(&master, b"c ap traffic", &th)?;

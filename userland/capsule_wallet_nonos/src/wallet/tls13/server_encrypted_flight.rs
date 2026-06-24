@@ -19,7 +19,7 @@ use super::flight::ClientFlight;
 pub fn server_encrypted_flight(client: &ClientFlight, bytes: &[u8]) -> bool {
     let Some(ctx) = super::server_keys::server_keys(client, bytes) else { return false };
     let mut pos = ctx.used;
-    let mut seq = 0u64;
+    let seq = 0u64;
     while pos + 5 <= bytes.len() {
         let len = u16::from_be_bytes([bytes[pos + 3], bytes[pos + 4]]) as usize;
         let end = pos + 5 + len;
@@ -30,7 +30,6 @@ pub fn server_encrypted_flight(client: &ClientFlight, bytes: &[u8]) -> bool {
             return opens_handshake(&ctx.keys.server_key, &ctx.keys.server_iv, seq, &bytes[pos..end]);
         }
         pos = end;
-        seq += 1;
     }
     false
 }
