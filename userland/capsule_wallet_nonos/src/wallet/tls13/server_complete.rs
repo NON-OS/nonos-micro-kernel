@@ -34,12 +34,14 @@ pub fn server_complete(client: &ClientFlight, bytes: &[u8]) -> Option<ServerComp
         if end > bytes.len() {
             return None;
         }
-        if bytes[pos] == 23 && decrypt_scan(&mut ctx, seq, &bytes[pos..end]) {
-            let app = super::app_keys::app_keys(&ctx.keys, &ctx.transcript)?;
-            return Some(ServerComplete { handshake: ctx.keys, app, transcript: ctx.transcript });
+        if bytes[pos] == 23 {
+            if decrypt_scan(&mut ctx, seq, &bytes[pos..end]) {
+                let app = super::app_keys::app_keys(&ctx.keys, &ctx.transcript)?;
+                return Some(ServerComplete { handshake: ctx.keys, app, transcript: ctx.transcript });
+            }
+            seq += 1;
         }
         pos = end;
-        seq += 1;
     }
     None
 }

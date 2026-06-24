@@ -26,11 +26,13 @@ pub fn server_validity_flight(client: &ClientFlight, bytes: &[u8], now: u64) -> 
         if end > bytes.len() {
             return false;
         }
-        if bytes[pos] == 23 && decrypt_scan(&ctx, seq, &bytes[pos..end], now) {
-            return true;
+        if bytes[pos] == 23 {
+            if decrypt_scan(&ctx, seq, &bytes[pos..end], now) {
+                return true;
+            }
+            seq += 1;
         }
         pos = end;
-        seq += 1;
     }
     false
 }
