@@ -14,20 +14,5 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-
-extern crate alloc;
-
-mod device;
-mod protocol;
-
-use nonos_libc::{heap_init, mk_exit};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    mk_exit(0);
-}
+pub mod header;
+pub mod ops;
