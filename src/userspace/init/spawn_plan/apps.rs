@@ -19,6 +19,7 @@ pub(super) fn spawn() {
     spawn_about();
     spawn_hello();
     spawn_calculator();
+    spawn_browser();
     spawn_snake();
     spawn_wallet_nonos();
     spawn_terminal();
@@ -67,6 +68,19 @@ fn spawn_calculator() {
 }
 #[cfg(not(feature = "nonos-capsule-calculator"))]
 fn spawn_calculator() {}
+
+#[cfg(feature = "nonos-capsule-browser")]
+fn spawn_browser() {
+    use crate::userspace::capsule_browser as b;
+    super::boot::capsule(
+        "APP-BROWSER",
+        "app_browser",
+        b::spawn_browser_capsule,
+        b::shared_state,
+    );
+}
+#[cfg(not(feature = "nonos-capsule-browser"))]
+fn spawn_browser() {}
 
 #[cfg(feature = "nonos-capsule-wallet-nonos")]
 fn spawn_wallet_nonos() {
