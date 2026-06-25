@@ -41,4 +41,14 @@ impl App for Browser {
     fn paint(&mut self, fb: &mut PaintBuffer) {
         paint(&self.state, fb);
     }
+    fn on_tick(&mut self) -> bool {
+        if let Some(target) = self.state.pending_nav.take() {
+            crate::browser::fetch::load(&mut self.state, &target);
+            return true;
+        }
+        false
+    }
+    fn tick_interval_ms(&self) -> i64 {
+        50
+    }
 }
