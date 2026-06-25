@@ -32,6 +32,33 @@ unsafe impl Send for NetState {}
 
 pub static NET: Mutex<Option<NetState>> = Mutex::new(None);
 
+pub struct Lease {
+    pub ip: [u8; 4],
+    pub prefix: u8,
+    pub gw: [u8; 4],
+    pub dns: [u8; 4],
+    pub secs: u32,
+    pub bound: bool,
+}
+
+static LEASE: Mutex<Option<Lease>> = Mutex::new(None);
+
+pub fn lease() -> Option<Lease> {
+    let guard = LEASE.lock();
+    guard.as_ref().map(|l| Lease {
+        ip: l.ip,
+        prefix: l.prefix,
+        gw: l.gw,
+        dns: l.dns,
+        secs: l.secs,
+        bound: l.bound,
+    })
+}
+
+pub fn set_lease(l: Option<Lease>) {
+    *LEASE.lock() = l;
+}
+
 pub fn store(state: NetState) {
     *NET.lock() = Some(state);
 }
@@ -42,4 +69,12 @@ pub fn with_iface<R>(
     let mut guard = NET.lock();
     let state = guard.as_mut()?;
     Some(f(&mut state.iface, &mut state.sockets, &mut state.device))
+}
+
+pub fn with_dhcp<R>(
+    f: impl FnOnce(&mut Interface, &mut SocketSet<'static>, SocketHandle) -> R,
+) -> Option<R> {
+    let mut guard = NET.lock();
+    let state = guard.as_mut()?;
+    Some(f(&mut state.iface, &mut state.sockets, state.dhcp_handle))
 }

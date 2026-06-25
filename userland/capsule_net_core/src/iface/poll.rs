@@ -17,6 +17,7 @@
 use nonos_libc::mk_time_millis;
 use smoltcp::time::Instant;
 
+use crate::iface::dhcp;
 use crate::state;
 
 pub fn pump() {
@@ -24,4 +25,5 @@ pub fn pump() {
         let now = Instant::from_millis(mk_time_millis());
         iface.poll(now, device, sockets);
     });
+    dhcp::poll_event();
 }
