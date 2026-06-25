@@ -123,6 +123,22 @@ fn attr(raw: &str, key: &str) -> Option<String> {
     None
 }
 
+fn skip_until_close(chars: &mut core::iter::Peekable<core::str::CharIndices>, name: &str) {
+    let mut scanned = 0u32;
+    while let Some((_, c)) = chars.next() {
+        scanned = scanned.saturating_add(1);
+        if scanned > 4_000_000 {
+            break;
+        }
+        if c == '<' && chars.peek().map(|&(_, n)| n) == Some('/') {
+            let raw = read_to_gt(chars);
+            if tag_name(&raw) == name {
+                break;
+            }
+        }
+    }
+}
+
 fn consume_tag(
     text: &str,
     chars: &mut core::iter::Peekable<core::str::CharIndices>,
@@ -130,6 +146,27 @@ fn consume_tag(
     style: &mut Style,
 ) {
     let raw = read_to_gt(chars);
-    let _ = tag_name(&raw);
-    let _ = (text, out, style);
+    let closing = raw.starts_with('/');
+    let name = tag_name(&raw);
+    match name.as_str() {
+        "br" | "p" | "div" | "li" | "ul" | "tr" | "h1" | "h2" | "h3" | "h4" | "h5"
+        | "h6" => out.push(Flow::Break),
+        "b" | "strong" => style.bold = !closing,
+        "a" if !closing => {
+            if let Some(href) = attr(&raw, "href") {
+                out.push(Flow::Link(String::new(), href));
+            }
+        }
+        "img" => {
+            let src = attr(&raw, "src").unwrap_or_default();
+            let alt = attr(&raw, "alt").unwrap_or_default();
+            out.push(Flow::Image(src, alt));
+        }
+        "script" | "style" | "noscript" if !closing => skip_until_close(chars, &name),
+        _ => {}
+    }
+    if name.starts_with('h') && name.len() == 2 && name.as_bytes()[1].is_ascii_digit() {
+        style.heading = if closing { 0 } else { name.as_bytes()[1] - b'0' };
+    }
+    let _ = text;
 }
