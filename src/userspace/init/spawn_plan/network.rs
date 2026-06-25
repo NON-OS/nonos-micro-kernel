@@ -23,7 +23,17 @@ pub(super) fn spawn() {
     spawn_dns();
     spawn_nym();
     spawn_sockets();
+    spawn_core();
 }
+
+#[cfg(feature = "nonos-capsule-net-core")]
+fn spawn_core() {
+    use crate::userspace::capsule_net_core as c;
+    super::boot::capsule("NET-CORE", "net_core", c::spawn_net_core_capsule, c::shared_state);
+}
+
+#[cfg(not(feature = "nonos-capsule-net-core"))]
+fn spawn_core() {}
 
 #[cfg(feature = "nonos-capsule-net-l2")]
 fn spawn_l2() {

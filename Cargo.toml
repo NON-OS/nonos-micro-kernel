@@ -123,6 +123,7 @@ nonos-capsule-net-udp           = []
 nonos-capsule-net-dhcp          = []
 nonos-capsule-net-tcp           = []
 nonos-capsule-net-dns           = []
+nonos-capsule-net-core          = []
 nonos-capsule-net-sockets       = []
 nonos-capsule-net-nym           = []
 nonos-capsule-market            = []
@@ -378,6 +379,14 @@ microkernel-net-l2 = [
   "nonos-capsule-proof-io",
   "nonos-capsule-driver-virtio-net",
   "nonos-capsule-net-l2",
+]
+
+microkernel-net-core = [
+  "microkernel-core",
+  "nonos-production",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-driver-virtio-net",
+  "nonos-capsule-net-core",
 ]
 
 microkernel-net-ip = [
