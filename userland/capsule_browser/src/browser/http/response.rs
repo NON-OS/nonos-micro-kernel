@@ -31,8 +31,8 @@ pub fn parse(raw: &[u8]) -> Option<Response> {
     let mut chunked = false;
     for line in head.lines().skip(1) {
         let lower = line.to_ascii_lowercase();
-        if let Some(v) = lower.strip_prefix("location:") {
-            location = Some(v.trim().to_string());
+        if lower.starts_with("location:") {
+            location = Some(line[line.find(':').map(|c| c + 1).unwrap_or(line.len())..].trim().to_string());
         } else if lower.starts_with("transfer-encoding:") && lower.contains("chunked") {
             chunked = true;
         }

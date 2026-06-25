@@ -26,7 +26,7 @@ pub fn decode(body: &[u8]) -> Vec<u8> {
         };
         let size = parse_hex(&body[i..line_end]);
         i = line_end + 2;
-        if size == 0 || i + size > body.len() {
+        if size == 0 || size > body.len().saturating_sub(i) {
             break;
         }
         out.extend_from_slice(&body[i..i + size]);
