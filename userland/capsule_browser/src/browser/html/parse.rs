@@ -17,6 +17,7 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
+use super::entity::push_decoded;
 use super::flow::{Flow, Style};
 
 const MAX_TAGS: u32 = 20000;
@@ -34,6 +35,12 @@ pub fn parse(bytes: &[u8]) -> Vec<Flow> {
             break;
         }
         match c {
+            '<' => {
+                flush(&mut out, &mut buf, style);
+                tags += 1;
+                consume_tag(text, &mut chars);
+            }
+            '&' => read_entity(&mut chars, &mut buf),
             c if c.is_whitespace() => push_ws(&mut buf),
             _ => buf.push(c),
         }
@@ -54,4 +61,26 @@ fn flush(out: &mut Vec<Flow>, buf: &mut String, style: Style) {
         out.push(Flow::Text(t.into(), style));
     }
     buf.clear();
+}
+
+fn read_entity(chars: &mut core::iter::Peekable<core::str::CharIndices>, buf: &mut String) {
+    let mut name = String::new();
+    while let Some(&(_, c)) = chars.peek() {
+        if c == ';' {
+            chars.next();
+            break;
+        }
+        name.push(c);
+        chars.next();
+    }
+    push_decoded(buf, &name);
+}
+
+fn consume_tag(text: &str, chars: &mut core::iter::Peekable<core::str::CharIndices>) {
+    while let Some((_, c)) = chars.next() {
+        if c == '>' {
+            break;
+        }
+    }
+    let _ = text;
 }
