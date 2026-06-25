@@ -14,8 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dhcp_status;
-pub mod dns;
-pub mod health;
-pub mod tcp;
-pub mod udp;
+mod resolve_a;
+
+use crate::protocol::dns::{E_BAD_OP, MAGIC_NDNS, OP_RESOLVE_A};
+use crate::server::parse_req::Request;
+use crate::server::respond::reply;
+
+pub fn dispatch(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    match req.op {
+        OP_RESOLVE_A => resolve_a::handle(sender_pid, req, body, tx),
+        _ => {
+            let _ = reply(sender_pid, MAGIC_NDNS, req.op, E_BAD_OP, req.request_id, &[], tx);
+        }
+    }
+}

@@ -40,5 +40,5 @@ pub fn build(mac: [u8; 6], port: u32) -> Option<NetState> {
     let mut sockets = SocketSet::new(alloc::vec![]);
     let dhcp_handle = dhcp::create(&mut sockets);
 
-    Some(NetState { iface, sockets, device, dhcp_handle })
+    Some(NetState { iface, sockets, device, dhcp_handle, dns_handle: None })
 }

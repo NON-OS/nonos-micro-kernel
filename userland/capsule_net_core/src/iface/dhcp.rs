@@ -16,8 +16,8 @@
 
 use nonos_libc::mk_debug;
 use smoltcp::iface::{SocketHandle, SocketSet};
-use smoltcp::socket::dhcpv4;
-use smoltcp::wire::IpCidr;
+use smoltcp::socket::{dhcpv4, dns};
+use smoltcp::wire::{IpAddress, IpCidr, Ipv4Address};
 
 use crate::state::{self, Lease};
 
@@ -26,8 +26,8 @@ pub fn create(sockets: &mut SocketSet<'static>) -> SocketHandle {
 }
 
 pub fn poll_event() {
-    state::with_dhcp(|iface, sockets, handle| {
-        let event = sockets.get_mut::<dhcpv4::Socket>(handle).poll();
+    state::with_dhcp_and_dns_slot(|iface, sockets, dhcp_handle, dns_slot| {
+        let event = sockets.get_mut::<dhcpv4::Socket>(dhcp_handle).poll();
         match event {
             Some(dhcpv4::Event::Configured(cfg)) => {
                 iface.update_ip_addrs(|addrs| {
@@ -43,6 +43,7 @@ pub fn poll_event() {
                 let dns = cfg.dns_servers.first().map(|d| d.0).unwrap_or([0u8; 4]);
                 emit_lease_marker(ip, prefix, gw);
                 state::set_lease(Some(Lease { ip, prefix, gw, dns, secs: 0, bound: true }));
+                *dns_slot = Some(install_dns_socket(sockets, dns));
                 emit_status_selfcheck();
             }
             Some(dhcpv4::Event::Deconfigured) => {
@@ -53,6 +54,12 @@ pub fn poll_event() {
             None => {}
         }
     });
+}
+
+fn install_dns_socket(sockets: &mut SocketSet<'static>, dns_ip: [u8; 4]) -> SocketHandle {
+    let server = IpAddress::Ipv4(Ipv4Address(dns_ip));
+    let socket = dns::Socket::new(&[server], alloc::vec![]);
+    sockets.add(socket)
 }
 
 fn emit_lease_marker(ip: [u8; 4], prefix: u8, gw: [u8; 4]) {

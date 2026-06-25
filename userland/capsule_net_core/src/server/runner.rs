@@ -18,6 +18,7 @@ use alloc::vec;
 
 use nonos_libc::mk_ipc_recv_from;
 
+use crate::protocol::dns::MAGIC_NDNS;
 use crate::protocol::errno::E_BAD_MAGIC;
 use crate::protocol::ops::MAGIC_NDHC;
 use crate::protocol::tcp::MAGIC_NTCP;
@@ -57,6 +58,9 @@ pub fn run() -> ! {
                 }
                 MAGIC_NUDP => {
                     crate::server::handlers::udp::dispatch(sender_pid, &req, body, &mut tx);
+                }
+                MAGIC_NDNS => {
+                    crate::server::handlers::dns::dispatch(sender_pid, &req, body, &mut tx);
                 }
                 _ => {
                     let _ = reply(

@@ -19,18 +19,21 @@ use nonos_libc::{mk_debug, mk_service_register};
 const NET_TCP: &[u8] = b"net.tcp";
 const NET_UDP: &[u8] = b"net.udp";
 const NET_DHCP: &[u8] = b"net.dhcp.client";
+const NET_DNS: &[u8] = b"net.dns";
 
 const PORT_TCP: u32 = 4476;
 const PORT_UDP: u32 = 4472;
 const PORT_DHCP: u32 = 4474;
+const PORT_DNS: u32 = 4478;
 
 pub fn all() {
     let tcp_ok = mk_service_register(NET_TCP.as_ptr(), NET_TCP.len(), PORT_TCP) >= 0;
     let udp_ok = mk_service_register(NET_UDP.as_ptr(), NET_UDP.len(), PORT_UDP) >= 0;
     let dhcp_ok = mk_service_register(NET_DHCP.as_ptr(), NET_DHCP.len(), PORT_DHCP) >= 0;
+    let dns_ok = mk_service_register(NET_DNS.as_ptr(), NET_DNS.len(), PORT_DNS) >= 0;
 
-    if tcp_ok && udp_ok && dhcp_ok {
-        let msg = b"[NET-CORE] registered net.tcp net.udp net.dhcp.client\n";
+    if tcp_ok && udp_ok && dhcp_ok && dns_ok {
+        let msg = b"[NET-CORE] registered net.tcp net.udp net.dhcp.client net.dns\n";
         mk_debug(msg.as_ptr(), msg.len());
     } else {
         let msg = b"[NET-CORE] registration partial failure\n";

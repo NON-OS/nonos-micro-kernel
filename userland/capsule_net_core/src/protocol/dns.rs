@@ -14,8 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dhcp_status;
-pub mod dns;
-pub mod health;
-pub mod tcp;
-pub mod udp;
+pub const MAGIC_NDNS: u32 = 0x4E44_4E53;
+
+pub const OP_RESOLVE_A: u16 = 2;
+
+pub const E_OK: u16 = 0;
+pub const E_BAD_OP: u16 = 3;
+pub const E_NAME_INVALID: u16 = 9;
+pub const E_SERVFAIL: u16 = 10;
+pub const E_NO_LEASE: u16 = 11;

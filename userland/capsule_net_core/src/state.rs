@@ -23,6 +23,7 @@ pub struct NetState {
     pub sockets: SocketSet<'static>,
     pub device: NicDevice,
     pub dhcp_handle: SocketHandle,
+    pub dns_handle: Option<SocketHandle>,
 }
 
 // SAFETY: The capsule has a single execution context (no threads); spin::Mutex
@@ -71,10 +72,19 @@ pub fn with_iface<R>(
     Some(f(&mut state.iface, &mut state.sockets, &mut state.device))
 }
 
-pub fn with_dhcp<R>(
+pub fn with_dns<R>(
     f: impl FnOnce(&mut Interface, &mut SocketSet<'static>, SocketHandle) -> R,
 ) -> Option<R> {
     let mut guard = NET.lock();
     let state = guard.as_mut()?;
-    Some(f(&mut state.iface, &mut state.sockets, state.dhcp_handle))
+    let handle = state.dns_handle?;
+    Some(f(&mut state.iface, &mut state.sockets, handle))
+}
+
+pub fn with_dhcp_and_dns_slot<R>(
+    f: impl FnOnce(&mut Interface, &mut SocketSet<'static>, SocketHandle, &mut Option<SocketHandle>) -> R,
+) -> Option<R> {
+    let mut guard = NET.lock();
+    let state = guard.as_mut()?;
+    Some(f(&mut state.iface, &mut state.sockets, state.dhcp_handle, &mut state.dns_handle))
 }
