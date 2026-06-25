@@ -14,22 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
-
-pub struct State {
-    pub address: String,
-    pub address_focused: bool,
-    pub status: String,
-    pub pending_nav: Option<String>,
-}
-
-impl State {
-    pub fn new() -> Self {
-        State {
-            address: String::new(),
-            address_focused: true,
-            status: String::from("ready"),
-            pending_nav: None,
-        }
+pub fn printable(code: u32) -> Option<u8> {
+    if (0x20..=0x7E).contains(&code) {
+        Some(code as u8)
+    } else {
+        None
     }
 }

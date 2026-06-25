@@ -14,10 +14,39 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent};
+use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_BACKSPACE, KEY_ENTER};
 
+use crate::browser::keymap::printable;
 use crate::browser::state::State;
 
-pub fn on_event(_state: &mut State, _event: InputEvent) -> EventOutcome {
-    EventOutcome::Idle
+pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
+    match event.kind {
+        InputKind::ButtonDown => {
+            state.address_focused = event.y < 40;
+            EventOutcome::Repaint
+        }
+        InputKind::KeyDown if state.address_focused => on_key(state, event),
+        _ => EventOutcome::Idle,
+    }
+}
+
+fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
+    match event.code {
+        KEY_ENTER => {
+            state.pending_nav = Some(state.address.clone());
+            state.status = alloc::format!("loading {}", state.address);
+            EventOutcome::Repaint
+        }
+        KEY_BACKSPACE => {
+            state.address.pop();
+            EventOutcome::Repaint
+        }
+        code => match printable(code) {
+            Some(b) => {
+                state.address.push(b as char);
+                EventOutcome::Repaint
+            }
+            None => EventOutcome::Idle,
+        },
+    }
 }

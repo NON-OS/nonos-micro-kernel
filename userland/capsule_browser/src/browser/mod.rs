@@ -18,6 +18,7 @@ extern crate alloc;
 
 mod app;
 mod event;
+mod keymap;
 pub mod manifest;
 mod paint;
 pub mod state;
