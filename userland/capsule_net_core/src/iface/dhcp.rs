@@ -14,29 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use smoltcp::iface::{SocketHandle, SocketSet};
+use smoltcp::socket::dhcpv4;
 
-extern crate alloc;
+pub fn create(sockets: &mut SocketSet<'static>) -> SocketHandle {
+    sockets.add(dhcpv4::Socket::new())
+}
 
-mod device;
-mod iface;
-mod protocol;
-mod setup;
-mod state;
-
-use nonos_libc::{heap_init, mk_exit, mk_yield};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    if setup::run().is_err() {
-        mk_exit(2);
-    }
-    loop {
-        iface::poll::pump();
-        mk_yield();
-    }
+pub fn drain_events(handle: SocketHandle, sockets: &mut SocketSet<'static>) {
+    sockets.get_mut::<dhcpv4::Socket>(handle).poll();
 }

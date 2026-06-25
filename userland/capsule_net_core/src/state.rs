@@ -14,29 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use spin::Mutex;
+use smoltcp::iface::{Interface, SocketHandle, SocketSet};
+use crate::device::NicDevice;
 
-extern crate alloc;
+pub struct NetState {
+    pub iface: Interface,
+    pub sockets: SocketSet<'static>,
+    pub device: NicDevice,
+    pub dhcp_handle: SocketHandle,
+}
 
-mod device;
-mod iface;
-mod protocol;
-mod setup;
-mod state;
+unsafe impl Send for NetState {}
 
-use nonos_libc::{heap_init, mk_exit, mk_yield};
+pub static NET: Mutex<Option<NetState>> = Mutex::new(None);
 
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    if setup::run().is_err() {
-        mk_exit(2);
-    }
-    loop {
-        iface::poll::pump();
-        mk_yield();
-    }
+pub fn store(state: NetState) {
+    *NET.lock() = Some(state);
 }
