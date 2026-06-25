@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
+use super::constants::{DNS_MAGIC, OP_RESOLVE_A};
 
-mod app;
-mod event;
-mod keymap;
-pub mod manifest;
-mod net;
-mod paint;
-pub mod state;
-
-pub use app::Browser;
+pub fn resolve(dns_port: u32, host: &[u8]) -> Result<[u8; 4], ()> {
+    let mut rx = [0u8; 32];
+    let n = super::call::call(dns_port, DNS_MAGIC, OP_RESOLVE_A, host, &mut rx)?;
+    if n < 24 {
+        return Err(());
+    }
+    Ok([rx[20], rx[21], rx[22], rx[23]])
+}

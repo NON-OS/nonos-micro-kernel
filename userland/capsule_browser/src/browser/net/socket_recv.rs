@@ -14,14 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
+use alloc::vec;
 
-mod app;
-mod event;
-mod keymap;
-pub mod manifest;
-mod net;
-mod paint;
-pub mod state;
+use super::constants::{OP_RECV, SOCKETS_MAGIC};
 
-pub use app::Browser;
+pub fn socket_recv(sockets_port: u32, handle: u32, out: &mut [u8]) -> Result<usize, ()> {
+    let mut body = [0u8; 4];
+    let mut rx = vec![0u8; out.len().saturating_add(20)];
+    body.copy_from_slice(&handle.to_le_bytes());
+    let n = super::call::call(sockets_port, SOCKETS_MAGIC, OP_RECV, &body, &mut rx)?;
+    if n < 20 {
+        return Err(());
+    }
+    let payload = u32::from_le_bytes([rx[16], rx[17], rx[18], rx[19]]) as usize;
+    let copy_len = core::cmp::min(core::cmp::min(payload, n - 20), out.len());
+    out[..copy_len].copy_from_slice(&rx[20..20 + copy_len]);
+    Ok(copy_len)
+}

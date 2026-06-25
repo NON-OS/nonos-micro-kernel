@@ -14,14 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
+use super::constants::{OP_SOCKET, SOCKETS_MAGIC, SOCKET_FAMILY_IP4, SOCKET_KIND_STREAM};
 
-mod app;
-mod event;
-mod keymap;
-pub mod manifest;
-mod net;
-mod paint;
-pub mod state;
-
-pub use app::Browser;
+pub fn socket_open(sockets_port: u32) -> Result<u32, ()> {
+    let mut body = [0u8; 4];
+    let mut rx = [0u8; 32];
+    body[0..2].copy_from_slice(&SOCKET_FAMILY_IP4.to_le_bytes());
+    body[2..4].copy_from_slice(&SOCKET_KIND_STREAM.to_le_bytes());
+    let n = super::call::call(sockets_port, SOCKETS_MAGIC, OP_SOCKET, &body, &mut rx)?;
+    if n < 24 {
+        return Err(());
+    }
+    Ok(u32::from_le_bytes([rx[20], rx[21], rx[22], rx[23]]))
+}

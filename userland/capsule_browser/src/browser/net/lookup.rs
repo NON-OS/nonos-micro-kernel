@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
+use nonos_libc::mk_service_lookup;
 
-mod app;
-mod event;
-mod keymap;
-pub mod manifest;
-mod net;
-mod paint;
-pub mod state;
-
-pub use app::Browser;
+pub fn lookup(name: &[u8]) -> u32 {
+    let mut port = 0u32;
+    let mut pid = 0u32;
+    let rc = mk_service_lookup(name.as_ptr(), name.len(), &mut port, &mut pid);
+    if rc < 0 || pid == 0 {
+        return 0;
+    }
+    port
+}

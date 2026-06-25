@@ -14,14 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
+use alloc::vec::Vec;
 
-mod app;
-mod event;
-mod keymap;
-pub mod manifest;
-mod net;
-mod paint;
-pub mod state;
+use super::constants::{OP_SEND, SOCKETS_MAGIC};
 
-pub use app::Browser;
+pub fn socket_send(sockets_port: u32, handle: u32, payload: &[u8]) -> Result<(), ()> {
+    let mut body = Vec::with_capacity(payload.len() + 4);
+    let mut rx = [0u8; 20];
+    body.extend_from_slice(&handle.to_le_bytes());
+    body.extend_from_slice(payload);
+    super::call::call(sockets_port, SOCKETS_MAGIC, OP_SEND, &body, &mut rx)?;
+    Ok(())
+}

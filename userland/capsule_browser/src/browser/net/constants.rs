@@ -14,14 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
-
-mod app;
-mod event;
-mod keymap;
-pub mod manifest;
-mod net;
-mod paint;
-pub mod state;
-
-pub use app::Browser;
+pub const DNS_MAGIC: u32 = 0x4E44_4E53;
+pub const OP_RESOLVE_A: u16 = 2;
+pub const SOCKETS_MAGIC: u32 = 0x4E53_4B54;
+pub const OP_SOCKET: u16 = 2;
+pub const OP_CONNECT: u16 = 6;
+pub const OP_SEND: u16 = 7;
+pub const OP_RECV: u16 = 8;
+pub const OP_CLOSE: u16 = 9;
+pub const SERVICE_DNS: &[u8] = b"net.dns";
+pub const SERVICE_SOCKETS: &[u8] = b"net.sockets";
+pub const SOCKET_FAMILY_IP4: u16 = 4;
+pub const SOCKET_KIND_STREAM: u16 = 1;
