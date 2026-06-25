@@ -17,14 +17,11 @@
 use nonos_libc::mk_time_millis;
 use smoltcp::time::Instant;
 
-use crate::iface::dhcp;
-use crate::state::NET;
+use crate::state;
 
 pub fn pump() {
-    let mut guard = NET.lock();
-    let Some(state) = guard.as_mut() else { return };
-
-    let now = Instant::from_millis(mk_time_millis());
-    state.iface.poll(now, &mut state.device, &mut state.sockets);
-    dhcp::drain_events(state.dhcp_handle, &mut state.sockets);
+    state::with_iface(|iface, sockets, device| {
+        let now = Instant::from_millis(mk_time_millis());
+        iface.poll(now, device, sockets);
+    });
 }

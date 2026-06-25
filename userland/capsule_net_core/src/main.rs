@@ -26,17 +26,30 @@ mod setup;
 mod state;
 
 use nonos_libc::{heap_init, mk_exit, mk_yield};
+use setup::SetupError;
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
-    if setup::run().is_err() {
-        mk_exit(2);
-    }
+    wait_for_setup();
     loop {
         iface::poll::pump();
         mk_yield();
+    }
+}
+
+fn wait_for_setup() {
+    loop {
+        match setup::run() {
+            Ok(()) => return,
+            Err(SetupError::NicNotFound) => {
+                for _ in 0..64 {
+                    mk_yield();
+                }
+            }
+            Err(_) => mk_exit(2),
+        }
     }
 }

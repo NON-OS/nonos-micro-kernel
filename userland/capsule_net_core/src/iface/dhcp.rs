@@ -20,7 +20,3 @@ use smoltcp::socket::dhcpv4;
 pub fn create(sockets: &mut SocketSet<'static>) -> SocketHandle {
     sockets.add(dhcpv4::Socket::new())
 }
-
-pub fn drain_events(handle: SocketHandle, sockets: &mut SocketSet<'static>) {
-    sockets.get_mut::<dhcpv4::Socket>(handle).poll();
-}

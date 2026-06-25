@@ -25,10 +25,21 @@ pub struct NetState {
     pub dhcp_handle: SocketHandle,
 }
 
+// SAFETY: The capsule has a single execution context (no threads); spin::Mutex
+// is the exclusive access gate; Interface, SocketSet<'static>, and NicDevice
+// are themselves Send.
 unsafe impl Send for NetState {}
 
 pub static NET: Mutex<Option<NetState>> = Mutex::new(None);
 
 pub fn store(state: NetState) {
     *NET.lock() = Some(state);
+}
+
+pub fn with_iface<R>(
+    f: impl FnOnce(&mut Interface, &mut SocketSet<'static>, &mut NicDevice) -> R,
+) -> Option<R> {
+    let mut guard = NET.lock();
+    let state = guard.as_mut()?;
+    Some(f(&mut state.iface, &mut state.sockets, &mut state.device))
 }
