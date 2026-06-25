@@ -38,4 +38,4 @@ pub use store::KeyStore;
 pub use types::{
     KeyId, KeyStatus, RevocationEntry, RevocationReason, MAX_KEYS, MAX_REVOKED, PK_LEN,
 };
-pub use util::derive_keyid;
+pub use util::{constant_time_eq, derive_keyid};

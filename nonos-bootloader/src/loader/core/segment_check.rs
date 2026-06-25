@@ -18,7 +18,7 @@ use goblin::elf::ProgramHeader;
 
 use crate::loader::errors::{LoaderError, LoaderResult};
 use crate::loader::types::memory;
-use crate::log::logger::{log_error, log_info, log_warn};
+use crate::log::logger::{log_error, log_info};
 
 use super::constants::{elf_flags, PAGE_SIZE};
 use super::types::ValidatedSegment;
@@ -51,7 +51,8 @@ pub fn validate_single_segment(
     let is_writable = (p_flags & elf_flags::PF_W) != 0;
     let is_executable = (p_flags & elf_flags::PF_X) != 0;
     if is_writable && is_executable {
-        log_warn("loader", "WARNING: Segment has W+X permissions (W^X violation)");
+        log_error("loader", "SECURITY: Segment has W+X permissions (W^X violation)");
+        return Err(LoaderError::UnsupportedElf("W^X violation"));
     }
 
     let target = if ph.p_paddr != 0 { ph.p_paddr } else { ph.p_vaddr } as u64;

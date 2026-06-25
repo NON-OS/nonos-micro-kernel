@@ -18,16 +18,25 @@ use super::tables::AcpiSdtHeader;
 
 const LAPIC_ENTRY_TYPE: u8 = 0;
 const LAPIC_FLAGS_ENABLED: u32 = 1;
+const MADT_MIN_LEN: usize = 44;
+const MADT_MAX_LEN: usize = 0x10000;
 
 pub fn parse_madt_cpu_count(madt_addr: u64) -> usize {
+    if madt_addr == 0 {
+        return 1;
+    }
     unsafe {
         let hdr = &*(madt_addr as *const AcpiSdtHeader);
+        let length = hdr.length as usize;
+        if length < MADT_MIN_LEN || length > MADT_MAX_LEN {
+            return 1;
+        }
         let mut cpu_count = 0usize;
-        let mut offset = 44usize;
-        while offset + 2 <= hdr.length as usize {
+        let mut offset = MADT_MIN_LEN;
+        while offset + 2 <= length {
             let entry_type = *((madt_addr + offset as u64) as *const u8);
             let entry_len = *((madt_addr + offset as u64 + 1) as *const u8) as usize;
-            if entry_len < 2 {
+            if entry_len < 2 || offset + entry_len > length {
                 break;
             }
             if entry_type == LAPIC_ENTRY_TYPE && entry_len >= 8 {
