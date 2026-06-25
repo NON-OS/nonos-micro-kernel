@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use smoltcp::socket::udp;
-
 use crate::protocol::udp::{E_BAD_LEN, E_NO_SOCKET, E_OK, MAGIC_NUDP, OP_UNBIND};
 use crate::server::parse_req::Request;
 use crate::server::respond::reply;
@@ -38,7 +36,7 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     };
 
     state::with_iface(|_iface, sockets, _dev| {
-        sockets.get_mut::<udp::Socket>(sock_handle).close();
+        sockets.remove(sock_handle);
     });
     udp_ports::remove(sender_pid, local_port);
 

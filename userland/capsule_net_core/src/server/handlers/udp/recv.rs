@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use smoltcp::socket::udp;
-use smoltcp::wire::{IpAddress};
+use smoltcp::wire::IpAddress;
 
 use crate::protocol::udp::{E_BAD_LEN, E_NO_SOCKET, E_OK, E_RX_EMPTY, MAGIC_NUDP, OP_RECV};
 use crate::server::parse_req::{Request, IPC_BUF_MAX};
