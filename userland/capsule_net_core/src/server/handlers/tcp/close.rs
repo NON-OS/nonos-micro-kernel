@@ -29,7 +29,7 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     }
     let app_handle = u32::from_le_bytes([body[0], body[1], body[2], body[3]]);
 
-    let sock_handle = match handles::get(app_handle) {
+    let sock_handle = match handles::get(app_handle, sender_pid) {
         Some(h) => h,
         None => {
             let _ = reply(sender_pid, MAGIC_NTCP, OP_CLOSE, E_NO_SOCKET, req.request_id, &[], tx);
@@ -40,7 +40,7 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     state::with_iface(|_iface, sockets, _dev| {
         sockets.get_mut::<tcp::Socket>(sock_handle).close();
     });
-    handles::free(app_handle);
+    handles::free(app_handle, sender_pid);
 
     let _ = reply(sender_pid, MAGIC_NTCP, OP_CLOSE, E_OK, req.request_id, &[], tx);
 }

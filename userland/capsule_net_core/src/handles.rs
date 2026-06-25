@@ -19,27 +19,31 @@ use smoltcp::iface::SocketHandle;
 
 pub const MAX_SOCKETS: usize = 32;
 
-static TABLE: Mutex<[Option<SocketHandle>; MAX_SOCKETS]> = Mutex::new([None; MAX_SOCKETS]);
+static TABLE: Mutex<[Option<(u32, SocketHandle)>; MAX_SOCKETS]> = Mutex::new([None; MAX_SOCKETS]);
 
-pub fn alloc(handle: SocketHandle) -> Option<u32> {
+pub fn alloc(owner_pid: u32, handle: SocketHandle) -> Option<u32> {
     let mut table = TABLE.lock();
     for (i, slot) in table.iter_mut().enumerate() {
         if slot.is_none() {
-            *slot = Some(handle);
+            *slot = Some((owner_pid, handle));
             return Some(i as u32);
         }
     }
     None
 }
 
-pub fn get(index: u32) -> Option<SocketHandle> {
+pub fn get(index: u32, sender_pid: u32) -> Option<SocketHandle> {
     let table = TABLE.lock();
-    table.get(index as usize).and_then(|s| *s)
+    table.get(index as usize).and_then(|s| {
+        s.and_then(|(owner, h)| if owner == sender_pid { Some(h) } else { None })
+    })
 }
 
-pub fn free(index: u32) {
+pub fn free(index: u32, sender_pid: u32) {
     let mut table = TABLE.lock();
     if let Some(slot) = table.get_mut(index as usize) {
-        *slot = None;
+        if matches!(slot, Some((owner, _)) if *owner == sender_pid) {
+            *slot = None;
+        }
     }
 }

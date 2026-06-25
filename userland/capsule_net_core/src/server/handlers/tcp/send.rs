@@ -17,7 +17,7 @@
 use smoltcp::socket::tcp;
 
 use crate::handles;
-use crate::protocol::tcp::{E_BAD_LEN, E_NO_SOCKET, E_OK, MAGIC_NTCP, OP_SEND};
+use crate::protocol::tcp::{E_BAD_LEN, E_NO_SOCKET, E_NOT_CONNECTED, E_OK, MAGIC_NTCP, OP_SEND};
 use crate::server::parse_req::Request;
 use crate::server::respond::reply;
 use crate::state;
@@ -30,7 +30,7 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     let app_handle = u32::from_le_bytes([body[0], body[1], body[2], body[3]]);
     let payload = &body[4..];
 
-    let sock_handle = match handles::get(app_handle) {
+    let sock_handle = match handles::get(app_handle, sender_pid) {
         Some(h) => h,
         None => {
             let _ = reply(sender_pid, MAGIC_NTCP, OP_SEND, E_NO_SOCKET, req.request_id, &[], tx);
@@ -38,11 +38,18 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         }
     };
 
-    let queued = state::with_iface(|_iface, sockets, _dev| {
+    let send_result = state::with_iface(|_iface, sockets, _dev| {
         let sock = sockets.get_mut::<tcp::Socket>(sock_handle);
-        sock.send_slice(payload).unwrap_or(0)
+        sock.send_slice(payload)
     });
 
-    let n = queued.unwrap_or(0) as u32;
-    let _ = reply(sender_pid, MAGIC_NTCP, OP_SEND, E_OK, req.request_id, &n.to_le_bytes(), tx);
+    match send_result {
+        Some(Ok(n)) => {
+            let n = n as u32;
+            let _ = reply(sender_pid, MAGIC_NTCP, OP_SEND, E_OK, req.request_id, &n.to_le_bytes(), tx);
+        }
+        _ => {
+            let _ = reply(sender_pid, MAGIC_NTCP, OP_SEND, E_NOT_CONNECTED, req.request_id, &[], tx);
+        }
+    }
 }

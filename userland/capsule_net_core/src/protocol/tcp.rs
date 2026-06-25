@@ -29,3 +29,4 @@ pub const E_BAD_OP: u16 = 3;
 pub const E_BAD_LEN: u16 = 4;
 pub const E_NO_SOCKET: u16 = 5;
 pub const E_RX_EMPTY: u16 = 11;
+pub const E_NOT_CONNECTED: u16 = 12;
