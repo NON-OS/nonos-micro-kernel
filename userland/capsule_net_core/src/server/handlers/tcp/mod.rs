@@ -14,43 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-
-extern crate alloc;
-
-mod device;
-mod handles;
-mod iface;
-mod protocol;
-mod register;
-mod server;
-mod setup;
+mod close;
+mod connect;
+mod recv;
+mod send;
 mod state;
 
-use nonos_libc::{heap_init, mk_exit, mk_yield};
-use setup::SetupError;
+use crate::protocol::tcp::{
+    E_BAD_OP, MAGIC_NTCP, OP_CLOSE, OP_CONNECT, OP_RECV, OP_SEND, OP_STATE,
+};
+use crate::server::parse_req::Request;
+use crate::server::respond::reply;
 
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    wait_for_setup();
-    register::all();
-    server::run();
-}
-
-fn wait_for_setup() {
-    loop {
-        match setup::run() {
-            Ok(()) => return,
-            Err(SetupError::NicNotFound) => {
-                for _ in 0..64 {
-                    mk_yield();
-                }
-            }
-            Err(_) => mk_exit(2),
+pub fn dispatch(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    match req.op {
+        OP_CONNECT => connect::handle(sender_pid, req, body, tx),
+        OP_SEND => send::handle(sender_pid, req, body, tx),
+        OP_RECV => recv::handle(sender_pid, req, body, tx),
+        OP_CLOSE => close::handle(sender_pid, req, body, tx),
+        OP_STATE => state::handle(sender_pid, req, body, tx),
+        _ => {
+            let _ = reply(sender_pid, MAGIC_NTCP, req.op, E_BAD_OP, req.request_id, &[], tx);
         }
     }
 }

@@ -14,7 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod errno;
-pub mod header;
-pub mod ops;
-pub mod tcp;
+pub const MAGIC_NTCP: u32 = 0x4E54_4350;
+
+pub const OP_LISTEN: u16 = 2;
+pub const OP_CONNECT: u16 = 3;
+pub const OP_ACCEPT: u16 = 4;
+pub const OP_SEND: u16 = 5;
+pub const OP_RECV: u16 = 6;
+pub const OP_CLOSE: u16 = 7;
+pub const OP_STATE: u16 = 9;
+
+pub const E_OK: u16 = 0;
+pub const E_BAD_OP: u16 = 3;
+pub const E_BAD_LEN: u16 = 4;
+pub const E_NO_SOCKET: u16 = 5;
+pub const E_RX_EMPTY: u16 = 11;

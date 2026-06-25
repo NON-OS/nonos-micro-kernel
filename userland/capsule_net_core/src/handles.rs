@@ -14,7 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod errno;
-pub mod header;
-pub mod ops;
-pub mod tcp;
+use spin::Mutex;
+use smoltcp::iface::SocketHandle;
+
+pub const MAX_SOCKETS: usize = 32;
+
+static TABLE: Mutex<[Option<SocketHandle>; MAX_SOCKETS]> = Mutex::new([None; MAX_SOCKETS]);
+
+pub fn alloc(handle: SocketHandle) -> Option<u32> {
+    let mut table = TABLE.lock();
+    for (i, slot) in table.iter_mut().enumerate() {
+        if slot.is_none() {
+            *slot = Some(handle);
+            return Some(i as u32);
+        }
+    }
+    None
+}
+
+pub fn get(index: u32) -> Option<SocketHandle> {
+    let table = TABLE.lock();
+    table.get(index as usize).and_then(|s| *s)
+}
+
+pub fn free(index: u32) {
+    let mut table = TABLE.lock();
+    if let Some(slot) = table.get_mut(index as usize) {
+        *slot = None;
+    }
+}

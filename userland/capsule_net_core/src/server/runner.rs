@@ -20,6 +20,7 @@ use nonos_libc::mk_ipc_recv_from;
 
 use crate::protocol::errno::E_BAD_MAGIC;
 use crate::protocol::ops::MAGIC_NDHC;
+use crate::protocol::tcp::MAGIC_NTCP;
 use crate::server::handlers::health::{handle as health_handle, OP_HEALTHCHECK};
 use crate::server::parse_req::{parse, HDR_LEN, IPC_BUF_MAX};
 use crate::server::respond::reply;
@@ -43,12 +44,15 @@ pub fn run() -> ! {
         if n <= 0 || sender_pid == 0 {
             continue;
         }
-        let Ok((req, _body)) = parse(&rx[..n as usize]) else { continue };
+        let Ok((req, body)) = parse(&rx[..n as usize]) else { continue };
         match req.op {
             OP_HEALTHCHECK => health_handle(sender_pid, &req, &mut tx),
             _ => match req.magic {
                 MAGIC_NDHC => {
                     crate::server::handlers::dhcp_status::dispatch(sender_pid, &req, &mut tx);
+                }
+                MAGIC_NTCP => {
+                    crate::server::handlers::tcp::dispatch(sender_pid, &req, body, &mut tx);
                 }
                 _ => {
                     let _ = reply(
