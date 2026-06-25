@@ -21,6 +21,10 @@ pub struct State {
     pub address_focused: bool,
     pub status: String,
     pub pending_nav: Option<String>,
+    pub document: Option<crate::browser::layout::doc::RenderDocument>,
+    pub scroll: u32,
+    pub dns_port: u32,
+    pub sockets_port: u32,
 }
 
 impl State {
@@ -30,6 +34,10 @@ impl State {
             address_focused: true,
             status: String::from("ready"),
             pending_nav: None,
+            document: None,
+            scroll: 0,
+            dns_port: 0,
+            sockets_port: 0,
         }
     }
 }
