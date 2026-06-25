@@ -66,14 +66,21 @@ fn flush(out: &mut Vec<Flow>, buf: &mut String, style: Style) {
 fn read_entity(chars: &mut core::iter::Peekable<core::str::CharIndices>, buf: &mut String) {
     let mut name = String::new();
     while let Some(&(_, c)) = chars.peek() {
-        if c == ';' {
+        if c == ';' || name.len() >= 12 {
             chars.next();
+            break;
+        }
+        if !c.is_ascii_alphanumeric() && c != '#' {
             break;
         }
         name.push(c);
         chars.next();
     }
-    push_decoded(buf, &name);
+    if name.is_empty() {
+        buf.push('&');
+    } else {
+        push_decoded(buf, &name);
+    }
 }
 
 fn consume_tag(text: &str, chars: &mut core::iter::Peekable<core::str::CharIndices>) {
