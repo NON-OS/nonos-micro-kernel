@@ -43,6 +43,7 @@ pub fn poll_event() {
                 let dns = cfg.dns_servers.first().map(|d| d.0).unwrap_or([0u8; 4]);
                 emit_lease_marker(ip, prefix, gw);
                 state::set_lease(Some(Lease { ip, prefix, gw, dns, secs: 0, bound: true }));
+                emit_status_selfcheck();
             }
             Some(dhcpv4::Event::Deconfigured) => {
                 iface.update_ip_addrs(|addrs| addrs.clear());
@@ -89,4 +90,21 @@ fn write_decimal_u8(buf: &mut [u8; 64], mut pos: usize, val: u8) -> usize {
     if val >= 10  { buf[pos] = b'0' + (val / 10) % 10; pos += 1; }
     buf[pos] = b'0' + val % 10; pos += 1;
     pos
+}
+
+fn emit_status_selfcheck() {
+    use crate::server::handlers::dhcp_status::encode_body;
+    let mut body = [0u8; 18];
+    encode_body(&mut body);
+    let state_code = body[0];
+    let ip = [body[1], body[2], body[3], body[4]];
+    let mut buf = [0u8; 64];
+    let msg = b"[NET-CORE] lease-status state=";
+    let mut pos = 0usize;
+    for &b in msg { buf[pos] = b; pos += 1; }
+    pos = write_decimal_u8(&mut buf, pos, state_code);
+    for &b in b" ip=" { buf[pos] = b; pos += 1; }
+    pos = write_octet_quad(&mut buf, pos, ip);
+    buf[pos] = b'\n'; pos += 1;
+    mk_debug(buf.as_ptr(), pos);
 }

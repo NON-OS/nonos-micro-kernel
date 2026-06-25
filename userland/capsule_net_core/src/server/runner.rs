@@ -18,7 +18,8 @@ use alloc::vec;
 
 use nonos_libc::mk_ipc_recv_from;
 
-use crate::protocol::errno::E_BAD_OP;
+use crate::protocol::errno::E_BAD_MAGIC;
+use crate::protocol::ops::MAGIC_NDHC;
 use crate::server::handlers::health::{handle as health_handle, OP_HEALTHCHECK};
 use crate::server::parse_req::{parse, HDR_LEN, IPC_BUF_MAX};
 use crate::server::respond::reply;
@@ -45,17 +46,22 @@ pub fn run() -> ! {
         let Ok((req, _body)) = parse(&rx[..n as usize]) else { continue };
         match req.op {
             OP_HEALTHCHECK => health_handle(sender_pid, &req, &mut tx),
-            _ => {
-                let _ = reply(
-                    sender_pid,
-                    req.magic,
-                    req.op,
-                    E_BAD_OP,
-                    req.request_id,
-                    &[],
-                    &mut tx,
-                );
-            }
+            _ => match req.magic {
+                MAGIC_NDHC => {
+                    crate::server::handlers::dhcp_status::dispatch(sender_pid, &req, &mut tx);
+                }
+                _ => {
+                    let _ = reply(
+                        sender_pid,
+                        req.magic,
+                        req.op,
+                        E_BAD_MAGIC,
+                        req.request_id,
+                        &[],
+                        &mut tx,
+                    );
+                }
+            },
         }
     }
 }
