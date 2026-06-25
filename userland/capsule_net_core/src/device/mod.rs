@@ -65,6 +65,6 @@ impl Device for NicDevice {
     }
 }
 
-pub fn mac(port: u32) -> [u8; 6] {
-    mac::read_mac(port).unwrap_or([0u8; 6])
+pub fn mac(port: u32) -> Option<[u8; 6]> {
+    mac::read_mac(port)
 }
