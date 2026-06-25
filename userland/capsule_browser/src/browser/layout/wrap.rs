@@ -16,9 +16,8 @@
 
 use alloc::string::String;
 
-use crate::browser::layout::doc::Span;
+use crate::browser::layout::doc::{Span, LINE_H};
 
-pub const LINE_H: u32 = 20;
 pub const MARGIN: u32 = 16;
 const FG: u32 = 0xFFE6_EDF3;
 const LINK: u32 = 0xFF4C_9AFF;

@@ -17,6 +17,8 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
+pub const LINE_H: u32 = 20;
+
 pub struct Span {
     pub x: u32,
     pub w: u32,
@@ -43,7 +45,7 @@ impl RenderDocument {
             for s in &line.spans {
                 if let Some(href) = s.href.as_deref() {
                     let sx = s.x as i32;
-                    if x >= sx && x < sx + s.w as i32 && y >= sy && y < sy + 20 {
+                    if x >= sx && x < sx + s.w as i32 && y >= sy && y < sy + LINE_H as i32 {
                         return Some(href);
                     }
                 }

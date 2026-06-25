@@ -21,8 +21,8 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::browser::html::flow::Flow;
-use doc::{RenderDocument, RenderLine};
-use wrap::{Cursor, LINE_H, MARGIN};
+use doc::{RenderDocument, RenderLine, LINE_H};
+use wrap::{Cursor, MARGIN};
 
 pub fn build(flows: &[Flow], width: u32, advance: u32) -> RenderDocument {
     let mut lines: Vec<RenderLine> = Vec::new();
