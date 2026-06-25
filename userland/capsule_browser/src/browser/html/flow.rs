@@ -14,17 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
+use alloc::string::String;
 
-mod app;
-mod event;
-pub mod html;
-pub mod http;
-mod keymap;
-pub mod manifest;
-mod net;
-mod paint;
-pub mod state;
-pub mod url;
+#[derive(Clone, Copy, Default)]
+pub struct Style {
+    pub heading: u8,
+    pub bold: bool,
+}
 
-pub use app::Browser;
+pub enum Flow {
+    Text(String, Style),
+    Link(String, String),
+    Image(String, String),
+    Break,
+}
