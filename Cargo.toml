@@ -379,6 +379,14 @@ microkernel-net-l2 = [
   "nonos-capsule-net-l2",
 ]
 
+microkernel-net-core = [
+  "microkernel-core",
+  "nonos-production",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-driver-virtio-net",
+  "nonos-capsule-net-core",
+]
+
 microkernel-net-ip = [
   "microkernel-core",
   "nonos-production",
