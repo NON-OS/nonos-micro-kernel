@@ -21,6 +21,7 @@ use nonos_libc::mk_ipc_recv_from;
 use crate::protocol::errno::E_BAD_MAGIC;
 use crate::protocol::ops::MAGIC_NDHC;
 use crate::protocol::tcp::MAGIC_NTCP;
+use crate::protocol::udp::MAGIC_NUDP;
 use crate::server::handlers::health::{handle as health_handle, OP_HEALTHCHECK};
 use crate::server::parse_req::{parse, HDR_LEN, IPC_BUF_MAX};
 use crate::server::respond::reply;
@@ -53,6 +54,9 @@ pub fn run() -> ! {
                 }
                 MAGIC_NTCP => {
                     crate::server::handlers::tcp::dispatch(sender_pid, &req, body, &mut tx);
+                }
+                MAGIC_NUDP => {
+                    crate::server::handlers::udp::dispatch(sender_pid, &req, body, &mut tx);
                 }
                 _ => {
                     let _ = reply(
