@@ -14,10 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod components;
-mod pcr;
-mod tcg2;
+use super::consts::RC_SUBMIT_FAILED;
+use super::define::nv_define_counter;
+use super::increment::nv_increment;
+use super::read::nv_read_counter;
+use uefi::table::boot::BootServices;
 
-pub use components::measure_boot_components;
-pub use pcr::extend_pcr_measurement;
-pub use tcg2::submit_tpm_command;
+pub fn tpm_counter_selftest(bs: &BootServices) -> Result<(u64, u64), u32> {
+    nv_define_counter(bs)?;
+    nv_increment(bs)?;
+    let first = nv_read_counter(bs)?;
+    nv_increment(bs)?;
+    let second = nv_read_counter(bs)?;
+    if second > first {
+        Ok((first, second))
+    } else {
+        Err(RC_SUBMIT_FAILED)
+    }
+}

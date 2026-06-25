@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod components;
-mod pcr;
-mod tcg2;
+mod consts;
+mod define;
+mod increment;
+mod read;
+mod selftest;
 
-pub use components::measure_boot_components;
-pub use pcr::extend_pcr_measurement;
-pub use tcg2::submit_tpm_command;
+pub use selftest::tpm_counter_selftest;

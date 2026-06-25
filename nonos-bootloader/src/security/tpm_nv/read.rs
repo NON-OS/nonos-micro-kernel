@@ -14,10 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod components;
-mod pcr;
-mod tcg2;
+use super::consts::{response_code, READ_CMD, RC_SUBMIT_FAILED};
+use crate::security::tpm_extend::submit_tpm_command;
+use uefi::table::boot::BootServices;
 
-pub use components::measure_boot_components;
-pub use pcr::extend_pcr_measurement;
-pub use tcg2::submit_tpm_command;
+pub fn nv_read_counter(bs: &BootServices) -> Result<u64, u32> {
+    let mut resp = [0u8; 64];
+    let n = match submit_tpm_command(bs, &READ_CMD, &mut resp) {
+        Ok(n) => n,
+        Err(_) => return Err(RC_SUBMIT_FAILED),
+    };
+    let rc = response_code(&resp);
+    if rc != 0 {
+        return Err(rc);
+    }
+    if n < 24 {
+        return Err(RC_SUBMIT_FAILED);
+    }
+    Ok(u64::from_be_bytes([
+        resp[16], resp[17], resp[18], resp[19], resp[20], resp[21], resp[22], resp[23],
+    ]))
+}

@@ -14,10 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod components;
-mod pcr;
-mod tcg2;
+use super::consts::{response_code, DEFINE_COUNTER_CMD, RC_NV_DEFINED, RC_SUBMIT_FAILED};
+use crate::security::tpm_extend::submit_tpm_command;
+use uefi::table::boot::BootServices;
 
-pub use components::measure_boot_components;
-pub use pcr::extend_pcr_measurement;
-pub use tcg2::submit_tpm_command;
+pub fn nv_define_counter(bs: &BootServices) -> Result<(), u32> {
+    let mut resp = [0u8; 64];
+    if submit_tpm_command(bs, &DEFINE_COUNTER_CMD, &mut resp).is_err() {
+        return Err(RC_SUBMIT_FAILED);
+    }
+    let rc = response_code(&resp);
+    if rc == 0 || rc == RC_NV_DEFINED {
+        Ok(())
+    } else {
+        Err(rc)
+    }
+}

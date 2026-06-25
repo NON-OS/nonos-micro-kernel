@@ -14,10 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::format;
 use uefi::prelude::*;
 
 use crate::display::{draw_boot_progress, update_stage, StageStatus, STAGE_SECURITY};
-use crate::security::SecurityContext;
+use crate::log::logger::{log_info, log_warn};
+use crate::security::{tpm_counter_selftest, SecurityContext};
 
 use super::super::uefi::TOTAL_BOOT_STAGES;
 use super::hardware::verify_hardware_requirements;
@@ -34,6 +36,12 @@ pub fn run_security_checks(st: &mut SystemTable<Boot>, gop: bool) -> SecurityCon
     let security = init_subsystems(st, gop);
     enforce_policy(&security, st, gop);
     verify_chain(&security, st);
+    match tpm_counter_selftest(st.boot_services()) {
+        Ok((first, second)) => {
+            log_info("tpm-counter", &format!("monotonic v1={} v2={}", first, second))
+        }
+        Err(rc) => log_warn("tpm-counter", &format!("selftest rc=0x{:08x}", rc)),
+    }
     update_stage(STAGE_SECURITY, StageStatus::Success);
     draw_boot_progress(3, TOTAL_BOOT_STAGES);
     security

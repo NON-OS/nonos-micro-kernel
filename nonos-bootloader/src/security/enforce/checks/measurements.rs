@@ -21,13 +21,11 @@ use uefi::prelude::*;
 pub fn extend_boot_measurements(
     system_table: &mut SystemTable<Boot>,
     kernel_hash: &[u8; 32],
-    signature: &[u8; 64],
     zk_proof_hash: &[u8; 32],
 ) -> bool {
-    let mut composite = [0u8; 128];
+    let mut composite = [0u8; 64];
     composite[0..32].copy_from_slice(kernel_hash);
-    composite[32..96].copy_from_slice(signature);
-    composite[96..128].copy_from_slice(zk_proof_hash);
+    composite[32..64].copy_from_slice(zk_proof_hash);
     let extended = extend_pcr_measurement(system_table, PCR_KERNEL, &composite);
     if extended {
         log_info("enforce", "measurements extended to PCR9");
