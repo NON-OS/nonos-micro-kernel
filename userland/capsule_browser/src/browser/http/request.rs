@@ -14,16 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
+use alloc::string::String;
 
-mod app;
-mod event;
-pub mod http;
-mod keymap;
-pub mod manifest;
-mod net;
-mod paint;
-pub mod state;
-pub mod url;
+use crate::browser::url::Url;
 
-pub use app::Browser;
+pub fn build(url: &Url) -> String {
+    let mut r = String::new();
+    r.push_str("GET ");
+    r.push_str(&url.path);
+    r.push_str(" HTTP/1.1\r\nHost: ");
+    r.push_str(&url.host);
+    r.push_str("\r\nUser-Agent: nonos-browser/0.1\r\nAccept: text/html\r\n");
+    r.push_str("Accept-Encoding: identity\r\nConnection: close\r\n\r\n");
+    r
+}
