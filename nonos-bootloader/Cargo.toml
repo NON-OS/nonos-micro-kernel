@@ -85,5 +85,7 @@ cc = "1.0"
 embed-manifest = "1.4.0"
 sha2 = "0.10"
 blake3 = "1.5"
-image = "0.25"
 ed25519-dalek = { version = "2.1", default-features = false, features = ["alloc"] }
+
+[profile.release]
+codegen-units = 1
