@@ -45,6 +45,7 @@ pub mod capsule_input_proof;
 pub mod capsule_input_router;
 pub mod capsule_installer;
 pub mod capsule_login;
+pub mod capsule_net_core;
 pub mod capsule_net_dhcp;
 pub mod capsule_net_dns;
 pub mod capsule_net_ip;

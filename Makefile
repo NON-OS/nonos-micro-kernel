@@ -829,6 +829,7 @@ include userland/capsule_net_udp/Capsule.mk
 include userland/capsule_net_dhcp/Capsule.mk
 include userland/capsule_net_tcp/Capsule.mk
 include userland/capsule_net_dns/Capsule.mk
+include userland/capsule_net_core/Capsule.mk
 include userland/capsule_net_sockets/Capsule.mk
 include userland/capsule_net_nym/Capsule.mk
 include userland/capsule_wallpaper/Capsule.mk
@@ -1236,6 +1237,15 @@ nonos-mk-net-l2-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-net-l2
+
+nonos-mk-net-core-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
+		$(net-core_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-net-core)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-net-core
 
 nonos-mk-net-ip-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) \
