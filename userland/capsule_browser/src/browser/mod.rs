@@ -21,6 +21,7 @@ mod event;
 pub mod html;
 pub mod http;
 mod keymap;
+pub mod layout;
 pub mod manifest;
 mod net;
 mod paint;
