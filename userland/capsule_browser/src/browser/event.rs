@@ -21,13 +21,34 @@ use crate::browser::state::State;
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     match event.kind {
-        InputKind::ButtonDown => {
-            state.address_focused = event.y < 40;
+        InputKind::ButtonDown => on_button(state, event),
+        InputKind::Wheel => {
+            let max = state.document.as_ref().map(|d| d.content_h).unwrap_or(0);
+            let next = state.scroll as i32 - event.delta_y * 20;
+            state.scroll = next.clamp(0, max as i32) as u32;
             EventOutcome::Repaint
         }
         InputKind::KeyDown if state.address_focused => on_key(state, event),
         _ => EventOutcome::Idle,
     }
+}
+
+fn on_button(state: &mut State, event: InputEvent) -> EventOutcome {
+    if event.y >= 40 {
+        let dy = event.y - 40 + state.scroll as i32;
+        let hit = state
+            .document
+            .as_ref()
+            .and_then(|d| d.link_at(event.x, dy).map(alloc::string::String::from));
+        if let Some(href) = hit {
+            state.address = href.clone();
+            state.pending_nav = Some(href);
+            return EventOutcome::Repaint;
+        }
+        return EventOutcome::Idle;
+    }
+    state.address_focused = true;
+    EventOutcome::Repaint
 }
 
 fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
