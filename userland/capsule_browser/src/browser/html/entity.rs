@@ -14,5 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod entity;
-pub mod flow;
+use alloc::string::String;
+
+pub fn push_decoded(out: &mut String, entity: &str) {
+    let s = match entity {
+        "amp" => "&",
+        "lt" => "<",
+        "gt" => ">",
+        "quot" => "\"",
+        "apos" => "'",
+        "nbsp" => " ",
+        _ => {
+            if let Some(n) = entity.strip_prefix('#') {
+                if let Ok(cp) = n.parse::<u32>() {
+                    if let Some(c) = char::from_u32(cp) {
+                        out.push(c);
+                        return;
+                    }
+                }
+            }
+            ""
+        }
+    };
+    out.push_str(s);
+}
