@@ -829,6 +829,7 @@ include userland/capsule_net_udp/Capsule.mk
 include userland/capsule_net_dhcp/Capsule.mk
 include userland/capsule_net_tcp/Capsule.mk
 include userland/capsule_net_dns/Capsule.mk
+include userland/capsule_net_core/Capsule.mk
 include userland/capsule_net_sockets/Capsule.mk
 include userland/capsule_net_nym/Capsule.mk
 include userland/capsule_wallpaper/Capsule.mk
