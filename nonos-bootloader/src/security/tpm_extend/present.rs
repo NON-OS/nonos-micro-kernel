@@ -14,25 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::consts::{RC_NO_TPM, RC_SUBMIT_FAILED};
-use super::define::nv_define_counter;
-use super::increment::nv_increment;
-use super::read::nv_read_counter;
-use crate::security::tpm_extend::tpm_present;
-use uefi::table::boot::BootServices;
+use uefi::table::boot::{BootServices, SearchType};
+use uefi::Identify;
 
-pub fn tpm_counter_selftest(bs: &BootServices) -> Result<(u64, u64), u32> {
-    if !tpm_present(bs) {
-        return Err(RC_NO_TPM);
-    }
-    nv_define_counter(bs)?;
-    nv_increment(bs)?;
-    let first = nv_read_counter(bs)?;
-    nv_increment(bs)?;
-    let second = nv_read_counter(bs)?;
-    if second > first {
-        Ok((first, second))
-    } else {
-        Err(RC_SUBMIT_FAILED)
-    }
+use crate::security::tpm_types::Tcg2Protocol;
+
+pub fn tpm_present(bs: &BootServices) -> bool {
+    bs.locate_handle_buffer(SearchType::ByProtocol(&Tcg2Protocol::GUID))
+        .map(|handles| handles.first().is_some())
+        .unwrap_or(false)
 }

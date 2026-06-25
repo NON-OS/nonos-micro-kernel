@@ -62,7 +62,7 @@ pub use memory::{
     init_canaries, verify_heap_canary, verify_stack_canary, zeroize_slice, SecureBuffer, SecureKey,
 };
 pub use tpm_extend::{extend_pcr_measurement, measure_boot_components};
-pub use tpm_nv::tpm_counter_selftest;
+pub use tpm_nv::{tpm_counter_selftest, RC_NO_TPM};
 pub use tpm_types::{EV_POST_CODE, PCR_BOOTLOADER, PCR_CAPSULE, PCR_KERNEL};
 pub use types::SecurityContext;
 pub use verify::{verify_kernel_signature_advanced, verify_signature};

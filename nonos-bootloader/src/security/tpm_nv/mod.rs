@@ -20,4 +20,5 @@ mod increment;
 mod read;
 mod selftest;
 
+pub use consts::RC_NO_TPM;
 pub use selftest::tpm_counter_selftest;

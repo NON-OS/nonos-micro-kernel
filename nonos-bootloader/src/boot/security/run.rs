@@ -19,7 +19,7 @@ use uefi::prelude::*;
 
 use crate::display::{draw_boot_progress, update_stage, StageStatus, STAGE_SECURITY};
 use crate::log::logger::{log_info, log_warn};
-use crate::security::{tpm_counter_selftest, SecurityContext};
+use crate::security::{tpm_counter_selftest, SecurityContext, RC_NO_TPM};
 
 use super::super::uefi::TOTAL_BOOT_STAGES;
 use super::hardware::verify_hardware_requirements;
@@ -40,6 +40,7 @@ pub fn run_security_checks(st: &mut SystemTable<Boot>, gop: bool) -> SecurityCon
         Ok((first, second)) => {
             log_info("tpm-counter", &format!("monotonic v1={} v2={}", first, second))
         }
+        Err(rc) if rc == RC_NO_TPM => log_info("tpm-counter", "no TPM present, selftest skipped"),
         Err(rc) => log_warn("tpm-counter", &format!("selftest rc=0x{:08x}", rc)),
     }
     update_stage(STAGE_SECURITY, StageStatus::Success);

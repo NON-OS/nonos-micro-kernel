@@ -16,8 +16,10 @@
 
 mod components;
 mod pcr;
+mod present;
 mod tcg2;
 
 pub use components::measure_boot_components;
 pub use pcr::extend_pcr_measurement;
+pub use present::tpm_present;
 pub use tcg2::submit_tpm_command;
