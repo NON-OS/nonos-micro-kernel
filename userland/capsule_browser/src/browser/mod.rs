@@ -23,5 +23,6 @@ pub mod manifest;
 mod net;
 mod paint;
 pub mod state;
+pub mod url;
 
 pub use app::Browser;
