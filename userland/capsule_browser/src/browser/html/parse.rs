@@ -27,7 +27,7 @@ pub fn parse(bytes: &[u8]) -> Vec<Flow> {
     let text = core::str::from_utf8(bytes).unwrap_or("");
     let mut out: Vec<Flow> = Vec::new();
     let mut buf = String::new();
-    let style = Style::default();
+    let mut style = Style::default();
     let mut tags = 0u32;
     let mut chars = text.char_indices().peekable();
     while let Some((_, c)) = chars.next() {
@@ -38,7 +38,7 @@ pub fn parse(bytes: &[u8]) -> Vec<Flow> {
             '<' => {
                 flush(&mut out, &mut buf, style);
                 tags += 1;
-                consume_tag(text, &mut chars);
+                consume_tag(text, &mut chars, &mut out, &mut style);
             }
             '&' => read_entity(&mut chars, &mut buf),
             c if c.is_whitespace() => push_ws(&mut buf),
@@ -83,11 +83,53 @@ fn read_entity(chars: &mut core::iter::Peekable<core::str::CharIndices>, buf: &m
     }
 }
 
-fn consume_tag(text: &str, chars: &mut core::iter::Peekable<core::str::CharIndices>) {
-    while let Some((_, c)) = chars.next() {
+fn read_to_gt(chars: &mut core::iter::Peekable<core::str::CharIndices>) -> String {
+    let mut raw = String::new();
+    while let Some(&(_, c)) = chars.peek() {
+        chars.next();
         if c == '>' {
             break;
         }
+        if raw.len() < 8192 {
+            raw.push(c);
+        }
     }
-    let _ = text;
+    raw
+}
+
+fn tag_name(raw: &str) -> String {
+    let body = raw.strip_prefix('/').unwrap_or(raw);
+    body.split(|c: char| c.is_whitespace() || c == '/')
+        .find(|s| !s.is_empty())
+        .unwrap_or("")
+        .to_ascii_lowercase()
+}
+
+fn attr(raw: &str, key: &str) -> Option<String> {
+    let lower = raw.to_ascii_lowercase();
+    let mut from = 0usize;
+    while let Some(rel) = lower.get(from..)?.find(key) {
+        let at = from + rel;
+        from = at + key.len();
+        let rest = raw.get(from..)?.trim_start();
+        let after = rest.strip_prefix('=')?.trim_start();
+        let (q, body) = match after.as_bytes().first() {
+            Some(b'"') => ('"', after.get(1..)?),
+            Some(b'\'') => ('\'', after.get(1..)?),
+            _ => return Some(after.split(|c: char| c.is_whitespace()).next()?.into()),
+        };
+        return Some(body.split(q).next()?.into());
+    }
+    None
+}
+
+fn consume_tag(
+    text: &str,
+    chars: &mut core::iter::Peekable<core::str::CharIndices>,
+    out: &mut Vec<Flow>,
+    style: &mut Style,
+) {
+    let raw = read_to_gt(chars);
+    let _ = tag_name(&raw);
+    let _ = (text, out, style);
 }
