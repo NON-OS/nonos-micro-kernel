@@ -11,7 +11,7 @@ CAPSULE_FEATURE          := nonos-capsule-net-core
 CAPSULE_NAMESPACE        := systems.nonos.net.core
 CAPSULE_SERVICE_ENDPOINT := service:4480:net.core
 CAPSULE_REPLY_ENDPOINT   := reply:4481:endpoint.net.core.reply
-CAPSULE_REQUIRED_CAPS    := 0x00039
+CAPSULE_REQUIRED_CAPS    := 0x00139
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_net_core
 
 include nonos-mk/capsule.mk
