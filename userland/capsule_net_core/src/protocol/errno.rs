@@ -14,42 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-
-extern crate alloc;
-
-mod device;
-mod iface;
-mod protocol;
-mod register;
-mod server;
-mod setup;
-mod state;
-
-use nonos_libc::{heap_init, mk_exit, mk_yield};
-use setup::SetupError;
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    wait_for_setup();
-    register::all();
-    server::run();
-}
-
-fn wait_for_setup() {
-    loop {
-        match setup::run() {
-            Ok(()) => return,
-            Err(SetupError::NicNotFound) => {
-                for _ in 0..64 {
-                    mk_yield();
-                }
-            }
-            Err(_) => mk_exit(2),
-        }
-    }
-}
+pub const E_OK: u16 = 0;
+pub const E_BAD_MAGIC: u16 = 1;
+pub const E_BAD_VERSION: u16 = 2;
+pub const E_BAD_OP: u16 = 3;
+pub const E_BAD_LEN: u16 = 4;

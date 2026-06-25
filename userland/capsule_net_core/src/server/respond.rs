@@ -14,42 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use nonos_libc::mk_ipc_reply;
 
-extern crate alloc;
+use super::parse_req::HDR_LEN;
 
-mod device;
-mod iface;
-mod protocol;
-mod register;
-mod server;
-mod setup;
-mod state;
-
-use nonos_libc::{heap_init, mk_exit, mk_yield};
-use setup::SetupError;
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    wait_for_setup();
-    register::all();
-    server::run();
-}
-
-fn wait_for_setup() {
-    loop {
-        match setup::run() {
-            Ok(()) => return,
-            Err(SetupError::NicNotFound) => {
-                for _ in 0..64 {
-                    mk_yield();
-                }
-            }
-            Err(_) => mk_exit(2),
-        }
-    }
+pub fn reply(
+    sender_pid: u32,
+    magic: u32,
+    op: u16,
+    errno: u16,
+    request_id: u32,
+    body: &[u8],
+    tx: &mut [u8],
+) -> i64 {
+    tx[0..4].copy_from_slice(&magic.to_le_bytes());
+    tx[4..6].copy_from_slice(&1u16.to_le_bytes());
+    tx[6..8].copy_from_slice(&op.to_le_bytes());
+    tx[8..10].copy_from_slice(&errno.to_le_bytes());
+    tx[10..12].fill(0);
+    tx[12..16].copy_from_slice(&request_id.to_le_bytes());
+    tx[16..20].copy_from_slice(&(body.len() as u32).to_le_bytes());
+    tx[HDR_LEN..HDR_LEN + body.len()].copy_from_slice(body);
+    mk_ipc_reply(sender_pid, tx.as_ptr(), HDR_LEN + body.len())
 }

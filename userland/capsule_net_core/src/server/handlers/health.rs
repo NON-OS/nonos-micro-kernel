@@ -14,42 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use crate::protocol::errno::E_OK;
+use crate::server::parse_req::Request;
+use crate::server::respond::reply;
 
-extern crate alloc;
+pub const OP_HEALTHCHECK: u16 = 1;
 
-mod device;
-mod iface;
-mod protocol;
-mod register;
-mod server;
-mod setup;
-mod state;
-
-use nonos_libc::{heap_init, mk_exit, mk_yield};
-use setup::SetupError;
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    wait_for_setup();
-    register::all();
-    server::run();
-}
-
-fn wait_for_setup() {
-    loop {
-        match setup::run() {
-            Ok(()) => return,
-            Err(SetupError::NicNotFound) => {
-                for _ in 0..64 {
-                    mk_yield();
-                }
-            }
-            Err(_) => mk_exit(2),
-        }
-    }
+pub fn handle(sender_pid: u32, req: &Request, tx: &mut [u8]) {
+    let _ = reply(sender_pid, req.magic, req.op, E_OK, req.request_id, &[], tx);
 }
