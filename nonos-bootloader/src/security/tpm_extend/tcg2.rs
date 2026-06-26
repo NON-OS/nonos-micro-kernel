@@ -14,47 +14,52 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::table::boot::SearchType;
+use uefi::table::boot::{OpenProtocolAttributes, OpenProtocolParams, SearchType};
 use uefi::Identify;
 
-use crate::security::tpm_types::{Tcg2EventHeader, Tcg2Protocol, EV_POST_CODE};
-
-pub fn locate_tcg2_protocol(bs: &uefi::table::boot::BootServices) -> Option<*mut Tcg2Protocol> {
-    let handles = bs.locate_handle_buffer(SearchType::ByProtocol(&Tcg2Protocol::GUID)).ok()?;
-    let handle = handles.first()?;
-    let protocol = bs.open_protocol_exclusive::<Tcg2Protocol>(*handle).ok()?;
-    let ptr = &*protocol as *const Tcg2Protocol as *mut Tcg2Protocol;
-    core::mem::forget(protocol);
-    Some(ptr)
-}
+use crate::security::tpm_types::{Tcg2Event, Tcg2EventHeader, Tcg2Protocol, EV_POST_CODE};
 
 pub fn extend_pcr_via_tcg2(
-    tcg2: *mut Tcg2Protocol,
+    bs: &uefi::table::boot::BootServices,
     pcr_index: u32,
     digest: &[u8; 32],
 ) -> Result<(), &'static str> {
-    if tcg2.is_null() {
-        return Err("null TCG2 handle");
+    let handles = bs
+        .locate_handle_buffer(SearchType::ByProtocol(&Tcg2Protocol::GUID))
+        .map_err(|_| "no TCG2 handle")?;
+    let handle = *handles.first().ok_or("no TCG2 protocol")?;
+    let proto = unsafe {
+        bs.open_protocol::<Tcg2Protocol>(
+            OpenProtocolParams { handle, agent: bs.image_handle(), controller: None },
+            OpenProtocolAttributes::GetProtocol,
+        )
     }
-    let header = Tcg2EventHeader {
-        header_size: core::mem::size_of::<Tcg2EventHeader>() as u32,
-        header_version: 1,
-        pcr_index,
-        event_type: EV_POST_CODE,
+    .map_err(|_| "open TCG2 failed")?;
+    let tcg2 = &*proto as *const Tcg2Protocol as *mut Tcg2Protocol;
+    let event = Tcg2Event {
+        size: core::mem::size_of::<Tcg2Event>() as u32,
+        header: Tcg2EventHeader {
+            header_size: core::mem::size_of::<Tcg2EventHeader>() as u32,
+            header_version: 1,
+            pcr_index,
+            event_type: EV_POST_CODE,
+        },
+        event: *digest,
     };
-    unsafe {
-        let status = ((*tcg2).hash_log_extend_event)(
+    let status = unsafe {
+        ((*tcg2).hash_log_extend_event)(
             tcg2,
             0,
             digest.as_ptr(),
             digest.len() as u64,
-            &header,
-        );
-        if status.is_success() {
-            Ok(())
-        } else {
-            Err("TCG2 extend failed")
-        }
+            &event as *const Tcg2Event as *const u8,
+        )
+    };
+    drop(proto);
+    if status.is_success() {
+        Ok(())
+    } else {
+        Err("TCG2 extend failed")
     }
 }
 
@@ -63,7 +68,20 @@ pub fn submit_tpm_command(
     cmd: &[u8],
     response: &mut [u8],
 ) -> Result<usize, &'static str> {
-    let tcg2 = locate_tcg2_protocol(bs).ok_or("no TCG2 protocol")?;
+    let handles = bs
+        .locate_handle_buffer(SearchType::ByProtocol(&Tcg2Protocol::GUID))
+        .map_err(|_| "no TCG2 handle")?;
+    let handle = *handles.first().ok_or("no TCG2 protocol")?;
+    // OVMF keeps the TCG2 protocol open BY_DRIVER, so an exclusive open is
+    // denied. GetProtocol borrows the interface without disturbing that owner.
+    let proto = unsafe {
+        bs.open_protocol::<Tcg2Protocol>(
+            OpenProtocolParams { handle, agent: bs.image_handle(), controller: None },
+            OpenProtocolAttributes::GetProtocol,
+        )
+    }
+    .map_err(|_| "open TCG2 failed")?;
+    let tcg2 = &*proto as *const Tcg2Protocol as *mut Tcg2Protocol;
     let status = unsafe {
         ((*tcg2).submit_command)(
             tcg2,
@@ -73,6 +91,7 @@ pub fn submit_tpm_command(
             response.as_mut_ptr(),
         )
     };
+    drop(proto);
     if !status.is_success() {
         return Err("submit_command failed");
     }
