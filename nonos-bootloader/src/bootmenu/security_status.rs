@@ -14,25 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::footer::draw_footer;
-use super::header::draw_header;
-use super::list::draw_list;
-use super::security_status::draw_security_status;
-use crate::display::fx::fill_atmosphere;
-use crate::display::gop::get_dimensions;
+use super::theme::STATUS;
+use crate::display::font::{draw_string, CHAR_WIDTH};
 use crate::security::SecurityContext;
 
-pub(super) fn render(sel: usize, remaining_s: u32, sec: &SecurityContext) {
-    let (w, h) = get_dimensions();
-    fill_atmosphere();
-
-    // Vertically center the title + list + status as one block.
-    let title_y = h.saturating_sub(360) / 2 + 24;
-    let list_top = title_y + 116;
-    let status_y = list_top + 6 * 50 + 30;
-
-    draw_header(w, title_y);
-    draw_list(w, list_top, sel);
-    draw_footer(w, status_y, remaining_s);
-    draw_security_status(w, status_y + 44, sec);
+pub(super) fn draw_security_status(w: u32, y: u32, sec: &SecurityContext) {
+    let mut buf = [0u8; 64];
+    let mut n = 0usize;
+    let head: &[u8] = if sec.measured_boot_active {
+        b"TPM MEASURED BOOT ACTIVE   NV COUNTER "
+    } else {
+        b"TPM MEASURED BOOT INACTIVE   NV COUNTER "
+    };
+    for &b in head {
+        buf[n] = b;
+        n += 1;
+    }
+    let counter: &[u8] = if sec.tpm_counter_ok { b"OK" } else { b"--" };
+    for &b in counter {
+        buf[n] = b;
+        n += 1;
+    }
+    let msg = &buf[..n];
+    let mw = msg.len() as u32 * CHAR_WIDTH;
+    draw_string(w.saturating_sub(mw) / 2, y, msg, STATUS);
 }

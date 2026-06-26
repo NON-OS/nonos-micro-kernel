@@ -23,6 +23,7 @@ mod list;
 mod nav;
 mod render;
 mod run;
+mod security_status;
 mod theme;
 
 pub use run::run;

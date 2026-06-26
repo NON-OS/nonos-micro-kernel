@@ -33,11 +33,12 @@ pub fn run_security_checks(st: &mut SystemTable<Boot>, gop: bool) -> SecurityCon
     init_security_primitives();
     let hw_caps = verify_hardware_requirements(st, gop);
     verify_platform(&hw_caps, gop);
-    let security = init_subsystems(st, gop);
+    let mut security = init_subsystems(st, gop);
     enforce_policy(&security, st, gop);
     verify_chain(&security, st);
     match tpm_counter_selftest(st.boot_services()) {
         Ok((first, second)) => {
+            security.tpm_counter_ok = true;
             log_info("tpm-counter", &format!("monotonic v1={} v2={}", first, second))
         }
         Err(rc) if rc == RC_NO_TPM => log_info("tpm-counter", "no TPM present, selftest skipped"),
