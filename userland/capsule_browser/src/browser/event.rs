@@ -17,7 +17,9 @@
 use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_BACKSPACE, KEY_ENTER};
 
 use crate::browser::keymap::printable;
-use crate::browser::state::State;
+use crate::browser::paint::chrome::{self, Btn, TITLEBAR};
+use crate::browser::paint::home_page::{self, CONTENT_TOP};
+use crate::browser::state::{State, View};
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     match event.kind {
@@ -34,21 +36,70 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
 }
 
 fn on_button(state: &mut State, event: InputEvent) -> EventOutcome {
-    if event.y >= 40 {
-        let dy = event.y - 40 + state.scroll as i32;
-        let hit = state
-            .document
-            .as_ref()
-            .and_then(|d| d.link_at(event.x, dy).map(alloc::string::String::from));
-        if let Some(href) = hit {
-            state.address = href.clone();
-            state.pending_nav = Some(href);
-            return EventOutcome::Repaint;
-        }
+    if event.y < TITLEBAR as i32 {
         return EventOutcome::Idle;
     }
-    state.address_focused = true;
-    EventOutcome::Repaint
+    if event.y < CONTENT_TOP as i32 {
+        return on_toolbar(state, event);
+    }
+    match state.view {
+        View::Home => on_home_click(state, event),
+        View::Page => on_page_click(state, event),
+    }
+}
+
+fn on_toolbar(state: &mut State, event: InputEvent) -> EventOutcome {
+    match chrome::toolbar_button_at(event.x, event.y) {
+        Some(Btn::Home) => {
+            state.view = View::Home;
+            state.address.clear();
+            EventOutcome::Repaint
+        }
+        Some(Btn::Reload) => {
+            if !state.address.is_empty() {
+                state.pending_nav = Some(state.address.clone());
+            }
+            EventOutcome::Repaint
+        }
+        Some(Btn::Url) => {
+            state.address_focused = true;
+            EventOutcome::Repaint
+        }
+        Some(Btn::Back) | Some(Btn::Forward) => EventOutcome::Idle,
+        None => {
+            state.address_focused = false;
+            EventOutcome::Idle
+        }
+    }
+}
+
+fn on_home_click(state: &mut State, event: InputEvent) -> EventOutcome {
+    if home_page::search_bar_hit(event.x, event.y) {
+        state.address_focused = true;
+        return EventOutcome::Repaint;
+    }
+    match home_page::shortcut_at(event.x, event.y) {
+        Some(url) => {
+            state.address = url.into();
+            state.pending_nav = Some(url.into());
+            EventOutcome::Repaint
+        }
+        None => EventOutcome::Idle,
+    }
+}
+
+fn on_page_click(state: &mut State, event: InputEvent) -> EventOutcome {
+    let dy = event.y - CONTENT_TOP as i32 + state.scroll as i32;
+    let hit = state
+        .document
+        .as_ref()
+        .and_then(|d| d.link_at(event.x, dy).map(alloc::string::String::from));
+    if let Some(href) = hit {
+        state.address = href.clone();
+        state.pending_nav = Some(href);
+        return EventOutcome::Repaint;
+    }
+    EventOutcome::Idle
 }
 
 fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {

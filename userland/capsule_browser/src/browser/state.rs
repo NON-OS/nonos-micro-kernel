@@ -15,6 +15,18 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::string::String;
+use alloc::vec::Vec;
+
+pub enum View {
+    Home,
+    Page,
+}
+
+pub struct FetchJob {
+    pub handle: u32,
+    pub buf: Vec<u8>,
+    pub idle: u32,
+}
 
 pub struct State {
     pub address: String,
@@ -25,6 +37,9 @@ pub struct State {
     pub scroll: u32,
     pub dns_port: u32,
     pub sockets_port: u32,
+    pub view: View,
+    pub fetch_job: Option<FetchJob>,
+    pub fetch_start_ms: i64,
 }
 
 impl State {
@@ -38,6 +53,9 @@ impl State {
             scroll: 0,
             dns_port: 0,
             sockets_port: 0,
+            view: View::Home,
+            fetch_job: None,
+            fetch_start_ms: 0,
         }
     }
 }

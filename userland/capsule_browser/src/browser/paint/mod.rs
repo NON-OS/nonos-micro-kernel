@@ -14,14 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod chrome;
+pub mod chrome;
 mod document;
+pub mod home_page;
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::browser::state::State;
+use crate::browser::state::{State, View};
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     chrome::paint(state, fb);
-    document::paint(state, fb);
+    match state.view {
+        View::Home => home_page::paint(state, fb),
+        View::Page => document::paint(state, fb),
+    }
 }
