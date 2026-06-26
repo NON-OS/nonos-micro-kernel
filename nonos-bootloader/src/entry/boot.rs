@@ -19,7 +19,8 @@ use super::init::init_boot_services;
 use super::mode::select_security_mode;
 use super::pipeline::run_verified_boot;
 use nonos_boot::boot::{
-    initialize_zk_replay_protection, run_hardware_discovery, run_security_checks, run_uefi_init,
+    enforce_policy, initialize_zk_replay_protection, run_hardware_discovery, run_security_checks,
+    run_uefi_init,
 };
 use nonos_boot::display::{draw_status_line, init_boot_screen};
 use uefi::prelude::*;
@@ -35,6 +36,7 @@ pub fn boot_entry(_handle: Handle, mut st: SystemTable<Boot>) -> Status {
         Ok(mode) => mode,
         Err(status) => return status,
     };
+    enforce_policy(&security, &mut st, gop, security_mode);
     if gop {
         init_boot_screen();
         draw_status_line(security.secure_boot_enabled, security.measured_boot_active, false);

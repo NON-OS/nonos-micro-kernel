@@ -20,4 +20,5 @@ mod platform;
 mod policy;
 mod run;
 
+pub use policy::enforce_policy;
 pub use run::run_security_checks;

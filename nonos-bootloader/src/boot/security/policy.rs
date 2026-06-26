@@ -18,14 +18,20 @@ use uefi::prelude::*;
 
 use crate::display::{log_ok, show_error_screen, update_stage, StageStatus, STAGE_SECURITY};
 use crate::log::logger::{log_error, log_warn};
+use crate::menu::SecurityMode;
 use crate::security::{
     enforce_security_policy, verify_secure_boot_chain, SecurityContext, SecurityPolicy,
 };
 
 use super::super::util::fatal_reset;
 
-pub fn enforce_policy(security: &SecurityContext, st: &mut SystemTable<Boot>, gop: bool) {
-    let enforcement = enforce_security_policy(security, st);
+pub fn enforce_policy(
+    security: &SecurityContext,
+    st: &mut SystemTable<Boot>,
+    gop: bool,
+    mode: SecurityMode,
+) {
+    let enforcement = enforce_security_policy(security, st, mode);
     if !enforcement.allow_boot {
         log_error("security", enforcement.reason);
         update_stage(STAGE_SECURITY, StageStatus::Failed);
