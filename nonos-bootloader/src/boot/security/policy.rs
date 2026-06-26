@@ -18,7 +18,9 @@ use uefi::prelude::*;
 
 use crate::display::{log_ok, show_error_screen, update_stage, StageStatus, STAGE_SECURITY};
 use crate::log::logger::{log_error, log_warn};
-use crate::security::{enforce_security_policy, verify_secure_boot_chain, SecurityContext};
+use crate::security::{
+    enforce_security_policy, verify_secure_boot_chain, SecurityContext, SecurityPolicy,
+};
 
 use super::super::util::fatal_reset;
 
@@ -39,6 +41,11 @@ pub fn enforce_policy(security: &SecurityContext, st: &mut SystemTable<Boot>, go
 
 pub fn verify_chain(security: &SecurityContext, st: &mut SystemTable<Boot>) {
     if security.secure_boot_enabled && !verify_secure_boot_chain(security, st) {
-        log_warn("security", "Secure Boot chain verification warning");
+        if SecurityPolicy::from_build() == SecurityPolicy::Development {
+            log_warn("security", "Secure Boot chain verification warning");
+        } else {
+            log_error("security", "Secure Boot chain verification failed");
+            fatal_reset(st, "Secure Boot chain verification failed");
+        }
     }
 }

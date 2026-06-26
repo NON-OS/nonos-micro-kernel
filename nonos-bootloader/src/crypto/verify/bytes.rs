@@ -16,7 +16,9 @@
 
 use super::error::VerifyError;
 use super::SIG_LEN;
-use crate::crypto::keys::{derive_keyid, is_initialized, KeyId, KeyStatus, KEYSTORE};
+use crate::crypto::keys::{
+    constant_time_eq, derive_keyid, get_nonos_key, is_initialized, KeyId, KeyStatus, KEYSTORE,
+};
 use core::convert::TryInto;
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
@@ -35,6 +37,9 @@ pub fn verify_signature_bytes(data: &[u8], sig_bytes: &[u8]) -> Result<KeyId, Ve
         let version = store.versions[i];
         if let Ok(pk) = VerifyingKey::from_bytes(pk_bytes) {
             if pk.verify(data, &sig).is_ok() {
+                if !constant_time_eq(pk_bytes, get_nonos_key()) {
+                    return Err(VerifyError::KeyNotFound);
+                }
                 let key_id = derive_keyid(pk_bytes);
                 match store.validate_key(pk_bytes, version) {
                     KeyStatus::Valid => return Ok(key_id),

@@ -39,8 +39,7 @@ pub fn display_success(
         log_hash(b"capsule ", &r.capsule_commitment);
     }
     if tpm {
-        let sig = [0u8; 64];
-        extend_boot_measurements(st, kh, &sig, &r.program_hash);
+        extend_boot_measurements(st, kh, &r.program_hash);
         log_info("tpm", "measurements extended");
     }
 }

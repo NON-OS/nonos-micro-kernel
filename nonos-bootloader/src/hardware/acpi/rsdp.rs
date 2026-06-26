@@ -30,6 +30,9 @@ pub fn discover_acpi_rsdp(system_table: &mut SystemTable<Boot>) -> Option<u64> {
 }
 
 fn validate_rsdp(rsdp_address: u64) -> bool {
+    if rsdp_address == 0 {
+        return false;
+    }
     unsafe {
         let rsdp = &*(rsdp_address as *const RsdpDescriptor);
         if &rsdp.signature != RsdpDescriptor::SIGNATURE {

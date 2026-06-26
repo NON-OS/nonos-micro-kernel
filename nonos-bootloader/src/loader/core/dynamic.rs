@@ -29,7 +29,7 @@ use crate::crypto::sig::CapsuleMetadata;
 use crate::loader::errors::{LoaderError, LoaderResult};
 use crate::loader::image::{KernelImage, KernelSegmentLayout, MAX_KERNEL_SEGMENTS};
 use crate::loader::types::memory;
-use crate::log::logger::{log_error, log_info, log_warn};
+use crate::log::logger::{log_error, log_info};
 
 use super::alloc::record_alloc;
 use super::constants::{MAX_ALLOCS, PAGE_SIZE};
@@ -71,7 +71,7 @@ pub fn load_dyn_kernel(
     load_segments_relocated(payload, v, base, base_phys);
 
     let load_bias = (base_phys as i64) - (base as i64);
-    apply_relocations(v, base_phys, load_bias, payload);
+    apply_relocations(v, base_phys, load_bias, payload)?;
 
     let entry_virt = v.elf.header.e_entry as u64;
     let entry_offset = entry_virt.saturating_sub(base);
@@ -139,15 +139,22 @@ fn load_segments_relocated(payload: &[u8], v: &ValidationResult, base: u64, base
     }
 }
 
-fn apply_relocations(v: &ValidationResult, base_phys: u64, load_bias: i64, payload: &[u8]) {
+fn apply_relocations(
+    v: &ValidationResult,
+    base_phys: u64,
+    load_bias: i64,
+    payload: &[u8],
+) -> LoaderResult<()> {
     match crate::loader::reloc::process_elf_relocations(&v.elf, base_phys, load_bias, payload) {
         Ok(reloc_count) => {
             if reloc_count > 0 {
                 log_info("loader", &format!("Applied {} relocations", reloc_count));
             }
+            Ok(())
         }
         Err(e) => {
-            log_warn("loader", &format!("Relocation warning: {}", e));
+            log_error("loader", &format!("SECURITY: relocation failed: {}", e));
+            Err(LoaderError::MalformedElf("relocation failed"))
         }
     }
 }

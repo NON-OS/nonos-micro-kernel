@@ -14,28 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod add;
-mod init;
-mod query;
-mod revoke;
-mod state;
-mod store;
-mod store_add;
-mod store_revoke;
-mod store_validate;
-mod types;
-mod util;
+use super::consts::{response_code, READ_CMD, RC_SUBMIT_FAILED};
+use crate::security::tpm_extend::submit_tpm_command;
+use uefi::table::boot::BootServices;
 
-pub use add::{add_key, add_key_versioned};
-pub use init::{init_nonos_keys, init_production_keys, is_initialized};
-pub use query::{
-    get_build_timestamp, get_key_fingerprint, get_minimum_version, get_nonos_key, get_nonos_key_id,
-    key_count, set_minimum_version, validate_key,
-};
-pub use revoke::revoke_key_by_pubkey;
-pub use state::{KEYSTORE, NONOS_SIGNING_KEY};
-pub use store::KeyStore;
-pub use types::{
-    KeyId, KeyStatus, RevocationEntry, RevocationReason, MAX_KEYS, MAX_REVOKED, PK_LEN,
-};
-pub use util::{constant_time_eq, derive_keyid};
+pub fn nv_read_counter(bs: &BootServices) -> Result<u64, u32> {
+    let mut resp = [0u8; 64];
+    let n = match submit_tpm_command(bs, &READ_CMD, &mut resp) {
+        Ok(n) => n,
+        Err(_) => return Err(RC_SUBMIT_FAILED),
+    };
+    let rc = response_code(&resp);
+    if rc != 0 {
+        return Err(rc);
+    }
+    if n < 24 {
+        return Err(RC_SUBMIT_FAILED);
+    }
+    Ok(u64::from_be_bytes([
+        resp[16], resp[17], resp[18], resp[19], resp[20], resp[21], resp[22], resp[23],
+    ]))
+}

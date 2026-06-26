@@ -360,20 +360,52 @@ $(TARGET_DIR)/.nonos-toolchain.stamp:
 	@$(RUSTUP) component add clippy rustfmt --toolchain $(TOOLCHAIN) 2>/dev/null || true
 	@touch $@
 
+# Bootloader security policy, selected at compile time. The loader refuses to
+# build without an explicit policy (no silent default), so this is never
+# ambiguous. `standard-qemu` boots under emulation while still enforcing the
+# kernel signature and ZK attestation; a real production image MUST be built
+# with BOOTLOADER_POLICY=production (Hardened: Secure Boot + TPM measured boot
+# are mandatory and a missing one halts the boot).
+BOOTLOADER_POLICY ?= standard-qemu
+
+# When NONOS_TRUST_ANCHOR_PUBKEY points at a 32-byte public key, the bootloader
+# bakes the trust anchor from it directly and the private signing seed is never
+# read at build time. Production build/CI machines set this and hold no secret;
+# only the offline signer's machine holds the seed for the sign step.
+NONOS_TRUST_ANCHOR_PUBKEY ?=
+
 $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 		$(BOOTLOADER_SRCS) \
-		$(SIGNING_KEY) \
+		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),$(NONOS_TRUST_ANCHOR_PUBKEY),$(SIGNING_KEY)) \
 		$(ZK_BOOT_ROOT) \
 		$(TARGET_DIR)/.nonos-toolchain.stamp
-	@echo "Building UEFI bootloader..."
+	@echo "Building UEFI bootloader (policy: $(BOOTLOADER_POLICY))..."
 	$(eval SIGNING_KEY_ABS := $(if $(filter /%,$(SIGNING_KEY)),$(SIGNING_KEY),$(shell pwd)/$(SIGNING_KEY)))
 	@cd $(BOOTLOADER_DIR) && \
-		NONOS_SIGNING_KEY=$(SIGNING_KEY_ABS) \
+		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),NONOS_TRUST_ANCHOR_PUBKEY=$(abspath $(NONOS_TRUST_ANCHOR_PUBKEY)),NONOS_SIGNING_KEY=$(SIGNING_KEY_ABS)) \
 		NONOS_ZK_DEVICE_ROOT=$(shell pwd)/$(ZK_BOOT_ROOT) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build --target x86_64-unknown-uefi --release --features zk-transparent
+		$(CARGO) build --target x86_64-unknown-uefi --release \
+			--features zk-transparent,$(BOOTLOADER_POLICY)
 
 nonos-mk-bootloader: $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
+
+# Builds the bootloader twice from identical inputs and proves the two outputs
+# are byte-identical. Reproducibility is what lets anyone rebuild the loader
+# from public source and confirm a published hash, so a single signing key
+# cannot ship a hidden change. SOURCE_DATE_EPOCH is pinned by this Makefile.
+nonos-mk-verify-reproducible-boot:
+	@echo "Reproducible bootloader build check (policy: $(BOOTLOADER_POLICY))..."
+	@touch $(BOOTLOADER_DIR)/build.rs
+	@$(MAKE) --no-print-directory nonos-mk-bootloader
+	@cp $(NONOS_BOOT_EFI) $(TARGET_DIR)/nonos_boot.repro-a.efi
+	@touch $(BOOTLOADER_DIR)/build.rs
+	@$(MAKE) --no-print-directory nonos-mk-bootloader
+	@if cmp -s $(TARGET_DIR)/nonos_boot.repro-a.efi $(NONOS_BOOT_EFI); then \
+		echo "  REPRODUCIBLE: byte-identical  sha256=$$(shasum -a256 $(NONOS_BOOT_EFI) | cut -c1-32)"; \
+	else \
+		echo "  gap: bootloader build is NOT reproducible"; exit 1; \
+	fi
 
 # Userland capsules
 

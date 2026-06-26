@@ -14,28 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod add;
-mod init;
-mod query;
-mod revoke;
-mod state;
-mod store;
-mod store_add;
-mod store_revoke;
-mod store_validate;
-mod types;
-mod util;
+use core::arch::x86_64::{__cpuid, __cpuid_count};
 
-pub use add::{add_key, add_key_versioned};
-pub use init::{init_nonos_keys, init_production_keys, is_initialized};
-pub use query::{
-    get_build_timestamp, get_key_fingerprint, get_minimum_version, get_nonos_key, get_nonos_key_id,
-    key_count, set_minimum_version, validate_key,
-};
-pub use revoke::revoke_key_by_pubkey;
-pub use state::{KEYSTORE, NONOS_SIGNING_KEY};
-pub use store::KeyStore;
-pub use types::{
-    KeyId, KeyStatus, RevocationEntry, RevocationReason, MAX_KEYS, MAX_REVOKED, PK_LEN,
-};
-pub use util::{constant_time_eq, derive_keyid};
+pub fn detect_cpu_security_features() -> (bool, bool, bool) {
+    let max_leaf = __cpuid(0).eax;
+    if max_leaf < 7 {
+        return (false, false, false);
+    }
+    let cpuid7 = __cpuid_count(7, 0);
+    let smep = (cpuid7.ebx & (1 << 7)) != 0;
+    let smap = (cpuid7.ebx & (1 << 20)) != 0;
+    let umip = (cpuid7.ecx & (1 << 2)) != 0;
+    (smep, smap, umip)
+}

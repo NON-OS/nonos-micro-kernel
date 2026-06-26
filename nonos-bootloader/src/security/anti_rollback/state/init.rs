@@ -17,6 +17,7 @@
 use super::types::AntiRollbackState;
 use crate::security::anti_rollback::nvram::read_from_nvram;
 use crate::security::anti_rollback::types::{RollbackError, VersionState};
+use crate::security::SecurityPolicy;
 
 impl AntiRollbackState {
     pub fn init(&mut self, tpm_available: bool) -> Result<(), RollbackError> {
@@ -24,7 +25,13 @@ impl AntiRollbackState {
         if tpm_available {
             match read_from_nvram() {
                 Ok(state) => self.state = state,
-                Err(RollbackError::NvramReadFailed) => self.state = VersionState::new(),
+                Err(RollbackError::NvramReadFailed) => {
+                    if SecurityPolicy::from_build() == SecurityPolicy::Development {
+                        self.state = VersionState::new();
+                    } else {
+                        return Err(RollbackError::NvramReadFailed);
+                    }
+                }
                 Err(e) => return Err(e),
             }
         }

@@ -42,11 +42,10 @@ pub fn extend_pcr_via_tcg2(
         pcr_index,
         event_type: EV_POST_CODE,
     };
-    const PE_COFF_IMAGE: u64 = 0x10;
     unsafe {
         let status = ((*tcg2).hash_log_extend_event)(
             tcg2,
-            PE_COFF_IMAGE,
+            0,
             digest.as_ptr(),
             digest.len() as u64,
             &header,
@@ -57,4 +56,29 @@ pub fn extend_pcr_via_tcg2(
             Err("TCG2 extend failed")
         }
     }
+}
+
+pub fn submit_tpm_command(
+    bs: &uefi::table::boot::BootServices,
+    cmd: &[u8],
+    response: &mut [u8],
+) -> Result<usize, &'static str> {
+    let tcg2 = locate_tcg2_protocol(bs).ok_or("no TCG2 protocol")?;
+    let status = unsafe {
+        ((*tcg2).submit_command)(
+            tcg2,
+            cmd.len() as u32,
+            cmd.as_ptr(),
+            response.len() as u32,
+            response.as_mut_ptr(),
+        )
+    };
+    if !status.is_success() {
+        return Err("submit_command failed");
+    }
+    if response.len() < 10 {
+        return Err("short response");
+    }
+    let size = u32::from_be_bytes([response[2], response[3], response[4], response[5]]);
+    Ok(size as usize)
 }

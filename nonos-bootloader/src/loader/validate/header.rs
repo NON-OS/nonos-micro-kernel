@@ -73,8 +73,7 @@ pub fn validate_header(header: &Elf64Header) -> LoaderResult<ValidationContext> 
             ctx.is_pie = false;
         }
         elf_type::ET_DYN => {
-            ctx.is_executable = true;
-            ctx.is_pie = true;
+            return Err(LoaderError::UnsupportedElf("ET_DYN forbidden; kernel must be ET_EXEC"));
         }
         _ => return Err(LoaderError::UnsupportedElf("not executable or shared object")),
     }

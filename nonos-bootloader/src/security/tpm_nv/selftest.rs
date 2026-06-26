@@ -14,28 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod add;
-mod init;
-mod query;
-mod revoke;
-mod state;
-mod store;
-mod store_add;
-mod store_revoke;
-mod store_validate;
-mod types;
-mod util;
+use super::consts::{RC_NO_TPM, RC_SUBMIT_FAILED};
+use super::define::nv_define_counter;
+use super::increment::nv_increment;
+use super::read::nv_read_counter;
+use crate::security::tpm_extend::tpm_present;
+use uefi::table::boot::BootServices;
 
-pub use add::{add_key, add_key_versioned};
-pub use init::{init_nonos_keys, init_production_keys, is_initialized};
-pub use query::{
-    get_build_timestamp, get_key_fingerprint, get_minimum_version, get_nonos_key, get_nonos_key_id,
-    key_count, set_minimum_version, validate_key,
-};
-pub use revoke::revoke_key_by_pubkey;
-pub use state::{KEYSTORE, NONOS_SIGNING_KEY};
-pub use store::KeyStore;
-pub use types::{
-    KeyId, KeyStatus, RevocationEntry, RevocationReason, MAX_KEYS, MAX_REVOKED, PK_LEN,
-};
-pub use util::{constant_time_eq, derive_keyid};
+pub fn tpm_counter_selftest(bs: &BootServices) -> Result<(u64, u64), u32> {
+    if !tpm_present(bs) {
+        return Err(RC_NO_TPM);
+    }
+    nv_define_counter(bs)?;
+    nv_increment(bs)?;
+    let first = nv_read_counter(bs)?;
+    nv_increment(bs)?;
+    let second = nv_read_counter(bs)?;
+    if second > first {
+        Ok((first, second))
+    } else {
+        Err(RC_SUBMIT_FAILED)
+    }
+}

@@ -27,17 +27,27 @@ impl SecurityPolicy {
         {
             return SecurityPolicy::Hardened;
         }
-        #[cfg(feature = "standard")]
+        #[cfg(all(feature = "standard", not(feature = "hardened")))]
         {
             return SecurityPolicy::Standard;
         }
-        #[cfg(not(any(feature = "standard", feature = "hardened")))]
+        #[cfg(all(
+            feature = "dev-mode",
+            not(feature = "standard"),
+            not(feature = "hardened")
+        ))]
         {
-            if cfg!(debug_assertions) {
-                SecurityPolicy::Development
-            } else {
-                SecurityPolicy::Standard
-            }
+            return SecurityPolicy::Development;
+        }
+        #[cfg(not(any(feature = "standard", feature = "hardened", feature = "dev-mode")))]
+        {
+            compile_error!(
+                "nonos-bootloader: no security policy selected. Build with exactly one of \
+                 --features production|hardened (real hardware), \
+                 --features standard|standard-qemu (emulation with full attestation), or \
+                 --features dev-qemu (emulation, checks skipped). \
+                 The policy is never defaulted, so a production image cannot ship permissive by accident."
+            );
         }
     }
 }
