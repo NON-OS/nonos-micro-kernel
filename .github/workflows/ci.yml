@@ -36,7 +36,10 @@ jobs:
   evidence:
     uses: ./.github/workflows/ci-evidence.yml
 
+  benchmark:
+    uses: ./.github/workflows/ci-benchmark.yml
+
   attestation:
-    needs: [build, supply-chain, trust-chain, adversarial, evidence]
+    needs: [build, supply-chain, trust-chain, adversarial, evidence, benchmark]
     if: always()
     uses: ./.github/workflows/ci-attestation.yml

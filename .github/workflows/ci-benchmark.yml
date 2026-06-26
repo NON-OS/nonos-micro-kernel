@@ -1,0 +1,136 @@
+name: ci-benchmark
+
+on:
+  workflow_call:
+    inputs:
+      trust-mode:
+        description: "scratch for scheduled CI, production for release gates"
+        required: false
+        type: string
+        default: "scratch"
+      output-root:
+        description: "benchmark artifact directory"
+        required: false
+        type: string
+        default: "benchmarks/runs"
+      boot-evidence:
+        description: "run QEMU boot evidence benchmark"
+        required: false
+        type: boolean
+        default: true
+      strict:
+        description: "fail when enabled benchmark records fail"
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      SIGNING_KEY_BASE64:
+        required: false
+      ZK_BOOT_INDEX:
+        required: false
+      ZK_BOOT_SECRET_X:
+        required: false
+      ZK_BOOT_SECRET_R:
+        required: false
+      ZK_BOOT_NONCE_SEED:
+        required: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ci-benchmark-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    name: benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: ./.github/actions/nonos-setup
+        with:
+          targets: x86_64-nonos,x86_64-unknown-uefi
+          qemu: "true"
+          module: benchmark
+      - name: Prepare benchmark artifact root
+        run: mkdir -p "${{ inputs['output-root'] }}/${{ github.run_id }}-${{ github.run_attempt }}"
+      - name: Provision benchmark trust material
+        env:
+          NONOS_CI_TRUST_MODE: ${{ inputs['trust-mode'] }}
+          SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
+          ZK_BOOT_INDEX: ${{ secrets.ZK_BOOT_INDEX }}
+          ZK_BOOT_SECRET_X: ${{ secrets.ZK_BOOT_SECRET_X }}
+          ZK_BOOT_SECRET_R: ${{ secrets.ZK_BOOT_SECRET_R }}
+          ZK_BOOT_NONCE_SEED: ${{ secrets.ZK_BOOT_NONCE_SEED }}
+          CAPSULE_SLUGS: >-
+            proof-io std-proof ripgrep ramfs keyring entropy crypto vfs
+            driver-virtio-rng driver-virtio-blk driver-virtio-gpu
+            driver-virtio-net driver-ps2-input driver-xhci driver-usb-hid
+            net-l2 net-ip net-udp net-dhcp net-tcp net-dns net-sockets net-nym
+            policy wallpaper_catalog installer input-router compositor wm
+            desktop-shell image-codec clipboard login wallpaper toolkit about
+            boot-splash calculator snake wallet-nonos terminal file-manager
+            text-editor settings process-manager attest power
+          CAPSULE_KEY_PREFIXES: >-
+            proof_io std_proof rg ramfs keyring entropy crypto vfs
+            driver_virtio_rng driver_virtio_blk driver_virtio_gpu
+            driver_virtio_net driver_ps2_input driver_xhci driver_usb_hid
+            net_l2 net_ip net_udp net_dhcp net_tcp net_dns net_sockets net_nym
+            policy wallpaper_catalog installer input_router compositor wm
+            desktop_shell image_codec clipboard login wallpaper toolkit about
+            boot_splash calculator snake wallet_nonos terminal file_manager
+            text_editor settings process_manager attest power
+        run: |
+          set -euo pipefail
+          case "${NONOS_CI_TRUST_MODE}" in
+            scratch)
+              bash nonos-ci/setup-signing-key.sh
+              echo "NONOS_DEV=1" >> "$GITHUB_ENV"
+              bash nonos-ci/scratch-trust-bootstrap.sh
+              ;;
+            production)
+              bash nonos-ci/setup-signing-key.sh
+              for name in ZK_BOOT_INDEX ZK_BOOT_SECRET_X ZK_BOOT_SECRET_R ZK_BOOT_NONCE_SEED; do
+                test -n "${!name:-}" || { echo "::error::${name} is required for production benchmark"; exit 1; }
+              done
+              make nonos-mk-check-trust-manifest
+              ;;
+            *)
+              echo "::error::unknown trust-mode '${NONOS_CI_TRUST_MODE}'"
+              exit 1
+              ;;
+          esac
+      - name: Run benchmark suite
+        env:
+          NONOS_BENCH_OUT: ${{ inputs['output-root'] }}/${{ github.run_id }}-${{ github.run_attempt }}
+          NONOS_BENCH_BUILD_CMD: cargo run --release --manifest-path nonos-verify/Cargo.toml -- build
+          NONOS_BENCH_BOOT_TIMEOUT: "420"
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs['strict'] }}" = "true" ]; then
+            export NONOS_BENCH_STRICT=1
+          else
+            export NONOS_BENCH_STRICT=0
+          fi
+          if [ "${{ inputs['boot-evidence'] }}" != "true" ]; then
+            export NONOS_BENCH_SKIP_BOOT=1
+          fi
+          export NONOS_BENCH_BOOT_CMD="make PLAN_A_SERIAL=${NONOS_BENCH_OUT}/boot/qemu-serial.log PLAN_A_RESULT=${NONOS_BENCH_OUT}/boot/plan-a-result.log nonos-mk-plan-a-runtime"
+          make nonos-mk-bench
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nonos-benchmarks-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ inputs['output-root'] }}/${{ github.run_id }}-${{ github.run_attempt }}/
+          retention-days: 30
+          if-no-files-found: error
