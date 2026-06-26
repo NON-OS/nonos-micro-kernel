@@ -23,6 +23,26 @@ pub struct Response {
     pub location: Option<String>,
 }
 
+pub fn is_complete(raw: &[u8]) -> bool {
+    let Some(sep) = raw.windows(4).position(|w| w == b"\r\n\r\n") else {
+        return false;
+    };
+    let Ok(head) = core::str::from_utf8(&raw[..sep]) else {
+        return false;
+    };
+    let body_len = raw.len() - sep - 4;
+    for line in head.lines().skip(1) {
+        let lower = line.to_ascii_lowercase();
+        if let Some(v) = lower.strip_prefix("content-length:") {
+            return v.trim().parse::<usize>().map_or(false, |n| body_len >= n);
+        }
+        if lower.starts_with("transfer-encoding:") && lower.contains("chunked") {
+            return raw.ends_with(b"0\r\n\r\n");
+        }
+    }
+    false
+}
+
 pub fn parse(raw: &[u8]) -> Option<Response> {
     let sep = raw.windows(4).position(|w| w == b"\r\n\r\n")?;
     let head = core::str::from_utf8(&raw[..sep]).ok()?;

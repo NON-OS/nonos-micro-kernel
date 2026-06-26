@@ -27,8 +27,8 @@ use crate::browser::{html, http};
 
 const MAX: usize = 4 * 1024 * 1024;
 const FIRST_WAIT: u32 = 25;
-const IDLE_AFTER: u32 = 10;
-const MAX_FETCH_MS: i64 = 6000;
+const IDLE_AFTER: u32 = 20;
+const MAX_FETCH_MS: i64 = 20000;
 
 pub fn load(state: &mut State, target: &str) {
     if state.sockets_port == 0 {
@@ -91,7 +91,8 @@ pub fn poll(state: &mut State) -> bool {
             Ok(n) if n > 0 => {
                 job.idle = 0;
                 job.buf.extend_from_slice(&chunk[..n]);
-                (job.handle, job.buf.len() >= MAX, false)
+                let done = job.buf.len() >= MAX || http::response::is_complete(&job.buf);
+                (job.handle, done, false)
             }
             _ => {
                 job.idle = job.idle.wrapping_add(1);
