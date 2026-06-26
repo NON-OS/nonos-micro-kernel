@@ -22,6 +22,7 @@ use crate::sys::{boot_log, clock};
 use core::sync::atomic::Ordering;
 
 pub fn microkernel_init(handoff: &KernelHandoff) {
+    crate::sys::bench::mark(b"microkernel_init_start");
     init_arch_memory_and_framebuffer(handoff);
     let cursor_y = handoff.framebuffer.map(|fb| fb.cursor_y).unwrap_or(0);
     boot_log::init_after_fb(cursor_y);
@@ -48,6 +49,7 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     if let Err(e) = crate::memory::unified::init_unified_vm() {
         fatal("memory: init_unified_vm failed", e);
     }
+    crate::sys::bench::mark(b"vm_ready");
     // The framebuffer is MMIO-mapped only now: mapping it needs the paging
     // manager, which init_unified_vm brings up. Doing it in the early
     // memory/framebuffer step failed to map on real GOP framebuffers
@@ -60,10 +62,12 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     crate::process::init_process_management();
     crate::elf::loader::init_elf_loader();
     crate::crypto::kernel_keys::init();
+    crate::sys::bench::mark(b"process_runtime_ready");
 
     super::start_secondary::start_secondary_cpus();
 
     boot_log::ok("NONOS", "Core ready");
+    crate::sys::bench::mark(b"microkernel_core_ready");
 }
 
 fn fatal(stage: &str, detail: &str) -> ! {
@@ -106,6 +110,7 @@ fn init_arch_firmware(handoff: &KernelHandoff) {
 }
 
 pub fn microkernel_main() -> ! {
+    crate::sys::bench::mark(b"microkernel_main_start");
     boot_log::ok("NONOS", "boot log held; starting userspace");
     let start = clock::uptime_ms();
     let mut guard: u64 = 0;
@@ -126,6 +131,7 @@ pub fn microkernel_main() -> ! {
             crate::arch::halt_loop()
         }
     };
+    crate::sys::bench::mark(b"init_process_created");
     if let Err(_) = create_address_space(init_pid) {
         boot_log::error("Failed to create init address space");
         crate::sys::serial::println(b"[FATAL] Init address space creation failed");
@@ -138,5 +144,6 @@ pub fn microkernel_main() -> ! {
     }
     CURRENT_PID.store(init_pid, Ordering::SeqCst);
     boot_log::ok("UKERNEL", "Entering userspace");
+    crate::sys::bench::mark(b"init_enter_userspace");
     crate::userspace::run_init()
 }

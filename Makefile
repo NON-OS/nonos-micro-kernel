@@ -24,11 +24,13 @@
 .PHONY: nonos-mk-libc nonos-mk-proof-io nonos-mk-proof-io-sign nonos-mk-check-trust-keys nonos-mk-check-trust-manifest nonos-mk-trust-policy nonos-mk-host-trust-verify nonos-mk-verify-trust nonos-mk-ramfs nonos-mk-ramfs-sign nonos-mk-keyring nonos-mk-entropy nonos-mk-crypto nonos-mk-vfs nonos-mk-virtio-rng nonos-mk-virtio-rng-sign nonos-mk-check-virtio-rng-keys nonos-mk-virtio-blk nonos-mk-virtio-blk-sign nonos-mk-check-virtio-blk-keys nonos-mk-driver-virtio-gpu nonos-mk-driver-virtio-gpu-sign nonos-mk-check-driver-virtio-gpu-keys nonos-mk-virtio-net nonos-mk-virtio-net-sign nonos-mk-check-virtio-net-keys nonos-mk-driver-iwlwifi nonos-mk-driver-iwlwifi-sign nonos-mk-check-driver-iwlwifi-keys nonos-mk-driver-i2c-pci nonos-mk-driver-i2c-pci-sign nonos-mk-check-driver-i2c-pci-keys nonos-mk-driver-i2c-hid nonos-mk-driver-i2c-hid-sign nonos-mk-check-driver-i2c-hid-keys nonos-mk-ps2-input nonos-mk-ps2-input-sign nonos-mk-check-ps2-input-keys nonos-mk-xhci nonos-mk-xhci-sign nonos-mk-check-xhci-keys nonos-mk-driver-usb-msc nonos-mk-driver-usb-msc-sign nonos-mk-check-driver-usb-msc-keys nonos-mk-driver-e1000 nonos-mk-driver-e1000-sign nonos-mk-check-driver-e1000-keys nonos-mk-driver-rtl8139 nonos-mk-driver-rtl8139-sign nonos-mk-check-driver-rtl8139-keys nonos-mk-driver-rtl8169 nonos-mk-driver-rtl8169-sign nonos-mk-check-driver-rtl8169-keys nonos-mk-driver-ahci nonos-mk-driver-ahci-sign nonos-mk-check-driver-ahci-keys nonos-mk-driver-hda nonos-mk-driver-hda-sign nonos-mk-check-driver-hda-keys nonos-mk-driver-nvme nonos-mk-driver-nvme-sign nonos-mk-check-driver-nvme-keys nonos-mk-wallpaper nonos-mk-marketplace-abi nonos-mk-market nonos-mk-marketplace-index-tool
 .PHONY: nonos-mk-userland-clean
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
-.PHONY: nonos-mk-run nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-run-serial-log nonos-mk-debug nonos-mk-plan-a-runtime
+.PHONY: nonos-mk-run nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-run-serial-log nonos-mk-run-input-probe-inject-serial-log nonos-mk-debug nonos-mk-plan-a-runtime
 .PHONY: nonos-mk-static nonos-mk-scan
 .PHONY: nonos-mk-verify nonos-mk-verify-fast
 .PHONY: nonos-mk-release-audit nonos-mk-claims-check nonos-mk-qemu-net-audit
-.PHONY: ci-fast ci-security ci-release ci-soak nonos-mk-no-telemetry-capture nonos-mk-boot-evidence
+.PHONY: nonos-mk-bench nonos-mk-bench-host nonos-mk-bench-boot-log
+.PHONY: nonos-mk-bench-collect nonos-mk-bench-compare
+.PHONY: ci-fast ci-security ci-release ci-soak nonos-mk-no-telemetry-capture nonos-mk-boot-evidence nonos-mk-hardware-dossier nonos-mk-validate-machine-metadata
 .PHONY: nonos-mk-release
 .PHONY: nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean
 .PHONY: nonos-mk-fmt
@@ -57,6 +59,20 @@ export PATH := $(HOME)/.cargo/bin:$(PATH)
 TOOLCHAIN := nightly-2026-01-16
 CARGO     := $(HOME)/.cargo/bin/cargo
 RUSTUP    := $(HOME)/.cargo/bin/rustup
+NONOS_PYTHON ?= /usr/bin/python3
+NONOS_BENCH_OUT ?=
+NONOS_BENCH_BUILD_CMD ?= make nonos-mk-verify-fast
+NONOS_BENCH_SKIP_BUILD ?= 0
+NONOS_BENCH_SKIP_BOOT ?= 0
+NONOS_BENCH_STRICT ?= 0
+NONOS_BENCH_BOOT_TIMEOUT ?= 360
+NONOS_BENCH_BOOT_CMD ?=
+NONOS_BENCH_HOST_OUT ?= target/bench/host
+NONOS_BENCH_BOOT_JSON ?= target/bench/boot-log.json
+NONOS_BENCH_SERIAL_LOG ?=
+NONOS_BENCH_BASELINE ?=
+NONOS_BENCH_CANDIDATE ?=
+NONOS_BENCH_REGRESSION_LIMIT ?= 15
 
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
@@ -817,6 +833,7 @@ NONOS_INPUT_E2E_ARTIFACTS := $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 	$(toolkit_ARTIFACTS) $(power_ARTIFACTS) $(input-proof_ARTIFACTS)
 
 NONOS_BOOT_EFI := $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
+NONOS_INPUT_PROBE_INJECT_ESP := $(TARGET_DIR)/esp-input-probe-inject
 
 # Per-capsule production kernel builds. Each `-prod` target builds
 # the kernel under the `nonos-production` posture with proof_io and
@@ -1182,6 +1199,26 @@ nonos-mk-setup-wizard-inject-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-setup-wizard,input-probe-inject
 
+nonos-mk-input-probe-inject-prod: $(proof-io_ARTIFACTS) \
+		$(driver-ps2-input_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
+		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
+		$(input-probe_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-input-probe + inject)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-input-probe,input-probe-inject
+
+nonos-mk-input-probe-inject-esp: $(NONOS_BOOT_EFI)
+	@$(MAKE) --no-print-directory nonos-mk-input-probe-inject-prod
+	@$(MAKE) --no-print-directory $(TARGET_DIR)/kernel_attested.bin
+	@mkdir -p $(NONOS_INPUT_PROBE_INJECT_ESP)/EFI/Boot $(NONOS_INPUT_PROBE_INJECT_ESP)/EFI/nonos
+	@cp $(NONOS_BOOT_EFI) $(NONOS_INPUT_PROBE_INJECT_ESP)/EFI/Boot/BOOTX64.EFI
+	@cp $(TARGET_DIR)/kernel_attested.bin $(NONOS_INPUT_PROBE_INJECT_ESP)/EFI/nonos/kernel.bin
+	@printf "timeout=0\ndefault=nonos\n" > $(NONOS_INPUT_PROBE_INJECT_ESP)/EFI/nonos/boot.cfg
+	@echo 'fs0:\EFI\Boot\BOOTX64.EFI' > $(NONOS_INPUT_PROBE_INJECT_ESP)/startup.nsh
+
 nonos-mk-toolkit-prod: nonos-mk-desktop-gui-prod
 nonos-mk-about-prod: nonos-mk-desktop-gui-prod
 nonos-mk-calculator-prod: nonos-mk-desktop-gui-prod
@@ -1372,6 +1409,17 @@ nonos-mk-run-serial-log: nonos-mk-desktop-gui-prod nonos-mk-esp
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial "file:$(QEMU_SERIAL_LOG)" -display none -no-reboot
 
+nonos-mk-run-input-probe-inject-serial-log: nonos-mk-input-probe-inject-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
+	@mkdir -p $(dir $(QEMU_SERIAL_LOG))
+	@echo "Booting NONOS input-probe inject serial console in QEMU..."
+	@echo "  Network: $(QEMU_NET_DESC)"
+	@echo "  Serial log: $(QEMU_SERIAL_LOG)"
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(NONOS_INPUT_PROBE_INJECT_ESP)" \
+		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial "file:$(QEMU_SERIAL_LOG)" -display none -no-reboot
+
 nonos-mk-debug: nonos-mk-desktop-gui-prod nonos-mk-esp
 	@echo "QEMU listening for GDB on :1234   (gdb -ex 'target remote :1234')"
 	@$(QEMU) -m $(QEMU_MEM) -cpu $(QEMU_CPU) -smp $(QEMU_SMP) -machine q35 \
@@ -1525,6 +1573,47 @@ nonos-mk-no-telemetry-capture:
 nonos-mk-boot-evidence:
 	@bash scripts/qemu_boot_evidence.sh
 
+nonos-mk-hardware-dossier:
+	@test -n "$(NONOS_HW_SERIAL_LOG)" || { echo "NONOS_HW_SERIAL_LOG is required"; exit 1; }
+	@NONOS_HW_OUT="$(NONOS_HW_OUT)" \
+		NONOS_HW_SERIAL_LOG="$(NONOS_HW_SERIAL_LOG)" \
+		NONOS_HW_MACHINE_JSON="$(NONOS_HW_MACHINE_JSON)" \
+		NONOS_HW_BOOT_MEDIA="$(NONOS_HW_BOOT_MEDIA)" \
+		NONOS_HW_ARTIFACTS="$(NONOS_HW_ARTIFACTS)" \
+		$(NONOS_PYTHON) scripts/bare_metal_evidence.py
+
+nonos-mk-validate-machine-metadata:
+	@test -n "$(NONOS_HW_MACHINE_JSON)" || { echo "NONOS_HW_MACHINE_JSON is required"; exit 1; }
+	@$(NONOS_PYTHON) scripts/validate_machine_metadata.py "$(NONOS_HW_MACHINE_JSON)"
+
+nonos-mk-bench:
+	@NONOS_BENCH_OUT="$(NONOS_BENCH_OUT)" \
+		NONOS_BENCH_BUILD_CMD="$(NONOS_BENCH_BUILD_CMD)" \
+		NONOS_BENCH_SKIP_BUILD="$(NONOS_BENCH_SKIP_BUILD)" \
+		NONOS_BENCH_SKIP_BOOT="$(NONOS_BENCH_SKIP_BOOT)" \
+		NONOS_BENCH_STRICT="$(NONOS_BENCH_STRICT)" \
+		NONOS_BENCH_BOOT_TIMEOUT="$(NONOS_BENCH_BOOT_TIMEOUT)" \
+		NONOS_BENCH_BOOT_CMD="$(NONOS_BENCH_BOOT_CMD)" \
+		$(NONOS_PYTHON) nonos-ci/bench_suite.py
+
+nonos-mk-bench-host:
+	@$(NONOS_PYTHON) nonos-ci/bench_host.py "$(NONOS_BENCH_HOST_OUT)"
+
+nonos-mk-bench-boot-log:
+	@test -n "$(NONOS_BENCH_SERIAL_LOG)" || { echo "NONOS_BENCH_SERIAL_LOG is required"; exit 1; }
+	@$(NONOS_PYTHON) nonos-ci/bench_boot_log.py "$(NONOS_BENCH_SERIAL_LOG)" \
+		"$(NONOS_BENCH_BOOT_JSON)"
+
+nonos-mk-bench-collect:
+	@test -n "$(NONOS_BENCH_OUT)" || { echo "NONOS_BENCH_OUT is required"; exit 1; }
+	@$(NONOS_PYTHON) nonos-ci/bench_collect.py "$(NONOS_BENCH_OUT)"
+
+nonos-mk-bench-compare:
+	@test -n "$(NONOS_BENCH_BASELINE)" || { echo "NONOS_BENCH_BASELINE is required"; exit 1; }
+	@test -n "$(NONOS_BENCH_CANDIDATE)" || { echo "NONOS_BENCH_CANDIDATE is required"; exit 1; }
+	@$(NONOS_PYTHON) nonos-ci/bench_compare.py "$(NONOS_BENCH_BASELINE)" \
+		"$(NONOS_BENCH_CANDIDATE)" "$(NONOS_BENCH_REGRESSION_LIMIT)"
+
 ci-soak:
 	@echo "ci-soak: run nonos-mk-boot-evidence, nonos-mk-no-telemetry-capture, scripts/zero_state_forensic_qemu.sh, and hardware dossier collection"
 
@@ -1610,6 +1699,11 @@ help:
 	@echo "  make nonos-mk-qemu-net-audit  QEMU default/no-NIC command audit"
 	@echo "  make nonos-mk-no-telemetry-capture bounded QEMU packet-capture harness"
 	@echo "  make nonos-mk-boot-evidence   bounded no-network QEMU serial boot evidence"
+	@echo "  make nonos-mk-bench           host/build/boot benchmark evidence"
+	@echo "  make nonos-mk-bench-host      host benchmark metadata only"
+	@echo "  make nonos-mk-bench-compare   compare benchmark runs for regressions"
+	@echo "  make nonos-mk-hardware-dossier parse physical serial log into dossier"
+	@echo "  make nonos-mk-validate-machine-metadata check hardware metadata JSON"
 	@echo "  make ci-fast                  host security tests + claims check"
 	@echo "  make ci-security              ci-fast + release-profile audit"
 	@echo

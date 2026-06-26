@@ -20,6 +20,7 @@ use crate::security::capsule_attest::verify_capsule_attestation;
 pub(crate) fn attest_gate(spec: &CapsuleSpecVerified, install_caps: u64) -> Result<(), SpawnError> {
     let trailer = spec.attestation_trailer;
     if trailer.is_empty() {
+        crate::sys::bench::mark_named(b"capsule_attest_none", spec.name.as_bytes());
         crate::sys::serial::print(b"[ZK-ATTEST] none ");
         crate::sys::serial::print(spec.name.as_bytes());
         crate::sys::serial::print(b"\n");
@@ -30,12 +31,14 @@ pub(crate) fn attest_gate(spec: &CapsuleSpecVerified, install_caps: u64) -> Resu
     }
     match verify_capsule_attestation(trailer, spec.elf, install_caps) {
         Ok(()) => {
+            crate::sys::bench::mark_named(b"capsule_attest_ok", spec.name.as_bytes());
             crate::sys::serial::print(b"[ZK-ATTEST] ok ");
             crate::sys::serial::print(spec.name.as_bytes());
             crate::sys::serial::print(b"\n");
             Ok(())
         }
         Err(e) => {
+            crate::sys::bench::mark_named(b"capsule_attest_fail", spec.name.as_bytes());
             crate::sys::serial::print(b"[ZK-ATTEST] FAIL ");
             crate::sys::serial::print(spec.name.as_bytes());
             crate::sys::serial::print(b": ");

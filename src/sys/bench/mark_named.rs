@@ -14,12 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum DecodeError {
-    Short,
-    TooLarge,
-    TooManyItems,
-    BadUtf8,
-    UnsupportedSchema,
-    BlobTooLarge,
+pub fn mark_named(event: &[u8], name: &[u8]) {
+    crate::sys::serial::print(b"[BENCH] ");
+    crate::sys::serial::print_dec(crate::sys::timer::uptime_ms());
+    crate::sys::serial::print(b" ");
+    crate::sys::serial::print(event);
+    crate::sys::serial::print(b":");
+    crate::sys::serial::println(name);
 }

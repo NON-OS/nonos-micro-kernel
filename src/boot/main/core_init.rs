@@ -23,6 +23,7 @@ pub fn init_core_systems() {
     serial::println(b"[NONOS] Kernel entry - SSE enabled");
     crate::arch::x86_64::time::timer::init_boot_time();
     crate::sys::timer::tsc::init_default();
+    crate::sys::bench::mark(b"kernel_entry");
     if crate::arch::x86_64::gdt::init().is_err() {
         serial::println(b"[FATAL] arch GDT init failed");
         crate::arch::halt_loop();
@@ -43,6 +44,7 @@ pub fn init_core_systems() {
     serial::println(b"[NONOS] Global allocator initialized");
     interrupts::init_idt();
     serial::println(b"[NONOS] Full IDT loaded");
+    crate::sys::bench::mark(b"kernel_idt_ready");
     init_acpi_tables();
     apic::init();
     serial::println(b"[NONOS] APIC initialized");
@@ -51,6 +53,7 @@ pub fn init_core_systems() {
         crate::arch::halt_loop();
     }
     serial::println(b"[NONOS] Preemption timer armed");
+    crate::sys::bench::mark(b"kernel_timer_ready");
     // PS/2 input + IRQ wiring belongs to the legacy tree. The
     // microkernel boot path does not bring up keyboard/mouse rings;
     // input is owned by future capsule migration (input capsule).
@@ -61,10 +64,12 @@ pub fn init_core_systems() {
     super::init_memory_encryption();
     bus::pci::init();
     serial::println(b"[NONOS] PCI enumerated");
+    crate::sys::bench::mark(b"kernel_pci_ready");
     seed_hardware_broker();
     init_entropy();
     init_boot_session_nonce();
     super::init_token_signing_key();
+    crate::sys::bench::mark(b"kernel_core_ready");
 }
 
 fn init_acpi_tables() {
