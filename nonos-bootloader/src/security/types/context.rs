@@ -25,6 +25,7 @@ pub struct SecurityContext {
     pub production_keys_loaded: bool,
     pub key_count: usize,
     pub measured_boot_active: bool,
+    pub tpm_counter_ok: bool,
 }
 
 impl SecurityContext {
@@ -39,6 +40,7 @@ impl SecurityContext {
             production_keys_loaded: false,
             key_count: 0,
             measured_boot_active: false,
+            tpm_counter_ok: false,
         }
     }
 }
