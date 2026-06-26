@@ -13,7 +13,7 @@ inputs:
     required: false
     default: "x86_64-nonos"
   tools:
-    description: "CSV subset of: audit,deny,fuzz,nextest. Empty installs none."
+    description: "CSV subset of: audit,deny,cyclonedx,fuzz,nextest. Empty installs none."
     required: false
     default: ""
   qemu:
@@ -99,7 +99,7 @@ runs:
         done
 
     - name: Restore rustup + cargo cache
-      uses: actions/cache@v4  # TODO: pin to commit SHA
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
       with:
         path: |
           ~/.cargo/registry/index
@@ -110,7 +110,7 @@ runs:
           ${{ runner.os }}-${{ steps.pin.outputs.channel }}-cargo-
 
     - name: Restore target cache
-      uses: actions/cache@v4  # TODO: pin to commit SHA
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
       with:
         path: |
           target
@@ -131,18 +131,25 @@ runs:
           tool="$(echo "${tool}" | xargs)"
           [ -z "${tool}" ] && continue
           case "${tool}" in
-            audit)   bin=cargo-audit;   crate=cargo-audit   ;;
-            deny)    bin=cargo-deny;    crate=cargo-deny    ;;
-            fuzz)    bin=cargo-fuzz;    crate=cargo-fuzz    ;;
-            nextest) bin=cargo-nextest; crate=cargo-nextest ;;
-            *) echo "::error::unknown cargo tool '${tool}' (want audit|deny|fuzz|nextest)"; exit 1 ;;
+            audit)     bin=cargo-audit;    crate=cargo-audit;    version=0.22.2 ;;
+            deny)      bin=cargo-deny;     crate=cargo-deny;     version=0.19.9 ;;
+            cyclonedx) bin=cargo-cyclonedx; crate=cargo-cyclonedx; version=0.5.9 ;;
+            fuzz)      bin=cargo-fuzz;     crate=cargo-fuzz     ;;
+            nextest)   bin=cargo-nextest;  crate=cargo-nextest  ;;
+            *) echo "::error::unknown cargo tool '${tool}' (want audit|deny|cyclonedx|fuzz|nextest)"; exit 1 ;;
           esac
           if command -v "${bin}" >/dev/null 2>&1; then
             echo "${bin} already present"
           else
-            echo "cargo install --locked ${crate}"
-            cargo install --locked "${crate}"
+            if [ -n "${version:-}" ]; then
+              echo "cargo install --locked ${crate} --version ${version}"
+              cargo install --locked "${crate}" --version "${version}"
+            else
+              echo "cargo install --locked ${crate}"
+              cargo install --locked "${crate}"
+            fi
           fi
+          unset version
         done
 
     - name: Install QEMU + OVMF + boot helpers

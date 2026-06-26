@@ -7,9 +7,19 @@ name: ci-attestation
 
 on:
   workflow_call:
+    inputs:
+      required-modules:
+        description: "CSV list of module reports that must be present"
+        required: false
+        type: string
+        default: "build,supply-chain,trust-chain,adversarial,evidence"
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    shell: bash
 
 concurrency:
   group: ci-attestation-${{ github.ref }}
@@ -21,24 +31,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4  # TODO: pin to commit SHA
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: ./.github/actions/nonos-setup
         with:
           module: attest
       - name: Download all module reports
-        uses: actions/download-artifact@v4  # TODO: pin to commit SHA
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           pattern: ci-reports-*
           merge-multiple: true
           path: ci-reports
       - name: nonos-verify attest
+        env:
+          NONOS_VERIFY_REQUIRED_MODULES: ${{ inputs.required-modules }}
         run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- attest
       - name: Upload attestation
         if: always()
-        uses: actions/upload-artifact@v4  # TODO: pin to commit SHA
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ci-attestation
           path: ci-reports/attest/
           retention-days: 30
+          if-no-files-found: error

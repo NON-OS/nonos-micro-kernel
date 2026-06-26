@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: nightly-${{ github.ref }}
   cancel-in-progress: false
@@ -29,11 +33,19 @@ jobs:
   supply-chain:
     uses: ./.github/workflows/ci-supply-chain.yml
 
+  evidence:
+    uses: ./.github/workflows/ci-evidence.yml
+
   runtime:
     needs: build
     uses: ./.github/workflows/ci-runtime.yml
 
+  reproducible:
+    uses: ./.github/workflows/ci-reproducible.yml
+
   attestation:
-    needs: [build, trust-chain, adversarial, supply-chain, runtime]
+    needs: [build, trust-chain, adversarial, supply-chain, evidence, runtime, reproducible]
     if: always()
     uses: ./.github/workflows/ci-attestation.yml
+    with:
+      required-modules: build,trust-chain,adversarial,supply-chain,evidence,runtime,reproducible

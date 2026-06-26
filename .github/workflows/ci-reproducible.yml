@@ -1,15 +1,14 @@
-name: ci-runtime
+name: ci-reproducible
 
-# Reusable runtime proof in QEMU. `nonos-verify runtime` boots the kernel
-# (ramfs, keyring, desktop-gui) and asserts each readiness/PASS marker, then
-# runs the subsystem round-trips that have harnesses. Input end-to-end is an
-# explicit gap until a harness exists.
+# Reusable reproducibility proof. `nonos-verify reproducible` builds the release
+# artifact target twice from clean detached worktrees with fixed deterministic
+# inputs and compares artifact hashes.
 
 on:
   workflow_call:
     inputs:
       trust-mode:
-        description: "scratch for PR/dev CI, production for release gates"
+        description: "scratch for nightly/dev proof, production for release gates"
         required: false
         type: string
         default: "scratch"
@@ -33,14 +32,14 @@ defaults:
     shell: bash
 
 concurrency:
-  group: ci-runtime-${{ github.ref }}
+  group: ci-reproducible-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  runtime:
-    name: runtime
+  reproducible:
+    name: reproducible
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
@@ -49,9 +48,8 @@ jobs:
       - uses: ./.github/actions/nonos-setup
         with:
           targets: x86_64-nonos,x86_64-unknown-uefi
-          qemu: "true"
-          module: runtime
-      - name: Provision CI trust material
+          module: reproducible
+      - name: Provision reproducible trust material
         env:
           NONOS_CI_TRUST_MODE: ${{ inputs.trust-mode }}
           SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
@@ -65,32 +63,30 @@ jobs:
             scratch)
               bash nonos-ci/setup-signing-key.sh
               echo "NONOS_DEV=1" >> "$GITHUB_ENV"
-              bash nonos-ci/scratch-trust-bootstrap.sh
               ;;
             production)
               bash nonos-ci/setup-signing-key.sh
               for name in ZK_BOOT_INDEX ZK_BOOT_SECRET_X ZK_BOOT_SECRET_R ZK_BOOT_NONCE_SEED; do
-                test -n "${!name:-}" || { echo "::error::${name} is required for production runtime"; exit 1; }
+                test -n "${!name:-}" || { echo "::error::${name} is required for production reproducibility"; exit 1; }
               done
-              make nonos-mk-check-trust-manifest
               ;;
             *)
               echo "::error::unknown trust-mode '${NONOS_CI_TRUST_MODE}'"
               exit 1
               ;;
           esac
-      - name: nonos-verify runtime
+      - name: nonos-verify reproducible
         env:
           ZK_BOOT_INDEX: ${{ secrets.ZK_BOOT_INDEX }}
           ZK_BOOT_SECRET_X: ${{ secrets.ZK_BOOT_SECRET_X }}
           ZK_BOOT_SECRET_R: ${{ secrets.ZK_BOOT_SECRET_R }}
           ZK_BOOT_NONCE_SEED: ${{ secrets.ZK_BOOT_NONCE_SEED }}
-        run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- runtime
-      - name: Upload runtime artifacts
+        run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- reproducible
+      - name: Upload reproducibility artifacts
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: ci-reports-runtime
+          name: ci-reports-reproducible
           path: ci-reports/
           retention-days: 14
           if-no-files-found: error

@@ -1,8 +1,8 @@
 name: release
 
-# Release-candidate pipeline. Runs the deterministic, artifact-producing lanes
-# (build, trust-chain, supply-chain) and fuses one signed attestation for the
-# tag. Triggered by hand or on a version tag.
+# Release-candidate pipeline. Runs the blocking build, trust-chain,
+# supply-chain, evidence, runtime, reproducibility, and release-artifact lanes
+# before fusing one attestation for the tag.
 
 on:
   workflow_dispatch:
@@ -13,6 +13,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -20,14 +24,43 @@ concurrency:
 jobs:
   build:
     uses: ./.github/workflows/ci-build.yml
+    with:
+      trust-mode: production
+    secrets: inherit
 
   trust-chain:
     uses: ./.github/workflows/ci-trust-chain.yml
 
+  adversarial:
+    uses: ./.github/workflows/ci-adversarial.yml
+
   supply-chain:
     uses: ./.github/workflows/ci-supply-chain.yml
 
+  evidence:
+    uses: ./.github/workflows/ci-evidence.yml
+
+  reproducible:
+    uses: ./.github/workflows/ci-reproducible.yml
+    with:
+      trust-mode: production
+    secrets: inherit
+
+  runtime:
+    needs: build
+    uses: ./.github/workflows/ci-runtime.yml
+    with:
+      trust-mode: production
+    secrets: inherit
+
+  release-artifacts:
+    needs: [build, trust-chain, adversarial, supply-chain, evidence]
+    uses: ./.github/workflows/ci-release-artifacts.yml
+    secrets: inherit
+
   attestation:
-    needs: [build, trust-chain, supply-chain]
+    needs: [build, trust-chain, adversarial, supply-chain, evidence, reproducible, runtime, release-artifacts]
     if: always()
     uses: ./.github/workflows/ci-attestation.yml
+    with:
+      required-modules: build,trust-chain,adversarial,supply-chain,evidence,reproducible,runtime,release

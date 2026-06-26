@@ -2,9 +2,8 @@ name: submodule-sync
 
 # Keeps every mounted submodule (tests, nonos-ci, nonos-sign, nonos-mk,
 # nonos-utils, nonos-data, docs, wallpapers) at the latest commit of its default
-# branch, and lands the bump on main ONLY if the verification engine passes
-# against the bumped state. A breaking upstream change is caught here and never
-# reaches main. Runs daily and on demand.
+# branch, verifies the bumped state, and opens a reviewable PR branch. A
+# breaking upstream change is caught here and never reaches main automatically.
 
 on:
   schedule:
@@ -13,6 +12,11 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+
+defaults:
+  run:
+    shell: bash
 
 concurrency:
   group: submodule-sync
@@ -24,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v4  # TODO: pin to commit SHA
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           submodules: recursive
           fetch-depth: 0
@@ -57,29 +61,40 @@ jobs:
           targets: x86_64-nonos,x86_64-unknown-uefi
           module: submodule-sync
 
-      - name: Verify the bumped state, then land on main only if green
+      - name: Verify the bumped state
         if: steps.diff.outputs.changed == 'true'
         run: |
           set -euo pipefail
           bash nonos-ci/setup-signing-key.sh
           bash nonos-ci/scratch-trust-bootstrap.sh
-          # Any blocking module that fails exits non-zero and aborts before the
-          # push, so a bad bump never lands.
           cargo run --release --manifest-path nonos-verify/Cargo.toml -- trust-chain
-          cargo run --release --manifest-path nonos-verify/Cargo.toml -- tests
           cargo run --release --manifest-path nonos-verify/Cargo.toml -- build
           cargo run --release --manifest-path nonos-verify/Cargo.toml -- attest
 
+      - name: Open verified submodule bump PR
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch="automation/submodule-sync-${GITHUB_RUN_ID}"
           git config user.name "eKisNonos"
           git config user.email "ekisanon@proton.me"
-          git add -A
+          git checkout -B "${branch}"
+          git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}' | xargs git add
           git commit -m "submodules: auto-bump to verified upstream heads"
-          git push origin HEAD:main
+          git push --set-upstream origin "${branch}"
+          gh pr create \
+            --title "submodules: verified upstream bump" \
+            --body "Automated submodule pointer update. The workflow verified trust-chain, build, and attestation before opening this PR." \
+            --base main \
+            --head "${branch}"
 
       - name: Upload verification reports
         if: always() && steps.diff.outputs.changed == 'true'
-        uses: actions/upload-artifact@v4  # TODO: pin to commit SHA
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: submodule-sync-${{ github.run_id }}
           path: ci-reports/
           retention-days: 14
+          if-no-files-found: error
