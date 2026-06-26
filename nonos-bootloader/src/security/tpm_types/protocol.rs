@@ -15,7 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::capability::Tcg2BootServiceCapability;
-use super::event::Tcg2EventHeader;
 use uefi::proto::unsafe_protocol;
 use uefi::Status;
 
@@ -26,13 +25,8 @@ pub struct Tcg2Protocol {
         unsafe extern "efiapi" fn(*mut Tcg2Protocol, *mut Tcg2BootServiceCapability) -> Status,
     pub get_event_log:
         unsafe extern "efiapi" fn(*mut Tcg2Protocol, u32, *mut u64, *mut u64, *mut bool) -> Status,
-    pub hash_log_extend_event: unsafe extern "efiapi" fn(
-        *mut Tcg2Protocol,
-        u64,
-        *const u8,
-        u64,
-        *const Tcg2EventHeader,
-    ) -> Status,
+    pub hash_log_extend_event:
+        unsafe extern "efiapi" fn(*mut Tcg2Protocol, u64, *const u8, u64, *const u8) -> Status,
     pub submit_command:
         unsafe extern "efiapi" fn(*mut Tcg2Protocol, u32, *const u8, u32, *mut u8) -> Status,
     pub get_active_pcr_banks: unsafe extern "efiapi" fn(*mut Tcg2Protocol, *mut u32) -> Status,
