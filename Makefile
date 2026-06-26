@@ -135,6 +135,12 @@ ZK_CAPSULE_ENROLL_SEED ?=
 ZK_CAPSULE_NONCE_SEED ?=
 ZK_CAPSULE_EPOCH ?= 1
 EMBED_TOOL       := $(BOOTLOADER_DIR)/tools/embed-zk-proof/target/$(HOST_TARGET)/release/embed-zk-proof
+SIGN_TOOL        := $(BOOTLOADER_DIR)/tools/sign-kernel/target/$(HOST_TARGET)/release/sign-kernel
+
+# Anti-rollback index baked into and signed over the kernel image. Bump only for
+# security-critical releases; the TPM monotonic counter enforces it as a floor
+# so an older signed kernel cannot be rolled back onto a device.
+NONOS_ROLLBACK_INDEX ?= 0
 
 # Developer evaluation bootstrap (NOT production custody).
 #
@@ -338,6 +344,11 @@ nonos-mk-attestation-receipt: $(TARGET_DIR)/kernel_attested.bin
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
 	@cd $(BOOTLOADER_DIR)/tools/embed-zk-proof && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build --release --target $(HOST_TARGET)
+
+$(SIGN_TOOL): nonos-mk-check-deps
+	@echo "Building kernel signing tool..."
+	@cd $(BOOTLOADER_DIR)/tools/sign-kernel && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --target $(HOST_TARGET)
 
 $(ZK_BOOT_ROOT) $(ZK_BOOT_COMMITMENTS) $(ZK_BOOT_SECRETS): $(ZK_BOOT_LABELS) $(ZK_ENROLL_TOOL)
@@ -1255,14 +1266,11 @@ nonos-mk-process-manager-prod: nonos-mk-desktop-gui-prod
 
 # Sign + attest + ESP packaging
 
-$(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY)
-	@echo "Signing kernel (Ed25519)..."
+$(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY) $(SIGN_TOOL)
+	@echo "Signing kernel (Ed25519, rollback index $(NONOS_ROLLBACK_INDEX))..."
 	@mkdir -p $(TARGET_DIR)
-ifeq ($(UNAME_S),Darwin)
-	@/usr/bin/python3 nonos-utils/sign_kernel.py $< $(SIGNING_KEY) $@
-else
-	@python3 nonos-utils/sign_kernel.py $< $(SIGNING_KEY) $@
-endif
+	@$(SIGN_TOOL) --key $(KERNEL_SIGNING_KEY) --input $< --output $@ \
+		--rollback-index $(NONOS_ROLLBACK_INDEX)
 
 nonos-mk-sign: $(TARGET_DIR)/kernel_signed.bin
 

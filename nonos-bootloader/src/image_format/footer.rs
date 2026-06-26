@@ -36,6 +36,8 @@ pub struct ImageFooter {
     pub proof_size: u32,
     pub image_version: u32,
     pub reserved1: [u8; 4],
+    pub rollback_index: u32,
+    pub reserved2: [u8; 4],
 }
 
 impl ImageFooter {

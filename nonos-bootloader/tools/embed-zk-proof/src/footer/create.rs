@@ -21,6 +21,7 @@ pub fn create_image_footer(
     signature_size: u32,
     proof_size: u32,
     total_image_size: u64,
+    rollback_index: u32,
 ) -> [u8; FOOTER_SIZE] {
     let mut footer = [0u8; FOOTER_SIZE];
 
@@ -38,6 +39,7 @@ pub fn create_image_footer(
     footer[40..44].copy_from_slice(&(kernel_size + signature_size).to_le_bytes());
     footer[44..48].copy_from_slice(&proof_size.to_le_bytes());
     footer[48..52].copy_from_slice(&1u32.to_le_bytes());
+    footer[56..60].copy_from_slice(&rollback_index.to_le_bytes());
 
     footer
 }

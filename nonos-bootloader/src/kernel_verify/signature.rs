@@ -25,7 +25,8 @@ use crate::crypto::sig::verify_signature_bytes;
 use crate::log::logger::{log_error, log_info};
 
 pub fn verify_and_display_signature(
-    kernel_code: &[u8],
+    kernel_hash: &[u8; 32],
+    rollback_index: u32,
     signature: &[u8],
     result: &mut CryptoVerifyResult,
     st: &mut SystemTable<Boot>,
@@ -40,7 +41,10 @@ pub fn verify_and_display_signature(
     }
     display_signature_components(signature, st);
     print(st, cstr16!("  [CRYPTO] Verifying Ed25519 signature...\r\n"));
-    match verify_signature_bytes(kernel_code, signature) {
+    let mut signed_message = [0u8; 36];
+    signed_message[..32].copy_from_slice(kernel_hash);
+    signed_message[32..].copy_from_slice(&rollback_index.to_le_bytes());
+    match verify_signature_bytes(&signed_message, signature) {
         Ok(key_id) => signature_passed(result, &key_id, st),
         Err(e) => {
             result.signature_valid = false;

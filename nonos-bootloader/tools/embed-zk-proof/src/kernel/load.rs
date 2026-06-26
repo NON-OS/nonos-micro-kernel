@@ -27,6 +27,7 @@ pub struct SignedKernel {
     pub raw_bytes: Vec<u8>,
     pub kernel_bytes: Vec<u8>,
     pub signature: [u8; ED25519_SIG_SIZE],
+    pub rollback_index: u32,
 }
 
 pub fn load_signed_kernel(path: &Path) -> Result<SignedKernel> {
@@ -58,5 +59,12 @@ pub fn load_signed_kernel(path: &Path) -> Result<SignedKernel> {
     let mut signature = [0u8; ED25519_SIG_SIZE];
     signature.copy_from_slice(&raw_bytes[sig_start..sig_start + ED25519_SIG_SIZE]);
 
-    Ok(SignedKernel { raw_bytes, kernel_bytes, signature })
+    let rollback_index = u32::from_le_bytes([
+        raw_bytes[footer_start + 56],
+        raw_bytes[footer_start + 57],
+        raw_bytes[footer_start + 58],
+        raw_bytes[footer_start + 59],
+    ]);
+
+    Ok(SignedKernel { raw_bytes, kernel_bytes, signature, rollback_index })
 }
