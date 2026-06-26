@@ -58,7 +58,14 @@ pub fn verify_kernel_crypto(kernel_data: &[u8], st: &mut SystemTable<Boot>) -> C
     print_kernel_size(st, parsed.kernel_bytes.len());
     mini_delay();
     compute_and_display_hash(parsed.kernel_bytes, &mut result, st);
-    verify_and_display_signature(parsed.kernel_bytes, parsed.signature_bytes, &mut result, st);
+    let kernel_hash = result.kernel_hash_full;
+    verify_and_display_signature(
+        &kernel_hash,
+        parsed.footer.rollback_index,
+        parsed.signature_bytes,
+        &mut result,
+        st,
+    );
     if result.signature_valid {
         print_verification_success(st);
     } else {

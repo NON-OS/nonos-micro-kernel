@@ -46,6 +46,11 @@ pub fn parse_footer_bytes(bytes: &[u8]) -> Result<ImageFooter, ParseError> {
     let mut reserved1 = [0u8; 4];
     reserved1.copy_from_slice(&bytes[52..56]);
 
+    let rollback_index = u32::from_le_bytes([bytes[56], bytes[57], bytes[58], bytes[59]]);
+
+    let mut reserved2 = [0u8; 4];
+    reserved2.copy_from_slice(&bytes[60..64]);
+
     Ok(ImageFooter {
         magic,
         version,
@@ -62,5 +67,7 @@ pub fn parse_footer_bytes(bytes: &[u8]) -> Result<ImageFooter, ParseError> {
         proof_size,
         image_version,
         reserved1,
+        rollback_index,
+        reserved2,
     })
 }
