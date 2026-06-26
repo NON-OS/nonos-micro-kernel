@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(feature = "input-probe-inject")]
-use core::sync::atomic::AtomicBool;
-use core::sync::atomic::{AtomicU64, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use spin::Mutex;
 
 use super::types::{InputEvent, RegistryError, INPUT_RING_CAP};
@@ -50,6 +48,7 @@ static RING: Mutex<Ring> = Mutex::new(Ring {
 static DROPPED: AtomicU64 = AtomicU64::new(0);
 static SEQ: AtomicU64 = AtomicU64::new(0);
 static WAITER: AtomicU64 = AtomicU64::new(0);
+static FIRST_INPUT_POST: AtomicBool = AtomicBool::new(false);
 #[cfg(feature = "input-probe-inject")]
 static INPUT_CONSUMER_READY: AtomicBool = AtomicBool::new(false);
 
@@ -66,6 +65,7 @@ pub fn post_input(ev: InputEvent) -> Result<(), RegistryError> {
         ring.head = next;
     }
     SEQ.fetch_add(1, Ordering::Release);
+    crate::sys::bench::mark_once(&FIRST_INPUT_POST, b"input_post_first");
     let waiter = WAITER.swap(0, Ordering::AcqRel);
     if waiter != 0 {
         crate::sched::wake_process(waiter as u32);

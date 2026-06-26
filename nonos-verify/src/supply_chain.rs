@@ -72,8 +72,7 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         let ok = run_logged("cargo", &["cyclonedx", "--format", "json"], &out.join("sbom.log"));
         rpt.check("sbom", st(ok), "CycloneDX SBOM");
     } else {
-        rpt.check("sbom", Status::Gap, "cargo-cyclonedx not installed");
-        rpt.gap("SBOM generation", "add cargo-cyclonedx (or cargo-sbom) to nonos-setup tools");
+        rpt.check("sbom", Status::Fail, "cargo-cyclonedx not installed");
     }
 
     // reproducibility: the double-build hash compare runs in the nightly lane.

@@ -22,9 +22,13 @@ pub(in crate::userspace::init) fn spawn_core_after_ramfs() {
     super::core::spawn_after_ramfs();
 }
 
+#[cfg(not(feature = "microkernel-input-probe"))]
 pub(in crate::userspace::init) fn spawn_display_core() {
     super::desktop_fleet::spawn_early_display();
 }
+
+#[cfg(feature = "microkernel-input-probe")]
+pub(in crate::userspace::init) fn spawn_display_core() {}
 
 pub(in crate::userspace::init) fn spawn_drivers() {
     super::drivers_virtio::spawn();

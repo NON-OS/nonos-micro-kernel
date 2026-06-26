@@ -14,12 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum DecodeError {
-    Short,
-    TooLarge,
-    TooManyItems,
-    BadUtf8,
-    UnsupportedSchema,
-    BlobTooLarge,
+use core::sync::atomic::{AtomicBool, Ordering};
+
+pub fn mark_once(flag: &AtomicBool, event: &[u8]) {
+    if !flag.swap(true, Ordering::AcqRel) {
+        super::mark(event);
+    }
 }

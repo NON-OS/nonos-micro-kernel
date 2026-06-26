@@ -26,11 +26,13 @@ use crate::process::current_pid;
 use crate::syscall::dispatch::util::errno;
 use crate::syscall::SyscallResult;
 use crate::usercopy::{read_user_value, write_user_value};
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 use super::surface_ops::{map_err, EFAULT, EINVAL, ESRCH};
 
 static VSYNC_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
+static FIRST_SURFACE_REGISTER: AtomicBool = AtomicBool::new(false);
+static FIRST_SURFACE_PRESENT: AtomicBool = AtomicBool::new(false);
 
 fn trace_surface(op: &[u8], label: &[u8], pid: u32) {
     if !matches!(pid, 0x17 | 0x26 | 0x27) || VSYNC_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80
@@ -74,6 +76,7 @@ pub(super) fn do_register(desc_ptr: u64) -> SyscallResult {
         Ok((sid, h)) => {
             attach_map::record(pid, h, desc.base_va, desc.byte_len);
             trace_surface(b"register", b"ok", pid);
+            crate::sys::bench::mark_once(&FIRST_SURFACE_REGISTER, b"surface_register_first");
             SyscallResult::success_audited(sid as i64)
         }
         Err(e) => errno(map_err(e)),
@@ -137,7 +140,11 @@ pub(super) fn do_present(handle: u64) -> SyscallResult {
         Some(v) => v,
         None => return errno(EINVAL),
     };
-    super::graphics_present::handle(0, base_va, byte_len as usize)
+    let result = super::graphics_present::handle(0, base_va, byte_len as usize);
+    if !result.is_error() {
+        crate::sys::bench::mark_once(&FIRST_SURFACE_PRESENT, b"surface_present_first");
+    }
+    result
 }
 
 pub(super) fn do_vsync_wait(display: u64) -> SyscallResult {

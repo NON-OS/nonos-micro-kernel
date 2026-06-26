@@ -28,7 +28,9 @@ pub fn spawn_verified(
     trust_anchor: &NonosTrustAnchorPolicy,
     now_ms: Option<u64>,
 ) -> Result<u32, SpawnError> {
+    crate::sys::bench::mark_named(b"capsule_spawn_start", spec.name.as_bytes());
     let preflighted = preflight::run(spec, trust_anchor, now_ms)?;
+    crate::sys::bench::mark_named(b"capsule_preflight_ok", spec.name.as_bytes());
     install(&InstallParams {
         name: spec.name,
         service_port: spec.service_port,

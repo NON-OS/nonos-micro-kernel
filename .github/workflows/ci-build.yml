@@ -6,9 +6,22 @@ name: ci-build
 
 on:
   workflow_call:
+    inputs:
+      trust-mode:
+        description: "scratch for PR/dev CI, production for release gates"
+        required: false
+        type: string
+        default: "scratch"
+    secrets:
+      SIGNING_KEY_BASE64:
+        required: false
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    shell: bash
 
 concurrency:
   group: ci-build-${{ github.ref }}
@@ -20,24 +33,41 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 75
     steps:
-      - uses: actions/checkout@v4  # TODO: pin to commit SHA
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: ./.github/actions/nonos-setup
         with:
           targets: x86_64-nonos,x86_64-unknown-uefi
           module: build
-      - name: Provision CI signing key and scratch trust anchor
+      - name: Provision CI trust material
+        env:
+          NONOS_CI_TRUST_MODE: ${{ inputs.trust-mode }}
+          SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
         run: |
           set -euo pipefail
-          bash nonos-ci/setup-signing-key.sh
-          bash nonos-ci/scratch-trust-bootstrap.sh
+          case "${NONOS_CI_TRUST_MODE}" in
+            scratch)
+              bash nonos-ci/setup-signing-key.sh
+              bash nonos-ci/scratch-trust-bootstrap.sh
+              ;;
+            production)
+              bash nonos-ci/setup-signing-key.sh
+              make nonos-mk-check-trust-manifest
+              ;;
+            *)
+              echo "::error::unknown trust-mode '${NONOS_CI_TRUST_MODE}'"
+              exit 1
+              ;;
+          esac
       - name: nonos-verify build
         run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- build
       - name: Upload build artifacts
         if: always()
-        uses: actions/upload-artifact@v4  # TODO: pin to commit SHA
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ci-reports-build
           path: ci-reports/
           retention-days: 14
+          if-no-files-found: error
