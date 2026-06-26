@@ -42,6 +42,10 @@ impl App for Browser {
         paint(&self.state, fb);
     }
     fn on_tick(&mut self) -> bool {
+        if self.state.fetch_job.is_some() {
+            self.state.pending_nav = None;
+            return crate::browser::fetch::poll(&mut self.state);
+        }
         if let Some(target) = self.state.pending_nav.take() {
             crate::browser::fetch::load(&mut self.state, &target);
             return true;

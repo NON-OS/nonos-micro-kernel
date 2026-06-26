@@ -16,13 +16,18 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use crate::browser::manifest::WIDTH;
 use crate::browser::state::State;
 
-const TOP: i32 = 40;
+const TOP: i32 = 80;
 const BOTTOM: i32 = 676;
+const PAGE_BG: u32 = 0xFF18_1B20;
+const FG: u32 = 0xFFE8_EAED;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
+    fb.fill_rect(0, TOP as u32, WIDTH, (BOTTOM - TOP) as u32, PAGE_BG);
     let Some(doc) = &state.document else {
+        fb.text(16, TOP as u32 + 24, state.status.as_bytes(), FG);
         return;
     };
     for line in &doc.lines {

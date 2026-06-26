@@ -14,53 +14,121 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::string::String;
+use alloc::vec::Vec;
+
+use nonos_libc::mk_time_millis;
+
 use crate::browser::layout;
 use crate::browser::net;
-use crate::browser::state::State;
+use crate::browser::state::{FetchJob, State, View};
 use crate::browser::url::{self, Scheme};
 use crate::browser::{html, http};
+
+const MAX: usize = 4 * 1024 * 1024;
+const FIRST_WAIT: u32 = 25;
+const IDLE_AFTER: u32 = 10;
+const MAX_FETCH_MS: i64 = 6000;
 
 pub fn load(state: &mut State, target: &str) {
     if state.sockets_port == 0 {
         state.sockets_port = net::lookup(b"net.sockets");
         state.dns_port = net::lookup(b"net.dns");
     }
-    match fetch(state, target) {
-        Ok(()) => {}
-        Err(msg) => {
-            state.status = alloc::string::String::from(msg);
-            state.document = None;
-        }
+    if let Err(msg) = begin(state, target) {
+        state.fetch_job = None;
+        state.status = String::from(msg);
+        state.document = None;
+        state.view = View::Page;
     }
 }
 
-fn fetch(state: &mut State, target: &str) -> Result<(), &'static str> {
+fn begin(state: &mut State, target: &str) -> Result<(), &'static str> {
     let url = url::parse(target).ok_or("bad url")?;
     if url.scheme == Scheme::Https {
         return Err("https not supported yet (P2)");
     }
     let ip = net::resolve(state.dns_port, url.host.as_bytes()).map_err(|_| "dns failed")?;
     let h = net::socket_open(state.sockets_port).map_err(|_| "socket failed")?;
-    let result = transact(state, h, &url, ip);
-    let _ = net::socket_close(state.sockets_port, h);
-    let raw = result?;
-    let resp = http::response::parse(&raw).ok_or("bad response")?;
-    let flows = html::parse::parse(&resp.body);
-    let doc = layout::build(&flows, crate::browser::manifest::WIDTH, 8);
-    state.scroll = 0;
-    state.status = alloc::format!("{} ({} bytes)", resp.status, resp.body.len());
-    state.document = Some(doc);
+    if net::socket_connect(state.sockets_port, h, ip, url.port).is_err() {
+        let _ = net::socket_close(state.sockets_port, h);
+        return Err("connect failed");
+    }
+    let req = http::request::build(&url);
+    if net::socket_send(state.sockets_port, h, req.as_bytes()).is_err() {
+        let _ = net::socket_close(state.sockets_port, h);
+        return Err("send failed");
+    }
+    state.status = alloc::format!("loading {}", url.host);
+    state.document = None;
+    state.view = View::Page;
+    state.fetch_start_ms = mk_time_millis();
+    state.fetch_job = Some(FetchJob { handle: h, buf: Vec::new(), idle: 0 });
     Ok(())
 }
 
-fn transact(
-    state: &mut State,
-    h: u32,
-    url: &url::Url,
-    ip: [u8; 4],
-) -> Result<alloc::vec::Vec<u8>, &'static str> {
-    net::socket_connect(state.sockets_port, h, ip, url.port).map_err(|_| "connect failed")?;
-    let req = http::request::build(url);
-    net::socket_send(state.sockets_port, h, req.as_bytes()).map_err(|_| "send failed")?;
-    net::recv_all(state.sockets_port, h, 4 * 1024 * 1024).map_err(|_| "recv failed")
+pub fn poll(state: &mut State) -> bool {
+    if mk_time_millis().wrapping_sub(state.fetch_start_ms) > MAX_FETCH_MS {
+        let job = state.fetch_job.take().unwrap();
+        let _ = net::socket_close(state.sockets_port, job.handle);
+        if job.buf.is_empty() {
+            state.status = String::from("timed out");
+            state.document = None;
+            state.view = View::Page;
+        } else {
+            finish(state, &job.buf);
+        }
+        return true;
+    }
+    let port = state.sockets_port;
+    let mut chunk = [0u8; 4096];
+    let (handle, finished, failed) = {
+        let job = match state.fetch_job.as_mut() {
+            Some(j) => j,
+            None => return false,
+        };
+        match net::socket_recv(port, job.handle, &mut chunk) {
+            Ok(n) if n > 0 => {
+                job.idle = 0;
+                job.buf.extend_from_slice(&chunk[..n]);
+                (job.handle, job.buf.len() >= MAX, false)
+            }
+            _ => {
+                job.idle = job.idle.wrapping_add(1);
+                let budget = if job.buf.is_empty() { FIRST_WAIT } else { IDLE_AFTER };
+                let over = job.idle >= budget;
+                (job.handle, over, over && job.buf.is_empty())
+            }
+        }
+    };
+    if !finished {
+        return false;
+    }
+    let job = state.fetch_job.take().unwrap();
+    let _ = net::socket_close(port, handle);
+    if failed {
+        state.status = String::from("no response");
+        state.document = None;
+        state.view = View::Page;
+        return true;
+    }
+    finish(state, &job.buf);
+    true
+}
+
+fn finish(state: &mut State, raw: &[u8]) {
+    match http::response::parse(raw) {
+        Some(resp) => {
+            let flows = html::parse::parse(&resp.body);
+            let doc = layout::build(&flows, crate::browser::manifest::WIDTH, 8);
+            state.scroll = 0;
+            state.status = alloc::format!("{} ({} bytes)", resp.status, resp.body.len());
+            state.document = Some(doc);
+        }
+        None => {
+            state.status = String::from("bad response");
+            state.document = None;
+        }
+    }
+    state.view = View::Page;
 }
