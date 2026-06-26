@@ -27,6 +27,7 @@ pub mod manifest;
 mod net;
 mod paint;
 pub mod state;
+pub mod tls13;
 pub mod url;
 
 pub use app::Browser;

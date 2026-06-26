@@ -14,24 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod constants;
-mod lookup;
-mod read_tls_flight;
-mod recv_all;
-mod resolve;
-mod socket_close;
-mod socket_connect;
-mod socket_open;
-mod socket_recv;
-mod socket_send;
-
-pub use lookup::lookup;
-pub use read_tls_flight::read_tls_flight;
-pub use recv_all::recv_all;
-pub use resolve::resolve;
-pub use socket_close::socket_close;
-pub use socket_connect::socket_connect;
-pub use socket_open::socket_open;
-pub use socket_recv::socket_recv;
-pub use socket_send::socket_send;
+pub const TLS_HANDSHAKE: u8 = 22;
+pub const HS_CLIENT_HELLO: u8 = 1;
+pub const LEGACY_RECORD_VERSION: u16 = 0x0301;
+pub const LEGACY_HANDSHAKE_VERSION: u16 = 0x0303;
+pub const TLS13: u16 = 0x0304;
+pub const SUITE_CHACHA20_SHA256: u16 = 0x1303;
+pub const GROUP_X25519: u16 = 0x001d;
+pub const EXT_SERVER_NAME: u16 = 0;
+pub const EXT_SUPPORTED_GROUPS: u16 = 10;
+pub const EXT_SIGNATURE_ALGORITHMS: u16 = 13;
+pub const EXT_SUPPORTED_VERSIONS: u16 = 43;
+pub const EXT_KEY_SHARE: u16 = 51;

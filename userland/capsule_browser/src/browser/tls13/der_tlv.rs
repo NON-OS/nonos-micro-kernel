@@ -14,24 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod constants;
-mod lookup;
-mod read_tls_flight;
-mod recv_all;
-mod resolve;
-mod socket_close;
-mod socket_connect;
-mod socket_open;
-mod socket_recv;
-mod socket_send;
-
-pub use lookup::lookup;
-pub use read_tls_flight::read_tls_flight;
-pub use recv_all::recv_all;
-pub use resolve::resolve;
-pub use socket_close::socket_close;
-pub use socket_connect::socket_connect;
-pub use socket_open::socket_open;
-pub use socket_recv::socket_recv;
-pub use socket_send::socket_send;
+pub fn der_tlv(buf: &[u8], off: usize) -> Option<(u8, usize, usize)> {
+    if off + 2 > buf.len() {
+        return None;
+    }
+    let tag = buf[off];
+    let first = buf[off + 1];
+    if first < 128 {
+        let val = off + 2;
+        return Some((tag, val, val.checked_add(first as usize)?));
+    }
+    let n = (first & 0x7f) as usize;
+    if n == 0 || n > 4 || off + 2 + n > buf.len() {
+        return None;
+    }
+    let mut len = 0usize;
+    for b in &buf[off + 2..off + 2 + n] {
+        len = len.checked_shl(8)?.checked_add(*b as usize)?;
+    }
+    let val = off + 2 + n;
+    let end = val.checked_add(len)?;
+    if end <= buf.len() { Some((tag, val, end)) } else { None }
+}

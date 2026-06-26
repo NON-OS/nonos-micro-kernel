@@ -14,24 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod constants;
-mod lookup;
-mod read_tls_flight;
-mod recv_all;
-mod resolve;
-mod socket_close;
-mod socket_connect;
-mod socket_open;
-mod socket_recv;
-mod socket_send;
+use alloc::vec::Vec;
 
-pub use lookup::lookup;
-pub use read_tls_flight::read_tls_flight;
-pub use recv_all::recv_all;
-pub use resolve::resolve;
-pub use socket_close::socket_close;
-pub use socket_connect::socket_connect;
-pub use socket_open::socket_open;
-pub use socket_recv::socket_recv;
-pub use socket_send::socket_send;
+pub fn scan(secret: &[u8; 32], transcript: &mut Vec<u8>, msgs: &[u8]) -> bool {
+    let mut pos = 0usize;
+    while pos + 4 <= msgs.len() {
+        let len = ((msgs[pos + 1] as usize) << 16) | ((msgs[pos + 2] as usize) << 8) | msgs[pos + 3] as usize;
+        let end = pos + 4 + len;
+        if end > msgs.len() {
+            return false;
+        }
+        if msgs[pos] == 20 {
+            return super::finished_verify::verify(secret, transcript, &msgs[pos + 4..end]);
+        }
+        transcript.extend_from_slice(&msgs[pos..end]);
+        pos = end;
+    }
+    false
+}

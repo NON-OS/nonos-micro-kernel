@@ -14,24 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod constants;
-mod lookup;
-mod read_tls_flight;
-mod recv_all;
-mod resolve;
-mod socket_close;
-mod socket_connect;
-mod socket_open;
-mod socket_recv;
-mod socket_send;
-
-pub use lookup::lookup;
-pub use read_tls_flight::read_tls_flight;
-pub use recv_all::recv_all;
-pub use resolve::resolve;
-pub use socket_close::socket_close;
-pub use socket_connect::socket_connect;
-pub use socket_open::socket_open;
-pub use socket_recv::socket_recv;
-pub use socket_send::socket_send;
+pub fn verify_p384(pk: &[u8; 97], sig: &[u8; 96], digest: &[u8; 48]) -> bool {
+    let mut body = [0u8; 241];
+    body[..97].copy_from_slice(pk);
+    body[97..193].copy_from_slice(sig);
+    body[193..].copy_from_slice(digest);
+    super::crypto_status::crypto_status(19, &body)
+}

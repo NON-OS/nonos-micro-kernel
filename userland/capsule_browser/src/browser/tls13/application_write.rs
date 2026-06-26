@@ -14,24 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod constants;
-mod lookup;
-mod read_tls_flight;
-mod recv_all;
-mod resolve;
-mod socket_close;
-mod socket_connect;
-mod socket_open;
-mod socket_recv;
-mod socket_send;
+use alloc::vec::Vec;
 
-pub use lookup::lookup;
-pub use read_tls_flight::read_tls_flight;
-pub use recv_all::recv_all;
-pub use resolve::resolve;
-pub use socket_close::socket_close;
-pub use socket_connect::socket_connect;
-pub use socket_open::socket_open;
-pub use socket_recv::socket_recv;
-pub use socket_send::socket_send;
+use super::flight::ClientFlight;
+
+pub fn application_write(client: &ClientFlight, bytes: &[u8], body: &[u8]) -> Option<Vec<u8>> {
+    let done = super::server_complete::server_complete(client, bytes)?;
+    let mut out = super::client_finished::client_finished(&done.handshake, &done.transcript)?;
+    let record = super::record_seal::seal(&done.app.client_key, &done.app.client_iv, 0, 23, body)?;
+    out.extend_from_slice(&record);
+    Some(out)
+}

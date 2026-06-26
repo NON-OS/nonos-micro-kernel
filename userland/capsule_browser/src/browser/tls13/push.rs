@@ -14,24 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod constants;
-mod lookup;
-mod read_tls_flight;
-mod recv_all;
-mod resolve;
-mod socket_close;
-mod socket_connect;
-mod socket_open;
-mod socket_recv;
-mod socket_send;
+use alloc::vec::Vec;
 
-pub use lookup::lookup;
-pub use read_tls_flight::read_tls_flight;
-pub use recv_all::recv_all;
-pub use resolve::resolve;
-pub use socket_close::socket_close;
-pub use socket_connect::socket_connect;
-pub use socket_open::socket_open;
-pub use socket_recv::socket_recv;
-pub use socket_send::socket_send;
+pub fn u16(out: &mut Vec<u8>, v: u16) {
+    out.extend_from_slice(&v.to_be_bytes());
+}
+
+pub fn u24(out: &mut Vec<u8>, v: usize) {
+    out.push(((v >> 16) & 0xff) as u8);
+    out.push(((v >> 8) & 0xff) as u8);
+    out.push((v & 0xff) as u8);
+}
+
+pub fn ext(out: &mut Vec<u8>, kind: u16, body: &[u8]) {
+    u16(out, kind);
+    u16(out, body.len() as u16);
+    out.extend_from_slice(body);
+}

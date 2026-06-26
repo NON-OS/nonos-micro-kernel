@@ -14,24 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod constants;
-mod lookup;
-mod read_tls_flight;
-mod recv_all;
-mod resolve;
-mod socket_close;
-mod socket_connect;
-mod socket_open;
-mod socket_recv;
-mod socket_send;
+use alloc::vec::Vec;
 
-pub use lookup::lookup;
-pub use read_tls_flight::read_tls_flight;
-pub use recv_all::recv_all;
-pub use resolve::resolve;
-pub use socket_close::socket_close;
-pub use socket_connect::socket_connect;
-pub use socket_open::socket_open;
-pub use socket_recv::socket_recv;
-pub use socket_send::socket_send;
+pub fn expand_label(prk: &[u8; 32], label: &[u8], context: &[u8], out: &mut [u8]) -> bool {
+    let mut info = Vec::with_capacity(label.len() + context.len() + 10);
+    super::push::u16(&mut info, out.len() as u16);
+    info.push((label.len() + 6) as u8);
+    info.extend_from_slice(b"tls13 ");
+    info.extend_from_slice(label);
+    info.push(context.len() as u8);
+    info.extend_from_slice(context);
+    super::hkdf::expand(prk, &info, out)
+}

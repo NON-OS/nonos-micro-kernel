@@ -14,24 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod constants;
-mod lookup;
-mod read_tls_flight;
-mod recv_all;
-mod resolve;
-mod socket_close;
-mod socket_connect;
-mod socket_open;
-mod socket_recv;
-mod socket_send;
+use alloc::vec::Vec;
 
-pub use lookup::lookup;
-pub use read_tls_flight::read_tls_flight;
-pub use recv_all::recv_all;
-pub use resolve::resolve;
-pub use socket_close::socket_close;
-pub use socket_connect::socket_connect;
-pub use socket_open::socket_open;
-pub use socket_recv::socket_recv;
-pub use socket_send::socket_send;
+pub fn open(key: &[u8; 32], iv: &[u8; 12], seq: u64, record: &[u8]) -> Option<Vec<u8>> {
+    if record.len() < 22 || record.first() != Some(&23) {
+        return None;
+    }
+    let len = super::read::u16_at(record, 3)? as usize;
+    if len + 5 != record.len() || len <= 16 {
+        return None;
+    }
+    let nonce = super::nonce::nonce(iv, seq);
+    let frame = super::aad_frame::aad_frame(&record[..5], &record[5..]);
+    let mut pt = Vec::new();
+    pt.resize(len - 16, 0);
+    let n = nonos_libc::crypto_decrypt_aad(
+        0,
+        key.as_ptr(),
+        nonce.as_ptr(),
+        frame.as_ptr(),
+        frame.len(),
+        pt.as_mut_ptr(),
+    );
+    if n == pt.len() as i64 { Some(pt) } else { None }
+}

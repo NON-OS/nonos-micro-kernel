@@ -14,24 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod constants;
-mod lookup;
-mod read_tls_flight;
-mod recv_all;
-mod resolve;
-mod socket_close;
-mod socket_connect;
-mod socket_open;
-mod socket_recv;
-mod socket_send;
-
-pub use lookup::lookup;
-pub use read_tls_flight::read_tls_flight;
-pub use recv_all::recv_all;
-pub use resolve::resolve;
-pub use socket_close::socket_close;
-pub use socket_connect::socket_connect;
-pub use socket_open::socket_open;
-pub use socket_recv::socket_recv;
-pub use socket_send::socket_send;
+pub fn verify(secret: &[u8; 32], transcript: &[u8], verify_data: &[u8]) -> bool {
+    if verify_data.len() != 32 {
+        return false;
+    }
+    let Some(hash) = super::hash_sha256::hash_sha256(transcript) else { return false };
+    let Some(key) = super::finished_key::finished_key(secret) else { return false };
+    let mut out = [0u8; 32];
+    let n = nonos_libc::crypto_hmac_sha256(key.as_ptr(), key.len(), hash.as_ptr(), hash.len(), out.as_mut_ptr());
+    n == 32 && out == verify_data
+}

@@ -14,24 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod constants;
-mod lookup;
-mod read_tls_flight;
-mod recv_all;
-mod resolve;
-mod socket_close;
-mod socket_connect;
-mod socket_open;
-mod socket_recv;
-mod socket_send;
-
-pub use lookup::lookup;
-pub use read_tls_flight::read_tls_flight;
-pub use recv_all::recv_all;
-pub use resolve::resolve;
-pub use socket_close::socket_close;
-pub use socket_connect::socket_connect;
-pub use socket_open::socket_open;
-pub use socket_recv::socket_recv;
-pub use socket_send::socket_send;
+pub fn chain_anchor(body: &[u8]) -> bool {
+    if super::cert_count::cert_count(body) < 2 {
+        return false;
+    }
+    let Some(cert) = super::last_cert::last_cert(body) else { return false };
+    let Some(spki) = super::cert_spki::cert_spki(cert) else { return false };
+    let Some(hash) = super::hash_sha256::hash_sha256(spki) else { return false };
+    super::gts_r4_anchor::gts_r4_anchor(&hash)
+}
