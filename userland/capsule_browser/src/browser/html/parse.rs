@@ -28,6 +28,7 @@ pub fn parse(bytes: &[u8]) -> Vec<Flow> {
     let mut out: Vec<Flow> = Vec::new();
     let mut buf = String::new();
     let mut style = Style::default();
+    let mut link: Option<String> = None;
     let mut tags = 0u32;
     let mut chars = text.char_indices().peekable();
     while let Some((_, c)) = chars.next() {
@@ -36,16 +37,16 @@ pub fn parse(bytes: &[u8]) -> Vec<Flow> {
         }
         match c {
             '<' => {
-                flush(&mut out, &mut buf, style);
+                flush(&mut out, &mut buf, style, &link);
                 tags += 1;
-                consume_tag(text, &mut chars, &mut out, &mut style);
+                consume_tag(text, &mut chars, &mut out, &mut style, &mut link);
             }
             '&' => read_entity(&mut chars, &mut buf),
             c if c.is_whitespace() => push_ws(&mut buf),
             _ => buf.push(c),
         }
     }
-    flush(&mut out, &mut buf, style);
+    flush(&mut out, &mut buf, style, &link);
     out
 }
 
@@ -55,10 +56,13 @@ fn push_ws(buf: &mut String) {
     }
 }
 
-fn flush(out: &mut Vec<Flow>, buf: &mut String, style: Style) {
+fn flush(out: &mut Vec<Flow>, buf: &mut String, style: Style, link: &Option<String>) {
     let t = buf.trim();
     if !t.is_empty() {
-        out.push(Flow::Text(t.into(), style));
+        match link {
+            Some(href) => out.push(Flow::Link(t.into(), href.clone())),
+            None => out.push(Flow::Text(t.into(), style)),
+        }
     }
     buf.clear();
 }
@@ -144,6 +148,7 @@ fn consume_tag(
     chars: &mut core::iter::Peekable<core::str::CharIndices>,
     out: &mut Vec<Flow>,
     style: &mut Style,
+    link: &mut Option<String>,
 ) {
     let raw = read_to_gt(chars);
     let closing = raw.starts_with('/');
@@ -152,11 +157,7 @@ fn consume_tag(
         "br" | "p" | "div" | "li" | "ul" | "tr" | "h1" | "h2" | "h3" | "h4" | "h5"
         | "h6" => out.push(Flow::Break),
         "b" | "strong" => style.bold = !closing,
-        "a" if !closing => {
-            if let Some(href) = attr(&raw, "href") {
-                out.push(Flow::Link(String::new(), href));
-            }
-        }
+        "a" => *link = if closing { None } else { attr(&raw, "href") },
         "img" => {
             let src = attr(&raw, "src").unwrap_or_default();
             let alt = attr(&raw, "alt").unwrap_or_default();
