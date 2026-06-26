@@ -17,6 +17,7 @@
 #[cfg(target_arch = "x86_64")]
 pub mod apic;
 pub mod boot_log;
+pub mod bench;
 pub mod clock;
 #[cfg(target_arch = "x86_64")]
 pub mod gdt;

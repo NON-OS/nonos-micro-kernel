@@ -22,6 +22,7 @@ use crate::syscall::dispatch::util::errno;
 use crate::syscall::numbers::SyscallNumber;
 use crate::syscall::SyscallResult;
 use crate::usercopy::{copy_to_user, read_user_value, validate_user_write, write_user_value};
+use core::sync::atomic::AtomicBool;
 
 const EINVAL: i32 = 22;
 const EFAULT: i32 = 14;
@@ -30,6 +31,7 @@ const ENOTSUP: i32 = 95;
 const ENOMEM: i32 = 12;
 const MAX_DRAIN: usize = 64;
 const DEFAULT_WAIT_MS: u64 = 50;
+static FIRST_INPUT_DRAIN: AtomicBool = AtomicBool::new(false);
 
 pub(super) fn handle(
     nr: SyscallNumber,
@@ -74,6 +76,7 @@ fn do_drain(out_ptr: u64, max_events: u64) -> SyscallResult {
     if copy_to_user(out_ptr, src).is_err() {
         return errno(EFAULT);
     }
+    crate::sys::bench::mark_once(&FIRST_INPUT_DRAIN, b"input_drain_first");
     SyscallResult::success_audited(n as i64)
 }
 

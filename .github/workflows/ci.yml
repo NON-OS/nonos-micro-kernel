@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -29,11 +33,10 @@ jobs:
   adversarial:
     uses: ./.github/workflows/ci-adversarial.yml
 
-  # The heavy QEMU boot lane (cold-compiles the ZK proving toolchain, then boots
-  # each kernel under QEMU) runs on the nightly schedule, not per push. Every
-  # push is gated by the deterministic build, trust-chain, adversarial,
-  # and supply-chain proofs; the boot proof lands in nightly.yml.
+  evidence:
+    uses: ./.github/workflows/ci-evidence.yml
+
   attestation:
-    needs: [build, supply-chain, trust-chain, adversarial]
+    needs: [build, supply-chain, trust-chain, adversarial, evidence]
     if: always()
     uses: ./.github/workflows/ci-attestation.yml

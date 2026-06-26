@@ -20,6 +20,8 @@ use super::state;
 pub fn on_timer_interrupt() {
     state::increment_ticks();
     crate::sched::tick();
+    #[cfg(feature = "input-probe-inject")]
+    crate::kernel_core::surface_registry::inject::on_tick();
     // The legacy in-kernel network stack runs its retransmit/timeout
     // wheel from the timer tick. The microkernel has no in-kernel
     // sockets; capsule-side networking, when present, drives its own

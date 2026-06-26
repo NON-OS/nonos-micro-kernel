@@ -51,6 +51,7 @@ pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
         .map_err(|_| SpawnError::EndpointCollision)?;
     super::spawn_log::emit(params.name, pid, caps, entry);
     crate::sched::add_to_run_queue(pid);
+    crate::sys::bench::mark_named(b"capsule_runqueue_ok", params.name.as_bytes());
     super::trace::trace(params.name, b"runqueue ok");
     Ok(pid)
 }

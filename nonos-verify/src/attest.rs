@@ -14,6 +14,7 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     let mut modules: Vec<serde_json::Value> = Vec::new();
     let mut gaps: Vec<serde_json::Value> = Vec::new();
     let mut blocking_fail = false;
+    let required = required_modules();
 
     if let Ok(rd) = std::fs::read_dir(root_path) {
         let mut dirs: Vec<_> =
@@ -51,10 +52,21 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         }
     }
 
+    let present: std::collections::BTreeSet<String> = modules
+        .iter()
+        .filter_map(|m| m.get("module").and_then(|n| n.as_str()).map(str::to_string))
+        .collect();
+    let missing: Vec<String> = required.iter().filter(|m| !present.contains(*m)).cloned().collect();
+    if !missing.is_empty() {
+        blocking_fail = true;
+    }
+
     let attestation = serde_json::json!({
         "commit": meta.commit,
         "toolchain": meta.toolchain,
         "modules": modules,
+        "required_modules": required,
+        "missing_modules": missing,
         "gaps": gaps,
         "blocking_failure": blocking_fail,
     });
@@ -77,6 +89,9 @@ pub fn run(root: &str) -> std::io::Result<Status> {
             m["blocking"].as_bool().unwrap_or(true)
         );
     }
+    if !missing.is_empty() {
+        let _ = writeln!(md, "\nmissing required modules: `{}`", missing.join(","));
+    }
     let _ = writeln!(md, "\nknown gaps: {}", gaps.len());
     let _ = writeln!(md, "\nblocking failure: {blocking_fail}");
     std::fs::write(out.join("summary.md"), &md)?;
@@ -95,4 +110,14 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         eprintln!("attest: no blocking failures ({} modules)", modules.len());
         Ok(Status::Pass)
     }
+}
+
+fn required_modules() -> Vec<String> {
+    std::env::var("NONOS_VERIFY_REQUIRED_MODULES")
+        .unwrap_or_else(|_| "build,supply-chain,trust-chain,adversarial,evidence".to_string())
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+        .collect()
 }

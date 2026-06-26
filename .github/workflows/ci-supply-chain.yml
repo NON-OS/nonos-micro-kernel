@@ -11,6 +11,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: ci-supply-chain-${{ github.ref }}
   cancel-in-progress: false
@@ -21,19 +25,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4  # TODO: pin to commit SHA
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: ./.github/actions/nonos-setup
         with:
-          tools: audit,deny
+          tools: audit,deny,cyclonedx
           module: supply-chain
       - name: nonos-verify supply-chain
         run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- supply-chain
       - name: Upload supply-chain artifacts
         if: always()
-        uses: actions/upload-artifact@v4  # TODO: pin to commit SHA
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ci-reports-supply-chain
           path: ci-reports/
           retention-days: 14
+          if-no-files-found: error

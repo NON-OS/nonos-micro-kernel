@@ -1,0 +1,40 @@
+name: ci-evidence
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ci-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evidence:
+    name: evidence tooling
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: ./.github/actions/nonos-setup
+        with:
+          targets: x86_64-nonos,x86_64-unknown-uefi
+          module: evidence
+      - name: nonos-verify evidence
+        run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- evidence
+      - name: Upload evidence artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ci-reports-evidence
+          path: ci-reports/
+          retention-days: 14
+          if-no-files-found: error
