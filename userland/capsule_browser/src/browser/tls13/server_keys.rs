@@ -30,7 +30,7 @@ pub fn server_keys(client: &ClientFlight, record: &[u8]) -> Option<ServerContext
     transcript.extend_from_slice(&client.handshake);
     transcript.extend_from_slice(server_hello);
     let keys = super::schedule::handshake_keys(&shared, &transcript)?;
-    Some(ServerContext { used, keys, transcript })
+    Some(ServerContext { used, keys, transcript, cert11: Vec::new(), validated: false })
 }
 
 fn first_handshake(record: &[u8]) -> Option<(&[u8], usize)> {

@@ -39,7 +39,8 @@ mod server_context; mod server_finished_flight; mod server_finished_flight_ready
 mod server_hello; mod server_hostname_flight; mod server_first_flight;
 mod server_keys; mod server_signature_flight; mod server_validity_flight; mod scan_finished;
 mod self_check; mod spki_point; mod traffic_keys; mod verify_intermediate; mod verify_leaf;
-mod verify_p256; mod verify_p384;
+mod verify_p256; mod verify_p384; mod verify_rsa;
+mod cert_sig_alg; mod chain_walk; mod cert_verify_msg; mod roots; mod verify_link;
 
 pub use client_flight::client_flight;
 pub use client_finished_flight::client_finished_flight;

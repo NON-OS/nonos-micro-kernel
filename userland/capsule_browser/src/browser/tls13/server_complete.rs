@@ -24,7 +24,7 @@ pub struct ServerComplete {
     pub transcript: Vec<u8>,
 }
 
-pub fn server_complete(client: &ClientFlight, bytes: &[u8]) -> Option<ServerComplete> {
+pub fn server_complete(client: &ClientFlight, bytes: &[u8], host: &[u8], now: u64) -> Option<ServerComplete> {
     let mut ctx = super::server_keys::server_keys(client, bytes)?;
     let mut pos = ctx.used;
     let mut seq = 0u64;
@@ -35,7 +35,7 @@ pub fn server_complete(client: &ClientFlight, bytes: &[u8]) -> Option<ServerComp
             return None;
         }
         if bytes[pos] == 23 {
-            if decrypt_scan(&mut ctx, seq, &bytes[pos..end]) {
+            if decrypt_scan(&mut ctx, seq, &bytes[pos..end], host, now) {
                 let app = super::app_keys::app_keys(&ctx.keys, &ctx.transcript)?;
                 return Some(ServerComplete { handshake: ctx.keys, app, transcript: ctx.transcript });
             }
@@ -46,10 +46,18 @@ pub fn server_complete(client: &ClientFlight, bytes: &[u8]) -> Option<ServerComp
     None
 }
 
-fn decrypt_scan(ctx: &mut super::server_context::ServerContext, seq: u64, record: &[u8]) -> bool {
+fn decrypt_scan(ctx: &mut super::server_context::ServerContext, seq: u64, record: &[u8], host: &[u8], now: u64) -> bool {
     let Some(plain) = super::record_open::open(&ctx.keys.server_key, &ctx.keys.server_iv, seq, record) else {
         return false;
     };
     let Some((msgs, 22)) = super::inner_plain::split(&plain) else { return false };
-    super::scan_server_finished::scan(&ctx.keys.server_secret, &mut ctx.transcript, msgs)
+    super::scan_server_finished::scan(
+        &ctx.keys.server_secret,
+        &mut ctx.transcript,
+        msgs,
+        host,
+        now,
+        &mut ctx.cert11,
+        &mut ctx.validated,
+    )
 }

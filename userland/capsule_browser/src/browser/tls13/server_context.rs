@@ -22,4 +22,6 @@ pub struct ServerContext {
     pub used: usize,
     pub keys: TrafficKeys,
     pub transcript: Vec<u8>,
+    pub cert11: Vec<u8>,
+    pub validated: bool,
 }

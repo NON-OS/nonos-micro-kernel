@@ -16,8 +16,8 @@
 
 use super::flight::ClientFlight;
 
-pub fn client_finished_flight(client: &ClientFlight, bytes: &[u8]) -> bool {
-    let Some(done) = super::server_complete::server_complete(client, bytes) else { return false };
+pub fn client_finished_flight(client: &ClientFlight, bytes: &[u8], host: &[u8], now: u64) -> bool {
+    let Some(done) = super::server_complete::server_complete(client, bytes, host, now) else { return false };
     if super::client_finished::client_finished(&done.handshake, &done.transcript).is_none() {
         return false;
     }

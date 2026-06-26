@@ -17,13 +17,13 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use nonos_libc::mk_time_millis;
+use nonos_libc::{mk_time_millis, mk_time_rtc, RtcTime};
 
 use crate::browser::layout;
 use crate::browser::net;
 use crate::browser::state::{FetchJob, State, View};
 use crate::browser::url::{self, Scheme};
-use crate::browser::{html, http};
+use crate::browser::{html, http, tls13};
 
 const MAX: usize = 4 * 1024 * 1024;
 const FIRST_WAIT: u32 = 25;
@@ -46,7 +46,7 @@ pub fn load(state: &mut State, target: &str) {
 fn begin(state: &mut State, target: &str) -> Result<(), &'static str> {
     let url = url::parse(target).ok_or("bad url")?;
     if url.scheme == Scheme::Https {
-        return Err("https not supported yet (P2)");
+        return https_fetch(state, &url);
     }
     let ip = net::resolve(state.dns_port, url.host.as_bytes()).map_err(|_| "dns failed")?;
     let h = net::socket_open(state.sockets_port).map_err(|_| "socket failed")?;
@@ -115,6 +115,73 @@ pub fn poll(state: &mut State) -> bool {
     }
     finish(state, &job.buf);
     true
+}
+
+fn rtc_packed() -> u64 {
+    let mut t = RtcTime::default();
+    if mk_time_rtc(&mut t as *mut RtcTime) != 0 {
+        return 0;
+    }
+    (t.year as u64) * 10_000_000_000
+        + (t.month as u64) * 100_000_000
+        + (t.day as u64) * 1_000_000
+        + (t.hour as u64) * 10_000
+        + (t.minute as u64) * 100
+        + t.second as u64
+}
+
+fn https_fetch(state: &mut State, url: &url::Url) -> Result<(), &'static str> {
+    let host = url.host.as_bytes();
+    let now = rtc_packed();
+    let ip = net::resolve(state.dns_port, host).map_err(|_| "dns failed")?;
+    let cf = tls13::client_flight(host).ok_or("tls init failed")?;
+    let h = net::socket_open(state.sockets_port).map_err(|_| "socket failed")?;
+    if net::socket_connect(state.sockets_port, h, ip, url.port).is_err() {
+        let _ = net::socket_close(state.sockets_port, h);
+        return Err("connect failed");
+    }
+    if net::socket_send(state.sockets_port, h, &cf.record).is_err() {
+        let _ = net::socket_close(state.sockets_port, h);
+        return Err("send failed");
+    }
+    let flight = net::read_tls_flight(state.sockets_port, h).map_err(|_| "tls handshake failed")?;
+    let req = http::request::build(url);
+    let out = tls13::application_write(&cf, &flight, req.as_bytes(), host, now).ok_or("cert verify failed")?;
+    if net::socket_send(state.sockets_port, h, &out).is_err() {
+        let _ = net::socket_close(state.sockets_port, h);
+        return Err("send failed");
+    }
+    let enc = tls_read_response(state.sockets_port, h);
+    let _ = net::socket_close(state.sockets_port, h);
+    let plain = tls13::application_plaintext(&cf, &flight, &enc, host, now).ok_or("cert verify failed")?;
+    state.fetch_job = None;
+    finish(state, &plain);
+    Ok(())
+}
+
+fn tls_read_response(port: u32, h: u32) -> Vec<u8> {
+    let mut enc = Vec::new();
+    let mut idle = 0u32;
+    let mut chunk = [0u8; 4096];
+    loop {
+        match net::socket_recv(port, h, &mut chunk) {
+            Ok(n) if n > 0 => {
+                idle = 0;
+                enc.extend_from_slice(&chunk[..n]);
+                if enc.len() >= MAX {
+                    break;
+                }
+            }
+            _ => {
+                idle += 1;
+                let budget = if enc.is_empty() { FIRST_WAIT } else { IDLE_AFTER };
+                if idle >= budget {
+                    break;
+                }
+            }
+        }
+    }
+    enc
 }
 
 fn finish(state: &mut State, raw: &[u8]) {

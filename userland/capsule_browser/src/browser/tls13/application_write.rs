@@ -18,8 +18,8 @@ use alloc::vec::Vec;
 
 use super::flight::ClientFlight;
 
-pub fn application_write(client: &ClientFlight, bytes: &[u8], body: &[u8]) -> Option<Vec<u8>> {
-    let done = super::server_complete::server_complete(client, bytes)?;
+pub fn application_write(client: &ClientFlight, bytes: &[u8], body: &[u8], host: &[u8], now: u64) -> Option<Vec<u8>> {
+    let done = super::server_complete::server_complete(client, bytes, host, now)?;
     let mut out = super::client_finished::client_finished(&done.handshake, &done.transcript)?;
     let record = super::record_seal::seal(&done.app.client_key, &done.app.client_iv, 0, 23, body)?;
     out.extend_from_slice(&record);
