@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use uefi::table::boot::SearchType;
+use uefi::table::boot::{OpenProtocolAttributes, OpenProtocolParams, SearchType};
 use uefi::Identify;
 
 use crate::security::tpm_types::{Tcg2EventHeader, Tcg2Protocol, EV_POST_CODE};
@@ -63,7 +63,20 @@ pub fn submit_tpm_command(
     cmd: &[u8],
     response: &mut [u8],
 ) -> Result<usize, &'static str> {
-    let tcg2 = locate_tcg2_protocol(bs).ok_or("no TCG2 protocol")?;
+    let handles = bs
+        .locate_handle_buffer(SearchType::ByProtocol(&Tcg2Protocol::GUID))
+        .map_err(|_| "no TCG2 handle")?;
+    let handle = *handles.first().ok_or("no TCG2 protocol")?;
+    // OVMF keeps the TCG2 protocol open BY_DRIVER, so an exclusive open is
+    // denied. GetProtocol borrows the interface without disturbing that owner.
+    let proto = unsafe {
+        bs.open_protocol::<Tcg2Protocol>(
+            OpenProtocolParams { handle, agent: bs.image_handle(), controller: None },
+            OpenProtocolAttributes::GetProtocol,
+        )
+    }
+    .map_err(|_| "open TCG2 failed")?;
+    let tcg2 = &*proto as *const Tcg2Protocol as *mut Tcg2Protocol;
     let status = unsafe {
         ((*tcg2).submit_command)(
             tcg2,
@@ -73,6 +86,7 @@ pub fn submit_tpm_command(
             response.as_mut_ptr(),
         )
     };
+    drop(proto);
     if !status.is_success() {
         return Err("submit_command failed");
     }
