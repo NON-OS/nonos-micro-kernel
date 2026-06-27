@@ -34,6 +34,7 @@ const FIRST_WAIT: u32 = 25;
 const IDLE_AFTER: u32 = 20;
 const MAX_FETCH_MS: i64 = 20000;
 const MAX_REDIRECTS: u8 = 5;
+const DRAIN_BURST: usize = 64;
 
 pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
     if state.sockets_port == 0 {
@@ -88,7 +89,7 @@ pub fn step(state: &mut State) -> bool {
         types::Phase::Decrypt => {
             match tls::decrypt(&job) {
                 Some(p) => finish(state, &p, job.suppress),
-                None => { state.status = String::from("cert verify failed"); state.document = None; }
+                None => { state.status = String::from("decrypt failed"); state.document = None; }
             }
         }
         types::Phase::Done => finish(state, &job.buf, job.suppress),

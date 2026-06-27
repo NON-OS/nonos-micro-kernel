@@ -31,21 +31,27 @@ pub fn send_req(state_port: u32, f: &mut Fetch) {
 
 pub fn read_body(state_port: u32, f: &mut Fetch, tls: bool) -> bool {
     let mut chunk = [0u8; 4096];
-    match net::socket_recv(state_port, f.handle, &mut chunk) {
-        Ok(n) if n > 0 => {
-            f.idle = 0;
-            f.buf.extend_from_slice(&chunk[..n]);
-            let done = f.buf.len() >= super::MAX || (!tls && http::response::is_complete(&f.buf));
-            if done {
-                f.phase = if tls { Phase::Decrypt } else { Phase::Done };
+    let mut got = false;
+    for _ in 0..super::DRAIN_BURST {
+        match net::socket_recv(state_port, f.handle, &mut chunk) {
+            Ok(n) if n > 0 => {
+                got = true;
+                f.buf.extend_from_slice(&chunk[..n]);
+                if f.buf.len() >= super::MAX || (!tls && http::response::is_complete(&f.buf)) {
+                    f.phase = if tls { Phase::Decrypt } else { Phase::Done };
+                    return true;
+                }
             }
+            _ => break,
         }
-        _ => {
-            f.idle = f.idle.wrapping_add(1);
-            let budget = if f.buf.is_empty() { super::FIRST_WAIT } else { super::IDLE_AFTER };
-            if f.idle >= budget {
-                f.phase = if tls && !f.buf.is_empty() { Phase::Decrypt } else { Phase::Done };
-            }
+    }
+    if got {
+        f.idle = 0;
+    } else {
+        f.idle = f.idle.wrapping_add(1);
+        let budget = if f.buf.is_empty() { super::FIRST_WAIT } else { super::IDLE_AFTER };
+        if f.idle >= budget {
+            f.phase = if tls && !f.buf.is_empty() { Phase::Decrypt } else { Phase::Done };
         }
     }
     true
