@@ -27,7 +27,7 @@ pub fn application_plaintext(client: &ClientFlight, flight: &[u8], response: &[u
         let len = u16::from_be_bytes([response[pos + 3], response[pos + 4]]) as usize;
         let end = pos + 5 + len;
         if end > response.len() {
-            return None;
+            break;
         }
         if response[pos] == 23 {
             append(&mut out, &done.app, seq, &response[pos..end]);

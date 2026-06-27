@@ -15,31 +15,39 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub fn cert_valid_now(cert: &[u8], now: u64) -> bool {
-    let mut pos = 0usize;
-    while pos + 4 <= cert.len() {
-        let tag = cert[pos];
-        let len = cert[pos + 1] as usize;
-        if len < 128 && pos + 2 + len <= cert.len() && (tag == 0x17 || tag == 0x18) {
-            if pair_valid(cert, pos, now) {
-                return true;
-            }
-        }
-        pos += if len < 128 { 2 + len } else { 1 };
-    }
-    false
+    let Some(val) = validity(cert) else {
+        return false;
+    };
+    let Some((t1, v1, e1)) = super::der_tlv::der_tlv(val, 0) else {
+        return false;
+    };
+    let Some((t2, v2, e2)) = super::der_tlv::der_tlv(val, e1) else {
+        return false;
+    };
+    let Some(from) = super::cert_time_value::cert_time_value(t1, &val[v1..e1]) else {
+        return false;
+    };
+    let Some(until) = super::cert_time_value::cert_time_value(t2, &val[v2..e2]) else {
+        return false;
+    };
+    from <= now && now <= until
 }
 
-fn pair_valid(cert: &[u8], pos: usize, now: u64) -> bool {
-    let len1 = cert[pos + 1] as usize;
-    let end1 = pos + 2 + len1;
-    if end1 + 2 > cert.len() {
-        return false;
+fn validity(cert: &[u8]) -> Option<&[u8]> {
+    let (_, ov, _) = super::der_tlv::der_tlv(cert, 0)?;
+    let (_, tv, _) = super::der_tlv::der_tlv(cert, ov)?;
+    let mut o = tv;
+    let (t0, _, e0) = super::der_tlv::der_tlv(cert, o)?;
+    if t0 == 0xA0 {
+        o = e0;
     }
-    let len2 = cert[end1 + 1] as usize;
-    if len2 >= 128 || end1 + 2 + len2 > cert.len() {
-        return false;
+    for _ in 0..3 {
+        let (_, _, e) = super::der_tlv::der_tlv(cert, o)?;
+        o = e;
     }
-    let Some(from) = super::cert_time_value::cert_time_value(cert[pos], &cert[pos + 2..end1]) else { return false };
-    let Some(until) = super::cert_time_value::cert_time_value(cert[end1], &cert[end1 + 2..end1 + 2 + len2]) else { return false };
-    from <= now && now <= until
+    let (t, v, e) = super::der_tlv::der_tlv(cert, o)?;
+    if t != 0x30 {
+        return None;
+    }
+    Some(&cert[v..e])
 }

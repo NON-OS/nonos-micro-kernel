@@ -28,6 +28,7 @@ pub fn server_complete(client: &ClientFlight, bytes: &[u8], host: &[u8], now: u6
     let mut ctx = super::server_keys::server_keys(client, bytes)?;
     let mut pos = ctx.used;
     let mut seq = 0u64;
+    let mut msgs: Vec<u8> = Vec::new();
     while pos + 5 <= bytes.len() {
         let len = u16::from_be_bytes([bytes[pos + 3], bytes[pos + 4]]) as usize;
         let end = pos + 5 + len;
@@ -35,29 +36,26 @@ pub fn server_complete(client: &ClientFlight, bytes: &[u8], host: &[u8], now: u6
             return None;
         }
         if bytes[pos] == 23 {
-            if decrypt_scan(&mut ctx, seq, &bytes[pos..end], host, now) {
-                let app = super::app_keys::app_keys(&ctx.keys, &ctx.transcript)?;
-                return Some(ServerComplete { handshake: ctx.keys, app, transcript: ctx.transcript });
+            let plain = super::record_open::open(&ctx.keys.server_key, &ctx.keys.server_iv, seq, &bytes[pos..end])?;
+            if let Some((inner, 22)) = super::inner_plain::split(&plain) {
+                msgs.extend_from_slice(inner);
             }
             seq += 1;
         }
         pos = end;
     }
-    None
-}
-
-fn decrypt_scan(ctx: &mut super::server_context::ServerContext, seq: u64, record: &[u8], host: &[u8], now: u64) -> bool {
-    let Some(plain) = super::record_open::open(&ctx.keys.server_key, &ctx.keys.server_iv, seq, record) else {
-        return false;
-    };
-    let Some((msgs, 22)) = super::inner_plain::split(&plain) else { return false };
-    super::scan_server_finished::scan(
+    let ok = super::scan_server_finished::scan(
         &ctx.keys.server_secret,
         &mut ctx.transcript,
-        msgs,
+        &msgs,
         host,
         now,
         &mut ctx.cert11,
         &mut ctx.validated,
-    )
+    );
+    if !ok {
+        return None;
+    }
+    let app = super::app_keys::app_keys(&ctx.keys, &ctx.transcript)?;
+    Some(ServerComplete { handshake: ctx.keys, app, transcript: ctx.transcript })
 }

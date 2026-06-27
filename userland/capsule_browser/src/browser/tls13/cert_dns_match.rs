@@ -15,14 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub fn matches(cert: &[u8], host: &[u8]) -> bool {
+    let Some(san) = san_value(cert) else {
+        return false;
+    };
     let mut pos = 0usize;
-    while pos + 2 <= cert.len() {
-        let len = cert[pos + 1] as usize;
+    while pos + 2 <= san.len() {
+        let len = san[pos + 1] as usize;
         if len < 128 {
-            if pos + 2 + len > cert.len() {
+            if pos + 2 + len > san.len() {
                 return false;
             }
-            if cert[pos] == 0x82 && host_match(&cert[pos + 2..pos + 2 + len], host) {
+            if san[pos] == 0x82 && host_match(&san[pos + 2..pos + 2 + len], host) {
                 return true;
             }
             pos += 2 + len;
@@ -31,6 +34,25 @@ pub fn matches(cert: &[u8], host: &[u8]) -> bool {
         }
     }
     false
+}
+
+fn san_value(cert: &[u8]) -> Option<&[u8]> {
+    let needle = [0x06u8, 0x03, 0x55, 0x1D, 0x11];
+    let p = cert.windows(5).position(|w| w == needle)?;
+    let (tag, v, e) = super::der_tlv::der_tlv(cert, p + 5)?;
+    let (octag, octv, _) = if tag == 0x01 {
+        super::der_tlv::der_tlv(cert, e)?
+    } else {
+        (tag, v, e)
+    };
+    if octag != 0x04 {
+        return None;
+    }
+    let (seqtag, sv, se) = super::der_tlv::der_tlv(cert, octv)?;
+    if seqtag != 0x30 {
+        return None;
+    }
+    Some(&cert[sv..se])
 }
 
 fn host_match(name: &[u8], host: &[u8]) -> bool {
