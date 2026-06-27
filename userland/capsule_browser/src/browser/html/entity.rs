@@ -26,11 +26,14 @@ pub fn push_decoded(out: &mut String, entity: &str) {
         "nbsp" => " ",
         _ => {
             if let Some(n) = entity.strip_prefix('#') {
-                if let Ok(cp) = n.parse::<u32>() {
-                    if let Some(c) = char::from_u32(cp) {
-                        out.push(c);
-                        return;
-                    }
+                let cp = if let Some(h) = n.strip_prefix('x').or_else(|| n.strip_prefix('X')) {
+                    u32::from_str_radix(h, 16).ok()
+                } else {
+                    n.parse::<u32>().ok()
+                };
+                if let Some(c) = cp.and_then(char::from_u32) {
+                    out.push(c);
+                    return;
                 }
             }
             ""
