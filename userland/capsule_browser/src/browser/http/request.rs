@@ -25,6 +25,6 @@ pub fn build(url: &Url) -> String {
     r.push_str(" HTTP/1.1\r\nHost: ");
     r.push_str(&url.host);
     r.push_str("\r\nUser-Agent: nonos-browser/0.1\r\nAccept: text/html\r\n");
-    r.push_str("Accept-Encoding: identity\r\nConnection: close\r\n\r\n");
+    r.push_str("Accept-Encoding: gzip, deflate\r\nConnection: close\r\n\r\n");
     r
 }

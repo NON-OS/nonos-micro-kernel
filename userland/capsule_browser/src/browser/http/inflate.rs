@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![allow(dead_code)]
-
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -230,4 +228,38 @@ pub fn inflate(src: &[u8]) -> Option<Vec<u8>> {
         }
     }
     Some(out)
+}
+
+pub fn gunzip(data: &[u8]) -> Option<Vec<u8>> {
+    if data.len() < 18 || data[0] != 0x1f || data[1] != 0x8b || data[2] != 8 {
+        return None;
+    }
+    let flg = data[3];
+    let mut p = 10usize;
+    if flg & 4 != 0 {
+        let xlen = *data.get(p)? as usize | (*data.get(p + 1)? as usize) << 8;
+        p += 2 + xlen;
+    }
+    if flg & 8 != 0 {
+        while *data.get(p)? != 0 { p += 1; }
+        p += 1;
+    }
+    if flg & 16 != 0 {
+        while *data.get(p)? != 0 { p += 1; }
+        p += 1;
+    }
+    if flg & 2 != 0 {
+        p += 2;
+    }
+    if p >= data.len() {
+        return None;
+    }
+    inflate(&data[p..])
+}
+
+pub fn zlib(data: &[u8]) -> Option<Vec<u8>> {
+    if data.len() < 2 {
+        return None;
+    }
+    inflate(&data[2..])
 }

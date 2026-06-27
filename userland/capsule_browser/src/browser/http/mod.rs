@@ -15,7 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod chunked;
-#[allow(dead_code)]
 pub mod inflate;
 pub mod request;
 pub mod response;

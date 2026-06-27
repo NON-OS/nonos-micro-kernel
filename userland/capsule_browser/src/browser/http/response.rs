@@ -49,12 +49,16 @@ pub fn parse(raw: &[u8]) -> Option<Response> {
     let status = head.split_whitespace().nth(1)?.parse().ok()?;
     let mut location = None;
     let mut chunked = false;
+    let mut encoding = "";
     for line in head.lines().skip(1) {
         let lower = line.to_ascii_lowercase();
         if lower.starts_with("location:") {
             location = Some(line[line.find(':').map(|c| c + 1).unwrap_or(line.len())..].trim().to_string());
         } else if lower.starts_with("transfer-encoding:") && lower.contains("chunked") {
             chunked = true;
+        } else if lower.starts_with("content-encoding:") {
+            if lower.contains("gzip") { encoding = "gzip"; }
+            else if lower.contains("deflate") { encoding = "deflate"; }
         }
     }
     let raw_body = &raw[sep + 4..];
@@ -62,6 +66,11 @@ pub fn parse(raw: &[u8]) -> Option<Response> {
         super::chunked::decode(raw_body)
     } else {
         raw_body.to_vec()
+    };
+    let body = match encoding {
+        "gzip" => super::inflate::gunzip(&body).unwrap_or_default(),
+        "deflate" => super::inflate::zlib(&body).or_else(|| super::inflate::inflate(&body)).unwrap_or_default(),
+        _ => body,
     };
     Some(Response { status, body, location })
 }
