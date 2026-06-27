@@ -50,6 +50,25 @@ pub fn parse(input: &str) -> Option<Url> {
     Some(Url { scheme, host, port, path: path.to_string() })
 }
 
+pub fn join(base: &Url, location: &str) -> String {
+    let loc = location.trim();
+    if loc.starts_with("http://") || loc.starts_with("https://") {
+        return loc.to_string();
+    }
+    let scheme = if base.scheme == Scheme::Https { "https" } else { "http" };
+    if let Some(rest) = loc.strip_prefix("//") {
+        return alloc::format!("{}://{}", scheme, rest);
+    }
+    if loc.starts_with('/') {
+        return alloc::format!("{}://{}{}", scheme, base.host, loc);
+    }
+    let dir = match base.path.rfind('/') {
+        Some(i) => &base.path[..=i],
+        None => "/",
+    };
+    alloc::format!("{}://{}{}{}", scheme, base.host, dir, loc)
+}
+
 fn split_host_port(authority: &str, scheme: Scheme) -> Option<(String, u16)> {
     let default = if scheme == Scheme::Https { 443 } else { 80 };
     match authority.rsplit_once(':') {

@@ -29,6 +29,7 @@ const MAX: usize = 4 * 1024 * 1024;
 const FIRST_WAIT: u32 = 25;
 const IDLE_AFTER: u32 = 20;
 const MAX_FETCH_MS: i64 = 20000;
+const MAX_REDIRECTS: u8 = 5;
 
 pub fn load(state: &mut State, target: &str) {
     if state.sockets_port == 0 {
@@ -45,6 +46,7 @@ pub fn load(state: &mut State, target: &str) {
 
 fn begin(state: &mut State, target: &str) -> Result<(), &'static str> {
     let url = url::parse(target).ok_or("bad url")?;
+    state.base = Some(url.clone());
     if url.scheme == Scheme::Https {
         return https_fetch(state, &url);
     }
@@ -187,6 +189,12 @@ fn tls_read_response(port: u32, h: u32) -> Vec<u8> {
 fn finish(state: &mut State, raw: &[u8]) {
     match http::response::parse(raw) {
         Some(resp) => {
+            if matches!(resp.status, 301 | 302 | 303 | 307 | 308) {
+                if let Some(loc) = resp.location {
+                    return redirect(state, loc);
+                }
+            }
+            state.redirect_count = 0;
             let flows = html::parse::parse(&resp.body);
             let doc = layout::build(&flows, crate::browser::manifest::WIDTH, 8);
             state.scroll = 0;
@@ -194,9 +202,28 @@ fn finish(state: &mut State, raw: &[u8]) {
             state.document = Some(doc);
         }
         None => {
+            state.redirect_count = 0;
             state.status = String::from("bad response");
             state.document = None;
         }
     }
     state.view = View::Page;
+}
+
+fn redirect(state: &mut State, location: String) {
+    state.view = View::Page;
+    if state.redirect_count >= MAX_REDIRECTS {
+        state.redirect_count = 0;
+        state.status = String::from("too many redirects");
+        state.document = None;
+        return;
+    }
+    state.redirect_count += 1;
+    let next = match &state.base {
+        Some(b) => url::join(b, &location),
+        None => location,
+    };
+    state.status = alloc::format!("redirecting to {}", next);
+    state.address = next.clone();
+    state.pending_nav = Some(next);
 }

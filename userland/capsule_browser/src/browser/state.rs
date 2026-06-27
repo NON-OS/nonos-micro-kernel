@@ -40,6 +40,8 @@ pub struct State {
     pub view: View,
     pub fetch_job: Option<FetchJob>,
     pub fetch_start_ms: i64,
+    pub base: Option<crate::browser::url::Url>,
+    pub redirect_count: u8,
 }
 
 impl State {
@@ -56,6 +58,8 @@ impl State {
             view: View::Home,
             fetch_job: None,
             fetch_start_ms: 0,
+            base: None,
+            redirect_count: 0,
         }
     }
 }
