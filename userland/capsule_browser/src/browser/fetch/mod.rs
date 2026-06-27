@@ -37,6 +37,7 @@ const MAX_REDIRECTS: u8 = 5;
 const DRAIN_BURST: usize = 64;
 const HS_WAIT: u32 = 200;
 const CHECK_STRIDE: usize = 16 * 1024;
+const MAX_RETRIES: u8 = 2;
 
 pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
     if state.sockets_port == 0 {
@@ -88,16 +89,27 @@ pub fn step(state: &mut State) -> bool {
     let job = state.fetch.take().unwrap();
     let _ = net::socket_close(port, job.handle);
     match job.phase {
-        types::Phase::Decrypt => {
-            match tls::decrypt(&job) {
-                Some(p) => finish(state, &p, job.suppress),
-                None => { state.status = String::from("decrypt failed"); state.document = None; }
-            }
-        }
+        types::Phase::Decrypt => match tls::decrypt(&job) {
+            Some(p) => finish(state, &p, job.suppress),
+            None => fail(state, "decrypt failed"),
+        },
         types::Phase::Done => finish(state, &job.buf, job.suppress),
-        _ => { state.status = String::from(job.error.unwrap_or("error")); state.document = None; }
+        _ => fail(state, job.error.unwrap_or("error")),
     }
     true
+}
+
+fn fail(state: &mut State, msg: &str) {
+    if state.retries < MAX_RETRIES && !state.address.is_empty() {
+        state.retries += 1;
+        state.status = alloc::format!("retry {} — {}", state.retries, msg);
+        state.pending_nav = Some(state.address.clone());
+    } else {
+        state.retries = 0;
+        state.status = String::from(msg);
+        state.document = None;
+        state.view = View::Page;
+    }
 }
 
 fn rtc_packed() -> u64 {
@@ -114,6 +126,7 @@ fn rtc_packed() -> u64 {
 }
 
 fn finish(state: &mut State, raw: &[u8], suppress: bool) {
+    state.retries = 0;
     match http::response::parse(raw) {
         Some(resp) => {
             if matches!(resp.status, 301 | 302 | 303 | 307 | 308) {

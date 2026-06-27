@@ -38,6 +38,7 @@ pub struct State {
     pub history: Vec<String>,
     pub hist_index: i32,
     pub suppress_history_push: bool,
+    pub retries: u8,
 }
 
 impl State {
@@ -58,6 +59,7 @@ impl State {
             history: Vec::new(),
             hist_index: -1,
             suppress_history_push: false,
+            retries: 0,
         }
     }
 }
