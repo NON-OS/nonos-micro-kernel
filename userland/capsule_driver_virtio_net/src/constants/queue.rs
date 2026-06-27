@@ -40,7 +40,7 @@ pub const RING_SLOTS: u16 = (VQ_AVAIL_OFFSET / 16) as u16;
 
 
 
-pub const RX_DESC_COUNT: u16 = QUEUE_SIZE;
+pub const RX_DESC_COUNT: u16 = 64;
 pub const TX_DESC_COUNT: u16 = QUEUE_SIZE;
 
 
