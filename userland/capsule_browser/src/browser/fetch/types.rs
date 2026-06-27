@@ -21,8 +21,6 @@ use crate::browser::url::Url;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Phase {
-    Resolve,
-    Connect,
     TlsHello,
     TlsFlight,
     TlsVerify,

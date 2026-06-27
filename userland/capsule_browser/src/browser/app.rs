@@ -42,12 +42,16 @@ impl App for Browser {
         paint(&self.state, fb);
     }
     fn on_tick(&mut self) -> bool {
-        if self.state.fetch_job.is_some() {
+        if self.state.fetch.is_some() {
             self.state.pending_nav = None;
-            return crate::browser::fetch::poll(&mut self.state);
+            return crate::browser::fetch::step(&mut self.state);
         }
         if let Some(target) = self.state.pending_nav.take() {
-            crate::browser::fetch::load(&mut self.state, &target);
+            if let Err(msg) = crate::browser::fetch::load(&mut self.state, &target) {
+                self.state.status = alloc::string::String::from(msg);
+                self.state.document = None;
+                self.state.view = crate::browser::state::View::Page;
+            }
             return true;
         }
         false

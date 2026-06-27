@@ -22,12 +22,6 @@ pub enum View {
     Page,
 }
 
-pub struct FetchJob {
-    pub handle: u32,
-    pub buf: Vec<u8>,
-    pub idle: u32,
-}
-
 pub struct State {
     pub address: String,
     pub address_focused: bool,
@@ -38,9 +32,7 @@ pub struct State {
     pub dns_port: u32,
     pub sockets_port: u32,
     pub view: View,
-    pub fetch_job: Option<FetchJob>,
     pub fetch: Option<crate::browser::fetch::types::Fetch>,
-    pub fetch_start_ms: i64,
     pub base: Option<crate::browser::url::Url>,
     pub redirect_count: u8,
     pub history: Vec<String>,
@@ -60,9 +52,7 @@ impl State {
             dns_port: 0,
             sockets_port: 0,
             view: View::Home,
-            fetch_job: None,
             fetch: None,
-            fetch_start_ms: 0,
             base: None,
             redirect_count: 0,
             history: Vec::new(),
