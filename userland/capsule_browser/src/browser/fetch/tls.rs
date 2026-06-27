@@ -34,19 +34,27 @@ pub fn hello(port: u32, f: &mut Fetch, now: u64) {
 pub fn read_flight(port: u32, f: &mut Fetch) {
     let mut chunk = [0u8; 4096];
     let Some(tls) = f.tls.as_mut() else { f.phase = Phase::Error; return; };
-    match net::socket_recv(port, f.handle, &mut chunk) {
-        Ok(n) if n > 0 => {
-            f.idle = 0;
-            tls.flight.extend_from_slice(&chunk[..n]);
-            if tls13::server_finished_flight_ready(&tls.flight) { f.phase = Phase::TlsVerify; }
-        }
-        _ => {
-            f.idle = f.idle.wrapping_add(1);
-            if tls13::server_finished_flight_ready(&tls.flight) {
-                f.phase = Phase::TlsVerify;
-            } else if f.idle >= super::FIRST_WAIT {
-                f.error = Some("tls handshake failed"); f.phase = Phase::Error;
+    let mut got = false;
+    for _ in 0..super::DRAIN_BURST {
+        match net::socket_recv(port, f.handle, &mut chunk) {
+            Ok(n) if n > 0 => {
+                got = true;
+                tls.flight.extend_from_slice(&chunk[..n]);
+                if tls13::server_finished_flight_ready(&tls.flight) {
+                    f.phase = Phase::TlsVerify;
+                    return;
+                }
             }
+            _ => break,
+        }
+    }
+    if got {
+        f.idle = 0;
+    } else {
+        f.idle = f.idle.wrapping_add(1);
+        if f.idle >= super::HS_WAIT {
+            f.error = Some("tls handshake failed");
+            f.phase = Phase::Error;
         }
     }
 }

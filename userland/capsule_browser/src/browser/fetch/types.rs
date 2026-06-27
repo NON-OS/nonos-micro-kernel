@@ -47,4 +47,5 @@ pub struct Fetch {
     pub started_ms: i64,
     pub error: Option<&'static str>,
     pub suppress: bool,
+    pub last_check: usize,
 }

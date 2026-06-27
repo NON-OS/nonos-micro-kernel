@@ -32,9 +32,11 @@ use crate::browser::{html, http};
 const MAX: usize = 4 * 1024 * 1024;
 const FIRST_WAIT: u32 = 25;
 const IDLE_AFTER: u32 = 20;
-const MAX_FETCH_MS: i64 = 20000;
+const MAX_FETCH_MS: i64 = 45000;
 const MAX_REDIRECTS: u8 = 5;
 const DRAIN_BURST: usize = 64;
+const HS_WAIT: u32 = 200;
+const CHECK_STRIDE: usize = 16 * 1024;
 
 pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
     if state.sockets_port == 0 {
@@ -56,7 +58,7 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
     let suppress = core::mem::take(&mut state.suppress_history_push);
     state.fetch = Some(types::Fetch {
         url, handle: h, phase, buf: Vec::new(), tls: None,
-        idle: 0, started_ms: mk_time_millis(), error: None, suppress,
+        idle: 0, started_ms: mk_time_millis(), error: None, suppress, last_check: 0,
     });
     Ok(())
 }
@@ -123,13 +125,16 @@ fn finish(state: &mut State, raw: &[u8], suppress: bool) {
             let flows = html::parse::parse(&resp.body);
             let doc = layout::build(&flows, crate::browser::manifest::WIDTH, nonos_app_skeleton::font_advance());
             state.scroll = 0;
-            state.status = alloc::format!("{} ({} bytes)", resp.status, resp.body.len());
-            state.document = Some(doc);
+            state.status = alloc::format!(
+                "{} raw={} body={} fl={}",
+                resp.status, raw.len(), resp.body.len(), flows.len()
+            );
+            state.document = if flows.is_empty() { None } else { Some(doc) };
             record_history(state, suppress);
         }
         None => {
             state.redirect_count = 0;
-            state.status = String::from("bad response");
+            state.status = alloc::format!("bad resp raw={}", raw.len());
             state.document = None;
         }
     }

@@ -37,13 +37,27 @@ pub fn read_body(state_port: u32, f: &mut Fetch, tls: bool) -> bool {
             Ok(n) if n > 0 => {
                 got = true;
                 f.buf.extend_from_slice(&chunk[..n]);
-                if f.buf.len() >= super::MAX || (!tls && http::response::is_complete(&f.buf)) {
-                    f.phase = if tls { Phase::Decrypt } else { Phase::Done };
+                if !tls && http::response::is_complete(&f.buf) {
+                    f.phase = Phase::Done;
                     return true;
                 }
             }
             _ => break,
         }
+    }
+    if f.buf.len() >= super::MAX {
+        f.phase = if tls { Phase::Decrypt } else { Phase::Done };
+        return true;
+    }
+    if tls {
+        let grew = f.buf.len() > f.last_check;
+        if grew && (!got || f.buf.len() >= f.last_check + super::CHECK_STRIDE) {
+            f.last_check = f.buf.len();
+            if super::tls::decrypt(f).map_or(false, |p| http::response::is_complete(&p)) {
+                f.phase = Phase::Decrypt;
+            }
+        }
+        return true;
     }
     if got {
         f.idle = 0;
@@ -51,7 +65,7 @@ pub fn read_body(state_port: u32, f: &mut Fetch, tls: bool) -> bool {
         f.idle = f.idle.wrapping_add(1);
         let budget = if f.buf.is_empty() { super::FIRST_WAIT } else { super::IDLE_AFTER };
         if f.idle >= budget {
-            f.phase = if tls && !f.buf.is_empty() { Phase::Decrypt } else { Phase::Done };
+            f.phase = Phase::Done;
         }
     }
     true
