@@ -52,9 +52,10 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
     state.status = alloc::format!("loading {}", url.host);
     state.document = None;
     state.view = View::Page;
+    let suppress = core::mem::take(&mut state.suppress_history_push);
     state.fetch = Some(types::Fetch {
         url, handle: h, phase, buf: Vec::new(), tls: None,
-        idle: 0, started_ms: mk_time_millis(), error: None,
+        idle: 0, started_ms: mk_time_millis(), error: None, suppress,
     });
     Ok(())
 }
@@ -86,11 +87,11 @@ pub fn step(state: &mut State) -> bool {
     match job.phase {
         types::Phase::Decrypt => {
             match tls::decrypt(&job) {
-                Some(p) => finish(state, &p),
+                Some(p) => finish(state, &p, job.suppress),
                 None => { state.status = String::from("cert verify failed"); state.document = None; }
             }
         }
-        types::Phase::Done => finish(state, &job.buf),
+        types::Phase::Done => finish(state, &job.buf, job.suppress),
         _ => { state.status = String::from(job.error.unwrap_or("error")); state.document = None; }
     }
     true
@@ -109,7 +110,7 @@ fn rtc_packed() -> u64 {
         + t.second as u64
 }
 
-fn finish(state: &mut State, raw: &[u8]) {
+fn finish(state: &mut State, raw: &[u8], suppress: bool) {
     match http::response::parse(raw) {
         Some(resp) => {
             if matches!(resp.status, 301 | 302 | 303 | 307 | 308) {
@@ -123,7 +124,7 @@ fn finish(state: &mut State, raw: &[u8]) {
             state.scroll = 0;
             state.status = alloc::format!("{} ({} bytes)", resp.status, resp.body.len());
             state.document = Some(doc);
-            record_history(state);
+            record_history(state, suppress);
         }
         None => {
             state.redirect_count = 0;
@@ -134,9 +135,8 @@ fn finish(state: &mut State, raw: &[u8]) {
     state.view = View::Page;
 }
 
-fn record_history(state: &mut State) {
-    if state.suppress_history_push {
-        state.suppress_history_push = false;
+fn record_history(state: &mut State, suppress: bool) {
+    if suppress {
         return;
     }
     let url = state.address.clone();

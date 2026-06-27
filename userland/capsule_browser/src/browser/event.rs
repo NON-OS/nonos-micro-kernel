@@ -104,6 +104,9 @@ fn on_page_click(state: &mut State, event: InputEvent) -> EventOutcome {
 }
 
 fn nav_history(state: &mut State, delta: i32) -> EventOutcome {
+    if state.fetch.is_some() {
+        return EventOutcome::Idle;
+    }
     let next = state.hist_index + delta;
     if next < 0 || next >= state.history.len() as i32 {
         return EventOutcome::Idle;

@@ -46,4 +46,5 @@ pub struct Fetch {
     pub idle: u32,
     pub started_ms: i64,
     pub error: Option<&'static str>,
+    pub suppress: bool,
 }
