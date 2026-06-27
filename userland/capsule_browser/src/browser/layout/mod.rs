@@ -49,12 +49,14 @@ pub fn build(flows: &[Flow], width: u32, advance: u32) -> RenderDocument {
     for f in flows {
         match f {
             Flow::Break => {
-                cur.y += line.height;
-                lines.push(core::mem::replace(
-                    &mut line,
-                    RenderLine { y: cur.y, height: LINE_H, spans: Vec::new() },
-                ));
-                cur.x = MARGIN;
+                if !line.spans.is_empty() {
+                    cur.y += line.height;
+                    lines.push(core::mem::replace(
+                        &mut line,
+                        RenderLine { y: cur.y, height: LINE_H, spans: Vec::new() },
+                    ));
+                    cur.x = MARGIN;
+                }
             }
             Flow::Text(t, style) => {
                 let (scale, bold) = span_metrics(style);
