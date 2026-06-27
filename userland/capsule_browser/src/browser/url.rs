@@ -37,7 +37,7 @@ pub fn parse(input: &str) -> Option<Url> {
     } else if let Some(r) = s.strip_prefix("http://") {
         (Scheme::Http, r)
     } else {
-        (Scheme::Http, s)
+        (Scheme::Https, s)
     };
     if rest.is_empty() {
         return None;
