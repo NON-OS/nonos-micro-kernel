@@ -27,13 +27,13 @@ use wrap::{Cursor, MARGIN};
 pub fn build(flows: &[Flow], width: u32, advance: u32) -> RenderDocument {
     let mut lines: Vec<RenderLine> = Vec::new();
     let mut cur = Cursor { x: MARGIN, y: MARGIN, width, advance };
-    let mut line = RenderLine { y: cur.y, spans: Vec::new() };
+    let mut line = RenderLine { y: cur.y, height: LINE_H, spans: Vec::new() };
     for f in flows {
         match f {
             Flow::Break => {
                 lines.push(core::mem::replace(
                     &mut line,
-                    RenderLine { y: cur.y + LINE_H, spans: Vec::new() },
+                    RenderLine { y: cur.y + LINE_H, height: LINE_H, spans: Vec::new() },
                 ));
                 cur.y += LINE_H;
                 cur.x = MARGIN;
@@ -61,7 +61,7 @@ fn emit(
     for w in text.split_whitespace() {
         let (span, wrapped) = wrap::word(cur, w, href.clone());
         if wrapped {
-            let finished = core::mem::replace(line, RenderLine { y: cur.y, spans: Vec::new() });
+            let finished = core::mem::replace(line, RenderLine { y: cur.y, height: LINE_H, spans: Vec::new() });
             lines.push(finished);
         }
         line.spans.push(span);

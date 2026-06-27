@@ -26,10 +26,13 @@ pub struct Span {
     pub color: u32,
     pub href: Option<String>,
     pub image_src: Option<String>,
+    pub scale: u32,
+    pub bold: bool,
 }
 
 pub struct RenderLine {
     pub y: u32,
+    pub height: u32,
     pub spans: Vec<Span>,
 }
 
@@ -45,7 +48,7 @@ impl RenderDocument {
             for s in &line.spans {
                 if let Some(href) = s.href.as_deref() {
                     let sx = s.x as i32;
-                    if x >= sx && x < sx + s.w as i32 && y >= sy && y < sy + LINE_H as i32 {
+                    if x >= sx && x < sx + s.w as i32 && y >= sy && y < sy + line.height as i32 {
                         return Some(href);
                     }
                 }

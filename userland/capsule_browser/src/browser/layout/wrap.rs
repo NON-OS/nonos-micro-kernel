@@ -46,6 +46,8 @@ pub fn word(cur: &mut Cursor, w: &str, href: Option<String>) -> (Span, bool) {
         color,
         href,
         image_src: None,
+        scale: 1,
+        bold: false,
     };
     cur.x += px;
     (span, wrapped)
