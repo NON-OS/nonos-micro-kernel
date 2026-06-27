@@ -14,10 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_BACKSPACE, KEY_ENTER, MOD_SHIFT};
+use nonos_app_skeleton::{
+    EventOutcome, InputEvent, InputKind, KEY_BACKSPACE, KEY_DOWN, KEY_END, KEY_ENTER, KEY_HOME,
+    KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_UP, MOD_SHIFT,
+};
 
 use crate::browser::keymap::printable;
 use crate::browser::paint::chrome::{self, Btn, TITLEBAR};
+use crate::browser::paint::document::VIEW_H;
 use crate::browser::paint::home_page::{self, CONTENT_TOP};
 use crate::browser::state::{State, View};
 
@@ -25,14 +29,37 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     match event.kind {
         InputKind::ButtonDown => on_button(state, event),
         InputKind::Wheel => {
-            let max = state.document.as_ref().map(|d| d.content_h).unwrap_or(0);
-            let next = state.scroll as i32 - event.delta_y * 20;
-            state.scroll = next.clamp(0, max as i32) as u32;
+            scroll_by(state, -event.delta_y * 60);
             EventOutcome::Repaint
         }
         InputKind::KeyDown if state.address_focused => on_key(state, event),
+        InputKind::KeyDown if matches!(state.view, View::Page) => on_page_key(state, event),
         _ => EventOutcome::Idle,
     }
+}
+
+fn scroll_by(state: &mut State, dy: i32) {
+    let max = state
+        .document
+        .as_ref()
+        .map(|d| d.content_h.saturating_sub(VIEW_H))
+        .unwrap_or(0);
+    let next = state.scroll as i32 + dy;
+    state.scroll = next.clamp(0, max as i32) as u32;
+}
+
+fn on_page_key(state: &mut State, event: InputEvent) -> EventOutcome {
+    let page = VIEW_H as i32 - 40;
+    match event.code {
+        KEY_UP => scroll_by(state, -40),
+        KEY_DOWN => scroll_by(state, 40),
+        KEY_PAGE_UP => scroll_by(state, -page),
+        KEY_PAGE_DOWN | 0x20 => scroll_by(state, page),
+        KEY_HOME => state.scroll = 0,
+        KEY_END => scroll_by(state, i32::MAX),
+        _ => return EventOutcome::Idle,
+    }
+    EventOutcome::Repaint
 }
 
 fn on_button(state: &mut State, event: InputEvent) -> EventOutcome {
@@ -124,6 +151,7 @@ fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
         KEY_ENTER => {
             state.pending_nav = Some(state.address.clone());
             state.status = alloc::format!("loading {}", state.address);
+            state.address_focused = false;
             EventOutcome::Repaint
         }
         KEY_BACKSPACE => {

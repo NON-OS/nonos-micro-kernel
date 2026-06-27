@@ -21,6 +21,7 @@ use crate::browser::state::State;
 
 const TOP: i32 = 80;
 const BOTTOM: i32 = 676;
+pub const VIEW_H: u32 = (BOTTOM - TOP) as u32;
 const PAGE_BG: u32 = 0xFF18_1B20;
 const FG: u32 = 0xFFE8_EAED;
 

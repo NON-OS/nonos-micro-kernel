@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod chrome;
-mod document;
+pub mod document;
 pub mod home_page;
 
 use nonos_app_skeleton::PaintBuffer;
