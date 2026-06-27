@@ -42,6 +42,9 @@ pub struct State {
     pub fetch_start_ms: i64,
     pub base: Option<crate::browser::url::Url>,
     pub redirect_count: u8,
+    pub history: Vec<String>,
+    pub hist_index: i32,
+    pub suppress_history_push: bool,
 }
 
 impl State {
@@ -60,6 +63,9 @@ impl State {
             fetch_start_ms: 0,
             base: None,
             redirect_count: 0,
+            history: Vec::new(),
+            hist_index: -1,
+            suppress_history_push: false,
         }
     }
 }

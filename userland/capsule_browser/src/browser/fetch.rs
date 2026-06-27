@@ -200,6 +200,7 @@ fn finish(state: &mut State, raw: &[u8]) {
             state.scroll = 0;
             state.status = alloc::format!("{} ({} bytes)", resp.status, resp.body.len());
             state.document = Some(doc);
+            record_history(state);
         }
         None => {
             state.redirect_count = 0;
@@ -208,6 +209,21 @@ fn finish(state: &mut State, raw: &[u8]) {
         }
     }
     state.view = View::Page;
+}
+
+fn record_history(state: &mut State) {
+    if state.suppress_history_push {
+        state.suppress_history_push = false;
+        return;
+    }
+    let url = state.address.clone();
+    if url.is_empty() {
+        return;
+    }
+    let trunc = (state.hist_index + 1).max(0) as usize;
+    state.history.truncate(trunc);
+    state.history.push(url);
+    state.hist_index = state.history.len() as i32 - 1;
 }
 
 fn redirect(state: &mut State, location: String) {
