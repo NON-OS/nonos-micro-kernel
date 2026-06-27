@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+#[allow(dead_code)]
+pub mod types;
+
 use alloc::string::String;
 use alloc::vec::Vec;
 
