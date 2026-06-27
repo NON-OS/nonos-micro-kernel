@@ -16,7 +16,7 @@
 
 use alloc::string::String;
 
-use crate::browser::layout::doc::{Span, LINE_H};
+use crate::browser::layout::doc::Span;
 
 pub const MARGIN: u32 = 16;
 const FG: u32 = 0xFFE6_EDF3;
@@ -29,26 +29,17 @@ pub struct Cursor {
     pub advance: u32,
 }
 
-pub fn word(cur: &mut Cursor, w: &str, href: Option<String>) -> (Span, bool) {
-    let px = w.len() as u32 * cur.advance + cur.advance;
+pub fn word(cur: &mut Cursor, w: &str, href: Option<String>, scale: u32, bold: bool) -> (Span, bool) {
+    let px = w.len() as u32 * cur.advance * scale + cur.advance * scale + if bold { 1 } else { 0 };
     let wrapped = if cur.x + px > cur.width.saturating_sub(MARGIN) {
-        cur.y += LINE_H;
+        cur.y += scale * 8 + 12;
         cur.x = MARGIN;
         true
     } else {
         false
     };
     let color = if href.is_some() { LINK } else { FG };
-    let span = Span {
-        x: cur.x,
-        w: px,
-        text: String::from(w),
-        color,
-        href,
-        image_src: None,
-        scale: 1,
-        bold: false,
-    };
+    let span = Span { x: cur.x, w: px, text: String::from(w), color, href, image_src: None, scale, bold };
     cur.x += px;
     (span, wrapped)
 }
