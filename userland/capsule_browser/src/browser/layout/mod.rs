@@ -42,6 +42,8 @@ fn line_height(scale: u32) -> u32 {
     scale * 8 + 12
 }
 
+const PARA_GAP: u32 = 6;
+
 pub fn build(flows: &[Flow], width: u32, advance: u32) -> RenderDocument {
     let mut lines: Vec<RenderLine> = Vec::new();
     let mut cur = Cursor { x: MARGIN, y: MARGIN, width, advance };
@@ -50,7 +52,7 @@ pub fn build(flows: &[Flow], width: u32, advance: u32) -> RenderDocument {
         match f {
             Flow::Break => {
                 if !line.spans.is_empty() {
-                    cur.y += line.height;
+                    cur.y += line.height + PARA_GAP;
                     lines.push(core::mem::replace(
                         &mut line,
                         RenderLine { y: cur.y, height: LINE_H, spans: Vec::new() },
