@@ -38,6 +38,7 @@ const DRAIN_BURST: usize = 64;
 const HS_WAIT: u32 = 200;
 const CHECK_STRIDE: usize = 16 * 1024;
 const MAX_RETRIES: u8 = 2;
+const FLIGHT_SETTLE: u32 = 15;
 
 pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
     if state.sockets_port == 0 {

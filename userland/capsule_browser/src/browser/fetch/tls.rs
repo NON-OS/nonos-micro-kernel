@@ -52,11 +52,29 @@ pub fn read_flight(port: u32, f: &mut Fetch) {
         f.idle = 0;
     } else {
         f.idle = f.idle.wrapping_add(1);
-        if f.idle >= super::HS_WAIT {
+        if flight_settled(&tls.flight) && f.idle >= super::FLIGHT_SETTLE {
+            f.phase = Phase::TlsVerify;
+        } else if f.idle >= super::HS_WAIT {
             f.error = Some("tls handshake failed");
             f.phase = Phase::Error;
         }
     }
+}
+
+fn flight_settled(bytes: &[u8]) -> bool {
+    let mut pos = 0usize;
+    while pos + 5 <= bytes.len() {
+        let len = u16::from_be_bytes([bytes[pos + 3], bytes[pos + 4]]) as usize;
+        let end = pos + 5 + len;
+        if end > bytes.len() {
+            return false;
+        }
+        if bytes[pos] == 23 {
+            return true;
+        }
+        pos = end;
+    }
+    false
 }
 
 pub fn verify_and_send(port: u32, f: &mut Fetch) {
