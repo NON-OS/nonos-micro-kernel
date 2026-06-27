@@ -196,7 +196,7 @@ fn finish(state: &mut State, raw: &[u8]) {
             }
             state.redirect_count = 0;
             let flows = html::parse::parse(&resp.body);
-            let doc = layout::build(&flows, crate::browser::manifest::WIDTH, 8);
+            let doc = layout::build(&flows, crate::browser::manifest::WIDTH, nonos_app_skeleton::font_advance());
             state.scroll = 0;
             state.status = alloc::format!("{} ({} bytes)", resp.status, resp.body.len());
             state.document = Some(doc);
