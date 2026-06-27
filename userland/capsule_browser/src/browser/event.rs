@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_BACKSPACE, KEY_ENTER};
+use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_BACKSPACE, KEY_ENTER, MOD_SHIFT};
 
 use crate::browser::keymap::printable;
 use crate::browser::paint::chrome::{self, Btn, TITLEBAR};
@@ -113,7 +113,7 @@ fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
             state.address.pop();
             EventOutcome::Repaint
         }
-        code => match printable(code) {
+        code => match printable(code, event.flags & MOD_SHIFT != 0) {
             Some(b) => {
                 state.address.push(b as char);
                 EventOutcome::Repaint

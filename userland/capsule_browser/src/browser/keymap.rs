@@ -14,10 +14,42 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn printable(code: u32) -> Option<u8> {
-    if (0x20..=0x7E).contains(&code) {
-        Some(code as u8)
+pub fn printable(code: u32, shift: bool) -> Option<u8> {
+    if !(0x20..=0x7E).contains(&code) {
+        return None;
+    }
+    let b = code as u8;
+    if shift {
+        Some(shifted(b))
     } else {
-        None
+        Some(b)
+    }
+}
+
+fn shifted(b: u8) -> u8 {
+    match b {
+        b'a'..=b'z' => b - 32,
+        b'1' => b'!',
+        b'2' => b'@',
+        b'3' => b'#',
+        b'4' => b'$',
+        b'5' => b'%',
+        b'6' => b'^',
+        b'7' => b'&',
+        b'8' => b'*',
+        b'9' => b'(',
+        b'0' => b')',
+        b'-' => b'_',
+        b'=' => b'+',
+        b'[' => b'{',
+        b']' => b'}',
+        b'\\' => b'|',
+        b';' => b':',
+        b'\'' => b'"',
+        b'`' => b'~',
+        b',' => b'<',
+        b'.' => b'>',
+        b'/' => b'?',
+        other => other,
     }
 }
