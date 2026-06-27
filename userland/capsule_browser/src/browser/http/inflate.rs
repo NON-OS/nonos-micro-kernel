@@ -167,6 +167,49 @@ fn fixed(b: &mut Bits, out: &mut Vec<u8>) -> Option<()> {
     codes(b, out, &lit, &dist)
 }
 
+const ORDER: [usize; 19] = [16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
+
+fn dynamic(b: &mut Bits, out: &mut Vec<u8>) -> Option<()> {
+    let hlit = b.bits(5)? as usize + 257;
+    let hdist = b.bits(5)? as usize + 1;
+    let hclen = b.bits(4)? as usize + 4;
+    if hlit > 286 || hdist > 30 {
+        return None;
+    }
+    let mut cl = [0u8; 19];
+    for i in 0..hclen {
+        cl[ORDER[i]] = b.bits(3)? as u8;
+    }
+    let clh = build(&cl);
+    let mut lengths: Vec<u8> = Vec::with_capacity(hlit + hdist);
+    while lengths.len() < hlit + hdist {
+        let sym = decode(b, &clh)?;
+        match sym {
+            0..=15 => lengths.push(sym as u8),
+            16 => {
+                let prev = *lengths.last()?;
+                let n = 3 + b.bits(2)?;
+                for _ in 0..n { lengths.push(prev); }
+            }
+            17 => {
+                let n = 3 + b.bits(3)?;
+                for _ in 0..n { lengths.push(0); }
+            }
+            18 => {
+                let n = 11 + b.bits(7)?;
+                for _ in 0..n { lengths.push(0); }
+            }
+            _ => return None,
+        }
+        if lengths.len() > hlit + hdist {
+            return None;
+        }
+    }
+    let lit = build(&lengths[..hlit]);
+    let dist = build(&lengths[hlit..hlit + hdist]);
+    codes(b, out, &lit, &dist)
+}
+
 pub fn inflate(src: &[u8]) -> Option<Vec<u8>> {
     let mut b = Bits::new(src);
     let mut out: Vec<u8> = Vec::new();
@@ -176,7 +219,7 @@ pub fn inflate(src: &[u8]) -> Option<Vec<u8>> {
         match ty {
             0 => stored(&mut b, &mut out)?,
             1 => fixed(&mut b, &mut out)?,
-            2 => return None,
+            2 => dynamic(&mut b, &mut out)?,
             _ => return None,
         }
         if out.len() > MAX_OUT {
