@@ -65,7 +65,8 @@ fn on_toolbar(state: &mut State, event: InputEvent) -> EventOutcome {
             state.address_focused = true;
             EventOutcome::Repaint
         }
-        Some(Btn::Back) | Some(Btn::Forward) => EventOutcome::Idle,
+        Some(Btn::Back) => nav_history(state, -1),
+        Some(Btn::Forward) => nav_history(state, 1),
         None => {
             state.address_focused = false;
             EventOutcome::Idle
@@ -100,6 +101,19 @@ fn on_page_click(state: &mut State, event: InputEvent) -> EventOutcome {
         return EventOutcome::Repaint;
     }
     EventOutcome::Idle
+}
+
+fn nav_history(state: &mut State, delta: i32) -> EventOutcome {
+    let next = state.hist_index + delta;
+    if next < 0 || next >= state.history.len() as i32 {
+        return EventOutcome::Idle;
+    }
+    state.hist_index = next;
+    state.suppress_history_push = true;
+    let url = state.history[next as usize].clone();
+    state.address = url.clone();
+    state.pending_nav = Some(url);
+    EventOutcome::Repaint
 }
 
 fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
