@@ -163,7 +163,7 @@ fn consume_tag(
             let alt = attr(&raw, "alt").unwrap_or_default();
             out.push(Flow::Image(src, alt));
         }
-        "script" | "style" | "noscript" if !closing => skip_until_close(chars, &name),
+        "script" | "style" if !closing => skip_until_close(chars, &name),
         _ => {}
     }
     if name.starts_with('h') && name.len() == 2 && name.as_bytes()[1].is_ascii_digit() {
