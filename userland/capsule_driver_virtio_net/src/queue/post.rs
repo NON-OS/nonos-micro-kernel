@@ -17,7 +17,7 @@
 use core::ptr::{read_volatile, write_volatile};
 
 use super::{RxQueue, TxQueue};
-use crate::constants::{QUEUE_SIZE, VQ_AVAIL_OFFSET, VQ_DESC_OFFSET, VRING_DESC_F_WRITE};
+use crate::constants::{RING_SLOTS, VQ_AVAIL_OFFSET, VQ_DESC_OFFSET, VRING_DESC_F_WRITE};
 
 const DESC_SIZE: usize = 16;
 const AVAIL_RING_OFFSET: usize = 4;
@@ -44,9 +44,15 @@ impl RxQueue {
         unsafe {
             let avail = self.region_va.add(VQ_AVAIL_OFFSET).cast::<u16>();
             let idx = read_volatile(avail.add(1));
-            let pos = (idx as usize) % (self.buf_count as usize);
+            let pos = (idx % RING_SLOTS) as usize;
             write_volatile(avail.add(2 + pos), slot);
             write_volatile(avail.add(1), idx.wrapping_add(1));
+        }
+    }
+
+    pub fn refill_consumed(&mut self) {
+        if let Some(slot) = self.pending_refill.take() {
+            self.refill(slot);
         }
     }
 }
@@ -62,7 +68,7 @@ impl TxQueue {
 
             let avail = self.region_va.add(VQ_AVAIL_OFFSET).cast::<u16>();
             let idx = read_volatile(avail.add(1));
-            let pos = (idx % QUEUE_SIZE) as usize;
+            let pos = (idx % RING_SLOTS) as usize;
             write_volatile(avail.add(AVAIL_RING_OFFSET / 2 + pos), slot);
             write_volatile(avail.add(1), idx.wrapping_add(1));
         }
