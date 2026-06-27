@@ -212,22 +212,22 @@ pub fn inflate(src: &[u8]) -> Option<Vec<u8>> {
     let mut b = Bits::new(src);
     let mut out: Vec<u8> = Vec::new();
     loop {
-        let last = b.bit()?;
-        let ty = b.bits(2)?;
-        match ty {
-            0 => stored(&mut b, &mut out)?,
-            1 => fixed(&mut b, &mut out)?,
-            2 => dynamic(&mut b, &mut out)?,
-            _ => return None,
-        }
-        if out.len() > MAX_OUT {
-            return None;
-        }
-        if last == 1 {
+        let Some(last) = b.bit() else { break; };
+        let failed = match b.bits(2) {
+            Some(0) => stored(&mut b, &mut out).is_none(),
+            Some(1) => fixed(&mut b, &mut out).is_none(),
+            Some(2) => dynamic(&mut b, &mut out).is_none(),
+            _ => true,
+        };
+        if failed || out.len() > MAX_OUT || last == 1 {
             break;
         }
     }
-    Some(out)
+    if out.is_empty() {
+        None
+    } else {
+        Some(out)
+    }
 }
 
 pub fn gunzip(data: &[u8]) -> Option<Vec<u8>> {
