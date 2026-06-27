@@ -24,6 +24,20 @@ pub fn push_decoded(out: &mut String, entity: &str) {
         "quot" => "\"",
         "apos" => "'",
         "nbsp" => " ",
+        "mdash" => "--",
+        "ndash" | "minus" => "-",
+        "hellip" => "...",
+        "lsquo" | "rsquo" | "sbquo" => "'",
+        "ldquo" | "rdquo" | "bdquo" => "\"",
+        "copy" => "(c)",
+        "reg" => "(r)",
+        "trade" => "(tm)",
+        "bull" | "middot" => "*",
+        "deg" => "deg",
+        "times" => "x",
+        "laquo" => "<<",
+        "raquo" => ">>",
+        "frasl" => "/",
         _ => {
             if let Some(n) = entity.strip_prefix('#') {
                 let cp = if let Some(h) = n.strip_prefix('x').or_else(|| n.strip_prefix('X')) {
