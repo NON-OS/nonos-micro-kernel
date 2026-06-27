@@ -16,6 +16,10 @@
 
 #[allow(dead_code)]
 pub mod types;
+#[allow(dead_code)]
+mod plain;
+#[allow(dead_code)]
+mod tls;
 
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -245,4 +249,68 @@ fn redirect(state: &mut State, location: String) {
     state.status = alloc::format!("redirecting to {}", next);
     state.address = next.clone();
     state.pending_nav = Some(next);
+}
+
+#[allow(dead_code)]
+pub fn begin2(state: &mut State, target: &str) -> Result<(), &'static str> {
+    if state.sockets_port == 0 {
+        state.sockets_port = net::lookup(b"net.sockets");
+        state.dns_port = net::lookup(b"net.dns");
+    }
+    let url = url::parse(target).ok_or("bad url")?;
+    state.base = Some(url.clone());
+    let ip = net::resolve(state.dns_port, url.host.as_bytes()).map_err(|_| "dns failed")?;
+    let h = net::socket_open(state.sockets_port).map_err(|_| "socket failed")?;
+    if net::socket_connect(state.sockets_port, h, ip, url.port).is_err() {
+        let _ = net::socket_close(state.sockets_port, h);
+        return Err("connect failed");
+    }
+    let phase = if url.scheme == url::Scheme::Https { types::Phase::TlsHello } else { types::Phase::SendReq };
+    state.status = alloc::format!("loading {}", url.host);
+    state.document = None;
+    state.view = View::Page;
+    state.fetch = Some(types::Fetch {
+        url, handle: h, phase, buf: Vec::new(), tls: None,
+        idle: 0, started_ms: mk_time_millis(), error: None,
+    });
+    Ok(())
+}
+
+#[allow(dead_code)]
+pub fn step(state: &mut State) -> bool {
+    let port = state.sockets_port;
+    let now = rtc_packed();
+    {
+        let Some(f) = state.fetch.as_mut() else { return false; };
+        if mk_time_millis().wrapping_sub(f.started_ms) > MAX_FETCH_MS {
+            if f.buf.is_empty() {
+                if f.error.is_none() { f.error = Some("timed out"); }
+                f.phase = types::Phase::Error;
+            } else {
+                f.phase = if f.tls.is_some() { types::Phase::Decrypt } else { types::Phase::Done };
+            }
+        }
+        match f.phase {
+            types::Phase::TlsHello => { tls::hello(port, f, now); return true; }
+            types::Phase::TlsFlight => { tls::read_flight(port, f); return true; }
+            types::Phase::TlsVerify => { tls::verify_and_send(port, f); return true; }
+            types::Phase::SendReq => { plain::send_req(port, f); return true; }
+            types::Phase::ReadBody => { plain::read_body(port, f, f.tls.is_some()); return true; }
+            types::Phase::Resolve | types::Phase::Connect => { return true; }
+            types::Phase::Decrypt | types::Phase::Done | types::Phase::Error => {}
+        }
+    }
+    let job = state.fetch.take().unwrap();
+    let _ = net::socket_close(port, job.handle);
+    match job.phase {
+        types::Phase::Decrypt => {
+            match tls::decrypt(&job) {
+                Some(p) => finish(state, &p),
+                None => { state.status = String::from("cert verify failed"); state.document = None; }
+            }
+        }
+        types::Phase::Done => finish(state, &job.buf),
+        _ => { state.status = String::from(job.error.unwrap_or("error")); state.document = None; }
+    }
+    true
 }
