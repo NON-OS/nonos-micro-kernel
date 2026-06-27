@@ -32,13 +32,16 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     };
     for line in &doc.lines {
         let sy = line.y as i32 + TOP - state.scroll as i32;
-        if sy < TOP || sy + 18 > BOTTOM {
+        if sy < TOP || sy + line.height as i32 > BOTTOM {
             continue;
         }
         for s in &line.spans {
-            fb.text(s.x, sy as u32, s.text.as_bytes(), s.color);
+            fb.text_scaled(s.x, sy as u32, s.text.as_bytes(), s.color, s.scale);
+            if s.bold {
+                fb.text_scaled(s.x + 1, sy as u32, s.text.as_bytes(), s.color, s.scale);
+            }
             if s.href.is_some() {
-                fb.fill_rect(s.x, sy as u32 + 16, s.w, 1, s.color);
+                fb.fill_rect(s.x, sy as u32 + line.height - 4, s.w, 1, s.color);
             }
         }
     }
