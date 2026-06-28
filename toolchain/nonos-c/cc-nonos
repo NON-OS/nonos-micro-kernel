@@ -1,0 +1,2 @@
+#!/bin/sh
+exec clang --config "$(dirname "$0")/x86_64-unknown-nonos.cfg" "$@"
