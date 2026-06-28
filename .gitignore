@@ -88,3 +88,6 @@ CONTEXT.md
 .continue/
 .superpowers/
 
+
+# nonos C sysroot (build artifact of toolchain/nonos-c/build-sysroot.sh)
+toolchain/nonos-c/sysroot/
