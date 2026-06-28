@@ -143,6 +143,38 @@ patch("src/header/signal/mod.rs",
       '#[cfg(not(target_os = "linux"))]\npub struct sigevent {',
       '#[cfg(not(any(target_os = "linux", target_os = "nonos")))]\npub struct sigevent {')
 broaden("src/header/signal/mod.rs", "pub struct sigevent {")
+
+patch("src/header/sys_ioctl/mod.rs",
+      'use crate::{\n    error::ResultExt,\n'
+      '    platform::types::{c_char, c_int, c_ulong, c_ushort, c_void},\n};',
+      '#[cfg(not(target_os = "nonos"))]\nuse crate::error::ResultExt;\n'
+      'use crate::platform::types::{c_char, c_int, c_ulong, c_ushort, c_void};')
+patch("src/header/sys_ioctl/mod.rs",
+      '    #[cfg(target_os = "redox")]\n'
+      '    unsafe { self::redox::ioctl_inner(fd, request, out) }.or_minus_one_errno()\n}',
+      '    #[cfg(target_os = "nonos")]\n    { let _ = (fd, request, out); -1 }\n'
+      '    #[cfg(target_os = "redox")]\n'
+      '    unsafe { self::redox::ioctl_inner(fd, request, out) }.or_minus_one_errno()\n}')
+
+patch("src/ld_so/tcb.rs",
+      '#[cfg(target_os = "linux")]\npub type OsSpecific = ();',
+      '#[cfg(any(target_os = "linux", target_os = "nonos"))]\npub type OsSpecific = ();')
+patch("src/ld_so/tcb.rs",
+      '#[cfg(any(target_os = "linux", target_os = "redox"))]\n    unsafe fn os_new(',
+      '#[cfg(any(target_os = "linux", target_os = "redox", target_os = "nonos"))]\n    unsafe fn os_new(')
+patch("src/ld_so/tcb.rs",
+      '#[cfg(all(target_os = "linux", target_arch = "x86_64"))]',
+      '#[cfg(all(target_os = "nonos", target_arch = "x86_64"))]\n'
+      '    unsafe fn os_arch_activate(_os: &(), _tls_end: usize, _tls_len: usize) {}\n\n'
+      '    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]')
+
+patch("src/ld_so/mod.rs",
+      '#[cfg(any(target_os = "linux", target_os = "redox"))]\npub unsafe fn init(',
+      '#[cfg(any(target_os = "linux", target_os = "redox", target_os = "nonos"))]\npub unsafe fn init(')
+patch("src/ld_so/mod.rs",
+      '#[cfg(all(target_os = "linux", target_arch = "x86_64"))]\n    {\n        const ARCH_GET_FS',
+      '#[cfg(all(target_os = "nonos", target_arch = "x86_64"))]\n    { tp = 0; }\n'
+      '    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]\n    {\n        const ARCH_GET_FS')
 PY
 
 echo "NONOS relibc backend grafted into $RELIBC"
