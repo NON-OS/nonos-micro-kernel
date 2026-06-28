@@ -175,6 +175,23 @@ patch("src/ld_so/mod.rs",
       '#[cfg(all(target_os = "linux", target_arch = "x86_64"))]\n    {\n        const ARCH_GET_FS',
       '#[cfg(all(target_os = "nonos", target_arch = "x86_64"))]\n    { tp = 0; }\n'
       '    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]\n    {\n        const ARCH_GET_FS')
+
+patch("src/crt0/src/lib.rs",
+      '#[cfg(target_arch = "x86_64")]\nglobal_asm!(',
+      '#[cfg(target_os = "nonos")]\nglobal_asm!(\n'
+      '    "\n'
+      '    .globl _start\n'
+      '    .type _start, @function\n'
+      '_start:\n'
+      '    xor rbp, rbp\n'
+      '    and rsp, -16\n'
+      '    sub rsp, 8\n'
+      '    push 0\n    push 0\n    push 0\n    push 0\n    push 0\n'
+      '    mov rdi, rsp\n'
+      '    call relibc_crt0\n'
+      '    .size _start, . - _start\n'
+      '"\n);\n\n'
+      '#[cfg(all(target_arch = "x86_64", not(target_os = "nonos")))]\nglobal_asm!(')
 PY
 
 echo "NONOS relibc backend grafted into $RELIBC"
