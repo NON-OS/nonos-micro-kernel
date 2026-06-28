@@ -85,6 +85,66 @@ with open(cfgmk, "w") as f:
     f.write(s.rstrip("\n") + "\n" + block)
 PY
 
+# 3. reuse linux generic-x86_64 ABI definitions for nonos (idempotent)
+python3 - "$RELIBC" <<'PY'
+import sys
+relibc = sys.argv[1]
+
+def patch(rel, old, new):
+    p = f"{relibc}/{rel}"
+    with open(p) as f:
+        s = f.read()
+    if new in s:
+        return
+    if old not in s:
+        raise SystemExit(f"anchor not found in {rel}")
+    with open(p, "w") as f:
+        f.write(s.replace(old, new, 1))
+
+LX = '#[cfg(target_os = "linux")]'
+NX = '#[cfg(any(target_os = "linux", target_os = "nonos"))]'
+
+def broaden(rel, marker):
+    patch(rel, f'{LX}\n{marker}', f'{NX}\n{marker}')
+
+for m in ("_paths", "bits_open-flags", "fcntl", "netdb", "signal",
+          "sys_mman", "sys_syslog", "termios"):
+    patch(f"src/header/{m}/mod.rs",
+          f'{LX}\n#[path = "linux.rs"]', f'{NX}\n#[path = "linux.rs"]')
+
+patch("src/header/time/constants.rs",
+      f'{LX}\n#[path = "linux.rs"]', f'{NX}\n#[path = "linux.rs"]')
+patch("src/header/unistd/sysconf.rs",
+      f'{LX}\n#[path = "sysconf/linux.rs"]', f'{NX}\n#[path = "sysconf/linux.rs"]')
+patch("src/platform/mod.rs", f'{LX}\npub mod auxv_defs;', f'{NX}\npub mod auxv_defs;')
+patch("src/header/sys_epoll/mod.rs",
+      f'{LX}\npub const EPOLL_CLOEXEC: c_int = 0x8_0000;',
+      f'{NX}\npub const EPOLL_CLOEXEC: c_int = 0x8_0000;')
+
+broaden("src/header/termios/mod.rs",
+        '#[repr(C)]\n#[derive(Default, Clone)]\npub struct termios {')
+for fn in ("cfgetispeed", "cfgetospeed", "cfsetispeed", "cfsetospeed"):
+    broaden("src/header/termios/mod.rs",
+            f'#[unsafe(no_mangle)]\npub unsafe extern "C" fn {fn}')
+
+broaden("src/header/grp/mod.rs", "const SEPARATOR: char = ':';")
+broaden("src/header/pwd/mod.rs", "const SEPARATOR: u8 = b':';")
+broaden("src/header/shadow/mod.rs", "const SEPARATOR: char = ':';")
+broaden("src/header/pwd/mod.rs", "mod linux;")
+broaden("src/header/pwd/mod.rs", "use self::linux as sys;")
+broaden("src/header/limits/mod.rs", "pub const PAGE_SIZE: usize = 4096;")
+broaden("src/header/sys_mman/mod.rs", 'static SHM_PATH: &[u8] = b"/dev/shm/";')
+broaden("src/header/stdlib/mod.rs",
+        '    let r = unsafe { open(c"/dev/ptmx".as_ptr(), flags) };')
+broaden("src/header/stdlib/mod.rs",
+        '        let name = format!("/dev/pts/{}", pty);')
+
+patch("src/header/signal/mod.rs",
+      '#[cfg(not(target_os = "linux"))]\npub struct sigevent {',
+      '#[cfg(not(any(target_os = "linux", target_os = "nonos")))]\npub struct sigevent {')
+broaden("src/header/signal/mod.rs", "pub struct sigevent {")
+PY
+
 echo "NONOS relibc backend grafted into $RELIBC"
 echo "  src/platform/nonos/{mod,lowlevel,socket,signal,epoll,ptrace}.rs"
 echo "  cfg arm + Sync-errno patch + config.mk TARGET block (override CARGOFLAGS)"
