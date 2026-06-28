@@ -117,6 +117,50 @@ impl Pal for Sys {
     unsafe fn munlockall() -> Result<()> { Err(Errno(ENOSYS)) }
     unsafe fn nanosleep(_rqtp: *const timespec, _rmtp: *mut timespec) -> Result<()> { Err(Errno(ENOSYS)) }
     fn getpagesize() -> usize { 4096 }
+    fn clock_getres(_clk_id: clockid_t, _tp: Option<Out<timespec>>) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn clock_gettime(_clk_id: clockid_t, _tp: Out<timespec>) -> Result<()> { Err(Errno(ENOSYS)) }
+    unsafe fn clock_settime(_clk_id: clockid_t, _tp: *const timespec) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn gettimeofday(_tp: Out<timeval>, _tzp: Option<Out<timezone>>) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn timer_create(_clock_id: clockid_t, _evp: &sigevent, _timerid: Out<timer_t>) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn timer_delete(_timerid: timer_t) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn timer_gettime(_timerid: timer_t, _value: Out<itimerspec>) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn timer_settime(_timerid: timer_t, _flags: c_int, _value: &itimerspec, _ovalue: Option<Out<itimerspec>>) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn getegid() -> gid_t { 0 }
+    fn geteuid() -> uid_t { 0 }
+    fn getgid() -> gid_t { 0 }
+    fn getgroups(_list: Out<[gid_t]>) -> Result<c_int> { Err(Errno(ENOSYS)) }
+    fn getpgid(_pid: pid_t) -> Result<pid_t> { Err(Errno(ENOSYS)) }
+    fn getppid() -> pid_t { 0 }
+    fn getpriority(_which: c_int, _who: id_t) -> Result<c_int> { Err(Errno(ENOSYS)) }
+    fn getrandom(_buf: &mut [u8], _flags: c_uint) -> Result<usize> { Err(Errno(ENOSYS)) }
+    fn getresgid(_rgid: Option<Out<gid_t>>, _egid: Option<Out<gid_t>>, _sgid: Option<Out<gid_t>>) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn getresuid(_ruid: Option<Out<uid_t>>, _euid: Option<Out<uid_t>>, _suid: Option<Out<uid_t>>) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn getrlimit(_resource: c_int, _rlim: Out<rlimit>) -> Result<()> { Err(Errno(ENOSYS)) }
+    unsafe fn setrlimit(_resource: c_int, _rlim: *const rlimit) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn getrusage(_who: c_int, _r_usage: Out<rusage>) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn getsid(_pid: pid_t) -> Result<pid_t> { Err(Errno(ENOSYS)) }
+    fn gettid() -> pid_t { 0 }
+    fn getuid() -> uid_t { 0 }
+    unsafe fn setgroups(_size: size_t, _list: *const gid_t) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn setpgid(_pid: pid_t, _pgid: pid_t) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn setpriority(_which: c_int, _who: id_t, _prio: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn setresgid(_rgid: gid_t, _egid: gid_t, _sgid: gid_t) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn setresuid(_ruid: uid_t, _euid: uid_t, _suid: uid_t) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn setsid() -> Result<c_int> { Err(Errno(ENOSYS)) }
+    fn umask(_mask: mode_t) -> mode_t { 0 }
+    unsafe fn execve(_path: CStr, _argv: *const *mut c_char, _envp: *const *mut c_char) -> Result<()> { Err(Errno(ENOSYS)) }
+    unsafe fn fexecve(_fildes: c_int, _argv: *const *mut c_char, _envp: *const *mut c_char) -> Result<()> { Err(Errno(ENOSYS)) }
+    unsafe fn exit_thread(_stack_base: *mut (), _stack_size: usize) -> ! { Self::exit(0) }
+    unsafe fn fork() -> Result<pid_t> { Err(Errno(ENOSYS)) }
+    unsafe fn futex_wait(_addr: *mut u32, _val: u32, _deadline: Option<&timespec>) -> Result<()> { Err(Errno(ENOSYS)) }
+    unsafe fn futex_wake(_addr: *mut u32, _num: u32) -> Result<u32> { Err(Errno(ENOSYS)) }
+    unsafe fn rlct_clone(_stack: *mut usize, _os_specific: &mut OsSpecific) -> Result<pthread::OsTid> { Err(Errno(ENOSYS)) }
+    unsafe fn rlct_kill(_os_tid: pthread::OsTid, _signal: usize) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn current_os_tid() -> pthread::OsTid { pthread::OsTid::default() }
+    unsafe fn spawn(_program: CStr, _fac: Option<&crate::header::spawn::posix_spawn_file_actions_t>, _fat: Option<&crate::header::spawn::posix_spawnattr_t>, _argv: NulTerminated<*mut c_char>, _envp: Option<NulTerminated<*mut c_char>>) -> Result<pid_t> { Err(Errno(ENOSYS)) }
+    fn waitpid(_pid: pid_t, _stat_loc: Option<Out<c_int>>, _options: c_int) -> Result<pid_t> { Err(Errno(ENOSYS)) }
+    fn sched_yield() -> Result<()> { Err(Errno(ENOSYS)) }
+    fn uname(_utsname: Out<utsname>) -> Result<()> { Err(Errno(ENOSYS)) }
 
     fn verify() -> bool {
         true
