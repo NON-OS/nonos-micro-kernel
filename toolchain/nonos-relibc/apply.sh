@@ -78,7 +78,7 @@ block = ("\nifeq ($(TARGET),x86_64-unknown-nonos)\n"
          "\texport CARGO_TEST=\n"
          "\toverride CARGOFLAGS := -Z build-std=core,alloc,compiler_builtins "
          f"-Z json-target-spec --target={tgtdir}/x86_64-unknown-nonos.json "
-         "--no-default-features --features no_trace\n"
+         "--no-default-features\n"
          "endif\n")
 s = re.sub(r"\nifeq \(\$\(TARGET\),x86_64-unknown-nonos\).*?endif\n", "", s, flags=re.S)
 with open(cfgmk, "w") as f:
