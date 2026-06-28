@@ -534,6 +534,7 @@ nonos-mk-trust-policy: $(NONOS_TRUST_ANCHOR_POLICY_BIN)
 #   nonos-mk-check-<slug>-keys assert publisher seeds + pubs exist
 include userland/capsule_proof_io/Capsule.mk
 include userland/capsule_std_proof/Capsule.mk
+include userland/capsule_c_proof/Capsule.mk
 include userland/capsule_ripgrep/Capsule.mk
 include userland/capsule_ramfs/Capsule.mk
 include userland/capsule_keyring/Capsule.mk
