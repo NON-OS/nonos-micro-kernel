@@ -25,6 +25,7 @@ modrs = f"{relibc}/src/platform/mod.rs"
 with open(modrs) as f:
     s = f.read()
 if 'target_os = "nonos"' not in s:
+    # vendored-relibc-version-specific anchor — re-check on a relibc re-import
     anchor = '\npub use self::rlb::{Line, RawLineBuffer};'
     arm = ('\n#[cfg(target_os = "nonos")]\n#[path = "nonos/mod.rs"]\n'
            'pub(crate) mod sys;\n')
@@ -42,6 +43,7 @@ if 'x86_64-unknown-nonos' not in s:
              "\texport AR=llvm-ar\n"
              "\texport NM=llvm-nm\n"
              "\texport CPPFLAGS=\n"
+             "\texport CARGO_TEST=\n"
              "endif\n")
     with open(cfgmk, "w") as f:
         f.write(s.rstrip("\n") + "\n" + block)
