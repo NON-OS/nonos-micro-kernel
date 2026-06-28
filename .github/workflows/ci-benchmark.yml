@@ -64,6 +64,7 @@ jobs:
       - name: Prepare benchmark artifact root
         run: mkdir -p "${{ inputs['output-root'] }}/${{ github.run_id }}-${{ github.run_attempt }}"
       - name: Provision benchmark trust material
+        timeout-minutes: 45
         env:
           NONOS_CI_TRUST_MODE: ${{ inputs['trust-mode'] }}
           SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
@@ -95,7 +96,7 @@ jobs:
             scratch)
               bash nonos-ci/setup-signing-key.sh
               echo "NONOS_DEV=1" >> "$GITHUB_ENV"
-              bash nonos-ci/scratch-trust-bootstrap.sh
+              bash -x nonos-ci/scratch-trust-bootstrap.sh
               ;;
             production)
               bash nonos-ci/setup-signing-key.sh
@@ -110,6 +111,7 @@ jobs:
               ;;
           esac
       - name: Run benchmark suite
+        timeout-minutes: 30
         env:
           NONOS_BENCH_OUT: ${{ inputs['output-root'] }}/${{ github.run_id }}-${{ github.run_attempt }}
           NONOS_BENCH_BUILD_CMD: cargo run --release --manifest-path nonos-verify/Cargo.toml -- build
