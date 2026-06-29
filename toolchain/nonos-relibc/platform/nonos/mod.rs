@@ -328,8 +328,8 @@ impl Pal for Sys {
     unsafe fn fexecve(_fildes: c_int, _argv: *const *mut c_char, _envp: *const *mut c_char) -> Result<()> { Err(Errno(ENOSYS)) }
     unsafe fn exit_thread(_stack_base: *mut (), _stack_size: usize) -> ! { Self::exit(0) }
     unsafe fn fork() -> Result<pid_t> { Err(Errno(ENOSYS)) }
-    unsafe fn futex_wait(_addr: *mut u32, _val: u32, _deadline: Option<&timespec>) -> Result<()> { Err(Errno(ENOSYS)) }
-    unsafe fn futex_wake(_addr: *mut u32, _num: u32) -> Result<u32> { Err(Errno(ENOSYS)) }
+    unsafe fn futex_wait(_addr: *mut u32, _val: u32, _deadline: Option<&timespec>) -> Result<()> { Ok(()) }
+    unsafe fn futex_wake(_addr: *mut u32, _num: u32) -> Result<u32> { Ok(0) }
     unsafe fn rlct_clone(_stack: *mut usize, _os_specific: &mut OsSpecific) -> Result<pthread::OsTid> { Err(Errno(ENOSYS)) }
     unsafe fn rlct_kill(_os_tid: pthread::OsTid, _signal: usize) -> Result<()> { Err(Errno(ENOSYS)) }
     fn current_os_tid() -> pthread::OsTid { pthread::OsTid::default() }
