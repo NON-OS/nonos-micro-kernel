@@ -164,7 +164,20 @@ impl Pal for Sys {
     fn dir_seek(_fd: c_int, _opaque_offset: u64) -> Result<()> { Err(Errno(ENOSYS)) }
     unsafe fn dent_reclen_offset(_this_dent: &[u8], _offset: usize) -> Option<(u16, u64)> { None }
     fn linkat(_fd1: c_int, _oldpath: CStr, _fd2: c_int, _newpath: CStr, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
-    fn lseek(_fildes: c_int, _offset: off_t, _whence: c_int) -> Result<off_t> { Err(Errno(ENOSYS)) }
+    fn lseek(fildes: c_int, offset: off_t, whence: c_int) -> Result<off_t> {
+        let vfs_fd = fs::fd_vfs(fildes).ok_or(Errno(EBADF))?;
+        let pid = Self::getpid() as u32;
+        let mut payload = [0u8; 20];
+        payload[0..4].copy_from_slice(&pid.to_le_bytes());
+        payload[4..8].copy_from_slice(&vfs_fd.to_le_bytes());
+        payload[8..10].copy_from_slice(&(whence as u16).to_le_bytes());
+        payload[12..20].copy_from_slice(&offset.to_le_bytes());
+        let mut resp = [0u8; 32];
+        let (status, data_len) = fs::vfs_call(fs::OP_SEEK, &payload, &mut resp)?;
+        if status < 0 { return Err(Errno(-status)); }
+        if data_len < 8 { return Err(Errno(EIO)); }
+        Ok(i64::from_le_bytes([resp[24], resp[25], resp[26], resp[27], resp[28], resp[29], resp[30], resp[31]]) as off_t)
+    }
     fn mkdirat(_fildes: c_int, path: CStr, _mode: mode_t) -> Result<()> {
         let pb = path.to_bytes();
         if pb.is_empty() || pb.len() > 255 { return Err(Errno(EINVAL)); }
@@ -216,8 +229,36 @@ impl Pal for Sys {
         buf[..n].copy_from_slice(&resp[24..24 + n]);
         Ok(n)
     }
-    fn pread(_fildes: c_int, _buf: &mut [u8], _offset: off_t) -> Result<usize> { Err(Errno(ENOSYS)) }
-    fn pwrite(_fildes: c_int, _buf: &[u8], _offset: off_t) -> Result<usize> { Err(Errno(ENOSYS)) }
+    fn pread(fildes: c_int, buf: &mut [u8], offset: off_t) -> Result<usize> {
+        let vfs_fd = fs::fd_vfs(fildes).ok_or(Errno(EBADF))?;
+        let count = (buf.len() as u32).min(65536);
+        let pid = Self::getpid() as u32;
+        let mut payload = [0u8; 20];
+        payload[0..4].copy_from_slice(&pid.to_le_bytes());
+        payload[4..8].copy_from_slice(&vfs_fd.to_le_bytes());
+        payload[8..16].copy_from_slice(&(offset as i64).to_le_bytes());
+        payload[16..20].copy_from_slice(&count.to_le_bytes());
+        let mut resp = alloc::vec![0u8; 24 + count as usize];
+        let (status, n) = fs::vfs_call(fs::OP_PREAD, &payload, &mut resp)?;
+        if status < 0 { return Err(Errno(-status)); }
+        buf[..n].copy_from_slice(&resp[24..24 + n]);
+        Ok(n)
+    }
+    fn pwrite(fildes: c_int, buf: &[u8], offset: off_t) -> Result<usize> {
+        let vfs_fd = fs::fd_vfs(fildes).ok_or(Errno(EBADF))?;
+        if buf.len() > 65536 { return Err(Errno(EINVAL)); }
+        let pid = Self::getpid() as u32;
+        let mut payload = alloc::vec![0u8; 16 + buf.len()];
+        payload[0..4].copy_from_slice(&pid.to_le_bytes());
+        payload[4..8].copy_from_slice(&vfs_fd.to_le_bytes());
+        payload[8..16].copy_from_slice(&(offset as i64).to_le_bytes());
+        payload[16..].copy_from_slice(buf);
+        let mut resp = [0u8; 28];
+        let (status, data_len) = fs::vfs_call(fs::OP_PWRITE, &payload, &mut resp)?;
+        if status < 0 { return Err(Errno(-status)); }
+        if data_len < 4 { return Err(Errno(EIO)); }
+        Ok(u32::from_le_bytes([resp[24], resp[25], resp[26], resp[27]]) as usize)
+    }
     fn readlinkat(_dirfd: c_int, _pathname: CStr, _out: &mut [u8]) -> Result<usize> { Err(Errno(ENOSYS)) }
     fn renameat2(_old_dir: c_int, old_path: CStr, _new_dir: c_int, new_path: CStr, _flags: c_uint) -> Result<()> {
         let ob = old_path.to_bytes();
