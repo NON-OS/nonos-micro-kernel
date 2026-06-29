@@ -810,6 +810,20 @@ nonos-mk-std-proof-prod: $(proof-io_ARTIFACTS) $(std-proof_ARTIFACTS) nonos-mk-c
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-proof-io,nonos-capsule-std-proof
 
+.PHONY: nonos-mk-cproof-prod nonos-mk-boot-cproof nonos-mk-cproof-test
+nonos-mk-cproof-prod: $(proof-io_ARTIFACTS) $(c-proof_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-c-proof)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-c-proof
+
+nonos-mk-boot-cproof:
+	@./tests/boot/cproof.sh
+
+nonos-mk-cproof-test: nonos-mk-boot-cproof
+
 nonos-mk-ramfs-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-ramfs)..."
