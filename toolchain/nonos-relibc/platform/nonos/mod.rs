@@ -58,8 +58,8 @@ impl Pal for Sys {
         payload[8..].copy_from_slice(buf);
         let mut resp = [0u8; 28];
         let (status, data_len) = fs::vfs_call(fs::OP_WRITE, &payload, &mut resp)?;
-        if data_len < 4 { return Err(Errno(EIO)); }
         if status < 0 { return Err(Errno(-status)); }
+        if data_len < 4 { return Err(Errno(EIO)); }
         Ok(u32::from_le_bytes([resp[24], resp[25], resp[26], resp[27]]) as usize)
     }
 
@@ -141,8 +141,8 @@ impl Pal for Sys {
         payload.extend_from_slice(pb);
         let mut resp = [0u8; 36];
         let (status, data_len) = fs::vfs_call(fs::OP_STAT, &payload, &mut resp)?;
-        if data_len < 12 { return Err(Errno(EIO)); }
         if status < 0 { return Err(Errno(-status)); }
+        if data_len < 12 { return Err(Errno(EIO)); }
         let size = u64::from_le_bytes([resp[24], resp[25], resp[26], resp[27],
                                        resp[28], resp[29], resp[30], resp[31]]);
         let vfs_flags = u32::from_le_bytes([resp[32], resp[33], resp[34], resp[35]]);
@@ -207,8 +207,8 @@ impl Pal for Sys {
         payload.extend_from_slice(&vfs_flags.to_le_bytes());
         let mut resp = [0u8; 28];
         let (status, data_len) = fs::vfs_call(fs::OP_OPEN, &payload, &mut resp)?;
-        if data_len < 4 { return Err(Errno(EIO)); }
         if status < 0 { return Err(Errno(-status)); }
+        if data_len < 4 { return Err(Errno(EIO)); }
         let vfs_fd = u32::from_le_bytes([resp[24], resp[25], resp[26], resp[27]]);
         fs::fd_alloc(vfs_fd).ok_or(Errno(EMFILE))
     }
