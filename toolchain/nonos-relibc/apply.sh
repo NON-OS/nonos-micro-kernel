@@ -21,6 +21,7 @@ cp "$HERE/platform/nonos/socket.rs"      "$RELIBC/src/platform/nonos/socket.rs"
 cp "$HERE/platform/nonos/socket_rt.rs"  "$RELIBC/src/platform/nonos/socket_rt.rs"
 cp "$HERE/platform/nonos/signal.rs"   "$RELIBC/src/platform/nonos/signal.rs"
 cp "$HERE/platform/nonos/epoll.rs"    "$RELIBC/src/platform/nonos/epoll.rs"
+cp "$HERE/platform/nonos/epoll_rt.rs" "$RELIBC/src/platform/nonos/epoll_rt.rs"
 cp "$HERE/platform/nonos/ptrace.rs"   "$RELIBC/src/platform/nonos/ptrace.rs"
 cp "$HERE/platform/nonos/fs.rs"       "$RELIBC/src/platform/nonos/fs.rs"
 

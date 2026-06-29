@@ -36,6 +36,7 @@ mod ptrace;
 mod signal;
 mod socket;
 mod socket_rt;
+mod epoll_rt;
 
 fn now_ms() -> i64 {
     let r = unsafe { lowlevel::syscall0(lowlevel::MK_TIME_MILLIS) };
@@ -110,6 +111,10 @@ impl Pal for Sys {
         if fildes <= 2 { return Ok(()); }
         if socket_rt::is_socket_fd(fildes) {
             return socket::close_fd(fildes);
+        }
+        if epoll_rt::is_epoll_fd(fildes) {
+            epoll_rt::destroy(fildes);
+            return Ok(());
         }
         let vfs_fd = fs::fd_vfs(fildes).ok_or(Errno(EBADF))?;
         let pid = Self::getpid() as u32;
