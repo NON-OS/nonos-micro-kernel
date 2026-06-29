@@ -30,6 +30,7 @@ pub enum StoreError {
     Exists,
     NotEmpty,
     IsDir,
+    Invalid,
 }
 
 pub(super) type StoreResult<T> = Result<T, StoreError>;

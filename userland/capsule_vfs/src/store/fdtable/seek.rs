@@ -14,25 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
-
-use super::types::{Store, StoreError};
+use super::types::{Store, StoreError, StoreResult};
 
 impl Store {
-    pub fn read(&mut self, fd: u32, owner_pid: u32, max: usize) -> Result<Vec<u8>, StoreError> {
+    pub fn seek(&mut self, fd: u32, owner_pid: u32, whence: u16, offset: i64) -> StoreResult<u64> {
         let (file_idx, pos) = {
-            let entry = self.entry(fd, owner_pid)?;
-            (entry.file_idx, entry.pos)
+            let e = self.entry(fd, owner_pid)?;
+            (e.file_idx, e.pos)
         };
-        let data = &self.files[file_idx].data;
-        let raw_pos = pos;
-        let pos = pos.min(data.len());
-        let avail = data.len().saturating_sub(pos);
-        let n = if max < avail { max } else { avail };
-        let out = data[pos..pos + n].to_vec();
-        if let Some(entry) = self.fds[fd as usize].as_mut() {
-            entry.pos = raw_pos + n;
+        let base: i64 = match whence {
+            0 => 0,
+            1 => pos as i64,
+            2 => self.files[file_idx].data.len() as i64,
+            _ => return Err(StoreError::Invalid),
+        };
+        let new = base.checked_add(offset).ok_or(StoreError::Invalid)?;
+        if new < 0 {
+            return Err(StoreError::Invalid);
         }
-        Ok(out)
+        if let Some(e) = self.fds[fd as usize].as_mut() {
+            e.pos = new as usize;
+        }
+        Ok(new as u64)
     }
 }
