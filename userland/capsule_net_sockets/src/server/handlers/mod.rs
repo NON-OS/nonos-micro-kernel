@@ -24,6 +24,7 @@ mod getsockopt;
 mod health;
 mod io;
 mod listen;
+mod poll;
 mod recv;
 mod send;
 mod setflags;

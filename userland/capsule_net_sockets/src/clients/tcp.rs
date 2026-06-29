@@ -27,6 +27,9 @@ const ACCEPT: u16 = 4;
 const SEND: u16 = 5;
 const RECV: u16 = 6;
 const CLOSE: u16 = 7;
+const STATE: u16 = 9;
+
+pub const ESTABLISHED: u8 = 3;
 
 pub fn listen(port: u32, local: u16) -> Result<u32, u16> {
     call_handle(port, LISTEN, &local.to_le_bytes())
@@ -56,6 +59,14 @@ pub fn recv(port: u32, handle: u32, out: &mut [u8]) -> Result<usize, u16> {
 
 pub fn close(port: u32, handle: u32) -> Result<(), u16> {
     call(port, MAGIC, CLOSE, &handle.to_le_bytes(), &mut []).map(|_| ())
+}
+
+pub fn state(port: u32, handle: u32) -> Result<u8, u16> {
+    let mut out = [0u8; 1];
+    if call(port, MAGIC, STATE, &handle.to_le_bytes(), &mut out)? != 1 {
+        return Err(4);
+    }
+    Ok(out[0])
 }
 
 fn call_handle(port: u32, op: u16, body: &[u8]) -> Result<u32, u16> {
