@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{process::current_pid, services::registry::lookup_port};
-use crate::syscall::microkernel::errnos::ERRNO_BUSY;
+use crate::syscall::microkernel::errnos::{ERRNO_BUSY, ERRNO_FAULT, ERRNO_INVAL};
 use core::sync::atomic::AtomicBool;
 
 use super::super::pending_reply;
@@ -37,6 +37,12 @@ pub fn sys_ipc_call(
     timeout_ms: u64,
 ) -> i64 {
     let pid = current_pid().unwrap_or(0);
+    if resp_len == 0 || resp_len > crate::ipc::channel::MAX_MESSAGE_SIZE {
+        return ERRNO_INVAL;
+    }
+    if crate::usercopy::validate_user_write(resp, resp_len).is_err() {
+        return ERRNO_FAULT;
+    }
     let inbox = reply_inbox::for_pid(pid);
     let endpoint = lookup_port(ep as u32);
     let endpoint_pid = endpoint.as_ref().map(|endpoint| endpoint.pid);
@@ -65,8 +71,7 @@ pub fn sys_ipc_call(
             let mut hdr = [0u8; 20];
             let mut status = [0u8; 4];
             let ok_hdr = crate::usercopy::copy_from_user(req, &mut hdr).is_ok();
-            let ok_status =
-                crate::usercopy::copy_from_user(resp.saturating_add(20), &mut status).is_ok();
+            let ok_status = crate::usercopy::copy_from_user(resp + 20, &mut status).is_ok();
             if endpoint.name.as_bytes() == b"driver.virtio_gpu0" && ok_hdr && ok_status {
                 let magic = u32::from_le_bytes([hdr[0], hdr[1], hdr[2], hdr[3]]);
                 let op = u16::from_le_bytes([hdr[6], hdr[7]]);
