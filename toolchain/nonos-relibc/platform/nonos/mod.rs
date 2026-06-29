@@ -3,6 +3,7 @@
 //! munmap) and the remaining required methods stubbed to `ENOSYS` (or the
 //! obvious constant). Phase 1 de-stubs this backend method by method.
 
+use alloc::vec::Vec;
 use core::num::NonZeroU64;
 
 use super::{Pal, types::*};
@@ -10,7 +11,7 @@ use crate::{
     c_str::CStr,
     error::{Errno, Result},
     header::{
-        errno::{EBADF, EIO, ENOMEM, ENOSYS},
+        errno::{EBADF, EIO, EINVAL, EMFILE, ENOMEM, ENOSYS},
         signal::sigevent,
         sys_resource::{rlimit, rusage},
         sys_select::timeval,
@@ -27,6 +28,7 @@ use crate::{
 };
 
 pub mod lowlevel;
+mod fs;
 
 mod epoll;
 mod ptrace;
@@ -46,7 +48,17 @@ impl Pal for Sys {
             unsafe { lowlevel::syscall2(lowlevel::MK_DEBUG, buf.as_ptr() as u64, buf.len() as u64); }
             return Ok(buf.len());
         }
-        Err(Errno(EBADF))
+        let vfs_fd = fs::fd_vfs(fildes).ok_or(Errno(EBADF))?;
+        if buf.len() > 65536 { return Err(Errno(EINVAL)); }
+        let pid = Self::getpid() as u32;
+        let mut payload = alloc::vec![0u8; 8 + buf.len()];
+        payload[0..4].copy_from_slice(&pid.to_le_bytes());
+        payload[4..8].copy_from_slice(&vfs_fd.to_le_bytes());
+        payload[8..].copy_from_slice(buf);
+        let mut resp = [0u8; 28];
+        let (status, _) = fs::vfs_call(fs::OP_WRITE, &payload, &mut resp)?;
+        if status < 0 { return Err(Errno(-status)); }
+        Ok(u32::from_le_bytes([resp[24], resp[25], resp[26], resp[27]]) as usize)
     }
 
     fn exit(status: c_int) -> ! {
@@ -77,8 +89,25 @@ impl Pal for Sys {
 
     fn faccessat(_fd: c_int, _path: CStr, _amode: c_int, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
     fn chdir(_path: CStr) -> Result<()> { Err(Errno(ENOSYS)) }
-    fn close(_fildes: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
-    fn dup2(_fildes: c_int, _fildes2: c_int) -> Result<c_int> { Err(Errno(ENOSYS)) }
+    fn close(fildes: c_int) -> Result<()> {
+        if fildes <= 2 { return Ok(()); }
+        let vfs_fd = fs::fd_vfs(fildes).ok_or(Errno(EBADF))?;
+        let pid = Self::getpid() as u32;
+        let mut payload = [0u8; 8];
+        payload[0..4].copy_from_slice(&pid.to_le_bytes());
+        payload[4..8].copy_from_slice(&vfs_fd.to_le_bytes());
+        let mut resp = [0u8; 24];
+        let (status, _) = fs::vfs_call(fs::OP_CLOSE, &payload, &mut resp)?;
+        fs::fd_free(fildes);
+        if status < 0 { Err(Errno(-status)) } else { Ok(()) }
+    }
+    fn dup2(fildes: c_int, fildes2: c_int) -> Result<c_int> {
+        if fildes == fildes2 { return Ok(fildes2); }
+        if fildes2 < 3 { return Err(Errno(EBADF)); }
+        let vfs_fd = fs::fd_vfs(fildes).ok_or(Errno(EBADF))?;
+        if !fs::fd_set(fildes2, vfs_fd) { return Err(Errno(EBADF)); }
+        Ok(fildes2)
+    }
     fn fchdir(_fildes: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
     fn fchmodat(_dirfd: c_int, _path: Option<CStr>, _mode: mode_t, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
     fn fchownat(_fildes: c_int, _path: CStr, _owner: uid_t, _group: gid_t, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
@@ -104,7 +133,20 @@ impl Pal for Sys {
     fn pipe2(_fildes: Out<[c_int; 2]>, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
     fn posix_fallocate(_fd: c_int, _offset: u64, _length: NonZeroU64) -> Result<()> { Err(Errno(ENOSYS)) }
     fn posix_getdents(_fildes: c_int, _buf: &mut [u8]) -> Result<usize> { Err(Errno(ENOSYS)) }
-    fn read(_fildes: c_int, _buf: &mut [u8]) -> Result<usize> { Err(Errno(ENOSYS)) }
+    fn read(fildes: c_int, buf: &mut [u8]) -> Result<usize> {
+        let vfs_fd = fs::fd_vfs(fildes).ok_or(Errno(EBADF))?;
+        let count = (buf.len() as u32).min(65536);
+        let pid = Self::getpid() as u32;
+        let mut payload = [0u8; 12];
+        payload[0..4].copy_from_slice(&pid.to_le_bytes());
+        payload[4..8].copy_from_slice(&vfs_fd.to_le_bytes());
+        payload[8..12].copy_from_slice(&count.to_le_bytes());
+        let mut resp = alloc::vec![0u8; 24 + count as usize];
+        let (status, n) = fs::vfs_call(fs::OP_READ, &payload, &mut resp)?;
+        if status < 0 { return Err(Errno(-status)); }
+        buf[..n].copy_from_slice(&resp[24..24 + n]);
+        Ok(n)
+    }
     fn pread(_fildes: c_int, _buf: &mut [u8], _offset: off_t) -> Result<usize> { Err(Errno(ENOSYS)) }
     fn pwrite(_fildes: c_int, _buf: &[u8], _offset: off_t) -> Result<usize> { Err(Errno(ENOSYS)) }
     fn readlinkat(_dirfd: c_int, _pathname: CStr, _out: &mut [u8]) -> Result<usize> { Err(Errno(ENOSYS)) }
