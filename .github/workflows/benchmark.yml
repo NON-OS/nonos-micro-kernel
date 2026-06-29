@@ -1,0 +1,48 @@
+name: benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      trust-mode:
+        description: "scratch or production"
+        required: true
+        default: "scratch"
+        type: choice
+        options:
+          - scratch
+          - production
+      boot-evidence:
+        description: "include the QEMU boot evidence benchmark"
+        required: true
+        default: true
+        type: boolean
+      boot-runs:
+        description: "QEMU boot evidence runs"
+        required: true
+        default: "3"
+        type: string
+  push:
+    branches: [main]
+  schedule:
+    - cron: "30 6 * * *"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    uses: ./.github/workflows/ci-benchmark.yml
+    with:
+      trust-mode: ${{ github.event_name == 'workflow_dispatch' && inputs['trust-mode'] || 'scratch' }}
+      boot-evidence: ${{ github.event_name != 'workflow_dispatch' || inputs['boot-evidence'] }}
+      boot-runs: ${{ github.event_name == 'schedule' && '3' || github.event_name == 'workflow_dispatch' && inputs['boot-runs'] || '1' }}
+      output-root: benchmarks/runs
+    secrets: inherit
