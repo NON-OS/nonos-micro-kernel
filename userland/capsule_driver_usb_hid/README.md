@@ -26,7 +26,7 @@ configuration, and interrupt-transfer scheduling remain in `driver.xhci0`.
 The manifest grants only `IPC` and `Memory`:
 
 ```text
-CAPSULE_REQUIRED_CAPS = 0x18
+CAPSULE_REQUIRED_CAPS = 0x200019
 ```
 
 The service receives requests with `MkIpcRecvFrom` and replies with

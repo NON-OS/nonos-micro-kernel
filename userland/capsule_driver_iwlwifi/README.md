@@ -22,7 +22,7 @@ The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, `Irq`, and
 `Dma`:
 
 ```text
-CAPSULE_REQUIRED_CAPS = 0xF8018
+CAPSULE_REQUIRED_CAPS = 0xF8019
 ```
 
 The driver reaches hardware only through `MkDeviceList`, `MkDeviceClaim`,

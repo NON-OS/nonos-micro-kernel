@@ -45,7 +45,7 @@ state. It only enforces capabilities and revokes grants.
 ## Authority
 
 The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, `Irq`,
-and `Dma` (`CAPSULE_REQUIRED_CAPS = 0xF8018`). It has no socket, routing,
+and `Dma` (`CAPSULE_REQUIRED_CAPS = 0xF8019`). It has no socket, routing,
 firewall, filesystem, admin, or debug authority.
 
 ```text

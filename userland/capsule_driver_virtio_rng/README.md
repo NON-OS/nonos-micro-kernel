@@ -43,7 +43,7 @@ the kernel.
 ## Authority
 
 The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, `Irq`,
-and `Dma` (`CAPSULE_REQUIRED_CAPS = 0xF8018`). It has no filesystem, network,
+and `Dma` (`CAPSULE_REQUIRED_CAPS = 0x1F8019`). It has no filesystem, network,
 graphics, admin, debug, or raw kernel-memory authority.
 
 ```text

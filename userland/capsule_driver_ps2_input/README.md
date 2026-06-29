@@ -65,7 +65,7 @@ There is no inline port assembly in the capsule. The static gate rejects raw
 ## Authority
 
 The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Irq`, and `Pio`
-(`CAPSULE_REQUIRED_CAPS = 0x158018`). It does not grant `Mmio`, `Dma`,
+(`CAPSULE_REQUIRED_CAPS = 0x358019`). It does not grant `Mmio`, `Dma`,
 filesystem, graphics, network, admin, debug, or persistent storage authority.
 
 ```text

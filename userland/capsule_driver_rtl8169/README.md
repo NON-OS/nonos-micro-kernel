@@ -42,7 +42,7 @@ The kernel mediates grants and teardown only. Network policy is userland.
 ## Authority
 
 The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, `Irq`,
-and `Dma` (`CAPSULE_REQUIRED_CAPS = 0xF8018`). It has no PIO, socket,
+and `Dma` (`CAPSULE_REQUIRED_CAPS = 0xF8019`). It has no PIO, socket,
 filesystem, admin, debug, or routing authority.
 
 ```text

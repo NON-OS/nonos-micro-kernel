@@ -27,7 +27,7 @@ and encryption stay above the block layer.
 The manifest grants only `IPC` and `Memory`:
 
 ```text
-CAPSULE_REQUIRED_CAPS = 0x18
+CAPSULE_REQUIRED_CAPS = 0x19
 ```
 
 The service receives requests with `MkIpcRecvFrom` and replies with

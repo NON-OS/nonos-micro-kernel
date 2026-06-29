@@ -21,7 +21,7 @@ engine, or input router. Those layers stay above the controller driver.
 The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, and `Irq`:
 
 ```text
-CAPSULE_REQUIRED_CAPS = 0x78018
+CAPSULE_REQUIRED_CAPS = 0x78019
 ```
 
 The capsule reaches hardware only through `MkDeviceList`, `MkDeviceClaim`,

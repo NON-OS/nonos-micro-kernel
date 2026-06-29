@@ -20,7 +20,7 @@ The capsule is not an I2C controller driver and has no direct hardware grants.
 The manifest grants `IPC` and `Memory` only:
 
 ```text
-CAPSULE_REQUIRED_CAPS = 0x18
+CAPSULE_REQUIRED_CAPS = 0x200019
 ```
 
 The capsule resolves `driver.i2c_pci0` with `MkServiceLookup`, sends bounded IPC
@@ -126,4 +126,3 @@ management.
 - Kernel profile: `cargo check --no-default-features --features
   microkernel-driver-i2c-hid`
 - Static gate: `bash nonos-ci/run-static-checks.sh`
-

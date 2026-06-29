@@ -6,11 +6,11 @@
 logic out of the kernel and into a signed userland process that receives only
 the hardware authority it needs.
 
-The current production slice reaches the admin queue: it claims the PCI NVMe
-device, maps BAR0, binds MSI-X, allocates broker DMA for the admin submission
-queue, admin completion queue, and admin data buffer, enables the controller,
-issues Identify Controller plus Identify Namespace for NSID 1, and snapshots
-the controller SMART / health log.
+The current production slice reaches the admin queue and one NVM IO queue pair:
+it claims the PCI NVMe device, maps BAR0, binds MSI-X, allocates broker DMA for
+admin queues, IO queues, PRP list, and data buffers, enables the controller,
+issues Identify Controller plus Identify Namespace for NSID 1, snapshots the
+controller SMART / health log, and serves read/write/flush block requests.
 
 ```text
 driver.nvme0
@@ -20,8 +20,8 @@ driver.nvme0
 NVMe PCI function
     |
     +-- MkMmioMap(BAR0) ----------> controller registers
-    +-- MkIrqBind(MSI-X) ---------> admin completion interrupt
-    `-- MkDmaMap -----------------> ASQ / ACQ / identify buffer
+    +-- MkIrqBind(MSI-X) ---------> completion interrupt
+    `-- MkDmaMap -----------------> admin queues / IO queues / data buffers
 ```
 
 ## Microkernel contract
@@ -33,7 +33,8 @@ The capsule uses the microkernel as mechanism, not as an NVMe driver:
 - `MkPciConfigWrite` enables bus mastering through the broker.
 - `MkMmioMap` maps BAR0 controller registers.
 - `MkIrqBind`, `MkIrqPoll`, and `MkIrqAck` own the MSI-X interrupt path.
-- `MkDmaMap` and `MkDmaUnmap` allocate and revoke admin queue DMA.
+- `MkDmaMap` and `MkDmaUnmap` allocate and revoke admin queue, IO queue, PRP,
+  identify, health, and sector data DMA.
 - `MkIpcRecv` and `MkIpcSend` serve `driver.nvme0` on
   `service:4220:driver.nvme0`.
 
@@ -50,11 +51,15 @@ revokes every grant on exit.
 | `OP_IDENTIFY_CONTROLLER` | selected Identify Controller fields | 88-byte identity record |
 | `OP_IDENTIFY_NAMESPACE` | selected Identify Namespace fields for NSID 1 | 36-byte namespace record |
 | `OP_SMART_HEALTH` | selected Get Log Page SMART / health fields | 177-byte health record |
+| `OP_CAPACITY` | selected namespace capacity | status plus sector count |
+| `OP_READ_BLOCKS` | read sectors from NSID 1 | status plus sector bytes |
+| `OP_WRITE_BLOCKS` | write sectors to NSID 1 | status word |
+| `OP_FLUSH` | flush NSID 1 | status word |
 
 ## Authority
 
 The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, `Irq`,
-and `Dma` (`CAPSULE_REQUIRED_CAPS = 0xF8018`). It has no filesystem, storage
+and `Dma` (`CAPSULE_REQUIRED_CAPS = 0xF8019`). It has no filesystem, storage
 policy, admin, debug, network, or raw physical-memory authority.
 
 ```text
@@ -64,25 +69,26 @@ forbidden: filesystem policy, partition policy, raw physmem, kernel drivers
 
 ## Privacy and persistence
 
-The capsule currently reads controller identity, namespace identity, and the
-standard controller health log only. It does not read user sectors, write media,
-parse filesystems, or persist metadata. Queue memory and admin buffers are
-broker DMA grants and are revoked when the capsule exits.
+The capsule reads and writes sector payloads only for explicit block protocol
+requests. It does not parse partitions, mount filesystems, cache disk payloads,
+or persist metadata. Queue memory and data buffers are broker DMA grants and
+are revoked when the capsule exits.
 
 ## Runtime lifecycle
 
 The capsule discovers one NVMe PCI function, claims it, enables bus mastering,
-maps BAR0, binds MSI-X, allocates admin queue DMA, disables the controller,
-programs AQA/ASQ/ACQ, enables the controller, runs identify commands, reads the
-SMART / health log, and then serves IPC. Teardown unmaps DMA, unbinds IRQ,
-unmaps MMIO, and releases the device claim.
+maps BAR0, binds MSI-X, allocates admin and IO queue DMA, disables the
+controller, programs AQA/ASQ/ACQ, enables the controller, runs identify
+commands, creates one IO queue pair, reads the SMART / health log, and then
+serves IPC. Teardown unmaps DMA, unbinds IRQ, unmaps MMIO, and releases the
+device claim.
 
 ## Failure model
 
 Every setup phase is a barrier with reverse-order rollback. Controller timeout,
 admin completion error, stale claim, MSI-X bind failure, or DMA allocation
-failure prevents service start. Runtime identity requests return only data that
-was captured successfully during setup.
+failure prevents service start. Runtime block requests validate size and
+capacity before submitting commands.
 
 ## Current implemented surface
 
@@ -95,6 +101,9 @@ was captured successfully during setup.
 - Issues Identify Controller.
 - Issues Identify Namespace for NSID 1 when the controller reports namespaces.
 - Issues Get Log Page for the standard SMART / health log.
+- Creates one IO submission/completion queue pair.
+- Allocates PRP list and sector data DMA.
+- Serves capacity, read, write, and flush requests over IPC.
 - Exposes controller and namespace identity over IPC.
 - Exposes selected health counters over IPC without exposing raw log DMA.
 
@@ -107,36 +116,35 @@ Identify Namespace returns 36 bytes for NSID 1. Raw 4096-byte identify pages
 remain internal DMA data unless a later protocol explicitly exposes them.
 SMART / health returns 177 bytes of selected fields, including the controller
 warning bits, composite temperature, spare percentage, lifetime counters, media
-errors, and error-log count.
+errors, and error-log count. `OP_CAPACITY` returns an 8-byte sector count.
+`OP_READ_BLOCKS` and `OP_WRITE_BLOCKS` use a 12-byte `lba, sector_count`
+request header and fixed 512-byte sectors.
 
 ## State ownership
 
 The capsule owns the controller claim epoch, BAR0 mapping, MSI-X grant, admin
-submission queue, admin completion queue, identify DMA buffer, controller
-snapshot, and namespace snapshot. The kernel owns capability validation, grant
-records, IRQ routing, and teardown only.
+queues, IO queues, identify DMA, health DMA, PRP list, sector data buffer,
+controller snapshot, and namespace snapshot. The kernel owns capability
+validation, grant records, IRQ routing, and teardown only.
 
 ## Operating rules
 
-- Do not expose a block endpoint until IO queues and PRP/SGL data movement are
-  implemented.
 - Keep namespace and controller command logic inside the capsule.
 - Do not parse partitions, filesystems, or encrypted volume headers here.
 - Every setup phase must have reverse-order rollback.
 
 ## Release target
 
-The finished NVMe capsule is a signed block-controller service with admin and
-IO queue pairs, namespace scan, PRP/SGL data movement, read/write/flush
-commands, timeout/error recovery, MSI-X completion handling, teardown rollback,
-and a block endpoint per usable namespace. It does not parse partitions,
-filesystems, encryption headers, or application data.
+The next NVMe target is wider validation: namespace scanning, multi-queue
+support, PRP boundary stress, timeout/error recovery, MSI-X completion
+handling under load, teardown rollback, and one real NVMe controller boot. It
+does not parse partitions, filesystems, encryption headers, or application data.
 
 ## Release evidence
 
-Release requires QEMU `-device nvme` identify validation, IO queue creation validation,
-single read/write/flush proof, PRP/SGL boundary tests, teardown DMA revocation,
-and one real NVMe controller boot.
+Release requires QEMU `-device nvme` identify validation, IO queue creation
+validation, single read/write/flush proof, PRP boundary tests, teardown DMA
+revocation, and one real NVMe controller boot.
 
 ## Release checklist
 
@@ -149,9 +157,8 @@ and one real NVMe controller boot.
 
 ## Explicit non-goals today
 
-No IO queue pairs, PRP/SGL read/write path, flush, discard, namespace scanning
-beyond NSID 1, multipath, partition table, filesystem, encryption, or block
-service endpoint is exposed yet.
+No discard, namespace scanning beyond NSID 1, multipath, partition table,
+filesystem, encryption, or cache policy is exposed here.
 
 ## Verification
 

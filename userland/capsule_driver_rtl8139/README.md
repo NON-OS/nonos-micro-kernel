@@ -41,7 +41,7 @@ The kernel does not route packets or retain network policy.
 ## Authority
 
 The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Irq`, `Dma`,
-and `Pio` (`CAPSULE_REQUIRED_CAPS = 0x1D8018`). It has no MMIO, socket,
+and `Pio` (`CAPSULE_REQUIRED_CAPS = 0x1D8019`). It has no MMIO, socket,
 filesystem, admin, debug, or routing authority.
 
 ```text
