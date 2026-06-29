@@ -19,23 +19,19 @@ use crate::l2_client::{poll_frame, RxError};
 use crate::protocol::{E_BAD_PACKET, E_L2_FAULT};
 use crate::state::{push, Packet};
 
-use super::select;
-
 pub enum PollResult {
-    Delivered(Packet),
     KeepPolling,
     Empty,
     Fault(u16),
 }
 
-pub fn poll_and_route(l2: u32, wanted: Option<u8>) -> PollResult {
+pub fn poll_and_route(l2: u32) -> PollResult {
     let frame = match poll_frame(l2) {
         Ok(f) => f,
         Err(RxError::Empty) => return PollResult::Empty,
         Err(_) => return PollResult::Fault(E_L2_FAULT),
     };
     match from_frame(&frame).map(Packet::from) {
-        Ok(p) if select::matches(wanted, &p) => PollResult::Delivered(p),
         Ok(p) => {
             let _ = push(p);
             PollResult::KeepPolling

@@ -793,6 +793,7 @@ include userland/capsule_about/Capsule.mk
 include userland/capsule_hello/Capsule.mk
 include userland/capsule_boot_splash/Capsule.mk
 include userland/capsule_calculator/Capsule.mk
+include userland/capsule_browser/Capsule.mk
 include userland/capsule_snake/Capsule.mk
 include userland/capsule_wallet_nonos/Capsule.mk
 include userland/capsule_terminal/Capsule.mk
@@ -872,6 +873,7 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
 	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
 	$(boot-splash_VERIFY) $(about_VERIFY) $(calculator_VERIFY) \
+	$(browser_VERIFY) \
 	$(snake_VERIFY) $(wallet-nonos_VERIFY) $(terminal_VERIFY) \
 	$(file-manager_VERIFY) $(text-editor_VERIFY) $(settings_VERIFY) \
 	$(process-manager_VERIFY) $(attest_VERIFY) $(power_VERIFY)
@@ -1314,7 +1316,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(snake_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(browser_ARTIFACTS) $(snake_ARTIFACTS) \
 		$(wallet-nonos_ARTIFACTS) $(terminal_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
@@ -1394,6 +1396,7 @@ nonos-mk-setup-wizard-inject-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 nonos-mk-toolkit-prod: nonos-mk-desktop-gui-prod
 nonos-mk-about-prod: nonos-mk-desktop-gui-prod
 nonos-mk-calculator-prod: nonos-mk-desktop-gui-prod
+nonos-mk-browser-prod: nonos-mk-desktop-gui-prod
 nonos-mk-snake-prod: nonos-mk-desktop-gui-prod
 nonos-mk-terminal-prod: nonos-mk-desktop-gui-prod
 nonos-mk-file-manager-prod: nonos-mk-desktop-gui-prod

@@ -16,9 +16,10 @@
 
 use alloc::vec;
 
-use super::envelope::call;
+use super::envelope::{call, call_t};
 
 const MAGIC: u32 = 0x4E54_4350;
+const CONNECT_TIMEOUT_MS: u64 = 9000;
 const LISTEN: u16 = 2;
 const CONNECT: u16 = 3;
 const ACCEPT: u16 = 4;
@@ -34,7 +35,11 @@ pub fn connect(port: u32, dst: [u8; 4], dst_port: u16) -> Result<u32, u16> {
     let mut body = [0u8; 6];
     body[0..4].copy_from_slice(&dst);
     body[4..6].copy_from_slice(&dst_port.to_le_bytes());
-    call_handle(port, CONNECT, &body)
+    let mut out = [0u8; 4];
+    if call_t(port, MAGIC, CONNECT, &body, &mut out, CONNECT_TIMEOUT_MS)? != 4 {
+        return Err(4);
+    }
+    Ok(u32::from_le_bytes(out))
 }
 
 pub fn accept(port: u32, handle: u32) -> Result<u32, u16> {

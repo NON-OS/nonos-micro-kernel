@@ -20,7 +20,7 @@
 
 
 
-use crate::constants::VIRTIO_NET_HDR_LEN;
+use crate::constants::{RING_SLOTS, VIRTIO_NET_HDR_LEN};
 use crate::queue::RxQueue;
 
 pub struct Frame<'a> {
@@ -35,14 +35,11 @@ pub struct Frame<'a> {
 
 
 pub unsafe fn take_one(rx: &mut RxQueue) -> Option<Frame<'static>> {
-    if let Some(prev) = rx.pending_refill.take() {
-        rx.refill(prev);
-    }
     let used = rx.used_idx();
     if used == rx.last_used {
         return None;
     }
-    let ring_pos = rx.last_used % rx.buf_count;
+    let ring_pos = rx.last_used % RING_SLOTS;
     let (desc_id, used_len) = rx.used_elem_at(ring_pos);
 
 

@@ -17,16 +17,18 @@
 use nonos_libc::mk_yield;
 
 use crate::clock::now_ms;
-use crate::server::tcp_rx;
+use crate::server::{tcp_rx, tcp_tx};
 use crate::state::TABLE;
-use crate::tcp::State;
+use crate::tcp::{State, FLAG_SYN};
 
 const FALLBACK_TRIES: usize = 8192;
 const WAIT_MS: u64 = 8000;
+const RESEND_MS: u64 = 1000;
 
 pub fn established(owner: u32, handle: u32) -> bool {
     let start = now_ms();
     let mut fallback = 0;
+    let mut last_resend = start;
     loop {
         tcp_rx::drain_one();
         let ready =
@@ -37,8 +39,28 @@ pub fn established(owner: u32, handle: u32) -> bool {
         if expired(start, &mut fallback) {
             return false;
         }
+        let now = now_ms();
+        if now.wrapping_sub(last_resend) >= RESEND_MS {
+            last_resend = now;
+            resend_syn(owner, handle);
+        }
         mk_yield();
     }
+}
+
+fn resend_syn(owner: u32, handle: u32) {
+    let tcb = {
+        let mut table = TABLE.lock();
+        match table.owned_mut(owner, handle) {
+            Some(e) if e.tcb.state == State::SynSent => {
+                let mut t = e.tcb;
+                t.send.nxt = t.send.iss;
+                t
+            }
+            _ => return,
+        }
+    };
+    let _ = tcp_tx::send(tcb, FLAG_SYN, &[]);
 }
 
 fn expired(start: u64, fallback: &mut usize) -> bool {

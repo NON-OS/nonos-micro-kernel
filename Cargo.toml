@@ -86,6 +86,7 @@ nonos-capsule-about             = []
 nonos-capsule-hello             = []
 nonos-capsule-boot-splash       = []
 nonos-capsule-calculator        = []
+nonos-capsule-browser           = []
 nonos-capsule-snake             = []
 nonos-capsule-wallet-nonos      = []
 nonos-capsule-terminal          = []
@@ -488,6 +489,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-about",
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
+  "nonos-capsule-browser",
   "nonos-capsule-snake",
   "nonos-capsule-wallet-nonos",
   "nonos-capsule-terminal",
@@ -525,6 +527,7 @@ microkernel-full-gui = [
 microkernel-toolkit = ["microkernel-desktop-gui"]
 microkernel-about = ["microkernel-desktop-gui"]
 microkernel-calculator = ["microkernel-desktop-gui"]
+microkernel-browser = ["microkernel-desktop-gui"]
 microkernel-terminal = ["microkernel-desktop-gui"]
 
 # Minimum interactive stack to bring up only the terminal capsule.
