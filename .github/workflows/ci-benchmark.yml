@@ -77,24 +77,6 @@ jobs:
           ZK_BOOT_SECRET_X: ${{ secrets.ZK_BOOT_SECRET_X }}
           ZK_BOOT_SECRET_R: ${{ secrets.ZK_BOOT_SECRET_R }}
           ZK_BOOT_NONCE_SEED: ${{ secrets.ZK_BOOT_NONCE_SEED }}
-          CAPSULE_SLUGS: >-
-            proof-io std-proof ripgrep ramfs keyring entropy crypto vfs
-            driver-virtio-rng driver-virtio-blk driver-virtio-gpu
-            driver-virtio-net driver-ps2-input driver-xhci driver-usb-hid
-            net-l2 net-ip net-udp net-dhcp net-tcp net-dns net-sockets net-nym
-            policy wallpaper_catalog installer input-router compositor wm
-            desktop-shell image-codec clipboard login wallpaper toolkit about
-            boot-splash calculator snake wallet-nonos terminal file-manager
-            text-editor settings process-manager attest power
-          CAPSULE_KEY_PREFIXES: >-
-            proof_io std_proof rg ramfs keyring entropy crypto vfs
-            driver_virtio_rng driver_virtio_blk driver_virtio_gpu
-            driver_virtio_net driver_ps2_input driver_xhci driver_usb_hid
-            net_l2 net_ip net_udp net_dhcp net_tcp net_dns net_sockets net_nym
-            policy wallpaper_catalog installer input_router compositor wm
-            desktop_shell image_codec clipboard login wallpaper toolkit about
-            boot_splash calculator snake wallet_nonos terminal file_manager
-            text_editor settings process_manager attest power
         run: |
           set -euo pipefail
           case "${NONOS_CI_TRUST_MODE}" in
