@@ -30,6 +30,7 @@ pub struct Socket {
     pub transport_handle: u32,
     pub bound: bool,
     pub listening: bool,
+    pub nonblock: bool,
 }
 
 pub struct Table {

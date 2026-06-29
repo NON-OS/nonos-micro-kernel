@@ -25,3 +25,6 @@ pub const OP_RECV: u16 = 8;
 pub const OP_CLOSE: u16 = 9;
 pub const OP_GETSOCKOPT: u16 = 10;
 pub const OP_SETSOCKOPT: u16 = 11;
+pub const OP_SETFLAGS: u16 = 13;
+pub const OP_GETFLAGS: u16 = 14;
+pub const FLAG_NONBLOCK: u32 = 1;

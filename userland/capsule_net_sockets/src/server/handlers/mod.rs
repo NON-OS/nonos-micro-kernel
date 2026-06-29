@@ -19,12 +19,14 @@ mod bind;
 mod close;
 mod connect;
 mod dispatch;
+mod getflags;
 mod getsockopt;
 mod health;
 mod io;
 mod listen;
 mod recv;
 mod send;
+mod setflags;
 mod setsockopt;
 mod socket;
 

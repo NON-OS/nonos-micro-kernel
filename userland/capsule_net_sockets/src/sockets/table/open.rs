@@ -45,6 +45,7 @@ impl Socket {
             transport_handle: 0,
             bound: false,
             listening: false,
+            nonblock: false,
         }
     }
 }
