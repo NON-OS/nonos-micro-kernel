@@ -21,6 +21,7 @@ pub fn run_init() -> ! {
     boot_log::ok("INIT", "Starting");
     run_user_entry_proof();
     run_std_proof();
+    run_c_proof();
     run_ripgrep();
     spawn_plan::spawn_ramfs();
     spawn_plan::spawn_core_after_ramfs();
@@ -56,6 +57,17 @@ fn run_std_proof() {
 
 #[cfg(not(feature = "nonos-capsule-std-proof"))]
 fn run_std_proof() {}
+
+#[cfg(feature = "nonos-capsule-c-proof")]
+fn run_c_proof() {
+    match crate::userspace::capsule_c_proof::spawn_c_proof_capsule() {
+        Ok(()) => boot_log::ok("C-PROOF", "capsule spawned"),
+        Err(_) => boot_log::error("C-PROOF capsule spawn failed"),
+    }
+}
+
+#[cfg(not(feature = "nonos-capsule-c-proof"))]
+fn run_c_proof() {}
 
 #[cfg(feature = "nonos-capsule-ripgrep")]
 fn run_ripgrep() {

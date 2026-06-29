@@ -66,6 +66,7 @@ sched = []
 # below maps 1:1 to a capsule directory under `userland/`.
 nonos-capsule-proof-io          = []
 nonos-capsule-std-proof         = []
+nonos-capsule-c-proof           = []
 nonos-capsule-ripgrep           = []
 nonos-capsule-ramfs             = []
 nonos-capsule-wallpaper         = []
@@ -210,6 +211,13 @@ microkernel-ramfs = [
   "nonos-production",
   "nonos-capsule-proof-io",
   "nonos-capsule-ramfs",
+]
+
+microkernel-c-proof = [
+  "microkernel-core",
+  "nonos-production",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-c-proof",
 ]
 
 microkernel-keyring = [
