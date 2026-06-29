@@ -28,12 +28,8 @@ use super::pending::{Entry, SLOTS};
 fn tear_down(e: &'static Entry) {
     let source = e.source.load(Ordering::Acquire);
     if source != 0 {
-        if plic::disable_irq(source).is_err() {
-            return;
-        }
-        if irq_handlers::unregister_for_capsule(source).is_err() {
-            return;
-        }
+        let _ = plic::disable_irq(source);
+        let _ = irq_handlers::unregister_for_capsule(source);
     }
     e.source.store(0, Ordering::Release);
     e.pid.store(0, Ordering::Release);
