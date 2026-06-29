@@ -121,6 +121,10 @@ patch("src/header/sys_epoll/mod.rs",
       f'{LX}\npub const EPOLL_CLOEXEC: c_int = 0x8_0000;',
       f'{NX}\npub const EPOLL_CLOEXEC: c_int = 0x8_0000;')
 
+patch("cbindgen.globdefs.toml",
+      '"target_os=linux" = "__linux__"',
+      '"target_os=linux" = "__linux__"\n"target_os=nonos" = "__nonos__"')
+
 broaden("src/header/termios/mod.rs",
         '#[repr(C)]\n#[derive(Default, Clone)]\npub struct termios {')
 for fn in ("cfgetispeed", "cfgetospeed", "cfsetispeed", "cfsetospeed"):
