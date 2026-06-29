@@ -33,6 +33,11 @@ mod ptrace;
 mod signal;
 mod socket;
 
+fn now_ms() -> i64 {
+    let r = unsafe { lowlevel::syscall0(lowlevel::MK_TIME_MILLIS) };
+    if r < 0 { 0 } else { r }
+}
+
 pub struct Sys;
 
 impl Pal for Sys {
@@ -115,12 +120,32 @@ impl Pal for Sys {
     unsafe fn munlock(_addr: *const c_void, _len: usize) -> Result<()> { Err(Errno(ENOSYS)) }
     unsafe fn madvise(_addr: *mut c_void, _len: usize, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
     unsafe fn munlockall() -> Result<()> { Err(Errno(ENOSYS)) }
-    unsafe fn nanosleep(_rqtp: *const timespec, _rmtp: *mut timespec) -> Result<()> { Err(Errno(ENOSYS)) }
+    unsafe fn nanosleep(rqtp: *const timespec, _rmtp: *mut timespec) -> Result<()> {
+        let rq = unsafe { &*rqtp };
+        let deadline = now_ms() + rq.tv_sec * 1000 + rq.tv_nsec / 1_000_000;
+        while now_ms() < deadline {
+            unsafe { lowlevel::syscall0(lowlevel::MK_YIELD); }
+        }
+        Ok(())
+    }
     fn getpagesize() -> usize { 4096 }
-    fn clock_getres(_clk_id: clockid_t, _tp: Option<Out<timespec>>) -> Result<()> { Err(Errno(ENOSYS)) }
-    fn clock_gettime(_clk_id: clockid_t, _tp: Out<timespec>) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn clock_getres(_clk_id: clockid_t, tp: Option<Out<timespec>>) -> Result<()> {
+        if let Some(mut tp) = tp {
+            tp.write(timespec { tv_sec: 0, tv_nsec: 1_000_000 });
+        }
+        Ok(())
+    }
+    fn clock_gettime(_clk_id: clockid_t, mut tp: Out<timespec>) -> Result<()> {
+        let ms = now_ms();
+        tp.write(timespec { tv_sec: ms / 1000, tv_nsec: (ms % 1000) * 1_000_000 });
+        Ok(())
+    }
     unsafe fn clock_settime(_clk_id: clockid_t, _tp: *const timespec) -> Result<()> { Err(Errno(ENOSYS)) }
-    fn gettimeofday(_tp: Out<timeval>, _tzp: Option<Out<timezone>>) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn gettimeofday(mut tp: Out<timeval>, _tzp: Option<Out<timezone>>) -> Result<()> {
+        let ms = now_ms();
+        tp.write(timeval { tv_sec: ms / 1000, tv_usec: ((ms % 1000) * 1000) as suseconds_t });
+        Ok(())
+    }
     fn timer_create(_clock_id: clockid_t, _evp: &sigevent, _timerid: Out<timer_t>) -> Result<()> { Err(Errno(ENOSYS)) }
     fn timer_delete(_timerid: timer_t) -> Result<()> { Err(Errno(ENOSYS)) }
     fn timer_gettime(_timerid: timer_t, _value: Out<itimerspec>) -> Result<()> { Err(Errno(ENOSYS)) }
