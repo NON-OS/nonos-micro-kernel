@@ -215,10 +215,37 @@ impl Pal for Sys {
     fn pread(_fildes: c_int, _buf: &mut [u8], _offset: off_t) -> Result<usize> { Err(Errno(ENOSYS)) }
     fn pwrite(_fildes: c_int, _buf: &[u8], _offset: off_t) -> Result<usize> { Err(Errno(ENOSYS)) }
     fn readlinkat(_dirfd: c_int, _pathname: CStr, _out: &mut [u8]) -> Result<usize> { Err(Errno(ENOSYS)) }
-    fn renameat2(_old_dir: c_int, _old_path: CStr, _new_dir: c_int, _new_path: CStr, _flags: c_uint) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn renameat2(_old_dir: c_int, old_path: CStr, _new_dir: c_int, new_path: CStr, _flags: c_uint) -> Result<()> {
+        let ob = old_path.to_bytes();
+        let nb = new_path.to_bytes();
+        if ob.is_empty() || ob.len() > 255 || nb.is_empty() || nb.len() > 255 {
+            return Err(Errno(EINVAL));
+        }
+        let pid = Self::getpid() as u32;
+        let mut payload = Vec::with_capacity(4 + 1 + ob.len() + 1 + nb.len());
+        payload.extend_from_slice(&pid.to_le_bytes());
+        payload.push(ob.len() as u8);
+        payload.extend_from_slice(ob);
+        payload.push(nb.len() as u8);
+        payload.extend_from_slice(nb);
+        let mut resp = [0u8; 24];
+        let (status, _) = fs::vfs_call(fs::OP_RENAME, &payload, &mut resp)?;
+        if status < 0 { Err(Errno(-status)) } else { Ok(()) }
+    }
     fn symlinkat(_path1: CStr, _fd: c_int, _path2: CStr) -> Result<()> { Err(Errno(ENOSYS)) }
     fn sync() -> Result<()> { Err(Errno(ENOSYS)) }
-    fn unlinkat(_fd: c_int, _path: CStr, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn unlinkat(_fd: c_int, path: CStr, _flags: c_int) -> Result<()> {
+        let pb = path.to_bytes();
+        if pb.is_empty() || pb.len() > 255 { return Err(Errno(EINVAL)); }
+        let pid = Self::getpid() as u32;
+        let mut payload = Vec::with_capacity(5 + pb.len());
+        payload.extend_from_slice(&pid.to_le_bytes());
+        payload.push(pb.len() as u8);
+        payload.extend_from_slice(pb);
+        let mut resp = [0u8; 24];
+        let (status, _) = fs::vfs_call(fs::OP_UNLINK, &payload, &mut resp)?;
+        if status < 0 { Err(Errno(-status)) } else { Ok(()) }
+    }
     unsafe fn mlock(_addr: *const c_void, _len: usize) -> Result<()> { Ok(()) }
     unsafe fn mlockall(_flags: c_int) -> Result<()> { Ok(()) }
     unsafe fn mremap(_addr: *mut c_void, _len: usize, _new_len: usize, _flags: c_int, _args: *mut c_void) -> Result<*mut c_void> { Err(Errno(ENOSYS)) }
