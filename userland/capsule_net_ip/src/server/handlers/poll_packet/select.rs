@@ -31,7 +31,3 @@ pub fn queued(wanted: Option<u8>) -> Option<Packet> {
         None => pop_any(),
     }
 }
-
-pub fn matches(wanted: Option<u8>, packet: &Packet) -> bool {
-    wanted.map_or(true, |x| x == packet.protocol)
-}

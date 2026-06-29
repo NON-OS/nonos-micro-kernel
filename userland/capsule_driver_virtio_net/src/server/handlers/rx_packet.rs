@@ -25,12 +25,12 @@ use crate::setup::Driver;
 
 pub fn handle(sender_pid: u32, driver: &mut Driver, req: &Request, tx: &mut [u8]) -> bool {
     let frame = unsafe { take_one(&mut driver.rx) };
-    unsafe {
-        driver.regs.w16(LEG_QUEUE_NOTIFY, Q_RX);
-    }
     let frame = match frame {
         Some(f) => f,
         None => {
+            unsafe {
+                driver.regs.w16(LEG_QUEUE_NOTIFY, Q_RX);
+            }
             return reply_with_status(sender_pid, tx, req, E_AGAIN);
         }
     };
@@ -44,5 +44,9 @@ pub fn handle(sender_pid: u32, driver: &mut Driver, req: &Request, tx: &mut [u8]
         .copy_from_slice(&prefix);
     tx[RESP_HDR_LEN + STATUS_LEN + RX_PAYLOAD_PREFIX_LEN..RESP_HDR_LEN + STATUS_LEN + body_len]
         .copy_from_slice(frame.bytes);
+    driver.rx.refill_consumed();
+    unsafe {
+        driver.regs.w16(LEG_QUEUE_NOTIFY, Q_RX);
+    }
     reply(sender_pid, tx, RESP_HDR_LEN + STATUS_LEN + body_len)
 }

@@ -38,14 +38,16 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         return status(sender_pid, req, E_NO_CONFIG, tx);
     }
     for _ in 0..POLL_BUDGET {
-        match route::poll_and_route(l2, wanted) {
-            route::PollResult::Delivered(p) => return deliver::send(sender_pid, req, p, tx),
+        match route::poll_and_route(l2) {
             route::PollResult::KeepPolling => continue,
             route::PollResult::Empty => break,
             route::PollResult::Fault(errno) => return status(sender_pid, req, errno, tx),
         }
     }
-    status(sender_pid, req, E_RX_EMPTY, tx);
+    match select::queued(wanted) {
+        Some(p) => deliver::send(sender_pid, req, p, tx),
+        None => status(sender_pid, req, E_RX_EMPTY, tx),
+    }
 }
 
 fn status(sender_pid: u32, req: &Request, errno: u16, tx: &mut [u8]) {

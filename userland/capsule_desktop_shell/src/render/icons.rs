@@ -19,6 +19,7 @@ use crate::state::apps::LauncherIcon;
 use crate::state::Context;
 
 mod about;
+mod browser;
 mod calculator;
 mod constants;
 mod file_manager;
@@ -54,5 +55,6 @@ pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u3
         LauncherIcon::Calculator => calculator::calculator(ctx, x, y, size),
         LauncherIcon::Snake => snake::snake(ctx, x, y, size),
         LauncherIcon::Wallet => wallet::wallet(ctx, x, y, size),
+        LauncherIcon::Browser => browser::browser(ctx, x, y, size),
     }
 }

@@ -20,7 +20,7 @@ use super::handlers;
 use crate::protocol::{
     encode_response, Request, EINVAL, OP_AES256_GCM_OPEN, OP_AES256_GCM_SEAL, OP_BLAKE3_HASH,
     OP_CHACHA20_POLY1305_OPEN, OP_CHACHA20_POLY1305_SEAL, OP_ED25519_VERIFY, OP_HEALTHCHECK,
-    OP_HKDF_SHA256, OP_HMAC_SHA256, OP_P256_ECDSA_VERIFY, OP_P384_ECDSA_VERIFY,
+    OP_HKDF_SHA256, OP_HMAC_SHA256, OP_P256_ECDSA_VERIFY, OP_P384_ECDSA_VERIFY, OP_RSA_VERIFY,
     OP_SHA256_HASH, OP_SHA3_256_HASH, OP_SHA384_HASH, OP_SHA512_HASH, OP_X25519_PUBLIC,
     OP_X25519_SHARED,
 };
@@ -35,6 +35,7 @@ pub fn dispatch(req: Request<'_>) -> Vec<u8> {
         OP_ED25519_VERIFY => handlers::ed25519_verify(req),
         OP_P256_ECDSA_VERIFY => handlers::p256_ecdsa_verify(req),
         OP_P384_ECDSA_VERIFY => handlers::p384_ecdsa_verify(req),
+        OP_RSA_VERIFY => handlers::rsa_verify(req),
         OP_CHACHA20_POLY1305_SEAL => handlers::chacha20_poly1305_seal(req),
         OP_CHACHA20_POLY1305_OPEN => handlers::chacha20_poly1305_open(req),
         OP_AES256_GCM_SEAL => handlers::aes256_gcm_seal(req),

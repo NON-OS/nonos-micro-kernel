@@ -22,3 +22,4 @@ mod text;
 mod text_scaled;
 
 pub use buffer::PaintBuffer;
+pub use glyph_advance::font_advance;

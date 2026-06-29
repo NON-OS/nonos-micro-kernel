@@ -35,10 +35,12 @@ pub const VQ_AVAIL_OFFSET: usize = 4096;
 pub const VQ_USED_OFFSET: usize = 8192;
 pub const VQ_REGION_SIZE: usize = 12288;
 
+pub const RING_SLOTS: u16 = (VQ_AVAIL_OFFSET / 16) as u16;
 
 
 
-pub const RX_DESC_COUNT: u16 = QUEUE_SIZE;
+
+pub const RX_DESC_COUNT: u16 = 64;
 pub const TX_DESC_COUNT: u16 = QUEUE_SIZE;
 
 

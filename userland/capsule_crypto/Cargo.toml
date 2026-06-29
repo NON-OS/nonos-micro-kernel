@@ -22,7 +22,7 @@ path = "src/main.rs"
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 blake3 = { version = "1.0", default-features = false }
-sha2   = { version = "0.10", default-features = false, features = ["force-soft"] }
+sha2   = { version = "0.10", default-features = false, features = ["force-soft", "oid"] }
 sha3   = { version = "0.10", default-features = false }
 digest = { version = "0.10", default-features = false }
 aead   = { version = "0.5", default-features = false, features = ["alloc"] }
@@ -32,6 +32,7 @@ ed25519-dalek    = { version = "2.1.1", default-features = false, features = ["a
 x25519-dalek     = { version = "2", default-features = false, features = ["static_secrets", "zeroize"] }
 p256             = { version = "0.13", default-features = false, features = ["ecdsa"] }
 p384             = { version = "0.13", default-features = false, features = ["ecdsa"] }
+rsa              = { version = "0.9", default-features = false, features = ["sha2"] }
 
 [profile.release]
 panic    = "abort"
