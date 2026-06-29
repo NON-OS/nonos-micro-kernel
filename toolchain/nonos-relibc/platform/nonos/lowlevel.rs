@@ -12,6 +12,7 @@ pub const MK_MUNMAP: u64 = tag4(b"MUMP");
 pub const MK_TIME_MILLIS: u64 = tag4(b"MTMS");
 pub const MK_YIELD: u64 = tag4(b"MYLD");
 pub const MK_CRYPTO_RANDOM: u64 = tag4(b"CRND");
+pub const MK_IPC_CALL: u64 = tag4(b"MICL");
 
 #[inline]
 pub unsafe fn syscall0(n: u64) -> i64 {
