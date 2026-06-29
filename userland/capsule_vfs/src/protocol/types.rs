@@ -28,6 +28,8 @@ pub const OP_MKDIR: u16 = 8;
 pub const OP_UNLINK: u16 = 9;
 pub const OP_RENAME: u16 = 10;
 pub const OP_SEEK: u16 = 11;
+pub const OP_PREAD: u16 = 12;
+pub const OP_PWRITE: u16 = 13;
 
 pub const O_CREATE: u32 = 1 << 0;
 pub const O_TRUNC: u32 = 1 << 1;

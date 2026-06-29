@@ -20,6 +20,8 @@ mod mkdir;
 mod new;
 mod open;
 mod query;
+mod pread;
+mod pwrite;
 mod read;
 mod rename;
 mod seek;

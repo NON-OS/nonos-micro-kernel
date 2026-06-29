@@ -14,31 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod close;
-mod healthcheck;
-mod list;
-mod mkdir;
-mod open;
-mod pread;
-mod pwrite;
-mod read;
-mod rename;
-mod seek;
-mod stat;
-mod unlink;
-mod util;
-mod write;
+use alloc::vec::Vec;
 
-pub(super) use close::close;
-pub(super) use healthcheck::healthcheck;
-pub(super) use list::list;
-pub(super) use mkdir::mkdir;
-pub(super) use open::open;
-pub(super) use pread::pread;
-pub(super) use pwrite::pwrite;
-pub(super) use read::read;
-pub(super) use rename::rename;
-pub(super) use seek::seek;
-pub(super) use stat::stat;
-pub(super) use unlink::unlink;
-pub(super) use write::write;
+use super::types::{Store, StoreError};
+
+impl Store {
+    pub fn pread(&mut self, fd: u32, owner_pid: u32, offset: u64, max: usize) -> Result<Vec<u8>, StoreError> {
+        let file_idx = self.entry(fd, owner_pid)?.file_idx;
+        let data = &self.files[file_idx].data;
+        let off = (offset as usize).min(data.len());
+        let avail = data.len() - off;
+        let n = if max < avail { max } else { avail };
+        Ok(data[off..off + n].to_vec())
+    }
+}

@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use super::handlers;
 use crate::protocol::{
     encode_response, Request, EINVAL, OP_CLOSE, OP_HEALTHCHECK, OP_LIST, OP_MKDIR, OP_OPEN,
-    OP_READ, OP_RENAME, OP_SEEK, OP_STAT, OP_UNLINK, OP_WRITE,
+    OP_PREAD, OP_PWRITE, OP_READ, OP_RENAME, OP_SEEK, OP_STAT, OP_UNLINK, OP_WRITE,
 };
 use crate::store::Store;
 
@@ -35,6 +35,8 @@ pub fn dispatch(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8>
         OP_UNLINK => handlers::unlink(store, req, sender_pid),
         OP_RENAME => handlers::rename(store, req, sender_pid),
         OP_SEEK => handlers::seek(store, req, sender_pid),
+        OP_PREAD => handlers::pread(store, req, sender_pid),
+        OP_PWRITE => handlers::pwrite(store, req, sender_pid),
         OP_HEALTHCHECK => handlers::healthcheck(req),
         _ => encode_response(req.op, req.flags, req.request_id, EINVAL, &[]),
     }
