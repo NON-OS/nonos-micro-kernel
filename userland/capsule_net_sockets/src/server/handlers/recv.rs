@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_libc::{mk_time_millis, mk_yield};
+
 use crate::clients::{nym, tcp, udp};
 use crate::protocol::{E_NOT_CONNECTED, E_NO_HANDLE, E_NO_TRANSPORT, E_OK, E_WOULD_BLOCK, OP_RECV};
 use crate::server::handlers::io::u32_at;
@@ -31,11 +33,18 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     let Some(sock) = SOCKETS.with(key, |s| *s) else {
         return status(pid, req, E_NO_HANDLE, tx);
     };
-    match recv_socket(sock, &mut tx[20..]) {
-        Ok(n) => {
-            respond(pid, OP_RECV, E_OK, req.request_id, n as u32, tx);
+    let deadline = mk_time_millis().saturating_add(sock.timeout_ms as i64);
+    loop {
+        match recv_socket(sock, &mut tx[20..]) {
+            Ok(n) => {
+                let _ = respond(pid, OP_RECV, E_OK, req.request_id, n as u32, tx);
+                return;
+            }
+            Err(E_WOULD_BLOCK) if sock.timeout_ms > 0 && mk_time_millis() < deadline => {
+                mk_yield();
+            }
+            Err(e) => return status(pid, req, e, tx),
         }
-        Err(e) => status(pid, req, e, tx),
     }
 }
 

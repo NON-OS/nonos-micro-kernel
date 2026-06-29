@@ -31,6 +31,7 @@ pub struct Socket {
     pub bound: bool,
     pub listening: bool,
     pub nonblock: bool,
+    pub timeout_ms: u32,
 }
 
 pub struct Table {

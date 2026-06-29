@@ -16,7 +16,7 @@
 
 use super::{
     accept, bind, close, connect, getflags, getsockopt, health, listen, recv, send, setflags,
-    setsockopt, socket,
+    setsockopt, settimeout, socket,
 };
 use crate::protocol::*;
 use crate::server::parse_req::Request;
@@ -36,6 +36,7 @@ pub fn dispatch(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) -> bool {
         OP_SETSOCKOPT => setsockopt::handle(pid, req, body, tx),
         OP_SETFLAGS => setflags::handle(pid, req, body, tx),
         OP_GETFLAGS => getflags::handle(pid, req, body, tx),
+        OP_SETTIMEOUT => settimeout::handle(pid, req, body, tx),
         _ => return false,
     }
     true

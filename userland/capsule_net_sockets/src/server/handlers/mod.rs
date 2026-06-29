@@ -28,6 +28,7 @@ mod recv;
 mod send;
 mod setflags;
 mod setsockopt;
+mod settimeout;
 mod socket;
 
 pub use dispatch::dispatch;

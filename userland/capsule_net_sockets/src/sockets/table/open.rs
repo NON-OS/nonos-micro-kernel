@@ -46,6 +46,7 @@ impl Socket {
             bound: false,
             listening: false,
             nonblock: false,
+            timeout_ms: 0,
         }
     }
 }
