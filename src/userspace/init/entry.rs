@@ -22,6 +22,7 @@ pub fn run_init() -> ! {
     run_user_entry_proof();
     run_std_proof();
     run_c_proof();
+    run_relibc_test();
     run_ripgrep();
     spawn_plan::spawn_ramfs();
     spawn_plan::spawn_core_after_ramfs();
@@ -68,6 +69,17 @@ fn run_c_proof() {
 
 #[cfg(not(feature = "nonos-capsule-c-proof"))]
 fn run_c_proof() {}
+
+#[cfg(feature = "nonos-capsule-relibc-test")]
+fn run_relibc_test() {
+    match crate::userspace::capsule_relibc_test::spawn_relibc_test_capsule() {
+        Ok(()) => boot_log::ok("RELIBC-TEST", "capsule spawned"),
+        Err(_) => boot_log::error("RELIBC-TEST capsule spawn failed"),
+    }
+}
+
+#[cfg(not(feature = "nonos-capsule-relibc-test"))]
+fn run_relibc_test() {}
 
 #[cfg(feature = "nonos-capsule-ripgrep")]
 fn run_ripgrep() {
