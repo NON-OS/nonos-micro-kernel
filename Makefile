@@ -135,6 +135,12 @@ ZK_CAPSULE_ENROLL_SEED ?=
 ZK_CAPSULE_NONCE_SEED ?=
 ZK_CAPSULE_EPOCH ?= 1
 EMBED_TOOL       := $(BOOTLOADER_DIR)/tools/embed-zk-proof/target/$(HOST_TARGET)/release/embed-zk-proof
+SIGN_TOOL        := $(BOOTLOADER_DIR)/tools/sign-kernel/target/$(HOST_TARGET)/release/sign-kernel
+
+# Anti-rollback index baked into and signed over the kernel image. Bump only for
+# security-critical releases; the TPM monotonic counter enforces it as a floor
+# so an older signed kernel cannot be rolled back onto a device.
+NONOS_ROLLBACK_INDEX ?= 0
 
 # Developer evaluation bootstrap (NOT production custody).
 #
@@ -338,6 +344,11 @@ nonos-mk-attestation-receipt: $(TARGET_DIR)/kernel_attested.bin
 $(EMBED_TOOL): nonos-mk-check-deps
 	@echo "Building ZK embed tool..."
 	@cd $(BOOTLOADER_DIR)/tools/embed-zk-proof && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build --release --target $(HOST_TARGET)
+
+$(SIGN_TOOL): nonos-mk-check-deps
+	@echo "Building kernel signing tool..."
+	@cd $(BOOTLOADER_DIR)/tools/sign-kernel && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --target $(HOST_TARGET)
 
 $(ZK_BOOT_ROOT) $(ZK_BOOT_COMMITMENTS) $(ZK_BOOT_SECRETS): $(ZK_BOOT_LABELS) $(ZK_ENROLL_TOOL)
@@ -602,6 +613,7 @@ include userland/capsule_about/Capsule.mk
 include userland/capsule_hello/Capsule.mk
 include userland/capsule_boot_splash/Capsule.mk
 include userland/capsule_calculator/Capsule.mk
+include userland/capsule_browser/Capsule.mk
 include userland/capsule_snake/Capsule.mk
 include userland/capsule_wallet_nonos/Capsule.mk
 include userland/capsule_terminal/Capsule.mk
@@ -688,6 +700,7 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
 	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
 	$(boot-splash_VERIFY) $(about_VERIFY) $(calculator_VERIFY) \
+	$(browser_VERIFY) \
 	$(snake_VERIFY) $(wallet-nonos_VERIFY) $(terminal_VERIFY) \
 	$(file-manager_VERIFY) $(text-editor_VERIFY) $(settings_VERIFY) \
 	$(process-manager_VERIFY) $(attest_VERIFY) $(power_VERIFY)
@@ -1122,7 +1135,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(snake_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(browser_ARTIFACTS) $(snake_ARTIFACTS) \
 		$(wallet-nonos_ARTIFACTS) $(terminal_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
@@ -1222,6 +1235,7 @@ nonos-mk-input-probe-inject-esp: $(NONOS_BOOT_EFI)
 nonos-mk-toolkit-prod: nonos-mk-desktop-gui-prod
 nonos-mk-about-prod: nonos-mk-desktop-gui-prod
 nonos-mk-calculator-prod: nonos-mk-desktop-gui-prod
+nonos-mk-browser-prod: nonos-mk-desktop-gui-prod
 nonos-mk-snake-prod: nonos-mk-desktop-gui-prod
 nonos-mk-terminal-prod: nonos-mk-desktop-gui-prod
 nonos-mk-file-manager-prod: nonos-mk-desktop-gui-prod
@@ -1255,14 +1269,11 @@ nonos-mk-process-manager-prod: nonos-mk-desktop-gui-prod
 
 # Sign + attest + ESP packaging
 
-$(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY)
-	@echo "Signing kernel (Ed25519)..."
+$(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY) $(SIGN_TOOL)
+	@echo "Signing kernel (Ed25519, rollback index $(NONOS_ROLLBACK_INDEX))..."
 	@mkdir -p $(TARGET_DIR)
-ifeq ($(UNAME_S),Darwin)
-	@/usr/bin/python3 nonos-utils/sign_kernel.py $< $(SIGNING_KEY) $@
-else
-	@python3 nonos-utils/sign_kernel.py $< $(SIGNING_KEY) $@
-endif
+	@$(SIGN_TOOL) --key $(KERNEL_SIGNING_KEY) --input $< --output $@ \
+		--rollback-index $(NONOS_ROLLBACK_INDEX)
 
 nonos-mk-sign: $(TARGET_DIR)/kernel_signed.bin
 

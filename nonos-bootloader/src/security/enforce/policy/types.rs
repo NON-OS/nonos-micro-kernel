@@ -50,4 +50,20 @@ impl SecurityPolicy {
             );
         }
     }
+
+    pub fn level(self) -> u8 {
+        match self {
+            SecurityPolicy::Development => 0,
+            SecurityPolicy::Standard => 1,
+            SecurityPolicy::Hardened => 2,
+        }
+    }
+
+    pub fn stricter(self, other: SecurityPolicy) -> SecurityPolicy {
+        if other.level() > self.level() {
+            other
+        } else {
+            self
+        }
+    }
 }

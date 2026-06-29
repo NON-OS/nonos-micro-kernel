@@ -25,8 +25,11 @@ use super::super::uefi::TOTAL_BOOT_STAGES;
 use super::hardware::verify_hardware_requirements;
 use super::init::init_security_primitives;
 use super::platform::{init_subsystems, verify_platform};
-use super::policy::{enforce_policy, verify_chain};
+use super::policy::verify_chain;
 
+// Gathers the security posture (keys, measured boot, TPM, secure-boot chain)
+// so the menu can display it. Policy enforcement is deferred until after the
+// menu, in enforce_selected_policy, so the chosen mode can raise the floor.
 pub fn run_security_checks(st: &mut SystemTable<Boot>, gop: bool) -> SecurityContext {
     update_stage(STAGE_SECURITY, StageStatus::Running);
     draw_boot_progress(2, TOTAL_BOOT_STAGES);
@@ -34,7 +37,6 @@ pub fn run_security_checks(st: &mut SystemTable<Boot>, gop: bool) -> SecurityCon
     let hw_caps = verify_hardware_requirements(st, gop);
     verify_platform(&hw_caps, gop);
     let mut security = init_subsystems(st, gop);
-    enforce_policy(&security, st, gop);
     verify_chain(&security, st);
     match tpm_counter_selftest(st.boot_services()) {
         Ok((first, second)) => {

@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const RC_NV_DEFINED: u32 = 0x0000_014C;
+pub const RC_NV_UNINITIALIZED: u32 = 0x0000_014A;
 pub const RC_SUBMIT_FAILED: u32 = 0xFFFF_FFFF;
 pub const RC_NO_TPM: u32 = 0xFFFF_FFFE;
 

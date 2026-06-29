@@ -57,11 +57,18 @@ struct Args {
     #[arg(long, action = clap::ArgAction::SetTrue)]
     verify: bool,
 
+    #[arg(long, value_name = "N", default_value_t = 0)]
+    rollback_index: u32,
+
     #[arg(short, long, action = clap::ArgAction::SetTrue)]
     verbose: bool,
 }
 
-fn create_image_footer(kernel_size: u32, total_image_size: u64) -> [u8; FOOTER_SIZE] {
+fn create_image_footer(
+    kernel_size: u32,
+    total_image_size: u64,
+    rollback_index: u32,
+) -> [u8; FOOTER_SIZE] {
     let mut footer = [0u8; FOOTER_SIZE];
     footer[0..8].copy_from_slice(&FOOTER_MAGIC);
     footer[8..10].copy_from_slice(&FOOTER_VERSION.to_le_bytes());
@@ -77,7 +84,15 @@ fn create_image_footer(kernel_size: u32, total_image_size: u64) -> [u8; FOOTER_S
     footer[40..44].copy_from_slice(&0u32.to_le_bytes());
     footer[44..48].copy_from_slice(&0u32.to_le_bytes());
     footer[48..52].copy_from_slice(&1u32.to_le_bytes());
+    footer[56..60].copy_from_slice(&rollback_index.to_le_bytes());
     footer
+}
+
+fn signed_message(kernel_data: &[u8], rollback_index: u32) -> Vec<u8> {
+    let mut msg = Vec::with_capacity(36);
+    msg.extend_from_slice(blake3::hash(kernel_data).as_bytes());
+    msg.extend_from_slice(&rollback_index.to_le_bytes());
+    msg
 }
 
 fn main() -> Result<()> {
@@ -93,7 +108,12 @@ fn main() -> Result<()> {
 
     let kernel_hash = blake3::hash(&kernel_data);
     println!("Kernel BLAKE3: {}", kernel_hash.to_hex());
+    println!("Rollback index: {}", args.rollback_index);
     println!();
+
+    // The signature covers BLAKE3(kernel) || rollback_index so the anti-rollback
+    // floor is authenticated, not just the kernel bytes.
+    let message = signed_message(&kernel_data, args.rollback_index);
 
     let (sig_bytes, verifying_key) = if let Some(ref vault_addr) = args.vault_addr {
         let vault_token = args
@@ -126,7 +146,7 @@ fn main() -> Result<()> {
         println!();
 
         let sig_bytes =
-            sign_kernel_with_vault(vault_addr, vault_token, &args.vault_key_name, &kernel_data)
+            sign_kernel_with_vault(vault_addr, vault_token, &args.vault_key_name, &message)
                 .map_err(|e| anyhow::anyhow!("vault signing failed: {}", e))?;
 
         (sig_bytes, verifying_key)
@@ -157,7 +177,7 @@ fn main() -> Result<()> {
         println!();
 
         println!("Signing kernel with Ed25519 (local key)...");
-        let signature = signing_key.sign(&kernel_data);
+        let signature = signing_key.sign(&message);
 
         (signature.to_bytes(), verifying_key)
     } else {
@@ -170,7 +190,7 @@ fn main() -> Result<()> {
 
     let kernel_size = kernel_data.len() as u32;
     let total_size = (kernel_data.len() + 64 + FOOTER_SIZE) as u64;
-    let footer = create_image_footer(kernel_size, total_size);
+    let footer = create_image_footer(kernel_size, total_size, args.rollback_index);
 
     let mut output_data = kernel_data.clone();
     output_data.extend_from_slice(&sig_bytes);
@@ -213,8 +233,9 @@ fn main() -> Result<()> {
         sig_arr.copy_from_slice(sig_bytes_read);
         let sig_read = ed25519_dalek::Signature::from_bytes(&sig_arr);
 
+        let check = signed_message(payload, args.rollback_index);
         use ed25519_dalek::Verifier;
-        match verifying_key.verify(payload, &sig_read) {
+        match verifying_key.verify(&check, &sig_read) {
             Ok(()) => {
                 println!("Signature verification: PASSED");
             }

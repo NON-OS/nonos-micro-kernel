@@ -33,7 +33,7 @@ pub use elf::run_elf_parse;
 pub use hardware::run_hardware_discovery;
 pub use kernel::run_kernel_load;
 pub use prepare::{run_handoff_prepare, HandoffParams};
-pub use security::run_security_checks;
+pub use security::{enforce_policy, run_security_checks};
 pub use shell::exit_to_shell;
 pub use uefi::{run_boot_screen_init, run_uefi_init};
 pub use util::{fatal_reset, micro_delay, mini_delay, print_u64};

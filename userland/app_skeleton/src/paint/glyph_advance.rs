@@ -24,3 +24,8 @@ impl<'a> PaintBuffer<'a> {
         atlas.glyph_width as u32 + atlas.letter_spacing as u32
     }
 }
+
+pub fn font_advance() -> u32 {
+    let atlas = FontAtlas::default();
+    atlas.glyph_width as u32 + atlas.letter_spacing as u32
+}

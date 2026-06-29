@@ -21,6 +21,7 @@ pub const OP_HKDF_SHA256: u16 = 17;
 pub const OP_P256_ECDSA_VERIFY: u16 = 18;
 pub const OP_P384_ECDSA_VERIFY: u16 = 19;
 pub const OP_SHA384_HASH: u16 = 20;
+pub const OP_RSA_VERIFY: u16 = 21;
 
 pub const X25519_KEY_BYTES: usize = 32;
 pub const P256_VERIFY_BYTES: usize = 65 + 64 + 32;

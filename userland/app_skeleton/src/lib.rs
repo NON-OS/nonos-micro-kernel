@@ -35,4 +35,5 @@ pub use input::{
     MOD_CTRL, MOD_META, MOD_NUM, MOD_SHIFT,
 };
 pub use paint::PaintBuffer;
+pub use paint::font_advance;
 pub use runner::run;

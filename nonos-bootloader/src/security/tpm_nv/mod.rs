@@ -16,9 +16,11 @@
 
 mod consts;
 mod define;
+mod floor;
 mod increment;
 mod read;
 mod selftest;
 
 pub use consts::RC_NO_TPM;
+pub use floor::{commit_floor, read_floor};
 pub use selftest::tpm_counter_selftest;
