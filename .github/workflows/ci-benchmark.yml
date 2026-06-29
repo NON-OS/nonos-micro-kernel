@@ -126,7 +126,11 @@ jobs:
           if [ "${{ inputs['boot-evidence'] }}" != "true" ]; then
             export NONOS_BENCH_SKIP_BOOT=1
           fi
-          export NONOS_BENCH_BOOT_CMD="make PLAN_A_SERIAL=${NONOS_BENCH_OUT}/boot/qemu-serial.log PLAN_A_RESULT=${NONOS_BENCH_OUT}/boot/plan-a-result.log nonos-mk-plan-a-runtime"
+          boot_args="PLAN_A_SERIAL=${NONOS_BENCH_OUT}/boot/qemu-serial.log PLAN_A_RESULT=${NONOS_BENCH_OUT}/boot/plan-a-result.log"
+          if [ "${{ inputs['trust-mode'] }}" = "scratch" ]; then
+            boot_args="ZK_BOOT_LABELS=target/ci/zk/device_labels.txt ZK_BOOT_ROOT=target/ci/zk/device_root.bin ZK_BOOT_COMMITMENTS=target/ci/zk/device_commitments.bin ZK_BOOT_SECRETS=target/ci/zk/device_secrets.txt ${boot_args}"
+          fi
+          export NONOS_BENCH_BOOT_CMD="make ${boot_args} nonos-mk-plan-a-runtime"
           make nonos-mk-bench
       - name: Upload benchmark artifacts
         if: always()
