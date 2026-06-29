@@ -10,7 +10,7 @@ use crate::{
     c_str::CStr,
     error::{Errno, Result},
     header::{
-        errno::{EBADF, ENOMEM, ENOSYS},
+        errno::{EBADF, EIO, ENOMEM, ENOSYS},
         signal::sigevent,
         sys_resource::{rlimit, rusage},
         sys_select::timeval,
@@ -112,14 +112,14 @@ impl Pal for Sys {
     fn symlinkat(_path1: CStr, _fd: c_int, _path2: CStr) -> Result<()> { Err(Errno(ENOSYS)) }
     fn sync() -> Result<()> { Err(Errno(ENOSYS)) }
     fn unlinkat(_fd: c_int, _path: CStr, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
-    unsafe fn mlock(_addr: *const c_void, _len: usize) -> Result<()> { Err(Errno(ENOSYS)) }
-    unsafe fn mlockall(_flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
+    unsafe fn mlock(_addr: *const c_void, _len: usize) -> Result<()> { Ok(()) }
+    unsafe fn mlockall(_flags: c_int) -> Result<()> { Ok(()) }
     unsafe fn mremap(_addr: *mut c_void, _len: usize, _new_len: usize, _flags: c_int, _args: *mut c_void) -> Result<*mut c_void> { Err(Errno(ENOSYS)) }
-    unsafe fn mprotect(_addr: *mut c_void, _len: usize, _prot: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
-    unsafe fn msync(_addr: *mut c_void, _len: usize, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
-    unsafe fn munlock(_addr: *const c_void, _len: usize) -> Result<()> { Err(Errno(ENOSYS)) }
-    unsafe fn madvise(_addr: *mut c_void, _len: usize, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
-    unsafe fn munlockall() -> Result<()> { Err(Errno(ENOSYS)) }
+    unsafe fn mprotect(_addr: *mut c_void, _len: usize, _prot: c_int) -> Result<()> { Ok(()) }
+    unsafe fn msync(_addr: *mut c_void, _len: usize, _flags: c_int) -> Result<()> { Ok(()) }
+    unsafe fn munlock(_addr: *const c_void, _len: usize) -> Result<()> { Ok(()) }
+    unsafe fn madvise(_addr: *mut c_void, _len: usize, _flags: c_int) -> Result<()> { Ok(()) }
+    unsafe fn munlockall() -> Result<()> { Ok(()) }
     unsafe fn nanosleep(rqtp: *const timespec, _rmtp: *mut timespec) -> Result<()> {
         let rq = unsafe { &*rqtp };
         let deadline = now_ms() + rq.tv_sec * 1000 + rq.tv_nsec / 1_000_000;
@@ -157,7 +157,20 @@ impl Pal for Sys {
     fn getpgid(_pid: pid_t) -> Result<pid_t> { Err(Errno(ENOSYS)) }
     fn getppid() -> pid_t { 0 }
     fn getpriority(_which: c_int, _who: id_t) -> Result<c_int> { Err(Errno(ENOSYS)) }
-    fn getrandom(_buf: &mut [u8], _flags: c_uint) -> Result<usize> { Err(Errno(ENOSYS)) }
+    fn getrandom(buf: &mut [u8], _flags: c_uint) -> Result<usize> {
+        if buf.is_empty() {
+            return Ok(0);
+        }
+        let mut filled = 0usize;
+        for chunk in buf.chunks_mut(4096) {
+            let r = unsafe { lowlevel::syscall2(lowlevel::MK_CRYPTO_RANDOM, chunk.as_mut_ptr() as u64, chunk.len() as u64) };
+            if r < 0 {
+                return Err(Errno(EIO));
+            }
+            filled += r as usize;
+        }
+        Ok(filled)
+    }
     fn getresgid(_rgid: Option<Out<gid_t>>, _egid: Option<Out<gid_t>>, _sgid: Option<Out<gid_t>>) -> Result<()> { Err(Errno(ENOSYS)) }
     fn getresuid(_ruid: Option<Out<uid_t>>, _euid: Option<Out<uid_t>>, _suid: Option<Out<uid_t>>) -> Result<()> { Err(Errno(ENOSYS)) }
     fn getrlimit(_resource: c_int, _rlim: Out<rlimit>) -> Result<()> { Err(Errno(ENOSYS)) }
