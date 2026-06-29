@@ -9,6 +9,9 @@ pub const MK_EXIT: u64 = tag4(b"MEXT");
 pub const MK_GETPID: u64 = tag4(b"MGPD");
 pub const MK_MMAP: u64 = tag4(b"MMAP");
 pub const MK_MUNMAP: u64 = tag4(b"MUMP");
+pub const MK_TIME_MILLIS: u64 = tag4(b"MTMS");
+pub const MK_YIELD: u64 = tag4(b"MYLD");
+pub const MK_CRYPTO_RANDOM: u64 = tag4(b"CRND");
 
 #[inline]
 pub unsafe fn syscall0(n: u64) -> i64 {
