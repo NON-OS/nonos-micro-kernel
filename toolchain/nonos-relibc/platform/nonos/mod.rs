@@ -330,7 +330,11 @@ impl Pal for Sys {
     unsafe fn fork() -> Result<pid_t> { Err(Errno(ENOSYS)) }
     unsafe fn futex_wait(_addr: *mut u32, _val: u32, _deadline: Option<&timespec>) -> Result<()> { Ok(()) }
     unsafe fn futex_wake(_addr: *mut u32, _num: u32) -> Result<u32> { Ok(0) }
-    unsafe fn rlct_clone(_stack: *mut usize, _os_specific: &mut OsSpecific) -> Result<pthread::OsTid> { Err(Errno(ENOSYS)) }
+    unsafe fn rlct_clone(stack: *mut usize, _os_specific: &mut OsSpecific) -> Result<pthread::OsTid> {
+        let r = unsafe { lowlevel::syscall2(lowlevel::MK_THREAD_SPAWN, lowlevel::rlct_trampoline as *const () as u64, stack as u64) };
+        if r < 0 { return Err(Errno(-r as c_int)); }
+        Ok(pthread::OsTid {})
+    }
     unsafe fn rlct_kill(_os_tid: pthread::OsTid, _signal: usize) -> Result<()> { Err(Errno(ENOSYS)) }
     fn current_os_tid() -> pthread::OsTid { pthread::OsTid::default() }
     unsafe fn spawn(_program: CStr, _fac: Option<&crate::header::spawn::posix_spawn_file_actions_t>, _fat: Option<&crate::header::spawn::posix_spawnattr_t>, _argv: NulTerminated<*mut c_char>, _envp: Option<NulTerminated<*mut c_char>>) -> Result<pid_t> { Err(Errno(ENOSYS)) }
