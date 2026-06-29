@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod clear_pid;
-mod pop;
-mod push;
-mod remove;
-mod state;
+use super::state::PENDING;
 
-pub(crate) use clear_pid::clear_pid;
-pub(super) use pop::pop;
-pub(super) use push::push;
-pub(super) use remove::remove;
+pub(crate) fn clear_pid(pid: u32) {
+    let caller_inbox = super::super::reply_inbox::for_pid(pid);
+    let mut map = PENDING.lock();
+    map.remove(&pid);
+    map.retain(|_, queue| {
+        queue.retain(|inbox| inbox != &caller_inbox);
+        !queue.is_empty()
+    });
+}

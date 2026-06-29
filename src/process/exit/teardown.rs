@@ -34,6 +34,7 @@ pub fn teardown(pid: Pid, exit_code: i32, _by_signal: bool) {
     crate::hardware::broker::irq_release_all_for_pid(pid);
     crate::hardware::broker::dma_release_all_for_pid(pid, current);
     crate::hardware::broker::pio_release_all_for_pid(pid);
+    crate::syscall::microkernel::ipc::release_pending_replies_for_pid(pid);
 
     crate::kernel_core::process_spawn::defer_kernel_stack_release(pid);
 
