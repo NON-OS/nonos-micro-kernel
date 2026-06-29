@@ -67,6 +67,7 @@ sched = []
 nonos-capsule-proof-io          = []
 nonos-capsule-std-proof         = []
 nonos-capsule-c-proof           = []
+nonos-capsule-relibc-test       = []
 nonos-capsule-ripgrep           = []
 nonos-capsule-ramfs             = []
 nonos-capsule-wallpaper         = []
@@ -228,6 +229,12 @@ microkernel-c-proof-smoketest = [
   "microkernel-core",
   "nonos-dev-unverified-capsules",
   "nonos-capsule-c-proof",
+]
+
+microkernel-relibc-test-smoketest = [
+  "microkernel-core",
+  "nonos-dev-unverified-capsules",
+  "nonos-capsule-relibc-test",
 ]
 
 microkernel-keyring = [

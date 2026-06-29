@@ -535,6 +535,7 @@ nonos-mk-trust-policy: $(NONOS_TRUST_ANCHOR_POLICY_BIN)
 include userland/capsule_proof_io/Capsule.mk
 include userland/capsule_std_proof/Capsule.mk
 include userland/capsule_c_proof/Capsule.mk
+include userland/capsule_relibc_test/Capsule.mk
 include userland/capsule_ripgrep/Capsule.mk
 include userland/capsule_ramfs/Capsule.mk
 include userland/capsule_keyring/Capsule.mk
@@ -835,6 +836,18 @@ nonos-mk-cproof-smoke-prod: $(c-proof_ARTIFACTS) \
 
 nonos-mk-cproof-smoke-test:
 	@CPROOF_PROD_TARGET=nonos-mk-cproof-smoke-prod ./tests/boot/cproof.sh
+
+.PHONY: nonos-mk-relibc-smoke-prod nonos-mk-relibc-smoke-test
+nonos-mk-relibc-smoke-prod: $(relibc-test_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-relibc-test-smoketest, unverified)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-relibc-test-smoketest
+
+nonos-mk-relibc-smoke-test:
+	@CPROOF_PROD_TARGET=nonos-mk-relibc-smoke-prod ./tests/boot/relibc.sh
 
 nonos-mk-ramfs-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
