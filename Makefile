@@ -824,6 +824,18 @@ nonos-mk-boot-cproof:
 
 nonos-mk-cproof-test: nonos-mk-boot-cproof
 
+.PHONY: nonos-mk-cproof-smoke-prod nonos-mk-cproof-smoke-test
+nonos-mk-cproof-smoke-prod: $(c-proof_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-c-proof-smoketest, unverified)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-c-proof-smoketest
+
+nonos-mk-cproof-smoke-test:
+	@CPROOF_PROD_TARGET=nonos-mk-cproof-smoke-prod ./tests/boot/cproof.sh
+
 nonos-mk-ramfs-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-ramfs)..."

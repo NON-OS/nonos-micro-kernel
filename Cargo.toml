@@ -220,6 +220,16 @@ microkernel-c-proof = [
   "nonos-capsule-c-proof",
 ]
 
+# Temporary unverified boot proof of the clang/relibc C capsule: spawns
+# c_proof via the legacy unverified path (no ZK attestation) while the
+# capsule-attestation NZKCAPS2 migration is owned elsewhere. Superseded by
+# microkernel-c-proof once a valid c_proof trailer is available.
+microkernel-c-proof-smoketest = [
+  "microkernel-core",
+  "nonos-dev-unverified-capsules",
+  "nonos-capsule-c-proof",
+]
+
 microkernel-keyring = [
   "microkernel-core",
   "nonos-production",
