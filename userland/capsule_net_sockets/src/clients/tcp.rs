@@ -18,6 +18,8 @@ use alloc::vec;
 
 use super::envelope::call;
 
+pub const RX_EMPTY: u16 = 11;
+
 const MAGIC: u32 = 0x4E54_4350;
 const LISTEN: u16 = 2;
 const CONNECT: u16 = 3;

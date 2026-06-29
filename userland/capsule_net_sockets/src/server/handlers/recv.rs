@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::clients::{nym, tcp, udp};
-use crate::protocol::{E_NOT_CONNECTED, E_NO_HANDLE, E_NO_TRANSPORT, E_OK, OP_RECV};
+use crate::protocol::{E_NOT_CONNECTED, E_NO_HANDLE, E_NO_TRANSPORT, E_OK, E_WOULD_BLOCK, OP_RECV};
 use crate::server::handlers::io::u32_at;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
@@ -39,14 +39,20 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     }
 }
 
+fn map_recv_err(e: u16, empty: u16) -> u16 {
+    if e == empty { E_WOULD_BLOCK } else { E_NO_TRANSPORT }
+}
+
 fn recv_socket(sock: Socket, out: &mut [u8]) -> Result<usize, u16> {
     match sock.kind {
         Kind::Stream if sock.transport_handle != 0 => {
-            tcp::recv(state::tcp(), sock.transport_handle, out).map_err(|_| E_NO_TRANSPORT)
+            tcp::recv(state::tcp(), sock.transport_handle, out)
+                .map_err(|e| map_recv_err(e, tcp::RX_EMPTY))
         }
         Kind::Datagram => {
             let Some(local) = sock.local else { return Err(E_NOT_CONNECTED) };
-            udp::recv(state::udp(), local.port, out).map_err(|_| E_NO_TRANSPORT)
+            udp::recv(state::udp(), local.port, out)
+                .map_err(|e| map_recv_err(e, udp::RX_EMPTY))
         }
         Kind::Mixnet if sock.transport_handle != 0 => {
             nym::recv(state::nym(), sock.transport_handle, out).map_err(|_| E_NO_TRANSPORT)

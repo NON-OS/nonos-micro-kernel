@@ -25,4 +25,5 @@ pub const E_TABLE_FULL: u16 = 7;
 pub const E_BAD_FAMILY: u16 = 8;
 pub const E_BAD_KIND: u16 = 9;
 pub const E_NOT_BOUND: u16 = 10;
+pub const E_WOULD_BLOCK: u16 = 11;
 pub const E_NOT_CONNECTED: u16 = 12;
