@@ -50,6 +50,9 @@ impl Pal for Sys {
             unsafe { lowlevel::syscall2(lowlevel::MK_DEBUG, buf.as_ptr() as u64, buf.len() as u64); }
             return Ok(buf.len());
         }
+        if socket_rt::is_socket_fd(fildes) {
+            return socket::sock_send(fildes, buf);
+        }
         let vfs_fd = fs::fd_vfs(fildes).ok_or(Errno(EBADF))?;
         if buf.len() > 65536 { return Err(Errno(EINVAL)); }
         let pid = Self::getpid() as u32;
@@ -220,6 +223,9 @@ impl Pal for Sys {
     fn posix_fallocate(_fd: c_int, _offset: u64, _length: NonZeroU64) -> Result<()> { Err(Errno(ENOSYS)) }
     fn posix_getdents(_fildes: c_int, _buf: &mut [u8]) -> Result<usize> { Err(Errno(ENOSYS)) }
     fn read(fildes: c_int, buf: &mut [u8]) -> Result<usize> {
+        if socket_rt::is_socket_fd(fildes) {
+            return socket::sock_recv(fildes, buf);
+        }
         let vfs_fd = fs::fd_vfs(fildes).ok_or(Errno(EBADF))?;
         let count = (buf.len() as u32).min(65536);
         let pid = Self::getpid() as u32;
