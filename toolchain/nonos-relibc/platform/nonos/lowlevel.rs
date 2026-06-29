@@ -18,6 +18,7 @@ pub unsafe fn syscall0(n: u64) -> i64 {
     let r: i64;
     unsafe {
         asm!("syscall", inlateout("rax") n => r,
+             lateout("rdi") _, lateout("rsi") _, lateout("rdx") _,
              lateout("rcx") _, lateout("r11") _, options(nostack));
     }
     r
@@ -28,6 +29,7 @@ pub unsafe fn syscall1(n: u64, a0: u64) -> i64 {
     let r: i64;
     unsafe {
         asm!("syscall", inlateout("rax") n => r, in("rdi") a0,
+             lateout("rsi") _, lateout("rdx") _,
              lateout("rcx") _, lateout("r11") _, options(nostack));
     }
     r
@@ -38,6 +40,7 @@ pub unsafe fn syscall2(n: u64, a0: u64, a1: u64) -> i64 {
     let r: i64;
     unsafe {
         asm!("syscall", inlateout("rax") n => r, in("rdi") a0, in("rsi") a1,
+             lateout("rdx") _,
              lateout("rcx") _, lateout("r11") _, options(nostack));
     }
     r
