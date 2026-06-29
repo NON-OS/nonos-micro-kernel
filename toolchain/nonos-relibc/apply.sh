@@ -185,6 +185,12 @@ patch("src/ld_so/tcb.rs",
       "    pub unsafe fn current() -> Option<&'static mut Self> {\n"
       "        unsafe { Some(&mut *GenericTcb::<OsSpecific>::current_ptr()?.cast()) }\n    }")
 
+patch("src/pthread/mod.rs",
+      'pub unsafe fn init() {\n    let mut thread = Pthread {',
+      '#[cfg(target_os = "nonos")]\npub unsafe fn init() {}\n'
+      '#[cfg(not(target_os = "nonos"))]\n'
+      'pub unsafe fn init() {\n    let mut thread = Pthread {')
+
 patch("src/crt0/src/lib.rs",
       '#[cfg(target_arch = "x86_64")]\nglobal_asm!(',
       '#[cfg(target_os = "nonos")]\nglobal_asm!(\n'
@@ -194,14 +200,10 @@ patch("src/crt0/src/lib.rs",
       '_start:\n'
       '    xor rbp, rbp\n'
       '    and rsp, -16\n'
-      '    xor edi, edi\n'
-      '    xor esi, esi\n'
-      '    xor edx, edx\n'
-      '    call main\n'
-      '    mov edi, eax\n'
-      '    mov rax, 0x5458454d\n'
-      '    syscall\n'
-      '    ud2\n'
+      '    sub rsp, 8\n'
+      '    push 0\n    push 0\n    push 0\n    push 0\n    push 0\n'
+      '    mov rdi, rsp\n'
+      '    call relibc_crt0\n'
       '    .size _start, . - _start\n'
       '"\n);\n\n'
       '#[cfg(all(target_arch = "x86_64", not(target_os = "nonos")))]\nglobal_asm!(')
