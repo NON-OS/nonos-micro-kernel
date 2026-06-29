@@ -33,6 +33,11 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     let Some(sock) = SOCKETS.with(key, |s| *s) else {
         return status(pid, req, E_NO_HANDLE, tx);
     };
+    let buffered = crate::sockets::stash::take(pid, handle, &mut tx[20..]);
+    if buffered > 0 {
+        let _ = respond(pid, OP_RECV, E_OK, req.request_id, buffered as u32, tx);
+        return;
+    }
     let deadline = mk_time_millis().saturating_add(sock.timeout_ms as i64);
     loop {
         match recv_socket(sock, &mut tx[20..]) {

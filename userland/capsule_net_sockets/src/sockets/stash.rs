@@ -14,9 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod table;
-mod types;
-pub mod stash;
+use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
 
-pub use table::{Socket, SOCKETS};
-pub use types::{Kind, LocalAddr4, RemoteAddr4, SocketKey};
+use spin::Mutex;
+
+static STASH: Mutex<BTreeMap<(u32, u32), Vec<u8>>> = Mutex::new(BTreeMap::new());
+
+pub fn take(pid: u32, handle: u32, out: &mut [u8]) -> usize {
+    let mut g = STASH.lock();
+    let Some(buf) = g.get_mut(&(pid, handle)) else {
+        return 0;
+    };
+    let n = core::cmp::min(out.len(), buf.len());
+    out[..n].copy_from_slice(&buf[..n]);
+    buf.drain(..n);
+    if buf.is_empty() {
+        g.remove(&(pid, handle));
+    }
+    n
+}
