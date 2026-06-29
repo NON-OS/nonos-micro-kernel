@@ -12,10 +12,11 @@ use crate::{
     error::{Errno, Result},
     header::{
         errno::{EBADF, EIO, EINVAL, EMFILE, ENOMEM, ENOSYS},
+        fcntl::{O_APPEND, O_CREAT, O_TRUNC},
         signal::sigevent,
         sys_resource::{rlimit, rusage},
         sys_select::timeval,
-        sys_stat::stat,
+        sys_stat::{stat, S_IFDIR, S_IFREG},
         sys_statvfs::statvfs,
         sys_time::timezone,
         sys_utsname::utsname,
@@ -87,7 +88,18 @@ impl Pal for Sys {
         Err(Errno(ENOSYS))
     }
 
-    fn faccessat(_fd: c_int, _path: CStr, _amode: c_int, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn faccessat(_fd: c_int, path: CStr, _amode: c_int, _flags: c_int) -> Result<()> {
+        let pb = path.to_bytes();
+        if pb.is_empty() || pb.len() > 255 { return Err(Errno(EINVAL)); }
+        let pid = Self::getpid() as u32;
+        let mut payload = Vec::with_capacity(5 + pb.len());
+        payload.extend_from_slice(&pid.to_le_bytes());
+        payload.push(pb.len() as u8);
+        payload.extend_from_slice(pb);
+        let mut resp = [0u8; 36];
+        let (status, _) = fs::vfs_call(fs::OP_STAT, &payload, &mut resp)?;
+        if status < 0 { Err(Errno(-status)) } else { Ok(()) }
+    }
     fn chdir(_path: CStr) -> Result<()> { Err(Errno(ENOSYS)) }
     fn close(fildes: c_int) -> Result<()> {
         if fildes <= 2 { return Ok(()); }
@@ -113,7 +125,31 @@ impl Pal for Sys {
     fn fchownat(_fildes: c_int, _path: CStr, _owner: uid_t, _group: gid_t, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
     fn fdatasync(_fildes: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
     fn flock(_fd: c_int, _operation: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
-    fn fstatat(_fildes: c_int, _path: Option<CStr>, _buf: Out<stat>, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn fstatat(_fildes: c_int, path: Option<CStr>, mut buf: Out<stat>, _flags: c_int) -> Result<()> {
+        let p = match path {
+            Some(p) if !p.to_bytes().is_empty() => p,
+            _ => return Err(Errno(ENOSYS)),
+        };
+        let pb = p.to_bytes();
+        if pb.len() > 255 { return Err(Errno(EINVAL)); }
+        let pid = Self::getpid() as u32;
+        let mut payload = Vec::with_capacity(5 + pb.len());
+        payload.extend_from_slice(&pid.to_le_bytes());
+        payload.push(pb.len() as u8);
+        payload.extend_from_slice(pb);
+        let mut resp = [0u8; 36];
+        let (status, _) = fs::vfs_call(fs::OP_STAT, &payload, &mut resp)?;
+        if status < 0 { return Err(Errno(-status)); }
+        let size = u64::from_le_bytes([resp[24], resp[25], resp[26], resp[27],
+                                       resp[28], resp[29], resp[30], resp[31]]);
+        let vfs_flags = u32::from_le_bytes([resp[32], resp[33], resp[34], resp[35]]);
+        buf.write(stat {
+            st_size: size as off_t,
+            st_mode: if vfs_flags & 1 != 0 { S_IFDIR | 0o555 } else { S_IFREG | 0o644 },
+            ..Default::default()
+        });
+        Ok(())
+    }
     fn fstatvfs(_fildes: c_int, _buf: Out<statvfs>) -> Result<()> { Err(Errno(ENOSYS)) }
     fn fcntl(_fildes: c_int, _cmd: c_int, _arg: c_ulonglong) -> Result<c_int> { Err(Errno(ENOSYS)) }
     fn fpath(_fildes: c_int, _out: &mut [u8]) -> Result<usize> { Err(Errno(ENOSYS)) }
@@ -126,10 +162,39 @@ impl Pal for Sys {
     unsafe fn dent_reclen_offset(_this_dent: &[u8], _offset: usize) -> Option<(u16, u64)> { None }
     fn linkat(_fd1: c_int, _oldpath: CStr, _fd2: c_int, _newpath: CStr, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
     fn lseek(_fildes: c_int, _offset: off_t, _whence: c_int) -> Result<off_t> { Err(Errno(ENOSYS)) }
-    fn mkdirat(_fildes: c_int, _path: CStr, _mode: mode_t) -> Result<()> { Err(Errno(ENOSYS)) }
+    fn mkdirat(_fildes: c_int, path: CStr, _mode: mode_t) -> Result<()> {
+        let pb = path.to_bytes();
+        if pb.is_empty() || pb.len() > 255 { return Err(Errno(EINVAL)); }
+        let pid = Self::getpid() as u32;
+        let mut payload = Vec::with_capacity(5 + pb.len());
+        payload.extend_from_slice(&pid.to_le_bytes());
+        payload.push(pb.len() as u8);
+        payload.extend_from_slice(pb);
+        let mut resp = [0u8; 24];
+        let (status, _) = fs::vfs_call(fs::OP_MKDIR, &payload, &mut resp)?;
+        if status < 0 { Err(Errno(-status)) } else { Ok(()) }
+    }
     fn mkfifoat(_dir_fd: c_int, _path: CStr, _mode: mode_t) -> Result<()> { Err(Errno(ENOSYS)) }
     fn mknodat(_fildes: c_int, _path: CStr, _mode: mode_t, _dev: dev_t) -> Result<()> { Err(Errno(ENOSYS)) }
-    fn openat(_dirfd: c_int, _path: CStr, _oflag: c_int, _mode: mode_t) -> Result<c_int> { Err(Errno(ENOSYS)) }
+    fn openat(_dirfd: c_int, path: CStr, oflag: c_int, _mode: mode_t) -> Result<c_int> {
+        let pb = path.to_bytes();
+        if pb.is_empty() || pb.len() > 255 { return Err(Errno(EINVAL)); }
+        let pid = Self::getpid() as u32;
+        let vfs_flags =
+            (if oflag & O_CREAT != 0 { fs::VFS_O_CREATE } else { 0 }) |
+            (if oflag & O_TRUNC != 0 { fs::VFS_O_TRUNC } else { 0 }) |
+            (if oflag & O_APPEND != 0 { fs::VFS_O_APPEND } else { 0 });
+        let mut payload = Vec::with_capacity(9 + pb.len());
+        payload.extend_from_slice(&pid.to_le_bytes());
+        payload.push(pb.len() as u8);
+        payload.extend_from_slice(pb);
+        payload.extend_from_slice(&vfs_flags.to_le_bytes());
+        let mut resp = [0u8; 28];
+        let (status, _) = fs::vfs_call(fs::OP_OPEN, &payload, &mut resp)?;
+        if status < 0 { return Err(Errno(-status)); }
+        let vfs_fd = u32::from_le_bytes([resp[24], resp[25], resp[26], resp[27]]);
+        fs::fd_alloc(vfs_fd).ok_or(Errno(EMFILE))
+    }
     fn pipe2(_fildes: Out<[c_int; 2]>, _flags: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
     fn posix_fallocate(_fd: c_int, _offset: u64, _length: NonZeroU64) -> Result<()> { Err(Errno(ENOSYS)) }
     fn posix_getdents(_fildes: c_int, _buf: &mut [u8]) -> Result<usize> { Err(Errno(ENOSYS)) }
