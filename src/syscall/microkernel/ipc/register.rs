@@ -50,6 +50,9 @@ pub fn sys_service_register(name_ptr: u64, name_len: usize, port: u32) -> i64 {
         Ok(s) => s,
         Err(_) => return ERRNO_INVAL,
     };
+    if name.starts_with("proc.") || name.starts_with("endpoint.") {
+        return ERRNO_PERM;
+    }
     match register_endpoint(name, port, pid, 0) {
         Ok(()) => 0,
         Err(RegError::Full) => ERRNO_NOMEM,
