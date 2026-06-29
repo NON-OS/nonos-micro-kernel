@@ -6,6 +6,7 @@ use crate::{
     error::{Errno, Result},
     header::{
         errno::{EAFNOSUPPORT, EBADF, EINPROGRESS, EINVAL, EMFILE, ENOSYS},
+        fcntl::{F_GETFL, F_SETFL, O_NONBLOCK, O_RDWR},
         sys_socket::{msghdr, sockaddr, socklen_t},
     },
 };
@@ -111,4 +112,28 @@ pub fn close_fd(fd: c_int) -> Result<()> {
     rt::free(fd);
     if errno != 0 { return Err(Errno(rt::map_errno(errno))); }
     Ok(())
+}
+
+pub fn fcntl_sock(fd: c_int, cmd: c_int, arg: c_ulonglong) -> Result<c_int> {
+    use super::socket_rt as rt;
+    match cmd {
+        F_GETFL => {
+            let mut fl = O_RDWR;
+            if rt::nonblock_of(fd) { fl |= O_NONBLOCK; }
+            Ok(fl)
+        }
+        F_SETFL => {
+            let on = (arg as c_int & O_NONBLOCK) != 0;
+            let handle = rt::handle_of(fd).ok_or(Errno(EBADF))?;
+            rt::set_nonblock(fd, on);
+            let mut payload = [0u8; 8];
+            payload[0..4].copy_from_slice(&handle.to_le_bytes());
+            payload[4..8].copy_from_slice(&(if on { 1u32 } else { 0u32 }).to_le_bytes());
+            let mut resp = [0u8; 24];
+            let (errno, _) = rt::nskt_call(rt::OP_SETFLAGS, &payload, &mut resp)?;
+            if errno != 0 { return Err(Errno(rt::map_errno(errno))); }
+            Ok(0)
+        }
+        _ => Err(Errno(ENOSYS)),
+    }
 }

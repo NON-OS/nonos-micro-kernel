@@ -161,7 +161,12 @@ impl Pal for Sys {
         Ok(())
     }
     fn fstatvfs(_fildes: c_int, _buf: Out<statvfs>) -> Result<()> { Err(Errno(ENOSYS)) }
-    fn fcntl(_fildes: c_int, _cmd: c_int, _arg: c_ulonglong) -> Result<c_int> { Err(Errno(ENOSYS)) }
+    fn fcntl(fildes: c_int, cmd: c_int, arg: c_ulonglong) -> Result<c_int> {
+        if socket_rt::is_socket_fd(fildes) {
+            return socket::fcntl_sock(fildes, cmd, arg);
+        }
+        Err(Errno(ENOSYS))
+    }
     fn fpath(_fildes: c_int, _out: &mut [u8]) -> Result<usize> { Err(Errno(ENOSYS)) }
     fn fsync(_fildes: c_int) -> Result<()> { Err(Errno(ENOSYS)) }
     fn ftruncate(_fildes: c_int, _length: off_t) -> Result<()> { Err(Errno(ENOSYS)) }
