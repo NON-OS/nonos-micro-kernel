@@ -173,8 +173,17 @@ patch("src/ld_so/mod.rs",
       '#[cfg(any(target_os = "linux", target_os = "redox", target_os = "nonos"))]\npub unsafe fn init(')
 patch("src/ld_so/mod.rs",
       '#[cfg(all(target_os = "linux", target_arch = "x86_64"))]\n    {\n        const ARCH_GET_FS',
-      '#[cfg(all(target_os = "nonos", target_arch = "x86_64"))]\n    { tp = 0; }\n'
+      '#[cfg(all(target_os = "nonos", target_arch = "x86_64"))]\n    { tp = 1; }\n'
       '    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]\n    {\n        const ARCH_GET_FS')
+
+patch("src/ld_so/tcb.rs",
+      "    pub unsafe fn current() -> Option<&'static mut Self> {\n"
+      "        unsafe { Some(&mut *GenericTcb::<OsSpecific>::current_ptr()?.cast()) }\n    }",
+      "    #[cfg(target_os = \"nonos\")]\n"
+      "    pub unsafe fn current() -> Option<&'static mut Self> { None }\n"
+      "    #[cfg(not(target_os = \"nonos\"))]\n"
+      "    pub unsafe fn current() -> Option<&'static mut Self> {\n"
+      "        unsafe { Some(&mut *GenericTcb::<OsSpecific>::current_ptr()?.cast()) }\n    }")
 
 patch("src/crt0/src/lib.rs",
       '#[cfg(target_arch = "x86_64")]\nglobal_asm!(',
@@ -185,10 +194,14 @@ patch("src/crt0/src/lib.rs",
       '_start:\n'
       '    xor rbp, rbp\n'
       '    and rsp, -16\n'
-      '    sub rsp, 8\n'
-      '    push 0\n    push 0\n    push 0\n    push 0\n    push 0\n'
-      '    mov rdi, rsp\n'
-      '    call relibc_crt0\n'
+      '    xor edi, edi\n'
+      '    xor esi, esi\n'
+      '    xor edx, edx\n'
+      '    call main\n'
+      '    mov edi, eax\n'
+      '    mov rax, 0x5458454d\n'
+      '    syscall\n'
+      '    ud2\n'
       '    .size _start, . - _start\n'
       '"\n);\n\n'
       '#[cfg(all(target_arch = "x86_64", not(target_os = "nonos")))]\nglobal_asm!(')
