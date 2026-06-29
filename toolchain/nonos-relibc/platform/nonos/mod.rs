@@ -326,7 +326,10 @@ impl Pal for Sys {
     fn umask(_mask: mode_t) -> mode_t { 0 }
     unsafe fn execve(_path: CStr, _argv: *const *mut c_char, _envp: *const *mut c_char) -> Result<()> { Err(Errno(ENOSYS)) }
     unsafe fn fexecve(_fildes: c_int, _argv: *const *mut c_char, _envp: *const *mut c_char) -> Result<()> { Err(Errno(ENOSYS)) }
-    unsafe fn exit_thread(_stack_base: *mut (), _stack_size: usize) -> ! { Self::exit(0) }
+    unsafe fn exit_thread(_stack_base: *mut (), _stack_size: usize) -> ! {
+        unsafe { lowlevel::syscall1(lowlevel::MK_EXIT, 0); }
+        loop {}
+    }
     unsafe fn fork() -> Result<pid_t> { Err(Errno(ENOSYS)) }
     unsafe fn futex_wait(_addr: *mut u32, _val: u32, _deadline: Option<&timespec>) -> Result<()> { Ok(()) }
     unsafe fn futex_wake(_addr: *mut u32, _num: u32) -> Result<u32> { Ok(0) }
@@ -336,10 +339,16 @@ impl Pal for Sys {
         Ok(pthread::OsTid {})
     }
     unsafe fn rlct_kill(_os_tid: pthread::OsTid, _signal: usize) -> Result<()> { Err(Errno(ENOSYS)) }
-    fn current_os_tid() -> pthread::OsTid { pthread::OsTid::default() }
+    fn current_os_tid() -> pthread::OsTid {
+        let _pid = unsafe { lowlevel::syscall0(lowlevel::MK_GETPID) };
+        pthread::OsTid {}
+    }
     unsafe fn spawn(_program: CStr, _fac: Option<&crate::header::spawn::posix_spawn_file_actions_t>, _fat: Option<&crate::header::spawn::posix_spawnattr_t>, _argv: NulTerminated<*mut c_char>, _envp: Option<NulTerminated<*mut c_char>>) -> Result<pid_t> { Err(Errno(ENOSYS)) }
     fn waitpid(_pid: pid_t, _stat_loc: Option<Out<c_int>>, _options: c_int) -> Result<pid_t> { Err(Errno(ENOSYS)) }
-    fn sched_yield() -> Result<()> { Err(Errno(ENOSYS)) }
+    fn sched_yield() -> Result<()> {
+        unsafe { lowlevel::syscall0(lowlevel::MK_YIELD); }
+        Ok(())
+    }
     fn uname(_utsname: Out<utsname>) -> Result<()> { Err(Errno(ENOSYS)) }
 
     fn verify() -> bool {
