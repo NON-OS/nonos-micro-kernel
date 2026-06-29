@@ -234,6 +234,10 @@ microkernel-c-proof-smoketest = [
 microkernel-relibc-test-smoketest = [
   "microkernel-core",
   "nonos-dev-unverified-capsules",
+  "nonos-zk-rollout",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-ramfs",
+  "nonos-capsule-vfs",
   "nonos-capsule-relibc-test",
 ]
 
