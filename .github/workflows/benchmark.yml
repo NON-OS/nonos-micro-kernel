@@ -16,6 +16,11 @@ on:
         required: true
         default: true
         type: boolean
+      boot-runs:
+        description: "QEMU boot evidence runs"
+        required: true
+        default: "3"
+        type: string
   push:
     branches: [main]
   schedule:
@@ -38,5 +43,6 @@ jobs:
     with:
       trust-mode: ${{ github.event_name == 'workflow_dispatch' && inputs['trust-mode'] || 'scratch' }}
       boot-evidence: ${{ github.event_name != 'workflow_dispatch' || inputs['boot-evidence'] }}
+      boot-runs: ${{ github.event_name == 'schedule' && '3' || github.event_name == 'workflow_dispatch' && inputs['boot-runs'] || '1' }}
       output-root: benchmarks/runs
     secrets: inherit

@@ -23,6 +23,11 @@ on:
         required: false
         type: boolean
         default: true
+      boot-runs:
+        description: "number of QEMU boot evidence runs"
+        required: false
+        type: string
+        default: "1"
     secrets:
       SIGNING_KEY_BASE64:
         required: false
@@ -116,6 +121,7 @@ jobs:
           NONOS_BENCH_OUT: ${{ inputs['output-root'] }}/${{ github.run_id }}-${{ github.run_attempt }}
           NONOS_BENCH_BUILD_CMD: cargo run --release --manifest-path nonos-verify/Cargo.toml -- build
           NONOS_BENCH_BOOT_TIMEOUT: "420"
+          NONOS_BENCH_BOOT_RUNS: ${{ inputs['boot-runs'] }}
         run: |
           set -euo pipefail
           if [ "${{ inputs['strict'] }}" = "true" ]; then
