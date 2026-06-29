@@ -57,7 +57,8 @@ impl Pal for Sys {
         payload[4..8].copy_from_slice(&vfs_fd.to_le_bytes());
         payload[8..].copy_from_slice(buf);
         let mut resp = [0u8; 28];
-        let (status, _) = fs::vfs_call(fs::OP_WRITE, &payload, &mut resp)?;
+        let (status, data_len) = fs::vfs_call(fs::OP_WRITE, &payload, &mut resp)?;
+        if data_len < 4 { return Err(Errno(EIO)); }
         if status < 0 { return Err(Errno(-status)); }
         Ok(u32::from_le_bytes([resp[24], resp[25], resp[26], resp[27]]) as usize)
     }
@@ -117,6 +118,7 @@ impl Pal for Sys {
         if fildes == fildes2 { return Ok(fildes2); }
         if fildes2 < 3 { return Err(Errno(EBADF)); }
         let vfs_fd = fs::fd_vfs(fildes).ok_or(Errno(EBADF))?;
+        if fs::fd_vfs(fildes2).is_some() { let _ = Self::close(fildes2); }
         if !fs::fd_set(fildes2, vfs_fd) { return Err(Errno(EBADF)); }
         Ok(fildes2)
     }
@@ -138,7 +140,8 @@ impl Pal for Sys {
         payload.push(pb.len() as u8);
         payload.extend_from_slice(pb);
         let mut resp = [0u8; 36];
-        let (status, _) = fs::vfs_call(fs::OP_STAT, &payload, &mut resp)?;
+        let (status, data_len) = fs::vfs_call(fs::OP_STAT, &payload, &mut resp)?;
+        if data_len < 12 { return Err(Errno(EIO)); }
         if status < 0 { return Err(Errno(-status)); }
         let size = u64::from_le_bytes([resp[24], resp[25], resp[26], resp[27],
                                        resp[28], resp[29], resp[30], resp[31]]);
@@ -190,7 +193,8 @@ impl Pal for Sys {
         payload.extend_from_slice(pb);
         payload.extend_from_slice(&vfs_flags.to_le_bytes());
         let mut resp = [0u8; 28];
-        let (status, _) = fs::vfs_call(fs::OP_OPEN, &payload, &mut resp)?;
+        let (status, data_len) = fs::vfs_call(fs::OP_OPEN, &payload, &mut resp)?;
+        if data_len < 4 { return Err(Errno(EIO)); }
         if status < 0 { return Err(Errno(-status)); }
         let vfs_fd = u32::from_le_bytes([resp[24], resp[25], resp[26], resp[27]]);
         fs::fd_alloc(vfs_fd).ok_or(Errno(EMFILE))
