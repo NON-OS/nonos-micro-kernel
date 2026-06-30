@@ -28,6 +28,7 @@ pub fn run_init() -> ! {
     spawn_plan::spawn_core_after_ramfs();
     spawn_plan::spawn_display_core();
     spawn_plan::spawn_drivers();
+    run_nsfb_probe();
     spawn_plan::spawn_vfs();
     spawn_plan::spawn_network();
     run_c_net();
@@ -70,6 +71,17 @@ fn run_c_proof() {
 
 #[cfg(not(feature = "nonos-capsule-c-proof"))]
 fn run_c_proof() {}
+
+#[cfg(feature = "nonos-capsule-nsfb-probe")]
+fn run_nsfb_probe() {
+    match crate::userspace::capsule_nsfb_probe::spawn_nsfb_probe_capsule() {
+        Ok(()) => boot_log::ok("NSFB-PROBE", "capsule spawned"),
+        Err(_) => boot_log::error("NSFB-PROBE capsule spawn failed"),
+    }
+}
+
+#[cfg(not(feature = "nonos-capsule-nsfb-probe"))]
+fn run_nsfb_probe() {}
 
 #[cfg(feature = "nonos-capsule-relibc-test")]
 fn run_relibc_test() {
