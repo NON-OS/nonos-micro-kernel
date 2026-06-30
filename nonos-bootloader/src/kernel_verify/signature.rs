@@ -16,13 +16,15 @@
 
 use uefi::cstr16;
 use uefi::prelude::*;
-
 use super::delay::mini_delay;
-use super::display::{print, print_hex_bytes};
+use super::display::print;
+use super::signature_display::display_signature_components;
+use super::signature_message::signed_kernel_message;
+use super::signature_passed::signature_passed;
 use super::types::CryptoVerifyResult;
 use super::verify_error::display_verification_error;
 use crate::crypto::sig::verify_signature_bytes;
-use crate::log::logger::{log_error, log_info};
+use crate::log::logger::log_error;
 
 pub fn verify_and_display_signature(
     kernel_hash: &[u8; 32],
@@ -41,9 +43,7 @@ pub fn verify_and_display_signature(
     }
     display_signature_components(signature, st);
     print(st, cstr16!("  [CRYPTO] Verifying Ed25519 signature...\r\n"));
-    let mut signed_message = [0u8; 36];
-    signed_message[..32].copy_from_slice(kernel_hash);
-    signed_message[32..].copy_from_slice(&rollback_index.to_le_bytes());
+    let signed_message = signed_kernel_message(kernel_hash, rollback_index);
     match verify_signature_bytes(&signed_message, signature) {
         Ok(key_id) => signature_passed(result, &key_id, st),
         Err(e) => {
@@ -53,25 +53,5 @@ pub fn verify_and_display_signature(
             display_verification_error(e, st);
         }
     }
-    mini_delay();
-}
-
-fn signature_passed(result: &mut CryptoVerifyResult, key_id: &[u8], st: &mut SystemTable<Boot>) {
-    result.signature_valid = true;
-    log_info("kernel_verify", "Ed25519 signature VERIFIED against trusted key");
-    print(st, cstr16!("  [CRYPTO] Ed25519 verify ....................... [PASS]\r\n"));
-    mini_delay();
-    print(st, cstr16!("  [CRYPTO] Signer key ID: "));
-    print_hex_bytes(st, &key_id[0..8]);
-    print(st, cstr16!("...\r\n"));
-}
-
-fn display_signature_components(signature: &[u8], st: &mut SystemTable<Boot>) {
-    print(st, cstr16!("  [CRYPTO] Sig R: "));
-    print_hex_bytes(st, &signature[0..8]);
-    print(st, cstr16!("...\r\n"));
-    print(st, cstr16!("  [CRYPTO] Sig S: "));
-    print_hex_bytes(st, &signature[32..40]);
-    print(st, cstr16!("...\r\n"));
     mini_delay();
 }

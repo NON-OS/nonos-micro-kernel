@@ -14,28 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod delay;
-mod display;
-mod display_status;
-mod elf;
-mod footer;
-mod hash;
-mod helpers;
-mod key;
-mod signature;
-mod signature_display;
-mod signature_message;
-mod signature_passed;
-mod size;
-mod types;
-mod verify;
-mod verify_error;
+use uefi::cstr16;
+use uefi::prelude::*;
 
-pub use delay::mini_delay;
-pub use display::{byte_to_hex, print, print_hex_bytes, print_hex_char};
-pub use display_status::{
-    print_kernel_size, print_verification_failure, print_verification_success,
-};
-pub use footer::handle_missing_footer;
-pub use types::{CryptoVerifyResult, MIN_KERNEL_SIZE, SIGNATURE_SIZE};
-pub use verify::verify_kernel_crypto;
+use super::delay::mini_delay;
+use super::display::{print, print_hex_bytes};
+use super::types::CryptoVerifyResult;
+use crate::log::logger::log_info;
+
+pub fn signature_passed(result: &mut CryptoVerifyResult, key_id: &[u8], st: &mut SystemTable<Boot>) {
+    result.signature_valid = true;
+    log_info("kernel_verify", "Ed25519 signature VERIFIED against trusted key");
+    print(st, cstr16!("  [CRYPTO] Ed25519 verify ....................... [PASS]\r\n"));
+    mini_delay();
+    print(st, cstr16!("  [CRYPTO] Signer key ID: "));
+    print_hex_bytes(st, &key_id[0..8]);
+    print(st, cstr16!("...\r\n"));
+}
