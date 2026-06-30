@@ -17,6 +17,7 @@
 use x86_64::structures::idt::InterruptStackFrame;
 
 use super::context::{log_exception, ExceptionContext};
+use crate::interrupts::idt::halt_loop;
 use crate::interrupts::stats;
 
 pub fn handle(frame: InterruptStackFrame) {
@@ -31,10 +32,12 @@ pub fn handle(frame: InterruptStackFrame) {
     }
 }
 
-fn signal_user_process(_ctx: &ExceptionContext) {
+fn signal_user_process(_ctx: &ExceptionContext) -> ! {
     crate::log::logger::log_warning!("User process caused overflow exception");
+    crate::process::exit::exit_and_yield(-8, true)
 }
 
-fn kernel_overflow(_ctx: &ExceptionContext) {
+fn kernel_overflow(_ctx: &ExceptionContext) -> ! {
     crate::log::logger::log_error!("Kernel overflow detected");
+    halt_loop();
 }

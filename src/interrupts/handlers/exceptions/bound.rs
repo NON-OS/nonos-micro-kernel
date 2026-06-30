@@ -17,6 +17,7 @@
 use x86_64::structures::idt::InterruptStackFrame;
 
 use super::context::{log_exception, ExceptionContext};
+use crate::interrupts::idt::halt_loop;
 use crate::interrupts::stats;
 
 pub fn handle(frame: InterruptStackFrame) {
@@ -31,10 +32,12 @@ pub fn handle(frame: InterruptStackFrame) {
     }
 }
 
-fn terminate_user_process(_ctx: &ExceptionContext) {
+fn terminate_user_process(_ctx: &ExceptionContext) -> ! {
     crate::log::logger::log_error!("User process exceeded array bounds");
+    crate::process::exit::exit_and_yield(-11, true)
 }
 
-fn kernel_bounds_error(_ctx: &ExceptionContext) {
+fn kernel_bounds_error(_ctx: &ExceptionContext) -> ! {
     crate::log::logger::log_critical("Kernel bounds check failed");
+    halt_loop();
 }
