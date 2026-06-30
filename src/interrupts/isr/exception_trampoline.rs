@@ -33,6 +33,8 @@ macro_rules! exc_tramp_err {
         pub unsafe extern "C" fn $tramp() {
             core::arch::naked_asm!(
                 "test byte ptr [rsp + 16], 3", "jz 1f", "swapgs", "1:",
+                // User RFLAGS may carry DF=1; Rust handlers require forward string ops.
+                "cld",
                 "push rax\npush rcx\npush rdx\npush rbx\npush rbp\npush rsi\npush rdi\npush r8\npush r9\npush r10\npush r11\npush r12\npush r13\npush r14\npush r15\nmov rbp, rsp",
                 "lea rdi, [rbp + 128]", "mov rsi, [rbp + 120]",
                 "sub rsp, 528", "and rsp, -16", "fxsave [rsp]", "mov rbx, rsp",
@@ -56,6 +58,8 @@ macro_rules! exc_tramp_noerr {
         pub unsafe extern "C" fn $tramp() {
             core::arch::naked_asm!(
                 "test byte ptr [rsp + 8], 3", "jz 1f", "swapgs", "1:",
+                // User RFLAGS may carry DF=1; Rust handlers require forward string ops.
+                "cld",
                 "push rax\npush rcx\npush rdx\npush rbx\npush rbp\npush rsi\npush rdi\npush r8\npush r9\npush r10\npush r11\npush r12\npush r13\npush r14\npush r15\nmov rbp, rsp",
                 "lea rdi, [rbp + 120]",
                 "sub rsp, 528", "and rsp, -16", "fxsave [rsp]", "mov rbx, rsp",

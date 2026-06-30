@@ -16,6 +16,8 @@
 
 syscall_entry_asm:
     swapgs
+    /* Rust and C string/memory code require DF=0 even if user RFLAGS had DF set. */
+    cld
     mov     gs:PCPU_USER_STACK, rsp
     mov     rsp, gs:PCPU_KERN_STACK
 
