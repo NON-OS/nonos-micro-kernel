@@ -1,6 +1,7 @@
 #ifndef NONOS_SURFACE_H
 #define NONOS_SURFACE_H
 
+#include <stddef.h>
 #include "nonos_sys.h"
 
 #define PROT_RW                 0x3
@@ -16,6 +17,14 @@ struct surface_descriptor {
     u64 base_va;
     u64 flags;
 };
+_Static_assert(sizeof(struct surface_descriptor) == 40,
+               "surface_descriptor size must be 40 bytes");
+_Static_assert(offsetof(struct surface_descriptor, byte_len) == 16,
+               "surface_descriptor byte_len must be at offset 16");
+_Static_assert(offsetof(struct surface_descriptor, base_va) == 24,
+               "surface_descriptor base_va must be at offset 24");
+_Static_assert(offsetof(struct surface_descriptor, flags) == 32,
+               "surface_descriptor flags must be at offset 32");
 
 static inline u64 nonos_mmap(u64 len) {
     return (u64)nonos_sys6(SYS_MMAP, 0, len, PROT_RW, MAP_PRIVATE_ANON,
