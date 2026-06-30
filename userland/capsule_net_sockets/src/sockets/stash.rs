@@ -45,3 +45,7 @@ pub fn put(pid: u32, handle: u32, bytes: &[u8]) {
 pub fn has(pid: u32, handle: u32) -> bool {
     STASH.lock().get(&(pid, handle)).is_some_and(|b| !b.is_empty())
 }
+
+pub fn clear(pid: u32, handle: u32) {
+    STASH.lock().remove(&(pid, handle));
+}

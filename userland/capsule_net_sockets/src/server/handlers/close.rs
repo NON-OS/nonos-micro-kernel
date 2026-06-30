@@ -19,7 +19,7 @@ use crate::protocol::{E_NO_HANDLE, E_NO_TRANSPORT, E_OK, OP_CLOSE};
 use crate::server::handlers::io::u32_at;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
-use crate::sockets::{Kind, SocketKey, SOCKETS};
+use crate::sockets::{stash, Kind, SocketKey, SOCKETS};
 use crate::state;
 
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
@@ -51,6 +51,7 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     if !SOCKETS.close(key) {
         return status(pid, req, E_NO_HANDLE, tx);
     }
+    stash::clear(pid, handle);
     status(pid, req, E_OK, tx);
 }
 
