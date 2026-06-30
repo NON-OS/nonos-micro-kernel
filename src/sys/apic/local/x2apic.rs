@@ -22,6 +22,8 @@
 
 use core::sync::atomic::Ordering;
 
+use crate::arch::x86_64::boot::cpu_ops::{rdmsr, wrmsr};
+
 use super::state::LAPIC_X2;
 
 const IA32_APIC_BASE: u32 = 0x1B;
@@ -45,20 +47,4 @@ pub(in crate::sys::apic) fn read(reg: u32) -> u32 {
 
 pub(in crate::sys::apic) fn write(reg: u32, value: u32) {
     unsafe { wrmsr(X2APIC_MSR_BASE + (reg >> 4), value as u64) }
-}
-
-unsafe fn rdmsr(msr: u32) -> u64 {
-    let (lo, hi): (u32, u32);
-    unsafe {
-        core::arch::asm!("rdmsr", in("ecx") msr, out("eax") lo, out("edx") hi,
-            options(nomem, nostack, preserves_flags));
-    }
-    ((hi as u64) << 32) | lo as u64
-}
-
-unsafe fn wrmsr(msr: u32, value: u64) {
-    unsafe {
-        core::arch::asm!("wrmsr", in("ecx") msr, in("eax") value as u32,
-            in("edx") (value >> 32) as u32, options(nomem, nostack, preserves_flags));
-    }
 }
