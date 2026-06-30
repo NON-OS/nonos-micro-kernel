@@ -15,41 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use x86_64::registers::control::{Cr0, Cr0Flags};
-use x86_64::structures::idt::InterruptStackFrame;
 
-use super::context::{log_exception, ExceptionContext};
-use crate::interrupts::stats;
-
-pub fn handle(frame: InterruptStackFrame) {
-    let ctx = ExceptionContext::from_frame(&frame);
-    log_exception("DEVICE NOT AVAILABLE", &ctx);
-    stats::increment_exceptions();
-
-    let cr0 = Cr0::read();
-
-    if cr0.contains(Cr0Flags::TASK_SWITCHED) {
-        handle_task_switch_fpu();
-    } else if cr0.contains(Cr0Flags::EMULATE_COPROCESSOR) {
-        handle_fpu_emulation(&ctx);
-    } else {
-        handle_missing_fpu(&ctx);
-    }
-}
-
-fn handle_task_switch_fpu() {
-    // SAFETY: Clearing TS flag to allow FPU access after task switch
+pub fn handle_task_switch_fpu() {
     unsafe {
         Cr0::update(|cr0| {
             cr0.remove(Cr0Flags::TASK_SWITCHED);
         });
     }
     crate::log::logger::log_debug!("FPU context restored after task switch");
-}
-
-fn handle_fpu_emulation(_ctx: &ExceptionContext) {
-    crate::log::logger::log_warning!("FPU emulation not supported");
-}
-
-fn handle_missing_fpu(_ctx: &ExceptionContext) {
-    crate::log::logger::log_error!("No FPU available");
 }
