@@ -14,10 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dispatch;
-mod first_entry;
-mod kernel_thread;
-mod resume;
-mod validate_resume;
+use crate::process::userspace::{UserContext, USER_CS, USER_DS};
 
-pub(crate) use dispatch::switch_to_user_pcb_x86_64;
+const USER_SPACE_MAX: u64 = 0x0000_7FFF_FFFF_FFFF;
+const RFLAGS_PRIVILEGED_MASK: u64 = 0x0000_0000_001F_7500;
+const RFLAGS_RESERVED_SET: u64 = 0x0000_0000_0000_0002;
+const RFLAGS_IF: u64 = 0x0000_0000_0000_0200;
+
+pub(super) fn sanitize_user_context(ctx: &mut UserContext) -> bool {
+    if ctx.cs != USER_CS as u64 || ctx.ss != USER_DS as u64 {
+        return false;
+    }
+    if ctx.rip > USER_SPACE_MAX || ctx.rsp > USER_SPACE_MAX || ctx.rsp == 0 {
+        return false;
+    }
+    ctx.rflags = (ctx.rflags & !RFLAGS_PRIVILEGED_MASK) | RFLAGS_RESERVED_SET | RFLAGS_IF;
+    true
+}
