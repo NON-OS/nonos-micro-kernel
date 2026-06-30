@@ -56,6 +56,11 @@ syscall_entry_asm:
     pop     rcx
     pop     r11
     pop     rbp
+    push    rax
+    movabs  rax, 0xffffffffffe08aff
+    and     r11, rax
+    or      r11, 0x202
+    pop     rax
 
     /* SYSRETQ requires canonical user RIP. */
     bt      rcx, 47
