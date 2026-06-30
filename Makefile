@@ -537,6 +537,7 @@ include userland/capsule_std_proof/Capsule.mk
 include userland/capsule_c_proof/Capsule.mk
 include userland/capsule_relibc_test/Capsule.mk
 include userland/capsule_c_net/Capsule.mk
+include userland/capsule_nsfb_probe/Capsule.mk
 include userland/capsule_ripgrep/Capsule.mk
 include userland/capsule_ramfs/Capsule.mk
 include userland/capsule_keyring/Capsule.mk
@@ -864,6 +865,19 @@ nonos-mk-cnet-smoke-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 
 nonos-mk-cnet-smoke-test:
 	@CNET_PROD_TARGET=nonos-mk-cnet-smoke-prod ./tests/boot/cnet.sh
+
+.PHONY: nonos-mk-nsfbprobe-smoke-prod nonos-mk-nsfbprobe-smoke-test
+nonos-mk-nsfbprobe-smoke-prod: $(compositor_ARTIFACTS) \
+		$(driver-virtio-gpu_ARTIFACTS) $(nsfb-probe_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-nsfb-probe-smoketest, unverified)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-nsfb-probe-smoketest
+
+nonos-mk-nsfbprobe-smoke-test:
+	@NSFBPROBE_PROD_TARGET=nonos-mk-nsfbprobe-smoke-prod ./tests/boot/nsfbprobe.sh
 
 nonos-mk-ramfs-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
