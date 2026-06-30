@@ -69,6 +69,7 @@ nonos-capsule-std-proof         = []
 nonos-capsule-c-proof           = []
 nonos-capsule-relibc-test       = []
 nonos-capsule-c-net             = []
+nonos-capsule-nsfb-probe        = []
 nonos-capsule-ripgrep           = []
 nonos-capsule-ramfs             = []
 nonos-capsule-wallpaper         = []
@@ -230,6 +231,33 @@ microkernel-c-proof-smoketest = [
   "microkernel-core",
   "nonos-dev-unverified-capsules",
   "nonos-capsule-c-proof",
+]
+
+# Phase-4 framebuffer probe (verified path). Brings up the compositor
+# and the virtio-gpu driver so a real framebuffer exists, then spawns
+# nsfb_probe which registers a surface, reads OP_DISPLAY_INFO, paints a
+# gradient, and presents it.
+microkernel-nsfb-probe = [
+  "microkernel-core",
+  "nonos-production",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-compositor",
+  "nonos-capsule-driver-virtio-gpu",
+  "nonos-capsule-nsfb-probe",
+]
+
+# Unverified smoke build of the framebuffer probe: spawns nsfb_probe via
+# the legacy path while the NZKCAPS2 migration is owned elsewhere. The
+# compositor + virtio-gpu carry real ZK trailers that the always-on
+# transparent verifier would reject, so `nonos-zk-rollout` keeps a stale
+# trailer non-fatal — the same reason the cnet/relibc smoketests set it.
+microkernel-nsfb-probe-smoketest = [
+  "microkernel-core",
+  "nonos-dev-unverified-capsules",
+  "nonos-zk-rollout",
+  "nonos-capsule-compositor",
+  "nonos-capsule-driver-virtio-gpu",
+  "nonos-capsule-nsfb-probe",
 ]
 
 microkernel-relibc-test-smoketest = [
