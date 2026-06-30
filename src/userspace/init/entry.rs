@@ -30,6 +30,7 @@ pub fn run_init() -> ! {
     spawn_plan::spawn_drivers();
     spawn_plan::spawn_vfs();
     spawn_plan::spawn_network();
+    run_c_net();
     spawn_plan::spawn_desktop();
     spawn_plan::spawn_market();
     spawn_plan::spawn_apps();
@@ -80,6 +81,17 @@ fn run_relibc_test() {
 
 #[cfg(not(feature = "nonos-capsule-relibc-test"))]
 fn run_relibc_test() {}
+
+#[cfg(feature = "nonos-capsule-c-net")]
+fn run_c_net() {
+    match crate::userspace::capsule_c_net::spawn_c_net_capsule() {
+        Ok(()) => boot_log::ok("C-NET", "capsule spawned"),
+        Err(_) => boot_log::error("C-NET capsule spawn failed"),
+    }
+}
+
+#[cfg(not(feature = "nonos-capsule-c-net"))]
+fn run_c_net() {}
 
 #[cfg(feature = "nonos-capsule-ripgrep")]
 fn run_ripgrep() {

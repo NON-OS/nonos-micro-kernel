@@ -68,6 +68,7 @@ nonos-capsule-proof-io          = []
 nonos-capsule-std-proof         = []
 nonos-capsule-c-proof           = []
 nonos-capsule-relibc-test       = []
+nonos-capsule-c-net             = []
 nonos-capsule-ripgrep           = []
 nonos-capsule-ramfs             = []
 nonos-capsule-wallpaper         = []
@@ -239,6 +240,23 @@ microkernel-relibc-test-smoketest = [
   "nonos-capsule-ramfs",
   "nonos-capsule-vfs",
   "nonos-capsule-relibc-test",
+]
+
+microkernel-cnet-smoketest = [
+  "microkernel-core",
+  "nonos-dev-unverified-capsules",
+  "nonos-zk-rollout",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-driver-virtio-net",
+  "nonos-capsule-net-l2",
+  "nonos-capsule-net-ip",
+  "nonos-capsule-net-udp",
+  "nonos-capsule-net-dhcp",
+  "nonos-capsule-net-tcp",
+  "nonos-capsule-net-dns",
+  "nonos-capsule-net-sockets",
+  "nonos-capsule-net-nym",
+  "nonos-capsule-c-net",
 ]
 
 microkernel-keyring = [

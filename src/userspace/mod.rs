@@ -62,6 +62,7 @@ pub mod capsule_settings;
 pub mod capsule_setup_wizard;
 pub mod capsule_snake;
 pub mod capsule_c_proof;
+pub mod capsule_c_net;
 pub mod capsule_relibc_test;
 pub mod capsule_std_proof;
 pub mod capsule_terminal;

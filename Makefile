@@ -536,6 +536,7 @@ include userland/capsule_proof_io/Capsule.mk
 include userland/capsule_std_proof/Capsule.mk
 include userland/capsule_c_proof/Capsule.mk
 include userland/capsule_relibc_test/Capsule.mk
+include userland/capsule_c_net/Capsule.mk
 include userland/capsule_ripgrep/Capsule.mk
 include userland/capsule_ramfs/Capsule.mk
 include userland/capsule_keyring/Capsule.mk
@@ -848,6 +849,18 @@ nonos-mk-relibc-smoke-prod: $(relibc-test_ARTIFACTS) \
 
 nonos-mk-relibc-smoke-test:
 	@CPROOF_PROD_TARGET=nonos-mk-relibc-smoke-prod ./tests/boot/relibc.sh
+
+.PHONY: nonos-mk-cnet-smoke-prod
+nonos-mk-cnet-smoke-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
+		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
+		$(net-dhcp_ARTIFACTS) $(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) \
+		$(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) $(c-net_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-cnet-smoketest, unverified)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-cnet-smoketest
 
 nonos-mk-ramfs-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
