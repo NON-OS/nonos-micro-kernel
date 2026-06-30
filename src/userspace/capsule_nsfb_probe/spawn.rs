@@ -68,3 +68,18 @@ pub fn spawn_nsfb_probe_capsule() -> Result<(), SpawnError> {
     capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
     Ok(())
 }
+
+#[cfg(feature = "nonos-dev-unverified-capsules")]
+pub fn spawn_nsfb_probe_capsule() -> Result<(), SpawnError> {
+    let spec = CapsuleSpec {
+        name: SERVICE_NAME,
+        service_port: SERVICE_PORT,
+        reply_inbox: REPLY_INBOX,
+        reply_port: REPLY_PORT,
+        elf: NSFB_PROBE_ELF,
+        caps_bits: requested_caps(),
+        debug_tag: b"",
+    };
+    capsule_spawn::spawn(&spec)?;
+    Ok(())
+}
