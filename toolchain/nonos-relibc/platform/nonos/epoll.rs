@@ -46,7 +46,10 @@ impl PalEpoll for Sys {
     unsafe fn epoll_pwait(epfd: c_int, events: *mut epoll_event, maxevents: c_int, timeout: c_int, _sigmask: *const sigset_t) -> Result<usize> {
         use super::epoll_rt as ep;
         use super::socket_rt as rt;
-        let max = if maxevents > 0 { maxevents as usize } else { 0 };
+        if maxevents <= 0 {
+            return Err(Errno(EINVAL));
+        }
+        let max = maxevents as usize;
         let deadline = super::now_ms().saturating_add(timeout as i64);
         loop {
             let mut n = 0usize;
