@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::tlb::flush_tlb_pcid;
-use super::types::MAX_PCID;
+use super::{pcid_features::supports_pcid_invalidation, tlb::flush_tlb_pcid, types::MAX_PCID};
 use core::sync::atomic::{AtomicBool, Ordering};
 use spin::Mutex;
 
@@ -23,7 +22,7 @@ const CR4_PCIDE: u64 = 1 << 17;
 
 pub const KERNEL_PCID: u16 = 0;
 
-static PCID_BITMAP: Mutex<[u64; 64]> = Mutex::new([0; 64]); // 64 * 64 = 4096 bits
+static PCID_BITMAP: Mutex<[u64; 64]> = Mutex::new([0; 64]);
 static PCID_ENABLED: AtomicBool = AtomicBool::new(false);
 
 pub fn pcid_enabled() -> bool {
@@ -31,18 +30,10 @@ pub fn pcid_enabled() -> bool {
 }
 
 pub fn enable_pcid() {
-    // Check if PCID is supported
-    let cpuid = core::arch::x86_64::__cpuid(1);
-    if cpuid.ecx & (1 << 17) == 0 {
-        crate::log::log_warning!("[ADDR_SPACE] PCID not supported by CPU");
+    if !supports_pcid_invalidation() {
         return;
     }
 
-    // SAFETY: CR4 register manipulation is safe when:
-    // 1. We are in ring 0 (kernel mode) - always true in kernel code
-    // 2. We have verified PCID support via CPUID above
-    // 3. The PCIDE bit only enables a performance optimization feature
-    // The nomem/nostack options are correct as these are pure register operations.
     unsafe {
         let cr4: u64;
         core::arch::asm!("mov {}, cr4", out(reg) cr4, options(nomem, nostack));
@@ -56,7 +47,6 @@ pub fn enable_pcid() {
 pub fn allocate_pcid() -> u16 {
     let mut bitmap = PCID_BITMAP.lock();
 
-    // PCID 0 is reserved for kernel
     for i in 1..MAX_PCID {
         let word_idx = (i / 64) as usize;
         let bit_idx = i % 64;
@@ -67,14 +57,13 @@ pub fn allocate_pcid() -> u16 {
         }
     }
 
-    // No free PCID, return 0 (will share with kernel)
     crate::log::log_warning!("[ADDR_SPACE] PCID exhausted, sharing with kernel");
     0
 }
 
 pub fn release_pcid(pcid: u16) {
     if pcid == 0 {
-        return; // Kernel PCID
+        return;
     }
 
     let mut bitmap = PCID_BITMAP.lock();
@@ -82,6 +71,5 @@ pub fn release_pcid(pcid: u16) {
     let bit_idx = pcid % 64;
     bitmap[word_idx] &= !(1u64 << bit_idx);
 
-    // Flush TLB entries for this PCID
     flush_tlb_pcid(pcid);
 }
