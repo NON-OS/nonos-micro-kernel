@@ -850,7 +850,7 @@ nonos-mk-relibc-smoke-prod: $(relibc-test_ARTIFACTS) \
 nonos-mk-relibc-smoke-test:
 	@CPROOF_PROD_TARGET=nonos-mk-relibc-smoke-prod ./tests/boot/relibc.sh
 
-.PHONY: nonos-mk-cnet-smoke-prod
+.PHONY: nonos-mk-cnet-smoke-prod nonos-mk-cnet-smoke-test
 nonos-mk-cnet-smoke-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
 		$(net-dhcp_ARTIFACTS) $(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) \
@@ -861,6 +861,9 @@ nonos-mk-cnet-smoke-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-cnet-smoketest
+
+nonos-mk-cnet-smoke-test:
+	@CNET_PROD_TARGET=nonos-mk-cnet-smoke-prod ./tests/boot/cnet.sh
 
 nonos-mk-ramfs-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key

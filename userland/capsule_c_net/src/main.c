@@ -20,7 +20,12 @@ int main(void) {
     addr.sin_port = htons(7);
     addr.sin_addr.s_addr = htonl(0x0A0002C8);
 
-    int rc = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
+    int rc = -1;
+    for (int attempt = 0; attempt < 60; attempt++) {
+        rc = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
+        if (rc == 0 || errno == EINPROGRESS) break;
+        poll(NULL, 0, 500);
+    }
     if (rc < 0 && errno != EINPROGRESS) { EMIT("[C-NET] FAIL connect\n"); return 1; }
 
     struct pollfd pfd;
