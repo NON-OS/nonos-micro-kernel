@@ -3,10 +3,32 @@
 #include "nonos_scene.h"
 
 #define SCENE_Z 1000u
+#define ACQUIRE_ATTEMPTS 60u
+#define ACQUIRE_YIELDS 256u
 
 static void hang(void) {
     for (;;)
         nonos_yield();
+}
+
+static void acquire_delay(void) {
+    for (u32 i = 0; i < ACQUIRE_YIELDS; i++)
+        nonos_yield();
+}
+
+static u32 acquire_compositor(struct display_info *di, i64 *last_rc) {
+    *last_rc = 0;
+    for (u32 attempt = 0; attempt < ACQUIRE_ATTEMPTS; attempt++) {
+        u32 port = nonos_lookup_port("compositor", 10);
+        if (port) {
+            i64 rc = ncmp_display_info(port, 1, di);
+            if (rc == 0)
+                return port;
+            *last_rc = rc;
+        }
+        acquire_delay();
+    }
+    return 0;
 }
 
 static void paint_gradient(u64 base, u32 w, u32 h, u32 stride) {
@@ -22,12 +44,16 @@ static void paint_gradient(u64 base, u32 w, u32 h, u32 stride) {
 }
 
 int main(void) {
-    u32 port = nonos_lookup_port("compositor", 10);
-    if (!port) { emit_fail("lookup", 0); hang(); }
-
     struct display_info di;
-    i64 rc = ncmp_display_info(port, 1, &di);
-    if (rc != 0) { emit_fail("display_info", rc); hang(); }
+    i64 rc = 0;
+    u32 port = acquire_compositor(&di, &rc);
+    if (!port) {
+        if (rc == 0)
+            emit_fail("lookup", 0);
+        else
+            emit_fail("display_info", rc);
+        hang();
+    }
 
     u64 byte_len = (u64)di.stride * (u64)di.height;
     u64 base = nonos_mmap(byte_len);
