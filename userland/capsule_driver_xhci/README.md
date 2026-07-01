@@ -50,7 +50,7 @@ class behavior. It grants resources and revokes them.
 ## Authority
 
 The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, `Irq`,
-and `Dma` (`CAPSULE_REQUIRED_CAPS = 0xF8018`). It has no filesystem, input
+and `Dma` (`CAPSULE_REQUIRED_CAPS = 0xF8019`). It has no filesystem, input
 routing, audio, network, graphics, admin, or debug authority.
 
 ```text

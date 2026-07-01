@@ -22,14 +22,14 @@ capsule_installer -- OP_PAY --> capsule_payment -- sign --> keyring
 ## Microkernel contract
 
 ```text
-CAPSULE_REQUIRED_CAPS = 0x10019
+CAPSULE_REQUIRED_CAPS = 0x19
 ```
 
 The capsule resolves the payment capsule with `MkServiceLookup`, drives
 settlement with `MkIpcCall`, serves callers with `MkIpcRecvFrom` plus
 `MkIpcSendToPid`, invokes `MkCapsuleLoad` for VFS-backed capsule artifacts, and
-terminates only through `MkExit`. It carries the `Driver` bit only because the
-current syscall contract gates `MkCapsuleLoad` as a driver-class authority.
+terminates only through `MkExit`. The loader syscall requires the same valid
+`CoreExec | IPC | Memory` authority shape that the installer manifest carries.
 
 ## Interface contract
 

@@ -17,6 +17,7 @@
 use x86_64::structures::idt::InterruptStackFrame;
 
 use super::context::{log_exception, ExceptionContext};
+use crate::interrupts::idt::halt_loop;
 use crate::interrupts::stats;
 
 pub fn handle(frame: InterruptStackFrame) {
@@ -31,13 +32,15 @@ pub fn handle(frame: InterruptStackFrame) {
     }
 }
 
-fn handle_user_alignment(_ctx: &ExceptionContext) {
+fn handle_user_alignment(_ctx: &ExceptionContext) -> ! {
     crate::log::logger::log_warning!(
         "User process alignment check at {:#x}",
         _ctx.instruction_pointer
     );
+    crate::process::exit::exit_and_yield(-7, true)
 }
 
-fn handle_kernel_alignment(_ctx: &ExceptionContext) {
+fn handle_kernel_alignment(_ctx: &ExceptionContext) -> ! {
     crate::log::logger::log_error!("Kernel alignment check at {:#x}", _ctx.instruction_pointer);
+    halt_loop();
 }

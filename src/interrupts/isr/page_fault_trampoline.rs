@@ -33,6 +33,8 @@ pub unsafe extern "C" fn page_fault_trampoline() {
         "jz 1f",
         "swapgs",
         "1:",
+        // User RFLAGS may carry DF=1; Rust handlers require forward string ops.
+        "cld",
         "push rax",
         "push rcx",
         "push rdx",

@@ -42,6 +42,8 @@ unsafe extern "C" fn interrupt_common() {
         "push r13",
         "push r14",
         "push r15",
+        // User RFLAGS may carry DF=1; Rust handlers require forward string ops.
+        "cld",
         "mov ax, ds",
         "push rax",
         "mov ax, 0x10",

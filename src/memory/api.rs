@@ -22,22 +22,20 @@ pub fn get_memory_stats() -> MemorySystemStats {
     get_memory_system_stats()
 }
 
-// WAVE 3 (Boundary Hardening) target: this function performs a privileged
-// raw read of user memory after only a VMA range check. No copy_from_user
-// fault discipline, no UAF/page-fault guard. Audit-flagged trust-boundary
-// violation (DEEP_AUDIT_PASS2). Preserved verbatim during Phase 1
-// consolidation; rewrite belongs to the syscall-boundary hardening pass,
-// not memory consolidation.
 pub fn read_process_memory(pid: u32, addr: u64, buf: &mut [u8]) -> Result<usize, i32> {
+    if buf.is_empty() {
+        return Ok(0);
+    }
+    if crate::process::current_pid().ok_or(-3)? != pid {
+        return Err(-1);
+    }
     let pcb = crate::process::PROCESS_TABLE.find_by_pid(pid).ok_or(-3)?;
     let mem = pcb.memory.lock();
     for vma in &mem.vmas {
         if addr >= vma.start.as_u64() && addr < vma.end.as_u64() {
             let max_len = (vma.end.as_u64() - addr) as usize;
             let copy_len = buf.len().min(max_len);
-            unsafe {
-                core::ptr::copy_nonoverlapping(addr as *const u8, buf.as_mut_ptr(), copy_len);
-            }
+            crate::usercopy::copy_from_user(addr, &mut buf[..copy_len]).map_err(i32::from)?;
             return Ok(copy_len);
         }
     }

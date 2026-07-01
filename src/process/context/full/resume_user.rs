@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::definition::Context;
+use crate::process::signal::SIGSEGV;
 
 // Ring-3 selectors with RPL=3. These must match the GDT layout in
 // `arch::x86_64::gdt::constants` (SEL_USER_CODE = 0x20|3 = 0x23,
@@ -25,16 +26,13 @@ const USER_CS: u64 = 0x23;
 const USER_SS: u64 = 0x1B;
 
 impl Context {
-    /// Restore this context as the user-mode register state and `iretq`
-    /// into it. All eighteen `Context` fields are loaded from `self`.
     pub fn resume_user(&self) -> ! {
-        // SAFETY: ek@nonos.systems — `resume_user_asm` reads the
-        // `Context` once, builds a five-word iret frame on the kernel
-        // stack (SS=0x1B, RSP, RFLAGS|0x202, CS=0x23, RIP), loads every
-        // GPR from the context, swapgs to restore user GS, then iretq.
-        // The reserved RFLAGS bits 1 and 9 are forced on so the user
-        // resumes with interrupts enabled and a legal RFLAGS.
-        unsafe { resume_user_asm(self as *const Context) }
+        if self.validate_userspace().is_err() {
+            crate::process::terminate_current_with_signal(SIGSEGV)
+        }
+        let mut safe_ctx = *self;
+        safe_ctx.rflags = Self::sanitize_rflags(safe_ctx.rflags);
+        unsafe { resume_user_asm(&safe_ctx as *const Context) }
     }
 }
 
@@ -44,7 +42,6 @@ unsafe extern "C" fn resume_user_asm(_ctx: *const Context) -> ! {
         "push {ss}",
         "push qword ptr [rdi + 56]",
         "push qword ptr [rdi + 136]",
-        "or qword ptr [rsp], 0x202",
         "push {cs}",
         "push qword ptr [rdi + 128]",
         "mov rax, [rdi + 0]",

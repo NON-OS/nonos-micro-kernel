@@ -37,3 +37,4 @@ pub use register::sys_service_register;
 pub use reply::sys_ipc_reply;
 pub use send::sys_ipc_send;
 pub use send_to_pid::sys_ipc_send_to_pid;
+pub(crate) use pending_reply::clear_pid as release_pending_replies_for_pid;

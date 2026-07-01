@@ -11,8 +11,10 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     let mut rpt = Report::new("evidence", true);
     let out = Path::new(root).join("evidence");
     std::fs::create_dir_all(&out)?;
+    let python = std::env::var("NONOS_PYTHON").unwrap_or_else(|_| "python3".to_string());
     let scripts = [
         "scripts/bare_metal_evidence.py",
+        "scripts/hardware_support_evidence.py",
         "scripts/validate_machine_metadata.py",
         "nonos-ci/bench_boot_log.py",
         "nonos-ci/bench_collect.py",
@@ -23,7 +25,7 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     ];
     let mut args = vec!["-m", "py_compile"];
     args.extend(scripts);
-    let ok = run_logged("python3", &args, &out.join("python-syntax.txt"));
+    let ok = run_logged(&python, &args, &out.join("python-syntax.txt"));
     rpt.check("python-syntax", st(ok), "benchmark and hardware evidence scripts compile");
     std::fs::create_dir_all("target/hardware-dossier")?;
     std::fs::write(
@@ -54,6 +56,14 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     good_log.extend_from_slice(&good.stderr);
     std::fs::write(out.join("metadata-pass-fixture.txt"), good_log)?;
     rpt.check("metadata-pass-fixture", st(good.status.success()), "complete metadata accepted");
+    let hardware_support = out.join("hardware-support-source.json");
+    let hardware_support_arg = hardware_support.to_string_lossy().to_string();
+    let ok = run_logged(
+        &python,
+        &["scripts/hardware_support_evidence.py", &hardware_support_arg],
+        &out.join("hardware-support-source.txt"),
+    ) && hardware_support.exists();
+    rpt.check("hardware-support-source", st(ok), "driver capsule source evidence is complete");
     let ok = run_logged("make", &["nonos-mk-check"], &out.join("kernel-source-check.txt"));
     rpt.check("kernel-source-check", st(ok), "make nonos-mk-check");
     std::fs::create_dir_all("target/ci")?;

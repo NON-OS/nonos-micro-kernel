@@ -1,8 +1,7 @@
 # NVMe — PCIe storage-controller capsule. This slice owns broker
-# claim, BAR0 MMIO, MSI-X binding, admin-queue DMA, controller
-# enable, Identify Controller, Identify Namespace, and SMART /
-# health log snapshot. Block I/O waits for IO queues, PRP/SGL
-# request DMA, and namespace service wiring.
+# claim, BAR0 MMIO, MSI-X binding, admin and IO queue DMA,
+# controller enable, Identify Controller, Identify Namespace,
+# SMART / health snapshot, and read/write/flush block operations.
 
 CAPSULE_SLUG             := driver-nvme
 CAPSULE_HANDLE           := driver.nvme0

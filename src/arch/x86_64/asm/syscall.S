@@ -16,6 +16,8 @@
 
 syscall_entry_asm:
     swapgs
+    /* Rust and C string/memory code require DF=0 even if user RFLAGS had DF set. */
+    cld
     mov     gs:PCPU_USER_STACK, rsp
     mov     rsp, gs:PCPU_KERN_STACK
 
@@ -56,6 +58,11 @@ syscall_entry_asm:
     pop     rcx
     pop     r11
     pop     rbp
+    push    rax
+    movabs  rax, 0xffffffffffe08aff
+    and     r11, rax
+    or      r11, 0x202
+    pop     rax
 
     /* SYSRETQ requires canonical user RIP. */
     bt      rcx, 47

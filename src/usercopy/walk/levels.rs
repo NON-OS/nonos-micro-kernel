@@ -21,7 +21,7 @@
 use super::bounds::{directmap_of, leaf_in_directmap};
 use super::leaf::UserLeaf;
 use super::root::page_table_root;
-use crate::memory::paging::constants::{PTE_ADDR_MASK, PTE_HUGE_PAGE, PTE_PRESENT};
+use crate::memory::paging::constants::{PTE_ADDR_MASK, PTE_HUGE_PAGE, PTE_PRESENT, PTE_USER};
 use crate::usercopy::error::UsercopyError;
 
 const PAGE_TABLE_INDEX_MASK: u64 = 0x1FF;
@@ -55,9 +55,15 @@ fn walk(pt_root: u64, va: u64) -> Result<UserLeaf, UsercopyError> {
     if e4 & PTE_PRESENT == 0 {
         return Err(UsercopyError::PageNotMapped);
     }
+    if e4 & PTE_USER == 0 {
+        return Err(UsercopyError::PageNotUser);
+    }
     let e3 = read_pte(directmap_of(e4 & PTE_ADDR_MASK)?, i3);
     if e3 & PTE_PRESENT == 0 {
         return Err(UsercopyError::PageNotMapped);
+    }
+    if e3 & PTE_USER == 0 {
+        return Err(UsercopyError::PageNotUser);
     }
     if e3 & PTE_HUGE_PAGE != 0 {
         return leaf_in_directmap(UserLeaf {
@@ -70,6 +76,9 @@ fn walk(pt_root: u64, va: u64) -> Result<UserLeaf, UsercopyError> {
     let e2 = read_pte(directmap_of(e3 & PTE_ADDR_MASK)?, i2);
     if e2 & PTE_PRESENT == 0 {
         return Err(UsercopyError::PageNotMapped);
+    }
+    if e2 & PTE_USER == 0 {
+        return Err(UsercopyError::PageNotUser);
     }
     if e2 & PTE_HUGE_PAGE != 0 {
         return leaf_in_directmap(UserLeaf {

@@ -48,7 +48,7 @@ It does not mix audio, route streams, parse codec widgets, or hold user audio.
 ## Authority
 
 The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, and
-`Irq` (`CAPSULE_REQUIRED_CAPS = 0x78018`). There is no `Dma` grant until the
+`Irq` (`CAPSULE_REQUIRED_CAPS = 0x78019`). There is no `Dma` grant until the
 capsule programs CORB/RIRB and stream buffers.
 
 ```text

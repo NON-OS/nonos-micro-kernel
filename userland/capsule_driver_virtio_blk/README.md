@@ -45,7 +45,7 @@ mediates grants, routes IPC, and tears grants down on exit.
 ## Authority
 
 The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, `Irq`,
-and `Dma` (`CAPSULE_REQUIRED_CAPS = 0xF8018`). It has no filesystem,
+and `Dma` (`CAPSULE_REQUIRED_CAPS = 0x1F8019`). It has no filesystem,
 partition, crypto, admin, debug, or raw physical-memory authority.
 
 ```text

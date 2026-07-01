@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::capabilities::CapabilityToken;
+use crate::capabilities::{Capability, CapabilityToken};
 use crate::syscall::numbers::SyscallNumber;
 
 pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<bool> {
@@ -32,11 +32,8 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkMmap => caps.can_allocate_memory(),
         SyscallNumber::MkMunmap => caps.can_deallocate_memory(),
 
-        // Loading a capsule from the store is gated like MkSpawn on the IPC
-        // capability the installer already holds. The real protection is the
-        // full verified-spawn path the kernel runs on the artifacts; an
-        // unsigned or unattested capsule cannot load regardless of the caller.
-        SyscallNumber::MkCapsuleLoad => caps.can_ipc(),
+        SyscallNumber::MkCapsuleLoad => caps.is_valid()
+            && caps.grants_all(&[Capability::CoreExec, Capability::IPC, Capability::Memory]),
 
         SyscallNumber::MkGetPid => caps.can_getpid(),
         SyscallNumber::MkArgs => caps.can_getpid(),

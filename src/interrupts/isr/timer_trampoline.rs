@@ -70,6 +70,8 @@ pub unsafe extern "C" fn timer_trampoline() {
         "jz 1f",
         "swapgs",
         "1:",
+        // User RFLAGS may carry DF=1; Rust handlers require forward string ops.
+        "cld",
         // Push 15 GPRs in the order that produces the UserContext
         // layout described in the module-level comment. rax first,
         // r15 last, so r15 ends up at the lowest address (offset 0).

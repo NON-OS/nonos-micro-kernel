@@ -43,7 +43,7 @@ grant revocation. Network protocol logic belongs to userland network capsules.
 ## Authority
 
 The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, `Irq`,
-and `Dma` (`CAPSULE_REQUIRED_CAPS = 0xF8018`). It has no socket, route table,
+and `Dma` (`CAPSULE_REQUIRED_CAPS = 0x1F8019`). It has no socket, route table,
 firewall, DNS, DHCP, filesystem, admin, or debug authority.
 
 ```text

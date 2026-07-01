@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::sync::Arc;
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::sync::atomic::Ordering;
 
 use crate::arch::x86_64::gdt;
 use crate::memory::paging::manager::api::switch_to_process_address_space;
@@ -25,28 +25,17 @@ use crate::process::scheduler::preemption::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLI
 use crate::process::userspace::transitions::restore_user_context_iretq;
 use crate::smp::percpu;
 
-static USER_RESUME_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
+use super::validate_resume::sanitize_user_context;
 
-fn trace(label: &[u8], pid: u32) {
-    if !matches!(pid, 7 | 8 | 0x1b | 0x1c | 0x26 | 0x27)
-        || USER_RESUME_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 24
-    {
-        return;
-    }
-    crate::sys::serial::print(b"[URESUME] ");
-    crate::sys::serial::println(label);
-}
-
-// Preempt-resume path: a CPL=3 capsule was trapped/IRQ'd back into the
-// kernel by the trap trampoline, which captured a full UserContext on
-// the PCB. Take() consumes the snapshot so a subsequent resume sees
-// the next captured frame, never a stale one.
 pub(super) fn try_resume(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
-    let saved = match pcb.saved_user_context.lock().take() {
+    let mut saved = match pcb.saved_user_context.lock().take() {
         Some(s) => s,
         None => return false,
     };
-    trace(b"enter", pid);
+    if !sanitize_user_context(&mut saved) {
+        *pcb.state.lock() = ProcessState::Terminated(-1);
+        return true;
+    }
 
     let kstack = pcb.kernel_stack_top.load(Ordering::Acquire);
     if kstack == 0 {
@@ -55,7 +44,6 @@ pub(super) fn try_resume(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
     }
 
     let cpu = percpu::current().cpu_id;
-    // SAFETY: cpu bounded by MAX_CPUS; set_kernel_stack validates.
     unsafe {
         if gdt::set_kernel_stack(cpu, kstack).is_err() {
             *pcb.state.lock() = ProcessState::Terminated(-1);
@@ -66,7 +54,6 @@ pub(super) fn try_resume(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
 
     let cr3v = pcb.cr3.load(Ordering::Relaxed);
     if cr3v != 0 && switch_to_process_address_space(pid).is_err() {
-        // Thread sharing an inherited address space: load CR3 directly.
         crate::memory::paging::tlb::set_cr3(crate::memory::PhysAddr::new(cr3v));
     }
 
@@ -80,7 +67,5 @@ pub(super) fn try_resume(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
         init_fpu();
     }
 
-    trace(b"iretq", pid);
-    // SAFETY: `saved` fully populated; asm consumes via rdi and iretqs.
     unsafe { restore_user_context_iretq(&saved as *const _) }
 }

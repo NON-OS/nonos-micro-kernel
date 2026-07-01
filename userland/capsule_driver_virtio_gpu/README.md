@@ -23,7 +23,7 @@ The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, `Irq`,
 `Dma`, and `Pio`:
 
 ```text
-CAPSULE_REQUIRED_CAPS = 0x1F8018
+CAPSULE_REQUIRED_CAPS = 0x1F9019
 ```
 
 The capsule reaches hardware only through `MkDeviceList`, `MkDeviceClaim`,

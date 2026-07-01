@@ -19,10 +19,9 @@ use super::restore_asm::context_restore_asm;
 
 const USER_SPACE_MAX: u64 = 0x0000_7FFF_FFFF_FFFF;
 const KERNEL_SPACE_MIN: u64 = 0xFFFF_8000_0000_0000;
-const RFLAGS_PRIVILEGED_MASK: u64 = 0x0000_0000_001B_3000;
+const RFLAGS_PRIVILEGED_MASK: u64 = 0x0000_0000_001F_7500;
 const RFLAGS_RESERVED_SET: u64 = 0x0000_0000_0000_0002;
 const RFLAGS_IF: u64 = 0x0000_0000_0000_0200;
-
 impl Context {
     #[inline]
     fn is_user_space_addr(addr: u64) -> bool {
@@ -30,7 +29,7 @@ impl Context {
     }
 
     #[inline]
-    fn validate_rflags(rflags: u64) -> u64 {
+    pub(super) fn sanitize_rflags(rflags: u64) -> u64 {
         (rflags & !RFLAGS_PRIVILEGED_MASK) | RFLAGS_RESERVED_SET | RFLAGS_IF
     }
 
@@ -69,7 +68,7 @@ impl Context {
             crate::arch::halt_loop()
         }
         let mut safe_ctx = *self;
-        safe_ctx.rflags = Self::validate_rflags(safe_ctx.rflags);
+        safe_ctx.rflags = Self::sanitize_rflags(safe_ctx.rflags);
         super::save::set_restored_flag();
         context_restore_asm(&safe_ctx as *const Context)
     }

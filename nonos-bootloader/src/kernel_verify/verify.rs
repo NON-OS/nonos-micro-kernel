@@ -52,7 +52,6 @@ pub fn verify_kernel_crypto(kernel_data: &[u8], st: &mut SystemTable<Boot>) -> C
             return result;
         }
     };
-
     result.kernel_code_size = parsed.kernel_bytes.len();
     result.signature_present = true;
     print_kernel_size(st, parsed.kernel_bytes.len());
@@ -71,7 +70,6 @@ pub fn verify_kernel_crypto(kernel_data: &[u8], st: &mut SystemTable<Boot>) -> C
     } else {
         print_verification_failure(st);
     }
-
     log_info("kernel_verify", "Cryptographic verification complete");
     result
 }

@@ -1,8 +1,7 @@
 # AHCI — SATA host controller capsule. PCI MMIO + INTx. This
-# first production slice owns controller discovery, broker claim,
-# ABAR mapping, IRQ binding, AHCI-mode enable, and port signature
-# enumeration. It does not expose block I/O until command-list,
-# FIS, PRDT, and DMA completion paths land.
+# production slice owns controller discovery, broker claim, ABAR
+# mapping, IRQ binding, AHCI-mode enable, port identity, command
+# DMA, and read/write/flush block operations.
 
 CAPSULE_SLUG             := driver-ahci
 CAPSULE_HANDLE           := driver.ahci0
