@@ -14,19 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod bind;
-mod close;
-mod connect;
-mod dispatch;
-mod getsockopt;
-mod health;
-mod io;
-mod listen;
-mod mixnet_frame;
-mod recv;
-mod send;
-mod setsockopt;
-mod socket;
+use super::envelope::call;
 
-pub use dispatch::dispatch;
+const MAGIC: u32 = 0x4E44_4E53;
+const RESOLVE_A: u16 = 2;
+
+pub fn resolve_a(port: u32, host: &[u8]) -> Result<[u8; 4], u16> {
+    let mut out = [0u8; 4];
+    if call(port, MAGIC, RESOLVE_A, host, &mut out)? != 4 {
+        return Err(4);
+    }
+    Ok(out)
+}

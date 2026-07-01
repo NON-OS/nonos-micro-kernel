@@ -14,19 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod bind;
-mod close;
-mod connect;
-mod dispatch;
-mod getsockopt;
-mod health;
-mod io;
-mod listen;
-mod mixnet_frame;
-mod recv;
-mod send;
-mod setsockopt;
-mod socket;
+mod decode;
+mod encode;
+mod types;
 
-pub use dispatch::dispatch;
+pub use decode::decode;
+pub use encode::encode;
+pub use types::MAX_BODY;

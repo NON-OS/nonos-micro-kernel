@@ -14,11 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::clients::nym;
-use crate::state;
+use crate::{clients::nym, state};
 
-pub fn connect_nym(ip: [u8; 4], port: u16) -> Result<u32, u16> {
-    let nym_port = state::nym();
-    nym::set_gateway(nym_port, ip, port)?;
-    nym::open(nym_port)
+pub fn connect_nym() -> Result<u32, u16> {
+    nym::open(state::nym())
 }

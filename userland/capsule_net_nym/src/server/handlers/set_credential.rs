@@ -16,13 +16,17 @@
 
 use crate::protocol::{
     E_AUTHORITY_MISSING, E_AUTHORITY_UNTRUSTED, E_BAD_LEN, E_CREDENTIAL_EXPIRED, E_CRYPTO, E_OK,
-    E_TOPOLOGY_AUTH, OP_SET_CREDENTIAL,
+    E_PERM, E_TOPOLOGY_AUTH, OP_SET_CREDENTIAL,
 };
+use crate::server::authz::admin;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::state::{self, CredentialError};
 
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    if !admin(pid) {
+        return respond(pid, OP_SET_CREDENTIAL, E_PERM, req.request_id, 0, tx);
+    }
     let errno = match state::install_credential(body) {
         Ok(()) => E_OK,
         Err(CredentialError::BadLength) => E_BAD_LEN,

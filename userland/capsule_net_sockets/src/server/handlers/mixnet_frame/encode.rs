@@ -14,19 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod bind;
-mod close;
-mod connect;
-mod dispatch;
-mod getsockopt;
-mod health;
-mod io;
-mod listen;
-mod mixnet_frame;
-mod recv;
-mod send;
-mod setsockopt;
-mod socket;
+use alloc::vec::Vec;
 
-pub use dispatch::dispatch;
+use super::types::{HEADER, MAGIC, MAX_BODY, VERSION};
+
+pub fn encode(ip: [u8; 4], port: u16, body: &[u8]) -> Option<Vec<u8>> {
+    if body.len() > MAX_BODY {
+        return None;
+    }
+    let mut out = Vec::with_capacity(HEADER + body.len());
+    out.extend_from_slice(&MAGIC.to_le_bytes());
+    out.push(VERSION);
+    out.push(1);
+    out.extend_from_slice(&0u16.to_le_bytes());
+    out.extend_from_slice(&ip);
+    out.extend_from_slice(&port.to_le_bytes());
+    out.extend_from_slice(&(body.len() as u16).to_le_bytes());
+    out.extend_from_slice(body);
+    Some(out)
+}

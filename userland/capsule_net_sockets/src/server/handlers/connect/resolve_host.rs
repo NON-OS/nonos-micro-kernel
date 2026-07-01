@@ -14,19 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod bind;
-mod close;
-mod connect;
-mod dispatch;
-mod getsockopt;
-mod health;
-mod io;
-mod listen;
-mod mixnet_frame;
-mod recv;
-mod send;
-mod setsockopt;
-mod socket;
+use crate::{clients::dns, state};
 
-pub use dispatch::dispatch;
+use super::parse_ipv4::parse_ipv4;
+
+pub fn resolve_host(host: &[u8]) -> Option<[u8; 4]> {
+    parse_ipv4(host).or_else(|| dns::resolve_a(state::dns(), host).ok())
+}

@@ -14,19 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod bind;
-mod close;
-mod connect;
-mod dispatch;
-mod getsockopt;
-mod health;
-mod io;
-mod listen;
-mod mixnet_frame;
-mod recv;
-mod send;
-mod setsockopt;
-mod socket;
+use crate::server::handlers::io::{u16_at, u32_at};
 
-pub use dispatch::dispatch;
+pub fn parse(body: &[u8]) -> Option<(u32, u16, &[u8])> {
+    let handle = u32_at(body, 0).ok()?;
+    let port = u16_at(body, 4).ok()?;
+    let len = u16_at(body, 6).ok()? as usize;
+    if len == 0 || len > 253 || 8 + len > body.len() {
+        return None;
+    }
+    Some((handle, port, &body[8..8 + len]))
+}

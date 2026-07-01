@@ -14,19 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod bind;
-mod close;
-mod connect;
-mod dispatch;
-mod getsockopt;
-mod health;
-mod io;
-mod listen;
-mod mixnet_frame;
-mod recv;
-mod send;
-mod setsockopt;
-mod socket;
+pub const MAGIC: u32 = 0x314D_584E;
+pub const VERSION: u8 = 1;
+pub const HEADER: usize = 16;
+pub const MAX_PACKET: usize = 1024;
+pub const MAX_BODY: usize = MAX_PACKET - HEADER;
 
-pub use dispatch::dispatch;
+pub struct Frame<'a> {
+    pub ip: [u8; 4],
+    pub port: u16,
+    pub body: &'a [u8],
+}

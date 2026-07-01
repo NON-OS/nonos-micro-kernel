@@ -14,13 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::*;
-use crate::clients::envelope::call;
+use super::types::{Frame, HEADER, MAGIC, VERSION};
 
-pub fn set_gateway(port: u32, ip: [u8; 4], gw_port: u16) -> Result<(), u16> {
-    let mut body = [0u8; 7];
-    body[0..4].copy_from_slice(&ip);
-    body[4..6].copy_from_slice(&gw_port.to_le_bytes());
-    body[6] = 1;
-    call(port, MAGIC, SET_GATEWAY, &body, &mut []).map(|_| ())
+pub fn decode(bytes: &[u8]) -> Option<Frame<'_>> {
+    if bytes.len() < HEADER {
+        return None;
+    }
+    let magic = u32::from_le_bytes(bytes[0..4].try_into().ok()?);
+    if magic != MAGIC || bytes[4] != VERSION || bytes[5] != 1 {
+        return None;
+    }
+    let len = u16::from_le_bytes(bytes[14..16].try_into().ok()?) as usize;
+    if HEADER + len > bytes.len() {
+        return None;
+    }
+    let ip = [bytes[8], bytes[9], bytes[10], bytes[11]];
+    let port = u16::from_le_bytes(bytes[12..14].try_into().ok()?);
+    Some(Frame { ip, port, body: &bytes[HEADER..HEADER + len] })
 }
