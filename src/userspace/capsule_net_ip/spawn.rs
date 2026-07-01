@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Spawn the `net.ip` IPv4 capsule. IPC + Memory only — sits on
+//! Spawn the `net.ip` IPv4 capsule. Sits on
 //! top of `net.l2` (reached through the service registry, not
 //! through the kernel) and serves `net.ip` to upstream transport
 //! capsules (UDP, TCP) and the ICMP responder.
@@ -52,7 +52,9 @@ pub fn spawn_net_ip_capsule() -> Result<(), SpawnError> {
         manifest_bytes: NET_IP_MANIFEST_BYTES,
         attestation_trailer: NET_IP_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit() | Capability::Memory.bit(),
+        requested_caps: Capability::IPC.bit()
+            | Capability::Memory.bit()
+            | Capability::Network.bit(),
         debug_tag: b"[NET-IP] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

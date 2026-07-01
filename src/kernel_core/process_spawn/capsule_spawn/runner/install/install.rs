@@ -24,7 +24,7 @@ use crate::kernel_core::process_spawn::{
     allocate_kernel_stack, allocate_user_stack, setup_initial_user_context,
 };
 use crate::process::core::{create_process, Priority, ProcessState};
-use crate::services::registry::register_endpoint;
+use crate::services::registry::{register_endpoint, required_caps};
 use alloc::format;
 
 pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
@@ -47,7 +47,8 @@ pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
     let _kernel_stack = allocate_kernel_stack(pid).map_err(|_| SpawnError::AddressSpace)?;
     let user_rsp = allocate_user_stack(pid).map_err(|_| SpawnError::AddressSpace)?;
     setup_initial_user_context(pid, entry, user_rsp).map_err(|_| SpawnError::AddressSpace)?;
-    register_endpoint(params.name, params.service_port, pid, Capability::IPC.bit())
+    let service_caps = required_caps(params.name, Capability::IPC.bit());
+    register_endpoint(params.name, params.service_port, pid, service_caps)
         .map_err(|_| SpawnError::EndpointCollision)?;
     super::spawn_log::emit(params.name, pid, caps, entry);
     crate::sched::add_to_run_queue(pid);

@@ -30,4 +30,6 @@ pub use caps::{
     CAP_ADMIN, CAP_AGENTS, CAP_APPS, CAP_AUDIO, CAP_CRYPTO, CAP_DISPLAY, CAP_DRIVER, CAP_GPU,
     CAP_INPUT, CAP_NET, CAP_SHELL, CAP_VFS, CAP_ZK,
 };
-pub use registry::{lookup_port, lookup_service, register_endpoint, RegError, ServiceEndpoint};
+pub use registry::{
+    lookup_port, lookup_service, register_endpoint, required_caps, RegError, ServiceEndpoint,
+};

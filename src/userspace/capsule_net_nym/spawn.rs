@@ -46,7 +46,10 @@ pub fn spawn_net_nym_capsule() -> Result<(), SpawnError> {
         manifest_bytes: NET_NYM_MANIFEST_BYTES,
         attestation_trailer: NET_NYM_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit() | Capability::Memory.bit() | Capability::Crypto.bit(),
+        requested_caps: Capability::IPC.bit()
+            | Capability::Memory.bit()
+            | Capability::Crypto.bit()
+            | Capability::Network.bit(),
         debug_tag: b"[NET-NYM] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
