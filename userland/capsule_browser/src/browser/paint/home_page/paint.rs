@@ -16,12 +16,11 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::browser::manifest::{HEIGHT, WIDTH};
 use crate::browser::paint::home_page::{constants, search_bar, shortcut, shortcut_data, text, wordmark};
 use crate::browser::state::State;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
-    fb.fill_rect(0, constants::CONTENT_TOP, WIDTH, HEIGHT.saturating_sub(constants::CONTENT_TOP), constants::PAGE_BG);
+    fb.fill_rect(0, constants::CONTENT_TOP, fb.width, fb.height.saturating_sub(constants::CONTENT_TOP), constants::PAGE_BG);
     wordmark::wordmark(fb);
     search_bar::search_bar(state, fb);
     for i in 0..shortcut_data::SHORTCUTS.len() as u32 {

@@ -40,12 +40,21 @@ pub(in crate::browser::fetch) fn read_body(state_port: u32, f: &mut Fetch, tls_m
         }
     }
     if tls_mode {
+        let ready = tls::decrypt(f).map_or(false, |p| http::response::has_headers(&p));
         let grew = f.buf.len() > f.last_check;
         if grew && (!got || f.buf.len() >= f.last_check + constants::CHECK_STRIDE) {
             f.last_check = f.buf.len();
             if tls::decrypt(f).map_or(false, |p| http::response::is_complete(&p)) {
                 f.phase = Phase::Decrypt;
             }
+        }
+        if !got && ready {
+            f.idle = f.idle.wrapping_add(1);
+            if f.idle >= constants::IDLE_AFTER {
+                f.phase = Phase::Decrypt;
+            }
+        } else if got {
+            f.idle = 0;
         }
         if f.buf.len() == constants::MAX_BODY && !matches!(f.phase, Phase::Decrypt) {
             f.error = Some("response too large");

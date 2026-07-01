@@ -16,6 +16,7 @@
 
 use crate::browser::paint::chrome::buttons::Btn;
 use crate::browser::paint::chrome::constants;
+use crate::browser::manifest::WIDTH;
 
 pub fn toolbar_button_at(x: i32, y: i32) -> Option<Btn> {
     if y < constants::T || y >= constants::T + constants::TOOLBAR_H {
@@ -33,7 +34,7 @@ pub fn toolbar_button_at(x: i32, y: i32) -> Option<Btn> {
     if hit(x, constants::HOME_X) {
         return Some(Btn::Home);
     }
-    if x >= constants::PILL_L && x < constants::PILL_R {
+    if x >= constants::PILL_L && x < WIDTH as i32 - 52 {
         return Some(Btn::Url);
     }
     None

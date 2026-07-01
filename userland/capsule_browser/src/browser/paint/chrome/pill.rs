@@ -21,7 +21,8 @@ use crate::browser::state::State;
 
 pub fn pill(state: &State, fb: &mut PaintBuffer) {
     let l = constants::PILL_L as u32;
-    let w = (constants::PILL_R - constants::PILL_L).max(0) as u32;
+    let r = fb.width.saturating_sub(52).max(l);
+    let w = r.saturating_sub(l);
     let edge = if state.address_focused { constants::ACCENT } else { constants::BORDER };
     fb.fill_rect(l, constants::TITLEBAR + 10, w, 32, edge);
     fb.fill_rect(l + 1, constants::TITLEBAR + 11, w.saturating_sub(2), 30, constants::FIELD_BG);

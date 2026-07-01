@@ -28,9 +28,11 @@ pub(super) fn emit_text(
     href: Option<String>,
     scale: u32,
     bold: bool,
+    color: u32,
+    bg: u32,
 ) {
     for w in text.split_whitespace() {
-        let (span, wrapped) = wrap::word(cur, w, href.clone(), scale, bold);
+        let (span, wrapped) = wrap::word(cur, w, href.clone(), scale, bold, color, bg);
         if wrapped {
             lines.push(core::mem::replace(line, RenderLine { y: cur.y, height: LINE_H, spans: Vec::new() }));
         }

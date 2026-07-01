@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::browser::manifest::WIDTH;
 use crate::browser::paint::home_page::{constants, shortcut, shortcut_data};
 
 pub fn shortcut_at(x: i32, y: i32) -> Option<&'static str> {
@@ -22,7 +23,7 @@ pub fn shortcut_at(x: i32, y: i32) -> Option<&'static str> {
     }
     let (xu, yu) = (x as u32, y as u32);
     for i in 0..shortcut_data::SHORTCUTS.len() as u32 {
-        let bx = shortcut::badge_x(i);
+        let bx = shortcut::center_x(WIDTH, i).saturating_sub(constants::BADGE / 2);
         if xu >= bx && xu < bx + constants::BADGE && yu >= constants::BADGE_Y && yu < constants::BADGE_Y + constants::BADGE {
             return Some(shortcut_data::SHORTCUTS[i as usize].url);
         }
@@ -35,5 +36,6 @@ pub fn search_bar_hit(x: i32, y: i32) -> bool {
         return false;
     }
     let (xu, yu) = (x as u32, y as u32);
-    xu >= constants::PILL_X && xu < constants::PILL_X + constants::PILL_W && yu >= constants::PILL_Y && yu < constants::PILL_Y + constants::PILL_H
+    let px = WIDTH.saturating_sub(constants::PILL_W) / 2;
+    xu >= px && xu < px + constants::PILL_W && yu >= constants::PILL_Y && yu < constants::PILL_Y + constants::PILL_H
 }

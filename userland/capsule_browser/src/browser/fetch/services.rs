@@ -14,21 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::net;
 use crate::browser::state::State;
 
-pub fn services(state: &mut State, dns_needed: bool) -> Result<(), &'static str> {
+pub fn services(state: &mut State) -> Result<(), &'static str> {
     if state.sockets_port == 0 {
-        state.sockets_port = net::lookup(b"net.sockets");
-    }
-    if dns_needed && state.dns_port == 0 {
-        state.dns_port = net::lookup(b"net.dns");
+        state.sockets_port = crate::browser::net::lookup(b"net.sockets");
     }
     if state.sockets_port == 0 {
         return Err("net.sockets unavailable");
-    }
-    if dns_needed && state.dns_port == 0 {
-        return Err("net.dns unavailable");
     }
     Ok(())
 }

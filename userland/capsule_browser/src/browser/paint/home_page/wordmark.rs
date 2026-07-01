@@ -16,13 +16,12 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::browser::manifest::WIDTH;
 use crate::browser::paint::home_page::constants;
 
 pub fn wordmark(fb: &mut PaintBuffer) {
     let advance = fb.glyph_advance().saturating_mul(3);
-    let width = advance.saturating_mul(5).min(WIDTH);
-    let x0 = (WIDTH - width) / 2;
+    let width = advance.saturating_mul(5).min(fb.width);
+    let x0 = fb.width.saturating_sub(width) / 2;
     let y = 108;
     fb.text_scaled(x0, y, b"N", constants::FG, 3);
     fb.text_scaled(x0 + advance, y, b"\xd8", constants::ACCENT, 3);

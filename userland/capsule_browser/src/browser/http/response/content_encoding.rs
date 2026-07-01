@@ -16,11 +16,14 @@
 
 pub fn content_encoding(value: &str) -> Option<&'static str> {
     let lower = value.trim().to_ascii_lowercase();
-    match lower.as_str() {
-        "identity" => Some(""),
-        "gzip" | "x-gzip" => Some("gzip"),
-        "deflate" => Some("deflate"),
-        "" => Some(""),
-        _ => None,
+    let mut out = "";
+    for token in lower.split(',').map(str::trim).filter(|s| !s.is_empty()) {
+        match token {
+            "identity" => {}
+            "gzip" | "x-gzip" => out = "gzip",
+            "deflate" if out.is_empty() => out = "deflate",
+            _ => return None,
+        }
     }
+    Some(out)
 }

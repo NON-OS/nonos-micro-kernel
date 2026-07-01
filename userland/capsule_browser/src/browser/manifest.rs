@@ -16,8 +16,8 @@
 
 use nonos_app_skeleton::{AppManifest, WindowKind};
 
-pub const WIDTH: u32 = 1000;
-pub const HEIGHT: u32 = 700;
+pub const WIDTH: u32 = 1360;
+pub const HEIGHT: u32 = 760;
 const WINDOW_ID: u32 = 0x4252_5753;
 const TITLE: &[u8] = b"NONOS Browser";
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
@@ -32,8 +32,8 @@ pub fn manifest() -> AppManifest {
         title: TITLE,
         window_id: WINDOW_ID,
         kind: WindowKind::Normal,
-        initial_x: 80,
-        initial_y: 60,
+        initial_x: 24,
+        initial_y: 44,
         width: WIDTH,
         height: HEIGHT,
         input_kind_mask: INPUT_MASK,
