@@ -14,30 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod build;
-pub mod cc;
-mod checksum;
-mod constants;
-mod header;
-mod iss;
-mod msl_2_ms;
-mod parse;
-pub mod rtt;
-pub mod seq;
-mod siphash;
-mod state;
-mod tcb;
-pub mod window;
+use alloc::vec::Vec;
 
-pub use build::{build, BuildRequest};
-pub use constants::{
-    DUP_ACK_THRESH, INIT_CWND, MAX_CONN_PER_PID, MAX_RETX, MSL_MS, MSS, REASM_MAX_SEGS, RTO_INIT_MS,
-    RTO_MAX_MS, RTO_MIN_MS, RWND_MAX, SND_BUF_MAX,
-};
-pub use header::{TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_PSH, FLAG_RST, FLAG_SYN};
-pub use iss::iss_for;
-pub use msl_2_ms::msl_2_ms;
-pub use parse::parse;
-pub use siphash::siphash24;
-pub use state::State;
-pub use tcb::{Endpoint4, Tcb};
+use crate::tcp::seq;
+
+use super::Reasm;
+
+impl Reasm {
+    pub fn drain_contiguous(&mut self, mut rcv_nxt: u32) -> Vec<u8> {
+        let mut out = Vec::new();
+        loop {
+            let Some(key) = self.segs.keys().next().copied() else { break; };
+            if !seq::leq(key, rcv_nxt) {
+                break;
+            }
+            let Some(data) = self.segs.remove(&key) else { break; };
+            let end = key.wrapping_add(data.len() as u32);
+            if seq::gt(end, rcv_nxt) {
+                let skip = rcv_nxt.wrapping_sub(key) as usize;
+                out.extend_from_slice(&data[skip..]);
+                rcv_nxt = end;
+            }
+        }
+        out
+    }
+}

@@ -14,30 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod build;
-pub mod cc;
-mod checksum;
-mod constants;
-mod header;
-mod iss;
-mod msl_2_ms;
-mod parse;
-pub mod rtt;
-pub mod seq;
-mod siphash;
-mod state;
-mod tcb;
-pub mod window;
+use crate::clients::tcp;
+use crate::protocol::{E_NO_TRANSPORT, E_OK};
+use crate::server::parse_req::Request;
+use crate::sockets::{Kind, SocketKey};
+use crate::state;
 
-pub use build::{build, BuildRequest};
-pub use constants::{
-    DUP_ACK_THRESH, INIT_CWND, MAX_CONN_PER_PID, MAX_RETX, MSL_MS, MSS, REASM_MAX_SEGS, RTO_INIT_MS,
-    RTO_MAX_MS, RTO_MIN_MS, RWND_MAX, SND_BUF_MAX,
-};
-pub use header::{TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_PSH, FLAG_RST, FLAG_SYN};
-pub use iss::iss_for;
-pub use msl_2_ms::msl_2_ms;
-pub use parse::parse;
-pub use siphash::siphash24;
-pub use state::State;
-pub use tcb::{Endpoint4, Tcb};
+use super::{install_transport, status};
+
+pub fn update_stream(pid: u32, req: &Request, key: SocketKey, ip: [u8; 4], port: u16, tx: &mut [u8]) {
+    let transport = match tcp::connect(state::tcp(), ip, port) {
+        Ok(h) => h,
+        Err(_) => return status::status(pid, req, E_NO_TRANSPORT, tx),
+    };
+    let errno = install_transport::install_transport(key, Kind::Stream, ip, port, transport);
+    if errno != E_OK {
+        let _ = tcp::close(state::tcp(), transport);
+    }
+    status::status(pid, req, errno, tx);
+}

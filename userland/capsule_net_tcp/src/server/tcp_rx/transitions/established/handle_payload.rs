@@ -14,17 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{E_BAD_ADDR, E_BAD_LEN};
-use crate::server::handlers::io::{ip4_at, u16_at};
+use crate::state::{Entry, RX_DEPTH};
+use crate::tcp::{seq, TcpHeader};
 
-pub fn parse(body: &[u8]) -> Result<([u8; 4], u16), u16> {
-    if body.len() < 6 {
-        return Err(E_BAD_LEN);
+pub fn handle_payload(e: &mut Entry, hdr: &TcpHeader, payload: &[u8]) {
+    if payload.is_empty() {
+        return;
     }
-    let ip = ip4_at(body, 0)?;
-    let port = u16_at(body, 4)?;
-    if ip == [0, 0, 0, 0] || port == 0 {
-        return Err(E_BAD_ADDR);
+    if hdr.seq == e.tcb.recv.nxt && e.rx.len() < RX_DEPTH && e.push_rx(payload) {
+        e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(payload.len() as u32);
+        while e.rx.len() < RX_DEPTH {
+            let more = e.reasm.drain_contiguous(e.tcb.recv.nxt);
+            if more.is_empty() || !e.push_rx(&more) {
+                break;
+            }
+            e.tcb.recv.nxt = e.tcb.recv.nxt.wrapping_add(more.len() as u32);
+        }
+    } else if seq::gt(hdr.seq, e.tcb.recv.nxt) {
+        e.reasm.insert(hdr.seq, payload.to_vec());
     }
-    Ok((ip, port))
 }

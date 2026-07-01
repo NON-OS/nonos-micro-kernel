@@ -14,30 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod build;
-pub mod cc;
-mod checksum;
-mod constants;
-mod header;
-mod iss;
-mod msl_2_ms;
-mod parse;
-pub mod rtt;
-pub mod seq;
-mod siphash;
-mod state;
-mod tcb;
-pub mod window;
-
-pub use build::{build, BuildRequest};
-pub use constants::{
-    DUP_ACK_THRESH, INIT_CWND, MAX_CONN_PER_PID, MAX_RETX, MSL_MS, MSS, REASM_MAX_SEGS, RTO_INIT_MS,
-    RTO_MAX_MS, RTO_MIN_MS, RWND_MAX, SND_BUF_MAX,
-};
-pub use header::{TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_PSH, FLAG_RST, FLAG_SYN};
-pub use iss::iss_for;
-pub use msl_2_ms::msl_2_ms;
-pub use parse::parse;
-pub use siphash::siphash24;
-pub use state::State;
-pub use tcb::{Endpoint4, Tcb};
+pub fn round(v: &mut [u64; 4]) {
+    v[0] = v[0].wrapping_add(v[1]);
+    v[1] = v[1].rotate_left(13);
+    v[1] ^= v[0];
+    v[0] = v[0].rotate_left(32);
+    v[2] = v[2].wrapping_add(v[3]);
+    v[3] = v[3].rotate_left(16);
+    v[3] ^= v[2];
+    v[0] = v[0].wrapping_add(v[3]);
+    v[3] = v[3].rotate_left(21);
+    v[3] ^= v[0];
+    v[2] = v[2].wrapping_add(v[1]);
+    v[1] = v[1].rotate_left(17);
+    v[1] ^= v[2];
+    v[2] = v[2].rotate_left(32);
+}

@@ -14,30 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod build;
-pub mod cc;
-mod checksum;
-mod constants;
-mod header;
-mod iss;
-mod msl_2_ms;
-mod parse;
-pub mod rtt;
-pub mod seq;
-mod siphash;
-mod state;
-mod tcb;
-pub mod window;
+use alloc::collections::VecDeque;
 
-pub use build::{build, BuildRequest};
-pub use constants::{
-    DUP_ACK_THRESH, INIT_CWND, MAX_CONN_PER_PID, MAX_RETX, MSL_MS, MSS, REASM_MAX_SEGS, RTO_INIT_MS,
-    RTO_MAX_MS, RTO_MIN_MS, RWND_MAX, SND_BUF_MAX,
-};
-pub use header::{TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_PSH, FLAG_RST, FLAG_SYN};
-pub use iss::iss_for;
-pub use msl_2_ms::msl_2_ms;
-pub use parse::parse;
-pub use siphash::siphash24;
-pub use state::State;
-pub use tcb::{Endpoint4, Tcb};
+use super::types::{Entry, RX_DEPTH};
+use crate::tcp::Tcb;
+
+impl Entry {
+    pub fn new(owner_pid: u32, handle: u32, parent: u32, tcb: Tcb) -> Self {
+        Self {
+            owner_pid,
+            handle,
+            parent,
+            tcb,
+            rx: VecDeque::with_capacity(RX_DEPTH),
+            accept: VecDeque::with_capacity(RX_DEPTH),
+            snd_buf: VecDeque::new(),
+            retx: crate::state::RetxQueue::new(),
+            rtt: crate::tcp::rtt::Rtt::new(),
+            reasm: crate::state::Reasm::new(),
+            cc: crate::tcp::cc::Cc::new(),
+        }
+    }
+}

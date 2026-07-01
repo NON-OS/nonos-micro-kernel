@@ -14,30 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod build;
-pub mod cc;
-mod checksum;
-mod constants;
-mod header;
-mod iss;
-mod msl_2_ms;
-mod parse;
-pub mod rtt;
-pub mod seq;
-mod siphash;
-mod state;
-mod tcb;
-pub mod window;
+use alloc::collections::VecDeque;
+use alloc::vec::Vec;
 
-pub use build::{build, BuildRequest};
-pub use constants::{
-    DUP_ACK_THRESH, INIT_CWND, MAX_CONN_PER_PID, MAX_RETX, MSL_MS, MSS, REASM_MAX_SEGS, RTO_INIT_MS,
-    RTO_MAX_MS, RTO_MIN_MS, RWND_MAX, SND_BUF_MAX,
-};
-pub use header::{TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_PSH, FLAG_RST, FLAG_SYN};
-pub use iss::iss_for;
-pub use msl_2_ms::msl_2_ms;
-pub use parse::parse;
-pub use siphash::siphash24;
-pub use state::State;
-pub use tcb::{Endpoint4, Tcb};
+use crate::tcp::Tcb;
+
+pub const RX_DEPTH: usize = 32;
+
+pub struct Entry {
+    pub owner_pid: u32,
+    pub handle: u32,
+    pub parent: u32,
+    pub tcb: Tcb,
+    pub rx: VecDeque<Vec<u8>>,
+    pub accept: VecDeque<u32>,
+    pub snd_buf: VecDeque<u8>,
+    pub retx: crate::state::RetxQueue,
+    pub rtt: crate::tcp::rtt::Rtt,
+    pub reasm: crate::state::Reasm,
+    pub cc: crate::tcp::cc::Cc,
+}

@@ -24,3 +24,4 @@ pub const E_PORT_IN_USE: u16 = 6;
 pub const E_TIMEOUT: u16 = 8;
 pub const E_CLOSED: u16 = 10;
 pub const E_RX_EMPTY: u16 = 11;
+pub const E_BAD_ADDR: u16 = 12;

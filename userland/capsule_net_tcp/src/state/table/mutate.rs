@@ -55,6 +55,13 @@ impl Table {
         self.entries.retain(|e| e.handle != handle);
     }
 
+    pub fn queue_accept(&mut self, parent: u32, child: u32) -> bool {
+        match self.by_handle_mut(parent) {
+            Some(p) => p.push_accept(child),
+            None => false,
+        }
+    }
+
     pub fn is_idle(&self) -> bool {
         self.entries.is_empty() && self.timers.is_empty()
     }

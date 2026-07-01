@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{E_BAD_LEN, E_OK, E_PORT_IN_USE, OP_LISTEN};
+use crate::protocol::{E_BAD_ADDR, E_BAD_LEN, E_OK, E_PORT_IN_USE, OP_LISTEN};
 use crate::server::handlers::io::u16_at;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
@@ -26,6 +26,9 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         Ok(p) => p,
         Err(_) => return status(sender_pid, req, E_BAD_LEN, tx),
     };
+    if port == 0 {
+        return status(sender_pid, req, E_BAD_ADDR, tx);
+    }
     let local = Endpoint4 { ip: local_ip(), port };
     let mut table = TABLE.lock();
     if table.listener_for_mut(port).is_some() {

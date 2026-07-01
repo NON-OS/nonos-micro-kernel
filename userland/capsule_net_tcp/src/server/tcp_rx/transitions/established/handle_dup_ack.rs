@@ -14,30 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod build;
-pub mod cc;
-mod checksum;
-mod constants;
-mod header;
-mod iss;
-mod msl_2_ms;
-mod parse;
-pub mod rtt;
-pub mod seq;
-mod siphash;
-mod state;
-mod tcb;
-pub mod window;
+use crate::state::Entry;
+use crate::tcp::{TcpHeader, FLAG_ACK};
 
-pub use build::{build, BuildRequest};
-pub use constants::{
-    DUP_ACK_THRESH, INIT_CWND, MAX_CONN_PER_PID, MAX_RETX, MSL_MS, MSS, REASM_MAX_SEGS, RTO_INIT_MS,
-    RTO_MAX_MS, RTO_MIN_MS, RWND_MAX, SND_BUF_MAX,
-};
-pub use header::{TcpHeader, FLAG_ACK, FLAG_FIN, FLAG_PSH, FLAG_RST, FLAG_SYN};
-pub use iss::iss_for;
-pub use msl_2_ms::msl_2_ms;
-pub use parse::parse;
-pub use siphash::siphash24;
-pub use state::State;
-pub use tcb::{Endpoint4, Tcb};
+pub fn handle_dup_ack(e: &mut Entry, hdr: &TcpHeader, payload: &[u8]) {
+    if !(hdr.has_flag(FLAG_ACK) && hdr.ack == e.tcb.send.una && hdr.window == e.tcb.send.wnd && payload.is_empty()) {
+        return;
+    }
+    if e.retx.is_empty() || !e.cc.on_dup_ack() {
+        return;
+    }
+    let mut t = e.tcb;
+    if let Some(seg) = e.retx.oldest_mut() {
+        t.send.nxt = seg.seq;
+        let _ = crate::server::tcp_tx::send(t, seg.flags, &seg.data);
+        seg.sent_ms = crate::clock::now_ms();
+    }
+}
