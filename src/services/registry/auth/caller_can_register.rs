@@ -14,9 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{caller_has_register_right, caller_has_required};
+use super::caller_has_register_right::caller_has_register_right;
+use super::caller_has_required::caller_has_required;
 
-pub(super) fn caller_can_register(required: u64) -> bool {
+pub(in crate::services::registry) fn caller_can_register(required: u64) -> bool {
     match crate::process::current_pid() {
         None => true,
         Some(pid) if pid <= 64 => caller_has_required(required),

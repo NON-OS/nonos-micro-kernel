@@ -18,6 +18,4 @@ mod caller_can_register;
 mod caller_has_register_right;
 mod caller_has_required;
 
-pub(super) use caller_can_register::caller_can_register;
-pub(super) use caller_has_register_right::caller_has_register_right;
-pub(super) use caller_has_required::caller_has_required;
+pub(in crate::services::registry) use caller_can_register::caller_can_register;
