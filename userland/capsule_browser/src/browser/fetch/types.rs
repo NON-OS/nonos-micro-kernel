@@ -21,6 +21,9 @@ use crate::browser::url::Url;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Phase {
+    SocksHello,
+    SocksMethod,
+    SocksConnect,
     TlsHello,
     TlsFlight,
     TlsVerify,
@@ -42,6 +45,7 @@ pub struct Fetch {
     pub handle: u32,
     pub phase: Phase,
     pub buf: Vec<u8>,
+    pub socks: Vec<u8>,
     pub tls: Option<TlsCtx>,
     pub idle: u32,
     pub started_ms: i64,

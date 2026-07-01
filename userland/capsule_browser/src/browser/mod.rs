@@ -26,6 +26,7 @@ pub mod layout;
 pub mod manifest;
 mod net;
 mod paint;
+mod proxy;
 pub mod state;
 pub mod tls13;
 pub mod url;

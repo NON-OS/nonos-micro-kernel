@@ -17,6 +17,12 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
+#[derive(Clone)]
+pub struct ProxyConfig {
+    pub host: String,
+    pub port: u16,
+}
+
 pub enum View {
     Home,
     Page,
@@ -39,6 +45,7 @@ pub struct State {
     pub hist_index: i32,
     pub suppress_history_push: bool,
     pub retries: u8,
+    pub proxy: Option<ProxyConfig>,
 }
 
 impl State {
@@ -60,6 +67,7 @@ impl State {
             hist_index: -1,
             suppress_history_push: false,
             retries: 0,
+            proxy: None,
         }
     }
 }

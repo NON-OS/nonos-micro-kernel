@@ -17,9 +17,9 @@
 mod call;
 mod constants;
 mod lookup;
-mod read_tls_flight;
-mod recv_all;
+mod parse_ipv4;
 mod resolve;
+mod resolve_host;
 mod socket_close;
 mod socket_connect;
 mod socket_open;
@@ -27,9 +27,8 @@ mod socket_recv;
 mod socket_send;
 
 pub use lookup::lookup;
-pub use read_tls_flight::read_tls_flight;
-pub use recv_all::recv_all;
-pub use resolve::resolve;
+pub use parse_ipv4::parse_ipv4;
+pub use resolve_host::resolve_host;
 pub use socket_close::socket_close;
 pub use socket_connect::socket_connect;
 pub use socket_open::socket_open;

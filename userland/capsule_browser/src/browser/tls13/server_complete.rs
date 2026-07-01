@@ -44,15 +44,15 @@ pub fn server_complete(client: &ClientFlight, bytes: &[u8], host: &[u8], now: u6
         }
         pos = end;
     }
-    let ok = super::scan_server_finished::scan(
-        &ctx.keys.server_secret,
-        &mut ctx.transcript,
-        &msgs,
+    let mut scan = super::scan_server_finished::ScanState {
+        secret: &ctx.keys.server_secret,
+        transcript: &mut ctx.transcript,
         host,
         now,
-        &mut ctx.cert11,
-        &mut ctx.validated,
-    );
+        cert11: &mut ctx.cert11,
+        validated: &mut ctx.validated,
+    };
+    let ok = super::scan_server_finished::scan(&msgs, &mut scan);
     if !ok {
         return None;
     }

@@ -21,10 +21,11 @@ use crate::browser::url::Url;
 pub fn build(url: &Url) -> String {
     let mut r = String::new();
     r.push_str("GET ");
-    r.push_str(&url.path);
+    r.push_str(crate::browser::url::request_target(url));
     r.push_str(" HTTP/1.1\r\nHost: ");
-    r.push_str(&url.host);
-    r.push_str("\r\nUser-Agent: nonos-browser/0.1\r\nAccept: text/html\r\n");
+    r.push_str(&crate::browser::url::authority(url));
+    r.push_str("\r\nUser-Agent: nonos-browser/0.1\r\n");
+    r.push_str("Accept: text/html,text/plain,application/json,*/*;q=0.1\r\n");
     r.push_str("Accept-Encoding: gzip, deflate\r\nConnection: close\r\n\r\n");
     r
 }

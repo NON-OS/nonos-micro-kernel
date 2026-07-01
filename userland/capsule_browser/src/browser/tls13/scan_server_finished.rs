@@ -16,16 +16,16 @@
 
 use alloc::vec::Vec;
 
-#[allow(clippy::too_many_arguments)]
-pub fn scan(
-    secret: &[u8; 32],
-    transcript: &mut Vec<u8>,
-    msgs: &[u8],
-    host: &[u8],
-    now: u64,
-    cert11: &mut Vec<u8>,
-    validated: &mut bool,
-) -> bool {
+pub struct ScanState<'a> {
+    pub secret: &'a [u8; 32],
+    pub transcript: &'a mut Vec<u8>,
+    pub host: &'a [u8],
+    pub now: u64,
+    pub cert11: &'a mut Vec<u8>,
+    pub validated: &'a mut bool,
+}
+
+pub fn scan(msgs: &[u8], state: &mut ScanState) -> bool {
     let mut pos = 0usize;
     while pos + 4 <= msgs.len() {
         let len = ((msgs[pos + 1] as usize) << 16) | ((msgs[pos + 2] as usize) << 8) | msgs[pos + 3] as usize;
@@ -35,36 +35,36 @@ pub fn scan(
         }
         match msgs[pos] {
             11 => {
-                cert11.clear();
-                cert11.extend_from_slice(&msgs[pos + 4..end]);
-                if !super::chain_walk::verify_chain(cert11.as_slice(), host, now) {
+                state.cert11.clear();
+                state.cert11.extend_from_slice(&msgs[pos + 4..end]);
+                if !super::chain_walk::verify_chain(state.cert11.as_slice(), state.host, state.now) {
                     return false;
                 }
-                transcript.extend_from_slice(&msgs[pos..end]);
+                state.transcript.extend_from_slice(&msgs[pos..end]);
             }
             15 => {
-                let before_cv = transcript.clone();
-                let Some(leaf) = super::cert_at::cert_at(cert11.as_slice(), 0) else {
+                let before_cv = state.transcript.clone();
+                let Some(leaf) = super::cert_at::cert_at(state.cert11.as_slice(), 0) else {
                     return false;
                 };
                 if !super::cert_verify_msg::verify_cert_verify(leaf, &before_cv, &msgs[pos + 4..end]) {
                     return false;
                 }
-                *validated = true;
-                transcript.extend_from_slice(&msgs[pos..end]);
+                *state.validated = true;
+                state.transcript.extend_from_slice(&msgs[pos..end]);
             }
             20 => {
-                if !*validated {
+                if !*state.validated {
                     return false;
                 }
-                let ok = super::finished_verify::verify(secret, transcript, &msgs[pos + 4..end]);
+                let ok = super::finished_verify::verify(state.secret, state.transcript, &msgs[pos + 4..end]);
                 if ok {
-                    transcript.extend_from_slice(&msgs[pos..end]);
+                    state.transcript.extend_from_slice(&msgs[pos..end]);
                 }
                 return ok;
             }
             _ => {
-                transcript.extend_from_slice(&msgs[pos..end]);
+                state.transcript.extend_from_slice(&msgs[pos..end]);
             }
         }
         pos = end;
