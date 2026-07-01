@@ -28,3 +28,4 @@ pub const E_NO_SOCKET: u16 = 5;
 pub const E_BIND_FAILED: u16 = 6;
 pub const E_NOT_CONNECTED: u16 = 12;
 pub const E_RX_EMPTY: u16 = 8;
+pub const E_BAD_ADDR: u16 = 14;

@@ -37,6 +37,10 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
             continue;
         }
         for s in &line.spans {
+            if s.image_src.is_some() {
+                super::image_span::paint_image(fb, s, sy as u32, line.height);
+                continue;
+            }
             fb.text_scaled(s.x, sy as u32, s.text.as_bytes(), s.color, s.scale);
             if s.bold {
                 fb.text_scaled(s.x + 1, sy as u32, s.text.as_bytes(), s.color, s.scale);

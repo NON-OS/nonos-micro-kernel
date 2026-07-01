@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::clients::udp;
-use crate::protocol::{E_NO_HANDLE, E_NO_TRANSPORT, E_OK, OP_BIND};
+use crate::protocol::{E_ALREADY_BOUND, E_BAD_ADDR, E_NO_HANDLE, E_NO_TRANSPORT, E_OK, OP_BIND};
 use crate::server::handlers::io::{ip4_at, u16_at, u32_at};
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
@@ -28,15 +28,26 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         Err(e) => return status(pid, req, e, tx),
     };
     let key = SocketKey { pid, handle };
-    let result = SOCKETS.with(key, |s| {
-        if s.kind == Kind::Datagram && udp::bind(state::udp(), port).is_err() {
-            return E_NO_TRANSPORT;
-        }
+    let Some(sock) = SOCKETS.with(key, |s| *s) else {
+        return status(pid, req, E_NO_HANDLE, tx);
+    };
+    if port == 0 {
+        return status(pid, req, E_BAD_ADDR, tx);
+    }
+    if sock.bound {
+        return status(pid, req, E_ALREADY_BOUND, tx);
+    }
+    if sock.kind == Kind::Datagram && udp::bind(state::udp(), port).is_err() {
+        return status(pid, req, E_NO_TRANSPORT, tx);
+    }
+    let updated = SOCKETS.with(key, |s| {
         s.local = Some(LocalAddr4 { port });
         s.bound = true;
-        E_OK
     });
-    status(pid, req, result.map_or(E_NO_HANDLE, |errno| errno), tx);
+    if updated.is_none() && sock.kind == Kind::Datagram {
+        let _ = udp::unbind(state::udp(), port);
+    }
+    status(pid, req, updated.map_or(E_NO_HANDLE, |_| E_OK), tx);
 }
 
 fn parse_body(body: &[u8]) -> Result<(u32, u16), u16> {

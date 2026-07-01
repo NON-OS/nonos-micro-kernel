@@ -1,0 +1,41 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use nonos_app_skeleton::PaintBuffer;
+
+use crate::browser::paint::home_page::{constants, shortcut_data};
+
+pub fn shortcut(fb: &mut PaintBuffer, i: u32) {
+    let s = &shortcut_data::SHORTCUTS[i as usize];
+    let bx = badge_x(i);
+    fb.fill_rect(bx, constants::BADGE_Y, constants::BADGE, constants::BADGE, s.color);
+    fb.fill_rect(bx, constants::BADGE_Y, 6, 6, constants::PAGE_BG);
+    fb.fill_rect(bx + constants::BADGE - 6, constants::BADGE_Y, 6, 6, constants::PAGE_BG);
+    fb.fill_rect(bx, constants::BADGE_Y + constants::BADGE - 6, 6, 6, constants::PAGE_BG);
+    fb.fill_rect(bx + constants::BADGE - 6, constants::BADGE_Y + constants::BADGE - 6, 6, 6, constants::PAGE_BG);
+    let gw = fb.glyph_advance().saturating_mul(3);
+    fb.text_scaled(center_x(i).saturating_sub(gw / 2), constants::BADGE_Y + 16, s.badge, constants::WHITE, 3);
+    let lw = (s.label.len() as u32).saturating_mul(fb.glyph_advance());
+    fb.text(center_x(i).saturating_sub(lw / 2), 370, s.label, constants::FG);
+}
+
+pub fn center_x(i: u32) -> u32 {
+    constants::ROW_X0 + i * constants::CELL_W + constants::CELL_W / 2
+}
+
+pub fn badge_x(i: u32) -> u32 {
+    center_x(i).saturating_sub(constants::BADGE / 2)
+}

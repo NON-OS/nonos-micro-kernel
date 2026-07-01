@@ -20,6 +20,7 @@ use alloc::string::String;
 pub struct Style {
     pub heading: u8,
     pub bold: bool,
+    pub pre: bool,
 }
 
 pub enum Flow {

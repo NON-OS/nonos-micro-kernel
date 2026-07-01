@@ -26,3 +26,5 @@ pub const E_BAD_FAMILY: u16 = 8;
 pub const E_BAD_KIND: u16 = 9;
 pub const E_NOT_BOUND: u16 = 10;
 pub const E_NOT_CONNECTED: u16 = 12;
+pub const E_ALREADY_BOUND: u16 = 13;
+pub const E_BAD_ADDR: u16 = 14;

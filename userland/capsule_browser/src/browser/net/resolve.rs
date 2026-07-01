@@ -22,5 +22,9 @@ pub fn resolve(dns_port: u32, host: &[u8]) -> Result<[u8; 4], ()> {
     if n < 24 {
         return Err(());
     }
-    Ok([rx[20], rx[21], rx[22], rx[23]])
+    let ip = [rx[20], rx[21], rx[22], rx[23]];
+    if ip == [0, 0, 0, 0] {
+        return Err(());
+    }
+    Ok(ip)
 }

@@ -2,70 +2,93 @@
 
 ## Role
 
-`capsule_browser` is the graphical web client capsule. It owns URL parsing,
-page fetch orchestration, response decoding, document layout, scroll state, and
-surface painting for the browser window.
+`capsule_browser` is the graphical web browser capsule. It owns browser chrome,
+navigation state, document parsing, layout, paint, TLS client state, and the
+network fetch loop for the user-facing browser app.
+
+```text
+desktop shell
+    |
+    | launch app.browser
+    v
+browser -- MkIpc --> net.sockets -- TCP/UDP/IP/L2 --> selected NIC capsule
+    |
+    `-- MkSurface* --> compositor
+```
 
 ## Microkernel contract
 
-The capsule runs as a signed userland process and renders through the desktop
-toolkit/compositor surface path. Network access is mediated through the network
-capsule stack; the browser does not talk to NIC drivers, MMIO, IRQ, DMA, or PIO
-directly.
+The browser is a user capsule. It does not own NIC hardware, routing tables,
+DNS policy, kernel packet parsing, global input focus, or framebuffer memory.
+It talks to the network stack through MkIpc services and presents pixels
+through the graphics surface ABI.
+
+- `MkIpcSend` and `MkIpcRecv` carry network requests and replies.
+- `MkSurfaceCreate` and display-query authority are used for the app surface.
+- The manifest capability mask is `CAPSULE_REQUIRED_CAPS = 0x1839`.
+- The service endpoint is `service:4760:app.browser`.
+- The reply endpoint is `reply:4761:endpoint.app.browser.reply`.
+
+## Interface contract
+
+The browser accepts keyboard and pointer events through the app skeleton,
+resolves a URL, opens a socket through `net.sockets`, performs HTTP or HTTPS
+fetch, parses the response, builds a simple document flow, and paints the
+result into its compositor-owned surface.
 
 ## Authority
 
-The capsule requires only the authority needed to open UI surfaces, exchange IPC
-with runtime services, allocate memory, and use the network service path. It
-does not hold driver, device enumeration, raw hardware, filesystem, admin,
-debug, or broker grant authority.
+Authority is intentionally narrow: core execution, memory, IPC, crypto, display
+query, and surface creation. The browser has no driver, device enumeration,
+MMIO, IRQ, DMA, PIO, filesystem, admin, or debug authority.
 
 ## Privacy and persistence
 
-Runtime page state, URL state, decoded body buffers, scroll state, and transient
-network responses live in memory. The capsule does not persist browsing history,
-cache contents, cookies, credentials, downloaded files, or telemetry.
+Navigation state, history, TLS transcript material, response bytes, and parsed
+documents live in capsule memory. The capsule does not persist browsing history
+or write a cache. It does not receive raw NIC frames, device registers, or
+kernel-global input state.
 
 ## Runtime lifecycle
 
-Startup creates the browser application state, registers the window surface, and
-enters the event loop. Input events update URL, scroll, focus, and navigation
-state. Network responses update the decoded document model, and paint passes
-draw the current viewport into the owned surface.
+The launcher starts the capsule, the browser creates a surface, paints chrome,
+and waits for navigation input. Each navigation creates one bounded fetch job,
+uses DNS and sockets over MkIpc, closes the socket on completion or error, then
+renders a parsed document or a clear failure state.
 
 ## Failure model
 
-Malformed URLs, transient network failures, truncated bodies, unsupported
-content, oversized responses, and decoding errors resolve into bounded UI state.
-The capsule must not panic, block the compositor, or gain additional authority
-when a page fails to load.
+Bad URLs, DNS failure, connect failure, send failure, TLS initialization
+failure, TLS certificate failure, oversized responses, oversized TLS server
+flights, malformed HTTP, redirect loops, and fetch timeouts become explicit
+browser status states. They must not panic the capsule or leave sockets open.
 
 ## Current implemented surface
 
-- URL state and browser application loop.
-- Keyboard and event handling.
-- Response body handling for fetched pages.
-- Basic document layout and painting.
-- Scroll state and viewport rendering.
+- HTTP request construction and response parsing are present.
+- HTTPS fetch uses an in-capsule TLS 1.3 client path.
+- TLS server flights and response bodies are bounded before append.
+- Redirect count is bounded.
+- Socket cleanup runs on fetch completion and fetch failure.
+- HTML flow parsing, layout, chrome paint, and document paint are present.
 
 ## State ownership
 
-The browser owns page, URL, scroll, and render state. The compositor owns final
-surface composition. Network capsules own packet, DNS, TCP, socket, and driver
-state. The kernel owns only scheduling, memory isolation, capability checks, and
-IPC mechanics.
+The browser owns address-bar text, navigation history, fetch state, TLS client
+state, parsed document state, scroll state, and surface paint buffers.
+`net.sockets` owns socket handles. Lower network capsules own packet and link
+state. The compositor owns final scene composition and focus policy.
 
 ## Operating rules
 
-- Keep remote content untrusted.
-- Bound decoded body and layout state.
-- Keep driver and packet ownership outside the browser.
-- Keep persistence out until an explicit encrypted profile store exists.
-- Treat rendering as data presentation, not authority.
+- Keep all network input bounded before allocation growth.
+- Close the active socket on every terminal fetch state.
+- Treat TLS and HTTP parse failure as user-visible failure, not success.
+- Keep hardware, routing, and packet policy outside the browser.
 
 ## Release evidence
 
-Release evidence is deterministic UI startup, successful DNS and TCP fetch
-through the network capsule stack, bounded rendering for malformed pages, no
-kernel network protocol ownership, and static proof that the browser has no raw
-hardware or broker grant path.
+Release evidence for this capsule is a signed and attested browser capsule,
+static proof that it has no hardware authority, a successful HTTP fetch through
+the NØNOS socket stack, a successful HTTPS fetch through the TLS path, bounded
+oversize-response rejection, redirect-loop rejection, and GUI render evidence.

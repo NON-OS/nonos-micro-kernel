@@ -45,12 +45,15 @@ pub fn push_decoded(out: &mut String, entity: &str) {
                 } else {
                     n.parse::<u32>().ok()
                 };
-                if let Some(c) = cp.and_then(char::from_u32) {
+                if let Some(c) = cp.and_then(char::from_u32).filter(|c| !c.is_control()) {
                     out.push(c);
                     return;
                 }
             }
-            ""
+            out.push('&');
+            out.push_str(entity);
+            out.push(';');
+            return;
         }
     };
     out.push_str(s);

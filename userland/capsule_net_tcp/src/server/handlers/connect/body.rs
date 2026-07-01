@@ -14,12 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::E_BAD_LEN;
+use crate::protocol::{E_BAD_ADDR, E_BAD_LEN};
 use crate::server::handlers::io::{ip4_at, u16_at};
 
 pub fn parse(body: &[u8]) -> Result<([u8; 4], u16), u16> {
     if body.len() < 6 {
         return Err(E_BAD_LEN);
     }
-    Ok((ip4_at(body, 0)?, u16_at(body, 4)?))
+    let ip = ip4_at(body, 0)?;
+    let port = u16_at(body, 4)?;
+    if ip == [0, 0, 0, 0] || port == 0 {
+        return Err(E_BAD_ADDR);
+    }
+    Ok((ip, port))
 }

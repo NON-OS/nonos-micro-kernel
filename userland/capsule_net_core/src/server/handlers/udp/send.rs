@@ -17,7 +17,7 @@
 use smoltcp::socket::udp;
 use smoltcp::wire::{IpAddress, IpEndpoint, Ipv4Address};
 
-use crate::protocol::udp::{E_BAD_LEN, E_NOT_CONNECTED, E_NO_SOCKET, E_OK, MAGIC_NUDP, OP_SEND};
+use crate::protocol::udp::{E_BAD_ADDR, E_BAD_LEN, E_NOT_CONNECTED, E_NO_SOCKET, E_OK, MAGIC_NUDP, OP_SEND};
 use crate::server::parse_req::Request;
 use crate::server::respond::reply;
 use crate::state;
@@ -32,6 +32,10 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     let dst_ip = Ipv4Address([body[2], body[3], body[4], body[5]]);
     let dst_port = u16::from_le_bytes([body[6], body[7]]);
     let payload = &body[8..];
+    if dst_ip.0 == [0, 0, 0, 0] || dst_port == 0 || local_port == 0 {
+        let _ = reply(sender_pid, MAGIC_NUDP, OP_SEND, E_BAD_ADDR, req.request_id, &[], tx);
+        return;
+    }
 
     let sock_handle = match udp_ports::get(sender_pid, local_port) {
         Some(h) => h,

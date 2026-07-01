@@ -35,6 +35,7 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         Err(_) => return status(pid, req, E_NO_TRANSPORT, tx),
     };
     let Some(key) = SOCKETS.open(pid, Kind::Stream) else {
+        let _ = tcp::close(state::tcp(), child);
         return status(pid, req, E_TABLE_FULL, tx);
     };
     SOCKETS.with(key, |s| {

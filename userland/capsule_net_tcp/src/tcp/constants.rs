@@ -1,0 +1,28 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+pub const MSS: usize = crate::protocol::SEGMENT_PAYLOAD_MAX;
+pub const RWND_MAX: u16 = (crate::state::RX_DEPTH * MSS) as u16;
+pub const SND_BUF_MAX: usize = 64 * 1024;
+pub const MSL_MS: u64 = 30_000;
+pub const MAX_RETX: u8 = 8;
+pub const REASM_MAX_SEGS: usize = 32;
+pub const MAX_CONN_PER_PID: usize = 32;
+pub const INIT_CWND: u32 = 3 * MSS as u32;
+pub const DUP_ACK_THRESH: u8 = 3;
+pub const RTO_MIN_MS: u32 = 200;
+pub const RTO_MAX_MS: u32 = 60_000;
+pub const RTO_INIT_MS: u32 = 1_000;

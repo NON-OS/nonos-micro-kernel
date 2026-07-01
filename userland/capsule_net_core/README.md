@@ -2,108 +2,131 @@
 
 ## Role
 
-`capsule_net_core` owns the selected NIC client and the in-memory network
-interface state used by the higher network services.
+`capsule_net_core` is the integrated network core capsule. It binds the selected
+network device path to smoltcp-backed interface state and exposes compact IPC
+operations for DHCP status, DNS resolution, UDP sockets, and TCP sockets.
 
 ```text
-DHCP / DNS / sockets
+browser / apps
     |
+    | MkIpc socket operations
     v
-net.core -- interface poll / link state --> driver.virtio_net0 / e1000 / rtl*
+net.core -- smoltcp iface/sockets --> net device client --> selected NIC capsule
+    |
+    `-- bounded replies to callers
 ```
 
 ## Microkernel contract
 
-The capsule is a signed IPC service:
+The capsule is an IPC network service. The kernel routes messages and enforces
+capabilities; it does not hold TCP state, DNS cache state, DHCP lease state, or
+application socket buffers.
 
-- `MkIpcRecv` receives requests on `service:4480:net.core`.
-- `MkIpcSend` replies through `reply:4481:endpoint.net.core.reply`.
-- Its endpoint name is `net.core`.
-- Its kernel mirror target is `src/userspace/capsule_net_core`.
-
-The kernel does not own network protocol state or parse packets for this
-capsule.
+- `MkIpcRecv` receives network service requests.
+- `MkIpcSend` returns bounded replies.
+- The capsule uses `CAPSULE_REQUIRED_CAPS` from `Capsule.mk`.
+- The service endpoint is `net.core`.
 
 ## Interface contract
 
-| Operation | Meaning |
-|---|---|
-| health | service liveness |
-| dhcp status | report configured address and lease state |
+The capsule accepts protocol-framed operations for service health, DHCP status,
+DNS A resolution, UDP bind/send/recv/unbind, TCP connect/send/recv/state/close,
+and interface polling. Requests are parsed from explicit wire headers and every
+unknown operation returns an error status.
 
 ## Authority
 
-The manifest grants driver discovery, IPC, and memory:
-`CAPSULE_REQUIRED_CAPS = 0x00039`. It has no MMIO, IRQ, DMA, PIO, filesystem,
-admin, debug, or direct raw hardware authority.
+The capsule owns network stack state only. It does not own MMIO, IRQ, DMA, PIO,
+device enumeration, raw PCI config, filesystem access, debug authority, or
+admin authority. Hardware access remains below the selected driver capsule and
+broker grants.
 
 ## Privacy and persistence
 
-The capsule keeps runtime link, MAC, address, socket, and DHCP state in memory.
-It does not persist packet contents, leases, peers, or traffic history.
+The capsule observes IP addresses, DNS names requested by callers, socket peer
+addresses, transient packet payloads, and DHCP lease data. It keeps this state
+in memory only and does not write packet captures, DNS history, socket history,
+or lease history to persistent storage.
 
 ## Runtime lifecycle
 
-At startup it discovers one NIC driver endpoint, obtains the MAC address, builds
-the interface state, registers network services, and enters the server loop.
+At start, the capsule discovers the selected network path, initializes the
+smoltcp interface, polls the device, maintains DHCP and socket progress, and
+services IPC requests. Callers see explicit busy, empty, no-route, and protocol
+errors rather than implicit blocking.
 
 ## Failure model
 
-Missing NIC, MAC query failure, interface setup failure, malformed request, and
-empty poll states return deterministic protocol errors.
+No device, link down, missing lease, DNS failure, malformed request, unsupported
+operation, socket exhaustion, connection refusal, timeout, receive-empty, and
+device TX/RX failure are explicit protocol results. They must not panic the
+capsule or leak ownership of a caller socket handle.
 
 ## Current implemented surface
 
-- NIC endpoint discovery covers virtio-net, e1000, rtl8169, and rtl8139.
-- Interface construction, polling, DHCP state, UDP port state, and service
-  registration are present.
-- Server handlers expose health and DHCP status.
-
-## Wire format
-
-Requests use the net-core service endpoint. Replies carry a status word followed
-by operation-specific bytes for health and DHCP status.
+- Device RX/TX client modules are present.
+- smoltcp interface construction and polling are present.
+- DHCP, DNS, UDP, and TCP handler modules are present.
+- Request parsing and bounded response helpers are present.
+- Unknown operations reply with a protocol error.
 
 ## State ownership
 
-The capsule owns selected NIC endpoint state, interface state, DHCP status, and
-UDP port bookkeeping. NIC driver capsules own hardware rings and broker grants.
+The capsule owns the smoltcp interface, socket tables, DHCP state, DNS resolver
+state, and the selected network device client. Driver capsules own hardware
+rings and broker grants. Applications own their own navigation or socket call
+intent, not network-global state.
 
 ## Operating rules
 
-- Select one NIC endpoint.
-- Keep packet and address state transient.
-- Do not parse hardware registers in this capsule.
-- Keep firewall, capture, and persistent policy out of net-core.
-
-## Release target
-
-The finished capsule drives the shared network interface state for DHCP, DNS,
-UDP, TCP, and sockets through a selected NIC driver without kernel packet policy.
+- Never move TCP, DHCP, DNS, or socket state into the kernel.
+- Keep all request and response buffers bounded.
+- Return explicit protocol errors for malformed or unsupported operations.
+- Keep packet captures and persistent network telemetry out of this capsule.
 
 ## Release evidence
 
-Release evidence is DHCP address acquisition, DNS query over the stack, TCP
-connection lifecycle, packet TX/RX counters, and static proof that the kernel
-does not own network protocol state.
+Release evidence for this capsule is a signed and attested `net.core`, static
+proof that it has no hardware authority, DHCP lease evidence, DNS A-resolution
+evidence, TCP connect/send/recv/close evidence, UDP bind/send/recv evidence,
+and a browser fetch that reaches the GUI through the NØNOS network path.
+
+## Wire format
+
+Requests use explicit protocol magics for DHCP, DNS, UDP, and TCP families.
+Each request starts with an operation code and bounded payload length. Replies
+return a status word before operation-specific data. Socket operations carry
+caller-owned handles; the capsule owns the backing socket state.
+
+## Release target
+
+The finished capsule is a first-class production network profile:
+`nonos-mk-net-core-prod` builds the signed capsule set and the kernel profile
+with `microkernel-net-core`. The capsule must boot, acquire or report DHCP
+state, resolve DNS, open TCP, move bytes, close sockets, and keep all hardware
+access below brokered driver capsules.
 
 ## Release checklist
 
-- NIC endpoint discovery works for each enabled NIC class.
-- DHCP status is observable through IPC.
-- DNS and TCP clients use this capsule path.
-- Packet buffers remain bounded.
-- Static gate confirms no kernel protocol ownership.
+- Root build includes `userland/capsule_net_core/Capsule.mk`.
+- `microkernel-net-core` embeds and spawns `net_core`.
+- DHCP status returns explicit lease or no-lease state.
+- DNS A resolution returns bounded replies.
+- TCP connect/send/recv/state/close works through IPC.
+- Unknown operations return protocol errors.
+- Static gate confirms no kernel packet stack.
 
 ## Explicit non-goals today
 
-No NIC register access, MMIO, IRQ ownership, DMA ownership, packet capture
-store, firewall policy, TLS, persistent leases, or user identity policy lives
-here.
+No raw NIC ownership, packet capture store, persistent DNS cache, browser
+history, firewall policy, Tor/Nym routing policy, TLS verification, or GUI
+rendering belongs in `net.core`. Those remain in driver capsules, browser
+capsule, Nym capsule, or user-facing apps.
 
 ## Verification
 
 - Static gate: `bash nonos-ci/run-static-checks.sh`
-- Build gate: `make -B nonos-mk-net-core`
-- Runtime proof: boot with a NIC driver, acquire DHCP state, and complete DNS
-  and TCP traffic through the net-core service path.
+- Capsule build: `make userland/capsule_net_core/target/x86_64-nonos-user/release/net_core`
+- Production profile: `make nonos-mk-net-core-prod`
+- Runtime proof: DHCP/DNS/TCP socket transaction followed by a browser fetch
+  rendered in the GUI through `net.core`.

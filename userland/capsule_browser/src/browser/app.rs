@@ -49,7 +49,7 @@ impl App for Browser {
         if let Some(target) = self.state.pending_nav.take() {
             if let Err(msg) = crate::browser::fetch::load(&mut self.state, &target) {
                 self.state.status = alloc::string::String::from(msg);
-                self.state.document = None;
+                self.state.document = Some(crate::browser::fetch::render_error(msg));
                 self.state.view = crate::browser::state::View::Page;
             }
             return true;

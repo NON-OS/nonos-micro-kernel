@@ -27,21 +27,25 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         Ok(h) => h,
         Err(e) => return status(pid, req, e, tx),
     };
-    let errno = SOCKETS.with(SocketKey { pid, handle }, |s| {
-        let local = match s.local {
-            Some(local) if s.kind == Kind::Stream => local,
-            _ => return E_NOT_BOUND,
-        };
-        match tcp::listen(state::tcp(), local.port) {
-            Ok(h) => {
-                s.transport_handle = h;
-                s.listening = true;
-                E_OK
-            }
-            Err(_) => E_NO_TRANSPORT,
-        }
+    let key = SocketKey { pid, handle };
+    let Some(sock) = SOCKETS.with(key, |s| *s) else {
+        return status(pid, req, E_NO_HANDLE, tx);
+    };
+    let Some(local) = sock.local.filter(|_| sock.kind == Kind::Stream) else {
+        return status(pid, req, E_NOT_BOUND, tx);
+    };
+    let transport = match tcp::listen(state::tcp(), local.port) {
+        Ok(h) => h,
+        Err(_) => return status(pid, req, E_NO_TRANSPORT, tx),
+    };
+    let updated = SOCKETS.with(key, |s| {
+        s.transport_handle = transport;
+        s.listening = true;
     });
-    status(pid, req, errno.map_or(E_NO_HANDLE, |code| code), tx);
+    if updated.is_none() {
+        let _ = tcp::close(state::tcp(), transport);
+    }
+    status(pid, req, updated.map_or(E_NO_HANDLE, |_| E_OK), tx);
 }
 
 fn status(pid: u32, req: &Request, errno: u16, tx: &mut [u8]) {

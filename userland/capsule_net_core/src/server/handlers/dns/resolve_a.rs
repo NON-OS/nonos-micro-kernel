@@ -58,7 +58,8 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
 
 fn reply_a(sender_pid: u32, req: &Request, addrs: &[IpAddress], tx: &mut [u8]) {
     let ip = addrs.iter().find_map(|a| match a {
-        IpAddress::Ipv4(v4) => Some(v4.0),
+        IpAddress::Ipv4(v4) if v4.0 != [0, 0, 0, 0] => Some(v4.0),
+        _ => None,
     });
     match ip {
         Some(o) => {
