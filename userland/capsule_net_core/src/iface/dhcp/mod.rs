@@ -14,7 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+mod create;
+mod emit_lease_marker;
+mod emit_status_selfcheck;
+mod fill_marker;
+mod handle_configured;
+mod handle_deconfigured;
+mod install_dns_socket;
+mod poll_event;
+mod types;
+mod write_decimal_u8;
+mod write_octet_quad;
 
-pub use dispatch::dispatch;
+pub use create::create;
+pub use poll_event::poll_event;

@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use nonos_libc::mk_ipc_recv_from;
 
-pub use dispatch::dispatch;
+const SERVICE_INBOX: u64 = 0;
+const POLL_MS: u64 = 50;
+
+pub fn receive(rx: &mut [u8], sender_pid: &mut u32) -> i64 {
+    mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), POLL_MS, sender_pid)
+}

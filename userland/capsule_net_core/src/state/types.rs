@@ -14,7 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use smoltcp::iface::{Interface, SocketHandle, SocketSet};
 
-pub use dispatch::dispatch;
+use crate::device::NicDevice;
+
+pub struct NetState {
+    pub iface: Interface,
+    pub sockets: SocketSet<'static>,
+    pub device: NicDevice,
+    pub dhcp_handle: SocketHandle,
+    pub dns_handle: Option<SocketHandle>,
+}
+
+unsafe impl Send for NetState {}
+
+pub struct Lease {
+    pub ip: [u8; 4],
+    pub prefix: u8,
+    pub gw: [u8; 4],
+    pub dns: [u8; 4],
+    pub secs: u32,
+    pub bound: bool,
+}

@@ -14,7 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use core::sync::atomic::{AtomicU16, Ordering};
 
-pub use dispatch::dispatch;
+const EPHEMERAL_BASE: u16 = 49152;
+const EPHEMERAL_TOP: u16 = u16::MAX;
+static EPHEMERAL: AtomicU16 = AtomicU16::new(EPHEMERAL_BASE);
+
+pub fn next_ephemeral() -> u16 {
+    let p = EPHEMERAL.fetch_add(1, Ordering::Relaxed);
+    let range = EPHEMERAL_TOP - EPHEMERAL_BASE + 1;
+    EPHEMERAL_BASE + p.wrapping_sub(EPHEMERAL_BASE) % range
+}

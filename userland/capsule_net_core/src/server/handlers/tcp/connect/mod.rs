@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+mod endpoint;
+mod ephemeral;
+mod handle;
+mod open_socket;
+mod reply_outcome;
+mod types;
 
-pub use dispatch::dispatch;
+pub use handle::handle;

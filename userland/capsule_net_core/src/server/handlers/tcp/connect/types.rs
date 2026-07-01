@@ -14,7 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use smoltcp::wire::IpAddress;
 
-pub use dispatch::dispatch;
+pub struct Endpoint {
+    pub remote: IpAddress,
+    pub port: u16,
+}
+
+pub enum ConnectOutcome {
+    Ok(u32),
+    ConnectFailed,
+    TableFull,
+}

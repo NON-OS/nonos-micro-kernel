@@ -14,7 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use crate::device::tx;
+use crate::device::types::NicTxToken;
 
-pub use dispatch::dispatch;
+impl smoltcp::phy::TxToken for NicTxToken {
+    fn consume<R, F>(self, len: usize, f: F) -> R
+    where F: FnOnce(&mut [u8]) -> R {
+        let mut buf = alloc::vec![0u8; len];
+        let r = f(&mut buf);
+        tx::send_frame(self.port, &buf);
+        r
+    }
+}

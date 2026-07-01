@@ -14,7 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
-
-pub use dispatch::dispatch;
+pub fn write_decimal_u8(buf: &mut [u8; 64], mut pos: usize, val: u8) -> usize {
+    if val >= 100 {
+        buf[pos] = b'0' + val / 100;
+        pos += 1;
+    }
+    if val >= 10 {
+        buf[pos] = b'0' + (val / 10) % 10;
+        pos += 1;
+    }
+    buf[pos] = b'0' + val % 10;
+    pos + 1
+}

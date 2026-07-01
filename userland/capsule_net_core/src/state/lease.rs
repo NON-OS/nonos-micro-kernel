@@ -14,7 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use crate::state::globals::LEASE;
+use crate::state::types::Lease;
 
-pub use dispatch::dispatch;
+pub fn lease() -> Option<Lease> {
+    let guard = LEASE.lock();
+    guard.as_ref().map(|l| Lease {
+        ip: l.ip,
+        prefix: l.prefix,
+        gw: l.gw,
+        dns: l.dns,
+        secs: l.secs,
+        bound: l.bound,
+    })
+}
+
+pub fn set_lease(l: Option<Lease>) {
+    *LEASE.lock() = l;
+}

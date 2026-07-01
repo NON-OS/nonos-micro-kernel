@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use crate::device::rx;
+use crate::device::types::{NicRxToken, NicTxToken};
 
-pub use dispatch::dispatch;
+pub fn receive(port: u32) -> Option<(NicRxToken, NicTxToken)> {
+    let frame = rx::poll_frame(port)?;
+    Some((NicRxToken(frame), NicTxToken { port }))
+}

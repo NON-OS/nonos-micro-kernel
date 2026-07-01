@@ -14,7 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use smoltcp::iface::{Interface, SocketHandle, SocketSet};
 
-pub use dispatch::dispatch;
+use crate::state;
+
+pub fn handle_deconfigured(
+    iface: &mut Interface,
+    sockets: &mut SocketSet<'static>,
+    dns_slot: &mut Option<SocketHandle>,
+) {
+    iface.update_ip_addrs(|addrs| addrs.clear());
+    let _ = iface.routes_mut().remove_default_ipv4_route();
+    if let Some(old) = dns_slot.take() {
+        sockets.remove(old);
+    }
+    state::set_lease(None);
+}

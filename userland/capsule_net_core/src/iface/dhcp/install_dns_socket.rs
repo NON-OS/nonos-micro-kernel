@@ -14,7 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use smoltcp::iface::{SocketHandle, SocketSet};
+use smoltcp::socket::dns;
+use smoltcp::wire::{IpAddress, Ipv4Address};
 
-pub use dispatch::dispatch;
+pub fn install_dns_socket(sockets: &mut SocketSet<'static>, dns_ip: [u8; 4]) -> Option<SocketHandle> {
+    if dns_ip == [0, 0, 0, 0] {
+        return None;
+    }
+    let server = IpAddress::Ipv4(Ipv4Address(dns_ip));
+    let socket = dns::Socket::new(&[server], alloc::vec![]);
+    Some(sockets.add(socket))
+}

@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use spin::Mutex;
 
-pub use dispatch::dispatch;
+use crate::state::types::{Lease, NetState};
+
+pub static NET: Mutex<Option<NetState>> = Mutex::new(None);
+pub static LEASE: Mutex<Option<Lease>> = Mutex::new(None);

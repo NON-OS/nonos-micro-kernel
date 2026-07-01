@@ -14,7 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use smoltcp::wire::{Ipv4Address, Ipv4Cidr};
 
-pub use dispatch::dispatch;
+pub struct ConfiguredLease {
+    pub address: Ipv4Cidr,
+    pub router: Option<Ipv4Address>,
+    pub dns: [u8; 4],
+}
+
+pub enum DhcpAction {
+    Configured(ConfiguredLease),
+    Deconfigured,
+    None,
+}

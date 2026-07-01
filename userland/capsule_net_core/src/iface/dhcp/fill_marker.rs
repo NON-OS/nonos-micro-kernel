@@ -14,7 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use crate::iface::dhcp::{write_decimal_u8, write_octet_quad};
 
-pub use dispatch::dispatch;
+pub fn fill_marker(buf: &mut [u8; 64], prefix_msg: &[u8], ip: [u8; 4], prefix: u8, gw: [u8; 4]) -> usize {
+    let mut pos = 0usize;
+    for &b in prefix_msg {
+        buf[pos] = b;
+        pos += 1;
+    }
+    pos = write_octet_quad::write_octet_quad(buf, pos, ip);
+    buf[pos] = b'/';
+    pos += 1;
+    pos = write_decimal_u8::write_decimal_u8(buf, pos, prefix);
+    buf[pos] = b' ';
+    pos += 1;
+    for &b in b"gw " {
+        buf[pos] = b;
+        pos += 1;
+    }
+    pos = write_octet_quad::write_octet_quad(buf, pos, gw);
+    buf[pos] = b'\n';
+    pos + 1
+}

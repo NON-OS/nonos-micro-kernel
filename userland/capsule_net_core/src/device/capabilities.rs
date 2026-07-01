@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use smoltcp::phy::{DeviceCapabilities, Medium};
 
-pub use dispatch::dispatch;
+pub fn capabilities() -> DeviceCapabilities {
+    let mut c = DeviceCapabilities::default();
+    c.max_transmission_unit = 1514;
+    c.medium = Medium::Ethernet;
+    c
+}

@@ -14,7 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use smoltcp::phy::{Device, DeviceCapabilities};
+use smoltcp::time::Instant;
 
-pub use dispatch::dispatch;
+use crate::device::{capabilities, receive, transmit};
+use crate::device::types::{NicDevice, NicRxToken, NicTxToken};
+
+impl Device for NicDevice {
+    type RxToken<'a> = NicRxToken where Self: 'a;
+    type TxToken<'a> = NicTxToken where Self: 'a;
+
+    fn receive(&mut self, _now: Instant) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
+        receive::receive(self.port)
+    }
+
+    fn transmit(&mut self, _now: Instant) -> Option<Self::TxToken<'_>> {
+        transmit::transmit(self.port)
+    }
+
+    fn capabilities(&self) -> DeviceCapabilities {
+        capabilities::capabilities()
+    }
+}

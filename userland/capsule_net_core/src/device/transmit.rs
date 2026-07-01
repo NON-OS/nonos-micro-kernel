@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use crate::device::types::NicTxToken;
 
-pub use dispatch::dispatch;
+pub fn transmit(port: u32) -> Option<NicTxToken> {
+    Some(NicTxToken { port })
+}

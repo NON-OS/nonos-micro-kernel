@@ -14,7 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use alloc::vec::Vec;
 
-pub use dispatch::dispatch;
+pub struct NicDevice {
+    pub port: u32,
+}
+
+pub struct NicRxToken(pub Vec<u8>);
+
+pub struct NicTxToken {
+    pub port: u32,
+}

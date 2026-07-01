@@ -14,7 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use crate::device::types::NicRxToken;
 
-pub use dispatch::dispatch;
+impl smoltcp::phy::RxToken for NicRxToken {
+    fn consume<R, F>(self, f: F) -> R
+    where F: FnOnce(&mut [u8]) -> R {
+        let mut frame = self.0;
+        f(&mut frame)
+    }
+}

@@ -14,7 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use crate::iface::dhcp::write_decimal_u8;
 
-pub use dispatch::dispatch;
+pub fn write_octet_quad(buf: &mut [u8; 64], mut pos: usize, quad: [u8; 4]) -> usize {
+    for (i, &byte) in quad.iter().enumerate() {
+        if i > 0 {
+            buf[pos] = b'.';
+            pos += 1;
+        }
+        pos = write_decimal_u8::write_decimal_u8(buf, pos, byte);
+    }
+    pos
+}

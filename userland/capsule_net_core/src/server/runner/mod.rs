@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+mod dispatch;
+mod receive;
+mod run;
 
-pub use dispatch::dispatch;
+pub use run::run;

@@ -14,7 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use smoltcp::iface::{Interface, SocketHandle, SocketSet};
 
-pub use dispatch::dispatch;
+use crate::state::globals::NET;
+
+pub fn with_dhcp_and_dns_slot<R>(
+    f: impl FnOnce(&mut Interface, &mut SocketSet<'static>, SocketHandle, &mut Option<SocketHandle>) -> R,
+) -> Option<R> {
+    let mut guard = NET.lock();
+    let state = guard.as_mut()?;
+    Some(f(&mut state.iface, &mut state.sockets, state.dhcp_handle, &mut state.dns_handle))
+}

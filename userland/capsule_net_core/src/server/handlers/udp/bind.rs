@@ -17,7 +17,7 @@
 use smoltcp::socket::udp;
 use smoltcp::storage::PacketMetadata;
 
-use crate::protocol::udp::{E_BAD_LEN, E_BIND_FAILED, E_NO_SOCKET, E_OK, MAGIC_NUDP, OP_BIND};
+use crate::protocol::udp::{E_BAD_ADDR, E_BAD_LEN, E_BIND_FAILED, E_NO_SOCKET, E_OK, MAGIC_NUDP, OP_BIND};
 use crate::server::parse_req::Request;
 use crate::server::respond::reply;
 use crate::state;
@@ -35,6 +35,10 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         return;
     }
     let local_port = u16::from_le_bytes([body[0], body[1]]);
+    if local_port == 0 {
+        let _ = reply(sender_pid, MAGIC_NUDP, OP_BIND, E_BAD_ADDR, req.request_id, &[], tx);
+        return;
+    }
 
     let outcome = state::with_iface(|_iface, sockets, _dev| {
         let rx = udp::PacketBuffer::new(
@@ -58,7 +62,10 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         }
     });
 
-    let errno = match outcome.unwrap_or(BindOutcome::TableFull) {
+    let errno = match match outcome {
+        Some(value) => value,
+        None => BindOutcome::TableFull,
+    } {
         BindOutcome::Ok => E_OK,
         BindOutcome::BindFailed => E_BIND_FAILED,
         BindOutcome::TableFull => E_NO_SOCKET,

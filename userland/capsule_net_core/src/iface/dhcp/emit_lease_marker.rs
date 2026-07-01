@@ -14,7 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use nonos_libc::mk_debug;
 
-pub use dispatch::dispatch;
+use crate::iface::dhcp::fill_marker;
+
+pub fn emit_lease_marker(ip: [u8; 4], prefix: u8, gw: [u8; 4]) {
+    let mut buf = [0u8; 64];
+    let n = fill_marker::fill_marker(&mut buf, b"[NET-CORE] lease ", ip, prefix, gw);
+    mk_debug(buf.as_ptr(), n);
+}

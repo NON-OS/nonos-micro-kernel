@@ -14,7 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use alloc::vec;
 
-pub use dispatch::dispatch;
+use crate::server::parse_req::{parse, HDR_LEN, IPC_BUF_MAX};
+use crate::server::runner::{dispatch, receive};
+
+pub fn run() -> ! {
+    let mut rx = vec![0u8; HDR_LEN + IPC_BUF_MAX];
+    let mut tx = vec![0u8; HDR_LEN + IPC_BUF_MAX];
+    loop {
+        crate::iface::poll::pump();
+        let mut sender_pid = 0u32;
+        let n = receive::receive(&mut rx, &mut sender_pid);
+        if n <= 0 || sender_pid == 0 {
+            continue;
+        }
+        let Ok((req, body)) = parse(&rx[..n as usize]) else {
+            continue;
+        };
+        dispatch::dispatch(sender_pid, &req, body, &mut tx);
+    }
+}

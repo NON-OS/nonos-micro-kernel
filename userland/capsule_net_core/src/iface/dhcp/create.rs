@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dispatch;
-pub mod resolve_a;
+use smoltcp::iface::{SocketHandle, SocketSet};
+use smoltcp::socket::dhcpv4;
 
-pub use dispatch::dispatch;
+pub fn create(sockets: &mut SocketSet<'static>) -> SocketHandle {
+    sockets.add(dhcpv4::Socket::new())
+}
