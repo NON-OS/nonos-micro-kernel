@@ -17,9 +17,12 @@
 extern crate alloc;
 
 mod app;
+mod css;
+pub mod dom;
 mod event;
 pub mod fetch;
 pub mod html;
+mod js;
 pub mod http;
 mod keymap;
 pub mod layout;

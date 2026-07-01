@@ -21,6 +21,7 @@ use nonos_libc::mk_service_lookup;
 static TCP: AtomicU32 = AtomicU32::new(0);
 static UDP: AtomicU32 = AtomicU32::new(0);
 static NYM: AtomicU32 = AtomicU32::new(0);
+static DNS: AtomicU32 = AtomicU32::new(0);
 
 pub fn tcp() -> u32 {
     TCP.load(Ordering::Acquire)
@@ -34,10 +35,15 @@ pub fn nym() -> u32 {
     NYM.load(Ordering::Acquire)
 }
 
+pub fn dns() -> u32 {
+    DNS.load(Ordering::Acquire)
+}
+
 pub fn discover() -> Result<(), ()> {
     TCP.store(lookup(b"net.tcp")?, Ordering::Release);
     UDP.store(lookup(b"net.udp")?, Ordering::Release);
     NYM.store(lookup(b"net.nym")?, Ordering::Release);
+    DNS.store(lookup(b"net.dns")?, Ordering::Release);
     Ok(())
 }
 

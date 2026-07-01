@@ -15,7 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const MAGIC: u32 = 0x4E59_4D31;
-pub const SET_GATEWAY: u16 = 2;
 pub const OPEN: u16 = 3;
 pub const SEND: u16 = 4;
 pub const RECV: u16 = 5;

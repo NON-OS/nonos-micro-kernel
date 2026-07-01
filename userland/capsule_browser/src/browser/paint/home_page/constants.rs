@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::manifest::WIDTH;
-
 pub const PAGE_BG: u32 = 0xFF18_1B20;
 pub const PILL_BG: u32 = 0xFF20_242C;
 pub const FG: u32 = 0xFFE8_EAED;
@@ -26,10 +24,8 @@ pub const WHITE: u32 = 0xFFFF_FFFF;
 pub const CONTENT_TOP: u32 = 80;
 pub const PILL_W: u32 = 640;
 pub const PILL_H: u32 = 46;
-pub const PILL_X: u32 = (WIDTH - PILL_W) / 2;
 pub const PILL_Y: u32 = 170;
 pub const COUNT: u32 = 4;
 pub const CELL_W: u32 = 150;
-pub const ROW_X0: u32 = (WIDTH - COUNT * CELL_W) / 2;
 pub const BADGE: u32 = 56;
 pub const BADGE_Y: u32 = 300;

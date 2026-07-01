@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Spawn the `net.dhcp.client` capsule. IPC + Memory only. Drives
+//! Spawn the `net.dhcp.client` capsule. Drives
 //! the RFC 2131 DISCOVER/OFFER/REQUEST/ACK ladder using raw L2
 //! broadcasts (before an IPv4 address exists, no normal UDP path
 //! is available) and installs the lease into `net.ip` via
@@ -53,7 +53,10 @@ pub fn spawn_net_dhcp_capsule() -> Result<(), SpawnError> {
         manifest_bytes: NET_DHCP_MANIFEST_BYTES,
         attestation_trailer: NET_DHCP_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit() | Capability::Memory.bit() | Capability::Crypto.bit(),
+        requested_caps: Capability::IPC.bit()
+            | Capability::Memory.bit()
+            | Capability::Crypto.bit()
+            | Capability::Network.bit(),
         debug_tag: b"[NET-DHCP] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

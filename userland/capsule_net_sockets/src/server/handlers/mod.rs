@@ -23,6 +23,7 @@ mod getsockopt;
 mod health;
 mod io;
 mod listen;
+mod mixnet_frame;
 mod recv;
 mod send;
 mod setsockopt;

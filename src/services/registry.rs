@@ -18,28 +18,20 @@ extern crate alloc;
 use alloc::vec::Vec;
 use spin::Mutex;
 
+mod auth;
 mod endpoint;
 mod error;
+mod policy;
 
 pub use endpoint::ServiceEndpoint;
 pub use error::RegError;
+pub use policy::required_caps;
 
 pub const MAX_SERVICES: usize = 256;
 static ENDPOINTS: Mutex<Vec<ServiceEndpoint>> = Mutex::new(Vec::new());
 
-fn caller_can_register() -> bool {
-    match crate::process::current_pid() {
-        None => true,
-        Some(pid) if pid <= 64 => true,
-        Some(_) => {
-            let token = crate::syscall::capabilities::current_caps_or_default();
-            token.can_register_service() || token.is_admin()
-        }
-    }
-}
-
 pub fn register_endpoint(name: &str, port: u32, pid: u32, caps: u64) -> Result<(), RegError> {
-    if !caller_can_register() {
+    if !auth::caller_can_register(caps) {
         return Err(RegError::PermissionDenied);
     }
     let mut eps = ENDPOINTS.lock();

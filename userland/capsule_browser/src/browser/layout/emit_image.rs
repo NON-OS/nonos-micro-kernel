@@ -20,21 +20,23 @@ use alloc::vec::Vec;
 use super::doc::{RenderLine, Span, LINE_H};
 use super::wrap::{Cursor, MARGIN};
 
-const IMAGE_W: u32 = 220;
-const IMAGE_H: u32 = 82;
+const IMAGE_H: u32 = 126;
 const IMAGE_FG: u32 = 0xFF8C_DFEA;
 
 pub(super) fn emit_image(lines: &mut Vec<RenderLine>, line: &mut RenderLine, cur: &mut Cursor, src: &str, alt: &str) {
-    if cur.x + IMAGE_W > cur.width.saturating_sub(MARGIN) && !line.spans.is_empty() {
+    if !line.spans.is_empty() {
         cur.y += line.height + 6;
         lines.push(core::mem::replace(line, RenderLine { y: cur.y, height: LINE_H, spans: Vec::new() }));
         cur.x = MARGIN;
     }
     let label = if alt.is_empty() { "[image]" } else { alt };
-    line.height = line.height.max(IMAGE_H);
+    let image_w = cur.width.saturating_sub(MARGIN * 2).max(220);
+    line.height = IMAGE_H;
     line.spans.push(Span {
-        x: cur.x, w: IMAGE_W, text: label.to_string(), color: IMAGE_FG,
-        href: None, image_src: Some(String::from(src)), scale: 1, bold: false,
+        x: MARGIN, w: image_w, text: label.to_string(), color: IMAGE_FG,
+        bg: 0, href: Some(String::from(src)), image_src: Some(String::from(src)), scale: 1, bold: false,
     });
-    cur.x = cur.x.saturating_add(IMAGE_W + MARGIN);
+    cur.y += IMAGE_H + 10;
+    lines.push(core::mem::replace(line, RenderLine { y: cur.y, height: LINE_H, spans: Vec::new() }));
+    cur.x = MARGIN;
 }

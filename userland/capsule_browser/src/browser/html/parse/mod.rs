@@ -14,14 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod attr;
-mod consume_tag;
-mod flush;
-mod parse_doc;
-mod push_ws;
-mod read_entity;
-mod read_to_gt;
-mod skip_until_close;
-mod tag_name;
-
-pub use parse_doc::parse;
+pub mod attr;
+pub mod flush;
+pub mod push_ws;
+pub mod read_entity;
+pub mod read_to_gt;
+pub mod tag_name;

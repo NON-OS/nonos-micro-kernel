@@ -14,9 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod attr;
-mod read_name;
-mod read_value;
-mod skip_ws;
-
-pub use attr::attr;
+pub mod read_name;
+pub mod read_value;
+pub mod skip_ws;

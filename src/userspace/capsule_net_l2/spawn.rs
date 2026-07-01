@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Spawn the `net.l2` ethernet+ARP capsule. IPC + Memory only.
+//! Spawn the `net.l2` ethernet+ARP capsule.
 //! The NIC-side authority (MMIO/IRQ/DMA) lives one layer below at
 //! the virtio-net (or e1000) driver capsule; this service reaches
 //! the NIC through the service registry, never through the kernel.
@@ -52,7 +52,9 @@ pub fn spawn_net_l2_capsule() -> Result<(), SpawnError> {
         manifest_bytes: NET_L2_MANIFEST_BYTES,
         attestation_trailer: NET_L2_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit() | Capability::Memory.bit(),
+        requested_caps: Capability::IPC.bit()
+            | Capability::Memory.bit()
+            | Capability::Network.bit(),
         debug_tag: b"[NET-L2] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

@@ -28,6 +28,7 @@ pub fn dispatch(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) -> bool {
         OP_LISTEN => listen::handle(pid, req, body, tx),
         OP_ACCEPT => accept::handle(pid, req, body, tx),
         OP_CONNECT => connect::handle(pid, req, body, tx),
+        OP_CONNECT_HOST => connect::handle_host(pid, req, body, tx),
         OP_SEND => send::handle(pid, req, body, tx),
         OP_RECV => recv::handle(pid, req, body, tx),
         OP_CLOSE => close::handle(pid, req, body, tx),

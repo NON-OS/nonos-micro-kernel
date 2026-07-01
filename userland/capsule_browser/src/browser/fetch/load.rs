@@ -30,11 +30,10 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
         Some(p) => (p.host.as_str(), p.port),
         None => (url.host.as_str(), url.port),
     };
-    super::services::services(state, net::parse_ipv4(connect_host).is_none())?;
+    super::services::services(state)?;
     state.base = Some(url.clone());
-    let ip = net::resolve_host(state.dns_port, connect_host).map_err(|_| "dns failed")?;
     let h = net::socket_open(state.sockets_port).map_err(|_| "socket failed")?;
-    if net::socket_connect(state.sockets_port, h, ip, connect_port).is_err() {
+    if net::socket_connect_host(state.sockets_port, h, connect_host, connect_port).is_err() {
         let _ = net::socket_close(state.sockets_port, h);
         return Err("connect failed");
     }

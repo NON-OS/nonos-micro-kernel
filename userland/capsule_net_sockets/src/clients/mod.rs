@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod envelope;
+pub mod dns;
 pub mod nym;
 pub mod tcp;
 pub mod udp;

@@ -16,19 +16,18 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::browser::manifest::WIDTH;
 use crate::browser::paint::chrome::{constants, pill};
 use crate::browser::state::State;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
-    fb.fill_rect(0, constants::TITLEBAR, WIDTH, 52, constants::TOOLBAR_BG);
+    fb.fill_rect(0, constants::TITLEBAR, fb.width, 52, constants::TOOLBAR_BG);
     chevron(fb, constants::BACK_X as u32);
     chevron(fb, constants::FWD_X as u32);
     reload(fb, constants::RELOAD_X as u32);
     home(fb, constants::HOME_X as u32);
     pill::pill(state, fb);
     hamburger(fb);
-    fb.fill_rect(0, constants::TITLEBAR + 51, WIDTH, 1, constants::ACCENT);
+    fb.fill_rect(0, constants::TITLEBAR + 51, fb.width, 1, constants::ACCENT);
 }
 
 fn chevron(fb: &mut PaintBuffer, x: u32) {
@@ -57,7 +56,7 @@ fn home(fb: &mut PaintBuffer, x: u32) {
 }
 
 fn hamburger(fb: &mut PaintBuffer) {
-    let x = WIDTH - 36;
+    let x = fb.width.saturating_sub(36);
     fb.fill_rect(x, constants::TITLEBAR + 18, 16, 2, constants::DIM);
     fb.fill_rect(x, constants::TITLEBAR + 25, 16, 2, constants::DIM);
     fb.fill_rect(x, constants::TITLEBAR + 32, 16, 2, constants::DIM);

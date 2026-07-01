@@ -16,10 +16,8 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::browser::manifest::WIDTH;
-
 pub fn centered_text(fb: &mut PaintBuffer, bytes: &[u8], color: u32, y: u32) {
-    let width = (bytes.len() as u32 * fb.glyph_advance()).min(WIDTH);
-    let x = (WIDTH - width) / 2;
+    let width = (bytes.len() as u32 * fb.glyph_advance()).min(fb.width);
+    let x = fb.width.saturating_sub(width) / 2;
     fb.text(x, y, bytes, color);
 }

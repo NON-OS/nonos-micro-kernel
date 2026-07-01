@@ -21,6 +21,8 @@ pub struct Style {
     pub heading: u8,
     pub bold: bool,
     pub pre: bool,
+    pub color: u32,
+    pub bg: u32,
 }
 
 pub enum Flow {

@@ -16,30 +16,32 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::browser::manifest::WIDTH;
 use crate::browser::state::State;
 
 const TOP: i32 = 80;
-const BOTTOM: i32 = 676;
-pub const VIEW_H: u32 = (BOTTOM - TOP) as u32;
+pub const VIEW_H: u32 = 680;
 const PAGE_BG: u32 = 0xFF18_1B20;
 const FG: u32 = 0xFFE8_EAED;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
-    fb.fill_rect(0, TOP as u32, WIDTH, (BOTTOM - TOP) as u32, PAGE_BG);
+    let bottom = fb.height as i32;
+    fb.fill_rect(0, TOP as u32, fb.width, fb.height.saturating_sub(TOP as u32), PAGE_BG);
     let Some(doc) = &state.document else {
         fb.text(16, TOP as u32 + 24, state.status.as_bytes(), FG);
         return;
     };
     for line in &doc.lines {
         let sy = line.y as i32 + TOP - state.scroll as i32;
-        if sy < TOP || sy + line.height as i32 > BOTTOM {
+        if sy < TOP || sy + line.height as i32 > bottom {
             continue;
         }
         for s in &line.spans {
             if s.image_src.is_some() {
                 super::image_span::paint_image(fb, s, sy as u32, line.height);
                 continue;
+            }
+            if s.bg != 0 {
+                fb.fill_rect(s.x, sy as u32, s.w, line.height, s.bg);
             }
             fb.text_scaled(s.x, sy as u32, s.text.as_bytes(), s.color, s.scale);
             if s.bold {

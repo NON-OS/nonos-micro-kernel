@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::manifest::WIDTH;
-
 pub const TOOLBAR_BG: u32 = 0xFF2B_2E37;
 pub const FIELD_BG: u32 = 0xFF15_171C;
 pub const BORDER: u32 = 0xFF3A_3F4B;
@@ -31,4 +29,3 @@ pub const FWD_X: i32 = 46;
 pub const RELOAD_X: i32 = 82;
 pub const HOME_X: i32 = 114;
 pub const PILL_L: i32 = 152;
-pub const PILL_R: i32 = WIDTH as i32 - 52;

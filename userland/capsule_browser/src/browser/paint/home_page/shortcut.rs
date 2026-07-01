@@ -20,22 +20,20 @@ use crate::browser::paint::home_page::{constants, shortcut_data};
 
 pub fn shortcut(fb: &mut PaintBuffer, i: u32) {
     let s = &shortcut_data::SHORTCUTS[i as usize];
-    let bx = badge_x(i);
+    let cx = center_x(fb.width, i);
+    let bx = cx.saturating_sub(constants::BADGE / 2);
     fb.fill_rect(bx, constants::BADGE_Y, constants::BADGE, constants::BADGE, s.color);
     fb.fill_rect(bx, constants::BADGE_Y, 6, 6, constants::PAGE_BG);
     fb.fill_rect(bx + constants::BADGE - 6, constants::BADGE_Y, 6, 6, constants::PAGE_BG);
     fb.fill_rect(bx, constants::BADGE_Y + constants::BADGE - 6, 6, 6, constants::PAGE_BG);
     fb.fill_rect(bx + constants::BADGE - 6, constants::BADGE_Y + constants::BADGE - 6, 6, 6, constants::PAGE_BG);
     let gw = fb.glyph_advance().saturating_mul(3);
-    fb.text_scaled(center_x(i).saturating_sub(gw / 2), constants::BADGE_Y + 16, s.badge, constants::WHITE, 3);
+    fb.text_scaled(cx.saturating_sub(gw / 2), constants::BADGE_Y + 16, s.badge, constants::WHITE, 3);
     let lw = (s.label.len() as u32).saturating_mul(fb.glyph_advance());
-    fb.text(center_x(i).saturating_sub(lw / 2), 370, s.label, constants::FG);
+    fb.text(cx.saturating_sub(lw / 2), 370, s.label, constants::FG);
 }
 
-pub fn center_x(i: u32) -> u32 {
-    constants::ROW_X0 + i * constants::CELL_W + constants::CELL_W / 2
-}
-
-pub fn badge_x(i: u32) -> u32 {
-    center_x(i).saturating_sub(constants::BADGE / 2)
+pub fn center_x(width: u32, i: u32) -> u32 {
+    let row = constants::COUNT.saturating_mul(constants::CELL_W);
+    width.saturating_sub(row) / 2 + i * constants::CELL_W + constants::CELL_W / 2
 }

@@ -15,12 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::browser::http::response::{ContentKind, Response};
-use crate::browser::{html, layout};
 use crate::browser::fetch::unsupported_content;
+use crate::browser::{css, dom, html, js, layout};
 
 pub fn render_response(resp: &Response) -> (Option<layout::doc::RenderDocument>, usize) {
     let flows = match resp.content_kind {
-        ContentKind::Html => html::parse::parse(&resp.body),
+        ContentKind::Html => {
+            let mut tree = dom::parse(&resp.body);
+            let _ = js::run(&mut tree);
+            let styles = css::compute(&tree, &css::collect_css(&tree));
+            dom::to_flows(&tree, &styles)
+        }
         ContentKind::Text => html::text::parse_text(&resp.body),
         ContentKind::Unsupported => unsupported_content::unsupported_content(resp.status, resp.body.len()),
     };

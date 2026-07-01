@@ -18,8 +18,9 @@ extern crate alloc;
 
 use alloc::vec;
 
+use crate::capabilities::Capability;
 use crate::process::current_pid;
-use crate::services::registry::{register_endpoint, RegError};
+use crate::services::registry::{register_endpoint, required_caps, RegError};
 use crate::syscall::microkernel::errnos::{
     ERRNO_BUSY, ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOMEM, ERRNO_PERM,
 };
@@ -53,7 +54,7 @@ pub fn sys_service_register(name_ptr: u64, name_len: usize, port: u32) -> i64 {
     if name.starts_with("proc.") || name.starts_with("endpoint.") {
         return ERRNO_PERM;
     }
-    match register_endpoint(name, port, pid, 0) {
+    match register_endpoint(name, port, pid, required_caps(name, Capability::IPC.bit())) {
         Ok(()) => 0,
         Err(RegError::Full) => ERRNO_NOMEM,
         Err(RegError::Exists) => ERRNO_BUSY,

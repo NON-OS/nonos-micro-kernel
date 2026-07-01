@@ -33,6 +33,7 @@ pub fn emit_pre(lines: &mut Vec<RenderLine>, line: &mut RenderLine, cur: &mut Cu
             w,
             text: shown,
             color: FG,
+            bg: 0,
             href: None,
             image_src: None,
             scale: 1,

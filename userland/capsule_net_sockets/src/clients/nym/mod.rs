@@ -14,11 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod config;
 mod constants;
 mod session;
 mod transfer;
 
-pub use config::set_gateway;
 pub use session::{close, open};
 pub use transfer::{cover, recv, send};

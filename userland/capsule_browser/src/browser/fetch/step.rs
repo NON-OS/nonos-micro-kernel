@@ -18,6 +18,7 @@ use nonos_libc::mk_time_millis;
 
 use crate::browser::fetch::{constants, fail, finish, plain, rtc_packed, socks, tls};
 use crate::browser::fetch::types::Phase;
+use crate::browser::http;
 use crate::browser::net;
 use crate::browser::state::State;
 
@@ -27,8 +28,18 @@ pub fn step(state: &mut State) -> bool {
     {
         let Some(f) = state.fetch.as_mut() else { return false; };
         if mk_time_millis().wrapping_sub(f.started_ms) > constants::MAX_FETCH_MS {
-            f.phase = if f.buf.is_empty() { Phase::Error } else { Phase::Done };
-            if f.error.is_none() && f.buf.is_empty() { f.error = Some("timed out"); }
+            if f.tls.is_some() {
+                f.phase = if tls::decrypt(f).map_or(false, |p| http::response::has_headers(&p)) {
+                    Phase::Decrypt
+                } else {
+                    Phase::Error
+                };
+            } else {
+                f.phase = if f.buf.is_empty() { Phase::Error } else { Phase::Done };
+            }
+            if f.error.is_none() && matches!(f.phase, Phase::Error) {
+                f.error = Some("timed out");
+            }
         }
         match f.phase {
             Phase::SocksHello => { socks::hello(port, f); return true; }

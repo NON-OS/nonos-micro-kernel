@@ -1,6 +1,6 @@
 # net_sockets — POSIX-shape socket multiplexer. Routes per-handle
 # operations to the right transport capsule (TCP / UDP) and the
-# DNS resolver. IPC + Memory only; no kernel surface.
+# DNS resolver. IPC + Memory + Network; public clients still enter here.
 
 CAPSULE_SLUG             := net-sockets
 CAPSULE_HANDLE           := net.sockets
@@ -11,7 +11,7 @@ CAPSULE_FEATURE          := nonos-capsule-net-sockets
 CAPSULE_NAMESPACE        := systems.nonos.net.sockets
 CAPSULE_SERVICE_ENDPOINT := service:4460:net.sockets
 CAPSULE_REPLY_ENDPOINT   := reply:4461:endpoint.net.sockets.reply
-CAPSULE_REQUIRED_CAPS    := 0x00019
+CAPSULE_REQUIRED_CAPS    := 0x0001d
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_net_sockets
 
 include nonos-mk/capsule.mk

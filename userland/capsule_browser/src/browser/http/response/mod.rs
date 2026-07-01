@@ -19,11 +19,13 @@ mod content_length;
 mod content_encoding;
 mod header_value;
 mod header_line;
+mod has_headers;
 mod is_complete;
 mod parse;
 mod status_code;
 mod types;
 
+pub use has_headers::has_headers;
 pub use is_complete::is_complete;
 pub use parse::parse;
 pub use types::{ContentKind, Response};

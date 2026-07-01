@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::recv_drain::drain_stream;
-use crate::protocol::{E_NO_SESSION, E_OK, E_RX_EMPTY, OP_RECV};
+use crate::protocol::{E_BAD_LEN, E_NO_SESSION, E_OK, E_RX_EMPTY, MIX_PAYLOAD_MAX, OP_RECV};
 use crate::server::handlers::io::u32_at;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
@@ -37,6 +37,10 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
 }
 
 fn deliver_queued(pid: u32, req: &Request, id: u32, tx: &mut [u8]) -> bool {
+    if tx.len() < 20 + MIX_PAYLOAD_MAX {
+        respond(pid, OP_RECV, E_BAD_LEN, req.request_id, 0, tx);
+        return true;
+    }
     let msg = TABLE.lock().with_mut(pid, id, |s| s.pop());
     match msg {
         Some(Some(body)) if 20 + body.len() <= tx.len() => {
