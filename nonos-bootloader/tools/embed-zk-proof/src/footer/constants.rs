@@ -19,4 +19,3 @@ pub const FOOTER_VERSION: u16 = 1;
 pub const FOOTER_SIZE: usize = 64;
 pub const FLAG_HAS_ZK_PROOF: u16 = 1;
 pub const HASH_ALG_BLAKE3: u8 = 1;
-pub const SIG_ALG_ED25519: u8 = 1;

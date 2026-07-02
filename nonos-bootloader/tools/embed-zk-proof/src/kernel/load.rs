@@ -19,14 +19,14 @@ use std::path::Path;
 
 use anyhow::{bail, Context, Result};
 
-pub const ED25519_SIG_SIZE: usize = 64;
 pub const FOOTER_SIZE: usize = 64;
 pub const FOOTER_MAGIC: [u8; 8] = *b"NONOSIMG";
 
 pub struct SignedKernel {
     pub raw_bytes: Vec<u8>,
     pub kernel_bytes: Vec<u8>,
-    pub signature: [u8; ED25519_SIG_SIZE],
+    pub signature: Vec<u8>,
+    pub signature_algorithm: u8,
     pub rollback_index: u32,
 }
 
@@ -34,7 +34,7 @@ pub fn load_signed_kernel(path: &Path) -> Result<SignedKernel> {
     let raw_bytes = fs::read(path)
         .with_context(|| format!("Failed to read signed kernel: {}", path.display()))?;
 
-    if raw_bytes.len() < FOOTER_SIZE + ED25519_SIG_SIZE + 64 {
+    if raw_bytes.len() < FOOTER_SIZE + 64 {
         bail!("Signed kernel too small");
     }
 
@@ -50,14 +50,32 @@ pub fn load_signed_kernel(path: &Path) -> Result<SignedKernel> {
         raw_bytes[footer_start + 31],
     ]) as usize;
 
-    if kernel_size > footer_start - ED25519_SIG_SIZE {
+    let signature_algorithm = raw_bytes[footer_start + 13];
+    let signature_offset = u32::from_le_bytes([
+        raw_bytes[footer_start + 32],
+        raw_bytes[footer_start + 33],
+        raw_bytes[footer_start + 34],
+        raw_bytes[footer_start + 35],
+    ]) as usize;
+    let signature_size = u32::from_le_bytes([
+        raw_bytes[footer_start + 36],
+        raw_bytes[footer_start + 37],
+        raw_bytes[footer_start + 38],
+        raw_bytes[footer_start + 39],
+    ]) as usize;
+
+    if kernel_size > footer_start {
         bail!("Invalid kernel size in footer");
     }
 
     let kernel_bytes = raw_bytes[..kernel_size].to_vec();
-    let sig_start = kernel_size;
-    let mut signature = [0u8; ED25519_SIG_SIZE];
-    signature.copy_from_slice(&raw_bytes[sig_start..sig_start + ED25519_SIG_SIZE]);
+    let sig_end = signature_offset
+        .checked_add(signature_size)
+        .ok_or_else(|| anyhow::anyhow!("signature offset overflow"))?;
+    if signature_offset != kernel_size || sig_end > footer_start {
+        bail!("Invalid signature region in footer");
+    }
+    let signature = raw_bytes[signature_offset..sig_end].to_vec();
 
     let rollback_index = u32::from_le_bytes([
         raw_bytes[footer_start + 56],
@@ -66,5 +84,11 @@ pub fn load_signed_kernel(path: &Path) -> Result<SignedKernel> {
         raw_bytes[footer_start + 59],
     ]);
 
-    Ok(SignedKernel { raw_bytes, kernel_bytes, signature, rollback_index })
+    Ok(SignedKernel {
+        raw_bytes,
+        kernel_bytes,
+        signature,
+        signature_algorithm,
+        rollback_index,
+    })
 }

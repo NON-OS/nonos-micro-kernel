@@ -14,31 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod delay;
-mod display;
-mod display_status;
-mod elf;
-mod footer;
-mod hash;
-mod helpers;
-mod key;
-mod signature;
-mod signature_display;
-mod signature_ed25519;
-mod signature_hybrid;
-mod signature_message;
-mod signature_passed;
-mod signature_policy;
-mod size;
-mod types;
-mod verify;
-mod verify_error;
-
-pub use delay::mini_delay;
-pub use display::{byte_to_hex, print, print_hex_bytes, print_hex_char};
-pub use display_status::{
-    print_kernel_size, print_verification_failure, print_verification_success,
-};
-pub use footer::handle_missing_footer;
-pub use types::{CryptoVerifyResult, MIN_KERNEL_SIZE, SIGNATURE_SIZE};
-pub use verify::verify_kernel_crypto;
+pub fn signed_message(kernel_data: &[u8], rollback_index: u32) -> Vec<u8> {
+    let mut msg = Vec::with_capacity(36);
+    msg.extend_from_slice(blake3::hash(kernel_data).as_bytes());
+    msg.extend_from_slice(&rollback_index.to_le_bytes());
+    msg
+}

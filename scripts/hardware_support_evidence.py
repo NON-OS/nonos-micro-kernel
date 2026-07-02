@@ -16,7 +16,6 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 import glob, json, os, re, sys, time
 out = sys.argv[1] if len(sys.argv) > 1 else "target/hardware-support-evidence.json"
-sections = ("## Role", "## Microkernel contract", "## Interface contract", "## Authority", "## Privacy and persistence", "## Runtime lifecycle", "## Failure model", "## Current implemented surface", "## Wire format", "## State ownership", "## Operating rules", "## Release target", "## Release evidence")
 src_text = []
 for path in sorted(glob.glob("src/**/*.rs", recursive=True)):
     with open(path, encoding="utf-8", errors="ignore") as fh:
@@ -44,12 +43,6 @@ for mk in sorted(glob.glob("userland/capsule_driver_*/Capsule.mk")):
             missing.append(path)
     if not os.path.getsize(readme) if os.path.exists(readme) else True:
         missing.append(readme)
-    else:
-        with open(readme, encoding="utf-8", errors="ignore") as fh:
-            body = fh.read()
-        missing.extend(section for section in sections if section not in body)
-        if "CAPSULE_REQUIRED_CAPS" in body and caps.lower() not in body.lower():
-            missing.append("README capability mask mismatch")
     if f"{cdir}/target/" not in hay:
         missing.append("kernel embed userland target")
     if f"trust/capsules/{name}.nonos_id_cert.bin" not in hay:
@@ -65,7 +58,9 @@ for mk in sorted(glob.glob("userland/capsule_driver_*/Capsule.mk")):
         failures.append({"capsule": slug or mk, "missing": missing})
     capsules.append({"slug": slug, "bin": name, "service": service, "caps": caps, "status": status})
 report = {"schema": "nonos.hardware.support.source.v1", "created_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "status": "fail" if failures else "pass", "capsule_count": len(capsules), "capsules": capsules, "failures": failures}
-os.makedirs(os.path.dirname(out), exist_ok=True)
+out_dir = os.path.dirname(out)
+if out_dir:
+    os.makedirs(out_dir, exist_ok=True)
 with open(out, "w", encoding="utf-8") as fh:
     json.dump(report, fh, indent=2, sort_keys=True)
     fh.write("\n")

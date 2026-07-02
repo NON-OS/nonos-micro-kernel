@@ -33,7 +33,7 @@ pub use query::{
     key_count, set_minimum_version, validate_key,
 };
 pub use revoke::revoke_key_by_pubkey;
-pub use state::{KEYSTORE, NONOS_SIGNING_KEY};
+pub use state::{KEYSTORE, NONOS_MLDSA65_PUBLIC_KEY, NONOS_SIGNING_KEY};
 pub use store::KeyStore;
 pub use types::{
     KeyId, KeyStatus, RevocationEntry, RevocationReason, MAX_KEYS, MAX_REVOKED, PK_LEN,

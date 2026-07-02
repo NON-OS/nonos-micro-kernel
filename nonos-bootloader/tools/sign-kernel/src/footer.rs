@@ -14,33 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::*;
+use crate::constants::*;
 
 pub fn create_image_footer(
     kernel_size: u32,
     signature_size: u32,
     signature_algorithm: u8,
-    proof_size: u32,
     total_image_size: u64,
     rollback_index: u32,
 ) -> [u8; FOOTER_SIZE] {
     let mut footer = [0u8; FOOTER_SIZE];
-
     footer[0..8].copy_from_slice(&FOOTER_MAGIC);
     footer[8..10].copy_from_slice(&FOOTER_VERSION.to_le_bytes());
-    footer[10..12].copy_from_slice(&FLAG_HAS_ZK_PROOF.to_le_bytes());
+    footer[10..12].copy_from_slice(&0u16.to_le_bytes());
     footer[12] = HASH_ALG_BLAKE3;
     footer[13] = signature_algorithm;
-    footer[14..16].copy_from_slice(&0u16.to_le_bytes());
     footer[16..24].copy_from_slice(&total_image_size.to_le_bytes());
-    footer[24..28].copy_from_slice(&0u32.to_le_bytes());
     footer[28..32].copy_from_slice(&kernel_size.to_le_bytes());
     footer[32..36].copy_from_slice(&kernel_size.to_le_bytes());
     footer[36..40].copy_from_slice(&signature_size.to_le_bytes());
-    footer[40..44].copy_from_slice(&(kernel_size + signature_size).to_le_bytes());
-    footer[44..48].copy_from_slice(&proof_size.to_le_bytes());
     footer[48..52].copy_from_slice(&1u32.to_le_bytes());
     footer[56..60].copy_from_slice(&rollback_index.to_le_bytes());
-
     footer
 }

@@ -14,31 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod delay;
-mod display;
-mod display_status;
-mod elf;
-mod footer;
-mod hash;
-mod helpers;
-mod key;
-mod signature;
-mod signature_display;
-mod signature_ed25519;
-mod signature_hybrid;
-mod signature_message;
-mod signature_passed;
-mod signature_policy;
-mod size;
-mod types;
-mod verify;
-mod verify_error;
+use anyhow::{bail, Result};
+use nonos_capsule_sign::algs::AlgId;
+use nonos_capsule_sign::keys::read_pub;
 
-pub use delay::mini_delay;
-pub use display::{byte_to_hex, print, print_hex_bytes, print_hex_char};
-pub use display_status::{
-    print_kernel_size, print_verification_failure, print_verification_success,
-};
-pub use footer::handle_missing_footer;
-pub use types::{CryptoVerifyResult, MIN_KERNEL_SIZE, SIGNATURE_SIZE};
-pub use verify::verify_kernel_crypto;
+use crate::args::Args;
+
+pub fn load_mldsa65_pub(args: &Args) -> Result<Vec<u8>> {
+    let path = args.mldsa65_pub.as_ref().ok_or_else(|| {
+        anyhow::anyhow!("--mldsa65-pub is required for kernel signing")
+    })?;
+    let key = read_pub(path).map_err(|e| anyhow::anyhow!("{}", e))?;
+    if key.alg != AlgId::MlDsa65 {
+        bail!("ML-DSA-65 pubkey file has wrong algorithm");
+    }
+    Ok(key.bytes)
+}

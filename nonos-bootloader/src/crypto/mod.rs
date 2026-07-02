@@ -17,6 +17,7 @@
 pub mod keyring;
 pub mod keys;
 pub mod keystore_v2;
+pub mod mldsa65;
 pub mod sig;
 mod verifier;
 pub mod verify;

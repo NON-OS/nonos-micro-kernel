@@ -61,6 +61,7 @@ pub fn verify_kernel_crypto(kernel_data: &[u8], st: &mut SystemTable<Boot>) -> C
     verify_and_display_signature(
         &kernel_hash,
         parsed.footer.rollback_index,
+        parsed.signature_algorithm,
         parsed.signature_bytes,
         &mut result,
         st,

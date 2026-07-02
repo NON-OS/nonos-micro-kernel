@@ -8,6 +8,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src/");
     println!("cargo:rerun-if-changed=Cargo.toml");
     println!("cargo:rerun-if-env-changed=NONOS_SIGNING_KEY");
+    println!("cargo:rerun-if-env-changed=NONOS_MLDSA65_PUBKEY");
     println!("cargo:rerun-if-env-changed=NONOS_TRUST_ANCHOR_PUBKEY");
     println!("cargo:rerun-if-env-changed=NONOS_ZK_DEVICE_ROOT");
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
@@ -18,6 +19,7 @@ fn main() {
     configure_uefi();
     configure_optimization();
     configure_crypto();
+    compile_mldsa65();
     configure_security();
     embed_build_info();
 }
@@ -66,6 +68,7 @@ fn generate_keys() {
     let dest_path = Path::new(&out_dir).join("keys_generated.rs");
 
     let public_key = resolve_public_key();
+    let mldsa65_key = resolve_mldsa65_public_key();
     let key_id = compute_key_id(&public_key);
 
     let fingerprint = format!(
@@ -85,6 +88,21 @@ fn generate_keys() {
             write!(file, ", ").unwrap();
         }
         if (i + 1) % 8 == 0 && i < 31 {
+            writeln!(file).unwrap();
+            write!(file, "    ").unwrap();
+        }
+    }
+    writeln!(file, "\n];").unwrap();
+
+    writeln!(file, "#[allow(dead_code)]").unwrap();
+    writeln!(file, "pub const NONOS_MLDSA65_PUBLIC_KEY: [u8; 1952] = [").unwrap();
+    write!(file, "    ").unwrap();
+    for (i, byte) in mldsa65_key.iter().enumerate() {
+        write!(file, "0x{:02x}", byte).unwrap();
+        if i < 1951 {
+            write!(file, ", ").unwrap();
+        }
+        if (i + 1) % 8 == 0 && i < 1951 {
             writeln!(file).unwrap();
             write!(file, "    ").unwrap();
         }
@@ -136,6 +154,33 @@ fn resolve_public_key() -> [u8; 32] {
     }
     let seed: [u8; 32] = key_data[..32].try_into().expect("seed length");
     derive_ed25519_public_key(&seed)
+}
+
+fn resolve_mldsa65_public_key() -> [u8; 1952] {
+    let path = match env::var("NONOS_MLDSA65_PUBKEY") {
+        Ok(path) if !path.trim().is_empty() => path,
+        _ if production_mode() => panic!("production bootloader requires NONOS_MLDSA65_PUBKEY"),
+        _ => String::from(".keys/kernel_mldsa65.pub"),
+    };
+    println!("cargo:rerun-if-changed={}", path);
+    let data = fs::read(&path).unwrap_or_else(|e| {
+        panic!("cannot read ML-DSA-65 public key at {}: {}", path, e)
+    });
+    parse_mldsa65_public_key(&data)
+}
+
+fn parse_mldsa65_public_key(data: &[u8]) -> [u8; 1952] {
+    if data.len() != 1963 || &data[..8] != b"NONOSPK1" {
+        panic!("ML-DSA-65 public key file has invalid envelope");
+    }
+    if data[8] != 0x03 {
+        panic!("ML-DSA-65 public key file has wrong algorithm");
+    }
+    let len = u16::from_be_bytes([data[9], data[10]]) as usize;
+    if len != 1952 {
+        panic!("ML-DSA-65 public key length must be 1952 bytes");
+    }
+    data[11..1963].try_into().expect("mldsa65 pubkey length")
 }
 
 fn resolve_signing_key_path() -> String {
@@ -273,6 +318,39 @@ fn configure_crypto() {
     println!("cargo:rustc-cfg=blake3_no_sse41");
     println!("cargo:rustc-cfg=blake3_no_avx2");
     println!("cargo:rustc-cfg=blake3_no_avx512");
+}
+
+fn compile_mldsa65() {
+    let target = env::var("TARGET").unwrap_or_default();
+    if !target.contains("uefi") {
+        return;
+    }
+    let mldsa = "../third_party/pqclean/crypto_sign/ml-dsa-65/clean";
+    let common = "../third_party/pqclean/common";
+    let mut build = cc::Build::new();
+    build.compiler("clang");
+    build.flag("-target");
+    build.flag("x86_64-unknown-windows");
+    for entry in fs::read_dir(mldsa).expect("cannot read ML-DSA-65 source directory") {
+        let path = entry.expect("bad ML-DSA-65 source entry").path();
+        if path.extension().and_then(|s| s.to_str()) == Some("c") {
+            build.file(path);
+        }
+    }
+    build.file(format!("{common}/fips202.c"));
+    build.file("src/crypto/mldsa65/chkstk.c");
+    build.file("src/crypto/mldsa65/uefi_alloc.c");
+    build.file("src/crypto/mldsa65/randombytes.c");
+    build.file("src/crypto/mldsa65/mem.c");
+    build.include("src/crypto/mldsa65/pqclean_shim");
+    build.include(mldsa);
+    build.include(common);
+    build.flag_if_supported("-ffreestanding");
+    build.flag_if_supported("-fno-stack-protector");
+    build.flag_if_supported("-mno-stack-arg-probe");
+    build.flag_if_supported("-ffunction-sections");
+    build.flag_if_supported("-fdata-sections");
+    build.compile("nonos_boot_mldsa65");
 }
 
 fn configure_security() {

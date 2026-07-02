@@ -14,31 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod delay;
-mod display;
-mod display_status;
-mod elf;
-mod footer;
-mod hash;
-mod helpers;
-mod key;
-mod signature;
-mod signature_display;
-mod signature_ed25519;
-mod signature_hybrid;
-mod signature_message;
-mod signature_passed;
-mod signature_policy;
-mod size;
-mod types;
-mod verify;
-mod verify_error;
-
-pub use delay::mini_delay;
-pub use display::{byte_to_hex, print, print_hex_bytes, print_hex_char};
-pub use display_status::{
-    print_kernel_size, print_verification_failure, print_verification_success,
-};
-pub use footer::handle_missing_footer;
-pub use types::{CryptoVerifyResult, MIN_KERNEL_SIZE, SIGNATURE_SIZE};
-pub use verify::verify_kernel_crypto;
+pub const FOOTER_MAGIC: [u8; 8] = *b"NONOSIMG";
+pub const FOOTER_VERSION: u16 = 1;
+pub const FOOTER_SIZE: usize = 64;
+pub const HASH_ALG_BLAKE3: u8 = 1;
+pub const SIG_ALG_ED25519_MLDSA65: u8 = 2;
+pub const ED25519_SIG_SIZE: usize = 64;
+pub const MLDSA65_SIG_SIZE: usize = 3309;
+pub const RELEASE_SIG_MAGIC: [u8; 8] = *b"NKRSIG2\0";
+pub const RELEASE_SIG_SIZE: usize = 8 + 32 + ED25519_SIG_SIZE + 32 + MLDSA65_SIG_SIZE;
