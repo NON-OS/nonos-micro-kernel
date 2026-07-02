@@ -16,42 +16,45 @@
 
 use uefi::cstr16;
 use uefi::prelude::*;
+
 use super::delay::mini_delay;
 use super::display::print;
-use super::signature_display::display_signature_components;
+use super::signature_ed25519::verify_ed25519_signature;
+use super::signature_hybrid::verify_hybrid_signature;
 use super::signature_message::signed_kernel_message;
-use super::signature_passed::signature_passed;
 use super::types::CryptoVerifyResult;
-use super::verify_error::display_verification_error;
-use crate::crypto::sig::verify_signature_bytes;
+use crate::image_format::types::SignatureAlgorithm;
 use crate::log::logger::log_error;
 
 pub fn verify_and_display_signature(
     kernel_hash: &[u8; 32],
     rollback_index: u32,
+    algorithm: SignatureAlgorithm,
     signature: &[u8],
     result: &mut CryptoVerifyResult,
     st: &mut SystemTable<Boot>,
 ) {
-    print(st, cstr16!("  [CRYPTO] Extracting Ed25519 signature...\r\n"));
-    mini_delay();
     if signature.iter().all(|&b| b == 0) {
-        log_error("crypto_real", "Signature is all zeros - kernel unsigned");
-        print(st, cstr16!("  [CRYPTO] Signature: ALL ZEROS (UNSIGNED!)\r\n"));
-        print(st, cstr16!("  [CRYPTO] Ed25519 verify ....................... [FAIL]\r\n"));
+        reject_unsigned(result, st);
         return;
     }
-    display_signature_components(signature, st);
-    print(st, cstr16!("  [CRYPTO] Verifying Ed25519 signature...\r\n"));
-    let signed_message = signed_kernel_message(kernel_hash, rollback_index);
-    match verify_signature_bytes(&signed_message, signature) {
-        Ok(key_id) => signature_passed(result, &key_id, st),
-        Err(e) => {
-            result.signature_valid = false;
-            log_error("kernel_verify", "Ed25519 signature verification FAILED");
-            print(st, cstr16!("  [CRYPTO] Ed25519 verify ....................... [FAIL]\r\n"));
-            display_verification_error(e, st);
+    let message = signed_kernel_message(kernel_hash, rollback_index);
+    match algorithm {
+        SignatureAlgorithm::Ed25519 => {
+            print(st, cstr16!("  [CRYPTO] Extracting Ed25519 signature...\r\n"));
+            verify_ed25519_signature(&message, signature, result, st);
+        }
+        SignatureAlgorithm::Ed25519MlDsa65 => {
+            print(st, cstr16!("  [CRYPTO] Extracting Ed25519 + ML-DSA-65 signatures...\r\n"));
+            verify_hybrid_signature(&message, signature, result, st);
         }
     }
     mini_delay();
+}
+
+fn reject_unsigned(result: &mut CryptoVerifyResult, st: &mut SystemTable<Boot>) {
+    result.signature_valid = false;
+    log_error("crypto_real", "Signature is all zeros - kernel unsigned");
+    print(st, cstr16!("  [CRYPTO] Signature: ALL ZEROS (UNSIGNED!)\r\n"));
+    print(st, cstr16!("  [CRYPTO] Signature verify .................... [FAIL]\r\n"));
 }

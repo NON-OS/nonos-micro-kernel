@@ -25,6 +25,9 @@ include!(concat!(env!("OUT_DIR"), "/keys_generated.rs"));
 
 pub fn init_production_keystore() -> Result<usize, &'static str> {
     let mut store = KEYSTORE_V2.lock();
+    if NONOS_MLDSA65_PUBLIC_KEY.iter().all(|&b| b == 0) {
+        return Err("ML-DSA-65 key missing");
+    }
     let primary_key =
         TrustedKey::new(NONOS_PUBLIC_KEY, KEY_VERSION, BUILD_TIMESTAMP, 0, KeyType::Primary);
     if primary_key.key_id != NONOS_KEY_ID {

@@ -22,6 +22,6 @@ pub fn handle_valid_signature(gop: bool) {
     set_signature_attestation(true);
     audit(AuditEvent::SignatureVerified, 0, b"sig valid");
     if gop {
-        log_ok(b"Ed25519 signature VALID");
+        log_ok(b"kernel signature VALID");
     }
 }

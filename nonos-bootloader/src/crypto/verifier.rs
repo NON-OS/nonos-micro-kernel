@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::keys::{init_production_keys, NONOS_SIGNING_KEY};
+use super::keys::{init_production_keys, NONOS_MLDSA65_PUBLIC_KEY, NONOS_SIGNING_KEY};
 use super::verify::{verify_signature_bytes, SignatureStatus, VerifyError};
 use ed25519_dalek::VerifyingKey;
 
@@ -55,5 +55,6 @@ pub fn perform_crypto_health_check() -> bool {
         h1.as_bytes() == h2.as_bytes()
     };
     let ed25519_ok = VerifyingKey::from_bytes(NONOS_SIGNING_KEY).is_ok();
-    blake3_ok && ed25519_ok
+    let mldsa65_ok = NONOS_MLDSA65_PUBLIC_KEY.iter().any(|&b| b != 0);
+    blake3_ok && ed25519_ok && mldsa65_ok
 }

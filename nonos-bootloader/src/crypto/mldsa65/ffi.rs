@@ -14,31 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod delay;
-mod display;
-mod display_status;
-mod elf;
-mod footer;
-mod hash;
-mod helpers;
-mod key;
-mod signature;
-mod signature_display;
-mod signature_ed25519;
-mod signature_hybrid;
-mod signature_message;
-mod signature_passed;
-mod signature_policy;
-mod size;
-mod types;
-mod verify;
-mod verify_error;
-
-pub use delay::mini_delay;
-pub use display::{byte_to_hex, print, print_hex_bytes, print_hex_char};
-pub use display_status::{
-    print_kernel_size, print_verification_failure, print_verification_success,
-};
-pub use footer::handle_missing_footer;
-pub use types::{CryptoVerifyResult, MIN_KERNEL_SIZE, SIGNATURE_SIZE};
-pub use verify::verify_kernel_crypto;
+extern "C" {
+    pub fn PQCLEAN_MLDSA65_CLEAN_crypto_sign_verify(
+        sig: *const u8,
+        siglen: usize,
+        msg: *const u8,
+        msglen: usize,
+        pk: *const u8,
+    ) -> core::ffi::c_int;
+}

@@ -17,7 +17,7 @@
 use super::error::ImageValidationError;
 use super::signature::validate_signature_size;
 use crate::image_format::parse::{parse_image_footer, ParsedImage};
-use crate::image_format::types::HashAlgorithm;
+use crate::image_format::types::{HashAlgorithm, SignatureAlgorithm};
 
 pub const MIN_KERNEL_SIZE: usize = 64;
 pub const ELF_MAGIC: [u8; 4] = [0x7f, b'E', b'L', b'F'];
@@ -68,6 +68,9 @@ fn validate_proof_if_present(parsed: &ParsedImage<'_>) -> Result<(), ImageValida
 fn validate_algorithm_consistency(parsed: &ParsedImage<'_>) -> Result<(), ImageValidationError> {
     if parsed.hash_algorithm != HashAlgorithm::Blake3_256 {
         return Err(ImageValidationError::HashAlgorithmMismatch);
+    }
+    if parsed.signature_algorithm != SignatureAlgorithm::Ed25519MlDsa65 {
+        return Err(ImageValidationError::SignatureAlgorithmMismatch);
     }
 
     Ok(())

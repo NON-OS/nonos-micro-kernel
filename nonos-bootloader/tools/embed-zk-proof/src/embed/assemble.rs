@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::footer::{create_image_footer, FOOTER_SIZE};
-use crate::kernel::{SignedKernel, ED25519_SIG_SIZE};
+use crate::kernel::SignedKernel;
 
 pub struct AttestedImage {
     pub data: Vec<u8>,
@@ -26,13 +26,14 @@ pub struct AttestedImage {
 
 pub fn assemble_attested_image(kernel: &SignedKernel, zk_block: Vec<u8>) -> AttestedImage {
     let kernel_size = kernel.kernel_bytes.len() as u32;
-    let signature_size = ED25519_SIG_SIZE as u32;
+    let signature_size = kernel.signature.len() as u32;
     let proof_size = zk_block.len() as u32;
 
-    let total_size = kernel.kernel_bytes.len() + ED25519_SIG_SIZE + zk_block.len() + FOOTER_SIZE;
+    let total_size = kernel.kernel_bytes.len() + kernel.signature.len() + zk_block.len() + FOOTER_SIZE;
     let footer = create_image_footer(
         kernel_size,
         signature_size,
+        kernel.signature_algorithm,
         proof_size,
         total_size as u64,
         kernel.rollback_index,

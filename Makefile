@@ -104,6 +104,9 @@ endif
 
 # Signing key. Auto-generated on first use.
 SIGNING_KEY ?= $(KEYS_DIR)/signing_key_v1.bin
+KERNEL_MLDSA65_PREFIX ?= $(KEYS_DIR)/kernel_mldsa65
+KERNEL_MLDSA65_KEY ?= $(KERNEL_MLDSA65_PREFIX).seed
+KERNEL_MLDSA65_PUB ?= $(KERNEL_MLDSA65_PREFIX).pub
 NONOS_TRUST_DIR := nonos-data/trust
 
 # Transparent ZK attestation paths.
@@ -113,6 +116,7 @@ ZK_ENROLL_TOOL   := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/transparent-
 ZK_TRANSPARENT_PROVE_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/transparent-prove
 ZK_TRANSPARENT_VERIFY_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/transparent-verify
 ZK_CAPSULE_PROOF_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/capsule-attest-proof
+CAPSULE_SIGN_BIN := nonos-sign/target/release/capsule-sign
 ZK_BOOT_ROOT     ?= $(NONOS_TRUST_DIR)/zk/device_root.bin
 ZK_BOOT_COMMITMENTS ?= $(NONOS_TRUST_DIR)/zk/device_commitments.bin
 ZK_BOOT_LABELS   ?= $(NONOS_TRUST_DIR)/zk/device_labels.txt
@@ -307,7 +311,15 @@ $(SIGNING_KEY):
 	@head -c 32 /dev/urandom > $@
 	@echo "Wrote $@"
 
-nonos-mk-ensure-signing-key: $(SIGNING_KEY)
+$(KERNEL_MLDSA65_KEY): $(CAPSULE_SIGN_BIN)
+	@echo "Generating kernel signing key (ML-DSA-65)..."
+	@mkdir -p $(KEYS_DIR)
+	@$(CAPSULE_SIGN_BIN) keygen --alg mldsa65 --out $(KERNEL_MLDSA65_PREFIX)
+
+$(KERNEL_MLDSA65_PUB): $(KERNEL_MLDSA65_KEY)
+	@test -f $@
+
+nonos-mk-ensure-signing-key: $(SIGNING_KEY) $(KERNEL_MLDSA65_KEY) $(KERNEL_MLDSA65_PUB)
 
 # ZK attestation: transparent enrolled-secret tools
 
@@ -350,6 +362,11 @@ $(SIGN_TOOL): nonos-mk-check-deps
 	@echo "Building kernel signing tool..."
 	@cd $(BOOTLOADER_DIR)/tools/sign-kernel && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --target $(HOST_TARGET)
+
+$(ZK_BOOT_LABELS):
+	@test "$(NONOS_DEV)" = 1 || { echo "$@ is required"; exit 1; }
+	@mkdir -p $(dir $@)
+	@printf "nonos-dev-device\n" > $@
 
 $(ZK_BOOT_ROOT) $(ZK_BOOT_COMMITMENTS) $(ZK_BOOT_SECRETS): $(ZK_BOOT_LABELS) $(ZK_ENROLL_TOOL)
 	@echo "Enrolling transparent boot attestation identities..."
@@ -404,12 +421,14 @@ NONOS_TRUST_ANCHOR_PUBKEY ?=
 $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 		$(BOOTLOADER_SRCS) \
 		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),$(NONOS_TRUST_ANCHOR_PUBKEY),$(SIGNING_KEY)) \
+		$(KERNEL_MLDSA65_PUB) \
 		$(ZK_BOOT_ROOT) \
 		$(TARGET_DIR)/.nonos-toolchain.stamp
 	@echo "Building UEFI bootloader (policy: $(BOOTLOADER_POLICY))..."
 	$(eval SIGNING_KEY_ABS := $(if $(filter /%,$(SIGNING_KEY)),$(SIGNING_KEY),$(shell pwd)/$(SIGNING_KEY)))
 	@cd $(BOOTLOADER_DIR) && \
 		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),NONOS_TRUST_ANCHOR_PUBKEY=$(abspath $(NONOS_TRUST_ANCHOR_PUBKEY)),NONOS_SIGNING_KEY=$(SIGNING_KEY_ABS)) \
+		NONOS_MLDSA65_PUBKEY=$(shell pwd)/$(KERNEL_MLDSA65_PUB) \
 		NONOS_ZK_DEVICE_ROOT=$(shell pwd)/$(ZK_BOOT_ROOT) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --target x86_64-unknown-uefi --release \
@@ -472,8 +491,6 @@ NONOS_TRUST_ANCHOR_POLICY_BIN := $(NONOS_TRUST_DIR)/policy/nonos_trust_anchor.po
 NONOS_TRUST_ANCHOR_EPOCH  := 1
 NONOS_CERT_VALID_FROM_MS  := 1767225600000
 NONOS_CERT_VALID_UNTIL_MS := 1893456000000
-
-CAPSULE_SIGN_BIN := nonos-sign/target/release/capsule-sign
 
 # Order-only dependency on the toolchain stamp: -Zbuild-std needs the
 # rust-src component, and a make-level RUSTUP_TOOLCHAIN override skips the
@@ -1269,11 +1286,15 @@ nonos-mk-process-manager-prod: nonos-mk-desktop-gui-prod
 
 # Sign + attest + ESP packaging
 
-$(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel $(SIGNING_KEY) $(SIGN_TOOL)
-	@echo "Signing kernel (Ed25519, rollback index $(NONOS_ROLLBACK_INDEX))..."
+$(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel \
+		$(SIGNING_KEY) $(KERNEL_MLDSA65_KEY) $(KERNEL_MLDSA65_PUB) $(SIGN_TOOL)
+	@echo "Signing kernel (Ed25519 + ML-DSA-65, rollback index $(NONOS_ROLLBACK_INDEX))..."
 	@mkdir -p $(TARGET_DIR)
 	@$(SIGN_TOOL) --key $(KERNEL_SIGNING_KEY) --input $< --output $@ \
-		--rollback-index $(NONOS_ROLLBACK_INDEX)
+		--mldsa65-key $(KERNEL_MLDSA65_KEY) \
+		--mldsa65-pub $(KERNEL_MLDSA65_PUB) \
+		--rollback-index $(NONOS_ROLLBACK_INDEX) \
+		--verify
 
 nonos-mk-sign: $(TARGET_DIR)/kernel_signed.bin
 
@@ -1662,7 +1683,7 @@ nonos-mk-clean-all:
 nonos-mk-distclean: nonos-mk-clean-all
 	@echo "Removing signing + ZK keys..."
 	@rm -rf $(BOOTLOADER_DIR)/target target
-	@rm -f $(SIGNING_KEY)
+	@rm -f $(SIGNING_KEY) $(KERNEL_MLDSA65_KEY) $(KERNEL_MLDSA65_PUB)
 	@rm -rf $(ZK_KEYS_DIR)
 
 nonos-mk-fmt:

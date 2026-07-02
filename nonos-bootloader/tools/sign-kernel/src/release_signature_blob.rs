@@ -14,31 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod delay;
-mod display;
-mod display_status;
-mod elf;
-mod footer;
-mod hash;
-mod helpers;
-mod key;
-mod signature;
-mod signature_display;
-mod signature_ed25519;
-mod signature_hybrid;
-mod signature_message;
-mod signature_passed;
-mod signature_policy;
-mod size;
-mod types;
-mod verify;
-mod verify_error;
+use crate::constants::{RELEASE_SIG_MAGIC, RELEASE_SIG_SIZE};
+use crate::key_id_ed25519::ed25519_key_id;
+use crate::key_id_mldsa65::mldsa65_key_id;
 
-pub use delay::mini_delay;
-pub use display::{byte_to_hex, print, print_hex_bytes, print_hex_char};
-pub use display_status::{
-    print_kernel_size, print_verification_failure, print_verification_success,
-};
-pub use footer::handle_missing_footer;
-pub use types::{CryptoVerifyResult, MIN_KERNEL_SIZE, SIGNATURE_SIZE};
-pub use verify::verify_kernel_crypto;
+pub fn release_signature_blob(
+    ed_pub: &[u8; 32],
+    ed_sig: &[u8; 64],
+    pq_pub: &[u8],
+    pq_sig: &[u8],
+) -> Vec<u8> {
+    let mut out = Vec::with_capacity(RELEASE_SIG_SIZE);
+    out.extend_from_slice(&RELEASE_SIG_MAGIC);
+    out.extend_from_slice(&ed25519_key_id(ed_pub));
+    out.extend_from_slice(ed_sig);
+    out.extend_from_slice(&mldsa65_key_id(pq_pub));
+    out.extend_from_slice(pq_sig);
+    out
+}

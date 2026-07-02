@@ -18,4 +18,4 @@ mod hash;
 mod load;
 
 pub use hash::{compute_capsule_commitment, compute_kernel_hash};
-pub use load::{load_signed_kernel, SignedKernel, ED25519_SIG_SIZE};
+pub use load::{load_signed_kernel, SignedKernel};

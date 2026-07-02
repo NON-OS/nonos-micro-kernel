@@ -32,7 +32,7 @@ static STAGE_NAMES: [&[u8]; 11] = [
     b"hardware",
     b"kernel_load",
     b"blake3",
-    b"ed25519",
+    b"signature",
     b"zk_verify",
     b"elf_parse",
     b"handoff",

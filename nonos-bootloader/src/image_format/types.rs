@@ -39,12 +39,14 @@ impl HashAlgorithm {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SignatureAlgorithm {
     Ed25519 = 1,
+    Ed25519MlDsa65 = 2,
 }
 
 impl SignatureAlgorithm {
     pub const fn from_u8(v: u8) -> Option<Self> {
         match v {
             1 => Some(Self::Ed25519),
+            2 => Some(Self::Ed25519MlDsa65),
             _ => None,
         }
     }
@@ -52,6 +54,7 @@ impl SignatureAlgorithm {
     pub const fn signature_size(&self) -> usize {
         match self {
             Self::Ed25519 => 64,
+            Self::Ed25519MlDsa65 => 8 + 32 + 64 + 32 + 3309,
         }
     }
 }
