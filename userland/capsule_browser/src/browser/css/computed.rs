@@ -108,6 +108,9 @@ pub struct Computed {
     pub margin_auto_x: bool,
     pub margin_left_auto: bool,
     pub margin_right_auto: bool,
+    // box-sizing: border-box makes width/height span the border box; the
+    // default content-box adds padding and border on top.
+    pub border_box: bool,
     pub is_block: bool,
     pub is_flex: bool,
     pub is_inline_block: bool,
@@ -165,6 +168,7 @@ impl Computed {
             margin_auto_x: false,
             margin_left_auto: false,
             margin_right_auto: false,
+            border_box: false,
             is_block: false,
             is_flex: false,
             is_inline_block: false,

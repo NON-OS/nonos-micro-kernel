@@ -16,21 +16,34 @@
 
 use crate::browser::css::{Computed, Size};
 
-// Border-box width within the available px. width is treated as the
-// border-box size, which keeps real pages inside their containers.
+use super::edges_x::edges_x;
+
+// Border-box width within the available px. box-sizing decides whether the
+// declared width is the border box (border-box) or the content box, in which
+// case padding and border are added on top (content-box, the default).
 pub(super) fn border_box_w(style: &Computed, avail: i32) -> i32 {
+    let (el, er) = edges_x(style);
+    let edges = if style.border_box { 0 } else { el + er };
     let mut w = match style.width {
+        // An auto block fills the container; its border box is the available
+        // width regardless of box-sizing.
         Size::Auto => avail,
-        Size::Px(p) => (p as i32).min(avail),
-        s => s.resolve(avail).unwrap_or(avail).clamp(0, avail),
+        // A percentage resolves against the container, then adds edges under
+        // content-box; capped to the container so padding cannot overflow it,
+        // which is exactly the case border-box was invented to avoid.
+        Size::Pct(_) | Size::Calc(_, _) => {
+            (style.width.resolve(avail).unwrap_or(avail) + edges).clamp(0, avail)
+        }
+        // A fixed length keeps its true border-box size even past the
+        // container, so an explicitly sized box is not silently shrunk.
+        Size::Px(p) => p as i32 + edges,
     };
-    // max-width caps, then min-width raises; percentages resolve against the
-    // available width like the base size does.
+    // max-width caps, then min-width raises. They clamp the border box.
     if let Some(mx) = style.max_width.resolve(avail) {
-        w = w.min(mx);
+        w = w.min(mx + edges);
     }
     if let Some(mn) = style.min_width.resolve(avail) {
-        w = w.max(mn);
+        w = w.max(mn + edges);
     }
     w.max(0)
 }
