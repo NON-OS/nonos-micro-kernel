@@ -23,6 +23,7 @@ pub(super) enum Format {
     Jpeg,
     Bmp,
     Gif,
+    Webp,
 }
 
 pub(super) struct Probe {
@@ -61,6 +62,9 @@ pub(super) fn probe(b: &[u8]) -> Option<Probe> {
     if b.starts_with(b"GIF87a") || b.starts_with(b"GIF89a") {
         return Some(Probe { format: Format::Gif, w: le16(b, 6)?, h: le16(b, 8)? });
     }
+    if b.len() >= 16 && &b[0..4] == b"RIFF" && &b[8..12] == b"WEBP" {
+        return webp_dims(b);
+    }
     None
 }
 
@@ -88,4 +92,32 @@ fn jpeg_dims(b: &[u8]) -> Option<Probe> {
         i += 2 + len;
     }
     None
+}
+
+// WebP dimensions from the first chunk after the RIFF/WEBP header. VP8X
+// carries a 24-bit canvas size, VP8L packs 14-bit dims after a signature
+// byte, and lossy VP8 reads them from the keyframe header.
+fn webp_dims(b: &[u8]) -> Option<Probe> {
+    let fourcc = b.get(12..16)?;
+    match fourcc {
+        b"VP8X" => {
+            let w = 1 + (le16(b, 24)? | ((b.get(26).copied()? as u32) << 16)) & 0xFF_FFFF;
+            let h = 1 + (le16(b, 27)? | ((b.get(29).copied()? as u32) << 16)) & 0xFF_FFFF;
+            Some(Probe { format: Format::Webp, w, h })
+        }
+        b"VP8L" => {
+            let bits = le32(b, 21)?;
+            let w = (bits & 0x3FFF) + 1;
+            let h = ((bits >> 14) & 0x3FFF) + 1;
+            Some(Probe { format: Format::Webp, w, h })
+        }
+        b"VP8 " => {
+            // Skip the 10-byte frame tag and the 3-byte start code to the
+            // 14-bit width and height words.
+            let w = le16(b, 26)? & 0x3FFF;
+            let h = le16(b, 28)? & 0x3FFF;
+            Some(Probe { format: Format::Webp, w, h })
+        }
+        _ => None,
+    }
 }

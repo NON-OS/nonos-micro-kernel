@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::css::computed::{Computed, Size};
+use crate::browser::css::computed::Computed;
 use crate::browser::css::parse_grow::parse_grow;
 use crate::browser::css::parse_size::parse_size;
 

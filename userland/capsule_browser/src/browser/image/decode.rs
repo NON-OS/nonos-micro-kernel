@@ -42,6 +42,10 @@ pub(super) fn decode_body(bytes: &[u8]) -> Result<Decoded, &'static str> {
         Format::Jpeg => jpeg::decode_jpeg_argb8888(bytes, &mut px),
         Format::Bmp => bmp::decode_bmp_argb8888(bytes, &mut px),
         Format::Gif => gif::decode_gif_argb8888(bytes, &mut px),
+        // The container is parsed and the box is sized; the VP8L and VP8
+        // payload decoders are the remaining work, so decode fails closed to
+        // the sized placeholder rather than painting garbage.
+        Format::Webp => return Err("webp decode not yet supported"),
     }
     .map_err(|_| "image decode failed")?;
     Ok(Decoded { w: size.width, h: size.height, px })
