@@ -16,12 +16,20 @@
 
 use alloc::vec::Vec;
 
-use crate::browser::html::flow::Flow;
+use crate::browser::css::Computed;
 
-use super::is_block::is_block;
+use super::tree::{BoxKind, BoxNode};
 
-pub fn leave_element(out: &mut Vec<Flow>, name: &str) {
-    if is_block(name) {
-        out.push(Flow::Break);
+// Wrap a pending run of inline children in one anonymous block and append it.
+pub(super) fn flush_run(out: &mut Vec<BoxNode>, run: &mut Vec<BoxNode>, parent: &Computed) {
+    if run.is_empty() {
+        return;
     }
+    out.push(BoxNode {
+        kind: BoxKind::Block,
+        style: Computed::inherit_from(parent),
+        href: None,
+        dom_id: 0,
+        children: core::mem::take(run),
+    });
 }

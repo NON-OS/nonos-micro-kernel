@@ -14,11 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn is_block(name: &str) -> bool {
-    matches!(
-        name,
-        "br" | "hr" | "p" | "div" | "section" | "article" | "main" | "header" | "footer" | "nav"
-            | "aside" | "figure" | "figcaption" | "form" | "button" | "li" | "ul" | "ol" | "tr"
-            | "table" | "thead" | "tbody" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6"
-    )
+use crate::browser::css::Size;
+
+// Resolve a top/right/bottom/left offset; percentages use the containing
+// block width for both axes. Auto stays unresolved.
+pub(super) fn offset_px(s: Size, base: i32) -> Option<i32> {
+    match s {
+        Size::Auto => None,
+        Size::Px(p) => Some(p as i32),
+        Size::Pct(p) => Some(base.saturating_mul(p.min(100) as i32) / 100),
+    }
 }

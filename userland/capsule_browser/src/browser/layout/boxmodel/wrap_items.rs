@@ -14,6 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn is_heading(name: &str) -> bool {
-    name.len() == 2 && name.as_bytes()[0] == b'h' && name.as_bytes()[1].is_ascii_digit()
+use alloc::vec::Vec;
+
+use crate::browser::css::Computed;
+
+use super::tree::BoxNode;
+use super::wrap_runs::wrap_runs;
+
+// Flex containers treat every child as an item: inline runs get an anonymous
+// block each so the flex axis only ever sees block-level boxes.
+pub(super) fn wrap_items(parent: &Computed, children: Vec<BoxNode>) -> Vec<BoxNode> {
+    if children.iter().all(|c| c.kind.block_level()) {
+        return children;
+    }
+    wrap_runs(parent, children)
 }

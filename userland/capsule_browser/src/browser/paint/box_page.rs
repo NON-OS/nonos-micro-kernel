@@ -14,10 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
+use nonos_app_skeleton::PaintBuffer;
 
-pub fn push_ws(buf: &mut String) {
-    if !buf.ends_with(' ') {
-        buf.push(' ');
+use crate::browser::layout::boxmodel::BoxDocument;
+use crate::browser::state::State;
+
+use super::box_fragment::box_fragment;
+
+pub(super) const TOP: i32 = 80;
+const PAGE_BG: u32 = 0xFF18_1B20;
+
+pub fn paint(state: &State, doc: &BoxDocument, fb: &mut PaintBuffer) {
+    fb.fill_rect(0, TOP as u32, fb.width, fb.height.saturating_sub(TOP as u32), PAGE_BG);
+    let bottom = fb.height as i32;
+    for f in &doc.frags {
+        let sy = f.y + TOP - state.scroll as i32;
+        if sy + f.h < TOP || sy > bottom {
+            continue;
+        }
+        box_fragment(state, fb, f, sy, bottom);
     }
 }

@@ -14,26 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
-use alloc::vec::Vec;
+use super::containing::Containing;
 
-use crate::browser::html::flow::{Flow, Style};
-use crate::browser::html::parse::flush::flush;
-use crate::browser::html::parse::push_ws::push_ws;
+// Ambient layout state a box hands to its children: the containing block
+// for absolute descendants, the active clip, and the stacking z.
+#[derive(Clone, Copy)]
+pub(super) struct Ctx {
+    pub cb: Containing,
+    pub clip: Option<[i32; 4]>,
+    pub z: i32,
+}
 
-pub fn append_text(out: &mut Vec<Flow>, buf: &mut String, text: &str, style: Style, link: &Option<String>) {
-    for c in text.chars() {
-        if style.pre {
-            if c == '\n' {
-                flush(out, buf, style, link);
-                out.push(Flow::Break);
-            } else {
-                buf.push(c);
-            }
-        } else if c.is_whitespace() {
-            push_ws(buf);
-        } else {
-            buf.push(c);
-        }
+impl Ctx {
+    // Intersect the active clip with `rect` ([x0, y0, x1, y1]).
+    pub(super) fn clipped(mut self, rect: [i32; 4]) -> Self {
+        self.clip = Some(match self.clip {
+            Some(c) => [c[0].max(rect[0]), c[1].max(rect[1]), c[2].min(rect[2]), c[3].min(rect[3])],
+            None => rect,
+        });
+        self
     }
 }

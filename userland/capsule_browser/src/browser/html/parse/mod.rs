@@ -15,8 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod attr;
-pub mod flush;
-pub mod push_ws;
 pub mod read_entity;
 pub mod read_to_gt;
 pub mod tag_name;

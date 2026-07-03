@@ -14,18 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
-use alloc::vec::Vec;
+use crate::browser::css::{Computed, Size};
 
-use crate::browser::html::flow::{Flow, Style};
-
-pub fn flush(out: &mut Vec<Flow>, buf: &mut String, style: Style, link: &Option<String>) {
-    let t = if style.pre { buf.as_str() } else { buf.trim() };
-    if !t.is_empty() {
-        match link {
-            Some(href) => out.push(Flow::Link(t.into(), href.clone())),
-            None => out.push(Flow::Text(t.into(), style)),
-        }
+// Clamp a resolved border-box height between min-height and max-height. Length
+// values (px, and vh/vw which parse to px) apply directly; percentages need a
+// definite parent height, which is not threaded here, so they are ignored.
+pub(super) fn resolve_min_max_h(s: &Computed, content_h: i32) -> i32 {
+    let mut h = content_h;
+    if let Size::Px(mn) = s.min_height {
+        h = h.max(mn as i32);
     }
-    buf.clear();
+    if let Size::Px(mx) = s.max_height {
+        h = h.min(mx as i32);
+    }
+    h.max(0)
 }

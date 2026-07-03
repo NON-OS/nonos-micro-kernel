@@ -29,8 +29,19 @@ pub struct Cursor {
     pub advance: u32,
 }
 
-pub fn word(cur: &mut Cursor, w: &str, href: Option<String>, scale: u32, bold: bool, req_color: u32, bg: u32) -> (Span, bool) {
-    let px = w.len() as u32 * cur.advance * scale + cur.advance * scale + if bold { 1 } else { 0 };
+pub fn word(
+    cur: &mut Cursor,
+    w: &str,
+    href: Option<String>,
+    scale: u32,
+    bold: bool,
+    req_color: u32,
+    bg: u32,
+) -> (Span, bool) {
+    let em = super::px_for(scale);
+    let text_w = nonos_app_skeleton::measure_ttf(w, em).max(0) as u32;
+    let space_w = nonos_app_skeleton::measure_ttf(" ", em).max(1) as u32;
+    let px = text_w + space_w + if bold { 1 } else { 0 };
     let wrapped = if cur.x + px > cur.width.saturating_sub(MARGIN) {
         cur.y += scale * 8 + 12;
         cur.x = MARGIN;
@@ -45,7 +56,7 @@ pub fn word(cur: &mut Cursor, w: &str, href: Option<String>, scale: u32, bold: b
     } else {
         FG
     };
-    let span = Span { x: cur.x, w: px, text: String::from(w), color, bg, href, image_src: None, scale, bold };
+    let span = Span { x: cur.x, w: px, text: String::from(w), color, bg, href, scale, bold };
     cur.x += px;
     (span, wrapped)
 }

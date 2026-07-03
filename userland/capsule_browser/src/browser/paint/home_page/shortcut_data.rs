@@ -22,8 +22,23 @@ pub struct Shortcut {
 }
 
 pub const SHORTCUTS: [Shortcut; 4] = [
-    Shortcut { label: b"neverssl.com", url: "http://neverssl.com/", badge: b"N", color: 0xFF3F_B950 },
+    Shortcut {
+        label: b"neverssl.com",
+        url: "http://neverssl.com/",
+        badge: b"N",
+        color: 0xFF3F_B950,
+    },
     Shortcut { label: b"example.com", url: "http://example.com/", badge: b"E", color: 0xFF38_8BFD },
-    Shortcut { label: b"info.cern.ch", url: "http://info.cern.ch/", badge: b"C", color: 0xFFE5_534B },
-    Shortcut { label: b"httpforever.com", url: "http://httpforever.com/", badge: b"H", color: 0xFFA3_71F7 },
+    Shortcut {
+        label: b"info.cern.ch",
+        url: "http://info.cern.ch/",
+        badge: b"C",
+        color: 0xFFE5_534B,
+    },
+    Shortcut {
+        label: b"httpforever.com",
+        url: "http://httpforever.com/",
+        badge: b"H",
+        color: 0xFFA3_71F7,
+    },
 ];

@@ -14,20 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
-use alloc::vec::Vec;
+const MAX_ATTR_PX: u32 = 4096;
 
-use crate::browser::css::Computed;
-use crate::browser::dom::tree::Dom;
-use crate::browser::html::flow::{Flow, Style};
-use crate::browser::html::parse::flush::flush;
-
-use super::walk::walk;
-
-pub fn to_flows(dom: &Dom, styles: &[Computed]) -> Vec<Flow> {
-    let mut out: Vec<Flow> = Vec::new();
-    let mut buf = String::new();
-    walk(dom, 0, Style::default(), None, &mut out, &mut buf, 0, styles);
-    flush(&mut out, &mut buf, Style::default(), &None);
-    out
+// Whole-pixel value of an <img> width/height attribute. Percentages and
+// malformed values yield None and the box falls back to its default size.
+pub(super) fn attr_px(v: Option<&str>) -> Option<u32> {
+    let n = v?.trim().parse::<u32>().ok()?;
+    if n == 0 {
+        return None;
+    }
+    Some(n.min(MAX_ATTR_PX))
 }

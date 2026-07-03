@@ -26,7 +26,6 @@ pub struct Span {
     pub color: u32,
     pub bg: u32,
     pub href: Option<String>,
-    pub image_src: Option<String>,
     pub scale: u32,
     pub bold: bool,
 }

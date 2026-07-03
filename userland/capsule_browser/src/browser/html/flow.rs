@@ -27,7 +27,5 @@ pub struct Style {
 
 pub enum Flow {
     Text(String, Style),
-    Link(String, String),
-    Image(String, String),
     Break,
 }

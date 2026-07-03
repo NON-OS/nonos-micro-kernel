@@ -34,7 +34,10 @@ pub(super) fn emit_text(
     for w in text.split_whitespace() {
         let (span, wrapped) = wrap::word(cur, w, href.clone(), scale, bold, color, bg);
         if wrapped {
-            lines.push(core::mem::replace(line, RenderLine { y: cur.y, height: LINE_H, spans: Vec::new() }));
+            lines.push(core::mem::replace(
+                line,
+                RenderLine { y: cur.y, height: LINE_H, spans: Vec::new() },
+            ));
         }
         if super::line_height::line_height(scale) > line.height {
             line.height = super::line_height::line_height(scale);

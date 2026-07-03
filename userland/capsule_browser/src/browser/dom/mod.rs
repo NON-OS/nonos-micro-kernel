@@ -14,19 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod attach;
 mod attrs;
 mod close_tag;
 mod consume;
-mod flows;
+mod create;
+mod detach;
 mod flush_text;
 mod limits;
 pub mod node;
 mod parse;
 mod push;
 mod raw_text;
+mod remove_attr;
+mod set_attr;
 mod tree;
 mod void;
 
-pub use flows::to_flows;
 pub use parse::parse;
 pub use tree::Dom;

@@ -17,7 +17,8 @@
 use nonos_app_skeleton::PaintBuffer;
 
 pub fn centered_text(fb: &mut PaintBuffer, bytes: &[u8], color: u32, y: u32) {
-    let width = (bytes.len() as u32 * fb.glyph_advance()).min(fb.width);
-    let x = fb.width.saturating_sub(width) / 2;
-    fb.text(x, y, bytes, color);
+    let text = core::str::from_utf8(bytes).unwrap_or("");
+    let width = fb.measure_ttf(text, 15.0);
+    let x = (fb.width as i32 - width) / 2;
+    fb.text_ttf(x, y as i32, text, color, 15.0);
 }
