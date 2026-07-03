@@ -16,8 +16,16 @@
 
 use crate::browser::css::Computed;
 
-// A definite height, or None when the box sizes to its content. Percent
-// heights have no resolvable base here and also size to content.
-pub(super) fn fixed_h(style: &Computed) -> Option<i32> {
-    style.height.definite_px()
+// A definite border-box height, or None when the box sizes to its content.
+// A pixel or calc height is always definite. A percentage height resolves
+// only when the containing block has a definite height; otherwise the box
+// falls back to content sizing, as CSS specifies.
+pub(super) fn fixed_h(style: &Computed, cb_h: Option<i32>) -> Option<i32> {
+    if let Some(px) = style.height.definite_px() {
+        return Some(px);
+    }
+    match cb_h {
+        Some(base) => style.height.resolve(base),
+        None => None,
+    }
 }

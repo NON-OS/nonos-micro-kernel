@@ -51,18 +51,21 @@ pub(super) fn layout_flex(
     let (el, er) = edges_x(s);
     let (et, eb) = edges_y(s);
     let content_w = (bb_w - el - er).max(0);
+    let def_h = fixed_h(s, ctx.cb.h);
     let mut inner = ctx;
+    inner.cb.h = def_h.map(|fh| (fh - et - eb).max(0));
     if s.position != Position::Static {
         inner.cb = Containing {
             x: x + s.border_left as i32,
             y: y + s.border_top as i32,
             w: bb_w - (s.border_left + s.border_right) as i32,
+            h: inner.cb.h,
         };
     }
     if s.overflow_hidden {
         let x0 = x + s.border_left as i32;
         let x1 = x + bb_w - s.border_right as i32;
-        let (y0, y1) = match fixed_h(s) {
+        let (y0, y1) = match def_h {
             Some(fh) => (y + s.border_top as i32, y + fh - s.border_bottom as i32),
             None => (i32::MIN, i32::MAX),
         };
@@ -90,7 +93,7 @@ pub(super) fn layout_flex(
         flex_row(node, x + el, y + et, content_w, frags, depth, inner)
     };
     layout_absolutes(node, frags, depth, inner);
-    let h = match fixed_h(s) {
+    let h = match def_h {
         Some(fh) => fh,
         None => inner_h + et + eb,
     };

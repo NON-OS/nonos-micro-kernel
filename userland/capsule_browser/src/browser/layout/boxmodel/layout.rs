@@ -31,7 +31,16 @@ pub fn layout(root: &BoxNode, viewport_w: u32) -> BoxDocument {
     let (ml, mr) = (s.margin_left as i32, s.margin_right as i32);
     let (mt, mb) = (s.margin_top as i32, s.margin_bottom as i32);
     let avail = (viewport_w as i32 - ml - mr).max(0);
-    let ctx = Ctx { cb: Containing { x: 0, y: 0, w: viewport_w as i32 }, clip: None, z: 0 };
+    let ctx = Ctx {
+        cb: Containing {
+            x: 0,
+            y: 0,
+            w: viewport_w as i32,
+            h: Some(crate::browser::manifest::HEIGHT as i32),
+        },
+        clip: None,
+        z: 0,
+    };
     let h = layout_box(root, ml, mt, avail, &mut frags, 0, ctx);
     frags.sort_by_key(|f| f.z);
     let mut bottom = mt + h + mb;
