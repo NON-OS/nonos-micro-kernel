@@ -32,7 +32,8 @@ pub fn hash_sha384(data: &[u8]) -> Option<[u8; 48]> {
     if rc < 72
         || u32::from_le_bytes([rx[0], rx[1], rx[2], rx[3]]) != 0x4e4f_4358
         || u16::from_le_bytes([rx[6], rx[7]]) != 20
-        || i32::from_le_bytes([rx[20], rx[21], rx[22], rx[23]]) != 0 {
+        || i32::from_le_bytes([rx[20], rx[21], rx[22], rx[23]]) != 0
+    {
         return None;
     }
     let mut out = [0u8; 48];

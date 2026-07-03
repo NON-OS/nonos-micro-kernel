@@ -31,7 +31,7 @@ pub fn builtin(name: &str, argv: &[Value]) -> Value {
         "Boolean" => Value::Bool(to_bool(&first)),
         "isNaN" => {
             let n = to_num(&first);
-            Value::Bool(n != n)
+            Value::Bool(n.is_nan())
         }
         _ => Value::Undef,
     }

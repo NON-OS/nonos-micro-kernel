@@ -20,7 +20,10 @@ use super::default_port::default_port;
 use super::types::Scheme;
 
 pub fn host_port(authority: &str, scheme: Scheme) -> Option<(String, u16)> {
-    if authority.is_empty() || authority.contains('@') || authority.bytes().any(|b| b.is_ascii_whitespace()) {
+    if authority.is_empty()
+        || authority.contains('@')
+        || authority.bytes().any(|b| b.is_ascii_whitespace())
+    {
         return None;
     }
     if authority.starts_with('[') {

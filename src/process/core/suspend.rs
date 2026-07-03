@@ -171,8 +171,7 @@ pub fn has_saved_fpu_state(pid: Pid) -> bool {
 }
 
 pub fn init_fpu() {
-    let fpu = FpuState::default();
-    fpu.restore();
+    FpuState::init();
 }
 
 pub fn resume_process(pid: Pid) -> Result<(), &'static str> {

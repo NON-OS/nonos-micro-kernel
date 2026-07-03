@@ -16,8 +16,8 @@
 
 mod authority;
 mod default_port;
-mod host_port;
 mod has_scheme_prefix;
+mod host_port;
 mod join;
 mod normalize_path;
 mod parse;

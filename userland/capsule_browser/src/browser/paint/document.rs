@@ -27,7 +27,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     let bottom = fb.height as i32;
     fb.fill_rect(0, TOP as u32, fb.width, fb.height.saturating_sub(TOP as u32), PAGE_BG);
     let Some(doc) = &state.document else {
-        fb.text(16, TOP as u32 + 24, state.status.as_bytes(), FG);
+        fb.text_ttf(16, TOP + 24, &state.status, FG, 15.0);
         return;
     };
     for line in &doc.lines {
@@ -36,16 +36,13 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
             continue;
         }
         for s in &line.spans {
-            if s.image_src.is_some() {
-                super::image_span::paint_image(fb, s, sy as u32, line.height);
-                continue;
-            }
             if s.bg != 0 {
                 fb.fill_rect(s.x, sy as u32, s.w, line.height, s.bg);
             }
-            fb.text_scaled(s.x, sy as u32, s.text.as_bytes(), s.color, s.scale);
+            let px = crate::browser::layout::px_for(s.scale);
+            fb.text_ttf(s.x as i32, sy, &s.text, s.color, px);
             if s.bold {
-                fb.text_scaled(s.x + 1, sy as u32, s.text.as_bytes(), s.color, s.scale);
+                fb.text_ttf(s.x as i32 + 1, sy, &s.text, s.color, px);
             }
             if s.href.is_some() {
                 fb.fill_rect(s.x, sy as u32 + line.height - 4, s.w, 1, s.color);

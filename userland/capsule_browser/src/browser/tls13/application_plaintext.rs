@@ -18,7 +18,13 @@ use alloc::vec::Vec;
 
 use super::flight::ClientFlight;
 
-pub fn application_plaintext(client: &ClientFlight, flight: &[u8], response: &[u8], host: &[u8], now: u64) -> Option<Vec<u8>> {
+pub fn application_plaintext(
+    client: &ClientFlight,
+    flight: &[u8],
+    response: &[u8],
+    host: &[u8],
+    now: u64,
+) -> Option<Vec<u8>> {
     let done = super::server_complete::server_complete(client, flight, host, now)?;
     let mut out = Vec::new();
     let mut pos = 0usize;
@@ -39,7 +45,11 @@ pub fn application_plaintext(client: &ClientFlight, flight: &[u8], response: &[u
 }
 
 fn append(out: &mut Vec<u8>, keys: &super::traffic_keys::TrafficKeys, seq: u64, record: &[u8]) {
-    let Some(plain) = super::record_open::open(&keys.server_key, &keys.server_iv, seq, record) else { return };
+    let Some(plain) =
+        super::record_open::open(keys.suite, &keys.server_key, &keys.server_iv, seq, record)
+    else {
+        return;
+    };
     let Some((body, 23)) = super::inner_plain::split(&plain) else { return };
     out.extend_from_slice(body);
 }

@@ -15,12 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::caller_has_register_right::caller_has_register_right;
-use super::caller_has_required::caller_has_required;
+use super::owner_has_required::owner_has_required;
 
-pub(in crate::services::registry) fn caller_can_register(required: u64) -> bool {
+pub(in crate::services::registry) fn caller_can_register(owner_pid: u32, required: u64) -> bool {
+    if !owner_has_required(owner_pid, required) {
+        return false;
+    }
     match crate::process::current_pid() {
         None => true,
-        Some(pid) if pid <= 64 => caller_has_required(required),
-        Some(_) => caller_has_required(required) && caller_has_register_right(),
+        Some(pid) if pid <= 64 => true,
+        Some(_) => caller_has_register_right(),
     }
 }

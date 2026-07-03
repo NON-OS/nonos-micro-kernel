@@ -21,6 +21,7 @@ use crate::browser::js::value::Value;
 use super::ctx::Ctx;
 use super::eval_expr::eval_expr;
 use super::eval_for::eval_for;
+use super::eval_for_of::eval_for_of;
 use super::eval_if::eval_if;
 use super::eval_while::eval_while;
 use super::exec::exec;
@@ -48,6 +49,7 @@ pub fn eval_stmt(ctx: &mut Ctx, env: &Env, s: &Stmt) -> Result<Flow, ()> {
         Stmt::If(c, t, e) => eval_if(ctx, env, c, t, e),
         Stmt::While(c, b) => eval_while(ctx, env, c, b),
         Stmt::For(i, c, u, b) => eval_for(ctx, env, i, c, u, b),
+        Stmt::ForOf(name, iter, b) => eval_for_of(ctx, env, name, iter, b),
         Stmt::Func(..) => Ok(Flow::Normal),
         Stmt::Return(e) => {
             let v = match e {

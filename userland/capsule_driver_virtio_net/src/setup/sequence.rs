@@ -14,19 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_debug, mk_irq_ack};
+use nonos_libc::mk_irq_ack;
 
 use super::driver::Driver;
+use super::stage::stage;
 use super::{claim, config, dma_set, irq, queues, registers};
-use crate::constants::{LEG_MAC, VIRTIO_NET_F_STATUS};
+use crate::constants::{LEG_MAC, LEG_QUEUE_NOTIFY, Q_RX, VIRTIO_NET_F_STATUS};
 use crate::discover::find_virtio_net;
 use crate::init::{driver_ok, negotiate};
 
 const MSIX_CONFIG_SHIFT: usize = 4;
-
-fn stage(s: &str) {
-    mk_debug(s.as_ptr(), s.len());
-}
 
 pub fn run() -> Result<Driver, &'static str> {
     stage("[net-setup] find");
@@ -49,6 +46,9 @@ pub fn run() -> Result<Driver, &'static str> {
     let (rx, tx) = queues::build(regs, &dma)?;
     rx.prime();
     driver_ok(regs);
+    unsafe {
+        regs.w16(LEG_QUEUE_NOTIFY, Q_RX);
+    }
     stage("[net-setup] irq-ack");
     if mk_irq_ack(irq_grant.grant_id) < 0 {
         return Err("virtio-net: irq ack failed");

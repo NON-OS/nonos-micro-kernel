@@ -41,4 +41,7 @@ pub enum Value {
     Func(Rc<FuncData>),
     Native(&'static str),
     Node(usize),
+    // A node facet like classList or style: members and methods resolve
+    // against the carried node id.
+    Bound(&'static str, usize),
 }

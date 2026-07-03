@@ -36,6 +36,6 @@ pub use components::{
     list, menu, progress, radio, scroll, slider, statusbar, tabbar, toggle, tooltip,
 };
 pub use design::{border, color, shadow, spacing, typography};
-pub use font::{atlas, glyph, render as font_render};
-pub use image::{bmp, jpeg, lz4_raw, png, types};
+pub use font::{atlas, glyph, render as font_render, ttf};
+pub use image::{bmp, gif, jpeg, lz4_raw, png, types};
 pub use qr::{ecc, format, mask, place, render as qr_render};

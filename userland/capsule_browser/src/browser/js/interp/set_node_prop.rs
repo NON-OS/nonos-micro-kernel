@@ -17,12 +17,29 @@
 use crate::browser::js::value::Value;
 
 use super::ctx::Ctx;
+use super::graft_html::graft_html;
 use super::set_text_content::set_text_content;
 use super::to_str::to_str;
 
 pub fn set_node_prop(ctx: &mut Ctx, id: usize, name: &str, v: &Value) {
-    if matches!(name, "textContent" | "innerText" | "innerHTML") {
-        set_text_content(ctx.dom, id, to_str(v));
-        ctx.dirty = true;
+    match name {
+        "textContent" | "innerText" => {
+            set_text_content(ctx.dom, id, to_str(v));
+            ctx.dirty = true;
+        }
+        "innerHTML" => graft_html(ctx, id, &to_str(v)),
+        "id" => {
+            ctx.dom.set_attr(id, "id", to_str(v));
+            ctx.dirty = true;
+        }
+        "className" => {
+            ctx.dom.set_attr(id, "class", to_str(v));
+            ctx.dirty = true;
+        }
+        "value" => {
+            ctx.dom.set_attr(id, "value", to_str(v));
+            ctx.dirty = true;
+        }
+        _ => {}
     }
 }

@@ -31,7 +31,7 @@ pub const MAX_SERVICES: usize = 256;
 static ENDPOINTS: Mutex<Vec<ServiceEndpoint>> = Mutex::new(Vec::new());
 
 pub fn register_endpoint(name: &str, port: u32, pid: u32, caps: u64) -> Result<(), RegError> {
-    if !auth::caller_can_register(caps) {
+    if !auth::caller_can_register(pid, caps) {
         return Err(RegError::PermissionDenied);
     }
     let mut eps = ENDPOINTS.lock();

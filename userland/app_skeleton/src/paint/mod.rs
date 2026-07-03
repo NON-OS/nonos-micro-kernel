@@ -20,6 +20,8 @@ mod fill_rect;
 mod glyph_advance;
 mod text;
 mod text_scaled;
+mod text_ttf;
 
 pub use buffer::PaintBuffer;
 pub use glyph_advance::font_advance;
+pub use text_ttf::{measure_ttf, measure_ttf_mono};

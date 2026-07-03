@@ -20,6 +20,7 @@ pub const LEGACY_RECORD_VERSION: u16 = 0x0301;
 pub const LEGACY_HANDSHAKE_VERSION: u16 = 0x0303;
 pub const TLS13: u16 = 0x0304;
 pub const SUITE_CHACHA20_SHA256: u16 = 0x1303;
+pub const SUITE_AES128_GCM_SHA256: u16 = 0x1301;
 pub const GROUP_X25519: u16 = 0x001d;
 pub const EXT_SERVER_NAME: u16 = 0;
 pub const EXT_SUPPORTED_GROUPS: u16 = 10;

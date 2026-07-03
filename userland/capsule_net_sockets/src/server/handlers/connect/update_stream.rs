@@ -20,13 +20,24 @@ use crate::server::parse_req::Request;
 use crate::sockets::{Kind, SocketKey};
 use crate::state;
 
-use super::{install_transport, status};
+use super::{install_transport, status, wait_established};
 
-pub fn update_stream(pid: u32, req: &Request, key: SocketKey, ip: [u8; 4], port: u16, tx: &mut [u8]) {
+pub fn update_stream(
+    pid: u32,
+    req: &Request,
+    key: SocketKey,
+    ip: [u8; 4],
+    port: u16,
+    tx: &mut [u8],
+) {
     let transport = match tcp::connect(state::tcp(), ip, port) {
         Ok(h) => h,
         Err(_) => return status::status(pid, req, E_NO_TRANSPORT, tx),
     };
+    if !wait_established::wait_established(state::tcp(), transport) {
+        let _ = tcp::close(state::tcp(), transport);
+        return status::status(pid, req, E_NO_TRANSPORT, tx);
+    }
     let errno = install_transport::install_transport(key, Kind::Stream, ip, port, transport);
     if errno != E_OK {
         let _ = tcp::close(state::tcp(), transport);

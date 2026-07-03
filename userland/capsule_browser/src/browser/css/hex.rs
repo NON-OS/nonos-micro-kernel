@@ -20,9 +20,10 @@ pub fn parse_hex(h: &str) -> Option<u32> {
         return None;
     }
     let b = h.as_bytes();
+    // #rgba and #rrggbbaa carry an alpha we drop; colors stay opaque.
     let full: [u8; 6] = match h.len() {
-        3 => [b[0], b[0], b[1], b[1], b[2], b[2]],
-        6 => [b[0], b[1], b[2], b[3], b[4], b[5]],
+        3 | 4 => [b[0], b[0], b[1], b[1], b[2], b[2]],
+        6 | 8 => [b[0], b[1], b[2], b[3], b[4], b[5]],
         _ => return None,
     };
     let s = core::str::from_utf8(&full).ok()?;

@@ -37,17 +37,25 @@ pub enum HeapError {
     MmapFailed,
 }
 
-/// Bind the global allocator to a 4 MiB region returned by
-/// `mk_mmap`. One-shot: the first call locks initialisation;
-/// subsequent calls return `AlreadyInitialized`. On `mk_mmap`
-/// failure the flag is released for retry.
+/// Bind the global allocator to the default 16 MiB region. One-shot: the
+/// first call locks initialisation; subsequent calls return
+/// `AlreadyInitialized`. On `mk_mmap` failure the flag is released for retry.
 pub fn init() -> Result<(), HeapError> {
+    init_sized(INITIAL_HEAP_SIZE)
+}
+
+/// Bind the global allocator to a region of `bytes` returned by `mk_mmap`.
+/// A memory-hungry capsule (the browser) calls this from its entry point
+/// with a larger size before the skeleton's default `init`, which then sees
+/// `AlreadyInitialized` and proceeds. Keeping the larger heap opt-in means
+/// the common capsule footprint stays at the 16 MiB default.
+pub fn init_sized(bytes: usize) -> Result<(), HeapError> {
     if INITIALIZED.swap(true, Ordering::SeqCst) {
         return Err(HeapError::AlreadyInitialized);
     }
     let base = mk_mmap(
         core::ptr::null_mut(),
-        INITIAL_HEAP_SIZE,
+        bytes,
         PROT_READ | PROT_WRITE,
         MAP_PRIVATE | MAP_ANONYMOUS,
         -1,
@@ -59,9 +67,9 @@ pub fn init() -> Result<(), HeapError> {
         return Err(HeapError::MmapFailed);
     }
     // SAFETY: ek@nonos.systems — `mk_mmap` returned a userspace VA, so
-    // `[base, base + INITIAL_HEAP_SIZE)` is owned by this process.
+    // `[base, base + bytes)` is owned by this process.
     unsafe {
-        ALLOCATOR.lock().init(base, INITIAL_HEAP_SIZE);
+        ALLOCATOR.lock().init(base, bytes);
     }
     Ok(())
 }

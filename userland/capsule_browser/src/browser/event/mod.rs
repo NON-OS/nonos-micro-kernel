@@ -14,6 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod enclosing_form;
+mod field_at;
+mod field_key;
+mod form_fields;
+mod js_click;
+mod js_tick;
 mod nav_history;
 mod on_button;
 mod on_event;
@@ -22,6 +28,10 @@ mod on_key;
 mod on_page_click;
 mod on_page_key;
 mod on_toolbar;
+mod relayout;
 mod scroll_by;
+mod submit_form;
 
+pub use js_tick::js_tick;
 pub use on_event::on_event;
+pub use relayout::relayout;

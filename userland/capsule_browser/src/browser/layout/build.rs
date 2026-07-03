@@ -45,14 +45,17 @@ pub fn build(flows: &[Flow], width: u32, advance: u32) -> RenderDocument {
                     continue;
                 }
                 let (scale, bold) = super::span_metrics::span_metrics(style);
-                super::emit_text::emit_text(&mut lines, &mut line, &mut cur, t, None, scale, bold, style.color, style.bg);
-            }
-            Flow::Link(t, href) => {
-                let shown = if t.is_empty() { href.clone() } else { t.clone() };
-                super::emit_text::emit_text(&mut lines, &mut line, &mut cur, &shown, Some(href.clone()), 1, false, 0, 0);
-            }
-            Flow::Image(src, alt) => {
-                super::emit_image::emit_image(&mut lines, &mut line, &mut cur, src, alt);
+                super::emit_text::emit_text(
+                    &mut lines,
+                    &mut line,
+                    &mut cur,
+                    t,
+                    None,
+                    scale,
+                    bold,
+                    style.color,
+                    style.bg,
+                );
             }
         }
     }

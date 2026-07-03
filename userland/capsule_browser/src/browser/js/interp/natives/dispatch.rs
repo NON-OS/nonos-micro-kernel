@@ -18,24 +18,45 @@ use alloc::vec::Vec;
 
 use crate::browser::js::value::Value;
 
-use super::super::ctx::Ctx;
+use super::super::ctx::{Ctx, TimerReq};
+use super::super::to_str::to_str;
 use super::builtins::builtin;
 use super::console::console_log;
+use super::document_create::create_element;
 use super::document_get::get_by_id;
 use super::document_query::query;
+use super::document_query_all::query_all;
+use super::js_fetch::js_fetch;
+use super::json_parse::json_parse;
+use super::json_stringify::json_stringify;
 use super::math::math;
+use super::timer_ms::timer_ms;
 
 pub fn dispatch(ctx: &mut Ctx, name: &'static str, argv: Vec<Value>) -> Result<Value, ()> {
     match name {
         "console.log" => console_log(ctx, &argv),
         "document.getElementById" => Ok(get_by_id(ctx, &argv)),
         "document.querySelector" => Ok(query(ctx, &argv)),
+        "document.querySelectorAll" => Ok(query_all(ctx, &argv)),
+        "document.createElement" => Ok(create_element(ctx, &argv)),
         "Math.floor" | "Math.round" | "Math.abs" | "Math.max" | "Math.min" => Ok(math(name, &argv)),
-        "parseInt" | "parseFloat" | "Number" | "String" | "Boolean" | "isNaN" => Ok(builtin(name, &argv)),
-        "setTimeout" => {
+        "parseInt" | "parseFloat" | "Number" | "String" | "Boolean" | "isNaN" => {
+            Ok(builtin(name, &argv))
+        }
+        "fetch" => Ok(js_fetch(ctx, &argv)),
+        "JSON.parse" => Ok(argv.first().map(|v| json_parse(&to_str(v))).unwrap_or(Value::Undef)),
+        "JSON.stringify" => {
+            let mut out = alloc::string::String::new();
+            if let Some(v) = argv.first() {
+                json_stringify(v, &mut out, 0);
+            }
+            Ok(Value::Str(alloc::rc::Rc::new(out)))
+        }
+        "setTimeout" | "setInterval" => {
             if let Some(cb) = argv.first() {
-                if matches!(cb, Value::Func(_)) && ctx.timers.len() < 1024 {
-                    ctx.timers.push(cb.clone());
+                if matches!(cb, Value::Func(_)) && ctx.timers.len() < 256 {
+                    let ms = argv.get(1).map(timer_ms).unwrap_or(0);
+                    ctx.timers.push(TimerReq { cb: cb.clone(), ms, repeat: name == "setInterval" });
                 }
             }
             Ok(Value::Undef)

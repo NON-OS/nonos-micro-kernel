@@ -18,10 +18,12 @@ use crate::browser::paint::document::VIEW_H;
 use crate::browser::state::State;
 
 pub fn scroll_by(state: &mut State, dy: i32) {
-    let max = match state.document.as_ref() {
-        Some(d) => d.content_h.saturating_sub(VIEW_H),
-        None => 0,
+    let content_h = match (state.box_doc.as_ref(), state.document.as_ref()) {
+        (Some(b), _) => b.content_h,
+        (None, Some(d)) => d.content_h,
+        (None, None) => 0,
     };
+    let max = content_h.saturating_sub(VIEW_H);
     let next = state.scroll as i32 + dy;
     state.scroll = next.clamp(0, max as i32) as u32;
 }

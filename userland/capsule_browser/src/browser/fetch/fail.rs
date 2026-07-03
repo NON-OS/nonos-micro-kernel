@@ -23,7 +23,8 @@ pub(super) fn fail(state: &mut State, msg: &str) {
     if retryable_error::retryable_error(msg)
         && !security_error::security_error(msg)
         && state.retries < constants::MAX_RETRIES
-        && !state.address.is_empty() {
+        && !state.address.is_empty()
+    {
         state.retries += 1;
         state.status = alloc::format!("retry {} - {}", state.retries, msg);
         state.pending_nav = Some(state.address.clone());
@@ -31,6 +32,9 @@ pub(super) fn fail(state: &mut State, msg: &str) {
         state.retries = 0;
         state.status = String::from(msg);
         state.document = Some(render_error::render_error(msg));
+        state.box_doc = None;
+        state.page_dom = None;
+        state.world = None;
         state.view = View::Page;
     }
 }

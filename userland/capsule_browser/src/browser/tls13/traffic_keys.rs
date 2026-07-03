@@ -16,6 +16,7 @@
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct TrafficKeys {
+    pub suite: u16,
     pub handshake_secret: [u8; 32],
     pub client_secret: [u8; 32],
     pub server_secret: [u8; 32],

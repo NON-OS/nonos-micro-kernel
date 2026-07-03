@@ -26,11 +26,25 @@ pub fn shortcut(fb: &mut PaintBuffer, i: u32) {
     fb.fill_rect(bx, constants::BADGE_Y, 6, 6, constants::PAGE_BG);
     fb.fill_rect(bx + constants::BADGE - 6, constants::BADGE_Y, 6, 6, constants::PAGE_BG);
     fb.fill_rect(bx, constants::BADGE_Y + constants::BADGE - 6, 6, 6, constants::PAGE_BG);
-    fb.fill_rect(bx + constants::BADGE - 6, constants::BADGE_Y + constants::BADGE - 6, 6, 6, constants::PAGE_BG);
-    let gw = fb.glyph_advance().saturating_mul(3);
-    fb.text_scaled(cx.saturating_sub(gw / 2), constants::BADGE_Y + 16, s.badge, constants::WHITE, 3);
-    let lw = (s.label.len() as u32).saturating_mul(fb.glyph_advance());
-    fb.text(cx.saturating_sub(lw / 2), 370, s.label, constants::FG);
+    fb.fill_rect(
+        bx + constants::BADGE - 6,
+        constants::BADGE_Y + constants::BADGE - 6,
+        6,
+        6,
+        constants::PAGE_BG,
+    );
+    let badge = core::str::from_utf8(s.badge).unwrap_or("");
+    let bw = fb.measure_ttf(badge, 26.0);
+    fb.text_ttf(
+        cx as i32 - bw / 2,
+        (constants::BADGE_Y + 14) as i32,
+        badge,
+        constants::WHITE,
+        26.0,
+    );
+    let label = core::str::from_utf8(s.label).unwrap_or("");
+    let lw = fb.measure_ttf(label, 15.0);
+    fb.text_ttf(cx as i32 - lw / 2, 366, label, constants::FG, 15.0);
 }
 
 pub fn center_x(width: u32, i: u32) -> u32 {

@@ -20,7 +20,7 @@ pub fn to_bool(v: &Value) -> bool {
     match v {
         Value::Undef | Value::Null => false,
         Value::Bool(b) => *b,
-        Value::Num(n) => *n != 0.0 && *n == *n,
+        Value::Num(n) => *n != 0.0 && !n.is_nan(),
         Value::Str(s) => !s.is_empty(),
         _ => true,
     }

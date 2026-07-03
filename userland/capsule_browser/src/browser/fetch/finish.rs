@@ -15,30 +15,71 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::browser::fetch::{record_history, redirect, render_error, render_response};
-use crate::browser::state::{State, View};
 use crate::browser::http;
+use crate::browser::state::{State, View};
 
 pub(super) fn finish(state: &mut State, raw: &[u8], suppress: bool) {
     state.retries = 0;
     match http::response::parse(raw) {
         Some(resp) => {
             if matches!(resp.status, 301 | 302 | 303 | 307 | 308) {
-                if let Some(loc) = resp.location { return redirect::redirect(state, loc); }
+                if let Some(loc) = resp.location {
+                    return redirect::redirect(state, loc);
+                }
             }
             state.redirect_count = 0;
-            let (doc, flows) = render_response::render_response(&resp);
+            let (rendered, count) = render_response::render_response(&resp);
             state.scroll = 0;
             state.status = alloc::format!(
                 "{} raw={} body={} fl={}",
-                resp.status, raw.len(), resp.body.len(), flows
+                resp.status,
+                raw.len(),
+                resp.body.len(),
+                count
             );
-            state.document = doc;
+            // A fresh document drops any stylesheets gathered for the last one.
+            state.css_queue.clear();
+            state.page_css.clear();
+            match rendered {
+                render_response::Rendered::Boxes(b, dom, world) => {
+                    state.page_dom = Some(dom);
+                    state.world = Some(world);
+                    state.document = None;
+                    super::enqueue_css::enqueue_css(state);
+                    // Stylesheets are render-blocking: if the page pulls in
+                    // external CSS, hold the first paint until it arrives so
+                    // the user never sees the unstyled document flash. With no
+                    // external CSS the inline render is already complete.
+                    if state.css_queue.is_empty() {
+                        state.box_doc = Some(b);
+                    } else {
+                        state.box_doc = None;
+                        state.status = alloc::string::String::from("loading styles");
+                    }
+                }
+                render_response::Rendered::Lines(d) => {
+                    state.document = Some(d);
+                    state.box_doc = None;
+                    state.page_dom = None;
+                    state.world = None;
+                }
+                render_response::Rendered::Nothing => {
+                    state.document = None;
+                    state.box_doc = None;
+                    state.page_dom = None;
+                    state.world = None;
+                }
+            }
+            crate::browser::image::enqueue_from_doc(state);
             record_history::record_history(state, suppress);
         }
         None => {
             state.redirect_count = 0;
             state.status = alloc::format!("bad resp raw={}", raw.len());
             state.document = Some(render_error::render_error("bad response"));
+            state.box_doc = None;
+            state.page_dom = None;
+            state.world = None;
         }
     }
     state.view = View::Page;

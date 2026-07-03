@@ -24,9 +24,11 @@ pub mod capsule_load;
 pub mod crypto;
 pub mod debug;
 pub mod graphics;
+#[cfg(feature = "heap")]
 pub mod heap;
 pub mod ipc;
 pub mod mem;
+#[cfg(feature = "panic-handler")]
 mod panic;
 pub mod proc_output;
 pub mod process;
@@ -62,7 +64,8 @@ pub use graphics::{
     nonos_surface_destroy, nonos_surface_map, nonos_surface_present_full,
     nonos_surface_present_rect, NonosDisplayInfo, NONOS_PIXEL_FMT_ARGB8888,
 };
-pub use heap::{init as heap_init, HeapError};
+#[cfg(feature = "heap")]
+pub use heap::{init as heap_init, init_sized as heap_init_sized, HeapError};
 pub use ipc::{
     mk_ipc_call, mk_ipc_call_timeout, mk_ipc_recv, mk_ipc_recv_from, mk_ipc_reply, mk_ipc_send,
     mk_ipc_send_to_pid, mk_service_lookup, mk_service_register,

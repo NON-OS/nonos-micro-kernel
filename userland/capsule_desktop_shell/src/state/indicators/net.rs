@@ -53,5 +53,16 @@ pub fn online() -> bool {
     if n < (HDR_LEN + BODY_LEN) as i64 {
         return false;
     }
+    let magic = u32::from_le_bytes([rx[0], rx[1], rx[2], rx[3]]);
+    let version = u16::from_le_bytes([rx[4], rx[5]]);
+    let op = u16::from_le_bytes([rx[6], rx[7]]);
+    let errno = u16::from_le_bytes([rx[8], rx[9]]);
+    let body_len = u32::from_le_bytes([rx[16], rx[17], rx[18], rx[19]]);
+    if magic != MAGIC || version != VERSION || op != OP_LEASE_STATUS {
+        return false;
+    }
+    if errno != 0 || body_len < BODY_LEN as u32 {
+        return false;
+    }
     rx[HDR_LEN] >= STATE_BOUND
 }

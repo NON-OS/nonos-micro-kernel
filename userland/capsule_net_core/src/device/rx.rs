@@ -16,22 +16,15 @@
 
 use alloc::vec;
 use alloc::vec::Vec;
-use core::sync::atomic::{AtomicU32, Ordering};
 
 use nonos_libc::mk_ipc_call;
 
+use super::rx_seq::next_rid;
 use crate::protocol::header::{parse_response, write_request};
 use crate::protocol::ops::{HDR_LEN, OP_RX_PACKET};
 
 const MAX_FRAME: usize = 1514;
 const RESP_CAP: usize = HDR_LEN + 4 + 4 + 12 + MAX_FRAME;
-
-static SEQ: AtomicU32 = AtomicU32::new(1);
-
-fn next_rid() -> u32 {
-    let v = SEQ.fetch_add(1, Ordering::Relaxed);
-    if v == 0 { SEQ.fetch_add(1, Ordering::Relaxed) } else { v }
-}
 
 pub fn poll_frame(port: u32) -> Option<Vec<u8>> {
     let mut req = [0u8; HDR_LEN];
@@ -52,7 +45,12 @@ pub fn poll_frame(port: u32) -> Option<Vec<u8>> {
     if op != OP_RX_PACKET || (plen as usize) < 4 || view.len() < HDR_LEN + 4 {
         return None;
     }
-    let status = i32::from_le_bytes([view[HDR_LEN], view[HDR_LEN+1], view[HDR_LEN+2], view[HDR_LEN+3]]);
+    let status = i32::from_le_bytes([
+        view[HDR_LEN],
+        view[HDR_LEN + 1],
+        view[HDR_LEN + 2],
+        view[HDR_LEN + 3],
+    ]);
     if status != 0 {
         return None;
     }
@@ -60,7 +58,12 @@ pub fn poll_frame(port: u32) -> Option<Vec<u8>> {
         return None;
     }
     let body = HDR_LEN + 4;
-    let frame_len = u32::from_le_bytes([view[body], view[body+1], view[body+2], view[body+3]]) as usize;
+    let frame_len = u32::from_le_bytes([
+        view[body],
+        view[body + 1],
+        view[body + 2],
+        view[body + 3],
+    ]) as usize;
     let frame_start = body + 4;
     if frame_start + frame_len > view.len() {
         return None;

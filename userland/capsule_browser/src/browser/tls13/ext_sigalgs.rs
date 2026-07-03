@@ -19,10 +19,16 @@ use alloc::vec::Vec;
 use super::constants::EXT_SIGNATURE_ALGORITHMS;
 
 pub fn ext_sigalgs(out: &mut Vec<u8>) {
-    let mut body = Vec::with_capacity(8);
-    super::push::u16(&mut body, 6);
+    // Only schemes the verifier actually handles are advertised, so the server
+    // never picks one we would reject. rsa_pss_sha256/384, ecdsa P-256/P-384,
+    // rsa_pkcs1_sha256. rsa_pss_sha512 (0x0806) is intentionally omitted: the
+    // RSA verify path wires SHA-256 and SHA-384 only.
+    let mut body = Vec::with_capacity(12);
+    super::push::u16(&mut body, 10);
     super::push::u16(&mut body, 0x0804);
     super::push::u16(&mut body, 0x0805);
     super::push::u16(&mut body, 0x0403);
+    super::push::u16(&mut body, 0x0503);
+    super::push::u16(&mut body, 0x0401);
     super::push::ext(out, EXT_SIGNATURE_ALGORITHMS, &body);
 }

@@ -14,21 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::fetch::{append_capped, constants};
 use crate::browser::fetch::tls::flight_settled;
 use crate::browser::fetch::types::{Fetch, Phase};
+use crate::browser::fetch::{append_capped, constants};
 use crate::browser::net;
 use crate::browser::tls13;
 
 pub(in crate::browser::fetch) fn read_flight(port: u32, f: &mut Fetch) {
     let mut chunk = [0u8; 4096];
-    let Some(tls) = f.tls.as_mut() else { f.phase = Phase::Error; return; };
+    let Some(tls) = f.tls.as_mut() else {
+        f.phase = Phase::Error;
+        return;
+    };
     let mut got = false;
     for _ in 0..constants::DRAIN_BURST {
         match net::socket_recv(port, f.handle, &mut chunk) {
             Ok(n) if n > 0 => {
                 got = true;
-                if append_capped::append_capped(&mut tls.flight, &chunk[..n], constants::MAX_TLS_FLIGHT).is_err() {
+                if append_capped::append_capped(
+                    &mut tls.flight,
+                    &chunk[..n],
+                    constants::MAX_TLS_FLIGHT,
+                )
+                .is_err()
+                {
                     f.error = Some("tls flight too large");
                     f.phase = Phase::Error;
                     return;

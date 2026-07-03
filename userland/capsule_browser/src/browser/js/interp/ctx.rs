@@ -20,6 +20,14 @@ use alloc::vec::Vec;
 use crate::browser::dom::Dom;
 use crate::browser::js::value::Value;
 
+// A timer request captured during evaluation; run() and the event pump turn
+// it into a queued Timer on the page's World.
+pub struct TimerReq {
+    pub cb: Value,
+    pub ms: u32,
+    pub repeat: bool,
+}
+
 pub struct Ctx<'a> {
     pub dom: &'a mut Dom,
     pub out: String,
@@ -27,12 +35,25 @@ pub struct Ctx<'a> {
     pub budget: u64,
     pub depth: u32,
     pub dirty: bool,
-    pub timers: Vec<Value>,
+    pub timers: Vec<TimerReq>,
+    pub listeners: Vec<(usize, String, Value)>,
+    // fetch(url) slots: the callback arrives via .then() or as arg two.
+    pub net: Vec<(String, Option<Value>)>,
 }
 
 impl<'a> Ctx<'a> {
     pub fn new(dom: &'a mut Dom, budget: u64) -> Self {
-        Ctx { dom, out: String::new(), steps: 0, budget, depth: 0, dirty: false, timers: Vec::new() }
+        Ctx {
+            dom,
+            out: String::new(),
+            steps: 0,
+            budget,
+            depth: 0,
+            dirty: false,
+            timers: Vec::new(),
+            listeners: Vec::new(),
+            net: Vec::new(),
+        }
     }
     pub fn tick(&mut self) -> bool {
         self.steps += 1;

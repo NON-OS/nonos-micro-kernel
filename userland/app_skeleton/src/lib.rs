@@ -34,6 +34,9 @@ pub use input::{
     KEY_HOME, KEY_LEFT, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_RIGHT, KEY_TAB, KEY_UP, MOD_ALT, MOD_CAPS,
     MOD_CTRL, MOD_META, MOD_NUM, MOD_SHIFT,
 };
-pub use paint::PaintBuffer;
 pub use paint::font_advance;
+pub use paint::{measure_ttf, measure_ttf_mono};
+pub use paint::PaintBuffer;
+#[cfg(feature = "runtime")]
 pub use runner::run;
+pub use runner::run_loop;

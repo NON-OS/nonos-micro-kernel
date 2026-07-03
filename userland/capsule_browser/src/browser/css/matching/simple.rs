@@ -17,8 +17,12 @@
 use crate::browser::css::selector::Simple;
 use crate::browser::dom::Dom;
 
+use super::pseudo::pseudo_matches;
+
 pub fn matches_simple(dom: &Dom, id: usize, s: &Simple) -> bool {
-    let node = &dom.nodes[id];
+    let Some(node) = dom.nodes.get(id) else {
+        return false;
+    };
     if let Some(t) = &s.tag {
         if &node.tag != t {
             return false;
@@ -35,5 +39,15 @@ pub fn matches_simple(dom: &Dom, id: usize, s: &Simple) -> bool {
             return false;
         }
     }
-    true
+    for (name, test) in &s.attrs {
+        match node.attr(name) {
+            None => return false,
+            Some(have) => {
+                if !test.matches(have) {
+                    return false;
+                }
+            }
+        }
+    }
+    s.pseudo.iter().all(|p| pseudo_matches(dom, id, p))
 }

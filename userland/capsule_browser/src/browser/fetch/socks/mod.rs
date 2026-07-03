@@ -18,8 +18,8 @@ mod connect;
 mod hello;
 mod method;
 mod next_phase;
-mod request;
 mod recv_some;
+mod request;
 mod response_len;
 
 pub use connect::connect;

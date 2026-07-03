@@ -11,6 +11,13 @@ description = "NONOS userland app client framework"
 name = "nonos_app_skeleton"
 path = "src/lib.rs"
 
+[features]
+# `runtime` exposes `runner::run`, the no_std entry that owns heap bring-up
+# and the CPL=3 frame loop. no_std capsules keep it (default); std capsules
+# built through the NONOS PAL disable it and drive `run_loop` themselves.
+default = ["runtime"]
+runtime = []
+
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_toolkit = { path = "../toolkit" }

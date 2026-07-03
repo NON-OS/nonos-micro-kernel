@@ -20,9 +20,21 @@ use crate::browser::html::flow::{Flow, Style};
 
 pub fn render_error(msg: &str) -> crate::browser::layout::doc::RenderDocument {
     let flows = Vec::from([
-        Flow::Text(alloc::format!("Navigation failed: {}", msg), Style { heading: 2, bold: true, pre: false, color: 0, bg: 0 }),
+        Flow::Text(
+            alloc::format!("Navigation failed: {}", msg),
+            Style { heading: 2, bold: true, pre: false, color: 0, bg: 0 },
+        ),
         Flow::Break,
-        Flow::Text(alloc::string::String::from("The browser stopped before rendering untrusted or incomplete content."), Style::default()),
+        Flow::Text(
+            alloc::string::String::from(
+                "The browser stopped before rendering untrusted or incomplete content.",
+            ),
+            Style::default(),
+        ),
     ]);
-    crate::browser::layout::build(&flows, crate::browser::manifest::WIDTH, nonos_app_skeleton::font_advance())
+    crate::browser::layout::build(
+        &flows,
+        crate::browser::manifest::WIDTH,
+        nonos_app_skeleton::font_advance(),
+    )
 }

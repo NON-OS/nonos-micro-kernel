@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::browser::manifest::WIDTH;
 use crate::browser::paint::chrome::buttons::Btn;
 use crate::browser::paint::chrome::constants;
-use crate::browser::manifest::WIDTH;
 
 pub fn toolbar_button_at(x: i32, y: i32) -> Option<Btn> {
     if y < constants::T || y >= constants::T + constants::TOOLBAR_H {

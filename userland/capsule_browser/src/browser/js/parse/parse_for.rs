@@ -15,13 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::boxed::Box;
+use alloc::vec;
 
 use crate::browser::js::ast::Stmt;
+use crate::browser::js::token::Tok;
 
 use super::body::body;
 use super::expr::expr;
 use super::parser::Parser;
-use super::var::var_decl;
 
 pub fn parse_for(p: &mut Parser) -> Stmt {
     p.eat_punct("(");
@@ -29,7 +30,28 @@ pub fn parse_for(p: &mut Parser) -> Stmt {
         None
     } else if p.is_kw("var") || p.is_kw("let") || p.is_kw("const") {
         p.advance();
-        Some(Box::new(var_decl(p)))
+        let name = match p.advance() {
+            Tok::Ident(s) => s,
+            _ => alloc::string::String::new(),
+        };
+        if p.eat_kw("of") {
+            let iter = expr(p);
+            p.eat_punct(")");
+            return Stmt::ForOf(name, iter, body(p));
+        }
+        // Not a for-of: resume the declaration list from the taken name.
+        let first = if p.eat_punct("=") { Some(expr(p)) } else { None };
+        let mut decls = vec![(name, first)];
+        while p.eat_punct(",") && decls.len() < 1024 {
+            let n = match p.advance() {
+                Tok::Ident(s) => s,
+                _ => break,
+            };
+            let init = if p.eat_punct("=") { Some(expr(p)) } else { None };
+            decls.push((n, init));
+        }
+        p.eat_punct(";");
+        Some(Box::new(Stmt::Var(decls)))
     } else {
         let e = expr(p);
         p.eat_punct(";");

@@ -16,6 +16,13 @@ path = "src/lib.rs"
 name = "toolkit"
 path = "src/main.rs"
 
+[features]
+# `runtime` pulls the libc no_std heap and panic handler for the
+# standalone toolkit bin. std capsules disable it and keep the lib only.
+default = ["runtime"]
+runtime = ["nonos_libc/heap", "nonos_libc/panic-handler"]
+
 [dependencies]
-nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_libc = { package = "nonos_userland_libc", path = "../libc", default-features = false }
 spin = "0.9"
+ab_glyph = { version = "0.2", default-features = false, features = ["libm"] }

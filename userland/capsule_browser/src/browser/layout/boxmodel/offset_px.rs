@@ -1,0 +1,27 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use crate::browser::css::Size;
+
+// Resolve a top/right/bottom/left offset; percentages use the containing
+// block width for both axes. Auto stays unresolved.
+pub(super) fn offset_px(s: Size, base: i32) -> Option<i32> {
+    match s {
+        Size::Auto => None,
+        Size::Px(p) => Some(p as i32),
+        Size::Pct(p) => Some(base.saturating_mul(p.min(100) as i32) / 100),
+    }
+}

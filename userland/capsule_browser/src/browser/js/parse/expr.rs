@@ -25,13 +25,24 @@ use super::parser::Parser;
 
 pub fn expr(p: &mut Parser) -> Expr {
     let left = binary(p, 1);
-    if p.is_punct("=") || p.is_punct("+=") || p.is_punct("-=") || p.is_punct("*=") || p.is_punct("/=") {
+    if p.is_punct("=")
+        || p.is_punct("+=")
+        || p.is_punct("-=")
+        || p.is_punct("*=")
+        || p.is_punct("/=")
+    {
         let op = match p.advance() {
             Tok::Punct(s) => s,
             _ => String::from("="),
         };
         let right = expr(p);
         return Expr::Assign(op, Box::new(left), Box::new(right));
+    }
+    if p.eat_punct("?") {
+        let then = expr(p);
+        p.eat_punct(":");
+        let other = expr(p);
+        return Expr::Ternary(Box::new(left), Box::new(then), Box::new(other));
     }
     left
 }

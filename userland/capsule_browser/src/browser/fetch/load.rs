@@ -24,6 +24,9 @@ use crate::browser::state::{State, View};
 use crate::browser::url;
 
 pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
+    if super::about_page::about_page(state, target) {
+        return Ok(());
+    }
     let url = url::parse(target).ok_or("bad url")?;
     let proxy = state.proxy.clone();
     let (connect_host, connect_port) = match proxy.as_ref() {
@@ -46,11 +49,35 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
     };
     state.status = alloc::format!("loading {}", url.host);
     state.document = None;
+    state.box_doc = None;
+    state.page_dom = None;
+    state.world = None;
+    state.css_queue.clear();
+    state.page_css.clear();
+    state.image_queue.clear();
+    state.images.reset();
+    state.css_cache = None;
+    state.scroll = 0;
+    state.focus = None;
     state.view = View::Page;
     let suppress = core::mem::take(&mut state.suppress_history_push);
+    let post = core::mem::take(&mut state.pending_post);
     state.fetch = Some(Fetch {
-        url, handle: h, phase, buf: Vec::new(), socks: Vec::new(), tls: None,
-        idle: 0, started_ms: mk_time_millis(), error: None, suppress, last_check: 0,
+        url,
+        handle: h,
+        phase,
+        buf: Vec::new(),
+        socks: Vec::new(),
+        tls: None,
+        idle: 0,
+        started_ms: mk_time_millis(),
+        error: None,
+        suppress,
+        image: None,
+        last_check: 0,
+        post,
+        js_req: false,
+        css: false,
     });
     Ok(())
 }

@@ -47,6 +47,7 @@ pub fn spawn_wallet_nonos_capsule() -> Result<(), SpawnError> {
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
+            | Capability::Network.bit()
             | Capability::Memory.bit()
             | Capability::Crypto.bit()
             | Capability::GraphicsDisplayQuery.bit()

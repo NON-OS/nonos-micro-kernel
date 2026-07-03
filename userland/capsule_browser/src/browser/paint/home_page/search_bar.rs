@@ -23,14 +23,20 @@ pub fn search_bar(state: &State, fb: &mut PaintBuffer) {
     let edge = if state.address_focused { constants::ACCENT } else { constants::BORDER };
     let x = fb.width.saturating_sub(constants::PILL_W) / 2;
     fb.fill_rect(x, constants::PILL_Y, constants::PILL_W, constants::PILL_H, edge);
-    fb.fill_rect(x + 2, constants::PILL_Y + 2, constants::PILL_W - 4, constants::PILL_H - 4, constants::PILL_BG);
+    fb.fill_rect(
+        x + 2,
+        constants::PILL_Y + 2,
+        constants::PILL_W - 4,
+        constants::PILL_H - 4,
+        constants::PILL_BG,
+    );
     globe(fb, x + 16, constants::PILL_Y + 15);
-    let ty = constants::PILL_Y + (constants::PILL_H - 8) / 2;
-    let tx = x + 40;
+    let ty = (constants::PILL_Y + (constants::PILL_H - 18) / 2) as i32;
+    let tx = (x + 40) as i32;
     if state.address.is_empty() {
-        fb.text(tx, ty, b"Search or enter a URL", constants::DIM);
+        fb.text_ttf(tx, ty, "Search or enter a URL", constants::DIM, 15.0);
     } else {
-        fb.text(tx, ty, state.address.as_bytes(), constants::FG);
+        fb.text_ttf(tx, ty, &state.address, constants::FG, 15.0);
     }
 }
 

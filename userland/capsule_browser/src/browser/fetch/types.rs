@@ -51,5 +51,16 @@ pub struct Fetch {
     pub started_ms: i64,
     pub error: Option<&'static str>,
     pub suppress: bool,
+    // Set when this fetch services an <img> resource rather than a page
+    // navigation; carries the absolute source url the raster is keyed by.
+    pub image: Option<alloc::string::String>,
     pub last_check: usize,
+    // Form body for a POST navigation; None sends a GET.
+    pub post: Option<alloc::string::String>,
+    // A script-issued fetch: the body goes to the page callback, not the
+    // renderer.
+    pub js_req: bool,
+    // An external stylesheet fetch: the body is appended to the page CSS and
+    // triggers a re-layout, not a navigation.
+    pub css: bool,
 }

@@ -32,9 +32,10 @@ pub fn pill(state: &State, fb: &mut PaintBuffer) {
     fb.fill_rect(l + w.saturating_sub(2), constants::TITLEBAR + 40, 2, 2, constants::TOOLBAR_BG);
     fb.fill_rect(l + 10, constants::TITLEBAR + 22, 8, 8, constants::DIM);
     fb.fill_rect(l + 12, constants::TITLEBAR + 24, 4, 4, constants::FIELD_BG);
+    let ty = (constants::TITLEBAR + 15) as i32;
     if state.address.is_empty() {
-        fb.text(l + 30, constants::TITLEBAR + 18, b"Search or enter address", constants::DIM);
+        fb.text_ttf(l as i32 + 30, ty, "Search or enter address", constants::DIM, 15.0);
     } else {
-        fb.text(l + 30, constants::TITLEBAR + 18, state.address.as_bytes(), constants::FG);
+        fb.text_ttf(l as i32 + 30, ty, &state.address, constants::FG, 15.0);
     }
 }

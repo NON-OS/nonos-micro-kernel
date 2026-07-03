@@ -23,7 +23,7 @@ use crate::protocol::ops::{HDR_LEN, OP_MAC_ADDRESS};
 
 static SEQ: AtomicU32 = AtomicU32::new(1);
 
-fn next_rid() -> u32 {
+pub(super) fn next_rid() -> u32 {
     let v = SEQ.fetch_add(1, Ordering::Relaxed);
     if v == 0 { SEQ.fetch_add(1, Ordering::Relaxed) } else { v }
 }
@@ -48,6 +48,15 @@ pub fn read_mac(port: u32) -> Option<[u8; 6]> {
         return None;
     }
     if view.len() < HDR_LEN + 4 + 6 {
+        return None;
+    }
+    let status = i32::from_le_bytes([
+        view[HDR_LEN],
+        view[HDR_LEN + 1],
+        view[HDR_LEN + 2],
+        view[HDR_LEN + 3],
+    ]);
+    if status != 0 {
         return None;
     }
     let mac_start = HDR_LEN + 4;

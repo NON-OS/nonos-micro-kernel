@@ -17,10 +17,19 @@
 mod builtins;
 mod console;
 mod dispatch;
+mod document_create;
 mod document_get;
 mod document_query;
+mod document_query_all;
 mod find;
 mod floor;
+mod js_fetch;
+mod json_of;
+mod json_parse;
+mod json_stringify;
+mod json_value;
 mod math;
+mod timer_ms;
 
 pub use dispatch::dispatch;
+pub(super) use json_of::json_of;

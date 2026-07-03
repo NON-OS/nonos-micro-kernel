@@ -27,6 +27,7 @@ pub enum Stmt {
     If(Expr, Vec<Stmt>, Vec<Stmt>),
     While(Expr, Vec<Stmt>),
     For(Option<Box<Stmt>>, Option<Expr>, Option<Expr>, Vec<Stmt>),
+    ForOf(String, Expr, Vec<Stmt>),
     Func(String, Vec<String>, Vec<Stmt>),
     Return(Option<Expr>),
     Break,

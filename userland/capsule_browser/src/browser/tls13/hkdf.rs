@@ -25,7 +25,11 @@ pub fn extract(salt: &[u8], ikm: &[u8]) -> Option<[u8; 32]> {
         ikm.len(),
         out.as_mut_ptr(),
     );
-    if n == 32 { Some(out) } else { None }
+    if n == 32 {
+        Some(out)
+    } else {
+        None
+    }
 }
 
 pub fn expand(prk: &[u8; 32], info: &[u8], out: &mut [u8]) -> bool {

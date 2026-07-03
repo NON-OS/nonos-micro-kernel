@@ -23,6 +23,7 @@ mod irq;
 mod queues;
 mod registers;
 mod sequence;
+mod stage;
 
 pub use driver::Driver;
 pub use sequence::run;

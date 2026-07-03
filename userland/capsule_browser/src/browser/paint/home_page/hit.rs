@@ -24,7 +24,11 @@ pub fn shortcut_at(x: i32, y: i32) -> Option<&'static str> {
     let (xu, yu) = (x as u32, y as u32);
     for i in 0..shortcut_data::SHORTCUTS.len() as u32 {
         let bx = shortcut::center_x(WIDTH, i).saturating_sub(constants::BADGE / 2);
-        if xu >= bx && xu < bx + constants::BADGE && yu >= constants::BADGE_Y && yu < constants::BADGE_Y + constants::BADGE {
+        if xu >= bx
+            && xu < bx + constants::BADGE
+            && yu >= constants::BADGE_Y
+            && yu < constants::BADGE_Y + constants::BADGE
+        {
             return Some(shortcut_data::SHORTCUTS[i as usize].url);
         }
     }
@@ -37,5 +41,8 @@ pub fn search_bar_hit(x: i32, y: i32) -> bool {
     }
     let (xu, yu) = (x as u32, y as u32);
     let px = WIDTH.saturating_sub(constants::PILL_W) / 2;
-    xu >= px && xu < px + constants::PILL_W && yu >= constants::PILL_Y && yu < constants::PILL_Y + constants::PILL_H
+    xu >= px
+        && xu < px + constants::PILL_W
+        && yu >= constants::PILL_Y
+        && yu < constants::PILL_Y + constants::PILL_H
 }

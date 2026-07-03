@@ -26,6 +26,8 @@ const NIC_CANDIDATES: &[&str] =
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SetupError {
     NicNotFound,
+    LinkDown,
+    LinkFailed,
     MacFailed,
     BuildFailed,
 }
@@ -43,6 +45,10 @@ fn discover_nic() -> Option<u32> {
 
 pub fn run() -> Result<(), SetupError> {
     let port = discover_nic().ok_or(SetupError::NicNotFound)?;
+    let link_up = device::link_up(port).ok_or(SetupError::LinkFailed)?;
+    if !link_up {
+        return Err(SetupError::LinkDown);
+    }
     let mac = device::mac(port).ok_or(SetupError::MacFailed)?;
     let net_state = build::build(mac, port).ok_or(SetupError::BuildFailed)?;
     state::store(net_state);

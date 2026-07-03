@@ -14,10 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod box_fragment;
+mod box_page;
 pub mod chrome;
 pub mod document;
+mod fill_page;
+mod fill_rounded;
 pub mod home_page;
-mod image_span;
 mod paint;
 
 pub use paint::paint;

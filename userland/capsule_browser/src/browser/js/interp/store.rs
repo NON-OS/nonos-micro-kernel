@@ -21,6 +21,7 @@ use crate::browser::js::value::Value;
 use super::ctx::Ctx;
 use super::eval_expr::eval_expr;
 use super::set_node_prop::set_node_prop;
+use super::style_set::style_set;
 use super::to_num::to_num;
 use super::to_str::to_str;
 
@@ -32,6 +33,7 @@ pub fn store(ctx: &mut Ctx, env: &Env, target: &Expr, v: Value) -> Result<(), ()
                 map.borrow_mut().insert(name.clone(), v);
             }
             Value::Node(id) => set_node_prop(ctx, id, name, &v),
+            Value::Bound("style", id) => style_set(ctx, id, name, &to_str(&v)),
             _ => {}
         },
         Expr::Index(obj, idx) => {

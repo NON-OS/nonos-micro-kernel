@@ -1,72 +1,48 @@
-use crate::image::png::{inflate::inflate_zlib, scanline::unfilter};
+use alloc::vec;
+
+use crate::image::png::inflate::inflate_zlib;
+use crate::image::png::scanline::unfilter;
 use crate::image::types::{DecodeError, ImageSize};
 
-const PNG_SIG: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
+use super::chunks::gather;
+use super::header::parse_header;
+use super::to_argb::to_argb;
 
-fn be_u32(input: &[u8], off: usize) -> Result<u32, DecodeError> {
-    let b = input.get(off..off + 4).ok_or(DecodeError::Truncated)?;
-    Ok(u32::from_be_bytes([b[0], b[1], b[2], b[3]]))
-}
+// Ceiling on the inflated and unfiltered staging buffers, so a small file that
+// claims huge dimensions cannot force a runaway allocation.
+const MAX_STAGE: usize = 64 * 1024 * 1024;
 
+// Decode a non-interlaced PNG (grayscale, truecolor, palette, gray+alpha or
+// truecolor+alpha; bit depths 1/2/4/8 for grayscale and palette, 8 for the
+// color formats) into ARGB8888. `out` must hold at least width*height pixels.
 pub fn decode_png_argb8888(input: &[u8], out: &mut [u32]) -> Result<ImageSize, DecodeError> {
-    if input.get(0..8) != Some(&PNG_SIG) {
-        return Err(DecodeError::BadMagic);
-    }
-    let ihdr_len = be_u32(input, 8)? as usize;
-    if ihdr_len != 13 || input.get(12..16) != Some(b"IHDR") {
-        return Err(DecodeError::Unsupported);
-    }
-    let width = be_u32(input, 16)?;
-    let height = be_u32(input, 20)?;
-    let size = ImageSize::new(width, height)?;
-    if input.get(24) != Some(&8) || input.get(25) != Some(&6) || input.get(26) != Some(&0) {
-        return Err(DecodeError::Unsupported);
-    }
-    let pixel_count = size.pixel_count() as usize;
-    if pixel_count > out.len() {
+    let h = parse_header(input)?;
+    let w = h.size.width as usize;
+    let ht = h.size.height as usize;
+    if w.saturating_mul(ht) > out.len() {
         return Err(DecodeError::OutputTooSmall);
     }
-    let mut idat = [0u8; 65536];
-    let mut idat_len = 0usize;
-    let mut off = 8 + 4 + 4 + 13 + 4;
-    loop {
-        let clen = be_u32(input, off)? as usize;
-        let tag = input.get(off + 4..off + 8).ok_or(DecodeError::Truncated)?;
-        if tag == b"IEND" {
-            break;
-        }
-        if tag == b"IDAT" {
-            let data = input.get(off + 8..off + 8 + clen).ok_or(DecodeError::Truncated)?;
-            if idat_len + clen > idat.len() {
-                return Err(DecodeError::OutputTooSmall);
-            }
-            idat[idat_len..idat_len + clen].copy_from_slice(data);
-            idat_len += clen;
-        }
-        off = off + 8 + clen + 4;
-        if off >= input.len() {
-            break;
-        }
-    }
-    if idat_len == 0 {
+    // Bits per pixel, then packed row length and the filter unit (bytes per
+    // pixel, at least one) that the reconstruction references.
+    let bits_pp = h.channels.saturating_mul(h.bit_depth as usize);
+    let row_bytes = w.saturating_mul(bits_pp).saturating_add(7) / 8;
+    let bpp = bits_pp.saturating_add(7) / 8;
+    let raw_len = row_bytes.saturating_add(1).saturating_mul(ht);
+    let unfiltered_len = row_bytes.saturating_mul(ht);
+    if raw_len == 0 || raw_len > MAX_STAGE || unfiltered_len > MAX_STAGE {
         return Err(DecodeError::Unsupported);
     }
-    let mut deflated = [0u8; 65536];
-    let mut rgba = [0u8; 65536];
-    let n = inflate_zlib(&idat[..idat_len], &mut deflated)?;
-    let rgba_n = unfilter(&deflated[..n], width, height, &mut rgba)?;
-    if rgba_n != pixel_count * 4 {
+    let chunks = gather(input)?;
+    if chunks.idat.is_empty() {
+        return Err(DecodeError::Unsupported);
+    }
+    let mut deflated = vec![0u8; raw_len];
+    let n = inflate_zlib(&chunks.idat, &mut deflated)?;
+    let mut rows = vec![0u8; unfiltered_len];
+    let got = unfilter(&deflated[..n], row_bytes, ht, bpp, &mut rows)?;
+    if got != unfiltered_len {
         return Err(DecodeError::Truncated);
     }
-    let mut i = 0usize;
-    while i < pixel_count {
-        let o = i * 4;
-        let r = rgba[o] as u32;
-        let g = rgba[o + 1] as u32;
-        let b = rgba[o + 2] as u32;
-        let a = rgba[o + 3] as u32;
-        out[i] = (a << 24) | (r << 16) | (g << 8) | b;
-        i += 1;
-    }
-    Ok(size)
+    to_argb(&rows, &h, row_bytes, &chunks.plte, &chunks.trns, out)?;
+    Ok(h.size)
 }

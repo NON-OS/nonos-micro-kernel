@@ -36,7 +36,9 @@ mod prime_frame;
 mod refresh_input;
 mod repaint;
 mod request_id;
+mod run_loop;
 mod service_frame;
 mod teardown;
 
 pub use entry::run;
+pub use run_loop::run_loop;

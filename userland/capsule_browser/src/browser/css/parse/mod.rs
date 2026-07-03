@@ -14,11 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod attr_test;
+mod compound;
 mod decls;
+mod matching_brace;
+mod media_feature;
+mod media_matches;
+mod nth;
+mod parse_into;
+mod pseudo;
 mod selectors;
 mod simple;
-mod stylesheet;
 mod strip_comments;
+mod stylesheet;
 
 pub use decls::parse_decls;
+pub use selectors::parse_selectors;
 pub use stylesheet::parse;

@@ -18,6 +18,7 @@ use crate::browser::js::ast::Expr;
 use crate::browser::js::env::Env;
 use crate::browser::js::value::Value;
 
+use super::bound_member::bound_member;
 use super::ctx::Ctx;
 use super::eval_expr::eval_expr;
 use super::node_member::node_member;
@@ -41,6 +42,7 @@ pub fn eval_member(ctx: &mut Ctx, env: &Env, obj: &Expr, name: &str) -> Result<V
             }
         }
         Value::Node(id) => node_member(ctx, id, name),
+        Value::Bound(kind, id) => bound_member(ctx, kind, id, name),
         _ => Value::Undef,
     })
 }

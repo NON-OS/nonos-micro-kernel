@@ -17,4 +17,4 @@
 mod allocator;
 mod init;
 
-pub use init::{init, HeapError};
+pub use init::{init, init_sized, HeapError};

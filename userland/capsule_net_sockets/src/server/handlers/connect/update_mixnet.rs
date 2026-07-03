@@ -22,7 +22,14 @@ use crate::state;
 
 use super::{connect_nym, install_transport, status};
 
-pub fn update_mixnet(pid: u32, req: &Request, key: SocketKey, ip: [u8; 4], port: u16, tx: &mut [u8]) {
+pub fn update_mixnet(
+    pid: u32,
+    req: &Request,
+    key: SocketKey,
+    ip: [u8; 4],
+    port: u16,
+    tx: &mut [u8],
+) {
     let transport = match connect_nym::connect_nym() {
         Ok(h) => h,
         Err(_) => return status::status(pid, req, E_NO_TRANSPORT, tx),

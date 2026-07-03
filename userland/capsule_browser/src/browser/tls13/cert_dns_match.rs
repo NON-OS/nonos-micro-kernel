@@ -40,11 +40,8 @@ fn san_value(cert: &[u8]) -> Option<&[u8]> {
     let needle = [0x06u8, 0x03, 0x55, 0x1D, 0x11];
     let p = cert.windows(5).position(|w| w == needle)?;
     let (tag, v, e) = super::der_tlv::der_tlv(cert, p + 5)?;
-    let (octag, octv, _) = if tag == 0x01 {
-        super::der_tlv::der_tlv(cert, e)?
-    } else {
-        (tag, v, e)
-    };
+    let (octag, octv, _) =
+        if tag == 0x01 { super::der_tlv::der_tlv(cert, e)? } else { (tag, v, e) };
     if octag != 0x04 {
         return None;
     }
@@ -66,7 +63,8 @@ fn wildcard(suffix: &[u8], host: &[u8]) -> bool {
     if host.len() <= suffix.len() || !eq_ascii(&host[host.len() - suffix.len()..], suffix) {
         return false;
     }
-    host[host.len() - suffix.len() - 1] == b'.' && !host[..host.len() - suffix.len() - 1].contains(&b'.')
+    host[host.len() - suffix.len() - 1] == b'.'
+        && !host[..host.len() - suffix.len() - 1].contains(&b'.')
 }
 
 fn eq_ascii(a: &[u8], b: &[u8]) -> bool {

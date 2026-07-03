@@ -18,9 +18,11 @@ use super::selector::Selector;
 
 pub fn specificity(sel: &Selector) -> u32 {
     core::iter::once(&sel.key)
-        .chain(sel.ancestors.iter())
+        .chain(sel.ancestors.iter().map(|a| &a.simple))
         .map(|s| {
-            (s.id.is_some() as u32) * 100 + (s.classes.len() as u32) * 10 + (s.tag.is_some() as u32)
+            (s.id.is_some() as u32) * 100
+                + (s.classes.len() as u32 + s.attrs.len() as u32) * 10
+                + (s.tag.is_some() as u32)
         })
         .sum()
 }

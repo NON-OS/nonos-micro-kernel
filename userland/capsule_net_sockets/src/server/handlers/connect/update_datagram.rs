@@ -20,13 +20,25 @@ use crate::sockets::{RemoteAddr4, SocketKey, SOCKETS};
 
 use super::status;
 
-pub fn update_datagram(pid: u32, req: &Request, key: SocketKey, ip: [u8; 4], port: u16, tx: &mut [u8]) {
+pub fn update_datagram(
+    pid: u32,
+    req: &Request,
+    key: SocketKey,
+    ip: [u8; 4],
+    port: u16,
+    tx: &mut [u8],
+) {
     let errno = SOCKETS.with(key, |s| {
         s.remote = Some(RemoteAddr4 { ip, port });
         E_OK
     });
-    status::status(pid, req, match errno {
-        Some(value) => value,
-        None => E_NO_HANDLE,
-    }, tx);
+    status::status(
+        pid,
+        req,
+        match errno {
+            Some(value) => value,
+            None => E_NO_HANDLE,
+        },
+        tx,
+    );
 }

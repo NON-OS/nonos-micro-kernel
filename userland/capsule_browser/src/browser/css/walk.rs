@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::browser::dom::node::NodeKind;
@@ -23,16 +24,29 @@ use super::apply_rules::apply_rules;
 use super::apply_style_attr::apply_style_attr;
 use super::computed::Computed;
 use super::rule::Rule;
+use super::rule_index::RuleIndex;
 
-pub fn walk(dom: &Dom, id: usize, inherited: Computed, ua: &[Rule], author: &[Rule], styles: &mut Vec<Computed>, depth: u32) {
+pub(super) fn walk(
+    dom: &Dom,
+    id: usize,
+    inherited: Computed,
+    ua: &[Rule],
+    ua_index: &RuleIndex,
+    author: &[Rule],
+    author_index: &RuleIndex,
+    vars: &[(String, String)],
+    styles: &mut Vec<Computed>,
+    depth: u32,
+) {
     let node = &dom.nodes[id];
-    let mut c = inherited;
-    c.display_none = false;
+    // Box properties reset per element; text properties carry down.
+    let mut c = Computed::inherit_from(&inherited);
+    let parent_fs = inherited.font_size_px;
     if node.kind == NodeKind::Element {
-        apply_rules(dom, id, ua, &mut c);
-        apply_rules(dom, id, author, &mut c);
+        apply_rules(dom, id, ua, ua_index, &mut c, parent_fs, vars);
+        apply_rules(dom, id, author, author_index, &mut c, parent_fs, vars);
         if let Some(st) = node.attr("style") {
-            apply_style_attr(st, &mut c);
+            apply_style_attr(st, &mut c, parent_fs, vars);
         }
     }
     styles[id] = c;
@@ -40,6 +54,6 @@ pub fn walk(dom: &Dom, id: usize, inherited: Computed, ua: &[Rule], author: &[Ru
         return;
     }
     for &ch in &node.children {
-        walk(dom, ch, c, ua, author, styles, depth + 1);
+        walk(dom, ch, c, ua, ua_index, author, author_index, vars, styles, depth + 1);
     }
 }

@@ -18,29 +18,12 @@ use alloc::vec::Vec;
 
 use crate::browser::css::rule::Rule;
 
-use super::decls::parse_decls;
-use super::selectors::parse_selectors;
+use super::parse_into::parse_into;
 use super::strip_comments::strip_comments;
 
 pub fn parse(css: &str) -> Vec<Rule> {
     let src = strip_comments(css);
     let mut rules: Vec<Rule> = Vec::new();
-    let mut rest = src.as_str();
-    while let Some(open) = rest.find('{') {
-        let head = rest[..open].trim();
-        let after = &rest[open + 1..];
-        let close = after.find('}').unwrap_or(after.len());
-        if !head.starts_with('@') {
-            let selectors = parse_selectors(head);
-            let decls = parse_decls(&after[..close]);
-            if !selectors.is_empty() && !decls.is_empty() {
-                rules.push(Rule { selectors, decls });
-            }
-        }
-        rest = after.get(close + 1..).unwrap_or("");
-        if rules.len() >= 4096 {
-            break;
-        }
-    }
+    parse_into(&src, &mut rules, 0);
     rules
 }

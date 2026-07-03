@@ -1,5 +1,13 @@
+mod argb_bytes;
+mod argb_packed;
+mod be_u32;
+mod channels;
+mod chunks;
 pub mod decoder;
 pub mod deflate;
+mod header;
 pub mod huffman;
 pub mod inflate;
+mod paeth;
 pub mod scanline;
+mod to_argb;

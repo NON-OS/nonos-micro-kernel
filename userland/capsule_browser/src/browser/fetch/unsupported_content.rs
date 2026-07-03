@@ -20,6 +20,9 @@ use crate::browser::html::flow::{Flow, Style};
 
 pub fn unsupported_content(status: u16, len: usize) -> Vec<Flow> {
     let mut out = Vec::new();
-    out.push(Flow::Text(alloc::format!("Unsupported content: status {} body {} bytes", status, len), Style::default()));
+    out.push(Flow::Text(
+        alloc::format!("Unsupported content: status {} body {} bytes", status, len),
+        Style::default(),
+    ));
     out
 }

@@ -1,0 +1,34 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use crate::browser::state::State;
+use crate::browser::{css, layout};
+
+// Rebuild styles, box tree and display list after a script mutation, an
+// external stylesheet arriving, or an image landing. Author CSS (fetched
+// stylesheets) cascades after the page's inline <style>.
+pub fn relayout(state: &mut State) {
+    let Some(dom) = state.page_dom.as_ref() else {
+        return;
+    };
+    let mut css_text = css::collect_css(dom);
+    css_text.push_str(&state.page_css);
+    let styles = css::compute_cached(dom, &css_text, &mut state.css_cache);
+    let root = layout::boxmodel::build(dom, &styles);
+    let doc = layout::boxmodel::layout(&root, crate::browser::manifest::WIDTH);
+    state.box_doc = Some(doc);
+    crate::browser::image::enqueue_from_doc(state);
+}

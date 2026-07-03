@@ -23,7 +23,14 @@ mod browser;
 
 use nonos_app_skeleton::run;
 
+// The browser holds a page DOM, a box tree, decoded rasters and transient
+// fetch buffers at once, so it claims a larger heap than the 16 MiB shared
+// default before the skeleton initialises. A failure here is non-fatal: the
+// skeleton's own init then falls back to the default size.
+const BROWSER_HEAP: usize = 48 * 1024 * 1024;
+
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
+    let _ = nonos_libc::heap_init_sized(BROWSER_HEAP);
     run(browser::Browser::new)
 }

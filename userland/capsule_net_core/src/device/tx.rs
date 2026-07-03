@@ -15,19 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec;
-use core::sync::atomic::{AtomicU32, Ordering};
 
 use nonos_libc::mk_ipc_call;
 
+use super::tx_seq::next_rid;
 use crate::protocol::header::{parse_response, write_request};
 use crate::protocol::ops::{HDR_LEN, OP_TX_PACKET};
-
-static SEQ: AtomicU32 = AtomicU32::new(1);
-
-fn next_rid() -> u32 {
-    let v = SEQ.fetch_add(1, Ordering::Relaxed);
-    if v == 0 { SEQ.fetch_add(1, Ordering::Relaxed) } else { v }
-}
 
 pub fn send_frame(port: u32, frame: &[u8]) -> bool {
     let total = HDR_LEN + frame.len();
@@ -53,6 +46,11 @@ pub fn send_frame(port: u32, frame: &[u8]) -> bool {
     if op != OP_TX_PACKET || plen as usize != 4 {
         return false;
     }
-    let status = i32::from_le_bytes([view[HDR_LEN], view[HDR_LEN+1], view[HDR_LEN+2], view[HDR_LEN+3]]);
+    let status = i32::from_le_bytes([
+        view[HDR_LEN],
+        view[HDR_LEN + 1],
+        view[HDR_LEN + 2],
+        view[HDR_LEN + 3],
+    ]);
     status >= 0
 }

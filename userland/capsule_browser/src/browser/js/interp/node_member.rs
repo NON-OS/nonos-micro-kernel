@@ -16,7 +16,10 @@
 
 use alloc::rc::Rc;
 use alloc::string::ToString;
+use alloc::vec::Vec;
+use core::cell::RefCell;
 
+use crate::browser::dom::node::NodeKind;
 use crate::browser::js::value::Value;
 
 use super::ctx::Ctx;
@@ -29,9 +32,23 @@ pub fn node_member(ctx: &mut Ctx, id: usize, name: &str) -> Value {
     match name {
         "textContent" | "innerText" | "innerHTML" => Value::Str(Rc::new(node_text(ctx.dom, id))),
         "id" => Value::Str(Rc::new(ctx.dom.nodes[id].attr("id").unwrap_or("").to_string())),
-        "className" => Value::Str(Rc::new(ctx.dom.nodes[id].attr("class").unwrap_or("").to_string())),
+        "className" => {
+            Value::Str(Rc::new(ctx.dom.nodes[id].attr("class").unwrap_or("").to_string()))
+        }
+        "value" => Value::Str(Rc::new(ctx.dom.nodes[id].attr("value").unwrap_or("").to_string())),
         "tagName" | "nodeName" => Value::Str(Rc::new(ctx.dom.nodes[id].tag.to_ascii_uppercase())),
-        "parentNode" => Value::Node(ctx.dom.nodes[id].parent),
+        "parentNode" | "parentElement" => Value::Node(ctx.dom.nodes[id].parent),
+        "classList" => Value::Bound("classList", id),
+        "style" => Value::Bound("style", id),
+        "children" => {
+            let kids: Vec<Value> = ctx.dom.nodes[id]
+                .children
+                .iter()
+                .filter(|&&c| ctx.dom.nodes.get(c).is_some_and(|n| n.kind == NodeKind::Element))
+                .map(|&c| Value::Node(c))
+                .collect();
+            Value::Array(Rc::new(RefCell::new(kids)))
+        }
         _ => Value::Undef,
     }
 }

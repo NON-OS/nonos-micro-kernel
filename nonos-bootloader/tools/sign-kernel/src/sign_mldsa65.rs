@@ -17,6 +17,7 @@
 use anyhow::{bail, Result};
 use nonos_capsule_sign::algs::mldsa65::MlDsa65;
 use nonos_capsule_sign::algs::AlgId;
+use nonos_capsule_sign::algs::Signer;
 use nonos_capsule_sign::keys::read_seed;
 
 use crate::args::Args;
@@ -29,5 +30,5 @@ pub fn sign_mldsa65(args: &Args, message: &[u8]) -> Result<Vec<u8>> {
     if key.alg != AlgId::MlDsa65 {
         bail!("ML-DSA-65 seed file has wrong algorithm");
     }
-    MlDsa65::sign_reproducible(&key.bytes, message).map_err(|e| anyhow::anyhow!("{}", e))
+    MlDsa65::sign(&key.bytes, message).map_err(|e| anyhow::anyhow!("{}", e))
 }

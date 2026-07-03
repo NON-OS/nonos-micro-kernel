@@ -42,7 +42,8 @@ pub fn call_t(
     tx[12..16].copy_from_slice(&1u32.to_le_bytes());
     tx[16..20].copy_from_slice(&(body.len() as u32).to_le_bytes());
     tx[HDR_LEN..len].copy_from_slice(body);
-    let rc = mk_ipc_call_timeout(port as u64, tx.as_ptr(), len, rx.as_mut_ptr(), rx.len(), timeout_ms);
+    let rc =
+        mk_ipc_call_timeout(port as u64, tx.as_ptr(), len, rx.as_mut_ptr(), rx.len(), timeout_ms);
     if rc < HDR_LEN as i64 {
         return Err(());
     }

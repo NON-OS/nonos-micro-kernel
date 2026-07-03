@@ -14,14 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod boxmodel;
 mod build;
 pub mod doc;
-mod emit_image;
 mod emit_pre;
 mod emit_text;
 mod heading_scale;
 mod line_height;
+mod px_for;
 mod span_metrics;
 mod wrap;
 
 pub use build::build;
+pub use px_for::px_for;

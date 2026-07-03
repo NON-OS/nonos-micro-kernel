@@ -19,5 +19,7 @@ mod chunk1;
 mod chunk2;
 mod chunk3;
 mod lookup;
+mod store;
 
 pub use lookup::is_trusted_spki_hash;
+pub use store::find_spki_by_subject;

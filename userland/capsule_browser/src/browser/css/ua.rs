@@ -19,7 +19,27 @@ use alloc::vec::Vec;
 use super::parse::parse;
 use super::rule::Rule;
 
-const UA: &str = "head{display:none}script{display:none}style{display:none}title{display:none}a{color:#4c9aff}b{font-weight:bold}strong{font-weight:bold}h1{font-weight:bold}h2{font-weight:bold}h3{font-weight:bold}h4{font-weight:bold}h5{font-weight:bold}h6{font-weight:bold}";
+const UA: &str = concat!(
+    "head{display:none}script{display:none}style{display:none}title{display:none}",
+    "a{color:#4c9aff}b{font-weight:bold}strong{font-weight:bold}",
+    "body{display:block;margin:8px}",
+    "div,section,article,main,header,footer,nav,aside,figure,figcaption,form,button,",
+    "table,thead,tbody,tr,li,dl,dt,dd{display:block}",
+    "p,pre,blockquote{display:block;margin:10px 0}",
+    "ul,ol{display:block;margin:10px 0;padding-left:28px}",
+    "pre,code,kbd,samp,tt{font-family:monospace}",
+    "hr{display:block;margin:8px 0}",
+    "input,textarea,select,button{display:block;margin:6px 0;padding:6px 8px;",
+    "border:1px solid #6b7885;background:#10161b}",
+    "input,select{height:34px}textarea{height:80px}",
+    "button{background:#2b3844;border:1px solid #46a6b2}",
+    "h1{display:block;font-weight:bold;font-size:30px;margin:13px 0}",
+    "h2{display:block;font-weight:bold;font-size:24px;margin:12px 0}",
+    "h3{display:block;font-weight:bold;font-size:19px;margin:10px 0}",
+    "h4{display:block;font-weight:bold;font-size:16px;margin:9px 0}",
+    "h5{display:block;font-weight:bold;font-size:13px;margin:8px 0}",
+    "h6{display:block;font-weight:bold;font-size:12px;margin:8px 0}",
+);
 
 pub fn ua_rules() -> Vec<Rule> {
     parse(UA)
