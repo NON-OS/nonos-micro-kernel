@@ -16,6 +16,6 @@
 
 mod caller_can_register;
 mod caller_has_register_right;
-mod caller_has_required;
+mod owner_has_required;
 
 pub(in crate::services::registry) use caller_can_register::caller_can_register;

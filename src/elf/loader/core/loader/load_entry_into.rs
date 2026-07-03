@@ -39,6 +39,7 @@ impl ElfLoader {
             base_addr,
             target_asid,
         )?;
+        super::super::relro::enforce_relro(elf_data, &header, ph_count, base_addr, target_asid)?;
         Ok(base_addr::entry_point(&header, base_addr))
     }
 }

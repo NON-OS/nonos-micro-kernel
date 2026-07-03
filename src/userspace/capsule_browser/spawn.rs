@@ -48,6 +48,8 @@ pub fn spawn_browser_capsule() -> Result<(), SpawnError> {
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
+            | Capability::Network.bit()
+            | Capability::Debug.bit()
             | Capability::Memory.bit()
             | Capability::Crypto.bit()
             | Capability::GraphicsDisplayQuery.bit()

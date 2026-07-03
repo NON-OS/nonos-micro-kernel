@@ -17,6 +17,7 @@ mod parse_dynamic;
 mod parse_header;
 mod parse_sections;
 mod relocate;
+mod relro;
 mod section;
 
 pub use loader::ElfLoader;

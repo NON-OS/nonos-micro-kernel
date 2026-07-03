@@ -14,12 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::capabilities::caps_to_bits;
-
-pub(super) fn caller_has_required(required: u64) -> bool {
-    if required == 0 {
-        return true;
-    }
-    let token = crate::syscall::capabilities::current_caps_or_default();
-    token.is_admin() || caps_to_bits(&token.permissions) & required == required
+#[cfg(feature = "nonos-capsule-net-ip")]
+pub(super) fn spawn_ip() {
+    use crate::userspace::capsule_net_ip as c;
+    super::super::boot::capsule("NET-IP", "net_ip", c::spawn_net_ip_capsule, c::shared_state);
 }
+
+#[cfg(not(feature = "nonos-capsule-net-ip"))]
+pub(super) fn spawn_ip() {}

@@ -16,7 +16,7 @@
 
 use crate::capabilities::Capability;
 
-const NETWORK_SERVICES: [&str; 8] = [
+const NETWORK_SERVICES: [&str; 9] = [
     "net.core",
     "net.l2",
     "net.ip",
@@ -24,6 +24,7 @@ const NETWORK_SERVICES: [&str; 8] = [
     "net.tcp",
     "net.dns",
     "net.dhcp.client",
+    "net.sockets",
     "net.nym",
 ];
 

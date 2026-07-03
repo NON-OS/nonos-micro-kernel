@@ -14,16 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::caller_has_register_right::caller_has_register_right;
-use super::owner_has_required::owner_has_required;
-
-pub(in crate::services::registry) fn caller_can_register(owner_pid: u32, required: u64) -> bool {
-    if !owner_has_required(owner_pid, required) {
-        return false;
-    }
-    match crate::process::current_pid() {
-        None => true,
-        Some(pid) if pid <= 64 => true,
-        Some(_) => caller_has_register_right(),
-    }
+#[cfg(feature = "nonos-capsule-net-core")]
+pub(super) fn spawn_core() {
+    use crate::userspace::capsule_net_core as c;
+    super::super::boot::capsule("NET-CORE", "net_core", c::spawn_net_core_capsule, c::shared_state);
 }
+
+#[cfg(not(feature = "nonos-capsule-net-core"))]
+pub(super) fn spawn_core() {}

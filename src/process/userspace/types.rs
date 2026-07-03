@@ -106,6 +106,25 @@ impl FpuState {
             );
         }
     }
+
+    // Architectural default FPU/SSE state for a fresh thread. FNINIT sets
+    // FCW=0x037F; MXCSR must be 0x1F80 (all SIMD exceptions masked, round to
+    // nearest). Restoring a zeroed FXSAVE image instead leaves MXCSR=0, which
+    // unmasks every SIMD exception and makes the first inexact result trap.
+    #[inline(always)]
+    pub fn init() {
+        let mxcsr: u32 = 0x1F80;
+        // SAFETY: FNINIT resets the x87 unit; LDMXCSR loads the SSE control word
+        // from the 4-byte `mxcsr` local. Neither touches the stack.
+        unsafe {
+            core::arch::asm!(
+                "fninit",
+                "ldmxcsr [{}]",
+                in(reg) &mxcsr as *const u32,
+                options(nostack),
+            );
+        }
+    }
 }
 
 impl Default for FpuState {
