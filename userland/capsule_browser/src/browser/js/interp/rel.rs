@@ -29,7 +29,7 @@ pub fn rel(a: &Value, b: &Value, op: &str) -> bool {
         };
     }
     let (x, y) = (to_num(a), to_num(b));
-    if x != x || y != y {
+    if x.is_nan() || y.is_nan() {
         return false;
     }
     match op {

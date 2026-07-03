@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub fn floor(x: f64) -> f64 {
-    if x != x {
+    if x.is_nan() {
         return x;
     }
     let t = x as i64 as f64;
