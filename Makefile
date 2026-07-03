@@ -8,7 +8,7 @@
 #
 # Cheat sheet:
 #   make nonos-mk              microkernel-capsules runtime baseline
-#   make nonos-mk-run          QEMU + OVMF
+#   make nonos-mk-run          full OS under QEMU + OVMF + TPM + NAT
 #   make nonos-mk-verify       static + trust gates + desktop build + symbol scan
 #
 # A few old names (`kernel-capsules`, `kernel-with-keyring`,
@@ -20,11 +20,11 @@
 # Public nonos-mk-* targets
 .PHONY: nonos-mk
 .PHONY: nonos-mk-check nonos-mk-check-ramfs-keys nonos-mk-core nonos-mk-capsules nonos-mk-terminal-test
-.PHONY: nonos-mk-proof-io-prod nonos-mk-ramfs-prod nonos-mk-keyring-prod nonos-mk-entropy-prod nonos-mk-crypto-prod nonos-mk-vfs-prod nonos-mk-market-prod nonos-mk-driver-virtio-rng-prod nonos-mk-driver-virtio-blk-prod nonos-mk-driver-virtio-gpu-prod nonos-mk-driver-virtio-net-prod nonos-mk-driver-iwlwifi-prod nonos-mk-driver-i2c-pci-prod nonos-mk-driver-i2c-hid-prod nonos-mk-driver-ps2-input-prod nonos-mk-driver-xhci-prod nonos-mk-driver-usb-hid-prod nonos-mk-driver-usb-msc-prod nonos-mk-driver-e1000-prod nonos-mk-driver-rtl8139-prod nonos-mk-driver-rtl8169-prod nonos-mk-driver-ahci-prod nonos-mk-driver-hda-prod nonos-mk-driver-nvme-prod nonos-mk-net-l2-prod nonos-mk-net-core-prod nonos-mk-net-ip-prod nonos-mk-net-udp-prod nonos-mk-net-dhcp-prod nonos-mk-net-nym-prod nonos-mk-net-sockets-prod nonos-mk-desktop-gui-prod
+.PHONY: nonos-mk-proof-io-prod nonos-mk-ramfs-prod nonos-mk-keyring-prod nonos-mk-entropy-prod nonos-mk-crypto-prod nonos-mk-vfs-prod nonos-mk-market-prod nonos-mk-driver-virtio-rng-prod nonos-mk-driver-virtio-blk-prod nonos-mk-driver-virtio-gpu-prod nonos-mk-driver-virtio-net-prod nonos-mk-driver-iwlwifi-prod nonos-mk-driver-i2c-pci-prod nonos-mk-driver-i2c-hid-prod nonos-mk-driver-ps2-input-prod nonos-mk-driver-xhci-prod nonos-mk-driver-usb-hid-prod nonos-mk-driver-usb-msc-prod nonos-mk-driver-e1000-prod nonos-mk-driver-rtl8139-prod nonos-mk-driver-rtl8169-prod nonos-mk-driver-ahci-prod nonos-mk-driver-hda-prod nonos-mk-driver-nvme-prod nonos-mk-net-l2-prod nonos-mk-net-core-prod nonos-mk-net-ip-prod nonos-mk-net-udp-prod nonos-mk-net-dhcp-prod nonos-mk-net-nym-prod nonos-mk-net-sockets-prod nonos-mk-desktop-gui-prod nonos-mk-full-gui-prod
 .PHONY: nonos-mk-libc nonos-mk-proof-io nonos-mk-proof-io-sign nonos-mk-check-trust-keys nonos-mk-check-trust-manifest nonos-mk-trust-policy nonos-mk-host-trust-verify nonos-mk-verify-trust nonos-mk-ramfs nonos-mk-ramfs-sign nonos-mk-keyring nonos-mk-entropy nonos-mk-crypto nonos-mk-vfs nonos-mk-virtio-rng nonos-mk-virtio-rng-sign nonos-mk-check-virtio-rng-keys nonos-mk-virtio-blk nonos-mk-virtio-blk-sign nonos-mk-check-virtio-blk-keys nonos-mk-driver-virtio-gpu nonos-mk-driver-virtio-gpu-sign nonos-mk-check-driver-virtio-gpu-keys nonos-mk-virtio-net nonos-mk-virtio-net-sign nonos-mk-check-virtio-net-keys nonos-mk-driver-iwlwifi nonos-mk-driver-iwlwifi-sign nonos-mk-check-driver-iwlwifi-keys nonos-mk-driver-i2c-pci nonos-mk-driver-i2c-pci-sign nonos-mk-check-driver-i2c-pci-keys nonos-mk-driver-i2c-hid nonos-mk-driver-i2c-hid-sign nonos-mk-check-driver-i2c-hid-keys nonos-mk-ps2-input nonos-mk-ps2-input-sign nonos-mk-check-ps2-input-keys nonos-mk-xhci nonos-mk-xhci-sign nonos-mk-check-xhci-keys nonos-mk-driver-usb-msc nonos-mk-driver-usb-msc-sign nonos-mk-check-driver-usb-msc-keys nonos-mk-driver-e1000 nonos-mk-driver-e1000-sign nonos-mk-check-driver-e1000-keys nonos-mk-driver-rtl8139 nonos-mk-driver-rtl8139-sign nonos-mk-check-driver-rtl8139-keys nonos-mk-driver-rtl8169 nonos-mk-driver-rtl8169-sign nonos-mk-check-driver-rtl8169-keys nonos-mk-driver-ahci nonos-mk-driver-ahci-sign nonos-mk-check-driver-ahci-keys nonos-mk-driver-hda nonos-mk-driver-hda-sign nonos-mk-check-driver-hda-keys nonos-mk-driver-nvme nonos-mk-driver-nvme-sign nonos-mk-check-driver-nvme-keys nonos-mk-wallpaper nonos-mk-marketplace-abi nonos-mk-market nonos-mk-marketplace-index-tool
 .PHONY: nonos-mk-userland-clean
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
-.PHONY: nonos-mk-run nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-run-serial-log nonos-mk-run-input-probe-inject-serial-log nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-run-tpm nonos-mk-swtpm-start nonos-mk-swtpm-stop
+.PHONY: nonos-mk-run nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-run-serial-log nonos-mk-run-input-probe-inject-serial-log nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-swtpm-start nonos-mk-swtpm-stop
 .PHONY: nonos-mk-static nonos-mk-scan
 .PHONY: nonos-mk-verify nonos-mk-verify-fast
 .PHONY: nonos-mk-release-audit nonos-mk-claims-check nonos-mk-qemu-net-audit
@@ -250,7 +250,7 @@ QEMU_CPU := max
 QEMU_SMP := 2
 QEMU_HOST_SSH_PORT ?= 2222
 QEMU_HOST_HTTP_PORT ?= 8080
-QEMU_NET_MODE ?= hostfwd
+QEMU_NET_MODE ?= nat
 QEMU_NET_CAPTURE ?=
 QEMU_SERIAL_LOG ?= $(TARGET_DIR)/qemu-serial.log
 QEMU_BLK_IMG := $(TARGET_DIR)/qemu-virtio-blk.img
@@ -267,7 +267,7 @@ QEMU_RNG := -device virtio-rng-pci
 
 # Software TPM 2.0 for measured boot. The guest reaches it by direct MMIO at
 # 0xFED40000 (tpm-crb), so no TCG2 firmware is needed; swtpm backs it over a
-# unix socket. Wired only into nonos-mk-run-tpm.
+# unix socket.
 SWTPM ?= swtpm
 SWTPM_STATE ?= /tmp/nonos-swtpm
 SWTPM_SOCK ?= $(SWTPM_STATE)/swtpm-sock
@@ -302,7 +302,7 @@ nonos-mk: nonos-mk-capsules
 	@echo
 	@echo "Built microkernel-capsules ($(VERSION))."
 	@echo "  make nonos-mk-esp           package the ESP for QEMU"
-	@echo "  make nonos-mk-run           boot under QEMU + OVMF"
+	@echo "  make nonos-mk-run           full OS under QEMU + OVMF + TPM + NAT"
 	@echo "  make nonos-mk-dev-run       clean-clone: mint a dev identity then boot"
 	@echo "  make nonos-mk-verify        static gates + symbol scan"
 	@echo "  make nonos-mk-test          verify + both boot harnesses"
@@ -1386,15 +1386,16 @@ nonos-mk-dev-run:
 	@$(MAKE) --no-print-directory NONOS_DEV=1 nonos-mk-dev-enroll
 	@$(MAKE) --no-print-directory NONOS_DEV=1 nonos-mk-run
 
-nonos-mk-run: nonos-mk-live-production-proof nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
+nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof nonos-mk-full-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
+	@echo "  TPM: swtpm CRB"
 	@echo "  Quit: Ctrl+A then X"
 	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
 		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
 		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
-		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) $(QEMU_TPM) \
 		-serial mon:stdio -vga none -display cocoa,zoom-to-fit=on -no-reboot
 
 nonos-mk-run-net:
@@ -1412,12 +1413,6 @@ nonos-mk-swtpm-start: nonos-mk-swtpm-stop
 	@mkdir -p "$(SWTPM_STATE)"
 	@$(SWTPM) socket --tpm2 --tpmstate dir="$(SWTPM_STATE)" --ctrl type=unixio,path="$(SWTPM_SOCK)" --flags startup-clear --daemon
 	@while [ ! -S "$(SWTPM_SOCK)" ]; do perl -e 'select(undef,undef,undef,0.1)'; done
-
-# Full OS boot with NAT outbound networking and a software TPM 2.0 for
-# measured boot.
-nonos-mk-run-tpm: nonos-mk-swtpm-start
-	@echo "Booting NONOS with TPM 2.0 (swtpm) + NAT network..."
-	@$(MAKE) --no-print-directory NONOS_DEV=1 QEMU_NET_MODE=nat QEMU="$(QEMU) $(QEMU_TPM)" nonos-mk-dev-run
 
 nonos-mk-run-wizard: nonos-mk-setup-wizard-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS (first-boot setup wizard) in QEMU..."
@@ -1736,9 +1731,8 @@ help:
 	@echo "  make nonos-mk-esp             EFI System Partition for QEMU"
 	@echo
 	@echo "Run:"
-	@echo "  make nonos-mk-run             QEMU + OVMF, network disabled by default"
-	@echo "  make nonos-mk-run-nat         QEMU + OVMF with outbound NAT network"
-	@echo "  make nonos-mk-run-net         QEMU + OVMF with explicit hostfwd network"
+	@echo "  make nonos-mk-run             full OS with TPM 2.0, NAT, signatures, ZK"
+	@echo "  make nonos-mk-run-net         same image with explicit hostfwd network"
 	@echo "  make nonos-mk-run-wizard      QEMU + OVMF, first-boot setup wizard"
 	@echo "  make nonos-mk-run-serial      headless serial-only"
 	@echo "  make nonos-mk-run-serial-nat  headless serial with outbound NAT network"
