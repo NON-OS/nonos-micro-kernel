@@ -61,9 +61,16 @@ pub(super) fn flex_row(
     let mut base_sum = 0i32;
     let mut total_weight = 0i32;
     for it in &items {
-        let (b, g) = match it.style.width {
-            Size::Auto => (content_width(it, depth).min(w), it.style.flex_grow as i32),
-            _ => (border_box_w(&it.style, w), it.style.flex_grow as i32),
+        // flex-basis wins when set; otherwise the width property, otherwise
+        // the content width. A zero basis (from "flex: 1") makes grow split
+        // the row into equal columns instead of content-proportional ones.
+        let g = it.style.flex_grow as i32;
+        let b = match it.style.flex_basis {
+            Size::Auto => match it.style.width {
+                Size::Auto => content_width(it, depth).min(w),
+                _ => border_box_w(&it.style, w),
+            },
+            basis => basis.resolve(w).unwrap_or(0).clamp(0, w),
         };
         margins_gaps += it.style.margin_left as i32 + it.style.margin_right as i32;
         base_sum += b;

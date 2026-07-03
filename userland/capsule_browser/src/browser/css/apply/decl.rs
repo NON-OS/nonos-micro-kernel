@@ -56,7 +56,7 @@ pub fn apply_decl(
         || apply_border(c, name, value, fs)
         || apply_sizing(c, name, value, fs)
         || apply_display(c, name, value)
-        || apply_flex(c, name, value)
+        || apply_flex(c, name, value, fs)
         || apply_align(c, name, value)
         || apply_grid(c, name, value, fs)
         || apply_list(c, name, value)

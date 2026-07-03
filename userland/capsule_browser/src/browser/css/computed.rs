@@ -120,6 +120,9 @@ pub struct Computed {
     pub align: Align,
     pub gap: u32,
     pub flex_grow: u32,
+    // flex-basis: the main-size base before grow/shrink. Auto means size to
+    // content or the width property, as CSS specifies.
+    pub flex_basis: Size,
     pub position: Position,
     pub top: Size,
     pub right: Size,
@@ -178,6 +181,7 @@ impl Computed {
             align: Align::Stretch,
             gap: 0,
             flex_grow: 0,
+            flex_basis: Size::Auto,
             position: Position::Static,
             top: Size::Auto,
             right: Size::Auto,
