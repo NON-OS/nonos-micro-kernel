@@ -14,25 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
+use alloc::vec::Vec;
 
-mod app;
-mod css;
-pub mod dom;
-mod event;
-pub mod fetch;
-pub mod html;
-pub mod http;
-pub mod image;
-mod js;
-mod keymap;
-pub mod layout;
-pub mod manifest;
-mod net;
-mod paint;
-mod proxy;
-pub mod state;
-pub mod tls13;
-pub mod url;
+use super::fill::fill_polys;
+use super::raster::Raster;
+use super::state::Paint;
+use super::stroke::stroke_polys;
 
-pub use app::Browser;
+type P = [f32; 2];
+
+// Transform user-space subpaths to device space and paint fill then stroke,
+// as SVG orders them.
+pub(super) fn draw(r: &mut Raster, polys: &[Vec<P>], p: &Paint) {
+    if polys.is_empty() {
+        return;
+    }
+    let dev: Vec<Vec<P>> =
+        polys.iter().map(|sp| sp.iter().map(|&pt| p.t.apply(pt)).collect()).collect();
+    if let Some(c) = p.fill {
+        fill_polys(r, &dev, c, p.evenodd);
+    }
+    if let Some(c) = p.stroke {
+        stroke_polys(r, &dev, c, p.stroke_w * p.t.scale_avg());
+    }
+}

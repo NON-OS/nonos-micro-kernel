@@ -14,25 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
+// Minimal SVG rasterizer: paths with bezier and arc segments, the basic
+// shapes, groups with affine transforms, solid fills (nonzero and evenodd)
+// and approximated strokes, supersampled 2x. Gradients, masks, filters,
+// text and use/defs indirection are skipped, never guessed.
 
-mod app;
-mod css;
-pub mod dom;
-mod event;
-pub mod fetch;
-pub mod html;
-pub mod http;
-pub mod image;
-mod js;
-mod keymap;
-pub mod layout;
-pub mod manifest;
-mod net;
-mod paint;
-mod proxy;
-pub mod state;
-pub mod tls13;
-pub mod url;
+mod affine;
+mod arc;
+mod attr;
+mod color;
+mod curves;
+mod decode;
+mod downsample;
+mod draw;
+mod fill;
+mod math;
+mod num;
+mod path;
+mod path_curves;
+mod path_num;
+mod path_state;
+mod path_tok;
+mod raster;
+mod shapes;
+mod state;
+mod stroke;
+mod transform;
+mod walk;
+mod xml;
 
-pub use app::Browser;
+pub(super) use decode::{decode_svg, is_svg};

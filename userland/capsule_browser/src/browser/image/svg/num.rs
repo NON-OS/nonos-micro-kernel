@@ -14,25 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
+use alloc::vec::Vec;
 
-mod app;
-mod css;
-pub mod dom;
-mod event;
-pub mod fetch;
-pub mod html;
-pub mod http;
-pub mod image;
-mod js;
-mod keymap;
-pub mod layout;
-pub mod manifest;
-mod net;
-mod paint;
-mod proxy;
-pub mod state;
-pub mod tls13;
-pub mod url;
+// Whitespace/comma separated float list, as used by viewBox, points and
+// transform arguments.
+pub(super) fn num_list(s: &str) -> Vec<f32> {
+    s.split(|c: char| c.is_whitespace() || c == ',')
+        .filter(|t| !t.is_empty())
+        .filter_map(|t| t.parse::<f32>().ok())
+        .collect()
+}
 
-pub use app::Browser;
+// A length attribute in user units; the px suffix is the only unit icons
+// carry in practice. Percentages and other units yield None.
+pub(super) fn parse_len(s: &str) -> Option<f32> {
+    let t = s.trim();
+    let t = t.strip_suffix("px").unwrap_or(t);
+    let v = t.trim().parse::<f32>().ok()?;
+    if v.is_finite() {
+        Some(v)
+    } else {
+        None
+    }
+}

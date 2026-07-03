@@ -14,25 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
+use super::decode;
+use super::store::Store;
 
-mod app;
-mod css;
-pub mod dom;
-mod event;
-pub mod fetch;
-pub mod html;
-pub mod http;
-pub mod image;
-mod js;
-mod keymap;
-pub mod layout;
-pub mod manifest;
-mod net;
-mod paint;
-mod proxy;
-pub mod state;
-pub mod tls13;
-pub mod url;
-
-pub use app::Browser;
+// Decode a fetched image body and record the outcome against `url`.
+pub fn ingest(store: &mut Store, url: &str, body: &[u8]) {
+    match decode::decode_body(body) {
+        Ok(d) => store.set_ready(url, d),
+        Err(_) => store.set_failed(url),
+    }
+}
