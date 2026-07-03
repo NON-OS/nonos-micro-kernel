@@ -14,14 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct TrafficKeys {
-    pub suite: u16,
-    pub handshake_secret: [u8; 32],
-    pub client_secret: [u8; 32],
-    pub server_secret: [u8; 32],
-    pub client_key: [u8; 32],
-    pub client_iv: [u8; 12],
-    pub server_key: [u8; 32],
-    pub server_iv: [u8; 12],
-}
+mod aes128;
+mod gcm;
+mod ghash;
+
+pub use gcm::{open, seal};

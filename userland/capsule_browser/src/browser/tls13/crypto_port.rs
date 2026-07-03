@@ -19,5 +19,9 @@ pub fn crypto_port() -> Option<u32> {
     let mut pid = 0u32;
     let name = b"crypto_pool";
     let rc = nonos_libc::mk_service_lookup(name.as_ptr(), name.len(), &mut port, &mut pid);
-    if rc < 0 || pid == 0 || port == 0 { None } else { Some(port) }
+    if rc < 0 || pid == 0 || port == 0 {
+        None
+    } else {
+        Some(port)
+    }
 }

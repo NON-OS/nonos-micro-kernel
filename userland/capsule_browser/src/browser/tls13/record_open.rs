@@ -16,7 +16,9 @@
 
 use alloc::vec::Vec;
 
-pub fn open(key: &[u8; 32], iv: &[u8; 12], seq: u64, record: &[u8]) -> Option<Vec<u8>> {
+use super::constants::SUITE_AES128_GCM_SHA256;
+
+pub fn open(suite: u16, key: &[u8; 32], iv: &[u8; 12], seq: u64, record: &[u8]) -> Option<Vec<u8>> {
     if record.len() < 22 || record.first() != Some(&23) {
         return None;
     }
@@ -25,6 +27,11 @@ pub fn open(key: &[u8; 32], iv: &[u8; 12], seq: u64, record: &[u8]) -> Option<Ve
         return None;
     }
     let nonce = super::nonce::nonce(iv, seq);
+    if suite == SUITE_AES128_GCM_SHA256 {
+        let mut k = [0u8; 16];
+        k.copy_from_slice(&key[..16]);
+        return super::aes_gcm::open(&k, &nonce, &record[..5], &record[5..]);
+    }
     let frame = super::aad_frame::aad_frame(&record[..5], &record[5..]);
     let mut pt = Vec::new();
     pt.resize(len - 16, 0);
@@ -36,5 +43,9 @@ pub fn open(key: &[u8; 32], iv: &[u8; 12], seq: u64, record: &[u8]) -> Option<Ve
         frame.len(),
         pt.as_mut_ptr(),
     );
-    if n == pt.len() as i64 { Some(pt) } else { None }
+    if n == pt.len() as i64 {
+        Some(pt)
+    } else {
+        None
+    }
 }

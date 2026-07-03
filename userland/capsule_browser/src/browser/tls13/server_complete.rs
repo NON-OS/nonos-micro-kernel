@@ -24,7 +24,12 @@ pub struct ServerComplete {
     pub transcript: Vec<u8>,
 }
 
-pub fn server_complete(client: &ClientFlight, bytes: &[u8], host: &[u8], now: u64) -> Option<ServerComplete> {
+pub fn server_complete(
+    client: &ClientFlight,
+    bytes: &[u8],
+    host: &[u8],
+    now: u64,
+) -> Option<ServerComplete> {
     let mut ctx = super::server_keys::server_keys(client, bytes)?;
     let mut pos = ctx.used;
     let mut seq = 0u64;
@@ -36,7 +41,13 @@ pub fn server_complete(client: &ClientFlight, bytes: &[u8], host: &[u8], now: u6
             return None;
         }
         if bytes[pos] == 23 {
-            let plain = super::record_open::open(&ctx.keys.server_key, &ctx.keys.server_iv, seq, &bytes[pos..end])?;
+            let plain = super::record_open::open(
+                ctx.keys.suite,
+                &ctx.keys.server_key,
+                &ctx.keys.server_iv,
+                seq,
+                &bytes[pos..end],
+            )?;
             if let Some((inner, 22)) = super::inner_plain::split(&plain) {
                 msgs.extend_from_slice(inner);
             }

@@ -28,7 +28,9 @@ pub struct ScanState<'a> {
 pub fn scan(msgs: &[u8], state: &mut ScanState) -> bool {
     let mut pos = 0usize;
     while pos + 4 <= msgs.len() {
-        let len = ((msgs[pos + 1] as usize) << 16) | ((msgs[pos + 2] as usize) << 8) | msgs[pos + 3] as usize;
+        let len = ((msgs[pos + 1] as usize) << 16)
+            | ((msgs[pos + 2] as usize) << 8)
+            | msgs[pos + 3] as usize;
         let end = pos + 4 + len;
         if end > msgs.len() {
             return false;
@@ -37,7 +39,8 @@ pub fn scan(msgs: &[u8], state: &mut ScanState) -> bool {
             11 => {
                 state.cert11.clear();
                 state.cert11.extend_from_slice(&msgs[pos + 4..end]);
-                if !super::chain_walk::verify_chain(state.cert11.as_slice(), state.host, state.now) {
+                if !super::chain_walk::verify_chain(state.cert11.as_slice(), state.host, state.now)
+                {
                     return false;
                 }
                 state.transcript.extend_from_slice(&msgs[pos..end]);
@@ -47,7 +50,11 @@ pub fn scan(msgs: &[u8], state: &mut ScanState) -> bool {
                 let Some(leaf) = super::cert_at::cert_at(state.cert11.as_slice(), 0) else {
                     return false;
                 };
-                if !super::cert_verify_msg::verify_cert_verify(leaf, &before_cv, &msgs[pos + 4..end]) {
+                if !super::cert_verify_msg::verify_cert_verify(
+                    leaf,
+                    &before_cv,
+                    &msgs[pos + 4..end],
+                ) {
                     return false;
                 }
                 *state.validated = true;
@@ -57,7 +64,11 @@ pub fn scan(msgs: &[u8], state: &mut ScanState) -> bool {
                 if !*state.validated {
                     return false;
                 }
-                let ok = super::finished_verify::verify(state.secret, state.transcript, &msgs[pos + 4..end]);
+                let ok = super::finished_verify::verify(
+                    state.secret,
+                    state.transcript,
+                    &msgs[pos + 4..end],
+                );
                 if ok {
                     state.transcript.extend_from_slice(&msgs[pos..end]);
                 }

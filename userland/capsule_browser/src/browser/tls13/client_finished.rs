@@ -16,11 +16,14 @@
 
 use alloc::vec::Vec;
 
-pub fn client_finished(keys: &super::traffic_keys::TrafficKeys, transcript: &[u8]) -> Option<Vec<u8>> {
+pub fn client_finished(
+    keys: &super::traffic_keys::TrafficKeys,
+    transcript: &[u8],
+) -> Option<Vec<u8>> {
     let verify = super::finished_value::finished_value(&keys.client_secret, transcript)?;
     let mut msg = Vec::with_capacity(36);
     msg.push(20);
     super::push::u24(&mut msg, verify.len());
     msg.extend_from_slice(&verify);
-    super::record_seal::seal(&keys.client_key, &keys.client_iv, 0, 22, &msg)
+    super::record_seal::seal(keys.suite, &keys.client_key, &keys.client_iv, 0, 22, &msg)
 }

@@ -15,9 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 // Validate the server's TLS Certificate(11) message body for `host` at time
-// `now`: the leaf must match the hostname and be in its validity window, each
-// certificate must be signed by the next one up, and the top certificate's
-// SubjectPublicKeyInfo must hash to a trusted root. Fail closed everywhere.
+// `now`: the leaf must match the hostname and be in its validity window and each
+// certificate must be signed by the next one up. The top served certificate is
+// then anchored to a trusted root. Servers commonly omit the root, so if the top
+// certificate's own SPKI is not itself pinned we look up a root by the top
+// certificate's issuer and verify the top certificate's signature against that
+// root's public key. Fail closed everywhere.
 pub fn verify_chain(body: &[u8], host: &[u8], now: u64) -> bool {
     let n = super::cert_count::cert_count(body);
     if n < 1 {
@@ -26,7 +29,9 @@ pub fn verify_chain(body: &[u8], host: &[u8], now: u64) -> bool {
     let Some(leaf) = super::cert_at::cert_at(body, 0) else {
         return false;
     };
-    if !super::cert_dns_match::matches(leaf, host) || !super::cert_valid_now::cert_valid_now(leaf, now) {
+    if !super::cert_dns_match::matches(leaf, host)
+        || !super::cert_valid_now::cert_valid_now(leaf, now)
+    {
         return false;
     }
     let mut i = 0u8;
@@ -50,11 +55,25 @@ pub fn verify_chain(body: &[u8], host: &[u8], now: u64) -> bool {
     let Some(top) = super::cert_at::cert_at(body, n - 1) else {
         return false;
     };
-    let Some(top_spki) = super::cert_spki::cert_spki(top) else {
+    anchor(top)
+}
+
+// The top served certificate is trusted if it is itself a pinned anchor (the
+// server sent the root, or its SPKI is directly pinned), otherwise if a trusted
+// root issued it and the signature verifies against that root's key.
+fn anchor(top: &[u8]) -> bool {
+    if let Some(top_spki) = super::cert_spki::cert_spki(top) {
+        if let Some(h) = super::hash_sha256::hash_sha256(top_spki) {
+            if super::roots::is_trusted_spki_hash(&h) {
+                return true;
+            }
+        }
+    }
+    let Some(issuer) = super::cert_issuer::cert_issuer(top) else {
         return false;
     };
-    match super::hash_sha256::hash_sha256(top_spki) {
-        Some(h) => super::roots::is_trusted_spki_hash(&h),
-        None => false,
-    }
+    let Some(root_spki) = super::roots::find_spki_by_subject(issuer) else {
+        return false;
+    };
+    super::verify_link::verify_link(top, root_spki)
 }
