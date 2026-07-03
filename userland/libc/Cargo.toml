@@ -19,14 +19,25 @@ description = "NØNOS userspace libc — Mk syscall ABI for CPL=3 capsules"
 
 [lib]
 name = "nonos_libc"
-# `staticlib` produces the .a for C-ABI consumers (the real userspace
-# distribution shape). `rlib` lets Rust user programs in the workspace
-# depend on this crate directly via Cargo, which is how the in-tree
-# proof binaries link.
-crate-type = ["staticlib", "rlib"]
+# `rlib` lets Rust user programs in the workspace depend on this crate
+# directly via Cargo. The .a for C-ABI consumers (the real userspace
+# distribution shape) is produced by the Makefile through
+# `cargo rustc --crate-type staticlib`; declaring staticlib here would
+# force a panic handler into every dependent build, which breaks std
+# capsules that carry their own.
+crate-type = ["rlib"]
+
+[features]
+# `heap` registers the crate's linked-list #[global_allocator] and
+# `panic-handler` the CPL=3 panic hook. no_std capsules keep both
+# (default). std capsules built through the NONOS PAL disable both so
+# the std allocator and std panic runtime stay the single program truth.
+default = ["heap", "panic-handler"]
+heap = ["dep:linked_list_allocator"]
+panic-handler = []
 
 [dependencies]
-linked_list_allocator = { version = "0.10", default-features = false, features = ["use_spin"] }
+linked_list_allocator = { version = "0.10", default-features = false, features = ["use_spin"], optional = true }
 
 [profile.release]
 panic = "abort"

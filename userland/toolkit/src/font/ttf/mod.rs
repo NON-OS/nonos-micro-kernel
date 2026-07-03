@@ -14,7 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocator;
-mod init;
+// Antialiased vector text from a bundled TrueType face. Glyphs are
+// outlined by ab_glyph and blended onto an ARGB8888 surface at CPL=3,
+// where the FPU is live. Metrics come straight from the face, so
+// layout and paint agree on advance widths.
 
-pub use init::{init, init_sized, HeapError};
+mod blend;
+mod draw;
+mod face;
+mod metrics;
+
+pub use draw::draw_text;
+pub use metrics::{ascent, line_height, measure};
