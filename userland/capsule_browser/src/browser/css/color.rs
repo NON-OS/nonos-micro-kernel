@@ -15,12 +15,26 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::hex::parse_hex;
+use super::hsl_fn::parse_hsl;
 use super::named::named;
+use super::rgb_fn::parse_rgb;
 
 pub fn parse_color(v: &str) -> Option<u32> {
     let s = v.trim();
-    match s.strip_prefix('#') {
-        Some(hex) => parse_hex(hex),
-        None => named(s),
+    if let Some(hex) = s.strip_prefix('#') {
+        return parse_hex(hex);
     }
+    let lower = s.to_ascii_lowercase();
+    if lower.starts_with("rgb") {
+        return parse_rgb(&lower);
+    }
+    if lower.starts_with("hsl") {
+        return parse_hsl(&lower);
+    }
+    // currentColor keeps the inherited value: reporting None leaves the slot
+    // untouched, which is what borders/text want.
+    if lower == "currentcolor" {
+        return None;
+    }
+    named(s)
 }

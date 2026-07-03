@@ -14,21 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn parse_hex(h: &str) -> Option<u32> {
-    let h = h.trim();
-    if !h.is_ascii() {
-        return None;
+// Byte index of the paren closing an already-opened group, honoring nested
+// groups. Unbalanced input runs to the end.
+pub(super) fn matching_paren(s: &str) -> usize {
+    let mut depth = 1u32;
+    for (i, b) in s.bytes().enumerate() {
+        match b {
+            b'(' => depth = depth.saturating_add(1),
+            b')' => {
+                depth -= 1;
+                if depth == 0 {
+                    return i;
+                }
+            }
+            _ => {}
+        }
     }
-    let b = h.as_bytes();
-    // #rgba and #rrggbbaa carry an alpha we drop; colors stay opaque.
-    let full: [u8; 6] = match h.len() {
-        3 | 4 => [b[0], b[0], b[1], b[1], b[2], b[2]],
-        6 | 8 => [b[0], b[1], b[2], b[3], b[4], b[5]],
-        _ => return None,
-    };
-    let s = core::str::from_utf8(&full).ok()?;
-    let r = u8::from_str_radix(&s[0..2], 16).ok()? as u32;
-    let g = u8::from_str_radix(&s[2..4], 16).ok()? as u32;
-    let b = u8::from_str_radix(&s[4..6], 16).ok()? as u32;
-    Some(0xFF00_0000 | (r << 16) | (g << 8) | b)
+    s.len()
 }

@@ -14,21 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn parse_hex(h: &str) -> Option<u32> {
-    let h = h.trim();
-    if !h.is_ascii() {
-        return None;
+const MAX_GROW: u32 = 100;
+
+// flex-grow factor rounded to whole units, capped to keep the math sane.
+pub(super) fn parse_grow(value: &str) -> Option<u32> {
+    let f = value.trim().parse::<f32>().ok()?;
+    if f.is_finite() && (0.0..=MAX_GROW as f32).contains(&f) {
+        Some((f + 0.5) as u32)
+    } else {
+        None
     }
-    let b = h.as_bytes();
-    // #rgba and #rrggbbaa carry an alpha we drop; colors stay opaque.
-    let full: [u8; 6] = match h.len() {
-        3 | 4 => [b[0], b[0], b[1], b[1], b[2], b[2]],
-        6 | 8 => [b[0], b[1], b[2], b[3], b[4], b[5]],
-        _ => return None,
-    };
-    let s = core::str::from_utf8(&full).ok()?;
-    let r = u8::from_str_radix(&s[0..2], 16).ok()? as u32;
-    let g = u8::from_str_radix(&s[2..4], 16).ok()? as u32;
-    let b = u8::from_str_radix(&s[4..6], 16).ok()? as u32;
-    Some(0xFF00_0000 | (r << 16) | (g << 8) | b)
 }

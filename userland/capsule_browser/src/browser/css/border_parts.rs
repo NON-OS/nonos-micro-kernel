@@ -15,30 +15,25 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::color::parse_color;
-use super::computed::Computed;
+use super::parse_px::parse_px;
 
-pub fn apply_decl(c: &mut Computed, name: &str, value: &str) {
-    match name {
-        "color" => {
-            if let Some(rgb) = parse_color(value) {
-                c.color = rgb;
+// "border: 1px solid #ccc" and friends: pick out the width and the color,
+// skip the line-style token. Returns (width, color) with either side optional.
+pub(super) fn border_parts(value: &str, em: u32, max: u32) -> (Option<u32>, Option<u32>) {
+    let mut width = None;
+    let mut color = None;
+    for part in value.split_whitespace() {
+        if width.is_none() {
+            if let Some(px) = parse_px(part, em) {
+                width = Some(px.min(max));
+                continue;
             }
         }
-        "background" | "background-color" => {
-            if let Some(rgb) = parse_color(value) {
-                c.bg = rgb;
+        if color.is_none() {
+            if let Some(rgb) = parse_color(part) {
+                color = Some(rgb);
             }
         }
-        "font-weight" => match value.trim() {
-            "normal" | "100" | "200" | "300" | "400" => c.bold = false,
-            "bold" | "bolder" | "500" | "600" | "700" | "800" | "900" => c.bold = true,
-            _ => {}
-        },
-        "display" => {
-            if value.trim() == "none" {
-                c.display_none = true;
-            }
-        }
-        _ => {}
     }
+    (width, color)
 }

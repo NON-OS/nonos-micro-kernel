@@ -14,21 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn parse_hex(h: &str) -> Option<u32> {
-    let h = h.trim();
-    if !h.is_ascii() {
-        return None;
-    }
-    let b = h.as_bytes();
-    // #rgba and #rrggbbaa carry an alpha we drop; colors stay opaque.
-    let full: [u8; 6] = match h.len() {
-        3 | 4 => [b[0], b[0], b[1], b[1], b[2], b[2]],
-        6 | 8 => [b[0], b[1], b[2], b[3], b[4], b[5]],
-        _ => return None,
-    };
-    let s = core::str::from_utf8(&full).ok()?;
-    let r = u8::from_str_radix(&s[0..2], 16).ok()? as u32;
-    let g = u8::from_str_radix(&s[2..4], 16).ok()? as u32;
-    let b = u8::from_str_radix(&s[4..6], 16).ok()? as u32;
-    Some(0xFF00_0000 | (r << 16) | (g << 8) | b)
-}
+mod align;
+mod border;
+mod decl;
+mod display;
+mod flex;
+mod grid;
+mod list;
+mod margin;
+mod padding;
+mod paint;
+mod position;
+mod sizing;
+mod text;
+
+pub use decl::apply_decl;

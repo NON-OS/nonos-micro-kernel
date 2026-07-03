@@ -14,21 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn parse_hex(h: &str) -> Option<u32> {
-    let h = h.trim();
-    if !h.is_ascii() {
-        return None;
+use alloc::string::String;
+use alloc::vec::Vec;
+
+use super::attr::AttrTest;
+use super::pseudo::Pseudo;
+
+// One compound selector: tag.class#id[attr=v]:pseudo.
+pub struct Simple {
+    pub tag: Option<String>,
+    pub id: Option<String>,
+    pub classes: Vec<String>,
+    pub attrs: Vec<(String, AttrTest)>,
+    pub pseudo: Vec<Pseudo>,
+}
+
+impl Simple {
+    pub fn empty() -> Self {
+        Simple { tag: None, id: None, classes: Vec::new(), attrs: Vec::new(), pseudo: Vec::new() }
     }
-    let b = h.as_bytes();
-    // #rgba and #rrggbbaa carry an alpha we drop; colors stay opaque.
-    let full: [u8; 6] = match h.len() {
-        3 | 4 => [b[0], b[0], b[1], b[1], b[2], b[2]],
-        6 | 8 => [b[0], b[1], b[2], b[3], b[4], b[5]],
-        _ => return None,
-    };
-    let s = core::str::from_utf8(&full).ok()?;
-    let r = u8::from_str_radix(&s[0..2], 16).ok()? as u32;
-    let g = u8::from_str_radix(&s[2..4], 16).ok()? as u32;
-    let b = u8::from_str_radix(&s[4..6], 16).ok()? as u32;
-    Some(0xFF00_0000 | (r << 16) | (g << 8) | b)
+}
+
+// An ancestor constraint; `direct` requires the immediate parent (the `>`
+// combinator) instead of any ancestor.
+pub struct Step {
+    pub simple: Simple,
+    pub direct: bool,
+}
+
+pub struct Selector {
+    pub key: Simple,
+    pub ancestors: Vec<Step>,
 }

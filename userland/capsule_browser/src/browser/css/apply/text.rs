@@ -1,0 +1,67 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use crate::browser::css::color::parse_color;
+use crate::browser::css::computed::{Computed, TextAlign};
+use crate::browser::css::parse_line_height::parse_line_height;
+use crate::browser::css::parse_px::parse_px;
+
+const MAX_FONT_PX: u32 = 96;
+
+// Text properties: color, weight, family, size, line height and alignment.
+pub(super) fn apply_text(
+    c: &mut Computed,
+    name: &str,
+    value: &str,
+    fs: u32,
+    parent_fs: u32,
+) -> bool {
+    match name {
+        "color" => {
+            if let Some(rgb) = parse_color(value) {
+                c.color = rgb;
+            }
+        }
+        "font-weight" => match value.trim() {
+            "normal" | "100" | "200" | "300" | "400" => c.bold = false,
+            "bold" | "bolder" | "500" | "600" | "700" | "800" | "900" => c.bold = true,
+            _ => {}
+        },
+        // The monospace generic (or an explicit mono family) switches text to
+        // the fixed-pitch face; anything else keeps the body face.
+        "font-family" => c.mono = value.to_ascii_lowercase().contains("mono"),
+        // Em resolves against the parent font size. Clamp above zero so a
+        // styled element never reads as "no CSS size" downstream.
+        "font-size" => {
+            if let Some(px) = parse_px(value, parent_fs) {
+                c.font_size_px = px.clamp(1, MAX_FONT_PX);
+            }
+        }
+        "line-height" => {
+            if let Some(px) = parse_line_height(value, fs) {
+                c.line_height_px = px.min(4 * MAX_FONT_PX);
+            }
+        }
+        "text-align" => match value.trim() {
+            "left" | "start" => c.text_align = TextAlign::Left,
+            "center" => c.text_align = TextAlign::Center,
+            "right" | "end" => c.text_align = TextAlign::Right,
+            _ => {}
+        },
+        _ => return false,
+    }
+    true
+}

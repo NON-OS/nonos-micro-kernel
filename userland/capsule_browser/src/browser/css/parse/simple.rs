@@ -14,39 +14,48 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::ToString;
-use alloc::vec::Vec;
+use alloc::string::String;
 
 use crate::browser::css::selector::Simple;
 
+use super::attr_test::parse_attr;
+use super::compound::parse_compound;
+use super::pseudo::parse_pseudo_tail;
+
 pub fn parse_simple(tok: &str) -> Simple {
-    let b = tok.as_bytes();
-    let mut i = 0;
-    while i < b.len() && b[i] != b'.' && b[i] != b'#' {
-        i += 1;
+    let mut s = Simple::empty();
+    // Attribute tests split off first: tag.class[attr="v"]:pseudo.
+    let mut plain = String::new();
+    let mut rest = tok;
+    while let Some(open) = rest.find('[') {
+        plain.push_str(&rest[..open]);
+        let after = &rest[open + 1..];
+        let Some(close) = after.find(']') else {
+            rest = "";
+            break;
+        };
+        if s.attrs.len() < 4 {
+            if let Some(t) = parse_attr(&after[..close]) {
+                s.attrs.push(t);
+            }
+        }
+        rest = after.get(close + 1..).unwrap_or("");
     }
-    let tag = match &tok[..i] {
-        "" | "*" => None,
-        t => Some(t.to_ascii_lowercase()),
+    plain.push_str(rest);
+    // The compound runs to the first colon; the rest is the pseudo tail.
+    let mut pseudo_root = false;
+    let tok = match plain.find(':') {
+        Some(col) => {
+            let tail = &plain[col..];
+            if col == 0 && tail.trim_start_matches(':').starts_with("root") {
+                pseudo_root = true;
+            } else {
+                parse_pseudo_tail(tail, &mut s.pseudo);
+            }
+            &plain[..col]
+        }
+        None => plain.as_str(),
     };
-    let mut id = None;
-    let mut classes: Vec<alloc::string::String> = Vec::new();
-    while i < b.len() {
-        let marker = b[i];
-        i += 1;
-        let start = i;
-        while i < b.len() && b[i] != b'.' && b[i] != b'#' {
-            i += 1;
-        }
-        let name = &tok[start..i];
-        if name.is_empty() {
-            continue;
-        }
-        if marker == b'#' {
-            id = Some(name.to_string());
-        } else if classes.len() < 16 {
-            classes.push(name.to_string());
-        }
-    }
-    Simple { tag, id, classes }
+    parse_compound(tok, pseudo_root, &mut s);
+    s
 }

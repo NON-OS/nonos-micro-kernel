@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::string::String;
+
 use super::apply::apply_decl;
 use super::computed::Computed;
 use super::parse::parse_decls;
 
-pub fn apply_style_attr(style: &str, c: &mut Computed) {
+pub fn apply_style_attr(style: &str, c: &mut Computed, parent_fs: u32, vars: &[(String, String)]) {
     for d in parse_decls(style) {
-        apply_decl(c, &d.name, &d.value);
+        apply_decl(c, &d.name, &d.value, parent_fs, vars);
     }
 }

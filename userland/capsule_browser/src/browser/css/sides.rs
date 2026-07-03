@@ -14,21 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn parse_hex(h: &str) -> Option<u32> {
-    let h = h.trim();
-    if !h.is_ascii() {
-        return None;
+use super::parse_px::parse_px;
+
+// Expand a 1-4 value box shorthand into [top, right, bottom, left].
+// "auto" resolves to 0; any unparsable component rejects the whole value.
+pub(super) fn sides(value: &str, em: u32, max: u32) -> Option<[u32; 4]> {
+    let mut vals = [0u32; 4];
+    let mut n = 0;
+    for part in value.split_whitespace() {
+        if n == 4 {
+            return None;
+        }
+        vals[n] = if part.eq_ignore_ascii_case("auto") { 0 } else { parse_px(part, em)?.min(max) };
+        n += 1;
     }
-    let b = h.as_bytes();
-    // #rgba and #rrggbbaa carry an alpha we drop; colors stay opaque.
-    let full: [u8; 6] = match h.len() {
-        3 | 4 => [b[0], b[0], b[1], b[1], b[2], b[2]],
-        6 | 8 => [b[0], b[1], b[2], b[3], b[4], b[5]],
-        _ => return None,
-    };
-    let s = core::str::from_utf8(&full).ok()?;
-    let r = u8::from_str_radix(&s[0..2], 16).ok()? as u32;
-    let g = u8::from_str_radix(&s[2..4], 16).ok()? as u32;
-    let b = u8::from_str_radix(&s[4..6], 16).ok()? as u32;
-    Some(0xFF00_0000 | (r << 16) | (g << 8) | b)
+    match n {
+        1 => Some([vals[0]; 4]),
+        2 => Some([vals[0], vals[1], vals[0], vals[1]]),
+        3 => Some([vals[0], vals[1], vals[2], vals[1]]),
+        4 => Some(vals),
+        _ => None,
+    }
 }

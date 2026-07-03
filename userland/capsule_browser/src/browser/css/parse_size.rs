@@ -14,16 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
-use alloc::vec::Vec;
+use super::computed::Size;
+use super::parse_px::parse_px;
 
-pub struct Simple {
-    pub tag: Option<String>,
-    pub id: Option<String>,
-    pub classes: Vec<String>,
-}
+const MAX_PCT: f32 = 1000.0;
 
-pub struct Selector {
-    pub key: Simple,
-    pub ancestors: Vec<Simple>,
+// Resolve a width/height value: auto, a length, or a percentage of the
+// containing box.
+pub(super) fn parse_size(value: &str, em_base: u32) -> Option<Size> {
+    let v = value.trim();
+    if v.eq_ignore_ascii_case("auto") {
+        return Some(Size::Auto);
+    }
+    if let Some(num) = v.strip_suffix('%') {
+        let f = num.trim().parse::<f32>().ok()?;
+        if f.is_finite() && (0.0..=MAX_PCT).contains(&f) {
+            return Some(Size::Pct((f + 0.5) as u16));
+        }
+        return None;
+    }
+    parse_px(v, em_base).map(Size::Px)
 }

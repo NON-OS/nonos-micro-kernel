@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::browser::dom::Dom;
@@ -22,11 +23,25 @@ use super::apply::apply_decl;
 use super::computed::Computed;
 use super::matching::matches_selector;
 use super::rule::Rule;
+use super::rule_index::RuleIndex;
 use super::specificity::specificity;
 
-pub fn apply_rules(dom: &Dom, id: usize, rules: &[Rule], c: &mut Computed) {
+pub(super) fn apply_rules(
+    dom: &Dom,
+    id: usize,
+    rules: &[Rule],
+    index: &RuleIndex,
+    c: &mut Computed,
+    parent_fs: u32,
+    vars: &[(String, String)],
+) {
     let mut hits: Vec<(u32, usize)> = Vec::new();
-    for (i, rule) in rules.iter().enumerate() {
+    // Only rules whose key could match this node; the full matcher still
+    // decides, so the applied set is identical to scanning every rule.
+    for i in index.candidates(dom, id) {
+        let Some(rule) = rules.get(i) else {
+            continue;
+        };
         let mut best: Option<u32> = None;
         for sel in &rule.selectors {
             if matches_selector(dom, id, sel) {
@@ -38,10 +53,13 @@ pub fn apply_rules(dom: &Dom, id: usize, rules: &[Rule], c: &mut Computed) {
             hits.push((s, i));
         }
     }
-    hits.sort_by(|a, b| a.cmp(b));
+    // Cascade order: ascending specificity, then source index for ties.
+    hits.sort();
     for (_, i) in hits {
-        for d in &rules[i].decls {
-            apply_decl(c, &d.name, &d.value);
+        if let Some(rule) = rules.get(i) {
+            for d in &rule.decls {
+                apply_decl(c, &d.name, &d.value, parent_fs, vars);
+            }
         }
     }
 }

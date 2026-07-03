@@ -21,14 +21,29 @@ use crate::browser::dom::Dom;
 
 use super::computed::Computed;
 use super::parse::parse;
+use super::rule::Rule;
+use super::rule_index::RuleIndex;
 use super::ua::ua_rules;
+use super::vars::collect_vars;
 use super::walk::walk;
 
 pub fn compute(dom: &Dom, author_css: &str) -> Vec<Computed> {
-    let ua = ua_rules();
     let author = parse(author_css);
-    let author = &author[..super::budget::rule_limit(dom.nodes.len(), author.len())];
+    let limit = super::budget::rule_limit(dom.nodes.len(), author.len());
+    let author = author.get(..limit).unwrap_or(&author[..]);
+    cascade(dom, author)
+}
+
+// Cascade an already-parsed, already-budgeted author rule set over the tree.
+// Shared by the uncached path and the cached relayout path.
+pub(super) fn cascade(dom: &Dom, author: &[Rule]) -> Vec<Computed> {
+    let ua = ua_rules();
+    // Custom properties resolve against a global token table before any
+    // per-element parse sees the substituted value.
+    let vars = collect_vars(&ua, author);
+    let ua_index = RuleIndex::build(&ua);
+    let author_index = RuleIndex::build(author);
     let mut styles = vec![Computed::root(); dom.nodes.len()];
-    walk(dom, 0, Computed::root(), &ua, author, &mut styles, 0);
+    walk(dom, 0, Computed::root(), &ua, &ua_index, author, &author_index, &vars, &mut styles, 0);
     styles
 }
