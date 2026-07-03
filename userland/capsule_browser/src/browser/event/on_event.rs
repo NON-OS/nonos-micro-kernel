@@ -27,7 +27,9 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
             EventOutcome::Repaint
         }
         InputKind::KeyDown if state.address_focused => on_key::on_key(state, event),
-        InputKind::KeyDown if matches!(state.view, View::Page) => on_page_key::on_page_key(state, event),
+        InputKind::KeyDown if matches!(state.view, View::Page) => {
+            on_page_key::on_page_key(state, event)
+        }
         _ => EventOutcome::Idle,
     }
 }

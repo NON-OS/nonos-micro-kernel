@@ -14,19 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+use crate::browser::js;
+use crate::browser::state::State;
 
-use crate::browser::js::env::Env;
+use super::relayout::relayout;
 
-use super::apply::apply;
-use super::ctx::Ctx;
-
-pub fn drain(ctx: &mut Ctx, env: &Env) {
-    let timers = core::mem::take(&mut ctx.timers);
-    for cb in timers.into_iter().take(256) {
-        if ctx.steps >= ctx.budget {
-            break;
-        }
-        let _ = apply(ctx, env, cb, Vec::new());
+// Dispatch a click on a DOM node to its script listeners. Returns whether
+// any listener ran (the click is then consumed).
+pub fn js_click(state: &mut State, node: usize) -> bool {
+    let (fired, dirty) = match (state.page_dom.as_mut(), state.world.as_mut()) {
+        (Some(dom), Some(world)) => js::dispatch_event(dom, world, node, "click"),
+        _ => return false,
+    };
+    if dirty {
+        relayout(state);
     }
+    fired
 }

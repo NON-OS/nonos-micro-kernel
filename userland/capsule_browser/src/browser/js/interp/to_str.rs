@@ -37,5 +37,6 @@ pub fn to_str(v: &Value) -> String {
         Value::Object(_) => "[object Object]".to_string(),
         Value::Func(_) | Value::Native(_) => "function".to_string(),
         Value::Node(_) => "[object Node]".to_string(),
+        Value::Bound(kind, _) => (*kind).to_string(),
     }
 }

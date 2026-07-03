@@ -22,5 +22,6 @@ pub enum Tok {
     Str(String),
     Ident(String),
     Punct(String),
+    Tmpl(String),
     Eof,
 }

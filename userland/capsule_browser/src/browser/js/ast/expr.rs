@@ -38,4 +38,5 @@ pub enum Expr {
     Index(Box<Expr>, Box<Expr>),
     Call(Box<Expr>, Vec<Expr>),
     Func(Vec<String>, Vec<Stmt>),
+    Ternary(Box<Expr>, Box<Expr>, Box<Expr>),
 }

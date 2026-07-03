@@ -26,6 +26,8 @@ pub fn install(env: &Env) {
         obj(&[
             ("getElementById", Value::Native("document.getElementById")),
             ("querySelector", Value::Native("document.querySelector")),
+            ("querySelectorAll", Value::Native("document.querySelectorAll")),
+            ("createElement", Value::Native("document.createElement")),
         ]),
     );
     env.define(
@@ -38,8 +40,17 @@ pub fn install(env: &Env) {
             ("min", Value::Native("Math.min")),
         ]),
     );
+    env.define(
+        "JSON",
+        obj(&[
+            ("parse", Value::Native("JSON.parse")),
+            ("stringify", Value::Native("JSON.stringify")),
+        ]),
+    );
     env.define("window", obj(&[]));
+    env.define("fetch", Value::Native("fetch"));
     env.define("setTimeout", Value::Native("setTimeout"));
+    env.define("setInterval", Value::Native("setInterval"));
     env.define("parseInt", Value::Native("parseInt"));
     env.define("parseFloat", Value::Native("parseFloat"));
     env.define("Number", Value::Native("Number"));

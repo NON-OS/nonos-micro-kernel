@@ -23,7 +23,13 @@ use super::exec::exec;
 use super::flow::Flow;
 use super::to_bool::to_bool;
 
-pub fn eval_if(ctx: &mut Ctx, env: &Env, cond: &Expr, then_b: &[Stmt], else_b: &[Stmt]) -> Result<Flow, ()> {
+pub fn eval_if(
+    ctx: &mut Ctx,
+    env: &Env,
+    cond: &Expr,
+    then_b: &[Stmt],
+    else_b: &[Stmt],
+) -> Result<Flow, ()> {
     let c = eval_expr(ctx, env, cond)?;
     let child = env.child();
     if to_bool(&c) {

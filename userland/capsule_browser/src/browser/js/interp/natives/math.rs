@@ -25,8 +25,16 @@ pub fn math(name: &str, argv: &[Value]) -> Value {
         "Math.floor" => Value::Num(floor(a)),
         "Math.round" => Value::Num(floor(a + 0.5)),
         "Math.abs" => Value::Num(if a < 0.0 { -a } else { a }),
-        "Math.max" => Value::Num(argv.iter().map(to_num).fold(f64::NEG_INFINITY, |x, y| if y > x { y } else { x })),
-        "Math.min" => Value::Num(argv.iter().map(to_num).fold(f64::INFINITY, |x, y| if y < x { y } else { x })),
+        "Math.max" => {
+            Value::Num(
+                argv.iter().map(to_num).fold(f64::NEG_INFINITY, |x, y| if y > x { y } else { x }),
+            )
+        }
+        "Math.min" => {
+            Value::Num(
+                argv.iter().map(to_num).fold(f64::INFINITY, |x, y| if y < x { y } else { x }),
+            )
+        }
         _ => Value::Undef,
     }
 }

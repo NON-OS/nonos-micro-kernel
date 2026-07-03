@@ -24,7 +24,13 @@ use super::eval_expr::eval_expr;
 use super::store::store;
 use super::to_num::to_num;
 
-pub fn eval_assign(ctx: &mut Ctx, env: &Env, op: &str, target: &Expr, value: &Expr) -> Result<Value, ()> {
+pub fn eval_assign(
+    ctx: &mut Ctx,
+    env: &Env,
+    op: &str,
+    target: &Expr,
+    value: &Expr,
+) -> Result<Value, ()> {
     let rhs = eval_expr(ctx, env, value)?;
     let newv = if op == "=" {
         rhs

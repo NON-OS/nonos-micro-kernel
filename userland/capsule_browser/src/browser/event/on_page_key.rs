@@ -14,13 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_DOWN, KEY_END, KEY_HOME, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_UP};
+use nonos_app_skeleton::{
+    EventOutcome, InputEvent, KEY_DOWN, KEY_END, KEY_HOME, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_UP,
+};
 
 use crate::browser::event::scroll_by;
 use crate::browser::paint::document::VIEW_H;
 use crate::browser::state::State;
 
 pub fn on_page_key(state: &mut State, event: InputEvent) -> EventOutcome {
+    if let Some(id) = state.focus {
+        return super::field_key::field_key(state, id, event);
+    }
     let page = VIEW_H as i32 - 40;
     match event.code {
         KEY_UP => scroll_by::scroll_by(state, -40),

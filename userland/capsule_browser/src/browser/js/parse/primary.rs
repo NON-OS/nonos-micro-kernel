@@ -27,6 +27,7 @@ pub fn primary(p: &mut Parser) -> Expr {
     match p.advance() {
         Tok::Num(n) => Expr::Num(n),
         Tok::Str(s) => Expr::Str(s),
+        Tok::Tmpl(raw) => super::template::template(&raw),
         Tok::Ident(s) => match s.as_str() {
             "true" => Expr::Bool(true),
             "false" => Expr::Bool(false),

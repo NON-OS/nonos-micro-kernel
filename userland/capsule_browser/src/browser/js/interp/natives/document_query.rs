@@ -14,24 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::ToString;
-
+use crate::browser::css;
 use crate::browser::js::value::Value;
 
 use super::super::ctx::Ctx;
 use super::super::to_str::to_str;
-use super::find::find_node;
 
+// document.querySelector through the real selector matcher.
 pub fn query(ctx: &mut Ctx, argv: &[Value]) -> Value {
     let sel = argv.first().map(to_str).unwrap_or_default();
-    if let Some(id) = sel.strip_prefix('#') {
-        let id = id.to_string();
-        return find_node(ctx.dom, |n| n.attr("id") == Some(id.as_str()));
+    match css::select(ctx.dom, &sel, 1).first() {
+        Some(&id) => Value::Node(id),
+        None => Value::Null,
     }
-    if let Some(cls) = sel.strip_prefix('.') {
-        let cls = cls.to_string();
-        return find_node(ctx.dom, |n| n.attr("class").is_some_and(|c| c.split_whitespace().any(|x| x == cls)));
-    }
-    let tag = sel.to_ascii_lowercase();
-    find_node(ctx.dom, |n| n.tag == tag)
 }

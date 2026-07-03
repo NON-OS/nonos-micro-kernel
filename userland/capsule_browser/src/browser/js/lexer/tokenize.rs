@@ -22,6 +22,7 @@ use super::ident::scan_ident;
 use super::number::scan_number;
 use super::operator::scan_op;
 use super::string::scan_string;
+use super::template::scan_template;
 
 pub fn tokenize(src: &str) -> Vec<Tok> {
     let cs: Vec<char> = src.chars().collect();
@@ -41,8 +42,13 @@ pub fn tokenize(src: &str) -> Vec<Tok> {
                 i += 1;
             }
             i = (i + 2).min(cs.len());
-        } else if c.is_ascii_digit() || (c == '.' && i + 1 < cs.len() && cs[i + 1].is_ascii_digit()) {
+        } else if c.is_ascii_digit() || (c == '.' && i + 1 < cs.len() && cs[i + 1].is_ascii_digit())
+        {
             let (t, n) = scan_number(&cs, i);
+            out.push(t);
+            i = n;
+        } else if c == '`' {
+            let (t, n) = scan_template(&cs, i);
             out.push(t);
             i = n;
         } else if c == '"' || c == '\'' {

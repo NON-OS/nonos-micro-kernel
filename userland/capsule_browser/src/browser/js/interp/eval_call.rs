@@ -19,9 +19,14 @@ use crate::browser::js::env::Env;
 use crate::browser::js::value::Value;
 
 use super::apply::apply;
+use super::array_method::array_method;
+use super::classlist_method::classlist_method;
 use super::ctx::Ctx;
 use super::eval_args::eval_args;
 use super::eval_expr::eval_expr;
+use super::node_method::node_method;
+use super::str_method::str_method;
+use super::to_num::to_num;
 
 pub fn eval_call(ctx: &mut Ctx, env: &Env, callee: &Expr, arg_exprs: &[Expr]) -> Result<Value, ()> {
     if let Expr::Member(obj, method) = callee {
@@ -32,6 +37,32 @@ pub fn eval_call(ctx: &mut Ctx, env: &Env, callee: &Expr, arg_exprs: &[Expr]) ->
             if let Some(f) = f {
                 return apply(ctx, env, f, argv);
             }
+            // fetch handles chain their callback through then().
+            if method == "then" {
+                let slot = map.borrow().get("__net").map(|v| to_num(v) as usize);
+                if let Some(id) = slot {
+                    if let Some((_, cb)) = ctx.net.get_mut(id) {
+                        if cb.is_none() {
+                            if let Some(f @ Value::Func(_)) = argv.first() {
+                                *cb = Some(f.clone());
+                            }
+                        }
+                    }
+                    return Ok(recv.clone());
+                }
+            }
+        }
+        if let Value::Node(id) = recv {
+            return Ok(node_method(ctx, id, method, &argv));
+        }
+        if let Value::Bound("classList", id) = recv {
+            return Ok(classlist_method(ctx, id, method, &argv));
+        }
+        if let Value::Array(a) = &recv {
+            return array_method(ctx, env, a, method, &argv);
+        }
+        if let Value::Str(s) = &recv {
+            return Ok(str_method(s, method, &argv));
         }
         return Ok(Value::Undef);
     }

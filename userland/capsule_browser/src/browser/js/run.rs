@@ -14,26 +14,36 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
+use alloc::vec::Vec;
 
 use crate::browser::dom::Dom;
 
 use super::collect_scripts::collect_scripts;
 use super::env::Env;
-use super::interp::{drain, exec, install, Ctx};
+use super::interp::{absorb, exec, install, Ctx};
 use super::lexer::tokenize;
 use super::parse::{program, Parser};
+use super::world::World;
 
 const STEP_BUDGET: u64 = 5_000_000;
 
-pub fn run(dom: &mut Dom) -> (bool, String) {
-    let scripts = collect_scripts(dom);
-    if scripts.is_empty() {
-        return (false, String::new());
-    }
-    let mut ctx = Ctx::new(dom, STEP_BUDGET);
+// Run every <script> against the DOM and return the page's live script
+// state: globals, registered listeners, and queued timers.
+pub fn run(dom: &mut Dom) -> World {
     let env = Env::root();
     install(&env);
+    let mut world = World {
+        env: env.clone(),
+        listeners: Vec::new(),
+        timers: Vec::new(),
+        net: Vec::new(),
+        net_active: None,
+    };
+    let scripts = collect_scripts(dom);
+    if scripts.is_empty() {
+        return world;
+    }
+    let mut ctx = Ctx::new(dom, STEP_BUDGET);
     for src in &scripts {
         let prog = program(&mut Parser::new(tokenize(src)));
         let _ = exec(&mut ctx, &env, &prog);
@@ -41,6 +51,6 @@ pub fn run(dom: &mut Dom) -> (bool, String) {
             break;
         }
     }
-    drain(&mut ctx, &env);
-    (ctx.dirty, ctx.out)
+    absorb(&mut world, ctx);
+    world
 }

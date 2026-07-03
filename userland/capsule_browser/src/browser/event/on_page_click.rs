@@ -22,10 +22,34 @@ use crate::browser::url;
 
 pub fn on_page_click(state: &mut State, event: InputEvent) -> EventOutcome {
     let dy = event.y - CONTENT_TOP as i32 + state.scroll as i32;
-    let hit = state
-        .document
-        .as_ref()
-        .and_then(|d| d.link_at(event.x, dy).map(alloc::string::String::from));
+    // Script listeners see the click first; a handled click stops here.
+    // Otherwise form fields take focus and submit controls submit.
+    state.focus = None;
+    if let Some(node) = state.box_doc.as_ref().and_then(|b| b.hit_node(event.x, dy)) {
+        if super::js_click::js_click(state, node) {
+            return EventOutcome::Repaint;
+        }
+        if let Some(dom) = state.page_dom.as_ref() {
+            match super::field_at::field_at(dom, node) {
+                super::field_at::Field::Edit(id) => {
+                    state.focus = Some(id);
+                    return EventOutcome::Repaint;
+                }
+                super::field_at::Field::Submit(id) => {
+                    super::submit_form::submit_form(state, id);
+                    return EventOutcome::Repaint;
+                }
+                super::field_at::Field::None => {}
+            }
+        }
+    }
+    let hit = match state.box_doc.as_ref() {
+        Some(b) => b.link_at(event.x, dy).map(alloc::string::String::from),
+        None => state
+            .document
+            .as_ref()
+            .and_then(|d| d.link_at(event.x, dy).map(alloc::string::String::from)),
+    };
     if let Some(href) = hit {
         let next = match state.base.as_ref() {
             Some(base) => url::join(base, &href),

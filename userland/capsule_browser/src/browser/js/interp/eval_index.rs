@@ -42,7 +42,10 @@ pub fn eval_index(ctx: &mut Ctx, env: &Env, obj: &Expr, idx: &Expr) -> Result<Va
         Value::Str(s) => {
             let i = to_num(&key);
             if i >= 0.0 {
-                s.chars().nth(i as usize).map(|c| Value::Str(Rc::new(String::from(c)))).unwrap_or(Value::Undef)
+                s.chars()
+                    .nth(i as usize)
+                    .map(|c| Value::Str(Rc::new(String::from(c))))
+                    .unwrap_or(Value::Undef)
             } else {
                 Value::Undef
             }

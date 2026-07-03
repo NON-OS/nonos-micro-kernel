@@ -18,6 +18,7 @@ mod ident;
 mod number;
 mod operator;
 mod string;
+mod template;
 mod tokenize;
 
 pub use tokenize::tokenize;

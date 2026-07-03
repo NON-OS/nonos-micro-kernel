@@ -30,6 +30,7 @@ use super::eval_logical::eval_logical;
 use super::eval_member::eval_member;
 use super::eval_object::eval_object;
 use super::eval_unary::eval_unary;
+use super::to_bool::to_bool;
 
 pub fn eval_expr(ctx: &mut Ctx, env: &Env, e: &Expr) -> Result<Value, ()> {
     if !ctx.tick() {
@@ -55,6 +56,13 @@ pub fn eval_expr(ctx: &mut Ctx, env: &Env, e: &Expr) -> Result<Value, ()> {
         Expr::Member(o, name) => eval_member(ctx, env, o, name)?,
         Expr::Index(o, i) => eval_index(ctx, env, o, i)?,
         Expr::Call(c, a) => eval_call(ctx, env, c, a)?,
+        Expr::Ternary(c, a, b) => {
+            if to_bool(&eval_expr(ctx, env, c)?) {
+                eval_expr(ctx, env, a)?
+            } else {
+                eval_expr(ctx, env, b)?
+            }
+        }
         Expr::Func(params, body) => Value::Func(Rc::new(FuncData {
             params: params.clone(),
             body: body.clone(),

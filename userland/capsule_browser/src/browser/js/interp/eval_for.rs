@@ -26,7 +26,14 @@ use super::exec::exec;
 use super::flow::Flow;
 use super::to_bool::to_bool;
 
-pub fn eval_for(ctx: &mut Ctx, env: &Env, init: &Option<Box<Stmt>>, cond: &Option<Expr>, update: &Option<Expr>, body: &[Stmt]) -> Result<Flow, ()> {
+pub fn eval_for(
+    ctx: &mut Ctx,
+    env: &Env,
+    init: &Option<Box<Stmt>>,
+    cond: &Option<Expr>,
+    update: &Option<Expr>,
+    body: &[Stmt],
+) -> Result<Flow, ()> {
     let scope = env.child();
     if let Some(i) = init {
         eval_stmt(ctx, &scope, i)?;
