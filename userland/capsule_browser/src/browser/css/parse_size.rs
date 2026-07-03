@@ -14,17 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::calc::eval_calc;
 use super::computed::Size;
 use super::parse_px::parse_px;
 
 const MAX_PCT: f32 = 1000.0;
+const CALC_LIMIT: f32 = 100_000.0;
 
-// Resolve a width/height value: auto, a length, or a percentage of the
-// containing box.
+// Resolve a width/height value: auto, a length, a percentage of the
+// containing box, or a calc() expression carried to layout unresolved.
 pub(super) fn parse_size(value: &str, em_base: u32) -> Option<Size> {
     let v = value.trim();
     if v.eq_ignore_ascii_case("auto") {
         return Some(Size::Auto);
+    }
+    if let Some(inner) = strip_calc(v) {
+        let (px, pml) = eval_calc(inner, em_base)?;
+        if !px.is_finite() || !pml.is_finite() || px.abs() > CALC_LIMIT || pml.abs() > CALC_LIMIT {
+            return None;
+        }
+        if pml == 0.0 && px >= 0.0 {
+            return Some(Size::Px((px + 0.5) as u32));
+        }
+        return Some(Size::Calc(px as i32, pml as i32));
     }
     if let Some(num) = v.strip_suffix('%') {
         let f = num.trim().parse::<f32>().ok()?;
@@ -34,4 +46,12 @@ pub(super) fn parse_size(value: &str, em_base: u32) -> Option<Size> {
         return None;
     }
     parse_px(v, em_base).map(Size::Px)
+}
+
+// The body of a calc(...) wrapper, case-insensitive, None otherwise.
+pub(super) fn strip_calc(v: &str) -> Option<&str> {
+    if v.len() >= 6 && v[..5].eq_ignore_ascii_case("calc(") && v.ends_with(')') {
+        return Some(&v[5..v.len() - 1]);
+    }
+    None
 }

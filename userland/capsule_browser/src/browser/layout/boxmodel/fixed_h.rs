@@ -14,13 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::css::{Computed, Size};
+use crate::browser::css::Computed;
 
 // A definite height, or None when the box sizes to its content. Percent
 // heights have no resolvable base here and also size to content.
 pub(super) fn fixed_h(style: &Computed) -> Option<i32> {
-    match style.height {
-        Size::Px(p) => Some(p as i32),
-        _ => None,
-    }
+    style.height.definite_px()
 }

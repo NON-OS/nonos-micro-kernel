@@ -19,9 +19,5 @@ use crate::browser::css::Size;
 // Resolve a top/right/bottom/left offset; percentages use the containing
 // block width for both axes. Auto stays unresolved.
 pub(super) fn offset_px(s: Size, base: i32) -> Option<i32> {
-    match s {
-        Size::Auto => None,
-        Size::Px(p) => Some(p as i32),
-        Size::Pct(p) => Some(base.saturating_mul(p.min(100) as i32) / 100),
-    }
+    s.resolve(base)
 }

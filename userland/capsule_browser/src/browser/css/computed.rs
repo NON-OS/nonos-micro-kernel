@@ -22,6 +22,9 @@ pub enum Size {
     Auto,
     Px(u32),
     Pct(u16),
+    // calc(): fixed pixels plus per-mille of the containing base, either
+    // part possibly negative.
+    Calc(i32, i32),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

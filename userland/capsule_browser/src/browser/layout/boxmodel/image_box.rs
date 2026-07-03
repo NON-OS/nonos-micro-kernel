@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::css::{Computed, Size};
+use crate::browser::css::Computed;
 
 const DEFAULT_IMG_W: i32 = 320;
 
@@ -22,15 +22,11 @@ const DEFAULT_IMG_W: i32 = 320;
 // 4:3 height. Natural dimensions arrive after decode and cannot drive layout.
 pub(super) fn image_box(s: &Computed, content_w: i32) -> (i32, i32) {
     let max_w = content_w.max(1);
-    let w = match s.width {
-        Size::Px(p) => p as i32,
-        Size::Pct(p) => content_w.saturating_mul(p.min(100) as i32) / 100,
-        Size::Auto => content_w.min(DEFAULT_IMG_W),
-    };
+    let w = s.width.resolve(content_w).unwrap_or_else(|| content_w.min(DEFAULT_IMG_W));
     let w = w.clamp(1, max_w);
-    let h = match s.height {
-        Size::Px(p) => (p as i32).max(1),
-        _ => (w * 3 / 4).max(1),
+    let h = match s.height.definite_px() {
+        Some(p) => p.max(1),
+        None => (w * 3 / 4).max(1),
     };
     (w, h)
 }

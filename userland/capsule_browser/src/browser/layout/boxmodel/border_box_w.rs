@@ -22,19 +22,15 @@ pub(super) fn border_box_w(style: &Computed, avail: i32) -> i32 {
     let mut w = match style.width {
         Size::Auto => avail,
         Size::Px(p) => (p as i32).min(avail),
-        Size::Pct(p) => avail.saturating_mul(p.min(100) as i32) / 100,
+        s => s.resolve(avail).unwrap_or(avail).clamp(0, avail),
     };
     // max-width caps, then min-width raises; percentages resolve against the
     // available width like the base size does.
-    match style.max_width {
-        Size::Px(p) => w = w.min(p as i32),
-        Size::Pct(p) => w = w.min(avail.saturating_mul(p.min(100) as i32) / 100),
-        Size::Auto => {}
+    if let Some(mx) = style.max_width.resolve(avail) {
+        w = w.min(mx);
     }
-    match style.min_width {
-        Size::Px(p) => w = w.max(p as i32),
-        Size::Pct(p) => w = w.max(avail.saturating_mul(p.min(100) as i32) / 100),
-        Size::Auto => {}
+    if let Some(mn) = style.min_width.resolve(avail) {
+        w = w.max(mn);
     }
     w.max(0)
 }

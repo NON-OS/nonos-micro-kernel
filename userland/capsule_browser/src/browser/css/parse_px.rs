@@ -25,6 +25,14 @@ const ROOT_EM: f32 = 16.0;
 // else is rejected.
 pub(super) fn parse_px(value: &str, em_base: u32) -> Option<u32> {
     let v = value.trim();
+    // calc() with no percentage part is a plain length here.
+    if let Some(inner) = super::parse_size::strip_calc(v) {
+        let (px, pml) = super::calc::eval_calc(inner, em_base)?;
+        if pml == 0.0 && px.is_finite() && (0.0..=100_000.0).contains(&px) {
+            return Some((px + 0.5) as u32);
+        }
+        return None;
+    }
     if v == "0" {
         return Some(0);
     }
