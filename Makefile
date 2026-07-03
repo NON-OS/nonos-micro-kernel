@@ -20,11 +20,11 @@
 # Public nonos-mk-* targets
 .PHONY: nonos-mk
 .PHONY: nonos-mk-check nonos-mk-check-ramfs-keys nonos-mk-core nonos-mk-capsules nonos-mk-terminal-test
-.PHONY: nonos-mk-proof-io-prod nonos-mk-ramfs-prod nonos-mk-keyring-prod nonos-mk-entropy-prod nonos-mk-crypto-prod nonos-mk-vfs-prod nonos-mk-market-prod nonos-mk-driver-virtio-rng-prod nonos-mk-driver-virtio-blk-prod nonos-mk-driver-virtio-gpu-prod nonos-mk-driver-virtio-net-prod nonos-mk-driver-iwlwifi-prod nonos-mk-driver-i2c-pci-prod nonos-mk-driver-i2c-hid-prod nonos-mk-driver-ps2-input-prod nonos-mk-driver-xhci-prod nonos-mk-driver-usb-hid-prod nonos-mk-driver-usb-msc-prod nonos-mk-driver-e1000-prod nonos-mk-driver-rtl8139-prod nonos-mk-driver-rtl8169-prod nonos-mk-driver-ahci-prod nonos-mk-driver-hda-prod nonos-mk-driver-nvme-prod nonos-mk-net-l2-prod nonos-mk-net-ip-prod nonos-mk-net-udp-prod nonos-mk-net-dhcp-prod nonos-mk-net-nym-prod nonos-mk-net-sockets-prod nonos-mk-desktop-gui-prod
+.PHONY: nonos-mk-proof-io-prod nonos-mk-ramfs-prod nonos-mk-keyring-prod nonos-mk-entropy-prod nonos-mk-crypto-prod nonos-mk-vfs-prod nonos-mk-market-prod nonos-mk-driver-virtio-rng-prod nonos-mk-driver-virtio-blk-prod nonos-mk-driver-virtio-gpu-prod nonos-mk-driver-virtio-net-prod nonos-mk-driver-iwlwifi-prod nonos-mk-driver-i2c-pci-prod nonos-mk-driver-i2c-hid-prod nonos-mk-driver-ps2-input-prod nonos-mk-driver-xhci-prod nonos-mk-driver-usb-hid-prod nonos-mk-driver-usb-msc-prod nonos-mk-driver-e1000-prod nonos-mk-driver-rtl8139-prod nonos-mk-driver-rtl8169-prod nonos-mk-driver-ahci-prod nonos-mk-driver-hda-prod nonos-mk-driver-nvme-prod nonos-mk-net-l2-prod nonos-mk-net-core-prod nonos-mk-net-ip-prod nonos-mk-net-udp-prod nonos-mk-net-dhcp-prod nonos-mk-net-nym-prod nonos-mk-net-sockets-prod nonos-mk-desktop-gui-prod
 .PHONY: nonos-mk-libc nonos-mk-proof-io nonos-mk-proof-io-sign nonos-mk-check-trust-keys nonos-mk-check-trust-manifest nonos-mk-trust-policy nonos-mk-host-trust-verify nonos-mk-verify-trust nonos-mk-ramfs nonos-mk-ramfs-sign nonos-mk-keyring nonos-mk-entropy nonos-mk-crypto nonos-mk-vfs nonos-mk-virtio-rng nonos-mk-virtio-rng-sign nonos-mk-check-virtio-rng-keys nonos-mk-virtio-blk nonos-mk-virtio-blk-sign nonos-mk-check-virtio-blk-keys nonos-mk-driver-virtio-gpu nonos-mk-driver-virtio-gpu-sign nonos-mk-check-driver-virtio-gpu-keys nonos-mk-virtio-net nonos-mk-virtio-net-sign nonos-mk-check-virtio-net-keys nonos-mk-driver-iwlwifi nonos-mk-driver-iwlwifi-sign nonos-mk-check-driver-iwlwifi-keys nonos-mk-driver-i2c-pci nonos-mk-driver-i2c-pci-sign nonos-mk-check-driver-i2c-pci-keys nonos-mk-driver-i2c-hid nonos-mk-driver-i2c-hid-sign nonos-mk-check-driver-i2c-hid-keys nonos-mk-ps2-input nonos-mk-ps2-input-sign nonos-mk-check-ps2-input-keys nonos-mk-xhci nonos-mk-xhci-sign nonos-mk-check-xhci-keys nonos-mk-driver-usb-msc nonos-mk-driver-usb-msc-sign nonos-mk-check-driver-usb-msc-keys nonos-mk-driver-e1000 nonos-mk-driver-e1000-sign nonos-mk-check-driver-e1000-keys nonos-mk-driver-rtl8139 nonos-mk-driver-rtl8139-sign nonos-mk-check-driver-rtl8139-keys nonos-mk-driver-rtl8169 nonos-mk-driver-rtl8169-sign nonos-mk-check-driver-rtl8169-keys nonos-mk-driver-ahci nonos-mk-driver-ahci-sign nonos-mk-check-driver-ahci-keys nonos-mk-driver-hda nonos-mk-driver-hda-sign nonos-mk-check-driver-hda-keys nonos-mk-driver-nvme nonos-mk-driver-nvme-sign nonos-mk-check-driver-nvme-keys nonos-mk-wallpaper nonos-mk-marketplace-abi nonos-mk-market nonos-mk-marketplace-index-tool
 .PHONY: nonos-mk-userland-clean
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
-.PHONY: nonos-mk-run nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-run-serial-log nonos-mk-run-input-probe-inject-serial-log nonos-mk-debug nonos-mk-plan-a-runtime
+.PHONY: nonos-mk-run nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-run-serial-log nonos-mk-run-input-probe-inject-serial-log nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-run-tpm nonos-mk-swtpm-start nonos-mk-swtpm-stop
 .PHONY: nonos-mk-static nonos-mk-scan
 .PHONY: nonos-mk-verify nonos-mk-verify-fast
 .PHONY: nonos-mk-release-audit nonos-mk-claims-check nonos-mk-qemu-net-audit
@@ -265,6 +265,14 @@ QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=$(QEMU_XRES),yre
 QEMU_USB := -device qemu-xhci,id=xhci
 QEMU_RNG := -device virtio-rng-pci
 
+# Software TPM 2.0 for measured boot. The guest reaches it by direct MMIO at
+# 0xFED40000 (tpm-crb), so no TCG2 firmware is needed; swtpm backs it over a
+# unix socket. Wired only into nonos-mk-run-tpm.
+SWTPM ?= swtpm
+SWTPM_STATE ?= /tmp/nonos-swtpm
+SWTPM_SOCK ?= $(SWTPM_STATE)/swtpm-sock
+QEMU_TPM := -chardev socket,id=chrtpm,path=$(SWTPM_SOCK) -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-crb,tpmdev=tpm0
+
 ifeq ($(QEMU_NET_MODE),off)
     QEMU_NET :=
     QEMU_NET_DESC := disabled
@@ -500,8 +508,8 @@ $(USERLAND_LIBC): $(USERLAND_LIBC_SRCS) | $(TARGET_DIR)/.nonos-toolchain.stamp
 	@echo "Building userland libc..."
 	@cd $(USERLAND_DIR)/libc && \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build --release --target ../x86_64-nonos-user.json \
-		-Zbuild-std=core
+		$(CARGO) rustc --release --target ../x86_64-nonos-user.json \
+		-Zbuild-std=core --crate-type staticlib
 	@touch $@
 
 nonos-mk-libc: $(USERLAND_LIBC)
@@ -662,6 +670,7 @@ include userland/capsule_driver_ahci/Capsule.mk
 include userland/capsule_driver_hda/Capsule.mk
 include userland/capsule_driver_nvme/Capsule.mk
 include userland/capsule_net_l2/Capsule.mk
+include userland/capsule_net_core/Capsule.mk
 include userland/capsule_net_ip/Capsule.mk
 include userland/capsule_net_udp/Capsule.mk
 include userland/capsule_net_dhcp/Capsule.mk
@@ -708,16 +717,14 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(driver-virtio-gpu_VERIFY) $(driver-virtio-net_VERIFY) \
 	$(driver-ps2-input_VERIFY) $(driver-xhci_VERIFY) \
 	$(driver-usb-hid_VERIFY) \
-	$(net-l2_VERIFY) $(net-ip_VERIFY) $(net-udp_VERIFY) \
-	$(net-dhcp_VERIFY) $(net-tcp_VERIFY) $(net-dns_VERIFY) \
-	$(net-sockets_VERIFY) $(net-nym_VERIFY) \
+	$(net-core_VERIFY) $(net-sockets_VERIFY) $(net-nym_VERIFY) \
 	$(policy_VERIFY) $(wallpaper_catalog_VERIFY) \
 	$(installer_VERIFY) \
 	$(input-router_VERIFY) $(compositor_VERIFY) $(wm_VERIFY) \
 	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
 	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
 	$(boot-splash_VERIFY) $(about_VERIFY) $(calculator_VERIFY) \
-	$(browser_VERIFY) \
+	$(browser_VERIFY) $(web_VERIFY) \
 	$(snake_VERIFY) $(wallet-nonos_VERIFY) $(terminal_VERIFY) \
 	$(file-manager_VERIFY) $(text-editor_VERIFY) $(settings_VERIFY) \
 	$(process-manager_VERIFY) $(attest_VERIFY) $(power_VERIFY)
@@ -1085,6 +1092,15 @@ nonos-mk-net-l2-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-net-l2
 
+nonos-mk-net-core-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
+		$(net-core_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-net-core)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-net-core
+
 nonos-mk-net-ip-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
@@ -1114,8 +1130,7 @@ nonos-mk-net-dhcp-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		--no-default-features --features microkernel-net-dhcp
 
 nonos-mk-net-nym-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
-		$(net-dhcp_ARTIFACTS) $(net-tcp_ARTIFACTS) $(net-nym_ARTIFACTS) \
+		$(net-core_ARTIFACTS) $(net-nym_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-net-nym)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
@@ -1124,8 +1139,7 @@ nonos-mk-net-nym-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		--no-default-features --features microkernel-net-nym
 
 nonos-mk-net-sockets-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
-		$(net-dhcp_ARTIFACTS) $(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) \
+		$(net-core_ARTIFACTS) \
 		$(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-net-sockets)..."
@@ -1141,10 +1155,8 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
 		$(driver-virtio-net_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
 		$(driver-xhci_ARTIFACTS) $(driver-usb-hid_ARTIFACTS) \
-		$(net-l2_ARTIFACTS) \
-		$(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) \
-		$(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) \
-		$(net-nym_ARTIFACTS) \
+		$(net-core_ARTIFACTS) \
+		$(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) \
 		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
 		$(installer_ARTIFACTS) \
 		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
@@ -1152,7 +1164,8 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(browser_ARTIFACTS) $(snake_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(browser_ARTIFACTS) \
+		$(snake_ARTIFACTS) \
 		$(wallet-nonos_ARTIFACTS) $(terminal_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
@@ -1180,10 +1193,8 @@ nonos-mk-setup-wizard-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
 		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
 		$(driver-virtio-net_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
-		$(driver-xhci_ARTIFACTS) $(net-l2_ARTIFACTS) \
-		$(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) \
-		$(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) \
-		$(net-nym_ARTIFACTS) \
+		$(driver-xhci_ARTIFACTS) $(net-core_ARTIFACTS) \
+		$(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) \
 		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
 		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
 		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
@@ -1207,10 +1218,8 @@ nonos-mk-setup-wizard-inject-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
 		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
 		$(driver-virtio-net_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
-		$(driver-xhci_ARTIFACTS) $(net-l2_ARTIFACTS) \
-		$(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) $(net-dhcp_ARTIFACTS) \
-		$(net-tcp_ARTIFACTS) $(net-dns_ARTIFACTS) $(net-sockets_ARTIFACTS) \
-		$(net-nym_ARTIFACTS) \
+		$(driver-xhci_ARTIFACTS) $(net-core_ARTIFACTS) \
+		$(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) \
 		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
 		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
 		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
@@ -1393,6 +1402,22 @@ nonos-mk-run-net:
 
 nonos-mk-run-nat:
 	@$(MAKE) --no-print-directory QEMU_NET_MODE=nat nonos-mk-run
+
+nonos-mk-swtpm-stop:
+	@pkill -f "$(SWTPM)" 2>/dev/null || true
+
+nonos-mk-swtpm-start: nonos-mk-swtpm-stop
+	@command -v "$(SWTPM)" >/dev/null || { echo "swtpm not found (brew install swtpm)"; exit 1; }
+	@rm -rf "$(SWTPM_STATE)"
+	@mkdir -p "$(SWTPM_STATE)"
+	@$(SWTPM) socket --tpm2 --tpmstate dir="$(SWTPM_STATE)" --ctrl type=unixio,path="$(SWTPM_SOCK)" --flags startup-clear --daemon
+	@while [ ! -S "$(SWTPM_SOCK)" ]; do perl -e 'select(undef,undef,undef,0.1)'; done
+
+# Full OS boot with NAT outbound networking and a software TPM 2.0 for
+# measured boot.
+nonos-mk-run-tpm: nonos-mk-swtpm-start
+	@echo "Booting NONOS with TPM 2.0 (swtpm) + NAT network..."
+	@$(MAKE) --no-print-directory NONOS_DEV=1 QEMU_NET_MODE=nat QEMU="$(QEMU) $(QEMU_TPM)" nonos-mk-dev-run
 
 nonos-mk-run-wizard: nonos-mk-setup-wizard-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS (first-boot setup wizard) in QEMU..."
