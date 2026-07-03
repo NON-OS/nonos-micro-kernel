@@ -14,21 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::http::response::{ContentKind, Response};
 use crate::browser::fetch::unsupported_content;
+use crate::browser::http::response::{ContentKind, Response};
 use crate::browser::{css, dom, html, js, layout};
 
-pub fn render_response(resp: &Response) -> (Option<layout::doc::RenderDocument>, usize) {
-    let flows = match resp.content_kind {
+use super::render_lines::render_lines;
+
+// HTML renders through the box engine and keeps its DOM and script world
+// alive for events; plain text and error surfaces use the line renderer.
+pub enum Rendered {
+    Boxes(layout::boxmodel::BoxDocument, dom::Dom, js::World),
+    Lines(layout::doc::RenderDocument),
+    Nothing,
+}
+
+pub fn render_response(resp: &Response) -> (Rendered, usize) {
+    match resp.content_kind {
         ContentKind::Html => {
             let mut tree = dom::parse(&resp.body);
-            let _ = js::run(&mut tree);
+            let world = js::run(&mut tree);
             let styles = css::compute(&tree, &css::collect_css(&tree));
-            dom::to_flows(&tree, &styles)
+            let root = layout::boxmodel::build(&tree, &styles);
+            if root.children.is_empty() {
+                return (Rendered::Nothing, 0);
+            }
+            let doc = layout::boxmodel::layout(&root, crate::browser::manifest::WIDTH);
+            let n = doc.frags.len();
+            (Rendered::Boxes(doc, tree, world), n)
         }
-        ContentKind::Text => html::text::parse_text(&resp.body),
-        ContentKind::Unsupported => unsupported_content::unsupported_content(resp.status, resp.body.len()),
-    };
-    let doc = layout::build(&flows, crate::browser::manifest::WIDTH, nonos_app_skeleton::font_advance());
-    (if flows.is_empty() { None } else { Some(doc) }, flows.len())
+        ContentKind::Text => render_lines(html::text::parse_text(&resp.body)),
+        ContentKind::Unsupported => {
+            render_lines(unsupported_content::unsupported_content(resp.status, resp.body.len()))
+        }
+    }
 }

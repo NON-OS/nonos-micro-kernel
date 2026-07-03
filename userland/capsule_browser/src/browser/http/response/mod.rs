@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod decode_body;
-mod content_length;
 mod content_encoding;
-mod header_value;
-mod header_line;
+mod content_length;
+mod decode_body;
 mod has_headers;
+mod header_line;
+mod header_value;
 mod is_complete;
 mod parse;
 mod status_code;

@@ -14,15 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+use crate::browser::fetch::types::Phase;
 
-use crate::browser::html::flow::{Flow, Style};
-
-pub fn unsupported_content(status: u16, len: usize) -> Vec<Flow> {
-    let mut out = Vec::new();
-    out.push(Flow::Text(
-        alloc::format!("Unsupported content: status {} body {} bytes", status, len),
-        Style::default(),
-    ));
-    out
+// A short human label for the current fetch phase, shown on the loading
+// screen so the user sees real progress instead of a static "loading".
+pub(super) fn phase_label(phase: Phase) -> &'static str {
+    match phase {
+        Phase::SocksHello | Phase::SocksMethod | Phase::SocksConnect => "connecting",
+        Phase::TlsHello | Phase::TlsFlight | Phase::TlsVerify => "securing",
+        Phase::SendReq => "requesting",
+        Phase::ReadBody => "downloading",
+        Phase::Decrypt | Phase::Done => "rendering",
+        Phase::Error => "error",
+    }
 }

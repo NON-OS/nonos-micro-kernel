@@ -19,7 +19,7 @@ use crate::browser::http;
 use crate::browser::net;
 
 pub(in crate::browser::fetch) fn send_req(state_port: u32, f: &mut Fetch) {
-    let req = http::request::build(&f.url);
+    let req = http::request::build(&f.url, f.post.as_deref());
     if net::socket_send(state_port, f.handle, req.as_bytes()).is_err() {
         f.error = Some("send failed");
         f.phase = Phase::Error;

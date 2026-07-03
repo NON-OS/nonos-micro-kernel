@@ -42,19 +42,38 @@ impl App for Browser {
         paint(&self.state, fb);
     }
     fn on_tick(&mut self) -> bool {
-        if self.state.fetch.is_some() {
-            self.state.pending_nav = None;
+        // A pending navigation preempts any in-flight fetch. Page loads pull
+        // in stylesheets and images that keep the socket busy well after the
+        // document appears; without this the user could never navigate away
+        // from the address bar or a link while those sub-fetches ran.
+        if self.state.pending_nav.is_some() {
+            if let Some(job) = self.state.fetch.take() {
+                let _ = crate::browser::net::socket_close(self.state.sockets_port, job.handle);
+            }
+        } else if self.state.fetch.is_some() {
             return crate::browser::fetch::step(&mut self.state);
         }
         if let Some(target) = self.state.pending_nav.take() {
             if let Err(msg) = crate::browser::fetch::load(&mut self.state, &target) {
                 self.state.status = alloc::string::String::from(msg);
                 self.state.document = Some(crate::browser::fetch::render_error(msg));
+                self.state.box_doc = None;
+                self.state.page_dom = None;
+                self.state.world = None;
                 self.state.view = crate::browser::state::View::Page;
             }
             return true;
         }
-        false
+        if crate::browser::event::js_tick(&mut self.state) {
+            return true;
+        }
+        if crate::browser::fetch::js_pump(&mut self.state) {
+            return true;
+        }
+        if crate::browser::fetch::css_pump(&mut self.state) {
+            return true;
+        }
+        crate::browser::image::pump(&mut self.state)
     }
     fn tick_interval_ms(&self) -> i64 {
         50

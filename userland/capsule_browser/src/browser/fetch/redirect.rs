@@ -26,6 +26,7 @@ pub(super) fn redirect(state: &mut State, location: String) {
         state.redirect_count = 0;
         state.status = String::from("too many redirects");
         state.document = None;
+        state.box_doc = None;
         return;
     }
     state.redirect_count += 1;

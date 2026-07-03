@@ -16,13 +16,18 @@
 
 use alloc::vec::Vec;
 
-use crate::browser::html::flow::{Flow, Style};
+use crate::browser::html::flow::Flow;
+use crate::browser::layout;
 
-pub fn unsupported_content(status: u16, len: usize) -> Vec<Flow> {
-    let mut out = Vec::new();
-    out.push(Flow::Text(
-        alloc::format!("Unsupported content: status {} body {} bytes", status, len),
-        Style::default(),
-    ));
-    out
+use super::render_response::Rendered;
+
+// Line renderer for non-HTML content: plain text and error surfaces.
+pub(super) fn render_lines(flows: Vec<Flow>) -> (Rendered, usize) {
+    if flows.is_empty() {
+        return (Rendered::Nothing, 0);
+    }
+    let n = flows.len();
+    let doc =
+        layout::build(&flows, crate::browser::manifest::WIDTH, nonos_app_skeleton::font_advance());
+    (Rendered::Lines(doc), n)
 }

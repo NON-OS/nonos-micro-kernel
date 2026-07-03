@@ -15,10 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub fn split_path(rest: &str) -> (&str, &str) {
-    let first = [rest.find('/'), rest.find('?'), rest.find('#')]
-        .into_iter()
-        .flatten()
-        .min();
+    let first = [rest.find('/'), rest.find('?'), rest.find('#')].into_iter().flatten().min();
     match first {
         Some(i) => (&rest[..i], &rest[i..]),
         None => (rest, "/"),

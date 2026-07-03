@@ -20,7 +20,12 @@ use super::constants::{OP_CONNECT_HOST, SOCKETS_MAGIC};
 
 const CONNECT_TIMEOUT_MS: u64 = 9000;
 
-pub fn socket_connect_host(sockets_port: u32, handle: u32, host: &str, port: u16) -> Result<(), ()> {
+pub fn socket_connect_host(
+    sockets_port: u32,
+    handle: u32,
+    host: &str,
+    port: u16,
+) -> Result<(), ()> {
     let h = host.as_bytes();
     if h.is_empty() || h.len() > 253 {
         return Err(());
@@ -31,6 +36,13 @@ pub fn socket_connect_host(sockets_port: u32, handle: u32, host: &str, port: u16
     body[6..8].copy_from_slice(&(h.len() as u16).to_le_bytes());
     body[8..].copy_from_slice(h);
     let mut rx = [0u8; 20];
-    super::call::call_t(sockets_port, SOCKETS_MAGIC, OP_CONNECT_HOST, &body, &mut rx, CONNECT_TIMEOUT_MS)?;
+    super::call::call_t(
+        sockets_port,
+        SOCKETS_MAGIC,
+        OP_CONNECT_HOST,
+        &body,
+        &mut rx,
+        CONNECT_TIMEOUT_MS,
+    )?;
     Ok(())
 }

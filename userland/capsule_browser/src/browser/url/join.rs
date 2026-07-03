@@ -38,10 +38,22 @@ pub fn join(base: &Url, location: &str) -> String {
         return alloc::format!("{}://{}{}", scheme, authority(base), loc);
     }
     if loc.starts_with('?') {
-        return alloc::format!("{}://{}{}{}", scheme, authority(base), path_without_query(&base.path), loc);
+        return alloc::format!(
+            "{}://{}{}{}",
+            scheme,
+            authority(base),
+            path_without_query(&base.path),
+            loc
+        );
     }
     if loc.starts_with('#') {
-        return alloc::format!("{}://{}{}{}", scheme, authority(base), path_without_fragment(&base.path), loc);
+        return alloc::format!(
+            "{}://{}{}{}",
+            scheme,
+            authority(base),
+            path_without_fragment(&base.path),
+            loc
+        );
     }
     let dir = match base.path.rfind('/') {
         Some(i) => &base.path[..=i],

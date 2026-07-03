@@ -17,5 +17,9 @@
 use super::types::Scheme;
 
 pub fn default_port(scheme: Scheme) -> u16 {
-    if scheme == Scheme::Https { 443 } else { 80 }
+    if scheme == Scheme::Https {
+        443
+    } else {
+        80
+    }
 }

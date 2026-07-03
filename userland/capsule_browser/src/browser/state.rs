@@ -34,6 +34,11 @@ pub struct State {
     pub status: String,
     pub pending_nav: Option<String>,
     pub document: Option<crate::browser::layout::doc::RenderDocument>,
+    pub box_doc: Option<crate::browser::layout::boxmodel::BoxDocument>,
+    pub page_dom: Option<crate::browser::dom::Dom>,
+    pub world: Option<crate::browser::js::World>,
+    pub focus: Option<usize>,
+    pub pending_post: Option<String>,
     pub scroll: u32,
     pub sockets_port: u32,
     pub view: View,
@@ -45,6 +50,17 @@ pub struct State {
     pub suppress_history_push: bool,
     pub retries: u8,
     pub proxy: Option<ProxyConfig>,
+    pub images: crate::browser::image::Store,
+    pub image_queue: Vec<String>,
+    // Hops taken by the in-flight image fetch; bounds 3xx chasing.
+    pub image_redirects: u8,
+    // External stylesheets: URLs still to fetch, and the CSS text gathered so
+    // far. Applied on top of the page's inline <style> at each re-layout.
+    pub css_queue: Vec<String>,
+    pub page_css: String,
+    // Author rules parsed once and reused across relayouts when the CSS text
+    // is unchanged, so JS-driven relayouts skip re-parsing the whole sheet.
+    pub css_cache: Option<crate::browser::css::CssCache>,
 }
 
 impl State {
@@ -55,6 +71,11 @@ impl State {
             status: String::from("ready"),
             pending_nav: None,
             document: None,
+            box_doc: None,
+            page_dom: None,
+            world: None,
+            focus: None,
+            pending_post: None,
             scroll: 0,
             sockets_port: 0,
             view: View::Home,
@@ -66,6 +87,12 @@ impl State {
             suppress_history_push: false,
             retries: 0,
             proxy: None,
+            images: crate::browser::image::Store::new(),
+            image_queue: Vec::new(),
+            image_redirects: 0,
+            css_queue: Vec::new(),
+            page_css: String::new(),
+            css_cache: None,
         }
     }
 }

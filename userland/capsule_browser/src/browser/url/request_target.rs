@@ -18,5 +18,9 @@ use super::types::Url;
 
 pub fn request_target(url: &Url) -> &str {
     let path = super::path_without_fragment::path_without_fragment(&url.path);
-    if path.is_empty() { "/" } else { path }
+    if path.is_empty() {
+        "/"
+    } else {
+        path
+    }
 }

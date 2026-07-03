@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::fetch::{append_capped, constants, tls};
 use crate::browser::fetch::types::{Fetch, Phase};
+use crate::browser::fetch::{append_capped, constants, tls};
 use crate::browser::http;
 use crate::browser::net;
 
@@ -26,7 +26,9 @@ pub(in crate::browser::fetch) fn read_body(state_port: u32, f: &mut Fetch, tls_m
         match net::socket_recv(state_port, f.handle, &mut chunk) {
             Ok(n) if n > 0 => {
                 got = true;
-                if append_capped::append_capped(&mut f.buf, &chunk[..n], constants::MAX_BODY).is_err() {
+                if append_capped::append_capped(&mut f.buf, &chunk[..n], constants::MAX_BODY)
+                    .is_err()
+                {
                     f.error = Some("response too large");
                     f.phase = Phase::Error;
                     return true;
@@ -40,11 +42,11 @@ pub(in crate::browser::fetch) fn read_body(state_port: u32, f: &mut Fetch, tls_m
         }
     }
     if tls_mode {
-        let ready = tls::decrypt(f).map_or(false, |p| http::response::has_headers(&p));
+        let ready = tls::decrypt(f).is_some_and(|p| http::response::has_headers(&p));
         let grew = f.buf.len() > f.last_check;
         if grew && (!got || f.buf.len() >= f.last_check + constants::CHECK_STRIDE) {
             f.last_check = f.buf.len();
-            if tls::decrypt(f).map_or(false, |p| http::response::is_complete(&p)) {
+            if tls::decrypt(f).is_some_and(|p| http::response::is_complete(&p)) {
                 f.phase = Phase::Decrypt;
             }
         }
@@ -67,7 +69,9 @@ pub(in crate::browser::fetch) fn read_body(state_port: u32, f: &mut Fetch, tls_m
     } else {
         f.idle = f.idle.wrapping_add(1);
         let budget = if f.buf.is_empty() { constants::FIRST_WAIT } else { constants::IDLE_AFTER };
-        if f.idle >= budget { f.phase = Phase::Done; }
+        if f.idle >= budget {
+            f.phase = Phase::Done;
+        }
     }
     true
 }

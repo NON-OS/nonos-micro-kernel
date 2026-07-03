@@ -18,3 +18,6 @@ pub mod chunked;
 pub mod inflate;
 pub mod request;
 pub mod response;
+mod urlencode;
+
+pub use urlencode::urlencode;

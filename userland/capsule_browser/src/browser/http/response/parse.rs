@@ -42,7 +42,8 @@ pub fn parse(raw: &[u8]) -> Option<Response> {
         } else if let Some(v) = header_value(line, "content-length") {
             content_length(&mut content_len, v)?;
         } else if let Some(v) = header_value(line, "transfer-encoding") {
-            chunked = v.eq_ignore_ascii_case("chunked") || v.to_ascii_lowercase().contains("chunked");
+            chunked =
+                v.eq_ignore_ascii_case("chunked") || v.to_ascii_lowercase().contains("chunked");
         } else if let Some(v) = header_value(line, "content-encoding") {
             encoding = content_encoding(v)?;
         } else if let Some(v) = header_value(line, "content-type") {

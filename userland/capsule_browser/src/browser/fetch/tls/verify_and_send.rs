@@ -20,14 +20,23 @@ use crate::browser::net;
 use crate::browser::tls13;
 
 pub(in crate::browser::fetch) fn verify_and_send(port: u32, f: &mut Fetch) {
-    let req = http::request::build(&f.url);
+    let req = http::request::build(&f.url, f.post.as_deref());
     let host = f.url.host.clone();
-    let Some(tls) = f.tls.as_ref() else { f.phase = Phase::Error; return; };
-    let Some(out) = tls13::application_write(&tls.cf, &tls.flight, req.as_bytes(), host.as_bytes(), tls.now) else {
-        f.error = Some("cert verify failed"); f.phase = Phase::Error; return;
+    let Some(tls) = f.tls.as_ref() else {
+        f.phase = Phase::Error;
+        return;
+    };
+    let Some(out) =
+        tls13::application_write(&tls.cf, &tls.flight, req.as_bytes(), host.as_bytes(), tls.now)
+    else {
+        f.error = Some("cert verify failed");
+        f.phase = Phase::Error;
+        return;
     };
     if net::socket_send(port, f.handle, &out).is_err() {
-        f.error = Some("send failed"); f.phase = Phase::Error; return;
+        f.error = Some("send failed");
+        f.phase = Phase::Error;
+        return;
     }
     f.buf.clear();
     f.phase = Phase::ReadBody;

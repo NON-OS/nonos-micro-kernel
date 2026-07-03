@@ -14,26 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod about_page;
 mod append_capped;
+mod apply_css;
 mod constants;
+mod css_pump;
+mod enqueue_css;
 mod fail;
 mod finish;
+mod js_pump;
 mod load;
 mod plain;
+mod progress;
 mod record_history;
-mod render_response;
 mod redirect;
-mod rtc_packed;
 mod render_error;
+mod render_lines;
+mod render_response;
 mod retryable_error;
+mod rtc_packed;
 mod security_error;
 mod services;
 mod socks;
 mod step;
-mod unsupported_content;
 mod tls;
 pub mod types;
+mod unsupported_content;
 
+pub use css_pump::css_pump;
+pub use js_pump::js_pump;
 pub use load::load;
 pub use render_error::render_error;
 pub use step::step;

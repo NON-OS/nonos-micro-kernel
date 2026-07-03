@@ -26,7 +26,8 @@ pub fn parse_socks5(input: &str) -> Option<ProxyConfig> {
         || host.contains('/')
         || host.contains('@')
         || host.bytes().any(|b| b.is_ascii_whitespace())
-        || port == 0 {
+        || port == 0
+    {
         return None;
     }
     Some(ProxyConfig { host: String::from(host), port })

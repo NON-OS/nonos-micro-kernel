@@ -21,10 +21,14 @@ use crate::browser::tls13;
 pub(in crate::browser::fetch) fn hello(port: u32, f: &mut Fetch, now: u64) {
     let host = f.url.host.clone();
     let Some(cf) = tls13::client_flight(host.as_bytes()) else {
-        f.error = Some("tls init failed"); f.phase = Phase::Error; return;
+        f.error = Some("tls init failed");
+        f.phase = Phase::Error;
+        return;
     };
     if net::socket_send(port, f.handle, &cf.record).is_err() {
-        f.error = Some("send failed"); f.phase = Phase::Error; return;
+        f.error = Some("send failed");
+        f.phase = Phase::Error;
+        return;
     }
     f.tls = Some(TlsCtx { cf, flight: alloc::vec::Vec::new(), now });
     f.phase = Phase::TlsFlight;

@@ -14,15 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+use alloc::string::String;
 
-use crate::browser::html::flow::{Flow, Style};
+const HEX: &[u8; 16] = b"0123456789ABCDEF";
 
-pub fn unsupported_content(status: u16, len: usize) -> Vec<Flow> {
-    let mut out = Vec::new();
-    out.push(Flow::Text(
-        alloc::format!("Unsupported content: status {} body {} bytes", status, len),
-        Style::default(),
-    ));
+// Percent-encode one form field for application/x-www-form-urlencoded.
+pub fn urlencode(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for b in s.bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(b as char)
+            }
+            b' ' => out.push('+'),
+            _ => {
+                out.push('%');
+                out.push(HEX[(b >> 4) as usize] as char);
+                out.push(HEX[(b & 15) as usize] as char);
+            }
+        }
+    }
     out
 }

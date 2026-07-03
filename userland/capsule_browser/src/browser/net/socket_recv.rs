@@ -24,7 +24,8 @@ pub fn socket_recv(sockets_port: u32, handle: u32, out: &mut [u8]) -> Result<usi
     let mut body = [0u8; 4];
     let mut rx = vec![0u8; out.len().saturating_add(20)];
     body.copy_from_slice(&handle.to_le_bytes());
-    let n = super::call::call_t(sockets_port, SOCKETS_MAGIC, OP_RECV, &body, &mut rx, RECV_TIMEOUT_MS)?;
+    let n =
+        super::call::call_t(sockets_port, SOCKETS_MAGIC, OP_RECV, &body, &mut rx, RECV_TIMEOUT_MS)?;
     if n < 20 {
         return Err(());
     }

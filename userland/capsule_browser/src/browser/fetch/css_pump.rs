@@ -20,50 +20,47 @@ use nonos_libc::mk_time_millis;
 
 use crate::browser::fetch::types::{Fetch, Phase};
 use crate::browser::net;
-use crate::browser::state::{State, View};
+use crate::browser::state::State;
 use crate::browser::url;
 
-pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
-    if super::about_page::about_page(state, target) {
-        return Ok(());
+// Fetch the next queued external stylesheet when the socket is idle. Rides
+// the same single-socket machine as page navigation and images, so only one
+// request runs at a time. Returns true when a fetch was launched.
+pub fn css_pump(state: &mut State) -> bool {
+    if state.sockets_port == 0 || state.fetch.is_some() || state.css_queue.is_empty() {
+        return false;
     }
-    let url = url::parse(target).ok_or("bad url")?;
-    let proxy = state.proxy.clone();
-    let (connect_host, connect_port) = match proxy.as_ref() {
-        Some(p) => (p.host.as_str(), p.port),
-        None => (url.host.as_str(), url.port),
+    let target = state.css_queue.remove(0);
+    // A sheet that fails before its fetch even launches must still drain the
+    // render-blocking hold, or a page whose only stylesheet host is down would
+    // stay blank forever. apply_css(None) relayouts with whatever CSS arrived.
+    let Some(u) = url::parse(&target) else {
+        super::apply_css::apply_css(state, None);
+        return true;
     };
-    super::services::services(state)?;
-    state.base = Some(url.clone());
-    let h = net::socket_open(state.sockets_port).map_err(|_| "socket failed")?;
-    if net::socket_connect_host(state.sockets_port, h, connect_host, connect_port).is_err() {
+    let proxy = state.proxy.clone();
+    let (host, port) = match proxy.as_ref() {
+        Some(p) => (p.host.as_str(), p.port),
+        None => (u.host.as_str(), u.port),
+    };
+    let Ok(h) = net::socket_open(state.sockets_port) else {
+        super::apply_css::apply_css(state, None);
+        return true;
+    };
+    if net::socket_connect_host(state.sockets_port, h, host, port).is_err() {
         let _ = net::socket_close(state.sockets_port, h);
-        return Err("connect failed");
+        super::apply_css::apply_css(state, None);
+        return true;
     }
     let phase = if proxy.is_some() {
         Phase::SocksHello
-    } else if url.scheme == url::Scheme::Https {
+    } else if u.scheme == url::Scheme::Https {
         Phase::TlsHello
     } else {
         Phase::SendReq
     };
-    state.status = alloc::format!("loading {}", url.host);
-    state.document = None;
-    state.box_doc = None;
-    state.page_dom = None;
-    state.world = None;
-    state.css_queue.clear();
-    state.page_css.clear();
-    state.image_queue.clear();
-    state.images.reset();
-    state.css_cache = None;
-    state.scroll = 0;
-    state.focus = None;
-    state.view = View::Page;
-    let suppress = core::mem::take(&mut state.suppress_history_push);
-    let post = core::mem::take(&mut state.pending_post);
     state.fetch = Some(Fetch {
-        url,
+        url: u,
         handle: h,
         phase,
         buf: Vec::new(),
@@ -72,12 +69,12 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
         idle: 0,
         started_ms: mk_time_millis(),
         error: None,
-        suppress,
+        suppress: true,
         image: None,
         last_check: 0,
-        post,
+        post: None,
         js_req: false,
-        css: false,
+        css: true,
     });
-    Ok(())
+    true
 }
