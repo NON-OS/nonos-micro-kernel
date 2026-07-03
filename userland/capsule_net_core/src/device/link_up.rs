@@ -14,37 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec;
-
+use super::mac::next_rid;
+use crate::protocol::header::{parse_response, write_request};
+use crate::protocol::ops::{HDR_LEN, OP_LINK_STATUS};
 use nonos_libc::mk_ipc_call;
 
-use super::tx_seq::next_rid;
-use crate::protocol::header::{parse_response, write_request};
-use crate::protocol::ops::{HDR_LEN, OP_TX_PACKET};
-
-pub fn send_frame(port: u32, frame: &[u8]) -> bool {
-    let total = HDR_LEN + frame.len();
-    let mut req = vec![0u8; total];
-    if write_request(&mut req, OP_TX_PACKET, next_rid(), frame.len() as u32).is_none() {
-        return false;
+pub fn link_up(port: u32) -> Option<bool> {
+    let mut req = [0u8; HDR_LEN];
+    write_request(&mut req, OP_LINK_STATUS, next_rid(), 0)?;
+    let mut resp = [0u8; HDR_LEN + 5];
+    let n = mk_ipc_call(port as u64, req.as_ptr(), HDR_LEN, resp.as_mut_ptr(), resp.len());
+    if n < 0 || n as usize > resp.len() {
+        return None;
     }
-    req[HDR_LEN..total].copy_from_slice(frame);
-    let mut resp = [0u8; HDR_LEN + 4];
-    let n = mk_ipc_call(port as u64, req.as_ptr(), total, resp.as_mut_ptr(), resp.len());
-    if n < 0 {
-        return false;
-    }
-    let got = n as usize;
-    if got < HDR_LEN + 4 {
-        return false;
-    }
-    let view = &resp[..got.min(resp.len())];
-    let (op, _, plen) = match parse_response(view) {
-        Some(v) => v,
-        None => return false,
-    };
-    if op != OP_TX_PACKET || plen as usize != 4 {
-        return false;
+    let view = &resp[..n as usize];
+    let (op, _, plen) = parse_response(view)?;
+    if op != OP_LINK_STATUS || plen != 5 || view.len() < HDR_LEN + 5 {
+        return None;
     }
     let status = i32::from_le_bytes([
         view[HDR_LEN],
@@ -52,5 +38,8 @@ pub fn send_frame(port: u32, frame: &[u8]) -> bool {
         view[HDR_LEN + 2],
         view[HDR_LEN + 3],
     ]);
-    status >= 0
+    if status != 0 {
+        return None;
+    }
+    Some(view[HDR_LEN + 4] != 0)
 }

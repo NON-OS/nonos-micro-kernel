@@ -27,7 +27,8 @@
 pub const Q_RX: u16 = 0;
 pub const Q_TX: u16 = 1;
 
-pub const QUEUE_SIZE: u16 = 8;
+pub const RX_QUEUE_SIZE: u16 = 64;
+pub const TX_QUEUE_SIZE: u16 = 8;
 pub const VRING_DESC_F_WRITE: u16 = 2;
 
 pub const VQ_DESC_OFFSET: usize = 0;
@@ -35,13 +36,15 @@ pub const VQ_AVAIL_OFFSET: usize = 4096;
 pub const VQ_USED_OFFSET: usize = 8192;
 pub const VQ_REGION_SIZE: usize = 12288;
 
+// Physical virtqueue slot count. Legacy virtio never shrinks the ring here,
+// so the device keeps its QueueNumMax size, and the hardcoded offsets above
+// only hold for a 256-entry ring (256 descriptors * 16 bytes = the avail
+// offset). Avail and used ring positions index modulo THIS, never the smaller
+// number of buffers the driver chooses to prime.
 pub const RING_SLOTS: u16 = (VQ_AVAIL_OFFSET / 16) as u16;
 
-
-
-
-pub const RX_DESC_COUNT: u16 = 64;
-pub const TX_DESC_COUNT: u16 = QUEUE_SIZE;
+pub const RX_DESC_COUNT: u16 = RX_QUEUE_SIZE;
+pub const TX_DESC_COUNT: u16 = TX_QUEUE_SIZE;
 
 
 

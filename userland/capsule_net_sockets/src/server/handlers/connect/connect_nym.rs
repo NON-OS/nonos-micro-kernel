@@ -14,8 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::protocol::E_NO_TRANSPORT;
 use crate::{clients::nym, state};
 
 pub fn connect_nym() -> Result<u32, u16> {
-    nym::open(state::nym())
+    let port = state::nym();
+    if port == 0 {
+        return Err(E_NO_TRANSPORT);
+    }
+    nym::open(port)
 }

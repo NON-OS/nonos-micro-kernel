@@ -32,7 +32,15 @@ pub fn udp() -> u32 {
 }
 
 pub fn nym() -> u32 {
-    NYM.load(Ordering::Acquire)
+    let port = NYM.load(Ordering::Acquire);
+    if port != 0 {
+        return port;
+    }
+    let port = lookup(b"net.nym").unwrap_or(0);
+    if port != 0 {
+        NYM.store(port, Ordering::Release);
+    }
+    port
 }
 
 pub fn dns() -> u32 {
@@ -42,8 +50,8 @@ pub fn dns() -> u32 {
 pub fn discover() -> Result<(), ()> {
     TCP.store(lookup(b"net.tcp")?, Ordering::Release);
     UDP.store(lookup(b"net.udp")?, Ordering::Release);
-    NYM.store(lookup(b"net.nym")?, Ordering::Release);
     DNS.store(lookup(b"net.dns")?, Ordering::Release);
+    NYM.store(lookup(b"net.nym").unwrap_or(0), Ordering::Release);
     Ok(())
 }
 

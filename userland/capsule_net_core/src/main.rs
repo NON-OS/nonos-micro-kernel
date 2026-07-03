@@ -46,7 +46,7 @@ fn wait_for_setup() {
     loop {
         match setup::run() {
             Ok(()) => return,
-            Err(SetupError::NicNotFound) => {
+            Err(SetupError::NicNotFound | SetupError::LinkDown) => {
                 for _ in 0..64 {
                     mk_yield();
                 }

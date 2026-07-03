@@ -17,7 +17,13 @@
 use crate::protocol::{E_NO_HANDLE, E_OK};
 use crate::sockets::{Kind, RemoteAddr4, SocketKey, SOCKETS};
 
-pub fn install_transport(key: SocketKey, kind: Kind, ip: [u8; 4], port: u16, transport: u32) -> u16 {
+pub fn install_transport(
+    key: SocketKey,
+    kind: Kind,
+    ip: [u8; 4],
+    port: u16,
+    transport: u32,
+) -> u16 {
     match SOCKETS.with(key, |s| {
         if s.kind != kind {
             return E_NO_HANDLE;

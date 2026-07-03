@@ -16,11 +16,10 @@
 
 use core::ptr::{read_volatile, write_volatile};
 
-use super::{RxQueue, TxQueue};
+use super::RxQueue;
 use crate::constants::{RING_SLOTS, VQ_AVAIL_OFFSET, VQ_DESC_OFFSET, VRING_DESC_F_WRITE};
 
 const DESC_SIZE: usize = 16;
-const AVAIL_RING_OFFSET: usize = 4;
 
 impl RxQueue {
     pub fn prime(&self) {
@@ -53,24 +52,6 @@ impl RxQueue {
     pub fn refill_consumed(&mut self) {
         if let Some(slot) = self.pending_refill.take() {
             self.refill(slot);
-        }
-    }
-}
-
-impl TxQueue {
-    pub fn post_packet(&self, slot: u16, length: u32) {
-        unsafe {
-            let desc = self.region_va.add(VQ_DESC_OFFSET).add(DESC_SIZE * slot as usize);
-            write_volatile(desc.cast::<u64>(), self.buf_phys + self.buf_len as u64 * slot as u64);
-            write_volatile(desc.add(8).cast::<u32>(), length);
-            write_volatile(desc.add(12).cast::<u16>(), 0u16);
-            write_volatile(desc.add(14).cast::<u16>(), 0u16);
-
-            let avail = self.region_va.add(VQ_AVAIL_OFFSET).cast::<u16>();
-            let idx = read_volatile(avail.add(1));
-            let pos = (idx % RING_SLOTS) as usize;
-            write_volatile(avail.add(AVAIL_RING_OFFSET / 2 + pos), slot);
-            write_volatile(avail.add(1), idx.wrapping_add(1));
         }
     }
 }

@@ -14,21 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod capabilities;
-pub mod link_up;
-pub mod mac;
-pub mod nic_device;
-pub mod read_mac;
-pub mod receive;
-pub mod rx;
-pub mod rx_seq;
-pub mod rx_token;
-pub mod transmit;
-pub mod tx;
-pub mod tx_seq;
-pub mod tx_token;
-pub mod types;
+mod bit;
+mod driver_ok;
+mod negotiate;
+mod program_queue;
 
-pub use link_up::link_up;
-pub use read_mac::mac;
-pub use types::NicDevice;
+pub use driver_ok::driver_ok;
+pub use negotiate::negotiate;
+pub use program_queue::program_queue;

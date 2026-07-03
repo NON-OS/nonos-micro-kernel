@@ -19,16 +19,24 @@ use crate::protocol::{E_NO_HANDLE, E_NO_TRANSPORT, E_OK};
 use crate::sockets::{Kind, RemoteAddr4, SocketKey, SOCKETS};
 use crate::state;
 
-use super::{connect_nym, install_transport};
+use super::{connect_nym, install_transport, wait_established};
 
 pub fn finish(key: SocketKey, ip: [u8; 4], port: u16) -> u16 {
     let Some(sock) = SOCKETS.with(key, |s| *s) else {
         return E_NO_HANDLE;
     };
     match sock.kind {
-        Kind::Datagram => SOCKETS.with(key, |s| s.remote = Some(RemoteAddr4 { ip, port })).map_or(E_NO_HANDLE, |_| E_OK),
+        Kind::Datagram => SOCKETS
+            .with(key, |s| s.remote = Some(RemoteAddr4 { ip, port }))
+            .map_or(E_NO_HANDLE, |_| E_OK),
         Kind::Stream => match tcp::connect(state::tcp(), ip, port) {
-            Ok(h) => install_transport::install_transport(key, Kind::Stream, ip, port, h),
+            Ok(h) => {
+                if !wait_established::wait_established(state::tcp(), h) {
+                    let _ = tcp::close(state::tcp(), h);
+                    return E_NO_TRANSPORT;
+                }
+                install_transport::install_transport(key, Kind::Stream, ip, port, h)
+            }
             Err(_) => E_NO_TRANSPORT,
         },
         Kind::Mixnet => match connect_nym::connect_nym() {

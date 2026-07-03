@@ -19,6 +19,7 @@ pub const MAGIC_NDHC: u32 = 0x4E44_4843;
 pub const VERSION: u16 = 1;
 pub const HDR_LEN: usize = 20;
 
+pub const OP_LINK_STATUS: u16 = 2;
 pub const OP_MAC_ADDRESS: u16 = 3;
 pub const OP_TX_PACKET: u16 = 4;
 pub const OP_RX_PACKET: u16 = 5;
