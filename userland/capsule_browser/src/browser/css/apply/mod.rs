@@ -19,6 +19,7 @@ mod border;
 mod decl;
 mod display;
 mod flex;
+mod flex_shorthand;
 mod grid;
 mod list;
 mod margin;
