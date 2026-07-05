@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::kernel_core::surface_registry::table::SLOTS;
+use crate::kernel_core::surface_registry::table::{bump_generation, SLOTS};
 use crate::kernel_core::surface_registry::types::{encode_handle, SLOT_CAP};
 
 pub fn release_owned_by_pid(pid: u32) -> u32 {
@@ -32,6 +32,7 @@ pub fn release_owned_by_pid(pid: u32) -> u32 {
             handles[count] = encode_handle(idx as u32, slot.epoch);
             count += 1;
             *entry = None;
+            bump_generation(idx);
         }
     }
     for handle in handles.iter().take(count) {
