@@ -32,7 +32,9 @@ pub fn enqueue_from_doc(state: &mut State) {
                 queue(&base, src, &state.images, &mut fresh);
             }
             if let Some(src) = f.bg_image.as_deref() {
-                queue(&base, src, &state.images, &mut fresh);
+                if !src.starts_with("linear-gradient(") && !src.starts_with("radial-gradient(") {
+                    queue(&base, src, &state.images, &mut fresh);
+                }
             }
         }
     }

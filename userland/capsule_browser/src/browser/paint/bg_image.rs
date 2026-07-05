@@ -32,10 +32,15 @@ pub(super) fn paint_bg_image(
     bottom: i32,
 ) {
     let Some(src) = f.bg_image.as_deref() else { return };
-    let Some(base) = state.base.as_ref() else { return };
     if sy < TOP || sy + f.h > bottom {
         return;
     }
+    // A gradient renders directly; a url resolves and blits once decoded.
+    if super::grad::is_gradient(src) {
+        super::grad::paint_gradient(fb, src, f.x, sy, f.w, f.h);
+        return;
+    }
+    let Some(base) = state.base.as_ref() else { return };
     let abs = crate::browser::url::join(base, src);
     if let Some(img) = state.images.ready(&abs) {
         let (bx, by) = (f.x.max(0) as u32, sy.max(0) as u32);

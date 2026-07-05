@@ -57,6 +57,7 @@ mod walk;
 
 pub use cache::{compute_cached, CssCache};
 pub use collect::collect_css;
+pub use color::parse_color;
 pub use compute::compute;
 pub use computed::{Align, Computed, GridTrack, Justify, Position, Size, TextAlign, WhiteSpace};
 pub use select::select;

@@ -16,19 +16,27 @@
 
 use alloc::string::{String, ToString};
 
-// The url() target of a background or background-image declaration, with the
-// quotes and whitespace stripped. Gradients and other image functions return
-// None, so only a fetchable image is captured.
+// The background layer captured from a background or background-image
+// declaration: either a url() to fetch, or a gradient function kept verbatim
+// for the painter to render. Solid colors and unknown values return None.
 pub(super) fn bg_url(name: &str, value: &str) -> Option<String> {
     if name != "background" && name != "background-image" {
         return None;
     }
-    let start = value.find("url(")? + 4;
-    let rest = &value[start..];
-    let end = rest.find(')')?;
-    let inner = rest[..end].trim().trim_matches('"').trim_matches('\'').trim();
-    if inner.is_empty() || inner.starts_with("data:") {
-        return None;
+    if let Some(start) = value.find("url(") {
+        let rest = &value[start + 4..];
+        let end = rest.find(')')?;
+        let inner = rest[..end].trim().trim_matches('"').trim_matches('\'').trim();
+        if !inner.is_empty() && !inner.starts_with("data:") {
+            return Some(inner.to_string());
+        }
     }
-    Some(inner.to_string())
+    // A gradient function is kept as-is; the painter parses and draws it.
+    if let Some(start) = value.find("linear-gradient(").or_else(|| value.find("radial-gradient(")) {
+        let rest = &value[start..];
+        let end = super::matching_paren::matching_paren(&rest[rest.find('(')? + 1..]);
+        let open = rest.find('(')?;
+        return Some(rest[..open + 1 + end + 1].trim().to_string());
+    }
+    None
 }

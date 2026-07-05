@@ -14,15 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod bg_image;
-mod box_fragment;
-mod box_page;
-pub mod chrome;
-pub mod document;
-mod fill_page;
-mod fill_rounded;
-mod grad;
-pub mod home_page;
-mod paint;
+const PI: f32 = core::f32::consts::PI;
 
-pub use paint::paint;
+// Polynomial sine over a reduced range; the gradient axis only needs a couple
+// of digits, far tighter than a supersampled pixel.
+pub(super) fn sin(x: f32) -> f32 {
+    let mut t = x % (2.0 * PI);
+    if t > PI {
+        t -= 2.0 * PI;
+    } else if t < -PI {
+        t += 2.0 * PI;
+    }
+    let t2 = t * t;
+    t * (1.0 - t2 / 6.0 * (1.0 - t2 / 20.0 * (1.0 - t2 / 42.0)))
+}
+
+pub(super) fn cos(x: f32) -> f32 {
+    sin(x + PI / 2.0)
+}

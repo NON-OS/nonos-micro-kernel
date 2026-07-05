@@ -14,15 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod bg_image;
-mod box_fragment;
-mod box_page;
-pub mod chrome;
-pub mod document;
-mod fill_page;
-mod fill_rounded;
-mod grad;
-pub mod home_page;
-mod paint;
+use alloc::string::String;
+use alloc::vec::Vec;
 
-pub use paint::paint;
+// Split on top-level commas, keeping commas inside nested parentheses (an
+// rgb() or rgba() stop color) together with their item.
+pub(super) fn split_top(s: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut depth = 0i32;
+    let mut start = 0usize;
+    for (i, c) in s.char_indices() {
+        match c {
+            '(' => depth += 1,
+            ')' => depth -= 1,
+            ',' if depth == 0 => {
+                out.push(s[start..i].trim().into());
+                start = i + 1;
+            }
+            _ => {}
+        }
+    }
+    let tail = s[start..].trim();
+    if !tail.is_empty() {
+        out.push(tail.into());
+    }
+    out
+}
