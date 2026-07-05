@@ -14,30 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod clipboard;
-mod duplicate;
-mod entries;
-mod event;
-mod filetype;
-mod filter;
-mod fmt_time;
-mod help;
-mod human_size;
-mod layout;
-mod manifest;
-mod paint;
-mod perms;
-mod preview;
-mod preview_hex;
-mod preview_paint;
-mod preview_text;
-mod prompt;
-mod refresh;
-mod scroll;
-mod selection;
-mod state;
-mod theme;
-mod view;
-
-pub use app::FileManager;
+// Row geometry shared by the paint pass, click hit-testing, and scroll
+// clamping so a click lands on the row it visually points at.
+pub const FIRST_ROW_Y: u32 = 64;
+pub const ROW_HEIGHT: u32 = 22;
+pub const LIST_VISIBLE: usize = 10;

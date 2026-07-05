@@ -14,30 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod clipboard;
-mod duplicate;
-mod entries;
-mod event;
-mod filetype;
-mod filter;
-mod fmt_time;
-mod help;
-mod human_size;
-mod layout;
-mod manifest;
-mod paint;
-mod perms;
-mod preview;
-mod preview_hex;
-mod preview_paint;
-mod preview_text;
-mod prompt;
-mod refresh;
-mod scroll;
-mod selection;
-mod state;
-mod theme;
-mod view;
+use alloc::string::String;
 
-pub use app::FileManager;
+// A short human-readable byte count: exact under 1K, then one decimal with a
+// K/M/G suffix, so a listing column stays narrow and readable.
+pub fn human_size(bytes: u64) -> String {
+    const UNITS: [&str; 3] = ["K", "M", "G"];
+    if bytes < 1024 {
+        return alloc::format!("{bytes}");
+    }
+    let mut value = bytes;
+    let mut unit = 0usize;
+    // Keep one fractional digit by carrying tenths through each division.
+    let mut tenths = 0u64;
+    while value >= 1024 && unit < UNITS.len() {
+        tenths = (value % 1024) * 10 / 1024;
+        value /= 1024;
+        unit += 1;
+    }
+    alloc::format!("{value}.{tenths}{}", UNITS[unit - 1])
+}

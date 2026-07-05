@@ -23,8 +23,17 @@ pub struct Entry {
     pub label: String,
     pub full_path: String,
     pub is_dir: bool,
+    // Byte size for files, filled in by a stat pass after the listing is built;
+    // None until known or for directories.
+    pub size: Option<u64>,
+    // Last-modified time in unix milliseconds, 0 when unknown.
+    pub mtime: u64,
+    // Whether the entry can be written; false marks a read-only file.
+    pub writable: bool,
 }
 
+// Turn the vfs path listing into one entry per immediate child of `prefix`,
+// de-duplicated. Ordering and filtering are applied later by the view layer.
 pub fn build_entries(prefix: &str, paths: &[String]) -> Vec<Entry> {
     let mut out = Vec::new();
     for path in paths {
@@ -35,7 +44,12 @@ pub fn build_entries(prefix: &str, paths: &[String]) -> Vec<Entry> {
         let cut = rest.find('/').unwrap_or(rest.len());
         let name = &rest[..cut];
         let is_dir = cut < rest.len();
-        if name.is_empty() || out.iter().any(|entry: &Entry| entry.label.as_str() == name) {
+        // Compare against the bare name: a directory's label carries a trailing
+        // slash, so without trimming it a folder with several children would be
+        // listed once per child instead of once.
+        if name.is_empty()
+            || out.iter().any(|entry: &Entry| entry.label.trim_end_matches('/') == name)
+        {
             continue;
         }
         let mut label = String::from(name);
@@ -45,7 +59,7 @@ pub fn build_entries(prefix: &str, paths: &[String]) -> Vec<Entry> {
         } else {
             alloc::format!("{prefix}{name}")
         };
-        out.push(Entry { label, full_path, is_dir });
+        out.push(Entry { label, full_path, is_dir, size: None, mtime: 0, writable: true });
     }
     out
 }

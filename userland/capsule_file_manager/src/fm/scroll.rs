@@ -14,30 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod clipboard;
-mod duplicate;
-mod entries;
-mod event;
-mod filetype;
-mod filter;
-mod fmt_time;
-mod help;
-mod human_size;
-mod layout;
-mod manifest;
-mod paint;
-mod perms;
-mod preview;
-mod preview_hex;
-mod preview_paint;
-mod preview_text;
-mod prompt;
-mod refresh;
-mod scroll;
-mod selection;
-mod state;
-mod theme;
-mod view;
+use super::layout::LIST_VISIBLE;
+use super::state::State;
 
-pub use app::FileManager;
+// Slide the listing window so the cursor stays on screen: page up when the
+// cursor moves above the top row, page down when it falls past the last
+// visible row.
+pub fn ensure_visible(state: &mut State) {
+    if state.cursor < state.scroll {
+        state.scroll = state.cursor;
+    } else if state.cursor >= state.scroll + LIST_VISIBLE {
+        state.scroll = state.cursor + 1 - LIST_VISIBLE;
+    }
+}
