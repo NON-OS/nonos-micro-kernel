@@ -14,14 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod dmar;
-mod hpet;
-mod mcfg;
-mod srat;
-mod srat_memory;
+use core::sync::atomic::Ordering;
 
-pub use dmar::parse_dmar;
-pub use hpet::parse_hpet;
-pub use mcfg::parse_mcfg;
-pub use srat::parse_srat;
-pub use srat_memory::{parse_memory_affinity, parse_x2apic_affinity};
+use super::state::DMAR_PRESENT;
+
+pub fn set_present() {
+    DMAR_PRESENT.store(true, Ordering::Release);
+}

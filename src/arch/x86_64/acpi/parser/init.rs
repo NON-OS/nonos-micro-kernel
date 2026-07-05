@@ -18,7 +18,7 @@ use core::sync::atomic::Ordering;
 
 use super::fadt::parse_fadt;
 use super::madt::parse_madt;
-use super::other::{parse_hpet, parse_mcfg, parse_srat};
+use super::other::{parse_dmar, parse_hpet, parse_mcfg, parse_srat};
 use super::rsdp::find_rsdp;
 use super::state::{TableRegistry, INITIALIZED, STATS, TABLES};
 use super::{parse_rsdt, parse_xsdt};
@@ -50,6 +50,7 @@ pub fn init() -> AcpiResult<()> {
     parse_hpet(&mut registry);
     parse_mcfg(&mut registry);
     parse_srat(&mut registry);
+    parse_dmar(&mut registry);
 
     {
         let mut stats = STATS.write();
