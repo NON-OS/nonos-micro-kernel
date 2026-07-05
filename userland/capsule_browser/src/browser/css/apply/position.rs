@@ -22,12 +22,20 @@ use crate::browser::css::parse_size::parse_size;
 // visible and out of normal flow.
 pub(super) fn apply_position(c: &mut Computed, name: &str, value: &str, fs: u32) -> bool {
     match name {
-        "position" => match value.trim() {
-            "static" => c.position = Position::Static,
-            "relative" | "sticky" => c.position = Position::Relative,
-            "absolute" | "fixed" => c.position = Position::Absolute,
-            _ => {}
-        },
+        "position" => {
+            c.is_fixed = false;
+            match value.trim() {
+                "static" => c.position = Position::Static,
+                "relative" | "sticky" => c.position = Position::Relative,
+                "absolute" => c.position = Position::Absolute,
+                // Laid out as absolute, but flagged so paint pins it on scroll.
+                "fixed" => {
+                    c.position = Position::Absolute;
+                    c.is_fixed = true;
+                }
+                _ => {}
+            }
+        }
         "top" => {
             if let Some(s) = parse_size(value, fs) {
                 c.top = s;

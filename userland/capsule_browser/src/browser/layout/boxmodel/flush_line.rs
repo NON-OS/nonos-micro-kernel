@@ -60,6 +60,7 @@ pub(super) fn flush_line(
                     content: Content::Text { text, color, px: px as f32, bold, mono },
                     z: ctx.z,
                     clip: ctx.clip,
+                    fixed: ctx.fixed,
                     radius: 0,
                     node,
                 });
@@ -77,6 +78,7 @@ pub(super) fn flush_line(
                     content: Content::Image { src, alt },
                     z: ctx.z,
                     clip: ctx.clip,
+                    fixed: ctx.fixed,
                     radius: 0,
                     node,
                 });

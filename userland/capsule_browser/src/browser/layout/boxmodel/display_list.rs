@@ -37,6 +37,8 @@ pub struct Fragment {
     pub content: Content,
     pub z: i32,
     pub clip: Option<[i32; 4]>,
+    // Painted without the scroll offset when true (position:fixed).
+    pub fixed: bool,
     pub radius: u32,
     // DOM node behind this rect (0 = anonymous), for event hit-testing.
     pub node: usize,

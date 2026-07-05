@@ -23,6 +23,8 @@ pub(super) struct Ctx {
     pub cb: Containing,
     pub clip: Option<[i32; 4]>,
     pub z: i32,
+    // True inside a position:fixed subtree; its fragments pin on scroll.
+    pub fixed: bool,
 }
 
 impl Ctx {

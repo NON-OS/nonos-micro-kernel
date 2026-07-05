@@ -135,6 +135,9 @@ pub struct Computed {
     // content or the width property, as CSS specifies.
     pub flex_basis: Size,
     pub position: Position,
+    // position: fixed is laid out like absolute but painted without the
+    // scroll offset, so it pins to the viewport.
+    pub is_fixed: bool,
     pub top: Size,
     pub right: Size,
     pub bottom: Size,
@@ -195,6 +198,7 @@ impl Computed {
             flex_grow: 0,
             flex_basis: Size::Auto,
             position: Position::Static,
+            is_fixed: false,
             top: Size::Auto,
             right: Size::Auto,
             bottom: Size::Auto,

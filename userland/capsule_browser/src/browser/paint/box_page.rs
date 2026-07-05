@@ -28,7 +28,9 @@ pub fn paint(state: &State, doc: &BoxDocument, fb: &mut PaintBuffer) {
     fb.fill_rect(0, TOP as u32, fb.width, fb.height.saturating_sub(TOP as u32), PAGE_BG);
     let bottom = fb.height as i32;
     for f in &doc.frags {
-        let sy = f.y + TOP - state.scroll as i32;
+        // A fixed fragment ignores the scroll offset so it pins to the
+        // viewport; everything else scrolls with the page.
+        let sy = if f.fixed { f.y + TOP } else { f.y + TOP - state.scroll as i32 };
         if sy + f.h < TOP || sy > bottom {
             continue;
         }
