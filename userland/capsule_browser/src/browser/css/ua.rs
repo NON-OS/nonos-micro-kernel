@@ -21,7 +21,7 @@ use super::rule::Rule;
 
 const UA: &str = concat!(
     "head{display:none}script{display:none}style{display:none}title{display:none}",
-    "a{color:#4c9aff}b{font-weight:bold}strong{font-weight:bold}",
+    "a{color:#4c9aff;text-decoration:underline}b{font-weight:bold}strong{font-weight:bold}",
     "body{display:block;margin:8px}",
     "div,section,article,main,header,footer,nav,aside,figure,figcaption,form,button,",
     "thead,tbody,tfoot,li,dl,dt,dd{display:block}",

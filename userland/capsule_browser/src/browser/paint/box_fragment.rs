@@ -69,7 +69,7 @@ pub(super) fn box_fragment(
     }
     match &f.content {
         Content::None => {}
-        Content::Text { text, color, px, bold, mono } => {
+        Content::Text { text, color, px, bold, mono, underline } => {
             let ty = sy + (f.h - *px as i32).max(0) / 2;
             if *mono {
                 fb.text_ttf_mono(f.x, ty, text, *color, *px);
@@ -82,7 +82,7 @@ pub(super) fn box_fragment(
                     fb.text_ttf(f.x + 1, ty, text, *color, *px);
                 }
             }
-            if f.href.is_some() {
+            if *underline {
                 fill_page(fb, f.x, sy + f.h - 2, f.w, 1, *color, clip);
             }
         }

@@ -66,6 +66,7 @@ pub(super) fn collect_items(
                     bg: c.style.bg,
                     bold: c.style.bold,
                     mono,
+                    underline: c.style.underline,
                     href: c.href.clone(),
                     adv: measure(w).max(0) + if c.style.bold { 1 } else { 0 },
                     space,

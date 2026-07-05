@@ -55,6 +55,9 @@ pub(super) fn apply_text(
                 c.line_height_px = px.min(4 * MAX_FONT_PX);
             }
         }
+        "text-decoration" | "text-decoration-line" => {
+            c.underline = value.split_whitespace().any(|t| t == "underline");
+        }
         "white-space" => match value.trim() {
             "pre" | "pre-wrap" | "pre-line" | "break-spaces" => c.white_space = WhiteSpace::Pre,
             "nowrap" => c.white_space = WhiteSpace::Nowrap,
