@@ -40,10 +40,9 @@ pub fn init() -> Result<(), &'static str> {
 }
 
 /* DEV NOTES eK@nonos.systems
-   Secure random generation with multiple entropy source fallbacks: RDRAND, RDSEED, VirtIO RNG.
-   Uses TSC-based PRNG as last resort fallback to prevent system panic if no hardware RNG is
-   available. The TSC fallback provides reasonable entropy for non-cryptographic uses but callers
-   requiring cryptographic randomness should use try_secure_random_u64() and handle errors.
+   Secure random generation from hardware entropy sources: RDRAND, RDSEED, VirtIO RNG.
+   Returns cryptographic entropy or panics if secure entropy is unavailable (fail-closed).
+   For error handling, use try_secure_random_u64() instead.
 */
 pub fn secure_random_u64() -> u64 {
     match try_secure_random_u64() {
