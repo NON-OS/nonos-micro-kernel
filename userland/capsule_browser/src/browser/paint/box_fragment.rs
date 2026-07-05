@@ -40,27 +40,8 @@ pub(super) fn box_fragment(
     if f.bg != 0 {
         fill_rounded(fb, f.x, sy, f.w, f.h, f.radius, f.bg, clip);
     }
-    // A decoded background image paints over the color and behind content,
-    // scaled to the box. Its url resolves against the page base like any
-    // other fetched image.
-    if let Some(src) = f.bg_image.as_deref() {
-        if let Some(base) = state.base.as_ref() {
-            let abs = crate::browser::url::join(base, src);
-            if let Some(img) = state.images.ready(&abs) {
-                if sy >= TOP && sy + f.h <= bottom {
-                    let (bx, by) = (f.x.max(0) as u32, sy.max(0) as u32);
-                    crate::browser::image::blit_into(
-                        fb,
-                        img,
-                        bx,
-                        by,
-                        f.w.max(0) as u32,
-                        f.h.max(0) as u32,
-                    );
-                }
-            }
-        }
-    }
+    // A decoded background image paints over the color and behind content.
+    super::bg_image::paint_bg_image(state, fb, f, sy, bottom);
     // Border edges shorten by the corner radius on each end.
     let r = f.radius as i32;
     let [bt, br, bb, bl] = f.border;
