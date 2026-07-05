@@ -19,17 +19,21 @@ use alloc::{vec, vec::Vec};
 use crate::discover::lookup_service;
 use crate::wire::HDR_LEN;
 
-pub fn mkdir(owner_pid: u32, path: &[u8]) -> Result<(), &'static str> {
+// Remove a directory. With `recursive` the directory and its whole subtree are
+// removed; otherwise the vfs rejects a non-empty directory. Payload is
+// `u32 owner_pid, u8 path_len, path, u8 recursive`.
+pub fn rmdir(owner_pid: u32, path: &[u8], recursive: bool) -> Result<(), &'static str> {
     if path.is_empty() || path.len() > 255 {
         return Err("vfs path invalid");
     }
     let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
-    let mut body = Vec::with_capacity(5 + path.len());
+    let mut body = Vec::with_capacity(6 + path.len());
     body.extend_from_slice(&owner_pid.to_le_bytes());
     body.push(path.len() as u8);
     body.extend_from_slice(path);
+    body.push(u8::from(recursive));
     let mut rx = vec![0u8; HDR_LEN + 8];
-    let (status, _) = super::call::call(peer.port, super::types::OP_MKDIR, 8, &body, &mut rx)?;
+    let (status, _) = super::call::call(peer.port, super::types::OP_RMDIR, 11, &body, &mut rx)?;
     if status != 0 {
         return Err(super::errmsg::errmsg(status));
     }

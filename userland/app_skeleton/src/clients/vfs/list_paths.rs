@@ -19,13 +19,23 @@ use alloc::{string::String, vec, vec::Vec};
 use crate::discover::lookup_service;
 use crate::wire::HDR_LEN;
 
+// The vfs caps a listing at MAX_LIST_BYTES; the receive buffer must hold the
+// full reply (status word + that body) or a large directory overflows it and
+// entries are silently dropped.
+const MAX_LIST_BYTES: usize = 65536;
+
 pub fn list_paths(owner_pid: u32, prefix: &[u8]) -> Result<Vec<String>, &'static str> {
+    // The length prefix is a single byte, so a longer path would truncate and
+    // the server would parse a different path than intended.
+    if prefix.len() > 255 {
+        return Err("vfs path invalid");
+    }
     let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
     let mut body = Vec::with_capacity(5 + prefix.len());
     body.extend_from_slice(&owner_pid.to_le_bytes());
     body.push(prefix.len() as u8);
     body.extend_from_slice(prefix);
-    let mut rx = vec![0u8; HDR_LEN + 4096];
+    let mut rx = vec![0u8; HDR_LEN + 4 + MAX_LIST_BYTES];
     let (status, total) = super::call::call(peer.port, super::types::OP_LIST, 1, &body, &mut rx)?;
     if status != 0 {
         return Err("vfs list failed");

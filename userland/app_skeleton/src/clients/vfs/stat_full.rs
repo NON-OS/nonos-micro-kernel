@@ -14,12 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::{vec, vec::Vec};
+use alloc::vec;
+use alloc::vec::Vec;
 
 use crate::discover::lookup_service;
-use crate::wire::HDR_LEN;
+use crate::wire::{read_u32, read_u64, HDR_LEN};
 
-pub fn mkdir(owner_pid: u32, path: &[u8]) -> Result<(), &'static str> {
+// Metadata for a path: byte size, directory flag, last-modified time in unix
+// milliseconds (0 when unknown), and whether it is writable. Reply body is
+// u64 size, u32 flags (bit0 dir, bit1 writable), u64 mtime.
+pub fn stat_full(owner_pid: u32, path: &[u8]) -> Result<(u64, bool, u64, bool), &'static str> {
     if path.is_empty() || path.len() > 255 {
         return Err("vfs path invalid");
     }
@@ -28,10 +32,13 @@ pub fn mkdir(owner_pid: u32, path: &[u8]) -> Result<(), &'static str> {
     body.extend_from_slice(&owner_pid.to_le_bytes());
     body.push(path.len() as u8);
     body.extend_from_slice(path);
-    let mut rx = vec![0u8; HDR_LEN + 8];
-    let (status, _) = super::call::call(peer.port, super::types::OP_MKDIR, 8, &body, &mut rx)?;
-    if status != 0 {
-        return Err(super::errmsg::errmsg(status));
+    let mut rx = vec![0u8; HDR_LEN + 24];
+    let (status, total) = super::call::call(peer.port, super::types::OP_STAT, 5, &body, &mut rx)?;
+    if status != 0 || total < HDR_LEN + 24 {
+        return Err("vfs stat failed");
     }
-    Ok(())
+    let size = read_u64(&rx, HDR_LEN + 4)?;
+    let flags = read_u32(&rx, HDR_LEN + 12)?;
+    let mtime = read_u64(&rx, HDR_LEN + 16)?;
+    Ok((size, flags & 1 != 0, mtime, flags & 2 != 0))
 }

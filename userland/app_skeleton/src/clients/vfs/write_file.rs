@@ -19,7 +19,16 @@ use alloc::{vec, vec::Vec};
 use crate::discover::lookup_service;
 use crate::wire::{read_u32, HDR_LEN};
 
+// Bytes written per request. The vfs caps a write payload at MAX_DATA_BYTES and
+// the whole request (caller pid + fd + data) at MAX_PAYLOAD_BYTES, so the data
+// slice stays comfortably under 64 KiB; a larger file is sent across several
+// writes whose positions the server advances on the open fd.
+const CHUNK: usize = 60 * 1024;
+
 pub fn write_file(owner_pid: u32, path: &[u8], data: &[u8]) -> Result<(), &'static str> {
+    if path.is_empty() || path.len() > 255 {
+        return Err("vfs path invalid");
+    }
     let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
     let mut open = Vec::with_capacity(9 + path.len());
     open.extend_from_slice(&owner_pid.to_le_bytes());
@@ -32,21 +41,41 @@ pub fn write_file(owner_pid: u32, path: &[u8], data: &[u8]) -> Result<(), &'stat
         return Err("vfs open failed");
     }
     let fd = read_u32(&rx, HDR_LEN + 4)?;
-    let mut write = Vec::with_capacity(8 + data.len());
-    write.extend_from_slice(&owner_pid.to_le_bytes());
-    write.extend_from_slice(&fd.to_le_bytes());
-    write.extend_from_slice(data);
-    let (status, total) = super::call::call(peer.port, super::types::OP_WRITE, 6, &write, &mut rx)?;
+    let result = write_all(peer.port, owner_pid, fd, data, &mut rx);
     let mut close = [0u8; 8];
     close[..4].copy_from_slice(&owner_pid.to_le_bytes());
     close[4..8].copy_from_slice(&fd.to_le_bytes());
     let _ = super::call::call(peer.port, super::types::OP_CLOSE, 7, &close, &mut rx);
-    if status != 0 || total < HDR_LEN + 8 {
-        return Err("vfs write failed");
-    }
-    let wrote = read_u32(&rx, HDR_LEN + 4)? as usize;
-    if wrote != data.len() {
-        return Err("vfs short write");
+    result
+}
+
+// Send the whole buffer to the open fd one chunk at a time, advancing across
+// the file as the server tracks the fd position. An O_TRUNC open already sized
+// the file to zero, so an empty buffer writes nothing and succeeds.
+fn write_all(
+    port: u32,
+    owner_pid: u32,
+    fd: u32,
+    data: &[u8],
+    rx: &mut [u8],
+) -> Result<(), &'static str> {
+    let mut sent = 0;
+    while sent < data.len() {
+        let end = (sent + CHUNK).min(data.len());
+        let chunk = &data[sent..end];
+        let mut write = Vec::with_capacity(8 + chunk.len());
+        write.extend_from_slice(&owner_pid.to_le_bytes());
+        write.extend_from_slice(&fd.to_le_bytes());
+        write.extend_from_slice(chunk);
+        let (status, total) = super::call::call(port, super::types::OP_WRITE, 6, &write, rx)?;
+        if status != 0 || total < HDR_LEN + 8 {
+            return Err(super::errmsg::errmsg(status));
+        }
+        let wrote = read_u32(rx, HDR_LEN + 4)? as usize;
+        if wrote != chunk.len() {
+            return Err("vfs short write");
+        }
+        sent += wrote;
     }
     Ok(())
 }

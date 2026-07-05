@@ -19,17 +19,23 @@ use alloc::{vec, vec::Vec};
 use crate::discover::lookup_service;
 use crate::wire::HDR_LEN;
 
-pub fn mkdir(owner_pid: u32, path: &[u8]) -> Result<(), &'static str> {
-    if path.is_empty() || path.len() > 255 {
+// Copy `src` to `dst` inside the vfs, no size-capped round-trip. With
+// `recursive` a directory's whole subtree is copied. Payload is
+// `u32 owner_pid, u8 src_len, src, u8 dst_len, dst, u8 recursive`.
+pub fn copy(owner_pid: u32, src: &[u8], dst: &[u8], recursive: bool) -> Result<(), &'static str> {
+    if src.is_empty() || src.len() > 255 || dst.is_empty() || dst.len() > 255 {
         return Err("vfs path invalid");
     }
     let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
-    let mut body = Vec::with_capacity(5 + path.len());
+    let mut body = Vec::with_capacity(7 + src.len() + dst.len());
     body.extend_from_slice(&owner_pid.to_le_bytes());
-    body.push(path.len() as u8);
-    body.extend_from_slice(path);
+    body.push(src.len() as u8);
+    body.extend_from_slice(src);
+    body.push(dst.len() as u8);
+    body.extend_from_slice(dst);
+    body.push(u8::from(recursive));
     let mut rx = vec![0u8; HDR_LEN + 8];
-    let (status, _) = super::call::call(peer.port, super::types::OP_MKDIR, 8, &body, &mut rx)?;
+    let (status, _) = super::call::call(peer.port, super::types::OP_COPY, 12, &body, &mut rx)?;
     if status != 0 {
         return Err(super::errmsg::errmsg(status));
     }

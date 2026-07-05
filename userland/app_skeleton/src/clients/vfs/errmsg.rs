@@ -14,33 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod chmod;
-mod copy;
-mod errmsg;
-mod list_paths;
-mod mkdir;
-mod read_file;
-mod rename;
-mod rmdir;
-mod stat;
-mod stat_full;
-mod truncate;
-mod types;
-mod unlink;
-mod usage;
-mod write_file;
-
-pub use chmod::chmod;
-pub use copy::copy;
-pub use list_paths::list_paths;
-pub use mkdir::mkdir;
-pub use read_file::read_file;
-pub use rename::rename;
-pub use rmdir::rmdir;
-pub use stat::stat;
-pub use stat_full::stat_full;
-pub use truncate::truncate;
-pub use unlink::unlink;
-pub use usage::usage;
-pub use write_file::write_file;
+// Turn a vfs errno reply into a short human message so a caller can surface the
+// real reason a request failed instead of one generic string. Values mirror the
+// service's errno table.
+pub fn errmsg(status: i32) -> &'static str {
+    match status {
+        -2 => "not found",
+        -9 => "bad handle",
+        -13 => "access denied",
+        -17 => "already exists",
+        -21 => "is a directory",
+        -22 => "invalid request",
+        -28 => "no space left",
+        -39 => "directory not empty",
+        -90 => "too large",
+        _ => "operation failed",
+    }
+}

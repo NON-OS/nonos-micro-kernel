@@ -28,7 +28,7 @@ pub fn stat(owner_pid: u32, path: &[u8]) -> Result<(u64, bool), &'static str> {
     body.extend_from_slice(&owner_pid.to_le_bytes());
     body.push(path.len() as u8);
     body.extend_from_slice(path);
-    let mut rx = vec![0u8; HDR_LEN + 16];
+    let mut rx = vec![0u8; HDR_LEN + 24];
     let (status, total) = super::call::call(peer.port, super::types::OP_STAT, 5, &body, &mut rx)?;
     if status != 0 || total < HDR_LEN + 16 {
         return Err("vfs stat failed");

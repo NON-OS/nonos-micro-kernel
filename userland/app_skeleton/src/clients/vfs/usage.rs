@@ -14,24 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::{vec, vec::Vec};
+use alloc::vec;
 
 use crate::discover::lookup_service;
-use crate::wire::HDR_LEN;
+use crate::wire::{read_u32, read_u64, HDR_LEN};
 
-pub fn mkdir(owner_pid: u32, path: &[u8]) -> Result<(), &'static str> {
-    if path.is_empty() || path.len() > 255 {
-        return Err("vfs path invalid");
-    }
+// Store occupancy: (file_count, bytes_used, max_files). Lets a caller show how
+// full the filesystem is.
+pub fn usage(owner_pid: u32) -> Result<(u32, u64, u32), &'static str> {
     let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
-    let mut body = Vec::with_capacity(5 + path.len());
-    body.extend_from_slice(&owner_pid.to_le_bytes());
-    body.push(path.len() as u8);
-    body.extend_from_slice(path);
-    let mut rx = vec![0u8; HDR_LEN + 8];
-    let (status, _) = super::call::call(peer.port, super::types::OP_MKDIR, 8, &body, &mut rx)?;
-    if status != 0 {
-        return Err(super::errmsg::errmsg(status));
+    let body = owner_pid.to_le_bytes();
+    let mut rx = vec![0u8; HDR_LEN + 20];
+    let (status, total) = super::call::call(peer.port, super::types::OP_USAGE, 14, &body, &mut rx)?;
+    if status != 0 || total < HDR_LEN + 20 {
+        return Err("vfs usage failed");
     }
-    Ok(())
+    let files = read_u32(&rx, HDR_LEN + 4)?;
+    let bytes = read_u64(&rx, HDR_LEN + 8)?;
+    let max = read_u32(&rx, HDR_LEN + 16)?;
+    Ok((files, bytes, max))
 }
