@@ -14,25 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod chmod;
-mod close;
-mod copy;
-mod lookup;
-mod mkdir;
-mod new;
-mod open;
-mod packages;
-mod query;
-mod read;
-mod rename;
-mod rmdir;
-mod seed;
-mod time;
-mod truncate;
-mod types;
-mod usage;
-mod zeroize;
-mod unlink;
-mod write;
+use super::types::{Store, MAX_FILES};
 
-pub use types::{Store, StoreError};
+impl Store {
+    // Store occupancy: current entry count, total bytes held, and the entry
+    // ceiling, so a caller can show how full the filesystem is.
+    pub fn usage(&self) -> (u32, u64, u32) {
+        let bytes = self.files.iter().map(|f| f.data.len() as u64).sum();
+        (self.files.len() as u32, bytes, MAX_FILES as u32)
+    }
+}

@@ -14,25 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod chmod;
-mod close;
-mod copy;
-mod lookup;
-mod mkdir;
-mod new;
-mod open;
-mod packages;
-mod query;
-mod read;
-mod rename;
-mod rmdir;
-mod seed;
-mod time;
-mod truncate;
-mod types;
-mod usage;
-mod zeroize;
-mod unlink;
-mod write;
+use core::sync::atomic::{compiler_fence, Ordering};
 
-pub use types::{Store, StoreError};
+// Overwrite a buffer with zeros before its memory is freed or truncated, so a
+// deleted file's contents cannot linger in reclaimed heap. Volatile writes plus
+// a compiler fence stop the optimiser from eliding the erase as a dead store.
+pub(super) fn zeroize(buf: &mut [u8]) {
+    for byte in buf.iter_mut() {
+        // SAFETY: ek@nonos.systems — `byte` is a valid, uniquely borrowed,
+        // aligned u8 owned by this buffer; a volatile write of 0 is in bounds.
+        unsafe {
+            core::ptr::write_volatile(byte, 0);
+        }
+    }
+    compiler_fence(Ordering::SeqCst);
+}

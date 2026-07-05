@@ -14,25 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod chmod;
-mod close;
-mod copy;
-mod lookup;
-mod mkdir;
-mod new;
-mod open;
-mod packages;
-mod query;
-mod read;
-mod rename;
-mod rmdir;
-mod seed;
-mod time;
-mod truncate;
-mod types;
-mod usage;
-mod zeroize;
-mod unlink;
-mod write;
+use nonos_libc::mk_time_millis;
 
-pub use types::{Store, StoreError};
+// Current wall-clock time in unix milliseconds. Before the kernel clock is
+// ready the syscall reports a negative error, which maps to 0 so a file simply
+// carries no known timestamp rather than a garbage one.
+pub(super) fn now_ms() -> u64 {
+    let t = mk_time_millis();
+    if t < 0 {
+        0
+    } else {
+        t as u64
+    }
+}

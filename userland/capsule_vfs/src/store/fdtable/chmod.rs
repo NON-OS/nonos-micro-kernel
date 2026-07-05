@@ -14,25 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod chmod;
-mod close;
-mod copy;
-mod lookup;
-mod mkdir;
-mod new;
-mod open;
-mod packages;
-mod query;
-mod read;
-mod rename;
-mod rmdir;
-mod seed;
-mod time;
-mod truncate;
-mod types;
-mod usage;
-mod zeroize;
-mod unlink;
-mod write;
+use super::types::{Store, StoreError, StoreResult};
 
-pub use types::{Store, StoreError};
+impl Store {
+    // Set a file's permission bits.
+    pub fn chmod(&mut self, path: &str, mode: u16) -> StoreResult<()> {
+        let idx = self.find(path).ok_or(StoreError::NotFound)?;
+        self.files[idx].mode = mode & 0o777;
+        Ok(())
+    }
+}

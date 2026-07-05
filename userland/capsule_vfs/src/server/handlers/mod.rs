@@ -14,25 +14,36 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod chmod;
 mod close;
+mod copy;
 mod healthcheck;
 mod list;
 mod mkdir;
 mod open;
+mod path;
 mod read;
 mod rename;
+mod rmdir;
 mod stat;
+mod truncate;
 mod unlink;
+mod usage;
 mod util;
 mod write;
 
+pub(super) use chmod::chmod;
 pub(super) use close::close;
+pub(super) use copy::copy;
 pub(super) use healthcheck::healthcheck;
 pub(super) use list::list;
 pub(super) use mkdir::mkdir;
 pub(super) use open::open;
 pub(super) use read::read;
 pub(super) use rename::rename;
+pub(super) use rmdir::rmdir;
 pub(super) use stat::stat;
+pub(super) use truncate::truncate;
 pub(super) use unlink::unlink;
+pub(super) use usage::usage;
 pub(super) use write::write;

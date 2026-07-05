@@ -16,20 +16,20 @@
 
 use alloc::vec::Vec;
 
-use super::types::{Store, MAX_OPEN_FDS};
+use super::util::split_caller;
+use crate::protocol::{encode_response, Request, OP_USAGE};
+use crate::store::Store;
 
-impl Store {
-    pub fn new() -> Self {
-        let mut fds = Vec::with_capacity(MAX_OPEN_FDS);
-        for _ in 0..MAX_OPEN_FDS {
-            fds.push(None);
-        }
-        Self { files: Vec::new(), fds }
+// Payload: u32 caller_pid. Reply body: u32 file_count, u64 bytes_used,
+// u32 max_files.
+pub fn usage(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
+    if let Err(s) = split_caller(req.payload, sender_pid) {
+        return encode_response(OP_USAGE, req.flags, req.request_id, s, &[]);
     }
-}
-
-impl Default for Store {
-    fn default() -> Self {
-        Self::new()
-    }
+    let (files, bytes, max) = store.usage();
+    let mut body = Vec::with_capacity(16);
+    body.extend_from_slice(&files.to_le_bytes());
+    body.extend_from_slice(&bytes.to_le_bytes());
+    body.extend_from_slice(&max.to_le_bytes());
+    encode_response(OP_USAGE, req.flags, req.request_id, 0, &body)
 }

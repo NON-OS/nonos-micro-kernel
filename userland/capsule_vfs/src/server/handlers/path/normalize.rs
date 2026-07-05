@@ -14,25 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod chmod;
-mod close;
-mod copy;
-mod lookup;
-mod mkdir;
-mod new;
-mod open;
-mod packages;
-mod query;
-mod read;
-mod rename;
-mod rmdir;
-mod seed;
-mod time;
-mod truncate;
-mod types;
-mod usage;
-mod zeroize;
-mod unlink;
-mod write;
+use alloc::string::String;
+use alloc::vec;
 
-pub use types::{Store, StoreError};
+use super::normalize_to_buffer;
+
+pub(crate) fn normalize(path: &str) -> String {
+    let needed = path.len().saturating_add(1);
+    let mut out = vec![0; needed];
+    let len = normalize_to_buffer(path.as_bytes(), &mut out);
+    out.truncate(len);
+    unsafe { String::from_utf8_unchecked(out) }
+}

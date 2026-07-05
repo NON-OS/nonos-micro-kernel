@@ -19,11 +19,29 @@ use alloc::vec::Vec;
 use super::types::{Store, StoreError};
 
 impl Store {
-    pub fn stat(&self, path: &str) -> Result<(u64, bool), StoreError> {
+    pub fn stat(&self, path: &str) -> Result<(u64, bool, u64, u16), StoreError> {
         match self.find(path) {
-            Some(i) => Ok((self.files[i].data.len() as u64, self.files[i].is_dir)),
+            Some(i) => {
+                let f = &self.files[i];
+                // A directory reports its immediate child count in place of a
+                // byte size, so a listing can show how full each folder is.
+                let size = if f.is_dir { self.child_count(path) } else { f.data.len() as u64 };
+                Ok((size, f.is_dir, f.mtime, f.mode))
+            }
             None => Err(StoreError::NotFound),
         }
+    }
+
+    // Number of entries directly under `path` (one level deep).
+    fn child_count(&self, path: &str) -> u64 {
+        let mut prefix = alloc::string::String::from(path);
+        prefix.push('/');
+        self.files
+            .iter()
+            .filter(|f| {
+                f.name.strip_prefix(prefix.as_str()).is_some_and(|rest| !rest.contains('/'))
+            })
+            .count() as u64
     }
 
     pub fn list(&self, prefix: &str, max_bytes: usize) -> Vec<u8> {

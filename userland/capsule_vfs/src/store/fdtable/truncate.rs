@@ -14,29 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
-
-use super::types::{Store, StoreError, StoreResult};
+use super::types::{Store, StoreError, StoreResult, MAX_FILE_BYTES};
 
 impl Store {
-    pub fn unlink(&mut self, path: &str) -> StoreResult<()> {
+    // Set a file's length: shrink drops the tail, grow zero-fills. Directories
+    // and oversized requests are rejected. Refreshes the modified time.
+    pub fn truncate(&mut self, path: &str, size: u64) -> StoreResult<()> {
         let idx = self.find(path).ok_or(StoreError::NotFound)?;
         if self.files[idx].is_dir {
-            let mut prefix = String::from(path);
-            prefix.push('/');
-            if self.files.iter().any(|f| f.name.starts_with(prefix.as_str())) {
-                return Err(StoreError::NotEmpty);
-            }
+            return Err(StoreError::IsDir);
         }
-        for slot in self.fds.iter_mut() {
-            match slot {
-                Some(fd) if fd.file_idx == idx => *slot = None,
-                Some(fd) if fd.file_idx > idx => fd.file_idx -= 1,
-                _ => {}
-            }
+        let new_len = size as usize;
+        if new_len > MAX_FILE_BYTES {
+            return Err(StoreError::Full);
         }
-        super::zeroize::zeroize(&mut self.files[idx].data);
-        self.files.remove(idx);
+        // Securely erase the tail being dropped before it is freed.
+        let data = &mut self.files[idx].data;
+        if new_len < data.len() {
+            super::zeroize::zeroize(&mut data[new_len..]);
+        }
+        data.resize(new_len, 0);
+        self.files[idx].mtime = super::time::now_ms();
         Ok(())
     }
 }

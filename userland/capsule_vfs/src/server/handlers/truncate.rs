@@ -19,31 +19,35 @@ use core::str;
 
 use super::path::{is_read_only, normalize};
 use super::util::{map_store_err, split_caller};
-use crate::protocol::{encode_response, Request, EACCES, EINVAL, MAX_PATH_BYTES, OP_MKDIR};
+use crate::protocol::{encode_response, Request, EACCES, EINVAL, MAX_PATH_BYTES, OP_TRUNCATE};
 use crate::store::Store;
 
-pub fn mkdir(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
+// Payload: u32 caller_pid, u8 path_len, path bytes, u64 size.
+pub fn truncate(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
     let (_pid, rest) = match split_caller(req.payload, sender_pid) {
         Ok(v) => v,
-        Err(s) => return encode_response(OP_MKDIR, req.flags, req.request_id, s, &[]),
+        Err(s) => return encode_response(OP_TRUNCATE, req.flags, req.request_id, s, &[]),
     };
     if rest.is_empty() {
-        return encode_response(OP_MKDIR, req.flags, req.request_id, EINVAL, &[]);
+        return encode_response(OP_TRUNCATE, req.flags, req.request_id, EINVAL, &[]);
     }
     let len = rest[0] as usize;
-    if len == 0 || len > MAX_PATH_BYTES as usize || rest.len() < 1 + len {
-        return encode_response(OP_MKDIR, req.flags, req.request_id, EINVAL, &[]);
+    if len == 0 || len > MAX_PATH_BYTES as usize || rest.len() < 1 + len + 8 {
+        return encode_response(OP_TRUNCATE, req.flags, req.request_id, EINVAL, &[]);
     }
     let path = match str::from_utf8(&rest[1..1 + len]) {
         Ok(s) => s,
-        Err(_) => return encode_response(OP_MKDIR, req.flags, req.request_id, EINVAL, &[]),
+        Err(_) => return encode_response(OP_TRUNCATE, req.flags, req.request_id, EINVAL, &[]),
     };
+    let mut sz = [0u8; 8];
+    sz.copy_from_slice(&rest[1 + len..1 + len + 8]);
+    let size = u64::from_le_bytes(sz);
     let path = normalize(path);
     if is_read_only(&path) {
-        return encode_response(OP_MKDIR, req.flags, req.request_id, EACCES, &[]);
+        return encode_response(OP_TRUNCATE, req.flags, req.request_id, EACCES, &[]);
     }
-    match store.mkdir(&path) {
-        Ok(()) => encode_response(OP_MKDIR, req.flags, req.request_id, 0, &[]),
-        Err(e) => encode_response(OP_MKDIR, req.flags, req.request_id, map_store_err(e), &[]),
+    match store.truncate(&path, size) {
+        Ok(()) => encode_response(OP_TRUNCATE, req.flags, req.request_id, 0, &[]),
+        Err(e) => encode_response(OP_TRUNCATE, req.flags, req.request_id, map_store_err(e), &[]),
     }
 }

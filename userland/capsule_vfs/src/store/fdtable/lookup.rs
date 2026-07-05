@@ -33,11 +33,7 @@ impl Store {
         }
     }
 
-    pub(super) fn slot_mut(
-        &mut self,
-        fd: u32,
-        owner_pid: u32,
-    ) -> StoreResult<&mut Option<OpenFd>> {
+    pub(super) fn slot_mut(&mut self, fd: u32, owner_pid: u32) -> StoreResult<&mut Option<OpenFd>> {
         let idx = fd as usize;
         if idx >= self.fds.len() {
             return Err(StoreError::BadFd);

@@ -20,14 +20,26 @@ use alloc::vec::Vec;
 use super::types::{File, Store, StoreError, StoreResult, MAX_FILES};
 
 impl Store {
+    // Create `path` and any missing ancestor directories (mkdir -p), so a
+    // nested path never leaves an orphaned prefix in the flat namespace.
     pub fn mkdir(&mut self, path: &str) -> StoreResult<()> {
         if self.find(path).is_some() {
             return Err(StoreError::Exists);
         }
-        if self.files.len() >= MAX_FILES {
-            return Err(StoreError::Full);
+        let mut acc = String::new();
+        for comp in path.trim_start_matches('/').split('/') {
+            if comp.is_empty() {
+                continue;
+            }
+            acc.push('/');
+            acc.push_str(comp);
+            if self.find(&acc).is_none() {
+                if self.files.len() >= MAX_FILES {
+                    return Err(StoreError::Full);
+                }
+                self.files.push(File::new(acc.clone(), Vec::new(), true));
+            }
         }
-        self.files.push(File { name: String::from(path), data: Vec::new(), is_dir: true });
         Ok(())
     }
 }
