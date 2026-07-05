@@ -16,7 +16,6 @@
 
 use alloc::vec::Vec;
 
-use super::color::stop_color;
 use super::split::split_top;
 
 // A parsed linear gradient: an angle in CSS degrees (0 points up, clockwise)
@@ -40,21 +39,8 @@ pub(super) fn parse_linear(func: &str) -> Option<Linear> {
         angle = a;
         items.remove(0);
     }
-    let mut stops: Vec<(u32, f32)> = Vec::new();
-    let n = items.len();
-    for (i, item) in items.iter().enumerate() {
-        let mut parts = item.trim().rsplitn(2, ' ');
-        let last = parts.next().unwrap_or("");
-        let (color_str, pos) = match last.strip_suffix('%') {
-            Some(p) => (parts.next().unwrap_or("").trim(), p.trim().parse::<f32>().ok()),
-            None => (item.trim(), None),
-        };
-        let color = stop_color(color_str)?;
-        let p =
-            pos.map(|v| v / 100.0).unwrap_or(if n > 1 { i as f32 / (n - 1) as f32 } else { 0.0 });
-        stops.push((color, p.clamp(0.0, 1.0)));
-    }
-    (stops.len() >= 2).then_some(Linear { angle, stops })
+    let stops = super::stop_list::parse_stops(&items)?;
+    Some(Linear { angle, stops })
 }
 
 // A leading angle or side keyword; None means the item is a color stop.

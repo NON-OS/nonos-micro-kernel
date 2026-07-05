@@ -20,8 +20,11 @@
 
 mod color;
 mod parse;
+mod radial;
 mod render;
 mod split;
+mod sqrt;
+mod stop_list;
 mod stops;
 mod trig;
 
@@ -44,6 +47,10 @@ pub(super) fn paint_gradient(
 ) -> bool {
     if let Some(g) = parse::parse_linear(src) {
         render::fill_linear(fb, &g, x, y, w, h);
+        return true;
+    }
+    if let Some(stops) = radial::parse_radial(src) {
+        radial::fill_radial(fb, &stops, x, y, w, h);
         return true;
     }
     false
