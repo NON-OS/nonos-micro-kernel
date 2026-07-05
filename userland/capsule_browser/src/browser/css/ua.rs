@@ -24,7 +24,14 @@ const UA: &str = concat!(
     "a{color:#4c9aff}b{font-weight:bold}strong{font-weight:bold}",
     "body{display:block;margin:8px}",
     "div,section,article,main,header,footer,nav,aside,figure,figcaption,form,button,",
-    "table,thead,tbody,tr,li,dl,dt,dd{display:block}",
+    "thead,tbody,tfoot,li,dl,dt,dd{display:block}",
+    // Tables lay each row as a flex line and each cell as an equal share, so
+    // rows read as columns instead of stacking. A real per-column width pass
+    // is a later refinement.
+    "table{display:block;margin:8px 0}",
+    "tr{display:flex}",
+    "td,th{display:block;flex:1;padding:4px 8px;border:1px solid #3a4652}",
+    "th{font-weight:bold;text-align:left}",
     "p,pre,blockquote{display:block;margin:10px 0}",
     "ul,ol{display:block;margin:10px 0;padding-left:28px}",
     "pre,code,kbd,samp,tt{font-family:monospace}",
