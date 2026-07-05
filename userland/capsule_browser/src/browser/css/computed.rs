@@ -28,6 +28,16 @@ pub enum Size {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+pub enum WhiteSpace {
+    // Collapse runs of whitespace and wrap at the content edge.
+    Normal,
+    // Preserve spaces and newlines; wrap only at a newline.
+    Pre,
+    // Collapse whitespace but never wrap.
+    Nowrap,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TextAlign {
     Left,
     Center,
@@ -81,6 +91,7 @@ pub struct Computed {
     pub mono: bool,
     pub font_size_px: u32,
     pub text_align: TextAlign,
+    pub white_space: WhiteSpace,
     // 0 means unset: derive 1.3 * font size where a line height is needed.
     pub line_height_px: u32,
     pub margin_top: u32,
@@ -148,6 +159,7 @@ impl Computed {
             mono: false,
             font_size_px: DEFAULT_FONT_PX,
             text_align: TextAlign::Left,
+            white_space: WhiteSpace::Normal,
             line_height_px: 0,
             margin_top: 0,
             margin_right: 0,
@@ -206,6 +218,7 @@ impl Computed {
         c.mono = parent.mono;
         c.font_size_px = parent.font_size_px;
         c.text_align = parent.text_align;
+        c.white_space = parent.white_space;
         c.line_height_px = parent.line_height_px;
         c.list_none = parent.list_none;
         c

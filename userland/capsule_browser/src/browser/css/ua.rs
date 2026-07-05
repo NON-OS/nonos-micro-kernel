@@ -28,6 +28,7 @@ const UA: &str = concat!(
     "p,pre,blockquote{display:block;margin:10px 0}",
     "ul,ol{display:block;margin:10px 0;padding-left:28px}",
     "pre,code,kbd,samp,tt{font-family:monospace}",
+    "pre{white-space:pre;display:block;margin:10px 0}textarea{white-space:pre}",
     "hr{display:block;margin:8px 0}",
     "input,textarea,select,button{display:block;margin:6px 0;padding:6px 8px;",
     "border:1px solid #6b7885;background:#10161b}",
