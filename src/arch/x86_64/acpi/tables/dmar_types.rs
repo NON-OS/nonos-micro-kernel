@@ -14,17 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::global::{fill_random_bytes, random_u64_secure};
+use super::sdt::SdtHeader;
 
-#[inline]
-pub fn fill_bytes(buffer: &mut [u8]) {
-    fill_random_bytes(buffer);
+#[repr(C, packed)]
+#[derive(Debug, Clone, Copy)]
+pub struct Dmar {
+    pub header: SdtHeader,
+    pub host_address_width: u8,
+    pub flags: u8,
+    pub reserved: [u8; 10],
 }
 
-#[inline]
-pub fn secure_random_u64() -> u64 {
-    match random_u64_secure() {
-        Ok(v) => v,
-        Err(e) => panic!("[RNG] secure entropy unavailable; refusing predictable output ({})", e.as_str()),
-    }
+#[repr(C, packed)]
+#[derive(Debug, Clone, Copy)]
+pub struct Drhd {
+    pub kind: u16,
+    pub length: u16,
+    pub flags: u8,
+    pub reserved: u8,
+    pub segment: u16,
+    pub register_base_address: u64,
 }

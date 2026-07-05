@@ -16,7 +16,9 @@
 
 mod allocate_domain_id;
 mod is_present;
+mod set_present;
 pub(super) mod state;
 
 pub use allocate_domain_id::allocate_domain_id;
 pub use is_present::is_present;
+pub use set_present::set_present;

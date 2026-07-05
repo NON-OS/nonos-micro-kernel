@@ -14,17 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::global::{fill_random_bytes, random_u64_secure};
+use core::sync::atomic::Ordering;
 
-#[inline]
-pub fn fill_bytes(buffer: &mut [u8]) {
-    fill_random_bytes(buffer);
-}
+use super::state::DMAR_PRESENT;
 
-#[inline]
-pub fn secure_random_u64() -> u64 {
-    match random_u64_secure() {
-        Ok(v) => v,
-        Err(e) => panic!("[RNG] secure entropy unavailable; refusing predictable output ({})", e.as_str()),
-    }
+pub fn set_present() {
+    DMAR_PRESENT.store(true, Ordering::Release);
 }

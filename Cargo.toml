@@ -182,6 +182,7 @@ microkernel-core = [
   "sched",
   "sha3",
   "crypto-ed25519-int",
+  "nonos-arch-iommu",
 ]
 
 # Runtime baseline: core + the three live capsule embeds.

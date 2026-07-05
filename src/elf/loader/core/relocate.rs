@@ -27,6 +27,7 @@ const DT_RELASZ: u64 = 8;
 const R_X86_64_RELATIVE: u64 = 8;
 const DYN_ENTRY: usize = 16;
 const RELA_ENTRY: usize = 24;
+const RELA_WRITE_SIZE: u64 = 8;
 
 fn rd_u64(bytes: &[u8], off: usize) -> u64 {
     u64::from_le_bytes([
@@ -79,6 +80,9 @@ pub(in crate::elf::loader::core) fn apply_relative_relocations(
         if r_info & 0xffff_ffff != R_X86_64_RELATIVE {
             continue;
         }
+        if !reloc_in_writable_load(elf_data, header, ph_count, r_offset)? {
+            return Err(ElfError::RelocationFailed);
+        }
         let va = VirtAddr::new(base_addr.as_u64().wrapping_add(r_offset));
         let value = base_addr.as_u64().wrapping_add(r_addend);
         let pa = translate_in_asid(target_asid, va).ok_or(ElfError::DynamicSectionError)?;
@@ -87,6 +91,30 @@ pub(in crate::elf::loader::core) fn apply_relative_relocations(
         }
     }
     Ok(())
+}
+
+fn reloc_in_writable_load(
+    elf_data: &[u8],
+    header: &ElfHeader,
+    ph_count: usize,
+    r_offset: u64,
+) -> Result<bool, ElfError> {
+    let Some(end) = r_offset.checked_add(RELA_WRITE_SIZE) else {
+        return Ok(false);
+    };
+    for index in 0..ph_count {
+        let ph = parse_program_header_at(elf_data, header, index)?;
+        if ph.p_type != phdr_type::PT_LOAD || !ph.is_writable() {
+            continue;
+        }
+        let Some(seg_end) = ph.p_vaddr.checked_add(ph.p_memsz) else {
+            continue;
+        };
+        if r_offset >= ph.p_vaddr && end <= seg_end {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 fn vaddr_to_file_offset(

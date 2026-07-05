@@ -36,7 +36,7 @@ pub use constant_time::{
 
 pub use random::{
     fill_random, fill_random_bytes, init as random_init, secure_random_u32, secure_random_u64,
-    secure_random_u8,
+    secure_random_u8, try_fill_random,
 };
 
 pub use trusted_keys::{

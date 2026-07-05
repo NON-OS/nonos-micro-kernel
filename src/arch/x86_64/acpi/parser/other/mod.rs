@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod dmar;
 mod hpet;
 mod mcfg;
 mod srat;
 mod srat_memory;
 
+pub use dmar::parse_dmar;
 pub use hpet::parse_hpet;
 pub use mcfg::parse_mcfg;
 pub use srat::parse_srat;

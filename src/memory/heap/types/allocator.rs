@@ -15,14 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::constants::CANARY_VALUE;
-use alloc::collections::BTreeSet;
 use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use heapless::FnvIndexSet;
 use linked_list_allocator::LockedHeap;
 use spin::Mutex;
 
+pub const TRACK_CAPACITY: usize = 8192;
+
 pub struct SecureHeapAllocator {
     pub inner: LockedHeap,
-    pub allocated_ptrs: Mutex<BTreeSet<usize>>,
+    pub allocated_ptrs: Mutex<FnvIndexSet<usize, TRACK_CAPACITY>>,
+    pub tracking_overflowed: AtomicBool,
     pub canary_value: u64,
     pub initialized: AtomicBool,
     pub heap_size: AtomicUsize,
@@ -32,7 +35,8 @@ impl SecureHeapAllocator {
     pub const fn new() -> Self {
         Self {
             inner: LockedHeap::empty(),
-            allocated_ptrs: Mutex::new(BTreeSet::new()),
+            allocated_ptrs: Mutex::new(FnvIndexSet::new()),
+            tracking_overflowed: AtomicBool::new(false),
             canary_value: CANARY_VALUE,
             initialized: AtomicBool::new(false),
             heap_size: AtomicUsize::new(0),

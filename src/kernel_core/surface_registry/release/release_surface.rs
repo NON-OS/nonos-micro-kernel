@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::kernel_core::surface_registry::table::SLOTS;
+use crate::kernel_core::surface_registry::table::{bump_generation, SLOTS};
 use crate::kernel_core::surface_registry::types::{decode_handle, RegistryError, SurfaceHandle};
 
 pub fn release_surface(handle: SurfaceHandle) -> Result<u32, RegistryError> {
@@ -31,6 +31,7 @@ pub fn release_surface(handle: SurfaceHandle) -> Result<u32, RegistryError> {
     };
     if new_count == 0 {
         *entry = None;
+        bump_generation(idx as usize);
     }
     Ok(new_count)
 }

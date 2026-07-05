@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod dmar_types;
 pub mod fadt;
 pub mod hpet;
 pub mod madt;
@@ -33,6 +34,7 @@ mod srat_other;
 mod srat_processor;
 mod srat_types;
 
+pub use dmar_types::*;
 pub use fadt::*;
 pub use hpet::*;
 pub use madt::*;
@@ -58,6 +60,7 @@ pub const SIG_FADT: u32 = u32::from_le_bytes(*b"FACP");
 pub const SIG_MADT: u32 = u32::from_le_bytes(*b"APIC");
 pub const SIG_HPET: u32 = u32::from_le_bytes(*b"HPET");
 pub const SIG_MCFG: u32 = u32::from_le_bytes(*b"MCFG");
+pub const SIG_DMAR: u32 = u32::from_le_bytes(*b"DMAR");
 pub const SIG_SRAT: u32 = u32::from_le_bytes(*b"SRAT");
 pub const SIG_SLIT: u32 = u32::from_le_bytes(*b"SLIT");
 pub const SIG_DSDT: u32 = u32::from_le_bytes(*b"DSDT");

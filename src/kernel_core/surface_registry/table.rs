@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec::Vec;
+use core::sync::atomic::{AtomicU32, Ordering};
 use spin::Mutex;
 
 use crate::memory::addr::PhysAddr;
@@ -43,6 +44,16 @@ pub(super) struct Slot {
 
 pub(super) static SLOTS: Mutex<[Option<Slot>; SLOT_CAP]> = Mutex::new([const { None }; SLOT_CAP]);
 
+pub(super) static SLOT_GENERATIONS: [AtomicU32; SLOT_CAP] =
+    [const { AtomicU32::new(1) }; SLOT_CAP];
+
+pub(super) fn bump_generation(idx: usize) {
+    let next = SLOT_GENERATIONS[idx].fetch_add(1, Ordering::AcqRel).wrapping_add(1);
+    if next == 0 {
+        SLOT_GENERATIONS[idx].store(1, Ordering::Release);
+    }
+}
+
 pub fn register_surface(
     owner_pid: u32,
     desc: &SurfaceDescriptor,
@@ -61,7 +72,7 @@ pub fn register_surface(
     let mut slots = SLOTS.lock();
     for (i, entry) in slots.iter_mut().enumerate() {
         if entry.is_none() {
-            let epoch = (i as u32).wrapping_add(1);
+            let epoch = SLOT_GENERATIONS[i].load(Ordering::Acquire);
             *entry = Some(Slot {
                 owner_pid,
                 epoch,
@@ -75,6 +86,8 @@ pub fn register_surface(
                 owner_base_va: desc.base_va,
                 frames,
             });
+            #[cfg(feature = "dbg-ring")]
+            crate::log::dbg_ring::dbg_emit_2u64(0x5546_0002, i as u64, epoch as u64);
             return Ok((i as u64, encode_handle(i as u32, epoch)));
         }
     }

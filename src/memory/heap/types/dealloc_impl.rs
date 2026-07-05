@@ -58,6 +58,10 @@ pub(super) unsafe fn dealloc_impl(allocator: &SecureHeapAllocator, ptr: *mut u8,
             return;
         }
 
+        crate::arch::x86_64::idt::without_interrupts(|| {
+            allocator.allocated_ptrs.lock().remove(&(ptr as usize));
+        });
+
         if super::super::manager::HEAP_ZERO_ON_FREE.load(Ordering::Relaxed) {
             ptr::write_bytes(ptr, 0, layout.size());
         }

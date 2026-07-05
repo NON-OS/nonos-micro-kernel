@@ -40,10 +40,10 @@ pub fn handle_crypto_random(buf: u64, len: u64) -> SyscallResult {
         Ok(n) if n == len as usize => deliver(buf, &buffer, len),
         Ok(_) => errno(5),
         Err(e) if is_caller_error(&e) => map_entropy_error(e),
-        Err(_) => {
-            crate::security::crypto::random::fill_random(&mut buffer);
-            deliver(buf, &buffer, len)
-        }
+        Err(_) => match crate::security::crypto::random::try_fill_random(&mut buffer) {
+            Ok(()) => deliver(buf, &buffer, len),
+            Err(_) => errno(5),
+        },
     }
 }
 

@@ -44,6 +44,8 @@ pub fn attach_surface(
         let slot =
             slots.get(idx as usize).and_then(|s| s.as_ref()).ok_or(RegistryError::BadHandle)?;
         if slot.epoch != epoch {
+            #[cfg(feature = "dbg-ring")]
+            crate::log::dbg_ring::dbg_emit_2u64(0x5546_0001, handle, slot.epoch as u64);
             return Err(RegistryError::BadHandle);
         }
         if slot.owner_pid == receiver_pid && slot.owner_base_va != 0 {
@@ -62,6 +64,8 @@ pub fn attach_surface(
         let slot =
             slots.get_mut(idx as usize).and_then(|s| s.as_mut()).ok_or(RegistryError::BadHandle)?;
         if slot.epoch != epoch {
+            #[cfg(feature = "dbg-ring")]
+            crate::log::dbg_ring::dbg_emit_2u64(0x5546_0001, handle, slot.epoch as u64);
             return Err(RegistryError::BadHandle);
         }
         slot.refcount = slot.refcount.checked_add(1).ok_or(RegistryError::InvalidArg)?;
