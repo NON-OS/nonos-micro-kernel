@@ -42,7 +42,8 @@ pub(super) fn element_box(
     } else {
         link.clone()
     };
-    let mut kids = collect(w.dom, item.ch, &style, w.styles, &link, depth + 1, w.count);
+    let mut kids =
+        collect(w.dom, item.ch, &style, w.styles, w.bg_images, &link, depth + 1, w.count);
     // An edited textarea renders its value attribute, which the typing path
     // keeps current.
     if tag == "textarea" {
@@ -80,5 +81,6 @@ pub(super) fn element_box(
         BoxKind::Block => wrap_mixed(&style, kids),
         _ => kids,
     };
-    BoxNode { kind, style, href: link, dom_id: item.ch, children: kids }
+    let bg_image = w.bg_images.get(item.ch).cloned().flatten();
+    BoxNode { kind, style, href: link, dom_id: item.ch, bg_image, children: kids }
 }

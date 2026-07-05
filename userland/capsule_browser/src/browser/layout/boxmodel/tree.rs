@@ -43,5 +43,7 @@ pub struct BoxNode {
     pub style: Computed,
     pub href: Option<String>,
     pub dom_id: usize,
+    // background-image url captured from the cascade, painted behind content.
+    pub bg_image: Option<String>,
     pub children: Vec<BoxNode>,
 }

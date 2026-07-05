@@ -33,8 +33,8 @@ pub fn render_response(resp: &Response) -> (Rendered, usize) {
         ContentKind::Html => {
             let mut tree = dom::parse(&resp.body);
             let world = js::run(&mut tree);
-            let styles = css::compute(&tree, &css::collect_css(&tree));
-            let root = layout::boxmodel::build(&tree, &styles);
+            let styled = css::compute(&tree, &css::collect_css(&tree));
+            let root = layout::boxmodel::build(&tree, &styled.styles, &styled.bg_images);
             if root.children.is_empty() {
                 return (Rendered::Nothing, 0);
             }

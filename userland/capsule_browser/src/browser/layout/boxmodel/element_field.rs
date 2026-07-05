@@ -34,5 +34,12 @@ pub(super) fn element_field(w: &Walk, item: &ElementIn, style: Computed) -> Opti
     if !label.is_empty() {
         kids.push(leaf(BoxKind::Text(label), &style, &None, item.ch));
     }
-    Some(BoxNode { kind: BoxKind::Block, style, href: None, dom_id: item.ch, children: kids })
+    Some(BoxNode {
+        kind: BoxKind::Block,
+        style,
+        href: None,
+        dom_id: item.ch,
+        bg_image: None,
+        children: kids,
+    })
 }

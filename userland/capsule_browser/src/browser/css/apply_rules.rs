@@ -34,6 +34,7 @@ pub(super) fn apply_rules(
     c: &mut Computed,
     parent_fs: u32,
     vars: &[(String, String)],
+    bg: &mut Option<alloc::string::String>,
 ) {
     let mut hits: Vec<(u32, usize)> = Vec::new();
     // Only rules whose key could match this node; the full matcher still
@@ -59,6 +60,11 @@ pub(super) fn apply_rules(
         if let Some(rule) = rules.get(i) {
             for d in &rule.decls {
                 apply_decl(c, &d.name, &d.value, parent_fs, vars);
+                // A later winning background url() overrides an earlier one,
+                // matching the cascade order the declarations are applied in.
+                if let Some(u) = super::bg_url::bg_url(&d.name, &d.value) {
+                    *bg = Some(u);
+                }
             }
         }
     }

@@ -61,6 +61,7 @@ pub(super) fn flush_line(
                     z: ctx.z,
                     clip: ctx.clip,
                     fixed: ctx.fixed,
+                    bg_image: None,
                     radius: 0,
                     node,
                 });
@@ -79,6 +80,7 @@ pub(super) fn flush_line(
                     z: ctx.z,
                     clip: ctx.clip,
                     fixed: ctx.fixed,
+                    bg_image: None,
                     radius: 0,
                     node,
                 });

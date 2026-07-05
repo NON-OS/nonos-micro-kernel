@@ -14,23 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+use alloc::string::{String, ToString};
 
-use crate::browser::css::Computed;
-
-use super::tree::{BoxKind, BoxNode};
-
-// Wrap a pending run of inline children in one anonymous block and append it.
-pub(super) fn flush_run(out: &mut Vec<BoxNode>, run: &mut Vec<BoxNode>, parent: &Computed) {
-    if run.is_empty() {
-        return;
+// The url() target of a background or background-image declaration, with the
+// quotes and whitespace stripped. Gradients and other image functions return
+// None, so only a fetchable image is captured.
+pub(super) fn bg_url(name: &str, value: &str) -> Option<String> {
+    if name != "background" && name != "background-image" {
+        return None;
     }
-    out.push(BoxNode {
-        kind: BoxKind::Block,
-        style: Computed::inherit_from(parent),
-        href: None,
-        dom_id: 0,
-        bg_image: None,
-        children: core::mem::take(run),
-    });
+    let start = value.find("url(")? + 4;
+    let rest = &value[start..];
+    let end = rest.find(')')?;
+    let inner = rest[..end].trim().trim_matches('"').trim_matches('\'').trim();
+    if inner.is_empty() || inner.starts_with("data:") {
+        return None;
+    }
+    Some(inner.to_string())
 }

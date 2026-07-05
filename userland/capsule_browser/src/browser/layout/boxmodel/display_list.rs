@@ -39,6 +39,8 @@ pub struct Fragment {
     pub clip: Option<[i32; 4]>,
     // Painted without the scroll offset when true (position:fixed).
     pub fixed: bool,
+    // background-image url to fetch and paint behind the box content.
+    pub bg_image: Option<alloc::string::String>,
     pub radius: u32,
     // DOM node behind this rect (0 = anonymous), for event hit-testing.
     pub node: usize,

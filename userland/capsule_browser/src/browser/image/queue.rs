@@ -29,15 +29,23 @@ pub fn enqueue_from_doc(state: &mut State) {
     if let Some(doc) = state.box_doc.as_ref() {
         for f in &doc.frags {
             if let Content::Image { src, .. } = &f.content {
-                let abs = url::join(&base, src);
-                if !state.images.contains(&abs) && !fresh.contains(&abs) {
-                    fresh.push(abs);
-                }
+                queue(&base, src, &state.images, &mut fresh);
+            }
+            if let Some(src) = f.bg_image.as_deref() {
+                queue(&base, src, &state.images, &mut fresh);
             }
         }
     }
     for u in fresh {
         state.images.mark_pending(&u);
         state.image_queue.push(u);
+    }
+}
+
+// Resolve one source against the base and add it if not already known.
+fn queue(base: &url::Url, src: &str, images: &super::Store, fresh: &mut Vec<String>) {
+    let abs = url::join(base, src);
+    if !images.contains(&abs) && !fresh.contains(&abs) {
+        fresh.push(abs);
     }
 }

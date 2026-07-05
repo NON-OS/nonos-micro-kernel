@@ -19,7 +19,6 @@ use alloc::vec::Vec;
 use crate::browser::dom::Dom;
 
 use super::compute::{cascade, compute};
-use super::computed::Computed;
 use super::parse::parse;
 use super::rule::Rule;
 
@@ -36,7 +35,11 @@ pub struct CssCache {
 // changed (length or content hash differ); otherwise the cached rules are
 // reused. Budgeting and index build still run per call since they depend on
 // the current node count, but they are cheap next to parsing.
-pub fn compute_cached(dom: &Dom, author_css: &str, cache: &mut Option<CssCache>) -> Vec<Computed> {
+pub fn compute_cached(
+    dom: &Dom,
+    author_css: &str,
+    cache: &mut Option<CssCache>,
+) -> super::compute::Styled {
     let len = author_css.len();
     let hash = fnv1a(author_css.as_bytes());
     let fresh = matches!(cache, Some(c) if c.len == len && c.hash == hash);

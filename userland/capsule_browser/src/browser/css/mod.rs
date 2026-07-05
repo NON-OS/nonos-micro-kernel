@@ -17,6 +17,7 @@
 mod apply;
 mod apply_rules;
 mod apply_style_attr;
+mod bg_url;
 mod border_parts;
 mod budget;
 mod cache;

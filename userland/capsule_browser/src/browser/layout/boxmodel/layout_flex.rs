@@ -85,6 +85,7 @@ pub(super) fn layout_flex(
         z: ctx.z,
         clip: ctx.clip,
         fixed: ctx.fixed,
+        bg_image: None,
         radius: 0,
         node: node.dom_id,
     });
@@ -114,6 +115,7 @@ pub(super) fn layout_flex(
             z: ctx.z,
             clip: ctx.clip,
             fixed: ctx.fixed,
+            bg_image: node.bg_image.clone(),
             radius: s.radius,
             node: node.dom_id,
         };
