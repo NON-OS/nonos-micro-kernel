@@ -51,9 +51,8 @@ pub fn secure_random_u64() -> u64 {
             consume_entropy(64);
             v
         }
-        Err(_) => {
-            crate::log::warn!("[RNG] No hardware entropy source, using TSC-based fallback");
-            tsc_fallback_random()
+        Err(e) => {
+            panic!("[RNG] secure entropy unavailable; refusing predictable output ({})", e)
         }
     }
 }
@@ -80,6 +79,7 @@ pub fn try_secure_random_u64() -> Result<u64, &'static str> {
     Err("No hardware entropy source available")
 }
 
+#[allow(dead_code)]
 fn tsc_fallback_random() -> u64 {
     use core::sync::atomic::{AtomicU64, Ordering};
     static STATE: AtomicU64 = AtomicU64::new(0x853c49e6748fea9b);
@@ -132,6 +132,19 @@ pub fn fill_random(buf: &mut [u8]) {
         buf[off..off + take].copy_from_slice(&chunk[..take]);
         off += take;
     }
+}
+
+pub fn try_fill_random(buf: &mut [u8]) -> Result<(), &'static str> {
+    let mut off = 0;
+    while off < buf.len() {
+        let v = try_secure_random_u64()?;
+        consume_entropy(64);
+        let chunk = v.to_le_bytes();
+        let take = core::cmp::min(buf.len() - off, chunk.len());
+        buf[off..off + take].copy_from_slice(&chunk[..take]);
+        off += take;
+    }
+    Ok(())
 }
 
 pub fn secure_random_u32() -> u32 {
