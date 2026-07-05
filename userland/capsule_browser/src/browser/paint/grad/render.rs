@@ -48,7 +48,7 @@ pub(super) fn fill_linear(fb: &mut PaintBuffer, g: &Linear, x: i32, y: i32, w: i
 }
 
 // Source-over one gradient sample onto the framebuffer.
-pub(super) fn put_pixel(fb: &mut PaintBuffer, x: i32, y: i32, argb: u32) {
+pub(crate) fn put_pixel(fb: &mut PaintBuffer, x: i32, y: i32, argb: u32) {
     if x < 0 || y < 0 || x as u32 >= fb.width || y as u32 >= fb.height {
         return;
     }

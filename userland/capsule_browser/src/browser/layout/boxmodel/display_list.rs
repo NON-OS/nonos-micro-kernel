@@ -41,6 +41,8 @@ pub struct Fragment {
     pub fixed: bool,
     // background-image url to fetch and paint behind the box content.
     pub bg_image: Option<alloc::string::String>,
+    // drop shadow painted behind the box.
+    pub shadow: Option<crate::browser::css::Shadow>,
     pub radius: u32,
     // DOM node behind this rect (0 = anonymous), for event hit-testing.
     pub node: usize,

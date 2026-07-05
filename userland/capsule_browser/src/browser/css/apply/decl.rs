@@ -61,5 +61,6 @@ pub fn apply_decl(
         || apply_grid(c, name, value, fs)
         || apply_list(c, name, value)
         || apply_position(c, name, value, fs)
-        || apply_paint(c, name, value, fs);
+        || apply_paint(c, name, value, fs)
+        || super::shadow::apply_shadow(c, name, value, fs);
 }

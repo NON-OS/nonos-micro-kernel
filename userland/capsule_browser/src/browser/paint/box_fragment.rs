@@ -37,6 +37,10 @@ pub(super) fn box_fragment(
 ) {
     let dy = TOP - state.scroll as i32;
     let clip = f.clip.map(|c| [c[0], c[1].saturating_add(dy), c[2], c[3].saturating_add(dy)]);
+    // The drop shadow paints first so the box and its content sit over it.
+    if let Some(s) = f.shadow.as_ref() {
+        super::shadow::paint_shadow(fb, s, f.x, sy, f.w, f.h);
+    }
     if f.bg != 0 {
         fill_rounded(fb, f.x, sy, f.w, f.h, f.radius, f.bg, clip);
     }

@@ -28,6 +28,8 @@ mod stop_list;
 mod stops;
 mod trig;
 
+pub(crate) use render::put_pixel;
+
 use nonos_app_skeleton::PaintBuffer;
 
 // True when the background value is a gradient function this module owns.

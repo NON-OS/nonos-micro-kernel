@@ -82,6 +82,14 @@ pub const MAX_GRID_COLS: usize = 8;
 // Inherited fields: color, bold, font_size_px, text_align, line_height_px.
 // Everything else is per-element; the cascade walk starts each element from
 // root() and copies only the inherited fields across.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct Shadow {
+    pub dx: i32,
+    pub dy: i32,
+    pub blur: u32,
+    pub color: u32,
+}
+
 #[derive(Clone, Copy)]
 pub struct Computed {
     pub display_none: bool,
@@ -146,6 +154,7 @@ pub struct Computed {
     pub overflow_hidden: bool,
     pub z: i32,
     pub radius: u32,
+    pub shadow: Option<Shadow>,
     pub is_grid: bool,
     pub grid_cols: [GridTrack; MAX_GRID_COLS],
     pub grid_col_n: u8,
@@ -208,6 +217,7 @@ impl Computed {
             overflow_hidden: false,
             z: 0,
             radius: 0,
+            shadow: None,
             is_grid: false,
             grid_cols: [GridTrack::Fr(1); MAX_GRID_COLS],
             grid_col_n: 0,

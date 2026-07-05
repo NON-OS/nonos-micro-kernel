@@ -24,5 +24,6 @@ mod fill_rounded;
 mod grad;
 pub mod home_page;
 mod paint;
+mod shadow;
 
 pub use paint::paint;

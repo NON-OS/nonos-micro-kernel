@@ -26,6 +26,7 @@ mod margin;
 mod padding;
 mod paint;
 mod position;
+mod shadow;
 mod sizing;
 mod text;
 

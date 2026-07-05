@@ -85,6 +85,7 @@ pub(super) fn layout_grid(
         clip: ctx.clip,
         fixed: ctx.fixed,
         bg_image: None,
+        shadow: None,
         radius: 0,
         node: node.dom_id,
     });
@@ -111,6 +112,7 @@ pub(super) fn layout_grid(
             clip: ctx.clip,
             fixed: ctx.fixed,
             bg_image: node.bg_image.clone(),
+            shadow: node.style.shadow,
             radius: s.radius,
             node: node.dom_id,
         };
