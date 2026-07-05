@@ -28,30 +28,32 @@ pub fn verify_heap_integrity() -> bool {
         return false;
     }
     let _sampled = KERNEL_HEAP.tracking_overflowed.load(core::sync::atomic::Ordering::Relaxed);
-    let allocated_ptrs = KERNEL_HEAP.allocated_ptrs.lock();
-    for &ptr_addr in allocated_ptrs.iter() {
-        if ptr_addr < layout::KHEAP_BASE as usize
-            || ptr_addr >= (layout::KHEAP_BASE + layout::KHEAP_SIZE) as usize
-        {
-            return false;
+    crate::arch::x86_64::idt::without_interrupts(|| {
+        let allocated_ptrs = KERNEL_HEAP.allocated_ptrs.lock();
+        for &ptr_addr in allocated_ptrs.iter() {
+            if ptr_addr < layout::KHEAP_BASE as usize
+                || ptr_addr >= (layout::KHEAP_BASE + layout::KHEAP_SIZE) as usize
+            {
+                return false;
+            }
+            unsafe {
+                let header_size = mem::size_of::<AllocationHeader>();
+                let header_ptr = (ptr_addr - header_size) as *const AllocationHeader;
+                let header = ptr::read_volatile(header_ptr);
+                if !header.is_valid() {
+                    return false;
+                }
+                let canary_ptr = (ptr_addr + header.canary_offset) as *const u64;
+                let canary = ptr::read_volatile(canary_ptr);
+                if canary != KERNEL_HEAP.canary_value {
+                    return false;
+                }
+                let current_time = get_timestamp();
+                if current_time < header.allocated_at {
+                    return false;
+                }
+            }
         }
-        unsafe {
-            let header_size = mem::size_of::<AllocationHeader>();
-            let header_ptr = (ptr_addr - header_size) as *const AllocationHeader;
-            let header = ptr::read_volatile(header_ptr);
-            if !header.is_valid() {
-                return false;
-            }
-            let canary_ptr = (ptr_addr + header.canary_offset) as *const u64;
-            let canary = ptr::read_volatile(canary_ptr);
-            if canary != KERNEL_HEAP.canary_value {
-                return false;
-            }
-            let current_time = get_timestamp();
-            if current_time < header.allocated_at {
-                return false;
-            }
-        }
-    }
-    true
+        true
+    })
 }
