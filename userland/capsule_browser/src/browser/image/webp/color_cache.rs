@@ -14,24 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Real raster images for the document view. Sources discovered during layout
-// are fetched through the same socket state machine as pages, decoded from
-// PNG/JPEG/BMP into ARGB8888, cached, and scale-blitted into their box.
+use alloc::vec;
+use alloc::vec::Vec;
 
-mod base64;
-mod blit;
-mod data_uri;
-mod decode;
-mod fetch;
-mod ingest;
-mod queue;
-mod sniff;
-mod store;
-mod svg;
-mod webp;
+// VP8L color cache: a small hash-indexed set of recently emitted ARGB
+// pixels, addressable by a short code so repeats cost few bits.
+pub(super) struct ColorCache {
+    entries: Vec<u32>,
+    shift: u32,
+}
 
-pub use blit::blit_into;
-pub use fetch::{follow_redirect, pump};
-pub use ingest::ingest;
-pub use queue::enqueue_from_doc;
-pub use store::Store;
+impl ColorCache {
+    pub fn new(bits: u32) -> Self {
+        ColorCache { entries: vec![0u32; 1 << bits], shift: 32 - bits }
+    }
+
+    fn hash(&self, argb: u32) -> usize {
+        (argb.wrapping_mul(0x1e35_a7bd) >> self.shift) as usize
+    }
+
+    pub fn insert(&mut self, argb: u32) {
+        let h = self.hash(argb);
+        self.entries[h] = argb;
+    }
+
+    pub fn lookup(&self, index: usize) -> u32 {
+        self.entries.get(index).copied().unwrap_or(0)
+    }
+}

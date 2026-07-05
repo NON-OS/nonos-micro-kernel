@@ -14,24 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Real raster images for the document view. Sources discovered during layout
-// are fetched through the same socket state machine as pages, decoded from
-// PNG/JPEG/BMP into ARGB8888, cached, and scale-blitted into their box.
-
-mod base64;
-mod blit;
-mod data_uri;
-mod decode;
-mod fetch;
-mod ingest;
-mod queue;
-mod sniff;
-mod store;
-mod svg;
-mod webp;
-
-pub use blit::blit_into;
-pub use fetch::{follow_redirect, pump};
-pub use ingest::ingest;
-pub use queue::enqueue_from_doc;
-pub use store::Store;
+// Undo the subtract-green transform: the encoder subtracted the green channel
+// from red and blue to decorrelate them, so add it back, wrapping each byte.
+pub(super) fn apply(px: &mut [u32]) {
+    for p in px.iter_mut() {
+        let argb = *p;
+        let green = (argb >> 8) & 0xff;
+        let red = (((argb >> 16) & 0xff) + green) & 0xff;
+        let blue = ((argb & 0xff) + green) & 0xff;
+        *p = (argb & 0xff00_ff00) | (red << 16) | blue;
+    }
+}

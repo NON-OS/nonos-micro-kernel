@@ -14,24 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Real raster images for the document view. Sources discovered during layout
-// are fetched through the same socket state machine as pages, decoded from
-// PNG/JPEG/BMP into ARGB8888, cached, and scale-blitted into their box.
+use super::bitread::BitReader;
 
-mod base64;
-mod blit;
-mod data_uri;
-mod decode;
-mod fetch;
-mod ingest;
-mod queue;
-mod sniff;
-mod store;
-mod svg;
-mod webp;
+pub(super) const SIGNATURE: u32 = 0x2f;
 
-pub use blit::blit_into;
-pub use fetch::{follow_redirect, pump};
-pub use ingest::ingest;
-pub use queue::enqueue_from_doc;
-pub use store::Store;
+// VP8L stream header: a signature byte, then 14-bit width-1 and height-1,
+// an alpha flag and a 3-bit version. Returns (width, height).
+pub(super) fn read_header(br: &mut BitReader) -> Option<(u32, u32)> {
+    if br.read(8) != SIGNATURE {
+        return None;
+    }
+    let w = br.read(14) + 1;
+    let h = br.read(14) + 1;
+    let _alpha = br.read(1);
+    let version = br.read(3);
+    if version != 0 || br.eos {
+        return None;
+    }
+    Some((w, h))
+}

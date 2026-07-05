@@ -14,24 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Real raster images for the document view. Sources discovered during layout
-// are fetched through the same socket state machine as pages, decoded from
-// PNG/JPEG/BMP into ARGB8888, cached, and scale-blitted into their box.
+use super::bitread::BitReader;
 
-mod base64;
-mod blit;
-mod data_uri;
-mod decode;
-mod fetch;
-mod ingest;
-mod queue;
-mod sniff;
-mod store;
-mod svg;
-mod webp;
-
-pub use blit::blit_into;
-pub use fetch::{follow_redirect, pump};
-pub use ingest::ingest;
-pub use queue::enqueue_from_doc;
-pub use store::Store;
+// A length or distance prefix code expands to a base value plus extra bits.
+// Codes 0 and 1 are literal; from 2 up, each pair of codes doubles the range,
+// so a small symbol space covers large runs and offsets.
+pub(super) fn prefix_value(code: u32, br: &mut BitReader) -> u32 {
+    if code < 4 {
+        return code + 1;
+    }
+    let extra = (code - 2) >> 1;
+    let offset = (2 + (code & 1)) << extra;
+    offset + br.read(extra) + 1
+}
