@@ -18,13 +18,18 @@ use crate::crypto::kernel_keys;
 use crate::crypto::util::rng;
 
 pub fn init_crypto_subsystem() -> Result<(), &'static str> {
-    let _ = rng::init_rng();
+    if rng::init_rng().is_err() {
+        return Err("crypto: init_rng failed, entropy unavailable");
+    }
     kernel_keys::init();
     Ok(())
 }
 
 pub fn init() {
-    let _ = rng::init_rng();
+    if rng::init_rng().is_err() {
+        crate::sys::serial::println(b"[FATAL] crypto: init_rng failed, entropy unavailable");
+        crate::arch::halt_loop();
+    }
     kernel_keys::init();
 }
 
