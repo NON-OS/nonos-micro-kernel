@@ -27,6 +27,7 @@ pub fn verify_heap_integrity() -> bool {
     if heap_size == 0 {
         return false;
     }
+    let _sampled = KERNEL_HEAP.tracking_overflowed.load(core::sync::atomic::Ordering::Relaxed);
     let allocated_ptrs = KERNEL_HEAP.allocated_ptrs.lock();
     for &ptr_addr in allocated_ptrs.iter() {
         if ptr_addr < layout::KHEAP_BASE as usize
