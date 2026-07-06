@@ -52,4 +52,12 @@ impl App for Clock {
         self.state.refresh();
         true
     }
+
+    fn tick_interval_ms(&self) -> i64 {
+        if self.state.sw.running {
+            100
+        } else {
+            1000
+        }
+    }
 }

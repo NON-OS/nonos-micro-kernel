@@ -18,13 +18,14 @@ use nonos_app_skeleton::PaintBuffer;
 
 use crate::clock::state::State;
 use crate::clock::tabs::Tab;
-use crate::clock::{fmt, manifest, paint_analog, paint_tabbar, theme};
+use crate::clock::{fmt, manifest, paint_analog, paint_stopwatch, paint_tabbar, theme};
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(theme::BG);
     match state.tab {
         Tab::Clock => paint_clock(state, fb),
-        _ => {}
+        Tab::Stopwatch => paint_stopwatch::paint(state, fb),
+        Tab::Timer => {}
     }
     paint_tabbar::paint(state.tab, fb, manifest::WIDTH);
 }

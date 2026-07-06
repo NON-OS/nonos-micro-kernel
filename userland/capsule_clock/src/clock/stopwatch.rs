@@ -14,38 +14,36 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::time::{mk_time_millis, mk_time_rtc, RtcTime};
-
-use crate::clock::stopwatch::Stopwatch;
-use crate::clock::tabs::Tab;
-
-pub struct State {
-    pub rtc: RtcTime,
-    pub now_ms: u64,
-    pub tab: Tab,
-    pub sw: Stopwatch,
+#[derive(Default)]
+pub struct Stopwatch {
+    pub running: bool,
+    pub start_ms: u64,
+    pub accumulated_ms: u64,
 }
 
-impl State {
-    pub fn new() -> Self {
-        let mut s = State {
-            rtc: RtcTime::default(),
-            now_ms: 0,
-            tab: Tab::Clock,
-            sw: Stopwatch::default(),
-        };
-        s.refresh();
-        s
+impl Stopwatch {
+    pub fn elapsed(&self, now_ms: u64) -> u64 {
+        self.accumulated_ms
+            + if self.running {
+                now_ms.saturating_sub(self.start_ms)
+            } else {
+                0
+            }
     }
 
-    pub fn refresh(&mut self) {
-        let mut t = RtcTime::default();
-        if mk_time_rtc(&mut t as *mut RtcTime) == 0 {
-            self.rtc = t;
+    pub fn toggle(&mut self, now_ms: u64) {
+        if self.running {
+            self.accumulated_ms += now_ms.saturating_sub(self.start_ms);
+            self.running = false;
+        } else {
+            self.start_ms = now_ms;
+            self.running = true;
         }
-        let n = mk_time_millis();
-        if n >= 0 {
-            self.now_ms = n as u64;
-        }
+    }
+
+    pub fn reset(&mut self) {
+        self.running = false;
+        self.start_ms = 0;
+        self.accumulated_ms = 0;
     }
 }

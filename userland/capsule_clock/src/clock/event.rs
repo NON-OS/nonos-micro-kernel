@@ -18,12 +18,31 @@ use nonos_app_skeleton::EventOutcome;
 
 use crate::clock::manifest::WIDTH;
 use crate::clock::state::State;
-use crate::clock::tabs;
+use crate::clock::tabs::{self, Tab};
 
 pub fn on_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if let Some(t) = tabs::hit(WIDTH as i32, x, y) {
         state.tab = t;
         return EventOutcome::Repaint;
     }
+    if state.tab == Tab::Stopwatch {
+        return stopwatch_click(state, x, y);
+    }
     EventOutcome::Idle
+}
+
+fn stopwatch_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
+    if in_rect(x, y, 40, 300, 130, 46) {
+        state.sw.toggle(state.now_ms);
+        return EventOutcome::Repaint;
+    }
+    if in_rect(x, y, 190, 300, 130, 46) {
+        state.sw.reset();
+        return EventOutcome::Repaint;
+    }
+    EventOutcome::Idle
+}
+
+fn in_rect(x: i32, y: i32, rx: i32, ry: i32, w: i32, h: i32) -> bool {
+    x >= rx && x < rx + w && y >= ry && y < ry + h
 }

@@ -14,20 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod angles;
-mod app;
-mod event;
-mod fixed;
-mod fmt;
-mod geom;
-mod manifest;
-mod paint;
-mod paint_analog;
-mod paint_stopwatch;
-mod paint_tabbar;
-mod state;
-mod stopwatch;
-mod tabs;
-mod theme;
+use nonos_app_skeleton::PaintBuffer;
 
-pub use app::Clock;
+use crate::clock::state::State;
+use crate::clock::{fmt, theme};
+
+pub fn paint(state: &State, fb: &mut PaintBuffer) {
+    let e = state.sw.elapsed(state.now_ms);
+    let buf = fmt::ms_clock(e);
+    fb.text_scaled(40, 150, &buf, theme::FG, 5);
+    let label: &[u8] = if state.sw.running { b"Stop" } else { b"Start" };
+    fb.fill_rect(40, 300, 130, 46, theme::ACCENT);
+    fb.text(80, 318, label, theme::BG);
+    fb.fill_rect(190, 300, 130, 46, theme::DIM);
+    fb.text(228, 318, b"Reset", theme::BG);
+}
