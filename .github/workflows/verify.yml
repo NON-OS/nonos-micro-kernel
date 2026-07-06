@@ -95,3 +95,138 @@ jobs:
           else
             echo "nonos-bootloader/boot_proofs absent on this ref; skipping"
           fi
+
+  proof-crates:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        crate:
+          - kernel_proofs
+          - net_proofs
+          - driver_proofs
+          - usb_proofs
+          - nvme_proofs
+          - usb_msc_proofs
+          - virtio_blk_proofs
+          - virtio_net_proofs
+          - e1000_proofs
+          - rtl8139_proofs
+          - xhci_proofs
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Runnable proofs and clippy
+        run: |
+          if [ -d "userland/${{ matrix.crate }}" ]; then
+            cargo test --release --manifest-path "userland/${{ matrix.crate }}/Cargo.toml"
+            cargo clippy --release --all-targets \
+              --manifest-path "userland/${{ matrix.crate }}/Cargo.toml" -- -D warnings
+          else
+            echo "userland/${{ matrix.crate }} absent on this ref; skipping"
+          fi
+
+  proof-crates-kani:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Kani
+        run: |
+          cargo install --locked kani-verifier --version 0.67.0
+          cargo kani setup
+      - name: Kani model checks
+        run: |
+          set -euo pipefail
+          for crate in kernel_proofs net_proofs driver_proofs usb_proofs nvme_proofs \
+              usb_msc_proofs virtio_blk_proofs virtio_net_proofs e1000_proofs \
+              rtl8139_proofs xhci_proofs; do
+            if [ -d "userland/$crate" ]; then
+              ( cd "userland/$crate" && cargo kani --output-format terse )
+            else
+              echo "userland/$crate absent on this ref; skipping"
+            fi
+          done
+
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install elan
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://elan.lean-lang.org/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Specification theorems
+        run: |
+          if [ -d verification/lean ]; then
+            ( cd verification/lean && lake build )
+          else
+            echo "verification/lean absent on this ref; skipping"
+          fi
+
+  extraction:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install the extraction toolchain
+        run: |
+          set -euo pipefail
+          if [ ! -d verification/extraction ]; then
+            echo "verification/extraction absent on this ref; skipping"
+            exit 0
+          fi
+          rustup toolchain install nightly-2026-06-01 --profile minimal \
+            --component rustc-dev,llvm-tools-preview,rust-src
+          mkdir -p "$HOME/exttools" && cd "$HOME/exttools"
+          curl -fsSL -o charon.tar.gz \
+            "https://github.com/AeneasVerif/charon/releases/download/nightly-2026.07.02/charon-linux-x86_64.tar.gz"
+          tar xzf charon.tar.gz
+          curl -fsSL -o aeneas.tar.gz \
+            "https://github.com/AeneasVerif/aeneas/releases/download/nightly-2026.07.06-45061fa/aeneas-linux-x86_64.tar.gz"
+          tar xzf aeneas.tar.gz
+          echo "$HOME/exttools" >> "$GITHUB_PATH"
+          curl --proto '=https' --tlsv1.2 -sSf https://elan.lean-lang.org/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Regenerate and check for drift
+        run: |
+          set -euo pipefail
+          if [ ! -d verification/extraction ]; then exit 0; fi
+          cd verification/extraction/caps
+          charon cargo --preset=aeneas \
+            --start-from 'nonos_caps::capabilities::bits::has_capability' \
+            --start-from 'nonos_caps::capabilities::bits::add_capability' \
+            --start-from 'nonos_caps::capabilities::bits::remove_capability' \
+            --dest-file caps.llbc
+          mkdir -p /tmp/regen-caps
+          aeneas -backend lean caps.llbc -dest /tmp/regen-caps
+          diff -u ../lean/NonosExtraction/Caps.lean /tmp/regen-caps/Caps.lean
+          cd ../policy
+          charon cargo --preset=aeneas \
+            --start-from 'nonos_policy::usercopy::policy::check_range' \
+            --start-from 'nonos_policy::to_pte_flags' \
+            --start-from 'nonos_policy::is_wx_violation' \
+            --dest-file policy.llbc
+          mkdir -p /tmp/regen-policy
+          aeneas -backend lean -split-files policy.llbc -dest /tmp/regen-policy
+          for f in Types.lean Funs.lean FunsExternal_Template.lean; do
+            diff -u "../lean/Policy/$f" "/tmp/regen-policy/$f"
+          done
+      - name: Verify the refinement theorems
+        run: |
+          set -euo pipefail
+          if [ ! -d verification/extraction ]; then exit 0; fi
+          cd verification/extraction/lean
+          lake exe cache get
+          lake build
