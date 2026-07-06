@@ -27,3 +27,25 @@
 )]
 #[path = "../../../../../src/crypto/symmetric/chacha20poly1305/mod.rs"]
 pub mod chacha20poly1305;
+
+// AES block cipher core (depends only on the constant-time primitives) and the
+// AES-GCM AEAD built on it. Same reference-shape allowances as above.
+#[allow(
+    clippy::needless_range_loop,
+    clippy::manual_rotate,
+    clippy::identity_op,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of
+)]
+#[path = "../../../../../src/crypto/symmetric/aes/mod.rs"]
+pub mod aes;
+
+#[allow(
+    clippy::needless_range_loop,
+    clippy::manual_rotate,
+    clippy::identity_op,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of
+)]
+#[path = "../../../../../src/crypto/symmetric/aes_gcm/mod.rs"]
+pub mod aes_gcm;

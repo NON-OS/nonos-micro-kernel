@@ -27,6 +27,8 @@ pub mod crypto;
 pub mod hash;
 
 #[cfg(test)]
+mod aesgcm_tests;
+#[cfg(test)]
 mod chacha_tests;
 #[cfg(test)]
 mod ed25519_tests;
