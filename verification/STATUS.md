@@ -163,3 +163,4 @@ Finished release profile for both capsules.
 - Kani GitHub Action: `model-checking/kani-github-action@v1`, pinned input `kani-version: "0.67.0"`.
 - Verus release: `release/0.2026.06.28.1847ab3`.
 - Verus Linux asset: `verus-0.2026.06.28.1847ab3-x86-linux.zip`.
+- Verus Linux Rust toolchain: `1.96.0-x86_64-unknown-linux-gnu`.

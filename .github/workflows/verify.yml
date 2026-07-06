@@ -72,6 +72,7 @@ jobs:
         run: |
           set -euo pipefail
           VERUS_VERSION="0.2026.06.28.1847ab3"
+          rustup toolchain install 1.96.0-x86_64-unknown-linux-gnu
           curl -fsSL -o verus.zip \
             "https://github.com/verus-lang/verus/releases/download/release/${VERUS_VERSION}/verus-${VERUS_VERSION}-x86-linux.zip"
           unzip -q verus.zip -d "$HOME/verus"
