@@ -1,0 +1,22 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the bootloader's security-critical logic. Builds for
+# the host so `cargo test` checks the real anti-rollback source (included via
+# #[path]) against its invariants, without a boot. Only the TPM/NVRAM write is
+# shimmed; the decision logic is the real code.
+[package]
+name = "boot_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+# The real state serialization derives a domain-separated integrity tag with
+# BLAKE3; same crate/version the bootloader pins.
+blake3 = { version = "1.5", default-features = false, features = ["pure"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
