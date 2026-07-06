@@ -86,6 +86,7 @@ nonos-capsule-about             = []
 nonos-capsule-hello             = []
 nonos-capsule-boot-splash       = []
 nonos-capsule-calculator        = []
+nonos-capsule-clock             = []
 nonos-capsule-browser           = []
 nonos-capsule-snake             = []
 nonos-capsule-wallet-nonos      = []
@@ -478,6 +479,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-about",
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
+  "nonos-capsule-clock",
   "nonos-capsule-browser",
   "nonos-capsule-snake",
   "nonos-capsule-wallet-nonos",
@@ -516,6 +518,7 @@ microkernel-full-gui = [
 microkernel-toolkit = ["microkernel-desktop-gui"]
 microkernel-about = ["microkernel-desktop-gui"]
 microkernel-calculator = ["microkernel-desktop-gui"]
+microkernel-clock = ["microkernel-desktop-gui"]
 microkernel-browser = ["microkernel-desktop-gui"]
 microkernel-terminal = ["microkernel-desktop-gui"]
 

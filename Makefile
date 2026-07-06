@@ -573,7 +573,7 @@ nonos-mk-host-trust-elfs: $(USERLAND_LIBC) $(MARKETPLACE_ABI_LIB) \
 		$(net-l2_BIN) $(net-ip_BIN) $(net-udp_BIN) $(net-dhcp_BIN) \
 		$(input-router_BIN) $(compositor_BIN) $(wm_BIN) $(desktop-shell_BIN) \
 		$(image-codec_BIN) $(clipboard_BIN) $(login_BIN) $(wallpaper_BIN) \
-		$(toolkit_BIN) $(about_BIN) $(calculator_BIN) $(snake_BIN) $(terminal_BIN) \
+		$(toolkit_BIN) $(about_BIN) $(calculator_BIN) $(clock_BIN) $(snake_BIN) $(terminal_BIN) \
 		$(file-manager_BIN) $(text-editor_BIN) $(settings_BIN) $(process-manager_BIN)
 	@echo "Capsule ELFs built for the host-trust artifact proof."
 
@@ -638,6 +638,7 @@ include userland/capsule_about/Capsule.mk
 include userland/capsule_hello/Capsule.mk
 include userland/capsule_boot_splash/Capsule.mk
 include userland/capsule_calculator/Capsule.mk
+include userland/capsule_clock/Capsule.mk
 include userland/capsule_browser/Capsule.mk
 include userland/capsule_snake/Capsule.mk
 include userland/capsule_wallet_nonos/Capsule.mk
@@ -723,7 +724,7 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(input-router_VERIFY) $(compositor_VERIFY) $(wm_VERIFY) \
 	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
 	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
-	$(boot-splash_VERIFY) $(about_VERIFY) $(calculator_VERIFY) \
+	$(boot-splash_VERIFY) $(about_VERIFY) $(calculator_VERIFY) $(clock_VERIFY) \
 	$(browser_VERIFY) $(web_VERIFY) \
 	$(snake_VERIFY) $(wallet-nonos_VERIFY) $(terminal_VERIFY) \
 	$(file-manager_VERIFY) $(text-editor_VERIFY) $(settings_VERIFY) \
@@ -1164,7 +1165,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(browser_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(clock_ARTIFACTS) $(browser_ARTIFACTS) \
 		$(snake_ARTIFACTS) \
 		$(wallet-nonos_ARTIFACTS) $(terminal_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
@@ -1201,7 +1202,7 @@ nonos-mk-setup-wizard-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(snake_ARTIFACTS) $(terminal_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(clock_ARTIFACTS) $(snake_ARTIFACTS) $(terminal_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
 		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
@@ -1226,7 +1227,7 @@ nonos-mk-setup-wizard-inject-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(snake_ARTIFACTS) $(terminal_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(clock_ARTIFACTS) $(snake_ARTIFACTS) $(terminal_ARTIFACTS) \
 		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
 		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
 		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
@@ -1261,6 +1262,7 @@ nonos-mk-input-probe-inject-esp: $(NONOS_BOOT_EFI)
 nonos-mk-toolkit-prod: nonos-mk-desktop-gui-prod
 nonos-mk-about-prod: nonos-mk-desktop-gui-prod
 nonos-mk-calculator-prod: nonos-mk-desktop-gui-prod
+nonos-mk-clock-prod: nonos-mk-desktop-gui-prod
 nonos-mk-browser-prod: nonos-mk-desktop-gui-prod
 nonos-mk-snake-prod: nonos-mk-desktop-gui-prod
 nonos-mk-terminal-prod: nonos-mk-desktop-gui-prod
