@@ -25,7 +25,7 @@ use spin::Mutex;
 // formality. Cleared on navigation with the rest of the page.
 static FONTS: Mutex<Vec<(u32, Vec<u8>)>> = Mutex::new(Vec::new());
 
-const MAX_FONTS: usize = 8;
+const MAX_FONTS: usize = 12;
 const MAX_FONT_BYTES: usize = 2 * 1024 * 1024;
 
 // Validate and install a fetched face under its family key. Returns true when

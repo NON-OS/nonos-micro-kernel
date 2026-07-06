@@ -68,6 +68,7 @@ fn widest_word(t: &str, node: &BoxNode) -> i32 {
         let w = crate::browser::fonts::measure_text(
             node.style.font_key,
             node.style.mono,
+            node.style.bold,
             word,
             px,
             node.style.letter_spacing,

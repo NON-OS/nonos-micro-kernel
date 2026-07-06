@@ -96,6 +96,7 @@ fn text_width(t: &str, node: &BoxNode) -> i32 {
     let w = crate::browser::fonts::measure_text(
         node.style.font_key,
         node.style.mono,
+        node.style.bold,
         s,
         px,
         node.style.letter_spacing,

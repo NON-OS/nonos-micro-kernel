@@ -78,13 +78,16 @@ pub(super) fn box_fragment(
             let run = |x: i32| crate::browser::fonts::TextRun {
                 key: *font,
                 mono: *mono,
+                bold: *bold,
                 x,
                 top_y: ty,
                 px: *px,
                 spacing: *spacing,
             };
-            crate::browser::fonts::draw_text(fb, run(f.x), text, *color);
-            if *bold {
+            // A true bold cut needs no thickening; the fake second pass only
+            // remains for faces that never shipped one, the mono cut mostly.
+            let real_bold = crate::browser::fonts::draw_text(fb, run(f.x), text, *color);
+            if *bold && !real_bold {
                 crate::browser::fonts::draw_text(fb, run(f.x + 1), text, *color);
             }
             if *underline {

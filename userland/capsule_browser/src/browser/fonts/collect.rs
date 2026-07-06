@@ -38,13 +38,21 @@ pub fn collect_font_faces(css: &str) -> Vec<(u32, String)> {
         if key == 0 {
             continue;
         }
-        // One face per family; the regular weight wins over whichever weight
-        // the sheet happened to declare first.
-        let regular = decl_value(body, "font-weight").map(|w| w.trim() == "400").unwrap_or(true);
-        match out.iter_mut().find(|(k, _)| *k == key) {
-            Some(slot) if regular => slot.1 = url,
+        // Faces split into a regular and a bold slot per family, the CSS bold
+        // threshold at 600. Within a slot the canonical weight wins over
+        // whichever the sheet declared first.
+        let weight = match decl_value(body, "font-weight").map(str::trim) {
+            Some("bold") => 700,
+            Some(w) => w.parse::<u16>().unwrap_or(400),
+            None => 400,
+        };
+        let bold = weight >= 600;
+        let slot_key = if bold { key | super::text::BOLD_KEY } else { key };
+        let canonical = weight == if bold { 700 } else { 400 };
+        match out.iter_mut().find(|(k, _)| *k == slot_key) {
+            Some(slot) if canonical => slot.1 = url,
             Some(_) => {}
-            None => out.push((key, url)),
+            None => out.push((slot_key, url)),
         }
     }
     out

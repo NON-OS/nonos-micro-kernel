@@ -19,34 +19,60 @@ use nonos_toolkit::font::ttf;
 
 use super::registry::with_face;
 
-// Advance width in the keyed face at the run's letter-spacing, falling back
-// to the built-in faces until the page's font loads, so layout always has a
-// metric.
-pub fn measure_text(key: u32, mono: bool, text: &str, px: f32, spacing: f32) -> i32 {
-    with_face(key, |f| ttf::measure_tracked(f, text, px, spacing))
-        .unwrap_or_else(|| ttf::measure_spaced(text, px, mono, spacing))
-}
+// Bold cuts store under the family key with this bit set, so one registry
+// holds both weights without a second key namespace.
+pub const BOLD_KEY: u32 = 1 << 31;
 
-// Draw in the keyed face with the same fallback and spacing the measurement
-// used, so the painted glyphs match what layout sized.
-pub fn draw_text(fb: &mut PaintBuffer, run: TextRun, text: &str, argb: u32) -> i32 {
-    let stride = fb.stride_words as usize;
-    let (w, h) = (fb.width, fb.height);
-    let TextRun { key, mono, x, top_y, px, spacing } = run;
-    let drawn = with_face(key, |f| {
-        ttf::draw_text_tracked(f, fb.pixels, stride, w, h, x, top_y, text, argb, px, spacing)
-    });
-    drawn.unwrap_or_else(|| {
-        ttf::draw_text_spaced(fb.pixels, stride, w, h, x, top_y, text, argb, px, mono, spacing)
-    })
-}
-
-// One text run's face and geometry, grouped so the draw call stays readable.
+// One text run's face and geometry, grouped so calls stay readable.
 pub struct TextRun {
     pub key: u32,
     pub mono: bool,
+    pub bold: bool,
     pub x: i32,
     pub top_y: i32,
     pub px: f32,
     pub spacing: f32,
+}
+
+// Advance width for the run, resolving the face the same way the draw will:
+// the family's bold cut, then its regular one, then the built-in weight.
+pub fn measure_text(key: u32, mono: bool, bold: bool, text: &str, px: f32, spacing: f32) -> i32 {
+    let custom = if bold {
+        with_face(key | BOLD_KEY, |f| ttf::measure_tracked(f, text, px, spacing))
+            .or_else(|| with_face(key, |f| ttf::measure_tracked(f, text, px, spacing)))
+    } else {
+        with_face(key, |f| ttf::measure_tracked(f, text, px, spacing))
+    };
+    custom.unwrap_or_else(|| {
+        ttf::builtin_face(mono, bold)
+            .map(|f| ttf::measure_tracked(f, text, px, spacing))
+            .unwrap_or(0)
+    })
+}
+
+// Draw the run with the resolved face. Returns true when a true bold cut was
+// used, so the caller knows the fake thickening is not needed.
+pub fn draw_text(fb: &mut PaintBuffer, run: TextRun, text: &str, argb: u32) -> bool {
+    let stride = fb.stride_words as usize;
+    let (w, h) = (fb.width, fb.height);
+    let TextRun { key, mono, bold, x, top_y, px, spacing } = run;
+    if bold {
+        let drew = with_face(key | BOLD_KEY, |f| {
+            ttf::draw_text_tracked(f, fb.pixels, stride, w, h, x, top_y, text, argb, px, spacing);
+        });
+        if drew.is_some() {
+            return true;
+        }
+    }
+    let drew = with_face(key, |f| {
+        ttf::draw_text_tracked(f, fb.pixels, stride, w, h, x, top_y, text, argb, px, spacing);
+    });
+    if drew.is_some() {
+        return false;
+    }
+    if let Some(f) = ttf::builtin_face(mono, bold) {
+        ttf::draw_text_tracked(f, fb.pixels, stride, w, h, x, top_y, text, argb, px, spacing);
+        return bold && !mono;
+    }
+    false
 }

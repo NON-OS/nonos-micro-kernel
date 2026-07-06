@@ -17,13 +17,15 @@
 use ab_glyph::FontRef;
 use spin::Once;
 
-// Body face (Inter) for prose and UI; monospace face (JetBrains Mono, OFL) for
-// pre/code. Both cover Latin, punctuation and common symbols; unmapped
-// codepoints fall back to .notdef.
+// Body face (Inter) for prose and UI with its true bold cut; monospace face
+// (JetBrains Mono, OFL) for pre/code. All cover Latin, punctuation and common
+// symbols; unmapped codepoints fall back to .notdef.
 const BODY: &[u8] = include_bytes!("../../../assets/fonts/Inter-Regular.ttf");
+const BOLD: &[u8] = include_bytes!("../../../assets/fonts/Inter-Bold.ttf");
 const MONO: &[u8] = include_bytes!("../../../assets/fonts/JetBrainsMono-Regular.ttf");
 
 static BODY_FACE: Once<Option<FontRef<'static>>> = Once::new();
+static BOLD_FACE: Once<Option<FontRef<'static>>> = Once::new();
 static MONO_FACE: Once<Option<FontRef<'static>>> = Once::new();
 
 // Parse once and hand back a shared borrow of the requested face. A corrupt
@@ -35,4 +37,13 @@ pub(super) fn face(mono: bool) -> Option<&'static FontRef<'static>> {
     } else {
         BODY_FACE.call_once(|| FontRef::try_from_slice(BODY).ok()).as_ref()
     }
+}
+
+// The built-in face for a weight and pitch. Bold monospace keeps the regular
+// mono cut; callers thicken it themselves.
+pub fn builtin_face(mono: bool, bold: bool) -> Option<&'static FontRef<'static>> {
+    if !mono && bold {
+        return BOLD_FACE.call_once(|| FontRef::try_from_slice(BOLD).ok()).as_ref();
+    }
+    face(mono)
 }
