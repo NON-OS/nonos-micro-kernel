@@ -1556,6 +1556,9 @@ nonos-mk-boot-input-e2e-xhci:
 nonos-mk-boot-desktop-gui:
 	@./tests/boot/desktop_gui_boot.sh
 
+nonos-mk-boot-ntp:
+	@./tests/boot/ntp_round_trip.sh
+
 .PHONY: nonos-mk-boot-terminal
 nonos-mk-boot-terminal:
 	@./tests/boot/terminal_round_trip.sh; rc=$$?; \
