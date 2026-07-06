@@ -16,7 +16,7 @@
 
 use core::sync::atomic::Ordering;
 
-use super::errnos::ERRNO_FAULT;
+use super::errnos::{ERRNO_FAULT, ERRNO_INVAL};
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -64,4 +64,43 @@ pub fn sys_time_millis() -> i64 {
 fn clock_ready() -> bool {
     crate::sys::clock::TSC_HZ.load(Ordering::Relaxed) != 0
         && crate::sys::clock::BOOT_UNIX_MS.load(Ordering::Relaxed) != 0
+}
+
+const CLOCK_FLOOR_MS: u64 = 1_735_689_600_000;
+const CLOCK_CEIL_MS: u64 = 4_102_444_800_000;
+
+pub fn clamp_ok(correct_ms: u64) -> bool {
+    correct_ms >= CLOCK_FLOOR_MS && correct_ms <= CLOCK_CEIL_MS
+}
+
+pub fn compute_offset_ms(correct_ms: u64, base_ms: u64) -> i64 {
+    correct_ms as i64 - base_ms as i64
+}
+
+pub fn sys_time_adjust(correct_ms: u64) -> i64 {
+    if !clamp_ok(correct_ms) {
+        return ERRNO_INVAL;
+    }
+    let base = crate::sys::clock::base_unix_ms();
+    crate::sys::clock::set_ntp_offset_ms(compute_offset_ms(correct_ms, base));
+    0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{clamp_ok, compute_offset_ms};
+
+    #[test]
+    fn rejects_prehistoric_and_future() {
+        assert!(!clamp_ok(0));
+        assert!(!clamp_ok(1_600_000_000_000));
+        assert!(!clamp_ok(5_000_000_000_000));
+        assert!(clamp_ok(1_800_000_000_000));
+    }
+
+    #[test]
+    fn offset_is_correct_minus_base() {
+        assert_eq!(compute_offset_ms(1_800_000_010_000, 1_800_000_000_000), 10_000);
+        assert_eq!(compute_offset_ms(1_800_000_000_000, 1_800_000_010_000), -10_000);
+    }
 }
