@@ -19,7 +19,7 @@ use nonos_app_skeleton::PaintBuffer;
 use crate::clock::state::State;
 use crate::clock::tabs::Tab;
 use crate::clock::{
-    fmt, manifest, paint_analog, paint_stopwatch, paint_tabbar, paint_timer, theme,
+    fmt, manifest, paint_analog, paint_settime, paint_stopwatch, paint_tabbar, paint_timer, theme,
 };
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
@@ -28,6 +28,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
         Tab::Clock => paint_clock(state, fb),
         Tab::Stopwatch => paint_stopwatch::paint(state, fb),
         Tab::Timer => paint_timer::paint(state, fb),
+        Tab::Set => paint_settime::paint(state, fb),
     }
     paint_tabbar::paint(state.tab, fb, manifest::WIDTH);
 }
@@ -35,7 +36,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
 fn paint_clock(state: &State, fb: &mut PaintBuffer) {
     let r = &state.rtc;
     let hms = fmt::hms(r.hour, r.minute, r.second);
-    fb.text_scaled(36, 56, &hms, theme::FG, 4);
+    fb.text_scaled(36, 72, &hms, theme::FG, 4);
     let wd = fmt::weekday(r.year, r.month, r.day);
     fb.text(40, 122, wd.as_bytes(), theme::DIM);
     let mon = fmt::month_name(r.month);

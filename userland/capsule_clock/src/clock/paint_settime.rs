@@ -14,39 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum Tab {
-    Clock,
-    Stopwatch,
-    Timer,
-    Set,
+use nonos_app_skeleton::PaintBuffer;
+
+use crate::clock::state::State;
+use crate::clock::{fmt, theme};
+
+pub fn paint(state: &State, fb: &mut PaintBuffer) {
+    let buf = fmt::hm(state.edit_hour, state.edit_min);
+    fb.text_scaled(96, 100, &buf, theme::FG, 6);
+    adj(fb, 40, b"H-");
+    adj(fb, 118, b"H+");
+    adj(fb, 202, b"M-");
+    adj(fb, 280, b"M+");
+    fb.fill_rect(40, 300, 280, 48, theme::ACCENT);
+    fb.text(150, 318, b"Apply", theme::BG);
 }
 
-pub const BAR_H: i32 = 32;
-pub const BAR_TOP: i32 = 28;
-
-pub fn all() -> [Tab; 4] {
-    [Tab::Clock, Tab::Stopwatch, Tab::Timer, Tab::Set]
-}
-
-pub fn label(t: Tab) -> &'static [u8] {
-    match t {
-        Tab::Clock => b"Clock",
-        Tab::Stopwatch => b"Stopwatch",
-        Tab::Timer => b"Timer",
-        Tab::Set => b"Set",
-    }
-}
-
-pub fn hit(width: i32, x: i32, y: i32) -> Option<Tab> {
-    if y < BAR_TOP || y >= BAR_TOP + BAR_H {
-        return None;
-    }
-    let w = width / 4;
-    match x / w {
-        0 => Some(Tab::Clock),
-        1 => Some(Tab::Stopwatch),
-        2 => Some(Tab::Timer),
-        _ => Some(Tab::Set),
-    }
+fn adj(fb: &mut PaintBuffer, x: u32, label: &[u8]) {
+    fb.fill_rect(x, 210, 68, 48, theme::DIM);
+    fb.text(x + 22, 228, label, theme::BG);
 }

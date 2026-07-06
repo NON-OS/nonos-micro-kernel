@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::time::{mk_time_millis, mk_time_rtc, RtcTime};
+use nonos_libc::time::{mk_time_millis, RtcTime};
 
+use crate::clock::civil;
 use crate::clock::stopwatch::Stopwatch;
 use crate::clock::tabs::Tab;
 use crate::clock::timer::Timer;
@@ -26,6 +27,8 @@ pub struct State {
     pub tab: Tab,
     pub sw: Stopwatch,
     pub timer: Timer,
+    pub edit_hour: u8,
+    pub edit_min: u8,
 }
 
 impl State {
@@ -36,19 +39,32 @@ impl State {
             tab: Tab::Clock,
             sw: Stopwatch::default(),
             timer: Timer::default(),
+            edit_hour: 0,
+            edit_min: 0,
         };
         s.refresh();
         s
     }
 
     pub fn refresh(&mut self) {
-        let mut t = RtcTime::default();
-        if mk_time_rtc(&mut t as *mut RtcTime) == 0 {
-            self.rtc = t;
-        }
         let n = mk_time_millis();
         if n >= 0 {
             self.now_ms = n as u64;
+            let c = civil::from_unix_ms(n as u64);
+            self.rtc = RtcTime {
+                year: c.year,
+                month: c.month,
+                day: c.day,
+                hour: c.hour,
+                minute: c.minute,
+                second: c.second,
+                _pad: 0,
+            };
         }
+    }
+
+    pub fn load_edit(&mut self) {
+        self.edit_hour = self.rtc.hour;
+        self.edit_min = self.rtc.minute;
     }
 }

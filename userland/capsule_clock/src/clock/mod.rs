@@ -16,6 +16,7 @@
 
 mod angles;
 mod app;
+mod civil;
 mod event;
 mod fixed;
 mod fmt;
@@ -23,6 +24,7 @@ mod geom;
 mod manifest;
 mod paint;
 mod paint_analog;
+mod paint_settime;
 mod paint_stopwatch;
 mod paint_tabbar;
 mod paint_timer;

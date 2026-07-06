@@ -16,6 +16,9 @@
 
 use nonos_app_skeleton::EventOutcome;
 
+use nonos_libc::time::mk_time_adjust;
+
+use crate::clock::civil;
 use crate::clock::manifest::WIDTH;
 use crate::clock::state::State;
 use crate::clock::tabs::{self, Tab};
@@ -23,6 +26,9 @@ use crate::clock::tabs::{self, Tab};
 pub fn on_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if let Some(t) = tabs::hit(WIDTH as i32, x, y) {
         state.tab = t;
+        if t == Tab::Set {
+            state.load_edit();
+        }
         return EventOutcome::Repaint;
     }
     if state.tab == Tab::Stopwatch {
@@ -31,7 +37,36 @@ pub fn on_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if state.tab == Tab::Timer {
         return timer_click(state, x, y);
     }
+    if state.tab == Tab::Set {
+        return settime_click(state, x, y);
+    }
     EventOutcome::Idle
+}
+
+fn settime_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
+    if in_rect(x, y, 40, 210, 68, 48) {
+        state.edit_hour = (state.edit_hour + 23) % 24;
+    } else if in_rect(x, y, 118, 210, 68, 48) {
+        state.edit_hour = (state.edit_hour + 1) % 24;
+    } else if in_rect(x, y, 202, 210, 68, 48) {
+        state.edit_min = (state.edit_min + 59) % 60;
+    } else if in_rect(x, y, 280, 210, 68, 48) {
+        state.edit_min = (state.edit_min + 1) % 60;
+    } else if in_rect(x, y, 40, 300, 280, 48) {
+        let ms = civil::to_unix_ms(
+            state.rtc.year,
+            state.rtc.month,
+            state.rtc.day,
+            state.edit_hour,
+            state.edit_min,
+            0,
+        );
+        mk_time_adjust(ms);
+        return EventOutcome::Repaint;
+    } else {
+        return EventOutcome::Idle;
+    }
+    EventOutcome::Repaint
 }
 
 fn timer_click(state: &mut State, x: i32, y: i32) -> EventOutcome {

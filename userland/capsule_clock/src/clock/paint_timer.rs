@@ -21,7 +21,7 @@ use crate::clock::{fmt, theme};
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     if state.timer.fired {
-        fb.fill_rect(0, 32, 360, 408, theme::ALERT);
+        fb.fill_rect(0, 60, 360, 380, theme::ALERT);
     }
     let rem = state.timer.remaining(state.now_ms);
     let buf = fmt::ms_ms(rem);
