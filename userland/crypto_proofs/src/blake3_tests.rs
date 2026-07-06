@@ -67,16 +67,10 @@ fn blake3_derive_key_vectors() {
     let mut out = [0u8; 32];
 
     blake3_derive_key(CONTEXT, &input(0), &mut out);
-    assert_eq!(
-        out,
-        hex32("2cc39783c223154fea8dfb7c1b1660f2ac2dcbd1c1de8277b0b0dd39b7e50d7d")
-    );
+    assert_eq!(out, hex32("2cc39783c223154fea8dfb7c1b1660f2ac2dcbd1c1de8277b0b0dd39b7e50d7d"));
 
     blake3_derive_key(CONTEXT, &input(1), &mut out);
-    assert_eq!(
-        out,
-        hex32("b3e2e340a117a499c6cf2398a19ee0d29cca2bb7404c73063382693bf66cb06c")
-    );
+    assert_eq!(out, hex32("b3e2e340a117a499c6cf2398a19ee0d29cca2bb7404c73063382693bf66cb06c"));
 }
 
 #[test]

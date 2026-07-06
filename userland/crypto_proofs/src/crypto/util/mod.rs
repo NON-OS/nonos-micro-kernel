@@ -32,3 +32,7 @@
 )]
 #[path = "../../../../../src/crypto/util/bigint/mod.rs"]
 pub mod bigint;
+
+// Kernel code addresses the constant-time primitives as
+// `crate::crypto::util::constant_time`; alias the single real module.
+pub use crate::crypto::constant_time;

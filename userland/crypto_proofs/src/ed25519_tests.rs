@@ -26,10 +26,7 @@ use alloc::vec::Vec;
 fn unhex(s: &str) -> Vec<u8> {
     let digits: Vec<u8> = s.bytes().filter(|b| !b.is_ascii_whitespace()).collect();
     assert!(digits.len().is_multiple_of(2), "odd hex length");
-    digits
-        .chunks_exact(2)
-        .map(|pair| (nibble(pair[0]) << 4) | nibble(pair[1]))
-        .collect()
+    digits.chunks_exact(2).map(|pair| (nibble(pair[0]) << 4) | nibble(pair[1])).collect()
 }
 
 fn nibble(c: u8) -> u8 {

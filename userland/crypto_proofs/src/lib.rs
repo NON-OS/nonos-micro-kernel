@@ -49,6 +49,8 @@ mod rsa_tests;
 #[cfg(test)]
 mod secp256k1_tests;
 #[cfg(test)]
+mod zk_tests;
+#[cfg(test)]
 mod sha256_tests;
 #[cfg(test)]
 mod sha3_tests;

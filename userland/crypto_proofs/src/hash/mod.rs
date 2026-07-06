@@ -62,3 +62,6 @@ pub mod sha3;
 )]
 #[path = "../../../../src/crypto/hash/blake3/mod.rs"]
 pub mod blake3;
+
+// The ZK verifier addresses BLAKE3 as `crate::crypto::hash::blake3_hash`.
+pub use blake3::blake3_hash;

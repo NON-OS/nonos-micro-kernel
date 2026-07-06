@@ -87,6 +87,26 @@ pub mod p384;
 #[path = "../../../../../src/crypto/asymmetric/secp256k1/mod.rs"]
 pub mod secp256k1;
 
+// Curve25519 (Edwards point arithmetic) used by the kernel ZK verifier.
+// (The module self-allows `needless_range_loop`.)
+#[allow(
+    unused_imports,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of,
+    clippy::redundant_closure,
+    clippy::wrong_self_convention,
+    clippy::identity_op,
+    clippy::manual_rotate,
+    clippy::useless_conversion,
+    clippy::should_implement_trait,
+    clippy::manual_memcpy,
+    clippy::manual_div_ceil,
+    clippy::needless_borrow,
+    clippy::op_ref
+)]
+#[path = "../../../../../src/crypto/asymmetric/curve25519/mod.rs"]
+pub mod curve25519;
+
 // RSA (PKCS#1 v1.5 / PSS). Uses the bigint, entropy, error and hash modules
 // provided above.
 #[allow(
