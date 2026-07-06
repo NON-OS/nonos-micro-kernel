@@ -5,6 +5,7 @@
 
 //! Transparent, post-quantum STARK verification primitives. Hash-based and
 //! curve-free, so verification relies only on the strength of the hash. Built
-//! bottom up starting from the Goldilocks field.
+//! bottom up: the Goldilocks field, then a Merkle commitment over it.
 
 pub mod field;
+pub mod merkle;

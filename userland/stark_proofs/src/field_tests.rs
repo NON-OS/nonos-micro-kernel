@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::stark::field::{Fp, P};
+use crate::crypto::stark::field::{Fp, P};
 
 // The Goldilocks field is the base of every STARK. If its arithmetic is wrong,
 // nothing above it can be sound. These proofs check the real implementation
