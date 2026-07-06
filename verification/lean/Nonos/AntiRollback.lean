@@ -51,10 +51,12 @@ theorem accepted_at_least_floor (s : State) (v : Nat) (h : Accepts s v) :
     rejected forever. -/
 theorem no_rollback_after_boot (s : State) (v w : Nat)
     (hv : Accepts s v) (hw : w < v) : ¬ Accepts (update s v) w := by
+  have hfloor : s.floor ≤ v := hv.2
   unfold update
   rw [if_pos hv]
   unfold Accepts
-  have hfloor : s.floor ≤ v := hv.2
+  -- Reduce the structure projection so `omega` sees the new floor explicitly.
+  show ¬ (w ≠ 0 ∧ max s.floor v ≤ w)
   -- The new floor is `max s.floor v ≥ v > w`, so `w` cannot meet it.
   omega
 
