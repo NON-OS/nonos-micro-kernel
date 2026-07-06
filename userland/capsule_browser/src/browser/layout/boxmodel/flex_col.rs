@@ -55,8 +55,14 @@ pub(super) fn flex_col(
         // Cross-axis auto margins centre the item and override align-items: a
         // narrower `margin: 0 auto` container is centred in the column even
         // when the column stretches or starts its other children.
+        // An item with auto margins on both sides centres itself once inside
+        // the width its own layout receives, so place it at the content edge
+        // and let that single shift happen there. Centring here as well laid
+        // the box right of centre by the whole leftover. A left-only auto
+        // margin still pushes the item to the end from this side, since the
+        // item's own layout ignores single-sided auto margins.
         let dx = if it.style.margin_left_auto && it.style.margin_right_auto {
-            ((w - iw) / 2).max(ml)
+            ml
         } else if it.style.margin_left_auto {
             (w - iw - mr).max(0)
         } else {
