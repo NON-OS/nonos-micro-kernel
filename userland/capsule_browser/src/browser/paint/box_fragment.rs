@@ -91,7 +91,15 @@ pub(super) fn box_fragment(
             }
         }
         Content::Image { src, alt } => {
-            if let Some(img) = state.images.ready(src) {
+            // The store is keyed by the absolute URL the fetch used, so resolve
+            // the fragment's src against the page base before looking it up.
+            // Without this every relative image src misses its decoded raster.
+            let key = state
+                .base
+                .as_ref()
+                .map(|b| crate::browser::url::join(b, src))
+                .unwrap_or_else(|| src.clone());
+            if let Some(img) = state.images.ready(&key) {
                 crate::browser::image::blit_into(
                     fb,
                     img,

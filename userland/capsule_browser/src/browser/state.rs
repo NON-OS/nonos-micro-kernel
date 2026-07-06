@@ -54,6 +54,12 @@ pub struct State {
     pub image_queue: Vec<String>,
     // Hops taken by the in-flight image fetch; bounds 3xx chasing.
     pub image_redirects: u8,
+    // Alternates the free socket between script-issued fetches and images so a
+    // page whose JS never stops requesting cannot starve image loading.
+    pub img_turn: bool,
+    // Current content width in pixels, tracked from the paint surface so the
+    // page reflows when the window resizes instead of holding a fixed width.
+    pub viewport_w: u32,
     // External stylesheets: URLs still to fetch, and the CSS text gathered so
     // far. Applied on top of the page's inline <style> at each re-layout.
     pub css_queue: Vec<String>,
@@ -90,6 +96,8 @@ impl State {
             images: crate::browser::image::Store::new(),
             image_queue: Vec::new(),
             image_redirects: 0,
+            img_turn: false,
+            viewport_w: crate::browser::manifest::WIDTH,
             css_queue: Vec::new(),
             page_css: String::new(),
             css_cache: None,
