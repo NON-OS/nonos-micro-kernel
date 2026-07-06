@@ -1,0 +1,18 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Verifies the Lean 4 specification proofs. `lake build` reports 0 errors only
+# when every theorem checks.
+name: lean
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: verification/lean

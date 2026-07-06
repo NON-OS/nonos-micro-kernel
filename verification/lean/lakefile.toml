@@ -1,0 +1,8 @@
+name = "nonos"
+defaultTargets = ["Nonos"]
+
+# Core-only (no mathlib): the theorems use plain Nat/Prop reasoning so any
+# recent Lean 4 toolchain verifies them, matching the pinned lean-toolchain.
+
+[[lean_lib]]
+name = "Nonos"
