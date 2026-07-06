@@ -20,7 +20,7 @@ use alloc::vec::Vec;
 pub enum Content {
     None,
     Text { text: String, color: u32, px: f32, bold: bool, mono: bool, underline: bool },
-    Image { src: String, alt: String },
+    Image { src: String, alt: String, fit: crate::browser::css::ObjectFit },
 }
 
 // One painted rectangle in absolute page coordinates. Border widths run

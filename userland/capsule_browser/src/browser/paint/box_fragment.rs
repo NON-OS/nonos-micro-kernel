@@ -90,7 +90,7 @@ pub(super) fn box_fragment(
                 fill_page(fb, f.x, sy + f.h - 2, f.w, 1, *color, clip);
             }
         }
-        Content::Image { src, alt } => {
+        Content::Image { src, alt, fit } => {
             // The store is keyed by the absolute URL the fetch used, so resolve
             // the fragment's src against the page base before looking it up.
             // Without this every relative image src misses its decoded raster.
@@ -107,6 +107,7 @@ pub(super) fn box_fragment(
                     sy.max(0) as u32,
                     f.w.max(0) as u32,
                     f.h.max(0) as u32,
+                    *fit,
                 );
             } else {
                 fill_page(fb, f.x, sy, f.w, f.h, IMG_BG, clip);

@@ -101,6 +101,7 @@ pub(super) fn collect_items(
                     h,
                     href: c.href.clone(),
                     node: c.dom_id,
+                    fit: c.style.object_fit,
                 });
             }
             BoxKind::Inline | BoxKind::Block | BoxKind::Flex | BoxKind::Grid => {

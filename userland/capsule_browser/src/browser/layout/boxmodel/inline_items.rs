@@ -39,6 +39,7 @@ pub(super) enum InlineItem {
         h: i32,
         href: Option<String>,
         node: usize,
+        fit: crate::browser::css::ObjectFit,
     },
     Break,
 }
