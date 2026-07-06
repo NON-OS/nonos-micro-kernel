@@ -19,6 +19,14 @@ guard bytes proven untouched. Kani harnesses prove totality and confinement
 over every offset and length within their bounds, with every dereference
 checked by the model checker.
 
+Bounds, stated plainly: the byte-read harness covers every offset up to
+`usize::MAX` unbounded; the u16 and copy harnesses assume the walk's own
+offset invariant (`start < 4 * RX_BUF_DATA_BYTES`, maintained by `advance`
+wrapping modulo the ring size); the copy harness uses an 8-byte output with
+`#[kani::unwind(10)]`, which exceeds its 8 loop iterations, and arbitrary
+lengths. Larger outputs are covered by the runnable tests with 64-byte and
+96-byte buffers.
+
 The gate above the primitives (`read_frame`) rejects bad status words, short
 raw lengths, and frames larger than the Ethernet maximum or the caller's
 buffer before any copy. It reaches the hardware through PIO and IRQ
