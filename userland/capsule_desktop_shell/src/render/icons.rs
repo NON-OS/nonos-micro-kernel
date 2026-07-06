@@ -21,6 +21,7 @@ use crate::state::Context;
 mod about;
 mod browser;
 mod calculator;
+mod clock;
 mod constants;
 mod file_manager;
 mod nonos_logo;
@@ -53,6 +54,7 @@ pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u3
         LauncherIcon::ProcessManager => process_manager::process_manager(ctx, x, y, size),
         LauncherIcon::About => about::about(ctx, x, y, size),
         LauncherIcon::Calculator => calculator::calculator(ctx, x, y, size),
+        LauncherIcon::Clock => clock::clock(ctx, x, y, size),
         LauncherIcon::Snake => snake::snake(ctx, x, y, size),
         LauncherIcon::Wallet => wallet::wallet(ctx, x, y, size),
         LauncherIcon::Browser => browser::browser(ctx, x, y, size),
