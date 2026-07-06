@@ -14,25 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Host-runnable proofs for kernel isolation and authorization. The real page
-//! permission and user-copy bounds source is pulled in via `#[path]` and run
-//! directly, so the invariants are proven about the code that actually gates
-//! memory access.
-
-pub mod capabilities;
-pub mod memory;
-pub mod syscall;
-pub mod time;
-pub mod usercopy;
-
-#[cfg(test)]
-mod authorization_tests;
-#[cfg(test)]
-mod permissions_tests;
-#[cfg(test)]
-mod syscall_tests;
-#[cfg(test)]
-mod usercopy_tests;
-
-#[cfg(kani)]
-mod kani_proofs;
+// Clock shim: token expiry consults `crate::time::timestamp_millis`. The
+// authorization proofs use non-expiring tokens, so the value is fixed; the
+// expiry branch is proven separately with explicit timestamps.
+pub fn timestamp_millis() -> u64 {
+    0
+}

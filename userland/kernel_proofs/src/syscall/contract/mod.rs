@@ -14,25 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Host-runnable proofs for kernel isolation and authorization. The real page
-//! permission and user-copy bounds source is pulled in via `#[path]` and run
-//! directly, so the invariants are proven about the code that actually gates
-//! memory access.
+// The real syscall capability table. `is_allowed` is `pub(super)`, visible to
+// this parent module; expose it for the proofs.
+#[path = "../../../../../src/syscall/contract/cap_table/mod.rs"]
+mod cap_table;
 
-pub mod capabilities;
-pub mod memory;
-pub mod syscall;
-pub mod time;
-pub mod usercopy;
+use crate::capabilities::CapabilityToken;
+use crate::syscall::numbers::SyscallNumber;
 
-#[cfg(test)]
-mod authorization_tests;
-#[cfg(test)]
-mod permissions_tests;
-#[cfg(test)]
-mod syscall_tests;
-#[cfg(test)]
-mod usercopy_tests;
-
-#[cfg(kani)]
-mod kani_proofs;
+pub fn is_allowed(caps: &CapabilityToken, number: SyscallNumber) -> bool {
+    cap_table::is_allowed(caps, number)
+}
