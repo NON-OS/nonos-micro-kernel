@@ -1,5 +1,0 @@
-{"log":
- [{"message":
-   ".> LEAN_PATH=././.lake/build/lib DYLD_LIBRARY_PATH= /Users/ek/.elan/toolchains/leanprover--lean4---v4.15.0/bin/lean ././././Nonos/AntiRollback.lean -R ./././. -o ././.lake/build/lib/Nonos/AntiRollback.olean -i ././.lake/build/lib/Nonos/AntiRollback.ilean -c ././.lake/build/ir/Nonos/AntiRollback.c --json",
-   "level": "trace"}],
- "depHash": "7069554204216204287"}

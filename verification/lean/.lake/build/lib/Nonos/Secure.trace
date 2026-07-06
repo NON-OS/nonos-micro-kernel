@@ -1,5 +1,0 @@
-{"log":
- [{"message":
-   ".> LEAN_PATH=././.lake/build/lib DYLD_LIBRARY_PATH= /Users/ek/.elan/toolchains/leanprover--lean4---v4.15.0/bin/lean ././././Nonos/Secure.lean -R ./././. -o ././.lake/build/lib/Nonos/Secure.olean -i ././.lake/build/lib/Nonos/Secure.ilean -c ././.lake/build/ir/Nonos/Secure.c --json",
-   "level": "trace"}],
- "depHash": "14790921969171042928"}
