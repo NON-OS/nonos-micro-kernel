@@ -17,14 +17,12 @@
 // The real boot-image footer parser, over untrusted image bytes. Pure: the
 // footer layout, the algorithm enums, and the region-extraction logic pull in
 // no hardware or UEFI services.
-#[allow(dead_code)]
 #[path = "../../../src/image_format/footer.rs"]
 pub mod footer;
 
-#[allow(dead_code)]
 #[path = "../../../src/image_format/types.rs"]
 pub mod types;
 
-#[allow(dead_code, clippy::op_ref)]
+#[allow(clippy::op_ref)]
 #[path = "../../../src/image_format/parse/mod.rs"]
 pub mod parse;

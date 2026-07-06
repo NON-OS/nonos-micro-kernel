@@ -16,7 +16,7 @@
 
 // The real version/error types (pure: plain u64 fields and an error enum).
 // `new_without_default` is a style choice in the real source, not restyled here.
-#[allow(dead_code, clippy::new_without_default)]
+#[allow(clippy::new_without_default)]
 #[path = "../../../../src/security/anti_rollback/types/mod.rs"]
 pub mod types;
 
