@@ -28,8 +28,9 @@ use alloc::vec::Vec;
 /// Prove that `codeword`, the evaluations of a polynomial over the size-`2^k`
 /// subgroup domain, has degree below `2^k / 2^log_blowup`. Folds `k - log_blowup`
 /// times down to a constant layer of `2^log_blowup` values, then answers
-/// `n_queries` sampled positions. `codeword.len()` must be a power of two.
-pub fn fri_prove(codeword: &[Fp], log_blowup: u32, n_queries: usize) -> FriProof {
+/// `n_queries` sampled positions. The domain is `shift * {omega^i}`; pass
+/// `shift = Fp::ONE` for the raw subgroup. `codeword.len()` must be a power of two.
+pub fn fri_prove(codeword: &[Fp], shift: Fp, log_blowup: u32, n_queries: usize) -> FriProof {
     let n = codeword.len();
     let log_n = n.trailing_zeros();
     let n_folds = (log_n - log_blowup) as usize;
@@ -43,17 +44,19 @@ pub fn fri_prove(codeword: &[Fp], log_blowup: u32, n_queries: usize) -> FriProof
 
     let mut current = codeword.to_vec();
     let mut omega = base_omega;
+    let mut coset = shift;
     for _ in 0..n_folds {
         let tree = MerkleTree::commit(&current);
         let root = tree.root();
         transcript.absorb_digest(&root);
         let beta = transcript.challenge_fp();
-        let next = fold_layer(&current, beta, omega, inv2);
+        let next = fold_layer(&current, beta, coset, omega, inv2);
         layers.push(current);
         trees.push(tree);
         roots.push(root);
         current = next;
         omega = omega.square();
+        coset = coset.square();
     }
 
     // The final layer is small and constant for a genuine low-degree input; it

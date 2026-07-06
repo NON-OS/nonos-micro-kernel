@@ -29,7 +29,13 @@ use alloc::vec::Vec;
 /// Verify a FRI proof for a size-`2^log_n` domain and blowup `2^log_blowup`.
 /// Returns `true` only if every structural, Merkle, folding, and low-degree
 /// check passes for all `n_queries` sampled positions.
-pub fn fri_verify(proof: &FriProof, log_n: u32, log_blowup: u32, n_queries: usize) -> bool {
+pub fn fri_verify(
+    proof: &FriProof,
+    shift: Fp,
+    log_n: u32,
+    log_blowup: u32,
+    n_queries: usize,
+) -> bool {
     let n = 1usize << log_n;
     let blowup = 1usize << log_blowup;
     let n_folds = (log_n - log_blowup) as usize;
@@ -79,8 +85,9 @@ pub fn fri_verify(proof: &FriProof, log_n: u32, log_blowup: u32, n_queries: usiz
                 return false;
             }
 
-            // Recompute the fold at the queried point x = omega_m^i.
-            let x = base_omega.pow((i as u64) << m);
+            // Recompute the fold at the queried point of layer m, which is
+            // `(shift * omega^i)^(2^m)` on the squared coset.
+            let x = (shift * base_omega.pow(i as u64)).pow(1u64 << m);
             let even = (op.a + op.b) * inv2;
             let odd = (op.a - op.b) * inv2 * x.inv();
             let folded = even + *beta * odd;

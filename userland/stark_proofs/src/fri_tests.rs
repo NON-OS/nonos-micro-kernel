@@ -35,13 +35,13 @@ fn xorshift(state: &mut u64) -> u64 {
 }
 
 /// Evaluate a random polynomial of degree below `d` over the size-`2^log_n`
-/// subgroup domain, giving a genuine low-degree codeword.
-fn low_degree_codeword(log_n: u32, d: usize, seed: u64) -> Vec<Fp> {
+/// domain `shift * {omega^i}`, giving a genuine low-degree codeword.
+fn low_degree_codeword(log_n: u32, d: usize, shift: Fp, seed: u64) -> Vec<Fp> {
     let n = 1usize << log_n;
     let omega = root_of_unity(log_n);
     let mut s = seed | 1;
     let coeffs: Vec<Fp> = (0..d).map(|_| Fp::from_u64(xorshift(&mut s))).collect();
-    let mut x = Fp::ONE;
+    let mut x = shift;
     let mut codeword = Vec::with_capacity(n);
     for _ in 0..n {
         codeword.push(eval(&coeffs, x));
@@ -72,18 +72,35 @@ fn the_domain_generator_has_the_right_order() {
 #[test]
 fn an_honest_low_degree_codeword_verifies() {
     let (log_n, log_blowup, degree, queries) = (5u32, 2u32, 8usize, 40usize);
-    let codeword = low_degree_codeword(log_n, degree, 0xABCD);
-    let proof = fri_prove(&codeword, log_blowup, queries);
-    assert!(fri_verify(&proof, log_n, log_blowup, queries), "an honest proof was rejected");
+    let codeword = low_degree_codeword(log_n, degree, Fp::ONE, 0xABCD);
+    let proof = fri_prove(&codeword, Fp::ONE, log_blowup, queries);
+    assert!(
+        fri_verify(&proof, Fp::ONE, log_n, log_blowup, queries),
+        "an honest proof was rejected"
+    );
+}
+
+#[test]
+fn an_honest_codeword_on_a_coset_verifies() {
+    // The STARK runs FRI on an LDE coset, not the raw subgroup. Folding must hold
+    // there too: evaluate a low-degree polynomial on shift * {omega^i} and prove.
+    let (log_n, log_blowup, degree, queries) = (6u32, 2u32, 8usize, 40usize);
+    let shift = Fp::from_u64(7);
+    let codeword = low_degree_codeword(log_n, degree, shift, 0xC05E7);
+    let proof = fri_prove(&codeword, shift, log_blowup, queries);
+    assert!(
+        fri_verify(&proof, shift, log_n, log_blowup, queries),
+        "an honest coset proof rejected"
+    );
 }
 
 #[test]
 fn honest_proofs_verify_across_sizes() {
     for (log_n, log_blowup, degree) in [(4u32, 1u32, 4usize), (6, 2, 8), (8, 3, 16)] {
-        let codeword = low_degree_codeword(log_n, degree, 0x1000 + log_n as u64);
-        let proof = fri_prove(&codeword, log_blowup, 32);
+        let codeword = low_degree_codeword(log_n, degree, Fp::ONE, 0x1000 + log_n as u64);
+        let proof = fri_prove(&codeword, Fp::ONE, log_blowup, 32);
         assert!(
-            fri_verify(&proof, log_n, log_blowup, 32),
+            fri_verify(&proof, Fp::ONE, log_n, log_blowup, 32),
             "honest proof at log_n {log_n} rejected"
         );
     }
@@ -95,8 +112,8 @@ fn a_high_degree_codeword_is_rejected() {
     // layer is not constant, so the low-degree check rejects it.
     let (log_n, log_blowup, queries) = (5u32, 2u32, 40usize);
     let codeword = random_codeword(log_n, 0x99);
-    let proof = fri_prove(&codeword, log_blowup, queries);
-    assert!(!fri_verify(&proof, log_n, log_blowup, queries), "a random codeword verified");
+    let proof = fri_prove(&codeword, Fp::ONE, log_blowup, queries);
+    assert!(!fri_verify(&proof, Fp::ONE, log_n, log_blowup, queries), "a random codeword verified");
 }
 
 #[test]
@@ -106,20 +123,26 @@ fn a_forged_constant_final_layer_is_rejected() {
     // longer land at the re-derived positions and the Merkle checks fail.
     let (log_n, log_blowup, queries) = (5u32, 2u32, 40usize);
     let codeword = random_codeword(log_n, 0x1357);
-    let mut proof = fri_prove(&codeword, log_blowup, queries);
+    let mut proof = fri_prove(&codeword, Fp::ONE, log_blowup, queries);
     let constant = proof.final_layer[0];
     for value in proof.final_layer.iter_mut() {
         *value = constant;
     }
-    assert!(!fri_verify(&proof, log_n, log_blowup, queries), "a forged constant final verified");
+    assert!(
+        !fri_verify(&proof, Fp::ONE, log_n, log_blowup, queries),
+        "a forged constant final verified"
+    );
 }
 
 #[test]
 fn a_tampered_opening_is_rejected() {
     // Corrupt one opened value. Its Merkle path no longer recomputes the root.
     let (log_n, log_blowup, queries) = (5u32, 2u32, 40usize);
-    let codeword = low_degree_codeword(log_n, 8, 0x2468);
-    let mut proof = fri_prove(&codeword, log_blowup, queries);
+    let codeword = low_degree_codeword(log_n, 8, Fp::ONE, 0x2468);
+    let mut proof = fri_prove(&codeword, Fp::ONE, log_blowup, queries);
     proof.queries[0].layers[0].a = proof.queries[0].layers[0].a + Fp::ONE;
-    assert!(!fri_verify(&proof, log_n, log_blowup, queries), "a tampered opening verified");
+    assert!(
+        !fri_verify(&proof, Fp::ONE, log_n, log_blowup, queries),
+        "a tampered opening verified"
+    );
 }
