@@ -14,24 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[inline]
-pub(crate) fn ct_eq_bool(a: &[u8; 32], b: &[u8; 32]) -> u8 {
-    let mut diff = 0u8;
-    for i in 0..32 {
-        diff |= a[i] ^ b[i];
-    }
-    ((diff as u16 | (diff as u16).wrapping_neg()) >> 8) as u8 ^ 1
+// Ed25519's `KeyPair::generate` is the only consumer of the RNG, and the KATs
+// exercise sign/verify with fixed seeds from the standard vectors. This shim
+// satisfies the include without pulling the kernel's entropy stack; nothing in
+// the proof set calls it.
+pub fn get_random_bytes() -> [u8; 32] {
+    [0u8; 32]
 }
 
-#[inline]
-pub(crate) fn ct_is_all_zero(data: &[u8; 32]) -> u8 {
-    let mut acc = 0u8;
-    for &b in data {
-        acc |= b;
+// Consumed only by the signing/keygen paths (P-256 ECDH and ECDSA), which the
+// KATs do not exercise; verification is deterministic.
+pub fn fill_random_bytes(buf: &mut [u8]) {
+    for b in buf.iter_mut() {
+        *b = 0;
     }
-    // 1 if every byte is zero, else 0, branch-free. `acc | acc.wrapping_neg()`
-    // has its high bit set for any nonzero `acc`, so the shift yields the
-    // nonzero flag; subtracting from 1 gives the all-zero flag. Returning a full
-    // 0x00/0xFF mask here would underflow the callers' `1 - ct_is_all_zero(..)`.
-    1 - ((acc | acc.wrapping_neg()) >> 7)
 }

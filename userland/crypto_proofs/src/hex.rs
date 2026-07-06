@@ -14,24 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[inline]
-pub(crate) fn ct_eq_bool(a: &[u8; 32], b: &[u8; 32]) -> u8 {
-    let mut diff = 0u8;
-    for i in 0..32 {
-        diff |= a[i] ^ b[i];
+// Parse a 64-char hex string into a 32-byte digest for comparing against the
+// published test vectors.
+pub fn hex32(s: &str) -> [u8; 32] {
+    let b = s.as_bytes();
+    assert_eq!(b.len(), 64, "expected a 64-char hex digest");
+    let mut out = [0u8; 32];
+    for (i, byte) in out.iter_mut().enumerate() {
+        *byte = (nibble(b[2 * i]) << 4) | nibble(b[2 * i + 1]);
     }
-    ((diff as u16 | (diff as u16).wrapping_neg()) >> 8) as u8 ^ 1
+    out
 }
 
-#[inline]
-pub(crate) fn ct_is_all_zero(data: &[u8; 32]) -> u8 {
-    let mut acc = 0u8;
-    for &b in data {
-        acc |= b;
+fn nibble(c: u8) -> u8 {
+    match c {
+        b'0'..=b'9' => c - b'0',
+        b'a'..=b'f' => c - b'a' + 10,
+        b'A'..=b'F' => c - b'A' + 10,
+        _ => panic!("bad hex digit"),
     }
-    // 1 if every byte is zero, else 0, branch-free. `acc | acc.wrapping_neg()`
-    // has its high bit set for any nonzero `acc`, so the shift yields the
-    // nonzero flag; subtracting from 1 gives the all-zero flag. Returning a full
-    // 0x00/0xFF mask here would underflow the callers' `1 - ct_is_all_zero(..)`.
-    1 - ((acc | acc.wrapping_neg()) >> 7)
 }
