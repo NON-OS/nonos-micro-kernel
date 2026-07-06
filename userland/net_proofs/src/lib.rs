@@ -20,8 +20,10 @@
 
 extern crate alloc;
 
-// The real DNS module, addressed as `crate::dns` by its own source.
-#[allow(dead_code, clippy::all)]
+// The real DNS module, addressed as `crate::dns` by its own source. The style
+// lints are the real code's own choices, allowed on the include rather than
+// restyled here.
+#[allow(clippy::new_without_default, clippy::unnecessary_map_or)]
 #[path = "../../capsule_net_dns/src/dns/mod.rs"]
 pub mod dns;
 
