@@ -25,9 +25,11 @@ mod paint;
 mod paint_analog;
 mod paint_stopwatch;
 mod paint_tabbar;
+mod paint_timer;
 mod state;
 mod stopwatch;
 mod tabs;
 mod theme;
+mod timer;
 
 pub use app::Clock;

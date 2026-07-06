@@ -28,7 +28,27 @@ pub fn on_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if state.tab == Tab::Stopwatch {
         return stopwatch_click(state, x, y);
     }
+    if state.tab == Tab::Timer {
+        return timer_click(state, x, y);
+    }
     EventOutcome::Idle
+}
+
+fn timer_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
+    if in_rect(x, y, 40, 250, 80, 40) {
+        state.timer.set(60_000);
+    } else if in_rect(x, y, 140, 250, 80, 40) {
+        state.timer.set(300_000);
+    } else if in_rect(x, y, 240, 250, 80, 40) {
+        state.timer.set(600_000);
+    } else if in_rect(x, y, 40, 320, 130, 46) {
+        state.timer.toggle(state.now_ms);
+    } else if in_rect(x, y, 190, 320, 130, 46) {
+        state.timer.reset();
+    } else {
+        return EventOutcome::Idle;
+    }
+    EventOutcome::Repaint
 }
 
 fn stopwatch_click(state: &mut State, x: i32, y: i32) -> EventOutcome {

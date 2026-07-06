@@ -50,11 +50,12 @@ impl App for Clock {
 
     fn on_tick(&mut self) -> bool {
         self.state.refresh();
+        self.state.timer.poll(self.state.now_ms);
         true
     }
 
     fn tick_interval_ms(&self) -> i64 {
-        if self.state.sw.running {
+        if self.state.sw.running || self.state.timer.running {
             100
         } else {
             1000

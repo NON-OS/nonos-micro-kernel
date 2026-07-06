@@ -18,3 +18,4 @@ pub const BG: u32 = 0xFF10_1418;
 pub const FG: u32 = 0xFFF2_F4F6;
 pub const DIM: u32 = 0xFF8A_93A0;
 pub const ACCENT: u32 = 0xFF4C_9AFF;
+pub const ALERT: u32 = 0xFFE0_5A4A;

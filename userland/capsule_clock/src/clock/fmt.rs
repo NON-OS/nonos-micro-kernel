@@ -35,6 +35,14 @@ pub fn ms_clock(ms: u64) -> [u8; 8] {
     [mm[0], mm[1], b':', ss[0], ss[1], b'.', cc[0], cc[1]]
 }
 
+pub fn ms_ms(ms: u64) -> [u8; 5] {
+    let s = (ms / 1000 % 60) as u8;
+    let m = (ms / 60000 % 100) as u8;
+    let mm = two(m);
+    let ss = two(s);
+    [mm[0], mm[1], b':', ss[0], ss[1]]
+}
+
 pub fn year4(y: u16) -> [u8; 4] {
     [
         b'0' + ((y / 1000) % 10) as u8,

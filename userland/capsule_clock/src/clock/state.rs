@@ -18,12 +18,14 @@ use nonos_libc::time::{mk_time_millis, mk_time_rtc, RtcTime};
 
 use crate::clock::stopwatch::Stopwatch;
 use crate::clock::tabs::Tab;
+use crate::clock::timer::Timer;
 
 pub struct State {
     pub rtc: RtcTime,
     pub now_ms: u64,
     pub tab: Tab,
     pub sw: Stopwatch,
+    pub timer: Timer,
 }
 
 impl State {
@@ -33,6 +35,7 @@ impl State {
             now_ms: 0,
             tab: Tab::Clock,
             sw: Stopwatch::default(),
+            timer: Timer::default(),
         };
         s.refresh();
         s
