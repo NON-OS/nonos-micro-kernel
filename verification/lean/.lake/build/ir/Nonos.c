@@ -1,6 +1,6 @@
 // Lean compiler output
 // Module: Nonos
-// Imports: Init Nonos.AntiRollback Nonos.Authorization Nonos.Capability Nonos.CapabilityBits Nonos.Crypto Nonos.Ipc Nonos.Isolation Nonos.Path Nonos.Paging
+// Imports: Init Nonos.AntiRollback Nonos.Authorization Nonos.Capability Nonos.CapabilityBits Nonos.Crypto Nonos.Ipc Nonos.Isolation Nonos.Path Nonos.Paging Nonos.Secure
 #include <lean/lean.h>
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -23,6 +23,7 @@ lean_object* initialize_Nonos_Ipc(uint8_t builtin, lean_object*);
 lean_object* initialize_Nonos_Isolation(uint8_t builtin, lean_object*);
 lean_object* initialize_Nonos_Path(uint8_t builtin, lean_object*);
 lean_object* initialize_Nonos_Paging(uint8_t builtin, lean_object*);
+lean_object* initialize_Nonos_Secure(uint8_t builtin, lean_object*);
 static bool _G_initialized = false;
 LEAN_EXPORT lean_object* initialize_Nonos(uint8_t builtin, lean_object* w) {
 lean_object * res;
@@ -56,6 +57,9 @@ res = initialize_Nonos_Path(builtin, lean_io_mk_world());
 if (lean_io_result_is_error(res)) return res;
 lean_dec_ref(res);
 res = initialize_Nonos_Paging(builtin, lean_io_mk_world());
+if (lean_io_result_is_error(res)) return res;
+lean_dec_ref(res);
+res = initialize_Nonos_Secure(builtin, lean_io_mk_world());
 if (lean_io_result_is_error(res)) return res;
 lean_dec_ref(res);
 return lean_io_result_mk_ok(lean_box(0));
