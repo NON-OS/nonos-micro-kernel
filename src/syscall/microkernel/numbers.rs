@@ -39,6 +39,7 @@ pub const SYS_THREAD_SPAWN: u64 = tag4(b"MTSP");
 pub const SYS_YIELD: u64 = tag4(b"MYLD");
 pub const SYS_TIME_MILLIS: u64 = tag4(b"MTMS");
 pub const SYS_TIME_RTC: u64 = tag4(b"MTRT");
+pub const SYS_TIME_ADJUST: u64 = tag4(b"MTAD");
 pub const SYS_BATTERY_STATUS: u64 = tag4(b"MBAT");
 pub const SYS_PROC_STAT: u64 = tag4(b"MPST");
 pub const SYS_PROC_OUTPUT: u64 = tag4(b"MOUT");
