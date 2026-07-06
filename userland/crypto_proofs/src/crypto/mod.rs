@@ -32,3 +32,6 @@ pub mod constant_time;
 pub mod asymmetric;
 pub mod rng;
 pub mod sha512;
+
+// ChaCha20-Poly1305 AEAD; depends only on the constant-time primitives above.
+pub mod symmetric;

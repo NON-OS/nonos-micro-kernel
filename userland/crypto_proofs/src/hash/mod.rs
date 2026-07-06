@@ -29,3 +29,21 @@ pub use sha256::sha256;
 
 #[path = "../../../../src/crypto/hash/unified/hmac.rs"]
 pub mod hmac;
+
+// Expose the HMAC functions at the parent level so the included HKDF source
+// resolves `use super::hmac_sha256`.
+pub use hmac::{hmac_sha256, hmac_verify};
+
+#[path = "../../../../src/crypto/hash/unified/hkdf.rs"]
+pub mod hkdf;
+
+// SHA-3 / Keccak family (self-contained under its own module).
+#[allow(
+    clippy::needless_range_loop,
+    clippy::manual_rotate,
+    clippy::identity_op,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of
+)]
+#[path = "../../../../src/crypto/hash/sha3/mod.rs"]
+pub mod sha3;

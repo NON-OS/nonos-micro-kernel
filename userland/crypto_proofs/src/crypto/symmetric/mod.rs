@@ -14,31 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Known-answer proofs for the kernel crypto primitives. Each `#[path]` include
-//! pulls the real `src/crypto` source, so the tests check production code
-//! against the official standard vectors (RFC / NIST), not a copy of it. Run
-//! with `cargo test` from this directory.
-
-extern crate alloc;
-
-// The real crypto source under test, with the minimal supporting types the
-// primitives expect from their parent module.
-pub mod crypto;
-pub mod hash;
-
-#[cfg(test)]
-mod chacha_tests;
-#[cfg(test)]
-mod ed25519_tests;
-#[cfg(test)]
-mod hex;
-#[cfg(test)]
-mod hkdf_tests;
-#[cfg(test)]
-mod hmac_tests;
-#[cfg(test)]
-mod sha256_tests;
-#[cfg(test)]
-mod sha3_tests;
-#[cfg(test)]
-mod sha512_tests;
+// ChaCha20-Poly1305 AEAD. The included source resolves its constant-time
+// dependency through `crate::crypto::constant_time`, already provided here.
+// The block and MAC cores use reference-style index loops and rotates, which
+// are kept as-is (the KAT proves behavior).
+#[allow(
+    clippy::needless_range_loop,
+    clippy::manual_rotate,
+    clippy::identity_op,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of
+)]
+#[path = "../../../../../src/crypto/symmetric/chacha20poly1305/mod.rs"]
+pub mod chacha20poly1305;
