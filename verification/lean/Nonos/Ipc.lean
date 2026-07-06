@@ -33,4 +33,16 @@ theorem oversized_rejected (len : Nat) (h : len > maxMessageSize) : ¬ ValidLen 
 theorem accepted_is_bounded (len : Nat) (h : ValidLen len) :
     0 < len ∧ len ≤ maxMessageSize := h
 
+/-- The gate is exact: a length is valid if and only if it is non-empty and
+    within the bound, with no other accepting case. -/
+theorem valid_iff (len : Nat) : ValidLen len ↔ (0 < len ∧ len ≤ maxMessageSize) :=
+  Iff.rfl
+
+/-- The boundary length is accepted and one past it is rejected, so the bound is
+    exactly `maxMessageSize`. -/
+theorem boundary_is_exact :
+    ValidLen maxMessageSize ∧ ¬ ValidLen (maxMessageSize + 1) := by
+  unfold ValidLen maxMessageSize
+  omega
+
 end Nonos.Ipc

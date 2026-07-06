@@ -37,6 +37,14 @@ theorem no_wx_page (p : Perm) (h : ¬ IsWxViolation p) :
   unfold IsWxViolation pteWritable pteExecutable at *
   exact h
 
+/-- The encoding is exact: a page is writable and executable at once if and only
+    if its permission is a W^X violation. So rejecting `IsWxViolation` is both
+    necessary and sufficient to keep W+X pages off the tables. -/
+theorem wx_page_iff_violation (p : Perm) :
+    (pteWritable p = true ∧ pteExecutable p = true) ↔ IsWxViolation p := by
+  unfold IsWxViolation pteWritable pteExecutable
+  tauto
+
 /-- The last user address and the maximum single-copy length. -/
 def userEnd : Nat := 0x7FFFFFFFFFFF
 def maxCopy : Nat := 64 * 1024 * 1024

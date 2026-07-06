@@ -60,4 +60,25 @@ theorem no_rollback_after_boot (s : State) (v w : Nat)
   -- The new floor is `max s.floor v ≥ v > w`, so `w` cannot meet it.
   omega
 
+/-- On an accepted boot the floor rises to exactly the greater of the old floor
+    and the booted version: a complete characterization of the update. -/
+theorem update_raises_to_max (s : State) (v : Nat) (h : Accepts s v) :
+    (update s v).floor = max s.floor v := by
+  unfold update
+  rw [if_pos h]
+
+/-- Re-booting the same version is stable: the floor does not change on a second
+    identical update. -/
+theorem update_stable (s : State) (v : Nat) (h : Accepts s v) :
+    (update (update s v) v).floor = (update s v).floor := by
+  rw [update_raises_to_max s v h]
+  have hfloor : s.floor ≤ v := h.2
+  have h2 : Accepts { floor := max s.floor v } v := by
+    refine ⟨h.1, ?_⟩
+    show max s.floor v ≤ v
+    omega
+  rw [update_raises_to_max { floor := max s.floor v } v h2]
+  show max (max s.floor v) v = max s.floor v
+  omega
+
 end Nonos.AntiRollback

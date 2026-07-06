@@ -52,4 +52,19 @@ theorem leading_dotdot_neutralized (cs : List Component) :
 theorem name_descends_one (d : Nat) : depthStep d .name = d + 1 :=
   rfl
 
+/-- No single step ever moves more than one level in either direction, so the
+    resolved depth changes by at most one per component. -/
+theorem step_moves_at_most_one (d : Nat) (c : Component) :
+    depthStep d c ≤ d + 1 ∧ d ≤ depthStep d c + 1 := by
+  cases c <;> simp [depthStep] <;> omega
+
+/-- A path made only of `..` components resolves to the root, never below it: no
+    amount of parent references can escape upward. -/
+theorem all_up_stays_at_root : ∀ n : Nat, resolve (List.replicate n .up) = 0
+  | 0 => rfl
+  | n + 1 => by
+    show resolve (.up :: List.replicate n .up) = 0
+    rw [leading_dotdot_neutralized]
+    exact all_up_stays_at_root n
+
 end Nonos.Path

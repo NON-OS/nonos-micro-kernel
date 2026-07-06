@@ -46,4 +46,14 @@ theorem allow_monotone (t u : Token) (required : Nat)
   unfold Allowed Grants at *
   exact hsub required h
 
+/-- The gate is exactly a capability check: there is no path to acceptance that
+    does not go through holding the required capability. -/
+theorem allowed_iff_grants (t : Token) (required : Nat) :
+    Allowed t required ↔ Grants t required := Iff.rfl
+
+/-- Two syscalls guarded by the same capability are permitted together or denied
+    together: authorization depends only on the guarding capability. -/
+theorem same_guard_same_decision (t : Token) (r1 r2 : Nat) (h : r1 = r2) :
+    Allowed t r1 ↔ Allowed t r2 := by rw [h]
+
 end Nonos.Authorization
