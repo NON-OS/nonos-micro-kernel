@@ -1,0 +1,19 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the RTL8139 driver's RX ring primitives and
+# untrusted protocol input. Builds for the host so `cargo test` runs the real
+# driver source (included via #[path]) against hostile offsets and lengths,
+# without a boot.
+[package]
+name = "rtl8139_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
