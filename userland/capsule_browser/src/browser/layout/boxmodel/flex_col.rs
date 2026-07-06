@@ -52,10 +52,19 @@ pub(super) fn flex_col(
         cy += it.style.margin_top as i32;
         let item_avail = (w - ml - mr).max(0);
         let iw = border_box_w(&it.style, item_avail);
-        let dx = match s.align {
-            Align::Start | Align::Stretch => ml,
-            Align::Center => ml.max((w - iw) / 2),
-            Align::End => (w - iw - mr).max(0),
+        // Cross-axis auto margins centre the item and override align-items: a
+        // narrower `margin: 0 auto` container is centred in the column even
+        // when the column stretches or starts its other children.
+        let dx = if it.style.margin_left_auto && it.style.margin_right_auto {
+            ((w - iw) / 2).max(ml)
+        } else if it.style.margin_left_auto {
+            (w - iw - mr).max(0)
+        } else {
+            match s.align {
+                Align::Start | Align::Stretch => ml,
+                Align::Center => ml.max((w - iw) / 2),
+                Align::End => (w - iw - mr).max(0),
+            }
         };
         let h = layout_box(it, x + dx, y + cy, item_avail, frags, depth + 1, ctx);
         cy += h + it.style.margin_bottom as i32;

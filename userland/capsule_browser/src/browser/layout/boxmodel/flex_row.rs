@@ -114,17 +114,29 @@ pub(super) fn flex_row(
     for sz in sizes.iter_mut() {
         *sz = (*sz).max(MIN_ITEM_W).min(w);
     }
-    // Leftover main-axis space after sizing feeds justify-content.
+    // Leftover main-axis space after sizing. Auto margins on the items absorb
+    // it first, so a max-width item with `margin: 0 auto` centres in the row;
+    // only when no item carries an auto margin does the leftover feed
+    // justify-content.
     let placed: i32 = sizes.iter().sum();
     let leftover = (avail - placed).max(0);
-    let (mut cx, step) = match s.justify {
-        Justify::Start => (0, gap),
-        Justify::Center => (leftover / 2, gap),
-        Justify::End => (leftover, gap),
-        Justify::Between => (0, gap + if n > 1 { leftover / (n - 1) } else { 0 }),
-        Justify::Around => {
-            let pad = leftover / n;
-            (pad / 2, gap + pad)
+    let auto_count: i32 = items
+        .iter()
+        .map(|it| it.style.margin_left_auto as i32 + it.style.margin_right_auto as i32)
+        .sum();
+    let auto_share = if auto_count > 0 { leftover / auto_count } else { 0 };
+    let (mut cx, step) = if auto_count > 0 {
+        (0, gap)
+    } else {
+        match s.justify {
+            Justify::Start => (0, gap),
+            Justify::Center => (leftover / 2, gap),
+            Justify::End => (leftover, gap),
+            Justify::Between => (0, gap + if n > 1 { leftover / (n - 1) } else { 0 }),
+            Justify::Around => {
+                let pad = leftover / n;
+                (pad / 2, gap + pad)
+            }
         }
     };
     // Single layout pass: place each item at its main-axis slot on the row's
@@ -133,8 +145,10 @@ pub(super) fn flex_row(
     let mut row_h = 0i32;
     let mut ranges: Vec<(usize, usize, i32)> = Vec::with_capacity(items.len());
     for (i, it) in items.iter().enumerate() {
-        let ml = it.style.margin_left as i32;
-        let mr = it.style.margin_right as i32;
+        let ml = it.style.margin_left as i32
+            + if it.style.margin_left_auto { auto_share } else { 0 };
+        let mr = it.style.margin_right as i32
+            + if it.style.margin_right_auto { auto_share } else { 0 };
         let mt = it.style.margin_top as i32;
         let mb = it.style.margin_bottom as i32;
         let start = frags.len();
