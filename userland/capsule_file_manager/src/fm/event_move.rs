@@ -14,29 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+use nonos_app_skeleton::EventOutcome;
 
-use super::entries::Entry;
 use super::scroll::ensure_visible;
 use super::state::State;
-use super::view_sort::sort_view;
 
-// Rebuild the visible list from the full listing: keep entries whose name
-// contains the active filter, order them by the current sort mode, then keep
-// the cursor and scroll window in range. Called whenever the listing, filter,
-// or sort mode changes.
-pub fn rebuild_view(state: &mut State) {
-    let needle = state.filter.to_ascii_lowercase();
-    let mut view: Vec<Entry> = state
-        .all
-        .iter()
-        .filter(|e| needle.is_empty() || e.label.to_ascii_lowercase().contains(needle.as_str()))
-        .cloned()
-        .collect();
-    sort_view(&mut view, state.sort_mode);
-    state.entries = view;
-    if state.cursor >= state.entries.len() {
-        state.cursor = state.entries.len().saturating_sub(1);
+pub fn move_cursor(state: &mut State, delta: i32) -> EventOutcome {
+    if delta < 0 {
+        state.cursor = state.cursor.saturating_sub((-delta) as usize);
+    } else {
+        state.cursor = state.cursor.saturating_add(delta as usize);
+        state.cursor = state.cursor.min(state.entries.len().saturating_sub(1));
     }
     ensure_visible(state);
+    EventOutcome::Repaint
 }

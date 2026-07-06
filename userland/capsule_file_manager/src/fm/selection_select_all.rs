@@ -16,15 +16,7 @@
 
 use super::state::State;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
-    }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+pub fn select_all(state: &mut State) {
+    state.selected = state.entries.iter().map(|e| e.full_path.clone()).collect();
+    state.status = b"selected all";
 }

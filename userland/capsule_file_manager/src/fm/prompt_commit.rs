@@ -14,17 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
+use alloc::format;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
+use super::prompt_run_op::run_op;
+use super::refresh::refresh;
+use super::state::{Mode, PromptKind, State};
+
+pub fn commit(state: &mut State, kind: PromptKind) {
+    let name = core::mem::take(&mut state.input);
+    state.mode = Mode::Browse;
+    if name.is_empty() && !matches!(kind, PromptKind::Delete) {
+        state.status = b"empty name";
+        return;
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+    let target = format!("{}{}", state.prefix, name);
+    let msg = match run_op(state, kind, &name, &target) {
+        Ok(msg) => msg,
+        Err(e) => e.as_bytes(),
+    };
+    refresh(state);
+    state.status = msg;
 }

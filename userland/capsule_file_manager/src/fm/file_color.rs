@@ -14,17 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
+use super::filetype::Kind;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
+pub fn color(kind: Kind) -> u32 {
+    match kind {
+        Kind::Dir => 0xFF6CE08C,
+        Kind::Code => 0xFF7FB4FF,
+        Kind::Image => 0xFFD08CF0,
+        Kind::Doc => 0xFFD7E2F2,
+        Kind::Archive => 0xFFE0B060,
+        Kind::Exec => 0xFFE0785C,
+        Kind::Other => 0xFFA8B6CC,
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
 }

@@ -14,17 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
+use super::preview::Preview;
+use super::preview_paint::VISIBLE_LINES;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
-    }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+pub fn info(preview: &Preview) -> alloc::string::String {
+    let total = preview.lines.len();
+    let first = if total == 0 { 0 } else { preview.scroll + 1 };
+    let last = (preview.scroll + VISIBLE_LINES).min(total);
+    let kind = if preview.binary { "binary" } else { "text" };
+    let cut = if preview.truncated { " (truncated)" } else { "" };
+    alloc::format!("{} bytes  {}  ln {}-{}/{}{}", preview.byte_len, kind, first, last, total, cut)
 }

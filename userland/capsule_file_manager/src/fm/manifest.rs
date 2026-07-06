@@ -16,8 +16,8 @@
 
 use nonos_app_skeleton::{AppManifest, WindowKind};
 
-pub const WIDTH: u32 = 480;
-pub const HEIGHT: u32 = 340;
+pub const WIDTH: u32 = 360;
+pub const HEIGHT: u32 = 260;
 
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
 const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;

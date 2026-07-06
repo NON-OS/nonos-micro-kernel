@@ -14,17 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
+use super::entries::Entry;
+use super::file_ext::ext;
+use super::filetype::Kind;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
+pub fn kind_of(entry: &Entry) -> Kind {
+    if entry.is_dir {
+        return Kind::Dir;
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+    match ext(&entry.label) {
+        "rs" | "c" | "h" | "cpp" | "py" | "js" | "ts" | "go" | "sh" | "toml" | "json" | "md"
+        | "html" | "css" | "lua" => Kind::Code,
+        "png" | "jpg" | "jpeg" | "gif" | "bmp" | "svg" | "webp" | "ico" => Kind::Image,
+        "txt" | "pdf" | "log" | "cfg" | "conf" | "ini" | "csv" => Kind::Doc,
+        "zip" | "tar" | "gz" | "xz" | "bz2" | "7z" | "zst" => Kind::Archive,
+        "elf" | "bin" | "exe" | "wasm" | "so" | "a" => Kind::Exec,
+        _ => Kind::Other,
+    }
 }

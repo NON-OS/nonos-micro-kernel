@@ -16,10 +16,8 @@
 
 use alloc::string::String;
 
-use nonos_app_skeleton::clients::vfs::{copy, rename};
-
-use super::refresh::refresh;
-use super::selection;
+use super::selection_acting::acting;
+use super::selection_clear::clear;
 use super::state::State;
 
 // A remembered entry awaiting a paste. `path` is keyed the way the store holds
@@ -34,7 +32,7 @@ pub struct Clip {
 // Remember the acting set (selection, or the cursor) for a later paste, as a
 // copy or a cut. Clears the selection so the next action starts fresh.
 pub fn yank(state: &mut State, cut: bool) {
-    let act = selection::acting(state);
+    let act = acting(state);
     if act.is_empty() {
         state.status = b"nothing to yank";
         return;
@@ -43,42 +41,6 @@ pub fn yank(state: &mut State, cut: bool) {
         .into_iter()
         .map(|(full, is_dir)| Clip { path: String::from(full.trim_end_matches('/')), is_dir, cut })
         .collect();
-    selection::clear(state);
+    clear(state);
     state.status = if cut { b"cut (p to paste)" } else { b"copied (p to paste)" };
-}
-
-// Paste every clipboard entry into the current directory under its own name: a
-// cut moves, a copy duplicates, a directory carries its whole subtree.
-pub fn paste(state: &mut State) {
-    if state.clipboard.is_empty() {
-        state.status = b"clipboard empty";
-        return;
-    }
-    let clips = state.clipboard.clone();
-    let cut = clips.first().map(|c| c.cut).unwrap_or(false);
-    let pid = state.owner_pid;
-    let mut failed = false;
-    for clip in &clips {
-        let Some(base) = clip.path.rsplit('/').next().filter(|b| !b.is_empty()) else { continue };
-        let dest = alloc::format!("{}{}", state.prefix, base);
-        let result = if clip.cut {
-            rename(pid, clip.path.as_bytes(), dest.as_bytes())
-        } else {
-            copy(pid, clip.path.as_bytes(), dest.as_bytes(), clip.is_dir)
-        };
-        if result.is_err() {
-            failed = true;
-        }
-    }
-    if cut {
-        state.clipboard.clear();
-    }
-    refresh(state);
-    state.status = if failed {
-        b"paste: some failed"
-    } else if cut {
-        b"moved"
-    } else {
-        b"pasted"
-    };
 }

@@ -14,17 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
+use alloc::string::String;
+use alloc::vec::Vec;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
+use super::state::{Mode, SortMode, State};
+
+impl State {
+    pub fn new() -> Self {
+        State {
+            owner_pid: 0,
+            prefix: String::from("/"),
+            all: Vec::new(),
+            entries: Vec::new(),
+            cursor: 0,
+            scroll: 0,
+            preview: None,
+            status: b"loading...",
+            mode: Mode::Browse,
+            input: String::new(),
+            filter: String::new(),
+            sort_mode: SortMode::Name,
+            selected: Vec::new(),
+            clipboard: Vec::new(),
         }
-        None => state.selected.push(path),
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
 }

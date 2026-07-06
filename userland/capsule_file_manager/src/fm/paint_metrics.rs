@@ -14,17 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
+use super::manifest::{HEIGHT, WIDTH};
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
-    }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
-}
+pub const TEXT_LEFT: u32 = 16;
+pub const GLYPH_W: u32 = 9;
+pub const NAME_MAX: usize = 30;
+pub const SIZE_END: u32 = 362;
+pub const DATE_END: u32 = WIDTH - TEXT_LEFT;
+pub const STATUS_Y: u32 = HEIGHT - 22;

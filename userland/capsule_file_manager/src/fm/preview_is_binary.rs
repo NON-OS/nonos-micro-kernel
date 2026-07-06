@@ -14,17 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
-
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
+pub fn is_binary(bytes: &[u8]) -> bool {
+    let sample = &bytes[..bytes.len().min(1024)];
+    if sample.is_empty() {
+        return false;
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+    let mut suspicious = 0usize;
+    for &b in sample {
+        if b == 0 {
+            return true;
+        }
+        let printable = (0x20..=0x7e).contains(&b) || matches!(b, b'\n' | b'\r' | b'\t');
+        if !printable {
+            suspicious += 1;
+        }
+    }
+    suspicious * 100 / sample.len() > 30
 }

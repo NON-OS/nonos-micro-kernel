@@ -14,17 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
+use nonos_app_skeleton::PaintBuffer;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
+use super::manifest::WIDTH;
+use super::paint_metrics::{GLYPH_W, TEXT_LEFT};
+use super::state::State;
+use super::theme::MUTED;
+
+pub fn paint_header(state: &State, fb: &mut PaintBuffer) {
+    let mut tag = alloc::string::String::from("sort:");
+    tag.push_str(core::str::from_utf8(state.sort_mode.label()).unwrap_or("?"));
+    if !state.filter.is_empty() {
+        tag.push_str("  /");
+        tag.push_str(&state.filter);
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+    let x = WIDTH.saturating_sub(TEXT_LEFT + GLYPH_W * tag.len() as u32);
+    fb.text(x, 18, tag.as_bytes(), MUTED);
 }

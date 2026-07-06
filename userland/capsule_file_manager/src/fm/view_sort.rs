@@ -14,17 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
+use core::cmp::Ordering;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
-    }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+use super::entries::Entry;
+use super::state::SortMode;
+use super::view_sort_mode::by_mode;
+
+pub fn sort_view(entries: &mut [Entry], mode: SortMode) {
+    entries.sort_by(|a, b| match b.is_dir.cmp(&a.is_dir) {
+        Ordering::Equal => by_mode(a, b, mode),
+        other => other,
+    });
 }

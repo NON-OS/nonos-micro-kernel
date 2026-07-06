@@ -19,13 +19,14 @@ use alloc::string::String;
 use nonos_app_skeleton::clients::vfs::copy;
 
 use super::refresh::refresh;
-use super::selection;
+use super::selection_acting::acting;
+use super::selection_clear::clear;
 use super::state::State;
 
 // Copy the acting set (selection or cursor) into the current directory under a
 // non-colliding "(copy)" name, so an entry can be duplicated in place.
 pub fn duplicate(state: &mut State) {
-    let act = selection::acting(state);
+    let act = acting(state);
     if act.is_empty() {
         state.status = b"nothing to duplicate";
         return;
@@ -41,7 +42,7 @@ pub fn duplicate(state: &mut State) {
             failed = true;
         }
     }
-    selection::clear(state);
+    clear(state);
     refresh(state);
     state.status = if failed { b"duplicate: some failed" } else { b"duplicated" };
 }

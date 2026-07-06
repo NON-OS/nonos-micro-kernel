@@ -14,34 +14,39 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::clients::vfs::chmod;
+use nonos_app_skeleton::clients::vfs::{copy, rename};
 
 use super::refresh::refresh;
-use super::selection_acting::acting;
-use super::selection_clear::clear;
 use super::state::State;
 
-const MODE_RW: u16 = 0o644;
-const MODE_RO: u16 = 0o444;
-
-// Flip the read-only state of the acting set (selection or cursor). An entry
-// currently writable becomes read-only and vice versa.
-pub fn toggle_readonly(state: &mut State) {
-    let act = acting(state);
-    if act.is_empty() {
-        state.status = b"nothing selected";
+pub fn paste(state: &mut State) {
+    if state.clipboard.is_empty() {
+        state.status = b"clipboard empty";
         return;
     }
+    let clips = state.clipboard.clone();
+    let cut = clips.first().map(|c| c.cut).unwrap_or(false);
     let pid = state.owner_pid;
     let mut failed = false;
-    for (full, _is_dir) in &act {
-        let writable = state.all.iter().find(|e| e.full_path == *full).is_none_or(|e| e.writable);
-        let mode = if writable { MODE_RO } else { MODE_RW };
-        if chmod(pid, full.trim_end_matches('/').as_bytes(), mode).is_err() {
-            failed = true;
-        }
+    for clip in &clips {
+        let Some(base) = clip.path.rsplit('/').next().filter(|b| !b.is_empty()) else { continue };
+        let dest = alloc::format!("{}{}", state.prefix, base);
+        let result = if clip.cut {
+            rename(pid, clip.path.as_bytes(), dest.as_bytes())
+        } else {
+            copy(pid, clip.path.as_bytes(), dest.as_bytes(), clip.is_dir)
+        };
+        failed |= result.is_err();
     }
-    clear(state);
+    if cut {
+        state.clipboard.clear();
+    }
     refresh(state);
-    state.status = if failed { b"chmod: some failed" } else { b"permissions changed" };
+    state.status = if failed {
+        b"paste: some failed"
+    } else if cut {
+        b"moved"
+    } else {
+        b"pasted"
+    };
 }

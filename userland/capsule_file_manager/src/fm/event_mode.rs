@@ -14,17 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
+use nonos_app_skeleton::{EventOutcome, InputEvent};
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
+use super::filter;
+use super::help;
+use super::preview_key;
+use super::prompt;
+use super::state::{Mode, State};
+
+pub fn route(state: &mut State, event: InputEvent) -> Option<EventOutcome> {
+    match state.mode {
+        Mode::Filter => Some(filter::on_key(state, event)),
+        Mode::Help => Some(help::on_key(state, event)),
+        Mode::Prompt(_) => Some(prompt::on_key(state, event)),
+        Mode::Preview => Some(preview_key::on_key(state, event)),
+        Mode::Browse => None,
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
 }

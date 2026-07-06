@@ -14,17 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::string::String;
+use alloc::vec::Vec;
+
+use super::selection_is_selected::is_selected;
 use super::state::State;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
+pub fn acting(state: &State) -> Vec<(String, bool)> {
+    if !state.selected.is_empty() {
+        return state
+            .entries
+            .iter()
+            .filter(|e| is_selected(state, &e.full_path))
+            .map(|e| (e.full_path.clone(), e.is_dir))
+            .collect();
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+    match state.entries.get(state.cursor) {
+        Some(e) => alloc::vec![(e.full_path.clone(), e.is_dir)],
+        None => Vec::new(),
+    }
 }

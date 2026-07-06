@@ -14,17 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_app_skeleton::clients::vfs::stat_full;
+
 use super::state::State;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
+const META_STAT_LIMIT: usize = 128;
+
+pub fn fill_meta(state: &mut State) {
+    if state.all.len() > META_STAT_LIMIT {
+        return;
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+    let pid = state.owner_pid;
+    for entry in state.all.iter_mut() {
+        if entry.is_dir {
+            continue;
+        }
+        if let Ok((size, false, mtime, writable)) = stat_full(pid, entry.full_path.as_bytes()) {
+            entry.size = Some(size);
+            entry.mtime = mtime;
+            entry.writable = writable;
+        }
+    }
 }

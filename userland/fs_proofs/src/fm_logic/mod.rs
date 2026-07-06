@@ -20,8 +20,17 @@
 
 #[path = "../../../capsule_file_manager/src/fm/entries.rs"]
 mod entries;
+#[path = "../../../capsule_file_manager/src/fm/file_color.rs"]
+mod file_color;
+#[path = "../../../capsule_file_manager/src/fm/file_ext.rs"]
+mod file_ext;
+#[path = "../../../capsule_file_manager/src/fm/file_kind.rs"]
+mod file_kind;
 #[path = "../../../capsule_file_manager/src/fm/filetype.rs"]
 mod filetype;
 
 pub use entries::{build_entries, Entry};
-pub use filetype::{color, ext, kind_of, Kind};
+pub use file_color::color;
+pub use file_ext::ext;
+pub use file_kind::kind_of;
+pub use filetype::Kind;

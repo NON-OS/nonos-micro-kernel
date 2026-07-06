@@ -14,17 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_ENTER};
+
+use super::event_browse::on_browse_key;
+use super::event_mode::route;
+use super::event_mouse::select_row;
 use super::state::State;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
+pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
+    select_row(state, event);
+    if event.kind != InputKind::ButtonDown && !event.is_key_down() {
+        return EventOutcome::Idle;
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+    if let Some(outcome) = route(state, event) {
+        return outcome;
+    }
+    let code = if event.kind == InputKind::ButtonDown { KEY_ENTER } else { event.code };
+    on_browse_key(state, code)
 }

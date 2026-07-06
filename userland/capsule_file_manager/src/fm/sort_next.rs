@@ -14,17 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
+use super::state::SortMode;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
+impl SortMode {
+    pub fn next(self) -> Self {
+        match self {
+            SortMode::Name => SortMode::Size,
+            SortMode::Size => SortMode::Date,
+            SortMode::Date => SortMode::Type,
+            SortMode::Type => SortMode::Name,
         }
-        None => state.selected.push(path),
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
 }

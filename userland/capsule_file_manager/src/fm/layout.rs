@@ -18,4 +18,4 @@
 // clamping so a click lands on the row it visually points at.
 pub const FIRST_ROW_Y: u32 = 64;
 pub const ROW_HEIGHT: u32 = 22;
-pub const LIST_VISIBLE: usize = 10;
+pub const LIST_VISIBLE: usize = 7;

@@ -14,17 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::State;
+use nonos_app_skeleton::{InputEvent, InputKind};
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
+use super::layout::{FIRST_ROW_Y, ROW_HEIGHT};
+use super::state::{Mode, State};
+
+pub fn select_row(state: &mut State, event: InputEvent) {
+    if event.kind != InputKind::ButtonDown || !matches!(state.mode, Mode::Browse) {
+        return;
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+    let rel = event.y as i32 - FIRST_ROW_Y as i32 + 4;
+    if rel < 0 {
+        return;
+    }
+    let row = state.scroll + (rel as u32 / ROW_HEIGHT) as usize;
+    if row < state.entries.len() {
+        state.cursor = row;
+    }
 }

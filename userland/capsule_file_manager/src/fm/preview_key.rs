@@ -14,32 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
+use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_DOWN, KEY_ESC, KEY_UP};
 
-use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_BACKSPACE, KEY_ENTER, KEY_ESC};
-
-use super::prompt_commit::commit;
+use super::preview_paint::VISIBLE_LINES;
 use super::state::{Mode, State};
 
 pub fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
-    let Mode::Prompt(kind) = state.mode else { return EventOutcome::Idle };
+    let Some(preview) = state.preview.as_mut() else { return EventOutcome::Idle };
     match event.code {
         KEY_ESC => {
             state.mode = Mode::Browse;
-            state.input = String::new();
-            state.status = b"cancelled";
+            state.status = b"click or Enter to open";
         }
-        KEY_BACKSPACE => {
-            state.input.pop();
+        KEY_UP => {
+            preview.scroll = preview.scroll.saturating_sub(1);
         }
-        KEY_ENTER => commit(state, kind),
-        code => {
-            if let Some(ch) = char::from_u32(code) {
-                if ch.is_ascii_graphic() && state.input.len() < 64 {
-                    state.input.push(ch);
-                }
-            }
+        KEY_DOWN => {
+            let max = preview.lines.len().saturating_sub(VISIBLE_LINES);
+            preview.scroll = preview.scroll.saturating_add(1).min(max);
         }
+        _ => return EventOutcome::Idle,
     }
     EventOutcome::Repaint
 }

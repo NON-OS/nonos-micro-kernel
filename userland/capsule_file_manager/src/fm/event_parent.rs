@@ -14,17 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_app_skeleton::EventOutcome;
+
+use super::refresh::refresh;
 use super::state::State;
 
-// Check or uncheck the entry under the cursor.
-pub fn toggle(state: &mut State) {
-    let Some(entry) = state.entries.get(state.cursor) else { return };
-    let path = entry.full_path.clone();
-    match state.selected.iter().position(|p| *p == path) {
-        Some(i) => {
-            state.selected.remove(i);
-        }
-        None => state.selected.push(path),
+pub fn open_parent(state: &mut State) -> EventOutcome {
+    if state.prefix == "/" {
+        return EventOutcome::Idle;
     }
-    state.status = if state.selected.is_empty() { b"selection cleared" } else { b"selected" };
+    let trim = state.prefix.trim_end_matches('/');
+    let cut = trim.rfind('/').unwrap_or(0);
+    state.prefix.truncate(if cut == 0 { 1 } else { cut + 1 });
+    state.cursor = 0;
+    state.scroll = 0;
+    refresh(state);
+    EventOutcome::Repaint
 }
