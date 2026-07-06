@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::browser::css::color::parse_color;
-use crate::browser::css::computed::{Computed, TextAlign, WhiteSpace};
+use crate::browser::css::computed::{Computed, TextAlign, TextTransform, WhiteSpace};
 use crate::browser::css::parse_line_height::parse_line_height;
 use crate::browser::css::parse_px::parse_px;
 
@@ -62,6 +62,13 @@ pub(super) fn apply_text(
             "pre" | "pre-wrap" | "pre-line" | "break-spaces" => c.white_space = WhiteSpace::Pre,
             "nowrap" => c.white_space = WhiteSpace::Nowrap,
             "normal" => c.white_space = WhiteSpace::Normal,
+            _ => {}
+        },
+        "text-transform" => match value.trim() {
+            "uppercase" => c.text_transform = TextTransform::Upper,
+            "lowercase" => c.text_transform = TextTransform::Lower,
+            "capitalize" => c.text_transform = TextTransform::Capitalize,
+            "none" => c.text_transform = TextTransform::None,
             _ => {}
         },
         "text-align" => match value.trim() {
