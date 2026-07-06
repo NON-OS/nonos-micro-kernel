@@ -21,6 +21,25 @@ is naturally stated as an abstract theorem, we state it in Lean and then show,
 with a second proof over the real code, that the implementation satisfies it. The
 model is never left standing on its own.
 
+## Threat model
+
+The proofs are written against an attacker with the capabilities below, which is
+the standard threat model for a microkernel that runs untrusted capsules and
+talks to untrusted peripherals and networks.
+
+- The bytes of any capsule image, its signature, and its ELF headers.
+- The bytes of any network packet the system receives.
+- The bytes any peripheral returns, including a USB device's descriptors and a
+  storage device's identify structure.
+- The arguments any userspace process passes across the syscall boundary.
+- The contents of a persisted anti-rollback record, subject to the monotonic
+  counter the TPM enforces.
+
+The attacker does not control the code under `src/` or the capsules, the signing
+keys, or the verification tools. Physical attacks below the TPM boundary, fault
+injection, and analog side channels are out of scope, as is any timing channel
+the constant-time work does not cover.
+
 ## The four instruments
 
 We use four verification techniques, each where it is the right tool.
@@ -188,6 +207,26 @@ done
 
 The continuous integration workflow runs all of these on every push. Each proof
 job reports success only when its checker reports zero errors.
+
+## What you must trust
+
+A proof reduces trust; it does not eliminate it. To rely on these results you
+trust the following, and nothing about a hand-written model of the code.
+
+- The four checkers, each to be sound for the property it reports: `cargo test`
+  to run the tests as written, Kani and its CBMC backend to model-check within
+  the stated bound, Verus and its SMT backend to be a sound proof checker, and
+  Lean 4 to be a sound proof kernel. Each is pinned to a specific version in the
+  continuous integration workflow.
+- That the `#[path]` inclusion pulls the source that ships. The proof crates
+  include files from `src/` and the capsules by relative path, not a copy, so a
+  divergence between the proved code and the built code is a build error rather
+  than a silent difference.
+- The small set of shims, named in each crate: the syscall clock, the RNG used
+  only by signing and key generation and never by verification, the TPM and
+  NVRAM write in the boot proofs, and the entropy source. No verification path
+  depends on a shimmed value.
+- The standard vectors, taken from the cited RFC and NIST documents.
 
 ## What we do not claim
 
