@@ -41,6 +41,14 @@ fn wx_isolation_holds_for_all_permissions() {
     }
 }
 
+// Decoding an untrusted syscall id is total: no u64 value panics or accesses
+// out of bounds while scanning the ABI registry.
+#[kani::proof]
+fn syscall_decode_is_total() {
+    let id: u64 = kani::any();
+    let _ = crate::syscall::numbers::SyscallNumber::from_u64(id);
+}
+
 // For every address/length: `check_range` is total, and an accepted non-empty
 // range lies inside user space without wrapping.
 #[kani::proof]

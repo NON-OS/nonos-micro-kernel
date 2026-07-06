@@ -20,10 +20,13 @@
 //! memory access.
 
 pub mod memory;
+pub mod syscall;
 pub mod usercopy;
 
 #[cfg(test)]
 mod permissions_tests;
+#[cfg(test)]
+mod syscall_tests;
 #[cfg(test)]
 mod usercopy_tests;
 
