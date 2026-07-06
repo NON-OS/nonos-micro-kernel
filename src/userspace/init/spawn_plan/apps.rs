@@ -19,6 +19,7 @@ pub(super) fn spawn() {
     spawn_about();
     spawn_hello();
     spawn_calculator();
+    spawn_clock();
     spawn_browser();
     spawn_snake();
     spawn_wallet_nonos();
@@ -68,6 +69,19 @@ fn spawn_calculator() {
 }
 #[cfg(not(feature = "nonos-capsule-calculator"))]
 fn spawn_calculator() {}
+
+#[cfg(feature = "nonos-capsule-clock")]
+fn spawn_clock() {
+    use crate::userspace::capsule_clock as c;
+    super::boot::capsule(
+        "APP-CLOCK",
+        "app_clock",
+        c::spawn_clock_capsule,
+        c::shared_state,
+    );
+}
+#[cfg(not(feature = "nonos-capsule-clock"))]
+fn spawn_clock() {}
 
 #[cfg(feature = "nonos-capsule-browser")]
 fn spawn_browser() {

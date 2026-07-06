@@ -32,6 +32,7 @@ pub mod capsule_boot_splash;
 pub mod capsule_browser;
 pub mod capsule_calculator;
 pub mod capsule_clipboard;
+pub mod capsule_clock;
 pub mod capsule_compositor;
 pub mod capsule_desktop_shell;
 pub mod capsule_driver_i2c_hid;
