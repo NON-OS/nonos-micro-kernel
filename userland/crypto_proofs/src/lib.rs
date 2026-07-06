@@ -29,6 +29,8 @@ pub mod hash;
 #[cfg(test)]
 mod aesgcm_tests;
 #[cfg(test)]
+mod blake3_tests;
+#[cfg(test)]
 mod chacha_tests;
 #[cfg(test)]
 mod ed25519_tests;
@@ -38,6 +40,14 @@ mod hex;
 mod hkdf_tests;
 #[cfg(test)]
 mod hmac_tests;
+#[cfg(test)]
+mod p256_tests;
+#[cfg(test)]
+mod p384_tests;
+#[cfg(test)]
+mod rsa_tests;
+#[cfg(test)]
+mod secp256k1_tests;
 #[cfg(test)]
 mod sha256_tests;
 #[cfg(test)]

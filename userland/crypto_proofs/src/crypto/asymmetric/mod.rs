@@ -36,3 +36,74 @@
 )]
 #[path = "../../../../../src/crypto/asymmetric/ed25519/mod.rs"]
 pub mod ed25519;
+
+// NIST P-256 ECDSA (self-contained; reference-shape field/scalar arithmetic).
+#[allow(
+    unused_imports,
+    clippy::needless_range_loop,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of,
+    clippy::redundant_closure,
+    clippy::wrong_self_convention,
+    clippy::identity_op,
+    clippy::manual_rotate,
+    clippy::useless_conversion,
+    clippy::should_implement_trait
+)]
+#[path = "../../../../../src/crypto/asymmetric/p256/mod.rs"]
+pub mod p256;
+
+// NIST P-384 ECDSA (self-contained; reference-shape arithmetic).
+#[allow(
+    unused_imports,
+    clippy::needless_range_loop,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of,
+    clippy::redundant_closure,
+    clippy::wrong_self_convention,
+    clippy::identity_op,
+    clippy::manual_rotate,
+    clippy::useless_conversion,
+    clippy::should_implement_trait
+)]
+#[path = "../../../../../src/crypto/asymmetric/p384/mod.rs"]
+pub mod p384;
+
+// secp256k1 ECDSA (the chain signature curve). Uses hmac_sha256, the rng shim,
+// and the crypto error types, all provided above.
+#[allow(
+    unused_imports,
+    clippy::needless_range_loop,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of,
+    clippy::redundant_closure,
+    clippy::wrong_self_convention,
+    clippy::identity_op,
+    clippy::manual_rotate,
+    clippy::useless_conversion,
+    clippy::should_implement_trait,
+    clippy::manual_memcpy
+)]
+#[path = "../../../../../src/crypto/asymmetric/secp256k1/mod.rs"]
+pub mod secp256k1;
+
+// RSA (PKCS#1 v1.5 / PSS). Uses the bigint, entropy, error and hash modules
+// provided above.
+#[allow(
+    unused_imports,
+    clippy::needless_range_loop,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of,
+    clippy::redundant_closure,
+    clippy::wrong_self_convention,
+    clippy::identity_op,
+    clippy::manual_rotate,
+    clippy::useless_conversion,
+    clippy::should_implement_trait,
+    clippy::manual_memcpy,
+    clippy::manual_div_ceil,
+    clippy::same_item_push,
+    clippy::needless_borrow
+)]
+#[path = "../../../../../src/crypto/asymmetric/rsa/mod.rs"]
+pub mod rsa;

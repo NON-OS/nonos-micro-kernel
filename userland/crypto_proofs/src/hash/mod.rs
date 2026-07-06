@@ -23,6 +23,10 @@ pub mod sha256;
 #[path = "../../../../src/crypto/hash/sha512/mod.rs"]
 pub mod sha512;
 
+// SHA-384 shares the SHA-512 compression function (`super::sha512::Sha512`).
+#[path = "../../../../src/crypto/hash/sha384.rs"]
+pub mod sha384;
+
 // Mirror the kernel's `unified` module: expose the `sha256` function (not just
 // the module) so the included HMAC source resolves `use super::sha256`.
 pub use sha256::sha256;
@@ -47,3 +51,14 @@ pub mod hkdf;
 )]
 #[path = "../../../../src/crypto/hash/sha3/mod.rs"]
 pub mod sha3;
+
+// BLAKE3 (regular, keyed, and derive-key modes); self-contained apart from the
+// constant-time primitives. The module already allows `identity_op` internally.
+#[allow(
+    clippy::needless_range_loop,
+    clippy::manual_rotate,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of
+)]
+#[path = "../../../../src/crypto/hash/blake3/mod.rs"]
+pub mod blake3;

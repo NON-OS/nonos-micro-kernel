@@ -14,18 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Ed25519's `KeyPair::generate` is the only consumer of the RNG, and the KATs
-// exercise sign/verify with fixed seeds from the standard vectors. This shim
-// satisfies the include without pulling the kernel's entropy stack; nothing in
-// the proof set calls it.
-pub fn get_random_bytes() -> [u8; 32] {
-    [0u8; 32]
-}
-
-// Consumed only by the signing/keygen paths (P-256 ECDH and ECDSA), which the
-// KATs do not exercise; verification is deterministic.
-pub fn fill_random_bytes(buf: &mut [u8]) {
-    for b in buf.iter_mut() {
-        *b = 0;
-    }
-}
+// Arbitrary-precision integers used by RSA. Self-contained apart from the
+// constant-time fence already provided by `crate::crypto::constant_time`.
+#[allow(
+    clippy::needless_range_loop,
+    clippy::manual_rotate,
+    clippy::identity_op,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of,
+    clippy::useless_conversion,
+    clippy::should_implement_trait,
+    clippy::manual_memcpy,
+    clippy::redundant_closure,
+    clippy::wrong_self_convention,
+    clippy::manual_div_ceil,
+    clippy::needless_borrow
+)]
+#[path = "../../../../../src/crypto/util/bigint/mod.rs"]
+pub mod bigint;

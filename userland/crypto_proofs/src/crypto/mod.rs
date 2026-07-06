@@ -35,3 +35,19 @@ pub mod sha512;
 
 // ChaCha20-Poly1305 AEAD; depends only on the constant-time primitives above.
 pub mod symmetric;
+
+// P-256's RFC 6979 deterministic nonce resolves `crate::crypto::hmac_sha256`,
+// and `verify_message` resolves `crate::crypto::hash::*`.
+pub use crate::hash;
+pub use crate::hash::hmac_sha256;
+// secp256k1's Ethereum-address helper resolves `crate::crypto::sha3`.
+pub use crate::hash::sha3;
+
+// secp256k1 returns `crate::crypto::{CryptoError, CryptoResult}`.
+#[path = "../../../../src/crypto/error.rs"]
+pub mod error;
+pub use error::{CryptoError, CryptoResult};
+
+// Big integers (RSA) and an entropy shim (RSA/ECDSA keygen, unused by KATs).
+pub mod entropy;
+pub mod util;
