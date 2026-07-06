@@ -14,4 +14,5 @@ import Nonos.Capability
 import Nonos.Crypto
 import Nonos.Ipc
 import Nonos.Isolation
+import Nonos.Path
 import Nonos.Paging

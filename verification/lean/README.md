@@ -29,6 +29,7 @@ the *code*:
 | `Ipc.zero_length_rejected` / `oversized_rejected` | Verus `ipc_lengths.rs` + `IpcMessage::new` |
 | `Paging.subset_trans` / `confined_preserves_no_wx` | Verus `page_permissions.rs` (bit ops) |
 | `Crypto.wrong_tag_rejected` / `acceptance_iff_equal` | `userland/crypto_proofs` `ct_eq` correctness + KATs (#265) |
+| `Path.leading_dotdot_neutralized` / `up_moves_toward_root` | `userland/fs_proofs` path normalization (Kani + runnable) |
 
 The proofs use only core Lean (no mathlib), so any recent `leanprover/lean4`
 toolchain checks them.
