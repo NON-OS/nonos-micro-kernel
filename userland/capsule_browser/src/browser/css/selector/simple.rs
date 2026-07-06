@@ -45,4 +45,7 @@ pub struct Step {
 pub struct Selector {
     pub key: Simple,
     pub ancestors: Vec<Step>,
+    // 0 plain, 1 ::before, 2 ::after: the rule styles generated content on
+    // the matched element rather than the element itself.
+    pub element: u8,
 }

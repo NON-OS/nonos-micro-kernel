@@ -31,6 +31,7 @@ mod svg;
 mod webp;
 
 pub use blit::blit_into;
+pub(crate) use data_uri::data_uri_bytes;
 pub use fetch::{follow_redirect, pump};
 pub use ingest::ingest;
 pub use queue::enqueue_from_doc;

@@ -38,6 +38,10 @@ pub(super) fn collect(
     parent: &Computed,
     styles: &[Computed],
     bg_images: &[Option<String>],
+    pseudos: &[(
+        Option<crate::browser::css::PseudoText>,
+        Option<crate::browser::css::PseudoText>,
+    )],
     link: &Option<String>,
     depth: u32,
     count: &mut usize,
@@ -49,7 +53,7 @@ pub(super) fn collect(
     let Some(node) = dom.nodes.get(id) else {
         return out;
     };
-    let mut w = Walk { dom, styles, bg_images, count };
+    let mut w = Walk { dom, styles, bg_images, pseudos, count };
     let mut ordinal = 0u32;
     for &ch in &node.children {
         if *w.count >= MAX_BOXES {

@@ -28,6 +28,15 @@ pub(super) fn pick_src(src: &str) -> Option<String> {
         let end = rest.find(')')?;
         let raw = rest[..end].trim().trim_matches('"').trim_matches('\'');
         rest = &rest[end + 1..];
+        if raw.starts_with("data:") {
+            let head = raw.split(',').next().unwrap_or("").to_ascii_lowercase();
+            let fontish =
+                head.contains("font") || head.contains("truetype") || head.contains("opentype");
+            if fontish && !head.contains("woff2") && woff.is_none() {
+                woff = Some(String::from(raw));
+            }
+            continue;
+        }
         let lower_end = raw.split('?').next().unwrap_or(raw).to_ascii_lowercase();
         if lower_end.ends_with(".ttf") || lower_end.ends_with(".otf") {
             return Some(String::from(raw));
