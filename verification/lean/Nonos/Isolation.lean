@@ -38,7 +38,7 @@ theorem no_wx_page (p : Perm) (h : ¬ IsWxViolation p) :
   exact h
 
 /-- The last user address and the maximum single-copy length. -/
-def userEnd : Nat := 0x7FFF_FFFF_FFFF
+def userEnd : Nat := 0x7FFFFFFFFFFF
 def maxCopy : Nat := 64 * 1024 * 1024
 
 /-- A user copy is accepted only if it is non-null, within the size limit, and
