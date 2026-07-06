@@ -23,6 +23,9 @@ the *code*:
 |---|---|
 | `AntiRollback.update_never_lowers_floor`, `no_rollback_after_boot` | `nonos-bootloader/boot_proofs` (runnable + Kani over all u64) |
 | `Capability.grant_adds` / `revoke_drops` / `attenuate_confines` | `verification/verus/src/capabilities.rs` (Verus over the bit ops) |
+| `Isolation.no_wx_page` | `userland/kernel_proofs` W^X (`to_pte_flags`, runnable + Kani) |
+| `Isolation.accepted_stays_in_user_space` | `userland/kernel_proofs` user-copy (`check_range`, runnable + Kani) |
+| `Authorization.empty_token_denied` / `allow_monotone` | `userland/kernel_proofs` cap-table (`is_allowed`, runnable) |
 
 The proofs use only core Lean (no mathlib), so any recent `leanprover/lean4`
 toolchain checks them.
