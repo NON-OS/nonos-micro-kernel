@@ -25,5 +25,15 @@ extern crate alloc;
 #[path = "../../capsule_net_dns/src/dns/mod.rs"]
 pub mod dns;
 
+// Minimal mirrors so the ICMP and ARP parsers resolve their siblings.
+pub mod arp;
+pub mod ethernet;
+pub mod icmp;
+pub mod ipv4;
+
+#[cfg(test)]
+mod arp_tests;
 #[cfg(test)]
 mod dns_tests;
+#[cfg(test)]
+mod icmp_tests;
