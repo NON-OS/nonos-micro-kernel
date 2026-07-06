@@ -1,0 +1,244 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="1240" viewBox="0 0 1720 1240" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1720" height="1240" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="60" y="58" font-size="34" font-weight="700" fill="#111">N&#216;NOS verification map</text>
+  <text x="60" y="90" font-size="18" fill="#555">Prove the code that runs, connect it to a specification, leave no gap. Every row is machine-checked and reproducible from a clean checkout.</text>
+
+  <!-- Refinement chain strip -->
+  <g>
+    <rect x="60" y="118" width="360" height="72" rx="10" fill="#efe7f7" stroke="#7b52ab" stroke-width="2"/>
+    <text x="240" y="146" font-size="17" font-weight="700" fill="#4a2f6e" text-anchor="middle">SPECIFICATION</text>
+    <text x="240" y="170" font-size="14" fill="#4a2f6e" text-anchor="middle">Lean 4  ·  the abstract theorem</text>
+
+    <text x="452" y="160" font-size="26" fill="#888" text-anchor="middle">&#8594;</text>
+    <text x="452" y="182" font-size="11" fill="#888" text-anchor="middle">refined onto</text>
+
+    <rect x="500" y="118" width="420" height="72" rx="10" fill="#e3ecf9" stroke="#3f6bb0" stroke-width="2"/>
+    <text x="710" y="146" font-size="17" font-weight="700" fill="#274a80" text-anchor="middle">IMPLEMENTATION</text>
+    <text x="710" y="170" font-size="14" fill="#274a80" text-anchor="middle">Verus (SMT on Rust)  ·  Kani (all inputs)</text>
+
+    <text x="952" y="160" font-size="26" fill="#888" text-anchor="middle">&#8594;</text>
+    <text x="952" y="182" font-size="11" fill="#888" text-anchor="middle">rests on</text>
+
+    <rect x="1000" y="118" width="400" height="72" rx="10" fill="#e4f1e0" stroke="#4c8a44" stroke-width="2"/>
+    <text x="1200" y="146" font-size="17" font-weight="700" fill="#2f5c2a" text-anchor="middle">PRIMITIVE</text>
+    <text x="1200" y="170" font-size="14" fill="#2f5c2a" text-anchor="middle">known-answer tests + fuzz  ·  vs NIST / RFC</text>
+
+    <rect x="1430" y="118" width="230" height="72" rx="10" fill="#f7f7f7" stroke="#bbb" stroke-width="1.5"/>
+    <text x="1545" y="143" font-size="13" fill="#666" text-anchor="middle">source is included,</text>
+    <text x="1545" y="161" font-size="13" fill="#666" text-anchor="middle">never copied, so a</text>
+    <text x="1545" y="179" font-size="13" fill="#666" text-anchor="middle">divergence is a build error</text>
+  </g>
+
+  <!-- ============ CRYPTO BAND ============ -->
+  <g>
+    <rect x="60" y="214" width="1600" height="150" rx="12" fill="#faf0dd" stroke="#b9822c" stroke-width="2"/>
+    <text x="82" y="246" font-size="20" font-weight="700" fill="#7a541a">Cryptography</text>
+    <text x="82" y="268" font-size="13" fill="#8a6a2e">trust root</text>
+    <text x="82" y="286" font-size="13" fill="#8a6a2e">#265</text>
+
+    <rect x="230" y="230" width="240" height="118" rx="9" fill="#fff" stroke="#c98a2e" stroke-width="1.5"/>
+    <text x="350" y="256" font-size="15" font-weight="700" fill="#5f4212" text-anchor="middle">Hash / MAC / KDF</text>
+    <text x="350" y="280" font-size="12.5" fill="#6b4a15" text-anchor="middle">SHA-256/512, SHA-3</text>
+    <text x="350" y="298" font-size="12.5" fill="#6b4a15" text-anchor="middle">BLAKE3, HMAC, HKDF</text>
+    <text x="350" y="330" font-size="12" fill="#4c8a44" text-anchor="middle">KAT vs NIST / RFC</text>
+
+    <rect x="490" y="230" width="240" height="118" rx="9" fill="#fff" stroke="#c98a2e" stroke-width="1.5"/>
+    <text x="610" y="256" font-size="15" font-weight="700" fill="#5f4212" text-anchor="middle">AEAD</text>
+    <text x="610" y="284" font-size="12.5" fill="#6b4a15" text-anchor="middle">ChaCha20-Poly1305</text>
+    <text x="610" y="302" font-size="12.5" fill="#6b4a15" text-anchor="middle">AES-128-GCM</text>
+    <text x="610" y="330" font-size="12" fill="#4c8a44" text-anchor="middle">KAT + tamper reject</text>
+
+    <rect x="750" y="230" width="270" height="118" rx="9" fill="#fff" stroke="#c98a2e" stroke-width="1.5"/>
+    <text x="885" y="256" font-size="15" font-weight="700" fill="#5f4212" text-anchor="middle">Signatures</text>
+    <text x="885" y="284" font-size="12.5" fill="#6b4a15" text-anchor="middle">Ed25519 (trust root)</text>
+    <text x="885" y="302" font-size="12.5" fill="#6b4a15" text-anchor="middle">P-256/384, secp256k1, RSA</text>
+    <text x="885" y="330" font-size="12" fill="#4c8a44" text-anchor="middle">KAT vs RFC 8032 / 6979</text>
+
+    <rect x="1040" y="230" width="270" height="118" rx="9" fill="#fff" stroke="#c98a2e" stroke-width="1.5"/>
+    <text x="1175" y="256" font-size="15" font-weight="700" fill="#5f4212" text-anchor="middle">Constant-time gate</text>
+    <text x="1175" y="284" font-size="12.5" fill="#6b4a15" text-anchor="middle">ct_eq / ct_select correct</text>
+    <text x="1175" y="302" font-size="12.5" fill="#6b4a15" text-anchor="middle">Lean: Crypto (auth gate)</text>
+    <text x="1175" y="330" font-size="12" fill="#4c8a44" text-anchor="middle">fuzz + Kani, all inputs</text>
+
+    <rect x="1330" y="230" width="310" height="118" rx="9" fill="#fff" stroke="#c0392b" stroke-width="1.8"/>
+    <text x="1485" y="256" font-size="15" font-weight="700" fill="#8a2a1f" text-anchor="middle">ZK verifier (PLONK / range)</text>
+    <text x="1485" y="284" font-size="12.5" fill="#7a2a20" text-anchor="middle">fuzzed on adversarial proofs</text>
+    <text x="1485" y="308" font-size="13" font-weight="700" fill="#c0392b" text-anchor="middle">2 real bugs found + fixed</text>
+    <text x="1485" y="332" font-size="11.5" fill="#8a2a1f" text-anchor="middle">underflow panic + soundness gap</text>
+  </g>
+
+  <!-- ============ KERNEL BAND ============ -->
+  <g>
+    <rect x="60" y="380" width="1600" height="200" rx="12" fill="#e7eefb" stroke="#3f6bb0" stroke-width="2"/>
+    <text x="82" y="412" font-size="20" font-weight="700" fill="#274a80">Kernel TCB</text>
+    <text x="82" y="434" font-size="13" fill="#3a5a95">isolation + authorization</text>
+    <text x="82" y="452" font-size="13" fill="#3a5a95">#264 · #268</text>
+
+    <rect x="230" y="398" width="215" height="80" rx="9" fill="#fff" stroke="#3f6bb0" stroke-width="1.5"/>
+    <text x="337" y="424" font-size="14.5" font-weight="700" fill="#274a80" text-anchor="middle">W^X isolation</text>
+    <text x="337" y="446" font-size="12" fill="#3a5a95" text-anchor="middle">no writable+executable PTE</text>
+    <text x="337" y="466" font-size="11.5" fill="#7b52ab" text-anchor="middle">Lean · Kani (all bits) · #268</text>
+
+    <rect x="460" y="398" width="215" height="80" rx="9" fill="#fff" stroke="#3f6bb0" stroke-width="1.5"/>
+    <text x="567" y="424" font-size="14.5" font-weight="700" fill="#274a80" text-anchor="middle">User-copy bounds</text>
+    <text x="567" y="446" font-size="12" fill="#3a5a95" text-anchor="middle">total, stays in user space</text>
+    <text x="567" y="466" font-size="11.5" fill="#7b52ab" text-anchor="middle">Lean · Kani (all addr/len) · #268</text>
+
+    <rect x="690" y="398" width="215" height="80" rx="9" fill="#fff" stroke="#3f6bb0" stroke-width="1.5"/>
+    <text x="797" y="424" font-size="14.5" font-weight="700" fill="#274a80" text-anchor="middle">Authorization gate</text>
+    <text x="797" y="446" font-size="12" fill="#3a5a95" text-anchor="middle">empty token denied all</text>
+    <text x="797" y="466" font-size="11.5" fill="#7b52ab" text-anchor="middle">Lean · runnable · #268</text>
+
+    <rect x="920" y="398" width="215" height="80" rx="9" fill="#fff" stroke="#3f6bb0" stroke-width="1.5"/>
+    <text x="1027" y="424" font-size="14.5" font-weight="700" fill="#274a80" text-anchor="middle">Syscall decode</text>
+    <text x="1027" y="446" font-size="12" fill="#3a5a95" text-anchor="middle">total on untrusted u64</text>
+    <text x="1027" y="466" font-size="11.5" fill="#e07b1a" text-anchor="middle">Kani (all u64) · #268</text>
+
+    <rect x="1150" y="398" width="215" height="80" rx="9" fill="#fff" stroke="#3f6bb0" stroke-width="1.5"/>
+    <text x="1257" y="424" font-size="14.5" font-weight="700" fill="#274a80" text-anchor="middle">Capsule ELF loader</text>
+    <text x="1257" y="446" font-size="12" fill="#3a5a95" text-anchor="middle">no overflow / OOB in headers</text>
+    <text x="1257" y="466" font-size="11.5" fill="#4c8a44" text-anchor="middle">fuzz · #268</text>
+
+    <rect x="1380" y="398" width="260" height="80" rx="9" fill="#fff" stroke="#3f6bb0" stroke-width="1.5"/>
+    <text x="1510" y="424" font-size="14.5" font-weight="700" fill="#274a80" text-anchor="middle">Capabilities · IPC · Paging</text>
+    <text x="1510" y="446" font-size="12" fill="#3a5a95" text-anchor="middle">grant/revoke, length gate, perms</text>
+    <text x="1510" y="466" font-size="11.5" fill="#3f6bb0" text-anchor="middle">Lean · Verus (deductive) · #264</text>
+
+    <rect x="230" y="492" width="1410" height="72" rx="9" fill="#f2f6fd" stroke="#7fa0d0" stroke-width="1.3"/>
+    <text x="250" y="518" font-size="13.5" font-weight="700" fill="#274a80">Refinement in force here:</text>
+    <text x="250" y="542" font-size="13" fill="#3a5a95">the Lean theorems Isolation.no_wx_page, Authorization.empty_token_denied and Capability.attenuate_confines are each discharged on the real Rust by the Kani and Verus proofs named above. Spec to code, by name.</text>
+  </g>
+
+  <!-- ============ BOOT BAND ============ -->
+  <g>
+    <rect x="60" y="596" width="780" height="118" rx="12" fill="#f6e3d3" stroke="#c0692a" stroke-width="2"/>
+    <text x="82" y="628" font-size="20" font-weight="700" fill="#8a4418">Boot chain</text>
+    <text x="82" y="650" font-size="13" fill="#a05828">#266</text>
+
+    <rect x="230" y="612" width="290" height="86" rx="9" fill="#fff" stroke="#c0692a" stroke-width="1.5"/>
+    <text x="375" y="638" font-size="14.5" font-weight="700" fill="#8a4418" text-anchor="middle">Anti-rollback</text>
+    <text x="375" y="660" font-size="12" fill="#a05828" text-anchor="middle">floor monotone, no downgrade after boot</text>
+    <text x="375" y="682" font-size="11.5" fill="#7b52ab" text-anchor="middle">Lean · Kani (all u64) · runnable</text>
+
+    <rect x="540" y="612" width="290" height="86" rx="9" fill="#fff" stroke="#c0692a" stroke-width="1.5"/>
+    <text x="685" y="638" font-size="14.5" font-weight="700" fill="#8a4418" text-anchor="middle">Image footer parser</text>
+    <text x="685" y="660" font-size="12" fill="#a05828" text-anchor="middle">no panic, no region slice escapes</text>
+    <text x="685" y="682" font-size="11.5" fill="#4c8a44" text-anchor="middle">Kani (total) · fuzz 125k inputs</text>
+  </g>
+
+  <!-- ============ FILESYSTEM (right of boot) ============ -->
+  <g>
+    <rect x="860" y="596" width="800" height="118" rx="12" fill="#e9f7f0" stroke="#2f8a5a" stroke-width="2"/>
+    <text x="882" y="628" font-size="20" font-weight="700" fill="#1f6642">Filesystem</text>
+    <text x="882" y="650" font-size="13" fill="#2f8a5a">#263</text>
+
+    <rect x="1010" y="612" width="300" height="86" rx="9" fill="#fff" stroke="#2f8a5a" stroke-width="1.5"/>
+    <text x="1160" y="638" font-size="14.5" font-weight="700" fill="#1f6642" text-anchor="middle">Path canonicalization</text>
+    <text x="1160" y="660" font-size="12" fill="#2f8a5a" text-anchor="middle">no .. escapes the root</text>
+    <text x="1160" y="682" font-size="11.5" fill="#7b52ab" text-anchor="middle">Lean: Path · Kani · runnable</text>
+
+    <rect x="1330" y="612" width="310" height="86" rx="9" fill="#fff" stroke="#2f8a5a" stroke-width="1.5"/>
+    <text x="1485" y="638" font-size="14.5" font-weight="700" fill="#1f6642" text-anchor="middle">VFS store / protocol</text>
+    <text x="1485" y="660" font-size="12" fill="#2f8a5a" text-anchor="middle">codec + caller attestation</text>
+    <text x="1485" y="682" font-size="11.5" fill="#4c8a44" text-anchor="middle">runnable + fuzz · #263</text>
+  </g>
+
+  <!-- ============ NETWORK + DRIVERS BAND ============ -->
+  <g>
+    <rect x="60" y="730" width="1600" height="150" rx="12" fill="#e2f0da" stroke="#4c8a44" stroke-width="2"/>
+    <text x="82" y="762" font-size="20" font-weight="700" fill="#2f5c2a">I/O surface</text>
+    <text x="82" y="784" font-size="13" fill="#3f7238">untrusted parsers</text>
+    <text x="82" y="802" font-size="13" fill="#3f7238">#267 · #271 · #274</text>
+
+    <rect x="230" y="748" width="620" height="114" rx="9" fill="#fff" stroke="#4c8a44" stroke-width="1.5"/>
+    <text x="540" y="774" font-size="15" font-weight="700" fill="#2f5c2a" text-anchor="middle">Network parsers  ·  #267</text>
+    <text x="540" y="800" font-size="13" fill="#3f7238" text-anchor="middle">DNS (no compression-pointer loop)  ·  ICMP  ·  ARP</text>
+    <text x="540" y="822" font-size="13" fill="#3f7238" text-anchor="middle">TCP parse + reassembly  ·  DHCP options</text>
+    <text x="540" y="848" font-size="12" fill="#4c8a44" text-anchor="middle">no panic, no out-of-bounds, over hundreds of thousands of adversarial packets</text>
+
+    <rect x="870" y="748" width="360" height="114" rx="9" fill="#fff" stroke="#4c8a44" stroke-width="1.5"/>
+    <text x="1050" y="774" font-size="15" font-weight="700" fill="#2f5c2a" text-anchor="middle">AHCI block I/O  ·  #271</text>
+    <text x="1050" y="802" font-size="13" fill="#3f7238" text-anchor="middle">a request never reaches</text>
+    <text x="1050" y="822" font-size="13" fill="#3f7238" text-anchor="middle">past the disk capacity</text>
+    <text x="1050" y="848" font-size="12" fill="#e07b1a" text-anchor="middle">Kani (all requests) · fuzz</text>
+
+    <rect x="1250" y="748" width="390" height="114" rx="9" fill="#fff" stroke="#4c8a44" stroke-width="1.5"/>
+    <text x="1445" y="774" font-size="15" font-weight="700" fill="#2f5c2a" text-anchor="middle">USB HID descriptor  ·  #274</text>
+    <text x="1445" y="802" font-size="13" fill="#3f7238" text-anchor="middle">device-controlled input: no panic,</text>
+    <text x="1445" y="822" font-size="13" fill="#3f7238" text-anchor="middle">zero-length descriptor rejected not looped</text>
+    <text x="1445" y="848" font-size="12" fill="#4c8a44" text-anchor="middle">fuzz</text>
+  </g>
+
+  <!-- ============ STARK PQ BAND ============ -->
+  <g>
+    <rect x="60" y="896" width="1600" height="188" rx="12" fill="#d6ecea" stroke="#2f8a82" stroke-width="2.4"/>
+    <text x="82" y="928" font-size="20" font-weight="700" fill="#1d605a">Transparent post-quantum proofs</text>
+    <text x="82" y="950" font-size="13" fill="#2a7a72">hash + integer only</text>
+    <text x="82" y="968" font-size="13" fill="#2a7a72">no trusted setup, no curve</text>
+    <text x="82" y="986" font-size="13" fill="#2a7a72">#277 · in kernel build</text>
+
+    <!-- pipeline -->
+    <g font-size="13">
+      <rect x="330" y="930" width="180" height="120" rx="9" fill="#fff" stroke="#2f8a82" stroke-width="1.6"/>
+      <text x="420" y="958" font-size="15" font-weight="700" fill="#1d605a" text-anchor="middle">Goldilocks field</text>
+      <text x="420" y="982" fill="#2a7a72" text-anchor="middle">p = 2^64 - 2^32 + 1</text>
+      <text x="420" y="1004" fill="#2a7a72" text-anchor="middle">field axioms proven</text>
+      <text x="420" y="1030" font-size="12" font-weight="700" fill="#4c8a44" text-anchor="middle">DONE</text>
+
+      <text x="527" y="995" font-size="24" fill="#2f8a82" text-anchor="middle">&#8594;</text>
+
+      <rect x="545" y="930" width="180" height="120" rx="9" fill="#fff" stroke="#2f8a82" stroke-width="1.6"/>
+      <text x="635" y="958" font-size="15" font-weight="700" fill="#1d605a" text-anchor="middle">Merkle commit</text>
+      <text x="635" y="982" fill="#2a7a72" text-anchor="middle">over field leaves</text>
+      <text x="635" y="1004" fill="#2a7a72" text-anchor="middle">binding, tamper-proof</text>
+      <text x="635" y="1030" font-size="12" font-weight="700" fill="#4c8a44" text-anchor="middle">DONE</text>
+
+      <text x="742" y="995" font-size="24" fill="#2f8a82" text-anchor="middle">&#8594;</text>
+
+      <rect x="760" y="930" width="180" height="120" rx="9" fill="#fff" stroke="#2f8a82" stroke-width="1.6"/>
+      <text x="850" y="958" font-size="15" font-weight="700" fill="#1d605a" text-anchor="middle">Polynomial + LDE</text>
+      <text x="850" y="982" fill="#2a7a72" text-anchor="middle">extension recovers</text>
+      <text x="850" y="1004" fill="#2a7a72" text-anchor="middle">the polynomial</text>
+      <text x="850" y="1030" font-size="12" font-weight="700" fill="#4c8a44" text-anchor="middle">DONE</text>
+
+      <text x="957" y="995" font-size="24" fill="#2f8a82" text-anchor="middle">&#8594;</text>
+
+      <rect x="975" y="930" width="180" height="120" rx="9" fill="#f4faf9" stroke="#8bc3bd" stroke-width="1.6" stroke-dasharray="6 4"/>
+      <text x="1065" y="958" font-size="15" font-weight="700" fill="#3a827b" text-anchor="middle">FRI</text>
+      <text x="1065" y="982" fill="#5a9b95" text-anchor="middle">low-degree test</text>
+      <text x="1065" y="1004" fill="#5a9b95" text-anchor="middle">verifier</text>
+      <text x="1065" y="1030" font-size="12" font-weight="700" fill="#c0692a" text-anchor="middle">NEXT</text>
+
+      <text x="1172" y="995" font-size="24" fill="#8bc3bd" text-anchor="middle">&#8594;</text>
+
+      <rect x="1190" y="930" width="180" height="120" rx="9" fill="#f4faf9" stroke="#8bc3bd" stroke-width="1.6" stroke-dasharray="6 4"/>
+      <text x="1280" y="958" font-size="15" font-weight="700" fill="#3a827b" text-anchor="middle">AIR + transcript</text>
+      <text x="1280" y="982" fill="#5a9b95" text-anchor="middle">constraints +</text>
+      <text x="1280" y="1004" fill="#5a9b95" text-anchor="middle">Fiat-Shamir</text>
+      <text x="1280" y="1030" font-size="12" font-weight="700" fill="#999" text-anchor="middle">THEN</text>
+
+      <text x="1387" y="995" font-size="24" fill="#8bc3bd" text-anchor="middle">&#8594;</text>
+
+      <rect x="1405" y="930" width="200" height="120" rx="9" fill="#eef7f6" stroke="#5aa39c" stroke-width="1.8" stroke-dasharray="6 4"/>
+      <text x="1505" y="958" font-size="15" font-weight="700" fill="#1d605a" text-anchor="middle">End-to-end PoC</text>
+      <text x="1505" y="982" fill="#3a827b" text-anchor="middle">prove and verify,</text>
+      <text x="1505" y="1004" fill="#3a827b" text-anchor="middle">verifier fuzzed on forgeries</text>
+      <text x="1505" y="1030" font-size="12" font-weight="700" fill="#999" text-anchor="middle">GOAL</text>
+    </g>
+  </g>
+
+  <!-- Legend -->
+  <g font-size="13.5">
+    <text x="60" y="1128" font-weight="700" fill="#333">Proof technique:</text>
+    <circle cx="215" cy="1123" r="7" fill="#7b52ab"/><text x="228" y="1128" fill="#333">Lean 4 (spec)</text>
+    <circle cx="360" cy="1123" r="7" fill="#3f6bb0"/><text x="373" y="1128" fill="#333">Verus (deductive, Rust)</text>
+    <circle cx="600" cy="1123" r="7" fill="#e07b1a"/><text x="613" y="1128" fill="#333">Kani (all inputs)</text>
+    <circle cx="790" cy="1123" r="7" fill="#4c8a44"/><text x="803" y="1128" fill="#333">known-answer + fuzz</text>
+    <text x="1030" y="1128" font-weight="700" fill="#c0392b">red = a real defect this found and fixed</text>
+
+    <text x="60" y="1170" font-size="13" fill="#777">Ten pull requests. Four verification technologies. Around 200 machine-checked proofs on the real code. Model connected to code, top to bottom.</text>
+    <text x="60" y="1194" font-size="13" fill="#777">A model proof alone leaves a gap between the model and what runs. Here every abstract theorem is discharged on the implementation, which rests on primitives checked against the published standards.</text>
+  </g>
+</svg>
