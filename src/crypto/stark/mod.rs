@@ -8,6 +8,7 @@
 //! bottom up: the Goldilocks field, a Merkle commitment over it, polynomials,
 //! a Fiat-Shamir transcript, and the FRI low-degree test on top.
 
+pub mod air;
 pub mod field;
 pub mod fri;
 pub mod merkle;

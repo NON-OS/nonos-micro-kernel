@@ -7,6 +7,8 @@ extern crate alloc;
 pub mod crypto;
 
 #[cfg(test)]
+mod air_tests;
+#[cfg(test)]
 mod field_tests;
 #[cfg(test)]
 mod fri_tests;
