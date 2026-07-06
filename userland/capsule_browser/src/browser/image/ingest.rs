@@ -17,9 +17,12 @@
 use super::decode;
 use super::store::Store;
 
-// Decode a fetched image body and record the outcome against `url`.
+// Decode a fetched image body and record the outcome against `url`. The
+// display-size hint noted at enqueue lets a vector source rasterize at the
+// size the page draws it.
 pub fn ingest(store: &mut Store, url: &str, body: &[u8]) {
-    match decode::decode_body(body) {
+    let hint = store.hint(url);
+    match decode::decode_body(body, hint) {
         Ok(d) => store.set_ready(url, d),
         Err(_) => store.set_failed(url),
     }

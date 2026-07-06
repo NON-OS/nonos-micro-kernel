@@ -24,10 +24,12 @@ use super::store::Decoded;
 // Refuse rasters beyond this many pixels rather than allocate a huge buffer.
 const MAX_PIXELS: u64 = 4_000_000;
 
-// Decode raw image bytes (PNG/JPEG/BMP/GIF/SVG) into an ARGB8888 raster.
-pub(super) fn decode_body(bytes: &[u8]) -> Result<Decoded, &'static str> {
+// Decode raw image bytes (PNG/JPEG/BMP/GIF/SVG) into an ARGB8888 raster. The
+// hint is the largest box the page draws this image into; only the vector
+// path uses it, since rasters carry their own natural size.
+pub(super) fn decode_body(bytes: &[u8], hint: (u32, u32)) -> Result<Decoded, &'static str> {
     if super::svg::is_svg(bytes) {
-        return super::svg::decode_svg(bytes).ok_or("svg parse failed");
+        return super::svg::decode_svg(bytes, hint).ok_or("svg parse failed");
     }
     let p = probe(bytes).ok_or("unknown image format")?;
     if p.w == 0 || p.h == 0 {
