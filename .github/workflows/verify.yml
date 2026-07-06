@@ -1,10 +1,10 @@
 # NONOS Operating System
 # Copyright (C) 2026 NONOS Contributors
 #
-# Three-layer verification pipeline: runnable proofs, Kani model checking, and
-# Verus deductive proofs. Each job runs only when its component is present on
-# the ref, so a branch that carries just one layer stays green and the full
-# stack runs once every layer lands on main.
+# Verification pipeline: runnable proofs, crypto known-answer proofs, Kani model
+# checking, and Verus deductive proofs. Each job runs only when its component is
+# present on the ref, so a branch that carries one layer stays green and the
+# full stack runs once every layer lands on main.
 name: verify
 
 on:
@@ -26,6 +26,21 @@ jobs:
             cargo test --release --manifest-path userland/fs_proofs/Cargo.toml
           else
             echo "userland/fs_proofs absent on this ref; skipping"
+          fi
+
+  # Crypto: known-answer proofs of the real hash and cipher primitives against
+  # the official NIST/RFC vectors.
+  crypto-proofs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Crypto KATs (SHA, HMAC, HKDF, Ed25519, ChaCha20-Poly1305, AES-GCM)
+        run: |
+          if [ -d userland/crypto_proofs ]; then
+            cargo test --release --manifest-path userland/crypto_proofs/Cargo.toml
+          else
+            echo "userland/crypto_proofs absent on this ref; skipping"
           fi
 
   # Layer 2: Kani model-checks the untrusted-input surfaces over bounded inputs.
