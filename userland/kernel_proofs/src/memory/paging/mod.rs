@@ -15,8 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 // Page permission types resolve `crate::memory::paging::constants::*`.
-#[allow(dead_code, clippy::all)]
-#[path = "../../../../../src/memory/paging/constants/mod.rs"]
 pub mod constants;
 
 pub mod types;

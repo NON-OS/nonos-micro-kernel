@@ -15,19 +15,27 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 // The real user-copy bounds policy plus a thin public surface for the proofs.
-#[allow(dead_code, clippy::all)]
 #[path = "../../../../src/usercopy/error.rs"]
 pub mod error;
 
-#[allow(dead_code, clippy::all)]
 #[path = "../../../../src/usercopy/policy.rs"]
 pub mod policy;
 
 pub const USER_SPACE_END: u64 = policy::USER_SPACE_END;
 pub const MAX_COPY_SIZE: usize = policy::MAX_COPY_SIZE;
+pub const PAGE_SIZE: u64 = policy::PAGE_SIZE;
 
-// `check_range` returns a private `UserRange`; expose only accept/reject for the
-// proofs so the invariant is stated without leaking the internal type.
+// `check_range` returns a private `UserRange`; expose accept/reject and the
+// accepted page range so the proofs can state the invariant without leaking the
+// internal type.
 pub fn accepts(addr: u64, len: usize) -> bool {
     policy::check_range(addr, len).is_ok()
+}
+
+// The page-aligned range covered by an accepted non-empty copy, or None.
+pub fn accepted_range(addr: u64, len: usize) -> Option<(u64, u64)> {
+    match policy::check_range(addr, len) {
+        Ok(Some(range)) => Some((range.start_page, range.end_page)),
+        _ => None,
+    }
 }

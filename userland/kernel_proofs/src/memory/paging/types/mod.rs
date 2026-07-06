@@ -14,6 +14,5 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[allow(dead_code, clippy::all)]
 #[path = "../../../../../../src/memory/paging/types/permissions/mod.rs"]
 pub mod permissions;
