@@ -28,6 +28,11 @@ mod token_types;
 pub use token_types::CapabilityToken;
 pub use types::Capability;
 
+// The real bit-token operations: has/add/remove and the bits<->caps
+// conversions the kernel authorization path executes.
+#[path = "../../../../src/capabilities/bits.rs"]
+pub mod bits;
+
 // The single-bit mask a capability occupies. `Capability::bit` is `pub(crate)`
 // in the kernel; expose it here so the bit-distinctness proof exercises it.
 pub fn bit_of(cap: Capability) -> u64 {

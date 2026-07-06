@@ -66,3 +66,44 @@ fn user_range_check_is_total_and_bounded() {
         }
     }
 }
+
+// The functional differentials: the real kernel functions equal the
+// executable spec for every input, not only the sampled ones. These are the
+// harnesses that make the refinement machine-checked end to end: Lean proves
+// the spec's properties, Verus proves the bit logic computes the spec, and
+// these prove the shipping functions are that logic.
+
+// For every 64-bit token and every capability the kernel defines: the real
+// has/add/remove equal the spec through the real bit assignment.
+#[kani::proof]
+fn capability_bits_equal_the_spec_for_all_tokens() {
+    let token: u64 = kani::any();
+    for cap in crate::capabilities::Capability::all() {
+        let bit = crate::capabilities::bit_of(cap);
+        assert!(crate::capabilities::bits::has_capability(token, cap) == crate::spec::has(token, bit));
+        assert!(crate::capabilities::bits::add_capability(token, cap) == crate::spec::grant(token, bit));
+        assert!(
+            crate::capabilities::bits::remove_capability(token, cap)
+                == crate::spec::revoke(token, bit)
+        );
+    }
+}
+
+// For every address and length: the real check_range equals the spec, exact
+// error variants included.
+#[kani::proof]
+fn check_range_equals_the_spec_for_all_inputs() {
+    let addr: u64 = kani::any();
+    let len: usize = kani::any();
+    assert!(crate::usercopy::check(addr, len) == crate::spec::check_range(addr, len));
+}
+
+// For every permission bit pattern: the real PTE encoding and the W^X
+// predicate equal the spec.
+#[kani::proof]
+fn pte_encoding_equals_the_spec_for_all_permissions() {
+    let perm: u32 = kani::any();
+    let p = PagePermissions::from_bits(perm);
+    assert!(p.to_pte_flags() == crate::spec::pte_flags(perm));
+    assert!(p.is_wx_violation() == crate::spec::wx_violation(perm));
+}

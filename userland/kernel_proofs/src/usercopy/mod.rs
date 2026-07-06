@@ -39,3 +39,10 @@ pub fn accepted_range(addr: u64, len: usize) -> Option<(u64, u64)> {
         _ => None,
     }
 }
+
+// The full decision, error variant included, for the functional differential
+// against the executable spec. The private `UserRange` is flattened to its
+// page pair; nothing else is changed.
+pub fn check(addr: u64, len: usize) -> Result<Option<(u64, u64)>, error::UsercopyError> {
+    policy::check_range(addr, len).map(|r| r.map(|range| (range.start_page, range.end_page)))
+}

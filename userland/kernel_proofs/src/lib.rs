@@ -24,6 +24,7 @@ pub mod elf;
 pub mod memory;
 pub mod syscall;
 pub mod time;
+pub mod spec;
 pub mod usercopy;
 
 #[cfg(test)]
@@ -34,6 +35,8 @@ mod elf_tests;
 mod permissions_tests;
 #[cfg(test)]
 mod syscall_tests;
+#[cfg(test)]
+mod refinement_tests;
 #[cfg(test)]
 mod usercopy_tests;
 
