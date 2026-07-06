@@ -9,6 +9,8 @@ pub mod crypto;
 #[cfg(test)]
 mod field_tests;
 #[cfg(test)]
+mod fri_tests;
+#[cfg(test)]
 mod merkle_tests;
 #[cfg(test)]
 mod poly_tests;
