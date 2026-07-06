@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
 use alloc::vec::Vec;
 
 use super::abs_out_of_flow::out_of_flow;
@@ -59,19 +58,23 @@ pub(super) fn collect_items(
                 };
                 let space = measure(" ").max(1);
                 let line_h = c.style.line_height() as i32;
-                let word = |w: &str| InlineItem::Word {
-                    text: String::from(w),
-                    px,
-                    color: c.style.color,
-                    bg: c.style.bg,
-                    bold: c.style.bold,
-                    mono,
-                    underline: c.style.underline,
-                    href: c.href.clone(),
-                    adv: measure(w).max(0) + if c.style.bold { 1 } else { 0 },
-                    space,
-                    line_h,
-                    node: c.dom_id,
+                let tt = c.style.text_transform;
+                let word = |w: &str| {
+                    let text = super::text_transform::transform(w, tt);
+                    InlineItem::Word {
+                        px,
+                        color: c.style.color,
+                        bg: c.style.bg,
+                        bold: c.style.bold,
+                        mono,
+                        underline: c.style.underline,
+                        href: c.href.clone(),
+                        adv: measure(&text).max(0) + if c.style.bold { 1 } else { 0 },
+                        space,
+                        line_h,
+                        node: c.dom_id,
+                        text,
+                    }
                 };
                 if c.style.white_space == WhiteSpace::Pre {
                     // Preserve each line verbatim, breaking only at newlines, so

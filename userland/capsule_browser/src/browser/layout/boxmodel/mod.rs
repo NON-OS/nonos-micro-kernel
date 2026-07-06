@@ -57,6 +57,7 @@ mod rel_offset;
 mod resolve_min_max_h;
 mod srcset;
 mod svg_serialize;
+mod text_transform;
 mod track_widths;
 mod tree;
 mod walk;

@@ -55,6 +55,14 @@ pub enum TextAlign {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+pub enum TextTransform {
+    None,
+    Upper,
+    Lower,
+    Capitalize,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Justify {
     Start,
     Center,
@@ -111,6 +119,7 @@ pub struct Computed {
     pub text_align: TextAlign,
     pub white_space: WhiteSpace,
     pub object_fit: ObjectFit,
+    pub text_transform: TextTransform,
     pub underline: bool,
     // 0 means unset: derive 1.3 * font size where a line height is needed.
     pub line_height_px: u32,
@@ -185,6 +194,7 @@ impl Computed {
             text_align: TextAlign::Left,
             white_space: WhiteSpace::Normal,
             object_fit: ObjectFit::Contain,
+            text_transform: TextTransform::None,
             underline: false,
             line_height_px: 0,
             margin_top: 0,
@@ -250,6 +260,7 @@ impl Computed {
         c.underline = parent.underline;
         c.line_height_px = parent.line_height_px;
         c.list_none = parent.list_none;
+        c.text_transform = parent.text_transform;
         c
     }
 

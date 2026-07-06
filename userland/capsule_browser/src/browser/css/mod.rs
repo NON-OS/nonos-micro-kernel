@@ -61,6 +61,7 @@ pub use color::parse_color;
 pub use compute::compute;
 pub use computed::Shadow;
 pub use computed::{
-    Align, Computed, GridTrack, Justify, ObjectFit, Position, Size, TextAlign, WhiteSpace,
+    Align, Computed, GridTrack, Justify, ObjectFit, Position, Size, TextAlign, TextTransform,
+    WhiteSpace,
 };
 pub use select::select;
