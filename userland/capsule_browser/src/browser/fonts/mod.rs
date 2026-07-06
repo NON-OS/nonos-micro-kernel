@@ -14,45 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod about_page;
-mod append_capped;
-mod apply_css;
-mod constants;
-mod css_pump;
-mod enqueue_css;
-mod enqueue_imports;
-mod fail;
-mod finish;
-mod font_pump;
-mod import_url;
-mod js_pump;
-mod keep;
-mod load;
-mod plain;
-mod progress;
-mod record_history;
-mod redirect;
-mod render_error;
-mod render_lines;
-mod render_response;
-mod retryable_error;
-mod reuse;
-mod rtc_packed;
-mod security_error;
-mod services;
-mod socks;
-mod stash;
-mod step;
-mod tls;
-pub mod types;
-mod unsupported_content;
-mod webfont_shim;
+mod collect;
+mod ingest;
+mod key;
+mod pick_src;
+mod registry;
+mod sfnt_header;
+mod text;
+mod woff;
 
-pub use css_pump::css_pump;
-pub use font_pump::font_pump;
-pub use js_pump::js_pump;
-pub use keep::KeptConn;
-pub use load::load;
-pub use render_error::render_error;
-pub(crate) use reuse::try_reuse;
-pub use step::step;
+pub use collect::collect_font_faces;
+pub use ingest::ingest_font;
+pub use key::family_key;
+pub use registry::clear;
+pub use text::{draw_text, measure_text};

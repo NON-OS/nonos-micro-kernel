@@ -116,6 +116,7 @@ fn begin(state: &mut State, target: &str, key: &str) -> Result<(), &'static str>
         rx_consumed: 0,
         tx_seq: 0,
         keep_uses: 0,
+        font: 0,
     });
     Ok(())
 }

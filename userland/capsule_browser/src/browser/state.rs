@@ -60,6 +60,10 @@ pub struct State {
     // A TLS connection held open between image fetches, so a run of same-host
     // images pays a single handshake.
     pub keep: Option<crate::browser::fetch::KeptConn>,
+    // Declared @font-face sources still to fetch, and the keys ever queued so
+    // a face is fetched at most once per page.
+    pub font_queue: Vec<(u32, String)>,
+    pub font_seen: Vec<u32>,
     // Current content width in pixels, tracked from the paint surface so the
     // page reflows when the window resizes instead of holding a fixed width.
     pub viewport_w: u32,
@@ -101,6 +105,8 @@ impl State {
             image_redirects: 0,
             img_turn: false,
             keep: None,
+            font_queue: Vec::new(),
+            font_seen: Vec::new(),
             viewport_w: crate::browser::manifest::WIDTH,
             css_queue: Vec::new(),
             page_css: String::new(),

@@ -30,5 +30,15 @@ pub fn relayout(state: &mut State) {
     let root = layout::boxmodel::build(dom, &styled.styles, &styled.bg_images);
     let doc = layout::boxmodel::layout(&root, state.viewport_w);
     state.box_doc = Some(doc);
+    // Queue newly declared web fonts; each face is fetched once and text
+    // relayouts with its real metrics when it lands.
+    for (key, src) in crate::browser::fonts::collect_font_faces(&css_text) {
+        if !state.font_seen.contains(&key) {
+            state.font_seen.push(key);
+            if let Some(base) = state.base.as_ref() {
+                state.font_queue.push((key, crate::browser::url::join(base, &src)));
+            }
+        }
+    }
     crate::browser::image::enqueue_from_doc(state);
 }

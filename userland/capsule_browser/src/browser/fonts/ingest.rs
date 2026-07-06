@@ -14,45 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod about_page;
-mod append_capped;
-mod apply_css;
-mod constants;
-mod css_pump;
-mod enqueue_css;
-mod enqueue_imports;
-mod fail;
-mod finish;
-mod font_pump;
-mod import_url;
-mod js_pump;
-mod keep;
-mod load;
-mod plain;
-mod progress;
-mod record_history;
-mod redirect;
-mod render_error;
-mod render_lines;
-mod render_response;
-mod retryable_error;
-mod reuse;
-mod rtc_packed;
-mod security_error;
-mod services;
-mod socks;
-mod stash;
-mod step;
-mod tls;
-pub mod types;
-mod unsupported_content;
-mod webfont_shim;
+use alloc::vec::Vec;
 
-pub use css_pump::css_pump;
-pub use font_pump::font_pump;
-pub use js_pump::js_pump;
-pub use keep::KeptConn;
-pub use load::load;
-pub use render_error::render_error;
-pub(crate) use reuse::try_reuse;
-pub use step::step;
+// Install a fetched face body under its family key: a WOFF unwraps to sfnt
+// first, a raw ttf/otf loads as is. Returns true when the face installed and
+// the page should relayout with its real metrics.
+pub fn ingest_font(key: u32, body: Vec<u8>) -> bool {
+    if body.is_empty() {
+        return false;
+    }
+    let Some(sfnt) = super::woff::unwrap_woff(body) else { return false };
+    super::registry::install(key, sfnt)
+}

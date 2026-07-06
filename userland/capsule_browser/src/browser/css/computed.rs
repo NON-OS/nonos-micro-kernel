@@ -120,6 +120,9 @@ pub struct Computed {
     pub white_space: WhiteSpace,
     pub object_fit: ObjectFit,
     pub text_transform: TextTransform,
+    // Family key of the custom face this text draws in, 0 for the built-in
+    // face; the fonts registry maps keys to loaded faces.
+    pub font_key: u32,
     pub underline: bool,
     // 0 means unset: derive 1.3 * font size where a line height is needed.
     pub line_height_px: u32,
@@ -195,6 +198,7 @@ impl Computed {
             white_space: WhiteSpace::Normal,
             object_fit: ObjectFit::Contain,
             text_transform: TextTransform::None,
+            font_key: 0,
             underline: false,
             line_height_px: 0,
             margin_top: 0,
@@ -261,6 +265,7 @@ impl Computed {
         c.line_height_px = parent.line_height_px;
         c.list_none = parent.list_none;
         c.text_transform = parent.text_transform;
+        c.font_key = parent.font_key;
         c
     }
 

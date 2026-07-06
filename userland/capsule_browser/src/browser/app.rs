@@ -78,6 +78,9 @@ impl App for Browser {
         if crate::browser::fetch::css_pump(&mut self.state) {
             return true;
         }
+        if crate::browser::fetch::font_pump(&mut self.state) {
+            return true;
+        }
         // Then alternate the socket between script-issued fetches and images.
         // A page whose JS never stops requesting would otherwise hold the one
         // socket forever and no image would ever load.

@@ -41,8 +41,19 @@ pub(super) fn apply_text(
             _ => {}
         },
         // The monospace generic (or an explicit mono family) switches text to
-        // the fixed-pitch face; anything else keeps the body face.
-        "font-family" => c.mono = value.to_ascii_lowercase().contains("mono"),
+        // the fixed-pitch face. A named first family keys the custom face the
+        // text draws in once its @font-face loads; a generic keeps the
+        // built-in one.
+        "font-family" => {
+            c.mono = value.to_ascii_lowercase().contains("mono");
+            let first = value.split(',').next().unwrap_or("").trim();
+            let bare = first.trim_matches('"').trim_matches('\'').trim();
+            c.font_key = match bare.to_ascii_lowercase().as_str() {
+                "" | "sans-serif" | "serif" | "system-ui" | "ui-sans-serif" => 0,
+                "monospace" | "ui-monospace" | "cursive" | "fantasy" => 0,
+                _ => crate::browser::fonts::family_key(bare),
+            };
+        }
         // Em resolves against the parent font size. Clamp above zero so a
         // styled element never reads as "no CSS size" downstream.
         "font-size" => {

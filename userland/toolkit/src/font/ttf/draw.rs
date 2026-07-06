@@ -35,6 +35,23 @@ pub fn draw_text(
     mono: bool,
 ) -> i32 {
     let Some(f) = face(mono) else { return x };
+    draw_text_with(f, buf, stride, w, h, x, top_y, text, argb, px)
+}
+
+// Same rendering with a caller-provided face, so text can draw in a font
+// loaded at runtime, such as a page's web font.
+pub fn draw_text_with<F: Font>(
+    f: &F,
+    buf: &mut [u32],
+    stride: usize,
+    w: u32,
+    h: u32,
+    x: i32,
+    top_y: i32,
+    text: &str,
+    argb: u32,
+    px: f32,
+) -> i32 {
     let sf = f.as_scaled(PxScale::from(px));
     let baseline = top_y as f32 + sf.ascent();
     let mut pen = x as f32;

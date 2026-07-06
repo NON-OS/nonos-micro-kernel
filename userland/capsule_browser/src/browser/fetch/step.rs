@@ -130,6 +130,24 @@ pub fn step(state: &mut State) -> bool {
         return true;
     }
     let _ = net::socket_close(port, job.handle);
+    if job.font != 0 {
+        let raw = match job.phase {
+            Phase::Decrypt => tls::decrypt(&job),
+            Phase::Done => Some(job.buf.clone()),
+            _ => None,
+        };
+        let body = raw
+            .as_deref()
+            .and_then(http::response::parse)
+            .filter(|r| r.status == 200)
+            .map(|r| r.body)
+            .unwrap_or_default();
+        // A face that parses changes every metric measured with it.
+        if crate::browser::fonts::ingest_font(job.font, body) {
+            crate::browser::event::relayout(state);
+        }
+        return true;
+    }
     if job.css {
         let raw = match job.phase {
             Phase::Decrypt => tls::decrypt(&job),

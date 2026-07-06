@@ -23,33 +23,23 @@ use crate::browser::net;
 use crate::browser::state::State;
 use crate::browser::url;
 
-// Fetch the next queued external stylesheet when the socket is idle. Rides
-// the same single-socket machine as page navigation and images, so only one
-// request runs at a time. Returns true when a fetch was launched.
-pub fn css_pump(state: &mut State) -> bool {
-    if state.sockets_port == 0 || state.fetch.is_some() || state.css_queue.is_empty() {
+// Fetch the next declared @font-face when the socket is idle. Fonts ride the
+// same single-socket machine as stylesheets; a face that cannot even launch
+// is simply skipped and its text keeps the built-in fallback.
+pub fn font_pump(state: &mut State) -> bool {
+    if state.sockets_port == 0 || state.fetch.is_some() || state.font_queue.is_empty() {
         return false;
     }
-    let target = state.css_queue.remove(0);
-    // A sheet that fails before its fetch even launches must still drain the
-    // render-blocking hold, or a page whose only stylesheet host is down would
-    // stay blank forever. apply_css(None) relayouts with whatever CSS arrived.
-    let Some(u) = url::parse(&target) else {
-        super::apply_css::apply_css(state, None, None);
-        return true;
-    };
+    let (key, target) = state.font_queue.remove(0);
+    let Some(u) = url::parse(&target) else { return true };
     let proxy = state.proxy.clone();
     let (host, port) = match proxy.as_ref() {
         Some(p) => (p.host.as_str(), p.port),
         None => (u.host.as_str(), u.port),
     };
-    let Ok(h) = net::socket_open(state.sockets_port) else {
-        super::apply_css::apply_css(state, None, None);
-        return true;
-    };
+    let Ok(h) = net::socket_open(state.sockets_port) else { return true };
     if net::socket_connect_host(state.sockets_port, h, host, port).is_err() {
         let _ = net::socket_close(state.sockets_port, h);
-        super::apply_css::apply_css(state, None, None);
         return true;
     }
     let phase = if proxy.is_some() {
@@ -74,11 +64,11 @@ pub fn css_pump(state: &mut State) -> bool {
         last_check: 0,
         post: None,
         js_req: false,
-        css: true,
+        css: false,
         rx_consumed: 0,
         tx_seq: 0,
         keep_uses: 0,
-        font: 0,
+        font: key,
     });
     true
 }

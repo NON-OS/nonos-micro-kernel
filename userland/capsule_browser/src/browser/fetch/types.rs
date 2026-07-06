@@ -74,4 +74,6 @@ pub struct Fetch {
     pub tx_seq: u64,
     // Requests already served on this connection, bounding reuse.
     pub keep_uses: u8,
+    // Family key when this fetch is an @font-face download; zero otherwise.
+    pub font: u32,
 }

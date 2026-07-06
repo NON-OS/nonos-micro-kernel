@@ -24,5 +24,6 @@ mod draw;
 mod face;
 mod metrics;
 
-pub use draw::draw_text;
-pub use metrics::{ascent, line_height, measure};
+pub use ab_glyph::FontRef;
+pub use draw::{draw_text, draw_text_with};
+pub use metrics::{ascent, line_height, measure, measure_with};

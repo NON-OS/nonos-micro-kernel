@@ -14,45 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod about_page;
-mod append_capped;
-mod apply_css;
-mod constants;
-mod css_pump;
-mod enqueue_css;
-mod enqueue_imports;
-mod fail;
-mod finish;
-mod font_pump;
-mod import_url;
-mod js_pump;
-mod keep;
-mod load;
-mod plain;
-mod progress;
-mod record_history;
-mod redirect;
-mod render_error;
-mod render_lines;
-mod render_response;
-mod retryable_error;
-mod reuse;
-mod rtc_packed;
-mod security_error;
-mod services;
-mod socks;
-mod stash;
-mod step;
-mod tls;
-pub mod types;
-mod unsupported_content;
-mod webfont_shim;
-
-pub use css_pump::css_pump;
-pub use font_pump::font_pump;
-pub use js_pump::js_pump;
-pub use keep::KeptConn;
-pub use load::load;
-pub use render_error::render_error;
-pub(crate) use reuse::try_reuse;
-pub use step::step;
+// Key for a font family name: the FNV-1a hash of its unquoted, lowercased
+// form. The computed style carries the key rather than the name so it stays
+// Copy; the registry maps keys to loaded faces. Zero means "no custom face"
+// and never collides because FNV-1a of a non-empty name is never zero here.
+pub fn family_key(name: &str) -> u32 {
+    let trimmed = name.trim().trim_matches('"').trim_matches('\'').trim();
+    if trimmed.is_empty() {
+        return 0;
+    }
+    let mut h: u32 = 0x811c_9dc5;
+    for b in trimmed.bytes() {
+        let lower = b.to_ascii_lowercase();
+        h ^= lower as u32;
+        h = h.wrapping_mul(0x0100_0193);
+    }
+    h.max(1)
+}

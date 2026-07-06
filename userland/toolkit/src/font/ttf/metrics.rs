@@ -22,6 +22,11 @@ use super::face::face;
 // so painted runs land exactly where layout placed them.
 pub fn measure(text: &str, px: f32, mono: bool) -> i32 {
     let Some(f) = face(mono) else { return 0 };
+    measure_with(f, text, px)
+}
+
+// Same measurement with a caller-provided face, matching draw_text_with.
+pub fn measure_with<F: Font>(f: &F, text: &str, px: f32) -> i32 {
     let sf = f.as_scaled(PxScale::from(px));
     let mut pen = 0.0f32;
     let mut prev: Option<GlyphId> = None;
