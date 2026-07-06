@@ -25,25 +25,20 @@ use super::super::field::Fp;
 use super::super::fri::{fri_verify, root_of_unity};
 use super::super::merkle::verify_path;
 use super::super::transcript::Transcript;
-use super::composition::{compose, num_coeffs};
+use super::composition::{compose, domain_params, num_coeffs};
 use super::spec::Air;
 use super::types::StarkProof;
 use alloc::vec::Vec;
 
 const SHIFT: u64 = 7;
 
-/// Verify `proof` against `air` on an evaluation domain `2^log_blowup` times the
-/// trace length.
-pub fn stark_verify<A: Air>(
-    air: &A,
-    proof: &StarkProof,
-    log_blowup: u32,
-    n_queries: usize,
-) -> bool {
+/// Verify `proof` against `air`. The evaluation domain and the low-degree bound
+/// are derived from the AIR, matching the prover.
+pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bool {
     let log_t = air.log_trace_len();
-    let log_n = log_t + log_blowup;
+    let (log_n, fri_log_blowup) = domain_params(air);
     let n = 1usize << log_n;
-    let blowup = 1usize << log_blowup;
+    let blowup = 1usize << (log_n - log_t);
     let window_size = air.window_size();
 
     if proof.queries.len() != n_queries {
@@ -54,8 +49,8 @@ pub fn stark_verify<A: Air>(
     let omega = root_of_unity(log_n);
     let shift = Fp::from_u64(SHIFT);
 
-    // 1. The composition must be low degree (below the trace length).
-    if !fri_verify(&proof.fri, shift, log_n, log_blowup, n_queries) {
+    // 1. The composition must be low degree (below the derived bound).
+    if !fri_verify(&proof.fri, shift, log_n, fri_log_blowup, n_queries) {
         return false;
     }
     let comp_root = proof.fri.roots[0];

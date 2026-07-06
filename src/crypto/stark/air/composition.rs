@@ -29,6 +29,22 @@ pub(super) fn num_coeffs<A: Air>(air: &A) -> usize {
     air.num_transition() + air.boundary().len()
 }
 
+/// The evaluation-domain sizing derived from the AIR: `(log_n, fri_log_blowup)`.
+///
+/// The composition degree is below `constraint_degree * trace_len`, so the FRI
+/// degree bound `B` is that rounded up to a power of two, and the evaluation
+/// domain is `2 * B` (a rate of one half for the low-degree test). Both prover
+/// and verifier call this, so they agree on the domain without passing sizes.
+pub(super) fn domain_params<A: Air>(air: &A) -> (u32, u32) {
+    let t = 1usize << air.log_trace_len();
+    let degree = air.constraint_degree().max(1);
+    let bound = (degree * t).next_power_of_two();
+    let n = 2 * bound;
+    let log_n = n.trailing_zeros();
+    let fri_log_blowup = log_n - bound.trailing_zeros();
+    (log_n, fri_log_blowup)
+}
+
 /// The composition value at coset point `x`, given the trace window
 /// `[f(x), f(g*x), ...]` and the transcript coefficients. `g` is the trace-domain
 /// generator. `x` lies off the trace domain, so every divisor is invertible.

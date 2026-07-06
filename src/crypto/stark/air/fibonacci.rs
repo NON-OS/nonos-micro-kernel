@@ -36,6 +36,10 @@ impl Air for Fibonacci {
         3
     }
 
+    fn constraint_degree(&self) -> usize {
+        1
+    }
+
     fn num_transition(&self) -> usize {
         1
     }

@@ -30,6 +30,11 @@ pub trait Air {
     /// Number of consecutive rows the transition reads (2 reads `x, g*x`).
     fn window_size(&self) -> usize;
 
+    /// The highest polynomial degree among the transition constraints, in the
+    /// trace values. Squaring is 2, a linear recurrence 1, an `x^7` S-box 7. The
+    /// engine sizes the evaluation domain and the low-degree test from this.
+    fn constraint_degree(&self) -> usize;
+
     /// Number of transition constraints (the length of `transition`).
     fn num_transition(&self) -> usize;
 

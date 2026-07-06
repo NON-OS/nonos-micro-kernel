@@ -23,7 +23,7 @@ use super::super::fri::{fri_prove, root_of_unity};
 use super::super::merkle::MerkleTree;
 use super::super::poly::eval_lagrange;
 use super::super::transcript::Transcript;
-use super::composition::{compose, num_coeffs};
+use super::composition::{compose, domain_params, num_coeffs};
 use super::spec::Air;
 use super::types::{StarkProof, StarkQuery};
 use alloc::vec::Vec;
@@ -32,14 +32,15 @@ use alloc::vec::Vec;
 /// meets the trace subgroup.
 const SHIFT: u64 = 7;
 
-/// Prove that `trace` satisfies `air` on an evaluation domain `2^log_blowup`
-/// times the trace length. `trace.len()` must equal the AIR's trace length.
-pub fn stark_prove<A: Air>(air: &A, trace: &[Fp], log_blowup: u32, n_queries: usize) -> StarkProof {
+/// Prove that `trace` satisfies `air`. The evaluation domain and the low-degree
+/// bound are derived from the AIR's constraint degree. `trace.len()` must equal
+/// the AIR's trace length.
+pub fn stark_prove<A: Air>(air: &A, trace: &[Fp], n_queries: usize) -> StarkProof {
     let log_t = air.log_trace_len();
     let t = 1usize << log_t;
-    let log_n = log_t + log_blowup;
+    let (log_n, fri_log_blowup) = domain_params(air);
     let n = 1usize << log_n;
-    let blowup = 1usize << log_blowup;
+    let blowup = 1usize << (log_n - log_t);
     let window_size = air.window_size();
 
     let g = root_of_unity(log_t);
@@ -83,7 +84,7 @@ pub fn stark_prove<A: Air>(air: &A, trace: &[Fp], log_blowup: u32, n_queries: us
     }
 
     // FRI proves the composition is low degree; its first root commits it.
-    let fri = fri_prove(&comp_d, shift, log_blowup, n_queries);
+    let fri = fri_prove(&comp_d, shift, fri_log_blowup, n_queries);
     let comp_tree = MerkleTree::commit(&comp_d);
 
     // Consistency positions, bound after the composition commitment.

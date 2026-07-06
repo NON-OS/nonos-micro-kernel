@@ -24,6 +24,7 @@
 
 mod composition;
 mod fibonacci;
+mod power_chain;
 mod prove;
 mod spec;
 mod squaring;
@@ -31,6 +32,7 @@ mod types;
 mod verify;
 
 pub use fibonacci::Fibonacci;
+pub use power_chain::PowerChain;
 pub use prove::stark_prove;
 pub use spec::Air;
 pub use squaring::Squaring;

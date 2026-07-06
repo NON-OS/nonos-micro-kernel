@@ -14,19 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The squaring AIR: a chain `t[i+1] = t[i]^2` from a public seed.
+//! An iterated S-box chain: `t[i+1] = t[i]^7 + c`. Raising to the seventh power
+//! is a permutation of this field (7 is coprime to the group order), the same
+//! low-degree S-box the Goldilocks hash permutations use. Proving a chain of it
+//! is a computational-integrity proof of a hash-style, verifiable-delay
+//! computation: the prover shows a public output is the result of applying the
+//! permutation `T` times to some starting value, without revealing that value.
+//! The degree-7 transition is what exercises the engine's high-degree path.
 
 use super::super::field::Fp;
 use super::spec::Air;
 use alloc::vec;
 use alloc::vec::Vec;
 
-pub struct Squaring {
+pub struct PowerChain {
     pub log_t: u32,
-    pub seed: Fp,
+    /// The round constant added after each S-box.
+    pub c: Fp,
+    /// The public final value the chain must reach.
+    pub output: Fp,
 }
 
-impl Air for Squaring {
+impl Air for PowerChain {
     fn log_trace_len(&self) -> u32 {
         self.log_t
     }
@@ -36,7 +45,7 @@ impl Air for Squaring {
     }
 
     fn constraint_degree(&self) -> usize {
-        2
+        7
     }
 
     fn num_transition(&self) -> usize {
@@ -44,11 +53,14 @@ impl Air for Squaring {
     }
 
     fn transition(&self, window: &[Fp]) -> Vec<Fp> {
-        // f(g*x) - f(x)^2
-        vec![window[1] - window[0] * window[0]]
+        // f(g*x) - (f(x)^7 + c)
+        let x = window[0];
+        let x7 = x.pow(7);
+        vec![window[1] - (x7 + self.c)]
     }
 
     fn boundary(&self) -> Vec<(usize, Fp)> {
-        vec![(0, self.seed)]
+        // The last row is the public output.
+        vec![((1usize << self.log_t) - 1, self.output)]
     }
 }
