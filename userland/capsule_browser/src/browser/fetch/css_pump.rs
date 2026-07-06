@@ -35,7 +35,7 @@ pub fn css_pump(state: &mut State) -> bool {
     // render-blocking hold, or a page whose only stylesheet host is down would
     // stay blank forever. apply_css(None) relayouts with whatever CSS arrived.
     let Some(u) = url::parse(&target) else {
-        super::apply_css::apply_css(state, None);
+        super::apply_css::apply_css(state, None, None);
         return true;
     };
     let proxy = state.proxy.clone();
@@ -44,12 +44,12 @@ pub fn css_pump(state: &mut State) -> bool {
         None => (u.host.as_str(), u.port),
     };
     let Ok(h) = net::socket_open(state.sockets_port) else {
-        super::apply_css::apply_css(state, None);
+        super::apply_css::apply_css(state, None, None);
         return true;
     };
     if net::socket_connect_host(state.sockets_port, h, host, port).is_err() {
         let _ = net::socket_close(state.sockets_port, h);
-        super::apply_css::apply_css(state, None);
+        super::apply_css::apply_css(state, None, None);
         return true;
     }
     let phase = if proxy.is_some() {
