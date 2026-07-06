@@ -32,6 +32,10 @@ impl Air for Fibonacci {
         self.log_t
     }
 
+    fn trace_width(&self) -> usize {
+        1
+    }
+
     fn window_size(&self) -> usize {
         3
     }
@@ -49,7 +53,8 @@ impl Air for Fibonacci {
         vec![window[2] - window[1] - window[0]]
     }
 
-    fn boundary(&self) -> Vec<(usize, Fp)> {
-        vec![(0, Fp::ONE), (1, Fp::ONE)]
+    fn boundary(&self) -> Vec<(usize, usize, Fp)> {
+        // column 0, the first two rows are both one.
+        vec![(0, 0, Fp::ONE), (0, 1, Fp::ONE)]
     }
 }

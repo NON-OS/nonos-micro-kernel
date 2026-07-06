@@ -24,6 +24,7 @@
 
 mod composition;
 mod fibonacci;
+mod permutation2;
 mod power_chain;
 mod prove;
 mod spec;
@@ -32,6 +33,7 @@ mod types;
 mod verify;
 
 pub use fibonacci::Fibonacci;
+pub use permutation2::Permutation2;
 pub use power_chain::PowerChain;
 pub use prove::stark_prove;
 pub use spec::Air;

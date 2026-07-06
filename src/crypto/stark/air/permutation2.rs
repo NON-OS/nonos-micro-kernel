@@ -14,25 +14,38 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The squaring AIR: a chain `t[i+1] = t[i]^2` from a public seed.
+//! A two-element algebraic permutation, the shape of a hash round: a full x^7
+//! S-box on each state element, a linear mix, and a round constant. The round is
+//!
+//!   x' = x^7 + y + rc0
+//!   y' = x + y^7 + rc1
+//!
+//! A trace of it is a two-column state, so proving a chain is a
+//! computational-integrity proof over a multi-element permutation, the same
+//! structure a Poseidon or Rescue hash is built from. This is the multi-column,
+//! high-degree case: two degree-seven transition constraints over a width-two
+//! trace.
 
 use super::super::field::Fp;
 use super::spec::Air;
 use alloc::vec;
 use alloc::vec::Vec;
 
-pub struct Squaring {
+pub struct Permutation2 {
     pub log_t: u32,
-    pub seed: Fp,
+    pub rc0: Fp,
+    pub rc1: Fp,
+    /// The public final state after the whole chain.
+    pub out: [Fp; 2],
 }
 
-impl Air for Squaring {
+impl Air for Permutation2 {
     fn log_trace_len(&self) -> u32 {
         self.log_t
     }
 
     fn trace_width(&self) -> usize {
-        1
+        2
     }
 
     fn window_size(&self) -> usize {
@@ -40,20 +53,22 @@ impl Air for Squaring {
     }
 
     fn constraint_degree(&self) -> usize {
-        2
+        7
     }
 
     fn num_transition(&self) -> usize {
-        1
+        2
     }
 
     fn transition(&self, window: &[Fp]) -> Vec<Fp> {
-        // f(g*x) - f(x)^2
-        vec![window[1] - window[0] * window[0]]
+        // window = [x, y, x_next, y_next].
+        let (x, y, x_next, y_next) = (window[0], window[1], window[2], window[3]);
+        vec![x_next - (x.pow(7) + y + self.rc0), y_next - (x + y.pow(7) + self.rc1)]
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {
-        // column 0, row 0, the public seed.
-        vec![(0, 0, self.seed)]
+        // Both state columns at the last row are the public output.
+        let last = (1usize << self.log_t) - 1;
+        vec![(0, last, self.out[0]), (1, last, self.out[1])]
     }
 }

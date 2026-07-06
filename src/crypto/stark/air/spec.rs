@@ -15,10 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! The algebraic intermediate representation a STARK proves. A computation is a
-//! single trace column; the transition reads a sliding window of consecutive
-//! rows and returns the constraint values that must vanish on every trace row
-//! but the last `window_size - 1`, and boundary constraints pin chosen rows to
-//! public values. Any type implementing this can be proven by the same engine.
+//! trace of `trace_width` columns; the transition reads a sliding window of
+//! consecutive rows and returns the constraint values that must vanish on every
+//! trace row but the last `window_size - 1`, and boundary constraints pin a
+//! chosen `(column, row)` to a public value. A single column proves a chain; a
+//! wider trace proves a permutation over a multi-element state, which is what a
+//! hash round is. Any type implementing this is proven by the same engine.
 
 use super::super::field::Fp;
 use alloc::vec::Vec;
@@ -27,7 +29,11 @@ pub trait Air {
     /// Log2 of the trace length, a power of two.
     fn log_trace_len(&self) -> u32;
 
-    /// Number of consecutive rows the transition reads (2 reads `x, g*x`).
+    /// Number of trace columns, the width of the state.
+    fn trace_width(&self) -> usize;
+
+    /// Number of consecutive rows the transition reads (2 reads a row and its
+    /// successor).
     fn window_size(&self) -> usize;
 
     /// The highest polynomial degree among the transition constraints, in the
@@ -38,10 +44,12 @@ pub trait Air {
     /// Number of transition constraints (the length of `transition`).
     fn num_transition(&self) -> usize;
 
-    /// The transition constraint values for a window `[f(x), f(g*x), ...]`. Each
-    /// must be zero on every trace row except the final `window_size - 1`.
+    /// The transition constraint values for a window laid out row-major:
+    /// `window[k * trace_width + col]` is column `col` of the k-th row in the
+    /// window. Each returned value must be zero on every trace row except the
+    /// final `window_size - 1`.
     fn transition(&self, window: &[Fp]) -> Vec<Fp>;
 
-    /// Boundary constraints as `(row, value)` on the trace column.
-    fn boundary(&self) -> Vec<(usize, Fp)>;
+    /// Boundary constraints as `(column, row, value)`.
+    fn boundary(&self) -> Vec<(usize, usize, Fp)>;
 }

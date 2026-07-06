@@ -17,9 +17,9 @@
 //! The STARK verifier, generic over any AIR. It checks the composition is low
 //! degree through FRI, then at each sampled position checks the committed
 //! composition equals the constraint composition recomputed from the committed
-//! trace window. A false trace yields either a high-degree composition (FRI
-//! rejects) or one that disagrees with the trace (consistency rejects). It only
-//! reads the proof and never panics.
+//! trace window across all columns. A false trace yields either a high-degree
+//! composition (FRI rejects) or one that disagrees with the trace (consistency
+//! rejects). It only reads the proof and never panics.
 
 use super::super::field::Fp;
 use super::super::fri::{fri_verify, root_of_unity};
@@ -32,16 +32,17 @@ use alloc::vec::Vec;
 
 const SHIFT: u64 = 7;
 
-/// Verify `proof` against `air`. The evaluation domain and the low-degree bound
-/// are derived from the AIR, matching the prover.
+/// Verify `proof` against `air`. The evaluation domain and low-degree bound are
+/// derived from the AIR, matching the prover.
 pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bool {
     let log_t = air.log_trace_len();
+    let width = air.trace_width();
     let (log_n, fri_log_blowup) = domain_params(air);
     let n = 1usize << log_n;
     let blowup = 1usize << (log_n - log_t);
     let window_size = air.window_size();
 
-    if proof.queries.len() != n_queries {
+    if proof.trace_roots.len() != width || proof.queries.len() != n_queries {
         return false;
     }
 
@@ -57,15 +58,18 @@ pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bo
 
     // 2. Recover the composition coefficients and query positions.
     let mut transcript = Transcript::new(b"NONOS-STARK");
-    transcript.absorb_digest(&proof.trace_root);
+    for root in &proof.trace_roots {
+        transcript.absorb_digest(root);
+    }
     let coeffs: Vec<Fp> = (0..num_coeffs(air)).map(|_| transcript.challenge_fp()).collect();
     transcript.absorb_digest(&comp_root);
 
     // 3. The committed composition must equal the constraint composition of the
-    // committed trace window at every sampled position.
+    // committed trace window, across every column, at every sampled position.
+    let expected_window = window_size * width;
     for qd in &proof.queries {
         let p = transcript.challenge_index(n);
-        if qd.window.len() != window_size || qd.window_paths.len() != window_size {
+        if qd.window.len() != expected_window || qd.window_paths.len() != expected_window {
             return false;
         }
         if !verify_path(&comp_root, p, qd.comp, &qd.comp_path) {
@@ -73,8 +77,12 @@ pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bo
         }
         for k in 0..window_size {
             let idx = (p + k * blowup) % n;
-            if !verify_path(&proof.trace_root, idx, qd.window[k], &qd.window_paths[k]) {
-                return false;
+            for c in 0..width {
+                let slot = k * width + c;
+                if !verify_path(&proof.trace_roots[c], idx, qd.window[slot], &qd.window_paths[slot])
+                {
+                    return false;
+                }
             }
         }
         let x = shift * omega.pow(p as u64);

@@ -65,9 +65,10 @@ pub(super) fn compose<A: Air>(air: &A, g: Fp, x: Fp, window: &[Fp], coeffs: &[Fp
         acc = acc + *coeff * (*value * exempt * z_h_inv);
     }
 
+    // Boundary quotients read column `col` at window offset zero, `window[col]`.
     let boundary_coeffs = &coeffs[transition.len()..];
-    for ((row, expected), coeff) in air.boundary().iter().zip(boundary_coeffs.iter()) {
-        let quotient = (window[0] - *expected) * (x - g.pow(*row as u64)).inv();
+    for ((col, row, expected), coeff) in air.boundary().iter().zip(boundary_coeffs.iter()) {
+        let quotient = (window[*col] - *expected) * (x - g.pow(*row as u64)).inv();
         acc = acc + *coeff * quotient;
     }
 

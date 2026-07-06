@@ -14,16 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The STARK proof: a trace commitment, a FRI proof that the constraint
-//! composition is low degree, and per-query openings that bind the composition
-//! back to the committed trace over the whole constraint window.
+//! The STARK proof: one Merkle commitment per trace column, a FRI proof that the
+//! constraint composition is low degree, and per-query openings that bind the
+//! composition back to the committed trace over the whole constraint window.
 
 use super::super::field::Fp;
 use super::super::fri::FriProof;
 use alloc::vec::Vec;
 
 /// One consistency query: the composition value at position `p`, and the trace
-/// values across the constraint window starting at `p`, each with a Merkle path.
+/// values across the constraint window at `p`, laid out row-major
+/// (`window[k * width + col]`), each with a Merkle path to its column commitment.
 pub struct StarkQuery {
     pub comp: Fp,
     pub comp_path: Vec<[u8; 32]>,
@@ -33,7 +34,7 @@ pub struct StarkQuery {
 
 /// A complete STARK proof.
 pub struct StarkProof {
-    pub trace_root: [u8; 32],
+    pub trace_roots: Vec<[u8; 32]>,
     pub fri: FriProof,
     pub queries: Vec<StarkQuery>,
 }

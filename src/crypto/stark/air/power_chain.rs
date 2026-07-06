@@ -40,6 +40,10 @@ impl Air for PowerChain {
         self.log_t
     }
 
+    fn trace_width(&self) -> usize {
+        1
+    }
+
     fn window_size(&self) -> usize {
         2
     }
@@ -59,8 +63,8 @@ impl Air for PowerChain {
         vec![window[1] - (x7 + self.c)]
     }
 
-    fn boundary(&self) -> Vec<(usize, Fp)> {
-        // The last row is the public output.
-        vec![((1usize << self.log_t) - 1, self.output)]
+    fn boundary(&self) -> Vec<(usize, usize, Fp)> {
+        // column 0, last row, the public output.
+        vec![(0, (1usize << self.log_t) - 1, self.output)]
     }
 }

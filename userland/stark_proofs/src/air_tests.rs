@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::crypto::stark::air::{stark_prove, stark_verify, Fibonacci, PowerChain, Squaring};
+use crate::crypto::stark::air::{
+    stark_prove, stark_verify, Fibonacci, Permutation2, PowerChain, Squaring,
+};
 use crate::crypto::stark::field::Fp;
 
 extern crate alloc;
@@ -92,6 +94,54 @@ fn an_honest_sbox_chain_verifies() {
     let air = PowerChain { log_t: 4, c, output };
     let proof = stark_prove(&air, &trace, QUERIES);
     assert!(stark_verify(&air, &proof, QUERIES), "honest s-box chain rejected");
+}
+
+/// The honest width-two permutation chain and its public final state.
+fn permutation2_trace(log_t: u32, x0: Fp, y0: Fp, rc0: Fp, rc1: Fp) -> (Vec<Fp>, [Fp; 2]) {
+    let t = 1usize << log_t;
+    let mut trace = Vec::with_capacity(2 * t);
+    let (mut x, mut y) = (x0, y0);
+    for _ in 0..t {
+        trace.push(x);
+        trace.push(y);
+        let nx = x.pow(7) + y + rc0;
+        let ny = x + y.pow(7) + rc1;
+        x = nx;
+        y = ny;
+    }
+    let out = [trace[(t - 1) * 2], trace[(t - 1) * 2 + 1]];
+    (trace, out)
+}
+
+#[test]
+fn an_honest_permutation_chain_verifies() {
+    // A width-two state under an x^7 permutation round: the multi-column, hash
+    // round shaped case. The same engine, a two-element state.
+    let (rc0, rc1) = (Fp::from_u64(13), Fp::from_u64(17));
+    let (trace, out) = permutation2_trace(4, Fp::from_u64(2), Fp::from_u64(5), rc0, rc1);
+    let air = Permutation2 { log_t: 4, rc0, rc1, out };
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "honest permutation chain rejected");
+}
+
+#[test]
+fn a_corrupted_permutation_step_is_rejected() {
+    let (rc0, rc1) = (Fp::from_u64(13), Fp::from_u64(17));
+    let (mut trace, out) = permutation2_trace(4, Fp::from_u64(2), Fp::from_u64(5), rc0, rc1);
+    // Corrupt the y column at some row.
+    trace[9] = trace[9] + Fp::ONE;
+    let air = Permutation2 { log_t: 4, rc0, rc1, out };
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a corrupted permutation step verified");
+}
+
+#[test]
+fn a_wrong_permutation_output_is_rejected() {
+    let (rc0, rc1) = (Fp::from_u64(13), Fp::from_u64(17));
+    let (trace, out) = permutation2_trace(4, Fp::from_u64(2), Fp::from_u64(5), rc0, rc1);
+    let air = Permutation2 { log_t: 4, rc0, rc1, out: [out[0] + Fp::ONE, out[1]] };
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a wrong permutation output verified");
 }
 
 #[test]
