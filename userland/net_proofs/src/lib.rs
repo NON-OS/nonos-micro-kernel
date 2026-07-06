@@ -27,8 +27,9 @@ extern crate alloc;
 #[path = "../../capsule_net_dns/src/dns/mod.rs"]
 pub mod dns;
 
-// Minimal mirrors so the ICMP, ARP and TCP parsers resolve their siblings.
+// Minimal mirrors so the ICMP, ARP, TCP and DHCP parsers resolve their siblings.
 pub mod arp;
+pub mod dhcp;
 pub mod ethernet;
 pub mod icmp;
 pub mod ipv4;
@@ -37,6 +38,8 @@ pub mod tcp;
 
 #[cfg(test)]
 mod arp_tests;
+#[cfg(test)]
+mod dhcp_tests;
 #[cfg(test)]
 mod dns_tests;
 #[cfg(test)]
