@@ -19,40 +19,34 @@ use nonos_toolkit::font::ttf;
 
 use super::registry::with_face;
 
-// Advance width in the keyed face, falling back to the built-in faces until
-// the page's font loads, so layout always has a metric.
-pub fn measure_text(key: u32, mono: bool, text: &str, px: f32) -> i32 {
-    with_face(key, |f| ttf::measure_with(f, text, px)).unwrap_or_else(|| {
-        if mono {
-            nonos_app_skeleton::measure_ttf_mono(text, px)
-        } else {
-            nonos_app_skeleton::measure_ttf(text, px)
-        }
+// Advance width in the keyed face at the run's letter-spacing, falling back
+// to the built-in faces until the page's font loads, so layout always has a
+// metric.
+pub fn measure_text(key: u32, mono: bool, text: &str, px: f32, spacing: f32) -> i32 {
+    with_face(key, |f| ttf::measure_tracked(f, text, px, spacing))
+        .unwrap_or_else(|| ttf::measure_spaced(text, px, mono, spacing))
+}
+
+// Draw in the keyed face with the same fallback and spacing the measurement
+// used, so the painted glyphs match what layout sized.
+pub fn draw_text(fb: &mut PaintBuffer, run: TextRun, text: &str, argb: u32) -> i32 {
+    let stride = fb.stride_words as usize;
+    let (w, h) = (fb.width, fb.height);
+    let TextRun { key, mono, x, top_y, px, spacing } = run;
+    let drawn = with_face(key, |f| {
+        ttf::draw_text_tracked(f, fb.pixels, stride, w, h, x, top_y, text, argb, px, spacing)
+    });
+    drawn.unwrap_or_else(|| {
+        ttf::draw_text_spaced(fb.pixels, stride, w, h, x, top_y, text, argb, px, mono, spacing)
     })
 }
 
-// Draw in the keyed face with the same fallback the measurement used, so the
-// painted glyphs match what layout sized.
-pub fn draw_text(
-    fb: &mut PaintBuffer,
-    key: u32,
-    mono: bool,
-    x: i32,
-    top_y: i32,
-    text: &str,
-    argb: u32,
-    px: f32,
-) -> i32 {
-    let stride = fb.stride_words as usize;
-    let (w, h) = (fb.width, fb.height);
-    let drawn = with_face(key, |f| {
-        ttf::draw_text_with(f, fb.pixels, stride, w, h, x, top_y, text, argb, px)
-    });
-    drawn.unwrap_or_else(|| {
-        if mono {
-            fb.text_ttf_mono(x, top_y, text, argb, px)
-        } else {
-            fb.text_ttf(x, top_y, text, argb, px)
-        }
-    })
+// One text run's face and geometry, grouped so the draw call stays readable.
+pub struct TextRun {
+    pub key: u32,
+    pub mono: bool,
+    pub x: i32,
+    pub top_y: i32,
+    pub px: f32,
+    pub spacing: f32,
 }

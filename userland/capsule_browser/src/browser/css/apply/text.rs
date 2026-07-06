@@ -69,6 +69,22 @@ pub(super) fn apply_text(
         "text-decoration" | "text-decoration-line" => {
             c.underline = value.split_whitespace().any(|t| t == "underline");
         }
+        "letter-spacing" => {
+            // Negative tracking tightens headings; parse the magnitude and
+            // restore the sign, since lengths only parse unsigned.
+            let v = value.trim();
+            if v.eq_ignore_ascii_case("normal") {
+                c.letter_spacing = 0.0;
+            } else {
+                let (mag, sign) = match v.strip_prefix('-') {
+                    Some(rest) => (rest, -1.0f32),
+                    None => (v, 1.0f32),
+                };
+                if let Some(px) = parse_px(mag, fs) {
+                    c.letter_spacing = (px.min(64) as f32) * sign;
+                }
+            }
+        }
         "white-space" => match value.trim() {
             "pre" | "pre-wrap" | "pre-line" | "break-spaces" => c.white_space = WhiteSpace::Pre,
             "nowrap" => c.white_space = WhiteSpace::Nowrap,

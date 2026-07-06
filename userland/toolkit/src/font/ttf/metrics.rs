@@ -27,6 +27,11 @@ pub fn measure(text: &str, px: f32, mono: bool) -> i32 {
 
 // Same measurement with a caller-provided face, matching draw_text_with.
 pub fn measure_with<F: Font>(f: &F, text: &str, px: f32) -> i32 {
+    measure_tracked(f, text, px, 0.0)
+}
+
+// Advance width with extra spacing per glyph, matching draw_text_tracked.
+pub fn measure_tracked<F: Font>(f: &F, text: &str, px: f32, spacing: f32) -> i32 {
     let sf = f.as_scaled(PxScale::from(px));
     let mut pen = 0.0f32;
     let mut prev: Option<GlyphId> = None;
@@ -35,10 +40,16 @@ pub fn measure_with<F: Font>(f: &F, text: &str, px: f32) -> i32 {
         if let Some(p) = prev {
             pen += sf.kern(p, g);
         }
-        pen += sf.h_advance(g);
+        pen += sf.h_advance(g) + spacing;
         prev = Some(g);
     }
     pen as i32
+}
+
+// Tracked measurement with the built-in faces.
+pub fn measure_spaced(text: &str, px: f32, mono: bool, spacing: f32) -> i32 {
+    let Some(f) = face(mono) else { return 0 };
+    measure_tracked(f, text, px, spacing)
 }
 
 // Baseline-to-baseline distance at `px`.

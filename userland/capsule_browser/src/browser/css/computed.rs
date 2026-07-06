@@ -135,6 +135,9 @@ pub struct Computed {
     pub font_key: u32,
     pub bg_size: BgSize,
     pub bg_repeat: bool,
+    // Extra advance in px between glyphs, letter-spacing; inherited, may be
+    // negative for tightened headings.
+    pub letter_spacing: f32,
     pub underline: bool,
     // 0 means unset: derive 1.3 * font size where a line height is needed.
     pub line_height_px: u32,
@@ -213,6 +216,7 @@ impl Computed {
             font_key: 0,
             bg_size: BgSize::Auto,
             bg_repeat: true,
+            letter_spacing: 0.0,
             underline: false,
             line_height_px: 0,
             margin_top: 0,
@@ -280,6 +284,7 @@ impl Computed {
         c.list_none = parent.list_none;
         c.text_transform = parent.text_transform;
         c.font_key = parent.font_key;
+        c.letter_spacing = parent.letter_spacing;
         c
     }
 

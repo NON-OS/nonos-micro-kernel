@@ -73,11 +73,19 @@ pub(super) fn box_fragment(
     }
     match &f.content {
         Content::None => {}
-        Content::Text { text, color, px, bold, mono, underline, font } => {
+        Content::Text { text, color, px, bold, mono, underline, font, spacing } => {
             let ty = sy + (f.h - *px as i32).max(0) / 2;
-            crate::browser::fonts::draw_text(fb, *font, *mono, f.x, ty, text, *color, *px);
+            let run = |x: i32| crate::browser::fonts::TextRun {
+                key: *font,
+                mono: *mono,
+                x,
+                top_y: ty,
+                px: *px,
+                spacing: *spacing,
+            };
+            crate::browser::fonts::draw_text(fb, run(f.x), text, *color);
             if *bold {
-                crate::browser::fonts::draw_text(fb, *font, *mono, f.x + 1, ty, text, *color, *px);
+                crate::browser::fonts::draw_text(fb, run(f.x + 1), text, *color);
             }
             if *underline {
                 fill_page(fb, f.x, sy + f.h - 2, f.w, 1, *color, clip);

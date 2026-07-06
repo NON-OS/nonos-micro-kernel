@@ -50,7 +50,9 @@ pub(super) fn collect_items(
                 let fpx = px as f32;
                 let mono = c.style.mono;
                 let font = c.style.font_key;
-                let measure = |s: &str| crate::browser::fonts::measure_text(font, mono, s, fpx);
+                let spacing = c.style.letter_spacing;
+                let measure =
+                    |s: &str| crate::browser::fonts::measure_text(font, mono, s, fpx, spacing);
                 let space = measure(" ").max(1);
                 let line_h = c.style.line_height() as i32;
                 let tt = c.style.text_transform;
@@ -64,6 +66,7 @@ pub(super) fn collect_items(
                         mono,
                         underline: c.style.underline,
                         font,
+                        spacing,
                         href: c.href.clone(),
                         adv: measure(&text).max(0) + if c.style.bold { 1 } else { 0 },
                         space,

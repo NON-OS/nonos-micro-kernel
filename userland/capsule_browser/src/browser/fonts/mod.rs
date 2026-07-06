@@ -27,4 +27,4 @@ pub use collect::collect_font_faces;
 pub use ingest::ingest_font;
 pub use key::family_key;
 pub use registry::clear;
-pub use text::{draw_text, measure_text};
+pub use text::{draw_text, measure_text, TextRun};

@@ -65,7 +65,13 @@ fn widest_word(t: &str, node: &BoxNode) -> i32 {
     let px = node.style.font_size_px as f32;
     let mut max = 0i32;
     for word in t.split_whitespace() {
-        let w = crate::browser::fonts::measure_text(node.style.font_key, node.style.mono, word, px);
+        let w = crate::browser::fonts::measure_text(
+            node.style.font_key,
+            node.style.mono,
+            word,
+            px,
+            node.style.letter_spacing,
+        );
         max = max.max(w);
     }
     max.max(0)

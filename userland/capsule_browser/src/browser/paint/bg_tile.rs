@@ -41,7 +41,16 @@ pub(super) fn paint_tiles(
     };
     let th = ((tw as u64 * img.h as u64) / img.w as u64).max(1) as u32;
     if !f.bg_repeat {
-        crate::browser::image::blit_into(fb, img, bx, by, tw.min(bw), th.min(bh), ObjectFit::Fill, clip);
+        crate::browser::image::blit_into(
+            fb,
+            img,
+            bx,
+            by,
+            tw.min(bw),
+            th.min(bh),
+            ObjectFit::Fill,
+            clip,
+        );
         return;
     }
     // Bound the tile count so a one-pixel pattern cannot spin the painter.

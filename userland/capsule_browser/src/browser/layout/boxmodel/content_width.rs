@@ -93,6 +93,12 @@ fn text_width(t: &str, node: &BoxNode) -> i32 {
         return 0;
     }
     let px = node.style.font_size_px as f32;
-    let w = crate::browser::fonts::measure_text(node.style.font_key, node.style.mono, s, px);
+    let w = crate::browser::fonts::measure_text(
+        node.style.font_key,
+        node.style.mono,
+        s,
+        px,
+        node.style.letter_spacing,
+    );
     w.max(0)
 }
