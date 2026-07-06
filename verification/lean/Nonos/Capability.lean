@@ -71,7 +71,11 @@ theorem attenuate_idempotent (c mask : Caps) (x : Nat) :
 /-- The order of two attenuations does not matter. -/
 theorem attenuate_comm (c m1 m2 : Caps) (x : Nat) :
     Grants (attenuate (attenuate c m1) m2) x ↔ Grants (attenuate (attenuate c m2) m1) x := by
-  unfold Grants attenuate; simp
+  unfold Grants attenuate
+  simp only [Bool.and_eq_true]
+  constructor
+  · intro h; obtain ⟨⟨hc, h1⟩, h2⟩ := h; exact ⟨⟨hc, h2⟩, h1⟩
+  · intro h; obtain ⟨⟨hc, h2⟩, h1⟩ := h; exact ⟨⟨hc, h1⟩, h2⟩
 
 /-- Revoking a capability twice equals revoking it once. -/
 theorem revoke_idempotent (c : Caps) (b x : Nat) :
