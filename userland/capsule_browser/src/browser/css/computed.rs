@@ -38,6 +38,16 @@ pub enum WhiteSpace {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+pub enum ObjectFit {
+    // Fit the whole image inside the box, letterboxing the spare space.
+    Contain,
+    // Fill the box, cropping whatever overflows after covering it.
+    Cover,
+    // Stretch the image to the box, ignoring its aspect ratio.
+    Fill,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TextAlign {
     Left,
     Center,
@@ -100,6 +110,7 @@ pub struct Computed {
     pub font_size_px: u32,
     pub text_align: TextAlign,
     pub white_space: WhiteSpace,
+    pub object_fit: ObjectFit,
     pub underline: bool,
     // 0 means unset: derive 1.3 * font size where a line height is needed.
     pub line_height_px: u32,
@@ -173,6 +184,7 @@ impl Computed {
             font_size_px: DEFAULT_FONT_PX,
             text_align: TextAlign::Left,
             white_space: WhiteSpace::Normal,
+            object_fit: ObjectFit::Contain,
             underline: false,
             line_height_px: 0,
             margin_top: 0,

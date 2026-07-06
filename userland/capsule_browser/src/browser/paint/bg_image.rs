@@ -44,6 +44,14 @@ pub(super) fn paint_bg_image(
     let abs = crate::browser::url::join(base, src);
     if let Some(img) = state.images.ready(&abs) {
         let (bx, by) = (f.x.max(0) as u32, sy.max(0) as u32);
-        crate::browser::image::blit_into(fb, img, bx, by, f.w.max(0) as u32, f.h.max(0) as u32);
+        crate::browser::image::blit_into(
+            fb,
+            img,
+            bx,
+            by,
+            f.w.max(0) as u32,
+            f.h.max(0) as u32,
+            crate::browser::css::ObjectFit::Cover,
+        );
     }
 }

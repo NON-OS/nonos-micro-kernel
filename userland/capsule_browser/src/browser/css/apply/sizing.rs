@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::css::computed::{Computed, Size};
+use crate::browser::css::computed::{Computed, ObjectFit, Size};
 use crate::browser::css::parse_size::parse_size;
 
 // Width and height with their min/max clamps. `none` lifts a clamp.
@@ -23,6 +23,12 @@ pub(super) fn apply_sizing(c: &mut Computed, name: &str, value: &str, fs: u32) -
         "box-sizing" => match value.trim() {
             "border-box" => c.border_box = true,
             "content-box" => c.border_box = false,
+            _ => {}
+        },
+        "object-fit" => match value.trim() {
+            "cover" => c.object_fit = ObjectFit::Cover,
+            "fill" => c.object_fit = ObjectFit::Fill,
+            "contain" | "scale-down" | "none" => c.object_fit = ObjectFit::Contain,
             _ => {}
         },
         "width" => {

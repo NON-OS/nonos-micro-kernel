@@ -79,7 +79,7 @@ pub(super) fn flush_line(
                     node,
                 });
             }
-            InlineItem::Image { src, alt, w: iw, h: ih, href, node } => {
+            InlineItem::Image { src, alt, w: iw, h: ih, href, node, fit } => {
                 frags.push(Fragment {
                     x: x + shift + ix,
                     y: top + (line_h - ih).max(0) / 2,
@@ -89,7 +89,7 @@ pub(super) fn flush_line(
                     border: [0; 4],
                     border_color: 0,
                     href,
-                    content: Content::Image { src, alt },
+                    content: Content::Image { src, alt, fit },
                     z: ctx.z,
                     clip: ctx.clip,
                     fixed: ctx.fixed,

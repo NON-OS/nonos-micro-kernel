@@ -16,33 +16,69 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use crate::browser::css::ObjectFit;
+
 use super::store::Decoded;
 
-// Scale-blit `img` to fit the box at (x, y, box_w, box_h) preserving aspect
-// ratio and centering. Bilinear sampling so a small icon scaled up stays smooth
-// instead of blocky; alpha composited over the existing surface so transparent
-// PNGs read correctly.
-pub fn blit_into(fb: &mut PaintBuffer, img: &Decoded, x: u32, y: u32, box_w: u32, box_h: u32) {
+// Scale-blit `img` into the box at (x, y, box_w, box_h) honouring object-fit:
+// contain letterboxes the whole image, cover fills the box and crops the
+// overflow, fill stretches to the box. Bilinear sampling keeps scaled images
+// smooth; alpha is composited so transparent PNGs read correctly.
+pub fn blit_into(
+    fb: &mut PaintBuffer,
+    img: &Decoded,
+    x: u32,
+    y: u32,
+    box_w: u32,
+    box_h: u32,
+    fit: ObjectFit,
+) {
     if img.w == 0 || img.h == 0 || box_w == 0 || box_h == 0 {
         return;
     }
-    let fit_w = box_w as u64 * img.h as u64;
-    let fit_h = box_h as u64 * img.w as u64;
-    let (dst_w, dst_h) = if fit_w <= fit_h {
-        (box_w, ((box_w as u64 * img.h as u64) / img.w as u64) as u32)
-    } else {
-        (((box_h as u64 * img.w as u64) / img.h as u64) as u32, box_h)
-    };
-    if dst_w == 0 || dst_h == 0 {
-        return;
+    let (iw, ih) = (img.w as u64, img.h as u64);
+    let (bw, bh) = (box_w as u64, box_h as u64);
+    let whole = [0, 0, img.w, img.h];
+    match fit {
+        // Whole image into the whole box, ignoring aspect ratio.
+        ObjectFit::Fill => draw(fb, img, [x, y, box_w, box_h], whole),
+        // Whole image into a centred rect that fits inside the box.
+        ObjectFit::Contain => {
+            let (dw, dh) = if bw * ih <= bh * iw {
+                (box_w, ((bw * ih) / iw) as u32)
+            } else {
+                (((bh * iw) / ih) as u32, box_h)
+            };
+            if dw == 0 || dh == 0 {
+                return;
+            }
+            let dest = [x + (box_w - dw) / 2, y + (box_h - dh) / 2, dw, dh];
+            draw(fb, img, dest, whole);
+        }
+        // A centred crop of the image, with the box's aspect, into the box.
+        ObjectFit::Cover => {
+            let src = if bw * ih >= bh * iw {
+                let sh = (iw * bh) / bw;
+                [0, ((ih - sh) / 2) as u32, img.w, (sh as u32).max(1)]
+            } else {
+                let sw = (ih * bw) / bh;
+                [((iw - sw) / 2) as u32, 0, (sw as u32).max(1), img.h]
+            };
+            draw(fb, img, [x, y, box_w, box_h], src);
+        }
     }
-    let ox = x + (box_w - dst_w) / 2;
-    let oy = y + (box_h - dst_h) / 2;
-    for dy in 0..dst_h {
-        let gy = (dy as u64 * img.h as u64 * 256 / dst_h as u64) as u32;
-        for dx in 0..dst_w {
-            let gx = (dx as u64 * img.w as u64 * 256 / dst_w as u64) as u32;
-            put(fb, ox + dx, oy + dy, sample(img, gx, gy));
+}
+
+// Bilinear-blit the source rect [sx0, sy0, sw, sh] of `img` into the
+// destination rect [dx, dy, dw, dh].
+fn draw(fb: &mut PaintBuffer, img: &Decoded, dest: [u32; 4], src: [u32; 4]) {
+    let [dx, dy, dw, dh] = dest;
+    let [sx0, sy0, sw, sh] = src;
+    for j in 0..dh {
+        let gy = (sy0 as u64 * 256 + j as u64 * sh as u64 * 256 / dh as u64) as u32;
+        for i in 0..dw {
+            let gx = (sx0 as u64 * 256 + i as u64 * sw as u64 * 256 / dw as u64) as u32;
+            put(fb, dx + i, dy + j, sample(img, gx, gy));
         }
     }
 }
