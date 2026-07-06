@@ -56,4 +56,27 @@ theorem allowed_iff_grants (t : Token) (required : Nat) :
 theorem same_guard_same_decision (t : Token) (r1 r2 : Nat) (h : r1 = r2) :
     Allowed t r1 ↔ Allowed t r2 := by rw [h]
 
+/-- Subsumption is reflexive: every token delegates to itself. -/
+theorem subsumes_refl (t : Token) : Subsumes t t := fun _ h => h
+
+/-- Subsumption is transitive: delegation chains compose, so a token attenuated
+    through any number of hands still sits below the original. -/
+theorem subsumes_trans (t u v : Token)
+    (htu : Subsumes t u) (huv : Subsumes u v) : Subsumes t v :=
+  fun c h => htu c (huv c h)
+
+/-- Every token subsumes the empty token: the bottom of the delegation order. -/
+theorem subsumes_empty (t : Token) : Subsumes t empty := by
+  intro c h
+  simp [empty] at h
+
+/-- The security-critical contrapositive of monotonicity: a syscall denied to a
+    token is denied to everything below it. No chain of attenuations can reach
+    a syscall the original token could not. -/
+theorem denied_below (t u : Token) (required : Nat)
+    (hsub : Subsumes t u) (hdenied : ¬ Allowed t required) :
+    ¬ Allowed u required := by
+  intro h
+  exact hdenied (allow_monotone t u required hsub h)
+
 end Nonos.Authorization

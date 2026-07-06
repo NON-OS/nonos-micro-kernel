@@ -30,6 +30,9 @@ the *code*:
 | `Paging.subset_trans` / `confined_preserves_no_wx` | Verus `page_permissions.rs` (bit ops) |
 | `Crypto.wrong_tag_rejected` / `acceptance_iff_equal` | `userland/crypto_proofs` `ct_eq` correctness + KATs (#265) |
 | `Path.leading_dotdot_neutralized` / `up_moves_toward_root` | `userland/fs_proofs` path normalization (Kani + runnable) |
+| `Capability.attenuate_is_glb` / `grant_is_lub` | Verus `capabilities.rs` confinement legs; the bound-optimality legs are model-side algebra |
+| `Paging.meet_is_glb` / `subset_antisymm` | Verus `page_permissions.rs` (`permission_subset_is_monotonic`) |
+| `Authorization.denied_below` / `subsumes_trans` | `userland/kernel_proofs` cap-table (contrapositive of `allow_monotone`) |
 
 The proofs use only core Lean (no mathlib), so any recent `leanprover/lean4`
 toolchain checks them.

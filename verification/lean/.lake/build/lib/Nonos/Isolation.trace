@@ -1,0 +1,5 @@
+{"log":
+ [{"message":
+   ".> LEAN_PATH=././.lake/build/lib DYLD_LIBRARY_PATH= /Users/ek/.elan/toolchains/leanprover--lean4---v4.15.0/bin/lean ././././Nonos/Isolation.lean -R ./././. -o ././.lake/build/lib/Nonos/Isolation.olean -i ././.lake/build/lib/Nonos/Isolation.ilean -c ././.lake/build/ir/Nonos/Isolation.c --json",
+   "level": "trace"}],
+ "depHash": "3782453943815576586"}
