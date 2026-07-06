@@ -42,23 +42,32 @@ pub(in crate::browser::fetch) fn read_body(state_port: u32, f: &mut Fetch, tls_m
         }
     }
     if tls_mode {
-        let ready = tls::decrypt(f).is_some_and(|p| http::response::has_headers(&p));
-        let grew = f.buf.len() > f.last_check;
-        if grew && (!got || f.buf.len() >= f.last_check + constants::CHECK_STRIDE) {
-            f.last_check = f.buf.len();
-            if tls::decrypt(f).is_some_and(|p| http::response::is_complete(&p)) {
-                f.phase = Phase::Decrypt;
+        // Decrypt once per tick and judge completion on the plaintext directly.
+        // Checking every tick (not only once the raw socket goes quiet) lets a
+        // content-length or chunked response finish the instant its last byte
+        // decrypts, instead of hanging until the fetch timeout.
+        if let Some(plain) = tls::decrypt(f) {
+            if http::response::has_headers(&plain) {
+                if http::response::is_complete(&plain) {
+                    f.phase = Phase::Decrypt;
+                    return true;
+                }
+                // Keep-alive responses we cannot frame end when the decrypted
+                // body stops growing; track the plaintext length, not the raw
+                // socket, so post-handshake records do not reset the idle count.
+                if plain.len() as usize > f.last_check as usize {
+                    f.last_check = plain.len();
+                    f.idle = 0;
+                } else {
+                    f.idle = f.idle.wrapping_add(1);
+                    if f.idle >= constants::IDLE_AFTER {
+                        f.phase = Phase::Decrypt;
+                        return true;
+                    }
+                }
             }
         }
-        if !got && ready {
-            f.idle = f.idle.wrapping_add(1);
-            if f.idle >= constants::IDLE_AFTER {
-                f.phase = Phase::Decrypt;
-            }
-        } else if got {
-            f.idle = 0;
-        }
-        if f.buf.len() == constants::MAX_BODY && !matches!(f.phase, Phase::Decrypt) {
+        if f.buf.len() >= constants::MAX_BODY {
             f.error = Some("response too large");
             f.phase = Phase::Error;
         }
