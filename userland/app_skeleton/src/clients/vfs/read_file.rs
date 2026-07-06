@@ -25,6 +25,9 @@ use crate::wire::{read_u32, HDR_LEN};
 const CHUNK: u32 = 65536;
 
 pub fn read_file(owner_pid: u32, path: &[u8], max_bytes: u32) -> Result<Vec<u8>, &'static str> {
+    if path.is_empty() || path.len() > 255 {
+        return Err("vfs path invalid");
+    }
     let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
     let mut open = Vec::with_capacity(9 + path.len());
     open.extend_from_slice(&owner_pid.to_le_bytes());

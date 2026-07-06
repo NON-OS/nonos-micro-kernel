@@ -17,8 +17,9 @@
 use alloc::vec::Vec;
 use core::str;
 
+use super::path::{is_read_only, normalize};
 use super::util::{map_store_err, split_caller};
-use crate::protocol::{encode_response, Request, EINVAL, MAX_PATH_BYTES, OP_RENAME};
+use crate::protocol::{encode_response, Request, EACCES, EINVAL, MAX_PATH_BYTES, OP_RENAME};
 use crate::store::Store;
 
 pub fn rename(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
@@ -46,7 +47,12 @@ pub fn rename(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
         Ok(s) => s,
         Err(_) => return encode_response(OP_RENAME, req.flags, req.request_id, EINVAL, &[]),
     };
-    match store.rename(old, new) {
+    let old = normalize(old);
+    let new = normalize(new);
+    if is_read_only(&old) || is_read_only(&new) {
+        return encode_response(OP_RENAME, req.flags, req.request_id, EACCES, &[]);
+    }
+    match store.rename(&old, &new) {
         Ok(()) => encode_response(OP_RENAME, req.flags, req.request_id, 0, &[]),
         Err(e) => encode_response(OP_RENAME, req.flags, req.request_id, map_store_err(e), &[]),
     }

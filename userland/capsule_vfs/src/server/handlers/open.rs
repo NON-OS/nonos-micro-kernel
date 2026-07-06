@@ -17,9 +17,10 @@
 use alloc::vec::Vec;
 use core::str;
 
+use super::path::{is_read_only, normalize};
 use super::util::{map_store_err, split_caller};
 use crate::protocol::{
-    encode_response, Request, EINVAL, MAX_PATH_BYTES, OP_OPEN, O_APPEND, O_CREATE, O_TRUNC,
+    encode_response, Request, EACCES, EINVAL, MAX_PATH_BYTES, OP_OPEN, O_APPEND, O_CREATE, O_TRUNC,
 };
 use crate::store::Store;
 
@@ -54,7 +55,14 @@ pub fn open(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
     let create = flags & O_CREATE != 0;
     let truncate = flags & O_TRUNC != 0;
     let append = flags & O_APPEND != 0;
-    match store.open(path, pid, create, truncate, append) {
+    let path = normalize(path);
+    // The signed artifacts under /capsules open read-only: a write intent is
+    // refused up front, and the handle itself carries no write permission.
+    let read_only = is_read_only(&path);
+    if read_only && (create || truncate || append) {
+        return encode_response(OP_OPEN, req.flags, req.request_id, EACCES, &[]);
+    }
+    match store.open(&path, pid, create, truncate, append, !read_only) {
         Ok(fd) => encode_response(OP_OPEN, req.flags, req.request_id, 0, &fd.to_le_bytes()),
         Err(e) => encode_response(OP_OPEN, req.flags, req.request_id, map_store_err(e), &[]),
     }

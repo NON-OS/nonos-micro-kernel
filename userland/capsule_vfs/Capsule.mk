@@ -15,4 +15,21 @@ CAPSULE_REPLY_ENDPOINT   := reply:4105:endpoint.4294967301
 CAPSULE_REQUIRED_CAPS    := 0x19
 CAPSULE_KERNEL_MIRROR    := src/fs/vfs_capsule
 
+# The vfs capsule stages packages into its store by include_bytes!ing their
+# signed artifacts (see src/store/fdtable/packages.rs). Capsule signing is not
+# byte-deterministic across builds, so whenever an artifact is re-signed the vfs
+# binary must rebuild to embed the fresh copy; otherwise it ships artifacts
+# signed by a stale trust anchor and the runtime load is rejected. Declaring the
+# artifacts as inputs keeps the embedded copies in lockstep with the kernel's
+# baked trust roots.
+CAPSULE_EXTRA_DEPS := \
+	userland/capsule_std_proof/target/x86_64-nonos-user/release/std_proof \
+	userland/capsule_ripgrep/target/x86_64-nonos-user/release/rg \
+	nonos-data/trust/capsules/std_proof.nonos_id_cert.bin \
+	nonos-data/trust/capsules/std_proof.manifest.bin \
+	nonos-data/trust/capsules/std_proof.zk_trailer.bin \
+	nonos-data/trust/capsules/rg.nonos_id_cert.bin \
+	nonos-data/trust/capsules/rg.manifest.bin \
+	nonos-data/trust/capsules/rg.zk_trailer.bin
+
 include nonos-mk/capsule.mk

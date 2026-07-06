@@ -35,6 +35,7 @@ impl Store {
             data.resize(end, 0);
         }
         data[start..end].copy_from_slice(bytes);
+        self.files[file_idx].mtime = super::time::now_ms();
         if let Some(entry) = self.fds[fd as usize].as_mut() {
             entry.pos = end;
         }

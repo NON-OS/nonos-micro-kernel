@@ -17,7 +17,7 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
-pub(super) const MAX_FILES: usize = 256;
+pub(super) const MAX_FILES: usize = 2048;
 pub(super) const MAX_OPEN_FDS: usize = 256;
 pub(super) const MAX_FILE_BYTES: usize = 1 << 20;
 
@@ -38,6 +38,25 @@ pub(super) struct File {
     pub(super) name: String,
     pub(super) data: Vec<u8>,
     pub(super) is_dir: bool,
+    // Last-modified wall-clock time in unix milliseconds, stamped at creation
+    // and refreshed on every write.
+    pub(super) mtime: u64,
+    // Unix-style permission bits; only the owner-write bit (0o200) is enforced.
+    pub(super) mode: u16,
+}
+
+// Default permissions for a new file and a new directory.
+pub(super) const MODE_FILE: u16 = 0o644;
+pub(super) const MODE_DIR: u16 = 0o755;
+// Owner-write bit; its absence makes a file read-only.
+pub(super) const MODE_WRITE: u16 = 0o200;
+
+impl File {
+    // Build a file stamped with the current time and default permissions.
+    pub(super) fn new(name: String, data: Vec<u8>, is_dir: bool) -> Self {
+        let mode = if is_dir { MODE_DIR } else { MODE_FILE };
+        File { name, data, is_dir, mtime: super::time::now_ms(), mode }
+    }
 }
 
 pub(super) struct OpenFd {

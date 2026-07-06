@@ -15,19 +15,32 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod call;
+mod chmod;
+mod copy;
+mod errmsg;
 mod list_paths;
 mod mkdir;
 mod read_file;
 mod rename;
+mod rmdir;
 mod stat;
+mod stat_full;
+mod truncate;
 mod types;
 mod unlink;
+mod usage;
 mod write_file;
 
+pub use chmod::chmod;
+pub use copy::copy;
 pub use list_paths::list_paths;
 pub use mkdir::mkdir;
 pub use read_file::read_file;
 pub use rename::rename;
+pub use rmdir::rmdir;
 pub use stat::stat;
+pub use stat_full::stat_full;
+pub use truncate::truncate;
 pub use unlink::unlink;
+pub use usage::usage;
 pub use write_file::write_file;

@@ -23,6 +23,9 @@ pub struct Entry {
     pub label: String,
     pub full_path: String,
     pub is_dir: bool,
+    pub size: Option<u64>,
+    pub mtime: u64,
+    pub writable: bool,
 }
 
 pub fn build_entries(prefix: &str, paths: &[String]) -> Vec<Entry> {
@@ -35,9 +38,6 @@ pub fn build_entries(prefix: &str, paths: &[String]) -> Vec<Entry> {
         let cut = rest.find('/').unwrap_or(rest.len());
         let name = &rest[..cut];
         let is_dir = cut < rest.len();
-        if name.is_empty() || out.iter().any(|entry: &Entry| entry.label.as_str() == name) {
-            continue;
-        }
         let mut label = String::from(name);
         let full_path = if is_dir {
             label.push('/');
@@ -45,7 +45,10 @@ pub fn build_entries(prefix: &str, paths: &[String]) -> Vec<Entry> {
         } else {
             alloc::format!("{prefix}{name}")
         };
-        out.push(Entry { label, full_path, is_dir });
+        if name.is_empty() || out.iter().any(|entry: &Entry| entry.full_path == full_path) {
+            continue;
+        }
+        out.push(Entry { label, full_path, is_dir, size: None, mtime: 0, writable: true });
     }
     out
 }

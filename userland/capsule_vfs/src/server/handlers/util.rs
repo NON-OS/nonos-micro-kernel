@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::{
-    EACCES, EBADF, EEXIST, EINVAL, EISDIR, ENOENT, ENOSPC, ENOTEMPTY,
-};
+use crate::protocol::{EACCES, EBADF, EEXIST, EINVAL, EISDIR, ENOENT, ENOSPC, ENOTEMPTY};
 use crate::store::StoreError;
 
 pub(super) fn map_store_err(e: StoreError) -> i32 {

@@ -27,6 +27,11 @@ pub const OP_HEALTHCHECK: u16 = 7;
 pub const OP_MKDIR: u16 = 8;
 pub const OP_UNLINK: u16 = 9;
 pub const OP_RENAME: u16 = 10;
+pub const OP_RMDIR: u16 = 11;
+pub const OP_COPY: u16 = 12;
+pub const OP_TRUNCATE: u16 = 13;
+pub const OP_USAGE: u16 = 14;
+pub const OP_CHMOD: u16 = 15;
 
 pub const O_CREATE: u32 = 1 << 0;
 pub const O_TRUNC: u32 = 1 << 1;
