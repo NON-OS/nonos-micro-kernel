@@ -1,0 +1,93 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Verification pipeline: runnable proofs, crypto known-answer proofs, Kani model
+# checking, and Verus deductive proofs. Each job runs only when its component is
+# present on the ref, so a branch that carries one layer stays green and the
+# full stack runs once every layer lands on main.
+name: verify
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Layer 1: runnable proofs over the real capsule source, incl. millions of
+  # fuzz inputs. Fast.
+  runnable-proofs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Host proof suite (store, protocol, security, formatting, fuzz)
+        run: |
+          if [ -d userland/fs_proofs ]; then
+            cargo test --release --manifest-path userland/fs_proofs/Cargo.toml
+          else
+            echo "userland/fs_proofs absent on this ref; skipping"
+          fi
+
+  # Crypto: known-answer proofs of the real hash and cipher primitives against
+  # the official NIST/RFC vectors.
+  crypto-proofs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Crypto KATs (SHA, HMAC, HKDF, Ed25519, ChaCha20-Poly1305, AES-GCM)
+        run: |
+          if [ -d userland/crypto_proofs ]; then
+            cargo test --release --manifest-path userland/crypto_proofs/Cargo.toml
+          else
+            echo "userland/crypto_proofs absent on this ref; skipping"
+          fi
+
+  # Layer 2: Kani model-checks the untrusted-input surfaces over bounded inputs.
+  kani:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        run: |
+          if [ -d userland/fs_proofs ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "userland/fs_proofs absent on this ref; skipping Kani"
+          fi
+      - if: steps.detect.outputs.present == 'true'
+        uses: model-checking/kani-github-action@v1
+        with:
+          kani-version: "0.67.0"
+          working-directory: userland/fs_proofs
+
+  # Layer 3: Verus verifies the kernel capability, IPC and paging theorems
+  # against the kernel's own bit operations.
+  verus:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        run: |
+          if [ -d verification/verus ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "verification/verus absent on this ref; skipping Verus"
+          fi
+      - if: steps.detect.outputs.present == 'true'
+        name: Install Verus and its toolchain
+        run: |
+          set -euo pipefail
+          VERUS_VERSION="0.2026.06.28.1847ab3"
+          curl -fsSL -o verus.zip \
+            "https://github.com/verus-lang/verus/releases/download/release/${VERUS_VERSION}/verus-${VERUS_VERSION}-x86-linux.zip"
+          unzip -q verus.zip -d "$HOME/verus"
+          echo "$HOME/verus/verus-x86-linux" >> "$GITHUB_PATH"
+          # Verus drives rustc through rustup; install the toolchain it pins.
+          rustup toolchain install 1.96.0 --profile minimal --no-self-update
+      - if: steps.detect.outputs.present == 'true'
+        name: Verify kernel theorems
+        run: verus --crate-type=lib src/lib.rs
+        working-directory: verification/verus
