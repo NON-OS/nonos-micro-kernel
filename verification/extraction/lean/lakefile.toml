@@ -17,3 +17,6 @@ path = "../../lean"
 
 [[lean_lib]]
 name = "NonosExtraction"
+
+[[lean_lib]]
+name = "Policy"

@@ -28,12 +28,24 @@ definitions by transitivity.
 
 ## Scope, honestly stated
 
-Extraction covers the pure safe decision core: the capability bit operations
-and their call graph (`Capability::bit`). The `Vec`-returning conversions in
-the same file use iterator adapters outside Aeneas's supported fragment and
-stay covered by the kernel_proofs differential harnesses and Kani. The
-unsafe hardware glue is out of extraction scope by design and remains under
-Kani and Verus.
+Extraction covers the pure safe decision cores: the capability bit
+operations and their call graph (`Capability::bit`) in `caps/`, and the
+user-copy range policy (`check_range`, with the exact error variant on every
+rejecting path and totality on every input) plus the page-permission
+encoding (`to_pte_flags`, `is_wx_violation`) in `policy/`. The proofs in
+`lean/NonosExtraction/PolicyRefinement.lean` bind the policy to
+`Nonos.Isolation`: acceptance is exactly the model's `Accepts`, and the
+extracted encoder can never emit a writable page without NX unless the
+permission was a W^X violation. The `Vec`-returning conversions in bits.rs
+use iterator adapters outside Aeneas's supported fragment and stay covered
+by the kernel_proofs differential harnesses and Kani. The unsafe hardware
+glue is out of extraction scope by design and remains under Kani and Verus.
+
+One external definition is provided by hand, as Aeneas prescribes for core
+functions it treats as opaque: `Option::ok_or`, four lines in
+`lean/Policy/FunsExternal.lean`, entering the trusted base with the
+documented core semantics. Everything else in `lean/Policy` and
+`lean/NonosExtraction/Caps.lean` is generated and never edited.
 
 ## Trusted base and pins
 
@@ -61,5 +73,16 @@ charon cargo --preset=aeneas \
   --start-from 'nonos_caps::capabilities::bits::remove_capability' \
   --dest-file caps.llbc
 aeneas -backend lean caps.llbc -dest ../lean/NonosExtraction
+
+cd ../policy
+charon cargo --preset=aeneas \
+  --start-from 'nonos_policy::usercopy::policy::check_range' \
+  --start-from 'nonos_policy::to_pte_flags' \
+  --start-from 'nonos_policy::is_wx_violation' \
+  --dest-file policy.llbc
+aeneas -backend lean -split-files policy.llbc -dest ../lean/Policy
+# FunsExternal.lean is hand-written from FunsExternal_Template.lean; do not
+# overwrite it.
+
 cd ../lean && lake exe cache get && lake build   # 0 errors == verified
 ```
