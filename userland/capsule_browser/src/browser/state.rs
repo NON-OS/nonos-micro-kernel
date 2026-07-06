@@ -52,11 +52,9 @@ pub struct State {
     pub proxy: Option<ProxyConfig>,
     pub images: crate::browser::image::Store,
     pub image_queue: Vec<String>,
-    // Hops taken by the in-flight image fetch; bounds 3xx chasing.
-    pub image_redirects: u8,
-    // Alternates the free socket between script-issued fetches and images so a
-    // page whose JS never stops requesting cannot starve image loading.
-    pub img_turn: bool,
+    // In-flight image fetches, run concurrently on their own sockets so an
+    // image-heavy page fills in parallel instead of one raster at a time.
+    pub img_fetches: Vec<crate::browser::fetch::types::Fetch>,
     // Current content width in pixels, tracked from the paint surface so the
     // page reflows when the window resizes instead of holding a fixed width.
     pub viewport_w: u32,
@@ -95,8 +93,7 @@ impl State {
             proxy: None,
             images: crate::browser::image::Store::new(),
             image_queue: Vec::new(),
-            image_redirects: 0,
-            img_turn: false,
+            img_fetches: Vec::new(),
             viewport_w: crate::browser::manifest::WIDTH,
             css_queue: Vec::new(),
             page_css: String::new(),

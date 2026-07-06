@@ -25,39 +25,34 @@ use crate::browser::state::State;
 use crate::browser::url;
 
 const MAX_IMG_REDIRECTS: u8 = 4;
+// Images fetched at once. Enough to hide per-request latency on an image-heavy
+// page without opening an unbounded number of sockets.
+const MAX_CONCURRENT: usize = 6;
 
-// Start the next queued image fetch when the socket is idle. Returns true if a
-// fetch was launched so the run loop keeps ticking. Page navigation always
-// wins the socket; this only runs once the page's own fetch has finished.
-// data: sources carry their bytes inline and ingest without a socket.
+// Fill the concurrent image pool from the queue while a socket slot is free.
+// data: sources carry their bytes inline and ingest without a socket. Returns
+// true if the pool advanced so the run loop keeps ticking.
 pub fn pump(state: &mut State) -> bool {
-    if state.sockets_port == 0 || state.fetch.is_some() {
+    if state.sockets_port == 0 {
         return false;
     }
-    let Some(target) = next_pending(state) else { return false };
-    if target.starts_with("data:") {
-        match super::data_uri::data_uri_bytes(&target) {
-            Some(bytes) => super::ingest(&mut state.images, &target, &bytes),
+    let mut did = false;
+    while state.img_fetches.len() < MAX_CONCURRENT {
+        let Some(target) = next_pending(state) else { break };
+        did = true;
+        if target.starts_with("data:") {
+            match super::data_uri::data_uri_bytes(&target) {
+                Some(bytes) => super::ingest(&mut state.images, &target, &bytes),
+                None => state.images.set_failed(&target),
+            }
+            continue;
+        }
+        match begin(state, &target, &target, 0) {
+            Some(f) => state.img_fetches.push(f),
             None => state.images.set_failed(&target),
         }
-        return true;
     }
-    state.image_redirects = 0;
-    if begin(state, &target, &target).is_err() {
-        state.images.set_failed(&target);
-    }
-    true
-}
-
-// Chase a 3xx on an image fetch: the redirect target is fetched but the
-// decoded pixels stay keyed to the original URL the boxes reference. Returns
-// false once the hop budget is spent so the caller records a failure.
-pub fn follow_redirect(state: &mut State, location: &str, key: &str) -> bool {
-    if state.image_redirects >= MAX_IMG_REDIRECTS {
-        return false;
-    }
-    state.image_redirects += 1;
-    begin(state, location, key).is_ok()
+    did
 }
 
 fn next_pending(state: &mut State) -> Option<String> {
@@ -70,17 +65,19 @@ fn next_pending(state: &mut State) -> Option<String> {
     None
 }
 
-fn begin(state: &mut State, target: &str, key: &str) -> Result<(), &'static str> {
-    let url = url::parse(target).ok_or("bad url")?;
+// Open a connection for one image and return the fetch to add to the pool. The
+// decoded pixels stay keyed to `key` even when `target` is a redirect target.
+pub(crate) fn begin(state: &State, target: &str, key: &str, redirects: u8) -> Option<Fetch> {
+    let url = url::parse(target)?;
     let proxy = state.proxy.clone();
     let (host, port) = match proxy.as_ref() {
         Some(p) => (p.host.as_str(), p.port),
         None => (url.host.as_str(), url.port),
     };
-    let h = net::socket_open(state.sockets_port).map_err(|_| "socket failed")?;
+    let h = net::socket_open(state.sockets_port).ok()?;
     if net::socket_connect_host(state.sockets_port, h, host, port).is_err() {
         let _ = net::socket_close(state.sockets_port, h);
-        return Err("connect failed");
+        return None;
     }
     let phase = if proxy.is_some() {
         Phase::SocksHello
@@ -89,7 +86,7 @@ fn begin(state: &mut State, target: &str, key: &str) -> Result<(), &'static str>
     } else {
         Phase::SendReq
     };
-    state.fetch = Some(Fetch {
+    Some(Fetch {
         url,
         handle: h,
         phase,
@@ -105,6 +102,8 @@ fn begin(state: &mut State, target: &str, key: &str) -> Result<(), &'static str>
         post: None,
         js_req: false,
         css: false,
-    });
-    Ok(())
+        redirects,
+    })
 }
+
+pub(crate) const REDIRECT_LIMIT: u8 = MAX_IMG_REDIRECTS;

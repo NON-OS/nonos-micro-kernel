@@ -31,7 +31,8 @@ mod svg;
 mod webp;
 
 pub use blit::blit_into;
-pub use fetch::{follow_redirect, pump};
+pub use fetch::pump;
+pub(crate) use fetch::{begin, REDIRECT_LIMIT};
 pub use ingest::ingest;
 pub use queue::enqueue_from_doc;
 pub use store::Store;

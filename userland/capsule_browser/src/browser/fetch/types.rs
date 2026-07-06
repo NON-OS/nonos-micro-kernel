@@ -66,4 +66,7 @@ pub struct Fetch {
     // An external stylesheet fetch: the body is appended to the page CSS and
     // triggers a re-layout, not a navigation.
     pub css: bool,
+    // Redirect hops this fetch has already chased; bounds 3xx following per
+    // connection so concurrent image fetches each keep their own budget.
+    pub redirects: u8,
 }

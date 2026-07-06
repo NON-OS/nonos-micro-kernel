@@ -75,6 +75,7 @@ pub fn css_pump(state: &mut State) -> bool {
         post: None,
         js_req: false,
         css: true,
+        redirects: 0,
     });
     true
 }

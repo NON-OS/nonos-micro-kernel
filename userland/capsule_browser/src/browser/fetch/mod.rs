@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod about_page;
+mod advance;
 mod append_capped;
 mod apply_css;
 mod constants;
@@ -23,6 +24,7 @@ mod enqueue_css;
 mod enqueue_imports;
 mod fail;
 mod finish;
+mod img_pool;
 mod import_url;
 mod js_pump;
 mod load;
@@ -44,6 +46,7 @@ pub mod types;
 mod unsupported_content;
 
 pub use css_pump::css_pump;
+pub use img_pool::step_images;
 pub use js_pump::js_pump;
 pub use load::load;
 pub use render_error::render_error;
