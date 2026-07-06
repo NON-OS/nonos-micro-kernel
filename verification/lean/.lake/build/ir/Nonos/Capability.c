@@ -18,6 +18,7 @@ LEAN_EXPORT lean_object* l_Nonos_Capability_empty___boxed(lean_object*);
 LEAN_EXPORT uint8_t l_Nonos_Capability_only(lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Nonos_Capability_only___boxed(lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Nonos_Capability_grant___boxed(lean_object*, lean_object*, lean_object*);
+LEAN_EXPORT lean_object* l_Nonos_Capability_attenuateAll(lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Nonos_Capability_attenuate(lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT uint8_t l_Nonos_Capability_grant(lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Nonos_Capability_revoke___boxed(lean_object*, lean_object*, lean_object*);
@@ -162,6 +163,32 @@ lean_dec(x_2);
 lean_dec(x_1);
 x_4 = lean_box(x_3);
 return x_4;
+}
+}
+LEAN_EXPORT lean_object* l_Nonos_Capability_attenuateAll(lean_object* x_1, lean_object* x_2, lean_object* x_3) {
+_start:
+{
+if (lean_obj_tag(x_2) == 0)
+{
+lean_object* x_4; 
+x_4 = lean_apply_1(x_1, x_3);
+return x_4;
+}
+else
+{
+lean_object* x_5; lean_object* x_6; lean_object* x_7; 
+x_5 = lean_ctor_get(x_2, 0);
+lean_inc(x_5);
+x_6 = lean_ctor_get(x_2, 1);
+lean_inc(x_6);
+lean_dec(x_2);
+x_7 = lean_alloc_closure((void*)(l_Nonos_Capability_attenuate), 3, 2);
+lean_closure_set(x_7, 0, x_1);
+lean_closure_set(x_7, 1, x_5);
+x_1 = x_7;
+x_2 = x_6;
+goto _start;
+}
 }
 }
 lean_object* initialize_Init(uint8_t builtin, lean_object*);

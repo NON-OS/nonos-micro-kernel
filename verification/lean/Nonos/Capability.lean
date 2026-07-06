@@ -190,4 +190,19 @@ theorem grant_is_lub (c d : Caps) (b : Nat)
   · exact hc x hcx
   · exact hb x hxb
 
+/-- A delegation chain: each holder attenuates by its own mask and passes the
+    result on. -/
+def attenuateAll (c : Caps) : List Caps → Caps
+  | [] => c
+  | m :: ms => attenuateAll (attenuate c m) ms
+
+/-- No chain of delegations, of any length, widens authority: whatever the
+    final token grants, the original token already granted. This lifts
+    `attenuate_confines` from one step to every execution. -/
+theorem chain_never_widens (c : Caps) (ms : List Caps) (x : Nat)
+    (h : Grants (attenuateAll c ms) x) : Grants c x := by
+  induction ms generalizing c with
+  | nil => exact h
+  | cons m ms ih => exact attenuate_confines c m x (ih (attenuate c m) h)
+
 end Nonos.Capability

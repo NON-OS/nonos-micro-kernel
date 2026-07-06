@@ -83,4 +83,47 @@ theorem update_stable (s : State) (v : Nat) (h : Accepts s v) :
   show max (max s.floor v) v = max s.floor v
   omega
 
+/-- One boot attempt: an accepted version commits, a rejected one changes
+    nothing. This is the bootloader's whole per-boot effect on the floor. -/
+def step (s : State) (v : Nat) : State :=
+  if Accepts s v then update s v else s
+
+/-- A whole execution: any sequence of boot attempts, hostile or not. -/
+def run (s : State) : List Nat → State
+  | [] => s
+  | v :: vs => run (step s v) vs
+
+/-- One step never lowers the floor. -/
+theorem step_never_lowers_floor (s : State) (v : Nat) :
+    s.floor ≤ (step s v).floor := by
+  unfold step
+  split
+  · exact update_never_lowers_floor s v
+  · exact Nat.le_refl _
+
+/-- The floor never decreases across any execution: every trace of boot
+    attempts, of any length and content, leaves the floor at least where it
+    started. This lifts the single-step theorem to whole histories. -/
+theorem floor_never_decreases_over_any_trace (s : State) (vs : List Nat) :
+    s.floor ≤ (run s vs).floor := by
+  induction vs generalizing s with
+  | nil => exact Nat.le_refl _
+  | cons v vs ih =>
+    exact Nat.le_trans (step_never_lowers_floor s v) (ih (step s v))
+
+/-- No rollback over any execution: once version `v` boots, no strictly older
+    version is accepted at any later point of any trace whatsoever. The
+    attacker chooses every subsequent boot attempt and still cannot get one
+    accepted. -/
+theorem no_rollback_over_any_trace (s : State) (v w : Nat) (vs : List Nat)
+    (hv : Accepts s v) (hw : w < v) : ¬ Accepts (run (update s v) vs) w := by
+  intro hacc
+  have hstart : v ≤ (update s v).floor := by
+    rw [update_raises_to_max s v hv]
+    omega
+  have hrun : (update s v).floor ≤ (run (update s v) vs).floor :=
+    floor_never_decreases_over_any_trace (update s v) vs
+  have : (run (update s v) vs).floor ≤ w := hacc.2
+  omega
+
 end Nonos.AntiRollback
