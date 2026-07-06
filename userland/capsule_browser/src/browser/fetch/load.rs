@@ -78,7 +78,6 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
         post,
         js_req: false,
         css: false,
-        redirects: 0,
     });
     Ok(())
 }
