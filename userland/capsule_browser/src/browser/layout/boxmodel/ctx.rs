@@ -25,6 +25,9 @@ pub(super) struct Ctx {
     pub z: i32,
     // True inside a position:fixed subtree; its fragments pin on scroll.
     pub fixed: bool,
+    // Inside a sticky subtree: the sticky box's flow y and its top offset,
+    // so paint can clamp the whole subtree with one shift.
+    pub sticky: Option<(i32, i32)>,
 }
 
 impl Ctx {

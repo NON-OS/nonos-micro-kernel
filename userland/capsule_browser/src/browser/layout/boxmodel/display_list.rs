@@ -52,6 +52,8 @@ pub struct Fragment {
     pub clip: Option<[i32; 4]>,
     // Painted without the scroll offset when true (position:fixed).
     pub fixed: bool,
+    // Sticky anchor (flow y, top offset) shared by the sticky subtree.
+    pub sticky: Option<(i32, i32)>,
     // background-image url to fetch and paint behind the box content.
     pub bg_image: Option<alloc::string::String>,
     pub bg_size: crate::browser::css::BgSize,

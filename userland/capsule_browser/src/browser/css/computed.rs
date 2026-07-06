@@ -185,6 +185,9 @@ pub struct Computed {
     // position: fixed is laid out like absolute but painted without the
     // scroll offset, so it pins to the viewport.
     pub is_fixed: bool,
+    // position: sticky flows normally and clamps against the viewport top
+    // once scrolled past its threshold.
+    pub is_sticky: bool,
     pub top: Size,
     pub right: Size,
     pub bottom: Size,
@@ -254,6 +257,7 @@ impl Computed {
             flex_basis: Size::Auto,
             position: Position::Static,
             is_fixed: false,
+            is_sticky: false,
             top: Size::Auto,
             right: Size::Auto,
             bottom: Size::Auto,
