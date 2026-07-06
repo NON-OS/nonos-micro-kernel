@@ -33,6 +33,8 @@ mod blake3_tests;
 #[cfg(test)]
 mod chacha_tests;
 #[cfg(test)]
+mod constant_time_tests;
+#[cfg(test)]
 mod ed25519_tests;
 #[cfg(test)]
 mod hex;
@@ -56,3 +58,6 @@ mod sha256_tests;
 mod sha3_tests;
 #[cfg(test)]
 mod sha512_tests;
+
+#[cfg(kani)]
+mod ct_kani;

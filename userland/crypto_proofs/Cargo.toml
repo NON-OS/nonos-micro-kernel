@@ -16,3 +16,6 @@ path = "src/lib.rs"
 # Ed25519's precomputed-table init uses `spin::Once`; the ZK verifier holds a
 # `spin::Mutex`. Same crate/version the kernel and net capsules pin.
 spin = { version = "0.9", default-features = false, features = ["once", "mutex", "spin_mutex"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
