@@ -49,18 +49,16 @@ impl App for Browser {
         paint(&self.state, fb);
     }
     fn on_tick(&mut self) -> bool {
-        // A pending navigation preempts any in-flight fetch. Page loads pull
-        // in stylesheets and images that keep the socket busy well after the
-        // document appears; without this the user could never navigate away
-        // from the address bar or a link while those sub-fetches ran.
-        if self.state.pending_nav.is_some() {
+        // A pending navigation preempts everything: drop the old page's page
+        // and image fetches and load the new document before any pool work, so
+        // stale image URLs are not fetched against the outgoing page.
+        if let Some(target) = self.state.pending_nav.take() {
             if let Some(job) = self.state.fetch.take() {
                 let _ = crate::browser::net::socket_close(self.state.sockets_port, job.handle);
             }
-        } else if self.state.fetch.is_some() {
-            return crate::browser::fetch::step(&mut self.state);
-        }
-        if let Some(target) = self.state.pending_nav.take() {
+            for job in self.state.img_fetches.drain(..) {
+                let _ = crate::browser::net::socket_close(self.state.sockets_port, job.handle);
+            }
             if let Err(msg) = crate::browser::fetch::load(&mut self.state, &target) {
                 self.state.status = alloc::string::String::from(msg);
                 self.state.document = Some(crate::browser::fetch::render_error(msg));
@@ -71,29 +69,25 @@ impl App for Browser {
             }
             return true;
         }
+        // The image pool runs on its own sockets, so advance it and refill free
+        // slots every tick, in parallel with the page fetch rather than behind
+        // it. This is what lets an image-heavy page fill in quickly.
+        let mut busy = crate::browser::fetch::step_images(&mut self.state);
+        busy |= crate::browser::image::pump(&mut self.state);
+        // The page/css/js fetch keeps its own single socket.
+        if self.state.fetch.is_some() {
+            return crate::browser::fetch::step(&mut self.state) || busy;
+        }
         if crate::browser::event::js_tick(&mut self.state) {
             return true;
         }
-        // Stylesheets stay render-blocking, so they claim the free socket first.
         if crate::browser::fetch::css_pump(&mut self.state) {
             return true;
         }
-        // Then alternate the socket between script-issued fetches and images.
-        // A page whose JS never stops requesting would otherwise hold the one
-        // socket forever and no image would ever load.
-        let img_first = self.state.img_turn;
-        self.state.img_turn = !self.state.img_turn;
-        if img_first {
-            if crate::browser::image::pump(&mut self.state) {
-                return true;
-            }
-            crate::browser::fetch::js_pump(&mut self.state)
-        } else {
-            if crate::browser::fetch::js_pump(&mut self.state) {
-                return true;
-            }
-            crate::browser::image::pump(&mut self.state)
+        if crate::browser::fetch::js_pump(&mut self.state) {
+            return true;
         }
+        busy
     }
     fn tick_interval_ms(&self) -> i64 {
         50
