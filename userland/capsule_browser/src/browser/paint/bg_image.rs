@@ -30,6 +30,7 @@ pub(super) fn paint_bg_image(
     f: &Fragment,
     sy: i32,
     bottom: i32,
+    clip: Option<[i32; 4]>,
 ) {
     let Some(src) = f.bg_image.as_deref() else { return };
     if sy < TOP || sy + f.h > bottom {
@@ -52,6 +53,7 @@ pub(super) fn paint_bg_image(
             f.w.max(0) as u32,
             f.h.max(0) as u32,
             crate::browser::css::ObjectFit::Cover,
+            clip,
         );
     }
 }

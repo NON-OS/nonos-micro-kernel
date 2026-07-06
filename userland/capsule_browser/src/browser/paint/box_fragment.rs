@@ -45,7 +45,7 @@ pub(super) fn box_fragment(
         fill_rounded(fb, f.x, sy, f.w, f.h, f.radius, f.bg, clip);
     }
     // A decoded background image paints over the color and behind content.
-    super::bg_image::paint_bg_image(state, fb, f, sy, bottom);
+    super::bg_image::paint_bg_image(state, fb, f, sy, bottom, clip);
     // Border edges shorten by the corner radius on each end.
     let r = f.radius as i32;
     let [bt, br, bb, bl] = f.border;
@@ -108,6 +108,7 @@ pub(super) fn box_fragment(
                     f.w.max(0) as u32,
                     f.h.max(0) as u32,
                     *fit,
+                    clip,
                 );
             } else {
                 fill_page(fb, f.x, sy, f.w, f.h, IMG_BG, clip);
