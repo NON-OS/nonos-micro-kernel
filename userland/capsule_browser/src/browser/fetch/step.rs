@@ -124,7 +124,7 @@ pub fn step(state: &mut State) -> bool {
             Phase::Done => Some(job.buf.clone()),
             _ => None,
         };
-        super::apply_css::apply_css(state, raw.as_deref());
+        super::apply_css::apply_css(state, raw.as_deref(), Some(&job.url));
         return true;
     }
     if job.js_req {
