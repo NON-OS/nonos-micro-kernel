@@ -11,4 +11,6 @@ the implementation rather than standing apart from it.
 import Nonos.AntiRollback
 import Nonos.Authorization
 import Nonos.Capability
+import Nonos.Ipc
 import Nonos.Isolation
+import Nonos.Paging
