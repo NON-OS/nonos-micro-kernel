@@ -16,23 +16,30 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::clock::fmt;
-use crate::clock::paint_analog;
 use crate::clock::state::State;
-use crate::clock::theme;
+use crate::clock::tabs::Tab;
+use crate::clock::{fmt, manifest, paint_analog, paint_tabbar, theme};
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(theme::BG);
+    match state.tab {
+        Tab::Clock => paint_clock(state, fb),
+        _ => {}
+    }
+    paint_tabbar::paint(state.tab, fb, manifest::WIDTH);
+}
+
+fn paint_clock(state: &State, fb: &mut PaintBuffer) {
     let r = &state.rtc;
     let hms = fmt::hms(r.hour, r.minute, r.second);
-    fb.text_scaled(36, 30, &hms, theme::FG, 4);
+    fb.text_scaled(36, 56, &hms, theme::FG, 4);
     let wd = fmt::weekday(r.year, r.month, r.day);
-    fb.text(40, 96, wd.as_bytes(), theme::DIM);
+    fb.text(40, 122, wd.as_bytes(), theme::DIM);
     let mon = fmt::month_name(r.month);
-    fb.text(40, 116, mon.as_bytes(), theme::DIM);
+    fb.text(40, 142, mon.as_bytes(), theme::DIM);
     let dd = fmt::two(r.day);
-    fb.text(84, 116, &dd, theme::DIM);
+    fb.text(84, 142, &dd, theme::DIM);
     let yr = fmt::year4(r.year);
-    fb.text(120, 116, &yr, theme::DIM);
-    paint_analog::paint(state, fb, 180, 290, 90);
+    fb.text(120, 142, &yr, theme::DIM);
+    paint_analog::paint(state, fb, 180, 300, 84);
 }

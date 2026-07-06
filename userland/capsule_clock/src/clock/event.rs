@@ -14,18 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod angles;
-mod app;
-mod event;
-mod fixed;
-mod fmt;
-mod geom;
-mod manifest;
-mod paint;
-mod paint_analog;
-mod paint_tabbar;
-mod state;
-mod tabs;
-mod theme;
+use nonos_app_skeleton::EventOutcome;
 
-pub use app::Clock;
+use crate::clock::manifest::WIDTH;
+use crate::clock::state::State;
+use crate::clock::tabs;
+
+pub fn on_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
+    if let Some(t) = tabs::hit(WIDTH as i32, x, y) {
+        state.tab = t;
+        return EventOutcome::Repaint;
+    }
+    EventOutcome::Idle
+}

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, InputKind, PaintBuffer};
 
 use crate::clock::manifest::manifest;
 use crate::clock::paint::paint;
@@ -37,7 +37,10 @@ impl App for Clock {
         manifest()
     }
 
-    fn on_event(&mut self, _event: InputEvent) -> EventOutcome {
+    fn on_event(&mut self, ev: InputEvent) -> EventOutcome {
+        if ev.kind == InputKind::ButtonDown {
+            return crate::clock::event::on_click(&mut self.state, ev.x, ev.y);
+        }
         EventOutcome::Idle
     }
 

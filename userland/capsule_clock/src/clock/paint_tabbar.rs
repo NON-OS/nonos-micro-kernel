@@ -14,18 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod angles;
-mod app;
-mod event;
-mod fixed;
-mod fmt;
-mod geom;
-mod manifest;
-mod paint;
-mod paint_analog;
-mod paint_tabbar;
-mod state;
-mod tabs;
-mod theme;
+use nonos_app_skeleton::PaintBuffer;
 
-pub use app::Clock;
+use crate::clock::tabs::{self, Tab, BAR_H};
+use crate::clock::theme;
+
+pub fn paint(tab: Tab, fb: &mut PaintBuffer, width: u32) {
+    let w = width / 3;
+    for (i, t) in tabs::all().iter().enumerate() {
+        let x = i as u32 * w;
+        let active = *t == tab;
+        let bg = if active { theme::ACCENT } else { theme::BG };
+        fb.fill_rect(x, 0, w, BAR_H as u32, bg);
+        let fg = if active { theme::BG } else { theme::DIM };
+        fb.text(x + 10, 10, tabs::label(*t), fg);
+    }
+}

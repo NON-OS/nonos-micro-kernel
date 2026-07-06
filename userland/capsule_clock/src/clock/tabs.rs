@@ -14,18 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod angles;
-mod app;
-mod event;
-mod fixed;
-mod fmt;
-mod geom;
-mod manifest;
-mod paint;
-mod paint_analog;
-mod paint_tabbar;
-mod state;
-mod tabs;
-mod theme;
+#[derive(Clone, Copy, PartialEq)]
+pub enum Tab {
+    Clock,
+    Stopwatch,
+    Timer,
+}
 
-pub use app::Clock;
+pub const BAR_H: i32 = 32;
+
+pub fn all() -> [Tab; 3] {
+    [Tab::Clock, Tab::Stopwatch, Tab::Timer]
+}
+
+pub fn label(t: Tab) -> &'static [u8] {
+    match t {
+        Tab::Clock => b"Clock",
+        Tab::Stopwatch => b"Stopwatch",
+        Tab::Timer => b"Timer",
+    }
+}
+
+pub fn hit(width: i32, x: i32, y: i32) -> Option<Tab> {
+    if y < 0 || y >= BAR_H {
+        return None;
+    }
+    let w = width / 3;
+    match x / w {
+        0 => Some(Tab::Clock),
+        1 => Some(Tab::Stopwatch),
+        _ => Some(Tab::Timer),
+    }
+}

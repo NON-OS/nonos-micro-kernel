@@ -16,14 +16,18 @@
 
 use nonos_libc::time::{mk_time_rtc, RtcTime};
 
+use crate::clock::tabs::Tab;
+
 pub struct State {
     pub rtc: RtcTime,
+    pub tab: Tab,
 }
 
 impl State {
     pub fn new() -> Self {
         let mut s = State {
             rtc: RtcTime::default(),
+            tab: Tab::Clock,
         };
         s.refresh();
         s
