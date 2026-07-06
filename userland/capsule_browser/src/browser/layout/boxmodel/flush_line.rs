@@ -47,7 +47,19 @@ pub(super) fn flush_line(
     };
     for (ix, item) in pending.drain(..) {
         match item {
-            InlineItem::Word { text, px, color, bg, bold, mono, href, adv, node, .. } => {
+            InlineItem::Word {
+                text,
+                px,
+                color,
+                bg,
+                bold,
+                mono,
+                underline,
+                href,
+                adv,
+                node,
+                ..
+            } => {
                 frags.push(Fragment {
                     x: x + shift + ix,
                     y: top,
@@ -57,9 +69,12 @@ pub(super) fn flush_line(
                     border: [0; 4],
                     border_color: 0,
                     href,
-                    content: Content::Text { text, color, px: px as f32, bold, mono },
+                    content: Content::Text { text, color, px: px as f32, bold, mono, underline },
                     z: ctx.z,
                     clip: ctx.clip,
+                    fixed: ctx.fixed,
+                    bg_image: None,
+                    shadow: None,
                     radius: 0,
                     node,
                 });
@@ -77,6 +92,9 @@ pub(super) fn flush_line(
                     content: Content::Image { src, alt },
                     z: ctx.z,
                     clip: ctx.clip,
+                    fixed: ctx.fixed,
+                    bg_image: None,
+                    shadow: None,
                     radius: 0,
                     node,
                 });

@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::browser::css::color::parse_color;
-use crate::browser::css::computed::{Computed, TextAlign};
+use crate::browser::css::computed::{Computed, TextAlign, WhiteSpace};
 use crate::browser::css::parse_line_height::parse_line_height;
 use crate::browser::css::parse_px::parse_px;
 
@@ -55,6 +55,15 @@ pub(super) fn apply_text(
                 c.line_height_px = px.min(4 * MAX_FONT_PX);
             }
         }
+        "text-decoration" | "text-decoration-line" => {
+            c.underline = value.split_whitespace().any(|t| t == "underline");
+        }
+        "white-space" => match value.trim() {
+            "pre" | "pre-wrap" | "pre-line" | "break-spaces" => c.white_space = WhiteSpace::Pre,
+            "nowrap" => c.white_space = WhiteSpace::Nowrap,
+            "normal" => c.white_space = WhiteSpace::Normal,
+            _ => {}
+        },
         "text-align" => match value.trim() {
             "left" | "start" => c.text_align = TextAlign::Left,
             "center" => c.text_align = TextAlign::Center,

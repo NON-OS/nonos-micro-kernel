@@ -25,6 +25,7 @@ pub(super) enum InlineItem {
         bg: u32,
         bold: bool,
         mono: bool,
+        underline: bool,
         href: Option<String>,
         adv: i32,
         space: i32,

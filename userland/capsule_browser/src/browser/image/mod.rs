@@ -28,6 +28,7 @@ mod queue;
 mod sniff;
 mod store;
 mod svg;
+mod webp;
 
 pub use blit::blit_into;
 pub use fetch::{follow_redirect, pump};

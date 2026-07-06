@@ -20,6 +20,11 @@ use crate::browser::css::parse_size::parse_size;
 // Width and height with their min/max clamps. `none` lifts a clamp.
 pub(super) fn apply_sizing(c: &mut Computed, name: &str, value: &str, fs: u32) -> bool {
     match name {
+        "box-sizing" => match value.trim() {
+            "border-box" => c.border_box = true,
+            "content-box" => c.border_box = false,
+            _ => {}
+        },
         "width" => {
             if let Some(s) = parse_size(value, fs) {
                 c.width = s;

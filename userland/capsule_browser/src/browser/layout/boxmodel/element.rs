@@ -54,6 +54,10 @@ pub(super) fn element(
         out.push(element_img(w, item, parent, link, style));
         return;
     }
+    if tag == "svg" {
+        out.push(super::element_svg::element_svg(w, item, parent, link, style));
+        return;
+    }
     if matches!(tag, "input" | "select") {
         if let Some(b) = element_field(w, item, style) {
             out.push(b);

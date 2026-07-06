@@ -40,6 +40,10 @@ pub(super) fn layout_box(
     if node.style.z != 0 {
         ctx.z = node.style.z;
     }
+    // A fixed box and everything under it pins to the viewport on scroll.
+    if node.style.is_fixed {
+        ctx.fixed = true;
+    }
     let (mut x, mut y) = (x, y);
     if node.style.position == Position::Relative {
         let (dx, dy) = rel_offset(&node.style, ctx.cb.w);

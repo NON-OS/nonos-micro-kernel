@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::string::String;
+
 use crate::browser::css::Computed;
 use crate::browser::dom::Dom;
 
@@ -23,17 +25,19 @@ use super::tree::{BoxKind, BoxNode};
 use super::wrap_mixed::wrap_mixed;
 
 // Box tree for the page: rooted at <body> (or the document when a page has
-// none), display:none subtrees dropped, mixed children wrapped.
-pub fn build(dom: &Dom, styles: &[Computed]) -> BoxNode {
+// none), display:none subtrees dropped, mixed children wrapped. Per-node
+// background images travel alongside the styles for the collect walk.
+pub fn build(dom: &Dom, styles: &[Computed], bg_images: &[Option<String>]) -> BoxNode {
     let root_id = body_id(dom);
     let style = styles.get(root_id).copied().unwrap_or_else(Computed::root);
     let mut count = 0usize;
-    let children = collect(dom, root_id, &style, styles, &None, 0, &mut count);
+    let children = collect(dom, root_id, &style, styles, bg_images, &None, 0, &mut count);
     BoxNode {
         kind: BoxKind::Block,
         style,
         href: None,
         dom_id: root_id,
+        bg_image: bg_images.get(root_id).cloned().flatten(),
         children: wrap_mixed(&style, children),
     }
 }

@@ -20,6 +20,8 @@ use alloc::vec::Vec;
 use super::abs_out_of_flow::out_of_flow;
 use super::image_box::image_box;
 use super::inline_items::InlineItem;
+use crate::browser::css::WhiteSpace;
+
 use super::tree::{BoxKind, BoxNode};
 
 const MAX_DEPTH: u32 = 400;
@@ -57,21 +59,37 @@ pub(super) fn collect_items(
                 };
                 let space = measure(" ").max(1);
                 let line_h = c.style.line_height() as i32;
-                for w in t.split_whitespace() {
-                    let adv = measure(w).max(0) + if c.style.bold { 1 } else { 0 };
-                    out.push(InlineItem::Word {
-                        text: String::from(w),
-                        px,
-                        color: c.style.color,
-                        bg: c.style.bg,
-                        bold: c.style.bold,
-                        mono,
-                        href: c.href.clone(),
-                        adv,
-                        space,
-                        line_h,
-                        node: c.dom_id,
-                    });
+                let word = |w: &str| InlineItem::Word {
+                    text: String::from(w),
+                    px,
+                    color: c.style.color,
+                    bg: c.style.bg,
+                    bold: c.style.bold,
+                    mono,
+                    underline: c.style.underline,
+                    href: c.href.clone(),
+                    adv: measure(w).max(0) + if c.style.bold { 1 } else { 0 },
+                    space,
+                    line_h,
+                    node: c.dom_id,
+                };
+                if c.style.white_space == WhiteSpace::Pre {
+                    // Preserve each line verbatim, breaking only at newlines, so
+                    // code and pre-formatted text keep their spacing.
+                    let mut first = true;
+                    for line in t.split('\n') {
+                        if !first {
+                            out.push(InlineItem::Break);
+                        }
+                        first = false;
+                        if !line.is_empty() {
+                            out.push(word(line));
+                        }
+                    }
+                } else {
+                    for w in t.split_whitespace() {
+                        out.push(word(w));
+                    }
                 }
             }
             BoxKind::Image { src, alt } => {

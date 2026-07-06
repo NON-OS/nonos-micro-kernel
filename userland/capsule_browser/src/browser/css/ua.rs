@@ -21,13 +21,21 @@ use super::rule::Rule;
 
 const UA: &str = concat!(
     "head{display:none}script{display:none}style{display:none}title{display:none}",
-    "a{color:#4c9aff}b{font-weight:bold}strong{font-weight:bold}",
+    "a{color:#4c9aff;text-decoration:underline}b{font-weight:bold}strong{font-weight:bold}",
     "body{display:block;margin:8px}",
     "div,section,article,main,header,footer,nav,aside,figure,figcaption,form,button,",
-    "table,thead,tbody,tr,li,dl,dt,dd{display:block}",
+    "thead,tbody,tfoot,li,dl,dt,dd{display:block}",
+    // Tables lay each row as a flex line and each cell as an equal share, so
+    // rows read as columns instead of stacking. A real per-column width pass
+    // is a later refinement.
+    "table{display:block;margin:8px 0}",
+    "tr{display:flex}",
+    "td,th{display:block;flex:1;padding:4px 8px;border:1px solid #3a4652}",
+    "th{font-weight:bold;text-align:left}",
     "p,pre,blockquote{display:block;margin:10px 0}",
     "ul,ol{display:block;margin:10px 0;padding-left:28px}",
     "pre,code,kbd,samp,tt{font-family:monospace}",
+    "pre{white-space:pre;display:block;margin:10px 0}textarea{white-space:pre}",
     "hr{display:block;margin:8px 0}",
     "input,textarea,select,button{display:block;margin:6px 0;padding:6px 8px;",
     "border:1px solid #6b7885;background:#10161b}",

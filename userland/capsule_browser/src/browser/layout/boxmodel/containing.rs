@@ -21,4 +21,7 @@ pub(super) struct Containing {
     pub x: i32,
     pub y: i32,
     pub w: i32,
+    // Definite content height of the containing block, None when it sizes to
+    // content. Percentage heights resolve only against a definite value.
+    pub h: Option<i32>,
 }

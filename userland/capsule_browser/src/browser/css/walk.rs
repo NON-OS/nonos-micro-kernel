@@ -26,6 +26,7 @@ use super::computed::Computed;
 use super::rule::Rule;
 use super::rule_index::RuleIndex;
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn walk(
     dom: &Dom,
     id: usize,
@@ -36,24 +37,27 @@ pub(super) fn walk(
     author_index: &RuleIndex,
     vars: &[(String, String)],
     styles: &mut Vec<Computed>,
+    bg_images: &mut Vec<Option<String>>,
     depth: u32,
 ) {
     let node = &dom.nodes[id];
     // Box properties reset per element; text properties carry down.
     let mut c = Computed::inherit_from(&inherited);
     let parent_fs = inherited.font_size_px;
+    let mut bg: Option<String> = None;
     if node.kind == NodeKind::Element {
-        apply_rules(dom, id, ua, ua_index, &mut c, parent_fs, vars);
-        apply_rules(dom, id, author, author_index, &mut c, parent_fs, vars);
+        apply_rules(dom, id, ua, ua_index, &mut c, parent_fs, vars, &mut bg);
+        apply_rules(dom, id, author, author_index, &mut c, parent_fs, vars, &mut bg);
         if let Some(st) = node.attr("style") {
-            apply_style_attr(st, &mut c, parent_fs, vars);
+            apply_style_attr(st, &mut c, parent_fs, vars, &mut bg);
         }
     }
     styles[id] = c;
+    bg_images[id] = bg;
     if depth >= 400 {
         return;
     }
     for &ch in &node.children {
-        walk(dom, ch, c, ua, ua_index, author, author_index, vars, styles, depth + 1);
+        walk(dom, ch, c, ua, ua_index, author, author_index, vars, styles, bg_images, depth + 1);
     }
 }

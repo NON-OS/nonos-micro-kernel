@@ -16,9 +16,10 @@
 
 use crate::browser::css::computed::Computed;
 use crate::browser::css::parse_grow::parse_grow;
+use crate::browser::css::parse_size::parse_size;
 
 // Flex container axis and wrapping, and the item grow factor.
-pub(super) fn apply_flex(c: &mut Computed, name: &str, value: &str) -> bool {
+pub(super) fn apply_flex(c: &mut Computed, name: &str, value: &str, fs: u32) -> bool {
     match name {
         "flex-direction" => {
             let v = value.trim();
@@ -53,19 +54,12 @@ pub(super) fn apply_flex(c: &mut Computed, name: &str, value: &str) -> bool {
                 c.flex_grow = g;
             }
         }
-        "flex" => {
-            // "flex: <grow> ..." or the none/auto keywords.
-            let v = value.trim();
-            if v == "none" {
-                c.flex_grow = 0;
-            } else if v == "auto" {
-                c.flex_grow = 1;
-            } else if let Some(first) = v.split_whitespace().next() {
-                if let Some(g) = parse_grow(first) {
-                    c.flex_grow = g;
-                }
+        "flex-basis" => {
+            if let Some(s) = parse_size(value, fs) {
+                c.flex_basis = s;
             }
         }
+        "flex" => super::flex_shorthand::apply_flex_shorthand(c, value.trim(), fs),
         _ => return false,
     }
     true

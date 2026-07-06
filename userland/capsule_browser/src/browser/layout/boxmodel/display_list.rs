@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 
 pub enum Content {
     None,
-    Text { text: String, color: u32, px: f32, bold: bool, mono: bool },
+    Text { text: String, color: u32, px: f32, bold: bool, mono: bool, underline: bool },
     Image { src: String, alt: String },
 }
 
@@ -37,6 +37,12 @@ pub struct Fragment {
     pub content: Content,
     pub z: i32,
     pub clip: Option<[i32; 4]>,
+    // Painted without the scroll offset when true (position:fixed).
+    pub fixed: bool,
+    // background-image url to fetch and paint behind the box content.
+    pub bg_image: Option<alloc::string::String>,
+    // drop shadow painted behind the box.
+    pub shadow: Option<crate::browser::css::Shadow>,
     pub radius: u32,
     // DOM node behind this rect (0 = anonymous), for event hit-testing.
     pub node: usize,

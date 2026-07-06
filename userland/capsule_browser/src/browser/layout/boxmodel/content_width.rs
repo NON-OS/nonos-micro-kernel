@@ -40,7 +40,9 @@ pub(super) fn content_width(node: &BoxNode, depth: u32) -> i32 {
     // its siblings to the minimum item width.
     match node.style.width {
         Size::Px(p) => return (p as i32).clamp(0, CAP),
-        Size::Pct(_) | Size::Auto => {}
+        // A calc with no percent part is as definite as plain pixels.
+        Size::Calc(px, 0) => return px.clamp(0, CAP),
+        Size::Pct(_) | Size::Calc(_, _) | Size::Auto => {}
     }
     let (el, er) = edges_x(&node.style);
     (inner_width(node, depth) + el + er).clamp(0, CAP)

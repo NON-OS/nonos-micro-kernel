@@ -30,6 +30,7 @@ pub(super) fn flush_run(out: &mut Vec<BoxNode>, run: &mut Vec<BoxNode>, parent: 
         style: Computed::inherit_from(parent),
         href: None,
         dom_id: 0,
+        bg_image: None,
         children: core::mem::take(run),
     });
 }

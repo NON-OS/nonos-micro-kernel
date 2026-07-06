@@ -20,8 +20,17 @@ use super::apply::apply_decl;
 use super::computed::Computed;
 use super::parse::parse_decls;
 
-pub fn apply_style_attr(style: &str, c: &mut Computed, parent_fs: u32, vars: &[(String, String)]) {
+pub fn apply_style_attr(
+    style: &str,
+    c: &mut Computed,
+    parent_fs: u32,
+    vars: &[(String, String)],
+    bg: &mut Option<String>,
+) {
     for d in parse_decls(style) {
         apply_decl(c, &d.name, &d.value, parent_fs, vars);
+        if let Some(u) = super::bg_url::bg_url(&d.name, &d.value) {
+            *bg = Some(u);
+        }
     }
 }

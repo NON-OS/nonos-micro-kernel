@@ -22,6 +22,19 @@ pub enum Size {
     Auto,
     Px(u32),
     Pct(u16),
+    // calc(): fixed pixels plus per-mille of the containing base, either
+    // part possibly negative.
+    Calc(i32, i32),
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum WhiteSpace {
+    // Collapse runs of whitespace and wrap at the content edge.
+    Normal,
+    // Preserve spaces and newlines; wrap only at a newline.
+    Pre,
+    // Collapse whitespace but never wrap.
+    Nowrap,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -69,6 +82,14 @@ pub const MAX_GRID_COLS: usize = 8;
 // Inherited fields: color, bold, font_size_px, text_align, line_height_px.
 // Everything else is per-element; the cascade walk starts each element from
 // root() and copies only the inherited fields across.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct Shadow {
+    pub dx: i32,
+    pub dy: i32,
+    pub blur: u32,
+    pub color: u32,
+}
+
 #[derive(Clone, Copy)]
 pub struct Computed {
     pub display_none: bool,
@@ -78,6 +99,8 @@ pub struct Computed {
     pub mono: bool,
     pub font_size_px: u32,
     pub text_align: TextAlign,
+    pub white_space: WhiteSpace,
+    pub underline: bool,
     // 0 means unset: derive 1.3 * font size where a line height is needed.
     pub line_height_px: u32,
     pub margin_top: u32,
@@ -105,6 +128,9 @@ pub struct Computed {
     pub margin_auto_x: bool,
     pub margin_left_auto: bool,
     pub margin_right_auto: bool,
+    // box-sizing: border-box makes width/height span the border box; the
+    // default content-box adds padding and border on top.
+    pub border_box: bool,
     pub is_block: bool,
     pub is_flex: bool,
     pub is_inline_block: bool,
@@ -114,7 +140,13 @@ pub struct Computed {
     pub align: Align,
     pub gap: u32,
     pub flex_grow: u32,
+    // flex-basis: the main-size base before grow/shrink. Auto means size to
+    // content or the width property, as CSS specifies.
+    pub flex_basis: Size,
     pub position: Position,
+    // position: fixed is laid out like absolute but painted without the
+    // scroll offset, so it pins to the viewport.
+    pub is_fixed: bool,
     pub top: Size,
     pub right: Size,
     pub bottom: Size,
@@ -122,6 +154,7 @@ pub struct Computed {
     pub overflow_hidden: bool,
     pub z: i32,
     pub radius: u32,
+    pub shadow: Option<Shadow>,
     pub is_grid: bool,
     pub grid_cols: [GridTrack; MAX_GRID_COLS],
     pub grid_col_n: u8,
@@ -139,6 +172,8 @@ impl Computed {
             mono: false,
             font_size_px: DEFAULT_FONT_PX,
             text_align: TextAlign::Left,
+            white_space: WhiteSpace::Normal,
+            underline: false,
             line_height_px: 0,
             margin_top: 0,
             margin_right: 0,
@@ -162,6 +197,7 @@ impl Computed {
             margin_auto_x: false,
             margin_left_auto: false,
             margin_right_auto: false,
+            border_box: false,
             is_block: false,
             is_flex: false,
             is_inline_block: false,
@@ -171,7 +207,9 @@ impl Computed {
             align: Align::Stretch,
             gap: 0,
             flex_grow: 0,
+            flex_basis: Size::Auto,
             position: Position::Static,
+            is_fixed: false,
             top: Size::Auto,
             right: Size::Auto,
             bottom: Size::Auto,
@@ -179,6 +217,7 @@ impl Computed {
             overflow_hidden: false,
             z: 0,
             radius: 0,
+            shadow: None,
             is_grid: false,
             grid_cols: [GridTrack::Fr(1); MAX_GRID_COLS],
             grid_col_n: 0,
@@ -195,6 +234,8 @@ impl Computed {
         c.mono = parent.mono;
         c.font_size_px = parent.font_size_px;
         c.text_align = parent.text_align;
+        c.white_space = parent.white_space;
+        c.underline = parent.underline;
         c.line_height_px = parent.line_height_px;
         c.list_none = parent.list_none;
         c

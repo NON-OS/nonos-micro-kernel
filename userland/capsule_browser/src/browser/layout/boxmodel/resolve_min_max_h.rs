@@ -14,18 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::css::{Computed, Size};
+use crate::browser::css::Computed;
 
 // Clamp a resolved border-box height between min-height and max-height. Length
 // values (px, and vh/vw which parse to px) apply directly; percentages need a
 // definite parent height, which is not threaded here, so they are ignored.
 pub(super) fn resolve_min_max_h(s: &Computed, content_h: i32) -> i32 {
     let mut h = content_h;
-    if let Size::Px(mn) = s.min_height {
-        h = h.max(mn as i32);
+    if let Some(mn) = s.min_height.definite_px() {
+        h = h.max(mn);
     }
-    if let Size::Px(mx) = s.max_height {
-        h = h.min(mx as i32);
+    if let Some(mx) = s.max_height.definite_px() {
+        h = h.min(mx);
     }
     h.max(0)
 }

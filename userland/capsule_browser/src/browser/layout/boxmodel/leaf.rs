@@ -32,5 +32,5 @@ pub(super) fn leaf(
 ) -> BoxNode {
     let mut style = Computed::inherit_from(parent);
     style.bg = parent.bg;
-    BoxNode { kind, style, href: link.clone(), dom_id, children: Vec::new() }
+    BoxNode { kind, style, href: link.clone(), dom_id, bg_image: None, children: Vec::new() }
 }

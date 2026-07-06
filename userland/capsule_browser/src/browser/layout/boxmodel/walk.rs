@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::string::String;
+
 use crate::browser::css::Computed;
 use crate::browser::dom::node::Node;
 use crate::browser::dom::Dom;
@@ -23,6 +25,7 @@ use crate::browser::dom::Dom;
 pub(super) struct Walk<'a, 'b> {
     pub dom: &'a Dom,
     pub styles: &'a [Computed],
+    pub bg_images: &'a [Option<String>],
     pub count: &'b mut usize,
 }
 

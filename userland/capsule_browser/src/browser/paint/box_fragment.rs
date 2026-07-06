@@ -37,9 +37,15 @@ pub(super) fn box_fragment(
 ) {
     let dy = TOP - state.scroll as i32;
     let clip = f.clip.map(|c| [c[0], c[1].saturating_add(dy), c[2], c[3].saturating_add(dy)]);
+    // The drop shadow paints first so the box and its content sit over it.
+    if let Some(s) = f.shadow.as_ref() {
+        super::shadow::paint_shadow(fb, s, f.x, sy, f.w, f.h);
+    }
     if f.bg != 0 {
         fill_rounded(fb, f.x, sy, f.w, f.h, f.radius, f.bg, clip);
     }
+    // A decoded background image paints over the color and behind content.
+    super::bg_image::paint_bg_image(state, fb, f, sy, bottom);
     // Border edges shorten by the corner radius on each end.
     let r = f.radius as i32;
     let [bt, br, bb, bl] = f.border;
@@ -67,7 +73,7 @@ pub(super) fn box_fragment(
     }
     match &f.content {
         Content::None => {}
-        Content::Text { text, color, px, bold, mono } => {
+        Content::Text { text, color, px, bold, mono, underline } => {
             let ty = sy + (f.h - *px as i32).max(0) / 2;
             if *mono {
                 fb.text_ttf_mono(f.x, ty, text, *color, *px);
@@ -80,7 +86,7 @@ pub(super) fn box_fragment(
                     fb.text_ttf(f.x + 1, ty, text, *color, *px);
                 }
             }
-            if f.href.is_some() {
+            if *underline {
                 fill_page(fb, f.x, sy + f.h - 2, f.w, 1, *color, clip);
             }
         }

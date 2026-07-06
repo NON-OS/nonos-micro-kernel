@@ -19,12 +19,14 @@ mod border;
 mod decl;
 mod display;
 mod flex;
+mod flex_shorthand;
 mod grid;
 mod list;
 mod margin;
 mod padding;
 mod paint;
 mod position;
+mod shadow;
 mod sizing;
 mod text;
 
