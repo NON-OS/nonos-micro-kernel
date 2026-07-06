@@ -23,6 +23,7 @@ pub(crate) const N_MK_GETPID: i64 = tag4(b"MGPD");
 pub(crate) const N_MK_ARGS: i64 = tag4(b"MKAR");
 pub(crate) const N_MK_YIELD: i64 = tag4(b"MYLD");
 pub(crate) const N_MK_TIME_MILLIS: i64 = tag4(b"MTMS");
+pub(crate) const N_MK_TIME_ADJUST: i64 = tag4(b"MTAD");
 pub(crate) const N_MK_TIME_RTC: i64 = tag4(b"MTRT");
 pub(crate) const N_MK_BATTERY_STATUS: i64 = tag4(b"MBAT");
 pub(crate) const N_MK_PROC_STAT: i64 = tag4(b"MPST");
