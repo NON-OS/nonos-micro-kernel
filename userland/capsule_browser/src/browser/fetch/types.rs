@@ -38,6 +38,9 @@ pub struct TlsCtx {
     pub cf: ClientFlight,
     pub flight: Vec<u8>,
     pub now: u64,
+    // Server application keys, derived once the handshake completes so response
+    // records decrypt without replaying certificate verification every tick.
+    pub server_app: Option<crate::browser::tls13::TrafficKeys>,
 }
 
 pub struct Fetch {

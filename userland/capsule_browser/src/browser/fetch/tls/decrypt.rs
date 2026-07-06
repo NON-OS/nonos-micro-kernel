@@ -21,5 +21,10 @@ use crate::browser::tls13;
 
 pub(in crate::browser::fetch) fn decrypt(f: &Fetch) -> Option<Vec<u8>> {
     let tls = f.tls.as_ref()?;
+    // Once the handshake cached the server keys, decrypt straight from them and
+    // skip re-verifying the certificate chain on every read tick.
+    if let Some(app) = tls.server_app.as_ref() {
+        return Some(tls13::application_plaintext_cached(app, &f.buf));
+    }
     tls13::application_plaintext(&tls.cf, &tls.flight, &f.buf, f.url.host.as_bytes(), tls.now)
 }
