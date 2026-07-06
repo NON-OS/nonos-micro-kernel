@@ -1,0 +1,96 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Verification pipeline for source hygiene, runnable proofs, crypto vectors,
+# Kani model checks, and Verus theorems.
+name: verify
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verification engine clippy
+        run: cargo clippy --manifest-path nonos-verify/Cargo.toml --all-targets -- -D warnings
+      - name: Production source hygiene
+        run: cargo run --manifest-path nonos-verify/Cargo.toml -- hygiene
+
+  runnable-proofs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Host proof suite (store, protocol, security, formatting, fuzz)
+        run: cargo test --release
+        working-directory: userland/fs_proofs
+      - name: Host proof clippy
+        run: cargo clippy --release -- -D warnings
+        working-directory: userland/fs_proofs
+
+  crypto-proofs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Crypto known-answer proofs
+        run: cargo test --release
+        working-directory: userland/crypto_proofs
+      - name: Crypto proof clippy
+        run: cargo clippy --release -- -D warnings
+        working-directory: userland/crypto_proofs
+
+  kani:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: model-checking/kani-github-action@v1
+        with:
+          kani-version: "0.67.0"
+          working-directory: userland/fs_proofs
+
+  verus:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Verus
+        run: |
+          set -euo pipefail
+          VERUS_VERSION="0.2026.06.28.1847ab3"
+          curl -fsSL -o verus.zip \
+            "https://github.com/verus-lang/verus/releases/download/release/${VERUS_VERSION}/verus-${VERUS_VERSION}-x86-linux.zip"
+          unzip -q verus.zip -d "$HOME/verus"
+          echo "$HOME/verus/verus-x86-linux" >> "$GITHUB_PATH"
+      - name: Verify capability theorems
+        run: verus --crate-type=lib src/lib.rs
+        working-directory: verification/verus
+
+  boot-proofs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Boot proofs
+        run: |
+          if [ -d nonos-bootloader/boot_proofs ]; then
+            cargo test --release --manifest-path nonos-bootloader/boot_proofs/Cargo.toml
+          else
+            echo "nonos-bootloader/boot_proofs absent on this ref; skipping"
+          fi
