@@ -34,4 +34,4 @@ pub use blit::blit_into;
 pub use fetch::{follow_redirect, pump};
 pub use ingest::ingest;
 pub use queue::enqueue_from_doc;
-pub use store::Store;
+pub use store::{Decoded, Store};

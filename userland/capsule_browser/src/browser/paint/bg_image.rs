@@ -43,17 +43,39 @@ pub(super) fn paint_bg_image(
     }
     let Some(base) = state.base.as_ref() else { return };
     let abs = crate::browser::url::join(base, src);
-    if let Some(img) = state.images.ready(&abs) {
-        let (bx, by) = (f.x.max(0) as u32, sy.max(0) as u32);
-        crate::browser::image::blit_into(
+    let Some(img) = state.images.ready(&abs) else { return };
+    let (bx, by) = (f.x.max(0) as u32, sy.max(0) as u32);
+    let (bw, bh) = (f.w.max(0) as u32, f.h.max(0) as u32);
+    // The box's own rect clips every layer form, so a tile run never paints
+    // past the fragment.
+    let own = [f.x, sy, f.x + f.w, sy + f.h];
+    let boxed = Some(match clip {
+        Some(c) => [own[0].max(c[0]), own[1].max(c[1]), own[2].min(c[2]), own[3].min(c[3])],
+        None => own,
+    });
+    match f.bg_size {
+        crate::browser::css::BgSize::Cover => crate::browser::image::blit_into(
             fb,
             img,
             bx,
             by,
-            f.w.max(0) as u32,
-            f.h.max(0) as u32,
+            bw,
+            bh,
             crate::browser::css::ObjectFit::Cover,
-            clip,
-        );
+            boxed,
+        ),
+        crate::browser::css::BgSize::Contain => crate::browser::image::blit_into(
+            fb,
+            img,
+            bx,
+            by,
+            bw,
+            bh,
+            crate::browser::css::ObjectFit::Contain,
+            boxed,
+        ),
+        crate::browser::css::BgSize::Auto | crate::browser::css::BgSize::Px(_) => {
+            super::bg_tile::paint_tiles(fb, img, f, [bx, by, bw, bh], boxed);
+        }
     }
 }

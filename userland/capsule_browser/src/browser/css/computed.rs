@@ -62,6 +62,16 @@ pub enum TextTransform {
     Capitalize,
 }
 
+// background-size for the box's image layer. Auto keeps the natural size and
+// tiles per background-repeat; a length scales the tile width keeping aspect.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum BgSize {
+    Auto,
+    Cover,
+    Contain,
+    Px(u16),
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Justify {
     Start,
@@ -123,6 +133,8 @@ pub struct Computed {
     // Family key of the custom face this text draws in, 0 for the built-in
     // face; the fonts registry maps keys to loaded faces.
     pub font_key: u32,
+    pub bg_size: BgSize,
+    pub bg_repeat: bool,
     pub underline: bool,
     // 0 means unset: derive 1.3 * font size where a line height is needed.
     pub line_height_px: u32,
@@ -199,6 +211,8 @@ impl Computed {
             object_fit: ObjectFit::Contain,
             text_transform: TextTransform::None,
             font_key: 0,
+            bg_size: BgSize::Auto,
+            bg_repeat: true,
             underline: false,
             line_height_px: 0,
             margin_top: 0,
