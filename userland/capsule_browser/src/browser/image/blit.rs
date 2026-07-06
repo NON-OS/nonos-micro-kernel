@@ -73,7 +73,13 @@ pub fn blit_into(
 // Bilinear-blit the source rect [sx0, sy0, sw, sh] of `img` into the
 // destination rect [dx, dy, dw, dh], skipping pixels outside the clip rect so
 // an image stays inside an overflow-hidden or rounded container.
-fn draw(fb: &mut PaintBuffer, img: &Decoded, dest: [u32; 4], src: [u32; 4], clip: Option<[i32; 4]>) {
+fn draw(
+    fb: &mut PaintBuffer,
+    img: &Decoded,
+    dest: [u32; 4],
+    src: [u32; 4],
+    clip: Option<[i32; 4]>,
+) {
     let [dx, dy, dw, dh] = dest;
     let [sx0, sy0, sw, sh] = src;
     for j in 0..dh {

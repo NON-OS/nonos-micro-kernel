@@ -20,7 +20,13 @@ use crate::browser::net;
 use crate::browser::tls13;
 
 pub(in crate::browser::fetch) fn verify_and_send(port: u32, f: &mut Fetch) {
-    let req = http::request::build(&f.url, f.post.as_deref());
+    // Image fetches keep the connection open so the next same-host image can
+    // reuse the handshake; everything else closes as before.
+    let req = if f.image.is_some() {
+        http::request::build_keep_alive(&f.url)
+    } else {
+        http::request::build(&f.url, f.post.as_deref())
+    };
     let host = f.url.host.clone();
     let Some(tls) = f.tls.as_ref() else {
         f.phase = Phase::Error;

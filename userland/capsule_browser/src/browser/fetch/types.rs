@@ -66,4 +66,12 @@ pub struct Fetch {
     // An external stylesheet fetch: the body is appended to the page CSS and
     // triggers a re-layout, not a navigation.
     pub css: bool,
+    // Plaintext bytes belonging to earlier responses on a kept-alive
+    // connection; this fetch's response starts after them.
+    pub rx_consumed: usize,
+    // Client application record sequence this request was sealed at; the next
+    // request on the same connection seals at the one after it.
+    pub tx_seq: u64,
+    // Requests already served on this connection, bounding reuse.
+    pub keep_uses: u8,
 }

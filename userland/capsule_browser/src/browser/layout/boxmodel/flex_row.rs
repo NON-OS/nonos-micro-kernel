@@ -145,10 +145,10 @@ pub(super) fn flex_row(
     let mut row_h = 0i32;
     let mut ranges: Vec<(usize, usize, i32)> = Vec::with_capacity(items.len());
     for (i, it) in items.iter().enumerate() {
-        let ml = it.style.margin_left as i32
-            + if it.style.margin_left_auto { auto_share } else { 0 };
-        let mr = it.style.margin_right as i32
-            + if it.style.margin_right_auto { auto_share } else { 0 };
+        let ml =
+            it.style.margin_left as i32 + if it.style.margin_left_auto { auto_share } else { 0 };
+        let mr =
+            it.style.margin_right as i32 + if it.style.margin_right_auto { auto_share } else { 0 };
         let mt = it.style.margin_top as i32;
         let mb = it.style.margin_bottom as i32;
         let start = frags.len();

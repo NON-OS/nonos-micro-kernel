@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod complete;
-mod decode;
-mod find_crlf;
-mod parse_hex;
+use alloc::vec::Vec;
 
-pub use complete::complete;
-pub use decode::decode;
-pub use find_crlf::find_crlf;
-pub use parse_hex::parse_hex;
+use super::traffic_keys::TrafficKeys;
+
+// Seal one request as an application record at the client's next sequence
+// number, for a follow-up request on an established connection. The first
+// request rides the handshake flight at sequence zero; each request after it
+// advances the sequence by one.
+pub fn application_request(app: &TrafficKeys, seq: u64, body: &[u8]) -> Option<Vec<u8>> {
+    super::record_seal::seal(app.suite, &app.client_key, &app.client_iv, seq, 23, body)
+}

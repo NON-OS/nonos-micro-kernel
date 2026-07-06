@@ -17,6 +17,7 @@
 mod content_encoding;
 mod content_length;
 mod decode_body;
+mod frame_len;
 mod has_headers;
 mod header_line;
 mod header_value;
@@ -25,6 +26,7 @@ mod parse;
 mod status_code;
 mod types;
 
+pub use frame_len::frame_len;
 pub use has_headers::has_headers;
 pub use is_complete::is_complete;
 pub use parse::parse;

@@ -22,9 +22,19 @@ use crate::browser::tls13;
 pub(in crate::browser::fetch) fn decrypt(f: &Fetch) -> Option<Vec<u8>> {
     let tls = f.tls.as_ref()?;
     // Once the handshake cached the server keys, decrypt straight from them and
-    // skip re-verifying the certificate chain on every read tick.
+    // skip re-verifying the certificate chain on every read tick. On a
+    // kept-alive connection the buffer holds every response since the
+    // handshake, so this fetch's response starts past the consumed prefix.
     if let Some(app) = tls.server_app.as_ref() {
-        return Some(tls13::application_plaintext_cached(app, &f.buf));
+        let mut plain = tls13::application_plaintext_cached(app, &f.buf);
+        if f.rx_consumed > 0 {
+            if f.rx_consumed >= plain.len() {
+                plain.clear();
+            } else {
+                plain.drain(..f.rx_consumed);
+            }
+        }
+        return Some(plain);
     }
     tls13::application_plaintext(&tls.cf, &tls.flight, &f.buf, f.url.host.as_bytes(), tls.now)
 }

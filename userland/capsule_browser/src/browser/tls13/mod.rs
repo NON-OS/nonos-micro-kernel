@@ -18,6 +18,7 @@ mod aad_frame;
 mod aes_gcm;
 mod app_keys;
 mod application_plaintext;
+mod application_request;
 mod application_write;
 mod cert_at;
 mod cert_count;
@@ -75,6 +76,7 @@ mod verify_p384;
 mod verify_rsa;
 
 pub use application_plaintext::{application_plaintext, application_plaintext_cached};
+pub use application_request::application_request;
 pub use application_write::application_write;
 pub use client_flight::client_flight;
 pub use server_complete::server_complete;

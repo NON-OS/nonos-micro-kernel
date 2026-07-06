@@ -81,6 +81,9 @@ pub fn js_pump(state: &mut State) -> bool {
         post: None,
         js_req: true,
         css: false,
+        rx_consumed: 0,
+        tx_seq: 0,
+        keep_uses: 0,
     });
     if let Some(world) = state.world.as_mut() {
         world.net_active = Some(cb);

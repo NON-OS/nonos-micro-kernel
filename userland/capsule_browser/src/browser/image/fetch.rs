@@ -72,6 +72,14 @@ fn next_pending(state: &mut State) -> Option<String> {
 
 fn begin(state: &mut State, target: &str, key: &str) -> Result<(), &'static str> {
     let url = url::parse(target).ok_or("bad url")?;
+    // A kept-alive connection to the same host skips connect and handshake;
+    // a refused reuse falls through to a fresh connection.
+    if state.proxy.is_none() {
+        if let Some(f) = crate::browser::fetch::try_reuse(state, &url, key) {
+            state.fetch = Some(f);
+            return Ok(());
+        }
+    }
     let proxy = state.proxy.clone();
     let (host, port) = match proxy.as_ref() {
         Some(p) => (p.host.as_str(), p.port),
@@ -105,6 +113,9 @@ fn begin(state: &mut State, target: &str, key: &str) -> Result<(), &'static str>
         post: None,
         js_req: false,
         css: false,
+        rx_consumed: 0,
+        tx_seq: 0,
+        keep_uses: 0,
     });
     Ok(())
 }

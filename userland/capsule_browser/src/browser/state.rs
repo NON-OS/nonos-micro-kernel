@@ -57,6 +57,9 @@ pub struct State {
     // Alternates the free socket between script-issued fetches and images so a
     // page whose JS never stops requesting cannot starve image loading.
     pub img_turn: bool,
+    // A TLS connection held open between image fetches, so a run of same-host
+    // images pays a single handshake.
+    pub keep: Option<crate::browser::fetch::KeptConn>,
     // Current content width in pixels, tracked from the paint surface so the
     // page reflows when the window resizes instead of holding a fixed width.
     pub viewport_w: u32,
@@ -97,6 +100,7 @@ impl State {
             image_queue: Vec::new(),
             image_redirects: 0,
             img_turn: false,
+            keep: None,
             viewport_w: crate::browser::manifest::WIDTH,
             css_queue: Vec::new(),
             page_css: String::new(),
