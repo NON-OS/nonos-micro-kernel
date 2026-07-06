@@ -58,8 +58,6 @@ pub use asymmetric::curve25519;
 // The kernel ZK proof verifier (PLONK / range / commitment) over untrusted
 // proof bytes. Self-contained apart from the primitives mirrored above.
 #[allow(
-    unused_imports,
-    dead_code,
     clippy::needless_range_loop,
     clippy::unnecessary_cast,
     clippy::manual_is_multiple_of,
