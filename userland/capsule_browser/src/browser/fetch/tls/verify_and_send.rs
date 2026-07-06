@@ -33,10 +33,20 @@ pub(in crate::browser::fetch) fn verify_and_send(port: u32, f: &mut Fetch) {
         f.phase = Phase::Error;
         return;
     };
+    // The handshake is settled and its inputs no longer change, so derive the
+    // server application keys once now and cache them; response records then
+    // decrypt without repeating certificate verification on every read tick.
+    let server_app =
+        tls13::server_complete(&tls.cf, &tls.flight, host.as_bytes(), tls.now).map(|sc| sc.app);
     if net::socket_send(port, f.handle, &out).is_err() {
         f.error = Some("send failed");
         f.phase = Phase::Error;
         return;
+    }
+    if let Some(app) = server_app {
+        if let Some(tls) = f.tls.as_mut() {
+            tls.server_app = Some(app);
+        }
     }
     f.buf.clear();
     f.phase = Phase::ReadBody;

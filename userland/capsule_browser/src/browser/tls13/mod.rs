@@ -74,7 +74,9 @@ mod verify_p256;
 mod verify_p384;
 mod verify_rsa;
 
-pub use application_plaintext::application_plaintext;
+pub use application_plaintext::{application_plaintext, application_plaintext_cached};
 pub use application_write::application_write;
 pub use client_flight::client_flight;
+pub use server_complete::server_complete;
 pub use server_finished_flight_ready::server_finished_flight_ready;
+pub use traffic_keys::TrafficKeys;
