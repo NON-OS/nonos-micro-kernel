@@ -23,8 +23,6 @@ use super::leaf::leaf;
 use super::tree::{BoxKind, BoxNode};
 use super::walk::{ElementIn, Walk};
 
-// Box for an <input> or <select>: a block carrying its current value or
-// placeholder as a text child. Hidden inputs render nothing.
 pub(super) fn element_field(w: &Walk, item: &ElementIn, style: Computed) -> Option<BoxNode> {
     if item.c.attr("type").is_some_and(|t| t.eq_ignore_ascii_case("hidden")) {
         return None;
