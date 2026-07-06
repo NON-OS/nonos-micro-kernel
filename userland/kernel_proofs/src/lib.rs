@@ -20,6 +20,7 @@
 //! memory access.
 
 pub mod capabilities;
+pub mod elf;
 pub mod memory;
 pub mod syscall;
 pub mod time;
@@ -27,6 +28,8 @@ pub mod usercopy;
 
 #[cfg(test)]
 mod authorization_tests;
+#[cfg(test)]
+mod elf_tests;
 #[cfg(test)]
 mod permissions_tests;
 #[cfg(test)]
