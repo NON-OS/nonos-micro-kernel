@@ -32,6 +32,7 @@ pub fn blit_into(
     box_w: u32,
     box_h: u32,
     fit: ObjectFit,
+    clip: Option<[i32; 4]>,
 ) {
     if img.w == 0 || img.h == 0 || box_w == 0 || box_h == 0 {
         return;
@@ -41,7 +42,7 @@ pub fn blit_into(
     let whole = [0, 0, img.w, img.h];
     match fit {
         // Whole image into the whole box, ignoring aspect ratio.
-        ObjectFit::Fill => draw(fb, img, [x, y, box_w, box_h], whole),
+        ObjectFit::Fill => draw(fb, img, [x, y, box_w, box_h], whole, clip),
         // Whole image into a centred rect that fits inside the box.
         ObjectFit::Contain => {
             let (dw, dh) = if bw * ih <= bh * iw {
@@ -53,7 +54,7 @@ pub fn blit_into(
                 return;
             }
             let dest = [x + (box_w - dw) / 2, y + (box_h - dh) / 2, dw, dh];
-            draw(fb, img, dest, whole);
+            draw(fb, img, dest, whole, clip);
         }
         // A centred crop of the image, with the box's aspect, into the box.
         ObjectFit::Cover => {
@@ -64,21 +65,28 @@ pub fn blit_into(
                 let sw = (ih * bw) / bh;
                 [((iw - sw) / 2) as u32, 0, (sw as u32).max(1), img.h]
             };
-            draw(fb, img, [x, y, box_w, box_h], src);
+            draw(fb, img, [x, y, box_w, box_h], src, clip);
         }
     }
 }
 
 // Bilinear-blit the source rect [sx0, sy0, sw, sh] of `img` into the
-// destination rect [dx, dy, dw, dh].
-fn draw(fb: &mut PaintBuffer, img: &Decoded, dest: [u32; 4], src: [u32; 4]) {
+// destination rect [dx, dy, dw, dh], skipping pixels outside the clip rect so
+// an image stays inside an overflow-hidden or rounded container.
+fn draw(fb: &mut PaintBuffer, img: &Decoded, dest: [u32; 4], src: [u32; 4], clip: Option<[i32; 4]>) {
     let [dx, dy, dw, dh] = dest;
     let [sx0, sy0, sw, sh] = src;
     for j in 0..dh {
         let gy = (sy0 as u64 * 256 + j as u64 * sh as u64 * 256 / dh as u64) as u32;
         for i in 0..dw {
+            let (px, py) = (dx + i, dy + j);
+            if let Some([cx0, cy0, cx1, cy1]) = clip {
+                if (px as i32) < cx0 || px as i32 >= cx1 || (py as i32) < cy0 || py as i32 >= cy1 {
+                    continue;
+                }
+            }
             let gx = (sx0 as u64 * 256 + i as u64 * sw as u64 * 256 / dw as u64) as u32;
-            put(fb, dx + i, dy + j, sample(img, gx, gy));
+            put(fb, px, py, sample(img, gx, gy));
         }
     }
 }
