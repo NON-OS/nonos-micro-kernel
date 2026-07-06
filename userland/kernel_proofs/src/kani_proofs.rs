@@ -49,6 +49,25 @@ fn syscall_decode_is_total() {
     let _ = crate::syscall::numbers::SyscallNumber::from_u64(id);
 }
 
+// The marshalling agreement, over every possible id: the number decode, the
+// registry id lookup, and the registry name lookup accept exactly the same
+// set of untrusted u64 values, and an accepted id resolves to an entry whose
+// id round-trips. A syscall id can never decode to a number the dispatch
+// table does not route, and never routes without a decodable number.
+#[kani::proof]
+fn syscall_id_decode_and_registry_agree_for_all_ids() {
+    let id: u64 = kani::any();
+    let decoded = crate::syscall::numbers::SyscallNumber::from_u64(id);
+    let by_id = crate::syscall::abi::lookup_id(id);
+    let by_name = crate::syscall::abi::lookup_name(id);
+    assert!(decoded.is_some() == by_id.is_some());
+    assert!(decoded.is_some() == by_name.is_some());
+    if let (Some(d), Some(r)) = (decoded, by_id) {
+        assert!(d == r);
+        assert!(d as u64 == id);
+    }
+}
+
 // For every address/length: `check_range` is total, and an accepted non-empty
 // range lies inside user space without wrapping.
 #[kani::proof]
