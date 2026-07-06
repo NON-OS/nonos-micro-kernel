@@ -28,7 +28,7 @@ pub fn relayout(state: &mut State) {
     css_text.push_str(&state.page_css);
     let styled = css::compute_cached(dom, &css_text, &mut state.css_cache);
     let root = layout::boxmodel::build(dom, &styled.styles, &styled.bg_images);
-    let doc = layout::boxmodel::layout(&root, crate::browser::manifest::WIDTH);
+    let doc = layout::boxmodel::layout(&root, state.viewport_w);
     state.box_doc = Some(doc);
     crate::browser::image::enqueue_from_doc(state);
 }
