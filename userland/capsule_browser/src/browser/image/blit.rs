@@ -27,14 +27,13 @@ use super::store::Decoded;
 pub fn blit_into(
     fb: &mut PaintBuffer,
     img: &Decoded,
-    x: u32,
-    y: u32,
-    box_w: u32,
-    box_h: u32,
+    dest: [u32; 4],
     fit: ObjectFit,
+    alpha: u8,
     clip: Option<[i32; 4]>,
 ) {
-    if img.w == 0 || img.h == 0 || box_w == 0 || box_h == 0 {
+    let [x, y, box_w, box_h] = dest;
+    if img.w == 0 || img.h == 0 || box_w == 0 || box_h == 0 || alpha == 0 {
         return;
     }
     let (iw, ih) = (img.w as u64, img.h as u64);
@@ -42,7 +41,7 @@ pub fn blit_into(
     let whole = [0, 0, img.w, img.h];
     match fit {
         // Whole image into the whole box, ignoring aspect ratio.
-        ObjectFit::Fill => draw(fb, img, [x, y, box_w, box_h], whole, clip),
+        ObjectFit::Fill => draw(fb, img, [x, y, box_w, box_h], whole, alpha, clip),
         // Whole image into a centred rect that fits inside the box.
         ObjectFit::Contain => {
             let (dw, dh) = if bw * ih <= bh * iw {
@@ -54,7 +53,7 @@ pub fn blit_into(
                 return;
             }
             let dest = [x + (box_w - dw) / 2, y + (box_h - dh) / 2, dw, dh];
-            draw(fb, img, dest, whole, clip);
+            draw(fb, img, dest, whole, alpha, clip);
         }
         // A centred crop of the image, with the box's aspect, into the box.
         ObjectFit::Cover => {
@@ -65,7 +64,7 @@ pub fn blit_into(
                 let sw = (ih * bw) / bh;
                 [((iw - sw) / 2) as u32, 0, (sw as u32).max(1), img.h]
             };
-            draw(fb, img, [x, y, box_w, box_h], src, clip);
+            draw(fb, img, [x, y, box_w, box_h], src, alpha, clip);
         }
     }
 }
@@ -78,6 +77,7 @@ fn draw(
     img: &Decoded,
     dest: [u32; 4],
     src: [u32; 4],
+    alpha: u8,
     clip: Option<[i32; 4]>,
 ) {
     let [dx, dy, dw, dh] = dest;
@@ -92,7 +92,7 @@ fn draw(
                 }
             }
             let gx = (sx0 as u64 * 256 + i as u64 * sw as u64 * 256 / dw as u64) as u32;
-            put(fb, px, py, sample(img, gx, gy));
+            put(fb, px, py, sample(img, gx, gy), alpha);
         }
     }
 }
@@ -121,7 +121,7 @@ fn sample(img: &Decoded, gx: u32, gy: u32) -> u32 {
     (chan(24) << 24) | (chan(16) << 16) | (chan(8) << 8) | chan(0)
 }
 
-fn put(fb: &mut PaintBuffer, x: u32, y: u32, argb: u32) {
+fn put(fb: &mut PaintBuffer, x: u32, y: u32, argb: u32, alpha: u8) {
     if x >= fb.width || y >= fb.height {
         return;
     }
@@ -129,7 +129,8 @@ fn put(fb: &mut PaintBuffer, x: u32, y: u32, argb: u32) {
     if idx >= fb.pixels.len() {
         return;
     }
-    let a = (argb >> 24) & 0xff;
+    // The fragment opacity scales the pixel's own alpha.
+    let a = (((argb >> 24) & 0xff) * alpha as u32) / 255;
     if a == 0 {
         return;
     }

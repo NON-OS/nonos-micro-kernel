@@ -42,6 +42,7 @@ pub fn layout(root: &BoxNode, viewport_w: u32) -> BoxDocument {
         z: 0,
         fixed: false,
         sticky: None,
+        alpha: 255,
     };
     let h = layout_box(root, ml, mt, avail, &mut frags, 0, ctx);
     frags.sort_by_key(|f| f.z);

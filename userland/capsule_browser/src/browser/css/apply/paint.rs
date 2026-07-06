@@ -57,6 +57,13 @@ pub(super) fn apply_paint(c: &mut Computed, name: &str, value: &str, fs: u32) ->
             "visible" | "auto" | "scroll" => c.overflow_hidden = false,
             _ => {}
         },
+        "opacity" => {
+            if let Ok(v) = value.trim().parse::<f32>() {
+                if (0.0..=1.0).contains(&v) {
+                    c.opacity = (v * 255.0) as u8;
+                }
+            }
+        }
         "z-index" => {
             if let Ok(z) = value.trim().parse::<i32>() {
                 c.z = z.clamp(-999, 999);

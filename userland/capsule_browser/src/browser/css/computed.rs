@@ -135,6 +135,8 @@ pub struct Computed {
     pub font_key: u32,
     pub bg_size: BgSize,
     pub bg_repeat: bool,
+    // Element opacity 0..255; multiplies down the subtree at layout.
+    pub opacity: u8,
     // Extra advance in px between glyphs, letter-spacing; inherited, may be
     // negative for tightened headings.
     pub letter_spacing: f32,
@@ -219,6 +221,7 @@ impl Computed {
             font_key: 0,
             bg_size: BgSize::Auto,
             bg_repeat: true,
+            opacity: 255,
             letter_spacing: 0.0,
             underline: false,
             line_height_px: 0,

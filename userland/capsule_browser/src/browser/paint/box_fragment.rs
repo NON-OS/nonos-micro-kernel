@@ -41,25 +41,27 @@ pub(super) fn box_fragment(
     if let Some(s) = f.shadow.as_ref() {
         super::shadow::paint_shadow(fb, s, f.x, sy, f.w, f.h);
     }
-    if f.bg != 0 {
-        fill_rounded(fb, f.x, sy, f.w, f.h, f.radius, f.bg, clip);
+    let bg = super::fade::fade(f.bg, f.alpha);
+    if bg != 0 {
+        fill_rounded(fb, f.x, sy, f.w, f.h, f.radius, bg, clip);
     }
     // A decoded background image paints over the color and behind content.
     super::bg_image::paint_bg_image(state, fb, f, sy, bottom, clip);
     // Border edges shorten by the corner radius on each end.
+    let edge = super::fade::fade(f.border_color, f.alpha);
     let r = f.radius as i32;
     let [bt, br, bb, bl] = f.border;
     if bt > 0 {
-        fill_page(fb, f.x + r, sy, f.w - 2 * r, bt as i32, f.border_color, clip);
+        fill_page(fb, f.x + r, sy, f.w - 2 * r, bt as i32, edge, clip);
     }
     if bb > 0 {
-        fill_page(fb, f.x + r, sy + f.h - bb as i32, f.w - 2 * r, bb as i32, f.border_color, clip);
+        fill_page(fb, f.x + r, sy + f.h - bb as i32, f.w - 2 * r, bb as i32, edge, clip);
     }
     if bl > 0 {
-        fill_page(fb, f.x, sy + r, bl as i32, f.h - 2 * r, f.border_color, clip);
+        fill_page(fb, f.x, sy + r, bl as i32, f.h - 2 * r, edge, clip);
     }
     if br > 0 {
-        fill_page(fb, f.x + f.w - br as i32, sy + r, br as i32, f.h - 2 * r, f.border_color, clip);
+        fill_page(fb, f.x + f.w - br as i32, sy + r, br as i32, f.h - 2 * r, edge, clip);
     }
     // Text and images draw only when their box sits fully inside the page
     // area and clip; the framebuffer has no clip for glyph or raster runs.
@@ -74,6 +76,7 @@ pub(super) fn box_fragment(
     match &f.content {
         Content::None => {}
         Content::Text { text, color, px, bold, mono, underline, font, spacing } => {
+            let color = super::fade::fade(*color, f.alpha);
             let ty = sy + (f.h - *px as i32).max(0) / 2;
             let run = |x: i32| crate::browser::fonts::TextRun {
                 key: *font,
@@ -86,12 +89,12 @@ pub(super) fn box_fragment(
             };
             // A true bold cut needs no thickening; the fake second pass only
             // remains for faces that never shipped one, the mono cut mostly.
-            let real_bold = crate::browser::fonts::draw_text(fb, run(f.x), text, *color);
+            let real_bold = crate::browser::fonts::draw_text(fb, run(f.x), text, color);
             if *bold && !real_bold {
-                crate::browser::fonts::draw_text(fb, run(f.x + 1), text, *color);
+                crate::browser::fonts::draw_text(fb, run(f.x + 1), text, color);
             }
             if *underline {
-                fill_page(fb, f.x, sy + f.h - 2, f.w, 1, *color, clip);
+                fill_page(fb, f.x, sy + f.h - 2, f.w, 1, color, clip);
             }
         }
         Content::Image { src, alt, fit } => {
@@ -107,11 +110,9 @@ pub(super) fn box_fragment(
                 crate::browser::image::blit_into(
                     fb,
                     img,
-                    f.x.max(0) as u32,
-                    sy.max(0) as u32,
-                    f.w.max(0) as u32,
-                    f.h.max(0) as u32,
+                    [f.x.max(0) as u32, sy.max(0) as u32, f.w.max(0) as u32, f.h.max(0) as u32],
                     *fit,
+                    f.alpha,
                     clip,
                 );
             } else {

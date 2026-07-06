@@ -44,11 +44,9 @@ pub(super) fn paint_tiles(
         crate::browser::image::blit_into(
             fb,
             img,
-            bx,
-            by,
-            tw.min(bw),
-            th.min(bh),
+            [bx, by, tw.min(bw), th.min(bh)],
             ObjectFit::Fill,
+            f.alpha,
             clip,
         );
         return;
@@ -57,7 +55,14 @@ pub(super) fn paint_tiles(
     let cols = (bw + tw - 1) / tw;
     let rows = (bh + th - 1) / th;
     if cols.saturating_mul(rows) > 4096 {
-        crate::browser::image::blit_into(fb, img, bx, by, bw, bh, ObjectFit::Cover, clip);
+        crate::browser::image::blit_into(
+            fb,
+            img,
+            [bx, by, bw, bh],
+            ObjectFit::Cover,
+            f.alpha,
+            clip,
+        );
         return;
     }
     for r in 0..rows {
@@ -65,11 +70,9 @@ pub(super) fn paint_tiles(
             crate::browser::image::blit_into(
                 fb,
                 img,
-                bx + c * tw,
-                by + r * th,
-                tw,
-                th,
+                [bx + c * tw, by + r * th, tw, th],
                 ObjectFit::Fill,
+                f.alpha,
                 clip,
             );
         }

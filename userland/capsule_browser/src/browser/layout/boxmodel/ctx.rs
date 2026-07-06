@@ -28,6 +28,8 @@ pub(super) struct Ctx {
     // Inside a sticky subtree: the sticky box's flow y and its top offset,
     // so paint can clamp the whole subtree with one shift.
     pub sticky: Option<(i32, i32)>,
+    // Accumulated opacity of the ancestors, 255 fully opaque.
+    pub alpha: u8,
 }
 
 impl Ctx {

@@ -14,18 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod bg_image;
-mod bg_tile;
-mod box_fragment;
-mod box_page;
-pub mod chrome;
-pub mod document;
-mod fade;
-mod fill_page;
-mod fill_rounded;
-mod grad;
-pub mod home_page;
-mod paint;
-mod shadow;
-
-pub use paint::paint;
+// Scale a color's alpha channel by the fragment opacity, leaving fully
+// transparent (unset) colors untouched.
+pub(super) fn fade(color: u32, alpha: u8) -> u32 {
+    if alpha == 255 || color == 0 {
+        return color;
+    }
+    let a = ((color >> 24) as u16 * alpha as u16) / 255;
+    ((a as u32) << 24) | (color & 0x00ff_ffff)
+}

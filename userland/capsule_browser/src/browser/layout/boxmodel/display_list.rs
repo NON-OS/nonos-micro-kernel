@@ -54,6 +54,8 @@ pub struct Fragment {
     pub fixed: bool,
     // Sticky anchor (flow y, top offset) shared by the sticky subtree.
     pub sticky: Option<(i32, i32)>,
+    // Effective opacity for everything this fragment paints.
+    pub alpha: u8,
     // background-image url to fetch and paint behind the box content.
     pub bg_image: Option<alloc::string::String>,
     pub bg_size: crate::browser::css::BgSize,
