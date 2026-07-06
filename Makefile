@@ -676,6 +676,7 @@ include userland/capsule_net_udp/Capsule.mk
 include userland/capsule_net_dhcp/Capsule.mk
 include userland/capsule_net_tcp/Capsule.mk
 include userland/capsule_net_dns/Capsule.mk
+include userland/capsule_net_ntp/Capsule.mk
 include userland/capsule_net_sockets/Capsule.mk
 include userland/capsule_net_nym/Capsule.mk
 include userland/capsule_wallpaper/Capsule.mk
@@ -1128,6 +1129,28 @@ nonos-mk-net-dhcp-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-net-dhcp
+
+nonos-mk-ntp-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
+		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
+		$(net-dhcp_ARTIFACTS) $(net-ntp_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-net-ntp)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-net-ntp
+
+nonos-mk-ntp-sign: $(net-ntp_ARTIFACTS)
+
+nonos-mk-ntp-test: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
+		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
+		$(net-dhcp_ARTIFACTS) $(net-ntp_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (nonos-ntp-smoketest)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features nonos-ntp-smoketest
 
 nonos-mk-net-nym-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-core_ARTIFACTS) $(net-nym_ARTIFACTS) \
