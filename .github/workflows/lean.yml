@@ -2,7 +2,8 @@
 # Copyright (C) 2026 NONOS Contributors
 #
 # Verifies the Lean 4 specification proofs. `lake build` reports 0 errors only
-# when every theorem checks.
+# when every theorem checks. elan reads verification/lean/lean-toolchain to pick
+# the pinned Lean version, and lake generates its manifest on first build.
 name: lean
 on:
   push:
@@ -13,6 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
-        with:
-          lake-package-directory: verification/lean
+      - name: Install elan
+        run: |
+          set -euo pipefail
+          curl -fsSL https://elan.lean-lang.org/elan-init.sh -o elan-init.sh
+          bash elan-init.sh -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Verify theorems (lake build)
+        run: lake build
+        working-directory: verification/lean
