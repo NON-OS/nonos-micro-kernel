@@ -10,3 +10,5 @@ pub mod crypto;
 mod field_tests;
 #[cfg(test)]
 mod merkle_tests;
+#[cfg(test)]
+mod poly_tests;

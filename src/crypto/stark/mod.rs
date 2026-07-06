@@ -9,3 +9,4 @@
 
 pub mod field;
 pub mod merkle;
+pub mod poly;
