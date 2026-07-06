@@ -14,25 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{AppManifest, WindowKind};
+use crate::clock::fixed::{cos_deg, sin_deg, SCALE};
 
-pub const WIDTH: u32 = 360;
-pub const HEIGHT: u32 = 440;
-const WINDOW_ID: u32 = 0x434C_4F4B;
-const TITLE: &[u8] = b"Clock";
-const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
-const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
-const INPUT_MASK: u32 = INPUT_BUTTON_DOWN_BIT | INPUT_POINTER_ABS_BIT;
+pub fn hour_angle(h: u8, m: u8) -> i32 {
+    (h as i32 % 12) * 30 + m as i32 / 2
+}
 
-pub fn manifest() -> AppManifest {
-    AppManifest {
-        title: TITLE,
-        window_id: WINDOW_ID,
-        kind: WindowKind::Normal,
-        initial_x: 820,
-        initial_y: 120,
-        width: WIDTH,
-        height: HEIGHT,
-        input_kind_mask: INPUT_MASK,
-    }
+pub fn minute_angle(m: u8, s: u8) -> i32 {
+    m as i32 * 6 + s as i32 / 10
+}
+
+pub fn second_angle(s: u8) -> i32 {
+    s as i32 * 6
+}
+
+pub fn hand_end(cx: i32, cy: i32, angle: i32, len: i32) -> (i32, i32) {
+    let x = cx + len * sin_deg(angle) / SCALE;
+    let y = cy - len * cos_deg(angle) / SCALE;
+    (x, y)
 }
