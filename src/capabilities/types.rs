@@ -47,6 +47,7 @@ pub enum Capability {
     Dma,
     Pio,
     InputSource,
+    TimeSet,
 }
 
 impl Capability {
@@ -75,10 +76,11 @@ impl Capability {
             Self::Dma => 524288,
             Self::Pio => 1048576,
             Self::InputSource => 2097152,
+            Self::TimeSet => 4194304,
         }
     }
 
-    pub const fn all() -> [Capability; 22] {
+    pub const fn all() -> [Capability; 23] {
         [
             Self::CoreExec,
             Self::IO,
@@ -102,6 +104,7 @@ impl Capability {
             Self::Dma,
             Self::Pio,
             Self::InputSource,
+            Self::TimeSet,
         ]
     }
 
@@ -129,11 +132,12 @@ impl Capability {
             Self::Dma => "Dma",
             Self::Pio => "Pio",
             Self::InputSource => "InputSource",
+            Self::TimeSet => "TimeSet",
         }
     }
 
     pub const fn count() -> usize {
-        22
+        23
     }
 }
 
