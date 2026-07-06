@@ -41,9 +41,8 @@ theorem no_wx_page (p : Perm) (h : ¬ IsWxViolation p) :
     if its permission is a W^X violation. So rejecting `IsWxViolation` is both
     necessary and sufficient to keep W+X pages off the tables. -/
 theorem wx_page_iff_violation (p : Perm) :
-    (pteWritable p = true ∧ pteExecutable p = true) ↔ IsWxViolation p := by
-  unfold IsWxViolation pteWritable pteExecutable
-  tauto
+    (pteWritable p = true ∧ pteExecutable p = true) ↔ IsWxViolation p :=
+  Iff.rfl
 
 /-- The last user address and the maximum single-copy length. -/
 def userEnd : Nat := 0x7FFFFFFFFFFF

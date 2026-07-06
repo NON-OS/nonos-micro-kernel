@@ -66,17 +66,17 @@ theorem attenuate_confined_by_mask (c mask : Caps) (x : Nat)
     no residual authority to strip on a second pass. -/
 theorem attenuate_idempotent (c mask : Caps) (x : Nat) :
     Grants (attenuate (attenuate c mask) mask) x ↔ Grants (attenuate c mask) x := by
-  unfold Grants attenuate; simp only [Bool.and_eq_true]; tauto
+  unfold Grants attenuate; simp
 
 /-- The order of two attenuations does not matter. -/
 theorem attenuate_comm (c m1 m2 : Caps) (x : Nat) :
     Grants (attenuate (attenuate c m1) m2) x ↔ Grants (attenuate (attenuate c m2) m1) x := by
-  unfold Grants attenuate; simp only [Bool.and_eq_true]; tauto
+  unfold Grants attenuate; simp
 
 /-- Revoking a capability twice equals revoking it once. -/
 theorem revoke_idempotent (c : Caps) (b x : Nat) :
     Grants (revoke (revoke c b) b) x ↔ Grants (revoke c b) x := by
-  unfold Grants revoke; simp only [Bool.and_eq_true]; tauto
+  unfold Grants revoke; simp
 
 /-- A grant cannot survive a following revoke of the same capability: revoking
     after granting is the same as revoking directly. -/

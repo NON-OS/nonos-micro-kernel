@@ -71,8 +71,10 @@ theorem update_raises_to_max (s : State) (v : Nat) (h : Accepts s v) :
     identical update. -/
 theorem update_stable (s : State) (v : Nat) (h : Accepts s v) :
     (update (update s v) v).floor = (update s v).floor := by
-  rw [update_raises_to_max s v h]
   have hfloor : s.floor ≤ v := h.2
+  have hus : update s v = { floor := max s.floor v } := by
+    unfold update; rw [if_pos h]
+  rw [hus]
   have h2 : Accepts { floor := max s.floor v } v := by
     refine ⟨h.1, ?_⟩
     show max s.floor v ≤ v
