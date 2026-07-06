@@ -26,6 +26,9 @@ the *code*:
 | `Isolation.no_wx_page` | `userland/kernel_proofs` W^X (`to_pte_flags`, runnable + Kani) |
 | `Isolation.accepted_stays_in_user_space` | `userland/kernel_proofs` user-copy (`check_range`, runnable + Kani) |
 | `Authorization.empty_token_denied` / `allow_monotone` | `userland/kernel_proofs` cap-table (`is_allowed`, runnable) |
+| `Ipc.zero_length_rejected` / `oversized_rejected` | Verus `ipc_lengths.rs` + `IpcMessage::new` |
+| `Paging.subset_trans` / `confined_preserves_no_wx` | Verus `page_permissions.rs` (bit ops) |
+| `Crypto.wrong_tag_rejected` / `acceptance_iff_equal` | `userland/crypto_proofs` `ct_eq` correctness + KATs (#265) |
 
 The proofs use only core Lean (no mathlib), so any recent `leanprover/lean4`
 toolchain checks them.
