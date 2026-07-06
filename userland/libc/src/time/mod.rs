@@ -18,4 +18,4 @@ mod rtc;
 mod wall;
 
 pub use rtc::{mk_time_rtc, RtcTime};
-pub use wall::mk_time_millis;
+pub use wall::{mk_time_adjust, mk_time_millis};
