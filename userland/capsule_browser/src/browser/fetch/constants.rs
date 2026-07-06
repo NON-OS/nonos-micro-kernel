@@ -22,6 +22,5 @@ pub(super) const MAX_FETCH_MS: i64 = 12000;
 pub(super) const MAX_REDIRECTS: u8 = 5;
 pub(super) const DRAIN_BURST: usize = 64;
 pub(super) const HS_WAIT: u32 = 200;
-pub(super) const CHECK_STRIDE: usize = 16 * 1024;
 pub(super) const MAX_RETRIES: u8 = 2;
 pub(super) const FLIGHT_SETTLE: u32 = 15;
