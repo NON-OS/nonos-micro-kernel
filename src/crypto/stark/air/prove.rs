@@ -14,16 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The STARK prover. Interpolate the trace, extend it onto an evaluation coset,
-//! commit it, build the constraint composition, prove that composition is low
-//! degree with FRI, and open the sampled consistency positions.
+//! The STARK prover, generic over any AIR. Interpolate the trace, extend it onto
+//! an evaluation coset, commit it, build the constraint composition, prove that
+//! composition is low degree with FRI, and open the sampled window positions.
 
 use super::super::field::Fp;
 use super::super::fri::{fri_prove, root_of_unity};
 use super::super::merkle::MerkleTree;
 use super::super::poly::eval_lagrange;
 use super::super::transcript::Transcript;
-use super::constraints::{quotients, AirParams};
+use super::composition::{compose, num_coeffs};
+use super::spec::Air;
 use super::types::{StarkProof, StarkQuery};
 use alloc::vec::Vec;
 
@@ -31,22 +32,22 @@ use alloc::vec::Vec;
 /// meets the trace subgroup.
 const SHIFT: u64 = 7;
 
-/// Prove that `trace` (length a power of two, `t[i+1] = t[i]^2`) satisfies the
-/// squaring AIR with boundary `t[0]`. The evaluation domain is `2^log_blowup`
-/// times the trace length.
-pub fn stark_prove(trace: &[Fp], log_blowup: u32, n_queries: usize) -> StarkProof {
-    let t = trace.len();
-    let log_t = t.trailing_zeros();
+/// Prove that `trace` satisfies `air` on an evaluation domain `2^log_blowup`
+/// times the trace length. `trace.len()` must equal the AIR's trace length.
+pub fn stark_prove<A: Air>(air: &A, trace: &[Fp], log_blowup: u32, n_queries: usize) -> StarkProof {
+    let log_t = air.log_trace_len();
+    let t = 1usize << log_t;
     let log_n = log_t + log_blowup;
     let n = 1usize << log_n;
     let blowup = 1usize << log_blowup;
+    let window_size = air.window_size();
 
     let g = root_of_unity(log_t);
     let omega = root_of_unity(log_n);
     let shift = Fp::from_u64(SHIFT);
 
-    // Trace-domain points g^i and the low-degree extension of the trace onto the
-    // coset D = shift * {omega^j}, by Lagrange interpolation.
+    // Trace-domain points g^i, then the low-degree extension of the trace onto
+    // the coset D = shift * {omega^j} by Lagrange interpolation.
     let mut h_pts: Vec<Fp> = Vec::with_capacity(t);
     let mut hp = Fp::ONE;
     for _ in 0..t {
@@ -63,21 +64,21 @@ pub fn stark_prove(trace: &[Fp], log_blowup: u32, n_queries: usize) -> StarkProo
     let trace_tree = MerkleTree::commit(&trace_d);
     let trace_root = trace_tree.root();
 
-    // Composition coefficients are drawn after the trace is committed.
+    // Composition coefficients, drawn after the trace is committed.
     let mut transcript = Transcript::new(b"NONOS-STARK");
     transcript.absorb_digest(&trace_root);
-    let alpha = transcript.challenge_fp();
-    let beta = transcript.challenge_fp();
+    let coeffs: Vec<Fp> = (0..num_coeffs(air)).map(|_| transcript.challenge_fp()).collect();
 
-    let params = AirParams { log_t, seed: trace[0], g_last: g.pow((t - 1) as u64) };
-
-    // The constraint composition over the coset.
+    // The constraint composition over the coset. The window at position j reads
+    // the trace j, j+blowup, ... which are exactly f(x), f(g*x), ... on D.
     let mut comp_d: Vec<Fp> = Vec::with_capacity(n);
     let mut x = shift;
-    for (j, &f_x) in trace_d.iter().enumerate() {
-        let f_gx = trace_d[(j + blowup) % n];
-        let (q_transition, q_boundary) = quotients(&params, x, f_x, f_gx);
-        comp_d.push(alpha * q_transition + beta * q_boundary);
+    for j in 0..n {
+        let mut window: Vec<Fp> = Vec::with_capacity(window_size);
+        for k in 0..window_size {
+            window.push(trace_d[(j + k * blowup) % n]);
+        }
+        comp_d.push(compose(air, g, x, &window, &coeffs));
         x = x * omega;
     }
 
@@ -90,14 +91,18 @@ pub fn stark_prove(trace: &[Fp], log_blowup: u32, n_queries: usize) -> StarkProo
     let mut queries: Vec<StarkQuery> = Vec::with_capacity(n_queries);
     for _ in 0..n_queries {
         let p = transcript.challenge_index(n);
-        let gx = (p + blowup) % n;
+        let mut window: Vec<Fp> = Vec::with_capacity(window_size);
+        let mut window_paths: Vec<Vec<[u8; 32]>> = Vec::with_capacity(window_size);
+        for k in 0..window_size {
+            let idx = (p + k * blowup) % n;
+            window.push(trace_d[idx]);
+            window_paths.push(trace_tree.open(idx));
+        }
         queries.push(StarkQuery {
             comp: comp_d[p],
             comp_path: comp_tree.open(p),
-            t_x: trace_d[p],
-            t_x_path: trace_tree.open(p),
-            t_gx: trace_d[gx],
-            t_gx_path: trace_tree.open(gx),
+            window,
+            window_paths,
         });
     }
 

@@ -14,34 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The STARK verifier. It checks the composition is low degree through FRI, then
-//! at each sampled position checks the committed composition equals the
-//! constraint composition recomputed from the committed trace. A false trace
-//! yields either a high-degree composition (FRI rejects) or a composition that
-//! disagrees with the trace (consistency rejects). It only reads the proof.
+//! The STARK verifier, generic over any AIR. It checks the composition is low
+//! degree through FRI, then at each sampled position checks the committed
+//! composition equals the constraint composition recomputed from the committed
+//! trace window. A false trace yields either a high-degree composition (FRI
+//! rejects) or one that disagrees with the trace (consistency rejects). It only
+//! reads the proof and never panics.
 
 use super::super::field::Fp;
 use super::super::fri::{fri_verify, root_of_unity};
 use super::super::merkle::verify_path;
 use super::super::transcript::Transcript;
-use super::constraints::{quotients, AirParams};
+use super::composition::{compose, num_coeffs};
+use super::spec::Air;
 use super::types::StarkProof;
+use alloc::vec::Vec;
 
 const SHIFT: u64 = 7;
 
-/// Verify a squaring-AIR STARK proof for a trace of length `2^log_t` on an
-/// evaluation domain `2^log_blowup` times larger, with public boundary `seed`.
-pub fn stark_verify(
+/// Verify `proof` against `air` on an evaluation domain `2^log_blowup` times the
+/// trace length.
+pub fn stark_verify<A: Air>(
+    air: &A,
     proof: &StarkProof,
-    seed: Fp,
-    log_t: u32,
     log_blowup: u32,
     n_queries: usize,
 ) -> bool {
-    let t = 1usize << log_t;
+    let log_t = air.log_trace_len();
     let log_n = log_t + log_blowup;
     let n = 1usize << log_n;
     let blowup = 1usize << log_blowup;
+    let window_size = air.window_size();
 
     if proof.queries.len() != n_queries {
         return false;
@@ -50,7 +53,6 @@ pub fn stark_verify(
     let g = root_of_unity(log_t);
     let omega = root_of_unity(log_n);
     let shift = Fp::from_u64(SHIFT);
-    let params = AirParams { log_t, seed, g_last: g.pow((t - 1) as u64) };
 
     // 1. The composition must be low degree (below the trace length).
     if !fri_verify(&proof.fri, shift, log_n, log_blowup, n_queries) {
@@ -58,27 +60,30 @@ pub fn stark_verify(
     }
     let comp_root = proof.fri.roots[0];
 
-    // 2. Recover the composition coefficients and the query positions.
+    // 2. Recover the composition coefficients and query positions.
     let mut transcript = Transcript::new(b"NONOS-STARK");
     transcript.absorb_digest(&proof.trace_root);
-    let alpha = transcript.challenge_fp();
-    let beta = transcript.challenge_fp();
+    let coeffs: Vec<Fp> = (0..num_coeffs(air)).map(|_| transcript.challenge_fp()).collect();
     transcript.absorb_digest(&comp_root);
 
     // 3. The committed composition must equal the constraint composition of the
-    // committed trace at every sampled position.
+    // committed trace window at every sampled position.
     for qd in &proof.queries {
         let p = transcript.challenge_index(n);
-        let gx = (p + blowup) % n;
-        if !verify_path(&comp_root, p, qd.comp, &qd.comp_path)
-            || !verify_path(&proof.trace_root, p, qd.t_x, &qd.t_x_path)
-            || !verify_path(&proof.trace_root, gx, qd.t_gx, &qd.t_gx_path)
-        {
+        if qd.window.len() != window_size || qd.window_paths.len() != window_size {
             return false;
         }
+        if !verify_path(&comp_root, p, qd.comp, &qd.comp_path) {
+            return false;
+        }
+        for k in 0..window_size {
+            let idx = (p + k * blowup) % n;
+            if !verify_path(&proof.trace_root, idx, qd.window[k], &qd.window_paths[k]) {
+                return false;
+            }
+        }
         let x = shift * omega.pow(p as u64);
-        let (q_transition, q_boundary) = quotients(&params, x, qd.t_x, qd.t_gx);
-        if qd.comp != alpha * q_transition + beta * q_boundary {
+        if qd.comp != compose(air, g, x, &qd.window, &coeffs) {
             return false;
         }
     }

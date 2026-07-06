@@ -15,17 +15,24 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! An end-to-end STARK over an algebraic intermediate representation. A trace is
-//! interpolated and extended onto an evaluation coset, the constraints become a
+//! interpolated and extended onto an evaluation coset, its constraints become a
 //! composition polynomial, FRI proves that composition is low degree, and query
-//! openings bind it to the committed trace. This closes the transparent,
-//! post-quantum proof system: the verifier is proven against forgeries, not
-//! assumed sound.
+//! openings bind it to the committed trace. The AIR is a trait, so one engine
+//! proves any computation expressed as a trace with transition and boundary
+//! constraints. This closes the transparent, post-quantum proof system: the
+//! verifier is proven against forgeries, not assumed sound.
 
-mod constraints;
+mod composition;
+mod fibonacci;
 mod prove;
+mod spec;
+mod squaring;
 mod types;
 mod verify;
 
+pub use fibonacci::Fibonacci;
 pub use prove::stark_prove;
+pub use spec::Air;
+pub use squaring::Squaring;
 pub use types::{StarkProof, StarkQuery};
 pub use verify::stark_verify;

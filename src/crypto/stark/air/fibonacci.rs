@@ -14,26 +14,38 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The STARK proof: a trace commitment, a FRI proof that the constraint
-//! composition is low degree, and per-query openings that bind the composition
-//! back to the committed trace over the whole constraint window.
+//! The Fibonacci AIR: `t[i+2] = t[i+1] + t[i]` from `t[0] = t[1] = 1`. A second,
+//! structurally different computation, proven by the same engine as squaring,
+//! which is what shows the AIR layer is general and not fitted to one problem.
 
 use super::super::field::Fp;
-use super::super::fri::FriProof;
+use super::spec::Air;
+use alloc::vec;
 use alloc::vec::Vec;
 
-/// One consistency query: the composition value at position `p`, and the trace
-/// values across the constraint window starting at `p`, each with a Merkle path.
-pub struct StarkQuery {
-    pub comp: Fp,
-    pub comp_path: Vec<[u8; 32]>,
-    pub window: Vec<Fp>,
-    pub window_paths: Vec<Vec<[u8; 32]>>,
+pub struct Fibonacci {
+    pub log_t: u32,
 }
 
-/// A complete STARK proof.
-pub struct StarkProof {
-    pub trace_root: [u8; 32],
-    pub fri: FriProof,
-    pub queries: Vec<StarkQuery>,
+impl Air for Fibonacci {
+    fn log_trace_len(&self) -> u32 {
+        self.log_t
+    }
+
+    fn window_size(&self) -> usize {
+        3
+    }
+
+    fn num_transition(&self) -> usize {
+        1
+    }
+
+    fn transition(&self, window: &[Fp]) -> Vec<Fp> {
+        // f(g^2*x) - f(g*x) - f(x)
+        vec![window[2] - window[1] - window[0]]
+    }
+
+    fn boundary(&self) -> Vec<(usize, Fp)> {
+        vec![(0, Fp::ONE), (1, Fp::ONE)]
+    }
 }
