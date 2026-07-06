@@ -14,11 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
+use core::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 
 pub static TSC_HZ: AtomicU64 = AtomicU64::new(0);
 pub static BOOT_UNIX_MS: AtomicU64 = AtomicU64::new(0);
 pub static BOOT_TSC: AtomicU64 = AtomicU64::new(0);
+pub static NTP_OFFSET_MS: AtomicI64 = AtomicI64::new(0);
 
 pub fn init(tsc_hz: u64, unix_epoch_ms: u64) {
     TSC_HZ.store(tsc_hz, Ordering::Relaxed);
@@ -36,7 +37,7 @@ pub fn rdtsc() -> u64 {
     }
 }
 
-pub fn unix_ms() -> u64 {
+pub fn base_unix_ms() -> u64 {
     let tsc_hz = TSC_HZ.load(Ordering::Relaxed);
     if tsc_hz == 0 {
         return crate::time::timestamp_millis();
@@ -49,4 +50,17 @@ pub fn unix_ms() -> u64 {
     let elapsed_ms = (elapsed_tsc * 1000) / tsc_hz;
 
     BOOT_UNIX_MS.load(Ordering::Relaxed) + elapsed_ms
+}
+
+pub fn unix_ms() -> u64 {
+    let adjusted = base_unix_ms() as i64 + NTP_OFFSET_MS.load(Ordering::Relaxed);
+    if adjusted < 0 {
+        0
+    } else {
+        adjusted as u64
+    }
+}
+
+pub fn set_ntp_offset_ms(offset: i64) {
+    NTP_OFFSET_MS.store(offset, Ordering::Relaxed);
 }
