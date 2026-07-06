@@ -19,8 +19,9 @@ use nonos_app_skeleton::PaintBuffer;
 use super::store::Decoded;
 
 // Scale-blit `img` to fit the box at (x, y, box_w, box_h) preserving aspect
-// ratio and centering. Nearest-neighbor sampling; alpha composited over the
-// existing surface so transparent PNGs read correctly.
+// ratio and centering. Bilinear sampling so a small icon scaled up stays smooth
+// instead of blocky; alpha composited over the existing surface so transparent
+// PNGs read correctly.
 pub fn blit_into(fb: &mut PaintBuffer, img: &Decoded, x: u32, y: u32, box_w: u32, box_h: u32) {
     if img.w == 0 || img.h == 0 || box_w == 0 || box_h == 0 {
         return;
@@ -38,13 +39,36 @@ pub fn blit_into(fb: &mut PaintBuffer, img: &Decoded, x: u32, y: u32, box_w: u32
     let ox = x + (box_w - dst_w) / 2;
     let oy = y + (box_h - dst_h) / 2;
     for dy in 0..dst_h {
-        let src_y = (dy as u64 * img.h as u64 / dst_h as u64) as usize;
-        let row = src_y * img.w as usize;
+        let gy = (dy as u64 * img.h as u64 * 256 / dst_h as u64) as u32;
         for dx in 0..dst_w {
-            let src_x = (dx as u64 * img.w as u64 / dst_w as u64) as usize;
-            put(fb, ox + dx, oy + dy, img.px[row + src_x]);
+            let gx = (dx as u64 * img.w as u64 * 256 / dst_w as u64) as u32;
+            put(fb, ox + dx, oy + dy, sample(img, gx, gy));
         }
     }
+}
+
+// Bilinear sample of `img` at the 8.8 fixed-point source coordinate (gx, gy),
+// blending the four surrounding texels by the fractional part.
+fn sample(img: &Decoded, gx: u32, gy: u32) -> u32 {
+    let (w, h) = (img.w, img.h);
+    let x0 = (gx >> 8).min(w - 1);
+    let y0 = (gy >> 8).min(h - 1);
+    let x1 = (x0 + 1).min(w - 1);
+    let y1 = (y0 + 1).min(h - 1);
+    let fx = gx & 0xff;
+    let fy = gy & 0xff;
+    let tex = |xx: u32, yy: u32| img.px[(yy * w + xx) as usize];
+    let (c00, c10, c01, c11) = (tex(x0, y0), tex(x1, y0), tex(x0, y1), tex(x1, y1));
+    let chan = |sh: u32| -> u32 {
+        let a = (c00 >> sh) & 0xff;
+        let b = (c10 >> sh) & 0xff;
+        let c = (c01 >> sh) & 0xff;
+        let d = (c11 >> sh) & 0xff;
+        let top = a * (256 - fx) + b * fx;
+        let bot = c * (256 - fx) + d * fx;
+        ((top * (256 - fy) + bot * fy) >> 16) & 0xff
+    };
+    (chan(24) << 24) | (chan(16) << 16) | (chan(8) << 8) | chan(0)
 }
 
 fn put(fb: &mut PaintBuffer, x: u32, y: u32, argb: u32) {
