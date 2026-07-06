@@ -27,35 +27,61 @@ const PAYLOAD_CAP: usize = RX_BUFFER_LEN as usize - VIRTIO_NET_HDR_LEN;
 #[repr(align(4096))]
 struct Aligned<const N: usize>([u8; N]);
 
+// All access to the fake DMA memory goes through two raw pointers taken once
+// at construction, exactly like device memory: taking a fresh mutable borrow
+// between accesses would invalidate the queue's pointers under the aliasing
+// model, and Miri checks that (cargo miri test runs these harnesses).
 struct Harness {
-    region: Box<Aligned<VQ_REGION_SIZE>>,
-    bufs: Box<Aligned<BUF_TOTAL>>,
+    region_ptr: *mut u8,
+    bufs_ptr: *mut u8,
+}
+
+impl Drop for Harness {
+    fn drop(&mut self) {
+        unsafe {
+            drop(Box::from_raw(self.region_ptr as *mut Aligned<VQ_REGION_SIZE>));
+            drop(Box::from_raw(self.bufs_ptr as *mut Aligned<BUF_TOTAL>));
+        }
+    }
 }
 
 impl Harness {
     fn new() -> Self {
-        Self {
-            region: Box::new(Aligned([0u8; VQ_REGION_SIZE])),
-            bufs: Box::new(Aligned([0u8; BUF_TOTAL])),
-        }
+        let region_ptr = Box::into_raw(Box::new(Aligned([0u8; VQ_REGION_SIZE]))) as *mut u8;
+        let bufs_ptr = Box::into_raw(Box::new(Aligned([0u8; BUF_TOTAL]))) as *mut u8;
+        Self { region_ptr, bufs_ptr }
     }
 
     fn rx(&mut self) -> RxQueue {
-        RxQueue::new(self.region.0.as_mut_ptr() as u64, 0, self.bufs.0.as_mut_ptr() as u64, 0)
+        RxQueue::new(self.region_ptr as u64, 0, self.bufs_ptr as u64, 0)
+    }
+
+    fn write_region(&mut self, off: usize, bytes: &[u8]) {
+        for (i, b) in bytes.iter().enumerate() {
+            unsafe { self.region_ptr.add(off + i).write(*b) };
+        }
+    }
+
+    fn read_region(&self, off: usize) -> u8 {
+        unsafe { self.region_ptr.add(off).read() }
+    }
+
+    fn write_buf(&mut self, off: usize, byte: u8) {
+        unsafe { self.bufs_ptr.add(off).write(byte) };
     }
 
     fn set_used_idx(&mut self, idx: u16) {
-        self.region.0[VQ_USED_OFFSET + 2..VQ_USED_OFFSET + 4].copy_from_slice(&idx.to_le_bytes());
+        self.write_region(VQ_USED_OFFSET + 2, &idx.to_le_bytes());
     }
 
     fn set_used_elem(&mut self, pos: u16, desc_id: u32, used_len: u32) {
         let off = VQ_USED_OFFSET + 4 + 8 * (pos as usize);
-        self.region.0[off..off + 4].copy_from_slice(&desc_id.to_le_bytes());
-        self.region.0[off + 4..off + 8].copy_from_slice(&used_len.to_le_bytes());
+        self.write_region(off, &desc_id.to_le_bytes());
+        self.write_region(off + 4, &used_len.to_le_bytes());
     }
 
     fn assert_frame_in_slot(&self, bytes: &[u8], desc_id: u32) {
-        let base = self.bufs.0.as_ptr() as usize;
+        let base = self.bufs_ptr as usize;
         let slot = (desc_id as usize) % (RX_DESC_COUNT as usize);
         let p = bytes.as_ptr() as usize;
         assert_eq!(p, base + slot * RX_BUFFER_LEN as usize + VIRTIO_NET_HDR_LEN);
@@ -65,6 +91,12 @@ impl Harness {
             "frame escapes its slot"
         );
     }
+}
+
+// Miri runs the same harnesses with fewer rounds; the full counts are for
+// the native fuzz.
+fn rounds(full: u64) -> u64 {
+    if cfg!(miri) { 300 } else { full }
 }
 
 fn xorshift(state: &mut u64) -> u64 {
@@ -77,7 +109,7 @@ fn xorshift(state: &mut u64) -> u64 {
 #[test]
 fn hostile_used_entries_never_yield_a_frame_outside_its_slot() {
     let mut h = Harness::new();
-    for seed in 1..200_000u64 {
+    for seed in 1..rounds(200_000) {
         let mut s = seed;
         let desc_id = xorshift(&mut s) as u32;
         let used_len = xorshift(&mut s) as u32;
@@ -117,8 +149,8 @@ fn an_oversized_used_len_is_clamped_to_the_slot_payload() {
     // to the slot's payload capacity and point at the bytes after the header.
     let slot = 3usize;
     let base = slot * RX_BUFFER_LEN as usize + VIRTIO_NET_HDR_LEN;
-    for (i, b) in h.bufs.0[base..base + PAYLOAD_CAP].iter_mut().enumerate() {
-        *b = (i % 251) as u8;
+    for i in 0..PAYLOAD_CAP {
+        h.write_buf(base + i, (i % 251) as u8);
     }
     let mut rx = h.rx();
     h.set_used_idx(1);
@@ -153,11 +185,13 @@ fn the_returned_slot_is_refilled_into_the_avail_ring() {
     h.set_used_idx(2);
     h.set_used_elem(1, 6, 100);
     let _ = unsafe { take_one(&mut rx) };
-    let avail_idx =
-        u16::from_le_bytes([h.region.0[VQ_AVAIL_OFFSET + 2], h.region.0[VQ_AVAIL_OFFSET + 3]]);
+    let avail_idx = u16::from_le_bytes([
+        h.read_region(VQ_AVAIL_OFFSET + 2),
+        h.read_region(VQ_AVAIL_OFFSET + 3),
+    ]);
     assert_eq!(avail_idx, 1, "refill must publish one avail entry");
     let entry_off = VQ_AVAIL_OFFSET + 4;
-    let entry = u16::from_le_bytes([h.region.0[entry_off], h.region.0[entry_off + 1]]);
+    let entry = u16::from_le_bytes([h.read_region(entry_off), h.read_region(entry_off + 1)]);
     assert_eq!(entry, 5, "the refilled entry must name the drained slot");
 }
 
@@ -182,7 +216,7 @@ fn the_tx_length_gate_keeps_every_padded_frame_inside_a_slot() {
 #[test]
 fn decode_never_panics_and_reads_fields_from_their_offsets() {
     const MAGIC: u32 = 0x4E4E_4554; // the wire tag from protocol/header.rs
-    for seed in 1..100_000u64 {
+    for seed in 1..rounds(100_000) {
         let mut s = seed;
         let blen = (xorshift(&mut s) % 40) as usize;
         let mut buf: Vec<u8> = (0..blen).map(|_| (xorshift(&mut s) & 0xff) as u8).collect();
@@ -202,7 +236,7 @@ fn decode_never_panics_and_reads_fields_from_their_offsets() {
 
 #[test]
 fn encoded_response_headers_decode_back_to_the_request_fields() {
-    for seed in 1..20_000u64 {
+    for seed in 1..rounds(20_000) {
         let mut s = seed;
         let request = Request {
             op: (xorshift(&mut s) & 0xffff) as u16,
