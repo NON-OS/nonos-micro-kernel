@@ -20,6 +20,7 @@ i2c and PS/2. One command builds it, proves it and boots it.
 
 - [A microkernel, strictly](#a-microkernel-strictly)
 - [The chain of trust](#the-chain-of-trust)
+- [Proven, not asserted](#proven-not-asserted)
 - [Privacy by architecture](#privacy-by-architecture)
 - [Requirements](#requirements)
 - [Build and run](#build-and-run)
@@ -93,6 +94,35 @@ every arrow below is a cryptographic check that fails closed.
 The proofs bind each capsule's exact hash, its capability mask, its
 epoch and the policy root it was enrolled under. There is no trusted
 setup, proving key or ceremony trapdoor in the capsule attestation path.
+
+## Proven, not asserted
+
+The security-critical paths are not only tested, they are machine-checked,
+and the checks run against the code that actually ships rather than a
+separate model. The layers are documented in full under `verification/`:
+
+- **Runnable proofs.** Host crates include the real capsule and kernel
+  source (`#[path]`, only the syscall clock shimmed) and execute it: the
+  VFS store and path canonicalization, the protocol codec, caller
+  attestation, the Ethernet, IPv4 and UDP parsers, the driver ring walks,
+  the bootloader anti-rollback and the in-kernel STARK. Millions of
+  structured and random inputs assert the parsers never panic and never
+  break their invariants. Writing them found and fixed real bugs.
+- **Kani.** Over every bounded input, the untrusted-input surfaces are
+  proven panic-free and UB-free, together with the no-impersonation and
+  path-canonicalization theorems.
+- **Verus.** Theorems about the kernel's own capability bit operations,
+  page-table permission encoding and IPC length guards.
+- **Lean.** Specification-level theorems for the capability algebra, W^X
+  isolation, anti-rollback and path safety, refined onto the code proofs
+  above, with the capability theorems bound to the extracted Rust through
+  Charon and Aeneas. The Lean layer runs in CI on every push.
+
+Because the specs are the code the kernel runs, there is no
+model-implementation gap. `verification/README.md` and
+`verification/STATUS.md` carry the current status, the exact reproduction
+commands, and an honest account of what runs in CI versus what is
+reproduced locally.
 
 ## Privacy by architecture
 
@@ -259,6 +289,10 @@ claims are advertised again.
                          toolkit, libc
    nonos-data/           trust keystore (submodule): publisher keys,
                          signed manifests and proof trailers
+   verification/         machine-checked proofs and their status: Lean
+                         specifications, Charon/Aeneas extraction and Verus;
+                         the runnable and Kani proof crates live beside the
+                         code they prove, under userland/ and the bootloader
    abi/                  machine-readable contracts: syscalls, wire
                          format, schemas, the mainnet deployment
    nonos-mk/             capsule build include (submodule)
