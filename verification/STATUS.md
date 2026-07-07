@@ -9,7 +9,8 @@ Command:
 ```sh
 for c in crypto_proofs net_proofs kernel_proofs driver_proofs usb_proofs \
          fs_proofs stark_proofs nvme_proofs usb_msc_proofs \
-         virtio_net_proofs xhci_proofs; do
+         virtio_net_proofs xhci_proofs virtio_blk_proofs e1000_proofs \
+         rtl8139_proofs; do
   ( cd userland/$c && PATH="$HOME/.cargo/bin:$PATH" cargo test --release )
 done
 ( cd nonos-bootloader/boot_proofs && PATH="$HOME/.cargo/bin:$PATH" cargo test --release )
@@ -29,6 +30,9 @@ nvme_proofs        10 passed; 0 failed
 usb_msc_proofs     14 passed; 0 failed
 virtio_net_proofs   8 passed; 0 failed
 xhci_proofs         8 passed; 0 failed
+virtio_blk_proofs   7 passed; 0 failed
+e1000_proofs        6 passed; 0 failed
+rtl8139_proofs      7 passed; 0 failed
 boot_proofs         9 passed; 0 failed
 ```
 
@@ -131,6 +135,11 @@ Modules: AntiRollback, Authorization, BlockIO, BootImage, Capability,
 CapabilityBits, Crypto, Ipc, Isolation, Loader, NetParse, Path, Paging,
 Secure, Stark.Field, Stark.Merkle, Syscall, UsbHid. Every theorem names the
 code proof that discharges it; the mapping table is in `lean/README.md`.
+
+The extraction package (`verification/extraction`, landed via #326) builds
+separately with its own pinned toolchain and proves the Aeneas-generated
+Lean from the real `bits.rs` and policy MIR equals the abstract semantics:
+1711 jobs, 0 errors, reproduced against this tree.
 
 ## CI
 

@@ -49,6 +49,11 @@ checkout.
   USB MSC parsers       .             .                     fuzz            #278
   xHCI TRB encoding     .             .                     runnable        #284
   virtio-net RX slots   .             .                     fuzz            #287
+  virtio-blk requests   .             .                     fuzz            #279
+  e1000 ring machines   .             .                     fuzz            #282
+  RTL8139 ring walk     .             .                     fuzz            #283
+  Capability extraction Capability    Charon/Aeneas on      .               #286
+                                      real bits.rs MIR
   ─────────────────────────────────────────────────────────────────────────────
   Every crate: clippy -D warnings clean, zero allow(dead_code), source
   included (never copied) so a divergence is a build error.

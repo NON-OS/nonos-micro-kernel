@@ -194,7 +194,12 @@ specification bit for bit. The crate `userland/virtio_net_proofs` proves the
 virtio-net RX path confines every frame to its own slot: over hostile used
 ring entries the driver clamps a claimed length to the slot payload, reduces
 a wild descriptor id into the primed range, and hands a drained slot back to
-the device only after the frame has been copied out.
+the device only after the frame has been copied out. The crate
+`userland/virtio_blk_proofs` proves virtio-blk requests are bounded and
+exactly framed. The crates `userland/e1000_proofs` and
+`userland/rtl8139_proofs` prove the e1000 descriptor rings behave as bounded
+state machines over hostile descriptors and that the RTL8139 ring walk stays
+confined to its buffer across wraparound.
 
 ## Reproducing the proofs
 
@@ -204,7 +209,8 @@ Each layer is checked independently.
 # Runnable proofs and fuzzing (host)
 for c in crypto_proofs net_proofs kernel_proofs driver_proofs usb_proofs \
          fs_proofs stark_proofs nvme_proofs usb_msc_proofs \
-         virtio_net_proofs xhci_proofs; do
+         virtio_net_proofs xhci_proofs virtio_blk_proofs e1000_proofs \
+         rtl8139_proofs; do
   ( cd userland/$c && cargo test --release )
 done
 ( cd nonos-bootloader/boot_proofs && cargo test --release )
