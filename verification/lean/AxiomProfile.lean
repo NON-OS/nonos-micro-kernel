@@ -19,6 +19,7 @@ what was proven and on what foundations, not just an exit code.
 import Nonos
 
 #print axioms Nonos.AntiRollback.no_rollback_after_boot
+#print axioms Nonos.Attestation.no_impersonation
 #print axioms Nonos.Authorization.empty_token_denied
 #print axioms Nonos.BlockIO.accepted_request_stays_on_disk
 #print axioms Nonos.BootImage.accepted_region_stays_in_bounds
@@ -36,3 +37,4 @@ import Nonos
 #print axioms Nonos.Stark.Merkle.distinct_leaves_give_distinct_roots
 #print axioms Nonos.Syscall.decode_agrees_with_the_registry
 #print axioms Nonos.UsbHid.bindings_never_exceed_the_cap
+#print axioms Nonos.Zeroization.no_secret_survives
