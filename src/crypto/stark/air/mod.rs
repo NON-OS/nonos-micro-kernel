@@ -24,6 +24,7 @@
 
 mod composition;
 mod fibonacci;
+mod fri_fold;
 mod merkle_membership;
 mod permutation2;
 mod poseidon;
@@ -35,6 +36,7 @@ mod types;
 mod verify;
 
 pub use fibonacci::Fibonacci;
+pub use fri_fold::FriFold;
 pub use merkle_membership::MerkleMembership;
 pub use permutation2::Permutation2;
 pub use poseidon::{Poseidon, RATE, WIDTH};

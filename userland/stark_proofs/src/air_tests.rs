@@ -15,14 +15,22 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::crypto::stark::air::{
-    stark_prove, stark_verify, Fibonacci, MerkleMembership, Permutation2, Poseidon, PowerChain,
-    Squaring, RATE, WIDTH,
+    stark_prove, stark_verify, Fibonacci, FriFold, MerkleMembership, Permutation2, Poseidon,
+    PowerChain, Squaring, RATE, WIDTH,
 };
 use crate::crypto::stark::field::Fp;
+use crate::crypto::stark::fri::root_of_unity;
 use crate::crypto::stark::poseidon_merkle::PoseidonMerkleTree;
 
 extern crate alloc;
 use alloc::vec::Vec;
+
+fn xs(state: &mut u64) -> u64 {
+    *state ^= *state << 13;
+    *state ^= *state >> 7;
+    *state ^= *state << 17;
+    *state
+}
 
 // The end-to-end STARK: a real proof that a computation ran correctly, with no
 // trusted setup and hash-only cryptography. The engine is generic over the AIR,
@@ -430,6 +438,83 @@ fn a_membership_proof_for_a_wrong_root_is_rejected() {
     );
     let proof = stark_prove(&air, &trace, QUERIES);
     assert!(!stark_verify(&air, &proof, QUERIES), "a wrong-root membership proof verified");
+}
+
+#[test]
+fn a_fri_fold_chain_verifies() {
+    // Fold a real codeword four times, extract one query's path down the layers,
+    // and prove inside a STARK that the folds are consistent and reach the
+    // committed final value. This is the FRI verifier's fold check, arithmetized.
+    let (k, n_folds, log_layers) = (5u32, 4usize, 3u32); // domain 32, fold to size 2
+    let n = 1usize << k;
+    let inv2 = Fp::from_u64(2).inv();
+    let base_omega = root_of_unity(k);
+    let shift = Fp::from_u64(7);
+
+    let mut s = 0xf01d_1234u64 | 1;
+    let mut layers: Vec<Vec<Fp>> = Vec::new();
+    let mut betas: Vec<Fp> = Vec::new();
+    let mut cur: Vec<Fp> = (0..n).map(|_| Fp::from_u64(xs(&mut s))).collect();
+    layers.push(cur.clone());
+    let mut omega = base_omega;
+    let mut coset = shift;
+    for _ in 0..n_folds {
+        let beta = Fp::from_u64(xs(&mut s));
+        betas.push(beta);
+        let half = cur.len() / 2;
+        let mut next = Vec::with_capacity(half);
+        let mut x = coset;
+        for i in 0..half {
+            let (a, b) = (cur[i], cur[i + half]);
+            next.push((a + b) * inv2 + beta * ((a - b) * inv2 * x.inv()));
+            x = x * omega;
+        }
+        cur = next;
+        layers.push(cur.clone());
+        omega = omega.square();
+        coset = coset.square();
+    }
+
+    // Extract query q's path (q even so the last fold lands in the first slot).
+    let q = 6usize;
+    let rows = 1usize << log_layers;
+    let mut trace = alloc::vec![Fp::ZERO; rows * 2];
+    let (mut x_inv, mut beta_col, mut dir) = (Vec::new(), Vec::new(), Vec::new());
+    let mut om = base_omega;
+    let mut cs = shift;
+    for m in 0..n_folds {
+        let half = layers[m].len() / 2;
+        let i = q % half;
+        trace[m * 2] = layers[m][i];
+        trace[m * 2 + 1] = layers[m][i + half];
+        x_inv.push((cs * om.pow(i as u64)).inv());
+        beta_col.push(betas[m]);
+        dir.push(i >= half / 2);
+        om = om.square();
+        cs = cs.square();
+    }
+    // Final layer row: its pair, first slot is the committed value.
+    trace[n_folds * 2] = layers[n_folds][0];
+    trace[n_folds * 2 + 1] = layers[n_folds][1];
+    let final_value = layers[n_folds][0];
+
+    let air = FriFold::new(
+        log_layers,
+        n_folds,
+        x_inv.clone(),
+        beta_col.clone(),
+        dir.clone(),
+        final_value,
+    );
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an honest fri fold chain was rejected");
+
+    // Tamper one opened value: the fold no longer lands on the next layer.
+    let mut bad = trace.clone();
+    bad[2] = bad[2] + Fp::ONE;
+    let bad_air = FriFold::new(log_layers, n_folds, x_inv, beta_col, dir, final_value);
+    let bad_proof = stark_prove(&bad_air, &bad, QUERIES);
+    assert!(!stark_verify(&bad_air, &bad_proof, QUERIES), "a broken fold chain verified");
 }
 
 #[test]
