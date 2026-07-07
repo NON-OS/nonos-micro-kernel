@@ -1,0 +1,16 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Extraction root for the capability bit logic. Charon lowers this crate's
+# MIR to LLBC and Aeneas translates it to Lean, so the Lean theorems in
+# verification/extraction/lean are about the real kernel functions, included
+# below via #[path], not a retyped model.
+[package]
+name = "nonos_caps"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
