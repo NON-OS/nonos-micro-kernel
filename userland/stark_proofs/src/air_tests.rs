@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::crypto::stark::air::{
-    stark_prove, stark_verify, Fibonacci, Permutation2, PowerChain, Squaring,
+    stark_prove, stark_verify, Fibonacci, Permutation2, PowerChain, SpongePreimage, Squaring,
 };
 use crate::crypto::stark::field::Fp;
 
@@ -142,6 +142,83 @@ fn a_wrong_permutation_output_is_rejected() {
     let air = Permutation2 { log_t: 4, rc0, rc1, out: [out[0] + Fp::ONE, out[1]] };
     let proof = stark_prove(&air, &trace, QUERIES);
     assert!(!stark_verify(&air, &proof, QUERIES), "a wrong permutation output verified");
+}
+
+/// Run the width-three sponge on a secret input and return the trace and the
+/// public digest (the final rate lanes). The capacity lane starts at zero.
+fn sponge_trace(log_t: u32, in0: Fp, in1: Fp, rc: [Fp; 3]) -> (Vec<Fp>, [Fp; 2]) {
+    let t = 1usize << log_t;
+    let two = Fp::from_u64(2);
+    let mut trace = Vec::with_capacity(3 * t);
+    let (mut a, mut b, mut c) = (in0, in1, Fp::ZERO);
+    for _ in 0..t {
+        trace.push(a);
+        trace.push(b);
+        trace.push(c);
+        let (sa, sb, sc) = (a.pow(7), b.pow(7), c.pow(7));
+        let na = two * sa + sb + sc + rc[0];
+        let nb = sa + two * sb + sc + rc[1];
+        let nc = sa + sb + two * sc + rc[2];
+        a = na;
+        b = nb;
+        c = nc;
+    }
+    let digest = [trace[(t - 1) * 3], trace[(t - 1) * 3 + 1]];
+    (trace, digest)
+}
+
+#[test]
+fn an_honest_hash_preimage_verifies() {
+    // Prove knowledge of an input that sponges to a public digest, without the
+    // proof carrying the input in its public statement.
+    let rc = [Fp::from_u64(7), Fp::from_u64(11), Fp::from_u64(13)];
+    let (trace, digest) = sponge_trace(4, Fp::from_u64(42), Fp::from_u64(99), rc);
+    let air = SpongePreimage { log_t: 4, rc, digest };
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "honest preimage rejected");
+}
+
+#[test]
+fn a_wrong_hash_digest_is_rejected() {
+    let rc = [Fp::from_u64(7), Fp::from_u64(11), Fp::from_u64(13)];
+    let (trace, digest) = sponge_trace(4, Fp::from_u64(42), Fp::from_u64(99), rc);
+    let air = SpongePreimage { log_t: 4, rc, digest: [digest[0] + Fp::ONE, digest[1]] };
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a wrong digest verified");
+}
+
+#[test]
+fn a_corrupted_hash_round_is_rejected() {
+    let rc = [Fp::from_u64(7), Fp::from_u64(11), Fp::from_u64(13)];
+    let (mut trace, digest) = sponge_trace(4, Fp::from_u64(42), Fp::from_u64(99), rc);
+    trace[12] = trace[12] + Fp::ONE;
+    let air = SpongePreimage { log_t: 4, rc, digest };
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a corrupted hash round verified");
+}
+
+#[test]
+fn a_nonzero_capacity_initialization_is_rejected() {
+    // A prover that seeds the capacity lane with anything but zero is computing a
+    // different function; the sponge-initialization boundary rejects it.
+    let rc = [Fp::from_u64(7), Fp::from_u64(11), Fp::from_u64(13)];
+    let t = 1usize << 4;
+    let two = Fp::from_u64(2);
+    let mut trace = Vec::with_capacity(3 * t);
+    let (mut a, mut b, mut c) = (Fp::from_u64(42), Fp::from_u64(99), Fp::from_u64(5));
+    for _ in 0..t {
+        trace.push(a);
+        trace.push(b);
+        trace.push(c);
+        let (sa, sb, sc) = (a.pow(7), b.pow(7), c.pow(7));
+        a = two * sa + sb + sc + rc[0];
+        b = sa + two * sb + sc + rc[1];
+        c = sa + sb + two * sc + rc[2];
+    }
+    let digest = [trace[(t - 1) * 3], trace[(t - 1) * 3 + 1]];
+    let air = SpongePreimage { log_t: 4, rc, digest };
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a nonzero capacity init verified");
 }
 
 #[test]
