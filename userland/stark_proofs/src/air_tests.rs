@@ -918,7 +918,7 @@ fn a_value_is_bound_across_two_fused_regions() {
         Box::new(Squaring { log_t: 3, seed: Fp::from_u64(3) }),
         Box::new(Squaring { log_t: 3, seed: handoff }),
     ];
-    let wired = Wired::new(regions, sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let wired = Wired::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
     let witness = wired.trace(&[a_trace, b_trace]);
     let proof = stark_prove(&wired, &witness, QUERIES);
     assert!(stark_verify(&wired, &proof, QUERIES), "an honest cross-region binding was rejected");
@@ -941,7 +941,7 @@ fn a_broken_cross_region_binding_is_rejected() {
         Box::new(Squaring { log_t: 3, seed: Fp::from_u64(3) }),
         Box::new(Squaring { log_t: 3, seed: wrong }),
     ];
-    let wired = Wired::new(regions, sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let wired = Wired::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
     let witness = wired.trace(&[a_trace, b_trace]);
     let proof = stark_prove(&wired, &witness, QUERIES);
     assert!(!stark_verify(&wired, &proof, QUERIES), "a broken cross-region binding verified");
@@ -1039,7 +1039,7 @@ fn a_fold_bound_to_its_challenge_source_verifies() {
 
     let regions: Vec<Box<dyn Air>> =
         alloc::vec![Box::new(Squaring { log_t: 3, seed: beta[0] }), Box::new(fold),];
-    let wired = Wired::new(regions, sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let wired = Wired::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
     let witness = wired.trace(&[source, fold_trace]);
     let proof = stark_prove(&wired, &witness, QUERIES);
     assert!(stark_verify(&wired, &proof, QUERIES), "a fold bound to its challenge was rejected");
@@ -1059,8 +1059,57 @@ fn a_fold_using_the_wrong_challenge_is_rejected() {
 
     let regions: Vec<Box<dyn Air>> =
         alloc::vec![Box::new(Squaring { log_t: 3, seed: beta[0] + Fp::ONE }), Box::new(fold),];
-    let wired = Wired::new(regions, sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let wired = Wired::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
     let witness = wired.trace(&[source, fold_trace]);
     let proof = stark_prove(&wired, &witness, QUERIES);
     assert!(!stark_verify(&wired, &proof, QUERIES), "a fold on the wrong challenge verified");
+}
+
+#[test]
+fn a_fold_bound_to_both_its_challenge_and_opening_verifies() {
+    // The monolith's per-query binding: the fold must run on the transcript's
+    // challenge AND the opening's revealed value. A width-two source supplies
+    // both in one row; the wiring binds column zero (the challenge) and column
+    // one (the opened value) at once.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let (rc0, rc1) = (Fp::from_u64(13), Fp::from_u64(17));
+    let (source, out) = permutation2_trace(3, beta[0], a[0], rc0, rc1);
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    let mut sigma: Vec<usize> = (0..32).collect();
+    sigma.swap(0, 16); // source row 0 col 0 (challenge) <-> fold row 0 col 0
+    sigma.swap(1, 17); // source row 0 col 1 (opening)   <-> fold row 0 col 1
+
+    let regions: Vec<Box<dyn Air>> =
+        alloc::vec![Box::new(Permutation2 { log_t: 3, rc0, rc1, out }), Box::new(fold)];
+    let wired = Wired::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[source, fold_trace]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(
+        stark_verify(&wired, &proof, QUERIES),
+        "a fold bound to challenge and opening was rejected"
+    );
+}
+
+#[test]
+fn a_fold_bound_to_a_wrong_opening_is_rejected() {
+    // The source supplies the right challenge but a different opened value; the
+    // multi-column wiring catches the opening even though the challenge matches.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let (rc0, rc1) = (Fp::from_u64(13), Fp::from_u64(17));
+    let (source, out) = permutation2_trace(3, beta[0], a[0] + Fp::ONE, rc0, rc1);
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    let mut sigma: Vec<usize> = (0..32).collect();
+    sigma.swap(0, 16);
+    sigma.swap(1, 17);
+
+    let regions: Vec<Box<dyn Air>> =
+        alloc::vec![Box::new(Permutation2 { log_t: 3, rc0, rc1, out }), Box::new(fold)];
+    let wired = Wired::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[source, fold_trace]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(!stark_verify(&wired, &proof, QUERIES), "a fold on a wrong opening verified");
 }
