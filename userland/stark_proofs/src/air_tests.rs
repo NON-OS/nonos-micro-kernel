@@ -441,64 +441,6 @@ fn membership_proofs_verify_at_fri_layer_depths() {
 
 /// Build the batched trace: each opening runs its Merkle path, then the state
 /// resets to the next opening's leaf; padding openings run freely.
-fn multi_trace(hasher: &Poseidon, openings: &[Opening], log_rounds: u32) -> Vec<Fp> {
-    let l = 1usize << log_rounds;
-    let depth = openings[0].siblings.len();
-    let slots = (depth + 1).next_power_of_two();
-    let span = slots * l;
-    let count = openings.len();
-    let batch = count.next_power_of_two().max(1);
-    let n = batch * span;
-
-    let start = |o: &Opening| inject_full(o.leaf, o.siblings[0], o.directions[0]);
-    let mut rows: Vec<[Fp; WIDTH]> = Vec::with_capacity(n);
-    let mut state = start(&openings[0]);
-    for r in 0..n {
-        rows.push(state);
-        let pr = hasher.round_with_rc(&state, &hasher.round_constant(r % l));
-        let opening = r / span;
-        let within = r % span;
-        let at_row_bnd = within % l == l - 1;
-        let is_op_bnd = within == span - 1 && opening + 1 < count;
-        let is_slot_bnd = at_row_bnd && within < depth * l && !is_op_bnd;
-        if is_op_bnd {
-            state = start(&openings[opening + 1]);
-        } else if is_slot_bnd {
-            let m = (within + 1) / l;
-            let mut digest = [Fp::ZERO; RATE];
-            digest.copy_from_slice(&pr[..RATE]);
-            if opening < count && m < depth {
-                state = inject_full(
-                    digest,
-                    openings[opening].siblings[m],
-                    openings[opening].directions[m],
-                );
-            } else {
-                state = inject_full(digest, [Fp::ZERO; RATE], false);
-            }
-        } else {
-            state = pr;
-        }
-    }
-    let mut trace = Vec::with_capacity(n * WIDTH);
-    for row in &rows {
-        trace.extend_from_slice(row);
-    }
-    trace
-}
-
-fn inject_full(node: [Fp; RATE], sibling: [Fp; RATE], right: bool) -> [Fp; WIDTH] {
-    let mut state = [Fp::ZERO; WIDTH];
-    if !right {
-        state[..RATE].copy_from_slice(&node);
-        state[RATE..].copy_from_slice(&sibling);
-    } else {
-        state[..RATE].copy_from_slice(&sibling);
-        state[RATE..].copy_from_slice(&node);
-    }
-    state
-}
-
 fn opening_at(tree: &PoseidonMerkleTree, leaves: &[[Fp; RATE]], index: usize) -> Opening {
     let path = tree.open(index);
     let directions = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
@@ -514,8 +456,8 @@ fn a_batched_opening_proof_verifies() {
     let leaves = merkle_leaves(8);
     let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
     let openings = alloc::vec![opening_at(&tree, &leaves, 2), opening_at(&tree, &leaves, 6)];
-    let trace = multi_trace(&hasher, &openings, log_rounds);
     let air = MultiMembership::new(hasher.clone(), log_rounds, openings);
+    let trace = air.trace();
     let proof = stark_prove(&air, &trace, QUERIES);
     assert!(stark_verify(&air, &proof, QUERIES), "a batched opening proof was rejected");
 }
@@ -528,10 +470,11 @@ fn a_batched_opening_with_a_wrong_root_is_rejected() {
     let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
     let mut o0 = opening_at(&tree, &leaves, 2);
     let o1 = opening_at(&tree, &leaves, 6);
-    let openings_true = alloc::vec![opening_at(&tree, &leaves, 2), opening_at(&tree, &leaves, 6)];
-    let trace = multi_trace(&hasher, &openings_true, log_rounds);
     o0.root[0] = o0.root[0] + Fp::ONE; // corrupt the first opening's claimed root
     let air = MultiMembership::new(hasher.clone(), log_rounds, alloc::vec![o0, o1]);
+    // The trace hashes the true leaves and siblings, so its checkpoint holds the
+    // real root while the boundary pins the corrupted one: a mismatch.
+    let trace = air.trace();
     let proof = stark_prove(&air, &trace, QUERIES);
     assert!(!stark_verify(&air, &proof, QUERIES), "a wrong batched root verified");
 }
@@ -596,8 +539,8 @@ fn a_full_fri_query_verifies() {
         let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
         let openings =
             alloc::vec![opening_at(&tree, &leaves, i), opening_at(&tree, &leaves, i + half)];
-        let trace = multi_trace(&hasher, &openings, log_rounds);
         let air = MultiMembership::new(hasher.clone(), log_rounds, openings);
+        let trace = air.trace();
         let proof = stark_prove(&air, &trace, QUERIES);
         assert!(stark_verify(&air, &proof, QUERIES), "layer {m} openings not proven committed");
 

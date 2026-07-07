@@ -72,6 +72,51 @@ impl MultiMembership {
     fn initial_state(&self, opening: &Opening) -> [Fp; WIDTH] {
         inject(opening.leaf, opening.siblings[0], opening.directions[0])
     }
+
+    /// The witness trace for this batch: run each opening's Merkle path, reset to
+    /// the next opening's leaf at each opening boundary, and let padding rows run
+    /// the permutation. The single source of truth for the layout, so callers
+    /// prove against exactly what the constraints check.
+    pub fn trace(&self) -> Vec<Fp> {
+        let l = self.rounds();
+        let span = self.span();
+        let depth = self.depth;
+        let count = self.openings.len();
+        let n = 1usize << self.log_trace_len();
+
+        let mut rows: Vec<[Fp; WIDTH]> = Vec::with_capacity(n);
+        let mut state = self.initial_state(&self.openings[0]);
+        for r in 0..n {
+            rows.push(state);
+            let pr = self.hasher.round_with_rc(&state, &self.hasher.round_constant(r % l));
+            let opening = r / span;
+            let within = r % span;
+            let at_row_bnd = within % l == l - 1;
+            let is_op_bnd = within == span - 1 && opening + 1 < count;
+            let is_slot_bnd = at_row_bnd && within < depth * l && !is_op_bnd;
+            if is_op_bnd {
+                state = self.initial_state(&self.openings[opening + 1]);
+            } else if is_slot_bnd {
+                let m = (within + 1) / l;
+                let mut digest = [Fp::ZERO; RATE];
+                digest.copy_from_slice(&pr[..RATE]);
+                if opening < count && m < depth {
+                    let o = &self.openings[opening];
+                    state = inject(digest, o.siblings[m], o.directions[m]);
+                } else {
+                    state = inject(digest, [Fp::ZERO; RATE], false);
+                }
+            } else {
+                state = pr;
+            }
+        }
+
+        let mut trace = Vec::with_capacity(n * WIDTH);
+        for row in &rows {
+            trace.extend_from_slice(row);
+        }
+        trace
+    }
 }
 
 fn inject(node: [Fp; RATE], sibling: [Fp; RATE], right: bool) -> [Fp; WIDTH] {
