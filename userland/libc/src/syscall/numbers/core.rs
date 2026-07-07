@@ -28,3 +28,4 @@ pub(crate) const N_MK_BATTERY_STATUS: i64 = tag4(b"MBAT");
 pub(crate) const N_MK_PROC_STAT: i64 = tag4(b"MPST");
 pub(crate) const N_MK_PROC_OUTPUT: i64 = tag4(b"MOUT");
 pub(crate) const N_MK_ATTEST_STATUS: i64 = tag4(b"MAST");
+pub(crate) const N_MK_WAIT: i64 = tag4(b"MWAT");
