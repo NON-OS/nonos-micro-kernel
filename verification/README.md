@@ -1,7 +1,7 @@
 # NONOS verification
 
-NONOS proves its guarantees about the code that actually runs, and re-runs
-those proofs on every push. Three layers, strongest at the bottom:
+NONOS proves its guarantees about the code that actually runs. Three layers,
+strongest at the bottom:
 
 ## 1. Runnable proofs
 
@@ -59,5 +59,9 @@ has to trust that the running implementation matches the model. Here the specs
 store), so there is **no model-implementation gap**. Machine-checked rigor is
 applied to implementation paths, not to a detached sketch.
 
-All three layers run in CI (`.github/workflows/verify.yml`) on every push, so
-the guarantees are reproducible by anyone, not asserted.
+The Lean specification layer runs in CI on every push
+(`.github/workflows/lean.yml`). The runnable, Kani, and Verus layers are
+reproducible with the commands above; their CI gates were dropped in a
+workflow consolidation, and restoring them is tracked in PR #311. Until that
+lands, treat the non-Lean layers as locally reproducible rather than
+continuously enforced.

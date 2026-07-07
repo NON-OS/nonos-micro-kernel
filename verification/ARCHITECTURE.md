@@ -184,13 +184,33 @@ parser, which runs on fully device-controlled data, never panics, rejects a
 descriptor claiming a zero length rather than looping on it, and never returns
 more bindings than its fixed cap.
 
+The same pattern covers the other storage and transport drivers. The crate
+`userland/nvme_proofs` proves the NVMe command bounds and that the identify
+page parsers stay inside device-returned buffers. The crate
+`userland/usb_msc_proofs` proves the USB mass-storage descriptor, CSW, and
+request parsers reject malformed device data instead of reading through it.
+The crate `userland/xhci_proofs` proves the xHCI TRB encodings match the
+specification bit for bit. The crate `userland/virtio_net_proofs` proves the
+virtio-net RX path confines every frame to its own slot: over hostile used
+ring entries the driver clamps a claimed length to the slot payload, reduces
+a wild descriptor id into the primed range, and hands a drained slot back to
+the device only after the frame has been copied out. The crate
+`userland/virtio_blk_proofs` proves virtio-blk requests are bounded and
+exactly framed. The crates `userland/e1000_proofs` and
+`userland/rtl8139_proofs` prove the e1000 descriptor rings behave as bounded
+state machines over hostile descriptors and that the RTL8139 ring walk stays
+confined to its buffer across wraparound.
+
 ## Reproducing the proofs
 
 Each layer is checked independently.
 
 ```sh
 # Runnable proofs and fuzzing (host)
-for c in crypto_proofs net_proofs kernel_proofs driver_proofs usb_proofs; do
+for c in crypto_proofs net_proofs kernel_proofs driver_proofs usb_proofs \
+         fs_proofs stark_proofs nvme_proofs usb_msc_proofs \
+         virtio_net_proofs xhci_proofs virtio_blk_proofs e1000_proofs \
+         rtl8139_proofs; do
   ( cd userland/$c && cargo test --release )
 done
 ( cd nonos-bootloader/boot_proofs && cargo test --release )
@@ -205,8 +225,13 @@ done
 ( cd verification/lean && lake build )
 ```
 
-The continuous integration workflow runs all of these on every push. Each proof
-job reports success only when its checker reports zero errors.
+The Lean job runs in CI on every push and reports success only when `lake
+build` reports zero errors. The runnable, Kani, and Verus gates were dropped
+from CI in a workflow consolidation; they are reproducible with the commands
+above, and restoring them as push gates is tracked in PR #311. A proof that
+does not run in CI can rot silently, and two of the driver crates did exactly
+that before this document was corrected, so the distinction is stated here
+rather than papered over.
 
 ## What you must trust
 
@@ -252,6 +277,14 @@ The Kani and Verus and Lean proofs are checked by their respective tools, pinned
 to specific versions in CI. The runnable proofs are checked by `cargo test`.
 None of these tools proves the absence of a defect outside the property it
 checks.
+
+Two Lean modules state their own limits explicitly. The STARK field module
+proves the ring laws of modular arithmetic for every modulus; the existence
+of multiplicative inverses depends on the Goldilocks modulus being prime and
+is checked on the real field code by its known-answer tests, not stated
+abstractly. The Merkle binding theorem is conditional on injectivity of the
+compression function: collision resistance of BLAKE3 remains an assumption
+here exactly as it is everywhere else in this document.
 
 ## Findings
 

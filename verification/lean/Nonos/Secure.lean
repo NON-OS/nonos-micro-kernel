@@ -24,8 +24,7 @@ and the kernel_proofs differential harnesses over src/capabilities/bits.rs,
 the mapping gate by the to_pte_flags proofs over
 src/memory/paging/types/permissions/convert.rs, the copy gate by the
 check_range proofs over src/usercopy/policy.rs, and the boot step by
-nonos-bootloader/boot_proofs. The extraction layer in
-verification/extraction binds the capability steps to the extracted MIR.
+nonos-bootloader/boot_proofs.
 -/
 
 import Nonos.Capability
