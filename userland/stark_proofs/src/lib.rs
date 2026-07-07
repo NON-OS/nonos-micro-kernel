@@ -20,3 +20,5 @@ mod merkle_tests;
 mod poly_tests;
 #[cfg(test)]
 mod poseidon_tests;
+#[cfg(test)]
+mod transcript_tests;
