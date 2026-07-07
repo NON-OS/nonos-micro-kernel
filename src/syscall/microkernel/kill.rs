@@ -16,7 +16,9 @@
 
 use super::errnos::{ERRNO_INVAL, ERRNO_PERM};
 use crate::process::signal::{SIGINT, SIGKILL, SIGTERM};
-use crate::process::{current_pid, get_parent_pid, get_process, ProcessState};
+use crate::process::{
+    current_pid, get_parent_pid, get_process, terminate_current_with_signal, ProcessState,
+};
 use crate::syscall::caps::current_caps_or_default;
 
 pub fn sys_kill(pid: u64, sig: u64) -> i64 {
@@ -31,6 +33,9 @@ pub fn sys_kill(pid: u64, sig: u64) -> i64 {
     }
     if !pid_alive(target) {
         return 0;
+    }
+    if current_pid() == Some(target) {
+        terminate_current_with_signal(sig as u8);
     }
     crate::process::exit::teardown(target, 128 + sig as i32, true);
     0
