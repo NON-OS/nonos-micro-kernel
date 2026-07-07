@@ -39,6 +39,7 @@ mod spec;
 mod squaring;
 mod types;
 mod verify;
+mod wired;
 
 pub use copy_constraint::CopyConstraint;
 pub use fiat_shamir::FiatShamir;
@@ -56,3 +57,4 @@ pub use spec::Air;
 pub use squaring::Squaring;
 pub use types::{StarkProof, StarkQuery};
 pub use verify::stark_verify;
+pub use wired::Wired;
