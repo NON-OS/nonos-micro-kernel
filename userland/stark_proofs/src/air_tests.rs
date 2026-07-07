@@ -17,7 +17,7 @@
 use crate::crypto::stark::air::{
     stark_prove, stark_verify, Air, CopyConstraint, FiatShamir, Fibonacci, FriFold, Fused,
     MerkleMembership, MultiMembership, Opening, Permutation, Permutation2, Poseidon, PowerChain,
-    Squaring, Wired, RATE, WIDTH,
+    Squaring, TraceFold, Wired, RATE, WIDTH,
 };
 use crate::crypto::stark::field::Fp;
 use crate::crypto::stark::fri::root_of_unity;
@@ -945,4 +945,122 @@ fn a_broken_cross_region_binding_is_rejected() {
     let witness = wired.trace(&[a_trace, b_trace]);
     let proof = stark_prove(&wired, &witness, QUERIES);
     assert!(!stark_verify(&wired, &proof, QUERIES), "a broken cross-region binding verified");
+}
+
+/// One FRI query's fold path, split into the pieces an in-circuit fold witnesses:
+/// the per-layer challenge, the opened pairs, the public inverse points and
+/// position bits, and the committed final value.
+#[allow(clippy::type_complexity)]
+fn trace_fold_data(
+    query: usize,
+) -> (Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<bool>, Fp, u32, usize) {
+    let (k, n_folds, log_layers) = (5u32, 4usize, 3u32);
+    let n = 1usize << k;
+    let inv2 = Fp::from_u64(2).inv();
+    let base_omega = root_of_unity(k);
+    let shift = Fp::from_u64(7);
+
+    let mut s = 0xf01d_1234u64 | 1;
+    let mut layers: Vec<Vec<Fp>> = Vec::new();
+    let mut betas: Vec<Fp> = Vec::new();
+    let mut cur: Vec<Fp> = (0..n).map(|_| Fp::from_u64(xs(&mut s))).collect();
+    layers.push(cur.clone());
+    let mut omega = base_omega;
+    let mut coset = shift;
+    for _ in 0..n_folds {
+        let beta = Fp::from_u64(xs(&mut s));
+        betas.push(beta);
+        let half = cur.len() / 2;
+        let mut next = Vec::with_capacity(half);
+        let mut x = coset;
+        for i in 0..half {
+            let (a, b) = (cur[i], cur[i + half]);
+            next.push((a + b) * inv2 + beta * ((a - b) * inv2 * x.inv()));
+            x = x * omega;
+        }
+        cur = next;
+        layers.push(cur.clone());
+        omega = omega.square();
+        coset = coset.square();
+    }
+
+    let (mut a, mut b, mut x_inv, mut dir) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let mut om = base_omega;
+    let mut cs = shift;
+    for layer in layers.iter().take(n_folds) {
+        let half = layer.len() / 2;
+        let i = query % half;
+        a.push(layer[i]);
+        b.push(layer[i + half]);
+        x_inv.push((cs * om.pow(i as u64)).inv());
+        dir.push(i >= half / 2);
+        om = om.square();
+        cs = cs.square();
+    }
+    a.push(layers[n_folds][0]);
+    b.push(layers[n_folds][1]);
+    let final_value = layers[n_folds][0];
+    (betas, a, b, x_inv, dir, final_value, log_layers, n_folds)
+}
+
+#[test]
+fn an_in_circuit_fold_verifies() {
+    // The fold with its folding challenge witnessed in column zero, proven the
+    // same as the public-challenge fold. This is the shape the monolith wires.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let air = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let trace = air.trace(&beta, &a, &b);
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an honest in-circuit fold was rejected");
+}
+
+#[test]
+fn a_corrupted_in_circuit_fold_is_rejected() {
+    let (beta, mut a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    a[0] = a[0] + Fp::ONE; // an opened value that no longer folds
+    let air = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let trace = air.trace(&beta, &a, &b);
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a broken in-circuit fold verified");
+}
+
+#[test]
+fn a_fold_bound_to_its_challenge_source_verifies() {
+    // A supplier region produces the first folding challenge; the in-circuit fold
+    // consumes it. The wiring forces the fold to run on exactly the supplied
+    // challenge: the transcript-to-fold binding on a real fold.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let source = squaring_trace(3, beta[0]); // column zero holds beta[0] at row 0
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    let mut sigma: Vec<usize> = (0..16).collect();
+    sigma.swap(0, 8); // source row 0 wired to fold row 0 (fused row 8)
+
+    let regions: Vec<Box<dyn Air>> =
+        alloc::vec![Box::new(Squaring { log_t: 3, seed: beta[0] }), Box::new(fold),];
+    let wired = Wired::new(regions, sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[source, fold_trace]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(stark_verify(&wired, &proof, QUERIES), "a fold bound to its challenge was rejected");
+}
+
+#[test]
+fn a_fold_using_the_wrong_challenge_is_rejected() {
+    // The fold is internally valid and the supplier is internally valid, but the
+    // fold's challenge is not the one the supplier produced. The wiring rejects.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let source = squaring_trace(3, beta[0] + Fp::ONE); // supplies a different value
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    let mut sigma: Vec<usize> = (0..16).collect();
+    sigma.swap(0, 8);
+
+    let regions: Vec<Box<dyn Air>> =
+        alloc::vec![Box::new(Squaring { log_t: 3, seed: beta[0] + Fp::ONE }), Box::new(fold),];
+    let wired = Wired::new(regions, sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[source, fold_trace]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(!stark_verify(&wired, &proof, QUERIES), "a fold on the wrong challenge verified");
 }
