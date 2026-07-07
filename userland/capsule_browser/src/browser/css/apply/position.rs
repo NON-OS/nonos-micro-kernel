@@ -26,7 +26,13 @@ pub(super) fn apply_position(c: &mut Computed, name: &str, value: &str, fs: u32)
             c.is_fixed = false;
             match value.trim() {
                 "static" => c.position = Position::Static,
-                "relative" | "sticky" => c.position = Position::Relative,
+                "relative" => c.position = Position::Relative,
+                // Sticky keeps normal flow, without relative offsets, and
+                // pins at paint time once scrolled past its top threshold.
+                "sticky" => {
+                    c.position = Position::Static;
+                    c.is_sticky = true;
+                }
                 "absolute" => c.position = Position::Absolute,
                 // Laid out as absolute, but flagged so paint pins it on scroll.
                 "fixed" => {

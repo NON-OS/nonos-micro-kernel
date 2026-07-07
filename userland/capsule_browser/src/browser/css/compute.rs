@@ -22,6 +22,7 @@ use crate::browser::dom::Dom;
 
 use super::computed::Computed;
 use super::parse::parse;
+use super::pseudo_style::PseudoText;
 use super::rule::Rule;
 use super::rule_index::RuleIndex;
 use super::ua::ua_rules;
@@ -34,6 +35,8 @@ use super::walk::walk;
 pub struct Styled {
     pub styles: Vec<Computed>,
     pub bg_images: Vec<Option<String>>,
+    // Generated content per node: the cascaded ::before and ::after boxes.
+    pub pseudos: Vec<(Option<PseudoText>, Option<PseudoText>)>,
 }
 
 pub fn compute(dom: &Dom, author_css: &str) -> Styled {
@@ -55,6 +58,10 @@ pub(super) fn cascade(dom: &Dom, author: &[Rule]) -> Styled {
     let n = dom.nodes.len();
     let mut styles = vec![Computed::root(); n];
     let mut bg_images = vec![None; n];
+    let mut pseudos: Vec<(Option<PseudoText>, Option<PseudoText>)> = Vec::new();
+    pseudos.resize_with(n, || (None, None));
+    // Pseudo cascading only runs when the sheet declares any pseudo rules.
+    let has_pseudos = author.iter().any(|r| r.selectors.iter().any(|s| s.element != 0));
     walk(
         dom,
         0,
@@ -66,7 +73,8 @@ pub(super) fn cascade(dom: &Dom, author: &[Rule]) -> Styled {
         &vars,
         &mut styles,
         &mut bg_images,
+        if has_pseudos { Some(&mut pseudos) } else { None },
         0,
     );
-    Styled { styles, bg_images }
+    Styled { styles, bg_images, pseudos }
 }

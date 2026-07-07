@@ -33,6 +33,9 @@ enum Status {
 struct Entry {
     url: String,
     status: Status,
+    // Largest box (w, h) the page draws this image into, noted at enqueue so a
+    // vector source can rasterize at its displayed size instead of upscaling.
+    hint: (u32, u32),
 }
 
 // Ceiling on resident decoded pixels. Past this the store fails new images
@@ -74,8 +77,24 @@ impl Store {
 
     pub(super) fn mark_pending(&mut self, url: &str) {
         if !self.contains(url) {
-            self.entries.push(Entry { url: String::from(url), status: Status::Pending });
+            self.entries.push(Entry {
+                url: String::from(url),
+                status: Status::Pending,
+                hint: (0, 0),
+            });
         }
+    }
+
+    // Grow the noted display size for `url`; the largest referencing box wins
+    // so the raster is sharp everywhere it appears.
+    pub(super) fn note_hint(&mut self, url: &str, w: u32, h: u32) {
+        if let Some(e) = self.entries.iter_mut().find(|e| e.url == url) {
+            e.hint = (e.hint.0.max(w), e.hint.1.max(h));
+        }
+    }
+
+    pub(super) fn hint(&self, url: &str) -> (u32, u32) {
+        self.entries.iter().find(|e| e.url == url).map(|e| e.hint).unwrap_or((0, 0))
     }
 
     pub(super) fn set_failed(&mut self, url: &str) {
@@ -95,7 +114,7 @@ impl Store {
     fn set(&mut self, url: &str, status: Status) {
         match self.entries.iter_mut().find(|e| e.url == url) {
             Some(e) => e.status = status,
-            None => self.entries.push(Entry { url: String::from(url), status }),
+            None => self.entries.push(Entry { url: String::from(url), status, hint: (0, 0) }),
         }
     }
 }

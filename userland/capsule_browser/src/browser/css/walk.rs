@@ -23,8 +23,11 @@ use crate::browser::dom::Dom;
 use super::apply_rules::apply_rules;
 use super::apply_style_attr::apply_style_attr;
 use super::computed::Computed;
+use super::pseudo_style::{pseudo_style, PseudoText};
 use super::rule::Rule;
 use super::rule_index::RuleIndex;
+
+type Pseudos = Vec<(Option<PseudoText>, Option<PseudoText>)>;
 
 #[allow(clippy::too_many_arguments)]
 pub(super) fn walk(
@@ -38,6 +41,7 @@ pub(super) fn walk(
     vars: &[(String, String)],
     styles: &mut Vec<Computed>,
     bg_images: &mut Vec<Option<String>>,
+    mut pseudos: Option<&mut Pseudos>,
     depth: u32,
 ) {
     let node = &dom.nodes[id];
@@ -51,6 +55,14 @@ pub(super) fn walk(
         if let Some(st) = node.attr("style") {
             apply_style_attr(st, &mut c, parent_fs, vars, &mut bg);
         }
+        // Generated content cascades against the element's final style, so
+        // the pseudo boxes inherit color and font exactly like a real child.
+        if let Some(p) = pseudos.as_deref_mut() {
+            p[id] = (
+                pseudo_style(dom, id, author, author_index, 1, &c, vars),
+                pseudo_style(dom, id, author, author_index, 2, &c, vars),
+            );
+        }
     }
     styles[id] = c;
     bg_images[id] = bg;
@@ -58,6 +70,19 @@ pub(super) fn walk(
         return;
     }
     for &ch in &node.children {
-        walk(dom, ch, c, ua, ua_index, author, author_index, vars, styles, bg_images, depth + 1);
+        walk(
+            dom,
+            ch,
+            c,
+            ua,
+            ua_index,
+            author,
+            author_index,
+            vars,
+            styles,
+            bg_images,
+            pseudos.as_deref_mut(),
+            depth + 1,
+        );
     }
 }

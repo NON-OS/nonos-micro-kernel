@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
 use alloc::vec::Vec;
 
 use super::abs_out_of_flow::out_of_flow;
@@ -50,28 +49,33 @@ pub(super) fn collect_items(
                 let px = c.style.font_size_px;
                 let fpx = px as f32;
                 let mono = c.style.mono;
+                let font = c.style.font_key;
+                let spacing = c.style.letter_spacing;
+                let bold = c.style.bold;
                 let measure = |s: &str| {
-                    if mono {
-                        nonos_app_skeleton::measure_ttf_mono(s, fpx)
-                    } else {
-                        nonos_app_skeleton::measure_ttf(s, fpx)
-                    }
+                    crate::browser::fonts::measure_text(font, mono, bold, s, fpx, spacing)
                 };
                 let space = measure(" ").max(1);
                 let line_h = c.style.line_height() as i32;
-                let word = |w: &str| InlineItem::Word {
-                    text: String::from(w),
-                    px,
-                    color: c.style.color,
-                    bg: c.style.bg,
-                    bold: c.style.bold,
-                    mono,
-                    underline: c.style.underline,
-                    href: c.href.clone(),
-                    adv: measure(w).max(0) + if c.style.bold { 1 } else { 0 },
-                    space,
-                    line_h,
-                    node: c.dom_id,
+                let tt = c.style.text_transform;
+                let word = |w: &str| {
+                    let text = super::text_transform::transform(w, tt);
+                    InlineItem::Word {
+                        px,
+                        color: c.style.color,
+                        bg: c.style.bg,
+                        bold,
+                        mono,
+                        underline: c.style.underline,
+                        font,
+                        spacing,
+                        href: c.href.clone(),
+                        adv: measure(&text).max(0),
+                        space,
+                        line_h,
+                        node: c.dom_id,
+                        text,
+                    }
                 };
                 if c.style.white_space == WhiteSpace::Pre {
                     // Preserve each line verbatim, breaking only at newlines, so
@@ -101,6 +105,7 @@ pub(super) fn collect_items(
                     h,
                     href: c.href.clone(),
                     node: c.dom_id,
+                    fit: c.style.object_fit,
                 });
             }
             BoxKind::Inline | BoxKind::Block | BoxKind::Flex | BoxKind::Grid => {

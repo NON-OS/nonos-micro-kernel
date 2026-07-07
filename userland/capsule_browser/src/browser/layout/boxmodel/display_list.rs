@@ -19,8 +19,21 @@ use alloc::vec::Vec;
 
 pub enum Content {
     None,
-    Text { text: String, color: u32, px: f32, bold: bool, mono: bool, underline: bool },
-    Image { src: String, alt: String },
+    Text {
+        text: String,
+        color: u32,
+        px: f32,
+        bold: bool,
+        mono: bool,
+        underline: bool,
+        font: u32,
+        spacing: f32,
+    },
+    Image {
+        src: String,
+        alt: String,
+        fit: crate::browser::css::ObjectFit,
+    },
 }
 
 // One painted rectangle in absolute page coordinates. Border widths run
@@ -39,8 +52,14 @@ pub struct Fragment {
     pub clip: Option<[i32; 4]>,
     // Painted without the scroll offset when true (position:fixed).
     pub fixed: bool,
+    // Sticky anchor (flow y, top offset) shared by the sticky subtree.
+    pub sticky: Option<(i32, i32)>,
+    // Effective opacity for everything this fragment paints.
+    pub alpha: u8,
     // background-image url to fetch and paint behind the box content.
     pub bg_image: Option<alloc::string::String>,
+    pub bg_size: crate::browser::css::BgSize,
+    pub bg_repeat: bool,
     // drop shadow painted behind the box.
     pub shadow: Option<crate::browser::css::Shadow>,
     pub radius: u32,

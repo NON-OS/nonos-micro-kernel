@@ -24,6 +24,10 @@ use super::simple::parse_simple;
 pub fn parse_selectors(list: &str) -> Vec<Selector> {
     let mut out: Vec<Selector> = Vec::new();
     for part in list.split(',') {
+        // A trailing pseudo-element turns the selector into a generated
+        // content rule for the matched element; both spellings are stripped
+        // before compound parsing so the host element matches normally.
+        let (part, element) = strip_pseudo_element(part.trim_end());
         // Give `>` its own token whether or not it was spaced.
         let spaced: String = part.chars().fold(String::new(), |mut s, ch| {
             if ch == '>' {
@@ -64,10 +68,22 @@ pub fn parse_selectors(list: &str) -> Vec<Selector> {
             ancestors.push(Step { simple, direct: below });
             below = d;
         }
-        out.push(Selector { key, ancestors });
+        out.push(Selector { key, ancestors, element });
         if out.len() >= 64 {
             break;
         }
     }
     out
+}
+
+// Peel a trailing ::before/::after (or the legacy single-colon spelling) off
+// one selector. 1 marks before, 2 after, 0 no pseudo-element.
+fn strip_pseudo_element(part: &str) -> (&str, u8) {
+    for (suffix, which) in [("::before", 1u8), ("::after", 2u8), (":before", 1u8), (":after", 2u8)]
+    {
+        if let Some(rest) = part.strip_suffix(suffix) {
+            return (rest, which);
+        }
+    }
+    (part, 0)
 }

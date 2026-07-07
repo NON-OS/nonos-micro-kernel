@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::browser::css::color::parse_color;
-use crate::browser::css::computed::{Computed, TextAlign, WhiteSpace};
+use crate::browser::css::computed::{Computed, TextAlign, TextTransform, WhiteSpace};
 use crate::browser::css::parse_line_height::parse_line_height;
 use crate::browser::css::parse_px::parse_px;
 
@@ -41,8 +41,19 @@ pub(super) fn apply_text(
             _ => {}
         },
         // The monospace generic (or an explicit mono family) switches text to
-        // the fixed-pitch face; anything else keeps the body face.
-        "font-family" => c.mono = value.to_ascii_lowercase().contains("mono"),
+        // the fixed-pitch face. A named first family keys the custom face the
+        // text draws in once its @font-face loads; a generic keeps the
+        // built-in one.
+        "font-family" => {
+            c.mono = value.to_ascii_lowercase().contains("mono");
+            let first = value.split(',').next().unwrap_or("").trim();
+            let bare = first.trim_matches('"').trim_matches('\'').trim();
+            c.font_key = match bare.to_ascii_lowercase().as_str() {
+                "" | "sans-serif" | "serif" | "system-ui" | "ui-sans-serif" => 0,
+                "monospace" | "ui-monospace" | "cursive" | "fantasy" => 0,
+                _ => crate::browser::fonts::family_key(bare),
+            };
+        }
         // Em resolves against the parent font size. Clamp above zero so a
         // styled element never reads as "no CSS size" downstream.
         "font-size" => {
@@ -58,10 +69,33 @@ pub(super) fn apply_text(
         "text-decoration" | "text-decoration-line" => {
             c.underline = value.split_whitespace().any(|t| t == "underline");
         }
+        "letter-spacing" => {
+            // Negative tracking tightens headings; parse the magnitude and
+            // restore the sign, since lengths only parse unsigned.
+            let v = value.trim();
+            if v.eq_ignore_ascii_case("normal") {
+                c.letter_spacing = 0.0;
+            } else {
+                let (mag, sign) = match v.strip_prefix('-') {
+                    Some(rest) => (rest, -1.0f32),
+                    None => (v, 1.0f32),
+                };
+                if let Some(px) = parse_px(mag, fs) {
+                    c.letter_spacing = (px.min(64) as f32) * sign;
+                }
+            }
+        }
         "white-space" => match value.trim() {
             "pre" | "pre-wrap" | "pre-line" | "break-spaces" => c.white_space = WhiteSpace::Pre,
             "nowrap" => c.white_space = WhiteSpace::Nowrap,
             "normal" => c.white_space = WhiteSpace::Normal,
+            _ => {}
+        },
+        "text-transform" => match value.trim() {
+            "uppercase" => c.text_transform = TextTransform::Upper,
+            "lowercase" => c.text_transform = TextTransform::Lower,
+            "capitalize" => c.text_transform = TextTransform::Capitalize,
+            "none" => c.text_transform = TextTransform::None,
             _ => {}
         },
         "text-align" => match value.trim() {

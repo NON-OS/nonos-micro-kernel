@@ -21,3 +21,5 @@ mod parse_hex;
 
 pub use complete::complete;
 pub use decode::decode;
+pub use find_crlf::find_crlf;
+pub use parse_hex::parse_hex;

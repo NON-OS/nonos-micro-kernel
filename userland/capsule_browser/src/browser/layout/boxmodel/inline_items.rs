@@ -26,6 +26,8 @@ pub(super) enum InlineItem {
         bold: bool,
         mono: bool,
         underline: bool,
+        font: u32,
+        spacing: f32,
         href: Option<String>,
         adv: i32,
         space: i32,
@@ -39,6 +41,7 @@ pub(super) enum InlineItem {
         h: i32,
         href: Option<String>,
         node: usize,
+        fit: crate::browser::css::ObjectFit,
     },
     Break,
 }

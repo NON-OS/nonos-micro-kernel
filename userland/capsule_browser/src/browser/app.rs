@@ -39,6 +39,13 @@ impl App for Browser {
         on_event(&mut self.state, event)
     }
     fn paint(&mut self, fb: &mut PaintBuffer) {
+        // The window can be resized after the page laid out; when the surface
+        // width changes, reflow the document to the new width so it fills the
+        // window instead of leaving a fixed-width column.
+        if fb.width != 0 && fb.width != self.state.viewport_w {
+            self.state.viewport_w = fb.width;
+            crate::browser::event::relayout(&mut self.state);
+        }
         paint(&self.state, fb);
     }
     fn on_tick(&mut self) -> bool {
@@ -67,13 +74,29 @@ impl App for Browser {
         if crate::browser::event::js_tick(&mut self.state) {
             return true;
         }
-        if crate::browser::fetch::js_pump(&mut self.state) {
-            return true;
-        }
+        // Stylesheets stay render-blocking, so they claim the free socket first.
         if crate::browser::fetch::css_pump(&mut self.state) {
             return true;
         }
-        crate::browser::image::pump(&mut self.state)
+        if crate::browser::fetch::font_pump(&mut self.state) {
+            return true;
+        }
+        // Then alternate the socket between script-issued fetches and images.
+        // A page whose JS never stops requesting would otherwise hold the one
+        // socket forever and no image would ever load.
+        let img_first = self.state.img_turn;
+        self.state.img_turn = !self.state.img_turn;
+        if img_first {
+            if crate::browser::image::pump(&mut self.state) {
+                return true;
+            }
+            crate::browser::fetch::js_pump(&mut self.state)
+        } else {
+            if crate::browser::fetch::js_pump(&mut self.state) {
+                return true;
+            }
+            crate::browser::image::pump(&mut self.state)
+        }
     }
     fn tick_interval_ms(&self) -> i64 {
         50

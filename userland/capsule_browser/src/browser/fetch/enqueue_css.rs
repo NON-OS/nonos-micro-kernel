@@ -53,5 +53,15 @@ pub fn enqueue_css(state: &mut State) {
             break;
         }
     }
+    // Stylesheets the WebFont loader would have requested count like any
+    // other sheet; their @font-face rules feed the font pipeline.
+    for u in super::webfont_shim::webfont_css_urls(dom) {
+        if !fresh.contains(&u)
+            && !state.css_queue.contains(&u)
+            && fresh.len() + state.css_queue.len() < MAX_SHEETS
+        {
+            fresh.push(u);
+        }
+    }
     state.css_queue.extend(fresh);
 }

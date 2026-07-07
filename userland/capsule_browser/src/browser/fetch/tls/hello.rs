@@ -30,6 +30,6 @@ pub(in crate::browser::fetch) fn hello(port: u32, f: &mut Fetch, now: u64) {
         f.phase = Phase::Error;
         return;
     }
-    f.tls = Some(TlsCtx { cf, flight: alloc::vec::Vec::new(), now });
+    f.tls = Some(TlsCtx { cf, flight: alloc::vec::Vec::new(), now, server_app: None });
     f.phase = Phase::TlsFlight;
 }

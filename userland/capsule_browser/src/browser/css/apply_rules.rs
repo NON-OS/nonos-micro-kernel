@@ -45,7 +45,9 @@ pub(super) fn apply_rules(
         };
         let mut best: Option<u32> = None;
         for sel in &rule.selectors {
-            if matches_selector(dom, id, sel) {
+            // Pseudo-element selectors style generated content, not the host;
+            // they cascade separately in pseudo_style.
+            if sel.element == 0 && matches_selector(dom, id, sel) {
                 let s = specificity(sel);
                 best = Some(best.map_or(s, |b| b.max(s)));
             }

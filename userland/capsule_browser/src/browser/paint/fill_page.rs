@@ -42,5 +42,15 @@ pub(super) fn fill_page(
     if x1 <= x0 || y1 <= y0 {
         return;
     }
+    // A translucent color composites per pixel; an opaque one takes the fast
+    // rect fill.
+    if (color >> 24) != 0xff {
+        for py in y0..y1 {
+            for px in x0..x1 {
+                super::grad::put_pixel(fb, px, py, color);
+            }
+        }
+        return;
+    }
     fb.fill_rect(x0 as u32, y0 as u32, (x1 - x0) as u32, (y1 - y0) as u32, color);
 }

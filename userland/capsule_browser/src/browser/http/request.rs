@@ -20,6 +20,16 @@ use crate::browser::url::Url;
 
 // GET, or a form POST when a urlencoded body rides along.
 pub fn build(url: &Url, post: Option<&str>) -> String {
+    request(url, post, false)
+}
+
+// GET on a connection the fetch machine keeps open for the next same-host
+// request, so a run of images pays a single handshake.
+pub fn build_keep_alive(url: &Url) -> String {
+    request(url, None, true)
+}
+
+fn request(url: &Url, post: Option<&str>, keep_alive: bool) -> String {
     let mut r = String::new();
     r.push_str(if post.is_some() { "POST " } else { "GET " });
     r.push_str(crate::browser::url::request_target(url));
@@ -27,7 +37,8 @@ pub fn build(url: &Url, post: Option<&str>) -> String {
     r.push_str(&crate::browser::url::authority(url));
     r.push_str("\r\nUser-Agent: nonos-browser/0.1\r\n");
     r.push_str("Accept: text/html,text/plain,application/json,*/*;q=0.1\r\n");
-    r.push_str("Accept-Encoding: gzip, deflate\r\nConnection: close\r\n");
+    r.push_str("Accept-Encoding: gzip, deflate\r\n");
+    r.push_str(if keep_alive { "Connection: keep-alive\r\n" } else { "Connection: close\r\n" });
     match post {
         Some(body) => {
             r.push_str("Content-Type: application/x-www-form-urlencoded\r\n");

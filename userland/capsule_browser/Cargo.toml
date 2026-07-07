@@ -21,6 +21,7 @@ path = "src/main.rs"
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
 nonos_toolkit = { path = "../toolkit" }
+spin = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex"] }
 
 [profile.release]
 panic = "abort"

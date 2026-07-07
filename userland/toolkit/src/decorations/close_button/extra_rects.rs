@@ -13,7 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::decorations::metrics::{BUTTON_GAP, CLOSE_BUTTON_SIZE, TITLEBAR_HEIGHT, TITLEBAR_PADDING};
+use crate::decorations::metrics::{
+    BUTTON_GAP, CLOSE_BUTTON_SIZE, TITLEBAR_HEIGHT, TITLEBAR_PADDING,
+};
 
 use super::types::CloseRect;
 
