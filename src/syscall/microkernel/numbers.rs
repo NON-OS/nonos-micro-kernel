@@ -33,6 +33,7 @@ pub const SYS_SPAWN: u64 = tag4(b"MSPN");
 pub const SYS_CAPSULE_LOAD: u64 = tag4(b"MCLD");
 pub const SYS_EXIT: u64 = tag4(b"MEXT");
 pub const SYS_PID_ALIVE: u64 = tag4(b"MPAL");
+pub const SYS_WAIT: u64 = tag4(b"MWAT");
 pub const SYS_GETPID: u64 = tag4(b"MGPD");
 pub const SYS_ARGS: u64 = tag4(b"MKAR");
 pub const SYS_THREAD_SPAWN: u64 = tag4(b"MTSP");

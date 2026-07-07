@@ -38,6 +38,7 @@ pub mod proc_output;
 pub mod process;
 pub mod procstat;
 pub mod time;
+pub mod wait;
 
 pub use attest::sys_attest_status;
 pub use battery::sys_battery_status;
@@ -57,3 +58,4 @@ pub use proc_output::sys_proc_output;
 pub use process::{sys_args, sys_exit, sys_spawn, sys_thread_spawn, sys_yield};
 pub use procstat::sys_proc_stat;
 pub use time::{sys_time_millis, sys_time_rtc};
+pub use wait::sys_wait;

@@ -26,6 +26,7 @@ use crate::syscall::microkernel::process::{
 };
 use crate::syscall::microkernel::procstat::sys_proc_stat;
 use crate::syscall::microkernel::time::{sys_time_millis, sys_time_rtc};
+use crate::syscall::microkernel::wait::sys_wait;
 
 pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
     Some(match nr {
@@ -35,6 +36,7 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_CAPSULE_LOAD => sys_capsule_load(a.a0),
         SYS_EXIT => sys_exit(a.a0 as i32),
         SYS_PID_ALIVE => sys_pid_alive(a.a0 as u32),
+        SYS_WAIT => sys_wait(a.a0, a.a1),
         SYS_GETPID => sys_getpid(),
         SYS_ARGS => sys_args(a.a0, a.a1 as usize),
         SYS_THREAD_SPAWN => sys_thread_spawn(a.a0, a.a1),

@@ -34,6 +34,7 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkCapsuleLoad
             | MkExit
             | MkPidAlive
+            | MkWait
             | MkGetPid
             | MkArgs
             | MkThreadSpawn
