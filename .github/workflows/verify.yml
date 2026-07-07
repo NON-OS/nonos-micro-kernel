@@ -113,6 +113,7 @@ jobs:
           - e1000_proofs
           - rtl8139_proofs
           - xhci_proofs
+          - stark_proofs
     steps:
       - uses: actions/checkout@v4
         with:
