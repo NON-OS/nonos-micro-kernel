@@ -1113,3 +1113,67 @@ fn a_fold_bound_to_a_wrong_opening_is_rejected() {
     let proof = stark_prove(&wired, &witness, QUERIES);
     assert!(!stark_verify(&wired, &proof, QUERIES), "a fold on a wrong opening verified");
 }
+
+/// A single Merkle opening whose committed leaf is the scalar `v` (a FRI leaf is
+/// `[v, 0, 0, 0]`), at an even index so the scalar lands in column zero. Returns
+/// the opening trace, the AIR, and its `opened_cells()` map.
+fn opening_of_scalar(v: Fp, log_rounds: u32) -> (Vec<Fp>, MultiMembership, Vec<(usize, usize)>) {
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let mut leaves = merkle_leaves(4);
+    leaves[2] = [v, Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let opening = opening_at(&tree, &leaves, 2);
+    let mem = MultiMembership::new(hasher, log_rounds, alloc::vec![opening]);
+    let trace = mem.trace();
+    let cells = mem.opened_cells();
+    (trace, mem, cells)
+}
+
+#[test]
+fn a_fold_bound_to_its_committed_opening_verifies() {
+    // The other half of the monolith's per-query binding: the fold must fold the
+    // value the Merkle opening actually committed, not an arbitrary one. The
+    // opening commits `a[0]` as its leaf; the wiring binds that leaf cell to the
+    // fold's opened value.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let (mem_trace, mem, cells) = opening_of_scalar(a[0], 2);
+    assert_eq!(cells[0].1, 0, "the committed scalar should sit in column zero");
+    let mem_h = mem_trace.len() / WIDTH;
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    let fold_h = 1usize << log_layers;
+    let (k, span) = (2usize, (mem_h + fold_h).next_power_of_two());
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    // leaf scalar at (cells[0].0, col 0) <-> fold's opened value at (mem_h, col 1)
+    sigma.swap(cells[0].0 * k, mem_h * k + 1);
+
+    let regions: Vec<Box<dyn Air>> = alloc::vec![Box::new(mem), Box::new(fold)];
+    let wired = Wired::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[mem_trace, fold_trace]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(stark_verify(&wired, &proof, QUERIES), "a fold bound to its opening was rejected");
+}
+
+#[test]
+fn a_fold_folding_an_uncommitted_value_is_rejected() {
+    // The opening commits a different value than the fold folds. Each is
+    // internally valid, but the wiring forces the fold to fold exactly what was
+    // committed, so the single proof fails.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let (mem_trace, mem, cells) = opening_of_scalar(a[0] + Fp::ONE, 2);
+    let mem_h = mem_trace.len() / WIDTH;
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    let fold_h = 1usize << log_layers;
+    let (k, span) = (2usize, (mem_h + fold_h).next_power_of_two());
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    sigma.swap(cells[0].0 * k, mem_h * k + 1);
+
+    let regions: Vec<Box<dyn Air>> = alloc::vec![Box::new(mem), Box::new(fold)];
+    let wired = Wired::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[mem_trace, fold_trace]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(!stark_verify(&wired, &proof, QUERIES), "a fold on an uncommitted value verified");
+}

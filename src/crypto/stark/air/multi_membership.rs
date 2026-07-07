@@ -117,6 +117,24 @@ impl MultiMembership {
         }
         trace
     }
+
+    /// The `(row, column)` of each opening's committed scalar in the trace, one
+    /// per opening. A Poseidon-committed FRI leaf is `[value, 0, 0, 0]`, so the
+    /// scalar is lane zero of the leaf, which the first index bit places in the
+    /// low half of the initial state (column zero) or the high half (column
+    /// `RATE`). A wiring engine binds these cells to where a fold consumes the
+    /// opened value, so the fold runs on exactly what the opening committed.
+    pub fn opened_cells(&self) -> alloc::vec::Vec<(usize, usize)> {
+        let span = self.span();
+        self.openings
+            .iter()
+            .enumerate()
+            .map(|(o, opening)| {
+                let col = if opening.directions[0] { RATE } else { 0 };
+                (o * span, col)
+            })
+            .collect()
+    }
 }
 
 fn inject(node: [Fp; RATE], sibling: [Fp; RATE], right: bool) -> [Fp; WIDTH] {
