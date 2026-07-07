@@ -1517,3 +1517,69 @@ fn a_fold_with_an_uncommitted_second_input_is_rejected() {
         "a fold on an uncommitted second input verified"
     );
 }
+
+/// A minimal single Merkle opening committing the scalar `v` (two leaves, two
+/// rounds), so per-layer openings stay cheap to fuse.
+fn small_opening_of_scalar(v: Fp) -> (Vec<Fp>, MultiMembership) {
+    let log_rounds = 1u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let mut leaves = merkle_leaves(2);
+    leaves[0] = [v, Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let opening = opening_at(&tree, &leaves, 0);
+    let mem = MultiMembership::new(hasher, log_rounds, alloc::vec![opening]);
+    let trace = mem.trace();
+    (trace, mem)
+}
+
+/// Fuse one opening per fold layer, each committing that layer's opened value,
+/// and wire each to the fold's input at that layer. `wrong_layer`, if set, makes
+/// that layer's opening commit a value the fold did not fold.
+fn per_layer_monolith(query: usize, wrong_layer: Option<usize>) -> (Wired, Vec<Fp>) {
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(query);
+    let mut regions: Vec<Box<dyn Air>> = Vec::new();
+    let mut traces: Vec<Vec<Fp>> = Vec::new();
+    let mut open_rows: Vec<usize> = Vec::new();
+    let mut acc = 0usize;
+    for (m, &am) in a.iter().enumerate().take(n_folds) {
+        let scalar = if wrong_layer == Some(m) { am + Fp::ONE } else { am };
+        let (tr, mem) = small_opening_of_scalar(scalar);
+        open_rows.push(acc);
+        acc += tr.len() / WIDTH;
+        traces.push(tr);
+        regions.push(Box::new(mem));
+    }
+    let fold_off = acc;
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    traces.push(fold.trace(&beta, &a, &b));
+    regions.push(Box::new(fold));
+    acc += 1usize << log_layers;
+
+    let span = acc.next_power_of_two();
+    let k = 2usize;
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    for (m, &orow) in open_rows.iter().enumerate() {
+        // opening m's leaf (col 0) <-> fold input at layer m (col 1)
+        sigma.swap(orow * k, (fold_off + m) * k + 1);
+    }
+    let wired = Wired::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&traces);
+    (wired, witness)
+}
+
+#[test]
+fn every_layer_input_is_a_committed_opening() {
+    // The full per-query opening structure: every layer's fold input is bound to
+    // a committed Merkle opening at that layer, not just the first.
+    let (wired, witness) = per_layer_monolith(6, None);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(stark_verify(&wired, &proof, QUERIES), "per-layer committed openings rejected");
+}
+
+#[test]
+fn an_uncommitted_layer_input_is_rejected() {
+    // One layer folds a value its opening did not commit; the proof fails.
+    let (wired, witness) = per_layer_monolith(6, Some(2));
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(!stark_verify(&wired, &proof, QUERIES), "an uncommitted layer input verified");
+}
