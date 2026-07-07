@@ -40,6 +40,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkThreadSpawn => caps.can_ipc(),
         SyscallNumber::MkProcOutput => caps.can_ipc(),
         SyscallNumber::MkWait => caps.can_ipc(),
+        SyscallNumber::MkKill => caps.can_ipc(),
 
         SyscallNumber::MkSpawn
         | SyscallNumber::MkIpcCall

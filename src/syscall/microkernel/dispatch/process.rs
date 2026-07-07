@@ -18,6 +18,7 @@ use super::args::Args;
 use crate::syscall::microkernel::attest::sys_attest_status;
 use crate::syscall::microkernel::battery::sys_battery_status;
 use crate::syscall::microkernel::capsule_load::sys_capsule_load;
+use crate::syscall::microkernel::kill::sys_kill;
 use crate::syscall::microkernel::memory::{sys_mmap, sys_munmap};
 use crate::syscall::microkernel::numbers::*;
 use crate::syscall::microkernel::proc_output::sys_proc_output;
@@ -37,6 +38,7 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_EXIT => sys_exit(a.a0 as i32),
         SYS_PID_ALIVE => sys_pid_alive(a.a0 as u32),
         SYS_WAIT => sys_wait(a.a0, a.a1),
+        SYS_KILL => sys_kill(a.a0, a.a1),
         SYS_GETPID => sys_getpid(),
         SYS_ARGS => sys_args(a.a0, a.a1 as usize),
         SYS_THREAD_SPAWN => sys_thread_spawn(a.a0, a.a1),
