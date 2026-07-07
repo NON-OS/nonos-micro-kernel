@@ -536,6 +536,80 @@ fn a_batched_opening_with_a_wrong_root_is_rejected() {
     assert!(!stark_verify(&air, &proof, QUERIES), "a wrong batched root verified");
 }
 
+fn value_leaves(values: &[Fp]) -> Vec<[Fp; RATE]> {
+    values
+        .iter()
+        .map(|v| {
+            let mut d = [Fp::ZERO; RATE];
+            d[0] = *v;
+            d
+        })
+        .collect()
+}
+
+#[test]
+fn a_full_fri_query_verifies() {
+    // A whole FRI query: fold a codeword, and for each layer prove its two
+    // openings are committed with the batched-opening STARK, then check the fold
+    // is consistent. The expensive Merkle work is proven; the cheap fold is a
+    // public field check. This is FRI query verification, composed from step 2.
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let (k, n_folds) = (5u32, 4usize); // domain 32, fold to size 2
+    let n = 1usize << k;
+    let inv2 = Fp::from_u64(2).inv();
+    let base_omega = root_of_unity(k);
+    let shift = Fp::from_u64(7);
+
+    // Fold a codeword, keeping every layer and its Poseidon commitment.
+    let mut s = 0xf17_u64 | 1;
+    let mut layers: Vec<Vec<Fp>> = alloc::vec![(0..n).map(|_| Fp::from_u64(xs(&mut s))).collect()];
+    let mut betas: Vec<Fp> = Vec::new();
+    let (mut omega, mut coset) = (base_omega, shift);
+    for _ in 0..n_folds {
+        let beta = Fp::from_u64(xs(&mut s));
+        betas.push(beta);
+        let cur = layers.last().unwrap().clone();
+        let half = cur.len() / 2;
+        let mut next = Vec::with_capacity(half);
+        let mut x = coset;
+        for i in 0..half {
+            let (a, b) = (cur[i], cur[i + half]);
+            next.push((a + b) * inv2 + beta * ((a - b) * inv2 * x.inv()));
+            x = x * omega;
+        }
+        layers.push(next);
+        omega = omega.square();
+        coset = coset.square();
+    }
+
+    let q = 6usize;
+    let (mut om, mut cs) = (base_omega, shift);
+    for m in 0..n_folds {
+        let size = layers[m].len();
+        let half = size / 2;
+        let i = q % half;
+        let (a, b) = (layers[m][i], layers[m][i + half]);
+
+        // Prove both openings are committed under the layer's root.
+        let leaves = value_leaves(&layers[m]);
+        let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+        let openings =
+            alloc::vec![opening_at(&tree, &leaves, i), opening_at(&tree, &leaves, i + half)];
+        let trace = multi_trace(&hasher, &openings, log_rounds);
+        let air = MultiMembership::new(hasher.clone(), log_rounds, openings);
+        let proof = stark_prove(&air, &trace, QUERIES);
+        assert!(stark_verify(&air, &proof, QUERIES), "layer {m} openings not proven committed");
+
+        // Check the fold publicly: it must land on the next layer's value.
+        let x = cs * om.pow(i as u64);
+        let folded = (a + b) * inv2 + betas[m] * ((a - b) * inv2 * x.inv());
+        assert_eq!(folded, layers[m + 1][i], "fold at layer {m} inconsistent");
+        om = om.square();
+        cs = cs.square();
+    }
+}
+
 #[test]
 fn a_membership_proof_for_a_wrong_root_is_rejected() {
     let log_rounds = 3u32;
