@@ -135,10 +135,18 @@ impl Sha512 {
     fn process_block(&mut self, block: &[u8; 128]) {
         let mut w = [0u64; 80];
 
-        for (word, chunk) in w.iter_mut().zip(block.chunks_exact(8)) {
-            let mut bytes = [0u8; 8];
-            bytes.copy_from_slice(chunk);
-            *word = u64::from_be_bytes(bytes);
+        for i in 0..16 {
+            let idx = i * 8;
+            w[i] = u64::from_be_bytes([
+                block[idx],
+                block[idx + 1],
+                block[idx + 2],
+                block[idx + 3],
+                block[idx + 4],
+                block[idx + 5],
+                block[idx + 6],
+                block[idx + 7],
+            ]);
         }
 
         for i in 16..80 {
@@ -182,12 +190,6 @@ impl Sha512 {
         self.state[5] = self.state[5].wrapping_add(f);
         self.state[6] = self.state[6].wrapping_add(g);
         self.state[7] = self.state[7].wrapping_add(h);
-    }
-}
-
-impl Default for Sha512 {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

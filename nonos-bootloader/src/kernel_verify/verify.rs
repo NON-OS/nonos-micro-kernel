@@ -16,7 +16,9 @@
 
 use uefi::prelude::*;
 use super::delay::mini_delay;
-use super::display_status::{print_kernel_size, print_verification_failure, print_verification_success};
+use super::display_status::{
+    print_kernel_size, print_verification_failure, print_verification_success,
+};
 use super::footer::handle_missing_footer;
 use super::helpers::{
     compute_and_display_hash, initialize_crypto_if_needed, validate_kernel_size,

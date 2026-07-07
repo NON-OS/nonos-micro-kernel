@@ -25,8 +25,6 @@ pub fn fill_bytes(buffer: &mut [u8]) {
 pub fn secure_random_u64() -> u64 {
     match random_u64_secure() {
         Ok(v) => v,
-        Err(_) => loop {
-            core::hint::spin_loop();
-        },
+        Err(e) => panic!("[RNG] secure entropy unavailable; refusing predictable output ({})", e.as_str()),
     }
 }

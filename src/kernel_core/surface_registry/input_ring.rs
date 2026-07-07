@@ -21,7 +21,7 @@ use super::types::{InputEvent, RegistryError, INPUT_RING_CAP};
 
 // MPSC ring: many driver capsules post (kbd, mouse, touch); a single
 // input_router capsule drains. Posts and drains both take the mutex
-// during the short critical section held over the event ring stores.
+// for now; lock is held only over a few u64 stores so contention stays
 // bounded. Per-source SPSC fanout lives inside the router capsule.
 
 struct Ring {

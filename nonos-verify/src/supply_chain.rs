@@ -52,7 +52,7 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         if matches!(flag, '+' | '-' | 'U') {
             bad = true;
         }
-        let mut it = line[1..].split_whitespace();
+        let mut it = line[1..].trim().split_whitespace();
         let sha = it.next().unwrap_or("");
         let path = it.next().unwrap_or("");
         subs.push(serde_json::json!({ "path": path, "sha": sha, "state": state }));

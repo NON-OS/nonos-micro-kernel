@@ -39,15 +39,20 @@ pub fn init() -> Result<(), &'static str> {
     Ok(())
 }
 
+/* DEV NOTES eK@nonos.systems
+   Secure random generation from hardware entropy sources: RDRAND, RDSEED, VirtIO RNG.
+   Returns cryptographic entropy or panics if secure entropy is unavailable (fail-closed).
+   For error handling, use try_secure_random_u64() instead.
+*/
 pub fn secure_random_u64() -> u64 {
     match try_secure_random_u64() {
         Ok(v) => {
             consume_entropy(64);
             v
         }
-        Err(_) => loop {
-            core::hint::spin_loop();
-        },
+        Err(e) => {
+            panic!("[RNG] secure entropy unavailable; refusing predictable output ({})", e)
+        }
     }
 }
 
@@ -71,6 +76,18 @@ pub fn try_secure_random_u64() -> Result<u64, &'static str> {
         }
     }
     Err("No hardware entropy source available")
+}
+
+#[allow(dead_code)]
+fn tsc_fallback_random() -> u64 {
+    use core::sync::atomic::{AtomicU64, Ordering};
+    static STATE: AtomicU64 = AtomicU64::new(0x853c49e6748fea9b);
+    let tsc = unsafe { core::arch::x86_64::_rdtsc() };
+    let old = STATE.load(Ordering::Relaxed);
+    let mixed = old.wrapping_mul(0x5851f42d4c957f2d).wrapping_add(tsc);
+    let new = mixed ^ (mixed >> 33);
+    STATE.store(new, Ordering::Relaxed);
+    new.wrapping_mul(0xff51afd7ed558ccd)
 }
 
 #[cfg(target_arch = "x86_64")]

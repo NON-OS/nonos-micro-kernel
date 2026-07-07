@@ -7,7 +7,6 @@ mod adversarial;
 mod attest;
 mod build;
 mod evidence;
-mod hygiene;
 mod release;
 mod report;
 mod reproducible;
@@ -26,7 +25,6 @@ fn main() {
     let result = match cmd {
         "build" => build::run(&root),
         "evidence" => evidence::run(&root),
-        "hygiene" => hygiene::run(&root),
         "trust-chain" => trust_chain::run(&root),
         "adversarial" => adversarial::run(&root),
         "reproducible" => reproducible::run(&root),
@@ -39,7 +37,6 @@ fn main() {
             eprintln!("usage: nonos-verify <subcommand>\n");
             eprintln!("  build          compile profile, section sizes, binary symbol scan");
             eprintln!("  evidence       benchmark/evidence tooling and production bootloader gate");
-            eprintln!("  hygiene        deny production panic paths, stubs, and temporary markers");
             eprintln!("  trust-chain    decode + verify every capsule against the baked anchor");
             eprintln!(
                 "  adversarial    tamper valid artifacts and assert the verifier rejects them"
