@@ -32,19 +32,23 @@ checkout.
   IPC length gate       Ipc           Verus                 .               #264
   Paging permissions    Paging        Verus                 .               #264
   Boot anti-rollback    AntiRollback  Kani (all u64)        runnable        #266
-  Boot image parser     .             Kani (total)          fuzz            #266
+  Boot image parser     BootImage     Kani (total)          fuzz            #266
   Kernel W^X            Isolation     Kani (all bits)       runnable        #268
   User-copy bounds      Isolation     Kani (all addr/len)   runnable        #268
-  Syscall id decode     .             Kani (all u64)        runnable        #268
+  Syscall id decode     Syscall       Kani (all u64)        runnable        #268
   Authorization gate    Authorization .                     runnable        #268
-  Capsule ELF loader    .             .                     fuzz            #268
+  Capsule ELF loader    Loader        .                     fuzz            #268
   Filesystem paths      Path          Kani                  runnable        #263
-  Network parsers       .             .                     fuzz            #267
+  Network parsers       NetParse      .                     fuzz            #267
     DNS/ICMP/ARP                                            (no panic,
     TCP/DHCP                                                 no OOB,
                                                              no loop)
-  AHCI block I/O        .             Kani (all req)        fuzz            #271
-  USB HID descriptor    .             .                     fuzz            #274
+  AHCI block I/O        BlockIO       Kani (all req)        fuzz            #271
+  USB HID descriptor    UsbHid        .                     fuzz            #274
+  NVMe block I/O        .             .                     fuzz            #276
+  USB MSC parsers       .             .                     fuzz            #278
+  xHCI TRB encoding     .             .                     runnable        #284
+  virtio-net RX slots   .             .                     fuzz            #287
   ─────────────────────────────────────────────────────────────────────────────
   Every crate: clippy -D warnings clean, zero allow(dead_code), source
   included (never copied) so a divergence is a build error.
@@ -59,8 +63,9 @@ checkout.
      field      ─▶  commitment  ─▶  + low-degree    ─▶  low-    ─▶  Fiat-  ─▶  to
                     (BLAKE3)         extension           degree      Shamir     end
       [done]         [done]           [done]             test
-     axioms         binding,         LDE recovers       [next]     [then]     [goal]
-     proven        tamper-proof      the polynomial
+     ring laws      binding,         LDE recovers       [next]     [then]     [goal]
+     in Lean       tamper-proof      the polynomial
+    Stark.Field    Stark.Merkle
 
 
                         WHY THIS, NOT A MODEL ALONE
