@@ -92,6 +92,32 @@ fn a_tampered_path_or_root_is_rejected() {
 }
 
 #[test]
+fn a_path_of_the_wrong_length_is_rejected() {
+    // The verifier binds the path length to the leaf's depth through its final
+    // `idx == 0` check. A truncated path forges a shallower position; an
+    // over-long path overshoots the root. Both must fail, or a prover could open
+    // to a position it never committed.
+    let ls = leaves(64, 99);
+    let tree = MerkleTree::commit(&ls);
+    let root = tree.root();
+    for i in [0usize, 1, 9, 40, 63] {
+        let leaf = ls[i];
+        let path = tree.open(i);
+        assert!(verify_path(&root, i, leaf, &path));
+
+        // Drop the topmost sibling: the recomputation stops below the root.
+        let mut short = path.clone();
+        short.pop();
+        assert!(!verify_path(&root, i, leaf, &short), "a truncated path verified");
+
+        // Append a sibling: the recomputation runs one level past the root.
+        let mut long = path.clone();
+        long.push([0xABu8; 32]);
+        assert!(!verify_path(&root, i, leaf, &long), "an over-long path verified");
+    }
+}
+
+#[test]
 fn distinct_leaf_sets_give_distinct_roots() {
     // Binding: changing any leaf changes the root (collision would break BLAKE3).
     let a = MerkleTree::commit(&leaves(64, 1)).root();
