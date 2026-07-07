@@ -22,3 +22,9 @@ mod ntt_tests;
 mod poly_tests;
 #[cfg(test)]
 mod poseidon_merkle_tests;
+#[cfg(test)]
+mod poseidon_tests;
+#[cfg(test)]
+mod recursive_verifier_tests;
+#[cfg(test)]
+mod transcript_tests;

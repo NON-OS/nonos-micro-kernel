@@ -1583,3 +1583,263 @@ fn an_uncommitted_layer_input_is_rejected() {
     let proof = stark_prove(&wired, &witness, QUERIES);
     assert!(!stark_verify(&wired, &proof, QUERIES), "an uncommitted layer input verified");
 }
+// The logup lookup argument: prove every witness value lies in a table. The
+// running sum sum 1/(a_i + X) - sum m_j/(t_j + X) is zero exactly when the
+// witness multiset is contained in the table, so an in-table witness verifies
+// and a value outside the table leaves a term the multiplicities cannot cancel.
+use crate::crypto::stark::air::Lookup;
+
+const LOOKUP_X: u64 = 0x5bd1_e995;
+
+#[test]
+fn a_lookup_of_in_table_values_verifies() {
+    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
+    // Every witness value is a table entry, some repeated.
+    let witness: Vec<Fp> = [3u64, 3, 7, 0, 5, 3].iter().map(|v| Fp::from_u64(*v)).collect();
+    let air = Lookup::new(witness, table, Fp::from_u64(LOOKUP_X));
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an in-table lookup was rejected");
+}
+
+#[test]
+fn an_out_of_table_value_is_rejected() {
+    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
+    // 42 is not in the table: it is counted in no multiplicity, so its inverse
+    // term is unmatched and the sum cannot return to zero.
+    let witness: Vec<Fp> = [3u64, 7, 42, 0].iter().map(|v| Fp::from_u64(*v)).collect();
+    let air = Lookup::new(witness, table, Fp::from_u64(LOOKUP_X));
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "an out-of-table value verified");
+}
+
+#[test]
+fn a_range_check_via_bit_limbs_verifies() {
+    // The mega-AIR use: range-check a value by looking up each of its low limbs
+    // in a small range table. Here every two-bit limb of a set of values is
+    // proven to lie in {0, 1, 2, 3}.
+    let table: Vec<Fp> = (0..4).map(Fp::from_u64).collect();
+    let values = [0u64, 5, 10, 15, 9, 6];
+    let mut limbs: Vec<Fp> = Vec::new();
+    for v in values {
+        limbs.push(Fp::from_u64(v & 0b11));
+        limbs.push(Fp::from_u64((v >> 2) & 0b11));
+    }
+    let air = Lookup::new(limbs, table, Fp::from_u64(LOOKUP_X));
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an in-range limb decomposition was rejected");
+}
+
+#[test]
+fn a_limb_out_of_range_is_rejected() {
+    // A limb of 4 does not fit a two-bit range table.
+    let table: Vec<Fp> = (0..4).map(Fp::from_u64).collect();
+    let limbs: Vec<Fp> = [0u64, 1, 4, 2].iter().map(|v| Fp::from_u64(*v)).collect();
+    let air = Lookup::new(limbs, table, Fp::from_u64(LOOKUP_X));
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "an out-of-range limb verified");
+}
+
+#[test]
+fn a_tampered_running_sum_is_rejected() {
+    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
+    let witness: Vec<Fp> = [1u64, 2, 3, 4].iter().map(|v| Fp::from_u64(*v)).collect();
+    let air = Lookup::new(witness, table, Fp::from_u64(LOOKUP_X));
+    let mut trace = air.trace();
+    // Perturb the running-sum column at one interior row (width 3, column 2).
+    trace[3 * 2 + 2] = trace[3 * 2 + 2] + Fp::ONE;
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a tampered running sum verified");
+}
+
+// Adversarial hardening of the lookup: over many random tables and witnesses,
+// every in-table witness verifies and every witness carrying an out-of-table
+// value is rejected, and the soundness holds under a challenge drawn from a
+// Poseidon transcript after the witness and multiplicities are committed, the
+// order the argument requires.
+
+fn lookup_xs(state: &mut u64) -> u64 {
+    *state ^= *state << 13;
+    *state ^= *state >> 7;
+    *state ^= *state << 17;
+    *state
+}
+
+#[test]
+fn the_lookup_verifies_and_rejects_over_random_cases() {
+    let table_size = 8u64;
+    let table: Vec<Fp> = (0..table_size).map(Fp::from_u64).collect();
+    let mut s = 0x1234_5678u64;
+    let x = Fp::from_u64(LOOKUP_X);
+
+    for _ in 0..40 {
+        let len = 1 + (lookup_xs(&mut s) % 8) as usize;
+        // An in-table witness: every value drawn from the table.
+        let good: Vec<Fp> =
+            (0..len).map(|_| Fp::from_u64(lookup_xs(&mut s) % table_size)).collect();
+        let air = Lookup::new(good, table.clone(), x);
+        let proof = stark_prove(&air, &air.trace(), QUERIES);
+        assert!(stark_verify(&air, &proof, QUERIES), "an in-table random witness was rejected");
+
+        // The same witness with one value pushed out of the table.
+        let mut bad: Vec<Fp> =
+            (0..len).map(|_| Fp::from_u64(lookup_xs(&mut s) % table_size)).collect();
+        bad[(lookup_xs(&mut s) as usize) % len] =
+            Fp::from_u64(table_size + 1 + lookup_xs(&mut s) % 100);
+        let bad_air = Lookup::new(bad, table.clone(), x);
+        let bad_proof = stark_prove(&bad_air, &bad_air.trace(), QUERIES);
+        assert!(
+            !stark_verify(&bad_air, &bad_proof, QUERIES),
+            "an out-of-table random witness verified"
+        );
+    }
+}
+
+#[test]
+fn the_lookup_is_sound_under_a_transcript_challenge() {
+    use crate::crypto::stark::poseidon_transcript::PoseidonTranscript;
+
+    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
+    let witness: Vec<Fp> = [2u64, 5, 5, 1, 7].iter().map(|v| Fp::from_u64(*v)).collect();
+
+    // Draw the logup challenge from a Poseidon transcript, after absorbing the
+    // witness and the multiplicities, so the challenge cannot be anticipated.
+    let draw = |witness: &[Fp], table: &[Fp]| -> Fp {
+        let probe = Lookup::new(witness.to_vec(), table.to_vec(), Fp::ZERO);
+        let mut tr = PoseidonTranscript::new(Poseidon::new(3, [Fp::ZERO; RATE]));
+        for v in witness {
+            tr.absorb(*v);
+        }
+        for m in probe.multiplicities() {
+            tr.absorb(*m);
+        }
+        tr.challenge()
+    };
+
+    let x = draw(&witness, &table);
+    let air = Lookup::new(witness.clone(), table.clone(), x);
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(
+        stark_verify(&air, &proof, QUERIES),
+        "an in-table witness failed under a drawn challenge"
+    );
+
+    let mut out = witness;
+    out.push(Fp::from_u64(99)); // 99 is not in the table
+    let x2 = draw(&out, &table);
+    let bad = Lookup::new(out, table, x2);
+    let bad_proof = stark_prove(&bad, &bad.trace(), QUERIES);
+    assert!(
+        !stark_verify(&bad, &bad_proof, QUERIES),
+        "an out-of-table witness verified under a drawn challenge"
+    );
+}
+
+use crate::crypto::stark::air::TupleLookup;
+
+const TUPLE_ALPHA: u64 = 0x9e37_79b9;
+
+// A position-dependent range table: position 0 admits a two-bit limb {0,1,2,3},
+// position 1 admits a one-bit limb {0,1}. A pair carries both the value and
+// where it is allowed to sit, so a legitimate value at the wrong position is not
+// a table entry.
+fn tuple_range_table() -> Vec<Vec<Fp>> {
+    let mut table = Vec::new();
+    for v in 0..4u64 {
+        table.push(alloc::vec![Fp::from_u64(v), Fp::ZERO]);
+    }
+    for v in 0..2u64 {
+        table.push(alloc::vec![Fp::from_u64(v), Fp::ONE]);
+    }
+    table
+}
+
+#[test]
+fn a_tuple_range_check_of_in_range_pairs_verifies() {
+    // Every value in [0, 8) splits into a two-bit low limb at position 0 and a
+    // one-bit high limb at position 1, each presented as a (value, position)
+    // pair that the table admits.
+    let table = tuple_range_table();
+    let mut witness: Vec<Vec<Fp>> = Vec::new();
+    for v in [0u64, 3, 4, 7, 5, 1] {
+        witness.push(alloc::vec![Fp::from_u64(v & 0b11), Fp::ZERO]);
+        witness.push(alloc::vec![Fp::from_u64((v >> 2) & 0b1), Fp::ONE]);
+    }
+    let air =
+        TupleLookup::new(witness, table, 2, Fp::from_u64(TUPLE_ALPHA), Fp::from_u64(LOOKUP_X));
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an in-range pair set was rejected");
+}
+
+#[test]
+fn a_right_value_wrong_position_is_rejected() {
+    // The value 3 is a legitimate limb, but only at position 0; presenting it at
+    // position 1 is out of range. A scalar lookup on the values alone would
+    // admit it, since 3 is in the value set; the pair lookup catches the
+    // position, which is exactly what range-checking a FRI index needs.
+    let table = tuple_range_table();
+    let witness: Vec<Vec<Fp>> = alloc::vec![
+        alloc::vec![Fp::from_u64(3), Fp::ZERO], // legitimate: 3 at position 0
+        alloc::vec![Fp::from_u64(3), Fp::ONE],  // right value, wrong position
+    ];
+    let air =
+        TupleLookup::new(witness, table, 2, Fp::from_u64(TUPLE_ALPHA), Fp::from_u64(LOOKUP_X));
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a value at the wrong position verified");
+}
+
+#[test]
+fn a_folded_opening_pair_looks_up_against_committed_pairs() {
+    // A folded FRI opening is an (a, b) pair; the verifier looks it up against
+    // the table of pairs the commitment fixes. A pair sharing a first component
+    // with a table entry but not its second is still off the table.
+    let table: Vec<Vec<Fp>> = [(3u64, 9u64), (5, 25), (7, 49), (2, 4)]
+        .iter()
+        .map(|(a, b)| alloc::vec![Fp::from_u64(*a), Fp::from_u64(*b)])
+        .collect();
+    let good: Vec<Vec<Fp>> = alloc::vec![
+        alloc::vec![Fp::from_u64(5), Fp::from_u64(25)],
+        alloc::vec![Fp::from_u64(2), Fp::from_u64(4)],
+    ];
+    let air =
+        TupleLookup::new(good, table.clone(), 2, Fp::from_u64(TUPLE_ALPHA), Fp::from_u64(LOOKUP_X));
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "a committed opening pair was rejected");
+
+    // Right first component, wrong second: (5, 24) is not a committed pair.
+    let bad: Vec<Vec<Fp>> = alloc::vec![alloc::vec![Fp::from_u64(5), Fp::from_u64(24)]];
+    let bad_air =
+        TupleLookup::new(bad, table, 2, Fp::from_u64(TUPLE_ALPHA), Fp::from_u64(LOOKUP_X));
+    let bad_proof = stark_prove(&bad_air, &bad_air.trace(), QUERIES);
+    assert!(!stark_verify(&bad_air, &bad_proof, QUERIES), "an unmatched opening pair verified");
+}
+
+#[test]
+fn the_tuple_lookup_verifies_and_rejects_over_random_cases() {
+    let table = tuple_range_table();
+    let mut s = 0x0bad_c0deu64;
+    let alpha = Fp::from_u64(TUPLE_ALPHA);
+    let x = Fp::from_u64(LOOKUP_X);
+
+    for _ in 0..40 {
+        let len = 1 + (lookup_xs(&mut s) % 6) as usize;
+        // An in-table pair set: every pair drawn from the table.
+        let good: Vec<Vec<Fp>> =
+            (0..len).map(|_| table[(lookup_xs(&mut s) as usize) % table.len()].clone()).collect();
+        let air = TupleLookup::new(good, table.clone(), 2, alpha, x);
+        let proof = stark_prove(&air, &air.trace(), QUERIES);
+        assert!(stark_verify(&air, &proof, QUERIES), "an in-table random pair set was rejected");
+
+        // One pair swapped to a valid value at a position it is not allowed: a
+        // 2 or 3 at position 1, in range for position 0 but off the table here.
+        let mut bad: Vec<Vec<Fp>> =
+            (0..len).map(|_| table[(lookup_xs(&mut s) as usize) % table.len()].clone()).collect();
+        bad[(lookup_xs(&mut s) as usize) % len] =
+            alloc::vec![Fp::from_u64(2 + lookup_xs(&mut s) % 2), Fp::ONE];
+        let bad_air = TupleLookup::new(bad, table.clone(), 2, alpha, x);
+        let bad_proof = stark_prove(&bad_air, &bad_air.trace(), QUERIES);
+        assert!(
+            !stark_verify(&bad_air, &bad_proof, QUERIES),
+            "an out-of-table random pair set verified"
+        );
+    }
+}

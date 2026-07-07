@@ -14,6 +14,7 @@ pub mod fri;
 pub mod fri_poseidon;
 pub mod merkle;
 pub mod poly;
+pub mod poseidon;
 pub mod poseidon_merkle;
 pub mod poseidon_transcript;
 pub mod transcript;
