@@ -65,6 +65,13 @@ impl Lookup {
         Lookup { log_n, witness, table, mult, challenge }
     }
 
+    /// The multiplicities counted for the table, so a caller can commit them to
+    /// a transcript before the challenge is drawn: soundness rests on the
+    /// challenge following this commitment.
+    pub fn multiplicities(&self) -> &[Fp] {
+        &self.mult
+    }
+
     /// The base length: the padded maximum of the witness and table lengths.
     fn base(&self) -> usize {
         1usize << self.log_n

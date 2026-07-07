@@ -834,3 +834,76 @@ fn a_tampered_running_sum_is_rejected() {
     let proof = stark_prove(&air, &trace, QUERIES);
     assert!(!stark_verify(&air, &proof, QUERIES), "a tampered running sum verified");
 }
+
+// Adversarial hardening of the lookup: over many random tables and witnesses,
+// every in-table witness verifies and every witness carrying an out-of-table
+// value is rejected, and the soundness holds under a challenge drawn from a
+// Poseidon transcript after the witness and multiplicities are committed, the
+// order the argument requires.
+
+fn lookup_xs(state: &mut u64) -> u64 {
+    *state ^= *state << 13;
+    *state ^= *state >> 7;
+    *state ^= *state << 17;
+    *state
+}
+
+#[test]
+fn the_lookup_verifies_and_rejects_over_random_cases() {
+    let table_size = 8u64;
+    let table: Vec<Fp> = (0..table_size).map(Fp::from_u64).collect();
+    let mut s = 0x1234_5678u64;
+    let x = Fp::from_u64(LOOKUP_X);
+
+    for _ in 0..40 {
+        let len = 1 + (lookup_xs(&mut s) % 8) as usize;
+        // An in-table witness: every value drawn from the table.
+        let good: Vec<Fp> =
+            (0..len).map(|_| Fp::from_u64(lookup_xs(&mut s) % table_size)).collect();
+        let air = Lookup::new(good, table.clone(), x);
+        let proof = stark_prove(&air, &air.trace(), QUERIES);
+        assert!(stark_verify(&air, &proof, QUERIES), "an in-table random witness was rejected");
+
+        // The same witness with one value pushed out of the table.
+        let mut bad: Vec<Fp> =
+            (0..len).map(|_| Fp::from_u64(lookup_xs(&mut s) % table_size)).collect();
+        bad[(lookup_xs(&mut s) as usize) % len] = Fp::from_u64(table_size + 1 + lookup_xs(&mut s) % 100);
+        let bad_air = Lookup::new(bad, table.clone(), x);
+        let bad_proof = stark_prove(&bad_air, &bad_air.trace(), QUERIES);
+        assert!(!stark_verify(&bad_air, &bad_proof, QUERIES), "an out-of-table random witness verified");
+    }
+}
+
+#[test]
+fn the_lookup_is_sound_under_a_transcript_challenge() {
+    use crate::crypto::stark::poseidon_transcript::PoseidonTranscript;
+
+    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
+    let witness: Vec<Fp> = [2u64, 5, 5, 1, 7].iter().map(|v| Fp::from_u64(*v)).collect();
+
+    // Draw the logup challenge from a Poseidon transcript, after absorbing the
+    // witness and the multiplicities, so the challenge cannot be anticipated.
+    let draw = |witness: &[Fp], table: &[Fp]| -> Fp {
+        let probe = Lookup::new(witness.to_vec(), table.to_vec(), Fp::ZERO);
+        let mut tr = PoseidonTranscript::new(Poseidon::new(3, [Fp::ZERO; RATE]));
+        for v in witness {
+            tr.absorb(*v);
+        }
+        for m in probe.multiplicities() {
+            tr.absorb(*m);
+        }
+        tr.challenge()
+    };
+
+    let x = draw(&witness, &table);
+    let air = Lookup::new(witness.clone(), table.clone(), x);
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an in-table witness failed under a drawn challenge");
+
+    let mut out = witness;
+    out.push(Fp::from_u64(99)); // 99 is not in the table
+    let x2 = draw(&out, &table);
+    let bad = Lookup::new(out, table, x2);
+    let bad_proof = stark_prove(&bad, &bad.trace(), QUERIES);
+    assert!(!stark_verify(&bad, &bad_proof, QUERIES), "an out-of-table witness verified under a drawn challenge");
+}
