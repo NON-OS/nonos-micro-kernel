@@ -178,3 +178,180 @@ impl Air for Lookup {
         alloc::vec![(2, 0, Fp::ZERO), (2, self.base(), Fp::ZERO)]
     }
 }
+
+/// A lookup of tuples: prove every witness tuple lies in a table of tuples. Each
+/// tuple is compressed to a single field element under a column-folding
+/// challenge `alpha`, `c(v) = sum_k alpha^k * v_k`, and the same logarithmic
+/// derivative sum runs on the compressed values,
+/// `sum_i 1/(c(a_i) + X) = sum_j m_j/(c(t_j) + X)`. Two tuples compress to the
+/// same value only if they are equal or `alpha` hits a root of their
+/// difference, so a random `alpha` makes the compression injective with
+/// overwhelming probability, and a witness tuple absent from the table leaves
+/// an unmatched term. This is what the monolithic verifier needs beyond scalar
+/// lookup: range-checking a FRI index looks up `(limb_value, limb_position)`
+/// pairs, so a valid limb in the wrong position is caught, and a folded opening
+/// is an `(a, b)` pair looked up against a table of committed pairs.
+///
+/// The tuple columns, multiplicities, and selectors are public periodic
+/// columns; the compression is formed in the constraint from the columns and
+/// `alpha`, so a caller sees the same shape as the scalar lookup. Soundness
+/// needs `alpha` and `X` drawn after the witness and multiplicities commit.
+pub struct TupleLookup {
+    log_n: u32,
+    width: usize,
+    witness: Vec<Vec<Fp>>,
+    table: Vec<Vec<Fp>>,
+    mult: Vec<Fp>,
+    alpha: Fp,
+    challenge: Fp,
+}
+
+impl TupleLookup {
+    /// A lookup of `witness` tuples into `table` tuples, each of width `width`,
+    /// under the folding challenge `alpha` and the logup challenge `X`. The
+    /// multiplicities count equal tuples, element for element.
+    pub fn new(
+        witness: Vec<Vec<Fp>>,
+        table: Vec<Vec<Fp>>,
+        width: usize,
+        alpha: Fp,
+        challenge: Fp,
+    ) -> TupleLookup {
+        let mult = table
+            .iter()
+            .map(|t| {
+                Fp::from_u64(witness.iter().filter(|w| w.as_slice() == t.as_slice()).count() as u64)
+            })
+            .collect();
+        let base = witness.len().max(table.len()).max(1).next_power_of_two();
+        let log_n = base.trailing_zeros();
+        TupleLookup { log_n, width, witness, table, mult, alpha, challenge }
+    }
+
+    /// The multiplicities, so a caller can commit them before the challenges are
+    /// drawn.
+    pub fn multiplicities(&self) -> &[Fp] {
+        &self.mult
+    }
+
+    fn base(&self) -> usize {
+        1usize << self.log_n
+    }
+
+    /// Compress a tuple to one field element, `sum_k alpha^k * v_k`.
+    fn compress(&self, v: &[Fp]) -> Fp {
+        let mut acc = Fp::ZERO;
+        let mut p = Fp::ONE;
+        for c in v {
+            acc = acc + p * *c;
+            p = p * self.alpha;
+        }
+        acc
+    }
+
+    /// The compressed witness value, compressed table value, multiplicity, and
+    /// the two selectors active at row `r`.
+    fn row(&self, r: usize) -> (Fp, Fp, Fp, Fp, Fp) {
+        let ca = self.witness.get(r).map(|w| self.compress(w)).unwrap_or(Fp::ZERO);
+        let ct = self.table.get(r).map(|t| self.compress(t)).unwrap_or(Fp::ZERO);
+        let m = self.mult.get(r).copied().unwrap_or(Fp::ZERO);
+        let sw = if r < self.witness.len() { Fp::ONE } else { Fp::ZERO };
+        let st = if r < self.table.len() { Fp::ONE } else { Fp::ZERO };
+        (ca, ct, m, sw, st)
+    }
+
+    /// The honest trace, the single source of truth: the two inverse columns and
+    /// the running sum on the compressed values.
+    pub fn trace(&self) -> Vec<Fp> {
+        let total = 1usize << self.log_trace_len();
+        let x = self.challenge;
+        let mut flat = Vec::with_capacity(total * self.trace_width());
+        let mut acc = Fp::ZERO;
+        for r in 0..total {
+            let (ca, ct, m, sw, st) = self.row(r);
+            let inv_a = if sw == Fp::ONE { (ca + x).inv() } else { Fp::ZERO };
+            let inv_t = if st == Fp::ONE { (ct + x).inv() } else { Fp::ZERO };
+            flat.push(inv_a);
+            flat.push(inv_t);
+            flat.push(acc);
+            acc = acc + sw * inv_a - st * (m * inv_t);
+        }
+        flat
+    }
+}
+
+impl Air for TupleLookup {
+    fn log_trace_len(&self) -> u32 {
+        self.log_n + 1
+    }
+
+    fn trace_width(&self) -> usize {
+        3
+    }
+
+    fn window_size(&self) -> usize {
+        2
+    }
+
+    fn constraint_degree(&self) -> usize {
+        // The compression is a linear form in the periodic tuple columns, so it
+        // does not raise the degree beyond the scalar lookup: the worst term
+        // still multiplies a selector, a multiplicity, and an inverse, three
+        // degree-`trace_len` columns.
+        3
+    }
+
+    fn num_transition(&self) -> usize {
+        3
+    }
+
+    fn periodic_columns(&self) -> Vec<Vec<Fp>> {
+        let total = 1usize << self.log_trace_len();
+        // width witness columns, width table columns, then multiplicity and the
+        // two selectors.
+        let mut cols: Vec<Vec<Fp>> =
+            (0..2 * self.width + 3).map(|_| Vec::with_capacity(total)).collect();
+        for r in 0..total {
+            for k in 0..self.width {
+                cols[k].push(self.witness.get(r).map(|w| w[k]).unwrap_or(Fp::ZERO));
+                cols[self.width + k].push(self.table.get(r).map(|t| t[k]).unwrap_or(Fp::ZERO));
+            }
+            let (_, _, m, sw, st) = self.row(r);
+            cols[2 * self.width].push(m);
+            cols[2 * self.width + 1].push(sw);
+            cols[2 * self.width + 2].push(st);
+        }
+        cols
+    }
+
+    fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
+        let inv_a = window[0];
+        let inv_t = window[1];
+        let s = window[2];
+        let s_next = window[5];
+
+        // Compress the tuple columns under alpha, the same linear form the trace
+        // used.
+        let mut ca = Fp::ZERO;
+        let mut ct = Fp::ZERO;
+        let mut p = Fp::ONE;
+        for k in 0..self.width {
+            ca = ca + p * periodic[k];
+            ct = ct + p * periodic[self.width + k];
+            p = p * self.alpha;
+        }
+        let m = periodic[2 * self.width];
+        let sw = periodic[2 * self.width + 1];
+        let st = periodic[2 * self.width + 2];
+        let x = self.challenge;
+
+        let inv_a_ok = sw * (inv_a * (ca + x) - Fp::ONE);
+        let inv_t_ok = st * (inv_t * (ct + x) - Fp::ONE);
+        let sum_step = s_next - s - sw * inv_a + st * (m * inv_t);
+        alloc::vec![inv_a_ok, inv_t_ok, sum_step]
+    }
+
+    fn boundary(&self) -> Vec<(usize, usize, Fp)> {
+        alloc::vec![(2, 0, Fp::ZERO), (2, self.base(), Fp::ZERO)]
+    }
+}
