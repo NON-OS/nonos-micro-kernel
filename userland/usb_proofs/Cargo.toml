@@ -1,0 +1,15 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the USB HID driver's descriptor parser over
+# attacker-controlled device data. Builds for the host so `cargo test` runs the
+# real parser (included via #[path]) against adversarial descriptors.
+[package]
+name = "usb_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
