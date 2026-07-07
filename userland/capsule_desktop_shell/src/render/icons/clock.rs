@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::syscall::{call_raw, N_MK_TIME_ADJUST, N_MK_TIME_MILLIS};
+use crate::state::Context;
 
-pub extern "C" fn mk_time_millis() -> i64 {
-    call_raw(N_MK_TIME_MILLIS, [0; 6])
-}
-
-pub extern "C" fn mk_time_adjust(correct_ms: u64) -> i64 {
-    call_raw(N_MK_TIME_ADJUST, [correct_ms, 0, 0, 0, 0, 0])
+pub fn clock(ctx: &Context, x: u32, y: u32, size: u32) {
+    let fg = super::constants::ICON_FG;
+    let bg = super::constants::ICON_BG;
+    super::paint::paint_u(ctx, x, y, size, 3, 2, 10, 12, fg);
+    super::paint::paint_u(ctx, x, y, size, 5, 4, 6, 8, bg);
+    super::paint::paint_u(ctx, x, y, size, 7, 5, 2, 4, fg);
+    super::paint::paint_u(ctx, x, y, size, 7, 8, 3, 2, fg);
 }

@@ -14,12 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::syscall::{call_raw, N_MK_TIME_ADJUST, N_MK_TIME_MILLIS};
+use nonos_app_skeleton::PaintBuffer;
 
-pub extern "C" fn mk_time_millis() -> i64 {
-    call_raw(N_MK_TIME_MILLIS, [0; 6])
+use crate::clock::state::State;
+use crate::clock::{fmt, theme};
+
+pub fn paint(state: &State, fb: &mut PaintBuffer) {
+    let buf = fmt::hm(state.edit_hour, state.edit_min);
+    fb.text_scaled(96, 100, &buf, theme::FG, 6);
+    adj(fb, 40, b"H-");
+    adj(fb, 118, b"H+");
+    adj(fb, 202, b"M-");
+    adj(fb, 280, b"M+");
+    fb.fill_rect(40, 300, 280, 48, theme::ACCENT);
+    fb.text(150, 318, b"Apply", theme::BG);
 }
 
-pub extern "C" fn mk_time_adjust(correct_ms: u64) -> i64 {
-    call_raw(N_MK_TIME_ADJUST, [correct_ms, 0, 0, 0, 0, 0])
+fn adj(fb: &mut PaintBuffer, x: u32, label: &[u8]) {
+    fb.fill_rect(x, 210, 68, 48, theme::DIM);
+    fb.text(x + 22, 228, label, theme::BG);
 }

@@ -14,12 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::syscall::{call_raw, N_MK_TIME_ADJUST, N_MK_TIME_MILLIS};
+use nonos_app_skeleton::{AppManifest, WindowKind};
 
-pub extern "C" fn mk_time_millis() -> i64 {
-    call_raw(N_MK_TIME_MILLIS, [0; 6])
-}
+pub const WIDTH: u32 = 360;
+pub const HEIGHT: u32 = 440;
+const WINDOW_ID: u32 = 0x434C_4F4B;
+const TITLE: &[u8] = b"Clock";
+const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
+const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
+const INPUT_MASK: u32 = INPUT_BUTTON_DOWN_BIT | INPUT_POINTER_ABS_BIT;
 
-pub extern "C" fn mk_time_adjust(correct_ms: u64) -> i64 {
-    call_raw(N_MK_TIME_ADJUST, [correct_ms, 0, 0, 0, 0, 0])
+pub fn manifest() -> AppManifest {
+    AppManifest {
+        title: TITLE,
+        window_id: WINDOW_ID,
+        kind: WindowKind::Normal,
+        initial_x: 820,
+        initial_y: 120,
+        width: WIDTH,
+        height: HEIGHT,
+        input_kind_mask: INPUT_MASK,
+    }
 }

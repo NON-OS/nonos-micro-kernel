@@ -168,6 +168,10 @@ impl CapabilityToken {
             || self.grants(Capability::Irq)
             || self.grants(Capability::Admin)
     }
+    #[inline]
+    pub fn can_set_time(&self) -> bool {
+        self.grants(Capability::TimeSet)
+    }
 }
 
 impl core::fmt::Display for CapabilityToken {

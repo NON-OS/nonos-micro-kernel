@@ -14,12 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::syscall::{call_raw, N_MK_TIME_ADJUST, N_MK_TIME_MILLIS};
-
-pub extern "C" fn mk_time_millis() -> i64 {
-    call_raw(N_MK_TIME_MILLIS, [0; 6])
-}
-
-pub extern "C" fn mk_time_adjust(correct_ms: u64) -> i64 {
-    call_raw(N_MK_TIME_ADJUST, [correct_ms, 0, 0, 0, 0, 0])
-}
+pub const BG: u32 = 0xFF10_1418;
+pub const FG: u32 = 0xFFF2_F4F6;
+pub const DIM: u32 = 0xFF8A_93A0;
+pub const ACCENT: u32 = 0xFF4C_9AFF;
+pub const ALERT: u32 = 0xFFE0_5A4A;

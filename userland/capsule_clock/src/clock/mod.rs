@@ -14,12 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::syscall::{call_raw, N_MK_TIME_ADJUST, N_MK_TIME_MILLIS};
+mod angles;
+mod app;
+mod civil;
+mod event;
+mod fixed;
+mod fmt;
+mod geom;
+mod manifest;
+mod paint;
+mod paint_analog;
+mod paint_settime;
+mod paint_stopwatch;
+mod paint_tabbar;
+mod paint_timer;
+mod state;
+mod stopwatch;
+mod tabs;
+mod theme;
+mod timer;
 
-pub extern "C" fn mk_time_millis() -> i64 {
-    call_raw(N_MK_TIME_MILLIS, [0; 6])
-}
-
-pub extern "C" fn mk_time_adjust(correct_ms: u64) -> i64 {
-    call_raw(N_MK_TIME_ADJUST, [correct_ms, 0, 0, 0, 0, 0])
-}
+pub use app::Clock;
