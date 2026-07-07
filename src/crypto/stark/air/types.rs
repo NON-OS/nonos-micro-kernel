@@ -25,6 +25,7 @@ use alloc::vec::Vec;
 /// One consistency query: the composition value at position `p`, and the trace
 /// values across the constraint window at `p`, laid out row-major
 /// (`window[k * width + col]`), each with a Merkle path to its column commitment.
+#[derive(Clone)]
 pub struct StarkQuery {
     pub comp: Fp,
     pub comp_path: Vec<[u8; 32]>,
@@ -33,6 +34,7 @@ pub struct StarkQuery {
 }
 
 /// A complete STARK proof.
+#[derive(Clone)]
 pub struct StarkProof {
     pub trace_roots: Vec<[u8; 32]>,
     pub fri: FriProof,

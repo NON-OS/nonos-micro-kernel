@@ -22,6 +22,7 @@ use alloc::vec::Vec;
 
 /// One layer's contribution to a query: the value at the queried position `i`
 /// and at its negation `i + n/2`, each with a Merkle path to that layer's root.
+#[derive(Clone)]
 pub struct LayerOpening {
     pub a: Fp,
     pub a_path: Vec<[u8; 32]>,
@@ -30,11 +31,13 @@ pub struct LayerOpening {
 }
 
 /// The openings a single query induces across every folded layer.
+#[derive(Clone)]
 pub struct QueryProof {
     pub layers: Vec<LayerOpening>,
 }
 
 /// A complete FRI low-degree proof.
+#[derive(Clone)]
 pub struct FriProof {
     pub roots: Vec<[u8; 32]>,
     pub final_layer: Vec<Fp>,

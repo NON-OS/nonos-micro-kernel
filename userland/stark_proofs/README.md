@@ -41,6 +41,17 @@ public column, known to prover and verifier, interpolated over the trace
 domain and evaluated at the same point as the trace, so a round-dependent
 constraint needs no per-row index and stays low degree.
 
+## The verifier against forgeries
+
+The verifier's two promises, that it never accepts a forgery and never panics
+on any input, are fuzzed directly. Every single-field mutation of a valid
+proof, across the trace commitments, the opened field elements, the Merkle
+path nodes, and the FRI openings, is rejected without a panic. Structurally
+malformed proofs, with truncated, extended, or reordered vectors, are rejected
+by the length and bounds guards rather than crashing. Proofs assembled from
+arbitrary bytes are refused. The verifier reads attacker-supplied data, so
+this is the property that matters: a forged proof is turned away, not trusted.
+
 ## Field, polynomial, Merkle, FRI, AIR
 
 The Goldilocks field arithmetic, the Lagrange evaluation and low-degree

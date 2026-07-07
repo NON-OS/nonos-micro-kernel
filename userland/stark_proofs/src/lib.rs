@@ -11,6 +11,8 @@ mod air_tests;
 #[cfg(test)]
 mod field_tests;
 #[cfg(test)]
+mod forgery_tests;
+#[cfg(test)]
 mod fri_tests;
 #[cfg(test)]
 mod merkle_tests;
