@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::crypto::stark::air::{
-    stark_prove, stark_verify, Fibonacci, Permutation2, PowerChain, Squaring,
+    poseidon_trace, stark_prove, stark_verify, Fibonacci, Permutation2, PoseidonPreimage, PowerChain,
+    Squaring,
 };
 use crate::crypto::stark::field::Fp;
 
@@ -142,6 +143,52 @@ fn a_wrong_permutation_output_is_rejected() {
     let air = Permutation2 { log_t: 4, rc0, rc1, out: [out[0] + Fp::ONE, out[1]] };
     let proof = stark_prove(&air, &trace, QUERIES);
     assert!(!stark_verify(&air, &proof, QUERIES), "a wrong permutation output verified");
+}
+
+// A rate-8 secret input for the Poseidon preimage tests.
+fn preimage_input() -> [Fp; 8] {
+    core::array::from_fn(|i| Fp::from_u64(1000 + i as u64))
+}
+
+#[test]
+fn an_honest_poseidon_preimage_verifies() {
+    // Prove knowledge of an input whose real Poseidon permutation reaches a
+    // public digest, without the proof carrying the input in its statement.
+    let (trace, digest) = poseidon_trace(preimage_input());
+    let air = PoseidonPreimage { digest };
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "honest Poseidon preimage rejected");
+}
+
+#[test]
+fn a_wrong_poseidon_digest_is_rejected() {
+    let (trace, digest) = poseidon_trace(preimage_input());
+    let air = PoseidonPreimage { digest: [digest[0] + Fp::ONE, digest[1], digest[2], digest[3]] };
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a wrong Poseidon digest verified");
+}
+
+#[test]
+fn a_corrupted_poseidon_round_is_rejected() {
+    // Flip one state lane at an interior round: the transition into the next
+    // row no longer matches the real round, so the composition fails.
+    let (mut trace, digest) = poseidon_trace(preimage_input());
+    let width = 12;
+    trace[5 * width + 3] = trace[5 * width + 3] + Fp::ONE;
+    let air = PoseidonPreimage { digest };
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a corrupted Poseidon round verified");
+}
+
+#[test]
+fn a_nonzero_capacity_initialization_is_rejected() {
+    // Seeding a capacity lane with anything but zero computes a different
+    // function; the sponge-initialization boundary rejects it.
+    let (mut trace, digest) = poseidon_trace(preimage_input());
+    trace[8] = Fp::from_u64(5); // row 0, capacity lane 8
+    let air = PoseidonPreimage { digest };
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a nonzero capacity init verified");
 }
 
 #[test]

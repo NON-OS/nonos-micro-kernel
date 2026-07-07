@@ -56,7 +56,7 @@ impl Air for PowerChain {
         1
     }
 
-    fn transition(&self, window: &[Fp]) -> Vec<Fp> {
+    fn transition(&self, window: &[Fp], _periodic: &[Fp]) -> Vec<Fp> {
         // f(g*x) - (f(x)^7 + c)
         let x = window[0];
         let x7 = x.pow(7);

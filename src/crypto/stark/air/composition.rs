@@ -22,7 +22,27 @@
 //! on the two sides by construction.
 
 use super::super::field::Fp;
+use super::super::poly::eval_lagrange;
 use super::spec::Air;
+use alloc::vec::Vec;
+
+/// Evaluate every periodic column of `air` at coset point `x`. Each column is
+/// interpolated over the trace domain `g^0..g^(t-1)` and read at `x`, exactly
+/// as the trace columns are, so prover and verifier obtain identical values.
+fn periodic_at<A: Air>(air: &A, g: Fp, x: Fp) -> Vec<Fp> {
+    let cols = air.periodic_columns();
+    if cols.is_empty() {
+        return Vec::new();
+    }
+    let t = 1usize << air.log_trace_len();
+    let mut h_pts: Vec<Fp> = Vec::with_capacity(t);
+    let mut hp = Fp::ONE;
+    for _ in 0..t {
+        h_pts.push(hp);
+        hp = hp * g;
+    }
+    cols.iter().map(|col| eval_lagrange(&h_pts, col, x)).collect()
+}
 
 /// Total number of random coefficients an AIR's composition consumes.
 pub(super) fn num_coeffs<A: Air>(air: &A) -> usize {
@@ -60,7 +80,8 @@ pub(super) fn compose<A: Air>(air: &A, g: Fp, x: Fp, window: &[Fp], coeffs: &[Fp
     }
 
     let mut acc = Fp::ZERO;
-    let transition = air.transition(window);
+    let periodic = periodic_at(air, g, x);
+    let transition = air.transition(window, &periodic);
     for (value, coeff) in transition.iter().zip(coeffs.iter()) {
         acc = acc + *coeff * (*value * exempt * z_h_inv);
     }

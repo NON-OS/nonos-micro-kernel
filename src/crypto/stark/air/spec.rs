@@ -44,11 +44,23 @@ pub trait Air {
     /// Number of transition constraints (the length of `transition`).
     fn num_transition(&self) -> usize;
 
+    /// Public periodic columns, each a full-length vector over the trace
+    /// domain, known to both prover and verifier and never committed. The
+    /// engine interpolates each over the trace domain and evaluates it at the
+    /// same point as the trace window, then passes the values to `transition`.
+    /// This is how a round-dependent constraint, such as a hash permutation
+    /// whose constants change every round, is expressed without a per-row
+    /// index. The default is none.
+    fn periodic_columns(&self) -> Vec<Vec<Fp>> {
+        Vec::new()
+    }
+
     /// The transition constraint values for a window laid out row-major:
     /// `window[k * trace_width + col]` is column `col` of the k-th row in the
-    /// window. Each returned value must be zero on every trace row except the
-    /// final `window_size - 1`.
-    fn transition(&self, window: &[Fp]) -> Vec<Fp>;
+    /// window. `periodic[c]` is the c-th periodic column evaluated at the base
+    /// row of the window. Each returned value must be zero on every trace row
+    /// except the final `window_size - 1`.
+    fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp>;
 
     /// Boundary constraints as `(column, row, value)`.
     fn boundary(&self) -> Vec<(usize, usize, Fp)>;
