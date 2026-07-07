@@ -1,0 +1,212 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+//! Verify several Poseidon Merkle openings in one STARK, the heavy half of a FRI
+//! query verifier: a query opens two values per layer, all under different
+//! roots, and this proves the whole batch at once. Each opening occupies a fixed
+//! run of rows and is a Merkle path verification; at an opening boundary the
+//! state resets to the next opening's public leaf and first sibling. The leaves
+//! are public (a FRI proof reveals its openings), and every root is pinned at
+//! its checkpoint.
+
+use super::super::field::Fp;
+use super::poseidon::{Poseidon, RATE, WIDTH};
+use super::spec::Air;
+use alloc::vec::Vec;
+
+/// One opening: a public leaf digest, its committed root, and the sibling path.
+pub struct Opening {
+    pub leaf: [Fp; RATE],
+    pub root: [Fp; RATE],
+    pub siblings: Vec<[Fp; RATE]>,
+    pub directions: Vec<bool>,
+}
+
+pub struct MultiMembership {
+    hasher: Poseidon,
+    log_rounds: u32,
+    depth: usize,
+    openings: Vec<Opening>,
+}
+
+impl MultiMembership {
+    /// Build the AIR for a batch of equal-depth openings under `hasher`.
+    pub fn new(hasher: Poseidon, log_rounds: u32, openings: Vec<Opening>) -> MultiMembership {
+        let depth = openings.first().map(|o| o.siblings.len()).unwrap_or(0);
+        MultiMembership { hasher, log_rounds, depth, openings }
+    }
+
+    fn rounds(&self) -> usize {
+        1usize << self.log_rounds
+    }
+
+    /// Slots per opening: a compression per level plus the root checkpoint,
+    /// rounded to a power of two.
+    fn log_slots(&self) -> u32 {
+        (self.depth + 1).next_power_of_two().trailing_zeros()
+    }
+
+    /// Openings padded to a power of two.
+    fn log_batch(&self) -> u32 {
+        self.openings.len().next_power_of_two().max(1).trailing_zeros()
+    }
+
+    /// Rows per opening.
+    fn span(&self) -> usize {
+        (1usize << self.log_slots()) * self.rounds()
+    }
+
+    fn initial_state(&self, opening: &Opening) -> [Fp; WIDTH] {
+        inject(opening.leaf, opening.siblings[0], opening.directions[0])
+    }
+}
+
+fn inject(node: [Fp; RATE], sibling: [Fp; RATE], right: bool) -> [Fp; WIDTH] {
+    let mut state = [Fp::ZERO; WIDTH];
+    if !right {
+        state[..RATE].copy_from_slice(&node);
+        state[RATE..].copy_from_slice(&sibling);
+    } else {
+        state[..RATE].copy_from_slice(&sibling);
+        state[RATE..].copy_from_slice(&node);
+    }
+    state
+}
+
+impl Air for MultiMembership {
+    fn log_trace_len(&self) -> u32 {
+        self.log_batch() + self.log_slots() + self.log_rounds
+    }
+
+    fn trace_width(&self) -> usize {
+        WIDTH
+    }
+
+    fn window_size(&self) -> usize {
+        2
+    }
+
+    fn constraint_degree(&self) -> usize {
+        8
+    }
+
+    fn num_transition(&self) -> usize {
+        WIDTH
+    }
+
+    fn periodic_columns(&self) -> Vec<Vec<Fp>> {
+        let l = self.rounds();
+        let span = self.span();
+        let depth = self.depth;
+        let n = 1usize << self.log_trace_len();
+        let count = self.openings.len();
+
+        // rc[WIDTH], slot_bnd, op_bnd, dir, sib[RATE], reset[WIDTH].
+        let cols_len = WIDTH + 3 + RATE + WIDTH;
+        let mut cols: Vec<Vec<Fp>> = (0..cols_len).map(|_| Vec::with_capacity(n)).collect();
+
+        for r in 0..n {
+            let rc = self.hasher.round_constant(r % l);
+            for (j, col) in cols.iter_mut().take(WIDTH).enumerate() {
+                col.push(rc[j]);
+            }
+
+            let opening = r / span; // which opening this row belongs to
+            let within = r % span; // row inside the opening
+            let at_row_boundary = within % l == l - 1;
+            let is_op_boundary = within == span - 1 && opening + 1 < count;
+            // A slot boundary that injects a sibling: last round of a real
+            // compression, not the opening's final reset.
+            let is_slot_boundary = at_row_boundary && within < depth * l;
+
+            cols[WIDTH].push(if is_slot_boundary && !is_op_boundary { Fp::ONE } else { Fp::ZERO });
+            cols[WIDTH + 1].push(if is_op_boundary { Fp::ONE } else { Fp::ZERO });
+
+            // Sibling and direction for the slot injection at `within`.
+            let m = (within + 1) / l;
+            let (dir, sib) = if is_slot_boundary && !is_op_boundary && opening < count && m < depth
+            {
+                (self.openings[opening].directions[m], self.openings[opening].siblings[m])
+            } else {
+                (false, [Fp::ZERO; RATE])
+            };
+            cols[WIDTH + 2].push(if dir { Fp::ONE } else { Fp::ZERO });
+            for (c, s) in sib.iter().enumerate() {
+                cols[WIDTH + 3 + c].push(*s);
+            }
+
+            // Reset state to the next opening's initial, at an opening boundary.
+            let reset = if is_op_boundary && opening + 1 < count {
+                self.initial_state(&self.openings[opening + 1])
+            } else {
+                [Fp::ZERO; WIDTH]
+            };
+            for (c, v) in reset.iter().enumerate() {
+                cols[WIDTH + 3 + RATE + c].push(*v);
+            }
+        }
+        cols
+    }
+
+    fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
+        let mut state = [Fp::ZERO; WIDTH];
+        state.copy_from_slice(&window[..WIDTH]);
+        let mut rc = [Fp::ZERO; WIDTH];
+        rc.copy_from_slice(&periodic[..WIDTH]);
+        let slot_bnd = periodic[WIDTH];
+        let op_bnd = periodic[WIDTH + 1];
+        let dir = periodic[WIDTH + 2];
+        let sib = &periodic[WIDTH + 3..WIDTH + 3 + RATE];
+        let reset = &periodic[WIDTH + 3 + RATE..WIDTH + 3 + RATE + WIDTH];
+
+        let pr = self.hasher.round_with_rc(&state, &rc);
+        let one = Fp::ONE;
+
+        let mut out = Vec::with_capacity(WIDTH);
+        for (j, next) in window[WIDTH..2 * WIDTH].iter().enumerate() {
+            let slot_inject = if j < RATE {
+                (one - dir) * pr[j] + dir * sib[j]
+            } else {
+                (one - dir) * sib[j - RATE] + dir * pr[j - RATE]
+            };
+            let expected =
+                op_bnd * reset[j] + slot_bnd * slot_inject + (one - op_bnd - slot_bnd) * pr[j];
+            out.push(*next - expected);
+        }
+        out
+    }
+
+    fn boundary(&self) -> Vec<(usize, usize, Fp)> {
+        let l = self.rounds();
+        let span = self.span();
+        let depth = self.depth;
+        let mut b = Vec::with_capacity(WIDTH + self.openings.len() * RATE);
+
+        // The first opening's whole initial state is public.
+        let first = self.initial_state(&self.openings[0]);
+        for (j, v) in first.iter().enumerate() {
+            b.push((j, 0, *v));
+        }
+        // Every opening's root sits at its checkpoint.
+        for (o, opening) in self.openings.iter().enumerate() {
+            let row = o * span + depth * l;
+            for (c, r) in opening.root.iter().enumerate() {
+                b.push((c, row, *r));
+            }
+        }
+        b
+    }
+}
