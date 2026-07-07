@@ -1433,3 +1433,31 @@ fn the_monolith_rejects_a_split_challenge_set() {
     let proof = stark_prove(&wired, &witness, QUERIES);
     assert!(!stark_verify(&wired, &proof, QUERIES), "the monolith accepted a split challenge set");
 }
+
+#[test]
+fn the_fan_out_wiring_is_robust_under_fuzzing() {
+    // The wiring invariant across the input space, not just hand-picked cases:
+    // over many random query sets, an honest fan-out (all queries on one
+    // challenge set) always verifies, and giving one query a different set is
+    // always rejected.
+    let mut s = 0x9e37_79b9u64 | 1;
+    for _ in 0..24 {
+        let q_count = 2 + (xs(&mut s) % 3) as usize; // 2..=4 queries
+        let queries: Vec<usize> = (0..q_count).map(|_| (xs(&mut s) % 32) as usize).collect();
+        let base = xs(&mut s);
+
+        // Honest: every query shares one challenge set.
+        let honest = alloc::vec![base; q_count];
+        let (w, wit) = multi_query_fanout(&queries, &honest);
+        let p = stark_prove(&w, &wit, QUERIES);
+        assert!(stark_verify(&w, &p, QUERIES), "honest fan-out rejected: {queries:?}");
+
+        // Dishonest: one query folds on a different set.
+        let victim = (xs(&mut s) % q_count as u64) as usize;
+        let mut seeds = honest.clone();
+        seeds[victim] = base ^ 0xffff_ffff;
+        let (w2, wit2) = multi_query_fanout(&queries, &seeds);
+        let p2 = stark_prove(&w2, &wit2, QUERIES);
+        assert!(!stark_verify(&w2, &p2, QUERIES), "split set accepted: {queries:?} v{victim}");
+    }
+}
