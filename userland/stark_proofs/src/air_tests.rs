@@ -1461,3 +1461,59 @@ fn the_fan_out_wiring_is_robust_under_fuzzing() {
         assert!(!stark_verify(&w2, &p2, QUERIES), "split set accepted: {queries:?} v{victim}");
     }
 }
+
+#[test]
+fn both_fold_inputs_are_bound_to_committed_openings() {
+    // A FRI query opens both f(x) and f(-x). This binds both of the fold's
+    // layer-zero inputs to committed Merkle openings, over three wired columns:
+    // the fold folds two values, and both are proven committed, not just the
+    // first.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let (open_a, mem_a, _) = opening_of_scalar(a[0], 2);
+    let (open_b, mem_b, _) = opening_of_scalar(b[0], 2);
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    let mem_h = open_a.len() / WIDTH;
+    let fold_off = 2 * mem_h;
+    let k = 3usize;
+    let span = (2 * mem_h + (1usize << log_layers)).next_power_of_two();
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    // open_a.leaf (row 0, col 0) <-> fold.a (fold_off, col 1)
+    sigma.swap(0, fold_off * k + 1);
+    // open_b.leaf (row mem_h, col 0) <-> fold.b (fold_off, col 2)
+    sigma.swap(mem_h * k, fold_off * k + 2);
+
+    let regions: Vec<Box<dyn Air>> = alloc::vec![Box::new(mem_a), Box::new(mem_b), Box::new(fold)];
+    let wired = Wired::new(regions, alloc::vec![0, 1, 2], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[open_a, open_b, fold_trace]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(stark_verify(&wired, &proof, QUERIES), "a fold on two committed openings was rejected");
+}
+
+#[test]
+fn a_fold_with_an_uncommitted_second_input_is_rejected() {
+    // The first input is committed but the second is a value no opening committed.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let (open_a, mem_a, _) = opening_of_scalar(a[0], 2);
+    let (open_b, mem_b, _) = opening_of_scalar(b[0] + Fp::ONE, 2); // commits a wrong b
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    let mem_h = open_a.len() / WIDTH;
+    let fold_off = 2 * mem_h;
+    let k = 3usize;
+    let span = (2 * mem_h + (1usize << log_layers)).next_power_of_two();
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    sigma.swap(0, fold_off * k + 1);
+    sigma.swap(mem_h * k, fold_off * k + 2);
+
+    let regions: Vec<Box<dyn Air>> = alloc::vec![Box::new(mem_a), Box::new(mem_b), Box::new(fold)];
+    let wired = Wired::new(regions, alloc::vec![0, 1, 2], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[open_a, open_b, fold_trace]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(
+        !stark_verify(&wired, &proof, QUERIES),
+        "a fold on an uncommitted second input verified"
+    );
+}
