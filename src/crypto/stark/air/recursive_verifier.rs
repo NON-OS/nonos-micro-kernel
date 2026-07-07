@@ -28,6 +28,7 @@
 //! verifier makes, and the one gate a high-degree inner proof cannot pass.
 
 use super::super::field::Fp;
+use super::poseidon::{Poseidon, RATE, WIDTH};
 use super::spec::Air;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -80,5 +81,256 @@ impl Air for FinalLayerConstant {
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {
         // That constant is the committed final-layer value.
         vec![(0, 0, self.value)]
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Step 3: the transcript-driven challenge derivation.
+// ---------------------------------------------------------------------------
+
+/// The recursive verifier's Fiat-Shamir, replayed in-circuit. A FRI proof draws
+/// its fold challenges and query positions from a Poseidon transcript over the
+/// committed layer roots and the final layer, in a fixed schedule: for each
+/// layer, absorb the root and squeeze the fold challenge; then absorb the final
+/// layer; then squeeze one challenge per query. This AIR runs that exact
+/// schedule over the arithmetized Poseidon permutation and pins each squeezed
+/// challenge to its value, so a proof made with the real transcript has its
+/// challenges re-derived here rather than trusted. The query challenges are the
+/// field elements the FRI verifier masks into positions; the masking composes
+/// where the query verifier consumes them.
+///
+/// The duplex matches `super::super::poseidon_transcript::PoseidonTranscript`:
+/// state starts at zero, an absorb adds a value into lane zero and permutes, a
+/// squeeze reads lane zero and permutes.
+pub struct FriTranscript {
+    hasher: Poseidon,
+    log_rounds: u32,
+    /// The public FRI layer roots, one rate-sized digest per fold.
+    roots: Vec<[Fp; RATE]>,
+    /// The public final layer.
+    final_layer: Vec<Fp>,
+    n_queries: usize,
+    /// The derived fold challenges, one per layer, pinned as the squeeze output.
+    betas: Vec<Fp>,
+    /// The derived query challenges, before masking into positions.
+    query_challenges: Vec<Fp>,
+    log_trace: u32,
+}
+
+impl FriTranscript {
+    /// Build the transcript for a proof with these public roots and final layer,
+    /// deriving the challenges with the same permutation the AIR arithmetizes.
+    pub fn new(
+        hasher: Poseidon,
+        log_rounds: u32,
+        roots: Vec<[Fp; RATE]>,
+        final_layer: Vec<Fp>,
+        n_queries: usize,
+    ) -> FriTranscript {
+        // Replay the schedule out of circuit to obtain the pinned challenges.
+        let mut state = [Fp::ZERO; WIDTH];
+        let mut betas = Vec::with_capacity(roots.len());
+        for root in &roots {
+            for v in root.iter() {
+                state[0] = state[0] + *v;
+                state = hasher.permute(state);
+            }
+            betas.push(state[0]);
+            state = hasher.permute(state);
+        }
+        for v in &final_layer {
+            state[0] = state[0] + *v;
+            state = hasher.permute(state);
+        }
+        let mut query_challenges = Vec::with_capacity(n_queries);
+        for _ in 0..n_queries {
+            query_challenges.push(state[0]);
+            state = hasher.permute(state);
+        }
+
+        let ops = Self::op_count(roots.len(), final_layer.len(), n_queries);
+        let rows = (ops << log_rounds).next_power_of_two().max(2);
+        let log_trace = rows.trailing_zeros();
+
+        FriTranscript {
+            hasher,
+            log_rounds,
+            roots,
+            final_layer,
+            n_queries,
+            betas,
+            query_challenges,
+            log_trace,
+        }
+    }
+
+    /// The public challenges this transcript derived, for the caller to feed on.
+    pub fn betas(&self) -> &[Fp] {
+        &self.betas
+    }
+
+    pub fn query_challenges(&self) -> &[Fp] {
+        &self.query_challenges
+    }
+
+    /// The number of permutations the schedule runs: for each layer, `RATE`
+    /// absorbs plus one squeeze; the final-layer absorbs; and one squeeze per
+    /// query.
+    fn op_count(n_folds: usize, final_len: usize, n_queries: usize) -> usize {
+        n_folds * (RATE + 1) + final_len + n_queries
+    }
+
+    /// The value absorbed into lane zero at the start of each operation, in
+    /// order, and `Fp::ZERO` for the squeeze operations that absorb nothing.
+    fn inject_schedule(&self) -> Vec<Fp> {
+        let mut inject = Vec::with_capacity(Self::op_count(
+            self.roots.len(),
+            self.final_layer.len(),
+            self.n_queries,
+        ));
+        for root in &self.roots {
+            for v in root.iter() {
+                inject.push(*v);
+            }
+            inject.push(Fp::ZERO); // the beta squeeze absorbs nothing
+        }
+        for v in &self.final_layer {
+            inject.push(*v);
+        }
+        for _ in 0..self.n_queries {
+            inject.push(Fp::ZERO); // the query squeeze absorbs nothing
+        }
+        inject
+    }
+
+    /// The operation rows at which a squeeze happens, paired with the pinned
+    /// challenge, in schedule order. A squeeze reads lane zero at the start of
+    /// its operation.
+    fn squeeze_points(&self) -> Vec<(usize, Fp)> {
+        let l = 1usize << self.log_rounds;
+        let mut pts = Vec::with_capacity(self.betas.len() + self.query_challenges.len());
+        let mut op = 0usize;
+        for (i, _) in self.roots.iter().enumerate() {
+            op += RATE; // the RATE absorb operations
+            pts.push((op * l, self.betas[i]));
+            op += 1; // the beta squeeze operation
+        }
+        op += self.final_layer.len();
+        for c in &self.query_challenges {
+            pts.push((op * l, *c));
+            op += 1;
+        }
+        pts
+    }
+
+    /// The honest trace: one row per round, the state advancing under the
+    /// permutation with the scheduled absorptions injected into lane zero.
+    pub fn trace(&self) -> Vec<Fp> {
+        let l = 1usize << self.log_rounds;
+        let rows = 1usize << self.log_trace;
+        let inject = self.inject_schedule();
+        let ops = inject.len();
+
+        let mut state = [Fp::ZERO; WIDTH];
+        state[0] = inject[0]; // the first operation's absorb seeds the state
+        let mut flat = Vec::with_capacity(rows * WIDTH);
+        for r in 0..rows {
+            flat.extend_from_slice(&state);
+            let rc = self.hasher.round_constant(r % l);
+            let mut nxt = self.hasher.round_with_rc(&state, &rc);
+            // At an operation boundary, the next operation absorbs its value.
+            if r % l == l - 1 {
+                let next_op = r / l + 1;
+                if next_op < ops {
+                    nxt[0] = nxt[0] + inject[next_op];
+                }
+            }
+            state = nxt;
+        }
+        flat
+    }
+}
+
+impl Air for FriTranscript {
+    fn log_trace_len(&self) -> u32 {
+        self.log_trace
+    }
+
+    fn trace_width(&self) -> usize {
+        WIDTH
+    }
+
+    fn window_size(&self) -> usize {
+        2
+    }
+
+    fn constraint_degree(&self) -> usize {
+        7
+    }
+
+    fn num_transition(&self) -> usize {
+        WIDTH
+    }
+
+    fn periodic_columns(&self) -> Vec<Vec<Fp>> {
+        let l = 1usize << self.log_rounds;
+        let rows = 1usize << self.log_trace;
+        let inject = self.inject_schedule();
+        let ops = inject.len();
+
+        // WIDTH round-constant columns, then the lane-zero injection column.
+        let mut cols: Vec<Vec<Fp>> = (0..WIDTH + 1).map(|_| Vec::with_capacity(rows)).collect();
+        for r in 0..rows {
+            let rc = self.hasher.round_constant(r % l);
+            for (j, col) in cols.iter_mut().take(WIDTH).enumerate() {
+                col.push(rc[j]);
+            }
+            // The injection is nonzero only at an operation's last round, and
+            // then only when the next operation absorbs.
+            let value = if r % l == l - 1 {
+                let next_op = r / l + 1;
+                if next_op < ops {
+                    inject[next_op]
+                } else {
+                    Fp::ZERO
+                }
+            } else {
+                Fp::ZERO
+            };
+            cols[WIDTH].push(value);
+        }
+        cols
+    }
+
+    fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
+        let mut state = [Fp::ZERO; WIDTH];
+        state.copy_from_slice(&window[..WIDTH]);
+        let mut rc = [Fp::ZERO; WIDTH];
+        rc.copy_from_slice(&periodic[..WIDTH]);
+        let inject = periodic[WIDTH];
+
+        let pr = self.hasher.round_with_rc(&state, &rc);
+        let mut out = Vec::with_capacity(WIDTH);
+        for (j, next) in window[WIDTH..2 * WIDTH].iter().enumerate() {
+            let extra = if j == 0 { inject } else { Fp::ZERO };
+            out.push(*next - (pr[j] + extra));
+        }
+        out
+    }
+
+    fn boundary(&self) -> Vec<(usize, usize, Fp)> {
+        let inject = self.inject_schedule();
+        let mut b = Vec::with_capacity(WIDTH + self.betas.len() + self.query_challenges.len());
+        // The state starts with the first absorbed value in lane zero, capacity
+        // and the rest at zero: the sponge initialization.
+        b.push((0, 0, inject[0]));
+        for j in 1..WIDTH {
+            b.push((j, 0, Fp::ZERO));
+        }
+        // Each squeeze reads lane zero at its operation's first row.
+        for (row, expected) in self.squeeze_points() {
+            b.push((0, row, expected));
+        }
+        b
     }
 }
