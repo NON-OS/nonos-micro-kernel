@@ -41,6 +41,8 @@ the *code*:
 | `UsbHid.a_zero_length_record_is_rejected` / `bindings_never_exceed_the_cap` | `userland/usb_proofs` (`descriptor_walk_terminates_and_binding_count_is_bounded`) |
 | `Stark.Field` ring laws / `results_are_canonical` | `userland/stark_proofs` `field_tests.rs` on the real Goldilocks code; multiplicative inverses stay code-side (`every_nonzero_element_has_an_inverse`) |
 | `Stark.Merkle.acceptance_iff_recomputation` / `distinct_leaves_give_distinct_roots` | `userland/stark_proofs` `merkle_tests.rs`; binding is conditional on compression injectivity (BLAKE3 collision resistance stays assumed) |
+| `Attestation.no_impersonation` / `sender_independent_of_claim` | `userland/fs_proofs` caller attestation (kernel mirror path, impersonation rejection, `proof_split_caller_no_impersonation` Kani) |
+| `Zeroization.no_secret_survives` / `reused_region_leaks_nothing` | kernel zeroization on capsule teardown and page reclaim |
 
 The proofs use only core Lean (no mathlib), so any recent `leanprover/lean4`
 toolchain checks them.
