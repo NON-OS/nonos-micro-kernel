@@ -46,6 +46,7 @@ pub const RATE: usize = 4;
 
 const RC_DOMAIN: &[u8] = b"NONOS-POSEIDON-GOLDILOCKS-RC";
 
+#[derive(Clone)]
 pub struct Poseidon {
     log_t: u32,
     mds: [[Fp; WIDTH]; WIDTH],
