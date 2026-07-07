@@ -22,9 +22,9 @@
 use super::super::field::Fp;
 use super::super::fri::{fri_prove, root_of_unity};
 use super::super::merkle::MerkleTree;
-use super::super::poly::eval_lagrange;
+use super::super::poly::lde;
 use super::super::transcript::Transcript;
-use super::composition::{compose, domain_params, eval_periodic, num_coeffs};
+use super::composition::{compose, domain_params, num_coeffs};
 use super::spec::Air;
 use super::types::{StarkProof, StarkQuery};
 use alloc::vec::Vec;
@@ -49,27 +49,14 @@ pub fn stark_prove<A: Air>(air: &A, trace: &[Fp], n_queries: usize) -> StarkProo
     let omega = root_of_unity(log_n);
     let shift = Fp::from_u64(SHIFT);
 
-    // Trace-domain points g^i.
-    let mut h_pts: Vec<Fp> = Vec::with_capacity(t);
-    let mut hp = Fp::ONE;
-    for _ in 0..t {
-        h_pts.push(hp);
-        hp = hp * g;
-    }
-
-    // Each column is interpolated and extended onto the coset, then committed.
+    // Each column is extended onto the coset by transform, then committed.
     let mut transcript = Transcript::new(b"NONOS-STARK");
     let mut trace_d: Vec<Vec<Fp>> = Vec::with_capacity(width);
     let mut trace_trees: Vec<MerkleTree> = Vec::with_capacity(width);
     let mut trace_roots: Vec<[u8; 32]> = Vec::with_capacity(width);
     for c in 0..width {
         let column: Vec<Fp> = (0..t).map(|i| trace[i * width + c]).collect();
-        let mut column_d: Vec<Fp> = Vec::with_capacity(n);
-        let mut x = shift;
-        for _ in 0..n {
-            column_d.push(eval_lagrange(&h_pts, &column, x));
-            x = x * omega;
-        }
+        let column_d = lde(&column, g, shift, omega, n);
         let tree = MerkleTree::commit(&column_d);
         transcript.absorb_digest(&tree.root());
         trace_roots.push(tree.root());
@@ -80,8 +67,9 @@ pub fn stark_prove<A: Air>(air: &A, trace: &[Fp], n_queries: usize) -> StarkProo
     // Composition coefficients, drawn after the whole trace is committed.
     let coeffs: Vec<Fp> = (0..num_coeffs(air)).map(|_| transcript.challenge_fp()).collect();
 
-    // Public periodic columns (round constants) interpolated over the trace domain.
-    let periodic_cols = air.periodic_columns();
+    // Public periodic columns (round constants), each extended onto the coset once.
+    let periodic_d: Vec<Vec<Fp>> =
+        air.periodic_columns().iter().map(|col| lde(col, g, shift, omega, n)).collect();
 
     // The constraint composition over the coset. The window at position j gathers
     // every column at rows j, j+blowup, ... which are f(x), f(g*x), ... on D.
@@ -95,7 +83,7 @@ pub fn stark_prove<A: Air>(air: &A, trace: &[Fp], n_queries: usize) -> StarkProo
                 window.push(column[idx]);
             }
         }
-        let periodic = eval_periodic(&periodic_cols, &h_pts, x);
+        let periodic: Vec<Fp> = periodic_d.iter().map(|pd| pd[j]).collect();
         comp_d.push(compose(air, g, x, &window, &periodic, &coeffs));
         x = x * omega;
     }

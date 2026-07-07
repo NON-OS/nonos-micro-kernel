@@ -15,4 +15,6 @@ mod fri_tests;
 #[cfg(test)]
 mod merkle_tests;
 #[cfg(test)]
+mod ntt_tests;
+#[cfg(test)]
 mod poly_tests;
