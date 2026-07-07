@@ -14,16 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(not(feature = "nonos-capsule-net-core"))]
-pub(super) fn spawn_legacy_stack() {
-    super::spawn_l2::spawn_l2();
-    super::spawn_ip::spawn_ip();
-    super::spawn_udp::spawn_udp();
-    super::spawn_dhcp::spawn_dhcp();
-    super::spawn_tcp::spawn_tcp();
-    super::spawn_dns::spawn_dns();
-    super::spawn_ntp::spawn_ntp();
+//! Shared liveness state for the `net.ntp.client` capsule.
+
+use crate::services::lifecycle::CapsuleState;
+
+static STATE: CapsuleState = CapsuleState::new();
+
+pub(super) fn set_alive(pid: u32) {
+    STATE.set_alive(pid);
 }
 
-#[cfg(feature = "nonos-capsule-net-core")]
-pub(super) fn spawn_legacy_stack() {}
+pub fn shared_state() -> &'static CapsuleState {
+    &STATE
+}

@@ -14,16 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(not(feature = "nonos-capsule-net-core"))]
-pub(super) fn spawn_legacy_stack() {
-    super::spawn_l2::spawn_l2();
-    super::spawn_ip::spawn_ip();
-    super::spawn_udp::spawn_udp();
-    super::spawn_dhcp::spawn_dhcp();
-    super::spawn_tcp::spawn_tcp();
-    super::spawn_dns::spawn_dns();
-    super::spawn_ntp::spawn_ntp();
+use core::sync::atomic::{AtomicU32, Ordering};
+
+pub const LOCAL_PORT: u16 = 50123;
+
+static UDP_PORT: AtomicU32 = AtomicU32::new(0);
+
+pub fn udp_port() -> u32 {
+    UDP_PORT.load(Ordering::Acquire)
 }
 
-#[cfg(feature = "nonos-capsule-net-core")]
-pub(super) fn spawn_legacy_stack() {}
+pub fn set_udp_port(port: u32) {
+    UDP_PORT.store(port, Ordering::Release);
+}

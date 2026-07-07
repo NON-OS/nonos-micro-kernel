@@ -14,16 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(not(feature = "nonos-capsule-net-core"))]
-pub(super) fn spawn_legacy_stack() {
-    super::spawn_l2::spawn_l2();
-    super::spawn_ip::spawn_ip();
-    super::spawn_udp::spawn_udp();
-    super::spawn_dhcp::spawn_dhcp();
-    super::spawn_tcp::spawn_tcp();
-    super::spawn_dns::spawn_dns();
-    super::spawn_ntp::spawn_ntp();
+use nonos_libc::mk_service_lookup;
+
+use crate::state::{set_udp_port, LOCAL_PORT};
+use crate::udp_client;
+
+const UDP_NAME: &str = "net.udp";
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum SetupError {
+    UdpMissing,
+    BindFailed,
 }
 
-#[cfg(feature = "nonos-capsule-net-core")]
-pub(super) fn spawn_legacy_stack() {}
+pub fn run() -> Result<(), SetupError> {
+    let mut port = 0u32;
+    let mut pid = 0u32;
+    let rc = mk_service_lookup(UDP_NAME.as_ptr(), UDP_NAME.len(), &mut port, &mut pid);
+    if rc != 0 || port == 0 {
+        return Err(SetupError::UdpMissing);
+    }
+    udp_client::bind(port, LOCAL_PORT).map_err(|_| SetupError::BindFailed)?;
+    set_udp_port(port);
+    Ok(())
+}

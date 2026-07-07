@@ -14,16 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(not(feature = "nonos-capsule-net-core"))]
-pub(super) fn spawn_legacy_stack() {
-    super::spawn_l2::spawn_l2();
-    super::spawn_ip::spawn_ip();
-    super::spawn_udp::spawn_udp();
-    super::spawn_dhcp::spawn_dhcp();
-    super::spawn_tcp::spawn_tcp();
-    super::spawn_dns::spawn_dns();
-    super::spawn_ntp::spawn_ntp();
+use nonos_libc::{mk_debug, mk_time_millis, mk_yield};
+
+pub fn sleep_ms(ms: u64) {
+    let deadline = mk_time_millis() + ms as i64;
+    while mk_time_millis() < deadline {
+        mk_yield();
+    }
 }
 
-#[cfg(feature = "nonos-capsule-net-core")]
-pub(super) fn spawn_legacy_stack() {}
+pub fn log(msg: &str) {
+    mk_debug(msg.as_ptr(), msg.len());
+}
