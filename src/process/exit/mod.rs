@@ -22,4 +22,4 @@ mod teardown;
 pub use exit_and_yield::exit_and_yield;
 pub(crate) use pending::drain as drain_pending_teardowns;
 pub use teardown::teardown;
-pub(crate) use teardown::reaped_exit_status;
+pub(crate) use teardown::reap_exit_status;

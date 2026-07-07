@@ -107,7 +107,8 @@ pub fn get_parent_pid(pid: u32) -> Option<u32> {
 }
 
 /// `Some(code)` once `pid` has exited (zombie or already reaped), `None`
-/// while it is still running or unknown.
+/// while it is still running or unknown. Once the process has been reaped,
+/// its logged status is consumed on read and returned exactly once.
 pub fn exit_status(pid: u32) -> Option<i32> {
     if let Some(pcb) = get_process(pid) {
         return match *pcb.state.lock() {
@@ -115,7 +116,7 @@ pub fn exit_status(pid: u32) -> Option<i32> {
             _ => None,
         };
     }
-    crate::process::exit::reaped_exit_status(pid)
+    crate::process::exit::reap_exit_status(pid)
 }
 
 pub fn set_controlling_tty(pid: u32, tty: u32) -> Result<(), i32> {
