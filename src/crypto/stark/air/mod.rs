@@ -23,6 +23,7 @@
 //! verifier is proven against forgeries, not assumed sound.
 
 mod composition;
+mod fiat_shamir;
 mod fibonacci;
 mod fri_fold;
 mod merkle_membership;
@@ -35,6 +36,7 @@ mod squaring;
 mod types;
 mod verify;
 
+pub use fiat_shamir::FiatShamir;
 pub use fibonacci::Fibonacci;
 pub use fri_fold::FriFold;
 pub use merkle_membership::MerkleMembership;

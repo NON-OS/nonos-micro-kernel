@@ -15,8 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::crypto::stark::air::{
-    stark_prove, stark_verify, Fibonacci, FriFold, MerkleMembership, Permutation2, Poseidon,
-    PowerChain, Squaring, RATE, WIDTH,
+    stark_prove, stark_verify, FiatShamir, Fibonacci, FriFold, MerkleMembership, Permutation2,
+    Poseidon, PowerChain, Squaring, RATE, WIDTH,
 };
 use crate::crypto::stark::field::Fp;
 use crate::crypto::stark::fri::root_of_unity;
@@ -438,6 +438,72 @@ fn a_membership_proof_for_a_wrong_root_is_rejected() {
     );
     let proof = stark_prove(&air, &trace, QUERIES);
     assert!(!stark_verify(&air, &proof, QUERIES), "a wrong-root membership proof verified");
+}
+
+/// Run the Poseidon sponge transcript: seed with the first value, then permute
+/// and absorb each remaining value, and squeeze the first lane. Returns the
+/// trace and the challenge.
+fn fiat_shamir_trace(
+    hasher: &Poseidon,
+    inputs: &[Fp],
+    log_rounds: u32,
+    log_slots: u32,
+) -> (Vec<Fp>, Fp) {
+    let l = 1usize << log_rounds;
+    let blocks = (1usize << log_slots) - 1;
+    let mut rows: Vec<[Fp; WIDTH]> = Vec::with_capacity((blocks + 1) * l);
+    let mut state = [Fp::ZERO; WIDTH];
+    state[0] = inputs[0];
+    for k in 0..blocks {
+        for round in 0..l {
+            rows.push(state);
+            state = hasher.round_with_rc(&state, &hasher.round_constant(round));
+        }
+        if k + 1 < blocks {
+            state[0] = state[0] + inputs[k + 1];
+        }
+    }
+    let challenge = state[0];
+    for round in 0..l {
+        rows.push(state);
+        state = hasher.round_with_rc(&state, &hasher.round_constant(round));
+    }
+    let mut trace = Vec::with_capacity(rows.len() * WIDTH);
+    for row in &rows {
+        trace.extend_from_slice(row);
+    }
+    (trace, challenge)
+}
+
+#[test]
+fn a_fiat_shamir_transcript_verifies() {
+    // Prove a challenge was squeezed from a sequence of absorbed values through a
+    // Poseidon transcript: challenge derivation, arithmetized, the last piece a
+    // recursive verifier needs to run its own Fiat-Shamir in circuit.
+    let (log_rounds, log_slots) = (3u32, 2u32); // 8-round permute, 3 absorbs
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let inputs = alloc::vec![Fp::from_u64(111), Fp::from_u64(222), Fp::from_u64(333)];
+    let (trace, challenge) = fiat_shamir_trace(&hasher, &inputs, log_rounds, log_slots);
+
+    let air = FiatShamir::new(
+        Poseidon::new(log_rounds, [Fp::ZERO; RATE]),
+        log_rounds,
+        log_slots,
+        inputs.clone(),
+        challenge,
+    );
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an honest transcript was rejected");
+
+    let bad = FiatShamir::new(
+        Poseidon::new(log_rounds, [Fp::ZERO; RATE]),
+        log_rounds,
+        log_slots,
+        inputs,
+        challenge + Fp::ONE,
+    );
+    let bad_proof = stark_prove(&bad, &trace, QUERIES);
+    assert!(!stark_verify(&bad, &bad_proof, QUERIES), "a wrong challenge verified");
 }
 
 #[test]
