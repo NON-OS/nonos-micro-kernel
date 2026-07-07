@@ -23,6 +23,7 @@
 //! verifier is proven against forgeries, not assumed sound.
 
 mod composition;
+mod copy_constraint;
 mod fiat_shamir;
 mod fibonacci;
 mod fri_fold;
@@ -38,6 +39,7 @@ mod squaring;
 mod types;
 mod verify;
 
+pub use copy_constraint::CopyConstraint;
 pub use fiat_shamir::FiatShamir;
 pub use fibonacci::Fibonacci;
 pub use fri_fold::FriFold;

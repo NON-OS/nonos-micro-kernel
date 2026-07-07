@@ -15,8 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::crypto::stark::air::{
-    stark_prove, stark_verify, FiatShamir, Fibonacci, FriFold, MerkleMembership, MultiMembership,
-    Opening, Permutation, Permutation2, Poseidon, PowerChain, Squaring, RATE, WIDTH,
+    stark_prove, stark_verify, CopyConstraint, FiatShamir, Fibonacci, FriFold, MerkleMembership,
+    MultiMembership, Opening, Permutation, Permutation2, Poseidon, PowerChain, Squaring, RATE,
+    WIDTH,
 };
 use crate::crypto::stark::field::Fp;
 use crate::crypto::stark::fri::root_of_unity;
@@ -567,6 +568,32 @@ fn permutation_trace(a: &[Fp], b: &[Fp], gamma: Fp) -> Vec<Fp> {
         z[i + 1] = z[i];
     }
     z
+}
+
+#[test]
+fn a_copy_constraint_verifies() {
+    // sigma has one non-trivial cycle {0, 3}: the wiring requires the values at
+    // positions 0 and 3 to be equal. This is how a beta computed in one region
+    // is bound to where a fold consumes it in another.
+    let sigma = alloc::vec![3usize, 1, 2, 0, 4, 5, 6, 7];
+    let values: Vec<Fp> = [5u64, 1, 2, 5, 8, 9, 10, 11].iter().map(|v| Fp::from_u64(*v)).collect();
+    let (beta, gamma) = (Fp::from_u64(0x5171), Fp::from_u64(0x9e37));
+    let air = CopyConstraint::new(values, sigma, beta, gamma);
+    let trace = air.trace();
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an honest copy constraint was rejected");
+}
+
+#[test]
+fn a_violated_copy_constraint_is_rejected() {
+    // The wiring says positions 0 and 3 are equal, but they are not.
+    let sigma = alloc::vec![3usize, 1, 2, 0, 4, 5, 6, 7];
+    let values: Vec<Fp> = [5u64, 1, 2, 9, 8, 9, 10, 11].iter().map(|v| Fp::from_u64(*v)).collect();
+    let (beta, gamma) = (Fp::from_u64(0x5171), Fp::from_u64(0x9e37));
+    let air = CopyConstraint::new(values, sigma, beta, gamma);
+    let trace = air.trace();
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a violated copy constraint verified");
 }
 
 #[test]
