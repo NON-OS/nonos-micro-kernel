@@ -1341,3 +1341,95 @@ fn a_query_folding_on_a_different_challenge_set_is_rejected() {
         "a query on a different challenge set verified"
     );
 }
+
+/// The whole-proof monolith: for each query, a Merkle opening of its codeword
+/// value and its in-circuit fold, all fused into one trace. Per query the
+/// opening is wired to the fold's opened value; across queries every fold's
+/// challenge is wired into one cycle. So one STARK attests, for every query at
+/// once, that the fold folded the committed value and that all queries used one
+/// challenge set. `seeds[q]` seeds query q; `wrong_opening` makes query 0 commit
+/// a value it did not fold.
+fn whole_proof_monolith(queries: &[usize], seeds: &[u64], wrong_opening: bool) -> (Wired, Vec<Fp>) {
+    let mut regions: Vec<Box<dyn Air>> = Vec::new();
+    let mut traces: Vec<Vec<Fp>> = Vec::new();
+    let mut heights: Vec<usize> = Vec::new();
+    let mut open_idx: Vec<usize> = Vec::new();
+    let mut fold_idx: Vec<usize> = Vec::new();
+    let mut n_folds = 0usize;
+
+    for (qi, (&query, &seed)) in queries.iter().zip(seeds).enumerate() {
+        let (beta, a, b, x_inv, dir, fv, ll, nf) = trace_fold_data_seeded(query, seed);
+        n_folds = nf;
+        let scalar = if wrong_opening && qi == 0 { a[0] + Fp::ONE } else { a[0] };
+        let (mtr, mem, _) = opening_of_scalar(scalar, 2);
+        open_idx.push(regions.len());
+        heights.push(mtr.len() / WIDTH);
+        traces.push(mtr);
+        regions.push(Box::new(mem));
+
+        let fold = TraceFold::new(ll, nf, x_inv, dir, fv);
+        fold_idx.push(regions.len());
+        heights.push(1usize << ll);
+        traces.push(fold.trace(&beta, &a, &b));
+        regions.push(Box::new(fold));
+    }
+
+    let mut offsets: Vec<usize> = Vec::new();
+    let mut acc = 0usize;
+    for &h in &heights {
+        offsets.push(acc);
+        acc += h;
+    }
+    let span = acc.next_power_of_two();
+    let k = 2usize;
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+
+    // Per query: the opening's leaf (column zero) <-> the fold's opened value
+    // (column one).
+    for qi in 0..queries.len() {
+        let leaf = offsets[open_idx[qi]] * k; // (row, col 0)
+        let opened = offsets[fold_idx[qi]] * k + 1; // (row, col 1)
+        sigma.swap(leaf, opened);
+    }
+    // Across queries: cycle each layer's folding challenge (column zero).
+    let qn = queries.len();
+    for m in 0..n_folds {
+        for qi in 0..qn {
+            let here = (offsets[fold_idx[qi]] + m) * k;
+            let next = (offsets[fold_idx[(qi + 1) % qn]] + m) * k;
+            sigma[here] = next;
+        }
+    }
+
+    let wired = Wired::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&traces);
+    (wired, witness)
+}
+
+#[test]
+fn the_whole_fri_verification_is_one_stark() {
+    // Two queries, each with its opening and its fold, all in one proof: every
+    // fold folded the committed value and both queries used one challenge set.
+    let seed = 0xf01d_1234u64 | 1;
+    let (wired, witness) = whole_proof_monolith(&[6, 10], &[seed, seed], false);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(stark_verify(&wired, &proof, QUERIES), "the whole-proof monolith was rejected");
+}
+
+#[test]
+fn the_monolith_rejects_an_uncommitted_fold() {
+    // One query folds a value its opening did not commit.
+    let seed = 0xf01d_1234u64 | 1;
+    let (wired, witness) = whole_proof_monolith(&[6, 10], &[seed, seed], true);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(!stark_verify(&wired, &proof, QUERIES), "the monolith accepted an uncommitted fold");
+}
+
+#[test]
+fn the_monolith_rejects_a_split_challenge_set() {
+    // The two queries fold on different challenge sets.
+    let seed = 0xf01d_1234u64 | 1;
+    let (wired, witness) = whole_proof_monolith(&[6, 10], &[seed, 0xdead_beef], false);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(!stark_verify(&wired, &proof, QUERIES), "the monolith accepted a split challenge set");
+}
