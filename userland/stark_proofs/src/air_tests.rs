@@ -298,6 +298,40 @@ fn a_tampered_trace_opening_is_rejected() {
     let seed = Fp::from_u64(3);
     let air = Squaring { log_t: 3, seed };
     let mut proof = stark_prove(&air, &squaring_trace(3, seed), QUERIES);
-    proof.queries[0].window[0] = proof.queries[0].window[0] + Fp::ONE;
+    proof.queries[0].trace[0] = proof.queries[0].trace[0] + Fp::ONE;
     assert!(!stark_verify(&air, &proof, QUERIES), "a tampered trace opening verified");
+}
+
+#[test]
+fn a_full_scale_poseidon_preimage_verifies() {
+    // The scale check: 256 rounds, a width-8 trace, an evaluation domain of
+    // 4096 points. This is the NTT prover at work; the quadratic extension it
+    // replaced would not finish this in reasonable test time.
+    let log_t = 8u32;
+    let params = Poseidon::new(log_t, [Fp::ZERO; RATE]);
+    let (trace, digest) = poseidon_trace(&params, absorb(sample_input()), log_t);
+    let air = Poseidon::new(log_t, digest);
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "full-scale poseidon preimage rejected");
+}
+
+#[test]
+fn a_long_squaring_chain_verifies() {
+    // A 1024-row single-column trace, domain 4096.
+    let seed = Fp::from_u64(3);
+    let air = Squaring { log_t: 10, seed };
+    let proof = stark_prove(&air, &squaring_trace(10, seed), QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "long squaring chain rejected");
+}
+
+#[test]
+fn a_tampered_ood_frame_is_rejected() {
+    // The out-of-domain frame is the point where the constraints are actually
+    // checked. A frame that lies about the trace breaks the DEEP quotients, and
+    // the low-degree test rejects.
+    let seed = Fp::from_u64(3);
+    let air = Squaring { log_t: 3, seed };
+    let mut proof = stark_prove(&air, &squaring_trace(3, seed), QUERIES);
+    proof.ood_frame[0] = proof.ood_frame[0] + Fp::ONE;
+    assert!(!stark_verify(&air, &proof, QUERIES), "a tampered ood frame verified");
 }

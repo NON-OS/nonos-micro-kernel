@@ -22,20 +22,11 @@
 //! on the two sides by construction.
 
 use super::super::field::Fp;
-use super::super::poly::eval_lagrange;
 use super::spec::Air;
-use alloc::vec::Vec;
 
 /// Total number of random coefficients an AIR's composition consumes.
 pub(super) fn num_coeffs<A: Air>(air: &A) -> usize {
     air.num_transition() + air.boundary().len()
-}
-
-/// Evaluate each periodic column at point `x` by interpolating it over the trace
-/// domain `h_pts`. The columns are public, so prover and verifier compute this
-/// identically.
-pub(super) fn eval_periodic(columns: &[Vec<Fp>], h_pts: &[Fp], x: Fp) -> Vec<Fp> {
-    columns.iter().map(|col| eval_lagrange(h_pts, col, x)).collect()
 }
 
 /// The evaluation-domain sizing derived from the AIR: `(log_n, fri_log_blowup)`.

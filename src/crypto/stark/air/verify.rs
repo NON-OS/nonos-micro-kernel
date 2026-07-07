@@ -14,18 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The STARK verifier, generic over any AIR. It checks the composition is low
-//! degree through FRI, then at each sampled position checks the committed
-//! composition equals the constraint composition recomputed from the committed
-//! trace window across all columns. A false trace yields either a high-degree
-//! composition (FRI rejects) or one that disagrees with the trace (consistency
-//! rejects). It only reads the proof and never panics.
+//! The DEEP STARK verifier, generic over any AIR. It recomputes the transcript,
+//! evaluates the constraints once at the out-of-domain point using the claimed
+//! trace frame, checks with FRI that the DEEP quotient polynomial is low degree,
+//! and at each sampled position recomputes that quotient from the committed
+//! trace and composition openings. A false trace either breaks a quotient (FRI
+//! rejects) or disagrees with an opening (the consistency check rejects). It
+//! only reads the proof and never panics.
 
 use super::super::field::Fp;
 use super::super::fri::{fri_verify, root_of_unity};
 use super::super::merkle::verify_path;
+use super::super::poly::eval_lagrange;
 use super::super::transcript::Transcript;
-use super::composition::{compose, domain_params, eval_periodic, num_coeffs};
+use super::composition::{compose, domain_params, num_coeffs};
+use super::prove::draw_ood_point;
 use super::spec::Air;
 use super::types::StarkProof;
 use alloc::vec::Vec;
@@ -36,13 +39,16 @@ const SHIFT: u64 = 7;
 /// derived from the AIR, matching the prover.
 pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bool {
     let log_t = air.log_trace_len();
+    let t = 1usize << log_t;
     let width = air.trace_width();
     let (log_n, fri_log_blowup) = domain_params(air);
     let n = 1usize << log_n;
-    let blowup = 1usize << (log_n - log_t);
     let window_size = air.window_size();
 
-    if proof.trace_roots.len() != width || proof.queries.len() != n_queries {
+    if proof.trace_roots.len() != width
+        || proof.ood_frame.len() != window_size * width
+        || proof.queries.len() != n_queries
+    {
         return false;
     }
 
@@ -50,54 +56,74 @@ pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bo
     let omega = root_of_unity(log_n);
     let shift = Fp::from_u64(SHIFT);
 
-    // Trace-domain points g^i, for interpolating the public periodic columns.
-    let t = 1usize << log_t;
-    let mut h_pts: Vec<Fp> = Vec::with_capacity(t);
-    let mut hp = Fp::ONE;
-    for _ in 0..t {
-        h_pts.push(hp);
-        hp = hp * g;
-    }
-    let periodic_cols = air.periodic_columns();
-
-    // 1. The composition must be low degree (below the derived bound).
-    if !fri_verify(&proof.fri, shift, log_n, fri_log_blowup, n_queries) {
-        return false;
-    }
-    let comp_root = proof.fri.roots[0];
-
-    // 2. Recover the composition coefficients and query positions.
+    // Rebuild the transcript exactly as the prover did.
     let mut transcript = Transcript::new(b"NONOS-STARK");
     for root in &proof.trace_roots {
         transcript.absorb_digest(root);
     }
     let coeffs: Vec<Fp> = (0..num_coeffs(air)).map(|_| transcript.challenge_fp()).collect();
-    transcript.absorb_digest(&comp_root);
+    transcript.absorb_digest(&proof.comp_root);
+    let z = draw_ood_point(&mut transcript, shift, n, t);
+    for value in &proof.ood_frame {
+        transcript.absorb_fp(*value);
+    }
+    let deep_coeffs: Vec<Fp> =
+        (0..width * window_size + 1).map(|_| transcript.challenge_fp()).collect();
 
-    // 3. The committed composition must equal the constraint composition of the
-    // committed trace window, across every column, at every sampled position.
-    let expected_window = window_size * width;
+    // The constraints, checked once at the out-of-domain point: the composition
+    // there is derived from the claimed frame with this verifier's own boundary
+    // and transition algebra.
+    let h_pts: Vec<Fp> = {
+        let mut v = Vec::with_capacity(t);
+        let mut p = Fp::ONE;
+        for _ in 0..t {
+            v.push(p);
+            p = p * g;
+        }
+        v
+    };
+    let periodic_z: Vec<Fp> =
+        air.periodic_columns().iter().map(|col| eval_lagrange(&h_pts, col, z)).collect();
+    let comp_z = compose(air, g, z, &proof.ood_frame, &periodic_z, &coeffs);
+
+    // The DEEP quotient polynomial must be low degree.
+    if !fri_verify(&proof.fri, shift, log_n, fri_log_blowup, n_queries) {
+        return false;
+    }
+    let deep_root = proof.fri.roots[0];
+    transcript.absorb_digest(&deep_root);
+
+    // Every sampled position: bind the openings to their commitments and
+    // recompute the DEEP value from them.
     for qd in &proof.queries {
         let p = transcript.challenge_index(n);
-        if qd.window.len() != expected_window || qd.window_paths.len() != expected_window {
+        if qd.trace.len() != width || qd.trace_paths.len() != width {
             return false;
         }
-        if !verify_path(&comp_root, p, qd.comp, &qd.comp_path) {
+        if !verify_path(&deep_root, p, qd.deep, &qd.deep_path)
+            || !verify_path(&proof.comp_root, p, qd.comp, &qd.comp_path)
+        {
             return false;
         }
-        for k in 0..window_size {
-            let idx = (p + k * blowup) % n;
-            for c in 0..width {
-                let slot = k * width + c;
-                if !verify_path(&proof.trace_roots[c], idx, qd.window[slot], &qd.window_paths[slot])
-                {
-                    return false;
-                }
+        for c in 0..width {
+            if !verify_path(&proof.trace_roots[c], p, qd.trace[c], &qd.trace_paths[c]) {
+                return false;
             }
         }
+
         let x = shift * omega.pow(p as u64);
-        let periodic = eval_periodic(&periodic_cols, &h_pts, x);
-        if qd.comp != compose(air, g, x, &qd.window, &periodic, &coeffs) {
+        let mut acc = Fp::ZERO;
+        for k in 0..window_size {
+            let zk = z * g.pow(k as u64);
+            let inv_x_zk = (x - zk).inv();
+            for c in 0..width {
+                let claimed = proof.ood_frame[k * width + c];
+                acc = acc + deep_coeffs[k * width + c] * ((qd.trace[c] - claimed) * inv_x_zk);
+            }
+        }
+        let e = deep_coeffs[width * window_size];
+        acc = acc + e * ((qd.comp - comp_z) * (x - z).inv());
+        if acc != qd.deep {
             return false;
         }
     }
