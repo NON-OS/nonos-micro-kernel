@@ -16,7 +16,7 @@
 
 use crate::crypto::stark::air::{
     stark_prove, stark_verify, FiatShamir, Fibonacci, FriFold, MerkleMembership, MultiMembership,
-    Opening, Permutation2, Poseidon, PowerChain, Squaring, RATE, WIDTH,
+    Opening, Permutation, Permutation2, Poseidon, PowerChain, Squaring, RATE, WIDTH,
 };
 use crate::crypto::stark::field::Fp;
 use crate::crypto::stark::fri::root_of_unity;
@@ -608,6 +608,47 @@ fn a_full_fri_query_verifies() {
         om = om.square();
         cs = cs.square();
     }
+}
+
+/// Build the grand-product column: start at one, multiply by (a+g)/(b+g) per
+/// step over the sequence, then carry the final value through the inert tail.
+fn permutation_trace(a: &[Fp], b: &[Fp], gamma: Fp) -> Vec<Fp> {
+    let n = a.len();
+    let total = 2 * n;
+    let mut z = alloc::vec![Fp::ZERO; total];
+    z[0] = Fp::ONE;
+    for i in 0..n {
+        z[i + 1] = z[i] * (a[i] + gamma) * (b[i] + gamma).inv();
+    }
+    for i in n..total - 1 {
+        z[i + 1] = z[i];
+    }
+    z
+}
+
+#[test]
+fn a_permutation_argument_verifies() {
+    // Two sequences with the same multiset: the grand product returns to one.
+    let a: Vec<Fp> = (1..=8).map(Fp::from_u64).collect();
+    let b: Vec<Fp> = [3u64, 1, 4, 8, 2, 7, 5, 6].iter().map(|v| Fp::from_u64(*v)).collect();
+    let gamma = Fp::from_u64(0x9e37_79b9);
+    let trace = permutation_trace(&a, &b, gamma);
+    let air = Permutation::new(a, b, gamma);
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an honest permutation was rejected");
+}
+
+#[test]
+fn a_non_permutation_is_rejected() {
+    // Different multisets: the product does not return to one, so the checkpoint
+    // fails and the proof is rejected.
+    let a: Vec<Fp> = (1..=8).map(Fp::from_u64).collect();
+    let b: Vec<Fp> = (2..=9).map(Fp::from_u64).collect();
+    let gamma = Fp::from_u64(0x9e37_79b9);
+    let trace = permutation_trace(&a, &b, gamma);
+    let air = Permutation::new(a, b, gamma);
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a non-permutation verified");
 }
 
 #[test]
