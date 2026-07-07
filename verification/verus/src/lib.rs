@@ -14,19 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::global::{fill_random_bytes, random_u64_secure};
+//! Verus-verified theorems about NONOS security algebra. Nothing here runs at
+//! kernel time; it is checked by the Verus SMT verifier and is the machine-
+//! checked layer of the proof strategy documented in `verification/README.md`.
 
-#[inline]
-pub fn fill_bytes(buffer: &mut [u8]) {
-    fill_random_bytes(buffer);
-}
-
-#[inline]
-pub fn secure_random_u64() -> u64 {
-    match random_u64_secure() {
-        Ok(v) => v,
-        Err(_) => loop {
-            core::hint::spin_loop();
-        },
-    }
-}
+pub mod capabilities;
+pub mod ipc_lengths;
+pub mod page_permissions;

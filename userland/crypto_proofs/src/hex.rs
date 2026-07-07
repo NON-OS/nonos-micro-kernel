@@ -14,19 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::global::{fill_random_bytes, random_u64_secure};
-
-#[inline]
-pub fn fill_bytes(buffer: &mut [u8]) {
-    fill_random_bytes(buffer);
+// Parse a 64-char hex string into a 32-byte digest for comparing against the
+// published test vectors.
+pub fn hex32(s: &str) -> [u8; 32] {
+    let b = s.as_bytes();
+    assert_eq!(b.len(), 64, "expected a 64-char hex digest");
+    let mut out = [0u8; 32];
+    for (i, byte) in out.iter_mut().enumerate() {
+        *byte = (nibble(b[2 * i]) << 4) | nibble(b[2 * i + 1]);
+    }
+    out
 }
 
-#[inline]
-pub fn secure_random_u64() -> u64 {
-    match random_u64_secure() {
-        Ok(v) => v,
-        Err(_) => loop {
-            core::hint::spin_loop();
-        },
+fn nibble(c: u8) -> u8 {
+    match c {
+        b'0'..=b'9' => c - b'0',
+        b'a'..=b'f' => c - b'a' + 10,
+        b'A'..=b'F' => c - b'A' + 10,
+        _ => panic!("bad hex digit"),
     }
 }

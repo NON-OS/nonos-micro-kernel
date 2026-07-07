@@ -14,19 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::global::{fill_random_bytes, random_u64_secure};
+extern crate alloc;
+use alloc::vec::Vec;
 
-#[inline]
-pub fn fill_bytes(buffer: &mut [u8]) {
-    fill_random_bytes(buffer);
-}
-
-#[inline]
-pub fn secure_random_u64() -> u64 {
-    match random_u64_secure() {
-        Ok(v) => v,
-        Err(_) => loop {
-            core::hint::spin_loop();
-        },
-    }
+// Consumed only by RSA key generation, which the KATs do not exercise;
+// verification is deterministic. Satisfies the include without an entropy stack.
+pub fn get_entropy(len: usize) -> Vec<u8> {
+    alloc::vec![0u8; len]
 }

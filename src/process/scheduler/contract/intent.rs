@@ -16,7 +16,7 @@
 
 /// Why the scheduler is being asked to switch. `Preempt` is the timer
 /// path: time slice ran out, give the CPU to whoever is next. `Yield`
-/// is the voluntary path: caller is done for now, hand off to whoever
+/// is the voluntary path: caller is ready to hand off to whoever
 /// is next or stay if there is no one. A directed-target variant gets
 /// added the day a real caller appears.
 #[derive(Debug, Clone, Copy)]

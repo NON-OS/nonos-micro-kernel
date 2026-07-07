@@ -14,19 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::global::{fill_random_bytes, random_u64_secure};
-
-#[inline]
-pub fn fill_bytes(buffer: &mut [u8]) {
-    fill_random_bytes(buffer);
+// Ed25519's `KeyPair::generate` is the only consumer of the RNG, and the KATs
+// exercise sign/verify with fixed seeds from the standard vectors. This shim
+// satisfies the include without pulling the kernel's entropy stack; nothing in
+// the proof set calls it.
+pub fn get_random_bytes() -> [u8; 32] {
+    [0u8; 32]
 }
 
-#[inline]
-pub fn secure_random_u64() -> u64 {
-    match random_u64_secure() {
-        Ok(v) => v,
-        Err(_) => loop {
-            core::hint::spin_loop();
-        },
+// Consumed only by the signing/keygen paths (P-256 ECDH and ECDSA), which the
+// KATs do not exercise; verification is deterministic.
+pub fn fill_random_bytes(buf: &mut [u8]) {
+    for b in buf.iter_mut() {
+        *b = 0;
     }
 }

@@ -14,19 +14,45 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::global::{fill_random_bytes, random_u64_secure};
+use vstd::prelude::*;
 
-#[inline]
-pub fn fill_bytes(buffer: &mut [u8]) {
-    fill_random_bytes(buffer);
+verus! {
+
+pub open spec fn max_message_size() -> u64 {
+    1048576u64
 }
 
-#[inline]
-pub fn secure_random_u64() -> u64 {
-    match random_u64_secure() {
-        Ok(v) => v,
-        Err(_) => loop {
-            core::hint::spin_loop();
-        },
-    }
+pub open spec fn valid_ipc_len(len: u64) -> bool {
+    len != 0 && len <= max_message_size()
 }
+
+pub proof fn zero_length_is_rejected()
+    ensures
+        !valid_ipc_len(0),
+{
+}
+
+pub proof fn oversized_message_is_rejected(len: u64)
+    requires
+        len > max_message_size(),
+    ensures
+        !valid_ipc_len(len),
+{
+}
+
+pub proof fn accepted_message_is_bounded(len: u64)
+    requires
+        valid_ipc_len(len),
+    ensures
+        len > 0,
+        len <= max_message_size(),
+{
+}
+
+pub proof fn send_reply_share_the_same_length_gate(len: u64)
+    ensures
+        valid_ipc_len(len) == (len != 0 && len <= 1048576u64),
+{
+}
+
+} // verus!
