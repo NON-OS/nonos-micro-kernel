@@ -1177,3 +1177,95 @@ fn a_fold_folding_an_uncommitted_value_is_rejected() {
     let proof = stark_prove(&wired, &witness, QUERIES);
     assert!(!stark_verify(&wired, &proof, QUERIES), "a fold on an uncommitted value verified");
 }
+
+#[test]
+fn a_full_per_query_verifier_is_one_stark() {
+    // The monolith, per query: a challenge source, the Merkle opening of the
+    // codeword value, and the in-circuit fold, fused into one trace and verified
+    // as a single STARK. The wiring forces the fold to run on exactly the
+    // challenge the source produced AND exactly the value the opening committed.
+    // One constant-size proof stands for the whole per-query FRI check.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let (mem_trace, mem, cells) = opening_of_scalar(a[0], 2);
+    let source = squaring_trace(3, beta[0]); // column zero row 0 holds beta[0]
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    // Region offsets: source [0,8), opening [8,24), fold [24,32).
+    let src_h = 1usize << 3;
+    let mem_h = mem_trace.len() / WIDTH;
+    let fold_off = src_h + mem_h;
+    let (k, span) = (2usize, (src_h + mem_h + (1usize << log_layers)).next_power_of_two());
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    // source.beta (row 0, col 0) <-> fold.beta (fold_off, col 0)
+    sigma.swap(0, fold_off * k);
+    // opening leaf (src_h + cells[0].0, col 0) <-> fold.a (fold_off, col 1)
+    sigma.swap((src_h + cells[0].0) * k, fold_off * k + 1);
+
+    let regions: Vec<Box<dyn Air>> =
+        alloc::vec![Box::new(Squaring { log_t: 3, seed: beta[0] }), Box::new(mem), Box::new(fold)];
+    let wired = Wired::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[source, mem_trace, fold_trace]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(stark_verify(&wired, &proof, QUERIES), "the fused per-query verifier was rejected");
+}
+
+#[test]
+fn a_per_query_verifier_rejects_a_wrong_challenge() {
+    // Same fused per-query verifier, but the source produces a challenge the fold
+    // did not use. One region disagrees on a wired cell, so the whole proof fails.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let (mem_trace, mem, cells) = opening_of_scalar(a[0], 2);
+    let source = squaring_trace(3, beta[0] + Fp::ONE); // wrong challenge
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    let src_h = 1usize << 3;
+    let mem_h = mem_trace.len() / WIDTH;
+    let fold_off = src_h + mem_h;
+    let (k, span) = (2usize, (src_h + mem_h + (1usize << log_layers)).next_power_of_two());
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    sigma.swap(0, fold_off * k);
+    sigma.swap((src_h + cells[0].0) * k, fold_off * k + 1);
+
+    let regions: Vec<Box<dyn Air>> = alloc::vec![
+        Box::new(Squaring { log_t: 3, seed: beta[0] + Fp::ONE }),
+        Box::new(mem),
+        Box::new(fold)
+    ];
+    let wired = Wired::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[source, mem_trace, fold_trace]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(
+        !stark_verify(&wired, &proof, QUERIES),
+        "a per-query verifier accepted a wrong challenge"
+    );
+}
+
+#[test]
+fn a_per_query_verifier_rejects_a_wrong_opening() {
+    // The opening commits a value the fold did not fold. The proof fails.
+    let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
+    let (mem_trace, mem, cells) = opening_of_scalar(a[0] + Fp::ONE, 2); // commits a wrong value
+    let source = squaring_trace(3, beta[0]);
+    let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    let src_h = 1usize << 3;
+    let mem_h = mem_trace.len() / WIDTH;
+    let fold_off = src_h + mem_h;
+    let (k, span) = (2usize, (src_h + mem_h + (1usize << log_layers)).next_power_of_two());
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    sigma.swap(0, fold_off * k);
+    sigma.swap((src_h + cells[0].0) * k, fold_off * k + 1);
+
+    let regions: Vec<Box<dyn Air>> =
+        alloc::vec![Box::new(Squaring { log_t: 3, seed: beta[0] }), Box::new(mem), Box::new(fold)];
+    let wired = Wired::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[source, mem_trace, fold_trace]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(
+        !stark_verify(&wired, &proof, QUERIES),
+        "a per-query verifier accepted a wrong opening"
+    );
+}
