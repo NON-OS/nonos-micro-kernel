@@ -1,7 +1,7 @@
 // NONOS Operating System (AGPL-3.0-or-later)
 use crate::constants::{
-    MAX_ETHERNET_FRAME, MIN_ETHERNET_FRAME, RX_BUFFER_LEN, RX_DESC_COUNT, TX_BUFFER_LEN,
-    VIRTIO_NET_HDR_LEN, VQ_AVAIL_OFFSET, VQ_REGION_SIZE, VQ_USED_OFFSET,
+    MAX_ETHERNET_FRAME, MIN_ETHERNET_FRAME, RING_SLOTS, RX_BUFFER_LEN, RX_DESC_COUNT,
+    TX_BUFFER_LEN, VIRTIO_NET_HDR_LEN, VQ_AVAIL_OFFSET, VQ_REGION_SIZE, VQ_USED_OFFSET,
 };
 use crate::protocol::{
     decode_request, encode_response_header, Request, HDR_LEN, MAX_TX_PAYLOAD_BYTES,
@@ -53,7 +53,7 @@ impl Harness {
     }
 
     fn rx(&mut self) -> RxQueue {
-        RxQueue::new(self.region_ptr as u64, 0, self.bufs_ptr as u64, 0)
+        RxQueue::new(self.region_ptr as u64, 0, self.bufs_ptr as u64, 0, RX_DESC_COUNT)
     }
 
     fn write_region(&mut self, off: usize, bytes: &[u8]) {
@@ -118,7 +118,11 @@ fn hostile_used_entries_never_yield_a_frame_outside_its_slot() {
         let mut rx = h.rx();
         rx.last_used = last_used;
         h.set_used_idx(last_used.wrapping_add(1));
-        h.set_used_elem(last_used % RX_DESC_COUNT, desc_id, used_len);
+        // Used-ring positions index modulo the physical ring, which legacy
+        // virtio keeps at its QueueNumMax size, not the smaller number of
+        // primed buffers. The driver reads at this position; a harness that
+        // wrote modulo the buffer count would test a ring no device has.
+        h.set_used_elem(last_used % RING_SLOTS, desc_id, used_len);
 
         let frame = unsafe { take_one(&mut rx) }.expect("one pending entry yields a frame");
         if used_len as usize <= VIRTIO_NET_HDR_LEN {
@@ -181,10 +185,12 @@ fn the_returned_slot_is_refilled_into_the_avail_ring() {
     h.set_used_elem(0, 5, 100);
     let _ = unsafe { take_one(&mut rx) };
     assert_eq!(rx.pending_refill, Some(5));
-    // The second call must first hand slot 5 back through the avail ring.
-    h.set_used_idx(2);
-    h.set_used_elem(1, 6, 100);
-    let _ = unsafe { take_one(&mut rx) };
+    // The slot is handed back only after the caller has copied the frame out,
+    // by the explicit refill_consumed the rx_packet handler makes; a refill
+    // inside take_one would give the slot to the device while the frame
+    // borrow is still alive.
+    rx.refill_consumed();
+    assert_eq!(rx.pending_refill, None);
     let avail_idx = u16::from_le_bytes([
         h.read_region(VQ_AVAIL_OFFSET + 2),
         h.read_region(VQ_AVAIL_OFFSET + 3),
