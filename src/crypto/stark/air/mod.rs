@@ -47,7 +47,9 @@ pub use permutation2::Permutation2;
 pub use poseidon::{Poseidon, RATE, WIDTH};
 pub use power_chain::PowerChain;
 pub use prove::stark_prove;
-pub use recursive_verifier::{FinalLayerConstant, FriTranscript};
+pub use recursive_verifier::{
+    layer_membership, layer_openings, recursive_verify, FinalLayerConstant, FriTranscript,
+};
 pub use spec::Air;
 pub use squaring::Squaring;
 pub use types::{StarkProof, StarkQuery};

@@ -182,3 +182,178 @@ fn a_wrongly_pinned_challenge_is_rejected() {
     let proof = stark_prove(&other, &trace, QUERIES);
     assert!(!stark_verify(&other, &proof, QUERIES), "a mismatched pin verified");
 }
+
+// Step 4: the whole recursive verifier over a real inner FRI proof. The fold
+// challenges are re-derived by the transcript AIR, the openings at every query
+// and layer are proven committed by the membership AIR, and the folds are the
+// public linear check on the re-derived challenges, ending on the constant
+// final layer. Every expensive part is a STARK, so this verification is itself
+// STARK-provable: recursion.
+
+use crate::crypto::stark::air::{
+    layer_openings, recursive_verify, MultiMembership,
+};
+use crate::crypto::stark::fri::root_of_unity;
+use crate::crypto::stark::fri_poseidon::{fri_prove, FriProof};
+
+// The standard opening-trace builder, mirrored here as test scaffolding to
+// produce the membership proofs the recursive verifier consumes.
+fn inject_full(node: [Fp; RATE], sibling: [Fp; RATE], right: bool) -> [Fp; 8] {
+    let mut state = [Fp::ZERO; 8];
+    if !right {
+        state[..RATE].copy_from_slice(&node);
+        state[RATE..].copy_from_slice(&sibling);
+    } else {
+        state[..RATE].copy_from_slice(&sibling);
+        state[RATE..].copy_from_slice(&node);
+    }
+    state
+}
+
+fn multi_trace(
+    hasher: &Poseidon,
+    openings: &[crate::crypto::stark::air::Opening],
+    log_rounds: u32,
+) -> Vec<Fp> {
+    let l = 1usize << log_rounds;
+    let depth = openings[0].siblings.len();
+    let slots = (depth + 1).next_power_of_two();
+    let span = slots * l;
+    let count = openings.len();
+    let batch = count.next_power_of_two().max(1);
+    let n = batch * span;
+    let start = |o: &crate::crypto::stark::air::Opening| {
+        inject_full(o.leaf, o.siblings[0], o.directions[0])
+    };
+    let mut rows: Vec<[Fp; 8]> = Vec::with_capacity(n);
+    let mut state = start(&openings[0]);
+    for r in 0..n {
+        rows.push(state);
+        let pr = hasher.round_with_rc(&state, &hasher.round_constant(r % l));
+        let opening = r / span;
+        let within = r % span;
+        let at_row_bnd = within % l == l - 1;
+        let is_op_bnd = within == span - 1 && opening + 1 < count;
+        let is_slot_bnd = at_row_bnd && within < depth * l && !is_op_bnd;
+        if is_op_bnd {
+            state = start(&openings[opening + 1]);
+        } else if is_slot_bnd {
+            let m = (within + 1) / l;
+            let mut digest = [Fp::ZERO; RATE];
+            digest.copy_from_slice(&pr[..RATE]);
+            if opening < count && m < depth {
+                state = inject_full(digest, openings[opening].siblings[m], openings[opening].directions[m]);
+            } else {
+                state = inject_full(digest, [Fp::ZERO; RATE], false);
+            }
+        } else {
+            state = pr;
+        }
+    }
+    let mut trace = Vec::with_capacity(n * 8);
+    for row in &rows {
+        trace.extend_from_slice(row);
+    }
+    trace
+}
+
+const RV_LOG_ROUNDS: u32 = 3;
+const RV_STARK_QUERIES: usize = 16;
+
+// A small real inner FRI proof: a low-degree codeword committed with Poseidon.
+fn inner_proof() -> (Poseidon, FriProof, u32, u32, usize, Fp) {
+    let hasher = Poseidon::new(RV_LOG_ROUNDS, [Fp::ZERO; RATE]);
+    let (log_n, log_blowup, n_queries) = (4u32, 1u32, 2usize); // domain 16, fold to 2
+    let shift = Fp::from_u64(7);
+    // A low-degree codeword: a degree-3 polynomial on the coset.
+    let coeffs = [Fp::from_u64(2), Fp::from_u64(5), Fp::from_u64(1), Fp::from_u64(4)];
+    let omega = root_of_unity(log_n);
+    let n = 1usize << log_n;
+    let mut codeword = Vec::with_capacity(n);
+    let mut x = shift;
+    for _ in 0..n {
+        let mut acc = Fp::ZERO;
+        for c in coeffs.iter().rev() {
+            acc = acc * x + *c;
+        }
+        codeword.push(acc);
+        x = x * omega;
+    }
+    let proof = fri_prove(&codeword, shift, log_blowup, n_queries, &hasher);
+    (hasher, proof, log_n, log_blowup, n_queries, shift)
+}
+
+// Build the transcript proof and one membership proof per (query, layer).
+fn component_proofs(
+    hasher: &Poseidon,
+    proof: &FriProof,
+    log_n: u32,
+    log_blowup: u32,
+    n_queries: usize,
+) -> (crate::crypto::stark::air::StarkProof, Vec<crate::crypto::stark::air::StarkProof>) {
+    let n_folds = (log_n - log_blowup) as usize;
+    let n = 1usize << log_n;
+
+    let transcript = FriTranscript::new(
+        hasher.clone(),
+        RV_LOG_ROUNDS,
+        proof.roots.clone(),
+        proof.final_layer.to_vec(),
+        n_queries,
+    );
+    let t_proof = stark_prove(&transcript, &transcript.trace(), RV_STARK_QUERIES);
+
+    let mut mproofs = Vec::with_capacity(n_queries * n_folds);
+    for q in 0..n_queries {
+        let index = (transcript.query_challenges()[q].value() as usize) & (n - 1);
+        for m in 0..n_folds {
+            let openings = layer_openings(proof, q, m, index, log_n);
+            let trace = multi_trace(hasher, &openings, RV_LOG_ROUNDS);
+            let air = MultiMembership::new(hasher.clone(), RV_LOG_ROUNDS, openings);
+            mproofs.push(stark_prove(&air, &trace, RV_STARK_QUERIES));
+        }
+    }
+    (t_proof, mproofs)
+}
+
+#[test]
+fn a_real_inner_proof_verifies_recursively() {
+    let (hasher, proof, log_n, log_blowup, n_queries, shift) = inner_proof();
+    let (t_proof, mproofs) = component_proofs(&hasher, &proof, log_n, log_blowup, n_queries);
+    assert!(
+        recursive_verify(
+            &proof, &hasher, RV_LOG_ROUNDS, shift, log_n, log_blowup, n_queries,
+            RV_STARK_QUERIES, &t_proof, &mproofs,
+        ),
+        "an honest inner proof failed recursive verification"
+    );
+}
+
+#[test]
+fn a_tampered_opening_fails_recursive_verification() {
+    let (hasher, mut proof, log_n, log_blowup, n_queries, shift) = inner_proof();
+    let (t_proof, mproofs) = component_proofs(&hasher, &proof, log_n, log_blowup, n_queries);
+    // Corrupt an opened value after the component proofs were built.
+    proof.queries[0].layers[0].a = proof.queries[0].layers[0].a + Fp::ONE;
+    assert!(
+        !recursive_verify(
+            &proof, &hasher, RV_LOG_ROUNDS, shift, log_n, log_blowup, n_queries,
+            RV_STARK_QUERIES, &t_proof, &mproofs,
+        ),
+        "a tampered opening passed recursive verification"
+    );
+}
+
+#[test]
+fn a_tampered_final_layer_fails_recursive_verification() {
+    let (hasher, mut proof, log_n, log_blowup, n_queries, shift) = inner_proof();
+    let (t_proof, mproofs) = component_proofs(&hasher, &proof, log_n, log_blowup, n_queries);
+    proof.final_layer[0] = proof.final_layer[0] + Fp::ONE;
+    assert!(
+        !recursive_verify(
+            &proof, &hasher, RV_LOG_ROUNDS, shift, log_n, log_blowup, n_queries,
+            RV_STARK_QUERIES, &t_proof, &mproofs,
+        ),
+        "a tampered final layer passed recursive verification"
+    );
+}
