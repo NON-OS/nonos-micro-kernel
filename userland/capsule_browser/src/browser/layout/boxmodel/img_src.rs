@@ -26,7 +26,7 @@ const WANT_W: i32 = 1024;
 
 // Effective source for an <img>: a decodable <source> in the enclosing
 // <picture> wins, then the img's own srcset, then src, then the lazy-load
-// data-* attributes many sites use behind a placeholder src. <source>
+// data-* attributes many sites use behind an empty or tiny src. <source>
 // elements carrying a media condition are art-direction variants we cannot
 // evaluate, so they are passed over.
 pub(super) fn img_src(dom: &Dom, img: &Node) -> String {

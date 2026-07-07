@@ -15,7 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum SntpError { Malformed, NotServer, BadTimestamp }
+pub enum SntpError {
+    Malformed,
+    NotServer,
+    BadTimestamp,
+}
 
 const NTP_UNIX_DELTA_SECS: u64 = 2_208_988_800;
 
@@ -68,6 +72,6 @@ mod tests {
         b[1] = 1;
         let secs: u32 = 3_913_056_000;
         b[40..44].copy_from_slice(&secs.to_be_bytes());
-        assert_eq!(parse_reply(&b).unwrap(), 1_704_067_200_000);
+        assert!(matches!(parse_reply(&b), Ok(1_704_067_200_000)));
     }
 }

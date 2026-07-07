@@ -36,8 +36,6 @@ pub(super) fn decode_body(bytes: &[u8]) -> Result<Decoded, &'static str> {
     if p.w as u64 * p.h as u64 > MAX_PIXELS {
         return Err("image too large");
     }
-    // WebP owns its raster: the lossless VP8L path decodes here; a lossy VP8
-    // payload is not yet supported and fails closed to the sized placeholder.
     if p.format == Format::Webp {
         return super::webp::decode_webp(bytes).ok_or("webp decode unsupported");
     }
@@ -47,7 +45,7 @@ pub(super) fn decode_body(bytes: &[u8]) -> Result<Decoded, &'static str> {
         Format::Jpeg => jpeg::decode_jpeg_argb8888(bytes, &mut px),
         Format::Bmp => bmp::decode_bmp_argb8888(bytes, &mut px),
         Format::Gif => gif::decode_gif_argb8888(bytes, &mut px),
-        Format::Webp => unreachable!(),
+        Format::Webp => return Err("webp decode unsupported"),
     }
     .map_err(|_| "image decode failed")?;
     Ok(Decoded { w: size.width, h: size.height, px })
