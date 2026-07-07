@@ -93,6 +93,31 @@ impl Poseidon {
         digest.copy_from_slice(&state[..RATE]);
         digest
     }
+
+    /// The full permutation: every round applied to a state. This is the
+    /// primitive a Poseidon Merkle commitment compresses with, and because it is
+    /// all field operations it can be arithmetized, which is what makes a
+    /// commitment recursion-friendly.
+    pub fn permute(&self, mut state: [Fp; WIDTH]) -> [Fp; WIDTH] {
+        let rounds = 1usize << self.log_t;
+        for r in 0..rounds {
+            state = self.round(&state, r);
+        }
+        state
+    }
+
+    /// A fixed-length two-to-one compression: place two rate-sized digests in the
+    /// full state, permute, and return the first rate lanes. This is the node
+    /// hash of a Poseidon Merkle tree.
+    pub fn compress(&self, left: &[Fp; RATE], right: &[Fp; RATE]) -> [Fp; RATE] {
+        let mut state = [Fp::ZERO; WIDTH];
+        state[..RATE].copy_from_slice(left);
+        state[RATE..].copy_from_slice(right);
+        let out = self.permute(state);
+        let mut digest = [Fp::ZERO; RATE];
+        digest.copy_from_slice(&out[..RATE]);
+        digest
+    }
 }
 
 impl Air for Poseidon {

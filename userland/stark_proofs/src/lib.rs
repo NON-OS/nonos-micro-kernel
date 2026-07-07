@@ -18,3 +18,5 @@ mod merkle_tests;
 mod ntt_tests;
 #[cfg(test)]
 mod poly_tests;
+#[cfg(test)]
+mod poseidon_merkle_tests;

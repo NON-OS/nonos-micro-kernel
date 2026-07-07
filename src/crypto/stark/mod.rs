@@ -13,4 +13,5 @@ pub mod field;
 pub mod fri;
 pub mod merkle;
 pub mod poly;
+pub mod poseidon_merkle;
 pub mod transcript;
