@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::crypto::stark::air::{
-    stark_prove, stark_verify, Fibonacci, Permutation2, Poseidon, PowerChain, Squaring, RATE, WIDTH,
+    stark_prove, stark_verify, Fibonacci, MerkleMembership, Permutation2, Poseidon, PowerChain,
+    Squaring, RATE, WIDTH,
 };
 use crate::crypto::stark::field::Fp;
+use crate::crypto::stark::poseidon_merkle::PoseidonMerkleTree;
 
 extern crate alloc;
 use alloc::vec::Vec;
@@ -322,6 +324,112 @@ fn a_long_squaring_chain_verifies() {
     let air = Squaring { log_t: 10, seed };
     let proof = stark_prove(&air, &squaring_trace(10, seed), QUERIES);
     assert!(stark_verify(&air, &proof, QUERIES), "long squaring chain rejected");
+}
+
+/// Build the Poseidon-state trace of a Merkle path: for each compression, place
+/// the node and sibling by the index bit, run the rounds, and carry the digest
+/// up; the final slot holds the root.
+fn membership_trace(
+    hasher: &Poseidon,
+    leaf: [Fp; RATE],
+    siblings: &[[Fp; RATE]],
+    directions: &[bool],
+    log_rounds: u32,
+    log_slots: u32,
+) -> Vec<Fp> {
+    let l = 1usize << log_rounds;
+    let depth = (1usize << log_slots) - 1;
+    let mut rows: Vec<[Fp; WIDTH]> = Vec::with_capacity((depth + 1) * l);
+    let mut node = leaf;
+    for k in 0..depth {
+        let mut state = [Fp::ZERO; WIDTH];
+        if !directions[k] {
+            state[..RATE].copy_from_slice(&node);
+            state[RATE..].copy_from_slice(&siblings[k]);
+        } else {
+            state[..RATE].copy_from_slice(&siblings[k]);
+            state[RATE..].copy_from_slice(&node);
+        }
+        for round in 0..l {
+            rows.push(state);
+            state = hasher.round_with_rc(&state, &hasher.round_constant(round));
+        }
+        node.copy_from_slice(&state[..RATE]);
+    }
+    let mut state = [Fp::ZERO; WIDTH];
+    state[..RATE].copy_from_slice(&node);
+    for round in 0..l {
+        rows.push(state);
+        state = hasher.round_with_rc(&state, &hasher.round_constant(round));
+    }
+    let mut trace = Vec::with_capacity(rows.len() * WIDTH);
+    for row in &rows {
+        trace.extend_from_slice(row);
+    }
+    trace
+}
+
+fn merkle_leaves(n: usize) -> Vec<[Fp; RATE]> {
+    (0..n)
+        .map(|i| {
+            let mut d = [Fp::ZERO; RATE];
+            for (c, cell) in d.iter_mut().enumerate() {
+                *cell = Fp::from_u64((i * RATE + c + 1) as u64);
+            }
+            d
+        })
+        .collect()
+}
+
+#[test]
+fn a_merkle_membership_proof_verifies() {
+    // Prove, inside a STARK, that a leaf opens to a public Poseidon Merkle root:
+    // the commitment check is now itself a proof, the core recursion step.
+    let (log_rounds, log_slots) = (3u32, 2u32); // 8-round hash, depth-3 tree
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let leaves = merkle_leaves(8);
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let root = tree.root();
+    let index = 5usize;
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+
+    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds, log_slots);
+    let air = MerkleMembership::new(
+        Poseidon::new(log_rounds, [Fp::ZERO; RATE]),
+        log_rounds,
+        log_slots,
+        root,
+        path.clone(),
+        directions.clone(),
+    );
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an honest membership proof was rejected");
+}
+
+#[test]
+fn a_membership_proof_for_a_wrong_root_is_rejected() {
+    let (log_rounds, log_slots) = (3u32, 2u32);
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let leaves = merkle_leaves(8);
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let index = 5usize;
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds, log_slots);
+
+    let mut wrong = tree.root();
+    wrong[0] = wrong[0] + Fp::ONE;
+    let air = MerkleMembership::new(
+        Poseidon::new(log_rounds, [Fp::ZERO; RATE]),
+        log_rounds,
+        log_slots,
+        wrong,
+        path,
+        directions,
+    );
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a wrong-root membership proof verified");
 }
 
 #[test]

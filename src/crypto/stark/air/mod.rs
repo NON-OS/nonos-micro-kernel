@@ -24,6 +24,7 @@
 
 mod composition;
 mod fibonacci;
+mod merkle_membership;
 mod permutation2;
 mod poseidon;
 mod power_chain;
@@ -34,6 +35,7 @@ mod types;
 mod verify;
 
 pub use fibonacci::Fibonacci;
+pub use merkle_membership::MerkleMembership;
 pub use permutation2::Permutation2;
 pub use poseidon::{Poseidon, RATE, WIDTH};
 pub use power_chain::PowerChain;

@@ -94,6 +94,31 @@ impl Poseidon {
         digest
     }
 
+    /// One round using externally supplied constants: full x^7 S-box, MDS mix,
+    /// then add `rc`. The membership AIR feeds the round constants as periodic
+    /// values, so it shares this exact round function with the hash.
+    pub fn round_with_rc(&self, state: &[Fp; WIDTH], rc: &[Fp; WIDTH]) -> [Fp; WIDTH] {
+        let mut sbox = [Fp::ZERO; WIDTH];
+        for (s, v) in sbox.iter_mut().zip(state.iter()) {
+            *s = (*v).pow(7);
+        }
+        let mut out = [Fp::ZERO; WIDTH];
+        for (j, o) in out.iter_mut().enumerate() {
+            let mut acc = rc[j];
+            for (m, s) in self.mds[j].iter().zip(sbox.iter()) {
+                acc = acc + *m * *s;
+            }
+            *o = acc;
+        }
+        out
+    }
+
+    /// The round constant for round `r`, exposed so the membership AIR can build
+    /// its periodic columns from the same schedule the hash uses.
+    pub fn round_constant(&self, r: usize) -> [Fp; WIDTH] {
+        self.rc[r]
+    }
+
     /// The full permutation: every round applied to a state. This is the
     /// primitive a Poseidon Merkle commitment compresses with, and because it is
     /// all field operations it can be arithmetized, which is what makes a
