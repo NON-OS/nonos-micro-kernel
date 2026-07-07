@@ -116,6 +116,44 @@ fn the_in_circuit_derivation_matches_the_reference_transcript() {
 }
 
 #[test]
+fn the_beta_rows_point_at_the_squeezed_challenges() {
+    // The wiring engine binds a fold's challenge to the transcript by reading
+    // the squeezed challenge out of the transcript trace. This checks the map
+    // the accessor hands out: each beta row holds that layer's beta in column
+    // zero, and each query-challenge row holds its challenge, so the engine can
+    // wire (row, 0) directly with no repositioning.
+    use crate::crypto::stark::air::WIDTH;
+
+    let roots = sample_roots(3);
+    let final_layer = [Fp::from_u64(90), Fp::from_u64(91)];
+    let n_queries = 6;
+    let air = FriTranscript::new(
+        Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]),
+        LOG_ROUNDS,
+        roots,
+        final_layer.to_vec(),
+        n_queries,
+    );
+    let trace = air.trace();
+
+    let beta_rows = air.beta_rows();
+    assert_eq!(beta_rows.len(), air.betas().len(), "one beta row per fold challenge");
+    for (i, row) in beta_rows.iter().enumerate() {
+        assert_eq!(trace[row * WIDTH], air.betas()[i], "beta row does not hold its challenge");
+    }
+
+    let query_rows = air.query_challenge_rows();
+    assert_eq!(query_rows.len(), air.query_challenges().len(), "one row per query challenge");
+    for (i, row) in query_rows.iter().enumerate() {
+        assert_eq!(
+            trace[row * WIDTH],
+            air.query_challenges()[i],
+            "query row does not hold its challenge"
+        );
+    }
+}
+
+#[test]
 fn an_honest_transcript_derivation_verifies() {
     let roots = sample_roots(3);
     let final_layer = [Fp::from_u64(5), Fp::from_u64(6)];

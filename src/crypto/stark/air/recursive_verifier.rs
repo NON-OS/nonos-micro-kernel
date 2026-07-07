@@ -173,6 +173,22 @@ impl FriTranscript {
         &self.query_challenges
     }
 
+    /// The trace rows holding the squeezed fold challenges, one per layer, in
+    /// layer order. Each `beta_m` is pinned in column zero at the returned row:
+    /// a squeeze reads lane zero at its operation's first row, so the challenge
+    /// lives at `(row, 0)`. The wiring engine's column-zero grand product can
+    /// bind it directly to the folding challenge a fold region witnesses in its
+    /// own column zero, with no repositioning.
+    pub fn beta_rows(&self) -> Vec<usize> {
+        self.squeeze_points().into_iter().take(self.betas.len()).map(|(row, _)| row).collect()
+    }
+
+    /// The trace rows holding the squeezed query challenges, in query order,
+    /// each likewise in column zero at `(row, 0)`.
+    pub fn query_challenge_rows(&self) -> Vec<usize> {
+        self.squeeze_points().into_iter().skip(self.betas.len()).map(|(row, _)| row).collect()
+    }
+
     /// The number of permutations the schedule runs: for each layer, `RATE`
     /// absorbs plus one squeeze; the final-layer absorbs; and one squeeze per
     /// query.
