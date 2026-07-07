@@ -31,7 +31,6 @@ use alloc::vec::Vec;
 pub struct MerkleMembership {
     hasher: Poseidon,
     log_rounds: u32,
-    log_slots: u32,
     root: [Fp; RATE],
     /// One sibling digest per tree level, from the leaf up.
     siblings: Vec<[Fp; RATE]>,
@@ -41,32 +40,37 @@ pub struct MerkleMembership {
 
 impl MerkleMembership {
     /// Build the AIR. `hasher` must be the same Poseidon the tree committed with,
-    /// with `2^log_rounds` rounds. `2^log_slots` slots hold the `2^log_slots - 1`
-    /// compressions of a path that deep, plus the final root checkpoint.
+    /// with `2^log_rounds` rounds. The path depth is `siblings.len()`, any value:
+    /// the slots are padded to the next power of two, the extra ones inert.
     pub fn new(
         hasher: Poseidon,
         log_rounds: u32,
-        log_slots: u32,
         root: [Fp; RATE],
         siblings: Vec<[Fp; RATE]>,
         directions: Vec<bool>,
     ) -> MerkleMembership {
-        MerkleMembership { hasher, log_rounds, log_slots, root, siblings, directions }
+        MerkleMembership { hasher, log_rounds, root, siblings, directions }
     }
 
     fn rounds(&self) -> usize {
         1usize << self.log_rounds
     }
 
-    /// The number of compressions, the tree depth.
+    /// The number of compressions, the path depth.
     fn depth(&self) -> usize {
-        (1usize << self.log_slots) - 1
+        self.siblings.len()
+    }
+
+    /// Log2 of the slot count: enough slots for every compression plus the final
+    /// root checkpoint, rounded up to a power of two.
+    fn log_slots(&self) -> u32 {
+        (self.depth() + 1).next_power_of_two().trailing_zeros()
     }
 }
 
 impl Air for MerkleMembership {
     fn log_trace_len(&self) -> u32 {
-        self.log_rounds + self.log_slots
+        self.log_rounds + self.log_slots()
     }
 
     fn trace_width(&self) -> usize {
