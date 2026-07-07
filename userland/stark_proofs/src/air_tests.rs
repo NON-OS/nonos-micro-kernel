@@ -766,3 +766,71 @@ fn a_tampered_ood_frame_is_rejected() {
     proof.ood_frame[0] = proof.ood_frame[0] + Fp::ONE;
     assert!(!stark_verify(&air, &proof, QUERIES), "a tampered ood frame verified");
 }
+
+// The logup lookup argument: prove every witness value lies in a table. The
+// running sum sum 1/(a_i + X) - sum m_j/(t_j + X) is zero exactly when the
+// witness multiset is contained in the table, so an in-table witness verifies
+// and a value outside the table leaves a term the multiplicities cannot cancel.
+use crate::crypto::stark::air::Lookup;
+
+const LOOKUP_X: u64 = 0x5bd1_e995;
+
+#[test]
+fn a_lookup_of_in_table_values_verifies() {
+    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
+    // Every witness value is a table entry, some repeated.
+    let witness: Vec<Fp> = [3u64, 3, 7, 0, 5, 3].iter().map(|v| Fp::from_u64(*v)).collect();
+    let air = Lookup::new(witness, table, Fp::from_u64(LOOKUP_X));
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an in-table lookup was rejected");
+}
+
+#[test]
+fn an_out_of_table_value_is_rejected() {
+    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
+    // 42 is not in the table: it is counted in no multiplicity, so its inverse
+    // term is unmatched and the sum cannot return to zero.
+    let witness: Vec<Fp> = [3u64, 7, 42, 0].iter().map(|v| Fp::from_u64(*v)).collect();
+    let air = Lookup::new(witness, table, Fp::from_u64(LOOKUP_X));
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "an out-of-table value verified");
+}
+
+#[test]
+fn a_range_check_via_bit_limbs_verifies() {
+    // The mega-AIR use: range-check a value by looking up each of its low limbs
+    // in a small range table. Here every two-bit limb of a set of values is
+    // proven to lie in {0, 1, 2, 3}.
+    let table: Vec<Fp> = (0..4).map(Fp::from_u64).collect();
+    let values = [0u64, 5, 10, 15, 9, 6];
+    let mut limbs: Vec<Fp> = Vec::new();
+    for v in values {
+        limbs.push(Fp::from_u64(v & 0b11));
+        limbs.push(Fp::from_u64((v >> 2) & 0b11));
+    }
+    let air = Lookup::new(limbs, table, Fp::from_u64(LOOKUP_X));
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "an in-range limb decomposition was rejected");
+}
+
+#[test]
+fn a_limb_out_of_range_is_rejected() {
+    // A limb of 4 does not fit a two-bit range table.
+    let table: Vec<Fp> = (0..4).map(Fp::from_u64).collect();
+    let limbs: Vec<Fp> = [0u64, 1, 4, 2].iter().map(|v| Fp::from_u64(*v)).collect();
+    let air = Lookup::new(limbs, table, Fp::from_u64(LOOKUP_X));
+    let proof = stark_prove(&air, &air.trace(), QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "an out-of-range limb verified");
+}
+
+#[test]
+fn a_tampered_running_sum_is_rejected() {
+    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
+    let witness: Vec<Fp> = [1u64, 2, 3, 4].iter().map(|v| Fp::from_u64(*v)).collect();
+    let air = Lookup::new(witness, table, Fp::from_u64(LOOKUP_X));
+    let mut trace = air.trace();
+    // Perturb the running-sum column at one interior row (width 3, column 2).
+    trace[3 * 2 + 2] = trace[3 * 2 + 2] + Fp::ONE;
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a tampered running sum verified");
+}
