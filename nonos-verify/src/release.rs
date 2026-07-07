@@ -61,7 +61,7 @@ fn collect(bundle: &Path) -> std::io::Result<Vec<serde_json::Value>> {
             "present",
             bytes.len() as u64,
             &sha256(src),
-            &blake3::hash(&bytes).to_hex().to_string(),
+            blake3::hash(&bytes).to_hex().as_ref(),
         ));
     }
     Ok(rows)
