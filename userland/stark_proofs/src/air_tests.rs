@@ -954,13 +954,23 @@ fn a_broken_cross_region_binding_is_rejected() {
 fn trace_fold_data(
     query: usize,
 ) -> (Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<bool>, Fp, u32, usize) {
+    trace_fold_data_seeded(query, 0xf01d_1234u64 | 1)
+}
+
+/// The same fold path over a codeword seeded by `seed`; a different seed folds a
+/// different codeword with a different challenge set.
+#[allow(clippy::type_complexity)]
+fn trace_fold_data_seeded(
+    query: usize,
+    seed: u64,
+) -> (Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<bool>, Fp, u32, usize) {
     let (k, n_folds, log_layers) = (5u32, 4usize, 3u32);
     let n = 1usize << k;
     let inv2 = Fp::from_u64(2).inv();
     let base_omega = root_of_unity(k);
     let shift = Fp::from_u64(7);
 
-    let mut s = 0xf01d_1234u64 | 1;
+    let mut s = seed | 1;
     let mut layers: Vec<Vec<Fp>> = Vec::new();
     let mut betas: Vec<Fp> = Vec::new();
     let mut cur: Vec<Fp> = (0..n).map(|_| Fp::from_u64(xs(&mut s))).collect();
@@ -1267,5 +1277,67 @@ fn a_per_query_verifier_rejects_a_wrong_opening() {
     assert!(
         !stark_verify(&wired, &proof, QUERIES),
         "a per-query verifier accepted a wrong opening"
+    );
+}
+
+/// Fuse the in-circuit folds of several FRI queries into one trace and wire, per
+/// layer, every query's folding challenge into a single cycle: the copy
+/// constraint forces all queries to fold on the same challenge set. Returns the
+/// wired AIR and its witness. `seeds[q]` seeds query q's codeword, so an honest
+/// fan-out uses one seed for all and a dishonest one gives a query a different
+/// challenge set.
+fn multi_query_fanout(queries: &[usize], seeds: &[u64]) -> (Wired, Vec<Fp>) {
+    let mut regions: Vec<Box<dyn Air>> = Vec::new();
+    let mut traces: Vec<Vec<Fp>> = Vec::new();
+    let mut n_folds = 0usize;
+    let mut height = 0usize;
+    for (&query, &seed) in queries.iter().zip(seeds) {
+        let (beta, a, b, x_inv, dir, fv, ll, nf) = trace_fold_data_seeded(query, seed);
+        n_folds = nf;
+        height = 1usize << ll;
+        let fold = TraceFold::new(ll, nf, x_inv, dir, fv);
+        traces.push(fold.trace(&beta, &a, &b));
+        regions.push(Box::new(fold));
+    }
+
+    let q_count = queries.len();
+    let span = (q_count * height).next_power_of_two();
+    let mut sigma: Vec<usize> = (0..span).collect(); // wired_cols = [0], so cell id == row
+                                                     // Per layer, cycle the challenge cell across all queries: q -> q+1 -> ... -> 0.
+    for m in 0..n_folds {
+        for q in 0..q_count {
+            let here = q * height + m;
+            let next = ((q + 1) % q_count) * height + m;
+            sigma[here] = next;
+        }
+    }
+
+    let wired = Wired::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&traces);
+    (wired, witness)
+}
+
+#[test]
+fn every_query_folds_on_the_same_challenge_set() {
+    // Three FRI queries, folded in one STARK, all wired to a single challenge
+    // set. The honest fan-out, where every query used the same transcript
+    // challenges, verifies.
+    let seed = 0xf01d_1234u64 | 1;
+    let (wired, witness) = multi_query_fanout(&[6, 10, 2], &[seed, seed, seed]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(stark_verify(&wired, &proof, QUERIES), "an honest multi-query fan-out was rejected");
+}
+
+#[test]
+fn a_query_folding_on_a_different_challenge_set_is_rejected() {
+    // One query folded on a different challenge set than the others. Each fold is
+    // internally valid, but the wiring forces one shared set, so the single proof
+    // fails.
+    let seed = 0xf01d_1234u64 | 1;
+    let (wired, witness) = multi_query_fanout(&[6, 10, 2], &[seed, 0xdead_beef, seed]);
+    let proof = stark_prove(&wired, &witness, QUERIES);
+    assert!(
+        !stark_verify(&wired, &proof, QUERIES),
+        "a query on a different challenge set verified"
     );
 }
