@@ -22,11 +22,20 @@
 //! on the two sides by construction.
 
 use super::super::field::Fp;
+use super::super::poly::eval_lagrange;
 use super::spec::Air;
+use alloc::vec::Vec;
 
 /// Total number of random coefficients an AIR's composition consumes.
 pub(super) fn num_coeffs<A: Air>(air: &A) -> usize {
     air.num_transition() + air.boundary().len()
+}
+
+/// Evaluate each periodic column at point `x` by interpolating it over the trace
+/// domain `h_pts`. The columns are public, so prover and verifier compute this
+/// identically.
+pub(super) fn eval_periodic(columns: &[Vec<Fp>], h_pts: &[Fp], x: Fp) -> Vec<Fp> {
+    columns.iter().map(|col| eval_lagrange(h_pts, col, x)).collect()
 }
 
 /// The evaluation-domain sizing derived from the AIR: `(log_n, fri_log_blowup)`.
@@ -46,9 +55,17 @@ pub(super) fn domain_params<A: Air>(air: &A) -> (u32, u32) {
 }
 
 /// The composition value at coset point `x`, given the trace window
-/// `[f(x), f(g*x), ...]` and the transcript coefficients. `g` is the trace-domain
-/// generator. `x` lies off the trace domain, so every divisor is invertible.
-pub(super) fn compose<A: Air>(air: &A, g: Fp, x: Fp, window: &[Fp], coeffs: &[Fp]) -> Fp {
+/// `[f(x), f(g*x), ...]`, the periodic columns evaluated at `x`, and the
+/// transcript coefficients. `g` is the trace-domain generator. `x` lies off the
+/// trace domain, so every divisor is invertible.
+pub(super) fn compose<A: Air>(
+    air: &A,
+    g: Fp,
+    x: Fp,
+    window: &[Fp],
+    periodic: &[Fp],
+    coeffs: &[Fp],
+) -> Fp {
     let t = 1u64 << air.log_trace_len();
     let z_h_inv = (x.pow(t) - Fp::ONE).inv();
 
@@ -60,7 +77,7 @@ pub(super) fn compose<A: Air>(air: &A, g: Fp, x: Fp, window: &[Fp], coeffs: &[Fp
     }
 
     let mut acc = Fp::ZERO;
-    let transition = air.transition(window);
+    let transition = air.transition(window, periodic);
     for (value, coeff) in transition.iter().zip(coeffs.iter()) {
         acc = acc + *coeff * (*value * exempt * z_h_inv);
     }

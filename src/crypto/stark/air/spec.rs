@@ -44,11 +44,20 @@ pub trait Air {
     /// Number of transition constraints (the length of `transition`).
     fn num_transition(&self) -> usize;
 
-    /// The transition constraint values for a window laid out row-major:
+    /// Public per-row values, one vector of length `trace_len` per column. They
+    /// are interpolated over the trace domain and the engine hands the transition
+    /// their value at the current point. This is how round constants, which
+    /// differ every row, enter the constraints. Default: none.
+    fn periodic_columns(&self) -> Vec<Vec<Fp>> {
+        Vec::new()
+    }
+
+    /// The transition constraint values. `window` is laid out row-major:
     /// `window[k * trace_width + col]` is column `col` of the k-th row in the
-    /// window. Each returned value must be zero on every trace row except the
-    /// final `window_size - 1`.
-    fn transition(&self, window: &[Fp]) -> Vec<Fp>;
+    /// window. `periodic` holds the periodic columns evaluated at the current
+    /// point, in declaration order. Each returned value must be zero on every
+    /// trace row except the final `window_size - 1`.
+    fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp>;
 
     /// Boundary constraints as `(column, row, value)`.
     fn boundary(&self) -> Vec<(usize, usize, Fp)>;

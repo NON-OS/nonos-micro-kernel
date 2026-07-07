@@ -60,7 +60,7 @@ impl Air for Permutation2 {
         2
     }
 
-    fn transition(&self, window: &[Fp]) -> Vec<Fp> {
+    fn transition(&self, window: &[Fp], _periodic: &[Fp]) -> Vec<Fp> {
         // window = [x, y, x_next, y_next].
         let (x, y, x_next, y_next) = (window[0], window[1], window[2], window[3]);
         vec![x_next - (x.pow(7) + y + self.rc0), y_next - (x + y.pow(7) + self.rc1)]

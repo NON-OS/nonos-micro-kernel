@@ -24,7 +24,7 @@ use super::super::fri::{fri_prove, root_of_unity};
 use super::super::merkle::MerkleTree;
 use super::super::poly::eval_lagrange;
 use super::super::transcript::Transcript;
-use super::composition::{compose, domain_params, num_coeffs};
+use super::composition::{compose, domain_params, eval_periodic, num_coeffs};
 use super::spec::Air;
 use super::types::{StarkProof, StarkQuery};
 use alloc::vec::Vec;
@@ -80,6 +80,9 @@ pub fn stark_prove<A: Air>(air: &A, trace: &[Fp], n_queries: usize) -> StarkProo
     // Composition coefficients, drawn after the whole trace is committed.
     let coeffs: Vec<Fp> = (0..num_coeffs(air)).map(|_| transcript.challenge_fp()).collect();
 
+    // Public periodic columns (round constants) interpolated over the trace domain.
+    let periodic_cols = air.periodic_columns();
+
     // The constraint composition over the coset. The window at position j gathers
     // every column at rows j, j+blowup, ... which are f(x), f(g*x), ... on D.
     let mut comp_d: Vec<Fp> = Vec::with_capacity(n);
@@ -92,7 +95,8 @@ pub fn stark_prove<A: Air>(air: &A, trace: &[Fp], n_queries: usize) -> StarkProo
                 window.push(column[idx]);
             }
         }
-        comp_d.push(compose(air, g, x, &window, &coeffs));
+        let periodic = eval_periodic(&periodic_cols, &h_pts, x);
+        comp_d.push(compose(air, g, x, &window, &periodic, &coeffs));
         x = x * omega;
     }
 

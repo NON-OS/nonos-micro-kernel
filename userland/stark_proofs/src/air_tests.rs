@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::crypto::stark::air::{
-    stark_prove, stark_verify, Fibonacci, Permutation2, PowerChain, Squaring,
+    stark_prove, stark_verify, Fibonacci, Permutation2, Poseidon, PowerChain, Squaring, RATE, WIDTH,
 };
 use crate::crypto::stark::field::Fp;
 
@@ -142,6 +142,98 @@ fn a_wrong_permutation_output_is_rejected() {
     let air = Permutation2 { log_t: 4, rc0, rc1, out: [out[0] + Fp::ONE, out[1]] };
     let proof = stark_prove(&air, &trace, QUERIES);
     assert!(!stark_verify(&air, &proof, QUERIES), "a wrong permutation output verified");
+}
+
+/// Number of Poseidon rounds used by the tests, as log2. The round count is a
+/// security parameter; this is a representative value that exercises the engine.
+const POSEIDON_LOG_T: u32 = 5;
+
+/// Build a Poseidon trace from a full initial state, returning the trace and the
+/// digest (the rate lanes at the final row).
+fn poseidon_trace(air: &Poseidon, initial: [Fp; WIDTH], log_t: u32) -> (Vec<Fp>, [Fp; RATE]) {
+    let t = 1usize << log_t;
+    let mut state = initial;
+    let mut trace = Vec::with_capacity(WIDTH * t);
+    for r in 0..t {
+        trace.extend_from_slice(&state);
+        if r < t - 1 {
+            state = air.round(&state, r);
+        }
+    }
+    let mut digest = [Fp::ZERO; RATE];
+    digest.copy_from_slice(&trace[(t - 1) * WIDTH..(t - 1) * WIDTH + RATE]);
+    (trace, digest)
+}
+
+/// A full initial state that absorbs a rate-sized input with the capacity zeroed.
+fn absorb(input: [Fp; RATE]) -> [Fp; WIDTH] {
+    let mut state = [Fp::ZERO; WIDTH];
+    state[..RATE].copy_from_slice(&input);
+    state
+}
+
+fn sample_input() -> [Fp; RATE] {
+    [Fp::from_u64(11), Fp::from_u64(22), Fp::from_u64(33), Fp::from_u64(44)]
+}
+
+#[test]
+fn poseidon_hashing_diffuses_and_is_deterministic() {
+    // A real hash: one changed input lane changes every digest lane (full
+    // diffusion through the MDS layer over the rounds), and it is deterministic.
+    let air = Poseidon::new(POSEIDON_LOG_T, [Fp::ZERO; RATE]);
+    let a = air.hash(&sample_input());
+    let mut other = sample_input();
+    other[3] = other[3] + Fp::ONE;
+    let b = air.hash(&other);
+    for i in 0..RATE {
+        assert_ne!(a[i], b[i], "digest lane {i} did not diffuse");
+    }
+    assert_eq!(a, air.hash(&sample_input()), "hash is not deterministic");
+}
+
+#[test]
+fn an_honest_poseidon_preimage_verifies() {
+    // Prove knowledge of an input that Poseidon-hashes to a public digest,
+    // without the input appearing in the public statement.
+    let params = Poseidon::new(POSEIDON_LOG_T, [Fp::ZERO; RATE]);
+    let (trace, digest) = poseidon_trace(&params, absorb(sample_input()), POSEIDON_LOG_T);
+    let air = Poseidon::new(POSEIDON_LOG_T, digest);
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "honest poseidon preimage rejected");
+}
+
+#[test]
+fn a_wrong_poseidon_digest_is_rejected() {
+    let params = Poseidon::new(POSEIDON_LOG_T, [Fp::ZERO; RATE]);
+    let (trace, digest) = poseidon_trace(&params, absorb(sample_input()), POSEIDON_LOG_T);
+    let wrong = [digest[0] + Fp::ONE, digest[1], digest[2], digest[3]];
+    let air = Poseidon::new(POSEIDON_LOG_T, wrong);
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a wrong poseidon digest verified");
+}
+
+#[test]
+fn a_corrupted_poseidon_round_is_rejected() {
+    let params = Poseidon::new(POSEIDON_LOG_T, [Fp::ZERO; RATE]);
+    let (mut trace, digest) = poseidon_trace(&params, absorb(sample_input()), POSEIDON_LOG_T);
+    // Corrupt one lane of a middle row: the round no longer holds there.
+    trace[WIDTH * 3 + 2] = trace[WIDTH * 3 + 2] + Fp::ONE;
+    let air = Poseidon::new(POSEIDON_LOG_T, digest);
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a corrupted poseidon round verified");
+}
+
+#[test]
+fn a_nonzero_capacity_initialization_is_rejected() {
+    // Seeding the capacity with anything but zero computes a different function;
+    // the sponge-initialization boundary rejects it.
+    let params = Poseidon::new(POSEIDON_LOG_T, [Fp::ZERO; RATE]);
+    let mut initial = absorb(sample_input());
+    initial[RATE] = Fp::from_u64(5);
+    let (trace, digest) = poseidon_trace(&params, initial, POSEIDON_LOG_T);
+    let air = Poseidon::new(POSEIDON_LOG_T, digest);
+    let proof = stark_prove(&air, &trace, QUERIES);
+    assert!(!stark_verify(&air, &proof, QUERIES), "a nonzero capacity init verified");
 }
 
 #[test]

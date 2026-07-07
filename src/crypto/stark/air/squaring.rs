@@ -47,7 +47,7 @@ impl Air for Squaring {
         1
     }
 
-    fn transition(&self, window: &[Fp]) -> Vec<Fp> {
+    fn transition(&self, window: &[Fp], _periodic: &[Fp]) -> Vec<Fp> {
         // f(g*x) - f(x)^2
         vec![window[1] - window[0] * window[0]]
     }

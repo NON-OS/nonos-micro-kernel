@@ -25,7 +25,7 @@ use super::super::field::Fp;
 use super::super::fri::{fri_verify, root_of_unity};
 use super::super::merkle::verify_path;
 use super::super::transcript::Transcript;
-use super::composition::{compose, domain_params, num_coeffs};
+use super::composition::{compose, domain_params, eval_periodic, num_coeffs};
 use super::spec::Air;
 use super::types::StarkProof;
 use alloc::vec::Vec;
@@ -49,6 +49,16 @@ pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bo
     let g = root_of_unity(log_t);
     let omega = root_of_unity(log_n);
     let shift = Fp::from_u64(SHIFT);
+
+    // Trace-domain points g^i, for interpolating the public periodic columns.
+    let t = 1usize << log_t;
+    let mut h_pts: Vec<Fp> = Vec::with_capacity(t);
+    let mut hp = Fp::ONE;
+    for _ in 0..t {
+        h_pts.push(hp);
+        hp = hp * g;
+    }
+    let periodic_cols = air.periodic_columns();
 
     // 1. The composition must be low degree (below the derived bound).
     if !fri_verify(&proof.fri, shift, log_n, fri_log_blowup, n_queries) {
@@ -86,7 +96,8 @@ pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bo
             }
         }
         let x = shift * omega.pow(p as u64);
-        if qd.comp != compose(air, g, x, &qd.window, &coeffs) {
+        let periodic = eval_periodic(&periodic_cols, &h_pts, x);
+        if qd.comp != compose(air, g, x, &qd.window, &periodic, &coeffs) {
             return false;
         }
     }
