@@ -59,3 +59,22 @@ pub fn sys_proc_input(pid: u64, buf_ptr: u64, buf_len: usize) -> i64 {
         Err(crate::ipc::nonos_inbox::StrictEnqueueError::QueueFull(_)) => ERRNO_BUSY,
     }
 }
+
+pub fn sys_stdin_read(buf_ptr: u64, buf_len: usize) -> i64 {
+    if buf_ptr == 0 || buf_len == 0 {
+        return ERRNO_INVAL;
+    }
+    let caller = current_pid().unwrap_or(0);
+    if caller == 0 {
+        return ERRNO_PERM;
+    }
+    let name = alloc::format!("stdin.{}", caller);
+    let Some(msg) = crate::ipc::nonos_inbox::try_dequeue_existing(&name) else {
+        return 0;
+    };
+    let n = msg.data.len().min(buf_len);
+    if crate::usercopy::copy_to_user(buf_ptr, &msg.data[..n]).is_err() {
+        return ERRNO_FAULT;
+    }
+    n as i64
+}
