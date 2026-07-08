@@ -53,6 +53,42 @@ jobs:
               | grep -v 'no sorry anywhere' || echo "  none"
           } > "$GITHUB_WORKSPACE/lean-evidence/summary.txt"
           cat "$GITHUB_WORKSPACE/lean-evidence/summary.txt"
+      - name: Proof inventory and manifest
+        working-directory: verification/lean
+        run: |
+          set -euo pipefail
+          EV="$GITHUB_WORKSPACE/lean-evidence"
+          thms=$(grep -rh '^theorem ' Nonos --include='*.lean' | wc -l | tr -d ' ')
+          lemmas=$(grep -rh '^lemma ' Nonos --include='*.lean' | wc -l | tr -d ' ')
+          mods=$(find Nonos -name '*.lean' | wc -l | tr -d ' ')
+          loc=$(find Nonos -name '*.lean' -exec cat {} + | wc -l | tr -d ' ')
+          hatches=$(grep -rEn '\bsorry\b|\badmit\b|^axiom ' Nonos --include='*.lean' \
+            | grep -vc 'no sorry anywhere' || true)
+          {
+            echo "# NONOS Lean proof inventory"
+            echo
+            echo "commit \`$GITHUB_SHA\`, toolchain \`$(cat lean-toolchain)\`"
+            echo
+            echo "$thms theorems, $lemmas lemmas across $mods modules, $loc lines of proof, $hatches escape hatches."
+            echo
+            for f in $(find Nonos -name '*.lean' | sort); do
+              n=$(grep -c -e '^theorem ' -e '^lemma ' "$f" || true)
+              echo "## $f ($n)"
+              grep -hoE '^(theorem|lemma) [^ :({]+' "$f" | sed 's/^/  - /' || true
+              echo
+            done
+          } > "$EV/inventory.md"
+          jq -n \
+            --arg commit "$GITHUB_SHA" \
+            --arg toolchain "$(cat lean-toolchain)" \
+            --argjson theorems "$thms" \
+            --argjson lemmas "$lemmas" \
+            --argjson modules "$mods" \
+            --argjson proof_loc "$loc" \
+            --argjson escape_hatches "${hatches:-0}" \
+            '{commit:$commit, toolchain:$toolchain, theorems:$theorems, lemmas:$lemmas, modules:$modules, proof_loc:$proof_loc, escape_hatches:$escape_hatches}' \
+            > "$EV/manifest.json"
+          cat "$EV/manifest.json"
       - name: Upload lean evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
