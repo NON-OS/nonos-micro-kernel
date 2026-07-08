@@ -21,6 +21,8 @@ use crate::term::grid::types::Grid;
 use crate::term::state::State;
 use crate::term::util::copy_into;
 
+mod kernel_api;
+
 const READY_ATTEMPTS: u32 = 100_000;
 
 // Headless capsule entry for the autorun-selftest build: bring up the heap,
@@ -279,6 +281,8 @@ fn run_ext(state: &mut State) {
 
     run_cmd(state, b"nslookup nonos.test");
     mark(b"nslookup", visible_has(state, b"nslookup: dns unavailable"));
+
+    kernel_api::run();
 }
 
 fn run_cmd(state: &mut State, cmd: &[u8]) {
