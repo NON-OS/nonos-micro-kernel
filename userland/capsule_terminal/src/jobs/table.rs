@@ -67,4 +67,37 @@ impl JobTable {
         });
         id
     }
+
+    pub fn foreground(&self) -> Option<u32> {
+        self.jobs
+            .iter()
+            .rev()
+            .find(|j| !j.background && j.state == JobState::Running)
+            .map(|j| j.id)
+    }
+
+    pub fn get_mut(&mut self, id: u32) -> Option<&mut JobRecord> {
+        self.jobs.iter_mut().find(|j| j.id == id)
+    }
+
+    pub fn get(&self, id: u32) -> Option<&JobRecord> {
+        self.jobs.iter().find(|j| j.id == id)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &JobRecord> {
+        self.jobs.iter()
+    }
+
+    pub fn drop_done(&mut self) -> Vec<(u32, Vec<u8>, i32, bool)> {
+        let mut done = Vec::new();
+        self.jobs.retain(|j| {
+            if j.state == JobState::Done {
+                done.push((j.id, j.cmdline.clone(), j.status, j.background));
+                false
+            } else {
+                true
+            }
+        });
+        done
+    }
 }
