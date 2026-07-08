@@ -242,6 +242,9 @@ fn run(state: &mut State) {
     run_cmd(state, b"echo a b c | wc");
     mark(b"pipe", visible_has(state, b"1"));
 
+    run_cmd(state, b"echo a | cat /readme.txt");
+    mark(b"pipe-anystage", visible_has(state, b"This file lives in the vfs capsule."));
+
     run_cmd(state, b"read /nope.txt || echo recovered");
     mark(b"statement", visible_has(state, b"recovered"));
 
