@@ -45,6 +45,7 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkBatteryStatus
             | MkProcStat
             | MkProcOutput
+            | MkProcInput
             | MkAttestStatus
             | MkCapGrant
             | MkCapRevoke

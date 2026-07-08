@@ -44,6 +44,7 @@ pub const SYS_TIME_RTC: u64 = tag4(b"MTRT");
 pub const SYS_BATTERY_STATUS: u64 = tag4(b"MBAT");
 pub const SYS_PROC_STAT: u64 = tag4(b"MPST");
 pub const SYS_PROC_OUTPUT: u64 = tag4(b"MOUT");
+pub const SYS_PROC_INPUT: u64 = tag4(b"MPIN");
 pub const SYS_ATTEST_STATUS: u64 = tag4(b"MAST");
 pub const SYS_CAP_GRANT: u64 = tag4(b"MCGT");
 pub const SYS_CAP_REVOKE: u64 = tag4(b"MCRV");
