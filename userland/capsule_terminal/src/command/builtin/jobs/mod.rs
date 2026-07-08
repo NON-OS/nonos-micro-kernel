@@ -14,18 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod about;
-pub mod capsules;
-pub mod clear;
-pub mod display;
-pub mod echo;
-pub mod exit_check;
-pub mod history_cmd;
-pub mod jobs;
-pub mod market;
-pub mod motd;
-pub mod nox;
-pub mod ping;
-pub mod service;
-pub mod version;
-pub mod whoami;
+mod bg;
+mod fg;
+mod list;
+
+pub use bg::run as run_bg;
+pub use fg::run as run_fg;
+pub use list::run as run_jobs;
