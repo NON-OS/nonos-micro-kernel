@@ -21,6 +21,7 @@ extern crate alloc;
 
 mod command;
 mod event;
+mod jobs;
 mod paint;
 mod term;
 

@@ -14,29 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::State;
-use crate::jobs::JobTable;
-use crate::term::cwd::Cwd;
-use crate::term::history::History;
-use crate::term::line::Line;
-use crate::term::scrollback::Scrollback;
-
-impl State {
-    pub fn new() -> Self {
-        Self {
-            line: Line::new(),
-            history: History::new(),
-            scrollback: Scrollback::new(),
-            cwd: Cwd::new(),
-            owner_pid: 0,
-            fresh: true,
-            start_ms: 0,
-            vars: alloc::vec::Vec::new(),
-            last_status: true,
-            aliases: alloc::vec::Vec::new(),
-            hist_prefix: alloc::vec::Vec::new(),
-            blocks: alloc::vec::Vec::new(),
-            jobs: JobTable::new(),
-        }
-    }
+// The step machine for long-running command kinds, one variant per kind,
+// each holding the progress cursor its poll body tracks. Grown incrementally
+// by later tasks (Ping, InstallDrain, ExternalStage, PipelineStages, ...);
+// `Noop` is a placeholder so `JobTable`/`JobRecord` compile ahead of them.
+pub enum JobWork {
+    Noop,
 }

@@ -16,6 +16,7 @@
 
 use alloc::vec::Vec;
 
+use crate::jobs::JobTable;
 use crate::term::block::Block;
 use crate::term::cwd::Cwd;
 use crate::term::history::History;
@@ -43,4 +44,5 @@ pub struct State {
     // the newest entry.
     pub hist_prefix: Vec<u8>,
     pub blocks: Vec<Block>,
+    pub jobs: JobTable,
 }
