@@ -16,6 +16,9 @@
 
 use super::call::call_installer;
 use super::emit::{emit_err, emit_ok};
+use super::job::InstallJob;
+use crate::command::output::Output;
+use crate::jobs::JobProgress;
 use crate::term::state::State;
 
 // install <name> [argv...]: ask the installer to verify, load, and spawn the
@@ -49,48 +52,19 @@ pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
 
 // Pull the loaded capsule's stdout out of its proc.<pid> inbox and into
 // the terminal window. The kernel mirrors each MkDebug line there. We
-// yield between polls so the child can run, stop when it exits, and cap
-// the wait so a child that never exits cannot freeze the terminal.
+// step the drain job on the current thread until it finishes or times
+// out, so a child that never exits cannot freeze the terminal.
 fn drain_output(state: &mut State, pid: u32) {
-    use nonos_libc::{mk_pid_alive, mk_proc_output, mk_time_millis, mk_yield};
-    const DEADLINE_MS: i64 = 5000;
-    let start = mk_time_millis();
-    let mut buf = [0u8; 256];
-    let mut saw_output = false;
+    let mut out = Output::new(&mut state.scrollback);
+    let mut job = InstallJob::new(pid);
     loop {
-        let n = mk_proc_output(pid, buf.as_mut_ptr(), buf.len());
-        if n > 0 {
-            state.scrollback.feed_raw(&buf[..(n as usize).min(buf.len())]);
-            mark_output_drained(&mut saw_output);
-            continue;
-        }
-        if !mk_pid_alive(pid) {
-            loop {
-                let m = mk_proc_output(pid, buf.as_mut_ptr(), buf.len());
-                if m <= 0 {
-                    break;
-                }
-                state.scrollback.feed_raw(&buf[..(m as usize).min(buf.len())]);
-                mark_output_drained(&mut saw_output);
-            }
+        if let JobProgress::Done(_) = job.step_once(&mut out) {
             break;
         }
-        if mk_time_millis().wrapping_sub(start) > DEADLINE_MS {
-            break;
-        }
-        mk_yield();
     }
 }
 
-fn mark_output_drained(saw_output: &mut bool) {
-    if *saw_output {
-        return;
-    }
-    *saw_output = true;
-    debug_marker(b"[TERMINAL-MOUT] output drained\n");
-}
-
-fn debug_marker(msg: &[u8]) {
+pub(super) fn debug_marker(msg: &[u8]) {
     let _ = nonos_libc::mk_debug(msg.as_ptr(), msg.len());
 }
 

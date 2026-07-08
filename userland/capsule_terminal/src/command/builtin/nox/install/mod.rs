@@ -16,6 +16,8 @@
 
 mod call;
 mod emit;
+mod job;
 mod run;
 
+pub use job::InstallJob;
 pub use run::run;

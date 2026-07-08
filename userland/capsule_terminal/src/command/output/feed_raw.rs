@@ -14,44 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod alias;
-mod apps;
-mod caps;
-mod children;
-mod clear;
-mod copy;
-mod date;
-mod dispatch;
-mod display;
-mod du;
-mod echo;
-mod ensure_pid;
-mod enter;
-mod find;
-mod help;
-mod history;
-mod id;
-mod ifconfig;
-pub mod install;
-mod ls;
-mod mk;
-mod motd;
-mod mv;
-mod nslookup;
-mod pathname;
-mod ping;
-mod read;
-mod rm;
-mod run;
-mod set;
-mod stat;
-mod touch;
-mod svc;
-mod sysinfo;
-mod unalias;
-mod unknown;
-mod unset;
-mod whereis;
-mod write;
+use super::types::Output;
 
-pub use dispatch::dispatch;
+impl<'a> Output<'a> {
+    pub fn feed_raw(&mut self, bytes: &[u8]) {
+        self.sb.feed_raw(bytes);
+    }
+}
