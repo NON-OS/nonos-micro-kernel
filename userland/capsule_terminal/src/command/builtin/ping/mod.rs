@@ -18,12 +18,17 @@
 
 mod emit;
 mod icmp;
+mod job;
 mod lookup;
 mod parse;
 mod poll;
 mod probe;
 mod resolve;
 mod send;
+
+pub use emit::emit_probe;
+pub use job::PingJob;
+pub use probe::Probe;
 
 use crate::command::output::Output;
 
@@ -54,12 +59,6 @@ pub fn run(out: &mut Output<'_>, argv: &[&[u8]]) {
         return;
     };
     emit::emit_target(out, argv[1], &dst);
-    match probe::probe(port, dst) {
-        probe::Probe::Reply(rtt) => emit::emit_reply(out, &dst, rtt),
-        probe::Probe::NoRoute => out.writeln(b"no route to host"),
-        probe::Probe::NotReady => out.writeln(b"ping: network not ready"),
-        probe::Probe::Unreachable => out.writeln(b"ping: destination unreachable (no ARP reply)"),
-        probe::Probe::Timeout => out.writeln(b"request timed out"),
-        probe::Probe::SendFailed => out.writeln(b"ping: send failed"),
-    }
+    let result = probe::probe(port, dst);
+    emit::emit_probe(out, dst, result);
 }

@@ -17,6 +17,8 @@
 use crate::command::output::Output;
 use crate::term::util::{copy_into, format_u64};
 
+use super::probe::Probe;
+
 pub fn emit_target(out: &mut Output<'_>, host: &[u8], ip: &[u8; 4]) {
     let mut line = [0u8; 128];
     let mut k = 0;
@@ -49,4 +51,35 @@ fn fmt_ipv4(out: &mut [u8], ip: &[u8; 4]) -> usize {
         k += format_u64(b as u64, &mut out[k..]);
     }
     k
+}
+
+// Shared terminal outcome for a finished probe: writes the same line the
+// synchronous `ping` builtin always has, and returns an exit status.
+pub fn emit_probe(out: &mut Output<'_>, dst: [u8; 4], probe: Probe) -> i32 {
+    match probe {
+        Probe::Reply(rtt) => {
+            emit_reply(out, &dst, rtt);
+            0
+        }
+        Probe::NoRoute => {
+            out.writeln(b"no route to host");
+            1
+        }
+        Probe::NotReady => {
+            out.writeln(b"ping: network not ready");
+            1
+        }
+        Probe::Unreachable => {
+            out.writeln(b"ping: destination unreachable (no ARP reply)");
+            1
+        }
+        Probe::Timeout => {
+            out.writeln(b"request timed out");
+            1
+        }
+        Probe::SendFailed => {
+            out.writeln(b"ping: send failed");
+            1
+        }
+    }
 }
