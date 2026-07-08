@@ -62,3 +62,38 @@ pub fn run(out: &mut Output<'_>, argv: &[&[u8]]) {
     let result = probe::probe(port, dst);
     emit::emit_probe(out, dst, result);
 }
+
+// Job-submission variant of `run`: same host resolution and target
+// announcement, but hands the echo-request/echo-reply poll off as a
+// `PingJob` instead of looping it to completion inline.
+pub fn prepare(out: &mut Output<'_>, argv: &[&[u8]]) -> Option<PingJob> {
+    if argv.len() < 2 {
+        out.writeln(b"usage: ping <host>");
+        return None;
+    }
+    let dst = match resolve::resolve(argv[1]) {
+        resolve::Resolved::Ip(ip) => ip,
+        resolve::Resolved::NoService => {
+            out.writeln(b"ping: dns service unavailable");
+            return None;
+        }
+        resolve::Resolved::Timeout => {
+            out.writeln(b"ping: dns query timed out (no reply in 6s)");
+            return None;
+        }
+        resolve::Resolved::ServFail => {
+            out.writeln(b"ping: dns lookup failed (servfail)");
+            return None;
+        }
+        resolve::Resolved::Unknown => {
+            out.writeln(b"ping: unknown host");
+            return None;
+        }
+    };
+    let Some(port) = probe::lookup_ip_service() else {
+        out.writeln(b"ping: net unavailable");
+        return None;
+    };
+    emit::emit_target(out, argv[1], &dst);
+    Some(PingJob::new(port, dst))
+}

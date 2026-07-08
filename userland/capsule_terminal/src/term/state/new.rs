@@ -37,6 +37,8 @@ impl State {
             hist_prefix: alloc::vec::Vec::new(),
             blocks: alloc::vec::Vec::new(),
             jobs: JobTable::new(),
+            fg_running: false,
+            fg_started_ms: 0,
         }
     }
 }

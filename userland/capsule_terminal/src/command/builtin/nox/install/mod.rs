@@ -20,4 +20,4 @@ mod job;
 mod run;
 
 pub use job::InstallJob;
-pub use run::run;
+pub use run::{prepare, run};

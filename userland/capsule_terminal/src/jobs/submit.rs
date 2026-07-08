@@ -14,14 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod classify;
-mod env;
-mod submit;
-mod table;
-mod work;
+use crate::term::state::State;
 
-pub use classify::{is_job_command, Verdict};
-pub use env::JobEnv;
-pub use submit::submit;
-pub use table::{JobProgress, JobRecord, JobState, JobTable};
-pub use work::{step, JobWork};
+use super::env::JobEnv;
+use super::work::JobWork;
+
+// Snapshot the shell environment the job needs and register it in the
+// table. Every job, background or foreground, gets its own `JobEnv`; only
+// a foreground job's env is merged back into `State` once it reaps, so a
+// background job's `cd`/`set` never leaks into the interactive shell.
+pub fn submit(state: &mut State, cmdline: &[u8], background: bool, work: JobWork) -> u32 {
+    let env = JobEnv::snapshot(state);
+    state.jobs.add(cmdline, background, work, env)
+}

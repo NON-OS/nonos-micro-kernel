@@ -45,4 +45,10 @@ pub struct State {
     pub hist_prefix: Vec<u8>,
     pub blocks: Vec<Block>,
     pub jobs: JobTable,
+    // Set when a statement is submitted as a foreground job: on_enter
+    // stops consuming the line (v1 limit: statements after a foreground
+    // job are dropped, so it should be the last on its line) and defers
+    // close_block and last_status to the job's reap in the on_tick pump.
+    pub fg_running: bool,
+    pub fg_started_ms: i64,
 }

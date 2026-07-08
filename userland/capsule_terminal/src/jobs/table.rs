@@ -16,6 +16,7 @@
 
 use alloc::vec::Vec;
 
+use super::env::JobEnv;
 use super::work::JobWork;
 
 // Result of stepping a job's work by one bounded slice.
@@ -38,6 +39,7 @@ pub struct JobRecord {
     pub cancel: bool,
     pub status: i32,
     pub state: JobState,
+    pub env: JobEnv,
     pub work: JobWork,
 }
 
@@ -53,7 +55,7 @@ impl JobTable {
         Self { jobs: Vec::new(), next_id: 1 }
     }
 
-    pub fn add(&mut self, cmdline: &[u8], background: bool, work: JobWork) -> u32 {
+    pub fn add(&mut self, cmdline: &[u8], background: bool, work: JobWork, env: JobEnv) -> u32 {
         let id = self.next_id;
         self.next_id += 1;
         self.jobs.push(JobRecord {
@@ -63,6 +65,7 @@ impl JobTable {
             cancel: false,
             status: 0,
             state: JobState::Running,
+            env,
             work,
         });
         id

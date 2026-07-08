@@ -50,6 +50,34 @@ pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     }
 }
 
+// Job-submission variant of `run`: same installer call and success/failure
+// reporting, but hands the stdout drain off as an `InstallJob` instead of
+// looping it to completion inline.
+pub fn prepare(state: &mut State, args: &[&[u8]]) -> Option<InstallJob> {
+    if args.is_empty() {
+        state.scrollback.push_error(b"usage: install <name> [argv...]");
+        return None;
+    }
+    let stem = args[0];
+    if !valid_name(stem) {
+        state.scrollback.push_error(b"install: name must be ascii letters, digits, _ or -");
+        return None;
+    }
+    let argv = argv_blob(stem, &args[1..]);
+    match call_installer(stem, &argv) {
+        Ok(new_pid) => {
+            emit_ok(state, stem, new_pid);
+            debug_marker(b"[TERMINAL-INSTALL] load ok\n");
+            Some(InstallJob::new(new_pid))
+        }
+        Err(status) => {
+            emit_err(state, status);
+            debug_marker(b"[TERMINAL-INSTALL] load failed\n");
+            None
+        }
+    }
+}
+
 // Pull the loaded capsule's stdout out of its proc.<pid> inbox and into
 // the terminal window. The kernel mirrors each MkDebug line there. We
 // step the drain job on the current thread until it finishes or times
