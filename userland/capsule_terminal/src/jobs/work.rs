@@ -18,16 +18,22 @@ use crate::command::builtin::nox::install::InstallJob;
 use crate::command::builtin::ping::{emit_probe, PingJob};
 use crate::command::output::Output;
 
+use super::pipeline_job::PipelineJob;
 use super::table::JobProgress;
 
 // The step machine for long-running command kinds, one variant per kind,
 // each holding the progress cursor its poll body tracks. Grown incrementally
-// by later tasks (ExternalStage, PipelineStages, ...); `Noop` is a
-// placeholder so `JobTable`/`JobRecord` compile ahead of the rest.
+// by later tasks (ExternalStage, ...); `Noop` is a placeholder so
+// `JobTable`/`JobRecord` compile ahead of the rest. `PipelineStages` needs
+// `&mut State` to run its stages (real commands, not just filters), so it
+// is stepped by `pump::step_pipeline_job` instead of this function; the
+// arm below only fires if `step` is ever called on it directly, which
+// pump's routing avoids for the non-cancelled case.
 pub enum JobWork {
     Noop,
     Ping(PingJob),
     InstallDrain(InstallJob),
+    PipelineStages(PipelineJob),
 }
 
 // Step a job's work by one bounded slice. A cancelled job is finished
@@ -48,5 +54,6 @@ pub fn step(work: &mut JobWork, out: &mut Output<'_>, cancel: bool) -> JobProgre
             }
         },
         JobWork::InstallDrain(job) => job.step_once(out),
+        JobWork::PipelineStages(_) => JobProgress::Running,
     }
 }

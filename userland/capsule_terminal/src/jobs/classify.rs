@@ -14,11 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec::Vec;
+
 use crate::command::builtin::nox::install;
 use crate::command::builtin::ping;
+use crate::command::dispatch::split_stages;
 use crate::command::output::Output;
 use crate::term::state::State;
 
+use super::pipeline_job::PipelineJob;
 use super::work::JobWork;
 
 // `Instant` statements run through the untouched synchronous dispatch;
@@ -34,13 +38,20 @@ pub enum Verdict {
 
 // Long-running builtins that must not block the event loop: `ping` (a
 // network round trip) and `install` (an installer call plus stdout
-// drain). Everything else, and any `ping`/`install` invocation that is
-// piped or redirected, stays on the existing synchronous dispatch.
-// External processes and long pipelines extend this match once their
-// `JobWork` variants exist.
+// drain). A plain invocation of either becomes a stepped job directly;
+// one piped into a pipeline (`ping x | grep y`) becomes a stepped
+// `PipelineStages` job instead, so it does not block behind `command::run`.
+// Any other non-plain statement (redirects, or an all-instant pipeline)
+// stays on the existing synchronous dispatch.
 pub fn is_job_command(state: &mut State, args: &[&[u8]]) -> Verdict {
-    if args.is_empty() || !is_plain(args) {
+    if args.is_empty() {
         return Verdict::Instant;
+    }
+    if !is_plain(args) {
+        return match pipeline_stages(args) {
+            Some(stages) => Verdict::Job(JobWork::PipelineStages(PipelineJob::new(stages))),
+            None => Verdict::Instant,
+        };
     }
     match args[0] {
         b"ping" => {
@@ -63,4 +74,31 @@ pub fn is_job_command(state: &mut State, args: &[&[u8]]) -> Verdict {
 
 fn is_plain(args: &[&[u8]]) -> bool {
     !args.iter().any(|a| matches!(*a, b"|" | b">" | b">>" | b"<"))
+}
+
+// A pure pipeline (no redirects) whose stages include a long command
+// becomes owned, parsed stages for a `PipelineStages` job. Anything with a
+// redirect, or a pipeline with no long stage, returns `None` so the caller
+// falls back to `Verdict::Instant`.
+fn pipeline_stages(args: &[&[u8]]) -> Option<Vec<Vec<Vec<u8>>>> {
+    if args.iter().any(|a| matches!(*a, b">" | b">>" | b"<")) {
+        return None;
+    }
+    if !args.iter().any(|a| *a == b"|") {
+        return None;
+    }
+    let segments = split_stages(args);
+    if !segments.iter().any(|seg| is_long_stage(seg)) {
+        return None;
+    }
+    let mut stages: Vec<Vec<Vec<u8>>> = Vec::new();
+    for seg in &segments {
+        let tokens: Vec<Vec<u8>> = seg.iter().map(|tok| tok.to_vec()).collect();
+        stages.push(tokens);
+    }
+    Some(stages)
+}
+
+fn is_long_stage(seg: &[&[u8]]) -> bool {
+    matches!(seg.first().copied(), Some(b"ping") | Some(b"install"))
 }

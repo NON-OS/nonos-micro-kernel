@@ -40,7 +40,7 @@ pub(super) fn run_pipeline(state: &mut State, args: &[&[u8]]) -> Vec<Vec<u8>> {
     lines
 }
 
-fn run_stage(state: &mut State, seg: &[&[u8]], buffer: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+pub(crate) fn run_stage(state: &mut State, seg: &[&[u8]], buffer: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
     if FILTERS.contains(&seg.first().copied().unwrap_or(b"")) {
         apply(seg, buffer)
     } else {
@@ -50,7 +50,7 @@ fn run_stage(state: &mut State, seg: &[&[u8]], buffer: Vec<Vec<u8>>) -> Vec<Vec<
     }
 }
 
-fn split_stages<'a>(args: &'a [&'a [u8]]) -> Vec<&'a [&'a [u8]]> {
+pub(crate) fn split_stages<'a>(args: &'a [&'a [u8]]) -> Vec<&'a [&'a [u8]]> {
     let mut segments = Vec::new();
     let mut start = 0;
     for i in 0..=args.len() {

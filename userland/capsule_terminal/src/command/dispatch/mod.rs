@@ -28,5 +28,6 @@ mod write_redirect;
 pub use alias_expand::alias_expand;
 pub use expand::expand;
 pub use outcome::Outcome;
+pub(crate) use pipeline::{run_stage, split_stages};
 pub use run::run;
 pub use statements::{split_program, Conn, Stmt};
