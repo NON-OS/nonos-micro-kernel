@@ -53,6 +53,9 @@ dev_signing_key.bin
 !nonos-data/trust/**/*.bin
 !nonos-data/trust/**/*.pub
 
+# Editor and tool backup files.
+*.bak
+
 # ZK artifacts (generated, large)
 zk-artifacts/generated/
 zk-artifacts/*.bin
@@ -77,14 +80,4 @@ coverage/
 .env
 .env.local
 *.local.toml
-
-# AI assistant instruction files (local overrides, not for version control)
-.claude/
-CLAUDE.md
-CONTEXT.md
-.cursorrules
-.cursorignore
-.aider*
-.continue/
-.superpowers/
 
