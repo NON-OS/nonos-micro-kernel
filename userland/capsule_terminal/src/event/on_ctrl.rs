@@ -48,8 +48,16 @@ pub fn on_ctrl(state: &mut State, code: u32, flags: u16) -> Option<EventOutcome>
             Some(EventOutcome::Repaint)
         }
         CTRL_C | CTRL_C_LO => {
-            state.line.clear();
-            state.history.reset_cursor();
+            if state.fg_running {
+                if let Some(id) = state.jobs.foreground() {
+                    if let Some(job) = state.jobs.get_mut(id) {
+                        job.cancel = true;
+                    }
+                }
+            } else {
+                state.line.clear();
+                state.history.reset_cursor();
+            }
             state.scrollback.push_line(b"^C");
             state.scrollback.jump_bottom();
             Some(EventOutcome::Repaint)
