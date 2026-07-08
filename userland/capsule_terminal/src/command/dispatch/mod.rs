@@ -29,4 +29,4 @@ pub use alias_expand::alias_expand;
 pub use expand::expand;
 pub use outcome::Outcome;
 pub use run::run;
-pub use statements::{split_program, Conn};
+pub use statements::{split_program, Conn, Stmt};
