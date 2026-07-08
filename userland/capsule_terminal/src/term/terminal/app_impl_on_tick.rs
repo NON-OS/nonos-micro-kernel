@@ -14,17 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod classify;
-mod env;
-mod pump;
-mod reap;
-mod submit;
-mod table;
-mod work;
+use super::types::Terminal;
+use crate::jobs;
 
-pub use classify::{is_job_command, Verdict};
-pub use env::JobEnv;
-pub use pump::pump;
-pub use submit::submit;
-pub use table::{JobProgress, JobRecord, JobState, JobTable};
-pub use work::{step, JobWork};
+impl Terminal {
+    pub(super) fn on_tick_inner(&mut self) -> bool {
+        jobs::pump(self.cur())
+    }
+}

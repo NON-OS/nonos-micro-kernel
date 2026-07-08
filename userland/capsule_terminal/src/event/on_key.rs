@@ -35,6 +35,13 @@ pub fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
             return out;
         }
     }
+    if state.fg_running && event.flags & MOD_CTRL == 0 {
+        match event.code {
+            KEY_ENTER => return EventOutcome::Idle,
+            code if (0x20..=0x7E).contains(&code) => return EventOutcome::Idle,
+            _ => {}
+        }
+    }
     match event.code {
         KEY_ESC => EventOutcome::Close,
         KEY_ENTER => on_enter(state),
