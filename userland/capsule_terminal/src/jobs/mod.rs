@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod env;
 mod table;
 mod work;
 
+pub use env::JobEnv;
 pub use table::{JobProgress, JobRecord, JobState, JobTable};
 pub use work::JobWork;
