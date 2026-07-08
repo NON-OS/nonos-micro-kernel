@@ -1,15 +1,37 @@
 # Contributing verifiable work to NONOS
 
 NONOS previously documented a Groth16/ceremony-based NOX receipt lane.
-That path has been removed from the active build during the transparent
-enrolled-secret attestation migration. Do not issue reward or release
-claims from the old receipt commands.
+That path has been removed. There is no trusted setup anywhere in the
+active build, and no reward or release claim may be issued from the old
+receipt commands.
 
-What is live today: transparent capsule attestation tooling, regenerated
-capsule policy roots and NZKCAPS2 trailers, and an enforced runtime
-attestation gate in the kernel source path. The reward receipt tooling
-must be rebuilt on top of the transparent proof format before NOX claims
-are advertised again.
+What is live today rests on two proof stacks, both transparent, both in
+CI on every push:
+
+- A capsule attestation gate enforced in the kernel spawn path. The
+  live gate is the transparent enrolled-secret proof (NZKCAPS2
+  trailers, a Curve25519 Pedersen commitment with a BLAKE3 Merkle
+  membership). Its post-quantum successor, a Poseidon-Merkle STARK that
+  hides the same secret and reveals the same path, is under
+  construction; its verifier is already proven in Lean before it is
+  allowed to gate a spawn.
+- A from-scratch transparent post-quantum proof system in
+  `src/crypto/stark`: the Goldilocks field, Poseidon and BLAKE3 Merkle
+  commitments, FRI, a generic AIR prover and verifier, and a
+  recursive, monolithic FRI verifier. Hash-and-integer only, no
+  elliptic curve, no trusted setup, so verification is post-quantum by
+  construction. It ships with host known-answer tests, a forgery fuzz
+  that mutates real proofs and demands rejection, and Lean soundness
+  theorems.
+
+The formal-verification stack is the reference for what is actually
+proven and what is assumed: `verification/ARCHITECTURE.md`,
+`verification/MAP.md`, and `verification/STATUS.md`. Lean states the
+abstract theorems (`verification/lean`, checked with no `sorry` and no
+added axioms), Verus and Kani discharge them on the real Rust, and the
+runnable known-answer and fuzz crates check the primitives against the
+published vectors. Read those before auditing; do not take any claim
+here on faith.
 
 ## What work earns a receipt
 
@@ -17,7 +39,8 @@ are advertised again.
     RUNTIME_BOOT         you booted NONOS in QEMU and captured the serial log
                          with enforced [ZK-ATTEST] ok lines
     HARDWARE_BOOT        the same evidence from real hardware
-    CIRCUIT_AUDIT        you audited the attestation circuit and wrote it up
+    PROOF_AUDIT          you audited the STARK verifier or the attestation
+                         path against its Lean and host proofs and wrote it up
     CAPSULE_AUDIT        you audited a capsule and wrote it up
     CAPSULE_BUILD        you built a capsule reproducibly; its proof trailer
                          is re-proved before a receipt is issued
