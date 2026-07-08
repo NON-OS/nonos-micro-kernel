@@ -20,4 +20,4 @@ mod work;
 
 pub use env::JobEnv;
 pub use table::{JobProgress, JobRecord, JobState, JobTable};
-pub use work::JobWork;
+pub use work::{step, JobWork};
