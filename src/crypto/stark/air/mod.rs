@@ -34,6 +34,7 @@ mod multi_membership;
 mod permutation;
 mod permutation2;
 mod poseidon;
+mod poseidon_preimage;
 mod power_chain;
 mod prove;
 mod recursive_verifier;
@@ -55,6 +56,7 @@ pub use multi_membership::{MultiMembership, Opening};
 pub use permutation::Permutation;
 pub use permutation2::Permutation2;
 pub use poseidon::{Poseidon, RATE, WIDTH};
+pub use poseidon_preimage::{poseidon_preimage_trace, PoseidonPreimage};
 pub use power_chain::PowerChain;
 pub use prove::stark_prove;
 pub use recursive_verifier::{
