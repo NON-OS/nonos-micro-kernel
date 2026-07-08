@@ -1844,12 +1844,8 @@ fn the_tuple_lookup_verifies_and_rejects_over_random_cases() {
     }
 }
 
-// A capsule attestation is a Poseidon Merkle membership proof bound to the
-// capsule it is spawning: the leaf, an enrolled secret, stays private while the
-// proof is tied to a public context (the capsule hash, its granted rights, and
-// the policy epoch) absorbed into the transcript. Binding is what stops a
-// proof made for one capsule from admitting another. These exercise the real
-// bound prover and verifier over a real Poseidon Merkle tree.
+// Context binding: a membership proof is tied to a capsule context, so one
+// capsule's proof cannot admit another.
 
 #[test]
 fn a_context_bound_membership_proof_verifies_under_its_context() {
@@ -1926,9 +1922,8 @@ fn an_empty_context_matches_the_unbound_proof() {
     );
 }
 
-// Proof serialization: an attestation proof must travel in a capsule trailer,
-// so the encoding round-trips a real proof exactly and the decoder is total
-// over hostile bytes, never panicking and never over-allocating.
+// Serialization: a real proof round-trips exactly, and the decoder is total
+// over hostile bytes.
 
 #[test]
 fn a_proof_round_trips_through_its_bytes() {
@@ -1985,11 +1980,8 @@ fn arbitrary_bytes_never_panic_the_decoder() {
     }
 }
 
-// The capsule attestation core: verify_membership_attestation is the exact
-// operation the kernel gate runs. It takes the kernel's trusted root, the
-// public path, the capsule context, and the serialized proof, and admits the
-// spawn only if an enrolled secret vouches for this precise capsule. These
-// exercise it end to end over a real Poseidon policy tree.
+// The attestation core the gate runs: an enrolled secret vouches for exactly
+// this capsule, verified against the kernel's own root.
 
 fn enroll_and_prove(
     hasher: &Poseidon,
@@ -2126,11 +2118,9 @@ fn capsule_ctx(hash_byte: u8, caps: u64, epoch: u64) -> Vec<u8> {
     ctx
 }
 
-// The whole attestation trailer: the exact bytes a capsule carries and the gate
-// parses. The round and query counts are the kernel's, not the trailer's, so a
-// crafted trailer cannot weaken the proof. This builds a real trailer and
-// checks it verifies, and that magic, depth, direction, and proof tampering are
-// all rejected without a panic.
+// The whole trailer the gate parses. Query and round counts are the kernel's,
+// not the trailer's. A real trailer verifies; magic, direction, and proof
+// tampering are rejected.
 
 fn build_trailer(directions: &[bool], siblings: &[[Fp; RATE]], proof_bytes: &[u8]) -> Vec<u8> {
     use crate::crypto::stark::air::STARK_ATTEST_MAGIC;

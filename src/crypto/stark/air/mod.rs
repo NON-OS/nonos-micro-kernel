@@ -23,8 +23,10 @@
 //! verifier is proven against forgeries, not assumed sound.
 
 mod attest;
+mod attest_trailer;
 mod composition;
 mod copy_constraint;
+mod deserialize;
 mod fiat_shamir;
 mod fibonacci;
 mod fri_fold;
@@ -46,8 +48,10 @@ mod types;
 mod verify;
 mod wired;
 
-pub use attest::{verify_attestation_trailer, verify_membership_attestation, STARK_ATTEST_MAGIC};
+pub use attest::verify_membership_attestation;
+pub use attest_trailer::{verify_attestation_trailer, STARK_ATTEST_MAGIC};
 pub use copy_constraint::CopyConstraint;
+pub use deserialize::deserialize_proof;
 pub use fiat_shamir::FiatShamir;
 pub use fibonacci::Fibonacci;
 pub use fri_fold::FriFold;
@@ -63,7 +67,7 @@ pub use prove::{stark_prove, stark_prove_bound};
 pub use recursive_verifier::{
     layer_membership, layer_openings, recursive_verify, FinalLayerConstant, FriTranscript,
 };
-pub use serialize::{deserialize_proof, serialize_proof};
+pub use serialize::serialize_proof;
 pub use spec::Air;
 pub use squaring::Squaring;
 pub use trace_fold::TraceFold;
