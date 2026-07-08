@@ -51,6 +51,16 @@ impl Transcript {
         self.mix(0x02, &value.value().to_le_bytes());
     }
 
+    /// Bind a public context into the state: the length, then the bytes. An
+    /// empty context absorbs nothing, matching an unbound transcript.
+    pub fn absorb_context(&mut self, context: &[u8]) {
+        if context.is_empty() {
+            return;
+        }
+        self.mix(0x05, &(context.len() as u64).to_le_bytes());
+        self.mix(0x06, context);
+    }
+
     fn squeeze_u64(&mut self, tag: u8) -> u64 {
         self.mix(tag, &[]);
         let s = &self.state;

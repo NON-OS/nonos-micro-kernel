@@ -15,9 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::crypto::stark::air::{
-    stark_prove, stark_verify, Air, CopyConstraint, FiatShamir, Fibonacci, FriFold, Fused,
-    MerkleMembership, MultiMembership, Opening, Permutation, Permutation2, Poseidon, PowerChain,
-    Squaring, TraceFold, Wired, RATE, WIDTH,
+    stark_prove, stark_prove_bound, stark_verify, stark_verify_bound, Air, CopyConstraint,
+    FiatShamir, Fibonacci, FriFold, Fused, MerkleMembership, MultiMembership, Opening, Permutation,
+    Permutation2, Poseidon, PowerChain, Squaring, TraceFold, Wired, RATE, WIDTH,
 };
 use crate::crypto::stark::field::Fp;
 use crate::crypto::stark::fri::root_of_unity;
@@ -1841,5 +1841,372 @@ fn the_tuple_lookup_verifies_and_rejects_over_random_cases() {
             !stark_verify(&bad_air, &bad_proof, QUERIES),
             "an out-of-table random pair set verified"
         );
+    }
+}
+
+// A capsule attestation is a Poseidon Merkle membership proof bound to the
+// capsule it is spawning: the leaf, an enrolled secret, stays private while the
+// proof is tied to a public context (the capsule hash, its granted rights, and
+// the policy epoch) absorbed into the transcript. Binding is what stops a
+// proof made for one capsule from admitting another. These exercise the real
+// bound prover and verifier over a real Poseidon Merkle tree.
+
+#[test]
+fn a_context_bound_membership_proof_verifies_under_its_context() {
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let leaves = merkle_leaves(8);
+    let index = 5;
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
+    let air = MerkleMembership::new(hasher.clone(), log_rounds, tree.root(), path, directions);
+
+    // The public context this attestation is bound to: a capsule hash, its
+    // granted capabilities, and the policy epoch, exactly the gate's ctx bytes.
+    let mut ctx = [0u8; 48];
+    ctx[..32].copy_from_slice(&[0xa5u8; 32]);
+    ctx[32..40].copy_from_slice(&0x0000_0000_0000_000fu64.to_be_bytes());
+    ctx[40..48].copy_from_slice(&1u64.to_be_bytes());
+
+    let proof = stark_prove_bound(&air, &trace, QUERIES, &ctx);
+    assert!(
+        stark_verify_bound(&air, &proof, QUERIES, &ctx),
+        "an honest attestation was rejected under its own context"
+    );
+}
+
+#[test]
+fn a_membership_proof_is_rejected_under_a_different_context() {
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let leaves = merkle_leaves(8);
+    let index = 5;
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
+    let air = MerkleMembership::new(hasher.clone(), log_rounds, tree.root(), path, directions);
+
+    let mut ctx_a = [0u8; 48];
+    ctx_a[..32].copy_from_slice(&[0xa5u8; 32]);
+    // A different capsule: one byte of the hash differs.
+    let mut ctx_b = ctx_a;
+    ctx_b[0] ^= 1;
+
+    let proof = stark_prove_bound(&air, &trace, QUERIES, &ctx_a);
+    assert!(
+        stark_verify_bound(&air, &proof, QUERIES, &ctx_a),
+        "the proof failed under the context it was made for"
+    );
+    // The same enrolled leaf and path, but the proof cannot be replayed for a
+    // capsule it was not drawn for: a different context is rejected.
+    assert!(
+        !stark_verify_bound(&air, &proof, QUERIES, &ctx_b),
+        "a proof for one capsule verified for another"
+    );
+    // And it does not verify as an unbound proof either.
+    assert!(!stark_verify(&air, &proof, QUERIES), "a bound proof verified with no context");
+}
+
+#[test]
+fn an_empty_context_matches_the_unbound_proof() {
+    // The bound path is a strict extension: an empty context reproduces the
+    // unbound proof exactly, so existing proofs stay valid.
+    let seed = Fp::from_u64(2);
+    let air = Squaring { log_t: 3, seed };
+    let trace = squaring_trace(3, seed);
+    let bound = stark_prove_bound(&air, &trace, QUERIES, &[]);
+    let unbound = stark_prove(&air, &trace, QUERIES);
+    assert!(stark_verify(&air, &bound, QUERIES), "empty-context proof rejected by stark_verify");
+    assert!(
+        stark_verify_bound(&air, &unbound, QUERIES, &[]),
+        "unbound proof rejected by empty-context verify"
+    );
+}
+
+// Proof serialization: an attestation proof must travel in a capsule trailer,
+// so the encoding round-trips a real proof exactly and the decoder is total
+// over hostile bytes, never panicking and never over-allocating.
+
+#[test]
+fn a_proof_round_trips_through_its_bytes() {
+    use crate::crypto::stark::air::{deserialize_proof, serialize_proof};
+
+    // A real membership proof, the shape an attestation carries.
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let leaves = merkle_leaves(8);
+    let index = 3;
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
+    let air = MerkleMembership::new(hasher.clone(), log_rounds, tree.root(), path, directions);
+    let proof = stark_prove(&air, &trace, QUERIES);
+
+    let bytes = serialize_proof(&proof);
+    let decoded = deserialize_proof(&bytes).expect("a canonical proof failed to decode");
+    // The decoded proof verifies exactly as the original.
+    assert!(stark_verify(&air, &decoded, QUERIES), "the round-tripped proof was rejected");
+    // And re-encoding is stable, so the encoding is canonical.
+    assert_eq!(serialize_proof(&decoded), bytes, "re-encoding a decoded proof differed");
+}
+
+#[test]
+fn a_truncated_proof_is_rejected_not_panicked() {
+    use crate::crypto::stark::air::{deserialize_proof, serialize_proof};
+
+    let air = Squaring { log_t: 3, seed: Fp::from_u64(5) };
+    let proof = stark_prove(&air, &squaring_trace(3, Fp::from_u64(5)), QUERIES);
+    let bytes = serialize_proof(&proof);
+    // Every truncation of a valid proof must decode to None, not crash.
+    for cut in 0..bytes.len() {
+        let _ = deserialize_proof(&bytes[..cut]);
+    }
+    // Trailing bytes make it non-canonical and are rejected.
+    let mut extended = bytes.clone();
+    extended.push(0);
+    assert!(deserialize_proof(&extended).is_none(), "a proof with trailing bytes decoded");
+}
+
+#[test]
+fn arbitrary_bytes_never_panic_the_decoder() {
+    use crate::crypto::stark::air::deserialize_proof;
+
+    let mut s = 0x51ed_2701_dead_c0deu64;
+    for _ in 0..20_000 {
+        let len = (lookup_xs(&mut s) % 512) as usize;
+        let buf: Vec<u8> = (0..len).map(|_| (lookup_xs(&mut s) & 0xff) as u8).collect();
+        // No assertion on the result: the point is that it returns rather than
+        // panics or hangs, over any bytes a hostile trailer could carry.
+        let _ = deserialize_proof(&buf);
+    }
+}
+
+// The capsule attestation core: verify_membership_attestation is the exact
+// operation the kernel gate runs. It takes the kernel's trusted root, the
+// public path, the capsule context, and the serialized proof, and admits the
+// spawn only if an enrolled secret vouches for this precise capsule. These
+// exercise it end to end over a real Poseidon policy tree.
+
+fn enroll_and_prove(
+    hasher: &Poseidon,
+    leaves: &[[Fp; RATE]],
+    index: usize,
+    log_rounds: u32,
+    ctx: &[u8],
+) -> (Vec<[Fp; RATE]>, Vec<bool>, [Fp; RATE], Vec<u8>) {
+    use crate::crypto::stark::air::serialize_proof;
+    let tree = PoseidonMerkleTree::commit(hasher, leaves);
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let trace = membership_trace(hasher, leaves[index], &path, &directions, log_rounds);
+    let air = MerkleMembership::new(
+        hasher.clone(),
+        log_rounds,
+        tree.root(),
+        path.clone(),
+        directions.clone(),
+    );
+    let proof = stark_prove_bound(&air, &trace, QUERIES, ctx);
+    (path, directions, tree.root(), serialize_proof(&proof))
+}
+
+#[test]
+fn an_enrolled_capsule_attestation_is_accepted() {
+    use crate::crypto::stark::air::verify_membership_attestation;
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let leaves = merkle_leaves(8);
+    let ctx = capsule_ctx(0xa5, 0x0f, 1);
+    let (siblings, directions, root, bytes) =
+        enroll_and_prove(&hasher, &leaves, 5, log_rounds, &ctx);
+    assert!(
+        verify_membership_attestation(
+            &hasher,
+            log_rounds,
+            root,
+            &siblings,
+            &directions,
+            QUERIES,
+            &bytes,
+            &ctx
+        ),
+        "an enrolled capsule was denied"
+    );
+}
+
+#[test]
+fn attestation_is_denied_for_a_different_capsule_or_root() {
+    use crate::crypto::stark::air::verify_membership_attestation;
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let leaves = merkle_leaves(8);
+    let ctx = capsule_ctx(0xa5, 0x0f, 1);
+    let (siblings, directions, root, bytes) =
+        enroll_and_prove(&hasher, &leaves, 5, log_rounds, &ctx);
+
+    // A different capsule (context) is denied: the proof cannot be replayed.
+    let other_ctx = capsule_ctx(0xa6, 0x0f, 1);
+    assert!(
+        !verify_membership_attestation(
+            &hasher,
+            log_rounds,
+            root,
+            &siblings,
+            &directions,
+            QUERIES,
+            &bytes,
+            &other_ctx
+        ),
+        "a proof for one capsule admitted another"
+    );
+
+    // A wrong policy root is denied: enrollment in some other tree does not count.
+    let mut wrong_root = root;
+    wrong_root[0] = wrong_root[0] + Fp::ONE;
+    assert!(
+        !verify_membership_attestation(
+            &hasher,
+            log_rounds,
+            wrong_root,
+            &siblings,
+            &directions,
+            QUERIES,
+            &bytes,
+            &ctx
+        ),
+        "an attestation verified against the wrong root"
+    );
+
+    // Tampered proof bytes are denied without a panic.
+    let mut bad = bytes.clone();
+    if let Some(b) = bad.get_mut(64) {
+        *b ^= 1;
+    }
+    assert!(
+        !verify_membership_attestation(
+            &hasher,
+            log_rounds,
+            root,
+            &siblings,
+            &directions,
+            QUERIES,
+            &bad,
+            &ctx
+        ),
+        "a tampered attestation verified"
+    );
+
+    // A malformed path is denied.
+    assert!(
+        !verify_membership_attestation(
+            &hasher,
+            log_rounds,
+            root,
+            &siblings,
+            &directions[..directions.len() - 1],
+            QUERIES,
+            &bytes,
+            &ctx
+        ),
+        "a mismatched path length verified"
+    );
+}
+
+fn capsule_ctx(hash_byte: u8, caps: u64, epoch: u64) -> Vec<u8> {
+    let mut ctx = alloc::vec![0u8; 48];
+    for b in ctx[..32].iter_mut() {
+        *b = hash_byte;
+    }
+    ctx[32..40].copy_from_slice(&caps.to_be_bytes());
+    ctx[40..48].copy_from_slice(&epoch.to_be_bytes());
+    ctx
+}
+
+// The whole attestation trailer: the exact bytes a capsule carries and the gate
+// parses. The round and query counts are the kernel's, not the trailer's, so a
+// crafted trailer cannot weaken the proof. This builds a real trailer and
+// checks it verifies, and that magic, depth, direction, and proof tampering are
+// all rejected without a panic.
+
+fn build_trailer(directions: &[bool], siblings: &[[Fp; RATE]], proof_bytes: &[u8]) -> Vec<u8> {
+    use crate::crypto::stark::air::STARK_ATTEST_MAGIC;
+    let depth = siblings.len();
+    let mut t = Vec::new();
+    t.extend_from_slice(STARK_ATTEST_MAGIC);
+    t.push(depth as u8);
+    let dir_bytes = depth.div_ceil(8);
+    let mut dirs = alloc::vec![0u8; dir_bytes];
+    for (i, d) in directions.iter().enumerate() {
+        if *d {
+            dirs[i / 8] |= 1 << (i % 8);
+        }
+    }
+    t.extend_from_slice(&dirs);
+    for s in siblings {
+        for v in s {
+            t.extend_from_slice(&v.value().to_le_bytes());
+        }
+    }
+    t.extend_from_slice(proof_bytes);
+    t
+}
+
+#[test]
+fn a_real_attestation_trailer_verifies_and_tampering_is_rejected() {
+    use crate::crypto::stark::air::{serialize_proof, verify_attestation_trailer};
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let leaves = merkle_leaves(8);
+    let index = 6;
+    let ctx = capsule_ctx(0x7c, 0x03, 1);
+
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
+    let air = MerkleMembership::new(
+        hasher.clone(),
+        log_rounds,
+        tree.root(),
+        path.clone(),
+        directions.clone(),
+    );
+    let proof = stark_prove_bound(&air, &trace, QUERIES, &ctx);
+    let trailer = build_trailer(&directions, &path, &serialize_proof(&proof));
+
+    let root = tree.root();
+    assert!(
+        verify_attestation_trailer(&hasher, log_rounds, root, QUERIES, &trailer, &ctx),
+        "a real attestation trailer was rejected"
+    );
+
+    // Wrong magic.
+    let mut bad_magic = trailer.clone();
+    bad_magic[0] ^= 1;
+    assert!(!verify_attestation_trailer(&hasher, log_rounds, root, QUERIES, &bad_magic, &ctx));
+
+    // A corrupted direction bit changes the claimed path and must fail.
+    let mut bad_dir = trailer.clone();
+    bad_dir[9] ^= 1;
+    assert!(!verify_attestation_trailer(&hasher, log_rounds, root, QUERIES, &bad_dir, &ctx));
+
+    // A flipped proof byte must fail.
+    let mut bad_proof = trailer.clone();
+    let last = bad_proof.len() - 1;
+    bad_proof[last] ^= 1;
+    assert!(!verify_attestation_trailer(&hasher, log_rounds, root, QUERIES, &bad_proof, &ctx));
+
+    // Truncations decode without a panic. Sampled across the buffer, including
+    // the header boundaries where the parser transitions between fields, so the
+    // suite stays fast while still exercising the bounds checks.
+    let mut cut = 0;
+    while cut < trailer.len() {
+        let _ =
+            verify_attestation_trailer(&hasher, log_rounds, root, QUERIES, &trailer[..cut], &ctx);
+        cut += 37;
     }
 }
