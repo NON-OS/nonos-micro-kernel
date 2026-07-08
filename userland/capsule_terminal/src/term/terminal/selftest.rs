@@ -21,6 +21,7 @@ use crate::term::grid::types::Grid;
 use crate::term::state::State;
 use crate::term::util::copy_into;
 
+mod jobs_test;
 mod kernel_api;
 
 const READY_ATTEMPTS: u32 = 100_000;
@@ -282,7 +283,12 @@ fn run_ext(state: &mut State) {
     run_cmd(state, b"nslookup nonos.test");
     mark(b"nslookup", visible_has(state, b"nslookup: dns unavailable"));
 
+    run_cmd(state, b"cat /nonexistent");
+    run_cmd(state, b"echo $?");
+    mark(b"status", visible_has(state, b"1"));
+
     kernel_api::run();
+    jobs_test::run(state);
 }
 
 fn run_cmd(state: &mut State, cmd: &[u8]) {
