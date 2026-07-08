@@ -2200,3 +2200,30 @@ fn a_real_attestation_trailer_verifies_and_tampering_is_rejected() {
         cut += 37;
     }
 }
+
+// The public trace builder lets a prover generate an attestation without the
+// test helper: it matches the helper and yields a verifying proof.
+#[test]
+fn the_public_membership_trace_proves() {
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let leaves = merkle_leaves(8);
+    let index = 4;
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let air = MerkleMembership::new(
+        hasher.clone(),
+        log_rounds,
+        tree.root(),
+        path.clone(),
+        directions.clone(),
+    );
+
+    let public = air.trace(leaves[index]);
+    let helper = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
+    assert_eq!(public, helper, "the public trace differs from the reference");
+
+    let proof = stark_prove(&air, &public, QUERIES);
+    assert!(stark_verify(&air, &proof, QUERIES), "a proof from the public trace was rejected");
+}
