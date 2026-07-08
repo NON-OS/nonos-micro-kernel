@@ -19,7 +19,6 @@ use crate::process::signal::{SIGINT, SIGKILL, SIGTERM};
 use crate::process::{
     current_pid, get_parent_pid, get_process, terminate_current_with_signal, ProcessState,
 };
-use crate::syscall::caps::current_caps_or_default;
 
 pub fn sys_kill(pid: u64, sig: u64) -> i64 {
     if sig != SIGINT as u64 && sig != SIGTERM as u64 && sig != SIGKILL as u64 {
@@ -28,7 +27,7 @@ pub fn sys_kill(pid: u64, sig: u64) -> i64 {
     let target = pid as u32;
     let caller = current_pid().unwrap_or(0);
     let is_parent = caller != 0 && get_parent_pid(target) == Some(caller);
-    if !is_parent && !current_caps_or_default().can_signal() {
+    if !is_parent {
         return ERRNO_PERM;
     }
     if !pid_alive(target) {
