@@ -20,12 +20,38 @@ use super::exec::exec;
 use super::filter::apply;
 use crate::term::state::State;
 
-// Run a `a | b | c` pipeline: split the args on `|`, execute the first
-// segment with its output captured, then fold each subsequent segment as
-// a filter over the accumulated lines. Returns the final lines for the
-// caller to display or redirect.
+const FILTERS: [&[u8]; 8] = [b"grep", b"sort", b"uniq", b"cut", b"nl", b"wc", b"head", b"tail"];
+
+// Run a `a | b | c` pipeline: split the args on `|`, then fold each stage
+// in order over an accumulating buffer. A stage whose command name is a
+// known filter runs as a filter over the buffer; any other stage runs as
+// a real command through `exec`, capturing its output as the new buffer.
+// v1: real-command stages ignore the incoming buffer (no stdin plumbing
+// into non-filter commands) — only filters read upstream output.
 pub(super) fn run_pipeline(state: &mut State, args: &[&[u8]]) -> Vec<Vec<u8>> {
-    let mut segments: Vec<&[&[u8]]> = Vec::new();
+    let segments = split_stages(args);
+    if segments.is_empty() {
+        return Vec::new();
+    }
+    let mut lines = Vec::new();
+    for seg in &segments {
+        lines = run_stage(state, seg, lines);
+    }
+    lines
+}
+
+fn run_stage(state: &mut State, seg: &[&[u8]], buffer: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+    if FILTERS.contains(&seg.first().copied().unwrap_or(b"")) {
+        apply(seg, buffer)
+    } else {
+        state.scrollback.begin_capture();
+        let _ = exec(state, seg);
+        state.scrollback.end_capture()
+    }
+}
+
+fn split_stages<'a>(args: &'a [&'a [u8]]) -> Vec<&'a [&'a [u8]]> {
+    let mut segments = Vec::new();
     let mut start = 0;
     for i in 0..=args.len() {
         if i == args.len() || args[i] == b"|" {
@@ -35,16 +61,7 @@ pub(super) fn run_pipeline(state: &mut State, args: &[&[u8]]) -> Vec<Vec<u8>> {
             start = i + 1;
         }
     }
-    if segments.is_empty() {
-        return Vec::new();
-    }
-    state.scrollback.begin_capture();
-    let _ = exec(state, segments[0]);
-    let mut lines = state.scrollback.end_capture();
-    for seg in &segments[1..] {
-        lines = apply(seg, lines);
-    }
-    lines
+    segments
 }
 
 // Apply a `a | b | c` filter chain to pre-seeded input lines with no
@@ -52,14 +69,8 @@ pub(super) fn run_pipeline(state: &mut State, args: &[&[u8]]) -> Vec<Vec<u8>> {
 // leading command's captured output.
 pub(super) fn run_filters(seed: Vec<Vec<u8>>, args: &[&[u8]]) -> Vec<Vec<u8>> {
     let mut lines = seed;
-    let mut start = 0;
-    for i in 0..=args.len() {
-        if i == args.len() || args[i] == b"|" {
-            if i > start {
-                lines = apply(&args[start..i], lines);
-            }
-            start = i + 1;
-        }
+    for seg in &split_stages(args) {
+        lines = apply(seg, lines);
     }
     lines
 }
