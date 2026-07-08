@@ -39,7 +39,7 @@ pub(super) fn reap(state: &mut State) {
             state.close_block(status == 0, elapsed);
             env.merge_back(state);
             state.fg_running = false;
-            state.last_status = status == 0;
+            state.last_status = status;
         }
     }
 }

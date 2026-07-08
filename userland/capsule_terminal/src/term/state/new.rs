@@ -32,7 +32,7 @@ impl State {
             fresh: true,
             start_ms: 0,
             vars: alloc::vec::Vec::new(),
-            last_status: true,
+            last_status: 0,
             aliases: alloc::vec::Vec::new(),
             hist_prefix: alloc::vec::Vec::new(),
             blocks: alloc::vec::Vec::new(),

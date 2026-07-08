@@ -53,7 +53,7 @@ pub fn is_job_command(state: &mut State, args: &[&[u8]]) -> Verdict {
         b"install" => match install::prepare(state, &args[1..]) {
             Some(job) => Verdict::Job(JobWork::InstallDrain(job)),
             None => {
-                state.last_status = false;
+                state.last_status = 1;
                 Verdict::Handled
             }
         },

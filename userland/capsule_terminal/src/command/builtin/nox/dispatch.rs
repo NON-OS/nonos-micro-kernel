@@ -132,6 +132,6 @@ pub fn dispatch(state: &mut State, args: &[&[u8]]) -> Outcome {
             false
         }
     };
-    state.last_status = ok;
+    state.last_status = if ok { 0 } else { 1 };
     Outcome::Repaint
 }

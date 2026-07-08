@@ -39,19 +39,19 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
     state.scrollback.push_line(&echo[..k]);
     state.history.push(&entered[..n]);
     let mut outcome = command::Outcome::Repaint;
-    let mut prev_ok = true;
+    let mut prev_status: i32 = state.last_status;
     for command::Stmt { conn, body, background } in command::split_program(&entered[..n]) {
         let go = match conn {
             command::Conn::Always => true,
-            command::Conn::And => prev_ok,
-            command::Conn::Or => !prev_ok,
+            command::Conn::And => prev_status == 0,
+            command::Conn::Or => prev_status != 0,
         };
         if !go {
             continue;
         }
-        state.last_status = true;
         let aliased = command::alias_expand(body, &state.aliases);
-        let expanded = command::expand(&aliased, &state.vars);
+        let expanded = command::expand(&aliased, &state.vars, prev_status);
+        state.last_status = 0;
         let argv = command::parse(&expanded);
         let args = &argv.argv[..argv.argc];
         match jobs::is_job_command(state, args) {
@@ -59,7 +59,7 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
                 let id = jobs::submit(state, body, background, work);
                 if background {
                     print_started(state, id);
-                    prev_ok = state.last_status;
+                    prev_status = state.last_status;
                     continue;
                 }
                 state.fg_running = true;
@@ -67,7 +67,7 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
                 break;
             }
             jobs::Verdict::Handled => {
-                prev_ok = state.last_status;
+                prev_status = state.last_status;
                 continue;
             }
             jobs::Verdict::Instant => {}
@@ -76,11 +76,11 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
             outcome = command::Outcome::Exit;
             break;
         }
-        prev_ok = state.last_status;
+        prev_status = state.last_status;
     }
     if !state.fg_running {
         let dur = (mk_time_millis() - started).clamp(0, u32::MAX as i64) as u32;
-        state.close_block(state.last_status, dur);
+        state.close_block(state.last_status == 0, dur);
     }
     state.evict_blocks();
     state.line.clear();

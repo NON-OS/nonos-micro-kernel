@@ -56,7 +56,7 @@ fn exit_fail(msg: &[u8]) -> ! {
 // run after the capsule stack has settled and vfs is answering.
 fn ready(state: &mut State) -> bool {
     run_cmd(state, b"read /readme.txt");
-    state.last_status
+    state.last_status == 0
 }
 
 // Drive the previously unproven shell paths through the normal submit
@@ -293,7 +293,7 @@ fn run_cmd(state: &mut State, cmd: &[u8]) {
 
 fn ok_cmd(state: &mut State, cmd: &[u8]) -> bool {
     run_cmd(state, cmd);
-    state.last_status
+    state.last_status == 0
 }
 
 fn visible_has(state: &State, needle: &[u8]) -> bool {

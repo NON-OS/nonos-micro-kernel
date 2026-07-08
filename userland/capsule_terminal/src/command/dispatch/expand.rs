@@ -16,11 +16,13 @@
 
 use alloc::vec::Vec;
 
-// Expand `$NAME` shell-variable references in a command line before it is
-// tokenized. Expansion is suppressed inside single quotes (POSIX
-// behavior); quote bytes are preserved so the tokenizer still strips
-// them. An undefined variable expands to nothing.
-pub fn expand(line: &[u8], vars: &[(Vec<u8>, Vec<u8>)]) -> Vec<u8> {
+use crate::term::util::format_u64;
+
+// Expand `$NAME` shell-variable references and `$?` (last exit status) in
+// a command line before it is tokenized. Expansion is suppressed inside
+// single quotes (POSIX behavior); quote bytes are preserved so the
+// tokenizer still strips them. An undefined variable expands to nothing.
+pub fn expand(line: &[u8], vars: &[(Vec<u8>, Vec<u8>)], last_status: i32) -> Vec<u8> {
     let mut out = Vec::with_capacity(line.len());
     let mut in_single = false;
     let mut i = 0;
@@ -30,6 +32,11 @@ pub fn expand(line: &[u8], vars: &[(Vec<u8>, Vec<u8>)]) -> Vec<u8> {
             in_single = !in_single;
             out.push(c);
             i += 1;
+            continue;
+        }
+        if !in_single && c == b'$' && i + 1 < line.len() && line[i + 1] == b'?' {
+            push_status(&mut out, last_status);
+            i += 2;
             continue;
         }
         let starts_name =
@@ -50,4 +57,13 @@ pub fn expand(line: &[u8], vars: &[(Vec<u8>, Vec<u8>)]) -> Vec<u8> {
         }
     }
     out
+}
+
+fn push_status(out: &mut Vec<u8>, status: i32) {
+    if status < 0 {
+        out.push(b'-');
+    }
+    let mut buf = [0u8; 20];
+    let n = format_u64(status.unsigned_abs() as u64, &mut buf);
+    out.extend_from_slice(&buf[..n]);
 }

@@ -33,9 +33,10 @@ pub struct State {
     pub start_ms: u64,
     // Shell variables, set with `set NAME VALUE` and expanded as $NAME.
     pub vars: Vec<(Vec<u8>, Vec<u8>)>,
-    // Exit status of the last command: true on success. Fallible commands
-    // clear it on error; `&&` and `||` gate the next statement on it.
-    pub last_status: bool,
+    // Exit status of the last command: 0 on success, nonzero on failure.
+    // Fallible commands set it on error; `&&` and `||` gate the next
+    // statement on it.
+    pub last_status: i32,
     // Command aliases, defined with `alias NAME EXPANSION`. The first word
     // of a line is replaced by its expansion before the line is run.
     pub aliases: Vec<(Vec<u8>, Vec<u8>)>,
