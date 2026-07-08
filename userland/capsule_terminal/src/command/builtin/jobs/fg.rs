@@ -21,43 +21,40 @@ use crate::jobs::JobState;
 use crate::term::state::State;
 use crate::term::util::{copy_into, format_u64};
 
+// Every error return sets `state.last_status = 1` so a chained `fg 99 &&
+// rm ...` sees the failure instead of the stale 0 `on_enter` primed before
+// dispatch; the success path sets it back to 0 explicitly.
+fn err(state: &mut State, msg: &[u8]) {
+    Output::new(&mut state.scrollback).writeln(msg);
+    state.last_status = 1;
+}
+
 // Flips a background job to foreground so `on_tick`'s pump treats it like
 // a job submitted fg (prompt suppressed, Ctrl-C applies). Rejects the
 // two-fg-jobs case flagged in Task 12's review by refusing when another
 // job already owns `state.fg_running`.
 pub fn run(state: &mut State, argv: &[&[u8]]) {
-    let mut out = Output::new(&mut state.scrollback);
     if argv.len() < 2 {
-        out.writeln(b"usage: fg <id>");
-        return;
+        return err(state, b"usage: fg <id>");
     }
     let id = match core::str::from_utf8(argv[1]).ok().and_then(|s| s.parse::<u32>().ok()) {
         Some(id) => id,
-        None => {
-            out.writeln(b"fg: invalid job id");
-            return;
-        }
+        None => return err(state, b"fg: invalid job id"),
     };
     let fg_running = state.fg_running;
     let now = mk_time_millis();
     let job = match state.jobs.get_mut(id) {
         Some(job) => job,
-        None => {
-            out.writeln(b"fg: no such job");
-            return;
-        }
+        None => return err(state, b"fg: no such job"),
     };
     if job.state == JobState::Done {
-        out.writeln(b"fg: job has already finished");
-        return;
+        return err(state, b"fg: job has already finished");
     }
     if !job.background {
-        out.writeln(b"fg: job already in foreground");
-        return;
+        return err(state, b"fg: job already in foreground");
     }
     if fg_running {
-        out.writeln(b"fg: a job is already in the foreground");
-        return;
+        return err(state, b"fg: a job is already in the foreground");
     }
     job.background = false;
     let mut line = [0u8; 128];
@@ -69,7 +66,8 @@ pub fn run(state: &mut State, argv: &[&[u8]]) {
     n += copy_into(&mut line[n..], &num[..nk]);
     n += copy_into(&mut line[n..], b"] ");
     n += copy_into(&mut line[n..], &job.cmdline);
-    out.writeln(&line[..n]);
+    Output::new(&mut state.scrollback).writeln(&line[..n]);
     state.fg_running = true;
     state.fg_started_ms = now;
+    state.last_status = 0;
 }

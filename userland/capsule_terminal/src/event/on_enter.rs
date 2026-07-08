@@ -76,6 +76,9 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
             outcome = command::Outcome::Exit;
             break;
         }
+        if state.fg_running {
+            break;
+        }
         prev_status = state.last_status;
     }
     if !state.fg_running {
