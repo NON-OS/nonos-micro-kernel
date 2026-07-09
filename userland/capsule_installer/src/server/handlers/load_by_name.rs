@@ -33,7 +33,14 @@ const MAX_ARTIFACT: u32 = 16 * 1024 * 1024;
 // /capsules/<name>.{elf,nonos_id_cert.bin,manifest.bin,zk_trailer.bin}
 // ourselves and pass them to the load syscall, which runs the full trust
 // chain before the capsule is allowed to spawn.
-pub fn load_by_name(req: Request<'_>) -> Vec<u8> {
+// `sender_pid` is the kernel-attested pid of whoever sent this request
+// (from `mk_ipc_recv_from`), never a value the payload carries. It becomes
+// the spawned capsule's parent instead of this installer, so the requester
+// can later `mk_wait`/`mk_kill`/`mk_proc_input`/`mk_proc_output` the child it
+// asked for; honoring it kernel-side still requires this installer's own
+// spawn-broker capability, so an ordinary capsule forging the same field
+// through a raw `mk_capsule_load` call gets no effect.
+pub fn load_by_name(req: Request<'_>, sender_pid: u32) -> Vec<u8> {
     let p = req.payload;
     if p.len() < 9 {
         return encode_response(req.seq, EINVAL, &[]);
@@ -74,6 +81,7 @@ pub fn load_by_name(req: Request<'_>) -> Vec<u8> {
         manifest_len: manifest.len() as u32,
         trailer_len: trailer.len() as u32,
         args_len: args.len() as u32,
+        on_behalf_of: sender_pid,
     };
     // The blobs above stay owned by this stack frame until the syscall
     // returns, so the kernel's copy reads live memory.

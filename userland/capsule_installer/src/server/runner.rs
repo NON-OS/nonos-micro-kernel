@@ -16,7 +16,7 @@
 
 use alloc::vec;
 
-use nonos_libc::{mk_ipc_recv, mk_ipc_send};
+use nonos_libc::{mk_ipc_recv_from, mk_ipc_send};
 
 use super::dispatch::dispatch;
 use crate::protocol::{decode_request, KERNEL_REPLY_ENDPOINT};
@@ -26,7 +26,8 @@ const MAX_MSG: usize = 8 * 1024 * 1024;
 pub fn run() -> ! {
     let mut buf = vec![0u8; MAX_MSG];
     loop {
-        let n = mk_ipc_recv(0, buf.as_mut_ptr(), MAX_MSG, 0);
+        let mut sender_pid: u32 = 0;
+        let n = mk_ipc_recv_from(0, buf.as_mut_ptr(), MAX_MSG, 0, &mut sender_pid);
         if n <= 0 {
             continue;
         }
@@ -34,7 +35,7 @@ pub fn run() -> ! {
             Some(r) => r,
             None => continue,
         };
-        let resp = dispatch(req);
+        let resp = dispatch(req, sender_pid);
         let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, resp.as_ptr(), resp.len());
     }
 }

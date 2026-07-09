@@ -37,6 +37,10 @@ pub struct CapsuleLoadRequest {
     pub manifest_len: u32,
     pub trailer_len: u32,
     pub args_len: u32,
+    // Kernel-attested sender pid to attribute the spawned process to,
+    // instead of the caller. Zero means no override; only a caller holding
+    // the kernel's spawn-broker capability can make this take effect.
+    pub on_behalf_of: u32,
 }
 
 // Load and spawn a capsule through the kernel verified-spawn path from artifacts

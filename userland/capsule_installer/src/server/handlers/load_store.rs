@@ -60,6 +60,7 @@ pub fn load_store(req: Request<'_>) -> Vec<u8> {
         manifest_len: manifest_len as u32,
         trailer_len: trailer_len as u32,
         args_len: args_len as u32,
+        on_behalf_of: 0,
     };
     let rc = mk_capsule_load(&load as *const CapsuleLoadRequest);
     if rc < 0 {
