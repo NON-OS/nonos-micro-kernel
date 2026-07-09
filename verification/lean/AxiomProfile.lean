@@ -35,6 +35,7 @@ import Nonos
 #print axioms Nonos.Spawn.only_attested_capsules_run
 #print axioms Nonos.Stark.Attest.a_proof_for_one_capsule_is_rejected_for_another
 #print axioms Nonos.Stark.Constraint.constraint_holds_iff_quotient_exists
+#print axioms Nonos.Stark.Constraint.the_quotient_is_pinned
 #print axioms Nonos.Stark.CopyConstraint.wiring_forces_equality
 #print axioms Nonos.Stark.Field.mul_distributes_over_add
 #print axioms Nonos.Stark.Extension.low_degree_extension_is_unique

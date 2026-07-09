@@ -56,4 +56,22 @@ theorem a_broken_constraint_has_no_quotient (c : Poly) (d : List Int)
   intro hq
   exact hbroken ((constraint_holds_iff_quotient_exists c d hnd).mpr hq r hr)
 
+/-- The quotient is pinned off the domain: any two low-degree quotients for the
+    same constraint agree at every point outside the trace domain, since the
+    zerofier is nonzero there and cancels. So the witness the FRI test then checks
+    for low degree is a determined object, the prover has no freedom to wiggle it
+    once the constraint and domain are fixed. -/
+theorem the_quotient_is_pinned (c : Poly) (d : List Int) (q1 q2 : Poly)
+    (h1 : ∀ x, eval c x = eval (zerofier d) x * eval q1 x)
+    (h2 : ∀ x, eval c x = eval (zerofier d) x * eval q2 x)
+    (x : Int) (hx : ∀ r ∈ d, x ≠ r) : eval q1 x = eval q2 x := by
+  have hz : eval (zerofier d) x ≠ 0 := zerofier_nonzero_off_the_points x d hx
+  have heq : eval (zerofier d) x * eval q1 x = eval (zerofier d) x * eval q2 x := by
+    rw [← h1 x, ← h2 x]
+  have hzero : eval (zerofier d) x * (eval q1 x - eval q2 x) = 0 := by
+    rw [Int.mul_sub]; omega
+  rcases Int.mul_eq_zero.mp hzero with h0 | h0
+  · exact absurd h0 hz
+  · omega
+
 end Nonos.Stark.Constraint
