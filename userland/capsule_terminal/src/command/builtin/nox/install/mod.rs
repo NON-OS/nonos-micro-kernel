@@ -19,5 +19,6 @@ mod emit;
 mod job;
 mod run;
 
+pub(in crate::command::builtin::nox) use call::call_installer;
 pub use job::InstallJob;
 pub use run::{prepare, run};

@@ -27,6 +27,7 @@ mod du;
 mod echo;
 mod ensure_pid;
 mod enter;
+mod exec;
 mod find;
 mod help;
 mod history;
