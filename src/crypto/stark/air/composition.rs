@@ -21,8 +21,8 @@
 //! coefficients. Prover and verifier both call this, so the algebra is identical
 //! on the two sides by construction.
 
-use super::super::field::Fp;
-use super::spec::Air;
+use super::super::field::{Fp, Fp2};
+use super::spec::{Air, AirExt};
 
 /// Total number of random coefficients an AIR's composition consumes.
 pub(super) fn num_coeffs<A: Air>(air: &A) -> usize {
@@ -49,7 +49,7 @@ pub(super) fn domain_params<A: Air>(air: &A) -> (u32, u32) {
 /// `[f(x), f(g*x), ...]`, the periodic columns evaluated at `x`, and the
 /// transcript coefficients. `g` is the trace-domain generator. `x` lies off the
 /// trace domain, so every divisor is invertible.
-pub(super) fn compose<A: Air>(
+pub fn compose<A: Air>(
     air: &A,
     g: Fp,
     x: Fp,
@@ -77,6 +77,44 @@ pub(super) fn compose<A: Air>(
     let boundary_coeffs = &coeffs[transition.len()..];
     for ((col, row, expected), coeff) in air.boundary().iter().zip(boundary_coeffs.iter()) {
         let quotient = (window[*col] - *expected) * (x - g.pow(*row as u64)).inv();
+        acc = acc + *coeff * quotient;
+    }
+
+    acc
+}
+
+/// The composition value at an extension point `z in Fp2`, the out-of-domain
+/// evaluation a money-grade STARK samples. Same algebra as `compose`, over the
+/// extension: base-field constants (the trace generator powers, boundary values)
+/// enter through `Fp2::from_base`, and the batching coefficients are drawn from the
+/// extension for the same soundness. On a base-embedded point and base-embedded
+/// inputs it agrees with `compose` embedded, by construction.
+pub fn compose_ext<A: AirExt>(
+    air: &A,
+    g: Fp,
+    z: Fp2,
+    window: &[Fp2],
+    periodic: &[Fp2],
+    coeffs: &[Fp2],
+) -> Fp2 {
+    let t = 1u64 << air.log_trace_len();
+    let z_h_inv = (z.pow(t) - Fp2::ONE).inv();
+
+    let mut exempt = Fp2::ONE;
+    for k in 1..air.window_size() {
+        exempt = exempt * (z - Fp2::from_base(g.pow(t - k as u64)));
+    }
+
+    let mut acc = Fp2::ZERO;
+    let transition = air.transition_ext(window, periodic);
+    for (value, coeff) in transition.iter().zip(coeffs.iter()) {
+        acc = acc + *coeff * (*value * exempt * z_h_inv);
+    }
+
+    let boundary_coeffs = &coeffs[transition.len()..];
+    for ((col, row, expected), coeff) in air.boundary().iter().zip(boundary_coeffs.iter()) {
+        let quotient =
+            (window[*col] - Fp2::from_base(*expected)) * (z - Fp2::from_base(g.pow(*row as u64))).inv();
         acc = acc + *coeff * quotient;
     }
 

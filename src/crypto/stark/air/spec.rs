@@ -22,7 +22,7 @@
 //! wider trace proves a permutation over a multi-element state, which is what a
 //! hash round is. Any type implementing this is proven by the same engine.
 
-use super::super::field::Fp;
+use super::super::field::{Fp, Fp2};
 use alloc::vec::Vec;
 
 pub trait Air {
@@ -61,4 +61,15 @@ pub trait Air {
 
     /// Boundary constraints as `(column, row, value)`.
     fn boundary(&self) -> Vec<(usize, usize, Fp)>;
+}
+
+/// An AIR whose transition also evaluates over the extension field. A money-grade
+/// STARK samples its out-of-domain point at `z in Fp2`, so the constraints must be
+/// evaluable there. An AIR implements this by writing its transition once over the
+/// `Felt` abstraction and delegating both `transition` and `transition_ext` to it,
+/// which keeps the trait object-safe. Only AIRs proven by the money-grade engine
+/// (`stark_prove_ext`) need it.
+pub trait AirExt: Air {
+    /// The transition constraints over the extension field, layout as `transition`.
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2>;
 }
