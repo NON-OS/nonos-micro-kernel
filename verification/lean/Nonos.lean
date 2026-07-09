@@ -26,6 +26,7 @@ import Nonos.Path
 import Nonos.Secure
 import Nonos.Spawn
 import Nonos.Stark.Attest
+import Nonos.Stark.Constraint
 import Nonos.Stark.CopyConstraint
 import Nonos.Stark.Field
 import Nonos.Stark.Fri

@@ -50,6 +50,7 @@ the *code*:
 | `Stark.Polynomial.eval_mul` / `zerofier_vanishes_at_a_point` / `zerofier_nonzero_off_the_points` | `userland/stark_proofs` `poly_tests.rs` (`evaluation_matches_the_defining_sum`, `the_low_degree_extension_recovers_the_polynomial`) |
 | `Stark.Polynomial.factor` / `root_divides` / `roots_divide` | the factor theorem and root structure, proved from scratch with core tactics; the degree-free form of "no more roots than degree", underpinning the FRI and argument soundness |
 | `Stark.Polynomial.agreement_divides_by_zerofier` | the Reed-Solomon agreement structure FRI proximity rests on: two polynomials agreeing on distinct points differ by a zerofier multiple |
+| `Stark.Constraint.constraint_holds_iff_quotient_exists` / `a_broken_constraint_has_no_quotient` | the AIR soundness grounded in the polynomial facts: the low-degree quotient exists iff the constraints hold on the trace domain; discharges the argument via `roots_divide` rather than assuming it |
 | `Stark.Transcript.challenge_is_determined` / `order_changes_the_state` | `userland/stark_proofs` `transcript_tests.rs` (determinism, one-bit change re-randomizes, `absorb_order_matters`) |
 | `Attestation.no_impersonation` / `sender_independent_of_claim` | `userland/fs_proofs` caller attestation (kernel mirror path, impersonation rejection, `proof_split_caller_no_impersonation` Kani) |
 | `Zeroization.no_secret_survives` / `reused_region_leaks_nothing` | kernel zeroization on capsule teardown and page reclaim |
