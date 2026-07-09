@@ -21,8 +21,18 @@ const SLICE_MS: u64 = 5;
 
 pub fn sys_wait(pid: u64, timeout_ms: u64) -> i64 {
     let caller = current_pid().unwrap_or(0);
-    if caller == 0 || get_parent_pid(pid as u32) != Some(caller) {
+    if caller == 0 {
         return ERRNO_CHILD;
+    }
+    match get_parent_pid(pid as u32) {
+        Some(parent) if parent == caller => {}
+        Some(_) => return ERRNO_CHILD,
+        None => {
+            return match crate::process::exit::reap_exit_status_for(pid as u32, caller) {
+                Some(code) => code as i64,
+                None => ERRNO_CHILD,
+            };
+        }
     }
     let deadline = crate::time::timestamp_millis().saturating_add(timeout_ms);
     loop {

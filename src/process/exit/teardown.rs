@@ -26,11 +26,22 @@ use crate::process::core::{clear_current_if, Pid, ProcessState, CURRENT_PID, PRO
 // consumed (removed) on read, like POSIX waitpid, and the map is capped
 // so fire-and-forget children that are never waited on can't grow it
 // without bound.
-static REAP_LOG: Mutex<BTreeMap<Pid, i32>> = Mutex::new(BTreeMap::new());
+static REAP_LOG: Mutex<BTreeMap<Pid, (Pid, i32)>> = Mutex::new(BTreeMap::new());
 const REAP_LOG_CAP: usize = 64;
 
 pub(crate) fn reap_exit_status(pid: Pid) -> Option<i32> {
-    REAP_LOG.lock().remove(&pid)
+    REAP_LOG.lock().remove(&pid).map(|(_, code)| code)
+}
+
+pub(crate) fn reap_exit_status_for(pid: Pid, parent: Pid) -> Option<i32> {
+    let mut log = REAP_LOG.lock();
+    match log.get(&pid) {
+        Some(&(logged_parent, code)) if logged_parent == parent => {
+            log.remove(&pid);
+            Some(code)
+        }
+        _ => None,
+    }
 }
 
 pub fn teardown(pid: Pid, exit_code: i32, _by_signal: bool) {
@@ -62,7 +73,7 @@ pub fn teardown(pid: Pid, exit_code: i32, _by_signal: bool) {
                 reap_log.remove(&oldest);
             }
         }
-        reap_log.insert(pid, exit_code);
+        reap_log.insert(pid, (pcb.parent_pid(), exit_code));
     }
     crate::sched::remove_from_run_queue(pid);
     clear_current_if(pid);
