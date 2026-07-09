@@ -42,8 +42,17 @@ pub(super) fn element_box(
     } else {
         link.clone()
     };
-    let mut kids =
-        collect(w.dom, item.ch, &style, w.styles, w.bg_images, &link, depth + 1, w.count);
+    let mut kids = collect(
+        w.dom,
+        item.ch,
+        &style,
+        w.styles,
+        w.bg_images,
+        w.pseudos,
+        &link,
+        depth + 1,
+        w.count,
+    );
     // An edited textarea renders its value attribute, which the typing path
     // keeps current.
     if tag == "textarea" {
@@ -51,6 +60,35 @@ pub(super) fn element_box(
             let v = v.to_string();
             kids.clear();
             kids.push(leaf(BoxKind::Text(v), &style, &None, item.ch));
+        }
+    }
+    // Generated content wraps the real children: a ::before box leads and a
+    // ::after box trails, each a text leaf styled by its own cascade.
+    if let Some((before, after)) = w.pseudos.get(item.ch) {
+        if let Some(b) = before {
+            *w.count += 1;
+            kids.insert(
+                0,
+                BoxNode {
+                    kind: BoxKind::Text(b.text.clone()),
+                    style: b.style,
+                    href: link.clone(),
+                    dom_id: item.ch,
+                    bg_image: None,
+                    children: alloc::vec::Vec::new(),
+                },
+            );
+        }
+        if let Some(a) = after {
+            *w.count += 1;
+            kids.push(BoxNode {
+                kind: BoxKind::Text(a.text.clone()),
+                style: a.style,
+                href: link.clone(),
+                dom_id: item.ch,
+                bg_image: None,
+                children: alloc::vec::Vec::new(),
+            });
         }
     }
     // A list item leads with its marker: the ordinal in an <ol>, a bullet

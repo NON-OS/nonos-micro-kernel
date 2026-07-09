@@ -1,0 +1,15 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Extraction root for the user-copy range policy and the page-permission
+# encoding. Charon lowers this crate's MIR to LLBC and Aeneas translates it
+# to Lean; the kernel source is included below via #[path], never copied.
+[package]
+name = "nonos_policy"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]

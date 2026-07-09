@@ -21,6 +21,7 @@ mod css;
 pub mod dom;
 mod event;
 pub mod fetch;
+pub mod fonts;
 pub mod html;
 pub mod http;
 pub mod image;

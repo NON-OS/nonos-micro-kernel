@@ -34,6 +34,7 @@ impl Store {
         self.seed_file("/readme.txt", README);
         self.seed_file("/docs/about.txt", ABOUT);
         self.seed_file("/docs/demo.txt", DEMO);
+        self.seed_packages();
         self.seed_capsule_store();
     }
 
@@ -50,7 +51,7 @@ impl Store {
 
     fn seed_file(&mut self, name: &str, data: &[u8]) {
         if self.files.len() < MAX_FILES && self.find(name).is_none() {
-            self.files.push(File { name: String::from(name), data: Vec::from(data), is_dir: false });
+            self.files.push(File::new(String::from(name), Vec::from(data), false));
         }
     }
 }

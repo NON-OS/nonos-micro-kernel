@@ -30,6 +30,7 @@ pub mod kernel_keys;
 pub mod pqc;
 pub mod pqclean_support;
 pub mod random_api;
+pub mod stark;
 pub mod symmetric;
 pub mod util;
 pub mod zk;

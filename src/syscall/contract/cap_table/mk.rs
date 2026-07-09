@@ -29,6 +29,8 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkAttestStatus
         | SyscallNumber::MkCapCheck => caps.is_valid(),
 
+        SyscallNumber::MkTimeAdjust => caps.can_set_time(),
+
         SyscallNumber::MkMmap => caps.can_allocate_memory(),
         SyscallNumber::MkMunmap => caps.can_deallocate_memory(),
 

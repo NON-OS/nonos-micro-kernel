@@ -106,7 +106,8 @@ pub fn run(root: &str) -> std::io::Result<Status> {
 
     // Each attack must be DENIED. The closure returns Ok if the chain ACCEPTED
     // the tampered artifact, which is the failure (a real vuln).
-    let mut attacks: Vec<(String, Box<dyn Fn() -> Result<(), String>>)> = Vec::new();
+    type Attack = (String, Box<dyn Fn() -> Result<(), String>>);
+    let mut attacks: Vec<Attack> = Vec::new();
 
     attacks.push((
         "cert-bitflip".into(),

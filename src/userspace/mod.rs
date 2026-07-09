@@ -32,6 +32,7 @@ pub mod capsule_boot_splash;
 pub mod capsule_browser;
 pub mod capsule_calculator;
 pub mod capsule_clipboard;
+pub mod capsule_clock;
 pub mod capsule_compositor;
 pub mod capsule_desktop_shell;
 pub mod capsule_driver_i2c_hid;
@@ -51,6 +52,8 @@ pub mod capsule_net_dhcp;
 pub mod capsule_net_dns;
 pub mod capsule_net_ip;
 pub mod capsule_net_l2;
+#[cfg(feature = "nonos-capsule-net-ntp")]
+pub mod capsule_net_ntp;
 pub mod capsule_net_nym;
 pub mod capsule_net_sockets;
 pub mod capsule_net_tcp;

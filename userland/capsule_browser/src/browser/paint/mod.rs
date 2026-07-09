@@ -15,10 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod bg_image;
+mod bg_tile;
 mod box_fragment;
 mod box_page;
 pub mod chrome;
 pub mod document;
+mod fade;
 mod fill_page;
 mod fill_rounded;
 mod grad;

@@ -1,0 +1,59 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Verifies the Lean 4 specification proofs. `lake build` reports 0 errors only
+# when every theorem checks. elan reads verification/lean/lean-toolchain to pick
+# the pinned Lean version, and lake generates its manifest on first build.
+#
+# A green run also publishes evidence, the same convention as the benchmark
+# and evidence workflows: the theorem inventory, the axiom closure of every
+# flagship theorem as printed by Lean itself, and the toolchain and commit it
+# was checked against. The axiom profile is also a gate: a `sorry` anywhere in
+# a profiled theorem's closure would surface as `sorryAx` and fail the run.
+name: lean
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install elan
+        run: |
+          set -euo pipefail
+          curl -fsSL https://elan.lean-lang.org/elan-init.sh -o elan-init.sh
+          bash elan-init.sh -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Verify theorems (lake build)
+        run: lake build
+        working-directory: verification/lean
+      - name: Axiom profile and evidence
+        working-directory: verification/lean
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/lean-evidence"
+          lake env lean AxiomProfile.lean | tee "$GITHUB_WORKSPACE/lean-evidence/axioms.txt"
+          if grep -q sorryAx "$GITHUB_WORKSPACE/lean-evidence/axioms.txt"; then
+            echo "::error::a flagship theorem depends on sorryAx"
+            exit 1
+          fi
+          grep -rn '^theorem ' Nonos/ > "$GITHUB_WORKSPACE/lean-evidence/theorems.txt"
+          {
+            echo "commit: $GITHUB_SHA"
+            echo "toolchain: $(cat lean-toolchain)"
+            echo "theorems: $(grep -rc '^theorem ' Nonos/ --include='*.lean' -h | paste -sd+ - | bc)"
+            echo "escape hatches:"
+            grep -rEn '\bsorry\b|\badmit\b|^axiom ' Nonos.lean Nonos/ \
+              | grep -v 'no sorry anywhere' || echo "  none"
+          } > "$GITHUB_WORKSPACE/lean-evidence/summary.txt"
+          cat "$GITHUB_WORKSPACE/lean-evidence/summary.txt"
+      - name: Upload lean evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lean-proofs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: lean-evidence/
+          retention-days: 30
+          if-no-files-found: error

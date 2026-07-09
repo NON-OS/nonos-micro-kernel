@@ -1,0 +1,22 @@
+name = "nonos_extraction"
+defaultTargets = ["NonosExtraction"]
+
+# Aeneas support library, pinned to the release that generated Caps.lean.
+# Its prebuilt archive is fetched by lake (preferReleaseBuild); mathlib
+# oleans come from the mathlib cache.
+[[require]]
+name = "aeneas"
+git = "https://github.com/AeneasVerif/aeneas"
+rev = "45061fa1a5b4bad876f17c03d3a5544d818622e6"
+subDir = "backends/lean"
+
+# The core-only Nonos specification package, built from source in tree.
+[[require]]
+name = "nonos"
+path = "../../lean"
+
+[[lean_lib]]
+name = "NonosExtraction"
+
+[[lean_lib]]
+name = "Policy"

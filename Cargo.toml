@@ -86,6 +86,7 @@ nonos-capsule-about             = []
 nonos-capsule-hello             = []
 nonos-capsule-boot-splash       = []
 nonos-capsule-calculator        = []
+nonos-capsule-clock             = []
 nonos-capsule-browser           = []
 nonos-capsule-snake             = []
 nonos-capsule-wallet-nonos      = []
@@ -124,6 +125,7 @@ nonos-capsule-net-udp           = []
 nonos-capsule-net-dhcp          = []
 nonos-capsule-net-tcp           = []
 nonos-capsule-net-dns           = []
+nonos-capsule-net-ntp           = []
 nonos-capsule-net-core          = []
 nonos-capsule-net-sockets       = []
 nonos-capsule-net-nym           = []
@@ -168,6 +170,8 @@ nonos-user-entry-proof = []
 input-probe-inject = []
 
 nonos-terminal-smoketest = ["nonos-capsule-terminal", "nonos-user-entry-proof"]
+
+nonos-ntp-smoketest = ["microkernel-net-ntp", "nonos-user-entry-proof"]
 
 # Brutal-minimum kernel profile. Each entry closes a real boundary:
 #   kernel, standalone   no-std bootstrap and panic handler routing
@@ -421,6 +425,18 @@ microkernel-net-dhcp = [
   "nonos-capsule-net-dhcp",
 ]
 
+microkernel-net-ntp = [
+  "microkernel-core",
+  "nonos-production",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-driver-virtio-net",
+  "nonos-capsule-net-l2",
+  "nonos-capsule-net-ip",
+  "nonos-capsule-net-udp",
+  "nonos-capsule-net-dhcp",
+  "nonos-capsule-net-ntp",
+]
+
 microkernel-net-nym = [
   "microkernel-core",
   "nonos-production",
@@ -478,6 +494,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-about",
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
+  "nonos-capsule-clock",
   "nonos-capsule-browser",
   "nonos-capsule-snake",
   "nonos-capsule-wallet-nonos",
@@ -516,6 +533,7 @@ microkernel-full-gui = [
 microkernel-toolkit = ["microkernel-desktop-gui"]
 microkernel-about = ["microkernel-desktop-gui"]
 microkernel-calculator = ["microkernel-desktop-gui"]
+microkernel-clock = ["microkernel-desktop-gui"]
 microkernel-browser = ["microkernel-desktop-gui"]
 microkernel-terminal = ["microkernel-desktop-gui"]
 

@@ -44,6 +44,18 @@ pub(super) fn layout_box(
     if node.style.is_fixed {
         ctx.fixed = true;
     }
+    if node.style.opacity != 255 {
+        ctx.alpha = ((ctx.alpha as u16 * node.style.opacity as u16) / 255) as u8;
+    }
+    // A sticky box anchors its subtree: paint clamps everything under it by
+    // the same shift once the scroll passes the threshold.
+    if node.style.is_sticky && ctx.sticky.is_none() {
+        let top = match node.style.top {
+            crate::browser::css::Size::Px(p) => p as i32,
+            _ => 0,
+        };
+        ctx.sticky = Some((y, top));
+    }
     let (mut x, mut y) = (x, y);
     if node.style.position == Position::Relative {
         let (dx, dy) = rel_offset(&node.style, ctx.cb.w);

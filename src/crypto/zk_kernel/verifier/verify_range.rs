@@ -26,6 +26,12 @@ impl KernelZkVerifier {
             return ZkResult::MalformedProof;
         }
         let bits = proof_bytes[0];
+        // A range proof must cover at least one bit. Rejecting `bits == 0`
+        // closes a degenerate case that otherwise verifies with no bit proofs
+        // at all (the structure check passes vacuously for an empty range).
+        if bits == 0 {
+            return ZkResult::MalformedProof;
+        }
         let expected_len = 1 + 32 + (bits as usize * 32);
         if proof_bytes.len() < expected_len {
             return ZkResult::MalformedProof;

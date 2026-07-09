@@ -18,7 +18,9 @@ use nonos_app_skeleton::clients::vfs::list_paths;
 use nonos_app_skeleton::discover::lookup_service;
 
 use super::entries::build_entries;
+use super::refresh_meta::fill_meta;
 use super::state::State;
+use super::view::rebuild_view;
 
 pub fn refresh(state: &mut State) {
     state.preview = None;
@@ -27,13 +29,19 @@ pub fn refresh(state: &mut State) {
     }
     match list_paths(state.owner_pid, state.prefix.as_bytes()) {
         Ok(paths) => {
-            state.entries = build_entries(state.prefix.as_str(), &paths);
-            state.cursor = state.cursor.min(state.entries.len().saturating_sub(1));
-            state.status = if state.entries.is_empty() { b"empty directory" } else { b"click or Enter to open" };
+            state.all = build_entries(state.prefix.as_str(), &paths);
+            fill_meta(state);
+            rebuild_view(state);
+            state.status = if state.entries.is_empty() {
+                b"empty directory"
+            } else {
+                b"click or Enter to open"
+            };
         }
         Err(_) => {
-            if state.entries.is_empty() {
+            if state.all.is_empty() {
                 state.cursor = 0;
+                state.scroll = 0;
                 state.status = b"vfs unavailable";
             } else {
                 state.status = b"refresh deferred";

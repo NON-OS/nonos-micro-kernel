@@ -70,6 +70,7 @@ dependencies = [
  "nonos_app_skeleton",
  "nonos_toolkit",
  "nonos_userland_libc",
+ "spin",
 ]
 
 [[package]]

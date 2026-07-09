@@ -35,6 +35,7 @@ impl Store {
                 _ => {}
             }
         }
+        super::zeroize::zeroize(&mut self.files[idx].data);
         self.files.remove(idx);
         Ok(())
     }

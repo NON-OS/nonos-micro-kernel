@@ -28,6 +28,7 @@ mod collect;
 mod color;
 mod compute;
 mod computed;
+mod content_text;
 mod decl;
 mod grid_tracks;
 mod hex;
@@ -41,6 +42,7 @@ mod parse_grow;
 mod parse_line_height;
 mod parse_px;
 mod parse_size;
+mod pseudo_style;
 mod rgb_fn;
 mod rule;
 mod rule_index;
@@ -60,5 +62,9 @@ pub use collect::collect_css;
 pub use color::parse_color;
 pub use compute::compute;
 pub use computed::Shadow;
-pub use computed::{Align, Computed, GridTrack, Justify, Position, Size, TextAlign, WhiteSpace};
+pub use computed::{
+    Align, BgSize, Computed, GridTrack, Justify, ObjectFit, Position, Size, TextAlign,
+    TextTransform, WhiteSpace,
+};
+pub use pseudo_style::PseudoText;
 pub use select::select;

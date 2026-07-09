@@ -1,0 +1,20 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the pure filesystem logic. This crate builds for the
+# host so `cargo test` exercises the real capsule source (included via #[path])
+# without a boot.
+[package]
+name = "fs_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+
+# `kani` is set by the Kani model checker, not by rustc; declare it so ordinary
+# builds do not warn on the cfg-gated proof harnesses.
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

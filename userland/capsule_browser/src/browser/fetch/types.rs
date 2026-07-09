@@ -38,6 +38,9 @@ pub struct TlsCtx {
     pub cf: ClientFlight,
     pub flight: Vec<u8>,
     pub now: u64,
+    // Server application keys, derived once the handshake completes so response
+    // records decrypt without replaying certificate verification every tick.
+    pub server_app: Option<crate::browser::tls13::TrafficKeys>,
 }
 
 pub struct Fetch {
@@ -63,4 +66,14 @@ pub struct Fetch {
     // An external stylesheet fetch: the body is appended to the page CSS and
     // triggers a re-layout, not a navigation.
     pub css: bool,
+    // Plaintext bytes belonging to earlier responses on a kept-alive
+    // connection; this fetch's response starts after them.
+    pub rx_consumed: usize,
+    // Client application record sequence this request was sealed at; the next
+    // request on the same connection seals at the one after it.
+    pub tx_seq: u64,
+    // Requests already served on this connection, bounding reuse.
+    pub keep_uses: u8,
+    // Family key when this fetch is an @font-face download; zero otherwise.
+    pub font: u32,
 }

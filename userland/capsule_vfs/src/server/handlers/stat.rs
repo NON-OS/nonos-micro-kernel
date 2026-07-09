@@ -17,9 +17,16 @@
 use alloc::vec::Vec;
 use core::str;
 
+use super::path::{is_read_only, normalize};
 use super::util::{map_store_err, split_caller};
 use crate::protocol::{encode_response, Request, EINVAL, MAX_PATH_BYTES, OP_STAT};
 use crate::store::Store;
+
+// Reply flag bits.
+const FLAG_DIR: u32 = 1 << 0;
+const FLAG_WRITABLE: u32 = 1 << 1;
+// Owner-write permission bit.
+const MODE_WRITE: u16 = 0o200;
 
 // Payload: u32 caller_pid, u8 path_len, path bytes.
 // Reply body: u64 size, u32 flags (flags reserved for M3-2 routing).
@@ -42,12 +49,21 @@ pub fn stat(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
         Ok(s) => s,
         Err(_) => return encode_response(OP_STAT, req.flags, req.request_id, EINVAL, &[]),
     };
-    match store.stat(path) {
-        Ok((size, is_dir)) => {
-            let mut body = Vec::with_capacity(12);
+    let path = normalize(path);
+    match store.stat(&path) {
+        Ok((size, is_dir, mtime, mode)) => {
+            let writable = mode & MODE_WRITE != 0 && !is_read_only(&path);
+            let mut flags = 0u32;
+            if is_dir {
+                flags |= FLAG_DIR;
+            }
+            if writable {
+                flags |= FLAG_WRITABLE;
+            }
+            let mut body = Vec::with_capacity(20);
             body.extend_from_slice(&size.to_le_bytes());
-            let flags: u32 = if is_dir { 1 } else { 0 };
             body.extend_from_slice(&flags.to_le_bytes());
+            body.extend_from_slice(&mtime.to_le_bytes());
             encode_response(OP_STAT, req.flags, req.request_id, 0, &body)
         }
         Err(e) => encode_response(OP_STAT, req.flags, req.request_id, map_store_err(e), &[]),

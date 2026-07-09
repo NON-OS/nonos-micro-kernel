@@ -40,6 +40,9 @@ pub(super) fn blend(
     if idx >= buf.len() {
         return;
     }
+    // The color's own alpha scales the coverage, so translucent text fades
+    // instead of ignoring its opacity.
+    let a = a * ((argb >> 24) & 0xff) as f32 / 255.0;
     let dst = buf[idx];
     let (sr, sg, sb) = ((argb >> 16) & 0xff, (argb >> 8) & 0xff, argb & 0xff);
     let (dr, dg, db) = ((dst >> 16) & 0xff, (dst >> 8) & 0xff, dst & 0xff);

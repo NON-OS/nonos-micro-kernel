@@ -18,12 +18,17 @@ extern crate alloc;
 
 use alloc::{string::String, vec::Vec};
 
+use super::clipboard::Clip;
 use super::entries::Entry;
+use super::preview::Preview;
 
 #[derive(Clone, Copy)]
 pub enum Mode {
     Browse,
+    Filter,
+    Help,
     Prompt(PromptKind),
+    Preview,
 }
 
 #[derive(Clone, Copy)]
@@ -34,28 +39,29 @@ pub enum PromptKind {
     Delete,
 }
 
+#[derive(Clone, Copy)]
+pub enum SortMode {
+    Name,
+    Size,
+    Date,
+    Type,
+}
+
 pub struct State {
     pub owner_pid: u32,
     pub prefix: String,
+    pub all: Vec<Entry>,
     pub entries: Vec<Entry>,
     pub cursor: usize,
-    pub preview: Option<String>,
+    // Index of the first entry drawn, so long directories scroll instead of
+    // clipping the rows that fall past the window.
+    pub scroll: usize,
+    pub preview: Option<Preview>,
     pub status: &'static [u8],
     pub mode: Mode,
     pub input: String,
-}
-
-impl State {
-    pub fn new() -> Self {
-        State {
-            owner_pid: 0,
-            prefix: String::from("/"),
-            entries: Vec::new(),
-            cursor: 0,
-            preview: None,
-            status: b"loading...",
-            mode: Mode::Browse,
-            input: String::new(),
-        }
-    }
+    pub filter: String,
+    pub sort_mode: SortMode,
+    pub selected: Vec<String>,
+    pub clipboard: Vec<Clip>,
 }

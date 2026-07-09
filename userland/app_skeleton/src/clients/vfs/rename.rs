@@ -33,7 +33,7 @@ pub fn rename(owner_pid: u32, old: &[u8], new: &[u8]) -> Result<(), &'static str
     let mut rx = vec![0u8; HDR_LEN + 8];
     let (status, _) = super::call::call(peer.port, super::types::OP_RENAME, 10, &body, &mut rx)?;
     if status != 0 {
-        return Err("vfs rename failed");
+        return Err(super::errmsg::errmsg(status));
     }
     Ok(())
 }

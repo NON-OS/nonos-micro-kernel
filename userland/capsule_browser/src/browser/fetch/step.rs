@@ -89,16 +89,27 @@ pub fn step(state: &mut State) -> bool {
             Phase::Decrypt | Phase::Done | Phase::Error => {}
         }
     }
-    let Some(job) = state.fetch.take() else {
+    let Some(mut job) = state.fetch.take() else {
         return false;
     };
-    let _ = net::socket_close(port, job.handle);
     if let Some(src) = job.image.clone() {
         let raw = match job.phase {
             Phase::Decrypt => tls::decrypt(&job),
             Phase::Done => Some(job.buf.clone()),
             _ => None,
         };
+        // Keep the connection for the next same-host image when the response
+        // is intact and reusable; otherwise close it here.
+        if !super::stash::stash(state, &mut job, raw.as_deref()) {
+            let _ = net::socket_close(port, job.handle);
+        }
+        // A request sent on a kept connection the server had silently dropped
+        // yields nothing; retry that image once over a fresh connection
+        // rather than recording a failure it never earned.
+        if matches!(job.phase, Phase::Error) && job.keep_uses > 0 {
+            state.image_queue.insert(0, src);
+            return true;
+        }
         let resp = raw.as_deref().and_then(http::response::parse);
         // CDNs answer image hits with 3xx routinely; chase the hop while
         // keeping the pixels keyed to the URL the boxes reference.
@@ -118,13 +129,32 @@ pub fn step(state: &mut State) -> bool {
         crate::browser::image::ingest(&mut state.images, &src, &body);
         return true;
     }
+    let _ = net::socket_close(port, job.handle);
+    if job.font != 0 {
+        let raw = match job.phase {
+            Phase::Decrypt => tls::decrypt(&job),
+            Phase::Done => Some(job.buf.clone()),
+            _ => None,
+        };
+        let body = raw
+            .as_deref()
+            .and_then(http::response::parse)
+            .filter(|r| r.status == 200)
+            .map(|r| r.body)
+            .unwrap_or_default();
+        // A face that parses changes every metric measured with it.
+        if crate::browser::fonts::ingest_font(job.font, body) {
+            crate::browser::event::relayout(state);
+        }
+        return true;
+    }
     if job.css {
         let raw = match job.phase {
             Phase::Decrypt => tls::decrypt(&job),
             Phase::Done => Some(job.buf.clone()),
             _ => None,
         };
-        super::apply_css::apply_css(state, raw.as_deref());
+        super::apply_css::apply_css(state, raw.as_deref(), Some(&job.url));
         return true;
     }
     if job.js_req {

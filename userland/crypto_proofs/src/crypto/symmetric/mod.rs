@@ -1,0 +1,51 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+// ChaCha20-Poly1305 AEAD. The included source resolves its constant-time
+// dependency through `crate::crypto::constant_time`, already provided here.
+// The block and MAC cores use reference-style index loops and rotates, which
+// are kept as-is (the KAT proves behavior).
+#[allow(
+    clippy::needless_range_loop,
+    clippy::manual_rotate,
+    clippy::identity_op,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of
+)]
+#[path = "../../../../../src/crypto/symmetric/chacha20poly1305/mod.rs"]
+pub mod chacha20poly1305;
+
+// AES block cipher core (depends only on the constant-time primitives) and the
+// AES-GCM AEAD built on it. Same reference-shape allowances as above.
+#[allow(
+    clippy::needless_range_loop,
+    clippy::manual_rotate,
+    clippy::identity_op,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of
+)]
+#[path = "../../../../../src/crypto/symmetric/aes/mod.rs"]
+pub mod aes;
+
+#[allow(
+    clippy::needless_range_loop,
+    clippy::manual_rotate,
+    clippy::identity_op,
+    clippy::unnecessary_cast,
+    clippy::manual_is_multiple_of
+)]
+#[path = "../../../../../src/crypto/symmetric/aes_gcm/mod.rs"]
+pub mod aes_gcm;

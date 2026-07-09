@@ -56,6 +56,12 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
     state.page_css.clear();
     state.image_queue.clear();
     state.images.reset();
+    if let Some(keep) = state.keep.take() {
+        let _ = crate::browser::net::socket_close(state.sockets_port, keep.handle);
+    }
+    state.font_queue.clear();
+    state.font_seen.clear();
+    crate::browser::fonts::clear();
     state.css_cache = None;
     state.scroll = 0;
     state.focus = None;
@@ -78,6 +84,10 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
         post,
         js_req: false,
         css: false,
+        rx_consumed: 0,
+        tx_seq: 0,
+        keep_uses: 0,
+        font: 0,
     });
     Ok(())
 }

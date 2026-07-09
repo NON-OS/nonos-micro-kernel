@@ -22,6 +22,7 @@ pub(super) fn spawn_legacy_stack() {
     super::spawn_dhcp::spawn_dhcp();
     super::spawn_tcp::spawn_tcp();
     super::spawn_dns::spawn_dns();
+    super::spawn_ntp::spawn_ntp();
 }
 
 #[cfg(feature = "nonos-capsule-net-core")]

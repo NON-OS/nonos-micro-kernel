@@ -17,7 +17,7 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use super::types::{File, OpenFd, Store, StoreError, StoreResult, MAX_FILES};
+use super::types::{File, OpenFd, Store, StoreError, StoreResult, MAX_FILES, MODE_WRITE};
 
 impl Store {
     pub fn open(
@@ -27,6 +27,7 @@ impl Store {
         create: bool,
         truncate: bool,
         append: bool,
+        writable: bool,
     ) -> Result<u32, StoreError> {
         let file_idx = match self.find(path) {
             Some(i) => i,
@@ -35,13 +36,21 @@ impl Store {
         if self.files[file_idx].is_dir {
             return Err(StoreError::IsDir);
         }
+        // The handle is writable only if the caller was allowed to write and the
+        // file's own permissions permit it. Truncating a read-only file is
+        // rejected rather than silently clearing it.
+        let mode_writable = self.files[file_idx].mode & MODE_WRITE != 0;
+        let writable = writable && mode_writable;
         if truncate {
+            if !writable {
+                return Err(StoreError::AccessDenied);
+            }
+            super::zeroize::zeroize(&mut self.files[file_idx].data);
             self.files[file_idx].data.clear();
         }
         let fd_slot = self.fds.iter().position(|s| s.is_none()).ok_or(StoreError::Full)?;
         let pos = if append { self.files[file_idx].data.len() } else { 0 };
-        self.fds[fd_slot] =
-            Some(OpenFd { file_idx, owner_pid, pos, append, writable: true });
+        self.fds[fd_slot] = Some(OpenFd { file_idx, owner_pid, pos, append, writable });
         Ok(fd_slot as u32)
     }
 
@@ -52,7 +61,7 @@ impl Store {
         if self.files.len() >= MAX_FILES {
             return Err(StoreError::Full);
         }
-        self.files.push(File { name: String::from(path), data: Vec::new(), is_dir: false });
+        self.files.push(File::new(String::from(path), Vec::new(), false));
         Ok(self.files.len() - 1)
     }
 }

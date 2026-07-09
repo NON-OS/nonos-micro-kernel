@@ -82,5 +82,5 @@ pub use surface_registry::{
     INPUT_KIND_TOUCH, INPUT_KIND_WHEEL, SURFACE_FORMAT_ARGB8888,
 };
 pub use syscall::call_raw as mk_syscall_raw;
-pub use time::{mk_time_millis, mk_time_rtc, RtcTime};
+pub use time::{mk_time_adjust, mk_time_millis, mk_time_rtc, RtcTime};
 pub use unistd::{mk_exit, mk_yield};

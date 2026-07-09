@@ -1,0 +1,29 @@
+# NONOS userland: capsule_net_ntp
+# eK@nonos.systems
+#
+# SNTP time-sync client capsule. Queries a configured NTP server over
+# `capsule_net_udp`, validates the reply, and adjusts the kernel clock
+# via the MkTimeAdjust syscall. Client only — serves no requests.
+
+[package]
+name = "nonos_capsule_net_ntp"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS userland SNTP time-sync capsule"
+
+[[bin]]
+name = "net_ntp"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true

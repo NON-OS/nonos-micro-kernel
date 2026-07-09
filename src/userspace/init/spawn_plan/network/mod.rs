@@ -25,6 +25,8 @@ mod spawn_ip;
 #[cfg(not(feature = "nonos-capsule-net-core"))]
 mod spawn_l2;
 mod spawn_legacy_stack;
+#[cfg(not(feature = "nonos-capsule-net-core"))]
+mod spawn_ntp;
 mod spawn_nym;
 mod spawn_sockets;
 #[cfg(not(feature = "nonos-capsule-net-core"))]

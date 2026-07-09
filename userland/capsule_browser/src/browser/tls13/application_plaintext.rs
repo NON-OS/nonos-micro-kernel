@@ -17,6 +17,30 @@
 use alloc::vec::Vec;
 
 use super::flight::ClientFlight;
+use super::traffic_keys::TrafficKeys;
+
+// Decrypt the application-data records with server keys already derived at the
+// end of the handshake, skipping the per-call handshake replay and certificate
+// verification. The record walk and sequence numbering match the full path
+// exactly, so the plaintext is identical; only the redundant work is dropped.
+pub fn application_plaintext_cached(app: &TrafficKeys, response: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    let mut seq = 0u64;
+    while pos + 5 <= response.len() {
+        let len = u16::from_be_bytes([response[pos + 3], response[pos + 4]]) as usize;
+        let end = pos + 5 + len;
+        if end > response.len() {
+            break;
+        }
+        if response[pos] == 23 {
+            append(&mut out, app, seq, &response[pos..end]);
+            seq += 1;
+        }
+        pos = end;
+    }
+    out
+}
 
 pub fn application_plaintext(
     client: &ClientFlight,

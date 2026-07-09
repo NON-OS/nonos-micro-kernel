@@ -29,5 +29,9 @@ pub(crate) fn ct_is_all_zero(data: &[u8; 32]) -> u8 {
     for &b in data {
         acc |= b;
     }
-    ((acc as u16 | (acc as u16).wrapping_neg()) >> 8) as u8 ^ 1
+    // 1 if every byte is zero, else 0, branch-free. `acc | acc.wrapping_neg()`
+    // has its high bit set for any nonzero `acc`, so the shift yields the
+    // nonzero flag; subtracting from 1 gives the all-zero flag. Returning a full
+    // 0x00/0xFF mask here would underflow the callers' `1 - ct_is_all_zero(..)`.
+    1 - ((acc | acc.wrapping_neg()) >> 7)
 }

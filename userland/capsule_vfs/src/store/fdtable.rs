@@ -14,16 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod chmod;
 mod close;
+mod copy;
 mod lookup;
 mod mkdir;
 mod new;
 mod open;
+mod packages;
 mod query;
 mod read;
 mod rename;
+mod rmdir;
 mod seed;
+mod time;
+mod truncate;
 mod types;
+mod usage;
+mod zeroize;
 mod unlink;
 mod write;
 

@@ -1,0 +1,19 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the USB mass-storage driver's untrusted-input
+# parsers. Builds for the host so `cargo test` runs the real driver source
+# (included via #[path]) against adversarial descriptors, status wrappers, and
+# requests, without a boot.
+[package]
+name = "usb_msc_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

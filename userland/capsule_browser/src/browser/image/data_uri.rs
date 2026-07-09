@@ -20,7 +20,7 @@ use super::base64::decode_b64;
 
 // Payload bytes of a data: URI, "data:[mediatype][;base64],payload".
 // Base64 payloads decode; plain payloads percent-decode.
-pub(super) fn data_uri_bytes(uri: &str) -> Option<Vec<u8>> {
+pub(crate) fn data_uri_bytes(uri: &str) -> Option<Vec<u8>> {
     let rest = uri.strip_prefix("data:")?;
     let comma = rest.find(',')?;
     let (meta, payload) = (&rest[..comma], &rest[comma + 1..]);

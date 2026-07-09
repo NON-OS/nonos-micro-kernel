@@ -29,8 +29,17 @@ pub fn paint(state: &State, doc: &BoxDocument, fb: &mut PaintBuffer) {
     let bottom = fb.height as i32;
     for f in &doc.frags {
         // A fixed fragment ignores the scroll offset so it pins to the
-        // viewport; everything else scrolls with the page.
-        let sy = if f.fixed { f.y + TOP } else { f.y + TOP - state.scroll as i32 };
+        // viewport; a sticky subtree shifts down once the scroll passes its
+        // threshold; everything else scrolls with the page.
+        let sy = if f.fixed {
+            f.y + TOP
+        } else {
+            let mut sy = f.y + TOP - state.scroll as i32;
+            if let Some((anchor, top)) = f.sticky {
+                sy += (state.scroll as i32 - anchor + top).max(0);
+            }
+            sy
+        };
         if sy + f.h < TOP || sy > bottom {
             continue;
         }

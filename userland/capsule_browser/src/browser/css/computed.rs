@@ -38,10 +38,38 @@ pub enum WhiteSpace {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+pub enum ObjectFit {
+    // Fit the whole image inside the box, letterboxing the spare space.
+    Contain,
+    // Fill the box, cropping whatever overflows after covering it.
+    Cover,
+    // Stretch the image to the box, ignoring its aspect ratio.
+    Fill,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TextAlign {
     Left,
     Center,
     Right,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum TextTransform {
+    None,
+    Upper,
+    Lower,
+    Capitalize,
+}
+
+// background-size for the box's image layer. Auto keeps the natural size and
+// tiles per background-repeat; a length scales the tile width keeping aspect.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum BgSize {
+    Auto,
+    Cover,
+    Contain,
+    Px(u16),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -100,6 +128,18 @@ pub struct Computed {
     pub font_size_px: u32,
     pub text_align: TextAlign,
     pub white_space: WhiteSpace,
+    pub object_fit: ObjectFit,
+    pub text_transform: TextTransform,
+    // Family key of the custom face this text draws in, 0 for the built-in
+    // face; the fonts registry maps keys to loaded faces.
+    pub font_key: u32,
+    pub bg_size: BgSize,
+    pub bg_repeat: bool,
+    // Element opacity 0..255; multiplies down the subtree at layout.
+    pub opacity: u8,
+    // Extra advance in px between glyphs, letter-spacing; inherited, may be
+    // negative for tightened headings.
+    pub letter_spacing: f32,
     pub underline: bool,
     // 0 means unset: derive 1.3 * font size where a line height is needed.
     pub line_height_px: u32,
@@ -147,6 +187,9 @@ pub struct Computed {
     // position: fixed is laid out like absolute but painted without the
     // scroll offset, so it pins to the viewport.
     pub is_fixed: bool,
+    // position: sticky flows normally and clamps against the viewport top
+    // once scrolled past its threshold.
+    pub is_sticky: bool,
     pub top: Size,
     pub right: Size,
     pub bottom: Size,
@@ -173,6 +216,13 @@ impl Computed {
             font_size_px: DEFAULT_FONT_PX,
             text_align: TextAlign::Left,
             white_space: WhiteSpace::Normal,
+            object_fit: ObjectFit::Contain,
+            text_transform: TextTransform::None,
+            font_key: 0,
+            bg_size: BgSize::Auto,
+            bg_repeat: true,
+            opacity: 255,
+            letter_spacing: 0.0,
             underline: false,
             line_height_px: 0,
             margin_top: 0,
@@ -210,6 +260,7 @@ impl Computed {
             flex_basis: Size::Auto,
             position: Position::Static,
             is_fixed: false,
+            is_sticky: false,
             top: Size::Auto,
             right: Size::Auto,
             bottom: Size::Auto,
@@ -238,6 +289,9 @@ impl Computed {
         c.underline = parent.underline;
         c.line_height_px = parent.line_height_px;
         c.list_none = parent.list_none;
+        c.text_transform = parent.text_transform;
+        c.font_key = parent.font_key;
+        c.letter_spacing = parent.letter_spacing;
         c
     }
 
