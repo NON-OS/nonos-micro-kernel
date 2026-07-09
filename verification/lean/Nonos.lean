@@ -37,6 +37,7 @@ import Nonos.Stark.Lookup
 import Nonos.Stark.Merkle
 import Nonos.Stark.NullifierSet
 import Nonos.Stark.Permutation
+import Nonos.Stark.Pool
 import Nonos.Stark.Polynomial
 import Nonos.Stark.RunningSum
 import Nonos.Stark.Transcript
