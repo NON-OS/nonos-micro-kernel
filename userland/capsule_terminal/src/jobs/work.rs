@@ -24,13 +24,13 @@ use super::pipeline_job::PipelineJob;
 use super::table::JobProgress;
 
 // The step machine for long-running command kinds, one variant per kind,
-// each holding the progress cursor its poll body tracks. Grown incrementally
-// by later tasks (ExternalStage, ...); `Noop` is a placeholder so
-// `JobTable`/`JobRecord` compile ahead of the rest. `PipelineStages` needs
-// `&mut State` to run its stages (real commands, not just filters), so it
-// is stepped by `pump::step_pipeline_job` instead of this function; the
-// arm below only fires if `step` is ever called on it directly, which
-// pump's routing avoids for the non-cancelled case.
+// each holding the progress cursor its poll body tracks. `Noop` is the
+// inert sentinel `pump` swaps in via `mem::replace(&mut job.work, Noop)`
+// while it runs a `PipelineStages` job with `&mut State`. `PipelineStages`
+// needs that `&mut State` to run its stages (real commands, not just
+// filters), so it is stepped by `pump::step_pipeline_job` instead of this
+// function; the arm below only fires if `step` is ever called on it
+// directly, which pump's routing avoids for the non-cancelled case.
 pub enum JobWork {
     Noop,
     Ping(PingJob),
