@@ -34,6 +34,18 @@ impl Store {
         self.seed_file("/readme.txt", README);
         self.seed_file("/docs/about.txt", ABOUT);
         self.seed_file("/docs/demo.txt", DEMO);
+        self.seed_capsule_store();
+    }
+
+    #[cfg(not(feature = "seed-terminal-store"))]
+    fn seed_capsule_store(&mut self) {}
+
+    #[cfg(feature = "seed-terminal-store")]
+    fn seed_capsule_store(&mut self) {
+        self.seed_file("/capsules/hello.elf", store::HELLO_ELF);
+        self.seed_file("/capsules/hello.nonos_id_cert.bin", store::HELLO_CERT);
+        self.seed_file("/capsules/hello.manifest.bin", store::HELLO_MANIFEST);
+        self.seed_file("/capsules/hello.zk_trailer.bin", store::HELLO_TRAILER);
     }
 
     fn seed_file(&mut self, name: &str, data: &[u8]) {
@@ -41,4 +53,16 @@ impl Store {
             self.files.push(File { name: String::from(name), data: Vec::from(data), is_dir: false });
         }
     }
+}
+
+#[cfg(feature = "seed-terminal-store")]
+mod store {
+    pub const HELLO_ELF: &[u8] =
+        include_bytes!("../../../../../userland/capsule_hello/target/x86_64-nonos-user/release/hello");
+    pub const HELLO_CERT: &[u8] =
+        include_bytes!("../../../../../nonos-data/trust/capsules/hello.nonos_id_cert.bin");
+    pub const HELLO_MANIFEST: &[u8] =
+        include_bytes!("../../../../../nonos-data/trust/capsules/hello.manifest.bin");
+    pub const HELLO_TRAILER: &[u8] =
+        include_bytes!("../../../../../nonos-data/trust/capsules/hello.zk_trailer.bin");
 }
