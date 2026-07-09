@@ -17,7 +17,9 @@
 use super::artifacts::CapsuleArtifacts;
 use super::error::LoadError;
 use super::leak::{leak_bytes, leak_str};
-use crate::kernel_core::process_spawn::capsule_spawn::{spawn_verified_as, CapsuleSpecVerified};
+use crate::kernel_core::process_spawn::capsule_spawn::{
+    spawn_verified_as, AttestedParent, CapsuleSpecVerified,
+};
 use crate::security::capsule_manifest::{decode as decode_manifest, CapsuleManifest, EndpointKind};
 use crate::security::nonos_trust_anchor::{decode as decode_trust, BAKED_TRUST_ANCHOR_POLICY};
 
@@ -29,11 +31,11 @@ use crate::security::nonos_trust_anchor::{decode as decode_trust, BAKED_TRUST_AN
 // manifest, publisher signature, capability, and attestation check intact.
 // requested_caps is the upper bound for optional caps, identical to a baked
 // spawn site; the verified manifest still decides what is actually granted.
-pub fn load_capsule_from_vfs(
+pub(crate) fn load_capsule_from_vfs(
     artifacts: CapsuleArtifacts,
     requested_caps: u64,
     args: &[u8],
-    on_behalf_of: Option<u32>,
+    on_behalf_of: Option<AttestedParent>,
 ) -> Result<u32, LoadError> {
     let manifest = decode_manifest(&artifacts.manifest).map_err(|_| LoadError::Manifest)?;
     let (service_name, service_port) = endpoint(&manifest, EndpointKind::Service)?;

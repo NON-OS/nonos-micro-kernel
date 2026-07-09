@@ -16,6 +16,7 @@
 
 use crate::security::nonos_trust_anchor::NonosTrustAnchorPolicy;
 
+use super::super::attested_parent::AttestedParent;
 use super::super::spec::{CapsuleSpecVerified, SpawnError};
 use super::install::{install, InstallParams};
 use super::preflight;
@@ -34,11 +35,11 @@ pub fn spawn_verified(
 // Same as `spawn_verified`, but attributes the spawned process to
 // `on_behalf_of` (a kernel-attested pid) instead of the caller. Used by the
 // capsule-load-from-store path when the caller holds spawn-broker authority.
-pub fn spawn_verified_as(
+pub(crate) fn spawn_verified_as(
     spec: &CapsuleSpecVerified,
     trust_anchor: &NonosTrustAnchorPolicy,
     now_ms: Option<u64>,
-    on_behalf_of: Option<u32>,
+    on_behalf_of: Option<AttestedParent>,
 ) -> Result<u32, SpawnError> {
     crate::sys::bench::mark_named(b"capsule_spawn_start", spec.name.as_bytes());
     let preflighted = preflight::run(spec, trust_anchor, now_ms)?;
