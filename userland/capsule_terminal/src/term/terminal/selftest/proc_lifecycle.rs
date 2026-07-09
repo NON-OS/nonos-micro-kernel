@@ -14,16 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+use nonos_libc::{mk_kill, mk_pid_alive, mk_proc_input, mk_wait, mk_yield};
 
-use nonos_app_skeleton::discover::lookup_service;
-use nonos_libc::{mk_ipc_call, mk_kill, mk_pid_alive, mk_proc_input, mk_wait, mk_yield};
+use crate::command::builtin::nox::install::call_installer;
 
 use super::mark;
 
-const OP_LOAD_BY_NAME: u16 = 4;
-const SEQ: u32 = 1;
-const REQUESTED_CAPS: u64 = u64::MAX;
 const SIGTERM: u64 = 15;
 const SIGTERM_STATUS: i64 = 143;
 const HELLO_EXIT: i64 = 2;
@@ -61,7 +57,7 @@ fn stdin_ok() {
 fn spawn(name: &[u8]) -> Option<u32> {
     let mut tries = 0u32;
     loop {
-        if let Some(pid) = load_by_name(name) {
+        if let Ok(pid) = call_installer(name, &[]) {
             return Some(pid);
         }
         tries += 1;
@@ -70,29 +66,4 @@ fn spawn(name: &[u8]) -> Option<u32> {
         }
         mk_yield();
     }
-}
-
-fn load_by_name(name: &[u8]) -> Option<u32> {
-    let port = lookup_service(b"installer").map(|p| p.port)?;
-    let payload = pack(name);
-    let mut rx = [0u8; 32];
-    let rc = mk_ipc_call(port as u64, payload.as_ptr(), payload.len(), rx.as_mut_ptr(), rx.len());
-    if rc < 12 {
-        return None;
-    }
-    if i32::from_le_bytes([rx[4], rx[5], rx[6], rx[7]]) != 0 {
-        return None;
-    }
-    Some(u32::from_le_bytes([rx[8], rx[9], rx[10], rx[11]]))
-}
-
-fn pack(name: &[u8]) -> Vec<u8> {
-    let mut p = Vec::with_capacity(17 + name.len());
-    p.extend_from_slice(&SEQ.to_le_bytes());
-    p.extend_from_slice(&OP_LOAD_BY_NAME.to_le_bytes());
-    p.extend_from_slice(&[0u8, 0u8]);
-    p.extend_from_slice(&REQUESTED_CAPS.to_le_bytes());
-    p.push(name.len() as u8);
-    p.extend_from_slice(name);
-    p
 }
