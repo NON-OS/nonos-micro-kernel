@@ -47,6 +47,8 @@ import Nonos
 #print axioms Nonos.Stark.Fri.final_layer_accepts_iff_matches
 #print axioms Nonos.Stark.Lookup.non_table_value_has_zero_multiplicity
 #print axioms Nonos.Stark.Merkle.distinct_leaves_give_distinct_roots
+#print axioms Nonos.Stark.NullifierSet.a_recorded_nullifier_cannot_be_respent
+#print axioms Nonos.Stark.NullifierSet.spend_only_grows
 #print axioms Nonos.Stark.Permutation.perm_preserves_count
 #print axioms Nonos.Stark.RunningSum.final_is_total
 #print axioms Nonos.Stark.RunningSum.conservation

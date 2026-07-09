@@ -35,6 +35,7 @@ import Nonos.Stark.Fri
 import Nonos.Stark.Instance
 import Nonos.Stark.Lookup
 import Nonos.Stark.Merkle
+import Nonos.Stark.NullifierSet
 import Nonos.Stark.Permutation
 import Nonos.Stark.Polynomial
 import Nonos.Stark.RunningSum
