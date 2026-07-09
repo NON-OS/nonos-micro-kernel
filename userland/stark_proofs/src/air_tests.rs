@@ -964,6 +964,18 @@ fn trace_fold_data_seeded(
     query: usize,
     seed: u64,
 ) -> (Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<bool>, Fp, u32, usize) {
+    trace_fold_data_seeded_first(query, seed, None)
+}
+
+// The same seeded fold, but with an optional first-layer challenge. A recursive
+// verifier's FRI fold must run on the challenge its transcript squeezed, so the
+// monolith overrides `beta[0]` with that challenge and wires the two together.
+#[allow(clippy::type_complexity)]
+fn trace_fold_data_seeded_first(
+    query: usize,
+    seed: u64,
+    first_beta: Option<Fp>,
+) -> (Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<bool>, Fp, u32, usize) {
     let (k, n_folds, log_layers) = (5u32, 4usize, 3u32);
     let n = 1usize << k;
     let inv2 = Fp::from_u64(2).inv();
@@ -977,8 +989,11 @@ fn trace_fold_data_seeded(
     layers.push(cur.clone());
     let mut omega = base_omega;
     let mut coset = shift;
-    for _ in 0..n_folds {
-        let beta = Fp::from_u64(xs(&mut s));
+    for layer_i in 0..n_folds {
+        let beta = match first_beta {
+            Some(b0) if layer_i == 0 => b0,
+            _ => Fp::from_u64(xs(&mut s)),
+        };
         betas.push(beta);
         let half = cur.len() / 2;
         let mut next = Vec::with_capacity(half);
@@ -2262,4 +2277,173 @@ fn gen_recursive_public_selftest() {
     );
     std::fs::write("/Users/ek/Desktop/NOX-SmartContract/spec/recursive-selftest.json", &json).expect("write");
     std::println!("wrote proof {} bytes + {} boundaries + {} periodic cols", bytes.len(), fused.boundary().len(), fused.periodic_columns().len());
+}
+
+// How to fault the wired recursive verifier, so each wire is shown load-bearing.
+enum RecursiveFault {
+    None,
+    // The DEEP check is about a value the opening never committed.
+    RebindValue(Fp),
+    // The fold runs on a challenge the transcript never squeezed.
+    UnboundChallenge(Fp),
+}
+
+// The fully wired 4-stage recursive verifier: the same four stages the fused vector
+// composes (Fiat-Shamir, Merkle opening, FRI fold, DEEP consistency), now bound end
+// to end by one grand-product column carrying two cross-stage cycles:
+//   value flow: Merkle-opened value == fold input == DEEP trace value.
+//   transcript: Fiat-Shamir challenge == the fold's first-layer beta.
+// So the four stages are provably about one value and driven by one challenge; a
+// verifier can neither fold or DEEP-check a value the opening never revealed, nor
+// fold on a challenge the transcript never squeezed. A faulted wire breaks the
+// product without touching any region's own constraint. This is the custody-flip
+// shape the pool's constant-gas verifier points at.
+fn wired_recursive_verifier(fault: RecursiveFault) -> (crate::crypto::stark::air::WiredExt, Vec<Fp>) {
+    use crate::crypto::stark::air::{AirExt, DeepCheck, FiatShamir, TraceFold, WiredExt};
+    use alloc::boxed::Box;
+
+    // Stage 1: transcript derivation.
+    let (lr, ls) = (3u32, 2u32);
+    let hasher = Poseidon::new(lr, [Fp::ZERO; RATE]);
+    let inputs = alloc::vec![Fp::from_u64(111), Fp::from_u64(222), Fp::from_u64(333)];
+    let (fs_trace, challenge) = fiat_shamir_trace(&hasher, &inputs, lr, ls);
+    let fs = FiatShamir::new(Poseidon::new(lr, [Fp::ZERO; RATE]), lr, ls, inputs, challenge);
+
+    // Stage 2 + 3: the Merkle opening of a[0], and the fold that consumes a[0]. The
+    // fold's first beta is the transcript challenge, unless faulted off-transcript.
+    let fold_beta0 = match fault {
+        RecursiveFault::UnboundChallenge(b) => b,
+        _ => challenge,
+    };
+    let (beta, a, b, x_inv, dir, fv, ll, nf) = trace_fold_data_seeded_first(6, 0xf01d_1234u64 | 1, Some(fold_beta0));
+    let (mtr, mem, _) = opening_of_scalar(a[0], 2);
+    let fold = TraceFold::new(ll, nf, x_inv, dir, fv);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    // Stage 4: DEEP consistency, honestly formed for whatever value it is about.
+    let deep_val = match fault {
+        RecursiveFault::RebindValue(v) => v,
+        _ => a[0],
+    };
+    let (cl, cp, cpz, x, z, c0, e) = (Fp::from_u64(2), Fp::from_u64(8), Fp::from_u64(1), Fp::from_u64(10), Fp::from_u64(3), Fp::from_u64(4), Fp::from_u64(6));
+    let xz_inv = (x - z).inv();
+    let deep = c0 * ((deep_val - cl) * xz_inv) + e * ((cp - cpz) * xz_inv);
+    let dc = DeepCheck { trace_val: deep_val, claimed: cl, comp: cp, comp_z: cpz, deep, x, z, c0, e };
+    let dc_trace = dc.trace();
+
+    let regions: Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(fs) as Box<dyn AirExt>,
+        Box::new(mem),
+        Box::new(fold),
+        Box::new(dc),
+    ];
+
+    // Region row offsets exactly as Stack::of lays them, each rounded to a power of
+    // two. The FS challenge sits at row (2^ls - 1) * 2^lr, column 0.
+    let mut offs = Vec::with_capacity(regions.len());
+    let mut row = 0usize;
+    for r in &regions {
+        offs.push(row);
+        row += 1usize << r.log_trace_len();
+    }
+    let span = row.next_power_of_two();
+    let (o_mem, o_fold, o_dc) = (offs[1], offs[2], offs[3]);
+    let fs_challenge_row = ((1usize << ls) - 1) * (1usize << lr);
+
+    // wired columns 0 and 1, so k = 2 and a cell's id is row*2 + wired_index.
+    let k = 2usize;
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    // Value-flow 3-cycle: Merkle leaf (col 0) -> fold input (col 1) -> DEEP (col 0).
+    let (id_mem, id_fold_a, id_dc) = (o_mem * k, o_fold * k + 1, o_dc * k);
+    sigma[id_mem] = id_fold_a;
+    sigma[id_fold_a] = id_dc;
+    sigma[id_dc] = id_mem;
+    // Transcript 2-cycle: FS challenge (col 0) <-> fold first beta (col 0).
+    sigma.swap(fs_challenge_row * k, o_fold * k);
+
+    let wired = WiredExt::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[fs_trace, mtr, fold_trace, dc_trace]);
+    (wired, witness)
+}
+
+// The honestly wired recursive verifier: opened == folded == DEEP-checked value, and
+// the fold runs on the transcript challenge. Both cross-stage cycles telescope, and
+// the proof verifies at ~2^-128.
+#[test]
+fn the_full_wired_recursive_verifier_binds_the_value_flow() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
+    let (wired, witness) = wired_recursive_verifier(RecursiveFault::None);
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(stark_verify_ext(&wired, &proof, 32, 8), "the honestly wired recursive verifier was rejected");
+}
+
+// The DEEP check is about a value the Merkle stage never opened. Its own constraint
+// still holds, but the value-flow wire breaks, so the grand product no longer
+// returns to one and the proof is rejected.
+#[test]
+fn the_full_wired_recursive_verifier_rejects_a_rebound_value() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
+    let (wired, witness) = wired_recursive_verifier(RecursiveFault::RebindValue(Fp::from_u64(0xD1FF)));
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(!stark_verify_ext(&wired, &proof, 32, 8), "a rebound recursive verifier verified");
+}
+
+// The fold runs on a challenge the transcript never squeezed. The fold is internally
+// consistent for that challenge, but the transcript wire breaks, so the proof is
+// rejected. This is what forces the recursive verifier to be honest about Fiat-Shamir.
+#[test]
+fn the_full_wired_recursive_verifier_rejects_an_off_transcript_fold() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
+    let (wired, witness) = wired_recursive_verifier(RecursiveFault::UnboundChallenge(Fp::from_u64(0xBAD0)));
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(!stark_verify_ext(&wired, &proof, 32, 8), "an off-transcript fold verified");
+}
+
+#[test]
+#[ignore]
+fn gen_wired_recursive_public_selftest() {
+    // The WIRED recursive-verifier vector with its public statement: the same four
+    // stages as the fused vector, plus the one grand-product column that binds the
+    // opened value to the folded and DEEP-checked value AND the transcript challenge
+    // to the fold's beta. The verifier gains exactly one product term in its compose
+    // and one boundary pinning that column to one; everything else (transcript, FRI,
+    // Merkle, Fp2, periodic eval) is unchanged. This is the custody-flip vector.
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Air};
+    use alloc::string::String;
+
+    let (wired, witness) = wired_recursive_verifier(RecursiveFault::None);
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(stark_verify_ext(&wired, &proof, 32, 8), "wired recursive public self-test does not verify");
+
+    let mut bnd = String::from("[");
+    for (i, (c, r, v)) in wired.boundary().iter().enumerate() {
+        if i > 0 {
+            bnd.push(',');
+        }
+        bnd.push_str(&alloc::format!("[{},{},\"{}\"]", c, r, v.value()));
+    }
+    bnd.push(']');
+    let mut per = String::from("[");
+    for (i, col) in wired.periodic_columns().iter().enumerate() {
+        if i > 0 {
+            per.push(',');
+        }
+        per.push('[');
+        for (j, v) in col.iter().enumerate() {
+            if j > 0 {
+                per.push(',');
+            }
+            per.push_str(&alloc::format!("\"{}\"", v.value()));
+        }
+        per.push(']');
+    }
+    per.push(']');
+
+    let bytes = crate::stark_selftest_gen::serialize(&proof);
+    let json = alloc::format!(
+        "{{\n  \"engine\": \"nonos-money-grade-stark\",\n  \"air\": \"wired-recursive-verifier (fiat-shamir + merkle-opening + fri-fold + deep-consistency, fully bound)\",\n  \"note\": \"The WIRED recursive verification with its PUBLIC STATEMENT. Adds one grand-product column to the fused composition carrying two cross-stage cycles: a value-flow cycle binds the Merkle-opened value to the fold input and the DEEP trace value, and a transcript cycle binds the Fiat-Shamir challenge to the fold's first beta. So the four stages are provably about one value and driven by one challenge. _composeConstraints = the fused sum of the four stage transitions PLUS the one grand-product term; boundaries include the product column pinned to one at row 0 and row span. Everything else is unchanged from the fused vector.\",\n  \"wiring\": {{ \"wired_cols\": [0, 1], \"beta\": 5, \"gamma\": 7 }},\n  \"log_trace_len\": {}, \"trace_width\": {}, \"n_queries\": 32, \"grind_bits\": 8,\n  \"stages\": [\"fiat_shamir\", \"merkle_membership\", \"trace_fold\", \"deep_check\", \"grand_product\"],\n  \"boundaries\": {},\n  \"periodic_columns\": {},\n  \"proof_len_bytes\": {},\n  \"proof_hex\": \"{}\"\n}}\n",
+        wired.log_trace_len(), wired.trace_width(), bnd, per, bytes.len(), crate::stark_selftest_gen::hex(&bytes)
+    );
+    std::fs::write("/Users/ek/Desktop/NOX-SmartContract/spec/wired-recursive-selftest.json", &json).expect("write");
+    std::println!("wrote wired proof {} bytes + {} boundaries + {} periodic cols", bytes.len(), wired.boundary().len(), wired.periodic_columns().len());
 }
