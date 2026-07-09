@@ -41,6 +41,9 @@ import Nonos
 #print axioms Nonos.Stark.CopyConstraint.wiring_forces_equality
 #print axioms Nonos.Stark.Field.mul_distributes_over_add
 #print axioms Nonos.Stark.Extension.low_degree_extension_is_unique
+#print axioms Nonos.Stark.Commitment.commitment_binds_value
+#print axioms Nonos.Stark.FeeRouter.route_conserves
+#print axioms Nonos.Stark.FeeRouter.an_accepted_fee_is_within_cap
 #print axioms Nonos.Stark.Fold.eval_split
 #print axioms Nonos.Stark.Instance.honest_run_has_a_quotient
 #print axioms Nonos.Stark.Instance.tampered_run_has_no_quotient
@@ -53,6 +56,9 @@ import Nonos
 #print axioms Nonos.Stark.NullifierSet.spend_only_grows
 #print axioms Nonos.Stark.Permutation.perm_preserves_count
 #print axioms Nonos.Stark.Pool.every_reachable_pool_is_solvent
+#print axioms Nonos.Stark.RootWindow.a_pushed_root_is_accepted
+#print axioms Nonos.Stark.RootWindow.the_window_never_exceeds_the_cap
+#print axioms Nonos.Stark.Staking.rewards_never_exceed_fees
 #print axioms Nonos.Stark.RunningSum.final_is_total
 #print axioms Nonos.Stark.RunningSum.conservation
 #print axioms Nonos.Stark.RunningSum.follows_pins_the_trace
