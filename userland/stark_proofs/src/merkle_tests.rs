@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::crypto::stark::field::Fp;
-use crate::crypto::stark::merkle::{verify_path, MerkleTree};
+use crate::crypto::stark::field::{Fp, Fp2};
+use crate::crypto::stark::merkle::{verify_path, verify_path_ext, MerkleTree};
 
 extern crate alloc;
 use alloc::vec::Vec;
@@ -127,4 +127,39 @@ fn distinct_leaf_sets_give_distinct_roots() {
     ls[20] = ls[20] + Fp::ONE;
     let c = MerkleTree::commit(&ls).root();
     assert_ne!(a, c, "a single changed leaf must change the root");
+}
+
+// The extension-field commitment is what the folded FRI layers use: same tree,
+// same node hashing, an Fp2 leaf. Honest openings verify and tampering fails,
+// exactly as for base leaves.
+
+#[test]
+fn extension_openings_verify_and_tampering_fails() {
+    let mut s = 0x5eed_1234u64 | 1;
+    let n = 32usize;
+    let leaves: Vec<Fp2> = (0..n)
+        .map(|_| Fp2::new(Fp::from_u64(xorshift(&mut s)), Fp::from_u64(xorshift(&mut s))))
+        .collect();
+    let tree = MerkleTree::commit_ext(&leaves);
+    let root = tree.root();
+
+    for (i, &leaf) in leaves.iter().enumerate() {
+        let path = tree.open(i);
+        assert!(verify_path_ext(&root, i, leaf, &path), "honest ext opening rejected at {i}");
+        // A tampered leaf must fail.
+        let bad = Fp2::new(leaf.c0 + Fp::ONE, leaf.c1);
+        assert!(!verify_path_ext(&root, i, bad, &path), "tampered ext leaf accepted at {i}");
+        // The wrong index must fail.
+        assert!(!verify_path_ext(&root, i ^ 1, leaf, &path), "wrong index accepted at {i}");
+    }
+}
+
+#[test]
+fn base_and_extension_leaves_are_domain_separated() {
+    // A base leaf and an extension leaf embedding the same value must commit to
+    // different roots, so a base-layer proof can never be replayed as an ext layer.
+    let v = Fp::from_u64(0x1234_5678);
+    let base = MerkleTree::commit(&[v]);
+    let ext = MerkleTree::commit_ext(&[Fp2::from_base(v)]);
+    assert_ne!(base.root(), ext.root());
 }
