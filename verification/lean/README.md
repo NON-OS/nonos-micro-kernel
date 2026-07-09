@@ -41,6 +41,7 @@ the *code*:
 | `UsbHid.a_zero_length_record_is_rejected` / `bindings_never_exceed_the_cap` | `userland/usb_proofs` (`descriptor_walk_terminates_and_binding_count_is_bounded`) |
 | `Stark.Field` ring laws / `results_are_canonical` | `userland/stark_proofs` `field_tests.rs` on the real Goldilocks code; multiplicative inverses stay code-side (`every_nonzero_element_has_an_inverse`) |
 | `Stark.Merkle.acceptance_iff_recomputation` / `distinct_leaves_give_distinct_roots` | `userland/stark_proofs` `merkle_tests.rs`; binding is conditional on compression injectivity (BLAKE3 collision resistance stays assumed) |
+| `Stark.Attest.accepted_leaf_is_enrolled` / `a_proof_for_one_capsule_is_rejected_for_another` | `userland/stark_proofs` `air_tests.rs` (`an_enrolled_capsule_attestation_is_accepted`, `attestation_is_denied_for_a_different_capsule_or_root`); composes Merkle binding + Fiat-Shamir binding |
 | `Stark.Fri.enough_folds_reach_a_constant` / `a_mismatched_final_layer_is_rejected` | `userland/stark_proofs` `fri_tests.rs` (honest low-degree verifies, high-degree rejected) + the `FinalLayerConstant` AIR in `recursive_verifier_tests.rs` |
 | `Stark.Lookup.non_table_value_has_zero_multiplicity` / `present_value_has_positive_multiplicity` | `userland/stark_proofs` `air_tests.rs` (`an_out_of_table_value_is_rejected`, `the_lookup_is_sound_under_a_transcript_challenge`) |
 | `Stark.Transcript.challenge_is_determined` / `order_changes_the_state` | `userland/stark_proofs` `transcript_tests.rs` (determinism, one-bit change re-randomizes, `absorb_order_matters`) |
