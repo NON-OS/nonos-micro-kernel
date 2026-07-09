@@ -26,7 +26,7 @@ use super::super::fri_ext::fri_prove_ext;
 use super::super::merkle::MerkleTree;
 use super::super::poly::{eval_ext, eval_lagrange_ext, intt, lde};
 use super::super::transcript::Transcript;
-use super::composition::{compose_ext, domain_params, num_coeffs};
+use super::composition::{compose_ext, domain_params_blown, num_coeffs};
 use super::spec::AirExt;
 use super::types_ext::{StarkProofExt, StarkQueryExt};
 use alloc::vec::Vec;
@@ -53,10 +53,24 @@ pub fn stark_prove_ext<A: AirExt>(
     n_queries: usize,
     grind_bits: u32,
 ) -> StarkProofExt {
+    stark_prove_ext_blown(air, trace, n_queries, grind_bits, 0)
+}
+
+/// The same prover, with `extra_blowup_bits` of FRI low-degree headroom. Zero is
+/// the minimal rate-one-half domain used everywhere in tests; a deployment vector
+/// raises it so a fixed query count reaches 128-bit soundness. The verifier must be
+/// given the same value, since it recomputes the domain from the AIR.
+pub fn stark_prove_ext_blown<A: AirExt>(
+    air: &A,
+    trace: &[Fp],
+    n_queries: usize,
+    grind_bits: u32,
+    extra_blowup_bits: u32,
+) -> StarkProofExt {
     let log_t = air.log_trace_len();
     let t = 1usize << log_t;
     let width = air.trace_width();
-    let (log_n, fri_log_blowup) = domain_params(air);
+    let (log_n, fri_log_blowup) = domain_params_blown(air, extra_blowup_bits);
     let n = 1usize << log_n;
     let blowup = 1usize << (log_n - log_t);
     let window_size = air.window_size();

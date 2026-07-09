@@ -36,10 +36,21 @@ pub(super) fn num_coeffs<A: Air>(air: &A) -> usize {
 /// domain is `2 * B` (a rate of one half for the low-degree test). Both prover
 /// and verifier call this, so they agree on the domain without passing sizes.
 pub(super) fn domain_params<A: Air>(air: &A) -> (u32, u32) {
+    domain_params_blown(air, 0)
+}
+
+/// The evaluation domain and FRI blowup with `extra_blowup_bits` of low-degree
+/// headroom folded into the FRI rate. Zero reproduces the minimal 2 * B domain
+/// (rate one half). Each added bit doubles the domain and halves the rate, so a
+/// single FRI query catches a non-low-degree codeword with proportionally higher
+/// probability: this is the query-count-versus-soundness lever a deployment vector
+/// sets to reach 128-bit security without paying for a hundred queries. The extra
+/// cost is a larger LDE, all prover side.
+pub(super) fn domain_params_blown<A: Air>(air: &A, extra_blowup_bits: u32) -> (u32, u32) {
     let t = 1usize << air.log_trace_len();
     let degree = air.constraint_degree().max(1);
     let bound = (degree * t).next_power_of_two();
-    let n = 2 * bound;
+    let n = (2 * bound) << extra_blowup_bits;
     let log_n = n.trailing_zeros();
     let fri_log_blowup = log_n - bound.trailing_zeros();
     (log_n, fri_log_blowup)

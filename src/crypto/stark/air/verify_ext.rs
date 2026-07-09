@@ -27,7 +27,7 @@ use super::super::fri_ext::fri_verify_ext;
 use super::super::merkle::{verify_path, verify_path_ext};
 use super::super::poly::eval_lagrange_ext;
 use super::super::transcript::Transcript;
-use super::composition::{compose_ext, domain_params, num_coeffs};
+use super::composition::{compose_ext, domain_params_blown, num_coeffs};
 use super::prove_ext::draw_ood_point_ext;
 use super::spec::AirExt;
 use super::types_ext::StarkProofExt;
@@ -42,10 +42,22 @@ pub fn stark_verify_ext<A: AirExt>(
     n_queries: usize,
     grind_bits: u32,
 ) -> bool {
+    stark_verify_ext_blown(air, proof, n_queries, grind_bits, 0)
+}
+
+/// The same verifier, with `extra_blowup_bits` matching the prover's. A deployment
+/// verifier pins this to the value the vector was proven at.
+pub fn stark_verify_ext_blown<A: AirExt>(
+    air: &A,
+    proof: &StarkProofExt,
+    n_queries: usize,
+    grind_bits: u32,
+    extra_blowup_bits: u32,
+) -> bool {
     let log_t = air.log_trace_len();
     let t = 1usize << log_t;
     let width = air.trace_width();
-    let (log_n, fri_log_blowup) = domain_params(air);
+    let (log_n, fri_log_blowup) = domain_params_blown(air, extra_blowup_bits);
     let n = 1usize << log_n;
     let window_size = air.window_size();
 

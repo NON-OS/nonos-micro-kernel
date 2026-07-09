@@ -2408,12 +2408,26 @@ fn gen_wired_recursive_public_selftest() {
     // to the fold's beta. The verifier gains exactly one product term in its compose
     // and one boundary pinning that column to one; everything else (transcript, FRI,
     // Merkle, Fp2, periodic eval) is unchanged. This is the custody-flip vector.
-    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Air};
+    use crate::crypto::stark::air::{stark_prove_ext_blown, stark_verify_ext_blown, Air};
     use alloc::string::String;
 
+    // Deployment soundness. The FRI runs at rate 1/2 by default (1 conjectured bit
+    // per query), so the 32-query test instances are only ~40-bit. For a fund gate
+    // the vector is generated at rate 1/16 (EXTRA_BLOWUP_BITS = 3, 4 conjectured
+    // bits per query): 32 queries give 128 bits and 16 grind bits add margin.
+    const EXTRA_BLOWUP_BITS: u32 = 3;
+    const N_QUERIES: usize = 32;
+    const GRIND_BITS: u32 = 16;
+
     let (wired, witness) = wired_recursive_verifier(RecursiveFault::None);
-    let proof = stark_prove_ext(&wired, &witness, 32, 8);
-    assert!(stark_verify_ext(&wired, &proof, 32, 8), "wired recursive public self-test does not verify");
+    let proof = stark_prove_ext_blown(&wired, &witness, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS);
+    assert!(stark_verify_ext_blown(&wired, &proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS), "wired recursive deployment self-test does not verify");
+
+    // The wiring must still reject at the deployment parameters, not just in the
+    // fast tests: a value the opening never committed breaks the grand product.
+    let (bad, bad_w) = wired_recursive_verifier(RecursiveFault::RebindValue(Fp::from_u64(0xD1FF)));
+    let bad_proof = stark_prove_ext_blown(&bad, &bad_w, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS);
+    assert!(!stark_verify_ext_blown(&bad, &bad_proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS), "a rebound value verified at deployment parameters");
 
     let mut bnd = String::from("[");
     for (i, (c, r, v)) in wired.boundary().iter().enumerate() {
@@ -2441,7 +2455,7 @@ fn gen_wired_recursive_public_selftest() {
 
     let bytes = crate::stark_selftest_gen::serialize(&proof);
     let json = alloc::format!(
-        "{{\n  \"engine\": \"nonos-money-grade-stark\",\n  \"air\": \"wired-recursive-verifier (fiat-shamir + merkle-opening + fri-fold + deep-consistency, fully bound)\",\n  \"note\": \"The WIRED recursive verification with its PUBLIC STATEMENT. Adds one grand-product column to the fused composition carrying two cross-stage cycles: a value-flow cycle binds the Merkle-opened value to the fold input and the DEEP trace value, and a transcript cycle binds the Fiat-Shamir challenge to the fold's first beta. So the four stages are provably about one value and driven by one challenge. _composeConstraints = the fused sum of the four stage transitions PLUS the one grand-product term; boundaries include the product column pinned to one at row 0 and row span. Everything else is unchanged from the fused vector.\",\n  \"wiring\": {{ \"wired_cols\": [0, 1], \"beta\": 5, \"gamma\": 7 }},\n  \"log_trace_len\": {}, \"trace_width\": {}, \"n_queries\": 32, \"grind_bits\": 8,\n  \"stages\": [\"fiat_shamir\", \"merkle_membership\", \"trace_fold\", \"deep_check\", \"grand_product\"],\n  \"boundaries\": {},\n  \"periodic_columns\": {},\n  \"proof_len_bytes\": {},\n  \"proof_hex\": \"{}\"\n}}\n",
+        "{{\n  \"engine\": \"nonos-money-grade-stark\",\n  \"air\": \"wired-recursive-verifier (fiat-shamir + merkle-opening + fri-fold + deep-consistency, fully bound)\",\n  \"note\": \"The WIRED recursive verification with its PUBLIC STATEMENT, at DEPLOYMENT soundness. Adds one grand-product column to the fused composition carrying two cross-stage cycles: a value-flow cycle binds the Merkle-opened value to the fold input and the DEEP trace value, and a transcript cycle binds the Fiat-Shamir challenge to the fold's first beta. So the four stages are provably about one value and driven by one challenge. The FRI runs at rate 1/16 (extra_blowup_bits=3, fri_log_blowup=4), so 32 queries give 128 conjectured bits and 16 grind bits add margin. _composeConstraints = the fused sum of the four stage transitions PLUS the one grand-product term; boundaries include the product column pinned to one at row 0 and row span.\",\n  \"wiring\": {{ \"wired_cols\": [0, 1], \"beta\": 5, \"gamma\": 7 }},\n  \"soundness\": {{ \"extra_blowup_bits\": 3, \"fri_log_blowup\": 4, \"conjectured_bits\": 144, \"regime\": \"proximity-gap-conjectured\" }},\n  \"log_trace_len\": {}, \"trace_width\": {}, \"n_queries\": 32, \"grind_bits\": 16,\n  \"stages\": [\"fiat_shamir\", \"merkle_membership\", \"trace_fold\", \"deep_check\", \"grand_product\"],\n  \"boundaries\": {},\n  \"periodic_columns\": {},\n  \"proof_len_bytes\": {},\n  \"proof_hex\": \"{}\"\n}}\n",
         wired.log_trace_len(), wired.trace_width(), bnd, per, bytes.len(), crate::stark_selftest_gen::hex(&bytes)
     );
     std::fs::write("/Users/ek/Desktop/NOX-SmartContract/spec/wired-recursive-selftest.json", &json).expect("write");
