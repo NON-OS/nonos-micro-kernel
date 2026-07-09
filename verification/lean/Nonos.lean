@@ -31,6 +31,7 @@ import Nonos.Stark.CopyConstraint
 import Nonos.Stark.Field
 import Nonos.Stark.Fold
 import Nonos.Stark.Fri
+import Nonos.Stark.Instance
 import Nonos.Stark.Lookup
 import Nonos.Stark.Merkle
 import Nonos.Stark.Permutation
