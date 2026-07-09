@@ -20,7 +20,7 @@ mod spec;
 
 #[cfg(feature = "nonos-dev-unverified-capsules")]
 pub use runner::spawn;
-pub use runner::spawn_verified;
+pub use runner::{spawn_verified, spawn_verified_as};
 #[cfg(feature = "nonos-dev-unverified-capsules")]
 pub use spec::CapsuleSpec;
 pub use spec::{CapsuleSpecVerified, SpawnError};

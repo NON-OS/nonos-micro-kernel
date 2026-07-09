@@ -22,4 +22,7 @@ pub(crate) struct InstallParams {
     pub elf: &'static [u8],
     pub caps_bits: u64,
     pub debug_tag: &'static [u8],
+    // Kernel-attested pid to parent the new process to instead of the
+    // caller. `None` preserves the default (caller-as-parent) behavior.
+    pub on_behalf_of: Option<u32>,
 }

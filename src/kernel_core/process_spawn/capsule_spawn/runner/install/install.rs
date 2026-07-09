@@ -23,7 +23,7 @@ use crate::ipc::nonos_inbox;
 use crate::kernel_core::process_spawn::{
     allocate_kernel_stack, allocate_user_stack, setup_initial_user_context,
 };
-use crate::process::core::{create_process, Priority, ProcessState};
+use crate::process::core::{create_process_with_parent, Priority, ProcessState};
 use crate::services::registry::{register_endpoint, required_caps};
 use alloc::format;
 
@@ -35,8 +35,14 @@ pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
     nonos_inbox::register_or_get_bootstrap_inbox(params.reply_inbox);
     register_endpoint(params.reply_inbox, params.reply_port, 0, 0)
         .map_err(|_| SpawnError::EndpointCollision)?;
-    let pid = create_process(params.name, ProcessState::Ready, Priority::Normal)
-        .map_err(|_| SpawnError::ProcessCreation)?;
+    let pid = create_process_with_parent(
+        params.name,
+        ProcessState::Ready,
+        Priority::Normal,
+        0,
+        params.on_behalf_of,
+    )
+    .map_err(|_| SpawnError::ProcessCreation)?;
     crate::process::with_process(pid, |pcb| pcb.set_reply_inbox(params.reply_inbox))
         .ok_or(SpawnError::ProcessCreation)?;
     nonos_inbox::register_inbox(&format!("proc.{}", pid), pid)
