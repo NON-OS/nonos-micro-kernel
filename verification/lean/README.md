@@ -46,6 +46,7 @@ the *code*:
 | `Stark.Fri.enough_folds_reach_a_constant` / `a_mismatched_final_layer_is_rejected` | `userland/stark_proofs` `fri_tests.rs` (honest low-degree verifies, high-degree rejected) + the `FinalLayerConstant` AIR in `recursive_verifier_tests.rs` |
 | `Stark.Lookup.non_table_value_has_zero_multiplicity` / `present_value_has_positive_multiplicity` | `userland/stark_proofs` `air_tests.rs` (`an_out_of_table_value_is_rejected`, `the_lookup_is_sound_under_a_transcript_challenge`) |
 | `Stark.Permutation.perm_preserves_count` / `a_missing_value_is_not_a_permutation` | `userland/stark_proofs` `air_tests.rs` (`a_permutation_argument_verifies`, `a_non_permutation_is_rejected`) |
+| `Stark.CopyConstraint.wiring_forces_equality` / `a_broken_wire_is_rejected` | `userland/stark_proofs` `air_tests.rs` (`a_value_is_bound_across_two_fused_regions`) |
 | `Stark.Transcript.challenge_is_determined` / `order_changes_the_state` | `userland/stark_proofs` `transcript_tests.rs` (determinism, one-bit change re-randomizes, `absorb_order_matters`) |
 | `Attestation.no_impersonation` / `sender_independent_of_claim` | `userland/fs_proofs` caller attestation (kernel mirror path, impersonation rejection, `proof_split_caller_no_impersonation` Kani) |
 | `Zeroization.no_secret_survives` / `reused_region_leaks_nothing` | kernel zeroization on capsule teardown and page reclaim |

@@ -34,6 +34,7 @@ import Nonos
 #print axioms Nonos.Secure.every_trace_is_secure
 #print axioms Nonos.Spawn.only_attested_capsules_run
 #print axioms Nonos.Stark.Attest.a_proof_for_one_capsule_is_rejected_for_another
+#print axioms Nonos.Stark.CopyConstraint.wiring_forces_equality
 #print axioms Nonos.Stark.Field.mul_distributes_over_add
 #print axioms Nonos.Stark.Fri.final_layer_accepts_iff_matches
 #print axioms Nonos.Stark.Lookup.non_table_value_has_zero_multiplicity
