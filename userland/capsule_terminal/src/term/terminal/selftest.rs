@@ -23,6 +23,7 @@ use crate::term::util::copy_into;
 
 mod jobs_test;
 mod kernel_api;
+mod proc_lifecycle;
 
 const READY_ATTEMPTS: u32 = 100_000;
 
@@ -291,6 +292,7 @@ fn run_ext(state: &mut State) {
     mark(b"status", visible_has(state, b"1"));
 
     kernel_api::run();
+    proc_lifecycle::run();
     jobs_test::run(state);
 }
 
