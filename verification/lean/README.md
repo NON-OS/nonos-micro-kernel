@@ -49,6 +49,7 @@ the *code*:
 | `Stark.CopyConstraint.wiring_forces_equality` / `a_broken_wire_is_rejected` | `userland/stark_proofs` `air_tests.rs` (`a_value_is_bound_across_two_fused_regions`) |
 | `Stark.Polynomial.eval_mul` / `zerofier_vanishes_at_a_point` / `zerofier_nonzero_off_the_points` | `userland/stark_proofs` `poly_tests.rs` (`evaluation_matches_the_defining_sum`, `the_low_degree_extension_recovers_the_polynomial`) |
 | `Stark.Polynomial.factor` / `root_divides` / `roots_divide` | the factor theorem and root structure, proved from scratch with core tactics; the degree-free form of "no more roots than degree", underpinning the FRI and argument soundness |
+| `Stark.Polynomial.agreement_divides_by_zerofier` | the Reed-Solomon agreement structure FRI proximity rests on: two polynomials agreeing on distinct points differ by a zerofier multiple |
 | `Stark.Transcript.challenge_is_determined` / `order_changes_the_state` | `userland/stark_proofs` `transcript_tests.rs` (determinism, one-bit change re-randomizes, `absorb_order_matters`) |
 | `Attestation.no_impersonation` / `sender_independent_of_claim` | `userland/fs_proofs` caller attestation (kernel mirror path, impersonation rejection, `proof_split_caller_no_impersonation` Kani) |
 | `Zeroization.no_secret_survives` / `reused_region_leaks_nothing` | kernel zeroization on capsule teardown and page reclaim |

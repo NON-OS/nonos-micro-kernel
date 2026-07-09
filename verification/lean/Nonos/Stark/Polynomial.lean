@@ -212,4 +212,27 @@ theorem roots_divide :
     simp only [zerofier, eval_mul, eval_linear]
     rw [Int.mul_assoc]
 
+/-- Polynomial subtraction. -/
+def sub (p q : Poly) : Poly := add p (scale (-1) q)
+
+theorem eval_sub (p q : Poly) (x : Int) :
+    eval (sub p q) x = eval p x - eval q x := by
+  simp only [sub, eval_add, eval_scale]
+  omega
+
+/-- The Reed-Solomon agreement structure FRI rests on: two polynomials that
+    agree at every point of a set of distinct points differ by a multiple of the
+    zerofier of those points. A codeword close to a low-degree polynomial, agree
+    at more positions than the degree, is that polynomial; the proximity test
+    turns disagreement into a zerofier that cannot divide a lower-degree word. -/
+theorem agreement_divides_by_zerofier (p q : Poly) (rs : List Int)
+    (hnd : rs.Nodup) (hagree : ∀ r ∈ rs, eval p r = eval q r) :
+    ∃ t, ∀ x, eval p x - eval q x = eval (zerofier rs) x * eval t x := by
+  obtain ⟨t, ht⟩ := roots_divide rs hnd (sub p q) (by
+    intro r hr
+    rw [eval_sub]
+    have := hagree r hr
+    omega)
+  exact ⟨t, fun x => by rw [← eval_sub]; exact ht x⟩
+
 end Nonos.Stark.Polynomial
