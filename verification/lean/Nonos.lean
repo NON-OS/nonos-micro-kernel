@@ -30,6 +30,7 @@ import Nonos.Stark.Field
 import Nonos.Stark.Fri
 import Nonos.Stark.Lookup
 import Nonos.Stark.Merkle
+import Nonos.Stark.Permutation
 import Nonos.Stark.Transcript
 import Nonos.Syscall
 import Nonos.UsbHid

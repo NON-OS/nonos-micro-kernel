@@ -38,6 +38,7 @@ import Nonos
 #print axioms Nonos.Stark.Fri.final_layer_accepts_iff_matches
 #print axioms Nonos.Stark.Lookup.non_table_value_has_zero_multiplicity
 #print axioms Nonos.Stark.Merkle.distinct_leaves_give_distinct_roots
+#print axioms Nonos.Stark.Permutation.perm_preserves_count
 #print axioms Nonos.Stark.Transcript.order_changes_the_state
 #print axioms Nonos.Syscall.decode_agrees_with_the_registry
 #print axioms Nonos.UsbHid.bindings_never_exceed_the_cap
