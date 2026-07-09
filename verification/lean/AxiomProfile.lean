@@ -48,6 +48,9 @@ import Nonos
 #print axioms Nonos.Stark.Lookup.non_table_value_has_zero_multiplicity
 #print axioms Nonos.Stark.Merkle.distinct_leaves_give_distinct_roots
 #print axioms Nonos.Stark.Permutation.perm_preserves_count
+#print axioms Nonos.Stark.RunningSum.final_is_total
+#print axioms Nonos.Stark.RunningSum.conservation
+#print axioms Nonos.Stark.RunningSum.follows_pins_the_trace
 #print axioms Nonos.Stark.Polynomial.eval_mul
 #print axioms Nonos.Stark.Polynomial.zerofier_nonzero_off_the_points
 #print axioms Nonos.Stark.Polynomial.factor
