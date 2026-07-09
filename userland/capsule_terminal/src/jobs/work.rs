@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec::Vec;
+
 use crate::command::builtin::nox::install::InstallJob;
 use crate::command::builtin::ping::{emit_probe, PingJob};
 use crate::command::output::Output;
@@ -34,6 +36,7 @@ pub enum JobWork {
     Ping(PingJob),
     InstallDrain(InstallJob),
     PipelineStages(PipelineJob),
+    ExternalStage { pid: u32, in_buf: Vec<u8>, in_cursor: usize },
 }
 
 // Step a job's work by one bounded slice. A cancelled job is finished
@@ -54,6 +57,9 @@ pub fn step(work: &mut JobWork, out: &mut Output<'_>, cancel: bool) -> JobProgre
             }
         },
         JobWork::InstallDrain(job) => job.step_once(out),
+        JobWork::ExternalStage { pid, in_buf, in_cursor } => {
+            super::external::step_external(*pid, in_buf, in_cursor, out)
+        }
         JobWork::PipelineStages(_) => JobProgress::Running,
     }
 }
