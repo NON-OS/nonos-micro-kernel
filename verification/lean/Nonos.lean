@@ -24,6 +24,7 @@ import Nonos.NetParse
 import Nonos.Paging
 import Nonos.Path
 import Nonos.Secure
+import Nonos.Spawn
 import Nonos.Stark.Attest
 import Nonos.Stark.Field
 import Nonos.Stark.Fri
