@@ -43,6 +43,8 @@ structure State where
   mapped : Nat → Option Isolation.Perm
   copies : List (Nat × Nat)
   floor : Nat
+  admitted : List Nat
+  attest : Nat → Bool
 
 /-- The security-relevant transitions. -/
 inductive Syscall where
@@ -52,6 +54,7 @@ inductive Syscall where
   | mapPage (page : Nat) (p : Isolation.Perm)
   | userCopy (addr len : Nat)
   | boot (v : Nat)
+  | spawn (cap : Nat)
 
 /-- One step of the machine. Every arm is the guard the kernel enforces:
     attenuation meets the caller's own token, a transfer moves only a right
@@ -79,6 +82,8 @@ def step (s : State) : Syscall → State
       else s
   | .boot v =>
       { s with floor := (AntiRollback.update { floor := s.floor } v).floor }
+  | .spawn cap =>
+      if s.attest cap then { s with admitted := cap :: s.admitted } else s
 
 /-- A whole execution. -/
 def run (s : State) : List Syscall → State
@@ -98,26 +103,30 @@ structure Secure (s0 s : State) : Prop where
     ¬(pm.write = true ∧ pm.execute = true)
   copies_in_user_space : ∀ c ∈ s.copies, ∀ i < c.2, c.1 + i ≤ Isolation.userEnd
   floor_monotone : s0.floor ≤ s.floor
+  admitted_attested : ∀ c ∈ s.admitted, s.attest c = true
 
 /-- A state with no W^X mapping and no logged copies is secure against
     itself: the induction base. -/
 theorem secure_refl (s0 : State)
     (hwx : ∀ page pm, s0.mapped page = some pm →
       ¬(pm.write = true ∧ pm.execute = true))
-    (hcopies : s0.copies = []) : Secure s0 s0 := by
-  refine ⟨fun b h => h, hwx, ?_, Nat.le_refl _⟩
-  intro c hc
-  rw [hcopies] at hc
-  exact absurd hc (List.not_mem_nil c)
+    (hcopies : s0.copies = []) (hadmit : s0.admitted = []) : Secure s0 s0 := by
+  refine ⟨fun b h => h, hwx, ?_, Nat.le_refl _, ?_⟩
+  · intro c hc
+    rw [hcopies] at hc
+    exact absurd hc (List.not_mem_nil c)
+  · intro c hc
+    rw [hadmit] at hc
+    exact absurd hc (List.not_mem_nil c)
 
 /-- The heart of the theorem: every single transition preserves the whole
     conjunction. -/
 theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     (h : Secure s0 s) : Secure s0 (step s sc) := by
-  obtain ⟨hauth, hwx, hcopy, hfloor⟩ := h
+  obtain ⟨hauth, hwx, hcopy, hfloor, hadm⟩ := h
   cases sc with
   | attenuate pid mask =>
-    refine ⟨?_, hwx, hcopy, hfloor⟩
+    refine ⟨?_, hwx, hcopy, hfloor, hadm⟩
     intro b ⟨p, hp⟩
     by_cases hpid : p = pid
     · subst hpid
@@ -129,7 +138,7 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     simp only [step]
     split
     · rename_i hsrc
-      refine ⟨?_, hwx, hcopy, hfloor⟩
+      refine ⟨?_, hwx, hcopy, hfloor, hadm⟩
       intro b ⟨p, hp⟩
       by_cases hpd : p = dst
       · subst hpd
@@ -145,9 +154,9 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
           exact hauth b ⟨src, hsrc⟩
       · have hp' : (s.token p) b = true := by simpa [hpd] using hp
         exact hauth b ⟨p, hp'⟩
-    · exact ⟨hauth, hwx, hcopy, hfloor⟩
+    · exact ⟨hauth, hwx, hcopy, hfloor, hadm⟩
   | revoke pid b' =>
-    refine ⟨?_, hwx, hcopy, hfloor⟩
+    refine ⟨?_, hwx, hcopy, hfloor, hadm⟩
     intro b ⟨p, hp⟩
     by_cases hpid : p = pid
     · subst hpid
@@ -158,9 +167,9 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
   | mapPage page p =>
     simp only [step]
     split
-    · exact ⟨hauth, hwx, hcopy, hfloor⟩
+    · exact ⟨hauth, hwx, hcopy, hfloor, hadm⟩
     · rename_i hnotwx
-      refine ⟨hauth, ?_, hcopy, hfloor⟩
+      refine ⟨hauth, ?_, hcopy, hfloor, hadm⟩
       intro q pm hq
       by_cases hqp : q = page
       · subst hqp
@@ -173,7 +182,7 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     simp only [step]
     split
     · rename_i hacc
-      refine ⟨hauth, hwx, ?_, hfloor⟩
+      refine ⟨hauth, hwx, ?_, hfloor, hadm⟩
       intro c hc
       simp at hc
       obtain hnew | hold := hc
@@ -182,11 +191,22 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
         obtain ⟨_, _, hbound⟩ := hacc
         omega
       · exact hcopy c hold
-    · exact ⟨hauth, hwx, hcopy, hfloor⟩
+    · exact ⟨hauth, hwx, hcopy, hfloor, hadm⟩
   | boot v =>
-    refine ⟨hauth, hwx, hcopy, ?_⟩
+    refine ⟨hauth, hwx, hcopy, ?_, hadm⟩
     exact Nat.le_trans hfloor
       (AntiRollback.update_never_lowers_floor { floor := s.floor } v)
+  | spawn cap =>
+    simp only [step]
+    by_cases hatt : s.attest cap = true
+    · rw [if_pos hatt]
+      refine ⟨hauth, hwx, hcopy, hfloor, ?_⟩
+      intro c hc
+      rcases List.mem_cons.mp hc with hc | hc
+      · subst hc; exact hatt
+      · exact hadm c hc
+    · rw [if_neg hatt]
+      exact ⟨hauth, hwx, hcopy, hfloor, hadm⟩
 
 /-- Security is preserved along any run, from any secure intermediate
     state. -/
@@ -202,7 +222,8 @@ theorem run_preserves_secure (s0 : State) (tr : List Syscall) (s : State)
 theorem every_trace_is_secure (s0 : State) (tr : List Syscall)
     (hwx : ∀ page pm, s0.mapped page = some pm →
       ¬(pm.write = true ∧ pm.execute = true))
-    (hcopies : s0.copies = []) : Secure s0 (run s0 tr) :=
-  run_preserves_secure s0 tr s0 (secure_refl s0 hwx hcopies)
+    (hcopies : s0.copies = []) (hadmit : s0.admitted = []) :
+    Secure s0 (run s0 tr) :=
+  run_preserves_secure s0 tr s0 (secure_refl s0 hwx hcopies hadmit)
 
 end Nonos.Secure
