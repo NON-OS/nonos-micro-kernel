@@ -26,8 +26,8 @@
 //! high-degree case: two degree-seven transition constraints over a width-two
 //! trace.
 
-use super::super::field::Fp;
-use super::spec::Air;
+use super::super::field::{Felt, Fp, Fp2};
+use super::spec::{Air, AirExt};
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -37,6 +37,22 @@ pub struct Permutation2 {
     pub rc1: Fp,
     /// The public final state after the whole chain.
     pub out: [Fp; 2],
+}
+
+impl Permutation2 {
+    fn transition_impl<F: Felt>(&self, window: &[F], _periodic: &[F]) -> Vec<F> {
+        let (x, y, x_next, y_next) = (window[0], window[1], window[2], window[3]);
+        alloc::vec![
+            x_next - (x.pow(7) + y + F::from_base(self.rc0)),
+            y_next - (x + y.pow(7) + F::from_base(self.rc1))
+        ]
+    }
+}
+
+impl AirExt for Permutation2 {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
+    }
 }
 
 impl Air for Permutation2 {
@@ -60,10 +76,8 @@ impl Air for Permutation2 {
         2
     }
 
-    fn transition(&self, window: &[Fp], _periodic: &[Fp]) -> Vec<Fp> {
-        // window = [x, y, x_next, y_next].
-        let (x, y, x_next, y_next) = (window[0], window[1], window[2], window[3]);
-        vec![x_next - (x.pow(7) + y + self.rc0), y_next - (x + y.pow(7) + self.rc1)]
+    fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
+        self.transition_impl(window, periodic)
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {

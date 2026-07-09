@@ -23,8 +23,8 @@
 //! region of a trace to where it is consumed in another, without laying them out
 //! adjacently.
 
-use super::super::field::Fp;
-use super::spec::Air;
+use super::super::field::{Felt, Fp, Fp2};
+use super::spec::{Air, AirExt};
 use alloc::vec::Vec;
 
 pub struct CopyConstraint {
@@ -67,6 +67,29 @@ impl CopyConstraint {
         }
         trace
     }
+
+    /// The grand-product transition over any field: in the product region the
+    /// running product accumulates `(w + b*id + g)` against `(w + b*sigma + g)`;
+    /// elsewhere it is carried. `beta`/`gamma` are base-field challenges, embedded.
+    fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
+        let w = window[0];
+        let z = window[1];
+        let z_next = window[3];
+        let id = periodic[0];
+        let sig = periodic[1];
+        let sel = periodic[2];
+        let b = F::from_base(self.beta);
+        let g = F::from_base(self.gamma);
+        let product = z_next * (w + b * sig + g) - z * (w + b * id + g);
+        let carry = z_next - z;
+        alloc::vec![sel * product + (F::ONE - sel) * carry]
+    }
+}
+
+impl AirExt for CopyConstraint {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
+    }
 }
 
 impl Air for CopyConstraint {
@@ -106,19 +129,7 @@ impl Air for CopyConstraint {
     }
 
     fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
-        let w = window[0];
-        let z = window[1];
-        let z_next = window[3];
-        let id = periodic[0];
-        let sig = periodic[1];
-        let sel = periodic[2];
-        let (b, g) = (self.beta, self.gamma);
-
-        // z_next * (w + b*sigma + g) = z * (w + b*id + g) in the product region;
-        // z carried otherwise.
-        let product = z_next * (w + b * sig + g) - z * (w + b * id + g);
-        let carry = z_next - z;
-        alloc::vec![sel * product + (Fp::ONE - sel) * carry]
+        self.transition_impl(window, periodic)
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {

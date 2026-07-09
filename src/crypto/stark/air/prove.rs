@@ -52,17 +52,6 @@ pub(super) fn draw_ood_point(transcript: &mut Transcript, shift: Fp, n: usize, t
 /// `trace[row * width + col]`. The evaluation domain and the low-degree bound
 /// are derived from the AIR's constraint degree.
 pub fn stark_prove<A: Air>(air: &A, trace: &[Fp], n_queries: usize) -> StarkProof {
-    stark_prove_bound(air, trace, n_queries, &[])
-}
-
-/// Prove `trace` satisfies `air`, binding the proof to `context` by absorbing it
-/// before any commitment. An empty context reproduces `stark_prove` exactly.
-pub fn stark_prove_bound<A: Air>(
-    air: &A,
-    trace: &[Fp],
-    n_queries: usize,
-    context: &[u8],
-) -> StarkProof {
     let log_t = air.log_trace_len();
     let t = 1usize << log_t;
     let width = air.trace_width();
@@ -78,7 +67,6 @@ pub fn stark_prove_bound<A: Air>(
     // Each column is extended onto the coset by transform and committed; its
     // coefficients are kept for the out-of-domain evaluations.
     let mut transcript = Transcript::new(b"NONOS-STARK");
-    transcript.absorb_context(context);
     let mut trace_d: Vec<Vec<Fp>> = Vec::with_capacity(width);
     let mut trace_coeffs: Vec<Vec<Fp>> = Vec::with_capacity(width);
     let mut trace_trees: Vec<MerkleTree> = Vec::with_capacity(width);

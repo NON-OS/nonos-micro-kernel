@@ -23,9 +23,9 @@
 //! challenges in circuit; a bitwise transcript hash could not be proven, an
 //! algebraic one can.
 
-use super::super::field::Fp;
+use super::super::field::{Felt, Fp, Fp2};
 use super::poseidon::{Poseidon, WIDTH};
-use super::spec::Air;
+use super::spec::{Air, AirExt};
 use alloc::vec::Vec;
 
 pub struct FiatShamir {
@@ -55,6 +55,30 @@ impl FiatShamir {
 
     fn blocks(&self) -> usize {
         (1usize << self.log_slots) - 1
+    }
+
+    fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
+        let mut state = [F::ZERO; WIDTH];
+        state.copy_from_slice(&window[..WIDTH]);
+        let mut rc = [F::ZERO; WIDTH];
+        rc.copy_from_slice(&periodic[..WIDTH]);
+        let bnd = periodic[WIDTH];
+        let input = periodic[WIDTH + 1];
+
+        let pr = self.hasher.round_generic(&state, &rc);
+
+        let mut out = Vec::with_capacity(WIDTH);
+        for (j, next) in window[WIDTH..2 * WIDTH].iter().enumerate() {
+            let extra = if j == 0 { bnd * input } else { F::ZERO };
+            out.push(*next - (pr[j] + extra));
+        }
+        out
+    }
+}
+
+impl AirExt for FiatShamir {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
     }
 }
 
@@ -102,23 +126,7 @@ impl Air for FiatShamir {
     }
 
     fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
-        let mut state = [Fp::ZERO; WIDTH];
-        state.copy_from_slice(&window[..WIDTH]);
-        let mut rc = [Fp::ZERO; WIDTH];
-        rc.copy_from_slice(&periodic[..WIDTH]);
-        let bnd = periodic[WIDTH];
-        let input = periodic[WIDTH + 1];
-
-        let pr = self.hasher.round_with_rc(&state, &rc);
-
-        let mut out = Vec::with_capacity(WIDTH);
-        for (j, next) in window[WIDTH..2 * WIDTH].iter().enumerate() {
-            // Every lane follows the permutation; the first also absorbs the input
-            // at a boundary.
-            let extra = if j == 0 { bnd * input } else { Fp::ZERO };
-            out.push(*next - (pr[j] + extra));
-        }
-        out
+        self.transition_impl(window, periodic)
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {

@@ -24,8 +24,8 @@
 //! its final value is pinned at a checkpoint, so the last row stays free as the
 //! engine requires.
 
-use super::super::field::Fp;
-use super::spec::Air;
+use super::super::field::{Felt, Fp, Fp2};
+use super::spec::{Air, AirExt};
 use alloc::vec::Vec;
 
 pub struct Permutation {
@@ -44,6 +44,24 @@ impl Permutation {
 
     fn len(&self) -> usize {
         1usize << self.log_n
+    }
+
+    fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
+        let z = window[0];
+        let z_next = window[1];
+        let a = periodic[0];
+        let b = periodic[1];
+        let sel = periodic[2];
+        let g = F::from_base(self.gamma);
+        let product = z_next * (b + g) - z * (a + g);
+        let carry = z_next - z;
+        alloc::vec![sel * product + (F::ONE - sel) * carry]
+    }
+}
+
+impl AirExt for Permutation {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
     }
 }
 
@@ -86,18 +104,7 @@ impl Air for Permutation {
     }
 
     fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
-        let z = window[0];
-        let z_next = window[1];
-        let a = periodic[0];
-        let b = periodic[1];
-        let sel = periodic[2];
-        let g = self.gamma;
-
-        // In the product region: z_next * (b + g) = z * (a + g).
-        // Outside it: z is carried unchanged.
-        let product = z_next * (b + g) - z * (a + g);
-        let carry = z_next - z;
-        alloc::vec![sel * product + (Fp::ONE - sel) * carry]
+        self.transition_impl(window, periodic)
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {

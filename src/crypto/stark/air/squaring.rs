@@ -16,14 +16,26 @@
 
 //! The squaring AIR: a chain `t[i+1] = t[i]^2` from a public seed.
 
-use super::super::field::Fp;
-use super::spec::Air;
+use super::super::field::{Felt, Fp, Fp2};
+use super::spec::{Air, AirExt};
 use alloc::vec;
 use alloc::vec::Vec;
 
 pub struct Squaring {
     pub log_t: u32,
     pub seed: Fp,
+}
+
+impl Squaring {
+    fn transition_impl<F: Felt>(&self, window: &[F], _periodic: &[F]) -> Vec<F> {
+        vec![window[1] - window[0] * window[0]]
+    }
+}
+
+impl AirExt for Squaring {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
+    }
 }
 
 impl Air for Squaring {
@@ -47,9 +59,8 @@ impl Air for Squaring {
         1
     }
 
-    fn transition(&self, window: &[Fp], _periodic: &[Fp]) -> Vec<Fp> {
-        // f(g*x) - f(x)^2
-        vec![window[1] - window[0] * window[0]]
+    fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
+        self.transition_impl(window, periodic)
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {

@@ -23,8 +23,8 @@
 //! verification step to become AIR constraints; composed with the Merkle
 //! opening gadget and the transcript, it is a recursive FRI verifier.
 
-use super::super::field::Fp;
-use super::spec::Air;
+use super::super::field::{Felt, Fp, Fp2};
+use super::spec::{Air, AirExt};
 use alloc::vec::Vec;
 
 pub struct FriFold {
@@ -50,6 +50,32 @@ impl FriFold {
         final_value: Fp,
     ) -> FriFold {
         FriFold { log_layers, n_folds, x_inv, beta, dir, final_value }
+    }
+
+    /// The fold-verification constraint over any field: recompute the fold from the
+    /// pair `(a, b)` under the layer challenge and require it to land in the next
+    /// layer's slot chosen by the direction bit. `inv2` is a base constant embedded.
+    fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
+        let (a, b) = (window[0], window[1]);
+        let (next_a, next_b) = (window[2], window[3]);
+        let sel = periodic[0];
+        let x_inv = periodic[1];
+        let beta = periodic[2];
+        let dir = periodic[3];
+
+        let inv2 = F::from_base(Fp::from_u64(2).inv());
+        let even = (a + b) * inv2;
+        let odd = (a - b) * inv2 * x_inv;
+        let folded = even + beta * odd;
+
+        let expected = (F::ONE - dir) * next_a + dir * next_b;
+        alloc::vec![sel * (folded - expected)]
+    }
+}
+
+impl AirExt for FriFold {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
     }
 }
 
@@ -96,21 +122,7 @@ impl Air for FriFold {
     }
 
     fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
-        let (a, b) = (window[0], window[1]);
-        let (next_a, next_b) = (window[2], window[3]);
-        let sel = periodic[0];
-        let x_inv = periodic[1];
-        let beta = periodic[2];
-        let dir = periodic[3];
-
-        let inv2 = Fp::from_u64(2).inv();
-        let even = (a + b) * inv2;
-        let odd = (a - b) * inv2 * x_inv;
-        let folded = even + beta * odd;
-
-        let expected = (Fp::ONE - dir) * next_a + dir * next_b;
-        // Enforced only on the active folding rows.
-        alloc::vec![sel * (folded - expected)]
+        self.transition_impl(window, periodic)
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {
