@@ -33,6 +33,8 @@ import Nonos
 #print axioms Nonos.Path.leading_dotdot_neutralized
 #print axioms Nonos.Secure.every_trace_is_secure
 #print axioms Nonos.Spawn.only_attested_capsules_run
+#print axioms Nonos.Stark.AssociationSet.an_excluded_deposit_cannot_pass
+#print axioms Nonos.Stark.AssociationSet.the_registry_only_grows
 #print axioms Nonos.Stark.Attest.a_proof_for_one_capsule_is_rejected_for_another
 #print axioms Nonos.Stark.Constraint.constraint_holds_iff_quotient_exists
 #print axioms Nonos.Stark.Constraint.the_quotient_is_pinned
