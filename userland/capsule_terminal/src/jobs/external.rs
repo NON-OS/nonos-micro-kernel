@@ -14,10 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_pid_alive, mk_proc_input, mk_proc_output, mk_wait};
+use nonos_libc::{mk_proc_input, mk_proc_output, mk_wait};
 
 use crate::command::output::Output;
 use crate::jobs::JobProgress;
+
+const ERRNO_TIMEDOUT: i64 = -110;
+const MAX_PROC_INPUT: usize = 1024 * 1024;
 
 pub fn step_external(
     pid: u32,
@@ -31,11 +34,12 @@ pub fn step_external(
     if n > 0 {
         out.feed_raw(&buf[..(n as usize).min(buf.len())]);
     }
-    if !mk_pid_alive(pid) {
-        drain_remaining(pid, out, &mut buf);
-        return JobProgress::Done(mk_wait(pid as u64, 0) as i32);
+    let status = mk_wait(pid as u64, 0);
+    if status == ERRNO_TIMEDOUT {
+        return JobProgress::Running;
     }
-    JobProgress::Running
+    drain_remaining(pid, out, &mut buf);
+    JobProgress::Done(status as i32)
 }
 
 fn feed_stdin(pid: u32, in_buf: &[u8], in_cursor: &mut usize) {
@@ -43,9 +47,10 @@ fn feed_stdin(pid: u32, in_buf: &[u8], in_cursor: &mut usize) {
         return;
     }
     let pending = &in_buf[*in_cursor..];
-    let sent = mk_proc_input(pid as u64, pending.as_ptr(), pending.len() as u64);
+    let chunk = &pending[..pending.len().min(MAX_PROC_INPUT)];
+    let sent = mk_proc_input(pid as u64, chunk.as_ptr(), chunk.len() as u64);
     if sent > 0 {
-        *in_cursor += (sent as usize).min(pending.len());
+        *in_cursor += (sent as usize).min(chunk.len());
     }
 }
 
