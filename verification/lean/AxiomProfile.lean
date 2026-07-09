@@ -37,6 +37,7 @@ import Nonos
 #print axioms Nonos.Stark.Constraint.constraint_holds_iff_quotient_exists
 #print axioms Nonos.Stark.CopyConstraint.wiring_forces_equality
 #print axioms Nonos.Stark.Field.mul_distributes_over_add
+#print axioms Nonos.Stark.Extension.low_degree_extension_is_unique
 #print axioms Nonos.Stark.Fold.eval_split
 #print axioms Nonos.Stark.Instance.honest_run_has_a_quotient
 #print axioms Nonos.Stark.Instance.tampered_run_has_no_quotient

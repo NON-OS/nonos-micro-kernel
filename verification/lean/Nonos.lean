@@ -30,6 +30,7 @@ import Nonos.Stark.Constraint
 import Nonos.Stark.CopyConstraint
 import Nonos.Stark.Field
 import Nonos.Stark.Fold
+import Nonos.Stark.Extension
 import Nonos.Stark.Fri
 import Nonos.Stark.Instance
 import Nonos.Stark.Lookup
