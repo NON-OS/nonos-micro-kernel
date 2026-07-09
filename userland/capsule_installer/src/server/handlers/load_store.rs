@@ -19,6 +19,8 @@ use alloc::vec::Vec;
 use crate::protocol::{encode_response, Request, EINVAL};
 use nonos_libc::{mk_capsule_load, CapsuleLoadRequest};
 
+// on_behalf_of below is intentionally left 0 (unattributed): this handler is
+// the direct VFS-store load path, not the broker-attributed spawn path.
 pub fn load_store(req: Request<'_>) -> Vec<u8> {
     const HEAD_LEN: usize = 28;
     if req.payload.len() < HEAD_LEN {
