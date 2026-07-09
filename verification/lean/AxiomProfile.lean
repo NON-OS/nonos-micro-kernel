@@ -42,6 +42,8 @@ import Nonos
 #print axioms Nonos.Stark.Permutation.perm_preserves_count
 #print axioms Nonos.Stark.Polynomial.eval_mul
 #print axioms Nonos.Stark.Polynomial.zerofier_nonzero_off_the_points
+#print axioms Nonos.Stark.Polynomial.factor
+#print axioms Nonos.Stark.Polynomial.roots_divide
 #print axioms Nonos.Stark.Transcript.order_changes_the_state
 #print axioms Nonos.Syscall.decode_agrees_with_the_registry
 #print axioms Nonos.UsbHid.bindings_never_exceed_the_cap

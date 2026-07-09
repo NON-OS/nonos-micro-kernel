@@ -141,4 +141,75 @@ theorem zerofier_nonzero_off_the_points (x : Int) :
     · exact hr h0
     · exact hrest h0
 
+/-- The ring identity the factor step needs, with the coefficients abstracted so
+    it is pure integer algebra. Proven by hand since core Lean has no `ring`. -/
+private theorem factor_identity (c a b x r : Int) :
+    c + x * (a + (x - r) * b) = c + r * a + (x - r) * (a + x * b) := by
+  have e1 : x * (a + (x - r) * b) = x * a + x * ((x - r) * b) := Int.mul_add x a ((x - r) * b)
+  have e2 : (x - r) * (a + x * b) = (x - r) * a + (x - r) * (x * b) := Int.mul_add (x - r) a (x * b)
+  have e3 : (x - r) * a = x * a - r * a := Int.sub_mul x r a
+  have e4 : x * ((x - r) * b) = (x - r) * (x * b) := by
+    rw [← Int.mul_assoc, Int.mul_comm x (x - r), Int.mul_assoc]
+  rw [e1, e2, e3, e4]
+  omega
+
+/-- The factor theorem: any polynomial splits as its value at `r` plus `(X - r)`
+    times a quotient. The quotient is `eval tail r :: quotient tail`, built by the
+    same recursion synthetic division uses. This is the algebraic heart of
+    root counting. -/
+theorem factor (p : Poly) (r : Int) :
+    ∃ q, ∀ x, eval p x = eval p r + (x - r) * eval q x := by
+  induction p with
+  | nil => exact ⟨[], fun x => by simp [eval]⟩
+  | cons c p ih =>
+    obtain ⟨q, hq⟩ := ih
+    refine ⟨eval p r :: q, fun x => ?_⟩
+    simp only [eval]
+    rw [hq x]
+    exact factor_identity c (eval p r) (eval q x) x r
+
+/-- A root lets you divide it out: if `p` vanishes at `r`, then `p = (X - r) q`
+    for a quotient `q`. This is the step that turns each root into a linear
+    factor, the basis of the bound that a polynomial has no more roots than its
+    degree. -/
+theorem root_divides (p : Poly) (r : Int) (h : eval p r = 0) :
+    ∃ q, ∀ x, eval p x = (x - r) * eval q x := by
+  obtain ⟨q, hq⟩ := factor p r
+  exact ⟨q, fun x => by rw [hq x, h]; omega⟩
+
+/-- The root structure theorem: if a polynomial vanishes at every point of a list
+    of distinct points, the zerofier of those points divides it. Proved by
+    dividing out one linear factor per root; a value present in the roots but not
+    yet divided cannot be a root of the linear factor, so the domain forces the
+    quotient to vanish there too. This is the degree-free form of the bound that
+    a polynomial has no more roots than its degree: more distinct roots than the
+    degree would demand a zerofier of higher degree than the polynomial, so the
+    polynomial is zero. -/
+theorem roots_divide :
+    ∀ (rs : List Int), rs.Nodup → ∀ (p : Poly), (∀ r ∈ rs, eval p r = 0) →
+      ∃ s, ∀ x, eval p x = eval (zerofier rs) x * eval s x := by
+  intro rs
+  induction rs with
+  | nil =>
+    intro _ p _
+    exact ⟨p, fun x => by simp [zerofier, eval]⟩
+  | cons r rs ih =>
+    intro hnd p hvan
+    obtain ⟨hrnotin, hrsnd⟩ := List.nodup_cons.mp hnd
+    obtain ⟨q, hq⟩ := root_divides p r (hvan r (List.mem_cons_self r rs))
+    have hqvan : ∀ r' ∈ rs, eval q r' = 0 := by
+      intro r' hr'
+      have hz : (r' - r) * eval q r' = 0 := by
+        rw [← hq r']; exact hvan r' (List.mem_cons_of_mem r hr')
+      rcases Int.mul_eq_zero.mp hz with h0 | h0
+      · have hre : r' = r := by omega
+        rw [hre] at hr'
+        exact absurd hr' hrnotin
+      · exact h0
+    obtain ⟨s, hs⟩ := ih hrsnd q hqvan
+    refine ⟨s, fun x => ?_⟩
+    rw [hq x, hs x]
+    simp only [zerofier, eval_mul, eval_linear]
+    rw [Int.mul_assoc]
+
 end Nonos.Stark.Polynomial
