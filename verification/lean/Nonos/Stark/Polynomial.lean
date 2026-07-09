@@ -212,6 +212,105 @@ theorem roots_divide :
     simp only [zerofier, eval_mul, eval_linear]
     rw [Int.mul_assoc]
 
+/-- A concrete quotient by `(X - r)`, the coefficients synthetic division
+    produces. Independent of the head coefficient, which the linear factor
+    absorbs into the remainder. -/
+def quo (r : Int) : Poly → Poly
+  | [] => []
+  | _ :: p => eval p r :: quo r p
+
+theorem eval_quo (p : Poly) (r x : Int) :
+    eval p x = eval p r + (x - r) * eval (quo r p) x := by
+  induction p with
+  | nil => simp [quo, eval]
+  | cons c p ih =>
+    simp only [quo, eval]
+    rw [ih]
+    exact factor_identity c (eval p r) (eval (quo r p) x) x r
+
+/-- Appending a zero coefficient does not change the value. -/
+theorem eval_snoc_zero (p : Poly) (x : Int) : eval (p ++ [0]) x = eval p x := by
+  induction p with
+  | nil => simp [eval]
+  | cons c p ih =>
+    have hc : (c :: p) ++ [0] = c :: (p ++ [0]) := List.cons_append c p [0]
+    rw [hc]
+    simp only [eval]
+    rw [ih]
+
+/-- The concrete quotient always ends in a zero, so it can be trimmed to a
+    strictly shorter polynomial with the same value: `(X - r)` lowers the degree
+    by exactly one. This is what makes the root count strict. -/
+theorem quo_snoc_zero (p : Poly) (r : Int) (hp : p ≠ []) :
+    ∃ q0, quo r p = q0 ++ [0] ∧ q0.length + 1 = p.length := by
+  induction p with
+  | nil => exact absurd rfl hp
+  | cons c p ih =>
+    by_cases hpe : p = []
+    · subst hpe
+      exact ⟨[], by simp [quo, eval], by simp⟩
+    · obtain ⟨q0, hq0, hlen⟩ := ih hpe
+      refine ⟨eval p r :: q0, ?_, ?_⟩
+      · simp [quo, hq0]
+      · simp only [List.length_cons] at hlen ⊢; omega
+
+/-- A root divides out with a strictly shorter quotient. -/
+theorem root_divides_shorter (p : Poly) (r : Int) (hp : p ≠ []) (h : eval p r = 0) :
+    ∃ q, (∀ x, eval p x = (x - r) * eval q x) ∧ q.length + 1 = p.length := by
+  obtain ⟨q0, hq0, hlen⟩ := quo_snoc_zero p r hp
+  refine ⟨q0, fun x => ?_, hlen⟩
+  rw [eval_quo p r x, h, hq0, eval_snoc_zero]
+  omega
+
+private theorem root_bound_aux :
+    ∀ (n : Nat) (p : Poly), p.length ≤ n → ∀ (rs : List Int), rs.Nodup →
+      (∀ r ∈ rs, eval p r = 0) → p.length ≤ rs.length → ∀ x, eval p x = 0 := by
+  intro n
+  induction n with
+  | zero =>
+    intro p hpl _ _ _ _ x
+    cases p with
+    | nil => simp [eval]
+    | cons c p => simp only [List.length_cons] at hpl; omega
+  | succ n ih =>
+    intro p hpl rs hnd hvan hlen x
+    by_cases hpe : p = []
+    · subst hpe; simp [eval]
+    · cases rs with
+      | nil =>
+        exfalso
+        rw [List.length_nil] at hlen
+        cases p with
+        | nil => exact hpe rfl
+        | cons _ _ => simp only [List.length_cons] at hlen; omega
+      | cons r0 rs' =>
+        obtain ⟨hr0, hrs'⟩ := List.nodup_cons.mp hnd
+        obtain ⟨q, hq, hqlen⟩ :=
+          root_divides_shorter p r0 hpe (hvan r0 (List.mem_cons_self r0 rs'))
+        have hqvan : ∀ r' ∈ rs', eval q r' = 0 := by
+          intro r' hr'
+          have hz : (r' - r0) * eval q r' = 0 := by
+            rw [← hq r']; exact hvan r' (List.mem_cons_of_mem r0 hr')
+          rcases Int.mul_eq_zero.mp hz with h0 | h0
+          · have : r' = r0 := by omega
+            rw [this] at hr'; exact absurd hr' hr0
+          · exact h0
+        have hqn : q.length ≤ n := by omega
+        have hqrs : q.length ≤ rs'.length := by
+          simp only [List.length_cons] at hlen; omega
+        rw [hq x, ih q hqn rs' hrs' hqvan hqrs x, Int.mul_zero]
+
+/-- The numeric root bound: a polynomial that vanishes at as many distinct points
+    as its length is functionally zero. Equivalently, a polynomial that is not
+    identically zero has strictly fewer roots than its length, so no more than
+    its degree. This is the Schwartz-Zippel core, proved outright: divide out one
+    linear factor per root, each strictly lowering the length, until the length
+    runs out and forces the zero polynomial. -/
+theorem root_bound (p : Poly) (rs : List Int) (hnd : rs.Nodup)
+    (hvan : ∀ r ∈ rs, eval p r = 0) (hlen : p.length ≤ rs.length) :
+    ∀ x, eval p x = 0 :=
+  root_bound_aux p.length p (Nat.le_refl _) rs hnd hvan hlen
+
 /-- Polynomial subtraction. -/
 def sub (p q : Poly) : Poly := add p (scale (-1) q)
 
