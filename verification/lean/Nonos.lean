@@ -29,6 +29,7 @@ import Nonos.Stark.Attest
 import Nonos.Stark.Constraint
 import Nonos.Stark.CopyConstraint
 import Nonos.Stark.Field
+import Nonos.Stark.Fold
 import Nonos.Stark.Fri
 import Nonos.Stark.Lookup
 import Nonos.Stark.Merkle
