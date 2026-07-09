@@ -117,4 +117,25 @@ theorem fold_length (beta : Int) (p : Poly) :
   have ho := odds_length p
   omega
 
+/-- Iterated folding under a list of challenges, one round per challenge. -/
+def foldN : List Int → Poly → Poly
+  | [], p => p
+  | beta :: bs, p => foldN bs (fold beta p)
+
+/-- The real fold reaches a constant: a polynomial of length at most `2^r`, folded
+    `r` times, is a single coefficient. This is the concrete form of the FRI
+    conclusion `Nonos.Stark.Fri.enough_folds_reach_a_constant`, carried on the
+    actual polynomial rather than an abstract bound: each round at least halves
+    the length, so `r` rounds exhaust a length below `2^r` down to one. -/
+theorem the_honest_fold_reaches_a_constant (betas : List Int) (p : Poly)
+    (h : p.length ≤ 2 ^ betas.length) : (foldN betas p).length ≤ 1 := by
+  induction betas generalizing p with
+  | nil => simpa [foldN] using h
+  | cons beta bs ih =>
+    simp only [foldN]
+    apply ih (fold beta p)
+    have hf := fold_length beta p
+    rw [List.length_cons, Nat.pow_succ] at h
+    omega
+
 end Nonos.Stark.Fold

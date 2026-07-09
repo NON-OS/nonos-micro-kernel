@@ -42,6 +42,7 @@ import Nonos
 #print axioms Nonos.Stark.Instance.honest_run_has_a_quotient
 #print axioms Nonos.Stark.Instance.tampered_run_has_no_quotient
 #print axioms Nonos.Stark.Fold.fold_length
+#print axioms Nonos.Stark.Fold.the_honest_fold_reaches_a_constant
 #print axioms Nonos.Stark.Fri.final_layer_accepts_iff_matches
 #print axioms Nonos.Stark.Lookup.non_table_value_has_zero_multiplicity
 #print axioms Nonos.Stark.Merkle.distinct_leaves_give_distinct_roots
