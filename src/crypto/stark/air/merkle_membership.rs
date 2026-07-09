@@ -66,6 +66,50 @@ impl MerkleMembership {
     fn log_slots(&self) -> u32 {
         (self.depth() + 1).next_power_of_two().trailing_zeros()
     }
+
+    /// The honest trace for a private `leaf`: the Poseidon state through the
+    /// path, compressing with each sibling by the index bit, the root at the
+    /// checkpoint, padding slots running freely. This is the witness a prover
+    /// feeds `stark_prove`.
+    pub fn trace(&self, leaf: [Fp; RATE]) -> Vec<Fp> {
+        let l = self.rounds();
+        let depth = self.depth();
+        let n = 1usize << self.log_trace_len();
+
+        let mut state = inject(leaf, self.siblings[0], self.directions[0]);
+        let mut out = Vec::with_capacity(n * WIDTH);
+        for r in 0..n {
+            out.extend_from_slice(&state);
+            let pr = self.hasher.round_with_rc(&state, &self.hasher.round_constant(r % l));
+            if r % l == l - 1 && r < depth * l {
+                let m = (r + 1) / l;
+                let mut node = [Fp::ZERO; RATE];
+                node.copy_from_slice(&pr[..RATE]);
+                let (sib, dir) = if m < depth {
+                    (self.siblings[m], self.directions[m])
+                } else {
+                    ([Fp::ZERO; RATE], false)
+                };
+                state = inject(node, sib, dir);
+            } else {
+                state = pr;
+            }
+        }
+        out
+    }
+}
+
+/// Arrange a node and its sibling into a compression input by the index bit.
+fn inject(node: [Fp; RATE], sibling: [Fp; RATE], right: bool) -> [Fp; WIDTH] {
+    let mut state = [Fp::ZERO; WIDTH];
+    if right {
+        state[..RATE].copy_from_slice(&sibling);
+        state[RATE..].copy_from_slice(&node);
+    } else {
+        state[..RATE].copy_from_slice(&node);
+        state[RATE..].copy_from_slice(&sibling);
+    }
+    state
 }
 
 impl Air for MerkleMembership {

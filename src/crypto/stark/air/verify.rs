@@ -38,6 +38,18 @@ const SHIFT: u64 = 7;
 /// Verify `proof` against `air`. The evaluation domain and low-degree bound are
 /// derived from the AIR, matching the prover.
 pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bool {
+    stark_verify_bound(air, proof, n_queries, &[])
+}
+
+/// Verify `proof` against `air` under `context`, absorbed as the prover did, so
+/// a proof made for one context is rejected under any other. Empty matches
+/// `stark_verify`.
+pub fn stark_verify_bound<A: Air>(
+    air: &A,
+    proof: &StarkProof,
+    n_queries: usize,
+    context: &[u8],
+) -> bool {
     let log_t = air.log_trace_len();
     let t = 1usize << log_t;
     let width = air.trace_width();
@@ -58,6 +70,7 @@ pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bo
 
     // Rebuild the transcript exactly as the prover did.
     let mut transcript = Transcript::new(b"NONOS-STARK");
+    transcript.absorb_context(context);
     for root in &proof.trace_roots {
         transcript.absorb_digest(root);
     }
