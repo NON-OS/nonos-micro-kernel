@@ -35,4 +35,8 @@ pub(super) struct CapsuleLoadRequest {
     pub manifest_len: u32,
     pub trailer_len: u32,
     pub args_len: u32,
+    // Kernel-attested sender pid to attribute the spawned process to,
+    // instead of the caller. Zero means no override. Only honored when the
+    // calling process holds `Capability::SpawnBroker`; see sys_capsule_load.
+    pub on_behalf_of: u32,
 }
