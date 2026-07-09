@@ -47,6 +47,11 @@ pub enum Capability {
     Dma,
     Pio,
     InputSource,
+    // Grants a spawn site the authority to attribute a capsule-load's
+    // parent to a kernel-attested pid other than the caller itself
+    // (see `on_behalf_of` on `CapsuleLoadRequest`). No ordinary capsule
+    // manifest declares this bit; only the installer's does.
+    SpawnBroker,
 }
 
 impl Capability {
@@ -75,10 +80,11 @@ impl Capability {
             Self::Dma => 524288,
             Self::Pio => 1048576,
             Self::InputSource => 2097152,
+            Self::SpawnBroker => 4194304,
         }
     }
 
-    pub const fn all() -> [Capability; 22] {
+    pub const fn all() -> [Capability; 23] {
         [
             Self::CoreExec,
             Self::IO,
@@ -102,6 +108,7 @@ impl Capability {
             Self::Dma,
             Self::Pio,
             Self::InputSource,
+            Self::SpawnBroker,
         ]
     }
 
@@ -129,11 +136,12 @@ impl Capability {
             Self::Dma => "Dma",
             Self::Pio => "Pio",
             Self::InputSource => "InputSource",
+            Self::SpawnBroker => "SpawnBroker",
         }
     }
 
     pub const fn count() -> usize {
-        22
+        23
     }
 }
 
