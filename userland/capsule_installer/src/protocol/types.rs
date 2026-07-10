@@ -19,7 +19,9 @@ pub const OP_INSTALL: u16 = 2;
 pub const OP_LOAD_FROM_STORE: u16 = 3;
 pub const OP_LOAD_BY_NAME: u16 = 4;
 
-pub const KERNEL_REPLY_ENDPOINT: u64 = 0x1_0000_0011;
+// 0x1_0000_0018; must stay unique across every capsule's reply inbox
+// (the old 0x1_0000_0011 collided with the NVMe driver on full-gui).
+pub const KERNEL_REPLY_ENDPOINT: u64 = 0x1_0000_0018;
 
 pub(super) const HDR_LEN: usize = 8;
 
