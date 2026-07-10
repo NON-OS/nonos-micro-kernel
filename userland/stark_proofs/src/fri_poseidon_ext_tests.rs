@@ -1,0 +1,694 @@
+// NONOS Operating System (AGPL-3.0-or-later)
+//! The Poseidon-committed money-grade FRI, checked against its spec: a low-degree
+//! extension codeword verifies, a random one is rejected, and the challenges are
+//! extension-field. This is the inner form recursion folds over.
+
+use crate::crypto::stark::air::Poseidon;
+use crate::crypto::stark::field::{Fp, Fp2};
+use crate::crypto::stark::fri::root_of_unity;
+use crate::crypto::stark::fri_poseidon_ext::{fri_prove_poseidon_ext, fri_verify_poseidon_ext};
+use crate::crypto::stark::poly::eval;
+
+extern crate alloc;
+use alloc::vec::Vec;
+
+const RATE: usize = 4;
+
+fn xorshift(state: &mut u64) -> u64 {
+    *state ^= *state << 13;
+    *state ^= *state >> 7;
+    *state ^= *state << 17;
+    *state
+}
+
+/// A low-degree extension codeword: a base polynomial of degree `< d` evaluated on
+/// the coset, lifted into `Fp2`.
+fn low_degree_ext(log_n: u32, d: usize, shift: Fp, seed: u64) -> Vec<Fp2> {
+    let n = 1usize << log_n;
+    let omega = root_of_unity(log_n);
+    let mut s = seed | 1;
+    let coeffs: Vec<Fp> = (0..d).map(|_| Fp::from_u64(xorshift(&mut s))).collect();
+    let mut x = shift;
+    let mut cw = Vec::with_capacity(n);
+    for _ in 0..n {
+        cw.push(Fp2::from_base(eval(&coeffs, x)));
+        x = x * omega;
+    }
+    cw
+}
+
+fn hasher() -> Poseidon {
+    Poseidon::new(2, [Fp::ZERO; RATE])
+}
+
+fn squaring_trace(log_t: u32, seed: Fp) -> Vec<Fp> {
+    let t = 1usize << log_t;
+    let mut trace = Vec::with_capacity(t);
+    let mut cur = seed;
+    for _ in 0..t {
+        trace.push(cur);
+        cur = cur * cur;
+    }
+    trace
+}
+
+#[test]
+fn a_poseidon_committed_stark_proves_and_verifies() {
+    use crate::crypto::stark::air::{stark_prove_poseidon_ext, stark_verify_poseidon_ext, Squaring};
+    let seed = Fp::from_u64(3);
+    let air = Squaring { log_t: 4, seed };
+    let trace = squaring_trace(4, seed);
+    let h = hasher();
+    let proof = stark_prove_poseidon_ext(&air, &trace, 32, 8, 0, &h);
+    assert!(
+        stark_verify_poseidon_ext(&air, &proof, 32, 8, 0, &h),
+        "an honest Poseidon-committed STARK was rejected"
+    );
+}
+
+#[test]
+fn a_tampered_poseidon_committed_stark_is_rejected() {
+    use crate::crypto::stark::air::{stark_prove_poseidon_ext, stark_verify_poseidon_ext, Squaring};
+    let seed = Fp::from_u64(3);
+    let air = Squaring { log_t: 4, seed };
+    let mut trace = squaring_trace(4, seed);
+    trace[2] = trace[2] + Fp::from_u64(1); // break the squaring relation
+    let h = hasher();
+    let proof = stark_prove_poseidon_ext(&air, &trace, 32, 8, 0, &h);
+    assert!(
+        !stark_verify_poseidon_ext(&air, &proof, 32, 8, 0, &h),
+        "a tampered Poseidon-committed STARK verified"
+    );
+}
+
+#[test]
+fn a_poseidon_committed_join_split_core_proves_and_verifies() {
+    // The real inner proof recursion folds over: the wired conservation + range
+    // join-split core, committed with Poseidon at deployment soundness (rate 1/16).
+    use crate::crypto::stark::air::{
+        stark_prove_poseidon_ext, stark_verify_poseidon_ext, Accumulator, AirExt, RangeCheck,
+        WiredExt,
+    };
+    use alloc::boxed::Box;
+
+    let regions: Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(Accumulator { log_t: 3 }) as Box<dyn AirExt>,
+        Box::new(RangeCheck { log_t: 4 }),
+    ];
+    let mut sigma: Vec<usize> = (0..32).collect();
+    sigma.swap(1, 8); // conservation acc[1] (=input 7) wired to range acc[0]
+    let wired = WiredExt::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
+
+    let neg = |x: u64| -> Fp { Fp::ZERO - Fp::from_u64(x) };
+    let addends =
+        [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let mut cons = Vec::with_capacity(addends.len() * 2);
+    let mut acc = Fp::ZERO;
+    for &a in &addends {
+        cons.push(acc);
+        cons.push(a);
+        acc = acc + a;
+    }
+    let mut rng = Vec::with_capacity(32);
+    let mut v = 7u64;
+    for i in 0..16usize {
+        let bit = if i < 15 { v & 1 } else { 0 };
+        rng.push(Fp::from_u64(v));
+        rng.push(Fp::from_u64(bit));
+        if i < 15 {
+            v >>= 1;
+        }
+    }
+    let witness = wired.trace(&[cons, rng]);
+    let h = hasher();
+    let proof = stark_prove_poseidon_ext(&wired, &witness, 32, 16, 3, &h);
+    assert!(
+        stark_verify_poseidon_ext(&wired, &proof, 32, 16, 3, &h),
+        "the Poseidon-committed join-split core was rejected"
+    );
+}
+
+// Build the real Poseidon-committed join-split core proof recursion folds over,
+// returning the AIR alongside so its verification witness can be extracted.
+fn poseidon_join_split_proof(
+    h: &Poseidon,
+    nq: usize,
+    grind: u32,
+    extra: u32,
+) -> (crate::crypto::stark::air::WiredExt, crate::crypto::stark::air::StarkProofExtP) {
+    use crate::crypto::stark::air::{
+        stark_prove_poseidon_ext, Accumulator, AirExt, RangeCheck, WiredExt,
+    };
+    use alloc::boxed::Box;
+    let regions: Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(Accumulator { log_t: 3 }) as Box<dyn AirExt>,
+        Box::new(RangeCheck { log_t: 4 }),
+    ];
+    let mut sigma: Vec<usize> = (0..32).collect();
+    sigma.swap(1, 8);
+    let wired = WiredExt::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let neg = |x: u64| -> Fp { Fp::ZERO - Fp::from_u64(x) };
+    let addends =
+        [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let mut cons = Vec::new();
+    let mut acc = Fp::ZERO;
+    for &a in &addends {
+        cons.push(acc);
+        cons.push(a);
+        acc = acc + a;
+    }
+    let mut rng = Vec::new();
+    let mut v = 7u64;
+    for i in 0..16usize {
+        let bit = if i < 15 { v & 1 } else { 0 };
+        rng.push(Fp::from_u64(v));
+        rng.push(Fp::from_u64(bit));
+        if i < 15 {
+            v >>= 1;
+        }
+    }
+    let witness = wired.trace(&[cons, rng]);
+    let proof = stark_prove_poseidon_ext(&wired, &witness, nq, grind, extra, h);
+    (wired, proof)
+}
+
+// The first real recursion fragment over the actual inner proof: take the real
+// Poseidon join-split proof's FRI, replay its transcript to recover the Fp2 fold
+// challenges, then prove IN-CIRCUIT (a STARK) that its query-0 fold chain is
+// consistent. This is verification of the real proof's low-degree test, arithmetized.
+#[test]
+fn the_real_poseidon_fri_fold_chain_verifies_in_circuit() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, TraceFoldExt};
+    use crate::crypto::stark::field::Fp2;
+    use crate::crypto::stark::poseidon_transcript::PoseidonTranscript;
+
+    let h = hasher();
+    let (nq, grind, extra) = (32usize, 16u32, 3u32);
+    let (_air, proof) = poseidon_join_split_proof(&h, nq, grind, extra);
+    let fri = &proof.fri;
+    let n_folds = fri.roots.len();
+    let blowup = fri.final_layer.len();
+    let log_n = n_folds as u32 + blowup.trailing_zeros();
+    let n = 1usize << log_n;
+
+    // Replay the FRI transcript to recover the fold challenges and the first index.
+    let mut ts = PoseidonTranscript::new(h.clone());
+    let mut betas: Vec<Fp2> = Vec::with_capacity(n_folds);
+    for root in &fri.roots {
+        ts.absorb_digest(root);
+        betas.push(ts.challenge_fp2());
+    }
+    for value in &fri.final_layer {
+        ts.absorb(value.c0);
+        ts.absorb(value.c1);
+    }
+    assert!(ts.verify_pow(fri.pow_nonce, grind), "P's FRI proof-of-work did not check");
+    let q0 = ts.challenge_index(n);
+
+    // Extract query 0's real openings and the public domain data per layer.
+    let final_value = fri.final_layer[0];
+    let base_omega = root_of_unity(log_n);
+    let shift = Fp::from_u64(7);
+    let layers = &fri.queries[0].layers;
+    let (mut a, mut b) = (Vec::new(), Vec::new());
+    let (mut x_inv, mut dir) = (Vec::new(), Vec::new());
+    for (m, op) in layers.iter().enumerate() {
+        a.push(op.a);
+        b.push(op.b);
+        let half = n >> (m + 1);
+        let i = q0 % half;
+        let x = (shift * base_omega.pow(i as u64)).pow(1u64 << m);
+        x_inv.push(x.inv());
+        let half_next = n >> (m + 2);
+        dir.push(i >= half_next);
+    }
+    a.push(final_value);
+    b.push(final_value);
+
+    let log_layers = (n_folds + 1).next_power_of_two().trailing_zeros();
+    let fold = TraceFoldExt::new(log_layers, n_folds, x_inv, dir, final_value);
+    let ftrace = fold.trace(&betas, &a, &b);
+    let fproof = stark_prove_ext(&fold, &ftrace, 32, 8);
+    assert!(
+        stark_verify_ext(&fold, &fproof, 32, 8),
+        "the real Poseidon join-split proof's FRI fold chain was rejected in-circuit"
+    );
+}
+
+// The second real recursion fragment: take the real Poseidon join-split proof's
+// FRI layer-0 opening and prove IN-CIRCUIT (a STARK) that its Poseidon Merkle path
+// authenticates against the committed root. This is verification of the real
+// proof's commitment openings, arithmetized.
+#[test]
+fn a_real_poseidon_merkle_opening_verifies_in_circuit() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, MultiMembership, Opening};
+    use crate::crypto::stark::poseidon_merkle::pack_ext;
+    use crate::crypto::stark::poseidon_transcript::PoseidonTranscript;
+
+    let h = hasher();
+    let (nq, grind, extra) = (32usize, 16u32, 3u32);
+    let (_air, proof) = poseidon_join_split_proof(&h, nq, grind, extra);
+    let fri = &proof.fri;
+    let n_folds = fri.roots.len();
+    let blowup = fri.final_layer.len();
+    let log_n = n_folds as u32 + blowup.trailing_zeros();
+    let n = 1usize << log_n;
+
+    // Replay to the first query index.
+    let mut ts = PoseidonTranscript::new(h.clone());
+    for root in &fri.roots {
+        ts.absorb_digest(root);
+        ts.challenge_fp2();
+    }
+    for value in &fri.final_layer {
+        ts.absorb(value.c0);
+        ts.absorb(value.c1);
+    }
+    assert!(ts.verify_pow(fri.pow_nonce, grind));
+    let q0 = ts.challenge_index(n);
+
+    // Layer 0 opens position i = q0 % (n/2) against roots[0].
+    let i = q0 % (n >> 1);
+    let op = &fri.queries[0].layers[0];
+    let siblings = op.a_path.clone();
+    let depth = siblings.len();
+    let directions: Vec<bool> = (0..depth).map(|l| (i >> l) & 1 == 1).collect();
+    let opening = Opening { leaf: pack_ext(op.a), root: fri.roots[0], siblings, directions };
+    let mem = MultiMembership::new(h.clone(), 2, alloc::vec![opening]);
+    let mtrace = mem.trace();
+    let mproof = stark_prove_ext(&mem, &mtrace, 32, 8);
+    assert!(
+        stark_verify_ext(&mem, &mproof, 32, 8),
+        "the real Poseidon join-split proof's Merkle opening was rejected in-circuit"
+    );
+}
+
+// The third real recursion fragment: verify the real Poseidon join-split proof's
+// DEEP consistency for query 0 in-circuit -- every opened column against its
+// out-of-domain claim, plus the composition against its claim, batched to the
+// query's DEEP value. This is verification of the real proof's DEEP quotient,
+// arithmetized.
+#[test]
+fn the_real_poseidon_deep_consistency_verifies_in_circuit() {
+    use crate::crypto::stark::air::{
+        deep_terms_query0, stark_prove_ext, stark_verify_ext, DeepCheckExt,
+    };
+    let h = hasher();
+    let (nq, grind, extra) = (32usize, 16u32, 3u32);
+    let (air, proof) = poseidon_join_split_proof(&h, nq, grind, extra);
+    let (terms, x, deep) = deep_terms_query0(&air, &proof, extra, &h);
+    let dc = DeepCheckExt::new(terms, x, deep);
+    let dtrace = dc.trace();
+    let dproof = stark_prove_ext(&dc, &dtrace, 32, 8);
+    assert!(
+        stark_verify_ext(&dc, &dproof, 32, 8),
+        "the real Poseidon join-split proof's DEEP consistency was rejected in-circuit"
+    );
+}
+
+// The inlined compose_ext formula for the join-split, validated natively against
+// the real compose_ext: this pins the arithmetic the compose-at-z AIR must encode
+// (transition values out0..out2, the exempt/vanishing factor, boundary quotients)
+// before it is committed to constraints.
+#[test]
+fn the_join_split_compose_formula_matches_compose_ext() {
+    use crate::crypto::stark::air::{compose_inputs, Air};
+    use crate::crypto::stark::field::Fp2;
+
+    let h = hasher();
+    let (nq, grind, extra) = (32usize, 16u32, 3u32);
+    let (air, proof) = poseidon_join_split_proof(&h, nq, grind, extra);
+    let ci = compose_inputs(&air, &proof, extra, &h);
+
+    let t = 1u64 << air.log_trace_len();
+    let g = root_of_unity(air.log_trace_len());
+    let w = &proof.ood_frame;
+    let (w0, w1, w2, w3, w5) = (w[0], w[1], w[2], w[3], w[5]);
+    let p = &ci.periodic_z;
+    let (sel0, sel1, id, sig, gp_sel) = (p[0], p[1], p[2], p[3], p[4]);
+    let beta = Fp2::from_base(Fp::from_u64(5));
+    let gamma = Fp2::from_base(Fp::from_u64(7));
+    let two = Fp2::from_base(Fp::from_u64(2));
+
+    let out0 = sel0 * (w3 - w0 - w1) + sel1 * (w0 - two * w3 - w1);
+    let out1 = sel1 * (w1 * (w1 - Fp2::ONE));
+    let num = w0 + beta * id + gamma;
+    let den = w0 + beta * sig + gamma;
+    let out2 = gp_sel * (w5 * den - w2 * num) + (Fp2::ONE - gp_sel) * (w5 - w2);
+
+    let z = ci.z;
+    let z_h_inv = (z.pow(t) - Fp2::ONE).inv();
+    let exempt = z - Fp2::from_base(g.pow(t - 1));
+    let e = exempt * z_h_inv;
+
+    let mut acc = ci.coeffs[0] * out0 * e + ci.coeffs[1] * out1 * e + ci.coeffs[2] * out2 * e;
+    for (j, (col, row, expected)) in air.boundary().iter().enumerate() {
+        let q = (w[*col] - Fp2::from_base(*expected)) * (z - Fp2::from_base(g.pow(*row as u64))).inv();
+        acc = acc + ci.coeffs[3 + j] * q;
+    }
+    assert_eq!(acc, ci.comp_z, "the inlined join-split compose formula did not match compose_ext");
+}
+
+// The fourth and hardest recursion fragment: verify compose_ext AT z in-circuit
+// over the real proof -- the meta-circular piece that re-derives the composition
+// value the DEEP check consumes from the out-of-domain frame, arithmetizing the
+// join-split's own transition_ext plus the vanishing and boundary quotients. With
+// this the composition value is no longer trusted; it is proven.
+#[test]
+fn the_real_poseidon_compose_at_z_verifies_in_circuit() {
+    use crate::crypto::stark::air::{
+        compose_inputs, stark_prove_ext, stark_verify_ext, Air, ComposeBoundary, ComposeCheck,
+    };
+    use crate::crypto::stark::field::Fp2;
+
+    let h = hasher();
+    let (nq, grind, extra) = (32usize, 16u32, 3u32);
+    let (air, proof) = poseidon_join_split_proof(&h, nq, grind, extra);
+    let ci = compose_inputs(&air, &proof, extra, &h);
+    let t = 1u64 << air.log_trace_len();
+    let g = root_of_unity(air.log_trace_len());
+
+    let mut window = [Fp2::ZERO; 6];
+    window.copy_from_slice(&proof.ood_frame[..6]);
+    let mut periodic = [Fp2::ZERO; 5];
+    periodic.copy_from_slice(&ci.periodic_z[..5]);
+    let mut coeffs = [Fp2::ZERO; 8];
+    coeffs.copy_from_slice(&ci.coeffs[..8]);
+    let boundaries: Vec<ComposeBoundary> = air
+        .boundary()
+        .iter()
+        .map(|(col, row, expected)| ComposeBoundary {
+            col: *col,
+            g_row: g.pow(*row as u64),
+            expected: *expected,
+        })
+        .collect();
+
+    let cc = ComposeCheck::new(window, periodic, coeffs, ci.z, ci.comp_z, g.pow(t - 1), t, boundaries);
+    let ctrace = cc.trace();
+    let cproof = stark_prove_ext(&cc, &ctrace, 32, 8);
+    assert!(
+        stark_verify_ext(&cc, &cproof, 32, 8),
+        "the real proof's compose_ext at z was rejected in-circuit"
+    );
+}
+
+// The compose-at-z check must reject a composition value that is not the honest
+// combination of the frame: a prover cannot substitute a convenient comp_z.
+#[test]
+fn the_real_poseidon_compose_at_z_rejects_a_wrong_value() {
+    use crate::crypto::stark::air::{
+        compose_inputs, stark_prove_ext, stark_verify_ext, Air, ComposeBoundary, ComposeCheck,
+    };
+    use crate::crypto::stark::field::Fp2;
+
+    let h = hasher();
+    let (nq, grind, extra) = (32usize, 16u32, 3u32);
+    let (air, proof) = poseidon_join_split_proof(&h, nq, grind, extra);
+    let ci = compose_inputs(&air, &proof, extra, &h);
+    let t = 1u64 << air.log_trace_len();
+    let g = root_of_unity(air.log_trace_len());
+
+    let mut window = [Fp2::ZERO; 6];
+    window.copy_from_slice(&proof.ood_frame[..6]);
+    let mut periodic = [Fp2::ZERO; 5];
+    periodic.copy_from_slice(&ci.periodic_z[..5]);
+    let mut coeffs = [Fp2::ZERO; 8];
+    coeffs.copy_from_slice(&ci.coeffs[..8]);
+    let boundaries: Vec<ComposeBoundary> = air
+        .boundary()
+        .iter()
+        .map(|(col, row, expected)| ComposeBoundary {
+            col: *col,
+            g_row: g.pow(*row as u64),
+            expected: *expected,
+        })
+        .collect();
+
+    let wrong = ci.comp_z + Fp2::from_base(Fp::from_u64(1));
+    let cc = ComposeCheck::new(window, periodic, coeffs, ci.z, wrong, g.pow(t - 1), t, boundaries);
+    let ctrace = cc.trace();
+    let cproof = stark_prove_ext(&cc, &ctrace, 32, 8);
+    assert!(
+        !stark_verify_ext(&cc, &cproof, 32, 8),
+        "a dishonest composition value verified"
+    );
+}
+
+// Pin the exact sponge alignment before arithmetizing it: a hand-run Poseidon
+// sponge (absorb = inject into lane 0 then permute; squeeze = read lane 0 then
+// permute) must reproduce the real proof's STARK challenges bit for bit. This is
+// the ground truth the transcript-derivation AIR must match.
+#[test]
+fn the_transcript_sponge_reproduces_the_stark_challenges() {
+    use crate::crypto::stark::air::{compose_inputs, WIDTH};
+    use crate::crypto::stark::field::Fp2;
+
+    let h = hasher();
+    let (nq, grind, extra) = (32usize, 16u32, 3u32);
+    let (air, proof) = poseidon_join_split_proof(&h, nq, grind, extra);
+    let ci = compose_inputs(&air, &proof, extra, &h);
+
+    let mut st = [Fp::ZERO; WIDTH];
+    let absorb = |st: &mut [Fp; WIDTH], v: Fp| {
+        st[0] = st[0] + v;
+        *st = h.permute(*st);
+    };
+    let squeeze = |st: &mut [Fp; WIDTH]| -> Fp {
+        let c = st[0];
+        *st = h.permute(*st);
+        c
+    };
+
+    for root in &proof.trace_roots {
+        for lane in root {
+            absorb(&mut st, *lane);
+        }
+    }
+    let ncoeffs = ci.coeffs.len();
+    let mut coeffs = Vec::with_capacity(ncoeffs);
+    for _ in 0..ncoeffs {
+        let c0 = squeeze(&mut st);
+        let c1 = squeeze(&mut st);
+        coeffs.push(Fp2::new(c0, c1));
+    }
+    assert_eq!(coeffs, ci.coeffs, "the hand-run sponge did not reproduce the coefficients");
+
+    for lane in &proof.comp_root {
+        absorb(&mut st, *lane);
+    }
+    let z0 = squeeze(&mut st);
+    let z1 = squeeze(&mut st);
+    assert_eq!(Fp2::new(z0, z1), ci.z, "the hand-run sponge did not reproduce the out-of-domain point");
+}
+
+// The fifth recursion fragment: prove the real proof's Fiat-Shamir challenges were
+// honestly squeezed from its committed data, in-circuit. The absorbed sequence is
+// the proof's (trace roots, composition root, out-of-domain frame); the squeezed
+// coefficients, out-of-domain point, and DEEP coefficients are pinned. With this
+// the challenges are proven, not trusted.
+#[test]
+fn the_real_poseidon_transcript_derivation_verifies_in_circuit() {
+    use crate::crypto::stark::air::{
+        compose_inputs, stark_prove_ext, stark_verify_ext, Air, TranscriptCheck, TranscriptOp, WIDTH,
+    };
+
+    let h = hasher();
+    let (nq, grind, extra) = (32usize, 16u32, 3u32);
+    let (air, proof) = poseidon_join_split_proof(&h, nq, grind, extra);
+    let ci = compose_inputs(&air, &proof, extra, &h);
+    let width = air.trace_width();
+    let window = air.window_size();
+
+    let mut st = [Fp::ZERO; WIDTH];
+    let mut ops: Vec<TranscriptOp> = Vec::new();
+    let absorb = |ops: &mut Vec<TranscriptOp>, st: &mut [Fp; WIDTH], v: Fp| {
+        ops.push(TranscriptOp::Absorb(v));
+        st[0] = st[0] + v;
+        *st = h.permute(*st);
+    };
+    let squeeze = |ops: &mut Vec<TranscriptOp>, st: &mut [Fp; WIDTH]| {
+        let c = st[0];
+        ops.push(TranscriptOp::Squeeze(c));
+        *st = h.permute(*st);
+    };
+
+    for root in &proof.trace_roots {
+        for lane in root {
+            absorb(&mut ops, &mut st, *lane);
+        }
+    }
+    for _ in 0..ci.coeffs.len() * 2 {
+        squeeze(&mut ops, &mut st);
+    }
+    for lane in &proof.comp_root {
+        absorb(&mut ops, &mut st, *lane);
+    }
+    for _ in 0..2 {
+        squeeze(&mut ops, &mut st);
+    }
+    for v in &proof.ood_frame {
+        absorb(&mut ops, &mut st, v.c0);
+        absorb(&mut ops, &mut st, v.c1);
+    }
+    for _ in 0..(width * window + 1) * 2 {
+        squeeze(&mut ops, &mut st);
+    }
+
+    let tc = TranscriptCheck::new(h.clone(), 2, ops);
+    let ttrace = tc.trace();
+    let tproof = stark_prove_ext(&tc, &ttrace, 32, 8);
+    assert!(
+        stark_verify_ext(&tc, &tproof, 32, 8),
+        "the real proof's transcript derivation was rejected in-circuit"
+    );
+}
+
+// The assembly begins: wire the transcript-derivation region and the compose-at-z
+// region into ONE proof, binding the squeezed out-of-domain point to the point the
+// composition is evaluated at. So compose no longer trusts z; it is the z the
+// transcript proved was squeezed. The grand product over the shared cells is the
+// copy constraint.
+#[test]
+fn the_transcript_and_compose_are_wired_into_one_proof() {
+    use crate::crypto::stark::air::{
+        compose_inputs, stark_prove_ext, stark_verify_ext, Air, AirExt, ComposeBoundary,
+        ComposeCheck, TranscriptCheck, TranscriptOp, WiredExt, WIDTH,
+    };
+    use crate::crypto::stark::field::Fp2;
+    use alloc::boxed::Box;
+
+    let h = hasher();
+    let (nq, grind, extra) = (32usize, 16u32, 3u32);
+    let (air, proof) = poseidon_join_split_proof(&h, nq, grind, extra);
+    let ci = compose_inputs(&air, &proof, extra, &h);
+    let t = 1u64 << air.log_trace_len();
+    let g = root_of_unity(air.log_trace_len());
+
+    // Region 1: compose-at-z.
+    let mut window = [Fp2::ZERO; 6];
+    window.copy_from_slice(&proof.ood_frame[..6]);
+    let mut periodic = [Fp2::ZERO; 5];
+    periodic.copy_from_slice(&ci.periodic_z[..5]);
+    let mut coeffs = [Fp2::ZERO; 8];
+    coeffs.copy_from_slice(&ci.coeffs[..8]);
+    let boundaries: Vec<ComposeBoundary> = air
+        .boundary()
+        .iter()
+        .map(|(col, row, expected)| ComposeBoundary { col: *col, g_row: g.pow(*row as u64), expected: *expected })
+        .collect();
+    let compose = ComposeCheck::new(window, periodic, coeffs, ci.z, ci.comp_z, g.pow(t - 1), t, boundaries);
+    let ctrace = compose.trace();
+
+    // Region 0: transcript derivation. z is squeezed at operations after the trace
+    // roots, the coefficients, and the composition root.
+    let mut st = [Fp::ZERO; WIDTH];
+    let mut ops: Vec<TranscriptOp> = Vec::new();
+    let absorb = |ops: &mut Vec<TranscriptOp>, st: &mut [Fp; WIDTH], v: Fp| {
+        ops.push(TranscriptOp::Absorb(v));
+        st[0] = st[0] + v;
+        *st = h.permute(*st);
+    };
+    let squeeze = |ops: &mut Vec<TranscriptOp>, st: &mut [Fp; WIDTH]| {
+        let c = st[0];
+        ops.push(TranscriptOp::Squeeze(c));
+        *st = h.permute(*st);
+    };
+    for root in &proof.trace_roots {
+        for lane in root {
+            absorb(&mut ops, &mut st, *lane);
+        }
+    }
+    for _ in 0..ci.coeffs.len() * 2 {
+        squeeze(&mut ops, &mut st);
+    }
+    for lane in &proof.comp_root {
+        absorb(&mut ops, &mut st, *lane);
+    }
+    let z_op = ops.len(); // the operation index where z.c0 is squeezed
+    squeeze(&mut ops, &mut st);
+    squeeze(&mut ops, &mut st);
+    let transcript = TranscriptCheck::new(h.clone(), 2, ops);
+    let ttrace = transcript.trace();
+
+    let regions: Vec<Box<dyn AirExt>> = alloc::vec![Box::new(transcript) as Box<dyn AirExt>, Box::new(compose)];
+    let l = 4usize; // permutation rounds
+    let t_height = 1usize << regions[0].log_trace_len();
+    let span = (t_height + (1usize << regions[1].log_trace_len())).next_power_of_two();
+
+    // wired columns: the transcript squeeze lane (0) and the compose z cells (22, 23).
+    let wired_cols = alloc::vec![0usize, 22, 23];
+    let k = wired_cols.len();
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    let z0_row = z_op * l; // transcript row holding z.c0
+    let z1_row = (z_op + 1) * l; // transcript row holding z.c1
+    let c_row = t_height; // compose region row 0
+    sigma.swap(z0_row * k, c_row * k + 1); // z.c0: (row, col 0) <-> (compose row, col 22)
+    sigma.swap(z1_row * k, c_row * k + 2); // z.c1: (row, col 0) <-> (compose row, col 23)
+
+    let wired = WiredExt::new(regions, wired_cols, sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[ttrace, ctrace]);
+    let wproof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(
+        stark_verify_ext(&wired, &wproof, 32, 8),
+        "the transcript and compose regions were not consistently wired on z"
+    );
+}
+
+#[test]
+fn a_poseidon_committed_stark_holds_at_deployment_blowup() {
+    use crate::crypto::stark::air::{stark_prove_poseidon_ext, stark_verify_poseidon_ext, Squaring};
+    // rate 1/16 (extra_blowup_bits = 3): the inner proof at deployment soundness.
+    let seed = Fp::from_u64(5);
+    let air = Squaring { log_t: 4, seed };
+    let trace = squaring_trace(4, seed);
+    let h = hasher();
+    let proof = stark_prove_poseidon_ext(&air, &trace, 32, 16, 3, &h);
+    assert!(
+        stark_verify_poseidon_ext(&air, &proof, 32, 16, 3, &h),
+        "an honest deployment-soundness Poseidon STARK was rejected"
+    );
+}
+
+#[test]
+fn a_low_degree_poseidon_ext_codeword_verifies() {
+    let (log_n, log_blowup) = (10u32, 1u32);
+    let shift = Fp::from_u64(7);
+    let d = 1usize << (log_n - log_blowup);
+    let cw = low_degree_ext(log_n, d, shift, 0xABCD_1234);
+    let h = hasher();
+    let proof = fri_prove_poseidon_ext(&cw, shift, log_blowup, 32, 8, &h);
+    assert!(
+        fri_verify_poseidon_ext(&proof, shift, log_n, log_blowup, 32, 8, &h),
+        "an honest low-degree Poseidon extension codeword was rejected"
+    );
+}
+
+#[test]
+fn a_high_degree_poseidon_ext_codeword_is_rejected() {
+    let (log_n, log_blowup) = (10u32, 1u32);
+    let shift = Fp::from_u64(7);
+    // Degree equal to the domain size: not low degree for a rate-1/2 test.
+    let cw = low_degree_ext(log_n, 1usize << log_n, shift, 0x9999);
+    let h = hasher();
+    let proof = fri_prove_poseidon_ext(&cw, shift, log_blowup, 32, 8, &h);
+    assert!(
+        !fri_verify_poseidon_ext(&proof, shift, log_n, log_blowup, 32, 8, &h),
+        "a high-degree Poseidon extension codeword verified"
+    );
+}
+
+#[test]
+fn a_tampered_final_layer_is_rejected() {
+    let (log_n, log_blowup) = (10u32, 1u32);
+    let shift = Fp::from_u64(7);
+    let d = 1usize << (log_n - log_blowup);
+    let cw = low_degree_ext(log_n, d, shift, 0x5151);
+    let h = hasher();
+    let mut proof = fri_prove_poseidon_ext(&cw, shift, log_blowup, 32, 8, &h);
+    proof.final_layer[0] = proof.final_layer[0] + Fp2::from_base(Fp::from_u64(1));
+    assert!(
+        !fri_verify_poseidon_ext(&proof, shift, log_n, log_blowup, 32, 8, &h),
+        "a tampered final layer verified"
+    );
+}

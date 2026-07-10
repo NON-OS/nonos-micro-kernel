@@ -17,6 +17,8 @@ mod forgery_tests;
 #[cfg(test)]
 mod fri_ext_tests;
 #[cfg(test)]
+mod fri_poseidon_ext_tests;
+#[cfg(test)]
 mod fri_poseidon_tests;
 #[cfg(test)]
 mod fri_tests;
