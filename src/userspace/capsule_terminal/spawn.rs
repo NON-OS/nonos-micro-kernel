@@ -19,7 +19,9 @@ use super::embed::{
 };
 use super::state;
 use crate::capabilities::Capability;
-use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
+use crate::kernel_core::process_spawn::capsule_spawn::{
+    self, spawn_next_instance, CapsuleSpecVerified, InstanceEndpoint, InstanceSpawn,
+};
 use crate::security::nonos_id_cert::IdCertVerifyError;
 use crate::security::nonos_trust_anchor::{
     decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
@@ -32,6 +34,55 @@ const SERVICE_PORT: u32 = 4722;
 const REPLY_INBOX: &str = "endpoint.app.terminal.reply";
 const REPLY_PORT: u32 = 4723;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+
+// The requested-caps ceiling, shared by the boot instance and every extra
+// window so the attestation context (which binds granted caps) is identical.
+fn terminal_caps() -> u64 {
+    Capability::CoreExec.bit()
+        | Capability::IPC.bit()
+        | Capability::Network.bit()
+        | Capability::Memory.bit()
+        | Capability::GraphicsDisplayQuery.bit()
+        | Capability::GraphicsSurfaceCreate.bit()
+}
+
+// Extra window endpoints, each declared in the signed manifest (see the
+// terminal Capsule.mk). Ordered, so the lowest-numbered free one is taken.
+const TERMINAL_INSTANCES: &[InstanceEndpoint] = &[
+    InstanceEndpoint {
+        name: "app.terminal.1",
+        port: 4740,
+        reply_inbox: "endpoint.app.terminal.1.reply",
+        reply_port: 4741,
+    },
+    InstanceEndpoint {
+        name: "app.terminal.2",
+        port: 4742,
+        reply_inbox: "endpoint.app.terminal.2.reply",
+        reply_port: 4743,
+    },
+    InstanceEndpoint {
+        name: "app.terminal.3",
+        port: 4744,
+        reply_inbox: "endpoint.app.terminal.3.reply",
+        reply_port: 4745,
+    },
+];
+
+// Spawn the next free terminal window on demand. Same signed artifacts as boot,
+// a fresh pid, and thus its own compositor window.
+pub fn spawn_terminal_instance() -> Result<u32, SpawnError> {
+    spawn_next_instance(&InstanceSpawn {
+        elf: TERMINAL_ELF,
+        cert: TERMINAL_NONOS_ID_CERT_BYTES,
+        manifest: TERMINAL_MANIFEST_BYTES,
+        attestation: TERMINAL_ATTESTATION_BYTES,
+        target_triple: TARGET_TRIPLE,
+        requested_caps: terminal_caps(),
+        instances: TERMINAL_INSTANCES,
+        debug_tag: b"[TERMINAL-INSTANCE] elf error:",
+    })
+}
 
 pub fn spawn_terminal_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
@@ -46,12 +97,7 @@ pub fn spawn_terminal_capsule() -> Result<(), SpawnError> {
         manifest_bytes: TERMINAL_MANIFEST_BYTES,
         attestation_trailer: TERMINAL_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::CoreExec.bit()
-            | Capability::IPC.bit()
-            | Capability::Network.bit()
-            | Capability::Memory.bit()
-            | Capability::GraphicsDisplayQuery.bit()
-            | Capability::GraphicsSurfaceCreate.bit(),
+        requested_caps: terminal_caps(),
         debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

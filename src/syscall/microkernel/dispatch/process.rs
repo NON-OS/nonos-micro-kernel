@@ -26,6 +26,7 @@ use crate::syscall::microkernel::process::{
     sys_yield,
 };
 use crate::syscall::microkernel::procstat::sys_proc_stat;
+use crate::syscall::microkernel::spawn_instance::sys_spawn_instance;
 use crate::syscall::microkernel::time::{sys_time_adjust, sys_time_millis, sys_time_rtc};
 
 pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
@@ -39,8 +40,8 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_GETPID => sys_getpid(),
         SYS_ARGS => sys_args(a.a0, a.a1 as usize),
         SYS_THREAD_SPAWN => sys_thread_spawn(a.a0, a.a1),
-        SYS_YIELD => sys_yield(),
         SYS_SET_TLS => sys_set_tls(a.a0),
+        SYS_YIELD => sys_yield(),
         SYS_TIME_MILLIS => sys_time_millis(),
         SYS_TIME_RTC => sys_time_rtc(a.a0),
         SYS_TIME_ADJUST => sys_time_adjust(a.a0),
@@ -48,6 +49,7 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_PROC_STAT => sys_proc_stat(a.a0, a.a1),
         SYS_PROC_OUTPUT => sys_proc_output(a.a0, a.a1, a.a2 as usize),
         SYS_ATTEST_STATUS => sys_attest_status(a.a0),
+        SYS_SPAWN_INSTANCE => sys_spawn_instance(a.a0, a.a1),
         _ => return None,
     })
 }

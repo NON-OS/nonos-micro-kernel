@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod from_vfs;
+mod instance;
 mod runner;
 mod spec;
 
@@ -26,3 +27,5 @@ pub use spec::CapsuleSpec;
 pub use spec::{CapsuleSpecVerified, SpawnError};
 // Runtime capsule loading from the VFS store, driven by the install syscall.
 pub use from_vfs::{load_capsule_from_vfs, CapsuleArtifacts, LoadError};
+// Spawning an extra window instance of an embedded, attested app capsule.
+pub use instance::{spawn_next as spawn_next_instance, InstanceEndpoint, InstanceSpawn};

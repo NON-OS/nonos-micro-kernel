@@ -172,6 +172,12 @@ impl CapabilityToken {
     pub fn can_set_time(&self) -> bool {
         self.grants(Capability::TimeSet)
     }
+    // Authority to request the kernel spawn another window (a fresh instance of
+    // an embedded, attested app capsule).
+    #[inline]
+    pub fn can_spawn_window(&self) -> bool {
+        self.grants(Capability::SpawnWindow) || self.grants(Capability::Admin)
+    }
 }
 
 impl core::fmt::Display for CapabilityToken {

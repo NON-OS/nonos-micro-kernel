@@ -91,6 +91,10 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkInputEventDrain => caps.can_input_source(),
         SyscallNumber::MkInputEventWait => caps.can_input_source(),
 
+        // Only a SpawnWindow-trusted capsule (the desktop shell) may ask the
+        // kernel to open another window instance of an embedded app capsule.
+        SyscallNumber::MkSpawnInstance => caps.can_spawn_window(),
+
         _ => return None,
     })
 }

@@ -98,4 +98,5 @@ pub enum SyscallNumber {
     MkInputEventPost = tag4(b"MIEP"),
     MkInputEventDrain = tag4(b"MIED"),
     MkInputEventWait = tag4(b"MIEW"),
+    MkSpawnInstance = tag4(b"MSPI"),
 }

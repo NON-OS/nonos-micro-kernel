@@ -14,9 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod embed;
-mod spawn;
-mod state;
+use super::queue::{self, PendingApp};
 
-pub use spawn::{spawn_browser_capsule, spawn_browser_instance};
-pub use state::shared_state;
+/// Queue one window-instance spawn for init to perform. Runs in the
+/// caller's syscall context, so it only touches the request queue; the
+/// real spawn happens later in init. Returns true when the request was
+/// accepted.
+pub fn request(app: PendingApp) -> bool {
+    queue::push(app)
+}

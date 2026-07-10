@@ -52,7 +52,9 @@ pub fn spawn_desktop_shell_capsule() -> Result<(), SpawnError> {
             | Capability::Network.bit()
             | Capability::Memory.bit()
             | Capability::GraphicsDisplayQuery.bit()
-            | Capability::GraphicsSurfaceCreate.bit(),
+            | Capability::GraphicsSurfaceCreate.bit()
+            // Authority to open extra terminal/browser windows on demand.
+            | Capability::SpawnWindow.bit(),
         debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
