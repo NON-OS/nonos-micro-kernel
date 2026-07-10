@@ -762,6 +762,199 @@ fn the_transcript_compose_and_deep_are_wired_into_one_proof() {
     );
 }
 
+// Five regions in one proof: the STARK transcript, composition, and DEEP (the
+// computation half), plus the FRI transcript and the fold chain (the low-degree
+// half), with the fold's challenges bound to the FRI transcript that squeezed them.
+// So the fold no longer trusts its betas; they are the ones the FRI transcript
+// proved.
+#[test]
+#[ignore]
+fn the_full_verifier_computation_and_fold_are_wired_into_one_proof() {
+    use crate::crypto::stark::air::{
+        compose_inputs, deep_terms_query0, stark_prove_ext, stark_verify_ext, Air, AirExt,
+        ComposeBoundary, ComposeCheck, DeepCheckExt, TraceFoldExt, TranscriptCheck, TranscriptOp,
+        WiredExt, WIDTH,
+    };
+    use crate::crypto::stark::field::Fp2;
+    use crate::crypto::stark::poseidon_transcript::PoseidonTranscript;
+    use alloc::boxed::Box;
+
+    let h = hasher();
+    let (nq, grind, extra) = (32usize, 16u32, 3u32);
+    let (air, proof) = poseidon_join_split_proof(&h, nq, grind, extra);
+    let ci = compose_inputs(&air, &proof, extra, &h);
+    let t = 1u64 << air.log_trace_len();
+    let g = root_of_unity(air.log_trace_len());
+
+    // Region 1: compose.
+    let mut window = [Fp2::ZERO; 6];
+    window.copy_from_slice(&proof.ood_frame[..6]);
+    let mut cperiodic = [Fp2::ZERO; 5];
+    cperiodic.copy_from_slice(&ci.periodic_z[..5]);
+    let mut coeffs = [Fp2::ZERO; 8];
+    coeffs.copy_from_slice(&ci.coeffs[..8]);
+    let bnds: Vec<ComposeBoundary> = air
+        .boundary()
+        .iter()
+        .map(|(col, row, e)| ComposeBoundary { col: *col, g_row: g.pow(*row as u64), expected: *e })
+        .collect();
+    let compose = ComposeCheck::new(window, cperiodic, coeffs, ci.z, ci.comp_z, g.pow(t - 1), t, bnds);
+    let ctrace = compose.trace();
+
+    // Region 2: DEEP.
+    let (terms, dx, ddeep) = deep_terms_query0(&air, &proof, extra, &h);
+    let deepck = DeepCheckExt::new(terms, dx, ddeep);
+    let dtrace = deepck.trace();
+
+    // Region 0: STARK transcript through z.
+    let mut st = [Fp::ZERO; WIDTH];
+    let mut ops: Vec<TranscriptOp> = Vec::new();
+    let absorb = |ops: &mut Vec<TranscriptOp>, st: &mut [Fp; WIDTH], v: Fp| {
+        ops.push(TranscriptOp::Absorb(v));
+        st[0] = st[0] + v;
+        *st = h.permute(*st);
+    };
+    let squeeze = |ops: &mut Vec<TranscriptOp>, st: &mut [Fp; WIDTH]| {
+        let c = st[0];
+        ops.push(TranscriptOp::Squeeze(c));
+        *st = h.permute(*st);
+    };
+    for root in &proof.trace_roots {
+        for lane in root {
+            absorb(&mut ops, &mut st, *lane);
+        }
+    }
+    for _ in 0..ci.coeffs.len() * 2 {
+        squeeze(&mut ops, &mut st);
+    }
+    for lane in &proof.comp_root {
+        absorb(&mut ops, &mut st, *lane);
+    }
+    let z_op = ops.len();
+    squeeze(&mut ops, &mut st);
+    squeeze(&mut ops, &mut st);
+    let transcript = TranscriptCheck::new(h.clone(), 2, ops);
+    let ttrace = transcript.trace();
+
+    // Region 3 + 4: the FRI transcript (interleaved absorb-root, squeeze-beta) and
+    // the fold chain over the real proof's query 0.
+    let fri = &proof.fri;
+    let n_folds = fri.roots.len();
+    let blowup = fri.final_layer.len();
+    let log_n = n_folds as u32 + blowup.trailing_zeros();
+    let n = 1usize << log_n;
+
+    let mut fs = PoseidonTranscript::new(h.clone());
+    let mut betas: Vec<Fp2> = Vec::with_capacity(n_folds);
+    let mut fri_st = [Fp::ZERO; WIDTH];
+    let mut fri_ops: Vec<TranscriptOp> = Vec::new();
+    for root in &fri.roots {
+        fs.absorb_digest(root);
+        betas.push(fs.challenge_fp2());
+        for lane in root {
+            absorb(&mut fri_ops, &mut fri_st, *lane);
+        }
+        squeeze(&mut fri_ops, &mut fri_st);
+        squeeze(&mut fri_ops, &mut fri_st);
+    }
+    for value in &fri.final_layer {
+        fs.absorb(value.c0);
+        fs.absorb(value.c1);
+    }
+    assert!(fs.verify_pow(fri.pow_nonce, grind));
+    let q0 = fs.challenge_index(n);
+    let fri_transcript = TranscriptCheck::new(h.clone(), 2, fri_ops);
+    let fttrace = fri_transcript.trace();
+
+    let final_value = fri.final_layer[0];
+    let base_omega = root_of_unity(log_n);
+    let shift = Fp::from_u64(7);
+    let layers = &fri.queries[0].layers;
+    let (mut a, mut b, mut x_inv, mut dir) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    for (m, op) in layers.iter().enumerate() {
+        a.push(op.a);
+        b.push(op.b);
+        let half = n >> (m + 1);
+        let i = q0 % half;
+        let x = (shift * base_omega.pow(i as u64)).pow(1u64 << m);
+        x_inv.push(x.inv());
+        dir.push(i >= (n >> (m + 2)));
+    }
+    a.push(final_value);
+    b.push(final_value);
+    let log_layers = (n_folds + 1).next_power_of_two().trailing_zeros();
+    let fold = TraceFoldExt::new(log_layers, n_folds, x_inv, dir, final_value);
+    let ftrace = fold.trace(&betas, &a, &b);
+
+    let regions: Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(transcript) as Box<dyn AirExt>,
+        Box::new(compose),
+        Box::new(deepck),
+        Box::new(fri_transcript),
+        Box::new(fold),
+    ];
+    let l = 4usize;
+    let off: Vec<usize> = {
+        let mut v = Vec::new();
+        let mut r = 0usize;
+        for reg in &regions {
+            v.push(r);
+            r += 1usize << reg.log_trace_len();
+        }
+        v
+    };
+    let span = {
+        let mut r = 0usize;
+        for reg in &regions {
+            r += 1usize << reg.log_trace_len();
+        }
+        r.next_power_of_two()
+    };
+    let (c_off, d_off, ft_off, f_off) = (off[1], off[2], off[3], off[4]);
+
+    // wired columns: transcript squeeze lane (0), compose z+coeffs (22..39), compose
+    // and DEEP comp_z (54,55 and 4,5), and the fold beta cells (columns 0,1 of the
+    // fold region, but the fold shares low columns 0,1 with the transcript squeeze
+    // lane 0, so beta.c1 uses column 1).
+    let mut wired_cols = alloc::vec![0usize, 1];
+    for c in 22..40 {
+        wired_cols.push(c);
+    }
+    wired_cols.push(54);
+    wired_cols.push(55);
+    wired_cols.push(4);
+    wired_cols.push(5);
+    let k = wired_cols.len();
+    let widx = |col: usize| -> usize { wired_cols.iter().position(|&c| c == col).unwrap() };
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    // z and coefficients.
+    sigma.swap((z_op * l) * k + widx(0), c_off * k + widx(22));
+    sigma.swap(((z_op + 1) * l) * k + widx(0), c_off * k + widx(23));
+    for i in 0..8 {
+        sigma.swap(((12 + 2 * i) * l) * k + widx(0), c_off * k + widx(24 + 2 * i));
+        sigma.swap(((12 + 2 * i + 1) * l) * k + widx(0), c_off * k + widx(25 + 2 * i));
+    }
+    // comp_z.
+    sigma.swap(c_off * k + widx(54), d_off * k + widx(4));
+    sigma.swap(c_off * k + widx(55), d_off * k + widx(5));
+    // betas: FRI transcript squeeze (op 6m+4 for c0, 6m+5 for c1, lane 0) wire to the
+    // fold's beta cells (row m, columns 0 and 1).
+    for m in 0..n_folds {
+        let b0_row = ft_off + (6 * m + 4) * l;
+        let b1_row = ft_off + (6 * m + 5) * l;
+        sigma.swap(b0_row * k + widx(0), (f_off + m) * k + widx(0));
+        sigma.swap(b1_row * k + widx(0), (f_off + m) * k + widx(1));
+    }
+
+    let wired = WiredExt::new(regions, wired_cols, sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[ttrace, ctrace, dtrace, fttrace, ftrace]);
+    let wproof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(
+        stark_verify_ext(&wired, &wproof, 32, 8),
+        "the five verifier regions were not consistently wired"
+    );
+}
+
 #[test]
 fn a_poseidon_committed_stark_holds_at_deployment_blowup() {
     use crate::crypto::stark::air::{stark_prove_poseidon_ext, stark_verify_poseidon_ext, Squaring};
