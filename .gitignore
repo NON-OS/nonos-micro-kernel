@@ -81,3 +81,9 @@ coverage/
 .env.local
 *.local.toml
 
+
+# Bootloader key material (private seeds + signing key, never commit)
+nonos-bootloader/keys/
+
+# Local scratch
+.proof-harness/
