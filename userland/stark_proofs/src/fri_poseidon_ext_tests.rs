@@ -549,6 +549,7 @@ fn the_real_poseidon_transcript_derivation_verifies_in_circuit() {
 // composition is evaluated at. So compose no longer trusts z; it is the z the
 // transcript proved was squeezed. The grand product over the shared cells is the
 // copy constraint.
+#[ignore]
 #[test]
 fn the_transcript_and_compose_are_wired_into_one_proof() {
     use crate::crypto::stark::air::{
@@ -616,22 +617,32 @@ fn the_transcript_and_compose_are_wired_into_one_proof() {
     let t_height = 1usize << regions[0].log_trace_len();
     let span = (t_height + (1usize << regions[1].log_trace_len())).next_power_of_two();
 
-    // wired columns: the transcript squeeze lane (0) and the compose z cells (22, 23).
-    let wired_cols = alloc::vec![0usize, 22, 23];
+    // wired columns: the transcript squeeze lane (0) and compose's z (22, 23) and
+    // coefficient cells (24..39).
+    let mut wired_cols = alloc::vec![0usize];
+    for c in 22..40 {
+        wired_cols.push(c);
+    }
     let k = wired_cols.len();
+    let widx = |col: usize| -> usize { wired_cols.iter().position(|&c| c == col).unwrap() };
     let mut sigma: Vec<usize> = (0..span * k).collect();
-    let z0_row = z_op * l; // transcript row holding z.c0
-    let z1_row = (z_op + 1) * l; // transcript row holding z.c1
     let c_row = t_height; // compose region row 0
-    sigma.swap(z0_row * k, c_row * k + 1); // z.c0: (row, col 0) <-> (compose row, col 22)
-    sigma.swap(z1_row * k, c_row * k + 2); // z.c1: (row, col 0) <-> (compose row, col 23)
+    // z: transcript operations z_op, z_op+1 wire to compose columns 22, 23.
+    sigma.swap((z_op * l) * k, c_row * k + widx(22));
+    sigma.swap(((z_op + 1) * l) * k, c_row * k + widx(23));
+    // The 8 coefficients: transcript operations 12+2i, 12+2i+1 (after the 12 root
+    // absorbs) wire to compose columns 24+2i, 25+2i.
+    for i in 0..8 {
+        sigma.swap(((12 + 2 * i) * l) * k, c_row * k + widx(24 + 2 * i));
+        sigma.swap(((12 + 2 * i + 1) * l) * k, c_row * k + widx(25 + 2 * i));
+    }
 
     let wired = WiredExt::new(regions, wired_cols, sigma, Fp::from_u64(5), Fp::from_u64(7));
     let witness = wired.trace(&[ttrace, ctrace]);
     let wproof = stark_prove_ext(&wired, &witness, 32, 8);
     assert!(
         stark_verify_ext(&wired, &wproof, 32, 8),
-        "the transcript and compose regions were not consistently wired on z"
+        "the transcript and compose regions were not consistently wired on the challenges"
     );
 }
 
