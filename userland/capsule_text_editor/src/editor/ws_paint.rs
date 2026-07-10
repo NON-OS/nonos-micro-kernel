@@ -30,7 +30,7 @@ use super::shell::{pane_rect, pane_x};
 use super::sidebar::paint_sidebar;
 use super::statusbar::paint_status;
 use super::tabbar::paint_tabs;
-use super::theme::BACKGROUND;
+use super::theme;
 
 impl Editor {
     pub(super) fn paint_shell(&mut self, fb: &mut PaintBuffer) {
@@ -44,7 +44,7 @@ impl Editor {
         let (w, h) = (fb.width, fb.height);
         self.last_w = w;
         self.last_h = h;
-        fb.fill_rect(0, 0, w, h, BACKGROUND);
+        fb.fill_rect(0, 0, w, h, theme::active().background);
 
         paint_activity(fb, h, self.sidebar_open);
         if self.sidebar_open {

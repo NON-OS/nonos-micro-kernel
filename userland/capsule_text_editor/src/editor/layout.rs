@@ -32,14 +32,30 @@ pub(super) const GUTTER_W: u32 = 54;
 pub(super) const TEXT_PAD: u32 = 12;
 pub(super) const PAD_X: u32 = 12;
 pub(super) const PAD_TOP: u32 = 8;
-pub(super) const LINE_HEIGHT: u32 = 22;
 pub(super) const ROW_H: u32 = 24;
 
-// Font sizes in px.
-pub(super) const BODY_PX: f32 = 15.0;
-pub(super) const GUTTER_PX: f32 = 13.0;
+// Font sizes in px. Chrome and status stay fixed; only the body zooms.
 pub(super) const CHROME_PX: f32 = 14.0;
 pub(super) const STATUS_PX: f32 = 13.0;
+
+// Zoom bounds. Scale 2 is the default and reproduces the original 15px body.
+pub(super) const MIN_SCALE: u32 = 1;
+pub(super) const MAX_SCALE: u32 = 6;
+
+// Body font size for a zoom level: 11 + 2*scale px, matching the terminal's
+// zoom curve (scale 2 = 15px). Line height and gutter size track it so a zoom
+// change moves everything together.
+pub(super) fn body_px(scale: u32) -> f32 {
+    11.0 + scale.clamp(MIN_SCALE, MAX_SCALE) as f32 * 2.0
+}
+
+pub(super) fn gutter_px(scale: u32) -> f32 {
+    (body_px(scale) - 2.0).max(9.0)
+}
+
+pub(super) fn line_height(scale: u32) -> u32 {
+    body_px(scale) as u32 + 7
+}
 
 /// Fallback cell width before the first measured advance is known.
 pub(super) const GLYPH_ADVANCE: u32 = 9;

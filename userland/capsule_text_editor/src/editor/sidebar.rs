@@ -22,15 +22,16 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::layout::{ACTIVITY_W, CHROME_PX, FOOTER_H, ROW_H, SIDEBAR_W, TABBAR_H, TITLEBAR_H};
 use super::shell::pane_y;
-use super::theme::{FOLDER, FOREGROUND, HEADER_BG, LINE, MUTED, ROW_SELECT, SIDEBAR_BG};
+use super::theme;
 use super::tree::FileTree;
 
 pub(super) fn paint_sidebar(fb: &mut PaintBuffer, tree: &FileTree, height: u32, entry_open: bool) {
-    fb.fill_rect(ACTIVITY_W, 0, SIDEBAR_W, height, SIDEBAR_BG);
-    fb.fill_rect(ACTIVITY_W, TITLEBAR_H, SIDEBAR_W, TABBAR_H, HEADER_BG);
+    let th = theme::active();
+    fb.fill_rect(ACTIVITY_W, 0, SIDEBAR_W, height, th.sidebar_bg);
+    fb.fill_rect(ACTIVITY_W, TITLEBAR_H, SIDEBAR_W, TABBAR_H, th.header_bg);
     let _ =
-        fb.text_ttf((ACTIVITY_W + 14) as i32, (TITLEBAR_H + 10) as i32, "EXPLORER", MUTED, 11.0);
-    fb.fill_rect(ACTIVITY_W + SIDEBAR_W - 1, 0, 1, height, LINE);
+        fb.text_ttf((ACTIVITY_W + 14) as i32, (TITLEBAR_H + 10) as i32, "EXPLORER", th.muted, 11.0);
+    fb.fill_rect(ACTIVITY_W + SIDEBAR_W - 1, 0, 1, height, th.line);
 
     // While the name entry is open its bar takes the first row slot.
     let top = pane_y() + if entry_open { ROW_H } else { 0 };
@@ -39,7 +40,7 @@ pub(super) fn paint_sidebar(fb: &mut PaintBuffer, tree: &FileTree, height: u32, 
 
     if tree.visible.is_empty() {
         let msg = if tree.status.is_empty() { "(empty)" } else { tree.status };
-        let _ = fb.text_ttf((ACTIVITY_W + 14) as i32, (top + 6) as i32, msg, MUTED, CHROME_PX);
+        let _ = fb.text_ttf((ACTIVITY_W + 14) as i32, (top + 6) as i32, msg, th.muted, CHROME_PX);
         return;
     }
 
@@ -51,17 +52,17 @@ pub(super) fn paint_sidebar(fb: &mut PaintBuffer, tree: &FileTree, height: u32, 
         let node = &tree.nodes[tree.visible[vi]];
         let y = top + r * ROW_H;
         if vi == tree.selected {
-            fb.fill_rect(ACTIVITY_W, y, SIDEBAR_W, ROW_H, ROW_SELECT);
+            fb.fill_rect(ACTIVITY_W, y, SIDEBAR_W, ROW_H, th.row_select);
         }
         let indent = 12 + node.depth as u32 * 12;
         let x = ACTIVITY_W + indent;
         if node.is_dir {
             let expanded = tree.expanded.contains(&node.path);
             let mark = if expanded { "\u{25BE}" } else { "\u{25B8}" };
-            let _ = fb.text_ttf(x as i32, (y + 5) as i32, mark, MUTED, 12.0);
+            let _ = fb.text_ttf(x as i32, (y + 5) as i32, mark, th.muted, 12.0);
         }
         let tx = x + 15;
-        let color = if node.is_dir { FOLDER } else { FOREGROUND };
+        let color = if node.is_dir { th.folder } else { th.foreground };
         let name = truncate(&node.name, SIDEBAR_W.saturating_sub(indent + 20));
         let _ = fb.text_ttf(tx as i32, (y + 5) as i32, name, color, CHROME_PX);
     }

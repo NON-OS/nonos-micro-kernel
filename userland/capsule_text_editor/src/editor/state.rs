@@ -72,4 +72,8 @@ pub struct State {
     pub last_click_ns: u64,
     pub last_click_x: i32,
     pub last_click_y: i32,
+    // Zoom level (1..=6) driving the body font size and line height. Default 2
+    // reproduces the original 15px look exactly. The theme is process-wide, so
+    // it does not live here.
+    pub font_scale: u32,
 }

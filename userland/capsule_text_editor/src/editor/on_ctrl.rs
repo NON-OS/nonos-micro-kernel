@@ -19,8 +19,10 @@ use nonos_app_skeleton::EventOutcome;
 use super::ctrl_copy::ctrl_copy;
 use super::ctrl_cut::ctrl_cut;
 use super::ctrl_paste::ctrl_paste;
+use super::layout::{MAX_SCALE, MIN_SCALE};
 use super::path_prompt;
 use super::state::{PromptOp, State};
+use super::theme;
 
 pub(super) fn on_ctrl(state: &mut State, code: u32, shift: bool) -> EventOutcome {
     match code {
@@ -42,8 +44,41 @@ pub(super) fn on_ctrl(state: &mut State, code: u32, shift: bool) -> EventOutcome
         // Ctrl+Z undoes; Ctrl+Y or Ctrl+Shift+Z redoes.
         0x5A | 0x7A => history(state, !shift),
         0x59 | 0x79 => history(state, false),
+        // Ctrl+= / Ctrl++ zoom in, Ctrl+- / Ctrl+_ zoom out, Ctrl+0 reset.
+        0x3D | 0x2B => zoom(state, 1),
+        0x2D | 0x5F => zoom(state, -1),
+        0x30 => zoom_reset(state),
+        // Ctrl+B cycles the editor theme.
+        0x42 | 0x62 => cycle_theme(state),
         _ => EventOutcome::Idle,
     }
+}
+
+// Step the zoom level within bounds; a no-op at the limit stays idle so the
+// screen is not repainted for nothing.
+fn zoom(state: &mut State, delta: i32) -> EventOutcome {
+    let next = (state.font_scale as i32 + delta).clamp(MIN_SCALE as i32, MAX_SCALE as i32) as u32;
+    if next == state.font_scale {
+        return EventOutcome::Idle;
+    }
+    state.font_scale = next;
+    state.status = b"zoom";
+    EventOutcome::Repaint
+}
+
+fn zoom_reset(state: &mut State) -> EventOutcome {
+    if state.font_scale == 2 {
+        return EventOutcome::Idle;
+    }
+    state.font_scale = 2;
+    state.status = b"zoom reset";
+    EventOutcome::Repaint
+}
+
+fn cycle_theme(state: &mut State) -> EventOutcome {
+    theme::cycle();
+    state.status = b"theme";
+    EventOutcome::Repaint
 }
 
 // Ctrl+/ comments or uncomments the caret line or the selected lines.

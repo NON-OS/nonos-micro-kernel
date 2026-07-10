@@ -18,19 +18,25 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::{SbMenu, MENU_ROW_H, MENU_W};
 use crate::editor::layout::CHROME_PX;
-use crate::editor::theme::{FOREGROUND, LINE, TAB_INACTIVE_BG};
+use crate::editor::theme;
 
 // Draw the context menu over whatever is beneath it, one row per action.
 pub(in crate::editor) fn paint_menu(fb: &mut PaintBuffer, menu: &SbMenu) {
+    let th = theme::active();
     let h = menu.items.len() as u32 * MENU_ROW_H + 2;
-    fb.fill_rect(menu.x, menu.y, MENU_W, h, TAB_INACTIVE_BG);
-    fb.fill_rect(menu.x, menu.y, MENU_W, 1, LINE);
-    fb.fill_rect(menu.x, menu.y + h - 1, MENU_W, 1, LINE);
-    fb.fill_rect(menu.x, menu.y, 1, h, LINE);
-    fb.fill_rect(menu.x + MENU_W - 1, menu.y, 1, h, LINE);
+    fb.fill_rect(menu.x, menu.y, MENU_W, h, th.tab_inactive_bg);
+    fb.fill_rect(menu.x, menu.y, MENU_W, 1, th.line);
+    fb.fill_rect(menu.x, menu.y + h - 1, MENU_W, 1, th.line);
+    fb.fill_rect(menu.x, menu.y, 1, h, th.line);
+    fb.fill_rect(menu.x + MENU_W - 1, menu.y, 1, h, th.line);
     for (i, item) in menu.items.iter().enumerate() {
         let iy = menu.y + 1 + i as u32 * MENU_ROW_H;
-        let _ =
-            fb.text_ttf((menu.x + 14) as i32, (iy + 6) as i32, item.label(), FOREGROUND, CHROME_PX);
+        let _ = fb.text_ttf(
+            (menu.x + 14) as i32,
+            (iy + 6) as i32,
+            item.label(),
+            th.foreground,
+            CHROME_PX,
+        );
     }
 }

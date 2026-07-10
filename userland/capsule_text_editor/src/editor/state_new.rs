@@ -49,6 +49,7 @@ impl State {
             last_click_ns: 0,
             last_click_x: 0,
             last_click_y: 0,
+            font_scale: 2,
         }
     }
 }

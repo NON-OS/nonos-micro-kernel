@@ -14,37 +14,190 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// One Dark palette, the look Lapce ships by default.
+//! The editor palette. A theme carries every colour the shell paints with, so
+//! switching themes recolours the whole editor at once: body, gutter, syntax,
+//! and the chrome (tab bar, sidebar, activity bar, status bar). One theme is
+//! active process-wide, held in an atomic so every tab shares it and the theme
+//! button can flip it from any paint path.
+
+use core::sync::atomic::{AtomicUsize, Ordering};
+
+// A full palette. Every field is an ARGB colour with a 0xFF alpha.
+#[derive(Clone, Copy)]
+pub struct Theme {
+    pub background: u32,
+    pub foreground: u32,
+    pub title: u32,
+    pub muted: u32,
+    pub header_bg: u32,
+    pub activity_bg: u32,
+    pub sidebar_bg: u32,
+    pub tabbar_bg: u32,
+    pub tab_active_bg: u32,
+    pub tab_inactive_bg: u32,
+    pub row_select: u32,
+    pub icon: u32,
+    pub icon_active: u32,
+    pub folder: u32,
+    pub gutter_bg: u32,
+    pub gutter_fg: u32,
+    pub gutter_cur: u32,
+    pub line: u32,
+    pub accent: u32,
+    pub caret: u32,
+    pub current_line: u32,
+    pub selection: u32,
+    pub syn_keyword: u32,
+    pub syn_string: u32,
+    pub syn_comment: u32,
+    pub syn_number: u32,
+    pub syn_type: u32,
+    pub syn_function: u32,
+}
+
+// The default background, kept as a standalone const so a caller can reach for
+// a plain fallback colour without loading the active theme.
+#[allow(dead_code)]
 pub const BACKGROUND: u32 = 0xFF282C34;
-pub const FOREGROUND: u32 = 0xFFABB2BF;
-pub const TITLE: u32 = 0xFFE5E9F0;
-pub const MUTED: u32 = 0xFF7F8899;
 
-// Chrome: activity bar, sidebar, tab bar, gutter, dividers, caret, and the
-// active-line band.
-pub const HEADER_BG: u32 = 0xFF21252B;
-pub const ACTIVITY_BG: u32 = 0xFF1B1E24;
-pub const SIDEBAR_BG: u32 = 0xFF21252B;
-pub const TABBAR_BG: u32 = 0xFF21252B;
-pub const TAB_ACTIVE_BG: u32 = 0xFF282C34;
-pub const TAB_INACTIVE_BG: u32 = 0xFF2C313A;
-pub const ROW_SELECT: u32 = 0xFF323842;
-pub const ICON: u32 = 0xFF6B7280;
-pub const ICON_ACTIVE: u32 = 0xFFE5E9F0;
-pub const FOLDER: u32 = 0xFF61AFEF;
-pub const GUTTER_BG: u32 = 0xFF282C34;
-pub const GUTTER_FG: u32 = 0xFF4B5263;
-pub const GUTTER_CUR: u32 = 0xFFABB2BF;
-pub const LINE: u32 = 0xFF3B4048;
-pub const ACCENT: u32 = 0xFF61AFEF;
-pub const CARET: u32 = 0xFF528BFF;
-pub const CURRENT_LINE: u32 = 0xFF2C313C;
-pub const SELECTION: u32 = 0xFF3E4451;
+// The bundled themes, cycled by the theme button and Ctrl+B. Index 0 is the
+// One Dark default the editor has always shipped.
+pub const THEMES: [Theme; 4] = [
+    // One Dark, the look Lapce ships by default.
+    Theme {
+        background: 0xFF282C34,
+        foreground: 0xFFABB2BF,
+        title: 0xFFE5E9F0,
+        muted: 0xFF7F8899,
+        header_bg: 0xFF21252B,
+        activity_bg: 0xFF1B1E24,
+        sidebar_bg: 0xFF21252B,
+        tabbar_bg: 0xFF21252B,
+        tab_active_bg: 0xFF282C34,
+        tab_inactive_bg: 0xFF2C313A,
+        row_select: 0xFF323842,
+        icon: 0xFF6B7280,
+        icon_active: 0xFFE5E9F0,
+        folder: 0xFF61AFEF,
+        gutter_bg: 0xFF282C34,
+        gutter_fg: 0xFF4B5263,
+        gutter_cur: 0xFFABB2BF,
+        line: 0xFF3B4048,
+        accent: 0xFF61AFEF,
+        caret: 0xFF528BFF,
+        current_line: 0xFF2C313C,
+        selection: 0xFF3E4451,
+        syn_keyword: 0xFFC678DD,
+        syn_string: 0xFF98C379,
+        syn_comment: 0xFF5C6370,
+        syn_number: 0xFFD19A66,
+        syn_type: 0xFFE5C07B,
+        syn_function: 0xFF61AFEF,
+    },
+    // Light.
+    Theme {
+        background: 0xFFFAFAFA,
+        foreground: 0xFF383A42,
+        title: 0xFF202020,
+        muted: 0xFF808080,
+        header_bg: 0xFFEAEAEB,
+        activity_bg: 0xFFE0E0E1,
+        sidebar_bg: 0xFFEAEAEB,
+        tabbar_bg: 0xFFEAEAEB,
+        tab_active_bg: 0xFFFAFAFA,
+        tab_inactive_bg: 0xFFECECEC,
+        row_select: 0xFFDDDDDD,
+        icon: 0xFF808080,
+        icon_active: 0xFF202020,
+        folder: 0xFF4078F2,
+        gutter_bg: 0xFFFAFAFA,
+        gutter_fg: 0xFFB0B0B0,
+        gutter_cur: 0xFF383A42,
+        line: 0xFFD0D0D0,
+        accent: 0xFF4078F2,
+        caret: 0xFF526EFF,
+        current_line: 0xFFF0F0F0,
+        selection: 0xFFCFD8E6,
+        syn_keyword: 0xFFA626A4,
+        syn_string: 0xFF50A14F,
+        syn_comment: 0xFFA0A1A7,
+        syn_number: 0xFF986801,
+        syn_type: 0xFFC18401,
+        syn_function: 0xFF4078F2,
+    },
+    // Dracula.
+    Theme {
+        background: 0xFF282A36,
+        foreground: 0xFFF8F8F2,
+        title: 0xFFF8F8F2,
+        muted: 0xFF6272A4,
+        header_bg: 0xFF21222C,
+        activity_bg: 0xFF191A21,
+        sidebar_bg: 0xFF21222C,
+        tabbar_bg: 0xFF21222C,
+        tab_active_bg: 0xFF282A36,
+        tab_inactive_bg: 0xFF21222C,
+        row_select: 0xFF44475A,
+        icon: 0xFF6272A4,
+        icon_active: 0xFFF8F8F2,
+        folder: 0xFFBD93F9,
+        gutter_bg: 0xFF282A36,
+        gutter_fg: 0xFF6272A4,
+        gutter_cur: 0xFFF8F8F2,
+        line: 0xFF44475A,
+        accent: 0xFFBD93F9,
+        caret: 0xFFF8F8F0,
+        current_line: 0xFF44475A,
+        selection: 0xFF44475A,
+        syn_keyword: 0xFFFF79C6,
+        syn_string: 0xFFF1FA8C,
+        syn_comment: 0xFF6272A4,
+        syn_number: 0xFFBD93F9,
+        syn_type: 0xFF8BE9FD,
+        syn_function: 0xFF50FA7B,
+    },
+    // Nord.
+    Theme {
+        background: 0xFF2E3440,
+        foreground: 0xFFD8DEE9,
+        title: 0xFFECEFF4,
+        muted: 0xFF616E88,
+        header_bg: 0xFF2E3440,
+        activity_bg: 0xFF272C36,
+        sidebar_bg: 0xFF2E3440,
+        tabbar_bg: 0xFF2E3440,
+        tab_active_bg: 0xFF3B4252,
+        tab_inactive_bg: 0xFF2E3440,
+        row_select: 0xFF434C5E,
+        icon: 0xFF616E88,
+        icon_active: 0xFFD8DEE9,
+        folder: 0xFF88C0D0,
+        gutter_bg: 0xFF2E3440,
+        gutter_fg: 0xFF4C566A,
+        gutter_cur: 0xFFD8DEE9,
+        line: 0xFF434C5E,
+        accent: 0xFF88C0D0,
+        caret: 0xFFD8DEE9,
+        current_line: 0xFF3B4252,
+        selection: 0xFF434C5E,
+        syn_keyword: 0xFF81A1C1,
+        syn_string: 0xFFA3BE8C,
+        syn_comment: 0xFF616E88,
+        syn_number: 0xFFB48EAD,
+        syn_type: 0xFF8FBCBB,
+        syn_function: 0xFF88C0D0,
+    },
+];
 
-// Syntax token colours (One Dark).
-pub const SYN_KEYWORD: u32 = 0xFFC678DD;
-pub const SYN_STRING: u32 = 0xFF98C379;
-pub const SYN_COMMENT: u32 = 0xFF5C6370;
-pub const SYN_NUMBER: u32 = 0xFFD19A66;
-pub const SYN_TYPE: u32 = 0xFFE5C07B;
-pub const SYN_FUNCTION: u32 = 0xFF61AFEF;
+// The index of the active theme, shared by every tab and paint path.
+static ACTIVE: AtomicUsize = AtomicUsize::new(0);
+
+// The palette every painter reads from this frame.
+pub fn active() -> &'static Theme {
+    &THEMES[ACTIVE.load(Ordering::Relaxed) % THEMES.len()]
+}
+
+// Advance to the next theme, wrapping. Driven by the theme button and Ctrl+B.
+pub fn cycle() {
+    ACTIVE.store((ACTIVE.load(Ordering::Relaxed) + 1) % THEMES.len(), Ordering::Relaxed);
+}
