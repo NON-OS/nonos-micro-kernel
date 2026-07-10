@@ -40,14 +40,7 @@ pub fn seed(
         };
         if !table.record(
             i as u32,
-            Scanout {
-                x: s.x,
-                y: s.y,
-                width,
-                height,
-                current_resource_id: 0,
-                enabled: true,
-            },
+            Scanout { x: s.x, y: s.y, width, height, current_resource_id: 0, enabled: true },
         ) {
             return Err("virtio-gpu: scanout table rejected display info");
         }

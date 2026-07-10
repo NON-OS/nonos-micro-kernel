@@ -16,7 +16,6 @@
 
 use nonos_libc::mk_ipc_send;
 
-use crate::nvm::SECTOR_SIZE;
 use crate::protocol::{
     encode_response_header, write_status, Request, E_IO, E_MSGSIZE, E_NODEV, KERNEL_REPLY_ENDPOINT,
     READ_REQ_LEN, RESP_HDR_LEN, STATUS_LEN,
@@ -33,14 +32,16 @@ pub fn handle(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) {
     if req.payload_len as usize != READ_REQ_LEN {
         return reply_with_status(tx, req, E_MSGSIZE);
     }
-    let (lba, nsectors) = match super::rw_parse::parse(body, io.capacity_sectors) {
+    let (lba, nsectors) = match super::rw_parse::parse(body, io.capacity_sectors, io.max_sectors())
+    {
         Ok(v) => v,
         Err(s) => return reply_with_status(tx, req, s),
     };
+    let lba_size = io.lba_size as usize;
     if io.transfer(regs, lba, nsectors, false).is_err() {
         return reply_with_status(tx, req, E_IO);
     }
-    let bytes = nsectors as usize * SECTOR_SIZE;
+    let bytes = nsectors as usize * lba_size;
     let payload = STATUS_LEN + bytes;
     encode_response_header(tx, req, payload as u32);
     write_status(&mut tx[RESP_HDR_LEN..], 0);

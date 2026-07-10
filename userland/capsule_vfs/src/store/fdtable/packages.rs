@@ -46,30 +46,16 @@ const STD_PROOF: [(&str, &[u8]); 4] = [
     ),
 ];
 
-// The real, unmodified ripgrep v14.1.1 from crates.io (stripped to fit the
-// load cap), staged so `install rg <pattern> <path>` runs it against the VFS.
-const RIPGREP: [(&str, &[u8]); 4] = [
-    (
-        "/capsules/rg.elf",
-        include_bytes!("../../../../capsule_ripgrep/target/x86_64-nonos-user/release/rg"),
-    ),
-    (
-        "/capsules/rg.nonos_id_cert.bin",
-        include_bytes!("../../../../../nonos-data/trust/capsules/rg.nonos_id_cert.bin"),
-    ),
-    (
-        "/capsules/rg.manifest.bin",
-        include_bytes!("../../../../../nonos-data/trust/capsules/rg.manifest.bin"),
-    ),
-    (
-        "/capsules/rg.zk_trailer.bin",
-        include_bytes!("../../../../../nonos-data/trust/capsules/rg.zk_trailer.bin"),
-    ),
-];
+// NOTE: ripgrep (rg.elf ~24 MB) is intentionally NOT baked into the store. The
+// vfs capsule heap is 16 MB, so staging a 24 MB file at boot exhausts it and the
+// capsule aborts before it can serve a single request, which made the whole
+// filesystem read as "vfs ipc failed". Large packages belong to the runtime
+// installer path (`/capsules` starts empty and is filled on demand), not the
+// image. std_proof (~1.5 MB) is small enough to stay as a working demo.
 
 impl Store {
     pub(super) fn seed_packages(&mut self) {
-        for &(name, data) in STD_PROOF.iter().chain(RIPGREP.iter()) {
+        for &(name, data) in STD_PROOF.iter() {
             self.stage(name, data);
         }
     }

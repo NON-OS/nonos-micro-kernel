@@ -48,8 +48,12 @@ pub fn handle(driver: &mut Driver, req: &Request, tx: &mut [u8]) {
     let body_off = prefix_off + RX_PAYLOAD_PREFIX_LEN;
     tx[prefix_off..body_off].copy_from_slice(&prefix);
     let src = driver.rx.buffer_va(idx) as *const u8;
+    // consume() already rejects len > MAX_ETHERNET_FRAME and tx is sized for it,
+    // but bound the copy to the actual tx tail so a constant drift among those
+    // sizes can never overflow tx with a device-written length.
+    let n = (len as usize).min(tx.len().saturating_sub(body_off));
     unsafe {
-        core::ptr::copy_nonoverlapping(src, tx[body_off..].as_mut_ptr(), len as usize);
+        core::ptr::copy_nonoverlapping(src, tx[body_off..].as_mut_ptr(), n);
     }
     unsafe {
         driver.regs.w32(REG_RDT, idx as u32);

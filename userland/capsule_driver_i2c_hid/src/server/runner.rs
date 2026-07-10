@@ -2,10 +2,10 @@ use alloc::vec;
 
 use nonos_libc::mk_ipc_recv_from;
 
+use crate::input;
 use crate::protocol::{
     parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_DESCRIPTOR, OP_HEALTHCHECK, OP_PROBE,
 };
-use crate::input;
 use crate::server::{handlers, respond};
 use crate::state::State;
 
