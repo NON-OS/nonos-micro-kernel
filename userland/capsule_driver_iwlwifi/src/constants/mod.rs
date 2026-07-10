@@ -17,8 +17,36 @@
 pub const INTEL_VENDOR_ID: u16 = 0x8086;
 pub const BAR_INDEX: u32 = 0;
 pub const BAR_OFFSET: u64 = 0;
-pub const FW_STAGING_SIZE: u64 = 64 * 1024;
+// Runtime ucode images are hundreds of KB to ~1 MB; the old 64 KB staging
+// buffer could not hold a single image, so staging truncated on real firmware.
+pub const FW_STAGING_SIZE: u64 = 2 * 1024 * 1024;
 pub const PAGE_MASK: u64 = 0xFFF;
+
+// Flow Handler (FH) registers for the legacy (pre-8000) firmware-load DMA path.
+// The FH service channel (9) transfers a staged section from host DRAM into the
+// device's internal SRAM at a destination address. Offsets from iwl-fh.h.
+pub const FH_TFDIB_CTRL0_REG: usize = 0x1948;
+pub const FH_TFDIB_CTRL1_REG: usize = 0x194C;
+pub const FH_SRVC_CHNL_SRAM_ADDR_REG: usize = 0x19C8;
+pub const FH_TCSR_CHNL_TX_CONFIG_REG: usize = 0x1E20;
+pub const FH_TCSR_CHNL_TX_BUF_STS_REG: usize = 0x1E28;
+pub const FH_TFDIB_REG1_ADDR_BITSHIFT: u32 = 28;
+pub const FH_TCSR_TX_CONFIG_DMA_PAUSE: u32 = 0x0000_0000;
+pub const FH_TCSR_TX_CONFIG_DMA_ENABLE: u32 = 0x8000_0000;
+pub const FH_TCSR_TX_CONFIG_CIRQ_HOST_ENDTFD: u32 = 0x0010_0000;
+pub const FH_TCSR_TX_BUF_STS_TFDB_VALID: u32 = (1 << 20) | (1 << 12) | 0x1;
+pub const FH_TX_POLL_ITERS: usize = 500_000;
+
+// Peripheral (PRPH) indirect register access through the HBUS window, and the
+// CPU-release register that starts the loaded firmware. After every ucode
+// section is in SRAM, releasing the CPU reset boots the firmware, which then
+// raises the ALIVE interrupt. Offsets from iwl-io.h / iwl-prph.h.
+pub const HBUS_TARG_PRPH_WADDR: usize = 0x0444;
+pub const HBUS_TARG_PRPH_WDAT: usize = 0x044C;
+pub const PRPH_WADDR_ADDR_MASK: u32 = 0x000F_FFFF;
+pub const PRPH_WADDR_WORD_ENABLE: u32 = 0x3 << 24;
+pub const RELEASE_CPU_RESET: u32 = 0x300C;
+pub const RELEASE_CPU_RESET_BIT: u32 = 0x0100_0000;
 pub const CSR_INT_COALESCING: usize = 0x004;
 pub const CSR_INT: usize = 0x008;
 pub const CSR_INT_MASK: usize = 0x00C;

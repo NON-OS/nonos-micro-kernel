@@ -13,19 +13,24 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use super::packet::{parse, PACKET_LEN};
+use super::packet::parse;
 use super::ring::MouseRing;
+
+const MAX_PACKET: usize = 4;
+
 pub struct MouseParser {
-    buf: [u8; PACKET_LEN],
+    buf: [u8; MAX_PACKET],
     index: usize,
+    // 3 for a plain mouse, 4 once IntelliMouse scroll is negotiated.
+    packet_len: usize,
 }
 impl MouseParser {
-    pub const fn new() -> Self {
-        Self { buf: [0; PACKET_LEN], index: 0 }
+    pub const fn new(wheel: bool) -> Self {
+        Self { buf: [0; MAX_PACKET], index: 0, packet_len: if wheel { 4 } else { 3 } }
     }
-    // Assemble 3-byte packets and queue them on the ring. Posting to the kernel
-    // input ring is done once, by the pump loop draining this ring; absorbing
-    // must not also post or every event reaches the kernel twice.
+    // Assemble one packet and queue it on the ring. Posting to the kernel input
+    // ring is done once, by the pump loop draining this ring; absorbing must not
+    // also post or every event reaches the kernel twice.
     pub fn absorb(&mut self, byte: u8, ring: &mut MouseRing) {
         if self.index == 0 && byte & 0x08 == 0 {
             ring.sync_errors = ring.sync_errors.wrapping_add(1);
@@ -33,9 +38,9 @@ impl MouseParser {
         }
         self.buf[self.index] = byte;
         self.index += 1;
-        if self.index == PACKET_LEN {
+        if self.index == self.packet_len {
             self.index = 0;
-            match parse(self.buf) {
+            match parse(&self.buf[..self.packet_len]) {
                 Some(ev) => ring.push(ev),
                 None => ring.sync_errors = ring.sync_errors.wrapping_add(1),
             }

@@ -29,4 +29,15 @@ pub struct IoQueue {
     pub(super) cq_db: u32,
     pub(super) nsid: u32,
     pub(crate) capacity_sectors: u64,
+    pub(crate) lba_size: u32,
+}
+
+impl IoQueue {
+    /// Sectors that fit in the fixed DMA data buffer. The buffer is a constant
+    /// byte budget, so the sector count scales inversely with the formatted LBA
+    /// size (64 at 512-byte, 8 at 4096-byte). Bounding transfers by this keeps
+    /// every read/write within the buffer regardless of the drive's format.
+    pub(crate) fn max_sectors(&self) -> u32 {
+        (super::constants::DATA_BYTES / self.lba_size.max(1) as u64) as u32
+    }
 }

@@ -13,30 +13,20 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::mouse::{MouseParser, MouseRing};
-use crate::poll::Drainer;
-use crate::ring::Ring;
-use crate::setup::Driver;
-pub struct Context {
-    pub driver: Driver,
-    pub ring: Ring,
-    pub drainer: Drainer,
-    pub mouse: MouseParser,
-    pub mouse_ring: MouseRing,
-    pub last_kbd_seq: u64,
-    pub last_aux_seq: u64,
-}
-impl Context {
-    pub fn new(driver: Driver) -> Self {
-        let mouse = MouseParser::new(driver.mouse_wheel);
-        Self {
-            driver,
-            ring: Ring::new(),
-            drainer: Drainer::new(),
-            mouse,
-            mouse_ring: MouseRing::new(),
-            last_kbd_seq: 0,
-            last_aux_seq: 0,
+
+use crate::driver::Driver;
+use crate::protocol::{Request, E_FW_INVALID, E_OK};
+use crate::server::respond;
+
+pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, out: &mut [u8]) {
+    match driver.load_firmware() {
+        Ok(sections) => {
+            let mut body = [0u8; 4];
+            body.copy_from_slice(&sections.to_le_bytes());
+            let _ = respond::send(sender_pid, req, E_OK, &body, out);
+        }
+        Err(_) => {
+            let _ = respond::send(sender_pid, req, E_FW_INVALID, &[], out);
         }
     }
 }

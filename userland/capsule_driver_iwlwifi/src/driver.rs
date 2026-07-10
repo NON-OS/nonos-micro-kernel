@@ -6,7 +6,10 @@
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-use crate::firmware::{blob_for_family, stage_firmware, Family, FirmwareBlob, FirmwareStageState};
+use crate::firmware::{
+    blob_for_family, load_sections, release_cpu, stage_firmware, Family, FirmwareBlob,
+    FirmwareStageState,
+};
 use crate::regs::Regs;
 
 #[derive(Clone, Copy)]
@@ -38,5 +41,18 @@ impl Driver {
         let state = stage_firmware(fw.bytes, self.dma_user_va, self.dma_len)?;
         self.firmware_stage = state;
         Some(state)
+    }
+
+    /// Transfer the staged firmware sections into device SRAM over the FH
+    /// service channel, then release the CPU so the firmware boots. Requires
+    /// stage_firmware to have run first. The caller then waits for ALIVE.
+    pub fn load_firmware(&self) -> Result<u32, &'static str> {
+        let staged = self.firmware_stage.staged_bytes;
+        if staged == 0 {
+            return Err("iwlwifi: firmware not staged");
+        }
+        let loaded = load_sections(&self.regs, self.dma_user_va, self.dma_device_addr, staged)?;
+        release_cpu(&self.regs);
+        Ok(loaded)
     }
 }

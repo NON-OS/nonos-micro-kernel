@@ -28,8 +28,10 @@ pub fn bring_up(
     admin: &mut AdminQueue,
     nsid: u32,
     capacity_sectors: u64,
+    lba_size: u32,
 ) -> NvmeResult<IoQueue> {
-    let io = IoQueue::allocate(device_id, epoch, stride, IO_QID, nsid, capacity_sectors)?;
+    let io =
+        IoQueue::allocate(device_id, epoch, stride, IO_QID, nsid, capacity_sectors, lba_size)?;
     admin.create_io_cq(regs, stride, IO_QID, IO_ENTRIES, io.cq.device_addr())?;
     admin.create_io_sq(regs, stride, IO_QID, IO_QID, IO_ENTRIES, io.sq.device_addr())?;
     Ok(io)

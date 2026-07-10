@@ -22,5 +22,9 @@ pub fn handle(driver: &Driver, sender_pid: u32, req: &Request, tx: &mut [u8]) {
     tx[body_off..body_off + 4].copy_from_slice(&num_scanouts.to_le_bytes());
     tx[body_off + 4..body_off + 8].copy_from_slice(&num_capsets.to_le_bytes());
     tx[body_off + 8..body_off + 12].copy_from_slice(&events_read.to_le_bytes());
+    // 3D capability: nonzero when VirGL is negotiated and render context 1 is
+    // live, so a client knows SUBMIT_3D-backed surfaces are available.
+    let virgl = u32::from(driver.virgl_ready);
+    tx[body_off + 12..body_off + 16].copy_from_slice(&virgl.to_le_bytes());
     respond::payload(sender_pid, req, QUERY_CAPS_RESP_LEN, tx);
 }

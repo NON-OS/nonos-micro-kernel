@@ -18,4 +18,6 @@ pub struct Driver {
     pub irq_grant_id: u64,
     pub aux_irq_grant_id: u64,
     pub mouse_enabled: bool,
+    /// The mouse negotiated the 4-byte IntelliMouse report with a scroll wheel.
+    pub mouse_wheel: bool,
 }

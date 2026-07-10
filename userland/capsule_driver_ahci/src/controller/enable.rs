@@ -14,13 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::constants::{GHC_AE, HBA_GHC, HBA_IS};
+use crate::constants::{GHC_AE, GHC_HR, HBA_GHC, HBA_IS};
 use crate::regs::Regs;
+
+// GHC.HR self-clears within 1s on a healthy HBA; bound the wait generously.
+const RESET_POLL_LIMIT: u32 = 2_000_000;
 
 pub fn enable_ahci(regs: Regs) {
     unsafe {
-        let ghc = regs.r32(HBA_GHC);
-        regs.w32(HBA_GHC, ghc | GHC_AE);
+        // AHCI 1.3.1 section 10.4.3. Enter AHCI mode, then reset the HBA so we
+        // start from a known state rather than trusting whatever the firmware
+        // left mid-configuration. HR self-clears when the reset completes and
+        // also clears AE, so AHCI mode is re-entered afterwards.
+        regs.w32(HBA_GHC, regs.r32(HBA_GHC) | GHC_AE);
+        regs.w32(HBA_GHC, regs.r32(HBA_GHC) | GHC_HR);
+        for _ in 0..RESET_POLL_LIMIT {
+            if regs.r32(HBA_GHC) & GHC_HR == 0 {
+                break;
+            }
+            core::hint::spin_loop();
+        }
+        regs.w32(HBA_GHC, regs.r32(HBA_GHC) | GHC_AE);
         regs.w32(HBA_IS, 0xffff_ffff);
     }
 }
