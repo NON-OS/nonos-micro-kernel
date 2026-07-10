@@ -60,3 +60,8 @@ mod hid_touchpad_tests;
 mod ps2_tests;
 #[cfg(test)]
 mod touchpad_tests;
+
+// Keyboard layout tables shared by the PS/2 and USB HID drivers; a normal
+// dependency because the crate is a plain no_std library.
+#[cfg(test)]
+mod layout_tests;

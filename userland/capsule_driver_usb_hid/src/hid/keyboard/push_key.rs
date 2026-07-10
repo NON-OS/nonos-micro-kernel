@@ -23,9 +23,16 @@ impl Keyboard {
         if pressed && keymap::is_caps_lock(scancode) {
             self.caps_lock = !self.caps_lock;
         }
+        // Ctrl+Alt+Space cycles the keyboard layout inside the driver and
+        // is consumed here; no app has a use for that chord as input.
+        if pressed && scancode == 0x2c && self.modifiers & 0x11 != 0 && self.modifiers & 0x44 != 0 {
+            let _ = super::super::active::cycle();
+            return;
+        }
         let ascii =
             if pressed { keymap::ascii(scancode, self.modifiers, self.caps_lock) } else { 0 };
-        let event = KeyEvent { scancode, ascii, modifiers: self.modifiers, pressed };
+        let event =
+            KeyEvent { scancode, ascii, modifiers: self.modifiers, pressed, caps: self.caps_lock };
         if !post_key::publish(event) {
             self.post_failures = self.post_failures.wrapping_add(1);
         }

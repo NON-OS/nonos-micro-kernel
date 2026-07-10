@@ -20,6 +20,9 @@ pub struct KeyEvent {
     pub ascii: u8,
     pub modifiers: u8,
     pub pressed: bool,
+    // Caps-lock toggle state at the time of the event; feeds the layout
+    // resolution when the event is posted. Not part of the wire format.
+    pub caps: bool,
 }
 
 impl KeyEvent {

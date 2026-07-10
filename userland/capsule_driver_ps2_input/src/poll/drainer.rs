@@ -17,9 +17,12 @@ pub struct Drainer {
     pub(super) pending_e0: bool,
     pub(super) pending_e1: bool,
     pub(super) mods: u16,
+    // Caps lock is a toggle, not a held modifier, so it lives beside the
+    // modifier bits and is folded into the published flags per event.
+    pub(super) caps: bool,
 }
 impl Drainer {
     pub const fn new() -> Self {
-        Self { pending_e0: false, pending_e1: false, mods: 0 }
+        Self { pending_e0: false, pending_e1: false, mods: 0, caps: false }
     }
 }
