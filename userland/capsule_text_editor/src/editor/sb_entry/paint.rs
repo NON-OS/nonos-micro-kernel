@@ -19,14 +19,15 @@ use nonos_app_skeleton::PaintBuffer;
 use super::{EntryOp, SbEntry};
 use crate::editor::layout::{ACTIVITY_W, CHROME_PX, ROW_H, SIDEBAR_W};
 use crate::editor::shell::pane_y;
-use crate::editor::theme::{ACCENT, FOREGROUND, MUTED, TAB_INACTIVE_BG};
+use crate::editor::theme;
 
 // The input bar at the top of the sidebar: a short prompt for the operation,
 // the name typed so far, and a caret mark.
 pub(in crate::editor) fn paint_entry(fb: &mut PaintBuffer, entry: &SbEntry) {
+    let th = theme::active();
     let y = pane_y();
-    fb.fill_rect(ACTIVITY_W, y, SIDEBAR_W, ROW_H, TAB_INACTIVE_BG);
-    fb.fill_rect(ACTIVITY_W, y + ROW_H - 1, SIDEBAR_W, 1, ACCENT);
+    fb.fill_rect(ACTIVITY_W, y, SIDEBAR_W, ROW_H, th.tab_inactive_bg);
+    fb.fill_rect(ACTIVITY_W, y + ROW_H - 1, SIDEBAR_W, 1, th.accent);
     let prompt = match entry.op {
         EntryOp::NewFile => "file: ",
         EntryOp::NewFolder => "dir: ",
@@ -34,9 +35,9 @@ pub(in crate::editor) fn paint_entry(fb: &mut PaintBuffer, entry: &SbEntry) {
     };
     let px = (ACTIVITY_W + 10) as i32;
     let ty = (y + 5) as i32;
-    let _ = fb.text_ttf(px, ty, prompt, MUTED, CHROME_PX);
+    let _ = fb.text_ttf(px, ty, prompt, th.muted, CHROME_PX);
     let pw = fb.measure_ttf(prompt, CHROME_PX);
-    let _ = fb.text_ttf(px + pw, ty, &entry.buf, FOREGROUND, CHROME_PX);
+    let _ = fb.text_ttf(px + pw, ty, &entry.buf, th.foreground, CHROME_PX);
     let bw = fb.measure_ttf(&entry.buf, CHROME_PX);
-    fb.fill_rect((px + pw + bw) as u32 + 1, y + 5, 2, ROW_H - 10, ACCENT);
+    fb.fill_rect((px + pw + bw) as u32 + 1, y + 5, 2, ROW_H - 10, th.accent);
 }

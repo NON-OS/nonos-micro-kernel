@@ -19,9 +19,7 @@ extern crate alloc;
 use alloc::vec;
 use alloc::vec::Vec;
 
-use super::theme::{
-    FOREGROUND, SYN_COMMENT, SYN_FUNCTION, SYN_KEYWORD, SYN_NUMBER, SYN_STRING, SYN_TYPE,
-};
+use super::theme;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Tok {
@@ -35,14 +33,15 @@ pub enum Tok {
 }
 
 pub fn color(t: Tok) -> u32 {
+    let th = theme::active();
     match t {
-        Tok::Text => FOREGROUND,
-        Tok::Keyword => SYN_KEYWORD,
-        Tok::String => SYN_STRING,
-        Tok::Comment => SYN_COMMENT,
-        Tok::Function => SYN_FUNCTION,
-        Tok::Number => SYN_NUMBER,
-        Tok::Type => SYN_TYPE,
+        Tok::Text => th.foreground,
+        Tok::Keyword => th.syn_keyword,
+        Tok::String => th.syn_string,
+        Tok::Comment => th.syn_comment,
+        Tok::Function => th.syn_function,
+        Tok::Number => th.syn_number,
+        Tok::Type => th.syn_type,
     }
 }
 

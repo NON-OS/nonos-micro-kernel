@@ -17,7 +17,7 @@
 //! Place the caret where the pointer clicked in the text body.
 
 use super::byte_at::byte_at;
-use super::layout::{text_left, LINE_HEIGHT, PAD_TOP};
+use super::layout::{line_height, text_left, PAD_TOP};
 use super::state::State;
 
 pub(super) fn click_caret(state: &mut State, x: i32, y: i32) {
@@ -30,7 +30,7 @@ pub(super) fn click_caret(state: &mut State, x: i32, y: i32) {
         state.caret = 0;
         return;
     }
-    let row = (y - top) / LINE_HEIGHT;
+    let row = (y - top) / line_height(state.font_scale);
     let line = state.scroll_line + row;
     // Same measured cell width and pane origin the body was drawn with, so
     // clicks land on the character under the pointer.

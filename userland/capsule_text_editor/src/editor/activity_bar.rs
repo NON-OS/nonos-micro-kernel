@@ -20,15 +20,16 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::layout::{ACTIVITY_W, TITLEBAR_H};
-use super::theme::{ACCENT, ACTIVITY_BG, ICON, ICON_ACTIVE};
+use super::theme;
 
 pub(super) fn paint_activity(fb: &mut PaintBuffer, height: u32, sidebar_open: bool) {
-    fb.fill_rect(0, 0, ACTIVITY_W, height, ACTIVITY_BG);
+    let th = theme::active();
+    fb.fill_rect(0, 0, ACTIVITY_W, height, th.activity_bg);
     let icon_y = TITLEBAR_H + 18;
     if sidebar_open {
-        fb.fill_rect(0, icon_y - 4, 2, 26, ACCENT);
+        fb.fill_rect(0, icon_y - 4, 2, 26, th.accent);
     }
-    let color = if sidebar_open { ICON_ACTIVE } else { ICON };
+    let color = if sidebar_open { th.icon_active } else { th.icon };
     let ix = 15;
     for k in 0..3 {
         fb.fill_rect(ix, icon_y + k * 7, 16, 2, color);

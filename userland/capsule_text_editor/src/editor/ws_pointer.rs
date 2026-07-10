@@ -25,7 +25,7 @@ use super::layout::{ACTIVITY_W, TABBAR_H, TITLEBAR_H};
 use super::sb_menu::{menu_hit, open_menu};
 use super::shell::pane_x;
 use super::sidebar::sidebar_row_at;
-use super::tabbar::tab_hit;
+use super::tabbar::{tab_hit, toolbar_hit};
 
 // The input router posts button codes as bit numbers: 1 = left, 2 = right.
 const BTN_RIGHT: u32 = 2;
@@ -72,7 +72,10 @@ impl Editor {
         }
 
         if press && y >= tb_top && y < tb_bot && x >= px {
-            if let Some((idx, close)) = tab_hit(&self.tab_layout, x) {
+            // View controls on the right win over the tab area they sit above.
+            if let Some(btn) = toolbar_hit(x, self.last_w) {
+                self.toolbar_action(btn);
+            } else if let Some((idx, close)) = tab_hit(&self.tab_layout, x) {
                 if close {
                     self.close_tab(idx);
                 } else {
@@ -83,5 +86,22 @@ impl Editor {
         }
 
         None
+    }
+
+    // Apply a view-control click: 0 zoom out, 1 zoom in, 2 cycle the theme. The
+    // theme is process-wide, so it is not tied to the active document.
+    fn toolbar_action(&mut self, btn: usize) {
+        use super::layout::{MAX_SCALE, MIN_SCALE};
+        match btn {
+            0 => {
+                let doc = self.doc();
+                doc.font_scale = doc.font_scale.saturating_sub(1).max(MIN_SCALE);
+            }
+            1 => {
+                let doc = self.doc();
+                doc.font_scale = (doc.font_scale + 1).min(MAX_SCALE);
+            }
+            _ => super::theme::cycle(),
+        }
     }
 }

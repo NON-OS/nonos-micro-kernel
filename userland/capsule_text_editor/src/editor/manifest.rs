@@ -19,8 +19,8 @@ use nonos_app_skeleton::{AppManifest, WindowKind};
 // A comfortable IDE window: room for the explorer sidebar plus a wide code
 // pane, without covering the desktop. The runner clamps it to the display, so
 // this also works on panels smaller than the size assumed here.
-pub const WIDTH: u32 = 1180;
-pub const HEIGHT: u32 = 780;
+pub const WIDTH: u32 = 1680;
+pub const HEIGHT: u32 = 1000;
 
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
 

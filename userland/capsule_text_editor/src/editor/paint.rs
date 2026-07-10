@@ -23,15 +23,17 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::clamp_scroll::clamp_scroll;
 use super::highlight;
-use super::layout::{text_left, wrap_cols, BODY_PX, GUTTER_PX, GUTTER_W, LINE_HEIGHT, PAD_TOP};
+use super::layout::{body_px, gutter_px, line_height, text_left, wrap_cols, GUTTER_W, PAD_TOP};
 use super::position_at::position_at;
 use super::state::State;
-use super::theme::{BACKGROUND, CARET, CURRENT_LINE, GUTTER_BG, GUTTER_CUR, GUTTER_FG, SELECTION};
+use super::theme;
 
 pub(super) fn paint_document(state: &mut State, fb: &mut PaintBuffer) {
-    let adv = fb.measure_ttf_mono("M", BODY_PX).max(1) as u32;
+    let px = body_px(state.font_scale);
+    let lh = line_height(state.font_scale);
+    let adv = fb.measure_ttf_mono("M", px).max(1) as u32;
     state.glyph_advance = adv;
-    state.visible_rows = (state.pane_h / LINE_HEIGHT).max(1);
+    state.visible_rows = (state.pane_h / lh).max(1);
     state.wrap_cols = wrap_cols(state.pane_w, adv);
     clamp_scroll(state, state.visible_rows);
     state.caret = state.caret.min(state.len);
@@ -39,7 +41,13 @@ pub(super) fn paint_document(state: &mut State, fb: &mut PaintBuffer) {
     let (caret_line, caret_col) =
         position_at(&state.buf[..state.len], state.wrap_cols, state.caret);
 
-    fb.fill_rect(state.pane_x, state.pane_y, state.pane_w, state.pane_h, BACKGROUND);
+    fb.fill_rect(
+        state.pane_x,
+        state.pane_y,
+        state.pane_w,
+        state.pane_h,
+        theme::active().background,
+    );
     paint_current_line(state, fb, caret_line);
     paint_gutter(state, fb, caret_line);
     paint_body(state, fb, adv);
@@ -57,7 +65,7 @@ fn in_view(state: &State, line: u32) -> bool {
 }
 
 fn row_top(state: &State, line: u32) -> u32 {
-    state.pane_y + PAD_TOP + (line - state.scroll_line) * LINE_HEIGHT
+    state.pane_y + PAD_TOP + (line - state.scroll_line) * line_height(state.font_scale)
 }
 
 fn paint_current_line(state: &State, fb: &mut PaintBuffer, caret_line: u32) {
@@ -67,28 +75,33 @@ fn paint_current_line(state: &State, fb: &mut PaintBuffer, caret_line: u32) {
             x,
             row_top(state, caret_line),
             state.pane_w - GUTTER_W,
-            LINE_HEIGHT,
-            CURRENT_LINE,
+            line_height(state.font_scale),
+            theme::active().current_line,
         );
     }
 }
 
 fn paint_gutter(state: &State, fb: &mut PaintBuffer, caret_line: u32) {
-    fb.fill_rect(state.pane_x, state.pane_y, GUTTER_W, state.pane_h, GUTTER_BG);
+    let th = theme::active();
+    fb.fill_rect(state.pane_x, state.pane_y, GUTTER_W, state.pane_h, th.gutter_bg);
+    let gpx = gutter_px(state.font_scale);
+    let lh = line_height(state.font_scale);
     for row in 0..state.visible_rows {
         let ln = state.scroll_line + row + 1;
         let mut buf = [0u8; 10];
         let n = fmt_u32(ln, &mut buf);
         let s = core::str::from_utf8(&buf[..n]).unwrap_or("");
-        let nw = fb.measure_ttf(s, GUTTER_PX).max(0) as u32;
+        let nw = fb.measure_ttf(s, gpx).max(0) as u32;
         let x = state.pane_x + GUTTER_W.saturating_sub(nw + 12);
-        let color = if ln == caret_line + 1 { GUTTER_CUR } else { GUTTER_FG };
-        let y = (state.pane_y + PAD_TOP + row * LINE_HEIGHT + 4) as i32;
-        let _ = fb.text_ttf(x as i32, y, s, color, GUTTER_PX);
+        let color = if ln == caret_line + 1 { th.gutter_cur } else { th.gutter_fg };
+        let y = (state.pane_y + PAD_TOP + row * lh + 4) as i32;
+        let _ = fb.text_ttf(x as i32, y, s, color, gpx);
     }
 }
 
 fn paint_body(state: &State, fb: &mut PaintBuffer, adv: u32) {
+    let px = body_px(state.font_scale);
+    let lh = line_height(state.font_scale);
     let toks = highlight::classify(&state.buf[..state.len]);
     let sel = state.sel_range();
     let text = core::str::from_utf8(&state.buf[..state.len]).unwrap_or("");
@@ -115,13 +128,13 @@ fn paint_body(state: &State, fb: &mut PaintBuffer, adv: u32) {
         let x = left + col * adv;
         if let Some((s, e)) = sel {
             if bi >= s && bi < e {
-                fb.fill_rect(x, ty, adv, LINE_HEIGHT, SELECTION);
+                fb.fill_rect(x, ty, adv, lh, theme::active().selection);
             }
         }
         if ch > ' ' && ch != '\u{7f}' {
             let color = highlight::color(toks.get(bi).copied().unwrap_or(highlight::Tok::Text));
             let s = ch.encode_utf8(&mut chbuf);
-            let _ = fb.text_ttf_mono(x as i32, ty as i32, s, color, BODY_PX);
+            let _ = fb.text_ttf_mono(x as i32, ty as i32, s, color, px);
         }
         col += 1;
     }
@@ -130,7 +143,13 @@ fn paint_body(state: &State, fb: &mut PaintBuffer, adv: u32) {
 fn paint_caret(state: &State, fb: &mut PaintBuffer, adv: u32, caret_line: u32, caret_col: u32) {
     if in_view(state, caret_line) {
         let x = text_left(state.pane_x) + caret_col * adv;
-        fb.fill_rect(x, row_top(state, caret_line), 2, LINE_HEIGHT, CARET);
+        fb.fill_rect(
+            x,
+            row_top(state, caret_line),
+            2,
+            line_height(state.font_scale),
+            theme::active().caret,
+        );
     }
 }
 
