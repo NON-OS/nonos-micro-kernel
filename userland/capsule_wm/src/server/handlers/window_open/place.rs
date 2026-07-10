@@ -14,38 +14,39 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Place a newly opened window. Normal windows cascade down-right from a fixed
+//! base by the count of open normal windows, so each successive titlebar sits
+//! below the last and stays clickable: with reachable titlebars, clicking one
+//! is a reliable way to switch windows even when they overlap. Non-normal
+//! windows (dialogs, tooltips) keep their requested position.
+
 use crate::geometry::{clamp_to_display, Rect};
 use crate::state::Context;
-use crate::window::Kind;
+use crate::window::{Kind, Visibility};
 
-use super::collides::collides;
-use super::constants::{PLACEMENT_LEFT, PLACEMENT_STEP, PLACEMENT_TOP};
-use super::fallback_slot::fallback_slot;
+use super::constants::{PLACEMENT_GAP, PLACEMENT_LEFT, PLACEMENT_STEP, PLACEMENT_TOP};
+
+// Cascade resets after this many windows so they never march off-screen.
+const CASCADE_WRAP: u32 = 5;
 
 pub(super) fn place(ctx: &Context, kind: Kind, requested: Rect) -> Rect {
     let requested = clamp_to_display(requested, ctx.display_width, ctx.display_height);
-    if kind != Kind::Normal || !collides(ctx, requested) {
+    if kind != Kind::Normal {
         return requested;
     }
+    let open = ctx
+        .windows
+        .windows()
+        .filter(|w| w.kind == Kind::Normal && w.visibility == Visibility::Visible)
+        .count() as u32;
+    let step = PLACEMENT_STEP + PLACEMENT_GAP;
+    let slot = open % CASCADE_WRAP;
     let max_x = ctx.display_width.saturating_sub(requested.width);
     let max_y = ctx.display_height.saturating_sub(requested.height);
-    let mut y = PLACEMENT_TOP.min(max_y);
-    while y <= max_y {
-        let mut x = PLACEMENT_LEFT.min(max_x);
-        while x <= max_x {
-            let candidate = Rect { x, y, width: requested.width, height: requested.height };
-            if !collides(ctx, candidate) {
-                return candidate;
-            }
-            if max_x - x < PLACEMENT_STEP {
-                break;
-            }
-            x += PLACEMENT_STEP;
-        }
-        if max_y - y < PLACEMENT_STEP {
-            break;
-        }
-        y += PLACEMENT_STEP;
+    Rect {
+        x: PLACEMENT_LEFT.saturating_add(slot * step).min(max_x),
+        y: PLACEMENT_TOP.saturating_add(slot * step).min(max_y),
+        width: requested.width,
+        height: requested.height,
     }
-    fallback_slot(ctx, requested, max_x, max_y)
 }

@@ -25,11 +25,24 @@ pub struct CursorState {
     max_y: i32,
     pub configured: bool,
     pub mult_x2: i32,
+    // Sub-pixel remainder from the fixed-point scale, carried into the next
+    // event so slow motion at a fractional sensitivity is not truncated away.
+    frac_x: i32,
+    frac_y: i32,
 }
 
 impl CursorState {
     pub const fn new() -> Self {
-        Self { x: 512, y: 384, max_x: 1023, max_y: 767, configured: false, mult_x2: 2 }
+        Self {
+            x: 512,
+            y: 384,
+            max_x: 1023,
+            max_y: 767,
+            configured: false,
+            mult_x2: 2,
+            frac_x: 0,
+            frac_y: 0,
+        }
     }
 
     pub fn configure(&mut self, width: u32, height: u32) {
@@ -42,12 +55,20 @@ impl CursorState {
 
     pub fn apply(&mut self, ev: &InputEvent) -> (u32, u32) {
         if ev.kind == INPUT_KIND_POINTER_REL {
-            self.x = self.x.saturating_add(ev.delta_x.saturating_mul(self.mult_x2) / 2);
-            self.y = self.y.saturating_add(ev.delta_y.saturating_mul(self.mult_x2) / 2);
+            let sx = ev.delta_x.saturating_mul(self.mult_x2).saturating_add(self.frac_x);
+            let sy = ev.delta_y.saturating_mul(self.mult_x2).saturating_add(self.frac_y);
+            self.x = self.x.saturating_add(sx / 2);
+            self.y = self.y.saturating_add(sy / 2);
+            self.frac_x = sx % 2;
+            self.frac_y = sy % 2;
         }
         if ev.kind == INPUT_KIND_POINTER_ABS || ev.kind == INPUT_KIND_TOUCH {
+            // Absolute devices place the cursor outright; drop any carried
+            // remainder so it does not skew the next relative motion.
             self.x = (ev.x as i64 * self.max_x as i64 / ABS_RANGE_MAX) as i32;
             self.y = (ev.y as i64 * self.max_y as i64 / ABS_RANGE_MAX) as i32;
+            self.frac_x = 0;
+            self.frac_y = 0;
         }
         self.clamp();
         (self.x as u32, self.y as u32)

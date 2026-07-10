@@ -16,7 +16,6 @@
 
 use alloc::{vec, vec::Vec};
 
-use crate::discover::lookup_service;
 use crate::wire::{read_u32, HDR_LEN};
 
 // Bytes written per request. The vfs caps a write payload at MAX_DATA_BYTES and
@@ -29,23 +28,23 @@ pub fn write_file(owner_pid: u32, path: &[u8], data: &[u8]) -> Result<(), &'stat
     if path.is_empty() || path.len() > 255 {
         return Err("vfs path invalid");
     }
-    let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
+    let port = super::resolve::vfs_port();
     let mut open = Vec::with_capacity(9 + path.len());
     open.extend_from_slice(&owner_pid.to_le_bytes());
     open.push(path.len() as u8);
     open.extend_from_slice(path);
     open.extend_from_slice(&(super::types::O_CREATE | super::types::O_TRUNC).to_le_bytes());
     let mut rx = vec![0u8; HDR_LEN + 8];
-    let (status, total) = super::call::call(peer.port, super::types::OP_OPEN, 5, &open, &mut rx)?;
+    let (status, total) = super::call::call(port, super::types::OP_OPEN, 5, &open, &mut rx)?;
     if status != 0 || total < HDR_LEN + 8 {
         return Err("vfs open failed");
     }
     let fd = read_u32(&rx, HDR_LEN + 4)?;
-    let result = write_all(peer.port, owner_pid, fd, data, &mut rx);
+    let result = write_all(port, owner_pid, fd, data, &mut rx);
     let mut close = [0u8; 8];
     close[..4].copy_from_slice(&owner_pid.to_le_bytes());
     close[4..8].copy_from_slice(&fd.to_le_bytes());
-    let _ = super::call::call(peer.port, super::types::OP_CLOSE, 7, &close, &mut rx);
+    let _ = super::call::call(port, super::types::OP_CLOSE, 7, &close, &mut rx);
     result
 }
 

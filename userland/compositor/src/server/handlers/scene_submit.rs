@@ -53,6 +53,17 @@ pub fn handle(
     {
         return respond::status(sender_pid, req, E_INVAL, tx);
     }
+    // A window that reopened its surface (a resize, for one) re-submits with a
+    // new handle for the same owner. The old handle's backing is gone, so drop
+    // it from the attach cache now instead of letting it linger until the
+    // reaper runs. Otherwise a reused handle number could serve a stale
+    // mapping and the compositor would paint from freed memory.
+    let stale = ctx
+        .scene
+        .layers()
+        .find(|l| l.owner_pid == sender_pid && l.surface_handle != surface_handle)
+        .map(|l| l.surface_handle);
+
     let layer = Layer {
         owner_pid: sender_pid,
         surface_handle,
@@ -66,6 +77,9 @@ pub fn handle(
     };
     if ctx.scene.submit(layer).is_err() {
         return respond::status(sender_pid, req, E_INVAL, tx);
+    }
+    if let Some(old) = stale {
+        let _ = ctx.attach.forget(old);
     }
     ctx.damage.accumulate(Rect { x, y, width, height });
     respond::status(sender_pid, req, 0, tx)

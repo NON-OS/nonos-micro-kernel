@@ -16,20 +16,19 @@
 
 use alloc::{vec, vec::Vec};
 
-use crate::discover::lookup_service;
 use crate::wire::HDR_LEN;
 
 pub fn unlink(owner_pid: u32, path: &[u8]) -> Result<(), &'static str> {
     if path.is_empty() || path.len() > 255 {
         return Err("vfs path invalid");
     }
-    let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
+    let port = super::resolve::vfs_port();
     let mut body = Vec::with_capacity(5 + path.len());
     body.extend_from_slice(&owner_pid.to_le_bytes());
     body.push(path.len() as u8);
     body.extend_from_slice(path);
     let mut rx = vec![0u8; HDR_LEN + 8];
-    let (status, _) = super::call::call(peer.port, super::types::OP_UNLINK, 9, &body, &mut rx)?;
+    let (status, _) = super::call::call(port, super::types::OP_UNLINK, 9, &body, &mut rx)?;
     if status != 0 {
         return Err(super::errmsg::errmsg(status));
     }

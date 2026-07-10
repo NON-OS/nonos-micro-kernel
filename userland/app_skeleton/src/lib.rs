@@ -35,8 +35,8 @@ pub use input::{
     MOD_CTRL, MOD_META, MOD_NUM, MOD_SHIFT,
 };
 pub use paint::font_advance;
-pub use paint::{measure_ttf, measure_ttf_mono};
 pub use paint::PaintBuffer;
+pub use paint::{measure_ttf, measure_ttf_mono};
 #[cfg(feature = "runtime")]
 pub use runner::run;
 pub use runner::run_loop;

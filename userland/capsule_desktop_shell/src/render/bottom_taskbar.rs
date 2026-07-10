@@ -19,7 +19,7 @@ use super::fill::fill_rect;
 use super::layout::{bottom_dock_rect, TASKBAR_ENTRY_W};
 use crate::state::{Context, LAUNCHER_APPS, TASKBAR_NO_ACTIVE};
 
-const ICON_SIZE: u32 = 28;
+const ICON_SIZE: u32 = 40;
 
 pub fn paint_bottom_taskbar(ctx: &Context) {
     let dock = bottom_dock_rect(ctx.width, ctx.height);

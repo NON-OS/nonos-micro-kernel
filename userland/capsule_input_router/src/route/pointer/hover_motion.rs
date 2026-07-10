@@ -38,8 +38,7 @@ pub(super) fn hover_motion(ctx: &mut Context, event: &InputEvent, x: u32, y: u32
     }
     match topmost_target(ctx, x, y) {
         Some(t) if t.owner_pid != shell_pid(ctx) => {
-            let hover =
-                Hover { pid: t.owner_pid, x: t.win_x, y: t.win_y, w: t.win_w, h: t.win_h };
+            let hover = Hover { pid: t.owner_pid, x: t.win_x, y: t.win_y, w: t.win_w, h: t.win_h };
             ctx.hover = Some(hover);
             deliver_local(ctx, hover, event, x, y)
         }

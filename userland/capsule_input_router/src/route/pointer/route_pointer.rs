@@ -37,6 +37,13 @@ pub fn route_pointer(ctx: &mut Context, event: &InputEvent) -> u32 {
     ctx.cursor_y = y;
     ctx.cursor_dirty = true;
     let mut delivered = mirror_shell_pointer(ctx, event, x, y);
+    // A press grab still held when a fresh button-down arrives means its
+    // release was lost (device desync, capsule restart). Drop the stale grab
+    // and let the new press hit-test normally, instead of routing every click
+    // to a dead window from then on.
+    if ctx.press.is_some() && event.kind == INPUT_KIND_BUTTON_DOWN {
+        ctx.press = None;
+    }
     if ctx.press.is_some() {
         delivered += route_to_press(ctx, event, x, y);
         if event.kind == INPUT_KIND_BUTTON_UP {

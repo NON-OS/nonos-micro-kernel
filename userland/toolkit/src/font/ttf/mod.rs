@@ -20,6 +20,7 @@
 // layout and paint agree on advance widths.
 
 mod blend;
+mod cache;
 mod draw;
 mod face;
 mod metrics;

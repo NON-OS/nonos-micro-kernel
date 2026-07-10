@@ -14,49 +14,54 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::fill::fill_rect;
 use crate::state::apps::LauncherIcon;
 use crate::state::Context;
 
-mod about;
-mod browser;
-mod calculator;
-mod clock;
-mod constants;
-mod file_manager;
+mod badge;
 mod nonos_logo;
-mod nonos_logo_bits;
-mod paint;
-mod process_manager;
-mod settings;
-mod snake;
-mod terminal;
-mod text_editor;
-mod wallet;
+
+// Real anti-aliased line-icons, one per app, rasterized from SVG (48x48 RGBA)
+// and tinted at render time in each app's accent colour.
+const TERMINAL: &[u8] = include_bytes!("../../assets/app_icons/terminal.rgba");
+const FILES: &[u8] = include_bytes!("../../assets/app_icons/files.rgba");
+const EDITOR: &[u8] = include_bytes!("../../assets/app_icons/editor.rgba");
+const SETTINGS: &[u8] = include_bytes!("../../assets/app_icons/settings.rgba");
+const PROCESSES: &[u8] = include_bytes!("../../assets/app_icons/processes.rgba");
+const ABOUT: &[u8] = include_bytes!("../../assets/app_icons/about.rgba");
+const CALC: &[u8] = include_bytes!("../../assets/app_icons/calc.rgba");
+const CLOCK: &[u8] = include_bytes!("../../assets/app_icons/clock.rgba");
+const SNAKE: &[u8] = include_bytes!("../../assets/app_icons/snake.rgba");
+const WALLET: &[u8] = include_bytes!("../../assets/app_icons/wallet.rgba");
+const BROWSER: &[u8] = include_bytes!("../../assets/app_icons/browser.rgba");
+
+// One brand accent for every app: NØNOS cyan on near-black tiles. No rainbow.
+const CYAN: u32 = 0xFF66E6FF;
 
 pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u32) {
-    fill_rect(
-        ctx.backing_va,
-        ctx.stride,
-        ctx.width,
-        ctx.height,
-        x,
-        y,
-        size,
-        size,
-        constants::ICON_BG,
-    );
-    match icon {
-        LauncherIcon::Terminal => terminal::terminal(ctx, x, y, size),
-        LauncherIcon::FileManager => file_manager::file_manager(ctx, x, y, size),
-        LauncherIcon::TextEditor => text_editor::text_editor(ctx, x, y, size),
-        LauncherIcon::Settings => settings::settings(ctx, x, y, size),
-        LauncherIcon::ProcessManager => process_manager::process_manager(ctx, x, y, size),
-        LauncherIcon::About => about::about(ctx, x, y, size),
-        LauncherIcon::Calculator => calculator::calculator(ctx, x, y, size),
-        LauncherIcon::Clock => clock::clock(ctx, x, y, size),
-        LauncherIcon::Snake => snake::snake(ctx, x, y, size),
-        LauncherIcon::Wallet => wallet::wallet(ctx, x, y, size),
-        LauncherIcon::Browser => browser::browser(ctx, x, y, size),
-    }
+    let glyph: &[u8] = match icon {
+        LauncherIcon::Terminal => TERMINAL,
+        LauncherIcon::FileManager => FILES,
+        LauncherIcon::TextEditor => EDITOR,
+        LauncherIcon::Settings => SETTINGS,
+        LauncherIcon::ProcessManager => PROCESSES,
+        LauncherIcon::About => ABOUT,
+        LauncherIcon::Calculator => CALC,
+        LauncherIcon::Clock => CLOCK,
+        LauncherIcon::Snake => SNAKE,
+        LauncherIcon::Wallet => WALLET,
+        LauncherIcon::Browser => BROWSER,
+    };
+    badge::badge(ctx, x, y, size, glyph, CYAN);
+}
+
+/// A file/folder tile for the desktop: the files glyph for directories, the
+/// document (editor) glyph for regular files. Same cyan tile language as apps.
+pub fn draw_fs_icon(ctx: &Context, x: u32, y: u32, size: u32, is_dir: bool) {
+    let glyph: &[u8] = if is_dir { FILES } else { EDITOR };
+    badge::badge(ctx, x, y, size, glyph, CYAN);
+}
+
+/// The real NØNOS logo, drawn as the top-left brand mark on the menu bar.
+pub fn draw_logo(ctx: &Context, x: u32, y: u32, size: u32) {
+    nonos_logo::paint(ctx, x, y, size, 0);
 }
