@@ -52,7 +52,10 @@ pub(super) fn parse_px(value: &str, em_base: u32) -> Option<u32> {
     };
     let f = num.trim().parse::<f32>().ok()?;
     let px = f * unit_px;
-    if px.is_finite() && px >= 0.0 {
+    // Cap the length like the calc() branch above. Without a ceiling a value
+    // such as width:4000000000px reaches layout as ~4.29e9 and overflows the
+    // i32 box-model arithmetic, which aborts under release overflow-checks.
+    if px.is_finite() && (0.0..=100_000.0).contains(&px) {
         Some((px + 0.5) as u32)
     } else {
         None

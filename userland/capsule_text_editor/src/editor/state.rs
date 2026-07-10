@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const CAPACITY: usize = 16384;
+// 256 KiB per document, heap-backed, enough for any real source file while
+// keeping a dozen open tabs cheap.
+pub const CAPACITY: usize = 256 * 1024;
 pub const PATH: &[u8] = b"/notes.txt";
 
 #[derive(Clone, Copy, PartialEq)]
@@ -25,14 +27,49 @@ pub enum PromptOp {
 
 pub struct State {
     pub owner_pid: u32,
-    pub buf: [u8; CAPACITY],
+    // Document bytes, always CAPACITY long; `len` is the live prefix. A Vec so
+    // the buffer lives on the heap: a State moves in and out of the tab list,
+    // and a fixed array this large would be copied across the stack each time.
+    pub buf: alloc::vec::Vec<u8>,
     pub len: usize,
+    // Byte offset of the insertion point within `buf`, always on a UTF-8
+    // boundary and in 0..=len. Editing and navigation act here, not at the end.
+    pub caret: usize,
+    // The fixed end of a selection; the caret is the moving end. None means no
+    // selection. `selecting` is true while a click-drag is in progress.
+    pub sel_anchor: Option<usize>,
+    pub selecting: bool,
     pub scroll_line: u32,
     pub visible_rows: u32,
     pub wrap_cols: u32,
+    // The code pane's rectangle inside the window, set by the shell each frame
+    // so painting and click mapping share the same origin as the chrome.
+    pub pane_x: u32,
+    pub pane_y: u32,
+    pub pane_w: u32,
+    pub pane_h: u32,
+    // Monospace cell width in pixels, measured from the font each paint so the
+    // caret, click mapping, and glyph layout all agree.
+    pub glyph_advance: u32,
     pub status: &'static [u8],
     pub path: [u8; 256],
     pub path_len: usize,
     pub prompt: Option<PromptOp>,
     pub shell_port: u32,
+    // Undo and redo stacks of reversible edits. Every mutation goes through
+    // `apply_edit`, so both stay in sync with the buffer.
+    pub undo: alloc::vec::Vec<super::edit::EditOp>,
+    pub redo: alloc::vec::Vec<super::edit::EditOp>,
+    // Incremental find: the query being typed and whether the find bar is open.
+    pub find_active: bool,
+    pub find_buf: alloc::string::String,
+    // Replace mode layered on find: typing edits the replacement text, Enter
+    // rewrites the current match and steps to the next one.
+    pub replace_active: bool,
+    pub replace_buf: alloc::string::String,
+    // The previous press, for double-click detection: when the next press lands
+    // close to this in both time and space it selects the word under it.
+    pub last_click_ns: u64,
+    pub last_click_x: i32,
+    pub last_click_y: i32,
 }

@@ -16,18 +16,18 @@
 
 use nonos_app_skeleton::{InputEvent, InputKind};
 
-use super::layout::{FIRST_ROW_Y, ROW_HEIGHT};
 use super::state::{Mode, State};
 
 pub fn select_row(state: &mut State, event: InputEvent) {
     if event.kind != InputKind::ButtonDown || !matches!(state.mode, Mode::Browse) {
         return;
     }
-    let rel = event.y as i32 - FIRST_ROW_Y as i32 + 4;
+    // Map the click against the live row geometry paint used this frame.
+    let rel = event.y as i32 - state.row_top as i32;
     if rel < 0 {
         return;
     }
-    let row = state.scroll + (rel as u32 / ROW_HEIGHT) as usize;
+    let row = state.scroll + (rel as u32 / state.row_h.max(1)) as usize;
     if row < state.entries.len() {
         state.cursor = row;
     }

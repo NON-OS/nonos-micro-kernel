@@ -14,8 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::layout::{FIRST_LINE_Y, LINE_HEIGHT};
+// Outcome of every not-yet-wired backend call. The UI renders each variant
+// honestly; a stub returns NotWired, a live provider returns Pending then Ready.
+#[derive(Clone)]
+pub enum Seam<T> {
+    NotWired,
+    Pending,
+    Ready(T),
+    Failed(&'static str),
+}
 
-pub(super) fn visible_rows(height: u32) -> u32 {
-    height.saturating_sub(FIRST_LINE_Y).saturating_div(LINE_HEIGHT).max(1)
+impl<T> Seam<T> {
+    pub fn is_ready(&self) -> bool {
+        matches!(self, Seam::Ready(_))
+    }
+    pub fn as_ready(&self) -> Option<&T> {
+        match self {
+            Seam::Ready(v) => Some(v),
+            _ => None,
+        }
+    }
+}
+
+// Association-set membership verdict for a shielded note.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Inclusion {
+    Pending,
+    Included,
+    Excluded,
+    NotWired,
 }

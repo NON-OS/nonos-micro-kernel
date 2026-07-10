@@ -14,11 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::max_scroll::max_scroll;
-use super::state::State;
-use super::visual_lines::visual_lines;
+use super::assoc_set_provider::AssocSetProvider;
+use super::pool_provider::PoolProvider;
+use super::proof_provider::ProofProvider;
+use super::revenue_provider::RevenueProvider;
+use super::sim_provider::SimProvider;
+use super::stub::Stub;
 
-pub(super) fn follow_end(state: &mut State, rows: u32) {
-    let total = visual_lines(&state.buf[..state.len], state.wrap_cols);
-    state.scroll_line = max_scroll(total, rows);
+// The one place the active backend is chosen. Screens call these, never a
+// concrete impl, so wiring the contracts+prover means swapping the body here and
+// nothing else. Today every one returns the honest Stub.
+pub fn pool() -> impl PoolProvider {
+    Stub
+}
+pub fn prover() -> impl ProofProvider {
+    Stub
+}
+pub fn assoc() -> impl AssocSetProvider {
+    Stub
+}
+pub fn sim() -> impl SimProvider {
+    Stub
+}
+pub fn revenue() -> impl RevenueProvider {
+    Stub
 }

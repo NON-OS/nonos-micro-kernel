@@ -43,4 +43,6 @@ pub struct State {
     // the newest entry.
     pub hist_prefix: Vec<u8>,
     pub blocks: Vec<Block>,
+    // Body font zoom, adjusted with Ctrl+= / Ctrl+-. 1 = base bitmap size.
+    pub font_scale: u32,
 }

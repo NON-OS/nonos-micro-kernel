@@ -16,7 +16,7 @@
 
 use crate::browser::manifest::{HEIGHT, WIDTH};
 
-use super::calc::{expr, P, V};
+use super::calc::{expr, MAX_CALC_DEPTH, P, V};
 
 impl P<'_> {
     pub(super) fn skip_ws(&mut self) {
@@ -32,7 +32,12 @@ pub(super) fn factor(p: &mut P) -> Option<V> {
     p.skip_ws();
     if p.s[p.i..].starts_with(b"(") {
         p.i += 1;
+        if p.d >= MAX_CALC_DEPTH {
+            return None;
+        }
+        p.d += 1;
         let v = expr(p)?;
+        p.d -= 1;
         p.skip_ws();
         if p.s.get(p.i) == Some(&b')') {
             p.i += 1;
@@ -44,7 +49,12 @@ pub(super) fn factor(p: &mut P) -> Option<V> {
         core::array::from_fn(|k| p.s.get(p.i + k).copied().unwrap_or(0).to_ascii_lowercase());
     if lower.starts_with(b"calc(") {
         p.i += 5;
+        if p.d >= MAX_CALC_DEPTH {
+            return None;
+        }
+        p.d += 1;
         let v = expr(p)?;
+        p.d -= 1;
         p.skip_ws();
         if p.s.get(p.i) == Some(&b')') {
             p.i += 1;

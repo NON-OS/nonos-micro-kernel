@@ -28,6 +28,7 @@ pub use default_net::default_net;
 pub use new::new_state;
 pub use record_tx::record_tx;
 pub use types::{
-    Rail, State, MAX_RAILS, SEND_FIELD_AMOUNT, SEND_FIELD_NONCE, SEND_FIELD_TO, VIEW_HOME,
-    VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND,
+    Rail, State, MAX_RAILS, SEND_FIELD_AMOUNT, SEND_FIELD_NONCE, SEND_FIELD_TO, VIEW_APPROVALS,
+    VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELD, VIEW_SHIELDED,
+    VIEW_SIGN, VIEW_UNSHIELD,
 };

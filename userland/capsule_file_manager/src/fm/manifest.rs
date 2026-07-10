@@ -16,8 +16,8 @@
 
 use nonos_app_skeleton::{AppManifest, WindowKind};
 
-pub const WIDTH: u32 = 360;
-pub const HEIGHT: u32 = 260;
+pub const WIDTH: u32 = 860;
+pub const HEIGHT: u32 = 560;
 
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
 const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
@@ -28,8 +28,8 @@ pub fn manifest() -> AppManifest {
         title: b"File Manager",
         window_id: 0x464D_4752,
         kind: WindowKind::Normal,
-        initial_x: 792,
-        initial_y: 438,
+        initial_x: 530,
+        initial_y: 260,
         width: WIDTH,
         height: HEIGHT,
         input_kind_mask: INPUT_KEY_DOWN_BIT | INPUT_BUTTON_DOWN_BIT | INPUT_POINTER_ABS_BIT,

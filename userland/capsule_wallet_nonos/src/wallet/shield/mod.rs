@@ -14,25 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(super) fn end_position(bytes: &[u8], wrap_cols: u32) -> (u32, u32) {
-    let mut line = 0;
-    let mut col = 0;
-    let text = core::str::from_utf8(bytes).unwrap_or("");
-    for ch in text.chars() {
-        if ch == '\n' {
-            line += 1;
-            col = 0;
-        } else {
-            if col == wrap_cols {
-                line += 1;
-                col = 0;
-            }
-            col += 1;
-        }
-    }
-    if col == wrap_cols {
-        (line + 1, 0)
-    } else {
-        (line, col)
-    }
-}
+//! NOX Shield client: the local note store and (later) the shielded flows. The
+//! backend prover/pool/association-set seams live in `wallet::pool`.
+
+pub mod notes;

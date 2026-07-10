@@ -21,8 +21,33 @@ use crate::wallet::state::State;
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     match event.kind {
         InputKind::KeyDown if event.code == KEY_ESC => EventOutcome::Close,
-        InputKind::KeyDown => super::on_key::on_key(state, event.code),
-        InputKind::ButtonDown => super::on_pointer::on_pointer(state, event.x, event.y),
+        InputKind::KeyDown => {
+            record(state, 0, event.x, event.y);
+            force_repaint(super::on_key::on_key(state, event.code))
+        }
+        InputKind::ButtonDown => {
+            record(state, 5, event.x, event.y);
+            force_repaint(super::on_pointer::on_pointer(state, event.x, event.y))
+        }
         _ => EventOutcome::Idle,
+    }
+}
+
+// Record a discrete input event so the status bar can show, live, whether
+// key and pointer events are actually reaching the capsule. Motion events are
+// deliberately excluded so the readout is not spammed and stays cheap.
+fn record(state: &mut State, kind: u32, x: i32, y: i32) {
+    state.in_count = state.in_count.wrapping_add(1);
+    state.in_kind = kind;
+    state.in_x = x;
+    state.in_y = y;
+}
+
+// Any event that reached us should refresh the readout even if the handler
+// itself had nothing to redraw, so the counter visibly advances on every click.
+fn force_repaint(outcome: EventOutcome) -> EventOutcome {
+    match outcome {
+        EventOutcome::Idle => EventOutcome::Repaint,
+        other => other,
     }
 }

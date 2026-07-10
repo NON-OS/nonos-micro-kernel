@@ -24,11 +24,12 @@ use super::state::{hydrate, new_state, State};
 pub struct Wallet {
     state: State,
     ready: bool,
+    ticks: u32,
 }
 
 impl Wallet {
     pub fn new() -> Self {
-        Wallet { state: new_state(), ready: false }
+        Wallet { state: new_state(), ready: false, ticks: 0 }
     }
 }
 
@@ -50,11 +51,18 @@ impl App for Wallet {
     }
 
     fn on_tick(&mut self) -> bool {
-        if self.ready {
-            return false;
+        if !self.ready {
+            hydrate(&mut self.state);
+            self.ready = true;
+            return true;
         }
-        hydrate(&mut self.state);
-        self.ready = true;
-        true
+        self.ticks = self.ticks.wrapping_add(1);
+        // Keep live account state fresh once a wallet exists, without hammering
+        // the RPC: refresh roughly every 15s.
+        if self.state.address_ready && self.ticks % 15 == 0 {
+            super::event::probe_net(&mut self.state);
+            return true;
+        }
+        false
     }
 }

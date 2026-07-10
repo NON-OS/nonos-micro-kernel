@@ -14,10 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::clamp_scroll::clamp_scroll;
-use super::state::State;
+//! Local shielded note store (the UTXO set), view-tag scanner, and incremental
+//! merkle-path cache. Scalable from day one: O(1) insert, index-backed
+//! spent-marking, O(1)-per-note view-tag sync, recent-roots path window.
 
-pub(super) fn scroll_down(state: &mut State, rows: u32, visible: u32) {
-    state.scroll_line = state.scroll_line.saturating_add(rows);
-    clamp_scroll(state, visible);
-}
+mod merkle_cache;
+mod note;
+mod scanner;
+mod store;
+
+pub use merkle_cache::{CachedPath, MerkleCache};
+pub use note::Note;
+pub use scanner::{ChainNote, NoteScanner, StubScanner};
+pub use store::NoteStore;
