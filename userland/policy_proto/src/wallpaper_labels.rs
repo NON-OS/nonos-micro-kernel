@@ -46,4 +46,6 @@ pub const WALLPAPER_LABELS: &[&[u8]] = &[
     b"Special Variant 10", b"Special Variant 11",
     b"Special Variant 12", b"Special Variant 13",
     b"Special Variant 14", b"Special Variant 15",
+    // Appended last, matching the FEATURED catalog entry (pepenonos).
+    b"NONOS Dev Pepe",
 ];

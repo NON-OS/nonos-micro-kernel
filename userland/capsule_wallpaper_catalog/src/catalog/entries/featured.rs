@@ -14,19 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::featured::FEATURED;
-use super::field_focus::FIELD_FOCUS;
-use super::hardware_aesthetic::HARDWARE_AESTHETIC;
-use super::network_topology::NETWORK_TOPOLOGY;
-use super::special_variant::SPECIAL_VARIANT;
 use crate::catalog::entry::Entry;
 
-pub(crate) const ENTRY_GROUPS: &[&[Entry]] = &[
-    FIELD_FOCUS,
-    HARDWARE_AESTHETIC,
-    NETWORK_TOPOLOGY,
-    SPECIAL_VARIANT,
-    // Appended last so it is a pure addition: every existing wallpaper keeps its
-    // index and the default is unchanged. Pepe is the final entry in the picker.
-    FEATURED,
-];
+// The featured wallpaper, first in the catalog so it is index 0: the boot
+// policy selects index 0, so this is what the desktop shows by default.
+pub(super) const FEATURED: &[Entry] = &[Entry {
+    slug: b"pepenonos",
+    bytes: include_bytes!("../../../../../nonos-data/wallpapers/pepenonos.jpg"),
+}];
