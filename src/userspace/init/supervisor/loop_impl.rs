@@ -37,6 +37,11 @@ pub(crate) fn init_loop() -> ! {
             super::super::spawn_plan::spawn_post_wizard();
             desktop_started = true;
         }
+        // Perform any window-instance spawns the shell requested. Running
+        // them here, in init's context, keeps the heavy spawn out of the
+        // calling capsule's syscall, which is what stopped the caller from
+        // resuming (it faulted on its own code under the wrong page tables).
+        crate::userspace::init::service_instance_spawns();
         crate::sched::yield_now();
     }
 }

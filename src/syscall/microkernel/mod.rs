@@ -37,6 +37,7 @@ pub mod pio;
 pub mod proc_output;
 pub mod process;
 pub mod procstat;
+pub mod spawn_instance;
 pub mod time;
 
 pub use attest::sys_attest_status;

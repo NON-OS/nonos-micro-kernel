@@ -33,6 +33,7 @@ mod panic;
 pub mod proc_output;
 pub mod process;
 pub mod procstat;
+pub mod spawn_instance;
 pub mod surface_registry;
 mod syscall;
 pub mod time;
@@ -52,6 +53,7 @@ pub use broker::{
     MK_PCI_MSIX_CTRL_ENABLE, MK_PCI_MSIX_CTRL_FUNCTION_MASK,
 };
 pub use capsule_load::{mk_capsule_load, CapsuleLoadRequest};
+pub use spawn_instance::mk_spawn_instance;
 pub use crypto::{
     crypto_decrypt, crypto_decrypt_aad, crypto_ed25519_verify, crypto_encrypt,
     crypto_encrypt_aad, crypto_hash, crypto_hkdf_sha256, crypto_hmac_sha256, crypto_keccak256,

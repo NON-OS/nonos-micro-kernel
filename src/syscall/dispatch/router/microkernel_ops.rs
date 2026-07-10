@@ -68,6 +68,7 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkPioWrite
             | MkPioRelease
             | MkDebug
+            | MkSpawnInstance
     )
 }
 

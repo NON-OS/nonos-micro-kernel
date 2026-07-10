@@ -14,9 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod embed;
-mod spawn;
-mod state;
+use crate::syscall::{call_raw, N_MK_SPAWN_INSTANCE};
 
-pub use spawn::{spawn_browser_capsule, spawn_browser_instance};
-pub use state::shared_state;
+/// Ask the kernel to open another window instance of an embedded app capsule
+/// named by `name` (currently "app.terminal" or "app.browser"). The kernel
+/// queues the request and init performs the attested spawn in its own context,
+/// so this returns 0 once the request is accepted and the window appears a tick
+/// later, or a negative errno: -2 unknown app, -16 the request queue is full,
+/// -22 bad name. Gated on the SpawnWindow capability, so only the desktop shell
+/// may call it.
+pub fn mk_spawn_instance(name: &[u8]) -> i64 {
+    call_raw(N_MK_SPAWN_INSTANCE, [name.as_ptr() as u64, name.len() as u64, 0, 0, 0, 0])
+}

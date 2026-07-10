@@ -48,6 +48,10 @@ pub enum Capability {
     Pio,
     InputSource,
     TimeSet,
+    // Authority to ask the kernel to spawn another instance of an already
+    // embedded, attested app capsule (a fresh window). Held only by the
+    // desktop shell so a compromised app cannot spawn capsules.
+    SpawnWindow,
 }
 
 impl Capability {
@@ -77,10 +81,11 @@ impl Capability {
             Self::Pio => 1048576,
             Self::InputSource => 2097152,
             Self::TimeSet => 4194304,
+            Self::SpawnWindow => 8388608,
         }
     }
 
-    pub const fn all() -> [Capability; 23] {
+    pub const fn all() -> [Capability; 24] {
         [
             Self::CoreExec,
             Self::IO,
@@ -105,6 +110,7 @@ impl Capability {
             Self::Pio,
             Self::InputSource,
             Self::TimeSet,
+            Self::SpawnWindow,
         ]
     }
 
@@ -133,6 +139,7 @@ impl Capability {
             Self::Pio => "Pio",
             Self::InputSource => "InputSource",
             Self::TimeSet => "TimeSet",
+            Self::SpawnWindow => "SpawnWindow",
         }
     }
 
