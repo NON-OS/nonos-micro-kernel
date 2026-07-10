@@ -31,7 +31,11 @@ impl Reasm {
             let Some(data) = self.segs.remove(&key) else { break; };
             let end = key.wrapping_add(data.len() as u32);
             if seq::gt(end, rcv_nxt) {
-                let skip = rcv_nxt.wrapping_sub(key) as usize;
+                // The seq-window guards above imply skip < data.len(), but clamp
+                // defensively so a future change to the comparators or to the
+                // acceptance in insert() can never turn this into an OOB slice
+                // panic (a remote DoS) on attacker-chosen sequence numbers.
+                let skip = (rcv_nxt.wrapping_sub(key) as usize).min(data.len());
                 out.extend_from_slice(&data[skip..]);
                 rcv_nxt = end;
             }

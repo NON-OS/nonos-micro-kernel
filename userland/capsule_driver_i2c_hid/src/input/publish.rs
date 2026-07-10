@@ -18,9 +18,9 @@ use nonos_libc::{
     INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP, INPUT_KIND_POINTER_REL, INPUT_KIND_WHEEL,
 };
 
-use crate::state::State;
 use super::post::post;
 use super::sample::MouseSample;
+use crate::state::State;
 
 pub fn publish(state: &mut State, sample: MouseSample) {
     let mut ok = true;
@@ -34,8 +34,11 @@ pub fn publish(state: &mut State, sample: MouseSample) {
     for bit in 0..5u8 {
         let mask = 1u8 << bit;
         if changed & mask != 0 {
-            let kind =
-                if sample.buttons & mask != 0 { INPUT_KIND_BUTTON_DOWN } else { INPUT_KIND_BUTTON_UP };
+            let kind = if sample.buttons & mask != 0 {
+                INPUT_KIND_BUTTON_DOWN
+            } else {
+                INPUT_KIND_BUTTON_UP
+            };
             ok &= post(kind, u32::from(bit) + 1, 0, 0);
         }
     }

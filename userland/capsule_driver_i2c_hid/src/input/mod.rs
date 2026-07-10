@@ -14,10 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod gesture;
 mod parse_report;
 mod poll;
 mod post;
 mod publish;
+mod publish_touch;
 mod sample;
 
+pub use gesture::TouchGesture;
 pub use poll::poll;

@@ -14,16 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::nvm::MAX_SECTORS;
 use crate::protocol::{E_INVAL, E_MSGSIZE, E_NXIO, RW_HEADER_LEN};
 
-pub(super) fn parse(body: &[u8], capacity: u64) -> Result<(u64, u32), i32> {
+pub(super) fn parse(body: &[u8], capacity: u64, max_sectors: u32) -> Result<(u64, u32), i32> {
     if body.len() < RW_HEADER_LEN {
         return Err(E_MSGSIZE);
     }
     let lba = u64::from_le_bytes(body[0..8].try_into().map_err(|_| E_MSGSIZE)?);
     let nsectors = u32::from_le_bytes(body[8..12].try_into().map_err(|_| E_MSGSIZE)?);
-    if nsectors == 0 || nsectors > MAX_SECTORS {
+    // Bound by what the fixed DMA buffer holds at this drive's LBA size, not a
+    // fixed 512-byte assumption; at 4096-byte LBAs the limit is 8, not 64.
+    if nsectors == 0 || nsectors > max_sectors {
         return Err(E_INVAL);
     }
     let last = lba.checked_add(nsectors as u64).ok_or(E_INVAL)?;

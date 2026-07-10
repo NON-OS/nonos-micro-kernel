@@ -19,5 +19,8 @@ use crate::regs::Regs;
 pub struct InitOut {
     pub queue_size: u16,
     pub host_features: u32,
+    // True when the 3D (VirGL) feature was offered and accepted. Only the
+    // modern transport can carry it; the legacy path always reports false.
+    pub virgl: bool,
     pub regs: Regs,
 }

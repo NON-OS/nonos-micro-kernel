@@ -24,6 +24,11 @@ pub const KBD_ENABLE_SCANNING: u8 = 0xF4;
 pub const KBD_RESET: u8 = 0xFF;
 pub const MOUSE_ENABLE_REPORTING: u8 = 0xF4;
 pub const MOUSE_SET_DEFAULTS: u8 = 0xF6;
+pub const MOUSE_SET_SAMPLE_RATE: u8 = 0xF3;
+pub const MOUSE_GET_DEVICE_ID: u8 = 0xF2;
+/// Device id reported after the 200/100/80 sample-rate knock when the mouse has
+/// switched to the 4-byte IntelliMouse report with a scroll wheel.
+pub const INTELLIMOUSE_ID: u8 = 0x03;
 pub const MOUSE_ACK: u8 = 0xFA;
 pub const CONFIG_IRQ1: u8 = 1 << 0;
 pub const CONFIG_IRQ12: u8 = 1 << 1;

@@ -13,30 +13,21 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::mouse::{MouseParser, MouseRing};
-use crate::poll::Drainer;
-use crate::ring::Ring;
-use crate::setup::Driver;
-pub struct Context {
-    pub driver: Driver,
-    pub ring: Ring,
-    pub drainer: Drainer,
-    pub mouse: MouseParser,
-    pub mouse_ring: MouseRing,
-    pub last_kbd_seq: u64,
-    pub last_aux_seq: u64,
-}
-impl Context {
-    pub fn new(driver: Driver) -> Self {
-        let mouse = MouseParser::new(driver.mouse_wheel);
-        Self {
-            driver,
-            ring: Ring::new(),
-            drainer: Drainer::new(),
-            mouse,
-            mouse_ring: MouseRing::new(),
-            last_kbd_seq: 0,
-            last_aux_seq: 0,
+
+//! Read a little-endian bit field from a report body. HID packs fields LSB
+//! first within each byte. Any bit that falls past the end of the buffer reads
+//! as zero, so a short report can never cause an out-of-range access.
+
+pub(super) fn read_bits(body: &[u8], bit_offset: u32, bit_size: u32) -> u32 {
+    let mut value = 0u32;
+    for k in 0..bit_size.min(32) {
+        let bit = bit_offset + k;
+        let byte = (bit / 8) as usize;
+        if byte >= body.len() {
+            break;
         }
+        let set = (body[byte] >> (bit % 8)) & 1;
+        value |= (set as u32) << k;
     }
+    value
 }

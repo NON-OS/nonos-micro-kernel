@@ -9,9 +9,11 @@
 pub mod blob;
 pub mod family;
 pub mod alive;
+pub mod load;
 pub mod stage;
 mod tlv;
 
 pub use blob::{blob_for_family, FirmwareBlob};
 pub use family::{family_for_device, Family};
+pub use load::{load_sections, release_cpu};
 pub use stage::{stage_firmware, FirmwareStageState};
