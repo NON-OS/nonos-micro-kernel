@@ -27,7 +27,9 @@ use crate::security::nonos_trust_anchor::{
 
 const SERVICE_NAME: &str = "installer";
 const SERVICE_PORT: u32 = 4112;
-const REPLY_INBOX: &str = "endpoint.4294967313";
+// 0x1_0000_0018; the old id collided with the NVMe driver's reply inbox
+// on full-gui, which killed the installer's endpoint registration.
+const REPLY_INBOX: &str = "endpoint.4294967320";
 const REPLY_PORT: u32 = 4113;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
 const REQUIRED_CAPS: u64 = 0x19;
