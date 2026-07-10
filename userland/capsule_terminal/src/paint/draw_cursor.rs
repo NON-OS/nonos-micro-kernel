@@ -25,12 +25,15 @@ pub fn draw_cursor(
     cursor_cell: usize,
     baseline_y: u32,
     under: u8,
+    scale: u32,
 ) {
-    let x = TEXT_LEFT + (prompt_cells as u32 + cursor_cell as u32) * CELL_WIDTH;
-    fb.fill_rect(x, baseline_y, CELL_WIDTH, LINE_HEIGHT - 2, CURSOR);
+    let cw = CELL_WIDTH * scale;
+    let lh = LINE_HEIGHT * scale;
+    let x = TEXT_LEFT + (prompt_cells as u32 + cursor_cell as u32) * cw;
+    fb.fill_rect(x, baseline_y, cw, lh.saturating_sub(2), CURSOR);
     // Inverse block: when the cursor sits on a printable glyph, repaint it in
     // the background colour so the character reads through the block.
     if under > b' ' {
-        fb.text(x, baseline_y - 1, &[under], BACKGROUND);
+        fb.text_scaled(x, baseline_y.saturating_sub(1), &[under], BACKGROUND, scale);
     }
 }

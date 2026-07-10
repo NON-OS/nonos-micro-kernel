@@ -39,6 +39,7 @@ impl State {
             jobs: JobTable::new(),
             fg_running: false,
             fg_started_ms: 0,
+            font_scale: 1,
         }
     }
 }

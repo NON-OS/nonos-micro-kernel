@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub fn u16_at(buf: &[u8], off: usize) -> Option<u16> {
-    if off + 2 > buf.len() {
+    // checked_add so a near-usize::MAX offset cannot wrap the bound check.
+    if off.checked_add(2)? > buf.len() {
         return None;
     }
     Some(u16::from_be_bytes([buf[off], buf[off + 1]]))

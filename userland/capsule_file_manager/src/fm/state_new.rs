@@ -17,7 +17,7 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use super::state::{Mode, SortMode, State};
+use super::state::{Mode, SortMode, State, ViewKind};
 
 impl State {
     pub fn new() -> Self {
@@ -36,6 +36,11 @@ impl State {
             sort_mode: SortMode::Name,
             selected: Vec::new(),
             clipboard: Vec::new(),
+            view_rows: super::layout::LIST_VISIBLE,
+            row_top: super::layout::FIRST_ROW_Y,
+            row_h: super::layout::ROW_H,
+            view: ViewKind::Grid,
+            grid_cols: 5,
         }
     }
 }

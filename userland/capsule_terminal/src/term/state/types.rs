@@ -52,4 +52,6 @@ pub struct State {
     // close_block and last_status to the job's reap in the on_tick pump.
     pub fg_running: bool,
     pub fg_started_ms: i64,
+    // Body font zoom, adjusted with Ctrl+= / Ctrl+-. 1 = base bitmap size.
+    pub font_scale: u32,
 }

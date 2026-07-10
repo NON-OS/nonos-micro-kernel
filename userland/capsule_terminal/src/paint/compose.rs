@@ -34,20 +34,21 @@ pub fn paint_tabs(tabs: &[State], active: usize, fb: &mut PaintBuffer) {
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
     draw_header(state, fb);
+    let scale = state.font_scale.max(1);
     let alt = state.scrollback.grid.alternate;
-    let input_y = fb.height.saturating_sub(FOOTER_H + LINE_HEIGHT);
+    let input_y = fb.height.saturating_sub(FOOTER_H + LINE_HEIGHT * scale);
     if alt {
         let body_max = fb.height.saturating_sub(FOOTER_H);
-        draw_grid(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP, body_max);
-        draw_grid_cursor(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP);
+        draw_grid(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP, body_max, scale);
+        draw_grid_cursor(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP, scale);
     } else if state.fresh {
         draw_fetch(state, fb);
     } else {
         draw_block_chrome(state, fb, TEXT_LEFT, BODY_TOP, input_y);
-        draw_grid(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP, input_y);
+        draw_grid(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP, input_y, scale);
     }
     if !alt {
-        draw_input_line(state, fb, input_y);
+        draw_input_line(state, fb, input_y, scale);
     }
     draw_footer(fb);
 }

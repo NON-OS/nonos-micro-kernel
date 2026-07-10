@@ -52,5 +52,10 @@ pub fn new_state() -> State {
         rails: [empty_rail(); MAX_RAILS],
         rail_count: 0,
         status: b"keyring pending",
+        in_count: 0,
+        in_kind: 0,
+        in_x: 0,
+        in_y: 0,
+        notes: crate::wallet::shield::notes::NoteStore::new(),
     }
 }

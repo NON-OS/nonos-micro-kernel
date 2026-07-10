@@ -16,12 +16,40 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::format_u32::format_u32;
 use crate::wallet::state::State;
-use crate::wallet::theme::{FG, MUTED, PANEL_2};
+use crate::wallet::theme::{ACCENT, FG, MUTED, PANEL_2};
 
 pub fn paint_statusbar(state: &State, fb: &mut PaintBuffer) {
     let y = fb.height.saturating_sub(54);
     fb.fill_rect(304, y, fb.width.saturating_sub(304), 54, PANEL_2);
     fb.text(336, y + 20, b"Status", MUTED);
     fb.text(424, y + 20, state.status, FG);
+
+    // Live input readout. `n` climbs on every discrete key/button event that
+    // reaches us: if it advances when you click, pointer delivery works and the
+    // bug is in hit-testing; if it only moves on keypress, clicks are not being
+    // delivered to the capsule at all. `btn`/`key` shows the last kind.
+    let mut buf = [0u8; 48];
+    let mut n = 0;
+    n += write(&mut buf, n, b"in ");
+    let mut num = [0u8; 10];
+    let d = format_u32(state.in_count, &mut num);
+    n += write(&mut buf, n, &num[..d]);
+    n += write(&mut buf, n, if state.in_kind == 5 { b"  btn " } else { b"  key " });
+    let d = format_u32(state.in_x.max(0) as u32, &mut num);
+    n += write(&mut buf, n, b"x");
+    n += write(&mut buf, n, &num[..d]);
+    let d = format_u32(state.in_y.max(0) as u32, &mut num);
+    n += write(&mut buf, n, b" y");
+    n += write(&mut buf, n, &num[..d]);
+    let tone = if state.in_kind == 5 { ACCENT } else { MUTED };
+    let rx = fb.width.saturating_sub(360);
+    fb.text(rx, y + 20, &buf[..n], tone);
+}
+
+fn write(out: &mut [u8], at: usize, src: &[u8]) -> usize {
+    let n = core::cmp::min(out.len().saturating_sub(at), src.len());
+    out[at..at + n].copy_from_slice(&src[..n]);
+    n
 }

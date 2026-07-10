@@ -14,8 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Scroll just enough to keep the caret's visual line on screen after an edit
+//! or a move.
+
+use super::position_at::position_at;
 use super::state::State;
 
-pub(super) fn scroll_up(state: &mut State, rows: u32) {
-    state.scroll_line = state.scroll_line.saturating_sub(rows);
+pub(super) fn follow_caret(state: &mut State, rows: u32) {
+    let (line, _) = position_at(&state.buf[..state.len], state.wrap_cols, state.caret);
+    if line < state.scroll_line {
+        state.scroll_line = line;
+    } else if rows > 0 && line >= state.scroll_line + rows {
+        state.scroll_line = line + 1 - rows;
+    }
 }

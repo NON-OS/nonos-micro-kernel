@@ -23,25 +23,27 @@ use crate::term::grid::types::Grid;
 use crate::term::theme::{BACKGROUND, CURSOR};
 use crate::term::vt::color::{ansi_to_argb, DEFAULT_BG};
 
-pub fn draw_grid_cursor(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32) {
+pub fn draw_grid_cursor(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, scale: u32) {
     if !g.cursor_visible {
         return;
     }
-    let adv = fb.glyph_advance();
+    let adv = fb.glyph_advance() * scale;
+    let lh = LINE_HEIGHT * scale;
     let x = ox + g.x as u32 * adv;
-    let y = oy + g.y as u32 * LINE_HEIGHT;
-    fb.fill_rect(x, y, adv, LINE_HEIGHT, CURSOR);
+    let y = oy + g.y as u32 * lh;
+    fb.fill_rect(x, y, adv, lh, CURSOR);
     let ch = g.cells[Grid::idx(g.x, g.y)].ch;
     if ch != b' ' {
-        fb.text(x, y, &[ch], BACKGROUND);
+        fb.text_scaled(x, y, &[ch], BACKGROUND, scale);
     }
 }
 
-pub fn draw_grid(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, max_y: u32) {
-    let adv = fb.glyph_advance();
+pub fn draw_grid(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, max_y: u32, scale: u32) {
+    let adv = fb.glyph_advance() * scale;
+    let lh = LINE_HEIGHT * scale;
     for row in 0..VISIBLE_ROWS {
-        let y = oy + row as u32 * LINE_HEIGHT;
-        if y + LINE_HEIGHT > max_y {
+        let y = oy + row as u32 * lh;
+        if y + lh > max_y {
             break;
         }
         let rowcells = g.visible_row(row);
@@ -55,10 +57,10 @@ pub fn draw_grid(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, max_y: u32) {
                 core::mem::swap(&mut fg, &mut bg);
             }
             if cell.bg != DEFAULT_BG || reverse {
-                fb.fill_rect(x, y, adv, LINE_HEIGHT, bg);
+                fb.fill_rect(x, y, adv, lh, bg);
             }
             if cell.ch != b' ' {
-                fb.text(x, y, &[cell.ch], fg);
+                fb.text_scaled(x, y, &[cell.ch], fg, scale);
             }
         }
     }
