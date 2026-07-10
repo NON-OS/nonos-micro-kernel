@@ -13,6 +13,7 @@ pub mod field;
 pub mod fri;
 pub mod fri_ext;
 pub mod fri_poseidon;
+pub mod fri_poseidon_ext;
 pub mod merkle;
 pub mod poly;
 pub mod poseidon;
