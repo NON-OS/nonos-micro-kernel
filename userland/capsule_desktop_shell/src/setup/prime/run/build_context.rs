@@ -39,5 +39,15 @@ pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
         clock_24h: true,
         policy_port: 0,
         next_request_id: 2,
+        desktop_items: alloc::vec::Vec::new(),
+        desktop_menu: None,
+        menu_hover: None,
+        menu_target: None,
+        rename: None,
+        rename_buf: alloc::string::String::new(),
+        drag_from: None,
+        drag_moved: false,
+        drag_x: 0,
+        drag_y: 0,
     }
 }

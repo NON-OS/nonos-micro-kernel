@@ -56,6 +56,11 @@ impl<'a> PaintBuffer<'a> {
     pub fn measure_ttf(&self, text: &str, px: f32) -> i32 {
         ttf::measure(text, px, false)
     }
+
+    // Advance width in the monospace face, matching `text_ttf_mono`.
+    pub fn measure_ttf_mono(&self, text: &str, px: f32) -> i32 {
+        ttf::measure(text, px, true)
+    }
 }
 
 // Surface-free measurement for layout, which sizes runs before it owns a

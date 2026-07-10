@@ -16,32 +16,33 @@
 
 use crate::state::Context;
 
-use super::super::fill::fill_rect;
+use super::super::fill::blit_rgba8_scaled;
 
-pub fn paint(ctx: &Context, x: u32, y: u32, size: u32, color: u32) {
-    for row in 0..super::nonos_logo_bits::H {
-        let (left, right) = super::nonos_logo_bits::ROWS[row as usize];
-        for col in 0..super::nonos_logo_bits::W {
-            let bits = if col < 32 { left } else { right };
-            let bit = if col < 32 { 31 - col } else { 63 - col };
-            if bits & (1 << bit) == 0 {
-                continue;
-            }
-            let px = x + col * size / super::nonos_logo_bits::W;
-            let py = y + row * size / super::nonos_logo_bits::H;
-            let nx = x + (col + 1) * size / super::nonos_logo_bits::W;
-            let ny = y + (row + 1) * size / super::nonos_logo_bits::H;
-            fill_rect(
-                ctx.backing_va,
-                ctx.stride,
-                ctx.width,
-                ctx.height,
-                px,
-                py,
-                nx.saturating_sub(px).max(1),
-                ny.saturating_sub(py).max(1),
-                color,
-            );
-        }
+// Real brand mark, rasterized from nonos-icon-teal.svg at 128x139 RGBA and
+// alpha-blitted so the dock icon stays crisp at any size. `color` is ignored:
+// the asset already carries the brand teal.
+const ICON: &[u8] = include_bytes!("../../../assets/nonos_icon_128x139.rgba");
+const ICON_W: u32 = 128;
+const ICON_H: u32 = 139;
+
+pub fn paint(ctx: &Context, x: u32, y: u32, size: u32, _color: u32) {
+    if size == 0 {
+        return;
     }
+    let dh = size;
+    let dw = (size * ICON_W / ICON_H).max(1);
+    let dx = x + size.saturating_sub(dw) / 2;
+    blit_rgba8_scaled(
+        ctx.backing_va,
+        ctx.stride,
+        ctx.width,
+        ctx.height,
+        dx,
+        y,
+        dw,
+        dh,
+        ICON,
+        ICON_W,
+        ICON_H,
+    );
 }

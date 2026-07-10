@@ -22,6 +22,7 @@ mod list_paths;
 mod mkdir;
 mod read_file;
 mod rename;
+mod resolve;
 mod rmdir;
 mod stat;
 mod stat_full;

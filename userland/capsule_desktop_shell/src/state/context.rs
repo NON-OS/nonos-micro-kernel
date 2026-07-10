@@ -37,6 +37,27 @@ pub struct Context {
     pub clock_24h: bool,
     pub policy_port: u32,
     pub next_request_id: u32,
+    /// Entries at the VFS root, shown as icons on the desktop. Loaded lazily
+    /// once the vfs_pool service is up, then refreshed after we mutate it.
+    pub desktop_items: alloc::vec::Vec<crate::vfs_client::Entry>,
+    /// Top-left corner of the desktop right-click menu, or None when hidden.
+    pub desktop_menu: Option<(u32, u32)>,
+    /// Which menu row the pointer is over, so it can be highlighted.
+    pub menu_hover: Option<usize>,
+    /// The desktop item the open menu acts on; None means the empty-desktop
+    /// menu (New Folder / New File) rather than the per-item one.
+    pub menu_target: Option<usize>,
+    /// The item being renamed and its edit buffer, while an inline rename is in
+    /// progress.
+    pub rename: Option<usize>,
+    pub rename_buf: alloc::string::String,
+    /// Drag-to-move: the icon a left-press started on, whether the pointer has
+    /// moved far enough to count as a drag, and the current pointer position so
+    /// the dragged icon can follow the cursor.
+    pub drag_from: Option<usize>,
+    pub drag_moved: bool,
+    pub drag_x: u32,
+    pub drag_y: u32,
 }
 
 impl Context {

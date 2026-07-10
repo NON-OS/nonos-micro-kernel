@@ -45,6 +45,12 @@ pub fn run(mut ctx: Context) -> ! {
                 let port = ctx.wm_port;
                 crate::setup::subscribe_wm(&mut ctx, port);
             }
+            // Keep the desktop icons in step with the filesystem: this catches
+            // the first listing once vfs_pool is up and any later change,
+            // without ever wiping a good desktop on a transient empty reply.
+            if crate::server::desktop::refresh(&mut ctx) {
+                crate::server::repaint::repaint(&mut ctx);
+            }
             ctx.toasts.expire(now);
             if !ctx.toasts.is_empty() || ctx.toast_layer_live {
                 sync_toast_layer(&mut ctx);

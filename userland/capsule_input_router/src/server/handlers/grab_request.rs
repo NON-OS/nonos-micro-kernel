@@ -15,14 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::clients::wire::lookup_pid;
-use crate::protocol::{read_u32, Request, E_INVAL, E_ACCES};
+use crate::protocol::{read_u32, Request, E_ACCES, E_INVAL};
 use crate::server::respond;
 use crate::state::Context;
 
 const E_BUSY: i32 = -16;
 const REQ_LEN: usize = 8;
 
-const GRABBERS: [&[u8]; 3] = [b"app.boot_splash", b"app.setup_wizard", b"app.input_probe"];
+// The desktop shell is allowed a keyboard grab for modal desktop editing (an
+// inline rename), which it releases as soon as the edit ends.
+const GRABBERS: [&[u8]; 4] =
+    [b"app.boot_splash", b"app.setup_wizard", b"app.input_probe", b"desktop_shell"];
 
 fn is_trusted_grabber(sender_pid: u32) -> bool {
     GRABBERS.iter().any(|name| lookup_pid(name) == Some(sender_pid))

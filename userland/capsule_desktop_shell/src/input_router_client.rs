@@ -24,7 +24,49 @@ const HDR_LEN: usize = 20;
 const STATUS_LEN: usize = 4;
 const BODY_LEN: usize = 8;
 const OP_SUBSCRIBE: u16 = 0x0002;
+const OP_GRAB_REQUEST: u16 = 0x0003;
+const OP_GRAB_RELEASE: u16 = 0x0004;
 const REPLY_TIMEOUT_MS: u64 = 250;
+
+/// Grab the given input kinds so they route to us regardless of window focus.
+/// Used for the modal desktop rename; released the moment it ends.
+pub fn grab(port: u32, request_id: u32, kind_mask: u32) -> Result<(), &'static str> {
+    grab_call(port, OP_GRAB_REQUEST, request_id, Some(kind_mask))
+}
+
+/// Release any grab this shell holds.
+pub fn release_grab(port: u32, request_id: u32) -> Result<(), &'static str> {
+    grab_call(port, OP_GRAB_RELEASE, request_id, None)
+}
+
+fn grab_call(port: u32, op: u16, request_id: u32, body: Option<u32>) -> Result<(), &'static str> {
+    let body_len = if body.is_some() { BODY_LEN } else { 0 };
+    let mut tx = [0u8; HDR_LEN + BODY_LEN];
+    tx[0..4].copy_from_slice(&MAGIC.to_le_bytes());
+    tx[4..6].copy_from_slice(&VERSION.to_le_bytes());
+    tx[6..8].copy_from_slice(&op.to_le_bytes());
+    tx[12..16].copy_from_slice(&request_id.to_le_bytes());
+    tx[16..20].copy_from_slice(&(body_len as u32).to_le_bytes());
+    if let Some(v) = body {
+        tx[20..24].copy_from_slice(&v.to_le_bytes());
+    }
+    let mut rx = [0u8; HDR_LEN + STATUS_LEN];
+    let rc = mk_ipc_call_timeout(
+        port as u64,
+        tx.as_ptr(),
+        HDR_LEN + body_len,
+        rx.as_mut_ptr(),
+        rx.len(),
+        REPLY_TIMEOUT_MS,
+    );
+    if rc < (HDR_LEN + STATUS_LEN) as i64 {
+        return Err("input_router call failed");
+    }
+    match read_i32(&rx, HDR_LEN) {
+        Some(0) => Ok(()),
+        _ => Err("input_router rejected request"),
+    }
+}
 
 pub fn subscribe(port: u32, request_id: u32, kind_mask: u32) -> Result<(), &'static str> {
     let mut tx = [0u8; HDR_LEN + BODY_LEN];
