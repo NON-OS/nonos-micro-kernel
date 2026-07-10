@@ -1,0 +1,16 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the text editor's document engine. Builds for the
+# host so `cargo test` exercises the real editing source (included via #[path]):
+# undo/redo, selection, word motion, indent, comment toggling, line ops, and
+# bracket auto-closing, with no compositor or vfs present.
+[package]
+name = "editor_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]

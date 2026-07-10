@@ -115,6 +115,7 @@ jobs:
           - virtio_net_proofs
           - e1000_proofs
           - rtl8139_proofs
+          - iwlwifi_proofs
           - xhci_proofs
           - stark_proofs
     steps:

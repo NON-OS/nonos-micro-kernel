@@ -58,6 +58,12 @@ standalone = ["kernel"]
 # Target architecture label.
 arch-x86_64 = []
 
+# Grants the `Debug` (serial console) capability to service capsules for
+# bring-up diagnostics. This is an information-leak surface: a hardened release
+# omits this feature so no capsule can emit serial output. Kept in the desktop
+# GUI feature set for now so live diagnostics still work.
+capsule-serial-debug = []
+
 # Runtime subsystem.
 sched = []
 
@@ -463,6 +469,7 @@ microkernel-net-sockets = [
 microkernel-desktop-gui = [
   "microkernel-core",
   "nonos-production",
+  "capsule-serial-debug",
   "nonos-capsule-proof-io",
   "nonos-capsule-ramfs",
   "nonos-capsule-keyring",
@@ -858,7 +865,12 @@ codegen-units   = 4
 panic           = "abort"
 strip           = "debuginfo"
 debug           = false
-overflow-checks = false
+# Trap integer overflow in release too. A silently wrapping length, offset,
+# or capability-bit calculation on the trusted path is a memory-safety
+# hazard; a checked overflow aborts (panic = "abort") instead, which is a
+# controlled halt rather than silent corruption. The size/speed cost is
+# acceptable for a security kernel.
+overflow-checks = true
 
 # Dev: opt-level=1 because 0 is intolerable at runtime; deps stay at 2
 # so they do not dominate the trace.

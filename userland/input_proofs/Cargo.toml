@@ -1,0 +1,15 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the input decoders. Builds for the host so
+# `cargo test` exercises the real PS/2 and i2c-hid decode source (included via
+# #[path]) against hostile and edge-case hardware bytes, with no device present.
+[package]
+name = "input_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]

@@ -256,9 +256,18 @@ QEMU_SERIAL_LOG ?= $(TARGET_DIR)/qemu-serial.log
 QEMU_BLK_IMG := $(TARGET_DIR)/qemu-virtio-blk.img
 QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
-QEMU_XRES ?= 1920
-QEMU_YRES ?= 1080
+QEMU_XRES ?= 1280
+QEMU_YRES ?= 800
+# QEMU_GL=1 swaps the display device for virtio-vga-gl (modern transport,
+# virglrenderer backend) so the guest can negotiate the 3D command set; the
+# cocoa display then needs a GL context. Default stays the plain 2D device.
+ifeq ($(QEMU_GL),1)
+QEMU_GPU := -device virtio-vga-gl,xres=$(QEMU_XRES),yres=$(QEMU_YRES)
+QEMU_DISPLAY := cocoa,gl=es,zoom-to-fit=off
+else
 QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=$(QEMU_XRES),yres=$(QEMU_YRES)
+QEMU_DISPLAY := cocoa,zoom-to-fit=off
+endif
 # Keyboard/mouse via the q35 i8042 (PS/2). USB HID interrupt-IN transfers
 # are not serviced under macOS hvf, so usb-kbd/usb-mouse never deliver input
 # there; the xHCI controller stays for the USB stack/storage paths.
@@ -426,11 +435,20 @@ BOOTLOADER_POLICY ?= standard-qemu
 # only the offline signer's machine holds the seed for the sign step.
 NONOS_TRUST_ANCHOR_PUBKEY ?=
 
+# The GOP preference is baked into the binary via option_env, so a change to
+# it must retrigger the cargo build; the stamp file's name carries the value.
+GOP_PREF_STAMP := $(TARGET_DIR)/.gop-pref-$(if $(NONOS_GOP_PREF),$(NONOS_GOP_PREF),none).stamp
+$(GOP_PREF_STAMP):
+	@mkdir -p $(TARGET_DIR)
+	@rm -f $(TARGET_DIR)/.gop-pref-*.stamp
+	@touch $@
+
 $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 		$(BOOTLOADER_SRCS) \
 		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),$(NONOS_TRUST_ANCHOR_PUBKEY),$(SIGNING_KEY)) \
 		$(KERNEL_MLDSA65_PUB) \
 		$(ZK_BOOT_ROOT) \
+		$(GOP_PREF_STAMP) \
 		$(TARGET_DIR)/.nonos-toolchain.stamp
 	@echo "Building UEFI bootloader (policy: $(BOOTLOADER_POLICY))..."
 	$(eval SIGNING_KEY_ABS := $(if $(filter /%,$(SIGNING_KEY)),$(SIGNING_KEY),$(shell pwd)/$(SIGNING_KEY)))
@@ -438,6 +456,7 @@ $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),NONOS_TRUST_ANCHOR_PUBKEY=$(abspath $(NONOS_TRUST_ANCHOR_PUBKEY)),NONOS_SIGNING_KEY=$(SIGNING_KEY_ABS)) \
 		NONOS_MLDSA65_PUBKEY=$(shell pwd)/$(KERNEL_MLDSA65_PUB) \
 		NONOS_ZK_DEVICE_ROOT=$(shell pwd)/$(ZK_BOOT_ROOT) \
+		$(if $(NONOS_GOP_PREF),NONOS_GOP_PREF=$(NONOS_GOP_PREF)) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --target x86_64-unknown-uefi --release \
 			--features zk-transparent,$(BOOTLOADER_POLICY)
@@ -1407,9 +1426,13 @@ nonos-mk-dev-enroll:
 	@printf "  dev boot identity ready: root %s\n\n" "$$(shasum -a 256 $(ZK_BOOT_ROOT) | cut -c1-16)"
 
 # One command for a clean checkout: enroll a dev identity, then build and boot.
+# The GOP preference pins the firmware mode to the QEMU window size so the
+# cocoa window opens at a size that fits the host screen; hardware builds
+# never set it and keep the largest-mode pick.
 nonos-mk-dev-run:
 	@$(MAKE) --no-print-directory NONOS_DEV=1 nonos-mk-dev-enroll
-	@$(MAKE) --no-print-directory NONOS_DEV=1 nonos-mk-run
+	@$(MAKE) --no-print-directory NONOS_DEV=1 \
+		NONOS_GOP_PREF=$(QEMU_XRES)x$(QEMU_YRES) nonos-mk-run
 
 nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof nonos-mk-full-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS in QEMU..."
@@ -1421,7 +1444,7 @@ nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof nonos-mk-full-
 		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
 		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) $(QEMU_TPM) \
-		-serial mon:stdio -vga none -display cocoa,zoom-to-fit=on -no-reboot
+		-serial mon:stdio -vga none -display $(QEMU_DISPLAY) -no-reboot
 
 nonos-mk-run-net:
 	@$(MAKE) --no-print-directory QEMU_NET_MODE=hostfwd nonos-mk-run
