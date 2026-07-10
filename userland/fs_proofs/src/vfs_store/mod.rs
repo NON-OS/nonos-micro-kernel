@@ -43,6 +43,8 @@ mod read;
 mod rename;
 #[path = "../../../capsule_vfs/src/store/fdtable/rmdir.rs"]
 mod rmdir;
+#[path = "../../../capsule_vfs/src/store/fdtable/seek.rs"]
+mod seek;
 #[path = "../../../capsule_vfs/src/store/fdtable/truncate.rs"]
 mod truncate;
 #[path = "../../../capsule_vfs/src/store/fdtable/types.rs"]
@@ -56,4 +58,4 @@ mod write;
 #[path = "../../../capsule_vfs/src/store/fdtable/zeroize.rs"]
 mod zeroize;
 
-pub use types::{Store, StoreError};
+pub use types::{SeekWhence, Store, StoreError};
