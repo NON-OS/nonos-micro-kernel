@@ -34,12 +34,17 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkMmap => caps.can_allocate_memory(),
         SyscallNumber::MkMunmap => caps.can_deallocate_memory(),
 
-        SyscallNumber::MkCapsuleLoad => caps.is_valid()
-            && caps.grants_all(&[Capability::CoreExec, Capability::IPC, Capability::Memory]),
+        SyscallNumber::MkCapsuleLoad => {
+            caps.is_valid()
+                && caps.grants_all(&[Capability::CoreExec, Capability::IPC, Capability::Memory])
+        }
 
         SyscallNumber::MkGetPid => caps.can_getpid(),
         SyscallNumber::MkArgs => caps.can_getpid(),
         SyscallNumber::MkThreadSpawn => caps.can_ipc(),
+        // A capsule may only move its own fs base; that mutates nothing
+        // outside its own PCB, so a valid token is the whole requirement.
+        SyscallNumber::MkSetTls => caps.is_valid(),
         SyscallNumber::MkProcOutput => caps.can_ipc(),
 
         SyscallNumber::MkSpawn

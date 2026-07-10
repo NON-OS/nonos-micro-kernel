@@ -119,3 +119,25 @@ pub fn sys_thread_spawn(entry: u64, stack: u64) -> i64 {
         Err(_) => ERRNO_NOMEM,
     }
 }
+
+pub fn sys_set_tls(base: u64) -> i64 {
+    // Zero clears the base; anything else must point at readable user
+    // memory (userspace keeps the TLS table's self-pointer at offset 0,
+    // so the first eight bytes are the smallest meaningful window).
+    if base != 0 && crate::usercopy::validate_user_read(base, 8).is_err() {
+        return ERRNO_FAULT;
+    }
+    let Some(pid) = current_pid() else {
+        return ERRNO_PERM;
+    };
+    let Some(pcb) = crate::process::get_process_table().find_by_pid(pid) else {
+        return ERRNO_INVAL;
+    };
+    if !crate::arch::context::set_user_tls(base) {
+        // The arch cannot carry a user TLS register across its return
+        // path yet; refuse rather than let userspace believe TLS works.
+        return ERRNO_INVAL;
+    }
+    pcb.set_tls_base(base);
+    0
+}
