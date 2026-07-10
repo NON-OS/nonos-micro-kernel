@@ -59,7 +59,7 @@ fn staged(sections: &[(u32, usize)]) -> (Vec<u8>, Vec<(u32, usize, usize)>) {
         buf.extend_from_slice(&(len as u32).to_le_bytes());
         buf.extend_from_slice(&0u32.to_le_bytes());
         let payload_off = buf.len();
-        buf.extend(core::iter::repeat(0xABu8).take(len));
+        buf.extend(core::iter::repeat_n(0xABu8, len));
         meta.push((dest, payload_off, len));
     }
     (buf, meta)
