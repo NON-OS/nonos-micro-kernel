@@ -61,18 +61,24 @@ impl DeepCheckExt {
     /// term; the row after the last term carries the final sum, the rest padded.
     pub fn trace(&self) -> Vec<Fp> {
         let rows = 1usize << self.log_rows;
-        let mut trace = alloc::vec![Fp::ZERO; rows * 4];
+        let mut trace = alloc::vec![Fp::ZERO; rows * 6];
+        // The composition claim, held on every row so it is a wireable trace cell.
+        let comp_z = self.terms.last().map(|t| t.claim).unwrap_or(Fp2::ZERO);
+        for r in 0..rows {
+            trace[r * 6 + 4] = comp_z.c0;
+            trace[r * 6 + 5] = comp_z.c1;
+        }
         let mut acc = Fp2::ZERO;
         for (i, term) in self.terms.iter().enumerate() {
             let q = (term.val - term.claim) * (self.x - term.point).inv();
-            let base = i * 4;
+            let base = i * 6;
             trace[base] = q.c0;
             trace[base + 1] = q.c1;
             trace[base + 2] = acc.c0;
             trace[base + 3] = acc.c1;
             acc = acc + term.coeff * q;
         }
-        let base = self.terms.len() * 4;
+        let base = self.terms.len() * 6;
         trace[base + 2] = acc.c0;
         trace[base + 3] = acc.c1;
         trace
@@ -81,13 +87,15 @@ impl DeepCheckExt {
     fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
         let (q0, q1) = (window[0], window[1]);
         let (acc0, acc1) = (window[2], window[3]);
-        let (nacc0, nacc1) = (window[6], window[7]);
+        let (cz0, cz1) = (window[4], window[5]);
+        let (nacc0, nacc1) = (window[8], window[9]);
         let (val0, val1) = (periodic[0], periodic[1]);
         let (clm0, clm1) = (periodic[2], periodic[3]);
         let (pt0, pt1) = (periodic[4], periodic[5]);
         let (cf0, cf1) = (periodic[6], periodic[7]);
         let (x0, x1) = (periodic[8], periodic[9]);
         let sel = periodic[10];
+        let comp_sel = periodic[11];
         let w = F::from_base(Fp::from_u64(W));
 
         // q * (x - point) in Fp2.
@@ -106,6 +114,9 @@ impl DeepCheckExt {
             sel * (qd1 - n1),
             nacc0 - acc0 - sel * cq0,
             nacc1 - acc1 - sel * cq1,
+            // The wired composition cell equals the composition term's claim.
+            comp_sel * (cz0 - clm0),
+            comp_sel * (cz1 - clm1),
         ]
     }
 }
@@ -122,7 +133,7 @@ impl Air for DeepCheckExt {
     }
 
     fn trace_width(&self) -> usize {
-        4
+        6
     }
 
     fn window_size(&self) -> usize {
@@ -136,12 +147,12 @@ impl Air for DeepCheckExt {
     }
 
     fn num_transition(&self) -> usize {
-        4
+        6
     }
 
     fn periodic_columns(&self) -> Vec<Vec<Fp>> {
         let rows = 1usize << self.log_rows;
-        let mut cols: Vec<Vec<Fp>> = (0..11).map(|_| alloc::vec![Fp::ZERO; rows]).collect();
+        let mut cols: Vec<Vec<Fp>> = (0..12).map(|_| alloc::vec![Fp::ZERO; rows]).collect();
         for (i, term) in self.terms.iter().enumerate() {
             cols[0][i] = term.val.c0;
             cols[1][i] = term.val.c1;
@@ -156,6 +167,11 @@ impl Air for DeepCheckExt {
         // x is constant on every row.
         cols[8].iter_mut().for_each(|c| *c = self.x.c0);
         cols[9].iter_mut().for_each(|c| *c = self.x.c1);
+        // The composition term (the last one) is where the wired cell must equal
+        // the claim.
+        if !self.terms.is_empty() {
+            cols[11][self.terms.len() - 1] = Fp::ONE;
+        }
         cols
     }
 

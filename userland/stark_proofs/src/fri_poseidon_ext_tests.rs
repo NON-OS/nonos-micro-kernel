@@ -646,6 +646,122 @@ fn the_transcript_and_compose_are_wired_into_one_proof() {
     );
 }
 
+// Three regions in one proof: the transcript, the composition, and the DEEP check,
+// with the composition value compose proved bound to the value DEEP consumes (and
+// the challenges bound as before). So DEEP no longer trusts comp_z; it is the one
+// compose proved was honestly formed from the frame.
+#[test]
+#[ignore]
+fn the_transcript_compose_and_deep_are_wired_into_one_proof() {
+    use crate::crypto::stark::air::{
+        compose_inputs, deep_terms_query0, stark_prove_ext, stark_verify_ext, Air, AirExt,
+        ComposeBoundary, ComposeCheck, DeepCheckExt, TranscriptCheck, TranscriptOp, WiredExt, WIDTH,
+    };
+    use crate::crypto::stark::field::Fp2;
+    use alloc::boxed::Box;
+
+    let h = hasher();
+    let (nq, grind, extra) = (32usize, 16u32, 3u32);
+    let (air, proof) = poseidon_join_split_proof(&h, nq, grind, extra);
+    let ci = compose_inputs(&air, &proof, extra, &h);
+    let t = 1u64 << air.log_trace_len();
+    let g = root_of_unity(air.log_trace_len());
+
+    // Region 1: compose-at-z.
+    let mut window = [Fp2::ZERO; 6];
+    window.copy_from_slice(&proof.ood_frame[..6]);
+    let mut periodic = [Fp2::ZERO; 5];
+    periodic.copy_from_slice(&ci.periodic_z[..5]);
+    let mut coeffs = [Fp2::ZERO; 8];
+    coeffs.copy_from_slice(&ci.coeffs[..8]);
+    let boundaries: Vec<ComposeBoundary> = air
+        .boundary()
+        .iter()
+        .map(|(col, row, expected)| ComposeBoundary { col: *col, g_row: g.pow(*row as u64), expected: *expected })
+        .collect();
+    let compose = ComposeCheck::new(window, periodic, coeffs, ci.z, ci.comp_z, g.pow(t - 1), t, boundaries);
+    let ctrace = compose.trace();
+
+    // Region 2: the DEEP check, holding comp_z (its composition term claim) as a
+    // wireable trace cell.
+    let (terms, dx, ddeep) = deep_terms_query0(&air, &proof, extra, &h);
+    let deepck = DeepCheckExt::new(terms, dx, ddeep);
+    let dtrace = deepck.trace();
+
+    // Region 0: transcript derivation, up to the out-of-domain point.
+    let mut st = [Fp::ZERO; WIDTH];
+    let mut ops: Vec<TranscriptOp> = Vec::new();
+    let absorb = |ops: &mut Vec<TranscriptOp>, st: &mut [Fp; WIDTH], v: Fp| {
+        ops.push(TranscriptOp::Absorb(v));
+        st[0] = st[0] + v;
+        *st = h.permute(*st);
+    };
+    let squeeze = |ops: &mut Vec<TranscriptOp>, st: &mut [Fp; WIDTH]| {
+        let c = st[0];
+        ops.push(TranscriptOp::Squeeze(c));
+        *st = h.permute(*st);
+    };
+    for root in &proof.trace_roots {
+        for lane in root {
+            absorb(&mut ops, &mut st, *lane);
+        }
+    }
+    for _ in 0..ci.coeffs.len() * 2 {
+        squeeze(&mut ops, &mut st);
+    }
+    for lane in &proof.comp_root {
+        absorb(&mut ops, &mut st, *lane);
+    }
+    let z_op = ops.len();
+    squeeze(&mut ops, &mut st);
+    squeeze(&mut ops, &mut st);
+    let transcript = TranscriptCheck::new(h.clone(), 2, ops);
+    let ttrace = transcript.trace();
+
+    let regions: Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(transcript) as Box<dyn AirExt>,
+        Box::new(compose),
+        Box::new(deepck),
+    ];
+    let l = 4usize;
+    let t_height = 1usize << regions[0].log_trace_len();
+    let c_off = t_height; // compose region offset
+    let d_off = c_off + (1usize << regions[1].log_trace_len()); // DEEP region offset
+    let span = (d_off + (1usize << regions[2].log_trace_len())).next_power_of_two();
+
+    // wired columns: transcript squeeze lane (0), compose z+coeffs (22..39), compose
+    // comp_z (54, 55), DEEP comp_z (4, 5).
+    let mut wired_cols = alloc::vec![0usize];
+    for c in 22..40 {
+        wired_cols.push(c);
+    }
+    wired_cols.push(54);
+    wired_cols.push(55);
+    wired_cols.push(4);
+    wired_cols.push(5);
+    let k = wired_cols.len();
+    let widx = |col: usize| -> usize { wired_cols.iter().position(|&c| c == col).unwrap() };
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    // z and coefficients: transcript squeezes wire to compose columns.
+    sigma.swap((z_op * l) * k, c_off * k + widx(22));
+    sigma.swap(((z_op + 1) * l) * k, c_off * k + widx(23));
+    for i in 0..8 {
+        sigma.swap(((12 + 2 * i) * l) * k, c_off * k + widx(24 + 2 * i));
+        sigma.swap(((12 + 2 * i + 1) * l) * k, c_off * k + widx(25 + 2 * i));
+    }
+    // comp_z: compose columns 54, 55 wire to DEEP columns 4, 5.
+    sigma.swap(c_off * k + widx(54), d_off * k + widx(4));
+    sigma.swap(c_off * k + widx(55), d_off * k + widx(5));
+
+    let wired = WiredExt::new(regions, wired_cols, sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[ttrace, ctrace, dtrace]);
+    let wproof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(
+        stark_verify_ext(&wired, &wproof, 32, 8),
+        "the transcript, compose, and DEEP regions were not consistently wired"
+    );
+}
+
 #[test]
 fn a_poseidon_committed_stark_holds_at_deployment_blowup() {
     use crate::crypto::stark::air::{stark_prove_poseidon_ext, stark_verify_poseidon_ext, Squaring};
