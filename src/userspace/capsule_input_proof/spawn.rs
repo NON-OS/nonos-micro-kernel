@@ -50,7 +50,7 @@ pub fn spawn_input_proof_capsule() -> Result<(), SpawnError> {
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
             | Capability::Memory.bit()
-            | Capability::Debug.bit()
+            | crate::capabilities::serial_debug_cap()
             | Capability::GraphicsDisplayQuery.bit()
             | Capability::GraphicsSurfaceCreate.bit(),
         debug_tag: b"",

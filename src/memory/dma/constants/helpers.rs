@@ -34,7 +34,9 @@ pub const fn is_aligned(value: usize, align: usize) -> bool {
 
 #[inline]
 pub const fn pages_needed(size: usize) -> usize {
-    (size + layout::PAGE_SIZE - 1) / layout::PAGE_SIZE
+    // div_ceil avoids an overflow in the `size + PAGE_SIZE - 1` intermediate
+    // that would abort under release overflow-checks near usize::MAX.
+    size.div_ceil(layout::PAGE_SIZE)
 }
 
 #[inline]

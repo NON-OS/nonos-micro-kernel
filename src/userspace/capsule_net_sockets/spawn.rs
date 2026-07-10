@@ -49,7 +49,7 @@ pub fn spawn_net_sockets_capsule() -> Result<(), SpawnError> {
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit()
             | Capability::Memory.bit()
-            | Capability::Debug.bit()
+            | crate::capabilities::serial_debug_cap()
             | Capability::Network.bit(),
         debug_tag: b"[NET-SOCKETS] load_elf_executable error:",
     };

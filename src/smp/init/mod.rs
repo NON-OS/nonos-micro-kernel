@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod ap_identity;
 mod ap_start;
 mod ap_unit;
 mod boot_inputs;

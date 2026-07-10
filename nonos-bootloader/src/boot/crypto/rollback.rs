@@ -35,9 +35,14 @@ pub fn check_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMod
         Ok(parsed) => parsed,
         Err(_) => return,
     };
-    let version = parsed.footer.image_version as u64;
+    // Gate on rollback_index, the field bound into the kernel signature
+    // (hash || rollback_index). image_version is not signed, so a replayed
+    // old-but-validly-signed kernel could carry any image_version and defeat
+    // the NVRAM floor; rollback_index cannot be altered without breaking the
+    // signature that was already verified before this runs. This also keeps
+    // the NVRAM floor and the TPM floor on the same monotonic counter.
     let rollback_index = parsed.footer.rollback_index as u64;
-    match check_kernel_version(version) {
+    match check_kernel_version(rollback_index) {
         Ok(()) => {
             log_info("rollback", "kernel version acceptable");
             if gop {
@@ -81,10 +86,12 @@ pub fn commit_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMo
             return;
         }
     };
-    let version = parsed.footer.image_version as u64;
+    // Commit the signed rollback_index as the new NVRAM floor, matching the
+    // authenticated field the check gates on and the value committed to the
+    // TPM floor below. image_version is unsigned and must not drive the floor.
     let rollback_index = parsed.footer.rollback_index as u64;
     let timestamp = get_uefi_time_epoch(st);
-    match update_kernel_version(version, timestamp) {
+    match update_kernel_version(rollback_index, timestamp) {
         Ok(()) => {
             log_info("rollback", "kernel version committed");
             if gop {

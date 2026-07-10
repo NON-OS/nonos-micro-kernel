@@ -17,10 +17,15 @@
 use super::super::core::PagingManager;
 use super::super::shootdown::flush_tlb_one_smp;
 use super::super::tlb_scope::mutation_asid;
+use crate::arch::x86_64::paging::read_cr3;
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use crate::memory::paging::constants::*;
 use crate::memory::paging::error::{PagingError, PagingResult};
 use crate::memory::{frame_alloc, layout};
+
+// CR3 holds the PML4 physical address in bits [51:12]; the low 12 bits are
+// flags / PCID. Masking them off yields the active page-table frame.
+const CR3_FRAME_MASK: u64 = !0xFFF;
 
 fn alloc_table(entry: &mut u64) -> PagingResult<()> {
     let new = frame_alloc::allocate_frame().ok_or(PagingError::FrameAllocationFailed)?;
@@ -45,7 +50,12 @@ impl PagingManager {
         let va_val = va.as_u64();
         let (l4_idx, l3_idx, l2_idx, l1_idx) =
             (pml4_index(va_val), pdpt_index(va_val), pd_index(va_val), pt_index(va_val));
-        let cr3 = self.active_page_table.ok_or(PagingError::NoActivePageTable)?;
+        // Read the live per-CPU CR3 rather than a shared cached field. On SMP a
+        // fault on one CPU must install into that CPU's own active address
+        // space; the cached `active_page_table` is overwritten by every other
+        // CPU's context switch and would misroute the mapping. On a single CPU
+        // this reads back exactly what the cache held.
+        let cr3 = PhysAddr::new(read_cr3() & CR3_FRAME_MASK);
         unsafe {
             let l4 = &mut *table_at(cr3);
             if !pte_is_present(l4[l4_idx]) {
@@ -62,7 +72,7 @@ impl PagingManager {
             let l1 = &mut *table_at(PhysAddr::new(pte_address(l2[l2_idx])));
             l1[l1_idx] = pa.as_u64() | flags;
         }
-        let asid = mutation_asid(va, self.active_asid);
+        let asid = mutation_asid(va, Some(crate::smp::percpu::active_asid()));
         flush_tlb_one_smp(va, asid);
         Ok(())
     }

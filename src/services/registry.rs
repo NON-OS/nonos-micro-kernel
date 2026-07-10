@@ -22,10 +22,12 @@ mod auth;
 mod endpoint;
 mod error;
 mod policy;
+mod reserved;
 
 pub use endpoint::ServiceEndpoint;
 pub use error::RegError;
 pub use policy::required_caps;
+pub(crate) use reserved::is_reserved_service;
 
 pub const MAX_SERVICES: usize = 256;
 static ENDPOINTS: Mutex<Vec<ServiceEndpoint>> = Mutex::new(Vec::new());

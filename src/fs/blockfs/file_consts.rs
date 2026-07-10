@@ -22,4 +22,4 @@ pub(super) const INDEX_PTR_BASE: usize = 16;
 pub(super) const PTR_BYTES: usize = 8;
 pub(super) const DATA_BYTES: usize = PLAIN_BLOCK_BYTES;
 pub(super) const MAX_PTRS: usize = (PLAIN_BLOCK_BYTES - INDEX_PTR_BASE) / PTR_BYTES;
-pub(super) const MAX_FILE_BYTES: usize = MAX_PTRS * DATA_BYTES;
+pub(crate) const MAX_FILE_BYTES: usize = MAX_PTRS * DATA_BYTES;

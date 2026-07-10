@@ -78,8 +78,13 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkSurfacePresent => caps.can_present(),
         SyscallNumber::MkDisplayVsyncWait => caps.can_display_query(),
         SyscallNumber::MkInputEventPost => caps.can_input_source(),
-        SyscallNumber::MkInputEventDrain => caps.can_ipc(),
-        SyscallNumber::MkInputEventWait => caps.can_ipc(),
+        // Draining/waiting on the global raw-input ring is a privileged consumer
+        // operation: the ring carries every keystroke. Gating it on baseline IPC
+        // let any capsule steal the keystroke stream (cross-capsule keylogging).
+        // Restrict it to input-trusted capsules (the input_router is granted
+        // InputSource for exactly this).
+        SyscallNumber::MkInputEventDrain => caps.can_input_source(),
+        SyscallNumber::MkInputEventWait => caps.can_input_source(),
 
         _ => return None,
     })

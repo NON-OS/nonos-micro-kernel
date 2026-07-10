@@ -15,8 +15,10 @@ nonos_ap_lmode:
     /* SysV first arg: cpu_id. */
     mov     (TRAMP_BASE + OFF_CPU_ID), %edi
 
-    /* Mark ready before jumping so BSP can rearm trampoline data. */
-    movl    $1, (TRAMP_BASE + OFF_READY)
+    /* No store into the trampoline here: the BSP gates the next AP on the
+     * descriptor's Online state (set in the higher-half ap_entry), so the old
+     * ready flag was dead. Keeping this stage read-only lets the trampoline
+     * page be mapped executable without write, satisfying W^X. */
 
     /* Jump through stored 64-bit entry pointer. */
     mov     (TRAMP_BASE + OFF_ENTRY), %rax

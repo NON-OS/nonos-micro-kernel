@@ -54,6 +54,13 @@ pub fn sys_service_register(name_ptr: u64, name_len: usize, port: u32) -> i64 {
     if name.starts_with("proc.") || name.starts_with("endpoint.") {
         return ERRNO_PERM;
     }
+    // Core service names/ports are owned by the kernel spawn path; a capsule
+    // must never register them at runtime. This closes the post-crash squat
+    // window where a capsule could impersonate keyring/crypto/vfs. Legitimate
+    // (re)spawn registration bypasses this syscall, so it is unaffected.
+    if crate::services::registry::is_reserved_service(name, port) {
+        return ERRNO_PERM;
+    }
     match register_endpoint(name, port, pid, required_caps(name, Capability::IPC.bit())) {
         Ok(()) => 0,
         Err(RegError::Full) => ERRNO_NOMEM,

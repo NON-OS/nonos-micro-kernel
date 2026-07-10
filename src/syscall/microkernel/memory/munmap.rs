@@ -20,7 +20,7 @@ use crate::process::current_pid;
 use crate::syscall::microkernel::errnos::ERRNO_INVAL;
 
 use super::accounting::record_munmap;
-use super::consts::PAGE_SIZE;
+use super::consts::{is_user_space, MAX_MMAP_SIZE, PAGE_SIZE};
 use super::va::release_va;
 
 pub fn sys_munmap(addr: u64, length: usize) -> i64 {
@@ -28,6 +28,12 @@ pub fn sys_munmap(addr: u64, length: usize) -> i64 {
         return ERRNO_INVAL;
     }
     if addr % PAGE_SIZE as u64 != 0 {
+        return ERRNO_INVAL;
+    }
+    // Bound the range to user space, symmetric with sys_mmap. Without this an
+    // out-of-range or oversized request would drive unmap_page/deallocate_frame
+    // over kernel addresses, and addr + i * PAGE_SIZE below could wrap.
+    if length > MAX_MMAP_SIZE || !is_user_space(addr, length) {
         return ERRNO_INVAL;
     }
     let pages = ((length + PAGE_SIZE - 1) / PAGE_SIZE) as u64;

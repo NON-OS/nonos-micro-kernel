@@ -64,6 +64,15 @@ syscall_entry_asm:
     or      r11, 0x202
     pop     rax
 
+    /* Scrub caller-saved registers that carry kernel data before returning to
+       ring 3. rdi held the kernel-stack address of the saved frame (leaking it
+       discloses a kernel VA and defeats kernel ASLR); rsi/rdx hold handler
+       leftovers. rax (return value), rcx (user RIP), and r11 (RFLAGS) are
+       intentional; rbx/r12-r15 are callee-saved and still hold user values. */
+    xor     edi, edi
+    xor     esi, esi
+    xor     edx, edx
+
     /* SYSRETQ requires canonical user RIP. */
     bt      rcx, 47
     jc      .L_iret

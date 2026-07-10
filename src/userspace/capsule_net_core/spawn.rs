@@ -51,7 +51,7 @@ pub fn spawn_net_core_capsule() -> Result<(), SpawnError> {
             | Capability::Memory.bit()
             | Capability::Crypto.bit()
             | Capability::Network.bit()
-            | Capability::Debug.bit()
+            | crate::capabilities::serial_debug_cap()
             | Capability::RegisterService.bit(),
         debug_tag: b"[NET-CORE] load_elf_executable error:",
     };
