@@ -1,7 +1,8 @@
 // NONOS std fs: files over the kernel VFS service (vfs_pool) via IPC.
-// Wires open/read/write/close, stat, unlink, mkdir, and readdir to the
-// VFS protocol. Symlinks, permissions, times, and locks are unsupported
-// (the VFS does not model them); those paths return an error or no-op.
+// Wires open/read/write/close, seek/tell, stat, truncate, rename, unlink,
+// mkdir/rmdir, and readdir to the VFS protocol. Symlinks, hard links,
+// per-file times, and locks are unsupported (the VFS does not model
+// them); those paths return an error or no-op.
 
 use crate::ffi::OsString;
 use crate::fmt;
@@ -25,8 +26,16 @@ const OP_STAT: u16 = 5;
 const OP_LIST: u16 = 6;
 const OP_MKDIR: u16 = 8;
 const OP_UNLINK: u16 = 9;
+const OP_RENAME: u16 = 10;
+const OP_RMDIR: u16 = 11;
+const OP_TRUNCATE: u16 = 13;
+const OP_SEEK: u16 = 16;
 const O_CREATE: u32 = 1;
 const O_TRUNC: u32 = 1 << 1;
+const O_APPEND: u32 = 1 << 2;
+const SEEK_SET: u8 = 0;
+const SEEK_CUR: u8 = 1;
+const SEEK_END: u8 = 2;
 
 const fn tag4(b: &[u8; 4]) -> i64 {
     (b[0] as i64) | ((b[1] as i64) << 8) | ((b[2] as i64) << 16) | ((b[3] as i64) << 24)
@@ -55,16 +64,28 @@ fn vfs_port() -> io::Result<u32> {
     let mut port = 0u32;
     let mut owner = 0u32;
     let rc = unsafe {
-        sys5(tag4(b"MSVL"), name.as_ptr() as u64, name.len() as u64,
-            &mut port as *mut u32 as u64, &mut owner as *mut u32 as u64, 0)
+        sys5(
+            tag4(b"MSVL"),
+            name.as_ptr() as u64,
+            name.len() as u64,
+            &mut port as *mut u32 as u64,
+            &mut owner as *mut u32 as u64,
+            0,
+        )
     };
-    if rc != 0 { return Err(err("vfs unavailable")); }
+    if rc != 0 {
+        return Err(err("vfs unavailable"));
+    }
     Ok(port)
 }
 
 fn getpid() -> u32 {
     let r = unsafe { sys3(tag4(b"MGPD"), 0, 0, 0) };
-    if r < 0 { 0 } else { r as u32 }
+    if r < 0 {
+        0
+    } else {
+        r as u32
+    }
 }
 
 fn frame(op: u16, body: &[u8]) -> Vec<u8> {
@@ -84,12 +105,22 @@ fn call(port: u32, op: u16, body: &[u8], reply_cap: usize) -> io::Result<Vec<u8>
     let tx = frame(op, body);
     let mut rx = crate::vec![0u8; BODY_OFF + reply_cap];
     let n = unsafe {
-        sys5(tag4(b"MICL"), port as u64, tx.as_ptr() as u64, tx.len() as u64,
-            rx.as_mut_ptr() as u64, rx.len() as u64)
+        sys5(
+            tag4(b"MICL"),
+            port as u64,
+            tx.as_ptr() as u64,
+            tx.len() as u64,
+            rx.as_mut_ptr() as u64,
+            rx.len() as u64,
+        )
     };
-    if n < (STATUS_OFF + 4) as i64 { return Err(err("vfs ipc failed")); }
+    if n < (STATUS_OFF + 4) as i64 {
+        return Err(err("vfs ipc failed"));
+    }
     let status = i32::from_le_bytes([rx[20], rx[21], rx[22], rx[23]]);
-    if status != 0 { return Err(err("vfs op rejected")); }
+    if status != 0 {
+        return Err(vfs_err(status));
+    }
     rx.truncate(n as usize);
     Ok(rx)
 }
@@ -98,9 +129,27 @@ fn err(msg: &'static str) -> Error {
     Error::new(ErrorKind::Other, msg)
 }
 
+// The VFS replies with negative unix errnos; surface them as the
+// ErrorKind std callers match on (fs::exists, create_new, and friends).
+fn vfs_err(status: i32) -> Error {
+    let kind = match status {
+        -2 => ErrorKind::NotFound,
+        -13 => ErrorKind::PermissionDenied,
+        -17 => ErrorKind::AlreadyExists,
+        -21 => ErrorKind::IsADirectory,
+        -22 => ErrorKind::InvalidInput,
+        -28 => ErrorKind::StorageFull,
+        -39 => ErrorKind::DirectoryNotEmpty,
+        _ => ErrorKind::Other,
+    };
+    Error::new(kind, "vfs op rejected")
+}
+
 fn path_bytes(p: &Path) -> io::Result<Vec<u8>> {
     let b = p.as_os_str().as_encoded_bytes();
-    if b.is_empty() || b.len() > 255 { return Err(err("bad path")); }
+    if b.is_empty() || b.len() > 255 {
+        return Err(err("bad path"));
+    }
     Ok(b.to_vec())
 }
 
@@ -114,7 +163,9 @@ fn path_body(pid: u32, p: &Path) -> io::Result<Vec<u8>> {
 }
 
 fn read_u32(b: &[u8], off: usize) -> u32 {
-    if b.len() < off + 4 { return 0; }
+    if b.len() < off + 4 {
+        return 0;
+    }
     u32::from_le_bytes([b[off], b[off + 1], b[off + 2], b[off + 3]])
 }
 
@@ -122,6 +173,10 @@ pub struct File {
     port: u32,
     pid: u32,
     fd: u32,
+    // Kept for the by-path operations the protocol lacks by-fd forms of
+    // (fstat, ftruncate). Renaming the file while it is open makes these
+    // miss, the usual race a path-based fallback accepts.
+    path: Vec<u8>,
 }
 
 #[derive(Clone)]
@@ -269,12 +324,20 @@ impl File {
     pub fn open(path: &Path, opts: &OpenOptions) -> io::Result<File> {
         let port = vfs_port()?;
         let pid = getpid();
+        // The protocol has no atomic create-exclusive; a pre-check is the
+        // honest approximation and reports the common case correctly.
+        if opts.create_new && stat(path).is_ok() {
+            return Err(Error::new(ErrorKind::AlreadyExists, "path exists"));
+        }
         let mut flags = 0u32;
         if opts.create || opts.create_new {
             flags |= O_CREATE;
         }
         if opts.truncate {
             flags |= O_TRUNC;
+        }
+        if opts.append {
+            flags |= O_APPEND;
         }
         let pb = path_bytes(path)?;
         let mut body = Vec::with_capacity(9 + pb.len());
@@ -283,11 +346,25 @@ impl File {
         body.extend_from_slice(&pb);
         body.extend_from_slice(&flags.to_le_bytes());
         let rx = call(port, OP_OPEN, &body, 8)?;
-        Ok(File { port, pid, fd: read_u32(&rx, BODY_OFF) })
+        Ok(File { port, pid, fd: read_u32(&rx, BODY_OFF), path: pb })
     }
 
     pub fn file_attr(&self) -> io::Result<FileAttr> {
-        unsupported()
+        stat(Path::new(crate::str::from_utf8(&self.path).map_err(|_| err("bad path"))?))
+    }
+
+    fn seek_raw(&self, whence: u8, offset: i64) -> io::Result<u64> {
+        let mut body = Vec::with_capacity(21);
+        body.extend_from_slice(&self.pid.to_le_bytes());
+        body.extend_from_slice(&self.fd.to_le_bytes());
+        body.push(whence);
+        body.extend_from_slice(&offset.to_le_bytes());
+        let rx = call(self.port, OP_SEEK, &body, 8)?;
+        let b = &rx[BODY_OFF..];
+        if b.len() < 8 {
+            return Err(err("short seek reply"));
+        }
+        Ok(u64::from_le_bytes([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]]))
     }
 
     pub fn read(&self, buf: &mut [u8]) -> io::Result<usize> {
@@ -380,20 +457,33 @@ impl File {
         Ok(())
     }
 
-    pub fn truncate(&self, _size: u64) -> io::Result<()> {
-        unsupported()
+    pub fn truncate(&self, size: u64) -> io::Result<()> {
+        let mut body = Vec::with_capacity(13 + self.path.len());
+        body.extend_from_slice(&self.pid.to_le_bytes());
+        body.push(self.path.len() as u8);
+        body.extend_from_slice(&self.path);
+        body.extend_from_slice(&size.to_le_bytes());
+        call(self.port, OP_TRUNCATE, &body, 0).map(|_| ())
     }
 
-    pub fn seek(&self, _pos: SeekFrom) -> io::Result<u64> {
-        unsupported()
+    pub fn seek(&self, pos: SeekFrom) -> io::Result<u64> {
+        let (whence, offset) = match pos {
+            SeekFrom::Start(n) => {
+                let n = i64::try_from(n).map_err(|_| err("seek offset too large"))?;
+                (SEEK_SET, n)
+            }
+            SeekFrom::Current(n) => (SEEK_CUR, n),
+            SeekFrom::End(n) => (SEEK_END, n),
+        };
+        self.seek_raw(whence, offset)
     }
 
     pub fn size(&self) -> Option<io::Result<u64>> {
-        None
+        Some(self.file_attr().map(|a| a.size()))
     }
 
     pub fn tell(&self) -> io::Result<u64> {
-        unsupported()
+        self.seek_raw(SEEK_CUR, 0)
     }
 
     pub fn duplicate(&self) -> io::Result<File> {
@@ -480,11 +570,21 @@ pub fn exists(p: &Path) -> io::Result<bool> {
 }
 
 pub fn rmdir(p: &Path) -> io::Result<()> {
-    unlink(p)
+    let port = vfs_port()?;
+    call(port, OP_RMDIR, &path_body(getpid(), p)?, 0).map(|_| ())
 }
 
-pub fn rename(_old: &Path, _new: &Path) -> io::Result<()> {
-    unsupported()
+pub fn rename(old: &Path, new: &Path) -> io::Result<()> {
+    let port = vfs_port()?;
+    let ob = path_bytes(old)?;
+    let nb = path_bytes(new)?;
+    let mut body = Vec::with_capacity(6 + ob.len() + nb.len());
+    body.extend_from_slice(&getpid().to_le_bytes());
+    body.push(ob.len() as u8);
+    body.extend_from_slice(&ob);
+    body.push(nb.len() as u8);
+    body.extend_from_slice(&nb);
+    call(port, OP_RENAME, &body, 0).map(|_| ())
 }
 
 pub fn set_perm(_p: &Path, _perm: FilePermissions) -> io::Result<()> {
