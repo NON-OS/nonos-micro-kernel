@@ -94,8 +94,14 @@ fn rw_parse_enforces_the_exact_boundaries() {
     let cap = 1_000_000u64;
     assert_eq!(parse_rw(&body(cap - 1, 1), cap), Ok((cap - 1, 1)));
     assert_eq!(parse_rw(&body(cap, 1), cap).unwrap_err(), E_NXIO);
-    assert_eq!(parse_rw(&body(cap - MAX_SECTORS as u64, MAX_SECTORS), cap), Ok((cap - MAX_SECTORS as u64, MAX_SECTORS)));
-    assert_eq!(parse_rw(&body(cap - MAX_SECTORS as u64 + 1, MAX_SECTORS), cap).unwrap_err(), E_NXIO);
+    assert_eq!(
+        parse_rw(&body(cap - MAX_SECTORS as u64, MAX_SECTORS), cap),
+        Ok((cap - MAX_SECTORS as u64, MAX_SECTORS))
+    );
+    assert_eq!(
+        parse_rw(&body(cap - MAX_SECTORS as u64 + 1, MAX_SECTORS), cap).unwrap_err(),
+        E_NXIO
+    );
     // Zero and oversized sector counts are invalid regardless of capacity.
     assert_eq!(parse_rw(&body(0, 0), cap).unwrap_err(), E_INVAL);
     assert_eq!(parse_rw(&body(0, MAX_SECTORS + 1), cap).unwrap_err(), E_INVAL);
