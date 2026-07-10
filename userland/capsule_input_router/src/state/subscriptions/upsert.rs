@@ -31,12 +31,21 @@ impl SubscriptionTable {
         if kind_mask == 0 {
             return true;
         }
-        for entry in self.entries.iter_mut() {
-            if !entry.in_use {
-                *entry = Subscription { pid, kind_mask, in_use: true };
-                return true;
-            }
+        if let Some(slot) = self.free_or_dead_slot() {
+            self.entries[slot] = Subscription { pid, kind_mask, in_use: true };
+            return true;
         }
         false
+    }
+
+    // The first free slot, or failing that the first slot held by a pid that
+    // is no longer alive. A live subscriber must never be turned away because
+    // a dead one still holds a slot, which would leave a real window unable to
+    // receive input.
+    fn free_or_dead_slot(&self) -> Option<usize> {
+        if let Some(i) = self.entries.iter().position(|e| !e.in_use) {
+            return Some(i);
+        }
+        self.entries.iter().position(|e| e.in_use && !nonos_libc::mk_pid_alive(e.pid))
     }
 }
