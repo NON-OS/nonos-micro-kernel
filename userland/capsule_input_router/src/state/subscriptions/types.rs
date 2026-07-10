@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const MAX_SUBSCRIBERS: usize = 16;
+// One slot per app that wants input. A full desktop with several base apps
+// plus on-demand window instances (each a distinct pid) can exceed a couple
+// dozen, and a subscriber that cannot get a slot receives no keyboard or
+// pointer at all, so the ceiling is generous.
+pub const MAX_SUBSCRIBERS: usize = 64;
 
 #[derive(Clone, Copy, Default)]
 pub struct Subscription {
