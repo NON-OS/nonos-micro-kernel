@@ -35,7 +35,8 @@ impl State {
             aliases: alloc::vec::Vec::new(),
             hist_prefix: alloc::vec::Vec::new(),
             blocks: alloc::vec::Vec::new(),
-            font_scale: 1,
+            font_scale: 2,
+            bg: crate::term::theme::BACKGROUND,
         }
     }
 }

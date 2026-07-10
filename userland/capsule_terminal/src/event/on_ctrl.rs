@@ -91,4 +91,4 @@ const ZOOM_IN_EQ: u32 = 0x3D; // '='
 const ZOOM_IN_PLUS: u32 = 0x2B; // '+'
 const ZOOM_OUT_MINUS: u32 = 0x2D; // '-'
 const ZOOM_OUT_USCORE: u32 = 0x5F; // '_'
-const MAX_FONT_SCALE: u32 = 4;
+const MAX_FONT_SCALE: u32 = 6;

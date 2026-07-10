@@ -14,12 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+//! Print the first lines of a file (default ten).
 
-use super::constants::CELL_WIDTH;
-use crate::term::theme::{ACCENT, FOREGROUND};
+use super::read_file::slurp;
+use crate::command::output::Output;
+use crate::term::state::State;
 
-pub fn fetch_row(fb: &mut PaintBuffer, x: u32, y: u32, label: &[u8], value: &[u8]) {
-    fb.text(x, y, label, ACCENT);
-    fb.text(x + 9 * CELL_WIDTH, y, value, FOREGROUND);
+pub fn head(state: &mut State, argv: &[&[u8]]) {
+    let (n, file) = super::head_tail_args(argv, 10);
+    let Some(file) = file else {
+        Output::new(&mut state.scrollback).writeln(b"head: missing file");
+        return;
+    };
+    let Some(bytes) = slurp(state, file) else { return };
+    let mut out = Output::new(&mut state.scrollback);
+    for line in bytes.split(|&b| b == b'\n').take(n) {
+        out.writeln(line);
+    }
 }

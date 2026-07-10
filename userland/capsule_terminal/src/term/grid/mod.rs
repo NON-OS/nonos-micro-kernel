@@ -14,17 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod absline;
+pub mod alt;
 pub mod cell;
-pub mod types;
+pub mod erase;
+pub mod feed;
+pub mod move_cells;
 pub mod new;
 pub mod put;
 pub mod scroll;
-pub mod absline;
-pub mod erase;
-pub mod move_cells;
-pub mod feed;
-pub mod view;
+pub mod scroll_region;
 pub mod scroll_view;
-pub mod alt;
+pub mod types;
+pub mod view;
 
 pub use types::Grid;

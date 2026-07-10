@@ -21,6 +21,9 @@ use crate::term::state::State;
 pub struct Terminal {
     pub(crate) tabs: Vec<State>,
     pub(crate) active: usize,
+    // Window width from the last paint, so the toolbar's right-aligned feature
+    // buttons can be hit-tested on click.
+    pub(crate) width: u32,
 }
 
 impl Terminal {

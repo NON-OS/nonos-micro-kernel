@@ -16,8 +16,8 @@
 
 use alloc::vec::Vec;
 
-use crate::term::grid::cell::Cell;
 use crate::term::dimensions::COLS;
+use crate::term::grid::cell::Cell;
 use crate::term::vt::parser::Parser;
 
 pub struct Grid {
@@ -31,11 +31,16 @@ pub struct Grid {
     pub cursor_visible: bool,
     pub x: usize,
     pub y: usize,
-    pub fg: u8,
-    pub bg: u8,
+    pub fg: u32,
+    pub bg: u32,
     pub flags: u8,
     pub parser: Parser,
     pub total_scrolled: u64,
+    // DECSTBM vertical scroll region, inclusive 0-based rows. Defaults to the
+    // whole screen; full-screen TUIs set a smaller window so a status line at
+    // the top or bottom stays put while the body scrolls.
+    pub scroll_top: usize,
+    pub scroll_bot: usize,
 }
 
 impl Grid {

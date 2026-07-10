@@ -18,10 +18,11 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::block_meta::draw_meta;
 use super::constants::LINE_HEIGHT;
+use super::shade::elevate;
 use crate::term::block::Status;
 use crate::term::dimensions::VISIBLE_ROWS;
 use crate::term::state::State;
-use crate::term::theme::{BLOCK_ERR, BLOCK_OK, BLOCK_RUN, BLOCK_TINT_A, BLOCK_TINT_B};
+use crate::term::theme::{BLOCK_ERR, BLOCK_OK, BLOCK_RUN};
 
 const STRIPE_W: u32 = 3;
 const STRIPE_GAP: u32 = 8;
@@ -38,7 +39,9 @@ pub fn draw_block_chrome(state: &State, fb: &mut PaintBuffer, ox: u32, oy: u32, 
             Some(v) => v,
             None => continue,
         };
-        let tint = if idx % 2 == 0 { BLOCK_TINT_A } else { BLOCK_TINT_B };
+        // Alternating block shades derived from the theme background, so the
+        // command zebra stays subtle on any profile instead of a fixed dark.
+        let tint = if idx % 2 == 0 { elevate(state.bg, 5) } else { elevate(state.bg, 13) };
         fb.fill_rect(ox, y, fb.width.saturating_sub(ox * 2), LINE_HEIGHT, tint);
         let stripe = match status {
             Status::Ok => BLOCK_OK,

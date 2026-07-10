@@ -14,20 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod about;
-pub mod capsules;
-pub mod clear;
-pub mod display;
-pub mod echo;
-pub mod exit_check;
-pub mod fs;
-pub mod help;
-pub mod history_cmd;
-pub mod market;
-pub mod motd;
-pub mod nox;
-pub mod ping;
-pub mod service;
-pub mod theme;
-pub mod version;
-pub mod whoami;
+//! Shared helper: read a file argument into bytes, or report the error.
+
+use alloc::vec::Vec;
+
+use nonos_app_skeleton::clients::vfs;
+
+use super::{abspath, pid};
+use crate::command::output::Output;
+use crate::term::state::State;
+
+const MAX_READ: u32 = 256 * 1024;
+
+pub(super) fn slurp(state: &mut State, arg: &[u8]) -> Option<Vec<u8>> {
+    let path = abspath(state, arg);
+    let owner = pid(state);
+    match vfs::read_file(owner, &path, MAX_READ) {
+        Ok(b) => Some(b),
+        Err(e) => {
+            Output::new(&mut state.scrollback).writeln(e.as_bytes());
+            None
+        }
+    }
+}

@@ -16,18 +16,14 @@
 
 pub const BACKGROUND: u32 = 0xFF181A1F;
 pub const FOREGROUND: u32 = 0xFFCBD0D8;
-pub const ERROR: u32 = 0xFFE06C75;
 pub const PROMPT: u32 = 0xFF98C379;
 pub const CURSOR: u32 = 0xFF5FB0C9;
 pub const ACCENT: u32 = 0xFF5FB0C9;
 pub const PATH: u32 = 0xFF7FC9A0;
 pub const DIM: u32 = 0xFF707682;
-pub const HEADER_BG: u32 = 0xFF1F2228;
-pub const HEADER_RULE: u32 = 0xFF2A2E37;
-pub const FOOTER_BG: u32 = 0xFF1F2228;
-pub const INPUT_BG: u32 = 0xFF1F2228;
+// Chrome (header, tab strip, footer, input bar, command blocks) no longer uses
+// fixed shades; it derives from the active `state.bg` via paint::shade::elevate
+// so every theme, including the translucent profiles, stays complete.
 pub const BLOCK_OK: u32 = 0xFF98C379;
 pub const BLOCK_ERR: u32 = 0xFFE06C75;
 pub const BLOCK_RUN: u32 = 0xFF707682;
-pub const BLOCK_TINT_A: u32 = 0xFF1C1F25;
-pub const BLOCK_TINT_B: u32 = 0xFF222631;

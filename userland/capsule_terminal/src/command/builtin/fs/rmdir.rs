@@ -14,20 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod about;
-pub mod capsules;
-pub mod clear;
-pub mod display;
-pub mod echo;
-pub mod exit_check;
-pub mod fs;
-pub mod help;
-pub mod history_cmd;
-pub mod market;
-pub mod motd;
-pub mod nox;
-pub mod ping;
-pub mod service;
-pub mod theme;
-pub mod version;
-pub mod whoami;
+//! Remove an empty directory.
+
+use nonos_app_skeleton::clients::vfs;
+
+use super::{abspath, pid};
+use crate::command::output::Output;
+use crate::term::state::State;
+
+pub fn rmdir(state: &mut State, argv: &[&[u8]]) {
+    if argv.len() < 2 {
+        Output::new(&mut state.scrollback).writeln(b"rmdir: missing name");
+        return;
+    }
+    for arg in &argv[1..] {
+        let path = abspath(state, arg);
+        let owner = pid(state);
+        if let Err(e) = vfs::rmdir(owner, &path, false) {
+            Output::new(&mut state.scrollback).writeln(e.as_bytes());
+        }
+    }
+}

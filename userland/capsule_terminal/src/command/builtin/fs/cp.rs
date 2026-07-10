@@ -14,22 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+//! Copy a path. A directory needs -r.
 
-use super::constants::{HEADER_H, TEXT_LEFT};
-use super::shade::elevate;
+use nonos_app_skeleton::clients::vfs;
+
+use super::{abspath, pid};
+use crate::command::output::Output;
 use crate::term::state::State;
-use crate::term::theme::{ACCENT, PATH};
 
-pub fn draw_header(state: &State, fb: &mut PaintBuffer) {
-    fb.fill_rect(0, 0, fb.width, HEADER_H, elevate(state.bg, 12));
-    fb.fill_rect(0, HEADER_H, fb.width, 1, elevate(state.bg, 24));
-    let _ = fb.text_ttf(TEXT_LEFT as i32, 5, "\u{00D8} NONOS", ACCENT, 15.0);
-    let cwd = state.cwd.as_bytes();
-    let take = cwd.len().min(48);
-    let start = cwd.len() - take;
-    let cwd_str = core::str::from_utf8(&cwd[start..]).unwrap_or("");
-    let width = fb.measure_ttf(cwd_str, 13.0).max(0) as u32;
-    let x = fb.width.saturating_sub(width + TEXT_LEFT);
-    let _ = fb.text_ttf(x as i32, 7, cwd_str, PATH, 13.0);
+pub fn cp(state: &mut State, argv: &[&[u8]]) {
+    let recursive = argv.iter().any(|a| *a == b"-r");
+    let ops: alloc::vec::Vec<&[u8]> =
+        argv[1..].iter().copied().filter(|a| a.first() != Some(&b'-')).collect();
+    if ops.len() != 2 {
+        Output::new(&mut state.scrollback).writeln(b"usage: cp [-r] <src> <dst>");
+        return;
+    }
+    let src = abspath(state, ops[0]);
+    let dst = abspath(state, ops[1]);
+    let owner = pid(state);
+    if let Err(e) = vfs::copy(owner, &src, &dst, recursive) {
+        Output::new(&mut state.scrollback).writeln(e.as_bytes());
+    }
 }
