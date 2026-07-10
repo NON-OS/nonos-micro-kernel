@@ -256,8 +256,8 @@ QEMU_SERIAL_LOG ?= $(TARGET_DIR)/qemu-serial.log
 QEMU_BLK_IMG := $(TARGET_DIR)/qemu-virtio-blk.img
 QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
-QEMU_XRES ?= 1280
-QEMU_YRES ?= 800
+QEMU_XRES ?= 1920
+QEMU_YRES ?= 1080
 # QEMU_GL=1 swaps the display device for virtio-vga-gl (modern transport,
 # virglrenderer backend) so the guest can negotiate the 3D command set; the
 # cocoa display then needs a GL context. Default stays the plain 2D device.

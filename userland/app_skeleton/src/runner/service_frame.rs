@@ -61,7 +61,12 @@ pub(super) fn service_frame<A: App>(
         apply_move(booted, peers, request_id, mx, my);
     }
     if result.close {
-        return close(peers, booted.manifest.window_id, &booted.binding, request_id);
+        // Once the user closes the window we must leave the frame loop no matter
+        // what: close() releases and unmaps the surface, so continuing would
+        // repaint into freed memory and fault every frame. Break unconditionally
+        // and let the outer loop idle until the app is launched again.
+        close(peers, booted.manifest.window_id, &booted.binding, request_id);
+        return true;
     }
     if result.minimize {
         let _ = wm::window_minimize(peers.wm, next(request_id), booted.manifest.window_id);
