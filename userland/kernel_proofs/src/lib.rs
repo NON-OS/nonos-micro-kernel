@@ -27,6 +27,17 @@ pub mod time;
 pub mod spec;
 pub mod usercopy;
 
+// The PID selection arithmetic is dependency-free, so the real source is pulled
+// in directly and its invariants (never 0, wraps to 1, skips active, unique)
+// are proven on the host.
+#[path = "../../../src/process/core/table/pid_alloc.rs"]
+pub mod pid_alloc;
+
+// Reserved core-service name/port predicate: dependency-free, so the real
+// source is pulled in and its coverage of every core name/port is proven.
+#[path = "../../../src/services/registry/reserved.rs"]
+pub mod reserved;
+
 #[cfg(test)]
 mod authorization_tests;
 #[cfg(test)]
@@ -39,6 +50,10 @@ mod syscall_tests;
 mod refinement_tests;
 #[cfg(test)]
 mod usercopy_tests;
+#[cfg(test)]
+mod pid_tests;
+#[cfg(test)]
+mod reserved_tests;
 
 #[cfg(kani)]
 mod kani_proofs;

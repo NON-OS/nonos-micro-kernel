@@ -1,0 +1,16 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the window manager's geometry primitives. Builds for
+# the host so `cargo test` exercises the real Rect hit-testing and the
+# clamp-to-display logic (included via #[path]) that click-to-raise window
+# switching and window placement depend on.
+[package]
+name = "wm_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
