@@ -113,6 +113,25 @@ fn composite_off_screen_placement_writes_nothing() {
 }
 
 #[test]
+fn composite_blends_a_translucent_source_over_the_destination() {
+    let mut c = Canvas::new();
+    let s = c.surface();
+    // Destination is solid black; source is 50% white. The result should be a
+    // mid grey, proving the layer is blended rather than overwritten.
+    fill_rect(s, Rect { x: 0, y: 0, width: W, height: H }, 0xFF00_0000);
+    let (_keep, src) = opaque_src(4, 4, 0x80FF_FFFF); // alpha 0x80, white
+    composite_layer(s, src, 2, 2, 4, 4, Rect { x: 0, y: 0, width: W, height: H });
+    c.assert_guards_intact();
+    let p = c.pixel(3, 3);
+    let ch = |sh: u32| (p >> sh) & 0xFF;
+    assert_eq!(p >> 24, 0xFF, "result stays opaque");
+    // 0xFF * 128 / 255 ~= 128; allow a rounding margin.
+    for sh in [0u32, 8, 16] {
+        assert!((120..=136).contains(&ch(sh)), "channel {sh} not blended: {:#010x}", p);
+    }
+}
+
+#[test]
 fn fill_fully_off_screen_is_a_noop() {
     let mut c = Canvas::new();
     let s = c.surface();
