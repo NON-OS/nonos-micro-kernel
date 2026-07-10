@@ -30,7 +30,7 @@ use super::request_id::next;
 const MENUBAR_H: u32 = 28;
 // Largest a window opens relative to the display, as a percent. Below 100 so
 // windows cascade with reachable titlebars instead of covering the screen.
-const WINDOW_FRACTION: u32 = 74;
+const WINDOW_FRACTION: u32 = 88;
 
 pub(super) fn fit_to_display(
     mut manifest: AppManifest,
