@@ -24,7 +24,9 @@
 
 use super::{spawn_verified, CapsuleSpecVerified, SpawnError};
 use crate::security::nonos_id_cert::IdCertVerifyError;
-use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY};
+use crate::security::nonos_trust_anchor::{
+    decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
+};
 use crate::services::registry::{lookup_port, lookup_service};
 
 /// One extra window's service + reply endpoint, all declared in the manifest.
@@ -47,20 +49,24 @@ pub struct InstanceSpawn {
     pub debug_tag: &'static [u8],
 }
 
-/// Spawn the next free instance window, or report every declared slot is taken.
-/// Returns the new pid; the compositor keys layers by pid, so the caller gets a
-/// distinct window with no further work.
+extern crate alloc;
+
+/// Spawn the next free instance window and return its pid. Each instance is a
+/// fresh, fully attested capsule; closing its window exits it, which zeroizes
+/// its RAM and frees the slot, so the next spawn here reuses that slot with a
+/// brand new capsule rather than reviving a lingering one. Every declared slot
+/// being live means the on-screen cap is reached; the caller then focuses an
+/// existing window instead. The instance is marked ephemeral through its argv
+/// so the app skeleton exits on close rather than idling.
 pub fn spawn_next(app: &InstanceSpawn) -> Result<u32, SpawnError> {
-    let trust = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
-        .map_err(|_| SpawnError::NonosIdCertRejected(IdCertVerifyError::TrustAnchorPolicy))?;
-    // Pick the first endpoint whose name and port are both unregistered. When
-    // all are live the registration would collide, so report that up front.
     let slot = app
         .instances
         .iter()
         .find(|e| lookup_service(e.name).is_none() && lookup_port(e.port).is_none())
         .ok_or(SpawnError::EndpointCollision)?;
 
+    let trust = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
+        .map_err(|_| SpawnError::NonosIdCertRejected(IdCertVerifyError::TrustAnchorPolicy))?;
     let spec = CapsuleSpecVerified {
         name: slot.name,
         service_port: slot.port,
@@ -74,9 +80,20 @@ pub fn spawn_next(app: &InstanceSpawn) -> Result<u32, SpawnError> {
         requested_caps: app.requested_caps,
         debug_tag: app.debug_tag,
     };
-    // Match the boot spawn path exactly: it passes None here, so the certificate
-    // temporal window is treated the same way for an on-demand instance as for
-    // the boot instance. Enforcing the clock only here would reject an instance
-    // that boot accepts.
-    spawn_verified(&spec, &trust, None)
+    // Match the boot spawn path exactly: it passes None here, so the
+    // certificate temporal window is treated the same for an on-demand
+    // instance as for the boot instance.
+    let pid = spawn_verified(&spec, &trust, None)?;
+    // Tag the instance ephemeral. The app skeleton reads this and exits (full
+    // teardown, RAM zeroized) when its window closes, instead of lingering
+    // idle, so a closed tab leaves no resident capsule and a relaunch is a
+    // fresh spawn. Set before the app is scheduled far enough to read argv.
+    crate::process::with_process(pid, |pcb| {
+        *pcb.argv.lock() = alloc::vec![alloc::string::String::from(INSTANCE_ARG)];
+    });
+    Ok(pid)
 }
+
+/// The argv marker that tells the app skeleton it is an on-demand window
+/// instance and must exit when its window closes.
+pub const INSTANCE_ARG: &str = "--nonos-window-instance";

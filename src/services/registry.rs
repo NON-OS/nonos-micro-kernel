@@ -64,3 +64,15 @@ pub fn unregister_endpoints_for_pid(pid: u32) -> usize {
     eps.retain(|e| e.pid != pid);
     before - eps.len()
 }
+
+/// Drop the endpoint registered under `name`, whoever owns it. A capsule's
+/// reply endpoint is registered kernel-owned (pid 0), so it is not caught by
+/// the per-pid sweep on teardown; without this an on-demand instance that
+/// closes would leak its reply endpoint and the next spawn of the same slot
+/// would collide on it. Returns true if an entry was removed.
+pub fn unregister_endpoint_by_name(name: &str) -> bool {
+    let mut eps = ENDPOINTS.lock();
+    let before = eps.len();
+    eps.retain(|e| e.name != name);
+    before != eps.len()
+}
