@@ -62,6 +62,14 @@ pub fn sys_ipc_call(
     let timeout = if timeout_ms == 0 { 5000 } else { timeout_ms };
     let recv_result = recv_from_inbox(pid, &inbox, resp, resp_len, timeout);
     if recv_result < 0 {
+        crate::sys::serial::print(b"[CALL-TIMEOUT] pid=");
+        crate::sys::serial::print_hex(pid as u64);
+        crate::sys::serial::print(b" port=");
+        crate::sys::serial::print_hex(ep);
+        crate::sys::serial::print(b" server=");
+        crate::sys::serial::print_hex(endpoint_pid.unwrap_or(0) as u64);
+        crate::sys::serial::print(b" rc=");
+        crate::sys::serial::println(if recv_result == -11 { b"-11" } else { b"neg" });
         if let Some(server_pid) = endpoint_pid {
             pending_reply::remove(server_pid, &inbox);
         }
