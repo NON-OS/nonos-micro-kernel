@@ -16,10 +16,10 @@
 
 use alloc::vec;
 
+use crate::term::dimensions::{COLS, SCROLLBACK_ROWS, VISIBLE_ROWS};
 use crate::term::grid::cell::Cell;
 use crate::term::grid::types::Grid;
-use crate::term::dimensions::{COLS, VISIBLE_ROWS, SCROLLBACK_ROWS};
-use crate::term::vt::color::{DEFAULT_FG, DEFAULT_BG};
+use crate::term::vt::color::{DEFAULT_BG, DEFAULT_FG};
 use crate::term::vt::parser::Parser;
 
 impl Grid {
@@ -40,6 +40,8 @@ impl Grid {
             flags: 0,
             parser: Parser::new(),
             total_scrolled: 0,
+            scroll_top: 0,
+            scroll_bot: VISIBLE_ROWS - 1,
         }
     }
 }

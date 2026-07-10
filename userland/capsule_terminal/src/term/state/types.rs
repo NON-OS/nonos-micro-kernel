@@ -45,4 +45,7 @@ pub struct State {
     pub blocks: Vec<Block>,
     // Body font zoom, adjusted with Ctrl+= / Ctrl+-. 1 = base bitmap size.
     pub font_scale: u32,
+    // Terminal background, chosen by the active profile. May carry alpha below
+    // 0xFF, which the compositor blends so the desktop shows through.
+    pub bg: u32,
 }

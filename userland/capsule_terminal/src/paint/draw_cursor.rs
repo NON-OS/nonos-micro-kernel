@@ -16,7 +16,8 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::constants::{CELL_WIDTH, LINE_HEIGHT, TEXT_LEFT};
+use super::constants::TEXT_LEFT;
+use super::metrics::Metrics;
 use crate::term::theme::{BACKGROUND, CURSOR};
 
 pub fn draw_cursor(
@@ -25,15 +26,16 @@ pub fn draw_cursor(
     cursor_cell: usize,
     baseline_y: u32,
     under: u8,
-    scale: u32,
+    m: Metrics,
 ) {
-    let cw = CELL_WIDTH * scale;
-    let lh = LINE_HEIGHT * scale;
-    let x = TEXT_LEFT + (prompt_cells as u32 + cursor_cell as u32) * cw;
-    fb.fill_rect(x, baseline_y, cw, lh.saturating_sub(2), CURSOR);
+    let (adv, px) = (m.adv, m.px);
+    let x = TEXT_LEFT + (prompt_cells as u32 + cursor_cell as u32) * adv;
+    fb.fill_rect(x, baseline_y, adv, m.lh.saturating_sub(2), CURSOR);
     // Inverse block: when the cursor sits on a printable glyph, repaint it in
     // the background colour so the character reads through the block.
-    if under > b' ' {
-        fb.text_scaled(x, baseline_y.saturating_sub(1), &[under], BACKGROUND, scale);
+    if under > b' ' && under < 0x7f {
+        let mut buf = [0u8; 4];
+        let s = (under as char).encode_utf8(&mut buf);
+        let _ = fb.text_ttf_mono(x as i32, baseline_y.saturating_sub(1) as i32, s, BACKGROUND, px);
     }
 }

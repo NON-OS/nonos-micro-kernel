@@ -14,8 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const DEFAULT_FG: u8 = 7;
-pub const DEFAULT_BG: u8 = 0;
+// Colours are stored per cell as full ARGB now, so the whole 24-bit space from
+// `38;2;r;g;b` survives instead of being rounded to sixteen. The default
+// background is fully transparent so an unstyled cell shows the terminal's own
+// backdrop rather than a solid black.
+pub const DEFAULT_FG: u32 = 0xFFC0_C0C0;
+pub const DEFAULT_BG: u32 = 0x0000_0000;
+
+// Pack a 24-bit colour into opaque ARGB.
+pub fn pack_rgb(r: u8, g: u8, b: u8) -> u32 {
+    0xFF00_0000 | ((r as u32) << 16) | ((g as u32) << 8) | (b as u32)
+}
 
 pub fn ansi_to_argb(index: u8) -> u32 {
     let pack = |r: u8, g: u8, b: u8| -> u32 {
@@ -50,20 +59,4 @@ pub fn ansi_to_argb(index: u8) -> u32 {
             pack(gray, gray, gray)
         }
     }
-}
-
-pub fn argb_nearest_ansi(r: u8, g: u8, b: u8) -> u8 {
-    let idx = |c: u8| -> u8 {
-        let levels = [0u8, 95, 135, 175, 215, 255];
-        let mut best = 0u8;
-        let mut bestd = 256i32;
-        let mut k = 0u8;
-        while (k as usize) < levels.len() {
-            let d = (c as i32 - levels[k as usize] as i32).abs();
-            if d < bestd { bestd = d; best = k; }
-            k += 1;
-        }
-        best
-    };
-    16 + 36 * idx(r) + 6 * idx(g) + idx(b)
 }

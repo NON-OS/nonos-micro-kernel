@@ -14,20 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod about;
-pub mod capsules;
-pub mod clear;
-pub mod display;
-pub mod echo;
-pub mod exit_check;
-pub mod fs;
-pub mod help;
-pub mod history_cmd;
-pub mod market;
-pub mod motd;
-pub mod nox;
-pub mod ping;
-pub mod service;
-pub mod theme;
-pub mod version;
-pub mod whoami;
+//! Print the working directory.
+
+use crate::command::output::Output;
+use crate::term::state::State;
+
+pub fn pwd(state: &mut State) {
+    let cwd = state.cwd.as_bytes().to_vec();
+    Output::new(&mut state.scrollback).writeln(&cwd);
+}

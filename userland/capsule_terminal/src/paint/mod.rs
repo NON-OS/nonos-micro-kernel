@@ -22,11 +22,13 @@ mod draw_cursor;
 mod draw_grid;
 mod draw_input_line;
 mod fetch;
+mod fetch_banner;
 mod fetch_palette;
-mod fetch_row;
 mod fetch_uptime;
 mod footer;
 mod header;
+mod metrics;
+mod shade;
 pub mod tabstrip;
 
 pub use compose::paint;

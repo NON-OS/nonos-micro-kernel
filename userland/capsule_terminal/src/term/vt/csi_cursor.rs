@@ -27,19 +27,41 @@ fn arg(params: &[i64], i: usize) -> usize {
 
 pub fn csi_cursor(g: &mut Grid, c: u8, params: &[i64]) {
     match c {
-        b'A' => { g.y = g.y.saturating_sub(n1(params)); }
-        b'B' => { g.y = (g.y + n1(params)).min(VISIBLE_ROWS - 1); }
-        b'C' => { g.x = (g.x + n1(params)).min(COLS - 1); }
-        b'D' => { g.x = g.x.saturating_sub(n1(params)); }
-        b'E' => { g.x = 0; g.y = (g.y + n1(params)).min(VISIBLE_ROWS - 1); }
-        b'F' => { g.x = 0; g.y = g.y.saturating_sub(n1(params)); }
-        b'G' => { g.x = (arg(params, 0) - 1).min(COLS - 1); }
+        b'A' => {
+            g.y = g.y.saturating_sub(n1(params));
+        }
+        b'B' => {
+            g.y = (g.y + n1(params)).min(VISIBLE_ROWS - 1);
+        }
+        b'C' => {
+            g.x = (g.x + n1(params)).min(COLS - 1);
+        }
+        b'D' => {
+            g.x = g.x.saturating_sub(n1(params));
+        }
+        b'E' => {
+            g.x = 0;
+            g.y = (g.y + n1(params)).min(VISIBLE_ROWS - 1);
+        }
+        b'F' => {
+            g.x = 0;
+            g.y = g.y.saturating_sub(n1(params));
+        }
+        b'G' => {
+            g.x = (arg(params, 0) - 1).min(COLS - 1);
+        }
         b'H' | b'f' => {
             g.y = (arg(params, 0) - 1).min(VISIBLE_ROWS - 1);
             g.x = (arg(params, 1) - 1).min(COLS - 1);
         }
-        b'd' => { g.y = (arg(params, 0) - 1).min(VISIBLE_ROWS - 1); }
-        b'S' => { for _ in 0..n1(params) { g.scroll_up_one(); } }
+        b'd' => {
+            g.y = (arg(params, 0) - 1).min(VISIBLE_ROWS - 1);
+        }
+        b'S' => {
+            for _ in 0..n1(params) {
+                g.scroll_up_one();
+            }
+        }
         _ => {}
     }
 }

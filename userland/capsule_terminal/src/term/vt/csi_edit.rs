@@ -23,19 +23,29 @@ fn n1(params: &[i64]) -> usize {
 
 pub fn csi_edit(g: &mut Grid, c: u8, params: &[i64]) {
     match c {
-        b'J' => { g.erase_display(params.first().copied().unwrap_or(0) as u8); }
-        b'K' => { g.erase_line(params.first().copied().unwrap_or(0) as u8); }
+        b'J' => {
+            g.erase_display(params.first().copied().unwrap_or(0) as u8);
+        }
+        b'K' => {
+            g.erase_line(params.first().copied().unwrap_or(0) as u8);
+        }
         b'P' => {
             let n = n1(params).min(COLS - g.x);
             g.move_cells(g.x + n, g.y, g.x, g.y, COLS - (g.x + n), 1);
             let bc = g.blank_cell();
-            for x in (COLS - n)..COLS { let i = Grid::idx(x, g.y); g.cells[i] = bc; }
+            for x in (COLS - n)..COLS {
+                let i = Grid::idx(x, g.y);
+                g.cells[i] = bc;
+            }
         }
         b'@' => {
             let n = n1(params).min(COLS - g.x);
             g.move_cells(g.x, g.y, g.x + n, g.y, COLS - (g.x + n), 1);
             let bc = g.blank_cell();
-            for x in g.x..(g.x + n) { let i = Grid::idx(x, g.y); g.cells[i] = bc; }
+            for x in g.x..(g.x + n) {
+                let i = Grid::idx(x, g.y);
+                g.cells[i] = bc;
+            }
         }
         _ => {}
     }

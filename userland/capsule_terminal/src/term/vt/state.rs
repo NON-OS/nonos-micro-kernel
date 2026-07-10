@@ -31,13 +31,20 @@ impl<'a> Perform for VtState<'a> {
 
     fn execute(&mut self, b: u8) {
         match b {
-            0x08 => { self.g.x = self.g.x.saturating_sub(1); }
+            0x08 => {
+                self.g.x = self.g.x.saturating_sub(1);
+            }
             0x09 => {
                 let next = ((self.g.x / 8) + 1) * 8;
                 self.g.x = next.min(COLS - 1);
             }
-            0x0A => { self.g.carriage_return(); self.g.line_feed(); }
-            0x0D => { self.g.carriage_return(); }
+            0x0A => {
+                self.g.carriage_return();
+                self.g.line_feed();
+            }
+            0x0D => {
+                self.g.carriage_return();
+            }
             _ => {}
         }
     }
@@ -47,10 +54,20 @@ impl<'a> Perform for VtState<'a> {
             b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'f' | b'd' | b'S' | b'T' => {
                 csi_cursor(self.g, c, params);
             }
-            b'J' | b'K' | b'P' | b'@' => { csi_edit(self.g, c, params); }
+            b'J' | b'K' | b'P' | b'@' => {
+                csi_edit(self.g, c, params);
+            }
             b'm' => crate::term::vt::sgr::sgr(self.g, params),
             b'h' => crate::term::vt::decset::decset(self.g, params, inter, true),
             b'l' => crate::term::vt::decset::decset(self.g, params, inter, false),
+            b'r' if inter.is_empty() => {
+                // DECSTBM: top;bottom are 1-based; an empty request is the full
+                // screen. Private `?...r` (restore modes) carries an intermediate
+                // and is intentionally left to fall through.
+                let top = params.first().copied().filter(|&v| v > 0).unwrap_or(1);
+                let bot = params.get(1).copied().filter(|&v| v > 0).unwrap_or(i64::MAX);
+                self.g.set_scroll_region((top - 1) as usize, (bot - 1) as usize);
+            }
             _ => {}
         }
     }

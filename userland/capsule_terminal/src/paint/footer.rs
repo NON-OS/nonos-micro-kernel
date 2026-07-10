@@ -17,11 +17,12 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::constants::{FOOTER_H, TEXT_LEFT};
-use crate::term::theme::{DIM, FOOTER_BG};
+use super::shade::elevate;
+use crate::term::theme::DIM;
 
-pub fn draw_footer(fb: &mut PaintBuffer) {
+pub fn draw_footer(fb: &mut PaintBuffer, bg: u32) {
     let y = fb.height.saturating_sub(FOOTER_H);
-    fb.fill_rect(0, y, fb.width, FOOTER_H, FOOTER_BG);
+    fb.fill_rect(0, y, fb.width, FOOTER_H, elevate(bg, 12));
     fb.text(
         TEXT_LEFT,
         y + 4,

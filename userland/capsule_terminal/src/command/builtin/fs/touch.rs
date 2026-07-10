@@ -14,26 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::term::dimensions::{COLS, SCROLLBACK_ROWS, VISIBLE_ROWS};
-use crate::term::grid::types::Grid;
+//! Create empty files, leaving any that already exist untouched.
 
-impl Grid {
-    pub fn scroll_up_one(&mut self) {
-        let slot = (self.hist_head + self.hist_count) % SCROLLBACK_ROWS;
-        let dst = slot * COLS;
-        for x in 0..COLS {
-            self.history[dst + x] = self.cells[Grid::idx(x, 0)];
+use nonos_app_skeleton::clients::vfs;
+
+use super::{abspath, pid};
+use crate::command::output::Output;
+use crate::term::state::State;
+
+pub fn touch(state: &mut State, argv: &[&[u8]]) {
+    if argv.len() < 2 {
+        Output::new(&mut state.scrollback).writeln(b"touch: missing name");
+        return;
+    }
+    for arg in &argv[1..] {
+        let path = abspath(state, arg);
+        let owner = pid(state);
+        if vfs::stat(owner, &path).is_ok() {
+            continue;
         }
-        if self.hist_count < SCROLLBACK_ROWS {
-            self.hist_count += 1;
-        } else {
-            self.hist_head = (self.hist_head + 1) % SCROLLBACK_ROWS;
-        }
-        self.total_scrolled += 1;
-        self.cells.copy_within(COLS..VISIBLE_ROWS * COLS, 0);
-        let blank = self.blank_cell();
-        for x in 0..COLS {
-            self.cells[Grid::idx(x, VISIBLE_ROWS - 1)] = blank;
+        if let Err(e) = vfs::write_file(owner, &path, &[]) {
+            Output::new(&mut state.scrollback).writeln(e.as_bytes());
         }
     }
 }
