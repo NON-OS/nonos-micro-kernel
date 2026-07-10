@@ -248,3 +248,57 @@ fn read_respects_max_bytes() {
     let fd = s.open("/f", PID, false, false, false, true).unwrap();
     assert_eq!(s.read(fd, PID, 4).unwrap(), b"0123");
 }
+
+#[test]
+fn seek_set_moves_the_read_cursor() {
+    use crate::vfs_store::SeekWhence;
+    let mut s = Store::new();
+    put(&mut s, "/f", b"0123456789");
+    let fd = s.open("/f", PID, false, false, false, true).unwrap();
+    assert_eq!(s.seek(fd, PID, SeekWhence::Set, 4), Ok(4));
+    assert_eq!(s.read(fd, PID, 16).unwrap(), b"456789");
+}
+
+#[test]
+fn seek_cur_and_end_resolve_against_position_and_length() {
+    use crate::vfs_store::SeekWhence;
+    let mut s = Store::new();
+    put(&mut s, "/f", b"0123456789");
+    let fd = s.open("/f", PID, false, false, false, true).unwrap();
+    s.read(fd, PID, 3).unwrap();
+    assert_eq!(s.seek(fd, PID, SeekWhence::Cur, 2), Ok(5));
+    assert_eq!(s.seek(fd, PID, SeekWhence::End, -1), Ok(9));
+    assert_eq!(s.read(fd, PID, 16).unwrap(), b"9");
+    assert_eq!(s.seek(fd, PID, SeekWhence::End, 0), Ok(10));
+}
+
+#[test]
+fn seek_before_start_is_invalid() {
+    use crate::vfs_store::SeekWhence;
+    let mut s = Store::new();
+    put(&mut s, "/f", b"abc");
+    let fd = s.open("/f", PID, false, false, false, true).unwrap();
+    assert_eq!(s.seek(fd, PID, SeekWhence::Set, -1), Err(StoreError::Inval));
+    assert_eq!(s.seek(fd, PID, SeekWhence::End, -4), Err(StoreError::Inval));
+}
+
+#[test]
+fn seek_past_eof_then_write_zero_fills_the_gap() {
+    use crate::vfs_store::SeekWhence;
+    let mut s = Store::new();
+    put(&mut s, "/f", b"ab");
+    let fd = s.open("/f", PID, false, false, false, true).unwrap();
+    assert_eq!(s.seek(fd, PID, SeekWhence::Set, 4), Ok(4));
+    s.write(fd, PID, b"z").unwrap();
+    s.close(fd, PID).unwrap();
+    assert_eq!(get(&mut s, "/f"), b"ab\0\0z");
+}
+
+#[test]
+fn seek_on_a_foreign_fd_is_rejected() {
+    use crate::vfs_store::SeekWhence;
+    let mut s = Store::new();
+    put(&mut s, "/f", b"abc");
+    let fd = s.open("/f", PID, false, false, false, true).unwrap();
+    assert_eq!(s.seek(fd, 99, SeekWhence::Set, 0), Err(StoreError::BadFd));
+}

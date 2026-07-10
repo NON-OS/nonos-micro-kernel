@@ -32,6 +32,12 @@ pub const OP_COPY: u16 = 12;
 pub const OP_TRUNCATE: u16 = 13;
 pub const OP_USAGE: u16 = 14;
 pub const OP_CHMOD: u16 = 15;
+pub const OP_SEEK: u16 = 16;
+
+// Seek whence values, matching the POSIX ordering std uses.
+pub const SEEK_SET: u8 = 0;
+pub const SEEK_CUR: u8 = 1;
+pub const SEEK_END: u8 = 2;
 
 pub const O_CREATE: u32 = 1 << 0;
 pub const O_TRUNC: u32 = 1 << 1;
