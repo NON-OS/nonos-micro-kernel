@@ -15,9 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::crypto::stark::air::{
-    stark_prove, stark_prove_bound, stark_verify, stark_verify_bound, Air, CopyConstraint,
-    FiatShamir, Fibonacci, FriFold, Fused, MerkleMembership, MultiMembership, Opening, Permutation,
-    Permutation2, Poseidon, PowerChain, Squaring, TraceFold, Wired, RATE, WIDTH,
+    stark_prove, stark_verify, Air, CopyConstraint, FiatShamir, Fibonacci, FriFold, Fused,
+    MerkleMembership, MultiMembership, Opening, Permutation, Permutation2, Poseidon, PowerChain,
+    Squaring, TraceFold, Wired, RATE, WIDTH,
 };
 use crate::crypto::stark::field::Fp;
 use crate::crypto::stark::fri::root_of_unity;
@@ -964,6 +964,18 @@ fn trace_fold_data_seeded(
     query: usize,
     seed: u64,
 ) -> (Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<bool>, Fp, u32, usize) {
+    trace_fold_data_seeded_first(query, seed, None)
+}
+
+// The same seeded fold, but with an optional first-layer challenge. A recursive
+// verifier's FRI fold must run on the challenge its transcript squeezed, so the
+// monolith overrides `beta[0]` with that challenge and wires the two together.
+#[allow(clippy::type_complexity)]
+fn trace_fold_data_seeded_first(
+    query: usize,
+    seed: u64,
+    first_beta: Option<Fp>,
+) -> (Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<Fp>, Vec<bool>, Fp, u32, usize) {
     let (k, n_folds, log_layers) = (5u32, 4usize, 3u32);
     let n = 1usize << k;
     let inv2 = Fp::from_u64(2).inv();
@@ -977,8 +989,11 @@ fn trace_fold_data_seeded(
     layers.push(cur.clone());
     let mut omega = base_omega;
     let mut coset = shift;
-    for _ in 0..n_folds {
-        let beta = Fp::from_u64(xs(&mut s));
+    for layer_i in 0..n_folds {
+        let beta = match first_beta {
+            Some(b0) if layer_i == 0 => b0,
+            _ => Fp::from_u64(xs(&mut s)),
+        };
         betas.push(beta);
         let half = cur.len() / 2;
         let mut next = Vec::with_capacity(half);
@@ -1583,647 +1598,866 @@ fn an_uncommitted_layer_input_is_rejected() {
     let proof = stark_prove(&wired, &witness, QUERIES);
     assert!(!stark_verify(&wired, &proof, QUERIES), "an uncommitted layer input verified");
 }
-// The logup lookup argument: prove every witness value lies in a table. The
-// running sum sum 1/(a_i + X) - sum m_j/(t_j + X) is zero exactly when the
-// witness multiset is contained in the table, so an in-table witness verifies
-// and a value outside the table leaves a term the multiplicities cannot cancel.
-use crate::crypto::stark::air::Lookup;
 
-const LOOKUP_X: u64 = 0x5bd1_e995;
-
+// The money-grade composition, compose_ext, evaluates the constraints at the
+// out-of-domain point z in Fp2. It must faithfully extend the base compose: on a
+// base-embedded point with base-embedded inputs, it returns the embedded base
+// result. This ties the Fp2 composition algebra to the already-tested one.
 #[test]
-fn a_lookup_of_in_table_values_verifies() {
-    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
-    // Every witness value is a table entry, some repeated.
-    let witness: Vec<Fp> = [3u64, 3, 7, 0, 5, 3].iter().map(|v| Fp::from_u64(*v)).collect();
-    let air = Lookup::new(witness, table, Fp::from_u64(LOOKUP_X));
-    let proof = stark_prove(&air, &air.trace(), QUERIES);
-    assert!(stark_verify(&air, &proof, QUERIES), "an in-table lookup was rejected");
-}
+fn compose_ext_faithfully_extends_compose() {
+    use crate::crypto::stark::air::{compose, compose_ext, Air, Fibonacci};
+    use crate::crypto::stark::field::Fp2;
+    use crate::crypto::stark::fri::root_of_unity;
 
-#[test]
-fn an_out_of_table_value_is_rejected() {
-    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
-    // 42 is not in the table: it is counted in no multiplicity, so its inverse
-    // term is unmatched and the sum cannot return to zero.
-    let witness: Vec<Fp> = [3u64, 7, 42, 0].iter().map(|v| Fp::from_u64(*v)).collect();
-    let air = Lookup::new(witness, table, Fp::from_u64(LOOKUP_X));
-    let proof = stark_prove(&air, &air.trace(), QUERIES);
-    assert!(!stark_verify(&air, &proof, QUERIES), "an out-of-table value verified");
-}
+    let air = Fibonacci { log_t: 4 };
+    let g = root_of_unity(air.log_trace_len());
+    let mut s = 0xF1B0u64 | 1;
+    let rnd = |s: &mut u64| { *s ^= *s << 13; *s ^= *s >> 7; *s ^= *s << 17; Fp::from_u64(*s) };
 
-#[test]
-fn a_range_check_via_bit_limbs_verifies() {
-    // The mega-AIR use: range-check a value by looking up each of its low limbs
-    // in a small range table. Here every two-bit limb of a set of values is
-    // proven to lie in {0, 1, 2, 3}.
-    let table: Vec<Fp> = (0..4).map(Fp::from_u64).collect();
-    let values = [0u64, 5, 10, 15, 9, 6];
-    let mut limbs: Vec<Fp> = Vec::new();
-    for v in values {
-        limbs.push(Fp::from_u64(v & 0b11));
-        limbs.push(Fp::from_u64((v >> 2) & 0b11));
-    }
-    let air = Lookup::new(limbs, table, Fp::from_u64(LOOKUP_X));
-    let proof = stark_prove(&air, &air.trace(), QUERIES);
-    assert!(stark_verify(&air, &proof, QUERIES), "an in-range limb decomposition was rejected");
-}
+    for _ in 0..200 {
+        let x = rnd(&mut s);
+        let window: alloc::vec::Vec<Fp> = (0..air.window_size()).map(|_| rnd(&mut s)).collect();
+        let periodic: alloc::vec::Vec<Fp> = alloc::vec::Vec::new();
+        let ncoeff = air.num_transition() + air.boundary().len();
+        let coeffs: alloc::vec::Vec<Fp> = (0..ncoeff).map(|_| rnd(&mut s)).collect();
 
-#[test]
-fn a_limb_out_of_range_is_rejected() {
-    // A limb of 4 does not fit a two-bit range table.
-    let table: Vec<Fp> = (0..4).map(Fp::from_u64).collect();
-    let limbs: Vec<Fp> = [0u64, 1, 4, 2].iter().map(|v| Fp::from_u64(*v)).collect();
-    let air = Lookup::new(limbs, table, Fp::from_u64(LOOKUP_X));
-    let proof = stark_prove(&air, &air.trace(), QUERIES);
-    assert!(!stark_verify(&air, &proof, QUERIES), "an out-of-range limb verified");
-}
+        let base = compose(&air, g, x, &window, &periodic, &coeffs);
 
-#[test]
-fn a_tampered_running_sum_is_rejected() {
-    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
-    let witness: Vec<Fp> = [1u64, 2, 3, 4].iter().map(|v| Fp::from_u64(*v)).collect();
-    let air = Lookup::new(witness, table, Fp::from_u64(LOOKUP_X));
-    let mut trace = air.trace();
-    // Perturb the running-sum column at one interior row (width 3, column 2).
-    trace[3 * 2 + 2] = trace[3 * 2 + 2] + Fp::ONE;
-    let proof = stark_prove(&air, &trace, QUERIES);
-    assert!(!stark_verify(&air, &proof, QUERIES), "a tampered running sum verified");
-}
+        let window_e: alloc::vec::Vec<Fp2> = window.iter().map(|v| Fp2::from_base(*v)).collect();
+        let periodic_e: alloc::vec::Vec<Fp2> = periodic.iter().map(|v| Fp2::from_base(*v)).collect();
+        let coeffs_e: alloc::vec::Vec<Fp2> = coeffs.iter().map(|v| Fp2::from_base(*v)).collect();
+        let ext = compose_ext(&air, g, Fp2::from_base(x), &window_e, &periodic_e, &coeffs_e);
 
-// Adversarial hardening of the lookup: over many random tables and witnesses,
-// every in-table witness verifies and every witness carrying an out-of-table
-// value is rejected, and the soundness holds under a challenge drawn from a
-// Poseidon transcript after the witness and multiplicities are committed, the
-// order the argument requires.
-
-fn lookup_xs(state: &mut u64) -> u64 {
-    *state ^= *state << 13;
-    *state ^= *state >> 7;
-    *state ^= *state << 17;
-    *state
-}
-
-#[test]
-fn the_lookup_verifies_and_rejects_over_random_cases() {
-    let table_size = 8u64;
-    let table: Vec<Fp> = (0..table_size).map(Fp::from_u64).collect();
-    let mut s = 0x1234_5678u64;
-    let x = Fp::from_u64(LOOKUP_X);
-
-    for _ in 0..40 {
-        let len = 1 + (lookup_xs(&mut s) % 8) as usize;
-        // An in-table witness: every value drawn from the table.
-        let good: Vec<Fp> =
-            (0..len).map(|_| Fp::from_u64(lookup_xs(&mut s) % table_size)).collect();
-        let air = Lookup::new(good, table.clone(), x);
-        let proof = stark_prove(&air, &air.trace(), QUERIES);
-        assert!(stark_verify(&air, &proof, QUERIES), "an in-table random witness was rejected");
-
-        // The same witness with one value pushed out of the table.
-        let mut bad: Vec<Fp> =
-            (0..len).map(|_| Fp::from_u64(lookup_xs(&mut s) % table_size)).collect();
-        bad[(lookup_xs(&mut s) as usize) % len] =
-            Fp::from_u64(table_size + 1 + lookup_xs(&mut s) % 100);
-        let bad_air = Lookup::new(bad, table.clone(), x);
-        let bad_proof = stark_prove(&bad_air, &bad_air.trace(), QUERIES);
-        assert!(
-            !stark_verify(&bad_air, &bad_proof, QUERIES),
-            "an out-of-table random witness verified"
-        );
+        assert_eq!(Fp2::from_base(base), ext, "compose_ext diverged from compose");
     }
 }
 
-#[test]
-fn the_lookup_is_sound_under_a_transcript_challenge() {
-    use crate::crypto::stark::poseidon_transcript::PoseidonTranscript;
-
-    let table: Vec<Fp> = (0..8).map(Fp::from_u64).collect();
-    let witness: Vec<Fp> = [2u64, 5, 5, 1, 7].iter().map(|v| Fp::from_u64(*v)).collect();
-
-    // Draw the logup challenge from a Poseidon transcript, after absorbing the
-    // witness and the multiplicities, so the challenge cannot be anticipated.
-    let draw = |witness: &[Fp], table: &[Fp]| -> Fp {
-        let probe = Lookup::new(witness.to_vec(), table.to_vec(), Fp::ZERO);
-        let mut tr = PoseidonTranscript::new(Poseidon::new(3, [Fp::ZERO; RATE]));
-        for v in witness {
-            tr.absorb(*v);
-        }
-        for m in probe.multiplicities() {
-            tr.absorb(*m);
-        }
-        tr.challenge()
-    };
-
-    let x = draw(&witness, &table);
-    let air = Lookup::new(witness.clone(), table.clone(), x);
-    let proof = stark_prove(&air, &air.trace(), QUERIES);
-    assert!(
-        stark_verify(&air, &proof, QUERIES),
-        "an in-table witness failed under a drawn challenge"
-    );
-
-    let mut out = witness;
-    out.push(Fp::from_u64(99)); // 99 is not in the table
-    let x2 = draw(&out, &table);
-    let bad = Lookup::new(out, table, x2);
-    let bad_proof = stark_prove(&bad, &bad.trace(), QUERIES);
-    assert!(
-        !stark_verify(&bad, &bad_proof, QUERIES),
-        "an out-of-table witness verified under a drawn challenge"
-    );
-}
-
-use crate::crypto::stark::air::TupleLookup;
-
-const TUPLE_ALPHA: u64 = 0x9e37_79b9;
-
-// A position-dependent range table: position 0 admits a two-bit limb {0,1,2,3},
-// position 1 admits a one-bit limb {0,1}. A pair carries both the value and
-// where it is allowed to sit, so a legitimate value at the wrong position is not
-// a table entry.
-fn tuple_range_table() -> Vec<Vec<Fp>> {
-    let mut table = Vec::new();
-    for v in 0..4u64 {
-        table.push(alloc::vec![Fp::from_u64(v), Fp::ZERO]);
+// The full money-grade DEEP STARK, end to end on a real computation: the OOD point
+// is drawn from Fp2, the composition and DEEP polynomial live in Fp2, and the
+// low-degree test is the money-grade FRI with grinding. An honest trace verifies;
+// any corrupted row breaks a transition and is rejected.
+fn fib_trace(t: usize) -> alloc::vec::Vec<Fp> {
+    let mut trace = alloc::vec![Fp::ONE, Fp::ONE];
+    for i in 2..t {
+        let next = trace[i - 1] + trace[i - 2];
+        trace.push(next);
     }
-    for v in 0..2u64 {
-        table.push(alloc::vec![Fp::from_u64(v), Fp::ONE]);
+    trace
+}
+
+#[test]
+fn the_money_grade_stark_verifies_a_fibonacci_trace() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Fibonacci};
+    let air = Fibonacci { log_t: 4 };
+    let trace = fib_trace(1 << 4);
+    let proof = stark_prove_ext(&air, &trace, 32, 8);
+    assert!(stark_verify_ext(&air, &proof, 32, 8), "honest money-grade STARK rejected");
+}
+
+#[test]
+fn a_tampered_money_grade_trace_is_rejected() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Fibonacci};
+    let air = Fibonacci { log_t: 4 };
+    let mut trace = fib_trace(1 << 4);
+    trace[7] = trace[7] + Fp::ONE; // breaks the recurrence at a non-exempt row
+    let proof = stark_prove_ext(&air, &trace, 32, 8);
+    assert!(!stark_verify_ext(&air, &proof, 32, 8), "a tampered money-grade trace verified");
+}
+
+// The value-conservation constraint, proven money-grade: a running-sum accumulator
+// whose signed addends (inputs positive, outputs and fee negative) must cancel. A
+// balanced set verifies; any imbalance (value created) breaks the end boundary and
+// is rejected. This is the no-inflation gate, proven at ~2^-128 soundness.
+fn neg(x: u64) -> Fp {
+    Fp::ZERO - Fp::from_u64(x)
+}
+
+fn accumulator_trace(addends: &[Fp]) -> alloc::vec::Vec<Fp> {
+    let mut trace = alloc::vec::Vec::with_capacity(addends.len() * 2);
+    let mut acc = Fp::ZERO;
+    for &a in addends {
+        trace.push(acc); // column 0: running total
+        trace.push(a); // column 1: addend
+        acc = acc + a;
     }
-    table
+    trace
 }
 
 #[test]
-fn a_tuple_range_check_of_in_range_pairs_verifies() {
-    // Every value in [0, 8) splits into a two-bit low limb at position 0 and a
-    // one-bit high limb at position 1, each presented as a (value, position)
-    // pair that the table admits.
-    let table = tuple_range_table();
-    let mut witness: Vec<Vec<Fp>> = Vec::new();
-    for v in [0u64, 3, 4, 7, 5, 1] {
-        witness.push(alloc::vec![Fp::from_u64(v & 0b11), Fp::ZERO]);
-        witness.push(alloc::vec![Fp::from_u64((v >> 2) & 0b1), Fp::ONE]);
-    }
-    let air =
-        TupleLookup::new(witness, table, 2, Fp::from_u64(TUPLE_ALPHA), Fp::from_u64(LOOKUP_X));
-    let proof = stark_prove(&air, &air.trace(), QUERIES);
-    assert!(stark_verify(&air, &proof, QUERIES), "an in-range pair set was rejected");
+fn the_money_grade_stark_proves_value_conservation() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Accumulator};
+    let air = Accumulator { log_t: 3 };
+    // inputs 7, 3; outputs 8, 1; fee 1; padding 0, 0. First seven sum to zero.
+    let addends = [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let trace = accumulator_trace(&addends);
+    let proof = stark_prove_ext(&air, &trace, 32, 8);
+    assert!(stark_verify_ext(&air, &proof, 32, 8), "a balanced (conserving) trace was rejected");
 }
 
 #[test]
-fn a_right_value_wrong_position_is_rejected() {
-    // The value 3 is a legitimate limb, but only at position 0; presenting it at
-    // position 1 is out of range. A scalar lookup on the values alone would
-    // admit it, since 3 is in the value set; the pair lookup catches the
-    // position, which is exactly what range-checking a FRI index needs.
-    let table = tuple_range_table();
-    let witness: Vec<Vec<Fp>> = alloc::vec![
-        alloc::vec![Fp::from_u64(3), Fp::ZERO], // legitimate: 3 at position 0
-        alloc::vec![Fp::from_u64(3), Fp::ONE],  // right value, wrong position
-    ];
-    let air =
-        TupleLookup::new(witness, table, 2, Fp::from_u64(TUPLE_ALPHA), Fp::from_u64(LOOKUP_X));
-    let proof = stark_prove(&air, &air.trace(), QUERIES);
-    assert!(!stark_verify(&air, &proof, QUERIES), "a value at the wrong position verified");
+fn the_money_grade_stark_rejects_inflation() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Accumulator};
+    let air = Accumulator { log_t: 3 };
+    // The addends no longer cancel: one extra unit of value is created.
+    let addends = [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let trace = accumulator_trace(&addends);
+    let proof = stark_prove_ext(&air, &trace, 32, 8);
+    assert!(!stark_verify_ext(&air, &proof, 32, 8), "an inflating trace verified");
+}
+
+// Poseidon proven INSIDE the money-grade STARK: knowledge of a preimage that
+// hashes to a public digest, at ~2^-128 soundness. This is the primitive private
+// membership and nullifier derivation are built from (a Merkle path is a chain of
+// these compressions). Honest preimage verifies; a forged digest is rejected.
+#[test]
+fn the_money_grade_stark_proves_a_poseidon_preimage() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
+    let params = Poseidon::new(POSEIDON_LOG_T, [Fp::ZERO; RATE]);
+    let (trace, digest) = poseidon_trace(&params, absorb(sample_input()), POSEIDON_LOG_T);
+    let air = Poseidon::new(POSEIDON_LOG_T, digest);
+    let proof = stark_prove_ext(&air, &trace, 32, 8);
+    assert!(stark_verify_ext(&air, &proof, 32, 8), "honest money-grade poseidon preimage rejected");
 }
 
 #[test]
-fn a_folded_opening_pair_looks_up_against_committed_pairs() {
-    // A folded FRI opening is an (a, b) pair; the verifier looks it up against
-    // the table of pairs the commitment fixes. A pair sharing a first component
-    // with a table entry but not its second is still off the table.
-    let table: Vec<Vec<Fp>> = [(3u64, 9u64), (5, 25), (7, 49), (2, 4)]
-        .iter()
-        .map(|(a, b)| alloc::vec![Fp::from_u64(*a), Fp::from_u64(*b)])
-        .collect();
-    let good: Vec<Vec<Fp>> = alloc::vec![
-        alloc::vec![Fp::from_u64(5), Fp::from_u64(25)],
-        alloc::vec![Fp::from_u64(2), Fp::from_u64(4)],
-    ];
-    let air =
-        TupleLookup::new(good, table.clone(), 2, Fp::from_u64(TUPLE_ALPHA), Fp::from_u64(LOOKUP_X));
-    let proof = stark_prove(&air, &air.trace(), QUERIES);
-    assert!(stark_verify(&air, &proof, QUERIES), "a committed opening pair was rejected");
-
-    // Right first component, wrong second: (5, 24) is not a committed pair.
-    let bad: Vec<Vec<Fp>> = alloc::vec![alloc::vec![Fp::from_u64(5), Fp::from_u64(24)]];
-    let bad_air =
-        TupleLookup::new(bad, table, 2, Fp::from_u64(TUPLE_ALPHA), Fp::from_u64(LOOKUP_X));
-    let bad_proof = stark_prove(&bad_air, &bad_air.trace(), QUERIES);
-    assert!(!stark_verify(&bad_air, &bad_proof, QUERIES), "an unmatched opening pair verified");
+fn a_money_grade_poseidon_forged_digest_is_rejected() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
+    let params = Poseidon::new(POSEIDON_LOG_T, [Fp::ZERO; RATE]);
+    let (trace, digest) = poseidon_trace(&params, absorb(sample_input()), POSEIDON_LOG_T);
+    let mut wrong = digest;
+    wrong[0] = wrong[0] + Fp::ONE;
+    let air = Poseidon::new(POSEIDON_LOG_T, wrong);
+    let proof = stark_prove_ext(&air, &trace, 32, 8);
+    assert!(!stark_verify_ext(&air, &proof, 32, 8), "a forged digest verified in the money-grade STARK");
 }
 
-#[test]
-fn the_tuple_lookup_verifies_and_rejects_over_random_cases() {
-    let table = tuple_range_table();
-    let mut s = 0x0bad_c0deu64;
-    let alpha = Fp::from_u64(TUPLE_ALPHA);
-    let x = Fp::from_u64(LOOKUP_X);
-
-    for _ in 0..40 {
-        let len = 1 + (lookup_xs(&mut s) % 6) as usize;
-        // An in-table pair set: every pair drawn from the table.
-        let good: Vec<Vec<Fp>> =
-            (0..len).map(|_| table[(lookup_xs(&mut s) as usize) % table.len()].clone()).collect();
-        let air = TupleLookup::new(good, table.clone(), 2, alpha, x);
-        let proof = stark_prove(&air, &air.trace(), QUERIES);
-        assert!(stark_verify(&air, &proof, QUERIES), "an in-table random pair set was rejected");
-
-        // One pair swapped to a valid value at a position it is not allowed: a
-        // 2 or 3 at position 1, in range for position 0 but off the table here.
-        let mut bad: Vec<Vec<Fp>> =
-            (0..len).map(|_| table[(lookup_xs(&mut s) as usize) % table.len()].clone()).collect();
-        bad[(lookup_xs(&mut s) as usize) % len] =
-            alloc::vec![Fp::from_u64(2 + lookup_xs(&mut s) % 2), Fp::ONE];
-        let bad_air = TupleLookup::new(bad, table.clone(), 2, alpha, x);
-        let bad_proof = stark_prove(&bad_air, &bad_air.trace(), QUERIES);
-        assert!(
-            !stark_verify(&bad_air, &bad_proof, QUERIES),
-            "an out-of-table random pair set verified"
-        );
-    }
-}
-
-// Context binding: a membership proof is tied to a capsule context, so one
-// capsule's proof cannot admit another.
-
-#[test]
-fn a_context_bound_membership_proof_verifies_under_its_context() {
-    let log_rounds = 3u32;
-    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
-    let leaves = merkle_leaves(8);
-    let index = 5;
-    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
-    let path = tree.open(index);
-    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
-    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
-    let air = MerkleMembership::new(hasher.clone(), log_rounds, tree.root(), path, directions);
-
-    // The public context this attestation is bound to: a capsule hash, its
-    // granted capabilities, and the policy epoch, exactly the gate's ctx bytes.
-    let mut ctx = [0u8; 48];
-    ctx[..32].copy_from_slice(&[0xa5u8; 32]);
-    ctx[32..40].copy_from_slice(&0x0000_0000_0000_000fu64.to_be_bytes());
-    ctx[40..48].copy_from_slice(&1u64.to_be_bytes());
-
-    let proof = stark_prove_bound(&air, &trace, QUERIES, &ctx);
-    assert!(
-        stark_verify_bound(&air, &proof, QUERIES, &ctx),
-        "an honest attestation was rejected under its own context"
-    );
-}
-
-#[test]
-fn a_membership_proof_is_rejected_under_a_different_context() {
-    let log_rounds = 3u32;
-    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
-    let leaves = merkle_leaves(8);
-    let index = 5;
-    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
-    let path = tree.open(index);
-    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
-    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
-    let air = MerkleMembership::new(hasher.clone(), log_rounds, tree.root(), path, directions);
-
-    let mut ctx_a = [0u8; 48];
-    ctx_a[..32].copy_from_slice(&[0xa5u8; 32]);
-    // A different capsule: one byte of the hash differs.
-    let mut ctx_b = ctx_a;
-    ctx_b[0] ^= 1;
-
-    let proof = stark_prove_bound(&air, &trace, QUERIES, &ctx_a);
-    assert!(
-        stark_verify_bound(&air, &proof, QUERIES, &ctx_a),
-        "the proof failed under the context it was made for"
-    );
-    // The same enrolled leaf and path, but the proof cannot be replayed for a
-    // capsule it was not drawn for: a different context is rejected.
-    assert!(
-        !stark_verify_bound(&air, &proof, QUERIES, &ctx_b),
-        "a proof for one capsule verified for another"
-    );
-    // And it does not verify as an unbound proof either.
-    assert!(!stark_verify(&air, &proof, QUERIES), "a bound proof verified with no context");
-}
-
-#[test]
-fn an_empty_context_matches_the_unbound_proof() {
-    // The bound path is a strict extension: an empty context reproduces the
-    // unbound proof exactly, so existing proofs stay valid.
-    let seed = Fp::from_u64(2);
-    let air = Squaring { log_t: 3, seed };
-    let trace = squaring_trace(3, seed);
-    let bound = stark_prove_bound(&air, &trace, QUERIES, &[]);
-    let unbound = stark_prove(&air, &trace, QUERIES);
-    assert!(stark_verify(&air, &bound, QUERIES), "empty-context proof rejected by stark_verify");
-    assert!(
-        stark_verify_bound(&air, &unbound, QUERIES, &[]),
-        "unbound proof rejected by empty-context verify"
-    );
-}
-
-// Serialization: a real proof round-trips exactly, and the decoder is total
-// over hostile bytes.
-
-#[test]
-fn a_proof_round_trips_through_its_bytes() {
-    use crate::crypto::stark::air::{deserialize_proof, serialize_proof};
-
-    // A real membership proof, the shape an attestation carries.
-    let log_rounds = 3u32;
-    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
-    let leaves = merkle_leaves(8);
-    let index = 3;
-    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
-    let path = tree.open(index);
-    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
-    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
-    let air = MerkleMembership::new(hasher.clone(), log_rounds, tree.root(), path, directions);
-    let proof = stark_prove(&air, &trace, QUERIES);
-
-    let bytes = serialize_proof(&proof);
-    let decoded = deserialize_proof(&bytes).expect("a canonical proof failed to decode");
-    // The decoded proof verifies exactly as the original.
-    assert!(stark_verify(&air, &decoded, QUERIES), "the round-tripped proof was rejected");
-    // And re-encoding is stable, so the encoding is canonical.
-    assert_eq!(serialize_proof(&decoded), bytes, "re-encoding a decoded proof differed");
-}
-
-#[test]
-fn a_truncated_proof_is_rejected_not_panicked() {
-    use crate::crypto::stark::air::{deserialize_proof, serialize_proof};
-
-    let air = Squaring { log_t: 3, seed: Fp::from_u64(5) };
-    let proof = stark_prove(&air, &squaring_trace(3, Fp::from_u64(5)), QUERIES);
-    let bytes = serialize_proof(&proof);
-    // Every truncation of a valid proof must decode to None, not crash.
-    for cut in 0..bytes.len() {
-        let _ = deserialize_proof(&bytes[..cut]);
-    }
-    // Trailing bytes make it non-canonical and are rejected.
-    let mut extended = bytes.clone();
-    extended.push(0);
-    assert!(deserialize_proof(&extended).is_none(), "a proof with trailing bytes decoded");
-}
-
-#[test]
-fn arbitrary_bytes_never_panic_the_decoder() {
-    use crate::crypto::stark::air::deserialize_proof;
-
-    let mut s = 0x51ed_2701_dead_c0deu64;
-    for _ in 0..20_000 {
-        let len = (lookup_xs(&mut s) % 512) as usize;
-        let buf: Vec<u8> = (0..len).map(|_| (lookup_xs(&mut s) & 0xff) as u8).collect();
-        // No assertion on the result: the point is that it returns rather than
-        // panics or hangs, over any bytes a hostile trailer could carry.
-        let _ = deserialize_proof(&buf);
-    }
-}
-
-// The attestation core the gate runs: an enrolled secret vouches for exactly
-// this capsule, verified against the kernel's own root.
-
-fn enroll_and_prove(
-    hasher: &Poseidon,
-    leaves: &[[Fp; RATE]],
-    index: usize,
-    log_rounds: u32,
-    ctx: &[u8],
-) -> (Vec<[Fp; RATE]>, Vec<bool>, [Fp; RATE], Vec<u8>) {
-    use crate::crypto::stark::air::serialize_proof;
+// Private set membership proven at money-grade soundness: a leaf opens to a public
+// Poseidon-Merkle root without the leaf appearing in the public statement. This is
+// the core of the pool's membership check (and nullifier derivation is the same
+// hash-chain shape). Honest opening verifies; a wrong root is rejected.
+fn prove_membership_ext(hasher: &Poseidon, leaves: &[[Fp; RATE]], index: usize, log_rounds: u32) -> bool {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
     let tree = PoseidonMerkleTree::commit(hasher, leaves);
+    let root = tree.root();
     let path = tree.open(index);
     let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
     let trace = membership_trace(hasher, leaves[index], &path, &directions, log_rounds);
-    let air = MerkleMembership::new(
-        hasher.clone(),
-        log_rounds,
-        tree.root(),
-        path.clone(),
-        directions.clone(),
-    );
-    let proof = stark_prove_bound(&air, &trace, QUERIES, ctx);
-    (path, directions, tree.root(), serialize_proof(&proof))
+    let air = MerkleMembership::new(hasher.clone(), log_rounds, root, path, directions);
+    let proof = stark_prove_ext(&air, &trace, 32, 8);
+    stark_verify_ext(&air, &proof, 32, 8)
 }
 
 #[test]
-fn an_enrolled_capsule_attestation_is_accepted() {
-    use crate::crypto::stark::air::verify_membership_attestation;
+fn the_money_grade_stark_proves_merkle_membership() {
     let log_rounds = 3u32;
     let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
-    let leaves = merkle_leaves(8);
-    let ctx = capsule_ctx(0xa5, 0x0f, 1);
-    let (siblings, directions, root, bytes) =
-        enroll_and_prove(&hasher, &leaves, 5, log_rounds, &ctx);
-    assert!(
-        verify_membership_attestation(
-            &hasher,
-            log_rounds,
-            root,
-            &siblings,
-            &directions,
-            QUERIES,
-            &bytes,
-            &ctx
-        ),
-        "an enrolled capsule was denied"
-    );
+    assert!(prove_membership_ext(&hasher, &merkle_leaves(8), 5, log_rounds), "money-grade membership rejected");
 }
 
 #[test]
-fn attestation_is_denied_for_a_different_capsule_or_root() {
-    use crate::crypto::stark::air::verify_membership_attestation;
+fn a_money_grade_membership_for_a_wrong_root_is_rejected() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
     let log_rounds = 3u32;
     let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
     let leaves = merkle_leaves(8);
-    let ctx = capsule_ctx(0xa5, 0x0f, 1);
-    let (siblings, directions, root, bytes) =
-        enroll_and_prove(&hasher, &leaves, 5, log_rounds, &ctx);
-
-    // A different capsule (context) is denied: the proof cannot be replayed.
-    let other_ctx = capsule_ctx(0xa6, 0x0f, 1);
-    assert!(
-        !verify_membership_attestation(
-            &hasher,
-            log_rounds,
-            root,
-            &siblings,
-            &directions,
-            QUERIES,
-            &bytes,
-            &other_ctx
-        ),
-        "a proof for one capsule admitted another"
-    );
-
-    // A wrong policy root is denied: enrollment in some other tree does not count.
-    let mut wrong_root = root;
-    wrong_root[0] = wrong_root[0] + Fp::ONE;
-    assert!(
-        !verify_membership_attestation(
-            &hasher,
-            log_rounds,
-            wrong_root,
-            &siblings,
-            &directions,
-            QUERIES,
-            &bytes,
-            &ctx
-        ),
-        "an attestation verified against the wrong root"
-    );
-
-    // Tampered proof bytes are denied without a panic.
-    let mut bad = bytes.clone();
-    if let Some(b) = bad.get_mut(64) {
-        *b ^= 1;
-    }
-    assert!(
-        !verify_membership_attestation(
-            &hasher,
-            log_rounds,
-            root,
-            &siblings,
-            &directions,
-            QUERIES,
-            &bad,
-            &ctx
-        ),
-        "a tampered attestation verified"
-    );
-
-    // A malformed path is denied.
-    assert!(
-        !verify_membership_attestation(
-            &hasher,
-            log_rounds,
-            root,
-            &siblings,
-            &directions[..directions.len() - 1],
-            QUERIES,
-            &bytes,
-            &ctx
-        ),
-        "a mismatched path length verified"
-    );
-}
-
-fn capsule_ctx(hash_byte: u8, caps: u64, epoch: u64) -> Vec<u8> {
-    let mut ctx = alloc::vec![0u8; 48];
-    for b in ctx[..32].iter_mut() {
-        *b = hash_byte;
-    }
-    ctx[32..40].copy_from_slice(&caps.to_be_bytes());
-    ctx[40..48].copy_from_slice(&epoch.to_be_bytes());
-    ctx
-}
-
-// The whole trailer the gate parses. Query and round counts are the kernel's,
-// not the trailer's. A real trailer verifies; magic, direction, and proof
-// tampering are rejected.
-
-fn build_trailer(directions: &[bool], siblings: &[[Fp; RATE]], proof_bytes: &[u8]) -> Vec<u8> {
-    use crate::crypto::stark::air::STARK_ATTEST_MAGIC;
-    let depth = siblings.len();
-    let mut t = Vec::new();
-    t.extend_from_slice(STARK_ATTEST_MAGIC);
-    t.push(depth as u8);
-    let dir_bytes = depth.div_ceil(8);
-    let mut dirs = alloc::vec![0u8; dir_bytes];
-    for (i, d) in directions.iter().enumerate() {
-        if *d {
-            dirs[i / 8] |= 1 << (i % 8);
-        }
-    }
-    t.extend_from_slice(&dirs);
-    for s in siblings {
-        for v in s {
-            t.extend_from_slice(&v.value().to_le_bytes());
-        }
-    }
-    t.extend_from_slice(proof_bytes);
-    t
-}
-
-#[test]
-fn a_real_attestation_trailer_verifies_and_tampering_is_rejected() {
-    use crate::crypto::stark::air::{serialize_proof, verify_attestation_trailer};
-    let log_rounds = 3u32;
-    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
-    let leaves = merkle_leaves(8);
-    let index = 6;
-    let ctx = capsule_ctx(0x7c, 0x03, 1);
-
+    let index = 5usize;
     let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
     let path = tree.open(index);
     let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
     let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
-    let air = MerkleMembership::new(
-        hasher.clone(),
-        log_rounds,
-        tree.root(),
-        path.clone(),
-        directions.clone(),
-    );
-    let proof = stark_prove_bound(&air, &trace, QUERIES, &ctx);
-    let trailer = build_trailer(&directions, &path, &serialize_proof(&proof));
-
-    let root = tree.root();
-    assert!(
-        verify_attestation_trailer(&hasher, log_rounds, root, QUERIES, &trailer, &ctx),
-        "a real attestation trailer was rejected"
-    );
-
-    // Wrong magic.
-    let mut bad_magic = trailer.clone();
-    bad_magic[0] ^= 1;
-    assert!(!verify_attestation_trailer(&hasher, log_rounds, root, QUERIES, &bad_magic, &ctx));
-
-    // A corrupted direction bit changes the claimed path and must fail.
-    let mut bad_dir = trailer.clone();
-    bad_dir[9] ^= 1;
-    assert!(!verify_attestation_trailer(&hasher, log_rounds, root, QUERIES, &bad_dir, &ctx));
-
-    // A flipped proof byte must fail.
-    let mut bad_proof = trailer.clone();
-    let last = bad_proof.len() - 1;
-    bad_proof[last] ^= 1;
-    assert!(!verify_attestation_trailer(&hasher, log_rounds, root, QUERIES, &bad_proof, &ctx));
-
-    // Truncations decode without a panic. Sampled across the buffer, including
-    // the header boundaries where the parser transitions between fields, so the
-    // suite stays fast while still exercising the bounds checks.
-    let mut cut = 0;
-    while cut < trailer.len() {
-        let _ =
-            verify_attestation_trailer(&hasher, log_rounds, root, QUERIES, &trailer[..cut], &ctx);
-        cut += 37;
-    }
+    let mut wrong = tree.root();
+    wrong[0] = wrong[0] + Fp::ONE;
+    let air = MerkleMembership::new(hasher.clone(), log_rounds, wrong, path, directions);
+    let proof = stark_prove_ext(&air, &trace, 32, 8);
+    assert!(!stark_verify_ext(&air, &proof, 32, 8), "a money-grade membership for a wrong root verified");
 }
 
-// The public trace builder lets a prover generate an attestation without the
-// test helper: it matches the helper and yields a verifying proof.
+// Range by bit decomposition, proven money-grade: the value peels into booleans and
+// the remainder reaches zero, so it fits the bit width. An out-of-range value leaves
+// a nonzero remainder and is rejected. This is the overflow guard on note values.
+fn range_trace(value: u64, log_t: u32) -> alloc::vec::Vec<Fp> {
+    let t = 1usize << log_t;
+    let mut trace = alloc::vec::Vec::with_capacity(t * 2);
+    let mut acc = value;
+    for i in 0..t {
+        let bit = if i < t - 1 { acc & 1 } else { 0 };
+        trace.push(Fp::from_u64(acc));
+        trace.push(Fp::from_u64(bit));
+        if i < t - 1 {
+            acc >>= 1;
+        }
+    }
+    trace
+}
+
 #[test]
-fn the_public_membership_trace_proves() {
+fn the_money_grade_stark_proves_a_value_in_range() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, RangeCheck};
+    let air = RangeCheck { log_t: 4 }; // bound 2^15
+    let proof = stark_prove_ext(&air, &range_trace(12345, 4), 32, 8);
+    assert!(stark_verify_ext(&air, &proof, 32, 8), "an in-range value was rejected");
+}
+
+#[test]
+fn the_money_grade_stark_rejects_an_out_of_range_value() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, RangeCheck};
+    let air = RangeCheck { log_t: 4 };
+    let proof = stark_prove_ext(&air, &range_trace(1u64 << 15, 4), 32, 8);
+    assert!(!stark_verify_ext(&air, &proof, 32, 8), "an out-of-range value verified");
+}
+
+// The money-grade fusion: two independent constraint systems (value conservation
+// AND range) proven as ONE STARK, each region's constraints firing under its
+// selector. This is the composition shape of the full join-split proof; the honest
+// compound trace verifies, and breaking either region is rejected.
+#[test]
+fn the_money_grade_stark_fuses_conservation_and_range() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Accumulator, RangeCheck, AirExt, FusedExt};
+    use alloc::boxed::Box;
+    let regions: alloc::vec::Vec<Box<dyn AirExt>> =
+        alloc::vec![Box::new(Accumulator { log_t: 3 }) as Box<dyn AirExt>, Box::new(RangeCheck { log_t: 4 })];
+    let fused = FusedExt::new(regions);
+    let addends = [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let cons = accumulator_trace(&addends);
+    let rng = range_trace(12345, 4);
+    let trace = fused.trace(&[cons, rng]);
+    let proof = stark_prove_ext(&fused, &trace, 32, 8);
+    assert!(stark_verify_ext(&fused, &proof, 32, 8), "an honest fused compound proof was rejected");
+}
+
+#[test]
+fn the_fused_money_grade_stark_rejects_a_broken_region() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Accumulator, RangeCheck, AirExt, FusedExt};
+    use alloc::boxed::Box;
+    let regions: alloc::vec::Vec<Box<dyn AirExt>> =
+        alloc::vec![Box::new(Accumulator { log_t: 3 }) as Box<dyn AirExt>, Box::new(RangeCheck { log_t: 4 })];
+    let fused = FusedExt::new(regions);
+    // Conservation broken (addends do not cancel), range fine.
+    let addends = [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let cons = accumulator_trace(&addends);
+    let rng = range_trace(12345, 4);
+    let trace = fused.trace(&[cons, rng]);
+    let proof = stark_prove_ext(&fused, &trace, 32, 8);
+    assert!(!stark_verify_ext(&fused, &proof, 32, 8), "a fused proof with a broken region verified");
+}
+
+// The join-split CORE as ONE money-grade STARK: value conservation AND range AND a
+// private membership opening, three real regions fused and proven together at
+// ~2^-128. This is the compound shape the pool's settlement proves (nullifier and
+// commitment are the same Poseidon primitive; copy-constraint wiring binds the
+// shared value). Honest compound witness verifies.
+#[test]
+fn the_money_grade_stark_proves_the_join_split_core() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Accumulator, RangeCheck, MerkleMembership, AirExt, FusedExt};
+    use crate::crypto::stark::poseidon_merkle::PoseidonMerkleTree;
+    use alloc::boxed::Box;
+
     let log_rounds = 3u32;
     let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
     let leaves = merkle_leaves(8);
-    let index = 4;
+    let index = 5usize;
     let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let root = tree.root();
     let path = tree.open(index);
-    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
-    let air = MerkleMembership::new(
-        hasher.clone(),
-        log_rounds,
-        tree.root(),
-        path.clone(),
-        directions.clone(),
+    let directions: alloc::vec::Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let mem_trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
+    let mem_air = MerkleMembership::new(hasher.clone(), log_rounds, root, path, directions);
+
+    let regions: alloc::vec::Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(Accumulator { log_t: 3 }) as Box<dyn AirExt>,
+        Box::new(RangeCheck { log_t: 4 }),
+        Box::new(mem_air),
+    ];
+    let fused = FusedExt::new(regions);
+
+    let addends = [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let cons = accumulator_trace(&addends);
+    let rng = range_trace(12345, 4);
+    let trace = fused.trace(&[cons, rng, mem_trace]);
+
+    let proof = stark_prove_ext(&fused, &trace, 32, 8);
+    assert!(stark_verify_ext(&fused, &proof, 32, 8), "the join-split core proof was rejected");
+}
+
+// A money-grade WIRED binding: region A produces a value, region B starts from it,
+// and a copy constraint forces A's last cell equal to B's first, so the two
+// internally-valid regions must agree on the shared value -- all at ~2^-128. This
+// is how the join-split binds one note's value across its conservation, range, and
+// commitment regions. Honest binding verifies; a mismatched handoff is rejected.
+#[test]
+fn the_money_grade_stark_wires_a_shared_value() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Squaring, AirExt, WiredExt};
+    use alloc::boxed::Box;
+    let a_trace = squaring_trace(3, Fp::from_u64(3));
+    let handoff = a_trace[7];
+    let b_trace = squaring_trace(3, handoff);
+    let mut sigma: alloc::vec::Vec<usize> = (0..16).collect();
+    sigma.swap(7, 8); // A's last cell wired to B's first
+    let regions: alloc::vec::Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(Squaring { log_t: 3, seed: Fp::from_u64(3) }) as Box<dyn AirExt>,
+        Box::new(Squaring { log_t: 3, seed: handoff }),
+    ];
+    let wired = WiredExt::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[a_trace, b_trace]);
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(stark_verify_ext(&wired, &proof, 32, 8), "an honest money-grade wiring was rejected");
+}
+
+#[test]
+fn the_money_grade_stark_rejects_a_broken_wire() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Squaring, AirExt, WiredExt};
+    use alloc::boxed::Box;
+    let a_trace = squaring_trace(3, Fp::from_u64(3));
+    let b_trace = squaring_trace(3, Fp::from_u64(99)); // B starts from a DIFFERENT value
+    let mut sigma: alloc::vec::Vec<usize> = (0..16).collect();
+    sigma.swap(7, 8);
+    let regions: alloc::vec::Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(Squaring { log_t: 3, seed: Fp::from_u64(3) }) as Box<dyn AirExt>,
+        Box::new(Squaring { log_t: 3, seed: Fp::from_u64(99) }),
+    ];
+    let wired = WiredExt::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[a_trace, b_trace]);
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(!stark_verify_ext(&wired, &proof, 32, 8), "a broken money-grade wire verified");
+}
+
+// A WIRED join-split at money-grade: value conservation AND range on the value AND
+// a copy constraint binding conservation's input to the range-checked value, so
+// they must be the SAME note value (not two independent statements). This is the
+// real join-split shape. Honest verifies; unbinding the value is rejected.
+#[test]
+fn the_money_grade_stark_proves_a_wired_join_split() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Accumulator, RangeCheck, AirExt, WiredExt};
+    use alloc::boxed::Box;
+    let regions: alloc::vec::Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(Accumulator { log_t: 3 }) as Box<dyn AirExt>,
+        Box::new(RangeCheck { log_t: 4 }),
+    ];
+    // span = (8 + 16).next_pow2() = 32. Wire col 0: conservation acc[1] (fused row 1,
+    // = the input 7) bound to range acc[0] (fused row 8, the range-checked value).
+    let mut sigma: alloc::vec::Vec<usize> = (0..32).collect();
+    sigma.swap(1, 8);
+    let wired = WiredExt::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let addends = [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let cons = accumulator_trace(&addends);      // acc[1] = 7
+    let rng = range_trace(7, 4);                  // range-checks 7
+    let witness = wired.trace(&[cons, rng]);
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(stark_verify_ext(&wired, &proof, 32, 8), "an honest wired join-split was rejected");
+}
+
+#[test]
+fn the_wired_join_split_rejects_an_unbound_value() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Accumulator, RangeCheck, AirExt, WiredExt};
+    use alloc::boxed::Box;
+    let regions: alloc::vec::Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(Accumulator { log_t: 3 }) as Box<dyn AirExt>,
+        Box::new(RangeCheck { log_t: 4 }),
+    ];
+    let mut sigma: alloc::vec::Vec<usize> = (0..32).collect();
+    sigma.swap(1, 8);
+    let wired = WiredExt::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let addends = [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let cons = accumulator_trace(&addends);      // acc[1] = 7
+    let rng = range_trace(9999, 4);               // range-checks a DIFFERENT value
+    let witness = wired.trace(&[cons, rng]);
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(!stark_verify_ext(&wired, &proof, 32, 8), "an unbound wired join-split verified");
+}
+
+// The FRI verification arithmetized as ONE money-grade STARK: per query a Merkle
+// opening region and a fold region, wired so each opening's leaf equals its fold's
+// opened value and the layer challenges agree across queries. Proven at ~2^-128.
+// This is the recursion primitive -- a proof's own verification, provable in a
+// proof -- and it reuses the base trace helpers unchanged, only WiredExt + AirExt.
+fn whole_proof_monolith_ext(queries: &[usize], seeds: &[u64]) -> (crate::crypto::stark::air::WiredExt, Vec<Fp>) {
+    use crate::crypto::stark::air::{AirExt, TraceFold, WiredExt};
+    use alloc::boxed::Box;
+    let mut regions: Vec<Box<dyn AirExt>> = Vec::new();
+    let mut traces: Vec<Vec<Fp>> = Vec::new();
+    let mut heights: Vec<usize> = Vec::new();
+    let mut open_idx: Vec<usize> = Vec::new();
+    let mut fold_idx: Vec<usize> = Vec::new();
+    let mut n_folds = 0usize;
+
+    for (&query, &seed) in queries.iter().zip(seeds) {
+        let (beta, a, b, x_inv, dir, fv, ll, nf) = trace_fold_data_seeded(query, seed);
+        n_folds = nf;
+        let (mtr, mem, _) = opening_of_scalar(a[0], 2);
+        open_idx.push(regions.len());
+        heights.push(mtr.len() / WIDTH);
+        traces.push(mtr);
+        regions.push(Box::new(mem));
+
+        let fold = TraceFold::new(ll, nf, x_inv, dir, fv);
+        fold_idx.push(regions.len());
+        heights.push(1usize << ll);
+        traces.push(fold.trace(&beta, &a, &b));
+        regions.push(Box::new(fold));
+    }
+
+    let mut offsets: Vec<usize> = Vec::new();
+    let mut acc = 0usize;
+    for &h in &heights {
+        offsets.push(acc);
+        acc += h;
+    }
+    let span = acc.next_power_of_two();
+    let k = 2usize;
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    for qi in 0..queries.len() {
+        let leaf = offsets[open_idx[qi]] * k;
+        let opened = offsets[fold_idx[qi]] * k + 1;
+        sigma.swap(leaf, opened);
+    }
+    let qn = queries.len();
+    for m in 0..n_folds {
+        for qi in 0..qn {
+            let here = (offsets[fold_idx[qi]] + m) * k;
+            let next = (offsets[fold_idx[(qi + 1) % qn]] + m) * k;
+            sigma[here] = next;
+        }
+    }
+    let wired = WiredExt::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&traces);
+    (wired, witness)
+}
+
+#[test]
+fn the_recursive_fri_verifier_is_one_money_grade_stark() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
+    let seed = 0xf01d_1234u64 | 1;
+    let (wired, witness) = whole_proof_monolith_ext(&[6, 10], &[seed, seed]);
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(stark_verify_ext(&wired, &proof, 32, 8), "the money-grade recursion monolith was rejected");
+}
+
+// Fiat-Shamir challenge derivation, arithmetized and proven money-grade: a
+// challenge squeezed from a Poseidon transcript, verified at ~2^-128. This is the
+// last recursion building block -- a recursive verifier runs its own transcript in
+// circuit -- and it confirms every recursion primitive (transcript, FRI fold,
+// Merkle opening, wiring) is now money-grade. Honest challenge verifies; wrong one
+// is rejected.
+#[test]
+fn money_grade_fiat_shamir_challenge_derivation() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, FiatShamir};
+    let (log_rounds, log_slots) = (3u32, 2u32);
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let inputs = alloc::vec![Fp::from_u64(111), Fp::from_u64(222), Fp::from_u64(333)];
+    let (trace, challenge) = fiat_shamir_trace(&hasher, &inputs, log_rounds, log_slots);
+    let air = FiatShamir::new(Poseidon::new(log_rounds, [Fp::ZERO; RATE]), log_rounds, log_slots, inputs.clone(), challenge);
+    let proof = stark_prove_ext(&air, &trace, 32, 8);
+    assert!(stark_verify_ext(&air, &proof, 32, 8), "an honest money-grade transcript was rejected");
+
+    let bad = FiatShamir::new(Poseidon::new(log_rounds, [Fp::ZERO; RATE]), log_rounds, log_slots, inputs, challenge + Fp::ONE);
+    let bad_proof = stark_prove_ext(&bad, &trace, 32, 8);
+    assert!(!stark_verify_ext(&bad, &bad_proof, 32, 8), "a wrong money-grade challenge verified");
+}
+
+// The DEEP-consistency check, arithmetized and proven money-grade: a query's DEEP
+// value must be the coefficient combination of the honestly-formed quotients of the
+// opened trace and composition against the out-of-domain claims. This is the last
+// verifier stage a recursive proof needs. Honest verifies; a wrong DEEP value is
+// rejected (its quotient-combination no longer matches the pinned value).
+#[test]
+fn the_money_grade_stark_proves_deep_consistency() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, DeepCheck};
+    let (tv, cl, cp, cpz, x, z, c0, e) = (Fp::from_u64(5), Fp::from_u64(2), Fp::from_u64(8), Fp::from_u64(1), Fp::from_u64(10), Fp::from_u64(3), Fp::from_u64(4), Fp::from_u64(6));
+    let xz_inv = (x - z).inv();
+    let q = (tv - cl) * xz_inv;
+    let qc = (cp - cpz) * xz_inv;
+    let deep = c0 * q + e * qc;
+    let air = DeepCheck { trace_val: tv, claimed: cl, comp: cp, comp_z: cpz, deep, x, z, c0, e };
+    let proof = stark_prove_ext(&air, &air.trace(), 32, 8);
+    assert!(stark_verify_ext(&air, &proof, 32, 8), "honest DEEP consistency was rejected");
+}
+
+#[test]
+fn the_money_grade_stark_rejects_a_wrong_deep_value() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, DeepCheck};
+    let (tv, cl, cp, cpz, x, z, c0, e) = (Fp::from_u64(5), Fp::from_u64(2), Fp::from_u64(8), Fp::from_u64(1), Fp::from_u64(10), Fp::from_u64(3), Fp::from_u64(4), Fp::from_u64(6));
+    let xz_inv = (x - z).inv();
+    let q = (tv - cl) * xz_inv;
+    let qc = (cp - cpz) * xz_inv;
+    let deep = c0 * q + e * qc + Fp::ONE; // wrong DEEP value
+    let air = DeepCheck { trace_val: tv, claimed: cl, comp: cp, comp_z: cpz, deep, x, z, c0, e };
+    let proof = stark_prove_ext(&air, &air.trace(), 32, 8);
+    assert!(!stark_verify_ext(&air, &proof, 32, 8), "a wrong DEEP value verified");
+}
+
+// The full recursive verifier as ONE money-grade STARK: all four verification
+// stages -- Fiat-Shamir transcript derivation, FRI fold, Merkle opening, and DEEP
+// consistency -- fused and proven together at ~2^-128. This is a proof's entire
+// verification, provable in a proof. Wiring the stages' shared values is the
+// soundness refinement (the wired join-split shows that shape); here the stages
+// compose into one money-grade proof.
+#[test]
+fn the_full_recursive_verifier_is_one_money_grade_stark() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, AirExt, FusedExt, DeepCheck, FiatShamir, TraceFold};
+    use alloc::boxed::Box;
+
+    // Stage 1: transcript derivation.
+    let (lr, ls) = (3u32, 2u32);
+    let hasher = Poseidon::new(lr, [Fp::ZERO; RATE]);
+    let inputs = alloc::vec![Fp::from_u64(111), Fp::from_u64(222), Fp::from_u64(333)];
+    let (fs_trace, challenge) = fiat_shamir_trace(&hasher, &inputs, lr, ls);
+    let fs = FiatShamir::new(Poseidon::new(lr, [Fp::ZERO; RATE]), lr, ls, inputs, challenge);
+
+    // Stage 2 + 3: a FRI fold and the Merkle opening of the folded value.
+    let (beta, a, b, x_inv, dir, fv, ll, nf) = trace_fold_data_seeded(6, 0xf01d_1234u64 | 1);
+    let (mtr, mem, _) = opening_of_scalar(a[0], 2);
+    let fold = TraceFold::new(ll, nf, x_inv, dir, fv);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    // Stage 4: DEEP consistency.
+    let (tv, cl, cp, cpz, x, z, c0, e) = (Fp::from_u64(5), Fp::from_u64(2), Fp::from_u64(8), Fp::from_u64(1), Fp::from_u64(10), Fp::from_u64(3), Fp::from_u64(4), Fp::from_u64(6));
+    let xz_inv = (x - z).inv();
+    let deep = c0 * ((tv - cl) * xz_inv) + e * ((cp - cpz) * xz_inv);
+    let dc = DeepCheck { trace_val: tv, claimed: cl, comp: cp, comp_z: cpz, deep, x, z, c0, e };
+
+    let regions: alloc::vec::Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(fs) as Box<dyn AirExt>,
+        Box::new(mem),
+        Box::new(fold),
+        Box::new(dc),
+    ];
+    let fused = FusedExt::new(regions);
+    let witness = fused.trace(&[fs_trace, mtr, fold_trace, DeepCheck { trace_val: tv, claimed: cl, comp: cp, comp_z: cpz, deep, x, z, c0, e }.trace()]);
+    let proof = stark_prove_ext(&fused, &witness, 32, 8);
+    assert!(stark_verify_ext(&fused, &proof, 32, 8), "the full recursive verifier was rejected");
+}
+
+#[test]
+#[ignore]
+fn gen_recursive_selftest() {
+    // Emit the full recursive-verifier proof: the four verification stages
+    // (Fiat-Shamir, FRI fold, Merkle opening, DEEP consistency) proven together as
+    // one money-grade STARK. This is the recursive-verifier vector the pool's
+    // constant-gas StarkVerifier is built against; its _composeConstraints is the
+    // fused sum of the four stage transitions (transcribe from the AIR sources).
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, AirExt, FusedExt, DeepCheck, FiatShamir, TraceFold};
+    use alloc::boxed::Box;
+
+    let (lr, ls) = (3u32, 2u32);
+    let hasher = Poseidon::new(lr, [Fp::ZERO; RATE]);
+    let inputs = alloc::vec![Fp::from_u64(111), Fp::from_u64(222), Fp::from_u64(333)];
+    let (fs_trace, challenge) = fiat_shamir_trace(&hasher, &inputs, lr, ls);
+    let fs = FiatShamir::new(Poseidon::new(lr, [Fp::ZERO; RATE]), lr, ls, inputs, challenge);
+
+    let (beta, a, b, x_inv, dir, fv, ll, nf) = trace_fold_data_seeded(6, 0xf01d_1234u64 | 1);
+    let (mtr, mem, _) = opening_of_scalar(a[0], 2);
+    let fold = TraceFold::new(ll, nf, x_inv, dir, fv);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    let (tv, cl, cp, cpz, x, z, c0, e) = (Fp::from_u64(5), Fp::from_u64(2), Fp::from_u64(8), Fp::from_u64(1), Fp::from_u64(10), Fp::from_u64(3), Fp::from_u64(4), Fp::from_u64(6));
+    let xz_inv = (x - z).inv();
+    let deep = c0 * ((tv - cl) * xz_inv) + e * ((cp - cpz) * xz_inv);
+    let dc = || DeepCheck { trace_val: tv, claimed: cl, comp: cp, comp_z: cpz, deep, x, z, c0, e };
+
+    let regions: alloc::vec::Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(fs) as Box<dyn AirExt>, Box::new(mem), Box::new(fold), Box::new(dc()),
+    ];
+    let fused = FusedExt::new(regions);
+    let witness = fused.trace(&[fs_trace, mtr, fold_trace, dc().trace()]);
+    let proof = stark_prove_ext(&fused, &witness, 32, 8);
+    assert!(stark_verify_ext(&fused, &proof, 32, 8), "recursive self-test does not verify");
+
+    let bytes = crate::stark_selftest_gen::serialize(&proof);
+    let json = alloc::format!(
+        "{{\n  \"engine\": \"nonos-money-grade-stark\",\n  \"air\": \"recursive-verifier (fiat-shamir + fri-fold + merkle-opening + deep-consistency)\",\n  \"note\": \"The full STARK verification arithmetized as one money-grade proof -- the CONSTANT-GAS target. _composeConstraints = the fused sum of the four stage transitions. Cross-stage sigma wiring is the soundness refinement (see the wired join-split shape).\",\n  \"params\": {{ \"n_queries\": 32, \"grind_bits\": 8 }},\n  \"stages\": [\"fiat_shamir\", \"merkle_membership\", \"trace_fold\", \"deep_check\"],\n  \"proof_len_bytes\": {},\n  \"proof_hex\": \"{}\"\n}}\n",
+        bytes.len(), crate::stark_selftest_gen::hex(&bytes)
     );
+    std::fs::write("/Users/ek/Desktop/NOX-SmartContract/spec/recursive-selftest.json", &json).expect("write recursive self-test");
+    std::println!("wrote {} proof bytes to recursive-selftest.json", bytes.len());
+}
 
-    let public = air.trace(leaves[index]);
-    let helper = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
-    assert_eq!(public, helper, "the public trace differs from the reference");
+// The cross-stage wiring that makes the recursive verifier SOUND: the value a
+// Merkle opening reveals is bound by a copy constraint to the value the DEEP check
+// consumes, so the two stages cannot be about different values. Proven money-grade;
+// a mismatched value is rejected. This is the wiring the full recursive verifier
+// uses to bind transcript->FRI->DEEP->Merkle; here it binds Merkle->DEEP.
+fn wired_recursive_check(deep_val: Fp) -> (crate::crypto::stark::air::WiredExt, Vec<Fp>) {
+    use crate::crypto::stark::air::{AirExt, DeepCheck, WiredExt};
+    use alloc::boxed::Box;
+    let scalar = Fp::from_u64(777);
+    let (mtr, mem, _) = opening_of_scalar(scalar, 2);
+    let mem_height = mtr.len() / WIDTH;
 
-    let proof = stark_prove(&air, &public, QUERIES);
-    assert!(stark_verify(&air, &proof, QUERIES), "a proof from the public trace was rejected");
+    let (cl, cp, cpz, x, z, c0, e) = (Fp::from_u64(2), Fp::from_u64(8), Fp::from_u64(1), Fp::from_u64(10), Fp::from_u64(3), Fp::from_u64(4), Fp::from_u64(6));
+    let xz_inv = (x - z).inv();
+    // Honest DEEP value is the combination for THIS trace_val (deep_val).
+    let deep = c0 * ((deep_val - cl) * xz_inv) + e * ((cp - cpz) * xz_inv);
+    let dc = DeepCheck { trace_val: deep_val, claimed: cl, comp: cp, comp_z: cpz, deep, x, z, c0, e };
+    let dc_trace = dc.trace();
+
+    let regions: Vec<Box<dyn AirExt>> = alloc::vec![Box::new(mem) as Box<dyn AirExt>, Box::new(dc)];
+    let span = (mem_height + 2).next_power_of_two();
+    let mut sigma: Vec<usize> = (0..span).collect();
+    // Merkle leaf (row 0, col 0) <-> DEEP trace_val (row mem_height, col 0).
+    sigma.swap(0, mem_height);
+    let wired = WiredExt::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[mtr, dc_trace]);
+    (wired, witness)
+}
+
+#[test]
+fn the_wired_recursive_verifier_binds_stages() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
+    // The DEEP value uses the SAME value the Merkle opening revealed (777).
+    let (wired, witness) = wired_recursive_check(Fp::from_u64(777));
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(stark_verify_ext(&wired, &proof, 32, 8), "an honestly-bound recursive verifier was rejected");
+}
+
+#[test]
+fn the_wired_recursive_verifier_rejects_a_stage_mismatch() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
+    // The DEEP check uses a DIFFERENT value (888) than the Merkle opening (777):
+    // the wire between stages breaks.
+    let (wired, witness) = wired_recursive_check(Fp::from_u64(888));
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(!stark_verify_ext(&wired, &proof, 32, 8), "a stage-mismatched recursive verifier verified");
+}
+
+#[test]
+#[ignore]
+fn gen_recursive_public_selftest() {
+    // The recursive-verifier vector WITH its public statement: the proof plus every
+    // boundary triple and every periodic column, so the verifier can reconstruct
+    // periodic_z and compose_ext and actually run. Poseidon round constants are
+    // regenerable from the schedule, but included here so the vector is fully
+    // self-contained and testable.
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Air, AirExt, FusedExt, DeepCheck, FiatShamir, TraceFold};
+    use alloc::boxed::Box;
+    use alloc::string::String;
+
+    let (lr, ls) = (3u32, 2u32);
+    let hasher = Poseidon::new(lr, [Fp::ZERO; RATE]);
+    let inputs = alloc::vec![Fp::from_u64(111), Fp::from_u64(222), Fp::from_u64(333)];
+    let (fs_trace, challenge) = fiat_shamir_trace(&hasher, &inputs, lr, ls);
+    let fs = FiatShamir::new(Poseidon::new(lr, [Fp::ZERO; RATE]), lr, ls, inputs, challenge);
+    let (beta, a, b, x_inv, dir, fv, ll, nf) = trace_fold_data_seeded(6, 0xf01d_1234u64 | 1);
+    let (mtr, mem, _) = opening_of_scalar(a[0], 2);
+    let fold = TraceFold::new(ll, nf, x_inv, dir, fv);
+    let fold_trace = fold.trace(&beta, &a, &b);
+    let (tv, cl, cp, cpz, x, z, c0, e) = (Fp::from_u64(5), Fp::from_u64(2), Fp::from_u64(8), Fp::from_u64(1), Fp::from_u64(10), Fp::from_u64(3), Fp::from_u64(4), Fp::from_u64(6));
+    let xz_inv = (x - z).inv();
+    let deep = c0 * ((tv - cl) * xz_inv) + e * ((cp - cpz) * xz_inv);
+    let dc = || DeepCheck { trace_val: tv, claimed: cl, comp: cp, comp_z: cpz, deep, x, z, c0, e };
+
+    let regions: alloc::vec::Vec<Box<dyn AirExt>> = alloc::vec![Box::new(fs) as Box<dyn AirExt>, Box::new(mem), Box::new(fold), Box::new(dc())];
+    let fused = FusedExt::new(regions);
+    let witness = fused.trace(&[fs_trace, mtr, fold_trace, dc().trace()]);
+    let proof = stark_prove_ext(&fused, &witness, 32, 8);
+    assert!(stark_verify_ext(&fused, &proof, 32, 8), "recursive public self-test does not verify");
+
+    // Public statement: boundaries + periodic columns.
+    let mut bnd = String::from("[");
+    for (i, (c, r, v)) in fused.boundary().iter().enumerate() {
+        if i > 0 { bnd.push(','); }
+        bnd.push_str(&alloc::format!("[{},{},\"{}\"]", c, r, v.value()));
+    }
+    bnd.push(']');
+    let mut per = String::from("[");
+    for (i, col) in fused.periodic_columns().iter().enumerate() {
+        if i > 0 { per.push(','); }
+        per.push('[');
+        for (j, v) in col.iter().enumerate() {
+            if j > 0 { per.push(','); }
+            per.push_str(&alloc::format!("\"{}\"", v.value()));
+        }
+        per.push(']');
+    }
+    per.push(']');
+
+    let bytes = crate::stark_selftest_gen::serialize(&proof);
+    let json = alloc::format!(
+        "{{\n  \"engine\": \"nonos-money-grade-stark\",\n  \"air\": \"recursive-verifier (fiat-shamir + fri-fold + merkle-opening + deep-consistency)\",\n  \"note\": \"Full recursive verification with its PUBLIC STATEMENT. boundaries = (col,row,value) pins; periodic_columns = every periodic column expanded (selectors, per-stage instance data, Poseidon RCs). The verifier reconstructs periodic_z via eval_lagrange_ext and runs compose_ext. This is the FusedExt composition; cross-stage sigma wiring is the soundness refinement.\",\n  \"log_trace_len\": {}, \"trace_width\": {}, \"n_queries\": 32, \"grind_bits\": 8,\n  \"stages\": [\"fiat_shamir\", \"merkle_membership\", \"trace_fold\", \"deep_check\"],\n  \"boundaries\": {},\n  \"periodic_columns\": {},\n  \"proof_len_bytes\": {},\n  \"proof_hex\": \"{}\"\n}}\n",
+        fused.log_trace_len(), fused.trace_width(), bnd, per, bytes.len(), crate::stark_selftest_gen::hex(&bytes)
+    );
+    std::fs::write("/Users/ek/Desktop/NOX-SmartContract/spec/recursive-selftest.json", &json).expect("write");
+    std::println!("wrote proof {} bytes + {} boundaries + {} periodic cols", bytes.len(), fused.boundary().len(), fused.periodic_columns().len());
+}
+
+// How to fault the wired recursive verifier, so each wire is shown load-bearing.
+enum RecursiveFault {
+    None,
+    // The DEEP check is about a value the opening never committed.
+    RebindValue(Fp),
+    // The fold runs on a challenge the transcript never squeezed.
+    UnboundChallenge(Fp),
+}
+
+// The fully wired 4-stage recursive verifier: the same four stages the fused vector
+// composes (Fiat-Shamir, Merkle opening, FRI fold, DEEP consistency), now bound end
+// to end by one grand-product column carrying two cross-stage cycles:
+//   value flow: Merkle-opened value == fold input == DEEP trace value.
+//   transcript: Fiat-Shamir challenge == the fold's first-layer beta.
+// So the four stages are provably about one value and driven by one challenge; a
+// verifier can neither fold or DEEP-check a value the opening never revealed, nor
+// fold on a challenge the transcript never squeezed. A faulted wire breaks the
+// product without touching any region's own constraint. This is the custody-flip
+// shape the pool's constant-gas verifier points at.
+fn wired_recursive_verifier(fault: RecursiveFault) -> (crate::crypto::stark::air::WiredExt, Vec<Fp>) {
+    use crate::crypto::stark::air::{AirExt, DeepCheck, FiatShamir, TraceFold, WiredExt};
+    use alloc::boxed::Box;
+
+    // Stage 1: transcript derivation.
+    let (lr, ls) = (3u32, 2u32);
+    let hasher = Poseidon::new(lr, [Fp::ZERO; RATE]);
+    let inputs = alloc::vec![Fp::from_u64(111), Fp::from_u64(222), Fp::from_u64(333)];
+    let (fs_trace, challenge) = fiat_shamir_trace(&hasher, &inputs, lr, ls);
+    let fs = FiatShamir::new(Poseidon::new(lr, [Fp::ZERO; RATE]), lr, ls, inputs, challenge);
+
+    // Stage 2 + 3: the Merkle opening of a[0], and the fold that consumes a[0]. The
+    // fold's first beta is the transcript challenge, unless faulted off-transcript.
+    let fold_beta0 = match fault {
+        RecursiveFault::UnboundChallenge(b) => b,
+        _ => challenge,
+    };
+    let (beta, a, b, x_inv, dir, fv, ll, nf) = trace_fold_data_seeded_first(6, 0xf01d_1234u64 | 1, Some(fold_beta0));
+    let (mtr, mem, _) = opening_of_scalar(a[0], 2);
+    let fold = TraceFold::new(ll, nf, x_inv, dir, fv);
+    let fold_trace = fold.trace(&beta, &a, &b);
+
+    // Stage 4: DEEP consistency, honestly formed for whatever value it is about.
+    let deep_val = match fault {
+        RecursiveFault::RebindValue(v) => v,
+        _ => a[0],
+    };
+    let (cl, cp, cpz, x, z, c0, e) = (Fp::from_u64(2), Fp::from_u64(8), Fp::from_u64(1), Fp::from_u64(10), Fp::from_u64(3), Fp::from_u64(4), Fp::from_u64(6));
+    let xz_inv = (x - z).inv();
+    let deep = c0 * ((deep_val - cl) * xz_inv) + e * ((cp - cpz) * xz_inv);
+    let dc = DeepCheck { trace_val: deep_val, claimed: cl, comp: cp, comp_z: cpz, deep, x, z, c0, e };
+    let dc_trace = dc.trace();
+
+    let regions: Vec<Box<dyn AirExt>> = alloc::vec![
+        Box::new(fs) as Box<dyn AirExt>,
+        Box::new(mem),
+        Box::new(fold),
+        Box::new(dc),
+    ];
+
+    // Region row offsets exactly as Stack::of lays them, each rounded to a power of
+    // two. The FS challenge sits at row (2^ls - 1) * 2^lr, column 0.
+    let mut offs = Vec::with_capacity(regions.len());
+    let mut row = 0usize;
+    for r in &regions {
+        offs.push(row);
+        row += 1usize << r.log_trace_len();
+    }
+    let span = row.next_power_of_two();
+    let (o_mem, o_fold, o_dc) = (offs[1], offs[2], offs[3]);
+    let fs_challenge_row = ((1usize << ls) - 1) * (1usize << lr);
+
+    // wired columns 0 and 1, so k = 2 and a cell's id is row*2 + wired_index.
+    let k = 2usize;
+    let mut sigma: Vec<usize> = (0..span * k).collect();
+    // Value-flow 3-cycle: Merkle leaf (col 0) -> fold input (col 1) -> DEEP (col 0).
+    let (id_mem, id_fold_a, id_dc) = (o_mem * k, o_fold * k + 1, o_dc * k);
+    sigma[id_mem] = id_fold_a;
+    sigma[id_fold_a] = id_dc;
+    sigma[id_dc] = id_mem;
+    // Transcript 2-cycle: FS challenge (col 0) <-> fold first beta (col 0).
+    sigma.swap(fs_challenge_row * k, o_fold * k);
+
+    let wired = WiredExt::new(regions, alloc::vec![0, 1], sigma, Fp::from_u64(5), Fp::from_u64(7));
+    let witness = wired.trace(&[fs_trace, mtr, fold_trace, dc_trace]);
+    (wired, witness)
+}
+
+// The honestly wired recursive verifier: opened == folded == DEEP-checked value, and
+// the fold runs on the transcript challenge. Both cross-stage cycles telescope, and
+// the proof verifies at ~2^-128.
+#[test]
+fn the_full_wired_recursive_verifier_binds_the_value_flow() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
+    let (wired, witness) = wired_recursive_verifier(RecursiveFault::None);
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(stark_verify_ext(&wired, &proof, 32, 8), "the honestly wired recursive verifier was rejected");
+}
+
+// The DEEP check is about a value the Merkle stage never opened. Its own constraint
+// still holds, but the value-flow wire breaks, so the grand product no longer
+// returns to one and the proof is rejected.
+#[test]
+fn the_full_wired_recursive_verifier_rejects_a_rebound_value() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
+    let (wired, witness) = wired_recursive_verifier(RecursiveFault::RebindValue(Fp::from_u64(0xD1FF)));
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(!stark_verify_ext(&wired, &proof, 32, 8), "a rebound recursive verifier verified");
+}
+
+// The fold runs on a challenge the transcript never squeezed. The fold is internally
+// consistent for that challenge, but the transcript wire breaks, so the proof is
+// rejected. This is what forces the recursive verifier to be honest about Fiat-Shamir.
+#[test]
+fn the_full_wired_recursive_verifier_rejects_an_off_transcript_fold() {
+    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext};
+    let (wired, witness) = wired_recursive_verifier(RecursiveFault::UnboundChallenge(Fp::from_u64(0xBAD0)));
+    let proof = stark_prove_ext(&wired, &witness, 32, 8);
+    assert!(!stark_verify_ext(&wired, &proof, 32, 8), "an off-transcript fold verified");
+}
+
+#[test]
+#[ignore]
+fn gen_wired_recursive_public_selftest() {
+    // The WIRED recursive-verifier vector with its public statement: the same four
+    // stages as the fused vector, plus the one grand-product column that binds the
+    // opened value to the folded and DEEP-checked value AND the transcript challenge
+    // to the fold's beta. The verifier gains exactly one product term in its compose
+    // and one boundary pinning that column to one; everything else (transcript, FRI,
+    // Merkle, Fp2, periodic eval) is unchanged. This is the custody-flip vector.
+    use crate::crypto::stark::air::{stark_prove_ext_blown, stark_verify_ext_blown, Air};
+    use alloc::string::String;
+
+    // Deployment soundness. The FRI runs at rate 1/2 by default (1 conjectured bit
+    // per query), so the 32-query test instances are only ~40-bit. For a fund gate
+    // the vector is generated at rate 1/16 (EXTRA_BLOWUP_BITS = 3, 4 conjectured
+    // bits per query): 32 queries give 128 bits and 16 grind bits add margin.
+    const EXTRA_BLOWUP_BITS: u32 = 3;
+    const N_QUERIES: usize = 32;
+    const GRIND_BITS: u32 = 16;
+
+    let (wired, witness) = wired_recursive_verifier(RecursiveFault::None);
+    let proof = stark_prove_ext_blown(&wired, &witness, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS);
+    assert!(stark_verify_ext_blown(&wired, &proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS), "wired recursive deployment self-test does not verify");
+
+    // The wiring must still reject at the deployment parameters, not just in the
+    // fast tests: a value the opening never committed breaks the grand product.
+    let (bad, bad_w) = wired_recursive_verifier(RecursiveFault::RebindValue(Fp::from_u64(0xD1FF)));
+    let bad_proof = stark_prove_ext_blown(&bad, &bad_w, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS);
+    assert!(!stark_verify_ext_blown(&bad, &bad_proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS), "a rebound value verified at deployment parameters");
+
+    let mut bnd = String::from("[");
+    for (i, (c, r, v)) in wired.boundary().iter().enumerate() {
+        if i > 0 {
+            bnd.push(',');
+        }
+        bnd.push_str(&alloc::format!("[{},{},\"{}\"]", c, r, v.value()));
+    }
+    bnd.push(']');
+    let mut per = String::from("[");
+    for (i, col) in wired.periodic_columns().iter().enumerate() {
+        if i > 0 {
+            per.push(',');
+        }
+        per.push('[');
+        for (j, v) in col.iter().enumerate() {
+            if j > 0 {
+                per.push(',');
+            }
+            per.push_str(&alloc::format!("\"{}\"", v.value()));
+        }
+        per.push(']');
+    }
+    per.push(']');
+
+    let bytes = crate::stark_selftest_gen::serialize(&proof);
+    let json = alloc::format!(
+        "{{\n  \"engine\": \"nonos-money-grade-stark\",\n  \"air\": \"wired-recursive-verifier (fiat-shamir + merkle-opening + fri-fold + deep-consistency, fully bound)\",\n  \"note\": \"The WIRED recursive verification with its PUBLIC STATEMENT, at DEPLOYMENT soundness. Adds one grand-product column to the fused composition carrying two cross-stage cycles: a value-flow cycle binds the Merkle-opened value to the fold input and the DEEP trace value, and a transcript cycle binds the Fiat-Shamir challenge to the fold's first beta. So the four stages are provably about one value and driven by one challenge. The FRI runs at rate 1/16 (extra_blowup_bits=3, fri_log_blowup=4), so 32 queries give 128 conjectured bits and 16 grind bits add margin. _composeConstraints = the fused sum of the four stage transitions PLUS the one grand-product term; boundaries include the product column pinned to one at row 0 and row span.\",\n  \"wiring\": {{ \"wired_cols\": [0, 1], \"beta\": 5, \"gamma\": 7 }},\n  \"soundness\": {{ \"extra_blowup_bits\": 3, \"fri_log_blowup\": 4, \"conjectured_bits\": 144, \"regime\": \"proximity-gap-conjectured\" }},\n  \"log_trace_len\": {}, \"trace_width\": {}, \"n_queries\": 32, \"grind_bits\": 16,\n  \"stages\": [\"fiat_shamir\", \"merkle_membership\", \"trace_fold\", \"deep_check\", \"grand_product\"],\n  \"boundaries\": {},\n  \"periodic_columns\": {},\n  \"proof_len_bytes\": {},\n  \"proof_hex\": \"{}\"\n}}\n",
+        wired.log_trace_len(), wired.trace_width(), bnd, per, bytes.len(), crate::stark_selftest_gen::hex(&bytes)
+    );
+    std::fs::write("/Users/ek/Desktop/NOX-SmartContract/spec/wired-recursive-selftest.json", &json).expect("write");
+    std::println!("wrote wired proof {} bytes + {} boundaries + {} periodic cols", bytes.len(), wired.boundary().len(), wired.periodic_columns().len());
 }

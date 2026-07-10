@@ -14,18 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The FRI low-degree test: a transparent, post-quantum argument that a
-//! committed codeword is close to a low-degree polynomial. It is the engine a
-//! STARK uses to check the trace and its constraints without a trusted setup.
+//! The money-grade FRI low-degree test: identical in structure to `fri`, but the
+//! fold challenges are drawn from the degree-2 extension `Fp2` and a proof-of-work
+//! nonce is ground before the queries. Extension challenges take the folding
+//! soundness error from ~2^-64 to ~2^-128, and grinding raises the query
+//! soundness. This is the FRI a high-value proof uses; the base `fri` module
+//! remains for the recursive-verifier arithmetization.
 
-mod domain;
-mod fold;
 mod prove;
 mod types;
 mod verify;
 
-pub use domain::root_of_unity;
-pub use fold::{fold_ext, fold_first, fold_layer};
-pub use prove::fri_prove;
-pub use types::{FriProof, LayerOpening, QueryProof};
-pub use verify::fri_verify;
+pub use prove::fri_prove_ext;
+pub use types::{FriProofExt, LayerOpeningExt, QueryProofExt};
+pub use verify::fri_verify_ext;

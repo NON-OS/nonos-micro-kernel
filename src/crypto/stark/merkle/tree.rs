@@ -17,8 +17,8 @@
 //! Building the Merkle tree and opening authentication paths. This is the
 //! committing side; a verifier only needs `super::verify`.
 
-use super::super::field::Fp;
-use super::hash::{hash_leaf, hash_node};
+use super::super::field::{Fp, Fp2};
+use super::hash::{hash_leaf, hash_leaf_ext, hash_node};
 use alloc::vec::Vec;
 
 /// A committed binary Merkle tree over field-element leaves. The leaf count is
@@ -39,7 +39,26 @@ impl MerkleTree {
         while !level.len().is_power_of_two() {
             level.push(hash_leaf(Fp::ZERO));
         }
+        Self::build(level)
+    }
 
+    /// Commit to extension-field leaves, the folded FRI layers past the first.
+    /// Same tree structure and node hashing as `commit`; only the leaf hash
+    /// differs, so paths open identically via `verify_path_ext`.
+    pub fn commit_ext(leaves: &[Fp2]) -> MerkleTree {
+        let mut level: Vec<[u8; 32]> = leaves.iter().map(|l| hash_leaf_ext(*l)).collect();
+        if level.is_empty() {
+            level.push(hash_leaf_ext(Fp2::ZERO));
+        }
+        while !level.len().is_power_of_two() {
+            level.push(hash_leaf_ext(Fp2::ZERO));
+        }
+        Self::build(level)
+    }
+
+    /// Build the tree above a power-of-two leaf-digest level. Shared by both
+    /// commit paths so node hashing has a single implementation.
+    fn build(mut level: Vec<[u8; 32]>) -> MerkleTree {
         let mut layers = Vec::new();
         layers.push(level.clone());
         while level.len() > 1 {

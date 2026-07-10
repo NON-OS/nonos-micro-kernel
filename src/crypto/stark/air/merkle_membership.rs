@@ -23,9 +23,9 @@
 //! the public siblings at the boundaries; the leaf stays private, so a valid
 //! proof is knowledge of a leaf whose path reaches the root.
 
-use super::super::field::Fp;
+use super::super::field::{Felt, Fp, Fp2};
 use super::poseidon::{Poseidon, RATE, WIDTH};
-use super::spec::Air;
+use super::spec::{Air, AirExt};
 use alloc::vec::Vec;
 
 pub struct MerkleMembership {
@@ -67,49 +67,39 @@ impl MerkleMembership {
         (self.depth() + 1).next_power_of_two().trailing_zeros()
     }
 
-    /// The honest trace for a private `leaf`: the Poseidon state through the
-    /// path, compressing with each sibling by the index bit, the root at the
-    /// checkpoint, padding slots running freely. This is the witness a prover
-    /// feeds `stark_prove`.
-    pub fn trace(&self, leaf: [Fp; RATE]) -> Vec<Fp> {
-        let l = self.rounds();
-        let depth = self.depth();
-        let n = 1usize << self.log_trace_len();
+    /// The Merkle-path transition over any field: one Poseidon round, then inject
+    /// the digest and the sibling by the index bit at each level boundary. Written
+    /// once so the path is proven at money-grade soundness over `Fp2`.
+    fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
+        let mut state = [F::ZERO; WIDTH];
+        state.copy_from_slice(&window[..WIDTH]);
+        let mut rc = [F::ZERO; WIDTH];
+        rc.copy_from_slice(&periodic[..WIDTH]);
+        let bnd = periodic[WIDTH];
+        let dir = periodic[WIDTH + 1];
+        let sib = &periodic[WIDTH + 2..WIDTH + 2 + RATE];
 
-        let mut state = inject(leaf, self.siblings[0], self.directions[0]);
-        let mut out = Vec::with_capacity(n * WIDTH);
-        for r in 0..n {
-            out.extend_from_slice(&state);
-            let pr = self.hasher.round_with_rc(&state, &self.hasher.round_constant(r % l));
-            if r % l == l - 1 && r < depth * l {
-                let m = (r + 1) / l;
-                let mut node = [Fp::ZERO; RATE];
-                node.copy_from_slice(&pr[..RATE]);
-                let (sib, dir) = if m < depth {
-                    (self.siblings[m], self.directions[m])
-                } else {
-                    ([Fp::ZERO; RATE], false)
-                };
-                state = inject(node, sib, dir);
+        let pr = self.hasher.round_generic(&state, &rc);
+        let one = F::ONE;
+
+        let mut out = Vec::with_capacity(WIDTH);
+        for (j, next) in window[WIDTH..2 * WIDTH].iter().enumerate() {
+            let inj = if j < RATE {
+                (one - dir) * pr[j] + dir * sib[j]
             } else {
-                state = pr;
-            }
+                (one - dir) * sib[j - RATE] + dir * pr[j - RATE]
+            };
+            let expected = (one - bnd) * pr[j] + bnd * inj;
+            out.push(*next - expected);
         }
         out
     }
 }
 
-/// Arrange a node and its sibling into a compression input by the index bit.
-fn inject(node: [Fp; RATE], sibling: [Fp; RATE], right: bool) -> [Fp; WIDTH] {
-    let mut state = [Fp::ZERO; WIDTH];
-    if right {
-        state[..RATE].copy_from_slice(&sibling);
-        state[RATE..].copy_from_slice(&node);
-    } else {
-        state[..RATE].copy_from_slice(&node);
-        state[RATE..].copy_from_slice(&sibling);
+impl AirExt for MerkleMembership {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
     }
-    state
 }
 
 impl Air for MerkleMembership {
@@ -166,31 +156,7 @@ impl Air for MerkleMembership {
     }
 
     fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
-        let mut state = [Fp::ZERO; WIDTH];
-        state.copy_from_slice(&window[..WIDTH]);
-        let mut rc = [Fp::ZERO; WIDTH];
-        rc.copy_from_slice(&periodic[..WIDTH]);
-        let bnd = periodic[WIDTH];
-        let dir = periodic[WIDTH + 1];
-        let sib = &periodic[WIDTH + 2..WIDTH + 2 + RATE];
-
-        // One Poseidon round with the periodic constants: the within-compression
-        // update, and its first RATE lanes are the output digest at a boundary.
-        let pr = self.hasher.round_with_rc(&state, &rc);
-        let one = Fp::ONE;
-
-        let mut out = Vec::with_capacity(WIDTH);
-        for (j, next) in window[WIDTH..2 * WIDTH].iter().enumerate() {
-            // Injection: the digest and the sibling arranged by the index bit.
-            let inj = if j < RATE {
-                (one - dir) * pr[j] + dir * sib[j]
-            } else {
-                (one - dir) * sib[j - RATE] + dir * pr[j - RATE]
-            };
-            let expected = (one - bnd) * pr[j] + bnd * inj;
-            out.push(*next - expected);
-        }
-        out
+        self.transition_impl(window, periodic)
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {

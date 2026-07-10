@@ -34,8 +34,8 @@
 //! final row, is the hash of some input the proof never reveals: knowledge of a
 //! preimage.
 
-use super::super::field::Fp;
-use super::spec::Air;
+use super::super::field::{Felt, Fp, Fp2};
+use super::spec::{Air, AirExt};
 use crate::crypto::hash::blake3_hash;
 use alloc::vec::Vec;
 
@@ -43,6 +43,14 @@ use alloc::vec::Vec;
 pub const WIDTH: usize = 8;
 /// Rate: the number of lanes that absorb input and emit the digest.
 pub const RATE: usize = 4;
+
+/// The fixed arity of the field commitment: eleven field elements in one digest.
+pub const NOTE_LIMBS: usize = 11;
+
+/// Domain tag placed in the commitment preimage, ASCII "NOTE". It separates a
+/// field commitment from a bare two-to-one tree node, both of which use the same
+/// compression, so a commitment can never be confused with an internal node.
+pub const NOTE_DOMAIN: u64 = 0x4E4F_5445;
 
 const RC_DOMAIN: &[u8] = b"NONOS-POSEIDON-GOLDILOCKS-RC";
 
@@ -144,6 +152,68 @@ impl Poseidon {
         digest.copy_from_slice(&out[..RATE]);
         digest
     }
+
+    /// A fixed-arity field commitment: a compress-tree over eleven field elements
+    /// padded to sixteen with a domain tag, built only from the two-to-one
+    /// compression. The input length is fixed, so there is no padding ambiguity and
+    /// collision resistance reduces to that of `compress`. Layout: the eleven
+    /// elements, then `NOTE_DOMAIN`, then four zeros; compress the four rate-sized
+    /// quarters into two digests, then compress those into the commitment.
+    pub fn commit_note(&self, limbs: &[Fp; NOTE_LIMBS]) -> [Fp; RATE] {
+        let mut p = [Fp::ZERO; 16];
+        p[..NOTE_LIMBS].copy_from_slice(limbs);
+        p[NOTE_LIMBS] = Fp::from_u64(NOTE_DOMAIN);
+        // p[12..16] stay zero.
+        let q0 = [p[0], p[1], p[2], p[3]];
+        let q1 = [p[4], p[5], p[6], p[7]];
+        let q2 = [p[8], p[9], p[10], p[11]];
+        let q3 = [p[12], p[13], p[14], p[15]];
+        let d0 = self.compress(&q0, &q1);
+        let d1 = self.compress(&q2, &q3);
+        self.compress(&d0, &d1)
+    }
+
+    /// One round over any field: a full x^7 S-box layer, the MDS mix, then the
+    /// round constants. The MDS entries are base-field constants, embedded through
+    /// `from_base`. Shared by the hash constraint and the Merkle-path constraint so
+    /// both are proven at money-grade soundness from one implementation.
+    pub fn round_generic<F: Felt>(&self, state: &[F; WIDTH], rc: &[F; WIDTH]) -> [F; WIDTH] {
+        let mut sbox = [F::ZERO; WIDTH];
+        for (s, v) in sbox.iter_mut().zip(state.iter()) {
+            *s = v.pow(7);
+        }
+        let mut out = [F::ZERO; WIDTH];
+        for (j, o) in out.iter_mut().enumerate() {
+            let mut acc = rc[j];
+            for (m, s) in self.mds[j].iter().zip(sbox.iter()) {
+                acc = acc + F::from_base(*m) * *s;
+            }
+            *o = acc;
+        }
+        out
+    }
+
+    /// The hash transition constraint over any field: the next state is one round
+    /// of the current state under this row's constants. `window = [state, next]`,
+    /// `periodic` = the round-constant lanes.
+    fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
+        let mut state = [F::ZERO; WIDTH];
+        state.copy_from_slice(&window[..WIDTH]);
+        let mut rc = [F::ZERO; WIDTH];
+        rc.copy_from_slice(&periodic[..WIDTH]);
+        let pr = self.round_generic(&state, &rc);
+        let mut out = Vec::with_capacity(WIDTH);
+        for (j, o) in pr.iter().enumerate() {
+            out.push(window[WIDTH + j] - *o);
+        }
+        out
+    }
+}
+
+impl AirExt for Poseidon {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
+    }
 }
 
 impl Air for Poseidon {
@@ -173,20 +243,7 @@ impl Air for Poseidon {
     }
 
     fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
-        // window = [state (WIDTH), next state (WIDTH)]; periodic = rc lanes at x.
-        let mut sbox = [Fp::ZERO; WIDTH];
-        for (s, v) in sbox.iter_mut().zip(window[..WIDTH].iter()) {
-            *s = (*v).pow(7);
-        }
-        let mut out = Vec::with_capacity(WIDTH);
-        for j in 0..WIDTH {
-            let mut acc = periodic[j];
-            for (m, s) in self.mds[j].iter().zip(sbox.iter()) {
-                acc = acc + *m * *s;
-            }
-            out.push(window[WIDTH + j] - acc);
-        }
-        out
+        self.transition_impl(window, periodic)
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {

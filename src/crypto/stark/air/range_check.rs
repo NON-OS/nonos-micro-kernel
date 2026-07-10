@@ -14,48 +14,36 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! A two-element algebraic permutation, the shape of a hash round: a full x^7
-//! S-box on each state element, a linear mix, and a round constant. The round is
-//!
-//!   x' = x^7 + y + rc0
-//!   y' = x + y^7 + rc1
-//!
-//! A trace of it is a two-column state, so proving a chain is a
-//! computational-integrity proof over a multi-element permutation, the same
-//! structure a Poseidon or Rescue hash is built from. This is the multi-column,
-//! high-degree case: two degree-seven transition constraints over a width-two
-//! trace.
+//! A range-check AIR by bit decomposition: two columns, a running remainder and a
+//! per-row bit, with `acc[i] = 2*acc[i+1] + bit[i]` and each bit boolean, pinned to
+//! zero at the last row. It proves `acc[0]` is the sum of `2^t - 1` bits, i.e. it
+//! lies in `[0, 2^(2^log_t - 1))`, the overflow/underflow guard a value must pass.
+//! Written once over `Felt`, so it is proven at money-grade soundness. The bit
+//! constraint is `Nonos.Stark.Instance`'s gate, `w*(w-1)`.
 
 use super::super::field::{Felt, Fp, Fp2};
 use super::spec::{Air, AirExt};
 use alloc::vec;
 use alloc::vec::Vec;
 
-pub struct Permutation2 {
+pub struct RangeCheck {
     pub log_t: u32,
-    pub rc0: Fp,
-    pub rc1: Fp,
-    /// The public final state after the whole chain.
-    pub out: [Fp; 2],
 }
 
-impl Permutation2 {
+impl RangeCheck {
+    /// The two constraints over any field: the remainder peels one bit per row,
+    /// and each bit is boolean. `window = [acc_i, bit_i, acc_next, bit_next]`.
     fn transition_impl<F: Felt>(&self, window: &[F], _periodic: &[F]) -> Vec<F> {
-        let (x, y, x_next, y_next) = (window[0], window[1], window[2], window[3]);
-        alloc::vec![
-            x_next - (x.pow(7) + y + F::from_base(self.rc0)),
-            y_next - (x + y.pow(7) + F::from_base(self.rc1))
-        ]
+        let acc_i = window[0];
+        let bit_i = window[1];
+        let acc_next = window[2];
+        let two = F::from_base(Fp::from_u64(2));
+        let one = F::ONE;
+        vec![acc_i - two * acc_next - bit_i, bit_i * (bit_i - one)]
     }
 }
 
-impl AirExt for Permutation2 {
-    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
-        self.transition_impl(window, periodic)
-    }
-}
-
-impl Air for Permutation2 {
+impl Air for RangeCheck {
     fn log_trace_len(&self) -> u32 {
         self.log_t
     }
@@ -69,7 +57,7 @@ impl Air for Permutation2 {
     }
 
     fn constraint_degree(&self) -> usize {
-        7
+        2
     }
 
     fn num_transition(&self) -> usize {
@@ -81,8 +69,14 @@ impl Air for Permutation2 {
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {
-        // Both state columns at the last row are the public output.
+        // The remainder is fully peeled: the value fits in the decomposed bits.
         let last = (1usize << self.log_t) - 1;
-        vec![(0, last, self.out[0]), (1, last, self.out[1])]
+        vec![(0, last, Fp::ZERO)]
+    }
+}
+
+impl AirExt for RangeCheck {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
     }
 }
