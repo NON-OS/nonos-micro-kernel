@@ -16,7 +16,9 @@
 
 extern crate alloc;
 
-use super::core::{current_pid, get_process_table, suspend_process, ProcessControlBlock};
+use super::core::{
+    current_pid, get_process_table, suspend_process, ProcessControlBlock, ProcessState,
+};
 use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::sync::atomic::Ordering;
@@ -102,6 +104,19 @@ pub fn get_uid(pid: u32) -> Option<u32> {
 
 pub fn get_parent_pid(pid: u32) -> Option<u32> {
     get_process(pid).map(|p| p.parent_pid())
+}
+
+/// `Some(code)` once `pid` has exited (zombie or already reaped), `None`
+/// while it is still running or unknown. Once the process has been reaped,
+/// its logged status is consumed on read and returned exactly once.
+pub fn exit_status(pid: u32) -> Option<i32> {
+    if let Some(pcb) = get_process(pid) {
+        return match *pcb.state.lock() {
+            ProcessState::Zombie(code) | ProcessState::Terminated(code) => Some(code),
+            _ => None,
+        };
+    }
+    crate::process::exit::reap_exit_status(pid)
 }
 
 pub fn set_controlling_tty(pid: u32, tty: u32) -> Result<(), i32> {

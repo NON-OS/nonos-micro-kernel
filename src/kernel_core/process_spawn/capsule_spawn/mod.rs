@@ -14,15 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod attested_parent;
 mod from_vfs;
 mod runner;
 mod spec;
 
+pub(crate) use attested_parent::AttestedParent;
 #[cfg(feature = "nonos-dev-unverified-capsules")]
 pub use runner::spawn;
 pub use runner::spawn_verified;
+pub(crate) use runner::spawn_verified_as;
 #[cfg(feature = "nonos-dev-unverified-capsules")]
 pub use spec::CapsuleSpec;
 pub use spec::{CapsuleSpecVerified, SpawnError};
 // Runtime capsule loading from the VFS store, driven by the install syscall.
-pub use from_vfs::{load_capsule_from_vfs, CapsuleArtifacts, LoadError};
+pub use from_vfs::{CapsuleArtifacts, LoadError};
+pub(crate) use from_vfs::load_capsule_from_vfs;

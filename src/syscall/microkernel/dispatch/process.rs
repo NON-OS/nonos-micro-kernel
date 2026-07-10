@@ -18,14 +18,17 @@ use super::args::Args;
 use crate::syscall::microkernel::attest::sys_attest_status;
 use crate::syscall::microkernel::battery::sys_battery_status;
 use crate::syscall::microkernel::capsule_load::sys_capsule_load;
+use crate::syscall::microkernel::kill::sys_kill;
 use crate::syscall::microkernel::memory::{sys_mmap, sys_munmap};
 use crate::syscall::microkernel::numbers::*;
 use crate::syscall::microkernel::proc_output::sys_proc_output;
+use crate::syscall::microkernel::proc_stdin::{sys_proc_input, sys_stdin_read};
 use crate::syscall::microkernel::process::{
     sys_args, sys_exit, sys_getpid, sys_pid_alive, sys_spawn, sys_thread_spawn, sys_yield,
 };
 use crate::syscall::microkernel::procstat::sys_proc_stat;
 use crate::syscall::microkernel::time::{sys_time_adjust, sys_time_millis, sys_time_rtc};
+use crate::syscall::microkernel::wait::sys_wait;
 
 pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
     Some(match nr {
@@ -35,6 +38,8 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_CAPSULE_LOAD => sys_capsule_load(a.a0),
         SYS_EXIT => sys_exit(a.a0 as i32),
         SYS_PID_ALIVE => sys_pid_alive(a.a0 as u32),
+        SYS_WAIT => sys_wait(a.a0, a.a1),
+        SYS_KILL => sys_kill(a.a0, a.a1),
         SYS_GETPID => sys_getpid(),
         SYS_ARGS => sys_args(a.a0, a.a1 as usize),
         SYS_THREAD_SPAWN => sys_thread_spawn(a.a0, a.a1),
@@ -45,6 +50,8 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_BATTERY_STATUS => sys_battery_status(),
         SYS_PROC_STAT => sys_proc_stat(a.a0, a.a1),
         SYS_PROC_OUTPUT => sys_proc_output(a.a0, a.a1, a.a2 as usize),
+        SYS_PROC_INPUT => sys_proc_input(a.a0, a.a1, a.a2 as usize),
+        SYS_STDIN_READ => sys_stdin_read(a.a0, a.a1 as usize),
         SYS_ATTEST_STATUS => sys_attest_status(a.a0),
         _ => return None,
     })

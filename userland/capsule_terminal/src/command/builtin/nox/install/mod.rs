@@ -16,6 +16,9 @@
 
 mod call;
 mod emit;
+mod job;
 mod run;
 
-pub use run::run;
+pub(crate) use call::call_installer;
+pub use job::InstallJob;
+pub use run::{prepare, run};

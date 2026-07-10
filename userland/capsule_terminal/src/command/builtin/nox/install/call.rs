@@ -34,7 +34,7 @@ const SEQ: u32 = 1;
 // argv travel here; the installer reads the (multi-MB) artifacts from the
 // store itself, so the message stays small. Returns the new pid, or a
 // negative status.
-pub(super) fn call_installer(name: &[u8], args: &[u8]) -> Result<u32, i32> {
+pub(crate) fn call_installer(name: &[u8], args: &[u8]) -> Result<u32, i32> {
     let port = lookup_service(b"installer").map(|p| p.port).ok_or(EAGAIN)?;
     let payload = pack(name, args);
     let mut rx = [0u8; 32];

@@ -1305,9 +1305,12 @@ nonos-mk-terminal-only-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) $(keyring_
 
 nonos-mk-terminal-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) $(keyring_ARTIFACTS) \
 		$(entropy_ARTIFACTS) $(crypto_ARTIFACTS) $(vfs_ARTIFACTS) \
-		$(driver-virtio-rng_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
+		$(driver-virtio-rng_ARTIFACTS) $(installer_ARTIFACTS) $(hello_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building terminal capsule (autorun-selftest)..."
 	@$(MAKE) -B terminal_CARGO_FEATURES=nonos-autorun-selftest nonos-mk-terminal-sign
+	@echo "Seeding vfs capsule store with the hello child..."
+	@$(MAKE) -B vfs_CARGO_FEATURES=seed-terminal-store $(vfs_ARTIFACTS)
 	@echo "Building kernel (microkernel-terminal-smoketest)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \

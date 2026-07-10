@@ -24,3 +24,4 @@ mod verified;
 #[cfg(feature = "nonos-dev-unverified-capsules")]
 pub use legacy::spawn;
 pub use verified::spawn_verified;
+pub(crate) use verified::spawn_verified_as;

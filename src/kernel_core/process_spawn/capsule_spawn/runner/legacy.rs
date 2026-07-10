@@ -26,5 +26,6 @@ pub fn spawn(spec: &CapsuleSpec) -> Result<u32, SpawnError> {
         elf: spec.elf,
         caps_bits: spec.caps_bits,
         debug_tag: spec.debug_tag,
+        on_behalf_of: None,
     })
 }

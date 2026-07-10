@@ -572,6 +572,7 @@ microkernel-terminal-smoketest = [
   "nonos-capsule-crypto",
   "nonos-capsule-vfs",
   "nonos-capsule-driver-virtio-rng",
+  "nonos-capsule-installer",
   "nonos-capsule-terminal",
   "nonos-terminal-smoketest",
 ]

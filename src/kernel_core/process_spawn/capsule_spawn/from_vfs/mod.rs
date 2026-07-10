@@ -21,4 +21,4 @@ mod load;
 
 pub use artifacts::CapsuleArtifacts;
 pub use error::LoadError;
-pub use load::load_capsule_from_vfs;
+pub(crate) use load::load_capsule_from_vfs;

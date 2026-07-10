@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::super::super::attested_parent::AttestedParent;
+
 pub(crate) struct InstallParams {
     pub name: &'static str,
     pub service_port: u32,
@@ -22,4 +24,7 @@ pub(crate) struct InstallParams {
     pub elf: &'static [u8],
     pub caps_bits: u64,
     pub debug_tag: &'static [u8],
+    // Kernel-attested pid to parent the new process to instead of the
+    // caller. `None` preserves the default (caller-as-parent) behavior.
+    pub on_behalf_of: Option<AttestedParent>,
 }

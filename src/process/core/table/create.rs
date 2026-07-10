@@ -18,6 +18,7 @@ use super::super::pcb::ProcessControlBlock;
 use super::super::types::{MemoryState, Pid, Priority, ProcessIoStats, ProcessState};
 use super::inherit::compute_inherited_caps;
 use super::types::{CURRENT_PID, NEXT_PID, PROCESS_TABLE};
+use crate::kernel_core::process_spawn::capsule_spawn::AttestedParent;
 use crate::memory::addr::VirtAddr;
 use crate::process::process_fd_table::ProcessFdTable;
 use alloc::{string::String, sync::Arc, vec::Vec};
@@ -37,11 +38,28 @@ pub fn create_process_with_mem(
     prio: Priority,
     mem_kb: u64,
 ) -> Result<Pid, &'static str> {
+    create_process_with_parent(name, state, prio, mem_kb, None)
+}
+
+// Same as `create_process_with_mem`, but lets a spawn site attribute the new
+// process to a kernel-attested `parent_override` pid instead of the calling
+// process. Used by the capsule-load path so a capsule loaded through a
+// broker (e.g. the installer, on behalf of the terminal) is parented to the
+// real requester, not the broker itself.
+pub(crate) fn create_process_with_parent(
+    name: &str,
+    state: ProcessState,
+    prio: Priority,
+    mem_kb: u64,
+    parent_override: Option<AttestedParent>,
+) -> Result<Pid, &'static str> {
     if name.is_empty() {
         return Err("empty name");
     }
     let pid = NEXT_PID.fetch_add(1, Ordering::Relaxed);
-    let parent_pid = CURRENT_PID.load(Ordering::Relaxed);
+    let parent_pid = parent_override
+        .map(AttestedParent::pid)
+        .unwrap_or_else(|| CURRENT_PID.load(Ordering::Relaxed));
     let caps = compute_inherited_caps(pid, parent_pid);
     let pcb = build_pcb(pid, parent_pid, name, state, prio, mem_kb / 4, caps)?;
     crate::process::address_space::lifecycle::allocate(&pcb)?;

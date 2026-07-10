@@ -14,10 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::syscall::{call_raw, N_MK_PROC_OUTPUT};
+use crate::syscall::{call_raw, N_MK_PROC_INPUT, N_MK_PROC_OUTPUT, N_MK_STDIN_READ};
 
-// Drain one stdout line a child capsule mirrored into its proc.<pid>
-// inbox. Returns bytes copied, 0 when empty, or a negative errno.
 pub extern "C" fn mk_proc_output(pid: u32, buf: *mut u8, len: usize) -> i64 {
     call_raw(N_MK_PROC_OUTPUT, [pid as u64, buf as u64, len as u64, 0, 0, 0])
+}
+
+pub extern "C" fn mk_proc_input(pid: u64, buf: *const u8, len: u64) -> i64 {
+    call_raw(N_MK_PROC_INPUT, [pid, buf as u64, len, 0, 0, 0])
+}
+
+pub extern "C" fn mk_stdin_read(buf: *mut u8, len: u64) -> i64 {
+    call_raw(N_MK_STDIN_READ, [buf as u64, len, 0, 0, 0, 0])
 }

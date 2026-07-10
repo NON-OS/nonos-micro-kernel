@@ -20,4 +20,5 @@ mod ops;
 mod types;
 
 pub use create::{create_process, create_process_with_mem, spawn_thread};
+pub(crate) use create::create_process_with_parent;
 pub use types::{allocate_tid, ProcessTable, CURRENT_PID, PROCESS_TABLE};

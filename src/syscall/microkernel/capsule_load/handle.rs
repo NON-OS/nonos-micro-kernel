@@ -17,7 +17,9 @@
 use super::copy::read_blob;
 use super::errno::load_errno;
 use super::request::CapsuleLoadRequest;
-use crate::kernel_core::process_spawn::capsule_spawn::{load_capsule_from_vfs, CapsuleArtifacts};
+use crate::kernel_core::process_spawn::capsule_spawn::{
+    load_capsule_from_vfs, AttestedParent, CapsuleArtifacts,
+};
 use crate::syscall::microkernel::errnos::ERRNO_FAULT;
 
 // Load and spawn a capsule whose artifacts were read from the store by the
@@ -49,6 +51,20 @@ fn run(req_ptr: u64) -> Result<i64, i64> {
     } else {
         read_blob(req.args_ptr, req.args_len)?
     };
-    let pid = load_capsule_from_vfs(artifacts, req.requested_caps, &args).map_err(load_errno)?;
+    let on_behalf_of = resolve_on_behalf_of(req.on_behalf_of);
+    let pid = load_capsule_from_vfs(artifacts, req.requested_caps, &args, on_behalf_of)
+        .map_err(load_errno)?;
     Ok(pid as i64)
+}
+
+// `on_behalf_of` in the request is only honored when the calling process
+// holds `Capability::SpawnBroker` (the installer, and no ordinary capsule)
+// and the attributed pid is still live; both checks live in
+// `AttestedParent::attest`, the sole constructor of the attested-parent
+// newtype. A caller that fails either check gets the default caller-as-parent
+// attribution, exactly as if the field were zero; this never turns into a
+// hard error, since a forged, stale, or dead field must fail closed, not
+// surface a capability probe.
+fn resolve_on_behalf_of(raw: u32) -> Option<AttestedParent> {
+    AttestedParent::attest(raw)
 }

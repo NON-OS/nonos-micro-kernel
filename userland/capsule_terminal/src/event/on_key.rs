@@ -35,6 +35,15 @@ pub fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
             return out;
         }
     }
+    if state.fg_running && event.flags & MOD_CTRL == 0 {
+        match event.code {
+            KEY_ENTER => return super::fg_stdin::forward(state, b'\n'),
+            code if (0x20..=0x7E).contains(&code) => {
+                return super::fg_stdin::forward(state, code as u8)
+            }
+            _ => {}
+        }
+    }
     match event.code {
         KEY_ESC => EventOutcome::Close,
         KEY_ENTER => on_enter(state),

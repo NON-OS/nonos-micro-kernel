@@ -34,6 +34,8 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkCapsuleLoad
             | MkExit
             | MkPidAlive
+            | MkWait
+            | MkKill
             | MkGetPid
             | MkArgs
             | MkThreadSpawn
@@ -44,6 +46,8 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkBatteryStatus
             | MkProcStat
             | MkProcOutput
+            | MkProcInput
+            | MkStdinRead
             | MkAttestStatus
             | MkCapGrant
             | MkCapRevoke
