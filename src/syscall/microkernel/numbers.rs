@@ -36,6 +36,7 @@ pub const SYS_PID_ALIVE: u64 = tag4(b"MPAL");
 pub const SYS_GETPID: u64 = tag4(b"MGPD");
 pub const SYS_ARGS: u64 = tag4(b"MKAR");
 pub const SYS_THREAD_SPAWN: u64 = tag4(b"MTSP");
+pub const SYS_SET_TLS: u64 = tag4(b"MSTB");
 pub const SYS_YIELD: u64 = tag4(b"MYLD");
 pub const SYS_TIME_MILLIS: u64 = tag4(b"MTMS");
 pub const SYS_TIME_RTC: u64 = tag4(b"MTRT");

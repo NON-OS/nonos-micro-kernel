@@ -54,6 +54,6 @@ pub use numbers::*;
 pub use pci::sys_pci_config_write;
 pub use pio::{sys_pio_grant, sys_pio_read, sys_pio_release, sys_pio_write};
 pub use proc_output::sys_proc_output;
-pub use process::{sys_args, sys_exit, sys_spawn, sys_thread_spawn, sys_yield};
+pub use process::{sys_args, sys_exit, sys_set_tls, sys_spawn, sys_thread_spawn, sys_yield};
 pub use procstat::sys_proc_stat;
 pub use time::{sys_time_adjust, sys_time_millis, sys_time_rtc};
