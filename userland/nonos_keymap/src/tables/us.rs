@@ -14,17 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod active;
-mod key_event;
-mod keyboard;
-mod keymap;
-mod mouse;
-mod mouse_event;
-mod post_key;
-mod post_mouse;
-mod post_wire;
-mod tablet;
+// US ANSI symbol row and punctuation.
 
-pub use keyboard::Keyboard;
-pub use mouse::Mouse;
-pub use tablet::Tablet;
+pub(crate) fn symbol(base: u8, shift: bool) -> u32 {
+    if !shift {
+        return base as u32;
+    }
+    let shifted: u8 = match base {
+        b'1' => b'!',
+        b'2' => b'@',
+        b'3' => b'#',
+        b'4' => b'$',
+        b'5' => b'%',
+        b'6' => b'^',
+        b'7' => b'&',
+        b'8' => b'*',
+        b'9' => b'(',
+        b'0' => b')',
+        b'-' => b'_',
+        b'=' => b'+',
+        b'[' => b'{',
+        b']' => b'}',
+        b'\\' => b'|',
+        b';' => b':',
+        b'\'' => b'"',
+        b',' => b'<',
+        b'.' => b'>',
+        b'/' => b'?',
+        b'`' => b'~',
+        other => other,
+    };
+    shifted as u32
+}

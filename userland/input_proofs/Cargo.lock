@@ -5,3 +5,10 @@ version = 4
 [[package]]
 name = "input_proofs"
 version = "0.1.0"
+dependencies = [
+ "nonos_keymap",
+]
+
+[[package]]
+name = "nonos_keymap"
+version = "0.1.0"

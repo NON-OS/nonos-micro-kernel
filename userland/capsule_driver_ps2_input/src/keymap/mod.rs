@@ -13,9 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+pub mod active;
 pub mod post;
 pub mod set1;
 pub mod set1_e0;
 pub mod translate;
-pub use post::{modifier_bit, publish};
+pub use post::{modifier_bit, publish, MOD_ALT, MOD_CTRL};
+pub use set1::KEYCODE_CAPS as KEYCODE_CAPS_LOCK;
 pub use translate::translate;

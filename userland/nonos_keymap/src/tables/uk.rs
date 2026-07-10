@@ -14,17 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod active;
-mod key_event;
-mod keyboard;
-mod keymap;
-mod mouse;
-mod mouse_event;
-mod post_key;
-mod post_mouse;
-mod post_wire;
-mod tablet;
+// UK (BS 4822): US positions except quote/at swap, pound on 3, and the
+// hash/tilde key beside Enter (the US backslash position on ANSI boards).
 
-pub use keyboard::Keyboard;
-pub use mouse::Mouse;
-pub use tablet::Tablet;
+pub(crate) fn symbol(base: u8, shift: bool) -> u32 {
+    let (lo, hi): (u32, u32) = match base {
+        b'2' => (b'2' as u32, b'"' as u32),
+        b'3' => (b'3' as u32, 0x00A3), // pound sign
+        b'\'' => (b'\'' as u32, b'@' as u32),
+        b'\\' => (b'#' as u32, b'~' as u32),
+        b'`' => (b'`' as u32, 0x00AC), // not sign
+        other => return super::us::symbol(other, shift),
+    };
+    if shift {
+        hi
+    } else {
+        lo
+    }
+}

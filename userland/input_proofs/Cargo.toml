@@ -13,3 +13,4 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
+nonos_keymap = { path = "../nonos_keymap" }

@@ -14,17 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod active;
-mod key_event;
-mod keyboard;
-mod keymap;
-mod mouse;
-mod mouse_event;
-mod post_key;
-mod post_mouse;
-mod post_wire;
-mod tablet;
+#![no_std]
 
-pub use keyboard::Keyboard;
-pub use mouse::Mouse;
-pub use tablet::Tablet;
+mod layout;
+mod resolve;
+mod tables;
+
+pub use layout::Layout;
+pub use resolve::resolve;

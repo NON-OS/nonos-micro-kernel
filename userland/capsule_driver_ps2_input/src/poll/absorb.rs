@@ -49,6 +49,19 @@ pub(super) fn absorb(drainer: &mut Drainer, ring: &mut Ring, byte: u8) {
                 drainer.mods |= bit;
             }
         }
-        let _ = keymap::publish(t, drainer.mods);
+        if !t.is_release && t.keycode == keymap::KEYCODE_CAPS_LOCK {
+            drainer.caps = !drainer.caps;
+        }
+        // Ctrl+Alt+Space cycles the keyboard layout inside the driver and
+        // is consumed here; no app has a use for that chord as input.
+        if !t.is_release
+            && t.keycode == b' ' as u32
+            && drainer.mods & keymap::MOD_CTRL != 0
+            && drainer.mods & keymap::MOD_ALT != 0
+        {
+            let _ = keymap::active::cycle();
+            return;
+        }
+        let _ = keymap::publish(t, drainer.mods, drainer.caps);
     }
 }
