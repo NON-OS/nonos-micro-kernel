@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::geometry::Rect;
-use crate::state::Context;
-use crate::window::{Kind, Visibility};
+//! How many icon rows fit in a column before wrapping.
 
-pub(super) fn collides(ctx: &Context, candidate: Rect) -> bool {
-    ctx.windows.windows().any(|w| {
-        w.visibility == Visibility::Visible && w.kind == Kind::Normal && w.rect.overlaps(&candidate)
-    })
+use super::metrics::{BOTTOM_RESERVE, CELL_H};
+use super::top::top;
+use crate::state::Context;
+
+pub(super) fn rows(ctx: &Context) -> u32 {
+    let usable = ctx.height.saturating_sub(top() + BOTTOM_RESERVE);
+    (usable / CELL_H).max(1)
 }

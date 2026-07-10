@@ -25,6 +25,7 @@ use super::{click_focus, decorations, dispatch::parse_delivery};
 const SERVICE_INBOX: u64 = 0;
 const RECV_NOWAIT: u64 = 1;
 
+#[derive(Default)]
 pub(super) struct DrainResult {
     pub repaint: bool,
     pub close: bool,
@@ -32,13 +33,16 @@ pub(super) struct DrainResult {
     pub maximize: bool,
     pub restore: bool,
     pub move_to: Option<(u32, u32)>,
+    pub resize_to: Option<(u32, u32)>,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn drain<A: App>(
     app: &mut A,
     drag_state: &mut DragState,
     rx: &mut [u8],
     width: u32,
+    height: u32,
     win_x: u32,
     win_y: u32,
     wm_port: u32,
@@ -48,19 +52,13 @@ pub(super) fn drain<A: App>(
     let mut repaint = false;
     let mut restore = false;
     let mut move_to = None;
+    let mut resize_to = None;
     loop {
         let mut sender = 0u32;
         let n =
             mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), RECV_NOWAIT, &mut sender);
         if n <= 0 {
-            return DrainResult {
-                repaint,
-                close: false,
-                minimize: false,
-                maximize: false,
-                restore,
-                move_to,
-            };
+            return DrainResult { repaint, restore, move_to, resize_to, ..Default::default() };
         }
         match handle_control(&rx[..n as usize], sender, wm_port, window_id, request_id) {
             ControlOutcome::FocusSelf => {
@@ -77,38 +75,42 @@ pub(super) fn drain<A: App>(
             Some(EventOutcome::Close) => {
                 return DrainResult {
                     repaint,
-                    close: true,
-                    minimize: false,
-                    maximize: false,
                     restore,
                     move_to,
-                }
+                    resize_to,
+                    close: true,
+                    ..Default::default()
+                };
             }
             Some(EventOutcome::Minimize) => {
                 return DrainResult {
                     repaint,
-                    close: false,
-                    minimize: true,
-                    maximize: false,
                     restore,
                     move_to,
-                }
+                    resize_to,
+                    minimize: true,
+                    ..Default::default()
+                };
             }
             Some(EventOutcome::Maximize) => {
                 return DrainResult {
                     repaint,
-                    close: false,
-                    minimize: false,
-                    maximize: true,
                     restore,
                     move_to,
-                }
+                    resize_to,
+                    maximize: true,
+                    ..Default::default()
+                };
             }
             _ => {}
         }
-        match drag::handle(drag_state, width, win_x, win_y, &event) {
+        match drag::handle(drag_state, width, height, win_x, win_y, &event) {
             PointerAction::MoveTo(mx, my) => {
                 move_to = Some((mx, my));
+                continue;
+            }
+            PointerAction::ResizeTo(rw, rh) => {
+                resize_to = Some((rw, rh));
                 continue;
             }
             PointerAction::HoverChanged => {
@@ -123,12 +125,12 @@ pub(super) fn drain<A: App>(
             EventOutcome::Close => {
                 return DrainResult {
                     repaint,
-                    close: true,
-                    minimize: false,
-                    maximize: false,
                     restore,
                     move_to,
-                }
+                    resize_to,
+                    close: true,
+                    ..Default::default()
+                };
             }
         }
     }

@@ -27,6 +27,7 @@ mod render;
 mod server;
 mod setup;
 mod state;
+mod vfs_client;
 mod wait_for_setup;
 mod wallpaper_client;
 mod wm_client;

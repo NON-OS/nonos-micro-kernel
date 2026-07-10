@@ -14,27 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::render::layout::{menubar_rect, Rect};
+//! Release the keyboard grab taken for an inline rename, so keys flow back to
+//! app windows.
+
 use crate::state::Context;
 
-pub fn paint_notify_badge(ctx: &Context) {
-    let Some(level) = ctx.last_notify_level else {
-        return;
-    };
-    let bar = menubar_rect(ctx.width);
-    if bar.width < super::constants::NOTIFY_BADGE + super::constants::NOTIFY_RIGHT_INSET {
-        return;
-    }
-    let x = bar.x + bar.width - super::constants::NOTIFY_RIGHT_INSET;
-    let y = bar.y + (bar.height.saturating_sub(super::constants::NOTIFY_BADGE)) / 2;
-    super::paint_rect::paint_rect(
-        ctx,
-        Rect {
-            x: x.saturating_sub(super::constants::NOTIFY_BADGE),
-            y,
-            width: super::constants::NOTIFY_BADGE,
-            height: super::constants::NOTIFY_BADGE,
-        },
-        level.tint(),
-    );
+pub(super) fn release_keys(ctx: &mut Context) {
+    let rid = ctx.issue_request_id();
+    let _ = crate::input_router_client::release_grab(ctx.input_router_port, rid);
 }

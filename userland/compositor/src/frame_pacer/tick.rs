@@ -21,19 +21,29 @@ use crate::state::Context;
 use core::sync::atomic::{fence, Ordering};
 
 pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
-    let Some(rect) = ctx.damage.drain() else {
-        return Ok(());
-    };
-    composite::paint(ctx, rect);
-    fence(Ordering::Release);
-    if ctx.gop_mode {
-        // The composed pixels already live in the registered surface; the
-        // kernel blits it to the UEFI framebuffer. No virtio resource ops.
+    // Composite every damaged rectangle this frame. Each is small and separate,
+    // so the empty space between far-apart damage is never touched.
+    let mut composited = false;
+    while let Some(rect) = ctx.damage.drain() {
+        composite::paint(ctx, rect);
+        composited = true;
+        if !ctx.gop_mode {
+            present_rect(ctx, rect)?;
+        }
+    }
+    if composited && ctx.gop_mode {
+        // The composed pixels already live in the registered surface; the kernel
+        // blits it to the UEFI framebuffer. Present once for the whole frame.
+        fence(Ordering::Release);
         if nonos_libc::mk_surface_present(ctx.surface_handle) < 0 {
             return Err("gop present rejected");
         }
-        return Ok(());
     }
+    Ok(())
+}
+
+fn present_rect(ctx: &mut Context, rect: crate::state::damage::Rect) -> Result<(), &'static str> {
+    fence(Ordering::Release);
     let req_a = ctx.issue_request_id();
     let pixel_offset = (rect.y as u64) * (ctx.stride as u64) + (rect.x as u64) * 4;
     gfx_client::transfer_to_host(

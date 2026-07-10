@@ -15,5 +15,3 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const TRANSPARENT: u32 = 0x0000_0000;
-pub const NOTIFY_BADGE: u32 = 8;
-pub const NOTIFY_RIGHT_INSET: u32 = 12;

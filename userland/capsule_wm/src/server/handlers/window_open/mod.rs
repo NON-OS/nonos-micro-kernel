@@ -14,10 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod collides;
 mod constants;
 mod decode;
-mod fallback_slot;
 mod focus_new_window;
 mod handle;
 mod place;

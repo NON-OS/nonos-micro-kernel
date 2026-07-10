@@ -16,6 +16,17 @@
 
 use nonos_libc::mk_battery_status;
 
+/// Battery charge as a percent, or None on AC power or when the reading is
+/// unavailable. Used to fill the battery glyph on the menu bar.
+pub fn percent() -> Option<u32> {
+    let rc = mk_battery_status();
+    if (0..=100).contains(&rc) {
+        Some(rc as u32)
+    } else {
+        None
+    }
+}
+
 pub fn label(buf: &mut [u8; 4]) -> usize {
     let rc = mk_battery_status();
     if rc < 0 || rc > 100 {

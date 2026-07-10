@@ -21,6 +21,7 @@ mod minimize;
 mod move_window;
 mod open;
 mod raise;
+mod resize;
 
 pub use close::window_close;
 pub use focus::window_focus;
@@ -29,3 +30,4 @@ pub use minimize::{window_minimize, window_restore};
 pub use move_window::window_move;
 pub use open::{window_open, WindowPlacement};
 pub use raise::window_raise;
+pub use resize::window_resize;

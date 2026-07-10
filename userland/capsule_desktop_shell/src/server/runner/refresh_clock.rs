@@ -17,7 +17,8 @@
 use nonos_libc::mk_time_millis;
 
 use crate::compositor_client::push_damage_commit;
-use crate::render::{paint_chrome, paint_status};
+use crate::render::layout::MENUBAR_HEIGHT;
+use crate::render::paint_chrome;
 use crate::state::indicators::{net, policy};
 use crate::state::{Context, NotifyLevel};
 
@@ -30,8 +31,11 @@ pub(super) fn refresh_clock(ctx: &mut Context) {
         ctx.toasts.push(b"network connected", NotifyLevel::Info, mk_time_millis());
     }
     ctx.net_was_online = net_now;
+    // paint_chrome redraws the whole overlay backing, but only the top bar's
+    // pixels actually change each second. Damage just that strip: a full-screen
+    // damage every tick would make the compositor recomposite every layer,
+    // including any open app window, which is what made the desktop hitch.
     paint_chrome(ctx);
-    paint_status(ctx, net_now);
     let rid = ctx.issue_request_id();
-    let _ = push_damage_commit(ctx.compositor_port, rid, 0, 0, ctx.width, ctx.height);
+    let _ = push_damage_commit(ctx.compositor_port, rid, 0, 0, ctx.width, MENUBAR_HEIGHT);
 }

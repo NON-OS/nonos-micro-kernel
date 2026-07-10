@@ -14,19 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::geometry::Rect;
+//! Column and row of the nth icon, filling down each column then wrapping.
+
+use super::rows::rows;
 use crate::state::Context;
-use crate::window::Kind;
 
-use super::constants::{PLACEMENT_GAP, PLACEMENT_LEFT, PLACEMENT_STEP, PLACEMENT_TOP};
-
-pub(super) fn fallback_slot(ctx: &Context, requested: Rect, max_x: u32, max_y: u32) -> Rect {
-    let open = ctx.windows.windows().filter(|w| w.kind == Kind::Normal).count() as u32;
-    let step = PLACEMENT_STEP + PLACEMENT_GAP;
-    Rect {
-        x: PLACEMENT_LEFT.saturating_add(open.saturating_mul(step)).min(max_x),
-        y: PLACEMENT_TOP.saturating_add(open.saturating_mul(step)).min(max_y),
-        width: requested.width,
-        height: requested.height,
-    }
+pub(super) fn slot(ctx: &Context, index: usize) -> (u32, u32) {
+    let r = rows(ctx);
+    let i = index as u32;
+    (i / r, i % r)
 }

@@ -38,6 +38,7 @@ pub fn cap_bit(name: &str) -> Option<u64> {
         "Dma" => 524288,
         "Pio" => 1048576,
         "InputSource" => 2097152,
+        "TimeSet" => 4194304,
         _ => return None,
     };
     Some(bit)

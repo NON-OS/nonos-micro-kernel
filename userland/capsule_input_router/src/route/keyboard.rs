@@ -29,10 +29,7 @@ pub fn route_keyboard(ctx: &mut Context, event: &InputEvent) -> u32 {
     // routes to current focus. Resolving the release from the press target also
     // avoids a synchronous WM query on every key-up.
     let pid = if is_up {
-        ctx.key_targets
-            .take(event.code)
-            .filter(|&p| p != 0)
-            .unwrap_or_else(|| fallback_focus(ctx))
+        ctx.key_targets.take(event.code).filter(|&p| p != 0).unwrap_or_else(|| fallback_focus(ctx))
     } else {
         let rid = ctx.issue_request_id();
         match wm::query_focus(&mut ctx.wm_port, rid) {

@@ -16,7 +16,6 @@
 
 use alloc::{vec, vec::Vec};
 
-use crate::discover::lookup_service;
 use crate::wire::HDR_LEN;
 
 // Copy `src` to `dst` inside the vfs, no size-capped round-trip. With
@@ -26,7 +25,7 @@ pub fn copy(owner_pid: u32, src: &[u8], dst: &[u8], recursive: bool) -> Result<(
     if src.is_empty() || src.len() > 255 || dst.is_empty() || dst.len() > 255 {
         return Err("vfs path invalid");
     }
-    let peer = lookup_service(super::types::NAME).ok_or("vfs unavailable")?;
+    let port = super::resolve::vfs_port();
     let mut body = Vec::with_capacity(7 + src.len() + dst.len());
     body.extend_from_slice(&owner_pid.to_le_bytes());
     body.push(src.len() as u8);
@@ -35,7 +34,7 @@ pub fn copy(owner_pid: u32, src: &[u8], dst: &[u8], recursive: bool) -> Result<(
     body.extend_from_slice(dst);
     body.push(u8::from(recursive));
     let mut rx = vec![0u8; HDR_LEN + 8];
-    let (status, _) = super::call::call(peer.port, super::types::OP_COPY, 12, &body, &mut rx)?;
+    let (status, _) = super::call::call(port, super::types::OP_COPY, 12, &body, &mut rx)?;
     if status != 0 {
         return Err(super::errmsg::errmsg(status));
     }

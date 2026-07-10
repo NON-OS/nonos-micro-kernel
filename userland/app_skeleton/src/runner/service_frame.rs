@@ -47,12 +47,16 @@ pub(super) fn service_frame<A: App>(
         &mut booted.drag,
         rx,
         booted.binding.width,
+        booted.binding.height,
         booted.binding.x,
         booted.binding.y,
         peers.wm,
         booted.manifest.window_id,
         request_id,
     );
+    if let Some((rw, rh)) = result.resize_to {
+        super::resize_window::apply_resize(booted, peers, request_id, rw, rh);
+    }
     if let Some((mx, my)) = result.move_to {
         apply_move(booted, peers, request_id, mx, my);
     }
