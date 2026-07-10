@@ -23,7 +23,9 @@ use crate::services::registry::lookup_service;
 static ROUTE_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 fn trace_route(caller_pid: u32, target: &str, dest_pid: u32, woke: bool) {
-    if !matches!(dest_pid, 9 | 0x17) || ROUTE_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 40 {
+    if !matches!(dest_pid, 9 | 0x17 | 0x1c | 0x26 | 0x32)
+        || ROUTE_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 200
+    {
         return;
     }
     crate::sys::serial::trace(b"[ROUTE] from=");
@@ -87,7 +89,15 @@ pub fn kernel_route_ipc_corr(
             trace_route(caller_pid, target, endpoint.pid, woke);
             Ok(())
         }
-        Err(StrictEnqueueError::MissingInbox) | Err(StrictEnqueueError::DeadOwner) => Err(ESRCH),
+        Err(StrictEnqueueError::MissingInbox) | Err(StrictEnqueueError::DeadOwner) => {
+            crate::sys::serial::print(b"[ROUTE-DROP] from=");
+            crate::sys::serial::print_hex(caller_pid as u64);
+            crate::sys::serial::print(b" target=");
+            crate::sys::serial::print(target.as_bytes());
+            crate::sys::serial::print(b" dest=");
+            crate::sys::serial::println(dest.as_bytes());
+            Err(ESRCH)
+        }
         Err(StrictEnqueueError::QueueFull(_)) => Err(EAGAIN),
     }
 }
