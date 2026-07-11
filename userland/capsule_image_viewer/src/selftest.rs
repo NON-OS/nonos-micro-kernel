@@ -19,11 +19,12 @@ use alloc::vec;
 
 use nonos_libc::{heap_init, mk_debug, mk_exit, HeapError};
 
+use crate::viewer::flip::flip_h;
 use crate::viewer::rotate::rotate_cw;
-use crate::viewer::scale::{draw_nn, Dst};
-use crate::viewer::viewport::{place, View};
+use crate::viewer::scale::{draw_bilinear, draw_nn, Dst};
+use crate::viewer::viewport::{place_mode, FitMode, View};
 
-const EXPECTED_CHECKSUM: u64 = 134_216_700;
+const EXPECTED_CHECKSUM: u64 = 301_987_575;
 
 pub fn run() -> ! {
     match heap_init() {
@@ -36,13 +37,24 @@ pub fn run() -> ! {
 
     let mut dst_px = vec![0u32; 16];
     let view = View { zoom: 1.0, pan_x: 0.0, pan_y: 0.0 };
-    let p = place(rw, rh, 4, 4, &view);
+    let p = place_mode(FitMode::Fit, rw, rh, 4, 4, &view);
     {
         let mut dst = Dst { px: &mut dst_px, stride: 4, w: 4, h: 4 };
         draw_nn(&mut dst, &rotated, rw, rh, p.dx, p.dy, p.dw, p.dh);
     }
+    let mut checksum: u64 = dst_px.iter().map(|&px| (px & 0x00FF_FFFF) as u64).sum();
 
-    let checksum: u64 = dst_px.iter().map(|&px| (px & 0x00FF_FFFF) as u64).sum();
+    let flipped = flip_h(&src, 2, 2);
+    checksum += flipped.iter().map(|&px| (px & 0x00FF_FFFF) as u64).sum::<u64>();
+
+    let mut bi_px = vec![0u32; 16];
+    let bp = place_mode(FitMode::Fit, 2, 2, 4, 4, &view);
+    {
+        let mut bdst = Dst { px: &mut bi_px, stride: 4, w: 4, h: 4 };
+        draw_bilinear(&mut bdst, &src, 2, 2, bp.dx, bp.dy, bp.dw, bp.dh);
+    }
+    checksum += bi_px.iter().map(|&px| (px & 0x00FF_FFFF) as u64).sum::<u64>();
+
     if checksum == EXPECTED_CHECKSUM {
         emit(b"[IMG-VIEWER] PASS\n");
         mk_exit(0);
