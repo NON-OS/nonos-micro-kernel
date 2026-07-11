@@ -116,3 +116,23 @@ import Nonos
 #print axioms Nonos.Vfs.resolve_dotdots_root
 #print axioms Nonos.Rng.drawN_advances
 #print axioms Nonos.Tlb.invalidate_evicts
+
+-- Concurrency, reclamation and rate-limiting mechanisms. One flagship theorem
+-- from each is profiled so its axiom closure is recorded and the sorryAx gate
+-- covers it.
+#print axioms Nonos.Semaphore.acquire_valid
+#print axioms Nonos.Semaphore.acquire_release_roundtrip
+#print axioms Nonos.Mutex.owner_unique
+#print axioms Nonos.Ticket.serving_unique
+#print axioms Nonos.Ticket.take_monotone
+#print axioms Nonos.Seqlock.changed_rejected
+#print axioms Nonos.TokenBucket.refill_never_exceeds_burst
+#print axioms Nonos.Signal.blocked_signal_still_pending
+#print axioms Nonos.Signal.unblock_delivers
+#print axioms Nonos.Reaper.reaped_not_zombie
+#print axioms Nonos.Epoch.drainN_old_le
+#print axioms Nonos.Barrier.not_released_before_all
+#print axioms Nonos.Buddy.alloc_conserves
+#print axioms Nonos.Buddy.split_conserves
+#print axioms Nonos.Cow.write_drops_original
+#print axioms Nonos.Bitmap.set_then_clear_frees
