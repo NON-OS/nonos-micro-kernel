@@ -55,11 +55,6 @@ pub struct Theme {
     pub syn_function: u32,
 }
 
-// The default background, kept as a standalone const so a caller can reach for
-// a plain fallback colour without loading the active theme.
-#[allow(dead_code)]
-pub const BACKGROUND: u32 = 0xFF282C34;
-
 // The bundled themes, cycled by the theme button and Ctrl+B. Index 0 is the
 // One Dark default the editor has always shipped.
 pub const THEMES: [Theme; 4] = [
