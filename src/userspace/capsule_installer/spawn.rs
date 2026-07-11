@@ -32,7 +32,7 @@ const REPLY_PORT: u32 = 4113;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
 // CoreExec | IPC | Memory | SpawnBroker; kept hand-synced with
 // userland/capsule_installer/Capsule.mk's CAPSULE_REQUIRED_CAPS.
-const REQUIRED_CAPS: u64 = 0x400019;
+const REQUIRED_CAPS: u64 = 0x800019;
 
 pub fn spawn_installer_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
