@@ -14,21 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Antialiased vector text from a bundled TrueType face. Glyphs are
-// outlined by ab_glyph and blended onto an ARGB8888 surface at CPL=3,
-// where the FPU is live. Metrics come straight from the face, so
-// layout and paint agree on advance widths.
+// The smallest em size the built-in UI faces are ever drawn or measured at. No
+// chrome text should be smaller than this, so nothing renders unreadable on a
+// high-resolution panel. Draw and measure clamp through the same function, so a
+// clamped size stays self-consistent and layout never drifts from what is drawn.
+// Web/page fonts pass their own faces and are deliberately not clamped here.
+pub const MIN_UI_PX: f32 = 17.0;
 
-mod blend;
-mod cache;
-mod draw;
-mod face;
-mod metrics;
-mod readable;
-
-pub use face::builtin_face;
-pub use readable::MIN_UI_PX;
-
-pub use ab_glyph::FontRef;
-pub use draw::{draw_text, draw_text_spaced, draw_text_tracked, draw_text_with};
-pub use metrics::{ascent, line_height, measure, measure_spaced, measure_tracked, measure_with};
+pub fn readable_px(px: f32) -> f32 {
+    if px < MIN_UI_PX {
+        MIN_UI_PX
+    } else {
+        px
+    }
+}
