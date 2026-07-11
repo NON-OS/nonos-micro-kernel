@@ -17,10 +17,14 @@
 use ab_glyph::{Font, GlyphId, PxScale, ScaleFont};
 
 use super::face::face;
+use super::readable::readable_px;
 
 // Advance width of `text` at `px`, kerning included. Layout wraps against this
-// so painted runs land exactly where layout placed them.
+// so painted runs land exactly where layout placed them. The size is clamped to
+// the readable floor, the same clamp draw_text applies, so measured runs match
+// what is painted.
 pub fn measure(text: &str, px: f32, mono: bool) -> i32 {
+    let px = readable_px(px);
     let Some(f) = face(mono) else { return 0 };
     measure_with(f, text, px)
 }
@@ -48,12 +52,14 @@ pub fn measure_tracked<F: Font>(f: &F, text: &str, px: f32, spacing: f32) -> i32
 
 // Tracked measurement with the built-in faces.
 pub fn measure_spaced(text: &str, px: f32, mono: bool, spacing: f32) -> i32 {
+    let px = readable_px(px);
     let Some(f) = face(mono) else { return 0 };
     measure_tracked(f, text, px, spacing)
 }
 
 // Baseline-to-baseline distance at `px`.
 pub fn line_height(px: f32) -> i32 {
+    let px = readable_px(px);
     let Some(f) = face(false) else { return px as i32 };
     let sf = f.as_scaled(PxScale::from(px));
     (sf.ascent() - sf.descent() + sf.line_gap()) as i32
@@ -61,6 +67,7 @@ pub fn line_height(px: f32) -> i32 {
 
 // Top-of-line to baseline at `px`.
 pub fn ascent(px: f32) -> i32 {
+    let px = readable_px(px);
     let Some(f) = face(false) else { return px as i32 };
     f.as_scaled(PxScale::from(px)).ascent() as i32
 }

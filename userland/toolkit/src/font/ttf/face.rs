@@ -17,12 +17,14 @@
 use ab_glyph::FontRef;
 use spin::Once;
 
-// Body face (Inter) for prose and UI with its true bold cut; monospace face
-// (JetBrains Mono, OFL) for pre/code. All cover Latin, punctuation and common
-// symbols; unmapped codepoints fall back to .notdef.
-const BODY: &[u8] = include_bytes!("../../../assets/fonts/Inter-Regular.ttf");
-const BOLD: &[u8] = include_bytes!("../../../assets/fonts/Inter-Bold.ttf");
-const MONO: &[u8] = include_bytes!("../../../assets/fonts/JetBrainsMono-Regular.ttf");
+// Body face (Noto Sans) for prose and UI with its true bold cut; monospace face
+// (Noto Sans Mono) for pre/code. Noto has a tall x-height that stays legible at
+// small sizes, and both cover Latin, Greek, Cyrillic, punctuation and common
+// symbols; unmapped codepoints fall back to .notdef. Both are OFL, see
+// assets/fonts/NotoSans-OFL.txt.
+const BODY: &[u8] = include_bytes!("../../../assets/fonts/NotoSans-Regular.ttf");
+const BOLD: &[u8] = include_bytes!("../../../assets/fonts/NotoSans-Bold.ttf");
+const MONO: &[u8] = include_bytes!("../../../assets/fonts/NotoSansMono-Regular.ttf");
 
 static BODY_FACE: Once<Option<FontRef<'static>>> = Once::new();
 static BOLD_FACE: Once<Option<FontRef<'static>>> = Once::new();

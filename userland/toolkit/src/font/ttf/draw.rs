@@ -19,6 +19,7 @@ use ab_glyph::{point, Font, FontRef, Glyph, GlyphId, PxScale, ScaleFont};
 use super::blend::blend;
 use super::cache::{self, Raster};
 use super::face::face;
+use super::readable::readable_px;
 
 // Render `text` with its top-left at (x, top_y) and return the pen x after
 // the last glyph. `px` is the em size in pixels. Kerning is applied between
@@ -35,6 +36,7 @@ pub fn draw_text(
     px: f32,
     mono: bool,
 ) -> i32 {
+    let px = readable_px(px);
     let Some(f) = face(mono) else { return x };
     draw_cached(f, mono, buf, stride, w, h, x, top_y, text, argb, px)
 }
@@ -224,6 +226,7 @@ pub fn draw_text_spaced(
     mono: bool,
     spacing: f32,
 ) -> i32 {
+    let px = readable_px(px);
     let Some(f) = face(mono) else { return x };
     draw_text_tracked(f, buf, stride, w, h, x, top_y, text, argb, px, spacing)
 }
