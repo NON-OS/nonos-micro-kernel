@@ -27,7 +27,7 @@ use crate::security::nonos_trust_anchor::{
 
 const SERVICE_NAME: &str = "installer";
 const SERVICE_PORT: u32 = 4112;
-const REPLY_INBOX: &str = "endpoint.4294967313";
+const REPLY_INBOX: &str = "endpoint.installer.reply";
 const REPLY_PORT: u32 = 4113;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
 // CoreExec | IPC | Memory | SpawnBroker; kept hand-synced with
