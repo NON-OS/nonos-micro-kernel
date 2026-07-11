@@ -14,6 +14,7 @@ pub fn open_path(st: &mut ViewerState, path: &str) {
         Ok(b) => b,
         Err(e) => { st.img = None; st.status = err_line(path, e); return; }
     };
+    st.file_size = bytes.len() as u64;
     match decode::decode(&bytes, path.as_bytes()) {
         Ok(d) => { st.img = Some(d); st.status = String::new(); build_dir(st, path); }
         Err(e) => { st.img = None; st.status = err_line(path, e); }

@@ -2,7 +2,7 @@ extern crate alloc;
 use alloc::string::String;
 use alloc::vec::Vec;
 use crate::viewer::decode::Decoded;
-use crate::viewer::viewport::View;
+use crate::viewer::viewport::{View, FitMode};
 
 pub struct ViewerState {
     pub owner_pid: u32,
@@ -11,6 +11,18 @@ pub struct ViewerState {
     pub dir: Vec<String>,
     pub idx: usize,
     pub status: String,
+    pub fit_mode: FitMode,
+    pub info_visible: bool,
+    pub help_visible: bool,
+    pub slideshow_on: bool,
+    pub interval_ms: u64,
+    pub last_advance_ms: u64,
+    pub file_size: u64,
+    pub dragging: bool,
+    pub drag_x: i32,
+    pub drag_y: i32,
+    pub view_w: u32,
+    pub view_h: u32,
 }
 
 impl ViewerState {
@@ -22,6 +34,18 @@ impl ViewerState {
             dir: Vec::new(),
             idx: 0,
             status: String::new(),
+            fit_mode: FitMode::Fit,
+            info_visible: false,
+            help_visible: false,
+            slideshow_on: false,
+            interval_ms: 3000,
+            last_advance_ms: 0,
+            file_size: 0,
+            dragging: false,
+            drag_x: 0,
+            drag_y: 0,
+            view_w: 0,
+            view_h: 0,
         }
     }
 }
