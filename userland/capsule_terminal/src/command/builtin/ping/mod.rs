@@ -39,8 +39,10 @@ const OP_SEND_PACKET: u16 = 4;
 const OP_POLL_PACKET: u16 = 5;
 const PROTO_ICMP: u8 = 1;
 const PING_ID: u16 = 0x4E4F;
-const PING_SEQ: u16 = 1;
 const DEADLINE_MS: i64 = 1000;
+// Echo requests the synchronous `ping` sends, one per sequence number, so a
+// single dropped packet no longer reads as a dead host.
+const PING_COUNT: u16 = 4;
 
 pub fn run(out: &mut Output<'_>, argv: &[&[u8]]) {
     if argv.len() < 2 {
@@ -61,8 +63,28 @@ pub fn run(out: &mut Output<'_>, argv: &[&[u8]]) {
         return;
     };
     emit::emit_target(out, argv[1], &dst);
-    let result = probe::probe(port, dst);
-    emit::emit_probe(out, dst, result);
+
+    let mut stats = emit::Stats::new();
+    for seq in 1..=PING_COUNT {
+        match probe::probe(port, dst, seq) {
+            probe::Probe::Reply(rtt) => {
+                stats.record(rtt);
+                emit::emit_reply_seq(out, &dst, seq, rtt);
+            }
+            probe::Probe::Timeout | probe::Probe::Unreachable => {
+                stats.miss();
+                emit::emit_timeout_seq(out, seq);
+            }
+            // A routing or configuration fault will not fix itself between
+            // packets, so report it once and stop rather than repeat it four
+            // times.
+            fatal => {
+                emit::emit_fatal(out, fatal);
+                break;
+            }
+        }
+    }
+    emit::emit_summary(out, argv[1], &stats);
 }
 
 // Job-submission variant of `run`: same host resolution and target
@@ -97,5 +119,5 @@ pub fn prepare(out: &mut Output<'_>, argv: &[&[u8]]) -> Option<PingJob> {
         return None;
     };
     emit::emit_target(out, argv[1], &dst);
-    Some(PingJob::new(port, dst))
+    Some(PingJob::new(port, dst, 1))
 }
