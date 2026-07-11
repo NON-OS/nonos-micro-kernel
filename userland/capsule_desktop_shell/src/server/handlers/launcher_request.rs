@@ -29,7 +29,7 @@ pub fn request(app: &LauncherApp) -> bool {
     mk_ipc_send_to_pid(pid, frame.as_ptr(), frame.len()) >= 0
 }
 
-fn lookup_pid(service: &[u8]) -> Option<u32> {
+pub(crate) fn lookup_pid(service: &[u8]) -> Option<u32> {
     let mut port = 0u32;
     let mut pid = 0u32;
     let rc = mk_service_lookup(service.as_ptr(), service.len(), &mut port, &mut pid);

@@ -14,18 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod health;
-pub mod launcher_focus;
-pub mod launcher_request;
-pub mod notify;
-pub mod open_with;
-pub mod spotlight_open;
-pub mod take_open_arg;
-pub mod tray_register;
-pub mod tray_remove;
-pub mod tray_update;
+use crate::protocol::Request;
+use crate::server::handlers::launcher_request::lookup_pid;
+use crate::server::respond;
+use crate::state::apps::LAUNCHER_APPS;
+use crate::state::Context;
 
-pub(super) fn u32_at(buf: &[u8], off: usize) -> Option<u32> {
-    let bytes = buf.get(off..off + 4)?;
-    Some(u32::from_le_bytes(bytes.try_into().ok()?))
+pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, tx: &mut [u8]) {
+    let svc = LAUNCHER_APPS
+        .iter()
+        .find(|a| lookup_pid(a.service) == Some(sender_pid))
+        .map(|a| a.service);
+    let path = match svc
+        .and_then(|s| core::str::from_utf8(s).ok())
+        .and_then(|s| ctx.pending_open.remove(s))
+    {
+        Some(p) => p,
+        None => {
+            let _ = respond::status(sender_pid, req, 0, tx);
+            return;
+        }
+    };
+    let _ = respond::payload(sender_pid, req, path.as_bytes(), tx);
 }
