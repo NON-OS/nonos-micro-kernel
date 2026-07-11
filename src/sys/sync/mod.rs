@@ -29,6 +29,10 @@
 
 pub mod irq_mutex;
 pub mod irq_rwlock;
+pub mod semaphore;
+pub mod seqlock;
 
 pub use irq_mutex::{IrqMutex, IrqMutexGuard};
 pub use irq_rwlock::{IrqRwLock, IrqRwLockReadGuard, IrqRwLockWriteGuard};
+pub use semaphore::Semaphore;
+pub use seqlock::SeqLock;
