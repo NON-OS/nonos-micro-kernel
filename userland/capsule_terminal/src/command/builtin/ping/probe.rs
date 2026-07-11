@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_service_lookup, mk_time_millis, mk_yield};
+use nonos_libc::mk_service_lookup;
 
-use super::poll::poll_once;
-use super::send::send_echo;
-use super::{DEADLINE_MS, IP_SERVICE};
+use super::job::PingJob;
+use super::IP_SERVICE;
 
 pub enum Probe {
     Reply(u64),
@@ -28,11 +27,6 @@ pub enum Probe {
     Timeout,
     SendFailed,
 }
-
-const E_OK: u16 = 0;
-const E_NO_CONFIG: u16 = 5;
-const E_NO_ROUTE: u16 = 6;
-const E_NO_NEIGHBOUR: u16 = 7;
 
 pub fn lookup_ip_service() -> Option<u32> {
     let mut port = 0u32;
@@ -45,24 +39,10 @@ pub fn lookup_ip_service() -> Option<u32> {
 }
 
 pub fn probe(port: u32, dst: [u8; 4]) -> Probe {
-    let t0 = mk_time_millis();
-    let mut sent = false;
+    let mut job = PingJob::new(port, dst);
     loop {
-        if mk_time_millis().wrapping_sub(t0) > DEADLINE_MS {
-            return if sent { Probe::Timeout } else { Probe::Unreachable };
+        if let Some(result) = job.step_once() {
+            return result;
         }
-        if !sent {
-            match send_echo(port, dst) {
-                E_OK => sent = true,
-                E_NO_NEIGHBOUR => {}
-                E_NO_ROUTE => return Probe::NoRoute,
-                E_NO_CONFIG => return Probe::NotReady,
-                _ => return Probe::SendFailed,
-            }
-        }
-        if let Some(rtt) = poll_once(port, dst, t0) {
-            return Probe::Reply(rtt);
-        }
-        mk_yield();
     }
 }

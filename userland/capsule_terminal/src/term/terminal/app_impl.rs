@@ -30,4 +30,12 @@ impl App for Terminal {
     fn paint(&mut self, fb: &mut PaintBuffer) {
         self.paint_inner(fb)
     }
+
+    fn on_tick(&mut self) -> bool {
+        self.on_tick_inner()
+    }
+
+    fn tick_interval_ms(&self) -> i64 {
+        30
+    }
 }

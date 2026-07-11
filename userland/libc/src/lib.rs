@@ -73,8 +73,8 @@ pub use ipc::{
     mk_ipc_send_to_pid, mk_service_lookup, mk_service_register,
 };
 pub use mem::{mk_mmap, mk_munmap};
-pub use proc_output::mk_proc_output;
-pub use process::{mk_args, mk_getpid, mk_pid_alive};
+pub use proc_output::{mk_proc_input, mk_proc_output, mk_stdin_read};
+pub use process::{mk_args, mk_getpid, mk_kill, mk_pid_alive, mk_wait};
 pub use procstat::{mk_proc_stat, ProcStatEntry, ProcStatHeader};
 pub use surface_registry::{
     mk_display_vsync_wait, mk_input_event_drain, mk_input_event_post, mk_input_event_wait,

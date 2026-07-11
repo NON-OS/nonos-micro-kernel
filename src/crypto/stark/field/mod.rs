@@ -9,6 +9,10 @@
 
 mod element;
 mod exp;
+mod ext;
+mod felt;
 mod ops;
 
 pub use element::{Fp, P};
+pub use ext::Fp2;
+pub use felt::Felt;

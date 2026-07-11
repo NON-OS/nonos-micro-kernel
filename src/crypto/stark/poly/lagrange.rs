@@ -19,7 +19,7 @@
 //! at an arbitrary location, without materializing its coefficients. This is the
 //! operation a STARK uses to move between a trace and its extension.
 
-use super::super::field::Fp;
+use super::super::field::{Fp, Fp2};
 
 /// Evaluate the polynomial that interpolates `(xs[i], ys[i])` at `z`. The `xs`
 /// must be distinct; a repeated node makes the interpolant undefined and the
@@ -37,6 +37,27 @@ pub fn eval_lagrange(xs: &[Fp], ys: &[Fp], z: Fp) -> Fp {
             }
         }
         acc = acc + ys[i] * num * den.inv();
+    }
+    acc
+}
+
+/// Evaluate the same interpolant at an extension point `z in Fp2`. The nodes and
+/// values stay in the base field (a periodic column is public and base-valued);
+/// only the evaluation point is in the extension, as the out-of-domain sampling of
+/// a money-grade STARK requires. Agrees with `eval_lagrange` on a base-embedded z.
+pub fn eval_lagrange_ext(xs: &[Fp], ys: &[Fp], z: Fp2) -> Fp2 {
+    let n = core::cmp::min(xs.len(), ys.len());
+    let mut acc = Fp2::ZERO;
+    for i in 0..n {
+        let mut num = Fp2::ONE;
+        let mut den = Fp::ONE;
+        for j in 0..n {
+            if i != j {
+                num = num * (z - Fp2::from_base(xs[j]));
+                den = den * (xs[i] - xs[j]);
+            }
+        }
+        acc = acc + Fp2::from_base(ys[i]) * num * Fp2::from_base(den.inv());
     }
     acc
 }

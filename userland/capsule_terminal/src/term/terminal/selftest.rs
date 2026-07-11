@@ -21,6 +21,10 @@ use crate::term::grid::types::Grid;
 use crate::term::state::State;
 use crate::term::util::copy_into;
 
+mod jobs_test;
+mod kernel_api;
+mod proc_lifecycle;
+
 const READY_ATTEMPTS: u32 = 100_000;
 
 // Headless capsule entry for the autorun-selftest build: bring up the heap,
@@ -54,7 +58,7 @@ fn exit_fail(msg: &[u8]) -> ! {
 // run after the capsule stack has settled and vfs is answering.
 fn ready(state: &mut State) -> bool {
     run_cmd(state, b"read /readme.txt");
-    state.last_status
+    state.last_status == 0
 }
 
 // Drive the previously unproven shell paths through the normal submit
@@ -272,6 +276,9 @@ fn run(state: &mut State) {
     run_cmd(state, b"echo a b c | wc");
     mark(b"pipe", visible_has(state, b"1"));
 
+    run_cmd(state, b"echo a | cat /readme.txt");
+    mark(b"pipe-anystage", visible_has(state, b"This file lives in the vfs capsule."));
+
     run_cmd(state, b"read /nope.txt || echo recovered");
     mark(b"statement", visible_has(state, b"recovered"));
 
@@ -312,6 +319,14 @@ fn run_ext(state: &mut State) {
 
     run_cmd(state, b"nslookup nonos.test");
     mark(b"nslookup", visible_has(state, b"nslookup: dns unavailable"));
+
+    run_cmd(state, b"cat /nonexistent");
+    run_cmd(state, b"echo $?");
+    mark(b"status", visible_has(state, b"1"));
+
+    kernel_api::run();
+    proc_lifecycle::run();
+    jobs_test::run(state);
 }
 
 fn run_cmd(state: &mut State, cmd: &[u8]) {
@@ -322,7 +337,7 @@ fn run_cmd(state: &mut State, cmd: &[u8]) {
 
 fn ok_cmd(state: &mut State, cmd: &[u8]) -> bool {
     run_cmd(state, cmd);
-    state.last_status
+    state.last_status == 0
 }
 
 fn visible_has(state: &State, needle: &[u8]) -> bool {

@@ -18,13 +18,22 @@
 //! structurally different computation, proven by the same engine as squaring,
 //! which is what shows the AIR layer is general and not fitted to one problem.
 
-use super::super::field::Fp;
-use super::spec::Air;
+use super::super::field::{Felt, Fp, Fp2};
+use super::spec::{Air, AirExt};
 use alloc::vec;
 use alloc::vec::Vec;
 
 pub struct Fibonacci {
     pub log_t: u32,
+}
+
+impl Fibonacci {
+    /// The transition written once over any field, so it serves both the base
+    /// composition and the extension out-of-domain evaluation.
+    fn transition_impl<F: Felt>(&self, window: &[F], _periodic: &[F]) -> Vec<F> {
+        // f(g^2*x) - f(g*x) - f(x)
+        vec![window[2] - window[1] - window[0]]
+    }
 }
 
 impl Air for Fibonacci {
@@ -48,13 +57,18 @@ impl Air for Fibonacci {
         1
     }
 
-    fn transition(&self, window: &[Fp], _periodic: &[Fp]) -> Vec<Fp> {
-        // f(g^2*x) - f(g*x) - f(x)
-        vec![window[2] - window[1] - window[0]]
+    fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
+        self.transition_impl(window, periodic)
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {
         // column 0, the first two rows are both one.
         vec![(0, 0, Fp::ONE), (0, 1, Fp::ONE)]
+    }
+}
+
+impl AirExt for Fibonacci {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
     }
 }

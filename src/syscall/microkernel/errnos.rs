@@ -21,6 +21,7 @@
 
 pub const ERRNO_PERM: i64 = -1;
 pub const ERRNO_NOENT: i64 = -2;
+pub const ERRNO_CHILD: i64 = -10;
 pub const ERRNO_NOMEM: i64 = -12;
 pub const ERRNO_ACCES: i64 = -13;
 pub const ERRNO_FAULT: i64 = -14;

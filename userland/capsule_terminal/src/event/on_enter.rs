@@ -18,10 +18,11 @@ use nonos_app_skeleton::EventOutcome;
 use nonos_libc::mk_time_millis;
 
 use crate::command;
+use crate::jobs;
 use crate::term::dimensions::COLS;
 use crate::term::prompt::PROMPT_BYTES;
 use crate::term::state::State;
-use crate::term::util::copy_into;
+use crate::term::util::{copy_into, format_u64};
 
 pub fn on_enter(state: &mut State) -> EventOutcome {
     state.fresh = false;
@@ -38,28 +39,52 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
     state.scrollback.push_line(&echo[..k]);
     state.history.push(&entered[..n]);
     let mut outcome = command::Outcome::Repaint;
-    let mut prev_ok = true;
-    for (conn, stmt) in command::split_program(&entered[..n]) {
+    let mut prev_status: i32 = state.last_status;
+    for command::Stmt { conn, body, background } in command::split_program(&entered[..n]) {
         let go = match conn {
             command::Conn::Always => true,
-            command::Conn::And => prev_ok,
-            command::Conn::Or => !prev_ok,
+            command::Conn::And => prev_status == 0,
+            command::Conn::Or => prev_status != 0,
         };
         if !go {
             continue;
         }
-        state.last_status = true;
-        let aliased = command::alias_expand(stmt, &state.aliases);
-        let expanded = command::expand(&aliased, &state.vars);
+        let aliased = command::alias_expand(body, &state.aliases);
+        let expanded = command::expand(&aliased, &state.vars, prev_status);
+        state.last_status = 0;
         let argv = command::parse(&expanded);
+        let args = &argv.argv[..argv.argc];
+        match jobs::is_job_command(state, args) {
+            jobs::Verdict::Job(work) => {
+                let id = jobs::submit(state, body, background, work);
+                if background {
+                    print_started(state, id);
+                    prev_status = state.last_status;
+                    continue;
+                }
+                state.fg_running = true;
+                state.fg_started_ms = mk_time_millis();
+                break;
+            }
+            jobs::Verdict::Handled => {
+                prev_status = state.last_status;
+                continue;
+            }
+            jobs::Verdict::Instant => {}
+        }
         if let command::Outcome::Exit = command::run(state, &argv) {
             outcome = command::Outcome::Exit;
             break;
         }
-        prev_ok = state.last_status;
+        if state.fg_running {
+            break;
+        }
+        prev_status = state.last_status;
     }
-    let dur = (mk_time_millis() - started).clamp(0, u32::MAX as i64) as u32;
-    state.close_block(state.last_status, dur);
+    if !state.fg_running {
+        let dur = (mk_time_millis() - started).clamp(0, u32::MAX as i64) as u32;
+        state.close_block(state.last_status == 0, dur);
+    }
     state.evict_blocks();
     state.line.clear();
     state.scrollback.jump_bottom();
@@ -67,4 +92,19 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
         command::Outcome::Exit => EventOutcome::Close,
         command::Outcome::Repaint => EventOutcome::Repaint,
     }
+}
+
+// "[n] started" line printed when a background job is submitted; the
+// job's own output streams into the scrollback as Task 13's on_tick pump
+// steps it.
+fn print_started(state: &mut State, id: u32) {
+    let mut num = [0u8; 20];
+    let nk = format_u64(id as u64, &mut num);
+    let mut msg = [0u8; 32];
+    let mut mk = 0;
+    msg[mk] = b'[';
+    mk += 1;
+    mk += copy_into(&mut msg[mk..], &num[..nk]);
+    mk += copy_into(&mut msg[mk..], b"] started");
+    state.scrollback.push_line(&msg[..mk]);
 }

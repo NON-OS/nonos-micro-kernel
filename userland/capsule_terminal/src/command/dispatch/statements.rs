@@ -26,8 +26,14 @@ pub enum Conn {
     Or,
 }
 
-pub fn split_program(line: &[u8]) -> Vec<(Conn, &[u8])> {
-    let mut out: Vec<(Conn, &[u8])> = Vec::new();
+pub struct Stmt<'a> {
+    pub conn: Conn,
+    pub body: &'a [u8],
+    pub background: bool,
+}
+
+pub fn split_program(line: &[u8]) -> Vec<Stmt<'_>> {
+    let mut out: Vec<Stmt<'_>> = Vec::new();
     let (mut start, mut conn) = (0usize, Conn::Always);
     let (mut sq, mut dq) = (false, false);
     let mut i = 0;
@@ -38,29 +44,33 @@ pub fn split_program(line: &[u8]) -> Vec<(Conn, &[u8])> {
         } else if c == b'"' && !sq {
             dq = !dq;
         } else if !sq && !dq && c == b';' {
-            push(&mut out, conn, &line[start..i]);
+            push(&mut out, conn, &line[start..i], false);
             conn = Conn::Always;
             start = i + 1;
         } else if !sq && !dq && c == b'&' && line.get(i + 1) == Some(&b'&') {
-            push(&mut out, conn, &line[start..i]);
+            push(&mut out, conn, &line[start..i], false);
             conn = Conn::And;
             start = i + 2;
             i += 2;
             continue;
         } else if !sq && !dq && c == b'|' && line.get(i + 1) == Some(&b'|') {
-            push(&mut out, conn, &line[start..i]);
+            push(&mut out, conn, &line[start..i], false);
             conn = Conn::Or;
             start = i + 2;
             i += 2;
             continue;
+        } else if !sq && !dq && c == b'&' {
+            push(&mut out, conn, &line[start..i], true);
+            conn = Conn::Always;
+            start = i + 1;
         }
         i += 1;
     }
-    push(&mut out, conn, &line[start..]);
+    push(&mut out, conn, &line[start..], false);
     out
 }
 
-fn push<'a>(out: &mut Vec<(Conn, &'a [u8])>, conn: Conn, seg: &'a [u8]) {
+fn push<'a>(out: &mut Vec<Stmt<'a>>, conn: Conn, seg: &'a [u8], background: bool) {
     let mut a = 0;
     let mut b = seg.len();
     while a < b && seg[a] == b' ' {
@@ -70,6 +80,6 @@ fn push<'a>(out: &mut Vec<(Conn, &'a [u8])>, conn: Conn, seg: &'a [u8]) {
         b -= 1;
     }
     if a < b {
-        out.push((conn, &seg[a..b]));
+        out.push(Stmt { conn, body: &seg[a..b], background });
     }
 }

@@ -61,11 +61,12 @@ const FORBIDDEN_AMBIENT: u64 = Capability::Admin.bit()
     | Capability::GraphicsDisplayQuery.bit()
     | Capability::GraphicsSurfaceCreate.bit()
     | Capability::GraphicsSurfaceMap.bit()
-    | Capability::GraphicsPresent.bit();
+    | Capability::GraphicsPresent.bit()
+    | Capability::SpawnBroker.bit();
 
 const _: () = assert!(
     AMBIENT_CAPS & FORBIDDEN_AMBIENT == 0,
-    "AMBIENT_CAPS must not include Admin/Driver/DeviceEnum/Mmio/Irq/Dma/Pio/Debug/Graphics*"
+    "AMBIENT_CAPS must not include Admin/Driver/DeviceEnum/Mmio/Irq/Dma/Pio/Debug/Graphics*/SpawnBroker"
 );
 
 pub(super) fn compute_inherited_caps(pid: Pid, parent_pid: Pid) -> u64 {

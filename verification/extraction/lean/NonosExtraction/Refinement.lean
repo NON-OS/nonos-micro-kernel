@@ -55,6 +55,7 @@ def idx : capabilities.types.Capability → Nat
   | .Pio => 20
   | .InputSource => 21
   | .TimeSet => 22
+  | .SpawnBroker => 23
 
 theorem idx_lt_64 (cap : capabilities.types.Capability) : idx cap < 64 := by
   cases cap <;> decide

@@ -7,4 +7,4 @@ mod tree;
 mod verify;
 
 pub use tree::MerkleTree;
-pub use verify::verify_path;
+pub use verify::{verify_path, verify_path_ext};

@@ -22,12 +22,12 @@ use crate::protocol::{
     OP_LOAD_FROM_STORE,
 };
 
-pub fn dispatch(req: Request<'_>) -> Vec<u8> {
+pub fn dispatch(req: Request<'_>, sender_pid: u32) -> Vec<u8> {
     match req.op {
         OP_HEALTHCHECK => handlers::health(req),
         OP_INSTALL => handlers::install(req),
         OP_LOAD_FROM_STORE => handlers::load_store(req),
-        OP_LOAD_BY_NAME => handlers::load_by_name(req),
+        OP_LOAD_BY_NAME => handlers::load_by_name(req, sender_pid),
         _ => encode_response(req.seq, EINVAL, &[]),
     }
 }

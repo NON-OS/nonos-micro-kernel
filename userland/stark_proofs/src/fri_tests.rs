@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::crypto::stark::field::Fp;
-use crate::crypto::stark::fri::{fri_prove, fri_verify, root_of_unity};
+use crate::crypto::stark::field::{Fp, Fp2};
+use crate::crypto::stark::fri::{fold_ext, fold_first, fold_layer, fri_prove, fri_verify, root_of_unity};
 use crate::crypto::stark::poly::eval;
 
 extern crate alloc;
@@ -145,4 +145,63 @@ fn a_tampered_opening_is_rejected() {
         !fri_verify(&proof, Fp::ONE, log_n, log_blowup, queries),
         "a tampered opening verified"
     );
+}
+
+// The extension-field fold, drawn from Fp2, is what makes FRI money-grade: the
+// soundness error drops from ~2^-64 (base field) to ~2^-128. These check the new
+// fold against the already-verified base fold and the degree-halving property.
+
+#[test]
+fn the_extension_fold_faithfully_extends_the_base_fold() {
+    // On a base-field challenge, fold_first must reproduce fold_layer embedded
+    // into Fp2 exactly. This ties the new path to the verified one.
+    let log_n = 4u32;
+    let n = 1usize << log_n;
+    let omega = root_of_unity(log_n);
+    let inv2 = Fp::from_u64(2).inv();
+    let shift = Fp::from_u64(7);
+    let mut s = 0xC0FFEE123u64 | 1;
+    let evals: Vec<Fp> = (0..n).map(|_| Fp::from_u64(xorshift(&mut s))).collect();
+    let beta = Fp::from_u64(xorshift(&mut s));
+
+    let base = fold_layer(&evals, beta, shift, omega, inv2);
+    let ext = fold_first(&evals, Fp2::from_base(beta), shift, omega, inv2);
+    assert_eq!(base.len(), ext.len());
+    for (b, e) in base.iter().zip(ext.iter()) {
+        assert_eq!(Fp2::from_base(*b), *e);
+    }
+}
+
+#[test]
+fn a_constant_codeword_folds_to_a_constant_in_the_extension() {
+    let log_n = 4u32;
+    let n = 1usize << log_n;
+    let omega = root_of_unity(log_n);
+    let inv2 = Fp::from_u64(2).inv();
+    let shift = Fp::from_u64(3);
+    let c = Fp2::new(Fp::from_u64(0xDEAD), Fp::from_u64(0xBEEF));
+    let cw: Vec<Fp2> = vec![c; n];
+    let folded = fold_ext(&cw, Fp2::new(Fp::from_u64(9), Fp::from_u64(11)), shift, omega, inv2);
+    assert_eq!(folded.len(), n / 2);
+    for v in &folded {
+        assert_eq!(*v, c);
+    }
+}
+
+#[test]
+fn the_extension_fold_chain_halves_each_layer() {
+    let log_n = 5u32;
+    let n = 1usize << log_n;
+    let omega = root_of_unity(log_n);
+    let inv2 = Fp::from_u64(2).inv();
+    let shift = Fp::from_u64(5);
+    let mut s = 0xABCDEF01u64 | 1;
+    let evals: Vec<Fp> = (0..n).map(|_| Fp::from_u64(xorshift(&mut s))).collect();
+
+    let b0 = Fp2::new(Fp::from_u64(0x33), Fp::from_u64(0x44));
+    let l1 = fold_first(&evals, b0, shift, omega, inv2);
+    let b1 = Fp2::new(Fp::from_u64(0x55), Fp::from_u64(0x66));
+    let l2 = fold_ext(&l1, b1, shift.square(), omega.square(), inv2);
+    assert_eq!(l1.len(), n / 2);
+    assert_eq!(l2.len(), n / 4);
 }

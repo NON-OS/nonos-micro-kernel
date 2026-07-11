@@ -56,8 +56,8 @@ pub use signal::SignalState;
 pub use types::Process;
 
 pub use api::{
-    current_tid, current_uid, get_current_pty, get_parent_pid, get_process, get_tty_pgrp, get_uid,
-    last_pid, list_all_pids, release_controlling_tty, resume_process, resume_process_by_pid,
-    set_comm, set_controlling_tty, set_cwd, set_tty_pgrp, stop_process,
+    current_tid, current_uid, exit_status, get_current_pty, get_parent_pid, get_process,
+    get_tty_pgrp, get_uid, last_pid, list_all_pids, release_controlling_tty, resume_process,
+    resume_process_by_pid, set_comm, set_controlling_tty, set_cwd, set_tty_pgrp, stop_process,
     terminate_current_with_signal, with_process, with_process_mut,
 };

@@ -8,7 +8,7 @@ mod lagrange;
 mod lde;
 mod ntt;
 
-pub use eval::eval;
-pub use lagrange::eval_lagrange;
+pub use eval::{eval, eval_ext};
+pub use lagrange::{eval_lagrange, eval_lagrange_ext};
 pub use lde::lde;
 pub use ntt::{intt, ntt};

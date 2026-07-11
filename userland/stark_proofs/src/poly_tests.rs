@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::crypto::stark::field::Fp;
-use crate::crypto::stark::poly::{eval, eval_lagrange};
+use crate::crypto::stark::field::{Fp, Fp2};
+use crate::crypto::stark::poly::{eval, eval_ext, eval_lagrange};
 
 extern crate alloc;
 use alloc::vec::Vec;
@@ -87,5 +87,34 @@ fn the_low_degree_extension_recovers_the_polynomial() {
                 "the interpolant disagrees with the polynomial off the nodes"
             );
         }
+    }
+}
+
+// The out-of-domain sampling point of a money-grade STARK is drawn from Fp2, so a
+// base-coefficient trace column is evaluated there via eval_ext. It must agree
+// with eval on base points and be a genuine Fp2 evaluation off them.
+
+#[test]
+fn eval_ext_agrees_with_eval_on_base_points() {
+    let mut s = 0x9e37u64 | 1;
+    let coeffs: Vec<Fp> = (0..24).map(|_| Fp::from_u64(xorshift(&mut s))).collect();
+    for _ in 0..500 {
+        let x = Fp::from_u64(xorshift(&mut s));
+        assert_eq!(eval_ext(&coeffs, Fp2::from_base(x)), Fp2::from_base(eval(&coeffs, x)));
+    }
+}
+
+#[test]
+fn eval_ext_matches_the_horner_definition_in_the_extension() {
+    let mut s = 0xC0DEu64 | 1;
+    let coeffs: Vec<Fp> = (0..8).map(|_| Fp::from_u64(xorshift(&mut s))).collect();
+    for _ in 0..200 {
+        let x = Fp2::new(Fp::from_u64(xorshift(&mut s)), Fp::from_u64(xorshift(&mut s)));
+        // Horner reference computed independently.
+        let mut acc = Fp2::ZERO;
+        for &c in coeffs.iter().rev() {
+            acc = acc * x + Fp2::from_base(c);
+        }
+        assert_eq!(eval_ext(&coeffs, x), acc);
     }
 }

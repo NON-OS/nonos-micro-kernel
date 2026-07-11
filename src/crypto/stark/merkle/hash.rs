@@ -14,15 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Domain-separated leaf and node hashing for the Merkle commitment. BLAKE3 is
-//! the hash, already proven correct against its reference vectors elsewhere in
-//! the tree, so the commitment's security rests on a checked primitive.
+//! Domain-separated leaf and node hashing for the Merkle commitment. Keccak256 is
+//! the hash, already the EVM-native hash, so the on-chain verifier recomputes leaves and nodes with a
+//! single native opcode instead of a costly in-Solidity hash.
 
-use super::super::field::Fp;
-use crate::crypto::hash::blake3_hash;
+use super::super::field::{Fp, Fp2};
+use crate::crypto::hash::keccak256;
 use alloc::vec::Vec;
 
 const DOM_LEAF: &[u8] = b"NONOS-STARK-MERKLE-LEAF";
+const DOM_LEAF_EXT: &[u8] = b"NONOS-STARK-MERKLE-LEAF-EXT";
 const DOM_NODE: &[u8] = b"NONOS-STARK-MERKLE-NODE";
 
 /// Hash a field element into a leaf digest, domain-separated from node hashing
@@ -31,7 +32,18 @@ pub(super) fn hash_leaf(leaf: Fp) -> [u8; 32] {
     let mut buf = Vec::with_capacity(DOM_LEAF.len() + 8);
     buf.extend_from_slice(DOM_LEAF);
     buf.extend_from_slice(&leaf.value().to_le_bytes());
-    blake3_hash(&buf)
+    keccak256(&buf)
+}
+
+/// Hash an extension-field element into a leaf digest: both lanes under a distinct
+/// domain, so a folded FRI layer commits like a base layer but can never be
+/// confused with one, an internal node, or a differently-shaped leaf.
+pub(super) fn hash_leaf_ext(leaf: Fp2) -> [u8; 32] {
+    let mut buf = Vec::with_capacity(DOM_LEAF_EXT.len() + 16);
+    buf.extend_from_slice(DOM_LEAF_EXT);
+    buf.extend_from_slice(&leaf.c0.value().to_le_bytes());
+    buf.extend_from_slice(&leaf.c1.value().to_le_bytes());
+    keccak256(&buf)
 }
 
 /// Hash two child digests into their parent, with a distinct domain tag.
@@ -40,5 +52,5 @@ pub(super) fn hash_node(left: &[u8; 32], right: &[u8; 32]) -> [u8; 32] {
     buf.extend_from_slice(DOM_NODE);
     buf.extend_from_slice(left);
     buf.extend_from_slice(right);
-    blake3_hash(&buf)
+    keccak256(&buf)
 }

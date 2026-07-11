@@ -25,8 +25,8 @@
 //! public input. The domain point inverse and the position bit stay public, as
 //! they follow from the committed domain and the query index.
 
-use super::super::field::Fp;
-use super::spec::Air;
+use super::super::field::{Felt, Fp, Fp2};
+use super::spec::{Air, AirExt};
 use alloc::vec::Vec;
 
 pub struct TraceFold {
@@ -66,6 +66,29 @@ impl TraceFold {
         trace[self.n_folds * 3 + 1] = a[self.n_folds];
         trace[self.n_folds * 3 + 2] = b[self.n_folds];
         trace
+    }
+
+    fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
+        let beta = window[0];
+        let (a, b) = (window[1], window[2]);
+        let (next_a, next_b) = (window[4], window[5]);
+        let sel = periodic[0];
+        let x_inv = periodic[1];
+        let dir = periodic[2];
+
+        let inv2 = F::from_base(Fp::from_u64(2).inv());
+        let even = (a + b) * inv2;
+        let odd = (a - b) * inv2 * x_inv;
+        let folded = even + beta * odd;
+
+        let expected = (F::ONE - dir) * next_a + dir * next_b;
+        alloc::vec![sel * (folded - expected)]
+    }
+}
+
+impl AirExt for TraceFold {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
     }
 }
 
@@ -107,20 +130,7 @@ impl Air for TraceFold {
     }
 
     fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
-        let beta = window[0];
-        let (a, b) = (window[1], window[2]);
-        let (next_a, next_b) = (window[4], window[5]);
-        let sel = periodic[0];
-        let x_inv = periodic[1];
-        let dir = periodic[2];
-
-        let inv2 = Fp::from_u64(2).inv();
-        let even = (a + b) * inv2;
-        let odd = (a - b) * inv2 * x_inv;
-        let folded = even + beta * odd;
-
-        let expected = (Fp::ONE - dir) * next_a + dir * next_b;
-        alloc::vec![sel * (folded - expected)]
+        self.transition_impl(window, periodic)
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {

@@ -15,7 +15,7 @@ set_option maxRecDepth 2048
 namespace nonos_caps
 
 /-- [nonos_caps::capabilities::types::Capability]
-    Source: 'src/capabilities/../../../../../src/capabilities/types.rs', lines 18:0-55:1
+    Source: 'src/capabilities/../../../../../src/capabilities/types.rs', lines 18:0-60:1
     Visibility: public -/
 @[discriminant isize]
 inductive capabilities.types.Capability where
@@ -42,10 +42,11 @@ inductive capabilities.types.Capability where
 | Pio : capabilities.types.Capability
 | InputSource : capabilities.types.Capability
 | TimeSet : capabilities.types.Capability
+| SpawnBroker : capabilities.types.Capability
 | SpawnWindow : capabilities.types.Capability
 
 /-- [nonos_caps::capabilities::types::{nonos_caps::capabilities::types::Capability}::bit]:
-    Source: 'src/capabilities/../../../../../src/capabilities/types.rs', lines 59:4-86:5 -/
+    Source: 'src/capabilities/../../../../../src/capabilities/types.rs', lines 64:4-92:5 -/
 def capabilities.types.Capability.bit
   (self : capabilities.types.Capability) : Result Std.U64 := do
   match self with
@@ -72,7 +73,8 @@ def capabilities.types.Capability.bit
   | capabilities.types.Capability.Pio => ok 1048576#u64
   | capabilities.types.Capability.InputSource => ok 2097152#u64
   | capabilities.types.Capability.TimeSet => ok 4194304#u64
-  | capabilities.types.Capability.SpawnWindow => ok 8388608#u64
+  | capabilities.types.Capability.SpawnBroker => ok 8388608#u64
+  | capabilities.types.Capability.SpawnWindow => ok 16777216#u64
 
 /-- [nonos_caps::capabilities::bits::has_capability]:
     Source: 'src/capabilities/../../../../../src/capabilities/bits.rs', lines 34:0-36:1

@@ -16,6 +16,7 @@
 
 use alloc::vec::Vec;
 
+use crate::jobs::JobTable;
 use crate::term::block::Block;
 use crate::term::cwd::Cwd;
 use crate::term::history::History;
@@ -32,9 +33,10 @@ pub struct State {
     pub start_ms: u64,
     // Shell variables, set with `set NAME VALUE` and expanded as $NAME.
     pub vars: Vec<(Vec<u8>, Vec<u8>)>,
-    // Exit status of the last command: true on success. Fallible commands
-    // clear it on error; `&&` and `||` gate the next statement on it.
-    pub last_status: bool,
+    // Exit status of the last command: 0 on success, nonzero on failure.
+    // Fallible commands set it on error; `&&` and `||` gate the next
+    // statement on it.
+    pub last_status: i32,
     // Command aliases, defined with `alias NAME EXPANSION`. The first word
     // of a line is replaced by its expansion before the line is run.
     pub aliases: Vec<(Vec<u8>, Vec<u8>)>,
@@ -48,4 +50,11 @@ pub struct State {
     // Terminal background, chosen by the active profile. May carry alpha below
     // 0xFF, which the compositor blends so the desktop shows through.
     pub bg: u32,
+    pub jobs: JobTable,
+    // Set when a statement is submitted as a foreground job: on_enter
+    // stops consuming the line (v1 limit: statements after a foreground
+    // job are dropped, so it should be the last on its line) and defers
+    // close_block and last_status to the job's reap in the on_tick pump.
+    pub fg_running: bool,
+    pub fg_started_ms: i64,
 }

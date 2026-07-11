@@ -15,10 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::{EventOutcome, MOD_SHIFT};
+use nonos_libc::mk_kill;
 
 use super::copy_line::copy_line;
 use super::paste_clipboard::paste_clipboard;
+use crate::jobs::JobWork;
 use crate::term::state::State;
+
+const SIGINT: u64 = 2;
 
 const CTRL_A: u32 = 0x41;
 const CTRL_C: u32 = 0x43;
@@ -48,8 +52,19 @@ pub fn on_ctrl(state: &mut State, code: u32, flags: u16) -> Option<EventOutcome>
             Some(EventOutcome::Repaint)
         }
         CTRL_C | CTRL_C_LO => {
-            state.line.clear();
-            state.history.reset_cursor();
+            if state.fg_running {
+                if let Some(id) = state.jobs.foreground() {
+                    if let Some(job) = state.jobs.get_mut(id) {
+                        if let JobWork::ExternalStage { pid, .. } = job.work {
+                            let _ = mk_kill(pid as u64, SIGINT);
+                        }
+                        job.cancel = true;
+                    }
+                }
+            } else {
+                state.line.clear();
+                state.history.reset_cursor();
+            }
             state.scrollback.push_line(b"^C");
             state.scrollback.jump_bottom();
             Some(EventOutcome::Repaint)

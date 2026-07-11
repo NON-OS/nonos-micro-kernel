@@ -22,9 +22,9 @@
 //! are public (a FRI proof reveals its openings), and every root is pinned at
 //! its checkpoint.
 
-use super::super::field::Fp;
+use super::super::field::{Felt, Fp, Fp2};
 use super::poseidon::{Poseidon, RATE, WIDTH};
-use super::spec::Air;
+use super::spec::{Air, AirExt};
 use alloc::vec::Vec;
 
 /// One opening: a public leaf digest, its committed root, and the sibling path.
@@ -149,6 +149,42 @@ fn inject(node: [Fp; RATE], sibling: [Fp; RATE], right: bool) -> [Fp; WIDTH] {
     state
 }
 
+impl MultiMembership {
+    fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
+        let mut state = [F::ZERO; WIDTH];
+        state.copy_from_slice(&window[..WIDTH]);
+        let mut rc = [F::ZERO; WIDTH];
+        rc.copy_from_slice(&periodic[..WIDTH]);
+        let slot_bnd = periodic[WIDTH];
+        let op_bnd = periodic[WIDTH + 1];
+        let dir = periodic[WIDTH + 2];
+        let sib = &periodic[WIDTH + 3..WIDTH + 3 + RATE];
+        let reset = &periodic[WIDTH + 3 + RATE..WIDTH + 3 + RATE + WIDTH];
+
+        let pr = self.hasher.round_generic(&state, &rc);
+        let one = F::ONE;
+
+        let mut out = Vec::with_capacity(WIDTH);
+        for (j, next) in window[WIDTH..2 * WIDTH].iter().enumerate() {
+            let slot_inject = if j < RATE {
+                (one - dir) * pr[j] + dir * sib[j]
+            } else {
+                (one - dir) * sib[j - RATE] + dir * pr[j - RATE]
+            };
+            let expected =
+                op_bnd * reset[j] + slot_bnd * slot_inject + (one - op_bnd - slot_bnd) * pr[j];
+            out.push(*next - expected);
+        }
+        out
+    }
+}
+
+impl AirExt for MultiMembership {
+    fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
+        self.transition_impl(window, periodic)
+    }
+}
+
 impl Air for MultiMembership {
     fn log_trace_len(&self) -> u32 {
         self.log_batch() + self.log_slots() + self.log_rounds
@@ -225,31 +261,7 @@ impl Air for MultiMembership {
     }
 
     fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
-        let mut state = [Fp::ZERO; WIDTH];
-        state.copy_from_slice(&window[..WIDTH]);
-        let mut rc = [Fp::ZERO; WIDTH];
-        rc.copy_from_slice(&periodic[..WIDTH]);
-        let slot_bnd = periodic[WIDTH];
-        let op_bnd = periodic[WIDTH + 1];
-        let dir = periodic[WIDTH + 2];
-        let sib = &periodic[WIDTH + 3..WIDTH + 3 + RATE];
-        let reset = &periodic[WIDTH + 3 + RATE..WIDTH + 3 + RATE + WIDTH];
-
-        let pr = self.hasher.round_with_rc(&state, &rc);
-        let one = Fp::ONE;
-
-        let mut out = Vec::with_capacity(WIDTH);
-        for (j, next) in window[WIDTH..2 * WIDTH].iter().enumerate() {
-            let slot_inject = if j < RATE {
-                (one - dir) * pr[j] + dir * sib[j]
-            } else {
-                (one - dir) * sib[j - RATE] + dir * pr[j - RATE]
-            };
-            let expected =
-                op_bnd * reset[j] + slot_bnd * slot_inject + (one - op_bnd - slot_bnd) * pr[j];
-            out.push(*next - expected);
-        }
-        out
+        self.transition_impl(window, periodic)
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {

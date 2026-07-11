@@ -17,6 +17,7 @@
 mod bool_to_outcome;
 mod complete;
 mod copy_line;
+mod fg_stdin;
 mod on_ctrl;
 mod on_down;
 mod on_enter;

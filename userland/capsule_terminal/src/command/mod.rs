@@ -20,5 +20,5 @@ pub mod output;
 pub mod parse;
 pub mod wire;
 
-pub use dispatch::{alias_expand, expand, run, split_program, Conn, Outcome};
+pub use dispatch::{alias_expand, expand, run, split_program, Conn, Outcome, Stmt};
 pub use parse::parse;

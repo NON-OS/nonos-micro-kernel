@@ -25,6 +25,7 @@ mod types;
 mod verify;
 
 pub use domain::root_of_unity;
+pub use fold::{fold_ext, fold_first, fold_layer};
 pub use prove::fri_prove;
 pub use types::{FriProof, LayerOpening, QueryProof};
 pub use verify::fri_verify;

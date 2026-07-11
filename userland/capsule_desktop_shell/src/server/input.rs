@@ -20,7 +20,7 @@ use crate::render::{desktop_icons, desktop_menu, topbar};
 use crate::server::desktop;
 use crate::server::handlers::{launcher_focus, launcher_request};
 use crate::server::refresh_taskbar::refresh_taskbar;
-use crate::state::{reveal_taskbar, Context, LAUNCHER_APPS};
+use crate::state::{collapse_taskbar, reveal_taskbar, Context, LAUNCHER_APPS};
 use nonos_libc::{
     mk_time_millis, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP, INPUT_KIND_KEY_DOWN,
     INPUT_KIND_POINTER_ABS, INPUT_KIND_TOUCH,

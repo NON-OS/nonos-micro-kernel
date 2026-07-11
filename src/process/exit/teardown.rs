@@ -14,9 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::collections::BTreeMap;
 use core::sync::atomic::Ordering;
+use spin::Mutex;
 
 use crate::process::core::{clear_current_if, Pid, ProcessState, CURRENT_PID, PROCESS_TABLE};
+
+// `finalize_teardown` removes the PCB from PROCESS_TABLE entirely, so
+// exit_code is unreadable once a zombie is reaped; this log keeps it
+// available to a parent calling sys_wait after that point. Entries are
+// consumed (removed) on read, like POSIX waitpid, and the map is capped
+// so fire-and-forget children that are never waited on can't grow it
+// without bound.
+static REAP_LOG: Mutex<BTreeMap<Pid, (Pid, i32)>> = Mutex::new(BTreeMap::new());
+const REAP_LOG_CAP: usize = 64;
+
+pub(crate) fn reap_exit_status(pid: Pid) -> Option<i32> {
+    REAP_LOG.lock().remove(&pid).map(|(_, code)| code)
+}
+
+pub(crate) fn reap_exit_status_for(pid: Pid, parent: Pid) -> Option<i32> {
+    let mut log = REAP_LOG.lock();
+    match log.get(&pid) {
+        Some(&(logged_parent, code)) if logged_parent == parent => {
+            log.remove(&pid);
+            Some(code)
+        }
+        _ => None,
+    }
+}
 
 pub fn teardown(pid: Pid, exit_code: i32, _by_signal: bool) {
     let pcb = match PROCESS_TABLE.find_by_pid(pid) {
@@ -40,6 +66,15 @@ pub fn teardown(pid: Pid, exit_code: i32, _by_signal: bool) {
 
     pcb.exit_code.store(exit_code, Ordering::Release);
     *pcb.state.lock() = ProcessState::Zombie(exit_code);
+    {
+        let mut reap_log = REAP_LOG.lock();
+        if reap_log.len() >= REAP_LOG_CAP {
+            if let Some((&oldest, _)) = reap_log.iter().next() {
+                reap_log.remove(&oldest);
+            }
+        }
+        reap_log.insert(pid, (pcb.parent_pid(), exit_code));
+    }
     crate::sched::remove_from_run_queue(pid);
     clear_current_if(pid);
     crate::process::scheduler::preemption::proc_ticks::clear(pid);
