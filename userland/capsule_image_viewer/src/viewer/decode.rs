@@ -45,6 +45,11 @@ pub fn decode(bytes: &[u8], name: &[u8]) -> Result<Decoded, &'static str> {
         let _ = mk_surface_release(handle);
         return Err("surface too small");
     }
+    if (desc.stride as u64) < (desc.width as u64) * 4
+        || (desc.stride as u64) * (desc.height as u64) > desc.byte_len {
+        let _ = mk_surface_release(handle);
+        return Err("bad surface geometry");
+    }
     let px = copy_surface(va as usize, desc.stride, desc.width, desc.height);
     let _ = mk_surface_release(handle);
     Ok(Decoded { px, w: desc.width, h: desc.height })
