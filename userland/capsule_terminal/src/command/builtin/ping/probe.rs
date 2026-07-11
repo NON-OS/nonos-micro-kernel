@@ -38,8 +38,8 @@ pub fn lookup_ip_service() -> Option<u32> {
     Some(port)
 }
 
-pub fn probe(port: u32, dst: [u8; 4]) -> Probe {
-    let mut job = PingJob::new(port, dst);
+pub fn probe(port: u32, dst: [u8; 4], seq: u16) -> Probe {
+    let mut job = PingJob::new(port, dst, seq);
     loop {
         if let Some(result) = job.step_once() {
             return result;

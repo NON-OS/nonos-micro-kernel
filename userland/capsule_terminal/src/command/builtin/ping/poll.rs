@@ -17,11 +17,11 @@
 use nonos_libc::{mk_ipc_call, mk_time_millis};
 
 use super::icmp::{parse_reply, ECHO_REPLY};
-use super::{HDR_LEN, IP_MAGIC, OP_POLL_PACKET, PING_ID, PING_SEQ, PROTO_ICMP};
+use super::{HDR_LEN, IP_MAGIC, OP_POLL_PACKET, PING_ID, PROTO_ICMP};
 
 const E_OK: u16 = 0;
 
-pub fn poll_once(port: u32, dst: [u8; 4], t0: i64) -> Option<u64> {
+pub fn poll_once(port: u32, dst: [u8; 4], t0: i64, want_seq: u16) -> Option<u64> {
     let mut req = [0u8; HDR_LEN + 1];
     req[0..4].copy_from_slice(&IP_MAGIC.to_le_bytes());
     req[4..6].copy_from_slice(&1u16.to_le_bytes());
@@ -37,7 +37,7 @@ pub fn poll_once(port: u32, dst: [u8; 4], t0: i64) -> Option<u64> {
         return None;
     }
     let (ty, id, seq) = parse_reply(&rx[HDR_LEN + 9..n as usize])?;
-    if ty != ECHO_REPLY || id != PING_ID || seq != PING_SEQ {
+    if ty != ECHO_REPLY || id != PING_ID || seq != want_seq {
         return None;
     }
     Some(mk_time_millis().wrapping_sub(t0) as u64)

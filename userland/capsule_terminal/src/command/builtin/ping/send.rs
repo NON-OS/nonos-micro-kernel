@@ -17,13 +17,13 @@
 use nonos_libc::mk_ipc_call;
 
 use super::icmp::build_echo;
-use super::{HDR_LEN, IP_MAGIC, OP_SEND_PACKET, PING_ID, PING_SEQ, PROTO_ICMP};
+use super::{HDR_LEN, IP_MAGIC, OP_SEND_PACKET, PING_ID, PROTO_ICMP};
 
 const PAYLOAD: [u8; 16] = *b"NONOS-ping-echo!";
 
-pub fn send_echo(port: u32, dst: [u8; 4]) -> u16 {
+pub fn send_echo(port: u32, dst: [u8; 4], seq: u16) -> u16 {
     let mut icmp = [0u8; 24];
-    let Some(n) = build_echo(PING_ID, PING_SEQ, &PAYLOAD, &mut icmp) else {
+    let Some(n) = build_echo(PING_ID, seq, &PAYLOAD, &mut icmp) else {
         return 0xffff;
     };
     let mut req = [0u8; HDR_LEN + 5 + 24];
