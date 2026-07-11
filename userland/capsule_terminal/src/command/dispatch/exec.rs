@@ -22,13 +22,11 @@ use crate::term::state::State;
 // Run a single resolved command (already stripped of any redirect). The
 // caller handles exit detection and output redirection.
 pub(super) fn exec(state: &mut State, args: &[&[u8]]) -> Outcome {
-    const HELP: &[u8] = b"help";
     if args.is_empty() {
         return Outcome::Repaint;
     }
     match args[0] {
         b"nox" => return builtin::nox::dispatch(state, &args[1..]),
-        b"help" => return builtin::nox::dispatch(state, &[HELP]),
         b"about" => builtin::about::run(&mut Output::new(&mut state.scrollback), args),
         b"version" => builtin::version::run(&mut Output::new(&mut state.scrollback), args),
         b"whoami" => builtin::whoami::run(&mut Output::new(&mut state.scrollback), args),
@@ -48,6 +46,24 @@ pub(super) fn exec(state: &mut State, args: &[&[u8]]) -> Outcome {
         b"motd" => builtin::motd::run(&mut state.scrollback, args),
         b"ping" => builtin::ping::run(&mut Output::new(&mut state.scrollback), args),
         b"service" | b"svc" => builtin::service::run(&mut Output::new(&mut state.scrollback), args),
+        b"pwd" => builtin::fs::pwd(state),
+        b"cd" => builtin::fs::cd(state, args),
+        b"ls" | b"dir" => builtin::fs::ls(state, args),
+        b"cat" => builtin::fs::cat(state, args),
+        b"mkdir" => builtin::fs::mkdir(state, args),
+        b"touch" => builtin::fs::touch(state, args),
+        b"rm" | b"del" => builtin::fs::rm(state, args),
+        b"mv" => builtin::fs::mv(state, args),
+        b"cp" => builtin::fs::cp(state, args),
+        b"stat" => builtin::fs::stat(state, args),
+        b"rmdir" => builtin::fs::rmdir(state, args),
+        b"find" => builtin::fs::find(state, args),
+        b"head" => builtin::fs::head(state, args),
+        b"tail" => builtin::fs::tail(state, args),
+        b"grep" => builtin::fs::grep(state, args),
+        b"wc" => builtin::fs::wc(state, args),
+        b"help" | b"commands" => builtin::help::run(&mut Output::new(&mut state.scrollback)),
+        b"theme" | b"profile" => builtin::theme::run(state, args),
         _ => return builtin::nox::dispatch(state, args),
     }
     Outcome::Repaint

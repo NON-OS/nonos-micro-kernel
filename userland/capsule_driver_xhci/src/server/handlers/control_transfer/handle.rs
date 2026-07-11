@@ -19,6 +19,12 @@ use crate::protocol::{Request, CONTROL_TRANSFER_REQUEST_LEN, E_INVAL, E_IO};
 use crate::server::context::Context;
 use crate::server::error::reply_with_status;
 
+// Largest data stage this handler will accept. The reply is copied into the
+// fixed-size `tx` buffer, so w_len must be clamped or a client-chosen w_len up
+// to 65535 overflows tx (heap OOB write). 512 matches the config-descriptor cap
+// and leaves ample headroom in tx (512 + header < 2068).
+const CONTROL_TRANSFER_DATA_MAX: u16 = 512;
+
 pub fn handle(ctx: &mut Context, req: &Request, body: &[u8], tx: &mut [u8]) {
     if body.len() != CONTROL_TRANSFER_REQUEST_LEN {
         reply_with_status(tx, req, E_INVAL);
@@ -27,7 +33,7 @@ pub fn handle(ctx: &mut Context, req: &Request, body: &[u8], tx: &mut [u8]) {
     let (slot, bm_rt, b_req) = (body[0], body[2], body[3]);
     let w_value = u16::from_le_bytes([body[4], body[5]]);
     let w_index = u16::from_le_bytes([body[6], body[7]]);
-    let w_len = u16::from_le_bytes([body[8], body[9]]);
+    let w_len = u16::from_le_bytes([body[8], body[9]]).min(CONTROL_TRANSFER_DATA_MAX);
     let region = if w_len > 0 {
         match ctx.driver.dma_pool.alloc(w_len as u64) {
             Ok(r) => {

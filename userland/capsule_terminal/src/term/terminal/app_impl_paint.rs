@@ -26,6 +26,7 @@ impl Terminal {
                 self.cur().start_ms = now as u64;
             }
         }
+        self.width = fb.width;
         crate::paint::paint_tabs(&self.tabs, self.active, fb);
     }
 }

@@ -29,6 +29,9 @@ pub struct Driver {
     pub queue_device_addr: u64,
     pub queue_size: u16,
     pub host_features: u32,
+    // True when VirGL was negotiated and render context 1 exists on the host,
+    // i.e. RESOURCE_CREATE_3D / SUBMIT_3D are usable.
+    pub virgl_ready: bool,
     pub regs: Regs,
     pub control_queue: ControlQueue,
     pub resources: ResourceTable,

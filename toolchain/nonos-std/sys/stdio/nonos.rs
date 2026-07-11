@@ -1,6 +1,7 @@
 // NONOS std PAL: stdout/stderr via the kernel debug syscall (serial sink),
-// the same path the userland libc `mk_debug` uses. Stdin is empty until a
-// console source is wired. Raw syscall: rax = tag, rdi/rsi = (buf, len).
+// the same path the userland libc `mk_debug` uses. Stdin is a blocking read
+// of this process's kernel stdin channel, fed by a launcher (the terminal).
+// Raw syscall: rax = tag, rdi/rsi = (buf, len).
 
 use crate::io;
 
@@ -9,7 +10,35 @@ const fn tag4(b: &[u8; 4]) -> i64 {
 }
 
 const N_MK_DEBUG: i64 = tag4(b"MDBG");
+const N_MK_STDIN_READ: i64 = tag4(b"MSRD");
+const N_MK_YIELD: i64 = tag4(b"MYLD");
 const CHUNK: usize = 240;
+
+// Drain one chunk of this process's stdin channel. The kernel read is
+// non-blocking: it returns the bytes a launcher (the terminal) has fed to
+// `stdin.<pid>`, 0 when nothing is queued yet, or a negative errno.
+#[inline]
+unsafe fn stdin_read(ptr: *mut u8, len: usize) -> i64 {
+    let ret: i64;
+    unsafe {
+        core::arch::asm!(
+            "syscall",
+            inout("rax") N_MK_STDIN_READ => ret,
+            in("rdi") ptr as u64,
+            in("rsi") len as u64,
+            out("rcx") _,
+            out("r11") _,
+        );
+    }
+    ret
+}
+
+#[inline]
+fn raw_yield() {
+    unsafe {
+        core::arch::asm!("syscall", in("rax") N_MK_YIELD, out("rcx") _, out("r11") _);
+    }
+}
 
 #[inline]
 unsafe fn debug_write(ptr: *const u8, len: usize) {
@@ -38,8 +67,24 @@ impl Stdin {
 }
 
 impl io::Read for Stdin {
-    fn read(&mut self, _buf: &mut [u8]) -> io::Result<usize> {
-        Ok(0)
+    // Blocking read, the std contract. The kernel channel is non-blocking, so
+    // spin with a yield until a launcher feeds a chunk. A negative return is
+    // an unreadable channel, reported as end of input rather than an error so
+    // a plain `read_to_string` terminates instead of looping.
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        if buf.is_empty() {
+            return Ok(0);
+        }
+        loop {
+            let n = unsafe { stdin_read(buf.as_mut_ptr(), buf.len()) };
+            if n > 0 {
+                return Ok(n as usize);
+            }
+            if n < 0 {
+                return Ok(0);
+            }
+            raw_yield();
+        }
     }
 }
 
@@ -65,7 +110,7 @@ impl io::Write for Stdout {
     }
 }
 
-pub const STDIN_BUF_SIZE: usize = 0;
+pub const STDIN_BUF_SIZE: usize = 8 * 1024;
 
 pub fn is_ebadf(_err: &io::Error) -> bool {
     true

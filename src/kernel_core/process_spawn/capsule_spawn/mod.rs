@@ -16,6 +16,7 @@
 
 mod attested_parent;
 mod from_vfs;
+mod instance;
 mod runner;
 mod spec;
 
@@ -30,3 +31,5 @@ pub use spec::{CapsuleSpecVerified, SpawnError};
 // Runtime capsule loading from the VFS store, driven by the install syscall.
 pub use from_vfs::{CapsuleArtifacts, LoadError};
 pub(crate) use from_vfs::load_capsule_from_vfs;
+// Spawning an extra window instance of an embedded, attested app capsule.
+pub use instance::{spawn_next as spawn_next_instance, InstanceEndpoint, InstanceSpawn};

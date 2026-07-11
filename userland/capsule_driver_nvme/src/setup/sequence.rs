@@ -60,7 +60,11 @@ pub fn run() -> NvmeResult<Driver> {
         let data = admin.smart_health(regs, info.doorbell_stride())?;
         SmartHealth::parse(data)
     };
-    let io = if namespace.nsid != 0 && namespace.lba_size == 512 && namespace.size_lba > 0 {
+    // Support the two real-world NVMe formats: 512-byte and 4096-byte (4Kn)
+    // LBAs. Many modern and enterprise SSDs are 4Kn; gating on 512 alone left
+    // them enumerated but unable to do I/O.
+    let lba_ok = namespace.lba_size == 512 || namespace.lba_size == 4096;
+    let io = if namespace.nsid != 0 && lba_ok && namespace.size_lba > 0 {
         crate::nvm::bring_up(
             dev.device_id,
             claim_epoch,
@@ -69,6 +73,7 @@ pub fn run() -> NvmeResult<Driver> {
             &mut admin,
             namespace.nsid,
             namespace.size_lba,
+            namespace.lba_size,
         )
         .ok()
     } else {

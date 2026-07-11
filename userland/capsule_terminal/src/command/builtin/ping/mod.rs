@@ -50,7 +50,9 @@ pub fn run(out: &mut Output<'_>, argv: &[&[u8]]) {
     let dst = match resolve::resolve(argv[1]) {
         resolve::Resolved::Ip(ip) => ip,
         resolve::Resolved::NoService => return out.writeln(b"ping: dns service unavailable"),
-        resolve::Resolved::Timeout => return out.writeln(b"ping: dns query timed out (no reply in 6s)"),
+        resolve::Resolved::Timeout => {
+            return out.writeln(b"ping: dns query timed out (no reply in 6s)")
+        }
         resolve::Resolved::ServFail => return out.writeln(b"ping: dns lookup failed (servfail)"),
         resolve::Resolved::Unknown => return out.writeln(b"ping: unknown host"),
     };

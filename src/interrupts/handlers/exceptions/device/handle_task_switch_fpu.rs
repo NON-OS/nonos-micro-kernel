@@ -16,7 +16,7 @@
 
 use x86_64::registers::control::{Cr0, Cr0Flags};
 
-pub fn handle_task_switch_fpu() {
+pub(crate) fn handle_task_switch_fpu() {
     unsafe {
         Cr0::update(|cr0| {
             cr0.remove(Cr0Flags::TASK_SWITCHED);

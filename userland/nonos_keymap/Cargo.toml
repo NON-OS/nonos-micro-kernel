@@ -1,0 +1,22 @@
+# NONOS userland: nonos_keymap
+# eK@nonos.systems
+#
+# Keyboard layout resolution shared by every keyboard driver (PS/2, USB
+# HID). Drivers translate hardware scancodes to the US base character for
+# the physical key position; this crate turns that base plus the shift,
+# caps-lock and layout state into the final codepoint an application
+# receives. Keeping the tables here means both drivers agree on every
+# layout and the host proofs test the exact production tables.
+
+[package]
+name = "nonos_keymap"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS keyboard layout tables and resolver"
+
+[lib]
+name = "nonos_keymap"
+path = "src/lib.rs"

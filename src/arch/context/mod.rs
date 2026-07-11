@@ -16,6 +16,7 @@
 
 mod facade;
 mod setup;
+mod tls;
 
 #[cfg(target_arch = "x86_64")]
 pub use crate::arch::x86_64::context::{SavedUser, UserEntry};
@@ -28,3 +29,4 @@ pub use crate::arch::riscv64::context::{SavedUser, UserEntry};
 
 pub use facade::switch_to_user_pcb;
 pub use setup::{setup_initial_user_pcb, SetupError};
+pub use tls::set_user_tls;

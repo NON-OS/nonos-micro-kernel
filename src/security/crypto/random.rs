@@ -40,14 +40,18 @@ pub fn init() -> Result<(), &'static str> {
 }
 
 pub fn secure_random_u64() -> u64 {
-    match try_secure_random_u64() {
-        Ok(v) => {
+    // Retry the hardware source on each iteration. The previous code sampled
+    // once and, on a single transient failure, spun forever WITHOUT retrying,
+    // turning a momentary RDRAND/RDSEED hiccup into a permanent hang. Retrying
+    // recovers from transient failures; only a sustained, genuinely dead
+    // entropy source keeps looping, which is the correct fail-safe: fabricating
+    // a value would hand out a predictable key/nonce/canary.
+    loop {
+        if let Ok(v) = try_secure_random_u64() {
             consume_entropy(64);
-            v
+            return v;
         }
-        Err(_) => loop {
-            core::hint::spin_loop();
-        },
+        core::hint::spin_loop();
     }
 }
 

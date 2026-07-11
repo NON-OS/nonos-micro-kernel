@@ -26,7 +26,10 @@ impl Store {
         if f.ciphertext.is_empty() {
             return Ok(Vec::new());
         }
-        let mut plain = vec![0u8; f.ciphertext.len() - TAG_LEN];
+        // Non-empty ciphertext must carry at least the AEAD tag; checked_sub
+        // avoids a usize underflow (and a huge allocation) on a truncated blob.
+        let plain_len = f.ciphertext.len().checked_sub(TAG_LEN).ok_or(StoreError::CryptoFailure)?;
+        let mut plain = vec![0u8; plain_len];
         let n = open(&f.key, &f.nonce, &f.ciphertext, &mut plain)?;
         plain.truncate(n);
         if offset >= plain.len() {

@@ -23,6 +23,7 @@ mod drag;
 mod drain_ipc;
 mod ensure_primed;
 mod entry;
+mod ephemeral;
 mod fail;
 mod fit_display;
 mod idle;

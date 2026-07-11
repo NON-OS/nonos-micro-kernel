@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::term::dimensions::{COLS, SCROLLBACK_ROWS, VISIBLE_ROWS};
 use crate::term::grid::types::Grid;
-use crate::term::dimensions::{COLS, VISIBLE_ROWS, SCROLLBACK_ROWS};
 
 impl Grid {
     pub fn scroll_up_one(&mut self) {

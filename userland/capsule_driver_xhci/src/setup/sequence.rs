@@ -19,8 +19,8 @@ use super::{
     mmio_map::mmio_map,
 };
 use crate::controller::{
-    halt, issue_noop_and_wait, program_command_ring, program_dcbaa, program_event_ring, reset,
-    start, wait_cnr_clear, wait_hc_running, Scratchpads,
+    halt, issue_noop_and_wait, legacy_handoff, program_command_ring, program_dcbaa,
+    program_event_ring, reset, start, wait_cnr_clear, wait_hc_running, Scratchpads,
 };
 use crate::discover::find_xhci;
 use crate::dma::DmaPool;
@@ -36,6 +36,10 @@ pub fn run() -> XhciResult<Driver> {
     let irq = irq_bind(dev, claim_epoch, &mmio)?;
     let handles = BrokerHandles::new(dev.device_id, mmio.grant_id, mmio.user_va, irq.grant_id);
     let layout = read_layout(&handles, mmio.length)?;
+    // Claim the controller from BIOS/SMM before halting or resetting it. On real
+    // firmware SMM often still owns it via USB legacy support; without this the
+    // reset races SMM and the boot keyboard can be lost. No-op on QEMU.
+    legacy_handoff(mmio.user_va);
     halt(layout.op_base)?;
     reset(layout.op_base)?;
     marker(b"[driver_xhci] reset ok\n");

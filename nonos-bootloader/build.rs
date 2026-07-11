@@ -11,6 +11,7 @@ fn main() {
     println!("cargo:rerun-if-env-changed=NONOS_MLDSA65_PUBKEY");
     println!("cargo:rerun-if-env-changed=NONOS_TRUST_ANCHOR_PUBKEY");
     println!("cargo:rerun-if-env-changed=NONOS_ZK_DEVICE_ROOT");
+    println!("cargo:rerun-if-env-changed=NONOS_GOP_PREF");
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
     println!("cargo:rerun-if-changed=boot-splash.png");
 

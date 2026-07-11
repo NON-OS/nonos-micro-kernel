@@ -29,6 +29,13 @@ pub fn start_aps() -> Result<usize, &'static str> {
     }
 
     let boot = super::boot_inputs::prepare()?;
+
+    // The trampoline loads the BSP CR3 whose low half is already cleared, so
+    // it needs the trampoline region identity-mapped to survive the switch to
+    // long mode. Install it before the first SIPI and remove it once the APs
+    // are up, so the low half is cleared again before any userspace runs.
+    super::ap_identity::install()?;
+
     let mut started = 0;
     let bsp_apic = BSP_APIC_ID.load(Ordering::Acquire);
     let ap_list = topology::get_ap_list();
@@ -43,10 +50,12 @@ pub fn start_aps() -> Result<usize, &'static str> {
             break;
         }
 
-        if super::ap_unit::start(cpu_id, apic_id, &boot)? {
+        if super::ap_unit::start(cpu_id, apic_id, &boot).unwrap_or(false) {
             started += 1;
         }
     }
+
+    super::ap_identity::remove();
 
     CPUS_ONLINE.store(started + 1, Ordering::Release);
     crate::log_info!("[SMP] {} APs started, {} total CPUs online", started, started + 1);

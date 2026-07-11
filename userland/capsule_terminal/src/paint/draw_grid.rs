@@ -14,52 +14,63 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Draw the character grid with crisp monospace TrueType glyphs. Each cell is
+//! laid out on the measured advance and painted with `text_ttf_mono`, so the
+//! body reads like a real terminal rather than a scaled bitmap.
+
 use nonos_app_skeleton::PaintBuffer;
 
-use super::constants::LINE_HEIGHT;
+use super::metrics::Metrics;
 use crate::term::dimensions::{COLS, VISIBLE_ROWS};
 use crate::term::grid::cell::F_REVERSE;
 use crate::term::grid::types::Grid;
 use crate::term::theme::{BACKGROUND, CURSOR};
-use crate::term::vt::color::{ansi_to_argb, DEFAULT_BG};
+use crate::term::vt::color::DEFAULT_BG;
 
-pub fn draw_grid_cursor(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32) {
-    if !g.cursor_visible {
-        return;
-    }
-    let adv = fb.glyph_advance();
-    let x = ox + g.x as u32 * adv;
-    let y = oy + g.y as u32 * LINE_HEIGHT;
-    fb.fill_rect(x, y, adv, LINE_HEIGHT, CURSOR);
-    let ch = g.cells[Grid::idx(g.x, g.y)].ch;
-    if ch != b' ' {
-        fb.text(x, y, &[ch], BACKGROUND);
+fn glyph(fb: &mut PaintBuffer, x: u32, y: u32, ch: u8, argb: u32, px: f32) {
+    if ch > b' ' && ch < 0x7f {
+        let mut buf = [0u8; 4];
+        let s = (ch as char).encode_utf8(&mut buf);
+        let _ = fb.text_ttf_mono(x as i32, y as i32, s, argb, px);
     }
 }
 
-pub fn draw_grid(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, max_y: u32) {
-    let adv = fb.glyph_advance();
+pub fn draw_grid_cursor(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, m: Metrics) {
+    if !g.cursor_visible {
+        return;
+    }
+    let x = ox + g.x as u32 * m.adv;
+    let y = oy + g.y as u32 * m.lh;
+    fb.fill_rect(x, y, m.adv, m.lh, CURSOR);
+    glyph(fb, x, y, g.cells[Grid::idx(g.x, g.y)].ch, BACKGROUND, m.px);
+}
+
+pub fn draw_grid(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, max_y: u32, m: Metrics) {
     for row in 0..VISIBLE_ROWS {
-        let y = oy + row as u32 * LINE_HEIGHT;
-        if y + LINE_HEIGHT > max_y {
+        let y = oy + row as u32 * m.lh;
+        if y + m.lh > max_y {
             break;
         }
         let rowcells = g.visible_row(row);
-        for col in 0..COLS {
-            let cell = rowcells[col];
-            let x = ox + col as u32 * adv;
-            let mut fg = ansi_to_argb(cell.fg);
-            let mut bg = ansi_to_argb(cell.bg);
+        for (col, cell) in rowcells.iter().enumerate().take(COLS) {
+            let x = ox + col as u32 * m.adv;
+            if x + m.adv > fb.width {
+                break;
+            }
+            let has_bg = cell.bg != DEFAULT_BG;
+            let mut fg = cell.fg;
+            // A default (transparent) background resolves to the terminal
+            // backdrop when it needs to become a visible colour, so reverse
+            // video and explicit fills both read correctly.
+            let mut bg = if has_bg { cell.bg } else { BACKGROUND };
             let reverse = cell.flags & F_REVERSE != 0;
             if reverse {
                 core::mem::swap(&mut fg, &mut bg);
             }
-            if cell.bg != DEFAULT_BG || reverse {
-                fb.fill_rect(x, y, adv, LINE_HEIGHT, bg);
+            if has_bg || reverse {
+                fb.fill_rect(x, y, m.adv, m.lh, bg);
             }
-            if cell.ch != b' ' {
-                fb.text(x, y, &[cell.ch], fg);
-            }
+            glyph(fb, x, y, cell.ch, fg, m.px);
         }
     }
 }

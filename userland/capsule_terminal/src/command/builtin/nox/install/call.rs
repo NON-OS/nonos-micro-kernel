@@ -16,7 +16,15 @@
 
 use alloc::vec::Vec;
 use nonos_app_skeleton::discover::lookup_service;
-use nonos_libc::mk_ipc_call;
+use nonos_libc::mk_ipc_call_timeout;
+
+// Install reads the capsule's artifacts out of the store in chunks and runs
+// the full verify and attestation before it replies, so it is inherently
+// slower than an ordinary service call. A multi-megabyte binary can take a
+// good few seconds; give the reply a wide budget rather than the 5s default,
+// which a large capsule blows through while the load is still legitimately
+// running.
+const INSTALL_TIMEOUT_MS: u64 = 30_000;
 
 // Grant the loaded capsule its full declared optional caps. The verified
 // manifest and the identity certificate ceiling are the real bounds; this only
@@ -38,7 +46,14 @@ pub(crate) fn call_installer(name: &[u8], args: &[u8]) -> Result<u32, i32> {
     let port = lookup_service(b"installer").map(|p| p.port).ok_or(EAGAIN)?;
     let payload = pack(name, args);
     let mut rx = [0u8; 32];
-    let rc = mk_ipc_call(port as u64, payload.as_ptr(), payload.len(), rx.as_mut_ptr(), rx.len());
+    let rc = mk_ipc_call_timeout(
+        port as u64,
+        payload.as_ptr(),
+        payload.len(),
+        rx.as_mut_ptr(),
+        rx.len(),
+        INSTALL_TIMEOUT_MS,
+    );
     if rc < 12 {
         return Err(EAGAIN);
     }

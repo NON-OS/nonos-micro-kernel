@@ -77,6 +77,27 @@ pub fn is_read_only(path: &str) -> bool {
 pub use fmt_time_src::fmt_time;
 pub use human_size_src::human_size;
 
+// The desktop's direct-child classifier: the logic that keeps only top-level
+// entries on the desktop and drops nested paths. Included from the shell capsule
+// so the proof pins the real function, not a copy.
+#[path = "../../capsule_desktop_shell/src/vfs_client/classify.rs"]
+mod desktop_classify;
+
+pub fn desktop_child(prefix: &str, raw: &str) -> Option<(String, bool)> {
+    desktop_classify::classify(prefix, raw)
+}
+
+// The framing walk over a LIST reply, which reads bytes the vfs service sent.
+// Included from the shell capsule so the bounds-safety proof pins the real code.
+#[path = "../../capsule_desktop_shell/src/vfs_client/walk.rs"]
+mod desktop_walk_src;
+
+pub fn desktop_walk(rx: &[u8], start: usize, end: usize) -> alloc::vec::Vec<(String, bool)> {
+    desktop_walk_src::walk(rx, start, end, |raw| desktop_classify::classify("/", raw))
+}
+
+#[cfg(test)]
+mod desktop_tests;
 #[cfg(test)]
 mod fm_tests;
 #[cfg(test)]

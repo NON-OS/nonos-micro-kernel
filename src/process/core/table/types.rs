@@ -91,21 +91,20 @@ pub(super) static NEXT_PID: AtomicU32 = AtomicU32::new(1);
 static PID_ALLOC_LOCK: spin::Mutex<()> = spin::Mutex::new(());
 
 pub fn allocate_tid() -> Option<Pid> {
-    const MAX_ATTEMPTS: u32 = 65536;
+    // The single serialized PID allocator. Every PID/TID must come through here
+    // so allocation stays race-free on SMP: the lock plus the active-PID check
+    // guarantee a unique, live-unused id. The selection arithmetic lives in the
+    // dependency-free `choose_pid` so it can be proven on the host.
     let _guard = PID_ALLOC_LOCK.lock();
-    let mut attempts = 0;
-    loop {
-        let current = NEXT_PID.load(Ordering::SeqCst);
-        let next = if current >= u32::MAX - 1 { 1 } else { current + 1 };
-        NEXT_PID.store(next, Ordering::SeqCst);
-        let pid = if current == 0 { 1 } else { current };
-        if !PROCESS_TABLE.is_active_pid(pid as u64) {
-            return Some(pid);
+    let current = NEXT_PID.load(Ordering::SeqCst);
+    match super::pid_alloc::choose_pid(current, |p| PROCESS_TABLE.is_active_pid(p as u64)) {
+        Some((pid, next)) => {
+            NEXT_PID.store(next, Ordering::SeqCst);
+            Some(pid)
         }
-        attempts += 1;
-        if attempts >= MAX_ATTEMPTS {
-            crate::log::error!("[PROCESS] PID space exhausted after {} attempts", MAX_ATTEMPTS);
-            return None;
+        None => {
+            crate::log::error!("[PROCESS] PID space exhausted");
+            None
         }
     }
 }

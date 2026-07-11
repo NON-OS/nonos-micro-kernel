@@ -21,6 +21,7 @@ mod mmio;
 mod modern_caps;
 mod pci;
 mod primary_surface;
+mod probe_3d;
 mod scanouts;
 mod sequence;
 pub use primary_surface::Primary;

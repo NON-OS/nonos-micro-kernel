@@ -23,6 +23,7 @@ pub enum NvmeError {
     UnsupportedPageSize,
     ControllerTimeout,
     AdminCommandFailed,
+    InvalidTransfer,
 }
 
 pub type NvmeResult<T> = Result<T, NvmeError>;
@@ -36,5 +37,6 @@ pub const fn exit_code(e: NvmeError) -> i32 {
         NvmeError::UnsupportedPageSize => 34,
         NvmeError::ControllerTimeout => 35,
         NvmeError::AdminCommandFailed => 36,
+        NvmeError::InvalidTransfer => 37,
     }
 }

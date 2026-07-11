@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::term::grid::types::Grid;
 use crate::term::dimensions::{COLS, VISIBLE_ROWS};
+use crate::term::grid::types::Grid;
 
 impl Grid {
     pub fn erase_line(&mut self, mode: u8) {
@@ -33,23 +33,35 @@ impl Grid {
         let blank = self.blank_cell();
         match mode {
             0 => {
-                for x in self.x..COLS { self.cells[Grid::idx(x, self.y)] = blank; }
+                for x in self.x..COLS {
+                    self.cells[Grid::idx(x, self.y)] = blank;
+                }
                 for y in (self.y + 1)..VISIBLE_ROWS {
-                    for x in 0..COLS { self.cells[Grid::idx(x, y)] = blank; }
+                    for x in 0..COLS {
+                        self.cells[Grid::idx(x, y)] = blank;
+                    }
                 }
             }
             1 => {
                 for y in 0..self.y {
-                    for x in 0..COLS { self.cells[Grid::idx(x, y)] = blank; }
+                    for x in 0..COLS {
+                        self.cells[Grid::idx(x, y)] = blank;
+                    }
                 }
-                for x in 0..self.x { self.cells[Grid::idx(x, self.y)] = blank; }
+                for x in 0..self.x {
+                    self.cells[Grid::idx(x, self.y)] = blank;
+                }
             }
-            _ => { self.clear(); }
+            _ => {
+                self.clear();
+            }
         }
     }
     pub fn clear(&mut self) {
         let blank = self.blank_cell();
-        for i in 0..self.cells.len() { self.cells[i] = blank; }
+        for i in 0..self.cells.len() {
+            self.cells[i] = blank;
+        }
         self.x = 0;
         self.y = 0;
         self.view_offset = 0;

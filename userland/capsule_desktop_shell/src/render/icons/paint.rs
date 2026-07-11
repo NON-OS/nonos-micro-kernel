@@ -33,7 +33,12 @@ pub fn paint_u(
 ) {
     let px = x0 + dx * size / 16;
     let py = y0 + dy * size / 16;
-    let pw = core::cmp::max(1, dw * size / 16);
-    let ph = core::cmp::max(1, dh * size / 16);
+    // Single-unit dimensions are strokes (lines and outlines). Render them one
+    // grid-unit wider than the naive scale so the linework reads bolder at every
+    // icon size, the way a heavier pen weight would. Wider spans (fills) keep
+    // their exact geometry.
+    let stroke = core::cmp::max(2, 2 * size / 16);
+    let pw = if dw == 1 { stroke } else { core::cmp::max(1, dw * size / 16) };
+    let ph = if dh == 1 { stroke } else { core::cmp::max(1, dh * size / 16) };
     fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, px, py, pw, ph, argb);
 }

@@ -17,7 +17,7 @@
 use crate::memory::addr::VirtAddr;
 
 use super::super::core::PagingManager;
-use crate::memory::paging::constants::PAGE_SIZE_4K;
+use crate::memory::paging::constants::{page_align_down, PAGE_SIZE_4K};
 use crate::memory::paging::error::{PagingError, PagingResult};
 use crate::memory::paging::stats::PagingStatistics;
 use crate::memory::paging::types::{PagePermissions, PageSize};
@@ -29,6 +29,25 @@ impl PagingManager {
         virtual_addr: VirtAddr,
         stats: &PagingStatistics,
     ) -> PagingResult<()> {
+        // A write fault on a *present* page is legitimate only when that page
+        // was mapped copy-on-write. Any other present+write fault is a
+        // protection violation: a write to a read-only page (a RELRO'd GOT,
+        // .rodata, or code) or a supervisor write to a kernel page. Neither may
+        // be silently promoted to writable, so fail closed here and let the
+        // fault handler kill the offending capsule (or halt on a kernel fault).
+        if !layout::in_user_space(virtual_addr.as_u64()) {
+            return Err(PagingError::UnhandledPageFault);
+        }
+        let page_addr = page_align_down(virtual_addr.as_u64());
+        let original = self
+            .mappings
+            .get(&page_addr)
+            .ok_or(PagingError::UnhandledPageFault)?
+            .permissions;
+        if !original.contains(PagePermissions::COW) {
+            return Err(PagingError::UnhandledPageFault);
+        }
+
         let new_frame = frame_alloc::allocate_frame().ok_or(PagingError::FrameAllocationFailed)?;
 
         if let Ok(original_pa) = self.translate_address(virtual_addr) {
@@ -43,7 +62,11 @@ impl PagingManager {
             }
         }
 
-        let permissions = PagePermissions::READ | PagePermissions::WRITE | PagePermissions::USER;
+        // Resolve the copy-on-write: drop the COW marker and grant the deferred
+        // write, preserving the original permissions (never fabricating USER).
+        let permissions = original
+            .remove(PagePermissions::COW)
+            .insert(PagePermissions::WRITE);
         self.map_page(virtual_addr, new_frame, permissions, PageSize::Size4KiB, stats)?;
 
         Ok(())

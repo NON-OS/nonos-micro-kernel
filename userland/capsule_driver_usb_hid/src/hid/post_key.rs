@@ -17,6 +17,7 @@
 use nonos_libc::{INPUT_KIND_KEY_DOWN, INPUT_KIND_KEY_UP};
 
 use super::key_event::KeyEvent;
+use super::keymap;
 use super::post_wire::send;
 
 const KEY_LEFT: u32 = 0xE000;
@@ -31,7 +32,7 @@ const KEY_PAGE_DOWN: u32 = 0xE008;
 
 pub fn publish(ev: KeyEvent) -> bool {
     let kind = if ev.pressed { INPUT_KIND_KEY_DOWN } else { INPUT_KIND_KEY_UP };
-    send(kind, flags(ev.modifiers), key_code(ev), 0, 0)
+    send(kind, flags(ev.modifiers, ev.caps), key_code(ev), 0, 0)
 }
 
 fn key_code(ev: KeyEvent) -> u32 {
@@ -45,11 +46,18 @@ fn key_code(ev: KeyEvent) -> u32 {
         0x50 => KEY_LEFT,
         0x51 => KEY_DOWN,
         0x52 => KEY_UP,
-        _ => ascii_or_usage(ev),
+        _ => resolved_or_usage(ev),
     }
 }
 
-fn ascii_or_usage(ev: KeyEvent) -> u32 {
+// Printable keys post their layout-resolved codepoint (which may be
+// outside ASCII for accented letters); control keys keep the ASCII byte
+// from the event; anything else posts its raw usage in the 0x2000 page.
+fn resolved_or_usage(ev: KeyEvent) -> u32 {
+    let code = keymap::resolve_code(ev.scancode, ev.modifiers, ev.caps);
+    if code != 0 {
+        return code;
+    }
     match ev.ascii {
         0 => 0x2000 | ev.scancode as u32,
         b'\n' => 0x0D,
@@ -57,10 +65,11 @@ fn ascii_or_usage(ev: KeyEvent) -> u32 {
     }
 }
 
-fn flags(modifiers: u8) -> u16 {
+fn flags(modifiers: u8, caps: bool) -> u16 {
     let shift = u16::from((modifiers & 0x22) != 0);
     let ctrl = u16::from((modifiers & 0x11) != 0) << 1;
     let alt = u16::from((modifiers & 0x44) != 0) << 2;
     let meta = u16::from((modifiers & 0x88) != 0) << 3;
-    shift | ctrl | alt | meta
+    let caps = u16::from(caps) << 4;
+    shift | ctrl | alt | meta | caps
 }

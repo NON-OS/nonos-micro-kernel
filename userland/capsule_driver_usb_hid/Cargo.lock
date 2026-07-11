@@ -24,8 +24,13 @@ dependencies = [
 name = "nonos_capsule_driver_usb_hid"
 version = "0.1.0"
 dependencies = [
+ "nonos_keymap",
  "nonos_userland_libc",
 ]
+
+[[package]]
+name = "nonos_keymap"
+version = "0.1.0"
 
 [[package]]
 name = "nonos_userland_libc"

@@ -17,12 +17,38 @@
 use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_ENTER};
 
 use super::event_browse::on_browse_key;
+use super::event_grid::grid_select;
 use super::event_mode::route;
 use super::event_mouse::select_row;
-use super::state::State;
+use super::layout::SIDEBAR_W;
+use super::refresh::refresh;
+use super::state::{State, ViewKind};
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
-    select_row(state, event);
+    // A click in the PLACES sidebar navigates straight to that location and
+    // must not fall through to row selection / open.
+    if event.kind == InputKind::ButtonDown
+        && event.x >= 0
+        && event.y >= 0
+        && (event.x as u32) < SIDEBAR_W
+        && matches!(state.mode, super::state::Mode::Browse)
+    {
+        if let Some(path) = super::paint_sidebar::place_at(event.y as u32) {
+            if state.prefix.as_str() != path {
+                state.prefix = alloc::string::String::from(path);
+                state.cursor = 0;
+                state.scroll = 0;
+                refresh(state);
+            }
+            return EventOutcome::Repaint;
+        }
+        return EventOutcome::Idle;
+    }
+    // Map a click to the cell/row of the active view before the open below runs.
+    match state.view {
+        ViewKind::Grid => grid_select(state, event),
+        ViewKind::List => select_row(state, event),
+    }
     if event.kind != InputKind::ButtonDown && !event.is_key_down() {
         return EventOutcome::Idle;
     }

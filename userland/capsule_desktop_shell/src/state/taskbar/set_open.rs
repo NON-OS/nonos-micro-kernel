@@ -23,8 +23,8 @@ pub fn set_taskbar_open(state: &mut TaskbarState, index: usize, open: bool) {
     state.open[index] = open;
     if open {
         state.active = index as u8;
-        state.visible = false;
-        state.reveal_until_ms = 0;
+        // The dock is a persistent taskbar: opening a window must not hide the
+        // one place a new window is launched from.
         return;
     }
     if state.active != index as u8 {

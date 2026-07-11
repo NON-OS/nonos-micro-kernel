@@ -29,5 +29,7 @@ pub const fn page_align_up(addr: u64) -> u64 {
 
 #[inline]
 pub const fn pages_needed(size: usize) -> usize {
-    (size + PAGE_SIZE_4K - 1) / PAGE_SIZE_4K
+    // div_ceil avoids the `size + PAGE_SIZE_4K - 1` intermediate, which would
+    // overflow (and abort under release overflow-checks) near usize::MAX.
+    size.div_ceil(PAGE_SIZE_4K)
 }

@@ -54,7 +54,7 @@ pub fn spawn_net_ntp_capsule() -> Result<(), SpawnError> {
         requested_caps: Capability::Network.bit()
             | Capability::IPC.bit()
             | Capability::Memory.bit()
-            | Capability::Debug.bit()
+            | crate::capabilities::serial_debug_cap()
             | Capability::TimeSet.bit(),
         debug_tag: b"[NET-NTP] load_elf_executable error:",
     };

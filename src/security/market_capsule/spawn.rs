@@ -53,7 +53,7 @@ pub fn spawn_market_capsule() -> Result<(), SpawnError> {
         manifest_bytes: MARKET_MANIFEST_BYTES,
         attestation_trailer: MARKET_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit() | Capability::Memory.bit(),
+        requested_caps: Capability::IPC.bit() | Capability::Memory.bit() | Capability::Crypto.bit(),
         debug_tag: b"[MARKET-DEBUG] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

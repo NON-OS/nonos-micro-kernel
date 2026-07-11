@@ -28,11 +28,12 @@ pub struct Context {
 }
 impl Context {
     pub fn new(driver: Driver) -> Self {
+        let mouse = MouseParser::new(driver.mouse_wheel);
         Self {
             driver,
             ring: Ring::new(),
             drainer: Drainer::new(),
-            mouse: MouseParser::new(),
+            mouse,
             mouse_ring: MouseRing::new(),
             last_kbd_seq: 0,
             last_aux_seq: 0,

@@ -17,6 +17,7 @@
 use super::super::core::PagingManager;
 use super::super::shootdown::flush_tlb_one_smp;
 use super::super::tlb_scope::mutation_asid;
+use crate::arch::x86_64::paging::read_cr3;
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use crate::memory::layout;
 use crate::memory::paging::constants::*;
@@ -48,7 +49,9 @@ impl PagingManager {
         let va_val = va.as_u64();
         let (l4_idx, l3_idx, l2_idx, l1_idx) =
             (pml4_index(va_val), pdpt_index(va_val), pd_index(va_val), pt_index(va_val));
-        let cr3 = self.active_page_table.ok_or(PagingError::NoActivePageTable)?;
+        // Live per-CPU CR3, not the racy cached field: on SMP the unmap must act
+        // on the faulting CPU's own active address space (see install_mapping).
+        let cr3 = PhysAddr::new(read_cr3() & !0xFFF);
         unsafe {
             let l4 = &*table_at(cr3);
             if !pte_is_present(l4[l4_idx]) {
@@ -74,7 +77,7 @@ impl PagingManager {
             // is dispatched). Single-CPU runtime stays a local
             // `invlpg`; SMP runtime broadcasts to peer CPUs running
             // the same address space.
-            let asid = mutation_asid(va, self.active_asid);
+            let asid = mutation_asid(va, Some(crate::smp::percpu::active_asid()));
             flush_tlb_one_smp(va, asid);
             Ok(pa)
         }

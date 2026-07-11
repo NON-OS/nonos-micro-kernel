@@ -38,7 +38,7 @@ pub(super) struct Stack {
 impl Stack {
     /// Lay regions out end to end, tracking each one's row offset and periodic-slot
     /// offset, the widest width, the largest window, and the rounded total height.
-    pub fn of(regions: &[Box<dyn AirExt>]) -> Stack {
+    pub(crate) fn of(regions: &[Box<dyn AirExt>]) -> Stack {
         let mut offsets = Vec::with_capacity(regions.len());
         let mut slot_offsets = Vec::with_capacity(regions.len());
         let mut row = 0usize;
@@ -57,11 +57,11 @@ impl Stack {
         Stack { offsets, slot_offsets, width, window, log_span }
     }
 
-    pub fn span(&self) -> usize {
+    pub(crate) fn span(&self) -> usize {
         1usize << self.log_span
     }
 
-    pub fn height(regions: &[Box<dyn AirExt>], i: usize) -> usize {
+    pub(crate) fn height(regions: &[Box<dyn AirExt>], i: usize) -> usize {
         1usize << regions[i].log_trace_len()
     }
 }

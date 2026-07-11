@@ -18,6 +18,7 @@ extern crate alloc;
 
 mod bits;
 pub mod roles;
+mod serial_debug;
 mod types;
 
 pub mod audit;
@@ -67,4 +68,5 @@ pub use token::{
     set_signing_key, sign_token, signing_key, to_bytes, token_material, validate_token_full,
     verify_token, CapabilityToken, TOKEN_BINARY_SIZE, TOKEN_VERSION,
 };
+pub(crate) use serial_debug::serial_debug_cap;
 pub use types::Capability;

@@ -1,0 +1,12 @@
+# Default owner for review routing across the tree.
+* @eKisNonos
+
+# The trusted path: kernel core, crypto, and the boot and capsule-load chain.
+/src/crypto/            @eKisNonos
+/src/kernel_core/       @eKisNonos
+/src/syscall/           @eKisNonos
+/nonos-bootloader/      @eKisNonos
+
+# The signing and verification tooling.
+/nonos-sign/            @eKisNonos
+/nonos-verify/          @eKisNonos

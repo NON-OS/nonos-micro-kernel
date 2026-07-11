@@ -26,6 +26,8 @@ const DEMO: &[u8] = b"Demo loop:\n 1. terminal: write /hello.txt hello from nono
 impl Store {
     pub fn seed(&mut self) {
         let _ = self.mkdir("/docs");
+        // Scratch space; std's env::temp_dir() on NONOS points here.
+        let _ = self.mkdir("/tmp");
         // The package store. It starts empty: capsules land here at runtime
         // when the installer fetches and verifies them, not baked into the
         // image. `install <name>` reads /capsules/<name>.{elf,cert,manifest,

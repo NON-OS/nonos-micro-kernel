@@ -32,7 +32,9 @@ impl Store {
         let mut plain: Vec<u8> = if f.ciphertext.is_empty() {
             Vec::new()
         } else {
-            let mut buf = vec![0u8; f.ciphertext.len() - TAG_LEN];
+            let plain_len =
+                f.ciphertext.len().checked_sub(TAG_LEN).ok_or(StoreError::CryptoFailure)?;
+            let mut buf = vec![0u8; plain_len];
             let n = open(&f.key, &f.nonce, &f.ciphertext, &mut buf)?;
             buf.truncate(n);
             buf

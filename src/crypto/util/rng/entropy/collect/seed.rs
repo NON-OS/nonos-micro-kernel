@@ -28,12 +28,16 @@ pub fn collect_seed_entropy_secure() -> Result<[u8; 32], EntropyError> {
             return Ok(seed);
         }
     }
+    // Count only bytes that came from a hardware entropy source. The TSC/stack
+    // fallback below must never be accepted as a real seed.
+    let mut hw_bytes = 0usize;
     let mut offset = 0;
     while offset < 32 {
         if let Some(v) = try_rdseed64() {
             let len = core::cmp::min(8, 32 - offset);
             seed[offset..offset + len].copy_from_slice(&v.to_le_bytes()[..len]);
             offset += len;
+            hw_bytes += len;
         } else {
             break;
         }
@@ -44,6 +48,7 @@ pub fn collect_seed_entropy_secure() -> Result<[u8; 32], EntropyError> {
                 let len = core::cmp::min(8, 32 - offset);
                 seed[offset..offset + len].copy_from_slice(&v.to_le_bytes()[..len]);
                 offset += len;
+                hw_bytes += len;
                 break;
             }
             for _ in 0..50 {
@@ -60,6 +65,14 @@ pub fn collect_seed_entropy_secure() -> Result<[u8; 32], EntropyError> {
             seed[offset..offset + len].copy_from_slice(&t2.wrapping_sub(t1).to_le_bytes()[..len]);
             offset += len;
         }
+    }
+    // Fail closed unless every seed byte came from hardware (virtio-rng returned
+    // early above; rdseed/rdrand must supply all 32 here). Accepting a
+    // TSC/stack-derived seed as "secure" would key the CSPRNG from low,
+    // partly predictable entropy. init_rng propagates this Err and leaves the
+    // RNG uninitialised rather than minting predictable keys and nonces.
+    if hw_bytes < 32 {
+        return Err(EntropyError::InsufficientEntropy);
     }
     let stack_addr: u64;
     unsafe {

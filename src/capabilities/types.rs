@@ -53,6 +53,10 @@ pub enum Capability {
     // (see `on_behalf_of` on `CapsuleLoadRequest`). No ordinary capsule
     // manifest declares this bit; only the installer's does.
     SpawnBroker,
+    // Authority to ask the kernel to spawn another instance of an already
+    // embedded, attested app capsule (a fresh window). Held only by the
+    // desktop shell so a compromised app cannot spawn capsules.
+    SpawnWindow,
 }
 
 impl Capability {
@@ -83,10 +87,11 @@ impl Capability {
             Self::InputSource => 2097152,
             Self::TimeSet => 4194304,
             Self::SpawnBroker => 8388608,
+            Self::SpawnWindow => 16777216,
         }
     }
 
-    pub const fn all() -> [Capability; 24] {
+    pub const fn all() -> [Capability; 25] {
         [
             Self::CoreExec,
             Self::IO,
@@ -112,6 +117,7 @@ impl Capability {
             Self::InputSource,
             Self::TimeSet,
             Self::SpawnBroker,
+            Self::SpawnWindow,
         ]
     }
 
@@ -141,6 +147,7 @@ impl Capability {
             Self::InputSource => "InputSource",
             Self::TimeSet => "TimeSet",
             Self::SpawnBroker => "SpawnBroker",
+            Self::SpawnWindow => "SpawnWindow",
         }
     }
 

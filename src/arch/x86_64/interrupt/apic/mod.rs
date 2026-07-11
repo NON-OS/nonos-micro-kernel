@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod adopt;
 pub mod constants;
 pub mod error;
 pub mod init;
+mod init_ap;
 mod init_x2apic;
 mod init_xapic;
 pub mod ipi;
@@ -33,9 +35,11 @@ mod timer_mask;
 mod timer_mode;
 mod timer_ops;
 
+pub use adopt::adopt_bsp_state;
 pub use constants::{VEC_ERROR, VEC_SPURIOUS, VEC_THERMAL, VEC_TIMER};
 pub use error::{ApicError, ApicResult};
 pub use init::{init, init_apic};
+pub use init_ap::init_ap_lapic;
 pub use ipi::{ipi_all, ipi_one, ipi_others, ipi_self, start_ap};
 pub use ops::{eoi, get_tpr, id, max_lvt, send_eoi, set_tpr, status, version, ApicStatus};
 pub use state::{

@@ -14,16 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::layout::LIST_VISIBLE;
 use super::state::State;
 
 // Slide the listing window so the cursor stays on screen: page up when the
 // cursor moves above the top row, page down when it falls past the last
-// visible row.
+// visible row. `view_rows` is the live count paint derived from the window
+// height, so scrolling matches whatever is actually on screen.
 pub fn ensure_visible(state: &mut State) {
+    let vis = state.view_rows.max(1);
     if state.cursor < state.scroll {
         state.scroll = state.cursor;
-    } else if state.cursor >= state.scroll + LIST_VISIBLE {
-        state.scroll = state.cursor + 1 - LIST_VISIBLE;
+    } else if state.cursor >= state.scroll + vis {
+        state.scroll = state.cursor + 1 - vis;
     }
 }

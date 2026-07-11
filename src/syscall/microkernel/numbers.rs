@@ -38,8 +38,12 @@ pub const SYS_KILL: u64 = tag4(b"MKIL");
 pub const SYS_GETPID: u64 = tag4(b"MGPD");
 pub const SYS_ARGS: u64 = tag4(b"MKAR");
 pub const SYS_THREAD_SPAWN: u64 = tag4(b"MTSP");
+pub const SYS_SET_TLS: u64 = tag4(b"MSTB");
 pub const SYS_YIELD: u64 = tag4(b"MYLD");
+pub const SYS_FUTEX_WAIT: u64 = tag4(b"MFTW");
+pub const SYS_FUTEX_WAKE: u64 = tag4(b"MFTK");
 pub const SYS_TIME_MILLIS: u64 = tag4(b"MTMS");
+pub const SYS_TIME_MONOTONIC: u64 = tag4(b"MMON");
 pub const SYS_TIME_RTC: u64 = tag4(b"MTRT");
 pub const SYS_TIME_ADJUST: u64 = tag4(b"MTAD");
 pub const SYS_BATTERY_STATUS: u64 = tag4(b"MBAT");
@@ -70,3 +74,6 @@ pub const SYS_PIO_RELEASE: u64 = tag4(b"MPRL");
 pub const SYS_MK_DEBUG: u64 = tag4(b"MDBG");
 pub const SYS_PCI_CONFIG_READ: u64 = tag4(b"MPCR");
 pub const SYS_PCI_CONFIG_WRITE: u64 = tag4(b"MPCW");
+// Spawn another window instance of an embedded, attested app capsule
+// (terminal or browser). Gated on the SpawnWindow capability.
+pub const SYS_SPAWN_INSTANCE: u64 = tag4(b"MSPI");

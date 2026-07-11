@@ -209,10 +209,6 @@ fn hover_reveal(ctx: &mut Context, y: u32) {
     }
     if y >= bottom_dock_rect(ctx.width, ctx.height).y {
         reveal_taskbar(&mut ctx.taskbar, mk_time_millis());
-        return;
     }
-    if ctx.taskbar.open.iter().any(|open| *open) {
-        collapse_taskbar(&mut ctx.taskbar);
-        refresh_taskbar(ctx);
-    }
+    // No auto-collapse: the dock stays visible as a persistent taskbar.
 }

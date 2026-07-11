@@ -27,6 +27,7 @@ mod read;
 mod rename;
 mod rmdir;
 mod seed;
+mod seek;
 mod time;
 mod truncate;
 mod types;
@@ -35,4 +36,4 @@ mod zeroize;
 mod unlink;
 mod write;
 
-pub use types::{Store, StoreError};
+pub use types::{SeekWhence, Store, StoreError};

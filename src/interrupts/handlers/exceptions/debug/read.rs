@@ -16,7 +16,7 @@
 
 use super::types::DebugInfo;
 
-pub fn read_debug_info() -> DebugInfo {
+pub(crate) fn read_debug_info() -> DebugInfo {
     let dr6: u64;
     unsafe {
         core::arch::asm!("mov {}, dr6", out(reg) dr6, options(nomem, nostack));

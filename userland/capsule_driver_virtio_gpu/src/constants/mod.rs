@@ -67,3 +67,16 @@ pub const VG_RESP_OK_NODATA: u32 = 0x1100;
 pub const VG_RESP_OK_DISPLAY_INFO: u32 = 0x1101;
 pub const VG_FORMAT_B8G8R8A8_UNORM: u32 = 1;
 pub const VG_MAX_SCANOUTS: usize = 16;
+
+// 3D (VirGL) surface. Feature bit 0 of the device features unlocks the 3D
+// command set; the host side is virglrenderer behind a virtio-vga-gl device,
+// which only exists on the modern transport. The guest never renders: it
+// builds Gallium command streams and submits them for host-side execution.
+pub const VIRTIO_GPU_F_VIRGL: u32 = 1 << 0;
+pub const VG_CMD_GET_CAPSET_INFO: u32 = 0x0108;
+pub const VG_CMD_CTX_CREATE: u32 = 0x0200;
+pub const VG_CMD_SUBMIT_3D: u32 = 0x0207;
+pub const VG_RESP_OK_CAPSET_INFO: u32 = 0x1102;
+// Header flag: the device must signal completion of this command through the
+// fence_id in the response, once host-side execution finished.
+pub const VG_FLAG_FENCE: u32 = 1 << 0;

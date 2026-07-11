@@ -14,15 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::state::{State, CAPACITY};
+use super::state::State;
 
 impl State {
+    /// Insert bytes at the caret (undoable), advancing the caret past them.
     pub fn insert(&mut self, bytes: &[u8]) -> bool {
-        if self.len + bytes.len() <= CAPACITY {
-            self.buf[self.len..self.len + bytes.len()].copy_from_slice(bytes);
-            self.len += bytes.len();
-            return true;
+        if bytes.is_empty() {
+            return false;
         }
-        false
+        let at = self.caret.min(self.len);
+        self.apply_edit(at, 0, bytes)
     }
 }

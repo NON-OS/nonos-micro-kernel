@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::term::dimensions::{COLS, VISIBLE_ROWS};
 use crate::term::grid::cell::Cell;
 use crate::term::grid::types::Grid;
-use crate::term::dimensions::{COLS, VISIBLE_ROWS};
 
 impl Grid {
     pub fn blank_cell(&self) -> Cell {
@@ -32,10 +32,12 @@ impl Grid {
         }
     }
     pub fn line_feed(&mut self) {
-        self.y += 1;
-        if self.y >= VISIBLE_ROWS {
-            self.scroll_up_one();
-            self.y = VISIBLE_ROWS - 1;
+        if self.y == self.scroll_bot {
+            // At the foot of the scroll region the window shifts and the cursor
+            // stays put; elsewhere it just steps down within the screen.
+            self.scroll_region_up();
+        } else if self.y + 1 < VISIBLE_ROWS {
+            self.y += 1;
         }
     }
     pub fn carriage_return(&mut self) {

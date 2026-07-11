@@ -17,7 +17,7 @@
 use super::super::pcb::ProcessControlBlock;
 use super::super::types::{MemoryState, Pid, Priority, ProcessIoStats, ProcessState};
 use super::inherit::compute_inherited_caps;
-use super::types::{CURRENT_PID, NEXT_PID, PROCESS_TABLE};
+use super::types::{allocate_tid, CURRENT_PID, PROCESS_TABLE};
 use crate::kernel_core::process_spawn::capsule_spawn::AttestedParent;
 use crate::memory::addr::VirtAddr;
 use crate::process::process_fd_table::ProcessFdTable;
@@ -56,7 +56,7 @@ pub(crate) fn create_process_with_parent(
     if name.is_empty() {
         return Err("empty name");
     }
-    let pid = NEXT_PID.fetch_add(1, Ordering::Relaxed);
+    let pid = allocate_tid().ok_or("pid space exhausted")?;
     let parent_pid = parent_override
         .map(AttestedParent::pid)
         .unwrap_or_else(|| CURRENT_PID.load(Ordering::Relaxed));
@@ -76,7 +76,7 @@ pub(crate) fn create_process_with_parent(
 pub fn spawn_thread(entry: u64, stack: u64) -> Result<Pid, &'static str> {
     let parent_pid = CURRENT_PID.load(Ordering::Relaxed);
     let parent = PROCESS_TABLE.find_by_pid(parent_pid).ok_or("no current process")?;
-    let tid = NEXT_PID.fetch_add(1, Ordering::Relaxed);
+    let tid = allocate_tid().ok_or("pid space exhausted")?;
     let caps = compute_inherited_caps(tid, parent_pid);
     let pcb = build_pcb(tid, parent_pid, "thread", ProcessState::Ready, Priority::Normal, 0, caps)?;
     crate::process::address_space::lifecycle::inherit(&pcb, &parent);

@@ -47,6 +47,14 @@ pub enum SortMode {
     Type,
 }
 
+/// How the current directory is presented: a grid of large icons (the default,
+/// matching a modern desktop file manager) or a compact detail list.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum ViewKind {
+    Grid,
+    List,
+}
+
 pub struct State {
     pub owner_pid: u32,
     pub prefix: String,
@@ -64,4 +72,13 @@ pub struct State {
     pub sort_mode: SortMode,
     pub selected: Vec<String>,
     pub clipboard: Vec<Clip>,
+    // Live layout geometry, recomputed each paint from the window size so scroll
+    // clamping and click-to-row stay consistent with what is drawn.
+    pub view_rows: usize,
+    pub row_top: u32,
+    pub row_h: u32,
+    // Grid presentation and its live column count, recomputed each paint so a
+    // click maps to the same cell that was drawn.
+    pub view: ViewKind,
+    pub grid_cols: u32,
 }

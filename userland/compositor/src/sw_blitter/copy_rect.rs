@@ -56,9 +56,36 @@ pub fn composite_layer(
             // SAFETY: source and destination rectangles are clipped to
             // valid bounds and surfaces do not intentionally overlap.
             let px = unsafe { core::ptr::read_volatile(src_ptr.add(col)) };
-            if px & 0xFF00_0000 != 0 {
-                unsafe { core::ptr::write_volatile(dst_ptr.add(col), px) };
+            let a = px >> 24;
+            if a == 0 {
+                // Fully transparent: leave whatever is underneath.
+                continue;
             }
+            if a == 0xFF {
+                unsafe { core::ptr::write_volatile(dst_ptr.add(col), px) };
+                continue;
+            }
+            // Partial alpha: blend the source over the destination so a
+            // translucent layer (a terminal profile, for one) shows what is
+            // behind it. out = src*a + dst*(255-a), per channel.
+            let dst = unsafe { core::ptr::read_volatile(dst_ptr.add(col)) };
+            unsafe { core::ptr::write_volatile(dst_ptr.add(col), blend(px, dst, a)) };
         }
     }
+}
+
+// Source-over alpha blend of two opaque-stored ARGB pixels, weighting by the
+// source alpha. The result is written back fully opaque.
+fn blend(src: u32, dst: u32, a: u32) -> u32 {
+    let ia = 255 - a;
+    let sr = (src >> 16) & 0xFF;
+    let sg = (src >> 8) & 0xFF;
+    let sb = src & 0xFF;
+    let dr = (dst >> 16) & 0xFF;
+    let dg = (dst >> 8) & 0xFF;
+    let db = dst & 0xFF;
+    let r = (sr * a + dr * ia) / 255;
+    let g = (sg * a + dg * ia) / 255;
+    let b = (sb * a + db * ia) / 255;
+    0xFF00_0000 | (r << 16) | (g << 8) | b
 }

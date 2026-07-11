@@ -45,6 +45,11 @@ pub struct State {
     // the newest entry.
     pub hist_prefix: Vec<u8>,
     pub blocks: Vec<Block>,
+    // Body font zoom, adjusted with Ctrl+= / Ctrl+-. 1 = base bitmap size.
+    pub font_scale: u32,
+    // Terminal background, chosen by the active profile. May carry alpha below
+    // 0xFF, which the compositor blends so the desktop shows through.
+    pub bg: u32,
     pub jobs: JobTable,
     // Set when a statement is submitted as a foreground job: on_enter
     // stops consuming the line (v1 limit: statements after a foreground

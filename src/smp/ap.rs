@@ -22,7 +22,10 @@ use core::sync::atomic::Ordering;
 
 #[no_mangle]
 pub unsafe extern "C" fn ap_entry(cpu_id: u32) {
-    let _ = unsafe { crate::arch::x86_64::interrupt::apic::init() };
+    // Per-CPU LAPIC bring-up: this AP's LAPIC comes out of INIT/SIPI
+    // software-disabled. The global mode and MMIO mapping were adopted from
+    // the BSP before the SIPI, so only the register programming runs here.
+    unsafe { crate::arch::x86_64::interrupt::apic::init_ap_lapic() };
     let apic_id = crate::arch::x86_64::interrupt::apic::id();
 
     // GDT/TSS before anything that can take an exception.

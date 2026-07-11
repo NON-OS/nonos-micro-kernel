@@ -16,21 +16,20 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+// Real brand mark, rasterized from userland/assets/wallet_logos/nonos-icon-teal.svg
+// at 128x139 RGBA. Rendered anti-aliased at any size via the alpha blit, so it
+// stays crisp instead of the old hand-traced 1-bit bitmap.
+const ICON: &[u8] = include_bytes!("../../../assets/nonos_icon_128x139.rgba");
+const ICON_W: u32 = 128;
+const ICON_H: u32 = 139;
+
 pub fn logo(fb: &mut PaintBuffer, x: u32, y: u32, s: u32) {
-    let c = 0xFF66_FFFF;
-    for row in 0..super::logo_bits::LOGO_H {
-        let (left, right) = super::logo_bits::LOGO_ROWS[row as usize];
-        for col in 0..super::logo_bits::LOGO_W {
-            let bits = if col < 32 { left } else { right };
-            let bit = if col < 32 { 31 - col } else { 63 - col };
-            if bits & (1 << bit) == 0 {
-                continue;
-            }
-            let px = x + col * s / super::logo_bits::LOGO_W;
-            let py = y + row * s / super::logo_bits::LOGO_H;
-            let nx = x + (col + 1) * s / super::logo_bits::LOGO_W;
-            let ny = y + (row + 1) * s / super::logo_bits::LOGO_H;
-            fb.fill_rect(px, py, nx.saturating_sub(px).max(1), ny.saturating_sub(py).max(1), c);
-        }
+    if s == 0 {
+        return;
     }
+    // Preserve the mark's 128:139 aspect inside an s-tall box, centred.
+    let dh = s;
+    let dw = (s * ICON_W / ICON_H).max(1);
+    let dx = x + s.saturating_sub(dw) / 2;
+    fb.blit_rgba8_scaled(dx, y, dw, dh, ICON, ICON_W, ICON_H);
 }

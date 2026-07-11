@@ -16,6 +16,7 @@
 
 use super::super::types::*;
 use super::state::PROOF_SYSTEM;
+use crate::crypto::util::constant_time::ct_eq_32;
 
 pub fn get_capsule_info(capsule_id: u64) -> Result<CapsuleInfo, &'static str> {
     let capsules = PROOF_SYSTEM.capsules.read();
@@ -58,7 +59,7 @@ pub fn unseal_capsule(capsule_id: u64, access_key: &[u8; 32]) -> Result<(), &'st
     let mut capsules = PROOF_SYSTEM.capsules.write();
     match capsules.get_mut(&capsule_id) {
         Some(capsule) if capsule.permissions.sealed => {
-            if &capsule.access_key == access_key {
+            if ct_eq_32(&capsule.access_key, access_key) {
                 capsule.permissions.sealed = false;
                 PROOF_SYSTEM.audit(AuditOperation::Unseal, capsule_id, AuditResult::Success);
                 Ok(())

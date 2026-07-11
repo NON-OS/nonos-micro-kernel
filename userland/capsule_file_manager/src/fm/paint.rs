@@ -17,13 +17,13 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::help::paint_help;
-use super::paint_clip::clip;
 use super::paint_footer::paint_footer;
+use super::paint_grid::paint_grid;
 use super::paint_header::paint_header;
 use super::paint_rows::paint_rows;
 use super::preview_paint::paint_preview;
-use super::state::{Mode, State};
-use super::theme::{BACKGROUND, FOREGROUND, MUTED};
+use super::state::{Mode, State, ViewKind};
+use super::theme::BACKGROUND;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     if matches!(state.mode, Mode::Help) {
@@ -35,9 +35,11 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
         return;
     }
     fb.clear(BACKGROUND);
-    fb.text(super::paint_metrics::TEXT_LEFT, 18, b"file_manager", FOREGROUND);
-    fb.text(super::paint_metrics::TEXT_LEFT, 38, clip(state.prefix.as_bytes(), 40), MUTED);
+    super::paint_sidebar::paint_sidebar(state, fb);
     paint_header(state, fb);
-    paint_rows(state, fb);
+    match state.view {
+        ViewKind::Grid => paint_grid(state, fb),
+        ViewKind::List => paint_rows(state, fb),
+    }
     paint_footer(state, fb);
 }

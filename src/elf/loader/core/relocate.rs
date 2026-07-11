@@ -58,7 +58,10 @@ pub(in crate::elf::loader::core) fn apply_relative_relocations(
         }
         let mut off = ph.p_offset as usize;
         let end = off.saturating_add(ph.p_filesz as usize).min(elf_data.len());
-        while off + DYN_ENTRY <= end {
+        // checked_add: a hostile p_offset near usize::MAX would overflow this
+        // sum and abort the kernel under release overflow-checks; fail the loop
+        // cleanly instead.
+        while off.checked_add(DYN_ENTRY).is_some_and(|e| e <= end) {
             match rd_u64(elf_data, off) {
                 DT_RELA => rela_vaddr = Some(rd_u64(elf_data, off + 8)),
                 DT_RELASZ => rela_size = rd_u64(elf_data, off + 8),
@@ -127,7 +130,14 @@ fn vaddr_to_file_offset(
         let ph = parse_program_header_at(elf_data, header, index)?;
         let end = ph.p_vaddr.wrapping_add(ph.p_filesz);
         if ph.p_type == phdr_type::PT_LOAD && vaddr >= ph.p_vaddr && vaddr < end {
-            return Ok((ph.p_offset + (vaddr - ph.p_vaddr)) as usize);
+            // vaddr >= p_vaddr above, so the subtraction cannot underflow; the
+            // addition still can (attacker-controlled p_offset), so keep it
+            // checked to fail closed rather than abort under overflow-checks.
+            return ph
+                .p_offset
+                .checked_add(vaddr - ph.p_vaddr)
+                .and_then(|v| usize::try_from(v).ok())
+                .ok_or(ElfError::DynamicSectionError);
         }
     }
     Err(ElfError::DynamicSectionError)

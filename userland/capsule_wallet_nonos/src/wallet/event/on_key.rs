@@ -16,7 +16,9 @@
 
 use nonos_app_skeleton::EventOutcome;
 
-use crate::wallet::state::{hydrate, State, VIEW_HOME, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND};
+use crate::wallet::state::{
+    hydrate, State, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED,
+};
 
 pub fn on_key(state: &mut State, code: u32) -> EventOutcome {
     if code == b'r' as u32 || code == b'R' as u32 {
@@ -32,6 +34,10 @@ pub fn on_key(state: &mut State, code: u32) -> EventOutcome {
         code if code == b'2' as u32 => view(state, VIEW_RECEIVE),
         code if code == b'3' as u32 => view(state, VIEW_SEND),
         code if code == b'4' as u32 => view(state, VIEW_PROOF),
+        code if code == b'5' as u32 => view(state, VIEW_SHIELDED),
+        code if code == b'6' as u32 => view(state, VIEW_NOX),
+        code if code == b'd' as u32 || code == b'D' as u32 => view(state, VIEW_SHIELDED),
+        code if code == b'x' as u32 || code == b'X' as u32 => view(state, VIEW_NOX),
         code if code == b'g' as u32 || code == b'G' as u32 => super::generate::generate(state),
         code if state.view == VIEW_SEND => super::send_input::send_input(state, code).unwrap_or(EventOutcome::Idle),
         code if code == b'E' as u32 => super::sign_eth::sign_eth(state),
