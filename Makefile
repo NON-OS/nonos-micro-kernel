@@ -141,10 +141,15 @@ ZK_CAPSULE_EPOCH ?= 1
 EMBED_TOOL       := $(BOOTLOADER_DIR)/tools/embed-zk-proof/target/$(HOST_TARGET)/release/embed-zk-proof
 SIGN_TOOL        := $(BOOTLOADER_DIR)/tools/sign-kernel/target/$(HOST_TARGET)/release/sign-kernel
 
-# Anti-rollback index baked into and signed over the kernel image. Bump only for
-# security-critical releases; the TPM monotonic counter enforces it as a floor
-# so an older signed kernel cannot be rolled back onto a device.
-NONOS_ROLLBACK_INDEX ?= 0
+# Anti-rollback index baked into and signed over the kernel image. Starts at 1,
+# the minimum the bootloader accepts (index 0 means unset and is rejected); bump
+# only for security-critical releases. The TPM monotonic counter enforces it as
+# a floor so an older signed kernel cannot be rolled back onto a device.
+NONOS_ROLLBACK_INDEX ?= 1
+
+# Changing the index must force a re-sign: the signed kernel does not otherwise
+# depend on the value, so it keys on this per-index stamp.
+NONOS_ROLLBACK_STAMP := $(TARGET_DIR)/.rollback-index.$(NONOS_ROLLBACK_INDEX)
 
 # Developer evaluation bootstrap (NOT production custody).
 #
@@ -1339,8 +1344,14 @@ nonos-mk-process-manager-prod: nonos-mk-desktop-gui-prod
 
 # Sign + attest + ESP packaging
 
+$(NONOS_ROLLBACK_STAMP):
+	@mkdir -p $(TARGET_DIR)
+	@rm -f $(TARGET_DIR)/.rollback-index.*
+	@touch $@
+
 $(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel \
-		$(SIGNING_KEY) $(KERNEL_MLDSA65_KEY) $(KERNEL_MLDSA65_PUB) $(SIGN_TOOL)
+		$(SIGNING_KEY) $(KERNEL_MLDSA65_KEY) $(KERNEL_MLDSA65_PUB) $(SIGN_TOOL) \
+		$(NONOS_ROLLBACK_STAMP)
 	@echo "Signing kernel (Ed25519 + ML-DSA-65, rollback index $(NONOS_ROLLBACK_INDEX))..."
 	@mkdir -p $(TARGET_DIR)
 	@$(SIGN_TOOL) --key $(KERNEL_SIGNING_KEY) --input $< --output $@ \
