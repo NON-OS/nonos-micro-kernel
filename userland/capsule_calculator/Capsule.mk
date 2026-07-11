@@ -7,6 +7,7 @@ CAPSULE_FEATURE          := nonos-capsule-calculator
 CAPSULE_NAMESPACE        := systems.nonos.app.calculator
 CAPSULE_SERVICE_ENDPOINT := service:4720:app.calculator
 CAPSULE_REPLY_ENDPOINT   := reply:4721:endpoint.app.calculator.reply
+CAPSULE_INSTANCE_ENDPOINTS := service:4838:app.calculator.1 reply:4839:endpoint.app.calculator.1.reply service:4840:app.calculator.2 reply:4841:endpoint.app.calculator.2.reply
 # CoreExec|IPC|Memory|GraphicsDisplayQuery|GraphicsSurfaceCreate
 CAPSULE_REQUIRED_CAPS    := 0x1819
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_calculator

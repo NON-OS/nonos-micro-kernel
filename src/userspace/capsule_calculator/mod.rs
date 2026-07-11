@@ -18,5 +18,5 @@ mod embed;
 mod spawn;
 mod state;
 
-pub use spawn::spawn_calculator_capsule;
+pub use spawn::{spawn_calculator_capsule, spawn_calculator_instance};
 pub use state::shared_state;

@@ -18,5 +18,5 @@ mod embed;
 mod spawn;
 mod state;
 
-pub use spawn::spawn_text_editor_capsule;
+pub use spawn::{spawn_text_editor_capsule, spawn_text_editor_instance};
 pub use state::shared_state;
