@@ -58,8 +58,8 @@ jobs:
         run: |
           set -euo pipefail
           EV="$GITHUB_WORKSPACE/lean-evidence"
-          thms=$(grep -rh '^theorem ' Nonos --include='*.lean' | wc -l | tr -d ' ')
-          lemmas=$(grep -rh '^lemma ' Nonos --include='*.lean' | wc -l | tr -d ' ')
+          thms=$({ grep -rh '^theorem ' Nonos --include='*.lean' || true; } | wc -l | tr -d ' ')
+          lemmas=$({ grep -rh '^lemma ' Nonos --include='*.lean' || true; } | wc -l | tr -d ' ')
           mods=$(find Nonos -name '*.lean' | wc -l | tr -d ' ')
           loc=$(find Nonos -name '*.lean' -exec cat {} + | wc -l | tr -d ' ')
           hatches=$(grep -rEn '\bsorry\b|\badmit\b|^axiom ' Nonos --include='*.lean' \
