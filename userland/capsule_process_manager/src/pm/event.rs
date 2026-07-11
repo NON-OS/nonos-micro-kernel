@@ -14,21 +14,95 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_ESC};
+use nonos_app_skeleton::{
+    EventOutcome, InputEvent, InputKind, KEY_DOWN, KEY_END, KEY_ENTER, KEY_ESC, KEY_HOME,
+    KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_UP,
+};
 
-use super::state::State;
+use super::layout::{sort_at_x, HEADER_H};
+use super::state::{Sort, State, View, SIGKILL, SIGTERM};
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
+    // S toggles panels from anywhere.
+    if event.is_key_down() && matches!(event.code, 0x53 | 0x73) {
+        state.toggle_view();
+        return EventOutcome::Repaint;
+    }
+    match state.view {
+        View::Processes => process_event(state, event),
+        View::Security => security_event(state, event),
+    }
+}
+
+fn process_event(state: &mut State, event: InputEvent) -> EventOutcome {
     if event.kind == InputKind::ButtonDown {
-        state.refresh();
+        // A click on the header row sorts by that column; below it selects.
+        if event.y < HEADER_H as i32 {
+            if let Some(sort) = sort_at_x(event.x) {
+                state.set_sort(sort);
+            }
+        } else {
+            state.select_at(event.y);
+        }
+        return EventOutcome::Repaint;
+    }
+    if event.kind == InputKind::Wheel {
+        state.scroll_by(if event.delta_y > 0 { -3 } else { 3 });
         return EventOutcome::Repaint;
     }
     if !event.is_key_down() {
         return EventOutcome::Idle;
     }
-    if event.code == KEY_ESC {
-        return EventOutcome::Close;
+    let big = state.visible.max(1) as i32;
+    match event.code {
+        KEY_ESC => return EventOutcome::Close,
+        KEY_UP => state.move_selection(-1),
+        KEY_DOWN => state.move_selection(1),
+        KEY_PAGE_UP => state.move_selection(-big),
+        KEY_PAGE_DOWN => state.move_selection(big),
+        KEY_HOME => state.move_selection(-(state.rows.len() as i32)),
+        KEY_END => state.move_selection(state.rows.len() as i32),
+        // K ends, F force-kills the selection.
+        0x4B | 0x6B => state.kill_selected(SIGTERM),
+        0x46 | 0x66 => state.kill_selected(SIGKILL),
+        // Sort by cpu, memory, name or pid.
+        0x43 | 0x63 => state.set_sort(Sort::Cpu),
+        0x4D | 0x6D => state.set_sort(Sort::Mem),
+        0x4E | 0x6E => state.set_sort(Sort::Name),
+        0x50 | 0x70 => state.set_sort(Sort::Pid),
+        // R re-reads the table immediately.
+        0x52 | 0x72 => state.refresh(),
+        _ => return EventOutcome::Idle,
     }
-    state.refresh();
+    EventOutcome::Repaint
+}
+
+fn security_event(state: &mut State, event: InputEvent) -> EventOutcome {
+    if event.kind == InputKind::ButtonDown {
+        state.alert_select_at(event.y);
+        return EventOutcome::Repaint;
+    }
+    if event.kind == InputKind::Wheel {
+        state.alert_scroll_by(if event.delta_y > 0 { -3 } else { 3 });
+        return EventOutcome::Repaint;
+    }
+    if !event.is_key_down() {
+        return EventOutcome::Idle;
+    }
+    let big = state.alert_visible.max(1) as i32;
+    match event.code {
+        // Esc leaves the panel back to the process table.
+        KEY_ESC => state.toggle_view(),
+        KEY_UP => state.alert_move(-1),
+        KEY_DOWN => state.alert_move(1),
+        KEY_PAGE_UP => state.alert_move(-big),
+        KEY_PAGE_DOWN => state.alert_move(big),
+        KEY_HOME => state.alert_move(-(state.alerts.len() as i32)),
+        KEY_END => state.alert_move(state.alerts.len() as i32),
+        // Enter jumps to the process the finding names.
+        KEY_ENTER => state.jump_to_alert(),
+        0x52 | 0x72 => state.refresh(),
+        _ => return EventOutcome::Idle,
+    }
     EventOutcome::Repaint
 }

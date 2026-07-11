@@ -14,20 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+mod monitor;
+mod posture;
+mod sensitive;
+mod types;
+mod watchlist;
 
-extern crate alloc;
-
-mod pm;
-
-use nonos_app_skeleton::run;
-
-/// # Safety
-///
-/// The loader jumps here directly as the capsule entry point; it must be the
-/// process's only `_start` and is never called from Rust.
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    run(pm::ProcessManager::new)
-}
+pub use monitor::Monitor;
+pub use posture::Posture;
+pub use types::{Alert, Level};
