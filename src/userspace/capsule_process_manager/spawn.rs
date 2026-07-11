@@ -29,9 +29,9 @@ use crate::security::nonos_trust_anchor::{
 use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 
 const SERVICE_NAME: &str = "app.process_manager";
-const SERVICE_PORT: u32 = 4730;
+const SERVICE_PORT: u32 = 4736;
 const REPLY_INBOX: &str = "endpoint.app.process_manager.reply";
-const REPLY_PORT: u32 = 4731;
+const REPLY_PORT: u32 = 4737;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
 
 pub fn spawn_process_manager_capsule() -> Result<(), SpawnError> {
