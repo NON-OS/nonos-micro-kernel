@@ -14,20 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+// Processes that hold the system or desktop up: ending one strands the session
+// or the kernel. The monitor still allows it (the authority is real), but arms
+// an extra confirmation so it is never a single stray keypress.
+const CRITICAL: &[&[u8]] = &[
+    b"init",
+    b"login",
+    b"keyring",
+    b"entropy_pool",
+    b"crypto_pool",
+    b"policy",
+    b"input_router",
+    b"vfs_pool",
+    b"net.core",
+    b"compositor",
+    b"wm",
+    b"desktop_shell",
+    b"process_manager",
+];
 
-extern crate alloc;
-
-mod pm;
-
-use nonos_app_skeleton::run;
-
-/// # Safety
-///
-/// The loader jumps here directly as the capsule entry point; it must be the
-/// process's only `_start` and is never called from Rust.
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    run(pm::ProcessManager::new)
+pub fn is_critical(name: &[u8]) -> bool {
+    CRITICAL.contains(&name)
 }

@@ -16,10 +16,15 @@
 
 use nonos_app_skeleton::{AppManifest, WindowKind};
 
-pub const WIDTH: u32 = 440;
-pub const HEIGHT: u32 = 240;
+pub const WIDTH: u32 = 1080;
+pub const HEIGHT: u32 = 720;
 
+// Keys drive the table; buttons sort/select by click, the wheel scrolls, and the
+// absolute pointer keeps the button coordinates current.
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
+const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
+const INPUT_WHEEL_BIT: u32 = 1 << 4;
+const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
 
 pub fn manifest() -> AppManifest {
     AppManifest {
@@ -30,6 +35,9 @@ pub fn manifest() -> AppManifest {
         initial_y: 456,
         width: WIDTH,
         height: HEIGHT,
-        input_kind_mask: INPUT_KEY_DOWN_BIT,
+        input_kind_mask: INPUT_KEY_DOWN_BIT
+            | INPUT_BUTTON_DOWN_BIT
+            | INPUT_WHEEL_BIT
+            | INPUT_POINTER_ABS_BIT,
     }
 }

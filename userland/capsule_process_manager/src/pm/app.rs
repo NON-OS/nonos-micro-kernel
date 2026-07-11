@@ -19,17 +19,15 @@ use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer
 use super::event::on_event;
 use super::manifest::manifest;
 use super::paint::paint;
-use super::sample::sample;
 use super::state::State;
 
 pub struct ProcessManager {
     state: State,
-    ticks: u32,
 }
 
 impl ProcessManager {
     pub fn new() -> Self {
-        ProcessManager { state: State::new(), ticks: 0 }
+        ProcessManager { state: State::new() }
     }
 }
 
@@ -43,15 +41,16 @@ impl App for ProcessManager {
     }
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&self.state, fb);
+        paint(&mut self.state, fb);
     }
 
     fn on_tick(&mut self) -> bool {
-        if self.ticks % 5 == 0 {
-            self.state.refresh();
-        }
-        self.ticks = self.ticks.wrapping_add(1);
-        sample(&mut self.state);
+        // The default tick is one second, a natural refresh rate for a monitor.
+        // Re-read the live table and always repaint: uptime advances every tick
+        // for every process, so the view is genuinely live rather than a frame
+        // that only redraws when a number happens to change. One repaint a second
+        // of cached glyphs is cheap.
+        self.state.refresh();
         true
     }
 }
