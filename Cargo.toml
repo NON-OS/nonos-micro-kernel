@@ -82,6 +82,7 @@ nonos-capsule-clipboard         = []
 nonos-capsule-attest            = []
 nonos-capsule-power             = []
 nonos-capsule-image-codec       = []
+nonos-capsule-image-viewer      = []
 nonos-capsule-about             = []
 nonos-capsule-hello             = []
 nonos-capsule-boot-splash       = []
@@ -485,6 +486,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-wm",
   "nonos-capsule-desktop-shell",
   "nonos-capsule-image-codec",
+  "nonos-capsule-image-viewer",
   "nonos-capsule-clipboard",
   "nonos-capsule-attest",
   "nonos-capsule-login",
