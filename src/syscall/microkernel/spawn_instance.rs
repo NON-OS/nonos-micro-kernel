@@ -59,6 +59,15 @@ fn queue_by_name(name: &str) -> i64 {
     let app = match name {
         "app.terminal" => PendingApp::Terminal,
         "app.browser" => PendingApp::Browser,
+        "app.text_editor" => PendingApp::TextEditor,
+        "app.settings" => PendingApp::Settings,
+        "app.calculator" => PendingApp::Calculator,
+        "app.clock" => PendingApp::Clock,
+        "app.about" => PendingApp::About,
+        "app.snake" => PendingApp::Snake,
+        "app.nonos_wallet" => PendingApp::WalletNonos,
+        "app.file_manager" => PendingApp::FileManager,
+        "app.process_manager" => PendingApp::ProcessManager,
         _ => return ERRNO_NOENT,
     };
     if request_instance(app) {

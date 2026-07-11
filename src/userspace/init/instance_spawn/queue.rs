@@ -25,6 +25,15 @@ use spin::Mutex;
 pub enum PendingApp {
     Terminal,
     Browser,
+    TextEditor,
+    Settings,
+    Calculator,
+    Clock,
+    About,
+    Snake,
+    WalletNonos,
+    FileManager,
+    ProcessManager,
 }
 
 // A click enqueues one request; a few in flight at once is the most a user

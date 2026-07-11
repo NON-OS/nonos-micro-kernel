@@ -19,7 +19,9 @@ use super::embed::{
 };
 use super::state;
 use crate::capabilities::Capability;
-use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
+use crate::kernel_core::process_spawn::capsule_spawn::{
+    self, spawn_next_instance, CapsuleSpecVerified, InstanceEndpoint, InstanceSpawn,
+};
 use crate::security::nonos_id_cert::IdCertVerifyError;
 use crate::security::nonos_trust_anchor::{
     decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
@@ -32,6 +34,42 @@ const SERVICE_PORT: u32 = 4710;
 const REPLY_INBOX: &str = "endpoint.app.about.reply";
 const REPLY_PORT: u32 = 4711;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+
+// Extra window endpoints, each declared in the signed manifest. Ordered, so the
+// lowest-numbered free one is taken.
+const ABOUT_INSTANCES: &[InstanceEndpoint] = &[
+    InstanceEndpoint {
+        name: "app.about.1",
+        port: 4846,
+        reply_inbox: "endpoint.app.about.1.reply",
+        reply_port: 4847,
+    },
+    InstanceEndpoint {
+        name: "app.about.2",
+        port: 4848,
+        reply_inbox: "endpoint.app.about.2.reply",
+        reply_port: 4849,
+    },
+];
+
+// Spawn the next free about window on demand. Same signed artifacts as boot, a
+// fresh pid, and thus its own compositor window.
+pub fn spawn_about_instance() -> Result<u32, SpawnError> {
+    spawn_next_instance(&InstanceSpawn {
+        elf: ABOUT_ELF,
+        cert: ABOUT_NONOS_ID_CERT_BYTES,
+        manifest: ABOUT_MANIFEST_BYTES,
+        attestation: ABOUT_ATTESTATION_BYTES,
+        target_triple: TARGET_TRIPLE,
+        requested_caps: Capability::CoreExec.bit()
+            | Capability::IPC.bit()
+            | Capability::Memory.bit()
+            | Capability::GraphicsDisplayQuery.bit()
+            | Capability::GraphicsSurfaceCreate.bit(),
+        instances: ABOUT_INSTANCES,
+        debug_tag: b"[ABOUT-INSTANCE] elf error:",
+    })
+}
 
 pub fn spawn_about_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

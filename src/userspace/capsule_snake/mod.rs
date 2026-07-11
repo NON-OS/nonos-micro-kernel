@@ -18,5 +18,5 @@ mod embed;
 mod spawn;
 mod state;
 
-pub use spawn::spawn_snake_capsule;
+pub use spawn::{spawn_snake_capsule, spawn_snake_instance};
 pub use state::shared_state;
