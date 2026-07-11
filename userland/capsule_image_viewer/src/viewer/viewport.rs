@@ -59,10 +59,6 @@ pub fn place_mode(mode: FitMode, sw: u32, sh: u32, vw: u32, vh: u32, view: &View
     Placement { dx: round_i(cx), dy: round_i(cy), dw, dh }
 }
 
-pub fn place(sw: u32, sh: u32, vw: u32, vh: u32, view: &View) -> Placement {
-    place_mode(FitMode::Fit, sw, sh, vw, vh, view)
-}
-
 pub fn clamp_pan_mode(view: &mut View, mode: FitMode, sw: u32, sh: u32, vw: u32, vh: u32) {
     let s = base_scale(mode, sw, sh, vw, vh) * view.zoom;
     let dw = sw as f32 * s;
@@ -73,10 +69,6 @@ pub fn clamp_pan_mode(view: &mut View, mode: FitMode, sw: u32, sh: u32, vw: u32,
     if view.pan_x < -lim_x { view.pan_x = -lim_x; }
     if view.pan_y > lim_y { view.pan_y = lim_y; }
     if view.pan_y < -lim_y { view.pan_y = -lim_y; }
-}
-
-pub fn clamp_pan(view: &mut View, sw: u32, sh: u32, vw: u32, vh: u32) {
-    clamp_pan_mode(view, FitMode::Fit, sw, sh, vw, vh);
 }
 
 pub fn zoom_at(view: &mut View, mode: FitMode, sw: u32, sh: u32, vw: u32, vh: u32, px: i32, py: i32, factor: f32) {
