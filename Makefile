@@ -724,7 +724,7 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(policy_VERIFY) $(wallpaper_catalog_VERIFY) \
 	$(installer_VERIFY) \
 	$(input-router_VERIFY) $(compositor_VERIFY) $(wm_VERIFY) \
-	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
+	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(image-viewer_VERIFY) $(clipboard_VERIFY) \
 	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
 	$(boot-splash_VERIFY) $(about_VERIFY) $(calculator_VERIFY) $(clock_VERIFY) \
 	$(browser_VERIFY) $(web_VERIFY) \
@@ -1196,7 +1196,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(installer_ARTIFACTS) \
 		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
 		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
-		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
+		$(image-codec_ARTIFACTS) $(image-viewer_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
 		$(calculator_ARTIFACTS) $(clock_ARTIFACTS) $(browser_ARTIFACTS) \
