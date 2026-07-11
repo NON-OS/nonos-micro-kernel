@@ -23,6 +23,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkPidAlive
         | SyscallNumber::MkYield
         | SyscallNumber::MkTimeMillis
+        | SyscallNumber::MkTimeMonotonic
         | SyscallNumber::MkTimeRtc
         | SyscallNumber::MkBatteryStatus
         | SyscallNumber::MkProcStat

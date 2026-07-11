@@ -63,6 +63,7 @@ pub enum SyscallNumber {
     MkSetTls = tag4(b"MSTB"),
     MkYield = tag4(b"MYLD"),
     MkTimeMillis = tag4(b"MTMS"),
+    MkTimeMonotonic = tag4(b"MMON"),
     MkTimeRtc = tag4(b"MTRT"),
     MkTimeAdjust = tag4(b"MTAD"),
     MkBatteryStatus = tag4(b"MBAT"),
