@@ -96,4 +96,4 @@ pub fn spawn_next(app: &InstanceSpawn) -> Result<u32, SpawnError> {
 
 /// The argv marker that tells the app skeleton it is an on-demand window
 /// instance and must exit when its window closes.
-pub const INSTANCE_ARG: &str = "--nonos-window-instance";
+pub(crate) const INSTANCE_ARG: &str = "--nonos-window-instance";

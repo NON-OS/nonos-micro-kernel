@@ -16,7 +16,7 @@
 
 use crate::interrupts::handlers::exceptions::context::ExceptionContext;
 
-pub fn log_simd_exception(ctx: &ExceptionContext, mxcsr: u32) {
+pub(crate) fn log_simd_exception(ctx: &ExceptionContext, mxcsr: u32) {
     crate::log::logger::log_warning!(
         "SIMD FP Exception at {:#x}: MXCSR={:#x}",
         ctx.instruction_pointer,

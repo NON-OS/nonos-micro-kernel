@@ -20,7 +20,7 @@ use heapless::FnvIndexSet;
 use linked_list_allocator::LockedHeap;
 use spin::Mutex;
 
-pub const TRACK_CAPACITY: usize = 8192;
+pub(crate) const TRACK_CAPACITY: usize = 8192;
 
 pub struct SecureHeapAllocator {
     pub inner: LockedHeap,

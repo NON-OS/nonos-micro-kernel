@@ -16,7 +16,7 @@
 
 use super::status::X87Status;
 
-pub fn read_x87_status() -> X87Status {
+pub(crate) fn read_x87_status() -> X87Status {
     let status: u16;
     unsafe {
         core::arch::asm!("fnstsw ax", out("ax") status, options(nomem, nostack));

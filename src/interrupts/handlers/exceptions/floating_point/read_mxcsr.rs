@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn read_mxcsr() -> u32 {
+pub(crate) fn read_mxcsr() -> u32 {
     let mut mxcsr: u32 = 0;
     unsafe {
         core::arch::asm!("stmxcsr [{}]", in(reg) &mut mxcsr as *mut u32, options(nostack));

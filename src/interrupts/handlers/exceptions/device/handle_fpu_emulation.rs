@@ -17,7 +17,7 @@
 use crate::interrupts::handlers::exceptions::context::ExceptionContext;
 use crate::interrupts::idt::halt_loop;
 
-pub fn handle_fpu_emulation(ctx: &ExceptionContext) -> ! {
+pub(crate) fn handle_fpu_emulation(ctx: &ExceptionContext) -> ! {
     crate::log::logger::log_warning!("FPU emulation not supported");
     if ctx.is_user_mode() {
         crate::process::exit::exit_and_yield(-4, true)

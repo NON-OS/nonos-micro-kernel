@@ -27,7 +27,7 @@ use super::super::domain_id::DomainId;
 use super::super::error::IommuError;
 use super::super::protection::IommuProtection;
 
-pub fn allocate_domain() -> Result<DomainId, IommuError> {
+pub(crate) fn allocate_domain() -> Result<DomainId, IommuError> {
     let raw_id = vtd_globals::allocate_domain_id();
     if raw_id > u16::MAX as u64 {
         return Err(IommuError::DomainExhausted);
@@ -37,11 +37,11 @@ pub fn allocate_domain() -> Result<DomainId, IommuError> {
     Ok(DomainId::new(raw_id as u16))
 }
 
-pub fn free_domain(id: DomainId) -> Result<(), IommuError> {
+pub(crate) fn free_domain(id: DomainId) -> Result<(), IommuError> {
     vtd_domain::destroy_domain(VtdDomainId::new(id.as_u16())).map_err(|_| IommuError::InvalidDomain)
 }
 
-pub fn map(
+pub(crate) fn map(
     domain: DomainId,
     iova: u64,
     phys: PhysAddr,
@@ -62,12 +62,12 @@ pub fn map(
         .map_err(|_| IommuError::BackendFault)
 }
 
-pub fn unmap(domain: DomainId, iova: u64, size: usize) -> Result<(), IommuError> {
+pub(crate) fn unmap(domain: DomainId, iova: u64, size: usize) -> Result<(), IommuError> {
     vtd_mapping::unmap_range(VtdDomainId::new(domain.as_u16()), iova, size)
         .map_err(|_| IommuError::NotMapped)
 }
 
-pub fn attach_device(domain: DomainId, device: DeviceAddress) -> Result<(), IommuError> {
+pub(crate) fn attach_device(domain: DomainId, device: DeviceAddress) -> Result<(), IommuError> {
     vtd_device::map_device(
         VtdDomainId::new(domain.as_u16()),
         device.pci_bus(),
@@ -77,7 +77,7 @@ pub fn attach_device(domain: DomainId, device: DeviceAddress) -> Result<(), Iomm
     .map_err(|_| IommuError::DeviceAttachFailed)
 }
 
-pub fn detach_device(_domain: DomainId, device: DeviceAddress) -> Result<(), IommuError> {
+pub(crate) fn detach_device(_domain: DomainId, device: DeviceAddress) -> Result<(), IommuError> {
     vtd_device::unmap_device(device.pci_bus(), device.pci_device(), device.pci_function())
         .map_err(|_| IommuError::DeviceDetachFailed)
 }

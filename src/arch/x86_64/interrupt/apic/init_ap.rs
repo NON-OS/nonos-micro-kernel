@@ -29,25 +29,23 @@ use super::ops::set_tpr;
 use super::state::{rdmsr, wrmsr, X2APIC_MODE};
 
 pub unsafe fn init_ap_lapic() {
-    unsafe {
-        // Hardware-enable this CPU's LAPIC (and keep it in the same mode the
-        // BSP chose; the mode is a package-wide contract).
-        let mut base = rdmsr(IA32_APIC_BASE) | APIC_BASE_ENABLE;
-        if X2APIC_MODE.load(Ordering::Acquire) {
-            base |= APIC_BASE_X2;
-        }
-        wrmsr(IA32_APIC_BASE, base);
-
-        if X2APIC_MODE.load(Ordering::Acquire) {
-            init_x2apic();
-        } else {
-            mmio_w32(LAPIC_SVR, SVR_APIC_ENABLE | VEC_SPURIOUS as u32);
-            mmio_w32(LAPIC_LVT_LINT0, LVT_NMI);
-            mmio_w32(LAPIC_LVT_LINT1, LVT_MASKED | LVT_LEVEL);
-            mmio_w32(LAPIC_LVT_THERM, VEC_THERMAL as u32);
-            mmio_w32(LAPIC_LVT_ERROR, VEC_ERROR as u32);
-            mmio_w32(LAPIC_LVT_TIMER, LVT_MASKED);
-        }
-        set_tpr(0);
+    // Hardware-enable this CPU's LAPIC (and keep it in the same mode the
+    // BSP chose; the mode is a package-wide contract).
+    let mut base = rdmsr(IA32_APIC_BASE) | APIC_BASE_ENABLE;
+    if X2APIC_MODE.load(Ordering::Acquire) {
+        base |= APIC_BASE_X2;
     }
+    wrmsr(IA32_APIC_BASE, base);
+
+    if X2APIC_MODE.load(Ordering::Acquire) {
+        init_x2apic();
+    } else {
+        mmio_w32(LAPIC_SVR, SVR_APIC_ENABLE | VEC_SPURIOUS as u32);
+        mmio_w32(LAPIC_LVT_LINT0, LVT_NMI);
+        mmio_w32(LAPIC_LVT_LINT1, LVT_MASKED | LVT_LEVEL);
+        mmio_w32(LAPIC_LVT_THERM, VEC_THERMAL as u32);
+        mmio_w32(LAPIC_LVT_ERROR, VEC_ERROR as u32);
+        mmio_w32(LAPIC_LVT_TIMER, LVT_MASKED);
+    }
+    set_tpr(0);
 }

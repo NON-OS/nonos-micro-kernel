@@ -16,6 +16,6 @@
 
 use crate::interrupts::handlers::exceptions::context::ExceptionContext;
 
-pub fn handle_single_step(_ctx: &ExceptionContext) {
+pub(crate) fn handle_single_step(_ctx: &ExceptionContext) {
     crate::log::logger::log_debug!("Single step triggered");
 }

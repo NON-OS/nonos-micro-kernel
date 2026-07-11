@@ -31,6 +31,7 @@
 //! release build strips the surface by dropping a single feature flag instead
 //! of editing every spawn site.
 
+#[cfg(feature = "capsule-serial-debug")]
 use super::types::Capability;
 
 /// Serial-debug capability bits to fold into a capsule's requested caps.

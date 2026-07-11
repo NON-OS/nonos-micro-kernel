@@ -17,7 +17,7 @@
 use super::types::DebugInfo;
 use crate::interrupts::handlers::exceptions::context::ExceptionContext;
 
-pub fn handle_hardware_breakpoint(ctx: &ExceptionContext, info: &DebugInfo) {
+pub(crate) fn handle_hardware_breakpoint(ctx: &ExceptionContext, info: &DebugInfo) {
     let bp_num = if info.breakpoint_0 {
         0
     } else if info.breakpoint_1 {
