@@ -12,6 +12,12 @@ capacity. The theorems below show an acquire needs a positive count and lowers
 it by one, a release never pushes the count past the capacity, and the
 capacity bound is an invariant of both operations, so a semaphore never hands
 out more permits than it was configured for and never underflows.
+
+The kernel implements this as a lock-free counting semaphore in
+`src/sys/sync/semaphore`. The permit arithmetic in that module's `pure.rs` is
+the same computation these theorems describe, and the `sync_proofs` crate runs
+it against this model with differential tests and Kani, so the property is
+checked of the code the kernel executes, not only of the model.
 -/
 
 namespace Nonos.Semaphore

@@ -14,6 +14,12 @@ unchanged. The theorems below show a write in progress makes the counter odd,
 a matched write pair returns it to even, and a reader rejects both an
 in-progress start and any value that changed under it, so a torn read is never
 accepted.
+
+The kernel implements this as a seqlock in `src/sys/sync/seqlock`, used for
+read-mostly data. The sequence discipline in that module's `pure.rs` is the
+same predicate set these theorems describe, and the `sync_proofs` crate runs it
+against this model with differential tests and Kani, so the property is checked
+of the code the kernel executes, not only of the model.
 -/
 
 namespace Nonos.Seqlock

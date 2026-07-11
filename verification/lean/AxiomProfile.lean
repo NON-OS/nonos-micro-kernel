@@ -136,3 +136,10 @@ import Nonos
 #print axioms Nonos.Buddy.split_conserves
 #print axioms Nonos.Cow.write_drops_original
 #print axioms Nonos.Bitmap.set_then_clear_frees
+
+-- Locking and address-space mechanisms, each backed by a real kernel primitive.
+#print axioms Nonos.Spinlock.try_fails_when_held
+#print axioms Nonos.Rwlock.writer_excludes_readers
+#print axioms Nonos.Futex.fifo_first_out
+#print axioms Nonos.Futex.waiter_enqueued
+#print axioms Nonos.Vma.disjoint_no_shared_addr
