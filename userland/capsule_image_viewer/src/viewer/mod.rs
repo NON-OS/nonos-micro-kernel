@@ -5,9 +5,9 @@ mod ext;
 mod load;
 mod manifest;
 mod render;
-mod rotate;
-mod scale;
+pub(crate) mod rotate;
+pub(crate) mod scale;
 mod state;
-mod viewport;
+pub(crate) mod viewport;
 
 pub use app::ViewerApp;

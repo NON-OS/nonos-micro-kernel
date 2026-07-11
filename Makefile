@@ -631,6 +631,7 @@ include userland/capsule_setup_wizard/Capsule.mk
 include userland/capsule_wm/Capsule.mk
 include userland/capsule_desktop_shell/Capsule.mk
 include userland/capsule_image_codec/Capsule.mk
+include userland/capsule_image_viewer/Capsule.mk
 include userland/capsule_clipboard/Capsule.mk
 include userland/capsule_login/Capsule.mk
 include userland/toolkit/Capsule.mk
@@ -1153,6 +1154,16 @@ nonos-mk-ntp-test: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features nonos-ntp-smoketest
 
+nonos-mk-image-viewer-test: $(proof-io_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building image_viewer capsule (nonos-image-viewer-smoketest)..."
+	@$(MAKE) -B image-viewer_CARGO_FEATURES=nonos-image-viewer-smoketest nonos-mk-image-viewer-sign
+	@echo "Building kernel (microkernel-image-viewer-smoketest)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-image-viewer-smoketest
+
 nonos-mk-net-nym-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-core_ARTIFACTS) $(net-nym_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
@@ -1563,6 +1574,13 @@ nonos-mk-boot-desktop-gui:
 
 nonos-mk-boot-ntp:
 	@./tests/boot/ntp_round_trip.sh
+
+.PHONY: nonos-mk-boot-image-viewer
+nonos-mk-boot-image-viewer:
+	@./tests/boot/image_viewer_round_trip.sh; rc=$$?; \
+		echo "Restoring GUI image_viewer capsule (undo smoketest artifact)..."; \
+		$(MAKE) -B nonos-mk-image-viewer-sign >/dev/null 2>&1; \
+		exit $$rc
 
 .PHONY: nonos-mk-boot-terminal
 nonos-mk-boot-terminal:

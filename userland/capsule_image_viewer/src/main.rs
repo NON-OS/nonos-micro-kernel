@@ -20,9 +20,18 @@
 extern crate alloc;
 
 mod viewer;
+#[cfg(feature = "nonos-image-viewer-smoketest")]
+mod selftest;
 
 use nonos_app_skeleton::run;
 
+#[cfg(feature = "nonos-image-viewer-smoketest")]
+#[no_mangle]
+pub unsafe extern "C" fn _start() -> ! {
+    selftest::run()
+}
+
+#[cfg(not(feature = "nonos-image-viewer-smoketest"))]
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     run(viewer::ViewerApp::new)

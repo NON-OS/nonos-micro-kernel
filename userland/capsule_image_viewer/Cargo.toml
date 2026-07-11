@@ -15,6 +15,12 @@ description = "NONOS image viewer capsule"
 name = "image_viewer"
 path = "src/main.rs"
 
+[features]
+# Self-test build: exercise the pure render pipeline (rotate + scale +
+# viewport, no IPC, no codec, no vfs) against a baked ARGB source and
+# emit a graded [IMG-VIEWER] serial marker for the boot harness.
+nonos-image-viewer-smoketest = []
+
 [dependencies]
 nonos_app_skeleton = { path = "../app_skeleton" }
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
