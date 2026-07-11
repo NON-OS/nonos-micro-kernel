@@ -13,8 +13,8 @@ CAPSULE_SERVICE_ENDPOINT := service:4410:desktop_shell
 CAPSULE_REPLY_ENDPOINT   := reply:4411:endpoint.desktop_shell.reply
 # CoreExec | Network | IPC | Memory | GraphicsDisplayQuery
 # | GraphicsSurfaceCreate | SpawnWindow
-# = 0x01 | 0x04 | 0x08 | 0x10 | 0x800 | 0x1000 | 0x800000 = 0x80181d
-CAPSULE_REQUIRED_CAPS    := 0x80181d
+# = 0x01 | 0x04 | 0x08 | 0x10 | 0x800 | 0x1000 | 0x1000000 = 0x100181d
+CAPSULE_REQUIRED_CAPS    := 0x100181d
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_desktop_shell
 
 include nonos-mk/capsule.mk
