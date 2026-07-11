@@ -2,6 +2,7 @@ mod app;
 mod arg;
 mod decode;
 mod ext;
+pub(crate) mod flip;
 mod load;
 mod manifest;
 mod render;
