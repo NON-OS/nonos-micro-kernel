@@ -37,13 +37,21 @@ pub fn decode(bytes: &[u8], name: &[u8]) -> Result<Decoded, &'static str> {
     let mut desc = SurfaceDescriptor::default();
     let va = mk_surface_attach(handle, &mut desc as *mut _);
     if va <= 0 { return Err("attach failed"); }
-    let px = copy_surface(va as usize, desc.stride, w, h);
+    if w != desc.width || h != desc.height {
+        let _ = mk_surface_release(handle);
+        return Err("codec dim mismatch");
+    }
+    if (desc.width as u64) * (desc.height as u64) * 4 > desc.byte_len {
+        let _ = mk_surface_release(handle);
+        return Err("surface too small");
+    }
+    let px = copy_surface(va as usize, desc.stride, desc.width, desc.height);
     let _ = mk_surface_release(handle);
-    Ok(Decoded { px, w, h })
+    Ok(Decoded { px, w: desc.width, h: desc.height })
 }
 
 fn copy_surface(base_va: usize, stride_bytes: u32, w: u32, h: u32) -> Vec<u32> {
-    let mut out = vec![0u32; (w * h) as usize];
+    let mut out = vec![0u32; w as usize * h as usize];
     let mut y = 0usize;
     while y < h as usize {
         let row = (base_va + y * stride_bytes as usize) as *const u32;
