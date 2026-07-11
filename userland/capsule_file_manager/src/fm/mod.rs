@@ -39,6 +39,7 @@ mod help;
 mod human_size;
 mod layout;
 mod manifest;
+mod open_with;
 mod paint;
 mod paint_clip;
 mod paint_footer;
