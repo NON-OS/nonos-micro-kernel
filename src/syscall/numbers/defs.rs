@@ -62,6 +62,8 @@ pub enum SyscallNumber {
     MkThreadSpawn = tag4(b"MTSP"),
     MkSetTls = tag4(b"MSTB"),
     MkYield = tag4(b"MYLD"),
+    MkFutexWait = tag4(b"MFTW"),
+    MkFutexWake = tag4(b"MFTK"),
     MkTimeMillis = tag4(b"MTMS"),
     MkTimeMonotonic = tag4(b"MMON"),
     MkTimeRtc = tag4(b"MTRT"),

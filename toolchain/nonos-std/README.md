@@ -42,7 +42,7 @@ returns `Unsupported` loudly; nothing pretends.
 | threads: spawn/join/sleep/yield | real | `MTSP` spawn, `MPAL`+`MYLD` polling join, `MTMS` sleep |
 | thread-local (`thread_local!`) | real | per-thread key table, address carried in fs base via `MSTB`, restored by the scheduler per task |
 | TLS destructors | real | dtor list run at thread exit / runtime cleanup |
-| `Mutex`/`RwLock`/`Condvar`/`Once`/parking | real | std futex backends over a polling futex (yield loop, ms timeouts); correct, not power-efficient, until a kernel wait queue exists |
+| `Mutex`/`RwLock`/`Condvar`/`Once`/parking | real | std futex backends over the kernel wait queue (`MFTW`/`MFTK`): a waiter sleeps and a waker wakes it directly, so contention no longer spins a core. Each wait is capped so a raced wakeup self-heals |
 | mpsc channels | real | thread parking above |
 | `available_parallelism` | 1 | no core-count syscall yet; honest lower bound |
 | thread names | no-op | nowhere to put them yet |

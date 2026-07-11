@@ -1,10 +1,9 @@
-// NONOS std PAL: a polling futex. The kernel has no blocking wait queue
-// syscall yet, so a waiter re-reads the atomic and yields the CPU between
-// polls instead of sleeping; wakers rely on the waiter observing the store
-// directly, which the futex contract allows (spurious wakeups are legal).
-// Every std sync primitive built on this (Mutex, Condvar, RwLock, Once,
-// thread parking) stays correct; contention costs yield loops rather than
-// a true sleep until the kernel grows a wait queue.
+// NONOS std PAL: a blocking futex over the kernel wait queue (MFTW/MFTK). A
+// waiter sleeps in the kernel instead of spinning a yield loop, and a waker
+// wakes it directly, so Mutex, Condvar, RwLock, Once and thread parking pay
+// a real sleep under contention rather than burning a core. The kernel caps
+// each wait so a wake that races the enqueue self-heals; this side rechecks
+// the atomic after every return, so the loop is correct regardless.
 
 use crate::sync::atomic::Atomic;
 use crate::sync::atomic::Ordering::Acquire;
@@ -24,15 +23,44 @@ const fn tag4(b: &[u8; 4]) -> i64 {
     (b[0] as i64) | ((b[1] as i64) << 8) | ((b[2] as i64) << 16) | ((b[3] as i64) << 24)
 }
 
-const N_MK_YIELD: i64 = tag4(b"MYLD");
 const N_MK_TIME_MILLIS: i64 = tag4(b"MTMS");
+const N_MK_FUTEX_WAIT: i64 = tag4(b"MFTW");
+const N_MK_FUTEX_WAKE: i64 = tag4(b"MFTK");
 
-fn raw_yield() {
-    // SAFETY: MYLD takes no arguments and only tells the scheduler to run
-    // someone else; rcx/r11 are the registers the syscall instruction burns.
+// Block in the kernel until the word at `addr` leaves `expected`, a waker
+// signals it, or the kernel's safety cap lapses. `timeout_ms == 0` means no
+// deadline (the kernel still caps each call, so the caller loops).
+fn futex_wait_syscall(addr: u64, expected: u32, timeout_ms: u64) {
+    // SAFETY: MFTW reads the futex word itself and only ever deschedules the
+    // caller; rcx/r11 are burned by the syscall instruction.
     unsafe {
-        core::arch::asm!("syscall", in("rax") N_MK_YIELD, out("rcx") _, out("r11") _);
+        core::arch::asm!(
+            "syscall",
+            in("rax") N_MK_FUTEX_WAIT,
+            in("rdi") addr,
+            in("rsi") expected as u64,
+            in("rdx") timeout_ms,
+            out("rcx") _,
+            out("r11") _,
+        );
     }
+}
+
+// Wake up to `count` waiters on `addr` (0 means all). Returns the count woken.
+fn futex_wake_syscall(addr: u64, count: u64) -> i64 {
+    let r: i64;
+    // SAFETY: MFTK only moves descheduled waiters back onto the run queue.
+    unsafe {
+        core::arch::asm!(
+            "syscall",
+            inout("rax") N_MK_FUTEX_WAKE => r,
+            in("rdi") addr,
+            in("rsi") count,
+            out("rcx") _,
+            out("r11") _,
+        );
+    }
+    r
 }
 
 fn now_ms() -> u64 {
@@ -48,9 +76,10 @@ fn now_ms() -> u64 {
     }
 }
 
-/// Poll `futex` until it no longer holds `expected` or the timeout lapses.
-/// Returns false only on timeout, mirroring the blocking futex contract.
+/// Block on `futex` while it holds `expected`, until a waker signals it or
+/// the timeout lapses. Returns false only on timeout, per the futex contract.
 pub fn futex_wait(futex: &Atomic<u32>, expected: u32, timeout: Option<Duration>) -> bool {
+    let addr = futex as *const Atomic<u32> as u64;
     let deadline = timeout.map(|dur| {
         // The kernel clock is millisecond-grained; round sub-millisecond
         // waits up so a nonzero timeout never degenerates to zero.
@@ -62,22 +91,30 @@ pub fn futex_wait(futex: &Atomic<u32>, expected: u32, timeout: Option<Duration>)
         if futex.load(Acquire) != expected {
             return true;
         }
-        if let Some(deadline) = deadline {
-            if now_ms() >= deadline {
-                return false;
+        let remaining = match deadline {
+            Some(d) => {
+                let now = now_ms();
+                if now >= d {
+                    return false;
+                }
+                d - now
             }
-        }
-        raw_yield();
+            None => 0,
+        };
+        futex_wait_syscall(addr, expected, remaining);
     }
 }
 
-/// Wakes are observation-based: waiters poll the atomic, so there is no
-/// queue to signal. Report "nothing woken" so callers fall through to
-/// their broadest wake path; the extra wakes are no-ops here.
+/// Wake one waiter blocked on `futex`. Returns whether one was woken.
 #[inline]
-pub fn futex_wake(_futex: &Atomic<u32>) -> bool {
-    false
+pub fn futex_wake(futex: &Atomic<u32>) -> bool {
+    let addr = futex as *const Atomic<u32> as u64;
+    futex_wake_syscall(addr, 1) > 0
 }
 
+/// Wake every waiter blocked on `futex`.
 #[inline]
-pub fn futex_wake_all(_futex: &Atomic<u32>) {}
+pub fn futex_wake_all(futex: &Atomic<u32>) {
+    let addr = futex as *const Atomic<u32> as u64;
+    futex_wake_syscall(addr, 0);
+}
