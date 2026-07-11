@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use nonos_app_skeleton::clients::vfs::{read_file, list_paths};
 use crate::viewer::state::ViewerState;
 use crate::viewer::viewport::View;
-use crate::viewer::{decode, ext, rotate};
+use crate::viewer::{decode, ext, flip, rotate};
 
 const MAX_IMAGE_BYTES: u32 = 16 * 1024 * 1024;
 
@@ -33,6 +33,18 @@ pub fn rotate(st: &mut ViewerState) {
     if let Some(img) = st.img.as_mut() {
         let (px, w, h) = rotate::rotate_cw(&img.px, img.w, img.h);
         img.px = px; img.w = w; img.h = h;
+    }
+}
+
+pub fn flip_h(st: &mut ViewerState) {
+    if let Some(img) = st.img.as_mut() {
+        img.px = flip::flip_h(&img.px, img.w, img.h);
+    }
+}
+
+pub fn flip_v(st: &mut ViewerState) {
+    if let Some(img) = st.img.as_mut() {
+        img.px = flip::flip_v(&img.px, img.w, img.h);
     }
 }
 
