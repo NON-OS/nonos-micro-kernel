@@ -16,13 +16,47 @@
 
 use crate::syscall::{call_raw, N_MK_PROC_STAT};
 
+// Inline process name length; must match the kernel's PROC_NAME_LEN.
+pub const PROC_NAME_LEN: usize = 24;
+
+// Mirrors the kernel ProcStatEntry wire layout exactly (see
+// src/syscall/microkernel/procstat.rs). state: 0 new, 1 ready, 2 running,
+// 3 sleeping, 4 stopped, 5 zombie, 6 terminated.
 #[repr(C)]
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 pub struct ProcStatEntry {
     pub pid: u32,
     pub state: u8,
-    pub _pad: [u8; 3],
+    pub name_len: u8,
+    pub _pad: [u8; 2],
     pub run_ticks: u64,
+    pub caps: u64,
+    pub mem_kb: u64,
+    pub uptime_ms: u64,
+    pub name: [u8; PROC_NAME_LEN],
+}
+
+impl Default for ProcStatEntry {
+    fn default() -> Self {
+        ProcStatEntry {
+            pid: 0,
+            state: 0,
+            name_len: 0,
+            _pad: [0; 2],
+            run_ticks: 0,
+            caps: 0,
+            mem_kb: 0,
+            uptime_ms: 0,
+            name: [0; PROC_NAME_LEN],
+        }
+    }
+}
+
+impl ProcStatEntry {
+    pub fn name_str(&self) -> &str {
+        let n = (self.name_len as usize).min(PROC_NAME_LEN);
+        core::str::from_utf8(&self.name[..n]).unwrap_or("")
+    }
 }
 
 #[repr(C)]
