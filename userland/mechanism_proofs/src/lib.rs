@@ -20,10 +20,13 @@
 //! Modules land here as their Lean model moves from a specification to a
 //! code-bound proof; see `verification/lean/REFINEMENT.md`.
 
+pub mod bounds;
 pub mod buddy;
 pub mod mmio;
+pub mod nonce;
 pub mod phys;
 pub mod quota;
+pub mod refcount;
 pub mod region;
 pub mod ring;
 pub mod spec;

@@ -64,12 +64,14 @@ impl PageInfoManager {
     pub(super) fn decrement_ref_count(&mut self, pa: PhysAddr) -> PageInfoResult<u32> {
         let page_num = pa.as_u64() / layout::PAGE_SIZE as u64;
         if let Some(info) = self.pages.get_mut(&page_num) {
-            if info.ref_count == 0 {
-                return Err(PageInfoError::RefCountUnderflow);
+            match super::refcount::dec_checked(info.ref_count) {
+                Some(next) => {
+                    info.ref_count = next;
+                    info.last_access = get_timestamp();
+                    Ok(next)
+                }
+                None => Err(PageInfoError::RefCountUnderflow),
             }
-            info.ref_count -= 1;
-            info.last_access = get_timestamp();
-            Ok(info.ref_count)
         } else {
             Err(PageInfoError::PageNotFound)
         }

@@ -17,12 +17,15 @@
 //! Differential proofs: the real buddy arithmetic, included via `#[path]`, run
 //! against the executable spec over sampled inputs.
 
+use crate::bounds::range::in_range;
 use crate::buddy::constants::helpers::{buddy_address, order_to_size, size_to_order};
 use crate::buddy::constants::orders::{MAX_ORDER, MIN_ORDER};
 use crate::buddy::constants::sizes::MAX_BLOCK_SIZE;
 use crate::mmio::mmio_range::range_ok;
+use crate::nonce::compose::compose;
 use crate::phys::bitmap::index::{bit_mask, byte_of};
 use crate::quota::limits::has_at_least;
+use crate::refcount::dec::dec_checked;
 use crate::region::overlap::{contains, overlaps};
 use crate::ring::ring_math::{is_full, wrap};
 use crate::spec;
@@ -205,4 +208,48 @@ fn range_ok_agrees_with_spec_and_rejects_empty_and_wrapping() {
     assert!(!range_ok(0x1000, 0), "an empty window is rejected");
     assert!(!range_ok(usize::MAX, 1), "a wrapping window is rejected");
     assert!(range_ok(0x1000, 0x1000), "a normal window is accepted");
+}
+
+// Page reference count: verification/lean Nonos/Refcount.lean.
+
+#[test]
+fn dec_never_underflows_and_agrees_with_spec() {
+    assert_eq!(dec_checked(0), None);
+    for n in 0..200_000u32 {
+        assert_eq!(dec_checked(n), spec::refcount_dec(n));
+        if n > 0 {
+            assert_eq!(dec_checked(n), Some(n - 1));
+            assert!(dec_checked(n).unwrap() < n);
+        }
+    }
+}
+
+// Token nonce: verification/lean Nonos/Nonce.lean.
+
+#[test]
+fn a_nonce_carries_its_counter_in_the_low_32_bits() {
+    for t in (0..2000u64).step_by(7) {
+        for c in (0..200_000u64).step_by(13) {
+            assert_eq!(compose(t, c) & 0xFFFF_FFFF, c & 0xFFFF_FFFF, "the counter is recoverable");
+        }
+    }
+    assert_ne!(compose(5, 1), compose(5, 2), "distinct counters give distinct nonces");
+}
+
+// Relocation-target bounds: verification/lean Nonos/Bounds.lean.
+
+#[test]
+fn in_range_agrees_with_spec_and_confines_the_access() {
+    for start in 0..20u64 {
+        for seg in 0..20u64 {
+            for addr in 0..25u64 {
+                for size in 0..8u64 {
+                    assert_eq!(in_range(addr, size, start, seg), spec::in_range(addr, size, start, seg));
+                }
+            }
+        }
+    }
+    assert!(in_range(10, 4, 8, 8), "an access inside the segment is in range");
+    assert!(!in_range(14, 4, 8, 8), "an access past the segment end is out of range");
+    assert!(!in_range(u64::MAX, 2, 0, 100), "a wrapping access is out of range");
 }

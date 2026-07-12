@@ -14,16 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
+//! The page reference-count decrement, factored out of `decrement_ref_count` so
+//! it holds no page table and can be included by the `mechanism_proofs` crate
+//! and checked against the Lean `Nonos.Refcount` model. A decrement of a live
+//! page lowers the count by one; a decrement of a count already at zero is
+//! refused, so the count never underflows.
 
-static NONCE_COUNTER: AtomicU64 = AtomicU64::new(1);
-
-pub fn next_nonce() -> u64 {
-    let timestamp = crate::time::timestamp_millis();
-    let counter = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
-    super::nonce_compose::compose(timestamp, counter)
-}
-
-pub fn reset_nonce_counter() {
-    NONCE_COUNTER.store(1, Ordering::Relaxed);
+/// Decrement a reference count, or `None` if it is already zero. A `Some(next)`
+/// result always has `next < ref_count`, so the count never wraps below zero.
+pub(crate) const fn dec_checked(ref_count: u32) -> Option<u32> {
+    if ref_count == 0 {
+        None
+    } else {
+        Some(ref_count - 1)
+    }
 }

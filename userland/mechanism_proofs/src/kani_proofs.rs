@@ -17,10 +17,13 @@
 //! Kani harnesses: the buddy address arithmetic holds for every input, not just
 //! the sampled ones.
 
+use crate::bounds::range::in_range;
 use crate::buddy::constants::helpers::{buddy_address, order_to_size};
 use crate::mmio::mmio_range::range_ok;
+use crate::nonce::compose::compose;
 use crate::phys::bitmap::index::{bit_mask, byte_of};
 use crate::quota::limits::has_at_least;
+use crate::refcount::dec::dec_checked;
 use crate::region::overlap::{contains, overlaps};
 use crate::ring::ring_math::wrap;
 use crate::timer::interval::elapsed_reached;
@@ -135,5 +138,45 @@ fn a_valid_mmio_window_is_non_empty_and_does_not_wrap() {
     if range_ok(base, size) {
         assert!(size > 0);
         assert!(base.checked_add(size).is_some());
+    }
+}
+
+// A reference count never underflows: a decrement exists only for a positive
+// count and lowers it by one, for every count.
+#[kani::proof]
+fn refcount_never_underflows() {
+    let n: u32 = kani::any();
+    match dec_checked(n) {
+        Some(next) => {
+            assert!(n > 0);
+            assert_eq!(next, n - 1);
+            assert!(next < n);
+        }
+        None => assert_eq!(n, 0),
+    }
+}
+
+// A nonce carries its counter in the low 32 bits, so the counter is recoverable
+// and distinct counters never collide, for every timestamp and counter.
+#[kani::proof]
+fn a_nonce_counter_is_recoverable() {
+    let timestamp: u64 = kani::any();
+    let counter: u64 = kani::any();
+    assert_eq!(compose(timestamp, counter) & 0xFFFF_FFFF, counter & 0xFFFF_FFFF);
+}
+
+// An in-range access sits wholly inside the segment with neither end
+// overflowing, for every input.
+#[kani::proof]
+fn an_in_range_access_is_confined() {
+    let addr: u64 = kani::any();
+    let size: u64 = kani::any();
+    let start: u64 = kani::any();
+    let seg: u64 = kani::any();
+    if in_range(addr, size, start, seg) {
+        assert!(addr >= start);
+        let end = start.checked_add(seg).unwrap();
+        let addr_end = addr.checked_add(size).unwrap();
+        assert!(addr_end <= end);
     }
 }

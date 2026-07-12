@@ -74,3 +74,22 @@ pub fn ring_wrap(pos: usize, cap: usize) -> usize {
 pub fn mmio_range_ok(base: usize, size: usize) -> bool {
     size != 0 && base.checked_add(size).is_some()
 }
+
+// Reference count decrement: verification/lean Nonos/Refcount.lean. A live count
+// lowers by one; a zero count has no predecessor.
+pub fn refcount_dec(ref_count: u32) -> Option<u32> {
+    if ref_count == 0 {
+        None
+    } else {
+        Some(ref_count - 1)
+    }
+}
+
+// Relocation-target bounds: verification/lean Nonos/Bounds.lean. An access is in
+// range when it sits wholly inside the segment and neither end overflows.
+pub fn in_range(addr: u64, size: u64, start: u64, seg_size: u64) -> bool {
+    match (start.checked_add(seg_size), addr.checked_add(size)) {
+        (Some(end), Some(addr_end)) => start <= addr && addr_end <= end,
+        _ => false,
+    }
+}

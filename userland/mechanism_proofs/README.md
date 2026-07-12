@@ -37,6 +37,17 @@ Bound so far:
   `src/drivers/security/mmio_range.rs`, which `validate_mmio_region` delegates
   to. A valid window is non-empty and does not wrap the address space. Lean:
   `Nonos/Mmio.lean`.
+- `refcount`: the page reference-count decrement in
+  `src/memory/page_info/manager/refcount.rs`, which `decrement_ref_count`
+  delegates to. A decrement never underflows. Lean: `Nonos/Refcount.lean`.
+- `nonce`: the nonce composition in
+  `src/capabilities/resource/nonce_compose.rs`, which `next_nonce` delegates to.
+  The monotonic counter is recoverable from the low 32 bits, so distinct
+  counters never collide. Lean: `Nonos/Nonce.lean`.
+- `bounds`: the relocation-target bounds test in
+  `src/elf/reloc/apply/range.rs`, which `in_segment` delegates to. An in-range
+  access sits wholly inside the segment with neither end overflowing. Lean:
+  `Nonos/Bounds.lean`.
 
 Run:
 

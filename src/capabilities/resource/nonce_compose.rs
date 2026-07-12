@@ -14,16 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
+//! The nonce composition, factored out of `next_nonce` so it holds no atomic
+//! and can be included by the `mechanism_proofs` crate and checked against the
+//! Lean `Nonos.Nonce` model. A nonce carries the monotonic counter in its low
+//! 32 bits, so two calls with distinct counters within a timestamp never
+//! collide: the counter is recoverable from the nonce.
 
-static NONCE_COUNTER: AtomicU64 = AtomicU64::new(1);
-
-pub fn next_nonce() -> u64 {
-    let timestamp = crate::time::timestamp_millis();
-    let counter = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
-    super::nonce_compose::compose(timestamp, counter)
-}
-
-pub fn reset_nonce_counter() {
-    NONCE_COUNTER.store(1, Ordering::Relaxed);
+/// Combine a millisecond timestamp with a monotonic counter. The counter
+/// occupies the low 32 bits and the timestamp the high bits, so the counter is
+/// recovered as `nonce & 0xFFFF_FFFF`.
+pub(crate) const fn compose(timestamp: u64, counter: u64) -> u64 {
+    (timestamp << 32) ^ (counter & 0xFFFF_FFFF)
 }
