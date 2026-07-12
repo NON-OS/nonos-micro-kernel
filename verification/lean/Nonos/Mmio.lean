@@ -12,6 +12,12 @@ windows; a register access is permitted only if it lands in a granted window.
 The theorems below show a driver with no grant can touch no register, a
 permitted access lies inside a granted window, and an access outside every
 window is denied, so a driver never pokes a device it was not handed.
+
+The kernel admits a window through `validate_mmio_region`, whose validity
+arithmetic lives in `src/drivers/security/mmio_range.rs`. The `mechanism_proofs`
+crate includes that file and proves with Kani that an admitted window is
+non-empty and does not wrap the address space, so the well-formedness this model
+assumes of a window is proven of the code that admits it.
 -/
 
 namespace Nonos.Mmio

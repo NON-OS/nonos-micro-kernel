@@ -39,6 +39,8 @@ contract the code owes. Moving an entry to level 2 or 1 is tracked work.
 | `Interval`, `Vma` | `src/memory/region` | `userland/mechanism_proofs` (differential tests and Kani over the range algebra in `overlap.rs`) |
 | `Timer` | `src/process/scheduler/smp` | `userland/mechanism_proofs` (differential tests and Kani over the elapsed-tick test in `interval.rs`) |
 | `Quota` | `src/capabilities/resource` | `userland/mechanism_proofs` (differential tests and Kani over the check in `limits.rs`) |
+| `Ring` | `src/kernel_core/surface_registry` | `userland/mechanism_proofs` (differential tests and Kani over the index wrap in `ring_math.rs`) |
+| `Mmio` | `src/drivers/security` | `userland/mechanism_proofs` (differential tests and Kani over the window check in `mmio_range.rs`) |
 | `Isolation`, `Paging` | `src/memory/paging` | `userland/kernel_proofs` (page permission W xor X, over all bit patterns) |
 | `Loader` | `src/elf` loader | `userland/kernel_proofs` (segment bounds) |
 | `Syscall` | `src/syscall` numbers | `userland/kernel_proofs` (decode totality and registry agreement) |
@@ -58,10 +60,10 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | `Spinlock` | `spin::Mutex` wrappers in `src/sys/sync` |
 | `PageTable`, `Bounds` | `src/memory` address space and paging |
 | `MemGrant`, `Refcount`, `Heap`, `Zeroize` | `src/memory` grants and allocation |
-| `Iommu`, `Mmio` | device DMA and register windows under `src/hardware` |
+| `Iommu` | device DMA windows under `src/hardware` |
 | `Tlb` | TLB shootdown under `src/memory` |
 | `CapTable`, `Dispatch` | capability tables and the syscall dispatch under `src/syscall` |
-| `Scheduler`, `Priority`, `Ring` | `src/process/scheduler` |
+| `Scheduler`, `Priority` | `src/process/scheduler` |
 | `Epoch` | RCU-style reclamation across the kernel |
 | `Signal` | signal delivery |
 | `Reaper` | the process table |

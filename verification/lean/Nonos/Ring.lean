@@ -12,6 +12,13 @@ adds one only if there is room; pop removes one. The theorems below show the
 count never exceeds the capacity, a full ring refuses a push, and the in-bounds
 invariant survives any sequence of pushes and pops, so a DMA or IPC ring never
 overruns its backing memory.
+
+The kernel's input ring runs the index arithmetic from
+`src/kernel_core/surface_registry/ring_math.rs` at its post and drain sites. The
+`mechanism_proofs` crate includes that file and proves with Kani that a wrapped
+index stays within the capacity and that a full ring is detected when the head
+would reach the tail, so the addressing this model relies on is proven of the
+code the ring runs.
 -/
 
 namespace Nonos.Ring
