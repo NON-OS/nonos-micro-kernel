@@ -10,7 +10,7 @@ const MAX_IMAGE_BYTES: u32 = 16 * 1024 * 1024;
 
 pub fn open_path(st: &mut ViewerState, path: &str) {
     st.view = View { zoom: 1.0, pan_x: 0.0, pan_y: 0.0 };
-    let bytes = match read_file(st.owner_pid, path.as_bytes(), MAX_IMAGE_BYTES) {
+    let bytes = match read_with_retry(st.owner_pid, path.as_bytes(), MAX_IMAGE_BYTES) {
         Ok(b) => b,
         Err(e) => { st.img = None; st.status = err_line(path, e); return; }
     };
@@ -18,6 +18,20 @@ pub fn open_path(st: &mut ViewerState, path: &str) {
     match decode::decode(&bytes, path.as_bytes()) {
         Ok(d) => { st.img = Some(d); st.status = String::new(); build_dir(st, path); }
         Err(e) => { st.img = None; st.status = err_line(path, e); }
+    }
+}
+
+fn read_with_retry(owner_pid: u32, path: &[u8], max: u32) -> Result<Vec<u8>, &'static str> {
+    let mut attempt = 0u32;
+    loop {
+        match read_file(owner_pid, path, max) {
+            Ok(b) => return Ok(b),
+            Err(e) => {
+                attempt += 1;
+                if attempt >= 8 || e != "vfs ipc failed" { return Err(e); }
+                for _ in 0..48 { let _ = nonos_libc::mk_yield(); }
+            }
+        }
     }
 }
 
