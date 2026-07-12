@@ -4,10 +4,12 @@
 //! the RFC-verified HMAC-SHA1, so a correct round-trip plus a rejected tamper
 //! and a rejected wrong key pin the verify logic exactly.
 
+use crate::eapol::build::build_key_frame;
 use crate::eapol::mic::{compute_mic, verify_mic};
 use crate::eapol::parse::{
     parse, EAPOL_TYPE_KEY, HEADER_LEN, KEY_INFO_MIC, KEY_INFO_PAIRWISE, MIC_LEN, MIC_OFFSET,
 };
+use crate::wpa::ptk::{pmk, ptk};
 
 fn build_frame(key_info: u16, nonce: &[u8; 32], key_data: &[u8]) -> Vec<u8> {
     let mut f = vec![0u8; HEADER_LEN + key_data.len()];
@@ -61,4 +63,54 @@ fn mic_round_trips_and_rejects_tampering_and_wrong_key() {
     f[20] ^= 0x01;
 
     assert!(!verify_mic(&[0u8; 16], &f), "the wrong KCK is rejected");
+}
+
+#[test]
+fn a_built_frame_verifies_parses_and_rejects_the_wrong_key() {
+    let kck = [0x33u8; 16];
+    let replay = [0, 0, 0, 0, 0, 0, 0, 2];
+    let nonce = [0x44u8; 32];
+    let key_data = [0xde, 0xad, 0xbe, 0xef];
+    let mut frame = [0u8; 128];
+    let n = build_key_frame(
+        &mut frame,
+        KEY_INFO_MIC | KEY_INFO_PAIRWISE,
+        &replay,
+        &nonce,
+        &key_data,
+        &kck,
+    )
+    .unwrap();
+    assert!(verify_mic(&kck, &frame[..n]), "the built MIC verifies under the same KCK");
+    let k = parse(&frame[..n]).unwrap();
+    assert_eq!(k.nonce, nonce);
+    assert_eq!(k.replay_counter, replay);
+    assert_eq!(k.key_data, &key_data);
+    assert!(!verify_mic(&[0u8; 16], &frame[..n]), "the wrong KCK does not verify");
+}
+
+#[test]
+fn the_supplicant_message_two_path_composes_end_to_end() {
+    // The full message-two crypto: derive the PTK from the PMK and the
+    // handshake nonces, build message two carrying the supplicant nonce, and
+    // confirm its MIC verifies under the KCK taken from that PTK.
+    let key = pmk(b"password", b"IEEE");
+    let aa = [0, 0, 0, 0, 0, 1];
+    let spa = [0, 0, 0, 0, 0, 2];
+    let anonce = [0xaau8; 32];
+    let snonce = [0xbbu8; 32];
+    let p = ptk(&key, &aa, &spa, &anonce, &snonce);
+    let kck = &p[..16];
+    let mut msg2 = [0u8; 128];
+    let n = build_key_frame(
+        &mut msg2,
+        KEY_INFO_MIC | KEY_INFO_PAIRWISE,
+        &[0, 0, 0, 0, 0, 0, 0, 1],
+        &snonce,
+        &[],
+        kck,
+    )
+    .unwrap();
+    assert!(verify_mic(kck, &msg2[..n]), "message two verifies with the derived KCK");
+    assert_eq!(parse(&msg2[..n]).unwrap().nonce, snonce);
 }

@@ -22,3 +22,4 @@ pub mod wpa;
 pub mod eapol;
 pub mod ccmp;
 pub mod keyunwrap;
+pub mod eapolbuild;

@@ -22,3 +22,4 @@ pub const OP_WPA_PTK: u16 = 0x000D;
 pub const OP_EAPOL_VERIFY: u16 = 0x000E;
 pub const OP_CCMP: u16 = 0x000F;
 pub const OP_KEY_UNWRAP: u16 = 0x0010;
+pub const OP_EAPOL_BUILD: u16 = 0x0011;

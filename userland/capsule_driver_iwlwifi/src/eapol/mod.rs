@@ -10,5 +10,6 @@
 //! verifying their MIC under the KCK derived from the pairwise transient key.
 //! Reached through OP_EAPOL_VERIFY. The MIC rests on the RFC-verified HMAC-SHA1.
 
+pub mod build;
 pub mod mic;
 pub mod parse;

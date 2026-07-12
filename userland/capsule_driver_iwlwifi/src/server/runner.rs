@@ -14,8 +14,8 @@ use crate::driver::Driver;
 use crate::protocol::{
     parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_ALIVE_WAIT, OP_BEACON_PARSE,
     OP_DEVICE_INFO, OP_DMA_STATE, OP_FIRMWARE_INFO, OP_FIRMWARE_LOAD, OP_FIRMWARE_STAGE,
-    OP_CCMP, OP_EAPOL_VERIFY, OP_HCMD_ISSUE, OP_HEALTHCHECK, OP_KEY_UNWRAP, OP_MGMT_BUILD,
-    OP_RF_STATE, OP_RX_POLL, OP_WPA_PTK,
+    OP_CCMP, OP_EAPOL_BUILD, OP_EAPOL_VERIFY, OP_HCMD_ISSUE, OP_HEALTHCHECK, OP_KEY_UNWRAP,
+    OP_MGMT_BUILD, OP_RF_STATE, OP_RX_POLL, OP_WPA_PTK,
 };
 use crate::server::{handlers, respond};
 
@@ -57,6 +57,7 @@ fn dispatch(driver: &mut Driver, sender_pid: u32, req: crate::protocol::Request,
         OP_EAPOL_VERIFY => handlers::eapol::handle(sender_pid, &req, body, tx),
         OP_CCMP => handlers::ccmp::handle(sender_pid, &req, body, tx),
         OP_KEY_UNWRAP => handlers::keyunwrap::handle(sender_pid, &req, body, tx),
+        OP_EAPOL_BUILD => handlers::eapolbuild::handle(sender_pid, &req, body, tx),
         _ if body.is_empty() => {
             let _ = respond::send(sender_pid, &req, E_BAD_OP, &[], tx);
         }
