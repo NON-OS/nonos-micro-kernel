@@ -67,3 +67,11 @@ pub const IWL_FW_MAGIC: u32 = 0x0A4C_5749;
 pub const FW_API_VERSION_MASK: u32 = 0xFFFF;
 pub const MIN_FW_API_VERSION: u16 = 22;
 pub const MAX_FW_API_VERSION: u16 = 77;
+
+// Host-command / transmit-queue interface. Once the firmware is alive, the
+// driver hands it commands through a TFD ring per transmit queue. The
+// write-pointer doorbell in the HBUS window tells the firmware a queue's new
+// write index; the legacy ring holds this many descriptors (a power of two).
+// Offset from iwl-prph.h / iwl-fh.h.
+pub const HBUS_TARG_WRPTR: usize = 0x0460;
+pub const TFD_QUEUE_SIZE: usize = 256;

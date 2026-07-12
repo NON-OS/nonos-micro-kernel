@@ -21,8 +21,18 @@ extern crate alloc;
 
 mod constants;
 mod discover;
+// The 802.11 frame layer is the first MLME brick above the alive firmware. It
+// is not wired into the server path yet (the host-command queue and TX rings
+// come next), so its builders are unused in the driver for now.
+#[allow(dead_code)]
+mod dot11;
 mod driver;
 mod firmware;
+// The host-command queue above the alive firmware. The TFD-fill and DMA wiring
+// that turn these into a real transfer come next, so the pieces are unused in
+// the driver server path for now.
+#[allow(dead_code)]
+mod hcmd;
 mod init;
 mod protocol;
 mod regs;

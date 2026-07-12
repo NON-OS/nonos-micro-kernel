@@ -19,5 +19,19 @@ pub mod regs;
 #[path = "../../capsule_driver_iwlwifi/src/firmware/load.rs"]
 pub mod load;
 
+// The 802.11 frame layer: pure IEEE encoding, no hardware, so it is checked
+// exactly rather than modeled. `src/dot11/mod.rs` pulls in the real files.
+pub mod dot11;
+
+// The host-command queue: header/sequence encoding, TFD ring math, and the
+// doorbell register write.
+pub mod hcmd;
+
 #[cfg(test)]
 mod iwlwifi_tests;
+
+#[cfg(test)]
+mod hcmd_tests;
+
+#[cfg(test)]
+mod dot11_tests;
