@@ -32,6 +32,7 @@ pub fn is_codec_ext(path: &str) -> bool {
         || e.eq_ignore_ascii_case("jpg")
         || e.eq_ignore_ascii_case("jpeg")
         || e.eq_ignore_ascii_case("bmp")
+        || e.eq_ignore_ascii_case("gif")
 }
 
 pub fn open_image(path: &str) -> bool {
