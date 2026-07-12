@@ -30,10 +30,10 @@ pub fn decode(bytes: &[u8], name: &[u8]) -> Result<Decoded, &'static str> {
     let mut rx = [0u8; 56];
     let rc = mk_ipc_call(svc.port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len());
     if rc < 48 { return Err("codec call failed"); }
-    if i32::from_le_bytes(rx[20..24].try_into().unwrap()) != 0 { return Err("decode error"); }
-    let handle = u64::from_le_bytes(rx[24..32].try_into().unwrap());
-    let w = u32::from_le_bytes(rx[32..36].try_into().unwrap());
-    let h = u32::from_le_bytes(rx[36..40].try_into().unwrap());
+    if i32::from_le_bytes([rx[20], rx[21], rx[22], rx[23]]) != 0 { return Err("decode error"); }
+    let handle = u64::from_le_bytes([rx[24], rx[25], rx[26], rx[27], rx[28], rx[29], rx[30], rx[31]]);
+    let w = u32::from_le_bytes([rx[32], rx[33], rx[34], rx[35]]);
+    let h = u32::from_le_bytes([rx[36], rx[37], rx[38], rx[39]]);
     let mut desc = SurfaceDescriptor::default();
     let va = mk_surface_attach(handle, &mut desc as *mut _);
     if va <= 0 { return Err("attach failed"); }
