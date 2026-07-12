@@ -36,6 +36,7 @@ contract the code owes. Moving an entry to level 2 or 1 is tracked work.
 | `Seqlock` | `src/sys/sync/seqlock` | `userland/sync_proofs` (differential tests and Kani over the sequence discipline in `pure.rs`) |
 | `Buddy` | `src/memory/buddy_alloc` | `userland/mechanism_proofs` (differential tests and Kani over the order and buddy-address arithmetic in `constants/helpers.rs`) |
 | `Bitmap` | `src/memory/phys/bitmap` | `userland/mechanism_proofs` (differential tests and Kani over the bit-index arithmetic in `index.rs`) |
+| `Interval`, `Vma` | `src/memory/region` | `userland/mechanism_proofs` (differential tests and Kani over the range algebra in `overlap.rs`) |
 | `Isolation`, `Paging` | `src/memory/paging` | `userland/kernel_proofs` (page permission W xor X, over all bit patterns) |
 | `Loader` | `src/elf` loader | `userland/kernel_proofs` (segment bounds) |
 | `Syscall` | `src/syscall` numbers | `userland/kernel_proofs` (decode totality and registry agreement) |
@@ -53,7 +54,7 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | `Mutex` | `src/sys/sync/irq_mutex` |
 | `Rwlock` | `src/sys/sync/irq_rwlock` |
 | `Spinlock` | `spin::Mutex` wrappers in `src/sys/sync` |
-| `Vma`, `Interval`, `PageTable`, `Bounds` | `src/memory` address space and paging |
+| `PageTable`, `Bounds` | `src/memory` address space and paging |
 | `MemGrant`, `Quota`, `Refcount`, `Heap`, `Zeroize` | `src/memory` grants and allocation |
 | `Iommu`, `Mmio` | device DMA and register windows under `src/hardware` |
 | `Tlb` | TLB shootdown under `src/memory` |

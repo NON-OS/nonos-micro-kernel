@@ -12,6 +12,11 @@ base for a size. Two areas are disjoint when one ends at or before the other
 begins. The theorems below show disjoint areas do not overlap and share no
 address, overlap is symmetric, and an address inside an area lies within its
 bounds, so a mapping placed in a disjoint hole cannot alias an existing one.
+
+The kernel's `MemRegion` runs this range algebra from
+`src/memory/region/overlap.rs`, and the `mechanism_proofs` crate checks the
+symmetry and the disjointness negation against it with differential tests and
+Kani, so the aliasing argument is proven of the code the memory manager runs.
 -/
 
 namespace Nonos.Vma

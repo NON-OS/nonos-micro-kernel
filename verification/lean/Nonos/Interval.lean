@@ -13,6 +13,13 @@ every memory-safety argument in the kernel rests on, paging, the IOMMU, the
 heap, capsule isolation. The theorems below are the full algebra: containment
 is a partial order, disjoint regions share no address, a subregion never
 exceeds its parent, and adjacency composes. All machine-checked.
+
+The kernel's `MemRegion` keeps this range algebra in
+`src/memory/region/overlap.rs`, which its `overlaps`, `contains` and
+`contains_range` methods delegate to. The `mechanism_proofs` crate includes that
+file and checks, with differential tests and Kani, that overlap is symmetric and
+is exactly the negation of disjointness, so the core of this algebra is proven
+of the code the memory manager runs.
 -/
 
 namespace Nonos.Interval
