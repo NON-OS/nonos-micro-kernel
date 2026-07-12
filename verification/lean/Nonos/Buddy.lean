@@ -13,6 +13,12 @@ allocation and freeing conserve the total memory (bytes only move between the
 free and used columns), a request larger than the free pool cannot go negative,
 and splitting a block into its two buddies conserves its size, so the allocator
 neither creates nor destroys memory.
+
+The kernel's buddy allocator keeps this arithmetic in
+`src/memory/buddy_alloc/constants/helpers.rs`. The `mechanism_proofs` crate
+includes that file and checks `split_conserves` and the
+buddy-address involution against this model with differential tests and Kani, so
+the split conservation is proven of the code the allocator runs.
 -/
 
 namespace Nonos.Buddy

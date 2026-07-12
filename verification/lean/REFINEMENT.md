@@ -34,6 +34,7 @@ contract the code owes. Moving an entry to level 2 or 1 is tracked work.
 | --- | --- | --- |
 | `Semaphore` | `src/sys/sync/semaphore` | `userland/sync_proofs` (differential tests and Kani over the permit arithmetic in `pure.rs`) |
 | `Seqlock` | `src/sys/sync/seqlock` | `userland/sync_proofs` (differential tests and Kani over the sequence discipline in `pure.rs`) |
+| `Buddy` | `src/memory/buddy_alloc` | `userland/mechanism_proofs` (differential tests and Kani over the order and buddy-address arithmetic in `constants/helpers.rs`) |
 | `Isolation`, `Paging` | `src/memory/paging` | `userland/kernel_proofs` (page permission W xor X, over all bit patterns) |
 | `Loader` | `src/elf` loader | `userland/kernel_proofs` (segment bounds) |
 | `Syscall` | `src/syscall` numbers | `userland/kernel_proofs` (decode totality and registry agreement) |
@@ -50,8 +51,6 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | --- | --- |
 | `Mutex` | `src/sys/sync/irq_mutex` |
 | `Rwlock` | `src/sys/sync/irq_rwlock` |
-| `Futex` | `src/syscall/microkernel/futex` |
-| `Buddy` | `src/memory/buddy_alloc` |
 | `Spinlock` | `spin::Mutex` wrappers in `src/sys/sync` |
 | `Vma`, `Interval`, `PageTable`, `Bounds` | `src/memory` address space and paging |
 | `MemGrant`, `Quota`, `Refcount`, `Heap`, `Zeroize` | `src/memory` grants and allocation |
@@ -66,6 +65,13 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | `Endpoint`, `Fd`, `Vfs` | IPC endpoints, descriptor tables, and the VFS |
 | `TokenBucket` | rate limiting in the network path |
 | `Cow`, `Bitmap` | copy-on-write pages and allocation bitmaps |
+
+`Futex` already has a code-bound proof: the wait-queue discipline in
+`src/syscall/microkernel/futex/queue.rs`, which `wait.rs` and `wake.rs` call, is
+checked against `Nonos/Futex.lean` by `mechanism_proofs` (first in first out
+order, exact wake count, no lost waiter). The futex module lives on a feature
+branch not yet merged to main, so that binding lands at level 2 when the branch
+does.
 
 The attestation, anti-rollback and STARK modules bind to code through the
 differential harnesses and published-vector checks described in the top-level
