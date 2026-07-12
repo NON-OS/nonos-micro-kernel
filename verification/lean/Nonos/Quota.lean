@@ -11,6 +11,12 @@ Resource quotas. A quota tracks used units against a cap. Acquire succeeds only
 if it keeps use within the cap; release lowers use. The theorems below show the
 in-bounds invariant survives any single operation and any whole sequence of
 acquires, a capsule can never be charged past its quota.
+
+The kernel's resource token gates a charge with the check in
+`src/capabilities/resource/limits.rs`, which `has_bytes` and `has_ops` delegate
+to. The `mechanism_proofs` crate includes that file and proves with Kani that a
+request is admitted exactly when it is within the remaining budget, so the gate
+this model relies on is proven of the code the token runs.
 -/
 
 namespace Nonos.Quota

@@ -35,6 +35,16 @@ contract the code owes. Moving an entry to level 2 or 1 is tracked work.
 | `Semaphore` | `src/sys/sync/semaphore` | `userland/sync_proofs` (differential tests and Kani over the permit arithmetic in `pure.rs`) |
 | `Seqlock` | `src/sys/sync/seqlock` | `userland/sync_proofs` (differential tests and Kani over the sequence discipline in `pure.rs`) |
 | `Buddy` | `src/memory/buddy_alloc` | `userland/mechanism_proofs` (differential tests and Kani over the order and buddy-address arithmetic in `constants/helpers.rs`) |
+| `Bitmap` | `src/memory/phys/bitmap` | `userland/mechanism_proofs` (differential tests and Kani over the bit-index arithmetic in `index.rs`) |
+| `Interval`, `Vma` | `src/memory/region` | `userland/mechanism_proofs` (differential tests and Kani over the range algebra in `overlap.rs`) |
+| `Timer` | `src/process/scheduler/smp` | `userland/mechanism_proofs` (differential tests and Kani over the elapsed-tick test in `interval.rs`) |
+| `Quota` | `src/capabilities/resource` | `userland/mechanism_proofs` (differential tests and Kani over the check in `limits.rs`) |
+| `Ring` | `src/kernel_core/surface_registry` | `userland/mechanism_proofs` (differential tests and Kani over the index wrap in `ring_math.rs`) |
+| `Mmio` | `src/drivers/security` | `userland/mechanism_proofs` (differential tests and Kani over the window check in `mmio_range.rs`) |
+| `Refcount` | `src/memory/page_info` | `userland/mechanism_proofs` (differential tests and Kani over the decrement in `refcount.rs`) |
+| `Nonce` | `src/capabilities/resource` | `userland/mechanism_proofs` (differential tests and Kani over the composition in `nonce_compose.rs`) |
+| `Bounds` | `src/elf/reloc` | `userland/mechanism_proofs` (differential tests and Kani over the range test in `range.rs`) |
+| `Priority` | `src/process/scheduler` | `userland/mechanism_proofs` (differential tests and Kani over `SchedAttr::effective_priority`) |
 | `Isolation`, `Paging` | `src/memory/paging` | `userland/kernel_proofs` (page permission W xor X, over all bit patterns) |
 | `Loader` | `src/elf` loader | `userland/kernel_proofs` (segment bounds) |
 | `Syscall` | `src/syscall` numbers | `userland/kernel_proofs` (decode totality and registry agreement) |
@@ -52,19 +62,19 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | `Mutex` | `src/sys/sync/irq_mutex` |
 | `Rwlock` | `src/sys/sync/irq_rwlock` |
 | `Spinlock` | `spin::Mutex` wrappers in `src/sys/sync` |
-| `Vma`, `Interval`, `PageTable`, `Bounds` | `src/memory` address space and paging |
-| `MemGrant`, `Quota`, `Refcount`, `Heap`, `Zeroize` | `src/memory` grants and allocation |
-| `Iommu`, `Mmio` | device DMA and register windows under `src/hardware` |
+| `PageTable` | `src/memory` address space and paging |
+| `MemGrant`, `Heap`, `Zeroize` | `src/memory` grants and allocation |
+| `Iommu` | device DMA windows under `src/hardware` |
 | `Tlb` | TLB shootdown under `src/memory` |
 | `CapTable`, `Dispatch` | capability tables and the syscall dispatch under `src/syscall` |
-| `Scheduler`, `Priority`, `Timer`, `Ring` | `src/process/scheduler` |
+| `Scheduler` | `src/process/scheduler` |
 | `Epoch` | RCU-style reclamation across the kernel |
 | `Signal` | signal delivery |
 | `Reaper` | the process table |
-| `Nonce`, `Rng` | entropy and nonce issuance under `src/crypto` |
+| `Rng` | entropy under `src/crypto` |
 | `Endpoint`, `Fd`, `Vfs` | IPC endpoints, descriptor tables, and the VFS |
 | `TokenBucket` | rate limiting in the network path |
-| `Cow`, `Bitmap` | copy-on-write pages and allocation bitmaps |
+| `Cow` | copy-on-write pages |
 
 `Futex` already has a code-bound proof: the wait-queue discipline in
 `src/syscall/microkernel/futex/queue.rs`, which `wait.rs` and `wake.rs` call, is

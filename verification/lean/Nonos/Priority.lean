@@ -11,6 +11,12 @@ Scheduling priority. A higher priority preempts a lower one. The theorems below
 show preemption is a strict order, irreflexive, transitive, asymmetric, and
 total up to equal priority, and that a maximal-priority task is preempted by no
 one, so the highest-priority runnable task always runs.
+
+The kernel assigns each task a numeric order with
+`SchedAttr::effective_priority` in `src/process/scheduler/policy_types.rs`. The
+`mechanism_proofs` crate calls that method directly and proves with Kani that
+deadline tops the order and idle bottoms it, so the strict stratification this
+model relies on is proven of the code the scheduler runs.
 -/
 
 namespace Nonos.Priority

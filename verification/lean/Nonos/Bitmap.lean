@@ -12,6 +12,13 @@ The theorems below show setting a bit allocates its index, clearing frees it,
 set-then-clear frees the index, and setting or clearing one index leaves every
 other unchanged, so bit operations affect exactly their own index and no
 neighbour.
+
+The kernel's frame bitmap keeps the bit-index arithmetic in
+`src/memory/phys/bitmap/index.rs`, which `bit_ops.rs` calls. The
+`mechanism_proofs` crate includes that file and checks, with differential tests
+and Kani, that a mask selects exactly one bit and that the byte and in-byte
+position reconstruct the index, so the addressing this model relies on is proven
+of the code the allocator runs.
 -/
 
 namespace Nonos.Bitmap

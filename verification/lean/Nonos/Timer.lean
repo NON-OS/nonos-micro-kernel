@@ -12,6 +12,12 @@ tick never moves time backward, a positive tick moves it strictly forward, and
 any sequence of ticks is monotone, so a timestamp read later is never earlier
 than one read before, the property scheduling and anti-rollback deadlines rely
 on.
+
+The load balancer's elapsed-tick test in `src/process/scheduler/smp/interval.rs`,
+which `should_balance` delegates to, is the same monotone comparison over a
+saturating subtraction. The `mechanism_proofs` crate includes that file and
+proves with Kani that it saturates on a tick wraparound, so the elapsed
+computation is proven of the code the scheduler runs.
 -/
 
 namespace Nonos.Timer
