@@ -34,5 +34,7 @@ pub unsafe extern "C" fn _start() -> ! {
 #[cfg(not(feature = "nonos-image-viewer-smoketest"))]
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
+    const VIEWER_HEAP: usize = 192 * 1024 * 1024;
+    let _ = nonos_libc::heap_init_sized(VIEWER_HEAP);
     run(viewer::ViewerApp::new)
 }
