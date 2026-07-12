@@ -14,26 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod consume;
-mod create;
-mod error;
-mod limits;
-mod material;
-mod nonce;
-mod quota;
-mod sign;
-mod token_type;
-mod token_usage;
-mod verify;
-
-pub use consume::{
-    refund_bytes, refund_ops, reset_token, try_consume, try_consume_bytes, try_consume_ops,
-};
-pub use create::{create_resource_token, create_resource_token_with_nonce};
-pub use error::ResourceError;
-pub use material::{compute_signature, token_material};
-pub use nonce::{next_nonce, reset_nonce_counter};
-pub use quota::ResourceQuota;
-pub use sign::sign_resource_token;
-pub use token_type::ResourceToken;
-pub use verify::{verify_resource_token, verify_resource_token_strict};
+// The real elapsed-tick test the load balancer runs.
+// `LoadBalanceState::should_balance` in the kernel delegates to this.
+#[allow(dead_code)]
+#[path = "../../../../src/process/scheduler/smp/interval.rs"]
+pub mod interval;

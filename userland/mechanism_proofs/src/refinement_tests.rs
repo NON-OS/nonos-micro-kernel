@@ -21,8 +21,10 @@ use crate::buddy::constants::helpers::{buddy_address, order_to_size, size_to_ord
 use crate::buddy::constants::orders::{MAX_ORDER, MIN_ORDER};
 use crate::buddy::constants::sizes::MAX_BLOCK_SIZE;
 use crate::phys::bitmap::index::{bit_mask, byte_of};
+use crate::quota::limits::has_at_least;
 use crate::region::overlap::{contains, overlaps};
 use crate::spec;
+use crate::timer::interval::elapsed_reached;
 
 // Buddy allocator: verification/lean Nonos/Buddy.lean.
 
@@ -129,6 +131,37 @@ fn contains_holds_only_within_the_range() {
             for addr in 0..30u64 {
                 assert_eq!(contains(s, e, addr), addr >= s && addr < e);
             }
+        }
+    }
+}
+
+// Load balancer elapsed test: verification/lean Nonos/Timer.lean.
+
+#[test]
+fn elapsed_agrees_with_spec_and_saturates() {
+    for current in 0..160u64 {
+        for last in 0..160u64 {
+            for interval in 0..160u64 {
+                assert_eq!(
+                    elapsed_reached(current, last, interval),
+                    spec::timer_elapsed_reached(current, last, interval)
+                );
+            }
+        }
+    }
+    // an earlier "current" (wraparound) counts as no time elapsed
+    assert!(elapsed_reached(5, 10, 0));
+    assert!(!elapsed_reached(5, 10, 1));
+}
+
+// Resource quota check: verification/lean Nonos/Quota.lean.
+
+#[test]
+fn has_at_least_agrees_with_spec() {
+    for remaining in 0..300u64 {
+        for amount in 0..300u64 {
+            assert_eq!(has_at_least(remaining, amount), spec::quota_has_at_least(remaining, amount));
+            assert_eq!(has_at_least(remaining, amount), amount <= remaining);
         }
     }
 }

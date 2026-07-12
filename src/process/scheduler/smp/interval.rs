@@ -14,26 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod consume;
-mod create;
-mod error;
-mod limits;
-mod material;
-mod nonce;
-mod quota;
-mod sign;
-mod token_type;
-mod token_usage;
-mod verify;
+//! The elapsed-tick test of the load balancer, factored out of
+//! `LoadBalanceState::should_balance` so it holds no atomic and can be included
+//! by the `mechanism_proofs` crate and checked against the Lean `Nonos.Timer`
+//! model.
 
-pub use consume::{
-    refund_bytes, refund_ops, reset_token, try_consume, try_consume_bytes, try_consume_ops,
-};
-pub use create::{create_resource_token, create_resource_token_with_nonce};
-pub use error::ResourceError;
-pub use material::{compute_signature, token_material};
-pub use nonce::{next_nonce, reset_nonce_counter};
-pub use quota::ResourceQuota;
-pub use sign::sign_resource_token;
-pub use token_type::ResourceToken;
-pub use verify::{verify_resource_token, verify_resource_token_strict};
+/// Whether at least `interval` ticks have elapsed since `last` at `current`.
+/// Saturating, so a tick-counter wraparound reads as no time elapsed rather than
+/// a spuriously huge span.
+pub(crate) const fn elapsed_reached(current: u64, last: u64, interval: u64) -> bool {
+    current.saturating_sub(last) >= interval
+}

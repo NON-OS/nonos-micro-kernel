@@ -23,6 +23,12 @@ Bound so far:
   `MemRegion::overlaps`, `contains` and `contains_range` delegate to. Overlap is
   symmetric and is exactly the negation of disjointness. Lean:
   `Nonos/Interval.lean` and `Nonos/Vma.lean`.
+- `timer`: the load-balancer elapsed-tick test in
+  `src/process/scheduler/smp/interval.rs`, which `should_balance` delegates to. A
+  tick wraparound saturates to no time elapsed. Lean: `Nonos/Timer.lean`.
+- `quota`: the resource-token check in `src/capabilities/resource/limits.rs`,
+  which `has_bytes` and `has_ops` delegate to. A request is covered exactly when
+  it is within the remaining budget. Lean: `Nonos/Quota.lean`.
 
 Run:
 

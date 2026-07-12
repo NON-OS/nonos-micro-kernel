@@ -22,8 +22,10 @@
 
 pub mod buddy;
 pub mod phys;
+pub mod quota;
 pub mod region;
 pub mod spec;
+pub mod timer;
 
 #[cfg(test)]
 mod refinement_tests;

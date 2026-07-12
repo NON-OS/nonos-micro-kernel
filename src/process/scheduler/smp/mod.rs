@@ -17,6 +17,7 @@
 mod api;
 mod balance;
 mod constants;
+mod interval;
 mod percpu_queue;
 mod spawn;
 mod state;

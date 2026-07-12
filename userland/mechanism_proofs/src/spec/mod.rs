@@ -45,3 +45,20 @@ pub fn region_overlaps(a0: u64, a1: u64, b0: u64, b1: u64) -> bool {
 pub fn region_disjoint(a0: u64, a1: u64, b0: u64, b1: u64) -> bool {
     a1 <= b0 || b1 <= a0
 }
+
+// Load-balancer elapsed test: verification/lean Nonos/Timer.lean. The interval
+// is reached when the elapsed ticks cover it; a wraparound (current before last)
+// reads as zero elapsed, restated here with an explicit branch.
+pub fn timer_elapsed_reached(current: u64, last: u64, interval: u64) -> bool {
+    if current >= last {
+        current - last >= interval
+    } else {
+        interval == 0
+    }
+}
+
+// Quota check: verification/lean Nonos/Quota.lean. A request is covered when it
+// is at most the remaining budget.
+pub fn quota_has_at_least(remaining: u64, amount: u64) -> bool {
+    amount <= remaining
+}

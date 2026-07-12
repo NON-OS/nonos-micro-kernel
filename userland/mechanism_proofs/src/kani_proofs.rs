@@ -19,7 +19,9 @@
 
 use crate::buddy::constants::helpers::{buddy_address, order_to_size};
 use crate::phys::bitmap::index::{bit_mask, byte_of};
+use crate::quota::limits::has_at_least;
 use crate::region::overlap::{contains, overlaps};
+use crate::timer::interval::elapsed_reached;
 
 // The buddy of the buddy of a block is the block itself: the address XOR is an
 // involution, for every address and every order.
@@ -85,4 +87,28 @@ fn contains_implies_within_bounds() {
     if contains(start, end, addr) {
         assert!(addr >= start && addr < end);
     }
+}
+
+// The elapsed test saturates on a tick wraparound: when current is at or after
+// last it is the true elapsed span, and when current is before last it reads as
+// no time elapsed, for every input.
+#[kani::proof]
+fn elapsed_saturates_on_wraparound() {
+    let current: u64 = kani::any();
+    let last: u64 = kani::any();
+    let interval: u64 = kani::any();
+    if current >= last {
+        assert_eq!(elapsed_reached(current, last, interval), current - last >= interval);
+    } else {
+        assert_eq!(elapsed_reached(current, last, interval), interval == 0);
+    }
+}
+
+// A quota covers a request exactly when the request is within the remaining
+// budget, for every input.
+#[kani::proof]
+fn has_at_least_iff_within_budget() {
+    let remaining: u64 = kani::any();
+    let amount: u64 = kani::any();
+    assert_eq!(has_at_least(remaining, amount), amount <= remaining);
 }
