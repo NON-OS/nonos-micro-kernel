@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const IPC_PAYLOAD_MAX: usize = 131072;
+pub const IPC_PAYLOAD_MAX: usize = 4096;
+pub const DECODE_REQ_LEN: usize = 16;
 pub const STATUS_LEN: usize = 4;
 pub const DECODE_LZ4_PREFIX_LEN: usize = 8;
 pub const DECODE_RESP_LEN: usize = 32;
