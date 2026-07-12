@@ -43,6 +43,9 @@ impl Driver {
     /// slot. Composes the command in the DMA buffer that staged the firmware,
     /// fills the slot's TFD, advances the ring and rings the doorbell.
     pub fn issue_command(&mut self, cmd: u8, group: u8, payload: &[u8]) -> Option<usize> {
+        if (self.dma_len as usize) < crate::constants::DMA_LAYOUT_END {
+            return None;
+        }
         let q = crate::hcmd::send::CmdQueue {
             dma_user_va: self.dma_user_va,
             dma_device_addr: self.dma_device_addr,
@@ -61,6 +64,9 @@ impl Driver {
     /// `None` if the receive ring is empty. Reads the firmware's write pointer
     /// from the device and advances the driver's read pointer.
     pub fn poll_response(&mut self, out: &mut [u8]) -> Option<(u8, u8, u16, usize)> {
+        if (self.dma_len as usize) < crate::constants::DMA_LAYOUT_END {
+            return None;
+        }
         let write_idx = self.regs.read32(crate::constants::RX_WPTR_REG) as usize;
         let (cmd, group, seq, n, next) = unsafe {
             crate::rx::recv::receive(

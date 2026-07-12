@@ -92,3 +92,8 @@ pub const RX_QUEUE_SIZE: usize = 256;
 pub const RB_SIZE: usize = 4096;
 pub const RX_RB_OFFSET: usize = CMD_AREA_OFFSET + TFD_QUEUE_SIZE * CMD_SLOT_SIZE;
 pub const RX_WPTR_REG: usize = 0x1BC0;
+
+// The last byte the command ring and the receive ring occupy in the DMA buffer.
+// The driver refuses to touch the DMA area unless the grant is at least this
+// large, so a short grant cannot turn into an out-of-bounds access.
+pub const DMA_LAYOUT_END: usize = RX_RB_OFFSET + RX_QUEUE_SIZE * RB_SIZE;

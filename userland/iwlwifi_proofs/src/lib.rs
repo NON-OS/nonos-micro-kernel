@@ -40,4 +40,7 @@ mod hcmd_tests;
 mod rx_tests;
 
 #[cfg(test)]
+mod harden_tests;
+
+#[cfg(test)]
 mod dot11_tests;
