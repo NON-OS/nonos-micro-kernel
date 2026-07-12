@@ -20,6 +20,7 @@ mod dump;
 pub mod inject;
 pub mod input_ring;
 pub mod release;
+mod ring_math;
 pub mod share;
 pub mod table;
 pub mod types;

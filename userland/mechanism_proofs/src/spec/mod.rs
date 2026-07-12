@@ -62,3 +62,15 @@ pub fn timer_elapsed_reached(current: u64, last: u64, interval: u64) -> bool {
 pub fn quota_has_at_least(remaining: u64, amount: u64) -> bool {
     amount <= remaining
 }
+
+// Ring index wrap: verification/lean Nonos/Ring.lean. A position advances by one
+// and wraps at the capacity.
+pub fn ring_wrap(pos: usize, cap: usize) -> usize {
+    (pos + 1) % cap
+}
+
+// MMIO window validity: verification/lean Nonos/Mmio.lean. A window is valid
+// when it is non-empty and does not overflow the address space.
+pub fn mmio_range_ok(base: usize, size: usize) -> bool {
+    size != 0 && base.checked_add(size).is_some()
+}

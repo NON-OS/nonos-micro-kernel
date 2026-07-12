@@ -18,9 +18,11 @@
 //! the sampled ones.
 
 use crate::buddy::constants::helpers::{buddy_address, order_to_size};
+use crate::mmio::mmio_range::range_ok;
 use crate::phys::bitmap::index::{bit_mask, byte_of};
 use crate::quota::limits::has_at_least;
 use crate::region::overlap::{contains, overlaps};
+use crate::ring::ring_math::wrap;
 use crate::timer::interval::elapsed_reached;
 
 // The buddy of the buddy of a block is the block itself: the address XOR is an
@@ -111,4 +113,27 @@ fn has_at_least_iff_within_budget() {
     let remaining: u64 = kani::any();
     let amount: u64 = kani::any();
     assert_eq!(has_at_least(remaining, amount), amount <= remaining);
+}
+
+// A wrapped ring index always stays within the capacity, for every position and
+// nonzero capacity.
+#[kani::proof]
+fn a_wrapped_index_stays_in_bounds() {
+    let pos: usize = kani::any();
+    let cap: usize = kani::any();
+    kani::assume(cap > 0);
+    kani::assume(pos < cap);
+    assert!(wrap(pos, cap) < cap);
+}
+
+// A valid MMIO window is non-empty and does not wrap the address space, for
+// every base and size.
+#[kani::proof]
+fn a_valid_mmio_window_is_non_empty_and_does_not_wrap() {
+    let base: usize = kani::any();
+    let size: usize = kani::any();
+    if range_ok(base, size) {
+        assert!(size > 0);
+        assert!(base.checked_add(size).is_some());
+    }
 }

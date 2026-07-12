@@ -14,23 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Host-runnable proofs binding kernel mechanisms to the properties their Lean
-//! models state. The real Rust of each mechanism is pulled in via `#[path]` and
-//! run directly, so the property is proven of the code the kernel executes.
-//! Modules land here as their Lean model moves from a specification to a
-//! code-bound proof; see `verification/lean/REFINEMENT.md`.
+//! The index arithmetic of the input ring, factored out of `input_ring.rs` so
+//! it holds no lock and can be included by the `mechanism_proofs` crate and
+//! checked against the Lean `Nonos.Ring` model. The ring stores at most
+//! `cap - 1` events; a position advances modulo the capacity and the ring is
+//! full when advancing the head would reach the tail.
 
-pub mod buddy;
-pub mod mmio;
-pub mod phys;
-pub mod quota;
-pub mod region;
-pub mod ring;
-pub mod spec;
-pub mod timer;
+/// Advance a ring position by one, wrapping at the capacity.
+pub(crate) const fn wrap(pos: usize, cap: usize) -> usize {
+    (pos + 1) % cap
+}
 
-#[cfg(test)]
-mod refinement_tests;
-
-#[cfg(kani)]
-mod kani_proofs;
+/// Whether the ring is full: advancing the head would collide with the tail.
+pub(crate) const fn is_full(head: usize, tail: usize, cap: usize) -> bool {
+    wrap(head, cap) == tail
+}

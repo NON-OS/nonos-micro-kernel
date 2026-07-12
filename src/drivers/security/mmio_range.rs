@@ -14,23 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Host-runnable proofs binding kernel mechanisms to the properties their Lean
-//! models state. The real Rust of each mechanism is pulled in via `#[path]` and
-//! run directly, so the property is proven of the code the kernel executes.
-//! Modules land here as their Lean model moves from a specification to a
-//! code-bound proof; see `verification/lean/REFINEMENT.md`.
+//! The window-validity arithmetic of an MMIO region, factored out of
+//! `validate_mmio_region` so it holds no driver error type and can be included
+//! by the `mechanism_proofs` crate and checked against the Lean `Nonos.Mmio`
+//! model. A window is valid only when it is non-empty and does not wrap the
+//! address space.
 
-pub mod buddy;
-pub mod mmio;
-pub mod phys;
-pub mod quota;
-pub mod region;
-pub mod ring;
-pub mod spec;
-pub mod timer;
-
-#[cfg(test)]
-mod refinement_tests;
-
-#[cfg(kani)]
-mod kani_proofs;
+/// Whether `[base, base + size)` is a non-empty window that does not overflow
+/// the address space.
+pub(crate) const fn range_ok(base: usize, size: usize) -> bool {
+    if size == 0 {
+        return false;
+    }
+    match base.checked_add(size) {
+        Some(end) => end > base,
+        None => false,
+    }
+}

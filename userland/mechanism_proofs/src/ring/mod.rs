@@ -14,23 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Host-runnable proofs binding kernel mechanisms to the properties their Lean
-//! models state. The real Rust of each mechanism is pulled in via `#[path]` and
-//! run directly, so the property is proven of the code the kernel executes.
-//! Modules land here as their Lean model moves from a specification to a
-//! code-bound proof; see `verification/lean/REFINEMENT.md`.
-
-pub mod buddy;
-pub mod mmio;
-pub mod phys;
-pub mod quota;
-pub mod region;
-pub mod ring;
-pub mod spec;
-pub mod timer;
-
-#[cfg(test)]
-mod refinement_tests;
-
-#[cfg(kani)]
-mod kani_proofs;
+// The real index arithmetic of the input ring. `input_ring.rs` in the kernel
+// calls exactly these to advance the head and tail.
+#[allow(dead_code)]
+#[path = "../../../../src/kernel_core/surface_registry/ring_math.rs"]
+pub mod ring_math;

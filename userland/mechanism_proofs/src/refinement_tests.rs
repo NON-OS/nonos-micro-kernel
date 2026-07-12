@@ -20,9 +20,11 @@
 use crate::buddy::constants::helpers::{buddy_address, order_to_size, size_to_order};
 use crate::buddy::constants::orders::{MAX_ORDER, MIN_ORDER};
 use crate::buddy::constants::sizes::MAX_BLOCK_SIZE;
+use crate::mmio::mmio_range::range_ok;
 use crate::phys::bitmap::index::{bit_mask, byte_of};
 use crate::quota::limits::has_at_least;
 use crate::region::overlap::{contains, overlaps};
+use crate::ring::ring_math::{is_full, wrap};
 use crate::spec;
 use crate::timer::interval::elapsed_reached;
 
@@ -164,4 +166,43 @@ fn has_at_least_agrees_with_spec() {
             assert_eq!(has_at_least(remaining, amount), amount <= remaining);
         }
     }
+}
+
+// Input ring index arithmetic: verification/lean Nonos/Ring.lean.
+
+#[test]
+fn wrap_agrees_with_spec_and_stays_in_bounds() {
+    for cap in 1..64usize {
+        for pos in 0..cap {
+            let w = wrap(pos, cap);
+            assert_eq!(w, spec::ring_wrap(pos, cap));
+            assert!(w < cap, "a wrapped index stays within the capacity");
+        }
+    }
+}
+
+#[test]
+fn a_full_ring_is_detected_when_the_head_would_reach_the_tail() {
+    for cap in 2..64usize {
+        for head in 0..cap {
+            for tail in 0..cap {
+                assert_eq!(is_full(head, tail, cap), wrap(head, cap) == tail);
+            }
+        }
+    }
+}
+
+// MMIO window validity: verification/lean Nonos/Mmio.lean.
+
+#[test]
+fn range_ok_agrees_with_spec_and_rejects_empty_and_wrapping() {
+    let samples: [usize; 8] = [0, 1, 4096, 0x1000, usize::MAX - 1, usize::MAX, usize::MAX / 2, 0x8000];
+    for &base in &samples {
+        for &size in &samples {
+            assert_eq!(range_ok(base, size), spec::mmio_range_ok(base, size));
+        }
+    }
+    assert!(!range_ok(0x1000, 0), "an empty window is rejected");
+    assert!(!range_ok(usize::MAX, 1), "a wrapping window is rejected");
+    assert!(range_ok(0x1000, 0x1000), "a normal window is accepted");
 }

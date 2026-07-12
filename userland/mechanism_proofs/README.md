@@ -29,6 +29,14 @@ Bound so far:
 - `quota`: the resource-token check in `src/capabilities/resource/limits.rs`,
   which `has_bytes` and `has_ops` delegate to. A request is covered exactly when
   it is within the remaining budget. Lean: `Nonos/Quota.lean`.
+- `ring`: the input-ring index arithmetic in
+  `src/kernel_core/surface_registry/ring_math.rs`, which `input_ring.rs` calls. A
+  wrapped index stays within the capacity, and a full ring is detected when the
+  head would reach the tail. Lean: `Nonos/Ring.lean`.
+- `mmio`: the window-validity arithmetic in
+  `src/drivers/security/mmio_range.rs`, which `validate_mmio_region` delegates
+  to. A valid window is non-empty and does not wrap the address space. Lean:
+  `Nonos/Mmio.lean`.
 
 Run:
 

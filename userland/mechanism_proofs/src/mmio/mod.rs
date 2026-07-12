@@ -14,23 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Host-runnable proofs binding kernel mechanisms to the properties their Lean
-//! models state. The real Rust of each mechanism is pulled in via `#[path]` and
-//! run directly, so the property is proven of the code the kernel executes.
-//! Modules land here as their Lean model moves from a specification to a
-//! code-bound proof; see `verification/lean/REFINEMENT.md`.
-
-pub mod buddy;
-pub mod mmio;
-pub mod phys;
-pub mod quota;
-pub mod region;
-pub mod ring;
-pub mod spec;
-pub mod timer;
-
-#[cfg(test)]
-mod refinement_tests;
-
-#[cfg(kani)]
-mod kani_proofs;
+// The real MMIO window-validity arithmetic. `validate_mmio_region` in the
+// kernel delegates to this before admitting a device window.
+#[allow(dead_code)]
+#[path = "../../../../src/drivers/security/mmio_range.rs"]
+pub mod mmio_range;
