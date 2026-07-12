@@ -35,6 +35,7 @@ contract the code owes. Moving an entry to level 2 or 1 is tracked work.
 | `Semaphore` | `src/sys/sync/semaphore` | `userland/sync_proofs` (differential tests and Kani over the permit arithmetic in `pure.rs`) |
 | `Seqlock` | `src/sys/sync/seqlock` | `userland/sync_proofs` (differential tests and Kani over the sequence discipline in `pure.rs`) |
 | `Buddy` | `src/memory/buddy_alloc` | `userland/mechanism_proofs` (differential tests and Kani over the order and buddy-address arithmetic in `constants/helpers.rs`) |
+| `Bitmap` | `src/memory/phys/bitmap` | `userland/mechanism_proofs` (differential tests and Kani over the bit-index arithmetic in `index.rs`) |
 | `Isolation`, `Paging` | `src/memory/paging` | `userland/kernel_proofs` (page permission W xor X, over all bit patterns) |
 | `Loader` | `src/elf` loader | `userland/kernel_proofs` (segment bounds) |
 | `Syscall` | `src/syscall` numbers | `userland/kernel_proofs` (decode totality and registry agreement) |
@@ -64,7 +65,7 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | `Nonce`, `Rng` | entropy and nonce issuance under `src/crypto` |
 | `Endpoint`, `Fd`, `Vfs` | IPC endpoints, descriptor tables, and the VFS |
 | `TokenBucket` | rate limiting in the network path |
-| `Cow`, `Bitmap` | copy-on-write pages and allocation bitmaps |
+| `Cow` | copy-on-write pages |
 
 `Futex` already has a code-bound proof: the wait-queue discipline in
 `src/syscall/microkernel/futex/queue.rs`, which `wait.rs` and `wake.rs` call, is
