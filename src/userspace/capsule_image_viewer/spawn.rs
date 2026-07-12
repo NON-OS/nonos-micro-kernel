@@ -28,9 +28,9 @@ use crate::security::nonos_trust_anchor::{
 use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 
 const SERVICE_NAME: &str = "app.image_viewer";
-const SERVICE_PORT: u32 = 4736;
+const SERVICE_PORT: u32 = 4746;
 const REPLY_INBOX: &str = "endpoint.app.image_viewer.reply";
-const REPLY_PORT: u32 = 4737;
+const REPLY_PORT: u32 = 4747;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
 const REQUIRED_CAPS: u64 = 0x3919;
 
