@@ -28,8 +28,15 @@ use crate::quota::limits::has_at_least;
 use crate::refcount::dec::dec_checked;
 use crate::region::overlap::{contains, overlaps};
 use crate::ring::ring_math::{is_full, wrap};
+use crate::scheduler::policy_types::{
+    SchedAttr, SCHED_BATCH, SCHED_DEADLINE, SCHED_FIFO, SCHED_IDLE, SCHED_NORMAL, SCHED_RR,
+};
 use crate::spec;
 use crate::timer::interval::elapsed_reached;
+
+fn sched_attr(policy: i32, rt_priority: i32, nice: i32) -> SchedAttr {
+    SchedAttr { policy, rt_priority, nice, ..Default::default() }
+}
 
 // Buddy allocator: verification/lean Nonos/Buddy.lean.
 
@@ -252,4 +259,51 @@ fn in_range_agrees_with_spec_and_confines_the_access() {
     assert!(in_range(10, 4, 8, 8), "an access inside the segment is in range");
     assert!(!in_range(14, 4, 8, 8), "an access past the segment end is out of range");
     assert!(!in_range(u64::MAX, 2, 0, 100), "a wrapping access is out of range");
+}
+
+// Scheduling priority order: verification/lean Nonos/Priority.lean.
+
+#[test]
+fn effective_priority_agrees_with_spec() {
+    let policies = [SCHED_NORMAL, SCHED_FIFO, SCHED_RR, SCHED_BATCH, SCHED_IDLE, SCHED_DEADLINE, 7];
+    for &policy in &policies {
+        for nice in -20..=19 {
+            for rt in 0..=99 {
+                assert_eq!(
+                    sched_attr(policy, rt, nice).effective_priority(),
+                    spec::effective_priority(policy, rt, nice)
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn deadline_tops_and_idle_bottoms_the_order() {
+    let policies = [SCHED_NORMAL, SCHED_FIFO, SCHED_RR, SCHED_BATCH, SCHED_IDLE, SCHED_DEADLINE];
+    for nice in -20..=19 {
+        for rt in 0..=99 {
+            let deadline = sched_attr(SCHED_DEADLINE, rt, nice).effective_priority();
+            let idle = sched_attr(SCHED_IDLE, rt, nice).effective_priority();
+            for &policy in &policies {
+                let p = sched_attr(policy, rt, nice).effective_priority();
+                assert!(deadline >= p, "deadline is the top of the order");
+                assert!(idle <= p, "idle is the bottom of the order");
+            }
+        }
+    }
+}
+
+#[test]
+fn a_realtime_task_preempts_a_timesharing_one() {
+    for nice in -20..=19 {
+        for rt in 0..=99 {
+            let fifo = sched_attr(SCHED_FIFO, rt, nice).effective_priority();
+            let rr = sched_attr(SCHED_RR, rt, nice).effective_priority();
+            let normal = sched_attr(SCHED_NORMAL, rt, nice).effective_priority();
+            let batch = sched_attr(SCHED_BATCH, rt, nice).effective_priority();
+            assert!(fifo > normal && fifo > batch, "fifo preempts timesharing");
+            assert!(rr > normal && rr > batch, "rr preempts timesharing");
+        }
+    }
 }

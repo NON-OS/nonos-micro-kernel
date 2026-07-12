@@ -93,3 +93,20 @@ pub fn in_range(addr: u64, size: u64, start: u64, seg_size: u64) -> bool {
         _ => false,
     }
 }
+
+// Scheduling priority order: verification/lean Nonos/Priority.lean. Restated
+// from the policy numbers directly (1 fifo, 2 rr, 3 batch, 5 idle, 6 deadline),
+// independent of the named constants. Higher preempts lower.
+pub fn effective_priority(policy: i32, rt_priority: i32, nice: i32) -> i32 {
+    if policy == 1 || policy == 2 {
+        100 + rt_priority
+    } else if policy == 6 {
+        200
+    } else if policy == 5 {
+        -1
+    } else if policy == 3 {
+        19 - nice
+    } else {
+        20 - nice
+    }
+}

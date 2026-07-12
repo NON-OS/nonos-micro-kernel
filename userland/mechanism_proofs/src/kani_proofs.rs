@@ -26,6 +26,7 @@ use crate::quota::limits::has_at_least;
 use crate::refcount::dec::dec_checked;
 use crate::region::overlap::{contains, overlaps};
 use crate::ring::ring_math::wrap;
+use crate::scheduler::policy_types::{SchedAttr, SCHED_DEADLINE, SCHED_IDLE};
 use crate::timer::interval::elapsed_reached;
 
 // The buddy of the buddy of a block is the block itself: the address XOR is an
@@ -179,4 +180,22 @@ fn an_in_range_access_is_confined() {
         let addr_end = addr.checked_add(size).unwrap();
         assert!(addr_end <= end);
     }
+}
+
+// Deadline is the top of the priority order and idle is the bottom, for every
+// policy and every valid real-time priority and nice value.
+#[kani::proof]
+fn deadline_tops_and_idle_bottoms_the_priority_order() {
+    let policy: i32 = kani::any();
+    let rt: i32 = kani::any();
+    let nice: i32 = kani::any();
+    kani::assume((0..=99).contains(&rt));
+    kani::assume((-20..=19).contains(&nice));
+    let other = SchedAttr { policy, rt_priority: rt, nice, ..Default::default() }.effective_priority();
+    let deadline =
+        SchedAttr { policy: SCHED_DEADLINE, rt_priority: rt, nice, ..Default::default() }.effective_priority();
+    let idle =
+        SchedAttr { policy: SCHED_IDLE, rt_priority: rt, nice, ..Default::default() }.effective_priority();
+    assert!(deadline >= other);
+    assert!(idle <= other);
 }

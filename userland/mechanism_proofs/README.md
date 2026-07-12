@@ -48,6 +48,10 @@ Bound so far:
   `src/elf/reloc/apply/range.rs`, which `in_segment` delegates to. An in-range
   access sits wholly inside the segment with neither end overflowing. Lean:
   `Nonos/Bounds.lean`.
+- `scheduler`: the priority order in `src/process/scheduler/policy_types.rs`,
+  through `SchedAttr::effective_priority` directly. Deadline tops the order and
+  idle bottoms it, and a real-time task preempts a timesharing one. Lean:
+  `Nonos/Priority.lean`.
 
 Run:
 
