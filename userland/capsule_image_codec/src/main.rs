@@ -22,11 +22,13 @@ extern crate alloc;
 mod protocol;
 mod server;
 
-use nonos_libc::{heap_init, mk_exit};
+use nonos_libc::{heap_init_sized, mk_exit};
+
+const CODEC_HEAP: usize = 96 * 1024 * 1024;
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
+    if heap_init_sized(CODEC_HEAP).is_err() {
         mk_exit(1);
     }
     server::run();
