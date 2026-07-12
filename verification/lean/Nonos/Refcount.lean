@@ -12,6 +12,12 @@ increment always leaves it live, decrement of a zero count cannot underflow
 (saturating at zero, matching the kernel's checked decrement), a count of one
 decrements to dead exactly, and increment/decrement round-trips, so an object
 is freed exactly when its last reference drops.
+
+The kernel's page table runs the checked decrement in
+`src/memory/page_info/manager/refcount.rs`, which `decrement_ref_count`
+delegates to. The `mechanism_proofs` crate includes that file and proves with
+Kani that a decrement never underflows, so the no-underflow property is proven
+of the code the page table runs.
 -/
 
 namespace Nonos.Refcount

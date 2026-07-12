@@ -12,6 +12,12 @@ buffer of `size` bytes is safe when it stays inside the buffer. The theorems
 below show a safe access's first and last bytes are in range, every index of a
 safe access lands inside the buffer, shrinking a safe access stays safe, and an
 oversized access is refused, the spatial-safety facts the copy paths rely on.
+
+The kernel's ELF relocator gates each write with the range test in
+`src/elf/reloc/apply/range.rs`, which `in_segment` delegates to. The
+`mechanism_proofs` crate includes that file and proves with Kani that an
+in-range access sits wholly inside the segment with neither end overflowing, so
+this spatial check is proven of the code the loader runs.
 -/
 
 namespace Nonos.Bounds

@@ -41,6 +41,9 @@ contract the code owes. Moving an entry to level 2 or 1 is tracked work.
 | `Quota` | `src/capabilities/resource` | `userland/mechanism_proofs` (differential tests and Kani over the check in `limits.rs`) |
 | `Ring` | `src/kernel_core/surface_registry` | `userland/mechanism_proofs` (differential tests and Kani over the index wrap in `ring_math.rs`) |
 | `Mmio` | `src/drivers/security` | `userland/mechanism_proofs` (differential tests and Kani over the window check in `mmio_range.rs`) |
+| `Refcount` | `src/memory/page_info` | `userland/mechanism_proofs` (differential tests and Kani over the decrement in `refcount.rs`) |
+| `Nonce` | `src/capabilities/resource` | `userland/mechanism_proofs` (differential tests and Kani over the composition in `nonce_compose.rs`) |
+| `Bounds` | `src/elf/reloc` | `userland/mechanism_proofs` (differential tests and Kani over the range test in `range.rs`) |
 | `Isolation`, `Paging` | `src/memory/paging` | `userland/kernel_proofs` (page permission W xor X, over all bit patterns) |
 | `Loader` | `src/elf` loader | `userland/kernel_proofs` (segment bounds) |
 | `Syscall` | `src/syscall` numbers | `userland/kernel_proofs` (decode totality and registry agreement) |
@@ -58,8 +61,8 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | `Mutex` | `src/sys/sync/irq_mutex` |
 | `Rwlock` | `src/sys/sync/irq_rwlock` |
 | `Spinlock` | `spin::Mutex` wrappers in `src/sys/sync` |
-| `PageTable`, `Bounds` | `src/memory` address space and paging |
-| `MemGrant`, `Refcount`, `Heap`, `Zeroize` | `src/memory` grants and allocation |
+| `PageTable` | `src/memory` address space and paging |
+| `MemGrant`, `Heap`, `Zeroize` | `src/memory` grants and allocation |
 | `Iommu` | device DMA windows under `src/hardware` |
 | `Tlb` | TLB shootdown under `src/memory` |
 | `CapTable`, `Dispatch` | capability tables and the syscall dispatch under `src/syscall` |
@@ -67,7 +70,7 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | `Epoch` | RCU-style reclamation across the kernel |
 | `Signal` | signal delivery |
 | `Reaper` | the process table |
-| `Nonce`, `Rng` | entropy and nonce issuance under `src/crypto` |
+| `Rng` | entropy under `src/crypto` |
 | `Endpoint`, `Fd`, `Vfs` | IPC endpoints, descriptor tables, and the VFS |
 | `TokenBucket` | rate limiting in the network path |
 | `Cow` | copy-on-write pages |

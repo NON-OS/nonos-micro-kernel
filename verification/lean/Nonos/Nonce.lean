@@ -11,6 +11,12 @@ Nonce freshness. A nonce generator hands out a strictly increasing sequence.
 The theorems below show each issue advances the counter, an issued nonce is
 strictly below the next one, and two successive issues are distinct, so a
 nonce is never reused, the freshness the attestation and replay defenses need.
+
+The kernel's resource tokens build a nonce with the composition in
+`src/capabilities/resource/nonce_compose.rs`, which `next_nonce` delegates to.
+The `mechanism_proofs` crate includes that file and proves with Kani that the
+monotonic counter is recoverable from the low 32 bits, so distinct counters
+never collide, the no-reuse property proven of the code the token runs.
 -/
 
 namespace Nonos.Nonce
