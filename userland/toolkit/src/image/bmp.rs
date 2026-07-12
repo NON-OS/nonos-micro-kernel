@@ -10,6 +10,13 @@ fn le_u32(bytes: &[u8], off: usize) -> Result<u32, DecodeError> {
     Ok(u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
 }
 
+pub fn bmp_dimensions(input: &[u8]) -> Result<ImageSize, DecodeError> {
+    if input.get(0..2) != Some(b"BM") {
+        return Err(DecodeError::BadMagic);
+    }
+    ImageSize::new(le_u32(input, 18)?, le_u32(input, 22)?)
+}
+
 pub fn decode_bmp_argb8888(input: &[u8], out: &mut [u32]) -> Result<ImageSize, DecodeError> {
     if input.get(0..2) != Some(b"BM") {
         return Err(DecodeError::BadMagic);

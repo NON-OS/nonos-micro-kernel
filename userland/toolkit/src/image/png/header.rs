@@ -15,6 +15,10 @@ pub(super) struct Header {
     pub bit_depth: u8,
 }
 
+pub fn png_dimensions(input: &[u8]) -> Result<ImageSize, DecodeError> {
+    Ok(parse_header(input)?.size)
+}
+
 pub(super) fn parse_header(input: &[u8]) -> Result<Header, DecodeError> {
     if input.get(0..8) != Some(&PNG_SIG) {
         return Err(DecodeError::BadMagic);

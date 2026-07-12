@@ -10,6 +10,10 @@ pub(super) struct Screen {
     pub blocks_at: usize,
 }
 
+pub fn gif_dimensions(input: &[u8]) -> Result<ImageSize, DecodeError> {
+    Ok(parse_screen(input)?.size)
+}
+
 pub(super) fn parse_screen(input: &[u8]) -> Result<Screen, DecodeError> {
     let sig = input.get(0..6).ok_or(DecodeError::Truncated)?;
     if sig != b"GIF87a" && sig != b"GIF89a" {
