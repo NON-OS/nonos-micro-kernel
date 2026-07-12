@@ -6,6 +6,7 @@
 //! every beacon byte, the firmware controls every DMA byte and the RX write
 //! pointer, and the IPC client controls every request byte.
 
+use crate::ccmp::ccm::ccm_decrypt;
 use crate::constants::{RB_SIZE, RX_QUEUE_SIZE, RX_RB_OFFSET};
 use crate::dot11::parse::{find_ie, parse_beacon};
 use crate::eapol::mic::verify_mic;
@@ -54,6 +55,21 @@ fn rx_packet_parser_never_panics_on_hostile_dma() {
     for _ in 0..400_000 {
         let buf = fuzz_buf(&mut s, 64);
         let _ = rx_parse(&buf);
+    }
+}
+
+#[test]
+fn ccm_decrypt_never_panics_on_hostile_ciphertext() {
+    // A rogue peer controls the ciphertext, tag and additional data; the
+    // authenticated-decrypt path must never panic or read OOB, and must reject.
+    let key = [0x2bu8; 16];
+    let nonce = [0x11u8; 13];
+    let mut out = [0u8; 256];
+    let mut s = 0xC0DE_CAFE_1234_ABCD;
+    for _ in 0..200_000 {
+        let aad = fuzz_buf(&mut s, 32);
+        let input = fuzz_buf(&mut s, 200);
+        let _ = ccm_decrypt(&key, &nonce, &aad, &input, &mut out);
     }
 }
 

@@ -20,3 +20,4 @@ pub const OP_HCMD_ISSUE: u16 = 0x000B;
 pub const OP_RX_POLL: u16 = 0x000C;
 pub const OP_WPA_PTK: u16 = 0x000D;
 pub const OP_EAPOL_VERIFY: u16 = 0x000E;
+pub const OP_CCMP: u16 = 0x000F;

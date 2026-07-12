@@ -19,6 +19,8 @@
 
 extern crate alloc;
 
+// WPA2 CCMP data protection: AES-128 in CCM mode. Reached through OP_CCMP.
+mod ccmp;
 mod constants;
 mod discover;
 // The WPA2 four-way handshake message layer: EAPOL-Key parsing and MIC

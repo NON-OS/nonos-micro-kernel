@@ -20,3 +20,4 @@ pub mod mgmt;
 pub mod rx;
 pub mod wpa;
 pub mod eapol;
+pub mod ccmp;
