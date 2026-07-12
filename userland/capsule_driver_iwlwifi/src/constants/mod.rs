@@ -83,3 +83,12 @@ pub const CMD_QUEUE_ID: u8 = 4;
 pub const CMD_SLOT_SIZE: usize = 512;
 pub const CMD_RING_OFFSET: usize = 0;
 pub const CMD_AREA_OFFSET: usize = TFD_QUEUE_SIZE * 128;
+
+// The receive ring, laid out after the command area in the same DMA buffer.
+// The firmware posts packets into RX_QUEUE_SIZE receive buffers of RB_SIZE each
+// and advances the write-pointer register as it does. RX_RB_OFFSET + the ring
+// fits within FW_STAGING_SIZE. Register offset from iwl-fh.h.
+pub const RX_QUEUE_SIZE: usize = 256;
+pub const RB_SIZE: usize = 4096;
+pub const RX_RB_OFFSET: usize = CMD_AREA_OFFSET + TFD_QUEUE_SIZE * CMD_SLOT_SIZE;
+pub const RX_WPTR_REG: usize = 0x1BC0;

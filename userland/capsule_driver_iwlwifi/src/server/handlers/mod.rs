@@ -17,3 +17,4 @@ pub mod alive;
 pub mod beacon;
 pub mod hcmd;
 pub mod mgmt;
+pub mod rx;

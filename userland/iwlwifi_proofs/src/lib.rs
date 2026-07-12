@@ -27,11 +27,17 @@ pub mod dot11;
 // doorbell register write.
 pub mod hcmd;
 
+// The receive path: response packet framing and the receive-ring math.
+pub mod rx;
+
 #[cfg(test)]
 mod iwlwifi_tests;
 
 #[cfg(test)]
 mod hcmd_tests;
+
+#[cfg(test)]
+mod rx_tests;
 
 #[cfg(test)]
 mod dot11_tests;

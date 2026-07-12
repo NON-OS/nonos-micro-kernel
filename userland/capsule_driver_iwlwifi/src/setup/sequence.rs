@@ -34,5 +34,6 @@ pub fn run() -> Result<Driver, &'static str> {
         hw_rev: init.hw_rev, gp_cntrl: init.gp_cntrl, rf_kill: init.rf_kill, family, regs,
         firmware_stage: FirmwareStageState::empty(),
         cmd_write_ptr: 0,
+        rx_read_ptr: 0,
     })
 }
