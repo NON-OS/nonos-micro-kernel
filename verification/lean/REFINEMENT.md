@@ -37,6 +37,8 @@ contract the code owes. Moving an entry to level 2 or 1 is tracked work.
 | `Buddy` | `src/memory/buddy_alloc` | `userland/mechanism_proofs` (differential tests and Kani over the order and buddy-address arithmetic in `constants/helpers.rs`) |
 | `Bitmap` | `src/memory/phys/bitmap` | `userland/mechanism_proofs` (differential tests and Kani over the bit-index arithmetic in `index.rs`) |
 | `Interval`, `Vma` | `src/memory/region` | `userland/mechanism_proofs` (differential tests and Kani over the range algebra in `overlap.rs`) |
+| `Timer` | `src/process/scheduler/smp` | `userland/mechanism_proofs` (differential tests and Kani over the elapsed-tick test in `interval.rs`) |
+| `Quota` | `src/capabilities/resource` | `userland/mechanism_proofs` (differential tests and Kani over the check in `limits.rs`) |
 | `Isolation`, `Paging` | `src/memory/paging` | `userland/kernel_proofs` (page permission W xor X, over all bit patterns) |
 | `Loader` | `src/elf` loader | `userland/kernel_proofs` (segment bounds) |
 | `Syscall` | `src/syscall` numbers | `userland/kernel_proofs` (decode totality and registry agreement) |
@@ -55,11 +57,11 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | `Rwlock` | `src/sys/sync/irq_rwlock` |
 | `Spinlock` | `spin::Mutex` wrappers in `src/sys/sync` |
 | `PageTable`, `Bounds` | `src/memory` address space and paging |
-| `MemGrant`, `Quota`, `Refcount`, `Heap`, `Zeroize` | `src/memory` grants and allocation |
+| `MemGrant`, `Refcount`, `Heap`, `Zeroize` | `src/memory` grants and allocation |
 | `Iommu`, `Mmio` | device DMA and register windows under `src/hardware` |
 | `Tlb` | TLB shootdown under `src/memory` |
 | `CapTable`, `Dispatch` | capability tables and the syscall dispatch under `src/syscall` |
-| `Scheduler`, `Priority`, `Timer`, `Ring` | `src/process/scheduler` |
+| `Scheduler`, `Priority`, `Ring` | `src/process/scheduler` |
 | `Epoch` | RCU-style reclamation across the kernel |
 | `Signal` | signal delivery |
 | `Reaper` | the process table |
