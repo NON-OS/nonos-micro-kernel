@@ -34,6 +34,9 @@ pub mod rx;
 // PMK/PTK derivation, checked against RFC and IEEE known-answer vectors.
 pub mod wpa;
 
+// The EAPOL-Key handshake message layer: frame parse and MIC verification.
+pub mod eapol;
+
 #[cfg(test)]
 mod iwlwifi_tests;
 
@@ -48,6 +51,9 @@ mod harden_tests;
 
 #[cfg(test)]
 mod wpa_tests;
+
+#[cfg(test)]
+mod eapol_tests;
 
 #[cfg(test)]
 mod dot11_tests;

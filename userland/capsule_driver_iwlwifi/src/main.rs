@@ -21,6 +21,9 @@ extern crate alloc;
 
 mod constants;
 mod discover;
+// The WPA2 four-way handshake message layer: EAPOL-Key parsing and MIC
+// verification. Reached through OP_EAPOL_VERIFY.
+mod eapol;
 // The 802.11 frame layer: the management frames the scan, auth and association
 // steps are built from. Reached through the OP_MGMT_BUILD / OP_BEACON_PARSE
 // server operations.

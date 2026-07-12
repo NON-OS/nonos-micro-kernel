@@ -8,6 +8,8 @@
 
 use crate::constants::{RB_SIZE, RX_QUEUE_SIZE, RX_RB_OFFSET};
 use crate::dot11::parse::{find_ie, parse_beacon};
+use crate::eapol::mic::verify_mic;
+use crate::eapol::parse::parse as eapol_parse;
 use crate::rx::packet::parse as rx_parse;
 use crate::rx::recv::receive;
 
@@ -52,6 +54,22 @@ fn rx_packet_parser_never_panics_on_hostile_dma() {
     for _ in 0..400_000 {
         let buf = fuzz_buf(&mut s, 64);
         let _ = rx_parse(&buf);
+    }
+}
+
+#[test]
+fn eapol_parse_and_mic_never_panic_on_hostile_frames() {
+    // A rogue AP controls every byte of the handshake frame and the key data
+    // length; neither the parse nor the MIC check may panic or read OOB.
+    let mut s = 0xF00D_BABE_1234_5678;
+    for _ in 0..400_000 {
+        let frame = fuzz_buf(&mut s, 160);
+        let _ = eapol_parse(&frame);
+        let kck = [
+            s as u8, (s >> 8) as u8, (s >> 16) as u8, (s >> 24) as u8, (s >> 32) as u8,
+            (s >> 40) as u8, (s >> 48) as u8, (s >> 56) as u8, 0, 0, 0, 0, 0, 0, 0, 0,
+        ];
+        let _ = verify_mic(&kck, &frame);
     }
 }
 
