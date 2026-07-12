@@ -4,3 +4,4 @@
 
 pub mod aes;
 pub mod ccm;
+pub mod keywrap;
