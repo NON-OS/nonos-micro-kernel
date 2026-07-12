@@ -30,6 +30,10 @@ pub mod hcmd;
 // The receive path: response packet framing and the receive-ring math.
 pub mod rx;
 
+// The WPA2 key derivation: SHA-1, HMAC-SHA1, PBKDF2, the 802.11i PRF, and the
+// PMK/PTK derivation, checked against RFC and IEEE known-answer vectors.
+pub mod wpa;
+
 #[cfg(test)]
 mod iwlwifi_tests;
 
@@ -41,6 +45,9 @@ mod rx_tests;
 
 #[cfg(test)]
 mod harden_tests;
+
+#[cfg(test)]
+mod wpa_tests;
 
 #[cfg(test)]
 mod dot11_tests;

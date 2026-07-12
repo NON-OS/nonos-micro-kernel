@@ -18,3 +18,4 @@ pub const OP_MGMT_BUILD: u16 = 0x0009;
 pub const OP_BEACON_PARSE: u16 = 0x000A;
 pub const OP_HCMD_ISSUE: u16 = 0x000B;
 pub const OP_RX_POLL: u16 = 0x000C;
+pub const OP_WPA_PTK: u16 = 0x000D;

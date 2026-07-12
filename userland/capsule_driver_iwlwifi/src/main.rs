@@ -38,6 +38,9 @@ mod regs;
 mod rx;
 mod server;
 mod setup;
+// The WPA2 security core: the key derivation the four-way handshake rests on.
+// Reached through OP_WPA_PTK.
+mod wpa;
 
 use nonos_libc::{heap_init, mk_exit};
 
