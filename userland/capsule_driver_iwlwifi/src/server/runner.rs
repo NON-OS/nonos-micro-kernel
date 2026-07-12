@@ -12,9 +12,9 @@ use nonos_libc::mk_ipc_recv_from;
 
 use crate::driver::Driver;
 use crate::protocol::{
-    parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_DEVICE_INFO, OP_DMA_STATE,
-    OP_FIRMWARE_INFO, OP_FIRMWARE_LOAD, OP_FIRMWARE_STAGE, OP_HEALTHCHECK, OP_ALIVE_WAIT,
-    OP_RF_STATE,
+    parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_ALIVE_WAIT, OP_BEACON_PARSE,
+    OP_DEVICE_INFO, OP_DMA_STATE, OP_FIRMWARE_INFO, OP_FIRMWARE_LOAD, OP_FIRMWARE_STAGE,
+    OP_HCMD_ISSUE, OP_HEALTHCHECK, OP_MGMT_BUILD, OP_RF_STATE,
 };
 use crate::server::{handlers, respond};
 
@@ -48,6 +48,9 @@ fn dispatch(driver: &mut Driver, sender_pid: u32, req: crate::protocol::Request,
             handlers::firmware_load::handle(driver, sender_pid, &req, tx)
         }
         OP_ALIVE_WAIT if body.is_empty() => handlers::alive::handle(driver, sender_pid, &req, tx),
+        OP_MGMT_BUILD => handlers::mgmt::handle(sender_pid, &req, body, tx),
+        OP_BEACON_PARSE => handlers::beacon::handle(sender_pid, &req, body, tx),
+        OP_HCMD_ISSUE => handlers::hcmd::handle(driver, sender_pid, &req, body, tx),
         _ if body.is_empty() => {
             let _ = respond::send(sender_pid, &req, E_BAD_OP, &[], tx);
         }

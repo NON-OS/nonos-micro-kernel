@@ -28,17 +28,13 @@ pub const BROADCAST: MacAddr = [0xFF; 6];
 
 // Frame Control type field (bits 2-3 of octet 0).
 pub const TYPE_MGMT: u8 = 0;
-pub const TYPE_CTRL: u8 = 1;
-pub const TYPE_DATA: u8 = 2;
 
-// Management-frame subtypes (bits 4-7 of octet 0).
+// Management-frame subtypes (bits 4-7 of octet 0) the driver builds or parses.
 pub const SUBTYPE_ASSOC_REQ: u8 = 0;
-pub const SUBTYPE_ASSOC_RESP: u8 = 1;
 pub const SUBTYPE_PROBE_REQ: u8 = 4;
 pub const SUBTYPE_PROBE_RESP: u8 = 5;
 pub const SUBTYPE_BEACON: u8 = 8;
 pub const SUBTYPE_AUTH: u8 = 11;
-pub const SUBTYPE_DEAUTH: u8 = 12;
 
 /// A management or data MAC header without QoS or a fourth address is 24 bytes:
 /// frame control (2), duration (2), addr1/2/3 (6 each), sequence control (2).

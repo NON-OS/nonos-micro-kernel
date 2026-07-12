@@ -20,14 +20,13 @@
 //! overflow. Pure encoding; the driver hands the bytes to the firmware TX path.
 
 use super::header::{
-    frame_control, write_header, MacAddr, BROADCAST, MAC_HEADER_LEN, SUBTYPE_ASSOC_REQ,
-    SUBTYPE_AUTH, SUBTYPE_PROBE_REQ, TYPE_MGMT,
+    frame_control, write_header, MacAddr, BROADCAST, SUBTYPE_ASSOC_REQ, SUBTYPE_AUTH,
+    SUBTYPE_PROBE_REQ, TYPE_MGMT,
 };
 
-// Information element ids.
+// Information element ids the builders emit.
 pub const IE_SSID: u8 = 0;
 pub const IE_SUPPORTED_RATES: u8 = 1;
-pub const IE_DS_PARAMS: u8 = 3;
 
 /// Append an information element `[id][len][data]` at `off`, returning the new
 /// offset or `None` if it would overflow the buffer or the 255-byte IE limit.
@@ -101,6 +100,3 @@ pub fn assoc_request(
     cur = put_ie(out, cur, IE_SUPPORTED_RATES, rates)?;
     Some(cur)
 }
-
-/// The minimum buffer a caller must provide for a header plus a short body.
-pub const MIN_FRAME_BUF: usize = MAC_HEADER_LEN + 64;

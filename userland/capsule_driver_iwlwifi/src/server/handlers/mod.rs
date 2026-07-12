@@ -14,3 +14,6 @@ pub mod firmware_stage;
 pub mod health;
 pub mod rf;
 pub mod alive;
+pub mod beacon;
+pub mod hcmd;
+pub mod mgmt;

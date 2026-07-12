@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The host-command queue: the mechanism the driver uses to hand commands and
-//! frames to the alive firmware. `header` frames a command, `ring` tracks the
-//! TFD ring indices, and `doorbell` tells the firmware a queue advanced. The
-//! TFD-fill and DMA-buffer allocation that tie these to a real transfer come
-//! next and need hardware validation; the pieces here are the provable core.
+//! The host-command queue: how the driver hands commands and frames to the
+//! alive firmware. `header` frames a command, `ring` tracks the TFD ring
+//! indices, `tfd` fills a descriptor, `doorbell` tells the firmware a queue
+//! advanced, and `send` ties them into the one operation the scan, auth and
+//! assoc steps issue commands through.
 
 pub mod doorbell;
 pub mod header;
 pub mod ring;
+pub mod send;
+pub mod tfd;

@@ -28,13 +28,3 @@ const MASK: usize = TFD_QUEUE_SIZE - 1;
 pub const fn advance(ptr: usize) -> usize {
     (ptr + 1) & MASK
 }
-
-/// The number of descriptors outstanding between the read and write pointers.
-pub const fn used(write: usize, read: usize) -> usize {
-    write.wrapping_sub(read) & MASK
-}
-
-/// Whether the queue is full: one more enqueue would catch the read pointer.
-pub const fn is_full(write: usize, read: usize) -> bool {
-    advance(write) == read
-}

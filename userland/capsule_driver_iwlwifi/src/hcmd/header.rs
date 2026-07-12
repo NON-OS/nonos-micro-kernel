@@ -22,9 +22,6 @@
 
 pub const CMD_HEADER_LEN: usize = 4;
 
-/// The legacy command group (group 0). Newer command sets use non-zero groups.
-pub const GROUP_LEGACY: u8 = 0;
-
 /// Encode the 4-byte command header from the command id, the group id, and the
 /// little-endian sequence.
 pub fn cmd_header(cmd: u8, group: u8, sequence: u16) -> [u8; CMD_HEADER_LEN] {
@@ -36,14 +33,4 @@ pub fn cmd_header(cmd: u8, group: u8, sequence: u16) -> [u8; CMD_HEADER_LEN] {
 /// index (low byte), the layout the firmware routes its response by.
 pub const fn make_sequence(queue: u8, index: u8) -> u16 {
     ((queue as u16 & 0x1F) << 8) | (index as u16)
-}
-
-/// The transmit queue carried by a sequence value.
-pub const fn seq_queue(sequence: u16) -> u8 {
-    ((sequence >> 8) & 0x1F) as u8
-}
-
-/// The ring index carried by a sequence value.
-pub const fn seq_index(sequence: u16) -> u8 {
-    (sequence & 0xFF) as u8
 }

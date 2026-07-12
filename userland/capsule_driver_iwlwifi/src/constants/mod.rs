@@ -75,3 +75,11 @@ pub const MAX_FW_API_VERSION: u16 = 77;
 // Offset from iwl-prph.h / iwl-fh.h.
 pub const HBUS_TARG_WRPTR: usize = 0x0460;
 pub const TFD_QUEUE_SIZE: usize = 256;
+
+// The command queue and its layout inside the DMA buffer that staged the
+// firmware (reused once the firmware is alive): a TFD ring followed by a
+// per-slot command area. Sized to fit within FW_STAGING_SIZE.
+pub const CMD_QUEUE_ID: u8 = 4;
+pub const CMD_SLOT_SIZE: usize = 512;
+pub const CMD_RING_OFFSET: usize = 0;
+pub const CMD_AREA_OFFSET: usize = TFD_QUEUE_SIZE * 128;

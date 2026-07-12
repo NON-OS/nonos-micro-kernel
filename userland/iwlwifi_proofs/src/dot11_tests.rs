@@ -6,9 +6,10 @@
 
 use crate::dot11::header::{
     fc_subtype, fc_type, frame_control, seq_control, write_header, BROADCAST, MAC_HEADER_LEN,
-    SUBTYPE_ASSOC_REQ, SUBTYPE_AUTH, SUBTYPE_PROBE_REQ, TYPE_MGMT,
+    SUBTYPE_ASSOC_REQ, SUBTYPE_AUTH, SUBTYPE_BEACON, SUBTYPE_PROBE_REQ, TYPE_MGMT,
 };
 use crate::dot11::mgmt::{assoc_request, auth_open, probe_request, IE_SSID, IE_SUPPORTED_RATES};
+use crate::dot11::parse::parse_beacon;
 
 #[test]
 fn frame_control_roundtrips_type_and_subtype() {
@@ -103,4 +104,44 @@ fn builders_reject_overflow() {
     let mut tiny = [0u8; MAC_HEADER_LEN + 2];
     let src = [0u8; 6];
     assert!(probe_request(&mut tiny, src, b"waytoolongssidforthisbuffer", &[0x82], 0).is_none());
+}
+
+#[test]
+fn parse_beacon_extracts_ssid_channel_and_rsn() {
+    let mut f = [0u8; 128];
+    let bssid = [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF];
+    let fc = frame_control(TYPE_MGMT, SUBTYPE_BEACON);
+    let n = write_header(&mut f, fc, BROADCAST, bssid, bssid, 0).unwrap();
+    // fixed fields: timestamp(8), beacon interval(2), capability(2 at +10)
+    f[n + 10] = 0x11;
+    f[n + 11] = 0x04;
+    let mut o = n + 12;
+    let ssid = b"nonos-ap";
+    f[o] = 0;
+    f[o + 1] = ssid.len() as u8;
+    f[o + 2..o + 2 + ssid.len()].copy_from_slice(ssid);
+    o += 2 + ssid.len();
+    f[o] = 3;
+    f[o + 1] = 1;
+    f[o + 2] = 6; // DS param: channel 6
+    o += 3;
+    f[o] = 48;
+    f[o + 1] = 2;
+    f[o + 2] = 1;
+    f[o + 3] = 0; // RSN element
+    o += 4;
+    let info = parse_beacon(&f[..o]).unwrap();
+    assert_eq!(info.bssid, bssid);
+    assert_eq!(info.ssid, ssid);
+    assert_eq!(info.channel, 6);
+    assert!(info.rsn, "RSN (WPA2) advertised");
+    assert_eq!(info.capability, 0x0411);
+}
+
+#[test]
+fn parse_beacon_rejects_a_non_beacon_frame() {
+    let mut f = [0u8; 64];
+    let fc = frame_control(TYPE_MGMT, SUBTYPE_PROBE_REQ);
+    write_header(&mut f, fc, BROADCAST, BROADCAST, BROADCAST, 0).unwrap();
+    assert!(parse_beacon(&f).is_none(), "a probe request is not a beacon");
 }

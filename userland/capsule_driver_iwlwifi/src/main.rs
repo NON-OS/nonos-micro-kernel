@@ -21,17 +21,14 @@ extern crate alloc;
 
 mod constants;
 mod discover;
-// The 802.11 frame layer is the first MLME brick above the alive firmware. It
-// is not wired into the server path yet (the host-command queue and TX rings
-// come next), so its builders are unused in the driver for now.
-#[allow(dead_code)]
+// The 802.11 frame layer: the management frames the scan, auth and association
+// steps are built from. Reached through the OP_MGMT_BUILD / OP_BEACON_PARSE
+// server operations.
 mod dot11;
 mod driver;
 mod firmware;
-// The host-command queue above the alive firmware. The TFD-fill and DMA wiring
-// that turn these into a real transfer come next, so the pieces are unused in
-// the driver server path for now.
-#[allow(dead_code)]
+// The host-command queue: how the driver hands commands and frames to the alive
+// firmware. Reached through OP_HCMD_ISSUE.
 mod hcmd;
 mod init;
 mod protocol;
