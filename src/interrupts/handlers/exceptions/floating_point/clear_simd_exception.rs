@@ -16,7 +16,7 @@
 
 use super::read_mxcsr::read_mxcsr;
 
-pub fn clear_simd_exception() {
+pub(crate) fn clear_simd_exception() {
     let mut mxcsr = read_mxcsr();
     mxcsr &= !0x3F;
     unsafe {

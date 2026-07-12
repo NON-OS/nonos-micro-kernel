@@ -21,6 +21,14 @@ pub(super) fn finalize_teardown(pid: Pid) {
     #[cfg(target_arch = "x86_64")]
     let _ = crate::hardware::broker::pio_release_all_for_pid(pid);
     let _ = crate::services::registry::unregister_endpoints_for_pid(pid);
+    // The reply endpoint is registered kernel-owned (pid 0), so the per-pid
+    // sweep above misses it. Drop it by name and remove its inbox, or an
+    // on-demand window instance that closes would leak its reply slot and the
+    // next spawn into that slot would collide on the stale endpoint.
+    if let Some(reply) = *pcb.reply_inbox.read() {
+        let _ = crate::services::registry::unregister_endpoint_by_name(reply);
+        let _ = crate::ipc::nonos_inbox::unregister_inbox(reply);
+    }
     let _ = crate::ipc::nonos_inbox::unregister_for_pid(pid);
 
     crate::process::clear_interrupt_context(pid);

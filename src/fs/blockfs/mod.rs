@@ -64,6 +64,7 @@ mod write_u64;
 pub use alloc_block::alloc_block;
 pub use commit::commit;
 pub use constants::{MODE_DIR, MODE_FILE};
+pub(crate) use file_consts::MAX_FILE_BYTES;
 pub use create::create;
 pub use dir_link::link;
 pub use dir_lookup::lookup;

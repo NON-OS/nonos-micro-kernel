@@ -42,6 +42,16 @@ pub(crate) fn switch_to_user_pcb_x86_64(pid: u32) {
         None => return,
     };
 
+    // Install this task's user fs base before any of the entry paths run.
+    // Threads of one process share an address space but not TLS, and the
+    // iretq/sysret paths never touch MSR_FS_BASE, so the scheduler is the
+    // only place the per-thread value can be carried across a switch.
+    // Writing the PCB value unconditionally also scrubs whatever base the
+    // previously scheduled capsule left behind.
+    // SAFETY: MSR_FS_BASE only redirects user-mode fs-segment addressing;
+    // the value is either zero or a user VA validated by sys_set_tls.
+    unsafe { crate::arch::x86_64::gdt::fs_gs::set_fs_base(pcb.get_tls_base()) };
+
     if try_first_entry(&pcb, pid) {
         return;
     }

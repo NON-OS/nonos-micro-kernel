@@ -60,8 +60,12 @@ pub enum SyscallNumber {
     MkGetPid = tag4(b"MGPD"),
     MkArgs = tag4(b"MKAR"),
     MkThreadSpawn = tag4(b"MTSP"),
+    MkSetTls = tag4(b"MSTB"),
     MkYield = tag4(b"MYLD"),
+    MkFutexWait = tag4(b"MFTW"),
+    MkFutexWake = tag4(b"MFTK"),
     MkTimeMillis = tag4(b"MTMS"),
+    MkTimeMonotonic = tag4(b"MMON"),
     MkTimeRtc = tag4(b"MTRT"),
     MkTimeAdjust = tag4(b"MTAD"),
     MkBatteryStatus = tag4(b"MBAT"),
@@ -101,4 +105,5 @@ pub enum SyscallNumber {
     MkInputEventPost = tag4(b"MIEP"),
     MkInputEventDrain = tag4(b"MIED"),
     MkInputEventWait = tag4(b"MIEW"),
+    MkSpawnInstance = tag4(b"MSPI"),
 }

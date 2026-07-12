@@ -28,12 +28,18 @@ pub(super) struct P<'a> {
     pub(super) s: &'a [u8],
     pub(super) i: usize,
     pub(super) em: u32,
+    // Current parenthesis/calc nesting depth. Bounds the recursive descent so a
+    // crafted `calc(((((...)))))` cannot recurse to a stack overflow (abort).
+    pub(super) d: u32,
 }
+
+// Deepest calc() nesting accepted; well past any real stylesheet.
+pub(super) const MAX_CALC_DEPTH: u32 = 32;
 
 // Evaluate the body of calc(...) to (px, permille). None on any form the
 // grammar does not cover; the declaration then drops, never guesses.
 pub(super) fn eval_calc(inner: &str, em: u32) -> Option<(f32, f32)> {
-    let mut p = P { s: inner.as_bytes(), i: 0, em };
+    let mut p = P { s: inner.as_bytes(), i: 0, em, d: 0 };
     let v = expr(&mut p)?;
     p.skip_ws();
     if p.i != p.s.len() {

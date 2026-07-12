@@ -27,6 +27,8 @@ mod paint_home;
 mod paint_network_card;
 mod paint_network_labels;
 mod paint_home_security;
+mod paint_nox;
+mod paint_portfolio;
 mod paint_proof_view;
 mod paint_proofs;
 mod paint_rail_card;
@@ -38,5 +40,9 @@ mod paint_statusbar;
 mod paint_topbar;
 mod paint_tx;
 mod panel;
+mod ui;
 
 pub use paint::paint;
+// Shared so the pointer handler can hit-test the Generate/probe button at the
+// exact rect the Receive screen paints it.
+pub use paint_receive::{GEN_BTN_H, GEN_BTN_W, GEN_BTN_X, GEN_BTN_Y};

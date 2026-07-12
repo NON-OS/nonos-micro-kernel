@@ -19,8 +19,8 @@ use alloc::vec::Vec;
 use super::handlers;
 use crate::protocol::{
     encode_response, Request, EINVAL, OP_CHMOD, OP_CLOSE, OP_COPY, OP_HEALTHCHECK, OP_LIST,
-    OP_MKDIR, OP_OPEN, OP_READ, OP_RENAME, OP_RMDIR, OP_STAT, OP_TRUNCATE, OP_UNLINK, OP_USAGE,
-    OP_WRITE,
+    OP_MKDIR, OP_OPEN, OP_READ, OP_RENAME, OP_RMDIR, OP_SEEK, OP_STAT, OP_TRUNCATE, OP_UNLINK,
+    OP_USAGE, OP_WRITE,
 };
 use crate::store::Store;
 
@@ -38,6 +38,7 @@ pub fn dispatch(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8>
         OP_RMDIR => handlers::rmdir(store, req, sender_pid),
         OP_COPY => handlers::copy(store, req, sender_pid),
         OP_TRUNCATE => handlers::truncate(store, req, sender_pid),
+        OP_SEEK => handlers::seek(store, req, sender_pid),
         OP_USAGE => handlers::usage(store, req, sender_pid),
         OP_CHMOD => handlers::chmod(store, req, sender_pid),
         OP_HEALTHCHECK => handlers::healthcheck(req),

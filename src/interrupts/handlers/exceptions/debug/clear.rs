@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn clear_debug_status() {
+pub(crate) fn clear_debug_status() {
     unsafe {
         core::arch::asm!("mov dr6, {}", in(reg) 0u64, options(nomem, nostack));
     }

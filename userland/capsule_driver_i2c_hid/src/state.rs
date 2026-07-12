@@ -1,3 +1,6 @@
+use crate::hid::TouchLayout;
+use crate::input::TouchGesture;
+
 pub struct State {
     pub i2c_port: u32,
     pub i2c_pid: u32,
@@ -11,10 +14,15 @@ pub struct State {
     pub input_polls: u64,
     pub input_reports: u64,
     pub post_failures: u64,
+    // Absolute-touchpad field map parsed from the HID report descriptor, and the
+    // gesture state that turns those reports into pointer events. Empty when the
+    // device is a plain relative mouse.
+    pub touch_layout: TouchLayout,
+    pub gesture: TouchGesture,
 }
 
 impl State {
-    pub const fn new(i2c_port: u32, i2c_pid: u32) -> Self {
+    pub fn new(i2c_port: u32, i2c_pid: u32) -> Self {
         Self {
             i2c_port,
             i2c_pid,
@@ -28,6 +36,8 @@ impl State {
             input_polls: 0,
             input_reports: 0,
             post_failures: 0,
+            touch_layout: TouchLayout::default(),
+            gesture: TouchGesture::default(),
         }
     }
 

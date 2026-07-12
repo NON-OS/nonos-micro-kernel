@@ -15,6 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[derive(Debug, Clone, Copy)]
-pub struct X87Status {
+pub(crate) struct X87Status {
     pub bits: u16,
 }

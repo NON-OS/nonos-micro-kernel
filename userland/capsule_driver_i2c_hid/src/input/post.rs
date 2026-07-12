@@ -17,15 +17,7 @@
 use nonos_libc::{mk_input_event_post, InputEvent};
 
 pub fn post(kind: u16, code: u32, dx: i32, dy: i32) -> bool {
-    let ev = InputEvent {
-        kind,
-        flags: 0,
-        code,
-        x: 0,
-        y: 0,
-        delta_x: dx,
-        delta_y: dy,
-        timestamp_ns: 0,
-    };
+    let ev =
+        InputEvent { kind, flags: 0, code, x: 0, y: 0, delta_x: dx, delta_y: dy, timestamp_ns: 0 };
     mk_input_event_post(&ev) >= 0
 }

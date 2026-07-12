@@ -21,6 +21,7 @@ path = "src/main.rs"
 
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_keymap = { path = "../nonos_keymap" }
 
 [profile.release]
 panic = "abort"

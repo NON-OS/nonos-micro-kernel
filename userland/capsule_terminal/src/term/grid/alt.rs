@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::term::dimensions::VISIBLE_ROWS;
 use crate::term::grid::types::Grid;
 
 impl Grid {
@@ -22,6 +23,9 @@ impl Grid {
             core::mem::swap(&mut self.cells, &mut self.alt);
             self.alternate = true;
         }
+        // A fresh screen starts with a full-screen scroll region.
+        self.scroll_top = 0;
+        self.scroll_bot = VISIBLE_ROWS - 1;
         if clear {
             self.clear();
         }
@@ -32,5 +36,7 @@ impl Grid {
             core::mem::swap(&mut self.cells, &mut self.alt);
             self.alternate = false;
         }
+        self.scroll_top = 0;
+        self.scroll_bot = VISIBLE_ROWS - 1;
     }
 }

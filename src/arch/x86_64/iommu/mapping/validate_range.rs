@@ -16,7 +16,7 @@
 
 use super::super::types::{VtdError, PAGE_SIZE_4K};
 
-pub fn validate_range(iova: u64, size: usize) -> Result<usize, VtdError> {
+pub(crate) fn validate_range(iova: u64, size: usize) -> Result<usize, VtdError> {
     let granule = PAGE_SIZE_4K as u64;
     if size == 0 {
         return Err(VtdError::SizeMisaligned);

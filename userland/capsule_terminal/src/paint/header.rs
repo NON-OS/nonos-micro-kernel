@@ -16,18 +16,20 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::constants::{CELL_WIDTH, HEADER_H, TEXT_LEFT};
+use super::constants::{HEADER_H, TEXT_LEFT};
+use super::shade::elevate;
 use crate::term::state::State;
-use crate::term::theme::{ACCENT, HEADER_BG, HEADER_RULE, PATH};
+use crate::term::theme::{ACCENT, PATH};
 
 pub fn draw_header(state: &State, fb: &mut PaintBuffer) {
-    fb.fill_rect(0, 0, fb.width, HEADER_H, HEADER_BG);
-    fb.fill_rect(0, HEADER_H, fb.width, 1, HEADER_RULE);
-    fb.text_scaled(TEXT_LEFT, 6, b"\xd8 NONOS", ACCENT, 2);
+    fb.fill_rect(0, 0, fb.width, HEADER_H, elevate(state.bg, 12));
+    fb.fill_rect(0, HEADER_H, fb.width, 1, elevate(state.bg, 24));
+    let _ = fb.text_ttf(TEXT_LEFT as i32, 5, "\u{00D8} NONOS", ACCENT, 15.0);
     let cwd = state.cwd.as_bytes();
-    let take = cwd.len().min(34);
+    let take = cwd.len().min(48);
     let start = cwd.len() - take;
-    let width = take as u32 * CELL_WIDTH;
+    let cwd_str = core::str::from_utf8(&cwd[start..]).unwrap_or("");
+    let width = fb.measure_ttf(cwd_str, 13.0).max(0) as u32;
     let x = fb.width.saturating_sub(width + TEXT_LEFT);
-    fb.text(x, 10, &cwd[start..], PATH);
+    let _ = fb.text_ttf(x as i32, 7, cwd_str, PATH, 13.0);
 }

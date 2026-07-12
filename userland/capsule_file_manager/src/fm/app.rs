@@ -50,6 +50,7 @@ impl App for FileManager {
         if self.state.owner_pid == 0 || self.state.status == b"vfs unavailable" {
             refresh(&mut self.state);
         }
+        super::layout::measure(&mut self.state, fb.height);
         paint(&self.state, fb);
     }
 }

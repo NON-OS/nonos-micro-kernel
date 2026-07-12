@@ -38,6 +38,14 @@ impl PagingManager {
             return Err(PagingError::UnhandledPageFault);
         }
 
+        // Never demand-back the null page. A fault in the lowest page is a null
+        // or near-null dereference; backing it would silently satisfy the bug
+        // instead of trapping it. Leave the page unmapped as a guard so the
+        // fault path kills the offending capsule.
+        if virtual_addr.as_u64() < PAGE_SIZE_4K as u64 {
+            return Err(PagingError::UnhandledPageFault);
+        }
+
         // Charge the page against the faulting process's demand budget. A
         // runaway capsule is refused here and killed by the fault path instead
         // of exhausting physical memory.

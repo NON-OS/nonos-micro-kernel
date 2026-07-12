@@ -16,6 +16,6 @@
 
 use crate::interrupts::handlers::exceptions::context::ExceptionContext;
 
-pub fn handle_task_switch(_ctx: &ExceptionContext) {
+pub(crate) fn handle_task_switch(_ctx: &ExceptionContext) {
     crate::log::logger::log_debug!("Task switch debug trap");
 }

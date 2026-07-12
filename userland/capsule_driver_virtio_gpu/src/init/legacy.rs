@@ -41,6 +41,6 @@ pub fn bring_up_legacy(regs: Regs, queue_phys: u64) -> Result<InitOut, &'static 
         }
         regs.w32(LEG_QUEUE_PFN, (queue_phys >> 12) as u32);
         regs.w8(LEG_STATUS, regs.r8(LEG_STATUS) | STATUS_DRIVER_OK);
-        Ok(InitOut { queue_size: qsize, host_features: host, regs })
+        Ok(InitOut { queue_size: qsize, host_features: host, virgl: false, regs })
     }
 }

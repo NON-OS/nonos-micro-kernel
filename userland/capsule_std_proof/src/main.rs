@@ -1,27 +1,42 @@
-// Unmodified-std program: the nonos-rt _start shim calls this main.
-// serde_json, regex, and base64 are pulled straight from crates.io
-// with no source edits, which is the whole point of the proof.
+// Unmodified-std app: the nonos-rt _start shim calls this main. It is a small
+// real tool built only from crates.io libraries with no source edits, packaged
+// and installed live on NONOS through the std platform layer and run only after
+// the kernel verifies its signature, manifest hash, and zero-knowledge proof.
+//
+// Given a JSON document (as the first argument, or a built-in sample), it uses
+// serde_json to parse it and report real results: the record count, the sum and
+// max of a numeric field, and a base64 digest of the document. This shows an
+// off-the-shelf Rust library doing real work on real input, attested and live.
+
 use base64::Engine;
 use serde_json::Value;
 
+const SAMPLE: &str = r#"{"service":"nonos","records":[
+    {"id":1,"amount":40},{"id":2,"amount":65},{"id":3,"amount":95}]}"#;
+
 fn main() {
-    let raw = r#"{"os":"nonos","crate":"serde_json","nums":[3,7,11,179],"ok":true}"#;
-    let Ok(v): Result<Value, _> = serde_json::from_str(raw) else {
-        println!("NONOS std proof failed: json parse");
-        return;
+    let input = std::env::args().nth(1).unwrap_or_else(|| SAMPLE.to_string());
+
+    let doc: Value = match serde_json::from_str(&input) {
+        Ok(v) => v,
+        Err(e) => {
+            println!("std_proof: not valid JSON ({e})");
+            return;
+        }
     };
-    let os = v["os"].as_str().unwrap_or("?");
-    let sum: i64 =
-        v["nums"].as_array().map(|a| a.iter().filter_map(Value::as_i64).sum()).unwrap_or(-1);
-    let ok = v["ok"].as_bool().unwrap_or(false);
-    let hay = "nonos std capsule: serde_json regex base64";
-    let Ok(re) = regex::Regex::new(r"\b[a-z_]{5,}\b") else {
-        println!("NONOS std proof failed: regex compile");
-        return;
-    };
-    let hits = re.find_iter(hay).count();
-    let b64 = base64::engine::general_purpose::STANDARD.encode(b"nonos");
-    println!(
-        "NONOS ran crates.io serde_json+regex+base64: os={os}, nums sum={sum}, ok={ok}, regex hits={hits}, base64={b64}"
-    );
+
+    let records = doc["records"].as_array().cloned().unwrap_or_default();
+    let amounts: Vec<i64> = records.iter().filter_map(|r| r["amount"].as_i64()).collect();
+    let count = records.len();
+    let sum: i64 = amounts.iter().sum();
+    let max = amounts.iter().copied().max().unwrap_or(0);
+    let service = doc["service"].as_str().unwrap_or("unknown");
+    let digest = base64::engine::general_purpose::STANDARD.encode(input.as_bytes());
+
+    println!("std_proof: crates.io serde_json + base64, running installed on NONOS");
+    println!("  service : {service}");
+    println!("  records : {count}");
+    println!("  amount  : sum={sum} max={max}");
+    println!("  digest  : {}", &digest[..digest.len().min(44)]);
+    println!("NONOS STD PROOF DONE");
 }

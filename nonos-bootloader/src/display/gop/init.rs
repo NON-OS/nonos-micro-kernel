@@ -38,11 +38,23 @@ pub fn init_gop(st: &mut SystemTable<Boot>) -> bool {
     }
 }
 
+// A development build can pin the exact mode the firmware should set, e.g.
+// "1280x800" so the QEMU window opens at a size that fits the host screen.
+// Unset (every hardware build), the picker keeps its largest-mode behaviour.
+const PREFERRED_MODE: Option<&str> = option_env!("NONOS_GOP_PREF");
+
+fn preferred_mode() -> Option<(usize, usize)> {
+    let s = PREFERRED_MODE?;
+    let (w, h) = s.split_once('x')?;
+    Some((w.parse().ok()?, h.parse().ok()?))
+}
+
 fn try_init(bs: &uefi::table::boot::BootServices, h: Handle) -> bool {
     let mut gop = match bs.open_protocol_exclusive::<GraphicsOutput>(h) {
         Ok(g) => g,
         Err(_) => return false,
     };
+    let prefer = preferred_mode();
     let mut best: Option<(u32, usize)> = None;
     let mode_count = gop.modes().len();
     for idx in 0..mode_count {
@@ -55,6 +67,10 @@ fn try_init(bs: &uefi::table::boot::BootServices, h: Handle) -> bool {
             continue;
         }
         let (w, ht) = info.resolution();
+        if prefer == Some((w, ht)) {
+            best = Some((idx as u32, usize::MAX));
+            break;
+        }
         if w > 1920 || ht > 1080 {
             continue;
         }

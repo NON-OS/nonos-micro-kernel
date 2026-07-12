@@ -1,6 +1,7 @@
-// NONOS std PAL: monotonic and wall-clock time via the mk_time_millis
-// syscall (the same source the userland libc mk_time_millis uses).
-// Millisecond resolution; both clocks read the kernel timer.
+// NONOS std PAL: Instant reads the kernel monotonic clock (MMON, TSC base,
+// no NTP) so it never runs backwards; SystemTime reads the NTP-corrected
+// wall clock (MTMS, Unix ms seeded from the RTC at boot). Millisecond
+// resolution.
 
 use crate::time::Duration;
 
@@ -9,18 +10,29 @@ const fn tag4(b: &[u8; 4]) -> i64 {
 }
 
 const N_MK_TIME_MILLIS: i64 = tag4(b"MTMS");
+const N_MK_TIME_MONOTONIC: i64 = tag4(b"MMON");
 
-fn now_ms() -> u64 {
+fn read_ms(tag: i64) -> u64 {
     let r: i64;
     unsafe {
         core::arch::asm!(
             "syscall",
-            inout("rax") N_MK_TIME_MILLIS => r,
+            inout("rax") tag => r,
             out("rcx") _,
             out("r11") _,
         );
     }
     if r < 0 { 0 } else { r as u64 }
+}
+
+// Wall clock (Unix ms, NTP-corrected) backs SystemTime.
+fn wall_ms() -> u64 {
+    read_ms(N_MK_TIME_MILLIS)
+}
+
+// Monotonic ms (TSC base, no NTP) backs Instant so it never runs backwards.
+fn mono_ms() -> u64 {
+    read_ms(N_MK_TIME_MONOTONIC)
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
@@ -33,7 +45,7 @@ pub const UNIX_EPOCH: SystemTime = SystemTime(Duration::from_secs(0));
 
 impl Instant {
     pub fn now() -> Instant {
-        Instant(Duration::from_millis(now_ms()))
+        Instant(Duration::from_millis(mono_ms()))
     }
 
     pub fn checked_sub_instant(&self, other: &Instant) -> Option<Duration> {
@@ -54,7 +66,7 @@ impl SystemTime {
     pub const MIN: SystemTime = SystemTime(Duration::ZERO);
 
     pub fn now() -> SystemTime {
-        SystemTime(Duration::from_millis(now_ms()))
+        SystemTime(Duration::from_millis(wall_ms()))
     }
 
     pub fn sub_time(&self, other: &SystemTime) -> Result<Duration, Duration> {

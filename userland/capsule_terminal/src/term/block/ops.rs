@@ -37,7 +37,8 @@ impl State {
 
     pub fn evict_blocks(&mut self) {
         let base = self.scrollback.grid.abs_base();
-        let keep = self.blocks.iter().position(|b| b.start_abs >= base).unwrap_or(self.blocks.len());
+        let keep =
+            self.blocks.iter().position(|b| b.start_abs >= base).unwrap_or(self.blocks.len());
         if keep > 1 {
             self.blocks.drain(..keep - 1);
         }

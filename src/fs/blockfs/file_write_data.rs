@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::alloc_block::alloc_block;
-use super::file_consts::{DATA_BYTES, INDEX_PTR_BASE, PTR_BYTES};
+use super::file_consts::{DATA_BYTES, INDEX_PTR_BASE, MAX_PTRS, PTR_BYTES};
 use super::write_u64::write_u64;
 use super::{BlockFsError, BlockFsMount};
 use crate::fs::cryptoblock::PLAIN_BLOCK_BYTES;
@@ -28,6 +28,12 @@ pub(super) fn write_chunks(
 ) -> Result<u32, BlockFsError> {
     let mut count = 0u32;
     for chunk in data.chunks(DATA_BYTES) {
+        // Local floor: the index block holds at most MAX_PTRS pointers. Callers
+        // already bound data.len() by MAX_FILE_BYTES, but keep this so a relaxed
+        // guard or a second caller can never write past the index buffer.
+        if count as usize >= MAX_PTRS {
+            return Err(BlockFsError::OutOfSpace);
+        }
         let lba = alloc_block(mount)?;
         let mut block = [0u8; PLAIN_BLOCK_BYTES];
         block[..chunk.len()].copy_from_slice(chunk);

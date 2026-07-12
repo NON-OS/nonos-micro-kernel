@@ -34,7 +34,10 @@ pub(super) const O_CREATE: u32 = 1 << 0;
 pub(super) const O_TRUNC: u32 = 1 << 1;
 pub(super) const O_APPEND: u32 = 1 << 2;
 
-pub(super) const MAX_PATH_BYTES: u32 = 256;
+// The path length is encoded as a single byte on the wire, so 255 is the
+// largest value that round-trips. 256 would truncate to 0 (`256 as u8`) and
+// desync the request from the path bytes that follow.
+pub(super) const MAX_PATH_BYTES: u32 = 255;
 pub(super) const MAX_DATA_BYTES: u32 = 65536;
 pub(super) const MAX_PAYLOAD_BYTES: u32 = 65536;
 

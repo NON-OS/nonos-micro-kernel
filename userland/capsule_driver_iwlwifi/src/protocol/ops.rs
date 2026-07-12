@@ -13,3 +13,4 @@ pub const OP_RF_STATE: u16 = 0x0004;
 pub const OP_DMA_STATE: u16 = 0x0005;
 pub const OP_FIRMWARE_STAGE: u16 = 0x0006;
 pub const OP_ALIVE_WAIT: u16 = 0x0007;
+pub const OP_FIRMWARE_LOAD: u16 = 0x0008;

@@ -28,7 +28,9 @@ pub fn generate(state: &mut State) -> EventOutcome {
                 state.address_ready = true;
                 state.view = crate::wallet::state::VIEW_RECEIVE;
                 state.status = b"wallet generated";
-                EventOutcome::Repaint
+                // Immediately pull live account state (balance/nonce/fee) over
+                // the RPC stack so the wallet is usable the moment it exists.
+                super::probe_net::probe_net(state)
             }
             Err(_) => {
                 state.status = b"address failed";

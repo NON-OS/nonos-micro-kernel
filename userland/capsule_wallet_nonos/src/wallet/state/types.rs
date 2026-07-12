@@ -19,6 +19,9 @@ use crate::wallet::net::NetStatus;
 
 pub const MAX_RAILS: usize = 8;
 pub const VIEW_HOME: u8 = 0; pub const VIEW_RECEIVE: u8 = 1; pub const VIEW_SEND: u8 = 2; pub const VIEW_PROOF: u8 = 3;
+// New hardened-wallet + private-swap + NOX screens.
+pub const VIEW_SIGN: u8 = 4; pub const VIEW_APPROVALS: u8 = 5; pub const VIEW_SHIELD: u8 = 6;
+pub const VIEW_UNSHIELD: u8 = 7; pub const VIEW_SHIELDED: u8 = 8; pub const VIEW_NOX: u8 = 9;
 pub const SEND_FIELD_TO: u8 = 0;
 pub const SEND_FIELD_AMOUNT: u8 = 1;
 pub const SEND_FIELD_NONCE: u8 = 2;
@@ -70,4 +73,12 @@ pub struct State {
     pub rails: [Rail; MAX_RAILS],
     pub rail_count: usize,
     pub status: &'static [u8],
+    // Live input readout, refreshed on each discrete key/button event so the
+    // running UI can show whether pointer clicks actually reach the capsule.
+    pub in_count: u32,
+    pub in_kind: u32,
+    pub in_x: i32,
+    pub in_y: i32,
+    // Local shielded UTXO set, reconstructed from the note secrets.
+    pub notes: crate::wallet::shield::notes::NoteStore,
 }

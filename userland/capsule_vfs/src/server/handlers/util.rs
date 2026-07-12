@@ -26,6 +26,7 @@ pub(super) fn map_store_err(e: StoreError) -> i32 {
         StoreError::Exists => EEXIST,
         StoreError::NotEmpty => ENOTEMPTY,
         StoreError::IsDir => EISDIR,
+        StoreError::Inval => EINVAL,
     }
 }
 

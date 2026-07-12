@@ -16,7 +16,9 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::state::{State, VIEW_HOME, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND};
+use crate::wallet::state::{
+    State, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED,
+};
 use crate::wallet::theme::{ACCENT, CYAN, FG, MUTED, PANEL_2};
 
 pub fn paint_sidebar(state: &State, fb: &mut PaintBuffer) {
@@ -27,6 +29,8 @@ pub fn paint_sidebar(state: &State, fb: &mut PaintBuffer) {
     nav(fb, 32, 212, b"Receive", state.view == VIEW_RECEIVE);
     nav(fb, 32, 264, b"Send", state.view == VIEW_SEND);
     nav(fb, 32, 316, b"Proof", state.view == VIEW_PROOF);
+    nav(fb, 32, 368, b"Shielded", state.view == VIEW_SHIELDED);
+    nav(fb, 32, 420, b"NOX", state.view == VIEW_NOX);
     fb.text(32, fb.height.saturating_sub(92), b"Rails", MUTED);
     fb.text(32, fb.height.saturating_sub(62), b"ETH", CYAN);
     fb.text(92, fb.height.saturating_sub(62), b"NOX", ACCENT);

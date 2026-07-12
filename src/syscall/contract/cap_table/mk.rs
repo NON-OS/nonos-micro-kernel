@@ -22,7 +22,10 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkExit
         | SyscallNumber::MkPidAlive
         | SyscallNumber::MkYield
+        | SyscallNumber::MkFutexWait
+        | SyscallNumber::MkFutexWake
         | SyscallNumber::MkTimeMillis
+        | SyscallNumber::MkTimeMonotonic
         | SyscallNumber::MkTimeRtc
         | SyscallNumber::MkBatteryStatus
         | SyscallNumber::MkProcStat
@@ -34,12 +37,17 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkMmap => caps.can_allocate_memory(),
         SyscallNumber::MkMunmap => caps.can_deallocate_memory(),
 
-        SyscallNumber::MkCapsuleLoad => caps.is_valid()
-            && caps.grants_all(&[Capability::CoreExec, Capability::IPC, Capability::Memory]),
+        SyscallNumber::MkCapsuleLoad => {
+            caps.is_valid()
+                && caps.grants_all(&[Capability::CoreExec, Capability::IPC, Capability::Memory])
+        }
 
         SyscallNumber::MkGetPid => caps.can_getpid(),
         SyscallNumber::MkArgs => caps.can_getpid(),
         SyscallNumber::MkThreadSpawn => caps.can_ipc(),
+        // A capsule may only move its own fs base; that mutates nothing
+        // outside its own PCB, so a valid token is the whole requirement.
+        SyscallNumber::MkSetTls => caps.is_valid(),
         SyscallNumber::MkProcOutput => caps.can_ipc(),
         SyscallNumber::MkProcInput => caps.can_ipc(),
         SyscallNumber::MkStdinRead => caps.can_ipc(),
@@ -82,8 +90,17 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkSurfacePresent => caps.can_present(),
         SyscallNumber::MkDisplayVsyncWait => caps.can_display_query(),
         SyscallNumber::MkInputEventPost => caps.can_input_source(),
-        SyscallNumber::MkInputEventDrain => caps.can_ipc(),
-        SyscallNumber::MkInputEventWait => caps.can_ipc(),
+        // Draining/waiting on the global raw-input ring is a privileged consumer
+        // operation: the ring carries every keystroke. Gating it on baseline IPC
+        // let any capsule steal the keystroke stream (cross-capsule keylogging).
+        // Restrict it to input-trusted capsules (the input_router is granted
+        // InputSource for exactly this).
+        SyscallNumber::MkInputEventDrain => caps.can_input_source(),
+        SyscallNumber::MkInputEventWait => caps.can_input_source(),
+
+        // Only a SpawnWindow-trusted capsule (the desktop shell) may ask the
+        // kernel to open another window instance of an embedded app capsule.
+        SyscallNumber::MkSpawnInstance => caps.can_spawn_window(),
 
         _ => return None,
     })

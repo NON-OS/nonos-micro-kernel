@@ -19,10 +19,9 @@ use nonos_app_skeleton::{clipboard_copy, EventOutcome};
 use super::state::State;
 
 pub(super) fn ctrl_copy(state: &mut State) -> EventOutcome {
-    state.status = if clipboard_copy(&state.buf[..state.len]).is_ok() {
-        b"copied /notes.txt"
-    } else {
-        b"clipboard unavailable"
-    };
+    // Copy the selection, or the whole buffer when nothing is selected.
+    let (s, e) = state.sel_range().unwrap_or((0, state.len));
+    state.status =
+        if clipboard_copy(&state.buf[s..e]).is_ok() { b"copied" } else { b"clipboard unavailable" };
     EventOutcome::Repaint
 }

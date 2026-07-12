@@ -77,7 +77,11 @@ impl Huffman {
             code |= br.read_bit() as i32;
             let count = self.counts[len] as i32;
             if code - first < count {
-                return self.symbols[(index + (code - first)) as usize];
+                // Bounds-checked: an oversubscribed (invalid) code-length table
+                // from a crafted WEBP can drive this index past symbols.len().
+                // Return 0 (treated as failure/eos by callers) instead of
+                // panicking, matching the safe HTTP-inflate decoder.
+                return self.symbols.get((index + (code - first)) as usize).copied().unwrap_or(0);
             }
             index += count;
             first += count;

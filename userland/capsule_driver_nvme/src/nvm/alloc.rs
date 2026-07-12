@@ -28,6 +28,7 @@ impl IoQueue {
         qid: u16,
         nsid: u32,
         capacity_sectors: u64,
+        lba_size: u32,
     ) -> NvmeResult<Self> {
         let stride_bytes = 4u32 << stride;
         Ok(Self {
@@ -43,6 +44,7 @@ impl IoQueue {
             cq_db: REG_DOORBELL_BASE + (2 * qid as u32 + 1) * stride_bytes,
             nsid,
             capacity_sectors,
+            lba_size,
         })
     }
 }

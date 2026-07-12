@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::clients::vfs::list_paths;
-use nonos_app_skeleton::discover::lookup_service;
+use nonos_libc::mk_getpid;
 
 use super::entries::build_entries;
 use super::refresh_meta::fill_meta;
@@ -25,7 +25,11 @@ use super::view::rebuild_view;
 pub fn refresh(state: &mut State) {
     state.preview = None;
     if state.owner_pid == 0 {
-        state.owner_pid = lookup_service(b"app.file_manager").map(|peer| peer.pid).unwrap_or(0);
+        // Send our own authoritative pid: the vfs server's anti-impersonation
+        // check requires the claimed owner pid to equal the real sender pid, so
+        // resolving it from a service lookup (which can miss or lag) makes every
+        // request fail as EACCES and the directory read as "vfs unavailable".
+        state.owner_pid = mk_getpid();
     }
     match list_paths(state.owner_pid, state.prefix.as_bytes()) {
         Ok(paths) => {
@@ -38,11 +42,15 @@ pub fn refresh(state: &mut State) {
                 b"click or Enter to open"
             };
         }
-        Err(_) => {
+        Err(e) => {
             if state.all.is_empty() {
                 state.cursor = 0;
                 state.scroll = 0;
-                state.status = b"vfs unavailable";
+                // Surface the concrete failure ("vfs ipc failed" = no reply,
+                // "access denied" = caller check, etc.) instead of collapsing
+                // every case to a generic string, so a wiring bug is diagnosable
+                // straight from the window.
+                state.status = e.as_bytes();
             } else {
                 state.status = b"refresh deferred";
             }

@@ -17,6 +17,7 @@
 mod create;
 mod inherit;
 mod ops;
+mod pid_alloc;
 mod types;
 
 pub use create::{create_process, create_process_with_mem, spawn_thread};

@@ -20,7 +20,9 @@ use super::embed::{
 };
 use super::state;
 use crate::capabilities::Capability;
-use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
+use crate::kernel_core::process_spawn::capsule_spawn::{
+    self, spawn_next_instance, CapsuleSpecVerified, InstanceEndpoint, InstanceSpawn,
+};
 use crate::security::nonos_id_cert::IdCertVerifyError;
 use crate::security::nonos_trust_anchor::{
     decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
@@ -32,6 +34,41 @@ const SERVICE_PORT: u32 = 4760;
 const REPLY_INBOX: &str = "endpoint.app.browser.reply";
 const REPLY_PORT: u32 = 4761;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+
+// Shared caps ceiling for the boot instance and every extra window, so the
+// attestation context (which binds granted caps) matches across instances.
+fn browser_caps() -> u64 {
+    Capability::CoreExec.bit()
+        | Capability::IPC.bit()
+        | Capability::Network.bit()
+        | Capability::Memory.bit()
+        | Capability::Crypto.bit()
+        | Capability::GraphicsDisplayQuery.bit()
+        | Capability::GraphicsSurfaceCreate.bit()
+}
+
+// Extra window endpoints, each declared in the signed manifest (browser
+// Capsule.mk). Ordered, so the lowest-numbered free one is taken.
+const BROWSER_INSTANCES: &[InstanceEndpoint] = &[
+    InstanceEndpoint {
+        name: "app.browser.1",
+        port: 4762,
+        reply_inbox: "endpoint.app.browser.1.reply",
+        reply_port: 4763,
+    },
+    InstanceEndpoint {
+        name: "app.browser.2",
+        port: 4764,
+        reply_inbox: "endpoint.app.browser.2.reply",
+        reply_port: 4765,
+    },
+    InstanceEndpoint {
+        name: "app.browser.3",
+        port: 4766,
+        reply_inbox: "endpoint.app.browser.3.reply",
+        reply_port: 4767,
+    },
+];
 
 pub fn spawn_browser_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
@@ -46,16 +83,25 @@ pub fn spawn_browser_capsule() -> Result<(), SpawnError> {
         manifest_bytes: BROWSER_MANIFEST_BYTES,
         attestation_trailer: BROWSER_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::CoreExec.bit()
-            | Capability::IPC.bit()
-            | Capability::Network.bit()
-            | Capability::Memory.bit()
-            | Capability::Crypto.bit()
-            | Capability::GraphicsDisplayQuery.bit()
-            | Capability::GraphicsSurfaceCreate.bit(),
+        requested_caps: browser_caps(),
         debug_tag: b"",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
     state::set_alive(pid);
     Ok(())
+}
+
+// Spawn the next free browser window on demand: same signed artifacts as boot,
+// a fresh pid, its own compositor window.
+pub fn spawn_browser_instance() -> Result<u32, SpawnError> {
+    spawn_next_instance(&InstanceSpawn {
+        elf: BROWSER_ELF,
+        cert: BROWSER_NONOS_ID_CERT_BYTES,
+        manifest: BROWSER_MANIFEST_BYTES,
+        attestation: BROWSER_ATTESTATION_BYTES,
+        target_triple: TARGET_TRIPLE,
+        requested_caps: browser_caps(),
+        instances: BROWSER_INSTANCES,
+        debug_tag: b"[BROWSER-INSTANCE] elf error:",
+    })
 }

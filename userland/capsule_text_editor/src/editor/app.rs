@@ -14,20 +14,60 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! The editor as a small IDE shell: an activity bar and file-explorer sidebar,
+//! a strip of document tabs, the code pane, and a status bar. It owns several
+//! open documents and the file tree; input and painting are delegated to the
+//! `ws_event` and `ws_paint` modules.
+
+use alloc::vec;
+use alloc::vec::Vec;
+
 use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
 
-use super::event::on_event;
 use super::manifest::manifest;
-use super::paint::paint;
+use super::sb_entry::SbEntry;
+use super::sb_menu::SbMenu;
 use super::state::State;
+use super::tabbar::TabSpan;
+use super::tree::FileTree;
 
 pub struct Editor {
-    state: State,
+    pub(super) docs: Vec<State>,
+    pub(super) active: usize,
+    pub(super) tree: FileTree,
+    pub(super) sidebar_open: bool,
+    pub(super) owner_pid: u32,
+    // Tab pixel spans from the last paint, used to hit-test tab-strip clicks.
+    pub(super) tab_layout: Vec<TabSpan>,
+    // Window size from the last paint; input events do not carry it, so the
+    // event router reuses these to reconstruct panel rectangles.
+    pub(super) last_w: u32,
+    pub(super) last_h: u32,
+    // Explorer file management: the open context menu and the inline name
+    // entry for create/rename, at most one of each at a time.
+    pub(super) menu: Option<SbMenu>,
+    pub(super) entry: Option<SbEntry>,
 }
 
 impl Editor {
     pub fn new() -> Self {
-        Editor { state: State::new() }
+        Editor {
+            docs: vec![State::new()],
+            active: 0,
+            tree: FileTree::new(),
+            sidebar_open: true,
+            owner_pid: 0,
+            tab_layout: Vec::new(),
+            last_w: 0,
+            last_h: 0,
+            menu: None,
+            entry: None,
+        }
+    }
+
+    pub(super) fn doc(&mut self) -> &mut State {
+        let i = self.active.min(self.docs.len().saturating_sub(1));
+        &mut self.docs[i]
     }
 }
 
@@ -37,10 +77,10 @@ impl App for Editor {
     }
 
     fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        on_event(&mut self.state, event)
+        self.handle_event(event)
     }
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&mut self.state, fb);
+        self.paint_shell(fb);
     }
 }

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn clear_x87_exception() {
+pub(crate) fn clear_x87_exception() {
     unsafe {
         core::arch::asm!("fnclex", options(nomem, nostack));
     }

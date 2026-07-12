@@ -1,0 +1,16 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the compositor's trusted-path primitives. Builds for
+# the host so `cargo test` exercises the real damage accumulator and software
+# blitter source (included via #[path]): damage coverage is never lost across a
+# merge, and the blitter never writes a pixel outside the destination surface.
+[package]
+name = "compositor_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]

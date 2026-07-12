@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{process::current_pid, services::registry::lookup_port};
 use crate::syscall::microkernel::errnos::{ERRNO_BUSY, ERRNO_FAULT, ERRNO_INVAL};
+use crate::{process::current_pid, services::registry::lookup_port};
 use core::sync::atomic::AtomicBool;
 
 use super::super::pending_reply;
@@ -77,10 +77,7 @@ pub fn sys_ipc_call(
                 let op = u16::from_le_bytes([hdr[6], hdr[7]]);
                 if magic == 0x4E56_4750 && u32::from_le_bytes(status) == 0 {
                     if op == 0x0008 {
-                        crate::sys::bench::mark_once(
-                            &GPU_TRANSFER,
-                            b"virtio_gpu_transfer_first",
-                        );
+                        crate::sys::bench::mark_once(&GPU_TRANSFER, b"virtio_gpu_transfer_first");
                     }
                     if op == 0x0009 {
                         crate::sys::bench::mark_once(&GPU_SCANOUT, b"virtio_gpu_scanout_first");

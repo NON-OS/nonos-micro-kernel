@@ -16,4 +16,4 @@
 
 mod fdtable;
 
-pub use fdtable::{Store, StoreError};
+pub use fdtable::{SeekWhence, Store, StoreError};

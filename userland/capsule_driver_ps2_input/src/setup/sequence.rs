@@ -37,9 +37,16 @@ pub fn run() -> Result<Driver, &'static str> {
     let aux_irq_grant_id = setup_aux();
     flush_output(pio_grant_id);
     enable_keyboard(pio_grant_id)?;
-    let mouse_enabled = aux_irq_grant_id != 0 && enable_mouse(pio_grant_id).is_ok();
+    let (mouse_enabled, mouse_wheel) = if aux_irq_grant_id != 0 {
+        match enable_mouse(pio_grant_id) {
+            Ok(wheel) => (true, wheel),
+            Err(_) => (false, false),
+        }
+    } else {
+        (false, false)
+    };
     open_line(irq_grant_id);
     open_line(aux_irq_grant_id);
     marker(b"[driver_ps2] endpoint driver.ps2_kbd0 ready\n");
-    Ok(Driver { pio_grant_id, irq_grant_id, aux_irq_grant_id, mouse_enabled })
+    Ok(Driver { pio_grant_id, irq_grant_id, aux_irq_grant_id, mouse_enabled, mouse_wheel })
 }

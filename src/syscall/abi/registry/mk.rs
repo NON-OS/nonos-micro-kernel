@@ -41,8 +41,12 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     e(b"MGPD", SyscallNumber::MkGetPid, "MkGetPid"),
     e(b"MKAR", SyscallNumber::MkArgs, "MkArgs"),
     e(b"MTSP", SyscallNumber::MkThreadSpawn, "MkThreadSpawn"),
+    e(b"MSTB", SyscallNumber::MkSetTls, "MkSetTls"),
     e(b"MYLD", SyscallNumber::MkYield, "MkYield"),
+    e(b"MFTW", SyscallNumber::MkFutexWait, "MkFutexWait"),
+    e(b"MFTK", SyscallNumber::MkFutexWake, "MkFutexWake"),
     e(b"MTMS", SyscallNumber::MkTimeMillis, "MkTimeMillis"),
+    e(b"MMON", SyscallNumber::MkTimeMonotonic, "MkTimeMonotonic"),
     e(b"MTRT", SyscallNumber::MkTimeRtc, "MkTimeRtc"),
     e(b"MTAD", SyscallNumber::MkTimeAdjust, "MkTimeAdjust"),
     e(b"MBAT", SyscallNumber::MkBatteryStatus, "MkBatteryStatus"),
@@ -82,6 +86,7 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     e(b"MIEP", SyscallNumber::MkInputEventPost, "MkInputEventPost"),
     e(b"MIED", SyscallNumber::MkInputEventDrain, "MkInputEventDrain"),
     e(b"MIEW", SyscallNumber::MkInputEventWait, "MkInputEventWait"),
+    e(b"MSPI", SyscallNumber::MkSpawnInstance, "MkSpawnInstance"),
 ];
 
 const fn e(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {

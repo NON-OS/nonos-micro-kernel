@@ -14,24 +14,43 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Arrow and paging keys move the caret; the view scrolls only as far as it
+//! must to keep the caret visible. Holding Shift extends the selection instead
+//! of collapsing it.
+
 use nonos_app_skeleton::{
-    EventOutcome, KEY_DOWN, KEY_END, KEY_HOME, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_UP,
+    EventOutcome, KEY_DOWN, KEY_END, KEY_HOME, KEY_LEFT, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_RIGHT,
+    KEY_UP,
 };
 
-use super::follow_end::follow_end;
-use super::scroll_down::scroll_down;
-use super::scroll_up::scroll_up;
+use super::follow_caret::follow_caret;
 use super::state::State;
 
-pub(super) fn on_nav(state: &mut State, code: u32, rows: u32) -> Option<EventOutcome> {
-    match code {
-        KEY_UP => scroll_up(state, 1),
-        KEY_DOWN => scroll_down(state, 1, rows),
-        KEY_PAGE_UP => scroll_up(state, rows.saturating_sub(1).max(1)),
-        KEY_PAGE_DOWN => scroll_down(state, rows.saturating_sub(1).max(1), rows),
-        KEY_HOME => state.scroll_line = 0,
-        KEY_END => follow_end(state, rows),
-        _ => return None,
+pub(super) fn on_nav(state: &mut State, code: u32, rows: u32, shift: bool) -> Option<EventOutcome> {
+    let is_nav = matches!(
+        code,
+        KEY_LEFT | KEY_RIGHT | KEY_UP | KEY_DOWN | KEY_PAGE_UP | KEY_PAGE_DOWN | KEY_HOME | KEY_END
+    );
+    if !is_nav {
+        return None;
     }
+    if shift {
+        state.begin_sel();
+    } else {
+        state.clear_sel();
+    }
+    let page = rows.saturating_sub(1).max(1);
+    match code {
+        KEY_LEFT => state.caret_left(),
+        KEY_RIGHT => state.caret_right(),
+        KEY_UP => state.caret_up_by(1),
+        KEY_DOWN => state.caret_down_by(1),
+        KEY_PAGE_UP => state.caret_up_by(page),
+        KEY_PAGE_DOWN => state.caret_down_by(page),
+        KEY_HOME => state.caret_home(),
+        KEY_END => state.caret_end(),
+        _ => {}
+    }
+    follow_caret(state, rows);
     Some(EventOutcome::Repaint)
 }

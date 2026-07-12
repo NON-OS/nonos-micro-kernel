@@ -16,25 +16,40 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::paint_metrics::{DATE_END, GLYPH_W, STATUS_Y, TEXT_LEFT};
-use super::paint_right::paint_right;
+use super::layout::{CONTENT_X, FOOTER_H, PAD_X};
 use super::state::{Mode, State};
-use super::theme::{FOREGROUND, MUTED};
+use super::theme::{FOREGROUND, HEADER_BG, LINE, MUTED};
+
+const HINT: &[u8] = b"n new   m dir   r rename   d del   c/x/p copy   / find   ? help";
 
 pub fn paint_footer(state: &State, fb: &mut PaintBuffer) {
-    let count = alloc::format!("{}/{}", state.cursor + 1, state.entries.len().max(1));
-    paint_right(fb, DATE_END, 38, count.as_bytes(), MUTED);
-    fb.text(TEXT_LEFT, STATUS_Y, state.status, MUTED);
+    let w = fb.width;
+    let cw = w.saturating_sub(CONTENT_X);
+    let left = CONTENT_X + PAD_X;
+    let y = fb.height.saturating_sub(FOOTER_H);
+    fb.fill_rect(CONTENT_X, y, cw, FOOTER_H, HEADER_BG);
+    fb.fill_rect(CONTENT_X, y, cw, 1, LINE);
+    let ty = y + FOOTER_H.saturating_sub(8) / 2;
+    let adv = fb.glyph_advance();
+
+    // status (and live prompt/filter input) on the left
+    fb.text(left, ty, state.status, MUTED);
     match state.mode {
         Mode::Prompt(_) | Mode::Filter => {
-            let x = TEXT_LEFT + GLYPH_W * state.status.len() as u32;
+            let x = left + (state.status.len() as u32 + 2) * adv;
             let text = if matches!(state.mode, Mode::Filter) {
                 state.filter.as_bytes()
             } else {
                 state.input.as_bytes()
             };
-            fb.text(x, STATUS_Y, text, FOREGROUND);
+            fb.text(x, ty, text, FOREGROUND);
         }
-        _ => {}
+        _ => {
+            // key hints on the right when there is room
+            let hw = HINT.len() as u32 * adv;
+            if w > hw + 360 {
+                fb.text(w.saturating_sub(PAD_X + hw), ty, HINT, MUTED);
+            }
+        }
     }
 }

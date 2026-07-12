@@ -29,7 +29,13 @@ pub fn allocate_page() -> PageAllocResult<VirtAddr> {
     PAGE_ALLOCATOR.lock().allocate_page(layout::PAGE_SIZE)
 }
 pub fn allocate_pages(count: usize) -> PageAllocResult<VirtAddr> {
-    PAGE_ALLOCATOR.lock().allocate_page(count * layout::PAGE_SIZE)
+    // checked_mul so an oversized count returns InvalidSize instead of
+    // overflowing (and aborting under release overflow-checks) before the
+    // allocator's own size ceiling is even consulted.
+    let size = count
+        .checked_mul(layout::PAGE_SIZE)
+        .ok_or(super::super::error::PageAllocError::InvalidSize)?;
+    PAGE_ALLOCATOR.lock().allocate_page(size)
 }
 pub fn allocate_sized(size: usize) -> PageAllocResult<VirtAddr> {
     PAGE_ALLOCATOR.lock().allocate_page(size)

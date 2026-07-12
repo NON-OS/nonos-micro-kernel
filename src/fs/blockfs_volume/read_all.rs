@@ -27,7 +27,13 @@ pub fn read_all(path: &[u8]) -> Result<Vec<u8>, VolumeError> {
     let state = guard.as_ref().ok_or(VolumeError::NotMounted)?;
     let lba = blockfs::resolve(&state.key, &state.mount, path).map_err(VolumeError::BlockFs)?;
     let node = blockfs::read_node(&state.key, lba).map_err(VolumeError::BlockFs)?;
-    let mut out = alloc::vec![0u8; node.size as usize];
+    // Clamp the allocation to the largest a file can actually occupy. node.size
+    // is read verbatim from a stored inode; a corrupt or hostile value (up to
+    // u64::MAX) would otherwise force an arbitrarily large zeroed allocation and
+    // OOM the FS. A real file cannot exceed MAX_FILE_BYTES (the index holds at
+    // most MAX_PTRS block pointers), and read_file bounds the actual copy.
+    let cap = (node.size as usize).min(blockfs::MAX_FILE_BYTES);
+    let mut out = alloc::vec![0u8; cap];
     let n = blockfs::read_file(&state.key, &node, &mut out).map_err(VolumeError::BlockFs)?;
     out.truncate(n);
     Ok(out)

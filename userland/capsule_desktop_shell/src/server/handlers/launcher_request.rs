@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_ipc_send_to_pid, mk_service_lookup};
+use nonos_libc::{mk_ipc_send_to_pid, mk_service_lookup, mk_spawn_instance};
 
 use crate::state::apps::LauncherApp;
 
@@ -23,7 +23,17 @@ const CONTROL_MAGIC: u32 = u32::from_le_bytes(*b"NCTL");
 const CONTROL_VERSION: u16 = 1;
 const OP_FOCUS_SELF: u16 = 1;
 
+// Clicking a dock app asks the kernel to spawn another attested instance.
+// The kernel queues the request and init performs the spawn in its own
+// context, because doing it inline in this shell's syscall corrupted the
+// caller. A click with a free instance slot returns ok and a new window
+// appears a tick later; when every declared slot is live the kernel returns
+// an error and we focus the running instance instead, so a click is never a
+// dead end.
 pub fn request(app: &LauncherApp) -> bool {
+    if mk_spawn_instance(app.service) >= 0 {
+        return true;
+    }
     let Some(pid) = lookup_pid(app.service) else { return false };
     let frame = focus_frame();
     mk_ipc_send_to_pid(pid, frame.as_ptr(), frame.len()) >= 0

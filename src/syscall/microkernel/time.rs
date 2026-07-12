@@ -61,6 +61,13 @@ pub fn sys_time_millis() -> i64 {
     now.min(i64::MAX as u64) as i64
 }
 
+// Monotonic milliseconds for `Instant`: the TSC-derived base clock without the
+// NTP offset, so a time correction can never move `Instant` backwards the way
+// it can move the wall clock `sys_time_millis` returns.
+pub fn sys_time_monotonic() -> i64 {
+    crate::sys::clock::base_unix_ms().min(i64::MAX as u64) as i64
+}
+
 fn clock_ready() -> bool {
     crate::sys::clock::TSC_HZ.load(Ordering::Relaxed) != 0
         && crate::sys::clock::BOOT_UNIX_MS.load(Ordering::Relaxed) != 0

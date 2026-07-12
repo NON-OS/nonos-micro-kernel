@@ -17,8 +17,20 @@
 pub const CAP_VFS: u64 = 1 << 0;
 pub const CAP_NET: u64 = 1 << 1;
 pub const CAP_DISPLAY: u64 = 1 << 2;
-pub const CAP_DRIVER: u64 = 1 << 3;
-pub const CAP_CRYPTO: u64 = 1 << 4;
+// CAP_DRIVER must equal the kernel Capability::Driver bit, not an independent
+// 1<<3. These service constants are tested against the PCB capability bitmap
+// (services::caps::has -> process::caps::has), which is built from
+// Capability::bit(). 1<<3 aliases Capability::IPC, an AMBIENT bit every capsule
+// holds, so the driver gates in src/hardware/*_capsule collapsed to "any
+// capsule". Binding to the real Driver bit makes them require the same
+// authority the broker's MkDeviceClaim already demands (can_driver), which every
+// legitimate driver capsule holds.
+pub const CAP_DRIVER: u64 = crate::capabilities::Capability::Driver.bit();
+// CAP_CRYPTO must equal the kernel Crypto bit, not 1<<4 which aliases the
+// AMBIENT Memory bit. The kernel-side crypto client gate is reached from the
+// crypto syscall dispatch, which already requires Capability::Crypto, so every
+// caller holds it and this closes the open alias without locking anyone out.
+pub const CAP_CRYPTO: u64 = crate::capabilities::Capability::Crypto.bit();
 pub const CAP_PROCESS: u64 = 1 << 5;
 pub const CAP_MEMORY: u64 = 1 << 6;
 pub const CAP_INPUT: u64 = 1 << 7;

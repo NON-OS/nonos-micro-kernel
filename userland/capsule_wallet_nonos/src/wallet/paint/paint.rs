@@ -16,7 +16,9 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::state::{State, VIEW_HOME, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND};
+use crate::wallet::state::{
+    State, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED,
+};
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     super::paint_background::paint_background(fb);
@@ -26,6 +28,8 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
         VIEW_RECEIVE => super::paint_receive::paint_receive(state, fb),
         VIEW_SEND => super::paint_send::paint_send(state, fb),
         VIEW_PROOF => super::paint_proof_view::paint_proof_view(state, fb),
+        VIEW_NOX => super::paint_nox::paint_nox(state, fb),
+        VIEW_SHIELDED => super::paint_portfolio::paint_portfolio(state, fb),
         VIEW_HOME => super::paint_home::paint_home(state, fb),
         _ => super::paint_home::paint_home(state, fb),
     }

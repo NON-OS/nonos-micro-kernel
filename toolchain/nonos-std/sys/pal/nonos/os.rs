@@ -1,6 +1,7 @@
-// NONOS pal os: real process exit (mk_exit) and pid (mk_getpid). A capsule
-// has no working directory, environment, or executable path, so those stay
-// unsupported.
+// NONOS pal os: real process exit (mk_exit) and pid (mk_getpid). Every
+// capsule sees the VFS from its root, so the working directory is the
+// fixed "/" and temp_dir is the store's /tmp; chdir and the executable
+// path stay unsupported (the capsule model has neither).
 
 use super::unsupported;
 use crate::ffi::{OsStr, OsString};
@@ -16,7 +17,7 @@ const N_MK_EXIT: i64 = tag4(b"MEXT");
 const N_MK_GETPID: i64 = tag4(b"MGPD");
 
 pub fn getcwd() -> io::Result<PathBuf> {
-    unsupported()
+    Ok(PathBuf::from("/"))
 }
 
 pub fn chdir(_: &path::Path) -> io::Result<()> {
@@ -60,7 +61,7 @@ pub fn current_exe() -> io::Result<PathBuf> {
 }
 
 pub fn temp_dir() -> PathBuf {
-    panic!("no filesystem on this platform")
+    PathBuf::from("/tmp")
 }
 
 pub fn home_dir() -> Option<PathBuf> {

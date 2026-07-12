@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod entry_at;
+mod featured;
 mod field_focus;
 mod groups;
 mod hardware_aesthetic;

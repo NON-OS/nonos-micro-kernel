@@ -16,16 +16,22 @@
 
 use nonos_app_skeleton::{clipboard_paste, EventOutcome};
 
-use super::follow_end::follow_end;
+use super::follow_caret::follow_caret;
 use super::state::State;
 
 pub(super) fn ctrl_paste(state: &mut State) -> EventOutcome {
     let mut scratch = [0u8; 512];
     match clipboard_paste(&mut scratch) {
-        Ok(n) if core::str::from_utf8(&scratch[..n]).is_ok() && state.insert(&scratch[..n]) => {
+        Ok(n)
+            if core::str::from_utf8(&scratch[..n]).is_ok() && {
+                // Paste replaces the selection when there is one.
+                state.delete_sel();
+                state.insert(&scratch[..n])
+            } =>
+        {
             state.status = b"pasted into /notes.txt";
             let rows = state.visible_rows;
-            follow_end(state, rows);
+            follow_caret(state, rows);
             EventOutcome::Repaint
         }
         Ok(_) => {

@@ -25,14 +25,51 @@ use crate::memory::paging::manager::api::translate_address;
 use crate::process::current_pid;
 use crate::syscall::dispatch::util::errno;
 use crate::syscall::SyscallResult;
-use crate::usercopy::{read_user_value, write_user_value};
+use crate::usercopy::{read_user_value, validate_user_write, write_user_value};
 use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
-use super::surface_ops::{map_err, EFAULT, EINVAL, ESRCH};
+use super::surface_ops::{map_err, EFAULT, EINVAL, EPERM, ESRCH};
 
 static VSYNC_TRACE_COUNT: AtomicU32 = AtomicU32::new(0);
 static FIRST_SURFACE_REGISTER: AtomicBool = AtomicBool::new(false);
 static FIRST_SURFACE_PRESENT: AtomicBool = AtomicBool::new(false);
+static DISPLAY_MODE_LOGGED: AtomicBool = AtomicBool::new(false);
+
+// The first registered surface is the GPU driver's scanout, so its geometry is
+// the real display mode. Log it once so every boot proves what resolution the
+// machine actually came up in.
+fn log_display_mode(desc: &SurfaceDescriptor) {
+    if DISPLAY_MODE_LOGGED.swap(true, Ordering::Relaxed) {
+        return;
+    }
+    let mut buf = [0u8; 24];
+    let mut n = 0;
+    n += fmt_u32(desc.width, &mut buf[n..]);
+    buf[n] = b'x';
+    n += 1;
+    n += fmt_u32(desc.height, &mut buf[n..]);
+    // serial::print, not trace: the mode must land in every boot log, not only
+    // debug-enabled ones, so a wrong resolution is visible immediately.
+    crate::sys::serial::print(b"[DISPLAY] mode ");
+    crate::sys::serial::println(&buf[..n]);
+}
+
+fn fmt_u32(mut v: u32, out: &mut [u8]) -> usize {
+    let mut tmp = [0u8; 10];
+    let mut k = 0;
+    loop {
+        tmp[k] = b'0' + (v % 10) as u8;
+        v /= 10;
+        k += 1;
+        if v == 0 || k == 10 {
+            break;
+        }
+    }
+    for i in 0..k {
+        out[i] = tmp[k - 1 - i];
+    }
+    k
+}
 
 fn trace_surface(op: &[u8], label: &[u8], pid: u32) {
     if !matches!(pid, 0x17 | 0x26 | 0x27) || VSYNC_TRACE_COUNT.fetch_add(1, Ordering::Relaxed) >= 80
@@ -63,6 +100,16 @@ pub(super) fn do_register(desc_ptr: u64) -> SyscallResult {
     if desc.byte_len == 0 || desc.byte_len > MAX_SURFACE_BYTES || (desc.base_va & 0xFFF) != 0 {
         return errno(EINVAL);
     }
+    // The surface must be the caller's own user-writable memory. Validate the
+    // whole range as user-writable before translating any address. Without
+    // this, base_va could point into the higher-half directmap (present in
+    // every capsule's CR3) and capture arbitrary kernel physical frames, which
+    // attach would then map USER_RW. The walk rejects any page that is not
+    // present, user-accessible, and writable, and bounds base_va+byte_len to
+    // user space with checked arithmetic.
+    if validate_user_write(desc.base_va, desc.byte_len as usize).is_err() {
+        return errno(EFAULT);
+    }
     let pages = ((desc.byte_len as usize) + 4095) / 4096;
     let mut frames = Vec::with_capacity(pages);
     for i in 0..pages {
@@ -77,6 +124,7 @@ pub(super) fn do_register(desc_ptr: u64) -> SyscallResult {
             attach_map::record(pid, h, desc.base_va, desc.byte_len);
             trace_surface(b"register", b"ok", pid);
             crate::sys::bench::mark_once(&FIRST_SURFACE_REGISTER, b"surface_register_first");
+            log_display_mode(&desc);
             SyscallResult::success_audited(sid as i64)
         }
         Err(e) => errno(map_err(e)),
@@ -122,9 +170,19 @@ pub(super) fn do_attach(handle: u64, out_desc_ptr: u64) -> SyscallResult {
 }
 
 pub(super) fn do_release(handle: u64) -> SyscallResult {
-    if let Some(pid) = current_pid() {
-        attach_map::forget(pid, handle);
+    let pid = match current_pid() {
+        Some(p) => p,
+        None => return errno(ESRCH),
+    };
+    // Only a holder (the owner or an attacher, both of which have an attach
+    // record for this handle) may drop a reference. Without this, any capsule
+    // could guess a handle -- epochs are small and there are only 256 slots --
+    // and force-free another capsule's surface, desyncing its refcount and
+    // invalidating its sid out from under it.
+    if attach_map::lookup(pid, handle).is_none() {
+        return errno(EPERM);
     }
+    attach_map::forget(pid, handle);
     match release_surface(handle) {
         Ok(n) => SyscallResult::success_audited(n as i64),
         Err(e) => errno(map_err(e)),

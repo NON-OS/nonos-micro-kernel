@@ -17,13 +17,15 @@
 use super::state::State;
 
 impl State {
+    /// Delete the character immediately before the caret (undoable).
     pub fn backspace(&mut self) -> bool {
-        while self.len > 0 {
-            self.len -= 1;
-            if self.buf[self.len] & 0b1100_0000 != 0b1000_0000 {
-                return true;
-            }
+        if self.caret == 0 {
+            return false;
         }
-        false
+        let mut start = self.caret - 1;
+        while start > 0 && self.buf[start] & 0b1100_0000 == 0b1000_0000 {
+            start -= 1;
+        }
+        self.apply_edit(start, self.caret - start, &[])
     }
 }

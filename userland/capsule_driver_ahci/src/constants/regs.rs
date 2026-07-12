@@ -22,6 +22,7 @@ pub const HBA_VS: u32 = 0x10;
 pub const HBA_CAP2: u32 = 0x24;
 
 pub const GHC_AE: u32 = 1 << 31;
+pub const GHC_HR: u32 = 1 << 0;
 
 pub const PORT_BASE: u32 = 0x100;
 pub const PORT_STRIDE: u32 = 0x80;

@@ -30,6 +30,16 @@ pub enum StoreError {
     Exists,
     NotEmpty,
     IsDir,
+    Inval,
+}
+
+// How a seek offset is anchored; the wire encoding stays in the protocol
+// layer, the store only sees the resolved intent.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SeekWhence {
+    Set,
+    Cur,
+    End,
 }
 
 pub(super) type StoreResult<T> = Result<T, StoreError>;

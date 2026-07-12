@@ -18,5 +18,5 @@ mod embed;
 mod spawn;
 mod state;
 
-pub use spawn::spawn_browser_capsule;
+pub use spawn::{spawn_browser_capsule, spawn_browser_instance};
 pub use state::shared_state;
