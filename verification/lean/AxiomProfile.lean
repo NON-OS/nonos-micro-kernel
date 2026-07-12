@@ -71,3 +71,75 @@ import Nonos
 #print axioms Nonos.Stark.Transcript.order_changes_the_state
 #print axioms Nonos.Syscall.decode_agrees_with_the_registry
 #print axioms Nonos.UsbHid.bindings_never_exceed_the_cap
+
+-- Assurance capstone: the guarantees composed, post-quantum hybrid authority,
+-- and the admission theorem that holds over the exact gated function the loader
+-- runs (attested AND rollback-fresh AND post-quantum-authorized).
+#print axioms Nonos.Assurance.authority
+#print axioms Nonos.Assurance.freshness
+#print axioms Nonos.Assurance.integrity
+#print axioms Nonos.Assurance.classical_break_insufficient
+#print axioms Nonos.Assurance.no_pq_no_authority
+#print axioms Nonos.Assurance.only_ok_capsules_run
+#print axioms Nonos.Assurance.run_capsule_pq_authorized
+#print axioms Nonos.Assurance.unattested_never_runs
+#print axioms Nonos.Assurance.stale_never_runs
+#print axioms Nonos.Assurance.unsigned_pq_never_runs
+
+-- Kernel-mechanism modules added alongside the capstone. One flagship theorem
+-- from each is profiled so the CI evidence records its axiom closure and the
+-- sorryAx gate covers it.
+#print axioms Nonos.MemGrant.run_conserves
+#print axioms Nonos.MemGrant.run_granted_le_capacity
+#print axioms Nonos.Scheduler.rotate_mem
+#print axioms Nonos.PageTable.mapAllChecked_safe
+#print axioms Nonos.Iommu.empty_grant_denies
+#print axioms Nonos.Dispatch.serviced_requires_cap
+#print axioms Nonos.Dispatch.denied_below
+#print axioms Nonos.Quota.acquireAll_used_le_cap
+#print axioms Nonos.Interval.disjoint_not_mem
+#print axioms Nonos.Interval.mem_of_subset
+#print axioms Nonos.Refcount.dec_from_one_dead
+#print axioms Nonos.Timer.tickAll_monotone
+#print axioms Nonos.Endpoint.recv_was_sent
+#print axioms Nonos.Heap.double_free_safe
+#print axioms Nonos.Heap.free_not_allocated
+#print axioms Nonos.Fd.close_not_open
+#print axioms Nonos.Ring.run_count_le_cap
+#print axioms Nonos.Bounds.index_in_buffer
+#print axioms Nonos.Nonce.issue2_distinct
+#print axioms Nonos.Priority.preempts_total
+#print axioms Nonos.Zeroize.wiped_is_zero
+#print axioms Nonos.Mmio.empty_grant_denies
+#print axioms Nonos.CapTable.revoke_not_holds
+#print axioms Nonos.CapTable.grant_then_revoke
+#print axioms Nonos.Vfs.resolve_dotdots_root
+#print axioms Nonos.Rng.drawN_advances
+#print axioms Nonos.Tlb.invalidate_evicts
+
+-- Concurrency, reclamation and rate-limiting mechanisms. One flagship theorem
+-- from each is profiled so its axiom closure is recorded and the sorryAx gate
+-- covers it.
+#print axioms Nonos.Semaphore.acquire_valid
+#print axioms Nonos.Semaphore.acquire_release_roundtrip
+#print axioms Nonos.Mutex.owner_unique
+#print axioms Nonos.Ticket.serving_unique
+#print axioms Nonos.Ticket.take_monotone
+#print axioms Nonos.Seqlock.changed_rejected
+#print axioms Nonos.TokenBucket.refill_never_exceeds_burst
+#print axioms Nonos.Signal.blocked_signal_still_pending
+#print axioms Nonos.Signal.unblock_delivers
+#print axioms Nonos.Reaper.reaped_not_zombie
+#print axioms Nonos.Epoch.drainN_old_le
+#print axioms Nonos.Barrier.not_released_before_all
+#print axioms Nonos.Buddy.alloc_conserves
+#print axioms Nonos.Buddy.split_conserves
+#print axioms Nonos.Cow.write_drops_original
+#print axioms Nonos.Bitmap.set_then_clear_frees
+
+-- Locking and address-space mechanisms, each backed by a real kernel primitive.
+#print axioms Nonos.Spinlock.try_fails_when_held
+#print axioms Nonos.Rwlock.writer_excludes_readers
+#print axioms Nonos.Futex.fifo_first_out
+#print axioms Nonos.Futex.waiter_enqueued
+#print axioms Nonos.Vma.disjoint_no_shared_addr
