@@ -45,13 +45,13 @@ impl MemRegion {
         self.size as u64
     }
     pub const fn contains(&self, addr: u64) -> bool {
-        addr >= self.start && addr < self.end()
+        super::super::overlap::contains(self.start, self.end(), addr)
     }
     pub const fn contains_range(&self, other: &MemRegion) -> bool {
-        other.start >= self.start && other.end() <= self.end()
+        super::super::overlap::contains_range(self.start, self.end(), other.start, other.end())
     }
     pub const fn overlaps(&self, other: &MemRegion) -> bool {
-        self.start < other.end() && other.start < self.end()
+        super::super::overlap::overlaps(self.start, self.end(), other.start, other.end())
     }
     pub fn has_flag(&self, flag: RegionFlags) -> bool {
         (self.flags & flag.bit()) != 0

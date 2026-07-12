@@ -21,6 +21,7 @@ use crate::buddy::constants::helpers::{buddy_address, order_to_size, size_to_ord
 use crate::buddy::constants::orders::{MAX_ORDER, MIN_ORDER};
 use crate::buddy::constants::sizes::MAX_BLOCK_SIZE;
 use crate::phys::bitmap::index::{bit_mask, byte_of};
+use crate::region::overlap::{contains, overlaps};
 use crate::spec;
 
 // Buddy allocator: verification/lean Nonos/Buddy.lean.
@@ -88,5 +89,46 @@ fn the_eight_bits_of_a_byte_are_distinct_and_cover_it() {
             seen |= m;
         }
         assert_eq!(seen, 0xff, "the eight masks cover the whole byte");
+    }
+}
+
+// Memory region range algebra: verification/lean Nonos/Interval.lean, Vma.lean.
+
+#[test]
+fn overlap_agrees_with_spec_and_is_commutative() {
+    for a0 in 0..25u64 {
+        for a1 in a0..25 {
+            for b0 in 0..25u64 {
+                for b1 in b0..25 {
+                    let o = overlaps(a0, a1, b0, b1);
+                    assert_eq!(o, spec::region_overlaps(a0, a1, b0, b1));
+                    assert_eq!(o, overlaps(b0, b1, a0, a1), "overlap is symmetric");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn overlap_is_exactly_the_negation_of_disjoint() {
+    for a0 in 0..25u64 {
+        for a1 in 0..25u64 {
+            for b0 in 0..25u64 {
+                for b1 in 0..25u64 {
+                    assert_eq!(overlaps(a0, a1, b0, b1), !spec::region_disjoint(a0, a1, b0, b1));
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn contains_holds_only_within_the_range() {
+    for s in 0..30u64 {
+        for e in s..30 {
+            for addr in 0..30u64 {
+                assert_eq!(contains(s, e, addr), addr >= s && addr < e);
+            }
+        }
     }
 }

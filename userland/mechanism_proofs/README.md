@@ -19,6 +19,10 @@ Bound so far:
   `src/memory/phys/bitmap/index.rs`, which `bit_ops.rs` calls. A mask selects
   exactly one bit, and the byte and bit position reconstruct the index
   losslessly. Lean: `Nonos/Bitmap.lean`.
+- `region`: the half-open range algebra in `src/memory/region/overlap.rs`, which
+  `MemRegion::overlaps`, `contains` and `contains_range` delegate to. Overlap is
+  symmetric and is exactly the negation of disjointness. Lean:
+  `Nonos/Interval.lean` and `Nonos/Vma.lean`.
 
 Run:
 

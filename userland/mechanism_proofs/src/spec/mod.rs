@@ -34,3 +34,14 @@ pub fn bitmap_byte_of(idx: usize) -> usize {
 pub fn bitmap_bit_mask(idx: usize) -> u8 {
     1u8 << (idx % 8)
 }
+
+// Region range algebra: verification/lean Nonos/Interval.lean and
+// Nonos/Vma.lean. Two half-open ranges overlap unless one ends at or before the
+// other begins; the two are exact negations.
+pub fn region_overlaps(a0: u64, a1: u64, b0: u64, b1: u64) -> bool {
+    a0 < b1 && b0 < a1
+}
+
+pub fn region_disjoint(a0: u64, a1: u64, b0: u64, b1: u64) -> bool {
+    a1 <= b0 || b1 <= a0
+}

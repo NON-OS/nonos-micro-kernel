@@ -14,19 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Host-runnable proofs binding kernel mechanisms to the properties their Lean
-//! models state. The real Rust of each mechanism is pulled in via `#[path]` and
-//! run directly, so the property is proven of the code the kernel executes.
-//! Modules land here as their Lean model moves from a specification to a
-//! code-bound proof; see `verification/lean/REFINEMENT.md`.
-
-pub mod buddy;
-pub mod phys;
-pub mod region;
-pub mod spec;
-
-#[cfg(test)]
-mod refinement_tests;
-
-#[cfg(kani)]
-mod kani_proofs;
+// The real half-open range algebra of a memory region. `MemRegion::overlaps`,
+// `contains` and `contains_range` in the kernel delegate to exactly these.
+#[allow(dead_code)]
+#[path = "../../../../src/memory/region/overlap.rs"]
+pub mod overlap;

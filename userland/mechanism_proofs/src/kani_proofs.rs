@@ -19,6 +19,7 @@
 
 use crate::buddy::constants::helpers::{buddy_address, order_to_size};
 use crate::phys::bitmap::index::{bit_mask, byte_of};
+use crate::region::overlap::{contains, overlaps};
 
 // The buddy of the buddy of a block is the block itself: the address XOR is an
 // involution, for every address and every order.
@@ -52,4 +53,36 @@ fn bit_mask_selects_exactly_one_bit() {
 fn byte_and_bit_reconstruct_the_index() {
     let idx: usize = kani::any();
     assert_eq!(byte_of(idx) * 8 + (idx & 7), idx);
+}
+
+// Region overlap is symmetric, for every pair of ranges.
+#[kani::proof]
+fn overlap_is_symmetric() {
+    let a0: u64 = kani::any();
+    let a1: u64 = kani::any();
+    let b0: u64 = kani::any();
+    let b1: u64 = kani::any();
+    assert_eq!(overlaps(a0, a1, b0, b1), overlaps(b0, b1, a0, a1));
+}
+
+// Overlap is exactly the negation of disjointness, for every pair of ranges.
+#[kani::proof]
+fn overlap_is_the_negation_of_disjoint() {
+    let a0: u64 = kani::any();
+    let a1: u64 = kani::any();
+    let b0: u64 = kani::any();
+    let b1: u64 = kani::any();
+    let disjoint = a1 <= b0 || b1 <= a0;
+    assert_eq!(overlaps(a0, a1, b0, b1), !disjoint);
+}
+
+// An address that a range contains lies within its bounds, for every input.
+#[kani::proof]
+fn contains_implies_within_bounds() {
+    let start: u64 = kani::any();
+    let end: u64 = kani::any();
+    let addr: u64 = kani::any();
+    if contains(start, end, addr) {
+        assert!(addr >= start && addr < end);
+    }
 }
