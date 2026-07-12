@@ -44,6 +44,7 @@ contract the code owes. Moving an entry to level 2 or 1 is tracked work.
 | `Refcount` | `src/memory/page_info` | `userland/mechanism_proofs` (differential tests and Kani over the decrement in `refcount.rs`) |
 | `Nonce` | `src/capabilities/resource` | `userland/mechanism_proofs` (differential tests and Kani over the composition in `nonce_compose.rs`) |
 | `Bounds` | `src/elf/reloc` | `userland/mechanism_proofs` (differential tests and Kani over the range test in `range.rs`) |
+| `Priority` | `src/process/scheduler` | `userland/mechanism_proofs` (differential tests and Kani over `SchedAttr::effective_priority`) |
 | `Isolation`, `Paging` | `src/memory/paging` | `userland/kernel_proofs` (page permission W xor X, over all bit patterns) |
 | `Loader` | `src/elf` loader | `userland/kernel_proofs` (segment bounds) |
 | `Syscall` | `src/syscall` numbers | `userland/kernel_proofs` (decode totality and registry agreement) |
@@ -66,7 +67,7 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | `Iommu` | device DMA windows under `src/hardware` |
 | `Tlb` | TLB shootdown under `src/memory` |
 | `CapTable`, `Dispatch` | capability tables and the syscall dispatch under `src/syscall` |
-| `Scheduler`, `Priority` | `src/process/scheduler` |
+| `Scheduler` | `src/process/scheduler` |
 | `Epoch` | RCU-style reclamation across the kernel |
 | `Signal` | signal delivery |
 | `Reaper` | the process table |
