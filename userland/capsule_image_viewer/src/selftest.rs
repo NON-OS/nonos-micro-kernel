@@ -55,6 +55,20 @@ pub fn run() -> ! {
     }
     checksum += bi_px.iter().map(|&px| (px & 0x00FF_FFFF) as u64).sum::<u64>();
 
+    let big_w = 200u32;
+    let big_h = 150u32;
+    let big_src = vec![0xFF3366CCu32; (big_w * big_h) as usize];
+    let mut big_dst = vec![0u32; (big_w * big_h) as usize];
+    let bview = View { zoom: 1.0, pan_x: 0.0, pan_y: 0.0 };
+    let bp2 = place_mode(FitMode::Fit, big_w, big_h, big_w, big_h, &bview);
+    {
+        let mut bd = Dst { px: &mut big_dst, stride: big_w, w: big_w, h: big_h };
+        draw_bilinear(&mut bd, &big_src, big_w, big_h, bp2.dx, bp2.dy, bp2.dw, bp2.dh);
+    }
+    if big_dst[(big_w * big_h / 2) as usize] & 0x00FF_FFFF != 0x3366CC {
+        exit_fail(b"[IMG-VIEWER] FAIL bigscale\n");
+    }
+
     if checksum == EXPECTED_CHECKSUM {
         emit(b"[IMG-VIEWER] PASS\n");
         mk_exit(0);
