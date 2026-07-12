@@ -15,6 +15,10 @@ Bound so far:
   split conserves size (`order_to_size(k+1) == 2 * order_to_size(k)`) and the
   buddy address is an involution (`buddy_address(buddy_address(a, o), o) == a`).
   Lean: `Nonos/Buddy.lean`.
+- `phys::bitmap`: the bit-index arithmetic in
+  `src/memory/phys/bitmap/index.rs`, which `bit_ops.rs` calls. A mask selects
+  exactly one bit, and the byte and bit position reconstruct the index
+  losslessly. Lean: `Nonos/Bitmap.lean`.
 
 Run:
 

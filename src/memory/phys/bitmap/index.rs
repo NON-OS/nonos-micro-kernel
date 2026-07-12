@@ -14,23 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The executable specification the differential proofs compare against, each
-//! function restating the contract a Lean model formalizes, independent of the
-//! implementation.
+//! The bit-index arithmetic of the frame bitmap, factored out of `bit_ops.rs`
+//! so it holds no pointer and touches no memory, and can be included by the
+//! `mechanism_proofs` crate and checked against the Lean `Nonos.Bitmap` model.
+//! `bit_test`, `bit_set` and `bit_clear` compute exactly these before touching
+//! the backing store.
 
-// Buddy order to size: verification/lean Nonos/Buddy.lean split_conserves. A
-// block of order k spans two to the k bytes.
-pub fn buddy_order_size(order: usize) -> usize {
-    1usize << order
+use super::super::constants::BITS_PER_BYTE;
+
+/// The byte holding bit `idx`.
+pub(crate) const fn byte_of(idx: usize) -> usize {
+    idx / BITS_PER_BYTE
 }
 
-// Bitmap index arithmetic: verification/lean Nonos/Bitmap.lean. The byte and
-// bit position of an index, restated with a modulo rather than the mask the
-// implementation uses.
-pub fn bitmap_byte_of(idx: usize) -> usize {
-    idx / 8
-}
-
-pub fn bitmap_bit_mask(idx: usize) -> u8 {
-    1u8 << (idx % 8)
+/// The single-bit mask selecting bit `idx` within its byte.
+pub(crate) const fn bit_mask(idx: usize) -> u8 {
+    1u8 << (idx & 7)
 }

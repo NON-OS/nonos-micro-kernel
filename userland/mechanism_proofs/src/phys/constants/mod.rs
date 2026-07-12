@@ -14,23 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The executable specification the differential proofs compare against, each
-//! function restating the contract a Lean model formalizes, independent of the
-//! implementation.
+// The real page constants, so the bitmap index arithmetic divides by the same
+// BITS_PER_BYTE the kernel uses, not a shim.
+#[allow(dead_code)]
+#[path = "../../../../../src/memory/phys/constants/pages.rs"]
+mod pages;
 
-// Buddy order to size: verification/lean Nonos/Buddy.lean split_conserves. A
-// block of order k spans two to the k bytes.
-pub fn buddy_order_size(order: usize) -> usize {
-    1usize << order
-}
-
-// Bitmap index arithmetic: verification/lean Nonos/Bitmap.lean. The byte and
-// bit position of an index, restated with a modulo rather than the mask the
-// implementation uses.
-pub fn bitmap_byte_of(idx: usize) -> usize {
-    idx / 8
-}
-
-pub fn bitmap_bit_mask(idx: usize) -> u8 {
-    1u8 << (idx % 8)
-}
+pub use pages::BITS_PER_BYTE;

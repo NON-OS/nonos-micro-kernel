@@ -20,6 +20,7 @@
 use crate::buddy::constants::helpers::{buddy_address, order_to_size, size_to_order};
 use crate::buddy::constants::orders::{MAX_ORDER, MIN_ORDER};
 use crate::buddy::constants::sizes::MAX_BLOCK_SIZE;
+use crate::phys::bitmap::index::{bit_mask, byte_of};
 use crate::spec;
 
 // Buddy allocator: verification/lean Nonos/Buddy.lean.
@@ -56,5 +57,36 @@ fn size_to_order_covers_the_request_and_stays_in_range() {
         assert!((MIN_ORDER..=MAX_ORDER).contains(&order));
         // the chosen block is large enough to hold the request
         assert!(order_to_size(order) >= size || order == MAX_ORDER);
+    }
+}
+
+// Bitmap allocator: verification/lean Nonos/Bitmap.lean.
+
+#[test]
+fn byte_and_mask_agree_with_spec() {
+    for idx in 0..200_000usize {
+        assert_eq!(byte_of(idx), spec::bitmap_byte_of(idx));
+        assert_eq!(bit_mask(idx), spec::bitmap_bit_mask(idx));
+    }
+}
+
+#[test]
+fn each_index_selects_exactly_one_bit_and_reconstructs() {
+    for idx in 0..200_000usize {
+        assert!(bit_mask(idx).is_power_of_two(), "a mask selects exactly one bit");
+        assert_eq!(byte_of(idx) * 8 + (idx % 8), idx, "byte times eight plus bit position is the index");
+    }
+}
+
+#[test]
+fn the_eight_bits_of_a_byte_are_distinct_and_cover_it() {
+    for base in (0..80_000usize).step_by(8) {
+        let mut seen = 0u8;
+        for b in 0..8 {
+            let m = bit_mask(base + b);
+            assert_eq!(seen & m, 0, "no two bits in a byte share a mask");
+            seen |= m;
+        }
+        assert_eq!(seen, 0xff, "the eight masks cover the whole byte");
     }
 }

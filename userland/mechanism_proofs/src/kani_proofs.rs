@@ -18,6 +18,7 @@
 //! the sampled ones.
 
 use crate::buddy::constants::helpers::{buddy_address, order_to_size};
+use crate::phys::bitmap::index::{bit_mask, byte_of};
 
 // The buddy of the buddy of a block is the block itself: the address XOR is an
 // involution, for every address and every order.
@@ -36,4 +37,19 @@ fn a_split_conserves_size() {
     let k: usize = kani::any();
     kani::assume(k < 62);
     assert_eq!(order_to_size(k + 1), 2 * order_to_size(k));
+}
+
+// A bit mask selects exactly one bit, for every index.
+#[kani::proof]
+fn bit_mask_selects_exactly_one_bit() {
+    let idx: usize = kani::any();
+    assert!(bit_mask(idx).is_power_of_two());
+}
+
+// The byte and the in-byte bit position reconstruct the index exactly, for
+// every index: the split is lossless.
+#[kani::proof]
+fn byte_and_bit_reconstruct_the_index() {
+    let idx: usize = kani::any();
+    assert_eq!(byte_of(idx) * 8 + (idx & 7), idx);
 }

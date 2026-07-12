@@ -21,6 +21,7 @@
 //! code-bound proof; see `verification/lean/REFINEMENT.md`.
 
 pub mod buddy;
+pub mod phys;
 pub mod spec;
 
 #[cfg(test)]
