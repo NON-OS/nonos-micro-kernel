@@ -14,16 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
+//! Host-runnable proofs binding kernel mechanisms to the properties their Lean
+//! models state. The real Rust of each mechanism is pulled in via `#[path]` and
+//! run directly, so the property is proven of the code the kernel executes.
+//! Modules land here as their Lean model moves from a specification to a
+//! code-bound proof; see `verification/lean/REFINEMENT.md`.
 
-static NONCE_COUNTER: AtomicU64 = AtomicU64::new(1);
+pub mod bounds;
+pub mod buddy;
+pub mod mmio;
+pub mod nonce;
+pub mod phys;
+pub mod quota;
+pub mod refcount;
+pub mod region;
+pub mod ring;
+pub mod scheduler;
+pub mod spec;
+pub mod timer;
 
-pub fn next_nonce() -> u64 {
-    let timestamp = crate::time::timestamp_millis();
-    let counter = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
-    super::nonce_compose::compose(timestamp, counter)
-}
+#[cfg(test)]
+mod refinement_tests;
 
-pub fn reset_nonce_counter() {
-    NONCE_COUNTER.store(1, Ordering::Relaxed);
-}
+#[cfg(kani)]
+mod kani_proofs;

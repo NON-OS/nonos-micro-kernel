@@ -14,16 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
+// The real buddy-allocator order and size constants and the pure arithmetic the
+// allocator runs: order-to-size, size-to-order, and the buddy address XOR.
+// Reconstructed as a module tree so `helpers.rs` resolves its `super::orders`
+// and `super::sizes` imports against the real files.
 
-static NONCE_COUNTER: AtomicU64 = AtomicU64::new(1);
+#[allow(dead_code)]
+#[path = "../../../../../src/memory/buddy_alloc/constants/orders.rs"]
+pub mod orders;
 
-pub fn next_nonce() -> u64 {
-    let timestamp = crate::time::timestamp_millis();
-    let counter = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
-    super::nonce_compose::compose(timestamp, counter)
-}
+#[allow(dead_code)]
+#[path = "../../../../../src/memory/buddy_alloc/constants/sizes.rs"]
+pub mod sizes;
 
-pub fn reset_nonce_counter() {
-    NONCE_COUNTER.store(1, Ordering::Relaxed);
-}
+#[allow(dead_code)]
+#[path = "../../../../../src/memory/buddy_alloc/constants/helpers.rs"]
+pub mod helpers;

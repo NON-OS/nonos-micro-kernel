@@ -17,6 +17,7 @@
 mod bit_ops;
 mod contiguous;
 mod count;
+mod index;
 mod range;
 
 pub(super) use bit_ops::{bit_clear, bit_set, bit_test};

@@ -14,16 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
+//! The window-validity arithmetic of an MMIO region, factored out of
+//! `validate_mmio_region` so it holds no driver error type and can be included
+//! by the `mechanism_proofs` crate and checked against the Lean `Nonos.Mmio`
+//! model. A window is valid only when it is non-empty and does not wrap the
+//! address space.
 
-static NONCE_COUNTER: AtomicU64 = AtomicU64::new(1);
-
-pub fn next_nonce() -> u64 {
-    let timestamp = crate::time::timestamp_millis();
-    let counter = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
-    super::nonce_compose::compose(timestamp, counter)
-}
-
-pub fn reset_nonce_counter() {
-    NONCE_COUNTER.store(1, Ordering::Relaxed);
+/// Whether `[base, base + size)` is a non-empty window that does not overflow
+/// the address space.
+pub(crate) const fn range_ok(base: usize, size: usize) -> bool {
+    if size == 0 {
+        return false;
+    }
+    match base.checked_add(size) {
+        Some(end) => end > base,
+        None => false,
+    }
 }

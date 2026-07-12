@@ -14,16 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
+//! The index arithmetic of the input ring, factored out of `input_ring.rs` so
+//! it holds no lock and can be included by the `mechanism_proofs` crate and
+//! checked against the Lean `Nonos.Ring` model. The ring stores at most
+//! `cap - 1` events; a position advances modulo the capacity and the ring is
+//! full when advancing the head would reach the tail.
 
-static NONCE_COUNTER: AtomicU64 = AtomicU64::new(1);
-
-pub fn next_nonce() -> u64 {
-    let timestamp = crate::time::timestamp_millis();
-    let counter = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
-    super::nonce_compose::compose(timestamp, counter)
+/// Advance a ring position by one, wrapping at the capacity.
+pub(crate) const fn wrap(pos: usize, cap: usize) -> usize {
+    (pos + 1) % cap
 }
 
-pub fn reset_nonce_counter() {
-    NONCE_COUNTER.store(1, Ordering::Relaxed);
+/// Whether the ring is full: advancing the head would collide with the tail.
+pub(crate) const fn is_full(head: usize, tail: usize, cap: usize) -> bool {
+    wrap(head, cap) == tail
 }

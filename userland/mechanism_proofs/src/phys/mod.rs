@@ -14,16 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
-
-static NONCE_COUNTER: AtomicU64 = AtomicU64::new(1);
-
-pub fn next_nonce() -> u64 {
-    let timestamp = crate::time::timestamp_millis();
-    let counter = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
-    super::nonce_compose::compose(timestamp, counter)
-}
-
-pub fn reset_nonce_counter() {
-    NONCE_COUNTER.store(1, Ordering::Relaxed);
-}
+// Reconstructs enough of the real `crate::memory::phys` module tree that the
+// bitmap index arithmetic resolves its `super::super::constants::BITS_PER_BYTE`
+// import against the real constant.
+pub mod bitmap;
+pub mod constants;

@@ -16,6 +16,7 @@ extern crate alloc;
 pub mod constants;
 pub mod error;
 pub mod manager;
+mod overlap;
 mod stats;
 pub mod types;
 

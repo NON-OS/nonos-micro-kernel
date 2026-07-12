@@ -55,7 +55,7 @@ impl LoadBalanceState {
 
     pub fn should_balance(&self, current_tick: u64, interval: u64) -> bool {
         let last = self.last_balance_tick.load(Ordering::Relaxed);
-        current_tick.saturating_sub(last) >= interval
+        super::interval::elapsed_reached(current_tick, last, interval)
     }
 
     pub fn mark_balanced(&self, tick: u64) {

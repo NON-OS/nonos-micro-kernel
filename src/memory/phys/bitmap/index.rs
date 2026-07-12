@@ -14,16 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
+//! The bit-index arithmetic of the frame bitmap, factored out of `bit_ops.rs`
+//! so it holds no pointer and touches no memory, and can be included by the
+//! `mechanism_proofs` crate and checked against the Lean `Nonos.Bitmap` model.
+//! `bit_test`, `bit_set` and `bit_clear` compute exactly these before touching
+//! the backing store.
 
-static NONCE_COUNTER: AtomicU64 = AtomicU64::new(1);
+use super::super::constants::BITS_PER_BYTE;
 
-pub fn next_nonce() -> u64 {
-    let timestamp = crate::time::timestamp_millis();
-    let counter = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
-    super::nonce_compose::compose(timestamp, counter)
+/// The byte holding bit `idx`.
+pub(crate) const fn byte_of(idx: usize) -> usize {
+    idx / BITS_PER_BYTE
 }
 
-pub fn reset_nonce_counter() {
-    NONCE_COUNTER.store(1, Ordering::Relaxed);
+/// The single-bit mask selecting bit `idx` within its byte.
+pub(crate) const fn bit_mask(idx: usize) -> u8 {
+    1u8 << (idx & 7)
 }

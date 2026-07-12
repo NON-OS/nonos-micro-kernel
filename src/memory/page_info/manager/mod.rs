@@ -16,6 +16,7 @@
 
 mod api;
 mod ops;
+mod refcount;
 mod state;
 mod update;
 

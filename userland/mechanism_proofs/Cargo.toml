@@ -1,0 +1,19 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for kernel mechanisms whose Lean models are being bound
+# to the code that runs them. Each module includes the real Rust via #[path]
+# and checks it against the properties the Lean model states, differentially
+# with cargo test and exhaustively with Kani.
+[package]
+name = "mechanism_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

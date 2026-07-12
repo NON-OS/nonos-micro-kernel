@@ -58,11 +58,11 @@ impl ResourceToken {
     }
     #[inline]
     pub fn has_bytes(&self, amount: u64) -> bool {
-        self.remaining_bytes >= amount
+        super::limits::has_at_least(self.remaining_bytes, amount)
     }
     #[inline]
     pub fn has_ops(&self, count: u64) -> bool {
-        self.remaining_ops >= count
+        super::limits::has_at_least(self.remaining_ops, count)
     }
     pub fn remaining_ms(&self) -> Option<u64> {
         self.original_quota.remaining_ms()

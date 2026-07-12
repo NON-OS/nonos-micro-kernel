@@ -55,7 +55,7 @@ static INPUT_CONSUMER_READY: AtomicBool = AtomicBool::new(false);
 pub fn post_input(ev: InputEvent) -> Result<(), RegistryError> {
     {
         let mut ring = RING.lock();
-        let next = (ring.head + 1) % INPUT_RING_CAP;
+        let next = super::ring_math::wrap(ring.head, INPUT_RING_CAP);
         if next == ring.tail {
             DROPPED.fetch_add(1, Ordering::Relaxed);
             return Err(RegistryError::OutOfSlots);
@@ -100,7 +100,7 @@ pub fn drain_input(out: &mut [InputEvent]) -> usize {
     let mut n = 0usize;
     while n < out.len() && ring.tail != ring.head {
         out[n] = ring.buf[ring.tail];
-        ring.tail = (ring.tail + 1) % INPUT_RING_CAP;
+        ring.tail = super::ring_math::wrap(ring.tail, INPUT_RING_CAP);
         n += 1;
     }
     n

@@ -14,16 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
+//! The elapsed-tick test of the load balancer, factored out of
+//! `LoadBalanceState::should_balance` so it holds no atomic and can be included
+//! by the `mechanism_proofs` crate and checked against the Lean `Nonos.Timer`
+//! model.
 
-static NONCE_COUNTER: AtomicU64 = AtomicU64::new(1);
-
-pub fn next_nonce() -> u64 {
-    let timestamp = crate::time::timestamp_millis();
-    let counter = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
-    super::nonce_compose::compose(timestamp, counter)
-}
-
-pub fn reset_nonce_counter() {
-    NONCE_COUNTER.store(1, Ordering::Relaxed);
+/// Whether at least `interval` ticks have elapsed since `last` at `current`.
+/// Saturating, so a tick-counter wraparound reads as no time elapsed rather than
+/// a spuriously huge span.
+pub(crate) const fn elapsed_reached(current: u64, last: u64, interval: u64) -> bool {
+    current.saturating_sub(last) >= interval
 }

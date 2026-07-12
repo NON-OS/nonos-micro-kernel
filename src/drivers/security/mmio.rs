@@ -19,13 +19,7 @@ use super::error::DriverError;
 use crate::memory::addr::VirtAddr;
 
 pub fn validate_mmio_region(base: usize, size: usize) -> Result<(), DriverError> {
-    if size == 0 {
-        return Err(DriverError::InvalidMmioRegion);
-    }
-
-    let end = base.checked_add(size).ok_or(DriverError::InvalidMmioRegion)?;
-
-    if end <= base {
+    if !super::mmio_range::range_ok(base, size) {
         return Err(DriverError::InvalidMmioRegion);
     }
 

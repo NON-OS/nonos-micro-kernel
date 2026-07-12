@@ -14,30 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::constants::BITS_PER_BYTE;
+use super::index::{bit_mask, byte_of};
 
 #[inline]
 pub(in crate::memory::phys) unsafe fn bit_test(ptr: *mut u8, idx: usize) -> bool {
     unsafe {
-        let byte = ptr.add(idx / BITS_PER_BYTE).read_volatile();
-        (byte & (1u8 << (idx & 7))) != 0
+        let byte = ptr.add(byte_of(idx)).read_volatile();
+        (byte & bit_mask(idx)) != 0
     }
 }
 
 #[inline]
 pub(in crate::memory::phys) unsafe fn bit_set(ptr: *mut u8, idx: usize) {
     unsafe {
-        let bptr = ptr.add(idx / BITS_PER_BYTE);
+        let bptr = ptr.add(byte_of(idx));
         let v = bptr.read_volatile();
-        bptr.write_volatile(v | (1u8 << (idx & 7)));
+        bptr.write_volatile(v | bit_mask(idx));
     }
 }
 
 #[inline]
 pub(in crate::memory::phys) unsafe fn bit_clear(ptr: *mut u8, idx: usize) {
     unsafe {
-        let bptr = ptr.add(idx / BITS_PER_BYTE);
+        let bptr = ptr.add(byte_of(idx));
         let v = bptr.read_volatile();
-        bptr.write_volatile(v & !(1u8 << (idx & 7)));
+        bptr.write_volatile(v & !bit_mask(idx));
     }
 }
