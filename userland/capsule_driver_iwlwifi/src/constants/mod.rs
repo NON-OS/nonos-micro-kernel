@@ -67,3 +67,33 @@ pub const IWL_FW_MAGIC: u32 = 0x0A4C_5749;
 pub const FW_API_VERSION_MASK: u32 = 0xFFFF;
 pub const MIN_FW_API_VERSION: u16 = 22;
 pub const MAX_FW_API_VERSION: u16 = 77;
+
+// Host-command / transmit-queue interface. Once the firmware is alive, the
+// driver hands it commands through a TFD ring per transmit queue. The
+// write-pointer doorbell in the HBUS window tells the firmware a queue's new
+// write index; the legacy ring holds this many descriptors (a power of two).
+// Offset from iwl-prph.h / iwl-fh.h.
+pub const HBUS_TARG_WRPTR: usize = 0x0460;
+pub const TFD_QUEUE_SIZE: usize = 256;
+
+// The command queue and its layout inside the DMA buffer that staged the
+// firmware (reused once the firmware is alive): a TFD ring followed by a
+// per-slot command area. Sized to fit within FW_STAGING_SIZE.
+pub const CMD_QUEUE_ID: u8 = 4;
+pub const CMD_SLOT_SIZE: usize = 512;
+pub const CMD_RING_OFFSET: usize = 0;
+pub const CMD_AREA_OFFSET: usize = TFD_QUEUE_SIZE * 128;
+
+// The receive ring, laid out after the command area in the same DMA buffer.
+// The firmware posts packets into RX_QUEUE_SIZE receive buffers of RB_SIZE each
+// and advances the write-pointer register as it does. RX_RB_OFFSET + the ring
+// fits within FW_STAGING_SIZE. Register offset from iwl-fh.h.
+pub const RX_QUEUE_SIZE: usize = 256;
+pub const RB_SIZE: usize = 4096;
+pub const RX_RB_OFFSET: usize = CMD_AREA_OFFSET + TFD_QUEUE_SIZE * CMD_SLOT_SIZE;
+pub const RX_WPTR_REG: usize = 0x1BC0;
+
+// The last byte the command ring and the receive ring occupy in the DMA buffer.
+// The driver refuses to touch the DMA area unless the grant is at least this
+// large, so a short grant cannot turn into an out-of-bounds access.
+pub const DMA_LAYOUT_END: usize = RX_RB_OFFSET + RX_QUEUE_SIZE * RB_SIZE;
