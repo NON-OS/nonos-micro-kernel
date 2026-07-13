@@ -36,6 +36,9 @@ impl Store {
         self.seed_file("/readme.txt", README);
         self.seed_file("/docs/about.txt", ABOUT);
         self.seed_file("/docs/demo.txt", DEMO);
+        self.seed_file("/images/pepe.png", include_bytes!("../../../testimages/pepe.png"));
+        self.seed_file("/images/pepe.jpg", include_bytes!("../../../testimages/pepe.jpg"));
+        self.seed_file("/images/pepe.gif", include_bytes!("../../../testimages/pepe.gif"));
         self.seed_packages();
         self.seed_capsule_store();
     }
