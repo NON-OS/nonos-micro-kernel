@@ -1,0 +1,15 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the libc monotonic Deadline. Builds for the host so
+# `cargo test` exercises the real deadline source (included via #[path]); the
+# uptime syscall is stubbed since the tested comparison logic never calls it.
+[package]
+name = "deadline_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
