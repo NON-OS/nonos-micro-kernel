@@ -93,16 +93,20 @@ def capabilities.bits.has_capability
     Source: 'src/capabilities/../../../../../src/capabilities/bits.rs', lines 39:0-41:1
     Visibility: public -/
 def capabilities.bits.add_capability
-  (bits : Std.U64) (cap : capabilities.types.Capability) : Result Std.U64 := do
-  let i ← capabilities.types.Capability.bit cap
+  (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
+  Result Std.U64
+  := do
+  let i ← capabilities.types.bit.Capability.bit cap
   ok (bits ||| i)
 
 /-- [nonos_caps::capabilities::bits::remove_capability]:
     Source: 'src/capabilities/../../../../../src/capabilities/bits.rs', lines 44:0-46:1
     Visibility: public -/
 def capabilities.bits.remove_capability
-  (bits : Std.U64) (cap : capabilities.types.Capability) : Result Std.U64 := do
-  let i ← capabilities.types.Capability.bit cap
+  (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
+  Result Std.U64
+  := do
+  let i ← capabilities.types.bit.Capability.bit cap
   let i1 ← lift (~~~ i)
   ok (bits &&& i1)
 
