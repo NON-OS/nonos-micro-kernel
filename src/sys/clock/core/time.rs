@@ -14,28 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicI64, AtomicU64, Ordering};
+use core::sync::atomic::Ordering;
 
-pub static TSC_HZ: AtomicU64 = AtomicU64::new(0);
-pub static BOOT_UNIX_MS: AtomicU64 = AtomicU64::new(0);
-pub static BOOT_TSC: AtomicU64 = AtomicU64::new(0);
-pub static NTP_OFFSET_MS: AtomicI64 = AtomicI64::new(0);
-
-pub fn init(tsc_hz: u64, unix_epoch_ms: u64) {
-    TSC_HZ.store(tsc_hz, Ordering::Relaxed);
-    BOOT_UNIX_MS.store(unix_epoch_ms, Ordering::Relaxed);
-    BOOT_TSC.store(rdtsc(), Ordering::Relaxed);
-}
-
-#[inline]
-pub fn rdtsc() -> u64 {
-    unsafe {
-        let lo: u32;
-        let hi: u32;
-        core::arch::asm!("rdtsc", out("eax") lo, out("edx") hi);
-        ((hi as u64) << 32) | (lo as u64)
-    }
-}
+use super::consts::{BOOT_TSC, BOOT_UNIX_MS, NTP_OFFSET_MS, TSC_HZ};
+use super::rdtsc::rdtsc;
 
 pub fn base_unix_ms() -> u64 {
     let tsc_hz = TSC_HZ.load(Ordering::Relaxed);

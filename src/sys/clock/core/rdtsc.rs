@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod artifacts;
-mod error;
-mod leak;
-mod load;
-mod validity_clock;
-
-pub use artifacts::CapsuleArtifacts;
-pub use error::LoadError;
-pub(crate) use load::load_capsule_from_vfs;
+#[inline]
+pub fn rdtsc() -> u64 {
+    unsafe {
+        let lo: u32;
+        let hi: u32;
+        core::arch::asm!("rdtsc", out("eax") lo, out("edx") hi);
+        ((hi as u64) << 32) | (lo as u64)
+    }
+}

@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod artifacts;
-mod error;
-mod leak;
-mod load;
-mod validity_clock;
+use super::super::error::LoadError;
+use crate::security::capsule_manifest::{CapsuleManifest, EndpointKind};
 
-pub use artifacts::CapsuleArtifacts;
-pub use error::LoadError;
-pub(crate) use load::load_capsule_from_vfs;
+pub(super) fn endpoint(m: &CapsuleManifest, kind: EndpointKind) -> Result<(&str, u32), LoadError> {
+    m.endpoints
+        .iter()
+        .find(|e| e.kind == kind)
+        .map(|e| (e.name_str(), e.port))
+        .ok_or(LoadError::Manifest)
+}

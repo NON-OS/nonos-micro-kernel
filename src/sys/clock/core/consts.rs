@@ -14,12 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod artifacts;
-mod error;
-mod leak;
-mod load;
-mod validity_clock;
+use core::sync::atomic::{AtomicI64, AtomicU64};
 
-pub use artifacts::CapsuleArtifacts;
-pub use error::LoadError;
-pub(crate) use load::load_capsule_from_vfs;
+pub static TSC_HZ: AtomicU64 = AtomicU64::new(0);
+pub static BOOT_UNIX_MS: AtomicU64 = AtomicU64::new(0);
+pub static BOOT_TSC: AtomicU64 = AtomicU64::new(0);
+pub static NTP_OFFSET_MS: AtomicI64 = AtomicI64::new(0);

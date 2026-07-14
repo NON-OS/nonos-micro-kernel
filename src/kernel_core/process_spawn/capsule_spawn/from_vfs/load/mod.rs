@@ -14,12 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod artifacts;
-mod error;
-mod leak;
-mod load;
-mod validity_clock;
+mod endpoint;
+mod spawn;
 
-pub use artifacts::CapsuleArtifacts;
-pub use error::LoadError;
-pub(crate) use load::load_capsule_from_vfs;
+pub(crate) use spawn::load_capsule_from_vfs;

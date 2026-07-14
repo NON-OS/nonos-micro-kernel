@@ -15,27 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::sys::serial;
-use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use core::sync::atomic::Ordering;
 
-pub static TSC_FREQ_HZ: AtomicU64 = AtomicU64::new(0);
-pub static BOOT_TSC: AtomicU64 = AtomicU64::new(0);
-pub static BOOT_EPOCH_MS: AtomicU64 = AtomicU64::new(0);
-pub static TIMER_INIT: AtomicBool = AtomicBool::new(false);
-
-#[inline]
-pub fn rdtsc() -> u64 {
-    unsafe {
-        let lo: u32;
-        let hi: u32;
-        core::arch::asm!(
-            "rdtsc",
-            out("eax") lo,
-            out("edx") hi,
-            options(nomem, nostack)
-        );
-        ((hi as u64) << 32) | (lo as u64)
-    }
-}
+use super::consts::{BOOT_EPOCH_MS, BOOT_TSC, TIMER_INIT, TSC_FREQ_HZ};
+use super::rdtsc::rdtsc;
 
 pub fn init(tsc_hz: u64, boot_epoch_ms: u64) {
     if TIMER_INIT.load(Ordering::Relaxed) {
@@ -66,7 +49,7 @@ pub fn init_default() {
     init(calibrated, real_unix_ms);
 }
 
-fn calibrate_tsc_hz() -> u64 {
+pub fn calibrate_tsc_hz() -> u64 {
     use crate::arch::x86_64::time::tsc as arch_tsc;
     if let Some(freq) = arch_tsc::get_cpuid_frequency() {
         return freq;
@@ -75,43 +58,4 @@ fn calibrate_tsc_hz() -> u64 {
         Ok((freq, _confidence)) => freq,
         Err(_) => 0,
     }
-}
-
-pub fn tsc_frequency() -> u64 {
-    TSC_FREQ_HZ.load(Ordering::Relaxed)
-}
-
-pub fn ticks_to_ns(ticks: u64) -> u64 {
-    let freq = TSC_FREQ_HZ.load(Ordering::Relaxed);
-    if freq == 0 {
-        return 0;
-    }
-    let ns_per_tick = 1_000_000_000u128 / freq as u128;
-    ((ticks as u128) * ns_per_tick) as u64
-}
-
-pub fn ticks_to_us(ticks: u64) -> u64 {
-    let freq = TSC_FREQ_HZ.load(Ordering::Relaxed);
-    if freq == 0 {
-        return 0;
-    }
-    ticks * 1_000_000 / freq
-}
-
-pub fn ticks_to_ms(ticks: u64) -> u64 {
-    let freq = TSC_FREQ_HZ.load(Ordering::Relaxed);
-    if freq == 0 {
-        return 0;
-    }
-    ticks * 1_000 / freq
-}
-
-pub fn us_to_ticks(us: u64) -> u64 {
-    let freq = TSC_FREQ_HZ.load(Ordering::Relaxed);
-    freq * us / 1_000_000
-}
-
-pub fn ms_to_ticks(ms: u64) -> u64 {
-    let freq = TSC_FREQ_HZ.load(Ordering::Relaxed);
-    freq * ms / 1_000
 }
