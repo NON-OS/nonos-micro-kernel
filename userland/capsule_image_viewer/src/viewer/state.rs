@@ -3,6 +3,10 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use crate::viewer::decode::Decoded;
 use crate::viewer::viewport::{View, FitMode};
+use crate::viewer::gallery::state::GalleryState;
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum Mode { Gallery, Single }
 
 pub struct ViewerState {
     pub owner_pid: u32,
@@ -23,6 +27,8 @@ pub struct ViewerState {
     pub drag_y: i32,
     pub view_w: u32,
     pub view_h: u32,
+    pub mode: Mode,
+    pub gallery: GalleryState,
 }
 
 impl ViewerState {
@@ -46,6 +52,8 @@ impl ViewerState {
             drag_y: 0,
             view_w: 0,
             view_h: 0,
+            mode: Mode::Gallery,
+            gallery: GalleryState::new(),
         }
     }
 }
