@@ -12,6 +12,10 @@
 //! This validates the driver's register sequence. It does not and cannot
 //! assert that a real Intel chip responds correctly; that still needs silicon.
 
+// The driver is no_std and uses `alloc`; link it so the included sources
+// (the supplicant's Vec replies) resolve when proven on the host.
+extern crate alloc;
+
 #[path = "../../capsule_driver_iwlwifi/src/constants/mod.rs"]
 pub mod constants;
 #[path = "../../capsule_driver_iwlwifi/src/regs.rs"]
@@ -63,3 +67,11 @@ mod dot11_tests;
 
 #[cfg(test)]
 mod ccmp_tests;
+#[cfg(test)]
+mod supplicant_tests;
+#[cfg(test)]
+mod mlme_tests;
+#[cfg(test)]
+mod data_tests;
+#[path = "../../capsule_driver_iwlwifi/src/mlme/mod.rs"]
+pub mod mlme;

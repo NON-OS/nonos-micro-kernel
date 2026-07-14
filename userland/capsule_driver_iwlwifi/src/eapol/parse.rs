@@ -20,9 +20,13 @@ pub const MIC_LEN: usize = 16;
 /// Length of the fixed EAPOL-Key header up to the key data.
 pub const HEADER_LEN: usize = 99;
 
-// Key-information flags (big-endian field at offset 5).
+// Key-information flags (big-endian field at offset 5). The low three bits are
+// the key-descriptor version; version 2 selects HMAC-SHA1 MIC + AES key wrap,
+// which is what WPA2/CCMP uses.
+pub const KEY_INFO_VERSION2: u16 = 2;
 pub const KEY_INFO_PAIRWISE: u16 = 1 << 3;
 pub const KEY_INFO_MIC: u16 = 1 << 8;
+pub const KEY_INFO_SECURE: u16 = 1 << 9;
 
 /// A parsed EAPOL-Key frame. `key_data` borrows the frame.
 pub struct EapolKey<'a> {
