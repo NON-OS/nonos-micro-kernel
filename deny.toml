@@ -25,6 +25,7 @@ ignore = [
     { id = "RUSTSEC-2024-0388", reason = "derivative 2.2.0 — unmaintained legacy transitive. Not on the microkernel runtime path. Drop once the dependency graph no longer pulls it." },
     { id = "RUSTSEC-2024-0436", reason = "paste 1.0.15 — unmaintained. Path includes halo2curves. Build-time macro only. Drop when the curve dependency stops pulling paste." },
     { id = "RUSTSEC-2026-0097", reason = "rand 0.8.5 — unsound only when rand::rng() is called with a custom logger. Path: nonos_kernel -> halo2curves -> pasta_curves -> rand. The kernel never installs a custom logger and the transitive use goes through the deterministic seed APIs. Drop when halo2curves migrates to rand 0.9." },
+    { crate = "spin@0.9.8", reason = "spin 0.9.8 is the latest release and was yanked upstream with no non-yanked successor. Path: nonos_kernel -> lazy_static -> spin, a spinlock primitive rather than a security defect. Drop once a non-yanked spin is published." },
 ]
 
 [licenses]
