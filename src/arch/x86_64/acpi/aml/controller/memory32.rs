@@ -17,7 +17,7 @@
 /// Decode a Memory32Fixed descriptor payload (ACPI 6.x 6.4.3.4): the base
 /// address at offset 1 and the range length at offset 5, both little-endian.
 /// A zero base is treated as absent.
-pub(super) fn parse_memory32_fixed(data: &[u8]) -> Option<(u32, u32)> {
+pub(in crate::arch::x86_64::acpi::aml) fn parse_memory32_fixed(data: &[u8]) -> Option<(u32, u32)> {
     let base = u32::from_le_bytes([*data.get(1)?, *data.get(2)?, *data.get(3)?, *data.get(4)?]);
     let len = u32::from_le_bytes([*data.get(5)?, *data.get(6)?, *data.get(7)?, *data.get(8)?]);
     (base != 0).then_some((base, len))

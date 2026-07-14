@@ -25,3 +25,6 @@ mod memory32;
 pub use crs::parse_controller_crs;
 pub use enumerate::enumerate_i2c_controllers;
 pub use find::find_i2c_controller_devices;
+// The Memory32Fixed decoder is a spec-layout primitive, not controller policy;
+// the GPIO community enumerator reuses it rather than growing a second truth.
+pub(super) use memory32::parse_memory32_fixed;

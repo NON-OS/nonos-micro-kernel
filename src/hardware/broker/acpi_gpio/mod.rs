@@ -14,19 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::sys::serial;
+mod record;
+mod register;
 
-pub(super) fn seed_hardware_broker() {
-    let devices = match crate::drivers::pci::manager::scan_and_collect_safe() {
-        Ok(v) => v,
-        Err(_) => {
-            serial::println(b"[NONOS] PCI scan failed; broker table empty");
-            return;
-        }
-    };
-    crate::hardware::broker::init_from_pci(&devices);
-    let _ = crate::hardware::broker::register_legacy_platform_devices();
-    crate::hardware::broker::register_acpi_i2c();
-    crate::hardware::broker::register_acpi_gpio();
-    serial::println(b"[NONOS] hardware broker seeded");
-}
+pub use register::register_acpi_gpio;

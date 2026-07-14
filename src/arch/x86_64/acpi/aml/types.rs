@@ -39,6 +39,11 @@ pub struct I2cHidDevice {
     /// when the descriptor carried no ResourceSource. This is what selects the
     /// correct controller when several I2C hosts are present.
     pub controller: [u8; 4],
+    /// The final NameSeg of the GpioInt ResourceSource, i.e. the ACPI name of
+    /// the GPIO community controller carrying `gpio_pin` (for example `GPO0`).
+    /// Zero when the descriptor carried no usable ResourceSource. This is what
+    /// selects the correct community when several are present.
+    pub gpio_controller: [u8; 4],
 }
 
 impl I2cHidDevice {
@@ -53,6 +58,7 @@ impl I2cHidDevice {
             hid,
             has_gpio: false,
             controller: [0; 4],
+            gpio_controller: [0; 4],
         }
     }
 }
@@ -86,6 +92,39 @@ impl LpssController {
 
     /// A controller record is usable only once its MMIO window is known; the
     /// interrupt is optional because the transfer engine can poll.
+    pub fn is_valid(&self) -> bool {
+        self.mmio_base != 0 && self.mmio_size != 0
+    }
+}
+
+/// A platform GPIO community controller (Intel pinctrl family) enumerated from
+/// the ACPI namespace by its `_HID`. A touchpad's GpioInt names one of these as
+/// its ResourceSource; a userspace driver polls the community's interrupt
+/// status register through the MMIO window recovered from its `_CRS`.
+#[derive(Debug, Clone, Copy)]
+pub struct GpioController {
+    /// The device's own ACPI NameSeg (for example `GPO0`), matched against the
+    /// trailing NameSeg of a GpioInt ResourceSource to pair a pin with its
+    /// community.
+    pub name: [u8; 4],
+    /// The firmware `_UID`, the stable community index on a multi-community
+    /// platform. Zero when the device declares none.
+    pub uid: u32,
+    /// Base of the community's MMIO register window, from the first
+    /// Memory32Fixed descriptor in `_CRS`.
+    pub mmio_base: u64,
+    /// Length of that MMIO window in bytes.
+    pub mmio_size: u64,
+    /// The eight-byte `_HID` that matched, retained for diagnostics.
+    pub hid: [u8; 8],
+}
+
+impl GpioController {
+    pub fn new(hid: [u8; 8]) -> Self {
+        Self { name: [0; 4], uid: 0, mmio_base: 0, mmio_size: 0, hid }
+    }
+
+    /// A community record is usable only once its MMIO window is known.
     pub fn is_valid(&self) -> bool {
         self.mmio_base != 0 && self.mmio_size != 0
     }
