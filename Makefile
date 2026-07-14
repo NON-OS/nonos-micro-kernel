@@ -268,10 +268,10 @@ QEMU_YRES ?= 1080
 # cocoa display then needs a GL context. Default stays the plain 2D device.
 ifeq ($(QEMU_GL),1)
 QEMU_GPU := -device virtio-vga-gl,xres=$(QEMU_XRES),yres=$(QEMU_YRES)
-QEMU_DISPLAY := cocoa,gl=es,zoom-to-fit=off
+QEMU_DISPLAY := cocoa,gl=es,zoom-to-fit=on
 else
 QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=$(QEMU_XRES),yres=$(QEMU_YRES)
-QEMU_DISPLAY := cocoa,zoom-to-fit=off
+QEMU_DISPLAY := cocoa,zoom-to-fit=on
 endif
 # Keyboard/mouse via the q35 i8042 (PS/2). USB HID interrupt-IN transfers
 # are not serviced under macOS hvf, so usb-kbd/usb-mouse never deliver input
