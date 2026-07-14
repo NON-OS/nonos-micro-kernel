@@ -13,22 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::controller::{issue_control_transfer, ControlRequest};
-use crate::error::{XhciError, XhciResult};
-use crate::server::context::Context;
 
-pub(super) fn do_transfer(ctx: &mut Context, slot: u8, req: ControlRequest) -> XhciResult<()> {
-    let res = ctx
-        .driver
-        .slots
-        .resources_mut(slot, ctx.driver.layout.max_slots)
-        .ok_or(XhciError::ControllerUnsupported)?;
-    issue_control_transfer(
-        ctx.driver.layout.doorbell_base,
-        ctx.driver.layout.primary_intr_base,
-        &mut ctx.driver.event_ring,
-        &mut res.ep0,
-        slot,
-        req,
-    )
+use nonos_libc::{mk_pci_config_write, MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER};
+
+use crate::error::{XhciError, XhciResult};
+
+pub fn enable_bus_master(device_id: u64, claim_epoch: u64) -> XhciResult<()> {
+    let r = mk_pci_config_write(device_id, claim_epoch, MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER);
+    if r < 0 {
+        return Err(XhciError::BrokerCallFailed(r));
+    }
+    Ok(())
 }

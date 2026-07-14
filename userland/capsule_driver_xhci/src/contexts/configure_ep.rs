@@ -23,22 +23,26 @@ const ADD_SLOT_FLAG: u32 = 1;
 const EP_TYPE_INTERRUPT_IN: u32 = 7;
 const CERR: u32 = 3;
 const DCS: u32 = 1;
-pub fn write_configure_endpoint_input(
-    region: &DmaRegion,
-    context_size: u8,
-    dci: u8,
-    ring_phys: u64,
-    max_packet: u16,
-    interval: u8,
-    speed: u8,
-    root_port: u8,
-) {
+/// The parameters of the interrupt-IN endpoint being configured, bundled so the
+/// writer stays within the argument limit.
+#[derive(Clone, Copy)]
+pub struct EndpointConfig {
+    pub context_size: u8,
+    pub dci: u8,
+    pub ring_phys: u64,
+    pub max_packet: u16,
+    pub interval: u8,
+    pub speed: u8,
+    pub root_port: u8,
+}
+
+pub fn write_configure_endpoint_input(region: &DmaRegion, cfg: EndpointConfig) {
     region.zero();
-    write_dw(region, context_size, INPUT_CONTROL_INDEX, 1, ADD_SLOT_FLAG | (1 << dci));
-    let slot_dw0 = ((speed as u32) << SPEED_SHIFT) | ((dci as u32) << CONTEXT_ENTRIES_SHIFT);
-    write_dw(region, context_size, SLOT_CTX_INDEX, 0, slot_dw0);
-    write_dw(region, context_size, SLOT_CTX_INDEX, 1, (root_port as u32) << ROOT_PORT_SHIFT);
-    write_endpoint(region, context_size, dci as usize + 1, ring_phys, max_packet, interval);
+    write_dw(region, cfg.context_size, INPUT_CONTROL_INDEX, 1, ADD_SLOT_FLAG | (1 << cfg.dci));
+    let slot_dw0 = ((cfg.speed as u32) << SPEED_SHIFT) | ((cfg.dci as u32) << CONTEXT_ENTRIES_SHIFT);
+    write_dw(region, cfg.context_size, SLOT_CTX_INDEX, 0, slot_dw0);
+    write_dw(region, cfg.context_size, SLOT_CTX_INDEX, 1, (cfg.root_port as u32) << ROOT_PORT_SHIFT);
+    write_endpoint(region, cfg.context_size, cfg.dci as usize + 1, cfg.ring_phys, cfg.max_packet, cfg.interval);
 }
 fn write_endpoint(
     region: &DmaRegion,

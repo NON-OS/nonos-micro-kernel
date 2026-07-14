@@ -13,22 +13,18 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use nonos_libc::{mk_irq_bind, IrqBindOut, MK_IRQ_BIND_MSIX};
+
 use crate::discover::Found;
-use crate::error::{XhciError, XhciResult};
-use nonos_libc::{
-    mk_device_release, mk_irq_bind, mk_mmio_unmap, IrqBindOut, MmioMapOut, MK_IRQ_BIND_MSIX,
-};
-pub fn irq_bind(dev: Found, claim_epoch: u64, mmio: &MmioMapOut) -> XhciResult<IrqBindOut> {
+
+/// Bind the controller MSI-X interrupt. Best-effort: the driver polls the event
+/// ring for every command and transfer and never waits on the interrupt, so a
+/// device without usable MSI-X, or a bind that fails on real firmware, still
+/// works over polling. A zero grant means no interrupt was bound.
+pub fn irq_bind(dev: Found, claim_epoch: u64) -> IrqBindOut {
     let mut out = IrqBindOut { grant_id: 0, vector: 0 };
-    let r = mk_irq_bind(dev.device_id, claim_epoch, 0, MK_IRQ_BIND_MSIX, 1, &mut out);
-    if r < 0 {
-        if mk_mmio_unmap(mmio.grant_id) < 0 {
-            return Err(XhciError::BrokerCallFailed(r));
-        }
-        if mk_device_release(dev.device_id) < 0 {
-            return Err(XhciError::BrokerCallFailed(r));
-        }
-        return Err(XhciError::BrokerCallFailed(r));
+    if mk_irq_bind(dev.device_id, claim_epoch, 0, MK_IRQ_BIND_MSIX, 1, &mut out) < 0 {
+        return IrqBindOut { grant_id: 0, vector: 0 };
     }
-    Ok(out)
+    out
 }

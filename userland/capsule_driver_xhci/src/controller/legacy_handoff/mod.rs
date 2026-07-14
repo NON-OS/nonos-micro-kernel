@@ -13,22 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::controller::{issue_control_transfer, ControlRequest};
-use crate::error::{XhciError, XhciResult};
-use crate::server::context::Context;
-
-pub(super) fn do_transfer(ctx: &mut Context, slot: u8, req: ControlRequest) -> XhciResult<()> {
-    let res = ctx
-        .driver
-        .slots
-        .resources_mut(slot, ctx.driver.layout.max_slots)
-        .ok_or(XhciError::ControllerUnsupported)?;
-    issue_control_transfer(
-        ctx.driver.layout.doorbell_base,
-        ctx.driver.layout.primary_intr_base,
-        &mut ctx.driver.event_ring,
-        &mut res.ep0,
-        slot,
-        req,
-    )
-}
+mod claim;
+mod legacy_handoff;
+pub use legacy_handoff::legacy_handoff;

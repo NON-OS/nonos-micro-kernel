@@ -13,20 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
+use super::claim::claim;
 use crate::constants::HCCPARAMS1;
-use crate::regs::{mmio_read32, mmio_write32};
+use crate::regs::mmio_read32;
 
-// Extended-capability IDs and the USBLEGSUP/USBLEGCTLSTS bits (xHCI 1.2 §7.1).
+// Extended-capability ID for USB legacy support (xHCI 1.2 §7.1).
 const XECP_ID_LEGACY: u32 = 1;
-const USBLEGSUP_BIOS_OWNED: u32 = 1 << 16;
-const USBLEGSUP_OS_OWNED: u32 = 1 << 24;
-// USBLEGCTLSTS (offset +4): mask of bits to preserve when clearing every SMI
-// enable, and the RW1C SMI status bits to acknowledge. Same values Linux uses.
-const CTLSTS_DISABLE_SMI: u32 = (0x7 << 1) | (0xff << 5) | (0x7 << 17);
-const CTLSTS_SMI_EVENTS: u32 = 0x7 << 29;
-
-const HANDOFF_POLL_LIMIT: u32 = 1_000_000;
 const XECP_WALK_LIMIT: u32 = 256;
 
 /// Claim the controller from BIOS/SMM before it is reset. On real firmware the
@@ -53,28 +45,4 @@ pub fn legacy_handoff(mmio_base: u64) {
         }
         cap += (next as u64) * 4;
     }
-}
-
-fn claim(usblegsup: u64) {
-    // Request OS ownership, then wait for BIOS to drop its semaphore.
-    mmio_write32(usblegsup, mmio_read32(usblegsup) | USBLEGSUP_OS_OWNED);
-    let mut owned = false;
-    for _ in 0..HANDOFF_POLL_LIMIT {
-        let v = mmio_read32(usblegsup);
-        if v & USBLEGSUP_BIOS_OWNED == 0 && v & USBLEGSUP_OS_OWNED != 0 {
-            owned = true;
-            break;
-        }
-        core::hint::spin_loop();
-    }
-    // Buggy firmware that never releases: force the BIOS-owned bit down so the
-    // controller is not left shared.
-    if !owned {
-        mmio_write32(usblegsup, mmio_read32(usblegsup) & !USBLEGSUP_BIOS_OWNED);
-    }
-    // Disable every SMI source and acknowledge pending SMI status so SMM stops
-    // trapping on this controller once we own it.
-    let ctlsts = usblegsup + 4;
-    let v = mmio_read32(ctlsts);
-    mmio_write32(ctlsts, (v & CTLSTS_DISABLE_SMI) | CTLSTS_SMI_EVENTS);
 }

@@ -20,6 +20,7 @@ mod irq_bind;
 mod layout;
 mod marker;
 mod mmio_map;
+mod pci;
 mod require_window;
 mod sequence;
 pub use driver::Driver;
