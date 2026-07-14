@@ -14,18 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::consts::{EFAULT, EINVAL, ENOTSUP};
+use crate::syscall::dispatch::util;
 use crate::syscall::SyscallResult;
 use crate::usercopy::copy_from_user;
 
-const EFAULT: i32 = 14;
-const EINVAL: i32 = 22;
-const ENOTSUP: i32 = 95;
-
-pub(super) fn handle(display: u64, surface: u64, span: usize) -> SyscallResult {
-    blit(display, surface, span, 0, 0, 0, 0, true)
-}
-
-fn blit(
+pub(super) fn blit(
     display: u64,
     surface: u64,
     span: usize,
@@ -36,16 +30,16 @@ fn blit(
     full: bool,
 ) -> SyscallResult {
     if display != 0 {
-        return super::super::util::errno(EINVAL);
+        return util::errno(EINVAL);
     }
     // `span` is the surface byte length from the attach record. Userland
     // mappings are not tracked in proc VMAs, so the size comes from the
     // surface registry; copy_from_user validates each source page below.
     let Some(fb) = crate::kernel_core::init::framebuffer::framebuffer_state() else {
-        return super::super::util::errno(ENOTSUP);
+        return util::errno(ENOTSUP);
     };
     if fb.frame_len().is_none() {
-        return super::super::util::errno(EINVAL);
+        return util::errno(EINVAL);
     };
     let fb_w = fb.width as usize;
     let fb_h = fb.height as usize;
@@ -53,23 +47,23 @@ fn blit(
     let bytes_per_pixel = core::mem::size_of::<u32>();
     let Some(src_len) = fb_w.checked_mul(fb_h).and_then(|px| px.checked_mul(bytes_per_pixel))
     else {
-        return super::super::util::errno(EINVAL);
+        return util::errno(EINVAL);
     };
     if span < src_len {
-        return super::super::util::errno(EINVAL);
+        return util::errno(EINVAL);
     }
     let rect_x = x as usize;
     let rect_y = y as usize;
     let rect_w = if full { fb_w } else { w as usize };
     let rect_h = if full { fb_h } else { h as usize };
     if rect_w == 0 || rect_h == 0 {
-        return super::super::util::errno(EINVAL);
+        return util::errno(EINVAL);
     }
     if rect_x >= fb_w || rect_y >= fb_h {
-        return super::super::util::errno(EINVAL);
+        return util::errno(EINVAL);
     }
     if rect_x.saturating_add(rect_w) > fb_w || rect_y.saturating_add(rect_h) > fb_h {
-        return super::super::util::errno(EINVAL);
+        return util::errno(EINVAL);
     }
     let mut bounce = [0u8; 4096];
     let dst = (fb.base_va.as_u64() + fb.offset as u64) as *mut u8;
@@ -84,7 +78,16 @@ fn blit(
             let chunk = core::cmp::min(bounce.len(), row_bytes - copied);
             let src = surface + (src_row_off + copied) as u64;
             if copy_from_user(src, &mut bounce[..chunk]).is_err() {
-                return super::super::util::errno(EFAULT);
+                return util::errno(EFAULT);
+            }
+            // Surface pixels are ARGB8888, stored B,G,R,A in memory, which is
+            // exactly what a BGR framebuffer scans out. RGB firmware needs the
+            // red and blue channels exchanged. Chunks stay pixel-aligned:
+            // row_bytes and the bounce length are both multiples of four.
+            if !fb.bgr {
+                for px in bounce[..chunk].chunks_exact_mut(4) {
+                    px.swap(0, 2);
+                }
             }
             let dst_off = dst_row_off + copied;
             for i in 0..chunk {

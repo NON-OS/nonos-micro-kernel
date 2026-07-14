@@ -14,29 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod attach_map;
-mod dump;
-#[cfg(feature = "input-probe-inject")]
-pub mod inject;
-pub mod input_ring;
-pub mod release;
-mod ring_math;
-pub mod share;
-pub mod table;
-pub mod types;
-pub mod vsync;
+use core::sync::atomic::Ordering;
 
-pub use attach_map::lookup as lookup_attached_va;
-pub use dump::dump_surface_accounting;
-pub use input_ring::{
-    arm_input_waiter, clear_input_waiter, drain_input, input_diag, input_drains, input_seq,
-    post_input,
-};
-pub use release::{release_owned_by_pid, release_surface};
-pub use share::{attach_surface, share_surface};
-pub use table::{lookup_owned, register_surface};
-pub use types::{
-    InputEvent, RegistryError, SurfaceDescriptor, SurfaceFormat, SurfaceHandle, SurfaceSid,
-    MAX_PAGES_PER_SURFACE, PIXEL_BYTES,
-};
-pub use vsync::{vsync_period_ns, wait_for_vsync};
+#[cfg(feature = "input-probe-inject")]
+use super::ring::INPUT_CONSUMER_READY;
+use super::ring::WAITER;
+
+pub fn arm_input_waiter(pid: u32) {
+    WAITER.store(pid as u64, Ordering::Release);
+    #[cfg(feature = "input-probe-inject")]
+    INPUT_CONSUMER_READY.store(true, Ordering::Release);
+}
