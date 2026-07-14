@@ -21,16 +21,21 @@ const USER_SPACE_MAX: u64 = 0x0000_7FFF_FFFF_FFFF;
 const KERNEL_SPACE_MIN: u64 = 0xFFFF_8000_0000_0000;
 const RFLAGS_PRIVILEGED_MASK: u64 = 0x0000_0000_001F_7500;
 const RFLAGS_RESERVED_SET: u64 = 0x0000_0000_0000_0002;
-const RFLAGS_IF: u64 = 0x0000_0000_0000_0200;
 impl Context {
     #[inline]
     fn is_user_space_addr(addr: u64) -> bool {
         addr <= USER_SPACE_MAX
     }
 
+    // Keep the saved IF value. These contexts resume at CPL=0: a yield or
+    // preempt continuation saved under SFMASK/interrupt-gate discipline
+    // carries IF=0 and must stay that way until its own sti/sysret/iretq,
+    // or the timer ISR can land on a kernel path that already holds a
+    // scheduler spin lock and deadlock the core. User-mode resumes get
+    // IF=1 from the iretq frame sanitizer, not from here.
     #[inline]
     pub(super) fn sanitize_rflags(rflags: u64) -> u64 {
-        (rflags & !RFLAGS_PRIVILEGED_MASK) | RFLAGS_RESERVED_SET | RFLAGS_IF
+        (rflags & !RFLAGS_PRIVILEGED_MASK) | RFLAGS_RESERVED_SET
     }
 
     fn is_canonical(addr: u64) -> bool {
