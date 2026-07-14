@@ -10,6 +10,11 @@ use super::{HDR_LEN, MAGIC, VERSION};
 
 pub fn response(req_op: u16, request_id: u32, errno: i32, payload: &[u8], out: &mut [u8]) -> usize {
     let len = HDR_LEN + payload.len();
+    // Never write past the reply buffer: a payload that would overrun it is
+    // dropped rather than panicking the driver.
+    if out.len() < len {
+        return 0;
+    }
     out[0..4].copy_from_slice(&MAGIC.to_le_bytes());
     out[4..6].copy_from_slice(&VERSION.to_le_bytes());
     out[6..8].copy_from_slice(&req_op.to_le_bytes());

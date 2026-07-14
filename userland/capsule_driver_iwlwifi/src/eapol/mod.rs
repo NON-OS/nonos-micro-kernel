@@ -6,23 +6,10 @@
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-pub mod device;
-pub mod dma;
-pub mod firmware;
-pub mod firmware_load;
-pub mod firmware_stage;
-pub mod health;
-pub mod rf;
-pub mod alive;
-pub mod beacon;
-pub mod hcmd;
-pub mod mgmt;
-pub mod rx;
-pub mod wpa;
-pub mod eapol;
-pub mod ccmp;
-pub mod keyunwrap;
-pub mod eapolbuild;
-pub mod connect;
-pub mod wifi_data;
-pub mod supplicant;
+//! The WPA2 four-way handshake message layer: parsing EAPOL-Key frames and
+//! verifying their MIC under the KCK derived from the pairwise transient key.
+//! Reached through OP_EAPOL_VERIFY. The MIC rests on the RFC-verified HMAC-SHA1.
+
+pub mod build;
+pub mod mic;
+pub mod parse;

@@ -33,5 +33,10 @@ pub fn run() -> Result<Driver, &'static str> {
         dma_device_addr: dma.device_addr, dma_len: dma.length,
         hw_rev: init.hw_rev, gp_cntrl: init.gp_cntrl, rf_kill: init.rf_kill, family, regs,
         firmware_stage: FirmwareStageState::empty(),
+        cmd_write_ptr: 0,
+        rx_read_ptr: 0,
+        supplicant: None,
+        mlme: None,
+        tx_pn: 0,
     })
 }

@@ -12,9 +12,11 @@ use nonos_libc::mk_ipc_recv_from;
 
 use crate::driver::Driver;
 use crate::protocol::{
-    parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_DEVICE_INFO, OP_DMA_STATE,
-    OP_FIRMWARE_INFO, OP_FIRMWARE_LOAD, OP_FIRMWARE_STAGE, OP_HEALTHCHECK, OP_ALIVE_WAIT,
-    OP_RF_STATE,
+    parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_ALIVE_WAIT, OP_BEACON_PARSE,
+    OP_DEVICE_INFO, OP_DMA_STATE, OP_FIRMWARE_INFO, OP_FIRMWARE_LOAD, OP_FIRMWARE_STAGE,
+    OP_CCMP, OP_CONNECT_EAPOL, OP_CONNECT_MGMT, OP_CONNECT_START, OP_EAPOL_BUILD, OP_EAPOL_VERIFY,
+    OP_HCMD_ISSUE, OP_HEALTHCHECK, OP_KEY_UNWRAP, OP_MGMT_BUILD, OP_RF_STATE, OP_RX_POLL,
+    OP_SUPPLICANT_START, OP_SUPPLICANT_STEP, OP_WIFI_RX, OP_WIFI_TX, OP_WPA_PTK,
 };
 use crate::server::{handlers, respond};
 
@@ -48,6 +50,22 @@ fn dispatch(driver: &mut Driver, sender_pid: u32, req: crate::protocol::Request,
             handlers::firmware_load::handle(driver, sender_pid, &req, tx)
         }
         OP_ALIVE_WAIT if body.is_empty() => handlers::alive::handle(driver, sender_pid, &req, tx),
+        OP_RX_POLL if body.is_empty() => handlers::rx::handle(driver, sender_pid, &req, tx),
+        OP_MGMT_BUILD => handlers::mgmt::handle(sender_pid, &req, body, tx),
+        OP_BEACON_PARSE => handlers::beacon::handle(sender_pid, &req, body, tx),
+        OP_HCMD_ISSUE => handlers::hcmd::handle(driver, sender_pid, &req, body, tx),
+        OP_WPA_PTK => handlers::wpa::handle(sender_pid, &req, body, tx),
+        OP_EAPOL_VERIFY => handlers::eapol::handle(sender_pid, &req, body, tx),
+        OP_CCMP => handlers::ccmp::handle(sender_pid, &req, body, tx),
+        OP_KEY_UNWRAP => handlers::keyunwrap::handle(sender_pid, &req, body, tx),
+        OP_EAPOL_BUILD => handlers::eapolbuild::handle(sender_pid, &req, body, tx),
+        OP_SUPPLICANT_START => handlers::supplicant::start(driver, sender_pid, &req, body, tx),
+        OP_SUPPLICANT_STEP => handlers::supplicant::step(driver, sender_pid, &req, body, tx),
+        OP_CONNECT_START => handlers::connect::start(driver, sender_pid, &req, body, tx),
+        OP_CONNECT_MGMT => handlers::connect::mgmt(driver, sender_pid, &req, body, tx),
+        OP_CONNECT_EAPOL => handlers::connect::eapol(driver, sender_pid, &req, body, tx),
+        OP_WIFI_TX => handlers::wifi_data::tx(driver, sender_pid, &req, body, tx),
+        OP_WIFI_RX => handlers::wifi_data::rx(driver, sender_pid, &req, body, tx),
         _ if body.is_empty() => {
             let _ = respond::send(sender_pid, &req, E_BAD_OP, &[], tx);
         }
