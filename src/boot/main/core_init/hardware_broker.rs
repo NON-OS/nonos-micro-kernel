@@ -14,11 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+use crate::sys::serial;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+pub(super) fn seed_hardware_broker() {
+    let devices = match crate::drivers::pci::manager::scan_and_collect_safe() {
+        Ok(v) => v,
+        Err(_) => {
+            serial::println(b"[NONOS] PCI scan failed; broker table empty");
+            return;
+        }
+    };
+    crate::hardware::broker::init_from_pci(&devices);
+    let _ = crate::hardware::broker::register_legacy_platform_devices();
+    crate::hardware::broker::register_acpi_i2c();
+    serial::println(b"[NONOS] hardware broker seeded");
+}

@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
-
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+// NONOS_NODESKTOP=1 builds bring up drivers and the input stack but leave
+// the compositor, splash and shell unspawned, so the on-screen kernel log
+// stays visible for the whole session. This is the hardware bring-up
+// channel: one photo shows every driver that initialized and where a fault
+// lands, with nothing painting over it and no serial cable required.
+pub(super) fn desktop_enabled() -> bool {
+    option_env!("NONOS_NODESKTOP").is_none()
+}

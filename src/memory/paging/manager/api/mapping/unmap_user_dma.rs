@@ -14,11 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+use super::unmap_page;
+use crate::memory::addr::VirtAddr;
+use crate::memory::paging::constants::{pages_needed, PAGE_SIZE_4K};
+use crate::memory::paging::error::PagingResult;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+// Unmap a DMA range previously installed by `map_user_dma`. The
+// SMP TLB shootdown happens inside `unmap_page` via the per-asid
+// flush in the paging manager.
+pub fn unmap_user_dma(virtual_addr: VirtAddr, size: usize) -> PagingResult<()> {
+    for i in 0..pages_needed(size) {
+        let va = VirtAddr::new(virtual_addr.as_u64() + (i * PAGE_SIZE_4K) as u64);
+        let _ = unmap_page(va);
+    }
+    Ok(())
+}

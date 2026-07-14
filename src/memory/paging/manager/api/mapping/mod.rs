@@ -14,11 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+mod map_device_memory;
+mod map_huge_page;
+mod map_kernel_page;
+mod map_page;
+mod map_user_dma;
+mod map_user_mmio;
+mod map_user_page;
+mod unmap_page;
+mod unmap_range;
+mod unmap_user_dma;
+mod unmap_user_mmio;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+pub use map_device_memory::map_device_memory;
+pub use map_huge_page::map_huge_page;
+pub use map_kernel_page::map_kernel_page;
+pub use map_page::map_page;
+pub use map_user_dma::map_user_dma;
+pub use map_user_mmio::map_user_mmio;
+pub use map_user_page::map_user_page;
+pub use unmap_page::unmap_page;
+pub use unmap_range::unmap_range;
+pub use unmap_user_dma::unmap_user_dma;
+pub use unmap_user_mmio::unmap_user_mmio;

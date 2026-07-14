@@ -14,11 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+use crate::sys::serial;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+pub(super) fn init_acpi_tables() {
+    if let Some(handoff) = crate::boot::handoff::get_handoff() {
+        if let Some(rsdp) = handoff.acpi_rsdp() {
+            crate::arch::x86_64::acpi::set_rsdp_address(rsdp);
+        }
+    }
+    match crate::arch::x86_64::acpi::init() {
+        Ok(()) => serial::println(b"[NONOS] ACPI tables parsed"),
+        Err(_) => serial::println(b"[NONOS] ACPI init failed; legacy fallbacks engaged"),
+    }
+}

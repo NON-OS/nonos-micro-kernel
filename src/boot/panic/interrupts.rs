@@ -14,34 +14,47 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::pixel_format;
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy, Default)]
-pub struct FramebufferInfo {
-    pub ptr: u64,
-    pub size: u64,
-    pub width: u32,
-    pub height: u32,
-    /// Row pitch in bytes, never pixels.
-    pub stride: u32,
-    pub pixel_format: u32,
-    pub cursor_y: u32,
-    pub reserved: u32,
+#[inline]
+pub fn halt_loop() -> ! {
+    crate::arch::halt_loop()
 }
 
-impl FramebufferInfo {
-    #[inline]
-    pub fn is_valid(&self) -> bool {
-        self.ptr != 0 && self.width > 0 && self.height > 0 && self.stride > 0
+#[inline]
+pub fn halt() {
+    // Single-shot HLT, used by the idle hook before the panic path.
+    // The cross-arch `cpu_yield` is the same primitive.
+    crate::arch::cpu_yield();
+}
+
+#[inline]
+pub fn disable_interrupts() {
+    crate::arch::disable_interrupts()
+}
+
+#[inline]
+pub fn enable_interrupts() {
+    crate::arch::enable_interrupts()
+}
+
+#[inline]
+pub fn interrupts_enabled() -> bool {
+    crate::arch::cpu::interrupts_enabled()
+}
+
+pub fn without_interrupts<F, R>(f: F) -> R
+where
+    F: FnOnce() -> R,
+{
+    let enabled = interrupts_enabled();
+    if enabled {
+        disable_interrupts();
     }
 
-    #[inline]
-    pub fn bytes_per_pixel(&self) -> u32 {
-        match self.pixel_format {
-            pixel_format::RGB | pixel_format::BGR => 3,
-            pixel_format::RGBX | pixel_format::BGRX => 4,
-            _ => 4,
-        }
+    let result = f();
+
+    if enabled {
+        enable_interrupts();
     }
+
+    result
 }

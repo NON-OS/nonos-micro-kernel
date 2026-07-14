@@ -14,11 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+use super::super::globals::{PAGING_MANAGER, PAGING_STATS};
+use crate::arch::x86_64::idt::without_interrupts;
+use crate::memory::addr::{PhysAddr, VirtAddr};
+use crate::memory::paging::error::PagingResult;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+pub fn unmap_page(virtual_addr: VirtAddr) -> PagingResult<PhysAddr> {
+    let (phys, perms, size) =
+        without_interrupts(|| PAGING_MANAGER.lock().unmap_page(virtual_addr))?;
+    PAGING_STATS.record_unmapping(perms, size);
+    Ok(phys)
+}

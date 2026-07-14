@@ -19,6 +19,9 @@ use super::state;
 
 pub fn on_timer_interrupt() {
     state::increment_ticks();
+    if option_env!("NONOS_FBCONSOLE").is_some() {
+        super::heartbeat::on_tick(state::get_ticks());
+    }
     crate::sched::tick();
     #[cfg(feature = "input-probe-inject")]
     crate::kernel_core::surface_registry::inject::on_tick();

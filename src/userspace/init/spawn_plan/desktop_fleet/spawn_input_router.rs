@@ -14,11 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
-
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+#[cfg(feature = "nonos-capsule-input-router")]
+pub(super) fn spawn_input_router() {
+    use crate::userspace::capsule_input_router as c;
+    if c::shared_state().is_alive() {
+        return;
+    }
+    super::super::boot::capsule(
+        "INPUT-ROUTER",
+        "input_router",
+        c::spawn_input_router_capsule,
+        c::shared_state,
+    );
+}
+#[cfg(not(feature = "nonos-capsule-input-router"))]
+pub(super) fn spawn_input_router() {}

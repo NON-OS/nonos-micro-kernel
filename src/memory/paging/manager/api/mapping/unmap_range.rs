@@ -14,11 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+use super::unmap_page;
+use crate::memory::addr::VirtAddr;
+use crate::memory::paging::constants::{pages_needed, PAGE_SIZE_4K};
+use crate::memory::paging::error::PagingResult;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+// Multi-page unmap. Walks 4 KiB pages from `virtual_addr` for `size`
+// bytes (rounded up). Stops at the first failure and returns it.
+pub fn unmap_range(virtual_addr: VirtAddr, size: usize) -> PagingResult<()> {
+    for i in 0..pages_needed(size) {
+        let va = VirtAddr::new(virtual_addr.as_u64() + (i * PAGE_SIZE_4K) as u64);
+        unmap_page(va)?;
+    }
+    Ok(())
+}

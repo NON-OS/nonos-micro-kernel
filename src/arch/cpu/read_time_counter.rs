@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+use crate::arch::abi::ArchOps;
+use crate::arch::Arch;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+/// Monotonic per-CPU tick counter. Backend-defined unit.
+#[inline(always)]
+pub fn read_time_counter() -> u64 {
+    Arch::read_time_counter()
+}

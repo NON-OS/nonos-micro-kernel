@@ -10,15 +10,17 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+use core::sync::atomic::{AtomicU32, Ordering};
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+use super::paint_blip::paint_blip;
+
+static DRAIN_PHASE: AtomicU32 = AtomicU32::new(0);
+const DRAIN_X0: u32 = 78;
+
+// Advanced once per batch the input router drains from the kernel ring via
+// mk_input_event_drain. If the post marker changes but this one stays frozen,
+// the router is not consuming events and they never reach the compositor/cursor.
+pub fn input_drain_blip() {
+    paint_blip(DRAIN_X0, DRAIN_PHASE.fetch_add(1, Ordering::Relaxed));
+}

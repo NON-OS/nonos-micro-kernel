@@ -10,15 +10,21 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+pub(super) const X0: u32 = 6;
+pub(super) const Y0: u32 = 30;
+pub(super) const SIZE: u32 = 16;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+// 1 kHz-ish palette so a photographed frame lands on a definite color.
+pub(super) const PALETTE: [u32; 6] = [
+    0xFF00_E5FF, // cyan
+    0xFF00_D060, // green
+    0xFFFF_D000, // gold
+    0xFFFF_6000, // orange
+    0xFFE0_2040, // red
+    0xFFB0_50FF, // violet
+];
+
+pub(super) const BAR_X0: u32 = 6;
+pub(super) const BAR_H: u32 = 6;
+pub(super) const BAR_MAX: u32 = 600;

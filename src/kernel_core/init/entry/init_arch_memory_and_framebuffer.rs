@@ -14,11 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+use crate::boot::handoff::{ArchSpecificHandoff, KernelHandoff};
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+// EFI memory descriptor walks and UEFI framebuffer init are inherently
+// arch-specific. Other arches will add match arms when their boot trees
+// land with their own per-arch init helpers.
+pub(super) fn init_arch_memory_and_framebuffer(handoff: &KernelHandoff) {
+    match handoff.arch {
+        ArchSpecificHandoff::X86_64 { v1 } => {
+            crate::arch::init_boot_memory(v1);
+        }
+    }
+}

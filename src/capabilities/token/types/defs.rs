@@ -14,11 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+extern crate alloc;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+use crate::capabilities::types::Capability;
+use alloc::vec::Vec;
+
+#[derive(Debug, Clone)]
+pub struct CapabilityToken {
+    pub owner_module: u64,
+    pub permissions: Vec<Capability>,
+    pub expires_at_ms: Option<u64>,
+    pub nonce: u64,
+    pub signature: [u8; 64],
+    // Authority material added in Phase 2 of the capability rewrite.
+    // Populated on every mint; covered by the MAC. Enforcement lands
+    // in a later step — this commit only carries the data.
+    pub token_id: u64,
+    pub subject_capsule_id: u32,
+    pub subject_asid: u32,
+    pub subject_measurement: [u8; 32],
+    pub boot_session_nonce: [u8; 16],
+    pub revocation_epoch: u64,
+    pub delegation_depth: u8,
+}

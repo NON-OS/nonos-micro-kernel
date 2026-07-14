@@ -14,11 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
-
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+pub(super) fn hex_u64(mut v: u64, out: &mut [u8; 16]) -> &[u8] {
+    let mut k = out.len();
+    loop {
+        k -= 1;
+        let d = (v & 0xF) as u8;
+        out[k] = if d < 10 { b'0' + d } else { b'a' + d - 10 };
+        v >>= 4;
+        if v == 0 || k == 0 {
+            break;
+        }
+    }
+    &out[k..]
+}

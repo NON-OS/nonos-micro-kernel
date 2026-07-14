@@ -14,11 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+use super::map_page;
+use crate::memory::addr::{PhysAddr, VirtAddr};
+use crate::memory::paging::error::PagingResult;
+use crate::memory::paging::types::PagePermissions;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+pub fn map_kernel_page(virtual_addr: VirtAddr, physical_addr: PhysAddr) -> PagingResult<()> {
+    let permissions = PagePermissions::READ | PagePermissions::WRITE | PagePermissions::GLOBAL;
+    map_page(virtual_addr, physical_addr, permissions)
+}

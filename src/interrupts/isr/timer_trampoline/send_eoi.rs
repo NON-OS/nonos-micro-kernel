@@ -10,15 +10,16 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+use crate::interrupts::apic;
+use crate::interrupts::pic;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+const TIMER_IRQ_LINE: u8 = 0;
+
+pub(super) fn send_eoi() {
+    if apic::is_enabled() {
+        apic::send_eoi();
+    } else {
+        pic::send_eoi(TIMER_IRQ_LINE);
+    }
+}

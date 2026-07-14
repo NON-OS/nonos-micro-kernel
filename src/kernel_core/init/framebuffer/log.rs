@@ -14,11 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
+use super::hex::hex_u64;
 
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+pub(super) fn log_handoff_fb(ptr: u64, stride: u32, format: u32) {
+    let mut buf = [0u8; 16];
+    crate::sys::serial::print(b"[FB] handoff ptr=0x");
+    crate::sys::serial::print(hex_u64(ptr, &mut buf));
+    crate::sys::serial::print(b" stride=0x");
+    let mut b2 = [0u8; 16];
+    crate::sys::serial::print(hex_u64(stride as u64, &mut b2));
+    crate::sys::serial::print(b" fmt=0x");
+    let mut b3 = [0u8; 16];
+    crate::sys::serial::println(hex_u64(format as u64, &mut b3));
+}
