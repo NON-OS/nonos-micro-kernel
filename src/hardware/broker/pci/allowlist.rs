@@ -22,13 +22,21 @@
 //! mutation, PCIe / AER — is rejected before it reaches the bus.
 
 use crate::drivers::pci::constants::{
-    CFG_COMMAND, CMD_BUS_MASTER, MSIX_CTRL_ENABLE, MSIX_CTRL_FUNCTION_MASK,
+    CFG_COMMAND, CMD_BUS_MASTER, CMD_MEMORY_SPACE, MSIX_CTRL_ENABLE, MSIX_CTRL_FUNCTION_MASK,
 };
 use crate::drivers::pci::types::MsixInfo;
 
 use super::types::{PciWriteError, PciWriteRequest, WriteAction};
 
 const MSIX_CONTROL_WRITABLE: u16 = MSIX_CTRL_ENABLE | MSIX_CTRL_FUNCTION_MASK;
+
+// The only PCI Command bits a driver capsule may flip: Bus Master (for DMA)
+// and Memory Space (so its MMIO BAR is decoded). Firmware often leaves
+// Memory Space clear on an LPSS controller it did not use, and then every
+// MMIO register access silently drops, so a driver must be able to assert
+// it. No other command bit (I/O space, interrupt disable, SERR, etc.) is
+// writable through this path.
+const COMMAND_WRITABLE: u16 = CMD_BUS_MASTER | CMD_MEMORY_SPACE;
 
 pub fn validate(
     req: &PciWriteRequest,
@@ -48,8 +56,8 @@ pub fn validate(
 }
 
 fn validate_command(new: u16, current: u16) -> Result<WriteAction, PciWriteError> {
-    let desired = if new & !CMD_BUS_MASTER == 0 { current | new } else { new };
-    if (desired ^ current) & !CMD_BUS_MASTER != 0 {
+    let desired = if new & !COMMAND_WRITABLE == 0 { current | new } else { new };
+    if (desired ^ current) & !COMMAND_WRITABLE != 0 {
         return Err(PciWriteError::BitsNotAllowed);
     }
     Ok(WriteAction::Command(desired))

@@ -51,7 +51,7 @@ fn bar_from_pci(b: &PciBar) -> Bar {
         mem_bar(b)
     } else if b.is_io() {
         let port = b.port().unwrap_or(0) as u64;
-        Bar { base: port, size: b.size(), kind: BarKind::Pio as u8, flags: 0, _pad: [0; 6] }
+        Bar { base: port, size: b.size(), kind: BarKind::Pio as u8, flags: 0, aux: 0, _pad: [0; 2] }
     } else {
         Bar::empty()
     }
@@ -66,5 +66,5 @@ fn mem_bar(b: &PciBar) -> Bar {
         flags |= BAR_FLAG_MEM64;
     }
     let base = b.address().map(|p| p.as_u64()).unwrap_or(0);
-    Bar { base, size: b.size(), kind: BarKind::Mmio as u8, flags, _pad: [0; 6] }
+    Bar { base, size: b.size(), kind: BarKind::Mmio as u8, flags, aux: 0, _pad: [0; 2] }
 }

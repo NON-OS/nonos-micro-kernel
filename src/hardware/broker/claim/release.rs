@@ -14,46 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extern crate alloc;
-
-use alloc::vec::Vec;
-use core::sync::atomic::{AtomicU64, Ordering};
-use spin::Mutex;
-
-#[derive(Debug, Clone, Copy)]
-pub struct Claim {
-    pub pid: u32,
-    pub device_id: u64,
-    pub epoch: u64,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ClaimError {
-    UnknownDevice,
-    AlreadyClaimed,
-    NotHolder,
-    NotClaimed,
-}
-
-static CLAIMS: Mutex<Vec<Claim>> = Mutex::new(Vec::new());
-static EPOCH: AtomicU64 = AtomicU64::new(1);
-
-fn next_epoch() -> u64 {
-    EPOCH.fetch_add(1, Ordering::SeqCst)
-}
-
-// Register a claim. Returns the granted epoch on success. The caller
-// must have already verified that `device_id` exists in the broker
-// table.
-pub fn claim(pid: u32, device_id: u64) -> Result<u64, ClaimError> {
-    let mut claims = CLAIMS.lock();
-    if claims.iter().any(|c| c.device_id == device_id) {
-        return Err(ClaimError::AlreadyClaimed);
-    }
-    let epoch = next_epoch();
-    claims.push(Claim { pid, device_id, epoch });
-    Ok(epoch)
-}
+use super::state::CLAIMS;
+use super::types::ClaimError;
 
 // Release a claim held by `pid`. Returns the released epoch on
 // success.
@@ -77,10 +39,3 @@ pub fn release_all_for_pid(pid: u32) -> usize {
     claims.retain(|c| c.pid != pid);
     before - claims.len()
 }
-
-pub fn lookup(device_id: u64) -> Option<Claim> {
-    CLAIMS.lock().iter().find(|c| c.device_id == device_id).copied()
-}
-
-
-
