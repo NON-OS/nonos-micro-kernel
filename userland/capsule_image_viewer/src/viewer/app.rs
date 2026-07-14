@@ -5,8 +5,9 @@ use nonos_app_skeleton::discover::lookup_service;
 use nonos_libc::mk_time_millis;
 use crate::viewer::manifest::manifest;
 use crate::viewer::state::{Mode, ViewerState};
-use crate::viewer::viewport::{zoom_at, clamp_pan_mode, FitMode};
+use crate::viewer::viewport::{zoom_at, clamp_pan_mode, place_mode, FitMode};
 use crate::viewer::{load, render};
+use crate::viewer::nav::{hit_nav, swipe_delta};
 use crate::viewer::gallery::{input as gin, paint as gpaint, scan, thumbs};
 use crate::viewer::gallery::input::GalleryAction;
 
@@ -34,13 +35,18 @@ impl App for ViewerApp {
         match event.kind {
             InputKind::Wheel => on_wheel(&mut self.st, &event),
             InputKind::ButtonDown => {
+                if let Some(d) = hit_nav(event.x, event.y, self.st.view_w, self.st.view_h) {
+                    load::step(&mut self.st, d);
+                    return EventOutcome::Repaint;
+                }
                 self.st.dragging = true;
                 self.st.drag_x = event.x;
                 self.st.drag_y = event.y;
+                self.st.swipe_start_x = event.x;
                 EventOutcome::Idle
             }
             InputKind::PointerAbs => on_pointer(&mut self.st, &event),
-            InputKind::ButtonUp => { self.st.dragging = false; EventOutcome::Idle }
+            InputKind::ButtonUp => on_button_up(&mut self.st, &event),
             InputKind::KeyDown => on_key(&mut self.st, event.code),
             _ => EventOutcome::Idle,
         }
@@ -114,6 +120,25 @@ fn on_wheel(st: &mut ViewerState, event: &InputEvent) -> EventOutcome {
     let factor = if event.delta_y > 0 { 1.25 } else { 0.8 };
     zoom_at(&mut st.view, st.fit_mode, iw, ih, st.view_w, st.view_h, event.x, event.y, factor);
     EventOutcome::Repaint
+}
+
+fn on_button_up(st: &mut ViewerState, event: &InputEvent) -> EventOutcome {
+    st.dragging = false;
+    let dx = event.x - st.swipe_start_x;
+    let dy = event.y - st.drag_y;
+    let pannable = h_pannable(st);
+    if let Some(step) = swipe_delta(dx, dy, pannable) {
+        load::step(st, step);
+        return EventOutcome::Repaint;
+    }
+    EventOutcome::Idle
+}
+
+fn h_pannable(st: &ViewerState) -> bool {
+    match st.img.as_ref() {
+        Some(img) => place_mode(st.fit_mode, img.w, img.h, st.view_w, st.view_h, &st.view).dw > st.view_w,
+        None => false,
+    }
 }
 
 fn on_pointer(st: &mut ViewerState, event: &InputEvent) -> EventOutcome {
