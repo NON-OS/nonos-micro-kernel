@@ -24,6 +24,7 @@ use crate::process::signal::SIGSEGV;
 // CPU fault with #GP on the return, so the values are pinned here.
 const USER_CS: u64 = 0x23;
 const USER_SS: u64 = 0x1B;
+const RFLAGS_IF: u64 = 0x0000_0000_0000_0200;
 
 impl Context {
     pub fn resume_user(&self) -> ! {
@@ -31,7 +32,10 @@ impl Context {
             crate::process::terminate_current_with_signal(SIGSEGV)
         }
         let mut safe_ctx = *self;
-        safe_ctx.rflags = Self::sanitize_rflags(safe_ctx.rflags);
+        // CPL=3 must always run with interrupts enabled. The context this
+        // resumes was captured in syscall context under SFMASK (IF=0), so
+        // the saved flag value is not the one user mode should get back.
+        safe_ctx.rflags = Self::sanitize_rflags(safe_ctx.rflags) | RFLAGS_IF;
         unsafe { resume_user_asm(&safe_ctx as *const Context) }
     }
 }
