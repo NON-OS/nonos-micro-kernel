@@ -15,7 +15,7 @@ set_option maxRecDepth 2048
 namespace nonos_caps
 
 /-- [nonos_caps::capabilities::types::Capability]
-    Source: 'src/capabilities/../../../../../src/capabilities/types.rs', lines 18:0-60:1
+    Source: 'src/capabilities/../../../../../src/capabilities/types/defs.rs', lines 18:0-65:1
     Visibility: public -/
 @[discriminant isize]
 inductive capabilities.types.Capability where
@@ -46,7 +46,7 @@ inductive capabilities.types.Capability where
 | SpawnWindow : capabilities.types.Capability
 
 /-- [nonos_caps::capabilities::types::{nonos_caps::capabilities::types::Capability}::bit]:
-    Source: 'src/capabilities/../../../../../src/capabilities/types.rs', lines 64:4-92:5 -/
+    Source: 'src/capabilities/../../../../../src/capabilities/types/bit.rs', lines 21:4-50:5 -/
 def capabilities.types.Capability.bit
   (self : capabilities.types.Capability) : Result Std.U64 := do
   match self with
