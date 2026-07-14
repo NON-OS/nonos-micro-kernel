@@ -9,9 +9,9 @@ const PANEL: u32 = 0xC0_10_14_18;
 const FG: u32 = 0xFFE6_E6E6;
 
 const KEYMAP: &[(&str, &str)] = &[
-    ("<-/->", "prev/next"),
+    ("< >  <-/->", "prev/next"),
     ("scroll/+/-", "zoom"),
-    ("drag", "pan"),
+    ("drag", "pan / swipe"),
     ("f/1/w", "fit/actual/fill"),
     ("r/h/v", "rotate/flip-h/flip-v"),
     ("i/?", "info/help"),
