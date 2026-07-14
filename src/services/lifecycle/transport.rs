@@ -165,10 +165,10 @@ pub fn round_trip(
         .map_err(|_| TransportError::TransportFailure)?;
     match nonos_inbox::try_enqueue_strict(&target, msg) {
         Ok(()) => {
-            let owner = state.pid();
-            if crate::sched::is_sleeping(owner) {
-                crate::sched::wake_process(owner);
-            }
+            // Unconditional: wake_process is state-checked and idempotent,
+            // and the sleep-map gate strands a receiver that is Sleeping
+            // without a map entry.
+            crate::sched::wake_process(state.pid());
         }
         // Owner exited between the liveness check above and the
         // enqueue, or the inbox was already unregistered. Either

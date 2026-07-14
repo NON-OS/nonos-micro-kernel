@@ -69,7 +69,10 @@ pub fn sys_ipc_send_to_pid(dest_pid: u64, buf: u64, len: usize) -> i64 {
         Err(StrictEnqueueError::MissingInbox) | Err(StrictEnqueueError::DeadOwner) => ERRNO_NOENT,
         Err(StrictEnqueueError::QueueFull(_)) => ERRNO_BUSY,
     };
-    if rc == 0 && crate::sched::is_sleeping(dest_pid as u32) {
+    // Wake unconditionally on delivery: wake_process is state-checked and
+    // idempotent, while gating on the sleep map strands a receiver that is
+    // Sleeping without a map entry, where no sender could ever revive it.
+    if rc == 0 {
         crate::sched::wake_process(dest_pid as u32);
     }
     rc

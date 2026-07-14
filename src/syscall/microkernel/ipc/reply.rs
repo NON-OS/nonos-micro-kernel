@@ -50,7 +50,9 @@ fn trace(caller_pid: u32, dest_pid: u64, label: &[u8], rc: i64, inbox: &str) {
 }
 
 pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {
-    if len == 0 || len > crate::ipc::channel::MAX_MESSAGE_SIZE || dest_pid == 0
+    if len == 0
+        || len > crate::ipc::channel::MAX_MESSAGE_SIZE
+        || dest_pid == 0
         || dest_pid > u32::MAX as u64
     {
         trace(current_pid().unwrap_or(0), dest_pid, b"inval", ERRNO_INVAL, "");
@@ -88,8 +90,10 @@ pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {
         Err(StrictEnqueueError::MissingInbox) | Err(StrictEnqueueError::DeadOwner) => ERRNO_NOENT,
         Err(StrictEnqueueError::QueueFull(_)) => ERRNO_BUSY,
     };
+    // Wake unconditionally on delivery (state-checked and idempotent); the
+    // sleep-map gate strands a receiver that is Sleeping without an entry.
     let mut woke = false;
-    if rc == 0 && crate::sched::is_sleeping(dest_pid as u32) {
+    if rc == 0 {
         crate::sched::wake_process(dest_pid as u32);
         woke = true;
     }

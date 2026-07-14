@@ -36,6 +36,13 @@ pub fn idle_cpu() {
             core::hint::spin_loop();
         }
     }
+    // Callers loop over scheduler state (run queue, process table) right
+    // after idling and rely on the kernel-wide IF=0 discipline for those
+    // locks; returning with interrupts still enabled lets the timer ISR
+    // land inside the caller's next lock section and spin-deadlock the core.
+    unsafe {
+        asm!("cli", options(nomem, nostack));
+    }
 }
 
 #[cfg(target_arch = "aarch64")]
