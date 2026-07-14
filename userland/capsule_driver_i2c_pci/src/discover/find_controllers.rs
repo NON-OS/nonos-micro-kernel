@@ -13,53 +13,39 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO};
 
-use nonos_libc::{mk_device_list, DeviceRecord, BAR_KIND_MMIO, BUS_KIND_PCI};
+use super::classify::classify;
+use super::defs::{Found, MAX_DEVICES};
 
-use crate::constants::{device_info, INTEL_VENDOR_ID};
-
-const MAX_DEVICES: usize = 128;
-const PCI_CLASS_SERIAL_BUS: u8 = 0x0c;
-
-#[derive(Clone, Copy)]
-pub struct Found {
-    pub device_id: u64,
-    pub irq_line: u8,
-    pub bar0_size: u64,
-    pub pci_device: u16,
-    pub clock_hz: u32,
-    pub family: &'static str,
-}
-
-pub fn find_controller() -> Option<Found> {
+/// Collect every LPSS I2C host controller with a usable MMIO window into `out`,
+/// returning how many were written. The touchpad may hang off any one of them,
+/// so the caller probes each rather than committing to the first.
+pub fn find_controllers(out: &mut [Found]) -> usize {
     let mut buf = [DeviceRecord::empty(); MAX_DEVICES];
     let n = mk_device_list(0, buf.as_mut_ptr(), MAX_DEVICES as u64);
     if n <= 0 {
-        return None;
+        return 0;
     }
+    let mut count = 0;
     for r in &buf[..core::cmp::min(n as usize, MAX_DEVICES)] {
-        if !is_intel_i2c(r) || r.irq_pin == 0 || r.irq_line == 0xFF {
-            continue;
+        if count >= out.len() {
+            break;
         }
-        let Some((family, clock_hz)) = device_info(r.device) else { continue };
+        let Some((family, clock_hz, is_acpi)) = classify(r) else { continue };
         let bar0 = r.bars[0];
         if r.bar_count != 0 && bar0.kind == BAR_KIND_MMIO && bar0.size != 0 {
-            return Some(Found {
+            out[count] = Found {
                 device_id: r.device_id,
                 irq_line: r.irq_line,
                 bar0_size: bar0.size,
                 pci_device: r.device,
                 clock_hz,
                 family,
-            });
+                is_acpi,
+            };
+            count += 1;
         }
     }
-    None
-}
-
-fn is_intel_i2c(r: &DeviceRecord) -> bool {
-    r.vendor == INTEL_VENDOR_ID
-        && r.bus_kind == BUS_KIND_PCI
-        && r.pci_class == PCI_CLASS_SERIAL_BUS
-        && device_info(r.device).is_some()
+    count
 }

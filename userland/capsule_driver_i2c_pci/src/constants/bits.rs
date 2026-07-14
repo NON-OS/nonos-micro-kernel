@@ -13,19 +13,19 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-use nonos_libc::{mk_irq_bind, IrqBindOut};
-
-use crate::discover::Found;
-
-/// Bind the controller interrupt when the platform offers a usable one. The
-/// transfer engine polls, so this is best-effort: a controller that declares no
-/// interrupt (irq_line 0xFF) or whose GSI does not translate on this platform
-/// still drives the bus. A zero grant means no interrupt was bound.
-pub fn bind(dev: Found, claim_epoch: u64) -> IrqBindOut {
-    let mut out = IrqBindOut { grant_id: 0, vector: 0 };
-    if mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out) < 0 {
-        return IrqBindOut { grant_id: 0, vector: 0 };
-    }
-    out
-}
+pub const IC_DATA_CMD_READ: u32 = 1 << 8;
+pub const IC_DATA_CMD_STOP: u32 = 1 << 9;
+pub const IC_DATA_CMD_RESTART: u32 = 1 << 10;
+pub const IC_INTR_TX_ABRT: u32 = 1 << 6;
+pub const IC_STATUS_TFE: u32 = 1 << 2;
+pub const IC_STATUS_RFNE: u32 = 1 << 3;
+pub const IC_STATUS_MST_ACTIVITY: u32 = 1 << 5;
+pub const IC_ENABLE_ENABLE: u32 = 1;
+pub const IC_CLR_TX_ABRT: u64 = 0x54;
+pub const TIMEOUT_ITERS: usize = 250_000;
+pub const TX_FIFO_DEPTH: u32 = 64;
+pub const RX_FIFO_DEPTH: u32 = 64;
+pub const IC_CON_MASTER_MODE: u32 = 1 << 0;
+pub const IC_CON_SPEED_FAST: u32 = 2 << 1;
+pub const IC_CON_RESTART_EN: u32 = 1 << 5;
+pub const IC_CON_SLAVE_DISABLE: u32 = 1 << 6;
