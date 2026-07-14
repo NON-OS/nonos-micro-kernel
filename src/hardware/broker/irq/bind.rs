@@ -71,7 +71,12 @@ fn bind_intx(pid: u32, req: IrqBindRequest, epoch: u64) -> Result<IrqBindResult,
         .find(|r| r.device_id == req.device_id)
         .ok_or(IrqBindError::UnknownDevice)?;
     validate_intx_request(&req, device.irq_pin, device.irq_line)?;
-    if records::vector_for_gsi(req.irq_source).is_some() {
+    // The driver names its line by ISA IRQ number; the IOAPIC is programmed
+    // by GSI. Resolve the MADT override once (identity when none) and route,
+    // mask and record everything by the resolved GSI so ack/unmask later
+    // operate on the same redirection entry.
+    let gsi = ioapic::gsi_for_irq(req.irq_source);
+    if records::vector_for_gsi(gsi).is_some() {
         return Err(IrqBindError::AlreadyBound);
     }
 
@@ -79,11 +84,11 @@ fn bind_intx(pid: u32, req: IrqBindRequest, epoch: u64) -> Result<IrqBindResult,
     let vector = vector_of(slot).ok_or(IrqBindError::NoVector)?;
     let dest_apic_id = crate::arch::interrupt::apic::id();
 
-    if ioapic::program_route_external(req.irq_source, vector, dest_apic_id).is_err() {
+    if ioapic::program_route_external(gsi, vector, dest_apic_id).is_err() {
         slots::free_slot(slot);
         return Err(IrqBindError::PlatformError);
     }
-    let _ = ioapic::mask(req.irq_source, true);
+    let _ = ioapic::mask(gsi, true);
 
     let grant_id = records::allocate_id();
     records::insert(IrqGrant {
@@ -91,13 +96,13 @@ fn bind_intx(pid: u32, req: IrqBindRequest, epoch: u64) -> Result<IrqBindResult,
         pid,
         device_id: req.device_id,
         claim_epoch: epoch,
-        irq_source: req.irq_source,
+        irq_source: gsi,
         vector,
         flags: req.flags,
         kind: IrqGrantKind::Intx,
         device_vector: 0,
     });
-    slots::activate(slot, grant_id, req.irq_source);
+    slots::activate(slot, grant_id, gsi);
 
     Ok(IrqBindResult { grant_id, vector })
 }

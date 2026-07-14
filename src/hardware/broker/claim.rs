@@ -46,12 +46,18 @@ fn next_epoch() -> u64 {
 // must have already verified that `device_id` exists in the broker
 // table.
 pub fn claim(pid: u32, device_id: u64) -> Result<u64, ClaimError> {
-    let mut claims = CLAIMS.lock();
-    if claims.iter().any(|c| c.device_id == device_id) {
-        return Err(ClaimError::AlreadyClaimed);
-    }
-    let epoch = next_epoch();
-    claims.push(Claim { pid, device_id, epoch });
+    let epoch = {
+        let mut claims = CLAIMS.lock();
+        if claims.iter().any(|c| c.device_id == device_id) {
+            return Err(ClaimError::AlreadyClaimed);
+        }
+        let epoch = next_epoch();
+        claims.push(Claim { pid, device_id, epoch });
+        epoch
+    };
+    // Bring the device to power state D0 before its driver maps MMIO. Done
+    // outside the claims lock: it touches config space and settles for a moment.
+    super::power::power_on_device(device_id);
     Ok(epoch)
 }
 

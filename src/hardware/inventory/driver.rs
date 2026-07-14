@@ -28,7 +28,10 @@ pub fn family_driver(family: HardwareFamily) -> Option<&'static str> {
         NetworkRtl8169 => "driver_rtl8169",
         NetworkIwlwifi => "driver_iwlwifi",
         DisplayVirtioGpu => "driver_virtio_gpu",
-        DisplayBga => "driver_bga",
+        // DisplayBga stays undispatched: the BGA capsule is a broker-path
+        // proof that re-modes the adapter and serves no gfx protocol, so
+        // spawning it destroys the firmware scanout the compositor's GOP
+        // path is presenting into. Wire it back once it speaks gfx.
         UsbXhci => "driver_xhci",
         InputPs2 => "driver_ps2_input",
         InputUsbHid => "driver_usb_hid",

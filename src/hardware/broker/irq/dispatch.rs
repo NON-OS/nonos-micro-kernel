@@ -35,6 +35,11 @@ const SEQ_SATURATION: u64 = u64::MAX - 1;
 
 #[inline]
 pub fn on_vector(vector: u8) {
+    if option_env!("NONOS_FBCONSOLE").is_some() {
+        // Bring-up diagnostic: flash the on-screen device-IRQ marker so a
+        // photo shows whether device interrupts are being delivered at all.
+        crate::interrupts::timer::heartbeat::device_irq_blip();
+    }
     let slot_idx = match slot_of(vector) {
         Some(i) => i,
         None => {

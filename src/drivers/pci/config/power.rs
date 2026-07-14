@@ -42,13 +42,17 @@ impl ConfigSpace {
         if let Some(pm_cap) = self.find_pm_capability()? {
             let pmcsr_offset = (pm_cap + 4) as u16;
             let pmcsr = self.read16(pmcsr_offset)?;
+            if pmcsr & 0x0003 == 0 {
+                return Ok(());
+            }
 
             let new_pmcsr = pmcsr & !0x0003;
             self.write16(pmcsr_offset, new_pmcsr)?;
 
-            for _ in 0..10000 {
-                core::hint::spin_loop();
-            }
+            // PCI PM requires 10 ms of recovery after leaving D3hot before the
+            // function is accessed; a shorter spin lets a still-recovering
+            // device misread during bring-up.
+            crate::sys::timer::delay_ms(10);
         }
         Ok(())
     }
