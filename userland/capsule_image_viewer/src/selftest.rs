@@ -69,6 +69,11 @@ pub fn run() -> ! {
         exit_fail(b"[IMG-VIEWER] FAIL bigscale\n");
     }
 
+    let gg = crate::viewer::gallery::layout::grid(800);
+    if gg.cols == 0 { exit_fail(b"[IMG-VIEWER] FAIL gridcols\n"); }
+    let (gx, _gy, gw, _gh) = crate::viewer::gallery::layout::cell_rect(0, 0, &gg);
+    if gx < 0 || gw == 0 { exit_fail(b"[IMG-VIEWER] FAIL cellrect\n"); }
+
     if checksum == EXPECTED_CHECKSUM {
         emit(b"[IMG-VIEWER] PASS\n");
         mk_exit(0);
