@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod address_space;
-mod entry_count;
-mod generic_address;
-mod header;
+mod apply;
+mod crs;
+mod enumerate;
+mod find;
+mod hid_match;
+mod interrupt;
+mod memory32;
 
-pub use address_space::AddressSpace;
-pub use entry_count::{sdt_entry_count, MAX_TABLE_BYTES};
-pub use generic_address::GenericAddress;
-pub use header::SdtHeader;
+pub use crs::parse_controller_crs;
+pub use enumerate::enumerate_i2c_controllers;
+pub use find::find_i2c_controller_devices;

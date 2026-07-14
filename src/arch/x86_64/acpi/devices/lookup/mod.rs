@@ -14,12 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod address_space;
-mod entry_count;
-mod generic_address;
-mod header;
+//! ACPI device lookup accessors.
 
-pub use address_space::AddressSpace;
-pub use entry_count::{sdt_entry_count, MAX_TABLE_BYTES};
-pub use generic_address::GenericAddress;
-pub use header::SdtHeader;
+mod enabled_processor_count;
+mod get_hpet_base;
+mod get_ioapic_addresses;
+mod get_ioapic_for_gsi;
+mod get_lapic_base;
+mod get_pcie_ecam;
+mod has_8042;
+mod has_legacy_pics;
+mod numa_domains;
+mod processor_count;
+
+pub use enabled_processor_count::enabled_processor_count;
+pub use get_hpet_base::get_hpet_base;
+pub use get_ioapic_addresses::get_ioapic_addresses;
+pub use get_ioapic_for_gsi::get_ioapic_for_gsi;
+pub use get_lapic_base::get_lapic_base;
+pub use get_pcie_ecam::get_pcie_ecam;
+pub use has_8042::has_8042;
+pub use has_legacy_pics::has_legacy_pics;
+pub use numa_domains::numa_domains;
+pub use processor_count::processor_count;

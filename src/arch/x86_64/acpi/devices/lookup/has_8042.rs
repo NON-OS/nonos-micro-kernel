@@ -14,12 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod address_space;
-mod entry_count;
-mod generic_address;
-mod header;
+use crate::arch::x86_64::acpi::parser;
 
-pub use address_space::AddressSpace;
-pub use entry_count::{sdt_entry_count, MAX_TABLE_BYTES};
-pub use generic_address::GenericAddress;
-pub use header::SdtHeader;
+// True when the platform has an i8042 PS/2 controller. Defaults to true
+// when the FADT is unavailable or unparsed so we never drop the i8042 on
+// firmware that a real controller (QEMU and legacy hardware) depends on.
+pub fn has_8042() -> bool {
+    parser::has_8042().unwrap_or(true)
+}

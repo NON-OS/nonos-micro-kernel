@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
 use core::sync::atomic::{AtomicBool, Ordering};
 use spin::RwLock;
 
@@ -26,12 +27,16 @@ pub static STATS: RwLock<AcpiStats> = RwLock::new(AcpiStats::new());
 
 pub struct TableRegistry {
     pub tables: BTreeMap<u32, u64>,
+    // Every SSDT physical address, kept in full: SSDTs share one signature so
+    // the signature-keyed map above collapses them to a single entry, yet a
+    // touchpad (or any device) is frequently described in a secondary SSDT.
+    pub ssdt_addresses: Vec<u64>,
     pub data: AcpiData,
 }
 
 impl TableRegistry {
     pub fn new() -> Self {
-        Self { tables: BTreeMap::new(), data: AcpiData::new() }
+        Self { tables: BTreeMap::new(), ssdt_addresses: Vec::new(), data: AcpiData::new() }
     }
 }
 

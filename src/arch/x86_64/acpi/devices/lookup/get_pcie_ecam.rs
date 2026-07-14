@@ -14,17 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
-
 use crate::arch::x86_64::acpi::parser;
-
-pub fn get_hpet_base() -> Option<u64> {
-    parser::hpet_address()
-}
-
-pub fn get_lapic_base() -> Option<u64> {
-    parser::lapic_address()
-}
 
 pub fn get_pcie_ecam(segment: u16, bus: u8) -> Option<u64> {
     for seg in parser::pcie_segments() {
@@ -33,40 +23,4 @@ pub fn get_pcie_ecam(segment: u16, bus: u8) -> Option<u64> {
         }
     }
     None
-}
-
-pub fn get_ioapic_addresses() -> Vec<u64> {
-    parser::ioapics().iter().map(|io| io.address).collect()
-}
-
-pub fn get_ioapic_for_gsi(gsi: u32) -> Option<u64> {
-    for io in parser::ioapics() {
-        if gsi >= io.gsi_base && gsi < io.gsi_base + 24 {
-            return Some(io.address);
-        }
-    }
-    None
-}
-
-pub fn processor_count() -> usize {
-    parser::processors().len()
-}
-
-pub fn enabled_processor_count() -> usize {
-    parser::processors().iter().filter(|p| p.enabled).count()
-}
-
-pub fn has_legacy_pics() -> bool {
-    parser::has_legacy_pics().unwrap_or(true)
-}
-
-pub fn numa_domains() -> Vec<u32> {
-    let mut domains = Vec::new();
-    for region in parser::numa_regions() {
-        if !domains.contains(&region.proximity_domain) {
-            domains.push(region.proximity_domain);
-        }
-    }
-    domains.sort();
-    domains
 }

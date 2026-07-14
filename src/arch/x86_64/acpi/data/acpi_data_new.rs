@@ -26,6 +26,7 @@ impl AcpiData {
             oem_id: [0; 6],
             lapic_address: 0xFEE0_0000,
             has_legacy_pics: true,
+            has_8042: true,
             processors: Vec::new(),
             ioapics: Vec::new(),
             overrides: Vec::new(),

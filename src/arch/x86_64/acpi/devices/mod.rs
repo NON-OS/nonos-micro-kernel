@@ -26,6 +26,6 @@ pub use i2c::{
 pub use irq::{irq_to_gsi, is_irq_active_low, is_irq_level_triggered};
 pub use lookup::{
     enabled_processor_count, get_hpet_base, get_ioapic_addresses, get_ioapic_for_gsi,
-    get_lapic_base, get_pcie_ecam, has_legacy_pics, numa_domains, processor_count,
+    get_lapic_base, get_pcie_ecam, has_8042, has_legacy_pics, numa_domains, processor_count,
 };
 pub use pci::{enumerate_pci_devices, enumerate_pci_raw, PciDevice};

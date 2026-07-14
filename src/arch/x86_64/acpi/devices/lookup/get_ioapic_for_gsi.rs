@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod address_space;
-mod entry_count;
-mod generic_address;
-mod header;
+use crate::arch::x86_64::acpi::parser;
 
-pub use address_space::AddressSpace;
-pub use entry_count::{sdt_entry_count, MAX_TABLE_BYTES};
-pub use generic_address::GenericAddress;
-pub use header::SdtHeader;
+pub fn get_ioapic_for_gsi(gsi: u32) -> Option<u64> {
+    for io in parser::ioapics() {
+        if gsi >= io.gsi_base && gsi < io.gsi_base + 24 {
+            return Some(io.address);
+        }
+    }
+    None
+}

@@ -31,6 +31,7 @@ pub fn parse_fadt(registry: &mut TableRegistry) -> AcpiResult<()> {
         registry.data.pm1b_control = fadt.pm1b_control_block;
         registry.data.pm_profile = fadt.pm_profile();
         registry.data.sci_interrupt = fadt.sci_interrupt;
+        registry.data.has_8042 = fadt.has_8042();
 
         if fadt.has_reset_register() {
             registry.data.reset_reg = Some(fadt.reset_reg);

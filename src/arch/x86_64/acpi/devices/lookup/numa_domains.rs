@@ -14,12 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod address_space;
-mod entry_count;
-mod generic_address;
-mod header;
+use alloc::vec::Vec;
 
-pub use address_space::AddressSpace;
-pub use entry_count::{sdt_entry_count, MAX_TABLE_BYTES};
-pub use generic_address::GenericAddress;
-pub use header::SdtHeader;
+use crate::arch::x86_64::acpi::parser;
+
+pub fn numa_domains() -> Vec<u32> {
+    let mut domains = Vec::new();
+    for region in parser::numa_regions() {
+        if !domains.contains(&region.proximity_domain) {
+            domains.push(region.proximity_domain);
+        }
+    }
+    domains.sort();
+    domains
+}

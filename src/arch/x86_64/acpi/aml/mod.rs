@@ -14,12 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod address_space;
-mod entry_count;
-mod generic_address;
-mod header;
+//! Bounded ACPI AML resource extractor for I2C-HID touchpads.
+//!
+//! This module scans the DSDT AML byte stream for device objects, matches
+//! known touchpad `_HID` values, and parses each device's `_CRS`
+//! ResourceTemplate to recover the I2C slave address and GPIO interrupt pin.
+//! It is not a full AML interpreter; it never executes AML and returns nothing
+//! rather than guessing when the encoding is unexpected.
 
-pub use address_space::AddressSpace;
-pub use entry_count::{sdt_entry_count, MAX_TABLE_BYTES};
-pub use generic_address::GenericAddress;
-pub use header::SdtHeader;
+pub mod controller;
+pub mod crs;
+mod hid_enumerate;
+pub mod scan;
+pub mod tables;
+pub mod types;
+
+pub use controller::enumerate_i2c_controllers;
+pub use hid_enumerate::enumerate_i2c_hid;
+pub use types::{I2cHidDevice, LpssController};
