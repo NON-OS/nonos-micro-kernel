@@ -29,7 +29,7 @@ pub use constants::{LAPIC_PHYS_BASE, TIMER_VECTOR};
 pub use eoi::eoi;
 pub use init::init_local_apic;
 pub use rebind::rebind_to_virt;
-pub use snapshot::lapic_state;
+pub use snapshot::{lapic_state, local_apic_id};
 pub use state::LAPIC_INIT;
 pub use stop_timer::stop_timer;
 pub use timer::setup_timer;

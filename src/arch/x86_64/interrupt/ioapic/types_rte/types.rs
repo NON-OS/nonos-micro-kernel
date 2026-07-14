@@ -14,10 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub use super::ops_msi::{claim_gsi_for_msi, release_gsi_from_msi};
-pub use super::ops_query::{query, restore, snapshot};
-pub use super::ops_route::{
-    alloc_route, free_vector, mask, program_route, program_route_external, retarget,
-};
-pub use super::ops_helpers::gsi_for_irq;
-pub use super::ops_status::{status, IoApicStatus};
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Rte {
+    pub vector: u8,
+    pub delivery: u8,
+    pub logical: bool,
+    pub active_low: bool,
+    pub level_trigger: bool,
+    pub masked: bool,
+    pub dest_apic_id: u32,
+}
+
+impl Default for Rte {
+    fn default() -> Self {
+        Self::fixed(0, 0)
+    }
+}

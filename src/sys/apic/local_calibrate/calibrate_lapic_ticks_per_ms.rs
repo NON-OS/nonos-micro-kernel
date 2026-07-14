@@ -13,15 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 
-use core::sync::atomic::{AtomicU64, Ordering};
+use core::sync::atomic::Ordering;
 
-use super::local::constants::{
+use super::accurate_tsc_hz::accurate_tsc_hz;
+use super::consts::{LAPIC_TICKS_PER_MS, LAPIC_TICKS_PER_MS_MAX, LAPIC_TICKS_PER_MS_MIN};
+use super::super::local::constants::{
     LAPIC_LVT_TIMER, LAPIC_TIMER_CURRENT, LAPIC_TIMER_DIV, LAPIC_TIMER_INIT, LAPIC_TIMER_MASKED,
 };
-use super::local::regs::{lapic_read_raw, lapic_write_raw};
-use crate::sys::timer::tsc::{rdtsc, tsc_frequency};
-
-static LAPIC_TICKS_PER_MS: AtomicU64 = AtomicU64::new(0);
+use super::super::local::regs::{lapic_read_raw, lapic_write_raw};
+use crate::sys::timer::tsc::rdtsc;
 
 pub fn calibrate_lapic_ticks_per_ms() -> u64 {
     let cached = LAPIC_TICKS_PER_MS.load(Ordering::Acquire);
@@ -29,7 +29,7 @@ pub fn calibrate_lapic_ticks_per_ms() -> u64 {
         return cached;
     }
 
-    let tsc_hz = tsc_frequency();
+    let tsc_hz = accurate_tsc_hz();
     if tsc_hz == 0 {
         return 0;
     }
@@ -43,7 +43,14 @@ pub fn calibrate_lapic_ticks_per_ms() -> u64 {
 
         let tsc_start = rdtsc();
         let target = tsc_start.wrapping_add(tsc_window);
-        while rdtsc() < target {
+        // Backstop against a non-advancing TSC. A sane window is at most
+        // ~6e7 TSC ticks and each loop turn lets the TSC move tens of ticks,
+        // so a real clock exits on the comparison in a few million turns;
+        // 50 million leaves wide margin yet bails in a fraction of a second
+        // if rdtsc is frozen, instead of spinning for a minute.
+        let mut guard: u64 = 50_000_000;
+        while rdtsc() < target && guard > 0 {
+            guard -= 1;
             core::hint::spin_loop();
         }
         let remaining = lapic_read_raw(LAPIC_TIMER_CURRENT);
@@ -54,7 +61,8 @@ pub fn calibrate_lapic_ticks_per_ms() -> u64 {
         lapic_write_raw(LAPIC_LVT_TIMER, prev | LAPIC_TIMER_MASKED);
 
         let elapsed = u32::MAX.wrapping_sub(remaining) as u64;
-        let ticks_per_ms = elapsed / window_ms;
+        let ticks_per_ms =
+            (elapsed / window_ms).clamp(LAPIC_TICKS_PER_MS_MIN, LAPIC_TICKS_PER_MS_MAX);
         LAPIC_TICKS_PER_MS.store(ticks_per_ms, Ordering::Release);
         ticks_per_ms
     }

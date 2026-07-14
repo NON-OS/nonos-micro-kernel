@@ -14,10 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub use super::ops_msi::{claim_gsi_for_msi, release_gsi_from_msi};
-pub use super::ops_query::{query, restore, snapshot};
-pub use super::ops_route::{
-    alloc_route, free_vector, mask, program_route, program_route_external, retarget,
-};
-pub use super::ops_helpers::gsi_for_irq;
-pub use super::ops_status::{status, IoApicStatus};
+use super::super::error::{IoApicError, IoApicResult};
+use super::super::mmio::{redtbl_read, redtbl_write};
+use super::super::ops_helpers::locate;
+
+pub fn mask(gsi: u32, masked: bool) -> IoApicResult<()> {
+    let (chip, idx) = locate(gsi).ok_or(IoApicError::GsiNotFound)?;
+    unsafe {
+        let (mut low, high) = redtbl_read(chip.mmio, idx);
+        if masked {
+            low |= 1 << 16;
+        } else {
+            low &= !(1 << 16);
+        }
+        redtbl_write(chip.mmio, idx, low, high);
+    }
+    Ok(())
+}

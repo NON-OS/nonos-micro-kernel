@@ -27,14 +27,25 @@ use crate::arch::x86_64::boot::cpu_ops::{rdmsr, wrmsr};
 use super::state::LAPIC_X2;
 
 const IA32_APIC_BASE: u32 = 0x1B;
+const APIC_BASE_GLOBAL_ENABLE: u64 = 1 << 11;
 const APIC_BASE_X2_ENABLE: u64 = 1 << 10;
 const X2APIC_MSR_BASE: u32 = 0x800;
 
-// Latch whether firmware left the APIC in x2APIC mode. Must run before any
-// register access so the accessors pick the right transport.
+// Latch whether firmware left the APIC in x2APIC mode, and make sure the
+// APIC is globally enabled before any register access. Bit 11 of
+// IA32_APIC_BASE is the hardware global-enable: with it clear, both the
+// xAPIC MMIO window and the x2APIC MSRs are dead and every LAPIC write
+// (SVR, timer LVT, EOI) silently vanishes, so no interrupt is ever
+// delivered. QEMU hands off with it set; some real firmware does not, and
+// leaving it clear is exactly the "boots but the timer never ticks"
+// symptom. Setting it is a no-op where firmware already did. The x2APIC
+// mode bit is preserved, never forced.
 pub(in crate::sys::apic) fn detect_mode() {
-    let enabled = unsafe { rdmsr(IA32_APIC_BASE) } & APIC_BASE_X2_ENABLE != 0;
-    LAPIC_X2.store(enabled, Ordering::Release);
+    let base = unsafe { rdmsr(IA32_APIC_BASE) };
+    if base & APIC_BASE_GLOBAL_ENABLE == 0 {
+        unsafe { wrmsr(IA32_APIC_BASE, base | APIC_BASE_GLOBAL_ENABLE) };
+    }
+    LAPIC_X2.store(base & APIC_BASE_X2_ENABLE != 0, Ordering::Release);
 }
 
 pub(in crate::sys::apic) fn is_x2(reg_order: Ordering) -> bool {

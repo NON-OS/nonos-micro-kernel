@@ -14,10 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub use super::ops_msi::{claim_gsi_for_msi, release_gsi_from_msi};
-pub use super::ops_query::{query, restore, snapshot};
-pub use super::ops_route::{
-    alloc_route, free_vector, mask, program_route, program_route_external, retarget,
-};
-pub use super::ops_helpers::gsi_for_irq;
-pub use super::ops_status::{status, IoApicStatus};
+use super::types::Rte;
+
+impl Rte {
+    pub(crate) fn flags_bits(self) -> u32 {
+        let mut f = 0u32;
+        if self.logical {
+            f |= 1 << 0;
+        }
+        if self.active_low {
+            f |= 1 << 1;
+        }
+        if self.level_trigger {
+            f |= 1 << 2;
+        }
+        if self.masked {
+            f |= 1 << 3;
+        }
+        f | ((self.delivery as u32) << 8)
+    }
+}

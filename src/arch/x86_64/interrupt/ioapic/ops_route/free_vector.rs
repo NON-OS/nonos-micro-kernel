@@ -14,10 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub use super::ops_msi::{claim_gsi_for_msi, release_gsi_from_msi};
-pub use super::ops_query::{query, restore, snapshot};
-pub use super::ops_route::{
-    alloc_route, free_vector, mask, program_route, program_route_external, retarget,
-};
-pub use super::ops_helpers::gsi_for_irq;
-pub use super::ops_status::{status, IoApicStatus};
+use super::super::state::VEC_ALLOC;
+
+pub fn free_vector(vec: u8) {
+    VEC_ALLOC.lock().free(vec);
+}
