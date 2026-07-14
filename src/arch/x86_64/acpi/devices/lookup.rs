@@ -60,6 +60,13 @@ pub fn has_legacy_pics() -> bool {
     parser::has_legacy_pics().unwrap_or(true)
 }
 
+// True when the platform has an i8042 PS/2 controller. Defaults to true
+// when the FADT is unavailable or unparsed so we never drop the i8042 on
+// firmware that a real controller (QEMU and legacy hardware) depends on.
+pub fn has_8042() -> bool {
+    parser::has_8042().unwrap_or(true)
+}
+
 pub fn numa_domains() -> Vec<u32> {
     let mut domains = Vec::new();
     for region in parser::numa_regions() {

@@ -29,6 +29,9 @@ pub struct AcpiData {
     pub oem_id: [u8; 6],
     pub lapic_address: u64,
     pub has_legacy_pics: bool,
+    // Reflects the FADT IA-PC boot architecture HAS_8042 flag. Defaults
+    // to true so a missing or unparsed FADT keeps the i8042 present.
+    pub has_8042: bool,
     pub processors: Vec<ProcessorInfo>,
     pub ioapics: Vec<IoApicInfo>,
     pub overrides: Vec<InterruptOverride>,

@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod address_space;
-mod entry_count;
-mod generic_address;
-mod header;
-
-pub use address_space::AddressSpace;
-pub use entry_count::{sdt_entry_count, MAX_TABLE_BYTES};
-pub use generic_address::GenericAddress;
-pub use header::SdtHeader;
+/// Decode an Extended Interrupt descriptor payload (ACPI 6.x 6.4.3.6): the
+/// interrupt table length at offset 1 and the first interrupt number, a
+/// little-endian dword, at offset 2. An empty table is treated as absent.
+pub(super) fn parse_extended_interrupt(data: &[u8]) -> Option<u32> {
+    if *data.get(1)? == 0 {
+        return None;
+    }
+    Some(u32::from_le_bytes([*data.get(2)?, *data.get(3)?, *data.get(4)?, *data.get(5)?]))
+}

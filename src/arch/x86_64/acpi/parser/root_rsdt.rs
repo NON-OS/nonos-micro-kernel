@@ -16,7 +16,7 @@
 
 use super::state::TableRegistry;
 use crate::arch::x86_64::acpi::error::{AcpiError, AcpiResult};
-use crate::arch::x86_64::acpi::tables::{SdtHeader, SIG_RSDT};
+use crate::arch::x86_64::acpi::tables::{sdt_entry_count, SdtHeader, SIG_RSDT, SIG_SSDT};
 use core::{mem, ptr};
 
 pub fn parse_rsdt(registry: &mut TableRegistry, addr: u64) -> AcpiResult<()> {
@@ -29,13 +29,16 @@ pub fn parse_rsdt(registry: &mut TableRegistry, addr: u64) -> AcpiResult<()> {
         if !header.validate_checksum(addr as *const u8) {
             return Err(AcpiError::RsdtChecksumFailed);
         }
-        let entry_count = (header.length as usize - mem::size_of::<SdtHeader>()) / 4;
+        let entry_count = sdt_entry_count(header.length as usize, mem::size_of::<SdtHeader>(), 4);
         let entries_ptr = (addr as usize + mem::size_of::<SdtHeader>()) as *const u32;
         for i in 0..entry_count {
             let entry_addr = ptr::read_volatile(entries_ptr.add(i)) as u64;
             if entry_addr != 0 {
                 if let Some(hdr) = super::phys::directmap(entry_addr) {
                     let table_header = ptr::read_volatile(hdr as *const SdtHeader);
+                    if table_header.signature == SIG_SSDT {
+                        registry.ssdt_addresses.push(entry_addr);
+                    }
                     registry.tables.insert(table_header.signature, entry_addr);
                 }
             }

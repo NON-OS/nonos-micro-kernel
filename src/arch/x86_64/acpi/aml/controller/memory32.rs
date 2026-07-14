@@ -14,12 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod address_space;
-mod entry_count;
-mod generic_address;
-mod header;
-
-pub use address_space::AddressSpace;
-pub use entry_count::{sdt_entry_count, MAX_TABLE_BYTES};
-pub use generic_address::GenericAddress;
-pub use header::SdtHeader;
+/// Decode a Memory32Fixed descriptor payload (ACPI 6.x 6.4.3.4): the base
+/// address at offset 1 and the range length at offset 5, both little-endian.
+/// A zero base is treated as absent.
+pub(super) fn parse_memory32_fixed(data: &[u8]) -> Option<(u32, u32)> {
+    let base = u32::from_le_bytes([*data.get(1)?, *data.get(2)?, *data.get(3)?, *data.get(4)?]);
+    let len = u32::from_le_bytes([*data.get(5)?, *data.get(6)?, *data.get(7)?, *data.get(8)?]);
+    (base != 0).then_some((base, len))
+}
