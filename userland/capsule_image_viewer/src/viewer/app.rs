@@ -70,8 +70,10 @@ impl App for ViewerApp {
             Mode::Gallery => {
                 if !self.st.gallery.scanned {
                     let paths = scan::scan(self.st.owner_pid);
-                    self.st.gallery.entries = paths.into_iter().map(mk_entry).collect();
-                    self.st.gallery.scanned = true;
+                    if !paths.is_empty() {
+                        self.st.gallery.entries = paths.into_iter().map(mk_entry).collect();
+                        self.st.gallery.scanned = true;
+                    }
                     return true;
                 }
                 thumbs::decode_next(&mut self.st.gallery, self.st.owner_pid)
