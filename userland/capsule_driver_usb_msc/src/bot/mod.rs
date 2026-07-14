@@ -16,6 +16,8 @@
 
 mod cbw;
 mod csw;
+mod validate;
 
 pub use cbw::{CommandBlockWrapper, CBW_FLAG_IN, CBW_FLAG_OUT};
 pub use csw::{parse, CommandStatus};
+pub use validate::{validate, TransferOutcome, ValidateError};
