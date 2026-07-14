@@ -14,6 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn input_len(desc: &[u8; 30]) -> usize {
-    usize::from(u16::from_le_bytes([desc[10], desc[11]])).min(256)
-}
+//! Turn a stream of absolute touch samples into pointer gestures: move the
+//! cursor under one finger, click on a tap (finger down then up without
+//! travel), and scroll with two fingers. Pure state so it can be exercised by
+//! host tests without a device.
+
+mod on_touch;
+mod types;
+
+pub use types::{TouchActions, TouchGesture};

@@ -14,25 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Decode one input report into an absolute touch sample using a parsed layout.
-
-use super::layout::TouchLayout;
-use super::read_bits::read_bits;
-
-/// The primary contact and gross state of one touch report.
-#[derive(Clone, Copy, Default)]
-pub struct TouchSample {
-    pub x: u32,
-    pub y: u32,
-    pub x_max: i32,
-    pub y_max: i32,
-    /// The primary finger is touching the surface.
-    pub tip: bool,
-    /// Number of fingers down, for gesture logic.
-    pub contacts: u32,
-    /// The physical click button (clickpad) is pressed.
-    pub button: bool,
-}
+use super::types::TouchSample;
+use crate::hid::report_desc::layout::TouchLayout;
+use crate::hid::report_desc::read_bits::read_bits;
 
 /// `report` is the input report after the two-byte i2c-hid length prefix (what
 /// the poll loop already slices out). Returns None when the report is for a
@@ -46,6 +30,16 @@ pub fn decode_touch(report: &[u8], layout: &TouchLayout) -> Option<TouchSample> 
     } else {
         report
     };
+
+    // A torn or short polled read must be dropped whole: read_bits zero-fills
+    // past the end, which would silently truncate coordinates into violent
+    // jumps toward the origin instead of failing.
+    let fields = [layout.x, layout.y, layout.tip, layout.contact_count, layout.button];
+    let need =
+        fields.iter().filter(|f| f.present()).map(|f| f.bit_offset + f.bit_size).max().unwrap_or(0);
+    if (body.len() as u32) * 8 < need {
+        return None;
+    }
 
     let x = read_bits(body, layout.x.bit_offset, layout.x.bit_size);
     let y = read_bits(body, layout.y.bit_offset, layout.y.bit_size);

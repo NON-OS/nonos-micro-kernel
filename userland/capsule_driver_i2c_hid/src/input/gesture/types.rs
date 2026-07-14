@@ -14,6 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn input_len(desc: &[u8; 30]) -> usize {
-    usize::from(u16::from_le_bytes([desc[10], desc[11]])).min(256)
+/// The absolute range the router expects for a POINTER_ABS event.
+pub const ABS_RANGE: u32 = 0x7FFF;
+
+#[derive(Default)]
+pub struct TouchGesture {
+    pub(super) was_tip: bool,
+    pub(super) was_button: bool,
+    pub(super) down_x: u32,
+    pub(super) down_y: u32,
+    pub(super) moved: bool,
+    pub(super) scrolling: bool,
+    pub(super) scroll_y: u32,
+    pub(super) multi_touch: bool,
+}
+
+/// What one sample should do. The driver posts these as input events.
+#[derive(Default, PartialEq, Eq, Debug)]
+pub struct TouchActions {
+    /// Absolute cursor position, already scaled to 0..ABS_RANGE.
+    pub move_to: Option<(u32, u32)>,
+    pub wheel: i32,
+    pub button_down: bool,
+    pub button_up: bool,
 }

@@ -14,6 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn input_len(desc: &[u8; 30]) -> usize {
-    usize::from(u16::from_le_bytes([desc[10], desc[11]])).min(256)
+/// The primary contact and gross state of one touch report.
+#[derive(Clone, Copy, Default)]
+pub struct TouchSample {
+    pub x: u32,
+    pub y: u32,
+    pub x_max: i32,
+    pub y_max: i32,
+    /// The primary finger is touching the surface.
+    pub tip: bool,
+    /// Number of fingers down, for gesture logic.
+    pub contacts: u32,
+    /// The physical click button (clickpad) is pressed.
+    pub button: bool,
 }

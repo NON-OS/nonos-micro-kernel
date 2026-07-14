@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn input_len(desc: &[u8; 30]) -> usize {
-    usize::from(u16::from_le_bytes([desc[10], desc[11]])).min(256)
+use nonos_libc::mk_yield;
+
+/// A fixed yield-spaced pause. ELAN pads need it after power-on before they
+/// accept the reset command, and it also covers the input register when a
+/// device has no addressable reset sentinel.
+pub(super) fn settle() {
+    for _ in 0..2048 {
+        mk_yield();
+    }
 }

@@ -43,6 +43,13 @@ pub struct TouchLayout {
     pub tip: Field,
     pub contact_count: Field,
     pub button: Field,
+    /// The Input Mode field of the device-configuration FEATURE report (usage
+    /// 0x0D:0x52), with its bit offset inside that feature report. A precision
+    /// touchpad powers up in mouse mode and only streams the touch collection
+    /// after the host writes mode 3 here.
+    pub input_mode: Field,
+    /// Report id of the feature report carrying the Input Mode field.
+    pub input_mode_report_id: u8,
 }
 
 impl TouchLayout {

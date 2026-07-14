@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn input_len(desc: &[u8; 30]) -> usize {
-    usize::from(u16::from_le_bytes([desc[10], desc[11]])).min(256)
-}
+//! I2C-HID power-up handshake. Real devices ship asleep: until the host
+//! writes SET_POWER(ON) and RESET through the command register, most
+//! touchpads never produce a single input report. The emulated bench has
+//! no i2c-hid device, so only real hardware exercises this path.
+
+mod await_reset;
+mod command_register;
+mod settle;
+mod wake;
+
+pub use wake::wake;

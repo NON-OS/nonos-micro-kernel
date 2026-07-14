@@ -14,6 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn input_len(desc: &[u8; 30]) -> usize {
-    usize::from(u16::from_le_bytes([desc[10], desc[11]])).min(256)
-}
+//! Walk a HID report descriptor and locate the touchpad's absolute X/Y, tip
+//! switch, contact count and button fields. This is a focused reader: it tracks
+//! only the global and local state those fields need, records the first contact
+//! it sees (enough to drive the cursor), and is bounded so a malformed
+//! descriptor can only ever yield fewer fields, never loop or read out of range.
+
+mod assign;
+mod parse;
+mod read_le;
+mod usage_for;
+
+pub use parse::parse;

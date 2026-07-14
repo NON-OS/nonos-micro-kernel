@@ -14,22 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Walk a HID report descriptor and locate the touchpad's absolute X/Y, tip
-//! switch, contact count and button fields. This is a focused reader: it tracks
-//! only the global and local state those fields need, records the first contact
-//! it sees (enough to drive the cursor), and is bounded so a malformed
-//! descriptor can only ever yield fewer fields, never loop or read out of range.
+use super::assign::assign;
+use super::read_le::read_le;
+use super::usage_for::usage_for;
+use crate::hid::report_desc::layout::{Field, TouchLayout};
 
-use super::layout::{Field, TouchLayout};
-
-const USAGE_PAGE_GENERIC_DESKTOP: u16 = 0x01;
-const USAGE_PAGE_BUTTON: u16 = 0x09;
 const USAGE_PAGE_DIGITIZER: u16 = 0x0D;
-
-const USAGE_X: u16 = 0x30;
-const USAGE_Y: u16 = 0x31;
-const USAGE_TIP_SWITCH: u16 = 0x42;
-const USAGE_CONTACT_COUNT: u16 = 0x54;
+const USAGE_INPUT_MODE: u16 = 0x52;
 
 const MAX_USAGES: usize = 64;
 const MAX_FIELDS_PER_ITEM: u32 = 256;
@@ -42,6 +33,9 @@ pub fn parse(desc: &[u8]) -> TouchLayout {
     let mut report_id: u8 = 0;
     let mut logical_max: i32 = 0;
     let mut bit_offset: u32 = 0;
+    // Feature reports lay out in their own offset space, separate from input
+    // reports of the same id.
+    let mut feature_bit_offset: u32 = 0;
     let mut usages = [0u16; MAX_USAGES];
     let mut n_usages = 0usize;
 
@@ -78,6 +72,7 @@ pub fn parse(desc: &[u8]) -> TouchLayout {
                 0x8 => {
                     report_id = data as u8;
                     bit_offset = 0;
+                    feature_bit_offset = 0;
                 }
                 0x9 => report_count = data,
                 _ => {}
@@ -90,7 +85,8 @@ pub fn parse(desc: &[u8]) -> TouchLayout {
                 }
             }
             0 => {
-                // Main item. Only Input (tag 0x8) lays out report fields.
+                // Main item. Input (tag 0x8) lays out input-report fields;
+                // Feature (tag 0xB) is walked only for the Input Mode switch.
                 if tag == 0x8 {
                     let count = report_count.min(MAX_FIELDS_PER_ITEM);
                     for f in 0..count {
@@ -106,6 +102,23 @@ pub fn parse(desc: &[u8]) -> TouchLayout {
                         );
                         bit_offset = bit_offset.saturating_add(report_size);
                     }
+                } else if tag == 0xB {
+                    let count = report_count.min(MAX_FIELDS_PER_ITEM);
+                    for f in 0..count {
+                        let usage = usage_for(&usages, n_usages, f as usize);
+                        if usage_page == USAGE_PAGE_DIGITIZER
+                            && usage == USAGE_INPUT_MODE
+                            && !layout.input_mode.present()
+                        {
+                            layout.input_mode = Field {
+                                bit_offset: feature_bit_offset,
+                                bit_size: report_size,
+                                logical_max,
+                            };
+                            layout.input_mode_report_id = report_id;
+                        }
+                        feature_bit_offset = feature_bit_offset.saturating_add(report_size);
+                    }
                 }
                 // Locals are cleared after every main item.
                 n_usages = 0;
@@ -114,51 +127,4 @@ pub fn parse(desc: &[u8]) -> TouchLayout {
         }
     }
     layout
-}
-
-// The nth field's usage; when a report declares more fields than usages, the
-// last usage applies to the remainder (per the HID spec).
-fn usage_for(usages: &[u16], n: usize, index: usize) -> u16 {
-    if n == 0 {
-        0
-    } else if index < n {
-        usages[index]
-    } else {
-        usages[n - 1]
-    }
-}
-
-// Record a field the first time its usage is seen, so multitouch reports that
-// repeat X/Y per finger keep the primary contact.
-fn assign(
-    layout: &mut TouchLayout,
-    page: u16,
-    usage: u16,
-    report_id: u8,
-    bit_offset: u32,
-    bit_size: u32,
-    logical_max: i32,
-) {
-    let field = Field { bit_offset, bit_size, logical_max };
-    match (page, usage) {
-        (USAGE_PAGE_GENERIC_DESKTOP, USAGE_X) if !layout.x.present() => {
-            layout.x = field;
-            layout.report_id = report_id;
-        }
-        (USAGE_PAGE_GENERIC_DESKTOP, USAGE_Y) if !layout.y.present() => layout.y = field,
-        (USAGE_PAGE_DIGITIZER, USAGE_TIP_SWITCH) if !layout.tip.present() => layout.tip = field,
-        (USAGE_PAGE_DIGITIZER, USAGE_CONTACT_COUNT) if !layout.contact_count.present() => {
-            layout.contact_count = field
-        }
-        (USAGE_PAGE_BUTTON, _) if !layout.button.present() => layout.button = field,
-        _ => {}
-    }
-}
-
-fn read_le(bytes: &[u8]) -> u32 {
-    let mut v = 0u32;
-    for (k, &b) in bytes.iter().enumerate() {
-        v |= (b as u32) << (8 * k as u32);
-    }
-    v
 }

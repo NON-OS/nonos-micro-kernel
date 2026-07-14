@@ -14,6 +14,10 @@ pub struct State {
     pub input_polls: u64,
     pub input_reports: u64,
     pub post_failures: u64,
+    pub woke: bool,
+    /// The Input Mode = touchpad feature write was accepted (PTP absolute
+    /// reports enabled). False also covers pads without the feature.
+    pub ptp_mode: bool,
     // Absolute-touchpad field map parsed from the HID report descriptor, and the
     // gesture state that turns those reports into pointer events. Empty when the
     // device is a plain relative mouse.
@@ -36,6 +40,8 @@ impl State {
             input_polls: 0,
             input_reports: 0,
             post_failures: 0,
+            woke: false,
+            ptp_mode: false,
             touch_layout: TouchLayout::default(),
             gesture: TouchGesture::default(),
         }

@@ -14,6 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn input_len(desc: &[u8; 30]) -> usize {
-    usize::from(u16::from_le_bytes([desc[10], desc[11]])).min(256)
+use super::read_at::read_descriptor_at;
+use crate::hid::HID_DESC_LEN;
+
+/// Try the exact address and descriptor register the firmware declared through
+/// ACPI. Returns the descriptor length on success, so the driver binds without
+/// probing a guessed list.
+pub fn probe_addr(
+    port: u32,
+    addr: u8,
+    reg: u16,
+    descriptor: &mut [u8; HID_DESC_LEN],
+) -> Option<usize> {
+    read_descriptor_at(port, addr, reg, descriptor).then_some(HID_DESC_LEN)
 }

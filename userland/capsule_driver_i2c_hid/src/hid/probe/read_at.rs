@@ -14,6 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn input_len(desc: &[u8; 30]) -> usize {
-    usize::from(u16::from_le_bytes([desc[10], desc[11]])).min(256)
+use crate::hid::{valid_descriptor, HID_DESC_LEN};
+use crate::i2c_client::write_read;
+
+/// Read and validate the HID descriptor at one (address, register), copying it
+/// into `descriptor` on success.
+pub(super) fn read_descriptor_at(
+    port: u32,
+    addr: u8,
+    reg: u16,
+    descriptor: &mut [u8; HID_DESC_LEN],
+) -> bool {
+    let mut buf = [0u8; HID_DESC_LEN];
+    if write_read(port, addr, &reg.to_le_bytes(), &mut buf).is_some() && valid_descriptor(&buf) {
+        descriptor.copy_from_slice(&buf);
+        return true;
+    }
+    false
 }

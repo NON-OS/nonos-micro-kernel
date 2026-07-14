@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn input_len(desc: &[u8; 30]) -> usize {
-    usize::from(u16::from_le_bytes([desc[10], desc[11]])).min(256)
+pub(super) fn read_le(bytes: &[u8]) -> u32 {
+    let mut v = 0u32;
+    for (k, &b) in bytes.iter().enumerate() {
+        v |= (b as u32) << (8 * k as u32);
+    }
+    v
 }

@@ -14,34 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Turn a stream of absolute touch samples into pointer gestures: move the
-//! cursor under one finger, click on a tap (finger down then up without
-//! travel), and scroll with two fingers. Pure state so it can be exercised by
-//! host tests without a device.
-
-/// The absolute range the router expects for a POINTER_ABS event.
-pub const ABS_RANGE: u32 = 0x7FFF;
-
-#[derive(Default)]
-pub struct TouchGesture {
-    was_tip: bool,
-    was_button: bool,
-    down_x: u32,
-    down_y: u32,
-    moved: bool,
-    scrolling: bool,
-    scroll_y: u32,
-}
-
-/// What one sample should do. The driver posts these as input events.
-#[derive(Default, PartialEq, Eq, Debug)]
-pub struct TouchActions {
-    /// Absolute cursor position, already scaled to 0..ABS_RANGE.
-    pub move_to: Option<(u32, u32)>,
-    pub wheel: i32,
-    pub button_down: bool,
-    pub button_up: bool,
-}
+use super::types::{TouchActions, TouchGesture, ABS_RANGE};
 
 impl TouchGesture {
     #[allow(clippy::too_many_arguments)]
@@ -56,10 +29,6 @@ impl TouchGesture {
         button: bool,
     ) -> TouchActions {
         let mut act = TouchActions::default();
-        let x_max = x_max.max(1) as u32;
-        let y_max = y_max.max(1) as u32;
-        let tap_travel = x_max / 20; // a tap must stay within ~5% of the pad
-        let scroll_step = (y_max / 60).max(1);
 
         // A physical clickpad press maps straight to the left button.
         if button && !self.was_button {
@@ -70,7 +39,24 @@ impl TouchGesture {
         }
         self.was_button = button;
 
+        // Degenerate maxima mean the descriptor's Logical Maximum did not
+        // parse; scaling through 1 would slam every touch to the far screen
+        // edge, so clicks pass through but motion is suppressed.
+        if x_max <= 1 || y_max <= 1 {
+            return act;
+        }
+        let x_max = x_max as u32;
+        let y_max = y_max as u32;
+        // Torn or short polled reports can carry coordinates beyond the pad's
+        // range; unclamped they scale past ABS_RANGE and the router rails the
+        // cursor to a screen edge where only a one-pixel sliver renders.
+        let x = x.min(x_max);
+        let y = y.min(y_max);
+        let tap_travel = x_max / 20; // a tap must stay within ~5% of the pad
+        let scroll_step = (y_max / 60).max(1);
+
         if contacts >= 2 {
+            self.multi_touch = true;
             if self.scrolling {
                 let dy = y as i32 - self.scroll_y as i32;
                 if dy.unsigned_abs() >= scroll_step {
@@ -87,6 +73,19 @@ impl TouchGesture {
         }
         self.scrolling = false;
 
+        // PTP hybrid reporting alternates which contact a report carries, and
+        // only the first report of a frame set carries the true contact count.
+        // While several fingers were down, the single-contact frames in between
+        // alternate finger positions and would teleport the cursor; hold all
+        // movement until every finger has lifted.
+        if self.multi_touch {
+            if !tip {
+                self.multi_touch = false;
+            }
+            self.was_tip = false;
+            return act;
+        }
+
         if tip {
             if self.was_tip {
                 let dx = (x as i32 - self.down_x as i32).unsigned_abs();
@@ -99,7 +98,10 @@ impl TouchGesture {
                 self.down_y = y;
                 self.moved = false;
             }
-            act.move_to = Some((x * ABS_RANGE / x_max, y * ABS_RANGE / y_max));
+            act.move_to = Some((
+                (u64::from(x) * u64::from(ABS_RANGE) / u64::from(x_max)) as u32,
+                (u64::from(y) * u64::from(ABS_RANGE) / u64::from(y_max)) as u32,
+            ));
         } else if self.was_tip && !self.moved {
             // Finger lifted without travelling: a tap, delivered as a click at
             // the cursor's current position.

@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub fn input_len(desc: &[u8; 30]) -> usize {
-    usize::from(u16::from_le_bytes([desc[10], desc[11]])).min(256)
+// The nth field's usage; when a report declares more fields than usages, the
+// last usage applies to the remainder (per the HID spec).
+pub(super) fn usage_for(usages: &[u16], n: usize, index: usize) -> u16 {
+    if n == 0 {
+        0
+    } else if index < n {
+        usages[index]
+    } else {
+        usages[n - 1]
+    }
 }
