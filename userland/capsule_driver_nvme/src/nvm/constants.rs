@@ -23,4 +23,4 @@ pub const SECTOR_SIZE: usize = 512;
 pub const MAX_SECTORS: u32 = 64;
 pub(super) const DATA_BYTES: u64 = MAX_SECTORS as u64 * SECTOR_SIZE as u64;
 pub(super) const PAGE: u64 = 4096;
-pub(super) const COMPLETION_POLL_LIMIT: u32 = 5_000_000;
+pub(super) const COMPLETION_TIMEOUT_MS: u64 = 5_000;

@@ -19,4 +19,4 @@ pub(super) const SQ_BYTES: u64 = 4096;
 pub(super) const CQ_BYTES: u64 = 4096;
 pub(super) const IDENTIFY_BYTES: u64 = 4096;
 pub(super) const IDENTIFY_SLICE_BYTES: usize = 4096;
-pub(super) const COMPLETION_POLL_LIMIT: u32 = 5_000_000;
+pub(super) const COMPLETION_TIMEOUT_MS: u64 = 5_000;

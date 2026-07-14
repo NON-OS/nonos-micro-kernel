@@ -19,7 +19,7 @@ use super::submission::Submission;
 impl Submission {
     pub const fn nvm_flush(cid: u16, nsid: u32) -> Self {
         Self {
-            cdw0: 0x00 | ((cid as u32) << 16),
+            cdw0: (cid as u32) << 16,
             nsid,
             cdw2: 0,
             cdw3: 0,

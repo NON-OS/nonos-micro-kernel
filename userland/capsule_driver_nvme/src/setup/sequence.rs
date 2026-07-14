@@ -35,7 +35,7 @@ pub fn run() -> NvmeResult<Driver> {
         return Err(e);
     }
     let mmio = mmio::map(dev.device_id, claim_epoch, dev.bar_size)?;
-    let irq = irq::bind(dev, claim_epoch, &mmio)?;
+    let irq = irq::bind(dev, claim_epoch);
     let handles = BrokerHandles::new(dev.device_id, mmio.grant_id, mmio.user_va, irq.grant_id);
     let regs = Regs::new(handles.mmio_user_va());
     let info = ControllerInfo::read(regs);
@@ -60,10 +60,10 @@ pub fn run() -> NvmeResult<Driver> {
         let data = admin.smart_health(regs, info.doorbell_stride())?;
         SmartHealth::parse(data)
     };
-    // Support the two real-world NVMe formats: 512-byte and 4096-byte (4Kn)
-    // LBAs. Many modern and enterprise SSDs are 4Kn; gating on 512 alone left
-    // them enumerated but unable to do I/O.
-    let lba_ok = namespace.lba_size == 512 || namespace.lba_size == 4096;
+    // Accept the two block sizes real NVMe namespaces are formatted with. Many
+    // enterprise and consumer SSDs ship 4096-byte LBAs; gating on 512 alone
+    // left those disks with no I/O queue and no way to read or write.
+    let lba_ok = matches!(namespace.lba_size, 512 | 4096);
     let io = if namespace.nsid != 0 && lba_ok && namespace.size_lba > 0 {
         crate::nvm::bring_up(
             dev.device_id,
@@ -71,9 +71,11 @@ pub fn run() -> NvmeResult<Driver> {
             regs,
             info.doorbell_stride(),
             &mut admin,
-            namespace.nsid,
-            namespace.size_lba,
-            namespace.lba_size,
+            crate::nvm::NamespaceGeometry {
+                nsid: namespace.nsid,
+                capacity_sectors: namespace.size_lba,
+                lba_size: namespace.lba_size,
+            },
         )
         .ok()
     } else {
