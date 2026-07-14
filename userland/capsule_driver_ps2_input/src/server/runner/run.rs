@@ -23,12 +23,10 @@ use crate::server::context::Context;
 use crate::server::error::{reply_decode_failed, reply_with_status};
 use crate::server::handlers;
 use crate::server::pump::pump;
+use crate::server::runner::consts::{IRQ_WAIT_MS, POLL_IDLE_MS};
 use crate::setup::Driver;
 use alloc::vec;
 use nonos_libc::{mk_ipc_recv, mk_irq_wait};
-
-const POLL_IDLE_MS: u64 = 1;
-const IRQ_WAIT_MS: u64 = 100;
 
 pub fn run(driver: Driver) -> ! {
     let rx_len = HDR_LEN;
@@ -46,6 +44,7 @@ pub fn run(driver: Driver) -> ! {
     let mut ctx = Context::new(driver);
     let mut prev_buttons = 0u8;
     let mut wait_seq = 0u64;
+    // signal_ready(); // bring-up diagnostic, silenced
     loop {
         pump(&mut ctx, &mut prev_buttons);
         let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, POLL_IDLE_MS);

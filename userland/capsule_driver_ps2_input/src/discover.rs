@@ -17,7 +17,11 @@ use super::constants::{
     PNP_DEVICE_PS2_AUX, PNP_DEVICE_PS2_KBD, PNP_VENDOR_PS2_AUX, PNP_VENDOR_PS2_KBD,
 };
 use nonos_libc::{mk_device_list, DeviceRecord, BUS_KIND_ACPI};
-const MAX_DEVICES: usize = 32;
+// The fabricated PS/2 records are appended after every PCI and ACPI record in
+// the broker table, and mk_device_list truncates silently to the caller's
+// buffer. A device-rich board can exceed 32 records, which would make the
+// keyboard invisible here; 128 matches the i2c driver's headroom.
+const MAX_DEVICES: usize = 128;
 #[derive(Debug, Clone, Copy)]
 pub struct Found {
     pub device_id: u64,

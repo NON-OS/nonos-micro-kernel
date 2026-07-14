@@ -33,6 +33,7 @@ pub fn drain(
             Some(v) => v,
             None => return,
         };
+        // super::diag::signal_pio_ok(); // bring-up diagnostic, silenced
         if status & STATUS_OUTPUT_FULL == 0 {
             return;
         }
@@ -46,6 +47,7 @@ pub fn drain(
             Some(v) => v,
             None => return,
         };
+        // super::diag::signal_byte(); // bring-up diagnostic, silenced
         if status & STATUS_AUX_DATA != 0 {
             mouse.absorb(byte, mouse_ring);
         } else {

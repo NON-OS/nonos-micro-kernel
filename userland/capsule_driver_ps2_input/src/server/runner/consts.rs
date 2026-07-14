@@ -13,18 +13,23 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+pub(super) const POLL_IDLE_MS: u64 = 1;
+pub(super) const IRQ_WAIT_MS: u64 = 100;
 
-use super::enable_port::enable_port;
-use crate::init::enable_scanning;
+/* driver-ready sentinel: bring-up diagnostic, silenced
+const KIND_DRIVER_READY: u16 = 0xFE01;
 
-// Bring the keyboard online without resetting the controller: the firmware
-// already initialized the i8042 (the machine boots and types in its own BIOS).
-// A keyboard RESET (0xFF) makes the device reply with a delayed self-test byte
-// that lands after init returns and desyncs the scancode stream, and rewriting
-// the config byte off a possibly-stale read can silence a working controller,
-// so neither is done here. What is required: explicitly enable the first port
-// (firmware may hand off with it disabled) and then start scanning.
-pub fn enable_keyboard(grant_id: u64) -> Result<(), &'static str> {
-    enable_port(grant_id)?;
-    enable_scanning(grant_id)
+fn signal_ready() {
+    let ev = InputEvent {
+        kind: KIND_DRIVER_READY,
+        flags: 0,
+        code: 0,
+        x: 0,
+        y: 0,
+        delta_x: 0,
+        delta_y: 0,
+        timestamp_ns: 0,
+    };
+    let _ = mk_input_event_post(&ev);
 }
+*/
