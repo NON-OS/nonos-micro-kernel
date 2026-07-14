@@ -25,14 +25,18 @@ pub const BAR_FLAG_MEM64: u8 = 1 << 1;
 pub struct Bar {
     pub base: u64,
     pub size: u64,
+    /// Bus-specific auxiliary value. For an ACPI LPSS I2C controller it carries
+    /// the DesignWare source clock in Hz; zero for every other bar. Placed here
+    /// so its four-byte alignment keeps the record at 24 bytes.
+    pub aux: u32,
     pub kind: u8,
     pub flags: u8,
-    pub _pad: [u8; 6],
+    pub _pad: [u8; 2],
 }
 
 impl Bar {
     pub const fn empty() -> Self {
-        Self { base: 0, size: 0, kind: BAR_KIND_NONE, flags: 0, _pad: [0; 6] }
+        Self { base: 0, size: 0, kind: BAR_KIND_NONE, flags: 0, aux: 0, _pad: [0; 2] }
     }
 }
 

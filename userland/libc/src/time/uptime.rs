@@ -14,12 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod deadline;
-mod rtc;
-mod uptime;
-mod wall;
+use crate::syscall::{call_raw, N_MK_UPTIME_MS};
 
-pub use deadline::Deadline;
-pub use rtc::{mk_time_rtc, RtcTime};
-pub use uptime::mk_uptime_ms;
-pub use wall::{mk_time_adjust, mk_time_millis};
+/// Monotonic milliseconds since boot. Never moves backwards and is available
+/// before the wall clock is set, so it is the source for bounded timeouts.
+pub extern "C" fn mk_uptime_ms() -> i64 {
+    call_raw(N_MK_UPTIME_MS, [0; 6])
+}

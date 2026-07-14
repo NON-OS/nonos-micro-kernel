@@ -24,6 +24,7 @@
 use crate::syscall::{call_raw, N_MK_PCI_CONFIG_READ, N_MK_PCI_CONFIG_WRITE};
 
 pub const MK_PCI_CFG_COMMAND: u32 = 0x04;
+pub const MK_PCI_CMD_MEMORY_SPACE: u16 = 1 << 1;
 pub const MK_PCI_CMD_BUS_MASTER: u16 = 1 << 2;
 pub const MK_PCI_MSIX_CTRL_FUNCTION_MASK: u16 = 1 << 14;
 pub const MK_PCI_MSIX_CTRL_ENABLE: u16 = 1 << 15;

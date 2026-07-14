@@ -27,7 +27,7 @@ pub use dma::{mk_dma_map, mk_dma_unmap, MK_DMA_MAP_HIGH};
 pub use irq::{mk_irq_ack, mk_irq_bind, mk_irq_poll, mk_irq_unbind, mk_irq_wait, MK_IRQ_BIND_MSIX};
 pub use mmio::{mk_mmio_map, mk_mmio_unmap};
 pub use pci::{
-    mk_pci_config_read, mk_pci_config_write, MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER,
+    mk_pci_config_read, mk_pci_config_write, MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER, MK_PCI_CMD_MEMORY_SPACE,
     MK_PCI_MSIX_CTRL_ENABLE, MK_PCI_MSIX_CTRL_FUNCTION_MASK,
 };
 pub use pio::{mk_pio_grant, mk_pio_read, mk_pio_release, mk_pio_write};
