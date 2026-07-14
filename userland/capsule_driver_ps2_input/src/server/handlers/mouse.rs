@@ -27,6 +27,7 @@ pub fn handle(ctx: &mut Context, req: &Request, tx: &mut [u8]) {
         &mut ctx.ring,
         &mut ctx.mouse,
         &mut ctx.mouse_ring,
+        ctx.driver.mouse_enabled,
     );
     let _ = mk_irq_ack(ctx.driver.irq_grant_id);
     let _ = mk_irq_ack(ctx.driver.aux_irq_grant_id);

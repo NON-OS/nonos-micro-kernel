@@ -18,6 +18,7 @@ pub const STATUS_OFFSET: u16 = 4;
 pub const CTL_READ_CONFIG: u8 = 0x20;
 pub const CTL_WRITE_CONFIG: u8 = 0x60;
 pub const CTL_ENABLE_AUX: u8 = 0xA8;
+pub const CTL_DISABLE_AUX: u8 = 0xA7;
 pub const CTL_ENABLE_KBD: u8 = 0xAE;
 pub const CTL_WRITE_AUX: u8 = 0xD4;
 pub const KBD_ENABLE_SCANNING: u8 = 0xF4;

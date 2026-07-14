@@ -27,6 +27,7 @@ pub fn drain(
     ring: &mut Ring,
     mouse: &mut MouseParser,
     mouse_ring: &mut MouseRing,
+    aux_enabled: bool,
 ) {
     for _ in 0..MAX_BYTES_PER_DRAIN {
         let status = match read_port(grant_id, STATUS_OFFSET) {
@@ -49,7 +50,14 @@ pub fn drain(
         };
         // super::diag::signal_byte(); // bring-up diagnostic, silenced
         if status & STATUS_AUX_DATA != 0 {
-            mouse.absorb(byte, mouse_ring);
+            // When mouse bring-up failed the aux stream is command echoes and
+            // EC garbage, not packets: 0xFA ACKs pass the parser's weak sync
+            // check (bit 3 set) and decode into phantom button presses that
+            // poison the whole desktop (stuck grabs, ghost menus). The bytes
+            // must still be consumed to clear the output buffer.
+            if aux_enabled {
+                mouse.absorb(byte, mouse_ring);
+            }
         } else {
             absorb(drainer, ring, byte);
         }
