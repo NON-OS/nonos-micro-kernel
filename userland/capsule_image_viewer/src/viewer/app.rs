@@ -1,11 +1,14 @@
+extern crate alloc;
 use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, InputKind, PaintBuffer};
-use nonos_app_skeleton::input::{KEY_LEFT, KEY_RIGHT};
+use nonos_app_skeleton::input::{KEY_BACKSPACE, KEY_ESC, KEY_LEFT, KEY_RIGHT};
 use nonos_app_skeleton::discover::lookup_service;
 use nonos_libc::mk_time_millis;
 use crate::viewer::manifest::manifest;
-use crate::viewer::state::ViewerState;
+use crate::viewer::state::{Mode, ViewerState};
 use crate::viewer::viewport::{zoom_at, clamp_pan_mode, FitMode};
 use crate::viewer::{load, render};
+use crate::viewer::gallery::{input as gin, paint as gpaint, scan, thumbs};
+use crate::viewer::gallery::input::GalleryAction;
 
 pub struct ViewerApp { st: ViewerState }
 
@@ -21,6 +24,13 @@ impl App for ViewerApp {
     fn manifest(&self) -> AppManifest { manifest() }
 
     fn on_event(&mut self, event: InputEvent) -> EventOutcome {
+        if self.st.mode == Mode::Gallery {
+            return gallery_event(&mut self.st, &event);
+        }
+        if event.kind == InputKind::KeyDown && (event.code == KEY_ESC || event.code == KEY_BACKSPACE) {
+            self.st.mode = Mode::Gallery;
+            return EventOutcome::Repaint;
+        }
         match event.kind {
             InputKind::Wheel => on_wheel(&mut self.st, &event),
             InputKind::ButtonDown => {
@@ -36,25 +46,66 @@ impl App for ViewerApp {
         }
     }
 
-    fn paint(&mut self, fb: &mut PaintBuffer) { render::paint(&mut self.st, fb); }
+    fn paint(&mut self, fb: &mut PaintBuffer) {
+        self.st.view_w = fb.width;
+        self.st.view_h = fb.height;
+        match self.st.mode {
+            Mode::Gallery => gpaint::paint_gallery(&mut self.st.gallery, fb),
+            Mode::Single => render::paint(&mut self.st, fb),
+        }
+    }
 
     fn on_tick(&mut self) -> bool {
-        let repainted = crate::viewer::arg::poll_open(&mut self.st);
-        if self.st.slideshow_on {
-            let now = now_ms();
-            if now.saturating_sub(self.st.last_advance_ms) >= self.st.interval_ms {
-                load::step(&mut self.st, 1);
-                self.st.last_advance_ms = now;
-                return true;
+        if crate::viewer::arg::poll_open(&mut self.st) {
+            self.st.mode = Mode::Single;
+            return true;
+        }
+        match self.st.mode {
+            Mode::Gallery => {
+                if !self.st.gallery.scanned {
+                    let paths = scan::scan(self.st.owner_pid);
+                    self.st.gallery.entries = paths.into_iter().map(mk_entry).collect();
+                    self.st.gallery.scanned = true;
+                    return true;
+                }
+                thumbs::decode_next(&mut self.st.gallery, self.st.owner_pid)
+            }
+            Mode::Single => {
+                if self.st.slideshow_on {
+                    let now = now_ms();
+                    if now.saturating_sub(self.st.last_advance_ms) >= self.st.interval_ms {
+                        load::step(&mut self.st, 1);
+                        self.st.last_advance_ms = now;
+                        return true;
+                    }
+                }
+                false
             }
         }
-        repainted
     }
 
     fn tick_interval_ms(&self) -> i64 { 150 }
 }
 
 fn now_ms() -> u64 { mk_time_millis().max(0) as u64 }
+
+fn mk_entry(path: alloc::string::String) -> crate::viewer::gallery::state::Entry {
+    crate::viewer::gallery::state::Entry { path, thumb: None, tw: 0, th: 0, failed: false }
+}
+
+fn gallery_event(st: &mut ViewerState, event: &InputEvent) -> EventOutcome {
+    match gin::on_event(&mut st.gallery, event, st.view_w, st.view_h) {
+        GalleryAction::Open(path) => {
+            load::open_path(st, &path);
+            st.dir = st.gallery.entries.iter().map(|e| e.path.clone()).collect();
+            st.idx = st.gallery.sel;
+            st.mode = Mode::Single;
+            EventOutcome::Repaint
+        }
+        GalleryAction::Repaint => EventOutcome::Repaint,
+        GalleryAction::None => EventOutcome::Idle,
+    }
+}
 
 fn on_wheel(st: &mut ViewerState, event: &InputEvent) -> EventOutcome {
     if st.view_w == 0 { return EventOutcome::Idle; }
