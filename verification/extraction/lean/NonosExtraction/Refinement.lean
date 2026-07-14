@@ -30,8 +30,8 @@ open nonos_caps
 namespace NonosExtraction
 
 /-- The bit index each capability occupies in the kernel token word,
-    matching the `bit` table in src/capabilities/types.rs. -/
-def idx : capabilities.types.Capability → Nat
+    matching the `bit` table in src/capabilities/types/bit.rs. -/
+def idx : capabilities.types.defs.Capability → Nat
   | .CoreExec => 0
   | .IO => 1
   | .Network => 2
@@ -58,7 +58,7 @@ def idx : capabilities.types.Capability → Nat
   | .SpawnBroker => 23
   | .SpawnWindow => 24
 
-theorem idx_lt_64 (cap : capabilities.types.Capability) : idx cap < 64 := by
+theorem idx_lt_64 (cap : capabilities.types.defs.Capability) : idx cap < 64 := by
   cases cap <;> decide
 
 private theorem u64_ne_zero (x : Std.U64) : (x != 0#u64) = decide (x.val ≠ 0) := by
@@ -75,16 +75,16 @@ private theorem nat_bridge2 (n v k : Nat) (hv : v = 2 ^ k) :
 
 /-- The extracted bit table is total and yields exactly one bit: the power of
     two at the capability's index. -/
-theorem bit_spec (cap : capabilities.types.Capability) :
-    ∃ v, capabilities.types.Capability.bit cap = ok v ∧ v.val = 2 ^ idx cap := by
+theorem bit_spec (cap : capabilities.types.defs.Capability) :
+    ∃ v, capabilities.types.bit.Capability.bit cap = ok v ∧ v.val = 2 ^ idx cap := by
   cases cap <;> exact ⟨_, rfl, by decide⟩
 
 /-- A single test never fails, and answers exactly the denotation: the
     extracted has_capability IS the Grants semantics of the token word. -/
-theorem has_capability_spec (bits : Std.U64) (cap : capabilities.types.Capability) :
+theorem has_capability_spec (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
     capabilities.bits.has_capability bits cap = ok (capsOf bits.val (idx cap)) := by
   cases cap <;> (
-    simp only [capabilities.bits.has_capability, capabilities.types.Capability.bit,
+    simp only [capabilities.bits.has_capability, capabilities.types.bit.Capability.bit,
       lift, bind_tc_ok, ok.injEq, Nonos.CapabilityBits.capsOf, idx]
     rw [u64_ne_zero]
     simp only [UScalar.val_and]
@@ -92,7 +92,7 @@ theorem has_capability_spec (bits : Std.U64) (cap : capabilities.types.Capabilit
 
 /-- Corollary in the vocabulary of the lattice theorems: the extracted test
     accepts exactly when the abstract token grants the capability. -/
-theorem has_capability_iff_grants (bits : Std.U64) (cap : capabilities.types.Capability) :
+theorem has_capability_iff_grants (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
     capabilities.bits.has_capability bits cap = ok true ↔
       Grants (capsOf bits.val) (idx cap) := by
   rw [has_capability_spec]
@@ -104,7 +104,7 @@ theorem has_capability_iff_grants (bits : Std.U64) (cap : capabilities.types.Cap
     rw [h]
 
 /-- The extracted add never fails and computes the word-level grant. -/
-theorem add_capability_spec (bits : Std.U64) (cap : capabilities.types.Capability) :
+theorem add_capability_spec (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
     ∃ r, capabilities.bits.add_capability bits cap = ok r ∧
       r.val = bits.val ||| bitOf (idx cap) := by
   cases cap <;>
@@ -112,7 +112,7 @@ theorem add_capability_spec (bits : Std.U64) (cap : capabilities.types.Capabilit
 
 /-- Semantic corollary: the token produced by the extracted add grants
     exactly what the abstract grant does, for every capability id. -/
-theorem add_capability_grants (bits : Std.U64) (cap : capabilities.types.Capability)
+theorem add_capability_grants (bits : Std.U64) (cap : capabilities.types.defs.Capability)
     (r : Std.U64) (h : capabilities.bits.add_capability bits cap = ok r) (x : Nat) :
     Grants (capsOf r.val) x ↔ Grants (grant (capsOf bits.val) (idx cap)) x := by
   obtain ⟨r', hr', hval⟩ := add_capability_spec bits cap
@@ -125,7 +125,7 @@ theorem add_capability_grants (bits : Std.U64) (cap : capabilities.types.Capabil
 
 /-- The extracted remove never fails and computes the word-level revoke:
     the 64-bit complement of the single bit, ANDed in. -/
-theorem remove_capability_spec (bits : Std.U64) (cap : capabilities.types.Capability) :
+theorem remove_capability_spec (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
     ∃ r, capabilities.bits.remove_capability bits cap = ok r ∧
       r.val = bits.val &&& not64 (bitOf (idx cap)) := by
   cases cap <;>
@@ -136,7 +136,7 @@ theorem remove_capability_spec (bits : Std.U64) (cap : capabilities.types.Capabi
 
 /-- Semantic corollary: the token produced by the extracted remove grants
     exactly what the abstract revoke does, for every capability id. -/
-theorem remove_capability_revokes (bits : Std.U64) (cap : capabilities.types.Capability)
+theorem remove_capability_revokes (bits : Std.U64) (cap : capabilities.types.defs.Capability)
     (r : Std.U64) (h : capabilities.bits.remove_capability bits cap = ok r) (x : Nat) :
     Grants (capsOf r.val) x ↔ Grants (revoke (capsOf bits.val) (idx cap)) x := by
   obtain ⟨r', hr', hval⟩ := remove_capability_spec bits cap
@@ -150,7 +150,7 @@ theorem remove_capability_revokes (bits : Std.U64) (cap : capabilities.types.Cap
 
 /-- The confinement chain, landed on the extracted code: a token built by the
     extracted remove never grants a capability the original token lacked. -/
-theorem extracted_remove_confines (bits : Std.U64) (cap : capabilities.types.Capability)
+theorem extracted_remove_confines (bits : Std.U64) (cap : capabilities.types.defs.Capability)
     (r : Std.U64) (h : capabilities.bits.remove_capability bits cap = ok r) (x : Nat)
     (hg : Grants (capsOf r.val) x) : Grants (capsOf bits.val) x := by
   have hrev := (remove_capability_revokes bits cap r h x).mp hg
