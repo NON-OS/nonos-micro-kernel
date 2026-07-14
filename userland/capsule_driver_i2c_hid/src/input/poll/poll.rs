@@ -22,6 +22,18 @@ use crate::input::publish::publish;
 use crate::input::publish_touch::publish_touch;
 use crate::state::State;
 
+// How many quiet polls (~2ms each) after the last decoded touch frame before
+// the boot-mouse fallback reopens for unmatched report ids.
+const TOUCH_GATE_POLLS: u32 = 1024;
+
+// Verbatim-repeat handling: a device generates reports at its own rate
+// (~8ms) while we poll faster, so an identical frame is processed only every
+// PACE-th poll, and a run longer than MAX repeats is a stale buffer (the pad
+// re-serving its last report), not input. Real finger motion changes the
+// bytes constantly and is untouched by either bound.
+const FRAME_REPEAT_PACE: u32 = 4;
+const FRAME_REPEAT_MAX: u32 = 12;
+
 pub fn poll(state: &mut State) {
     if !state.found() || state.input_register == 0 {
         return;
@@ -30,11 +42,14 @@ pub fn poll(state: &mut State) {
     // contact-count and scan-time trailer and can run past 64 bytes; the
     // length prefix at the head still drives how much of this we parse.
     let mut buf = [0u8; 256];
-    // wMaxInputLength is unreliable: some firmwares report 0 or a small value
-    // that is shorter than a real multi-contact report, which then fails the
-    // length-prefix check below and drops every frame. Always offer the full
-    // buffer and let the 2-byte length prefix say how much of it is valid.
-    let len = buf.len();
+    // Read only as much as the device declares (with a floor for firmwares
+    // that under-report wMaxInputLength). The read length is transfer TIME on
+    // the wire: a 256-byte read at fast-mode speed takes longer than the
+    // pad's report period, so it straddles a device-side report update and
+    // tears the coordinates mid-transfer. Keeping the read within the real
+    // report size keeps it inside one report interval.
+    let declared = state.input_len;
+    let len = if declared >= 5 { declared.min(buf.len()) } else { 64 };
     state.input_polls = state.input_polls.wrapping_add(1);
     // Spec first: after reset the device auto-points at the input register
     // and reports come from a bare read. Devices that only answer a
@@ -57,6 +72,32 @@ pub fn poll(state: &mut State) {
     // report; only count frames that carry data.
     if buf[0] != 0 || buf[1] != 0 {
         signal_raw_report();
+        // The first few raw frames go to the boot console so a photograph
+        // shows the exact wire bytes next to the parsed layout.
+        if state.frame_dumps < 6 {
+            state.frame_dumps += 1;
+            let tag = alloc::format!("[i2chid] frm{} n={}:", state.frame_dumps, n);
+            crate::diag::hex_line(&tag, &buf[..n.min(16)]);
+        }
+    }
+    // Stale-frame suppression: polled reads return the current report whether
+    // or not it is new. A byte-identical frame is paced down to the device's
+    // own report rate, and a long verbatim run is the pad re-serving a stale
+    // buffer (its last motion report after finger lift, or a post-reset
+    // announcement); treating those as input drifts the cursor by itself.
+    let snap = n.min(state.last_frame.len());
+    let identical = state.last_frame_len == n && state.last_frame[..snap] == buf[..snap];
+    if identical {
+        state.frame_repeats = state.frame_repeats.saturating_add(1);
+        if state.frame_repeats > FRAME_REPEAT_MAX
+            || !state.frame_repeats.is_multiple_of(FRAME_REPEAT_PACE)
+        {
+            return;
+        }
+    } else {
+        state.last_frame[..snap].copy_from_slice(&buf[..snap]);
+        state.last_frame_len = n;
+        state.frame_repeats = 0;
     }
 
     // An absolute touchpad decodes through the parsed field map and the gesture
@@ -71,21 +112,31 @@ pub fn poll(state: &mut State) {
         }
         let body = &buf[2..total];
         if let Some(s) = decode_touch(body, &state.touch_layout) {
-            let act =
-                state.gesture.on_touch(s.x, s.y, s.x_max, s.y_max, s.tip, s.contacts, s.button);
+            state.touch_decoded = true;
+            state.polls_since_touch = 0;
+            let act = state.gesture.on_touch(
+                s.x,
+                s.y,
+                s.x_max,
+                s.y_max,
+                s.tip,
+                s.confidence,
+                s.contacts,
+                s.button,
+            );
             publish_touch(state, &act);
             return;
         }
-        // In PTP mode every meaningful frame is the touch report; anything
-        // else here (vendor report ids, torn reads) must be dropped, not
+        // While the touch decoder is proving itself on this device, unmatched
+        // frames (vendor report ids, torn reads) are dropped rather than
         // reinterpreted by the boot-mouse heuristic as random ±127 deltas.
-        if state.ptp_mode {
+        // The gate decays: if the absolute stream goes quiet (mode changed,
+        // device reset to its mouse collection), the relative fallback
+        // reopens instead of muting the pad forever.
+        state.polls_since_touch = state.polls_since_touch.saturating_add(1);
+        if state.touch_decoded && state.polls_since_touch < TOUCH_GATE_POLLS {
             return;
         }
-        // A pad that stayed in its power-on mouse mode (the input-mode switch
-        // failed or is absent) streams under the mouse collection's report id,
-        // which the touch field map rejects; fall through to the relative
-        // decode instead of dropping every frame a healthy device sends.
     }
     if let Some(sample) = parse_report(&buf[..n]) {
         publish(state, sample);

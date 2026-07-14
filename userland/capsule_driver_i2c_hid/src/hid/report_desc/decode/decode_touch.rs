@@ -34,7 +34,8 @@ pub fn decode_touch(report: &[u8], layout: &TouchLayout) -> Option<TouchSample> 
     // A torn or short polled read must be dropped whole: read_bits zero-fills
     // past the end, which would silently truncate coordinates into violent
     // jumps toward the origin instead of failing.
-    let fields = [layout.x, layout.y, layout.tip, layout.contact_count, layout.button];
+    let fields =
+        [layout.x, layout.y, layout.tip, layout.contact_count, layout.button, layout.confidence];
     let need =
         fields.iter().filter(|f| f.present()).map(|f| f.bit_offset + f.bit_size).max().unwrap_or(0);
     if (body.len() as u32) * 8 < need {
@@ -53,6 +54,8 @@ pub fn decode_touch(report: &[u8], layout: &TouchLayout) -> Option<TouchSample> 
     };
     let button = layout.button.present()
         && read_bits(body, layout.button.bit_offset, layout.button.bit_size) != 0;
+    let confidence = !layout.confidence.present()
+        || read_bits(body, layout.confidence.bit_offset, layout.confidence.bit_size) != 0;
 
     Some(TouchSample {
         x,
@@ -62,5 +65,6 @@ pub fn decode_touch(report: &[u8], layout: &TouchLayout) -> Option<TouchSample> 
         tip,
         contacts,
         button,
+        confidence,
     })
 }

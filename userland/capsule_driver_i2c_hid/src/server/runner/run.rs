@@ -28,11 +28,16 @@ const RECV_TIMEOUT_MS: u64 = 2;
 // keep re-probing on a slow cadence until it is found, instead of giving up
 // after the single startup attempt and never producing input.
 const REPROBE_EVERY: u32 = 250;
+// Cycles (~2ms each) of doorbell silence after which its trust is revoked
+// and timed polling resumes; a genuine idle pad re-proves itself on the very
+// next touch, so the only cost is one re-verification read.
+const DOORBELL_TRUST_CYCLES: u32 = 2500;
 
 pub fn run(mut state: State) -> ! {
     let mut rx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut tx = vec![0u8; HDR_LEN + IPC_PAYLOAD_MAX];
     let mut ticks: u32 = 0;
+    let mut quiet_cycles: u32 = 0;
     /* bring-up sentinels, silenced
     let mut found_signaled = false;
     signal(KIND_DRIVER_READY);
@@ -69,7 +74,34 @@ pub fn run(mut state: State) -> ! {
             found_signaled = true;
         }
         */
-        input::poll(&mut state);
+        // Interrupt-paced reads when the platform gives us the doorbell: the
+        // pad holds its interrupt line active while a fresh report waits, so
+        // a quiet doorbell means no i2c read at all: no stale re-reads, no
+        // torn frames. The doorbell must fire once before it is trusted
+        // (timed polling continues until then, so a line the firmware never
+        // wired cannot silence input), and trust decays after a long quiet
+        // stretch so a one-off spurious reading cannot lock the gate shut.
+        let mut do_poll = true;
+        if state.found() {
+            if let Some((present, fired)) = crate::i2c_client::query_doorbell(state.i2c_port) {
+                if present {
+                    if fired {
+                        state.doorbell_proven = true;
+                        quiet_cycles = 0;
+                    } else if state.doorbell_proven {
+                        quiet_cycles = quiet_cycles.saturating_add(1);
+                        if quiet_cycles > DOORBELL_TRUST_CYCLES {
+                            state.doorbell_proven = false;
+                        } else {
+                            do_poll = false;
+                        }
+                    }
+                }
+            }
+        }
+        if do_poll {
+            input::poll(&mut state);
+        }
         if n <= 0 || sender_pid == 0 {
             continue;
         }

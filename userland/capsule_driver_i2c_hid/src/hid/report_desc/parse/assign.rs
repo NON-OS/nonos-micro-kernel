@@ -23,11 +23,11 @@ const USAGE_PAGE_DIGITIZER: u16 = 0x0D;
 const USAGE_X: u16 = 0x30;
 const USAGE_Y: u16 = 0x31;
 const USAGE_TIP_SWITCH: u16 = 0x42;
+const USAGE_CONFIDENCE: u16 = 0x47;
 const USAGE_CONTACT_COUNT: u16 = 0x54;
 
 // Record a field the first time its usage is seen, so multitouch reports that
 // repeat X/Y per finger keep the primary contact.
-#[allow(clippy::too_many_arguments)]
 pub(super) fn assign(
     layout: &mut TouchLayout,
     page: u16,
@@ -45,6 +45,9 @@ pub(super) fn assign(
         }
         (USAGE_PAGE_GENERIC_DESKTOP, USAGE_Y) if !layout.y.present() => layout.y = field,
         (USAGE_PAGE_DIGITIZER, USAGE_TIP_SWITCH) if !layout.tip.present() => layout.tip = field,
+        (USAGE_PAGE_DIGITIZER, USAGE_CONFIDENCE) if !layout.confidence.present() => {
+            layout.confidence = field
+        }
         (USAGE_PAGE_DIGITIZER, USAGE_CONTACT_COUNT) if !layout.contact_count.present() => {
             layout.contact_count = field
         }

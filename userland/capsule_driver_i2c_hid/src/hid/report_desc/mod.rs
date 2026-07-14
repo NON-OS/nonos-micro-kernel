@@ -23,5 +23,5 @@ mod parse;
 mod read_bits;
 
 pub use decode::decode_touch;
-pub use layout::TouchLayout;
+pub use layout::{Field, TouchLayout};
 pub use parse::parse;

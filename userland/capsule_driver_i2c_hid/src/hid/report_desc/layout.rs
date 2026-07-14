@@ -43,6 +43,10 @@ pub struct TouchLayout {
     pub tip: Field,
     pub contact_count: Field,
     pub button: Field,
+    /// The PTP Confidence bit (usage 0x0D:0x47): set when the contact is a
+    /// deliberate finger, clear for a palm or accidental contact. Absent on
+    /// non-PTP devices; treated as always-confident then.
+    pub confidence: Field,
     /// The Input Mode field of the device-configuration FEATURE report (usage
     /// 0x0D:0x52), with its bit offset inside that feature report. A precision
     /// touchpad powers up in mouse mode and only streams the touch collection
@@ -50,6 +54,14 @@ pub struct TouchLayout {
     pub input_mode: Field,
     /// Report id of the feature report carrying the Input Mode field.
     pub input_mode_report_id: u8,
+    /// Surface-switch feature field (usage 0x0D:0x57): zero disables all
+    /// surface (motion) reporting. A pad with this cleared looks dead.
+    pub surface_switch: Field,
+    pub surface_switch_report_id: u8,
+    /// Button-switch feature field (usage 0x0D:0x58): zero disables button
+    /// reporting.
+    pub button_switch: Field,
+    pub button_switch_report_id: u8,
 }
 
 impl TouchLayout {

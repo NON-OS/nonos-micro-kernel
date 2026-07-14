@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::{TouchActions, TouchGesture, ABS_RANGE};
+use super::types::{
+    TouchActions, TouchGesture, CONTINUITY_DIV, GAIN_CEIL_X16, GAIN_FLOOR_X16, GAIN_SPEED_DIV,
+    MOTION_CAP, NOMINAL_WIDTH,
+};
 
 impl TouchGesture {
     #[allow(clippy::too_many_arguments)]
@@ -25,38 +28,60 @@ impl TouchGesture {
         x_max: i32,
         y_max: i32,
         tip: bool,
+        confidence: bool,
         contacts: u32,
         button: bool,
     ) -> TouchActions {
         let mut act = TouchActions::default();
 
-        // A physical clickpad press maps straight to the left button.
-        if button && !self.was_button {
-            act.button_down = true;
+        // A physical clickpad press maps to the left button, palm or not: a
+        // deliberate press is a deliberate press. Debounced: two consecutive
+        // samples must agree before an edge is emitted, so a single-frame bit
+        // flip (torn read, misplaced field) can never click.
+        if button != self.was_button {
+            self.button_run = self.button_run.saturating_add(1);
+            if self.button_run >= 2 {
+                if button {
+                    act.button_down = true;
+                } else {
+                    act.button_up = true;
+                }
+                self.was_button = button;
+                self.button_run = 0;
+            }
+        } else {
+            self.button_run = 0;
         }
-        if !button && self.was_button {
-            act.button_up = true;
-        }
-        self.was_button = button;
 
         // Degenerate maxima mean the descriptor's Logical Maximum did not
-        // parse; scaling through 1 would slam every touch to the far screen
-        // edge, so clicks pass through but motion is suppressed.
+        // parse; motion math through them is meaningless, so only clicks pass.
         if x_max <= 1 || y_max <= 1 {
             return act;
         }
         let x_max = x_max as u32;
         let y_max = y_max as u32;
         // Torn or short polled reports can carry coordinates beyond the pad's
-        // range; unclamped they scale past ABS_RANGE and the router rails the
-        // cursor to a screen edge where only a one-pixel sliver renders.
+        // declared range; clamp before any delta or tap math.
         let x = x.min(x_max);
         let y = y.min(y_max);
-        let tap_travel = x_max / 20; // a tap must stay within ~5% of the pad
-        let scroll_step = (y_max / 60).max(1);
+
+        // Palm suppression: once a non-confident contact is seen, hold all
+        // motion until every contact has lifted. Typing with a palm resting
+        // on the pad must not steer the cursor.
+        if tip && !confidence {
+            self.palm = true;
+        }
+        if self.palm {
+            if !tip && contacts == 0 {
+                self.palm = false;
+            }
+            self.was_tip = false;
+            return act;
+        }
 
         if contacts >= 2 {
             self.multi_touch = true;
+            let scroll_step = (y_max / 96).max(1);
             if self.scrolling {
                 let dy = y as i32 - self.scroll_y as i32;
                 if dy.unsigned_abs() >= scroll_step {
@@ -67,7 +92,7 @@ impl TouchGesture {
                 self.scrolling = true;
                 self.scroll_y = y;
             }
-            // Two fingers never move the cursor or leave a pending tap.
+            // Two fingers never move the cursor.
             self.was_tip = false;
             return act;
         }
@@ -75,9 +100,9 @@ impl TouchGesture {
 
         // PTP hybrid reporting alternates which contact a report carries, and
         // only the first report of a frame set carries the true contact count.
-        // While several fingers were down, the single-contact frames in between
-        // alternate finger positions and would teleport the cursor; hold all
-        // movement until every finger has lifted.
+        // While several fingers were down, the single-contact frames in
+        // between alternate finger positions and would teleport the cursor;
+        // hold all movement until every finger has lifted.
         if self.multi_touch {
             if !tip {
                 self.multi_touch = false;
@@ -88,27 +113,49 @@ impl TouchGesture {
 
         if tip {
             if self.was_tip {
-                let dx = (x as i32 - self.down_x as i32).unsigned_abs();
-                let dy = (y as i32 - self.down_y as i32).unsigned_abs();
-                if dx > tap_travel || dy > tap_travel {
-                    self.moved = true;
+                let dxp = i64::from(x) - self.last_x;
+                let dyp = i64::from(y) - self.last_y;
+                let den = i64::from(x_max);
+                // Discontinuity: re-anchor silently instead of steering the
+                // cursor with a torn coordinate. The next clean report
+                // resumes motion from here.
+                if dxp.abs() > den / CONTINUITY_DIV || dyp.abs() > den / CONTINUITY_DIV {
+                    self.last_x = i64::from(x);
+                    self.last_y = i64::from(y);
+                    self.acc_x = 0;
+                    self.acc_y = 0;
+                    self.was_tip = tip;
+                    return act;
+                }
+                // Speed in nominal pixels per report drives the gain; both
+                // axes normalize against the X range so the pad's physical
+                // aspect ratio is preserved.
+                let speed = (dxp.abs() + dyp.abs()) * NOMINAL_WIDTH / den;
+                let gain = (GAIN_FLOOR_X16 + speed / GAIN_SPEED_DIV).min(GAIN_CEIL_X16);
+                let mx = step_axis(&mut self.acc_x, dxp, gain, den).clamp(-MOTION_CAP, MOTION_CAP);
+                let my = step_axis(&mut self.acc_y, dyp, gain, den).clamp(-MOTION_CAP, MOTION_CAP);
+                if mx != 0 || my != 0 {
+                    act.motion = Some((mx, my));
                 }
             } else {
-                self.down_x = x;
-                self.down_y = y;
-                self.moved = false;
+                self.acc_x = 0;
+                self.acc_y = 0;
             }
-            act.move_to = Some((
-                (u64::from(x) * u64::from(ABS_RANGE) / u64::from(x_max)) as u32,
-                (u64::from(y) * u64::from(ABS_RANGE) / u64::from(y_max)) as u32,
-            ));
-        } else if self.was_tip && !self.moved {
-            // Finger lifted without travelling: a tap, delivered as a click at
-            // the cursor's current position.
-            act.button_down = true;
-            act.button_up = true;
+            self.last_x = i64::from(x);
+            self.last_y = i64::from(y);
         }
         self.was_tip = tip;
         act
     }
+}
+
+// One axis of the accelerated pad-to-pixel conversion. The accumulator holds
+// the remainder in (pad-range * 16) denominator units, so slow motion that
+// rounds to zero pixels in one report still adds up across reports.
+fn step_axis(acc: &mut i64, d_pad: i64, gain_x16: i64, den_pad: i64) -> i32 {
+    let den = den_pad * 16;
+    *acc += d_pad * NOMINAL_WIDTH * gain_x16;
+    let out = *acc / den;
+    *acc -= out * den;
+    out as i32
 }

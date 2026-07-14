@@ -8,7 +8,7 @@ mod report_desc;
 
 pub use descriptor::{valid_descriptor, HID_DESC_LEN};
 pub use input_len::input_len;
-pub use input_mode::set_ptp_mode;
+pub use input_mode::configure_reporting;
 pub use input_register::input_register;
 pub use power::wake;
 pub use probe::{probe_addr, probe_bus};

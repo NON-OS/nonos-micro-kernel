@@ -13,29 +13,27 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-#![no_std]
-#![no_main]
 
-extern crate alloc;
+//! One-shot bind diagnostics on the boot console. Real laptops have no
+//! serial port, so the framebuffer console is the only place the parsed
+//! report layout and the first raw frames can be read back from a running
+//! machine; one photograph of these lines pins the exact bit positions the
+//! device uses, ending any disagreement between parser and hardware.
 
-use nonos_libc::{heap_init, mk_exit};
+use alloc::format;
+use alloc::string::String;
 
-mod diag;
-mod hid;
-mod i2c_client;
-mod input;
-mod protocol;
-mod server;
-mod setup;
-mod state;
+pub fn line(s: String) {
+    let b = s.as_bytes();
+    let len = b.len().min(256);
+    let _ = nonos_libc::mk_debug(b.as_ptr(), len);
+}
 
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
+pub fn hex_line(tag: &str, bytes: &[u8]) {
+    let mut s = String::from(tag);
+    for b in bytes {
+        s.push_str(&format!(" {:02x}", b));
     }
-    match setup::run() {
-        Ok(state) => server::run(state),
-        Err(_) => mk_exit(1),
-    }
+    s.push('\n');
+    line(s);
 }

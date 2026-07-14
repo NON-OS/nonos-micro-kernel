@@ -27,4 +27,7 @@ pub struct TouchSample {
     pub contacts: u32,
     /// The physical click button (clickpad) is pressed.
     pub button: bool,
+    /// The contact is a deliberate finger (PTP confidence bit). True when the
+    /// device does not report confidence at all.
+    pub confidence: bool,
 }

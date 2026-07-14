@@ -21,6 +21,7 @@
 //! descriptor can only ever yield fewer fields, never loop or read out of range.
 
 mod assign;
+mod find_touch_report_id;
 mod parse;
 mod read_le;
 mod usage_for;

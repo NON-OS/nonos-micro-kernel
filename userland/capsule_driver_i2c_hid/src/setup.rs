@@ -33,19 +33,54 @@ pub fn reprobe(state: &mut State) {
         state.woke =
             crate::hid::wake(state.i2c_port, state.addr, &state.descriptor, state.input_register);
         state.touch_layout = read_touch_layout(state);
-        // A Precision Touchpad powers up in mouse mode and never streams its
-        // touch collection until the host writes Input Mode = 3, the way
-        // Windows and Linux do on every bind. Best-effort: without the switch
-        // the pad keeps working through the relative fallback decode.
-        if state.touch_layout.is_absolute_touch() {
-            state.ptp_mode = crate::hid::set_ptp_mode(
-                state.i2c_port,
-                state.addr,
-                &state.descriptor,
-                &state.touch_layout,
-            );
-        }
+        // Drive the pad's reporting configuration: input mode = touchpad (the
+        // only collection PTP-class pads generate reports on; the vestigial
+        // mouse collection is a stub Windows and Linux never use), surface
+        // and button switches on. Read-modify-write per feature report,
+        // writing only when a bit differs, so a correctly-configured pad
+        // sees no writes, while one left muted or mode-switched by a
+        // previous session gets repaired. Read pacing comes from the GPIO
+        // doorbell. Best-effort: pads without the features are unaffected.
+        let _ = crate::hid::configure_reporting(
+            state.i2c_port,
+            state.addr,
+            &state.descriptor,
+            &state.touch_layout,
+        );
+        dump_layout(state);
     }
+}
+
+// One-shot bind report on the boot console: the parsed field map in bit
+// offsets, so a photograph of the screen pins exactly how this driver is
+// reading the device's frames.
+fn dump_layout(state: &State) {
+    let l = &state.touch_layout;
+    crate::diag::line(alloc::format!(
+        "[i2chid] bind addr={:#x} rid={} maxin={} inreg={:#x} woke={}\n",
+        state.addr,
+        l.report_id,
+        state.input_len,
+        state.input_register,
+        state.woke,
+    ));
+    crate::diag::line(alloc::format!(
+        "[i2chid] x@{}+{} max={} y@{}+{} max={} tip@{}+{} cnt@{}+{} btn@{}+{} conf@{}+{}\n",
+        l.x.bit_offset,
+        l.x.bit_size,
+        l.x.logical_max,
+        l.y.bit_offset,
+        l.y.bit_size,
+        l.y.logical_max,
+        l.tip.bit_offset,
+        l.tip.bit_size,
+        l.contact_count.bit_offset,
+        l.contact_count.bit_size,
+        l.button.bit_offset,
+        l.button.bit_size,
+        l.confidence.bit_offset,
+        l.confidence.bit_size,
+    ));
 }
 
 // Fetch the HID report descriptor named in the HID descriptor and parse it into
