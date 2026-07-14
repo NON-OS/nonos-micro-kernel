@@ -14,12 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod cleanup;
-mod fb_probe;
-mod gather;
-mod handoff_init;
-mod orchestrate;
-mod params;
-mod validate;
+use super::consts::{PIXEL_FORMAT_BGRX, PIXEL_FORMAT_RGBX};
+use uefi::proto::console::gop::{ModeInfo, PixelFormat};
 
-pub use orchestrate::exit_and_jump;
+pub(super) fn mode_usable(info: &ModeInfo) -> Option<u32> {
+    let (width, height) = info.resolution();
+    if width == 0 || height == 0 || info.stride() < width {
+        return None;
+    }
+    match info.pixel_format() {
+        PixelFormat::Rgb => Some(PIXEL_FORMAT_RGBX),
+        PixelFormat::Bgr => Some(PIXEL_FORMAT_BGRX),
+        PixelFormat::Bitmask | PixelFormat::BltOnly => None,
+    }
+}

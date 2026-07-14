@@ -14,14 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::display::get_cursor_y;
+use super::current::current_framebuffer_info;
+use super::usable::mode_usable;
 use crate::handoff::types::FramebufferInfo;
 use uefi::prelude::*;
-use uefi::proto::console::gop::{GraphicsOutput, ModeInfo, PixelFormat};
+use uefi::proto::console::gop::GraphicsOutput;
 use uefi::table::boot::BootServices;
-
-pub const PIXEL_FORMAT_RGBX: u32 = 2;
-pub const PIXEL_FORMAT_BGRX: u32 = 3;
 
 /// Try to get framebuffer info from a GOP handle. Returns None if invalid.
 pub fn try_gop_handle(bs: &BootServices, handle: Handle, _idx: usize) -> Option<FramebufferInfo> {
@@ -45,46 +43,4 @@ pub fn try_gop_handle(bs: &BootServices, handle: Handle, _idx: usize) -> Option<
         }
     }
     None
-}
-
-fn current_framebuffer_info(gop: &mut GraphicsOutput) -> Option<FramebufferInfo> {
-    let mode_info = gop.current_mode_info();
-    let pixel_format = mode_usable(&mode_info)?;
-    let (width, height) = mode_info.resolution();
-    let stride_pixels = mode_info.stride();
-    let stride = stride_pixels.checked_mul(core::mem::size_of::<u32>())?;
-    let mut fb = gop.frame_buffer();
-    let fb_addr = fb.as_mut_ptr() as u64;
-    if fb_addr == 0 {
-        return None;
-    }
-    let fb_size = fb.size() as u64;
-    if fb_size == 0 {
-        return None;
-    }
-    if (fb_size as usize) < stride.checked_mul(height)? {
-        return None;
-    }
-    Some(FramebufferInfo {
-        ptr: fb_addr,
-        size: fb_size,
-        width: width as u32,
-        height: height as u32,
-        stride: stride as u32,
-        pixel_format,
-        cursor_y: get_cursor_y(),
-        reserved: 0,
-    })
-}
-
-fn mode_usable(info: &ModeInfo) -> Option<u32> {
-    let (width, height) = info.resolution();
-    if width == 0 || height == 0 || info.stride() < width {
-        return None;
-    }
-    match info.pixel_format() {
-        PixelFormat::Rgb => Some(PIXEL_FORMAT_RGBX),
-        PixelFormat::Bgr => Some(PIXEL_FORMAT_BGRX),
-        PixelFormat::Bitmask | PixelFormat::BltOnly => None,
-    }
 }

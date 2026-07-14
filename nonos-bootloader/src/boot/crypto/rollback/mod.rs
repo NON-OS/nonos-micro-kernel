@@ -14,12 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod cleanup;
-mod fb_probe;
-mod gather;
-mod handoff_init;
-mod orchestrate;
-mod params;
-mod validate;
+mod check;
+mod commit;
 
-pub use orchestrate::exit_and_jump;
+pub use check::check_rollback;
+pub use commit::commit_rollback;

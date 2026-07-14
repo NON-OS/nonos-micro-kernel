@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::gop_handle::{try_gop_handle, PIXEL_FORMAT_BGRX, PIXEL_FORMAT_RGBX};
+use super::stride_to_bytes;
+use crate::handoff::config::gop_handle::{try_gop_handle, PIXEL_FORMAT_BGRX, PIXEL_FORMAT_RGBX};
 use crate::handoff::types::FramebufferInfo;
 use uefi::proto::console::gop::GraphicsOutput;
 use uefi::table::boot::BootServices;
@@ -30,16 +31,18 @@ use uefi::Identify;
 /// path where the splash never initialized.
 pub fn get_framebuffer_info(bs: &BootServices) -> FramebufferInfo {
     if let Some((ptr, width, height, stride, bgr)) = crate::display::gop::latched_linear_fb() {
-        return FramebufferInfo {
-            ptr,
-            size: (stride as u64).saturating_mul(height as u64),
-            width,
-            height,
-            stride,
-            pixel_format: if bgr { PIXEL_FORMAT_BGRX } else { PIXEL_FORMAT_RGBX },
-            cursor_y: crate::display::get_cursor_y(),
-            reserved: 0,
-        };
+        if let Some(stride_bytes) = stride_to_bytes(stride, width) {
+            return FramebufferInfo {
+                ptr,
+                size: (stride_bytes as u64).saturating_mul(height as u64),
+                width,
+                height,
+                stride: stride_bytes,
+                pixel_format: if bgr { PIXEL_FORMAT_BGRX } else { PIXEL_FORMAT_RGBX },
+                cursor_y: crate::display::get_cursor_y(),
+                reserved: 0,
+            };
+        }
     }
     if let Ok(handles) =
         bs.locate_handle_buffer(uefi::table::boot::SearchType::ByProtocol(&GraphicsOutput::GUID))

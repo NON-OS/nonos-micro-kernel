@@ -17,6 +17,7 @@
 use uefi::prelude::*;
 
 use super::cleanup::secure_cleanup_before_jump;
+use super::fb_probe;
 use super::gather::gather_system_info;
 use super::handoff_init::init_boothandoff;
 use super::validate::{validate_and_jump, JumpAddresses};
@@ -79,12 +80,16 @@ pub fn exit_and_jump(
         Err(e) => fatal_alloc_error(&st, e),
     };
 
+    fb_probe::latch();
+    fb_probe::dot(0);
     crate::display::gop::shutdown_for_exit();
     secure_cleanup_before_jump();
     settle_delay();
     com1_marker(b"EBS0");
+    fb_probe::dot(1);
     let (_runtime_st, final_mmap) = st.exit_boot_services();
     com1_marker(b"EBS1");
+    fb_probe::dot(2);
     let (mmap_ptr, entry_size, entry_count) = copy_memory_map(allocs.mmap_addr, &final_mmap);
     finalize_mmap(bh_ptr, mmap_ptr, entry_size, entry_count);
     com1_marker(b"MMAP1");
@@ -94,9 +99,12 @@ pub fn exit_and_jump(
     // present in the new PML4 are reachable; the identity-mapped
     // low region keeps the bootloader's running code valid
     // through these last instructions.
+    fb_probe::dot(3);
     unsafe { switch_to_kernel_pml4(new_pml4) };
     com1_marker(b"CR3OK");
+    fb_probe::dot(4);
 
+    fb_probe::dot(5);
     validate_and_jump(JumpAddresses {
         entry: kernel.entry_point as u64,
         stack: stack_va,

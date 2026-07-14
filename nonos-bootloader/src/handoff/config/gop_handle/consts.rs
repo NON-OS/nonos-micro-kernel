@@ -14,12 +14,5 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod cleanup;
-mod fb_probe;
-mod gather;
-mod handoff_init;
-mod orchestrate;
-mod params;
-mod validate;
-
-pub use orchestrate::exit_and_jump;
+pub(crate) const PIXEL_FORMAT_RGBX: u32 = 2;
+pub(crate) const PIXEL_FORMAT_BGRX: u32 = 3;

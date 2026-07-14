@@ -14,12 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod cleanup;
-mod fb_probe;
-mod gather;
-mod handoff_init;
-mod orchestrate;
-mod params;
-mod validate;
+mod get_info;
+mod stride;
 
-pub use orchestrate::exit_and_jump;
+pub use get_info::get_framebuffer_info;
+pub use stride::stride_to_bytes;

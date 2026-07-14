@@ -16,16 +16,14 @@
 
 use uefi::prelude::*;
 
+use crate::boot::util::fatal_reset;
 use crate::display::{log_ok, show_error_screen};
-use crate::handoff::get_uefi_time_epoch;
 use crate::image_format::{has_production_footer, parse_image_footer};
-use crate::log::logger::{log_error, log_info, log_warn};
+use crate::log::logger::{log_error, log_info};
 use alloc::format;
 
 use crate::menu::SecurityMode;
-use crate::security::{check_kernel_version, commit_floor, read_floor, update_kernel_version};
-
-use super::super::util::fatal_reset;
+use crate::security::{check_kernel_version, read_floor};
 
 pub fn check_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMode, gop: bool) {
     if !has_production_footer(data) {
@@ -53,7 +51,10 @@ pub fn check_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMod
             if mode.requires_signature() {
                 log_error("rollback", "kernel version rollback detected");
                 if gop {
-                    show_error_screen(b"Rollback attack detected");
+                    // The reason and numbers make a photo of this screen a
+                    // full diagnosis on machines with no serial console.
+                    let msg = format!("Rollback check failed: {} index {}", e.as_str(), rollback_index);
+                    show_error_screen(msg.as_bytes());
                 }
                 fatal_reset(st, e.as_str());
             }
@@ -65,47 +66,11 @@ pub fn check_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMod
         if rollback_index < floor && mode.requires_signature() {
             log_error("rollback", "rollback index below TPM monotonic floor");
             if gop {
-                show_error_screen(b"Rollback attack detected");
+                let msg =
+                    format!("Rollback: tpm floor {} above image index {}", floor, rollback_index);
+                show_error_screen(msg.as_bytes());
             }
             fatal_reset(st, "rollback index below TPM floor");
         }
-    }
-}
-
-pub fn commit_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMode, gop: bool) {
-    if !has_production_footer(data) {
-        return;
-    }
-    let parsed = match parse_image_footer(data) {
-        Ok(parsed) => parsed,
-        Err(e) => {
-            if mode.requires_signature() {
-                log_error("rollback", "kernel version footer parse failed");
-                fatal_reset(st, e.as_str());
-            }
-            return;
-        }
-    };
-    // Commit the signed rollback_index as the new NVRAM floor, matching the
-    // authenticated field the check gates on and the value committed to the
-    // TPM floor below. image_version is unsigned and must not drive the floor.
-    let rollback_index = parsed.footer.rollback_index as u64;
-    let timestamp = get_uefi_time_epoch(st);
-    match update_kernel_version(rollback_index, timestamp) {
-        Ok(()) => {
-            log_info("rollback", "kernel version committed");
-            if gop {
-                log_ok(b"Anti-rollback commit PASSED");
-            }
-        }
-        Err(_) => {
-            log_warn(
-                "rollback",
-                "legacy nvram commit unavailable; enforcing via TPM counter floor",
-            );
-        }
-    }
-    if commit_floor(st.boot_services(), rollback_index) {
-        log_info("rollback", "tpm rollback floor committed");
     }
 }

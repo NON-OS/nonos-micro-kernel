@@ -14,12 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod cleanup;
-mod fb_probe;
-mod gather;
-mod handoff_init;
-mod orchestrate;
-mod params;
-mod validate;
-
-pub use orchestrate::exit_and_jump;
+/// Normalize a GOP scanline stride to bytes for the handoff contract.
+///
+/// The spec says PixelsPerScanLine holds pixels, but firmware in the wild
+/// disagrees: OVMF builds have been seen reporting bytes in that field,
+/// while real laptop firmware reports pixels. The two ranges cannot
+/// overlap for 32-bit modes: a byte stride is always at least width * 4,
+/// and pixel padding never reaches four times the width. Below width the
+/// value is garbage either way.
+pub fn stride_to_bytes(stride: u32, width: u32) -> Option<u32> {
+    let min_bytes = width.checked_mul(4)?;
+    if stride >= min_bytes {
+        return Some(stride);
+    }
+    if stride >= width {
+        return stride.checked_mul(4);
+    }
+    None
+}
