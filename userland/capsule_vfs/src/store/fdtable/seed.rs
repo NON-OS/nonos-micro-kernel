@@ -37,8 +37,9 @@ impl Store {
         self.seed_file("/docs/about.txt", ABOUT);
         self.seed_file("/docs/demo.txt", DEMO);
         self.seed_file("/images/pepe.png", include_bytes!("../../../testimages/pepe.png"));
-        self.seed_file("/images/pepe.jpg", include_bytes!("../../../testimages/pepe.jpg"));
-        self.seed_file("/images/pepe.gif", include_bytes!("../../../testimages/pepe.gif"));
+        self.seed_file("/images/hardware.jpg", include_bytes!("../../../testimages/hardware.jpg"));
+        self.seed_file("/images/network.gif", include_bytes!("../../../testimages/network.gif"));
+        self.seed_file("/images/field.png", include_bytes!("../../../testimages/field.png"));
         self.seed_packages();
         self.seed_capsule_store();
     }
