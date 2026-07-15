@@ -21,6 +21,9 @@ pub mod ipv4;
 #[path = "../src/command/builtin/nox/pull/args.rs"]
 pub mod args;
 
+#[path = "../src/command/builtin/nox/pull/http.rs"]
+pub mod http;
+
 #[test]
 fn find_locates_crlf_gap() {
     let b = b"HTTP/1.1 200 OK\r\nX: y\r\n\r\nBODY";
@@ -68,4 +71,30 @@ fn args_reject_bad() {
     assert!(args::parse(&[&b"10.0.2.2:8000/x"[..]]).is_err());
     assert!(args::parse(&[&b"999.0.0.1:80/x"[..], &b"/d"[..]]).is_err());
     assert!(args::parse(&[&b"10.0.2.2/x"[..], &b"/d"[..]]).is_err());
+}
+
+#[test]
+fn http_build_get_shape() {
+    let r = http::build_get(b"10.0.2.2:8000", b"/a.txt");
+    assert!(scan::find(&r, b"GET /a.txt HTTP/1.1\r\n").is_some());
+    assert!(scan::find(&r, b"Host: 10.0.2.2:8000\r\n").is_some());
+    assert!(r.ends_with(b"\r\n\r\n"));
+}
+
+#[test]
+fn http_parse_content_length() {
+    let raw = b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nBODY";
+    let p = http::parse_head(raw).unwrap();
+    assert_eq!(p.status, 200);
+    assert_eq!(p.content_length, Some(4));
+    assert!(!p.chunked);
+    assert_eq!(&raw[p.body_off..], b"BODY");
+}
+
+#[test]
+fn http_parse_404_and_chunked() {
+    let p = http::parse_head(b"HTTP/1.1 404 Not Found\r\n\r\n").unwrap();
+    assert_eq!(p.status, 404);
+    let c = http::parse_head(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n").unwrap();
+    assert!(c.chunked);
 }

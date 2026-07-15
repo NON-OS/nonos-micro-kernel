@@ -15,5 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod args;
+pub mod http;
 pub mod ipv4;
 pub mod scan;
