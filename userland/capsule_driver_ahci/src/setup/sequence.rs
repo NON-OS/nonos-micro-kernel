@@ -32,7 +32,7 @@ pub fn run() -> AhciResult<Driver> {
     }
 
     let mmio = mmio::map(dev.device_id, claim_epoch, dev.abar_size)?;
-    let irq = irq::bind(dev, claim_epoch, &mmio)?;
+    let irq = irq::bind(dev, claim_epoch);
 
     let handles = BrokerHandles::new(dev.device_id, mmio.grant_id, mmio.user_va, irq.grant_id);
     let regs = Regs::new(handles.mmio_user_va());

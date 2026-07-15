@@ -12,6 +12,8 @@ pub mod protocol;
 pub mod scsi;
 
 #[cfg(test)]
+mod codec_tests;
+#[cfg(test)]
 mod msc_tests;
 
 #[cfg(kani)]

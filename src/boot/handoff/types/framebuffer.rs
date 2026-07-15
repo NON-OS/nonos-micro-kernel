@@ -23,6 +23,7 @@ pub struct FramebufferInfo {
     pub size: u64,
     pub width: u32,
     pub height: u32,
+    /// Row pitch in bytes, never pixels.
     pub stride: u32,
     pub pixel_format: u32,
     pub cursor_y: u32,

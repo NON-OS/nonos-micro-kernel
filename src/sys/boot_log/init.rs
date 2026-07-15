@@ -19,16 +19,22 @@ use core::sync::atomic::Ordering;
 
 const TOP: u32 = 24;
 
+// The on-screen kernel text console stays off by design: the bootloader
+// leaves its verified-boot splash in the framebuffer and the compositor
+// paints the desktop over it. NONOS_FBCONSOLE=1 at build time flips it on
+// for hardware bring-up, where the panel is the only console there is and
+// every kernel milestone must be photographable.
+const FBCONSOLE: Option<&'static str> = option_env!("NONOS_FBCONSOLE");
+
 pub fn init_after_fb(_cursor_y: u32) {
-    // The on-screen kernel text console stays off by design. The
-    // bootloader leaves its verified-boot splash in the framebuffer, and
-    // the compositor then brings up the boot-splash capsule and the
-    // desktop over it. Drawing a scrolling green-on-black kernel log here
-    // would clobber that sequence, so the kernel log goes to serial only
-    // and the framebuffer is left intact for the compositor.
-    crate::sys::serial::println(b"[fbconsole] on-screen log disabled; serial only");
     LOG_Y.store(TOP, Ordering::SeqCst);
     MIN_LOG_Y.store(TOP, Ordering::SeqCst);
+    if matches!(FBCONSOLE, Some("1")) {
+        crate::sys::serial::println(b"[fbconsole] on-screen log enabled (bring-up build)");
+        DISPLAY_ENABLED.store(true, Ordering::Release);
+        return;
+    }
+    crate::sys::serial::println(b"[fbconsole] on-screen log disabled; serial only");
     DISPLAY_ENABLED.store(false, Ordering::Release);
 }
 

@@ -1,3 +1,4 @@
+pub mod acpi_hid;
 pub mod controller;
 pub mod health;
 pub mod probe;

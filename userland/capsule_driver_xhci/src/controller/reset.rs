@@ -13,17 +13,24 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use nonos_libc::Deadline;
+
 use crate::constants::USBCMD_HCRST;
 use crate::error::{XhciError, XhciResult};
 use crate::regs::op::{usbcmd_read, usbcmd_write};
-const RESET_POLL_LIMIT: u32 = 200_000;
+
+const RESET_TIMEOUT_MS: u64 = 1_000;
+
 pub fn reset(op_base: u64) -> XhciResult<()> {
     usbcmd_write(op_base, usbcmd_read(op_base) | USBCMD_HCRST);
-    for _ in 0..RESET_POLL_LIMIT {
+    let deadline = Deadline::after_ms(RESET_TIMEOUT_MS);
+    loop {
         if usbcmd_read(op_base) & USBCMD_HCRST == 0 {
             return Ok(());
         }
+        if deadline.expired() {
+            return Err(XhciError::ResetTimeout);
+        }
         core::hint::spin_loop();
     }
-    Err(XhciError::ResetTimeout)
 }

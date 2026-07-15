@@ -13,18 +13,31 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use nonos_libc::Deadline;
+
 use crate::constants::{CC_SHORT_PACKET, CC_SUCCESS, TRB_TYPE_TRANSFER_EVENT};
 use crate::error::{XhciError, XhciResult};
 use crate::regs::runtime::erdp_program;
 use crate::rings::event::EventRing;
-const TRANSFER_POLL_LIMIT: u32 = 1_000_000;
+
+const TRANSFER_TIMEOUT_MS: u64 = 1_000;
+// Check the wall-time deadline only every this many idle spins so the transfer
+// poll stays a tight loop and does not make a syscall per iteration.
+const DEADLINE_CHECK_SPINS: u32 = 1024;
+
 pub fn wait_transfer_completion(
     intr_base: u64,
     issued_phys: u64,
     evt_ring: &mut EventRing,
 ) -> XhciResult<()> {
-    for _ in 0..TRANSFER_POLL_LIMIT {
+    let deadline = Deadline::after_ms(TRANSFER_TIMEOUT_MS);
+    let mut spins = 0u32;
+    loop {
         if !evt_ring.has_event() {
+            spins = spins.wrapping_add(1);
+            if spins.is_multiple_of(DEADLINE_CHECK_SPINS) && deadline.expired() {
+                return Err(XhciError::TransferCompletionTimeout);
+            }
             core::hint::spin_loop();
             continue;
         }
@@ -39,7 +52,6 @@ pub fn wait_transfer_completion(
         }
         return complete(event.completion_code());
     }
-    Err(XhciError::TransferCompletionTimeout)
 }
 fn complete(code: u8) -> XhciResult<()> {
     match code {

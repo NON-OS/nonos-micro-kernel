@@ -57,8 +57,12 @@ fn is_candidate(r: &DeviceRecord) -> bool {
         && r.pci_subclass == PCI_SUBCLASS_SATA
         && r.pci_progif == PCI_PROGIF_AHCI
         && r.bar_count > AHCI_ABAR_BAR
-        && r.irq_pin != 0
-        && r.irq_line != 0xff
+        // The IRQ routing is intentionally not part of the match. The I/O
+        // path polls the port completion registers and never waits on the
+        // interrupt, so a controller with no legacy PIC routing (irq_line
+        // reported as 0xff, common on APIC/MSI laptop platforms) is still a
+        // valid candidate. Requiring a routed line here rejected working
+        // SATA controllers on real hardware.
         && bar.kind == BAR_KIND_MMIO
         && bar.size >= MIN_ABAR_BYTES
 }

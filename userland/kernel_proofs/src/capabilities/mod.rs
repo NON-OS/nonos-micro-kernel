@@ -17,12 +17,12 @@
 // The real capability enum and token type. The token carries pure grant/expiry
 // logic (no signature check), so tokens can be constructed directly for the
 // proofs; the signing/nonce/revocation machinery is not needed here.
-#[path = "../../../../src/capabilities/types.rs"]
+#[path = "../../../../src/capabilities/types/mod.rs"]
 pub mod types;
 
 // Style lints below are the real token code's own choices.
 #[allow(clippy::manual_contains, clippy::unnecessary_map_or)]
-#[path = "../../../../src/capabilities/token/types.rs"]
+#[path = "../../../../src/capabilities/token/types/mod.rs"]
 mod token_types;
 
 pub use token_types::CapabilityToken;

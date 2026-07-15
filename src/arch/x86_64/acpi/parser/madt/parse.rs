@@ -21,7 +21,7 @@ use super::super::state::TableRegistry;
 use super::entries::*;
 use super::x2apic::*;
 use crate::arch::x86_64::acpi::tables::madt::*;
-use crate::arch::x86_64::acpi::tables::SIG_MADT;
+use crate::arch::x86_64::acpi::tables::{MAX_TABLE_BYTES, SIG_MADT};
 
 pub fn parse_madt(registry: &mut TableRegistry) {
     let addr = match registry.tables.get(&SIG_MADT) {
@@ -39,7 +39,7 @@ pub fn parse_madt(registry: &mut TableRegistry) {
         registry.data.lapic_address = madt.local_apic_address as u64;
         registry.data.has_legacy_pics = madt.has_legacy_pics();
 
-        let madt_end = addr + madt.header.length as u64;
+        let madt_end = addr + (madt.header.length as u64).min(MAX_TABLE_BYTES);
         let mut entry_ptr = addr + mem::size_of::<Madt>() as u64;
 
         while entry_ptr + 2 <= madt_end {

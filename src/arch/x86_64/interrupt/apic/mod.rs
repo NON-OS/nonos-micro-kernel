@@ -17,6 +17,7 @@
 mod adopt;
 pub mod constants;
 pub mod error;
+pub mod idle_timer;
 pub mod init;
 mod init_ap;
 mod init_x2apic;
@@ -35,7 +36,7 @@ mod timer_mask;
 mod timer_mode;
 mod timer_ops;
 
-pub use adopt::adopt_bsp_state;
+pub use adopt::{adopt_bsp_state, cache_bsp_apic_id};
 pub use constants::{VEC_ERROR, VEC_SPURIOUS, VEC_THERMAL, VEC_TIMER};
 pub use error::{ApicError, ApicResult};
 pub use init::{init, init_apic};

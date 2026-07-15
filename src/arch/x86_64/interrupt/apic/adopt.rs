@@ -24,7 +24,7 @@
 use core::sync::atomic::Ordering;
 
 use super::error::{ApicError, ApicResult};
-use super::state::{INITIALIZED, MMIO_BASE, X2APIC_MODE};
+use super::state::{CACHED_ID, INITIALIZED, MMIO_BASE, X2APIC_MODE};
 
 pub fn adopt_bsp_state() -> ApicResult<()> {
     if INITIALIZED.load(Ordering::Acquire) {
@@ -40,4 +40,16 @@ pub fn adopt_bsp_state() -> ApicResult<()> {
     }
     INITIALIZED.store(true, Ordering::Release);
     Ok(())
+}
+
+/// Cache this CPU's real LAPIC ID into the arch APIC module without touching
+/// any other arch APIC state (mode, base, init flag). The IOAPIC redirection
+/// destination is read from here; leaving it at the default 0 only works
+/// where the BSP happens to be APIC 0 (QEMU), so real hardware with a nonzero
+/// BSP ID drops every device interrupt. The ID is sourced from the already
+/// initialised sys::apic so this has no effect on the timer or IPI paths.
+pub fn cache_bsp_apic_id() {
+    if let Some(id) = crate::sys::apic::local_apic_id() {
+        CACHED_ID.store(id, Ordering::Release);
+    }
 }

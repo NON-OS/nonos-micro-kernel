@@ -24,6 +24,10 @@ pub(in crate::hardware::broker) mod ids {
     pub(in crate::hardware::broker) const NETWORK: u32 = 0x0020;
     pub(in crate::hardware::broker) const DISPLAY: u32 = 0x0030;
     pub(in crate::hardware::broker) const INPUT: u32 = 0x0040;
+    /// Subset of INPUT: an ACPI-declared I2C-HID touchpad, carrying its I2C
+    /// slave address and HID descriptor register for the HID driver to bind
+    /// without probing.
+    pub(in crate::hardware::broker) const I2C_HID: u32 = 0x0041;
     pub(in crate::hardware::broker) const AUDIO: u32 = 0x0050;
     pub(in crate::hardware::broker) const SERIAL: u32 = 0x0060;
     pub(in crate::hardware::broker) const USB_HOST: u32 = 0x0070;
@@ -32,6 +36,10 @@ pub(in crate::hardware::broker) mod ids {
     /// generic USB_HOST id. Userland discovery matches on this
     /// id so it never tries to drive a non-xHCI USB host.
     pub(in crate::hardware::broker) const USB_HOST_XHCI: u32 = 0x0071;
+    /// A platform GPIO community controller enumerated from ACPI. The input
+    /// driver claims the community a touchpad's GpioInt names and maps its
+    /// MMIO window to poll the pad's interrupt status register.
+    pub(in crate::hardware::broker) const GPIO_CTRL: u32 = 0x0080;
     pub(in crate::hardware::broker) const OTHER: u32 = 0xFFFF;
 }
 

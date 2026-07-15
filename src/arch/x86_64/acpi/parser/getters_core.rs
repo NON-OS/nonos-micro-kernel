@@ -34,6 +34,10 @@ pub fn has_legacy_pics() -> Option<bool> {
     TABLES.read().as_ref().map(|t| t.data.has_legacy_pics)
 }
 
+pub fn has_8042() -> Option<bool> {
+    TABLES.read().as_ref().map(|t| t.data.has_8042)
+}
+
 pub fn processors() -> alloc::vec::Vec<ProcessorInfo> {
     TABLES.read().as_ref().map(|t| t.data.processors.clone()).unwrap_or_default()
 }

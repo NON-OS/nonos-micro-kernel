@@ -20,7 +20,7 @@ use core::ptr;
 use super::super::state::TableRegistry;
 use super::srat_memory::{parse_memory_affinity, parse_x2apic_affinity};
 use crate::arch::x86_64::acpi::tables::srat::SratProcessorAffinity;
-use crate::arch::x86_64::acpi::tables::{Srat, SIG_SRAT};
+use crate::arch::x86_64::acpi::tables::{Srat, MAX_TABLE_BYTES, SIG_SRAT};
 
 pub fn parse_srat(registry: &mut TableRegistry) {
     let addr = match registry.tables.get(&SIG_SRAT) {
@@ -34,7 +34,7 @@ pub fn parse_srat(registry: &mut TableRegistry) {
 
     unsafe {
         let srat = ptr::read_volatile(addr as *const Srat);
-        let srat_end = addr + srat.header.length as u64;
+        let srat_end = addr + (srat.header.length as u64).min(MAX_TABLE_BYTES);
         let mut entry_ptr = addr + srat.entries_offset() as u64;
 
         while entry_ptr + 2 <= srat_end {

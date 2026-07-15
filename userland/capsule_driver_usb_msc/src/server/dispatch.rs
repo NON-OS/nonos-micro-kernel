@@ -31,6 +31,15 @@ pub(super) fn dispatch(state: &mut State, sender: u32, req: Request, body: &[u8]
         OP_BUILD_READ10 => handlers::build_read::handle(state, sender, &req, body, tx),
         OP_BUILD_WRITE10 => handlers::build_write::handle(state, sender, &req, body, tx),
         OP_ACCEPT_CSW => handlers::accept_csw::handle(state, sender, &req, body, tx),
+        OP_BUILD_TEST_UNIT_READY if body.is_empty() => {
+            handlers::build_tur::handle(state, sender, &req, tx)
+        }
+        OP_BUILD_REQUEST_SENSE => {
+            handlers::build_request_sense::handle(state, sender, &req, body, tx)
+        }
+        OP_DECODE_INQUIRY => handlers::decode_inquiry::handle(sender, &req, body, tx),
+        OP_DECODE_CAPACITY => handlers::decode_capacity::handle(sender, &req, body, tx),
+        OP_DECODE_SENSE => handlers::decode_sense::handle(sender, &req, body, tx),
         OP_GET_STATE if body.is_empty() => handlers::get_state::handle(state, sender, &req, tx),
         _ if body.is_empty() => {
             let _ = respond::status(sender, &req, E_BAD_OP, tx);

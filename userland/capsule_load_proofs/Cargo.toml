@@ -1,0 +1,15 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the runtime capsule-load certificate clock gate.
+# Builds for the host so `cargo test` exercises the real gate source (included
+# via #[path]) that decides when a certificate validity window is enforced.
+[package]
+name = "capsule_load_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]

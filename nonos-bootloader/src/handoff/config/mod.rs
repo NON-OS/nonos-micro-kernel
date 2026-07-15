@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod acpi;
-mod framebuffer;
+pub(crate) mod framebuffer;
 mod gop_handle;
 mod smbios;
 

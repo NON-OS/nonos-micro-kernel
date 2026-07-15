@@ -31,3 +31,10 @@ pub const MAX_SECTORS: u32 = 64;
 pub const DATA_BUF_BYTES: u64 = MAX_SECTORS as u64 * SECTOR_SIZE as u64;
 pub const STRUCT_REGION_BYTES: u64 = 4096;
 pub const COMPLETION_POLL_LIMIT: u32 = 5_000_000;
+/// Milliseconds to hold the PHY in COMRESET before releasing it.
+pub const COMRESET_HOLD_MS: u64 = 2;
+/// Wall-time bound on waiting for the PHY link and the device to become ready.
+/// A real SATA drive can take hundreds of milliseconds to link up after spin-up;
+/// this is measured against the monotonic clock, not a CPU-speed-dependent spin
+/// count.
+pub const LINK_TIMEOUT_MS: u64 = 2_000;

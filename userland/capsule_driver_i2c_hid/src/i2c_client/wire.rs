@@ -2,6 +2,8 @@ pub const MAGIC: u32 = 0x4E49_3243;
 pub const VERSION: u16 = 1;
 pub const HDR_LEN: usize = 20;
 pub const OP_TRANSFER: u16 = 5;
+pub const OP_ACPI_HID: u16 = 7;
+pub const OP_GPIO_DOORBELL: u16 = 8;
 pub const FLAG_RESTART_ON_READ: u16 = 1 << 0;
 
 pub fn request(seq: u64, addr: u8, write: &[u8], read_len: usize, out: &mut [u8]) -> usize {

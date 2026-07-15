@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::constants::ata::COMPLETION_POLL_LIMIT;
-use crate::constants::regs::{CMD_CR, CMD_FRE, CMD_ST, PORT_CMD};
+use crate::constants::regs::{CMD_CR, CMD_ST, PORT_CMD};
 use crate::regs::Regs;
 
 pub(super) fn start(regs: Regs, base: u32) {
@@ -25,7 +25,9 @@ pub(super) fn start(regs: Regs, base: u32) {
             spin += 1;
             core::hint::spin_loop();
         }
+        // FRE was already enabled during program(); only ST is set here, after
+        // the link is up, so command processing starts against a ready device.
         let cmd = regs.r32(base + PORT_CMD);
-        regs.w32(base + PORT_CMD, cmd | CMD_FRE | CMD_ST);
+        regs.w32(base + PORT_CMD, cmd | CMD_ST);
     }
 }

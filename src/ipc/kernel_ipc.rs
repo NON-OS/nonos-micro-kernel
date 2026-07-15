@@ -80,7 +80,10 @@ pub fn kernel_route_ipc_corr(
     msg.correlation = correlation;
     match nonos_inbox::try_enqueue_strict(&dest, msg) {
         Ok(()) => {
-            let woke = endpoint.pid != KERNEL_OWNER && crate::sched::is_sleeping(endpoint.pid);
+            // Wake unconditionally on delivery (state-checked, idempotent);
+            // the sleep-map gate strands a receiver that is Sleeping without
+            // a map entry.
+            let woke = endpoint.pid != KERNEL_OWNER;
             if woke {
                 crate::sched::wake_process(endpoint.pid);
             }

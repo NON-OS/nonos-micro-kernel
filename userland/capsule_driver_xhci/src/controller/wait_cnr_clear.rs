@@ -13,16 +13,23 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use nonos_libc::Deadline;
+
 use crate::constants::USBSTS_CNR;
 use crate::error::{XhciError, XhciResult};
 use crate::regs::op::usbsts_read;
-const CNR_POLL_LIMIT: u32 = 200_000;
+
+const CNR_TIMEOUT_MS: u64 = 1_000;
+
 pub fn wait_cnr_clear(op_base: u64) -> XhciResult<()> {
-    for _ in 0..CNR_POLL_LIMIT {
+    let deadline = Deadline::after_ms(CNR_TIMEOUT_MS);
+    loop {
         if usbsts_read(op_base) & USBSTS_CNR == 0 {
             return Ok(());
         }
+        if deadline.expired() {
+            return Err(XhciError::ControllerNotReadyTimeout);
+        }
         core::hint::spin_loop();
     }
-    Err(XhciError::ControllerNotReadyTimeout)
 }

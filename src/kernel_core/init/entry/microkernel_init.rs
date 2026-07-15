@@ -1,0 +1,77 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use super::fatal::fatal;
+use super::init_arch_firmware::init_arch_firmware;
+use super::init_arch_framebuffer::init_arch_framebuffer;
+use super::init_arch_memory_and_framebuffer::init_arch_memory_and_framebuffer;
+use crate::boot::handoff::KernelHandoff;
+use crate::sys::{boot_log, clock};
+
+pub fn microkernel_init(handoff: &KernelHandoff) {
+    crate::sys::bench::mark(b"microkernel_init_start");
+    init_arch_memory_and_framebuffer(handoff);
+    let cursor_y = handoff.framebuffer.map(|fb| fb.cursor_y).unwrap_or(0);
+    boot_log::init_after_fb(cursor_y);
+    boot_log::ok("NONOS", "Microkernel init");
+
+    init_arch_firmware(handoff);
+    crate::sys::policy::hostname_init();
+    if let Err(_) = crate::crypto::util::rng::init_rng() {
+        fatal("crypto: init_rng failed", "entropy unavailable");
+    }
+    if let Err(e) = crate::ipc::nonos_channel::init_ipc_secret() {
+        fatal("ipc: init_ipc_secret failed", e);
+    }
+    if let Err(e) = crate::smp::init_bsp() {
+        fatal("smp: init_bsp failed", e);
+    }
+    crate::sched::init();
+    clock::init(handoff.timing.fixed_freq_hz.unwrap_or(0), handoff.timing.unix_epoch_ms);
+
+    // VM/paging must be ready before any process creator runs. The
+    // process subsystem only initializes its tables after this; the
+    // userspace init process itself is created exactly once in
+    // `microkernel_main`.
+    if let Err(e) = crate::memory::unified::init_unified_vm() {
+        fatal("memory: init_unified_vm failed", e);
+    }
+    crate::sys::bench::mark(b"vm_ready");
+    // The framebuffer is MMIO-mapped only now: mapping it needs the paging
+    // manager, which init_unified_vm brings up. Doing it in the early
+    // memory/framebuffer step failed to map on real GOP framebuffers
+    // because the page-table machinery was not ready yet.
+    init_arch_framebuffer(handoff);
+    // Cache the real BSP LAPIC ID into the arch APIC module before any IOAPIC
+    // redirection entry is programmed, so device interrupts route to the CPU
+    // that actually exists rather than the default of APIC 0 (correct only on
+    // QEMU). This only writes the ID cache; it does not touch the arch APIC
+    // mode/base/init state, so the timer and IPI paths are unaffected.
+    crate::arch::x86_64::interrupt::apic::cache_bsp_apic_id();
+    match crate::arch::init_broker_irq_routing() {
+        Ok(_) => boot_log::ok("NONOS", "broker IO-APIC routing ready"),
+        Err(_) => crate::sys::serial::println(b"[NONOS] broker IO-APIC init failed"),
+    }
+    crate::process::init_process_management();
+    crate::elf::loader::init_elf_loader();
+    crate::crypto::kernel_keys::init();
+    crate::sys::bench::mark(b"process_runtime_ready");
+
+    super::super::start_secondary::start_secondary_cpus();
+
+    boot_log::ok("NONOS", "Core ready");
+    crate::sys::bench::mark(b"microkernel_core_ready");
+}

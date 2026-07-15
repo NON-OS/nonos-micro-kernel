@@ -13,24 +13,18 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use super::cmd::cmd;
-use super::data::data;
-use super::read_byte::read_byte;
-use super::reset::reset;
-use crate::constants::{
-    CONFIG_IRQ1, CONFIG_KBD_DISABLE, CTL_ENABLE_KBD, CTL_READ_CONFIG, CTL_WRITE_CONFIG,
-};
+
+use super::enable_port::enable_port;
 use crate::init::enable_scanning;
 
+// Bring the keyboard online without resetting the controller: the firmware
+// already initialized the i8042 (the machine boots and types in its own BIOS).
+// A keyboard RESET (0xFF) makes the device reply with a delayed self-test byte
+// that lands after init returns and desyncs the scancode stream, and rewriting
+// the config byte off a possibly-stale read can silence a working controller,
+// so neither is done here. What is required: explicitly enable the first port
+// (firmware may hand off with it disabled) and then start scanning.
 pub fn enable_keyboard(grant_id: u64) -> Result<(), &'static str> {
-    cmd(grant_id, CTL_ENABLE_KBD)?;
-    cmd(grant_id, CTL_READ_CONFIG)?;
-    let cfg = read_byte(grant_id)?;
-    if cfg == 0xFF {
-        return Err("kbd config invalid");
-    }
-    cmd(grant_id, CTL_WRITE_CONFIG)?;
-    data(grant_id, (cfg | CONFIG_IRQ1) & !CONFIG_KBD_DISABLE)?;
-    reset(grant_id);
+    enable_port(grant_id)?;
     enable_scanning(grant_id)
 }

@@ -19,4 +19,5 @@ pub use super::ops_query::{query, restore, snapshot};
 pub use super::ops_route::{
     alloc_route, free_vector, mask, program_route, program_route_external, retarget,
 };
+pub use super::ops_helpers::gsi_for_irq;
 pub use super::ops_status::{status, IoApicStatus};

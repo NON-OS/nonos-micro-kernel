@@ -32,3 +32,19 @@ pub fn lapic_state() -> Option<(bool, u64)> {
     }
     Some((LAPIC_X2.load(Ordering::Acquire), LAPIC_BASE.load(Ordering::Acquire)))
 }
+
+/// This CPU's LAPIC ID, read through the proven register path (MMIO in
+/// xAPIC mode, the APIC-ID MSR in x2APIC mode). Returns None before the
+/// LAPIC is initialised. The xAPIC register carries the ID in bits 24..31;
+/// the x2APIC MSR carries the full 32-bit ID with no shift.
+pub fn local_apic_id() -> Option<u32> {
+    if !LAPIC_INIT.load(Ordering::Acquire) {
+        return None;
+    }
+    let raw = unsafe { super::regs::lapic_read_raw(super::constants::LAPIC_ID) };
+    if LAPIC_X2.load(Ordering::Acquire) {
+        Some(raw)
+    } else {
+        Some(raw >> 24)
+    }
+}

@@ -1,5 +1,5 @@
 use crate::driver::Driver;
-use crate::protocol::{Request, E_BUSY, E_INVAL, E_NACK, E_OK, E_TIMEOUT};
+use crate::protocol::{Request, E_BUSY, E_INVAL, E_NACK, E_OK, E_TIMEOUT, TRANSFER_READ_MAX};
 use crate::server::respond;
 use crate::transaction::{transfer, TransferError, TransferRequest};
 
@@ -34,7 +34,7 @@ fn parse(body: &[u8]) -> Option<(u8, u16, &[u8], usize)> {
 }
 
 fn reply_ok(sender_pid: u32, req: &Request, read: &[u8], abort: u32, out: &mut [u8]) {
-    let mut body = [0u8; 72];
+    let mut body = [0u8; 8 + TRANSFER_READ_MAX];
     body[0..2].copy_from_slice(&(read.len() as u16).to_le_bytes());
     body[4..8].copy_from_slice(&abort.to_le_bytes());
     body[8..8 + read.len()].copy_from_slice(read);

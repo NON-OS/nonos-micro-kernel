@@ -19,9 +19,13 @@
 // this shim is what `handoff::exit::orchestrate` calls so the
 // orchestration code stays free of inline asm.
 
-use crate::arch::x86_64::paging::load_cr3;
+use crate::arch::x86_64::paging::{enable_nxe, load_cr3};
 
 // SAFETY: see `arch::x86_64::paging::load_cr3`.
 pub unsafe fn switch_to_kernel_pml4(pml4_phys: u64) {
+    // The PML4 carries NX bits (directmap, kernel data). With EFER.NXE
+    // clear those are reserved bits and the first access through them
+    // triple-faults; firmware is not guaranteed to have set it.
+    enable_nxe();
     load_cr3(pml4_phys);
 }

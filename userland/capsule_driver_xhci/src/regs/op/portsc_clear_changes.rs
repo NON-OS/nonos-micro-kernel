@@ -13,12 +13,21 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::constants::{PORTSC_BASE, PORTSC_CHANGE_BITS, PORT_REG_STRIDE};
+use crate::constants::{PORTSC_BASE, PORTSC_CHANGE_BITS, PORTSC_PP, PORT_REG_STRIDE};
 use crate::regs::mmio_write32;
+
+// RW bits we must preserve across a change-bit acknowledge. PP (port power)
+// is RW, not RW1C: a bare write of the change bits would clear it and power
+// the port off. We must never re-assert PR (port reset) or PED (writing 1
+// disables the port) or the PLS write strobe, so only PP is carried over.
+const PORTSC_PRESERVE_RW: u32 = PORTSC_PP;
+
 pub fn portsc_clear_changes(op_base: u64, port: u8, snapshot: u32) {
     let reg = op_base + PORTSC_BASE + ((port as u64) - 1) * PORT_REG_STRIDE;
     let to_clear = snapshot & PORTSC_CHANGE_BITS;
-    if to_clear != 0 {
-        mmio_write32(reg, to_clear);
+    if to_clear == 0 {
+        return;
     }
+    let preserved = snapshot & PORTSC_PRESERVE_RW;
+    mmio_write32(reg, preserved | to_clear);
 }

@@ -59,3 +59,9 @@ pub const SIG_SATA: u32 = 0x0000_0101;
 pub const SIG_ATAPI: u32 = 0xeb14_0101;
 pub const SIG_SEMB: u32 = 0xc33c_0101;
 pub const SIG_PM: u32 = 0x9669_0101;
+
+// SATA status/control DET field (PxSSTS / PxSCTL bits [3:0]).
+pub const SSTS_DET_MASK: u32 = 0xf;
+pub const SSTS_DET_PRESENT: u32 = 0x3; // device present, PHY communication up
+pub const SCTL_DET_MASK: u32 = 0xf;
+pub const SCTL_DET_COMRESET: u32 = 0x1;

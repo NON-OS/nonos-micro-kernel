@@ -1,0 +1,15 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the wall-clock source picker. Builds for the host so
+# `cargo test` exercises the real priority/laziness logic (included via #[path])
+# that decides which TSC-frequency and epoch source the clock uses at boot.
+[package]
+name = "clock_resolve_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]

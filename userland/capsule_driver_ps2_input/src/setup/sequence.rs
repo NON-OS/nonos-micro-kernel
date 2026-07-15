@@ -21,7 +21,7 @@ use super::open_line::open_line;
 use super::pio::grant as pio_grant;
 use super::setup_aux::setup_aux;
 use crate::discover::find_ps2_kbd;
-use crate::init::{enable_keyboard, enable_mouse, flush_output};
+use crate::init::{disable_aux, enable_keyboard, enable_mouse, flush_output};
 
 pub fn run() -> Result<Driver, &'static str> {
     let dev = find_ps2_kbd().ok_or("ps2 keyboard not present in device list")?;
@@ -40,7 +40,14 @@ pub fn run() -> Result<Driver, &'static str> {
     let (mouse_enabled, mouse_wheel) = if aux_irq_grant_id != 0 {
         match enable_mouse(pio_grant_id) {
             Ok(wheel) => (true, wheel),
-            Err(_) => (false, false),
+            Err(_) => {
+                // enable_mouse turned the aux clock on before the step that
+                // failed; on a machine with no PS/2 mouse behind the port
+                // (firmware-disabled aux) leaving it enabled streams garbage
+                // the drain would have to discard forever. Turn it back off.
+                disable_aux(pio_grant_id);
+                (false, false)
+            }
         }
     } else {
         (false, false)

@@ -32,7 +32,6 @@ pub fn sleep_until(pid: u32, wake_time_ms: u64) {
 
 pub fn wake_process(pid: u32) {
     use crate::process::nonos_core::{ProcessState, PROCESS_TABLE};
-    SLEEPING_PROCESSES.write().remove(&pid);
     let mut woke = false;
     if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
         let mut state = pcb.state.lock();
@@ -41,7 +40,12 @@ pub fn wake_process(pid: u32) {
             woke = true;
         }
     }
+    // Only a wake that actually transitioned the process may strip its sleep
+    // deadline: a wake landing on a Running/Ready target must not destroy the
+    // timeout of a sleep the target is about to enter (or re-enter), or that
+    // sleep becomes unwakeable by the tick sweep.
     if woke {
+        SLEEPING_PROCESSES.write().remove(&pid);
         add_to_run_queue(pid);
         SCHEDULER_STATS.wakeups.fetch_add(1, Ordering::Relaxed);
     }
@@ -81,6 +85,12 @@ pub fn check_sleeping_processes() {
         }
     }
     for &pid in &pids_to_wake[..count] {
+        // The deadline has passed, so the entry is spent regardless of
+        // whether the wake transitions the process (it may already be
+        // Running via an early-return path); leaving a stale entry behind
+        // would make this sweep re-chew it every tick until the 64-slot
+        // budget is exhausted.
+        SLEEPING_PROCESSES.write().remove(&pid);
         wake_process(pid);
     }
 }

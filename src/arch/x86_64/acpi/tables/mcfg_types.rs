@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::sdt::SdtHeader;
+use super::sdt::{sdt_entry_count, SdtHeader};
 use core::mem;
 
 #[repr(C, packed)]
@@ -26,7 +26,11 @@ pub struct Mcfg {
 
 impl Mcfg {
     pub fn entry_count(&self) -> usize {
-        (self.header.length as usize - mem::size_of::<Self>()) / mem::size_of::<McfgEntry>()
+        sdt_entry_count(
+            self.header.length as usize,
+            mem::size_of::<Self>(),
+            mem::size_of::<McfgEntry>(),
+        )
     }
     pub fn entries_offset(&self) -> usize {
         mem::size_of::<Self>()

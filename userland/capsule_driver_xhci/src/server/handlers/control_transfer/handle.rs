@@ -49,7 +49,15 @@ pub fn handle(ctx: &mut Context, req: &Request, body: &[u8], tx: &mut [u8]) {
         None
     };
     let (data_phys, data_len) = region.as_ref().map_or((0u64, 0u16), |r| (r.phys(), w_len));
-    match do_transfer(ctx, slot, bm_rt, b_req, w_value, w_index, data_len, data_phys) {
+    let request = crate::controller::ControlRequest {
+        bm_request_type: bm_rt,
+        b_request: b_req,
+        w_value,
+        w_index,
+        data_phys,
+        data_len,
+    };
+    match do_transfer(ctx, slot, request) {
         Ok(()) => send_reply(tx, req, data_len, region.as_ref()),
         Err(_) => reply_with_status(tx, req, E_IO),
     }

@@ -18,6 +18,7 @@ mod artifacts;
 mod error;
 mod leak;
 mod load;
+mod validity_clock;
 
 pub use artifacts::CapsuleArtifacts;
 pub use error::LoadError;

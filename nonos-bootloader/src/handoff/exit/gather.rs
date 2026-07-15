@@ -38,6 +38,18 @@ pub fn gather_system_info(
     rng_seed: [u8; 32],
 ) -> HandoffInitParams {
     let fb_info = get_framebuffer_info(bs);
+    // Paint the framebuffer the kernel will inherit onto the splash: on a
+    // machine with no serial console, a photo of this line is the only way
+    // to see what address and layout the firmware actually handed over.
+    crate::display::log_panel::log_ok(
+        alloc::format!(
+            "fb 0x{:x} stride {} fmt {}",
+            fb_info.ptr,
+            fb_info.stride,
+            fb_info.pixel_format
+        )
+        .as_bytes(),
+    );
     let (smep, smap, umip) = detect_cpu_security_features();
     let acpi_rsdp = get_acpi_rsdp(st);
     HandoffInitParams {

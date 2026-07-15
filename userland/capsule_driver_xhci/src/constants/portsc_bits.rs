@@ -17,6 +17,7 @@ pub const PORTSC_CCS: u32 = 1 << 0;
 pub const PORTSC_PED: u32 = 1 << 1;
 pub const PORTSC_PR: u32 = 1 << 4;
 pub const PORTSC_PLS_MASK: u32 = 0xF << 5;
+pub const PORTSC_PP: u32 = 1 << 9;
 pub const PORTSC_SPEED_SHIFT: u32 = 10;
 pub const PORTSC_SPEED_MASK: u32 = 0xF << PORTSC_SPEED_SHIFT;
 pub const PORTSC_CSC: u32 = 1 << 17;

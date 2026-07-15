@@ -14,8 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod deadline;
 mod rtc;
+mod uptime;
 mod wall;
 
+pub use deadline::Deadline;
 pub use rtc::{mk_time_rtc, RtcTime};
+pub use uptime::mk_uptime_ms;
 pub use wall::{mk_time_adjust, mk_time_millis};

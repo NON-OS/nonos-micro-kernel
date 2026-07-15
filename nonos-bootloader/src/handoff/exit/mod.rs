@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod cleanup;
+mod fb_probe;
 mod gather;
 mod handoff_init;
 mod orchestrate;

@@ -49,7 +49,7 @@ pub use get_device_descriptor::{get_device_descriptor, DEVICE_DESCRIPTOR_LEN};
 pub use halt::halt;
 pub use issue_address_device::issue_address_device;
 pub use issue_configure_endpoint::issue_configure_endpoint;
-pub use issue_control_transfer::issue_control_transfer;
+pub use issue_control_transfer::{issue_control_transfer, ControlRequest};
 pub use issue_disable_slot::issue_disable_slot;
 pub use issue_enable_slot::issue_enable_slot;
 pub use issue_noop_and_wait::issue_noop_and_wait;

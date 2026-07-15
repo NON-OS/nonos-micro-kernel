@@ -1,0 +1,15 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the AHCI link-up predicates. Builds for the host so
+# `cargo test` exercises the real SSTS/TFD decode source (included via #[path])
+# that decides when a SATA link is established and a device is ready.
+[package]
+name = "ahci_link_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]

@@ -23,7 +23,7 @@
 .PHONY: nonos-mk-proof-io-prod nonos-mk-ramfs-prod nonos-mk-keyring-prod nonos-mk-entropy-prod nonos-mk-crypto-prod nonos-mk-vfs-prod nonos-mk-market-prod nonos-mk-driver-virtio-rng-prod nonos-mk-driver-virtio-blk-prod nonos-mk-driver-virtio-gpu-prod nonos-mk-driver-virtio-net-prod nonos-mk-driver-iwlwifi-prod nonos-mk-driver-i2c-pci-prod nonos-mk-driver-i2c-hid-prod nonos-mk-driver-ps2-input-prod nonos-mk-driver-xhci-prod nonos-mk-driver-usb-hid-prod nonos-mk-driver-usb-msc-prod nonos-mk-driver-e1000-prod nonos-mk-driver-rtl8139-prod nonos-mk-driver-rtl8169-prod nonos-mk-driver-ahci-prod nonos-mk-driver-hda-prod nonos-mk-driver-nvme-prod nonos-mk-net-l2-prod nonos-mk-net-core-prod nonos-mk-net-ip-prod nonos-mk-net-udp-prod nonos-mk-net-dhcp-prod nonos-mk-net-nym-prod nonos-mk-net-sockets-prod nonos-mk-desktop-gui-prod nonos-mk-full-gui-prod
 .PHONY: nonos-mk-libc nonos-mk-proof-io nonos-mk-proof-io-sign nonos-mk-check-trust-keys nonos-mk-check-trust-manifest nonos-mk-trust-policy nonos-mk-host-trust-verify nonos-mk-verify-trust nonos-mk-ramfs nonos-mk-ramfs-sign nonos-mk-keyring nonos-mk-entropy nonos-mk-crypto nonos-mk-vfs nonos-mk-virtio-rng nonos-mk-virtio-rng-sign nonos-mk-check-virtio-rng-keys nonos-mk-virtio-blk nonos-mk-virtio-blk-sign nonos-mk-check-virtio-blk-keys nonos-mk-driver-virtio-gpu nonos-mk-driver-virtio-gpu-sign nonos-mk-check-driver-virtio-gpu-keys nonos-mk-virtio-net nonos-mk-virtio-net-sign nonos-mk-check-virtio-net-keys nonos-mk-driver-iwlwifi nonos-mk-driver-iwlwifi-sign nonos-mk-check-driver-iwlwifi-keys nonos-mk-driver-i2c-pci nonos-mk-driver-i2c-pci-sign nonos-mk-check-driver-i2c-pci-keys nonos-mk-driver-i2c-hid nonos-mk-driver-i2c-hid-sign nonos-mk-check-driver-i2c-hid-keys nonos-mk-ps2-input nonos-mk-ps2-input-sign nonos-mk-check-ps2-input-keys nonos-mk-xhci nonos-mk-xhci-sign nonos-mk-check-xhci-keys nonos-mk-driver-usb-msc nonos-mk-driver-usb-msc-sign nonos-mk-check-driver-usb-msc-keys nonos-mk-driver-e1000 nonos-mk-driver-e1000-sign nonos-mk-check-driver-e1000-keys nonos-mk-driver-rtl8139 nonos-mk-driver-rtl8139-sign nonos-mk-check-driver-rtl8139-keys nonos-mk-driver-rtl8169 nonos-mk-driver-rtl8169-sign nonos-mk-check-driver-rtl8169-keys nonos-mk-driver-ahci nonos-mk-driver-ahci-sign nonos-mk-check-driver-ahci-keys nonos-mk-driver-hda nonos-mk-driver-hda-sign nonos-mk-check-driver-hda-keys nonos-mk-driver-nvme nonos-mk-driver-nvme-sign nonos-mk-check-driver-nvme-keys nonos-mk-wallpaper nonos-mk-marketplace-abi nonos-mk-market nonos-mk-marketplace-index-tool
 .PHONY: nonos-mk-userland-clean
-.PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp
+.PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp nonos-mk-usb-img nonos-mk-usb-run
 .PHONY: nonos-mk-run nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-run-serial-log nonos-mk-run-input-probe-inject-serial-log nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-swtpm-start nonos-mk-swtpm-stop
 .PHONY: nonos-mk-static nonos-mk-scan
 .PHONY: nonos-mk-verify nonos-mk-verify-fast
@@ -50,6 +50,9 @@
 BOOTLOADER_DIR := nonos-bootloader
 TARGET_DIR     := target
 ESP_DIR        := $(TARGET_DIR)/esp
+USB_IMG        := $(TARGET_DIR)/nonos.img
+# Total image size in MiB. The kernel alone is ~68 MB, so keep generous headroom.
+USB_IMG_MB     ?= 256
 KEYS_DIR       := $(BOOTLOADER_DIR)/keys
 
 export SOURCE_DATE_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null || date +%s)
@@ -1419,6 +1422,35 @@ nonos-mk-esp: \
 	@printf "timeout=0\ndefault=nonos\n" > $(ESP_DIR)/EFI/nonos/boot.cfg
 	@echo 'fs0:\EFI\Boot\BOOTX64.EFI' > $(ESP_DIR)/startup.nsh
 	@echo "ESP ready at $(ESP_DIR)"
+
+# Produce a real, flashable GPT disk image with a FAT32 EFI System Partition.
+# Unlike the ESP directory (which only QEMU's virtual-FAT can boot), this
+# exercises a genuine partition table and filesystem, so it boots off a USB on
+# real hardware and off `-drive format=raw` in QEMU.
+nonos-mk-usb-img: nonos-mk-esp
+	@echo "Building GPT/FAT32 USB image $(USB_IMG) ($(USB_IMG_MB) MiB)..."
+	@dd if=/dev/zero of=$(USB_IMG) bs=1048576 count=$(USB_IMG_MB) status=none 2>/dev/null \
+		|| dd if=/dev/zero of=$(USB_IMG) bs=1048576 count=$(USB_IMG_MB) 2>/dev/null
+	@sgdisk -Z $(USB_IMG) >/dev/null 2>&1 || true
+	@sgdisk -o -n 1:2048:0 -t 1:EF00 -c 1:NONOS-ESP $(USB_IMG) >/dev/null
+	@mformat -i $(USB_IMG)@@1M -F ::
+	@mcopy -i $(USB_IMG)@@1M -s $(ESP_DIR)/EFI ::/EFI
+	@mcopy -i $(USB_IMG)@@1M $(ESP_DIR)/startup.nsh ::/
+	@echo "USB image ready at $(USB_IMG)"
+	@echo "  Validate as a real disk:  make nonos-mk-usb-run"
+	@echo "  Flash (macOS): sudo dd if=$(USB_IMG) of=/dev/rdiskN bs=4m && sync"
+	@echo "  Flash (Linux): sudo dd if=$(USB_IMG) of=/dev/sdX  bs=4M oflag=direct && sync"
+
+# Boot the image as a real GPT disk (NOT virtual FAT), so a pass here proves the
+# partition table and ESP filesystem the USB actually boots from.
+nonos-mk-usb-run: nonos-mk-usb-img $(QEMU_OVMF_VARS_RW)
+	@echo "Booting $(USB_IMG) as a real GPT disk..."
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive format=raw,file=$(USB_IMG) \
+		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
+		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
+		$(QEMU_GPU) $(QEMU_RNG) \
+		-serial mon:stdio -vga none -display $(QEMU_DISPLAY) -no-reboot
 
 # QEMU
 

@@ -26,4 +26,4 @@ mod wait;
 
 pub use constants::{MAX_SECTORS, SECTOR_SIZE};
 pub use queue::IoQueue;
-pub use setup::bring_up;
+pub use setup::{bring_up, NamespaceGeometry};

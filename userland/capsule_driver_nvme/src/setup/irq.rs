@@ -14,20 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{
-    mk_device_release, mk_irq_bind, mk_mmio_unmap, IrqBindOut, MmioMapOut, MK_IRQ_BIND_MSIX,
-};
+use nonos_libc::{mk_irq_bind, IrqBindOut, MK_IRQ_BIND_MSIX};
 
 use crate::discover::Found;
-use crate::error::{NvmeError, NvmeResult};
 
-pub fn bind(dev: Found, claim_epoch: u64, mmio: &MmioMapOut) -> NvmeResult<IrqBindOut> {
+pub fn bind(dev: Found, claim_epoch: u64) -> IrqBindOut {
     let mut out = IrqBindOut { grant_id: 0, vector: 0 };
     let r = mk_irq_bind(dev.device_id, claim_epoch, 0, MK_IRQ_BIND_MSIX, 1, &mut out);
     if r < 0 {
-        let _ = mk_mmio_unmap(mmio.grant_id);
-        let _ = mk_device_release(dev.device_id);
-        return Err(NvmeError::BrokerCallFailed);
+        // MSI-X binding is best effort. The driver polls every admin and I/O
+        // completion (admin/queue/wait.rs, nvm/wait.rs) and never waits on the
+        // interrupt, so a failed bind is not fatal. Continue in polling mode
+        // with a zero grant, which BrokerHandles::drop unbinds harmlessly.
+        return IrqBindOut { grant_id: 0, vector: 0 };
     }
-    Ok(out)
+    out
 }
