@@ -34,4 +34,5 @@ pub mod frame;
 pub mod key;
 pub mod mlme;
 pub mod netif;
+pub mod station;
 pub mod wpa;
