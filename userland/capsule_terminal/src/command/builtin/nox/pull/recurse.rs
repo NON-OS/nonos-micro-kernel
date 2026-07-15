@@ -31,12 +31,22 @@ pub fn parse_autoindex(html: &[u8]) -> Vec<Entry> {
         };
         let href = &html[start..start + end_rel];
         i = start + end_rel + 1;
-        if href.is_empty() || href[0] == b'/' || href.starts_with(b"..") || href[0] == b'?' {
+        if !safe(href) {
             continue;
         }
         out.push(Entry { name: href.to_vec(), is_dir: href.last() == Some(&b'/') });
     }
     out
+}
+
+fn safe(href: &[u8]) -> bool {
+    let core = href.strip_suffix(b"/").unwrap_or(href);
+    !core.is_empty()
+        && core[0] != b'?'
+        && core != b"."
+        && core != b".."
+        && !core.contains(&b'/')
+        && !core.contains(&b'\\')
 }
 
 fn find_from(hay: &[u8], from: usize, needle: &[u8]) -> Option<usize> {

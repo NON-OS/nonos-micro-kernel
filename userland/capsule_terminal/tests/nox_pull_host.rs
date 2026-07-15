@@ -121,3 +121,11 @@ fn autoindex_skips_parent_and_absolute() {
     assert_eq!(e.len(), 1);
     assert_eq!(e[0].name, b"ok.txt");
 }
+
+#[test]
+fn autoindex_rejects_traversal_names() {
+    let html = br#"<a href="a/../../etc">x</a><a href="s/../../y">y</a><a href="..\z">z</a><a href="good.txt">g</a>"#;
+    let e = recurse::parse_autoindex(html);
+    assert_eq!(e.len(), 1);
+    assert_eq!(e[0].name, b"good.txt");
+}
