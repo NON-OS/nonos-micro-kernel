@@ -16,7 +16,7 @@
 
 use super::{
     alias, apps, caps, clear, copy, date, display, du, echo, enter, find, help, history, id,
-    exec, ifconfig, install, ls, mk, motd, mv, nslookup, pathname, ping, read, rm, run, set, stat, svc,
+    exec, ifconfig, install, ls, mk, motd, mv, nslookup, pathname, ping, pull, read, rm, run, set, stat, svc,
     sysinfo, touch, unalias, unknown, unset, whereis, write,
 };
 use crate::command::output::Output;
@@ -43,6 +43,7 @@ pub fn dispatch(state: &mut State, args: &[&[u8]]) -> Outcome {
             true
         }
         b"read" | b"cat" => read::run(state, rest),
+        b"pull" => pull::run(state, rest),
         b"write" => write::run(state, rest),
         b"copy" | b"cp" => copy::run(state, rest),
         b"mk" | b"mkdir" => mk::run(state, rest),
