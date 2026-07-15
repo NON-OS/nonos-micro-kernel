@@ -14,11 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod args;
-pub mod conn;
-pub mod fetch;
-pub mod http;
-pub mod ipv4;
-pub mod recurse;
-pub mod scan;
-pub mod store;
+use nonos_app_skeleton::clients::vfs;
+
+pub fn write(pid: u32, path: &[u8], data: &[u8]) -> Result<(), &'static str> {
+    vfs::write_file(pid, path, data)
+}
+
+pub fn mkdir(pid: u32, path: &[u8]) {
+    let _ = vfs::mkdir(pid, path);
+}
