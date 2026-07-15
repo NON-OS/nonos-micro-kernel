@@ -24,6 +24,9 @@ pub mod args;
 #[path = "../src/command/builtin/nox/pull/http.rs"]
 pub mod http;
 
+#[path = "../src/command/builtin/nox/pull/recurse.rs"]
+pub mod recurse;
+
 #[test]
 fn find_locates_crlf_gap() {
     let b = b"HTTP/1.1 200 OK\r\nX: y\r\n\r\nBODY";
@@ -97,4 +100,24 @@ fn http_parse_404_and_chunked() {
     assert_eq!(p.status, 404);
     let c = http::parse_head(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n").unwrap();
     assert!(c.chunked);
+}
+
+#[test]
+fn autoindex_extracts_files_and_dirs() {
+    let html = br#"<ul><li><a href="a.png">a.png</a></li>
+<li><a href="sub/">sub/</a></li></ul>"#;
+    let e = recurse::parse_autoindex(html);
+    assert_eq!(e.len(), 2);
+    assert_eq!(e[0].name, b"a.png");
+    assert!(!e[0].is_dir);
+    assert_eq!(e[1].name, b"sub/");
+    assert!(e[1].is_dir);
+}
+
+#[test]
+fn autoindex_skips_parent_and_absolute() {
+    let html = br#"<a href="../">up</a><a href="/root">r</a><a href="ok.txt">ok</a>"#;
+    let e = recurse::parse_autoindex(html);
+    assert_eq!(e.len(), 1);
+    assert_eq!(e[0].name, b"ok.txt");
 }
