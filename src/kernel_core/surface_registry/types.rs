@@ -16,7 +16,7 @@
 
 pub const SLOT_CAP: usize = 256;
 pub const INPUT_RING_CAP: usize = 1024;
-pub const MAX_PAGES_PER_SURFACE: usize = 8192;
+pub const MAX_PAGES_PER_SURFACE: usize = 16384;
 pub const PIXEL_BYTES: u32 = 4;
 
 pub const FMT_ARGB8888: u32 = 1;

@@ -16,6 +16,7 @@
 
 pub(super) fn spawn() {
     spawn_image_codec();
+    spawn_image_viewer();
     spawn_clipboard();
     spawn_attest();
     spawn_installer();
@@ -51,6 +52,19 @@ fn spawn_image_codec() {
 }
 #[cfg(not(feature = "nonos-capsule-image-codec"))]
 fn spawn_image_codec() {}
+
+#[cfg(feature = "nonos-capsule-image-viewer")]
+fn spawn_image_viewer() {
+    use crate::userspace::capsule_image_viewer as c;
+    super::boot::capsule(
+        "IMAGE-VIEWER",
+        "image_viewer",
+        c::spawn_image_viewer_capsule,
+        c::shared_state,
+    );
+}
+#[cfg(not(feature = "nonos-capsule-image-viewer"))]
+fn spawn_image_viewer() {}
 
 #[cfg(feature = "nonos-capsule-clipboard")]
 fn spawn_clipboard() {

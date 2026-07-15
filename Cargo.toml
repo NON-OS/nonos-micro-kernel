@@ -88,6 +88,7 @@ nonos-capsule-clipboard         = []
 nonos-capsule-attest            = []
 nonos-capsule-power             = []
 nonos-capsule-image-codec       = []
+nonos-capsule-image-viewer      = []
 nonos-capsule-about             = []
 nonos-capsule-hello             = []
 nonos-capsule-boot-splash       = []
@@ -176,6 +177,8 @@ nonos-user-entry-proof = []
 input-probe-inject = []
 
 nonos-terminal-smoketest = ["nonos-capsule-terminal", "nonos-user-entry-proof"]
+
+nonos-image-viewer-smoketest = ["nonos-capsule-image-viewer", "nonos-user-entry-proof"]
 
 nonos-ntp-smoketest = ["microkernel-net-ntp", "nonos-user-entry-proof"]
 
@@ -492,6 +495,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-wm",
   "nonos-capsule-desktop-shell",
   "nonos-capsule-image-codec",
+  "nonos-capsule-image-viewer",
   "nonos-capsule-clipboard",
   "nonos-capsule-attest",
   "nonos-capsule-login",
@@ -582,6 +586,16 @@ microkernel-terminal-smoketest = [
   "nonos-capsule-installer",
   "nonos-capsule-terminal",
   "nonos-terminal-smoketest",
+]
+
+# Headless image_viewer smoketest. The capsule is built with
+# `nonos-image-viewer-smoketest` by the Makefile target and exercises
+# only the pure rotate/scale/viewport pipeline: no vfs, no IPC, no codec.
+microkernel-image-viewer-smoketest = [
+  "microkernel-core",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-image-viewer",
+  "nonos-image-viewer-smoketest",
 ]
 
 microkernel-file-manager = ["microkernel-desktop-gui"]

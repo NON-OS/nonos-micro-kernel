@@ -32,7 +32,7 @@ const SERVICE_PORT: u32 = 4412;
 const REPLY_INBOX: &str = "endpoint.image_codec.reply";
 const REPLY_PORT: u32 = 4413;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
-const REQUIRED_CAPS: u64 = 0x19;
+const REQUIRED_CAPS: u64 = 0x3819;
 
 pub fn spawn_image_codec_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

@@ -19,3 +19,4 @@ pub const OP_DECODE_PNG: u16 = 0x0002;
 pub const OP_DECODE_BMP: u16 = 0x0003;
 pub const OP_DECODE_LZ4_RAW: u16 = 0x0004;
 pub const OP_DECODE_JPEG: u16 = 0x0005;
+pub const OP_DECODE_GIF: u16 = 0x0006;

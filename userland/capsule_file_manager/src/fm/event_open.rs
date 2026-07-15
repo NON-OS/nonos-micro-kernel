@@ -27,6 +27,9 @@ pub fn open_selected(state: &mut State) -> EventOutcome {
         state.cursor = 0;
         state.scroll = 0;
         refresh(state);
+    } else if super::open_with::is_codec_ext(&entry.full_path)
+        && super::open_with::open_image(&entry.full_path)
+    {
     } else {
         preview::open_preview(state, entry.full_path);
     }

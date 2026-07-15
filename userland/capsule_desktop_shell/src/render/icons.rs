@@ -33,6 +33,7 @@ const CLOCK: &[u8] = include_bytes!("../../assets/app_icons/clock.rgba");
 const SNAKE: &[u8] = include_bytes!("../../assets/app_icons/snake.rgba");
 const WALLET: &[u8] = include_bytes!("../../assets/app_icons/wallet.rgba");
 const BROWSER: &[u8] = include_bytes!("../../assets/app_icons/browser.rgba");
+const IMAGE_VIEWER: &[u8] = include_bytes!("../../assets/app_icons/image_viewer.rgba");
 
 // One brand accent for every app: NØNOS cyan on near-black tiles. No rainbow.
 const CYAN: u32 = 0xFF66E6FF;
@@ -50,6 +51,7 @@ pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u3
         LauncherIcon::Snake => SNAKE,
         LauncherIcon::Wallet => WALLET,
         LauncherIcon::Browser => BROWSER,
+        LauncherIcon::ImageViewer => IMAGE_VIEWER,
     };
     badge::badge(ctx, x, y, size, glyph, CYAN);
 }
