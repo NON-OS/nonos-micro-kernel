@@ -15,6 +15,12 @@ extern crate alloc;
 #[path = "../src/command/builtin/nox/pull/scan.rs"]
 pub mod scan;
 
+#[path = "../src/command/builtin/nox/pull/ipv4.rs"]
+pub mod ipv4;
+
+#[path = "../src/command/builtin/nox/pull/args.rs"]
+pub mod args;
+
 #[test]
 fn find_locates_crlf_gap() {
     let b = b"HTTP/1.1 200 OK\r\nX: y\r\n\r\nBODY";
@@ -37,4 +43,29 @@ fn parse_usize_rejects_nondigits() {
 fn eq_ci_is_case_insensitive() {
     assert!(scan::eq_ci(b"Content-Length", b"content-length"));
     assert!(!scan::eq_ci(b"a", b"ab"));
+}
+
+#[test]
+fn args_parse_file() {
+    let a = args::parse(&[&b"10.0.2.2:8000/report.pdf"[..], &b"/docs/report.pdf"[..]]).unwrap();
+    assert_eq!(a.ip, [10, 0, 2, 2]);
+    assert_eq!(a.port, 8000);
+    assert_eq!(a.host, b"10.0.2.2:8000");
+    assert_eq!(a.path, b"/report.pdf");
+    assert_eq!(a.dest, b"/docs/report.pdf");
+    assert!(!a.is_dir);
+}
+
+#[test]
+fn args_parse_dir_trailing_slash() {
+    let a = args::parse(&[&b"10.0.2.2:8000/photos/"[..], &b"/docs/photos/"[..]]).unwrap();
+    assert!(a.is_dir);
+    assert_eq!(a.path, b"/photos/");
+}
+
+#[test]
+fn args_reject_bad() {
+    assert!(args::parse(&[&b"10.0.2.2:8000/x"[..]]).is_err());
+    assert!(args::parse(&[&b"999.0.0.1:80/x"[..], &b"/d"[..]]).is_err());
+    assert!(args::parse(&[&b"10.0.2.2/x"[..], &b"/d"[..]]).is_err());
 }

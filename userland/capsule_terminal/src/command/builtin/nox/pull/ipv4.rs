@@ -14,6 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod args;
-pub mod ipv4;
-pub mod scan;
+pub fn parse_ipv4(s: &[u8]) -> Option<[u8; 4]> {
+    let mut out = [0u8; 4];
+    let mut idx = 0usize;
+    for part in s.split(|&c| c == b'.') {
+        if idx == 4 || part.is_empty() || part.len() > 3 {
+            return None;
+        }
+        let mut v: u32 = 0;
+        for &c in part {
+            if !c.is_ascii_digit() {
+                return None;
+            }
+            v = v * 10 + (c - b'0') as u32;
+        }
+        if v > 255 {
+            return None;
+        }
+        out[idx] = v as u8;
+        idx += 1;
+    }
+    if idx == 4 {
+        Some(out)
+    } else {
+        None
+    }
+}
