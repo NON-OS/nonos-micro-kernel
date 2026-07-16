@@ -27,8 +27,29 @@ use super::{keyboard, pointer};
 
 pub fn route_event(ctx: &mut Context, event: &InputEvent) -> u32 {
     if let Some(holder) = ctx.grabs.holder_for(event.kind) {
-        let n = deliver_one(holder, event);
+        let mut ev = *event;
+        if is_pointer(ev.kind) {
+            // A grab redirects delivery, but the cursor must keep tracking:
+            // the compositor's pointer position only ever comes from this
+            // routing step, and parking it while a drag grab is held freezes
+            // the cursor on screen. The holder also expects screen pixels,
+            // not raw device units, so the grabbed event carries the routed
+            // position.
+            let (x, y) = ctx.cursor.apply(&ev);
+            ctx.cursor_x = x;
+            ctx.cursor_y = y;
+            ctx.cursor_dirty = true;
+            ev.x = x as i32;
+            ev.y = y as i32;
+        }
+        let n = deliver_one(holder, &ev);
         if n == 0 {
+            // A holder that cannot receive its grabbed stream (inbox full or
+            // dead) must not keep the grab: the lost event may be the very
+            // release edge that would have ended it, and a grab that outlives
+            // its release swallows all input forever. Routing normally again
+            // is strictly better than a permanent wedge.
+            ctx.grabs.release(holder);
             ctx.forget_pid(holder);
         }
         ctx.record(n);
