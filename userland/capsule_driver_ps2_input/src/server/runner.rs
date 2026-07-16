@@ -25,10 +25,33 @@ use crate::server::handlers;
 use crate::server::pump::pump;
 use crate::setup::Driver;
 use alloc::vec;
-use nonos_libc::{mk_ipc_recv, mk_irq_wait};
+use nonos_libc::{mk_input_event_post, mk_ipc_recv, mk_irq_wait, InputEvent};
 
 const POLL_IDLE_MS: u64 = 1;
-const IRQ_WAIT_MS: u64 = 100;
+// Upper bound on how long the loop parks waiting for the next keyboard/mouse
+// IRQ before it re-polls the controller. A real IRQ wakes it at once, so this
+// only bounds the fallback: on hardware where the 8042 line is misrouted the
+// driver runs off this poll instead, and one frame (16 ms) keeps clicks
+// responsive where 100 ms read as lag.
+const IRQ_WAIT_MS: u64 = 16;
+
+// Tell the kernel diagnostic this driver reached its serving loop (setup ok).
+// The kernel counts it and does not route it.
+const KIND_DRIVER_READY: u16 = 0xFE01;
+
+fn signal_ready() {
+    let ev = InputEvent {
+        kind: KIND_DRIVER_READY,
+        flags: 0,
+        code: 0,
+        x: 0,
+        y: 0,
+        delta_x: 0,
+        delta_y: 0,
+        timestamp_ns: 0,
+    };
+    let _ = mk_input_event_post(&ev);
+}
 
 pub fn run(driver: Driver) -> ! {
     let rx_len = HDR_LEN;
@@ -46,6 +69,7 @@ pub fn run(driver: Driver) -> ! {
     let mut ctx = Context::new(driver);
     let mut prev_buttons = 0u8;
     let mut wait_seq = 0u64;
+    signal_ready();
     loop {
         pump(&mut ctx, &mut prev_buttons);
         let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, POLL_IDLE_MS);

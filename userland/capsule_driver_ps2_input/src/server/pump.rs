@@ -51,5 +51,6 @@ fn drain_ports(ctx: &mut Context) {
         &mut ctx.ring,
         &mut ctx.mouse,
         &mut ctx.mouse_ring,
+        ctx.driver.mouse_enabled,
     );
 }
