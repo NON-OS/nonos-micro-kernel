@@ -1,0 +1,20 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the RTL8821CE power-sequence engine. Builds for the
+# host so `cargo test` runs the real executor source (included via #[path])
+# against a modeled register file, checking the exact register program a
+# power-sequence table produces, with no card present.
+[package]
+name = "rtl8821ce_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nonos_wifi_core = { path = "../nonos_wifi_core" }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
