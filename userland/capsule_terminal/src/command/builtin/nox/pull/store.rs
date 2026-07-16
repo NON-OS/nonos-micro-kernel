@@ -23,3 +23,7 @@ pub fn write(pid: u32, path: &[u8], data: &[u8]) -> Result<(), &'static str> {
 pub fn mkdir(pid: u32, path: &[u8]) {
     let _ = vfs::mkdir(pid, path);
 }
+
+pub fn exists(pid: u32, path: &[u8]) -> bool {
+    vfs::stat(pid, path).is_ok()
+}

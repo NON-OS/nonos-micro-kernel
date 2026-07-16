@@ -58,6 +58,10 @@ pub(super) fn one_file(
     dest: &[u8],
     tally: &mut progress::Tally,
 ) -> bool {
+    if a.no_clobber && store::exists(pid, dest) {
+        tally.skipped += 1;
+        return true;
+    }
     match fetch::get(ip, a.target.port, &a.target.host, path) {
         Ok(body) => match store::write(pid, dest, &body) {
             Ok(()) => {
