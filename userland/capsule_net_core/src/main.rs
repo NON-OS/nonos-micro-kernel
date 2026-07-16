@@ -46,7 +46,9 @@ fn wait_for_setup() {
     loop {
         match setup::run() {
             Ok(()) => return,
-            Err(SetupError::NicNotFound | SetupError::LinkDown) => {
+            // No NIC has an up link yet; keep retrying so the interface is bound
+            // the moment one gains carrier.
+            Err(SetupError::NicNotFound) => {
                 for _ in 0..64 {
                     mk_yield();
                 }

@@ -16,14 +16,27 @@
 
 use alloc::vec;
 
+use nonos_libc::mk_time_millis;
+
 use crate::server::parse_req::{parse, HDR_LEN, IPC_BUF_MAX};
 use crate::server::runner::{dispatch, receive};
+
+// How often to re-check whether a better interface has come up. A link can gain
+// carrier after boot, and the stack should follow it rather than stay on the one
+// it happened to bind first.
+const REEVAL_INTERVAL_MS: i64 = 1000;
 
 pub fn run() -> ! {
     let mut rx = vec![0u8; HDR_LEN + IPC_BUF_MAX];
     let mut tx = vec![0u8; HDR_LEN + IPC_BUF_MAX];
+    let mut last_reeval: i64 = 0;
     loop {
         crate::iface::poll::pump();
+        let now = mk_time_millis();
+        if now.wrapping_sub(last_reeval) >= REEVAL_INTERVAL_MS {
+            crate::setup::reevaluate();
+            last_reeval = now;
+        }
         let mut sender_pid = 0u32;
         let n = receive::receive(&mut rx, &mut sender_pid);
         if n <= 0 || sender_pid == 0 {
