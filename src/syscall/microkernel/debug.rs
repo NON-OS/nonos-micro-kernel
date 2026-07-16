@@ -46,6 +46,15 @@ pub fn sys_mk_debug(user_ptr: u64, len: u64) -> i64 {
         return ERRNO_FAULT;
     }
     crate::sys::serial::print(&buf[..len]);
+    // Mirror to the on-screen log too: a capsule reporting its bring-up on a
+    // machine with no serial port is otherwise invisible. No-op unless the
+    // framebuffer console is enabled (NONOS_FBCONSOLE=1 bring-up build).
+    //
+    // Silenced for a clean desktop: capsule diagnostics now surface in the
+    // Settings panel and the in-system log viewer, so they no longer scroll over
+    // the framebuffer. Uncomment to bring the on-screen capsule trace back for a
+    // headless bring-up.
+    /* crate::sys::boot_log::capsule_screen(&buf[..len]); */
     mirror_to_proc_inbox(&buf[..len]);
     len as i64
 }

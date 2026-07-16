@@ -55,6 +55,9 @@ fn do_post(ev_ptr: u64) -> SyscallResult {
         Ok(v) => v,
         Err(_) => return errno(EFAULT),
     };
+    if option_env!("NONOS_FBCONSOLE").is_some() {
+        crate::interrupts::timer::heartbeat::input_post_blip();
+    }
     match post_input(ev) {
         Ok(()) => SyscallResult::success_audited(0),
         Err(_) => errno(ENOMEM),
@@ -70,6 +73,9 @@ fn do_drain(out_ptr: u64, max_events: u64) -> SyscallResult {
     let n = drain_input(&mut scratch[..cap]);
     if n == 0 {
         return SyscallResult::success_audited(0);
+    }
+    if option_env!("NONOS_FBCONSOLE").is_some() {
+        crate::interrupts::timer::heartbeat::input_drain_blip();
     }
     let bytes = n * core::mem::size_of::<InputEvent>();
     let src = unsafe { core::slice::from_raw_parts(scratch.as_ptr() as *const u8, bytes) };

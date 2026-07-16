@@ -61,6 +61,13 @@ pub fn sys_time_millis() -> i64 {
     now.min(i64::MAX as u64) as i64
 }
 
+/// Monotonic milliseconds since boot. Unlike the wall clock this never goes
+/// backwards, is not moved by a time adjustment, and is available before the
+/// wall clock is set, so it is the source drivers use for bounded timeouts.
+pub fn sys_uptime_ms() -> i64 {
+    crate::time::timestamp_millis().min(i64::MAX as u64) as i64
+}
+
 fn clock_ready() -> bool {
     crate::sys::clock::TSC_HZ.load(Ordering::Relaxed) != 0
         && crate::sys::clock::BOOT_UNIX_MS.load(Ordering::Relaxed) != 0

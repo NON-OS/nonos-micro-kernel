@@ -121,10 +121,16 @@ pub fn map_user_mmio(
     physical_addr: PhysAddr,
     size: usize,
 ) -> PagingResult<()> {
+    // Device control registers need STRONG uncacheable (PAT index 3: PCD+PWT),
+    // not UC- (PCD only). UC- lets a write-combining MTRR over the BAR region
+    // silently downgrade the mapping to WC, which reorders and coalesces register
+    // writes and returns stale reads: a DesignWare I2C controller then never sees
+    // IC_ENABLE and every transfer fails while the driver believes it came up.
     let permissions = PagePermissions::USER
         | PagePermissions::READ
         | PagePermissions::WRITE
         | PagePermissions::NO_CACHE
+        | PagePermissions::WRITE_THROUGH
         | PagePermissions::DEVICE;
     let pages = pages_needed(size);
     for i in 0..pages {

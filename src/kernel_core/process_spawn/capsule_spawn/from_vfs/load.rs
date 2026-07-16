@@ -55,11 +55,12 @@ pub(crate) fn load_capsule_from_vfs(
         debug_tag: b"[RUNTIME-LOAD] elf error:",
     };
     let trust = decode_trust(BAKED_TRUST_ANCHOR_POLICY).map_err(|_| LoadError::TrustAnchor)?;
-    // Feed the real clock so the certificate validity window is enforced; a zero
-    // clock (not yet live) falls back to the baked behavior of skipping the
-    // temporal check rather than rejecting every certificate.
-    let now = crate::time::timestamp_millis();
-    let now_ms = if now == 0 { None } else { Some(now) };
+    // Enforce the certificate validity window against the wall clock, not
+    // uptime-since-boot: a real `valid_from_ms` is a wall-clock epoch, so
+    // comparing it to uptime rejected every runtime-loaded capsule as
+    // NotYetValid. Before the clock is set the gate returns None and the
+    // signature and trust anchor still gate the load.
+    let now_ms = super::validity_clock::validity_now_ms(crate::sys::unix_ms());
     let pid =
         spawn_verified_as(&spec, &trust, now_ms, on_behalf_of).map_err(LoadError::Spawn)?;
     if !args.is_empty() {

@@ -178,6 +178,11 @@ impl CapabilityToken {
     pub fn can_spawn_window(&self) -> bool {
         self.grants(Capability::SpawnWindow) || self.grants(Capability::Admin)
     }
+    // Authority to terminate a process the caller does not parent.
+    #[inline]
+    pub fn can_control_processes(&self) -> bool {
+        self.grants(Capability::ProcessControl) || self.grants(Capability::Admin)
+    }
 }
 
 impl core::fmt::Display for CapabilityToken {

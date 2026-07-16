@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::errnos::{ERRNO_INVAL, ERRNO_PERM};
+use crate::capabilities::Capability;
 use crate::process::signal::{SIGINT, SIGKILL, SIGTERM};
 use crate::process::{
-    current_pid, get_parent_pid, get_process, terminate_current_with_signal, ProcessState,
+    current_pid, get_parent_pid, get_process, terminate_current_with_signal, with_process,
+    ProcessState,
 };
 
 pub fn sys_kill(pid: u64, sig: u64) -> i64 {
@@ -26,8 +28,18 @@ pub fn sys_kill(pid: u64, sig: u64) -> i64 {
     }
     let target = pid as u32;
     let caller = current_pid().unwrap_or(0);
+    // Baseline: a process may kill its own children. Beyond that, killing an
+    // unrelated pid needs the ProcessControl capability, held only by the
+    // process manager, so a compromised app cannot terminate other capsules.
     let is_parent = caller != 0 && get_parent_pid(target) == Some(caller);
-    if !is_parent {
+    let controls = caller != 0
+        && with_process(caller, |pcb| {
+            pcb.caps_bits.load(core::sync::atomic::Ordering::Relaxed)
+                & (Capability::ProcessControl.bit() | Capability::Admin.bit())
+                != 0
+        })
+        .unwrap_or(false);
+    if !is_parent && !controls {
         return ERRNO_PERM;
     }
     if !pid_alive(target) {

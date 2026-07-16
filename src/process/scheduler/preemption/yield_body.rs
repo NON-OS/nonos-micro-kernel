@@ -79,7 +79,23 @@ pub(crate) fn perform_yield_inline() {
 // pending still lands inside the HLT, and the handler (timer tick
 // or broker IRQ) refills the run queue before control returns.
 fn idle_until_interrupt() {
-    unsafe {
-        core::arch::asm!("sti", "hlt", "cli", options(nomem, nostack));
+    // Halt only where the LAPIC timer is known to keep counting through it;
+    // on a laptop in C1E the timer clock gates off during hlt and the tick
+    // never returns. Where halting is unsafe, spin briefly with interrupts
+    // enabled so the wake still lands and the tick still fires.
+    if crate::arch::x86_64::interrupt::apic::idle_timer::halt_safe() {
+        unsafe {
+            core::arch::asm!("sti", "hlt", "cli", options(nomem, nostack));
+        }
+    } else {
+        unsafe {
+            core::arch::asm!("sti", options(nomem, nostack));
+        }
+        for _ in 0..4096 {
+            core::hint::spin_loop();
+        }
+        unsafe {
+            core::arch::asm!("cli", options(nomem, nostack));
+        }
     }
 }

@@ -14,7 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+// NONOS_NODESKTOP=1 builds bring up drivers and the input stack but leave
+// the compositor, splash and shell unspawned, so the on-screen kernel log
+// stays visible for the whole session. This is the hardware bring-up
+// channel: one photo shows every driver that initialized and where a fault
+// lands, with nothing painting over it and no serial cable required.
+fn desktop_enabled() -> bool {
+    option_env!("NONOS_NODESKTOP").is_none()
+}
+
 pub(super) fn spawn() {
+    if !desktop_enabled() {
+        return;
+    }
     spawn_gui_core();
     spawn_boot_splash();
     spawn_wm();
@@ -30,6 +42,9 @@ pub(super) fn spawn() {
 // the rest of the capsules spawn behind it. `spawn` re-invokes these
 // later; every one is idempotent through its `is_alive` guard.
 pub(super) fn spawn_early_display() {
+    if !desktop_enabled() {
+        return;
+    }
     spawn_gui_core();
     spawn_boot_splash();
 }

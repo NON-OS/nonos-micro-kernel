@@ -57,6 +57,11 @@ pub enum Capability {
     // embedded, attested app capsule (a fresh window). Held only by the
     // desktop shell so a compromised app cannot spawn capsules.
     SpawnWindow,
+    // Authority to terminate a process the caller does not parent. Every
+    // capsule may already kill its own children; this bit extends that to
+    // arbitrary pids, held only by the process manager so a compromised app
+    // cannot kill unrelated capsules.
+    ProcessControl,
 }
 
 impl Capability {
@@ -88,10 +93,11 @@ impl Capability {
             Self::TimeSet => 4194304,
             Self::SpawnBroker => 8388608,
             Self::SpawnWindow => 16777216,
+            Self::ProcessControl => 33554432,
         }
     }
 
-    pub const fn all() -> [Capability; 25] {
+    pub const fn all() -> [Capability; 26] {
         [
             Self::CoreExec,
             Self::IO,
@@ -118,6 +124,7 @@ impl Capability {
             Self::TimeSet,
             Self::SpawnBroker,
             Self::SpawnWindow,
+            Self::ProcessControl,
         ]
     }
 
@@ -148,6 +155,7 @@ impl Capability {
             Self::TimeSet => "TimeSet",
             Self::SpawnBroker => "SpawnBroker",
             Self::SpawnWindow => "SpawnWindow",
+            Self::ProcessControl => "ProcessControl",
         }
     }
 
