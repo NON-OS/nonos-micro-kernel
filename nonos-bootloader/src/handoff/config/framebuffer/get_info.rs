@@ -21,25 +21,6 @@ use uefi::proto::console::gop::GraphicsOutput;
 use uefi::table::boot::BootServices;
 use uefi::Identify;
 
-/// Normalize a GOP scanline stride to bytes for the handoff contract.
-///
-/// The spec says PixelsPerScanLine holds pixels, but firmware in the wild
-/// disagrees: OVMF builds have been seen reporting bytes in that field,
-/// while real laptop firmware reports pixels. The two ranges cannot
-/// overlap for 32-bit modes: a byte stride is always at least width * 4,
-/// and pixel padding never reaches four times the width. Below width the
-/// value is garbage either way.
-pub fn stride_to_bytes(stride: u32, width: u32) -> Option<u32> {
-    let min_bytes = width.checked_mul(4)?;
-    if stride >= min_bytes {
-        return Some(stride);
-    }
-    if stride >= width {
-        return stride.checked_mul(4);
-    }
-    None
-}
-
 /// Get framebuffer info for the kernel handoff.
 ///
 /// Prefer the framebuffer the display module already latched and drew the
