@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_libc::Deadline;
+
 use crate::constants::HCCPARAMS1;
 use crate::regs::{mmio_read32, mmio_write32};
 
@@ -26,7 +28,7 @@ const USBLEGSUP_OS_OWNED: u32 = 1 << 24;
 const CTLSTS_DISABLE_SMI: u32 = (0x7 << 1) | (0xff << 5) | (0x7 << 17);
 const CTLSTS_SMI_EVENTS: u32 = 0x7 << 29;
 
-const HANDOFF_POLL_LIMIT: u32 = 1_000_000;
+const HANDOFF_TIMEOUT_MS: u64 = 1_000;
 const XECP_WALK_LIMIT: u32 = 256;
 
 /// Claim the controller from BIOS/SMM before it is reset. On real firmware the
@@ -59,10 +61,14 @@ fn claim(usblegsup: u64) {
     // Request OS ownership, then wait for BIOS to drop its semaphore.
     mmio_write32(usblegsup, mmio_read32(usblegsup) | USBLEGSUP_OS_OWNED);
     let mut owned = false;
-    for _ in 0..HANDOFF_POLL_LIMIT {
+    let deadline = Deadline::after_ms(HANDOFF_TIMEOUT_MS);
+    loop {
         let v = mmio_read32(usblegsup);
         if v & USBLEGSUP_BIOS_OWNED == 0 && v & USBLEGSUP_OS_OWNED != 0 {
             owned = true;
+            break;
+        }
+        if deadline.expired() {
             break;
         }
         core::hint::spin_loop();

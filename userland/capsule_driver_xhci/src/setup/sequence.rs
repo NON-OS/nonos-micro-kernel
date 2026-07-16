@@ -13,10 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use nonos_libc::mk_device_release;
+
 use super::marker::marker;
 use super::{
     assemble::assemble, claim::claim, driver::Driver, irq_bind::irq_bind, layout::read_layout,
-    mmio_map::mmio_map,
+    mmio_map::mmio_map, pci::enable_bus_master,
 };
 use crate::controller::{
     halt, issue_noop_and_wait, legacy_handoff, program_command_ring, program_dcbaa,
@@ -32,14 +34,20 @@ use crate::rings::{command::CommandRing, event::EventRing};
 pub fn run() -> XhciResult<Driver> {
     let dev = find_xhci().ok_or(XhciError::DeviceNotFound)?;
     let claim_epoch = claim(dev.device_id)?;
+    if let Err(e) = enable_bus_master(dev.device_id, claim_epoch) {
+        let _ = mk_device_release(dev.device_id);
+        return Err(e);
+    }
     let mmio = mmio_map(dev.device_id, claim_epoch, dev.bar0_size)?;
-    let irq = irq_bind(dev, claim_epoch, &mmio)?;
+    let irq = irq_bind(dev, claim_epoch);
     let handles = BrokerHandles::new(dev.device_id, mmio.grant_id, mmio.user_va, irq.grant_id);
     let layout = read_layout(&handles, mmio.length)?;
-    // Claim the controller from BIOS/SMM before halting or resetting it. On real
-    // firmware SMM often still owns it via USB legacy support; without this the
-    // reset races SMM and the boot keyboard can be lost. No-op on QEMU.
+    // Take the controller from BIOS/SMM before halting or resetting it. On real
+    // firmware xHCI is still owned by SMM for boot-keyboard emulation; driving
+    // it without this handshake races SMM and can wedge the reset. No-op on a
+    // controller that advertises no legacy capability (QEMU).
     legacy_handoff(mmio.user_va);
+    marker(b"[driver_xhci] legacy handoff ok\n");
     halt(layout.op_base)?;
     reset(layout.op_base)?;
     marker(b"[driver_xhci] reset ok\n");

@@ -24,26 +24,42 @@ use crate::trb::builders::setup_stage_generic::{setup_stage, SetupDir};
 use crate::trb::builders::status_stage::status_stage_out;
 use crate::trb::builders::status_stage_in::status_stage_in;
 const DCI_EP0_BIDIR: u8 = 1;
+
+/// The parameters of a USB control transfer: the setup-packet fields plus the
+/// data-stage buffer.
+#[derive(Clone, Copy)]
+pub struct ControlRequest {
+    pub bm_request_type: u8,
+    pub b_request: u8,
+    pub w_value: u16,
+    pub w_index: u16,
+    pub data_phys: u64,
+    pub data_len: u16,
+}
+
 pub fn issue_control_transfer(
     doorbell_base: u64,
     intr_base: u64,
     evt_ring: &mut EventRing,
     ep0: &mut TransferRing,
     slot_id: u8,
-    bm_request_type: u8,
-    b_request: u8,
-    w_value: u16,
-    w_index: u16,
-    data_phys: u64,
-    data_len: u16,
+    req: ControlRequest,
 ) -> XhciResult<()> {
-    let dir = direction(bm_request_type, data_len);
+    let dir = direction(req.bm_request_type, req.data_len);
     let cycle = ep0.cycle() != 0;
-    ep0.enqueue(setup_stage(bm_request_type, b_request, w_value, w_index, data_len, dir, cycle))?;
+    ep0.enqueue(setup_stage(
+        req.bm_request_type,
+        req.b_request,
+        req.w_value,
+        req.w_index,
+        req.data_len,
+        dir,
+        cycle,
+    ))?;
     if matches!(dir, SetupDir::DeviceToHost) {
-        ep0.enqueue(data_stage_in(data_phys, data_len, ep0.cycle() != 0))?;
+        ep0.enqueue(data_stage_in(req.data_phys, req.data_len, ep0.cycle() != 0))?;
     } else if matches!(dir, SetupDir::HostToDevice) {
-        ep0.enqueue(data_stage_out(data_phys, data_len, ep0.cycle() != 0))?;
+        ep0.enqueue(data_stage_out(req.data_phys, req.data_len, ep0.cycle() != 0))?;
     }
     let status = match dir {
         SetupDir::DeviceToHost => status_stage_out(ep0.cycle() != 0),

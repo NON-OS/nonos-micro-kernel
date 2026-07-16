@@ -42,13 +42,15 @@ pub(super) fn do_configure(
         res.int_armed = None;
         write_configure_endpoint_input(
             &res.input_context,
-            ctx.driver.layout.context_size,
-            dci,
-            ring_phys,
-            max_packet,
-            interval,
-            res.speed,
-            res.port_id,
+            crate::contexts::EndpointConfig {
+                context_size: ctx.driver.layout.context_size,
+                dci,
+                ring_phys,
+                max_packet,
+                interval,
+                speed: res.speed,
+                root_port: res.port_id,
+            },
         );
         res.input_context.phys()
     };

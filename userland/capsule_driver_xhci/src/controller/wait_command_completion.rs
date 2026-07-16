@@ -13,11 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use nonos_libc::Deadline;
+
 use crate::constants::{CC_SUCCESS, TRB_TYPE_CMD_COMPLETION_EVENT};
 use crate::error::{XhciError, XhciResult};
 use crate::regs::runtime::erdp_program;
 use crate::rings::event::EventRing;
-const COMPLETION_POLL_LIMIT: u32 = 1_000_000;
+
+const COMPLETION_TIMEOUT_MS: u64 = 1_000;
+
 #[derive(Clone, Copy)]
 pub struct CommandCompletion {
     pub slot_id: u8,
@@ -27,7 +31,11 @@ pub fn wait_command_completion(
     issued_phys: u64,
     evt_ring: &mut EventRing,
 ) -> XhciResult<CommandCompletion> {
-    for _ in 0..COMPLETION_POLL_LIMIT {
+    let deadline = Deadline::after_ms(COMPLETION_TIMEOUT_MS);
+    loop {
+        if deadline.expired() {
+            return Err(XhciError::CommandCompletionTimeout);
+        }
         if !evt_ring.has_event() {
             core::hint::spin_loop();
             continue;
@@ -47,5 +55,4 @@ pub fn wait_command_completion(
         }
         return Ok(CommandCompletion { slot_id: event.slot_id() });
     }
-    Err(XhciError::CommandCompletionTimeout)
 }

@@ -21,10 +21,14 @@ use crate::state::State;
 
 pub fn handle(state: &mut State, sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     match bot::parse(body) {
-        Ok(csw) => {
-            state.accept_csw(csw);
-            let _ = respond::status(sender_pid, req, i32::from(csw.status), tx);
-        }
+        Ok(csw) => match state.finish_command(csw) {
+            Ok(status) => {
+                let _ = respond::status(sender_pid, req, i32::from(status), tx);
+            }
+            Err(errno) => {
+                let _ = respond::status(sender_pid, req, errno, tx);
+            }
+        },
         Err(errno) => {
             let _ = respond::status(sender_pid, req, errno, tx);
         }

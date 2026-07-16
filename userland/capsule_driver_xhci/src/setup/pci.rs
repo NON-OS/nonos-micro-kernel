@@ -14,23 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::bot::{CommandBlockWrapper, CBW_FLAG_IN};
-use crate::protocol::{Request, CBW_LEN, HDR_LEN, STATUS_LEN};
-use crate::scsi;
-use crate::server::respond;
-use crate::state::State;
+use nonos_libc::{mk_pci_config_write, MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER};
 
-pub fn handle(state: &mut State, sender_pid: u32, req: &Request, tx: &mut [u8]) {
-    let (cdb, cdb_len) = scsi::inquiry();
-    let data_len = scsi::INQUIRY_DATA_LEN as u32;
-    let cbw = CommandBlockWrapper {
-        tag: state.begin_command(data_len),
-        data_len,
-        flags: CBW_FLAG_IN,
-        lun: 0,
-        cdb_len,
-        cdb,
-    };
-    cbw.write(&mut tx[HDR_LEN + STATUS_LEN..HDR_LEN + STATUS_LEN + CBW_LEN]);
-    let _ = respond::payload(sender_pid, req, CBW_LEN, tx);
+use crate::error::{XhciError, XhciResult};
+
+pub fn enable_bus_master(device_id: u64, claim_epoch: u64) -> XhciResult<()> {
+    let r = mk_pci_config_write(device_id, claim_epoch, MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER);
+    if r < 0 {
+        return Err(XhciError::BrokerCallFailed(r));
+    }
+    Ok(())
 }

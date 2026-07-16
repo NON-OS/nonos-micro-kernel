@@ -13,20 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::controller::issue_control_transfer;
+use crate::controller::{issue_control_transfer, ControlRequest};
 use crate::error::{XhciError, XhciResult};
 use crate::server::context::Context;
 
-pub(super) fn do_transfer(
-    ctx: &mut Context,
-    slot: u8,
-    bm_rt: u8,
-    b_req: u8,
-    w_value: u16,
-    w_index: u16,
-    data_len: u16,
-    data_phys: u64,
-) -> XhciResult<()> {
+pub(super) fn do_transfer(ctx: &mut Context, slot: u8, req: ControlRequest) -> XhciResult<()> {
     let res = ctx
         .driver
         .slots
@@ -38,11 +29,6 @@ pub(super) fn do_transfer(
         &mut ctx.driver.event_ring,
         &mut res.ep0,
         slot,
-        bm_rt,
-        b_req,
-        w_value,
-        w_index,
-        data_phys,
-        data_len,
+        req,
     )
 }

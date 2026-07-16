@@ -14,23 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::bot::{CommandBlockWrapper, CBW_FLAG_IN};
-use crate::protocol::{Request, CBW_LEN, HDR_LEN, STATUS_LEN};
-use crate::scsi;
-use crate::server::respond;
-use crate::state::State;
-
-pub fn handle(state: &mut State, sender_pid: u32, req: &Request, tx: &mut [u8]) {
-    let (cdb, cdb_len) = scsi::inquiry();
-    let data_len = scsi::INQUIRY_DATA_LEN as u32;
-    let cbw = CommandBlockWrapper {
-        tag: state.begin_command(data_len),
-        data_len,
-        flags: CBW_FLAG_IN,
-        lun: 0,
-        cdb_len,
-        cdb,
-    };
-    cbw.write(&mut tx[HDR_LEN + STATUS_LEN..HDR_LEN + STATUS_LEN + CBW_LEN]);
-    let _ = respond::payload(sender_pid, req, CBW_LEN, tx);
+/// REQUEST SENSE (SPC opcode 0x03): fetch the sense data that explains the last
+/// CHECK CONDITION. `alloc_len` bounds how many sense bytes the device returns
+/// and lands in the allocation-length field. Returns the 16-byte CDB and its
+/// significant length.
+pub fn request_sense(alloc_len: u8) -> ([u8; 16], u8) {
+    let mut cdb = [0u8; 16];
+    cdb[0] = 0x03;
+    cdb[4] = alloc_len;
+    (cdb, 6)
 }

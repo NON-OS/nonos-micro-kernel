@@ -43,7 +43,7 @@ fn matches_armed(event: &Trb, issued_phys: u64) -> bool {
     event.get_type() == TRB_TYPE_TRANSFER_EVENT && event.get_pointer() & !0xF == issued_phys & !0xF
 }
 fn transferred(event: &Trb, length: u16) -> u16 {
-    let residual = (event.d2 & 0x00FF_FFFF) as u32;
+    let residual = event.d2 & 0x00FF_FFFF;
     let req = length as u32;
     if residual <= req {
         (req - residual) as u16

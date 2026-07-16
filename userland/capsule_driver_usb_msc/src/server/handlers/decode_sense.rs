@@ -14,23 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::bot::{CommandBlockWrapper, CBW_FLAG_IN};
-use crate::protocol::{Request, CBW_LEN, HDR_LEN, STATUS_LEN};
+use crate::protocol::{Request, E_INVAL, HDR_LEN, STATUS_LEN};
 use crate::scsi;
 use crate::server::respond;
-use crate::state::State;
 
-pub fn handle(state: &mut State, sender_pid: u32, req: &Request, tx: &mut [u8]) {
-    let (cdb, cdb_len) = scsi::inquiry();
-    let data_len = scsi::INQUIRY_DATA_LEN as u32;
-    let cbw = CommandBlockWrapper {
-        tag: state.begin_command(data_len),
-        data_len,
-        flags: CBW_FLAG_IN,
-        lun: 0,
-        cdb_len,
-        cdb,
+// sense_key(1) + asc(1) + ascq(1).
+const DECODED_LEN: usize = 3;
+
+pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
+    let Some(sense) = scsi::parse_sense(body) else {
+        let _ = respond::status(sender_pid, req, E_INVAL, tx);
+        return;
     };
-    cbw.write(&mut tx[HDR_LEN + STATUS_LEN..HDR_LEN + STATUS_LEN + CBW_LEN]);
-    let _ = respond::payload(sender_pid, req, CBW_LEN, tx);
+    let base = HDR_LEN + STATUS_LEN;
+    tx[base] = sense.sense_key;
+    tx[base + 1] = sense.asc;
+    tx[base + 2] = sense.ascq;
+    let _ = respond::payload(sender_pid, req, DECODED_LEN, tx);
 }
