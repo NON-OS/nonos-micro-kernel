@@ -91,3 +91,36 @@ fn reassembly_joins_contiguous_and_stops_at_gaps() {
     g.insert(103, alloc::vec![9]); // gap at 102
     assert_eq!(g.drain_contiguous(100), alloc::vec![1, 2]);
 }
+
+// Ground-truth for the mandatory TCP checksum (RFC 793/1071). These catch the
+// two real bugs a fuzz test cannot: omitting the IPv4 pseudo-header, and a fold
+// that does not carry.
+mod checksum_known_answer {
+    use crate::tcp::checksum::compute;
+
+    #[test]
+    fn all_zero_segment_is_just_the_pseudo_header() {
+        // src=dst=0.0.0.0, a 20-byte all-zero segment: the only contribution is
+        // the pseudo-header's protocol (6) + tcp length (20) = 26, so the
+        // checksum is the one's-complement of 26 = 0xFFE5. A checksum that
+        // forgot the pseudo-header would return 0xFFFF here instead.
+        assert_eq!(compute(&[0, 0, 0, 0], &[0, 0, 0, 0], &[0u8; 20]), 0xFFE5);
+    }
+
+    #[test]
+    fn a_correct_checksum_verifies_to_zero_and_depends_on_the_addresses() {
+        let src = [192, 168, 1, 10];
+        let dst = [93, 184, 216, 34];
+        // 20-byte TCP header (dst port 80, SYN), checksum field at 16..18 zero.
+        let mut seg = alloc::vec![
+            0x00, 0x50, 0xC1, 0x23, 0, 0, 0, 1, 0, 0, 0, 0, 0x50, 0x02, 0x72, 0x10, 0, 0, 0, 0,
+        ];
+        let ck = compute(&src, &dst, &seg);
+        assert_ne!(ck, 0, "a real, non-trivial checksum");
+        seg[16..18].copy_from_slice(&ck.to_be_bytes());
+        assert_eq!(compute(&src, &dst, &seg), 0, "a valid internet checksum verifies to zero");
+        // The pseudo-header is really folded in: a different source address
+        // changes the checksum. If it did not, the pseudo-header was ignored.
+        assert_ne!(compute(&[10, 0, 0, 1], &dst, &seg), 0);
+    }
+}

@@ -70,3 +70,30 @@ fn dhcp_option_lengths_never_read_out_of_bounds() {
     m.push(0xFF);
     let _ = parse(&m);
 }
+
+// Ground-truth: a real DHCPOFFER must parse to the correct offered address and
+// options, not merely "not panic". A wrong field offset or byte order fails here.
+fn dhcp_offer() -> Vec<u8> {
+    let mut m = alloc::vec![0u8; HEADER_LEN];
+    m[0] = 2; // op = BOOTREPLY
+    m[1] = 1; // htype = ethernet
+    m[2] = 6; // hlen
+    m[16..20].copy_from_slice(&[192, 168, 1, 100]); // yiaddr
+    m[236..240].copy_from_slice(&MAGIC_COOKIE);
+    m.extend_from_slice(&[53, 1, 2]); // message type = DHCPOFFER
+    m.extend_from_slice(&[3, 4, 192, 168, 1, 1]); // router
+    m.extend_from_slice(&[6, 4, 8, 8, 8, 8]); // dns
+    m.extend_from_slice(&[51, 4, 0, 0, 0x0E, 0x10]); // lease = 3600
+    m.push(255); // end
+    m
+}
+
+#[test]
+fn parses_a_real_offer_to_the_correct_address_and_options() {
+    let Ok(msg) = parse(&dhcp_offer()) else { panic!("a valid OFFER parses") };
+    assert_eq!(msg.yiaddr, [192, 168, 1, 100], "the offered address, right offset");
+    assert_eq!(msg.message_type, 2, "DHCPOFFER");
+    assert_eq!(msg.router, [192, 168, 1, 1]);
+    assert_eq!(msg.dns, [8, 8, 8, 8]);
+    assert_eq!(msg.lease_seconds, 3600, "lease seconds read big-endian");
+}
