@@ -18,7 +18,6 @@ use super::drain::drain_ipc;
 use crate::frame_pacer;
 use crate::protocol::{HDR_LEN, IPC_PAYLOAD_MAX};
 use crate::state::Context;
-use nonos_libc::mk_yield;
 
 // Force a full recomposite this often. Damage tracking only repaints the
 // rectangles a client reports; a region that was left stale by a transient
@@ -45,8 +44,10 @@ pub fn run(mut ctx: Context) -> ! {
             }
             Err(_) => {}
         }
-        if frame_pacer::wait_for_vsync().is_err() {
-            mk_yield();
-        }
+        // No vsync sleep: the blocking first receive in drain_ipc paces the loop
+        // to a frame while still waking the instant a client commits damage. The
+        // present already happened in tick(); sleeping on the periodic vsync tick
+        // only reintroduced the unreliable-timer dependency that left updates
+        // stuck until an input event.
     }
 }

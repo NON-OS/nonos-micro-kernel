@@ -22,17 +22,25 @@ use crate::server::respond;
 use crate::state::Context;
 
 const SERVICE_INBOX: u64 = 0;
-const RECV_NOWAIT: u64 = 1;
+/// The first receive of a drain blocks up to one 60 Hz frame. An incoming IPC (a
+/// client's damage or scene commit) resumes the receive immediately, so the
+/// compositor wakes on the actual work instead of on the periodic vsync tick,
+/// which is unreliable on some hardware and left frames unpresented until a stray
+/// input event happened to wake the loop. The rest of the batch polls so a burst
+/// drains in a single pass.
+const RECV_FRAME_MS: u64 = 16;
+const RECV_POLL_MS: u64 = 1;
 const MAX_BATCH: usize = 16;
 
 pub fn drain_ipc(ctx: &mut Context, rx: &mut [u8], tx: &mut [u8]) {
-    for _ in 0..MAX_BATCH {
+    for i in 0..MAX_BATCH {
+        let timeout = if i == 0 { RECV_FRAME_MS } else { RECV_POLL_MS };
         let mut sender_pid = 0u32;
         let n = mk_ipc_recv_from(
             SERVICE_INBOX,
             rx.as_mut_ptr(),
             rx.len(),
-            RECV_NOWAIT,
+            timeout,
             &mut sender_pid,
         );
         if n <= 0 || sender_pid == 0 {

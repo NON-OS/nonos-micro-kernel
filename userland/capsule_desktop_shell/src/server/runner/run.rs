@@ -16,7 +16,7 @@
 
 use alloc::vec;
 
-use nonos_libc::{mk_display_vsync_wait, mk_time_millis};
+use nonos_libc::mk_time_millis;
 
 use super::constants::CLOCK_REFRESH_MS;
 use super::drain::drain;
@@ -62,6 +62,10 @@ pub fn run(mut ctx: Context) -> ! {
             }
             last_clock_ms = now;
         }
-        let _ = mk_display_vsync_wait(0);
+        // No vsync sleep: drain() already blocks on the IPC inbox, waking the
+        // instant an input or notify message arrives and timing out so the clock
+        // still ticks. Parking again on the vsync tick only added up to a frame of
+        // latency to every click, since an inbound event cannot preempt a vsync
+        // wait.
     }
 }
