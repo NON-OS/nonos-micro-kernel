@@ -6,6 +6,7 @@ mod chunks;
 pub mod decoder;
 pub mod deflate;
 mod header;
+pub use header::png_dimensions;
 pub mod huffman;
 pub mod inflate;
 mod paeth;

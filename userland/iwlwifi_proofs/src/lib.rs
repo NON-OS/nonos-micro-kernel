@@ -22,20 +22,10 @@ pub mod constants;
 pub mod regs;
 #[path = "../../capsule_driver_iwlwifi/src/firmware/load.rs"]
 pub mod load;
-#[path = "../../capsule_driver_iwlwifi/src/firmware/gen3/mod.rs"]
-pub mod gen3;
-#[path = "../../capsule_driver_iwlwifi/src/firmware/tlv.rs"]
-pub mod tlv;
 
 // The 802.11 frame layer: pure IEEE encoding, no hardware, so it is checked
 // exactly rather than modeled. `src/dot11/mod.rs` pulls in the real files.
 pub mod dot11;
-
-// The shared station data-path engine (framing plus CCMP mode selection and the
-// transmit counters), included so the iwlwifi data path is proven composing it
-// with the gen3 transmit command and MPDU extraction.
-#[path = "../../nonos_wifi_core/src/station.rs"]
-pub mod station;
 
 // The host-command queue: header/sequence encoding, TFD ring math, and the
 // doorbell register write.
@@ -56,8 +46,6 @@ pub mod ccmp;
 
 #[cfg(test)]
 mod iwlwifi_tests;
-#[cfg(test)]
-mod gen3_tests;
 
 #[cfg(test)]
 mod hcmd_tests;
@@ -85,11 +73,5 @@ mod supplicant_tests;
 mod mlme_tests;
 #[cfg(test)]
 mod data_tests;
-#[path = "../../nonos_wifi_core/src/mlme/mod.rs"]
+#[path = "../../capsule_driver_iwlwifi/src/mlme/mod.rs"]
 pub mod mlme;
-#[cfg(test)]
-mod blob_scan_tests;
-#[cfg(test)]
-mod gen3_image_tests;
-#[cfg(test)]
-mod link_tests;

@@ -18,7 +18,7 @@ use alloc::vec;
 
 use nonos_libc::mk_ipc_recv_from;
 
-use crate::protocol::{parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_DECODE_BMP, OP_DECODE_JPEG, OP_DECODE_LZ4_RAW, OP_DECODE_PNG, OP_HEALTHCHECK};
+use crate::protocol::{parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_DECODE_BMP, OP_DECODE_GIF, OP_DECODE_JPEG, OP_DECODE_LZ4_RAW, OP_DECODE_PNG, OP_HEALTHCHECK};
 use crate::server::{handlers, respond};
 
 const SERVICE_INBOX: u64 = 0;
@@ -50,7 +50,7 @@ fn drain_ipc(rx: &mut [u8], tx: &mut [u8]) {
         };
         match req.op {
             OP_HEALTHCHECK if body.is_empty() => handlers::health::handle(sender_pid, &req, tx),
-            OP_DECODE_PNG | OP_DECODE_BMP | OP_DECODE_LZ4_RAW | OP_DECODE_JPEG => handlers::decode::handle(sender_pid, &req, body, tx),
+            OP_DECODE_PNG | OP_DECODE_BMP | OP_DECODE_LZ4_RAW | OP_DECODE_JPEG | OP_DECODE_GIF => handlers::decode::handle(sender_pid, &req, body, tx),
             _ if body.is_empty() => { let _ = respond::status(sender_pid, &req, E_BAD_OP, tx); }
             _ => { let _ = respond::status(sender_pid, &req, E_INVAL, tx); }
         }

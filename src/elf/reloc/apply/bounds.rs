@@ -60,10 +60,8 @@ pub(super) fn resolve_resolver_addr(
 
 fn in_segment(image: &ElfImage, addr: u64, size: usize, executable: bool) -> bool {
     image.segments.iter().any(|segment| {
-        let start = segment.vaddr.as_u64();
-        let Some(end) = start.checked_add(segment.size as u64) else { return false };
-        let Some(addr_end) = addr.checked_add(size as u64) else { return false };
         let exec_ok = !executable || segment.is_executable();
-        exec_ok && addr >= start && addr_end <= end
+        exec_ok
+            && super::range::in_range(addr, size as u64, segment.vaddr.as_u64(), segment.size as u64)
     })
 }

@@ -20,3 +20,5 @@ pub const OP_TRAY_UPDATE: u16 = 0x0003;
 pub const OP_TRAY_REMOVE: u16 = 0x0004;
 pub const OP_NOTIFY: u16 = 0x0005;
 pub const OP_SPOTLIGHT_OPEN: u16 = 0x0006;
+pub const OP_OPEN_WITH: u16 = 0x0007;
+pub const OP_TAKE_OPEN_ARG: u16 = 0x0008;

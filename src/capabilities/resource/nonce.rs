@@ -20,8 +20,8 @@ static NONCE_COUNTER: AtomicU64 = AtomicU64::new(1);
 
 pub fn next_nonce() -> u64 {
     let timestamp = crate::time::timestamp_millis();
-    let counter = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed) & 0xFFFF_FFFF;
-    (timestamp << 32) ^ counter
+    let counter = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
+    super::nonce_compose::compose(timestamp, counter)
 }
 
 pub fn reset_nonce_counter() {

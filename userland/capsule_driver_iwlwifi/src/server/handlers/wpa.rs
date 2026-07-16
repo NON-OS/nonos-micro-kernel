@@ -13,7 +13,7 @@
 
 use crate::protocol::{Request, E_INVAL, E_OK};
 use crate::server::respond;
-use nonos_wifi_core::wpa::ptk::{pmk, ptk};
+use crate::wpa::ptk::{pmk, ptk};
 
 const TAIL: usize = 6 + 6 + 32 + 32;
 

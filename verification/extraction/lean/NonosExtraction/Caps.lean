@@ -14,74 +14,78 @@ set_option maxRecDepth 2048
 
 namespace nonos_caps
 
-/-- [nonos_caps::capabilities::types::Capability]
-    Source: 'src/capabilities/../../../../../src/capabilities/types.rs', lines 18:0-60:1
+/-- [nonos_caps::capabilities::types::defs::Capability]
+    Source: 'src/capabilities/../../../../../src/capabilities/types/defs.rs', lines 18:0-65:1
     Visibility: public -/
 @[discriminant isize]
-inductive capabilities.types.Capability where
-| CoreExec : capabilities.types.Capability
-| IO : capabilities.types.Capability
-| Network : capabilities.types.Capability
-| IPC : capabilities.types.Capability
-| Memory : capabilities.types.Capability
-| Crypto : capabilities.types.Capability
-| FileSystem : capabilities.types.Capability
-| Hardware : capabilities.types.Capability
-| Debug : capabilities.types.Capability
-| Admin : capabilities.types.Capability
-| RegisterService : capabilities.types.Capability
-| GraphicsDisplayQuery : capabilities.types.Capability
-| GraphicsSurfaceCreate : capabilities.types.Capability
-| GraphicsSurfaceMap : capabilities.types.Capability
-| GraphicsPresent : capabilities.types.Capability
-| DeviceEnum : capabilities.types.Capability
-| Driver : capabilities.types.Capability
-| Mmio : capabilities.types.Capability
-| Irq : capabilities.types.Capability
-| Dma : capabilities.types.Capability
-| Pio : capabilities.types.Capability
-| InputSource : capabilities.types.Capability
-| TimeSet : capabilities.types.Capability
-| SpawnBroker : capabilities.types.Capability
-| SpawnWindow : capabilities.types.Capability
+inductive capabilities.types.defs.Capability where
+| CoreExec : capabilities.types.defs.Capability
+| IO : capabilities.types.defs.Capability
+| Network : capabilities.types.defs.Capability
+| IPC : capabilities.types.defs.Capability
+| Memory : capabilities.types.defs.Capability
+| Crypto : capabilities.types.defs.Capability
+| FileSystem : capabilities.types.defs.Capability
+| Hardware : capabilities.types.defs.Capability
+| Debug : capabilities.types.defs.Capability
+| Admin : capabilities.types.defs.Capability
+| RegisterService : capabilities.types.defs.Capability
+| GraphicsDisplayQuery : capabilities.types.defs.Capability
+| GraphicsSurfaceCreate : capabilities.types.defs.Capability
+| GraphicsSurfaceMap : capabilities.types.defs.Capability
+| GraphicsPresent : capabilities.types.defs.Capability
+| DeviceEnum : capabilities.types.defs.Capability
+| Driver : capabilities.types.defs.Capability
+| Mmio : capabilities.types.defs.Capability
+| Irq : capabilities.types.defs.Capability
+| Dma : capabilities.types.defs.Capability
+| Pio : capabilities.types.defs.Capability
+| InputSource : capabilities.types.defs.Capability
+| TimeSet : capabilities.types.defs.Capability
+| SpawnBroker : capabilities.types.defs.Capability
+| SpawnWindow : capabilities.types.defs.Capability
+| ProcessControl : capabilities.types.defs.Capability
 
-/-- [nonos_caps::capabilities::types::{nonos_caps::capabilities::types::Capability}::bit]:
-    Source: 'src/capabilities/../../../../../src/capabilities/types.rs', lines 64:4-92:5 -/
-def capabilities.types.Capability.bit
-  (self : capabilities.types.Capability) : Result Std.U64 := do
+/-- [nonos_caps::capabilities::types::bit::{nonos_caps::capabilities::types::defs::Capability}::bit]:
+    Source: 'src/capabilities/../../../../../src/capabilities/types/bit.rs', lines 21:4-50:5 -/
+def capabilities.types.bit.Capability.bit
+  (self : capabilities.types.defs.Capability) : Result Std.U64 := do
   match self with
-  | capabilities.types.Capability.CoreExec => ok 1#u64
-  | capabilities.types.Capability.IO => ok 2#u64
-  | capabilities.types.Capability.Network => ok 4#u64
-  | capabilities.types.Capability.IPC => ok 8#u64
-  | capabilities.types.Capability.Memory => ok 16#u64
-  | capabilities.types.Capability.Crypto => ok 32#u64
-  | capabilities.types.Capability.FileSystem => ok 64#u64
-  | capabilities.types.Capability.Hardware => ok 128#u64
-  | capabilities.types.Capability.Debug => ok 256#u64
-  | capabilities.types.Capability.Admin => ok 512#u64
-  | capabilities.types.Capability.RegisterService => ok 1024#u64
-  | capabilities.types.Capability.GraphicsDisplayQuery => ok 2048#u64
-  | capabilities.types.Capability.GraphicsSurfaceCreate => ok 4096#u64
-  | capabilities.types.Capability.GraphicsSurfaceMap => ok 8192#u64
-  | capabilities.types.Capability.GraphicsPresent => ok 16384#u64
-  | capabilities.types.Capability.DeviceEnum => ok 32768#u64
-  | capabilities.types.Capability.Driver => ok 65536#u64
-  | capabilities.types.Capability.Mmio => ok 131072#u64
-  | capabilities.types.Capability.Irq => ok 262144#u64
-  | capabilities.types.Capability.Dma => ok 524288#u64
-  | capabilities.types.Capability.Pio => ok 1048576#u64
-  | capabilities.types.Capability.InputSource => ok 2097152#u64
-  | capabilities.types.Capability.TimeSet => ok 4194304#u64
-  | capabilities.types.Capability.SpawnBroker => ok 8388608#u64
-  | capabilities.types.Capability.SpawnWindow => ok 16777216#u64
+  | capabilities.types.defs.Capability.CoreExec => ok 1#u64
+  | capabilities.types.defs.Capability.IO => ok 2#u64
+  | capabilities.types.defs.Capability.Network => ok 4#u64
+  | capabilities.types.defs.Capability.IPC => ok 8#u64
+  | capabilities.types.defs.Capability.Memory => ok 16#u64
+  | capabilities.types.defs.Capability.Crypto => ok 32#u64
+  | capabilities.types.defs.Capability.FileSystem => ok 64#u64
+  | capabilities.types.defs.Capability.Hardware => ok 128#u64
+  | capabilities.types.defs.Capability.Debug => ok 256#u64
+  | capabilities.types.defs.Capability.Admin => ok 512#u64
+  | capabilities.types.defs.Capability.RegisterService => ok 1024#u64
+  | capabilities.types.defs.Capability.GraphicsDisplayQuery => ok 2048#u64
+  | capabilities.types.defs.Capability.GraphicsSurfaceCreate => ok 4096#u64
+  | capabilities.types.defs.Capability.GraphicsSurfaceMap => ok 8192#u64
+  | capabilities.types.defs.Capability.GraphicsPresent => ok 16384#u64
+  | capabilities.types.defs.Capability.DeviceEnum => ok 32768#u64
+  | capabilities.types.defs.Capability.Driver => ok 65536#u64
+  | capabilities.types.defs.Capability.Mmio => ok 131072#u64
+  | capabilities.types.defs.Capability.Irq => ok 262144#u64
+  | capabilities.types.defs.Capability.Dma => ok 524288#u64
+  | capabilities.types.defs.Capability.Pio => ok 1048576#u64
+  | capabilities.types.defs.Capability.InputSource => ok 2097152#u64
+  | capabilities.types.defs.Capability.TimeSet => ok 4194304#u64
+  | capabilities.types.defs.Capability.SpawnBroker => ok 8388608#u64
+  | capabilities.types.defs.Capability.SpawnWindow => ok 16777216#u64
+  | capabilities.types.defs.Capability.ProcessControl => ok 33554432#u64
 
 /-- [nonos_caps::capabilities::bits::has_capability]:
     Source: 'src/capabilities/../../../../../src/capabilities/bits.rs', lines 34:0-36:1
     Visibility: public -/
 def capabilities.bits.has_capability
-  (bits : Std.U64) (cap : capabilities.types.Capability) : Result Bool := do
-  let i ← capabilities.types.Capability.bit cap
+  (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
+  Result Bool
+  := do
+  let i ← capabilities.types.bit.Capability.bit cap
   let i1 ← lift (bits &&& i)
   ok (i1 != 0#u64)
 
@@ -89,16 +93,20 @@ def capabilities.bits.has_capability
     Source: 'src/capabilities/../../../../../src/capabilities/bits.rs', lines 39:0-41:1
     Visibility: public -/
 def capabilities.bits.add_capability
-  (bits : Std.U64) (cap : capabilities.types.Capability) : Result Std.U64 := do
-  let i ← capabilities.types.Capability.bit cap
+  (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
+  Result Std.U64
+  := do
+  let i ← capabilities.types.bit.Capability.bit cap
   ok (bits ||| i)
 
 /-- [nonos_caps::capabilities::bits::remove_capability]:
     Source: 'src/capabilities/../../../../../src/capabilities/bits.rs', lines 44:0-46:1
     Visibility: public -/
 def capabilities.bits.remove_capability
-  (bits : Std.U64) (cap : capabilities.types.Capability) : Result Std.U64 := do
-  let i ← capabilities.types.Capability.bit cap
+  (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
+  Result Std.U64
+  := do
+  let i ← capabilities.types.bit.Capability.bit cap
   let i1 ← lift (~~~ i)
   ok (bits &&& i1)
 

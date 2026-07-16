@@ -24,7 +24,7 @@
 //! four-way handshake with CCMP key install. None of that is wired yet, so the
 //! builders here are not called from the driver server path until it is.
 
+pub mod data;
 pub mod header;
 pub mod mgmt;
-pub mod data;
 pub mod parse;

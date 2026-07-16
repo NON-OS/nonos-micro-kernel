@@ -26,7 +26,7 @@ pub struct State {
     pub polls_since_touch: u32,
     /// The GPIO doorbell has fired at least once, proving the platform's
     /// interrupt-status bit really tracks this pad. From then on the driver
-    /// reads the i2c input register only on a fired doorbell — exact
+    /// reads the i2c input register only on a fired doorbell: exact
     /// interrupt pacing, no stale re-reads. Until proven, timed polling
     /// continues so a doorbell that never latches cannot silence input.
     pub doorbell_proven: bool,

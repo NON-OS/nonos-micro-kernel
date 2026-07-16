@@ -22,7 +22,7 @@
 use crate::driver::Driver;
 use crate::protocol::{Request, E_INVAL, E_OK};
 use crate::server::respond;
-use nonos_wifi_core::wpa::supplicant::{State, Supplicant};
+use crate::wpa::supplicant::{State, Supplicant};
 
 const START_LEN: usize = 32 + 6 + 6 + 32;
 

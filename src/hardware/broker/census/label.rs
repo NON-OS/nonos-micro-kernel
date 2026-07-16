@@ -25,7 +25,6 @@ pub(super) fn class_label(rec: &DeviceRecord) -> &'static str {
         ids::USB_HOST => "USB host",
         ids::I2C_HID => "i2c-HID input",
         ids::SERIAL => "i2c/serial ctrl",
-        ids::GPIO_CTRL => "gpio community",
         ids::INPUT => "PS2/legacy input",
         ids::BLOCK => "block",
         ids::NETWORK => "network",

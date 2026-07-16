@@ -58,6 +58,9 @@ pub struct Context {
     pub drag_moved: bool,
     pub drag_x: u32,
     pub drag_y: u32,
+    /// Open-with broker: path handed to a target app's service name by
+    /// `OP_OPEN_WITH`, pulled once via `OP_TAKE_OPEN_ARG` after the app wakes.
+    pub pending_open: alloc::collections::BTreeMap<alloc::string::String, alloc::string::String>,
 }
 
 impl Context {

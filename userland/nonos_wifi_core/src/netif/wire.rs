@@ -71,7 +71,12 @@ pub fn parse_request(buf: &[u8]) -> Option<Request<'_>> {
 
 /// Write a response header into `out`, returning the header length or None if
 /// the buffer is too small.
-pub fn write_response_header(out: &mut [u8], op: u16, request_id: u32, payload_len: u32) -> Option<usize> {
+pub fn write_response_header(
+    out: &mut [u8],
+    op: u16,
+    request_id: u32,
+    payload_len: u32,
+) -> Option<usize> {
     if out.len() < HDR_LEN {
         return None;
     }

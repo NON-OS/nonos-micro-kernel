@@ -23,12 +23,12 @@ returns `Unsupported` loudly; nothing pretends.
 |---|---|---|
 | heap (`alloc`) | real | dlmalloc over `MMAP`, spin-locked (thread-safe) |
 | `println!` / stdout / stderr | real | `MDBG` serial sink, mirrored to `proc.<pid>` inbox |
-| stdin | empty | returns 0 bytes until a console source is wired |
+| stdin | real | blocking read of this process's kernel stdin channel (`MSRD`), fed by a launcher (the terminal); no EOF-on-close yet |
 | `args` | real | `MKAR` |
 | env vars | real, process-local | in-process map; nothing is inherited across spawns yet |
 | `current_dir` | fixed `/` | capsules see the VFS from its root; `chdir` unsupported |
 | `temp_dir` | real | `/tmp` seeded in the VFS store |
-| time (`Instant`, `SystemTime`) | real, ms resolution | `MTMS` kernel clock; `UNIX_EPOCH` is boot-relative, not wall time |
+| time (`Instant`, `SystemTime`) | real, ms resolution | `SystemTime` is real wall time (`MTMS`, RTC-seeded at boot, NTP-corrected); `Instant` is the monotonic clock (`MMON`, TSC base, no NTP) so it never runs backwards |
 | random | real | kernel entropy syscall |
 | fs open/read/write/close | real | `vfs_pool` IPC (`OP_OPEN/READ/WRITE/CLOSE`) |
 | fs seek/tell | real | `OP_SEEK` (added with this layer) |
@@ -42,7 +42,7 @@ returns `Unsupported` loudly; nothing pretends.
 | threads: spawn/join/sleep/yield | real | `MTSP` spawn, `MPAL`+`MYLD` polling join, `MTMS` sleep |
 | thread-local (`thread_local!`) | real | per-thread key table, address carried in fs base via `MSTB`, restored by the scheduler per task |
 | TLS destructors | real | dtor list run at thread exit / runtime cleanup |
-| `Mutex`/`RwLock`/`Condvar`/`Once`/parking | real | std futex backends over a polling futex (yield loop, ms timeouts); correct, not power-efficient, until a kernel wait queue exists |
+| `Mutex`/`RwLock`/`Condvar`/`Once`/parking | real | std futex backends over the kernel wait queue (`MFTW`/`MFTK`): a waiter sleeps and a waker wakes it directly, so contention no longer spins a core. Each wait is capped so a raced wakeup self-heals |
 | mpsc channels | real | thread parking above |
 | `available_parallelism` | 1 | no core-count syscall yet; honest lower bound |
 | thread names | no-op | nowhere to put them yet |

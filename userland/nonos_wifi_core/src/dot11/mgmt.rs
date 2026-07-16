@@ -76,15 +76,24 @@ pub fn auth_open(out: &mut [u8], src: MacAddr, bssid: MacAddr, seq: u16) -> Opti
     Some(end)
 }
 
+/// The information elements a station advertises in an association request: its
+/// SSID, its supported rates, and the complete RSN element that tells a WPA2 AP
+/// it will do CCMP. Grouped so the frame builder takes the payload as one value
+/// rather than a long argument list.
+pub struct AssocIes<'a> {
+    pub ssid: &'a [u8],
+    pub rates: &'a [u8],
+    pub rsn: &'a [u8],
+}
+
 /// Build an association request: capability info, a listen interval, then the
-/// SSID and supported-rates elements. `bssid` is the AP being joined.
+/// SSID, supported-rates, and RSN elements from `ies`. `bssid` is the AP being
+/// joined.
 pub fn assoc_request(
     out: &mut [u8],
     src: MacAddr,
     bssid: MacAddr,
-    ssid: &[u8],
-    rates: &[u8],
-    rsn: &[u8],
+    ies: &AssocIes,
     cap: u16,
     seq: u16,
 ) -> Option<usize> {
@@ -97,15 +106,15 @@ pub fn assoc_request(
     out[off..off + 2].copy_from_slice(&cap.to_le_bytes());
     out[off + 2..off + 4].copy_from_slice(&10u16.to_le_bytes());
     let mut cur = body;
-    cur = put_ie(out, cur, IE_SSID, ssid)?;
-    cur = put_ie(out, cur, IE_SUPPORTED_RATES, rates)?;
+    cur = put_ie(out, cur, IE_SSID, ies.ssid)?;
+    cur = put_ie(out, cur, IE_SUPPORTED_RATES, ies.rates)?;
     // The RSN element is already a complete element (id, length, then the cipher
     // and AKM suites), so it is written verbatim rather than through put_ie. A
     // WPA2 access point will not complete association for a station that omits it.
-    let end = cur + rsn.len();
+    let end = cur + ies.rsn.len();
     if end > out.len() {
         return None;
     }
-    out[cur..end].copy_from_slice(rsn);
+    out[cur..end].copy_from_slice(ies.rsn);
     Some(end)
 }

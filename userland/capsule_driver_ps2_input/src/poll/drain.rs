@@ -34,7 +34,7 @@ pub fn drain(
             Some(v) => v,
             None => return,
         };
-        super::diag::signal_pio_ok();
+        // super::diag::signal_pio_ok(); // bring-up diagnostic, silenced
         if status & STATUS_OUTPUT_FULL == 0 {
             return;
         }
@@ -48,7 +48,7 @@ pub fn drain(
             Some(v) => v,
             None => return,
         };
-        super::diag::signal_byte();
+        // super::diag::signal_byte(); // bring-up diagnostic, silenced
         if status & STATUS_AUX_DATA != 0 {
             // When mouse bring-up failed the aux stream is command echoes and
             // EC garbage, not packets: 0xFA ACKs pass the parser's weak sync

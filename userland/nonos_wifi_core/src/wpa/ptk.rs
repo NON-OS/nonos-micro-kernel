@@ -24,7 +24,13 @@ pub fn pmk(passphrase: &[u8], ssid: &[u8]) -> [u8; 32] {
 /// The 384-bit pairwise transient key. The MAC addresses and nonces are ordered
 /// (smaller first) so both sides derive the same key regardless of who is the
 /// authenticator.
-pub fn ptk(pmk: &[u8], aa: &[u8; 6], spa: &[u8; 6], anonce: &[u8; 32], snonce: &[u8; 32]) -> [u8; 48] {
+pub fn ptk(
+    pmk: &[u8],
+    aa: &[u8; 6],
+    spa: &[u8; 6],
+    anonce: &[u8; 32],
+    snonce: &[u8; 32],
+) -> [u8; 48] {
     let (a1, a2) = if aa <= spa { (aa, spa) } else { (spa, aa) };
     let (n1, n2) = if anonce <= snonce { (anonce, snonce) } else { (snonce, anonce) };
     let mut data = [0u8; 76];

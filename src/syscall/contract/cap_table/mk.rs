@@ -22,8 +22,10 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkExit
         | SyscallNumber::MkPidAlive
         | SyscallNumber::MkYield
+        | SyscallNumber::MkFutexWait
+        | SyscallNumber::MkFutexWake
         | SyscallNumber::MkTimeMillis
-        | SyscallNumber::MkUptimeMillis
+        | SyscallNumber::MkTimeMonotonic
         | SyscallNumber::MkTimeRtc
         | SyscallNumber::MkBatteryStatus
         | SyscallNumber::MkProcStat

@@ -1,0 +1,36 @@
+# NONOS userland: capsule_image_viewer
+#
+# Image viewer application for browsing and manipulating images.
+# Provides scale, rotate, and viewport navigation capabilities.
+
+[package]
+name = "image_viewer"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+description = "NONOS image viewer capsule"
+
+[[bin]]
+name = "image_viewer"
+path = "src/main.rs"
+
+[features]
+# Self-test build: exercise the pure render pipeline (rotate + scale +
+# viewport, no IPC, no codec, no vfs) against a baked ARGB source and
+# emit a graded [IMG-VIEWER] serial marker for the boot harness.
+nonos-image-viewer-smoketest = []
+
+[dependencies]
+nonos_app_skeleton = { path = "../app_skeleton" }
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+
+[profile.release]
+panic = "abort"
+opt-level = "z"
+lto = true
+
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true

@@ -21,6 +21,7 @@ pub mod examples;
 pub mod lba;
 mod limiters;
 pub mod mmio;
+mod mmio_range;
 pub mod pci;
 pub mod rate_limiter;
 

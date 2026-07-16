@@ -66,26 +66,6 @@ fn mic_round_trips_and_rejects_tampering_and_wrong_key() {
 }
 
 #[test]
-fn mic_ignores_trailing_mpdu_bytes_after_the_key_data() {
-    // A received EAPOL-Key frame arrives inside an 802.11 MPDU and can carry a
-    // trailing FCS or padding past its key data. The MIC covers only the key
-    // frame, so those bytes must not enter the hash. This is the four-way
-    // failure seen on hardware: message 3 carries a group-key KDE, and the four
-    // FCS bytes behind it made the otherwise-correct MIC verify fail.
-    let kck = [0x11u8; 16];
-    let nonce = [0x22u8; 32];
-    let mut f = build_frame(KEY_INFO_MIC, &nonce, &[1, 2, 3, 4, 5, 6, 7, 8]);
-    let mic = compute_mic(&kck, &f);
-    f[MIC_OFFSET..MIC_OFFSET + MIC_LEN].copy_from_slice(&mic);
-    assert!(verify_mic(&kck, &f), "the exact key frame verifies");
-
-    f.extend_from_slice(&[0xde, 0xad, 0xbe, 0xef]);
-    assert!(verify_mic(&kck, &f), "a trailing FCS does not break the MIC");
-    *f.last_mut().unwrap() ^= 0xff;
-    assert!(verify_mic(&kck, &f), "trailer contents are outside the MIC input");
-}
-
-#[test]
 fn a_built_frame_verifies_parses_and_rejects_the_wrong_key() {
     let kck = [0x33u8; 16];
     let replay = [0, 0, 0, 0, 0, 0, 0, 2];

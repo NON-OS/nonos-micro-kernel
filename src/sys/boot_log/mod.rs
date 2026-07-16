@@ -23,5 +23,5 @@ mod render;
 mod state;
 
 pub use init::{disable_display, init_after_fb};
-pub use output::{capsule_screen, error, info, ok, stage, warn};
+pub use output::{error, info, ok, stage, warn};
 pub use panic_screen::show as panic_screen;

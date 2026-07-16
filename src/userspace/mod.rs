@@ -41,6 +41,7 @@ pub mod capsule_driver_usb_msc;
 pub mod capsule_file_manager;
 pub mod capsule_hello;
 pub mod capsule_image_codec;
+pub mod capsule_image_viewer;
 #[cfg(feature = "nonos-capsule-input-probe")]
 pub mod capsule_input_probe;
 pub mod capsule_input_proof;

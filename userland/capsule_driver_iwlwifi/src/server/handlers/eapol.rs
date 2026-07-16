@@ -10,8 +10,8 @@
 //! MIC under the KCK (the first 16 bytes of the PTK). The body is
 //! `[kck:16][eapol_frame...]`; the reply is `[valid:1][key_info:2][nonce:32]`.
 
-use nonos_wifi_core::eapol::mic::verify_mic;
-use nonos_wifi_core::eapol::parse::{parse, KEY_INFO_MIC, KEY_INFO_PAIRWISE};
+use crate::eapol::mic::verify_mic;
+use crate::eapol::parse::{parse, KEY_INFO_MIC, KEY_INFO_PAIRWISE};
 use crate::protocol::{Request, E_INVAL, E_OK};
 use crate::server::respond;
 

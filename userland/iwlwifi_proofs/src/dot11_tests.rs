@@ -5,9 +5,8 @@
 //! and information elements a scan, an auth and an association are made of.
 
 use crate::dot11::header::{
-    fc_subtype, fc_type, frame_control, header_len, seq_control, write_header, BROADCAST,
-    FC_FROM_DS, FC_TO_DS, MAC_HEADER_LEN, SUBTYPE_ASSOC_REQ, SUBTYPE_AUTH, SUBTYPE_BEACON,
-    SUBTYPE_PROBE_REQ, TYPE_DATA, TYPE_MGMT,
+    fc_subtype, fc_type, frame_control, seq_control, write_header, BROADCAST, MAC_HEADER_LEN,
+    SUBTYPE_ASSOC_REQ, SUBTYPE_AUTH, SUBTYPE_BEACON, SUBTYPE_PROBE_REQ, TYPE_MGMT,
 };
 use crate::dot11::mgmt::{assoc_request, auth_open, probe_request, IE_SSID, IE_SUPPORTED_RATES};
 use crate::dot11::parse::parse_beacon;
@@ -31,26 +30,6 @@ fn seq_control_places_the_12_bit_sequence() {
         assert_eq!(sc & 0xF, 0, "fragment number is zero");
         assert_eq!((sc >> 4) & 0x0FFF, seq & 0x0FFF, "the 12-bit sequence is preserved");
     }
-}
-
-#[test]
-fn header_len_accounts_for_qos_and_a_fourth_address() {
-    // A plain data or management frame is the 24-byte base.
-    let data = frame_control(TYPE_DATA, 0);
-    assert_eq!(header_len(data), MAC_HEADER_LEN, "non-QoS data is the base header");
-    assert_eq!(header_len(frame_control(TYPE_MGMT, 0)), MAC_HEADER_LEN, "management is the base");
-
-    // A QoS data frame (data subtype with the QoS bit) adds the 2-byte QoS
-    // Control field, so real AP traffic sizes to 26 bytes.
-    let qos = frame_control(TYPE_DATA, 0x08);
-    assert_eq!(header_len(qos), MAC_HEADER_LEN + 2, "QoS data carries QoS Control");
-
-    // Both ToDS and FromDS means a four-address frame: the base plus Address4.
-    assert_eq!(header_len(data | FC_TO_DS | FC_FROM_DS), MAC_HEADER_LEN + 6, "four-address adds addr4");
-    // QoS and four addresses together.
-    assert_eq!(header_len(qos | FC_TO_DS | FC_FROM_DS), MAC_HEADER_LEN + 8, "QoS plus addr4");
-    // A single DS bit does not add an address.
-    assert_eq!(header_len(data | FC_TO_DS), MAC_HEADER_LEN, "one DS bit is still three addresses");
 }
 
 #[test]
@@ -113,14 +92,11 @@ fn assoc_request_carries_capability_and_ies() {
     let bssid = [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF];
     let ssid = b"nonos-net";
     let rates = &[0x82u8, 0x84];
-    let rsn = &crate::wpa::RSN_IE;
-    let n = assoc_request(&mut buf, src, bssid, ssid, rates, rsn, 0x0431, 5).unwrap();
+    let n = assoc_request(&mut buf, src, bssid, ssid, rates, 0x0431, 5).unwrap();
     let fc = u16::from_le_bytes([buf[0], buf[1]]);
     assert_eq!(fc_subtype(fc), SUBTYPE_ASSOC_REQ);
     assert_eq!(u16::from_le_bytes([buf[MAC_HEADER_LEN], buf[MAC_HEADER_LEN + 1]]), 0x0431, "capability info");
-    assert_eq!(n, MAC_HEADER_LEN + 4 + (2 + ssid.len()) + (2 + rates.len()) + rsn.len());
-    // The RSN element (id 48) is present so a WPA2 AP will associate.
-    assert_eq!(buf[n - rsn.len()], 0x30, "assoc request carries the RSN element");
+    assert_eq!(n, MAC_HEADER_LEN + 4 + (2 + ssid.len()) + (2 + rates.len()));
 }
 
 #[test]

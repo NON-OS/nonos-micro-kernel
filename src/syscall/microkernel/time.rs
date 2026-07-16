@@ -61,11 +61,11 @@ pub fn sys_time_millis() -> i64 {
     now.min(i64::MAX as u64) as i64
 }
 
-/// Monotonic milliseconds since boot. Unlike the wall clock this never goes
-/// backwards, is not moved by a time adjustment, and is available before the
-/// wall clock is set, so it is the source drivers use for bounded timeouts.
-pub fn sys_uptime_ms() -> i64 {
-    crate::time::timestamp_millis().min(i64::MAX as u64) as i64
+// Monotonic milliseconds for `Instant`: the TSC-derived base clock without the
+// NTP offset, so a time correction can never move `Instant` backwards the way
+// it can move the wall clock `sys_time_millis` returns.
+pub fn sys_time_monotonic() -> i64 {
+    crate::sys::clock::base_unix_ms().min(i64::MAX as u64) as i64
 }
 
 fn clock_ready() -> bool {

@@ -271,10 +271,10 @@ QEMU_YRES ?= 1080
 # cocoa display then needs a GL context. Default stays the plain 2D device.
 ifeq ($(QEMU_GL),1)
 QEMU_GPU := -device virtio-vga-gl,xres=$(QEMU_XRES),yres=$(QEMU_YRES)
-QEMU_DISPLAY := cocoa,gl=es,zoom-to-fit=off
+QEMU_DISPLAY := cocoa,gl=es,zoom-to-fit=on
 else
 QEMU_GPU := -device virtio-vga,disable-modern=on,vectors=0,xres=$(QEMU_XRES),yres=$(QEMU_YRES)
-QEMU_DISPLAY := cocoa,zoom-to-fit=off
+QEMU_DISPLAY := cocoa,zoom-to-fit=on
 endif
 # Keyboard/mouse via the q35 i8042 (PS/2). USB HID interrupt-IN transfers
 # are not serviced under macOS hvf, so usb-kbd/usb-mouse never deliver input
@@ -658,6 +658,7 @@ include userland/capsule_setup_wizard/Capsule.mk
 include userland/capsule_wm/Capsule.mk
 include userland/capsule_desktop_shell/Capsule.mk
 include userland/capsule_image_codec/Capsule.mk
+include userland/capsule_image_viewer/Capsule.mk
 include userland/capsule_clipboard/Capsule.mk
 include userland/capsule_login/Capsule.mk
 include userland/toolkit/Capsule.mk
@@ -751,7 +752,7 @@ NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(policy_VERIFY) $(wallpaper_catalog_VERIFY) \
 	$(installer_VERIFY) \
 	$(input-router_VERIFY) $(compositor_VERIFY) $(wm_VERIFY) \
-	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(clipboard_VERIFY) \
+	$(desktop-shell_VERIFY) $(image-codec_VERIFY) $(image-viewer_VERIFY) $(clipboard_VERIFY) \
 	$(login_VERIFY) $(wallpaper_VERIFY) $(toolkit_VERIFY) \
 	$(boot-splash_VERIFY) $(about_VERIFY) $(calculator_VERIFY) $(clock_VERIFY) \
 	$(browser_VERIFY) $(web_VERIFY) \
@@ -1189,6 +1190,16 @@ nonos-mk-ntp-test: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features nonos-ntp-smoketest
 
+nonos-mk-image-viewer-test: $(proof-io_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building image_viewer capsule (nonos-image-viewer-smoketest)..."
+	@$(MAKE) -B image-viewer_CARGO_FEATURES=nonos-image-viewer-smoketest nonos-mk-image-viewer-sign
+	@echo "Building kernel (microkernel-image-viewer-smoketest)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-image-viewer-smoketest
+
 nonos-mk-net-nym-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-core_ARTIFACTS) $(net-nym_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
@@ -1221,7 +1232,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(installer_ARTIFACTS) \
 		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
 		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
-		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
+		$(image-codec_ARTIFACTS) $(image-viewer_ARTIFACTS) $(clipboard_ARTIFACTS) \
 		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
 		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
 		$(calculator_ARTIFACTS) $(clock_ARTIFACTS) $(browser_ARTIFACTS) \
@@ -1639,6 +1650,13 @@ nonos-mk-boot-desktop-gui:
 
 nonos-mk-boot-ntp:
 	@./tests/boot/ntp_round_trip.sh
+
+.PHONY: nonos-mk-boot-image-viewer
+nonos-mk-boot-image-viewer:
+	@./tests/boot/image_viewer_round_trip.sh; rc=$$?; \
+		echo "Restoring GUI image_viewer capsule (undo smoketest artifact)..."; \
+		$(MAKE) -B nonos-mk-image-viewer-sign >/dev/null 2>&1; \
+		exit $$rc
 
 .PHONY: nonos-mk-boot-terminal
 nonos-mk-boot-terminal:

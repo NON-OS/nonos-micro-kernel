@@ -92,16 +92,13 @@ impl Mlme {
                 let mut out = [0u8; 128];
                 let ssid = self.ssid;
                 let len = self.ssid_len;
-                match assoc_request(
-                    &mut out,
-                    self.our_mac,
-                    self.bssid,
-                    &ssid[..len],
-                    &RATES,
-                    &crate::wpa::RSN_IE,
-                    CAP_ESS_PRIVACY,
-                    seq,
-                ) {
+                let ies = crate::dot11::mgmt::AssocIes {
+                    ssid: &ssid[..len],
+                    rates: &RATES,
+                    rsn: &crate::wpa::RSN_IE,
+                };
+                match assoc_request(&mut out, self.our_mac, self.bssid, &ies, CAP_ESS_PRIVACY, seq)
+                {
                     Some(n) => {
                         self.state = MlmeState::Associating;
                         MlmeOutput { tx: Some(out[..n].to_vec()) }

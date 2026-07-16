@@ -16,7 +16,8 @@
 
 mod acpi_gpio;
 mod acpi_i2c;
-mod census;
+// on-screen device census: bring-up diagnostic, silenced
+// mod census;
 mod claim;
 mod class;
 mod device;
@@ -40,7 +41,7 @@ mod table;
 
 pub use acpi_gpio::register_acpi_gpio;
 pub use acpi_i2c::register_acpi_i2c;
-pub use census::render_and_hold as device_census;
+// pub use census::render_and_hold as device_census; // bring-up diagnostic, silenced
 pub use claim::{
     claim as claim_device, lookup as claim_lookup, release as release_device,
     release_all_for_pid as release_claims_for_pid, Claim, ClaimError,

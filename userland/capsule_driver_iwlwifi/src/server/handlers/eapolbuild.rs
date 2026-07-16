@@ -10,7 +10,7 @@
 //! body is `[kck:16][key_info:2][replay:8][nonce:32][key_data...]`; the reply is
 //! the frame with its MIC filled in.
 
-use nonos_wifi_core::eapol::build::build_key_frame;
+use crate::eapol::build::build_key_frame;
 use crate::protocol::{Request, E_INVAL, E_OK};
 use crate::server::respond;
 

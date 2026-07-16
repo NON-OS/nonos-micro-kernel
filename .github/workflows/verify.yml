@@ -116,8 +116,11 @@ jobs:
           - e1000_proofs
           - rtl8139_proofs
           - iwlwifi_proofs
+          - nonos_wifi_core_proofs
           - xhci_proofs
           - stark_proofs
+          - sync_proofs
+          - mechanism_proofs
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -151,7 +154,7 @@ jobs:
           set -euo pipefail
           for crate in kernel_proofs net_proofs driver_proofs usb_proofs nvme_proofs \
               usb_msc_proofs virtio_blk_proofs virtio_net_proofs e1000_proofs \
-              rtl8139_proofs xhci_proofs; do
+              rtl8139_proofs xhci_proofs sync_proofs mechanism_proofs; do
             if [ -d "userland/$crate" ]; then
               ( cd "userland/$crate" && cargo kani --output-format terse )
             else

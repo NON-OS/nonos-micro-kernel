@@ -32,9 +32,9 @@ pub struct Driver {
     pub cmd_write_ptr: usize,
     pub rx_read_ptr: usize,
     /// The WPA2 handshake in progress, once a connection flow has started one.
-    pub supplicant: Option<nonos_wifi_core::wpa::supplicant::Supplicant>,
+    pub supplicant: Option<crate::wpa::supplicant::Supplicant>,
     /// The association in progress, once a connect request has started one.
-    pub mlme: Option<nonos_wifi_core::mlme::Mlme>,
+    pub mlme: Option<crate::mlme::Mlme>,
     /// The CCMP packet-number counter for transmitted data frames; it must
     /// never repeat under one key, so it only advances.
     pub tx_pn: u64,

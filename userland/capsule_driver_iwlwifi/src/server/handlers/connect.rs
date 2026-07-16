@@ -20,7 +20,7 @@
 //! link comes up the reply carries the pairwise and group keys.
 
 use crate::driver::Driver;
-use nonos_wifi_core::mlme::{Mlme, MlmeOutput, MlmeState};
+use crate::mlme::{Mlme, MlmeOutput, MlmeState};
 use crate::protocol::{Request, E_INVAL, E_OK};
 use crate::server::respond;
 

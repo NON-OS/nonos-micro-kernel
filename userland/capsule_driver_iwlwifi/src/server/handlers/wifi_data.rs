@@ -19,7 +19,7 @@
 //! air; RX takes a received 802.11 data frame and returns the decrypted
 //! ethernet frame. The pairwise key comes from the completed handshake.
 
-use nonos_wifi_core::dot11::data::{decap, encap};
+use crate::dot11::data::{decap, encap};
 use crate::driver::Driver;
 use crate::protocol::{Request, E_INVAL, E_OK};
 use crate::server::respond;
