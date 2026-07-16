@@ -44,6 +44,31 @@ pub mod http;
 #[path = "../src/command/builtin/nox/pull/recurse.rs"]
 pub mod recurse;
 
+pub mod term {
+    pub mod util {
+        pub fn format_u64(mut n: u64, out: &mut [u8]) -> usize {
+            if n == 0 {
+                out[0] = b'0';
+                return 1;
+            }
+            let mut tmp = [0u8; 24];
+            let mut i = 0;
+            while n > 0 {
+                tmp[i] = b'0' + (n % 10) as u8;
+                n /= 10;
+                i += 1;
+            }
+            for j in 0..i {
+                out[j] = tmp[i - 1 - j];
+            }
+            i
+        }
+    }
+}
+
+#[path = "../src/command/builtin/nox/pull/progress.rs"]
+pub mod progress;
+
 #[test]
 fn find_locates_crlf_gap() {
     let b = b"HTTP/1.1 200 OK\r\nX: y\r\n\r\nBODY";
@@ -199,4 +224,16 @@ fn autoindex_rejects_traversal_names() {
     let e = recurse::parse_autoindex(html);
     assert_eq!(e.len(), 1);
     assert_eq!(e[0].name, b"good.txt");
+}
+
+#[test]
+fn progress_file_line_has_name_and_size() {
+    let l = progress::file_line(b"/docs/report.pdf", 4096);
+    assert_eq!(l, b"/docs/report.pdf  4096 bytes");
+}
+
+#[test]
+fn progress_summary_counts() {
+    let t = progress::Tally { ok: 3, skipped: 1, failed: 2 };
+    assert_eq!(progress::summary(&t), b"3 ok, 1 skipped, 2 failed");
 }

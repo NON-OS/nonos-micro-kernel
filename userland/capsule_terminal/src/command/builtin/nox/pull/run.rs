@@ -16,7 +16,7 @@
 
 use super::super::ensure_pid::ensure_pid;
 use super::walk::walk;
-use super::{args, fetch, store};
+use super::{args, fetch, progress, store};
 use crate::term::cwd::resolve;
 use crate::term::state::State;
 
@@ -37,13 +37,15 @@ pub fn run(state: &mut State, argv: &[&[u8]]) -> bool {
     };
     let pid = ensure_pid(state);
     let dest = resolve(state.cwd.as_bytes(), &a.dest);
+    let mut tally = progress::Tally { ok: 0, skipped: 0, failed: 0 };
     if a.target.is_dir {
         store::mkdir(pid, &dest);
         let mut count = 0u32;
-        walk(state, pid, ip, &a, &a.target.path, &dest, 0, &mut count);
+        walk(state, pid, ip, &a, &a.target.path, &dest, 0, &mut count, &mut tally);
     } else {
-        one_file(state, pid, ip, &a, &a.target.path, &dest);
+        one_file(state, pid, ip, &a, &a.target.path, &dest, &mut tally);
     }
+    state.scrollback.push_line(&progress::summary(&tally));
     true
 }
 
@@ -54,20 +56,24 @@ pub(super) fn one_file(
     a: &args::PullArgs,
     path: &[u8],
     dest: &[u8],
+    tally: &mut progress::Tally,
 ) -> bool {
     match fetch::get(ip, a.target.port, &a.target.host, path) {
         Ok(body) => match store::write(pid, dest, &body) {
             Ok(()) => {
-                state.scrollback.push_line(dest);
+                state.scrollback.push_line(&progress::file_line(dest, body.len()));
+                tally.ok += 1;
                 true
             }
             Err(e) => {
                 state.scrollback.push_error(e.as_bytes());
+                tally.failed += 1;
                 false
             }
         },
         Err(e) => {
             state.scrollback.push_error(e.as_bytes());
+            tally.failed += 1;
             false
         }
     }

@@ -19,6 +19,7 @@ pub mod conn;
 pub mod fetch;
 pub mod http;
 pub mod ipv4;
+pub mod progress;
 pub mod recurse;
 pub mod resolve;
 mod run;

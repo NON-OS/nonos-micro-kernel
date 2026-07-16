@@ -18,7 +18,7 @@ use alloc::vec::Vec;
 
 use super::args::PullArgs;
 use super::run::one_file;
-use super::{fetch, recurse, store};
+use super::{fetch, progress, recurse, store};
 use crate::term::state::State;
 
 const MAX_DEPTH: u32 = 8;
@@ -33,6 +33,7 @@ pub(super) fn walk(
     dest: &[u8],
     depth: u32,
     count: &mut u32,
+    tally: &mut progress::Tally,
 ) {
     if depth >= MAX_DEPTH {
         return;
@@ -53,10 +54,10 @@ pub(super) fn walk(
         let child_dest = join(dest, &entry.name);
         if entry.is_dir {
             store::mkdir(pid, &child_dest);
-            walk(state, pid, ip, a, &child_url, &child_dest, depth + 1, count);
+            walk(state, pid, ip, a, &child_url, &child_dest, depth + 1, count, tally);
         } else {
             *count += 1;
-            one_file(state, pid, ip, a, &child_url, &child_dest);
+            one_file(state, pid, ip, a, &child_url, &child_dest, tally);
         }
     }
 }
