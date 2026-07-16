@@ -23,49 +23,6 @@ use super::super::local::constants::{
 use super::super::local::regs::{lapic_read_raw, lapic_write_raw};
 use crate::sys::timer::tsc::rdtsc;
 
-// Trust the TSC frequency to time the LAPIC only if it is a real
-// measurement. The bootloader hands over an estimate and the kernel falls
-// back to a hardcoded 2.5 GHz when it has nothing; both are wrong on most
-// real CPUs, and a wrong TSC rate scales the LAPIC timer by the same
-// factor, so the scheduler tick runs fast or slow and the whole system
-// drifts. The PIT is a fixed 1.193182 MHz part on every x86 machine;
-// measuring the TSC against it gives the true rate independent of any
-// firmware claim.
-// A TSC that reports outside this band is a broken measurement, not a real
-// CPU. Rejecting it keeps a flaky PIT emulation (some hypervisors) or a bad
-// firmware value from producing a nonsense window that would spin the
-// calibration loop below effectively forever.
-const TSC_HZ_MIN: u64 = 300_000_000;
-const TSC_HZ_MAX: u64 = 6_000_000_000;
-
-fn sane(hz: u64) -> Option<u64> {
-    (TSC_HZ_MIN..=TSC_HZ_MAX).contains(&hz).then_some(hz)
-}
-
-fn accurate_tsc_hz() -> u64 {
-    use crate::arch::x86_64::time::tsc::get_cpuid_frequency;
-    // Enumerated frequency (CPUID leaf 0x15/0x16) is exact and needs no
-    // port I/O. Under hardware virtualization every port access is a VM
-    // exit, so a PIT-polling calibration would take tens of seconds there;
-    // this path touches no ports and works on real Intel and hypervisors
-    // alike. When CPUID does not report it, the bootloader estimate is the
-    // fallback, and the final tick rate is clamped below so even a rough
-    // estimate still yields a working timer.
-    if let Some(hz) = get_cpuid_frequency().and_then(sane) {
-        return hz;
-    }
-    sane(tsc_frequency()).unwrap_or(2_000_000_000)
-}
-
-// A LAPIC timer runs off the CPU bus clock: 100 to 400 MHz on real parts,
-// so with the divide-by-16 configured below it decrements 6250 to 25000
-// times per millisecond. Clamping the measured rate to a slightly wider
-// band means a wrong TSC estimate can shift the tick a little but can never
-// program a pathologically short period, which is what made an
-// uncalibrated timer fire thousands of times a second and wedge the box.
-const LAPIC_TICKS_PER_MS_MIN: u64 = 2_000;
-const LAPIC_TICKS_PER_MS_MAX: u64 = 60_000;
-
 pub fn calibrate_lapic_ticks_per_ms() -> u64 {
     let cached = LAPIC_TICKS_PER_MS.load(Ordering::Acquire);
     if cached != 0 {
