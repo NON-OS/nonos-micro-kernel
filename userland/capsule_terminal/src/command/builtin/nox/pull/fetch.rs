@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec::Vec;
+use nonos_libc::{mk_time_millis, mk_yield};
 
 use super::conn::{connect, Rx};
 use super::http;
@@ -22,12 +23,31 @@ use super::http;
 pub const MAX_FETCH: usize = 64 * 1024 * 1024;
 const CLOSE_WAIT: u8 = 4;
 const EMPTY_BUDGET: u32 = 64;
+const RETRIES: u32 = 3;
+const BACKOFF_MS: i64 = 250;
 
 pub fn get(ip: [u8; 4], port: u16, host: &[u8], path: &[u8]) -> Result<Vec<u8>, &'static str> {
-    let conn = connect(ip, port).ok_or("connect failed")?;
+    let mut last = "connect failed";
+    for i in 0..RETRIES {
+        match attempt(ip, port, host, path) {
+            Ok(body) => return Ok(body),
+            Err((false, e)) => return Err(e),
+            Err((true, e)) => {
+                last = e;
+                if i + 1 < RETRIES {
+                    backoff(BACKOFF_MS);
+                }
+            }
+        }
+    }
+    Err(last)
+}
+
+fn attempt(ip: [u8; 4], port: u16, host: &[u8], path: &[u8]) -> Result<Vec<u8>, (bool, &'static str)> {
+    let conn = connect(ip, port).ok_or((true, "connect failed"))?;
     if !conn.send(&http::build_get(host, path)) {
         conn.close();
-        return Err("send failed");
+        return Err((true, "send failed"));
     }
     let mut raw = Vec::new();
     let mut empties = 0u32;
@@ -41,18 +61,25 @@ pub fn get(ip: [u8; 4], port: u16, host: &[u8], path: &[u8]) -> Result<Vec<u8>, 
                 empties += 1;
                 if empties > EMPTY_BUDGET {
                     conn.close();
-                    return Err("recv stalled");
+                    return Err((true, "recv stalled"));
                 }
             }
             Rx::Gone => break,
         }
         if raw.len() > MAX_FETCH {
             conn.close();
-            return Err("response too large");
+            return Err((false, "response too large"));
         }
     }
     conn.close();
-    finish(&raw)
+    finish(&raw).map_err(|e| (false, e))
+}
+
+fn backoff(ms: i64) {
+    let start = mk_time_millis();
+    while mk_time_millis().wrapping_sub(start) < ms {
+        mk_yield();
+    }
 }
 
 fn finish(raw: &[u8]) -> Result<Vec<u8>, &'static str> {
