@@ -29,6 +29,12 @@ pub(super) fn alloc_and_zero(pages: u64, length: u64, dma_flags: u32) -> Result<
             zero_run(phys_start, length);
             return Ok(phys_start);
         }
+    } else if let Some(phys_start) = pool::low32_alloc(pages as usize) {
+        // A device buffer small enough for the reserved low pool goes there, so a
+        // 32-bit descriptor can address it below 4GB. Bulk allocations fall
+        // through to the general allocator (64-bit devices do not need the pool).
+        zero_run(phys_start, length);
+        return Ok(phys_start);
     }
     let mut flags = AllocFlags::DMA | AllocFlags::ZERO;
     if dma_flags & DMA_MAP_HIGH != 0 {

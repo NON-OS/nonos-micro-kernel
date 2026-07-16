@@ -36,6 +36,10 @@ pub(in crate::hardware::broker) mod ids {
     /// generic USB_HOST id. Userland discovery matches on this
     /// id so it never tries to drive a non-xHCI USB host.
     pub(in crate::hardware::broker) const USB_HOST_XHCI: u32 = 0x0071;
+    /// A platform GPIO community controller enumerated from ACPI. The input
+    /// driver claims the community a touchpad's GpioInt names and maps its
+    /// MMIO window to poll the pad's interrupt status register.
+    pub(in crate::hardware::broker) const GPIO_CTRL: u32 = 0x0080;
     pub(in crate::hardware::broker) const OTHER: u32 = 0xFFFF;
 }
 

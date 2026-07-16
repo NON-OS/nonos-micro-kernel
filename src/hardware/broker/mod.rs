@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod acpi_gpio;
 mod acpi_i2c;
 mod census;
 mod claim;
@@ -37,6 +38,7 @@ mod platform;
 mod power;
 mod table;
 
+pub use acpi_gpio::register_acpi_gpio;
 pub use acpi_i2c::register_acpi_i2c;
 pub use census::render_and_hold as device_census;
 pub use claim::{
