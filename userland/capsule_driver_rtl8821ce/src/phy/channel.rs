@@ -65,8 +65,8 @@ impl Bw {
 }
 
 /// The RF front-end switch position for a channel. The baseband program that acts
-/// on it is a companion of the RF retune not yet built, so this is exercised in
-/// the proofs only for now.
+/// on it is a companion of the RF retune that is not built, so this is exercised
+/// in the proofs only.
 #[cfg(test)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum RfSwitch {
