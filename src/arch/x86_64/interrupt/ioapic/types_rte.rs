@@ -51,6 +51,15 @@ impl Rte {
     }
 
     pub fn to_u32s(self) -> (u32, u32) {
+        // The IO-APIC RTE only has an 8-bit destination field, so a
+        // BSP APIC ID above 255 (possible in x2APIC mode) would silently
+        // target the wrong CPU once masked to 0xFF. We keep the mask but
+        // fail loudly instead of quietly, since it must never go unseen.
+        if self.dest_apic_id > 0xFF {
+            crate::sys::serial::println(
+                b"[IOAPIC] warning: dest APIC id > 0xFF truncated to 8 bits (x2APIC)",
+            );
+        }
         let mut low = self.vector as u32;
         low |= (self.delivery as u32) << 8;
         if self.logical {

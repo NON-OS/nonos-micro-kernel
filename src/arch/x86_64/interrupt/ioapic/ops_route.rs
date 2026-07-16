@@ -70,6 +70,14 @@ pub fn mask(gsi: u32, masked: bool) -> IoApicResult<()> {
 
 pub fn retarget(gsi: u32, dest_apic_id: u32) -> IoApicResult<()> {
     let (chip, idx) = locate(gsi).ok_or(IoApicError::GsiNotFound)?;
+    // The RTE destination field is 8 bits wide. An APIC id above 255
+    // (x2APIC) would be masked to 0xFF and retarget the wrong CPU; keep
+    // the mask below but surface it so the mistarget is not silent.
+    if dest_apic_id > 0xFF {
+        crate::sys::serial::println(
+            b"[IOAPIC] warning: retarget dest APIC id > 0xFF truncated to 8 bits (x2APIC)",
+        );
+    }
     unsafe {
         let (low, mut high) = redtbl_read(chip.mmio, idx);
         high &= !(0xFF << 24);
