@@ -1,0 +1,19 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the WiFi settings panel: the detect -> select ->
+# enter passphrase -> connect flow and the scan/connect wire format. Builds for
+# the host so `cargo test` runs the real panel source (included via #[path])
+# against crafted scan buffers, no device.
+[package]
+name = "wifi_panel_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

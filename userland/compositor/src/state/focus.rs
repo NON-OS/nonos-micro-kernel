@@ -28,7 +28,21 @@ impl FocusTable {
         Self { focused_pid: 0 }
     }
 
-    pub fn set(&mut self, pid: u32) {
+    // Set the focused process, returning true if it actually changed. A change
+    // reorders the draw stack, so the caller must fully recomposite; otherwise
+    // the overlap between the old and new top window keeps stale pixels that a
+    // later partial repaint smears as the cursor passes over them.
+    pub fn set(&mut self, pid: u32) -> bool {
+        if self.focused_pid == pid {
+            return false;
+        }
         self.focused_pid = pid;
+        true
+    }
+
+    // The process that currently owns focus, or 0 for none. The compositor draws
+    // this owner's window on top within its z-band, so a click raises it.
+    pub fn focused(&self) -> u32 {
+        self.focused_pid
     }
 }

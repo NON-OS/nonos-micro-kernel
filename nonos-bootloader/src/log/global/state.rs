@@ -29,8 +29,10 @@ static SYSTEM_TABLE: AtomicPtr<SystemTable<Boot>> = AtomicPtr::new(core::ptr::nu
 /// Logger initialized flag
 static LOGGER_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
-/// Current minimum log level (atomic for thread safety)
-static MIN_LOG_LEVEL: AtomicU8 = AtomicU8::new(LogLevel::Info as u8);
+/// Current minimum log level (atomic for thread safety). Warnings and worse
+/// reach the boot console so a clean boot stays quiet; info/debug/trace calls
+/// stay in the source and come back by lowering this to `Info` or `Debug`.
+static MIN_LOG_LEVEL: AtomicU8 = AtomicU8::new(LogLevel::Warn as u8);
 
 /// Boot start tick for relative timestamps
 static BOOT_START_TICK: AtomicU64 = AtomicU64::new(0);

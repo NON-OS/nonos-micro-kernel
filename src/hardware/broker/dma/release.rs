@@ -64,7 +64,9 @@ fn teardown(g: &DmaGrant, unmap_pages: bool) {
         let _ = crate::memory::paging::unmap_user_dma(VirtAddr::new(g.user_va), g.length as usize);
     }
     let pages = (g.length / PAGE_SIZE) as usize;
-    if !pool::free(g.physical_start, pages) {
+    if pool::low32_owns(g.physical_start) {
+        pool::low32_free(g.physical_start, pages);
+    } else if !pool::free(g.physical_start, pages) {
         let _ = free_contiguous(g.physical_start, pages);
     }
 }

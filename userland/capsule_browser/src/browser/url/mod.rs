@@ -16,6 +16,7 @@
 
 mod authority;
 mod default_port;
+mod dot_segments;
 mod has_scheme_prefix;
 mod host_port;
 mod join;

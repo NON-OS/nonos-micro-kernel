@@ -20,7 +20,12 @@ use nonos_policy_proto::{kind_of, Field, E_ACCES, KIND_BOOL, KIND_I8, KIND_STR, 
 use super::handlers::{set_bool, set_i8, set_str, set_u8};
 use super::respond;
 
-const SETTERS: [&[u8]; 2] = [b"app.settings", b"app.setup_wizard"];
+// Only the settings app and the first-boot setup wizard may write policy. The
+// settings window now runs as an on-demand instance, so its instance service
+// names are trusted too; all of them are the same signed, attested settings
+// capsule, just a different window slot.
+const SETTERS: [&[u8]; 4] =
+    [b"app.settings", b"app.setup_wizard", b"app.settings.1", b"app.settings.2"];
 
 fn lookup_pid(name: &[u8]) -> Option<u32> {
     let mut port = 0u32;

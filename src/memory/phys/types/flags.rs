@@ -22,6 +22,9 @@ bitflags::bitflags! {
         const HIGH = 1 << 1;
         const DMA = 1 << 2;
         const CONTIGUOUS = 1 << 3;
+        /// The allocation must be below 4GB so a 32-bit device DMA descriptor can
+        /// address it without truncation.
+        const DMA32 = 1 << 4;
     }
 }
 

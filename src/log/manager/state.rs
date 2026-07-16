@@ -59,8 +59,15 @@ impl LogManager {
         entry.hash.copy_from_slice(&hasher.finalize());
         self.last_hash = entry.hash;
 
-        for backend in self.backends.iter_mut() {
-            backend.write(&entry);
+        // The on-screen sinks (framebuffer/VGA console) carry only warnings and
+        // worse, so a working desktop stays clean instead of scrolling boot and
+        // subsystem debug chatter. The full stream, every severity, is still
+        // recorded in the RAM buffer below for the in-system log viewer, so
+        // nothing is lost. Lower this threshold to bring the trace back on screen.
+        if (sev as u8) >= (Severity::Warn as u8) {
+            for backend in self.backends.iter_mut() {
+                backend.write(&entry);
+            }
         }
 
         self.ram_buffer.write(&entry);

@@ -18,5 +18,5 @@ mod embed;
 mod spawn;
 mod state;
 
-pub use spawn::spawn_clock_capsule;
+pub use spawn::{spawn_clock_capsule, spawn_clock_instance};
 pub use state::shared_state;

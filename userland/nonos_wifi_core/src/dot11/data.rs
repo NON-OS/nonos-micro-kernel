@@ -181,7 +181,14 @@ pub fn parse_data(mpdu: &[u8]) -> Option<Vec<u8>> {
     // A QoS data frame carries a longer header; size the body from the frame so
     // the LLC/SNAP shim is found whether or not the AP used QoS.
     let hlen = header_len(fc);
-    if mpdu.len() < hlen + 8 {
+    // A hardware-CCMP chip delivers a decrypted frame with the 802.11 header and
+    // the 8-byte CCMP header (IV and packet number) still in place, and leaves the
+    // Protected bit set in the frame control. The plaintext body begins after both
+    // headers. Skipping the CCMP header when protected is what puts the LLC/SNAP
+    // shim at the expected offset; without it every hardware-decrypted frame, the
+    // DHCP reply included, failed the LLC/SNAP check and was silently dropped.
+    let ccmp = if fc & FC_PROTECTED != 0 { CCMP_HDR_LEN } else { 0 };
+    if mpdu.len() < hlen + ccmp + 8 {
         return None;
     }
     let mut a1 = [0u8; 6];
@@ -190,7 +197,7 @@ pub fn parse_data(mpdu: &[u8]) -> Option<Vec<u8>> {
     a1.copy_from_slice(&mpdu[4..10]);
     a2.copy_from_slice(&mpdu[10..16]);
     a3.copy_from_slice(&mpdu[16..22]);
-    let body = &mpdu[hlen..];
+    let body = &mpdu[hlen + ccmp..];
     if body.len() < 8 || body[0..6] != LLC_SNAP {
         return None;
     }

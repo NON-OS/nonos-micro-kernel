@@ -33,12 +33,13 @@ pub struct PingJob {
     port: u32,
     dst: [u8; 4],
     t0: i64,
+    seq: u16,
     sent: bool,
 }
 
 impl PingJob {
-    pub fn new(port: u32, dst: [u8; 4]) -> Self {
-        Self { port, dst, t0: mk_time_millis(), sent: false }
+    pub fn new(port: u32, dst: [u8; 4], seq: u16) -> Self {
+        Self { port, dst, t0: mk_time_millis(), seq, sent: false }
     }
 
     pub fn dst(&self) -> [u8; 4] {
@@ -50,7 +51,7 @@ impl PingJob {
             return Some(if self.sent { Probe::Timeout } else { Probe::Unreachable });
         }
         if !self.sent {
-            match send_echo(self.port, self.dst) {
+            match send_echo(self.port, self.dst, self.seq) {
                 E_OK => self.sent = true,
                 E_NO_NEIGHBOUR => {}
                 E_NO_ROUTE => return Some(Probe::NoRoute),
@@ -58,7 +59,7 @@ impl PingJob {
                 _ => return Some(Probe::SendFailed),
             }
         }
-        if let Some(rtt) = poll_once(self.port, self.dst, self.t0) {
+        if let Some(rtt) = poll_once(self.port, self.dst, self.t0, self.seq) {
             return Some(Probe::Reply(rtt));
         }
         mk_yield();

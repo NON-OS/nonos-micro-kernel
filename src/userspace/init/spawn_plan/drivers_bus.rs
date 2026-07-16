@@ -16,6 +16,7 @@
 
 pub(super) fn spawn() {
     spawn_iwlwifi();
+    spawn_rtl8821ce();
     spawn_i2c_pci();
     spawn_i2c_hid();
 }
@@ -33,6 +34,20 @@ fn spawn_iwlwifi() {
 
 #[cfg(not(feature = "nonos-capsule-driver-iwlwifi"))]
 fn spawn_iwlwifi() {}
+
+#[cfg(feature = "nonos-capsule-driver-rtl8821ce")]
+fn spawn_rtl8821ce() {
+    use crate::hardware::rtl8821ce_capsule as c;
+    super::boot::capsule(
+        "DRIVER-RTL8821CE",
+        "driver_rtl8821ce",
+        c::spawn_driver_rtl8821ce_capsule,
+        c::shared_state,
+    );
+}
+
+#[cfg(not(feature = "nonos-capsule-driver-rtl8821ce"))]
+fn spawn_rtl8821ce() {}
 
 #[cfg(feature = "nonos-capsule-driver-i2c-pci")]
 fn spawn_i2c_pci() {

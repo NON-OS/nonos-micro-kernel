@@ -17,6 +17,7 @@
 use alloc::string::{String, ToString};
 
 use super::authority::authority;
+use super::dot_segments::remove_dot_segments;
 use super::has_scheme_prefix::has_scheme_prefix;
 use super::path_without_fragment::path_without_fragment;
 use super::path_without_query::path_without_query;
@@ -35,7 +36,7 @@ pub fn join(base: &Url, location: &str) -> String {
         return alloc::format!("{}://{}", scheme, rest);
     }
     if loc.starts_with('/') {
-        return alloc::format!("{}://{}{}", scheme, authority(base), loc);
+        return alloc::format!("{}://{}{}", scheme, authority(base), remove_dot_segments(loc));
     }
     if loc.starts_with('?') {
         return alloc::format!(
@@ -59,5 +60,6 @@ pub fn join(base: &Url, location: &str) -> String {
         Some(i) => &base.path[..=i],
         None => "/",
     };
-    alloc::format!("{}://{}{}{}", scheme, authority(base), dir, loc)
+    let merged = remove_dot_segments(&alloc::format!("{}{}", dir, loc));
+    alloc::format!("{}://{}{}", scheme, authority(base), merged)
 }

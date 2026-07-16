@@ -36,3 +36,8 @@ pub mod mlme;
 pub mod netif;
 pub mod station;
 pub mod wpa;
+
+#[cfg(test)]
+mod netif_tests;
+#[cfg(test)]
+mod station_tests;

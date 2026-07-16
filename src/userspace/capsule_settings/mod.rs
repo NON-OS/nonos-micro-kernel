@@ -18,5 +18,5 @@ mod embed;
 mod spawn;
 mod state;
 
-pub use spawn::spawn_settings_capsule;
+pub use spawn::{spawn_settings_capsule, spawn_settings_instance};
 pub use state::shared_state;

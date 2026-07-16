@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::js::ast::Expr;
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
+
+use crate::browser::js::ast::{Expr, Stmt};
 use crate::browser::js::token::Tok;
 
 use super::array::array_lit;
@@ -39,18 +43,66 @@ pub fn primary(p: &mut Parser) -> Expr {
                 }
                 Expr::Func(params(p), super::block::block(p))
             }
-            _ => Expr::Ident(s),
+            // A bare identifier followed by `=>` is a single-parameter arrow
+            // function: `x => body`.
+            _ => {
+                if p.is_punct("=>") {
+                    p.advance();
+                    arrow(vec![s], p)
+                } else {
+                    Expr::Ident(s)
+                }
+            }
         },
         Tok::Punct(op) => match op.as_str() {
-            "(" => {
-                let e = expr(p);
-                p.eat_punct(")");
-                e
-            }
+            "(" => paren_or_arrow(p),
             "[" => array_lit(p),
             "{" => object_lit(p),
             _ => Expr::Undef,
         },
         Tok::Eof => Expr::Undef,
     }
+}
+
+// A `(` opens either a parenthesised expression or an arrow parameter list. The
+// group is parsed as a comma-separated expression list; if `=>` follows the
+// closing `)`, the items (which must be identifiers) become the parameters,
+// otherwise it is an ordinary parenthesised expression.
+fn paren_or_arrow(p: &mut Parser) -> Expr {
+    if p.is_punct(")") {
+        p.advance();
+        if p.is_punct("=>") {
+            p.advance();
+            return arrow(Vec::new(), p);
+        }
+        return Expr::Undef;
+    }
+    let mut items = vec![expr(p)];
+    while p.eat_punct(",") {
+        items.push(expr(p));
+    }
+    p.eat_punct(")");
+    if p.is_punct("=>") {
+        p.advance();
+        let ps = items
+            .into_iter()
+            .filter_map(|e| match e {
+                Expr::Ident(s) => Some(s),
+                _ => None,
+            })
+            .collect();
+        return arrow(ps, p);
+    }
+    items.into_iter().last().unwrap_or(Expr::Undef)
+}
+
+// Parse the body of an arrow function: a `{ ... }` block, or a single
+// expression that becomes an implicit `return`.
+fn arrow(ps: Vec<String>, p: &mut Parser) -> Expr {
+    let body = if p.is_punct("{") {
+        super::block::block(p)
+    } else {
+        vec![Stmt::Return(Some(expr(p)))]
+    };
+    Expr::Func(ps, body)
 }

@@ -34,7 +34,7 @@ pub fn paint_field_row(
 ) {
     let bg = if selected {
         ROW_SELECTED_BG
-    } else if row_index % 2 == 0 {
+    } else if row_index.is_multiple_of(2) {
         ROW_BG
     } else {
         ROW_BG_ALT

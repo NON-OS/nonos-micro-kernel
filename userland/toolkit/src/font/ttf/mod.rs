@@ -24,8 +24,10 @@ mod cache;
 mod draw;
 mod face;
 mod metrics;
+mod readable;
 
 pub use face::builtin_face;
+pub use readable::MIN_UI_PX;
 
 pub use ab_glyph::FontRef;
 pub use draw::{draw_text, draw_text_spaced, draw_text_tracked, draw_text_with};
