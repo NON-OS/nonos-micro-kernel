@@ -16,14 +16,28 @@
 
 use alloc::vec;
 
+use nonos_libc::mk_time_millis;
+
 use crate::server::parse_req::{parse, HDR_LEN, IPC_BUF_MAX};
 use crate::server::runner::{dispatch, receive};
+
+// How often to re-check whether a better network interface has come up. The WiFi
+// link is down at boot and only associates once the user connects, so the stack
+// starts on whatever is up then (often nothing, or a cabled NIC) and must switch
+// when the WiFi link appears.
+const REEVAL_INTERVAL_MS: i64 = 1000;
 
 pub fn run() -> ! {
     let mut rx = vec![0u8; HDR_LEN + IPC_BUF_MAX];
     let mut tx = vec![0u8; HDR_LEN + IPC_BUF_MAX];
+    let mut last_reeval: i64 = 0;
     loop {
         crate::iface::poll::pump();
+        let now = mk_time_millis();
+        if now.wrapping_sub(last_reeval) >= REEVAL_INTERVAL_MS {
+            crate::setup::reevaluate();
+            last_reeval = now;
+        }
         let mut sender_pid = 0u32;
         let n = receive::receive(&mut rx, &mut sender_pid);
         if n <= 0 || sender_pid == 0 {
