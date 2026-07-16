@@ -32,18 +32,37 @@ const NCTL_FOCUS_SELF: [u8; 8] = [b'N', b'C', b'T', b'L', 1, 0, 1, 0];
 
 const DESKTOP_SHELL: &str = "desktop_shell";
 
+/// How long to keep retrying the focus-frame delivery before giving up.
+const BOOT_DEADLINE_MS: u64 = 1000;
+
 /// Boot a freshly spawned window instance by delivering the focus frame the
 /// app skeleton waits for. The frame is attributed to the desktop shell, the
 /// only sender the skeleton accepts, because the shell is what asked for this
-/// window. A missing shell or a full inbox just means no window yet, never a
-/// fault, so failures are swallowed.
+/// window. A missing shell just means no window yet, never a fault.
+///
+/// The instance's `proc.<pid>` inbox is created by its install, which can lag the
+/// spawn return by a few scheduler passes on real hardware; a single attempt then
+/// drops the frame and the window never draws. That timing is why a second or
+/// third window opened reliably under QEMU (steady, fast scheduling) yet not on
+/// hardware. Retry until the frame lands or a bounded wall-clock deadline passes,
+/// so the instance has real time to register its inbox while the wait stays
+/// capped and a genuinely missing instance never wedges the init drain.
 pub(super) fn boot(instance_pid: u32) {
     let Some(shell) = lookup_service(DESKTOP_SHELL) else {
         return;
     };
     let from = format!("proc.{}", shell.pid);
     let to = format!("proc.{}", instance_pid);
-    if let Ok(msg) = IpcMessage::new(&from, &to, &NCTL_FOCUS_SELF) {
-        let _ = nonos_inbox::try_enqueue_strict(&to, msg);
+    let deadline = crate::time::timestamp_millis().saturating_add(BOOT_DEADLINE_MS);
+    loop {
+        if let Ok(msg) = IpcMessage::new(&from, &to, &NCTL_FOCUS_SELF) {
+            if nonos_inbox::try_enqueue_strict(&to, msg).is_ok() {
+                return;
+            }
+        }
+        if crate::time::timestamp_millis() >= deadline {
+            return;
+        }
+        crate::sched::yield_now();
     }
 }
