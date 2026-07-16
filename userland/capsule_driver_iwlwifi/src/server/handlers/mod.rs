@@ -23,3 +23,6 @@ pub mod eapol;
 pub mod ccmp;
 pub mod keyunwrap;
 pub mod eapolbuild;
+pub mod connect;
+pub mod wifi_data;
+pub mod supplicant;

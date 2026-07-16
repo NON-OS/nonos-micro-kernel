@@ -13,3 +13,5 @@ pub mod pbkdf2;
 pub mod prf;
 #[path = "../../../capsule_driver_iwlwifi/src/wpa/ptk.rs"]
 pub mod ptk;
+#[path = "../../../capsule_driver_iwlwifi/src/wpa/supplicant/mod.rs"]
+pub mod supplicant;

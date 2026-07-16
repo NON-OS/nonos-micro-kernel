@@ -36,6 +36,7 @@ mod firmware;
 // firmware. Reached through OP_HCMD_ISSUE.
 mod hcmd;
 mod init;
+mod mlme;
 mod protocol;
 mod regs;
 // The receive path: reading the firmware's responses and notifications. Reached
@@ -49,6 +50,9 @@ mod wpa;
 
 use nonos_libc::{heap_init, mk_exit};
 
+/// # Safety
+/// The capsule entry point. The kernel loader calls this once on a fresh stack
+/// with the capsule's heap region reserved; it must never be called from Rust.
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
