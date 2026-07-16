@@ -20,6 +20,7 @@ extern crate alloc;
 
 use nonos_libc::{heap_init, mk_exit};
 
+mod diag;
 mod hid;
 mod i2c_client;
 mod input;

@@ -14,18 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_irq_bind, IrqBindOut};
+use super::read_at::read_descriptor_at;
+use crate::hid::HID_DESC_LEN;
 
-use crate::discover::Found;
-
-/// Bind the controller interrupt when the platform offers a usable one. The
-/// transfer engine polls, so this is best-effort: a controller that declares no
-/// interrupt (irq_line 0xFF) or whose GSI does not translate on this platform
-/// still drives the bus. A zero grant means no interrupt was bound.
-pub fn bind(dev: Found, claim_epoch: u64) -> IrqBindOut {
-    let mut out = IrqBindOut { grant_id: 0, vector: 0 };
-    if mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out) < 0 {
-        return IrqBindOut { grant_id: 0, vector: 0 };
-    }
-    out
+/// Try the exact address and descriptor register the firmware declared through
+/// ACPI. Returns the descriptor length on success, so the driver binds without
+/// probing a guessed list.
+pub fn probe_addr(
+    port: u32,
+    addr: u8,
+    reg: u16,
+    descriptor: &mut [u8; HID_DESC_LEN],
+) -> Option<usize> {
+    read_descriptor_at(port, addr, reg, descriptor).then_some(HID_DESC_LEN)
 }

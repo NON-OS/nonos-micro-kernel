@@ -24,5 +24,5 @@ mod take_write;
 mod transfer;
 mod tx_space;
 
-pub use probe::probe;
+pub use probe::{probe, probe_hid};
 pub use transfer::transfer;

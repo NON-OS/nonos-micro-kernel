@@ -4,8 +4,8 @@ use nonos_libc::mk_ipc_recv_from;
 
 use crate::driver::Driver;
 use crate::protocol::{
-    parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_CONTROLLER_INFO, OP_HEALTHCHECK,
-    OP_PROBE, OP_REGISTER_SNAPSHOT, OP_TIMING_INFO, OP_TRANSFER,
+    parse, E_BAD_OP, E_INVAL, HDR_LEN, IPC_PAYLOAD_MAX, OP_ACPI_HID, OP_CONTROLLER_INFO,
+    OP_GPIO_DOORBELL, OP_HEALTHCHECK, OP_PROBE, OP_REGISTER_SNAPSHOT, OP_TIMING_INFO, OP_TRANSFER,
 };
 use crate::server::{handlers, respond};
 
@@ -43,6 +43,10 @@ fn dispatch(
         OP_TIMING_INFO if body.is_empty() => handlers::timing::handle(driver, sender_pid, &req, tx),
         OP_TRANSFER => handlers::transfer::handle(driver, sender_pid, &req, body, tx),
         OP_PROBE => handlers::probe::handle(driver, sender_pid, &req, body, tx),
+        OP_ACPI_HID if body.is_empty() => handlers::acpi_hid::handle(driver, sender_pid, &req, tx),
+        OP_GPIO_DOORBELL if body.is_empty() => {
+            handlers::doorbell::handle(driver, sender_pid, &req, tx)
+        }
         _ if body.is_empty() => {
             let _ = respond::send(sender_pid, &req, E_BAD_OP, &[], tx);
         }

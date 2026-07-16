@@ -32,6 +32,9 @@ pub struct TouchSample {
     pub contacts: u32,
     /// The physical click button (clickpad) is pressed.
     pub button: bool,
+    /// The contact is a deliberate finger (PTP confidence bit). True when the
+    /// device does not report confidence at all.
+    pub confidence: bool,
 }
 
 /// `report` is the input report after the two-byte i2c-hid length prefix (what
@@ -47,6 +50,17 @@ pub fn decode_touch(report: &[u8], layout: &TouchLayout) -> Option<TouchSample> 
         report
     };
 
+    // A torn or short polled read must be dropped whole: read_bits zero-fills
+    // past the end, which would silently truncate coordinates into violent
+    // jumps toward the origin instead of failing.
+    let fields =
+        [layout.x, layout.y, layout.tip, layout.contact_count, layout.button, layout.confidence];
+    let need =
+        fields.iter().filter(|f| f.present()).map(|f| f.bit_offset + f.bit_size).max().unwrap_or(0);
+    if (body.len() as u32) * 8 < need {
+        return None;
+    }
+
     let x = read_bits(body, layout.x.bit_offset, layout.x.bit_size);
     let y = read_bits(body, layout.y.bit_offset, layout.y.bit_size);
     let tip = read_bits(body, layout.tip.bit_offset, layout.tip.bit_size) != 0;
@@ -59,6 +73,8 @@ pub fn decode_touch(report: &[u8], layout: &TouchLayout) -> Option<TouchSample> 
     };
     let button = layout.button.present()
         && read_bits(body, layout.button.bit_offset, layout.button.bit_size) != 0;
+    let confidence = !layout.confidence.present()
+        || read_bits(body, layout.confidence.bit_offset, layout.confidence.bit_size) != 0;
 
     Some(TouchSample {
         x,
@@ -68,5 +84,6 @@ pub fn decode_touch(report: &[u8], layout: &TouchLayout) -> Option<TouchSample> 
         tip,
         contacts,
         button,
+        confidence,
     })
 }

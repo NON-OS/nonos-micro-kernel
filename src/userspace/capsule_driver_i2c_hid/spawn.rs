@@ -41,7 +41,8 @@ pub fn spawn_driver_i2c_hid_capsule() -> Result<(), SpawnError> {
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit()
             | Capability::Memory.bit()
-            | Capability::InputSource.bit(),
+            | Capability::InputSource.bit()
+            | crate::capabilities::serial_debug_cap(),
         debug_tag: b"[DRIVER-I2C-HID] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;
