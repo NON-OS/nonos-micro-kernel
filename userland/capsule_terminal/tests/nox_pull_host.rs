@@ -12,6 +12,20 @@
 
 extern crate alloc;
 
+fn ok_val<T, E>(r: Result<T, E>) -> T {
+    match r {
+        Ok(v) => v,
+        Err(_) => std::process::exit(1),
+    }
+}
+
+fn some_val<T>(o: Option<T>) -> T {
+    match o {
+        Some(v) => v,
+        None => std::process::exit(1),
+    }
+}
+
 #[path = "../src/command/builtin/nox/pull/scan.rs"]
 pub mod scan;
 
@@ -53,7 +67,7 @@ fn eq_ci_is_case_insensitive() {
 
 #[test]
 fn args_parse_file() {
-    let a = args::parse(&[&b"10.0.2.2:8000/report.pdf"[..], &b"/docs/report.pdf"[..]]).unwrap();
+    let a = ok_val(args::parse(&[&b"10.0.2.2:8000/report.pdf"[..], &b"/docs/report.pdf"[..]]));
     assert_eq!(a.ip, [10, 0, 2, 2]);
     assert_eq!(a.port, 8000);
     assert_eq!(a.host, b"10.0.2.2:8000");
@@ -64,7 +78,7 @@ fn args_parse_file() {
 
 #[test]
 fn args_parse_dir_trailing_slash() {
-    let a = args::parse(&[&b"10.0.2.2:8000/photos/"[..], &b"/docs/photos/"[..]]).unwrap();
+    let a = ok_val(args::parse(&[&b"10.0.2.2:8000/photos/"[..], &b"/docs/photos/"[..]]));
     assert!(a.is_dir);
     assert_eq!(a.path, b"/photos/");
 }
@@ -87,7 +101,7 @@ fn http_build_get_shape() {
 #[test]
 fn http_parse_content_length() {
     let raw = b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nBODY";
-    let p = http::parse_head(raw).unwrap();
+    let p = some_val(http::parse_head(raw));
     assert_eq!(p.status, 200);
     assert_eq!(p.content_length, Some(4));
     assert!(!p.chunked);
@@ -96,9 +110,9 @@ fn http_parse_content_length() {
 
 #[test]
 fn http_parse_404_and_chunked() {
-    let p = http::parse_head(b"HTTP/1.1 404 Not Found\r\n\r\n").unwrap();
+    let p = some_val(http::parse_head(b"HTTP/1.1 404 Not Found\r\n\r\n"));
     assert_eq!(p.status, 404);
-    let c = http::parse_head(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n").unwrap();
+    let c = some_val(http::parse_head(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n"));
     assert!(c.chunked);
 }
 
