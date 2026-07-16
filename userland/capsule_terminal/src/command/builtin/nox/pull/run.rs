@@ -62,6 +62,11 @@ pub(super) fn one_file(
         tally.skipped += 1;
         return true;
     }
+    if !store::has_free_slot(pid) {
+        state.scrollback.push_error(b"pull: vfs store full");
+        tally.failed += 1;
+        return false;
+    }
     match fetch::get(ip, a.target.port, &a.target.host, path) {
         Ok(body) => match store::write(pid, dest, &body) {
             Ok(()) => {

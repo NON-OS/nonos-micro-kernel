@@ -27,3 +27,10 @@ pub fn mkdir(pid: u32, path: &[u8]) {
 pub fn exists(pid: u32, path: &[u8]) -> bool {
     vfs::stat(pid, path).is_ok()
 }
+
+pub fn has_free_slot(pid: u32) -> bool {
+    match vfs::usage(pid) {
+        Ok((files, _bytes, max)) => files < max,
+        Err(_) => true,
+    }
+}
