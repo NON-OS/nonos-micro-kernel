@@ -54,6 +54,11 @@ pub struct DeviceScope<'a> {
     /// inline descriptors; the named `ResourceTemplate` buffers live here in the
     /// body, so this is the fallback region for the descriptor byte-scan.
     pub body: &'a [u8],
+    /// The device's own NameSeg: the final four-byte segment of the Device's
+    /// NameString (for example `GPO0`). Zeros for a NullName or a truncated
+    /// encoding. This is what a ResourceSource path in another device's `_CRS`
+    /// resolves against.
+    pub name: [u8; 4],
 }
 
 /// Scan an AML block and return the device scopes whose `_HID` matches a known
@@ -87,7 +92,10 @@ pub(super) fn find_devices(aml: &[u8], matcher: fn(&[u8; 8]) -> bool) -> Vec<Dev
 
                 if let Some(name_end) = skip_name_string(aml, after_len) {
                     if name_end <= pkg_end {
-                        if let Some(scope) = inspect_device_body(&aml[name_end..pkg_end], matcher) {
+                        let name = trailing_name_seg(aml, after_len, name_end);
+                        if let Some(scope) =
+                            inspect_device_body(&aml[name_end..pkg_end], name, matcher)
+                        {
                             out.push(scope);
                         }
                         // Descend into the package rather than skipping it: a
@@ -117,7 +125,11 @@ pub(super) fn find_devices(aml: &[u8], matcher: fn(&[u8; 8]) -> bool) -> Vec<Dev
 /// Within a device body, find `_HID` and `_CRS` and, if the HID satisfies
 /// `matcher`, build a `DeviceScope`. Returns `None` when there is no matching
 /// `_HID`.
-fn inspect_device_body(body: &[u8], matcher: fn(&[u8; 8]) -> bool) -> Option<DeviceScope<'_>> {
+fn inspect_device_body(
+    body: &[u8],
+    name: [u8; 4],
+    matcher: fn(&[u8; 8]) -> bool,
+) -> Option<DeviceScope<'_>> {
     // Only the device's own objects count: everything up to its first nested
     // Device. Searching the whole package would let a controller Device with
     // no _HID of its own match on its first HID child, and would then pair
@@ -128,7 +140,19 @@ fn inspect_device_body(body: &[u8], matcher: fn(&[u8; 8]) -> bool) -> Option<Dev
         return None;
     }
     let crs = find_named_crs(own);
-    Some(DeviceScope { hid, crs, body: own })
+    Some(DeviceScope { hid, crs, body: own, name })
+}
+
+/// The final NameSeg of a NameString spanning `[name_start, name_end)`: its
+/// last four bytes. A NameString may carry root/parent prefixes and multiple
+/// segments, but every non-null path ends in a four-byte NameSeg. Returns
+/// zeros when fewer than four bytes were consumed (a NullName).
+fn trailing_name_seg(aml: &[u8], name_start: usize, name_end: usize) -> [u8; 4] {
+    let mut out = [0u8; 4];
+    if name_end <= aml.len() && name_end >= name_start.saturating_add(4) {
+        out.copy_from_slice(&aml[name_end - 4..name_end]);
+    }
+    out
 }
 
 /// Offset of the first nested `Device (...)` opcode in a device body, or the
@@ -230,7 +254,7 @@ fn find_method_body<'a>(body: &'a [u8], target: &[u8; 4]) -> Option<&'a [u8]> {
 /// Scan `body` for a `NameOp NameString(==target) value` pattern and return the
 /// index of the value's first byte. The four-character `target` must be the
 /// trailing NameSeg of the NameString.
-fn find_name_value(body: &[u8], target: &[u8; 4]) -> Option<usize> {
+pub(super) fn find_name_value(body: &[u8], target: &[u8; 4]) -> Option<usize> {
     let mut i = 0usize;
     let mut steps = 0usize;
     while i < body.len() {

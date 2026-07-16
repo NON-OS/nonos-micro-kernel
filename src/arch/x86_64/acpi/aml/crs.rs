@@ -180,6 +180,13 @@ fn fill_touchpad_descriptor(lead: u8, data: &[u8], dev: &mut I2cHidDevice) {
                 if let Some(pin) = parse_gpio_int(data) {
                     dev.gpio_pin = pin;
                     dev.has_gpio = true;
+                    // Same-fragment rule as the I2C controller name above: the
+                    // community name must come from the descriptor that
+                    // supplied the pin, or a multi-SKU body scan can pair the
+                    // pin with another template's community.
+                    if let Some(ctrl) = parse_gpio_controller(data) {
+                        dev.gpio_controller = ctrl;
+                    }
                 }
             }
         }
@@ -290,6 +297,31 @@ fn parse_i2c_controller(data: &[u8]) -> Option<[u8; 4]> {
     }
     let type_len = *data.get(7)? as usize | ((*data.get(8)? as usize) << 8);
     let src = data.get(9usize.checked_add(type_len)?..)?;
+    source_name_seg(src)
+}
+
+/// Parse the trailing NameSeg of a GpioInt descriptor's ResourceSource: the
+/// ACPI name of the GPIO community controller the pin belongs to (for example
+/// `GPO0`). The layout continues the table above `parse_gpio_int`: the
+/// ResourceSourceNameOffset is the u16 at `data[14..16]` (descriptor bytes
+/// 17..19, after PinTableOffset at 14..16 and ResourceSourceIndex at 16) and,
+/// like PinTableOffset, it is measured from the descriptor's lead byte, so the
+/// three-byte large header is subtracted before indexing `data`.
+fn parse_gpio_controller(data: &[u8]) -> Option<[u8; 4]> {
+    if *data.get(1)? != GPIO_CONN_TYPE_INTERRUPT {
+        return None;
+    }
+    let off_lo = *data.get(14)? as usize;
+    let off_hi = *data.get(15)? as usize;
+    let name_offset = off_lo | (off_hi << 8);
+    let src = data.get(name_offset.checked_sub(3)?..)?;
+    source_name_seg(src)
+}
+
+/// Extract the trailing NameSeg of a ResourceSource string region: the bytes up
+/// to the first NUL terminator (or the whole region when none), split on the
+/// last `.` of the ACPI path. None for an empty path.
+fn source_name_seg(src: &[u8]) -> Option<[u8; 4]> {
     let end = src.iter().position(|&b| b == 0).unwrap_or(src.len());
     let path = &src[..end];
     if path.is_empty() {

@@ -1,0 +1,15 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the ACPI AML resource extractor. Builds for the host
+# so `cargo test` exercises the real _CRS and device-scan source (included via
+# #[path]) against spec-shaped and hostile ACPI bytes, with no firmware present.
+[package]
+name = "acpi_aml_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
