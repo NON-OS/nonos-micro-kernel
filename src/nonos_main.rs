@@ -37,6 +37,14 @@ static HANDOFF_PTR: AtomicU64 = AtomicU64::new(0);
 
 #[no_mangle]
 extern "C" fn kernel_entry(handoff_ptr: u64) -> ! {
+    // First instruction path: paint the entry breadcrumb from the raw,
+    // unvalidated handoff before anything that could hang or halt runs.
+    // On a machine with no serial console this orange bar is the only
+    // proof the jump from the bootloader ever landed.
+    if handoff_ptr != 0 {
+        let raw = unsafe { &*(handoff_ptr as *const nonos_kernel::boot::handoff::BootHandoffV1) };
+        nonos_kernel::boot::entry_marker::paint(raw, 0, 0xFFFF_8000);
+    }
     unsafe {
         core::arch::asm!(
             "mov dx, 0x3F8", "mov al, 'R'", "out dx, al",
@@ -60,11 +68,16 @@ extern "C" fn kernel_entry(handoff_ptr: u64) -> ! {
             serial::print(b"[NONOS] Handoff ERR: ");
             serial::print_str(err.as_str());
             serial::println(b"");
+            let raw =
+                unsafe { &*(handoff_ptr as *const nonos_kernel::boot::handoff::BootHandoffV1) };
+            nonos_kernel::boot::entry_marker::paint(raw, 0, 0xFFFF_0000);
             fallback::vga_fallback();
         }
     };
+    nonos_kernel::boot::entry_marker::paint(handoff, 0, 0xFF00_FFFF);
     init_core_systems();
     security::log_security_status(handoff);
+    nonos_kernel::boot::entry_marker::paint(handoff, 1, 0xFFFF_D000);
     boot_microkernel(handoff)
 }
 

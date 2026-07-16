@@ -46,12 +46,32 @@ pub fn cpu_yield() {
     }
 }
 
-// idle_cpu: enable interrupts atomically with the halt.
+// idle_cpu: enable interrupts atomically with the halt. When the platform
+// cannot guarantee the LAPIC timer survives a halt (no ARAT and C1E not
+// disabled), spin with interrupts enabled instead so the scheduler tick
+// keeps arriving. The spin still lets any pending interrupt fire (sti) and
+// `pause` keeps it cheap; the next scheduler pass re-checks the runqueue.
 #[cfg(target_arch = "x86_64")]
 #[inline(always)]
 pub fn idle_cpu() {
+    if crate::arch::x86_64::interrupt::apic::idle_timer::halt_safe() {
+        unsafe {
+            asm!("sti; hlt", options(nomem, nostack));
+        }
+    } else {
+        unsafe {
+            asm!("sti", options(nomem, nostack));
+        }
+        for _ in 0..4096 {
+            core::hint::spin_loop();
+        }
+    }
+    // Callers loop over scheduler state (run queue, process table) right
+    // after idling and rely on the kernel-wide IF=0 discipline for those
+    // locks; returning with interrupts still enabled lets the timer ISR
+    // land inside the caller's next lock section and spin-deadlock the core.
     unsafe {
-        asm!("sti; hlt", options(nomem, nostack));
+        asm!("cli", options(nomem, nostack));
     }
 }
 

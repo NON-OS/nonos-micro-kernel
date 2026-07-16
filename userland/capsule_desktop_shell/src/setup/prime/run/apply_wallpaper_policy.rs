@@ -18,6 +18,8 @@ pub(super) fn apply_wallpaper_policy(port: u32) -> Result<(), &'static str> {
     if port == 0 {
         return Err("wallpaper service not announced");
     }
+    // Fill scaling for the wallpaper image (Policy::Fill). The image itself is
+    // selected by the Field::Wallpaper policy, not here.
     wallpaper_client::queue_policy(port, 3, 0)?;
     Ok(())
 }
