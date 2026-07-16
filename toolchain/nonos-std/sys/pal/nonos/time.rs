@@ -57,6 +57,13 @@ impl SystemTime {
         SystemTime(Duration::from_millis(now_ms()))
     }
 
+    // Wall-clock stamp from a unix-millisecond count, the form the VFS store
+    // records file times in. UNIX_EPOCH is a zero Duration, so the offset is
+    // the millisecond count itself.
+    pub fn from_unix_millis(millis: u64) -> SystemTime {
+        SystemTime(Duration::from_millis(millis))
+    }
+
     pub fn sub_time(&self, other: &SystemTime) -> Result<Duration, Duration> {
         self.0.checked_sub(other.0).ok_or_else(|| other.0 - self.0)
     }
