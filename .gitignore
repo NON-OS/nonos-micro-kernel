@@ -87,3 +87,6 @@ nonos-bootloader/keys/
 
 # Local scratch
 .proof-harness/
+
+# stray dev symlink, never track (dir form above only ignores contents)
+nonos-bootloader/keys
