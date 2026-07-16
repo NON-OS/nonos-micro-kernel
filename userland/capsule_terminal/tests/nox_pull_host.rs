@@ -163,6 +163,14 @@ fn default_dest_file_and_dir() {
 }
 
 #[test]
+fn default_dest_host_root_uses_hostname() {
+    let d = ok_val(target::parse_target(b"example.com/"));
+    assert_eq!(target::default_dest(&d), b"example.com/");
+    let f = ok_val(target::parse_target(b"10.0.2.2:8000/"));
+    assert_eq!(target::default_dest(&f), b"10.0.2.2/");
+}
+
+#[test]
 fn args_flag_and_default_dest() {
     let a = ok_val(args::parse(&[&b"-n"[..], &b"10.0.2.2:8000/x.txt"[..]]));
     assert!(a.no_clobber);

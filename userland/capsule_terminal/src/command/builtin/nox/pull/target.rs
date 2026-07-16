@@ -48,6 +48,13 @@ pub fn parse_target(target: &[u8]) -> Result<Target, &'static str> {
 
 pub fn default_dest(t: &Target) -> Vec<u8> {
     let trimmed = if t.is_dir { &t.path[..t.path.len() - 1] } else { &t.path[..] };
+    if trimmed.is_empty() {
+        let mut d = t.hostname.clone();
+        if t.is_dir {
+            d.push(b'/');
+        }
+        return d;
+    }
     match trimmed.iter().rposition(|&c| c == b'/') {
         Some(i) => {
             let mut d = t.path[i + 1..].to_vec();
