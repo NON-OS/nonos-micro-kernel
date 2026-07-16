@@ -20,18 +20,31 @@ use crate::admin::AdminQueue;
 use crate::error::NvmeResult;
 use crate::regs::Regs;
 
+/// The namespace parameters an I/O queue is built around, bundled so bring_up
+/// stays within the argument limit.
+pub struct NamespaceGeometry {
+    pub nsid: u32,
+    pub capacity_sectors: u64,
+    pub lba_size: u32,
+}
+
 pub fn bring_up(
     device_id: u64,
     epoch: u64,
     regs: Regs,
     stride: u8,
     admin: &mut AdminQueue,
-    nsid: u32,
-    capacity_sectors: u64,
-    lba_size: u32,
+    geometry: NamespaceGeometry,
 ) -> NvmeResult<IoQueue> {
-    let io =
-        IoQueue::allocate(device_id, epoch, stride, IO_QID, nsid, capacity_sectors, lba_size)?;
+    let io = IoQueue::allocate(
+        device_id,
+        epoch,
+        stride,
+        IO_QID,
+        geometry.nsid,
+        geometry.capacity_sectors,
+        geometry.lba_size,
+    )?;
     admin.create_io_cq(regs, stride, IO_QID, IO_ENTRIES, io.cq.device_addr())?;
     admin.create_io_sq(regs, stride, IO_QID, IO_QID, IO_ENTRIES, io.sq.device_addr())?;
     Ok(io)

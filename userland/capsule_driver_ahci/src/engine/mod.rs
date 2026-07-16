@@ -22,6 +22,7 @@ mod flush;
 mod identify;
 mod init;
 mod issue;
+mod link;
 mod port;
 mod prdt;
 mod prdt_write;

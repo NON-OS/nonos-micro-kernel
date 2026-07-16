@@ -28,6 +28,10 @@ impl AdminQueue {
             self.sq.user_va() + (self.tail as u64) * (core::mem::size_of::<Submission>() as u64);
         unsafe { write_volatile(slot as *mut Submission, cmd) };
         self.tail = (self.tail + 1) % ADMIN_ENTRIES;
+        // The controller DMA-reads the submission entry only after it sees the
+        // new tail in the doorbell. Order the entry store ahead of the doorbell
+        // store so the device never fetches a stale or half-written command.
+        core::sync::atomic::fence(core::sync::atomic::Ordering::SeqCst);
         unsafe { regs.w32(sq0_tail(stride), self.tail as u32) };
     }
 }

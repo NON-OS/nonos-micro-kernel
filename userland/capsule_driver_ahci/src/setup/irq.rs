@@ -14,18 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_device_release, mk_irq_bind, mk_mmio_unmap, IrqBindOut, MmioMapOut};
+use nonos_libc::{mk_irq_bind, IrqBindOut};
 
 use crate::discover::Found;
-use crate::error::{AhciError, AhciResult};
 
-pub fn bind(dev: Found, claim_epoch: u64, mmio: &MmioMapOut) -> AhciResult<IrqBindOut> {
+/// Bind the controller interrupt. Best-effort: the driver polls each command
+/// completion and never waits on the interrupt, so a controller whose legacy
+/// line reads 0xFF on real UEFI, or whose bind otherwise fails, still works
+/// over polling. A zero grant means no interrupt was bound.
+pub fn bind(dev: Found, claim_epoch: u64) -> IrqBindOut {
     let mut out = IrqBindOut { grant_id: 0, vector: 0 };
-    let r = mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out);
-    if r < 0 {
-        let _ = mk_mmio_unmap(mmio.grant_id);
-        let _ = mk_device_release(dev.device_id);
-        return Err(AhciError::BrokerCallFailed(r));
+    if mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out) < 0 {
+        return IrqBindOut { grant_id: 0, vector: 0 };
     }
-    Ok(out)
+    out
 }

@@ -30,6 +30,10 @@ pub(super) fn issue_slot0(regs: Regs, base: u32) -> AhciResult<()> {
             }
             core::hint::spin_loop();
         }
+        // The HBA DMA-reads the command list and table only after it sees the
+        // command-issue bit set. Order those stores ahead of the CI write so it
+        // never fetches a stale command header, FIS, or PRDT.
+        core::sync::atomic::fence(core::sync::atomic::Ordering::SeqCst);
         regs.w32(base + PORT_CI, 1);
         spin = 0;
         loop {

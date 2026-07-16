@@ -16,8 +16,8 @@
 
 use super::cmd_header::CmdHeader;
 use crate::constants::regs::{
-    CMD_POD, CMD_SUD, PORT_CLB, PORT_CLBU, PORT_CMD, PORT_FB, PORT_FBU, PORT_IE, PORT_IE_DEFAULT,
-    PORT_IS, PORT_SCTL, PORT_SERR, SCTL_IPM_DISABLE,
+    CMD_FRE, CMD_POD, CMD_SUD, PORT_CLB, PORT_CLBU, PORT_CMD, PORT_FB, PORT_FBU, PORT_IE,
+    PORT_IE_DEFAULT, PORT_IS, PORT_SCTL, PORT_SERR, SCTL_IPM_DISABLE,
 };
 use crate::regs::Regs;
 
@@ -41,6 +41,9 @@ pub(super) fn program(regs: Regs, base: u32, clb_phys: u64, fb_phys: u64, ctba_p
         regs.w32(base + PORT_IE, PORT_IE_DEFAULT);
         regs.w32(base + PORT_SERR, regs.r32(base + PORT_SERR));
         regs.w32(base + PORT_SCTL, regs.r32(base + PORT_SCTL) | SCTL_IPM_DISABLE);
-        regs.w32(base + PORT_CMD, regs.r32(base + PORT_CMD) | CMD_POD | CMD_SUD);
+        // Enable FIS receive (FRE) as part of bring-up. FRE must be set before
+        // ST, which start() sets only after the link is up; setting them
+        // together is out of spec and some controllers reject it.
+        regs.w32(base + PORT_CMD, regs.r32(base + PORT_CMD) | CMD_FRE | CMD_POD | CMD_SUD);
     }
 }

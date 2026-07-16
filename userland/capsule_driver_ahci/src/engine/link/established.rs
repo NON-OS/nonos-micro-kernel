@@ -14,20 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::constants::ata::COMPLETION_POLL_LIMIT;
-use crate::constants::regs::{CMD_CR, CMD_ST, PORT_CMD};
-use crate::regs::Regs;
+use crate::constants::regs::{SSTS_DET_MASK, SSTS_DET_PRESENT};
 
-pub(super) fn start(regs: Regs, base: u32) {
-    unsafe {
-        let mut spin = 0u32;
-        while regs.r32(base + PORT_CMD) & CMD_CR != 0 && spin < COMPLETION_POLL_LIMIT {
-            spin += 1;
-            core::hint::spin_loop();
-        }
-        // FRE was already enabled during program(); only ST is set here, after
-        // the link is up, so command processing starts against a ready device.
-        let cmd = regs.r32(base + PORT_CMD);
-        regs.w32(base + PORT_CMD, cmd | CMD_ST);
-    }
+/// True once PxSSTS.DET reports a present device with PHY communication up (3h).
+/// Firmware may hand the port over before this is set, so init must wait for it
+/// rather than issue a command into a port whose link is not yet established.
+pub fn link_established(ssts: u32) -> bool {
+    ssts & SSTS_DET_MASK == SSTS_DET_PRESENT
 }

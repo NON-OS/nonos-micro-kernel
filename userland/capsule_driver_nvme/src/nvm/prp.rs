@@ -25,7 +25,7 @@ pub(super) fn build_prp(io: &IoQueue, bytes: u64) -> (u64, u64) {
     if bytes <= 2 * PAGE {
         return (data_phys, data_phys + PAGE);
     }
-    let npages = (bytes + PAGE - 1) / PAGE;
+    let npages = bytes.div_ceil(PAGE);
     let list_va = io.prp_list.user_va();
     for i in 0..(npages - 1) {
         let entry = data_phys + PAGE * (i + 1);

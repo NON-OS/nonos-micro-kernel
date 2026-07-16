@@ -14,12 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_libc::Deadline;
+
 use crate::constants::{CC_EN, CC_IOCQES_16, CC_IOSQES_64, CSTS_CFS, CSTS_RDY, REG_CC, REG_CSTS};
 use crate::controller::ControllerInfo;
 use crate::error::{NvmeError, NvmeResult};
 use crate::regs::Regs;
 
-const READY_POLL_LIMIT: u32 = 5_000_000;
+// Real controllers can take up to CAP.TO to become ready; this is a generous
+// wall-time bound, not a CPU-speed-dependent spin count.
+const READY_TIMEOUT_MS: u64 = 5_000;
 
 pub fn reset_to_disabled(regs: Regs) -> NvmeResult<()> {
     unsafe { regs.w32(REG_CC, 0) };
@@ -36,7 +40,8 @@ pub fn enable(regs: Regs, info: ControllerInfo) -> NvmeResult<()> {
 }
 
 fn wait_ready(regs: Regs, want_ready: bool) -> NvmeResult<()> {
-    for _ in 0..READY_POLL_LIMIT {
+    let deadline = Deadline::after_ms(READY_TIMEOUT_MS);
+    loop {
         let csts = unsafe { regs.r32(REG_CSTS) };
         if (csts & CSTS_CFS) != 0 {
             return Err(NvmeError::UnsupportedController);
@@ -44,7 +49,9 @@ fn wait_ready(regs: Regs, want_ready: bool) -> NvmeResult<()> {
         if ((csts & CSTS_RDY) != 0) == want_ready {
             return Ok(());
         }
+        if deadline.expired() {
+            return Err(NvmeError::ControllerTimeout);
+        }
         core::hint::spin_loop();
     }
-    Err(NvmeError::ControllerTimeout)
 }

@@ -16,23 +16,34 @@
 
 use core::ptr::read_volatile;
 
-use super::constants::{COMPLETION_POLL_LIMIT, IO_ENTRIES};
+use nonos_libc::Deadline;
+
+use super::constants::{COMPLETION_TIMEOUT_MS, IO_ENTRIES};
 use super::queue::IoQueue;
 use crate::admin::Completion;
 use crate::error::{NvmeError, NvmeResult};
 use crate::regs::Regs;
 
+// Check the wall-time deadline only every this many spins so the I/O completion
+// poll stays a tight loop and does not make a syscall per iteration.
+const DEADLINE_CHECK_SPINS: u32 = 1024;
+
 impl IoQueue {
     pub(super) fn wait(&mut self, regs: Regs, cid: u16) -> NvmeResult<()> {
-        for _ in 0..COMPLETION_POLL_LIMIT {
+        let deadline = Deadline::after_ms(COMPLETION_TIMEOUT_MS);
+        let mut spins = 0u32;
+        loop {
             let c = self.completion();
             if c.phase() == self.phase && c.cid == cid {
                 self.advance(regs);
                 return if c.successful() { Ok(()) } else { Err(NvmeError::AdminCommandFailed) };
             }
+            spins = spins.wrapping_add(1);
+            if spins.is_multiple_of(DEADLINE_CHECK_SPINS) && deadline.expired() {
+                return Err(NvmeError::ControllerTimeout);
+            }
             core::hint::spin_loop();
         }
-        Err(NvmeError::ControllerTimeout)
     }
 
     fn completion(&self) -> Completion {

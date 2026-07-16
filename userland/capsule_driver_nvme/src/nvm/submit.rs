@@ -27,6 +27,10 @@ impl IoQueue {
             self.sq.user_va() + (self.sq_tail as u64) * (core::mem::size_of::<Submission>() as u64);
         unsafe { write_volatile(slot as *mut Submission, cmd) };
         self.sq_tail = (self.sq_tail + 1) % IO_ENTRIES;
+        // The controller DMA-reads the submission entry only after it sees the
+        // new tail in the doorbell. Order the entry store ahead of the doorbell
+        // store so the device never fetches a stale or half-written command.
+        core::sync::atomic::fence(core::sync::atomic::Ordering::SeqCst);
         unsafe { regs.w32(self.sq_db, self.sq_tail as u32) };
     }
 }
