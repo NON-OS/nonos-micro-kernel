@@ -19,7 +19,8 @@ use alloc::string::{String, ToString};
 use crate::browser::js::token::Tok;
 
 const THREE: [&str; 2] = ["===", "!=="];
-const TWO: [&str; 12] = ["==", "!=", "<=", ">=", "&&", "||", "+=", "-=", "*=", "/=", "++", "--"];
+const TWO: [&str; 13] =
+    ["==", "!=", "<=", ">=", "&&", "||", "+=", "-=", "*=", "/=", "++", "--", "=>"];
 
 pub fn scan_op(cs: &[char], i: usize) -> (Tok, usize) {
     if i + 3 <= cs.len() {
