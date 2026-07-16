@@ -23,6 +23,7 @@ pub mod recurse;
 mod run;
 pub mod scan;
 pub mod store;
+pub mod target;
 mod walk;
 
 pub use run::run;

@@ -32,6 +32,9 @@ pub mod scan;
 #[path = "../src/command/builtin/nox/pull/ipv4.rs"]
 pub mod ipv4;
 
+#[path = "../src/command/builtin/nox/pull/target.rs"]
+pub mod target;
+
 #[path = "../src/command/builtin/nox/pull/args.rs"]
 pub mod args;
 
@@ -68,26 +71,80 @@ fn eq_ci_is_case_insensitive() {
 #[test]
 fn args_parse_file() {
     let a = ok_val(args::parse(&[&b"10.0.2.2:8000/report.pdf"[..], &b"/docs/report.pdf"[..]]));
-    assert_eq!(a.ip, [10, 0, 2, 2]);
-    assert_eq!(a.port, 8000);
-    assert_eq!(a.host, b"10.0.2.2:8000");
-    assert_eq!(a.path, b"/report.pdf");
+    assert_eq!(a.target.hostname, b"10.0.2.2");
+    assert_eq!(a.target.port, 8000);
+    assert_eq!(a.target.host, b"10.0.2.2:8000");
+    assert_eq!(a.target.path, b"/report.pdf");
     assert_eq!(a.dest, b"/docs/report.pdf");
-    assert!(!a.is_dir);
+    assert!(!a.target.is_dir);
+    assert!(!a.no_clobber);
 }
 
 #[test]
 fn args_parse_dir_trailing_slash() {
     let a = ok_val(args::parse(&[&b"10.0.2.2:8000/photos/"[..], &b"/docs/photos/"[..]]));
-    assert!(a.is_dir);
-    assert_eq!(a.path, b"/photos/");
+    assert!(a.target.is_dir);
+    assert_eq!(a.target.path, b"/photos/");
 }
 
 #[test]
 fn args_reject_bad() {
-    assert!(args::parse(&[&b"10.0.2.2:8000/x"[..]]).is_err());
-    assert!(args::parse(&[&b"999.0.0.1:80/x"[..], &b"/d"[..]]).is_err());
-    assert!(args::parse(&[&b"10.0.2.2/x"[..], &b"/d"[..]]).is_err());
+    assert!(args::parse(&[]).is_err());
+    assert!(args::parse(&[&b"a/x"[..], &b"/d"[..], &b"/e"[..]]).is_err());
+    assert!(args::parse(&[&b"hostonly"[..]]).is_err());
+    assert!(args::parse(&[&b"host:bad/x"[..]]).is_err());
+    assert!(args::parse(&[&b"/x"[..]]).is_err());
+}
+
+#[test]
+fn target_parse_ip_with_port() {
+    let t = ok_val(target::parse_target(b"10.0.2.2:8000/report.pdf"));
+    assert_eq!(t.hostname, b"10.0.2.2");
+    assert_eq!(t.host, b"10.0.2.2:8000");
+    assert_eq!(t.port, 8000);
+    assert_eq!(t.path, b"/report.pdf");
+    assert!(!t.is_dir);
+}
+
+#[test]
+fn target_parse_hostname_default_port() {
+    let t = ok_val(target::parse_target(b"example.com/a.txt"));
+    assert_eq!(t.hostname, b"example.com");
+    assert_eq!(t.host, b"example.com");
+    assert_eq!(t.port, 80);
+    assert_eq!(t.path, b"/a.txt");
+}
+
+#[test]
+fn target_parse_dir_trailing_slash() {
+    let t = ok_val(target::parse_target(b"host:9/photos/"));
+    assert!(t.is_dir);
+    assert_eq!(t.port, 9);
+}
+
+#[test]
+fn target_reject_missing_path_and_bad_port() {
+    assert!(target::parse_target(b"host:80").is_err());
+    assert!(target::parse_target(b"host:99999/x").is_err());
+    assert!(target::parse_target(b"host:/x").is_err());
+}
+
+#[test]
+fn default_dest_file_and_dir() {
+    let f = ok_val(target::parse_target(b"h/sub/report.pdf"));
+    assert_eq!(target::default_dest(&f), b"report.pdf");
+    let d = ok_val(target::parse_target(b"h/photos/"));
+    assert_eq!(target::default_dest(&d), b"photos/");
+}
+
+#[test]
+fn args_flag_and_default_dest() {
+    let a = ok_val(args::parse(&[&b"-n"[..], &b"10.0.2.2:8000/x.txt"[..]]));
+    assert!(a.no_clobber);
+    assert_eq!(a.dest, b"x.txt");
+    let b = ok_val(args::parse(&[&b"10.0.2.2:8000/x.txt"[..], &b"/docs/x"[..]]));
+    assert!(!b.no_clobber);
+    assert_eq!(b.dest, b"/docs/x");
 }
 
 #[test]

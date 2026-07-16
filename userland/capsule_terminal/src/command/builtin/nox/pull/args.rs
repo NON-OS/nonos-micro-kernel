@@ -16,50 +16,30 @@
 
 use alloc::vec::Vec;
 
-use super::ipv4::parse_ipv4;
+use super::target::{default_dest, parse_target, Target};
 
 pub struct PullArgs {
-    pub ip: [u8; 4],
-    pub port: u16,
-    pub host: Vec<u8>,
-    pub path: Vec<u8>,
+    pub target: Target,
     pub dest: Vec<u8>,
-    pub is_dir: bool,
+    pub no_clobber: bool,
 }
 
 pub fn parse(argv: &[&[u8]]) -> Result<PullArgs, &'static str> {
-    if argv.len() != 2 {
-        return Err("usage: nox pull <ip:port>/<path> <dest>");
-    }
-    let target = argv[0];
-    let slash = target.iter().position(|&c| c == b'/').ok_or("missing /<path>")?;
-    let (hostport, path) = target.split_at(slash);
-    let colon = hostport.iter().position(|&c| c == b':').ok_or("missing :port")?;
-    let ip = parse_ipv4(&hostport[..colon]).ok_or("bad ipv4")?;
-    let port = parse_port(&hostport[colon + 1..])?;
-    Ok(PullArgs {
-        ip,
-        port,
-        host: hostport.to_vec(),
-        path: path.to_vec(),
-        dest: argv[1].to_vec(),
-        is_dir: path.last() == Some(&b'/'),
-    })
-}
-
-fn parse_port(s: &[u8]) -> Result<u16, &'static str> {
-    if s.is_empty() {
-        return Err("empty port");
-    }
-    let mut n: u32 = 0;
-    for &c in s {
-        if !c.is_ascii_digit() {
-            return Err("bad port");
-        }
-        n = n * 10 + (c - b'0') as u32;
-        if n > 65535 {
-            return Err("port range");
+    let mut no_clobber = false;
+    let mut rest = argv;
+    if let Some((&first, tail)) = rest.split_first() {
+        if first == b"-n" {
+            no_clobber = true;
+            rest = tail;
         }
     }
-    Ok(n as u16)
+    if rest.is_empty() || rest.len() > 2 {
+        return Err("usage: nox pull [-n] <host[:port]>/<path> [dest]");
+    }
+    let target = parse_target(rest[0])?;
+    let dest = match rest.get(1) {
+        Some(d) => d.to_vec(),
+        None => default_dest(&target),
+    };
+    Ok(PullArgs { target, dest, no_clobber })
 }

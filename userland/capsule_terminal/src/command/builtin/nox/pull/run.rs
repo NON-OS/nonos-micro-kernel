@@ -28,20 +28,34 @@ pub fn run(state: &mut State, argv: &[&[u8]]) -> bool {
             return false;
         }
     };
+    let ip = match super::ipv4::parse_ipv4(&a.target.hostname) {
+        Some(ip) => ip,
+        None => {
+            state.scrollback.push_error(b"unresolved host");
+            return false;
+        }
+    };
     let pid = ensure_pid(state);
     let dest = resolve(state.cwd.as_bytes(), &a.dest);
-    if a.is_dir {
+    if a.target.is_dir {
         store::mkdir(pid, &dest);
         let mut count = 0u32;
-        walk(state, pid, &a, &a.path, &dest, 0, &mut count);
+        walk(state, pid, ip, &a, &a.target.path, &dest, 0, &mut count);
     } else {
-        one_file(state, pid, &a, &a.path, &dest);
+        one_file(state, pid, ip, &a, &a.target.path, &dest);
     }
     true
 }
 
-pub(super) fn one_file(state: &mut State, pid: u32, a: &args::PullArgs, path: &[u8], dest: &[u8]) -> bool {
-    match fetch::get(a.ip, a.port, &a.host, path) {
+pub(super) fn one_file(
+    state: &mut State,
+    pid: u32,
+    ip: [u8; 4],
+    a: &args::PullArgs,
+    path: &[u8],
+    dest: &[u8],
+) -> bool {
+    match fetch::get(ip, a.target.port, &a.target.host, path) {
         Ok(body) => match store::write(pid, dest, &body) {
             Ok(()) => {
                 state.scrollback.push_line(dest);

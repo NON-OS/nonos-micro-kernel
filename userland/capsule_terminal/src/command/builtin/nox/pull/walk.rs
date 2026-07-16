@@ -27,6 +27,7 @@ const MAX_FILES: u32 = 512;
 pub(super) fn walk(
     state: &mut State,
     pid: u32,
+    ip: [u8; 4],
     a: &PullArgs,
     path: &[u8],
     dest: &[u8],
@@ -36,7 +37,7 @@ pub(super) fn walk(
     if depth >= MAX_DEPTH {
         return;
     }
-    let index = match fetch::get(a.ip, a.port, &a.host, path) {
+    let index = match fetch::get(ip, a.target.port, &a.target.host, path) {
         Ok(b) => b,
         Err(e) => {
             state.scrollback.push_error(e.as_bytes());
@@ -52,10 +53,10 @@ pub(super) fn walk(
         let child_dest = join(dest, &entry.name);
         if entry.is_dir {
             store::mkdir(pid, &child_dest);
-            walk(state, pid, a, &child_url, &child_dest, depth + 1, count);
+            walk(state, pid, ip, a, &child_url, &child_dest, depth + 1, count);
         } else {
             *count += 1;
-            one_file(state, pid, a, &child_url, &child_dest);
+            one_file(state, pid, ip, a, &child_url, &child_dest);
         }
     }
 }
