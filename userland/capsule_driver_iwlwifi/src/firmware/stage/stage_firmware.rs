@@ -17,9 +17,7 @@
 use super::count_section::count_section;
 use super::stage_section::stage_section;
 use super::state::FirmwareStageState;
-use crate::firmware::tlv::{
-    le32, parse_header, TLV_HEADER_LEN, TLV_PAGING, TLV_SEC_INIT, TLV_SEC_RT,
-};
+use crate::firmware::tlv::{le32, parse_header, TLV_PAGING, TLV_SEC_INIT, TLV_SEC_RT};
 
 pub fn stage_firmware(data: &[u8], dma_user_va: u64, dma_len: u64) -> Option<FirmwareStageState> {
     let h = parse_header(data)?;
@@ -30,7 +28,7 @@ pub fn stage_firmware(data: &[u8], dma_user_va: u64, dma_len: u64) -> Option<Fir
         build: h.build,
         ..FirmwareStageState::empty()
     };
-    let mut off = TLV_HEADER_LEN;
+    let mut off = 20usize;
     let mut dst = 0usize;
     while off + 8 <= data.len() {
         let ty = le32(data, off)?;
