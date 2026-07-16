@@ -28,10 +28,10 @@ pub fn run(state: &mut State, argv: &[&[u8]]) -> bool {
             return false;
         }
     };
-    let ip = match super::ipv4::parse_ipv4(&a.target.hostname) {
-        Some(ip) => ip,
-        None => {
-            state.scrollback.push_error(b"unresolved host");
+    let ip = match super::resolve::resolve_host(&a.target.hostname) {
+        Ok(ip) => ip,
+        Err(e) => {
+            state.scrollback.push_error(e.as_bytes());
             return false;
         }
     };

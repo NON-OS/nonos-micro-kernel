@@ -20,6 +20,7 @@ pub mod fetch;
 pub mod http;
 pub mod ipv4;
 pub mod recurse;
+pub mod resolve;
 mod run;
 pub mod scan;
 pub mod store;
