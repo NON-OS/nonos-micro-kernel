@@ -22,17 +22,24 @@ use crate::settings::theme::{TAB_ACTIVE_BG, TAB_ACTIVE_FG, TAB_BG, TAB_FG};
 
 use super::layout::{HEADER_H, TAB_H};
 
-const TABS: [(Category, &[u8]); 3] = [
-    (Category::User, b"Display"),
-    (Category::Identity, b"Network"),
-    (Category::Kernel, b"Security"),
+/// The three policy categories and the Wi-Fi tab, in tab order.
+const TABS: [(Option<Category>, &[u8]); 4] = [
+    (Some(Category::User), b"Display"),
+    (Some(Category::Identity), b"Network"),
+    (Some(Category::Kernel), b"Security"),
+    (None, b"Wi-Fi"),
 ];
-const TAB_WIDTH: u32 = WIDTH / 3;
+const TAB_WIDTH: u32 = WIDTH / 4;
 
-pub fn paint_tabs(fb: &mut PaintBuffer, active: Category) {
+/// Paint the tab bar. A category tab is active when it matches `active` and the
+/// Wi-Fi panel is not showing; the Wi-Fi tab is active when `wifi_active`.
+pub fn paint_tabs(fb: &mut PaintBuffer, active: Category, wifi_active: bool) {
     for (i, (tab, label)) in TABS.iter().enumerate() {
         let x = i as u32 * TAB_WIDTH;
-        let is_active = *tab == active;
+        let is_active = match tab {
+            Some(cat) => !wifi_active && *cat == active,
+            None => wifi_active,
+        };
         let bg = if is_active { TAB_ACTIVE_BG } else { TAB_BG };
         let fg = if is_active { TAB_ACTIVE_FG } else { TAB_FG };
         fb.fill_rect(x, HEADER_H, TAB_WIDTH, TAB_H, bg);

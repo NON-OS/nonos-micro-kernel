@@ -17,12 +17,34 @@
 use nonos_policy_proto::Category;
 
 use crate::settings::schema::ALL_FIELDS;
+use crate::wifi::{ConnectResult, DriverStage, ScanNetwork, ScanOutcome, ScanStats, WifiInterface};
 
 use super::cache::FieldValue;
 use super::edit_buffer::EditBuffer;
 use super::status::Status;
 
 pub const FIELD_SLOTS: usize = ALL_FIELDS.len();
+/// The most WiFi adapters the panel lists at once.
+pub const WIFI_MAX: usize = 8;
+/// The most networks the panel shows from one scan.
+pub const WIFI_NET_MAX: usize = 16;
+
+/// Where the Wi-Fi panel stands with the driver: it has not scanned yet, the last
+/// scan resolved to one of the driver outcomes.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum WifiScan {
+    Idle,
+    Done(ScanOutcome),
+}
+
+/// Where a connection attempt stands. `Failed` carries the driver's status code
+/// so the panel can say why.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum WifiConnect {
+    Idle,
+    Connected,
+    Failed(ConnectResult),
+}
 
 pub struct State {
     pub policy_port: u32,
@@ -34,4 +56,26 @@ pub struct State {
     pub editing: bool,
     pub edit: EditBuffer,
     pub status: Status,
+    /// The Wi-Fi tab is the fourth top-level section. It sits beside the policy
+    /// categories rather than among them, so it carries its own selection state.
+    pub wifi_active: bool,
+    pub wifi_adapters: [WifiInterface; WIFI_MAX],
+    pub wifi_adapter_count: usize,
+    pub wifi_cursor: usize,
+    /// The networks the last scan found, and how many are valid.
+    pub wifi_networks: [ScanNetwork; WIFI_NET_MAX],
+    pub wifi_network_count: usize,
+    /// Whether a scan has run and, if so, how it resolved.
+    pub wifi_scan: WifiScan,
+    /// The driver's radio bring-up stage from the last query, if it answered.
+    pub wifi_stage: Option<DriverStage>,
+    /// The driver's receive-pipeline counters from the last scan, so the panel can
+    /// show where reception stops when no networks come back.
+    pub wifi_stats: ScanStats,
+    /// Whether the passphrase editor is open for the selected secured network.
+    pub wifi_pass_active: bool,
+    /// The passphrase being typed for a secured network.
+    pub wifi_pass: EditBuffer,
+    /// The outcome of the last connection attempt.
+    pub wifi_connect: WifiConnect,
 }

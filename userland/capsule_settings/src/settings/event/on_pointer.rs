@@ -23,29 +23,32 @@ use crate::settings::paint::{
     visible_rows::visible_rows,
 };
 use crate::settings::state::{
-    focused_count::focused_count, set_category::set_category, track_scroll::track_scroll, State,
+    focused_count::focused_count, refresh_wifi::enter_wifi, set_category::set_category,
+    track_scroll::track_scroll, State,
 };
 
 use super::adjust::adjust;
 use super::toggle_or_inc::toggle_or_inc;
 
-const TAB_WIDTH: u32 = WIDTH / 3;
+const TAB_WIDTH: u32 = WIDTH / 4;
 
 pub(super) fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if x < 0 || y < 0 {
         return EventOutcome::Idle;
     }
     let (x, y) = (x as u32, y as u32);
-    if y >= HEADER_H && y < HEADER_H + TAB_H {
-        set_category(
-            state,
-            match core::cmp::min(x / TAB_WIDTH, 2) {
-                0 => Category::User,
-                1 => Category::Identity,
-                _ => Category::Kernel,
-            },
-        );
+    if (HEADER_H..HEADER_H + TAB_H).contains(&y) {
+        match core::cmp::min(x / TAB_WIDTH, 3) {
+            0 => set_category(state, Category::User),
+            1 => set_category(state, Category::Identity),
+            2 => set_category(state, Category::Kernel),
+            _ => enter_wifi(state),
+        }
         return EventOutcome::Repaint;
+    }
+    // The Wi-Fi panel is keyboard-driven; body clicks there do nothing.
+    if state.wifi_active {
+        return EventOutcome::Idle;
     }
     if y < BODY_TOP || y >= HEIGHT.saturating_sub(STATUS_H) {
         return EventOutcome::Idle;

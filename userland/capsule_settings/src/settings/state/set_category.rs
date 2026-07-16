@@ -21,6 +21,7 @@ use super::track_scroll::track_scroll;
 
 pub fn set_category(state: &mut State, category: Category) {
     state.category = category;
+    state.wifi_active = false;
     state.editing = false;
     track_scroll(state);
 }

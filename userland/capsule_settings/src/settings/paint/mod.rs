@@ -32,6 +32,7 @@ pub mod paint_value_enum;
 pub mod paint_value_i8;
 pub mod paint_value_str;
 pub mod paint_value_u8;
+pub mod paint_wifi;
 pub mod scroll_indicator;
 pub mod visible_rows;
 

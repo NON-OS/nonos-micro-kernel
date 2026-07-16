@@ -14,27 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
+//! The WiFi settings panel. The active tab lists the wireless adapters the
+//! broker discovered (`adapters`, `interface`) and the networks a scan found
+//! (`network`, `wire`, `scan_client`). The scan client sends the driver service
+//! its scan request and parses the reply; the panel shows the networks or a
+//! status line. The connect state machine stays proven-but-deferred until
+//! joining is wired.
 
-use crate::settings::state::State;
+mod adapters;
+mod interface;
+mod network;
+mod scan_client;
+mod wire;
 
-use super::on_event_browsing::on_event_browsing;
-use super::on_event_editing::on_event_editing;
-use super::on_event_wifi::on_event_wifi;
-use super::on_pointer::on_pointer;
-
-pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
-    if event.kind == InputKind::ButtonDown {
-        return on_pointer(state, event.x, event.y);
-    }
-    if !event.is_key_down() {
-        return EventOutcome::Idle;
-    }
-    if state.editing {
-        return on_event_editing(state, event.code);
-    }
-    if state.wifi_active {
-        return on_event_wifi(state, event.code);
-    }
-    on_event_browsing(state, event.code)
-}
+pub use adapters::scan_adapters;
+pub use interface::WifiInterface;
+pub use network::ScanNetwork;
+pub use scan_client::{
+    connect_network, driver_stage, scan_networks, ConnectResult, DriverStage, ScanOutcome,
+    ScanStats,
+};
