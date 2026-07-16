@@ -14,11 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod heartbeat;
-pub mod hooks;
-pub mod state;
-pub mod tick;
-
-pub use hooks::{clear_tick_hook, init, set_tick_hook, TickHook};
-pub use state::{get_ticks as tick_count, reset_ticks, TICK_COUNT};
-pub use tick::{on_timer_interrupt, tick};
+/// Pick the first available (nonzero) clock source in priority order,
+/// evaluating the lower-priority sources lazily: the value the bootloader
+/// handoff supplied, then a previously calibrated value, then a freshly
+/// computed one. Zero means "not available", so the fresh source (a fresh
+/// TSC calibration or RTC read) runs only when the earlier ones are absent.
+pub(super) fn pick_nonzero(
+    handoff: u64,
+    calibrated: impl FnOnce() -> u64,
+    fresh: impl FnOnce() -> u64,
+) -> u64 {
+    if handoff != 0 {
+        return handoff;
+    }
+    let c = calibrated();
+    if c != 0 {
+        c
+    } else {
+        fresh()
+    }
+}

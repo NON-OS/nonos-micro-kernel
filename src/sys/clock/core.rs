@@ -22,9 +22,30 @@ pub static BOOT_TSC: AtomicU64 = AtomicU64::new(0);
 pub static NTP_OFFSET_MS: AtomicI64 = AtomicI64::new(0);
 
 pub fn init(tsc_hz: u64, unix_epoch_ms: u64) {
-    TSC_HZ.store(tsc_hz, Ordering::Relaxed);
-    BOOT_UNIX_MS.store(unix_epoch_ms, Ordering::Relaxed);
+    TSC_HZ.store(resolve_tsc_hz(tsc_hz), Ordering::Relaxed);
+    BOOT_UNIX_MS.store(resolve_epoch_ms(unix_epoch_ms), Ordering::Relaxed);
     BOOT_TSC.store(rdtsc(), Ordering::Relaxed);
+}
+
+// When the handoff carries no TSC frequency, fall back to the timer subsystem's
+// calibrated value, then to a fresh CPUID/PIT calibration, so the wall clock
+// does not silently degrade to uptime on firmware that omits it.
+fn resolve_tsc_hz(handoff_hz: u64) -> u64 {
+    super::resolve::pick_nonzero(
+        handoff_hz,
+        crate::sys::timer::tsc::tsc_frequency,
+        crate::sys::timer::tsc::calibrate_tsc_hz,
+    )
+}
+
+// Likewise for the boot epoch: the handoff value, then the timer subsystem's
+// RTC read, then a direct RTC read.
+fn resolve_epoch_ms(handoff_ms: u64) -> u64 {
+    super::resolve::pick_nonzero(
+        handoff_ms,
+        || crate::sys::timer::tsc::BOOT_EPOCH_MS.load(Ordering::Relaxed),
+        || crate::arch::x86_64::time::rtc::read_unix_timestamp().saturating_mul(1000),
+    )
 }
 
 #[inline]

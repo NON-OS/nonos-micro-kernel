@@ -66,7 +66,7 @@ pub fn init_default() {
     init(calibrated, real_unix_ms);
 }
 
-fn calibrate_tsc_hz() -> u64 {
+pub fn calibrate_tsc_hz() -> u64 {
     use crate::arch::x86_64::time::tsc as arch_tsc;
     if let Some(freq) = arch_tsc::get_cpuid_frequency() {
         return freq;

@@ -191,10 +191,25 @@ pub(super) extern "C" fn timer_trap_handler(ctx: *mut UserContext) {
 
     let _ctx_guard = set_interrupt_context();
     stats::increment_timer();
-    timer::on_timer_interrupt();
-    crate::process::exit::drain_pending_teardowns();
-    crate::kernel_core::process_spawn::drain_pending_kernel_stacks();
+    // EOI before the tick work: on_timer_interrupt can preempt-switch away
+    // inside this interrupt, and a deferred EOI leaves the timer vector
+    // in-service at the LAPIC — no further ticks, sleep wakeups, or
+    // preemption until the preempted context happens to resume. Sending it
+    // here is safe: IF stays clear until the iretq, so the handler cannot
+    // re-enter; a next tick pends and fires after the return.
     send_eoi();
+    timer::on_timer_interrupt();
+    // Never reclaim while the interrupted context is a dying one: after
+    // exit_and_yield tears the current process down, CURRENT_PID is cleared
+    // and the CPU keeps looping on the dead pid's kernel stack under its
+    // CR3 until something runnable appears. Draining here in that window
+    // would free the very stack this trap frame sits on and the live page
+    // tables. The queues are retried on every tick, so reclamation happens
+    // as soon as a real context is interrupted instead.
+    if crate::process::current_pid().is_some() {
+        crate::process::exit::drain_pending_teardowns();
+        crate::kernel_core::process_spawn::drain_pending_kernel_stacks();
+    }
 }
 
 fn send_eoi() {
