@@ -21,6 +21,38 @@ use core::sync::atomic::Ordering;
 
 const LINE_H: u32 = 18;
 const MSG_COLOR: u32 = 0x00C8D0D8;
+const CAP_COLOR: u32 = 0x0098E0B0;
+
+/// Render one raw capsule line (its bytes verbatim, control bytes skipped) on
+/// the on-screen log. A capsule's `mk_debug` output is already on serial; this
+/// mirrors it to the framebuffer so a driver's bring-up markers are legible on a
+/// machine with no serial port. No tag, so the capsule's own prefix is kept.
+pub(super) fn write_raw(msg: &[u8]) {
+    if !DISPLAY_ENABLED.load(Ordering::Acquire) {
+        return;
+    }
+    let Some(fb) = framebuffer_state() else {
+        return;
+    };
+    let mut y = LOG_Y.load(Ordering::Relaxed);
+    if y + LINE_H + 4 >= fb.height {
+        let top = MIN_LOG_Y.load(Ordering::Relaxed);
+        fill_rect(fb, 0, top, fb.width, fb.height - top, 0x0000_0000);
+        y = top;
+    }
+    let mut x = 24u32;
+    for &b in msg {
+        if b == b'\n' || b == b'\r' {
+            continue;
+        }
+        if x + 8 >= fb.width {
+            break;
+        }
+        draw_char(fb, x, y, b, CAP_COLOR);
+        x += 8;
+    }
+    LOG_Y.store(y + LINE_H, Ordering::Relaxed);
+}
 
 pub(super) fn write_line(tag: &str, msg: &str, color: u32) {
     if !DISPLAY_ENABLED.load(Ordering::Acquire) {

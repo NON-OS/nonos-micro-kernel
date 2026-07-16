@@ -48,6 +48,10 @@ pub fn init_core_systems() {
     init_acpi_tables();
     apic::init();
     serial::println(b"[NONOS] APIC initialized");
+    // Ensure a halted core keeps receiving LAPIC timer ticks (C1E on
+    // laptops otherwise gates the timer clock and freezes the scheduler
+    // tick the moment the CPU idles) before the timer is armed.
+    crate::arch::x86_64::interrupt::apic::idle_timer::init();
     if crate::arch::x86_64::interrupt::apic::preemption::install_on_bsp().is_err() {
         serial::println(b"[FATAL] preemption timer install failed");
         crate::arch::halt_loop();
@@ -94,6 +98,8 @@ fn seed_hardware_broker() {
     };
     crate::hardware::broker::init_from_pci(&devices);
     let _ = crate::hardware::broker::register_legacy_platform_devices();
+    crate::hardware::broker::register_acpi_i2c();
+    crate::hardware::broker::register_acpi_gpio();
     serial::println(b"[NONOS] hardware broker seeded");
 }
 

@@ -48,6 +48,7 @@ pub(super) fn init_framebuffer(handoff: &BootHandoffV1) {
     if fb.width == 0 || fb.height == 0 || fb.stride == 0 || fb.ptr == 0 {
         return;
     }
+    log_handoff_fb(fb.ptr, fb.stride, fb.pixel_format);
     let row_bytes = (fb.width as u64).saturating_mul(core::mem::size_of::<u32>() as u64);
     if (fb.stride as u64) < row_bytes {
         return;
@@ -73,4 +74,55 @@ pub(super) fn init_framebuffer(handoff: &BootHandoffV1) {
         offset,
         bgr,
     });
+    paint_mapped_marker(base_va, offset, fb.stride, fb.width);
+}
+
+// Third breadcrumb segment (green), painted through the kernel's own
+// mapping: proves the paging switch survived and the framebuffer mapped.
+// The first two segments are painted by boot::entry_marker over the
+// bootloader's tables before the switch.
+fn paint_mapped_marker(base_va: VirtAddr, offset: usize, stride: u32, width: u32) {
+    const SEG_WIDTH: u32 = 180;
+    const SEG_GAP: u32 = 20;
+    const SEG_HEIGHT: u32 = 10;
+    let x0 = 2 * (SEG_WIDTH + SEG_GAP);
+    if x0 + SEG_WIDTH > width {
+        return;
+    }
+    let row_px = (stride / 4) as u64;
+    let base = (base_va.as_u64() + offset as u64) as *mut u32;
+    for y in 0..SEG_HEIGHT as u64 {
+        for x in 0..SEG_WIDTH as u64 {
+            let off = y * row_px + x0 as u64 + x;
+            // SAFETY: bounds checked against the handoff geometry; the
+            // mapping was just created above with room for the full frame.
+            unsafe { core::ptr::write_volatile(base.add(off as usize), 0xFF00_D060) };
+        }
+    }
+}
+
+fn log_handoff_fb(ptr: u64, stride: u32, format: u32) {
+    let mut buf = [0u8; 16];
+    crate::sys::serial::print(b"[FB] handoff ptr=0x");
+    crate::sys::serial::print(hex_u64(ptr, &mut buf));
+    crate::sys::serial::print(b" stride=0x");
+    let mut b2 = [0u8; 16];
+    crate::sys::serial::print(hex_u64(stride as u64, &mut b2));
+    crate::sys::serial::print(b" fmt=0x");
+    let mut b3 = [0u8; 16];
+    crate::sys::serial::println(hex_u64(format as u64, &mut b3));
+}
+
+fn hex_u64(mut v: u64, out: &mut [u8; 16]) -> &[u8] {
+    let mut k = out.len();
+    loop {
+        k -= 1;
+        let d = (v & 0xF) as u8;
+        out[k] = if d < 10 { b'0' + d } else { b'a' + d - 10 };
+        v >>= 4;
+        if v == 0 || k == 0 {
+            break;
+        }
+    }
+    &out[k..]
 }

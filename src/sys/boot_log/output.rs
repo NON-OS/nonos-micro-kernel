@@ -14,8 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::render::write_line;
+use super::render::{write_line, write_raw};
 use crate::sys::serial;
+
+/// Mirror a capsule's own diagnostic line onto the on-screen log. The caller
+/// (the `MkDebug` syscall) has already written it to serial; this only adds the
+/// framebuffer copy, so a driver reporting its bring-up on a serial-less machine
+/// is finally legible.
+pub fn capsule_screen(msg: &[u8]) {
+    write_raw(msg);
+}
 
 const TAG_OK: u32 = 0x0000FF00;
 const TAG_WARN: u32 = 0x0000AAFF;

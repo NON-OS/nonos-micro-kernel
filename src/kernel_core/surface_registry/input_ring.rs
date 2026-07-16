@@ -52,7 +52,33 @@ static FIRST_INPUT_POST: AtomicBool = AtomicBool::new(false);
 #[cfg(feature = "input-probe-inject")]
 static INPUT_CONSUMER_READY: AtomicBool = AtomicBool::new(false);
 
+/// Diagnostic sentinel events. A driver posts one of these to report a milestone
+/// the on-screen bars display; they never enter the ring or route anywhere.
+///   slot 0: a ps2 port read succeeded (the PIO grant is live)
+///   slot 1: reached serving loop      slot 2: i2c-HID touchpad found
+///   slot 3: i8042 produced a byte     slot 4: bound i2c controller (index+1)
+///   slot 5: the i2c bind was probe-confirmed by the touchpad's ACK
+///   slot 6: raw non-empty touchpad report read (pre-decode, grows per report)
+///   slot 7: the touchpad acknowledged RESET (wake handshake confirmed)
+pub const KIND_DIAG_BASE: u16 = 0xFE00;
+const DIAG_SLOTS: usize = 8;
+#[allow(clippy::declare_interior_mutable_const)]
+const DIAG_INIT: AtomicU64 = AtomicU64::new(0);
+static DIAG: [AtomicU64; DIAG_SLOTS] = [DIAG_INIT; DIAG_SLOTS];
+
+/// Value of a diagnostic counter slot (0 if out of range).
+pub fn input_diag(slot: usize) -> u64 {
+    DIAG.get(slot).map_or(0, |c| c.load(Ordering::Acquire))
+}
+
 pub fn post_input(ev: InputEvent) -> Result<(), RegistryError> {
+    if ev.kind >= KIND_DIAG_BASE {
+        let slot = (ev.kind - KIND_DIAG_BASE) as usize;
+        if let Some(c) = DIAG.get(slot) {
+            c.fetch_add(1, Ordering::Relaxed);
+        }
+        return Ok(());
+    }
     {
         let mut ring = RING.lock();
         let next = (ring.head + 1) % INPUT_RING_CAP;
@@ -75,6 +101,15 @@ pub fn post_input(ev: InputEvent) -> Result<(), RegistryError> {
 
 pub fn input_seq() -> u64 {
     SEQ.load(Ordering::Acquire)
+}
+
+static DRAINED: AtomicU64 = AtomicU64::new(0);
+
+/// Total input events the router has drained. Paired with `input_seq` (events
+/// posted), this locates a stall: posts climbing with drains flat means the
+/// router is not consuming; both flat means no driver is producing.
+pub fn input_drains() -> u64 {
+    DRAINED.load(Ordering::Acquire)
 }
 
 pub fn arm_input_waiter(pid: u32) {
@@ -103,5 +138,6 @@ pub fn drain_input(out: &mut [InputEvent]) -> usize {
         ring.tail = (ring.tail + 1) % INPUT_RING_CAP;
         n += 1;
     }
+    DRAINED.fetch_add(n as u64, Ordering::Relaxed);
     n
 }

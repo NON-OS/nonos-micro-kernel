@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod enable_nxe;
 mod load_cr3;
 
+pub use enable_nxe::enable_nxe;
 pub use load_cr3::load_cr3;

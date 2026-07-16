@@ -55,6 +55,12 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     // memory/framebuffer step failed to map on real GOP framebuffers
     // because the page-table machinery was not ready yet.
     init_arch_framebuffer(handoff);
+    // Cache the real BSP LAPIC ID into the arch APIC module before any IOAPIC
+    // redirection entry is programmed, so device interrupts route to the CPU
+    // that actually exists rather than the default of APIC 0 (correct only on
+    // QEMU). This only writes the ID cache; it does not touch the arch APIC
+    // mode/base/init state, so the timer and IPI paths are unaffected.
+    crate::arch::x86_64::interrupt::apic::cache_bsp_apic_id();
     match crate::arch::init_broker_irq_routing() {
         Ok(_) => boot_log::ok("NONOS", "broker IO-APIC routing ready"),
         Err(_) => crate::sys::serial::println(b"[NONOS] broker IO-APIC init failed"),
@@ -109,8 +115,94 @@ fn init_arch_firmware(handoff: &KernelHandoff) {
     }
 }
 
+// Render what the ACPI DSDT/SSDT enumeration found for the touchpad onto the
+// on-screen boot log, as the last kernel line before userspace so it stays
+// visible in a photo. On real hardware this prints the touchpad's true I2C
+// slave address, interrupt pin and HID descriptor register: the ground truth
+// the blind-probe path could only guess at.
+fn log_acpi_touchpad_onscreen() {
+    let devices = crate::arch::x86_64::acpi::aml::enumerate_i2c_hid();
+    let Some(d) = devices.first() else {
+        boot_log::stage("ACPI-HID", "no i2c-hid device in ACPI DSDT/SSDT");
+        return;
+    };
+    let mut buf = [0u8; 96];
+    let mut n = 0;
+    n += put(&mut buf[n..], b"addr=0x");
+    n += put_hex(&mut buf[n..], d.slave_addr as u64);
+    n += put(&mut buf[n..], b" gpio=");
+    n += put_dec(&mut buf[n..], d.gpio_pin as u64);
+    n += put(&mut buf[n..], b" reg=0x");
+    n += put_hex(&mut buf[n..], d.hid_desc_reg as u64);
+    n += put(&mut buf[n..], b" hid=");
+    for &c in d.hid.iter() {
+        if c == 0 {
+            break;
+        }
+        if n < buf.len() {
+            buf[n] = c;
+            n += 1;
+        }
+    }
+    n += put(&mut buf[n..], b" ctrl=");
+    for &c in d.controller.iter() {
+        if c == 0 {
+            break;
+        }
+        if n < buf.len() {
+            buf[n] = c;
+            n += 1;
+        }
+    }
+    let msg = core::str::from_utf8(&buf[..n]).unwrap_or("acpi-hid: format error");
+    boot_log::stage("ACPI-HID", msg);
+}
+
+fn put(out: &mut [u8], s: &[u8]) -> usize {
+    let k = s.len().min(out.len());
+    out[..k].copy_from_slice(&s[..k]);
+    k
+}
+
+fn put_dec(out: &mut [u8], mut v: u64) -> usize {
+    let mut tmp = [0u8; 20];
+    let mut k = 0;
+    loop {
+        tmp[k] = b'0' + (v % 10) as u8;
+        v /= 10;
+        k += 1;
+        if v == 0 {
+            break;
+        }
+    }
+    for i in 0..k.min(out.len()) {
+        out[i] = tmp[k - 1 - i];
+    }
+    k.min(out.len())
+}
+
+fn put_hex(out: &mut [u8], mut v: u64) -> usize {
+    let mut tmp = [0u8; 16];
+    let mut k = 0;
+    loop {
+        let d = (v & 0xF) as u8;
+        tmp[k] = if d < 10 { b'0' + d } else { b'a' + d - 10 };
+        v >>= 4;
+        k += 1;
+        if v == 0 {
+            break;
+        }
+    }
+    for i in 0..k.min(out.len()) {
+        out[i] = tmp[k - 1 - i];
+    }
+    k.min(out.len())
+}
+
 pub fn microkernel_main() -> ! {
     crate::sys::bench::mark(b"microkernel_main_start");
+    log_acpi_touchpad_onscreen();
+    crate::hardware::broker::device_census();
     boot_log::ok("NONOS", "boot log held; starting userspace");
     let start = clock::uptime_ms();
     let mut guard: u64 = 0;

@@ -53,7 +53,10 @@ pub fn check_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMod
             if mode.requires_signature() {
                 log_error("rollback", "kernel version rollback detected");
                 if gop {
-                    show_error_screen(b"Rollback attack detected");
+                    // The reason and numbers make a photo of this screen a
+                    // full diagnosis on machines with no serial console.
+                    let msg = format!("Rollback check failed: {} index {}", e.as_str(), rollback_index);
+                    show_error_screen(msg.as_bytes());
                 }
                 fatal_reset(st, e.as_str());
             }
@@ -65,7 +68,9 @@ pub fn check_rollback(st: &mut SystemTable<Boot>, data: &[u8], mode: SecurityMod
         if rollback_index < floor && mode.requires_signature() {
             log_error("rollback", "rollback index below TPM monotonic floor");
             if gop {
-                show_error_screen(b"Rollback attack detected");
+                let msg =
+                    format!("Rollback: tpm floor {} above image index {}", floor, rollback_index);
+                show_error_screen(msg.as_bytes());
             }
             fatal_reset(st, "rollback index below TPM floor");
         }

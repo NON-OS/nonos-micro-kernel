@@ -51,6 +51,13 @@ fn panic(info: &PanicInfo) -> ! {
     unsafe {
         vga::show_panic("KERNEL PANIC - See serial for details");
     }
+    // The VGA banner is invisible on UEFI machines; paint the GOP
+    // framebuffer too so real hardware shows where the kernel died.
+    if let Some(loc) = info.location() {
+        crate::sys::boot_log::panic_screen(loc.file(), loc.line());
+    } else {
+        crate::sys::boot_log::panic_screen("unknown location", 0);
+    }
 
     crate::smp::send_panic_ipi();
     crate::arch::halt_loop()

@@ -51,8 +51,8 @@ fn current_framebuffer_info(gop: &mut GraphicsOutput) -> Option<FramebufferInfo>
     let mode_info = gop.current_mode_info();
     let pixel_format = mode_usable(&mode_info)?;
     let (width, height) = mode_info.resolution();
-    let stride_pixels = mode_info.stride();
-    let stride = stride_pixels.checked_mul(core::mem::size_of::<u32>())?;
+    let stride =
+        super::framebuffer::stride_to_bytes(mode_info.stride() as u32, width as u32)? as usize;
     let mut fb = gop.frame_buffer();
     let fb_addr = fb.as_mut_ptr() as u64;
     if fb_addr == 0 {
