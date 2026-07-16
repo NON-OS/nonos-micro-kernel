@@ -28,13 +28,10 @@ use crate::eapol::parse::{
 };
 use crate::wpa::ptk::ptk;
 
-// A WPA2-PSK-CCMP RSN element, sent as message 2's key data so the AP sees the
-// pairwise/group/AKM selection the STA committed to. Group CCMP, pairwise
-// CCMP, AKM PSK.
-const RSN_IE: [u8; 22] = [
-    0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00,
-    0x00, 0x0f, 0xac, 0x02, 0x00, 0x00,
-];
+// Message 2 repeats the RSN element the association request advertised, so the AP
+// sees the same pairwise/group/AKM selection the STA committed to. It is the one
+// shared constant, so the request and the handshake cannot disagree.
+use crate::wpa::RSN_IE;
 
 /// What `step` produced: a frame to transmit, and whether the handshake is now
 /// complete. A frame is returned for messages 2 and 4; `None` means the input
@@ -113,7 +110,7 @@ impl Supplicant {
     // KDE (dd <len> 00 0f ac 01 <keyid> <gtk>). Unwrap it, find the KDE, and
     // store the group key.
     fn install_group_key(&mut self, wrapped: &[u8]) -> bool {
-        if wrapped.len() < 16 || wrapped.len() % 8 != 0 {
+        if wrapped.len() < 16 || !wrapped.len().is_multiple_of(8) {
             return false;
         }
         let mut plain = [0u8; 128];

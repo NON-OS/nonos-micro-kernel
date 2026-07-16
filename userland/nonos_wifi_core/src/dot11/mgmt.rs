@@ -84,6 +84,7 @@ pub fn assoc_request(
     bssid: MacAddr,
     ssid: &[u8],
     rates: &[u8],
+    rsn: &[u8],
     cap: u16,
     seq: u16,
 ) -> Option<usize> {
@@ -98,5 +99,13 @@ pub fn assoc_request(
     let mut cur = body;
     cur = put_ie(out, cur, IE_SSID, ssid)?;
     cur = put_ie(out, cur, IE_SUPPORTED_RATES, rates)?;
-    Some(cur)
+    // The RSN element is already a complete element (id, length, then the cipher
+    // and AKM suites), so it is written verbatim rather than through put_ie. A
+    // WPA2 access point will not complete association for a station that omits it.
+    let end = cur + rsn.len();
+    if end > out.len() {
+        return None;
+    }
+    out[cur..end].copy_from_slice(rsn);
+    Some(end)
 }

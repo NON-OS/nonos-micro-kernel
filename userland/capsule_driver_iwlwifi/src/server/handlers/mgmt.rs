@@ -10,8 +10,8 @@
 //! authentication or association request. A supplicant hands the driver the
 //! parameters and receives the frame bytes to transmit.
 
-use crate::dot11::header::{SUBTYPE_ASSOC_REQ, SUBTYPE_AUTH, SUBTYPE_PROBE_REQ};
-use crate::dot11::mgmt::{assoc_request, auth_open, probe_request};
+use nonos_wifi_core::dot11::header::{SUBTYPE_ASSOC_REQ, SUBTYPE_AUTH, SUBTYPE_PROBE_REQ};
+use nonos_wifi_core::dot11::mgmt::{assoc_request, auth_open, probe_request};
 use crate::protocol::{Request, E_INVAL, E_OK};
 use crate::server::respond;
 
@@ -33,9 +33,16 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], out: &mut [u8]) {
     let built = match subtype {
         SUBTYPE_PROBE_REQ => probe_request(&mut frame, src, ssid, DEFAULT_RATES, 0),
         SUBTYPE_AUTH => auth_open(&mut frame, src, bssid, 0),
-        SUBTYPE_ASSOC_REQ => {
-            assoc_request(&mut frame, src, bssid, ssid, DEFAULT_RATES, DEFAULT_CAP, 0)
-        }
+        SUBTYPE_ASSOC_REQ => assoc_request(
+            &mut frame,
+            src,
+            bssid,
+            ssid,
+            DEFAULT_RATES,
+            &nonos_wifi_core::wpa::RSN_IE,
+            DEFAULT_CAP,
+            0,
+        ),
         _ => None,
     };
     match built {

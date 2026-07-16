@@ -77,17 +77,17 @@ fn aes_wrap(kek: &[u8; 16], plain: &[u8]) -> Vec<u8> {
         })
         .collect();
     for j in 0..6u64 {
-        for i in 0..n {
+        for (i, ri) in r.iter_mut().enumerate() {
             let mut block = [0u8; 16];
             block[..8].copy_from_slice(&a);
-            block[8..].copy_from_slice(&r[i]);
+            block[8..].copy_from_slice(&ri[..]);
             aes.encrypt_block(&mut block);
             let t = (n as u64) * j + (i as u64) + 1;
             a.copy_from_slice(&block[..8]);
-            for k in 0..8 {
-                a[k] ^= (t >> (56 - 8 * k)) as u8;
+            for (k, ak) in a.iter_mut().enumerate() {
+                *ak ^= (t >> (56 - 8 * k)) as u8;
             }
-            r[i].copy_from_slice(&block[8..]);
+            ri.copy_from_slice(&block[8..]);
         }
     }
     let mut out = Vec::new();

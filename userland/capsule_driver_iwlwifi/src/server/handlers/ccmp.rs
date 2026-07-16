@@ -11,7 +11,7 @@
 //! authenticates, dir 1 decrypts and verifies. The reply is the result, or an
 //! error if authentication fails. All lengths are bounds checked.
 
-use crate::ccmp::ccm::{ccm_decrypt, ccm_encrypt};
+use nonos_wifi_core::ccmp::ccm::{ccm_decrypt, ccm_encrypt};
 use crate::protocol::{Request, E_INVAL, E_OK};
 use crate::server::respond;
 

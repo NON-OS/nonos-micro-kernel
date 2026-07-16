@@ -19,24 +19,14 @@
 
 extern crate alloc;
 
-// WPA2 CCMP data protection: AES-128 in CCM mode. Reached through OP_CCMP.
-mod ccmp;
 mod constants;
 mod discover;
-// The WPA2 four-way handshake message layer: EAPOL-Key parsing and MIC
-// verification. Reached through OP_EAPOL_VERIFY.
-mod eapol;
-// The 802.11 frame layer: the management frames the scan, auth and association
-// steps are built from. Reached through the OP_MGMT_BUILD / OP_BEACON_PARSE
-// server operations.
-mod dot11;
 mod driver;
 mod firmware;
 // The host-command queue: how the driver hands commands and frames to the alive
 // firmware. Reached through OP_HCMD_ISSUE.
 mod hcmd;
 mod init;
-mod mlme;
 mod protocol;
 mod regs;
 // The receive path: reading the firmware's responses and notifications. Reached
@@ -44,9 +34,6 @@ mod regs;
 mod rx;
 mod server;
 mod setup;
-// The WPA2 security core: the key derivation the four-way handshake rests on.
-// Reached through OP_WPA_PTK.
-mod wpa;
 
 use nonos_libc::{heap_init, mk_exit};
 

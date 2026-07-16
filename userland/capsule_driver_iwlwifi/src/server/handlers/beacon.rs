@@ -10,7 +10,7 @@
 //! BSSID, operating channel, whether it advertises RSN (WPA2), the capability
 //! field, and the SSID. This is how a scan turns air into a network list.
 
-use crate::dot11::parse::parse_beacon;
+use nonos_wifi_core::dot11::parse::parse_beacon;
 use crate::protocol::{Request, E_INVAL, E_OK};
 use crate::server::respond;
 

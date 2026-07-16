@@ -16,5 +16,8 @@ pub mod hmac;
 pub mod pbkdf2;
 pub mod prf;
 pub mod ptk;
+mod rsn;
 pub mod sha1;
 pub mod supplicant;
+
+pub use rsn::RSN_IE;

@@ -98,6 +98,7 @@ impl Mlme {
                     self.bssid,
                     &ssid[..len],
                     &RATES,
+                    &crate::wpa::RSN_IE,
                     CAP_ESS_PRIVACY,
                     seq,
                 ) {

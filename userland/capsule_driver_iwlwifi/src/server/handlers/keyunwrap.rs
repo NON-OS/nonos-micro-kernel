@@ -10,7 +10,7 @@
 //! `[kek:16][wrapped...]`; the reply is the recovered key, or an error if the
 //! integrity check fails.
 
-use crate::ccmp::keywrap::aes_unwrap;
+use nonos_wifi_core::ccmp::keywrap::aes_unwrap;
 use crate::protocol::{Request, E_INVAL, E_OK};
 use crate::server::respond;
 

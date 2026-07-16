@@ -42,6 +42,30 @@ pub const SUBTYPE_AUTH: u8 = 11;
 /// frame control (2), duration (2), addr1/2/3 (6 each), sequence control (2).
 pub const MAC_HEADER_LEN: usize = 24;
 
+// Frame Control flag bits (octet 1). ToDS/FromDS select the address layout;
+// both set means a four-address frame. Protected marks a CCMP-encrypted body.
+pub const FC_TO_DS: u16 = 0x0100;
+pub const FC_FROM_DS: u16 = 0x0200;
+pub const FC_PROTECTED: u16 = 0x4000;
+
+/// The MAC header length in bytes for a frame-control value. The base header is
+/// 24 bytes; a four-address frame (both ToDS and FromDS set) adds the 6-byte
+/// Address4, and a QoS data frame (a data subtype with the QoS bit set) adds the
+/// 2-byte QoS Control field. Real APs send QoS data, so the receive path sizes
+/// the header from the frame rather than assuming the 24-byte minimum. The
+/// optional HT Control field is not accounted for; the CCMP data path does not
+/// set the Order bit that would carry it.
+pub fn header_len(fc: u16) -> usize {
+    let mut len = MAC_HEADER_LEN;
+    if (fc & FC_TO_DS != 0) && (fc & FC_FROM_DS != 0) {
+        len += 6;
+    }
+    if fc_type(fc) == TYPE_DATA && (fc_subtype(fc) & 0x08) != 0 {
+        len += 2;
+    }
+    len
+}
+
 /// Build the 2-byte Frame Control value: protocol version 0, the given type and
 /// subtype, no flags. Stored little-endian on the wire.
 pub const fn frame_control(ftype: u8, subtype: u8) -> u16 {
