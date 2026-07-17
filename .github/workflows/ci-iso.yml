@@ -144,6 +144,12 @@ jobs:
           name: nonos-production-iso
           path: artifacts
 
+      # BLAKE3 is the measurement the OS itself uses, so the download carries a
+      # BLAKE3 sum next to the SHA-2 sums rather than only the universal ones.
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+      - name: Install b3sum
+        run: cargo install b3sum --version 1.5.1 --locked
+
       # Flatten whatever layout the artifact used, then checksum the images.
       - name: Assemble and checksum
         run: |
@@ -155,7 +161,8 @@ jobs:
           cd rel
           sha256sum nonos.iso nonos.img > SHA256SUMS
           sha512sum nonos.iso nonos.img > SHA512SUMS
-          cat SHA256SUMS
+          b3sum nonos.iso nonos.img > BLAKE3SUMS
+          cat SHA256SUMS BLAKE3SUMS
 
       - name: Sign build provenance for the image
         uses: actions/attest-build-provenance@520d128f165991a6c774bcb264f323e3d70747f4 # v2.2.0
@@ -183,7 +190,7 @@ jobs:
             echo "## Verify before you flash"
             echo
             echo '```'
-            echo "sha256sum -c SHA256SUMS"
+            echo "sha256sum -c SHA256SUMS        # or: b3sum -c BLAKE3SUMS"
             echo "gh attestation verify nonos.iso --repo ${GITHUB_REPOSITORY}"
             echo "gh attestation verify nonos.img --repo ${GITHUB_REPOSITORY}"
             echo '```'
@@ -205,7 +212,7 @@ jobs:
           } > "$notes"
           gh release create "${TAG}" \
             rel/nonos.iso rel/nonos.img \
-            rel/SHA256SUMS rel/SHA512SUMS rel/attestation-manifest.txt \
+            rel/SHA256SUMS rel/SHA512SUMS rel/BLAKE3SUMS rel/attestation-manifest.txt \
             --title "NONOS ${TAG}" \
             --notes-file "$notes"
           if-no-files-found: error
