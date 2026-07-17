@@ -755,35 +755,34 @@ $(ZK_CAPSULE_LABELS): $(NONOS_VERIFIED_CAPSULE_MKS) Makefile
 		printf "%s\n" "$$label"; \
 	done > $@
 
-# --- RETIRED: curve-based enrolled-secret policy ------------------------------
-# The transparent enrolled-secret enrollment (C = xG + rH commitments over
-# labels) was NOT post-quantum and its trailer is incompatible with the
-# nonos-stark spawn gate. It is replaced by the STARK measurement enrollment
-# below and kept here, disabled, for reference.
-#
-# $(ZK_CAPSULE_ROOT) $(ZK_CAPSULE_COMMITMENTS) $(ZK_CAPSULE_SECRETS): $(ZK_CAPSULE_LABELS) $(ZK_ENROLL_TOOL)
-# 	@echo "Enrolling transparent capsule attestation policy..."
-# 	@test -n "$(ZK_CAPSULE_ENROLL_SEED)" || { echo "ZK_CAPSULE_ENROLL_SEED is required"; exit 1; }
-# 	@mkdir -p $(dir $(ZK_CAPSULE_ROOT)) $(dir $(ZK_CAPSULE_SECRETS))
-# 	@$(ZK_ENROLL_TOOL) \
-# 		--seed "$(ZK_CAPSULE_ENROLL_SEED)" \
-# 		--labels $(ZK_CAPSULE_LABELS) \
-# 		--fixed-depth 8 \
-# 		--root-out $(ZK_CAPSULE_ROOT) \
-# 		--secrets-out $(ZK_CAPSULE_SECRETS) \
-# 		--commitments-out $(ZK_CAPSULE_COMMITMENTS)
-# -----------------------------------------------------------------------------
+# Capsule attestation policy. The default build uses the transparent
+# enrolled-secret enrollment; this is the pipeline the committed policy root and
+# the per-capsule trailers in nonos-mk/capsule.mk are produced by today.
+$(ZK_CAPSULE_ROOT) $(ZK_CAPSULE_COMMITMENTS) $(ZK_CAPSULE_SECRETS): $(ZK_CAPSULE_LABELS) $(ZK_ENROLL_TOOL)
+	@echo "Enrolling transparent capsule attestation policy..."
+	@test -n "$(ZK_CAPSULE_ENROLL_SEED)" || { echo "ZK_CAPSULE_ENROLL_SEED is required"; exit 1; }
+	@mkdir -p $(dir $(ZK_CAPSULE_ROOT)) $(dir $(ZK_CAPSULE_SECRETS))
+	@$(ZK_ENROLL_TOOL) \
+		--seed "$(ZK_CAPSULE_ENROLL_SEED)" \
+		--labels $(ZK_CAPSULE_LABELS) \
+		--fixed-depth 8 \
+		--root-out $(ZK_CAPSULE_ROOT) \
+		--secrets-out $(ZK_CAPSULE_SECRETS) \
+		--commitments-out $(ZK_CAPSULE_COMMITMENTS)
 
-# The capsule policy root and every capsule trailer, produced together so the
-# root commits to the actual capsule measurements, not to enrolled secrets.
-# Each spec is CAPS:elf:trailer-out; the tool re-checks every trailer against
-# the exact spawn-gate parse before writing it. Depends on every capsule ELF
-# and its signed manifest being built first.
-$(ZK_CAPSULE_ROOT): $(NONOS_STARK_ENROLL) \
+# Opt-in transparent STARK enrollment. Produces a post-quantum policy root over
+# the actual capsule measurements and a NZKSTRK1 trailer per capsule, each
+# re-checked against the exact spawn-gate parse. This is the production
+# attestation path; it becomes the default once the nonos-mk/capsule.mk
+# companion routes each trailer through it. Writes to a build-tree root so it
+# does not disturb the committed enrolled-secret policy above.
+STARK_CAPSULE_ROOT ?= $(TARGET_DIR)/stark-attest/capsule_policy_root.bin
+.PHONY: nonos-mk-stark-enroll-capsules
+nonos-mk-stark-enroll-capsules: $(NONOS_STARK_ENROLL) \
 		$(foreach s,$(NONOS_VERIFIED_CAPSULES),$($(s)_BIN) $($(s)_MANIFEST))
 	@echo "Enrolling $(words $(NONOS_VERIFIED_CAPSULES)) capsules under one transparent STARK policy root..."
-	@mkdir -p $(dir $(ZK_CAPSULE_ROOT)) $(NONOS_BAKED_TRUST_DIR)/capsules
-	@$(NONOS_STARK_ENROLL) capsules $(ZK_CAPSULE_ROOT) \
+	@mkdir -p $(dir $(STARK_CAPSULE_ROOT)) $(NONOS_BAKED_TRUST_DIR)/capsules
+	@$(NONOS_STARK_ENROLL) capsules $(STARK_CAPSULE_ROOT) \
 		$(foreach s,$(NONOS_VERIFIED_CAPSULES),$($(s)_REQUIRED_CAPS):$($(s)_BIN):$($(s)_ATTESTATION))
 
 nonos-mk-all-capsules-attested: $(NONOS_VERIFIED_ARTIFACTS)
@@ -1205,18 +1204,21 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(ZK_POLICY_ROOT) \
 		nonos-mk-verify-desktop-gui-capsules \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-desktop-gui + nonos-stark-attest,microkernel-desktop-gui$(_boot_comma)nonos-stark-attest)
+	$(call nonos_kernel_build,microkernel-desktop-gui,microkernel-desktop-gui)
 
 # nonos-mk-zerostate: the canonical NONOS image. The whole ZeroState system in
-# one build: every capsule and driver, the transparent STARK spawn gate
-# enforced, dual Ed25519 + ML-DSA-65 signing, the anti-rollback index bound into
-# the signature, and the TPM measured-boot path. This is the reference target;
-# the narrower -prod cuts share its recipe with a smaller feature set.
+# one build: every capsule and driver, dual Ed25519 + ML-DSA-65 signing, the
+# anti-rollback index bound into the signature, and the TPM measured-boot path.
+# The transparent STARK spawn gate is opt-in for now (build the kernel with
+# nonos-stark-attest and enroll via nonos-mk-stark-enroll-capsules); it becomes
+# the default once the capsule.mk companion routes trailers through it. This is
+# the reference target; the narrower -prod cuts share its recipe with a smaller
+# feature set.
 nonos-mk-zerostate: nonos-mk-all-capsules-attested \
 		$(driver-iwlwifi_ARTIFACTS) $(driver-rtl8821ce_ARTIFACTS) \
 		nonos-mk-verify-desktop-gui-capsules \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,zerostate: microkernel-full-gui + nonos-stark-attest,microkernel-full-gui$(_boot_comma)nonos-stark-attest)
+	$(call nonos_kernel_build,zerostate: microkernel-full-gui,microkernel-full-gui)
 
 # Back-compat alias for the former name. Prefer nonos-mk-zerostate.
 .PHONY: nonos-mk-full-gui-prod
