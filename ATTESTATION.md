@@ -7,26 +7,26 @@ is the proof a verifier reads, byte for byte.
 
 ## What a proof says
 
-A membership proof shows that a measurement — the BLAKE3 hash of an image — is a
+A membership proof shows that a measurement (the BLAKE3 hash of an image) is a
 leaf of a Merkle tree whose root the verifier already trusts, and that the proof
-was drawn under a specific context (the image, its granted capabilities, the
-policy epoch). It is a FRI-STARK over the Goldilocks field: hash-based, no
-trusted setup, no pairing, sound against a quantum adversary. The soundness is
-money-grade — extension-field challenges, proof-of-work grinding, a blown-up
-rate — accounted in `Soundness.lean`.
+was drawn under a specific context: the image, its granted capabilities, the
+policy epoch. It is a FRI-STARK over the Goldilocks field, hash-based, with no
+trusted setup and no pairing, sound against a quantum adversary. The soundness
+is money-grade: extension-field challenges, proof-of-work grinding and a
+blown-up rate, accounted in `Soundness.lean`.
 
 ## The two layers
 
-- **Kernel self-attestation.** The bootloader already measures the kernel with
-  BLAKE3. Before the jump it verifies the kernel's own STARK trailer, carried in
-  the image footer, against the enrolled kernel root
-  (`nonos-bootloader/src/kernel_verify/stark_attest.rs`). A zeroed root trusts
-  nothing, so an un-enrolled build cannot be spoofed.
+The bootloader already measures the kernel with BLAKE3. Before it jumps, it
+verifies the kernel's own STARK trailer, carried in the image footer, against the
+enrolled kernel root. The code is in
+`nonos-bootloader/src/kernel_verify/stark_attest.rs`. A zeroed root trusts
+nothing, so an un-enrolled build cannot be spoofed.
 
-- **Capsule attestation.** Every spawn is gated: the kernel verifies the
-  capsule's STARK trailer against the policy root, bound to the capsule's
-  measurement and its granted capabilities
-  (`src/security/capsule_attest/stark.rs`). No proof, no spawn.
+The kernel gates every spawn the same way. It verifies the capsule's STARK
+trailer against the policy root, bound to the capsule's measurement and its
+granted capabilities, in `src/security/capsule_attest/stark.rs`. No proof, no
+spawn.
 
 ## One shared verifier
 
@@ -47,25 +47,28 @@ this in; see [BUILD.md](BUILD.md).
 
 ## Machine-checked
 
-The design is proven across four independent tools, all in CI:
+The design is proven across four independent tools, all in CI.
 
-- **Lean 4** — 203 theorems: membership soundness, context and capability
-  binding, measurement injectivity, the money-grade soundness budget, signing-key
-  rollback and revocation (`verification/lean/Nonos/Stark/`).
-- **Verus** — the trailer length bound and the gate predicate, SMT-checked
-  (`verification/verus/src/stark_attestation.rs`).
-- **Kani** — the untrusted-trailer deserializer is total on any input
-  (`userland/stark_proofs/src/kani_proofs.rs`).
-- **Runnable proofs** — 165 tests against the real code, including a proof that a
-  hostile length prefix is refused without over-allocating
-  (`userland/stark_proofs/`).
+Lean 4 carries 203 theorems: membership soundness, context and capability
+binding, measurement injectivity, the money-grade soundness budget, and
+signing-key rollback and revocation, under `verification/lean/Nonos/Stark/`.
+
+Verus SMT-checks the trailer length bound and the gate predicate, in
+`verification/verus/src/stark_attestation.rs`.
+
+Kani proves the untrusted-trailer deserializer is total on any input, in
+`userland/stark_proofs/src/kani_proofs.rs`.
+
+The runnable suite is 165 tests against the real code, including a proof that a
+hostile length prefix is refused without over-allocating, under
+`userland/stark_proofs/`.
 
 These prove the model and the parser; a QEMU boot proves the wiring.
 
 ## Hardening
 
 The proof deserializer read a 32-bit count from an untrusted trailer and passed
-it to `Vec::with_capacity` before any data backed it — a capsule could force a
+it to `Vec::with_capacity` before any data backed it, so a capsule could force a
 multi-gigabyte reservation at the spawn gate. Every length is now capped at the
 bytes remaining, since each element consumes at least one. Proven three ways:
 Kani totality, a runnable proof-of-concept, and a Verus invariant.
