@@ -17,7 +17,7 @@
 extern crate alloc;
 
 mod app;
-mod css;
+pub mod css;
 pub mod dom;
 mod event;
 pub mod fetch;
@@ -32,6 +32,7 @@ pub mod manifest;
 mod net;
 mod paint;
 mod proxy;
+pub mod qjs_run;
 pub mod state;
 pub mod tls13;
 pub mod url;

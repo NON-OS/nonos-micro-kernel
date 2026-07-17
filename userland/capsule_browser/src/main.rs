@@ -20,6 +20,8 @@
 extern crate alloc;
 
 mod browser;
+mod qjs;
+mod qjs_dom;
 
 use nonos_app_skeleton::run;
 
@@ -32,5 +34,6 @@ const BROWSER_HEAP: usize = 48 * 1024 * 1024;
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     let _ = nonos_libc::heap_init_sized(BROWSER_HEAP);
+    qjs::selftest();
     run(browser::Browser::new)
 }
