@@ -2,7 +2,7 @@
 name = "nonos-stark-enroll"
 version = "0.1.0"
 edition = "2021"
-license = "AGPL-3.0-or-later"
+license = "AGPL-3.0"
 description = "Enroll capsule and kernel measurements and emit their transparent STARK attestation trailers"
 
 [[bin]]
