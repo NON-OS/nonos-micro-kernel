@@ -143,6 +143,14 @@ ZK_CAPSULE_ROOT  ?= $(NONOS_TRUST_DIR)/policy/zk_capsule_policy_root.bin
 # The kernel embeds this root at compile time (security/capsule_attest), so an
 # attested kernel build depends on the capsule enrollment having run first.
 ZK_POLICY_ROOT   ?= $(ZK_CAPSULE_ROOT)
+# Kernel self-attestation: the bootloader embeds this root and verifies the
+# kernel's own STARK membership trailer before the jump. Provisioned by the
+# kernel enrollment step below. Opt in with NONOS_STARK_KERNEL_ATTEST=1.
+KERNEL_ATTEST_ROOT_BIN ?= $(NONOS_TRUST_DIR)/policy/kernel_attest_root.bin
+KERNEL_ATTEST_TRAILER  ?= $(TARGET_DIR)/kernel-attest/kernel.zk_trailer.bin
+KERNEL_ATTEST_ELF      ?= $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel
+_boot_comma := ,
+BOOT_STARK_FEATURE := $(if $(NONOS_STARK_KERNEL_ATTEST),$(_boot_comma)stark-kernel-attest)
 ZK_CAPSULE_LABELS ?= $(TARGET_DIR)/capsule-attest/capsule_labels.txt
 ZK_CAPSULE_SECRETS ?= $(TARGET_DIR)/capsule-attest/capsule_secrets.txt
 ZK_CAPSULE_COMMITMENTS ?= $(TARGET_DIR)/capsule-attest/capsule_commitments.bin
@@ -470,6 +478,7 @@ $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),$(NONOS_TRUST_ANCHOR_PUBKEY),$(SIGNING_KEY)) \
 		$(KERNEL_MLDSA65_PUB) \
 		$(ZK_BOOT_ROOT) \
+		$(if $(NONOS_STARK_KERNEL_ATTEST),$(KERNEL_ATTEST_ROOT_BIN)) \
 		$(GOP_PREF_STAMP) \
 		$(TARGET_DIR)/.nonos-toolchain.stamp
 	@echo "Building UEFI bootloader (policy: $(BOOTLOADER_POLICY))..."
@@ -478,10 +487,11 @@ $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),NONOS_TRUST_ANCHOR_PUBKEY=$(abspath $(NONOS_TRUST_ANCHOR_PUBKEY)),NONOS_SIGNING_KEY=$(SIGNING_KEY_ABS)) \
 		NONOS_MLDSA65_PUBKEY=$(shell pwd)/$(KERNEL_MLDSA65_PUB) \
 		NONOS_ZK_DEVICE_ROOT=$(shell pwd)/$(ZK_BOOT_ROOT) \
+		$(if $(NONOS_STARK_KERNEL_ATTEST),NONOS_KERNEL_ATTEST_ROOT=$(shell pwd)/$(KERNEL_ATTEST_ROOT_BIN)) \
 		$(if $(NONOS_GOP_PREF),NONOS_GOP_PREF=$(NONOS_GOP_PREF)) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --target x86_64-unknown-uefi --release \
-			--features zk-transparent,$(BOOTLOADER_POLICY)
+			--features zk-transparent,$(BOOTLOADER_POLICY)$(BOOT_STARK_FEATURE)
 
 nonos-mk-bootloader: $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
 
@@ -772,6 +782,19 @@ $(ZK_CAPSULE_ROOT): $(NONOS_STARK_ENROLL) \
 
 nonos-mk-all-capsules-attested: $(NONOS_VERIFIED_ARTIFACTS)
 	@echo "Signed and attested $(words $(NONOS_VERIFIED_CAPSULES)) included capsules."
+
+# Enroll the kernel's own measurement and emit its self-attestation root and
+# trailer. The bootloader embeds the root (NONOS_KERNEL_ATTEST_ROOT) and verifies
+# the trailer, carried in the kernel image footer, before jumping. The tool
+# re-checks the trailer against the same verifier the bootloader runs.
+$(KERNEL_ATTEST_ROOT_BIN) $(KERNEL_ATTEST_TRAILER): $(KERNEL_ATTEST_ELF) $(NONOS_STARK_ENROLL)
+	@echo "Enrolling the kernel self-attestation..."
+	@mkdir -p $(dir $(KERNEL_ATTEST_ROOT_BIN)) $(dir $(KERNEL_ATTEST_TRAILER))
+	@$(NONOS_STARK_ENROLL) kernel $(KERNEL_ATTEST_ELF) \
+		$(KERNEL_ATTEST_ROOT_BIN) $(KERNEL_ATTEST_TRAILER)
+
+nonos-mk-kernel-attest: $(KERNEL_ATTEST_ROOT_BIN) $(KERNEL_ATTEST_TRAILER)
+	@echo "Kernel self-attestation enrolled: root $(KERNEL_ATTEST_ROOT_BIN)"
 
 NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
 	$(proof-io_VERIFY) $(std-proof_VERIFY) $(ripgrep_VERIFY) \
