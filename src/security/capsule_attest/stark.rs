@@ -71,17 +71,20 @@ pub fn verify_capsule_attestation_stark(
     let dirs = &trailer[sib_end..sib_end + dir_bytes];
     let directions: Vec<bool> =
         (0..POLICY_TREE_DEPTH).map(|i| (dirs[i / 8] >> (i % 8)) & 1 == 1).collect();
+    crate::sys::serial::print(b"[STARK-DBG] parse\n");
     let proof = deserialize_proof_ext(&trailer[sib_end + dir_bytes..]).ok_or(AttestError::Malformed)?;
 
     let root = to_rate(&policy_root::root().ok_or(AttestError::RootUnavailable)?);
 
     // Bind the proof to the capsule: its measurement, its capabilities, the epoch.
+    crate::sys::serial::print(b"[STARK-DBG] hash\n");
     let capsule_hash = *blake3::hash(elf).as_bytes();
     let mut ctx = [0u8; 48];
     ctx[..32].copy_from_slice(&capsule_hash);
     ctx[32..40].copy_from_slice(&granted_caps.to_be_bytes());
     ctx[40..48].copy_from_slice(&POLICY_EPOCH.to_be_bytes());
 
+    crate::sys::serial::print(b"[STARK-DBG] verify\n");
     let air = MerkleMembership::new(Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]), LOG_ROUNDS, root, siblings, directions);
     if stark_verify_ext_blown_bound(&air, &proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP, &ctx) {
         Ok(())
