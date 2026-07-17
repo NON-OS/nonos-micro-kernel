@@ -571,6 +571,48 @@ fn a_measured_capsule_enrolls_and_attests_at_money_grade() {
     );
 }
 
+// The kernel gate's path exactly: a capsule ships a money-grade attestation as
+// bytes, the kernel parses it from an untrusted trailer and verifies it bound to the
+// capsule identity. The proof survives the round trip, the wrong identity is
+// refused, and a truncated trailer parses to nothing rather than panicking.
+#[test]
+fn a_money_grade_attestation_survives_serialization() {
+    use crate::crypto::stark::air::{
+        deserialize_proof_ext, measure_capsule, serialize_proof_ext, stark_prove_ext_blown_bound,
+        stark_verify_ext_blown_bound,
+    };
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let images: [&[u8]; 4] =
+        [b"capsule:a bytes", b"capsule:b bytes", b"capsule:c bytes", b"capsule:d bytes"];
+    let leaves: Vec<[Fp; RATE]> = images.iter().map(|img| measure_capsule(&hasher, img)).collect();
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let root = tree.root();
+    let index = 2usize;
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let context = b"capsule:c:v1";
+
+    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
+    let air = MerkleMembership::new(hasher.clone(), log_rounds, root, path, directions);
+    let proof = stark_prove_ext_blown_bound(&air, &trace, 32, 16, 3, context);
+
+    let bytes = serialize_proof_ext(&proof);
+    let parsed = deserialize_proof_ext(&bytes).expect("a valid trailer round-trips");
+    assert!(
+        stark_verify_ext_blown_bound(&air, &parsed, 32, 16, 3, context),
+        "the parsed money-grade attestation was rejected"
+    );
+    assert!(
+        !stark_verify_ext_blown_bound(&air, &parsed, 32, 16, 3, b"capsule:other:v1"),
+        "the parsed attestation passed under the wrong identity"
+    );
+    assert!(
+        deserialize_proof_ext(&bytes[..bytes.len() / 2]).is_none(),
+        "a truncated trailer parsed instead of failing"
+    );
+}
+
 #[test]
 fn membership_proofs_verify_at_fri_layer_depths() {
     // FRI layers are sized 2^k, so paths are depth k, any value. The AIR pads its
