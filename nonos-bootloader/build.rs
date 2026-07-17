@@ -11,12 +11,14 @@ fn main() {
     println!("cargo:rerun-if-env-changed=NONOS_MLDSA65_PUBKEY");
     println!("cargo:rerun-if-env-changed=NONOS_TRUST_ANCHOR_PUBKEY");
     println!("cargo:rerun-if-env-changed=NONOS_ZK_DEVICE_ROOT");
+    println!("cargo:rerun-if-env-changed=NONOS_KERNEL_ATTEST_ROOT");
     println!("cargo:rerun-if-env-changed=NONOS_GOP_PREF");
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
     println!("cargo:rerun-if-changed=boot-splash.png");
 
     generate_keys();
     generate_zk_registry();
+    generate_kernel_attest_root();
     configure_uefi();
     configure_optimization();
     configure_crypto();
@@ -266,6 +268,32 @@ fn resolve_device_root_path() -> String {
         Ok(path) if !path.trim().is_empty() => path,
         _ => panic!("production bootloader requires NONOS_ZK_DEVICE_ROOT"),
     }
+}
+
+// The enrolled kernel measurement root the pre-jump self-attestation checks
+// against. Read from NONOS_KERNEL_ATTEST_ROOT when the kernel has been enrolled;
+// a zeroed root otherwise, which accepts nothing, so an un-enrolled build cannot
+// be spoofed into trusting a proof. Always emitted, so the source compiles with
+// or without `stark-kernel-attest`.
+fn generate_kernel_attest_root() {
+    let out_dir = env::var("OUT_DIR").expect("OUT_DIR not set");
+    let dest = Path::new(&out_dir).join("kernel_attest_root.rs");
+    let root: [u8; 32] = match env::var("NONOS_KERNEL_ATTEST_ROOT") {
+        Ok(path) if !path.trim().is_empty() => {
+            println!("cargo:rerun-if-changed={path}");
+            let bytes = fs::read(&path).unwrap_or_else(|e| {
+                panic!("cannot read NONOS_KERNEL_ATTEST_ROOT at {path}: {e}")
+            });
+            if bytes.len() != 32 {
+                panic!("NONOS_KERNEL_ATTEST_ROOT must be 32 bytes, got {}", bytes.len());
+            }
+            bytes.try_into().expect("32-byte root")
+        }
+        _ => [0u8; 32],
+    };
+    let body = root.iter().map(u8::to_string).collect::<Vec<_>>().join(", ");
+    fs::write(&dest, format!("pub const KERNEL_ATTEST_ROOT: [u8; 32] = [{body}];\n"))
+        .expect("write kernel_attest_root.rs");
 }
 
 fn compute_ed25519_pubkey(scalar: &[u8; 32]) -> [u8; 32] {
