@@ -122,5 +122,91 @@ jobs:
             target/nonos.img
             target/nonos.iso
             target/iso/attestation-manifest.txt
+
+  # On a version tag, publish a verifiable release: the image, its checksums, the
+  # attestation manifest that records the roots the image proves, and a signed
+  # SLSA build provenance that binds the files to this exact source and workflow
+  # run. Anyone can verify the provenance with `gh attestation verify` without
+  # trusting us for a key.
+  release:
+    name: publish release
+    needs: iso
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release
+      id-token: write # sign the build provenance
+      attestations: write # record the build provenance
+    steps:
+      - name: Download the built image
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: nonos-production-iso
+          path: artifacts
+
+      # Flatten whatever layout the artifact used, then checksum the images.
+      - name: Assemble and checksum
+        run: |
+          set -euo pipefail
+          mkdir -p rel
+          cp "$(find artifacts -name nonos.iso)" rel/
+          cp "$(find artifacts -name nonos.img)" rel/
+          cp "$(find artifacts -name attestation-manifest.txt)" rel/
+          cd rel
+          sha256sum nonos.iso nonos.img > SHA256SUMS
+          sha512sum nonos.iso nonos.img > SHA512SUMS
+          cat SHA256SUMS
+
+      - name: Sign build provenance for the image
+        uses: actions/attest-build-provenance@520d128f165991a6c774bcb264f323e3d70747f4 # v2.2.0
+        with:
+          subject-path: |
+            rel/nonos.iso
+            rel/nonos.img
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          notes="$(mktemp)"
+          {
+            echo "NONOS ${TAG}. A RAM-resident, zero-state microkernel OS."
+            echo
+            echo "The kernel is dual-signed (Ed25519 and ML-DSA-65) with an anti-rollback"
+            echo "index, and proves its own measurement with a transparent post-quantum STARK"
+            echo "before the bootloader jumps. Every capsule proves its code and its exact"
+            echo "capability set with the same STARK before the kernel spawns it. The roots"
+            echo "the image attests to are in attestation-manifest.txt."
+            echo
+            echo "## Verify before you flash"
+            echo
+            echo '```'
+            echo "sha256sum -c SHA256SUMS"
+            echo "gh attestation verify nonos.iso --repo ${GITHUB_REPOSITORY}"
+            echo "gh attestation verify nonos.img --repo ${GITHUB_REPOSITORY}"
+            echo '```'
+            echo
+            echo "The provenance is a signed SLSA statement binding these files to this"
+            echo "workflow run and commit ${GITHUB_SHA}. It needs no key from us to verify."
+            echo
+            echo "## Boot it"
+            echo
+            echo '```'
+            echo "qemu-system-x86_64 -bios OVMF.fd -cdrom nonos.iso    # try it first"
+            echo "sudo dd if=nonos.iso of=/dev/sdX bs=4M && sync        # then flash"
+            echo '```'
+            echo
+            echo "## Reproduce it"
+            echo
+            echo "The build is reproducible from source at this tag; rebuild and match the"
+            echo "SHA256SUMS above. See the build docs in the repository."
+          } > "$notes"
+          gh release create "${TAG}" \
+            rel/nonos.iso rel/nonos.img \
+            rel/SHA256SUMS rel/SHA512SUMS rel/attestation-manifest.txt \
+            --title "NONOS ${TAG}" \
+            --notes-file "$notes"
           if-no-files-found: error
           retention-days: 30
