@@ -69,7 +69,10 @@ jobs:
       - name: Prepare benchmark artifact root
         run: mkdir -p "${{ inputs['output-root'] }}/${{ github.run_id }}-${{ github.run_attempt }}"
       - name: Provision benchmark trust material
-        timeout-minutes: 45
+        # The benchmark builds the full zerostate ship image (every capsule and
+        # driver), not the lighter desktop cut, so provisioning it takes longer
+        # than the old profile did.
+        timeout-minutes: 75
         env:
           NONOS_CI_TRUST_MODE: ${{ inputs['trust-mode'] }}
           SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
