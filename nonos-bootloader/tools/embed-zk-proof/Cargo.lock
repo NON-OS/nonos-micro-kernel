@@ -207,6 +207,7 @@ dependencies = [
  "curve25519-dalek",
  "hex",
  "nonos-attestation-circuit",
+ "nonos-stark",
 ]
 
 [[package]]
@@ -253,6 +254,13 @@ dependencies = [
  "clap",
  "curve25519-dalek",
  "hex",
+]
+
+[[package]]
+name = "nonos-stark"
+version = "0.1.0"
+dependencies = [
+ "blake3",
 ]
 
 [[package]]
