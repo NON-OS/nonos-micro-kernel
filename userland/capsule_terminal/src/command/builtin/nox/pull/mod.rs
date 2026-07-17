@@ -28,6 +28,7 @@ mod run;
 pub mod scan;
 pub mod store;
 pub mod target;
+pub mod verify;
 mod walk;
 
 pub use run::run;

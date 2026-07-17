@@ -83,18 +83,29 @@ pub(super) fn one_file(
         return false;
     }
     match fetch::get_reuse(conn, ip, a.target.port, &a.target.host, path, &extra) {
-        Ok(body) => match store::write(pid, dest, &body) {
-            Ok(()) => {
-                state.scrollback.push_line(&progress::file_line(dest, body.len()));
-                tally.ok += 1;
-                true
+        Ok(body) => {
+            if a.verify {
+                if let Err(e) =
+                    super::verify::check(conn, ip, a.target.port, &a.target.host, path, &extra, &body)
+                {
+                    state.scrollback.push_error(e.as_bytes());
+                    tally.failed += 1;
+                    return false;
+                }
             }
-            Err(e) => {
-                state.scrollback.push_error(e.as_bytes());
-                tally.failed += 1;
-                false
+            match store::write(pid, dest, &body) {
+                Ok(()) => {
+                    state.scrollback.push_line(&progress::file_line(dest, body.len()));
+                    tally.ok += 1;
+                    true
+                }
+                Err(e) => {
+                    state.scrollback.push_error(e.as_bytes());
+                    tally.failed += 1;
+                    false
+                }
             }
-        },
+        }
         Err(e) => {
             state.scrollback.push_error(e.as_bytes());
             tally.failed += 1;

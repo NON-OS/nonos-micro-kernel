@@ -25,6 +25,7 @@ pub struct PullArgs {
     pub skip_unchanged: bool,
     pub auth: Option<Vec<u8>>,
     pub headers: Vec<Vec<u8>>,
+    pub verify: bool,
 }
 
 pub fn parse(argv: &[&[u8]]) -> Result<PullArgs, &'static str> {
@@ -32,6 +33,7 @@ pub fn parse(argv: &[&[u8]]) -> Result<PullArgs, &'static str> {
     let mut skip_unchanged = false;
     let mut auth = None;
     let mut headers = Vec::new();
+    let mut verify = false;
     let mut rest = argv;
     while let Some((&first, tail)) = rest.split_first() {
         match first {
@@ -53,16 +55,20 @@ pub fn parse(argv: &[&[u8]]) -> Result<PullArgs, &'static str> {
                 headers.push(v.to_vec());
                 rest = t;
             }
+            b"--verify" => {
+                verify = true;
+                rest = tail;
+            }
             _ => break,
         }
     }
     if rest.is_empty() || rest.len() > 2 {
-        return Err("usage: nox pull [-n] [-u] [-a user:pass] [-H 'K: V'] <host[:port]>/<path> [dest]");
+        return Err("usage: nox pull [-n] [-u] [-a user:pass] [-H 'K: V'] [--verify] <host[:port]>/<path> [dest]");
     }
     let target = parse_target(rest[0])?;
     let dest = match rest.get(1) {
         Some(d) => d.to_vec(),
         None => default_dest(&target),
     };
-    Ok(PullArgs { target, dest, no_clobber, skip_unchanged, auth, headers })
+    Ok(PullArgs { target, dest, no_clobber, skip_unchanged, auth, headers, verify })
 }

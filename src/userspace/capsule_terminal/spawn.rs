@@ -42,6 +42,7 @@ fn terminal_caps() -> u64 {
         | Capability::IPC.bit()
         | Capability::Network.bit()
         | Capability::Memory.bit()
+        | Capability::Crypto.bit()
         | Capability::GraphicsDisplayQuery.bit()
         | Capability::GraphicsSurfaceCreate.bit()
 }
