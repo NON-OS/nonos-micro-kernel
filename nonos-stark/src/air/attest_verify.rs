@@ -22,7 +22,7 @@
 
 use super::poseidon::{Poseidon, RATE};
 use super::{deserialize_proof_ext, stark_verify_ext_blown_bound, MerkleMembership};
-use crate::crypto::stark::field::Fp;
+use crate::field::Fp;
 use alloc::vec::Vec;
 
 /// The trailer magic, shared with the builder.

@@ -1387,6 +1387,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "nonos-stark"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+]
+
+[[package]]
 name = "nonos_boot"
 version = "1.0.5"
 dependencies = [
@@ -1401,6 +1408,7 @@ dependencies = [
  "halo2_proofs",
  "heapless",
  "log",
+ "nonos-stark",
  "noto-sans-mono-bitmap",
  "r-efi 4.5.0",
  "sha2",
