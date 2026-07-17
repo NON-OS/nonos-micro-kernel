@@ -96,8 +96,18 @@ Bound today:
 through QuickJS with the DOM installed, and returns the engine. Because the
 engine holds the page's listeners and closure state, it is returned rather than
 dropped, so later UI events can be dispatched into it. The caller lays the
-mutated tree out afterwards, which is the reflow. This mirrors the existing
-tree-walk `js::run` path, so it is a drop-in QuickJS executor.
+mutated tree out afterwards, which is the reflow.
+
+The browser wires this in at page commit. `fetch::render_response` now hands
+back the parsed DOM alone; the page state homes it in `state.page_dom` and then
+`fetch::commit_html` runs its scripts through QuickJS against that stable
+address, keeps the engine in `state.engine`, and lays the mutated tree out. The
+engine holds a pointer into `page_dom`, which keeps its address for the page's
+life, so a navigation drops the engine before it replaces the DOM. A click, a
+form field edit or a submit dispatches straight into the retained engine and the
+page relays out, so a script that mutates the tree in response to input is
+reflected on screen. QuickJS is the browser's only script executor; the earlier
+tree-walk parser and interpreter are gone.
 
 ## Verification
 
@@ -112,20 +122,43 @@ features were:
 - Inline styles accumulate correctly with camelCase conversion.
 
 The crate compiles for x86_64-nonos-user, links into the browser capsule, and
-the archive carries the QuickJS symbols. A startup selftest runs the whole path
-on-device.
+the archive carries the QuickJS symbols. It also runs on the real kernel: a
+startup probe that created a runtime and evaluated an expression ran to
+completion on hardware with no fault, which is how the input-termination and
+stack-anchor fixes below were confirmed. The probe has since been retired in
+favour of the live render path.
+
+## The freestanding fixes
+
+Two defects only show up in the freestanding, on-device build and were fixed
+against the engine's own contract:
+
+- `JS_Eval` requires its input to be NUL terminated (`input[len] == '\0'`). The
+  Rust caller passes a `&str`, which is not, so the eval shim now copies the
+  source into a terminated buffer before handing it to the engine. Without it
+  the lexer reads past the source and faults on a page boundary.
+- The runtime captures its stack top when it is created, and the browser creates
+  the engine far above the frame a page script later runs from. The shim
+  re-anchors the stack top before each eval and each event dispatch, so a
+  shallow script cannot trip a false stack-overflow.
 
 ## Honest status and remaining work
 
-The engine, the DOM write and query surface, framework-style rendering, events
-and inline style are done and building. What remains to render an arbitrary
-React or Svelte site:
+The engine is the browser's script executor: page scripts run through QuickJS,
+the engine is retained for event dispatch, and the tree relays out after input.
+The engine, the DOM write and query surface, events and inline style are done,
+building and running on the kernel. What remains to render an arbitrary React or
+Svelte site:
 
-- Wire run_scripts as the page executor in the render path, store the engine in
-  page state, and relayout after each dispatched event: the live reflow loop.
+- External `<script src>` bundles are not fed to the engine yet; only inline
+  scripts run. Most framework apps ship an external bundle, so fetching those
+  into the engine is the next step.
+- setTimeout, setInterval and fetch/XHR are not bound to the host loop yet, so a
+  standalone microtask pump and a network binding are still to come. The browser
+  keeps its socket-level fetch and timer pumps as the scaffolding these will use.
 - Node identity, so getElementById returns the same object twice.
 - WebGL, WebAssembly and Web Workers remain out of scope, so canvas-and-shader
   pages will not fully render.
 
 The ceiling is honest, but the DOM-based majority of the modern web, including
-framework single-page apps, is now reachable.
+framework single-page apps once their bundle is fed in, is now reachable.
