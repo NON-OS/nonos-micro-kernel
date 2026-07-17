@@ -147,3 +147,50 @@ fn a_tampered_kernel_fails_self_attestation() {
         "a kernel that does not match its enrolled measurement must be refused"
     );
 }
+
+// Adversarial POC: the attacks the image must survive. Each builds a real
+// attested image, mounts the attack, then runs the exact boot-side parse and
+// verify, and asserts the boot is refused. This is the ISO's threat model,
+// demonstrated rather than asserted.
+
+#[test]
+fn attack_flip_a_byte_in_the_image_kernel_region() {
+    // An attacker edits the flashed image's kernel code, keeping the trailer.
+    let kernel_bytes = b"nonos-kernel code region, the exact bytes the bootloader measures".to_vec();
+    let (root, trailer) = enroll_kernel(&kernel_bytes);
+    let mut image = assemble_attested_image(&signed_kernel(&kernel_bytes), trailer).data;
+    image[10] ^= 0xFF;
+    let (parsed_kernel, parsed_proof) = parse_footer(&image);
+    assert!(
+        !boot_verify(&root, &parsed_kernel, &parsed_proof),
+        "a tampered kernel in the flashed image must fail self-attestation"
+    );
+}
+
+#[test]
+fn attack_swap_a_foreign_kernel_with_a_stolen_trailer() {
+    // An attacker ships a different kernel but reuses an enrolled kernel's trailer.
+    let (root, trailer) = enroll_kernel(b"the genuine enrolled kernel code");
+    let foreign = b"a malicious kernel that was never enrolled".to_vec();
+    let image = assemble_attested_image(&signed_kernel(&foreign), trailer).data;
+    let (parsed_kernel, parsed_proof) = parse_footer(&image);
+    assert!(
+        !boot_verify(&root, &parsed_kernel, &parsed_proof),
+        "a foreign kernel carrying a stolen trailer must be rejected"
+    );
+}
+
+#[test]
+fn attack_forge_a_trailer_under_a_different_root() {
+    // An attacker enrolls their own kernel under their own root and embeds that
+    // trailer; the bootloader checks against the genuine enrolled root only.
+    let (genuine_root, _) = enroll_kernel(b"the genuine enrolled kernel code");
+    let attacker = b"the attacker's kernel, enrolled under the attacker's root".to_vec();
+    let (_attacker_root, attacker_trailer) = enroll_kernel(&attacker);
+    let image = assemble_attested_image(&signed_kernel(&attacker), attacker_trailer).data;
+    let (parsed_kernel, parsed_proof) = parse_footer(&image);
+    assert!(
+        !boot_verify(&genuine_root, &parsed_kernel, &parsed_proof),
+        "a trailer valid only under the attacker's root must fail against the genuine root"
+    );
+}
