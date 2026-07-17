@@ -1,7 +1,7 @@
 # Building the NONOS kernel
 
-The kernel is a single `cargo` crate. What goes into an image — which capsules,
-which drivers, whether the spawn gate is enforced — is selected entirely by
+The kernel is a single `cargo` crate. What goes into an image, which capsules,
+which drivers, and whether the spawn gate is enforced, is selected entirely by
 cargo features. This document explains how to choose them.
 
 ## Quick start
@@ -23,15 +23,18 @@ a profile is a combination that has been assembled to.
 
 The catalogue, grouped:
 
-- **Base** — `microkernel-core` (scheduler, memory, crypto, no capsules) and
-  `microkernel-capsules` (core plus proof-io, ramfs, keyring).
-- **Single capsule / single driver** — one capsule or one driver on top of the
-  core, for bring-up and tests (`microkernel-ramfs`, `microkernel-driver-nvme`,
-  and so on).
-- **Network** — the layered stack, each profile adding one layer
-  (`microkernel-net-l2` through `microkernel-net-sockets`).
-- **Desktop** — `microkernel-desktop-gui` (compositor, apps, core drivers) and
-  `microkernel-full-gui` (the desktop plus every driver).
+The base profiles are `microkernel-core` (scheduler, memory, crypto, no capsules)
+and `microkernel-capsules` (core plus proof-io, ramfs and keyring).
+
+The single-capsule and single-driver profiles put one capsule or one driver on
+top of the core, for bring-up and tests: `microkernel-ramfs`,
+`microkernel-driver-nvme`, and so on.
+
+The network profiles are the layered stack, each one adding a layer, from
+`microkernel-net-l2` through `microkernel-net-sockets`.
+
+The desktop profiles are `microkernel-desktop-gui` (compositor, apps, core
+drivers) and `microkernel-full-gui` (the desktop plus every driver).
 
 List them at any time:
 

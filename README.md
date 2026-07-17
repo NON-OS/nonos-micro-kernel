@@ -1,50 +1,57 @@
 # NØNOS
 
-NONOS is a privacy-first microkernel operating system in Rust where nothing runs
-unless it can prove itself. Every application is a signed, sandboxed capsule
-carrying a transparent, post-quantum proof of exactly what it is and what it is
-allowed to touch, and the kernel re-verifies that proof at every spawn. There is
-no override, no debug flag, no unsigned default path. The boot chain, the
-kernel, the drivers and the desktop all hold to the same rule: verify, then run.
+A microkernel where nothing runs unless it can prove itself.
 
-This is not a design document. The system boots to a real desktop — compositor,
-window management, terminal, file manager, some sixty capsules — on a driver
-stack covering NVMe, AHCI, e1000, RTL8139/8169, xHCI, USB HID and mass storage,
-HDA audio, i2c and PS/2. One command builds it, proves it and boots it.
+Every program on NONOS is a signed, sandboxed capsule that carries a
+transparent, post-quantum proof of what it is and what it is allowed to touch.
+The kernel checks that proof before every spawn, and the bootloader checks the
+kernel the same way before it jumps. There is no unsigned path to execution, no
+debug switch that turns the check off, no privileged account that can wave code
+through. Trust flows one direction only, downward from a root you can read.
 
-## Start here
+NONOS is written in Rust, capability-based, and RAM-resident: it keeps no mutable
+state on disk and leaves nothing behind after power-off. That is the ZeroState
+model the system is named for.
 
-Pick the path that fits you. Each is a self-contained, step-by-step guide.
+It boots. The default image comes up to a graphical desktop with a damage-tracked
+compositor, window management, a terminal and a file manager, on real drivers for
+NVMe and AHCI storage, xHCI USB and mass storage, e1000 and Realtek networking,
+Intel and Realtek Wi-Fi, HDA audio, i2c and PS/2 input. Around sixty capsules
+ship in it. One command builds the whole system, proves it, and boots it.
 
-- **Run it** — [QUICKSTART.md](QUICKSTART.md): install the toolchain, build the
-  full system, boot it in QEMU.
-- **Build your own kernel** — [BUILD.md](BUILD.md): choose a profile and the
-  security options with `make menuconfig`, then `make from-config`.
-- **Understand the trust model** — [ATTESTATION.md](ATTESTATION.md): the
-  two-layer STARK attestation, the shared verifier, and how it is proven.
-- **Write a capsule** — [CONTRIBUTING-ZK.md](CONTRIBUTING-ZK.md): the capsule
-  ABI, signing, enrollment, and getting it attested.
-- **Report a weakness** — [SECURITY.md](SECURITY.md): scope, disclosure, and the
-  trusted computing base.
-- **Earn NOX** — [REWARDS.md](REWARDS.md): what securing NONOS pays.
+The attestation is checked, not asserted. Four independent tools verify it on
+every change: Lean 4 with 203 theorems, Verus, Kani, and 165 runnable proofs
+against the real code. The prover and the verifier are a single crate linked into
+both the kernel and the bootloader, so the proof that gets written is the proof
+that gets read.
 
-## The one command
+## Documentation
 
-    make menuconfig        # choose what goes in your kernel
-    make from-config       # build exactly that
+[QUICKSTART.md](QUICKSTART.md) takes you from a clean checkout to the full system
+booting in QEMU.
 
-    make nonos-mk-zerostate   # or: the full ZeroState system, attested
-    make nonos-mk-run         # build, prove, and boot it in QEMU
+[BUILD.md](BUILD.md) is for assembling your own kernel. `make menuconfig` walks
+the profiles and the security options and writes a config; `make from-config`
+builds precisely that.
 
-`make` with no arguments prints the full target list.
+[ATTESTATION.md](ATTESTATION.md) is the trust model in full: how the bootloader
+proves the kernel, how the kernel proves each capsule, and how both are checked.
 
-## How it is proven
+[CONTRIBUTING-ZK.md](CONTRIBUTING-ZK.md) is the route to writing a capsule,
+signing it, and getting it enrolled and attested.
 
-The attestation is machine-checked by four independent tools, all in CI: **Lean
-4** (203 theorems), **Verus** (SMT), **Kani** (model checking), and **165
-runnable proofs** against the real code. The proof stack lives in one crate,
-`nonos-stark`, linked by both the kernel and the bootloader, so the prover and
-the verifier agree by construction. See [ATTESTATION.md](ATTESTATION.md).
+[SECURITY.md](SECURITY.md) sets out reporting, scope, and the trusted computing
+base. [REWARDS.md](REWARDS.md) sets out what securing NONOS pays.
+
+## Building
+
+    make menuconfig            # choose what goes in your kernel
+    make from-config           # build that
+
+    make nonos-mk-zerostate    # the full ZeroState system, attested
+    make nonos-mk-run          # build it, prove it, boot it in QEMU
+
+Run `make` with no target to list everything.
 
 ## License
 
