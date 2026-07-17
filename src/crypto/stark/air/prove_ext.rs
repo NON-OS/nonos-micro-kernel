@@ -72,6 +72,21 @@ pub fn stark_prove_ext_blown<A: AirExt>(
     grind_bits: u32,
     extra_blowup_bits: u32,
 ) -> StarkProofExt {
+    stark_prove_ext_blown_bound(air, trace, n_queries, grind_bits, extra_blowup_bits, &[])
+}
+
+/// The same prover bound to `context`, which is absorbed into the transcript before
+/// anything else, so the proof only verifies under the same context. This is the
+/// money-grade attestation prover: the extension challenges and the raised FRI rate
+/// give 128-bit soundness with the proof pinned to the capsule identity.
+pub fn stark_prove_ext_blown_bound<A: AirExt>(
+    air: &A,
+    trace: &[Fp],
+    n_queries: usize,
+    grind_bits: u32,
+    extra_blowup_bits: u32,
+    context: &[u8],
+) -> StarkProofExt {
     let log_t = air.log_trace_len();
     let t = 1usize << log_t;
     let width = air.trace_width();
@@ -88,6 +103,9 @@ pub fn stark_prove_ext_blown<A: AirExt>(
     // wide-leaf tree: leaf i hashes every column at row i, so a query authenticates
     // the whole row with a single path and the transcript absorbs one root.
     let mut transcript = Transcript::new(b"NONOS-STARK-EXT");
+    if !context.is_empty() {
+        transcript.absorb_digest(&crate::crypto::hash::keccak256(context));
+    }
     let mut trace_d: Vec<Vec<Fp>> = Vec::with_capacity(width);
     let mut trace_coeffs: Vec<Vec<Fp>> = Vec::with_capacity(width);
     for c in 0..width {

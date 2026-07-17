@@ -490,6 +490,38 @@ fn the_capsule_attestation_gate_accepts_enrolled_and_rejects_forged() {
     );
 }
 
+// The production-strength attestation: the same membership gate proven at
+// money-grade soundness (extension-field challenges, rate one sixteenth, grinding)
+// and bound to the capsule identity. The base gate is a demonstration rate; this is
+// the ~128-bit gate a spawn can actually rely on, and it still refuses a foreign
+// identity.
+#[test]
+fn the_capsule_attestation_holds_at_money_grade_soundness() {
+    use crate::crypto::stark::air::{stark_prove_ext_blown_bound, stark_verify_ext_blown_bound};
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let leaves = merkle_leaves(8);
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let root = tree.root();
+    let index = 5usize;
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let context = b"capsule:terminal:v1";
+
+    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
+    let air = MerkleMembership::new(hasher.clone(), log_rounds, root, path, directions);
+    // Rate one sixteenth, 32 queries, 16 grinding bits: ~128-bit conjectured.
+    let proof = stark_prove_ext_blown_bound(&air, &trace, 32, 16, 3, context);
+    assert!(
+        stark_verify_ext_blown_bound(&air, &proof, 32, 16, 3, context),
+        "the money-grade attestation was rejected under its own identity"
+    );
+    assert!(
+        !stark_verify_ext_blown_bound(&air, &proof, 32, 16, 3, b"capsule:impostor"),
+        "the money-grade attestation passed under the wrong identity"
+    );
+}
+
 #[test]
 fn membership_proofs_verify_at_fri_layer_depths() {
     // FRI layers are sized 2^k, so paths are depth k, any value. The AIR pads its
