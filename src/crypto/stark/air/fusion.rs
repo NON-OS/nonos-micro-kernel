@@ -38,7 +38,7 @@ pub(super) struct Stack {
 impl Stack {
     /// Lay regions out end to end, tracking each one's row offset and periodic-slot
     /// offset, the widest width, the largest window, and the rounded total height.
-    pub(crate) fn of(regions: &[Box<dyn AirExt>]) -> Stack {
+    pub fn of(regions: &[Box<dyn AirExt>]) -> Stack {
         let mut offsets = Vec::with_capacity(regions.len());
         let mut slot_offsets = Vec::with_capacity(regions.len());
         let mut row = 0usize;
@@ -57,11 +57,11 @@ impl Stack {
         Stack { offsets, slot_offsets, width, window, log_span }
     }
 
-    pub(crate) fn span(&self) -> usize {
+    pub fn span(&self) -> usize {
         1usize << self.log_span
     }
 
-    pub(crate) fn height(regions: &[Box<dyn AirExt>], i: usize) -> usize {
+    pub fn height(regions: &[Box<dyn AirExt>], i: usize) -> usize {
         1usize << regions[i].log_trace_len()
     }
 }
@@ -136,7 +136,11 @@ pub(super) fn grand_product<F: Felt>(
 /// The selector and region periodic columns shared by both engines: one selector
 /// per region (on its rows but its last), then each region's own periodic columns
 /// at its offset. Grand-product columns, if any, are appended by the caller.
-pub(super) fn base_periodic(stack: &Stack, regions: &[Box<dyn AirExt>], total: usize) -> Vec<Vec<Fp>> {
+pub(super) fn base_periodic(
+    stack: &Stack,
+    regions: &[Box<dyn AirExt>],
+    total: usize,
+) -> Vec<Vec<Fp>> {
     let mut cols: Vec<Vec<Fp>> = Vec::new();
     for i in 0..regions.len() {
         let off = stack.offsets[i];
