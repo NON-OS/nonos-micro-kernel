@@ -53,17 +53,17 @@ are narrower cuts of the same recipe for a single capsule, driver, or lane.
 Three choices change what a signed image is trusted to do. `make menuconfig`
 prompts for each; you can also set them by hand in `.nonos-config`.
 
-- **Capsule attestation** (`nonos-stark-attest`). The spawn gate verifies a
-  post-quantum STARK proof that the capsule's measurement is enrolled under the
-  policy root before it runs. With attestation off, the legacy path is used.
+Capsule attestation (`nonos-stark-attest`) has the spawn gate verify a
+post-quantum STARK proof that the capsule's measurement is enrolled under the
+policy root before it runs. With attestation off, the legacy path is used.
 
-- **Kernel self-attestation** (`NONOS_STARK_KERNEL_ATTEST=1`). The bootloader
-  verifies the kernel's own STARK proof against the enrolled kernel root before
-  the jump. It needs an enrolled kernel image, so it is off by default.
+Kernel self-attestation (`NONOS_STARK_KERNEL_ATTEST=1`) has the bootloader verify
+the kernel's own STARK proof against the enrolled kernel root before the jump. It
+needs an enrolled kernel image, so it is off by default.
 
-- **Anti-rollback index** (`NONOS_ROLLBACK_INDEX`). The floor a signed image
-  must meet. The TPM monotonic counter refuses anything below it, so raising the
-  index at release time burns older images.
+The anti-rollback index (`NONOS_ROLLBACK_INDEX`) is the floor a signed image must
+meet. The TPM monotonic counter refuses anything below it, so raising the index
+at release time burns older images.
 
 ## .nonos-config
 
