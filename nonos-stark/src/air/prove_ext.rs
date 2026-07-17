@@ -104,7 +104,7 @@ pub fn stark_prove_ext_blown_bound<A: AirExt>(
     // the whole row with a single path and the transcript absorbs one root.
     let mut transcript = Transcript::new(b"NONOS-STARK-EXT");
     if !context.is_empty() {
-        transcript.absorb_digest(&crate::crypto::hash::keccak256(context));
+        transcript.absorb_digest(&crate::hash::keccak256(context));
     }
     let mut trace_d: Vec<Vec<Fp>> = Vec::with_capacity(width);
     let mut trace_coeffs: Vec<Vec<Fp>> = Vec::with_capacity(width);

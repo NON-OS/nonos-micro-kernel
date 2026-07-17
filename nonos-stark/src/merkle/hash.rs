@@ -19,7 +19,7 @@
 //! single native opcode instead of a costly in-Solidity hash.
 
 use super::super::field::{Fp, Fp2};
-use crate::crypto::hash::keccak256;
+use crate::hash::keccak256;
 use alloc::vec::Vec;
 
 const DOM_LEAF: &[u8] = b"NONOS-STARK-MERKLE-LEAF";

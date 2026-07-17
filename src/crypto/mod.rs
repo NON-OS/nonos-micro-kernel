@@ -30,7 +30,10 @@ pub mod kernel_keys;
 pub mod pqc;
 pub mod pqclean_support;
 pub mod random_api;
-pub mod stark;
+/// The transparent STARK stack now lives in the `nonos-stark` crate, shared with
+/// the bootloader so the kernel self-attestation is verified by identical code.
+/// Re-exported here so the rest of the kernel keeps addressing it unchanged.
+pub use nonos_stark as stark;
 pub mod symmetric;
 pub mod util;
 pub mod zk;
