@@ -60,7 +60,6 @@ mod walk;
 pub use cache::{compute_cached, CssCache};
 pub use collect::collect_css;
 pub use color::parse_color;
-pub use compute::compute;
 pub use computed::Shadow;
 pub use computed::{
     Align, BgSize, Clear, Computed, Float, GridTrack, Justify, ObjectFit, Position, Size,
