@@ -39,7 +39,8 @@ pub(super) fn walk(
         return;
     }
     let mut conn = None;
-    let index = match fetch::get_reuse(&mut conn, ip, a.target.port, &a.target.host, path) {
+    let extra = super::auth::extra_headers(a);
+    let index = match fetch::get_reuse(&mut conn, ip, a.target.port, &a.target.host, path, &extra) {
         Ok(b) => b,
         Err(e) => {
             state.scrollback.push_error(e.as_bytes());

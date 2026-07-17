@@ -68,9 +68,10 @@ pub(super) fn one_file(
         tally.skipped += 1;
         return true;
     }
+    let extra = super::auth::extra_headers(a);
     if a.skip_unchanged {
         if let Some(local) = store::size(pid, dest) {
-            if fetch::head_reuse(conn, ip, a.target.port, &a.target.host, path) == Some(local as usize) {
+            if fetch::head_reuse(conn, ip, a.target.port, &a.target.host, path, &extra) == Some(local as usize) {
                 tally.skipped += 1;
                 return true;
             }
@@ -81,7 +82,7 @@ pub(super) fn one_file(
         tally.failed += 1;
         return false;
     }
-    match fetch::get_reuse(conn, ip, a.target.port, &a.target.host, path) {
+    match fetch::get_reuse(conn, ip, a.target.port, &a.target.host, path, &extra) {
         Ok(body) => match store::write(pid, dest, &body) {
             Ok(()) => {
                 state.scrollback.push_line(&progress::file_line(dest, body.len()));

@@ -14,20 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod args;
-pub mod auth;
-pub mod conn;
-pub mod fetch;
-pub mod framing;
-pub mod http;
-pub mod ipv4;
-pub mod progress;
-pub mod recurse;
-pub mod resolve;
-mod run;
-pub mod scan;
-pub mod store;
-pub mod target;
-mod walk;
+use alloc::vec::Vec;
+use nonos_base64::encode;
 
-pub use run::run;
+use super::args::PullArgs;
+
+pub fn extra_headers(a: &PullArgs) -> Vec<u8> {
+    let mut e = Vec::new();
+    if let Some(cred) = &a.auth {
+        e.extend_from_slice(b"Authorization: Basic ");
+        e.extend_from_slice(&encode(cred));
+        e.extend_from_slice(b"\r\n");
+    }
+    for h in &a.headers {
+        e.extend_from_slice(h);
+        e.extend_from_slice(b"\r\n");
+    }
+    e
+}

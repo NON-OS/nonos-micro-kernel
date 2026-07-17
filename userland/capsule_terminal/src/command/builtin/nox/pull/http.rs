@@ -26,33 +26,39 @@ pub struct Parsed {
     pub gzip: bool,
 }
 
-pub fn build_get(host: &[u8], path: &[u8]) -> Vec<u8> {
+pub fn build_get(host: &[u8], path: &[u8], extra: &[u8]) -> Vec<u8> {
     let mut r = Vec::new();
     r.extend_from_slice(b"GET ");
     r.extend_from_slice(path);
     r.extend_from_slice(b" HTTP/1.1\r\nHost: ");
     r.extend_from_slice(host);
-    r.extend_from_slice(b"\r\nConnection: close\r\nUser-Agent: nonos-nox\r\nAccept-Encoding: gzip\r\n\r\n");
+    r.extend_from_slice(b"\r\nConnection: close\r\nUser-Agent: nonos-nox\r\nAccept-Encoding: gzip\r\n");
+    r.extend_from_slice(extra);
+    r.extend_from_slice(b"\r\n");
     r
 }
 
-pub fn build_get_ka(host: &[u8], path: &[u8]) -> Vec<u8> {
+pub fn build_get_ka(host: &[u8], path: &[u8], extra: &[u8]) -> Vec<u8> {
     let mut r = Vec::new();
     r.extend_from_slice(b"GET ");
     r.extend_from_slice(path);
     r.extend_from_slice(b" HTTP/1.1\r\nHost: ");
     r.extend_from_slice(host);
-    r.extend_from_slice(b"\r\nConnection: keep-alive\r\nUser-Agent: nonos-nox\r\nAccept-Encoding: gzip\r\n\r\n");
+    r.extend_from_slice(b"\r\nConnection: keep-alive\r\nUser-Agent: nonos-nox\r\nAccept-Encoding: gzip\r\n");
+    r.extend_from_slice(extra);
+    r.extend_from_slice(b"\r\n");
     r
 }
 
-pub fn build_head(host: &[u8], path: &[u8]) -> Vec<u8> {
+pub fn build_head(host: &[u8], path: &[u8], extra: &[u8]) -> Vec<u8> {
     let mut r = Vec::new();
     r.extend_from_slice(b"HEAD ");
     r.extend_from_slice(path);
     r.extend_from_slice(b" HTTP/1.1\r\nHost: ");
     r.extend_from_slice(host);
-    r.extend_from_slice(b"\r\nConnection: keep-alive\r\nUser-Agent: nonos-nox\r\n\r\n");
+    r.extend_from_slice(b"\r\nConnection: keep-alive\r\nUser-Agent: nonos-nox\r\n");
+    r.extend_from_slice(extra);
+    r.extend_from_slice(b"\r\n");
     r
 }
 

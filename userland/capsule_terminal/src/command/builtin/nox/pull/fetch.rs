@@ -28,10 +28,10 @@ const EMPTY_BUDGET: u32 = 64;
 const RETRIES: u32 = 3;
 const BACKOFF_MS: i64 = 250;
 
-pub fn get(ip: [u8; 4], port: u16, host: &[u8], path: &[u8]) -> Result<Vec<u8>, &'static str> {
+pub fn get(ip: [u8; 4], port: u16, host: &[u8], path: &[u8], extra: &[u8]) -> Result<Vec<u8>, &'static str> {
     let mut last = "connect failed";
     for i in 0..RETRIES {
-        match attempt(ip, port, host, path) {
+        match attempt(ip, port, host, path, extra) {
             Ok(body) => return Ok(body),
             Err((false, e)) => return Err(e),
             Err((true, e)) => {
@@ -51,6 +51,7 @@ pub fn get_reuse(
     port: u16,
     host: &[u8],
     path: &[u8],
+    extra: &[u8],
 ) -> Result<Vec<u8>, &'static str> {
     for _ in 0..2 {
         if conn.is_none() {
@@ -60,7 +61,7 @@ pub fn get_reuse(
             Some(c) => c,
             None => break,
         };
-        match get_on(&*c, host, path) {
+        match get_on(&*c, host, path, extra) {
             Ok(body) => return Ok(body),
             Err((false, e)) => return Err(e),
             Err((true, _)) => {
@@ -70,7 +71,7 @@ pub fn get_reuse(
             }
         }
     }
-    get(ip, port, host, path)
+    get(ip, port, host, path, extra)
 }
 
 pub fn head_reuse(
@@ -79,6 +80,7 @@ pub fn head_reuse(
     port: u16,
     host: &[u8],
     path: &[u8],
+    extra: &[u8],
 ) -> Option<usize> {
     for _ in 0..2 {
         if conn.is_none() {
@@ -88,7 +90,7 @@ pub fn head_reuse(
             Some(c) => c,
             None => return None,
         };
-        if let Some(n) = head_len(&*c, host, path) {
+        if let Some(n) = head_len(&*c, host, path, extra) {
             return Some(n);
         }
         if let Some(c) = conn.take() {
@@ -98,8 +100,8 @@ pub fn head_reuse(
     None
 }
 
-fn head_len<T: Transport>(conn: &T, host: &[u8], path: &[u8]) -> Option<usize> {
-    if !conn.send(&http::build_head(host, path)) {
+fn head_len<T: Transport>(conn: &T, host: &[u8], path: &[u8], extra: &[u8]) -> Option<usize> {
+    if !conn.send(&http::build_head(host, path, extra)) {
         return None;
     }
     let mut raw = Vec::new();
@@ -130,9 +132,9 @@ fn head_len<T: Transport>(conn: &T, host: &[u8], path: &[u8]) -> Option<usize> {
     }
 }
 
-fn attempt(ip: [u8; 4], port: u16, host: &[u8], path: &[u8]) -> Result<Vec<u8>, (bool, &'static str)> {
+fn attempt(ip: [u8; 4], port: u16, host: &[u8], path: &[u8], extra: &[u8]) -> Result<Vec<u8>, (bool, &'static str)> {
     let conn = connect(ip, port).ok_or((true, "connect failed"))?;
-    if !conn.send(&http::build_get(host, path)) {
+    if !conn.send(&http::build_get(host, path, extra)) {
         conn.close();
         return Err((true, "send failed"));
     }
@@ -202,8 +204,9 @@ pub fn get_on<T: Transport>(
     conn: &T,
     host: &[u8],
     path: &[u8],
+    extra: &[u8],
 ) -> Result<Vec<u8>, (bool, &'static str)> {
-    if !conn.send(&http::build_get_ka(host, path)) {
+    if !conn.send(&http::build_get_ka(host, path, extra)) {
         return Err((true, "send failed"));
     }
     let mut raw = Vec::new();

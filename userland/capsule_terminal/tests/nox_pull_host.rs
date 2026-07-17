@@ -185,7 +185,7 @@ fn args_flag_and_default_dest() {
 
 #[test]
 fn http_build_get_shape() {
-    let r = http::build_get(b"10.0.2.2:8000", b"/a.txt");
+    let r = http::build_get(b"10.0.2.2:8000", b"/a.txt", b"");
     assert!(scan::find(&r, b"GET /a.txt HTTP/1.1\r\n").is_some());
     assert!(scan::find(&r, b"Host: 10.0.2.2:8000\r\n").is_some());
     assert!(r.ends_with(b"\r\n\r\n"));
@@ -285,7 +285,7 @@ fn gunzip_hello_roundtrips() {
 
 #[test]
 fn http_build_get_ka_is_keep_alive() {
-    let r = http::build_get_ka(b"example.com", b"/f.txt");
+    let r = http::build_get_ka(b"example.com", b"/f.txt", b"");
     assert!(scan::find(&r, b"Connection: keep-alive").is_some());
     assert!(scan::find(&r, b"Accept-Encoding: gzip").is_some());
     assert!(r.ends_with(b"\r\n\r\n"));
@@ -320,7 +320,7 @@ fn frame_rejects_missing_content_length_for_keepalive() {
 
 #[test]
 fn http_build_head_is_head_without_encoding() {
-    let r = http::build_head(b"example.com", b"/f.txt");
+    let r = http::build_head(b"example.com", b"/f.txt", b"");
     assert!(r.starts_with(b"HEAD /f.txt HTTP/1.1"));
     assert!(scan::find(&r, b"Connection: keep-alive").is_some());
     assert!(scan::find(&r, b"Accept-Encoding").is_none());
@@ -341,4 +341,33 @@ fn args_parse_both_flags_any_order() {
     let a = args::parse(&argv).expect("parse");
     assert!(a.skip_unchanged);
     assert!(a.no_clobber);
+}
+
+#[test]
+fn args_parse_auth_and_header() {
+    let argv: [&[u8]; 5] = [b"-a", b"user:pass", b"-H", b"X-Test: 1", b"example.com/f.txt"];
+    let a = args::parse(&argv).expect("parse");
+    assert_eq!(a.auth.as_deref(), Some(&b"user:pass"[..]));
+    assert_eq!(a.headers.len(), 1);
+    assert_eq!(&a.headers[0], b"X-Test: 1");
+}
+
+#[test]
+fn http_build_get_includes_extra_headers() {
+    let r = http::build_get(b"h", b"/p", b"Authorization: Basic abc\r\n");
+    assert!(scan::find(&r, b"Authorization: Basic abc").is_some());
+    assert!(r.ends_with(b"\r\n\r\n"));
+}
+
+#[path = "../../base64/src"]
+mod base64 {
+    #[path = "decode.rs"]
+    pub mod decode;
+    #[path = "encode.rs"]
+    pub mod encode;
+}
+
+#[test]
+fn base64_encode_basic_auth_credential() {
+    assert_eq!(&base64::encode::encode(b"user:pass"), b"dXNlcjpwYXNz");
 }
