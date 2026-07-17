@@ -1167,12 +1167,39 @@ nonos-mk-net-sockets-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) 
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	$(call nonos_kernel_build,microkernel-net-sockets,microkernel-net-sockets)
 
-# Back-compat alias. The separate, lighter desktop-gui profile is retired: the
-# default image ships the whole system (nonos-mk-zerostate), and a smaller build
-# is a menuconfig choice, not a second hardcoded target. Everything that used to
-# build the desktop-gui cut now builds the full ship image.
-.PHONY: nonos-mk-desktop-gui-prod
-nonos-mk-desktop-gui-prod: nonos-mk-zerostate
+# nonos-mk-desktop-gui-prod: the QEMU-bootable profile. This is NOT just a lighter
+# cut of zerostate; it deliberately excludes the real-hardware driver capsules
+# (iwlwifi, rtl8821ce, rtl8169, e1000, rtl8139, ahci, hda, nvme, usb-msc, i2c)
+# that have no counterpart under QEMU and block on spawn when their hardware is
+# absent. The runtime, debug, and benchmark boot targets use this so a QEMU boot
+# reaches the ready marker. The full hardware image is nonos-mk-zerostate, which
+# is what ships and what the ISO carries; do not fold this into it.
+nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
+		$(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) $(ramfs_ARTIFACTS) \
+		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
+		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
+		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
+		$(driver-virtio-net_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
+		$(driver-xhci_ARTIFACTS) $(driver-usb-hid_ARTIFACTS) \
+		$(net-core_ARTIFACTS) \
+		$(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) \
+		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
+		$(installer_ARTIFACTS) \
+		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
+		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
+		$(image-codec_ARTIFACTS) $(image-viewer_ARTIFACTS) $(clipboard_ARTIFACTS) \
+		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
+		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
+		$(calculator_ARTIFACTS) $(clock_ARTIFACTS) $(browser_ARTIFACTS) \
+		$(snake_ARTIFACTS) \
+		$(wallet-nonos_ARTIFACTS) $(terminal_ARTIFACTS) \
+		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
+		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
+		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
+		$(ZK_POLICY_ROOT) \
+		nonos-mk-verify-desktop-gui-capsules \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	$(call nonos_kernel_build,microkernel-desktop-gui + nonos-stark-attest,microkernel-desktop-gui$(_boot_comma)nonos-stark-attest)
 
 # nonos-mk-zerostate: the canonical NONOS image. The whole ZeroState system in
 # one build: every capsule and driver, the transparent STARK spawn gate
