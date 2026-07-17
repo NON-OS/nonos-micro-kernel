@@ -32,3 +32,7 @@ mod poseidon_constants_gen;
 mod poseidon_merkle_tests;
 #[cfg(test)]
 mod stark_selftest_gen;
+
+// Machine-checked proof harnesses, compiled only under `cargo kani`.
+#[cfg(kani)]
+mod kani_proofs;

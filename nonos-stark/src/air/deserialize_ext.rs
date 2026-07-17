@@ -30,12 +30,18 @@ struct Reader<'a> {
 
 impl<'a> Reader<'a> {
     fn take(&mut self, n: usize) -> Option<&'a [u8]> {
-        if self.i + n > self.b.len() {
+        let end = self.i.checked_add(n)?;
+        if end > self.b.len() {
             return None;
         }
-        let s = &self.b[self.i..self.i + n];
-        self.i += n;
+        let s = &self.b[self.i..end];
+        self.i = end;
         Some(s)
+    }
+    /// Bytes still unread. A length field is capped at this, since every element
+    /// consumes at least one byte, so a hostile count can never over-allocate.
+    fn remaining(&self) -> usize {
+        self.b.len() - self.i
     }
     fn u32(&mut self) -> Option<usize> {
         let b = self.take(4)?;
@@ -59,7 +65,7 @@ impl<'a> Reader<'a> {
     }
     fn path(&mut self) -> Option<Vec<[u8; 32]>> {
         let n = self.u32()?;
-        let mut v = Vec::with_capacity(n);
+        let mut v = Vec::with_capacity(n.min(self.remaining()));
         for _ in 0..n {
             v.push(self.digest()?);
         }
@@ -67,7 +73,7 @@ impl<'a> Reader<'a> {
     }
     fn fp2s(&mut self) -> Option<Vec<Fp2>> {
         let n = self.u32()?;
-        let mut v = Vec::with_capacity(n);
+        let mut v = Vec::with_capacity(n.min(self.remaining()));
         for _ in 0..n {
             v.push(self.fp2()?);
         }
@@ -83,16 +89,16 @@ pub fn deserialize_proof_ext(bytes: &[u8]) -> Option<StarkProofExt> {
     let ood_frame = r.fp2s()?;
 
     let nroots = r.u32()?;
-    let mut roots = Vec::with_capacity(nroots);
+    let mut roots = Vec::with_capacity(nroots.min(r.remaining()));
     for _ in 0..nroots {
         roots.push(r.digest()?);
     }
     let final_layer = r.fp2s()?;
     let nfq = r.u32()?;
-    let mut fri_queries = Vec::with_capacity(nfq);
+    let mut fri_queries = Vec::with_capacity(nfq.min(r.remaining()));
     for _ in 0..nfq {
         let nl = r.u32()?;
-        let mut layers = Vec::with_capacity(nl);
+        let mut layers = Vec::with_capacity(nl.min(r.remaining()));
         for _ in 0..nl {
             let a = r.fp2()?;
             let a_path = r.path()?;
@@ -106,12 +112,12 @@ pub fn deserialize_proof_ext(bytes: &[u8]) -> Option<StarkProofExt> {
     let fri = FriProofExt { roots, final_layer, queries: fri_queries, pow_nonce };
 
     let nq = r.u32()?;
-    let mut queries = Vec::with_capacity(nq);
+    let mut queries = Vec::with_capacity(nq.min(r.remaining()));
     for _ in 0..nq {
         let deep = r.fp2()?;
         let deep_path = r.path()?;
         let nt = r.u32()?;
-        let mut trace = Vec::with_capacity(nt);
+        let mut trace = Vec::with_capacity(nt.min(r.remaining()));
         for _ in 0..nt {
             trace.push(r.fp()?);
         }
