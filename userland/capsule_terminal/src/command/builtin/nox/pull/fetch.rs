@@ -18,7 +18,8 @@ use alloc::vec::Vec;
 use nonos_inflate::gunzip;
 use nonos_libc::{mk_time_millis, mk_yield};
 
-use super::conn::{connect, Rx};
+use super::conn::{connect, Conn, Rx, Transport};
+use super::framing;
 use super::http;
 
 pub const MAX_FETCH: usize = 64 * 1024 * 1024;
@@ -42,6 +43,34 @@ pub fn get(ip: [u8; 4], port: u16, host: &[u8], path: &[u8]) -> Result<Vec<u8>, 
         }
     }
     Err(last)
+}
+
+pub fn get_reuse(
+    conn: &mut Option<Conn>,
+    ip: [u8; 4],
+    port: u16,
+    host: &[u8],
+    path: &[u8],
+) -> Result<Vec<u8>, &'static str> {
+    for _ in 0..2 {
+        if conn.is_none() {
+            *conn = connect(ip, port);
+        }
+        let c = match conn {
+            Some(c) => c,
+            None => break,
+        };
+        match get_on(&*c, host, path) {
+            Ok(body) => return Ok(body),
+            Err((false, e)) => return Err(e),
+            Err((true, _)) => {
+                if let Some(c) = conn.take() {
+                    c.close();
+                }
+            }
+        }
+    }
+    get(ip, port, host, path)
 }
 
 fn attempt(ip: [u8; 4], port: u16, host: &[u8], path: &[u8]) -> Result<Vec<u8>, (bool, &'static str)> {
@@ -97,13 +126,50 @@ fn finish(raw: &[u8]) -> Result<Vec<u8>, &'static str> {
             .ok_or("truncated body")?,
         None => &raw[head.body_off..],
     };
-    if head.gzip {
-        let out = gunzip(body).ok_or("gunzip failed")?;
+    decode(body, head.gzip).map_err(|(_, e)| e)
+}
+
+fn decode(body: &[u8], gzip: bool) -> Result<Vec<u8>, (bool, &'static str)> {
+    if gzip {
+        let out = gunzip(body).ok_or((false, "gunzip failed"))?;
         if out.len() > MAX_FETCH {
-            return Err("response too large");
+            return Err((false, "response too large"));
         }
         Ok(out)
     } else {
         Ok(body.to_vec())
+    }
+}
+
+pub fn get_on<T: Transport>(
+    conn: &T,
+    host: &[u8],
+    path: &[u8],
+) -> Result<Vec<u8>, (bool, &'static str)> {
+    if !conn.send(&http::build_get_ka(host, path)) {
+        return Err((true, "send failed"));
+    }
+    let mut raw = Vec::new();
+    let mut empties = 0u32;
+    loop {
+        if let Some(f) = framing::frame(&raw)? {
+            return decode(&raw[f.body], f.gzip);
+        }
+        match conn.recv(&mut raw) {
+            Rx::Data => empties = 0,
+            Rx::Empty => {
+                if conn.state() >= CLOSE_WAIT {
+                    return Err((true, "truncated body"));
+                }
+                empties += 1;
+                if empties > EMPTY_BUDGET {
+                    return Err((true, "recv stalled"));
+                }
+            }
+            Rx::Gone => return Err((true, "connection closed")),
+        }
+        if raw.len() > MAX_FETCH {
+            return Err((false, "response too large"));
+        }
     }
 }

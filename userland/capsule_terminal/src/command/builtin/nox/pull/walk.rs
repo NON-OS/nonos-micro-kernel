@@ -38,7 +38,8 @@ pub(super) fn walk(
     if depth >= MAX_DEPTH {
         return;
     }
-    let index = match fetch::get(ip, a.target.port, &a.target.host, path) {
+    let mut conn = None;
+    let index = match fetch::get_reuse(&mut conn, ip, a.target.port, &a.target.host, path) {
         Ok(b) => b,
         Err(e) => {
             state.scrollback.push_error(e.as_bytes());
@@ -48,7 +49,7 @@ pub(super) fn walk(
     for entry in recurse::parse_autoindex(&index) {
         if *count >= MAX_FILES {
             state.scrollback.push_error(b"pull: file limit reached");
-            return;
+            break;
         }
         let child_url = join(path, &entry.name);
         let child_dest = join(dest, &entry.name);
@@ -57,8 +58,11 @@ pub(super) fn walk(
             walk(state, pid, ip, a, &child_url, &child_dest, depth + 1, count, tally);
         } else {
             *count += 1;
-            one_file(state, pid, ip, a, &child_url, &child_dest, tally);
+            one_file(state, pid, &mut conn, ip, a, &child_url, &child_dest, tally);
         }
+    }
+    if let Some(c) = conn {
+        c.close();
     }
 }
 

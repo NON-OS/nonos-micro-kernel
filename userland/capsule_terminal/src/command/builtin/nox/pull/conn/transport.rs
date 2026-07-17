@@ -14,11 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod connect;
-mod frame;
-mod io_recv;
-mod io_send;
-mod transport;
+use alloc::vec::Vec;
 
-pub use connect::{connect, Conn, Rx};
-pub use transport::Transport;
+use super::{Conn, Rx};
+
+pub trait Transport {
+    fn send(&self, data: &[u8]) -> bool;
+    fn recv(&self, out: &mut Vec<u8>) -> Rx;
+    fn state(&self) -> u8;
+}
+
+impl Transport for Conn {
+    fn send(&self, data: &[u8]) -> bool {
+        Conn::send(self, data)
+    }
+    fn recv(&self, out: &mut Vec<u8>) -> Rx {
+        Conn::recv(self, out)
+    }
+    fn state(&self) -> u8 {
+        Conn::state(self)
+    }
+}

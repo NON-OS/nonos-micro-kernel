@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::ensure_pid::ensure_pid;
+use super::conn::Conn;
 use super::walk::walk;
 use super::{args, fetch, progress, store};
 use crate::term::cwd::resolve;
@@ -43,7 +44,11 @@ pub fn run(state: &mut State, argv: &[&[u8]]) -> bool {
         let mut count = 0u32;
         walk(state, pid, ip, &a, &a.target.path, &dest, 0, &mut count, &mut tally);
     } else {
-        one_file(state, pid, ip, &a, &a.target.path, &dest, &mut tally);
+        let mut conn = None;
+        one_file(state, pid, &mut conn, ip, &a, &a.target.path, &dest, &mut tally);
+        if let Some(c) = conn {
+            c.close();
+        }
     }
     state.scrollback.push_line(&progress::summary(&tally));
     true
@@ -52,6 +57,7 @@ pub fn run(state: &mut State, argv: &[&[u8]]) -> bool {
 pub(super) fn one_file(
     state: &mut State,
     pid: u32,
+    conn: &mut Option<Conn>,
     ip: [u8; 4],
     a: &args::PullArgs,
     path: &[u8],
@@ -67,7 +73,7 @@ pub(super) fn one_file(
         tally.failed += 1;
         return false;
     }
-    match fetch::get(ip, a.target.port, &a.target.host, path) {
+    match fetch::get_reuse(conn, ip, a.target.port, &a.target.host, path) {
         Ok(body) => match store::write(pid, dest, &body) {
             Ok(()) => {
                 state.scrollback.push_line(&progress::file_line(dest, body.len()));

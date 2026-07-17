@@ -17,6 +17,7 @@
 pub mod args;
 pub mod conn;
 pub mod fetch;
+pub mod framing;
 pub mod http;
 pub mod ipv4;
 pub mod progress;
