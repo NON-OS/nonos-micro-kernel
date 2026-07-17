@@ -23,6 +23,7 @@ pub struct Parsed {
     pub body_off: usize,
     pub content_length: Option<usize>,
     pub chunked: bool,
+    pub gzip: bool,
 }
 
 pub fn build_get(host: &[u8], path: &[u8]) -> Vec<u8> {
@@ -31,7 +32,7 @@ pub fn build_get(host: &[u8], path: &[u8]) -> Vec<u8> {
     r.extend_from_slice(path);
     r.extend_from_slice(b" HTTP/1.1\r\nHost: ");
     r.extend_from_slice(host);
-    r.extend_from_slice(b"\r\nConnection: close\r\nUser-Agent: nonos-nox\r\n\r\n");
+    r.extend_from_slice(b"\r\nConnection: close\r\nUser-Agent: nonos-nox\r\nAccept-Encoding: gzip\r\n\r\n");
     r
 }
 
@@ -42,14 +43,17 @@ pub fn parse_head(buf: &[u8]) -> Option<Parsed> {
     let status = parse_status(lines.next()?)?;
     let mut content_length = None;
     let mut chunked = false;
+    let mut gzip = false;
     for line in lines {
         if let Some(v) = header(line, b"content-length") {
             content_length = scan::parse_usize(v);
         } else if let Some(v) = header(line, b"transfer-encoding") {
             chunked = scan::find(v, b"chunked").is_some();
+        } else if let Some(v) = header(line, b"content-encoding") {
+            gzip = scan::find(v, b"gzip").is_some();
         }
     }
-    Some(Parsed { status, body_off: sep + 4, content_length, chunked })
+    Some(Parsed { status, body_off: sep + 4, content_length, chunked, gzip })
 }
 
 fn parse_status(line: &[u8]) -> Option<u16> {

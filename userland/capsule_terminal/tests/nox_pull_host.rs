@@ -245,3 +245,37 @@ fn progress_summary_counts() {
     let t = progress::Tally { ok: 3, skipped: 1, failed: 2 };
     assert_eq!(progress::summary(&t), b"3 ok, 1 skipped, 2 failed");
 }
+
+#[path = "../../inflate/src"]
+mod inflate {
+    #[path = "tables.rs"]
+    pub mod tables;
+    #[path = "bits.rs"]
+    pub mod bits;
+    #[path = "huff.rs"]
+    pub mod huff;
+    #[path = "codes.rs"]
+    pub mod codes;
+    #[path = "fixed.rs"]
+    pub mod fixed;
+    #[path = "dynamic.rs"]
+    pub mod dynamic;
+    #[path = "stored.rs"]
+    pub mod stored;
+    #[path = "inflate_raw.rs"]
+    pub mod inflate_raw;
+    #[path = "zlib.rs"]
+    pub mod zlib;
+    #[path = "gzip.rs"]
+    pub mod gzip;
+}
+
+#[test]
+fn gunzip_hello_roundtrips() {
+    let gz: [u8; 25] = [
+        0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xcb, 0x48, 0xcd, 0xc9, 0xc9,
+        0x07, 0x00, 0x86, 0xa6, 0x10, 0x36, 0x05, 0x00, 0x00, 0x00,
+    ];
+    let out = inflate::gzip::gunzip(&gz).expect("gunzip");
+    assert_eq!(&out, b"hello");
+}

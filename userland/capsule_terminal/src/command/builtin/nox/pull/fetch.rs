@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec::Vec;
+use nonos_inflate::gunzip;
 use nonos_libc::{mk_time_millis, mk_yield};
 
 use super::conn::{connect, Rx};
@@ -90,11 +91,19 @@ fn finish(raw: &[u8]) -> Result<Vec<u8>, &'static str> {
     if head.chunked {
         return Err("chunked transfer unsupported");
     }
-    match head.content_length {
+    let body = match head.content_length {
         Some(len) => raw
             .get(head.body_off..head.body_off + len)
-            .map(|b| b.to_vec())
-            .ok_or("truncated body"),
-        None => Ok(raw[head.body_off..].to_vec()),
+            .ok_or("truncated body")?,
+        None => &raw[head.body_off..],
+    };
+    if head.gzip {
+        let out = gunzip(body).ok_or("gunzip failed")?;
+        if out.len() > MAX_FETCH {
+            return Err("response too large");
+        }
+        Ok(out)
+    } else {
+        Ok(body.to_vec())
     }
 }

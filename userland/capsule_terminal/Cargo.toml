@@ -27,6 +27,7 @@ nonos-autorun-selftest = []
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
+nonos_inflate = { path = "../inflate" }
 
 [profile.release]
 panic = "abort"
