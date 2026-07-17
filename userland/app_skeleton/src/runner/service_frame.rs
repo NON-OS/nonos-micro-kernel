@@ -17,7 +17,6 @@
 use crate::app::App;
 use crate::clients::{compositor, wm};
 use crate::discover::Peers;
-use nonos_libc::mk_display_vsync_wait;
 
 use super::boot::BootedApp;
 use super::drain_ipc::drain;
@@ -39,7 +38,6 @@ pub(super) fn service_frame<A: App>(
 ) -> bool {
     refresh_input(booted, peers, request_id);
     if !ensure_primed(booted, peers, request_id) {
-        let _ = mk_display_vsync_wait(0);
         return false;
     }
     let result = drain(
@@ -72,7 +70,6 @@ pub(super) fn service_frame<A: App>(
         let _ = wm::window_minimize(peers.wm, next(request_id), booted.manifest.window_id);
         let _ = compositor::scene_remove(peers.compositor, next(request_id), 0);
         booted.minimized = true;
-        let _ = mk_display_vsync_wait(0);
         return false;
     }
     if result.restore && booted.minimized {
@@ -91,12 +88,10 @@ pub(super) fn service_frame<A: App>(
     }
     if result.maximize {
         maximize::toggle(booted, peers, request_id);
-        let _ = mk_display_vsync_wait(0);
         return false;
     }
     if result.repaint {
         repaint(booted, peers, request_id);
     }
-    let _ = mk_display_vsync_wait(0);
     false
 }

@@ -102,4 +102,17 @@ impl App for Browser {
     fn tick_interval_ms(&self) -> i64 {
         50
     }
+
+    // A request on the wire, a queued navigation, or stylesheets, images or
+    // fonts still to fetch all mean the load must keep stepping. Reporting busy
+    // makes the runner yield rather than sleep, so the page advances through its
+    // fetch stages on its own instead of stalling until the pointer moves.
+    fn busy(&self) -> bool {
+        let s = &self.state;
+        s.fetch.is_some()
+            || s.pending_nav.is_some()
+            || !s.css_queue.is_empty()
+            || !s.image_queue.is_empty()
+            || !s.font_queue.is_empty()
+    }
 }

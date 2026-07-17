@@ -16,7 +16,7 @@
 
 use alloc::vec;
 
-use nonos_libc::mk_time_millis;
+use nonos_libc::{mk_display_vsync_wait, mk_time_millis, mk_yield};
 
 use crate::app::App;
 use crate::discover::require_peers;
@@ -53,6 +53,17 @@ pub fn run_loop<A: App, F: Fn() -> A>(build: F) -> ! {
                 if booted.app.on_tick() && !booted.minimized {
                     repaint(&mut booted, &peers, &mut request_id);
                 }
+            }
+            // Pace the frame. With pending async work, yield cooperatively so
+            // the next tick lands promptly and peer capsules (the network
+            // driver) still run; the load then advances on the free-running
+            // clock without waiting on the scheduler's periodic wake, which is
+            // what made progress stall until an input event on some hardware.
+            // Idle, sleep to the next vblank so the app costs nothing at rest.
+            if booted.app.busy() {
+                let _ = mk_yield();
+            } else {
+                let _ = mk_display_vsync_wait(0);
             }
         }
     }
