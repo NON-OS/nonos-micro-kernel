@@ -143,14 +143,14 @@ fn extension_openings_verify_and_tampering_fails() {
     let tree = MerkleTree::commit_ext(&leaves);
     let root = tree.root();
 
-    for (i, &leaf) in leaves.iter().enumerate() {
+    for i in 0..n {
         let path = tree.open(i);
-        assert!(verify_path_ext(&root, i, leaf, &path), "honest ext opening rejected at {i}");
+        assert!(verify_path_ext(&root, i, leaves[i], &path), "honest ext opening rejected at {i}");
         // A tampered leaf must fail.
-        let bad = Fp2::new(leaf.c0 + Fp::ONE, leaf.c1);
+        let bad = Fp2::new(leaves[i].c0 + Fp::ONE, leaves[i].c1);
         assert!(!verify_path_ext(&root, i, bad, &path), "tampered ext leaf accepted at {i}");
         // The wrong index must fail.
-        assert!(!verify_path_ext(&root, i ^ 1, leaf, &path), "wrong index accepted at {i}");
+        assert!(!verify_path_ext(&root, i ^ 1, leaves[i], &path), "wrong index accepted at {i}");
     }
 }
 

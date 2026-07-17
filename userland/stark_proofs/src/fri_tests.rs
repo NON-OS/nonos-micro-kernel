@@ -15,7 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::crypto::stark::field::{Fp, Fp2};
-use crate::crypto::stark::fri::{fold_ext, fold_first, fold_layer, fri_prove, fri_verify, root_of_unity};
+use crate::crypto::stark::fri::{
+    fold_ext, fold_first, fold_layer, fri_prove, fri_verify, root_of_unity,
+};
 use crate::crypto::stark::poly::eval;
 
 extern crate alloc;
@@ -180,7 +182,7 @@ fn a_constant_codeword_folds_to_a_constant_in_the_extension() {
     let inv2 = Fp::from_u64(2).inv();
     let shift = Fp::from_u64(3);
     let c = Fp2::new(Fp::from_u64(0xDEAD), Fp::from_u64(0xBEEF));
-    let cw: Vec<Fp2> = vec![c; n];
+    let cw: Vec<Fp2> = core::iter::repeat(c).take(n).collect();
     let folded = fold_ext(&cw, Fp2::new(Fp::from_u64(9), Fp::from_u64(11)), shift, omega, inv2);
     assert_eq!(folded.len(), n / 2);
     for v in &folded {
