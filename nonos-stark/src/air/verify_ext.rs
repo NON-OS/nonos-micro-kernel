@@ -85,7 +85,7 @@ pub fn stark_verify_ext_blown_bound<A: AirExt>(
 
     let mut transcript = Transcript::new(b"NONOS-STARK-EXT");
     if !context.is_empty() {
-        transcript.absorb_digest(&crate::crypto::hash::keccak256(context));
+        transcript.absorb_digest(&crate::hash::keccak256(context));
     }
     transcript.absorb_digest(&proof.trace_root);
     let coeffs: Vec<Fp2> = (0..num_coeffs(air)).map(|_| transcript.challenge_fp2()).collect();

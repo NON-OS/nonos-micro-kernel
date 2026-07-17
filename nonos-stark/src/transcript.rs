@@ -21,7 +21,7 @@
 //! into a non-interactive one, sound in the random-oracle model.
 
 use super::field::{Fp, Fp2};
-use crate::crypto::hash::keccak256;
+use crate::hash::keccak256;
 use alloc::vec::Vec;
 
 pub struct Transcript {

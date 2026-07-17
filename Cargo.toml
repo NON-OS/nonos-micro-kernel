@@ -740,6 +740,8 @@ sha1-legacy = []
 std = []
 
 [dependencies]
+# Transparent STARK stack, shared with the bootloader for kernel self-attestation.
+nonos-stark = { path = "nonos-stark" }
 # Synchronization. spin is the kernel-wide lock primitive (no_std,
 # interrupt-safe).
 spin        = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex", "lazy", "rwlock"] }
