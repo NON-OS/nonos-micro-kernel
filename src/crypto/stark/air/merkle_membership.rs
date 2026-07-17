@@ -52,6 +52,34 @@ impl MerkleMembership {
         MerkleMembership { hasher, log_rounds, root, siblings, directions }
     }
 
+    /// The witness for a private `leaf`: run the Poseidon path, injecting each
+    /// sibling at its compression boundary, and lay the state out row by row. The
+    /// prover holds the leaf; the verifier never sees it.
+    pub fn trace(&self, leaf: [Fp; RATE]) -> Vec<Fp> {
+        let l = self.rounds();
+        let depth = self.depth();
+        let n = (1usize << self.log_slots()) * l;
+        let mut trace = alloc::vec![Fp::ZERO; n * WIDTH];
+        let mut state = inject(leaf, self.siblings[0], self.directions[0]);
+        for r in 0..n {
+            trace[r * WIDTH..r * WIDTH + WIDTH].copy_from_slice(&state);
+            let pr = self.hasher.round_with_rc(&state, &self.hasher.round_constant(r % l));
+            if r % l == l - 1 && r < depth * l {
+                let m = (r + 1) / l;
+                let mut node = [Fp::ZERO; RATE];
+                node.copy_from_slice(&pr[..RATE]);
+                state = if m < depth {
+                    inject(node, self.siblings[m], self.directions[m])
+                } else {
+                    inject(node, [Fp::ZERO; RATE], false)
+                };
+            } else {
+                state = pr;
+            }
+        }
+        trace
+    }
+
     fn rounds(&self) -> usize {
         1usize << self.log_rounds
     }
@@ -176,4 +204,18 @@ impl Air for MerkleMembership {
         }
         b
     }
+}
+
+/// Place the node and its sibling into a fresh sponge state, ordered by the index
+/// bit: the node is the left child when `right` is false, the right child otherwise.
+fn inject(node: [Fp; RATE], sibling: [Fp; RATE], right: bool) -> [Fp; WIDTH] {
+    let mut state = [Fp::ZERO; WIDTH];
+    if !right {
+        state[..RATE].copy_from_slice(&node);
+        state[RATE..].copy_from_slice(&sibling);
+    } else {
+        state[..RATE].copy_from_slice(&sibling);
+        state[RATE..].copy_from_slice(&node);
+    }
+    state
 }
