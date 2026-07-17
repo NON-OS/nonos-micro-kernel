@@ -1322,6 +1322,14 @@ $(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel
 
 nonos-mk-sign: $(TARGET_DIR)/kernel_signed.bin
 
+ifdef NONOS_STARK_KERNEL_ATTEST
+# Kernel self-attestation: embed the transparent STARK trailer the bootloader
+# verifies against the enrolled kernel root before jump, in place of the curve
+# boot proof. The trailer is bound to the kernel measurement by nonos-stark-enroll.
+$(TARGET_DIR)/kernel_attested.bin: $(TARGET_DIR)/kernel_signed.bin $(EMBED_TOOL) $(KERNEL_ATTEST_TRAILER)
+	@echo "Embedding kernel STARK self-attestation trailer..."
+	@$(EMBED_TOOL) --input $< --output $@ --proof-file $(KERNEL_ATTEST_TRAILER) --verbose
+else
 $(TARGET_DIR)/kernel_attested.bin: $(TARGET_DIR)/kernel_signed.bin $(EMBED_TOOL) $(ZK_BOOT_ROOT) $(ZK_BOOT_COMMITMENTS)
 	@echo "Embedding ZK attestation proof..."
 	@test -n "$(ZK_BOOT_INDEX)" || { echo "ZK_BOOT_INDEX is required"; exit 1; }
@@ -1336,6 +1344,7 @@ $(TARGET_DIR)/kernel_attested.bin: $(TARGET_DIR)/kernel_signed.bin $(EMBED_TOOL)
 		--secret-r "$(ZK_BOOT_SECRET_R)" \
 		--nonce-seed "$(ZK_BOOT_NONCE_SEED)" \
 		--verbose
+endif
 
 nonos-mk-attest: $(TARGET_DIR)/kernel_attested.bin
 
