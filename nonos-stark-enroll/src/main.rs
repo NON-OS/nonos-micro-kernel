@@ -185,11 +185,54 @@ fn read(path: &str) -> Vec<u8> {
     })
 }
 
+fn write(path: &str, bytes: &[u8]) {
+    fs::write(path, bytes).unwrap_or_else(|e| {
+        eprintln!("cannot write {path}: {e}");
+        exit(1)
+    });
+}
+
 fn usage() -> ! {
     eprintln!(
-        "usage:\n  nonos-stark-enroll selftest\n  nonos-stark-enroll kernel <kernel-image> <root.bin> <trailer.bin>"
+        "usage:\n  \
+         nonos-stark-enroll selftest\n  \
+         nonos-stark-enroll kernel <kernel-image> <root.bin> <trailer.bin>\n  \
+         nonos-stark-enroll capsules <root.bin> <CAPS:image:trailer-out> ..."
     );
     exit(1)
+}
+
+/// Enroll a whole capsule set under one policy root and write each capsule's
+/// trailer. Each spec is `CAPS:image:trailer-out`, where CAPS is the granted
+/// capability mask in hex. All capsules share the tree, so the root commits to
+/// the set and each trailer proves that capsule under exactly its capabilities.
+fn enroll_capsules(root_out: &str, specs: &[String]) {
+    let mut images: Vec<Vec<u8>> = Vec::new();
+    let mut contexts: Vec<Vec<u8>> = Vec::new();
+    let mut outs: Vec<String> = Vec::new();
+    for spec in specs {
+        let parts: Vec<&str> = spec.splitn(3, ':').collect();
+        if parts.len() != 3 {
+            eprintln!("bad spec {spec}, want CAPS:image:trailer-out");
+            exit(1);
+        }
+        let caps = u64::from_str_radix(parts[0].trim_start_matches("0x"), 16)
+            .unwrap_or_else(|_| {
+                eprintln!("bad capability mask {}", parts[0]);
+                exit(1)
+            });
+        let image = read(parts[1]);
+        contexts.push(capsule_context(&image, caps));
+        images.push(image);
+        outs.push(parts[2].to_string());
+    }
+    let refs: Vec<&[u8]> = images.iter().map(Vec::as_slice).collect();
+    let (root, trailers) = enroll(&refs, &contexts);
+    write(root_out, &root);
+    for (out, trailer) in outs.iter().zip(&trailers) {
+        write(out, trailer);
+    }
+    println!("enrolled {} capsules under root {}", images.len(), hex(&root));
 }
 
 fn main() {
@@ -200,16 +243,11 @@ fn main() {
             let image = read(&args[2]);
             let ctx = kernel_context(&image);
             let (root, trailers) = enroll(&[&image], &[ctx]);
-            fs::write(&args[3], root).unwrap_or_else(|e| {
-                eprintln!("write root: {e}");
-                exit(1)
-            });
-            fs::write(&args[4], &trailers[0]).unwrap_or_else(|e| {
-                eprintln!("write trailer: {e}");
-                exit(1)
-            });
+            write(&args[3], &root);
+            write(&args[4], &trailers[0]);
             println!("kernel enrolled under root {}", hex(&root));
         }
+        Some("capsules") if args.len() >= 4 => enroll_capsules(&args[2], &args[3..]),
         _ => usage(),
     }
 }
