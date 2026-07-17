@@ -140,6 +140,9 @@ ZK_BOOT_NONCE_SEED ?=
 ZK_BOOT_CHALLENGE ?=
 ZK_BOOT_SIDECAR  ?= $(ESP_DIR)/EFI/nonos/boot.zkp
 ZK_CAPSULE_ROOT  ?= $(NONOS_TRUST_DIR)/policy/zk_capsule_policy_root.bin
+# The kernel embeds this root at compile time (security/capsule_attest), so an
+# attested kernel build depends on the capsule enrollment having run first.
+ZK_POLICY_ROOT   ?= $(ZK_CAPSULE_ROOT)
 ZK_CAPSULE_LABELS ?= $(TARGET_DIR)/capsule-attest/capsule_labels.txt
 ZK_CAPSULE_SECRETS ?= $(TARGET_DIR)/capsule-attest/capsule_secrets.txt
 ZK_CAPSULE_COMMITMENTS ?= $(TARGET_DIR)/capsule-attest/capsule_commitments.bin
@@ -1287,21 +1290,21 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(ZK_POLICY_ROOT) \
 		nonos-mk-verify-desktop-gui-capsules \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-desktop-gui)..."
+	@echo "Building kernel (microkernel-desktop-gui + nonos-stark-attest)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-desktop-gui
+		--no-default-features --features microkernel-desktop-gui,nonos-stark-attest
 
 nonos-mk-full-gui-prod: nonos-mk-all-capsules-attested \
 		$(driver-iwlwifi_ARTIFACTS) $(driver-rtl8821ce_ARTIFACTS) \
 		nonos-mk-verify-desktop-gui-capsules \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-full-gui)..."
+	@echo "Building kernel (microkernel-full-gui + nonos-stark-attest)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-full-gui
+		--no-default-features --features microkernel-full-gui,nonos-stark-attest
 
 nonos-mk-setup-wizard-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
