@@ -16,7 +16,7 @@
 
 use nonos_policy_proto::Category;
 
-use crate::wifi::{ScanNetwork, ScanStats, WifiInterface};
+use crate::wifi::{NetStatus, ScanNetwork, ScanStats, WifiInterface};
 
 use super::cache::FieldValue;
 use super::edit_buffer::EditBuffer;
@@ -46,5 +46,7 @@ pub fn new() -> State {
         wifi_pass_active: false,
         wifi_pass: EditBuffer::empty(),
         wifi_connect: WifiConnect::Idle,
+        wifi_datapath: None,
+        wifi_net: NetStatus::NoService,
     }
 }

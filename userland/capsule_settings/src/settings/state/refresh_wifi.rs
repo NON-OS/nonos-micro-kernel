@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::wifi::{
-    connect_network, driver_stage, scan_adapters, scan_networks, DriverStage, ScanOutcome,
+    connect_network, driver_datapath, driver_stage, net_status, scan_adapters, scan_networks,
+    DriverStage, ScanOutcome,
 };
 
 use super::edit_buffer::EditBuffer;
@@ -29,7 +30,13 @@ use super::state::{State, WifiConnect, WifiScan};
 /// wedged driver. Every path leaves a visible result and keeps the cursor in
 /// range.
 pub fn run_wifi_scan(state: &mut State) {
-    state.wifi_stage = driver_stage();
+    refresh_wifi_status(state);
+    // Once connected, a channel scan would retune the radio off the live link and
+    // drop the connection (and net_core's traffic), so refreshing the status is
+    // all a connected panel does; the scan is only for finding networks to join.
+    if state.wifi_connect == WifiConnect::Connected {
+        return;
+    }
     match state.wifi_stage {
         Some(DriverStage::Ready) => {
             let (count, outcome, stats) = scan_networks(&mut state.wifi_networks);
@@ -57,6 +64,15 @@ pub fn run_wifi_scan(state: &mut State) {
             state.wifi_scan = WifiScan::Done(ScanOutcome::NoResponse);
         }
     }
+}
+
+/// Refresh the driver bring-up stage, the data-path frame counts and net_core's
+/// lease without touching the radio, so the connected view (address, counters)
+/// stays current on a live link that a channel scan would otherwise drop.
+pub fn refresh_wifi_status(state: &mut State) {
+    state.wifi_stage = driver_stage();
+    state.wifi_datapath = driver_datapath();
+    state.wifi_net = net_status();
 }
 
 /// Re-enumerate the wireless adapters into the WiFi panel state and keep the
@@ -110,4 +126,5 @@ pub fn enter_wifi(state: &mut State) {
     state.wifi_active = true;
     state.editing = false;
     refresh_wifi(state);
+    refresh_wifi_status(state);
 }

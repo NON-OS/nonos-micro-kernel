@@ -16,19 +16,24 @@
 
 //! The WiFi settings panel. The active tab lists the wireless adapters the
 //! broker discovered (`adapters`, `interface`) and the networks a scan found
-//! (`network`, `wire`, `scan_client`). The scan client sends the driver service
-//! its scan request and parses the reply; the panel shows the networks or a
-//! status line. The connect state machine stays proven-but-deferred until
-//! joining is wired.
+//! (`network`, `wire`, `scan_client`). The scan client also joins a network and
+//! reads the driver's data-path counts (`datapath`); `lease` reads the address
+//! net_core bound. The panel shows the networks, the connection, and its address.
 
 mod adapters;
+mod datapath;
 mod interface;
+mod lease;
+mod net_status;
 mod network;
 mod scan_client;
 mod wire;
 
 pub use adapters::scan_adapters;
+pub use datapath::{driver_datapath, DataPath};
 pub use interface::WifiInterface;
+pub use lease::NetStatus;
+pub use net_status::net_status;
 pub use network::ScanNetwork;
 pub use scan_client::{
     connect_network, driver_stage, scan_networks, ConnectResult, DriverStage, ScanOutcome,

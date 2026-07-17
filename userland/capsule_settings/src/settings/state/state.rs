@@ -17,7 +17,10 @@
 use nonos_policy_proto::Category;
 
 use crate::settings::schema::ALL_FIELDS;
-use crate::wifi::{ConnectResult, DriverStage, ScanNetwork, ScanOutcome, ScanStats, WifiInterface};
+use crate::wifi::{
+    ConnectResult, DataPath, DriverStage, NetStatus, ScanNetwork, ScanOutcome, ScanStats,
+    WifiInterface,
+};
 
 use super::cache::FieldValue;
 use super::edit_buffer::EditBuffer;
@@ -78,4 +81,11 @@ pub struct State {
     pub wifi_pass: EditBuffer,
     /// The outcome of the last connection attempt.
     pub wifi_connect: WifiConnect,
+    /// The driver's data-path frame counts from the last refresh, so a stuck DHCP
+    /// is legible: no TX means net_core handed nothing down, RX without parsed
+    /// means the frames never decrypt.
+    pub wifi_datapath: Option<DataPath>,
+    /// What net_core reports: down, bound-but-no-address, or a bound lease. Splits
+    /// "the stack never started" from "started but got no address".
+    pub wifi_net: NetStatus,
 }

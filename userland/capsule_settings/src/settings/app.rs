@@ -20,6 +20,7 @@ use super::event::on_event;
 use super::ipc::{hydrate, lookup_policy_port};
 use super::manifest::manifest;
 use super::paint::paint;
+use super::state::refresh_wifi::refresh_wifi_status;
 use super::state::{state_new, State};
 
 pub struct Settings {
@@ -66,5 +67,16 @@ impl App for Settings {
     fn paint(&mut self, fb: &mut PaintBuffer) {
         self.ensure_ready();
         paint(&self.state, fb);
+    }
+
+    // While the Wi-Fi panel is open, re-poll net_core every tick so a lease that
+    // binds a few seconds after connecting shows its address without the user
+    // having to trigger another scan.
+    fn on_tick(&mut self) -> bool {
+        if self.state.wifi_active {
+            refresh_wifi_status(&mut self.state);
+            return true;
+        }
+        false
     }
 }
