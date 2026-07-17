@@ -27,21 +27,21 @@ that gets read.
 
 ## Documentation
 
-[QUICKSTART.md](QUICKSTART.md) takes you from a clean checkout to the full system
-booting in QEMU.
+The full reference is the NØNOS documentation wiki in [docs/](docs/), mounted as a
+submodule so a checkout always carries the matching revision. It is written
+against the source tree, with file and line references, so every claim can be
+checked against the code. Start with the
+[architecture overview](docs/architecture/overview.md), then the
+[verification scope](docs/architecture/verification.md) and the
+[attestation model](docs/security/attestation.md).
 
-[BUILD.md](BUILD.md) is for assembling your own kernel. `make menuconfig` walks
-the profiles and the security options and writes a config; `make from-config`
-builds precisely that.
+The common tasks have a short guide at the repository root:
 
-[ATTESTATION.md](ATTESTATION.md) is the trust model in full: how the bootloader
-proves the kernel, how the kernel proves each capsule, and how both are checked.
-
-[CONTRIBUTING-ZK.md](CONTRIBUTING-ZK.md) is the route to writing a capsule,
-signing it, and getting it enrolled and attested.
-
-[SECURITY.md](SECURITY.md) sets out reporting, scope, and the trusted computing
-base. [REWARDS.md](REWARDS.md) sets out what securing NONOS pays.
+[QUICKSTART.md](QUICKSTART.md) goes from a clean checkout to the system booting in
+QEMU. [BUILD.md](BUILD.md) assembles your own kernel with `make menuconfig`.
+[CONTRIBUTING.md](CONTRIBUTING.md) is where to start; [CONTRIBUTING-ZK.md](CONTRIBUTING-ZK.md)
+is the capsule path. [SECURITY.md](SECURITY.md) covers reporting and scope, and
+[REWARDS.md](REWARDS.md) covers what securing NONOS pays.
 
 ## Building
 
