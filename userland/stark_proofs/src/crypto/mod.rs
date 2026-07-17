@@ -7,5 +7,7 @@ pub mod constant_time;
 
 pub mod hash;
 
-#[path = "../../../../src/crypto/stark/mod.rs"]
-pub mod stark;
+// The stark stack now lives in the nonos-stark crate. Re-export it here so the
+// proofs run against the same source the kernel and bootloader link, addressed
+// at the path the tests already use.
+pub use nonos_stark as stark;
