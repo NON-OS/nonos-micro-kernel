@@ -36,10 +36,11 @@ pub struct Args {
     #[arg(long, value_name = "FILE")]
     pub proof_file: Option<PathBuf>,
 
-    // The curve enrolled-secret arguments. Defaulted so they are optional when
-    // --proof-file is used; the curve path requires the real values.
-    #[arg(long, value_name = "FILE", default_value = "")]
-    pub root: PathBuf,
+    // The curve enrolled-secret arguments. Optional so they can be omitted when
+    // --proof-file is used; the curve path requires the real values and errors if
+    // they are absent.
+    #[arg(long, value_name = "FILE")]
+    pub root: Option<PathBuf>,
 
     #[arg(long, default_value = "")]
     pub secret_x: String,
@@ -47,8 +48,8 @@ pub struct Args {
     #[arg(long, default_value = "")]
     pub secret_r: String,
 
-    #[arg(long, value_name = "FILE", default_value = "")]
-    pub commitments: PathBuf,
+    #[arg(long, value_name = "FILE")]
+    pub commitments: Option<PathBuf>,
 
     #[arg(long, default_value_t = 0)]
     pub index: usize,
