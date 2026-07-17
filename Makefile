@@ -983,11 +983,7 @@ from-config: nonos-mk-from-config
 
 nonos-mk-capsules: $(proof-io_ARTIFACTS) $(ramfs_BIN) $(keyring_BIN) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-capsules: proof_io + ramfs + keyring)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-capsules
+	$(call nonos_kernel_build,microkernel-capsules,microkernel-capsules)
 
 # Input stack end-to-end proof (Deliverable 2). Dedicated build + ESP
 # packaging that bypasses nonos-mk-esp (which always rebuilds the
@@ -1018,210 +1014,106 @@ NONOS_INPUT_PROBE_INJECT_ESP := $(TARGET_DIR)/esp-input-probe-inject
 # posture.
 
 nonos-mk-proof-io-prod: $(proof-io_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-proof-io)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-proof-io
+	$(call nonos_kernel_build,microkernel-proof-io,microkernel-proof-io)
 
 nonos-mk-std-proof-prod: $(proof-io_ARTIFACTS) $(std-proof_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-proof-io + std_proof)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-proof-io,nonos-capsule-std-proof
+	$(call nonos_kernel_build,microkernel-proof-io + nonos-capsule-std-proof,microkernel-proof-io$(_boot_comma)nonos-capsule-std-proof)
 
 nonos-mk-ramfs-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-ramfs)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-ramfs
+	$(call nonos_kernel_build,microkernel-ramfs,microkernel-ramfs)
 
 nonos-mk-keyring-prod: $(proof-io_ARTIFACTS) $(keyring_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-keyring)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-keyring
+	$(call nonos_kernel_build,microkernel-keyring,microkernel-keyring)
 
 nonos-mk-entropy-prod: $(proof-io_ARTIFACTS) $(entropy_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-entropy)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-entropy
+	$(call nonos_kernel_build,microkernel-entropy,microkernel-entropy)
 
 nonos-mk-crypto-prod: $(proof-io_ARTIFACTS) $(crypto_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-crypto)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-crypto
+	$(call nonos_kernel_build,microkernel-crypto,microkernel-crypto)
 
 nonos-mk-vfs-prod: $(proof-io_ARTIFACTS) $(vfs_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-vfs)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-vfs
+	$(call nonos_kernel_build,microkernel-vfs,microkernel-vfs)
 
 nonos-mk-market-prod: $(proof-io_ARTIFACTS) $(market_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-market)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-market
+	$(call nonos_kernel_build,microkernel-market,microkernel-market)
 
 nonos-mk-driver-virtio-rng-prod: $(proof-io_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-virtio-rng)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-virtio-rng
+	$(call nonos_kernel_build,microkernel-driver-virtio-rng,microkernel-driver-virtio-rng)
 
 nonos-mk-driver-virtio-blk-prod: $(proof-io_ARTIFACTS) $(driver-virtio-blk_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-virtio-blk)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-virtio-blk
+	$(call nonos_kernel_build,microkernel-driver-virtio-blk,microkernel-driver-virtio-blk)
 
 nonos-mk-driver-virtio-gpu-prod: $(proof-io_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-virtio-gpu)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-virtio-gpu
+	$(call nonos_kernel_build,microkernel-driver-virtio-gpu,microkernel-driver-virtio-gpu)
 
 nonos-mk-driver-virtio-net-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-virtio-net)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-virtio-net
+	$(call nonos_kernel_build,microkernel-driver-virtio-net,microkernel-driver-virtio-net)
 
 nonos-mk-driver-iwlwifi-prod: $(proof-io_ARTIFACTS) $(driver-iwlwifi_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-iwlwifi)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-iwlwifi
+	$(call nonos_kernel_build,microkernel-driver-iwlwifi,microkernel-driver-iwlwifi)
 
 nonos-mk-driver-rtl8821ce-prod: $(proof-io_ARTIFACTS) $(driver-rtl8821ce_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-rtl8821ce)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-rtl8821ce
+	$(call nonos_kernel_build,microkernel-driver-rtl8821ce,microkernel-driver-rtl8821ce)
 
 nonos-mk-driver-i2c-pci-prod: $(proof-io_ARTIFACTS) $(driver-i2c-pci_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-i2c-pci)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-i2c-pci
+	$(call nonos_kernel_build,microkernel-driver-i2c-pci,microkernel-driver-i2c-pci)
 
 nonos-mk-driver-i2c-hid-prod: $(proof-io_ARTIFACTS) $(driver-i2c-pci_ARTIFACTS) $(driver-i2c-hid_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-i2c-hid)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-i2c-hid
+	$(call nonos_kernel_build,microkernel-driver-i2c-hid,microkernel-driver-i2c-hid)
 
 nonos-mk-driver-ps2-input-prod: $(proof-io_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-ps2-input)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-ps2-input
+	$(call nonos_kernel_build,microkernel-driver-ps2-input,microkernel-driver-ps2-input)
 
 nonos-mk-driver-xhci-prod: $(proof-io_ARTIFACTS) $(driver-xhci_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-xhci)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-xhci
+	$(call nonos_kernel_build,microkernel-driver-xhci,microkernel-driver-xhci)
 
 nonos-mk-driver-usb-hid-prod: $(proof-io_ARTIFACTS) $(driver-xhci_ARTIFACTS) \
 		$(driver-usb-hid_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-usb-hid)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-usb-hid
+	$(call nonos_kernel_build,microkernel-driver-usb-hid,microkernel-driver-usb-hid)
 
 nonos-mk-driver-usb-msc-prod: $(proof-io_ARTIFACTS) $(driver-xhci_ARTIFACTS) \
 		$(driver-usb-msc_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-usb-msc)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-usb-msc
+	$(call nonos_kernel_build,microkernel-driver-usb-msc,microkernel-driver-usb-msc)
 
 nonos-mk-driver-e1000-prod: $(proof-io_ARTIFACTS) $(driver-e1000_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-e1000)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-e1000
+	$(call nonos_kernel_build,microkernel-driver-e1000,microkernel-driver-e1000)
 
 nonos-mk-driver-rtl8139-prod: $(proof-io_ARTIFACTS) $(driver-rtl8139_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-rtl8139)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-rtl8139
+	$(call nonos_kernel_build,microkernel-driver-rtl8139,microkernel-driver-rtl8139)
 
 nonos-mk-driver-rtl8169-prod: $(proof-io_ARTIFACTS) $(driver-rtl8169_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-rtl8169)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-rtl8169
+	$(call nonos_kernel_build,microkernel-driver-rtl8169,microkernel-driver-rtl8169)
 
 nonos-mk-driver-ahci-prod: $(proof-io_ARTIFACTS) $(driver-ahci_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-ahci)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-ahci
+	$(call nonos_kernel_build,microkernel-driver-ahci,microkernel-driver-ahci)
 
 nonos-mk-driver-hda-prod: $(proof-io_ARTIFACTS) $(driver-hda_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-hda)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-hda
+	$(call nonos_kernel_build,microkernel-driver-hda,microkernel-driver-hda)
 
 nonos-mk-driver-nvme-prod: $(proof-io_ARTIFACTS) $(driver-nvme_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-driver-nvme)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-driver-nvme
+	$(call nonos_kernel_build,microkernel-driver-nvme,microkernel-driver-nvme)
 
 # Net-service capsule kernel profiles. Each stacks on the lower
 # layer so a microkernel-net-dhcp build pulls in net.l2 + net.ip +
@@ -1230,58 +1122,34 @@ nonos-mk-driver-nvme-prod: $(proof-io_ARTIFACTS) $(driver-nvme_ARTIFACTS) \
 nonos-mk-net-l2-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-l2_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-net-l2)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-net-l2
+	$(call nonos_kernel_build,microkernel-net-l2,microkernel-net-l2)
 
 nonos-mk-net-core-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-core_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-net-core)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-net-core
+	$(call nonos_kernel_build,microkernel-net-core,microkernel-net-core)
 
 nonos-mk-net-ip-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-net-ip)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-net-ip
+	$(call nonos_kernel_build,microkernel-net-ip,microkernel-net-ip)
 
 nonos-mk-net-udp-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-net-udp)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-net-udp
+	$(call nonos_kernel_build,microkernel-net-udp,microkernel-net-udp)
 
 nonos-mk-net-dhcp-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
 		$(net-dhcp_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-net-dhcp)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-net-dhcp
+	$(call nonos_kernel_build,microkernel-net-dhcp,microkernel-net-dhcp)
 
 nonos-mk-ntp-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
 		$(net-dhcp_ARTIFACTS) $(net-ntp_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-net-ntp)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-net-ntp
+	$(call nonos_kernel_build,microkernel-net-ntp,microkernel-net-ntp)
 
 nonos-mk-ntp-sign: $(net-ntp_ARTIFACTS)
 
@@ -1299,30 +1167,18 @@ nonos-mk-image-viewer-test: $(proof-io_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building image_viewer capsule (nonos-image-viewer-smoketest)..."
 	@$(MAKE) -B image-viewer_CARGO_FEATURES=nonos-image-viewer-smoketest nonos-mk-image-viewer-sign
-	@echo "Building kernel (microkernel-image-viewer-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-image-viewer-smoketest
+	$(call nonos_kernel_build,microkernel-image-viewer-smoketest,microkernel-image-viewer-smoketest)
 
 nonos-mk-net-nym-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-core_ARTIFACTS) $(net-nym_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-net-nym)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-net-nym
+	$(call nonos_kernel_build,microkernel-net-nym,microkernel-net-nym)
 
 nonos-mk-net-sockets-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
 		$(net-core_ARTIFACTS) \
 		$(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-net-sockets)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-net-sockets
+	$(call nonos_kernel_build,microkernel-net-sockets,microkernel-net-sockets)
 
 nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) $(ramfs_ARTIFACTS) \
@@ -1349,11 +1205,7 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(ZK_POLICY_ROOT) \
 		nonos-mk-verify-desktop-gui-capsules \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-desktop-gui + nonos-stark-attest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-desktop-gui,nonos-stark-attest
+	$(call nonos_kernel_build,microkernel-desktop-gui + nonos-stark-attest,microkernel-desktop-gui$(_boot_comma)nonos-stark-attest)
 
 # nonos-mk-zerostate: the canonical NONOS image. The whole ZeroState system in
 # one build: every capsule and driver, the transparent STARK spawn gate
@@ -1389,11 +1241,7 @@ nonos-mk-setup-wizard-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
 		$(setup-wizard_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-setup-wizard)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-setup-wizard
+	$(call nonos_kernel_build,microkernel-setup-wizard,microkernel-setup-wizard)
 
 nonos-mk-setup-wizard-inject-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
@@ -1414,22 +1262,14 @@ nonos-mk-setup-wizard-inject-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
 		$(setup-wizard_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-setup-wizard + inject)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-setup-wizard,input-probe-inject
+	$(call nonos_kernel_build,microkernel-setup-wizard + input-probe-inject,microkernel-setup-wizard$(_boot_comma)input-probe-inject)
 
 nonos-mk-input-probe-inject-prod: $(proof-io_ARTIFACTS) \
 		$(driver-ps2-input_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
 		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
 		$(input-probe_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-input-probe + inject)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-input-probe,input-probe-inject
+	$(call nonos_kernel_build,microkernel-input-probe + input-probe-inject,microkernel-input-probe$(_boot_comma)input-probe-inject)
 
 nonos-mk-input-probe-inject-esp: $(NONOS_BOOT_EFI)
 	@$(MAKE) --no-print-directory nonos-mk-input-probe-inject-prod
@@ -1469,11 +1309,7 @@ nonos-mk-terminal-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) $(keyring_ARTIF
 	@$(MAKE) -B terminal_CARGO_FEATURES=nonos-autorun-selftest nonos-mk-terminal-sign
 	@echo "Seeding vfs capsule store with the hello child..."
 	@$(MAKE) -B vfs_CARGO_FEATURES=seed-terminal-store $(vfs_ARTIFACTS)
-	@echo "Building kernel (microkernel-terminal-smoketest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-terminal-smoketest
+	$(call nonos_kernel_build,microkernel-terminal-smoketest,microkernel-terminal-smoketest)
 
 nonos-mk-text-editor-prod: nonos-mk-desktop-gui-prod
 nonos-mk-settings-prod: nonos-mk-desktop-gui-prod
