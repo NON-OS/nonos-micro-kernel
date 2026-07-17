@@ -119,6 +119,11 @@ ZK_ENROLL_TOOL   := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/transparent-
 ZK_TRANSPARENT_PROVE_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/transparent-prove
 ZK_TRANSPARENT_VERIFY_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/transparent-verify
 ZK_CAPSULE_PROOF_TOOL := $(ZK_CIRCUIT_DIR)/target/$(HOST_TARGET)/release/capsule-attest-proof
+# Transparent post-quantum STARK enrollment. Produces the capsule policy root
+# and every capsule's money-grade membership trailer, verified by the same
+# nonos-stark the kernel and bootloader link. This is the production capsule
+# attestation path; the curve-based capsule-attest-proof above is retired.
+NONOS_STARK_ENROLL := nonos-stark-enroll/target/$(HOST_TARGET)/release/nonos-stark-enroll
 CAPSULE_SIGN_BIN := nonos-sign/target/release/capsule-sign
 ZK_BOOT_ROOT     ?= $(NONOS_TRUST_DIR)/zk/device_root.bin
 ZK_BOOT_COMMITMENTS ?= $(NONOS_TRUST_DIR)/zk/device_commitments.bin
@@ -354,6 +359,12 @@ $(ZK_ENROLL_TOOL) $(ZK_TRANSPARENT_PROVE_TOOL) $(ZK_TRANSPARENT_VERIFY_TOOL) $(Z
 		$(CARGO) build --release --bin transparent-enroll --bin transparent-prove --bin transparent-verify --bin capsule-attest-proof --target $(HOST_TARGET)
 
 nonos-mk-zk-tools: $(ZK_ENROLL_TOOL) $(ZK_TRANSPARENT_PROVE_TOOL) $(ZK_TRANSPARENT_VERIFY_TOOL) $(ZK_CAPSULE_PROOF_TOOL)
+
+# Transparent STARK enrollment tool, the production capsule attestation prover.
+$(NONOS_STARK_ENROLL): nonos-mk-check-deps
+	@echo "Building transparent STARK enrollment tool..."
+	@cd nonos-stark-enroll && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build --release --target $(HOST_TARGET)
 
 nonos-mk-ensure-zk-keys: $(ZK_BOOT_ROOT) $(ZK_BOOT_COMMITMENTS)
 
@@ -725,17 +736,36 @@ $(ZK_CAPSULE_LABELS): $(NONOS_VERIFIED_CAPSULE_MKS) Makefile
 		printf "%s\n" "$$label"; \
 	done > $@
 
-$(ZK_CAPSULE_ROOT) $(ZK_CAPSULE_COMMITMENTS) $(ZK_CAPSULE_SECRETS): $(ZK_CAPSULE_LABELS) $(ZK_ENROLL_TOOL)
-	@echo "Enrolling transparent capsule attestation policy..."
-	@test -n "$(ZK_CAPSULE_ENROLL_SEED)" || { echo "ZK_CAPSULE_ENROLL_SEED is required"; exit 1; }
-	@mkdir -p $(dir $(ZK_CAPSULE_ROOT)) $(dir $(ZK_CAPSULE_SECRETS))
-	@$(ZK_ENROLL_TOOL) \
-		--seed "$(ZK_CAPSULE_ENROLL_SEED)" \
-		--labels $(ZK_CAPSULE_LABELS) \
-		--fixed-depth 8 \
-		--root-out $(ZK_CAPSULE_ROOT) \
-		--secrets-out $(ZK_CAPSULE_SECRETS) \
-		--commitments-out $(ZK_CAPSULE_COMMITMENTS)
+# --- RETIRED: curve-based enrolled-secret policy ------------------------------
+# The transparent enrolled-secret enrollment (C = xG + rH commitments over
+# labels) was NOT post-quantum and its trailer is incompatible with the
+# nonos-stark spawn gate. It is replaced by the STARK measurement enrollment
+# below and kept here, disabled, for reference.
+#
+# $(ZK_CAPSULE_ROOT) $(ZK_CAPSULE_COMMITMENTS) $(ZK_CAPSULE_SECRETS): $(ZK_CAPSULE_LABELS) $(ZK_ENROLL_TOOL)
+# 	@echo "Enrolling transparent capsule attestation policy..."
+# 	@test -n "$(ZK_CAPSULE_ENROLL_SEED)" || { echo "ZK_CAPSULE_ENROLL_SEED is required"; exit 1; }
+# 	@mkdir -p $(dir $(ZK_CAPSULE_ROOT)) $(dir $(ZK_CAPSULE_SECRETS))
+# 	@$(ZK_ENROLL_TOOL) \
+# 		--seed "$(ZK_CAPSULE_ENROLL_SEED)" \
+# 		--labels $(ZK_CAPSULE_LABELS) \
+# 		--fixed-depth 8 \
+# 		--root-out $(ZK_CAPSULE_ROOT) \
+# 		--secrets-out $(ZK_CAPSULE_SECRETS) \
+# 		--commitments-out $(ZK_CAPSULE_COMMITMENTS)
+# -----------------------------------------------------------------------------
+
+# The capsule policy root and every capsule trailer, produced together so the
+# root commits to the actual capsule measurements, not to enrolled secrets.
+# Each spec is CAPS:elf:trailer-out; the tool re-checks every trailer against
+# the exact spawn-gate parse before writing it. Depends on every capsule ELF
+# and its signed manifest being built first.
+$(ZK_CAPSULE_ROOT): $(NONOS_STARK_ENROLL) \
+		$(foreach s,$(NONOS_VERIFIED_CAPSULES),$($(s)_BIN) $($(s)_MANIFEST))
+	@echo "Enrolling $(words $(NONOS_VERIFIED_CAPSULES)) capsules under one transparent STARK policy root..."
+	@mkdir -p $(dir $(ZK_CAPSULE_ROOT)) $(NONOS_BAKED_TRUST_DIR)/capsules
+	@$(NONOS_STARK_ENROLL) capsules $(ZK_CAPSULE_ROOT) \
+		$(foreach s,$(NONOS_VERIFIED_CAPSULES),$($(s)_REQUIRED_CAPS):$($(s)_BIN):$($(s)_ATTESTATION))
 
 nonos-mk-all-capsules-attested: $(NONOS_VERIFIED_ARTIFACTS)
 	@echo "Signed and attested $(words $(NONOS_VERIFIED_CAPSULES)) included capsules."
