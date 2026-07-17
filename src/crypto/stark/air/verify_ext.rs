@@ -54,6 +54,20 @@ pub fn stark_verify_ext_blown<A: AirExt>(
     grind_bits: u32,
     extra_blowup_bits: u32,
 ) -> bool {
+    stark_verify_ext_blown_bound(air, proof, n_queries, grind_bits, extra_blowup_bits, &[])
+}
+
+/// The same verifier bound to `context`, absorbed into the transcript first, so a
+/// proof drawn under one context never verifies under another. The money-grade
+/// attestation verifier.
+pub fn stark_verify_ext_blown_bound<A: AirExt>(
+    air: &A,
+    proof: &StarkProofExt,
+    n_queries: usize,
+    grind_bits: u32,
+    extra_blowup_bits: u32,
+    context: &[u8],
+) -> bool {
     let log_t = air.log_trace_len();
     let t = 1usize << log_t;
     let width = air.trace_width();
@@ -70,6 +84,9 @@ pub fn stark_verify_ext_blown<A: AirExt>(
     let shift = Fp::from_u64(SHIFT);
 
     let mut transcript = Transcript::new(b"NONOS-STARK-EXT");
+    if !context.is_empty() {
+        transcript.absorb_digest(&crate::crypto::hash::keccak256(context));
+    }
     transcript.absorb_digest(&proof.trace_root);
     let coeffs: Vec<Fp2> = (0..num_coeffs(air)).map(|_| transcript.challenge_fp2()).collect();
     transcript.absorb_digest(&proof.comp_root);
