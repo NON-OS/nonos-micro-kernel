@@ -14,29 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The FRI proof: commitment roots, the small final layer sent in full, and the
-//! opened query positions that bind consecutive layers together.
+//! Enrolling a set of capsule or kernel images into the policy root a spawn gate
+//! trusts. Each image is measured to a leaf and the leaves are committed to a
+//! Poseidon Merkle tree; the root is the value the kernel bakes and gates against.
+//! This is what an enrollment tool computes and what the boot chain carries.
 
 use super::super::field::Fp;
+use super::super::poseidon_merkle::PoseidonMerkleTree;
+use super::measure::measure_capsule;
+use super::poseidon::{Poseidon, RATE};
 use alloc::vec::Vec;
 
-/// One layer's contribution to a query: the value at the queried position `i`
-/// and at its negation `i + n/2`, each with a Merkle path to that layer's root.
-pub struct LayerOpening {
-    pub a: Fp,
-    pub a_path: Vec<[u8; 32]>,
-    pub b: Fp,
-    pub b_path: Vec<[u8; 32]>,
-}
-
-/// The openings a single query induces across every folded layer.
-pub struct QueryProof {
-    pub layers: Vec<LayerOpening>,
-}
-
-/// A complete FRI low-degree proof.
-pub struct FriProof {
-    pub roots: Vec<[u8; 32]>,
-    pub final_layer: Vec<Fp>,
-    pub queries: Vec<QueryProof>,
+/// The policy root over `images`: measure each to a leaf, then commit the leaves.
+pub fn enroll_policy_root(hasher: &Poseidon, images: &[&[u8]]) -> [Fp; RATE] {
+    let leaves: Vec<[Fp; RATE]> = images.iter().map(|img| measure_capsule(hasher, img)).collect();
+    PoseidonMerkleTree::commit(hasher, &leaves).root()
 }

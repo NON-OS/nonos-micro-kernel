@@ -14,29 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The FRI proof: commitment roots, the small final layer sent in full, and the
-//! opened query positions that bind consecutive layers together.
+//! Encoding a base-field value as a Poseidon Merkle leaf.
 
+use super::super::air::RATE;
 use super::super::field::Fp;
-use alloc::vec::Vec;
 
-/// One layer's contribution to a query: the value at the queried position `i`
-/// and at its negation `i + n/2`, each with a Merkle path to that layer's root.
-pub struct LayerOpening {
-    pub a: Fp,
-    pub a_path: Vec<[u8; 32]>,
-    pub b: Fp,
-    pub b_path: Vec<[u8; 32]>,
-}
-
-/// The openings a single query induces across every folded layer.
-pub struct QueryProof {
-    pub layers: Vec<LayerOpening>,
-}
-
-/// A complete FRI low-degree proof.
-pub struct FriProof {
-    pub roots: Vec<[u8; 32]>,
-    pub final_layer: Vec<Fp>,
-    pub queries: Vec<QueryProof>,
+/// A base-field value as a rate-sized leaf: `[v, 0, 0, 0]`.
+pub fn pack_base(v: Fp) -> [Fp; RATE] {
+    let mut d = [Fp::ZERO; RATE];
+    d[0] = v;
+    d
 }

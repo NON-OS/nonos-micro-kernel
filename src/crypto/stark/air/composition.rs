@@ -60,14 +60,7 @@ pub(super) fn domain_params_blown<A: Air>(air: &A, extra_blowup_bits: u32) -> (u
 /// `[f(x), f(g*x), ...]`, the periodic columns evaluated at `x`, and the
 /// transcript coefficients. `g` is the trace-domain generator. `x` lies off the
 /// trace domain, so every divisor is invertible.
-pub fn compose<A: Air>(
-    air: &A,
-    g: Fp,
-    x: Fp,
-    window: &[Fp],
-    periodic: &[Fp],
-    coeffs: &[Fp],
-) -> Fp {
+pub fn compose<A: Air>(air: &A, g: Fp, x: Fp, window: &[Fp], periodic: &[Fp], coeffs: &[Fp]) -> Fp {
     let t = 1u64 << air.log_trace_len();
     let z_h_inv = (x.pow(t) - Fp::ONE).inv();
 
@@ -124,8 +117,8 @@ pub fn compose_ext<A: AirExt>(
 
     let boundary_coeffs = &coeffs[transition.len()..];
     for ((col, row, expected), coeff) in air.boundary().iter().zip(boundary_coeffs.iter()) {
-        let quotient =
-            (window[*col] - Fp2::from_base(*expected)) * (z - Fp2::from_base(g.pow(*row as u64))).inv();
+        let quotient = (window[*col] - Fp2::from_base(*expected))
+            * (z - Fp2::from_base(g.pow(*row as u64))).inv();
         acc = acc + *coeff * quotient;
     }
 

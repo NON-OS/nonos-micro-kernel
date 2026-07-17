@@ -21,8 +21,12 @@
 //! recursive verifier needs, since a bitwise hash like BLAKE3 cannot be proven
 //! cheaply. Digests are `RATE` field elements; leaves are already digests.
 
+mod pack_base;
+mod pack_ext;
 mod tree;
 mod verify;
 
+pub use pack_base::pack_base;
+pub use pack_ext::pack_ext;
 pub use tree::PoseidonMerkleTree;
 pub use verify::verify_path;

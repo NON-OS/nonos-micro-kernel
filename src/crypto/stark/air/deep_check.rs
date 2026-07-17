@@ -44,7 +44,8 @@ impl DeepCheck {
     /// Columns: [trace_val, claimed, comp, comp_z, deep, x, z, c0, e, q, q_comp].
     fn transition_impl<F: Felt>(&self, window: &[F], _periodic: &[F]) -> Vec<F> {
         let (tv, cl, cp, cpz, dp) = (window[0], window[1], window[2], window[3], window[4]);
-        let (x, z, c0, e, q, qc) = (window[5], window[6], window[7], window[8], window[9], window[10]);
+        let (x, z, c0, e, q, qc) =
+            (window[5], window[6], window[7], window[8], window[9], window[10]);
         alloc::vec![
             // The trace quotient is honestly formed.
             q * (x - z) - (tv - cl),
@@ -62,8 +63,17 @@ impl DeepCheck {
         let q = (self.trace_val - self.claimed) * xz_inv;
         let qc = (self.comp - self.comp_z) * xz_inv;
         let row0 = [
-            self.trace_val, self.claimed, self.comp, self.comp_z, self.deep, self.x, self.z,
-            self.c0, self.e, q, qc,
+            self.trace_val,
+            self.claimed,
+            self.comp,
+            self.comp_z,
+            self.deep,
+            self.x,
+            self.z,
+            self.c0,
+            self.e,
+            q,
+            qc,
         ];
         let mut trace = Vec::with_capacity(22);
         trace.extend_from_slice(&row0);

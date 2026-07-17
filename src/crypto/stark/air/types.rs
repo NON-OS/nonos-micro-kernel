@@ -27,7 +27,6 @@ use alloc::vec::Vec;
 /// One consistency query at position `p`: the DEEP polynomial value (opened
 /// against the FRI layer-zero commitment), each trace column at `p`, and the
 /// composition at `p`, each with a Merkle path to its commitment.
-#[derive(Clone)]
 pub struct StarkQuery {
     pub deep: Fp,
     pub deep_path: Vec<[u8; 32]>,
@@ -38,7 +37,6 @@ pub struct StarkQuery {
 }
 
 /// A complete STARK proof.
-#[derive(Clone)]
 pub struct StarkProof {
     pub trace_roots: Vec<[u8; 32]>,
     pub comp_root: [u8; 32],

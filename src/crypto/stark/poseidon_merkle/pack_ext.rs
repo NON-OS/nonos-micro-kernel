@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod error;
-mod layout;
-mod policy_root;
-#[cfg(feature = "nonos-stark-attest")]
-mod stark;
-mod trailer;
-mod verify;
+//! Encoding an extension-field value as a Poseidon Merkle leaf.
 
-pub use error::AttestError;
-pub use verify::verify_capsule_attestation;
+use super::super::air::RATE;
+use super::super::field::{Fp, Fp2};
+
+/// An extension value as a rate-sized leaf: `[c0, c1, 0, 0]`.
+pub fn pack_ext(v: Fp2) -> [Fp; RATE] {
+    let mut d = [Fp::ZERO; RATE];
+    d[0] = v.c0;
+    d[1] = v.c1;
+    d
+}

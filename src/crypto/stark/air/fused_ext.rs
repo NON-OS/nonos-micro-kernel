@@ -77,9 +77,15 @@ impl Air for FusedExt {
     }
 
     fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
-        fusion::combine(&self.stack, &self.regions, self.num_transition(), self.stack.width, window, periodic, |i, l, p| {
-            self.regions[i].transition(l, p)
-        })
+        fusion::combine(
+            &self.stack,
+            &self.regions,
+            self.num_transition(),
+            self.stack.width,
+            window,
+            periodic,
+            |i, l, p| self.regions[i].transition(l, p),
+        )
     }
 
     fn boundary(&self) -> Vec<(usize, usize, Fp)> {
@@ -89,8 +95,14 @@ impl Air for FusedExt {
 
 impl AirExt for FusedExt {
     fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
-        fusion::combine(&self.stack, &self.regions, self.num_transition(), self.stack.width, window, periodic, |i, l, p| {
-            self.regions[i].transition_ext(l, p)
-        })
+        fusion::combine(
+            &self.stack,
+            &self.regions,
+            self.num_transition(),
+            self.stack.width,
+            window,
+            periodic,
+            |i, l, p| self.regions[i].transition_ext(l, p),
+        )
     }
 }
