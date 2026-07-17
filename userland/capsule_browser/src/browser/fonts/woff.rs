@@ -41,7 +41,7 @@ pub(super) fn unwrap_woff(bytes: Vec<u8>) -> Option<Vec<u8>> {
         let checksum = u32::from_be_bytes(bytes[e + 16..e + 20].try_into().ok()?);
         let src = bytes.get(src_off..src_off.checked_add(comp_len)?)?;
         let data = if comp_len < orig_len {
-            let inflated = crate::browser::http::inflate::zlib(src)?;
+            let inflated = nonos_inflate::zlib(src)?;
             if inflated.len() != orig_len {
                 return None;
             }
