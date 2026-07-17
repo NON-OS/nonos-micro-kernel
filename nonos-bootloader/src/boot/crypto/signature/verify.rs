@@ -19,7 +19,7 @@ use uefi::prelude::*;
 use crate::kernel_verify::CryptoVerifyResult;
 use crate::menu::SecurityMode;
 
-use super::error::{handle_invalid_signature, handle_no_signature};
+use super::error::{handle_failed_attestation, handle_invalid_signature, handle_no_signature};
 use super::valid::handle_valid_signature;
 
 pub fn verify_signature(
@@ -32,6 +32,8 @@ pub fn verify_signature(
         handle_no_signature(st, mode, gop);
     } else if !res.signature_valid {
         handle_invalid_signature(st, mode, gop);
+    } else if !res.stark_gate_satisfied() {
+        handle_failed_attestation(st, mode, gop);
     } else {
         handle_valid_signature(gop);
     }

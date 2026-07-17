@@ -48,4 +48,19 @@ impl CryptoVerifyResult {
     pub fn new() -> Self {
         Self::default()
     }
+
+    /// Whether the kernel self-attestation gate is satisfied for boot. With the
+    /// stark-kernel-attest feature off this is always true, so non-STARK builds
+    /// are unaffected. With it on, the kernel must have proven its transparent
+    /// STARK self-attestation against the enrolled boot root.
+    pub fn stark_gate_satisfied(&self) -> bool {
+        #[cfg(feature = "stark-kernel-attest")]
+        {
+            self.stark_attested
+        }
+        #[cfg(not(feature = "stark-kernel-attest"))]
+        {
+            true
+        }
+    }
 }
