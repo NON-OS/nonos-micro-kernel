@@ -19,8 +19,8 @@
 
 # Public nonos-mk-* targets
 .PHONY: nonos-mk
-.PHONY: nonos-mk-check nonos-mk-check-ramfs-keys nonos-mk-core nonos-mk-core-attested nonos-mk-capsules nonos-mk-terminal-test
-.PHONY: nonos-mk-proof-io-prod nonos-mk-ramfs-prod nonos-mk-keyring-prod nonos-mk-entropy-prod nonos-mk-crypto-prod nonos-mk-vfs-prod nonos-mk-market-prod nonos-mk-driver-virtio-rng-prod nonos-mk-driver-virtio-blk-prod nonos-mk-driver-virtio-gpu-prod nonos-mk-driver-virtio-net-prod nonos-mk-driver-iwlwifi-prod nonos-mk-driver-rtl8821ce-prod nonos-mk-driver-i2c-pci-prod nonos-mk-driver-i2c-hid-prod nonos-mk-driver-ps2-input-prod nonos-mk-driver-xhci-prod nonos-mk-driver-usb-hid-prod nonos-mk-driver-usb-msc-prod nonos-mk-driver-e1000-prod nonos-mk-driver-rtl8139-prod nonos-mk-driver-rtl8169-prod nonos-mk-driver-ahci-prod nonos-mk-driver-hda-prod nonos-mk-driver-nvme-prod nonos-mk-net-l2-prod nonos-mk-net-core-prod nonos-mk-net-ip-prod nonos-mk-net-udp-prod nonos-mk-net-dhcp-prod nonos-mk-net-nym-prod nonos-mk-net-sockets-prod nonos-mk-desktop-gui-prod nonos-mk-full-gui-prod
+.PHONY: nonos-mk-check nonos-mk-check-ramfs-keys nonos-mk-core nonos-mk-core-attested nonos-mk-menuconfig nonos-mk-from-config nonos-mk-capsules nonos-mk-terminal-test
+.PHONY: nonos-mk-proof-io-prod nonos-mk-ramfs-prod nonos-mk-keyring-prod nonos-mk-entropy-prod nonos-mk-crypto-prod nonos-mk-vfs-prod nonos-mk-market-prod nonos-mk-driver-virtio-rng-prod nonos-mk-driver-virtio-blk-prod nonos-mk-driver-virtio-gpu-prod nonos-mk-driver-virtio-net-prod nonos-mk-driver-iwlwifi-prod nonos-mk-driver-rtl8821ce-prod nonos-mk-driver-i2c-pci-prod nonos-mk-driver-i2c-hid-prod nonos-mk-driver-ps2-input-prod nonos-mk-driver-xhci-prod nonos-mk-driver-usb-hid-prod nonos-mk-driver-usb-msc-prod nonos-mk-driver-e1000-prod nonos-mk-driver-rtl8139-prod nonos-mk-driver-rtl8169-prod nonos-mk-driver-ahci-prod nonos-mk-driver-hda-prod nonos-mk-driver-nvme-prod nonos-mk-net-l2-prod nonos-mk-net-core-prod nonos-mk-net-ip-prod nonos-mk-net-udp-prod nonos-mk-net-dhcp-prod nonos-mk-net-nym-prod nonos-mk-net-sockets-prod nonos-mk-desktop-gui-prod nonos-mk-zerostate
 .PHONY: nonos-mk-libc nonos-mk-proof-io nonos-mk-proof-io-sign nonos-mk-check-trust-keys nonos-mk-check-trust-manifest nonos-mk-trust-policy nonos-mk-host-trust-verify nonos-mk-verify-trust nonos-mk-ramfs nonos-mk-ramfs-sign nonos-mk-keyring nonos-mk-entropy nonos-mk-crypto nonos-mk-vfs nonos-mk-virtio-rng nonos-mk-virtio-rng-sign nonos-mk-check-virtio-rng-keys nonos-mk-virtio-blk nonos-mk-virtio-blk-sign nonos-mk-check-virtio-blk-keys nonos-mk-driver-virtio-gpu nonos-mk-driver-virtio-gpu-sign nonos-mk-check-driver-virtio-gpu-keys nonos-mk-virtio-net nonos-mk-virtio-net-sign nonos-mk-check-virtio-net-keys nonos-mk-driver-iwlwifi nonos-mk-driver-iwlwifi-sign nonos-mk-check-driver-iwlwifi-keys nonos-mk-driver-rtl8821ce nonos-mk-driver-rtl8821ce-sign nonos-mk-check-driver-rtl8821ce-keys nonos-mk-driver-i2c-pci nonos-mk-driver-i2c-pci-sign nonos-mk-check-driver-i2c-pci-keys nonos-mk-driver-i2c-hid nonos-mk-driver-i2c-hid-sign nonos-mk-check-driver-i2c-hid-keys nonos-mk-ps2-input nonos-mk-ps2-input-sign nonos-mk-check-ps2-input-keys nonos-mk-xhci nonos-mk-xhci-sign nonos-mk-check-xhci-keys nonos-mk-driver-usb-msc nonos-mk-driver-usb-msc-sign nonos-mk-check-driver-usb-msc-keys nonos-mk-driver-e1000 nonos-mk-driver-e1000-sign nonos-mk-check-driver-e1000-keys nonos-mk-driver-rtl8139 nonos-mk-driver-rtl8139-sign nonos-mk-check-driver-rtl8139-keys nonos-mk-driver-rtl8169 nonos-mk-driver-rtl8169-sign nonos-mk-check-driver-rtl8169-keys nonos-mk-driver-ahci nonos-mk-driver-ahci-sign nonos-mk-check-driver-ahci-keys nonos-mk-driver-hda nonos-mk-driver-hda-sign nonos-mk-check-driver-hda-keys nonos-mk-driver-nvme nonos-mk-driver-nvme-sign nonos-mk-check-driver-nvme-keys nonos-mk-wallpaper nonos-mk-marketplace-abi nonos-mk-market nonos-mk-marketplace-index-tool
 .PHONY: nonos-mk-userland-clean
 .PHONY: nonos-mk-bootloader nonos-mk-sign nonos-mk-attest nonos-mk-esp nonos-mk-usb-img nonos-mk-usb-run
@@ -44,6 +44,12 @@
 # Default target: print help, never build silently.
 
 .DEFAULT_GOAL := help
+
+# User build configuration written by the menuconfig-style tool. Optional: the
+# dash means a missing file is not an error, so the fixed targets work without
+# it. When present it defines NONOS_PROFILE and the security toggles that
+# "make from-config" reads.
+-include .nonos-config
 
 # Configuration
 
@@ -909,6 +915,18 @@ KERNEL_BUILD_FLAGS := --release --target x86_64-nonos.json \
 
 KERNEL_SIGNING_KEY = $(if $(filter /%,$(SIGNING_KEY)),$(SIGNING_KEY),$(shell pwd)/$(SIGNING_KEY))
 
+# nonos_kernel_build: compile the kernel with one cargo feature set. Every
+# profile target is one call to this, so the build command lives in exactly one
+# place; only the feature string differs. $(1) is the human label for the log,
+# $(2) is the comma-separated feature list passed to cargo.
+define nonos_kernel_build
+	@echo "Building kernel ($(1))..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
+		--no-default-features --features $(2)
+endef
+
 # Kernel ELF artefact rule, no-features default (resolves to
 # microkernel-core via Cargo.toml). Phony deps stay off this rule so a
 # chain walk does not invalidate kernels built with a feature variant.
@@ -926,11 +944,7 @@ nonos-mk-check: nonos-mk-check-deps nonos-mk-ensure-signing-key
 		--no-default-features --features microkernel-core
 
 nonos-mk-core: nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-core, no capsules)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-core
+	$(call nonos_kernel_build,microkernel-core,microkernel-core)
 
 # Core kernel with the transparent STARK attestation backend selected. The
 # spawn gate verifies a money-grade membership proof instead of the pairing
@@ -939,11 +953,33 @@ nonos-mk-core: nonos-mk-check-deps nonos-mk-ensure-signing-key
 # STARK membership trailer enrolled under the policy root; until the signing
 # pipeline emits those, keep it on the core lane.
 nonos-mk-core-attested: nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-core + nonos-stark-attest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-core,nonos-stark-attest
+	$(call nonos_kernel_build,microkernel-core + nonos-stark-attest,microkernel-core$(_boot_comma)nonos-stark-attest)
+
+# -----------------------------------------------------------------------------
+# Configurable build: choose a profile with the menuconfig-style tool, then
+# build exactly that. This is the front door for a user assembling their own
+# kernel; the fixed -prod targets above are the curated, release-tested ones.
+# -----------------------------------------------------------------------------
+
+# The resolved feature set from .nonos-config: the chosen profile, plus the
+# attestation backend when the config asked for it.
+FROM_CONFIG_FEATURES = $(NONOS_PROFILE)$(if $(filter 1,$(NONOS_ATTEST)),$(_boot_comma)nonos-stark-attest)
+
+# Open the interactive configurator and write .nonos-config.
+nonos-mk-menuconfig:
+	@./tools/nonos-config
+
+# Build the kernel described by .nonos-config. Fails clearly if no config has
+# been written yet, rather than silently building the default.
+nonos-mk-from-config: nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@test -f .nonos-config || { echo "no .nonos-config; run 'make menuconfig' first"; exit 1; }
+	@echo "Building from .nonos-config (rollback index $(NONOS_ROLLBACK_INDEX))..."
+	$(call nonos_kernel_build,$(NONOS_PROFILE) from .nonos-config,$(FROM_CONFIG_FEATURES))
+
+# Short aliases, so a user types what the help prints.
+.PHONY: menuconfig from-config
+menuconfig: nonos-mk-menuconfig
+from-config: nonos-mk-from-config
 
 nonos-mk-capsules: $(proof-io_ARTIFACTS) $(ramfs_BIN) $(keyring_BIN) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
@@ -1319,15 +1355,20 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-desktop-gui,nonos-stark-attest
 
-nonos-mk-full-gui-prod: nonos-mk-all-capsules-attested \
+# nonos-mk-zerostate: the canonical NONOS image. The whole ZeroState system in
+# one build: every capsule and driver, the transparent STARK spawn gate
+# enforced, dual Ed25519 + ML-DSA-65 signing, the anti-rollback index bound into
+# the signature, and the TPM measured-boot path. This is the reference target;
+# the narrower -prod cuts share its recipe with a smaller feature set.
+nonos-mk-zerostate: nonos-mk-all-capsules-attested \
 		$(driver-iwlwifi_ARTIFACTS) $(driver-rtl8821ce_ARTIFACTS) \
 		nonos-mk-verify-desktop-gui-capsules \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@echo "Building kernel (microkernel-full-gui + nonos-stark-attest)..."
-	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
-		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
-		$(CARGO) build $(KERNEL_BUILD_FLAGS) \
-		--no-default-features --features microkernel-full-gui,nonos-stark-attest
+	$(call nonos_kernel_build,zerostate: microkernel-full-gui + nonos-stark-attest,microkernel-full-gui$(_boot_comma)nonos-stark-attest)
+
+# Back-compat alias for the former name. Prefer nonos-mk-zerostate.
+.PHONY: nonos-mk-full-gui-prod
+nonos-mk-full-gui-prod: nonos-mk-zerostate
 
 nonos-mk-setup-wizard-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
@@ -1570,7 +1611,7 @@ nonos-mk-dev-run:
 	@$(MAKE) --no-print-directory NONOS_DEV=1 \
 		NONOS_GOP_PREF=$(QEMU_XRES)x$(QEMU_YRES) nonos-mk-run
 
-nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof nonos-mk-full-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
+nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof nonos-mk-zerostate nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
 	@echo "  TPM: swtpm CRB"
@@ -1909,11 +1950,16 @@ nonos-mk-fmt:
 help:
 	@echo "NONOS microkernel build"
 	@echo
-	@echo "Build:"
+	@echo "Configure your own kernel:"
+	@echo "  make menuconfig               choose a profile and options, step by step"
+	@echo "  make from-config              build the kernel described by .nonos-config"
+	@echo
+	@echo "Build (curated profiles):"
 	@echo "  make nonos-mk                 microkernel-capsules runtime baseline"
 	@echo "  make nonos-mk-core            kernel only (microkernel-core, no capsules)"
 	@echo "  make nonos-mk-check           cargo check (microkernel-core)"
 	@echo "  make nonos-mk-capsules        microkernel-capsules build"
+	@echo "  make nonos-mk-zerostate       the full ZeroState system (all capsules + drivers, attested)"
 	@echo "Userland capsules:"
 	@echo "  make nonos-mk-libc nonos-mk-proof-io nonos-mk-ramfs nonos-mk-keyring"
 	@echo "  make nonos-mk-userland-clean"

@@ -1,0 +1,265 @@
+#!/usr/bin/env bash
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+# nonos-config - choose a kernel build configuration.
+#
+# The kernel is one cargo crate with a set of composite feature profiles
+# (microkernel-*) declared in Cargo.toml. Each profile is a coherent, bootable
+# selection: a base runtime plus a fixed set of capsules and drivers. This tool
+# walks those profiles by category, adds the security options (measured
+# attestation, the anti-rollback index), and writes ".nonos-config" at the repo
+# root. "make from-config" then builds exactly that.
+#
+# It is deliberately dependency-free: numbered prompts, no curses library, so it
+# runs the same over SSH, in a container, or on a bare terminal. Run
+# non-interactively with --profile/--attest/--rollback for scripts and CI.
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG_FILE="${REPO_ROOT}/.nonos-config"
+CARGO_TOML="${REPO_ROOT}/Cargo.toml"
+
+# The profile catalogue, grouped for the menu. Each entry is
+# "<cargo-feature>|<one-line description>". The groups mirror how the system is
+# actually assembled: a minimal base, one-capsule and one-driver builds for
+# bring-up and tests, the layered network stack, and the two full desktops.
+GROUP_NAMES=(base capsule driver network desktop)
+
+BASE_PROFILES=(
+  "microkernel-core|Minimal bootable kernel: scheduler, memory, crypto, no capsules"
+  "microkernel-capsules|Core plus the proof-io, ramfs and keyring capsules"
+)
+CAPSULE_PROFILES=(
+  "microkernel-proof-io|Core plus the proof I/O capsule"
+  "microkernel-ramfs|Core plus the RAM filesystem capsule"
+  "microkernel-keyring|Core plus the keyring capsule"
+  "microkernel-entropy|Core plus the entropy capsule"
+  "microkernel-crypto|Core plus the crypto capsule"
+  "microkernel-vfs|Core plus the virtual filesystem capsule"
+  "microkernel-terminal|Core plus the terminal capsule"
+)
+DRIVER_PROFILES=(
+  "microkernel-driver-virtio-blk|Core plus the virtio block driver"
+  "microkernel-driver-virtio-net|Core plus the virtio network driver"
+  "microkernel-driver-virtio-gpu|Core plus the virtio GPU driver"
+  "microkernel-driver-nvme|Core plus the NVMe storage driver"
+  "microkernel-driver-ahci|Core plus the AHCI/SATA storage driver"
+  "microkernel-driver-xhci|Core plus the xHCI USB driver"
+  "microkernel-driver-e1000|Core plus the e1000 network driver"
+  "microkernel-driver-iwlwifi|Core plus the Intel Wi-Fi driver"
+  "microkernel-driver-rtl8821ce|Core plus the Realtek RTL8821CE Wi-Fi driver"
+)
+NETWORK_PROFILES=(
+  "microkernel-net-l2|Core plus the layer-2 network stack"
+  "microkernel-net-ip|Adds the IPv4 layer"
+  "microkernel-net-udp|Adds the UDP layer"
+  "microkernel-net-dhcp|Adds DHCP address configuration"
+  "microkernel-net-sockets|Adds the socket service"
+  "microkernel-net-nym|Adds the Nym mixnet transport"
+)
+DESKTOP_PROFILES=(
+  "microkernel-desktop-gui|Full graphical desktop: compositor, apps, core drivers"
+  "microkernel-full-gui|The desktop plus every driver: storage, audio, all Wi-Fi"
+  "microkernel-setup-wizard|The desktop configured for first-boot setup"
+  "microkernel-terminal-only|A single full-screen terminal, no desktop"
+)
+
+# Defaults, overridable by flags or the interactive flow.
+SEL_PROFILE="microkernel-full-gui"
+SEL_ATTEST=1
+SEL_KERNEL_ATTEST=0
+SEL_ROLLBACK=1
+
+die() { echo "nonos-config: $*" >&2; exit 1; }
+
+# Confirm the chosen profile exists in Cargo.toml, so a stale catalogue entry
+# fails loudly here instead of deep in a cargo build.
+profile_is_declared() {
+  grep -qE "^$1 =" "${CARGO_TOML}"
+}
+
+group_profiles() {
+  case "$1" in
+    base)    printf '%s\n' "${BASE_PROFILES[@]}" ;;
+    capsule) printf '%s\n' "${CAPSULE_PROFILES[@]}" ;;
+    driver)  printf '%s\n' "${DRIVER_PROFILES[@]}" ;;
+    network) printf '%s\n' "${NETWORK_PROFILES[@]}" ;;
+    desktop) printf '%s\n' "${DESKTOP_PROFILES[@]}" ;;
+  esac
+}
+
+group_title() {
+  case "$1" in
+    base)    echo "Base runtime" ;;
+    capsule) echo "Single-capsule builds (bring-up and tests)" ;;
+    driver)  echo "Single-driver builds (bring-up and tests)" ;;
+    network) echo "Network stack" ;;
+    desktop) echo "Desktop and full system" ;;
+  esac
+}
+
+prompt() {
+  local msg="$1" default="$2" reply
+  read -r -p "${msg} [${default}]: " reply || true
+  echo "${reply:-${default}}"
+}
+
+# Step 1: pick a category, then a profile within it.
+choose_profile() {
+  echo
+  echo "Step 1 of 3  Choose a build profile"
+  echo "-----------------------------------"
+  local i=1
+  for g in "${GROUP_NAMES[@]}"; do
+    printf "  %d) %s\n" "${i}" "$(group_title "${g}")"
+    i=$((i + 1))
+  done
+  local gsel
+  gsel="$(prompt "Category" 5)"
+  [[ "${gsel}" =~ ^[1-5]$ ]] || die "not a category: ${gsel}"
+  local group="${GROUP_NAMES[$((gsel - 1))]}"
+
+  echo
+  echo "$(group_title "${group}"):"
+  local entries=() line
+  while IFS= read -r line; do entries+=("${line}"); done < <(group_profiles "${group}")
+  i=1
+  for line in "${entries[@]}"; do
+    printf "  %2d) %-32s %s\n" "${i}" "${line%%|*}" "${line#*|}"
+    i=$((i + 1))
+  done
+  local psel
+  psel="$(prompt "Profile" 1)"
+  [[ "${psel}" =~ ^[0-9]+$ ]] && (( psel >= 1 && psel <= ${#entries[@]} )) \
+    || die "not a profile in that category: ${psel}"
+  SEL_PROFILE="${entries[$((psel - 1))]%%|*}"
+}
+
+# Step 2: the security posture. Attestation and the rollback floor are the two
+# knobs that change what a signed image is trusted to do, so they are explicit.
+choose_security() {
+  echo
+  echo "Step 2 of 3  Security"
+  echo "---------------------"
+  echo "Capsule attestation gates every spawn on a post-quantum STARK proof that"
+  echo "the capsule is enrolled under the policy root. Recommended on."
+  local a; a="$(prompt "Enable capsule attestation? (y/n)" "$([[ ${SEL_ATTEST} -eq 1 ]] && echo y || echo n)")"
+  SEL_ATTEST=$([[ "${a}" =~ ^[Yy] ]] && echo 1 || echo 0)
+
+  echo
+  echo "Kernel self-attestation has the bootloader verify the kernel's own STARK"
+  echo "proof before the jump. Needs an enrolled kernel image; off by default."
+  local k; k="$(prompt "Enable kernel self-attestation? (y/n)" "$([[ ${SEL_KERNEL_ATTEST} -eq 1 ]] && echo y || echo n)")"
+  SEL_KERNEL_ATTEST=$([[ "${k}" =~ ^[Yy] ]] && echo 1 || echo 0)
+
+  echo
+  echo "The anti-rollback index is the floor a signed image must meet; the TPM"
+  echo "monotonic counter refuses anything older. Raise it to burn old images."
+  SEL_ROLLBACK="$(prompt "Anti-rollback index" "${SEL_ROLLBACK}")"
+  [[ "${SEL_ROLLBACK}" =~ ^[0-9]+$ ]] || die "rollback index must be a number: ${SEL_ROLLBACK}"
+}
+
+# Step 3: show the resolved selection and write it.
+write_config() {
+  echo
+  echo "Step 3 of 3  Review"
+  echo "-------------------"
+  printf "  profile               %s\n" "${SEL_PROFILE}"
+  printf "  capsule attestation   %s\n" "$([[ ${SEL_ATTEST} -eq 1 ]] && echo on || echo off)"
+  printf "  kernel self-attest    %s\n" "$([[ ${SEL_KERNEL_ATTEST} -eq 1 ]] && echo on || echo off)"
+  printf "  anti-rollback index   %s\n" "${SEL_ROLLBACK}"
+  printf "  cargo features        %s\n" "$(feature_string)"
+  echo
+
+  cat > "${CONFIG_FILE}" <<EOF
+# NONOS kernel build configuration.
+# Generated by tools/nonos-config. Edit by hand or re-run "make menuconfig".
+# Consumed by the "from-config" build target; every value is a plain Make var.
+NONOS_PROFILE := ${SEL_PROFILE}
+NONOS_ATTEST := ${SEL_ATTEST}
+NONOS_STARK_KERNEL_ATTEST := ${SEL_KERNEL_ATTEST}
+NONOS_ROLLBACK_INDEX := ${SEL_ROLLBACK}
+EOF
+  echo "Wrote ${CONFIG_FILE}."
+  echo "Build it with:  make from-config"
+}
+
+# The cargo feature string the build will pass, shown for review and used by the
+# --print mode so the Makefile and a human resolve it identically.
+feature_string() {
+  local f="${SEL_PROFILE}"
+  [[ "${SEL_ATTEST}" -eq 1 ]] && f="${f},nonos-stark-attest"
+  echo "${f}"
+}
+
+usage() {
+  cat <<EOF
+usage: nonos-config [options]
+  (no options)              interactive, step by step
+  --profile <feature>       set the base profile non-interactively
+  --attest <0|1>            capsule attestation off/on
+  --kernel-attest <0|1>     kernel self-attestation off/on
+  --rollback <n>            anti-rollback index
+  --print-features          print the resolved cargo feature string and exit
+  --list                    list the profile catalogue and exit
+  -h, --help                this help
+Non-interactive example:
+  nonos-config --profile microkernel-full-gui --attest 1 --rollback 1
+EOF
+}
+
+list_catalogue() {
+  for g in "${GROUP_NAMES[@]}"; do
+    echo "$(group_title "${g}"):"
+    group_profiles "${g}" | while IFS='|' read -r feat desc; do
+      printf "  %-34s %s\n" "${feat}" "${desc}"
+    done
+    echo
+  done
+}
+
+main() {
+  local interactive=1
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --profile) SEL_PROFILE="$2"; interactive=0; shift 2 ;;
+      --attest) SEL_ATTEST="$2"; interactive=0; shift 2 ;;
+      --kernel-attest) SEL_KERNEL_ATTEST="$2"; interactive=0; shift 2 ;;
+      --rollback) SEL_ROLLBACK="$2"; interactive=0; shift 2 ;;
+      --print-features) echo "$(feature_string)"; exit 0 ;;
+      --list) list_catalogue; exit 0 ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "unknown option: $1 (see --help)" ;;
+    esac
+  done
+
+  [[ -f "${CARGO_TOML}" ]] || die "run from inside the NONOS tree (no Cargo.toml)"
+
+  if [[ "${interactive}" -eq 1 ]]; then
+    echo "NONOS kernel configuration"
+    echo "=========================="
+    choose_profile
+    choose_security
+  fi
+
+  profile_is_declared "${SEL_PROFILE}" \
+    || die "profile '${SEL_PROFILE}' is not declared in Cargo.toml"
+  write_config
+}
+
+main "$@"
