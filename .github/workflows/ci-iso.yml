@@ -69,6 +69,17 @@ jobs:
       - name: Ensure ZK device root
         run: make nonos-mk-ensure-zk-keys
 
+      # Prove the gate before we ship it. The red-team battery mounts the attacks
+      # a shipped image must survive (tamper, kernel swap, trailer forgery,
+      # malformed input) against the exact boot-side verifier, and the fuzzer
+      # drives the untrusted trailer parser. This step must pass or no image ships.
+      - name: Prove the attestation under attack
+        run: |
+          set -euo pipefail
+          cargo test --release --manifest-path nonos-bootloader/tools/embed-zk-proof/Cargo.toml \
+            --test kernel_self_attest_poc
+          bash security/tests/run.sh 50000
+
       # Build the flashable image. This drives, in order: build and sign every
       # capsule, enroll the whole set under one STARK policy root and emit each
       # NZKSTRK1 trailer, build and dual-sign the kernel, enroll the kernel and
@@ -76,7 +87,10 @@ jobs:
       # stark-kernel-attest check and the enrolled kernel root, and package the
       # GPT/FAT32 image.
       - name: Build the production ISO
-        run: make nonos-mk-usb-img
+        run: |
+          set -euo pipefail
+          make nonos-mk-usb-img
+          make nonos-mk-iso
 
       # A machine-readable record of what the image attests, next to the image.
       - name: Write attestation manifest
@@ -85,8 +99,11 @@ jobs:
           mkdir -p target/iso
           {
             echo "image: $(ls target/nonos.img)"
-            echo "sha256: $(sha256sum target/nonos.img | cut -d' ' -f1)"
+            echo "image_sha256: $(sha256sum target/nonos.img | cut -d' ' -f1)"
+            echo "iso: $(ls target/nonos.iso)"
+            echo "iso_sha256: $(sha256sum target/nonos.iso | cut -d' ' -f1)"
             echo "rollback_index: ${NONOS_ROLLBACK_INDEX}"
+            echo "proven_under_attack: red-team battery + parser fuzz, see build log"
             echo "kernel_signature: ed25519+mldsa65"
             echo "kernel_self_attestation: stark"
             echo "capsule_attestation: stark"
@@ -103,6 +120,7 @@ jobs:
           name: nonos-production-iso
           path: |
             target/nonos.img
+            target/nonos.iso
             target/iso/attestation-manifest.txt
           if-no-files-found: error
           retention-days: 30
