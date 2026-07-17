@@ -155,6 +155,7 @@ static int type_eq(const char *a, const char *b) {
  * (Rust) when a real pointer/key event lands on a laid-out node. Drains the job
  * queue so listener-scheduled microtasks settle before layout. */
 int njs_dispatch_event(JSContext *ctx, int node, const char *type) {
+    JS_UpdateStackTop(JS_GetRuntime(ctx));
     int fired = 0;
     JSValue ev = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, ev, "type", JS_NewString(ctx, type));

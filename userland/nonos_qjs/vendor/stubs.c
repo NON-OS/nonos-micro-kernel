@@ -45,23 +45,32 @@ static void emit(char *buf, size_t size, size_t *pos, char c) {
     (*pos)++;
 }
 
-static void emit_str(char *buf, size_t size, size_t *pos, const char *s) {
+/* Emit at most `prec` characters of `s` (prec < 0 means until NUL). Honouring
+ * precision is essential: QuickJS passes %.*s with bounded, non-NUL-terminated
+ * buffers, so ignoring it reads off the end of the allocation. */
+static void emit_str_n(char *buf, size_t size, size_t *pos, const char *s, int prec) {
     if (!s) s = "(null)";
-    while (*s) emit(buf, size, pos, *s++);
+    for (int i = 0; s[i] && (prec < 0 || i < prec); i++) emit(buf, size, pos, s[i]);
 }
 
-static void emit_uint(char *buf, size_t size, size_t *pos, unsigned long long v, int base, int upper) {
+static void emit_uint_w(char *buf, size_t size, size_t *pos, unsigned long long v,
+                        int base, int upper, int width, int zero) {
     char tmp[24];
     const char *digits = upper ? "0123456789ABCDEF" : "0123456789abcdef";
     int n = 0;
     if (v == 0) tmp[n++] = '0';
     while (v) { tmp[n++] = digits[v % base]; v /= base; }
+    for (int p = width - n; p > 0; p--) emit(buf, size, pos, zero ? '0' : ' ');
     while (n) emit(buf, size, pos, tmp[--n]);
 }
 
-static void emit_int(char *buf, size_t size, size_t *pos, long long v, int base) {
-    if (v < 0) { emit(buf, size, pos, '-'); emit_uint(buf, size, pos, (unsigned long long)(-v), base, 0); }
-    else emit_uint(buf, size, pos, (unsigned long long)v, base, 0);
+static void emit_int_w(char *buf, size_t size, size_t *pos, long long v, int width, int zero) {
+    if (v < 0) {
+        emit(buf, size, pos, '-');
+        emit_uint_w(buf, size, pos, (unsigned long long)(-v), 10, 0, width > 0 ? width - 1 : 0, zero);
+    } else {
+        emit_uint_w(buf, size, pos, (unsigned long long)v, 10, 0, width, zero);
+    }
 }
 
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list ap) {
@@ -69,34 +78,55 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list ap) {
     for (const char *f = fmt; *f; f++) {
         if (*f != '%') { emit(buf, size, &pos, *f); continue; }
         f++;
-        while (*f == '-' || *f == '+' || *f == ' ' || *f == '#' || *f == '0') f++;
-        while ((*f >= '0' && *f <= '9') || *f == '.' || *f == '*') { if (*f == '*') (void)va_arg(ap, int); f++; }
+        int zero = 0;
+        while (*f == '-' || *f == '+' || *f == ' ' || *f == '#' || *f == '0') {
+            if (*f == '0') zero = 1;
+            f++;
+        }
+        int width = 0;
+        if (*f == '*') { width = va_arg(ap, int); f++; }
+        else while (*f >= '0' && *f <= '9') { width = width * 10 + (*f - '0'); f++; }
+        int prec = -1;
+        if (*f == '.') {
+            f++;
+            prec = 0;
+            if (*f == '*') { prec = va_arg(ap, int); f++; }
+            else while (*f >= '0' && *f <= '9') { prec = prec * 10 + (*f - '0'); f++; }
+        }
         int lng = 0;
-        while (*f == 'l' || *f == 'z' || *f == 'j' || *f == 't' || *f == 'h') { if (*f == 'l') lng++; f++; }
+        while (*f == 'l' || *f == 'z' || *f == 'j' || *f == 't' || *f == 'h') {
+            if (*f == 'l') lng++;
+            f++;
+        }
+        long long sv;
+        unsigned long long uv;
         switch (*f) {
             case '%': emit(buf, size, &pos, '%'); break;
             case 'c': emit(buf, size, &pos, (char)va_arg(ap, int)); break;
-            case 's': emit_str(buf, size, &pos, va_arg(ap, const char *)); break;
+            case 's': emit_str_n(buf, size, &pos, va_arg(ap, const char *), prec); break;
             case 'd': case 'i':
-                emit_int(buf, size, &pos, lng >= 2 ? va_arg(ap, long long) : (long long)va_arg(ap, long), 10); break;
-            case 'u':
-                emit_uint(buf, size, &pos, lng >= 2 ? va_arg(ap, unsigned long long) : (unsigned long long)va_arg(ap, unsigned long), 10, 0); break;
-            case 'x':
-                emit_uint(buf, size, &pos, lng >= 2 ? va_arg(ap, unsigned long long) : (unsigned long long)va_arg(ap, unsigned long), 16, 0); break;
-            case 'X':
-                emit_uint(buf, size, &pos, lng >= 2 ? va_arg(ap, unsigned long long) : (unsigned long long)va_arg(ap, unsigned long), 16, 1); break;
-            case 'o':
-                emit_uint(buf, size, &pos, lng >= 2 ? va_arg(ap, unsigned long long) : (unsigned long long)va_arg(ap, unsigned long), 8, 0); break;
+                sv = lng >= 2 ? va_arg(ap, long long)
+                             : (lng == 1 ? (long long)va_arg(ap, long) : (long long)va_arg(ap, int));
+                emit_int_w(buf, size, &pos, sv, width, zero);
+                break;
+            case 'u': case 'x': case 'X': case 'o':
+                uv = lng >= 2 ? va_arg(ap, unsigned long long)
+                             : (lng == 1 ? (unsigned long long)va_arg(ap, unsigned long)
+                                         : (unsigned long long)va_arg(ap, unsigned int));
+                emit_uint_w(buf, size, &pos, uv, *f == 'o' ? 8 : (*f == 'u' ? 10 : 16), *f == 'X', width, zero);
+                break;
             case 'p':
-                emit_str(buf, size, &pos, "0x");
-                emit_uint(buf, size, &pos, (unsigned long long)(uintptr_t)va_arg(ap, void *), 16, 0); break;
+                emit_str_n(buf, size, &pos, "0x", -1);
+                emit_uint_w(buf, size, &pos, (unsigned long long)(uintptr_t)va_arg(ap, void *), 16, 0, 0, 0);
+                break;
             case 'f': case 'g': case 'e': {
                 double d = va_arg(ap, double);
                 long long ip = (long long)d;
-                emit_int(buf, size, &pos, ip, 10);
+                emit_int_w(buf, size, &pos, ip, 0, 0);
                 emit(buf, size, &pos, '.');
-                double frac = d < 0 ? ip - d : d - ip;
-                for (int k = 0; k < 6; k++) { frac *= 10; int dig = (int)frac; emit(buf, size, &pos, '0' + (dig % 10)); frac -= dig; }
+                double frac = d < 0 ? (double)ip - d : d - (double)ip;
+                int after = prec >= 0 ? prec : 6;
+                for (int k = 0; k < after; k++) { frac *= 10; int dig = (int)frac; emit(buf, size, &pos, '0' + (dig % 10)); frac -= dig; }
                 break;
             }
             default: emit(buf, size, &pos, '%'); if (*f) emit(buf, size, &pos, *f); break;
