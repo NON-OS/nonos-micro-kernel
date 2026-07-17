@@ -36,11 +36,11 @@ const WIRED_NICS: &[&str] =
 // coming up after boot) should replace the one bound at startup.
 static BOUND_PORT: AtomicU32 = AtomicU32::new(0);
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum SetupError {
-    NicNotFound,
-    MacFailed,
-    BuildFailed,
+/// The broker port of the interface the stack is bound to, or zero before the
+/// first bind. Read by the lease-status reply so a panel can see which NIC the
+/// stack chose when no address ever binds.
+pub fn bound_port() -> u32 {
+    BOUND_PORT.load(Ordering::Acquire)
 }
 
 // Return the first candidate whose link is actually up. Driver capsules register
@@ -66,20 +66,11 @@ fn discover_nic() -> Option<u32> {
     None
 }
 
-pub fn run() -> Result<(), SetupError> {
-    let port = discover_nic().ok_or(SetupError::NicNotFound)?;
-    let mac = device::mac(port).ok_or(SetupError::MacFailed)?;
-    let net_state = build::build(mac, port).ok_or(SetupError::BuildFailed)?;
-    state::store(net_state);
-    BOUND_PORT.store(port, Ordering::Release);
-    Ok(())
-}
-
-/// Re-check the interface picture after the initial bind. When the best up link
-/// differs from the one currently bound - the WiFi link associating after boot,
-/// or the bound link going down - rebuild the stack on the new interface so DHCP
-/// runs where traffic can actually flow. A no-op once bound to the best link, so
-/// it is cheap to call on a timer from the server loop.
+/// Bind, or rebind, the stack to the best up link. The first call after boot with
+/// a link up does the initial bind (nothing is bound, so any up link differs from
+/// the zero sentinel); later calls switch interfaces when the WiFi link associates
+/// or the bound link drops. A no-op once bound to the best link, so it is cheap to
+/// call on a timer from the server loop.
 pub fn reevaluate() {
     let Some(best) = discover_nic() else {
         return;

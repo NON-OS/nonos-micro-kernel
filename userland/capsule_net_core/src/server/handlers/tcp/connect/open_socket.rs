@@ -27,10 +27,7 @@ pub fn open_socket(sender_pid: u32, endpoint: Endpoint) -> ConnectOutcome {
         let tx_buf = tcp::SocketBuffer::new(alloc::vec![0u8; 8192]);
         let mut sock = tcp::Socket::new(rx, tx_buf);
         let local = ephemeral::next_ephemeral();
-        if sock
-            .connect(iface.context(), (endpoint.remote, endpoint.port), local)
-            .is_err()
-        {
+        if sock.connect(iface.context(), (endpoint.remote, endpoint.port), local).is_err() {
             return ConnectOutcome::ConnectFailed;
         }
         let handle = sockets.add(sock);

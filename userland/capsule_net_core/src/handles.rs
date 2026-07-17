@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use spin::Mutex;
 use smoltcp::iface::SocketHandle;
+use spin::Mutex;
 
 pub const MAX_SOCKETS: usize = 32;
 
@@ -34,9 +34,9 @@ pub fn alloc(owner_pid: u32, handle: SocketHandle) -> Option<u32> {
 
 pub fn get(index: u32, sender_pid: u32) -> Option<SocketHandle> {
     let table = TABLE.lock();
-    table.get(index as usize).and_then(|s| {
-        s.and_then(|(owner, h)| if owner == sender_pid { Some(h) } else { None })
-    })
+    table
+        .get(index as usize)
+        .and_then(|s| s.and_then(|(owner, h)| if owner == sender_pid { Some(h) } else { None }))
 }
 
 pub fn free(index: u32, sender_pid: u32) {

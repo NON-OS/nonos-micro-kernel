@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use spin::Mutex;
 use smoltcp::iface::SocketHandle;
+use spin::Mutex;
 
 pub const MAX_UDP_SOCKETS: usize = 16;
 
@@ -25,9 +25,9 @@ struct Entry {
     handle: SocketHandle,
 }
 
-static TABLE: Mutex<[Option<Entry>; MAX_UDP_SOCKETS]> =
-    Mutex::new([None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None]);
+static TABLE: Mutex<[Option<Entry>; MAX_UDP_SOCKETS]> = Mutex::new([
+    None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+]);
 
 pub fn insert(owner_pid: u32, local_port: u16, handle: SocketHandle) -> bool {
     let mut table = TABLE.lock();
@@ -56,9 +56,8 @@ pub fn get(owner_pid: u32, local_port: u16) -> Option<SocketHandle> {
 pub fn remove(owner_pid: u32, local_port: u16) {
     let mut table = TABLE.lock();
     for slot in table.iter_mut() {
-        let matches = slot.as_ref().map_or(false, |e| {
-            e.owner_pid == owner_pid && e.local_port == local_port
-        });
+        let matches =
+            slot.as_ref().map_or(false, |e| e.owner_pid == owner_pid && e.local_port == local_port);
         if matches {
             *slot = None;
             return;

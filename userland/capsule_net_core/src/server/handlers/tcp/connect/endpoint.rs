@@ -28,8 +28,5 @@ pub fn parse(body: &[u8]) -> Result<Endpoint, u16> {
     if ip == [0, 0, 0, 0] || port == 0 {
         return Err(E_BAD_ADDR);
     }
-    Ok(Endpoint {
-        remote: IpAddress::Ipv4(Ipv4Address(ip)),
-        port,
-    })
+    Ok(Endpoint { remote: IpAddress::Ipv4(Ipv4Address(ip)), port })
 }

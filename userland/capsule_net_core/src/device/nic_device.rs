@@ -17,12 +17,18 @@
 use smoltcp::phy::{Device, DeviceCapabilities};
 use smoltcp::time::Instant;
 
-use crate::device::{capabilities, receive, transmit};
 use crate::device::types::{NicDevice, NicRxToken, NicTxToken};
+use crate::device::{capabilities, receive, transmit};
 
 impl Device for NicDevice {
-    type RxToken<'a> = NicRxToken where Self: 'a;
-    type TxToken<'a> = NicTxToken where Self: 'a;
+    type RxToken<'a>
+        = NicRxToken
+    where
+        Self: 'a;
+    type TxToken<'a>
+        = NicTxToken
+    where
+        Self: 'a;
 
     fn receive(&mut self, _now: Instant) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
         receive::receive(self.port)

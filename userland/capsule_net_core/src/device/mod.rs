@@ -32,3 +32,9 @@ pub mod types;
 pub use link_up::link_up;
 pub use read_mac::mac;
 pub use types::NicDevice;
+
+/// The timeout for a single request to a NIC driver. Bounded and short so a slow
+/// or dead interface (a cable-less wired NIC that answers link-up but never
+/// carries traffic) can never stall the poll loop, keeping the stack responsive
+/// and free to re-evaluate onto the WiFi link the moment it associates.
+pub const DEVICE_CALL_MS: u64 = 250;

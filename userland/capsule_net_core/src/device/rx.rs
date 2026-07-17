@@ -17,9 +17,10 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use nonos_libc::mk_ipc_call;
+use nonos_libc::mk_ipc_call_timeout;
 
 use super::rx_seq::next_rid;
+use crate::device::DEVICE_CALL_MS;
 use crate::protocol::header::{parse_response, write_request};
 use crate::protocol::ops::{HDR_LEN, OP_RX_PACKET};
 
@@ -32,7 +33,14 @@ pub fn poll_frame(port: u32) -> Option<Vec<u8>> {
         return None;
     }
     let mut resp = vec![0u8; RESP_CAP];
-    let n = mk_ipc_call(port as u64, req.as_ptr(), HDR_LEN, resp.as_mut_ptr(), resp.len());
+    let n = mk_ipc_call_timeout(
+        port as u64,
+        req.as_ptr(),
+        HDR_LEN,
+        resp.as_mut_ptr(),
+        resp.len(),
+        DEVICE_CALL_MS,
+    );
     if n < 0 {
         return None;
     }
@@ -58,12 +66,8 @@ pub fn poll_frame(port: u32) -> Option<Vec<u8>> {
         return None;
     }
     let body = HDR_LEN + 4;
-    let frame_len = u32::from_le_bytes([
-        view[body],
-        view[body + 1],
-        view[body + 2],
-        view[body + 3],
-    ]) as usize;
+    let frame_len =
+        u32::from_le_bytes([view[body], view[body + 1], view[body + 2], view[body + 3]]) as usize;
     let frame_start = body + 4;
     if frame_start + frame_len > view.len() {
         return None;

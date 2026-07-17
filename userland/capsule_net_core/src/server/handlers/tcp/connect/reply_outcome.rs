@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::protocol::tcp::{E_NO_SOCKET, E_NOT_CONNECTED, E_OK, MAGIC_NTCP, OP_CONNECT};
+use crate::protocol::tcp::{E_NOT_CONNECTED, E_NO_SOCKET, E_OK, MAGIC_NTCP, OP_CONNECT};
 use crate::server::handlers::tcp::connect::types::ConnectOutcome;
 use crate::server::respond::reply;
 

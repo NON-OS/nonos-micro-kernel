@@ -17,7 +17,9 @@
 use smoltcp::socket::udp;
 use smoltcp::storage::PacketMetadata;
 
-use crate::protocol::udp::{E_BAD_ADDR, E_BAD_LEN, E_BIND_FAILED, E_NO_SOCKET, E_OK, MAGIC_NUDP, OP_BIND};
+use crate::protocol::udp::{
+    E_BAD_ADDR, E_BAD_LEN, E_BIND_FAILED, E_NO_SOCKET, E_OK, MAGIC_NUDP, OP_BIND,
+};
 use crate::server::parse_req::Request;
 use crate::server::respond::reply;
 use crate::state;
@@ -41,14 +43,10 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     }
 
     let outcome = state::with_iface(|_iface, sockets, _dev| {
-        let rx = udp::PacketBuffer::new(
-            alloc::vec![PacketMetadata::EMPTY; 16],
-            alloc::vec![0u8; 4096],
-        );
-        let tx_buf = udp::PacketBuffer::new(
-            alloc::vec![PacketMetadata::EMPTY; 16],
-            alloc::vec![0u8; 4096],
-        );
+        let rx =
+            udp::PacketBuffer::new(alloc::vec![PacketMetadata::EMPTY; 16], alloc::vec![0u8; 4096]);
+        let tx_buf =
+            udp::PacketBuffer::new(alloc::vec![PacketMetadata::EMPTY; 16], alloc::vec![0u8; 4096]);
         let mut sock = udp::Socket::new(rx, tx_buf);
         if sock.bind(local_port).is_err() {
             return BindOutcome::BindFailed;

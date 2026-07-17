@@ -18,7 +18,9 @@ use crate::device::types::NicRxToken;
 
 impl smoltcp::phy::RxToken for NicRxToken {
     fn consume<R, F>(self, f: F) -> R
-    where F: FnOnce(&mut [u8]) -> R {
+    where
+        F: FnOnce(&mut [u8]) -> R,
+    {
         let mut frame = self.0;
         f(&mut frame)
     }
