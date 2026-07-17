@@ -26,6 +26,7 @@ mod token;
 mod value;
 mod world;
 
+pub use collect_scripts::collect_scripts;
 pub use interp::{deliver_net, dispatch_event, pump_timers};
 pub use run::run;
 pub use world::World;
