@@ -22,21 +22,23 @@ use super::super::field::{Fp, Fp2};
 use super::super::fri_ext::FriProofExt;
 use alloc::vec::Vec;
 
-/// One consistency query at position `p`: the extension DEEP value, each base-field
-/// trace column at `p`, and the extension composition at `p`, each with a Merkle
-/// path to its commitment (base leaf for the trace, extension leaf for the rest).
+/// One consistency query at position `p`: the extension DEEP value, the whole
+/// base-field trace row at `p`, and the extension composition at `p`. The trace row
+/// is authenticated by a single wide-leaf path; the DEEP and composition values by
+/// their own extension-leaf paths.
 pub struct StarkQueryExt {
     pub deep: Fp2,
     pub deep_path: Vec<[u8; 32]>,
     pub trace: Vec<Fp>,
-    pub trace_paths: Vec<Vec<[u8; 32]>>,
+    pub trace_path: Vec<[u8; 32]>,
     pub comp: Fp2,
     pub comp_path: Vec<[u8; 32]>,
 }
 
-/// A complete money-grade STARK proof.
+/// A complete money-grade STARK proof. The trace is committed row-wise as one
+/// wide-leaf tree, so there is a single trace root and one trace path per query.
 pub struct StarkProofExt {
-    pub trace_roots: Vec<[u8; 32]>,
+    pub trace_root: [u8; 32],
     pub comp_root: [u8; 32],
     /// The trace columns evaluated at `g^k * z` for each window row `k`, row-major
     /// as a transition window: `ood_frame[k * width + col]`, in `Fp2`.

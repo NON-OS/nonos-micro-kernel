@@ -14,19 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! A Merkle commitment whose node hash is the Poseidon permutation rather than
-//! BLAKE3. Its point is not speed but arithmetization: every node is a fixed
-//! sequence of field operations, so a path check can be expressed as AIR
-//! constraints and proven inside another STARK. That is the commitment a
-//! recursive verifier needs, since a bitwise hash like BLAKE3 cannot be proven
-//! cheaply. Digests are `RATE` field elements; leaves are already digests.
+//! Poseidon-committed money-grade FRI over the degree-2 extension. Same soundness
+//! as the keccak `fri_ext` (extension challenges, grinding), but committed with
+//! Poseidon so the entire low-degree test is cheap to re-verify inside a STARK.
+//! This is the inner form a recursive verifier folds over; the keccak form is the
+//! outer form an on-chain verifier checks.
 
-mod pack_base;
-mod pack_ext;
-mod tree;
+mod prove;
+mod types;
 mod verify;
 
-pub use pack_base::pack_base;
-pub use pack_ext::pack_ext;
-pub use tree::PoseidonMerkleTree;
-pub use verify::verify_path;
+pub use prove::fri_prove_poseidon_ext;
+pub use types::{FriProofExtP, LayerOpeningExtP, QueryProofExtP};
+pub use verify::fri_verify_poseidon_ext;

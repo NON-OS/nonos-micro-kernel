@@ -147,11 +147,26 @@ impl Air for WiredExt {
     }
 
     fn transition(&self, window: &[Fp], periodic: &[Fp]) -> Vec<Fp> {
-        let mut out = fusion::combine(&self.stack, &self.regions, self.num_transition(), self.stride(), window, periodic, |i, l, p| {
-            self.regions[i].transition(l, p)
-        });
+        let mut out = fusion::combine(
+            &self.stack,
+            &self.regions,
+            self.num_transition(),
+            self.stride(),
+            window,
+            periodic,
+            |i, l, p| self.regions[i].transition(l, p),
+        );
         let last = self.num_transition() - 1;
-        out[last] = fusion::grand_product(&self.wired_cols, self.beta, self.gamma, self.stack.width, self.stride(), self.gp_slot(), window, periodic);
+        out[last] = fusion::grand_product(
+            &self.wired_cols,
+            self.beta,
+            self.gamma,
+            self.stack.width,
+            self.stride(),
+            self.gp_slot(),
+            window,
+            periodic,
+        );
         out
     }
 
@@ -165,11 +180,26 @@ impl Air for WiredExt {
 
 impl AirExt for WiredExt {
     fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2> {
-        let mut out = fusion::combine(&self.stack, &self.regions, self.num_transition(), self.stride(), window, periodic, |i, l, p| {
-            self.regions[i].transition_ext(l, p)
-        });
+        let mut out = fusion::combine(
+            &self.stack,
+            &self.regions,
+            self.num_transition(),
+            self.stride(),
+            window,
+            periodic,
+            |i, l, p| self.regions[i].transition_ext(l, p),
+        );
         let last = self.num_transition() - 1;
-        out[last] = fusion::grand_product(&self.wired_cols, self.beta, self.gamma, self.stack.width, self.stride(), self.gp_slot(), window, periodic);
+        out[last] = fusion::grand_product(
+            &self.wired_cols,
+            self.beta,
+            self.gamma,
+            self.stack.width,
+            self.stride(),
+            self.gp_slot(),
+            window,
+            periodic,
+        );
         out
     }
 }

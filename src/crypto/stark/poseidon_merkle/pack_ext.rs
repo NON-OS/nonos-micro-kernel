@@ -14,19 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! A Merkle commitment whose node hash is the Poseidon permutation rather than
-//! BLAKE3. Its point is not speed but arithmetization: every node is a fixed
-//! sequence of field operations, so a path check can be expressed as AIR
-//! constraints and proven inside another STARK. That is the commitment a
-//! recursive verifier needs, since a bitwise hash like BLAKE3 cannot be proven
-//! cheaply. Digests are `RATE` field elements; leaves are already digests.
+//! Encoding an extension-field value as a Poseidon Merkle leaf.
 
-mod pack_base;
-mod pack_ext;
-mod tree;
-mod verify;
+use super::super::air::RATE;
+use super::super::field::{Fp, Fp2};
 
-pub use pack_base::pack_base;
-pub use pack_ext::pack_ext;
-pub use tree::PoseidonMerkleTree;
-pub use verify::verify_path;
+/// An extension value as a rate-sized leaf: `[c0, c1, 0, 0]`.
+pub fn pack_ext(v: Fp2) -> [Fp; RATE] {
+    let mut d = [Fp::ZERO; RATE];
+    d[0] = v.c0;
+    d[1] = v.c1;
+    d
+}

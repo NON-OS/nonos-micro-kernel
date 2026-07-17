@@ -14,45 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The money-grade DEEP STARK verifier. Same checks as the base verifier, done in
-//! the extension: it evaluates the constraints once at the out-of-domain point
-//! `z in Fp2`, verifies the DEEP quotient is low degree with the money-grade FRI,
-//! and at each sampled position recomputes that quotient from the committed trace
-//! (base leaf) and composition (extension leaf) openings. It only reads the proof
-//! and never panics.
+//! The Poseidon-committed money-grade STARK verifier: the exact algorithm of
+//! `verify_ext`, but replaying the Poseidon transcript and checking Poseidon Merkle
+//! openings. It is the algorithm a recursive verifier arithmetizes, so a proof that
+//! verifies here is the proof a recursion attests to.
 
+use super::super::air::Poseidon;
 use super::super::field::{Fp, Fp2};
 use super::super::fri::root_of_unity;
-use super::super::fri_ext::fri_verify_ext;
-use super::super::merkle::{verify_path_ext, verify_path_wide};
+use super::super::fri_poseidon_ext::fri_verify_poseidon_ext;
 use super::super::poly::eval_lagrange_ext;
-use super::super::transcript::Transcript;
+use super::super::poseidon_merkle::{pack_base, pack_ext, verify_path};
+use super::super::poseidon_transcript::PoseidonTranscript;
 use super::composition::{compose_ext, domain_params_blown, num_coeffs};
-use super::prove_ext::draw_ood_point_ext;
+use super::draw_ood_poseidon::draw_ood_point_poseidon;
 use super::spec::AirExt;
-use super::types_ext::StarkProofExt;
+use super::types_poseidon_ext::StarkProofExtP;
 use alloc::vec::Vec;
 
 const SHIFT: u64 = 7;
 
-/// Verify a money-grade `proof` against `air`. Domain sizing matches the prover.
-pub fn stark_verify_ext<A: AirExt>(
+pub fn stark_verify_poseidon_ext<A: AirExt>(
     air: &A,
-    proof: &StarkProofExt,
-    n_queries: usize,
-    grind_bits: u32,
-) -> bool {
-    stark_verify_ext_blown(air, proof, n_queries, grind_bits, 0)
-}
-
-/// The same verifier, with `extra_blowup_bits` matching the prover's. A deployment
-/// verifier pins this to the value the vector was proven at.
-pub fn stark_verify_ext_blown<A: AirExt>(
-    air: &A,
-    proof: &StarkProofExt,
+    proof: &StarkProofExtP,
     n_queries: usize,
     grind_bits: u32,
     extra_blowup_bits: u32,
+    hasher: &Poseidon,
 ) -> bool {
     let log_t = air.log_trace_len();
     let t = 1usize << log_t;
@@ -61,7 +49,10 @@ pub fn stark_verify_ext_blown<A: AirExt>(
     let n = 1usize << log_n;
     let window_size = air.window_size();
 
-    if proof.ood_frame.len() != window_size * width || proof.queries.len() != n_queries {
+    if proof.trace_roots.len() != width
+        || proof.ood_frame.len() != window_size * width
+        || proof.queries.len() != n_queries
+    {
         return false;
     }
 
@@ -69,20 +60,20 @@ pub fn stark_verify_ext_blown<A: AirExt>(
     let omega = root_of_unity(log_n);
     let shift = Fp::from_u64(SHIFT);
 
-    let mut transcript = Transcript::new(b"NONOS-STARK-EXT");
-    transcript.absorb_digest(&proof.trace_root);
+    let mut transcript = PoseidonTranscript::new(hasher.clone());
+    for root in &proof.trace_roots {
+        transcript.absorb_digest(root);
+    }
     let coeffs: Vec<Fp2> = (0..num_coeffs(air)).map(|_| transcript.challenge_fp2()).collect();
     transcript.absorb_digest(&proof.comp_root);
-    let z = draw_ood_point_ext(&mut transcript, shift, n, t);
+    let z = draw_ood_point_poseidon(&mut transcript, shift, n, t);
     for value in &proof.ood_frame {
-        transcript.absorb_fp(value.c0);
-        transcript.absorb_fp(value.c1);
+        transcript.absorb(value.c0);
+        transcript.absorb(value.c1);
     }
     let deep_coeffs: Vec<Fp2> =
         (0..width * window_size + 1).map(|_| transcript.challenge_fp2()).collect();
 
-    // The constraints checked once at the out-of-domain point from the claimed
-    // frame, with this verifier's own composition algebra.
     let h_pts: Vec<Fp> = {
         let mut v = Vec::with_capacity(t);
         let mut p = Fp::ONE;
@@ -96,8 +87,15 @@ pub fn stark_verify_ext_blown<A: AirExt>(
         air.periodic_columns().iter().map(|col| eval_lagrange_ext(&h_pts, col, z)).collect();
     let comp_z = compose_ext(air, g, z, &proof.ood_frame, &periodic_z, &coeffs);
 
-    // The DEEP quotient polynomial must be low degree.
-    if !fri_verify_ext(&proof.fri, shift, log_n, fri_log_blowup, n_queries, grind_bits) {
+    if !fri_verify_poseidon_ext(
+        &proof.fri,
+        shift,
+        log_n,
+        fri_log_blowup,
+        n_queries,
+        grind_bits,
+        hasher,
+    ) {
         return false;
     }
     let deep_root = proof.fri.roots[0];
@@ -105,14 +103,24 @@ pub fn stark_verify_ext_blown<A: AirExt>(
 
     for qd in &proof.queries {
         let p = transcript.challenge_index(n);
-        if qd.trace.len() != width {
+        if qd.trace.len() != width || qd.trace_paths.len() != width {
             return false;
         }
-        if !verify_path_ext(&deep_root, p, qd.deep, &qd.deep_path)
-            || !verify_path_ext(&proof.comp_root, p, qd.comp, &qd.comp_path)
-            || !verify_path_wide(&proof.trace_root, p, &qd.trace, &qd.trace_path)
+        if !verify_path(hasher, &deep_root, p, pack_ext(qd.deep), &qd.deep_path)
+            || !verify_path(hasher, &proof.comp_root, p, pack_ext(qd.comp), &qd.comp_path)
         {
             return false;
+        }
+        for c in 0..width {
+            if !verify_path(
+                hasher,
+                &proof.trace_roots[c],
+                p,
+                pack_base(qd.trace[c]),
+                &qd.trace_paths[c],
+            ) {
+                return false;
+            }
         }
 
         let x = shift * omega.pow(p as u64);

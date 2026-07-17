@@ -14,62 +14,56 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The money-grade FRI verifier. It rebuilds the transcript, draws each fold
-//! challenge from the extension, checks the grinding proof-of-work, and for every
-//! sampled query re-derives the extension fold and binds each opened value by a
-//! Merkle path. It only reads the proof and never panics.
+//! The Poseidon-committed money-grade FRI verifier: it replays the Poseidon
+//! transcript, checks each layer's Poseidon Merkle openings, and re-runs the
+//! extension fold to the constant final layer. It is the exact algorithm the
+//! recursive verifier arithmetizes, so an honest inner proof re-verified here also
+//! verifies in-circuit.
 
-use super::super::field::Fp;
-use super::super::field::Fp2;
+use super::super::air::Poseidon;
+use super::super::field::{Fp, Fp2};
 use super::super::fri::root_of_unity;
-use super::super::merkle::verify_path_ext;
-use super::super::transcript::Transcript;
-use super::types::FriProofExt;
+use super::super::poseidon_merkle::{pack_ext, verify_path};
+use super::super::poseidon_transcript::PoseidonTranscript;
+use super::types::FriProofExtP;
 use alloc::vec::Vec;
 
-/// Verify a money-grade FRI proof. Returns `true` only if every structural,
-/// grinding, Merkle, folding, and low-degree check passes for all queries.
-pub fn fri_verify_ext(
-    proof: &FriProofExt,
+pub fn fri_verify_poseidon_ext(
+    proof: &FriProofExtP,
     shift: Fp,
     log_n: u32,
     log_blowup: u32,
     n_queries: usize,
     grind_bits: u32,
+    hasher: &Poseidon,
 ) -> bool {
     let n = 1usize << log_n;
     let blowup = 1usize << log_blowup;
     let n_folds = (log_n - log_blowup) as usize;
-
     if proof.roots.len() != n_folds
         || proof.final_layer.len() != blowup
         || proof.queries.len() != n_queries
     {
         return false;
     }
-
     let base_omega = root_of_unity(log_n);
     let inv2 = Fp::from_u64(2).inv();
 
-    let mut transcript = Transcript::new(b"NONOS-STARK-FRI-EXT");
+    let mut transcript = PoseidonTranscript::new(hasher.clone());
     let mut betas: Vec<Fp2> = Vec::with_capacity(n_folds);
     for root in &proof.roots {
         transcript.absorb_digest(root);
         betas.push(transcript.challenge_fp2());
     }
 
-    // The low-degree conclusion: the final layer must be a single constant.
     let final_value = proof.final_layer[0];
     for value in &proof.final_layer {
         if *value != final_value {
             return false;
         }
-        transcript.absorb_fp(value.c0);
-        transcript.absorb_fp(value.c1);
+        transcript.absorb(value.c0);
+        transcript.absorb(value.c1);
     }
-
-    // The grinding nonce must meet the proof-of-work, bound at the same transcript
-    // point the prover committed it, before any query position is drawn.
     if !transcript.verify_pow(proof.pow_nonce, grind_bits) {
         return false;
     }
@@ -84,13 +78,12 @@ pub fn fri_verify_ext(
             let i = q % half;
             let op = &qp.layers[m];
 
-            if !verify_path_ext(&proof.roots[m], i, op.a, &op.a_path)
-                || !verify_path_ext(&proof.roots[m], i + half, op.b, &op.b_path)
+            if !verify_path(hasher, &proof.roots[m], i, pack_ext(op.a), &op.a_path)
+                || !verify_path(hasher, &proof.roots[m], i + half, pack_ext(op.b), &op.b_path)
             {
                 return false;
             }
 
-            // The queried evaluation point on the squared coset, in the base field.
             let x = (shift * base_omega.pow(i as u64)).pow(1u64 << m);
             let even = (op.a + op.b).mul_base(inv2);
             let odd = (op.a - op.b).mul_base(inv2).mul_base(x.inv());

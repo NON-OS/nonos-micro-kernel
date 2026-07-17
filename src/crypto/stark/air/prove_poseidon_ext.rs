@@ -14,64 +14,53 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The money-grade DEEP STARK prover. Same construction as the base prover, but
-//! the composition batching, the out-of-domain point, and every downstream
-//! quotient live in the extension `Fp2`, and the low-degree test is the money-grade
-//! FRI (`fri_ext`) with grinding. The trace is committed in the base field; the
-//! composition and the DEEP polynomial are committed over the extension.
+//! The Poseidon-committed money-grade DEEP STARK prover: the same construction as
+//! `prove_ext`, but the trace, composition, and DEEP polynomial are committed with
+//! Poseidon Merkle trees and the transcript is the Poseidon sponge, and the
+//! low-degree test is the Poseidon money-grade FRI. Every step is then cheap to
+//! re-verify inside a STARK, which is what makes a proof from here recursable.
 
+use super::super::air::{Poseidon, RATE};
 use super::super::field::{Fp, Fp2};
 use super::super::fri::root_of_unity;
-use super::super::fri_ext::fri_prove_ext;
-use super::super::merkle::MerkleTree;
+use super::super::fri_poseidon_ext::fri_prove_poseidon_ext;
 use super::super::poly::{eval_ext, eval_lagrange_ext, intt, lde};
-use super::super::transcript::Transcript;
+use super::super::poseidon_merkle::{pack_base, pack_ext, PoseidonMerkleTree};
+use super::super::poseidon_transcript::PoseidonTranscript;
 use super::composition::{compose_ext, domain_params_blown, num_coeffs};
+use super::draw_ood_poseidon::draw_ood_point_poseidon;
 use super::spec::AirExt;
-use super::types_ext::{StarkProofExt, StarkQueryExt};
+use super::types_poseidon_ext::{StarkProofExtP, StarkQueryExtP};
 use alloc::vec::Vec;
 
 const SHIFT: u64 = 7;
 
-/// Draw the out-of-domain point from the extension: off the evaluation coset and
-/// off the trace domain, so every DEEP and periodic denominator is invertible in
-/// `Fp2`. Both sides run this identically, so they agree on the point.
-pub(super) fn draw_ood_point_ext(
-    transcript: &mut Transcript,
-    shift: Fp,
-    n: usize,
-    t: usize,
-) -> Fp2 {
-    let shift_n = Fp2::from_base(shift.pow(n as u64));
-    let mut z = transcript.challenge_fp2();
-    while z.pow(n as u64) == shift_n || z.pow(t as u64) == Fp2::ONE {
-        z = transcript.challenge_fp2();
-    }
-    z
-}
-
-/// Prove that `trace` satisfies `air` at money-grade soundness. Layout and domain
-/// sizing match the base prover; `grind_bits` is the FRI proof-of-work.
-pub fn stark_prove_ext<A: AirExt>(
-    air: &A,
-    trace: &[Fp],
-    n_queries: usize,
-    grind_bits: u32,
-) -> StarkProofExt {
-    stark_prove_ext_blown(air, trace, n_queries, grind_bits, 0)
-}
-
-/// The same prover, with `extra_blowup_bits` of FRI low-degree headroom. Zero is
-/// the minimal rate-one-half domain used everywhere in tests; a deployment vector
-/// raises it so a fixed query count reaches 128-bit soundness. The verifier must be
-/// given the same value, since it recomputes the domain from the AIR.
-pub fn stark_prove_ext_blown<A: AirExt>(
+/// Prove `trace` satisfies `air` at money-grade soundness, committed with Poseidon.
+/// `extra_blowup_bits` sets the FRI rate exactly as the keccak prover.
+pub fn stark_prove_poseidon_ext<A: AirExt>(
     air: &A,
     trace: &[Fp],
     n_queries: usize,
     grind_bits: u32,
     extra_blowup_bits: u32,
-) -> StarkProofExt {
+    hasher: &Poseidon,
+) -> StarkProofExtP {
+    stark_prove_poseidon_ext_pub(air, trace, n_queries, grind_bits, extra_blowup_bits, hasher, &[])
+}
+
+/// The same prover, seeding the transcript with `publics` before the trace roots so
+/// the proof is bound to those public inputs by Fiat-Shamir. A recursive verifier
+/// replays the same seed, exposing the publics in its transcript column.
+#[allow(clippy::too_many_arguments)]
+pub fn stark_prove_poseidon_ext_pub<A: AirExt>(
+    air: &A,
+    trace: &[Fp],
+    n_queries: usize,
+    grind_bits: u32,
+    extra_blowup_bits: u32,
+    hasher: &Poseidon,
+    publics: &[Fp],
+) -> StarkProofExtP {
     let log_t = air.log_trace_len();
     let t = 1usize << log_t;
     let width = air.trace_width();
@@ -84,30 +73,32 @@ pub fn stark_prove_ext_blown<A: AirExt>(
     let omega = root_of_unity(log_n);
     let shift = Fp::from_u64(SHIFT);
 
-    // Trace columns are extended onto the coset, then committed row-wise as one
-    // wide-leaf tree: leaf i hashes every column at row i, so a query authenticates
-    // the whole row with a single path and the transcript absorbs one root.
-    let mut transcript = Transcript::new(b"NONOS-STARK-EXT");
+    let mut transcript = PoseidonTranscript::new(hasher.clone());
+    for &p in publics {
+        transcript.absorb(p);
+    }
     let mut trace_d: Vec<Vec<Fp>> = Vec::with_capacity(width);
     let mut trace_coeffs: Vec<Vec<Fp>> = Vec::with_capacity(width);
+    let mut trace_trees: Vec<PoseidonMerkleTree> = Vec::with_capacity(width);
+    let mut trace_roots: Vec<[Fp; RATE]> = Vec::with_capacity(width);
     for c in 0..width {
         let column: Vec<Fp> = (0..t).map(|i| trace[i * width + c]).collect();
+        let column_d = lde(&column, g, shift, omega, n);
+        let leaves: Vec<[Fp; RATE]> = column_d.iter().map(|v| pack_base(*v)).collect();
+        let tree = PoseidonMerkleTree::commit(hasher, &leaves);
+        transcript.absorb_digest(&tree.root());
+        trace_roots.push(tree.root());
         trace_coeffs.push(intt(&column, g));
-        trace_d.push(lde(&column, g, shift, omega, n));
+        trace_trees.push(tree);
+        trace_d.push(column_d);
     }
-    let trace_tree = MerkleTree::commit_wide(&trace_d);
-    let trace_root = trace_tree.root();
-    transcript.absorb_digest(&trace_root);
 
-    // Composition batching coefficients, drawn from the extension for soundness.
     let coeffs: Vec<Fp2> = (0..num_coeffs(air)).map(|_| transcript.challenge_fp2()).collect();
 
     let periodic_cols = air.periodic_columns();
     let periodic_d: Vec<Vec<Fp>> =
         periodic_cols.iter().map(|col| lde(col, g, shift, omega, n)).collect();
 
-    // The composition over the coset, in the extension: base window lifted, batched
-    // under the extension coefficients.
     let mut comp_d: Vec<Fp2> = Vec::with_capacity(n);
     let mut x = shift;
     for j in 0..n {
@@ -122,11 +113,11 @@ pub fn stark_prove_ext_blown<A: AirExt>(
         comp_d.push(compose_ext(air, g, Fp2::from_base(x), &window, &periodic, &coeffs));
         x = x * omega;
     }
-    let comp_tree = MerkleTree::commit_ext(&comp_d);
+    let comp_leaves: Vec<[Fp; RATE]> = comp_d.iter().map(|v| pack_ext(*v)).collect();
+    let comp_tree = PoseidonMerkleTree::commit(hasher, &comp_leaves);
     transcript.absorb_digest(&comp_tree.root());
 
-    // The out-of-domain point in the extension, and the trace frame there.
-    let z = draw_ood_point_ext(&mut transcript, shift, n, t);
+    let z = draw_ood_point_poseidon(&mut transcript, shift, n, t);
     let mut ood_frame: Vec<Fp2> = Vec::with_capacity(window_size * width);
     for k in 0..window_size {
         let zk = z * Fp2::from_base(g.pow(k as u64));
@@ -135,11 +126,10 @@ pub fn stark_prove_ext_blown<A: AirExt>(
         }
     }
     for value in &ood_frame {
-        transcript.absorb_fp(value.c0);
-        transcript.absorb_fp(value.c1);
+        transcript.absorb(value.c0);
+        transcript.absorb(value.c1);
     }
 
-    // The composition at z, from the claimed frame.
     let periodic_z: Vec<Fp2> = {
         let h_pts: Vec<Fp> = {
             let mut v = Vec::with_capacity(t);
@@ -154,11 +144,9 @@ pub fn stark_prove_ext_blown<A: AirExt>(
     };
     let comp_z = compose_ext(air, g, z, &ood_frame, &periodic_z, &coeffs);
 
-    // DEEP batching coefficients, also from the extension.
     let deep_coeffs: Vec<Fp2> =
         (0..width * window_size + 1).map(|_| transcript.challenge_fp2()).collect();
 
-    // The DEEP polynomial over the coset, in the extension.
     let mut deep_d: Vec<Fp2> = Vec::with_capacity(n);
     let mut x = shift;
     for j in 0..n {
@@ -179,25 +167,26 @@ pub fn stark_prove_ext_blown<A: AirExt>(
         x = x * omega;
     }
 
-    // The money-grade FRI proves the DEEP polynomial is low degree; its layer-zero
-    // root also commits the DEEP values the consistency queries open.
-    let fri = fri_prove_ext(&deep_d, shift, fri_log_blowup, n_queries, grind_bits);
-    let deep_tree = MerkleTree::commit_ext(&deep_d);
+    let fri = fri_prove_poseidon_ext(&deep_d, shift, fri_log_blowup, n_queries, grind_bits, hasher);
+    let deep_leaves: Vec<[Fp; RATE]> = deep_d.iter().map(|v| pack_ext(*v)).collect();
+    let deep_tree = PoseidonMerkleTree::commit(hasher, &deep_leaves);
     transcript.absorb_digest(&fri.roots[0]);
 
-    let mut queries: Vec<StarkQueryExt> = Vec::with_capacity(n_queries);
+    let mut queries: Vec<StarkQueryExtP> = Vec::with_capacity(n_queries);
     for _ in 0..n_queries {
         let p = transcript.challenge_index(n);
         let trace_vals: Vec<Fp> = trace_d.iter().map(|col| col[p]).collect();
-        queries.push(StarkQueryExt {
+        let trace_paths: Vec<Vec<[Fp; RATE]>> =
+            trace_trees.iter().map(|tree| tree.open(p)).collect();
+        queries.push(StarkQueryExtP {
             deep: deep_d[p],
             deep_path: deep_tree.open(p),
             trace: trace_vals,
-            trace_path: trace_tree.open(p),
+            trace_paths,
             comp: comp_d[p],
             comp_path: comp_tree.open(p),
         });
     }
 
-    StarkProofExt { trace_root, comp_root: comp_tree.root(), ood_frame, fri, queries }
+    StarkProofExtP { trace_roots, comp_root: comp_tree.root(), ood_frame, fri, queries }
 }

@@ -40,13 +40,32 @@ pub struct MultiMembership {
     log_rounds: u32,
     depth: usize,
     openings: Vec<Opening>,
+    witness_path: bool,
 }
 
 impl MultiMembership {
-    /// Build the AIR for a batch of equal-depth openings under `hasher`.
+    /// Build the AIR for a batch of equal-depth openings under `hasher`. The
+    /// siblings, directions, and the roots ride the periodic columns and boundaries:
+    /// instance-specific structure, fine for a per-proof AIR.
     pub fn new(hasher: Poseidon, log_rounds: u32, openings: Vec<Opening>) -> MultiMembership {
         let depth = openings.first().map(|o| o.siblings.len()).unwrap_or(0);
-        MultiMembership { hasher, log_rounds, depth, openings }
+        MultiMembership { hasher, log_rounds, depth, openings, witness_path: false }
+    }
+
+    /// The production form: the sibling and direction of each compression ride the
+    /// trace (a boolean-constrained direction plus RATE sibling columns), so the AIR
+    /// is instance-independent (round constants, the slot and opening selectors, and
+    /// the reset column are the only periodic columns; no boundary is pinned). The
+    /// opened leaf is bound by the assembly grand product to where the fold consumes
+    /// it, and the root at the checkpoint is bound to the transcript-absorbed root,
+    /// so the path authenticates the fold value against the committed root.
+    pub fn new_witness(
+        hasher: Poseidon,
+        log_rounds: u32,
+        openings: Vec<Opening>,
+    ) -> MultiMembership {
+        let depth = openings.first().map(|o| o.siblings.len()).unwrap_or(0);
+        MultiMembership { hasher, log_rounds, depth, openings, witness_path: true }
     }
 
     fn rounds(&self) -> usize {
@@ -83,17 +102,32 @@ impl MultiMembership {
         let depth = self.depth;
         let count = self.openings.len();
         let n = 1usize << self.log_trace_len();
+        let w = self.trace_width();
 
-        let mut rows: Vec<[Fp; WIDTH]> = Vec::with_capacity(n);
+        let mut trace = alloc::vec![Fp::ZERO; n * w];
         let mut state = self.initial_state(&self.openings[0]);
         for r in 0..n {
-            rows.push(state);
+            trace[r * w..r * w + WIDTH].copy_from_slice(&state);
             let pr = self.hasher.round_with_rc(&state, &self.hasher.round_constant(r % l));
             let opening = r / span;
             let within = r % span;
             let at_row_bnd = within % l == l - 1;
             let is_op_bnd = within == span - 1 && opening + 1 < count;
             let is_slot_bnd = at_row_bnd && within < depth * l && !is_op_bnd;
+            // In the production form the compression's direction and sibling ride the
+            // trace, at exactly the rows the transition reads them.
+            if self.witness_path {
+                let m = (within + 1) / l;
+                let (dir, sib) = if is_slot_bnd && opening < count && m < depth {
+                    (self.openings[opening].directions[m], self.openings[opening].siblings[m])
+                } else {
+                    (false, [Fp::ZERO; RATE])
+                };
+                trace[r * w + WIDTH] = if dir { Fp::ONE } else { Fp::ZERO };
+                for (c, s) in sib.iter().enumerate() {
+                    trace[r * w + WIDTH + 1 + c] = *s;
+                }
+            }
             if is_op_bnd {
                 state = self.initial_state(&self.openings[opening + 1]);
             } else if is_slot_bnd {
@@ -109,11 +143,6 @@ impl MultiMembership {
             } else {
                 state = pr;
             }
-        }
-
-        let mut trace = Vec::with_capacity(n * WIDTH);
-        for row in &rows {
-            trace.extend_from_slice(row);
         }
         trace
     }
@@ -151,21 +180,34 @@ fn inject(node: [Fp; RATE], sibling: [Fp; RATE], right: bool) -> [Fp; WIDTH] {
 
 impl MultiMembership {
     fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
+        let stride = self.trace_width();
         let mut state = [F::ZERO; WIDTH];
         state.copy_from_slice(&window[..WIDTH]);
         let mut rc = [F::ZERO; WIDTH];
         rc.copy_from_slice(&periodic[..WIDTH]);
         let slot_bnd = periodic[WIDTH];
         let op_bnd = periodic[WIDTH + 1];
-        let dir = periodic[WIDTH + 2];
-        let sib = &periodic[WIDTH + 3..WIDTH + 3 + RATE];
-        let reset = &periodic[WIDTH + 3 + RATE..WIDTH + 3 + RATE + WIDTH];
+        // The direction and sibling ride the periodic columns in the per-proof form
+        // and the trace in the production form; the reset column stays periodic
+        // (structurally zero for a single opening).
+        let mut sib = [F::ZERO; RATE];
+        let mut reset = [F::ZERO; WIDTH];
+        let dir;
+        if self.witness_path {
+            dir = window[WIDTH];
+            sib.copy_from_slice(&window[WIDTH + 1..WIDTH + 1 + RATE]);
+            reset.copy_from_slice(&periodic[WIDTH + 2..WIDTH + 2 + WIDTH]);
+        } else {
+            dir = periodic[WIDTH + 2];
+            sib.copy_from_slice(&periodic[WIDTH + 3..WIDTH + 3 + RATE]);
+            reset.copy_from_slice(&periodic[WIDTH + 3 + RATE..WIDTH + 3 + RATE + WIDTH]);
+        }
 
         let pr = self.hasher.round_generic(&state, &rc);
         let one = F::ONE;
 
-        let mut out = Vec::with_capacity(WIDTH);
-        for (j, next) in window[WIDTH..2 * WIDTH].iter().enumerate() {
+        let mut out = Vec::with_capacity(WIDTH + 1);
+        for (j, next) in window[stride..stride + WIDTH].iter().enumerate() {
             let slot_inject = if j < RATE {
                 (one - dir) * pr[j] + dir * sib[j]
             } else {
@@ -174,6 +216,10 @@ impl MultiMembership {
             let expected =
                 op_bnd * reset[j] + slot_bnd * slot_inject + (one - op_bnd - slot_bnd) * pr[j];
             out.push(*next - expected);
+        }
+        // The witnessed direction must be a bit, so it cannot blend the two children.
+        if self.witness_path {
+            out.push(dir * (one - dir));
         }
         out
     }
@@ -191,7 +237,11 @@ impl Air for MultiMembership {
     }
 
     fn trace_width(&self) -> usize {
-        WIDTH
+        if self.witness_path {
+            WIDTH + 1 + RATE
+        } else {
+            WIDTH
+        }
     }
 
     fn window_size(&self) -> usize {
@@ -203,7 +253,11 @@ impl Air for MultiMembership {
     }
 
     fn num_transition(&self) -> usize {
-        WIDTH
+        if self.witness_path {
+            WIDTH + 1
+        } else {
+            WIDTH
+        }
     }
 
     fn periodic_columns(&self) -> Vec<Vec<Fp>> {
@@ -213,8 +267,9 @@ impl Air for MultiMembership {
         let n = 1usize << self.log_trace_len();
         let count = self.openings.len();
 
-        // rc[WIDTH], slot_bnd, op_bnd, dir, sib[RATE], reset[WIDTH].
-        let cols_len = WIDTH + 3 + RATE + WIDTH;
+        // Per-proof: rc[WIDTH], slot_bnd, op_bnd, dir, sib[RATE], reset[WIDTH].
+        // Production: rc[WIDTH], slot_bnd, op_bnd, reset[WIDTH] (dir and sib are trace).
+        let cols_len = if self.witness_path { WIDTH + 2 + WIDTH } else { WIDTH + 3 + RATE + WIDTH };
         let mut cols: Vec<Vec<Fp>> = (0..cols_len).map(|_| Vec::with_capacity(n)).collect();
 
         for r in 0..n {
@@ -234,27 +289,34 @@ impl Air for MultiMembership {
             cols[WIDTH].push(if is_slot_boundary && !is_op_boundary { Fp::ONE } else { Fp::ZERO });
             cols[WIDTH + 1].push(if is_op_boundary { Fp::ONE } else { Fp::ZERO });
 
-            // Sibling and direction for the slot injection at `within`.
-            let m = (within + 1) / l;
-            let (dir, sib) = if is_slot_boundary && !is_op_boundary && opening < count && m < depth
-            {
-                (self.openings[opening].directions[m], self.openings[opening].siblings[m])
-            } else {
-                (false, [Fp::ZERO; RATE])
-            };
-            cols[WIDTH + 2].push(if dir { Fp::ONE } else { Fp::ZERO });
-            for (c, s) in sib.iter().enumerate() {
-                cols[WIDTH + 3 + c].push(*s);
-            }
-
-            // Reset state to the next opening's initial, at an opening boundary.
+            // Reset state to the next opening's initial, at an opening boundary
+            // (structurally zero for a single opening).
             let reset = if is_op_boundary && opening + 1 < count {
                 self.initial_state(&self.openings[opening + 1])
             } else {
                 [Fp::ZERO; WIDTH]
             };
-            for (c, v) in reset.iter().enumerate() {
-                cols[WIDTH + 3 + RATE + c].push(*v);
+
+            if self.witness_path {
+                for (c, v) in reset.iter().enumerate() {
+                    cols[WIDTH + 2 + c].push(*v);
+                }
+            } else {
+                // Sibling and direction for the slot injection at `within`.
+                let m = (within + 1) / l;
+                let (dir, sib) =
+                    if is_slot_boundary && !is_op_boundary && opening < count && m < depth {
+                        (self.openings[opening].directions[m], self.openings[opening].siblings[m])
+                    } else {
+                        (false, [Fp::ZERO; RATE])
+                    };
+                cols[WIDTH + 2].push(if dir { Fp::ONE } else { Fp::ZERO });
+                for (c, s) in sib.iter().enumerate() {
+                    cols[WIDTH + 3 + c].push(*s);
+                }
+                for (c, v) in reset.iter().enumerate() {
+                    cols[WIDTH + 3 + RATE + c].push(*v);
+                }
             }
         }
         cols
@@ -268,8 +330,15 @@ impl Air for MultiMembership {
         let l = self.rounds();
         let span = self.span();
         let depth = self.depth;
-        let mut b = Vec::with_capacity(WIDTH + self.openings.len() * RATE);
 
+        // Production form: nothing is pinned. The opened leaf is bound by the
+        // assembly to the fold, and the root at the checkpoint is bound to the
+        // transcript-absorbed root, so both are witness rather than public.
+        if self.witness_path {
+            return Vec::new();
+        }
+
+        let mut b = Vec::with_capacity(WIDTH + self.openings.len() * RATE);
         // The first opening's whole initial state is public.
         let first = self.initial_state(&self.openings[0]);
         for (j, v) in first.iter().enumerate() {
