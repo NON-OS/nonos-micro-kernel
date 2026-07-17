@@ -33,7 +33,7 @@ mod stage;
 
 pub use stage::Stage;
 
-use nonos_libc::{mk_ipc_recv, mk_ipc_send};
+use nonos_libc::{mk_ipc_recv_from, mk_ipc_reply};
 use nonos_wifi_core::netif::{self, wire, MAX_RESPONSE};
 
 use crate::link::DeadLink;
@@ -45,9 +45,6 @@ use control::control;
 use radio::{build_radio, Radio};
 use scanner::Scanner;
 
-/// The kernel endpoint the driver sends replies to; the spawn's reply inbox routes
-/// them back to whoever asked.
-const KERNEL_REPLY_ENDPOINT: u64 = 0x1_0000_0018;
 /// The driver's own service inbox, where requests arrive.
 const SERVICE_INBOX: u64 = 0;
 /// How long the serve loop waits for a request before taking an idle scan step.
@@ -76,8 +73,19 @@ pub fn run(mapped: Option<Mapped>, stage: Stage) -> ! {
     let mut rx = [0u8; wire::HDR_LEN + wire::MAX_FRAME];
     let mut tx = [0u8; MAX_RESPONSE];
     loop {
-        let n = mk_ipc_recv(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), IDLE_TIMEOUT_MS);
-        if n > 0 {
+        // Reply to the sender's pid, not a shared reply endpoint: net_core and the
+        // panel both call this driver, and a fixed endpoint routes answers by a
+        // FIFO that crosses under concurrent callers, so net_core's link-status
+        // reply could land in the panel's inbox.
+        let mut sender_pid = 0u32;
+        let n = mk_ipc_recv_from(
+            SERVICE_INBOX,
+            rx.as_mut_ptr(),
+            rx.len(),
+            IDLE_TIMEOUT_MS,
+            &mut sender_pid,
+        );
+        if n > 0 && sender_pid != 0 {
             let req = &rx[..n as usize];
             // net_core's link operations first; the control family is the
             // fallthrough. A down radio answers through a link that is always down.
@@ -86,11 +94,14 @@ pub fn run(mapped: Option<Mapped>, stage: Stage) -> ! {
                 Radio::Down => netif::serve(req, &mut DeadLink, &mut tx),
             };
             if let Some(len) = served {
-                let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), len);
+                if let Radio::Up(up) = &mut radio {
+                    up.link.note_netif_req();
+                }
+                let _ = mk_ipc_reply(sender_pid, tx.as_ptr(), len);
             } else if let Some(len) =
                 control(req, &mut radio, &mut session, &scanner, stage, &mut tx)
             {
-                let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, tx.as_ptr(), len);
+                let _ = mk_ipc_reply(sender_pid, tx.as_ptr(), len);
             }
         }
         // Advance the background scan while up and not associated. Draining runs on

@@ -37,8 +37,13 @@ pub enum Ccmp {
     /// station frames plaintext and lets the radio insert the CCMP header and
     /// manage packet numbers.
     Hardware,
-    /// The station runs AES-CCM in software with the pairwise temporal key.
+    /// The station runs AES-CCM in software with the pairwise temporal key for
+    /// both directions.
     Software { tk: [u8; 16] },
+    /// The station encrypts transmit frames in software but leaves receive
+    /// decryption to the radio. For a chip whose hardware transmit encryption
+    /// does not work but whose receive decryption does.
+    SoftwareTxHwRx { tk: [u8; 16] },
 }
 
 /// The per-station data path: association facts plus the transmit counters.
@@ -97,8 +102,12 @@ impl LinkStation {
         // Only commit the counter once framing has succeeded.
         self.seq = self.seq.wrapping_add(1) & 0x0FFF;
         match &self.ccmp {
-            Ccmp::Hardware => Some(mpdu),
-            Ccmp::Software { tk } => {
+            Ccmp::Hardware => {
+                // Pure-hardware CCMP hands the radio a plaintext frame; the engine
+                // inserts the IV and ciphertext and sets the Protected bit itself.
+                Some(mpdu)
+            }
+            Ccmp::Software { tk } | Ccmp::SoftwareTxHwRx { tk } => {
                 // CCMP packet numbers start at 1; pre-increment from zero.
                 let pn = self.pn.wrapping_add(1);
                 let frame = protect(&mpdu, pn, tk)?;
@@ -114,7 +123,7 @@ impl LinkStation {
     /// malformed, the MIC fails, or the body is not LLC/SNAP encapsulated.
     pub fn rx_frame(&self, mpdu: &[u8]) -> Option<Vec<u8>> {
         match &self.ccmp {
-            Ccmp::Hardware => parse_data(mpdu),
+            Ccmp::Hardware | Ccmp::SoftwareTxHwRx { .. } => parse_data(mpdu),
             Ccmp::Software { tk } => parse_data(&unprotect(mpdu, tk)?),
         }
     }

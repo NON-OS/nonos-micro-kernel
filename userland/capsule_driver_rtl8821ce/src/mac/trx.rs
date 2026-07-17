@@ -99,14 +99,18 @@ const GAPQ_NUM: u16 = 1;
 // Total transmit FIFO pages, and how many are left for the addressable queues
 // once the reserved pages are taken out.
 const TXFF_PG_NUM: u32 = TXFF_SIZE >> TX_PAGE_SIZE_SHIFT;
-const RSVD_PG_NUM: u32 =
-    RSVD_DRV_PG_NUM + H2C_EXTRAINFO + H2C_STATICINFO + RSVD_H2CQ_NUM + CPU_INSTRUCTION + FW_TXBUF + CSI_BUF;
+const RSVD_PG_NUM: u32 = RSVD_DRV_PG_NUM
+    + H2C_EXTRAINFO
+    + H2C_STATICINFO
+    + RSVD_H2CQ_NUM
+    + CPU_INSTRUCTION
+    + FW_TXBUF
+    + CSI_BUF;
 const ACQ_PG_NUM: u32 = TXFF_PG_NUM - RSVD_PG_NUM;
 // The reserved-page boundary the beacon and public queues are bounded against.
 const RSVD_BOUNDARY: u16 = (TXFF_PG_NUM - RSVD_PG_NUM) as u16;
 // The public queue takes whatever pages the per-priority queues do not.
-const PUBQ_NUM: u16 =
-    ACQ_PG_NUM as u16 - HQ_NUM - LQ_NUM - NQ_NUM - EXQ_NUM - GAPQ_NUM;
+const PUBQ_NUM: u16 = ACQ_PG_NUM as u16 - HQ_NUM - LQ_NUM - NQ_NUM - EXQ_NUM - GAPQ_NUM;
 // The receive FIFO boundary leaves room for the C2H report buffer.
 const RXFF_BNDY: u32 = RXFF_SIZE - C2H_PKT_BUF - 1;
 

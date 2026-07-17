@@ -129,8 +129,7 @@ pub(super) fn connect(
     let mut snonce = [0u8; 32];
     crypto_random(snonce.as_mut_ptr(), snonce.len());
     status::debug(b"[rtl8821ce] connect: joining\n");
-    let report =
-        assoc::run(link, our_mac, ssid, pass, &beacon[..beacon_len], snonce, JOIN_BUDGET);
+    let report = assoc::run(link, our_mac, ssid, pass, &beacon[..beacon_len], snonce, JOIN_BUDGET);
     log_progress(&report);
     let (sent, recv, data, eapol, probe, deauth, to_us, state) = (
         report.sent,
@@ -150,13 +149,14 @@ pub(super) fn connect(
             } else if !keys.install_gtk(&gtk, GROUP_KEY_ID) {
                 -4
             } else {
-                // Keys are in the CAM now, so turn on the hardware security
-                // engine: from here the data path encrypts TX and decrypts RX
-                // (the AP sends the DHCP exchange and everything after it
-                // encrypted). It stays off until this point so the unprotected
-                // four-way handshake frames are not dropped as undecryptable.
+                // The keys are in the CAM, so turn the sec engine on for receive
+                // decryption (this chip decrypts received frames correctly). The
+                // station encrypts transmit frames in software and sends them
+                // through the plaintext path the handshake proved works, because
+                // the chip's hardware transmit encryption sent frames protected
+                // but unencrypted and the access point dropped them.
                 crate::sec::enable_sec_engine(regs);
-                link.associate(bssid);
+                link.associate(bssid, ptk);
                 *session = Some(Session { bssid, key_id: PAIRWISE_KEY_ID, gtk_id: GROUP_KEY_ID });
                 status::debug(b"[rtl8821ce] connect: associated\n");
                 0

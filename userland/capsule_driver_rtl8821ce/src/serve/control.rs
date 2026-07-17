@@ -59,7 +59,7 @@ pub(super) fn control(
     out[6..10].copy_from_slice(&rid.to_le_bytes());
 
     match op {
-        OP_STATUS => status_reply(stage, out),
+        OP_STATUS => status_reply(stage, radio, out),
         OP_SCAN => scan_reply(radio, scanner, out),
         OP_CONNECT => connect_reply(body, radio, session, out),
         OP_DISCONNECT => disconnect_reply(radio, session, out),
@@ -67,11 +67,24 @@ pub(super) fn control(
     }
 }
 
-// The bring-up stage in one byte, so the panel can show how far the radio got even
-// when it never came up.
-fn status_reply(stage: Stage, out: &mut [u8]) -> Option<usize> {
+// The bring-up stage byte, then the data-path counts as five LE u32s: TX
+// enqueued, TX dropped, RX frames the ring returned, RX frames parsed to
+// Ethernet, and net_core link-protocol requests answered. netif=0 means the
+// stack never reached the radio; TX=0 with netif>0 means it probed but never
+// bound; RX-ring without RX-eth means frames arrive but never decrypt.
+fn status_reply(stage: Stage, radio: &Radio, out: &mut [u8]) -> Option<usize> {
     out[WIFI_HDR] = stage as u8;
-    Some(WIFI_HDR + 1)
+    let stats = match radio {
+        Radio::Up(up) => up.link.stats(),
+        Radio::Down => crate::link::LinkStats::default(),
+    };
+    out[WIFI_HDR + 1..WIFI_HDR + 5].copy_from_slice(&stats.tx_ok.to_le_bytes());
+    out[WIFI_HDR + 5..WIFI_HDR + 9].copy_from_slice(&stats.tx_drop.to_le_bytes());
+    out[WIFI_HDR + 9..WIFI_HDR + 13].copy_from_slice(&stats.rx_ring.to_le_bytes());
+    out[WIFI_HDR + 13..WIFI_HDR + 17].copy_from_slice(&stats.rx_eth.to_le_bytes());
+    out[WIFI_HDR + 17..WIFI_HDR + 21].copy_from_slice(&stats.netif_reqs.to_le_bytes());
+    out[WIFI_HDR + 21..WIFI_HDR + 25].copy_from_slice(&stats.rx_err.to_le_bytes());
+    Some(WIFI_HDR + 25)
 }
 
 // The scan is answered instantly from the background scanner's running picture.

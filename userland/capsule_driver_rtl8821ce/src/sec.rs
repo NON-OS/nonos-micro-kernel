@@ -14,13 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Install and clear keys in the hardware security CAM. On the RTL8821CE the
-//! per-frame CCMP encryption, decryption and integrity are done by hardware: a
-//! key is written into a CAM entry, the TX descriptor's security type selects it,
-//! and the RX descriptor reports the hardware decrypt and integrity result. This
-//! is the chip's crypto-offload path, so the WPA2 supplicant hands the derived
-//! pairwise and group keys here rather than encrypting frames in software. A key
-//! occupies eight CAM cells written newest-cell-first through a write/command
+//! Install and clear keys in the hardware security CAM, and turn the engine on
+//! for receive decryption. On the RTL8821CE the hardware decrypts received frames
+//! from its key cache correctly, but its transmit encryption does not work without
+//! a firmware MACID binding the driver does not set up, so transmit is encrypted
+//! in software (see `link`/`station`) and only the receive path uses the engine.
+//! A key occupies eight CAM cells written newest-cell-first through a write/command
 //! register pair, each cell carrying the key index and type, the peer address or
 //! four key bytes. This follows rtw88 `rtw_sec_write_cam` / `rtw_sec_clear_cam`
 //! in `sec.c`; the exact cell contents and command program are checked in
@@ -33,13 +32,14 @@ use crate::regs::Mmio;
 const RTW_SEC_CONFIG: usize = 0x0680;
 /// `RTW_SEC_ENGINE_EN`: the security-engine enable bit in `REG_CR`.
 const RTW_SEC_ENGINE_EN: u32 = 1 << 9;
-/// `RTW_SEC_CONFIG` bits: use the default key for unicast (bits 0,1), enable
-/// TX/RX decryption (bits 2,3) and use the default key for broadcast (bits 6,7).
-const RTW_SEC_TX_UNI_USE_DK: u16 = 1 << 0;
+/// `RTW_SEC_CONFIG` bits: enable RX decryption (bit 3) with default-key search for
+/// unicast and broadcast (bits 1, 7). TX encryption (bit 2) and its default-key
+/// bits stay clear on purpose: transmit is encrypted in software, and leaving the
+/// engine's TX crypto on corrupts an already-encrypted frame so the access point
+/// drops it. The engine decrypts received frames by the sender's MACID-indexed
+/// default key, which this chip does correctly.
 const RTW_SEC_RX_UNI_USE_DK: u16 = 1 << 1;
-const RTW_SEC_TX_DEC_EN: u16 = 1 << 2;
 const RTW_SEC_RX_DEC_EN: u16 = 1 << 3;
-const RTW_SEC_TX_BC_USE_DK: u16 = 1 << 6;
 const RTW_SEC_RX_BC_USE_DK: u16 = 1 << 7;
 
 /// `RTW_SEC_CMD_REG`: the CAM command register (address, enable, poll).
@@ -100,23 +100,17 @@ pub fn write_cam<M: Mmio>(mmio: &M, hw_key_idx: u8, hw_key_type: u8, k: &Key) {
     }
 }
 
-/// Turn on the hardware security engine so CCMP encryption and decryption run on
-/// the data path. Mirrors rtw88 `rtw_sec_enable_sec_engine`: set the engine-enable
-/// bit in the command register, then enable TX/RX decryption with default-key
-/// search. With default-key search the group keys occupy CAM entries 0..3 by their
-/// key index and the pairwise key sits from entry 4, which is exactly how the key
-/// store lays them out, so unicast decrypts against the pairwise key and broadcast
-/// against the group key. Called once the four-way handshake has installed both
-/// keys: before that the CAM is empty and enabling decryption drops the
-/// unprotected handshake frames, so the engine stays off until the keys exist.
+/// Turn on the hardware security engine for RECEIVE decryption only: set the
+/// engine enable bit, then RX crypto-enable with default-key search. Received
+/// frames decrypt against the CAM key resolved by the sender's MACID, which this
+/// chip does correctly. TX crypto stays off because transmit is encrypted in
+/// software; enabling it corrupts the already-encrypted frame. Called once the
+/// four-way handshake has installed the keys, since before that the CAM is empty.
 pub fn enable_sec_engine<M: Mmio>(mmio: &M) {
     mmio.write32(REG_CR, mmio.read32(REG_CR) | RTW_SEC_ENGINE_EN);
     let cfg = mmio.read16(RTW_SEC_CONFIG)
-        | RTW_SEC_TX_DEC_EN
         | RTW_SEC_RX_DEC_EN
-        | RTW_SEC_TX_UNI_USE_DK
         | RTW_SEC_RX_UNI_USE_DK
-        | RTW_SEC_TX_BC_USE_DK
         | RTW_SEC_RX_BC_USE_DK;
     mmio.write16(RTW_SEC_CONFIG, cfg);
 }

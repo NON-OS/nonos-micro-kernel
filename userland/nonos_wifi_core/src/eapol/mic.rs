@@ -18,10 +18,7 @@ use crate::wpa::hmac::hmac_sha1_parts;
 /// Compute the version-2 MIC of `frame` under `kck`.
 pub fn compute_mic(kck: &[u8], frame: &[u8]) -> [u8; MIC_LEN] {
     let zeros = [0u8; MIC_LEN];
-    let h = hmac_sha1_parts(
-        kck,
-        &[&frame[..MIC_OFFSET], &zeros, &frame[MIC_OFFSET + MIC_LEN..]],
-    );
+    let h = hmac_sha1_parts(kck, &[&frame[..MIC_OFFSET], &zeros, &frame[MIC_OFFSET + MIC_LEN..]]);
     let mut mic = [0u8; MIC_LEN];
     mic.copy_from_slice(&h[..MIC_LEN]);
     mic

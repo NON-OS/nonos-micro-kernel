@@ -34,8 +34,8 @@ pub mod power;
 pub mod regs;
 pub mod rf;
 pub mod rxpath;
-pub mod txpower;
 mod tables;
+pub mod txpower;
 
 pub use apply::load_all;
 pub use cond::{PhyCond, INTF_PCIE};
