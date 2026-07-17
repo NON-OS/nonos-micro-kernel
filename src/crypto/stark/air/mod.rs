@@ -25,6 +25,7 @@
 mod accumulator;
 mod attest;
 mod attest_build;
+mod attest_verify;
 mod attest_trailer;
 mod deserialize;
 mod compose_check;
@@ -76,6 +77,7 @@ mod wired_multi_ext;
 pub use accumulator::Accumulator;
 pub use attest::verify_membership_attestation;
 pub use attest_build::build_attestation_trailer;
+pub use attest_verify::verify_membership_trailer;
 pub use attest_trailer::verify_attestation_trailer;
 pub use serialize::serialize_proof;
 pub use serialize_ext::serialize_proof_ext;

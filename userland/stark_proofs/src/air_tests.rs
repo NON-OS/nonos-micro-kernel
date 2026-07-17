@@ -665,6 +665,47 @@ fn a_built_trailer_is_accepted_by_the_gate_logic() {
     );
 }
 
+// The shared verify core, exercised the way the kernel self-attestation calls it:
+// a kernel image is measured into the context, a trailer proves its measurement is
+// enrolled under the trust root, and the core accepts it and refuses a foreign boot
+// context. Same path the capsule gate uses, one layer up.
+#[test]
+fn the_shared_verify_core_accepts_a_kernel_self_attestation() {
+    use crate::crypto::stark::air::{
+        build_attestation_trailer, measure_capsule, verify_membership_trailer, RATE,
+    };
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    // The enrolled kernel image plus a few others, its measurement in the root.
+    let images: [&[u8]; 4] =
+        [b"nonos-kernel image", b"other:a", b"other:b", b"other:c"];
+    let index = 0usize;
+    let boot_ctx = b"kernel:boot:epoch:1";
+
+    let trailer =
+        build_attestation_trailer(&hasher, log_rounds, &images, index, boot_ctx, 32, 16, 3);
+
+    // The trust root the boot chain carries, as 32 bytes.
+    let leaves: Vec<[Fp; RATE]> = images.iter().map(|i| measure_capsule(&hasher, i)).collect();
+    let root_rate = PoseidonMerkleTree::commit(&hasher, &leaves).root();
+    let mut root = [0u8; 32];
+    for (i, lane) in root_rate.iter().enumerate() {
+        root[i * 8..i * 8 + 8].copy_from_slice(&lane.value().to_le_bytes());
+    }
+
+    let depth = trailer[8] as usize;
+    assert!(
+        verify_membership_trailer(&hasher, log_rounds, root, depth, &trailer, boot_ctx, 32, 16, 3),
+        "the kernel self-attestation was rejected by the shared core"
+    );
+    assert!(
+        !verify_membership_trailer(
+            &hasher, log_rounds, root, depth, &trailer, b"kernel:boot:epoch:2", 32, 16, 3
+        ),
+        "a self-attestation passed under the wrong boot context"
+    );
+}
+
 #[test]
 fn membership_proofs_verify_at_fri_layer_depths() {
     // FRI layers are sized 2^k, so paths are depth k, any value. The AIR pads its
