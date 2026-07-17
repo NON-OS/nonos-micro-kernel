@@ -23,10 +23,24 @@ pub(super) fn apply_display(c: &mut Computed, name: &str, value: &str) -> bool {
     }
     match value.trim() {
         "none" => c.display_none = true,
-        "block" | "list-item" | "table" => {
+        "block" | "list-item" => {
             c.is_block = true;
             c.is_flex = false;
             c.is_grid = false;
+        }
+        "table" | "inline-table" => {
+            c.is_block = true;
+            c.is_flex = false;
+            c.is_grid = false;
+            c.is_table = true;
+        }
+        "table-row" | "table-row-group" | "table-header-group" | "table-footer-group" => {
+            c.is_block = true;
+            c.is_table_row = value.trim() == "table-row";
+        }
+        "table-cell" => {
+            c.is_block = true;
+            c.is_table_cell = true;
         }
         "flex" => {
             c.is_block = true;

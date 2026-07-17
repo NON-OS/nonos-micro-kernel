@@ -19,15 +19,35 @@ use alloc::vec::Vec;
 use crate::browser::js::env::Env;
 use crate::browser::js::value::Value;
 
-use super::call_func::call_func;
+use super::call_func::call_func_this;
 use super::ctx::Ctx;
 use super::natives::dispatch;
 
 pub fn apply(ctx: &mut Ctx, env: &Env, f: Value, argv: Vec<Value>) -> Result<Value, ()> {
+    apply_this(ctx, env, f, argv, Value::Undef)
+}
+
+// Invoke `f` with an explicit receiver bound as `this` (for method calls).
+pub fn apply_this(
+    ctx: &mut Ctx,
+    env: &Env,
+    f: Value,
+    argv: Vec<Value>,
+    this_val: Value,
+) -> Result<Value, ()> {
     let _ = env;
     match f {
-        Value::Func(fd) => call_func(ctx, &fd, argv),
+        Value::Func(fd) => call_func_this(ctx, &fd, argv, this_val),
         Value::Native(name) => dispatch(ctx, name, argv),
+        Value::Bound(kind @ ("__presolve" | "__preject"), id) => {
+            let state = if kind == "__presolve" { 1 } else { 2 };
+            if let Some(slot) = ctx.promises.get_mut(id) {
+                if slot.0 == 0 {
+                    *slot = (state, argv.into_iter().next().unwrap_or(Value::Undef));
+                }
+            }
+            Ok(Value::Undef)
+        }
         _ => Ok(Value::Undef),
     }
 }

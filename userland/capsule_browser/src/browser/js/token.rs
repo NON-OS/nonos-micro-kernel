@@ -23,5 +23,7 @@ pub enum Tok {
     Ident(String),
     Punct(String),
     Tmpl(String),
+    // A regex literal: pattern source and flag characters.
+    Regex(String, String),
     Eof,
 }

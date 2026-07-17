@@ -37,6 +37,12 @@ pub enum Expr {
     Member(Box<Expr>, String),
     Index(Box<Expr>, Box<Expr>),
     Call(Box<Expr>, Vec<Expr>),
-    Func(Vec<String>, Vec<Stmt>),
+    // Function literal: parameters, body, and whether it was declared `async`
+    // (an async function wraps its return value in a resolved promise).
+    Func(Vec<String>, Vec<Stmt>, bool),
     Ternary(Box<Expr>, Box<Expr>, Box<Expr>),
+    // `new Callee(args)`: construct an instance from a class or constructor.
+    New(Box<Expr>, Vec<Expr>),
+    // A `/pattern/flags` regex literal.
+    Regex(String, String),
 }

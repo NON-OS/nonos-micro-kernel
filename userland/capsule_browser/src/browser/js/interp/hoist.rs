@@ -22,8 +22,13 @@ use crate::browser::js::value::{FuncData, Value};
 
 pub fn hoist(env: &Env, stmts: &[Stmt]) {
     for s in stmts {
-        if let Stmt::Func(name, params, body) = s {
-            let fd = FuncData { params: params.clone(), body: body.clone(), env: env.clone() };
+        if let Stmt::Func(name, params, body, is_async) = s {
+            let fd = FuncData {
+                params: params.clone(),
+                body: body.clone(),
+                env: env.clone(),
+                is_async: *is_async,
+            };
             env.define(name, Value::Func(Rc::new(fd)));
         }
     }

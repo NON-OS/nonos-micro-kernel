@@ -17,8 +17,10 @@
 use alloc::vec::Vec;
 
 use crate::browser::js::ast::Stmt;
+use crate::browser::js::token::Tok;
 
 use super::block::block;
+use super::class_decl::class_decl;
 use super::expr::expr;
 use super::func_decl::func_decl;
 use super::parse_for::parse_for;
@@ -26,6 +28,7 @@ use super::parse_if::parse_if;
 use super::parse_return::parse_return;
 use super::parse_while::parse_while;
 use super::parser::Parser;
+use super::try_stmt::parse_try;
 use super::var::var_decl;
 
 pub fn statement(p: &mut Parser) -> Stmt {
@@ -43,8 +46,20 @@ pub fn statement(p: &mut Parser) -> Stmt {
         parse_while(p)
     } else if p.eat_kw("for") {
         parse_for(p)
+    } else if p.is_kw("async") && matches!(p.peek2(), Tok::Ident(i) if i == "function") {
+        p.advance();
+        p.advance();
+        func_decl(p, true)
     } else if p.eat_kw("function") {
-        func_decl(p)
+        func_decl(p, false)
+    } else if p.eat_kw("class") {
+        class_decl(p)
+    } else if p.eat_kw("throw") {
+        let e = expr(p);
+        p.eat_punct(";");
+        Stmt::Throw(e)
+    } else if p.eat_kw("try") {
+        parse_try(p)
     } else if p.eat_kw("return") {
         parse_return(p)
     } else if p.eat_kw("break") {

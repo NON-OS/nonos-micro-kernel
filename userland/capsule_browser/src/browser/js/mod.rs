@@ -20,6 +20,7 @@ mod env;
 mod interp;
 mod lexer;
 mod parse;
+mod regex;
 mod run;
 mod token;
 mod value;

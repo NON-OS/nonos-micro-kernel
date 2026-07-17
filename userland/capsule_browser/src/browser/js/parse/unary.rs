@@ -37,6 +37,8 @@ pub fn unary(p: &mut Parser) -> Expr {
         Expr::Unary(op, Box::new(unary(p)))
     } else if p.eat_kw("typeof") {
         Expr::Unary(String::from("typeof"), Box::new(unary(p)))
+    } else if p.eat_kw("await") {
+        Expr::Unary(String::from("await"), Box::new(unary(p)))
     } else {
         postfix(p)
     };

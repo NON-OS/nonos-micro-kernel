@@ -47,6 +47,38 @@ pub fn install(env: &Env) {
             ("stringify", Value::Native("JSON.stringify")),
         ]),
     );
+    env.define(
+        "Object",
+        obj(&[
+            ("keys", Value::Native("Object.keys")),
+            ("values", Value::Native("Object.values")),
+            ("entries", Value::Native("Object.entries")),
+            ("assign", Value::Native("Object.assign")),
+        ]),
+    );
+    env.define(
+        "Promise",
+        obj(&[
+            ("resolve", Value::Native("Promise.resolve")),
+            ("reject", Value::Native("Promise.reject")),
+            ("__native_ctor__", Value::Str(alloc::rc::Rc::new("Promise".into()))),
+        ]),
+    );
+    env.define(
+        "RegExp",
+        obj(&[("__native_ctor__", Value::Str(alloc::rc::Rc::new("RegExp".into())))]),
+    );
+    for name in [
+        "Error",
+        "TypeError",
+        "RangeError",
+        "SyntaxError",
+        "ReferenceError",
+        "Map",
+        "Set",
+    ] {
+        env.define(name, obj(&[("__native_ctor__", Value::Str(alloc::rc::Rc::new(name.into())))]));
+    }
     env.define("window", obj(&[]));
     env.define("fetch", Value::Native("fetch"));
     env.define("setTimeout", Value::Native("setTimeout"));

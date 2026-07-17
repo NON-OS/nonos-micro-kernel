@@ -27,6 +27,7 @@ pub struct FuncData {
     pub params: Vec<String>,
     pub body: Vec<Stmt>,
     pub env: Env,
+    pub is_async: bool,
 }
 
 #[derive(Clone)]

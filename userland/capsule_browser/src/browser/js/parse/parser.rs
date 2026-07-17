@@ -31,6 +31,9 @@ impl Parser {
     pub fn peek(&self) -> &Tok {
         &self.toks[self.pos.min(self.toks.len() - 1)]
     }
+    pub fn peek2(&self) -> &Tok {
+        &self.toks[(self.pos + 1).min(self.toks.len() - 1)]
+    }
     pub fn advance(&mut self) -> Tok {
         let t = self.peek().clone();
         if self.pos < self.toks.len() - 1 {

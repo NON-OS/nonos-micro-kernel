@@ -29,6 +29,8 @@ mod json_parse;
 mod json_stringify;
 mod json_value;
 mod math;
+mod object_static;
+mod promise_static;
 mod timer_ms;
 
 pub use dispatch::dispatch;

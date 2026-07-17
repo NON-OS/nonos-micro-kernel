@@ -18,8 +18,10 @@ use crate::browser::js::ast::Stmt;
 use crate::browser::js::env::Env;
 use crate::browser::js::value::Value;
 
+use super::class_build::build_class;
 use super::ctx::Ctx;
 use super::eval_expr::eval_expr;
+use super::eval_try::eval_try;
 use super::eval_for::eval_for;
 use super::eval_for_of::eval_for_of;
 use super::eval_if::eval_if;
@@ -64,5 +66,16 @@ pub fn eval_stmt(ctx: &mut Ctx, env: &Env, s: &Stmt) -> Result<Flow, ()> {
             let child = env.child();
             exec(ctx, &child, b)
         }
+        Stmt::Class(name, sup, methods) => {
+            let cls = build_class(ctx, env, sup, methods)?;
+            env.define(name, cls);
+            Ok(Flow::Normal)
+        }
+        Stmt::Throw(e) => {
+            let v = eval_expr(ctx, env, e)?;
+            ctx.exception = Some(v);
+            Err(())
+        }
+        Stmt::Try(body, catch, finally) => eval_try(ctx, env, body, catch, finally),
     }
 }

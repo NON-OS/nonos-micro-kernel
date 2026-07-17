@@ -21,11 +21,12 @@ use crate::browser::js::token::Tok;
 
 use super::args::args;
 use super::expr::expr;
+use super::new_expr::new_expr;
 use super::parser::Parser;
 use super::primary::primary;
 
 pub fn postfix(p: &mut Parser) -> Expr {
-    let mut e = primary(p);
+    let mut e = if p.is_kw("new") { new_expr(p) } else { primary(p) };
     loop {
         if p.eat_punct(".") {
             match p.advance() {

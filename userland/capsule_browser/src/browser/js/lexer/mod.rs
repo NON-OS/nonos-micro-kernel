@@ -17,6 +17,7 @@
 mod ident;
 mod number;
 mod operator;
+mod regex;
 mod string;
 mod template;
 mod tokenize;

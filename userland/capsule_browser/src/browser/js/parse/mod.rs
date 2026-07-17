@@ -16,12 +16,15 @@
 
 mod args;
 mod array;
+mod async_expr;
 mod binary;
 mod block;
 mod body;
+mod class_decl;
 mod expr;
 mod func_decl;
 mod matching_close;
+mod new_expr;
 mod object;
 mod params;
 mod parse_for;
@@ -35,6 +38,7 @@ mod primary;
 mod program;
 mod statement;
 mod template;
+mod try_stmt;
 mod unary;
 mod var;
 

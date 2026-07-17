@@ -31,6 +31,7 @@ pub fn primary(p: &mut Parser) -> Expr {
     match p.advance() {
         Tok::Num(n) => Expr::Num(n),
         Tok::Str(s) => Expr::Str(s),
+        Tok::Regex(pat, flags) => Expr::Regex(pat, flags),
         Tok::Tmpl(raw) => super::template::template(&raw),
         Tok::Ident(s) => match s.as_str() {
             "true" => Expr::Bool(true),
@@ -41,14 +42,15 @@ pub fn primary(p: &mut Parser) -> Expr {
                 if matches!(p.peek(), Tok::Ident(_)) {
                     p.advance();
                 }
-                Expr::Func(params(p), super::block::block(p))
+                Expr::Func(params(p), super::block::block(p), false)
             }
+            "async" => super::async_expr::parse_async(p),
             // A bare identifier followed by `=>` is a single-parameter arrow
             // function: `x => body`.
             _ => {
                 if p.is_punct("=>") {
                     p.advance();
-                    arrow(vec![s], p)
+                    arrow(vec![s], p, false)
                 } else {
                     Expr::Ident(s)
                 }
@@ -73,7 +75,7 @@ fn paren_or_arrow(p: &mut Parser) -> Expr {
         p.advance();
         if p.is_punct("=>") {
             p.advance();
-            return arrow(Vec::new(), p);
+            return arrow(Vec::new(), p, false);
         }
         return Expr::Undef;
     }
@@ -91,18 +93,15 @@ fn paren_or_arrow(p: &mut Parser) -> Expr {
                 _ => None,
             })
             .collect();
-        return arrow(ps, p);
+        return arrow(ps, p, false);
     }
     items.into_iter().last().unwrap_or(Expr::Undef)
 }
 
 // Parse the body of an arrow function: a `{ ... }` block, or a single
 // expression that becomes an implicit `return`.
-fn arrow(ps: Vec<String>, p: &mut Parser) -> Expr {
-    let body = if p.is_punct("{") {
-        super::block::block(p)
-    } else {
-        vec![Stmt::Return(Some(expr(p)))]
-    };
-    Expr::Func(ps, body)
+pub(super) fn arrow(ps: Vec<String>, p: &mut Parser, is_async: bool) -> Expr {
+    let body =
+        if p.is_punct("{") { super::block::block(p) } else { vec![Stmt::Return(Some(expr(p)))] };
+    Expr::Func(ps, body, is_async)
 }

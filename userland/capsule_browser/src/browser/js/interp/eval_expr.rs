@@ -63,11 +63,14 @@ pub fn eval_expr(ctx: &mut Ctx, env: &Env, e: &Expr) -> Result<Value, ()> {
                 eval_expr(ctx, env, b)?
             }
         }
-        Expr::Func(params, body) => Value::Func(Rc::new(FuncData {
+        Expr::Func(params, body, is_async) => Value::Func(Rc::new(FuncData {
             params: params.clone(),
             body: body.clone(),
             env: env.clone(),
+            is_async: *is_async,
         })),
+        Expr::New(c, a) => super::eval_new::eval_new(ctx, env, c, a)?,
+        Expr::Regex(pat, flags) => super::regex_obj::regex_obj(pat.clone(), flags.clone()),
     };
     ctx.depth -= 1;
     Ok(v)
