@@ -42,6 +42,8 @@ pub struct State {
     // engine holds a pointer into `page_dom`, which keeps its address for the
     // page's life, so a navigation drops the engine before replacing the DOM.
     pub engine: Option<nonos_qjs::Engine>,
+    // Whether the settings panel behind the menu button is open.
+    pub settings_open: bool,
     pub focus: Option<usize>,
     pub pending_post: Option<String>,
     pub scroll: u32,
@@ -93,6 +95,7 @@ impl State {
             page_dom: None,
             world: None,
             engine: None,
+            settings_open: false,
             focus: None,
             pending_post: None,
             scroll: 0,

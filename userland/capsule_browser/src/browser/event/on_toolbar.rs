@@ -39,6 +39,10 @@ pub fn on_toolbar(state: &mut State, event: InputEvent) -> EventOutcome {
         }
         Some(Btn::Back) => nav_history::nav_history(state, -1),
         Some(Btn::Forward) => nav_history::nav_history(state, 1),
+        Some(Btn::Menu) => {
+            state.settings_open = !state.settings_open;
+            EventOutcome::Repaint
+        }
         None => {
             state.address_focused = false;
             EventOutcome::Idle

@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod buttons;
-mod constants;
+pub mod constants;
 mod hit;
 mod paint;
 mod pill;
