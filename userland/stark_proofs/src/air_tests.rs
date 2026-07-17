@@ -613,6 +613,58 @@ fn a_money_grade_attestation_survives_serialization() {
     );
 }
 
+// The full loop: the enrollment tool builds a capsule's trailer, and the kernel
+// gate's exact parse-and-verify accepts it under the capsule identity and refuses it
+// under any other. This is the prover side meeting the verifier side on the same
+// byte layout, which is what makes the gate usable end to end.
+#[test]
+fn a_built_trailer_is_accepted_by_the_gate_logic() {
+    use crate::crypto::stark::air::{
+        build_attestation_trailer, deserialize_proof_ext, measure_capsule,
+        stark_verify_ext_blown_bound, MerkleMembership,
+    };
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+    let images: [&[u8]; 4] = [b"cap:a bytes", b"cap:b bytes", b"cap:c bytes", b"cap:d bytes"];
+    let index = 1usize;
+    let context = b"capsule:b:v1";
+
+    // Tool side.
+    let trailer = build_attestation_trailer(&hasher, log_rounds, &images, index, context, 32, 16, 3);
+
+    // Kernel side: the same parse the spawn gate runs.
+    let depth = trailer[8] as usize;
+    let mut siblings = Vec::with_capacity(depth);
+    for i in 0..depth {
+        let mut s = [Fp::ZERO; RATE];
+        for (j, lane) in s.iter_mut().enumerate() {
+            let mut w = [0u8; 8];
+            w.copy_from_slice(&trailer[9 + i * 32 + j * 8..9 + i * 32 + j * 8 + 8]);
+            *lane = Fp::from_u64(u64::from_le_bytes(w));
+        }
+        siblings.push(s);
+    }
+    let sib_end = 9 + depth * 32;
+    let dir_bytes = depth.div_ceil(8);
+    let dirs = &trailer[sib_end..sib_end + dir_bytes];
+    let directions: Vec<bool> = (0..depth).map(|i| (dirs[i / 8] >> (i % 8)) & 1 == 1).collect();
+    let proof = deserialize_proof_ext(&trailer[sib_end + dir_bytes..]).expect("the proof parses");
+
+    // The kernel's own policy root, which enrollment publishes.
+    let leaves: Vec<[Fp; RATE]> = images.iter().map(|i| measure_capsule(&hasher, i)).collect();
+    let root = PoseidonMerkleTree::commit(&hasher, &leaves).root();
+    let air = MerkleMembership::new(hasher.clone(), log_rounds, root, siblings, directions);
+
+    assert!(
+        stark_verify_ext_blown_bound(&air, &proof, 32, 16, 3, context),
+        "a tool-built trailer was rejected by the gate logic"
+    );
+    assert!(
+        !stark_verify_ext_blown_bound(&air, &proof, 32, 16, 3, b"capsule:evil:v1"),
+        "the trailer passed under the wrong capsule identity"
+    );
+}
+
 #[test]
 fn membership_proofs_verify_at_fri_layer_depths() {
     // FRI layers are sized 2^k, so paths are depth k, any value. The AIR pads its
