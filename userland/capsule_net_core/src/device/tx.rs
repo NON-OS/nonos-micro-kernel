@@ -16,9 +16,10 @@
 
 use alloc::vec;
 
-use nonos_libc::mk_ipc_call;
+use nonos_libc::mk_ipc_call_timeout;
 
 use super::tx_seq::next_rid;
+use crate::device::DEVICE_CALL_MS;
 use crate::protocol::header::{parse_response, write_request};
 use crate::protocol::ops::{HDR_LEN, OP_TX_PACKET};
 
@@ -30,7 +31,14 @@ pub fn send_frame(port: u32, frame: &[u8]) -> bool {
     }
     req[HDR_LEN..total].copy_from_slice(frame);
     let mut resp = [0u8; HDR_LEN + 4];
-    let n = mk_ipc_call(port as u64, req.as_ptr(), total, resp.as_mut_ptr(), resp.len());
+    let n = mk_ipc_call_timeout(
+        port as u64,
+        req.as_ptr(),
+        total,
+        resp.as_mut_ptr(),
+        resp.len(),
+        DEVICE_CALL_MS,
+    );
     if n < 0 {
         return false;
     }

@@ -35,11 +35,15 @@ pub const RX_BUF_STRIDE: usize = 4096;
 pub struct RxState {
     pub rp: u32,
     pub len: u32,
+    /// Frames the card flagged CRC- or ICV-bad and the poll dropped. Climbing
+    /// while a lease is awaited means a reply arrives but does not decrypt (the
+    /// group key), so it never reaches the stack.
+    pub err_drops: u32,
 }
 
 impl RxState {
     pub const fn new(len: u32) -> Self {
-        Self { rp: 0, len }
+        Self { rp: 0, len, err_drops: 0 }
     }
 
     /// Ready frames: the distance from the host read index up to the hardware

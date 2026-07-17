@@ -30,6 +30,8 @@ use super::js_fetch::js_fetch;
 use super::json_parse::json_parse;
 use super::json_stringify::json_stringify;
 use super::math::math;
+use super::object_static::object_static;
+use super::promise_static::promise_static;
 use super::timer_ms::timer_ms;
 
 pub fn dispatch(ctx: &mut Ctx, name: &'static str, argv: Vec<Value>) -> Result<Value, ()> {
@@ -44,6 +46,10 @@ pub fn dispatch(ctx: &mut Ctx, name: &'static str, argv: Vec<Value>) -> Result<V
             Ok(builtin(name, &argv))
         }
         "fetch" => Ok(js_fetch(ctx, &argv)),
+        "Promise.resolve" | "Promise.reject" => Ok(promise_static(ctx, name, &argv)),
+        "Object.keys" | "Object.values" | "Object.entries" | "Object.assign" => {
+            Ok(object_static(name, &argv))
+        }
         "JSON.parse" => Ok(argv.first().map(|v| json_parse(&to_str(v))).unwrap_or(Value::Undef)),
         "JSON.stringify" => {
             let mut out = alloc::string::String::new();

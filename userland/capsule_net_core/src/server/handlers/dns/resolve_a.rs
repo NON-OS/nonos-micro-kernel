@@ -19,7 +19,9 @@ use smoltcp::socket::dns::{GetQueryResultError, Socket as DnsSocket};
 use smoltcp::wire::{DnsQueryType, IpAddress};
 
 use crate::iface::poll;
-use crate::protocol::dns::{E_NAME_INVALID, E_NO_LEASE, E_OK, E_SERVFAIL, MAGIC_NDNS, OP_RESOLVE_A};
+use crate::protocol::dns::{
+    E_NAME_INVALID, E_NO_LEASE, E_OK, E_SERVFAIL, MAGIC_NDNS, OP_RESOLVE_A,
+};
 use crate::server::parse_req::Request;
 use crate::server::respond::reply;
 use crate::state;
@@ -41,9 +43,8 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     let deadline = mk_time_millis() as u64 + TIMEOUT_MS;
     loop {
         poll::pump();
-        let result = state::with_dns(|_i, sockets, h| {
-            sockets.get_mut::<DnsSocket>(h).get_query_result(qh)
-        });
+        let result =
+            state::with_dns(|_i, sockets, h| sockets.get_mut::<DnsSocket>(h).get_query_result(qh));
         match result {
             Some(Ok(addrs)) => return reply_a(sender_pid, req, &addrs, tx),
             Some(Err(GetQueryResultError::Pending)) => {}

@@ -29,32 +29,18 @@ mod setup;
 mod state;
 mod udp_ports;
 
-use nonos_libc::{heap_init, mk_exit, mk_yield};
-use setup::SetupError;
+use nonos_libc::{heap_init, mk_exit};
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
-    wait_for_setup();
+    // Register and serve before any interface is bound. The stack has no link at
+    // boot (the WiFi link is down until the user associates and a laptop has no
+    // cable), so binding is done opportunistically from the serve loop's periodic
+    // re-evaluation. Registering first keeps net_core reachable while it waits, so
+    // a client can see it is up but unbound instead of finding no service at all.
     register::all();
     server::run();
-}
-
-fn wait_for_setup() {
-    loop {
-        match setup::run() {
-            Ok(()) => return,
-            // No NIC has an up link yet (at boot the WiFi link is down until the
-            // user associates); keep retrying so the interface is bound the moment
-            // a link comes up.
-            Err(SetupError::NicNotFound) => {
-                for _ in 0..64 {
-                    mk_yield();
-                }
-            }
-            Err(_) => mk_exit(2),
-        }
-    }
 }

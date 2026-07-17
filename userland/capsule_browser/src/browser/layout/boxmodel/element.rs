@@ -36,11 +36,30 @@ pub(super) fn element(
     depth: u32,
     out: &mut Vec<BoxNode>,
 ) {
-    let style = w.styles.get(item.ch).copied().unwrap_or_else(|| Computed::inherit_from(parent));
+    let mut style =
+        w.styles.get(item.ch).copied().unwrap_or_else(|| Computed::inherit_from(parent));
     if style.display_none {
         return;
     }
     let tag = item.c.tag.as_str();
+    // User-agent table roles by tag, so <table>/<tr>/<td> lay out as a column grid
+    // without the page having to declare `display: table*`. All three are
+    // block-level so the box tree keeps rows and cells as clean block children.
+    match tag {
+        "table" => {
+            style.is_table = true;
+            style.is_block = true;
+        }
+        "tr" => {
+            style.is_table_row = true;
+            style.is_block = true;
+        }
+        "td" | "th" => {
+            style.is_table_cell = true;
+            style.is_block = true;
+        }
+        _ => {}
+    }
     if matches!(tag, "script" | "style" | "head" | "title" | "noscript" | "template") {
         return;
     }

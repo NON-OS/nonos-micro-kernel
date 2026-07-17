@@ -63,8 +63,8 @@ pub use color::parse_color;
 pub use compute::compute;
 pub use computed::Shadow;
 pub use computed::{
-    Align, BgSize, Computed, GridTrack, Justify, ObjectFit, Position, Size, TextAlign,
-    TextTransform, WhiteSpace,
+    Align, BgSize, Clear, Computed, Float, GridTrack, Justify, ObjectFit, Position, Size,
+    TextAlign, TextTransform, WhiteSpace,
 };
 pub use pseudo_style::PseudoText;
 pub use select::select;

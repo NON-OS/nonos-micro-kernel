@@ -39,6 +39,12 @@ pub struct Ctx<'a> {
     pub listeners: Vec<(usize, String, Value)>,
     // fetch(url) slots: the callback arrives via .then() or as arg two.
     pub net: Vec<(String, Option<Value>)>,
+    // Promise states indexed by id: 0 pending, 1 fulfilled, 2 rejected, with
+    // the settled value. A promise Value is an object holding "__promise_id__".
+    pub promises: Vec<(u8, Value)>,
+    // A JS exception in flight: set by `throw`, cleared by the catching `try`.
+    // An Err(()) with this unset is a hard engine abort and is not catchable.
+    pub exception: Option<Value>,
 }
 
 impl<'a> Ctx<'a> {
@@ -53,6 +59,8 @@ impl<'a> Ctx<'a> {
             timers: Vec::new(),
             listeners: Vec::new(),
             net: Vec::new(),
+            promises: Vec::new(),
+            exception: None,
         }
     }
     pub fn tick(&mut self) -> bool {

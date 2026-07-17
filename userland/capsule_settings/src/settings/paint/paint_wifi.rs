@@ -75,7 +75,7 @@ fn write_signed(n: i32, out: &mut [u8]) -> usize {
 }
 
 // Write `n` as decimal into `out`, returning how many bytes it took.
-fn write_dec(mut n: u32, out: &mut [u8]) -> usize {
+pub(super) fn write_dec(mut n: u32, out: &mut [u8]) -> usize {
     if n == 0 {
         out[0] = b'0';
         return 1;
@@ -195,7 +195,7 @@ fn paint_status(fb: &mut PaintBuffer, state: &State, y: u32) {
     // The result of the last connection attempt, once one has been made.
     match state.wifi_connect {
         WifiConnect::Connected => {
-            fb.text(LABEL_LEFT, y, b"Connected.", VALUE_FG);
+            super::paint_wifi_link::paint_connected(fb, state, y);
             return;
         }
         WifiConnect::Failed(r) => {

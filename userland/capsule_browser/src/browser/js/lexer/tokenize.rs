@@ -21,6 +21,7 @@ use crate::browser::js::token::Tok;
 use super::ident::scan_ident;
 use super::number::scan_number;
 use super::operator::scan_op;
+use super::regex::{regex_allowed, scan_regex};
 use super::string::scan_string;
 use super::template::scan_template;
 
@@ -57,6 +58,10 @@ pub fn tokenize(src: &str) -> Vec<Tok> {
             i = n;
         } else if c.is_alphabetic() || c == '_' || c == '$' {
             let (t, n) = scan_ident(&cs, i);
+            out.push(t);
+            i = n;
+        } else if c == '/' && regex_allowed(out.last()) {
+            let (t, n) = scan_regex(&cs, i);
             out.push(t);
             i = n;
         } else {

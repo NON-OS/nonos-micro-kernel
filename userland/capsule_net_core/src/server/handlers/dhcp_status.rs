@@ -29,7 +29,7 @@ pub fn dispatch(sender_pid: u32, req: &Request, tx: &mut [u8]) {
     }
 }
 
-pub fn encode_body(body: &mut [u8; 18]) {
+pub fn encode_body(body: &mut [u8; 22]) {
     let lease = state::lease();
     match lease {
         Some(l) if l.bound => {
@@ -44,10 +44,13 @@ pub fn encode_body(body: &mut [u8; 18]) {
             body[0] = 1;
         }
     }
+    // The bound interface port trails the lease so a panel can tell which NIC the
+    // stack chose even when no address ever binds.
+    body[18..22].copy_from_slice(&crate::setup::bound_port().to_le_bytes());
 }
 
 fn lease_status(sender_pid: u32, req: &Request, tx: &mut [u8]) {
-    let mut body = [0u8; 18];
+    let mut body = [0u8; 22];
     encode_body(&mut body);
     let _ = reply(sender_pid, MAGIC_NDHC, OP_LEASE_STATUS, E_OK, req.request_id, &body, tx);
 }

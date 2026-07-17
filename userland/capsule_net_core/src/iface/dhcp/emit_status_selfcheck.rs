@@ -20,7 +20,7 @@ use crate::iface::dhcp::{write_decimal_u8, write_octet_quad};
 use crate::server::handlers::dhcp_status::encode_body;
 
 pub fn emit_status_selfcheck() {
-    let mut body = [0u8; 18];
+    let mut body = [0u8; 22];
     encode_body(&mut body);
     let state_code = body[0];
     let ip = [body[1], body[2], body[3], body[4]];

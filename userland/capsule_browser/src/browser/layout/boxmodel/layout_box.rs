@@ -62,6 +62,9 @@ pub(super) fn layout_box(
         x += dx;
         y += dy;
     }
+    if node.style.is_table {
+        return super::layout_table::layout_table(node, x, y, avail, frags, depth, ctx);
+    }
     match node.kind {
         BoxKind::Flex => layout_flex(node, x, y, avail, frags, depth, ctx),
         BoxKind::Grid => layout_grid(node, x, y, avail, frags, depth, ctx),

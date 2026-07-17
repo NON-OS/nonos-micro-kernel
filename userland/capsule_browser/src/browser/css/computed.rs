@@ -96,6 +96,24 @@ pub enum Position {
     Absolute,
 }
 
+/// Whether a box is taken out of the normal flow to one side, with the rest of
+/// the block's content wrapping around it.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Float {
+    None,
+    Left,
+    Right,
+}
+
+/// Which floats a box drops below before it is laid: `clear`.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Clear {
+    None,
+    Left,
+    Right,
+    Both,
+}
+
 // One grid column track: a length, a percentage of the row, or a fraction
 // of the leftover space.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -174,6 +192,11 @@ pub struct Computed {
     pub is_block: bool,
     pub is_flex: bool,
     pub is_inline_block: bool,
+    // Table roles, set from the tag as a user-agent default or `display: table*`.
+    // A table box lays its rows and cells into a shared column grid.
+    pub is_table: bool,
+    pub is_table_row: bool,
+    pub is_table_cell: bool,
     pub flex_wrap: bool,
     pub flex_col: bool,
     pub justify: Justify,
@@ -184,6 +207,10 @@ pub struct Computed {
     // content or the width property, as CSS specifies.
     pub flex_basis: Size,
     pub position: Position,
+    // float takes the box to one side and flows following content around it;
+    // clear drops a box below the floats named by it.
+    pub float: Float,
+    pub clear: Clear,
     // position: fixed is laid out like absolute but painted without the
     // scroll offset, so it pins to the viewport.
     pub is_fixed: bool,
@@ -251,6 +278,9 @@ impl Computed {
             is_block: false,
             is_flex: false,
             is_inline_block: false,
+            is_table: false,
+            is_table_row: false,
+            is_table_cell: false,
             flex_wrap: false,
             flex_col: false,
             justify: Justify::Start,
@@ -259,6 +289,8 @@ impl Computed {
             flex_grow: 0,
             flex_basis: Size::Auto,
             position: Position::Static,
+            float: Float::None,
+            clear: Clear::None,
             is_fixed: false,
             is_sticky: false,
             top: Size::Auto,

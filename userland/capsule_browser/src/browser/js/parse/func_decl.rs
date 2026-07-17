@@ -23,11 +23,11 @@ use super::block::block;
 use super::params::params;
 use super::parser::Parser;
 
-pub fn func_decl(p: &mut Parser) -> Stmt {
+pub fn func_decl(p: &mut Parser, is_async: bool) -> Stmt {
     let name = match p.advance() {
         Tok::Ident(s) => s,
         _ => String::new(),
     };
     let ps = params(p);
-    Stmt::Func(name, ps, block(p))
+    Stmt::Func(name, ps, block(p), is_async)
 }

@@ -54,7 +54,9 @@ where
         let buf_off = RxState::buffer_offset(slot);
         let info = parse(&buffers[buf_off..]);
 
-        // Decide whether this slot carries a frame we can hand up.
+        // Decide whether this slot carries a frame we can hand up. A CRC or ICV
+        // error is counted, not just skipped: an undecryptable reply (bad group
+        // key) shows up here rather than as a silent gap.
         let delivered = match info {
             Some(i)
                 if i.deliverable() && i.total_len() <= RX_BUF_STRIDE && i.pkt_len <= out.len() =>
@@ -62,6 +64,10 @@ where
                 let start = buf_off + i.frame_offset();
                 out[..i.pkt_len].copy_from_slice(&buffers[start..start + i.pkt_len]);
                 Some(i.pkt_len)
+            }
+            Some(i) if i.crc_err || i.icv_err => {
+                state.err_drops = state.err_drops.wrapping_add(1);
+                None
             }
             _ => None,
         };

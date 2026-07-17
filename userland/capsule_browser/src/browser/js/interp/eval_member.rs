@@ -26,7 +26,15 @@ use super::node_member::node_member;
 pub fn eval_member(ctx: &mut Ctx, env: &Env, obj: &Expr, name: &str) -> Result<Value, ()> {
     let recv = eval_expr(ctx, env, obj)?;
     Ok(match recv {
-        Value::Object(map) => map.borrow().get(name).cloned().unwrap_or(Value::Undef),
+        Value::Object(map) => {
+            let b = map.borrow();
+            if name == "size" {
+                if let Some(Value::Array(s)) = b.get("__map__").or_else(|| b.get("__set__")) {
+                    return Ok(Value::Num(s.borrow().len() as f64));
+                }
+            }
+            b.get(name).cloned().unwrap_or(Value::Undef)
+        }
         Value::Array(a) => {
             if name == "length" {
                 Value::Num(a.borrow().len() as f64)

@@ -43,6 +43,11 @@ use crate::tx::regs::QSEL_BE;
 use crate::tx::ring::{TxState, TX_DESC_COUNT};
 use crate::tx::{enqueue, program as tx_program};
 
+/// Most frames one receive poll drains looking for a data frame. Twice the ring
+/// so a full backlog of beacons is cleared in a call, but bounded so a continuous
+/// stream cannot spin it.
+const RX_DRAIN_MAX: usize = RX_DESC_COUNT as usize * 2;
+
 /// `RTW_SEC_DEFAULT_KEY_NUM`: CAM entries 0..3 are reserved for group keys keyed
 /// by their 802.11 key index; pairwise keys start here.
 const PAIRWISE_BASE: u8 = 4;
@@ -148,6 +153,23 @@ impl RxBuffers for Grant {
     }
 }
 
+/// Data-path frame counts, read over the control protocol so a laptop with no
+/// serial port can see where the DHCP path stops: TX frames net_core handed us
+/// versus RX frames the ring returned and how many parsed to Ethernet.
+#[derive(Clone, Copy, Default)]
+pub struct LinkStats {
+    pub tx_ok: u32,
+    pub tx_drop: u32,
+    pub rx_ring: u32,
+    pub rx_eth: u32,
+    /// net_core link-protocol requests answered. Nonzero proves net_core is
+    /// alive and probing this interface; zero means the stack never reached it.
+    pub netif_reqs: u32,
+    /// Frames dropped for a CRC or ICV error; a climbing count while a lease is
+    /// awaited points at a reply that arrives but does not decrypt.
+    pub rx_err: u32,
+}
+
 /// The Ethernet data path net_core drives for this radio. It owns the transmit
 /// and receive rings and one `LinkStation`; every WiFi specific (framing, CCMP,
 /// the sequence number) lives in the station, so this is the thin ring shim the
@@ -162,6 +184,7 @@ pub struct RtlLink<M: Mmio, D: DmaMem, RB: RxBuffers> {
     rx_buffers: RB,
     rx_state: RxState,
     station: LinkStation,
+    stats: LinkStats,
 }
 
 impl<M: Mmio, D: DmaMem, RB: RxBuffers> RtlLink<M, D, RB> {
@@ -190,13 +213,28 @@ impl<M: Mmio, D: DmaMem, RB: RxBuffers> RtlLink<M, D, RB> {
             rx_buffers,
             rx_state: RxState::new(RX_DESC_COUNT),
             station: LinkStation::new(our_mac),
+            stats: LinkStats::default(),
         }
     }
 
-    /// Record association to `bssid`. Hardware CCMP: the station frames plaintext
-    /// and the radio encrypts from the CAM key the `KeyStore` installed.
-    pub fn associate(&mut self, bssid: [u8; 6]) {
-        self.station.associate(bssid, Ccmp::Hardware);
+    /// The data-path frame counts for the control-protocol status reply. The
+    /// receive-error count lives with the ring state, so fold it in here.
+    pub fn stats(&self) -> LinkStats {
+        LinkStats { rx_err: self.rx_state.err_drops, ..self.stats }
+    }
+
+    /// Count one answered net_core link-protocol request.
+    pub fn note_netif_req(&mut self) {
+        self.stats.netif_reqs = self.stats.netif_reqs.wrapping_add(1);
+    }
+
+    /// Record association to `bssid`, encrypting transmit frames in software with
+    /// `ptk` while the radio decrypts receive frames from its key cache. This chip
+    /// does not encrypt transmit frames in hardware but does decrypt receive
+    /// frames, so the transmit path mirrors the plaintext handshake path and the
+    /// receive path leaves the sec engine on.
+    pub fn associate(&mut self, bssid: [u8; 6], ptk: [u8; 16]) {
+        self.station.associate(bssid, Ccmp::SoftwareTxHwRx { tk: ptk });
     }
 
     /// Drop the association; the link reports down and refuses to transmit until
@@ -229,13 +267,8 @@ impl<M: Mmio, D: DmaMem, RB: RxBuffers> RtlLink<M, D, RB> {
         } else {
             0
         };
-        let meta = FrameMeta {
-            qsel: QSEL_BE,
-            bmc: false,
-            rate: Some(DESC_RATE_6M),
-            seq,
-            sec_type: 0,
-        };
+        let meta =
+            FrameMeta { qsel: QSEL_BE, bmc: false, rate: Some(DESC_RATE_6M), seq, sec_type: 0 };
         enqueue(&self.mmio, &self.tx_ring, &self.tx_buffers, &mut self.tx_state, mpdu, &meta)
     }
 }
@@ -260,6 +293,7 @@ impl<M: Mmio, D: DmaMem, RB: RxBuffers> LinkPort for RtlLink<M, D, RB> {
 
     fn send_tx(&mut self, frame: &[u8]) -> bool {
         let Some(mpdu) = self.station.tx_frame(frame) else {
+            self.stats.tx_drop = self.stats.tx_drop.wrapping_add(1);
             return false;
         };
         // Keep the descriptor sequence consistent with the header the station
@@ -269,9 +303,26 @@ impl<M: Mmio, D: DmaMem, RB: RxBuffers> LinkPort for RtlLink<M, D, RB> {
         } else {
             0
         };
-        let meta =
-            FrameMeta { qsel: QSEL_BE, bmc: false, rate: None, seq, sec_type: SEC_TYPE_CCMP };
-        enqueue(&self.mmio, &self.tx_ring, &self.tx_buffers, &mut self.tx_state, &mpdu, &meta)
+        // Fix the transmit rate rather than leaving it to firmware rate control.
+        // The firmware has no rate-adaptation table for this station (the driver
+        // never registers one after association), so a rate-controlled data frame
+        // is dropped before it reaches the air; a fixed rate transmits, exactly as
+        // the fixed-rate handshake frames already do.
+        let meta = FrameMeta {
+            qsel: QSEL_BE,
+            bmc: false,
+            rate: Some(DESC_RATE_6M),
+            seq,
+            sec_type: SEC_TYPE_CCMP,
+        };
+        let ok =
+            enqueue(&self.mmio, &self.tx_ring, &self.tx_buffers, &mut self.tx_state, &mpdu, &meta);
+        if ok {
+            self.stats.tx_ok = self.stats.tx_ok.wrapping_add(1);
+        } else {
+            self.stats.tx_drop = self.stats.tx_drop.wrapping_add(1);
+        }
+        ok
     }
 
     fn poll_rx(&mut self, out: &mut [u8]) -> Option<usize> {
@@ -282,20 +333,29 @@ impl<M: Mmio, D: DmaMem, RB: RxBuffers> LinkPort for RtlLink<M, D, RB> {
         if !self.station.is_associated() {
             return None;
         }
-        // One receive buffer's worth of scratch for the decrypted MPDU before the
-        // station parses it down to Ethernet.
+        // Drain past beacons toward a data frame: the air carries far more of them
+        // than data and the ring holds only 32 slots, so returning on the first
+        // non-data frame let the card overwrite an unread DHCP reply. Bounded to
+        // twice the ring so a continuous beacon stream cannot spin this call and
+        // starve the caller; the next poll resumes the drain.
         let mut mpdu = [0u8; RX_BUF_STRIDE];
-        let n = poll_one(
-            &self.mmio,
-            &self.rx_ring,
-            self.rx_buffers.bytes(),
-            self.rx_buffers.device_addr(),
-            &mut self.rx_state,
-            &mut mpdu,
-        )?;
-        let eth = self.station.rx_frame(&mpdu[..n])?;
-        let m = eth.len().min(out.len());
-        out[..m].copy_from_slice(&eth[..m]);
-        Some(m)
+        for _ in 0..RX_DRAIN_MAX {
+            let n = poll_one(
+                &self.mmio,
+                &self.rx_ring,
+                self.rx_buffers.bytes(),
+                self.rx_buffers.device_addr(),
+                &mut self.rx_state,
+                &mut mpdu,
+            )?;
+            self.stats.rx_ring = self.stats.rx_ring.wrapping_add(1);
+            if let Some(eth) = self.station.rx_frame(&mpdu[..n]) {
+                self.stats.rx_eth = self.stats.rx_eth.wrapping_add(1);
+                let m = eth.len().min(out.len());
+                out[..m].copy_from_slice(&eth[..m]);
+                return Some(m);
+            }
+        }
+        None
     }
 }

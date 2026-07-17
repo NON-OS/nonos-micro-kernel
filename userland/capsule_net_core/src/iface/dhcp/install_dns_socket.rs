@@ -18,7 +18,10 @@ use smoltcp::iface::{SocketHandle, SocketSet};
 use smoltcp::socket::dns;
 use smoltcp::wire::{IpAddress, Ipv4Address};
 
-pub fn install_dns_socket(sockets: &mut SocketSet<'static>, dns_ip: [u8; 4]) -> Option<SocketHandle> {
+pub fn install_dns_socket(
+    sockets: &mut SocketSet<'static>,
+    dns_ip: [u8; 4],
+) -> Option<SocketHandle> {
     if dns_ip == [0, 0, 0, 0] {
         return None;
     }

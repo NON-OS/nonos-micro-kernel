@@ -20,6 +20,7 @@ use crate::browser::html::parse::read_to_gt::read_to_gt;
 use crate::browser::html::parse::tag_name::tag_name;
 
 use super::attrs::parse_attrs;
+use super::auto_close::auto_close;
 use super::close_tag::close_tag;
 use super::node::NodeKind;
 use super::raw_text::raw_text;
@@ -42,6 +43,10 @@ pub fn consume(
     if raw.starts_with('/') {
         return close_tag(dom, cur, &name);
     }
+    // Close any open element this one implicitly ends (an open <li> before a new
+    // <li>, an open <p> before a block, an open <td> before the next cell) so the
+    // omitted end tags common in real HTML still nest correctly.
+    let cur = auto_close(dom, cur, &name);
     let Some(id) = dom.push(cur, NodeKind::Element, name.clone()) else {
         return cur;
     };
