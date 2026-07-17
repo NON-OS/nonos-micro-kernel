@@ -32,9 +32,10 @@ use crate::fw::{download, prep, rsvd, DownloadError, MAX_CHUNK};
 use crate::regs::{Mmio, Regs};
 use crate::status;
 
-/// The RTL8821CE firmware image, redistributed by linux-firmware and carried in
-/// the capsule so no filesystem is needed at bring-up.
-const FW: &[u8] = include_bytes!("../firmware/rtw8821c_fw.bin");
+/// The RTL8821CE firmware image, redistributed by linux-firmware and linked from
+/// the tree's committed firmware set so no filesystem is needed at bring-up and a
+/// clean checkout builds without staging a blob.
+const FW: &[u8] = include_bytes!("../../../nonos-bootloader/firmware/realtek/rtw8821c_fw.bin");
 
 /// Staging buffer: one DDMA chunk plus its 48-byte TX descriptor, rounded to
 /// whole pages. Two pages cover the 0x1000-byte chunk and the descriptor.
