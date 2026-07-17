@@ -72,7 +72,7 @@ pub fn stark_verify_bound<A: Air>(
     // Rebuild the transcript exactly as the prover did, binding the context first.
     let mut transcript = Transcript::new(b"NONOS-STARK");
     if !context.is_empty() {
-        transcript.absorb_digest(&crate::crypto::hash::keccak256(context));
+        transcript.absorb_digest(&crate::hash::keccak256(context));
     }
     for root in &proof.trace_roots {
         transcript.absorb_digest(root);

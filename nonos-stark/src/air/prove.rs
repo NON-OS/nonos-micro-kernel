@@ -80,7 +80,7 @@ pub fn stark_prove_bound<A: Air>(
     // coefficients are kept for the out-of-domain evaluations.
     let mut transcript = Transcript::new(b"NONOS-STARK");
     if !context.is_empty() {
-        transcript.absorb_digest(&crate::crypto::hash::keccak256(context));
+        transcript.absorb_digest(&crate::hash::keccak256(context));
     }
     let mut trace_d: Vec<Vec<Fp>> = Vec::with_capacity(width);
     let mut trace_coeffs: Vec<Vec<Fp>> = Vec::with_capacity(width);

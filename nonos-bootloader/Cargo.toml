@@ -20,6 +20,9 @@ name = "nonos_boot"
 path = "src/main.rs"
 
 [dependencies]
+# Transparent STARK verifier, shared with the kernel. Verifies the kernel
+# self-attestation before jump when `stark-kernel-attest` is on.
+nonos-stark = { path = "../nonos-stark", optional = true }
 # UEFI stack
 uefi = { version = "0.23", features = ["alloc"] }
 uefi-services = "0.20"
@@ -79,6 +82,12 @@ zk-vk-provisioned = []
 zk-bind-manifest = []
 zk-zeroize = ["zeroize"]
 zk-transparent = []
+
+# Verify the kernel's transparent STARK self-attestation before jumping to it.
+# Off by default until the kernel image is enrolled and ships a self-attestation
+# trailer; turning it on without provisioning halts a kernel that cannot prove
+# its measurement.
+stark-kernel-attest = ["nonos-stark"]
 
 [build-dependencies]
 cc = "1.0"

@@ -12,6 +12,7 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
+nonos-stark = { path = "../../nonos-stark" }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

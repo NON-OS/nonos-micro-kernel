@@ -2918,3 +2918,22 @@ fn gen_wired_recursive_public_selftest() {
         wired.periodic_columns().len()
     );
 }
+
+// A hostile capsule can put any 32-bit count in the trailer before the data
+// that would back it. The deserializer must refuse such a trailer without first
+// reserving gigabytes for a vector it will never fill. This builds a trailer
+// that reaches the first length field and sets it to its maximum; the parser
+// must return None promptly, which it cannot do if it pre-allocates the count.
+#[test]
+fn a_hostile_length_prefix_is_refused_without_overallocating() {
+    use crate::crypto::stark::air::deserialize_proof_ext;
+    let mut trailer = Vec::new();
+    trailer.extend_from_slice(&[0u8; 32]); // trace_root
+    trailer.extend_from_slice(&[0u8; 32]); // comp_root
+    trailer.extend_from_slice(&0u32.to_le_bytes()); // ood frame: zero elements
+    trailer.extend_from_slice(&u32::MAX.to_le_bytes()); // FRI roots: 2^32 - 1
+    assert!(
+        deserialize_proof_ext(&trailer).is_none(),
+        "a trailer with a hostile length prefix must be refused"
+    );
+}

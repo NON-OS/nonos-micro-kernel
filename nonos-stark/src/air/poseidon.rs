@@ -36,7 +36,7 @@
 
 use super::super::field::{Felt, Fp, Fp2};
 use super::spec::{Air, AirExt};
-use crate::crypto::hash::blake3_hash;
+use crate::hash::blake3_hash;
 use alloc::vec::Vec;
 
 /// State width in field elements.
