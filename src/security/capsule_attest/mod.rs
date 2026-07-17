@@ -17,6 +17,8 @@
 mod error;
 mod layout;
 mod policy_root;
+#[cfg(feature = "nonos-stark-attest")]
+mod stark;
 mod trailer;
 mod verify;
 

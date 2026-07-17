@@ -48,6 +48,7 @@ path    = "src/nonos_main.rs"
 harness = false
 
 [features]
+nonos-stark-attest = []
 default = ["microkernel-core"]
 
 # Bootstrap. `kernel` switches malloc/free to Rust `alloc`; `standalone`
