@@ -14,23 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Real raster images for the document view. Sources discovered during layout
-// are fetched through the same socket state machine as pages, decoded from
-// PNG/JPEG/BMP into ARGB8888, cached, and scale-blitted into their box.
-mod blit;
-mod data_uri;
-mod decode;
-mod fetch;
-mod ingest;
-mod queue;
-mod sniff;
-mod store;
-mod svg;
-mod webp;
+#![no_std]
 
-pub use blit::blit_into;
-pub(crate) use data_uri::data_uri_bytes;
-pub use fetch::{follow_redirect, pump};
-pub use ingest::ingest;
-pub use queue::enqueue_from_doc;
-pub use store::{Decoded, Store};
+extern crate alloc;
+
+mod decode;
+mod encode;
+
+pub use decode::decode_b64;
+pub use encode::encode;

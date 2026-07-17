@@ -16,7 +16,7 @@
 
 use alloc::vec::Vec;
 
-use super::base64::decode_b64;
+use nonos_base64::decode_b64;
 
 // Payload bytes of a data: URI, "data:[mediatype][;base64],payload".
 // Base64 payloads decode; plain payloads percent-decode.
