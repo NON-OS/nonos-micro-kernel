@@ -19,7 +19,7 @@
 //! calls; it takes only untrusted inputs and never panics.
 
 use super::super::field::{Fp, Fp2};
-use super::hash::{hash_leaf, hash_leaf_ext, hash_node};
+use super::hash::{hash_leaf, hash_leaf_ext, hash_leaf_wide, hash_node};
 
 /// Recompute the root implied by `leaf` sitting at `index` under `path`, and
 /// return whether it equals the committed `root`. A path of the wrong length,
@@ -32,6 +32,18 @@ pub fn verify_path(root: &[u8; 32], index: usize, leaf: Fp, path: &[[u8; 32]]) -
         idx >>= 1;
     }
     // After consuming the whole path the index must have reached the root row.
+    idx == 0 && node == *root
+}
+
+/// Verify a wide-leaf path: recompute the row's leaf from all its column values
+/// and walk the path to the root. One path authenticates a whole trace row.
+pub fn verify_path_wide(root: &[u8; 32], index: usize, row: &[Fp], path: &[[u8; 32]]) -> bool {
+    let mut node = hash_leaf_wide(row);
+    let mut idx = index;
+    for sibling in path {
+        node = if idx & 1 == 0 { hash_node(&node, sibling) } else { hash_node(sibling, &node) };
+        idx >>= 1;
+    }
     idx == 0 && node == *root
 }
 

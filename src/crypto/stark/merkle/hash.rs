@@ -24,6 +24,7 @@ use alloc::vec::Vec;
 
 const DOM_LEAF: &[u8] = b"NONOS-STARK-MERKLE-LEAF";
 const DOM_LEAF_EXT: &[u8] = b"NONOS-STARK-MERKLE-LEAF-EXT";
+const DOM_LEAF_WIDE: &[u8] = b"NONOS-STARK-MERKLE-LEAF-WIDE";
 const DOM_NODE: &[u8] = b"NONOS-STARK-MERKLE-NODE";
 
 /// Hash a field element into a leaf digest, domain-separated from node hashing
@@ -43,6 +44,20 @@ pub(super) fn hash_leaf_ext(leaf: Fp2) -> [u8; 32] {
     buf.extend_from_slice(DOM_LEAF_EXT);
     buf.extend_from_slice(&leaf.c0.value().to_le_bytes());
     buf.extend_from_slice(&leaf.c1.value().to_le_bytes());
+    keccak256(&buf)
+}
+
+/// Hash a whole trace row into one leaf: every column's canonical value as an
+/// 8-byte little-endian integer, tightly packed in column order, under a domain
+/// distinct from the single-value leaf so a wide leaf can never be confused with a
+/// base leaf, an extension leaf, or an internal node. This is the commitment shape
+/// the on-chain verifier recomputes once per query instead of one path per column.
+pub(super) fn hash_leaf_wide(row: &[Fp]) -> [u8; 32] {
+    let mut buf = Vec::with_capacity(DOM_LEAF_WIDE.len() + row.len() * 8);
+    buf.extend_from_slice(DOM_LEAF_WIDE);
+    for v in row {
+        buf.extend_from_slice(&v.value().to_le_bytes());
+    }
     keccak256(&buf)
 }
 

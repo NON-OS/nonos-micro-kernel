@@ -38,6 +38,19 @@ const SHIFT: u64 = 7;
 /// Verify `proof` against `air`. The evaluation domain and low-degree bound are
 /// derived from the AIR, matching the prover.
 pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bool {
+    stark_verify_bound(air, proof, n_queries, &[])
+}
+
+/// Verify a proof bound to `context`. The context is absorbed into the transcript
+/// before anything else, so a proof drawn under one context never verifies under
+/// another. An empty context reduces to `stark_verify`. This is the primitive a
+/// capsule attestation gates on, binding the membership proof to the capsule.
+pub fn stark_verify_bound<A: Air>(
+    air: &A,
+    proof: &StarkProof,
+    n_queries: usize,
+    context: &[u8],
+) -> bool {
     let log_t = air.log_trace_len();
     let t = 1usize << log_t;
     let width = air.trace_width();
@@ -56,8 +69,11 @@ pub fn stark_verify<A: Air>(air: &A, proof: &StarkProof, n_queries: usize) -> bo
     let omega = root_of_unity(log_n);
     let shift = Fp::from_u64(SHIFT);
 
-    // Rebuild the transcript exactly as the prover did.
+    // Rebuild the transcript exactly as the prover did, binding the context first.
     let mut transcript = Transcript::new(b"NONOS-STARK");
+    if !context.is_empty() {
+        transcript.absorb_digest(&crate::crypto::hash::keccak256(context));
+    }
     for root in &proof.trace_roots {
         transcript.absorb_digest(root);
     }
