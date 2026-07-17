@@ -317,3 +317,28 @@ fn frame_rejects_missing_content_length_for_keepalive() {
         Ok(_) => panic!("expected keep-alive framing rejection"),
     }
 }
+
+#[test]
+fn http_build_head_is_head_without_encoding() {
+    let r = http::build_head(b"example.com", b"/f.txt");
+    assert!(r.starts_with(b"HEAD /f.txt HTTP/1.1"));
+    assert!(scan::find(&r, b"Connection: keep-alive").is_some());
+    assert!(scan::find(&r, b"Accept-Encoding").is_none());
+    assert!(r.ends_with(b"\r\n\r\n"));
+}
+
+#[test]
+fn args_parse_skip_unchanged_flag() {
+    let argv: [&[u8]; 2] = [b"-u", b"example.com/f.txt"];
+    let a = args::parse(&argv).expect("parse");
+    assert!(a.skip_unchanged);
+    assert!(!a.no_clobber);
+}
+
+#[test]
+fn args_parse_both_flags_any_order() {
+    let argv: [&[u8]; 3] = [b"-u", b"-n", b"example.com/f.txt"];
+    let a = args::parse(&argv).expect("parse");
+    assert!(a.skip_unchanged);
+    assert!(a.no_clobber);
+}

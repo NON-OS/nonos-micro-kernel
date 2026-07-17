@@ -22,24 +22,28 @@ pub struct PullArgs {
     pub target: Target,
     pub dest: Vec<u8>,
     pub no_clobber: bool,
+    pub skip_unchanged: bool,
 }
 
 pub fn parse(argv: &[&[u8]]) -> Result<PullArgs, &'static str> {
     let mut no_clobber = false;
+    let mut skip_unchanged = false;
     let mut rest = argv;
-    if let Some((&first, tail)) = rest.split_first() {
-        if first == b"-n" {
-            no_clobber = true;
-            rest = tail;
+    while let Some((&first, tail)) = rest.split_first() {
+        match first {
+            b"-n" => no_clobber = true,
+            b"-u" => skip_unchanged = true,
+            _ => break,
         }
+        rest = tail;
     }
     if rest.is_empty() || rest.len() > 2 {
-        return Err("usage: nox pull [-n] <host[:port]>/<path> [dest]");
+        return Err("usage: nox pull [-n] [-u] <host[:port]>/<path> [dest]");
     }
     let target = parse_target(rest[0])?;
     let dest = match rest.get(1) {
         Some(d) => d.to_vec(),
         None => default_dest(&target),
     };
-    Ok(PullArgs { target, dest, no_clobber })
+    Ok(PullArgs { target, dest, no_clobber, skip_unchanged })
 }

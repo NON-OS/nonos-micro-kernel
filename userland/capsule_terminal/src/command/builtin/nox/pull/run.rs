@@ -68,6 +68,14 @@ pub(super) fn one_file(
         tally.skipped += 1;
         return true;
     }
+    if a.skip_unchanged {
+        if let Some(local) = store::size(pid, dest) {
+            if fetch::head_reuse(conn, ip, a.target.port, &a.target.host, path) == Some(local as usize) {
+                tally.skipped += 1;
+                return true;
+            }
+        }
+    }
     if !store::has_free_slot(pid) {
         state.scrollback.push_error(b"pull: vfs store full");
         tally.failed += 1;

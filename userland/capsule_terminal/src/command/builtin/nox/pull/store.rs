@@ -28,6 +28,13 @@ pub fn exists(pid: u32, path: &[u8]) -> bool {
     vfs::stat(pid, path).is_ok()
 }
 
+pub fn size(pid: u32, path: &[u8]) -> Option<u64> {
+    match vfs::stat(pid, path) {
+        Ok((sz, false)) => Some(sz),
+        _ => None,
+    }
+}
+
 pub fn has_free_slot(pid: u32) -> bool {
     match vfs::usage(pid) {
         Ok((files, _bytes, max)) => files < max,
