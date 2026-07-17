@@ -65,6 +65,7 @@ impl App for Browser {
                 self.state.status = alloc::string::String::from(msg);
                 self.state.document = Some(crate::browser::fetch::render_error(msg));
                 self.state.box_doc = None;
+                self.state.engine = None;
                 self.state.page_dom = None;
                 self.state.world = None;
                 self.state.view = crate::browser::state::View::Page;

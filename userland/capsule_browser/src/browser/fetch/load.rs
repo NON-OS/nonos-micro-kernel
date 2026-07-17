@@ -50,6 +50,7 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
     state.status = alloc::format!("loading {}", url.host);
     state.document = None;
     state.box_doc = None;
+    state.engine = None;
     state.page_dom = None;
     state.world = None;
     state.css_queue.clear();

@@ -88,23 +88,25 @@ pub fn about_page(state: &mut State, target: &str) -> bool {
     state.focus = None;
     state.status = alloc::format!("{} fl={}", target, count);
     match rendered {
-        render_response::Rendered::Boxes(b, dom, world) => {
-            state.box_doc = Some(b);
+        render_response::Rendered::Html(dom) => {
+            state.engine = None;
             state.page_dom = Some(dom);
-            state.world = Some(world);
             state.document = None;
+            super::commit_html::commit_html(state);
         }
         render_response::Rendered::Lines(d) => {
             state.document = Some(d);
             state.box_doc = None;
             state.page_dom = None;
             state.world = None;
+            state.engine = None;
         }
         render_response::Rendered::Nothing => {
             state.document = None;
             state.box_doc = None;
             state.page_dom = None;
             state.world = None;
+            state.engine = None;
         }
     }
     state.address = String::from(target);

@@ -38,3 +38,21 @@ pub struct World {
     pub net: Vec<(String, Value)>,
     pub net_active: Option<Value>,
 }
+
+impl World {
+    // An empty script world: a root scope and no listeners, timers or pending
+    // requests. Page scripts run through QuickJS now, so this is the inert
+    // companion the timer and script-fetch pumps read while the engine holds
+    // the live page state.
+    pub fn empty() -> World {
+        let env = Env::root();
+        super::interp::install(&env);
+        World {
+            env,
+            listeners: Vec::new(),
+            timers: Vec::new(),
+            net: Vec::new(),
+            net_active: None,
+        }
+    }
+}

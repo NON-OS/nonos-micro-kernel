@@ -18,7 +18,6 @@ use alloc::string::{String, ToString};
 
 use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_BACKSPACE, KEY_ENTER, MOD_SHIFT};
 
-use crate::browser::js;
 use crate::browser::keymap::printable;
 use crate::browser::state::State;
 
@@ -56,8 +55,8 @@ pub(super) fn field_key(state: &mut State, id: usize, event: InputEvent) -> Even
     if let Some(dom) = state.page_dom.as_mut() {
         dom.set_attr(id, "value", value);
     }
-    if let (Some(dom), Some(world)) = (state.page_dom.as_mut(), state.world.as_mut()) {
-        let _ = js::dispatch_event(dom, world, id, "input");
+    if let Some(engine) = state.engine.as_ref() {
+        let _ = engine.dispatch_event(id as i32, "input");
     }
     relayout(state);
     EventOutcome::Repaint
