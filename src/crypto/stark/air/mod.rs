@@ -23,6 +23,9 @@
 //! verifier is proven against forgeries, not assumed sound.
 
 mod accumulator;
+mod attest;
+mod attest_trailer;
+mod deserialize;
 mod compose_check;
 mod compose_witness;
 mod composition;
@@ -50,6 +53,7 @@ mod prove_poseidon_ext;
 mod query_openings;
 mod range_check;
 mod spec;
+mod serialize;
 mod squaring;
 mod trace_fold;
 mod trace_fold_ext;
@@ -65,6 +69,10 @@ mod wired_ext;
 mod wired_multi_ext;
 
 pub use accumulator::Accumulator;
+pub use attest::verify_membership_attestation;
+pub use attest_trailer::verify_attestation_trailer;
+pub use serialize::serialize_proof;
+pub use deserialize::deserialize_proof;
 pub use compose_check::{ComposeBoundary, ComposeCheck};
 pub use compose_witness::{compose_inputs, compose_inputs_pub, ComposeInputs};
 pub use composition::{compose, compose_ext};
@@ -84,7 +92,7 @@ pub use permutation::Permutation;
 pub use permutation2::Permutation2;
 pub use poseidon::{Poseidon, NOTE_DOMAIN, NOTE_LIMBS, RATE, WIDTH};
 pub use power_chain::PowerChain;
-pub use prove::stark_prove;
+pub use prove::{stark_prove, stark_prove_bound};
 pub use prove_ext::{stark_prove_ext, stark_prove_ext_blown};
 pub use prove_poseidon_ext::{stark_prove_poseidon_ext, stark_prove_poseidon_ext_pub};
 pub use query_openings::query_openings_query0;
@@ -97,7 +105,7 @@ pub use transcript_check::{TranscriptCheck, TranscriptOp};
 pub use types::{StarkProof, StarkQuery};
 pub use types_ext::{StarkProofExt, StarkQueryExt};
 pub use types_poseidon_ext::{StarkProofExtP, StarkQueryExtP};
-pub use verify::stark_verify;
+pub use verify::{stark_verify, stark_verify_bound};
 pub use verify_ext::{stark_verify_ext, stark_verify_ext_blown};
 pub use verify_poseidon_ext::stark_verify_poseidon_ext;
 pub use wired::Wired;

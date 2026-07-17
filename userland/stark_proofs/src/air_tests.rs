@@ -426,6 +426,70 @@ fn a_merkle_membership_proof_verifies() {
     assert!(prove_membership(&hasher, &merkle_leaves(8), 5, log_rounds), "membership rejected");
 }
 
+// The capsule attestation gate, end to end. Enroll a set of capsule measurements
+// into a policy root, prove membership bound to the capsule identity, serialize the
+// proof, and gate on the kernel's verify_membership_attestation. A proof passes only
+// under the identity it was drawn for and only against the enrolled root, so a
+// forged identity or a foreign root is refused. This is the attestation a spawn
+// gates on: the leaf (the capsule secret) stays private, the path is public.
+#[test]
+fn the_capsule_attestation_gate_accepts_enrolled_and_rejects_forged() {
+    use crate::crypto::stark::air::{
+        serialize_proof, stark_prove_bound, verify_membership_attestation,
+    };
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+
+    // The enrolled capsule measurements, committed to the kernel's policy root.
+    let leaves = merkle_leaves(8);
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let root = tree.root();
+
+    // This capsule sits at slot 5; its identity binds the attestation.
+    let index = 5usize;
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let context = b"capsule:terminal:v1";
+
+    // Enrollment proves knowledge of the enrolled leaf, bound to the identity.
+    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
+    let air =
+        MerkleMembership::new(hasher.clone(), log_rounds, root, path.clone(), directions.clone());
+    let proof = stark_prove_bound(&air, &trace, QUERIES, context);
+    let bytes = serialize_proof(&proof);
+
+    // The kernel gate accepts the enrolled capsule under its own identity.
+    assert!(
+        verify_membership_attestation(
+            &hasher, log_rounds, root, &path, &directions, QUERIES, &bytes, context
+        ),
+        "an enrolled capsule attestation was rejected"
+    );
+    // The same proof presented under a different identity is refused.
+    assert!(
+        !verify_membership_attestation(
+            &hasher,
+            log_rounds,
+            root,
+            &path,
+            &directions,
+            QUERIES,
+            &bytes,
+            b"capsule:impostor"
+        ),
+        "an attestation passed under the wrong capsule identity"
+    );
+    // A foreign policy root is refused.
+    let mut bad_root = root;
+    bad_root[0] = bad_root[0] + Fp::from_u64(1);
+    assert!(
+        !verify_membership_attestation(
+            &hasher, log_rounds, bad_root, &path, &directions, QUERIES, &bytes, context
+        ),
+        "an attestation passed against a forged policy root"
+    );
+}
+
 #[test]
 fn membership_proofs_verify_at_fri_layer_depths() {
     // FRI layers are sized 2^k, so paths are depth k, any value. The AIR pads its
