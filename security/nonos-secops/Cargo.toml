@@ -1,0 +1,30 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# nonos-secops: the defensive and offensive security tools for the NONOS
+# attestation. Both operate on real attested images with the same verifier the
+# bootloader links, so a green attack run is real evidence the gate holds.
+
+[package]
+name = "nonos-secops"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0"
+description = "Defense and offense tools for the NONOS transparent STARK attestation"
+
+[lib]
+name = "nonos_secops"
+path = "src/lib.rs"
+
+[[bin]]
+name = "nonos-defend"
+path = "src/bin/defend.rs"
+
+[[bin]]
+name = "nonos-attack"
+path = "src/bin/attack.rs"
+
+[dependencies]
+nonos-stark = { path = "../../nonos-stark", version = "0.1.0" }
+embed-zk-proof = { path = "../../nonos-bootloader/tools/embed-zk-proof", version = "0.1.0" }
+blake3 = "1"
