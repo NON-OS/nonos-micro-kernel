@@ -522,6 +522,55 @@ fn the_capsule_attestation_holds_at_money_grade_soundness() {
     );
 }
 
+// The whole gate on real inputs: measure actual capsule images to Poseidon leaves,
+// enroll them into the policy root, and let a capsule attest its own measurement at
+// money-grade soundness bound to its identity. A capsule whose image was never
+// enrolled cannot attest, because its measurement reaches no path to the root. This
+// is what makes the leaves mean something: enrollment is measurement, not an
+// arbitrary secret.
+#[test]
+fn a_measured_capsule_enrolls_and_attests_at_money_grade() {
+    use crate::crypto::stark::air::{
+        measure_capsule, stark_prove_ext_blown_bound, stark_verify_ext_blown_bound,
+    };
+    let log_rounds = 3u32;
+    let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
+
+    let images: [&[u8]; 4] = [
+        b"capsule:terminal image bytes",
+        b"capsule:net_core image bytes",
+        b"capsule:editor image bytes",
+        b"capsule:browser image bytes",
+    ];
+    let leaves: Vec<[Fp; RATE]> = images.iter().map(|img| measure_capsule(&hasher, img)).collect();
+    let tree = PoseidonMerkleTree::commit(&hasher, &leaves);
+    let root = tree.root();
+
+    let index = 0usize;
+    let path = tree.open(index);
+    let directions: Vec<bool> = (0..path.len()).map(|k| (index >> k) & 1 == 1).collect();
+    let context = b"capsule:terminal:v1";
+
+    // The enrolled capsule attests its own measurement.
+    let trace = membership_trace(&hasher, leaves[index], &path, &directions, log_rounds);
+    let air =
+        MerkleMembership::new(hasher.clone(), log_rounds, root, path.clone(), directions.clone());
+    let proof = stark_prove_ext_blown_bound(&air, &trace, 32, 16, 3, context);
+    assert!(
+        stark_verify_ext_blown_bound(&air, &proof, 32, 16, 3, context),
+        "the enrolled measured capsule was rejected"
+    );
+
+    // A capsule whose image was never enrolled cannot attest.
+    let rogue = measure_capsule(&hasher, b"capsule:rogue never enrolled");
+    let rogue_trace = membership_trace(&hasher, rogue, &path, &directions, log_rounds);
+    let rogue_proof = stark_prove_ext_blown_bound(&air, &rogue_trace, 32, 16, 3, context);
+    assert!(
+        !stark_verify_ext_blown_bound(&air, &rogue_proof, 32, 16, 3, context),
+        "a rogue capsule measurement attested against the policy root"
+    );
+}
+
 #[test]
 fn membership_proofs_verify_at_fri_layer_depths() {
     // FRI layers are sized 2^k, so paths are depth k, any value. The AIR pads its
