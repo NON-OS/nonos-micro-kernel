@@ -1670,7 +1670,7 @@ fn an_uncommitted_layer_input_is_rejected() {
 #[test]
 fn compose_ext_faithfully_extends_compose() {
     use crate::crypto::stark::air::{compose, compose_ext, Air, Fibonacci};
-    use crate::crypto::stark::field::{Felt, Fp2};
+    use crate::crypto::stark::field::Fp2;
     use crate::crypto::stark::fri::root_of_unity;
 
     let air = Fibonacci { log_t: 4 };

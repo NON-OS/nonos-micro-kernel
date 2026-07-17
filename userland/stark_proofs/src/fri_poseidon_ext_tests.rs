@@ -408,8 +408,7 @@ fn the_deep_x_product_chain_matches_native() {
 #[test]
 fn the_index_point_region_derives_the_real_deep_x() {
     use crate::crypto::stark::air::{
-        deep_terms_query0, query_openings_query0, stark_prove_ext, stark_verify_ext, Air,
-        IndexPoint,
+        deep_terms_query0, query_openings_query0, stark_prove_ext, stark_verify_ext, IndexPoint,
     };
     use crate::crypto::stark::fri::root_of_unity;
     let h = hasher();
@@ -2374,8 +2373,8 @@ fn the_gapclosed_assembly_accepts() {
     let rate = 4usize;
     let ntr = proof.trace_roots.len();
     let ncoeff2 = ci.coeffs.len() * 2;
-    for o in 0..ocells.len() {
-        let cp_row = m_off + ocells[o].0 + depth * l;
+    for (o, cell) in ocells.iter().enumerate() {
+        let cp_row = m_off + cell.0 + depth * l;
         let mut sw: Vec<(usize, usize, usize, usize)> = Vec::new();
         for j in 0..rate {
             let arow = if o <= 1 {

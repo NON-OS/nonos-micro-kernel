@@ -31,9 +31,9 @@ fn fp(x: u64) -> Fp {
 /// here from the documented formula and checked against the live compression.
 fn mds() -> [[Fp; WIDTH]; WIDTH] {
     let mut m = [[Fp::ZERO; WIDTH]; WIDTH];
-    for i in 0..WIDTH {
-        for j in 0..WIDTH {
-            m[i][j] = (fp(i as u64) - fp((WIDTH + j) as u64)).inv();
+    for (i, row) in m.iter_mut().enumerate() {
+        for (j, cell) in row.iter_mut().enumerate() {
+            *cell = (fp(i as u64) - fp((WIDTH + j) as u64)).inv();
         }
     }
     m
@@ -73,8 +73,11 @@ fn gen_poseidon_constants() {
         alloc::format!("\"left\":{},\"right\":{},", row_json(&l), row_json(&r)),
     );
     let hash_in = [fp(9), fp(10), fp(11), fp(12)];
-    let hash_kat =
-        kat("hash", h.hash(&hash_in), alloc::format!("\"input\":{},", row_json(&hash_in)));
+    let hash_kat = kat(
+        "hash",
+        h.hash(&hash_in),
+        alloc::format!("\"input\":{},", row_json(&hash_in)),
+    );
 
     // Note-commitment KAT over the 11 limbs 1..=11, so the Solidity compress-tree
     // reproduces the kernel digest bit-for-bit.
@@ -82,8 +85,11 @@ fn gen_poseidon_constants() {
     for (i, c) in note.iter_mut().enumerate() {
         *c = fp((i + 1) as u64);
     }
-    let commit_kat =
-        kat("commit_note", h.commit_note(&note), alloc::format!("\"limbs\":{},", row_json(&note)));
+    let commit_kat = kat(
+        "commit_note",
+        h.commit_note(&note),
+        alloc::format!("\"limbs\":{},", row_json(&note)),
+    );
 
     let json = alloc::format!(
         "{{\n\
