@@ -46,9 +46,9 @@ fn to_rate(bytes: &[u8]) -> [Fp; RATE] {
     out
 }
 
-/// Verify a capsule's STARK attestation against the kernel policy root, bound to the
-/// capsule measurement and its granted capabilities. True only for a money-grade
-/// proof of membership under exactly this root and context.
+/// Verify a capsule's transparent-STARK attestation against the kernel policy
+/// root, bound to its measurement, its granted capabilities and the epoch. True
+/// only for a money-grade membership proof under exactly this root and context.
 #[must_use = "a capsule must not be spawned unless its attestation verifies"]
 pub fn verify_capsule_attestation_stark(
     trailer: &[u8],
@@ -71,20 +71,17 @@ pub fn verify_capsule_attestation_stark(
     let dirs = &trailer[sib_end..sib_end + dir_bytes];
     let directions: Vec<bool> =
         (0..POLICY_TREE_DEPTH).map(|i| (dirs[i / 8] >> (i % 8)) & 1 == 1).collect();
-    crate::sys::serial::print(b"[STARK-DBG] parse\n");
     let proof = deserialize_proof_ext(&trailer[sib_end + dir_bytes..]).ok_or(AttestError::Malformed)?;
 
     let root = to_rate(&policy_root::root().ok_or(AttestError::RootUnavailable)?);
 
     // Bind the proof to the capsule: its measurement, its capabilities, the epoch.
-    crate::sys::serial::print(b"[STARK-DBG] hash\n");
     let capsule_hash = *blake3::hash(elf).as_bytes();
     let mut ctx = [0u8; 48];
     ctx[..32].copy_from_slice(&capsule_hash);
     ctx[32..40].copy_from_slice(&granted_caps.to_be_bytes());
     ctx[40..48].copy_from_slice(&POLICY_EPOCH.to_be_bytes());
 
-    crate::sys::serial::print(b"[STARK-DBG] verify\n");
     let air = MerkleMembership::new(Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]), LOG_ROUNDS, root, siblings, directions);
     if stark_verify_ext_blown_bound(&air, &proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP, &ctx) {
         Ok(())
