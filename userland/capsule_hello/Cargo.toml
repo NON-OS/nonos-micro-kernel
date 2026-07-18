@@ -1,6 +1,6 @@
 # NONOS userland: capsule_hello
 #
-# Minimal real GUI capsule and the reference for QUICKSTART.md: opens
+# Minimal real GUI capsule and the reference for the docs quickstart guide: opens
 # a window through the wm, paints a greeting, closes on Esc. Start
 # here when building your first capsule.
 
