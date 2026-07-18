@@ -1,7 +1,7 @@
 # CI evidence and release plumbing: benchmarks, security audits, hardware
 # dossiers, the clean targets, cargo fmt, and the help text.
 
-.PHONY: ci-fast ci-release ci-security ci-soak help nonos-mk-bench nonos-mk-bench-boot-log nonos-mk-bench-collect nonos-mk-bench-compare nonos-mk-bench-host nonos-mk-boot-evidence nonos-mk-claims-check nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean nonos-mk-fmt nonos-mk-hardware-dossier nonos-mk-no-telemetry-capture nonos-mk-qemu-net-audit nonos-mk-release nonos-mk-release-audit nonos-mk-validate-machine-metadata
+.PHONY: ci-fast ci-release ci-security ci-soak help nonos-mk-bench nonos-mk-bench-boot-log nonos-mk-bench-collect nonos-mk-bench-compare nonos-mk-bench-host nonos-mk-boot-evidence nonos-mk-claims-check nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean nonos-mk-fmt nonos-mk-hardware-dossier nonos-mk-no-telemetry-capture nonos-mk-qemu-net-audit nonos-mk-release-audit nonos-mk-validate-machine-metadata
 
 # CI-friendly security evidence checks.
 nonos-mk-release-audit:
@@ -19,8 +19,9 @@ ci-fast:
 
 ci-security: ci-fast nonos-mk-release-audit nonos-mk-qemu-net-audit
 
-ci-release: ci-security
-	@echo "ci-release: heavy reproducibility check is explicit; run scripts/repro_build_check.sh for release candidates"
+# Release-candidate lane: the security checks plus the reproducible-build
+# proof, two bootloader builds compared byte for byte.
+ci-release: ci-security nonos-mk-verify-reproducible-boot
 
 nonos-mk-no-telemetry-capture:
 	@bash scripts/no_telemetry_qemu_capture.sh
@@ -69,21 +70,10 @@ nonos-mk-bench-compare:
 	@$(NONOS_PYTHON) nonos-ci/bench_compare.py "$(NONOS_BENCH_BASELINE)" \
 		"$(NONOS_BENCH_CANDIDATE)" "$(NONOS_BENCH_REGRESSION_LIMIT)"
 
-ci-soak:
-	@echo "ci-soak: run nonos-mk-boot-evidence, nonos-mk-no-telemetry-capture, scripts/zero_state_forensic_qemu.sh, and hardware dossier collection"
-
-# Release pipeline (paused)
-
-nonos-mk-release:
-	@echo
-	@echo "release pipeline paused"
-	@echo
-	@echo "  The legacy release targets produced the old monolithic-kernel"
-	@echo "  artefacts and have been withdrawn. The production image is"
-	@echo "  'make' (ESP + ISO) and 'make nonos-mk-usb-img'; a release"
-	@echo "  pipeline over those is staged for a later CI step."
-	@echo
-	@exit 1
+# Soak lane: the QEMU evidence runs. The ZeroState forensic capture and the
+# real-hardware dossier stay separate; the first wipes QEMU state and the
+# second needs a serial log carried off a physical machine.
+ci-soak: nonos-mk-boot-evidence nonos-mk-no-telemetry-capture
 
 # Clean
 
