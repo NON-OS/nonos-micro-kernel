@@ -10,8 +10,9 @@ nonos-mk-iso: nonos-mk-esp
 	@echo "Building bootable UEFI ISO $(NONOS_ISO)..."
 	@rm -rf $(TARGET_DIR)/isoroot $(TARGET_DIR)/efiboot.img
 	@mkdir -p $(TARGET_DIR)/isoroot
-	@dd if=/dev/zero of=$(TARGET_DIR)/efiboot.img bs=1048576 count=64 status=none 2>/dev/null \
-		|| dd if=/dev/zero of=$(TARGET_DIR)/efiboot.img bs=1048576 count=64 2>/dev/null
+	@sz=$$(( $$(du -sm $(ESP_DIR)/EFI | cut -f1) + 16 )); \
+		dd if=/dev/zero of=$(TARGET_DIR)/efiboot.img bs=1048576 count=$$sz status=none 2>/dev/null \
+		|| dd if=/dev/zero of=$(TARGET_DIR)/efiboot.img bs=1048576 count=$$sz 2>/dev/null
 	@mformat -i $(TARGET_DIR)/efiboot.img -F ::
 	@mcopy -i $(TARGET_DIR)/efiboot.img -s $(ESP_DIR)/EFI ::/EFI
 	@cp -r $(ESP_DIR)/EFI $(TARGET_DIR)/isoroot/
