@@ -172,7 +172,7 @@ NONOS_RT_SRCS := $(shell find toolchain/nonos-rt/src -name '*.rs' 2>/dev/null) \
                  toolchain/nonos-rt/Cargo.lock \
                  $(USERLAND_DIR)/x86_64-nonos-user.json
 
-# Trust-anchor inputs — global to all signed capsules. The two
+# Trust-anchor inputs, global to all signed capsules. The two
 # pubkeys (Ed25519 + ML-DSA-65) are sealed into a policy blob and
 # baked into the kernel via `BAKED_TRUST_ANCHOR_POLICY`. Capsule
 # certs and manifests are signed under this policy.
@@ -219,7 +219,7 @@ $(NONOS_RT_OBJ): $(NONOS_RT_SRCS) | $(TARGET_DIR)/.nonos-toolchain.stamp
 # unmodified `use std::...` crates into NONOS binaries. Stamped and keyed on
 # the PAL sources + apply.sh, so a clean checkout (or a rustup update that
 # reset rust-src) re-applies it before any std capsule builds. Without this
-# the patch was a manual prerequisite — hidden state that broke fresh trees.
+# the patch was a manual prerequisite, hidden state that broke fresh trees.
 NONOS_STD_PAL_SRCS  := $(shell find toolchain/nonos-std -type f 2>/dev/null)
 NONOS_STD_PAL_STAMP := $(TARGET_DIR)/.nonos-std-pal.stamp
 $(NONOS_STD_PAL_STAMP): $(NONOS_STD_PAL_SRCS) | $(TARGET_DIR)/.nonos-toolchain.stamp
@@ -286,7 +286,7 @@ nonos-mk-check-trust-keys:
 	@for f in $(NONOS_TA_ED25519_SEED) $(NONOS_TA_ED25519_PUB) \
 	          $(NONOS_TA_MLDSA65_SEED) $(NONOS_TA_MLDSA65_PUB); do \
 	    [ -f "$$f" ] || { \
-	        echo "::error::missing $$f — generate via: $(CAPSULE_SIGN_BIN) keygen --alg <ed25519|mldsa65> --out <prefix>"; \
+	        echo "::error::missing $$f; generate via: $(CAPSULE_SIGN_BIN) keygen --alg <ed25519|mldsa65> --out <prefix>"; \
 	        exit 1; \
 	    }; \
 	done
@@ -532,7 +532,7 @@ nonos-mk-userland-clean:
 		$(USERLAND_DIR)/marketplace_abi/target \
 		$(USERLAND_DIR)/capsule_market/target
 
-# Kernel — every target spells the profile out explicitly.
+# Kernel. Every target spells the profile out explicitly.
 
 KERNEL_BUILD_FLAGS := --release --target x86_64-nonos.json \
 		-Zbuild-std=core,alloc -Zbuild-std-features=compiler-builtins-mem
@@ -572,10 +572,9 @@ nonos-mk-core: nonos-mk-check-deps nonos-mk-ensure-signing-key
 
 # Core kernel with the transparent STARK attestation backend selected. The
 # spawn gate verifies a money-grade membership proof instead of the pairing
-# check, and the kernel self-attestation module is compiled in. Enabling this
-# for a capsule-bearing build additionally requires every capsule to ship a
-# STARK membership trailer enrolled under the policy root; until the signing
-# pipeline emits those, keep it on the core lane.
+# check, and the kernel self-attestation module is compiled in. The ship
+# profiles carry the same feature with the full capsule set enrolled; this
+# lane compiles the gate without any capsules, for gate work and CI checks.
 nonos-mk-core-attested: nonos-mk-check-deps nonos-mk-ensure-signing-key
 	$(call nonos_kernel_build,microkernel-core + nonos-stark-attest,microkernel-core$(_boot_comma)nonos-stark-attest)
 
@@ -720,7 +719,6 @@ nonos-mk-zerostate: nonos-mk-all-capsules-attested \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	$(call nonos_kernel_build,zerostate: microkernel-full-gui + nonos-stark-attest,microkernel-full-gui$(_boot_comma)nonos-stark-attest)
 
-# Back-compat alias for the former name. Prefer nonos-mk-zerostate.
 nonos-mk-input-probe-inject-prod: $(proof-io_ARTIFACTS) \
 		$(driver-ps2-input_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
 		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
@@ -860,5 +858,3 @@ nonos-mk-usb-img: nonos-mk-esp
 	@echo "  Validate as a real disk:  make nonos-mk-usb-run"
 	@echo "  Flash (macOS): sudo dd if=$(USB_IMG) of=/dev/rdiskN bs=4m && sync"
 	@echo "  Flash (Linux): sudo dd if=$(USB_IMG) of=/dev/sdX  bs=4M oflag=direct && sync"
-
-# A real bootable UEFI ISO 9660 image. It carries the same ESP as an El Torito

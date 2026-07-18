@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
-# NONOS microkernel: top-level build.
+# NONOS microkernel build.
 #
 # A capability-based, RAM-resident microkernel. The kernel and every capsule
 # ship a transparent post-quantum STARK attestation, are dual-signed with
@@ -40,10 +40,12 @@ nonos: nonos-mk-zerostate nonos-mk-esp nonos-mk-iso
 	@echo "  ISO:          $(TARGET_DIR)/nonos.iso"
 	@echo "  boot it:      make qemu"
 
-# The emulator cut. The desktop image booted under QEMU + OVMF + TPM: the same
-# signing, attestation, and rollback path as the ship image, without the drivers
-# that only bind on real hardware. This is the profile CI exercises.
+# The ship image booted under QEMU + OVMF + a software TPM. Same kernel, same
+# signing, attestation, and rollback path as the ISO; the real-hardware drivers
+# ride along and simply find no device under emulation.
 qemu: nonos-mk-run
 
-# The same emulator cut, headless, serial console to a log. For CI and remote runs.
+# The desktop cut, headless, serial console to a log. This drops the
+# real-hardware-only drivers so the boot reaches the ready marker under
+# emulation; it is the profile CI's boot harness drives.
 qemu-serial: nonos-mk-run-serial-log

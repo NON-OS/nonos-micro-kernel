@@ -78,19 +78,16 @@ nonos-mk-release:
 	@echo
 	@echo "release pipeline paused"
 	@echo
-	@echo "  The legacy 'release' / 'ci-release' / 'iso' / 'usb' / 'web-iso'"
-	@echo "  targets produced the old monolithic-kernel artefacts and have"
-	@echo "  been withdrawn from the active Makefile. A microkernel-shaped"
-	@echo "  replacement is staged for a later CI step."
-	@echo
-	@echo "  Legacy recipes:  docs/legacy/Makefile.monolithic"
-	@echo "  Status note:     docs/production-roadmap/master-execution-checklist.md"
+	@echo "  The legacy release targets produced the old monolithic-kernel"
+	@echo "  artefacts and have been withdrawn. The production image is"
+	@echo "  'make' (ESP + ISO) and 'make nonos-mk-usb-img'; a release"
+	@echo "  pipeline over those is staged for a later CI step."
 	@echo
 	@exit 1
 
 # Clean
 
-# Default `nonos-mk-clean` is kernel-only — userland artefacts survive
+# Default `nonos-mk-clean` is kernel-only: userland artefacts survive
 # so the next kernel build re-uses the existing capsule binaries.
 nonos-mk-clean:
 	@echo "Removing kernel build target (userland targets preserved)..."
@@ -113,7 +110,7 @@ nonos-mk-fmt:
 	@RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) fmt
 	@cd $(BOOTLOADER_DIR) && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) fmt
 
-# Help (default target)
+# Help. Not the default target: bare `make` builds the production image.
 
 help:
 	@echo "NONOS microkernel build"
@@ -121,7 +118,7 @@ help:
 	@echo "Three ways to build:"
 	@echo "  make                 the production image: full OS, all drivers, TPM,"
 	@echo "                       STARK attestation, dual-signed, anti-rollback"
-	@echo "  make qemu            build and boot the emulator cut under QEMU + OVMF"
+	@echo "  make qemu            build and boot it under QEMU + OVMF + TPM"
 	@echo "  make menuconfig      pick your own components, then: make from-config"
 	@echo
 	@echo "Also:"
