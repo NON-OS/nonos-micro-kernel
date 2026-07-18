@@ -34,9 +34,18 @@ pub(in crate::elf::loader::core) fn load_segment(
     let plan = plan::build(elf_data, header, base_addr)?;
     let perms = pte_perms_from_phdr(header);
     let file_bytes = &elf_data[plan.file_offset..plan.file_end];
+    crate::sys::serial::print(b"[LOAD-DBG] seg pages=");
+    crate::sys::serial::print_dec(plan.pages as u64);
+    crate::sys::serial::print(b"\n");
     for page_index in 0..plan.pages {
+        if page_index % 512 == 0 {
+            crate::sys::serial::print(b"[LOAD-DBG] p");
+            crate::sys::serial::print_dec(page_index as u64);
+            crate::sys::serial::print(b"\n");
+        }
         let copy = source::page(file_bytes, &plan, page_index)?;
         populate_page(target_asid, copy.page_va, perms, copy.dst_off, copy.src)?;
     }
+    crate::sys::serial::print(b"[LOAD-DBG] seg ok\n");
     Ok(result::loaded_segment(&plan, header))
 }
