@@ -22,9 +22,17 @@ use alloc::collections::VecDeque;
 use alloc::vec::Vec;
 use spin::Mutex;
 
+use crate::interrupts::disable_interrupts_guard;
+
+// The timer interrupt reaches this queue through the sleep-wake sweep
+// (check_sleeping_processes -> wake_process -> add_to_run_queue). If a spawn or
+// scheduler path held the lock with interrupts on and a tick landed, the handler
+// would spin on a lock the interrupted code can never release. So every path
+// that touches the queue holds interrupts off for the critical section.
 static PID_RUN_QUEUE: Mutex<VecDeque<u32>> = Mutex::new(VecDeque::new());
 
 pub fn add_to_run_queue(pid: u32) {
+    let _irq = disable_interrupts_guard();
     let mut q = PID_RUN_QUEUE.lock();
     if !q.iter().any(|p| *p == pid) {
         q.push_back(pid);
@@ -32,6 +40,7 @@ pub fn add_to_run_queue(pid: u32) {
 }
 
 pub fn add_to_run_queue_front(pid: u32) {
+    let _irq = disable_interrupts_guard();
     let mut q = PID_RUN_QUEUE.lock();
     if !q.iter().any(|p| *p == pid) {
         q.push_front(pid);
@@ -39,6 +48,7 @@ pub fn add_to_run_queue_front(pid: u32) {
 }
 
 pub fn remove_from_run_queue(pid: u32) {
+    let _irq = disable_interrupts_guard();
     let mut q = PID_RUN_QUEUE.lock();
     if let Some(pos) = q.iter().position(|p| *p == pid) {
         q.remove(pos);
@@ -46,14 +56,17 @@ pub fn remove_from_run_queue(pid: u32) {
 }
 
 pub fn is_in_run_queue(pid: u32) -> bool {
+    let _irq = disable_interrupts_guard();
     PID_RUN_QUEUE.lock().iter().any(|p| *p == pid)
 }
 
 pub fn runnable_process_count() -> usize {
+    let _irq = disable_interrupts_guard();
     PID_RUN_QUEUE.lock().len()
 }
 
 pub fn get_runnable_pids() -> Vec<u32> {
+    let _irq = disable_interrupts_guard();
     PID_RUN_QUEUE.lock().iter().copied().collect()
 }
 
