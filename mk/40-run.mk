@@ -1,4 +1,6 @@
-# Phony targets defined in this module.
+# Booting the image under QEMU (GUI, headless, serial, GDB, TPM), plus the
+# static and verification gates that run over the built kernel.
+
 .PHONY: nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-run nonos-mk-run-input-probe-inject-serial-log nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-log nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-scan nonos-mk-static nonos-mk-swtpm-start nonos-mk-swtpm-stop nonos-mk-verify nonos-mk-verify-fast
 
 # QEMU
@@ -252,4 +254,3 @@ nonos-mk-verify: nonos-mk-static
 
 # Full test: verify + required QEMU boot harnesses.
 nonos-mk-test: nonos-mk-verify nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-mk-boot-desktop-gui
-
