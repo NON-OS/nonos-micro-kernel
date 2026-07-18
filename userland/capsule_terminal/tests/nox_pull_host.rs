@@ -50,6 +50,9 @@ pub mod recurse;
 #[path = "../src/command/builtin/nox/pull/verify.rs"]
 pub mod verify;
 
+#[path = "../src/command/builtin/nox/pull/redirect.rs"]
+pub mod redirect;
+
 pub mod term {
     pub mod util {
         pub fn format_u64(mut n: u64, out: &mut [u8]) -> usize {
@@ -366,6 +369,46 @@ fn verify_rejects_short_digest() {
 fn verify_rejects_non_hex_char() {
     let bad = b"g3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
     assert!(verify::parse_sha256_hex(bad).is_none());
+}
+
+#[test]
+fn redirect_absolute_path_replaces_whole_path() {
+    assert_eq!(redirect::resolve(b"h", b"/a/b", b" /new").unwrap(), b"/new".to_vec());
+}
+
+#[test]
+fn redirect_relative_resolves_against_cur_dir() {
+    assert_eq!(
+        redirect::resolve(b"h", b"/dir/file.txt", b"next.txt").unwrap(),
+        b"/dir/next.txt".to_vec()
+    );
+}
+
+#[test]
+fn redirect_absolute_url_same_host_extracts_path() {
+    assert_eq!(redirect::resolve(b"host", b"/a", b"http://host/x").unwrap(), b"/x".to_vec());
+    assert_eq!(redirect::resolve(b"host", b"/a", b"http://host:8080/x").unwrap(), b"/x".to_vec());
+    assert_eq!(redirect::resolve(b"host", b"/a", b"HTTP://host/x").unwrap(), b"/x".to_vec());
+}
+
+#[test]
+fn redirect_absolute_url_no_path_is_root() {
+    assert_eq!(redirect::resolve(b"host", b"/a", b"http://host").unwrap(), b"/".to_vec());
+}
+
+#[test]
+fn redirect_refuses_cross_host() {
+    assert!(redirect::resolve(b"host", b"/a", b"http://other/x").is_err());
+}
+
+#[test]
+fn redirect_refuses_https_downgrade_guard() {
+    assert!(redirect::resolve(b"host", b"/a", b"https://host/x").is_err());
+}
+
+#[test]
+fn redirect_rejects_empty_location() {
+    assert!(redirect::resolve(b"host", b"/a", b"   ").is_err());
 }
 
 #[test]

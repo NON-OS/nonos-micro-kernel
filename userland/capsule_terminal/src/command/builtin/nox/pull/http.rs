@@ -24,6 +24,7 @@ pub struct Parsed {
     pub content_length: Option<usize>,
     pub chunked: bool,
     pub gzip: bool,
+    pub location: Option<Vec<u8>>,
 }
 
 pub fn build_get(host: &[u8], path: &[u8], extra: &[u8]) -> Vec<u8> {
@@ -70,6 +71,7 @@ pub fn parse_head(buf: &[u8]) -> Option<Parsed> {
     let mut content_length = None;
     let mut chunked = false;
     let mut gzip = false;
+    let mut location = None;
     for line in lines {
         if let Some(v) = header(line, b"content-length") {
             content_length = scan::parse_usize(v);
@@ -77,9 +79,11 @@ pub fn parse_head(buf: &[u8]) -> Option<Parsed> {
             chunked = scan::find(v, b"chunked").is_some();
         } else if let Some(v) = header(line, b"content-encoding") {
             gzip = scan::find(v, b"gzip").is_some();
+        } else if let Some(v) = header(line, b"location") {
+            location = Some(v.to_vec());
         }
     }
-    Some(Parsed { status, body_off: sep + 4, content_length, chunked, gzip })
+    Some(Parsed { status, body_off: sep + 4, content_length, chunked, gzip, location })
 }
 
 fn parse_status(line: &[u8]) -> Option<u16> {

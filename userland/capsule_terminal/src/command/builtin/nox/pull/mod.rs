@@ -23,6 +23,7 @@ pub mod http;
 pub mod ipv4;
 pub mod progress;
 pub mod recurse;
+pub mod redirect;
 pub mod resolve;
 mod run;
 pub mod scan;

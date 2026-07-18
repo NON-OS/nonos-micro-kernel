@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec::Vec;
 use core::ops::Range;
 
 use super::http;
@@ -21,6 +22,8 @@ use super::http;
 pub struct Framed {
     pub body: Range<usize>,
     pub gzip: bool,
+    pub status: u16,
+    pub location: Option<Vec<u8>>,
 }
 
 pub fn frame(raw: &[u8]) -> Result<Option<Framed>, (bool, &'static str)> {
@@ -28,9 +31,6 @@ pub fn frame(raw: &[u8]) -> Result<Option<Framed>, (bool, &'static str)> {
         Some(h) => h,
         None => return Ok(None),
     };
-    if head.status != 200 {
-        return Err((false, "http status not 200"));
-    }
     if head.chunked {
         return Err((true, "keep-alive needs content-length"));
     }
@@ -42,5 +42,10 @@ pub fn frame(raw: &[u8]) -> Result<Option<Framed>, (bool, &'static str)> {
     if raw.len() < end {
         return Ok(None);
     }
-    Ok(Some(Framed { body: head.body_off..end, gzip: head.gzip }))
+    Ok(Some(Framed {
+        body: head.body_off..end,
+        gzip: head.gzip,
+        status: head.status,
+        location: head.location,
+    }))
 }

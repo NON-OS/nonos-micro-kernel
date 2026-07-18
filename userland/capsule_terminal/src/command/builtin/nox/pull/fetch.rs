@@ -27,8 +27,18 @@ const CLOSE_WAIT: u8 = 4;
 const EMPTY_BUDGET: u32 = 64;
 const RETRIES: u32 = 3;
 const BACKOFF_MS: i64 = 250;
+const MAX_HOPS: u32 = 5;
 
-pub fn get(ip: [u8; 4], port: u16, host: &[u8], path: &[u8], extra: &[u8]) -> Result<Vec<u8>, &'static str> {
+pub enum Fetched {
+    Body(Vec<u8>),
+    Redirect(Vec<u8>),
+}
+
+fn is_redirect(status: u16) -> bool {
+    matches!(status, 301 | 302 | 303 | 307 | 308)
+}
+
+pub fn get(ip: [u8; 4], port: u16, host: &[u8], path: &[u8], extra: &[u8]) -> Result<Fetched, &'static str> {
     let mut last = "connect failed";
     for i in 0..RETRIES {
         match attempt(ip, port, host, path, extra) {
@@ -45,14 +55,14 @@ pub fn get(ip: [u8; 4], port: u16, host: &[u8], path: &[u8], extra: &[u8]) -> Re
     Err(last)
 }
 
-pub fn get_reuse(
+fn fetch_body(
     conn: &mut Option<Conn>,
     ip: [u8; 4],
     port: u16,
     host: &[u8],
     path: &[u8],
     extra: &[u8],
-) -> Result<Vec<u8>, &'static str> {
+) -> Result<Fetched, &'static str> {
     for _ in 0..2 {
         if conn.is_none() {
             *conn = connect(ip, port);
@@ -62,7 +72,7 @@ pub fn get_reuse(
             None => break,
         };
         match get_on(&*c, host, path, extra) {
-            Ok(body) => return Ok(body),
+            Ok(f) => return Ok(f),
             Err((false, e)) => return Err(e),
             Err((true, _)) => {
                 if let Some(c) = conn.take() {
@@ -72,6 +82,29 @@ pub fn get_reuse(
         }
     }
     get(ip, port, host, path, extra)
+}
+
+pub fn get_reuse(
+    conn: &mut Option<Conn>,
+    ip: [u8; 4],
+    port: u16,
+    host: &[u8],
+    path: &[u8],
+    extra: &[u8],
+) -> Result<Vec<u8>, &'static str> {
+    let mut cur = path.to_vec();
+    for _ in 0..MAX_HOPS {
+        match fetch_body(conn, ip, port, host, &cur, extra)? {
+            Fetched::Body(b) => return Ok(b),
+            Fetched::Redirect(loc) => {
+                if let Some(c) = conn.take() {
+                    c.close();
+                }
+                cur = super::redirect::resolve(host, &cur, &loc)?;
+            }
+        }
+    }
+    Err("too many redirects")
 }
 
 pub fn head_reuse(
@@ -132,7 +165,7 @@ fn head_len<T: Transport>(conn: &T, host: &[u8], path: &[u8], extra: &[u8]) -> O
     }
 }
 
-fn attempt(ip: [u8; 4], port: u16, host: &[u8], path: &[u8], extra: &[u8]) -> Result<Vec<u8>, (bool, &'static str)> {
+fn attempt(ip: [u8; 4], port: u16, host: &[u8], path: &[u8], extra: &[u8]) -> Result<Fetched, (bool, &'static str)> {
     let conn = connect(ip, port).ok_or((true, "connect failed"))?;
     if !conn.send(&http::build_get(host, path, extra)) {
         conn.close();
@@ -171,10 +204,13 @@ fn backoff(ms: i64) {
     }
 }
 
-fn finish(raw: &[u8]) -> Result<Vec<u8>, &'static str> {
+fn finish(raw: &[u8]) -> Result<Fetched, &'static str> {
     let head = http::parse_head(raw).ok_or("bad http response")?;
     if head.status != 200 {
-        return Err("http status not 200");
+        return match head.location {
+            Some(loc) if is_redirect(head.status) => Ok(Fetched::Redirect(loc)),
+            _ => Err("http status not 200"),
+        };
     }
     if head.chunked {
         return Err("chunked transfer unsupported");
@@ -185,7 +221,7 @@ fn finish(raw: &[u8]) -> Result<Vec<u8>, &'static str> {
             .ok_or("truncated body")?,
         None => &raw[head.body_off..],
     };
-    decode(body, head.gzip).map_err(|(_, e)| e)
+    decode(body, head.gzip).map(Fetched::Body).map_err(|(_, e)| e)
 }
 
 fn decode(body: &[u8], gzip: bool) -> Result<Vec<u8>, (bool, &'static str)> {
@@ -205,7 +241,7 @@ pub fn get_on<T: Transport>(
     host: &[u8],
     path: &[u8],
     extra: &[u8],
-) -> Result<Vec<u8>, (bool, &'static str)> {
+) -> Result<Fetched, (bool, &'static str)> {
     if !conn.send(&http::build_get_ka(host, path, extra)) {
         return Err((true, "send failed"));
     }
@@ -213,7 +249,13 @@ pub fn get_on<T: Transport>(
     let mut empties = 0u32;
     loop {
         if let Some(f) = framing::frame(&raw)? {
-            return decode(&raw[f.body], f.gzip);
+            if f.status == 200 {
+                return decode(&raw[f.body], f.gzip).map(Fetched::Body);
+            }
+            return match f.location {
+                Some(loc) if is_redirect(f.status) => Ok(Fetched::Redirect(loc)),
+                _ => Err((false, "http status not 200")),
+            };
         }
         match conn.recv(&mut raw) {
             Rx::Data => empties = 0,
