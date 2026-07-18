@@ -16,8 +16,8 @@
 
 use nonos_boot::boot::prepare::HandoffParams;
 use nonos_boot::boot::{
-    commit_rollback, run_crypto_verification, run_elf_parse, run_handoff_prepare, run_kernel_load,
-    run_zk_attestation,
+    attest_kernel, commit_rollback, run_crypto_verification, run_elf_parse, run_handoff_prepare,
+    run_kernel_load,
 };
 use nonos_boot::kernel_verify::CryptoVerifyResult;
 use nonos_boot::menu::SecurityMode;
@@ -34,10 +34,10 @@ pub fn run_verified_boot(
     let kernel_data = run_kernel_load(&mut st, gop);
     let (crypto_result, mut crypto_state) =
         run_crypto_verification(&mut st, &kernel_data, gop, mode);
-    let zk_result = run_zk_attestation(
+    let zk_result = attest_kernel(
         &mut st,
         &kernel_data,
-        &crypto_result.kernel_hash_full,
+        &crypto_result,
         &mut crypto_state,
         gop,
         security.measured_boot_active,
