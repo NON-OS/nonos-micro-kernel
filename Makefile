@@ -151,14 +151,18 @@ ZK_CAPSULE_ROOT  ?= $(NONOS_TRUST_DIR)/policy/zk_capsule_policy_root.bin
 ZK_POLICY_ROOT   ?= $(ZK_CAPSULE_ROOT)
 # Kernel self-attestation: the bootloader embeds this root and verifies the
 # kernel's own STARK membership trailer before the jump. Provisioned by the
-# kernel enrollment step below. Opt in with NONOS_STARK_KERNEL_ATTEST=1.
+# kernel enrollment step below.
 KERNEL_ATTEST_ROOT_BIN ?= $(NONOS_TRUST_DIR)/policy/kernel_attest_root.bin
 KERNEL_ATTEST_TRAILER  ?= $(TARGET_DIR)/kernel-attest/kernel.zk_trailer.bin
 KERNEL_ATTEST_ELF      ?= $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel
 _boot_comma := ,
-# Only the literal 1 turns kernel self-attestation on. A .nonos-config carrying
-# NONOS_STARK_KERNEL_ATTEST := 0 must read as off, so test the value, not just
-# whether the variable is defined.
+# Kernel self-attestation is on by default: a clean checkout with no .nonos-config
+# (CI, first build) ships the full STARK boot, kernel and capsules both. A config
+# carrying NONOS_STARK_KERNEL_ATTEST := 0, or make NONOS_STARK_KERNEL_ATTEST=0 on
+# the command line, turns it off for a build that only wants signature trust.
+NONOS_STARK_KERNEL_ATTEST ?= 1
+# Only the literal 1 turns it on, so an explicit := 0 reads as off; test the
+# value, not just whether the variable is defined.
 NONOS_STARK_KERNEL_ATTEST_ON := $(filter 1,$(NONOS_STARK_KERNEL_ATTEST))
 BOOT_STARK_FEATURE := $(if $(NONOS_STARK_KERNEL_ATTEST_ON),$(_boot_comma)stark-kernel-attest)
 ZK_CAPSULE_LABELS ?= $(TARGET_DIR)/capsule-attest/capsule_labels.txt

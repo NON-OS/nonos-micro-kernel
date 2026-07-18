@@ -27,7 +27,7 @@ pub mod util;
 pub mod zk_challenge;
 pub mod zk_init;
 
-pub use attestation::run_zk_attestation;
+pub use attestation::{attest_kernel, run_zk_attestation};
 pub use crypto::{commit_rollback, run_crypto_verification};
 pub use elf::run_elf_parse;
 pub use hardware::run_hardware_discovery;
