@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod binding;
-mod enforce;
-mod kernel_gate;
-mod run;
-mod source;
+//! The attestation parameters the bootloader, the enrollment tool, and the
+//! capsule gate all agree on. They are the single source of these numbers for
+//! the security tools, so a tool cannot drift from the gate it tests.
 
-pub use enforce::enforce_zk_binding;
-pub use kernel_gate::attest_kernel;
-pub use run::run_zk_attestation;
-pub use source::{proof_source_bytes, select_zk_proof_source, ProofSource};
+pub const LOG_ROUNDS: u32 = 3;
+pub const DEPTH: usize = 8;
+pub const LEAVES: usize = 1 << DEPTH;
+pub const N_QUERIES: usize = 32;
+pub const GRIND_BITS: u32 = 16;
+pub const EXTRA_BLOWUP_BITS: u32 = 3;
+pub const BOOT_EPOCH: u64 = 1;
+pub const PAD_IMAGE: &[u8] = b"\x00NONOS-POLICY-RESERVED-SLOT-v1";

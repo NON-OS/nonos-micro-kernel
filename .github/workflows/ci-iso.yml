@@ -1,0 +1,219 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Build the production NONOS image: the full ZeroState system, dual-signed
+# (Ed25519 + ML-DSA-65), anti-rollback bound into the signature, every capsule
+# attested with a transparent post-quantum STARK, and the kernel attesting its
+# own STARK measurement to the bootloader before jump. The output is a flashable
+# GPT/FAT32 disk image that boots off USB on real hardware and off QEMU.
+#
+# Privacy is architectural, not a flag: the system is RAM-resident and leaves
+# nothing on disk, capsules hold no ambient authority, and no network interface
+# is attached unless a run explicitly asks for one.
+
+name: ci-iso
+
+on:
+  workflow_dispatch:
+    inputs:
+      rollback_index:
+        description: "Anti-rollback index bound into the kernel signature."
+        required: false
+        default: "1"
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: ci-iso-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  iso:
+    name: production image
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      # Both attestation layers on, and the anti-rollback floor.
+      NONOS_STARK_KERNEL_ATTEST: "1"
+      NONOS_ROLLBACK_INDEX: ${{ github.event.inputs.rollback_index || '1' }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          submodules: recursive
+
+      # Pinned toolchain, the kernel and UEFI targets, and the host tools.
+      - uses: ./.github/actions/nonos-setup
+        with:
+          targets: "x86_64-nonos,x86_64-unknown-uefi"
+          module: "iso"
+
+      # Trust material: dev keys and a signed trust bundle for a scratch build,
+      # or the release keys from secrets for a production image.
+      - name: Provision trust material
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -n "${SIGNING_KEY_BASE64:-}" ]; then
+            mkdir -p nonos-bootloader/keys
+            echo "$SIGNING_KEY_BASE64" | base64 -d > nonos-bootloader/keys/signing_key_v1.bin
+          fi
+          bash nonos-ci/scratch-trust-bootstrap.sh
+          make nonos-mk-check-trust-manifest
+
+      # The enrolled ZK device root the bootloader binds (transparent boot path).
+      - name: Ensure ZK device root
+        run: make nonos-mk-ensure-zk-keys
+
+      # Prove the gate before we ship it. The red-team battery mounts the attacks
+      # a shipped image must survive (tamper, kernel swap, trailer forgery,
+      # malformed input) against the exact boot-side verifier, and the fuzzer
+      # drives the untrusted trailer parser. This step must pass or no image ships.
+      - name: Prove the attestation under attack
+        run: |
+          set -euo pipefail
+          cargo test --release --manifest-path nonos-bootloader/tools/embed-zk-proof/Cargo.toml \
+            --test kernel_self_attest_poc
+          bash security/tests/run.sh 50000
+
+      # Build the flashable image. This drives, in order: build and sign every
+      # capsule, enroll the whole set under one STARK policy root and emit each
+      # NZKSTRK1 trailer, build and dual-sign the kernel, enroll the kernel and
+      # embed its STARK self-attestation trailer, build the bootloader with the
+      # stark-kernel-attest check and the enrolled kernel root, and package the
+      # GPT/FAT32 image.
+      - name: Build the production ISO
+        run: |
+          set -euo pipefail
+          make nonos-mk-usb-img
+          make nonos-mk-iso
+
+      # A machine-readable record of what the image attests, next to the image.
+      - name: Write attestation manifest
+        run: |
+          set -euo pipefail
+          mkdir -p target/iso
+          {
+            echo "image: $(ls target/nonos.img)"
+            echo "image_sha256: $(sha256sum target/nonos.img | cut -d' ' -f1)"
+            echo "iso: $(ls target/nonos.iso)"
+            echo "iso_sha256: $(sha256sum target/nonos.iso | cut -d' ' -f1)"
+            echo "rollback_index: ${NONOS_ROLLBACK_INDEX}"
+            echo "proven_under_attack: red-team battery + parser fuzz, see build log"
+            echo "kernel_signature: ed25519+mldsa65"
+            echo "kernel_self_attestation: stark"
+            echo "capsule_attestation: stark"
+            echo "capsule_policy_root: $(sha256sum nonos-data/trust/policy/zk_capsule_policy_root.bin 2>/dev/null | cut -d' ' -f1 || echo unavailable)"
+            echo "kernel_attest_root: $(sha256sum nonos-data/trust/policy/kernel_attest_root.bin 2>/dev/null | cut -d' ' -f1 || echo unavailable)"
+            echo "network: none attached; opt-in only"
+            echo "state: RAM-resident, zero-state"
+          } > target/iso/attestation-manifest.txt
+          cat target/iso/attestation-manifest.txt
+
+      - name: Upload the ISO and manifest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nonos-production-iso
+          path: |
+            target/nonos.img
+            target/nonos.iso
+            target/iso/attestation-manifest.txt
+
+  # On a version tag, publish a verifiable release: the image, its checksums, the
+  # attestation manifest that records the roots the image proves, and a signed
+  # SLSA build provenance that binds the files to this exact source and workflow
+  # run. Anyone can verify the provenance with `gh attestation verify` without
+  # trusting us for a key.
+  release:
+    name: publish release
+    needs: iso
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release
+      id-token: write # sign the build provenance
+      attestations: write # record the build provenance
+    steps:
+      - name: Download the built image
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: nonos-production-iso
+          path: artifacts
+
+      # BLAKE3 is the measurement the OS itself uses, so the download carries a
+      # BLAKE3 sum next to the SHA-2 sums rather than only the universal ones.
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+      - name: Install b3sum
+        run: cargo install b3sum --version 1.5.1 --locked
+
+      # Flatten whatever layout the artifact used, then checksum the images.
+      - name: Assemble and checksum
+        run: |
+          set -euo pipefail
+          mkdir -p rel
+          cp "$(find artifacts -name nonos.iso)" rel/
+          cp "$(find artifacts -name nonos.img)" rel/
+          cp "$(find artifacts -name attestation-manifest.txt)" rel/
+          cd rel
+          sha256sum nonos.iso nonos.img > SHA256SUMS
+          sha512sum nonos.iso nonos.img > SHA512SUMS
+          b3sum nonos.iso nonos.img > BLAKE3SUMS
+          cat SHA256SUMS BLAKE3SUMS
+
+      - name: Sign build provenance for the image
+        uses: actions/attest-build-provenance@520d128f165991a6c774bcb264f323e3d70747f4 # v2.2.0
+        with:
+          subject-path: |
+            rel/nonos.iso
+            rel/nonos.img
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          notes="$(mktemp)"
+          {
+            echo "NONOS ${TAG}. A RAM-resident, zero-state microkernel OS."
+            echo
+            echo "The kernel is dual-signed (Ed25519 and ML-DSA-65) with an anti-rollback"
+            echo "index, and proves its own measurement with a transparent post-quantum STARK"
+            echo "before the bootloader jumps. Every capsule proves its code and its exact"
+            echo "capability set with the same STARK before the kernel spawns it. The roots"
+            echo "the image attests to are in attestation-manifest.txt."
+            echo
+            echo "## Verify before you flash"
+            echo
+            echo '```'
+            echo "sha256sum -c SHA256SUMS        # or: b3sum -c BLAKE3SUMS"
+            echo "gh attestation verify nonos.iso --repo ${GITHUB_REPOSITORY}"
+            echo "gh attestation verify nonos.img --repo ${GITHUB_REPOSITORY}"
+            echo '```'
+            echo
+            echo "The provenance is a signed SLSA statement binding these files to this"
+            echo "workflow run and commit ${GITHUB_SHA}. It needs no key from us to verify."
+            echo
+            echo "## Boot it"
+            echo
+            echo '```'
+            echo "qemu-system-x86_64 -bios OVMF.fd -cdrom nonos.iso    # try it first"
+            echo "sudo dd if=nonos.iso of=/dev/sdX bs=4M && sync        # then flash"
+            echo '```'
+            echo
+            echo "## Reproduce it"
+            echo
+            echo "The build is reproducible from source at this tag; rebuild and match the"
+            echo "SHA256SUMS above. See the build docs in the repository."
+          } > "$notes"
+          gh release create "${TAG}" \
+            rel/nonos.iso rel/nonos.img \
+            rel/SHA256SUMS rel/SHA512SUMS rel/BLAKE3SUMS rel/attestation-manifest.txt \
+            --title "NONOS ${TAG}" \
+            --notes-file "$notes"
+          if-no-files-found: error
+          retention-days: 30

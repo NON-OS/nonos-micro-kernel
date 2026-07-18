@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,13 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod binding;
-mod enforce;
-mod kernel_gate;
-mod run;
-mod source;
+//! The red-team surface: the categorized attack battery and the parser fuzzer.
 
-pub use enforce::enforce_zk_binding;
-pub use kernel_gate::attest_kernel;
-pub use run::run_zk_attestation;
-pub use source::{proof_source_bytes, select_zk_proof_source, ProofSource};
+mod battery;
+mod finding;
+mod fuzz;
+
+pub use battery::battery;
+pub use finding::{Finding, Severity};
+pub use fuzz::fuzz;

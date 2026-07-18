@@ -29,6 +29,21 @@ pub fn run_attestation(args: &Args) -> Result<()> {
     println!("Kernel code: {} bytes", kernel.kernel_bytes.len());
     let kernel_hash = compute_kernel_hash(&kernel.kernel_bytes);
     println!("Kernel BLAKE3: {}", hex::encode(kernel_hash));
+
+    // STARK self-attestation: embed a pre-made trailer verbatim as the proof
+    // region. The trailer is bound to this exact kernel measurement, so the
+    // bootloader verifies it against the same BLAKE3 over the same kernel bytes.
+    if let Some(proof_path) = &args.proof_file {
+        let trailer = fs::read(proof_path)
+            .with_context(|| format!("Failed to read proof file: {}", proof_path.display()))?;
+        println!("Embedding STARK self-attestation trailer: {} bytes", trailer.len());
+        let image = assemble_attested_image(&kernel, trailer);
+        fs::write(&args.output, &image.data)
+            .with_context(|| format!("Failed to write: {}", args.output.display()))?;
+        print_image_summary(args, &image);
+        return Ok(());
+    }
+
     let proof = create_transparent_boot_proof(args, &kernel_hash)?;
     let capsule_commitment = compute_capsule_commitment(&kernel_hash, &proof.root);
     println!("Device root: {}", hex::encode(proof.root));

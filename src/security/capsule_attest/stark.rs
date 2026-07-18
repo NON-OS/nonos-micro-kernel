@@ -46,9 +46,9 @@ fn to_rate(bytes: &[u8]) -> [Fp; RATE] {
     out
 }
 
-/// Verify a capsule's STARK attestation against the kernel policy root, bound to the
-/// capsule measurement and its granted capabilities. True only for a money-grade
-/// proof of membership under exactly this root and context.
+/// Verify a capsule's transparent-STARK attestation against the kernel policy
+/// root, bound to its measurement, its granted capabilities and the epoch. True
+/// only for a money-grade membership proof under exactly this root and context.
 #[must_use = "a capsule must not be spawned unless its attestation verifies"]
 pub fn verify_capsule_attestation_stark(
     trailer: &[u8],

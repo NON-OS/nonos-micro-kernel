@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,13 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod binding;
-mod enforce;
-mod kernel_gate;
-mod run;
-mod source;
+//! The attestation operations both tools share, each the boot-side operation
+//! over the boot-side byte layout using the shared nonos-stark verifier.
 
-pub use enforce::enforce_zk_binding;
-pub use kernel_gate::attest_kernel;
-pub use run::run_zk_attestation;
-pub use source::{proof_source_bytes, select_zk_proof_source, ProofSource};
+mod constants;
+mod context;
+mod enroll;
+mod image;
+mod parser;
+mod verify;
+
+pub use context::kernel_context;
+pub use enroll::enroll_kernel;
+pub use image::{assemble_image, parse_image_footer};
+pub use parser::proof_parser_is_total;
+pub use verify::verify_kernel_attestation;

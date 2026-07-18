@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,13 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod binding;
-mod enforce;
-mod kernel_gate;
-mod run;
-mod source;
+//! A deterministic xorshift64 PRNG. Deterministic so a fuzzing run is
+//! reproducible from its seed: a found weakness is replayable, not a one-off.
 
-pub use enforce::enforce_zk_binding;
-pub use kernel_gate::attest_kernel;
-pub use run::run_zk_attestation;
-pub use source::{proof_source_bytes, select_zk_proof_source, ProofSource};
+pub struct Rng(u64);
+
+impl Rng {
+    pub fn new(seed: u64) -> Self {
+        Rng(seed | 1)
+    }
+    pub fn next_u64(&mut self) -> u64 {
+        let mut x = self.0;
+        x ^= x << 13;
+        x ^= x >> 7;
+        x ^= x << 17;
+        self.0 = x;
+        x
+    }
+    pub fn byte(&mut self) -> u8 {
+        (self.next_u64() & 0xff) as u8
+    }
+    pub fn below(&mut self, n: usize) -> usize {
+        (self.next_u64() % n as u64) as usize
+    }
+}

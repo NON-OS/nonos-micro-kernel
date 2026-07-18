@@ -32,11 +32,10 @@ const GRIND_BITS: u32 = 16;
 const EXTRA_BLOWUP_BITS: u32 = 3;
 const BOOT_EPOCH: u64 = 1;
 
-/// The enrolled kernel measurement root the boot chain trusts. The kernel
-/// enrollment step provisions the real root here (or via a build input); a
-/// zeroed root accepts nothing, so an un-enrolled build cannot be spoofed into
-/// trusting a proof.
-const KERNEL_ROOT: [u8; 32] = [0u8; 32];
+/// The enrolled kernel measurement root the boot chain trusts, provisioned by
+/// `build.rs` from `NONOS_KERNEL_ATTEST_ROOT` (zeroed until the kernel is
+/// enrolled, which accepts nothing).
+include!(concat!(env!("OUT_DIR"), "/kernel_attest_root.rs"));
 
 /// Verify the kernel self-attestation `trailer` against the enrolled root, bound
 /// to the measurement of `kernel_bytes` and the boot epoch. True only for a
@@ -52,7 +51,7 @@ pub fn verify_kernel_self_attestation(kernel_bytes: &[u8], trailer: &[u8]) -> bo
     verify_membership_trailer(
         &hasher,
         LOG_ROUNDS,
-        KERNEL_ROOT,
+        KERNEL_ATTEST_ROOT,
         DEPTH,
         trailer,
         &ctx,

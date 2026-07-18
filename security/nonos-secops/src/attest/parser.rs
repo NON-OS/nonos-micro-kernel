@@ -1,5 +1,5 @@
-// NØNOS Operating System
-// Copyright (C) 2026 NØNOS Contributors
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,13 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod binding;
-mod enforce;
-mod kernel_gate;
-mod run;
-mod source;
+//! The parser-robustness oracle the fuzzer drives.
 
-pub use enforce::enforce_zk_binding;
-pub use kernel_gate::attest_kernel;
-pub use run::run_zk_attestation;
-pub use source::{proof_source_bytes, select_zk_proof_source, ProofSource};
+use nonos_stark::air::deserialize_proof_ext;
+
+/// Feed a byte string to the untrusted money-grade proof deserializer and report
+/// whether it completed rather than panicking. The gate parses adversarial input
+/// before it verifies, so a parser that can be driven to panic is a boot-time
+/// denial of service. This wraps the exact deserializer the bootloader links.
+pub fn proof_parser_is_total(bytes: &[u8]) -> bool {
+    std::panic::catch_unwind(|| {
+        let _ = deserialize_proof_ext(bytes);
+    })
+    .is_ok()
+}
