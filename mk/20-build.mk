@@ -2,7 +2,7 @@
 .PHONY: nonos-mk-check-driver-ahci-keys nonos-mk-check-driver-e1000-keys nonos-mk-check-driver-hda-keys nonos-mk-check-driver-i2c-hid-keys nonos-mk-check-driver-i2c-pci-keys nonos-mk-check-driver-iwlwifi-keys nonos-mk-check-driver-nvme-keys nonos-mk-check-driver-rtl8139-keys nonos-mk-check-driver-rtl8169-keys nonos-mk-check-driver-rtl8821ce-keys nonos-mk-check-driver-usb-msc-keys nonos-mk-check-driver-virtio-gpu-keys nonos-mk-check-ps2-input-keys nonos-mk-check-ramfs-keys nonos-mk-check-virtio-blk-keys nonos-mk-check-virtio-net-keys nonos-mk-check-virtio-rng-keys nonos-mk-check-xhci-keys nonos-mk-crypto nonos-mk-driver-ahci nonos-mk-driver-ahci-sign nonos-mk-driver-e1000 nonos-mk-driver-e1000-sign nonos-mk-driver-hda nonos-mk-driver-hda-sign nonos-mk-driver-i2c-hid nonos-mk-driver-i2c-hid-sign nonos-mk-driver-i2c-pci nonos-mk-driver-i2c-pci-sign nonos-mk-driver-iwlwifi nonos-mk-driver-iwlwifi-sign nonos-mk-driver-nvme nonos-mk-driver-nvme-sign nonos-mk-driver-rtl8139 nonos-mk-driver-rtl8139-sign nonos-mk-driver-rtl8169 nonos-mk-driver-rtl8169-sign nonos-mk-driver-rtl8821ce nonos-mk-driver-rtl8821ce-sign nonos-mk-driver-usb-msc nonos-mk-driver-usb-msc-sign nonos-mk-driver-virtio-gpu nonos-mk-driver-virtio-gpu-sign nonos-mk-entropy nonos-mk-keyring nonos-mk-market nonos-mk-proof-io nonos-mk-proof-io-sign nonos-mk-ps2-input nonos-mk-ps2-input-sign nonos-mk-ramfs nonos-mk-ramfs-sign nonos-mk-vfs nonos-mk-virtio-blk nonos-mk-virtio-blk-sign nonos-mk-virtio-net nonos-mk-virtio-net-sign nonos-mk-virtio-rng nonos-mk-virtio-rng-sign nonos-mk-wallpaper nonos-mk-xhci nonos-mk-xhci-sign
 
 # Phony targets defined in this module.
-.PHONY: nonos-mk-all-capsules-attested nonos-mk-attest nonos-mk-attestation nonos-mk-attestation-receipt nonos-mk-bootloader nonos-mk-capsules nonos-mk-check nonos-mk-check-trust-keys nonos-mk-check-trust-manifest nonos-mk-core nonos-mk-core-attested nonos-mk-crypto-prod nonos-mk-desktop-gui-prod nonos-mk-driver-ahci-prod nonos-mk-driver-e1000-prod nonos-mk-driver-hda-prod nonos-mk-driver-i2c-hid-prod nonos-mk-driver-i2c-pci-prod nonos-mk-driver-iwlwifi-prod nonos-mk-driver-nvme-prod nonos-mk-driver-ps2-input-prod nonos-mk-driver-rtl8139-prod nonos-mk-driver-rtl8169-prod nonos-mk-driver-rtl8821ce-prod nonos-mk-driver-usb-hid-prod nonos-mk-driver-usb-msc-prod nonos-mk-driver-virtio-blk-prod nonos-mk-driver-virtio-gpu-prod nonos-mk-driver-virtio-net-prod nonos-mk-driver-virtio-rng-prod nonos-mk-driver-xhci-prod nonos-mk-ensure-zk-keys nonos-mk-entropy-prod nonos-mk-esp nonos-mk-from-config nonos-mk-host-trust-verify nonos-mk-keyring-prod nonos-mk-libc nonos-mk-live-production-proof nonos-mk-market-prod nonos-mk-marketplace-abi nonos-mk-marketplace-index-tool nonos-mk-menuconfig nonos-mk-net-core-prod nonos-mk-net-dhcp-prod nonos-mk-net-ip-prod nonos-mk-net-l2-prod nonos-mk-net-nym-prod nonos-mk-net-sockets-prod nonos-mk-net-udp-prod nonos-mk-proof-io-prod nonos-mk-ramfs-prod nonos-mk-sign nonos-mk-terminal-test nonos-mk-trust-policy nonos-mk-usb-img nonos-mk-userland-clean nonos-mk-verify-capsule-attest nonos-mk-verify-trust nonos-mk-vfs-prod nonos-mk-zerostate nonos-mk-zk-report nonos-mk-zk-tools nonos-mk-zk-verify-live
+.PHONY: nonos-mk-all-capsules-attested nonos-mk-attest nonos-mk-attestation nonos-mk-attestation-receipt nonos-mk-bootloader nonos-mk-capsules nonos-mk-check nonos-mk-check-trust-keys nonos-mk-check-trust-manifest nonos-mk-core nonos-mk-core-attested nonos-mk-desktop-gui-prod nonos-mk-ensure-zk-keys nonos-mk-esp nonos-mk-from-config nonos-mk-host-trust-verify nonos-mk-libc nonos-mk-live-production-proof nonos-mk-marketplace-abi nonos-mk-marketplace-index-tool nonos-mk-menuconfig nonos-mk-sign nonos-mk-terminal-test nonos-mk-trust-policy nonos-mk-usb-img nonos-mk-userland-clean nonos-mk-verify-capsule-attest nonos-mk-verify-trust nonos-mk-zerostate nonos-mk-zk-report nonos-mk-zk-tools nonos-mk-zk-verify-live
 
 # ZK attestation: transparent enrolled-secret tools
 
@@ -636,143 +636,9 @@ NONOS_INPUT_PROBE_INJECT_ESP := $(TARGET_DIR)/esp-input-probe-inject
 # `-prod` suffix is the only kernel build path under production
 # posture.
 
-nonos-mk-proof-io-prod: $(proof-io_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-proof-io,microkernel-proof-io)
-
-nonos-mk-std-proof-prod: $(proof-io_ARTIFACTS) $(std-proof_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-proof-io + nonos-capsule-std-proof,microkernel-proof-io$(_boot_comma)nonos-capsule-std-proof)
-
-nonos-mk-ramfs-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-ramfs,microkernel-ramfs)
-
-nonos-mk-keyring-prod: $(proof-io_ARTIFACTS) $(keyring_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-keyring,microkernel-keyring)
-
-nonos-mk-entropy-prod: $(proof-io_ARTIFACTS) $(entropy_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-entropy,microkernel-entropy)
-
-nonos-mk-crypto-prod: $(proof-io_ARTIFACTS) $(crypto_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-crypto,microkernel-crypto)
-
-nonos-mk-vfs-prod: $(proof-io_ARTIFACTS) $(vfs_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-vfs,microkernel-vfs)
-
-nonos-mk-market-prod: $(proof-io_ARTIFACTS) $(market_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-market,microkernel-market)
-
-nonos-mk-driver-virtio-rng-prod: $(proof-io_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-virtio-rng,microkernel-driver-virtio-rng)
-
-nonos-mk-driver-virtio-blk-prod: $(proof-io_ARTIFACTS) $(driver-virtio-blk_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-virtio-blk,microkernel-driver-virtio-blk)
-
-nonos-mk-driver-virtio-gpu-prod: $(proof-io_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-virtio-gpu,microkernel-driver-virtio-gpu)
-
-nonos-mk-driver-virtio-net-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-virtio-net,microkernel-driver-virtio-net)
-
-nonos-mk-driver-iwlwifi-prod: $(proof-io_ARTIFACTS) $(driver-iwlwifi_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-iwlwifi,microkernel-driver-iwlwifi)
-
-nonos-mk-driver-rtl8821ce-prod: $(proof-io_ARTIFACTS) $(driver-rtl8821ce_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-rtl8821ce,microkernel-driver-rtl8821ce)
-
-nonos-mk-driver-i2c-pci-prod: $(proof-io_ARTIFACTS) $(driver-i2c-pci_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-i2c-pci,microkernel-driver-i2c-pci)
-
-nonos-mk-driver-i2c-hid-prod: $(proof-io_ARTIFACTS) $(driver-i2c-pci_ARTIFACTS) $(driver-i2c-hid_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-i2c-hid,microkernel-driver-i2c-hid)
-
-nonos-mk-driver-ps2-input-prod: $(proof-io_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-ps2-input,microkernel-driver-ps2-input)
-
-nonos-mk-driver-xhci-prod: $(proof-io_ARTIFACTS) $(driver-xhci_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-xhci,microkernel-driver-xhci)
-
-nonos-mk-driver-usb-hid-prod: $(proof-io_ARTIFACTS) $(driver-xhci_ARTIFACTS) \
-		$(driver-usb-hid_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-usb-hid,microkernel-driver-usb-hid)
-
-nonos-mk-driver-usb-msc-prod: $(proof-io_ARTIFACTS) $(driver-xhci_ARTIFACTS) \
-		$(driver-usb-msc_ARTIFACTS) nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-usb-msc,microkernel-driver-usb-msc)
-
-nonos-mk-driver-e1000-prod: $(proof-io_ARTIFACTS) $(driver-e1000_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-e1000,microkernel-driver-e1000)
-
-nonos-mk-driver-rtl8139-prod: $(proof-io_ARTIFACTS) $(driver-rtl8139_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-rtl8139,microkernel-driver-rtl8139)
-
-nonos-mk-driver-rtl8169-prod: $(proof-io_ARTIFACTS) $(driver-rtl8169_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-rtl8169,microkernel-driver-rtl8169)
-
-nonos-mk-driver-ahci-prod: $(proof-io_ARTIFACTS) $(driver-ahci_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-ahci,microkernel-driver-ahci)
-
-nonos-mk-driver-hda-prod: $(proof-io_ARTIFACTS) $(driver-hda_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-hda,microkernel-driver-hda)
-
-nonos-mk-driver-nvme-prod: $(proof-io_ARTIFACTS) $(driver-nvme_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-driver-nvme,microkernel-driver-nvme)
-
 # Net-service capsule kernel profiles. Each stacks on the lower
 # layer so a microkernel-net-dhcp build pulls in net.l2 + net.ip +
 # net.udp + net.dhcp and the underlying virtio-net driver.
-
-nonos-mk-net-l2-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		$(net-l2_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-net-l2,microkernel-net-l2)
-
-nonos-mk-net-core-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		$(net-core_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-net-core,microkernel-net-core)
-
-nonos-mk-net-ip-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-net-ip,microkernel-net-ip)
-
-nonos-mk-net-udp-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-net-udp,microkernel-net-udp)
-
-nonos-mk-net-dhcp-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
-		$(net-dhcp_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-net-dhcp,microkernel-net-dhcp)
-
-nonos-mk-ntp-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		$(net-l2_ARTIFACTS) $(net-ip_ARTIFACTS) $(net-udp_ARTIFACTS) \
-		$(net-dhcp_ARTIFACTS) $(net-ntp_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-net-ntp,microkernel-net-ntp)
 
 nonos-mk-ntp-sign: $(net-ntp_ARTIFACTS)
 
@@ -791,17 +657,6 @@ nonos-mk-image-viewer-test: $(proof-io_ARTIFACTS) \
 	@echo "Building image_viewer capsule (nonos-image-viewer-smoketest)..."
 	@$(MAKE) -B image-viewer_CARGO_FEATURES=nonos-image-viewer-smoketest nonos-mk-image-viewer-sign
 	$(call nonos_kernel_build,microkernel-image-viewer-smoketest,microkernel-image-viewer-smoketest)
-
-nonos-mk-net-nym-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		$(net-core_ARTIFACTS) $(net-nym_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-net-nym,microkernel-net-nym)
-
-nonos-mk-net-sockets-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) \
-		$(net-core_ARTIFACTS) \
-		$(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-net-sockets,microkernel-net-sockets)
 
 # nonos-mk-desktop-gui-prod: the QEMU-bootable profile. This is NOT just a lighter
 # cut of zerostate; it deliberately excludes the real-hardware driver capsules
@@ -849,51 +704,6 @@ nonos-mk-zerostate: nonos-mk-all-capsules-attested \
 	$(call nonos_kernel_build,zerostate: microkernel-full-gui + nonos-stark-attest,microkernel-full-gui$(_boot_comma)nonos-stark-attest)
 
 # Back-compat alias for the former name. Prefer nonos-mk-zerostate.
-.PHONY: nonos-mk-full-gui-prod
-nonos-mk-full-gui-prod: nonos-mk-zerostate
-
-nonos-mk-setup-wizard-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
-		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
-		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
-		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
-		$(driver-virtio-net_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
-		$(driver-xhci_ARTIFACTS) $(net-core_ARTIFACTS) \
-		$(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) \
-		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
-		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
-		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
-		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
-		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
-		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(clock_ARTIFACTS) $(snake_ARTIFACTS) $(terminal_ARTIFACTS) \
-		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
-		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
-		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
-		$(setup-wizard_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-setup-wizard,microkernel-setup-wizard)
-
-nonos-mk-setup-wizard-inject-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) \
-		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
-		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
-		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
-		$(driver-virtio-net_ARTIFACTS) $(driver-ps2-input_ARTIFACTS) \
-		$(driver-xhci_ARTIFACTS) $(net-core_ARTIFACTS) \
-		$(net-sockets_ARTIFACTS) $(net-nym_ARTIFACTS) \
-		$(policy_ARTIFACTS) $(wallpaper_catalog_ARTIFACTS) \
-		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
-		$(wm_ARTIFACTS) $(desktop-shell_ARTIFACTS) \
-		$(image-codec_ARTIFACTS) $(clipboard_ARTIFACTS) \
-		$(login_ARTIFACTS) $(wallpaper_ARTIFACTS) \
-		$(toolkit_ARTIFACTS) $(about_ARTIFACTS) $(boot-splash_ARTIFACTS) \
-		$(calculator_ARTIFACTS) $(clock_ARTIFACTS) $(snake_ARTIFACTS) $(terminal_ARTIFACTS) \
-		$(file-manager_ARTIFACTS) $(text-editor_ARTIFACTS) \
-		$(settings_ARTIFACTS) $(process-manager_ARTIFACTS) \
-		$(attest_ARTIFACTS) $(power_ARTIFACTS) \
-		$(setup-wizard_ARTIFACTS) \
-		nonos-mk-check-deps nonos-mk-ensure-signing-key
-	$(call nonos_kernel_build,microkernel-setup-wizard + input-probe-inject,microkernel-setup-wizard$(_boot_comma)input-probe-inject)
-
 nonos-mk-input-probe-inject-prod: $(proof-io_ARTIFACTS) \
 		$(driver-ps2-input_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
 		$(input-router_ARTIFACTS) $(compositor_ARTIFACTS) \
@@ -909,15 +719,6 @@ nonos-mk-input-probe-inject-esp: $(NONOS_BOOT_EFI)
 	@cp $(TARGET_DIR)/kernel_attested.bin $(NONOS_INPUT_PROBE_INJECT_ESP)/EFI/nonos/kernel.bin
 	@printf "timeout=0\ndefault=nonos\n" > $(NONOS_INPUT_PROBE_INJECT_ESP)/EFI/nonos/boot.cfg
 	@echo 'fs0:\EFI\Boot\BOOTX64.EFI' > $(NONOS_INPUT_PROBE_INJECT_ESP)/startup.nsh
-
-nonos-mk-toolkit-prod: nonos-mk-desktop-gui-prod
-nonos-mk-about-prod: nonos-mk-desktop-gui-prod
-nonos-mk-calculator-prod: nonos-mk-desktop-gui-prod
-nonos-mk-clock-prod: nonos-mk-desktop-gui-prod
-nonos-mk-browser-prod: nonos-mk-desktop-gui-prod
-nonos-mk-snake-prod: nonos-mk-desktop-gui-prod
-nonos-mk-terminal-prod: nonos-mk-desktop-gui-prod
-nonos-mk-file-manager-prod: nonos-mk-desktop-gui-prod
 
 nonos-mk-terminal-only-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) $(keyring_ARTIFACTS) \
 		$(entropy_ARTIFACTS) $(crypto_ARTIFACTS) $(vfs_ARTIFACTS) \
@@ -940,10 +741,6 @@ nonos-mk-terminal-test: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) $(keyring_ARTIF
 	@echo "Seeding vfs capsule store with the hello child..."
 	@$(MAKE) -B vfs_CARGO_FEATURES=seed-terminal-store $(vfs_ARTIFACTS)
 	$(call nonos_kernel_build,microkernel-terminal-smoketest,microkernel-terminal-smoketest)
-
-nonos-mk-text-editor-prod: nonos-mk-desktop-gui-prod
-nonos-mk-settings-prod: nonos-mk-desktop-gui-prod
-nonos-mk-process-manager-prod: nonos-mk-desktop-gui-prod
 
 # Sign + attest + ESP packaging
 
