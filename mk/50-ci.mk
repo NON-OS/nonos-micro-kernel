@@ -1,4 +1,6 @@
-# Phony targets defined in this module.
+# CI evidence and release plumbing: benchmarks, security audits, hardware
+# dossiers, the clean targets, cargo fmt, and the help text.
+
 .PHONY: ci-fast ci-release ci-security ci-soak help nonos-mk-bench nonos-mk-bench-boot-log nonos-mk-bench-collect nonos-mk-bench-compare nonos-mk-bench-host nonos-mk-boot-evidence nonos-mk-claims-check nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean nonos-mk-fmt nonos-mk-hardware-dossier nonos-mk-no-telemetry-capture nonos-mk-qemu-net-audit nonos-mk-release nonos-mk-release-audit nonos-mk-validate-machine-metadata
 
 # CI-friendly security evidence checks.

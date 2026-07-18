@@ -1,4 +1,6 @@
-# Phony targets defined in this module.
+# Bootable images built from the signed, attested kernel: the EFI System
+# Partition, a raw USB image, and a UEFI ISO.
+
 .PHONY: nonos-mk-usb-run
 
 # EFI boot image, so it boots from a burned disc, a USB written with dd, or QEMU
@@ -31,4 +33,3 @@ nonos-mk-usb-run: nonos-mk-usb-img $(QEMU_OVMF_VARS_RW)
 		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
 		$(QEMU_GPU) $(QEMU_RNG) \
 		-serial mon:stdio -vga none -display $(QEMU_DISPLAY) -no-reboot
-

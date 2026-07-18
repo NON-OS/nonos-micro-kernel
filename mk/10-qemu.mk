@@ -1,4 +1,6 @@
-# Phony targets defined in this module.
+# QEMU and OVMF discovery, and the prerequisites every build shares: the pinned
+# toolchain, the signing keys, and the transparent-STARK enrollment tools.
+
 .PHONY: nonos-mk nonos-mk-check-deps nonos-mk-ensure-signing-key nonos-mk-toolchain
 
 # QEMU + OVMF discovery.
@@ -132,4 +134,3 @@ $(KERNEL_MLDSA65_PUB): $(KERNEL_MLDSA65_KEY)
 	@test -f $@
 
 nonos-mk-ensure-signing-key: $(SIGNING_KEY) $(KERNEL_MLDSA65_KEY) $(KERNEL_MLDSA65_PUB)
-

@@ -1,5 +1,5 @@
-
-# Configuration
+# Paths, versions, keys, and the pinned toolchain: the global variables every
+# other module builds on. No targets live here.
 
 BOOTLOADER_DIR := nonos-bootloader
 TARGET_DIR     := target
