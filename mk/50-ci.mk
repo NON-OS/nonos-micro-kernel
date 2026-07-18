@@ -1,3 +1,6 @@
+# Phony targets defined in this module.
+.PHONY: ci-fast ci-release ci-security ci-soak help nonos-mk-bench nonos-mk-bench-boot-log nonos-mk-bench-collect nonos-mk-bench-compare nonos-mk-bench-host nonos-mk-boot-evidence nonos-mk-claims-check nonos-mk-clean nonos-mk-clean-all nonos-mk-distclean nonos-mk-fmt nonos-mk-hardware-dossier nonos-mk-no-telemetry-capture nonos-mk-qemu-net-audit nonos-mk-release nonos-mk-release-audit nonos-mk-validate-machine-metadata
+
 # CI-friendly security evidence checks.
 nonos-mk-release-audit:
 	@bash scripts/audit_release_profile.sh
@@ -113,79 +116,23 @@ nonos-mk-fmt:
 help:
 	@echo "NONOS microkernel build"
 	@echo
-	@echo "Configure your own kernel:"
-	@echo "  make menuconfig               choose a profile and options, step by step"
-	@echo "  make from-config              build the kernel described by .nonos-config"
+	@echo "Three ways to build:"
+	@echo "  make                 the production image: full OS, all drivers, TPM,"
+	@echo "                       STARK attestation, dual-signed, anti-rollback"
+	@echo "  make qemu            build and boot the emulator cut under QEMU + OVMF"
+	@echo "  make menuconfig      pick your own components, then: make from-config"
 	@echo
-	@echo "Build (curated profiles):"
-	@echo "  make nonos-mk                 microkernel-capsules runtime baseline"
-	@echo "  make nonos-mk-core            kernel only (microkernel-core, no capsules)"
-	@echo "  make nonos-mk-check           cargo check (microkernel-core)"
-	@echo "  make nonos-mk-capsules        microkernel-capsules build"
-	@echo "  make nonos-mk-zerostate       the full ZeroState system (all capsules + drivers, attested)"
-	@echo "Userland capsules:"
-	@echo "  make nonos-mk-libc nonos-mk-proof-io nonos-mk-ramfs nonos-mk-keyring"
-	@echo "  make nonos-mk-userland-clean"
+	@echo "Also:"
+	@echo "  make qemu-serial     headless boot, serial console to a log"
+	@echo "  make nonos-mk-clean  remove build artefacts (add -all / distclean for more)"
+	@echo "  make nonos-mk-fmt    cargo fmt across kernel + bootloader"
 	@echo
-	@echo "Sign / attest / package:"
-	@echo "  make nonos-mk-sign            Ed25519 manifest signature"
-	@echo "  make nonos-mk-attest          transparent attestation proof"
-	@echo "  make nonos-mk-bootloader      UEFI bootloader"
-	@echo "  make nonos-mk-esp             EFI System Partition for QEMU"
-	@echo
-	@echo "Run:"
-	@echo "  make nonos-mk-run             full OS with TPM 2.0, NAT, signatures, ZK"
-	@echo "  make nonos-mk-run-net         same image with explicit hostfwd network"
-	@echo "  make nonos-mk-run-wizard      QEMU + OVMF, first-boot setup wizard"
-	@echo "  make nonos-mk-run-serial      headless serial-only"
-	@echo "  make nonos-mk-run-serial-nat  headless serial with outbound NAT network"
-	@echo "  make nonos-mk-run-serial-net  headless serial with explicit hostfwd network"
-	@echo "  make nonos-mk-run-serial-log  headless serial with file log"
-	@echo "  make nonos-mk-debug           QEMU + GDB on :1234"
-	@echo
-	@echo "Verify:"
-	@echo "  make nonos-mk-static          CI static gates"
-	@echo "  make nonos-mk-scan            symbol scan over kernel image"
-	@echo "  make nonos-mk-verify-fast     static gates only (no kernel build)"
-	@echo "  make nonos-mk-verify          static gates + capsules build + scan"
-	@echo "  make nonos-mk-release-audit   release-profile safety audit"
-	@echo "  make nonos-mk-claims-check    claims registry schema/status check"
-	@echo "  make nonos-mk-qemu-net-audit  QEMU default/no-NIC command audit"
-	@echo "  make nonos-mk-no-telemetry-capture bounded QEMU packet-capture harness"
-	@echo "  make nonos-mk-boot-evidence   bounded no-network QEMU serial boot evidence"
-	@echo "  make nonos-mk-bench           host/build/boot benchmark evidence"
-	@echo "  make nonos-mk-bench-host      host benchmark metadata only"
-	@echo "  make nonos-mk-bench-compare   compare benchmark runs for regressions"
-	@echo "  make nonos-mk-hardware-dossier parse physical serial log into dossier"
-	@echo "  make nonos-mk-validate-machine-metadata check hardware metadata JSON"
-	@echo "  make ci-fast                  host security tests + claims check"
-	@echo "  make ci-security              ci-fast + release-profile audit"
-	@echo
-	@echo "Release:"
-	@echo "  make nonos-mk-release         (paused; see message)"
-	@echo "  make ci-release               release evidence gate (heavy repro explicit)"
-	@echo "  make ci-soak                  prints soak/forensic harness guidance"
-	@echo
-	@echo "Clean:"
-	@echo "  make nonos-mk-clean           kernel artefacts only (preserve userland)"
-	@echo "  make nonos-mk-clean-all       kernel + bootloader + ESP"
-	@echo "  make nonos-mk-distclean       above + signing + ZK keys"
-	@echo
-	@echo "Aux:"
-	@echo "  make nonos-mk-toolchain       install nightly + components"
-	@echo "  make nonos-mk-fmt             cargo fmt across kernel + bootloader"
+	@echo "Everything the build does internally is still available as nonos-mk-*"
+	@echo "targets in mk/*.mk; the three above are all most people need."
 	@echo
 	@echo "Environment:"
-	@echo "  SIGNING_KEY=<path>            override signing key (default auto-gen)"
-	@echo "  OVMF=<path>                   override OVMF firmware discovery"
-
-# Compatibility aliases (transitional; remove once callers migrate)
-
-kernel-capsules:                       nonos-mk-capsules
-kernel-with-keyring:                   nonos-mk-capsules
-check-static:                          nonos-mk-static
-clean-kernel-only:                     nonos-mk-clean
-microkernel-symbol-scan:               nonos-mk-scan
+	@echo "  SIGNING_KEY=<path>   override signing key (default auto-gen)"
+	@echo "  OVMF=<path>          override OVMF firmware discovery"
 
 # ---------------------------------------------------------------------------
 # Live GUI demo. One command boots the desktop image to a virtio-vga window
