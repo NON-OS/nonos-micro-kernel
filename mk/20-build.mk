@@ -585,25 +585,53 @@ nonos-mk-core-attested: nonos-mk-check-deps nonos-mk-ensure-signing-key
 # curated images are `make` (the full production system) and `make qemu`.
 # -----------------------------------------------------------------------------
 
-# The resolved feature set from .nonos-config: the chosen profile, plus the
-# attestation backend when the config asked for it.
+# The feature set and prerequisites for the configured build. A component
+# selection (NONOS_PROFILE := custom) carries its own explicit feature list and
+# the slugs it needs built; a hand-written profile resolves the standard way.
+# Either way the capsule set is enrolled under one policy root so the kernel it
+# embeds can attest every capsule it spawns.
+ifeq ($(NONOS_PROFILE),custom)
+FROM_CONFIG_FEATURES := $(NONOS_CUSTOM_FEATURES)
+FROM_CONFIG_DEPS := nonos-mk-all-capsules-attested \
+	$(foreach s,$(NONOS_CUSTOM_SLUGS),$($(s)_ARTIFACTS))
+else
 FROM_CONFIG_FEATURES = $(NONOS_PROFILE)$(if $(filter 1,$(NONOS_ATTEST)),$(_boot_comma)nonos-stark-attest)
+FROM_CONFIG_DEPS := nonos-mk-all-capsules-attested
+endif
 
 # Open the interactive configurator and write .nonos-config.
 nonos-mk-menuconfig:
 	@./tools/nonos-config
 
-# Build the kernel described by .nonos-config. Fails clearly if no config has
-# been written yet, rather than silently building the default.
-nonos-mk-from-config: nonos-mk-check-deps nonos-mk-ensure-signing-key
+# Build the exact system described by .nonos-config and package it into a
+# bootable image: enrol the capsules under the policy root, build the kernel
+# with just the chosen features, then sign, attest, and package the ESP. Fails
+# clearly if no config has been written yet.
+nonos-mk-from-config: $(FROM_CONFIG_DEPS) nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@test -f .nonos-config || { echo "no .nonos-config; run 'make menuconfig' first"; exit 1; }
-	@echo "Building from .nonos-config (rollback index $(NONOS_ROLLBACK_INDEX))..."
+	@echo "Building from .nonos-config ($(NONOS_PROFILE), rollback index $(NONOS_ROLLBACK_INDEX))..."
 	$(call nonos_kernel_build,$(NONOS_PROFILE) from .nonos-config,$(FROM_CONFIG_FEATURES))
+	@$(MAKE) --no-print-directory nonos-mk-esp
+	@echo
+	@echo "Bootable image ready: $(ESP_DIR)"
+	@echo "Boot it with:  make qemu-from-config"
+
+# Boot the image from-config just packaged, without rebuilding a different one.
+nonos-mk-run-from-config: $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
+	@test -f $(ESP_DIR)/EFI/nonos/kernel.bin || { echo "no image; run 'make from-config' first"; exit 1; }
+	@mkdir -p $(dir $(QEMU_SERIAL_LOG))
+	@echo "Booting the from-config image in QEMU (serial log: $(QEMU_SERIAL_LOG))..."
+	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
+		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
+		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial "file:$(QEMU_SERIAL_LOG)" -display none -no-reboot
 
 # Short aliases, so a user types what the help prints.
-.PHONY: menuconfig from-config
+.PHONY: menuconfig from-config qemu-from-config nonos-mk-run-from-config
 menuconfig: nonos-mk-menuconfig
 from-config: nonos-mk-from-config
+qemu-from-config: nonos-mk-run-from-config
 
 nonos-mk-capsules: $(proof-io_ARTIFACTS) $(ramfs_BIN) $(keyring_BIN) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
