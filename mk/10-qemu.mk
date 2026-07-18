@@ -1,3 +1,6 @@
+# Phony targets defined in this module.
+.PHONY: nonos-mk nonos-mk-check-deps nonos-mk-ensure-signing-key nonos-mk-toolchain
+
 # QEMU + OVMF discovery.
 QEMU := qemu-system-x86_64
 ifeq ($(UNAME_S),Darwin)

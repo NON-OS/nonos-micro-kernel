@@ -1,3 +1,6 @@
+# Phony targets defined in this module.
+.PHONY: nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-run nonos-mk-run-input-probe-inject-serial-log nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-log nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-scan nonos-mk-static nonos-mk-swtpm-start nonos-mk-swtpm-stop nonos-mk-verify nonos-mk-verify-fast
+
 # QEMU
 
 $(QEMU_BLK_IMG):

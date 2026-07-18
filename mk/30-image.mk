@@ -1,3 +1,6 @@
+# Phony targets defined in this module.
+.PHONY: nonos-mk-usb-run
+
 # EFI boot image, so it boots from a burned disc, a USB written with dd, or QEMU
 # with -cdrom. This is the distributable production image.
 NONOS_ISO ?= $(TARGET_DIR)/nonos.iso
