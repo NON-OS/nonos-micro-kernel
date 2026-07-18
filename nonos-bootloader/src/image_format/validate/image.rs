@@ -22,6 +22,9 @@ use crate::image_format::types::{HashAlgorithm, SignatureAlgorithm};
 pub const MIN_KERNEL_SIZE: usize = 64;
 pub const ELF_MAGIC: [u8; 4] = [0x7f, b'E', b'L', b'F'];
 pub const ZK_PROOF_MAGIC: [u8; 4] = [0x4E, 0xC3, 0x5A, 0x50];
+// The transparent-STARK kernel self-attestation trailer carries this magic
+// instead of the boot-binding block above.
+pub const STARK_TRAILER_MAGIC: [u8; 8] = *b"NZKSTRK1";
 pub const MIN_ZK_PROOF_SIZE: usize = 272;
 
 pub fn validate_image(data: &[u8]) -> Result<ParsedImage<'_>, ImageValidationError> {
@@ -57,7 +60,12 @@ fn validate_proof_if_present(parsed: &ParsedImage<'_>) -> Result<(), ImageValida
             return Err(ImageValidationError::ProofTooSmall);
         }
 
-        if proof_bytes.len() >= 4 && &proof_bytes[0..4] != &ZK_PROOF_MAGIC {
+        // Accept either proof-block format: the earlier boot-binding block or the
+        // transparent-STARK self-attestation trailer. This is a shape check; the
+        // proof itself is verified in kernel_verify, which knows which one to run.
+        let is_curve = &proof_bytes[0..4] == &ZK_PROOF_MAGIC;
+        let is_stark = proof_bytes.len() >= 8 && &proof_bytes[0..8] == &STARK_TRAILER_MAGIC;
+        if !is_curve && !is_stark {
             return Err(ImageValidationError::ProofMagicInvalid);
         }
     }
