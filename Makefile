@@ -156,7 +156,11 @@ KERNEL_ATTEST_ROOT_BIN ?= $(NONOS_TRUST_DIR)/policy/kernel_attest_root.bin
 KERNEL_ATTEST_TRAILER  ?= $(TARGET_DIR)/kernel-attest/kernel.zk_trailer.bin
 KERNEL_ATTEST_ELF      ?= $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel
 _boot_comma := ,
-BOOT_STARK_FEATURE := $(if $(NONOS_STARK_KERNEL_ATTEST),$(_boot_comma)stark-kernel-attest)
+# Only the literal 1 turns kernel self-attestation on. A .nonos-config carrying
+# NONOS_STARK_KERNEL_ATTEST := 0 must read as off, so test the value, not just
+# whether the variable is defined.
+NONOS_STARK_KERNEL_ATTEST_ON := $(filter 1,$(NONOS_STARK_KERNEL_ATTEST))
+BOOT_STARK_FEATURE := $(if $(NONOS_STARK_KERNEL_ATTEST_ON),$(_boot_comma)stark-kernel-attest)
 ZK_CAPSULE_LABELS ?= $(TARGET_DIR)/capsule-attest/capsule_labels.txt
 ZK_CAPSULE_SECRETS ?= $(TARGET_DIR)/capsule-attest/capsule_secrets.txt
 ZK_CAPSULE_COMMITMENTS ?= $(TARGET_DIR)/capsule-attest/capsule_commitments.bin
@@ -484,7 +488,7 @@ $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),$(NONOS_TRUST_ANCHOR_PUBKEY),$(SIGNING_KEY)) \
 		$(KERNEL_MLDSA65_PUB) \
 		$(ZK_BOOT_ROOT) \
-		$(if $(NONOS_STARK_KERNEL_ATTEST),$(KERNEL_ATTEST_ROOT_BIN)) \
+		$(if $(NONOS_STARK_KERNEL_ATTEST_ON),$(KERNEL_ATTEST_ROOT_BIN)) \
 		$(GOP_PREF_STAMP) \
 		$(TARGET_DIR)/.nonos-toolchain.stamp
 	@echo "Building UEFI bootloader (policy: $(BOOTLOADER_POLICY))..."
@@ -493,7 +497,7 @@ $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),NONOS_TRUST_ANCHOR_PUBKEY=$(abspath $(NONOS_TRUST_ANCHOR_PUBKEY)),NONOS_SIGNING_KEY=$(SIGNING_KEY_ABS)) \
 		NONOS_MLDSA65_PUBKEY=$(shell pwd)/$(KERNEL_MLDSA65_PUB) \
 		NONOS_ZK_DEVICE_ROOT=$(shell pwd)/$(ZK_BOOT_ROOT) \
-		$(if $(NONOS_STARK_KERNEL_ATTEST),NONOS_KERNEL_ATTEST_ROOT=$(shell pwd)/$(KERNEL_ATTEST_ROOT_BIN)) \
+		$(if $(NONOS_STARK_KERNEL_ATTEST_ON),NONOS_KERNEL_ATTEST_ROOT=$(shell pwd)/$(KERNEL_ATTEST_ROOT_BIN)) \
 		$(if $(NONOS_GOP_PREF),NONOS_GOP_PREF=$(NONOS_GOP_PREF)) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --target x86_64-unknown-uefi --release \
@@ -1329,7 +1333,7 @@ $(TARGET_DIR)/kernel_signed.bin: $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel
 
 nonos-mk-sign: $(TARGET_DIR)/kernel_signed.bin
 
-ifdef NONOS_STARK_KERNEL_ATTEST
+ifeq ($(NONOS_STARK_KERNEL_ATTEST),1)
 # Kernel self-attestation: embed the transparent STARK trailer the bootloader
 # verifies against the enrolled kernel root before jump, in place of the curve
 # boot proof. The trailer is bound to the kernel measurement by nonos-stark-enroll.
