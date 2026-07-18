@@ -102,7 +102,7 @@ endif
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 
-# Top-level: nonos-mk = build the microkernel-capsules runtime baseline.
+# nonos-mk: build the microkernel-capsules runtime baseline.
 
 nonos-mk: nonos-mk-capsules
 	@echo
@@ -111,7 +111,7 @@ nonos-mk: nonos-mk-capsules
 	@echo "  make nonos-mk-run           full OS under QEMU + OVMF + TPM + NAT"
 	@echo "  make nonos-mk-dev-run       clean-clone: mint a dev identity then boot"
 	@echo "  make nonos-mk-verify        static gates + symbol scan"
-	@echo "  make nonos-mk-test          verify + both boot harnesses"
+	@echo "  make nonos-mk-test          verify + the boot harnesses"
 
 # Toolchain + key bootstrap
 

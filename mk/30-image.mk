@@ -3,8 +3,10 @@
 
 .PHONY: nonos-mk-usb-run
 
-# EFI boot image, so it boots from a burned disc, a USB written with dd, or QEMU
-# with -cdrom. This is the distributable production image.
+# EFI boot image, so it boots from a burned disc or QEMU with -cdrom. This is
+# the distributable production image. For a USB stick use nonos-mk-usb-img
+# instead: it writes a real GPT partition table, which is what firmware
+# expects from a disk, where a plain El Torito ISO is not dependable.
 NONOS_ISO ?= $(TARGET_DIR)/nonos.iso
 nonos-mk-iso: nonos-mk-esp
 	@echo "Building bootable UEFI ISO $(NONOS_ISO)..."
@@ -22,7 +24,7 @@ nonos-mk-iso: nonos-mk-esp
 		-o $(NONOS_ISO) $(TARGET_DIR)/isoroot >/dev/null 2>&1
 	@echo "ISO ready at $(NONOS_ISO)"
 	@echo "  Boot in QEMU:  qemu-system-x86_64 -bios OVMF.fd -cdrom $(NONOS_ISO)"
-	@echo "  Flash: sudo dd if=$(NONOS_ISO) of=/dev/sdX bs=4M && sync"
+	@echo "  USB stick:     make nonos-mk-usb-img   (real GPT image for dd)"
 
 # Boot the image as a real GPT disk (NOT virtual FAT), so a pass here proves the
 # partition table and ESP filesystem the USB actually boots from.

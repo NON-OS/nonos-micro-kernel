@@ -5,7 +5,7 @@ BOOTLOADER_DIR := nonos-bootloader
 TARGET_DIR     := target
 ESP_DIR        := $(TARGET_DIR)/esp
 USB_IMG        := $(TARGET_DIR)/nonos.img
-# Total image size in MiB. The kernel alone is ~68 MB, so keep generous headroom.
+# Total image size in MiB. The attested kernel alone is ~70 MB, so keep generous headroom.
 USB_IMG_MB     ?= 256
 KEYS_DIR       := $(BOOTLOADER_DIR)/keys
 
@@ -177,7 +177,6 @@ NONOS_DIRTY     := $(shell test -n "$$(git status --porcelain 2>/dev/null)" && e
 NONOS_ATTESTED  := $(shell ls nonos-data/trust/capsules/*.zk_trailer.bin 2>/dev/null | wc -l | tr -d ' ')
 NONOS_SIGNED    := $(shell ls nonos-data/trust/capsules/*.manifest.bin 2>/dev/null | wc -l | tr -d ' ')
 NONOS_ZK_ROOT_FPR := $(shell test -f $(ZK_BOOT_ROOT) && shasum -a 256 $(ZK_BOOT_ROOT) 2>/dev/null | cut -c1-16 || echo unenrolled)
-NONOS_ENFORCE   := $(shell grep -q 'nonos-production = \["nonos-zk-enforce"\]' Cargo.toml && echo on || echo log-only)
 
 define NONOS_BANNER
 
