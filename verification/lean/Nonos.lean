@@ -54,6 +54,7 @@ import Nonos.Nonce
 import Nonos.PageTable
 import Nonos.Paging
 import Nonos.Path
+import Nonos.PciCmdWrite
 import Nonos.PidAlloc
 import Nonos.Priority
 import Nonos.Quota

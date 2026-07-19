@@ -179,6 +179,12 @@ import Nonos
 #print axioms Nonos.LoadProtect.accepted_wx_safe
 #print axioms Nonos.LoadProtect.sealed_not_writable
 
+-- PCI command-write allowlist: an admitted write changes only writable bits,
+-- the merge branch is confined, and a raw protected-bit write is refused.
+#print axioms Nonos.PciCmdWrite.admitted_changes_only_writable
+#print axioms Nonos.PciCmdWrite.merge_branch_confined
+#print axioms Nonos.PciCmdWrite.raw_protected_write_refused
+
 -- PID allocation: an allocated PID is never the reserved 0, is not already
 -- live, and the stored counter never wraps to 0.
 #print axioms Nonos.PidAlloc.chosen_pid_ne_zero
