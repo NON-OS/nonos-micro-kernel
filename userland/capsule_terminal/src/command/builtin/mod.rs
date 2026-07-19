@@ -28,6 +28,7 @@ pub mod market;
 pub mod motd;
 pub mod nox;
 pub mod ping;
+pub mod prove;
 pub mod service;
 pub mod theme;
 pub mod version;
