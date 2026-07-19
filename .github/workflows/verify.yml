@@ -253,6 +253,13 @@ jobs:
           for f in Types.lean Funs.lean FunsExternal_Template.lean; do
             diff -u "../lean/Policy/$f" "/tmp/regen-policy/$f"
           done
+          cd ../irq
+          charon cargo --preset=aeneas \
+            --start-from 'nonos_irq::irq::validate::validate_msix_request' \
+            --dest-file irq.llbc
+          mkdir -p /tmp/regen-irq
+          aeneas -backend lean irq.llbc -dest /tmp/regen-irq
+          diff -u ../lean/NonosExtraction/Irq.lean /tmp/regen-irq/Irq.lean
       - name: Verify the refinement theorems
         run: |
           set -euo pipefail
