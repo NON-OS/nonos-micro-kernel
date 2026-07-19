@@ -49,6 +49,7 @@ import Nonos.Loader
 import Nonos.MemGrant
 import Nonos.Mmio
 import Nonos.MsixExclusion
+import Nonos.MultiSig
 import Nonos.Mutex
 import Nonos.NetParse
 import Nonos.Nonce
