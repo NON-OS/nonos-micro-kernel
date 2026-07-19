@@ -37,6 +37,36 @@ jobs:
       - name: Production source hygiene
         run: cargo run --manifest-path nonos-verify/Cargo.toml -- hygiene
 
+  # The committed verification/EVIDENCE.json is a machine-readable inventory of
+  # everything NONOS proves. Regenerate it from the source tree and fail if it
+  # has drifted, so the file in the repo is always an accurate, CI-checked
+  # statement of the verification surface.
+  evidence-manifest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          submodules: recursive
+      - name: Regenerate and check for drift
+        run: |
+          set -euo pipefail
+          ./verification/collect-evidence.sh > /tmp/EVIDENCE.json
+          if ! diff -u verification/EVIDENCE.json /tmp/EVIDENCE.json; then
+            echo "::error::verification/EVIDENCE.json is stale; run ./verification/collect-evidence.sh > verification/EVIDENCE.json and commit"
+            exit 1
+          fi
+          jq -e '.proof_systems.lean_specification.sorry_count == 0' /tmp/EVIDENCE.json >/dev/null \
+            || { echo "::error::a sorry is present in the Lean corpus"; exit 1; }
+      - name: Publish evidence manifest
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: verification-evidence
+          path: verification/EVIDENCE.json
+          retention-days: 90
+          if-no-files-found: error
+
   runnable-proofs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
