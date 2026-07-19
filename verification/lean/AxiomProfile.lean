@@ -214,6 +214,12 @@ import Nonos
 #print axioms Nonos.FdAlloc.alloc_lowest
 #print axioms Nonos.FdAlloc.alloc_none_full
 
+-- Multisig k-of-n: an accepted config is a well-formed threshold, a valid add
+-- keeps signers distinct and authorized, and a met threshold is backed by them.
+#print axioms Nonos.MultiSig.valid_config
+#print axioms Nonos.MultiSig.add_preserves_nodup
+#print axioms Nonos.MultiSig.threshold_backed_by_distinct_authorized
+
 -- MSI-X exclusion: no address a clamped BAR mapping covers falls inside the
 -- protected MSI-X table or PBA region.
 #print axioms Nonos.MsixExclusion.no_protected_byte_mapped
