@@ -185,6 +185,12 @@ import Nonos
 #print axioms Nonos.LoadProtect.accepted_wx_safe
 #print axioms Nonos.LoadProtect.sealed_not_writable
 
+-- Service registry: registration preserves name and port uniqueness and never
+-- grows the table past its cap.
+#print axioms Nonos.ServiceRegistry.register_preserves_names
+#print axioms Nonos.ServiceRegistry.register_preserves_ports
+#print axioms Nonos.ServiceRegistry.register_within_cap
+
 -- PCI command-write allowlist: an admitted write changes only writable bits,
 -- the merge branch is confined, and a raw protected-bit write is refused.
 #print axioms Nonos.PciCmdWrite.admitted_changes_only_writable
