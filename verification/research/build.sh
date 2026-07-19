@@ -30,6 +30,22 @@ unzip -q "$out" -d "$work"
 
 doc="$work/word/document.xml"
 
+# Cover logo: embed the teal NONOS wordmark as a centered image above the title.
+# The image part, its content-type, and its relationship are added, then a
+# drawing paragraph is inserted before the Title paragraph. Dimensions are in
+# EMU (914400 per inch); the source is 900x316, shown at 3.6 inches wide.
+mkdir -p "$work/word/media"
+cp nonos-logo.png "$work/word/media/logo.png"
+grep -q 'Extension="png"' "$work/[Content_Types].xml" || \
+  perl -0pi -e 's{(<Types[^>]*>)}{$1<Default Extension="png" ContentType="image/png"/>}' "$work/[Content_Types].xml"
+perl -0pi -e 's{</Relationships>}{<Relationship Id="rIdNonosLogo" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.png"/></Relationships>}' \
+  "$work/word/_rels/document.xml.rels"
+logo_frag="$work/logo_frag.xml"
+cat > "$logo_frag" <<'XML'
+<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="1400" w:after="200"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="3291840" cy="1155913"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="101" name="NONOS logo"/><wp:cNvGraphicFramePr/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="101" name="logo.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdNonosLogo"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="3291840" cy="1155913"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>
+XML
+LOGO_FRAG="$logo_frag" perl -0pi -e 'BEGIN{local $/; open(my $f,"<",$ENV{LOGO_FRAG}); our $L=<$f>; close $f; chomp $L} s{(<w:body>)}{$1$L}' "$doc"
+
 # Page layout: the title block (title, subtitle, author, date, abstract) stands
 # alone on page one; the table of contents gets its own page two; the body
 # begins on page three. Insert a page break before the contents heading and
