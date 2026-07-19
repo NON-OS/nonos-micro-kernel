@@ -26,6 +26,7 @@ use alloc::vec::Vec;
 use crate::browser::css::Size;
 
 use super::border_box_w::border_box_w;
+use super::content_width::content_width;
 use super::ctx::Ctx;
 use super::display_list::{Content, DisplayList, Fragment};
 use super::edges_x::edges_x;
@@ -116,7 +117,11 @@ pub(super) fn layout_table(
         for (ci, cell) in cells(row).enumerate() {
             let mn = min_content_width(cell, depth + 1);
             let mx = match cell.style.width {
-                Size::Auto => mn,
+                // Auto cells size to their real max-content (the width the cell
+                // wants when nothing wraps), not the min-content: feeding min as
+                // the max collapsed every column onto its longest word, so text
+                // over-wrapped and the whole table squeezed into a narrow strip.
+                Size::Auto => content_width(cell, depth + 1),
                 _ => border_box_w(&cell.style, content_w),
             };
             colmin[ci] = colmin[ci].max(mn);

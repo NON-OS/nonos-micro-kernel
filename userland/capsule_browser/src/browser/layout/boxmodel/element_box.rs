@@ -16,11 +16,13 @@
 
 use alloc::format;
 use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 
 use crate::browser::css::Computed;
 
 use super::abs_out_of_flow::out_of_flow;
 use super::collect::collect;
+use super::grid_place::resolve_grid_places;
 use super::leaf::leaf;
 use super::tree::{BoxKind, BoxNode};
 use super::walk::{ElementIn, Walk};
@@ -48,6 +50,7 @@ pub(super) fn element_box(
         &style,
         w.styles,
         w.bg_images,
+        w.grids,
         w.pseudos,
         &link,
         depth + 1,
@@ -75,6 +78,7 @@ pub(super) fn element_box(
                     href: link.clone(),
                     dom_id: item.ch,
                     bg_image: None,
+                    grid_place: None,
                     children: alloc::vec::Vec::new(),
                 },
             );
@@ -87,6 +91,7 @@ pub(super) fn element_box(
                 href: link.clone(),
                 dom_id: item.ch,
                 bg_image: None,
+                grid_place: None,
                 children: alloc::vec::Vec::new(),
             });
         }
@@ -100,7 +105,7 @@ pub(super) fn element_box(
             String::from("\u{2022} ")
         };
         *w.count += 1;
-        kids.insert(0, leaf(BoxKind::Text(marker), &style, &None, item.ch));
+        attach_marker(&mut kids, leaf(BoxKind::Text(marker), &style, &None, item.ch));
     }
     // An absolute box with a real inset blockifies so it stays out of inline
     // runs and the container lays it from its own list. With all insets auto
@@ -114,11 +119,32 @@ pub(super) fn element_box(
     } else {
         BoxKind::Inline
     };
-    let kids = match kind {
+    let mut kids = match kind {
         BoxKind::Flex | BoxKind::Grid => wrap_items(&style, kids),
         BoxKind::Block => wrap_mixed(&style, kids),
         _ => kids,
     };
+    // Grid items that asked for a named or numeric position get it resolved
+    // to track indices now, while the name tables are still at hand.
+    if matches!(kind, BoxKind::Grid) {
+        resolve_grid_places(w, item.ch, &style, &mut kids);
+    }
     let bg_image = w.bg_images.get(item.ch).cloned().flatten();
-    BoxNode { kind, style, href: link, dom_id: item.ch, bg_image, children: kids }
+    BoxNode { kind, style, href: link, dom_id: item.ch, bg_image, grid_place: None, children: kids }
+}
+
+// The marker belongs on the list item's first line. As a sibling of a
+// block-level first child (display:block nav links) it would be wrapped
+// into its own anonymous line, so descend through leading in-flow blocks
+// until it can join an inline run.
+fn attach_marker(kids: &mut Vec<BoxNode>, marker: BoxNode) {
+    if let Some(first) = kids.first_mut() {
+        if matches!(first.kind, BoxKind::Block)
+            && !out_of_flow(&first.style)
+            && !first.children.is_empty()
+        {
+            return attach_marker(&mut first.children, marker);
+        }
+    }
+    kids.insert(0, marker);
 }

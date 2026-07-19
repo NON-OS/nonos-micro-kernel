@@ -40,6 +40,7 @@ mod float_ctx;
 mod flush_line;
 mod flush_run;
 mod grid_children;
+mod grid_place;
 mod image_box;
 mod img_src;
 mod inline_items;

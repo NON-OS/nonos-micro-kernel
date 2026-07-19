@@ -31,6 +31,7 @@ pub(super) fn flush_run(out: &mut Vec<BoxNode>, run: &mut Vec<BoxNode>, parent: 
         href: None,
         dom_id: 0,
         bg_image: None,
+        grid_place: None,
         children: core::mem::take(run),
     });
 }

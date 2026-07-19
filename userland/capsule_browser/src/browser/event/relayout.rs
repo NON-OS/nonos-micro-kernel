@@ -27,7 +27,13 @@ pub fn relayout(state: &mut State) {
     let mut css_text = css::collect_css(dom);
     css_text.push_str(&state.page_css);
     let styled = css::compute_cached(dom, &css_text, &mut state.css_cache);
-    let root = layout::boxmodel::build(dom, &styled.styles, &styled.bg_images, &styled.pseudos);
+    let root = layout::boxmodel::build(
+        dom,
+        &styled.styles,
+        &styled.bg_images,
+        &styled.grids,
+        &styled.pseudos,
+    );
     let doc = layout::boxmodel::layout(&root, state.viewport_w);
     state.box_doc = Some(doc);
     // Queue newly declared web fonts; each face is fetched once and text

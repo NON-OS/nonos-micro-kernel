@@ -58,8 +58,18 @@ pub(super) fn collect_items(
                 let space = measure(" ").max(1);
                 let line_h = c.style.line_height() as i32;
                 let tt = c.style.text_transform;
+                let icon = c.style.icon_font;
                 let word = |w: &str| {
-                    let text = super::text_transform::transform(w, tt);
+                    // Icon-font text is a ligature name or private-use glyph we
+                    // cannot draw: map it to a symbol the built-in face has, or
+                    // emit nothing, so the icon never shows as a literal word.
+                    let text = if icon {
+                        alloc::string::String::from(
+                            crate::browser::css::icon_font::map_ligature(w).unwrap_or(""),
+                        )
+                    } else {
+                        super::text_transform::transform(w, tt)
+                    };
                     InlineItem::Word {
                         px,
                         color: c.style.color,
