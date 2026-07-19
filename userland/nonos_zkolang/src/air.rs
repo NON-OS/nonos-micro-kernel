@@ -108,9 +108,6 @@ const DEGREE: usize = 3;
 /// Why a program or VM trace could not be laid out for the step AIR.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum BuildError {
-    /// A row used an opcode outside the scope this AIR proves. The memory opcodes
-    /// (Load, Store) and the Poseidon port (Pos) arrive with later phases.
-    NotInScope(OpTag),
     /// The program has no reachable halt, so its length is undefined.
     NoHalt,
     /// The run is longer than the requested power-of-two trace length.
@@ -326,7 +323,6 @@ impl StepAir {
             OpTag::Halt => {
                 flat[base + S_HALT] = Fp::ONE;
             }
-            other => return Err(BuildError::NotInScope(other)),
         }
         Ok(())
     }

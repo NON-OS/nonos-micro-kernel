@@ -16,31 +16,25 @@ conversion happens between running a program and proving it: the register file
 (`src/vm.rs`, `regs: [Fp; REGS]`) already holds exactly the values the prover
 reads. A run and its proof are the same object seen two ways.
 
-The machine also has a field-addressed memory in the executor, but the memory
-opcodes are not yet constrained by the proof; see the note at the end of this
-page.
-
 ## The instruction set
 
-One flat opcode per step. The full set in `isa.rs` is:
+One flat opcode per step. Every opcode is enforced by the step AIR; there are no
+unproven instructions. The full set in `isa.rs` is:
 
-| Opcode | Meaning | Proven today |
-|---|---|---|
-| `Imm { d, v }` | `r_d = v` (a literal) | yes |
-| `Add { d, a, b }` | `r_d = r_a + r_b` | yes |
-| `Sub { d, a, b }` | `r_d = r_a - r_b` | yes |
-| `Mul { d, a, b }` | `r_d = r_a * r_b` | yes |
-| `Inv { d, a }` | `r_d = r_a^{-1}`; zero is unprovable | yes |
-| `Sel { d, c, a, b }` | `r_d = r_c ? r_a : r_b`, `r_c` a bit | yes |
-| `Eq { d, a, b }` | `r_d = (r_a == r_b)` as a bit | yes |
-| `Bool { a }` | constrain `r_a` to a bit | yes |
-| `Assert { a }` | constrain `r_a` to zero | yes |
-| `Inp { d, idx }` | `r_d = public_input[idx]` | yes |
-| `Out { a, idx }` | `public_output[idx] = r_a` | yes |
-| `Halt` | end of program | yes |
-| `Load { d, a }` | `r_d = mem[r_a]` | not yet |
-| `Store { a, b }` | `mem[r_a] = r_b` | not yet |
-| `Pos { d, a, b }` | `r_d = poseidon2(r_a, r_b)` | not yet |
+| Opcode | Meaning |
+|---|---|
+| `Imm { d, v }` | `r_d = v` (a literal) |
+| `Add { d, a, b }` | `r_d = r_a + r_b` |
+| `Sub { d, a, b }` | `r_d = r_a - r_b` |
+| `Mul { d, a, b }` | `r_d = r_a * r_b` |
+| `Inv { d, a }` | `r_d = r_a^{-1}`; zero is unprovable |
+| `Sel { d, c, a, b }` | `r_d = r_c ? r_a : r_b`, `r_c` a bit |
+| `Eq { d, a, b }` | `r_d = (r_a == r_b)` as a bit |
+| `Bool { a }` | constrain `r_a` to a bit |
+| `Assert { a }` | constrain `r_a` to zero |
+| `Inp { d, idx }` | `r_d = public_input[idx]` |
+| `Out { a, idx }` | `public_output[idx] = r_a` |
+| `Halt` | end of program |
 
 `Inv`, `Eq`, `Bool`, `Assert`, and `Sel` carry a witness or a constraint rather
 than a plain result: an inverse is supplied and checked, an equality is decided by
@@ -64,13 +58,13 @@ machine with data-dependent branching would need its control flow itself proven,
 which is a much larger and more error-prone constraint system. zKølang trades
 generality for a core you can read and check by hand.
 
-## The deferred opcodes
+## Scope, and a note on growth
 
-`Load` and `Store` give the machine a random-access memory, and `Pos` gives it the
-Poseidon hash. All three are present in the instruction set so the executor and
-the language can grow into them, but the step AIR does not yet enforce them. A
-program that reaches one of these opcodes is rejected when the trace is laid out
-(`BuildError::NotInScope` in `src/air.rs`), not silently proven. Memory
-consistency needs a permutation argument over sorted accesses, and the hash needs
-its own constraint region; both are future work described in
-[the AIR](05-the-air.md).
+This is the complete instruction set. Every opcode above is proven, so a program
+built from them is proven whole; there are no placeholder instructions and nothing
+is rejected at proving time for being unimplemented. What the machine does not have
+is a random-access memory or a hash primitive. Those are not missing pieces of the
+current language; they are a deliberate future direction. Adding a memory would
+turn the circuit into a general machine and would need a permutation argument over
+sorted accesses, a distinct and larger construction that belongs to a future major
+version, not to the branchless arithmetic core documented here.

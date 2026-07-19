@@ -92,9 +92,7 @@ fn choose_log_t(n: usize) -> Option<u32> {
 /// Run a VM program on `inputs` (all treated as public), prove it, and verify the
 /// proof. Returns the report including the public outputs.
 pub fn prove_program(program: &[Op], inputs: &[Fp]) -> Result<Report, RunError> {
-    // The in-scope subset does not use the Poseidon port, so the injected hash is
-    // a placeholder that is provably never called.
-    let mut vm = Vm::new(|a, _b| a);
+    let mut vm = Vm::new();
     let trace = vm.run(program, inputs, inputs.len()).map_err(RunError::Execute)?;
     let steps = trace.rows.len();
     let log_trace_len = choose_log_t(steps).ok_or(RunError::ProgramTooLong { steps })?;

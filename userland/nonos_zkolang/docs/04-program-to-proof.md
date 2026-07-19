@@ -65,11 +65,9 @@ prover cannot substitute a different program or different public data.
 ## What it does not mean
 
 It does not mean the program is the one you intended; it means the program that
-was proven is the one whose text the verifier holds. It does not cover the
-deferred opcodes: a proof says nothing about memory or hashing, because a program
-using `Load`, `Store`, or `Pos` cannot be laid out and so is never proven. It is a
-proof about the code as written, not a claim that the code is the right code for
-your purpose. Choosing the right program is your job; proving it ran is zKølang's.
+was proven is the one whose text the verifier holds. It is a proof about the code
+as written, not a claim that the code is the right code for your purpose. Choosing
+the right program is your job; proving it ran is zKølang's.
 
 ## When there is no proof
 

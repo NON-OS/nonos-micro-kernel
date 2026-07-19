@@ -4,8 +4,7 @@
 
 ## Opcodes
 
-The instruction set (`src/isa.rs`). The last three are present but not yet
-enforced by the AIR.
+The instruction set (`src/isa.rs`). Every opcode is enforced by the AIR.
 
 | Opcode | Fields | Effect |
 |---|---|---|
@@ -21,9 +20,6 @@ enforced by the AIR.
 | `Inp` | `d, idx` | `r_d = public_input[idx]` |
 | `Out` | `a, idx` | `public_output[idx] = r_a` |
 | `Halt` | | end of program |
-| `Load` | `d, a` | `r_d = mem[r_a]` (not yet proven) |
-| `Store` | `a, b` | `mem[r_a] = r_b` (not yet proven) |
-| `Pos` | `d, a, b` | `r_d = poseidon2(r_a, r_b)` (not yet proven) |
 
 ## Grammar
 
@@ -65,8 +61,8 @@ Each failure is a typed value, never a panic.
   `TooManyRegisters`.
 - `ProveError` (`src/vm.rs`): `BadRegister`, `BadInput`, `NoHalt`,
   `Unprovable { step }`.
-- `BuildError` (`src/air.rs`): `NotInScope`, `NoHalt`, `TooLong`,
-  `MissingPublicInput`, `MissingPublicOutput`.
+- `BuildError` (`src/air.rs`): `NoHalt`, `TooLong`, `MissingPublicInput`,
+  `MissingPublicOutput`.
 - `RunError` (`src/driver.rs`): `Compile`, `Execute`, `Layout`, `ProgramTooLong`.
 
 ## Limits
@@ -77,7 +73,9 @@ Each failure is a typed value, never a panic.
   loops are unrolled by the front-end.
 - Traces up to 2^16 rows (`MAX_LOG_T` in `src/driver.rs`); a longer program is a
   `ProgramTooLong` error rather than a silent truncation.
-- No memory or hashing yet: `Load`, `Store`, `Pos` are rejected at layout.
+- No random-access memory or hash primitive: zKølang is a straight-line
+  arithmetic language. A memory extension is a future major version, not a
+  missing part of the current one.
 
 ## Proof parameters
 

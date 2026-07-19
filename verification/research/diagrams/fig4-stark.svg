@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="440" viewBox="0 0 1180 440" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+  <rect width="1180" height="440" fill="#ffffff"/>
+  <defs>
+    <marker id="a4" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#2E5C5C"/>
+    </marker>
+  </defs>
+
+  <text x="30" y="56" fill="#12403f" font-size="18" font-weight="700">The transparent attestation gate: a proof the verifier rebuilds from public inputs</text>
+
+  <!-- prover lane -->
+  <text x="30" y="98" fill="#5E7E7E" font-size="13" font-weight="700">PROVER</text>
+  <line x1="30" y1="108" x2="1150" y2="108" stroke="#DDE9E9" stroke-width="1.4"/>
+
+  <!-- stage boxes (prover) -->
+  <g>
+    <rect x="30" y="124" width="200" height="96" rx="11" fill="#ffffff" stroke="#2E5C5C" stroke-width="2"/>
+    <text x="130" y="160" fill="#12403f" font-size="16" font-weight="700" text-anchor="middle">Trace</text>
+    <text x="130" y="184" fill="#5E7E7E" font-size="12.5" text-anchor="middle">execution or the</text>
+    <text x="130" y="201" fill="#5E7E7E" font-size="12.5" text-anchor="middle">boot measurement</text>
+
+    <rect x="290" y="124" width="200" height="96" rx="11" fill="#ffffff" stroke="#2E5C5C" stroke-width="2"/>
+    <text x="390" y="160" fill="#12403f" font-size="16" font-weight="700" text-anchor="middle">AIR constraints</text>
+    <text x="390" y="184" fill="#5E7E7E" font-size="12.5" text-anchor="middle">the transition rules</text>
+    <text x="390" y="201" fill="#5E7E7E" font-size="12.5" text-anchor="middle">as low&#8211;degree polys</text>
+
+    <rect x="550" y="124" width="200" height="96" rx="11" fill="#ffffff" stroke="#2E5C5C" stroke-width="2"/>
+    <text x="650" y="160" fill="#12403f" font-size="16" font-weight="700" text-anchor="middle">Merkle commit</text>
+    <text x="650" y="184" fill="#5E7E7E" font-size="12.5" text-anchor="middle">low&#8211;degree extension,</text>
+    <text x="650" y="201" fill="#5E7E7E" font-size="12.5" text-anchor="middle">Poseidon hashing</text>
+
+    <rect x="810" y="124" width="200" height="96" rx="11" fill="#ffffff" stroke="#2E5C5C" stroke-width="2"/>
+    <text x="910" y="160" fill="#12403f" font-size="16" font-weight="700" text-anchor="middle">FRI</text>
+    <text x="910" y="184" fill="#5E7E7E" font-size="12.5" text-anchor="middle">proximity to a</text>
+    <text x="910" y="201" fill="#5E7E7E" font-size="12.5" text-anchor="middle">low&#8211;degree codeword</text>
+  </g>
+
+  <line x1="234" y1="172" x2="286" y2="172" stroke="#2E5C5C" stroke-width="2" marker-end="url(#a4)"/>
+  <line x1="494" y1="172" x2="546" y2="172" stroke="#2E5C5C" stroke-width="2" marker-end="url(#a4)"/>
+  <line x1="754" y1="172" x2="806" y2="172" stroke="#2E5C5C" stroke-width="2" marker-end="url(#a4)"/>
+
+  <!-- Fiat-Shamir band -->
+  <rect x="290" y="240" width="720" height="40" rx="20" fill="#F2F7F7" stroke="#9DB8B8" stroke-width="1.4"/>
+  <text x="650" y="265" fill="#2E5C5C" font-size="14" text-anchor="middle" font-weight="700">Fiat&#8211;Shamir transcript &#183; all challenges derived from the commitments, non&#8211;interactive</text>
+  <line x1="390" y1="220" x2="390" y2="238" stroke="#9DB8B8" stroke-width="1.4"/>
+  <line x1="650" y1="220" x2="650" y2="238" stroke="#9DB8B8" stroke-width="1.4"/>
+  <line x1="910" y1="220" x2="910" y2="238" stroke="#9DB8B8" stroke-width="1.4"/>
+
+  <!-- verifier -->
+  <rect x="30" y="320" width="620" height="92" rx="11" fill="#2E5C5C"/>
+  <rect x="30" y="320" width="8" height="92" rx="4" fill="#66FFFF"/>
+  <text x="60" y="356" fill="#ffffff" font-size="17" font-weight="700">Verifier &#183; at spawn and at boot</text>
+  <text x="60" y="382" fill="#BFEFEF" font-size="13.5">rebuilds the AIR and the transcript from the public inputs and accepts or refuses</text>
+  <text x="60" y="401" fill="#BFEFEF" font-size="13.5">no trusted setup, no elliptic&#8211;curve assumption, post&#8211;quantum</text>
+
+  <rect x="680" y="320" width="330" height="92" rx="11" fill="#E8FBFB" stroke="#2E5C5C" stroke-width="2"/>
+  <text x="845" y="360" fill="#12403f" font-size="16" font-weight="700" text-anchor="middle">accept  &#8658;  capsule runs</text>
+  <text x="845" y="388" fill="#5E7E7E" font-size="13" text-anchor="middle">refuse  &#8658;  capsule is denied</text>
+
+  <path d="M340,282 L340,318" stroke="#2E5C5C" stroke-width="2" marker-end="url(#a4)" fill="none"/>
+</svg>

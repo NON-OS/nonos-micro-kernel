@@ -20,7 +20,6 @@
 //! assert, an inverse of zero, a non-boolean selector) is reported as
 //! `Unprovable`, the honest result, because such a trace has no proof.
 
-use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
 use nonos_stark::field::Fp;
@@ -42,19 +41,21 @@ pub enum ProveError {
     Unprovable { step: u64 },
 }
 
-// The machine: a fixed register file, a sparse field-addressed memory, and the
-// Poseidon permutation the `Pos` opcode uses. `hash` is injected so the core
-// stays independent of the concrete permutation while the AIR proves the real
-// one used at build.
+// The machine: a fixed register file over the field. Every value it holds is an
+// `Fp`, the same scalar the STARK commits.
 pub struct Vm {
     regs: [Fp; REGS],
-    mem: BTreeMap<u64, Fp>,
-    hash: fn(Fp, Fp) -> Fp,
+}
+
+impl Default for Vm {
+    fn default() -> Vm {
+        Vm::new()
+    }
 }
 
 impl Vm {
-    pub fn new(hash: fn(Fp, Fp) -> Fp) -> Vm {
-        Vm { regs: [Fp::ZERO; REGS], mem: BTreeMap::new(), hash }
+    pub fn new() -> Vm {
+        Vm { regs: [Fp::ZERO; REGS] }
     }
 
     // Run `program` on `inputs`, the first `n_public` of which are public. On
@@ -116,26 +117,6 @@ impl Vm {
                 row.aux = inv;
                 self.wset(d, inv)?;
             }
-            Op::Load { d, a } => {
-                row.op = OpTag::Load;
-                let addr = self.rget(a)?;
-                row.ra = addr;
-                row.addr = addr;
-                let v = *self.mem.get(&addr.value()).unwrap_or(&Fp::ZERO);
-                row.mval = v;
-                row.rd = v;
-                self.wset(d, v)?;
-            }
-            Op::Store { a, b } => {
-                row.op = OpTag::Store;
-                let addr = self.rget(a)?;
-                let v = self.rget(b)?;
-                row.ra = addr;
-                row.rb = v;
-                row.addr = addr;
-                row.mval = v;
-                self.mem.insert(addr.value(), v);
-            }
             Op::Sel { d, c, a, b } => {
                 row.op = OpTag::Sel;
                 let vc = self.rget(c)?;
@@ -183,19 +164,6 @@ impl Vm {
                 if va != Fp::ZERO {
                     return Err(ProveError::Unprovable { step: clk });
                 }
-            }
-            Op::Pos { d, a, b } => {
-                row.op = OpTag::Pos;
-                let va = self.rget(a)?;
-                let vb = self.rget(b)?;
-                let out = (self.hash)(va, vb);
-                row.ra = va;
-                row.rb = vb;
-                row.pos_in0 = va;
-                row.pos_in1 = vb;
-                row.pos_out = out;
-                row.rd = out;
-                self.wset(d, out)?;
             }
             Op::Inp { d, idx } => {
                 row.op = OpTag::Inp;

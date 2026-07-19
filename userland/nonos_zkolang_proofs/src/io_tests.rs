@@ -23,7 +23,7 @@ fn hasher() -> Poseidon {
 fn square_trace(x: u64) -> nonos_zkolang::Trace {
     let program = compile_source("input x; let y = x * x; output y;").expect("compile");
     let inputs = [Fp::from_u64(x)];
-    let mut vm = Vm::new(|a, _b| a);
+    let mut vm = Vm::new();
     vm.run(&program, &inputs, 1).expect("run")
 }
 

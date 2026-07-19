@@ -233,6 +233,8 @@ each $\mathrm{Ax}(T)$; CI rejects any run in which admissibility fails.
 The layers below are ordered by the strength of the proof-to-code link, weakest
 first. Each is re-checked on every push.
 
+![**Figure 1.** The verification architecture, ordered by the strength of the proof-to-code link. Each layer is re-checked on every push. Mechanical extraction proves theorems on the definitions the compiler emits; the transparent STARK gate re-verifies attestation at runtime, at every spawn and at boot.](diagrams/fig1-architecture.png){width=6.4in}
+
 **Layer 0 (hygiene).** A static gate scans all production Rust under `src/` and
 `userland/` and rejects panic paths (`unwrap`, `expect`, `panic!`), stub macros,
 and dead-code markers. This is not a correctness proof; it is a machine-enforced
@@ -523,11 +525,31 @@ authorized and no others, so a device cannot address memory outside a window it
 was explicitly given; where the backend is not engaged the guarantee reduces to
 the software bounds of Theorem 7, as the scope section records.
 
+## The conjoined security theorem
+
+The modules above each prove a local invariant about one operation. The module
+`Nonos.Secure` composes them into a single invariant over a transition system
+whose steps are the security-relevant kernel operations, and the theorem
+`every_trace_is_secure` proves the conjunction holds after a trace of any length,
+with the adversary choosing every transition. The invariant conjoins authority
+conservation (no step manufactures a right nobody held at the start), the W^X
+mapping rule, the user-copy bound, the anti-rollback floor, attestation before
+admission, DMA-map confinement, ELF header-table bounds, and MSI-X
+interrupt-bind confinement. Each transition's guard is the guard the kernel
+enforces, and each guard's fidelity to the code is discharged by the extraction,
+Verus, and differential layers. Folding the hardware-broker and loader guards
+into the conjunction is what turns a set of local lemmas into a single statement
+an attacker cannot escape by ordering the operations adversarially.
+
+![**Figure 2.** The conjoined security theorem. An adversary chooses each transition; `every_trace_is_secure` proves the conjunction of eight invariants survives a trace of any length. The shaded clauses were added by folding the local hardware-broker and loader guards into the top-level statement.](diagrams/fig2-conjoined.png){width=6.4in}
+
 # Mechanical Extraction: From MIR to Lean
 
 The layers of §4 state and prove properties of Lean models; the remaining gap is
 the fidelity of each model to the Rust it transcribes. Layer 2c removes that
 transcription step for selected functions.
+
+![**Figure 3.** The mechanical-extraction pipeline. The shipping function is lowered through the compiler's own MIR by Charon, translated to a Lean definition by Aeneas, and the security theorems are proven on that extracted definition. Regeneration from an unchanged kernel is byte-stable, so any change to the code surfaces as a diff in the extracted Lean.](diagrams/fig3-extraction.png){width=6.4in}
 
 ## The pipeline
 
@@ -706,6 +728,8 @@ folding rounds reduce a claim about a large codeword to a claim about a small on
 The verifier is made non-interactive by deriving its challenges from the
 transcript with a Fiat-Shamir hash, so the same code produces and checks the
 proof and the challenges cannot be ground against.
+
+![**Figure 4.** The transparent attestation gate. The prover reduces a trace or boot measurement through the AIR constraints, a Merkle commitment, and FRI, with all challenges derived from the transcript by Fiat-Shamir. The verifier rebuilds the same argument from the public inputs at every spawn and at boot, with no trusted setup and no elliptic-curve assumption.](diagrams/fig4-stark.png){width=6.4in}
 
 The measurement itself is a length-prefixed encoding of the capsule image hash,
 the granted capability mask, the policy epoch and a domain separator, hashed into

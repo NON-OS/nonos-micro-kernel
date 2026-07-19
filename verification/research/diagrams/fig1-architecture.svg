@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="760" viewBox="0 0 1180 760" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+  <rect width="1180" height="760" fill="#ffffff"/>
+
+  <!-- fidelity axis -->
+  <defs>
+    <marker id="ah" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#2E5C5C"/>
+    </marker>
+  </defs>
+  <line x1="70" y1="700" x2="70" y2="70" stroke="#2E5C5C" stroke-width="2.5" marker-end="url(#ah)"/>
+  <text x="44" y="400" fill="#2E5C5C" font-size="18" font-weight="700" transform="rotate(-90 44 400)" text-anchor="middle">proof&#8211;to&#8211;code fidelity increases</text>
+
+  <!-- capstone: STARK gate (runtime) -->
+  <rect x="130" y="70" width="980" height="86" rx="10" fill="#2E5C5C"/>
+  <rect x="130" y="70" width="8" height="86" rx="4" fill="#66FFFF"/>
+  <text x="160" y="104" fill="#ffffff" font-size="21" font-weight="700">Transparent STARK attestation gate</text>
+  <text x="160" y="132" fill="#BFEFEF" font-size="15">runtime re&#8211;verification of each capsule at spawn and the kernel measurement at boot</text>
+  <rect x="905" y="94" width="185" height="40" rx="20" fill="#66FFFF"/>
+  <text x="997" y="120" fill="#12403f" font-size="15" font-weight="700" text-anchor="middle">no trusted setup</text>
+
+  <!-- layer 5: mechanical extraction (strongest static) -->
+  <rect x="130" y="182" width="980" height="86" rx="10" fill="#E8FBFB" stroke="#2E5C5C" stroke-width="2.5"/>
+  <rect x="130" y="182" width="8" height="86" rx="4" fill="#2E5C5C"/>
+  <text x="160" y="216" fill="#12403f" font-size="21" font-weight="700">Mechanical extraction &#183; MIR &#8594; Lean</text>
+  <text x="160" y="244" fill="#2E5C5C" font-size="15">theorems proven on the definitions the compiler emits, via Charon and Aeneas</text>
+  <rect x="960" y="206" width="130" height="40" rx="20" fill="#ffffff" stroke="#2E5C5C" stroke-width="1.5"/>
+  <text x="1025" y="232" fill="#2E5C5C" font-size="15" font-weight="700" text-anchor="middle">7 functions</text>
+
+  <!-- layer 4: verus -->
+  <rect x="130" y="294" width="980" height="72" rx="10" fill="#ffffff" stroke="#2E5C5C" stroke-width="2"/>
+  <text x="160" y="326" fill="#12403f" font-size="20" font-weight="700">Verus refinement</text>
+  <text x="160" y="351" fill="#2E5C5C" font-size="15">SMT proofs over the real Rust bit&#8211;operations</text>
+  <rect x="975" y="315" width="115" height="36" rx="18" fill="#ffffff" stroke="#2E5C5C" stroke-width="1.5"/>
+  <text x="1032" y="339" fill="#2E5C5C" font-size="14" font-weight="700" text-anchor="middle">5 files</text>
+
+  <!-- layer 3: lean corpus -->
+  <rect x="130" y="392" width="980" height="72" rx="10" fill="#ffffff" stroke="#2E5C5C" stroke-width="2"/>
+  <text x="160" y="424" fill="#12403f" font-size="20" font-weight="700">Lean specification corpus</text>
+  <text x="160" y="449" fill="#2E5C5C" font-size="15">machine&#8211;checked theorems over models of the security&#8211;critical operations</text>
+  <rect x="930" y="413" width="160" height="36" rx="18" fill="#ffffff" stroke="#2E5C5C" stroke-width="1.5"/>
+  <text x="1010" y="437" fill="#2E5C5C" font-size="14" font-weight="700" text-anchor="middle">903 thms &#183; 0 sorry</text>
+
+  <!-- layer 2: kani -->
+  <rect x="130" y="490" width="980" height="66" rx="10" fill="#ffffff" stroke="#7BA3A3" stroke-width="1.8"/>
+  <text x="160" y="520" fill="#2E5C5C" font-size="19" font-weight="700">Kani bounded model checking</text>
+  <text x="160" y="543" fill="#5E7E7E" font-size="14.5">exhaustive checks of the real source over a bounded input domain</text>
+  <rect x="960" y="505" width="130" height="34" rx="17" fill="#ffffff" stroke="#7BA3A3" stroke-width="1.5"/>
+  <text x="1025" y="528" fill="#2E5C5C" font-size="14" font-weight="700" text-anchor="middle">65 harnesses</text>
+
+  <!-- layer 1: runnable -->
+  <rect x="130" y="580" width="980" height="60" rx="10" fill="#ffffff" stroke="#7BA3A3" stroke-width="1.8"/>
+  <text x="160" y="608" fill="#2E5C5C" font-size="19" font-weight="700">Runnable proof crates</text>
+  <text x="160" y="630" fill="#5E7E7E" font-size="14.5">assertions that execute the real kernel source through path inclusion</text>
+  <rect x="975" y="592" width="115" height="34" rx="17" fill="#ffffff" stroke="#7BA3A3" stroke-width="1.5"/>
+  <text x="1032" y="615" fill="#2E5C5C" font-size="14" font-weight="700" text-anchor="middle">32 crates</text>
+
+  <!-- layer 0: hygiene -->
+  <rect x="130" y="664" width="980" height="54" rx="10" fill="#F2F7F7" stroke="#9DB8B8" stroke-width="1.5"/>
+  <text x="160" y="690" fill="#5E7E7E" font-size="18" font-weight="700">Source hygiene</text>
+  <text x="160" y="709" fill="#7E9797" font-size="14">formatting, lints, and the no&#8211;panic discipline enforced in CI</text>
+</svg>

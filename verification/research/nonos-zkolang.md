@@ -22,10 +22,12 @@ abstract: |
   implies a faithful run, the binding of the trace to the money-grade STARK, and a
   NOX pay-to-prove fee that follows the proving work. We report measured trace
   shapes and an accept-and-reject evidence suite of thirty in-process proofs. We
-  are explicit about scope: the branchless core, register binding, and public
-  input and output binding are built and enforced today; random-access memory and
-  a hash port are named in the instruction set but not yet constrained, and we
-  never lean on them.
+  are explicit about scope: every opcode is enforced, so a program is proven
+  whole with no unimplemented instruction; what the language does not have is a
+  random-access memory or a hash primitive, a deliberate scope rather than a
+  missing piece, and we never lean on either. The core is a portable no_std crate
+  that depends only on the prover and makes no operating-system calls, so it runs
+  on any host, with NØNOS as the flagship integration.
 ---
 
 # Introduction
@@ -49,10 +51,11 @@ becomes a set of linear constraints rather than a permutation argument. That is
 the technical heart of this paper, and it is the reason the AIR is small enough to
 audit by hand.
 
-We are deliberate about the boundary between what is built and what is not. The
-computational core is real and proven. Random-access memory and a Poseidon hash
-port are present in the instruction set but not yet enforced by the AIR, and every
-claim below respects that line.
+We are deliberate about the boundary between what is built and what is not. Every
+opcode is proven, so a program is proven whole. What the language deliberately
+lacks is a random-access memory and a hash primitive; those are a future direction,
+not an unfinished part of what is here, and every claim below respects that line.
+The core is a portable no_std crate, and NØNOS is its flagship host.
 
 # Motivation, the NØNOS way
 
@@ -136,12 +139,11 @@ panics. A violated constraint, a failed assertion, an inverse of zero, an operan
 index out of range, is returned as a typed error, and the honest consequence for a
 false claim is that there is no trace to prove (`ProveError::Unprovable`).
 
-The instruction set has fifteen opcodes. Twelve are enforced by the step AIR
-today: `Imm`, `Add`, `Sub`, `Mul`, `Inv`, `Eq`, `Sel`, `Bool`, `Assert`, `Inp`,
-`Out`, and `Halt`. Three are present in the executor and the type but not yet
-constrained by the AIR: the memory opcodes `Load` and `Store`, and the Poseidon
-port `Pos`. Each column of a trace row carries a claim, and the AIR is the
-statement that those claims hold and cohere.
+The instruction set has twelve opcodes, and every one is enforced by the step AIR:
+`Imm`, `Add`, `Sub`, `Mul`, `Inv`, `Eq`, `Sel`, `Bool`, `Assert`, `Inp`, `Out`,
+and `Halt`. There is no unproven instruction; a program built from these is proven
+whole. Each column of a trace row carries a claim, and the AIR is the statement
+that those claims hold and cohere.
 
 # The step AIR
 
@@ -211,8 +213,8 @@ recomputed by the verifier and not read from the proof. We claim, and the tamper
 suite below demonstrates, that an operand which keeps its row's arithmetic
 internally consistent but is not the live value of its named register is rejected.
 This construction is available precisely because the wiring is static; a dynamic
-memory would reintroduce the permutation argument, which is why `Load` and `Store`
-are deferred.
+memory would reintroduce the permutation argument, which a future memory
+extension would add.
 
 ## Public input and output binding
 
@@ -236,11 +238,11 @@ operation on its operands, each operand is the live register value by the bindin
 argument, the rows are ordered, and the public interface matches. This is what the
 STARK, over the AIR, attests.
 
-The boundary of that statement is the twelve enforced opcodes. The AIR says nothing
-about `Load`, `Store`, or `Pos`, because a trace using them cannot be laid out
-(`BuildError::NotInScope`) and is never proven. We do not claim memory consistency
-or a hash relation. Those are future work, and the permutation argument that
-register binding avoids today is exactly the tool the memory work will need.
+Every opcode the machine has is enforced, so the statement covers whole programs
+with no unproven instruction. What the machine deliberately lacks is a
+random-access memory and a hash primitive. Adding a memory would be a future major
+version whose consistency is a permutation argument over sorted accesses, exactly
+the tool that static register binding avoids today.
 
 # Binding to the kernel STARK
 
@@ -332,9 +334,9 @@ executor, which the host suite exercises but which are not formally verified, so
 compiler bug could produce a proof of the wrong program relative to the source
 text, though not a proof of a program that did not run.
 
-What is future work, stated plainly so it is not mistaken for present fact:
-random-access memory with `Load` and `Store`, which needs a permutation argument
-over sorted accesses for memory consistency; the Poseidon port `Pos` as its own
+What is future work, stated plainly so it is not mistaken for present fact: a
+random-access memory, which would need a permutation argument over sorted accesses
+for consistency and would be a future major version; a hash primitive as its own
 constraint region; a private witness so that an input can be hidden from the
 verifier, which zKølang does not offer today since all inputs are public; and the
 on-chain settlement of the NOX fee. None of these is in the tree, and no claim
@@ -359,30 +361,30 @@ about its edges. By naming registers statically it turns register binding into a
 public linear circuit, which keeps the step AIR at a size a person can audit, and
 by sharing the kernel's field it makes a run and its proof one object. The
 branchless core, register binding, and public input and output binding are built
-and proven; memory and hashing are named and deferred. The NOX fee makes proving a
+and proven, with no unimplemented instruction; a random-access memory is a
+deliberate future direction, not a missing piece. The NOX fee makes proving a
 paid operation whose price follows its work. The result is a foundation on which
-the deferred pieces can be added one constraint region at a time, each with the
+a memory extension can be added later as its own constraint region, held to the
 same standard of evidence.
 
 # Appendix A: Opcode table
 
-| Opcode | Fields | Effect | Enforced |
-|---|---|---|---|
-| `Imm` | `d, v` | `r_d = v` | yes |
-| `Add` | `d, a, b` | `r_d = r_a + r_b` | yes |
-| `Sub` | `d, a, b` | `r_d = r_a - r_b` | yes |
-| `Mul` | `d, a, b` | `r_d = r_a * r_b` | yes |
-| `Inv` | `d, a` | `r_d = r_a^{-1}` | yes |
-| `Sel` | `d, c, a, b` | `r_d = r_c ? r_a : r_b` | yes |
-| `Eq` | `d, a, b` | `r_d = (r_a == r_b)` | yes |
-| `Bool` | `a` | `r_a` in `{0,1}` | yes |
-| `Assert` | `a` | `r_a = 0` | yes |
-| `Inp` | `d, idx` | `r_d = public_input[idx]` | yes |
-| `Out` | `a, idx` | `public_output[idx] = r_a` | yes |
-| `Halt` | | end of program | yes |
-| `Load` | `d, a` | `r_d = mem[r_a]` | no |
-| `Store` | `a, b` | `mem[r_a] = r_b` | no |
-| `Pos` | `d, a, b` | `r_d = poseidon2(r_a, r_b)` | no |
+Every opcode is enforced by the step AIR.
+
+| Opcode | Fields | Effect |
+|---|---|---|
+| `Imm` | `d, v` | `r_d = v` |
+| `Add` | `d, a, b` | `r_d = r_a + r_b` |
+| `Sub` | `d, a, b` | `r_d = r_a - r_b` |
+| `Mul` | `d, a, b` | `r_d = r_a * r_b` |
+| `Inv` | `d, a` | `r_d = r_a^{-1}` |
+| `Sel` | `d, c, a, b` | `r_d = r_c ? r_a : r_b` |
+| `Eq` | `d, a, b` | `r_d = (r_a == r_b)` |
+| `Bool` | `a` | `r_a` in `{0,1}` |
+| `Assert` | `a` | `r_a = 0` |
+| `Inp` | `d, idx` | `r_d = public_input[idx]` |
+| `Out` | `a, idx` | `public_output[idx] = r_a` |
+| `Halt` | | end of program |
 
 # Appendix B: Constraint summary
 

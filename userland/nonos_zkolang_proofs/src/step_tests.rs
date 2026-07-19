@@ -78,9 +78,7 @@ fn honest() -> (StepAir, Vec<Fp>) {
         Op::Sub { d: 9, a: 2, b: 1 },
         Op::Halt,
     ];
-    // The in-scope subset never invokes the Poseidon port, so the injected hash
-    // is a placeholder that is provably never called.
-    let mut vm = Vm::new(|a, _b| a);
+    let mut vm = Vm::new();
     let trace = vm.run(&program, &[], 0).expect("honest run produced no trace");
     let air = StepAir::compile(&program, LOG_T, &[], &[]).expect("program did not compile");
     let flat = air.build_trace(&trace).expect("honest trace did not lay out");

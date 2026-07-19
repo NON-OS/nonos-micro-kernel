@@ -56,10 +56,19 @@ the statement is about public data, not about some self-contained run whose
 inputs a prover could have chosen after the fact. That binding is what makes a
 proof worth paying for.
 
-## Honest scope
+## Scope
 
-The branchless computational core is built and proven, and register binding and
-public input and output binding are enforced. Memory (`Load`, `Store`) and the
-Poseidon hash port (`Pos`) exist in the instruction set but are not yet
-constrained by the AIR; a program that uses them is rejected at layout time rather
-than proven. The rest of these pages hold to that line.
+zKølang is a complete straight-line verifiable-arithmetic language. Every opcode
+is proven, register binding and public input and output binding are enforced, and
+there are no placeholder instructions. What it does not have is a random-access
+memory or a hash primitive; those are a deliberate future direction rather than a
+missing piece of the current language, and the pages below never lean on them.
+
+## Universal core, NØNOS flagship
+
+The language core is a plain `no_std` crate that depends only on the prover
+(`nonos-stark`) and makes no operating-system calls, so it compiles and runs on
+any host that can run the prover. NØNOS is the flagship: it ships the `zkolang`
+terminal command that compiles, runs, proves, and verifies in a capsule. Nothing
+in the core is NØNOS-specific, so the same crate is portable to any OS, with NØNOS
+as the first-class integration.

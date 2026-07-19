@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="600" viewBox="0 0 1180 600" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+  <rect width="1180" height="600" fill="#ffffff"/>
+  <defs>
+    <marker id="a3" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#2E5C5C"/>
+    </marker>
+  </defs>
+
+  <text x="40" y="56" fill="#12403f" font-size="18" font-weight="700">One invariant, closed under every security&#8211;relevant transition</text>
+
+  <!-- left: transition system -->
+  <rect x="40" y="90" width="300" height="450" rx="12" fill="#ffffff" stroke="#2E5C5C" stroke-width="2"/>
+  <rect x="40" y="90" width="300" height="8" rx="4" fill="#66FFFF"/>
+  <text x="190" y="128" fill="#12403f" font-size="17" font-weight="700" text-anchor="middle">Transitions</text>
+  <text x="190" y="150" fill="#5E7E7E" font-size="13" text-anchor="middle">the adversary picks each one</text>
+  <g fill="#2E5C5C" font-size="15" font-family="Menlo, Consolas, monospace">
+    <text x="70" y="188">attenuate</text>
+    <text x="70" y="220">transfer</text>
+    <text x="70" y="252">revoke</text>
+    <text x="70" y="284">mapPage</text>
+    <text x="70" y="316">userCopy</text>
+    <text x="70" y="348">boot</text>
+    <text x="70" y="380">spawn</text>
+    <text x="70" y="412">dmaMap</text>
+    <text x="70" y="444">loadElf</text>
+    <text x="70" y="476">bindMsix</text>
+  </g>
+  <text x="190" y="516" fill="#2E5C5C" font-size="13.5" text-anchor="middle" font-family="Menlo, Consolas, monospace">run : List Syscall &#8594; State</text>
+
+  <!-- arrow -->
+  <line x1="344" y1="315" x2="452" y2="315" stroke="#2E5C5C" stroke-width="2.4" marker-end="url(#a3)"/>
+  <text x="398" y="300" fill="#2E5C5C" font-size="13" font-weight="700" text-anchor="middle">step*</text>
+  <text x="398" y="338" fill="#5E7E7E" font-size="11.5" text-anchor="middle">any length</text>
+
+  <!-- right: conjoined theorem -->
+  <rect x="460" y="90" width="680" height="450" rx="12" fill="#F4FAFA" stroke="#2E5C5C" stroke-width="2.4"/>
+  <rect x="460" y="90" width="680" height="8" rx="4" fill="#2E5C5C"/>
+  <text x="800" y="130" fill="#12403f" font-size="20" font-weight="700" text-anchor="middle" font-family="Menlo, Consolas, monospace">every_trace_is_secure</text>
+  <text x="800" y="154" fill="#2E5C5C" font-size="14" text-anchor="middle">the conjunction holds after a trace of any length</text>
+
+  <!-- 8 invariant chips, 2 cols x 4 rows -->
+  <g>
+    <!-- row 1 -->
+    <rect x="484" y="176" width="316" height="76" rx="9" fill="#ffffff" stroke="#7BA3A3" stroke-width="1.6"/>
+    <circle cx="506" cy="200" r="6" fill="#66FFFF" stroke="#2E5C5C" stroke-width="1.2"/>
+    <text x="522" y="205" fill="#12403f" font-size="15" font-weight="700">authority</text>
+    <text x="522" y="230" fill="#5E7E7E" font-size="12.5">no step manufactures a right</text>
+
+    <rect x="808" y="176" width="316" height="76" rx="9" fill="#ffffff" stroke="#7BA3A3" stroke-width="1.6"/>
+    <circle cx="830" cy="200" r="6" fill="#66FFFF" stroke="#2E5C5C" stroke-width="1.2"/>
+    <text x="846" y="205" fill="#12403f" font-size="15" font-weight="700">no_wx</text>
+    <text x="846" y="230" fill="#5E7E7E" font-size="12.5">no mapping is writable and executable</text>
+
+    <!-- row 2 -->
+    <rect x="484" y="264" width="316" height="76" rx="9" fill="#ffffff" stroke="#7BA3A3" stroke-width="1.6"/>
+    <circle cx="506" cy="288" r="6" fill="#66FFFF" stroke="#2E5C5C" stroke-width="1.2"/>
+    <text x="522" y="293" fill="#12403f" font-size="15" font-weight="700">copies_in_user_space</text>
+    <text x="522" y="318" fill="#5E7E7E" font-size="12.5">every accepted copy stays in user space</text>
+
+    <rect x="808" y="264" width="316" height="76" rx="9" fill="#ffffff" stroke="#7BA3A3" stroke-width="1.6"/>
+    <circle cx="830" cy="288" r="6" fill="#66FFFF" stroke="#2E5C5C" stroke-width="1.2"/>
+    <text x="846" y="293" fill="#12403f" font-size="15" font-weight="700">floor_monotone</text>
+    <text x="846" y="318" fill="#5E7E7E" font-size="12.5">the anti&#8211;rollback floor never drops</text>
+
+    <!-- row 3 -->
+    <rect x="484" y="352" width="316" height="76" rx="9" fill="#ffffff" stroke="#7BA3A3" stroke-width="1.6"/>
+    <circle cx="506" cy="376" r="6" fill="#66FFFF" stroke="#2E5C5C" stroke-width="1.2"/>
+    <text x="522" y="381" fill="#12403f" font-size="15" font-weight="700">admitted_attested</text>
+    <text x="522" y="406" fill="#5E7E7E" font-size="12.5">only an attested capsule is admitted</text>
+
+    <rect x="808" y="352" width="316" height="76" rx="9" fill="#E8FBFB" stroke="#2E5C5C" stroke-width="1.8"/>
+    <circle cx="830" cy="376" r="6" fill="#2E5C5C"/>
+    <text x="846" y="381" fill="#12403f" font-size="15" font-weight="700">dma_confined</text>
+    <text x="846" y="406" fill="#5E7E7E" font-size="12.5">every DMA mapping owned and bounded</text>
+
+    <!-- row 4 -->
+    <rect x="484" y="440" width="316" height="76" rx="9" fill="#E8FBFB" stroke="#2E5C5C" stroke-width="1.8"/>
+    <circle cx="506" cy="464" r="6" fill="#2E5C5C"/>
+    <text x="522" y="469" fill="#12403f" font-size="15" font-weight="700">elf_in_bounds</text>
+    <text x="522" y="494" fill="#5E7E7E" font-size="12.5">every ELF header table lies in the image</text>
+
+    <rect x="808" y="440" width="316" height="76" rx="9" fill="#E8FBFB" stroke="#2E5C5C" stroke-width="1.8"/>
+    <circle cx="830" cy="464" r="6" fill="#2E5C5C"/>
+    <text x="846" y="469" fill="#12403f" font-size="15" font-weight="700">irq_confined</text>
+    <text x="846" y="494" fill="#5E7E7E" font-size="12.5">every MSI&#8211;X bind within pool and table</text>
+  </g>
+
+  <text x="460" y="576" fill="#5E7E7E" font-size="13.5">Shaded clauses were added by folding the local hardware&#8211;broker and loader guards into the conjoined invariant.</text>
+</svg>

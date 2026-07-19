@@ -11,9 +11,9 @@ Soundness of the zkolang step AIR. zkolang compiles a small language to a regist
 machine whose execution trace the transparent STARK proves; the step AIR
 constrains one machine step. The theorems here show that the row constraints are
 sound: a satisfying assignment implies the row faithfully implements its opcode.
-Each mirrors a constraint in `userland/nonos_prove/src/air.rs`, and the whole set
+Each mirrors a constraint in `userland/nonos_zkolang/src/air.rs`, and the whole set
 is refined onto the real Goldilocks field and the real prover by the
-`nonos_prove_proofs` host suite, which accepts the honest trace and rejects a
+`nonos_zkolang_proofs` host suite, which accepts the honest trace and rejects a
 tamper set over the true `Fp`.
 
 A field element is modeled here as an integer. The row constraints are

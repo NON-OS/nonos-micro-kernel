@@ -79,7 +79,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nonos_prove"
+name = "nonos_zkolang"
 version = "0.1.0"
 dependencies = [
  "blake3",

@@ -39,9 +39,6 @@ pub enum Op {
     Mul { d: u8, a: u8, b: u8 },
     // r_d = r_a^{-1}; an inverse of zero makes the trace unprovable.
     Inv { d: u8, a: u8 },
-    // Memory addressed by a field element: r_d = mem[r_a], mem[r_a] = r_b.
-    Load { d: u8, a: u8 },
-    Store { a: u8, b: u8 },
     // r_d = r_c ? r_a : r_b, with r_c constrained boolean. Branchless.
     Sel { d: u8, c: u8, a: u8, b: u8 },
     // r_d = (r_a == r_b) as {0,1}.
@@ -50,12 +47,7 @@ pub enum Op {
     // registers; a violated constraint yields no proof.
     Bool { a: u8 },
     Assert { a: u8 },
-    // r_d = poseidon2(r_a, r_b). The one primitive with a dedicated AIR gadget;
-    // the executor is handed the hash so the core stays independent of the
-    // concrete permutation while the AIR proves the real one.
-    Pos { d: u8, a: u8, b: u8 },
-    // I/O against the public and private input vector and the public output
-    // vector.
+    // I/O against the public input vector and the public output vector.
     Inp { d: u8, idx: u16 },
     Out { a: u8, idx: u16 },
     // End of program.

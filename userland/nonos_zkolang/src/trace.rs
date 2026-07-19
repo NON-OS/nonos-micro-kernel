@@ -37,13 +37,6 @@ pub struct Row {
     pub rd: Fp,
     // Immediate operand, when the op carries one.
     pub imm: Fp,
-    // Memory address and value, for Load and Store.
-    pub addr: Fp,
-    pub mval: Fp,
-    // Poseidon gadget ports, active when op == Pos.
-    pub pos_in0: Fp,
-    pub pos_in1: Fp,
-    pub pos_out: Fp,
     // Auxiliary witness: the inverse for Inv and Eq, the tested value for Bool
     // and Assert. Zero when unused.
     pub aux: Fp,
@@ -60,11 +53,6 @@ impl Row {
             rc: Fp::ZERO,
             rd: Fp::ZERO,
             imm: Fp::ZERO,
-            addr: Fp::ZERO,
-            mval: Fp::ZERO,
-            pos_in0: Fp::ZERO,
-            pos_in1: Fp::ZERO,
-            pos_out: Fp::ZERO,
             aux: Fp::ZERO,
         }
     }
@@ -79,13 +67,10 @@ pub enum OpTag {
     Sub,
     Mul,
     Inv,
-    Load,
-    Store,
     Sel,
     Eq,
     Bool,
     Assert,
-    Pos,
     Inp,
     Out,
     Halt,

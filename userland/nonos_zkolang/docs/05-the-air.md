@@ -87,7 +87,7 @@ the public program, so a prover cannot lie about which register an operand came
 from. This is a different construction from the grand-product permutation a zkVM
 uses for a random-access register file, and it is available precisely because
 zKølang's register indices are static. A grand-product permutation would be needed
-for a dynamic memory, which is the deferred `Load` and `Store` work.
+only for a dynamic memory, which a future memory extension would add.
 
 ## The boundary constraints
 
@@ -112,9 +112,10 @@ verification paper for the STARK itself. What matters here is the seam: zKølang
 produces a standard AIR instance over the shared field, and the STARK does the
 rest.
 
-## What the AIR does not enforce yet
+## Completeness of the AIR
 
-The memory opcodes and the Poseidon port have no constraints. A trace that would
-use them is rejected at layout. Memory consistency will be a permutation argument
-over sorted accesses; the Poseidon port will be its own constraint region joined
-to this one. Neither is in the tree, and nothing above depends on them.
+Every opcode the machine has is constrained here; the AIR proves whole programs
+with no unenforced instruction. A random-access memory is not part of this
+language. Were one added, its consistency would be a permutation argument over
+sorted accesses, a separate and larger construction; that is a future major
+version and nothing above depends on it.

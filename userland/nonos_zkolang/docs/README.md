@@ -37,15 +37,19 @@ documentation's claims are checked against is `userland/nonos_zkolang_proofs/`; 
 `cargo run --release --example measure` to reproduce the trace shapes and fees
 quoted in these pages.
 
-## What is real today, and what is not
+## What is real
 
-The branchless computational core is built and proven: immediate loads, field
-add, subtract, multiply, inverse, an equality that yields a clean bit, a
-branchless select, a boolean check, a zero assertion, and public inputs and
-outputs. Register binding, the guarantee that an operand is the live value of the
-register it names, is enforced. Public inputs and outputs are bound to committed
-values.
+The whole language is built and proven. Every opcode is enforced by the AIR:
+immediate loads, field add, subtract, multiply, inverse, an equality that yields a
+clean bit, a branchless select, a boolean check, a zero assertion, and public
+inputs and outputs. Register binding, the guarantee that an operand is the live
+value of the register it names, is enforced. Public inputs and outputs are bound
+to committed values. There are no placeholder instructions and nothing is rejected
+at proving time for being unimplemented.
 
-Two things named in the instruction set are not yet enforced by the AIR: the
-memory opcodes `Load` and `Store`, and the Poseidon hash port `Pos`. The pages
-below say so wherever it matters, and never lean on them.
+What the language does not have is a random-access memory or a hash primitive.
+That is a deliberate scope, not an unfinished part: zKølang is a straight-line
+verifiable-arithmetic language, and a memory extension would be a future major
+version. The core is a `no_std` crate that depends only on the prover and makes no
+operating-system calls, so it runs on any host; NØNOS is the flagship, shipping
+the `zkolang` terminal command.

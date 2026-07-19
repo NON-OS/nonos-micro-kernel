@@ -234,7 +234,7 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     simp only [step]
     split
     · rename_i hacc
-      refine ⟨hauth, hwx, ?_, hfloor, hadm, hdma, helf⟩
+      refine ⟨hauth, hwx, ?_, hfloor, hadm, hdma, helf, hirq⟩
       intro c hc
       simp at hc
       obtain hnew | hold := hc
@@ -245,14 +245,14 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
       · exact hcopy c hold
     · exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
   | boot v =>
-    refine ⟨hauth, hwx, hcopy, ?_, hadm, hdma, helf⟩
+    refine ⟨hauth, hwx, hcopy, ?_, hadm, hdma, helf, hirq⟩
     exact Nat.le_trans hfloor
       (AntiRollback.update_never_lowers_floor { floor := s.floor } v)
   | spawn cap =>
     simp only [step]
     by_cases hatt : s.attest cap = true
     · rw [if_pos hatt]
-      refine ⟨hauth, hwx, hcopy, hfloor, ?_, hdma, helf⟩
+      refine ⟨hauth, hwx, hcopy, hfloor, ?_, hdma, helf, hirq⟩
       intro c hc
       rcases List.mem_cons.mp hc with hc | hc
       · subst hc; exact hatt
@@ -263,7 +263,7 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     simp only [step]
     by_cases hv : DmaMap.validate r c = .ok
     · rw [if_pos hv]
-      refine ⟨hauth, hwx, hcopy, hfloor, hadm, ?_, helf⟩
+      refine ⟨hauth, hwx, hcopy, hfloor, hadm, ?_, helf, hirq⟩
       intro rc hmem
       rcases List.mem_cons.mp hmem with hhead | htail
       · subst hhead; exact hv
@@ -275,11 +275,22 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     by_cases hv : ElfPhdr.check e.dataLen e.phoff e.phsize e.phnum e.expected
         = .ok e.phoff e.phsize e.phnum
     · rw [if_pos hv]
-      refine ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, ?_⟩
+      refine ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, ?_, hirq⟩
       intro e' hmem
       rcases List.mem_cons.mp hmem with hhead | htail
       · subst hhead; exact hv
       · exact helf e' htail
+    · rw [if_neg hv]
+      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+  | bindMsix i =>
+    simp only [step]
+    by_cases hv : IrqBind.validate i = .ok
+    · rw [if_pos hv]
+      refine ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, ?_⟩
+      intro i' hmem
+      rcases List.mem_cons.mp hmem with hhead | htail
+      · subst hhead; exact hv
+      · exact hirq i' htail
     · rw [if_neg hv]
       exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
 
@@ -298,9 +309,9 @@ theorem every_trace_is_secure (s0 : State) (tr : List Syscall)
     (hwx : ∀ page pm, s0.mapped page = some pm →
       ¬(pm.write = true ∧ pm.execute = true))
     (hcopies : s0.copies = []) (hadmit : s0.admitted = [])
-    (hdma : s0.dma = []) (helf : s0.elf = []) :
+    (hdma : s0.dma = []) (helf : s0.elf = []) (hirq : s0.irq = []) :
     Secure s0 (run s0 tr) :=
-  run_preserves_secure s0 tr s0 (secure_refl s0 hwx hcopies hadmit hdma helf)
+  run_preserves_secure s0 tr s0 (secure_refl s0 hwx hcopies hadmit hdma helf hirq)
 
 /-- Corollary of the conjoined invariant: in any reachable state, every
     installed DMA mapping is owned by the caller that claimed the device. A
@@ -326,5 +337,21 @@ theorem elf_table_in_bounds (s0 s : State) (h : Secure s0 s)
     e.phoff + e.phsize * e.phnum ≤ e.dataLen :=
   ElfPhdr.accepted_table_in_bounds e.dataLen e.phoff e.phsize e.phnum e.expected hn
     (h.elf_in_bounds e hmem)
+
+/-- Corollary of the conjoined invariant: every installed MSI-X bind programs a
+    vector count within both the broker pool and the device's MSI-X table, so no
+    reachable state over-programs an interrupt table. -/
+theorem irq_vector_count_bounded (s0 s : State) (h : Secure s0 s)
+    (i : IrqBind.Input) (hmem : i ∈ s.irq) :
+    i.vectorCount ≠ 0 ∧ i.vectorCount ≤ i.poolCapacity ∧
+      i.vectorCount ≤ i.msixTableSize :=
+  IrqBind.accepted_vector_count_bounded i (h.irq_confined i hmem)
+
+/-- Corollary of the conjoined invariant: no installed MSI-X bind overwrote an
+    existing grant, so a bind is all-or-nothing per device per pid in every
+    reachable state. -/
+theorem irq_not_already_bound (s0 s : State) (h : Secure s0 s)
+    (i : IrqBind.Input) (hmem : i ∈ s.irq) : i.hasExistingGrant = false :=
+  IrqBind.accepted_not_already_bound i (h.irq_confined i hmem)
 
 end Nonos.Secure
