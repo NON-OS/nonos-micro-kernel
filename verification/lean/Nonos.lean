@@ -31,6 +31,7 @@ import Nonos.Dispatch
 import Nonos.Endpoint
 import Nonos.Epoch
 import Nonos.Fd
+import Nonos.FdAlloc
 import Nonos.Futex
 import Nonos.Heap
 import Nonos.Interval

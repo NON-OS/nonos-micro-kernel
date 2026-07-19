@@ -180,3 +180,9 @@ import Nonos
 #print axioms Nonos.SyscallRoute.route_unclaimed_is_enosys
 #print axioms Nonos.SyscallRoute.route_earlier_shadows
 #print axioms Nonos.SyscallRoute.route_append_stable
+
+-- File-descriptor allocation: a returned descriptor is the lowest free one at
+-- or above the floor, and the allocator declines only when the window is full.
+#print axioms Nonos.FdAlloc.alloc_free
+#print axioms Nonos.FdAlloc.alloc_lowest
+#print axioms Nonos.FdAlloc.alloc_none_full
