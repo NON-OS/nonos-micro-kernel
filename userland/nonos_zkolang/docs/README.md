@@ -28,6 +28,9 @@ identifiers it is spelled `zkolang`, which keeps the crate ASCII.
    of it is code today.
 7. [Reference](07-reference.md). The opcode table, the grammar, the error types,
    the limits, and an FAQ.
+8. [The NOX utility and the contracts to build](08-nox-utility-contracts.md). The
+   pay-to-prove market, the contract set for the smart-contract team, and the
+   real-world gaps to close before launch.
 
 ## Where the code is
 
