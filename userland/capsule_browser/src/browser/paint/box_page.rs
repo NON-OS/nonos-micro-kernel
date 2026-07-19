@@ -22,7 +22,7 @@ use crate::browser::state::State;
 use super::box_fragment::box_fragment;
 
 pub(super) const TOP: i32 = 80;
-const PAGE_BG: u32 = 0xFF18_1B20;
+const PAGE_BG: u32 = 0xFFFF_FFFF;
 
 pub fn paint(state: &State, doc: &BoxDocument, fb: &mut PaintBuffer) {
     fb.fill_rect(0, TOP as u32, fb.width, fb.height.saturating_sub(TOP as u32), PAGE_BG);
