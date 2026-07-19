@@ -17,7 +17,7 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use crate::wallet::state::State;
-use crate::wallet::theme::{ACCENT, CYAN, MUTED, WARN};
+use crate::wallet::theme::{ACCENT, CYAN, WARN};
 
 pub fn paint_home(state: &State, fb: &mut PaintBuffer) {
     let w = fb.width.saturating_sub(368);
@@ -28,7 +28,7 @@ pub fn paint_home(state: &State, fb: &mut PaintBuffer) {
     super::panel::panel(fb, 336, 488, w.saturating_sub(32), fb.height.saturating_sub(570));
     super::paint_account_card::paint_account_card(state, fb);
     super::paint_network_card::paint_network_card(state, fb, right_x + 32);
-    fb.text(368, 520, b"Enabled rails", MUTED);
+    let _ = fb.text_ttf(368, 516, "ENABLED RAILS", ACCENT, 10.0);
     let gap = 32;
     let rail_w = core::cmp::max(128, w.saturating_sub(128) / 3);
     super::paint_rail_card::paint_rail_card(fb, 368, 556, rail_w, b"ETH", b"native", CYAN);

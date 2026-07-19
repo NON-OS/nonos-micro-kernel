@@ -16,37 +16,59 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::ui;
 use crate::wallet::state::State;
-use crate::wallet::theme::{ACCENT, FG, MUTED};
+use crate::wallet::theme::{ACCENT, BG, CYAN, FG, MUTED, NEUTRAL_400, NEUTRAL_800};
 
 pub fn paint_account_card(state: &State, fb: &mut PaintBuffer) {
-    fb.text(368, 160, b"Account", MUTED);
-    fb.text_scaled(
-        368,
-        198,
-        if state.wallet_id == 0 { b"Not created" } else { b"Active wallet" },
-        FG,
-        2,
-    );
-    fb.text(
-        368,
-        250,
-        if state.address_ready { b"Receive address ready" } else { b"Generate wallet to start" },
-        ACCENT,
-    );
-    fb.text(368, 286, if state.balance_ready { b"Balance live" } else { b"Balance pending" }, MUTED);
-    paint_u64(fb, 520, 286, lower_u64(&state.balance_wei));
-    fb.text(368, 322, if state.nonce_ready { b"Nonce" } else { b"Nonce pending" }, MUTED);
-    paint_u64(fb, 520, 322, state.live_nonce);
-    fb.text(368, 358, if state.fee_ready { b"Gas wei" } else { b"Gas pending" }, MUTED);
-    paint_u64(fb, 520, 358, state.fee_wei);
-    super::paint_button::paint_button(fb, 368, 394, 180, b"Generate");
+    let x: u32 = 368;
+    let _ = fb.text_ttf(x as i32, 150, "ACCOUNT", ACCENT, 10.0);
+    let head = if state.wallet_id == 0 { "Not created" } else { "Active wallet" };
+    let _ = fb.text_ttf(x as i32, 166, head, NEUTRAL_400, 15.0);
+
+    let mut buf = [0u8; 40];
+    let n = format_eth(lower_u64(&state.balance_wei), &mut buf);
+    let bal = core::str::from_utf8(&buf[..n]).unwrap_or("0");
+    let pen = fb.text_ttf(x as i32, 190, bal, CYAN, 46.0);
+    let _ = fb.text_ttf(pen + 8, 214, "ETH", ACCENT, 20.0);
+
+    let ready = if state.address_ready { "Receive address ready" } else { "Generate a wallet to start" };
+    let _ = fb.text_ttf(x as i32, 250, ready, ACCENT, 12.0);
+
+    stat(fb, x, 278, 148, "NONCE", state.live_nonce);
+    stat(fb, x + 160, 278, 148, "GAS WEI", state.fee_wei);
+
+    let label: &[u8] = if state.wallet_id == 0 { b"Generate wallet" } else { b"Send ETH" };
+    ui::primary(fb, x, 348, 308, label);
 }
 
-fn paint_u64(fb: &mut PaintBuffer, x: u32, y: u32, value: u64) {
+fn stat(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &str, value: u64) {
+    fb.fill_rect(x, y, w, 52, BG);
+    fb.fill_rect(x, y, w, 1, NEUTRAL_800);
+    fb.fill_rect(x, y + 51, w, 1, NEUTRAL_800);
+    fb.fill_rect(x, y, 1, 52, NEUTRAL_800);
+    fb.fill_rect(x + w - 1, y, 1, 52, NEUTRAL_800);
+    let _ = fb.text_ttf((x + 12) as i32, (y + 9) as i32, label, MUTED, 10.0);
     let mut out = [0u8; 20];
     let n = super::format_u64::format_u64(value, &mut out);
-    fb.text(x, y, &out[..n], FG);
+    let s = core::str::from_utf8(&out[..n]).unwrap_or("0");
+    let _ = fb.text_ttf((x + 12) as i32, (y + 26) as i32, s, FG, 17.0);
+}
+
+fn format_eth(v: u64, out: &mut [u8]) -> usize {
+    let whole = v / 1_000_000_000_000_000_000u64;
+    let frac = ((v % 1_000_000_000_000_000_000u64) / 100_000_000_000_000u64) as u32;
+    let mut wb = [0u8; 20];
+    let wn = super::format_u64::format_u64(whole, &mut wb);
+    out[..wn].copy_from_slice(&wb[..wn]);
+    let mut n = wn;
+    out[n] = b'.';
+    n += 1;
+    out[n] = b'0' + ((frac / 1000) % 10) as u8;
+    out[n + 1] = b'0' + ((frac / 100) % 10) as u8;
+    out[n + 2] = b'0' + ((frac / 10) % 10) as u8;
+    out[n + 3] = b'0' + (frac % 10) as u8;
+    n + 4
 }
 
 fn lower_u64(value: &[u8; 32]) -> u64 {

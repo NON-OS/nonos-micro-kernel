@@ -19,7 +19,7 @@ use nonos_app_skeleton::PaintBuffer;
 use super::ui;
 use crate::wallet::hex::hex_addr;
 use crate::wallet::state::State;
-use crate::wallet::theme::{ACCENT, CYAN, FG, MUTED, PANEL_2};
+use crate::wallet::theme::{ACCENT, BG, CYAN, FG, MUTED, NEUTRAL_800};
 
 // The content column starts just right of the sidebar. Keep the Generate
 // button rect in lockstep with `on_pointer` (GENERATE_HIT) so a click and the
@@ -37,21 +37,26 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
     if !state.address_ready {
         ui::card(fb, X, 196, w, 268);
         super::logo::logo(fb, X + 28, 228, 64);
-        fb.text_scaled(X + 108, 244, b"No wallet yet", FG, 2);
-        fb.text(X + 108, 288, b"Self-custody Ethereum account", MUTED);
-        fb.text(X + 28, 336, b"Keys are generated and sealed inside the NONOS keyring.", MUTED);
+        let _ = fb.text_ttf((X + 108) as i32, 236, "No wallet yet", FG, 18.0);
+        let _ = fb.text_ttf((X + 108) as i32, 268, "Self-custody Ethereum account", MUTED, 13.0);
+        let _ = fb.text_ttf((X + 28) as i32, 322, "Keys are generated and sealed inside the NONOS keyring.", MUTED, 13.0);
         ui::primary(fb, GEN_BTN_X, GEN_BTN_Y, GEN_BTN_W, b"Generate wallet");
-        fb.text(GEN_BTN_X + GEN_BTN_W + 20, GEN_BTN_Y + 15, b"or press G", MUTED);
+        let _ = fb.text_ttf((GEN_BTN_X + GEN_BTN_W + 20) as i32, (GEN_BTN_Y + 13) as i32, "or press G", MUTED, 12.0);
         return;
     }
 
     let mut addr = [0u8; 42];
     hex_addr(&state.address, &mut addr);
-    ui::card(fb, X, 196, w, 214);
-    fb.text(X + 28, 220, b"Your Ethereum address", MUTED);
-    fb.fill_rect(X + 28, 248, w.saturating_sub(56), 84, PANEL_2);
-    fb.text_scaled(X + 48, 266, &addr[..21], ACCENT, 2);
-    fb.text_scaled(X + 48, 298, &addr[21..], ACCENT, 2);
-    fb.text(X + 28, 356, b"Accepts ETH and configured ERC-20 rails on Ethereum mainnet.", FG);
-    fb.text(X + 28, 382, b"Do not send SAL here; Salvium uses its own native wallet.", CYAN);
+    ui::card(fb, X, 196, w, 200);
+    let _ = fb.text_ttf((X + 28) as i32, 218, "Your Ethereum address", MUTED, 12.0);
+    let chw = w.saturating_sub(56);
+    fb.fill_rect(X + 28, 248, chw, 44, BG);
+    fb.fill_rect(X + 28, 248, chw, 1, NEUTRAL_800);
+    fb.fill_rect(X + 28, 291, chw, 1, NEUTRAL_800);
+    fb.fill_rect(X + 28, 248, 1, 44, NEUTRAL_800);
+    fb.fill_rect(X + 28 + chw - 1, 248, 1, 44, NEUTRAL_800);
+    let s = core::str::from_utf8(&addr).unwrap_or("");
+    let _ = fb.text_ttf_mono((X + 40) as i32, 260, s, ACCENT, 15.0);
+    let _ = fb.text_ttf((X + 28) as i32, 312, "Accepts ETH and configured ERC-20 rails on Ethereum mainnet.", FG, 13.0);
+    let _ = fb.text_ttf((X + 28) as i32, 338, "Do not send SAL here; Salvium uses its own native wallet.", CYAN, 13.0);
 }

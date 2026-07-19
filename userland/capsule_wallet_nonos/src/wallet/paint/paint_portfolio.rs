@@ -56,8 +56,10 @@ pub fn paint_portfolio(state: &State, fb: &mut PaintBuffer) {
 
     let mut c = [0u8; 10];
     let cn = super::format_u32::format_u32(state.notes.unspent_count() as u32, &mut c);
-    super::ui::badge(fb, cx, fb.height.saturating_sub(150), b"unspent notes", ACCENT);
-    fb.text(cx + 170, fb.height.saturating_sub(144), &c[..cn], FG);
+    let yy = fb.height.saturating_sub(150);
+    let bw = super::ui::badge(fb, cx, yy, b"unspent notes", ACCENT);
+    let s = core::str::from_utf8(&c[..cn]).unwrap_or("0");
+    let _ = fb.text_ttf((cx + bw + 10) as i32, (yy + 4) as i32, s, FG, 12.0);
 }
 
 fn asset_row(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, asset: u32, value_wei: u128) {

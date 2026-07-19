@@ -36,13 +36,13 @@ pub fn paint_nox(_state: &State, fb: &mut PaintBuffer) {
 
     super::ui::card(fb, cx, 416, w, 128);
     super::ui::section(fb, cx + 20, 434, "Where the fee goes");
-    fb.text(cx + 22, 476, b"protocol fee   ->  treasury / NOX stakers / buyback-burn", CYAN);
-    fb.text(cx + 22, 502, b"relayer fee    ->  the relayer that fronts gas", MUTED);
-    fb.text(cx + 22, 528, b"gas            ->  Ethereum L1", MUTED);
+    let _ = fb.text_ttf((cx + 22) as i32, 470, "protocol fee    treasury / NOX stakers / buyback-burn", CYAN, 13.0);
+    let _ = fb.text_ttf((cx + 22) as i32, 496, "relayer fee    the relayer that fronts gas", MUTED, 13.0);
+    let _ = fb.text_ttf((cx + 22) as i32, 522, "gas    Ethereum L1", MUTED, 13.0);
 
     super::ui::primary(fb, cx, 576, 200, b"Stake NOX");
     super::ui::ghost(fb, cx + 220, 576, 200, b"Unstake");
-    fb.text(cx, 648, b"Live figures load from the NOX contracts once wired.", MUTED);
+    let _ = fb.text_ttf(cx as i32, 640, "Live figures load from the NOX contracts once wired.", MUTED, 13.0);
 }
 
 fn tile_u32(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &[u8], s: &Seam<u32>) {

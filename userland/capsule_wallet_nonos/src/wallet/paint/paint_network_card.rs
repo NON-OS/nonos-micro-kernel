@@ -16,13 +16,39 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::ui;
 use crate::wallet::state::State;
-use crate::wallet::theme::{CYAN, FG, MUTED, WARN};
+use crate::wallet::theme::{ACCENT, BG, FG, MUTED, NEUTRAL_800, OK, WARN};
 
 pub fn paint_network_card(state: &State, fb: &mut PaintBuffer, x: u32) {
-    fb.text(x, 160, b"Network privacy", MUTED);
-    fb.text_scaled(x, 198, if state.net.route_ready { b"Route ready" } else { b"Local mode" }, FG, 2);
-    fb.text(x, 250, super::paint_network_labels::primary(state), CYAN);
-    fb.text(x, 286, super::paint_network_labels::secondary(state), WARN);
-    super::paint_button::paint_button(fb, x, 326, 170, b"Probe route");
+    let w = 322u32;
+    let _ = fb.text_ttf(x as i32, 150, "NETWORK PRIVACY", ACCENT, 10.0);
+    let title = if state.net.route_ready { "Route ready" } else { "Local mode" };
+    let _ = fb.text_ttf(x as i32, 164, title, FG, 22.0);
+
+    let (tls, tls_tone): (&[u8], u32) = if state.net.tls_client_finished_ok {
+        (b"TLS 1.3", OK)
+    } else {
+        (b"pending", WARN)
+    };
+    row(fb, x, w, 206, "TLS / RPC codec", tls, tls_tone);
+    let (route, route_tone): (&[u8], u32) = if state.net.rpc_chain_ok {
+        (b"on-chain", OK)
+    } else {
+        (b"local", ACCENT)
+    };
+    row(fb, x, w, 244, "TCP route", route, route_tone);
+
+    ui::primary(fb, x, 300, w, b"Probe route");
+}
+
+fn row(fb: &mut PaintBuffer, x: u32, w: u32, y: u32, label: &str, tag: &[u8], tone: u32) {
+    fb.fill_rect(x, y, w, 30, BG);
+    fb.fill_rect(x, y, w, 1, NEUTRAL_800);
+    fb.fill_rect(x, y + 29, w, 1, NEUTRAL_800);
+    fb.fill_rect(x, y, 1, 30, NEUTRAL_800);
+    fb.fill_rect(x + w - 1, y, 1, 30, NEUTRAL_800);
+    let _ = fb.text_ttf((x + 12) as i32, (y + 8) as i32, label, MUTED, 12.0);
+    let tw = fb.measure_ttf(core::str::from_utf8(tag).unwrap_or(""), 11.0).max(0) as u32 + 20;
+    ui::badge(fb, x + w - 12 - tw, y + 4, tag, tone);
 }

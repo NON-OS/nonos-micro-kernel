@@ -16,19 +16,20 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::ui;
 use crate::wallet::state::State;
 use crate::wallet::theme::{FG, MUTED};
 
 pub fn paint_proof_view(state: &State, fb: &mut PaintBuffer) {
     let w = fb.width.saturating_sub(368);
-    super::panel::panel(fb, 336, 128, w - 16, fb.height.saturating_sub(220));
-    fb.text(368, 164, b"Transaction proofs", MUTED);
+    ui::title(fb, 368, 128, b"PROOF", "Transaction proofs");
     if state.proof_count >= 2 {
         super::paint_proofs::paint_proofs(state, fb);
     } else if state.tx_ready {
         super::paint_tx::paint_tx(state, fb);
     } else {
-        fb.text_scaled(368, 224, b"No signed transaction", FG, 2);
-        fb.text(368, 282, b"Use Send or Proof action after generating a wallet.", MUTED);
+        ui::card(fb, 336, 200, w - 16, 120);
+        let _ = fb.text_ttf(368, 232, "No signed transaction", FG, 18.0);
+        let _ = fb.text_ttf(368, 264, "Use Send or Proof action after generating a wallet.", MUTED, 13.0);
     }
 }

@@ -16,19 +16,20 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{FG, MUTED, PANEL};
+use crate::wallet::theme::{FG, MUTED};
 
 pub fn paint_rail_card(
     fb: &mut PaintBuffer,
     x: u32,
     y: u32,
-    w: u32,
+    _w: u32,
     symbol: &[u8],
     label: &[u8],
     color: u32,
 ) {
-    fb.fill_rect(x, y, w, 54, PANEL);
-    fb.fill_rect(x, y, 5, 54, color);
-    fb.text(x + 20, y + 12, symbol, FG);
-    fb.text(x + 76, y + 12, label, MUTED);
+    fb.fill_rect(x, y, 3, 44, color);
+    let s = core::str::from_utf8(symbol).unwrap_or("");
+    let l = core::str::from_utf8(label).unwrap_or("");
+    let _ = fb.text_ttf((x + 16) as i32, (y + 2) as i32, s, FG, 16.0);
+    let _ = fb.text_ttf((x + 16) as i32, (y + 24) as i32, l, MUTED, 12.0);
 }

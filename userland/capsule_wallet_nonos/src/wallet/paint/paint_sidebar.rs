@@ -23,24 +23,27 @@ use crate::wallet::theme::{ACCENT, CYAN, FG, MUTED, PANEL_2};
 
 pub fn paint_sidebar(state: &State, fb: &mut PaintBuffer) {
     super::logo::logo(fb, 32, 36, 80);
-    fb.text_scaled(128, 42, b"NONOS", FG, 2);
-    fb.text(132, 88, b"Wallet", MUTED);
-    nav(fb, 32, 160, b"Home", state.view == VIEW_HOME);
-    nav(fb, 32, 212, b"Receive", state.view == VIEW_RECEIVE);
-    nav(fb, 32, 264, b"Send", state.view == VIEW_SEND);
-    nav(fb, 32, 316, b"Proof", state.view == VIEW_PROOF);
-    nav(fb, 32, 368, b"Shielded", state.view == VIEW_SHIELDED);
-    nav(fb, 32, 420, b"NOX", state.view == VIEW_NOX);
-    fb.text(32, fb.height.saturating_sub(92), b"Rails", MUTED);
-    fb.text(32, fb.height.saturating_sub(62), b"ETH", CYAN);
-    fb.text(92, fb.height.saturating_sub(62), b"NOX", ACCENT);
-    fb.text(154, fb.height.saturating_sub(62), b"PR", MUTED);
+    let _ = fb.text_ttf(128, 40, "NONOS", FG, 16.0);
+    let _ = fb.text_ttf(128, 66, "WALLET", MUTED, 10.0);
+    nav(fb, 32, 160, "Home", state.view == VIEW_HOME);
+    nav(fb, 32, 212, "Receive", state.view == VIEW_RECEIVE);
+    nav(fb, 32, 264, "Send", state.view == VIEW_SEND);
+    nav(fb, 32, 316, "Proof", state.view == VIEW_PROOF);
+    nav(fb, 32, 368, "Shielded", state.view == VIEW_SHIELDED);
+    nav(fb, 32, 420, "NOX", state.view == VIEW_NOX);
+    let ry = fb.height.saturating_sub(94);
+    let _ = fb.text_ttf(32, ry as i32, "RAILS", MUTED, 10.0);
+    let cy = fb.height.saturating_sub(66) as i32;
+    let _ = fb.text_ttf(32, cy, "ETH", CYAN, 12.0);
+    let _ = fb.text_ttf(84, cy, "NOX", ACCENT, 12.0);
+    let _ = fb.text_ttf(136, cy, "PR", MUTED, 12.0);
 }
 
-fn nav(fb: &mut PaintBuffer, x: u32, y: u32, text: &[u8], active: bool) {
-    fb.fill_rect(x, y, 220, 38, PANEL_2);
+fn nav(fb: &mut PaintBuffer, x: u32, y: u32, text: &str, active: bool) {
     if active {
-        fb.fill_rect(x, y, 5, 38, ACCENT);
+        fb.fill_rect(x, y, 220, 38, PANEL_2);
+        fb.fill_rect(x, y, 3, 38, ACCENT);
     }
-    fb.text(x + 24, y + 13, text, FG);
+    let color = if active { ACCENT } else { FG };
+    let _ = fb.text_ttf((x + 16) as i32, (y + 10) as i32, text, color, 14.0);
 }
