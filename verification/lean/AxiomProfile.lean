@@ -202,6 +202,11 @@ import Nonos
 #print axioms Nonos.FdAlloc.alloc_lowest
 #print axioms Nonos.FdAlloc.alloc_none_full
 
+-- MSI-X exclusion: no address a clamped BAR mapping covers falls inside the
+-- protected MSI-X table or PBA region.
+#print axioms Nonos.MsixExclusion.no_protected_byte_mapped
+#print axioms Nonos.MsixExclusion.safeLen_le_length
+
 -- MSI-X interrupt bind: an admitted bind is bounded to the pool and device
 -- table, addressable, a device IRQ, and not a double-bind.
 #print axioms Nonos.IrqBind.accepted_vector_count_bounded
