@@ -16,35 +16,41 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{ACCENT, BG, FG, LINE, MUTED, PANEL_2};
+use crate::wallet::theme::{ACCENT, BG, LINE, MUTED};
 
 const BTN_H: u32 = 44;
 
-// Primary action: filled with an accent underline. Use one per view.
+// Primary action: transparent fill, accent outline and centered accent label.
 pub fn primary(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    fb.fill_rect(x, y, w, BTN_H, PANEL_2);
-    fb.fill_rect(x, y + BTN_H - 2, w, 2, ACCENT);
+    outline(fb, x, y, w, ACCENT);
     corners(fb, x, y, w);
-    fb.text(x + 22, y + 15, text, FG);
+    label(fb, x, y, w, text, ACCENT);
 }
 
-// Secondary action: outlined, muted. For cancel / less-important choices.
+// Secondary action: text-only accent label, no outline (design ghost).
 pub fn ghost(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    fb.fill_rect(x, y, w, 1, LINE);
-    fb.fill_rect(x, y + BTN_H - 1, w, 1, LINE);
-    fb.fill_rect(x, y, 1, BTN_H, LINE);
-    fb.fill_rect(x + w - 1, y, 1, BTN_H, LINE);
-    corners(fb, x, y, w);
-    fb.text(x + 22, y + 15, text, MUTED);
+    label(fb, x, y, w, text, ACCENT);
 }
 
-// A disabled action: rendered dim, no accent. Pairs with the clear-sign gate.
+// A disabled action: muted outline and label, no accent.
 pub fn disabled(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    fb.fill_rect(x, y, w, BTN_H, BG);
-    fb.fill_rect(x, y, w, 1, LINE);
-    fb.fill_rect(x, y + BTN_H - 1, w, 1, LINE);
+    outline(fb, x, y, w, LINE);
     corners(fb, x, y, w);
-    fb.text(x + 22, y + 15, text, MUTED);
+    label(fb, x, y, w, text, MUTED);
+}
+
+fn label(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8], color: u32) {
+    let s = core::str::from_utf8(text).unwrap_or("");
+    let tw = fb.measure_ttf(s, 14.0).max(0) as u32;
+    let tx = x + w.saturating_sub(tw) / 2;
+    let _ = fb.text_ttf(tx as i32, (y + 13) as i32, s, color, 14.0);
+}
+
+fn outline(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, c: u32) {
+    fb.fill_rect(x, y, w, 1, c);
+    fb.fill_rect(x, y + BTN_H - 1, w, 1, c);
+    fb.fill_rect(x, y, 1, BTN_H, c);
+    fb.fill_rect(x + w - 1, y, 1, BTN_H, c);
 }
 
 fn corners(fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {

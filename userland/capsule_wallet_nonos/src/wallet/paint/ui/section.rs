@@ -16,16 +16,17 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{ACCENT, FG, MUTED};
+use crate::wallet::theme::{ACCENT, FG};
 
 // A section heading: accent tick + TTF title. Sets the type rhythm for a card.
 pub fn section(fb: &mut PaintBuffer, x: u32, y: u32, title: &str) {
-    fb.fill_rect(x, y + 2, 3, 18, ACCENT);
-    let _ = fb.text_ttf((x + 14) as i32, y as i32, title, FG, 20.0);
+    fb.fill_rect(x, y + 2, 3, 20, ACCENT);
+    let _ = fb.text_ttf((x + 14) as i32, y as i32, title, FG, 25.0);
 }
 
 // The large screen title with a muted eyebrow above it.
 pub fn title(fb: &mut PaintBuffer, x: u32, y: u32, eyebrow: &[u8], head: &str) {
-    fb.text(x, y, eyebrow, MUTED);
-    let _ = fb.text_ttf(x as i32, (y + 22) as i32, head, FG, 30.0);
+    let e = core::str::from_utf8(eyebrow).unwrap_or("");
+    let _ = fb.text_ttf(x as i32, y as i32, e, ACCENT, 10.0);
+    let _ = fb.text_ttf(x as i32, (y + 20) as i32, head, FG, 32.0);
 }

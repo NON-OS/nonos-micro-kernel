@@ -22,10 +22,12 @@ use crate::wallet::theme::MUTED;
 // optional trailing suffix (e.g. bps, ETH).
 pub fn metric(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &[u8], value: &[u8], unit: &[u8], tone: u32) {
     super::card::card(fb, x, y, w, 80);
-    fb.text(x + 18, y + 16, label, MUTED);
-    fb.text_scaled(x + 18, y + 42, value, tone, 2);
+    let l = core::str::from_utf8(label).unwrap_or("");
+    let v = core::str::from_utf8(value).unwrap_or("");
+    let _ = fb.text_ttf((x + 16) as i32, (y + 14) as i32, l, MUTED, 10.0);
+    let pen = fb.text_ttf((x + 16) as i32, (y + 34) as i32, v, tone, 24.0);
     if !unit.is_empty() {
-        let vw = value.len() as u32 * 26;
-        fb.text(x + 18 + vw + 8, y + 48, unit, MUTED);
+        let u = core::str::from_utf8(unit).unwrap_or("");
+        let _ = fb.text_ttf(pen + 6, (y + 46) as i32, u, MUTED, 13.0);
     }
 }

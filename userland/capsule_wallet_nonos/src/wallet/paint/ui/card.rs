@@ -16,19 +16,19 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{BG, ELEV_HI, ELEV_LO, LINE, PANEL};
+use crate::wallet::theme::{BG, NEUTRAL_800, PANEL};
 
-// A raised surface: panel fill, a top highlight and bottom shadow for depth,
-// hairline sides, and clipped corners so it reads as a soft card, not a box.
+// A flat surface card: solid fill, a single uniform hairline border on all
+// edges (design shadow-sm), and clipped corners so it reads as a soft card.
 pub fn card(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32) {
     if w == 0 || h == 0 {
         return;
     }
     fb.fill_rect(x, y, w, h, PANEL);
-    fb.fill_rect(x, y, w, 1, ELEV_HI);
-    fb.fill_rect(x, y + h - 1, w, 1, ELEV_LO);
-    fb.fill_rect(x, y, 1, h, LINE);
-    fb.fill_rect(x + w - 1, y, 1, h, LINE);
+    fb.fill_rect(x, y, w, 1, NEUTRAL_800);
+    fb.fill_rect(x, y + h - 1, w, 1, NEUTRAL_800);
+    fb.fill_rect(x, y, 1, h, NEUTRAL_800);
+    fb.fill_rect(x + w - 1, y, 1, h, NEUTRAL_800);
     let rx = x + w - 1;
     let ry = y + h - 1;
     fb.fill_rect(x, y, 1, 1, BG);

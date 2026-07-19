@@ -22,6 +22,8 @@ use crate::wallet::theme::{ACCENT, FG, MUTED};
 pub fn empty_state(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, title: &[u8], reason: &[u8]) {
     super::card::card(fb, x, y, w, 128);
     fb.fill_rect(x + 26, y + 30, 40, 3, ACCENT);
-    fb.text_scaled(x + 26, y + 46, title, FG, 2);
-    fb.text(x + 26, y + 88, reason, MUTED);
+    let t = core::str::from_utf8(title).unwrap_or("");
+    let r = core::str::from_utf8(reason).unwrap_or("");
+    let _ = fb.text_ttf((x + 26) as i32, (y + 44) as i32, t, FG, 18.0);
+    let _ = fb.text_ttf((x + 26) as i32, (y + 84) as i32, r, MUTED, 13.0);
 }
