@@ -55,6 +55,108 @@ kernel functions are mechanically extracted from real MIR; **5** Verus source
 files, **65** Kani harnesses, and **32** runnable proof crates exercise the real
 code.
 
+# Motivation: Why NØNOS Exists
+
+Modern operating systems decide what to trust the wrong way. They trust code by
+where it came from: a package signed by a vendor, a binary in a root-owned
+directory, a process started by the right user. Provenance is a proxy for
+trustworthiness, and it is a poor one. It says nothing about what the code will
+do, and it fails exactly when it matters, when an attacker controls the
+provenance. Every privilege-escalation chain, every supply-chain compromise, and
+every driver that turns a peripheral into a foothold is a failure of
+provenance-based trust. The industry's response has been to add more layers of
+the same idea: more signatures, more sandboxes, more allowlists, each trusting
+the layer below by where it sits rather than by what it is.
+
+NØNOS begins from a different premise: a program should be admitted to execution
+only if it can *prove* what it is and what it may touch, and the system should
+*verify* that proof, mechanically, before it runs and every time it runs. This
+turns trust from a property of origin into a property of demonstration. There is
+no ambient authority, no privileged account that bypasses the check, and no
+build-time switch that disables it on the shipping image. Authority is held only
+as capabilities and flows in one direction, downward from a root the reader can
+inspect, attenuating at every hop. The result is a system whose security posture
+is not a policy layered on top but a consequence of its construction.
+
+Three commitments follow from that premise, and they are the reason the system
+is shaped as it is. First, the trusted computing base is made small on purpose:
+the kernel holds only primitives, and every driver is a userspace capsule behind
+the same boundary as any other program, so the surface that must be correct is
+narrow enough to prove. Second, the implementation language is memory-safe, which
+removes by construction the largest historical class of kernel defects, the
+spatial and temporal memory-corruption bugs that a C kernel's proof must labor to
+exclude, so the proof effort can be spent on the properties that remain. Third,
+the system keeps no mutable state on disk and leaves nothing behind at power-off,
+the ZeroState model, so that the medium which carries state across a program's
+life, memory, is the one place a residue could survive, and scrubbing it closes
+the leak.
+
+The deeper motivation is that a security claim should be checkable by a
+skeptic, not accepted on the authority of the people who make it. The industry
+is full of systems described as secure, hardened, or even formally verified,
+whose claims cannot be reproduced, whose proofs are decoupled from the running
+code, or whose theorems are left unfinished behind a placeholder. NØNOS is built
+so that every claim in this document can be reproduced from a clean checkout by a
+reader who trusts none of the authors, and so that the claims cannot silently
+decay: they are continuously re-checked, and the numbers are a machine-verified
+artifact rather than a sentence in a slide deck. This is the "why". The rest of
+the paper is the "how".
+
+# What Is Novel
+
+NØNOS does not claim to out-verify seL4 on seL4's own terms; that is not the
+contribution. The contribution is a way of building a large, useful,
+memory-safe system so that its security-critical behaviour is machine-checked
+over the code that runs, and several elements of the approach are, to our
+knowledge, either new or newly combined at this scale.
+
+**A proof-to-code spectrum, ordered by fidelity, culminating in MIR extraction.**
+Most verification efforts pick a single point: an abstract model with no link to
+the code, or a heroic total-correctness refinement for a minimal kernel. NØNOS
+instead layers techniques by how tightly each binds to the executable, from a
+source-hygiene floor, through proofs that execute the real source and bounded
+model checking, to abstract Lean theorems, to Verus over the real bit-operations,
+and finally to definitions lowered from the compiler's own MIR by Charon and
+Aeneas and proven in Lean. The last layer removes the human transcription step
+entirely: the object proved is the compiler's lowering of the function that runs,
+not a model a person retyped from it. Applying this Rust-verification toolchain
+to live kernel functions, and organizing an entire kernel's security surface
+along this spectrum, is the central novelty.
+
+**A machine-audited axiom policy, enforced continuously.** Every flagship
+theorem's complete axiom closure is computed by the proof kernel and checked in
+continuous integration to contain only the three standard axioms and never the
+placeholder a `sorry` introduces. A verification claim can therefore not rest on
+an unproven step without failing the build. This moves the guarantee from "the
+authors say it is proven" to "the proof kernel says it is proven, on every
+push", at the granularity of a single theorem.
+
+**A reproducible commitment to the proven corpus.** The proof-corpus root binds
+the entire set of proven properties, under a specific toolchain, to a single
+reproducible 32-byte value that refuses to form in the presence of any
+unfinished proof. It is the seed of a runtime binding, described in the future
+work, that would let a boot attestation commit to exactly which properties were
+machine-checked of the image being booted, checkable by anyone who rebuilds the
+repository.
+
+**Verification as a runtime discipline, not only a static one.** The proven
+admission rules are not merely checked once at build time; a transparent,
+post-quantum attestation gate enforces them at every capsule spawn and at boot,
+so the properties proven in Lean are the same discipline the running kernel
+imposes on what it will execute. The static proof and the runtime check are two
+faces of one rule.
+
+**Evidence as a first-class, self-verifying artifact.** The entire verification
+surface is inventoried in a machine-readable manifest generated from the source
+and diff-checked in CI, so the repository carries an accurate, continuously
+verified statement of exactly what it proves and how. The claims and the evidence
+for them travel together and cannot drift apart.
+
+None of these elements in isolation is the whole story; the combination, applied
+to a real memory-safe microkernel that boots to a graphical desktop on real
+hardware, is what we mean by revolutionary in a field where "verified" too often
+means a model no one can connect to the code.
+
 # The System Under Verification
 
 The properties in this paper are not abstract; each protects a specific mechanism
