@@ -114,3 +114,36 @@ launch: the recursion exposing `recursion_public_inputs` in the order above, and
 Solidity verifier for the recursion's succinct proof. That is the recursive
 verifier's per-query work, tracked as the on-chain verification gap. The market is
 already fail-closed against it, so nothing settles until it lands.
+
+## Binding the wiring to the program: a soundness obligation
+
+The step AIR's periodic columns are not fixed constants. `air/air_impl.rs`
+`periodic_columns` derives them from the program's wiring, and `air/wiring.rs`
+`WireRow::of` builds that wiring from the opcodes. They are the program's data
+flow, one-hot columns for which register each row writes and reads. So the
+recursion's preprocessed periodic root must be bound to the program commitment.
+Otherwise a prover satisfies program X's transition constraints while committing
+program Y's routing: the transitions get checked against a wiring the committed
+program never had. The shield recursion never had this obligation because its
+periodic columns were fixed; it is the one genuinely new thing the zKølang
+recursion must get right.
+
+The binding is well-defined, because the wiring is a deterministic public function
+of the committed program. `WireRow::of` maps each opcode to its read and write
+ports with no witness input, and `serialize` commits the exact opcode list, so
+`periodic_root = f(programCommit)` is a public, recomputable relation.
+
+Two sound ways to enforce it:
+
+- Re-derive the wiring inside the recursion from the committed opcode list and
+  check the periodic root against it. Sound, but it arithmetizes `WireRow::of` over
+  the whole program.
+- Expose the periodic root as a recursion public input and enforce
+  `periodic_root == f(programCommit)` outside the heavy circuit: a one-time
+  per-program registration that anyone can recompute and challenge, pinned by the
+  contract against the posted program commitment.
+
+For a first launch the registration path is the lighter one: the wiring root is a
+cheap deterministic function a deployer or a challenger can recompute, so it does
+not need to be derived inside the recursion. The prover side can expose that
+computation as a helper so the registration is a library call.
