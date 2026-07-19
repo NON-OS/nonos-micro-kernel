@@ -50,5 +50,7 @@ pub use isa::{Op, Program, REGS};
 pub use lang::{compile_source, CompileError};
 pub use nox::{quote, Quote, MICRONOX_PER_NOX};
 pub use trace::{OpTag, Row, Trace};
-pub use vkey::{periodic_root, verifier_key, KeyError};
+pub use vkey::{
+    periodic_root, registration_key, registration_root, verifier_key, KeyError, REGISTRATION_RATE,
+};
 pub use vm::{ProveError, Vm};

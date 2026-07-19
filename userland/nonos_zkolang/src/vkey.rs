@@ -49,6 +49,13 @@ use crate::isa::Op;
 // derivation change forces a new key rather than colliding with an old one.
 const WIRING_VERSION: u8 = 1;
 
+/// The FRI blowup every zkolang key is registered at. The recursion's inner proof
+/// and the on-chain contract fix this rate immutably, so a key registered at any
+/// other rate could never match a real proof and a challenger would reject it. Use
+/// this when deriving a market key rather than passing a rate literal; the rate is
+/// part of the key, so the one place it is written is the one place it can drift.
+pub const REGISTRATION_RATE: u32 = 3;
+
 /// Why a verifier key could not be derived.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum KeyError {
@@ -100,4 +107,17 @@ pub fn verifier_key(program: &[Op], extra_blowup_bits: u32) -> Result<[u8; 32], 
     buf.extend_from_slice(&extra_blowup_bits.to_le_bytes());
     buf.extend_from_slice(&root);
     Ok(keccak256(&buf))
+}
+
+/// The verifier key at the market's fixed registration rate. This is the value a
+/// NOX proving market stores against a program commitment, so callers register and
+/// challenge through this rather than choosing a rate at the call site.
+pub fn registration_key(program: &[Op]) -> Result<[u8; 32], KeyError> {
+    verifier_key(program, REGISTRATION_RATE)
+}
+
+/// The preprocessed-periodic root at the market's fixed registration rate, the tree
+/// a conforming proof commits its periodic columns with.
+pub fn registration_root(program: &[Op]) -> Result<[u8; 32], KeyError> {
+    periodic_root(program, REGISTRATION_RATE)
 }
