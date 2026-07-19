@@ -21,7 +21,7 @@ abstract: |
   execution model, the step AIR and an argument that a satisfying assignment
   implies a faithful run, the binding of the trace to the money-grade STARK, and a
   NOX pay-to-prove fee that follows the proving work. We report measured trace
-  shapes and an accept-and-reject evidence suite of fifty-two in-process proofs. We
+  shapes and an accept-and-reject evidence suite of fifty-eight in-process proofs. We
   are explicit about scope: every opcode is enforced, so a program is proven
   whole with no unimplemented instruction; what the language does not have is a
   random-access memory or a hash primitive, a deliberate scope rather than a
@@ -89,7 +89,7 @@ alone and can be checked.
 
 A zKølang program is a sequence of statements over field values. The concrete syntax
 is small enough to give in full. The lexer recognizes exactly the keywords `let`,
-`assert`, `input`, `secret`, `output`, `inv`, `sel`, `for`, `in`, the operators
+`assert`, `input`, `secret`, `output`, `inv`, `sel`, `for`, `in`, `if`, `else`, the operators
 `+ - * / == !=` and unary `-`, the punctuation `( ) , ; { } ..`, identifiers, and
 decimal numerals (`userland/nonos_zkolang/src/lang/lex.rs`). The grammar, lowest
 precedence first, is:
@@ -106,6 +106,7 @@ product  := unary (('*' | '/') unary)*
 unary    := '-' unary | primary
 primary  := number | ident | '(' expr ')'
           | 'inv' '(' expr ')' | 'sel' '(' expr ',' expr ',' expr ')'
+          | 'if' expr '{' expr '}' 'else' '{' expr '}'
 ```
 
 The semantics are straight-line and single-assignment at the source level. A `let`
@@ -116,9 +117,11 @@ constants (which is all the register binding needs) while larger programs fit th
 sixteen-register file. Arithmetic is field add, subtract, and
 multiply. `inv(e)` is the field inverse, defined for nonzero arguments; inverting
 zero yields no valid run. `a == b` is a total equality that produces a bit.
-`sel(c, a, b)` is a branchless conditional over a boolean `c`, evaluating both arms
-and selecting one. `assert e` states that `e` is zero, so equality of two values is
-written `assert x - y`. `input x` binds `x` to the next public input, `secret w` binds `w` to a private
+`sel(c, a, b)`, and its familiar form `if c { a } else { b }`, is a branchless
+conditional over a boolean `c`, evaluating both arms and selecting one. `assert e`
+states that `e` is zero; the forms `assert a == b` and `assert a != b` read the
+same intent, the first asserting the difference is zero, the second inverting it so
+the assertion fails only when they are equal. `input x` binds `x` to the next public input, `secret w` binds `w` to a private
 witness that never enters the public statement, and `output e` exposes `e` as the
 next public output.
 
@@ -308,7 +311,7 @@ The trace width is constant at thirty-five columns; the height is the next power
 two above the step count. Each of these programs proves and verifies in process on
 the host. The fee follows the trace area and always leaves the prover the majority.
 
-The correctness evidence is a suite of fifty-two in-process proofs in
+The correctness evidence is a suite of fifty-eight in-process proofs in
 `userland/nonos_zkolang_proofs` (`cargo test`). An honest run of a program touching
 every enforced opcode verifies. Each of a targeted tamper set is rejected: a wrong
 add, subtract, multiply, or select result; a forged inverse witness; a false

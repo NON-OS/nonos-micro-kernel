@@ -11,7 +11,7 @@ opcode it produces. The lexer, parser, and compiler are in
 ## Grammar
 
 The tokens the lexer recognises are exactly `let`, `assert`, `input`, `secret`,
-`for`, `in`, `output`, `inv`, `sel`, the operators `+ - * / == !=` and unary `-`,
+`for`, `in`, `if`, `else`, `output`, `inv`, `sel`, the operators `+ - * / == !=` and unary `-`,
 the punctuation `( ) , ; { } ..`, identifiers, and decimal numbers
 (`src/lang/lex.rs`). Line comments run from `//` to the end of the line. The
 grammar, lowest precedence first, is:
@@ -32,6 +32,7 @@ unary    := '-' unary | primary
 primary  := number | ident | '(' expr ')'
           | 'inv' '(' expr ')'
           | 'sel' '(' expr ',' expr ',' expr ')'
+          | 'if' expr '{' expr '}' 'else' '{' expr '}'
 ```
 
 ## Statements
@@ -49,11 +50,14 @@ let s = a + b;    // Add  r_s = r_a + r_b
 ```
 
 An `assert` states that an expression is zero. It compiles to the zero-assertion
-opcode, so it reads as "this must be zero"; to require that two values are equal,
-write `assert x - y`.
+opcode, so `assert e` reads as "e must be zero". A comparison reads naturally too:
+`assert a == b` proves equality, and `assert a != b` proves inequality (by
+inverting the difference, which fails only when it is zero).
 
 ```
-assert p - 64;    // Assert (p - 64) == 0, i.e. p == 64
+assert p - 64;    // p == 64, the direct zero form
+assert p == 64;   // the same, read as an equality
+assert a != b;    // a and b must differ
 ```
 
 An `input` binds a name to the next public input. Inputs are supplied to the
@@ -126,6 +130,13 @@ what keeps the trace shape independent of the data.
 let m = sel(e, a, b);   // Sel  r_m = e ? a : b
 ```
 
+`if c { a } else { b }` is the same select in a more familiar shape. Both arms are
+single expressions, because the lowering to `sel` evaluates both and chooses one.
+
+```
+let m = if e { a } else { b };   // exactly sel(e, a, b)
+```
+
 ## A complete program
 
 The canonical example, from `src/lang/mod.rs`, computed and proven end to end:
@@ -154,9 +165,9 @@ Running this on `x = 3` proves the statement and returns `y = 27`. See
 
 ## What the surface does not have, on purpose
 
-There are no `if` blocks and no function calls yet; a conditional is the branchless
-`sel`, and a bounded `for` loop is unrolled at compile time, so neither introduces
-data-dependent control flow. That is a deliberate limit: it is what makes a
-program's step count a static property and the proof's cost knowable before you
-run it. Loop bounds are literals, not runtime values, for the same reason.
-Division is the `/` operator, which lowers to a multiply by an inverse.
+There are no statement-level `if` blocks and no function calls yet. A conditional
+is the `if` expression, which is the branchless `sel`: both arms are evaluated and
+one is chosen, so it introduces no data-dependent control flow. A bounded `for`
+loop is unrolled at compile time over a literal range. That branchless, static
+shape is a deliberate limit: it is what makes a program's step count a static
+property and the proof's cost knowable before you run it.

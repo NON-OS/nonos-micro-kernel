@@ -96,20 +96,40 @@ impl Compiler {
         self.loop_consts.iter().rev().find(|(n, _)| n.as_str() == name).map(|(_, v)| *v)
     }
 
+    // Point a name at a register, replacing its newest binding in place so no
+    // shadowed entry lingers to confuse the alias check, or adding it if new.
+    fn rebind(&mut self, name: &str, reg: u8) {
+        if let Some(entry) = self.syms.iter_mut().rev().find(|(n, _)| n.as_str() == name) {
+            entry.1 = reg;
+        } else {
+            self.syms.push((String::from(name), reg));
+        }
+    }
+
+    // Whether any live binding still holds this register, so it must not be freed.
+    fn reg_in_use(&self, reg: u8) -> bool {
+        self.syms.iter().any(|(_, r)| *r == reg)
+    }
+
     fn stmt(&mut self, s: &Stmt) -> Result<(), CompileError> {
         match s {
             Stmt::Let(name, e) => {
-                // The result becomes a live binding, so it is not released.
+                // Note the register this name held before, if any. The right-hand
+                // side may still read it, so we look it up before compiling.
+                let old = self.lookup(name);
                 let v = self.expr(e)?;
-                self.syms.push((name.clone(), v.reg));
+                self.rebind(name, v.reg);
+                // If the name shadowed an earlier binding and no other live name
+                // holds that register, reclaim it. The alias check is what keeps
+                // this sound: a register two names share is never freed under one.
+                if let Some(old_reg) = old {
+                    if old_reg != v.reg && !self.reg_in_use(old_reg) {
+                        self.free.push(old_reg);
+                    }
+                }
                 Ok(())
             }
-            Stmt::Assert(e) => {
-                let v = self.expr(e)?;
-                self.ops.push(Op::Assert { a: v.reg });
-                self.release(&v);
-                Ok(())
-            }
+            Stmt::Assert(e) => self.assert(e),
             Stmt::Input(name) => {
                 let d = self.alloc()?;
                 let idx = self.next_public;
@@ -152,6 +172,47 @@ impl Compiler {
                     self.loop_consts.pop();
                     v += 1;
                 }
+                Ok(())
+            }
+        }
+    }
+
+    // Lower an `assert`. Writing the comparison out reads naturally: `assert a == b`
+    // proves equality by asserting the difference is zero, and `assert a != b`
+    // proves inequality by inverting the difference, which succeeds only when it is
+    // nonzero. Any other expression is asserted to be zero directly.
+    fn assert(&mut self, e: &Expr) -> Result<(), CompileError> {
+        match e {
+            Expr::Eq(l, r) => {
+                let a = self.expr(l)?;
+                let b = self.expr(r)?;
+                self.release(&a);
+                self.release(&b);
+                let d = self.alloc()?;
+                self.ops.push(Op::Sub { d, a: a.reg, b: b.reg });
+                self.ops.push(Op::Assert { a: d });
+                self.free.push(d);
+                Ok(())
+            }
+            Expr::Ne(l, r) => {
+                let a = self.expr(l)?;
+                let b = self.expr(r)?;
+                self.release(&a);
+                self.release(&b);
+                let diff = self.alloc()?;
+                self.ops.push(Op::Sub { d: diff, a: a.reg, b: b.reg });
+                self.free.push(diff);
+                // Inverting the difference discards the result; its only job is to
+                // fail, and so make the trace unprovable, when the difference is zero.
+                let recip = self.alloc()?;
+                self.ops.push(Op::Inv { d: recip, a: diff });
+                self.free.push(recip);
+                Ok(())
+            }
+            _ => {
+                let v = self.expr(e)?;
+                self.ops.push(Op::Assert { a: v.reg });
+                self.release(&v);
                 Ok(())
             }
         }
@@ -255,18 +316,25 @@ impl Compiler {
                 self.ops.push(Op::Inv { d, a: a.reg });
                 Ok(Val { reg: d, temp: true })
             }
-            Expr::Sel(cond, l, r) => {
-                let c = self.expr(cond)?;
-                let a = self.expr(l)?;
-                let b = self.expr(r)?;
-                self.release(&c);
-                self.release(&a);
-                self.release(&b);
-                let d = self.alloc()?;
-                self.ops.push(Op::Sel { d, c: c.reg, a: a.reg, b: b.reg });
-                Ok(Val { reg: d, temp: true })
-            }
+            // `sel(c, a, b)` and `if c { a } else { b }` are the same select: both
+            // arms are evaluated and one is chosen by the boolean condition.
+            Expr::Sel(cond, l, r) => self.select(cond, l, r),
+            Expr::If(cond, l, r) => self.select(cond, l, r),
         }
+    }
+
+    // The shared lowering of the select expression: compile the condition and both
+    // arms, release the temporaries, and emit one `Sel` opcode.
+    fn select(&mut self, cond: &Expr, l: &Expr, r: &Expr) -> Result<Val, CompileError> {
+        let c = self.expr(cond)?;
+        let a = self.expr(l)?;
+        let b = self.expr(r)?;
+        self.release(&c);
+        self.release(&a);
+        self.release(&b);
+        let d = self.alloc()?;
+        self.ops.push(Op::Sel { d, c: c.reg, a: a.reg, b: b.reg });
+        Ok(Val { reg: d, temp: true })
     }
 }
 

@@ -35,9 +35,10 @@ product  := unary (('*' | '/') unary)*
 unary    := '-' unary | primary
 primary  := number | ident | '(' expr ')'
           | 'inv' '(' expr ')' | 'sel' '(' expr ',' expr ',' expr ')'
+          | 'if' expr '{' expr '}' 'else' '{' expr '}'
 ```
 
-Keywords: `let`, `assert`, `input`, `secret`, `output`, `inv`, `sel`, `for`, `in`. Operators: `+ - * / == != ` and unary `-`. Comments: `//` to end
+Keywords: `let`, `assert`, `input`, `secret`, `output`, `inv`, `sel`, `for`, `in`, `if`, `else`. Operators: `+ - * / == != ` and unary `-`. Comments: `//` to end
 of line.
 
 ## Public API
@@ -114,7 +115,7 @@ the terminal, then write a `.zkl` file and run `zkolang myfile.zkl`.
 
 ## Reproducing the claims
 
-In `userland/nonos_zkolang_proofs`: `cargo test` runs the 52 host proofs behind this
+In `userland/nonos_zkolang_proofs`: `cargo test` runs the 58 host proofs behind this
 documentation (opcode tamper rejection, register binding, public input and output
 soundness, the language end to end, and the fee model), and
 `cargo run --release --example measure` prints the trace shapes and fees.

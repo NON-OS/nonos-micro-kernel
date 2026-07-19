@@ -39,6 +39,8 @@ pub enum Tok {
     Sel,
     For,
     In,
+    If,
+    Else,
     // A user name and a decimal literal, the two tokens that carry a value.
     Ident(String),
     Num(u64),
@@ -109,6 +111,8 @@ pub fn lex(src: &str) -> Result<Vec<Tok>, CompileError> {
                 "sel" => Tok::Sel,
                 "for" => Tok::For,
                 "in" => Tok::In,
+                "if" => Tok::If,
+                "else" => Tok::Else,
                 _ => Tok::Ident(String::from(word)),
             });
             continue;

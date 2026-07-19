@@ -46,6 +46,9 @@ pub enum Expr {
     // The field inverse and the branchless select, written as calls.
     Inv(Box<Expr>),
     Sel(Box<Expr>, Box<Expr>, Box<Expr>),
+    // A conditional expression, sugar for `sel`: both arms are evaluated and one
+    // is chosen by the boolean condition. Order is (cond, then, else).
+    If(Box<Expr>, Box<Expr>, Box<Expr>),
 }
 
 // A statement node.
@@ -292,6 +295,19 @@ impl<'a> Parser<'a> {
                 let b = self.expr()?;
                 self.expect(&Tok::RParen)?;
                 Ok(Expr::Sel(Box::new(cond), Box::new(a), Box::new(b)))
+            }
+            // A conditional expression: `if c { a } else { b }`. Both arms are
+            // single expressions, because the lowering to `sel` evaluates both.
+            Some(Tok::If) => {
+                let cond = self.expr()?;
+                self.expect(&Tok::LBrace)?;
+                let a = self.expr()?;
+                self.expect(&Tok::RBrace)?;
+                self.expect(&Tok::Else)?;
+                self.expect(&Tok::LBrace)?;
+                let b = self.expr()?;
+                self.expect(&Tok::RBrace)?;
+                Ok(Expr::If(Box::new(cond), Box::new(a), Box::new(b)))
             }
             Some(_) => Err(CompileError::UnexpectedToken),
             None => Err(CompileError::UnexpectedEof),
