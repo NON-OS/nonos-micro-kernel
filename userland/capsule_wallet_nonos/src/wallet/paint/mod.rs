@@ -51,3 +51,4 @@ pub use paint::paint;
 // Shared so the pointer handler can hit-test the Generate/probe button at the
 // exact rect the Receive screen paints it.
 pub use paint_receive::{GEN_BTN_H, GEN_BTN_W, GEN_BTN_X, GEN_BTN_Y};
+pub use paint_sidebar::{NAV_H, NAV_STEP, NAV_W, NAV_X, NAV_Y0};
