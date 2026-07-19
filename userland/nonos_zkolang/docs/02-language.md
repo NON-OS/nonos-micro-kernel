@@ -11,9 +11,10 @@ opcode it produces. The lexer, parser, and compiler are in
 ## Grammar
 
 The tokens the lexer recognises are exactly `let`, `assert`, `input`, `secret`,
-`output`, `inv`, `sel`, the operators `+ - * ==`, the punctuation `( ) , ;`,
-identifiers, and decimal numbers (`src/lang/lex.rs`). Line comments run from `//`
-to the end of the line. The grammar, lowest precedence first, is:
+`for`, `in`, `output`, `inv`, `sel`, the operators `+ - * / == !=` and unary `-`,
+the punctuation `( ) , ; { } ..`, identifiers, and decimal numbers
+(`src/lang/lex.rs`). Line comments run from `//` to the end of the line. The
+grammar, lowest precedence first, is:
 
 ```
 program  := stmt*
@@ -22,10 +23,12 @@ stmt     := 'let' ident '=' expr ';'
           | 'input' ident ';'
           | 'secret' ident ';'
           | 'output' expr ';'
+          | 'for' ident 'in' number '..' number '{' stmt* '}'
 expr     := equality
-equality := sum ('==' sum)?
+equality := sum (('==' | '!=') sum)?
 sum      := product (('+' | '-') product)*
-product  := primary ('*' primary)*
+product  := unary (('*' | '/') unary)*
+unary    := '-' unary | primary
 primary  := number | ident | '(' expr ')'
           | 'inv' '(' expr ')'
           | 'sel' '(' expr ',' expr ',' expr ')'
@@ -78,6 +81,17 @@ values a verifier reads off the proof.
 
 ```
 output y;         // Out  public_output[0] = r_y
+```
+
+A `for` loop repeats its body over a compile-time range, and the compiler unrolls
+it into straight-line code. The loop variable is a constant in the body, so the
+program's shape stays static. A loop is exactly its hand-unrolled body; it is the
+way to write repeated work like an accumulator or a power without repeating lines.
+
+```
+let acc = 0;
+for i in 0 .. 4 { let acc = acc + i; }   // acc = 0 + 1 + 2 + 3 = 6
+output acc;
 ```
 
 ## Expressions
@@ -140,8 +154,9 @@ Running this on `x = 3` proves the statement and returns `y = 27`. See
 
 ## What the surface does not have, on purpose
 
-There are no loops or `if` blocks in the surface syntax and no function calls yet.
-A bounded loop is unrolled by the front-end into straight-line code before
-compilation, so it never appears as control flow in the trace. This is a
-deliberate limit: it is what makes a program's step count a static property and
-the proof's cost knowable before you run it. Division is written `a * inv(b)`.
+There are no `if` blocks and no function calls yet; a conditional is the branchless
+`sel`, and a bounded `for` loop is unrolled at compile time, so neither introduces
+data-dependent control flow. That is a deliberate limit: it is what makes a
+program's step count a static property and the proof's cost knowable before you
+run it. Loop bounds are literals, not runtime values, for the same reason.
+Division is the `/` operator, which lowers to a multiply by an inverse.

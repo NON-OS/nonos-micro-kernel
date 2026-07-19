@@ -27,6 +27,7 @@ The instruction set (`src/isa.rs`). Every opcode is enforced by the AIR.
 program  := stmt*
 stmt     := 'let' ident '=' expr ';' | 'assert' expr ';'
           | 'input' ident ';' | 'secret' ident ';' | 'output' expr ';'
+          | 'for' ident 'in' number '..' number '{' stmt* '}'
 expr     := equality
 equality := sum (('==' | '!=') sum)?
 sum      := product (('+' | '-') product)*
@@ -36,7 +37,7 @@ primary  := number | ident | '(' expr ')'
           | 'inv' '(' expr ')' | 'sel' '(' expr ',' expr ',' expr ')'
 ```
 
-Keywords: `let`, `assert`, `input`, `secret`, `output`, `inv`, `sel`. Operators: `+ - * / == != ` and unary `-`. Comments: `//` to end
+Keywords: `let`, `assert`, `input`, `secret`, `output`, `inv`, `sel`, `for`, `in`. Operators: `+ - * / == != ` and unary `-`. Comments: `//` to end
 of line.
 
 ## Public API
@@ -61,7 +62,7 @@ Each failure is a typed value, never a panic.
 
 - `CompileError` (`src/lang/mod.rs`): `UnexpectedChar { at }`,
   `NumberTooLarge { at }`, `UnexpectedEof`, `UnexpectedToken`, `UnknownVariable`,
-  `TooManyRegisters`.
+  `TooManyRegisters`, `LoopTooLarge`.
 - `ProveError` (`src/vm.rs`): `BadRegister`, `BadInput`, `NoHalt`,
   `Unprovable { step }`.
 - `BuildError` (`src/air.rs`): `NoHalt`, `TooLong`, `MissingPublicOutput`.
@@ -113,7 +114,7 @@ the terminal, then write a `.zkl` file and run `zkolang myfile.zkl`.
 
 ## Reproducing the claims
 
-In `userland/nonos_zkolang_proofs`: `cargo test` runs the 36 host proofs behind this
+In `userland/nonos_zkolang_proofs`: `cargo test` runs the 52 host proofs behind this
 documentation (opcode tamper rejection, register binding, public input and output
 soundness, the language end to end, and the fee model), and
 `cargo run --release --example measure` prints the trace shapes and fees.

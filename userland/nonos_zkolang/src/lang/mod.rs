@@ -75,6 +75,8 @@ pub enum CompileError {
     UnknownVariable,
     /// The program needs more live values than the register file holds.
     TooManyRegisters,
+    /// A `for` loop whose range would unroll to too many iterations.
+    LoopTooLarge,
 }
 
 use crate::isa::Op;

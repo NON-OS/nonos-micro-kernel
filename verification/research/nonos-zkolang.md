@@ -21,7 +21,7 @@ abstract: |
   execution model, the step AIR and an argument that a satisfying assignment
   implies a faithful run, the binding of the trace to the money-grade STARK, and a
   NOX pay-to-prove fee that follows the proving work. We report measured trace
-  shapes and an accept-and-reject evidence suite of thirty-six in-process proofs. We
+  shapes and an accept-and-reject evidence suite of fifty-two in-process proofs. We
   are explicit about scope: every opcode is enforced, so a program is proven
   whole with no unimplemented instruction; what the language does not have is a
   random-access memory or a hash primitive, a deliberate scope rather than a
@@ -89,19 +89,21 @@ alone and can be checked.
 
 A zKølang program is a sequence of statements over field values. The concrete syntax
 is small enough to give in full. The lexer recognizes exactly the keywords `let`,
-`assert`, `input`, `secret`, `output`, `inv`, `sel`, the operators `+ - * ==`, the
-punctuation `( ) , ;`, identifiers, and decimal numerals
-(`userland/nonos_zkolang/src/lang/lex.rs`). The grammar, lowest precedence first,
-is:
+`assert`, `input`, `secret`, `output`, `inv`, `sel`, `for`, `in`, the operators
+`+ - * / == !=` and unary `-`, the punctuation `( ) , ; { } ..`, identifiers, and
+decimal numerals (`userland/nonos_zkolang/src/lang/lex.rs`). The grammar, lowest
+precedence first, is:
 
 ```
 program  := stmt*
 stmt     := 'let' ident '=' expr ';' | 'assert' expr ';'
           | 'input' ident ';' | 'secret' ident ';' | 'output' expr ';'
+          | 'for' ident 'in' number '..' number '{' stmt* '}'
 expr     := equality
-equality := sum ('==' sum)?
+equality := sum (('==' | '!=') sum)?
 sum      := product (('+' | '-') product)*
-product  := primary ('*' primary)*
+product  := unary (('*' | '/') unary)*
+unary    := '-' unary | primary
 primary  := number | ident | '(' expr ')'
           | 'inv' '(' expr ')' | 'sel' '(' expr ',' expr ',' expr ')'
 ```
@@ -306,7 +308,7 @@ The trace width is constant at thirty-five columns; the height is the next power
 two above the step count. Each of these programs proves and verifies in process on
 the host. The fee follows the trace area and always leaves the prover the majority.
 
-The correctness evidence is a suite of thirty-six in-process proofs in
+The correctness evidence is a suite of fifty-two in-process proofs in
 `userland/nonos_zkolang_proofs` (`cargo test`). An honest run of a program touching
 every enforced opcode verifies. Each of a targeted tamper set is rejected: a wrong
 add, subtract, multiply, or select result; a forged inverse witness; a false

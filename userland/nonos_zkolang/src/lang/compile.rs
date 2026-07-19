@@ -32,9 +32,18 @@ use super::parse::{Ast, Expr, Stmt};
 use super::CompileError;
 use crate::isa::{Op, REGS};
 
+// The largest number of iterations a single loop may unroll to. It guards against
+// a stray large range building an enormous program; the trace-length cap catches
+// anything that slips through at prove time, but this fails fast at compile.
+const MAX_UNROLL: u64 = 65_536;
+
 struct Compiler {
     ops: Vec<Op>,
     syms: Vec<(String, u8)>,
+    // Active loop variables, innermost last. A loop variable is a compile-time
+    // constant, so a reference to one lowers to an immediate rather than a
+    // register read.
+    loop_consts: Vec<(String, u64)>,
     // The high-water mark of registers ever allocated, and the pool of registers
     // freed from dead temporaries and available for reuse.
     next: u8,
@@ -81,6 +90,12 @@ impl Compiler {
         self.syms.iter().rev().find(|(n, _)| n.as_str() == name).map(|(_, r)| *r)
     }
 
+    // The value of a loop variable if `name` is one, innermost loop first. A loop
+    // variable shadows a same-named binding while its loop is active.
+    fn loop_const(&self, name: &str) -> Option<u64> {
+        self.loop_consts.iter().rev().find(|(n, _)| n.as_str() == name).map(|(_, v)| *v)
+    }
+
     fn stmt(&mut self, s: &Stmt) -> Result<(), CompileError> {
         match s {
             Stmt::Let(name, e) => {
@@ -119,6 +134,26 @@ impl Compiler {
                 self.release(&v);
                 Ok(())
             }
+            Stmt::For { var, lo, hi, body } => {
+                // Guard against an unreasonable unroll before building anything.
+                if hi.saturating_sub(*lo) > MAX_UNROLL {
+                    return Err(CompileError::LoopTooLarge);
+                }
+                // Unroll: for each value, bind the loop variable as a compile-time
+                // constant, compile the body inline, then pop the binding. Bodies
+                // are flat, so a binding a body makes persists, which is what lets
+                // an accumulator across iterations work.
+                let mut v = *lo;
+                while v < *hi {
+                    self.loop_consts.push((var.clone(), v));
+                    for s in body {
+                        self.stmt(s)?;
+                    }
+                    self.loop_consts.pop();
+                    v += 1;
+                }
+                Ok(())
+            }
         }
     }
 
@@ -149,6 +184,13 @@ impl Compiler {
                 Ok(Val { reg: d, temp: true })
             }
             Expr::Var(n) => {
+                // A loop variable is a compile-time constant, so it materializes as
+                // an immediate. Otherwise the name must resolve to a binding.
+                if let Some(v) = self.loop_const(n) {
+                    let d = self.alloc()?;
+                    self.ops.push(Op::Imm { d, v: Fp::from_u64(v) });
+                    return Ok(Val { reg: d, temp: true });
+                }
                 let reg = self.lookup(n).ok_or(CompileError::UnknownVariable)?;
                 Ok(Val { reg, temp: false })
             }
@@ -228,13 +270,34 @@ impl Compiler {
     }
 }
 
+// The number of public inputs a statement list produces, counting the inputs a
+// loop unrolls to, so the count matches the compiled program even through loops.
+// In practice this stays small, because each input binds a register and the file
+// holds only `REGS` of them.
+fn count_inputs(stmts: &[Stmt]) -> u64 {
+    let mut n = 0u64;
+    for s in stmts {
+        match s {
+            Stmt::Input(_) => n += 1,
+            Stmt::For { lo, hi, body, .. } => {
+                let iters = hi.saturating_sub(*lo);
+                n = n.saturating_add(iters.saturating_mul(count_inputs(body)));
+            }
+            _ => {}
+        }
+    }
+    n
+}
+
 /// Lower an AST into a VM program ending in `Halt`.
 pub fn compile(ast: &Ast) -> Result<Vec<Op>, CompileError> {
-    // Count the public inputs first, so secret inputs can be indexed after them.
-    let n_public = ast.stmts.iter().filter(|s| matches!(s, Stmt::Input(_))).count() as u16;
+    // Count the public inputs first, through any loops, so secret inputs can be
+    // indexed after them.
+    let n_public = count_inputs(&ast.stmts).min(u16::MAX as u64) as u16;
     let mut c = Compiler {
         ops: Vec::new(),
         syms: Vec::new(),
+        loop_consts: Vec::new(),
         next: 0,
         free: Vec::new(),
         n_public,

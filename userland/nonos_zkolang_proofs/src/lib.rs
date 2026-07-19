@@ -10,6 +10,8 @@ mod io_tests;
 #[cfg(test)]
 mod lang_tests;
 #[cfg(test)]
+mod loop_tests;
+#[cfg(test)]
 mod nox_tests;
 #[cfg(test)]
 mod operator_tests;

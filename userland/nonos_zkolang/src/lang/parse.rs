@@ -59,6 +59,10 @@ pub enum Stmt {
     Secret(String),
     // Expose an expression as the next public output.
     Output(Expr),
+    // A bounded loop over `[lo, hi)`, unrolled by the compiler. The loop variable
+    // is a compile-time constant in the body, so the body's shape never depends on
+    // a runtime value.
+    For { var: String, lo: u64, hi: u64, body: Vec<Stmt> },
 }
 
 /// A parsed program.
@@ -148,6 +152,41 @@ impl<'a> Parser<'a> {
                 self.expect(&Tok::Semi)?;
                 Ok(Stmt::Output(e))
             }
+            Some(Tok::For) => self.for_loop(),
+            Some(_) => Err(CompileError::UnexpectedToken),
+            None => Err(CompileError::UnexpectedEof),
+        }
+    }
+
+    // A bounded loop: `for i in lo .. hi { stmt* }`. The bounds are literals, so
+    // the iteration count is known at compile time and the compiler unrolls it.
+    fn for_loop(&mut self) -> Result<Stmt, CompileError> {
+        self.pos += 1; // the `for`
+        let var = match self.bump() {
+            Some(Tok::Ident(n)) => n.clone(),
+            Some(_) => return Err(CompileError::UnexpectedToken),
+            None => return Err(CompileError::UnexpectedEof),
+        };
+        self.expect(&Tok::In)?;
+        let lo = self.number()?;
+        self.expect(&Tok::DotDot)?;
+        let hi = self.number()?;
+        self.expect(&Tok::LBrace)?;
+        let mut body = Vec::new();
+        while !matches!(self.peek(), Some(Tok::RBrace)) {
+            if self.peek().is_none() {
+                return Err(CompileError::UnexpectedEof);
+            }
+            body.push(self.stmt()?);
+        }
+        self.expect(&Tok::RBrace)?;
+        Ok(Stmt::For { var, lo, hi, body })
+    }
+
+    // Consume a single numeric literal, for a loop bound.
+    fn number(&mut self) -> Result<u64, CompileError> {
+        match self.bump() {
+            Some(Tok::Num(v)) => Ok(*v),
             Some(_) => Err(CompileError::UnexpectedToken),
             None => Err(CompileError::UnexpectedEof),
         }

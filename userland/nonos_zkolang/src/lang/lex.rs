@@ -37,6 +37,8 @@ pub enum Tok {
     Output,
     Inv,
     Sel,
+    For,
+    In,
     // A user name and a decimal literal, the two tokens that carry a value.
     Ident(String),
     Num(u64),
@@ -51,11 +53,15 @@ pub enum Tok {
     Assign,
     EqEq,
     BangEq,
-    // Punctuation.
+    // Punctuation. `DotDot` is the range in a `for`, and the braces delimit its
+    // body.
     LParen,
     RParen,
     Comma,
     Semi,
+    DotDot,
+    LBrace,
+    RBrace,
 }
 
 fn is_ident_start(b: u8) -> bool {
@@ -101,6 +107,8 @@ pub fn lex(src: &str) -> Result<Vec<Tok>, CompileError> {
                 "output" => Tok::Output,
                 "inv" => Tok::Inv,
                 "sel" => Tok::Sel,
+                "for" => Tok::For,
+                "in" => Tok::In,
                 _ => Tok::Ident(String::from(word)),
             });
             continue;
@@ -130,6 +138,8 @@ pub fn lex(src: &str) -> Result<Vec<Tok>, CompileError> {
             b')' => Some(Tok::RParen),
             b',' => Some(Tok::Comma),
             b';' => Some(Tok::Semi),
+            b'{' => Some(Tok::LBrace),
+            b'}' => Some(Tok::RBrace),
             _ => None,
         };
         if let Some(tok) = single {
@@ -154,6 +164,16 @@ pub fn lex(src: &str) -> Result<Vec<Tok>, CompileError> {
         if ch == b'!' {
             if i + 1 < b.len() && b[i + 1] == b'=' {
                 toks.push(Tok::BangEq);
+                i += 2;
+                continue;
+            }
+            return Err(CompileError::UnexpectedChar { at: i });
+        }
+        // `.` is only ever the range `..` of a `for`. A single dot is meaningless
+        // in the language, so it is a lexing error.
+        if ch == b'.' {
+            if i + 1 < b.len() && b[i + 1] == b'.' {
+                toks.push(Tok::DotDot);
                 i += 2;
                 continue;
             }
