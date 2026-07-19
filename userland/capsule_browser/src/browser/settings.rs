@@ -34,8 +34,16 @@ const SET_Y: i32 = PANEL_TOP + 74;
 const OFF_Y: i32 = PANEL_TOP + 110;
 const ROW_H: i32 = 30;
 
-fn panel_x() -> i32 {
-    WIDTH as i32 - PANEL_W - 12
+fn panel_x(width: i32) -> i32 {
+    width - PANEL_W - 12
+}
+
+fn width_of(state: &State) -> i32 {
+    if state.viewport_w > 0 {
+        state.viewport_w as i32
+    } else {
+        WIDTH as i32
+    }
 }
 
 /// Draw the panel over the page when it is open.
@@ -43,7 +51,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     if !state.settings_open {
         return;
     }
-    let x = panel_x();
+    let x = panel_x(fb.width as i32);
     fb.fill_rect(x as u32, PANEL_TOP as u32, PANEL_W as u32, PANEL_H as u32, constants::TOOLBAR_BG);
     fb.fill_rect(x as u32, PANEL_TOP as u32, PANEL_W as u32, 2, constants::ACCENT);
     fb.text_ttf(x + 14, PANEL_TOP + 12, "Settings", constants::FG, 16.0);
@@ -59,7 +67,13 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
 }
 
 fn button(fb: &mut PaintBuffer, x: i32, y: i32, label: &str) {
-    fb.fill_rect((x + 12) as u32, y as u32, (PANEL_W - 24) as u32, ROW_H as u32, constants::FIELD_BG);
+    fb.fill_rect(
+        (x + 12) as u32,
+        y as u32,
+        (PANEL_W - 24) as u32,
+        ROW_H as u32,
+        constants::FIELD_BG,
+    );
     fb.text_ttf(x + 24, y + 8, label, constants::FG, 14.0);
 }
 
@@ -70,8 +84,8 @@ enum Action {
     Ignore,
 }
 
-fn action_at(x: i32, y: i32) -> Action {
-    let px = panel_x();
+fn action_at(x: i32, y: i32, width: i32) -> Action {
+    let px = panel_x(width);
     let inside = x >= px && x < px + PANEL_W && y >= PANEL_TOP && y < PANEL_TOP + PANEL_H;
     if !inside {
         return Action::Close;
@@ -90,7 +104,7 @@ fn action_at(x: i32, y: i32) -> Action {
 /// `proxy socks5://` prefix so the user types the host:port and presses Enter,
 /// which the existing address command applies. "Turn proxy off" clears it.
 pub fn on_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
-    match action_at(x, y) {
+    match action_at(x, y, width_of(state)) {
         Action::Set => {
             state.settings_open = false;
             state.address = String::from("proxy socks5://");

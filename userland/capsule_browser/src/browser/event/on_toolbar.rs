@@ -21,6 +21,18 @@ use crate::browser::paint::chrome::{self, Btn};
 use crate::browser::state::{State, View};
 
 pub fn on_toolbar(state: &mut State, event: InputEvent) -> EventOutcome {
+    // The menu button is right-aligned to the real surface width, which can
+    // differ from the fixed layout width, so hit-test it against the tracked
+    // viewport rather than the constant.
+    let w = if state.viewport_w > 0 {
+        state.viewport_w as i32
+    } else {
+        crate::browser::manifest::WIDTH as i32
+    };
+    if event.x >= w - 44 {
+        state.settings_open = !state.settings_open;
+        return EventOutcome::Repaint;
+    }
     match chrome::toolbar_button_at(event.x, event.y) {
         Some(Btn::Home) => {
             state.view = View::Home;
