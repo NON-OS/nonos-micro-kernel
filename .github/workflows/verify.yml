@@ -37,7 +37,7 @@ jobs:
       - name: Production source hygiene
         run: cargo run --manifest-path nonos-verify/Cargo.toml -- hygiene
 
-  # The committed verification/EVIDENCE.json is a machine-readable inventory of
+  # The committed verification/evidence/EVIDENCE.json is a machine-readable inventory of
   # everything NONOS proves. Regenerate it from the source tree and fail if it
   # has drifted, so the file in the repo is always an accurate, CI-checked
   # statement of the verification surface.
@@ -51,9 +51,9 @@ jobs:
       - name: Regenerate and check for drift
         run: |
           set -euo pipefail
-          ./verification/collect-evidence.sh > /tmp/EVIDENCE.json
-          if ! diff -u verification/EVIDENCE.json /tmp/EVIDENCE.json; then
-            echo "::error::verification/EVIDENCE.json is stale; run ./verification/collect-evidence.sh > verification/EVIDENCE.json and commit"
+          ./verification/evidence/collect-evidence.sh > /tmp/EVIDENCE.json
+          if ! diff -u verification/evidence/EVIDENCE.json /tmp/EVIDENCE.json; then
+            echo "::error::verification/evidence/EVIDENCE.json is stale; run ./verification/evidence/collect-evidence.sh > verification/evidence/EVIDENCE.json and commit"
             exit 1
           fi
           jq -e '.proof_systems.lean_specification.sorry_count == 0' /tmp/EVIDENCE.json >/dev/null \
@@ -63,7 +63,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: verification-evidence
-          path: verification/EVIDENCE.json
+          path: verification/evidence/EVIDENCE.json
           retention-days: 90
           if-no-files-found: error
 

@@ -214,6 +214,42 @@ every one of its $n$ headers is an in-bounds read.
 bytes; an unsupported type is refused; and an admitted relocation either writes
 nothing or writes wholly inside a segment.
 
+## Resource allocation and dispatch
+
+**Theorem 10a (Descriptor allocation; `FdAlloc.alloc_free`, `alloc_lowest`,
+`alloc_none_full`).** The file-descriptor allocator returns the least free
+descriptor at or above the floor: an allocated descriptor lies in the window and
+was free, every descriptor from the floor up to it was in use, and the allocator
+declines exactly when the whole window is occupied.
+
+**Theorem 10b (Process identifiers; `PidAlloc.chosen_pid_ne_zero`,
+`chosen_pid_inactive`).** The identifier the selector returns is never the
+reserved value zero and is not already live, and the counter stored back never
+wraps to zero, so two processes never share an identifier.
+
+**Theorem 10c (Syscall dispatch; `SyscallRoute.route_unclaimed_is_enosys`,
+`route_earlier_shadows`, `route_append_stable`).** Every system call has exactly
+one owner, decided by the fixed order of the handler groups: an unclaimed number
+is refused with the error sentinel, the first group to claim a number decides the
+result, and appending a new subsystem cannot capture a number an existing one
+already owns.
+
+## The multisignature and the Wi-Fi trusted path
+
+**Theorem 10d (Threshold authority; `MultiSig.valid_config`,
+`threshold_backed_by_distinct_authorized`).** A multisignature configuration is
+accepted only as a well-formed $k$-of-$n$ with $1 \le k \le n$ within the signer
+cap, a signature is recorded only from an authorized signer who has not already
+signed, and a met threshold is therefore backed by at least $k$ distinct
+authorized signatures, never by duplicates or outsiders.
+
+**Theorem 10e (WPA2 handshake and replay; `Wpa2Handshake.install_requires_valid_msg3`,
+`CcmpReplay.no_redelivery`).** The Wi-Fi supplicant installs keys only on a
+message 3 whose integrity code verifies under the derived key and whose nonce
+repeats the bound authenticator nonce, and a received packet number is delivered
+at most once: once processed, the same number is never fresh again, so a captured
+frame replayed cannot advance the connection.
+
 # Mechanical Extraction: From MIR to Lean
 
 The layers of §4 state and prove properties of Lean models; the remaining gap is
@@ -282,6 +318,96 @@ Where Aeneas models a `core`-library method as an opaque axiom (for instance
 faithful stand-in for the standard method, not a `sorry`, and is disjoint from
 $\mathsf{sorryAx}$.
 
+## The scalar and control-flow model
+
+Aeneas does not translate Rust into a partial imperative language; it produces a
+total functional program, and this shapes how the theorems are stated. Machine
+integers become bounded scalars carrying their bit width, and every operation
+that can overflow or fail returns a value in a result monad
+$\mathsf{Result}\,\tau = \mathsf{ok}\,\tau \mid \mathsf{fail} \mid \mathsf{div}$.
+An addition is therefore not $a + b$ but a computation that either yields
+$\mathsf{ok}(a + b)$ when the sum fits the width or $\mathsf{fail}$ when it does
+not, and the extracted function is a monadic bind over these steps. The checked
+addition inside `check_range` appears in the extracted Lean exactly as this
+branch, and Theorem 12 is proven by discharging both arms: the overflow arm
+cannot yield an accepted range because it routes to an error, and the in-bounds
+arm carries the arithmetic that the page mask then confines. Nothing about the
+overflow behaviour is assumed; it is present in the extracted definition and
+reasoned about.
+
+The `?` operator, which Rust uses to propagate errors, becomes an explicit match
+on a control-flow value with `Continue` and `Break` constructors. A proof over an
+extracted function that uses `?` is therefore a proof over that match, and the
+early-return semantics are visible rather than hidden. Borrows are resolved by
+Charon before Aeneas sees the program, so the Lean carries no lifetime
+machinery; what remains is a pure function of its inputs, which is the ideal
+object for a theorem.
+
+## A worked proof: the user and kernel boundary
+
+The value of the extraction is clearest on a single function. The kernel copies
+bytes across the user and kernel boundary only after clearing the request
+through `check_range`, whose source is a sequence of guards over a `u64` address
+and a `usize` length. Charon lowers it and Aeneas produces a Lean definition
+whose shape is the source control flow: a null test, a size-cap test against
+$2^{26}$, a zero-length short circuit, a checked addition of the address and the
+length less one, and, when that addition does not overflow, a comparison of the
+last byte against the user ceiling $U$ followed by two applications of the page
+mask $x \mapsto x \land \overline{P - 1}$.
+
+Theorem 12 states the admission condition of this extracted function exactly, as
+a biconditional, and further identifies it with the abstract predicate
+$\mathrm{Isolation.Accepts}$. The proof is a decision-tree walk that mirrors the
+source: at each guard it establishes which branch the hypotheses force and
+carries the arithmetic forward with a linear-arithmetic decision procedure. The
+page mask is the one step that is not linear, and it is handled by observing
+that $x \land \overline{P - 1} = \lfloor x \rfloor_P \le x$, so an accepted
+range whose last byte is at most $U$ has a masked end also at most $U$. The
+consequence, Theorem 4 restated over the extracted code, is that no address the
+copy touches can escape user space. There is no model between this theorem and
+the bytes the kernel moves; the theorem is about the compiler's own lowering of
+the function that moves them.
+
+## Proof methodology and the axiom audit
+
+Three techniques recur across the corpus and are worth naming, because they are
+what make the proofs both true and auditable.
+
+**Characterization lemmas.** A validator with several guarded exits is first
+proven to satisfy a single lemma that names, as a conjunction, every fact an
+accepted input enjoys. The individual safety theorems are then short corollaries
+that project one conjunct. `DmaMap`, `IrqBind` and `ElfPhdr` are each organized
+this way, so the branch analysis is done once and the security consequences read
+off it. This keeps the delicate part of each proof in one place and makes the
+theorems that a reader cares about trivial to check against the lemma.
+
+**Structural and fuel-bounded induction.** Allocators and scanners are proven by
+induction. The lowest-free-descriptor allocator is modelled as a bounded upward
+scan and its guarantee, that the returned descriptor is the least free one at or
+above the floor, is an induction over the scan whose inductive step is the
+observation that everything below the result was occupied. The syscall router is
+proven by induction over the ordered list of handler groups, establishing that
+the first group to claim a number decides the result and that appending a new
+subsystem cannot capture a number an existing one already owns.
+
+**Refinement.** Where an abstract theorem is the clean statement and the concrete
+code carries extra structure, a refinement theorem connects them. Theorem 6 is
+the archetype: the four-branch bootloader check, with its trust gating, is proven
+to accept exactly what the abstract monotone-floor predicate accepts, so the
+abstract no-rollback theorem lands on the real control flow. Verus (Layer 2b) and
+the Aeneas extraction (Layer 2c) are the two mechanized forms of the same
+discipline, one over the Rust semantics and one over the compiler's MIR.
+
+The audit that ties these together is the axiom profile. Lean's kernel can
+compute, for any theorem, the exact set of axioms its proof term depends on. The
+project enumerates its flagship theorems in a single file and prints that set for
+each, and the continuous-integration gate rejects any run in which a set contains
+$\mathsf{sorryAx}$ or any axiom outside $\mathcal{S}$. A claimed theorem cannot,
+therefore, silently rest on an unproven step: the placeholder that a `sorry`
+would introduce is exactly the axiom the gate forbids. This is a mechanical
+property of the proof terms, not a review convention, and it is the reason the
+corpus can be trusted at the granularity of a single theorem.
+
 # The Transparent STARK Attestation Gate
 
 Admission to execution is governed by a proof, not by provenance. Each capsule
@@ -289,6 +415,37 @@ carries a transparent, post-quantum STARK establishing membership of its
 measurement in an enrolled policy commitment; the kernel re-verifies it at every
 spawn, before the process receives memory, and the bootloader verifies the
 kernel's own measurement the same way before the jump.
+
+## Structure of the proof system
+
+The gate is a scalable transparent argument of knowledge, chosen because it needs
+no trusted setup and rests only on the collision resistance of a hash. A
+computation is expressed as an algebraic intermediate representation: an
+execution trace laid out as a table over a finite field, together with a set of
+polynomial constraints that hold on every row of a correct trace and fail
+somewhere on an incorrect one. Membership of a measurement in the enrolled policy
+is encoded as a fixed-depth Merkle authentication path, and the constraint system
+asserts, row by row, that each step of the path hashes correctly to the next,
+ending at the committed root. The prover commits to the trace and to the
+low-degree extension of its constraint polynomials through Merkle trees over the
+field, and proves proximity to a low-degree codeword with the FRI protocol, whose
+folding rounds reduce a claim about a large codeword to a claim about a small one.
+The verifier is made non-interactive by deriving its challenges from the
+transcript with a Fiat-Shamir hash, so the same code produces and checks the
+proof and the challenges cannot be ground against.
+
+The measurement itself is a length-prefixed encoding of the capsule image hash,
+the granted capability mask, the policy epoch and a domain separator, hashed into
+the field. Length prefixing makes the encoding injective, which is what stops a
+capsule from presenting a measurement that collides with another's under a
+different field split; this injectivity is one of the Lean theorems. The trailer
+that carries the proof through the image is parsed by untrusted code, so its
+deserializer is proven total: it terminates without panic and reserves no buffer
+larger than the bytes it actually holds, on every input, which closes the
+denial-of-service and out-of-bounds surface a hostile trailer would otherwise
+open.
+
+## What is proven, and what is assumed
 
 The attestation body adds 203 further Lean theorems (the `Nonos/Stark/` modules
 with `SigningKey` and `KeyLifecycle`): soundness and collision-freedom of the
@@ -333,7 +490,7 @@ Every claim is reproducible from a clean checkout: source hygiene, the runnable
 and Kani proofs, `lake build` and `lake env lean AxiomProfile.lean` for the Lean
 corpus and its axiom gate, and the Charon/Aeneas regeneration for the extraction.
 The whole surface is inventoried in a machine-readable manifest,
-`verification/EVIDENCE.json`, derived deterministically from the source and
+`verification/evidence/EVIDENCE.json`, derived deterministically from the source and
 diff-checked in CI, so the counts in the repository are never stale prose but a
 continuously verified artifact.
 
