@@ -33,8 +33,8 @@ pub struct CssCache {
 
 // Cascade with a persistent parse cache. Re-parses only when the CSS text
 // changed (length or content hash differ); otherwise the cached rules are
-// reused. Budgeting and index build still run per call since they depend on
-// the current node count, but they are cheap next to parsing.
+// reused. The index build still runs per call since it depends on the
+// current tree, but it is cheap next to parsing.
 pub fn compute_cached(
     dom: &Dom,
     author_css: &str,
@@ -52,9 +52,7 @@ pub fn compute_cached(
         // path rather than trusting an empty cache.
         None => return compute(dom, author_css),
     };
-    let limit = super::budget::rule_limit(dom.nodes.len(), rules.len());
-    let author = rules.get(..limit).unwrap_or(rules);
-    cascade(dom, author)
+    cascade(dom, rules)
 }
 
 // FNV-1a over the CSS bytes. Paired with the length it makes a same-length

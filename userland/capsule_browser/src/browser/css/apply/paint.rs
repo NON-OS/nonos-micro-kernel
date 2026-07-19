@@ -64,6 +64,13 @@ pub(super) fn apply_paint(c: &mut Computed, name: &str, value: &str, fs: u32) ->
                 }
             }
         }
+        // visibility keeps the box's space but paints nothing, which zero
+        // opacity models; descendant re-show is rare enough to ignore.
+        "visibility" => match value.trim() {
+            "hidden" | "collapse" => c.opacity = 0,
+            "visible" => c.opacity = 255,
+            _ => {}
+        },
         "z-index" => {
             if let Ok(z) = value.trim().parse::<i32>() {
                 c.z = z.clamp(-999, 999);

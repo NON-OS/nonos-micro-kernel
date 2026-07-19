@@ -18,6 +18,7 @@ use alloc::string::String;
 
 use super::apply::apply_decl;
 use super::computed::Computed;
+use super::grid_spec::GridSpec;
 use super::parse::parse_decls;
 
 pub fn apply_style_attr(
@@ -26,11 +27,13 @@ pub fn apply_style_attr(
     parent_fs: u32,
     vars: &[(String, String)],
     bg: &mut Option<String>,
+    grid: &mut Option<GridSpec>,
 ) {
     for d in parse_decls(style) {
         apply_decl(c, &d.name, &d.value, parent_fs, vars);
         if let Some(u) = super::bg_url::bg_url(&d.name, &d.value) {
             *bg = Some(u);
         }
+        super::grid_area_decl::grid_decl(grid, &d.name, &d.value, c.font_size_px);
     }
 }

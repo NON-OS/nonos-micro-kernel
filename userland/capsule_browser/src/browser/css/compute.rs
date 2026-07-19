@@ -35,29 +35,35 @@ use super::walk::walk;
 pub struct Styled {
     pub styles: Vec<Computed>,
     pub bg_images: Vec<Option<String>>,
+    // Named-grid data per node: template lines and areas on containers,
+    // requested placement on items.
+    pub grids: Vec<Option<super::grid_spec::GridSpec>>,
     // Generated content per node: the cascaded ::before and ::after boxes.
     pub pseudos: Vec<(Option<PseudoText>, Option<PseudoText>)>,
 }
 
 pub fn compute(dom: &Dom, author_css: &str) -> Styled {
     let author = parse(author_css);
-    let limit = super::budget::rule_limit(dom.nodes.len(), author.len());
-    let author = author.get(..limit).unwrap_or(&author[..]);
-    cascade(dom, author)
+    cascade(dom, &author)
 }
 
-// Cascade an already-parsed, already-budgeted author rule set over the tree.
-// Shared by the uncached path and the cached relayout path.
+// Cascade an already-parsed author rule set over the tree. Shared by the
+// uncached path and the cached relayout path. Author matching runs under a
+// work budget enforced per candidate test, so a hostile sheet degrades from
+// the document tail instead of losing rules everywhere.
 pub(super) fn cascade(dom: &Dom, author: &[Rule]) -> Styled {
     let ua = ua_rules();
+    let mut budget = super::budget::MatchBudget::new();
     // Custom properties resolve against a global token table before any
     // per-element parse sees the substituted value.
-    let vars = collect_vars(&ua, author);
+    let vars = collect_vars(&ua, author, dom);
     let ua_index = RuleIndex::build(&ua);
     let author_index = RuleIndex::build(author);
     let n = dom.nodes.len();
     let mut styles = vec![Computed::root(); n];
     let mut bg_images = vec![None; n];
+    let mut grids: Vec<Option<super::grid_spec::GridSpec>> = Vec::new();
+    grids.resize_with(n, || None);
     let mut pseudos: Vec<(Option<PseudoText>, Option<PseudoText>)> = Vec::new();
     pseudos.resize_with(n, || (None, None));
     // Pseudo cascading only runs when the sheet declares any pseudo rules.
@@ -73,8 +79,10 @@ pub(super) fn cascade(dom: &Dom, author: &[Rule]) -> Styled {
         &vars,
         &mut styles,
         &mut bg_images,
+        &mut grids,
         if has_pseudos { Some(&mut pseudos) } else { None },
+        &mut budget,
         0,
     );
-    Styled { styles, bg_images, pseudos }
+    Styled { styles, bg_images, grids, pseudos }
 }

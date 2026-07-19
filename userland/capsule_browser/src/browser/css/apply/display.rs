@@ -21,8 +21,15 @@ pub(super) fn apply_display(c: &mut Computed, name: &str, value: &str) -> bool {
     if name != "display" {
         return false;
     }
+    // Any later concrete display value overrides an earlier contents.
+    if value.trim() != "contents" {
+        c.is_contents = false;
+    }
     match value.trim() {
         "none" => c.display_none = true,
+        // The element generates no box; its children join the parent's
+        // formatting context directly.
+        "contents" => c.is_contents = true,
         "block" | "list-item" => {
             c.is_block = true;
             c.is_flex = false;

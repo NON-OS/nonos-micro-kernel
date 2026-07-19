@@ -30,9 +30,13 @@ mod compute;
 mod computed;
 mod content_text;
 mod decl;
+mod grid_area_decl;
+mod grid_lines;
+mod grid_spec;
 mod grid_tracks;
 mod hex;
 mod hsl_fn;
+pub(crate) mod icon_font;
 mod matching;
 mod matching_paren;
 mod named;
@@ -60,10 +64,14 @@ mod walk;
 pub use cache::{compute_cached, CssCache};
 pub use collect::collect_css;
 pub use color::parse_color;
+// The render harness computes styles directly; the capsule uses compute_cached.
+#[cfg(feature = "harness")]
+pub use compute::compute;
 pub use computed::Shadow;
 pub use computed::{
     Align, BgSize, Clear, Computed, Float, GridTrack, Justify, ObjectFit, Position, Size,
     TextAlign, TextTransform, WhiteSpace,
 };
+pub use grid_spec::GridSpec;
 pub use pseudo_style::PseudoText;
 pub use select::select;
