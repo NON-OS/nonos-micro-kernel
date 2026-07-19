@@ -79,6 +79,12 @@ pub struct State {
     pub in_kind: u32,
     pub in_x: i32,
     pub in_y: i32,
+    // UI selections driven by pointer clicks: fee tier (0..2), stake/unstake
+    // mode (0/1), proof filter (0..2), and the amount ETH/USD toggle.
+    pub fee_tier: u8,
+    pub stake_unstake: u8,
+    pub proof_filter: u8,
+    pub usd_mode: bool,
     // Local shielded UTXO set, reconstructed from the note secrets.
     pub notes: crate::wallet::shield::notes::NoteStore,
 }

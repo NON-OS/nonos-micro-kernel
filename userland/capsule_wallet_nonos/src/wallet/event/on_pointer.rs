@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::EventOutcome;
 
-use crate::wallet::state::{State, SEND_FIELD_AMOUNT, SEND_FIELD_TO, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED};
+use crate::wallet::state::{State, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED};
 
 pub fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if x < 0 || y < 0 {
@@ -27,18 +27,14 @@ pub fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if nav(state, x, y) {
         return EventOutcome::Repaint;
     }
-    use crate::wallet::paint::{GEN_BTN_H, GEN_BTN_W, GEN_BTN_X, GEN_BTN_Y};
-    if state.view == VIEW_RECEIVE && hit(x, y, GEN_BTN_X, GEN_BTN_Y, GEN_BTN_W, GEN_BTN_H) {
-        return if state.address_ready {
-            super::probe_net::probe_net(state)
-        } else {
-            super::generate::generate(state)
-        };
+    match state.view {
+        VIEW_HOME => super::on_pointer_view::home(state, x, y),
+        VIEW_RECEIVE => super::on_pointer_view::receive(state, x, y),
+        VIEW_SEND => super::on_pointer_view::send(state, x, y),
+        VIEW_PROOF => super::on_pointer_view::proof(state, x, y),
+        VIEW_NOX => super::on_pointer_view::nox(state, x, y),
+        _ => EventOutcome::Idle,
     }
-    if state.view == VIEW_SEND {
-        return send(state, x, y);
-    }
-    EventOutcome::Idle
 }
 
 // Sidebar nav: derive the item index from the same NAV_* geometry the sidebar
@@ -58,19 +54,6 @@ fn nav(state: &mut State, x: u32, y: u32) -> bool {
     true
 }
 
-fn send(state: &mut State, x: u32, y: u32) -> EventOutcome {
-    if hit(x, y, 246, 182, 600, 40) {
-        state.send_focus = SEND_FIELD_TO;
-    } else if hit(x, y, 246, 342, 508, 40) {
-        state.send_focus = SEND_FIELD_AMOUNT;
-    } else if hit(x, y, 246, 636, 150, 42) {
-        return super::sign_eth::sign_eth(state);
-    } else {
-        return EventOutcome::Idle;
-    }
-    EventOutcome::Repaint
-}
-
-fn hit(x: u32, y: u32, hx: u32, hy: u32, hw: u32, hh: u32) -> bool {
+pub(super) fn hit(x: u32, y: u32, hx: u32, hy: u32, hw: u32, hh: u32) -> bool {
     x >= hx && y >= hy && x < hx + hw && y < hy + hh
 }

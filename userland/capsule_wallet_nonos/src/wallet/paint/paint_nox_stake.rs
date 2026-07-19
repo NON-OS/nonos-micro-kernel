@@ -20,15 +20,14 @@ use super::ui;
 use crate::wallet::state::State;
 use crate::wallet::theme::{ACCENT, CYAN, DIM, FG, GREEN, INK, LINE2, MUTED, PANEL_2};
 
-pub fn paint_nox_stake(_state: &State, fb: &mut PaintBuffer) {
+pub fn paint_nox_stake(state: &State, fb: &mut PaintBuffer) {
     let cx = 226u32;
     let cw = fb.width.saturating_sub(252);
     let lw = 600u32;
     ui::card(fb, cx, 418, lw, 236);
-    fb.fill_rect(cx + 20, 438, 200, 36, ACCENT);
-    let _ = fb.text_ttf((cx + 84) as i32, 447, "Stake NOX", INK, 13.0);
-    ui::edge(fb, cx + 220, 438, 200, 36, LINE2);
-    let _ = fb.text_ttf((cx + 292) as i32, 447, "Unstake", MUTED, 13.0);
+    let stake = state.stake_unstake == 0;
+    tab(fb, cx + 20, 438, "Stake NOX", stake);
+    tab(fb, cx + 220, 438, "Unstake", !stake);
 
     let _ = fb.text_ttf((cx + 20) as i32, 494, "Amount", MUTED, 13.0);
     let av = "4000 NOX";
@@ -43,7 +42,8 @@ pub fn paint_nox_stake(_state: &State, fb: &mut PaintBuffer) {
     ui::bordered(fb, cx + 20, 576, lw - 40, 40, PANEL_2, LINE2);
     let _ = fb.text_ttf((cx + 34) as i32, 587, "Projected reward / yr", MUTED, 13.0);
     let _ = fb.text_ttf((cx + lw - 100) as i32, 587, "336 NOX", CYAN, 13.0);
-    ui::primary(fb, cx + 20, 626, lw - 40, b"Stake 4,000 NOX");
+    let btn: &[u8] = if stake { b"Stake 4,000 NOX" } else { b"Unstake 4,000 NOX" };
+    ui::primary(fb, cx + 20, 626, lw - 40, btn);
 
     let rx = cx + lw + 16;
     let rw = cw - lw - 16;
@@ -61,6 +61,17 @@ pub fn paint_nox_stake(_state: &State, fb: &mut PaintBuffer) {
     let _ = fb.text_ttf((cx + 20) as i32, 682, "Where the fee goes", FG, 14.0);
     fee(fb, cx, 708, "protocol fee", "treasury / NOX stakers / buyback-burn");
     fee(fb, cx, 730, "relayer fee", "the relayer that fronts gas");
+}
+
+fn tab(fb: &mut PaintBuffer, x: u32, y: u32, label: &str, sel: bool) {
+    if sel {
+        fb.fill_rect(x, y, 200, 36, ACCENT);
+    } else {
+        ui::edge(fb, x, y, 200, 36, LINE2);
+    }
+    let c = if sel { INK } else { MUTED };
+    let tw = fb.measure_ttf(label, 13.0).max(0) as u32;
+    let _ = fb.text_ttf((x + 100 - tw / 2) as i32, (y + 11) as i32, label, c, 13.0);
 }
 
 fn fee(fb: &mut PaintBuffer, x: u32, y: u32, k: &str, v: &str) {

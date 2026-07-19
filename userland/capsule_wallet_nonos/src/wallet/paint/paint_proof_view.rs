@@ -20,7 +20,7 @@ use super::ui;
 use crate::wallet::state::State;
 use crate::wallet::theme::{ACCENT, AMBER, AMBER_INK, CYAN, DIM, FG, GREEN, GREEN_INK, INK, LINE2, MUTED, PANEL_2};
 
-pub fn paint_proof_view(_state: &State, fb: &mut PaintBuffer) {
+pub fn paint_proof_view(state: &State, fb: &mut PaintBuffer) {
     let cx = 226u32;
     let cw = fb.width.saturating_sub(252);
     ui::card(fb, cx, 146, cw, 64);
@@ -32,20 +32,28 @@ pub fn paint_proof_view(_state: &State, fb: &mut PaintBuffer) {
 
     ui::bordered(fb, cx, 228, cw - 320, 40, PANEL_2, LINE2);
     let _ = fb.text_ttf((cx + 14) as i32, 239, "Search by hash\u{2026}", MUTED, 14.0);
-    seg(fb, cx + cw - 300, 228);
+    seg(fb, cx + cw - 300, 228, state.proof_filter);
 
     prow(fb, cx, cw, 288, "0x9f2a\u{2026}7bd1", "2 min ago  \u{00b7}  1.5 ETH", b"PROVED", GREEN, GREEN_INK);
     prow(fb, cx, cw, 352, "0x114c\u{2026}2e90", "9 min ago  \u{00b7}  0.2 ETH", b"PEND", AMBER, AMBER_INK);
     prow(fb, cx, cw, 416, "0x77ab\u{2026}01c4", "1 h ago  \u{00b7}  4.0 ETH", b"PROVED", GREEN, GREEN_INK);
 }
 
-fn seg(fb: &mut PaintBuffer, x: u32, y: u32) {
-    fb.fill_rect(x, y, 60, 40, ACCENT);
-    let _ = fb.text_ttf((x + 20) as i32, (y + 12) as i32, "All", INK, 13.0);
-    ui::edge(fb, x + 60, y, 110, 40, LINE2);
-    let _ = fb.text_ttf((x + 78) as i32, (y + 12) as i32, "Proved", MUTED, 13.0);
-    ui::edge(fb, x + 170, y, 130, 40, LINE2);
-    let _ = fb.text_ttf((x + 190) as i32, (y + 12) as i32, "Pending", MUTED, 13.0);
+fn seg(fb: &mut PaintBuffer, x: u32, y: u32, sel: u8) {
+    cell(fb, x, y, 60, "All", sel == 0);
+    cell(fb, x + 60, y, 110, "Proved", sel == 1);
+    cell(fb, x + 170, y, 130, "Pending", sel == 2);
+}
+
+fn cell(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &str, on: bool) {
+    if on {
+        fb.fill_rect(x, y, w, 40, ACCENT);
+    } else {
+        ui::edge(fb, x, y, w, 40, LINE2);
+    }
+    let c = if on { INK } else { MUTED };
+    let tw = fb.measure_ttf(label, 13.0).max(0) as u32;
+    let _ = fb.text_ttf((x + w / 2 - tw / 2) as i32, (y + 12) as i32, label, c, 13.0);
 }
 
 fn prow(fb: &mut PaintBuffer, x: u32, w: u32, y: u32, hash: &str, meta: &str, b: &[u8], bg: u32, fg: u32) {

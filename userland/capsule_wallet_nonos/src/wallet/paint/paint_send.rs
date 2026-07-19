@@ -17,7 +17,7 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::ui;
-use crate::wallet::state::State;
+use crate::wallet::state::{State, SEND_FIELD_AMOUNT, SEND_FIELD_TO};
 use crate::wallet::theme::{ACCENT, AMBER, CYAN, DIM, FG, GREEN, GREEN_INK, INK, LINE2, MUTED, PANEL_2};
 
 pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
@@ -28,7 +28,7 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
     ui::card(fb, cx, 146, lw, 590);
 
     let _ = fb.text_ttf(ix as i32, 162, "RECIPIENT", DIM, 10.5);
-    field(fb, ix, 182, iw, "vitalik.eth", true);
+    field(fb, ix, 182, iw, "vitalik.eth", state.send_focus == SEND_FIELD_TO);
     ui::badge(fb, ix, 230, "ENS OK  \u{00b7}  0x9A2c\u{2026}B841".as_bytes(), GREEN, GREEN_INK);
 
     let _ = fb.text_ttf(ix as i32, 262, "RECENT", DIM, 10.5);
@@ -37,16 +37,16 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
     ui::badge(fb, ix + a + b + 20, 282, "0x0a4f\u{2026}9d12".as_bytes(), PANEL_2, MUTED);
 
     let _ = fb.text_ttf(ix as i32, 322, "AMOUNT", DIM, 10.5);
-    seg(fb, ix + iw - 96, 318, "ETH", "USD");
-    field(fb, ix, 342, iw - 92, "1.5", false);
+    seg(fb, ix + iw - 96, 318, state.usd_mode);
+    field(fb, ix, 342, iw - 92, "1.5", state.send_focus == SEND_FIELD_AMOUNT);
     ui::outline(fb, ix + iw - 80, 342, 80, b"MAX");
     let _ = fb.text_ttf(ix as i32, 390, "= $4680.00", MUTED, 13.0);
 
     let _ = fb.text_ttf(ix as i32, 420, "FEE / SPEED", DIM, 10.5);
     let fw = (iw - 24) / 3;
-    fee(fb, ix, 440, fw, "Slow", "$0.9 - ~2m", false);
-    fee(fb, ix + fw + 12, 440, fw, "Avg", "$1.4 - ~30s", true);
-    fee(fb, ix + 2 * (fw + 12), 440, fw, "Fast", "$2.2 - ~12s", false);
+    fee(fb, ix, 440, fw, "Slow", "$0.9 - ~2m", state.fee_tier == 0);
+    fee(fb, ix + fw + 12, 440, fw, "Avg", "$1.4 - ~30s", state.fee_tier == 1);
+    fee(fb, ix + 2 * (fw + 12), 440, fw, "Fast", "$2.2 - ~12s", state.fee_tier == 2);
 
     ui::bordered(fb, ix, 516, iw, 42, PANEL_2, LINE2);
     let _ = fb.text_ttf((ix + 14) as i32, 528, "You'll have left", MUTED, 14.0);
@@ -69,11 +69,18 @@ fn field(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, val: &str, active: bool) 
     let _ = fb.text_ttf((x + 12) as i32, (y + 11) as i32, val, FG, 15.0);
 }
 
-fn seg(fb: &mut PaintBuffer, x: u32, y: u32, a: &str, b: &str) {
-    fb.fill_rect(x, y, 44, 24, ACCENT);
-    let _ = fb.text_ttf((x + 11) as i32, (y + 5) as i32, a, INK, 12.0);
-    ui::edge(fb, x + 44, y, 44, 24, LINE2);
-    let _ = fb.text_ttf((x + 55) as i32, (y + 5) as i32, b, MUTED, 12.0);
+fn seg(fb: &mut PaintBuffer, x: u32, y: u32, usd: bool) {
+    if usd {
+        ui::edge(fb, x, y, 44, 24, LINE2);
+        fb.fill_rect(x + 44, y, 44, 24, ACCENT);
+    } else {
+        fb.fill_rect(x, y, 44, 24, ACCENT);
+        ui::edge(fb, x + 44, y, 44, 24, LINE2);
+    }
+    let eth = if usd { MUTED } else { INK };
+    let usdc = if usd { INK } else { MUTED };
+    let _ = fb.text_ttf((x + 11) as i32, (y + 5) as i32, "ETH", eth, 12.0);
+    let _ = fb.text_ttf((x + 55) as i32, (y + 5) as i32, "USD", usdc, 12.0);
 }
 
 fn fee(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, name: &str, sub: &str, sel: bool) {
