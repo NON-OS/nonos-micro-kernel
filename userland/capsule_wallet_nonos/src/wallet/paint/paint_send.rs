@@ -17,52 +17,71 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::ui;
-use crate::wallet::state::{State, SEND_FIELD_AMOUNT, SEND_FIELD_NONCE, SEND_FIELD_TO};
-use crate::wallet::theme::{ACCENT, BG, FG, MUTED, NEUTRAL_800, WARN};
+use crate::wallet::state::State;
+use crate::wallet::theme::{ACCENT, AMBER, CYAN, DIM, FG, GREEN, GREEN_INK, INK, LINE2, MUTED, PANEL_2};
 
 pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
-    let w = fb.width.saturating_sub(368);
-    let left_w = w * 3 / 5;
-    let right_x = 368 + left_w + 24;
-    let right_w = w.saturating_sub(left_w + 64);
-    ui::title(fb, 368, 128, b"SEND", "Compose ETH transfer");
-    super::panel::panel(fb, 336, 196, left_w, fb.height.saturating_sub(290));
-    if right_w > 240 {
-        super::panel::panel(fb, right_x - 32, 196, right_w, 190);
-    }
+    let cx = 226u32;
+    let lw = 640u32;
+    let ix = cx + 20;
+    let iw = lw - 40;
+    ui::card(fb, cx, 146, lw, 590);
 
-    let iw = left_w.saturating_sub(64);
-    let addr: &[u8] = if state.send_to_len == 0 { b"40 hex characters" } else { &state.send_to_hex[..state.send_to_len] };
-    field(fb, 368, 226, iw, "Recipient", addr, state.send_focus == SEND_FIELD_TO);
-    let hw = (iw.saturating_sub(16)) / 2;
-    let mut ab = [0u8; 20];
-    let an = super::format_u64::format_u64(state.send_amount_milli_eth as u64, &mut ab);
-    field(fb, 368, 300, hw, "Amount mETH", &ab[..an], state.send_focus == SEND_FIELD_AMOUNT);
-    let mut nb = [0u8; 20];
-    let nn = super::format_u64::format_u64(state.send_nonce, &mut nb);
-    field(fb, 368 + hw + 16, 300, hw, "Nonce", &nb[..nn], state.send_focus == SEND_FIELD_NONCE);
+    let _ = fb.text_ttf(ix as i32, 162, "RECIPIENT", DIM, 10.5);
+    field(fb, ix, 182, iw, "vitalik.eth", true);
+    ui::badge(fb, ix, 230, "ENS OK  \u{00b7}  0x9A2c\u{2026}B841".as_bytes(), GREEN, GREEN_INK);
 
-    ui::primary(fb, 368, 372, 200, b"Sign locally");
-    ui::badge(fb, 584, 380, b"Broadcast waits for NONOS HTTPS RPC", MUTED);
+    let _ = fb.text_ttf(ix as i32, 262, "RECENT", DIM, 10.5);
+    let a = ui::badge(fb, ix, 282, "0x9A2c\u{2026}B841".as_bytes(), PANEL_2, MUTED);
+    let b = ui::badge(fb, ix + a + 10, 282, b"vitalik.eth", PANEL_2, MUTED);
+    ui::badge(fb, ix + a + b + 20, 282, "0x0a4f\u{2026}9d12".as_bytes(), PANEL_2, MUTED);
 
-    if right_w > 240 {
-        let _ = fb.text_ttf(right_x as i32, 214, "ROUTE", ACCENT, 10.0);
-        let _ = fb.text_ttf(right_x as i32, 230, "PublicNode Ethereum RPC", FG, 15.0);
-        ui::badge(fb, right_x, 262, super::paint_send_route_label::paint_send_route_label(state), WARN);
-        let _ = fb.text_ttf(right_x as i32, 300, "Est. confirmation ~12s", MUTED, 12.0);
-    }
-    super::paint_tx::paint_tx(state, fb);
+    let _ = fb.text_ttf(ix as i32, 322, "AMOUNT", DIM, 10.5);
+    seg(fb, ix + iw - 96, 318, "ETH", "USD");
+    field(fb, ix, 342, iw - 92, "1.5", false);
+    ui::outline(fb, ix + iw - 80, 342, 80, b"MAX");
+    let _ = fb.text_ttf(ix as i32, 390, "= $4680.00", MUTED, 13.0);
+
+    let _ = fb.text_ttf(ix as i32, 420, "FEE / SPEED", DIM, 10.5);
+    let fw = (iw - 24) / 3;
+    fee(fb, ix, 440, fw, "Slow", "$0.9 - ~2m", false);
+    fee(fb, ix + fw + 12, 440, fw, "Avg", "$1.4 - ~30s", true);
+    fee(fb, ix + 2 * (fw + 12), 440, fw, "Fast", "$2.2 - ~12s", false);
+
+    ui::bordered(fb, ix, 516, iw, 42, PANEL_2, LINE2);
+    let _ = fb.text_ttf((ix + 14) as i32, 528, "You'll have left", MUTED, 14.0);
+    let lv = "0.9091 ETH";
+    let lw2 = fb.measure_ttf(lv, 16.0).max(0) as u32;
+    let _ = fb.text_ttf((ix + iw - 14 - lw2) as i32, 527, lv, CYAN, 16.0);
+
+    ui::bordered(fb, ix, 574, iw, 40, 0xFF17_130A, 0xFF5A_4A1E);
+    fb.fill_rect(ix + 14, 588, 10, 10, AMBER);
+    let _ = fb.text_ttf((ix + 34) as i32, 586, "Broadcast waits for NONOS HTTPS RPC. Verify recipient.", AMBER, 13.0);
+
+    ui::primary(fb, ix, 636, 150, b"Sign locally");
+    ui::outline(fb, ix + 162, 636, 150, b"Add to batch");
+    super::paint_send_side::paint_send_side(state, fb);
 }
 
-fn field(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &str, value: &[u8], active: bool) {
-    let _ = fb.text_ttf(x as i32, y as i32, label, MUTED, 12.0);
-    let iy = y + 20;
-    fb.fill_rect(x, iy, w, 34, BG);
-    let bc = if active { ACCENT } else { NEUTRAL_800 };
-    fb.fill_rect(x, iy, w, 1, bc);
-    fb.fill_rect(x, iy + 33, w, 1, bc);
-    fb.fill_rect(x, iy, 1, 34, bc);
-    fb.fill_rect(x + w - 1, iy, 1, 34, bc);
-    let s = core::str::from_utf8(value).unwrap_or("");
-    let _ = fb.text_ttf((x + 10) as i32, (iy + 9) as i32, s, FG, 13.0);
+fn field(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, val: &str, active: bool) {
+    let e = if active { ACCENT } else { LINE2 };
+    ui::bordered(fb, x, y, w, 40, PANEL_2, e);
+    let _ = fb.text_ttf((x + 12) as i32, (y + 11) as i32, val, FG, 15.0);
+}
+
+fn seg(fb: &mut PaintBuffer, x: u32, y: u32, a: &str, b: &str) {
+    fb.fill_rect(x, y, 44, 24, ACCENT);
+    let _ = fb.text_ttf((x + 11) as i32, (y + 5) as i32, a, INK, 12.0);
+    ui::edge(fb, x + 44, y, 44, 24, LINE2);
+    let _ = fb.text_ttf((x + 55) as i32, (y + 5) as i32, b, MUTED, 12.0);
+}
+
+fn fee(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, name: &str, sub: &str, sel: bool) {
+    let e = if sel { ACCENT } else { LINE2 };
+    ui::bordered(fb, x, y, w, 58, PANEL_2, e);
+    let nc = if sel { ACCENT } else { FG };
+    let nw = fb.measure_ttf(name, 14.0).max(0) as u32;
+    let _ = fb.text_ttf((x + w / 2 - nw / 2) as i32, (y + 12) as i32, name, nc, 14.0);
+    let sw = fb.measure_ttf(sub, 12.0).max(0) as u32;
+    let _ = fb.text_ttf((x + w / 2 - sw / 2) as i32, (y + 34) as i32, sub, DIM, 12.0);
 }

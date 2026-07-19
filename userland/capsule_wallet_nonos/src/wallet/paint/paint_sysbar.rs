@@ -14,22 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Curated component library. One visual language across every screen: elevated
-//! cards, TTF section headings, metric tiles, status badges, buttons, and empty
-//! states, all keyed off theme.rs and the 8px spacing scale.
+use nonos_app_skeleton::PaintBuffer;
 
-mod badge;
-mod button;
-mod card;
-mod chart;
-mod empty;
-mod metric;
-mod section;
+use crate::wallet::theme::{ACCENT, DIM, MUTED, SYSBAR, LINE, WIDTH};
 
-pub use badge::{badge, chip};
-pub use button::{disabled, ghost, outline, primary};
-pub use card::{bordered, card, edge};
-pub use chart::bars;
-pub use empty::empty_state;
-pub use metric::metric;
-pub use section::{section, title};
+pub fn paint_sysbar(fb: &mut PaintBuffer) {
+    fb.fill_rect(0, 0, WIDTH, 34, SYSBAR);
+    fb.fill_rect(0, 33, WIDTH, 1, LINE);
+    fb.fill_rect(16, 12, 11, 11, ACCENT);
+    let _ = fb.text_ttf_mono(34, 9, "CAPSULE_WALLET_NONOS  CPL=3", MUTED, 11.0);
+    let right = "12:39  fps 60  1280x800";
+    let w = fb.measure_ttf_mono(right, 11.0).max(0) as u32;
+    let _ = fb.text_ttf_mono((WIDTH - 16 - w) as i32, 9, right, DIM, 11.0);
+}

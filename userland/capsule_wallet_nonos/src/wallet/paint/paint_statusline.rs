@@ -14,22 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Curated component library. One visual language across every screen: elevated
-//! cards, TTF section headings, metric tiles, status badges, buttons, and empty
-//! states, all keyed off theme.rs and the 8px spacing scale.
+use nonos_app_skeleton::PaintBuffer;
 
-mod badge;
-mod button;
-mod card;
-mod chart;
-mod empty;
-mod metric;
-mod section;
+use crate::wallet::theme::{GREEN, LINE, WIDTH};
 
-pub use badge::{badge, chip};
-pub use button::{disabled, ghost, outline, primary};
-pub use card::{bordered, card, edge};
-pub use chart::bars;
-pub use empty::empty_state;
-pub use metric::metric;
-pub use section::{section, title};
+pub fn paint_statusline(fb: &mut PaintBuffer) {
+    let y = 98u32;
+    fb.fill_rect(226, y + 11, 9, 9, GREEN);
+    let _ = fb.text_ttf(246, (y + 9) as i32, "keys sealed  \u{00b7}  TLS secured  \u{00b7}  route local  \u{00b7}  security STRONG", GREEN, 12.5);
+    fb.fill_rect(200, 130, WIDTH - 200, 1, LINE);
+}

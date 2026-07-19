@@ -16,34 +16,33 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::state::{
-    State, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED,
-};
-use crate::wallet::theme::{ACCENT, CYAN, FG, MUTED, PANEL_2};
+use super::ui;
+use crate::wallet::state::{State, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED};
+use crate::wallet::theme::{ACCENT, DIM, FG, GREEN, GREEN_INK, INK, LINE2, MUTED, SEL};
 
 pub fn paint_sidebar(state: &State, fb: &mut PaintBuffer) {
-    super::logo::logo(fb, 32, 36, 80);
-    let _ = fb.text_ttf(128, 40, "NONOS", FG, 16.0);
-    let _ = fb.text_ttf(128, 66, "WALLET", MUTED, 10.0);
-    nav(fb, 32, 160, "Home", state.view == VIEW_HOME);
-    nav(fb, 32, 212, "Receive", state.view == VIEW_RECEIVE);
-    nav(fb, 32, 264, "Send", state.view == VIEW_SEND);
-    nav(fb, 32, 316, "Proof", state.view == VIEW_PROOF);
-    nav(fb, 32, 368, "Shielded", state.view == VIEW_SHIELDED);
-    nav(fb, 32, 420, "NOX", state.view == VIEW_NOX);
-    let ry = fb.height.saturating_sub(94);
-    let _ = fb.text_ttf(32, ry as i32, "RAILS", MUTED, 10.0);
-    let cy = fb.height.saturating_sub(66) as i32;
-    let _ = fb.text_ttf(32, cy, "ETH", CYAN, 12.0);
-    let _ = fb.text_ttf(84, cy, "NOX", ACCENT, 12.0);
-    let _ = fb.text_ttf(136, cy, "PR", MUTED, 12.0);
+    fb.fill_rect(18, 50, 20, 20, ACCENT);
+    let _ = fb.text_ttf(48, 48, "NONOS", FG, 19.0);
+    nav(fb, 96, "Home", state.view == VIEW_HOME);
+    nav(fb, 142, "Receive", state.view == VIEW_RECEIVE);
+    nav(fb, 188, "Send", state.view == VIEW_SEND);
+    nav(fb, 234, "Proof", state.view == VIEW_PROOF);
+    nav(fb, 280, "Shielded", state.view == VIEW_SHIELDED);
+    nav(fb, 326, "NOX", state.view == VIEW_NOX);
+
+    let _ = fb.text_ttf(22, 700, "RAILS", DIM, 10.0);
+    ui::chip(fb, 22, 722, b"ETH", ACCENT, INK);
+    ui::chip(fb, 70, 722, b"NOX", GREEN, GREEN_INK);
+    ui::chip(fb, 118, 722, b"PR", LINE2, MUTED);
 }
 
-fn nav(fb: &mut PaintBuffer, x: u32, y: u32, text: &str, active: bool) {
+fn nav(fb: &mut PaintBuffer, y: u32, label: &str, active: bool) {
+    let bullet = if active { ACCENT } else { LINE2 };
     if active {
-        fb.fill_rect(x, y, 220, 38, PANEL_2);
-        fb.fill_rect(x, y, 3, 38, ACCENT);
+        fb.fill_rect(14, y, 172, 38, SEL);
+        fb.fill_rect(14, y, 3, 38, ACCENT);
     }
-    let color = if active { ACCENT } else { FG };
-    let _ = fb.text_ttf((x + 16) as i32, (y + 10) as i32, text, color, 14.0);
+    fb.fill_rect(30, y + 13, 12, 12, bullet);
+    let color = if active { FG } else { MUTED };
+    let _ = fb.text_ttf(52, (y + 10) as i32, label, color, 15.0);
 }

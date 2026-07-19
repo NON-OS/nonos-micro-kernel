@@ -22,8 +22,10 @@ use crate::wallet::state::{
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     super::paint_background::paint_background(fb);
+    super::paint_sysbar::paint_sysbar(fb);
     super::paint_sidebar::paint_sidebar(state, fb);
     super::paint_topbar::paint_topbar(state, fb);
+    super::paint_statusline::paint_statusline(fb);
     match state.view {
         VIEW_RECEIVE => super::paint_receive::paint_receive(state, fb),
         VIEW_SEND => super::paint_send::paint_send(state, fb),

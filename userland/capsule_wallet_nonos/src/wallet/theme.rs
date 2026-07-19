@@ -14,36 +14,48 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const WIDTH: u32 = 1180;
-pub const HEIGHT: u32 = 720;
-pub const BG: u32 = 0xFF16_1826;
-pub const BG_2: u32 = 0xFF16_1826;
-pub const LINE: u32 = 0xFF38_3946;
-pub const PANEL: u32 = 0xFF23_2532;
-pub const PANEL_2: u32 = 0xFF2E_313F;
-pub const FG: u32 = 0xFFE9_E9ED;
-pub const MUTED: u32 = 0xFF93_97AB;
-pub const ACCENT: u32 = 0xFF3F_D8E8;
-pub const CYAN: u32 = 0xFF9A_EAF2;
-pub const WARN: u32 = 0xFFE7_B975;
+pub const WIDTH: u32 = 1280;
+pub const HEIGHT: u32 = 800;
+pub const BG: u32 = 0xFF09_0C12;
+pub const BG_2: u32 = 0xFF07_0A0F;
+pub const LINE: u32 = 0xFF1A_2230;
+pub const PANEL: u32 = 0xFF0D_1219;
+pub const PANEL_2: u32 = 0xFF0A_0F17;
+pub const FG: u32 = 0xFFEC_EFF4;
+pub const MUTED: u32 = 0xFF81_8B9A;
+pub const ACCENT: u32 = 0xFF3D_D9E8;
+pub const CYAN: u32 = 0xFF3D_D9E8;
+pub const WARN: u32 = 0xFFEA_B873;
 
-// Card border hairline (design shadow-sm, neutral-800); uniform on all edges.
-pub const ELEV_HI: u32 = 0xFF3F_424D;
-pub const ELEV_LO: u32 = 0xFF3F_424D;
-// Dim accent tint for selected rows, keyed off ACCENT (accent-900).
-pub const ACCENT_DIM: u32 = 0xFF10_2F34;
+// Dark ink for text on solid cyan/green fills; dim text; stronger border.
+pub const INK: u32 = 0xFF04_222A;
+pub const DIM: u32 = 0xFF56_5F6E;
+pub const LINE2: u32 = 0xFF26_313F;
 
-// Design ramp/status tokens for tags and hierarchy.
-pub const ACCENT_TAG_BG: u32 = 0xFF16_4E56;
-pub const ACCENT_TAG_FG: u32 = 0xFFEA_FDFE;
-pub const NEUTRAL_100: u32 = 0xFFF3_F5FE;
+// Semantic status colors and their dark inks for solid badges.
+pub const GREEN: u32 = 0xFF6F_E6A6;
+pub const GREEN_INK: u32 = 0xFF05_271A;
+pub const AMBER: u32 = 0xFFEA_B873;
+pub const AMBER_INK: u32 = 0xFF2B_1E07;
+
+// Sidebar active-row background and the top/bottom system-bar ground.
+pub const SEL: u32 = 0xFF13_1A25;
+pub const SYSBAR: u32 = 0xFF07_0A0F;
+
+// Compatibility aliases retained while painters migrate.
+pub const ELEV_HI: u32 = 0xFF1A_2230;
+pub const ELEV_LO: u32 = 0xFF1A_2230;
+pub const ACCENT_DIM: u32 = 0xFF13_1A25;
+pub const ACCENT_TAG_BG: u32 = 0xFF0F_3B41;
+pub const ACCENT_TAG_FG: u32 = 0xFF3D_D9E8;
+pub const NEUTRAL_100: u32 = 0xFFEC_EFF4;
 pub const NEUTRAL_400: u32 = 0xFFB2_B6CA;
-pub const NEUTRAL_800: u32 = 0xFF3F_424D;
-pub const OK: u32 = 0xFF6B_DB95;
-pub const OK_BG: u32 = 0xFF17_3A29;
-pub const WARN_BG: u32 = 0xFF3D_2E14;
+pub const NEUTRAL_800: u32 = 0xFF26_313F;
+pub const OK: u32 = 0xFF6F_E6A6;
+pub const OK_BG: u32 = 0xFF05_271A;
+pub const WARN_BG: u32 = 0xFF2B_1E07;
 
-// 8px spacing scale. Compose layouts from these, not ad-hoc offsets.
+// Spacing scale.
 pub const S1: u32 = 8;
 pub const S2: u32 = 16;
 pub const S3: u32 = 24;
@@ -51,5 +63,5 @@ pub const S4: u32 = 32;
 pub const S6: u32 = 48;
 
 // Content geometry: sidebar ends here; screens draw from CONTENT_X inward.
-pub const CONTENT_X: u32 = 336;
-pub const CONTENT_PAD: u32 = 32;
+pub const CONTENT_X: u32 = 200;
+pub const CONTENT_PAD: u32 = 26;

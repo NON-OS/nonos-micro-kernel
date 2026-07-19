@@ -16,26 +16,18 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::BG;
-
-fn mix(over: u32, base: u32, bw: u32) -> u32 {
-    let ow = 256 - bw;
-    let c = |sh: u32| (((over >> sh) & 0xff) * ow + ((base >> sh) & 0xff) * bw) / 256;
-    0xFF00_0000 | (c(16) << 16) | (c(8) << 8) | c(0)
-}
-
-// A filled status pill: dark tone-tinted fill, tone label, clipped corners.
-// Returns the width drawn so callers can lay out following content.
-pub fn badge(fb: &mut PaintBuffer, x: u32, y: u32, text: &[u8], tone: u32) -> u32 {
+// A solid pill: filled background with dark ink label. Used for status badges
+// and rail chips. Returns the width drawn so callers can lay out siblings.
+pub fn badge(fb: &mut PaintBuffer, x: u32, y: u32, text: &[u8], bg: u32, fg: u32) -> u32 {
     let s = core::str::from_utf8(text).unwrap_or("");
     let tw = fb.measure_ttf(s, 11.0).max(0) as u32;
-    let w = tw + 20;
-    let h = 22;
-    fb.fill_rect(x, y, w, h, mix(tone, BG, 210));
-    fb.fill_rect(x, y, 1, 1, BG);
-    fb.fill_rect(x + w - 1, y, 1, 1, BG);
-    fb.fill_rect(x, y + h - 1, 1, 1, BG);
-    fb.fill_rect(x + w - 1, y + h - 1, 1, 1, BG);
-    let _ = fb.text_ttf((x + 10) as i32, (y + 5) as i32, s, tone, 11.0);
+    let w = tw + 18;
+    fb.fill_rect(x, y, w, 20, bg);
+    let _ = fb.text_ttf((x + 9) as i32, (y + 4) as i32, s, fg, 11.0);
     w
+}
+
+// Alias for sidebar rail chips; identical shape to a badge.
+pub fn chip(fb: &mut PaintBuffer, x: u32, y: u32, text: &[u8], bg: u32, fg: u32) -> u32 {
+    badge(fb, x, y, text, bg, fg)
 }

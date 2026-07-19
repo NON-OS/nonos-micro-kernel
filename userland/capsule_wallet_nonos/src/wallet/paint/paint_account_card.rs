@@ -18,41 +18,26 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::ui;
 use crate::wallet::state::State;
-use crate::wallet::theme::{ACCENT, BG, CYAN, FG, MUTED, NEUTRAL_400, NEUTRAL_800};
+use crate::wallet::theme::{ACCENT, DIM, FG, GREEN, GREEN_INK, MUTED};
 
-pub fn paint_account_card(state: &State, fb: &mut PaintBuffer) {
-    let x: u32 = 368;
-    let _ = fb.text_ttf(x as i32, 150, "ACCOUNT", ACCENT, 10.0);
-    let head = if state.wallet_id == 0 { "Not created" } else { "Active wallet" };
-    let _ = fb.text_ttf(x as i32, 166, head, NEUTRAL_400, 15.0);
+const BAL: [u8; 14] = [64, 52, 66, 42, 50, 30, 44, 28, 40, 26, 36, 20, 34, 18];
+
+pub fn paint_account_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {
+    ui::card(fb, x, y, w, 200);
+    let _ = fb.text_ttf((x + 20) as i32, (y + 18) as i32, "TOTAL BALANCE  \u{00b7}  0x71C9\u{2026}4e2B", DIM, 10.5);
+    let aw = fb.measure_ttf("ACTIVE", 11.0).max(0) as u32 + 18;
+    ui::badge(fb, x + w - 20 - aw, y + 15, b"ACTIVE", GREEN, GREEN_INK);
 
     let mut buf = [0u8; 40];
     let n = format_eth(lower_u64(&state.balance_wei), &mut buf);
     let bal = core::str::from_utf8(&buf[..n]).unwrap_or("0");
-    let pen = fb.text_ttf(x as i32, 190, bal, CYAN, 46.0);
-    let _ = fb.text_ttf(pen + 8, 214, "ETH", ACCENT, 20.0);
+    let pen = fb.text_ttf((x + 20) as i32, (y + 38) as i32, bal, FG, 44.0);
+    let _ = fb.text_ttf(pen + 10, (y + 58) as i32, "ETH", ACCENT, 20.0);
 
-    let ready = if state.address_ready { "Receive address ready" } else { "Generate a wallet to start" };
-    let _ = fb.text_ttf(x as i32, 250, ready, ACCENT, 12.0);
+    let dx = fb.text_ttf((x + 20) as i32, (y + 96) as i32, "= $7,516.40    ", MUTED, 13.0);
+    ui::badge(fb, dx as u32 + 4, y + 94, b"+2.8% 24h", GREEN, GREEN_INK);
 
-    stat(fb, x, 278, 148, "NONCE", state.live_nonce);
-    stat(fb, x + 160, 278, 148, "GAS WEI", state.fee_wei);
-
-    let label: &[u8] = if state.wallet_id == 0 { b"Generate wallet" } else { b"Send ETH" };
-    ui::primary(fb, x, 348, 308, label);
-}
-
-fn stat(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &str, value: u64) {
-    fb.fill_rect(x, y, w, 52, BG);
-    fb.fill_rect(x, y, w, 1, NEUTRAL_800);
-    fb.fill_rect(x, y + 51, w, 1, NEUTRAL_800);
-    fb.fill_rect(x, y, 1, 52, NEUTRAL_800);
-    fb.fill_rect(x + w - 1, y, 1, 52, NEUTRAL_800);
-    let _ = fb.text_ttf((x + 12) as i32, (y + 9) as i32, label, MUTED, 10.0);
-    let mut out = [0u8; 20];
-    let n = super::format_u64::format_u64(value, &mut out);
-    let s = core::str::from_utf8(&out[..n]).unwrap_or("0");
-    let _ = fb.text_ttf((x + 12) as i32, (y + 26) as i32, s, FG, 17.0);
+    ui::bars(fb, x + 20, y + 128, w - 40, 56, &BAL, ACCENT);
 }
 
 fn format_eth(v: u64, out: &mut [u8]) -> usize {
@@ -71,8 +56,6 @@ fn format_eth(v: u64, out: &mut [u8]) -> usize {
     n + 4
 }
 
-fn lower_u64(value: &[u8; 32]) -> u64 {
-    u64::from_be_bytes([
-        value[24], value[25], value[26], value[27], value[28], value[29], value[30], value[31],
-    ])
+fn lower_u64(v: &[u8; 32]) -> u64 {
+    u64::from_be_bytes([v[24], v[25], v[26], v[27], v[28], v[29], v[30], v[31]])
 }

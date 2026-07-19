@@ -1,0 +1,70 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use nonos_app_skeleton::PaintBuffer;
+
+use super::ui;
+use crate::wallet::state::State;
+use crate::wallet::theme::{ACCENT, CYAN, DIM, FG, GREEN, INK, LINE2, MUTED, PANEL_2};
+
+pub fn paint_nox_stake(_state: &State, fb: &mut PaintBuffer) {
+    let cx = 226u32;
+    let cw = fb.width.saturating_sub(252);
+    let lw = 600u32;
+    ui::card(fb, cx, 418, lw, 236);
+    fb.fill_rect(cx + 20, 438, 200, 36, ACCENT);
+    let _ = fb.text_ttf((cx + 84) as i32, 447, "Stake NOX", INK, 13.0);
+    ui::edge(fb, cx + 220, 438, 200, 36, LINE2);
+    let _ = fb.text_ttf((cx + 292) as i32, 447, "Unstake", MUTED, 13.0);
+
+    let _ = fb.text_ttf((cx + 20) as i32, 494, "Amount", MUTED, 13.0);
+    let av = "4000 NOX";
+    let aw = fb.measure_ttf(av, 14.0).max(0) as u32;
+    let _ = fb.text_ttf((cx + lw - 20 - aw) as i32, 493, av, CYAN, 14.0);
+    fb.fill_rect(cx + 20, 528, lw - 40, 5, PANEL_2);
+    fb.fill_rect(cx + 20, 528, (lw - 40) * 22 / 100, 5, ACCENT);
+    fb.fill_rect(cx + 20 + (lw - 40) * 22 / 100 - 5, 523, 14, 14, CYAN);
+    let _ = fb.text_ttf((cx + 20) as i32, 546, "0", DIM, 12.0);
+    let _ = fb.text_ttf((cx + lw - 90) as i32, 546, "18,204 avail", DIM, 12.0);
+
+    ui::bordered(fb, cx + 20, 576, lw - 40, 40, PANEL_2, LINE2);
+    let _ = fb.text_ttf((cx + 34) as i32, 587, "Projected reward / yr", MUTED, 13.0);
+    let _ = fb.text_ttf((cx + lw - 100) as i32, 587, "336 NOX", CYAN, 13.0);
+    ui::primary(fb, cx + 20, 626, lw - 40, b"Stake 4,000 NOX");
+
+    let rx = cx + lw + 16;
+    let rw = cw - lw - 16;
+    ui::card(fb, rx, 418, rw, 116);
+    let _ = fb.text_ttf((rx + 20) as i32, 436, "CLAIMABLE REWARDS", DIM, 10.5);
+    let _ = fb.text_ttf((rx + 20) as i32, 458, "0.284 ETH", GREEN, 28.0);
+    ui::primary(fb, rx + 20, 496, rw - 40, b"Claim");
+    ui::card(fb, rx, 546, rw, 108);
+    let _ = fb.text_ttf((rx + 20) as i32, 564, "LOCK PERIOD", DIM, 10.5);
+    let _ = fb.text_ttf((rx + 20) as i32, 586, "12d 04h 22m", FG, 24.0);
+    fb.fill_rect(rx + 20, 626, rw - 40, 6, PANEL_2);
+    fb.fill_rect(rx + 20, 626, (rw - 40) * 64 / 100, 6, ACCENT);
+
+    ui::card(fb, cx, 668, cw, 92);
+    let _ = fb.text_ttf((cx + 20) as i32, 682, "Where the fee goes", FG, 14.0);
+    fee(fb, cx, 708, "protocol fee", "treasury / NOX stakers / buyback-burn");
+    fee(fb, cx, 730, "relayer fee", "the relayer that fronts gas");
+}
+
+fn fee(fb: &mut PaintBuffer, x: u32, y: u32, k: &str, v: &str) {
+    let _ = fb.text_ttf((x + 20) as i32, y as i32, k, CYAN, 13.0);
+    let _ = fb.text_ttf((x + 150) as i32, y as i32, "\u{203a}", DIM, 13.0);
+    let _ = fb.text_ttf((x + 180) as i32, y as i32, v, MUTED, 13.0);
+}

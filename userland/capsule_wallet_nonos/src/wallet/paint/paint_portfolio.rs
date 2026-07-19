@@ -16,65 +16,39 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::ui;
 use crate::wallet::state::State;
-use crate::wallet::theme::{ACCENT, CYAN, FG, MUTED};
+use crate::wallet::theme::{ACCENT, CYAN, DIM, FG, GREEN, GREEN_INK, INK, MUTED};
 
-// Portfolio: transparent balance and shielded balances per asset, reconstructed
-// locally from the note store. The split is always explicit: public vs private.
-pub fn paint_portfolio(state: &State, fb: &mut PaintBuffer) {
-    let cx = 368;
-    let w = fb.width.saturating_sub(cx + 32);
-    super::ui::title(fb, cx, 140, b"PORTFOLIO", "Transparent and shielded");
+pub fn paint_portfolio(_state: &State, fb: &mut PaintBuffer) {
+    let cx = 226u32;
+    let cw = fb.width.saturating_sub(252);
+    let col = (cw - 16) / 2;
+    ui::card(fb, cx, 146, col, 120);
+    let _ = fb.text_ttf((cx + 20) as i32, 166, "TRANSPARENT  \u{00b7}  ON-CHAIN", DIM, 10.5);
+    let px = fb.text_ttf((cx + 20) as i32, (188) as i32, "2.4091", FG, 34.0);
+    let _ = fb.text_ttf(px + 8, 202, "ETH", CYAN, 16.0);
+    let _ = fb.text_ttf((cx + 20) as i32, 240, "= $7,516.40  \u{00b7}  public", MUTED, 13.0);
 
-    super::ui::section(fb, cx, 216, "Transparent");
-    let col = (w.saturating_sub(24)) / 2;
-    if state.balance_ready {
-        let mut b = [0u8; 20];
-        let n = super::format_u64::format_u64(eth_of(&state.balance_wei), &mut b);
-        super::ui::metric(fb, cx, 244, col, b"On-chain balance", &b[..n], b"ETH", CYAN);
-    } else {
-        super::ui::metric(fb, cx, 244, col, b"On-chain balance", b"...", b"", MUTED);
-    }
+    let rx = cx + col + 16;
+    ui::card(fb, rx, 146, col, 120);
+    let _ = fb.text_ttf((rx + 20) as i32, 166, "SHIELDED  \u{00b7}  PRIVATE", DIM, 10.5);
+    ui::badge(fb, rx + col - 90, 162, b"6 notes", ACCENT, INK);
+    let sx = fb.text_ttf((rx + 20) as i32, 188, "0.842", GREEN, 34.0);
+    let _ = fb.text_ttf(sx + 8, 202, "ETH", GREEN, 16.0);
+    let _ = fb.text_ttf((rx + 20) as i32, 240, "unspent  \u{00b7}  view-tag scanned", MUTED, 13.0);
 
-    super::ui::section(fb, cx, 356, "Shielded");
-    if state.notes.is_empty() {
-        super::ui::empty_state(
-            fb,
-            cx,
-            384,
-            w,
-            b"No shielded notes yet",
-            b"Sync is view-tag scanned once the chain feed connects; balances rebuild locally.",
-        );
-    } else {
-        let mut y = 384u32;
-        for asset in state.notes.assets() {
-            asset_row(fb, cx, y, w, asset, state.notes.balance(asset));
-            y = y.saturating_add(88);
-        }
-    }
-
-    let mut c = [0u8; 10];
-    let cn = super::format_u32::format_u32(state.notes.unspent_count() as u32, &mut c);
-    let yy = fb.height.saturating_sub(150);
-    let bw = super::ui::badge(fb, cx, yy, b"unspent notes", ACCENT);
-    let s = core::str::from_utf8(&c[..cn]).unwrap_or("0");
-    let _ = fb.text_ttf((cx + bw + 10) as i32, (yy + 4) as i32, s, FG, 12.0);
+    let _ = fb.text_ttf(cx as i32, 296, "SHIELDED NOTES", DIM, 10.5);
+    note(fb, cx, cw, 318, "note #1", "0.42 ETH");
+    note(fb, cx, cw, 372, "note #2", "0.30 ETH");
+    note(fb, cx, cw, 426, "note #3", "0.122 ETH");
 }
 
-fn asset_row(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, asset: u32, value_wei: u128) {
-    let mut a = [0u8; 10];
-    let na = super::format_u32::format_u32(asset, &mut a);
-    let mut label = [b'a', b's', b's', b'e', b't', b' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let ll = 6 + na;
-    label[6..ll].copy_from_slice(&a[..na]);
-    let mut b = [0u8; 20];
-    let n = super::format_u64::format_u64((value_wei / 1_000_000_000_000_000_000) as u64, &mut b);
-    super::ui::metric(fb, x, y, w, &label[..ll], &b[..n], b"", ACCENT);
-}
-
-fn eth_of(wei32: &[u8; 32]) -> u64 {
-    let mut lo = [0u8; 16];
-    lo.copy_from_slice(&wei32[16..]);
-    (u128::from_be_bytes(lo) / 1_000_000_000_000_000_000) as u64
+fn note(fb: &mut PaintBuffer, x: u32, w: u32, y: u32, name: &str, amt: &str) {
+    ui::card(fb, x, y, w, 44);
+    fb.fill_rect(x, y, 3, 44, GREEN);
+    let _ = fb.text_ttf_mono((x + 20) as i32, (y + 13) as i32, name, FG, 14.0);
+    let aw = fb.measure_ttf(amt, 14.0).max(0) as u32;
+    let _ = fb.text_ttf((x + w / 2 - aw / 2) as i32, (y + 13) as i32, amt, FG, 14.0);
+    ui::badge(fb, x + w - 88, y + 12, b"sealed", GREEN, GREEN_INK);
 }

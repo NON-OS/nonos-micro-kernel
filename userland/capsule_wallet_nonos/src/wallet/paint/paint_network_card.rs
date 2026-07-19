@@ -18,37 +18,23 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::ui;
 use crate::wallet::state::State;
-use crate::wallet::theme::{ACCENT, BG, FG, MUTED, NEUTRAL_800, OK, WARN};
+use crate::wallet::theme::{ACCENT, DIM, FG, GREEN, LINE, MUTED};
 
-pub fn paint_network_card(state: &State, fb: &mut PaintBuffer, x: u32) {
-    let w = 322u32;
-    let _ = fb.text_ttf(x as i32, 150, "NETWORK PRIVACY", ACCENT, 10.0);
-    let title = if state.net.route_ready { "Route ready" } else { "Local mode" };
-    let _ = fb.text_ttf(x as i32, 164, title, FG, 22.0);
-
-    let (tls, tls_tone): (&[u8], u32) = if state.net.tls_client_finished_ok {
-        (b"TLS 1.3", OK)
-    } else {
-        (b"pending", WARN)
-    };
-    row(fb, x, w, 206, "TLS / RPC codec", tls, tls_tone);
-    let (route, route_tone): (&[u8], u32) = if state.net.rpc_chain_ok {
-        (b"on-chain", OK)
-    } else {
-        (b"local", ACCENT)
-    };
-    row(fb, x, w, 244, "TCP route", route, route_tone);
-
-    ui::primary(fb, x, 300, w, b"Probe route");
+pub fn paint_network_card(_state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {
+    ui::card(fb, x, y, w, 200);
+    let _ = fb.text_ttf((x + 20) as i32, (y + 18) as i32, "GAS  \u{00b7}  ETHEREUM L1", DIM, 10.5);
+    let gx = fb.text_ttf((x + 20) as i32, (y + 38) as i32, "16", FG, 30.0);
+    let _ = fb.text_ttf(gx + 8, (y + 50) as i32, "gwei base", MUTED, 13.0);
+    row(fb, x, w, y + 84, "Slow", FG, "12 gwei", "~2m");
+    row(fb, x, w, y + 122, "Avg", ACCENT, "18 gwei", "~30s");
+    row(fb, x, w, y + 160, "Fast", GREEN, "26 gwei", "~12s");
 }
 
-fn row(fb: &mut PaintBuffer, x: u32, w: u32, y: u32, label: &str, tag: &[u8], tone: u32) {
-    fb.fill_rect(x, y, w, 30, BG);
-    fb.fill_rect(x, y, w, 1, NEUTRAL_800);
-    fb.fill_rect(x, y + 29, w, 1, NEUTRAL_800);
-    fb.fill_rect(x, y, 1, 30, NEUTRAL_800);
-    fb.fill_rect(x + w - 1, y, 1, 30, NEUTRAL_800);
-    let _ = fb.text_ttf((x + 12) as i32, (y + 8) as i32, label, MUTED, 12.0);
-    let tw = fb.measure_ttf(core::str::from_utf8(tag).unwrap_or(""), 11.0).max(0) as u32 + 20;
-    ui::badge(fb, x + w - 12 - tw, y + 4, tag, tone);
+fn row(fb: &mut PaintBuffer, x: u32, w: u32, y: u32, label: &str, lc: u32, val: &str, t: &str) {
+    fb.fill_rect(x + 20, y + 30, w - 40, 1, LINE);
+    let _ = fb.text_ttf((x + 20) as i32, (y + 6) as i32, label, lc, 14.0);
+    let vw = fb.measure_ttf(val, 14.0).max(0) as u32;
+    let _ = fb.text_ttf((x + w - 96 - vw) as i32, (y + 6) as i32, val, FG, 14.0);
+    let tw = fb.measure_ttf(t, 13.0).max(0) as u32;
+    let _ = fb.text_ttf((x + w - 20 - tw) as i32, (y + 7) as i32, t, DIM, 13.0);
 }

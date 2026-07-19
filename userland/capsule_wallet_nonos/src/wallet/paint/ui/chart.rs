@@ -14,22 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Curated component library. One visual language across every screen: elevated
-//! cards, TTF section headings, metric tiles, status badges, buttons, and empty
-//! states, all keyed off theme.rs and the 8px spacing scale.
+use nonos_app_skeleton::PaintBuffer;
 
-mod badge;
-mod button;
-mod card;
-mod chart;
-mod empty;
-mod metric;
-mod section;
-
-pub use badge::{badge, chip};
-pub use button::{disabled, ghost, outline, primary};
-pub use card::{bordered, card, edge};
-pub use chart::bars;
-pub use empty::empty_state;
-pub use metric::metric;
-pub use section::{section, title};
+// A column bar chart. Each value is a 0..100 height percentage of `h`.
+pub fn bars(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32, vals: &[u8], color: u32) {
+    let n = vals.len() as u32;
+    if n == 0 || w == 0 {
+        return;
+    }
+    let gap = 5u32;
+    let bw = (w.saturating_sub(gap * (n - 1)) / n).max(1);
+    for (i, &v) in vals.iter().enumerate() {
+        let bh = (v as u32 * h / 100).max(1);
+        let bx = x + i as u32 * (bw + gap);
+        fb.fill_rect(bx, y + h - bh, bw, bh, color);
+    }
+}

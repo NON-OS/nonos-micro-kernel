@@ -16,60 +16,36 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::pool::{revenue, RevenueProvider, Seam};
+use super::ui;
 use crate::wallet::state::State;
-use crate::wallet::theme::{ACCENT, CYAN, FG, MUTED, WARN};
+use crate::wallet::theme::{ACCENT, CYAN, DIM, FG, GREEN};
 
-// NOX token-utility surface. Values come from RevenueProvider; the Stub reports
-// NotWired so tiles show the honest "not wired" state, never a fake number.
-pub fn paint_nox(_state: &State, fb: &mut PaintBuffer) {
-    let cx = 368;
-    let w = fb.width.saturating_sub(cx + 32);
-    super::ui::title(fb, cx, 140, b"NOX PROTOCOL", "Revenue and staking");
+const REV: [u8; 14] = [8, 12, 14, 16, 22, 26, 30, 36, 44, 52, 60, 72, 84, 96];
+const APR: [u8; 10] = [38, 42, 40, 54, 58, 66, 70, 68, 80, 92];
 
-    let r = revenue();
-    let col = (w.saturating_sub(24)) / 2;
-    tile_u32(fb, cx, 216, col, b"Fee (bps)", &r.fee_bps());
-    tile_u32(fb, cx + col + 24, 216, col, b"Staking APR (bps)", &r.staking_apr_bps());
-    tile_wei(fb, cx, 312, col, b"Cumulative revenue", &r.cumulative_revenue_wei());
-    tile_wei(fb, cx + col + 24, 312, col, b"Your stake", &r.staked_wei());
+pub fn paint_nox(state: &State, fb: &mut PaintBuffer) {
+    let cx = 226u32;
+    let cw = fb.width.saturating_sub(252);
+    let sw = (cw - 48) / 4;
+    stat(fb, cx, 146, sw, "FEE (BPS)", "30", FG);
+    stat(fb, cx + sw + 16, 146, sw, "STAKING APR (BPS)", "840", CYAN);
+    stat(fb, cx + 2 * (sw + 16), 146, sw, "CUMUL. REVENUE", "112.4 ETH", FG);
+    stat(fb, cx + 3 * (sw + 16), 146, sw, "YOUR STAKE", "4,000", CYAN);
 
-    super::ui::card(fb, cx, 416, w, 128);
-    super::ui::section(fb, cx + 20, 434, "Where the fee goes");
-    let _ = fb.text_ttf((cx + 22) as i32, 470, "protocol fee    treasury / NOX stakers / buyback-burn", CYAN, 13.0);
-    let _ = fb.text_ttf((cx + 22) as i32, 496, "relayer fee    the relayer that fronts gas", MUTED, 13.0);
-    let _ = fb.text_ttf((cx + 22) as i32, 522, "gas    Ethereum L1", MUTED, 13.0);
+    let col = (cw - 16) / 2;
+    ui::card(fb, cx, 252, col, 170);
+    let _ = fb.text_ttf((cx + 20) as i32, 270, "CUMULATIVE REVENUE", DIM, 10.5);
+    ui::bars(fb, cx + 20, 296, col - 40, 108, &REV, ACCENT);
+    let rx = cx + col + 16;
+    ui::card(fb, rx, 252, col, 170);
+    let _ = fb.text_ttf((rx + 20) as i32, 270, "APR HISTORY (BPS)", DIM, 10.5);
+    ui::bars(fb, rx + 20, 296, col - 40, 108, &APR, GREEN);
 
-    super::ui::primary(fb, cx, 576, 200, b"Stake NOX");
-    super::ui::ghost(fb, cx + 220, 576, 200, b"Unstake");
-    let _ = fb.text_ttf(cx as i32, 640, "Live figures load from the NOX contracts once wired.", MUTED, 13.0);
+    super::paint_nox_stake::paint_nox_stake(state, fb);
 }
 
-fn tile_u32(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &[u8], s: &Seam<u32>) {
-    let mut b = [0u8; 10];
-    match s {
-        Seam::Ready(v) => {
-            let n = super::format_u32::format_u32(*v, &mut b);
-            super::ui::metric(fb, x, y, w, label, &b[..n], b"", ACCENT);
-        }
-        Seam::Pending => super::ui::metric(fb, x, y, w, label, b"...", b"", MUTED),
-        Seam::NotWired => super::ui::metric(fb, x, y, w, label, b"--", b"not wired", MUTED),
-        Seam::Failed(_) => super::ui::metric(fb, x, y, w, label, b"err", b"", WARN),
-    }
-}
-
-fn tile_wei(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &[u8], s: &Seam<[u8; 32]>) {
-    match s {
-        Seam::Ready(bytes) => {
-            let mut lo = [0u8; 16];
-            lo.copy_from_slice(&bytes[16..]);
-            let eth = (u128::from_be_bytes(lo) / 1_000_000_000_000_000_000) as u64;
-            let mut b = [0u8; 20];
-            let n = super::format_u64::format_u64(eth, &mut b);
-            super::ui::metric(fb, x, y, w, label, &b[..n], b"ETH", if eth > 0 { ACCENT } else { FG });
-        }
-        Seam::Pending => super::ui::metric(fb, x, y, w, label, b"...", b"", MUTED),
-        Seam::NotWired => super::ui::metric(fb, x, y, w, label, b"--", b"not wired", MUTED),
-        Seam::Failed(_) => super::ui::metric(fb, x, y, w, label, b"err", b"", WARN),
-    }
+fn stat(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &str, val: &str, color: u32) {
+    ui::card(fb, x, y, w, 90);
+    let _ = fb.text_ttf((x + 18) as i32, (y + 18) as i32, label, DIM, 10.5);
+    let _ = fb.text_ttf((x + 18) as i32, (y + 40) as i32, val, color, 28.0);
 }

@@ -18,18 +18,41 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::ui;
 use crate::wallet::state::State;
-use crate::wallet::theme::{FG, MUTED};
+use crate::wallet::theme::{ACCENT, AMBER, AMBER_INK, CYAN, DIM, FG, GREEN, GREEN_INK, INK, LINE2, MUTED, PANEL_2};
 
-pub fn paint_proof_view(state: &State, fb: &mut PaintBuffer) {
-    let w = fb.width.saturating_sub(368);
-    ui::title(fb, 368, 128, b"PROOF", "Transaction proofs");
-    if state.proof_count >= 2 {
-        super::paint_proofs::paint_proofs(state, fb);
-    } else if state.tx_ready {
-        super::paint_tx::paint_tx(state, fb);
-    } else {
-        ui::card(fb, 336, 200, w - 16, 120);
-        let _ = fb.text_ttf(368, 232, "No signed transaction", FG, 18.0);
-        let _ = fb.text_ttf(368, 264, "Use Send or Proof action after generating a wallet.", MUTED, 13.0);
-    }
+pub fn paint_proof_view(_state: &State, fb: &mut PaintBuffer) {
+    let cx = 226u32;
+    let cw = fb.width.saturating_sub(252);
+    ui::card(fb, cx, 146, cw, 64);
+    fb.fill_rect(cx + 20, 172, 10, 10, ACCENT);
+    let _ = fb.text_ttf((cx + 40) as i32, 170, "Generating proof  \u{00b7}  0x33f1\u{2026}", FG, 14.0);
+    let _ = fb.text_ttf((cx + cw - 60) as i32, 170, "68%", CYAN, 14.0);
+    ui::bordered(fb, cx + 20, 192, cw - 40, 6, PANEL_2, PANEL_2);
+    fb.fill_rect(cx + 20, 192, (cw - 40) * 68 / 100, 6, ACCENT);
+
+    ui::bordered(fb, cx, 228, cw - 320, 40, PANEL_2, LINE2);
+    let _ = fb.text_ttf((cx + 14) as i32, 239, "Search by hash\u{2026}", MUTED, 14.0);
+    seg(fb, cx + cw - 300, 228);
+
+    prow(fb, cx, cw, 288, "0x9f2a\u{2026}7bd1", "2 min ago  \u{00b7}  1.5 ETH", b"PROVED", GREEN, GREEN_INK);
+    prow(fb, cx, cw, 352, "0x114c\u{2026}2e90", "9 min ago  \u{00b7}  0.2 ETH", b"PEND", AMBER, AMBER_INK);
+    prow(fb, cx, cw, 416, "0x77ab\u{2026}01c4", "1 h ago  \u{00b7}  4.0 ETH", b"PROVED", GREEN, GREEN_INK);
+}
+
+fn seg(fb: &mut PaintBuffer, x: u32, y: u32) {
+    fb.fill_rect(x, y, 60, 40, ACCENT);
+    let _ = fb.text_ttf((x + 20) as i32, (y + 12) as i32, "All", INK, 13.0);
+    ui::edge(fb, x + 60, y, 110, 40, LINE2);
+    let _ = fb.text_ttf((x + 78) as i32, (y + 12) as i32, "Proved", MUTED, 13.0);
+    ui::edge(fb, x + 170, y, 130, 40, LINE2);
+    let _ = fb.text_ttf((x + 190) as i32, (y + 12) as i32, "Pending", MUTED, 13.0);
+}
+
+fn prow(fb: &mut PaintBuffer, x: u32, w: u32, y: u32, hash: &str, meta: &str, b: &[u8], bg: u32, fg: u32) {
+    ui::card(fb, x, y, w, 54);
+    fb.fill_rect(x, y, 3, 54, ACCENT);
+    let _ = fb.text_ttf_mono((x + 20) as i32, (y + 10) as i32, hash, FG, 16.0);
+    let _ = fb.text_ttf((x + 20) as i32, (y + 32) as i32, meta, DIM, 12.0);
+    let bw = fb.measure_ttf(core::str::from_utf8(b).unwrap_or(""), 11.0).max(0) as u32 + 18;
+    ui::badge(fb, x + w - 20 - bw, y + 17, b, bg, fg);
 }

@@ -16,34 +16,38 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::ui;
-use crate::wallet::state::State;
-use crate::wallet::theme::{ACCENT, FG, MUTED, OK, WARN};
+use crate::wallet::state::{State, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED};
+use crate::wallet::theme::{ACCENT, FG, LINE2, MUTED};
 
 pub fn paint_topbar(state: &State, fb: &mut PaintBuffer) {
-    let _ = fb.text_ttf(336, 18, "ETH custody", FG, 32.0);
-    let _ = fb.text_ttf(336, 58, "self-custody keys inside NONOS keyring", MUTED, 13.0);
-
-    let route: &[u8] = if state.net.route_ready { b"Route: ready" } else { b"Route: local" };
-    let tls: &[u8] = if state.net.rpc_chain_ok {
-        b"TLS 1.3 - chain 0x1"
-    } else if state.net.tls_client_finished_ok {
-        b"TLS 1.3 - client fin"
-    } else if state.net.tls_finished_ok {
-        b"TLS 1.3 - finished"
-    } else if state.net.tls_certificate_ok {
-        b"TLS 1.3 - cert chain"
-    } else if state.net.tls_server_ok {
-        b"TLS 1.3 - hello"
-    } else {
-        b"TLS pending"
+    let title = match state.view {
+        VIEW_RECEIVE => "Receive funds",
+        VIEW_SEND => "Compose transfer",
+        VIEW_PROOF => "Transaction proofs",
+        VIEW_SHIELDED => "Shielded balances",
+        VIEW_NOX => "NOX revenue & staking",
+        _ => "Account overview",
     };
-    let tls_tone = if state.net.rpc_chain_ok { OK } else { WARN };
+    let _ = fb.text_ttf(226, 46, title, FG, 20.0);
 
-    let wt = fb.measure_ttf(core::str::from_utf8(tls).unwrap_or(""), 11.0).max(0) as u32 + 20;
-    let wr = fb.measure_ttf(core::str::from_utf8(route).unwrap_or(""), 11.0).max(0) as u32 + 20;
-    let xt = fb.width.saturating_sub(32 + wt);
-    let xr = xt.saturating_sub(8 + wr);
-    ui::badge(fb, xr, 44, route, ACCENT);
-    ui::badge(fb, xt, 44, tls, tls_tone);
+    let mut x = fb.width.saturating_sub(26);
+    x = btn(fb, x, "Main", true);
+    x = btn(fb, x - 9, "LOCK", false);
+    x = btn(fb, x - 9, "MSG 3", false);
+    let _ = btn(fb, x - 9, "CMD_K", false);
+}
+
+fn btn(fb: &mut PaintBuffer, right: u32, label: &str, drop: bool) -> u32 {
+    let tw = fb.measure_ttf_mono(label, 11.5).max(0) as u32;
+    let extra = if drop { 30 } else { 22 };
+    let w = tw + extra;
+    let x = right.saturating_sub(w);
+    super::ui::edge(fb, x, 48, w, 28, LINE2);
+    if drop {
+        fb.fill_rect(x + 10, 58, 12, 12, ACCENT);
+        let _ = fb.text_ttf_mono((x + 27) as i32, 55, label, MUTED, 11.5);
+    } else {
+        let _ = fb.text_ttf_mono((x + 11) as i32, 55, label, MUTED, 11.5);
+    }
+    x
 }

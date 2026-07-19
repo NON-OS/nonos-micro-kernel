@@ -16,11 +16,10 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{BG, BG_2, LINE};
+use crate::wallet::theme::{BG, CONTENT_X, LINE};
 
 pub fn paint_background(fb: &mut PaintBuffer) {
     fb.clear(BG);
-    fb.fill_rect(0, 0, 304, fb.height, BG_2);
-    fb.fill_rect(304, 0, 1, fb.height, LINE);
-    fb.fill_rect(304, 88, fb.width.saturating_sub(304), 1, LINE);
+    fb.fill_rect(CONTENT_X, 34, 1, fb.height.saturating_sub(34), LINE);
+    fb.fill_rect(CONTENT_X, 98, fb.width.saturating_sub(CONTENT_X), 1, LINE);
 }

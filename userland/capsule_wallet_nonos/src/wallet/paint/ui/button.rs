@@ -16,26 +16,28 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{ACCENT, BG, LINE, MUTED};
+use crate::wallet::theme::{ACCENT, FG, INK, LINE2, MUTED};
 
-const BTN_H: u32 = 44;
+const BTN_H: u32 = 42;
 
-// Primary action: transparent fill, accent outline and centered accent label.
+// Primary action: solid cyan fill with dark ink label.
 pub fn primary(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    outline(fb, x, y, w, ACCENT);
-    corners(fb, x, y, w);
-    label(fb, x, y, w, text, ACCENT);
+    fb.fill_rect(x, y, w, BTN_H, ACCENT);
+    label(fb, x, y, w, text, INK);
 }
 
-// Secondary action: text-only accent label, no outline (design ghost).
+// Secondary action: outlined, light label.
+pub fn outline(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
+    border(fb, x, y, w, LINE2);
+    label(fb, x, y, w, text, FG);
+}
+
 pub fn ghost(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
     label(fb, x, y, w, text, ACCENT);
 }
 
-// A disabled action: muted outline and label, no accent.
 pub fn disabled(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    outline(fb, x, y, w, LINE);
-    corners(fb, x, y, w);
+    border(fb, x, y, w, LINE2);
     label(fb, x, y, w, text, MUTED);
 }
 
@@ -43,21 +45,12 @@ fn label(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8], color: u32) 
     let s = core::str::from_utf8(text).unwrap_or("");
     let tw = fb.measure_ttf(s, 14.0).max(0) as u32;
     let tx = x + w.saturating_sub(tw) / 2;
-    let _ = fb.text_ttf(tx as i32, (y + 13) as i32, s, color, 14.0);
+    let _ = fb.text_ttf(tx as i32, (y + 12) as i32, s, color, 14.0);
 }
 
-fn outline(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, c: u32) {
+fn border(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, c: u32) {
     fb.fill_rect(x, y, w, 1, c);
     fb.fill_rect(x, y + BTN_H - 1, w, 1, c);
     fb.fill_rect(x, y, 1, BTN_H, c);
     fb.fill_rect(x + w - 1, y, 1, BTN_H, c);
-}
-
-fn corners(fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {
-    let rx = x + w - 1;
-    let ry = y + BTN_H - 1;
-    fb.fill_rect(x, y, 1, 1, BG);
-    fb.fill_rect(rx, y, 1, 1, BG);
-    fb.fill_rect(x, ry, 1, 1, BG);
-    fb.fill_rect(rx, ry, 1, 1, BG);
 }
