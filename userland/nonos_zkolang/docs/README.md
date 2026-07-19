@@ -31,6 +31,9 @@ identifiers it is spelled `zkolang`, which keeps the crate ASCII.
 8. [The NOX utility and the contracts to build](08-nox-utility-contracts.md). The
    pay-to-prove market, the contract set for the smart-contract team, and the
    real-world gaps to close before launch.
+9. [The recursion seam and the on-chain ABI](09-recursion-abi.md). The exact
+   public-input layout that connects the prover, the recursive verifier, and the
+   market contract, so the on-chain route can be wired without guesswork.
 
 ## Where the code is
 
