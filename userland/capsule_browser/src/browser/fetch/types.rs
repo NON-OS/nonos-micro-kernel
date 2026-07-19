@@ -76,4 +76,7 @@ pub struct Fetch {
     pub keep_uses: u8,
     // Family key when this fetch is an @font-face download; zero otherwise.
     pub font: u32,
+    // An external <script src> fetch: the body is evaluated in the page engine
+    // and triggers a re-layout, not a navigation.
+    pub script: bool,
 }

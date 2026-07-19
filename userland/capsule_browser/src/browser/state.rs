@@ -37,6 +37,13 @@ pub struct State {
     pub box_doc: Option<crate::browser::layout::boxmodel::BoxDocument>,
     pub page_dom: Option<crate::browser::dom::Dom>,
     pub world: Option<crate::browser::js::World>,
+    // The QuickJS engine that ran this page's scripts. It keeps the page's
+    // listeners and closure state alive so later UI events dispatch into it. The
+    // engine holds a pointer into `page_dom`, which keeps its address for the
+    // page's life, so a navigation drops the engine before replacing the DOM.
+    pub engine: Option<nonos_qjs::Engine>,
+    // Whether the settings panel behind the menu button is open.
+    pub settings_open: bool,
     pub focus: Option<usize>,
     pub pending_post: Option<String>,
     pub scroll: u32,
@@ -71,6 +78,9 @@ pub struct State {
     // far. Applied on top of the page's inline <style> at each re-layout.
     pub css_queue: Vec<String>,
     pub page_css: String,
+    // External <script src> bundles still to fetch. Each is evaluated in the
+    // page engine as it arrives, in document order, so framework bundles run.
+    pub script_queue: Vec<String>,
     // Author rules parsed once and reused across relayouts when the CSS text
     // is unchanged, so JS-driven relayouts skip re-parsing the whole sheet.
     pub css_cache: Option<crate::browser::css::CssCache>,
@@ -87,6 +97,9 @@ impl State {
             box_doc: None,
             page_dom: None,
             world: None,
+            engine: None,
+            settings_open: false,
+            script_queue: Vec::new(),
             focus: None,
             pending_post: None,
             scroll: 0,

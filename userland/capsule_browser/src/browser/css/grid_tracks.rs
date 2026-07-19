@@ -28,6 +28,13 @@ pub(super) fn parse_grid_tracks(value: &str, em: u32) -> Option<([GridTrack; MAX
     let mut rest = value.trim();
     while !rest.is_empty() && n < MAX_GRID_COLS {
         rest = rest.trim_start();
+        // Named line groups ([full-start left-sidebar-start]) sit between
+        // tracks; grid_lines records them, the track list skips them.
+        if let Some(after) = rest.strip_prefix('[') {
+            let close = after.find(']').map(|i| i + 1).unwrap_or(after.len());
+            rest = after.get(close..).unwrap_or("");
+            continue;
+        }
         let low = rest.to_ascii_lowercase();
         if low.starts_with("repeat(") {
             let after = &rest[7..];

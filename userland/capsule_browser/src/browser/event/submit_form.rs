@@ -16,7 +16,6 @@
 
 use alloc::string::{String, ToString};
 
-use crate::browser::js;
 use crate::browser::state::State;
 use crate::browser::url;
 
@@ -31,9 +30,8 @@ pub(super) fn submit_form(state: &mut State, from: usize) {
         return;
     };
     state.focus = None;
-    if let (Some(dom), Some(world)) = (state.page_dom.as_mut(), state.world.as_mut()) {
-        let (_, dirty) = js::dispatch_event(dom, world, form, "submit");
-        if dirty {
+    if let Some(engine) = state.engine.as_ref() {
+        if engine.dispatch_event(form as i32, "submit") > 0 {
             relayout(state);
         }
     }

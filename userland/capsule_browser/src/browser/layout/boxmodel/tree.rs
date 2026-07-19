@@ -35,6 +35,18 @@ impl BoxKind {
     }
 }
 
+// Resolved explicit placement of a grid item: zero-based column track and
+// row indices with spans, resolved from grid-area names and grid-column
+// lines at build time so layout needs no name tables.
+#[derive(Clone, Copy)]
+pub struct GridPlace {
+    pub col: u8,
+    pub col_span: u8,
+    // None flows the item into the next free row.
+    pub row: Option<u8>,
+    pub row_span: u8,
+}
+
 // One box in the layout tree. Text and Image boxes are leaves; href carries
 // the enclosing anchor so hit-testing survives layout, and dom_id ties the
 // box back to its DOM node for event dispatch (0 = anonymous).
@@ -45,5 +57,7 @@ pub struct BoxNode {
     pub dom_id: usize,
     // background-image url captured from the cascade, painted behind content.
     pub bg_image: Option<String>,
+    // Explicit grid placement when this box is a grid item that asked for one.
+    pub grid_place: Option<GridPlace>,
     pub children: Vec<BoxNode>,
 }

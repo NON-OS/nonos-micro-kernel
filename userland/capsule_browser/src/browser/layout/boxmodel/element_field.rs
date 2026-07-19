@@ -40,6 +40,7 @@ pub(super) fn element_field(w: &Walk, item: &ElementIn, style: Computed) -> Opti
         href: None,
         dom_id: item.ch,
         bg_image: None,
+        grid_place: None,
         children: kids,
     })
 }

@@ -37,6 +37,12 @@ pub struct TextRun {
 // Advance width for the run, resolving the face the same way the draw will:
 // the family's bold cut, then its regular one, then the built-in weight.
 pub fn measure_text(key: u32, mono: bool, bold: bool, text: &str, px: f32, spacing: f32) -> i32 {
+    // Match the draw path's readability floor. `ttf::draw_text` clamps sizes
+    // below MIN_UI_PX up to it, but the raw `measure_tracked` used here did not,
+    // so text below the floor was laid out at its declared size yet painted
+    // larger, and every word overran into the next. Measuring at the same
+    // clamped size keeps layout and paint in step.
+    let px = px.max(ttf::MIN_UI_PX);
     let custom = if bold {
         with_face(key | BOLD_KEY, |f| ttf::measure_tracked(f, text, px, spacing))
             .or_else(|| with_face(key, |f| ttf::measure_tracked(f, text, px, spacing)))

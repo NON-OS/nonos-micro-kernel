@@ -34,9 +34,14 @@ pub(super) fn bg_url(name: &str, value: &str) -> Option<String> {
     // A gradient function is kept as-is; the painter parses and draws it.
     if let Some(start) = value.find("linear-gradient(").or_else(|| value.find("radial-gradient(")) {
         let rest = &value[start..];
-        let end = super::matching_paren::matching_paren(&rest[rest.find('(')? + 1..]);
         let open = rest.find('(')?;
-        return Some(rest[..open + 1 + end + 1].trim().to_string());
+        // matching_paren returns rest.len() for unbalanced input, so the naive
+        // `open + 1 + end + 1` can exceed rest.len() and panic on the slice
+        // (a hostile stylesheet/inline style would abort the capsule). Clamp
+        // the end to the string length.
+        let end = super::matching_paren::matching_paren(&rest[open + 1..]);
+        let stop = (open + 1 + end + 1).min(rest.len());
+        return Some(rest[..stop].trim().to_string());
     }
     None
 }

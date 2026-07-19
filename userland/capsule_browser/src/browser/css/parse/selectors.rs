@@ -23,7 +23,13 @@ use super::simple::parse_simple;
 
 pub fn parse_selectors(list: &str) -> Vec<Selector> {
     let mut out: Vec<Selector> = Vec::new();
-    for part in list.split(',') {
+    // Top-level split keeps :is(.a,.b) whole; each part then expands its
+    // :is()/:where() groups into plain alternatives.
+    let mut parts: Vec<String> = Vec::new();
+    for part in super::is_expand::split_top_level(list) {
+        parts.extend(super::is_expand::expand_is(part));
+    }
+    for part in &parts {
         // A trailing pseudo-element turns the selector into a generated
         // content rule for the matched element; both spellings are stripped
         // before compound parsing so the host element matches normally.

@@ -32,12 +32,14 @@ pub(super) const MAX_BOXES: usize = 20_000;
 // Build the box children of node `id`, recursing into elements. Text is kept
 // when non-blank; elements go through the per-tag dispatcher. The li ordinal
 // counts list items in this container for ordered-list markers.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn collect(
     dom: &Dom,
     id: usize,
     parent: &Computed,
     styles: &[Computed],
     bg_images: &[Option<String>],
+    grids: &[Option<crate::browser::css::GridSpec>],
     pseudos: &[(
         Option<crate::browser::css::PseudoText>,
         Option<crate::browser::css::PseudoText>,
@@ -53,8 +55,18 @@ pub(super) fn collect(
     let Some(node) = dom.nodes.get(id) else {
         return out;
     };
-    let mut w = Walk { dom, styles, bg_images, pseudos, count };
+    let mut w = Walk { dom, styles, bg_images, grids, pseudos, count };
     let mut ordinal = 0u32;
+    // A closed <details> renders only its <summary>; the rest of the subtree
+    // stays hidden until the open attribute appears.
+    let closed_details = node.tag == "details" && node.attr("open").is_none();
+    // A declarative shadow host renders its shadow tree, which layout skips.
+    // Light children aimed at named slots (dropdown panels, overlays) would
+    // paint over the page with no component to place them, so they skip too;
+    // default-slot children (button labels) still render.
+    let shadow_host = node.children.iter().any(|&t| {
+        dom.nodes.get(t).is_some_and(|c| c.tag == "template" && c.attr("shadowrootmode").is_some())
+    });
     for &ch in &node.children {
         if *w.count >= MAX_BOXES {
             break;
@@ -62,6 +74,9 @@ pub(super) fn collect(
         let Some(c) = dom.nodes.get(ch) else {
             continue;
         };
+        if closed_details && !(c.kind == NodeKind::Element && c.tag == "summary") {
+            continue;
+        }
         match c.kind {
             NodeKind::Document => {}
             NodeKind::Text => {
@@ -71,6 +86,29 @@ pub(super) fn collect(
                 }
             }
             NodeKind::Element => {
+                if shadow_host && c.attr("slot").is_some_and(|s| !s.is_empty()) {
+                    continue;
+                }
+                // display: contents generates no box: the element's children
+                // join this run directly (grid shells rely on this).
+                let cs = w.styles.get(ch);
+                if cs.is_some_and(|s| s.is_contents && !s.display_none) {
+                    let inner = cs.copied().unwrap_or(*parent);
+                    let spliced = collect(
+                        dom,
+                        ch,
+                        &inner,
+                        styles,
+                        bg_images,
+                        grids,
+                        pseudos,
+                        link,
+                        depth + 1,
+                        w.count,
+                    );
+                    out.extend(spliced);
+                    continue;
+                }
                 if c.tag == "li" {
                     ordinal += 1;
                 }

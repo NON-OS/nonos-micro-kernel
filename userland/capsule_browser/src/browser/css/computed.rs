@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const DEFAULT_FG: u32 = 0xFFE6_EDF3;
+pub const DEFAULT_FG: u32 = 0xFF1A_1A1A;
 pub const DEFAULT_FONT_PX: u32 = 16;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -151,6 +151,10 @@ pub struct Computed {
     // Family key of the custom face this text draws in, 0 for the built-in
     // face; the fonts registry maps keys to loaded faces.
     pub font_key: u32,
+    // Text draws in a webfont icon family (Material Icons/Symbols, Font
+    // Awesome) whose face we do not load. Ligature names like "arrow_forward"
+    // are mapped to a Unicode glyph so the icon reads as a symbol, not a word.
+    pub icon_font: bool,
     pub bg_size: BgSize,
     pub bg_repeat: bool,
     // Element opacity 0..255; multiplies down the subtree at layout.
@@ -226,6 +230,8 @@ pub struct Computed {
     pub radius: u32,
     pub shadow: Option<Shadow>,
     pub is_grid: bool,
+    // display: contents drops the box and promotes the children.
+    pub is_contents: bool,
     pub grid_cols: [GridTrack; MAX_GRID_COLS],
     pub grid_col_n: u8,
     // list-style-type: none suppresses the marker on li boxes; inherited.
@@ -246,6 +252,7 @@ impl Computed {
             object_fit: ObjectFit::Contain,
             text_transform: TextTransform::None,
             font_key: 0,
+            icon_font: false,
             bg_size: BgSize::Auto,
             bg_repeat: true,
             opacity: 255,
@@ -302,6 +309,7 @@ impl Computed {
             radius: 0,
             shadow: None,
             is_grid: false,
+            is_contents: false,
             grid_cols: [GridTrack::Fr(1); MAX_GRID_COLS],
             grid_col_n: 0,
             list_none: false,
@@ -323,6 +331,7 @@ impl Computed {
         c.list_none = parent.list_none;
         c.text_transform = parent.text_transform;
         c.font_key = parent.font_key;
+        c.icon_font = parent.icon_font;
         c.letter_spacing = parent.letter_spacing;
         c
     }

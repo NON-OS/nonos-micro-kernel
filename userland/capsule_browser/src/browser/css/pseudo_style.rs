@@ -20,6 +20,7 @@ use alloc::vec::Vec;
 use crate::browser::dom::Dom;
 
 use super::apply::apply_decl;
+use super::budget::MatchBudget;
 use super::computed::Computed;
 use super::content_text::content_text;
 use super::matching::matches_selector;
@@ -37,6 +38,7 @@ pub struct PseudoText {
 // Cascade the ::before (which 1) or ::after (which 2) rules matching `id`.
 // None when no matching rule declares displayable content, which is also the
 // common fast path since most elements have no pseudo rules at all.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn pseudo_style(
     dom: &Dom,
     id: usize,
@@ -45,9 +47,14 @@ pub(super) fn pseudo_style(
     which: u8,
     host: &Computed,
     vars: &[(String, String)],
+    budget: &mut MatchBudget,
 ) -> Option<PseudoText> {
     let mut hits: Vec<(u32, usize)> = Vec::new();
-    for i in index.candidates(dom, id) {
+    let cands = index.candidates(dom, id);
+    if !budget.take(cands.len()) {
+        return None;
+    }
+    for i in cands {
         let Some(rule) = rules.get(i) else { continue };
         let mut best: Option<u32> = None;
         for sel in &rule.selectors {

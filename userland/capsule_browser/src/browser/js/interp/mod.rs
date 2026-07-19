@@ -36,7 +36,6 @@ mod copy_children;
 mod css_name;
 mod ctx;
 mod deliver_net;
-mod dispatch_event;
 mod equals;
 mod error_obj;
 mod eval_args;
@@ -95,10 +94,6 @@ mod to_num;
 mod to_str;
 mod type_of;
 
-pub use absorb::absorb;
-pub use ctx::Ctx;
 pub use deliver_net::deliver_net;
-pub use dispatch_event::dispatch_event;
-pub use exec::exec;
 pub use globals::install;
 pub use pump_timers::pump_timers;

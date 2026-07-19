@@ -69,6 +69,7 @@ pub fn font_pump(state: &mut State) -> bool {
         tx_seq: 0,
         keep_uses: 0,
         font: key,
+        script: false,
     });
     true
 }

@@ -33,6 +33,7 @@ pub(super) fn fail(state: &mut State, msg: &str) {
         state.status = String::from(msg);
         state.document = Some(render_error::render_error(msg));
         state.box_doc = None;
+        state.engine = None;
         state.page_dom = None;
         state.world = None;
         state.view = View::Page;

@@ -157,6 +157,29 @@ pub fn step(state: &mut State) -> bool {
         super::apply_css::apply_css(state, raw.as_deref(), Some(&job.url));
         return true;
     }
+    if job.script {
+        let raw = match job.phase {
+            Phase::Decrypt => tls::decrypt(&job),
+            Phase::Done => Some(job.buf.clone()),
+            _ => None,
+        };
+        let body = raw
+            .as_deref()
+            .and_then(http::response::parse)
+            .filter(|r| r.status == 200)
+            .map(|r| r.body)
+            .unwrap_or_default();
+        // Evaluate the bundle in the page engine and lay the tree out again:
+        // a framework bundle builds its DOM here, which is the render.
+        if !body.is_empty() {
+            if let Some(engine) = state.engine.as_ref() {
+                let src = alloc::string::String::from_utf8_lossy(&body);
+                let _ = engine.eval(&src);
+            }
+            crate::browser::event::relayout(state);
+        }
+        return true;
+    }
     if job.js_req {
         let raw = match job.phase {
             Phase::Decrypt => tls::decrypt(&job),

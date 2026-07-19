@@ -22,8 +22,10 @@ mod base64;
 mod blit;
 mod data_uri;
 mod decode;
+#[cfg(not(feature = "harness"))]
 mod fetch;
 mod ingest;
+#[cfg(not(feature = "harness"))]
 mod queue;
 mod sniff;
 mod store;
@@ -32,7 +34,19 @@ mod webp;
 
 pub use blit::blit_into;
 pub(crate) use data_uri::data_uri_bytes;
+#[cfg(not(feature = "harness"))]
 pub use fetch::{follow_redirect, pump};
 pub use ingest::ingest;
+#[cfg(not(feature = "harness"))]
 pub use queue::enqueue_from_doc;
 pub use store::{Decoded, Store};
+
+// Record the box a source will be drawn into before ingest, so a vector image
+// rasterizes at its display size instead of upscaling a default raster. The
+// on-device path does this through the fetch queue; the host render harness has
+// no queue and calls this directly.
+#[cfg(feature = "harness")]
+pub fn note_size(store: &mut Store, url: &str, w: u32, h: u32) {
+    store.mark_pending(url);
+    store.note_hint(url, w, h);
+}
