@@ -143,3 +143,34 @@ import Nonos
 #print axioms Nonos.Futex.fifo_first_out
 #print axioms Nonos.Futex.waiter_enqueued
 #print axioms Nonos.Vma.disjoint_no_shared_addr
+
+-- WiFi trusted path: the WPA2 supplicant's handshake discipline and the CCMP
+-- packet-number replay window the data plane enforces under each key.
+#print axioms Nonos.Wpa2Handshake.install_requires_valid_msg3
+#print axioms Nonos.Wpa2Handshake.replay_never_advances
+#print axioms Nonos.Wpa2Handshake.mic_input_within_eapol
+#print axioms Nonos.Wpa2Handshake.connected_ptk_from_fixed_nonces
+#print axioms Nonos.CcmpReplay.no_nonce_reuse
+#print axioms Nonos.CcmpReplay.replay_dropped
+#print axioms Nonos.CcmpReplay.accepted_pn_dead_forever
+
+-- User/kernel boundary: the range policy every usercopy clears before a byte
+-- moves keeps an accepted range wholly inside user space.
+#print axioms Nonos.UserCopy.accepted_within_user
+#print axioms Nonos.UserCopy.accepted_nonzero_addr
+
+-- Demand paging: the fault router and the per-process page budget, and the
+-- fact that a served page is never executable.
+#print axioms Nonos.DemandPaging.kernel_half_never_mapped
+#print axioms Nonos.DemandPaging.refused_forever
+#print axioms Nonos.DemandPaging.demand_not_wx
+
+-- ELF load protection: no writable-and-executable segment is admitted, and the
+-- RELRO span ends the load read-only.
+#print axioms Nonos.LoadProtect.accepted_wx_safe
+#print axioms Nonos.LoadProtect.sealed_not_writable
+
+-- Network state machines: DHCP binds a lease only on a matching ACK, and TCP
+-- reaches Established only through the handshake.
+#print axioms Nonos.Dhcp.bound_only_via_matching_ack
+#print axioms Nonos.Tcp.established_only_via_handshake
