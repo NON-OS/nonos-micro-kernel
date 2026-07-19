@@ -793,4 +793,100 @@ architecture that makes this possible, a memory-safe language, a narrow trusted
 path, and proofs ordered by their fidelity to the executable, is the contribution
 we offer to the design of verified systems.
 
+# Appendix A: Complete Specification Inventory
+
+The specification corpus is 120 modules. They are enumerated here in full,
+grouped by the subsystem they constrain, so the coverage can be audited against
+the source tree rather than taken on the representative slice of the body. Each
+name is a module under `verification/lean/Nonos/`.
+
+**Capabilities and authority (8).** `Capability`, `CapabilityBits`, `CapMask`,
+`CapToken`, `CapTable`, `Authorization`, `MultiSig`, `Secure`. The grant and
+revoke algebra, the bit-level and token-level representations, the delegation
+subset relation, the k-of-n threshold, and the authority checks.
+
+**Memory management (16).** `Buddy`, `Heap`, `Bitmap`, `Cow`, `Refcount`,
+`PageTable`, `Paging`, `Vma`, `Tlb`, `MemGrant`, `Interval`, `Mmio`, `Iommu`,
+`Bounds`, `DemandPaging`, `LoadProtect`. The physical and heap allocators, the
+frame bitmap, copy-on-write and reference counting, the page-table and TLB
+discipline, the address-space region algebra, the memory-mapped-IO and IOMMU
+mapping rules, buffer-bounds safety, demand paging, and RELRO load protection.
+
+**Process, scheduling, and lifecycle (11).** `Scheduler`, `Priority`, `Quota`,
+`TokenBucket`, `PidAlloc`, `FdAlloc`, `Fd`, `Spawn`, `Reaper`, `Epoch`, `Signal`.
+The priority scheduler, the rate limiters, the process- and descriptor-identifier
+allocators, the descriptor table, spawn admission, teardown, epoch reclamation,
+and signal delivery.
+
+**Synchronization (8).** `Spinlock`, `Mutex`, `Ticket`, `Rwlock`, `Seqlock`,
+`Semaphore`, `Futex`, `Barrier`. Mutual exclusion, fair ticketing, reader-writer
+and sequence locks, counting semaphores, the futex queue, and barriers.
+
+**Interprocess communication and dispatch (7).** `Ipc`, `Endpoint`, `Ring`,
+`Dispatch`, `Syscall`, `SyscallRoute`, `ServiceRegistry`. Message and endpoint
+invariants, the ring buffer, syscall decoding and first-match routing, and the
+name and port uniqueness of the service registry.
+
+**The loader (4).** `ElfPhdr`, `ElfReloc`, `Loader`, `BootImage`. Program-header
+bounds, bounded relocation writes, the load pipeline, and boot-image structure.
+
+**The user and kernel boundary (4).** `UserCopy`, `Isolation`, `Zeroization`,
+`Zeroize`. The range policy, address-space isolation, and the scrub of freed
+memory.
+
+**The hardware broker (5).** `DmaMap`, `IrqBind`, `MsixExclusion`,
+`PciCmdWrite`, `UsbHid`. DMA-map admission, MSI-X interrupt binding, the MMIO
+exclusion of protected regions, the PCI command-write allowlist, and
+human-interface parsing.
+
+**Cryptography and keys (5).** `Crypto`, `Nonce`, `Rng`, `SigningKey`,
+`KeyLifecycle`. The crypto-facing invariants, nonce composition, the
+random-number interface, and the signing-key validity, revocation and rollback
+discipline.
+
+**Attestation and anti-rollback (3).** `Attestation`, `AntiRollback`,
+`AntiRollbackState`. The attestation binding and the abstract and concrete
+monotone-floor theorems.
+
+**Filesystem and paths (3).** `Vfs`, `Path`, `BlockIO`. Store operations, path
+canonicalization and the read-only guard, and block-store bounds.
+
+**Networking (5), and the remaining primitives.** `NetParse`, `Dhcp`, `Tcp`,
+`Wpa2Handshake`, `CcmpReplay` cover parser totality and the DHCP, TCP, WPA2 and
+CCMP state machines; `Assurance` records the axiom-audit discipline itself.
+
+**The transparent STARK attestation body (39).** Under `verification/lean/Nonos/Stark/`:
+`Field`, `FieldBound`, `Polynomial`, `Extension`, `Fold`, `Fri`, `Merkle`,
+`Commitment`, `Transcript`, `FiatShamir`, `ProofOfWork`, `Constraint`,
+`Permutation`, `Lookup`, `RunningSum`, `CopyConstraint`, `Instance`,
+`Measurement`, `Membership`, `Enrollment`, `Serialization`, `Trailer`,
+`IndexBits`, `QueryIndex`, `RootConsistency`, `RootWindow`, `Soundness`,
+`Attest`, `AttestSoundness`, `BootChain`, `CapabilityBinding`, `ContextBinding`,
+`DomainSeparation`, `PolicyEpoch`, `AssociationSet`, `NullifierSet`, `Pool`,
+`Staking`, `FeeRouter`. These establish the algebra of the extension field, the
+low-degree-test and folding machinery, the Merkle commitment and Fiat-Shamir
+transcript, the constraint, permutation and lookup arguments, the injective
+measurement encoding, the membership and enrollment relations, trailer parse
+safety, and the soundness of the boot and spawn attestation, together with the
+settlement objects the commercial pool builds on.
+
+# Appendix B: Notation
+
+| Symbol | Meaning |
+|---|---|
+| $\mathbb{B},\ \mathbb{N}$ | Booleans; natural numbers |
+| $\mathrm{testBit}(x,i)$ | the $i$-th bit of $x$ |
+| $\lor,\ \land,\ \overline{\cdot}$ | bitwise or, and, complement (word width) |
+| $2^{i}$ | the single-bit two-power at index $i$ |
+| $P = 4096$ | page size in bytes |
+| $\lfloor x \rfloor_P$ | page base $x - (x \bmod P)$ |
+| $x \sqsubseteq m$ | $x$ is a submask of $m$ |
+| $U$ | canonical user-space ceiling |
+| $\mathrm{Ax}(T)$ | the axiom closure of theorem $T$ |
+| $\mathcal{S}$ | Lean's three standard axioms |
+| $\mathsf{sorryAx}$ | the axiom a `sorry` introduces |
+| $\mathsf{Result}\,\tau$ | Aeneas result monad over $\tau$ |
+| $\llbracket f \rrbracket$ | the Aeneas extraction of function $f$ |
+| $\rho$ | the proof-corpus root |
+
 # References
