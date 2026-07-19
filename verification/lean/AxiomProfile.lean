@@ -186,3 +186,9 @@ import Nonos
 #print axioms Nonos.FdAlloc.alloc_free
 #print axioms Nonos.FdAlloc.alloc_lowest
 #print axioms Nonos.FdAlloc.alloc_none_full
+
+-- ELF program-header bounds: an accepted table lies wholly inside the image, so
+-- every header the loader reads is in bounds.
+#print axioms Nonos.ElfPhdr.accepted_table_in_bounds
+#print axioms Nonos.ElfPhdr.accepted_no_overflow
+#print axioms Nonos.ElfPhdr.wrong_size_rejected
