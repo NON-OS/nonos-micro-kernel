@@ -88,7 +88,12 @@ pub unsafe extern "C" fn njs_dom_remove_child(host: *mut c_void, _parent: i32, c
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn njs_dom_set_attr(host: *mut c_void, node: i32, k: *const u8, v: *const u8) {
+pub unsafe extern "C" fn njs_dom_set_attr(
+    host: *mut c_void,
+    node: i32,
+    k: *const u8,
+    v: *const u8,
+) {
     if node >= 0 {
         dom(host).set_attr(node as usize, &cstr(k), cstr(v));
     }
@@ -115,6 +120,18 @@ pub unsafe extern "C" fn njs_dom_set_text(host: *mut c_void, node: i32, text: *c
         return;
     }
     let d = dom(host);
+    // `node` is the JS-visible __node index, fully attacker controlled, so it
+    // is bounds-checked before indexing; a hostile page setting a wild index
+    // would otherwise abort the capsule (panic = abort in release).
+    if node as usize >= d.nodes.len() {
+        return;
+    }
+    // A text node's data is its own text; frameworks update it in place.
+    // Elements replace their subtree with one fresh text child.
+    if d.nodes[node as usize].kind == NodeKind::Text {
+        d.nodes[node as usize].text = cstr(text);
+        return;
+    }
     d.nodes[node as usize].children.clear();
     if let Some(tid) = d.create(NodeKind::Text, String::new()) {
         d.nodes[tid].text = cstr(text);
@@ -202,23 +219,37 @@ pub unsafe extern "C" fn njs_dom_set_inner_html(host: *mut c_void, node: i32, ht
         return;
     }
     let d = dom(host);
+    if node as usize >= d.nodes.len() {
+        return;
+    }
     let frag = crate::browser::dom::parse(cstr(html).as_bytes());
     d.nodes[node as usize].children.clear();
     graft(d, &frag, 0, node as usize, 0);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn njs_dom_set_style(host: *mut c_void, node: i32, prop: *const u8, val: *const u8) {
+pub unsafe extern "C" fn njs_dom_set_style(
+    host: *mut c_void,
+    node: i32,
+    prop: *const u8,
+    val: *const u8,
+) {
     if node < 0 {
         return;
     }
     let d = dom(host);
+    // style.cssText replaces the whole inline style rather than appending.
+    let key = cstr(prop);
+    if key == "cssText" {
+        d.set_attr(node as usize, "style", cstr(val));
+        return;
+    }
     let mut style = d
         .nodes
         .get(node as usize)
         .and_then(|n| n.attrs.iter().find(|(k, _)| k == "style").map(|(_, v)| v.clone()))
         .unwrap_or_default();
-    style.push_str(&kebab(&cstr(prop)));
+    style.push_str(&kebab(&key));
     style.push(':');
     style.push_str(&cstr(val));
     style.push(';');
@@ -248,4 +279,117 @@ pub unsafe extern "C" fn njs_dom_body(host: *mut c_void) -> i32 {
         }
     }
     0
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn njs_dom_create_text(host: *mut c_void, text: *const u8) -> i32 {
+    let d = dom(host);
+    match d.create(NodeKind::Text, String::new()) {
+        Some(id) => {
+            d.nodes[id].text = cstr(text);
+            id as i32
+        }
+        None => -1,
+    }
+}
+
+// Framework diffing inserts relative to a reference sibling. A missing or
+// foreign reference degrades to a plain append, which attach() provides.
+#[no_mangle]
+pub unsafe extern "C" fn njs_dom_insert_before(
+    host: *mut c_void,
+    parent: i32,
+    child: i32,
+    before: i32,
+) {
+    if parent < 0 || child < 0 {
+        return;
+    }
+    let d = dom(host);
+    if !d.attach(parent as usize, child as usize) {
+        return;
+    }
+    if before >= 0 && before != child {
+        let p = parent as usize;
+        let (c, b) = (child as usize, before as usize);
+        if let Some(node) = d.nodes.get_mut(p) {
+            if let Some(bi) = node.children.iter().position(|&x| x == b) {
+                node.children.retain(|&x| x != c);
+                node.children.insert(bi, c);
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn njs_dom_parent(host: *mut c_void, node: i32) -> i32 {
+    if node <= 0 {
+        return -1;
+    }
+    match dom(host).nodes.get(node as usize) {
+        Some(n) => n.parent as i32,
+        None => -1,
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn njs_dom_child_count(host: *mut c_void, node: i32) -> i32 {
+    if node < 0 {
+        return 0;
+    }
+    match dom(host).nodes.get(node as usize) {
+        Some(n) => n.children.len() as i32,
+        None => 0,
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn njs_dom_child_at(host: *mut c_void, node: i32, i: i32) -> i32 {
+    if node < 0 || i < 0 {
+        return -1;
+    }
+    match dom(host).nodes.get(node as usize) {
+        Some(n) => n.children.get(i as usize).map(|&c| c as i32).unwrap_or(-1),
+        None => -1,
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn njs_dom_next_sibling(host: *mut c_void, node: i32) -> i32 {
+    if node <= 0 {
+        return -1;
+    }
+    let d = dom(host);
+    let Some(n) = d.nodes.get(node as usize) else {
+        return -1;
+    };
+    let Some(p) = d.nodes.get(n.parent) else {
+        return -1;
+    };
+    match p.children.iter().position(|&c| c == node as usize) {
+        Some(i) => p.children.get(i + 1).map(|&c| c as i32).unwrap_or(-1),
+        None => -1,
+    }
+}
+
+// DOM nodeType numbering: 1 element, 3 text, 9 document.
+#[no_mangle]
+pub unsafe extern "C" fn njs_dom_node_kind(host: *mut c_void, node: i32) -> i32 {
+    if node < 0 {
+        return 0;
+    }
+    match dom(host).nodes.get(node as usize).map(|n| n.kind) {
+        Some(NodeKind::Element) => 1,
+        Some(NodeKind::Text) => 3,
+        Some(NodeKind::Document) => 9,
+        None => 0,
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn njs_dom_remove_attr(host: *mut c_void, node: i32, k: *const u8) {
+    if node >= 0 {
+        let key = cstr(k);
+        dom(host).remove_attr(node as usize, &key);
+    }
 }
