@@ -39,6 +39,7 @@ pub(super) fn finish(state: &mut State, raw: &[u8], suppress: bool) {
             );
             // A fresh document drops any stylesheets gathered for the last one.
             state.css_queue.clear();
+            state.script_queue.clear();
             state.page_css.clear();
             match rendered {
                 render_response::Rendered::Html(dom) => {
@@ -50,6 +51,7 @@ pub(super) fn finish(state: &mut State, raw: &[u8], suppress: bool) {
                     state.document = None;
                     super::commit_html::commit_html(state);
                     super::enqueue_css::enqueue_css(state);
+                    super::enqueue_scripts::enqueue_scripts(state);
                     // Stylesheets are render-blocking: if the page pulls in
                     // external CSS, hold the first paint until it arrives so
                     // the user never sees the unstyled document flash. With no

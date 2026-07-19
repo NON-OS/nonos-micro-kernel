@@ -23,21 +23,28 @@ use crate::browser::net;
 use crate::browser::state::State;
 use crate::browser::url;
 
-// Fetch the next declared @font-face when the socket is idle. Fonts ride the
-// same single-socket machine as stylesheets; a face that cannot even launch
-// is simply skipped and its text keeps the built-in fallback.
-pub fn font_pump(state: &mut State) -> bool {
-    if state.sockets_port == 0 || state.fetch.is_some() || state.font_queue.is_empty() {
+// Fetch the next queued external script when the socket is idle. Rides the same
+// single-socket machine as navigation, stylesheets and images, so only one
+// request runs at a time and scripts arrive in the order they were queued,
+// which is document order. Returns true when a fetch was launched.
+pub fn script_pump(state: &mut State) -> bool {
+    if state.sockets_port == 0 || state.fetch.is_some() || state.script_queue.is_empty() {
         return false;
     }
-    let (key, target) = state.font_queue.remove(0);
-    let Some(u) = url::parse(&target) else { return true };
+    // A script whose fetch cannot even launch is dropped; the page keeps
+    // whatever the other scripts built.
+    let target = state.script_queue.remove(0);
+    let Some(u) = url::parse(&target) else {
+        return true;
+    };
     let proxy = state.proxy.clone();
     let (host, port) = match proxy.as_ref() {
         Some(p) => (p.host.as_str(), p.port),
         None => (u.host.as_str(), u.port),
     };
-    let Ok(h) = net::socket_open(state.sockets_port) else { return true };
+    let Ok(h) = net::socket_open(state.sockets_port) else {
+        return true;
+    };
     if net::socket_connect_host(state.sockets_port, h, host, port).is_err() {
         let _ = net::socket_close(state.sockets_port, h);
         return true;
@@ -68,8 +75,8 @@ pub fn font_pump(state: &mut State) -> bool {
         rx_consumed: 0,
         tx_seq: 0,
         keep_uses: 0,
-        font: key,
-        script: false,
+        font: 0,
+        script: true,
     });
     true
 }

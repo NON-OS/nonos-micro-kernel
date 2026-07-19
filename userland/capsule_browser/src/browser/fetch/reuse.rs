@@ -67,5 +67,6 @@ pub(crate) fn try_reuse(state: &mut State, url: &Url, key: &str) -> Option<Fetch
         tx_seq: keep.tx_seq,
         keep_uses: keep.used,
         font: 0,
+        script: false,
     })
 }

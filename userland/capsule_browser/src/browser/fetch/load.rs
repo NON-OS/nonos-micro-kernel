@@ -54,6 +54,7 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
     state.page_dom = None;
     state.world = None;
     state.css_queue.clear();
+    state.script_queue.clear();
     state.page_css.clear();
     state.image_queue.clear();
     state.images.reset();
@@ -89,6 +90,7 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
         tx_seq: 0,
         keep_uses: 0,
         font: 0,
+        script: false,
     });
     Ok(())
 }

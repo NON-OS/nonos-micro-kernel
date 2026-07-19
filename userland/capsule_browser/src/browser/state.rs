@@ -78,6 +78,9 @@ pub struct State {
     // far. Applied on top of the page's inline <style> at each re-layout.
     pub css_queue: Vec<String>,
     pub page_css: String,
+    // External <script src> bundles still to fetch. Each is evaluated in the
+    // page engine as it arrives, in document order, so framework bundles run.
+    pub script_queue: Vec<String>,
     // Author rules parsed once and reused across relayouts when the CSS text
     // is unchanged, so JS-driven relayouts skip re-parsing the whole sheet.
     pub css_cache: Option<crate::browser::css::CssCache>,
@@ -96,6 +99,7 @@ impl State {
             world: None,
             engine: None,
             settings_open: false,
+            script_queue: Vec::new(),
             focus: None,
             pending_post: None,
             scroll: 0,

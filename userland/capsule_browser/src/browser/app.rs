@@ -49,6 +49,30 @@ impl App for Browser {
         paint(&self.state, fb);
     }
     fn on_tick(&mut self) -> bool {
+        self.tick_body()
+    }
+
+    fn tick_interval_ms(&self) -> i64 {
+        50
+    }
+
+    // A request on the wire, a queued navigation, or stylesheets, images or
+    // fonts still to fetch all mean the load must keep stepping. Reporting busy
+    // makes the runner yield rather than sleep, so the page advances through its
+    // fetch stages on its own instead of stalling until the pointer moves.
+    fn busy(&self) -> bool {
+        let s = &self.state;
+        s.fetch.is_some()
+            || s.pending_nav.is_some()
+            || !s.css_queue.is_empty()
+            || !s.script_queue.is_empty()
+            || !s.image_queue.is_empty()
+            || !s.font_queue.is_empty()
+    }
+}
+
+impl Browser {
+    fn tick_body(&mut self) -> bool {
         // A pending navigation preempts any in-flight fetch. Page loads pull
         // in stylesheets and images that keep the socket busy well after the
         // document appears; without this the user could never navigate away
@@ -82,6 +106,11 @@ impl App for Browser {
         if crate::browser::fetch::font_pump(&mut self.state) {
             return true;
         }
+        // External <script src> bundles load next, so a framework app runs and
+        // builds its DOM before images fill in.
+        if crate::browser::fetch::script_pump(&mut self.state) {
+            return true;
+        }
         // Then alternate the socket between script-issued fetches and images.
         // A page whose JS never stops requesting would otherwise hold the one
         // socket forever and no image would ever load.
@@ -98,21 +127,5 @@ impl App for Browser {
             }
             crate::browser::image::pump(&mut self.state)
         }
-    }
-    fn tick_interval_ms(&self) -> i64 {
-        50
-    }
-
-    // A request on the wire, a queued navigation, or stylesheets, images or
-    // fonts still to fetch all mean the load must keep stepping. Reporting busy
-    // makes the runner yield rather than sleep, so the page advances through its
-    // fetch stages on its own instead of stalling until the pointer moves.
-    fn busy(&self) -> bool {
-        let s = &self.state;
-        s.fetch.is_some()
-            || s.pending_nav.is_some()
-            || !s.css_queue.is_empty()
-            || !s.image_queue.is_empty()
-            || !s.font_queue.is_empty()
     }
 }
