@@ -14,10 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Lowering: the AST to a flat VM program. Every subexpression takes a fresh
-//! register, so the compiled program is single-assignment and its data flow is
-//! exactly the wiring the step AIR binds. A name resolves to the most recent
-//! `let` that bound it, which gives ordinary lexical shadowing.
+//! Lowering: the AST to a flat VM program. The language is single-assignment at
+//! the source level, but the compiler reuses physical registers: once a temporary
+//! subexpression value has been consumed by its parent, its register returns to a
+//! free pool for the next temporary. This keeps register pressure at the depth of
+//! the expression rather than its size, so real programs like a range proof fit in
+//! the sixteen-register file. Register indices stay compile-time constants, which
+//! is all the step AIR's register binding needs; reuse is invisible to it. A name
+//! resolves to the most recent `let` that bound it, giving lexical shadowing.
 
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -31,7 +35,10 @@ use crate::isa::{Op, REGS};
 struct Compiler {
     ops: Vec<Op>,
     syms: Vec<(String, u8)>,
+    // The high-water mark of registers ever allocated, and the pool of registers
+    // freed from dead temporaries and available for reuse.
     next: u8,
+    free: Vec<u8>,
     // The number of public inputs; public inputs take indices `0..n_public` and
     // private (secret) inputs take indices from `n_public` on, so the public
     // inputs are a prefix the AIR binds and the secrets are a hidden suffix.
@@ -41,15 +48,32 @@ struct Compiler {
     next_output: u16,
 }
 
+// A compiled subexpression: the register holding its value, and whether that
+// register is a temporary (safe to free once consumed) rather than a live binding.
+struct Val {
+    reg: u8,
+    temp: bool,
+}
+
 impl Compiler {
-    // Reserve the next free register.
+    // Reserve a register, reusing a freed one when the pool is non-empty.
     fn alloc(&mut self) -> Result<u8, CompileError> {
+        if let Some(r) = self.free.pop() {
+            return Ok(r);
+        }
         if self.next as usize >= REGS {
             return Err(CompileError::TooManyRegisters);
         }
         let r = self.next;
         self.next += 1;
         Ok(r)
+    }
+
+    // Return a value's register to the pool if it was a temporary.
+    fn release(&mut self, v: &Val) {
+        if v.temp {
+            self.free.push(v.reg);
+        }
     }
 
     // The register a bound name currently resolves to, newest binding first.
@@ -60,13 +84,15 @@ impl Compiler {
     fn stmt(&mut self, s: &Stmt) -> Result<(), CompileError> {
         match s {
             Stmt::Let(name, e) => {
-                let r = self.expr(e)?;
-                self.syms.push((name.clone(), r));
+                // The result becomes a live binding, so it is not released.
+                let v = self.expr(e)?;
+                self.syms.push((name.clone(), v.reg));
                 Ok(())
             }
             Stmt::Assert(e) => {
-                let r = self.expr(e)?;
-                self.ops.push(Op::Assert { a: r });
+                let v = self.expr(e)?;
+                self.ops.push(Op::Assert { a: v.reg });
+                self.release(&v);
                 Ok(())
             }
             Stmt::Input(name) => {
@@ -86,65 +112,67 @@ impl Compiler {
                 Ok(())
             }
             Stmt::Output(e) => {
-                let r = self.expr(e)?;
+                let v = self.expr(e)?;
                 let idx = self.next_output;
                 self.next_output += 1;
-                self.ops.push(Op::Out { a: r, idx });
+                self.ops.push(Op::Out { a: v.reg, idx });
+                self.release(&v);
                 Ok(())
             }
         }
     }
 
+    // The shared shape of a two-operand arithmetic node: compile both operands,
+    // release any temporaries so the result can reuse their registers, allocate
+    // the result, and emit the op.
+    fn binary(
+        &mut self,
+        l: &Expr,
+        r: &Expr,
+        make: fn(u8, u8, u8) -> Op,
+    ) -> Result<Val, CompileError> {
+        let a = self.expr(l)?;
+        let b = self.expr(r)?;
+        self.release(&a);
+        self.release(&b);
+        let d = self.alloc()?;
+        self.ops.push(make(d, a.reg, b.reg));
+        Ok(Val { reg: d, temp: true })
+    }
+
     // Compile an expression, returning the register that holds its value.
-    fn expr(&mut self, e: &Expr) -> Result<u8, CompileError> {
+    fn expr(&mut self, e: &Expr) -> Result<Val, CompileError> {
         match e {
             Expr::Num(v) => {
                 let d = self.alloc()?;
                 self.ops.push(Op::Imm { d, v: Fp::from_u64(*v) });
-                Ok(d)
+                Ok(Val { reg: d, temp: true })
             }
-            Expr::Var(n) => self.lookup(n).ok_or(CompileError::UnknownVariable),
-            Expr::Add(l, r) => {
-                let a = self.expr(l)?;
-                let b = self.expr(r)?;
-                let d = self.alloc()?;
-                self.ops.push(Op::Add { d, a, b });
-                Ok(d)
+            Expr::Var(n) => {
+                let reg = self.lookup(n).ok_or(CompileError::UnknownVariable)?;
+                Ok(Val { reg, temp: false })
             }
-            Expr::Sub(l, r) => {
-                let a = self.expr(l)?;
-                let b = self.expr(r)?;
-                let d = self.alloc()?;
-                self.ops.push(Op::Sub { d, a, b });
-                Ok(d)
-            }
-            Expr::Mul(l, r) => {
-                let a = self.expr(l)?;
-                let b = self.expr(r)?;
-                let d = self.alloc()?;
-                self.ops.push(Op::Mul { d, a, b });
-                Ok(d)
-            }
-            Expr::Eq(l, r) => {
-                let a = self.expr(l)?;
-                let b = self.expr(r)?;
-                let d = self.alloc()?;
-                self.ops.push(Op::Eq { d, a, b });
-                Ok(d)
-            }
+            Expr::Add(l, r) => self.binary(l, r, |d, a, b| Op::Add { d, a, b }),
+            Expr::Sub(l, r) => self.binary(l, r, |d, a, b| Op::Sub { d, a, b }),
+            Expr::Mul(l, r) => self.binary(l, r, |d, a, b| Op::Mul { d, a, b }),
+            Expr::Eq(l, r) => self.binary(l, r, |d, a, b| Op::Eq { d, a, b }),
             Expr::Inv(x) => {
                 let a = self.expr(x)?;
+                self.release(&a);
                 let d = self.alloc()?;
-                self.ops.push(Op::Inv { d, a });
-                Ok(d)
+                self.ops.push(Op::Inv { d, a: a.reg });
+                Ok(Val { reg: d, temp: true })
             }
             Expr::Sel(cond, l, r) => {
                 let c = self.expr(cond)?;
                 let a = self.expr(l)?;
                 let b = self.expr(r)?;
+                self.release(&c);
+                self.release(&a);
+                self.release(&b);
                 let d = self.alloc()?;
-                self.ops.push(Op::Sel { d, c, a, b });
-                Ok(d)
+                self.ops.push(Op::Sel { d, c: c.reg, a: a.reg, b: b.reg });
+                Ok(Val { reg: d, temp: true })
             }
         }
     }
@@ -158,6 +186,7 @@ pub fn compile(ast: &Ast) -> Result<Vec<Op>, CompileError> {
         ops: Vec::new(),
         syms: Vec::new(),
         next: 0,
+        free: Vec::new(),
         n_public,
         next_public: 0,
         next_secret: 0,

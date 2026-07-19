@@ -33,9 +33,11 @@ primary  := number | ident | '(' expr ')'
 
 ## Statements
 
-A `let` binds a name to the value of an expression. Every value is
-single-assignment: a fresh register holds each result, and a name resolves to the
-most recent `let` that bound it, which gives ordinary lexical shadowing
+A `let` binds a name to the value of an expression. Values are single-assignment
+at the source level, and a name resolves to the most recent `let` that bound it,
+which gives ordinary lexical shadowing. The compiler reuses physical registers for
+dead temporaries, so register pressure follows the depth of an expression rather
+than its size and larger programs fit the sixteen-register file
 (`src/lang/compile.rs`).
 
 ```

@@ -106,9 +106,12 @@ primary  := number | ident | '(' expr ')'
           | 'inv' '(' expr ')' | 'sel' '(' expr ',' expr ',' expr ')'
 ```
 
-The semantics are straight-line and single-assignment. A `let` evaluates its
-expression and binds a name to the result; a name resolves to the most recent
-binding, giving lexical shadowing. Arithmetic is field add, subtract, and
+The semantics are straight-line and single-assignment at the source level. A `let`
+evaluates its expression and binds a name to the result; a name resolves to the
+most recent binding, giving lexical shadowing. The compiler reuses physical
+registers once a temporary is dead, so register indices stay compile-time
+constants (which is all the register binding needs) while larger programs fit the
+sixteen-register file. Arithmetic is field add, subtract, and
 multiply. `inv(e)` is the field inverse, defined for nonzero arguments; inverting
 zero yields no valid run. `a == b` is a total equality that produces a bit.
 `sel(c, a, b)` is a branchless conditional over a boolean `c`, evaluating both arms

@@ -34,6 +34,9 @@ identifiers it is spelled `zkolang`, which keeps the crate ASCII.
 9. [The recursion seam and the on-chain ABI](09-recursion-abi.md). The exact
    public-input layout that connects the prover, the recursive verifier, and the
    market contract, so the on-chain route can be wired without guesswork.
+10. [Recipes](10-recipes.md). Real use cases written in zKølang and proven end to
+    end: delegated computation, knowledge of a secret solution, private set
+    membership, solvency, and a range proof.
 
 ## Where the code is
 
