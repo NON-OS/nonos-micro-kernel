@@ -10,6 +10,7 @@ per-operation lemmas into one invariant that holds after every trace.
 -/
 
 import Nonos.AntiRollback
+import Nonos.AntiRollbackState
 import Nonos.Assurance
 import Nonos.Attestation
 import Nonos.Authorization

@@ -19,6 +19,9 @@ what was proven and on what foundations, not just an exit code.
 import Nonos
 
 #print axioms Nonos.AntiRollback.no_rollback_after_boot
+#print axioms Nonos.AntiRollbackState.refines_abstract
+#print axioms Nonos.AntiRollbackState.no_rollback_after_update
+#print axioms Nonos.AntiRollbackState.update_floor_monotone
 #print axioms Nonos.Authorization.empty_token_denied
 #print axioms Nonos.BlockIO.accepted_request_stays_on_disk
 #print axioms Nonos.BootImage.accepted_region_stays_in_bounds
