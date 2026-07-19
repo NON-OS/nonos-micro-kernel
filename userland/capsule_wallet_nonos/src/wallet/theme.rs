@@ -16,22 +16,32 @@
 
 pub const WIDTH: u32 = 1180;
 pub const HEIGHT: u32 = 720;
-pub const BG: u32 = 0xFF0D_1218;
-pub const BG_2: u32 = 0xFF10_1821;
-pub const LINE: u32 = 0xFF2B_3645;
-pub const PANEL: u32 = 0xFF17_202B;
-pub const PANEL_2: u32 = 0xFF1E_2A36;
-pub const FG: u32 = 0xFFE6_EEF6;
-pub const MUTED: u32 = 0xFF8E_9BA9;
-pub const ACCENT: u32 = 0xFF65_D17E;
-pub const CYAN: u32 = 0xFF76_E4F7;
-pub const WARN: u32 = 0xFFE6_C173;
+pub const BG: u32 = 0xFF16_1826;
+pub const BG_2: u32 = 0xFF16_1826;
+pub const LINE: u32 = 0xFF38_3946;
+pub const PANEL: u32 = 0xFF23_2532;
+pub const PANEL_2: u32 = 0xFF2E_313F;
+pub const FG: u32 = 0xFFE9_E9ED;
+pub const MUTED: u32 = 0xFF93_97AB;
+pub const ACCENT: u32 = 0xFF3F_D8E8;
+pub const CYAN: u32 = 0xFF9A_EAF2;
+pub const WARN: u32 = 0xFFE7_B975;
 
-// Elevation edges for card depth (top highlight, bottom shadow).
-pub const ELEV_HI: u32 = 0xFF2E_3A48;
-pub const ELEV_LO: u32 = 0xFF0A_0E13;
-// Dim accent tint for selected rows / badges, keyed off ACCENT.
-pub const ACCENT_DIM: u32 = 0xFF16_2A1E;
+// Card border hairline (design shadow-sm, neutral-800); uniform on all edges.
+pub const ELEV_HI: u32 = 0xFF3F_424D;
+pub const ELEV_LO: u32 = 0xFF3F_424D;
+// Dim accent tint for selected rows, keyed off ACCENT (accent-900).
+pub const ACCENT_DIM: u32 = 0xFF10_2F34;
+
+// Design ramp/status tokens for tags and hierarchy.
+pub const ACCENT_TAG_BG: u32 = 0xFF16_4E56;
+pub const ACCENT_TAG_FG: u32 = 0xFFEA_FDFE;
+pub const NEUTRAL_100: u32 = 0xFFF3_F5FE;
+pub const NEUTRAL_400: u32 = 0xFFB2_B6CA;
+pub const NEUTRAL_800: u32 = 0xFF3F_424D;
+pub const OK: u32 = 0xFF6B_DB95;
+pub const OK_BG: u32 = 0xFF17_3A29;
+pub const WARN_BG: u32 = 0xFF3D_2E14;
 
 // 8px spacing scale. Compose layouts from these, not ad-hoc offsets.
 pub const S1: u32 = 8;
