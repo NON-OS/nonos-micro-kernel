@@ -254,3 +254,14 @@ import Nonos
 #print axioms Nonos.ElfPhdr.accepted_table_in_bounds
 #print axioms Nonos.ElfPhdr.accepted_no_overflow
 #print axioms Nonos.ElfPhdr.wrong_size_rejected
+
+-- zKølang step-AIR soundness: the row constraints imply a faithful step. Register
+-- read binding, the witnessed inverse and equality gadgets, and write propagation
+-- are the load-bearing ones.
+#print axioms Nonos.Zkolang.selector_is_bit
+#print axioms Nonos.Zkolang.add_gate_sound
+#print axioms Nonos.Zkolang.inv_gate_sound
+#print axioms Nonos.Zkolang.eq_gate_sound
+#print axioms Nonos.Zkolang.select_gate_sound
+#print axioms Nonos.Zkolang.write_prop_sound
+#print axioms Nonos.Zkolang.read_binding_sound

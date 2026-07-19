@@ -461,7 +461,14 @@ fn the_capsule_attestation_gate_accepts_enrolled_and_rejects_forged() {
     // The kernel gate accepts the enrolled capsule under its own identity.
     assert!(
         verify_membership_attestation(
-            &hasher, log_rounds, root, &path, &directions, QUERIES, &bytes, context
+            &hasher,
+            log_rounds,
+            root,
+            &path,
+            &directions,
+            QUERIES,
+            &bytes,
+            context
         ),
         "an enrolled capsule attestation was rejected"
     );
@@ -484,7 +491,14 @@ fn the_capsule_attestation_gate_accepts_enrolled_and_rejects_forged() {
     bad_root[0] = bad_root[0] + Fp::from_u64(1);
     assert!(
         !verify_membership_attestation(
-            &hasher, log_rounds, bad_root, &path, &directions, QUERIES, &bytes, context
+            &hasher,
+            log_rounds,
+            bad_root,
+            &path,
+            &directions,
+            QUERIES,
+            &bytes,
+            context
         ),
         "an attestation passed against a forged policy root"
     );
@@ -630,7 +644,8 @@ fn a_built_trailer_is_accepted_by_the_gate_logic() {
     let context = b"capsule:b:v1";
 
     // Tool side.
-    let trailer = build_attestation_trailer(&hasher, log_rounds, &images, index, context, 32, 16, 3);
+    let trailer =
+        build_attestation_trailer(&hasher, log_rounds, &images, index, context, 32, 16, 3);
 
     // Kernel side: the same parse the spawn gate runs.
     let depth = trailer[8] as usize;
@@ -677,8 +692,7 @@ fn the_shared_verify_core_accepts_a_kernel_self_attestation() {
     let log_rounds = 3u32;
     let hasher = Poseidon::new(log_rounds, [Fp::ZERO; RATE]);
     // The enrolled kernel image plus a few others, its measurement in the root.
-    let images: [&[u8]; 4] =
-        [b"nonos-kernel image", b"other:a", b"other:b", b"other:c"];
+    let images: [&[u8]; 4] = [b"nonos-kernel image", b"other:a", b"other:b", b"other:c"];
     let index = 0usize;
     let boot_ctx = b"kernel:boot:epoch:1";
 
@@ -700,7 +714,15 @@ fn the_shared_verify_core_accepts_a_kernel_self_attestation() {
     );
     assert!(
         !verify_membership_trailer(
-            &hasher, log_rounds, root, depth, &trailer, b"kernel:boot:epoch:2", 32, 16, 3
+            &hasher,
+            log_rounds,
+            root,
+            depth,
+            &trailer,
+            b"kernel:boot:epoch:2",
+            32,
+            16,
+            3
         ),
         "a self-attestation passed under the wrong boot context"
     );

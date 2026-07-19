@@ -13,6 +13,8 @@ mod field_ext_tests;
 #[cfg(test)]
 mod field_tests;
 #[cfg(test)]
+mod fold_witness_tests;
+#[cfg(test)]
 mod fri_ext_tests;
 #[cfg(test)]
 mod fri_poseidon_ext_tests;
@@ -25,11 +27,21 @@ mod merkle_tests;
 #[cfg(test)]
 mod ntt_tests;
 #[cfg(test)]
+mod periodic_z_tests;
+#[cfg(test)]
 mod poly_tests;
 #[cfg(test)]
 mod poseidon_constants_gen;
 #[cfg(test)]
 mod poseidon_merkle_tests;
+#[cfg(test)]
+mod preprocessed_tests;
+#[cfg(test)]
+mod production_vector_gen;
+#[cfg(test)]
+mod recursion_assembly;
+#[cfg(test)]
+mod recursion_assembly_tests;
 #[cfg(test)]
 mod stark_selftest_gen;
 

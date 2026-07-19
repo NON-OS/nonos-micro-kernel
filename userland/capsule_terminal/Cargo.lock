@@ -140,20 +140,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "nonos_prove"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "nonos-stark",
-]
-
-[[package]]
 name = "nonos_terminal"
 version = "0.1.0"
 dependencies = [
  "nonos_app_skeleton",
- "nonos_prove",
  "nonos_userland_libc",
+ "nonos_zkolang",
 ]
 
 [[package]]
@@ -170,6 +162,14 @@ name = "nonos_userland_libc"
 version = "0.1.0"
 dependencies = [
  "linked_list_allocator",
+]
+
+[[package]]
+name = "nonos_zkolang"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "nonos-stark",
 ]
 
 [[package]]

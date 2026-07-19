@@ -27,7 +27,7 @@ nonos-autorun-selftest = []
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
-nonos_prove = { path = "../nonos_prove" }
+nonos_zkolang = { path = "../nonos_zkolang" }
 
 [profile.release]
 panic = "abort"

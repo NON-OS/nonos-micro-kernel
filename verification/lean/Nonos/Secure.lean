@@ -11,33 +11,52 @@ The conjoined security theorem. The other modules prove local lemmas about
 one operation at a time; this module composes them into a single invariant
 over a transition system whose steps are the security-relevant kernel
 operations: capability attenuation, transfer, and revocation, page mapping,
-user copies, and boot. `Secure` conjoins authority conservation (no step
-manufactures a right nobody held initially), memory isolation (no installed
-mapping is writable and executable, and every accepted user copy lies inside
-user space), and anti-rollback (the version floor never decreases).
-`every_trace_is_secure` proves the conjunction holds after every trace of
-every length, so a hostile sequence of these operations cannot escape it.
+user copies, boot, capsule spawn, and device DMA mapping. `Secure` conjoins
+authority conservation (no step manufactures a right nobody held initially),
+memory isolation (no installed mapping is writable and executable, and every
+accepted user copy lies inside user space), anti-rollback (the version floor
+never decreases), attestation (only an attested capsule is admitted), and DMA
+confinement (every installed DMA mapping passed the broker's admission guard,
+so it is owned by its claiming caller and bounded by the device class's page
+limit). `every_trace_is_secure` proves the conjunction holds after every trace
+of every length, so a hostile sequence of these operations cannot escape it.
 
 Each transition's obligation is discharged on the real kernel code
 elsewhere: the capability steps by verification/verus/src/capabilities.rs
 and the kernel_proofs differential harnesses over src/capabilities/bits.rs,
 the mapping gate by the to_pte_flags proofs over
 src/memory/paging/types/permissions/convert.rs, the copy gate by the
-check_range proofs over src/usercopy/policy.rs, and the boot step by
-nonos-bootloader/boot_proofs.
+check_range proofs over src/usercopy/policy.rs, the boot step by
+nonos-bootloader/boot_proofs, and the DMA-map guard by the broker validate
+over src/hardware/broker (modelled in Nonos.DmaMap).
 -/
 
 import Nonos.Capability
 import Nonos.Isolation
 import Nonos.AntiRollback
+import Nonos.DmaMap
+import Nonos.ElfPhdr
+import Nonos.IrqBind
 
 namespace Nonos.Secure
 
 open Nonos.Capability (Caps Grants)
 
+/-- The inputs the ELF program-header bounds check reads: the image length, the
+    header-table offset, the entry size, the entry count, and the size the loader
+    expects each entry to be. -/
+structure ElfSpec where
+  dataLen : Nat
+  phoff : Nat
+  phsize : Nat
+  phnum : Nat
+  expected : Nat
+
 /-- The abstract machine state: each process's capability token, the
-    installed page permissions, the accepted user-copy log, and the
-    anti-rollback floor. -/
+    installed page permissions, the accepted user-copy log, the anti-rollback
+    floor, the admitted-capsule log, the attestation oracle, the installed
+    DMA mappings as the request/claim pair the broker admitted, and the ELF
+    header tables the loader accepted. -/
 structure State where
   token : Nat → Caps
   mapped : Nat → Option Isolation.Perm
@@ -45,6 +64,9 @@ structure State where
   floor : Nat
   admitted : List Nat
   attest : Nat → Bool
+  dma : List (DmaMap.Req × DmaMap.Claim)
+  elf : List ElfSpec
+  irq : List IrqBind.Input
 
 /-- The security-relevant transitions. -/
 inductive Syscall where
@@ -55,12 +77,15 @@ inductive Syscall where
   | userCopy (addr len : Nat)
   | boot (v : Nat)
   | spawn (cap : Nat)
+  | dmaMap (r : DmaMap.Req) (c : DmaMap.Claim)
+  | loadElf (e : ElfSpec)
+  | bindMsix (i : IrqBind.Input)
 
 /-- One step of the machine. Every arm is the guard the kernel enforces:
     attenuation meets the caller's own token, a transfer moves only a right
     the source holds, mapping rejects a W^X violation, a copy is logged only
-    if the range check accepts it, and boot goes through the anti-rollback
-    update. -/
+    if the range check accepts it, spawn admits only an attested capsule, and a
+    DMA mapping is installed only when the broker's `validate` returns `ok`. -/
 def step (s : State) : Syscall → State
   | .attenuate pid mask =>
       { s with token := fun p =>
@@ -84,6 +109,15 @@ def step (s : State) : Syscall → State
       { s with floor := (AntiRollback.update { floor := s.floor } v).floor }
   | .spawn cap =>
       if s.attest cap then { s with admitted := cap :: s.admitted } else s
+  | .dmaMap r c =>
+      if DmaMap.validate r c = .ok then { s with dma := (r, c) :: s.dma } else s
+  | .loadElf e =>
+      if ElfPhdr.check e.dataLen e.phoff e.phsize e.phnum e.expected
+          = .ok e.phoff e.phsize e.phnum then
+        { s with elf := e :: s.elf }
+      else s
+  | .bindMsix i =>
+      if IrqBind.validate i = .ok then { s with irq := i :: s.irq } else s
 
 /-- A whole execution. -/
 def run (s : State) : List Syscall → State
@@ -96,7 +130,9 @@ def run (s : State) : List Syscall → State
     held at the start; no sequence of attenuations, transfers, and
     revocations manufactures authority. Isolation: no installed mapping is
     writable and executable, and every byte of every accepted copy lies in
-    user space. Anti-rollback: the floor never went down. -/
+    user space. Anti-rollback: the floor never went down. Attestation: every
+    admitted capsule was attested. DMA confinement: every installed DMA
+    mapping passed the broker's admission guard. -/
 structure Secure (s0 s : State) : Prop where
   authority : ∀ b, (∃ p, Grants (s.token p) b) → ∃ p, Grants (s0.token p) b
   no_wx : ∀ page pm, s.mapped page = some pm →
@@ -104,29 +140,45 @@ structure Secure (s0 s : State) : Prop where
   copies_in_user_space : ∀ c ∈ s.copies, ∀ i < c.2, c.1 + i ≤ Isolation.userEnd
   floor_monotone : s0.floor ≤ s.floor
   admitted_attested : ∀ c ∈ s.admitted, s.attest c = true
+  dma_confined : ∀ rc ∈ s.dma, DmaMap.validate rc.1 rc.2 = .ok
+  elf_in_bounds : ∀ e ∈ s.elf,
+    ElfPhdr.check e.dataLen e.phoff e.phsize e.phnum e.expected
+      = .ok e.phoff e.phsize e.phnum
+  irq_confined : ∀ i ∈ s.irq, IrqBind.validate i = .ok
 
-/-- A state with no W^X mapping and no logged copies is secure against
-    itself: the induction base. -/
+/-- A state with no W^X mapping, no logged copies, no admitted capsule, and no
+    DMA mapping is secure against itself: the induction base. -/
 theorem secure_refl (s0 : State)
     (hwx : ∀ page pm, s0.mapped page = some pm →
       ¬(pm.write = true ∧ pm.execute = true))
-    (hcopies : s0.copies = []) (hadmit : s0.admitted = []) : Secure s0 s0 := by
-  refine ⟨fun b h => h, hwx, ?_, Nat.le_refl _, ?_⟩
+    (hcopies : s0.copies = []) (hadmit : s0.admitted = [])
+    (hdma : s0.dma = []) (helf : s0.elf = []) (hirq : s0.irq = []) :
+    Secure s0 s0 := by
+  refine ⟨fun b h => h, hwx, ?_, Nat.le_refl _, ?_, ?_, ?_, ?_⟩
   · intro c hc
     rw [hcopies] at hc
     exact absurd hc (List.not_mem_nil c)
   · intro c hc
     rw [hadmit] at hc
     exact absurd hc (List.not_mem_nil c)
+  · intro rc hrc
+    rw [hdma] at hrc
+    exact absurd hrc (List.not_mem_nil rc)
+  · intro e he
+    rw [helf] at he
+    exact absurd he (List.not_mem_nil e)
+  · intro i hi
+    rw [hirq] at hi
+    exact absurd hi (List.not_mem_nil i)
 
 /-- The heart of the theorem: every single transition preserves the whole
     conjunction. -/
 theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     (h : Secure s0 s) : Secure s0 (step s sc) := by
-  obtain ⟨hauth, hwx, hcopy, hfloor, hadm⟩ := h
+  obtain ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩ := h
   cases sc with
   | attenuate pid mask =>
-    refine ⟨?_, hwx, hcopy, hfloor, hadm⟩
+    refine ⟨?_, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
     intro b ⟨p, hp⟩
     by_cases hpid : p = pid
     · subst hpid
@@ -138,7 +190,7 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     simp only [step]
     split
     · rename_i hsrc
-      refine ⟨?_, hwx, hcopy, hfloor, hadm⟩
+      refine ⟨?_, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
       intro b ⟨p, hp⟩
       by_cases hpd : p = dst
       · subst hpd
@@ -154,9 +206,9 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
           exact hauth b ⟨src, hsrc⟩
       · have hp' : (s.token p) b = true := by simpa [hpd] using hp
         exact hauth b ⟨p, hp'⟩
-    · exact ⟨hauth, hwx, hcopy, hfloor, hadm⟩
+    · exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
   | revoke pid b' =>
-    refine ⟨?_, hwx, hcopy, hfloor, hadm⟩
+    refine ⟨?_, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
     intro b ⟨p, hp⟩
     by_cases hpid : p = pid
     · subst hpid
@@ -167,9 +219,9 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
   | mapPage page p =>
     simp only [step]
     split
-    · exact ⟨hauth, hwx, hcopy, hfloor, hadm⟩
+    · exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
     · rename_i hnotwx
-      refine ⟨hauth, ?_, hcopy, hfloor, hadm⟩
+      refine ⟨hauth, ?_, hcopy, hfloor, hadm, hdma, helf, hirq⟩
       intro q pm hq
       by_cases hqp : q = page
       · subst hqp
@@ -182,7 +234,7 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     simp only [step]
     split
     · rename_i hacc
-      refine ⟨hauth, hwx, ?_, hfloor, hadm⟩
+      refine ⟨hauth, hwx, ?_, hfloor, hadm, hdma, helf⟩
       intro c hc
       simp at hc
       obtain hnew | hold := hc
@@ -191,22 +243,45 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
         obtain ⟨_, _, hbound⟩ := hacc
         omega
       · exact hcopy c hold
-    · exact ⟨hauth, hwx, hcopy, hfloor, hadm⟩
+    · exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
   | boot v =>
-    refine ⟨hauth, hwx, hcopy, ?_, hadm⟩
+    refine ⟨hauth, hwx, hcopy, ?_, hadm, hdma, helf⟩
     exact Nat.le_trans hfloor
       (AntiRollback.update_never_lowers_floor { floor := s.floor } v)
   | spawn cap =>
     simp only [step]
     by_cases hatt : s.attest cap = true
     · rw [if_pos hatt]
-      refine ⟨hauth, hwx, hcopy, hfloor, ?_⟩
+      refine ⟨hauth, hwx, hcopy, hfloor, ?_, hdma, helf⟩
       intro c hc
       rcases List.mem_cons.mp hc with hc | hc
       · subst hc; exact hatt
       · exact hadm c hc
     · rw [if_neg hatt]
-      exact ⟨hauth, hwx, hcopy, hfloor, hadm⟩
+      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+  | dmaMap r c =>
+    simp only [step]
+    by_cases hv : DmaMap.validate r c = .ok
+    · rw [if_pos hv]
+      refine ⟨hauth, hwx, hcopy, hfloor, hadm, ?_, helf⟩
+      intro rc hmem
+      rcases List.mem_cons.mp hmem with hhead | htail
+      · subst hhead; exact hv
+      · exact hdma rc htail
+    · rw [if_neg hv]
+      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+  | loadElf e =>
+    simp only [step]
+    by_cases hv : ElfPhdr.check e.dataLen e.phoff e.phsize e.phnum e.expected
+        = .ok e.phoff e.phsize e.phnum
+    · rw [if_pos hv]
+      refine ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, ?_⟩
+      intro e' hmem
+      rcases List.mem_cons.mp hmem with hhead | htail
+      · subst hhead; exact hv
+      · exact helf e' htail
+    · rw [if_neg hv]
+      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
 
 /-- Security is preserved along any run, from any secure intermediate
     state. -/
@@ -222,8 +297,34 @@ theorem run_preserves_secure (s0 : State) (tr : List Syscall) (s : State)
 theorem every_trace_is_secure (s0 : State) (tr : List Syscall)
     (hwx : ∀ page pm, s0.mapped page = some pm →
       ¬(pm.write = true ∧ pm.execute = true))
-    (hcopies : s0.copies = []) (hadmit : s0.admitted = []) :
+    (hcopies : s0.copies = []) (hadmit : s0.admitted = [])
+    (hdma : s0.dma = []) (helf : s0.elf = []) :
     Secure s0 (run s0 tr) :=
-  run_preserves_secure s0 tr s0 (secure_refl s0 hwx hcopies hadmit)
+  run_preserves_secure s0 tr s0 (secure_refl s0 hwx hcopies hadmit hdma helf)
+
+/-- Corollary of the conjoined invariant: in any reachable state, every
+    installed DMA mapping is owned by the caller that claimed the device. A
+    caller can never program a device it does not hold to DMA on its behalf. -/
+theorem dma_owned_by_caller (s0 s : State) (h : Secure s0 s)
+    (rc : DmaMap.Req × DmaMap.Claim) (hmem : rc ∈ s.dma) :
+    rc.2.pid = rc.1.reqPid :=
+  DmaMap.accepted_owned_by_caller rc.1 rc.2 (h.dma_confined rc hmem)
+
+/-- Corollary of the conjoined invariant: every installed DMA mapping is within
+    its device class's page limit, so no reachable state has an unbounded DMA
+    window. -/
+theorem dma_within_class_limit (s0 s : State) (h : Secure s0 s)
+    (rc : DmaMap.Req × DmaMap.Claim) (hmem : rc ∈ s.dma) :
+    rc.1.length / DmaMap.page ≤ rc.2.pageLimit :=
+  DmaMap.accepted_within_class_limit rc.1 rc.2 (h.dma_confined rc hmem)
+
+/-- Corollary of the conjoined invariant: in any reachable state, every accepted
+    non-empty ELF program-header table lies wholly inside its image, so the loader
+    never reads a header entry past the buffer end. -/
+theorem elf_table_in_bounds (s0 s : State) (h : Secure s0 s)
+    (e : ElfSpec) (hmem : e ∈ s.elf) (hn : e.phnum ≠ 0) :
+    e.phoff + e.phsize * e.phnum ≤ e.dataLen :=
+  ElfPhdr.accepted_table_in_bounds e.dataLen e.phoff e.phsize e.phnum e.expected hn
+    (h.elf_in_bounds e hmem)
 
 end Nonos.Secure
