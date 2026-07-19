@@ -18,7 +18,6 @@ pandoc nonos-verification.md \
   --citeproc --bibliography=references.bib \
   --reference-doc=branded-reference.docx \
   --number-sections --toc --toc-depth=2 \
-  -M reference-section-title="References" \
   -o "$out"
 
 # ---------------------------------------------------------------------------
