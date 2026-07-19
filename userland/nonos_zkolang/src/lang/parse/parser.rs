@@ -22,57 +22,9 @@ use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use super::lex::Tok;
-use super::CompileError;
-
-// An expression node. The tree is what the compiler walks; each variant lowers to
-// a small, fixed run of opcodes, which is why the set stays this compact.
-#[derive(Clone, Debug)]
-pub enum Expr {
-    // A literal and a variable reference, the leaves of every tree.
-    Num(u64),
-    Var(String),
-    // Field arithmetic. `Div` is sugar for a multiply by an inverse, and `Neg` for
-    // a subtraction from zero, so neither needs its own opcode.
-    Add(Box<Expr>, Box<Expr>),
-    Sub(Box<Expr>, Box<Expr>),
-    Mul(Box<Expr>, Box<Expr>),
-    Div(Box<Expr>, Box<Expr>),
-    Neg(Box<Expr>),
-    // Comparisons that yield a zero or one bit. `Ne` is the complement of `Eq`,
-    // lowered as one minus the equality bit.
-    Eq(Box<Expr>, Box<Expr>),
-    Ne(Box<Expr>, Box<Expr>),
-    // The field inverse and the branchless select, written as calls.
-    Inv(Box<Expr>),
-    Sel(Box<Expr>, Box<Expr>, Box<Expr>),
-    // A conditional expression, sugar for `sel`: both arms are evaluated and one
-    // is chosen by the boolean condition. Order is (cond, then, else).
-    If(Box<Expr>, Box<Expr>, Box<Expr>),
-}
-
-// A statement node.
-#[derive(Clone, Debug)]
-pub enum Stmt {
-    Let(String, Expr),
-    Assert(Expr),
-    // Bind a name to the next public input.
-    Input(String),
-    // Bind a name to the next private input, a witness not in the public statement.
-    Secret(String),
-    // Expose an expression as the next public output.
-    Output(Expr),
-    // A bounded loop over `[lo, hi)`, unrolled by the compiler. The loop variable
-    // is a compile-time constant in the body, so the body's shape never depends on
-    // a runtime value.
-    For { var: String, lo: u64, hi: u64, body: Vec<Stmt> },
-}
-
-/// A parsed program.
-#[derive(Clone, Debug)]
-pub struct Ast {
-    pub stmts: Vec<Stmt>,
-}
+use super::super::lex::Tok;
+use super::super::CompileError;
+use super::ast::{Ast, Expr, FnDef, Stmt};
 
 struct Parser<'a> {
     toks: &'a [Tok],
@@ -102,11 +54,49 @@ impl<'a> Parser<'a> {
     }
 
     fn program(&mut self) -> Result<Ast, CompileError> {
+        let mut fns = Vec::new();
         let mut stmts = Vec::new();
         while self.peek().is_some() {
-            stmts.push(self.stmt()?);
+            if matches!(self.peek(), Some(Tok::Fn)) {
+                fns.push(self.fn_def()?);
+            } else {
+                stmts.push(self.stmt()?);
+            }
         }
-        Ok(Ast { stmts })
+        Ok(Ast { fns, stmts })
+    }
+
+    // A function definition: `fn name(a, b) = expr;`. The body is one expression,
+    // inlined at each call, so there is no statement block and no return keyword.
+    fn fn_def(&mut self) -> Result<FnDef, CompileError> {
+        self.pos += 1; // the `fn`
+        let name = self.ident()?;
+        self.expect(&Tok::LParen)?;
+        let mut params = Vec::new();
+        if !matches!(self.peek(), Some(Tok::RParen)) {
+            loop {
+                params.push(self.ident()?);
+                if matches!(self.peek(), Some(Tok::Comma)) {
+                    self.pos += 1;
+                } else {
+                    break;
+                }
+            }
+        }
+        self.expect(&Tok::RParen)?;
+        self.expect(&Tok::Assign)?;
+        let body = self.expr()?;
+        self.expect(&Tok::Semi)?;
+        Ok(FnDef { name, params, body })
+    }
+
+    // Consume an identifier, for a name or a parameter.
+    fn ident(&mut self) -> Result<String, CompileError> {
+        match self.bump() {
+            Some(Tok::Ident(n)) => Ok(n.clone()),
+            Some(_) => Err(CompileError::UnexpectedToken),
+            None => Err(CompileError::UnexpectedEof),
+        }
     }
 
     fn stmt(&mut self) -> Result<Stmt, CompileError> {
@@ -274,7 +264,28 @@ impl<'a> Parser<'a> {
     fn primary(&mut self) -> Result<Expr, CompileError> {
         match self.bump() {
             Some(Tok::Num(v)) => Ok(Expr::Num(*v)),
-            Some(Tok::Ident(n)) => Ok(Expr::Var(n.clone())),
+            // An identifier is a call when followed by `(`, otherwise a variable.
+            Some(Tok::Ident(n)) => {
+                let name = n.clone();
+                if matches!(self.peek(), Some(Tok::LParen)) {
+                    self.pos += 1;
+                    let mut args = Vec::new();
+                    if !matches!(self.peek(), Some(Tok::RParen)) {
+                        loop {
+                            args.push(self.expr()?);
+                            if matches!(self.peek(), Some(Tok::Comma)) {
+                                self.pos += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    self.expect(&Tok::RParen)?;
+                    Ok(Expr::Call(name, args))
+                } else {
+                    Ok(Expr::Var(name))
+                }
+            }
             Some(Tok::LParen) => {
                 let e = self.expr()?;
                 self.expect(&Tok::RParen)?;

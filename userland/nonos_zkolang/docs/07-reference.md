@@ -24,7 +24,10 @@ The instruction set (`src/isa.rs`). Every opcode is enforced by the AIR.
 ## Grammar
 
 ```
-program  := stmt*
+program  := item*
+item     := fndef | stmt
+fndef    := 'fn' ident '(' params? ')' '=' expr ';'
+params   := ident (',' ident)*
 stmt     := 'let' ident '=' expr ';' | 'assert' expr ';'
           | 'input' ident ';' | 'secret' ident ';' | 'output' expr ';'
           | 'for' ident 'in' number '..' number '{' stmt* '}'
@@ -33,13 +36,15 @@ equality := sum (('==' | '!=') sum)?
 sum      := product (('+' | '-') product)*
 product  := unary (('*' | '/') unary)*
 unary    := '-' unary | primary
-primary  := number | ident | '(' expr ')'
+primary  := number | ident | ident '(' args? ')' | '(' expr ')'
           | 'inv' '(' expr ')' | 'sel' '(' expr ',' expr ',' expr ')'
           | 'if' expr '{' expr '}' 'else' '{' expr '}'
+args     := expr (',' expr)*
 ```
 
-Keywords: `let`, `assert`, `input`, `secret`, `output`, `inv`, `sel`, `for`, `in`, `if`, `else`. Operators: `+ - * / == != ` and unary `-`. Comments: `//` to end
-of line.
+Keywords: `let`, `assert`, `input`, `secret`, `output`, `inv`, `sel`, `for`, `in`,
+`if`, `else`, `fn`. Operators: `+ - * / == != ` and unary `-`. Comments: `//` to
+end of line.
 
 ## Public API
 
@@ -52,7 +57,14 @@ From `nonos_zkolang` (`src/lib.rs`):
 - `prove_program(&[Op], &[Fp]) -> Result<Report, RunError>`
 - `commit(&[Op]) -> [u8; 32]`, `commit_limbs(&[Op]) -> [Fp; 4]`, `serialize(&[Op]) -> Vec<u8>`
 - `quote(&Report) -> Quote`
+- `verifier_key(&[Op], u32) -> Result<[u8; 32], KeyError>`, `periodic_root(&[Op], u32) -> Result<[u8; 32], KeyError>`
+- `registration_key(&[Op]) -> Result<[u8; 32], KeyError>`, `registration_root(&[Op]) -> Result<[u8; 32], KeyError>`, `REGISTRATION_RATE`
 - `StepAir`, `Vm`, `Trace`, `Report`, `Op`, `REGS`, `TRACE_WIDTH`
+
+The verifier key binds a program commitment to its wiring at the fixed
+registration rate; `registration_key` and `registration_root` are the rate-pinned
+values a NOX proving market registers and challenges against. See
+[the recursion ABI](09-recursion-abi.md).
 
 `Report` carries `verified`, `steps`, `log_trace_len`, `trace_len`, `trace_width`,
 `outputs`, and `program_commit` (the 32-byte commitment the proof is bound to).
@@ -63,18 +75,20 @@ Each failure is a typed value, never a panic.
 
 - `CompileError` (`src/lang/mod.rs`): `UnexpectedChar { at }`,
   `NumberTooLarge { at }`, `UnexpectedEof`, `UnexpectedToken`, `UnknownVariable`,
-  `TooManyRegisters`, `LoopTooLarge`.
-- `ProveError` (`src/vm.rs`): `BadRegister`, `BadInput`, `NoHalt`,
+  `TooManyRegisters`, `LoopTooLarge`, `UnknownFunction`, `ArityMismatch`,
+  `RecursionTooDeep`.
+- `ProveError` (`src/vm/`): `BadRegister`, `BadInput`, `NoHalt`,
   `Unprovable { step }`.
-- `BuildError` (`src/air.rs`): `NoHalt`, `TooLong`, `MissingPublicOutput`.
-- `RunError` (`src/driver.rs`): `Compile`, `Execute`, `Layout`, `ProgramTooLong`.
+- `BuildError` (`src/air/`): `NoHalt`, `TooLong`, `MissingPublicOutput`.
+- `RunError` (`src/driver/`): `Compile`, `Execute`, `Layout`, `ProgramTooLong`.
+- `KeyError` (`src/vkey.rs`): `NoHalt`, `ProgramTooLong`.
 
 ## Limits
 
 - Sixteen registers. A program needing more live values than the file holds is a
   `TooManyRegisters` compile error.
-- Straight-line only. No loops or conditionals in the surface syntax; bounded
-  loops are unrolled by the front-end.
+- Straight-line only. No runtime loops, conditionals, or calls; bounded loops are
+  unrolled and functions are inlined by the front-end.
 - Traces up to 2^16 rows (`MAX_LOG_T` in `src/driver.rs`); a longer program is a
   `ProgramTooLong` error rather than a silent truncation.
 - No random-access memory or hash primitive: zKølang is a straight-line
@@ -115,7 +129,8 @@ the terminal, then write a `.zkl` file and run `zkolang myfile.zkl`.
 
 ## Reproducing the claims
 
-In `userland/nonos_zkolang_proofs`: `cargo test` runs the 58 host proofs behind this
+In `userland/nonos_zkolang_proofs`: `cargo test` runs the 74 host proofs behind this
 documentation (opcode tamper rejection, register binding, public input and output
-soundness, the language end to end, and the fee model), and
+soundness, the language end to end including functions, the verifier-key binding at
+the registration rate, and the fee model), and
 `cargo run --release --example measure` prints the trace shapes and fees.

@@ -14,57 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The lexer: source bytes to a token stream. zkolang source is ASCII; a non-ASCII
-//! or otherwise unexpected byte is a typed error carrying its offset. Line
-//! comments run from `//` to end of line.
+//! The scanner: source bytes to a token stream. zkolang source is ASCII; a
+//! non-ASCII or otherwise unexpected byte is a typed error carrying its offset.
+//! Line comments run from `//` to end of line.
 
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use super::CompileError;
-
-// One lexical token. The set is small on purpose: a handful of keywords, the
-// arithmetic and comparison operators, and the punctuation the grammar needs.
-// Everything else the source could contain is a lexing error, not a silent skip.
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum Tok {
-    // Keywords. These are the words the grammar reserves; an identifier can never
-    // be one of them, because the ident branch below matches them first.
-    Let,
-    Assert,
-    Input,
-    Secret,
-    Output,
-    Inv,
-    Sel,
-    For,
-    In,
-    If,
-    Else,
-    // A user name and a decimal literal, the two tokens that carry a value.
-    Ident(String),
-    Num(u64),
-    // Arithmetic operators. `Slash` is field division, which lowers to a multiply
-    // by an inverse, so dividing by zero is unprovable rather than a crash.
-    Plus,
-    Minus,
-    Star,
-    Slash,
-    // Comparison and assignment. `Assign` is the `=` of a `let`; `EqEq` and
-    // `BangEq` are the `==` and `!=` that produce a zero or one bit.
-    Assign,
-    EqEq,
-    BangEq,
-    // Punctuation. `DotDot` is the range in a `for`, and the braces delimit its
-    // body.
-    LParen,
-    RParen,
-    Comma,
-    Semi,
-    DotDot,
-    LBrace,
-    RBrace,
-}
+use super::super::CompileError;
+use super::token::Tok;
 
 fn is_ident_start(b: u8) -> bool {
     b.is_ascii_alphabetic() || b == b'_'
@@ -113,6 +71,7 @@ pub fn lex(src: &str) -> Result<Vec<Tok>, CompileError> {
                 "in" => Tok::In,
                 "if" => Tok::If,
                 "else" => Tok::Else,
+                "fn" => Tok::Fn,
                 _ => Tok::Ident(String::from(word)),
             });
             continue;

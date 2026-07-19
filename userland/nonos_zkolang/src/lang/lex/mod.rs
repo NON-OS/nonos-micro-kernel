@@ -14,20 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Why a run produced no valid trace. Every variant is a legitimate outcome the
-//! caller can inspect, never a panic.
+//! The lexical layer: the token alphabet and the scanner that produces it. The
+//! token type lives apart from the scanner so the parser can name tokens without
+//! depending on the scanning loop.
 
-/// The reasons the executor stops without a provable trace. `Unprovable` is not a
-/// bug: it means the witness did not satisfy the program's constraints, which is
-/// the honest result for a program whose claim is false.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum ProveError {
-    /// A register index outside `0..REGS`.
-    BadRegister(u8),
-    /// An input index past the supplied input vector.
-    BadInput(u16),
-    /// The program ran its whole instruction list without a `Halt`.
-    NoHalt,
-    /// A constraint the trace must satisfy did not hold, at this step.
-    Unprovable { step: u64 },
-}
+mod scan;
+mod token;
+
+pub use scan::lex;
+pub use token::Tok;

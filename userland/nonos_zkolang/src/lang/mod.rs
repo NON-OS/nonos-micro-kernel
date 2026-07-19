@@ -77,6 +77,12 @@ pub enum CompileError {
     TooManyRegisters,
     /// A `for` loop whose range would unroll to too many iterations.
     LoopTooLarge,
+    /// A call to a function that was never defined.
+    UnknownFunction,
+    /// A call whose argument count does not match the function's parameters.
+    ArityMismatch,
+    /// Function inlining nested too deep, which a recursive call would cause.
+    RecursionTooDeep,
 }
 
 use crate::isa::Op;

@@ -8,6 +8,8 @@ mod commit_tests;
 #[cfg(test)]
 mod feature_tests;
 #[cfg(test)]
+mod fn_tests;
+#[cfg(test)]
 mod io_tests;
 #[cfg(test)]
 mod lang_tests;

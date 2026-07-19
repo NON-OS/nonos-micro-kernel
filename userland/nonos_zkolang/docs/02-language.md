@@ -11,13 +11,16 @@ opcode it produces. The lexer, parser, and compiler are in
 ## Grammar
 
 The tokens the lexer recognises are exactly `let`, `assert`, `input`, `secret`,
-`for`, `in`, `if`, `else`, `output`, `inv`, `sel`, the operators `+ - * / == !=` and unary `-`,
-the punctuation `( ) , ; { } ..`, identifiers, and decimal numbers
-(`src/lang/lex.rs`). Line comments run from `//` to the end of the line. The
-grammar, lowest precedence first, is:
+`for`, `in`, `if`, `else`, `fn`, `output`, `inv`, `sel`, the operators
+`+ - * / == !=` and unary `-`, the punctuation `( ) , ; { } ..`, identifiers, and
+decimal numbers (`src/lang/lex/`). Line comments run from `//` to the end of the
+line. The grammar, lowest precedence first, is:
 
 ```
-program  := stmt*
+program  := item*
+item     := fndef | stmt
+fndef    := 'fn' ident '(' params? ')' '=' expr ';'
+params   := ident (',' ident)*
 stmt     := 'let' ident '=' expr ';'
           | 'assert' expr ';'
           | 'input' ident ';'
@@ -29,10 +32,11 @@ equality := sum (('==' | '!=') sum)?
 sum      := product (('+' | '-') product)*
 product  := unary (('*' | '/') unary)*
 unary    := '-' unary | primary
-primary  := number | ident | '(' expr ')'
+primary  := number | ident | ident '(' args? ')' | '(' expr ')'
           | 'inv' '(' expr ')'
           | 'sel' '(' expr ',' expr ',' expr ')'
           | 'if' expr '{' expr '}' 'else' '{' expr '}'
+args     := expr (',' expr)*
 ```
 
 ## Statements
@@ -42,7 +46,7 @@ at the source level, and a name resolves to the most recent `let` that bound it,
 which gives ordinary lexical shadowing. The compiler reuses physical registers for
 dead temporaries, so register pressure follows the depth of an expression rather
 than its size and larger programs fit the sixteen-register file
-(`src/lang/compile.rs`).
+(`src/lang/compile/`).
 
 ```
 let a = 3;        // Imm  r0 = 3
@@ -137,6 +141,32 @@ single expressions, because the lowering to `sel` evaluates both and chooses one
 let m = if e { a } else { b };   // exactly sel(e, a, b)
 ```
 
+## Functions
+
+A `fn` names a reusable expression. Its body is a single expression over its
+parameters, and each call is that body with the arguments substituted in place, so
+a function is a hygienic macro with call syntax rather than a runtime call. There
+is no call stack, no return keyword, and no recursion: the compiler inlines every
+call, so a program stays straight-line and proves exactly as if the body had been
+written out by hand.
+
+```
+fn sq(x) = x * x;
+fn madd(a, b, c) = a * b + c;
+
+input p;
+let r = madd(sq(p), 2, 1);   // p*p*2 + 1, inlined with no call overhead
+output r;
+```
+
+The body sees only its own parameters and the other functions, never the caller's
+names, so a parameter named `x` never captures a `let x` at the call site. Three
+things are compile errors: a call to a name no `fn` defines, a call whose argument
+count differs from the definition, and a call that would recur (which, because
+inlining a recursive call cannot terminate, is caught as too-deep inlining). A
+function costs nothing at proof time that its inlined body would not: it is a way
+to write a relation once and reuse it, not a new machine feature.
+
 ## A complete program
 
 The canonical example, from `src/lang/mod.rs`, computed and proven end to end:
@@ -165,9 +195,10 @@ Running this on `x = 3` proves the statement and returns `y = 27`. See
 
 ## What the surface does not have, on purpose
 
-There are no statement-level `if` blocks and no function calls yet. A conditional
-is the `if` expression, which is the branchless `sel`: both arms are evaluated and
-one is chosen, so it introduces no data-dependent control flow. A bounded `for`
-loop is unrolled at compile time over a literal range. That branchless, static
-shape is a deliberate limit: it is what makes a program's step count a static
-property and the proof's cost knowable before you run it.
+There are no statement-level `if` blocks and no runtime function calls. A
+conditional is the `if` expression, which is the branchless `sel`: both arms are
+evaluated and one is chosen, so it introduces no data-dependent control flow. A
+bounded `for` loop is unrolled at compile time over a literal range, and a `fn` is
+inlined at each call, so neither adds control flow the trace could branch on. That
+branchless, static shape is a deliberate limit: it is what makes a program's step
+count a static property and the proof's cost knowable before you run it.
