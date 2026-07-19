@@ -17,6 +17,7 @@
 use alloc::vec::Vec;
 
 use super::scan;
+use crate::term::util::format_u64;
 
 pub struct Parsed {
     pub status: u16,
@@ -36,6 +37,20 @@ pub fn build_get(host: &[u8], path: &[u8], extra: &[u8]) -> Vec<u8> {
     r.extend_from_slice(b"\r\nConnection: close\r\nUser-Agent: nonos-nox\r\nAccept-Encoding: gzip\r\n");
     r.extend_from_slice(extra);
     r.extend_from_slice(b"\r\n");
+    r
+}
+
+pub fn build_put_head(host: &[u8], path: &[u8], len: usize) -> Vec<u8> {
+    let mut r = Vec::new();
+    r.extend_from_slice(b"PUT ");
+    r.extend_from_slice(path);
+    r.extend_from_slice(b" HTTP/1.1\r\nHost: ");
+    r.extend_from_slice(host);
+    r.extend_from_slice(b"\r\nConnection: close\r\nUser-Agent: nonos-nox\r\nContent-Length: ");
+    let mut buf = [0u8; 24];
+    let k = format_u64(len as u64, &mut buf);
+    r.extend_from_slice(&buf[..k]);
+    r.extend_from_slice(b"\r\n\r\n");
     r
 }
 
