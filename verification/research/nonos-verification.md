@@ -55,6 +55,49 @@ kernel functions are mechanically extracted from real MIR; **5** Verus source
 files, **65** Kani harnesses, and **32** runnable proof crates exercise the real
 code.
 
+# The System Under Verification
+
+The properties in this paper are not abstract; each protects a specific mechanism
+of a running system, and the mechanisms are worth stating so the theorems have a
+referent.
+
+NØNOS is a microkernel: the kernel holds only primitives, which are memory,
+scheduling, interprocess communication, capabilities, and a cryptographic floor,
+and every other component, including every device driver, runs in user space as a
+capsule. A capsule is a signed, sandboxed program that reaches the kernel only
+through system calls and holds authority only through capabilities. Because
+drivers are capsules, a driver defect is contained by the same boundary that
+contains any other userspace fault, and the surface the kernel must get right is
+correspondingly small. This is the structural reason a focused proof effort can
+cover the trusted path: the trusted path is deliberately narrow.
+
+Authority is capability-based. A capability is an unforgeable token of the right
+to perform an operation, carried as a bit in an authority word and, at the token
+layer, as a signed structure bound to its holder. There is no ambient authority
+and no privileged account that bypasses the check; a process can perform an
+operation only if it presents a capability for it. Delegation attenuates: a
+process may pass a subset of its authority to another, never a superset, which is
+the content of Theorem 2. The capability algebra, the token admission, and the
+delegation discipline are therefore central proof targets, because they are the
+mechanism by which the system decides what any code may do.
+
+The system is RAM-resident and keeps no mutable state on disk; a power cycle
+leaves nothing behind, the ZeroState model the name refers to. This makes the
+zeroization guarantee (Theorem 10t) load-bearing rather than hygienic: since
+memory is the only medium that carries state across a capsule's life, scrubbing
+freed memory is what prevents one tenant's data from reaching another.
+
+Admission to execution is governed by a proof rather than by provenance. Every
+capsule carries a transparent, post-quantum attestation of what it is and what it
+may touch, and the kernel re-verifies that attestation at every spawn, before the
+process is given memory; the bootloader holds the kernel to the same standard
+before it jumps. There is no unsigned path to execution and no build-time switch
+that disables the check on the shipping image. The attestation gate and its
+proof body are the subject of a dedicated section below, and the boundary,
+allocator, loader and driver-admission theorems are precisely the invariants that
+must hold for the code admitted through that gate to behave as the attestation
+promises.
+
 # Preliminaries and Notation
 
 We write $\mathbb{B} = \{\bot, \top\}$ for the Booleans and $\mathbb{N}$ for the
@@ -249,6 +292,134 @@ message 3 whose integrity code verifies under the derived key and whose nonce
 repeats the bound authenticator nonce, and a received packet number is delivered
 at most once: once processed, the same number is never fresh again, so a captured
 frame replayed cannot advance the connection.
+
+## Memory management
+
+The allocator and page-table invariants underwrite every other guarantee, since
+a proof about a mapping is only meaningful if the mapping is what the proof
+assumes.
+
+**Theorem 10f (Physical frame allocation; `Buddy`, `Bitmap`).** The buddy
+allocator returns an aligned block of the requested order that lies inside the
+managed region, and the frame bitmap's index arithmetic is a bijection between a
+frame number and its bit position, so a frame is neither double-allocated nor
+lost. Freeing a block restores exactly the bits its allocation cleared.
+
+**Theorem 10g (Reference counting and copy-on-write; `Refcount`, `Cow`).** A
+shared page is copied before the first write and never before, and a page whose
+reference count reaches zero is reclaimed exactly once; the count is a faithful
+tally of the live references, so no page is freed while a mapping still names it
+and none leaks after the last is dropped.
+
+**Theorem 10h (Address-space structure; `Vma`, `PageTable`, `Tlb`).** The
+virtual-memory-area list holds pairwise-disjoint ranges, so no two regions of an
+address space overlap; a page-table walk and its inverse agree; and a
+translation-lookaside-buffer entry is invalidated whenever the mapping it caches
+is changed, so a stale translation is never observed.
+
+**Theorem 10i (Memory grants; `MemGrant`, `Interval`).** A grant of a memory
+region confers access to exactly that interval and no superset, and the
+interval algebra the broker uses to decide containment and overlap is sound:
+containment is transitive and overlap is symmetric and decidable, so a grant
+check cannot be fooled into admitting an out-of-range access.
+
+## Synchronization
+
+Every lock in the kernel carries a proof that it provides the exclusion its
+callers assume, which is the property that makes the concurrent reasoning above
+valid.
+
+**Theorem 10j (Mutual exclusion; `Spinlock`, `Mutex`, `Ticket`).** At most one
+thread holds the lock at any time; a ticket lock additionally serves waiters in
+arrival order, so acquisition is fair and starvation-free. The lock and unlock
+operations are inverses on the held state.
+
+**Theorem 10k (Reader-writer and sequence locks; `Rwlock`, `Seqlock`).** The
+reader-writer lock admits any number of readers or a single writer but never
+both, and the sequence lock's even-odd counter discipline lets a reader detect
+any writer that overlapped its critical section, so a torn read is always caught
+and retried rather than returned.
+
+**Theorem 10l (Counting semaphore and futex; `Semaphore`, `Futex`).** The
+semaphore count never goes negative and equals the initial permits plus signals
+minus successful waits; the futex wait queue releases waiters in first-in
+first-out order and a wake never loses a waiter that was enqueued before it.
+
+**Theorem 10m (Barriers; `Barrier`).** A barrier releases no participant until
+all have arrived, and once released it resets cleanly for the next round, so no
+thread races ahead of a phase boundary.
+
+## Concurrent reclamation and lifecycle
+
+**Theorem 10n (Epoch reclamation; `Epoch`).** Under the epoch scheme a fresh
+reader always enters the current epoch and never the previous one, so the count
+of readers in the old epoch only ever falls; reclamation of that epoch is safe
+once the count reaches zero, and a grace period, being a sequence of exits from a
+count that never grows, always terminates.
+
+**Theorem 10o (Process teardown; `Reaper`, `Spawn`).** A reaped process releases
+every resource it held exactly once, and the spawn admission accumulates only
+capabilities the policy authorizes, so a process begins with no authority it was
+not granted and ends holding none.
+
+## Interprocess communication and scheduling
+
+**Theorem 10p (Message and endpoint invariants; `Ipc`, `Endpoint`, `Ring`).** A
+message accepted for delivery has a length within the endpoint's bound, the ring
+buffer that carries it never reports full while it can still admit an entry and
+never overwrites an unconsumed one, and an endpoint delivers a message only to a
+holder of the matching receive authority.
+
+**Theorem 10q (Fair scheduling and rate limiting; `Scheduler`, `Priority`,
+`Quota`, `TokenBucket`).** The scheduler's priority walk selects a runnable
+thread of the highest ready class and never starves a lower class indefinitely
+under the aging discipline; a quota is a monotone ceiling that admits a request
+only while consumption stays under it; and the token-bucket limiter admits
+traffic at no more than the configured long-run rate while permitting a bounded
+burst.
+
+## Cryptographic structure and key lifecycle
+
+**Theorem 10r (Nonce and randomness discipline; `Nonce`, `Rng`, `Crypto`).** A
+composed nonce is injective in its counter within a timestamp, so two draws in
+the same interval never collide and the counter is recoverable; the
+random-number interface never returns from an uninitialized pool; and the
+crypto-facing length and domain invariants the higher layers rely on hold.
+
+**Theorem 10s (Signing-key lifecycle; `SigningKey`, `KeyLifecycle`).** A signing
+key is honored only within its validity window and only if it has not been
+revoked and its rollback index has not regressed; a key past its window, revoked,
+or presenting a stale index is refused, and the per-boot session key and nonce
+scope every mint to the boot that issued it.
+
+## Zeroization and residue
+
+**Theorem 10t (No cross-lifetime residue; `Zeroization`, `Zeroize`).** Freed
+memory is scrubbed before it can be reallocated, so no byte of a previous
+tenant's data survives into a later allocation; the scrub covers the whole region
+and leaves no tail, which is the property the RAM-resident, leave-nothing-behind
+model depends on.
+
+## Filesystem, paths, and parsers
+
+**Theorem 10u (Path safety and store operations; `Vfs`, `Path`, `BlockIO`).**
+Path canonicalization resolves to a location inside the permitted subtree and the
+read-only `/capsules` guard resists slash-smuggling and traversal, so no crafted
+path escapes its jail; the block-store operations preserve the on-disk invariant
+that an accepted request stays within the device, round-tripping through the
+store without corruption.
+
+**Theorem 10v (Network parser totality; `NetParse`, `UsbHid`).** The network and
+human-interface parsers are total over hostile input: they terminate without
+panic and never read past the frame they were given, on every input, so a
+malformed packet or descriptor is rejected rather than able to derail the
+handler.
+
+**Theorem 10w (IOMMU mapping discipline; `Iommu`).** An IOMMU mapping, where the
+backend is engaged, grants a device access to exactly the pages the broker
+authorized and no others, so a device cannot address memory outside a window it
+was explicitly given; where the backend is not engaged the guarantee reduces to
+the software bounds of Theorem 7, as the scope section records.
 
 # Mechanical Extraction: From MIR to Lean
 
@@ -494,6 +665,49 @@ The whole surface is inventoried in a machine-readable manifest,
 diff-checked in CI, so the counts in the repository are never stale prose but a
 continuously verified artifact.
 
+The manifest records, in a canonical order that makes it byte-reproducible, the
+Lean module and theorem counts, the count of theorems whose axiom closure is
+audited, the functions mechanically extracted with the hash of each generated
+Lean file, and the Verus, Kani and runnable-proof totals, together with the
+pinned toolchain identifiers. A continuous-integration job regenerates it and
+fails the build if it differs from the committed copy, which turns every count in
+this document into a checked artifact rather than an assertion. The same job
+rejects any manifest reporting a nonzero `sorry` count. This is the difference
+between a verification claim that can quietly rot and one the repository proves
+about itself on every push.
+
+# Evaluation and Engineering
+
+The value of a verification effort is not only the theorems it states but the
+defects it removes and the cost at which it does so.
+
+**Defects found.** Writing the proofs surfaced real bugs, which is the strongest
+evidence that they exercise the code rather than decorate it. The runnable path
+and fuzz proofs over the real filesystem and parser code found and fixed
+concrete defects in canonicalization and codec handling; the model-checking pass
+over the attestation trailer deserializer motivated a bound on a length prefix
+that an earlier version reserved from untrusted input, closing a
+denial-of-service surface. A proof that fails to compile against the code it
+includes is a bug report, and several were exactly that.
+
+**Cost and structure.** The corpus is organized so that the expensive reasoning
+is localized. A validator's branch analysis is done once in a characterization
+lemma and reused; an allocator's guarantee is a single induction; a refinement is
+a single biconditional. The core-only discipline keeps the proofs fast to check,
+a full `lake build` of the specification completing in seconds, which matters
+because a proof that is slow to check is a proof that is rarely checked. The
+mechanical extraction adds a heavier dependency, the Charon and Aeneas toolchain
+and a Lean build with a supporting library, but it is confined to its own package
+so the specification corpus stays light.
+
+**Continuous enforcement.** None of this is a one-time artifact. The hygiene
+gate, the runnable and crypto proofs, the Kani harnesses, the Verus theorems, the
+Lean build, the axiom profile, the extraction drift check, and the evidence
+manifest all run on every push, under pinned toolchains, with the workflows
+themselves hardened to cancel superseded runs and cap their time. The
+verification is a property the repository maintains continuously, not a snapshot
+it once achieved.
+
 # Threat Model and Honest Scope
 
 We state the boundaries plainly, because an honest scope is the point.
@@ -528,17 +742,55 @@ used to verify cryptographic and systems Rust. RustBelt [@jung2018rustbelt]
 establishes the soundness of the Rust type system that NØNOS relies on for its
 memory-safety baseline.
 
+# Discussion and Future Directions
+
+The architecture generalizes beyond the properties currently proven. Three
+directions extend it, each strengthening a different part of the proof-to-code
+link.
+
+**Widening the mechanically-extracted set.** Every function in the trusted path
+is a candidate for Layer 2c. The obstacle is not the proof but the extraction
+setup: a function is extractable once its module dependencies are mirrored so the
+compiler can lower it, and the remaining work is mechanical. As the extracted set
+grows, the hand-written Lean models for those functions become redundant and can
+be retired in favor of the extracted definitions, monotonically shrinking the
+transcription surface. The functions with the shallowest dependencies, the pure
+validators and allocators, are the natural next targets.
+
+**Binding the corpus to the boot attestation.** The proof-corpus root of
+Definition 16 is a commitment to exactly what is proven. Feeding it as a public
+input of the kernel's boot attestation would make the boot proof state not only
+that the image is the enrolled one but that it is the image whose properties were
+machine-checked, checkable by anyone who rebuilds the repository and recomputes
+the root. This is an engineering binding across the enrollment tool, the
+kernel-side verifier, and the build, proven by a boot rather than a theorem, and
+it is honest about its claim: it commits the running image to its proof corpus,
+it does not arithmetize the Lean checker.
+
+**Closing the compiler gap.** The extraction reasons over the compiler's MIR,
+which removes the human transcription step but still trusts the lowering from MIR
+to machine code. A verified backend in the mold of CompCert, or a translation
+validator over the emitted code, would close the remaining gap, at which point the
+chain from theorem to instruction would be mechanically checked end to end for the
+extracted functions. This is the same frontier seL4's C-refinement and CompCert
+address, approached from the Rust side.
+
 # Conclusion
 
 NØNOS demonstrates that a substantial, memory-safe systems kernel can carry
 machine-checked security proofs whose link to the running code is not left as an
-act of faith: runnable proofs execute the real source, Verus reasons over the
+act of faith. Runnable proofs execute the real source, Verus reasons over the
 real bit-operations, and mechanical extraction lowers the compiler's own MIR into
-Lean for direct proof. The corpus is large (887 admissible theorems), audited to
-the axiom (168 flagship closures, zero `sorry`), reproducible, and inventoried in
-a continuously checked manifest, with a transparent post-quantum attestation gate
-enforcing the proven admission discipline at runtime. The scope is narrower than
-total correctness and is stated as such; within that scope, every claim is
-machine-checked over the code that runs.
+Lean for direct proof, so a spectrum of techniques covers the trusted path,
+ordered by the tightness of their link to the executable. The corpus is large,
+887 admissible theorems across 120 modules, audited to the axiom with 168 flagship
+closures and zero `sorry`, reproducible from a clean checkout, and inventoried in
+a continuously checked manifest, and a transparent post-quantum attestation gate
+enforces the proven admission discipline at runtime. The scope is narrower than
+total functional correctness and is stated as such throughout. Within that scope,
+every claim in this document is machine-checked over the code that runs, and the
+architecture that makes this possible, a memory-safe language, a narrow trusted
+path, and proofs ordered by their fidelity to the executable, is the contribution
+we offer to the design of verified systems.
 
 # References
