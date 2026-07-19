@@ -14,80 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The zkolang VM executor. It runs a compiled program on public and private
-//! inputs and emits the execution trace the STARK proves. It never panics: a
-//! malformed program is a typed error, and a violated constraint (a failed
-//! assert, an inverse of zero, a non-boolean selector) is reported as
-//! `Unprovable`, the honest result, because such a trace has no proof.
+//! One instruction. `step` fills the trace row for a single opcode and updates the
+//! register file. The witnessed opcodes (invert, equality) record the auxiliary
+//! value the AIR checks, and a violated constraint returns `Unprovable` rather
+//! than panicking. `arith` is the shared body of add, subtract, and multiply.
 
 use alloc::vec::Vec;
 
 use nonos_stark::field::Fp;
 
-use crate::isa::{Op, Program, REGS};
-use crate::trace::{OpTag, Row, Trace};
-
-// Why a run produced no valid trace. `Unprovable` is a legitimate outcome, not
-// a bug: the witness did not satisfy the program's constraints.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum ProveError {
-    // A register index outside `0..REGS`.
-    BadRegister(u8),
-    // An input index past the supplied input vector.
-    BadInput(u16),
-    // The program ran its whole instruction list without a `Halt`.
-    NoHalt,
-    // A constraint the trace must satisfy did not hold, at this step.
-    Unprovable { step: u64 },
-}
-
-// The machine: a fixed register file over the field. Every value it holds is an
-// `Fp`, the same scalar the STARK commits.
-pub struct Vm {
-    regs: [Fp; REGS],
-}
-
-impl Default for Vm {
-    fn default() -> Vm {
-        Vm::new()
-    }
-}
+use super::{ProveError, Vm};
+use crate::isa::Op;
+use crate::trace::{OpTag, Row};
 
 impl Vm {
-    pub fn new() -> Vm {
-        Vm { regs: [Fp::ZERO; REGS] }
-    }
-
-    // Run `program` on `inputs`, the first `n_public` of which are public. On
-    // success returns the trace plus the public boundary the proof commits to.
-    pub fn run(
-        &mut self,
-        program: &Program,
-        inputs: &[Fp],
-        n_public: usize,
-    ) -> Result<Trace, ProveError> {
-        let mut rows: Vec<Row> = Vec::with_capacity(program.len());
-        let mut outputs: Vec<Fp> = Vec::new();
-
-        for (i, op) in program.iter().enumerate() {
-            let clk = i as u64;
-            let mut row = Row::at(clk);
-            if self.step(*op, inputs, &mut outputs, &mut row, clk)? {
-                rows.push(row);
-                let n_pub = n_public.min(inputs.len());
-                return Ok(Trace {
-                    rows,
-                    public_inputs: inputs[..n_pub].to_vec(),
-                    public_outputs: outputs,
-                });
-            }
-            rows.push(row);
-        }
-        Err(ProveError::NoHalt)
-    }
-
-    // Execute one instruction, filling `row`. Returns Ok(true) on `Halt`.
-    fn step(
+    /// Execute one instruction, filling `row`. Returns `Ok(true)` on `Halt`, which
+    /// tells the run loop to stop.
+    pub(super) fn step(
         &mut self,
         op: Op,
         inputs: &[Fp],
@@ -109,6 +52,7 @@ impl Vm {
                 row.op = OpTag::Inv;
                 let va = self.rget(a)?;
                 row.ra = va;
+                // Zero has no inverse, so an inversion of zero has no valid trace.
                 if va == Fp::ZERO {
                     return Err(ProveError::Unprovable { step: clk });
                 }
@@ -125,6 +69,7 @@ impl Vm {
                 row.rc = vc;
                 row.ra = va;
                 row.rb = vb;
+                // The condition must be a bit, or the select has no valid trace.
                 if !is_bool(vc) {
                     return Err(ProveError::Unprovable { step: clk });
                 }
@@ -139,8 +84,8 @@ impl Vm {
                 row.ra = va;
                 row.rb = vb;
                 let diff = va - vb;
-                // aux is the inverse of the difference when non-zero, the EQ
-                // witness the AIR uses; the result is 1 exactly when equal.
+                // aux is the inverse of the difference when non-zero, the equality
+                // witness the AIR uses; the result is one exactly when equal.
                 let (eq, aux) =
                     if diff == Fp::ZERO { (Fp::ONE, Fp::ZERO) } else { (Fp::ZERO, diff.inv()) };
                 row.rd = eq;
@@ -190,23 +135,8 @@ impl Vm {
         Ok(false)
     }
 
-    // Read a register, bounds-checked.
-    fn rget(&self, idx: u8) -> Result<Fp, ProveError> {
-        self.regs.get(idx as usize).copied().ok_or(ProveError::BadRegister(idx))
-    }
-
-    // Write a register, bounds-checked.
-    fn wset(&mut self, idx: u8, v: Fp) -> Result<(), ProveError> {
-        match self.regs.get_mut(idx as usize) {
-            Some(slot) => {
-                *slot = v;
-                Ok(())
-            }
-            None => Err(ProveError::BadRegister(idx)),
-        }
-    }
-
-    // The shared body of Add, Sub, and Mul.
+    /// The shared body of add, subtract, and multiply: read two registers, record
+    /// them, apply the field operation, and write the result.
     fn arith(
         &mut self,
         tag: OpTag,
@@ -227,7 +157,8 @@ impl Vm {
     }
 }
 
-// True when a field element is 0 or 1.
+/// True when a field element is zero or one, the check the boolean and select
+/// opcodes gate on.
 fn is_bool(v: Fp) -> bool {
     v == Fp::ZERO || v == Fp::ONE
 }

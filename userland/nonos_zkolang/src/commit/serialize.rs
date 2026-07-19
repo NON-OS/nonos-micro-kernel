@@ -14,20 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The program commitment: a canonical byte encoding of a compiled program and a
-//! stable hash over it. On chain a proving job is posted against `commit`, the
-//! 32-byte digest, so buyer and verifier agree on one exact program. Inside a
-//! proof the same commitment enters as `commit_limbs`, four field elements bound
-//! into the transcript, so the proof is tied to the program it claims to run.
-//!
-//! The encoding is versioned and fixed-width per opcode, so it is reproducible
-//! across compilers and stable across time. A change to any instruction changes
-//! the digest.
+//! The canonical byte encoding of a program: a version byte followed by one
+//! fixed-width record per opcode, in order. It is versioned and fixed-width so the
+//! encoding is reproducible across compilers and stable across time; a change to
+//! any instruction changes the bytes, and so the digest over them.
 
 use alloc::vec::Vec;
-
-use nonos_stark::field::Fp;
-use nonos_stark::hash::blake3_hash;
 
 use crate::isa::Op;
 
@@ -69,24 +61,4 @@ pub fn serialize(program: &[Op]) -> Vec<u8> {
         }
     }
     out
-}
-
-/// The 32-byte program commitment, a blake3 digest of the canonical encoding.
-/// This is the `programCommit` a proving job is posted against on chain.
-pub fn commit(program: &[Op]) -> [u8; 32] {
-    blake3_hash(&serialize(program))
-}
-
-/// The commitment as four field elements, for binding the program into a proof's
-/// public statement. Each limb is eight bytes of the digest reduced into the
-/// field, so the four limbs carry the whole 32-byte commitment.
-pub fn commit_limbs(program: &[Op]) -> [Fp; 4] {
-    let h = commit(program);
-    let mut limbs = [Fp::ZERO; 4];
-    for (i, limb) in limbs.iter_mut().enumerate() {
-        let mut b = [0u8; 8];
-        b.copy_from_slice(&h[i * 8..i * 8 + 8]);
-        *limb = Fp::from_u64(u64::from_le_bytes(b));
-    }
-    limbs
 }
