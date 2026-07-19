@@ -159,3 +159,17 @@ The golden test is the strong form the obligation deserves: it proves a real pro
 The trust model is stated plainly, not discovered later. Because option 2 has the recursion expose `periodic_root` but not prove `periodic_root == f(programCommit)`, the registry row is the only binding, so a wrong row is directly exploitable, not merely a liveness bug: an attacker who registers `programCommit(X) -> f(Y)` can settle a proof carrying X's commitment under Y's routing. On-chain adjudication cannot save a permissionless set-once registry, because the contract cannot recompute `f` in EVM gas, so a challenge has nothing to adjudicate against. At launch, registration is governance-only: the same multisig that gates everything going live writes each row after validating it off chain with the helper, and can correct it. Governance is the adjudication path, resolved by the multisig rather than by on-chain recomputation. A permissionless registry is a later addition that needs a succinct validity proof of `periodic_root == f(programCommit)` verified once per program, not a challenge window. In-circuit derivation of the root is not the cheap alternative to either: checking the periodic root inside the recursion means arithmetizing the commitment itself, the coset extension and the keccak tree over the whole evaluation domain, which is a different design (a Poseidon-committed periodic tree with per-query in-circuit membership), the permissionless endgame, not an add-on.
 
 The `wiring_version` byte fronts the descriptor so a future change to the wiring derivation or the canonical serialization is a new key, never a silent re-registration. The canonical serialization (`commit.rs::serialize`, version 1) is frozen; a change to it is a `wiring_version` bump.
+
+## The FRI rate, made canonical on-chain
+
+`periodic_root` and `verifier_key` are parameterized by `extra_blowup_bits`, the
+FRI rate the recursion's inner proof uses, because the periodic evaluation domain
+scales with it. That value, call it R, is the one number neither the prover nor the
+contract can infer: the recursion's inner proof fixes it. The registry makes it
+un-driftable. `ProgramRegistry` holds R as an immutable `extraBlowupBits` set at
+deploy, and `registerProgram` reverts `RateMismatch` unless the caller's rate equals
+it. So governance registers `periodic_root(program, registry.extraBlowupBits())`,
+and a wrong rate fails loudly at registration rather than bricking every later proof
+with a `WiringMismatch`. The single open value is R itself, which the STARK team
+names for the recursion's inner proof; every other party reads it from the deployed
+registry.
