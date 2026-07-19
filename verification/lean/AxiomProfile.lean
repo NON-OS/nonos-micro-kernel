@@ -117,6 +117,12 @@ import Nonos
 #print axioms Nonos.CapTable.revoke_not_holds
 #print axioms Nonos.CapTable.grant_then_revoke
 
+-- Capability tokens: a valid token clears all three gates, and the boolean and
+-- result-path entry points agree.
+#print axioms Nonos.CapToken.valid_not_revoked
+#print axioms Nonos.CapToken.revoked_invalid
+#print axioms Nonos.CapToken.full_ok_iff_valid
+
 -- Capability masks: a subset (delegated) mask never carries a capability its
 -- parent lacks, and granting is monotone and non-aliasing.
 #print axioms Nonos.CapMask.subset_no_extra

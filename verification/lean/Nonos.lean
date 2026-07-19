@@ -24,6 +24,7 @@ import Nonos.CapMask
 import Nonos.CapTable
 import Nonos.Capability
 import Nonos.CapabilityBits
+import Nonos.CapToken
 import Nonos.CcmpReplay
 import Nonos.Cow
 import Nonos.Crypto
