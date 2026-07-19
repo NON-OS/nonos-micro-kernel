@@ -30,6 +30,7 @@ import Nonos.Crypto
 import Nonos.DemandPaging
 import Nonos.Dhcp
 import Nonos.Dispatch
+import Nonos.DmaMap
 import Nonos.ElfPhdr
 import Nonos.Endpoint
 import Nonos.Epoch

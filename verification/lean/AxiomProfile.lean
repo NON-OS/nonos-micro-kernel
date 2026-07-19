@@ -196,6 +196,12 @@ import Nonos
 #print axioms Nonos.FdAlloc.alloc_lowest
 #print axioms Nonos.FdAlloc.alloc_none_full
 
+-- DMA map admission: an accepted mapping is owned by the caller, on a fresh
+-- claim epoch, and bounded to the device class page limit.
+#print axioms Nonos.DmaMap.accepted_owned_by_caller
+#print axioms Nonos.DmaMap.accepted_fresh_epoch
+#print axioms Nonos.DmaMap.accepted_within_class_limit
+
 -- ELF program-header bounds: an accepted table lies wholly inside the image, so
 -- every header the loader reads is in bounds.
 #print axioms Nonos.ElfPhdr.accepted_table_in_bounds
