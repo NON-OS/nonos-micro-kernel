@@ -32,3 +32,6 @@ pub use error::RunError;
 pub use prove::prove_program;
 pub use report::Report;
 pub use source::{prove_source, prove_source_with_inputs, prove_source_with_witness};
+
+// The verifier-key helper sizes the trace the same way the prover does.
+pub(crate) use prove::choose_log_t;

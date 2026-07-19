@@ -22,4 +22,6 @@ mod recipes_tests;
 #[cfg(test)]
 mod step_tests;
 #[cfg(test)]
+mod vkey_tests;
+#[cfg(test)]
 mod witness_tests;

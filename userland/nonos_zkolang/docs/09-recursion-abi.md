@@ -147,3 +147,15 @@ For a first launch the registration path is the lighter one: the wiring root is 
 cheap deterministic function a deployer or a challenger can recompute, so it does
 not need to be derived inside the recursion. The prover side can expose that
 computation as a helper so the registration is a library call.
+
+## The verifier-key helper, and its trust model
+
+The prover side now exposes the registration primitive. `nonos_zkolang::periodic_root(program, extra_blowup_bits)` returns the 32-byte preprocessed-periodic root, computed through the same `nonos-stark` function the preprocessed prover commits its periodic tree with (`air/periodic_root.rs`, shared by `prove_ext_pre`), so a registered root and a proof's committed root are the same object by construction. `nonos_zkolang::verifier_key(program, extra_blowup_bits)` returns
+`keccak256(descriptor ‖ periodic_root)`, where the descriptor is a wiring-version byte, the 32-byte program commitment (which commits the whole opcode list, and so every boundary and wiring position), the padded trace length, the trace width, and the FRI rate. keccak256 is the tree's own hash and the contract's on-chain hash, so a challenger recomputes both halves from the committed opcode list.
+
+The golden test is the strong form the obligation deserves: it proves a real program with the preprocessed prover and requires the preprocessed verifier to accept using the helper's root and reject a wrong one (`vkey_tests.rs`,
+`the_helper_root_is_the_prover_baked_root`). Same code path both sides, checked end to end.
+
+The trust model is stated plainly, not discovered later. Registration plus recompute is sound under one of two models. For a launch with known deployers, the settlement counterparties validate a `(programCommit, verifier_key)` pair off chain once, the same deployment diligence the custody discipline already demands of verifier bytecode; this is a trust assumption, recorded here rather than left implicit. The permissionless variant, open registration with a staked challenge window, is a later addition and ships only when someone needs it. In-circuit derivation of the root is not the cheap alternative to either: checking the periodic root inside the recursion means arithmetizing the commitment itself, the coset extension and the keccak tree over the whole evaluation domain, which is a different design (a Poseidon-committed periodic tree with per-query in-circuit membership), the permissionless endgame, not an add-on.
+
+The `wiring_version` byte fronts the descriptor so a future change to the wiring derivation or the canonical serialization is a new key, never a silent re-registration. The canonical serialization (`commit.rs::serialize`, version 1) is frozen; a change to it is a `wiring_version` bump.

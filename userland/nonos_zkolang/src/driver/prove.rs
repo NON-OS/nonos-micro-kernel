@@ -91,7 +91,7 @@ pub(super) fn run_and_prove(
 }
 
 // The smallest `log_t` whose trace holds `n` rows, or `None` past the cap.
-fn choose_log_t(n: usize) -> Option<u32> {
+pub(crate) fn choose_log_t(n: usize) -> Option<u32> {
     let mut lg = 1u32;
     while (1usize << lg) < n {
         lg += 1;

@@ -30,6 +30,34 @@ use super::wiring::WireRow;
 use crate::isa::{Op, Program};
 
 impl StepAir {
+    /// Build the AIR with only the program's wiring, no public value bindings. The
+    /// periodic columns depend on the wiring alone, so this is all the verifier
+    /// key's periodic root needs; it never sees the public inputs or outputs. The
+    /// wiring and padding are identical to `compile`, so the periodic columns match
+    /// exactly what a real proof commits.
+    pub fn for_key(program: &Program, log_t: u32) -> Result<StepAir, BuildError> {
+        let t = 1usize << log_t;
+        let mut wiring: Vec<WireRow> = Vec::new();
+        let mut halted = false;
+        for op in program.iter() {
+            wiring.push(WireRow::of(op));
+            if matches!(op, Op::Halt) {
+                halted = true;
+                break;
+            }
+        }
+        if !halted {
+            return Err(BuildError::NoHalt);
+        }
+        if wiring.len() > t {
+            return Err(BuildError::TooLong { rows: wiring.len(), cap: t });
+        }
+        while wiring.len() < t {
+            wiring.push(WireRow::EMPTY);
+        }
+        Ok(StepAir { log_t, wiring, public_bindings: Vec::new() })
+    }
+
     /// Compile a program's public data flow into the AIR and bind the public
     /// inputs and outputs. The wiring runs up to and including the first halt and
     /// is padded to the power-of-two length, matching how the VM stops at halt and
