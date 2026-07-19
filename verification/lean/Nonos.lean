@@ -28,6 +28,7 @@ import Nonos.Crypto
 import Nonos.DemandPaging
 import Nonos.Dhcp
 import Nonos.Dispatch
+import Nonos.ElfPhdr
 import Nonos.Endpoint
 import Nonos.Epoch
 import Nonos.Fd
