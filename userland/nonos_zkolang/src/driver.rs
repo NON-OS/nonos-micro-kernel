@@ -25,10 +25,13 @@
 
 use alloc::vec::Vec;
 
-use nonos_stark::air::{stark_prove_poseidon_ext, stark_verify_poseidon_ext, Poseidon, RATE};
+use nonos_stark::air::{
+    stark_prove_poseidon_ext_pub, stark_verify_poseidon_ext_pub, Poseidon, RATE,
+};
 use nonos_stark::field::Fp;
 
 use crate::air::{BuildError, StepAir, TRACE_WIDTH};
+use crate::commit;
 use crate::isa::Op;
 use crate::lang::{compile_source, CompileError};
 use crate::vm::{ProveError, Vm};
@@ -60,6 +63,9 @@ pub struct Report {
     pub trace_width: usize,
     /// The public outputs the program exposed, in declaration order.
     pub outputs: Vec<u64>,
+    /// The 32-byte program commitment the proof is bound to, the on-chain
+    /// `programCommit` a proving job is posted against.
+    pub program_commit: [u8; 32],
 }
 
 /// Why a proving run did not complete.
@@ -99,16 +105,31 @@ pub fn prove_program(program: &[Op], inputs: &[Fp]) -> Result<Report, RunError> 
     let air = StepAir::compile(program, log_trace_len, &trace.public_inputs, &trace.public_outputs)
         .map_err(RunError::Layout)?;
     let flat = air.build_trace(&trace).map_err(RunError::Layout)?;
+
+    // The public statement bound into the proof by Fiat-Shamir: the program
+    // commitment, the trace length (so the fee is checkable), then the public
+    // inputs and outputs. The verifier replays exactly this, so a proof is tied
+    // to one program, one trace size, and one public input and output.
+    let trace_len = 1usize << log_trace_len;
+    let mut publics: Vec<Fp> = Vec::new();
+    publics.extend_from_slice(&commit::commit_limbs(program));
+    publics.push(Fp::from_u64(trace_len as u64));
+    publics.extend_from_slice(&trace.public_inputs);
+    publics.extend_from_slice(&trace.public_outputs);
+
     let hasher = Poseidon::new(2, [Fp::ZERO; RATE]);
-    let proof = stark_prove_poseidon_ext(&air, &flat, QUERIES, GRIND, BLOWUP, &hasher);
-    let verified = stark_verify_poseidon_ext(&air, &proof, QUERIES, GRIND, BLOWUP, &hasher);
+    let proof =
+        stark_prove_poseidon_ext_pub(&air, &flat, QUERIES, GRIND, BLOWUP, &hasher, &publics);
+    let verified =
+        stark_verify_poseidon_ext_pub(&air, &proof, QUERIES, GRIND, BLOWUP, &hasher, &publics);
     Ok(Report {
         verified,
         steps,
         log_trace_len,
-        trace_len: 1usize << log_trace_len,
+        trace_len,
         trace_width: TRACE_WIDTH,
         outputs: trace.public_outputs.iter().map(|f| f.value()).collect(),
+        program_commit: commit::commit(program),
     })
 }
 

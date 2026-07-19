@@ -31,6 +31,7 @@
 extern crate alloc;
 
 mod air;
+mod commit;
 mod driver;
 mod isa;
 mod lang;
@@ -39,6 +40,7 @@ mod trace;
 mod vm;
 
 pub use air::{BuildError, StepAir, TRACE_WIDTH};
+pub use commit::{commit, commit_limbs, serialize};
 pub use driver::{prove_program, prove_source, prove_source_with_inputs, Report, RunError};
 pub use isa::{Op, Program, REGS};
 pub use lang::{compile_source, CompileError};

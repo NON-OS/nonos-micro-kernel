@@ -42,6 +42,24 @@ pub fn stark_verify_poseidon_ext<A: AirExt>(
     extra_blowup_bits: u32,
     hasher: &Poseidon,
 ) -> bool {
+    stark_verify_poseidon_ext_pub(air, proof, n_queries, grind_bits, extra_blowup_bits, hasher, &[])
+}
+
+/// The same verifier, seeding the transcript with `publics` before the trace roots
+/// so acceptance is bound to those public inputs by Fiat-Shamir. It is the exact
+/// counterpart of `stark_prove_poseidon_ext_pub`: replaying the same seed in the
+/// same order. A recursive verifier exposes `publics` in its transcript column, so
+/// this is the algorithm a recursion over a public-bound proof arithmetizes.
+#[allow(clippy::too_many_arguments)]
+pub fn stark_verify_poseidon_ext_pub<A: AirExt>(
+    air: &A,
+    proof: &StarkProofExtP,
+    n_queries: usize,
+    grind_bits: u32,
+    extra_blowup_bits: u32,
+    hasher: &Poseidon,
+    publics: &[Fp],
+) -> bool {
     let log_t = air.log_trace_len();
     let t = 1usize << log_t;
     let width = air.trace_width();
@@ -61,6 +79,9 @@ pub fn stark_verify_poseidon_ext<A: AirExt>(
     let shift = Fp::from_u64(SHIFT);
 
     let mut transcript = PoseidonTranscript::new(hasher.clone());
+    for &p in publics {
+        transcript.absorb(p);
+    }
     for root in &proof.trace_roots {
         transcript.absorb_digest(root);
     }

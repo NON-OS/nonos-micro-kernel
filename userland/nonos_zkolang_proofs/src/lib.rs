@@ -4,6 +4,8 @@
 //! the honest trace is proven to accept and each tampered trace to be rejected.
 
 #[cfg(test)]
+mod commit_tests;
+#[cfg(test)]
 mod io_tests;
 #[cfg(test)]
 mod lang_tests;
