@@ -29,26 +29,31 @@ unzip -q "$out" -d "$work"
 
 doc="$work/word/document.xml"
 
-# Cover logo: embed the teal NONOS wordmark as a centered image above the title.
-# The image part, its content-type, and its relationship are added, then a
-# drawing paragraph is inserted before the Title paragraph. Dimensions are in
-# EMU (914400 per inch); the source is 900x316, shown at 3.6 inches wide.
+# Cover logo: embed the symmetric teal logomark, centered, with a teal "NØNOS"
+# text wordmark beneath it. The full-lockup PNG carries its wordmark as white
+# glyphs on transparency (invisible on a white page) and packs the mark into the
+# left third, so centering its box pushes the mark off-centre; the square mark
+# centres cleanly. The image part, its content-type, and its relationship are
+# added, then the lockup paragraphs are inserted at the top of the body.
+# Dimensions are in EMU (914400 per inch); the mark source is 120x134.
 mkdir -p "$work/word/media"
-cp nonos-logo.png "$work/word/media/logo.png"
+cp nonos-logomark.png "$work/word/media/logo.png"
 grep -q 'Extension="png"' "$work/[Content_Types].xml" || \
   perl -0pi -e 's{(<Types[^>]*>)}{$1<Default Extension="png" ContentType="image/png"/>}' "$work/[Content_Types].xml"
 perl -0pi -e 's{</Relationships>}{<Relationship Id="rIdNonosLogo" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.png"/></Relationships>}' \
   "$work/word/_rels/document.xml.rels"
 logo_frag="$work/logo_frag.xml"
 cat > "$logo_frag" <<'XML'
-<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="1400" w:after="200"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="3291840" cy="1155913"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="101" name="NONOS logo"/><wp:cNvGraphicFramePr/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="101" name="logo.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdNonosLogo"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="3291840" cy="1155913"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>
+<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="2600" w:after="120"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="1143000" cy="1276650"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="101" name="NONOS logomark"/><wp:cNvGraphicFramePr/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="101" name="logo.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdNonosLogo"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1143000" cy="1276650"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>
+<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="800"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="2E5C5C"/><w:sz w:val="48"/><w:spacing w:val="80"/></w:rPr><w:t xml:space="preserve">NØNOS</w:t></w:r></w:p>
 XML
 LOGO_FRAG="$logo_frag" perl -0pi -e 'BEGIN{local $/; open(my $f,"<",$ENV{LOGO_FRAG}); our $L=<$f>; close $f; chomp $L} s{(<w:body>)}{$1$L}' "$doc"
 
-# Page layout: the title block (title, subtitle, author, date, abstract) stands
-# alone on page one; the table of contents gets its own page two; the body
-# begins on page three. Insert a page break before the contents heading and
-# another before the first top-level heading of the body.
+# Page layout: page one is a clean cover (logo, title, subtitle, author, date);
+# the abstract takes page two; the table of contents gets its own page three;
+# the body begins on page four. Insert a page break before the abstract, before
+# the contents heading, and before the first top-level heading of the body.
+perl -0pi -e 's{(<w:p\b[^>]*>(?:(?!</w:p>).)*?<w:pStyle w:val="AbstractTitle")}{<w:p><w:r><w:br w:type="page"/></w:r></w:p>$1}s' "$doc"
 perl -0pi -e 's{(<w:p[^>]*><w:pPr><w:pStyle w:val="TOCHeading")}{<w:p><w:r><w:br w:type="page"/></w:r></w:p>$1}' "$doc"
 perl -0pi -e 's{(<w:p[^>]*><w:pPr><w:pStyle w:val="Heading1")}{<w:p><w:r><w:br w:type="page"/></w:r></w:p>$1}' "$doc"
 
