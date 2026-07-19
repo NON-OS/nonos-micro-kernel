@@ -174,3 +174,9 @@ import Nonos
 -- reaches Established only through the handshake.
 #print axioms Nonos.Dhcp.bound_only_via_matching_ack
 #print axioms Nonos.Tcp.established_only_via_handshake
+
+-- Syscall routing: an unclaimed number is refused, and the first handler that
+-- claims a number decides it and shadows all later handlers.
+#print axioms Nonos.SyscallRoute.route_unclaimed_is_enosys
+#print axioms Nonos.SyscallRoute.route_earlier_shadows
+#print axioms Nonos.SyscallRoute.route_append_stable
