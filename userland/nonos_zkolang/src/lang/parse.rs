@@ -25,15 +25,25 @@ use alloc::vec::Vec;
 use super::lex::Tok;
 use super::CompileError;
 
-// An expression node.
+// An expression node. The tree is what the compiler walks; each variant lowers to
+// a small, fixed run of opcodes, which is why the set stays this compact.
 #[derive(Clone, Debug)]
 pub enum Expr {
+    // A literal and a variable reference, the leaves of every tree.
     Num(u64),
     Var(String),
+    // Field arithmetic. `Div` is sugar for a multiply by an inverse, and `Neg` for
+    // a subtraction from zero, so neither needs its own opcode.
     Add(Box<Expr>, Box<Expr>),
     Sub(Box<Expr>, Box<Expr>),
     Mul(Box<Expr>, Box<Expr>),
+    Div(Box<Expr>, Box<Expr>),
+    Neg(Box<Expr>),
+    // Comparisons that yield a zero or one bit. `Ne` is the complement of `Eq`,
+    // lowered as one minus the equality bit.
     Eq(Box<Expr>, Box<Expr>),
+    Ne(Box<Expr>, Box<Expr>),
+    // The field inverse and the branchless select, written as calls.
     Inv(Box<Expr>),
     Sel(Box<Expr>, Box<Expr>, Box<Expr>),
 }
@@ -147,14 +157,24 @@ impl<'a> Parser<'a> {
         self.equality()
     }
 
+    // The lowest precedence: an optional single comparison of two sums. It is not
+    // chainable, `a == b == c` is a parse error, because a comparison yields a bit
+    // and comparing a bit to a third sum is almost never what a writer means.
     fn equality(&mut self) -> Result<Expr, CompileError> {
         let lhs = self.sum()?;
-        if matches!(self.peek(), Some(Tok::EqEq)) {
-            self.pos += 1;
-            let rhs = self.sum()?;
-            return Ok(Expr::Eq(Box::new(lhs), Box::new(rhs)));
+        match self.peek() {
+            Some(Tok::EqEq) => {
+                self.pos += 1;
+                let rhs = self.sum()?;
+                Ok(Expr::Eq(Box::new(lhs), Box::new(rhs)))
+            }
+            Some(Tok::BangEq) => {
+                self.pos += 1;
+                let rhs = self.sum()?;
+                Ok(Expr::Ne(Box::new(lhs), Box::new(rhs)))
+            }
+            _ => Ok(lhs),
         }
-        Ok(lhs)
     }
 
     fn sum(&mut self) -> Result<Expr, CompileError> {
@@ -176,14 +196,37 @@ impl<'a> Parser<'a> {
         }
     }
 
+    // Multiply and divide, which bind tighter than add and subtract. Both are
+    // left-associative, so `a / b / c` is `(a / b) / c`. Their operands are
+    // unary expressions, so a leading minus binds tighter still.
     fn product(&mut self) -> Result<Expr, CompileError> {
-        let mut lhs = self.primary()?;
-        while matches!(self.peek(), Some(Tok::Star)) {
-            self.pos += 1;
-            let rhs = self.primary()?;
-            lhs = Expr::Mul(Box::new(lhs), Box::new(rhs));
+        let mut lhs = self.unary()?;
+        loop {
+            match self.peek() {
+                Some(Tok::Star) => {
+                    self.pos += 1;
+                    let rhs = self.unary()?;
+                    lhs = Expr::Mul(Box::new(lhs), Box::new(rhs));
+                }
+                Some(Tok::Slash) => {
+                    self.pos += 1;
+                    let rhs = self.unary()?;
+                    lhs = Expr::Div(Box::new(lhs), Box::new(rhs));
+                }
+                _ => return Ok(lhs),
+            }
         }
-        Ok(lhs)
+    }
+
+    // A prefix minus negates. It is right-recursive so `- - a` double-negates, and
+    // it sits above the primaries so `-a * b` parses as `(-a) * b`.
+    fn unary(&mut self) -> Result<Expr, CompileError> {
+        if matches!(self.peek(), Some(Tok::Minus)) {
+            self.pos += 1;
+            let inner = self.unary()?;
+            return Ok(Expr::Neg(Box::new(inner)));
+        }
+        self.primary()
     }
 
     fn primary(&mut self) -> Result<Expr, CompileError> {

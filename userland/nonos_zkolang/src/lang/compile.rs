@@ -156,6 +156,56 @@ impl Compiler {
             Expr::Sub(l, r) => self.binary(l, r, |d, a, b| Op::Sub { d, a, b }),
             Expr::Mul(l, r) => self.binary(l, r, |d, a, b| Op::Mul { d, a, b }),
             Expr::Eq(l, r) => self.binary(l, r, |d, a, b| Op::Eq { d, a, b }),
+            // Division is sugar with no opcode of its own: a / b is a * b^{-1}. We
+            // invert the divisor, then multiply. Because inverting zero has no
+            // valid trace, dividing by zero is unprovable rather than a wrong
+            // answer, which is the honest behaviour.
+            Expr::Div(l, r) => {
+                let a = self.expr(l)?;
+                let b = self.expr(r)?;
+                // The divisor is consumed by the inverse; free it so the reciprocal
+                // can reuse its register.
+                self.release(&b);
+                let recip = self.alloc()?;
+                self.ops.push(Op::Inv { d: recip, a: b.reg });
+                // The dividend and the reciprocal are consumed by the multiply.
+                self.release(&a);
+                self.free.push(recip);
+                let d = self.alloc()?;
+                self.ops.push(Op::Mul { d, a: a.reg, b: recip });
+                Ok(Val { reg: d, temp: true })
+            }
+            // Negation is subtraction from zero: -x = 0 - x. We load a zero, then
+            // subtract, so no dedicated opcode is needed.
+            Expr::Neg(x) => {
+                let v = self.expr(x)?;
+                let zero = self.alloc()?;
+                self.ops.push(Op::Imm { d: zero, v: Fp::ZERO });
+                self.release(&v);
+                self.free.push(zero);
+                let d = self.alloc()?;
+                self.ops.push(Op::Sub { d, a: zero, b: v.reg });
+                Ok(Val { reg: d, temp: true })
+            }
+            // Not-equal is the complement of the equality bit: (a != b) = 1 - (a == b).
+            // We compute the equality bit, then subtract it from one, which flips a
+            // clean zero-or-one bit to its opposite.
+            Expr::Ne(l, r) => {
+                let a = self.expr(l)?;
+                let b = self.expr(r)?;
+                self.release(&a);
+                self.release(&b);
+                let bit = self.alloc()?;
+                self.ops.push(Op::Eq { d: bit, a: a.reg, b: b.reg });
+                let one = self.alloc()?;
+                self.ops.push(Op::Imm { d: one, v: Fp::ONE });
+                // Both the equality bit and the one are consumed by the subtract.
+                self.free.push(bit);
+                self.free.push(one);
+                let d = self.alloc()?;
+                self.ops.push(Op::Sub { d, a: one, b: bit });
+                Ok(Val { reg: d, temp: true })
+            }
             Expr::Inv(x) => {
                 let a = self.expr(x)?;
                 self.release(&a);

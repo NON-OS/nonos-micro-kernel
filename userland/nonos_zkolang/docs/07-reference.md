@@ -28,14 +28,15 @@ program  := stmt*
 stmt     := 'let' ident '=' expr ';' | 'assert' expr ';'
           | 'input' ident ';' | 'secret' ident ';' | 'output' expr ';'
 expr     := equality
-equality := sum ('==' sum)?
+equality := sum (('==' | '!=') sum)?
 sum      := product (('+' | '-') product)*
-product  := primary ('*' primary)*
+product  := unary (('*' | '/') unary)*
+unary    := '-' unary | primary
 primary  := number | ident | '(' expr ')'
           | 'inv' '(' expr ')' | 'sel' '(' expr ',' expr ',' expr ')'
 ```
 
-Keywords: `let`, `assert`, `input`, `secret`, `output`, `inv`, `sel`. Comments: `//` to end
+Keywords: `let`, `assert`, `input`, `secret`, `output`, `inv`, `sel`. Operators: `+ - * / == != ` and unary `-`. Comments: `//` to end
 of line.
 
 ## Public API

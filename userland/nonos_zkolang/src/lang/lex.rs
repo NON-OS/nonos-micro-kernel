@@ -23,9 +23,13 @@ use alloc::vec::Vec;
 
 use super::CompileError;
 
-// One lexical token.
+// One lexical token. The set is small on purpose: a handful of keywords, the
+// arithmetic and comparison operators, and the punctuation the grammar needs.
+// Everything else the source could contain is a lexing error, not a silent skip.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Tok {
+    // Keywords. These are the words the grammar reserves; an identifier can never
+    // be one of them, because the ident branch below matches them first.
     Let,
     Assert,
     Input,
@@ -33,13 +37,21 @@ pub enum Tok {
     Output,
     Inv,
     Sel,
+    // A user name and a decimal literal, the two tokens that carry a value.
     Ident(String),
     Num(u64),
+    // Arithmetic operators. `Slash` is field division, which lowers to a multiply
+    // by an inverse, so dividing by zero is unprovable rather than a crash.
     Plus,
     Minus,
     Star,
+    Slash,
+    // Comparison and assignment. `Assign` is the `=` of a `let`; `EqEq` and
+    // `BangEq` are the `==` and `!=` that produce a zero or one bit.
     Assign,
     EqEq,
+    BangEq,
+    // Punctuation.
     LParen,
     RParen,
     Comma,
@@ -65,6 +77,9 @@ pub fn lex(src: &str) -> Result<Vec<Tok>, CompileError> {
             i += 1;
             continue;
         }
+        // A double slash starts a line comment. We check this before the single
+        // `/` operator below, so `//` is always a comment and a lone `/` is always
+        // division. Skip to the newline and let the outer loop pick up from there.
         if ch == b'/' && i + 1 < b.len() && b[i + 1] == b'/' {
             i += 2;
             while i < b.len() && b[i] != b'\n' {
@@ -104,10 +119,13 @@ pub fn lex(src: &str) -> Result<Vec<Tok>, CompileError> {
             toks.push(Tok::Num(value));
             continue;
         }
+        // The single-character operators and punctuation. A lone `/` reaches here
+        // only when it was not the start of a `//` comment, so it is division.
         let single = match ch {
             b'+' => Some(Tok::Plus),
             b'-' => Some(Tok::Minus),
             b'*' => Some(Tok::Star),
+            b'/' => Some(Tok::Slash),
             b'(' => Some(Tok::LParen),
             b')' => Some(Tok::RParen),
             b',' => Some(Tok::Comma),
@@ -119,6 +137,8 @@ pub fn lex(src: &str) -> Result<Vec<Tok>, CompileError> {
             i += 1;
             continue;
         }
+        // `=` is either assignment or, when doubled, the equality operator. We peek
+        // one byte to tell them apart and advance by one or two accordingly.
         if ch == b'=' {
             if i + 1 < b.len() && b[i + 1] == b'=' {
                 toks.push(Tok::EqEq);
@@ -128,6 +148,16 @@ pub fn lex(src: &str) -> Result<Vec<Tok>, CompileError> {
                 i += 1;
             }
             continue;
+        }
+        // `!` is only ever the start of `!=`. A bare `!` has no meaning in the
+        // language, so it is a lexing error rather than a token.
+        if ch == b'!' {
+            if i + 1 < b.len() && b[i + 1] == b'=' {
+                toks.push(Tok::BangEq);
+                i += 2;
+                continue;
+            }
+            return Err(CompileError::UnexpectedChar { at: i });
         }
         return Err(CompileError::UnexpectedChar { at: i });
     }

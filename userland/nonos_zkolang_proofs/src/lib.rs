@@ -12,6 +12,8 @@ mod lang_tests;
 #[cfg(test)]
 mod nox_tests;
 #[cfg(test)]
+mod operator_tests;
+#[cfg(test)]
 mod recipes_tests;
 #[cfg(test)]
 mod step_tests;
