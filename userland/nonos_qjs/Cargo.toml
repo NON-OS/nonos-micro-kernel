@@ -12,3 +12,8 @@ libm = "0.2"
 
 [build-dependencies]
 cc = "1"
+
+[features]
+# Native host build for the render harness: the system libc supplies what the
+# freestanding stub layers provide on the NONOS target.
+hosted = []

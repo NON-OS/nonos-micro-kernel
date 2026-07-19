@@ -20,7 +20,12 @@
 use alloc::string::String;
 use core::ffi::c_void;
 
+#[cfg(not(feature = "hosted"))]
 use crate::alloc_stubs::free;
+#[cfg(feature = "hosted")]
+extern "C" {
+    fn free(p: *mut u8);
+}
 
 extern "C" {
     fn njs_new_runtime() -> *mut c_void;

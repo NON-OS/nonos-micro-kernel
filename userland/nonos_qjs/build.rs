@@ -15,6 +15,29 @@ fn clang_resource_include() -> String {
 
 fn main() {
     let root = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    // hosted: native build for the render harness, hosted libc instead of the
+    // freestanding shim and stub layers.
+    if std::env::var("CARGO_FEATURE_HOSTED").is_ok() {
+        let mut b = cc::Build::new();
+        b.compiler("clang");
+        b.warnings(false);
+        b.flag("-O2");
+        b.flag("-DNDEBUG");
+        // macOS spells malloc_usable_size differently.
+        if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
+            b.flag("-Dmalloc_usable_size=malloc_size");
+        }
+        b.flag(&format!("-I{root}/vendor"));
+        for f in
+            ["quickjs.c", "libregexp.c", "libunicode.c", "dtoa.c", "eval_shim.c", "dom_bindings.c"]
+        {
+            b.file(format!("{root}/vendor/{f}"));
+            println!("cargo:rerun-if-changed=vendor/{f}");
+        }
+        b.compile("qjs");
+        println!("cargo:rerun-if-changed=build.rs");
+        return;
+    }
     let mut b = cc::Build::new();
     b.compiler("clang");
     b.no_default_flags(true);

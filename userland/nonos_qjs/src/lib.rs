@@ -22,10 +22,16 @@
 
 extern crate alloc;
 
+// The hosted harness build links the system libc, which provides everything
+// the freestanding stub layers exist to supply.
+#[cfg(not(feature = "hosted"))]
 mod alloc_stubs;
 mod engine;
+#[cfg(not(feature = "hosted"))]
 mod math_stubs;
+#[cfg(not(feature = "hosted"))]
 mod misc_stubs;
+#[cfg(not(feature = "hosted"))]
 mod str_stubs;
 
 pub use engine::Engine;
