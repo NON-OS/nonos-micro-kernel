@@ -202,6 +202,12 @@ import Nonos
 #print axioms Nonos.FdAlloc.alloc_lowest
 #print axioms Nonos.FdAlloc.alloc_none_full
 
+-- MSI-X interrupt bind: an admitted bind is bounded to the pool and device
+-- table, addressable, a device IRQ, and not a double-bind.
+#print axioms Nonos.IrqBind.accepted_vector_count_bounded
+#print axioms Nonos.IrqBind.accepted_msix_addressable
+#print axioms Nonos.IrqBind.accepted_not_already_bound
+
 -- DMA map admission: an accepted mapping is owned by the caller, on a fresh
 -- claim epoch, and bounded to the device class page limit.
 #print axioms Nonos.DmaMap.accepted_owned_by_caller

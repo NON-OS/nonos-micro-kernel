@@ -41,6 +41,7 @@ import Nonos.Heap
 import Nonos.Interval
 import Nonos.Iommu
 import Nonos.Ipc
+import Nonos.IrqBind
 import Nonos.Isolation
 import Nonos.LoadProtect
 import Nonos.Loader
