@@ -243,6 +243,12 @@ import Nonos
 #print axioms Nonos.DmaMap.accepted_fresh_epoch
 #print axioms Nonos.DmaMap.accepted_within_class_limit
 
+-- ELF relocation write size: any supported relocation writes at most 8 bytes,
+-- an unknown type is refused, and an admitted relocation writes only in-segment.
+#print axioms Nonos.ElfReloc.writeSize_le_8
+#print axioms Nonos.ElfReloc.other_unsupported
+#print axioms Nonos.ElfReloc.admitted_no_oob
+
 -- ELF program-header bounds: an accepted table lies wholly inside the image, so
 -- every header the loader reads is in bounds.
 #print axioms Nonos.ElfPhdr.accepted_table_in_bounds

@@ -33,6 +33,7 @@ import Nonos.Dhcp
 import Nonos.Dispatch
 import Nonos.DmaMap
 import Nonos.ElfPhdr
+import Nonos.ElfReloc
 import Nonos.Endpoint
 import Nonos.Epoch
 import Nonos.Fd
