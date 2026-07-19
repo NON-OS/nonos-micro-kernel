@@ -116,6 +116,12 @@ import Nonos
 #print axioms Nonos.Mmio.empty_grant_denies
 #print axioms Nonos.CapTable.revoke_not_holds
 #print axioms Nonos.CapTable.grant_then_revoke
+
+-- Capability masks: a subset (delegated) mask never carries a capability its
+-- parent lacks, and granting is monotone and non-aliasing.
+#print axioms Nonos.CapMask.subset_no_extra
+#print axioms Nonos.CapMask.has_add_other
+#print axioms Nonos.CapMask.subset_trans
 #print axioms Nonos.Vfs.resolve_dotdots_root
 #print axioms Nonos.Rng.drawN_advances
 #print axioms Nonos.Tlb.invalidate_evicts

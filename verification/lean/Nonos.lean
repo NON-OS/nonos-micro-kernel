@@ -20,6 +20,7 @@ import Nonos.BlockIO
 import Nonos.BootImage
 import Nonos.Bounds
 import Nonos.Buddy
+import Nonos.CapMask
 import Nonos.CapTable
 import Nonos.Capability
 import Nonos.CapabilityBits
