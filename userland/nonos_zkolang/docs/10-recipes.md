@@ -87,6 +87,38 @@ revealing the value. Because the compiler reuses registers for dead temporaries,
 the bit work fits the sixteen-register file, and wider ranges follow the same
 shape.
 
+## Reusable relations with functions
+
+A `fn` names a relation so it is written once and reused. The range proof above
+repeats the boolean check `b * b - b` for every bit; naming it makes the intent
+plain and the source short. The call is inlined, so the proof is byte-for-byte the
+same:
+
+```
+fn bit(b) = b * b - b;
+secret w;
+secret b0; secret b1; secret b2; secret b3;
+assert bit(b0);
+assert bit(b1);
+assert bit(b2);
+assert bit(b3);
+assert w - (b0 + 2 * b1 + 4 * b2 + 8 * b3);
+```
+
+Functions also carry a small library of arithmetic. Here a delegated weighted sum
+of squares, with the square and the multiply-add each defined once:
+
+```
+fn sq(x) = x * x;
+fn madd(a, b, c) = a * b + c;
+input x; input y;
+let r = madd(sq(x), 3, sq(y));   // 3*x^2 + y^2
+output r;
+```
+
+On `x = 2, y = 5` this proves `r = 37`. Because every call is inlined, a function
+costs nothing the hand-written body would not; it buys clarity, not machinery.
+
 ## What these share
 
 None reveals more than its public inputs and outputs, each is a fixed-size program

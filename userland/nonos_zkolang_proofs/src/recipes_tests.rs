@@ -69,3 +69,38 @@ fn secret_value_is_in_range() {
     // A non-boolean bit, b0 = 2, is not a valid decomposition, so no proof.
     assert!(prove_source_with_witness(src, &[], &[13, 2, 0, 1, 1]).is_err());
 }
+
+// The same range proof written with a function. `bit(b)` is the boolean relation
+// once, and each bit asserts it, so the repeated `b * b - b` becomes one named
+// thing. The proof is identical, because the call is inlined; functions cut the
+// source, not the trace.
+#[test]
+fn a_range_proof_with_a_reusable_bit_relation() {
+    let src = "fn bit(b) = b * b - b;
+               secret w;
+               secret b0; secret b1; secret b2; secret b3;
+               assert bit(b0);
+               assert bit(b1);
+               assert bit(b2);
+               assert bit(b3);
+               assert w - (b0 + 2 * b1 + 4 * b2 + 8 * b3);";
+    // w = 10 = 1010: b0=0, b1=1, b2=0, b3=1.
+    assert!(prove_source_with_witness(src, &[], &[10, 0, 1, 0, 1]).expect("run").verified);
+    // A bit that is not boolean fails the `bit` relation, so there is no proof.
+    assert!(prove_source_with_witness(src, &[], &[10, 3, 1, 0, 1]).is_err());
+}
+
+// Delegated computation with a function library: prove a weighted sum of squares
+// for public inputs, with the square and the multiply-add each named once. The
+// verifier trusts the output without running the arithmetic.
+#[test]
+fn weighted_sum_of_squares_with_functions() {
+    let src = "fn sq(x) = x * x;
+               fn madd(a, b, c) = a * b + c;
+               input x; input y;
+               let r = madd(sq(x), 3, sq(y));   // 3*x^2 + y^2
+               output r;";
+    let report = prove_source_with_inputs(src, &[2, 5]).expect("run");
+    assert!(report.verified);
+    assert_eq!(report.outputs, vec![37], "3*4 + 25 = 37");
+}
