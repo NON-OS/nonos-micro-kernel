@@ -13,9 +13,20 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
+# Cancel superseded runs on the same ref so a fast push does not pile up
+# redundant verification passes.
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   hygiene:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -26,8 +37,39 @@ jobs:
       - name: Production source hygiene
         run: cargo run --manifest-path nonos-verify/Cargo.toml -- hygiene
 
+  # The committed verification/evidence/EVIDENCE.json is a machine-readable inventory of
+  # everything NONOS proves. Regenerate it from the source tree and fail if it
+  # has drifted, so the file in the repo is always an accurate, CI-checked
+  # statement of the verification surface.
+  evidence-manifest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          submodules: recursive
+      - name: Regenerate and check for drift
+        run: |
+          set -euo pipefail
+          ./verification/evidence/collect-evidence.sh > /tmp/EVIDENCE.json
+          if ! diff -u verification/evidence/EVIDENCE.json /tmp/EVIDENCE.json; then
+            echo "::error::verification/evidence/EVIDENCE.json is stale; run ./verification/evidence/collect-evidence.sh > verification/evidence/EVIDENCE.json and commit"
+            exit 1
+          fi
+          jq -e '.proof_systems.lean_specification.sorry_count == 0' /tmp/EVIDENCE.json >/dev/null \
+            || { echo "::error::a sorry is present in the Lean corpus"; exit 1; }
+      - name: Publish evidence manifest
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: verification-evidence
+          path: verification/evidence/EVIDENCE.json
+          retention-days: 90
+          if-no-files-found: error
+
   runnable-proofs:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -42,6 +84,7 @@ jobs:
 
   crypto-proofs:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -56,6 +99,7 @@ jobs:
 
   kani:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -67,6 +111,7 @@ jobs:
 
   verus:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -86,6 +131,7 @@ jobs:
 
   boot-proofs:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -101,6 +147,7 @@ jobs:
 
   attestation-attack:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -116,6 +163,7 @@ jobs:
 
   proof-crates:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -155,6 +203,7 @@ jobs:
 
   proof-crates-kani:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -179,6 +228,7 @@ jobs:
 
   lean:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -195,9 +245,17 @@ jobs:
           else
             echo "verification/lean absent on this ref; skipping"
           fi
+      - name: Proof-corpus root (no sorry, standard axioms only)
+        run: |
+          if [ -x verification/lean/proof-corpus-root.sh ]; then
+            verification/lean/proof-corpus-root.sh
+          else
+            echo "proof-corpus-root.sh absent on this ref; skipping"
+          fi
 
   extraction:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -246,6 +304,13 @@ jobs:
           for f in Types.lean Funs.lean FunsExternal_Template.lean; do
             diff -u "../lean/Policy/$f" "/tmp/regen-policy/$f"
           done
+          cd ../irq
+          charon cargo --preset=aeneas \
+            --start-from 'nonos_irq::irq::validate::validate_msix_request' \
+            --dest-file irq.llbc
+          mkdir -p /tmp/regen-irq
+          aeneas -backend lean irq.llbc -dest /tmp/regen-irq
+          diff -u ../lean/NonosExtraction/Irq.lean /tmp/regen-irq/Irq.lean
       - name: Verify the refinement theorems
         run: |
           set -euo pipefail

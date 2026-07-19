@@ -19,6 +19,9 @@ what was proven and on what foundations, not just an exit code.
 import Nonos
 
 #print axioms Nonos.AntiRollback.no_rollback_after_boot
+#print axioms Nonos.AntiRollbackState.refines_abstract
+#print axioms Nonos.AntiRollbackState.no_rollback_after_update
+#print axioms Nonos.AntiRollbackState.update_floor_monotone
 #print axioms Nonos.Authorization.empty_token_denied
 #print axioms Nonos.BlockIO.accepted_request_stays_on_disk
 #print axioms Nonos.BootImage.accepted_region_stays_in_bounds
@@ -113,6 +116,18 @@ import Nonos
 #print axioms Nonos.Mmio.empty_grant_denies
 #print axioms Nonos.CapTable.revoke_not_holds
 #print axioms Nonos.CapTable.grant_then_revoke
+
+-- Capability tokens: a valid token clears all three gates, and the boolean and
+-- result-path entry points agree.
+#print axioms Nonos.CapToken.valid_not_revoked
+#print axioms Nonos.CapToken.revoked_invalid
+#print axioms Nonos.CapToken.full_ok_iff_valid
+
+-- Capability masks: a subset (delegated) mask never carries a capability its
+-- parent lacks, and granting is monotone and non-aliasing.
+#print axioms Nonos.CapMask.subset_no_extra
+#print axioms Nonos.CapMask.has_add_other
+#print axioms Nonos.CapMask.subset_trans
 #print axioms Nonos.Vfs.resolve_dotdots_root
 #print axioms Nonos.Rng.drawN_advances
 #print axioms Nonos.Tlb.invalidate_evicts
@@ -143,3 +158,99 @@ import Nonos
 #print axioms Nonos.Futex.fifo_first_out
 #print axioms Nonos.Futex.waiter_enqueued
 #print axioms Nonos.Vma.disjoint_no_shared_addr
+
+-- WiFi trusted path: the WPA2 supplicant's handshake discipline and the CCMP
+-- packet-number replay window the data plane enforces under each key.
+#print axioms Nonos.Wpa2Handshake.install_requires_valid_msg3
+#print axioms Nonos.Wpa2Handshake.replay_never_advances
+#print axioms Nonos.Wpa2Handshake.mic_input_within_eapol
+#print axioms Nonos.Wpa2Handshake.connected_ptk_from_fixed_nonces
+#print axioms Nonos.CcmpReplay.no_nonce_reuse
+#print axioms Nonos.CcmpReplay.replay_dropped
+#print axioms Nonos.CcmpReplay.accepted_pn_dead_forever
+
+-- User/kernel boundary: the range policy every usercopy clears before a byte
+-- moves keeps an accepted range wholly inside user space.
+#print axioms Nonos.UserCopy.accepted_within_user
+#print axioms Nonos.UserCopy.accepted_nonzero_addr
+
+-- Demand paging: the fault router and the per-process page budget, and the
+-- fact that a served page is never executable.
+#print axioms Nonos.DemandPaging.kernel_half_never_mapped
+#print axioms Nonos.DemandPaging.refused_forever
+#print axioms Nonos.DemandPaging.demand_not_wx
+
+-- ELF load protection: no writable-and-executable segment is admitted, and the
+-- RELRO span ends the load read-only.
+#print axioms Nonos.LoadProtect.accepted_wx_safe
+#print axioms Nonos.LoadProtect.sealed_not_writable
+
+-- Service registry: registration preserves name and port uniqueness and never
+-- grows the table past its cap.
+#print axioms Nonos.ServiceRegistry.register_preserves_names
+#print axioms Nonos.ServiceRegistry.register_preserves_ports
+#print axioms Nonos.ServiceRegistry.register_within_cap
+
+-- PCI command-write allowlist: an admitted write changes only writable bits,
+-- the merge branch is confined, and a raw protected-bit write is refused.
+#print axioms Nonos.PciCmdWrite.admitted_changes_only_writable
+#print axioms Nonos.PciCmdWrite.merge_branch_confined
+#print axioms Nonos.PciCmdWrite.raw_protected_write_refused
+
+-- PID allocation: an allocated PID is never the reserved 0, is not already
+-- live, and the stored counter never wraps to 0.
+#print axioms Nonos.PidAlloc.chosen_pid_ne_zero
+#print axioms Nonos.PidAlloc.chosen_pid_inactive
+#print axioms Nonos.PidAlloc.chosen_next_ne_zero
+
+-- Network state machines: DHCP binds a lease only on a matching ACK, and TCP
+-- reaches Established only through the handshake.
+#print axioms Nonos.Dhcp.bound_only_via_matching_ack
+#print axioms Nonos.Tcp.established_only_via_handshake
+
+-- Syscall routing: an unclaimed number is refused, and the first handler that
+-- claims a number decides it and shadows all later handlers.
+#print axioms Nonos.SyscallRoute.route_unclaimed_is_enosys
+#print axioms Nonos.SyscallRoute.route_earlier_shadows
+#print axioms Nonos.SyscallRoute.route_append_stable
+
+-- File-descriptor allocation: a returned descriptor is the lowest free one at
+-- or above the floor, and the allocator declines only when the window is full.
+#print axioms Nonos.FdAlloc.alloc_free
+#print axioms Nonos.FdAlloc.alloc_lowest
+#print axioms Nonos.FdAlloc.alloc_none_full
+
+-- Multisig k-of-n: an accepted config is a well-formed threshold, a valid add
+-- keeps signers distinct and authorized, and a met threshold is backed by them.
+#print axioms Nonos.MultiSig.valid_config
+#print axioms Nonos.MultiSig.add_preserves_nodup
+#print axioms Nonos.MultiSig.threshold_backed_by_distinct_authorized
+
+-- MSI-X exclusion: no address a clamped BAR mapping covers falls inside the
+-- protected MSI-X table or PBA region.
+#print axioms Nonos.MsixExclusion.no_protected_byte_mapped
+#print axioms Nonos.MsixExclusion.safeLen_le_length
+
+-- MSI-X interrupt bind: an admitted bind is bounded to the pool and device
+-- table, addressable, a device IRQ, and not a double-bind.
+#print axioms Nonos.IrqBind.accepted_vector_count_bounded
+#print axioms Nonos.IrqBind.accepted_msix_addressable
+#print axioms Nonos.IrqBind.accepted_not_already_bound
+
+-- DMA map admission: an accepted mapping is owned by the caller, on a fresh
+-- claim epoch, and bounded to the device class page limit.
+#print axioms Nonos.DmaMap.accepted_owned_by_caller
+#print axioms Nonos.DmaMap.accepted_fresh_epoch
+#print axioms Nonos.DmaMap.accepted_within_class_limit
+
+-- ELF relocation write size: any supported relocation writes at most 8 bytes,
+-- an unknown type is refused, and an admitted relocation writes only in-segment.
+#print axioms Nonos.ElfReloc.writeSize_le_8
+#print axioms Nonos.ElfReloc.other_unsupported
+#print axioms Nonos.ElfReloc.admitted_no_oob
+
+-- ELF program-header bounds: an accepted table lies wholly inside the image, so
+-- every header the loader reads is in bounds.
+#print axioms Nonos.ElfPhdr.accepted_table_in_bounds
+#print axioms Nonos.ElfPhdr.accepted_no_overflow
+#print axioms Nonos.ElfPhdr.wrong_size_rejected

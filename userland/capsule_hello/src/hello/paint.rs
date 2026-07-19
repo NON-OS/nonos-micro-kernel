@@ -26,6 +26,6 @@ pub fn paint(fb: &mut PaintBuffer) {
     fb.fill_rect(0, 0, 360, 4, ACCENT);
     fb.text_scaled(24, 40, b"hello, NONOS", ACCENT, 2);
     fb.text(24, 88, b"a signed, attested capsule", TEXT);
-    fb.text(24, 110, b"built from QUICKSTART.md", TEXT);
+    fb.text(24, 110, b"built from the quickstart", TEXT);
     fb.text(24, 148, b"press Esc to close", DIM);
 }
