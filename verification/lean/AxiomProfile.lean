@@ -179,6 +179,12 @@ import Nonos
 #print axioms Nonos.LoadProtect.accepted_wx_safe
 #print axioms Nonos.LoadProtect.sealed_not_writable
 
+-- PID allocation: an allocated PID is never the reserved 0, is not already
+-- live, and the stored counter never wraps to 0.
+#print axioms Nonos.PidAlloc.chosen_pid_ne_zero
+#print axioms Nonos.PidAlloc.chosen_pid_inactive
+#print axioms Nonos.PidAlloc.chosen_next_ne_zero
+
 -- Network state machines: DHCP binds a lease only on a matching ACK, and TCP
 -- reaches Established only through the handshake.
 #print axioms Nonos.Dhcp.bound_only_via_matching_ack
