@@ -23,11 +23,11 @@ pub fn card(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32) {
     if w == 0 || h == 0 {
         return;
     }
-    fb.fill_rect(x, y, w, h, PANEL);
-    fb.fill_rect(x, y, w, 1, LINE);
-    fb.fill_rect(x, y + h - 1, w, 1, LINE);
-    fb.fill_rect(x, y, 1, h, LINE);
-    fb.fill_rect(x + w - 1, y, 1, h, LINE);
+    fb.fill_rect(x, y, w, h, PANEL());
+    fb.fill_rect(x, y, w, 1, LINE());
+    fb.fill_rect(x, y + h - 1, w, 1, LINE());
+    fb.fill_rect(x, y, 1, h, LINE());
+    fb.fill_rect(x + w - 1, y, 1, h, LINE());
 }
 
 // Same border on an arbitrary fill (e.g. an inset well).

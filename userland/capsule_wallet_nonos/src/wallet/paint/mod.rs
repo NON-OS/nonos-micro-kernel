@@ -52,3 +52,4 @@ pub use paint::paint;
 // exact rect the Receive screen paints it.
 pub use paint_receive::{GEN_BTN_H, GEN_BTN_W, GEN_BTN_X, GEN_BTN_Y};
 pub use paint_sidebar::{NAV_H, NAV_STEP, NAV_W, NAV_X, NAV_Y0};
+pub use paint_topbar::{THEME_BTN_H, THEME_BTN_W, THEME_BTN_X, THEME_BTN_Y};

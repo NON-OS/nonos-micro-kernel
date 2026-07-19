@@ -22,23 +22,23 @@ const BTN_H: u32 = 42;
 
 // Primary action: solid cyan fill with dark ink label.
 pub fn primary(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    fb.fill_rect(x, y, w, BTN_H, ACCENT);
-    label(fb, x, y, w, text, INK);
+    fb.fill_rect(x, y, w, BTN_H, ACCENT());
+    label(fb, x, y, w, text, INK());
 }
 
 // Secondary action: outlined, light label.
 pub fn outline(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    border(fb, x, y, w, LINE2);
-    label(fb, x, y, w, text, FG);
+    border(fb, x, y, w, LINE2());
+    label(fb, x, y, w, text, FG());
 }
 
 pub fn ghost(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    label(fb, x, y, w, text, ACCENT);
+    label(fb, x, y, w, text, ACCENT());
 }
 
 pub fn disabled(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    border(fb, x, y, w, LINE2);
-    label(fb, x, y, w, text, MUTED);
+    border(fb, x, y, w, LINE2());
+    label(fb, x, y, w, text, MUTED());
 }
 
 fn label(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8], color: u32) {

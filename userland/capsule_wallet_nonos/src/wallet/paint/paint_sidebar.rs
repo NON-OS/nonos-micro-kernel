@@ -29,8 +29,8 @@ pub const NAV_Y0: u32 = 96;
 pub const NAV_STEP: u32 = 46;
 
 pub fn paint_sidebar(state: &State, fb: &mut PaintBuffer) {
-    fb.fill_rect(18, 50, 20, 20, ACCENT);
-    let _ = fb.text_ttf(48, 48, "NONOS", FG, 19.0);
+    fb.fill_rect(18, 50, 20, 20, ACCENT());
+    let _ = fb.text_ttf(48, 48, "NONOS", FG(), 19.0);
     nav(fb, NAV_Y0, "Home", state.view == VIEW_HOME);
     nav(fb, NAV_Y0 + NAV_STEP, "Receive", state.view == VIEW_RECEIVE);
     nav(fb, NAV_Y0 + 2 * NAV_STEP, "Send", state.view == VIEW_SEND);
@@ -38,19 +38,19 @@ pub fn paint_sidebar(state: &State, fb: &mut PaintBuffer) {
     nav(fb, NAV_Y0 + 4 * NAV_STEP, "Shielded", state.view == VIEW_SHIELDED);
     nav(fb, NAV_Y0 + 5 * NAV_STEP, "NOX", state.view == VIEW_NOX);
 
-    let _ = fb.text_ttf(22, 700, "RAILS", DIM, 10.0);
-    ui::chip(fb, 22, 722, b"ETH", ACCENT, INK);
-    ui::chip(fb, 70, 722, b"NOX", GREEN, GREEN_INK);
-    ui::chip(fb, 118, 722, b"PR", LINE2, MUTED);
+    let _ = fb.text_ttf(22, 700, "RAILS", DIM(), 10.0);
+    ui::chip(fb, 22, 722, b"ETH", ACCENT(), INK());
+    ui::chip(fb, 70, 722, b"NOX", GREEN(), GREEN_INK());
+    ui::chip(fb, 118, 722, b"PR", LINE2(), MUTED());
 }
 
 fn nav(fb: &mut PaintBuffer, y: u32, label: &str, active: bool) {
-    let bullet = if active { ACCENT } else { LINE2 };
+    let bullet = if active { ACCENT() } else { LINE2() };
     if active {
-        fb.fill_rect(NAV_X, y, NAV_W, NAV_H, SEL);
-        fb.fill_rect(NAV_X, y, 3, NAV_H, ACCENT);
+        fb.fill_rect(NAV_X, y, NAV_W, NAV_H, SEL());
+        fb.fill_rect(NAV_X, y, 3, NAV_H, ACCENT());
     }
     fb.fill_rect(NAV_X + 16, y + 13, 12, 12, bullet);
-    let color = if active { FG } else { MUTED };
+    let color = if active { FG() } else { MUTED() };
     let _ = fb.text_ttf((NAV_X + 38) as i32, (y + 10) as i32, label, color, 15.0);
 }

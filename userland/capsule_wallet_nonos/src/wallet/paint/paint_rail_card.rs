@@ -30,6 +30,6 @@ pub fn paint_rail_card(
     fb.fill_rect(x, y, 3, 44, color);
     let s = core::str::from_utf8(symbol).unwrap_or("");
     let l = core::str::from_utf8(label).unwrap_or("");
-    let _ = fb.text_ttf((x + 16) as i32, (y + 2) as i32, s, FG, 16.0);
-    let _ = fb.text_ttf((x + 16) as i32, (y + 24) as i32, l, MUTED, 12.0);
+    let _ = fb.text_ttf((x + 16) as i32, (y + 2) as i32, s, FG(), 16.0);
+    let _ = fb.text_ttf((x + 16) as i32, (y + 24) as i32, l, MUTED(), 12.0);
 }

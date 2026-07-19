@@ -20,14 +20,14 @@ use crate::wallet::state::State;
 use crate::wallet::theme::{ACCENT, FG, MUTED};
 
 pub fn paint_net(state: &State, fb: &mut PaintBuffer) {
-    fb.text(340, 220, b"Network", MUTED);
-    fb.text(340, 240, b"dns", if state.net.dns_ok { ACCENT } else { FG });
-    fb.text(384, 240, b"sockets", if state.net.sockets_ok { ACCENT } else { FG });
-    fb.text(464, 240, b"nym", if state.net.nym_ok { ACCENT } else { FG });
-    fb.text(340, 260, b"https", ACCENT);
-    fb.text(392, 260, b"ethereum-rpc.publicnode.com", FG);
-    fb.text(340, 280, b"chain", MUTED);
-    fb.text(392, 280, b"0x1", FG);
-    fb.text(444, 280, if state.net.route_ready { b"route ok" } else { b"blocked" }, FG);
-    fb.text(552, 280, if state.net.rpc_chain_ok { b"chain 0x1" } else if state.net.tls_client_finished_ok { b"client fin" } else if state.net.tls_finished_ok { b"tls finish" } else if state.net.tls_validity_ok { b"cert time" } else if state.net.tls_hostname_ok { b"host ok" } else if state.net.tls_certificate_ok { b"cert chain" } else if state.net.tls_record_ok { b"tls record" } else if state.net.tls_server_ok { b"tls hello" } else if state.net.rpc_tcp_ok { b"tcp 443" } else { b"tls" }, FG);
+    fb.text(340, 220, b"Network", MUTED());
+    fb.text(340, 240, b"dns", if state.net.dns_ok { ACCENT() } else { FG() });
+    fb.text(384, 240, b"sockets", if state.net.sockets_ok { ACCENT() } else { FG() });
+    fb.text(464, 240, b"nym", if state.net.nym_ok { ACCENT() } else { FG() });
+    fb.text(340, 260, b"https", ACCENT());
+    fb.text(392, 260, b"ethereum-rpc.publicnode.com", FG());
+    fb.text(340, 280, b"chain", MUTED());
+    fb.text(392, 280, b"0x1", FG());
+    fb.text(444, 280, if state.net.route_ready { b"route ok" } else { b"blocked" }, FG());
+    fb.text(552, 280, if state.net.rpc_chain_ok { b"chain 0x1" } else if state.net.tls_client_finished_ok { b"client fin" } else if state.net.tls_finished_ok { b"tls finish" } else if state.net.tls_validity_ok { b"cert time" } else if state.net.tls_hostname_ok { b"host ok" } else if state.net.tls_certificate_ok { b"cert chain" } else if state.net.tls_record_ok { b"tls record" } else if state.net.tls_server_ok { b"tls hello" } else if state.net.rpc_tcp_ok { b"tcp 443" } else { b"tls" }, FG());
 }

@@ -27,6 +27,11 @@ pub fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if nav(state, x, y) {
         return EventOutcome::Repaint;
     }
+    use crate::wallet::paint::{THEME_BTN_H, THEME_BTN_W, THEME_BTN_X, THEME_BTN_Y};
+    if hit(x, y, THEME_BTN_X, THEME_BTN_Y, THEME_BTN_W, THEME_BTN_H) {
+        state.light_mode = !state.light_mode;
+        return EventOutcome::Repaint;
+    }
     match state.view {
         VIEW_HOME => super::on_pointer_view::home(state, x, y),
         VIEW_RECEIVE => super::on_pointer_view::receive(state, x, y),

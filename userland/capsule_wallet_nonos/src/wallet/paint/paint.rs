@@ -21,6 +21,7 @@ use crate::wallet::state::{
 };
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
+    crate::wallet::theme::set_light(state.light_mode);
     super::paint_background::paint_background(fb);
     super::paint_sysbar::paint_sysbar(fb);
     super::paint_sidebar::paint_sidebar(state, fb);

@@ -19,6 +19,11 @@ use nonos_app_skeleton::PaintBuffer;
 use crate::wallet::state::{State, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED};
 use crate::wallet::theme::{ACCENT, FG, LINE2, MUTED};
 
+pub const THEME_BTN_X: u32 = 920;
+pub const THEME_BTN_Y: u32 = 48;
+pub const THEME_BTN_W: u32 = 62;
+pub const THEME_BTN_H: u32 = 28;
+
 pub fn paint_topbar(state: &State, fb: &mut PaintBuffer) {
     let title = match state.view {
         VIEW_RECEIVE => "Receive funds",
@@ -28,7 +33,8 @@ pub fn paint_topbar(state: &State, fb: &mut PaintBuffer) {
         VIEW_NOX => "NOX revenue & staking",
         _ => "Account overview",
     };
-    let _ = fb.text_ttf(226, 46, title, FG, 20.0);
+    let _ = fb.text_ttf(226, 46, title, FG(), 20.0);
+    theme_toggle(fb, state.light_mode);
 
     let mut x = fb.width.saturating_sub(26);
     x = btn(fb, x, "Main", true);
@@ -37,17 +43,24 @@ pub fn paint_topbar(state: &State, fb: &mut PaintBuffer) {
     let _ = btn(fb, x - 9, "CMD_K", false);
 }
 
+fn theme_toggle(fb: &mut PaintBuffer, light: bool) {
+    super::ui::edge(fb, THEME_BTN_X, THEME_BTN_Y, THEME_BTN_W, THEME_BTN_H, LINE2());
+    let label = if light { "LIGHT" } else { "DARK" };
+    let tw = fb.measure_ttf_mono(label, 11.0).max(0) as u32;
+    let _ = fb.text_ttf_mono((THEME_BTN_X + THEME_BTN_W / 2 - tw / 2) as i32, 55, label, ACCENT(), 11.0);
+}
+
 fn btn(fb: &mut PaintBuffer, right: u32, label: &str, drop: bool) -> u32 {
     let tw = fb.measure_ttf_mono(label, 11.5).max(0) as u32;
     let extra = if drop { 30 } else { 22 };
     let w = tw + extra;
     let x = right.saturating_sub(w);
-    super::ui::edge(fb, x, 48, w, 28, LINE2);
+    super::ui::edge(fb, x, 48, w, 28, LINE2());
     if drop {
-        fb.fill_rect(x + 10, 58, 12, 12, ACCENT);
-        let _ = fb.text_ttf_mono((x + 27) as i32, 55, label, MUTED, 11.5);
+        fb.fill_rect(x + 10, 58, 12, 12, ACCENT());
+        let _ = fb.text_ttf_mono((x + 27) as i32, 55, label, MUTED(), 11.5);
     } else {
-        let _ = fb.text_ttf_mono((x + 11) as i32, 55, label, MUTED, 11.5);
+        let _ = fb.text_ttf_mono((x + 11) as i32, 55, label, MUTED(), 11.5);
     }
     x
 }

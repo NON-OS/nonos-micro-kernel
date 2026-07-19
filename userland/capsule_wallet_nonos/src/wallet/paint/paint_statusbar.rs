@@ -21,11 +21,11 @@ use crate::wallet::theme::{DIM, GREEN, LINE, MUTED, SYSBAR};
 
 pub fn paint_statusbar(_state: &State, fb: &mut PaintBuffer) {
     let y = fb.height.saturating_sub(30);
-    fb.fill_rect(200, y, fb.width.saturating_sub(200), 30, SYSBAR);
-    fb.fill_rect(200, y, fb.width.saturating_sub(200), 1, LINE);
-    let sx = fb.text_ttf(226, (y + 8) as i32, "STATUS: ", MUTED, 12.0);
-    let _ = fb.text_ttf(sx, (y + 8) as i32, "wallet ready", GREEN, 12.0);
+    fb.fill_rect(200, y, fb.width.saturating_sub(200), 30, SYSBAR());
+    fb.fill_rect(200, y, fb.width.saturating_sub(200), 1, LINE());
+    let sx = fb.text_ttf(226, (y + 8) as i32, "STATUS: ", MUTED(), 12.0);
+    let _ = fb.text_ttf(sx, (y + 8) as i32, "wallet ready", GREEN(), 12.0);
     let right = "block 20,914,332  \u{00b7}  12:39";
     let w = fb.measure_ttf(right, 12.0).max(0) as u32;
-    let _ = fb.text_ttf((fb.width - 26 - w) as i32, (y + 8) as i32, right, DIM, 12.0);
+    let _ = fb.text_ttf((fb.width - 26 - w) as i32, (y + 8) as i32, right, DIM(), 12.0);
 }

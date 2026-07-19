@@ -28,7 +28,7 @@ pub fn paint_home(state: &State, fb: &mut PaintBuffer) {
     super::paint_account_card::paint_account_card(state, fb, cx, 146, lw);
     super::paint_network_card::paint_network_card(state, fb, rx, 146, cw - lw - 16);
 
-    let _ = fb.text_ttf(cx as i32, 366, "QUICK ACTIONS", DIM, 10.5);
+    let _ = fb.text_ttf(cx as i32, 366, "QUICK ACTIONS", DIM(), 10.5);
     let qw = (cw - 48) / 4;
     quick(fb, cx, 386, qw, b"^", "Send");
     quick(fb, cx + qw + 16, 386, qw, b"v", "Receive");
@@ -41,9 +41,9 @@ pub fn paint_home(state: &State, fb: &mut PaintBuffer) {
 fn quick(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, icon: &[u8], label: &str) {
     ui::card(fb, x, y, w, 82);
     let ix = x + w / 2 - 17;
-    fb.fill_rect(ix, y + 16, 34, 34, ACCENT);
+    fb.fill_rect(ix, y + 16, 34, 34, ACCENT());
     let g = core::str::from_utf8(icon).unwrap_or("");
-    let _ = fb.text_ttf((ix + 12) as i32, (y + 22) as i32, g, INK, 15.0);
+    let _ = fb.text_ttf((ix + 12) as i32, (y + 22) as i32, g, INK(), 15.0);
     let tw = fb.measure_ttf(label, 14.0).max(0) as u32;
-    let _ = fb.text_ttf((x + w / 2 - tw / 2) as i32, (y + 56) as i32, label, FG, 14.0);
+    let _ = fb.text_ttf((x + w / 2 - tw / 2) as i32, (y + 56) as i32, label, FG(), 14.0);
 }

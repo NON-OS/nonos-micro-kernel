@@ -24,20 +24,20 @@ const BAL: [u8; 14] = [64, 52, 66, 42, 50, 30, 44, 28, 40, 26, 36, 20, 34, 18];
 
 pub fn paint_account_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {
     ui::card(fb, x, y, w, 200);
-    let _ = fb.text_ttf((x + 20) as i32, (y + 18) as i32, "TOTAL BALANCE  \u{00b7}  0x71C9\u{2026}4e2B", DIM, 10.5);
+    let _ = fb.text_ttf((x + 20) as i32, (y + 18) as i32, "TOTAL BALANCE  \u{00b7}  0x71C9\u{2026}4e2B", DIM(), 10.5);
     let aw = fb.measure_ttf("ACTIVE", 11.0).max(0) as u32 + 18;
-    ui::badge(fb, x + w - 20 - aw, y + 15, b"ACTIVE", GREEN, GREEN_INK);
+    ui::badge(fb, x + w - 20 - aw, y + 15, b"ACTIVE", GREEN(), GREEN_INK());
 
     let mut buf = [0u8; 40];
     let n = format_eth(lower_u64(&state.balance_wei), &mut buf);
     let bal = core::str::from_utf8(&buf[..n]).unwrap_or("0");
-    let pen = fb.text_ttf((x + 20) as i32, (y + 38) as i32, bal, FG, 44.0);
-    let _ = fb.text_ttf(pen + 10, (y + 58) as i32, "ETH", ACCENT, 20.0);
+    let pen = fb.text_ttf((x + 20) as i32, (y + 38) as i32, bal, FG(), 44.0);
+    let _ = fb.text_ttf(pen + 10, (y + 58) as i32, "ETH", ACCENT(), 20.0);
 
-    let dx = fb.text_ttf((x + 20) as i32, (y + 96) as i32, "= $7,516.40    ", MUTED, 13.0);
-    ui::badge(fb, dx as u32 + 4, y + 94, b"+2.8% 24h", GREEN, GREEN_INK);
+    let dx = fb.text_ttf((x + 20) as i32, (y + 96) as i32, "= $7,516.40    ", MUTED(), 13.0);
+    ui::badge(fb, dx as u32 + 4, y + 94, b"+2.8% 24h", GREEN(), GREEN_INK());
 
-    ui::bars(fb, x + 20, y + 128, w - 40, 56, &BAL, ACCENT);
+    ui::bars(fb, x + 20, y + 128, w - 40, 56, &BAL, ACCENT());
 }
 
 fn format_eth(v: u64, out: &mut [u8]) -> usize {

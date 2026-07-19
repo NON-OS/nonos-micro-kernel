@@ -85,6 +85,7 @@ pub struct State {
     pub stake_unstake: u8,
     pub proof_filter: u8,
     pub usd_mode: bool,
+    pub light_mode: bool,
     // Local shielded UTXO set, reconstructed from the note secrets.
     pub notes: crate::wallet::shield::notes::NoteStore,
 }

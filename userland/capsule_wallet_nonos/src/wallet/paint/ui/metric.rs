@@ -24,10 +24,10 @@ pub fn metric(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &[u8], value:
     super::card::card(fb, x, y, w, 80);
     let l = core::str::from_utf8(label).unwrap_or("");
     let v = core::str::from_utf8(value).unwrap_or("");
-    let _ = fb.text_ttf((x + 16) as i32, (y + 14) as i32, l, MUTED, 10.0);
+    let _ = fb.text_ttf((x + 16) as i32, (y + 14) as i32, l, MUTED(), 10.0);
     let pen = fb.text_ttf((x + 16) as i32, (y + 34) as i32, v, tone, 24.0);
     if !unit.is_empty() {
         let u = core::str::from_utf8(unit).unwrap_or("");
-        let _ = fb.text_ttf(pen + 6, (y + 46) as i32, u, MUTED, 13.0);
+        let _ = fb.text_ttf(pen + 6, (y + 46) as i32, u, MUTED(), 13.0);
     }
 }

@@ -27,25 +27,25 @@ pub fn paint_nox(state: &State, fb: &mut PaintBuffer) {
     let cx = 226u32;
     let cw = fb.width.saturating_sub(252);
     let sw = (cw - 48) / 4;
-    stat(fb, cx, 146, sw, "FEE (BPS)", "30", FG);
-    stat(fb, cx + sw + 16, 146, sw, "STAKING APR (BPS)", "840", CYAN);
-    stat(fb, cx + 2 * (sw + 16), 146, sw, "CUMUL. REVENUE", "112.4 ETH", FG);
-    stat(fb, cx + 3 * (sw + 16), 146, sw, "YOUR STAKE", "4,000", CYAN);
+    stat(fb, cx, 146, sw, "FEE (BPS)", "30", FG());
+    stat(fb, cx + sw + 16, 146, sw, "STAKING APR (BPS)", "840", CYAN());
+    stat(fb, cx + 2 * (sw + 16), 146, sw, "CUMUL. REVENUE", "112.4 ETH", FG());
+    stat(fb, cx + 3 * (sw + 16), 146, sw, "YOUR STAKE", "4,000", CYAN());
 
     let col = (cw - 16) / 2;
     ui::card(fb, cx, 252, col, 170);
-    let _ = fb.text_ttf((cx + 20) as i32, 270, "CUMULATIVE REVENUE", DIM, 10.5);
-    ui::bars(fb, cx + 20, 296, col - 40, 108, &REV, ACCENT);
+    let _ = fb.text_ttf((cx + 20) as i32, 270, "CUMULATIVE REVENUE", DIM(), 10.5);
+    ui::bars(fb, cx + 20, 296, col - 40, 108, &REV, ACCENT());
     let rx = cx + col + 16;
     ui::card(fb, rx, 252, col, 170);
-    let _ = fb.text_ttf((rx + 20) as i32, 270, "APR HISTORY (BPS)", DIM, 10.5);
-    ui::bars(fb, rx + 20, 296, col - 40, 108, &APR, GREEN);
+    let _ = fb.text_ttf((rx + 20) as i32, 270, "APR HISTORY (BPS)", DIM(), 10.5);
+    ui::bars(fb, rx + 20, 296, col - 40, 108, &APR, GREEN());
 
     super::paint_nox_stake::paint_nox_stake(state, fb);
 }
 
 fn stat(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &str, val: &str, color: u32) {
     ui::card(fb, x, y, w, 90);
-    let _ = fb.text_ttf((x + 18) as i32, (y + 18) as i32, label, DIM, 10.5);
+    let _ = fb.text_ttf((x + 18) as i32, (y + 18) as i32, label, DIM(), 10.5);
     let _ = fb.text_ttf((x + 18) as i32, (y + 40) as i32, val, color, 28.0);
 }

@@ -19,7 +19,7 @@ use nonos_app_skeleton::PaintBuffer;
 use crate::wallet::theme::{ACCENT, FG, PANEL_2};
 
 pub fn paint_button(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    fb.fill_rect(x, y, w, 42, PANEL_2);
-    fb.fill_rect(x, y + 40, w, 2, ACCENT);
-    fb.text(x + 22, y + 14, text, FG);
+    fb.fill_rect(x, y, w, 42, PANEL_2());
+    fb.fill_rect(x, y + 40, w, 2, ACCENT());
+    fb.text(x + 22, y + 14, text, FG());
 }
