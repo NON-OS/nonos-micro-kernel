@@ -37,6 +37,7 @@ import Nonos.AntiRollback
 import Nonos.DmaMap
 import Nonos.ElfPhdr
 import Nonos.IrqBind
+import Nonos.Quota
 
 namespace Nonos.Secure
 
@@ -67,6 +68,7 @@ structure State where
   dma : List (DmaMap.Req × DmaMap.Claim)
   elf : List ElfSpec
   irq : List IrqBind.Input
+  quota : Nat → Quota.Q
 
 /-- The security-relevant transitions. -/
 inductive Syscall where
@@ -80,6 +82,7 @@ inductive Syscall where
   | dmaMap (r : DmaMap.Req) (c : DmaMap.Claim)
   | loadElf (e : ElfSpec)
   | bindMsix (i : IrqBind.Input)
+  | acquire (pid : Nat) (n : Nat)
 
 /-- One step of the machine. Every arm is the guard the kernel enforces:
     attenuation meets the caller's own token, a transfer moves only a right
@@ -118,6 +121,9 @@ def step (s : State) : Syscall → State
       else s
   | .bindMsix i =>
       if IrqBind.validate i = .ok then { s with irq := i :: s.irq } else s
+  | .acquire pid n =>
+      { s with quota := fun p =>
+          if p = pid then Quota.acquire (s.quota p) n else s.quota p }
 
 /-- A whole execution. -/
 def run (s : State) : List Syscall → State
@@ -145,6 +151,7 @@ structure Secure (s0 s : State) : Prop where
     ElfPhdr.check e.dataLen e.phoff e.phsize e.phnum e.expected
       = .ok e.phoff e.phsize e.phnum
   irq_confined : ∀ i ∈ s.irq, IrqBind.validate i = .ok
+  quota_ok : ∀ p, Quota.ok (s.quota p)
 
 /-- A state with no W^X mapping, no logged copies, no admitted capsule, and no
     DMA mapping is secure against itself: the induction base. -/
@@ -152,9 +159,10 @@ theorem secure_refl (s0 : State)
     (hwx : ∀ page pm, s0.mapped page = some pm →
       ¬(pm.write = true ∧ pm.execute = true))
     (hcopies : s0.copies = []) (hadmit : s0.admitted = [])
-    (hdma : s0.dma = []) (helf : s0.elf = []) (hirq : s0.irq = []) :
+    (hdma : s0.dma = []) (helf : s0.elf = []) (hirq : s0.irq = [])
+    (hquota : ∀ p, Quota.ok (s0.quota p)) :
     Secure s0 s0 := by
-  refine ⟨fun b h => h, hwx, ?_, Nat.le_refl _, ?_, ?_, ?_, ?_⟩
+  refine ⟨fun b h => h, hwx, ?_, Nat.le_refl _, ?_, ?_, ?_, ?_, hquota⟩
   · intro c hc
     rw [hcopies] at hc
     exact absurd hc (List.not_mem_nil c)
@@ -175,10 +183,10 @@ theorem secure_refl (s0 : State)
     conjunction. -/
 theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     (h : Secure s0 s) : Secure s0 (step s sc) := by
-  obtain ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩ := h
+  obtain ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩ := h
   cases sc with
   | attenuate pid mask =>
-    refine ⟨?_, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+    refine ⟨?_, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩
     intro b ⟨p, hp⟩
     by_cases hpid : p = pid
     · subst hpid
@@ -190,7 +198,7 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     simp only [step]
     split
     · rename_i hsrc
-      refine ⟨?_, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+      refine ⟨?_, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩
       intro b ⟨p, hp⟩
       by_cases hpd : p = dst
       · subst hpd
@@ -206,9 +214,9 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
           exact hauth b ⟨src, hsrc⟩
       · have hp' : (s.token p) b = true := by simpa [hpd] using hp
         exact hauth b ⟨p, hp'⟩
-    · exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+    · exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩
   | revoke pid b' =>
-    refine ⟨?_, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+    refine ⟨?_, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩
     intro b ⟨p, hp⟩
     by_cases hpid : p = pid
     · subst hpid
@@ -219,9 +227,9 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
   | mapPage page p =>
     simp only [step]
     split
-    · exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+    · exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩
     · rename_i hnotwx
-      refine ⟨hauth, ?_, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+      refine ⟨hauth, ?_, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩
       intro q pm hq
       by_cases hqp : q = page
       · subst hqp
@@ -234,7 +242,7 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
     simp only [step]
     split
     · rename_i hacc
-      refine ⟨hauth, hwx, ?_, hfloor, hadm, hdma, helf, hirq⟩
+      refine ⟨hauth, hwx, ?_, hfloor, hadm, hdma, helf, hirq, hquota⟩
       intro c hc
       simp at hc
       obtain hnew | hold := hc
@@ -243,56 +251,65 @@ theorem step_preserves_secure (s0 s : State) (sc : Syscall)
         obtain ⟨_, _, hbound⟩ := hacc
         omega
       · exact hcopy c hold
-    · exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+    · exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩
   | boot v =>
-    refine ⟨hauth, hwx, hcopy, ?_, hadm, hdma, helf, hirq⟩
+    refine ⟨hauth, hwx, hcopy, ?_, hadm, hdma, helf, hirq, hquota⟩
     exact Nat.le_trans hfloor
       (AntiRollback.update_never_lowers_floor { floor := s.floor } v)
   | spawn cap =>
     simp only [step]
     by_cases hatt : s.attest cap = true
     · rw [if_pos hatt]
-      refine ⟨hauth, hwx, hcopy, hfloor, ?_, hdma, helf, hirq⟩
+      refine ⟨hauth, hwx, hcopy, hfloor, ?_, hdma, helf, hirq, hquota⟩
       intro c hc
       rcases List.mem_cons.mp hc with hc | hc
       · subst hc; exact hatt
       · exact hadm c hc
     · rw [if_neg hatt]
-      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩
   | dmaMap r c =>
     simp only [step]
     by_cases hv : DmaMap.validate r c = .ok
     · rw [if_pos hv]
-      refine ⟨hauth, hwx, hcopy, hfloor, hadm, ?_, helf, hirq⟩
+      refine ⟨hauth, hwx, hcopy, hfloor, hadm, ?_, helf, hirq, hquota⟩
       intro rc hmem
       rcases List.mem_cons.mp hmem with hhead | htail
       · subst hhead; exact hv
       · exact hdma rc htail
     · rw [if_neg hv]
-      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩
   | loadElf e =>
     simp only [step]
     by_cases hv : ElfPhdr.check e.dataLen e.phoff e.phsize e.phnum e.expected
         = .ok e.phoff e.phsize e.phnum
     · rw [if_pos hv]
-      refine ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, ?_, hirq⟩
+      refine ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, ?_, hirq, hquota⟩
       intro e' hmem
       rcases List.mem_cons.mp hmem with hhead | htail
       · subst hhead; exact hv
       · exact helf e' htail
     · rw [if_neg hv]
-      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩
   | bindMsix i =>
     simp only [step]
     by_cases hv : IrqBind.validate i = .ok
     · rw [if_pos hv]
-      refine ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, ?_⟩
+      refine ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, ?_, hquota⟩
       intro i' hmem
       rcases List.mem_cons.mp hmem with hhead | htail
       · subst hhead; exact hv
       · exact hirq i' htail
     · rw [if_neg hv]
-      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq⟩
+      exact ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, hquota⟩
+  | acquire pid n =>
+    refine ⟨hauth, hwx, hcopy, hfloor, hadm, hdma, helf, hirq, ?_⟩
+    intro p
+    simp only [step]
+    by_cases hp : p = pid
+    · rw [if_pos hp]
+      exact Quota.acquire_preserves_ok (s.quota p) n (hquota p)
+    · rw [if_neg hp]
+      exact hquota p
 
 /-- Security is preserved along any run, from any secure intermediate
     state. -/
@@ -309,9 +326,18 @@ theorem every_trace_is_secure (s0 : State) (tr : List Syscall)
     (hwx : ∀ page pm, s0.mapped page = some pm →
       ¬(pm.write = true ∧ pm.execute = true))
     (hcopies : s0.copies = []) (hadmit : s0.admitted = [])
-    (hdma : s0.dma = []) (helf : s0.elf = []) (hirq : s0.irq = []) :
+    (hdma : s0.dma = []) (helf : s0.elf = []) (hirq : s0.irq = [])
+    (hquota : ∀ p, Quota.ok (s0.quota p)) :
     Secure s0 (run s0 tr) :=
-  run_preserves_secure s0 tr s0 (secure_refl s0 hwx hcopies hadmit hdma helf hirq)
+  run_preserves_secure s0 tr s0
+    (secure_refl s0 hwx hcopies hadmit hdma helf hirq hquota)
+
+/-- Corollary of the conjoined invariant (availability): in any reachable state
+    every domain's resource use is within its cap, so no capsule can consume past
+    its quota and starve the others. -/
+theorem quota_within_cap (s0 s : State) (h : Secure s0 s) (p : Nat) :
+    (s.quota p).used ≤ (s.quota p).cap :=
+  h.quota_ok p
 
 /-- Corollary of the conjoined invariant: in any reachable state, every
     installed DMA mapping is owned by the caller that claimed the device. A
