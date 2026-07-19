@@ -14,13 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The one-call driver: source or program in, a proven-and-verified report out.
+//! The one-call driver: source and inputs in, a proven-and-verified report out.
 //!
 //! This is the whole pipeline behind a single function, the surface a shell
-//! command or a capsule calls. It compiles the source, runs the VM, sizes the
-//! trace to the next power of two, lays it out for the step AIR, proves it with
-//! the money-grade Poseidon-committed STARK, and verifies the proof in process.
-//! Nothing here panics: every failure along the way is a typed `RunError`.
+//! command or a capsule calls. It compiles the source, runs the VM on the public
+//! inputs, sizes the trace to the next power of two, lays it out for the step AIR,
+//! binds the public inputs and outputs, proves it with the money-grade
+//! Poseidon-committed STARK, and verifies the proof in process. Nothing here
+//! panics: every failure along the way is a typed `RunError`.
+
+use alloc::vec::Vec;
 
 use nonos_stark::air::{stark_prove_poseidon_ext, stark_verify_poseidon_ext, Poseidon, RATE};
 use nonos_stark::field::Fp;
@@ -41,7 +44,7 @@ const BLOWUP: u32 = 3;
 const MAX_LOG_T: u32 = 16;
 
 /// What a proving run produced.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Report {
     /// Whether the verifier accepted the proof. For an honest run this is true;
     /// it being false would signal a prover or AIR defect, not a bad program,
@@ -55,6 +58,8 @@ pub struct Report {
     pub trace_len: usize,
     /// The trace width the AIR proves over.
     pub trace_width: usize,
+    /// The public outputs the program exposed, in declaration order.
+    pub outputs: Vec<u64>,
 }
 
 /// Why a proving run did not complete.
@@ -84,15 +89,17 @@ fn choose_log_t(n: usize) -> Option<u32> {
     Some(lg)
 }
 
-/// Run a VM program, prove it, and verify the proof.
-pub fn prove_program(program: &[Op]) -> Result<Report, RunError> {
-    // The branchless computational subset does not use the Poseidon port, so the
-    // injected hash is a placeholder that is provably never called.
+/// Run a VM program on `inputs` (all treated as public), prove it, and verify the
+/// proof. Returns the report including the public outputs.
+pub fn prove_program(program: &[Op], inputs: &[Fp]) -> Result<Report, RunError> {
+    // The in-scope subset does not use the Poseidon port, so the injected hash is
+    // a placeholder that is provably never called.
     let mut vm = Vm::new(|a, _b| a);
-    let trace = vm.run(program, &[], 0).map_err(RunError::Execute)?;
+    let trace = vm.run(program, inputs, inputs.len()).map_err(RunError::Execute)?;
     let steps = trace.rows.len();
     let log_trace_len = choose_log_t(steps).ok_or(RunError::ProgramTooLong { steps })?;
-    let air = StepAir::compile(program, log_trace_len).map_err(RunError::Layout)?;
+    let air = StepAir::compile(program, log_trace_len, &trace.public_inputs, &trace.public_outputs)
+        .map_err(RunError::Layout)?;
     let flat = air.build_trace(&trace).map_err(RunError::Layout)?;
     let hasher = Poseidon::new(2, [Fp::ZERO; RATE]);
     let proof = stark_prove_poseidon_ext(&air, &flat, QUERIES, GRIND, BLOWUP, &hasher);
@@ -103,11 +110,18 @@ pub fn prove_program(program: &[Op]) -> Result<Report, RunError> {
         log_trace_len,
         trace_len: 1usize << log_trace_len,
         trace_width: TRACE_WIDTH,
+        outputs: trace.public_outputs.iter().map(|f| f.value()).collect(),
     })
 }
 
-/// Compile proeve source, then prove and verify it.
-pub fn prove_source(src: &str) -> Result<Report, RunError> {
+/// Compile proeve source, then prove and verify it with the given public inputs.
+pub fn prove_source_with_inputs(src: &str, inputs: &[u64]) -> Result<Report, RunError> {
     let program = compile_source(src).map_err(RunError::Compile)?;
-    prove_program(&program)
+    let fp_inputs: Vec<Fp> = inputs.iter().map(|&v| Fp::from_u64(v)).collect();
+    prove_program(&program, &fp_inputs)
+}
+
+/// Compile proeve source with no public inputs, then prove and verify it.
+pub fn prove_source(src: &str) -> Result<Report, RunError> {
+    prove_source_with_inputs(src, &[])
 }

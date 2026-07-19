@@ -43,6 +43,10 @@ pub enum Expr {
 pub enum Stmt {
     Let(String, Expr),
     Assert(Expr),
+    // Bind a name to the next public input.
+    Input(String),
+    // Expose an expression as the next public output.
+    Output(Expr),
 }
 
 /// A parsed program.
@@ -105,6 +109,22 @@ impl<'a> Parser<'a> {
                 let e = self.expr()?;
                 self.expect(&Tok::Semi)?;
                 Ok(Stmt::Assert(e))
+            }
+            Some(Tok::Input) => {
+                self.pos += 1;
+                let name = match self.bump() {
+                    Some(Tok::Ident(n)) => n.clone(),
+                    Some(_) => return Err(CompileError::UnexpectedToken),
+                    None => return Err(CompileError::UnexpectedEof),
+                };
+                self.expect(&Tok::Semi)?;
+                Ok(Stmt::Input(name))
+            }
+            Some(Tok::Output) => {
+                self.pos += 1;
+                let e = self.expr()?;
+                self.expect(&Tok::Semi)?;
+                Ok(Stmt::Output(e))
             }
             Some(_) => Err(CompileError::UnexpectedToken),
             None => Err(CompileError::UnexpectedEof),

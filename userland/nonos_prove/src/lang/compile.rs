@@ -32,6 +32,8 @@ struct Compiler {
     ops: Vec<Op>,
     syms: Vec<(String, u8)>,
     next: u8,
+    next_input: u16,
+    next_output: u16,
 }
 
 impl Compiler {
@@ -60,6 +62,21 @@ impl Compiler {
             Stmt::Assert(e) => {
                 let r = self.expr(e)?;
                 self.ops.push(Op::Assert { a: r });
+                Ok(())
+            }
+            Stmt::Input(name) => {
+                let d = self.alloc()?;
+                let idx = self.next_input;
+                self.next_input += 1;
+                self.ops.push(Op::Inp { d, idx });
+                self.syms.push((name.clone(), d));
+                Ok(())
+            }
+            Stmt::Output(e) => {
+                let r = self.expr(e)?;
+                let idx = self.next_output;
+                self.next_output += 1;
+                self.ops.push(Op::Out { a: r, idx });
                 Ok(())
             }
         }
@@ -122,7 +139,8 @@ impl Compiler {
 
 /// Lower an AST into a VM program ending in `Halt`.
 pub fn compile(ast: &Ast) -> Result<Vec<Op>, CompileError> {
-    let mut c = Compiler { ops: Vec::new(), syms: Vec::new(), next: 0 };
+    let mut c =
+        Compiler { ops: Vec::new(), syms: Vec::new(), next: 0, next_input: 0, next_output: 0 };
     for s in &ast.stmts {
         c.stmt(s)?;
     }

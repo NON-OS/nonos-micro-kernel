@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The proeve step AIR: the branchless computational core with register binding.
+//! The proeve step AIR: the branchless computational core with register binding
+//! and public input and output binding.
 //!
 //! This AIR proves, for a trace laid out one VM step per row:
 //!
@@ -27,25 +28,20 @@
 //!   3. every operand a row reads is the live value of the register it names, and
 //!      every register carries its value forward unchanged until the row that
 //!      writes it, at which point it takes that row's result;
-//!   4. the rows are clock-ordered, the counter rising by one each step;
-//!   5. a halt row, which is also every padding row up to the power-of-two
-//!      length, carries no data in its operand columns.
+//!   4. the input a row reads and the output a row exposes match the public
+//!      values the proof commits to, so the proof attests a statement about
+//!      public data, not merely that some self-contained run existed;
+//!   5. the rows are clock-ordered, the counter rising by one each step.
 //!
-//! Register binding, point three, is what makes this a proof that a program ran
-//! rather than a proof that a bag of individually valid rows exists. proeve names
-//! its registers by compile-time index, so the data flow, which row's result
-//! feeds which row's operand, is a public property of the program, not of the
-//! witness. The AIR carries it as periodic one-hot columns: for each row, which
-//! register it writes and which registers its three read ports name. The register
-//! file itself is threaded through the trace as `REGS` columns holding the state
-//! before each row. A read is then `operand = sum_k read_onehot_k * regfile_k`
-//! and a write is `regfile_next_k = (1 - write_onehot_k) * regfile_k +
-//! write_onehot_k * result`, both linear in the trace because the one-hots are
-//! public constants. The circuit is public, the register values are the witness.
+//! Points three and four together are what make a proof economically meaningful:
+//! it says a specific public function of specific public inputs produced specific
+//! public outputs. Register indices are compile-time, so the data flow is a public
+//! circuit carried as periodic one-hot columns, and both reads and writes are
+//! linear in the trace. Public inputs and outputs are bound by boundary
+//! constraints: the verifier reconstructs the same AIR from the same public
+//! program and public values, so a prover cannot substitute either.
 //!
-//! Still deferred: the memory opcodes (Load, Store), the Poseidon port (Pos), and
-//! public I/O (Inp, Out). Those are the next phases, and they build on this
-//! settled register-bound trace.
+//! Still deferred: the memory opcodes (Load, Store) and the Poseidon port (Pos).
 //!
 //! The transition is written once over the `Felt` abstraction so the base-field
 //! composition and the extension-field out-of-domain evaluation share one
@@ -60,8 +56,8 @@ use nonos_stark::field::{Felt, Fp, Fp2};
 use crate::isa::{Op, Program, REGS};
 use crate::trace::{OpTag, Trace};
 
-// Step column layout. One clock counter, ten one-hot opcode selectors, three read
-// operands, one result, one immediate, one auxiliary witness.
+// Step column layout. One clock counter, twelve one-hot opcode selectors, three
+// read operands, one result, one immediate, one auxiliary witness.
 const CLK: usize = 0;
 const S_IMM: usize = 1;
 const S_ADD: usize = 2;
@@ -72,17 +68,19 @@ const S_EQ: usize = 6;
 const S_SEL: usize = 7;
 const S_BOOL: usize = 8;
 const S_ASSERT: usize = 9;
-const S_HALT: usize = 10;
-const A: usize = 11;
-const B: usize = 12;
-const C: usize = 13;
-const D: usize = 14;
-const IMM: usize = 15;
-const AUX: usize = 16;
+const S_INP: usize = 10;
+const S_OUT: usize = 11;
+const S_HALT: usize = 12;
+const A: usize = 13;
+const B: usize = 14;
+const C: usize = 15;
+const D: usize = 16;
+const IMM: usize = 17;
+const AUX: usize = 18;
 
 // The register file occupies the columns after the step columns: `REGS` columns
 // holding the register state before the row executes.
-const RF_BASE: usize = 17;
+const RF_BASE: usize = 19;
 
 /// The width of the step trace: the step columns plus the register file.
 pub const TRACE_WIDTH: usize = RF_BASE + REGS;
@@ -99,9 +97,9 @@ const NUM_PERIODIC: usize = 4 * REGS;
 // constraints can read the next row.
 const WINDOW: usize = 2;
 
-// Transition constraint count: 24 step constraints, three read bindings, and one
+// Transition constraint count: 27 step constraints, three read bindings, and one
 // write propagation per register.
-const NUM_TRANSITION: usize = 24 + 3 + REGS;
+const NUM_TRANSITION: usize = 27 + 3 + REGS;
 
 // Highest degree among the constraints, e.g. the multiply gate or the witnessed
 // equality `s_eq * (d + diff*aux - 1)`. The register bindings are linear.
@@ -110,14 +108,17 @@ const DEGREE: usize = 3;
 /// Why a program or VM trace could not be laid out for the step AIR.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum BuildError {
-    /// A row used an opcode outside the scope this AIR proves. Memory (Load,
-    /// Store), the Poseidon port (Pos), and public I/O (Inp, Out) arrive with
-    /// later phases.
+    /// A row used an opcode outside the scope this AIR proves. The memory opcodes
+    /// (Load, Store) and the Poseidon port (Pos) arrive with later phases.
     NotInScope(OpTag),
     /// The program has no reachable halt, so its length is undefined.
     NoHalt,
     /// The run is longer than the requested power-of-two trace length.
     TooLong { rows: usize, cap: usize },
+    /// An `Inp` names a public input index with no supplied value.
+    MissingPublicInput { idx: u16 },
+    /// An `Out` names a public output index with no supplied value.
+    MissingPublicOutput { idx: u16 },
 }
 
 // The data flow of one row: which register it writes, and which registers its
@@ -139,6 +140,7 @@ impl WireRow {
     fn of(op: &Op) -> WireRow {
         match *op {
             Op::Imm { d, .. } => WireRow { write: Some(d), ..WireRow::EMPTY },
+            Op::Inp { d, .. } => WireRow { write: Some(d), ..WireRow::EMPTY },
             Op::Add { d, a, b } | Op::Sub { d, a, b } | Op::Mul { d, a, b } => {
                 WireRow { write: Some(d), read_a: Some(a), read_b: Some(b), read_c: None }
             }
@@ -150,32 +152,60 @@ impl WireRow {
                 WireRow { write: Some(d), read_a: Some(a), read_b: Some(b), read_c: Some(c) }
             }
             Op::Bool { a } | Op::Assert { a } => WireRow { read_a: Some(a), ..WireRow::EMPTY },
+            Op::Out { a, .. } => WireRow { read_a: Some(a), ..WireRow::EMPTY },
             _ => WireRow::EMPTY,
         }
     }
 }
 
 /// The step AIR over a trace of `2^log_t` rows, carrying the public data-flow
-/// wiring of the program it proves.
+/// wiring of the program it proves and the public input and output values it
+/// binds.
 pub struct StepAir {
     log_t: u32,
     wiring: Vec<WireRow>,
+    // Boundary triples binding public inputs and outputs: (column, row, value).
+    public_bindings: Vec<(usize, usize, Fp)>,
 }
 
 impl StepAir {
-    /// Compile a program's public data flow into the AIR. The wiring runs up to
-    /// and including the first halt and is padded with wireless rows to the
-    /// power-of-two length, matching how the VM stops at halt and `build_trace`
-    /// pads. The verifier reconstructs the same AIR from the same public program.
-    pub fn compile(program: &Program, log_t: u32) -> Result<StepAir, BuildError> {
+    /// Compile a program's public data flow into the AIR and bind the public
+    /// inputs and outputs. The wiring runs up to and including the first halt and
+    /// is padded to the power-of-two length, matching how the VM stops at halt and
+    /// `build_trace` pads. The verifier reconstructs the same AIR from the same
+    /// public program and the same public values.
+    pub fn compile(
+        program: &Program,
+        log_t: u32,
+        public_inputs: &[Fp],
+        public_outputs: &[Fp],
+    ) -> Result<StepAir, BuildError> {
         let t = 1usize << log_t;
         let mut wiring: Vec<WireRow> = Vec::new();
+        let mut public_bindings: Vec<(usize, usize, Fp)> = Vec::new();
         let mut halted = false;
-        for op in program.iter() {
+        for (row, op) in program.iter().enumerate() {
             wiring.push(WireRow::of(op));
-            if matches!(op, Op::Halt) {
-                halted = true;
-                break;
+            match *op {
+                Op::Inp { idx, .. } => {
+                    let v = public_inputs
+                        .get(idx as usize)
+                        .copied()
+                        .ok_or(BuildError::MissingPublicInput { idx })?;
+                    public_bindings.push((IMM, row, v));
+                }
+                Op::Out { idx, .. } => {
+                    let v = public_outputs
+                        .get(idx as usize)
+                        .copied()
+                        .ok_or(BuildError::MissingPublicOutput { idx })?;
+                    public_bindings.push((A, row, v));
+                }
+                Op::Halt => {
+                    halted = true;
+                    break;
+                }
+                _ => {}
             }
         }
         if !halted {
@@ -187,7 +217,7 @@ impl StepAir {
         while wiring.len() < t {
             wiring.push(WireRow::EMPTY);
         }
-        Ok(StepAir { log_t, wiring })
+        Ok(StepAir { log_t, wiring, public_bindings })
     }
 
     /// Lay a VM run out in the step column format, replay the register file into
@@ -284,6 +314,15 @@ impl StepAir {
                 flat[base + S_ASSERT] = Fp::ONE;
                 flat[base + A] = row.ra;
             }
+            OpTag::Inp => {
+                flat[base + S_INP] = Fp::ONE;
+                flat[base + D] = row.rd;
+                flat[base + IMM] = row.imm;
+            }
+            OpTag::Out => {
+                flat[base + S_OUT] = Fp::ONE;
+                flat[base + A] = row.ra;
+            }
             OpTag::Halt => {
                 flat[base + S_HALT] = Fp::ONE;
             }
@@ -308,6 +347,8 @@ impl StepAir {
         let s_sel = window[S_SEL];
         let s_bool = window[S_BOOL];
         let s_assert = window[S_ASSERT];
+        let s_inp = window[S_INP];
+        let s_out = window[S_OUT];
         let s_halt = window[S_HALT];
         let a = window[A];
         let b = window[B];
@@ -318,6 +359,18 @@ impl StepAir {
         let next_clk = window[TRACE_WIDTH + CLK];
 
         let diff = a - b;
+        let selector_sum = s_imm
+            + s_add
+            + s_sub
+            + s_mul
+            + s_inv
+            + s_eq
+            + s_sel
+            + s_bool
+            + s_assert
+            + s_inp
+            + s_out
+            + s_halt;
 
         let mut cs = vec![
             // Each selector is boolean.
@@ -330,9 +383,11 @@ impl StepAir {
             s_sel * (s_sel - one),
             s_bool * (s_bool - one),
             s_assert * (s_assert - one),
+            s_inp * (s_inp - one),
+            s_out * (s_out - one),
             s_halt * (s_halt - one),
             // Exactly one selector is set: the row names one opcode.
-            s_imm + s_add + s_sub + s_mul + s_inv + s_eq + s_sel + s_bool + s_assert + s_halt - one,
+            selector_sum - one,
             // The clock rises by one, fixing the row order.
             next_clk - clk - one,
             // Arithmetic: the result is the field operation on the operands.
@@ -353,6 +408,9 @@ impl StepAir {
             // Constraint opcodes: a is boolean, or a is zero.
             s_bool * (a * (a - one)),
             s_assert * a,
+            // Input: the register takes the immediate, whose value the boundary
+            // pins to the committed public input.
+            s_inp * (d - imm),
         ];
 
         // Register binding. Each read port equals the register it names; each
@@ -449,6 +507,8 @@ impl Air for StepAir {
         for k in 0..REGS {
             bnd.push((RF_BASE + k, 0, Fp::ZERO));
         }
+        // Public inputs and outputs, bound to the rows that read or expose them.
+        bnd.extend_from_slice(&self.public_bindings);
         bnd
     }
 }

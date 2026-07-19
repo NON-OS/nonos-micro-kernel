@@ -28,6 +28,8 @@ use super::CompileError;
 pub enum Tok {
     Let,
     Assert,
+    Input,
+    Output,
     Inv,
     Sel,
     Ident(String),
@@ -78,6 +80,8 @@ pub fn lex(src: &str) -> Result<Vec<Tok>, CompileError> {
             toks.push(match word {
                 "let" => Tok::Let,
                 "assert" => Tok::Assert,
+                "input" => Tok::Input,
+                "output" => Tok::Output,
                 "inv" => Tok::Inv,
                 "sel" => Tok::Sel,
                 _ => Tok::Ident(String::from(word)),

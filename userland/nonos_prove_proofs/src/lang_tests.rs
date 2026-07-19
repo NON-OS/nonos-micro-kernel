@@ -4,7 +4,7 @@
 //! program verifies; a false claim has no trace to prove; a malformed program is
 //! a typed compile error. These run on the host under `cargo test`.
 
-use nonos_prove::{compile_source, prove_source, CompileError, RunError};
+use nonos_prove::{compile_source, prove_source, prove_source_with_inputs, CompileError, RunError};
 
 #[test]
 fn source_program_proves_and_verifies() {
@@ -45,6 +45,28 @@ fn inverse_proves() {
     ";
     let report = prove_source(src).expect("an honest program failed to run");
     assert!(report.verified, "an inverse program did not verify");
+}
+
+#[test]
+fn public_cube_proves_and_returns_output() {
+    // Prove y = x^3 for a public input x = 3, exposing y as a public output.
+    let src = "
+        input x;
+        let y = x * x * x;
+        output y;
+    ";
+    let report = prove_source_with_inputs(src, &[3]).expect("cube failed to run");
+    assert!(report.verified, "the public cube did not verify");
+    assert_eq!(report.outputs, vec![27], "the public output was wrong");
+}
+
+#[test]
+fn public_input_drives_the_computation() {
+    // The same program on a different public input yields a different output.
+    let src = "input x; let y = x * x; output y;";
+    let report = prove_source_with_inputs(src, &[9]).expect("square failed to run");
+    assert!(report.verified);
+    assert_eq!(report.outputs, vec![81]);
 }
 
 #[test]

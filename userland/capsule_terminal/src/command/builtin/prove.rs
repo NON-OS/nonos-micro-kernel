@@ -22,7 +22,7 @@
 //! and is reported as such rather than crashing.
 
 use nonos_app_skeleton::clients::vfs;
-use nonos_prove::{prove_source, RunError};
+use nonos_prove::{prove_source, quote, RunError};
 
 use super::fs::{abspath, pid};
 use crate::command::output::Output;
@@ -32,9 +32,9 @@ use crate::term::util::{copy_into, format_u64};
 
 const MAX_READ: u32 = 64 * 1024;
 
-// A small program that touches add, multiply, and an assertion:
-//   a = 3; b = 5; s = a + b (= 8); p = s * s (= 64); assert p == 64.
-const DEMO: &str = "let a = 3; let b = 5; let s = a + b; let p = s * s; assert p - 64;";
+// A small program that touches add, multiply, an assertion, and a public output:
+//   a = 3; b = 5; s = a + b (= 8); p = s * s (= 64); assert p == 64; output p.
+const DEMO: &str = "let a = 3; let b = 5; let s = a + b; let p = s * s; assert p - 64; output p;";
 
 pub fn run(state: &mut State, argv: &[&[u8]]) {
     if argv.len() >= 2 {
@@ -76,6 +76,29 @@ fn report(state: &mut State, src: &str) {
             n += copy_into(&mut line[n..], b" x ");
             n += format_u64(r.trace_width as u64, &mut line[n..]);
             out.writeln(&line[..n]);
+            if !r.outputs.is_empty() {
+                let mut o = [0u8; COLS];
+                let mut m = copy_into(&mut o, b"  outputs:");
+                for value in &r.outputs {
+                    if m < o.len() {
+                        o[m] = b' ';
+                        m += 1;
+                    }
+                    m += format_u64(*value, &mut o[m..]);
+                }
+                out.writeln(&o[..m]);
+            }
+            // The pay-to-prove quote: the fee this proof would settle in NOX.
+            let q = quote(&r);
+            let mut f = [0u8; COLS];
+            let mut k = copy_into(&mut f, b"  fee=");
+            k += format_u64(q.total_micronox, &mut f[k..]);
+            k += copy_into(&mut f[k..], b" uNOX  (prover ");
+            k += format_u64(q.prover_micronox, &mut f[k..]);
+            k += copy_into(&mut f[k..], b", protocol ");
+            k += format_u64(q.protocol_fee_micronox, &mut f[k..]);
+            k += copy_into(&mut f[k..], b")");
+            out.writeln(&f[..k]);
         }
         Err(e) => out.writeln(reason(&e)),
     }

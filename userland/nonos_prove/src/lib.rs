@@ -34,12 +34,14 @@ mod air;
 mod driver;
 mod isa;
 mod lang;
+mod nox;
 mod trace;
 mod vm;
 
 pub use air::{BuildError, StepAir, TRACE_WIDTH};
-pub use driver::{prove_program, prove_source, Report, RunError};
+pub use driver::{prove_program, prove_source, prove_source_with_inputs, Report, RunError};
 pub use isa::{Op, Program, REGS};
 pub use lang::{compile_source, CompileError};
+pub use nox::{quote, Quote, MICRONOX_PER_NOX};
 pub use trace::{OpTag, Row, Trace};
 pub use vm::{ProveError, Vm};

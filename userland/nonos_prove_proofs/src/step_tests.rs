@@ -14,11 +14,11 @@ use nonos_stark::field::Fp;
 // these let a test reach into the flat trace to corrupt one cell.
 const CLK: usize = 0;
 const S_MUL: usize = 4;
-const A: usize = 11;
-const C: usize = 13;
-const D: usize = 14;
-const AUX: usize = 16;
-const RF_BASE: usize = 17;
+const A: usize = 13;
+const C: usize = 15;
+const D: usize = 16;
+const AUX: usize = 18;
+const RF_BASE: usize = 19;
 
 // The proof parameters the framework's own money-grade tests use: 32 queries,
 // 16 grinding bits, 3 extra blowup bits.
@@ -82,7 +82,7 @@ fn honest() -> (StepAir, Vec<Fp>) {
     // is a placeholder that is provably never called.
     let mut vm = Vm::new(|a, _b| a);
     let trace = vm.run(&program, &[], 0).expect("honest run produced no trace");
-    let air = StepAir::compile(&program, LOG_T).expect("program did not compile");
+    let air = StepAir::compile(&program, LOG_T, &[], &[]).expect("program did not compile");
     let flat = air.build_trace(&trace).expect("honest trace did not lay out");
     (air, flat)
 }
