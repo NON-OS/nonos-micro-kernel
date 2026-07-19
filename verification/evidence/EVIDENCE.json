@@ -49,15 +49,15 @@
       ]
     },
     "lean_specification": {
-      "axiom_profiled_theorems": 168,
+      "axiom_profiled_theorems": 214,
       "mathlib": false,
-      "modules": 120,
+      "modules": 124,
       "sorry_count": 0,
-      "theorems": 887,
+      "theorems": 947,
       "toolchain": "leanprover/lean4:v4.15.0"
     },
     "runnable": {
-      "proof_crates": 32
+      "proof_crates": 33
     },
     "verus": {
       "source_files": 5
