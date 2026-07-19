@@ -10,16 +10,17 @@ opcode it produces. The lexer, parser, and compiler are in
 
 ## Grammar
 
-The tokens the lexer recognises are exactly `let`, `assert`, `input`, `output`,
-`inv`, `sel`, the operators `+ - * ==`, the punctuation `( ) , ;`, identifiers,
-and decimal numbers (`src/lang/lex.rs`). Line comments run from `//` to the end
-of the line. The grammar, lowest precedence first, is:
+The tokens the lexer recognises are exactly `let`, `assert`, `input`, `secret`,
+`output`, `inv`, `sel`, the operators `+ - * ==`, the punctuation `( ) , ;`,
+identifiers, and decimal numbers (`src/lang/lex.rs`). Line comments run from `//`
+to the end of the line. The grammar, lowest precedence first, is:
 
 ```
 program  := stmt*
 stmt     := 'let' ident '=' expr ';'
           | 'assert' expr ';'
           | 'input' ident ';'
+          | 'secret' ident ';'
           | 'output' expr ';'
 expr     := equality
 equality := sum ('==' sum)?
@@ -56,6 +57,19 @@ prover in declaration order, and their values are bound into the proof.
 ```
 input x;          // Inp  r_x = public_input[0]
 ```
+
+A `secret` binds a name to the next private input, a witness the prover supplies
+that never enters the public statement. It lets a program prove knowledge of a
+hidden value that satisfies a public relation, for example a square root:
+
+```
+secret w;         // Inp  r_w = a private witness
+assert w * w - 25;  // proves knowledge of a root of 25 without revealing w
+```
+
+This is a private witness, not full zero-knowledge: the STARK is not hiding, so
+the openings could still leak trace values. What `secret` guarantees is that the
+value is not part of the committed public statement.
 
 An `output` exposes an expression as the next public output. Outputs are the
 values a verifier reads off the proof.

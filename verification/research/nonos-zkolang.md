@@ -21,7 +21,7 @@ abstract: |
   execution model, the step AIR and an argument that a satisfying assignment
   implies a faithful run, the binding of the trace to the money-grade STARK, and a
   NOX pay-to-prove fee that follows the proving work. We report measured trace
-  shapes and an accept-and-reject evidence suite of thirty in-process proofs. We
+  shapes and an accept-and-reject evidence suite of thirty-six in-process proofs. We
   are explicit about scope: every opcode is enforced, so a program is proven
   whole with no unimplemented instruction; what the language does not have is a
   random-access memory or a hash primitive, a deliberate scope rather than a
@@ -89,7 +89,7 @@ alone and can be checked.
 
 A zKølang program is a sequence of statements over field values. The concrete syntax
 is small enough to give in full. The lexer recognizes exactly the keywords `let`,
-`assert`, `input`, `output`, `inv`, `sel`, the operators `+ - * ==`, the
+`assert`, `input`, `secret`, `output`, `inv`, `sel`, the operators `+ - * ==`, the
 punctuation `( ) , ;`, identifiers, and decimal numerals
 (`userland/nonos_zkolang/src/lang/lex.rs`). The grammar, lowest precedence first,
 is:
@@ -97,7 +97,7 @@ is:
 ```
 program  := stmt*
 stmt     := 'let' ident '=' expr ';' | 'assert' expr ';'
-          | 'input' ident ';' | 'output' expr ';'
+          | 'input' ident ';' | 'secret' ident ';' | 'output' expr ';'
 expr     := equality
 equality := sum ('==' sum)?
 sum      := product (('+' | '-') product)*
@@ -113,8 +113,9 @@ multiply. `inv(e)` is the field inverse, defined for nonzero arguments; invertin
 zero yields no valid run. `a == b` is a total equality that produces a bit.
 `sel(c, a, b)` is a branchless conditional over a boolean `c`, evaluating both arms
 and selecting one. `assert e` states that `e` is zero, so equality of two values is
-written `assert x - y`. `input x` binds `x` to the next public input, and
-`output e` exposes `e` as the next public output.
+written `assert x - y`. `input x` binds `x` to the next public input, `secret w` binds `w` to a private
+witness that never enters the public statement, and `output e` exposes `e` as the
+next public output.
 
 The well-formedness condition that earns the fixed-width trace is simply this:
 there is no construct whose lowering depends on a value. Every statement compiles
@@ -302,7 +303,7 @@ The trace width is constant at thirty-five columns; the height is the next power
 two above the step count. Each of these programs proves and verifies in process on
 the host. The fee follows the trace area and always leaves the prover the majority.
 
-The correctness evidence is a suite of thirty in-process proofs in
+The correctness evidence is a suite of thirty-six in-process proofs in
 `userland/nonos_zkolang_proofs` (`cargo test`). An honest run of a program touching
 every enforced opcode verifies. Each of a targeted tamper set is rejected: a wrong
 add, subtract, multiply, or select result; a forged inverse witness; a false
@@ -311,9 +312,13 @@ boolean check; a failed assertion; an operand that is not drawn from its registe
 with the arithmetic gate kept internally consistent so that only the register
 binding can catch it; a forged initial register; a broken write propagation; an
 out-of-order clock; two opcodes named in one row; a dirtied final boundary; a
-forged public input; and a forged public output. The language is covered end to
-end: a true program verifies, a false claim yields no proof, and a malformed
-program is a typed compile error.
+forged public input; and a forged public output. The statement binding is
+exercised too: a proof bound to one program commitment or trace length is rejected
+under a forged one, since the public statement seeds the Fiat-Shamir transcript.
+The private witness is covered: a program proves knowledge of a secret square root
+without the witness entering the public statement, and a wrong witness yields no
+proof. The language is covered end to end: a true program verifies, a false claim
+yields no proof, and a malformed program is a typed compile error.
 
 # Threat model and honest scope
 
@@ -337,9 +342,10 @@ text, though not a proof of a program that did not run.
 What is future work, stated plainly so it is not mistaken for present fact: a
 random-access memory, which would need a permutation argument over sorted accesses
 for consistency and would be a future major version; a hash primitive as its own
-constraint region; a private witness so that an input can be hidden from the
-verifier, which zKølang does not offer today since all inputs are public; and the
-on-chain settlement of the NOX fee. None of these is in the tree, and no claim
+constraint region; full zero-knowledge, a hiding proof, since a `secret` input is
+a private witness kept out of the public statement but the STARK is not yet hiding
+so the openings could leak trace values; and the on-chain settlement of the NOX
+fee. None of these is in the tree, and no claim
 above depends on them.
 
 # Related work

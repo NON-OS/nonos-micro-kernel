@@ -98,8 +98,14 @@ fn choose_log_t(n: usize) -> Option<u32> {
 /// Run a VM program on `inputs` (all treated as public), prove it, and verify the
 /// proof. Returns the report including the public outputs.
 pub fn prove_program(program: &[Op], inputs: &[Fp]) -> Result<Report, RunError> {
+    run_and_prove(program, inputs, inputs.len())
+}
+
+// The shared pipeline. `inputs` is the public prefix (`n_public` values) followed
+// by the private witness; only the public prefix enters the bound statement.
+fn run_and_prove(program: &[Op], inputs: &[Fp], n_public: usize) -> Result<Report, RunError> {
     let mut vm = Vm::new();
-    let trace = vm.run(program, inputs, inputs.len()).map_err(RunError::Execute)?;
+    let trace = vm.run(program, inputs, n_public).map_err(RunError::Execute)?;
     let steps = trace.rows.len();
     let log_trace_len = choose_log_t(steps).ok_or(RunError::ProgramTooLong { steps })?;
     let air = StepAir::compile(program, log_trace_len, &trace.public_inputs, &trace.public_outputs)
@@ -135,9 +141,22 @@ pub fn prove_program(program: &[Op], inputs: &[Fp]) -> Result<Report, RunError> 
 
 /// Compile zkolang source, then prove and verify it with the given public inputs.
 pub fn prove_source_with_inputs(src: &str, inputs: &[u64]) -> Result<Report, RunError> {
+    prove_source_with_witness(src, inputs, &[])
+}
+
+/// Compile zkolang source, then prove and verify it with public inputs and a
+/// private witness. The `secret_inputs` feed the program's `secret` declarations;
+/// they are used by the run but never enter the public statement, so a verifier
+/// learns the outputs and the public inputs, not the witness.
+pub fn prove_source_with_witness(
+    src: &str,
+    public_inputs: &[u64],
+    secret_inputs: &[u64],
+) -> Result<Report, RunError> {
     let program = compile_source(src).map_err(RunError::Compile)?;
-    let fp_inputs: Vec<Fp> = inputs.iter().map(|&v| Fp::from_u64(v)).collect();
-    prove_program(&program, &fp_inputs)
+    let mut inputs: Vec<Fp> = public_inputs.iter().map(|&v| Fp::from_u64(v)).collect();
+    inputs.extend(secret_inputs.iter().map(|&v| Fp::from_u64(v)));
+    run_and_prove(&program, &inputs, public_inputs.len())
 }
 
 /// Compile zkolang source with no public inputs, then prove and verify it.

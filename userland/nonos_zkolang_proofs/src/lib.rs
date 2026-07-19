@@ -13,3 +13,5 @@ mod lang_tests;
 mod nox_tests;
 #[cfg(test)]
 mod step_tests;
+#[cfg(test)]
+mod witness_tests;

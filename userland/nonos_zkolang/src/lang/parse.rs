@@ -45,6 +45,8 @@ pub enum Stmt {
     Assert(Expr),
     // Bind a name to the next public input.
     Input(String),
+    // Bind a name to the next private input, a witness not in the public statement.
+    Secret(String),
     // Expose an expression as the next public output.
     Output(Expr),
 }
@@ -119,6 +121,16 @@ impl<'a> Parser<'a> {
                 };
                 self.expect(&Tok::Semi)?;
                 Ok(Stmt::Input(name))
+            }
+            Some(Tok::Secret) => {
+                self.pos += 1;
+                let name = match self.bump() {
+                    Some(Tok::Ident(n)) => n.clone(),
+                    Some(_) => return Err(CompileError::UnexpectedToken),
+                    None => return Err(CompileError::UnexpectedEof),
+                };
+                self.expect(&Tok::Semi)?;
+                Ok(Stmt::Secret(name))
             }
             Some(Tok::Output) => {
                 self.pos += 1;

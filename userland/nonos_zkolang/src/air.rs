@@ -112,8 +112,6 @@ pub enum BuildError {
     NoHalt,
     /// The run is longer than the requested power-of-two trace length.
     TooLong { rows: usize, cap: usize },
-    /// An `Inp` names a public input index with no supplied value.
-    MissingPublicInput { idx: u16 },
     /// An `Out` names a public output index with no supplied value.
     MissingPublicOutput { idx: u16 },
 }
@@ -185,11 +183,13 @@ impl StepAir {
             wiring.push(WireRow::of(op));
             match *op {
                 Op::Inp { idx, .. } => {
-                    let v = public_inputs
-                        .get(idx as usize)
-                        .copied()
-                        .ok_or(BuildError::MissingPublicInput { idx })?;
-                    public_bindings.push((IMM, row, v));
+                    // A public input, whose index falls in the public prefix, is
+                    // pinned to its committed value. A secret input has no value
+                    // in `public_inputs` and is left unbound: a private witness
+                    // that never enters the public statement.
+                    if let Some(&v) = public_inputs.get(idx as usize) {
+                        public_bindings.push((IMM, row, v));
+                    }
                 }
                 Op::Out { idx, .. } => {
                     let v = public_outputs

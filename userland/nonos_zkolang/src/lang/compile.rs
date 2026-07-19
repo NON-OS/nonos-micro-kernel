@@ -32,7 +32,12 @@ struct Compiler {
     ops: Vec<Op>,
     syms: Vec<(String, u8)>,
     next: u8,
-    next_input: u16,
+    // The number of public inputs; public inputs take indices `0..n_public` and
+    // private (secret) inputs take indices from `n_public` on, so the public
+    // inputs are a prefix the AIR binds and the secrets are a hidden suffix.
+    n_public: u16,
+    next_public: u16,
+    next_secret: u16,
     next_output: u16,
 }
 
@@ -66,8 +71,16 @@ impl Compiler {
             }
             Stmt::Input(name) => {
                 let d = self.alloc()?;
-                let idx = self.next_input;
-                self.next_input += 1;
+                let idx = self.next_public;
+                self.next_public += 1;
+                self.ops.push(Op::Inp { d, idx });
+                self.syms.push((name.clone(), d));
+                Ok(())
+            }
+            Stmt::Secret(name) => {
+                let d = self.alloc()?;
+                let idx = self.n_public + self.next_secret;
+                self.next_secret += 1;
                 self.ops.push(Op::Inp { d, idx });
                 self.syms.push((name.clone(), d));
                 Ok(())
@@ -139,8 +152,17 @@ impl Compiler {
 
 /// Lower an AST into a VM program ending in `Halt`.
 pub fn compile(ast: &Ast) -> Result<Vec<Op>, CompileError> {
-    let mut c =
-        Compiler { ops: Vec::new(), syms: Vec::new(), next: 0, next_input: 0, next_output: 0 };
+    // Count the public inputs first, so secret inputs can be indexed after them.
+    let n_public = ast.stmts.iter().filter(|s| matches!(s, Stmt::Input(_))).count() as u16;
+    let mut c = Compiler {
+        ops: Vec::new(),
+        syms: Vec::new(),
+        next: 0,
+        n_public,
+        next_public: 0,
+        next_secret: 0,
+        next_output: 0,
+    };
     for s in &ast.stmts {
         c.stmt(s)?;
     }

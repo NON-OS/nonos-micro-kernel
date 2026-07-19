@@ -41,7 +41,10 @@ mod vm;
 
 pub use air::{BuildError, StepAir, TRACE_WIDTH};
 pub use commit::{commit, commit_limbs, serialize};
-pub use driver::{prove_program, prove_source, prove_source_with_inputs, Report, RunError};
+pub use driver::{
+    prove_program, prove_source, prove_source_with_inputs, prove_source_with_witness, Report,
+    RunError,
+};
 pub use isa::{Op, Program, REGS};
 pub use lang::{compile_source, CompileError};
 pub use nox::{quote, Quote, MICRONOX_PER_NOX};
