@@ -69,6 +69,7 @@ import Nonos.Scheduler
 import Nonos.Secure
 import Nonos.Semaphore
 import Nonos.Seqlock
+import Nonos.ServiceRegistry
 import Nonos.Signal
 import Nonos.Spawn
 import Nonos.SigningKey
