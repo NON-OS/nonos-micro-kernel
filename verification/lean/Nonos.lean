@@ -69,6 +69,7 @@ import Nonos.Rwlock
 import Nonos.Scheduler
 import Nonos.Secure
 import Nonos.NonInterference
+import Nonos.AttestBinding
 import Nonos.Semaphore
 import Nonos.Seqlock
 import Nonos.ServiceRegistry
