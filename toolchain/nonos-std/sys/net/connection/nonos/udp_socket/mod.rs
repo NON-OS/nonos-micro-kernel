@@ -14,26 +14,41 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// A UDP socket over net.sockets. Holds the socket handle and the bound local
-// address. The operations are split by concern into the sibling bind, io and
-// options modules.
+// A UDP socket over net.sockets. Holds its handle through a `Socket`
+// descriptor (so close is RAII in the fd table) and the bound local address.
+// The operations are split by concern into the sibling bind, io and options
+// modules.
 
 mod bind;
 mod io;
 mod options;
 
+use super::socket::Socket;
+use super::transport::unspecified;
 use crate::fmt;
 use crate::net::SocketAddr;
-use crate::sys::net::connection::nonos::transport::close;
+use crate::sys::FromInner;
 
 pub struct UdpSocket {
-    pub(super) handle: u32,
+    pub(super) socket: Socket,
     pub(super) local: SocketAddr,
 }
 
-impl Drop for UdpSocket {
-    fn drop(&mut self) {
-        close(self.handle);
+impl UdpSocket {
+    pub(crate) fn socket(&self) -> &Socket {
+        &self.socket
+    }
+
+    pub(crate) fn into_socket(self) -> Socket {
+        self.socket
+    }
+}
+
+impl FromInner<Socket> for UdpSocket {
+    // Reconstruction from a bare descriptor: the bound address is not
+    // recoverable from the table, so socket_addr reads as unspecified.
+    fn from_inner(socket: Socket) -> UdpSocket {
+        UdpSocket { socket, local: unspecified() }
     }
 }
 

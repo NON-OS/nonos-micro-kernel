@@ -37,8 +37,25 @@ struct Nonos;
 
 unsafe impl dlmalloc::Allocator for Nonos {
     fn alloc(&self, size: usize) -> (*mut u8, usize, u32) {
-        let p = unsafe { mmap(size) };
-        if p.is_null() { (ptr::null_mut(), 0, 0) } else { (p, size, 0) }
+        // EXTERN (bit 0) tells dlmalloc this segment is externally allocated:
+        // never merge or free it, matching remap/free below returning
+        // null/false. A page of guard is mapped on each side of the reported
+        // region: dlmalloc's segment bookkeeping writes a chunk header a few
+        // dozen bytes below a segment base, and without the low pad that lands
+        // just below the mapped range and faults; the pads keep those writes
+        // in mapped memory.
+        const EXTERN: u32 = 1;
+        const PAD: usize = 0x1000;
+        let total = match size.checked_add(2 * PAD) {
+            Some(t) => t,
+            None => return (ptr::null_mut(), 0, 0),
+        };
+        let p = unsafe { mmap(total) };
+        if p.is_null() {
+            (ptr::null_mut(), 0, 0)
+        } else {
+            (unsafe { p.add(PAD) }, size, EXTERN)
+        }
     }
     fn remap(&self, _ptr: *mut u8, _old: usize, _new: usize, _can_move: bool) -> *mut u8 {
         ptr::null_mut()

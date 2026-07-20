@@ -20,11 +20,14 @@
 
 use super::File;
 use crate::io::{self, Error, ErrorKind};
+use crate::os::fd::FromRawFd;
 use crate::path::Path;
+use crate::sys::fd::{Backing, FileDesc, install};
 use crate::sys::fs::nonos::open_options::OpenOptions;
 use crate::sys::fs::nonos::ops::stat;
 use crate::sys::fs::nonos::transport::{
-    BODY_OFF, O_APPEND, O_CREATE, O_TRUNC, OP_OPEN, call, getpid, path_bytes, read_u32, vfs_port,
+    BODY_OFF, O_APPEND, O_CREATE, O_TRUNC, OP_CLOSE, OP_OPEN, call, getpid, path_bytes, read_u32,
+    vfs_port,
 };
 use crate::vec::Vec;
 
@@ -54,6 +57,20 @@ impl File {
         body.extend_from_slice(&pb);
         body.extend_from_slice(&flags.to_le_bytes());
         let rx = call(port, OP_OPEN, &body, 8)?;
-        Ok(File { port, pid, fd: read_u32(&rx, BODY_OFF), path: pb })
+        let fd = read_u32(&rx, BODY_OFF);
+        let desc = match install(Backing::File { port, pid, handle: fd }) {
+            // SAFETY: the slot was just installed and is owned by no other
+            // value, so the descriptor takes sole ownership.
+            Ok(raw) => unsafe { FileDesc::from_raw_fd(raw) },
+            Err(e) => {
+                // A full table must not leak the vfs handle it cannot track.
+                let mut close_body = [0u8; 8];
+                close_body[..4].copy_from_slice(&pid.to_le_bytes());
+                close_body[4..8].copy_from_slice(&fd.to_le_bytes());
+                let _ = call(port, OP_CLOSE, &close_body, 0);
+                return Err(e);
+            }
+        };
+        Ok(File { port, pid, fd, path: pb, desc })
     }
 }

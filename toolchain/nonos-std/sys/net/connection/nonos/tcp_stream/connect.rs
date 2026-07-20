@@ -45,7 +45,7 @@ impl TcpStream {
             close(handle);
             return Err(e);
         }
-        Ok(Self::wrap(handle, *addr))
+        Self::wrap(handle, *addr)
     }
 
     pub fn connect_timeout(addr: &SocketAddr, _: Duration) -> io::Result<TcpStream> {

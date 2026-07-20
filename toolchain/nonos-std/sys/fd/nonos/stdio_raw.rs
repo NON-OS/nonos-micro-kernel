@@ -14,20 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// The open-file handle. The struct lives in `handle`; its operations are
-// split one concern to a file (open, read, write, seek, lock, truncate,
-// metadata, and the descriptor plumbing `os::fd` reaches through) and hang
-// off it as impl blocks. Close is RAII through the descriptor table, which
-// issues the vfs OP_CLOSE when the last descriptor over the handle drops.
+// The reserved stdio descriptors, named as `os::fd::raw` expects so it can
+// alias this module in place of `libc` (the hermit and motor pattern). They
+// map to the process stdio streams, not to table slots.
 
-mod fd;
-mod handle;
-mod lock;
-mod meta;
-mod open;
-mod read;
-mod seek;
-mod truncate;
-mod write;
-
-pub use handle::File;
+pub const STDIN_FILENO: i32 = 0;
+pub const STDOUT_FILENO: i32 = 1;
+pub const STDERR_FILENO: i32 = 2;

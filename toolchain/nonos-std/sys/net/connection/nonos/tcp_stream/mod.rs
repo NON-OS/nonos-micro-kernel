@@ -14,23 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// A connected TCP stream over net.sockets. Holds the socket handle, the peer
-// address, and the socket options (read/write timeouts and nonblocking mode)
-// so a getter returns what its setter stored. The operations are split by
-// concern into the sibling connect, io, timeout, and options modules.
+// A connected TCP stream over net.sockets. Holds its handle through a
+// `Socket` descriptor (so close is RAII in the fd table and `os::fd` can
+// borrow or take it), the peer address, and the socket options (read/write
+// timeouts and nonblocking mode) so a getter returns what its setter stored.
+// The operations are split by concern into the sibling connect, io, timeout,
+// and options modules.
 
 mod connect;
 mod io;
 mod options;
 mod timeout;
 
-use crate::fmt;
-use crate::net::SocketAddr;
-use crate::sys::net::connection::nonos::transport::close;
 use core::sync::atomic::{AtomicBool, AtomicU64};
 
+use super::socket::Socket;
+use super::transport::unspecified;
+use crate::fmt;
+use crate::net::SocketAddr;
+use crate::sys::FromInner;
+
 pub struct TcpStream {
-    pub(super) handle: u32,
+    pub(super) socket: Socket,
     pub(super) peer: SocketAddr,
     // Socket options live here so a getter returns what its setter stored. A
     // 0 ms timeout means "no deadline"; a nonblocking read/write uses a 1 ms
@@ -41,20 +46,37 @@ pub struct TcpStream {
 }
 
 impl TcpStream {
-    pub(crate) fn wrap(handle: u32, peer: SocketAddr) -> TcpStream {
-        TcpStream {
-            handle,
+    pub(crate) fn wrap(handle: u32, peer: SocketAddr) -> crate::io::Result<TcpStream> {
+        Ok(TcpStream {
+            socket: Socket::register(handle)?,
             peer,
             read_timeout_ms: AtomicU64::new(0),
             write_timeout_ms: AtomicU64::new(0),
             nonblocking: AtomicBool::new(false),
-        }
+        })
+    }
+
+    pub(crate) fn socket(&self) -> &Socket {
+        &self.socket
+    }
+
+    pub(crate) fn into_socket(self) -> Socket {
+        self.socket
     }
 }
 
-impl Drop for TcpStream {
-    fn drop(&mut self) {
-        close(self.handle);
+impl FromInner<Socket> for TcpStream {
+    // Reconstruction from a bare descriptor (the `From<OwnedFd>` path). The
+    // peer address is not recoverable from the table, so it reads as
+    // unspecified, the same degradation an accepted stream reports.
+    fn from_inner(socket: Socket) -> TcpStream {
+        TcpStream {
+            socket,
+            peer: unspecified(),
+            read_timeout_ms: AtomicU64::new(0),
+            write_timeout_ms: AtomicU64::new(0),
+            nonblocking: AtomicBool::new(false),
+        }
     }
 }
 

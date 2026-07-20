@@ -32,9 +32,18 @@ cp "$HERE/sys/pal/nonos/common.rs"       "$SYS/pal/nonos/common.rs"
 cp "$HERE/sys/pal/nonos/futex.rs"        "$SYS/pal/nonos/futex.rs"
 rm -rf "$SYS/net/connection/nonos" "$SYS/net/connection/nonos.rs"
 cp -R "$HERE/sys/net/connection/nonos"   "$SYS/net/connection/nonos"
+rm -rf "$SYS/fd/nonos" "$SYS/fd/nonos.rs"
+cp -R "$HERE/sys/fd/nonos"               "$SYS/fd/nonos"
 mkdir -p "$SYS/thread" "$SYS/thread_local/key"
 cp "$HERE/sys/thread/nonos.rs"           "$SYS/thread/nonos.rs"
 cp "$HERE/sys/thread_local_key/nonos.rs" "$SYS/thread_local/key/nonos.rs"
+
+# Shared std files the os::fd port must patch in place: keep pristine copies
+# so a broken edit can be reverted to known-good with one cp.
+for f in "$STD/src/os/mod.rs" "$STD/src/os/fd/owned.rs" "$STD/src/os/fd/raw.rs" \
+         "$STD/src/os/fd/mod.rs" "$SYS/fd/mod.rs" "$SYS/pipe/unsupported.rs"; do
+  [ -f "$f.nonos-orig" ] || cp "$f" "$f.nonos-orig"
+done
 
 # 2. patch the cfg_select selectors + build.rs (idempotent). Prefer the
 # system interpreter: a broken Homebrew python3 exits 0 without running
@@ -158,7 +167,109 @@ if 'target_vendor == "nonos"' not in s:
                   '|| target_os == "vexos"\n        || target_vendor == "nonos"\n', 1)
     with open(f"{stddir}/build.rs", "w") as f:
         f.write(s)
+
+# os::fd for nonos: enable the module, select the sys/fd/nonos backend, and
+# route the dup/close/stdio paths through the descriptor table instead of
+# libc. Each edit indexes its anchor so a rust-src drift fails loudly here,
+# not as a mid-build compile error.
+
+def sub_once(path, old, new, guard):
+    with open(path) as f:
+        s = f.read()
+    if guard in s:
+        return
+    i = s.index(old)
+    with open(path, "w") as f:
+        f.write(s[:i] + new + s[i + len(old):])
+
+# the public module gate
+sub_once(f"{stddir}/src/os/mod.rs",
+    '    target_os = "motor",\n    doc\n))]\npub mod fd;',
+    '    target_os = "motor",\n    target_vendor = "nonos",\n    doc\n))]\npub mod fd;',
+    'target_vendor = "nonos",\n    doc\n))]\npub mod fd;')
+
+# the platform FileDesc backend
+insert_before(f"{sysdir}/fd/mod.rs", '    _ => {}', ARM, 'target_vendor = "nonos"')
+
+# owned.rs: cvt is the libc-errno helper; nonos has no libc
+sub_once(f"{stddir}/src/os/fd/owned.rs",
+    '    target_os = "motor"\n)))]\nuse crate::sys::cvt;',
+    '    target_os = "motor",\n    target_vendor = "nonos"\n)))]\nuse crate::sys::cvt;',
+    'target_vendor = "nonos"\n)))]\nuse crate::sys::cvt;')
+
+# owned.rs: keep nonos out of the fcntl(F_DUPFD) arm ...
+sub_once(f"{stddir}/src/os/fd/owned.rs",
+    '        target_os = "motor"\n    )))]\n    #[stable(feature = "io_safety", since = "1.63.0")]\n    pub fn try_clone_to_owned(&self) -> io::Result<OwnedFd> {',
+    '        target_os = "motor",\n        target_vendor = "nonos"\n    )))]\n    #[stable(feature = "io_safety", since = "1.63.0")]\n    pub fn try_clone_to_owned(&self) -> io::Result<OwnedFd> {',
+    'target_vendor = "nonos"\n    )))]')
+
+# ... and give it a descriptor-table dup arm instead
+DUP_ARM = ('    /// Creates a new `OwnedFd` instance that shares the same underlying file\n'
+    '    /// description as the existing `BorrowedFd` instance.\n'
+    '    #[cfg(target_vendor = "nonos")]\n'
+    '    #[stable(feature = "io_safety", since = "1.63.0")]\n'
+    '    pub fn try_clone_to_owned(&self) -> io::Result<OwnedFd> {\n'
+    '        let fd = crate::sys::fd::dup_fd(self.as_raw_fd())?;\n'
+    '        // SAFETY: `dup_fd` installed a fresh descriptor owned by no other value.\n'
+    '        Ok(unsafe { OwnedFd::from_raw_fd(fd) })\n'
+    '    }\n\n')
+insert_before(f"{stddir}/src/os/fd/owned.rs",
+    '    /// Creates a new `OwnedFd` instance that shares the same underlying file\n    /// description as the existing `BorrowedFd` instance.\n    #[cfg(any(target_arch = "wasm32", target_os = "hermit", target_os = "trusty"))]',
+    DUP_ARM, 'crate::sys::fd::dup_fd')
+
+# owned.rs: Drop closes through the table, not libc
+sub_once(f"{stddir}/src/os/fd/owned.rs",
+    '            #[cfg(not(target_os = "hermit"))]',
+    '            #[cfg(not(any(target_os = "hermit", target_vendor = "nonos")))]',
+    'not(any(target_os = "hermit", target_vendor = "nonos"))')
+sub_once(f"{stddir}/src/os/fd/owned.rs",
+    '            #[cfg(target_os = "hermit")]\n            let _ = hermit_abi::close(self.fd.as_inner());',
+    '            #[cfg(target_os = "hermit")]\n            let _ = hermit_abi::close(self.fd.as_inner());\n'
+    '            #[cfg(target_vendor = "nonos")]\n            crate::sys::fd::close_fd(self.fd.as_inner());',
+    'crate::sys::fd::close_fd')
+
+# raw.rs: OwnedFd for the fs::File conversions, and the stdio descriptor
+# constants in place of libc (the hermit/motor aliasing pattern)
+sub_once(f"{stddir}/src/os/fd/raw.rs",
+    '#[cfg(target_os = "motor")]\nuse moto_rt::libc;',
+    '#[cfg(target_os = "motor")]\nuse moto_rt::libc;\n'
+    '#[cfg(target_vendor = "nonos")]\nuse super::owned::OwnedFd;\n'
+    '#[cfg(target_vendor = "nonos")]\nuse crate::sys::fd::stdio_raw as libc;',
+    'stdio_raw as libc')
+
+# pipes stay unsupported, but the fd trait plumbing must exist for os::fd
+sub_once(f"{sysdir}/pipe/unsupported.rs",
+    '#[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]\nmod unix_traits {',
+    '#[cfg(any(unix, target_os = "hermit", target_os = "wasi", target_vendor = "nonos"))]\nmod unix_traits {',
+    'target_vendor = "nonos"))]\nmod unix_traits')
+
+# os::fd nonos seam: an fd-based reactor (the vendored mio backend) registers a
+# RawFd for readiness and must resolve it to the net.sockets handle OP_POLL
+# takes. Expose the table lookup as a nonos-only free fn on the os::fd surface.
+NONOS_FD_SEAM = ('\n#[cfg(target_vendor = "nonos")]\n'
+    '/// The NONOS net.sockets handle backing `fd`, or `None` if `fd` is not a\n'
+    '/// live socket descriptor. This is the seam a fd-based readiness reactor\n'
+    '/// (a vendored `mio` backend) uses to translate a registered `RawFd` into\n'
+    '/// the service handle its `OP_POLL` round trip addresses. NONOS-only.\n'
+    '#[unstable(feature = "nonos_fd_seam", issue = "none")]\n'
+    'pub fn nonos_socket_handle(fd: RawFd) -> Option<u32> {\n'
+    '    crate::sys::fd::socket_handle(fd)\n'
+    '}\n'
+    '\n#[cfg(target_vendor = "nonos")]\n'
+    '/// Install an already-open net.sockets `handle` into the descriptor table\n'
+    '/// and return the `RawFd` assigned to it. The reactor half of the seam: a\n'
+    '/// vendored `mio` backend creates sockets by talking to net.sockets\n'
+    '/// directly, then registers the handle here so std socket I/O flows through\n'
+    '/// the table. NONOS-only.\n'
+    '#[unstable(feature = "nonos_fd_seam", issue = "none")]\n'
+    'pub fn nonos_register_socket(handle: u32) -> crate::io::Result<RawFd> {\n'
+    '    crate::sys::fd::register_socket(handle)\n'
+    '}\n')
+sub_once(f"{stddir}/src/os/fd/mod.rs",
+    '#[stable(feature = "os_fd", since = "1.66.0")]\npub use raw::*;',
+    '#[stable(feature = "os_fd", since = "1.66.0")]\npub use raw::*;\n' + NONOS_FD_SEAM,
+    'nonos_socket_handle')
 PY
 
 echo "NONOS std PAL applied to $STD"
-echo "modules: alloc, io_error, random, stdio, args, fs, pal(time, futex), net(connection), thread, thread_local(keys), sync(futex)"
+echo "modules: alloc, io_error, random, stdio, args, fs, pal(time, futex), net(connection), fd(os::fd), thread, thread_local(keys), sync(futex)"
