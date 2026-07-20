@@ -454,6 +454,12 @@ fn args_parse_auth_and_header() {
 }
 
 #[test]
+fn args_reject_crlf_in_header() {
+    let argv: [&[u8]; 3] = [b"-H", b"X: 1\r\nEvil: 2", b"example.com/f.txt"];
+    assert!(args::parse(&argv).is_err());
+}
+
+#[test]
 fn http_build_get_includes_extra_headers() {
     let r = http::build_get(b"h", b"/p", b"Authorization: Basic abc\r\n");
     assert!(scan::find(&r, b"Authorization: Basic abc").is_some());

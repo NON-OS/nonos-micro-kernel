@@ -52,6 +52,9 @@ pub fn parse(argv: &[&[u8]]) -> Result<PullArgs, &'static str> {
             }
             b"-H" => {
                 let (&v, t) = tail.split_first().ok_or("-H needs 'Key: Value'")?;
+                if v.iter().any(|&b| b == b'\r' || b == b'\n') {
+                    return Err("-H value must not contain CR or LF");
+                }
                 headers.push(v.to_vec());
                 rest = t;
             }
