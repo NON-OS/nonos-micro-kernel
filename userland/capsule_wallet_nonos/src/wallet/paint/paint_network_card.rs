@@ -16,13 +16,25 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::ui;
 use crate::wallet::state::State;
-use crate::wallet::theme::{CYAN, FG, MUTED, WARN};
+use crate::wallet::theme::{ACCENT, DIM, FG, GREEN, LINE, MUTED};
 
-pub fn paint_network_card(state: &State, fb: &mut PaintBuffer, x: u32) {
-    fb.text(x, 160, b"Network privacy", MUTED);
-    fb.text_scaled(x, 198, if state.net.route_ready { b"Route ready" } else { b"Local mode" }, FG, 2);
-    fb.text(x, 250, super::paint_network_labels::primary(state), CYAN);
-    fb.text(x, 286, super::paint_network_labels::secondary(state), WARN);
-    super::paint_button::paint_button(fb, x, 326, 170, b"Probe route");
+pub fn paint_network_card(_state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {
+    ui::card(fb, x, y, w, 200);
+    let _ = fb.text_ttf((x + 20) as i32, (y + 18) as i32, "GAS  \u{00b7}  ETHEREUM L1", DIM(), 10.5);
+    let gx = fb.text_ttf((x + 20) as i32, (y + 38) as i32, "16", FG(), 30.0);
+    let _ = fb.text_ttf(gx + 8, (y + 50) as i32, "gwei base", MUTED(), 13.0);
+    row(fb, x, w, y + 84, "Slow", FG(), "12 gwei", "~2m");
+    row(fb, x, w, y + 122, "Avg", ACCENT(), "18 gwei", "~30s");
+    row(fb, x, w, y + 160, "Fast", GREEN(), "26 gwei", "~12s");
+}
+
+fn row(fb: &mut PaintBuffer, x: u32, w: u32, y: u32, label: &str, lc: u32, val: &str, t: &str) {
+    fb.fill_rect(x + 20, y + 30, w - 40, 1, LINE());
+    let _ = fb.text_ttf((x + 20) as i32, (y + 6) as i32, label, lc, 14.0);
+    let vw = fb.measure_ttf(val, 14.0).max(0) as u32;
+    let _ = fb.text_ttf((x + w - 96 - vw) as i32, (y + 6) as i32, val, FG(), 14.0);
+    let tw = fb.measure_ttf(t, 13.0).max(0) as u32;
+    let _ = fb.text_ttf((x + w - 20 - tw) as i32, (y + 7) as i32, t, DIM(), 13.0);
 }

@@ -16,10 +16,17 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{ELEV_HI, ELEV_LO, PANEL};
-
-pub fn panel(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32) {
-    fb.fill_rect(x, y, w, h, PANEL());
-    fb.fill_rect(x, y, w, 1, ELEV_HI());
-    fb.fill_rect(x, y + h.saturating_sub(1), w, 1, ELEV_LO());
+// A column bar chart. Each value is a 0..100 height percentage of `h`.
+pub fn bars(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32, vals: &[u8], color: u32) {
+    let n = vals.len() as u32;
+    if n == 0 || w == 0 {
+        return;
+    }
+    let gap = 5u32;
+    let bw = (w.saturating_sub(gap * (n - 1)) / n).max(1);
+    for (i, &v) in vals.iter().enumerate() {
+        let bh = (v as u32 * h / 100).max(1);
+        let bx = x + i as u32 * (bw + gap);
+        fb.fill_rect(bx, y + h - bh, bw, bh, color);
+    }
 }

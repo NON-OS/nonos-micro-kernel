@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::EventOutcome;
 
-use crate::wallet::state::{State, SEND_FIELD_AMOUNT, SEND_FIELD_NONCE, SEND_FIELD_TO, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED};
+use crate::wallet::state::{State, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED};
 
 pub fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if x < 0 || y < 0 {
@@ -24,55 +24,98 @@ pub fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
     }
     let x = x as u32;
     let y = y as u32;
+    if state.locked {
+        state.locked = false;
+        return EventOutcome::Repaint;
+    }
+    if header_icon(state, x, y) {
+        return EventOutcome::Repaint;
+    }
+    if state.panel != 0 {
+        return panel_click(state, x, y);
+    }
     if nav(state, x, y) {
         return EventOutcome::Repaint;
     }
-    // Generate button only exists on the Receive screen before a wallet
-    // exists; its rect mirrors paint_receive::GEN_BTN_* so click and paint stay
-    // aligned. After that, the same spot re-probes the live account.
-    use crate::wallet::paint::{GEN_BTN_H, GEN_BTN_W, GEN_BTN_X, GEN_BTN_Y};
-    if state.view == VIEW_RECEIVE && !state.address_ready {
-        if hit(x, y, GEN_BTN_X, GEN_BTN_Y, GEN_BTN_W, GEN_BTN_H) {
-            return super::generate::generate(state);
-        }
-    } else if state.view == VIEW_RECEIVE
-        && hit(x, y, GEN_BTN_X, GEN_BTN_Y, GEN_BTN_W, GEN_BTN_H)
-    {
-        return super::probe_net::probe_net(state);
+    match state.view {
+        VIEW_HOME => super::on_pointer_view::home(state, x, y),
+        VIEW_RECEIVE => super::on_pointer_view::receive(state, x, y),
+        VIEW_SEND => super::on_pointer_view::send(state, x, y),
+        VIEW_PROOF => super::on_pointer_view::proof(state, x, y),
+        VIEW_NOX => super::on_pointer_view::nox(state, x, y),
+        _ => EventOutcome::Idle,
     }
-    if state.view == VIEW_SEND {
-        return send(state, x, y);
-    }
-    if state.view == VIEW_PROOF && hit(x, y, 368, 674, 190, 42) {
-        return super::broadcast::broadcast(state);
-    }
-    EventOutcome::Idle
 }
 
-fn nav(state: &mut State, x: u32, y: u32) -> bool {
-    let view = if hit(x, y, 32, 160, 220, 38) { VIEW_HOME } else if hit(x, y, 32, 212, 220, 38) { VIEW_RECEIVE } else if hit(x, y, 32, 264, 220, 38) { VIEW_SEND } else if hit(x, y, 32, 316, 220, 38) { VIEW_PROOF } else if hit(x, y, 32, 368, 220, 38) { VIEW_SHIELDED } else if hit(x, y, 32, 420, 220, 38) { VIEW_NOX } else { 255 };
-    if view == 255 {
+fn header_icon(state: &mut State, x: u32, y: u32) -> bool {
+    use crate::wallet::paint::{
+        CMD_BTN_X, HDR_H, HDR_Y, ICON_W, LOCK_BTN_X, MAIN_BTN_X, MAIN_W, MSG_BTN_X, THEME_BTN_X,
+    };
+    if hit(x, y, THEME_BTN_X, HDR_Y, ICON_W, HDR_H) {
+        state.light_mode = !state.light_mode;
+    } else if hit(x, y, CMD_BTN_X, HDR_Y, ICON_W, HDR_H) {
+        state.panel = if state.panel == 1 { 0 } else { 1 };
+    } else if hit(x, y, MSG_BTN_X, HDR_Y, ICON_W, HDR_H) {
+        state.panel = if state.panel == 2 { 0 } else { 2 };
+    } else if hit(x, y, LOCK_BTN_X, HDR_Y, ICON_W, HDR_H) {
+        state.locked = true;
+        state.panel = 0;
+    } else if hit(x, y, MAIN_BTN_X, HDR_Y, MAIN_W, HDR_H) {
+        state.panel = if state.panel == 3 { 0 } else { 3 };
+    } else {
         return false;
     }
-    state.view = view;
     true
 }
 
-fn send(state: &mut State, x: u32, y: u32) -> EventOutcome {
-    if hit(x, y, 368, 214, 520, 58) {
-        state.send_focus = SEND_FIELD_TO;
-    } else if hit(x, y, 368, 296, 520, 58) {
-        state.send_focus = SEND_FIELD_AMOUNT;
-    } else if hit(x, y, 368, 378, 520, 58) {
-        state.send_focus = SEND_FIELD_NONCE;
-    } else if hit(x, y, 368, 474, 210, 42) {
-        return super::sign_eth::sign_eth(state);
-    } else {
-        return EventOutcome::Idle;
+fn panel_click(state: &mut State, x: u32, y: u32) -> EventOutcome {
+    if state.panel == 1 {
+        for i in 0..8u32 {
+            if hit(x, y, 410, 240 + i * 36, 460, 36) {
+                run_cmd(state, i as u8);
+                state.panel = 0;
+                return EventOutcome::Repaint;
+            }
+        }
+    } else if state.panel == 3 {
+        for i in 0..3u32 {
+            if hit(x, y, 1002, 122 + i * 38, 244, 34) {
+                state.account = i as u8;
+                state.panel = 0;
+                return EventOutcome::Repaint;
+            }
+        }
     }
+    state.panel = 0;
     EventOutcome::Repaint
 }
 
-fn hit(x: u32, y: u32, hx: u32, hy: u32, hw: u32, hh: u32) -> bool {
+fn run_cmd(state: &mut State, i: u8) {
+    let views = [VIEW_HOME, VIEW_RECEIVE, VIEW_SEND, VIEW_PROOF, VIEW_SHIELDED, VIEW_NOX];
+    if (i as usize) < views.len() {
+        state.view = views[i as usize];
+    } else if i == 6 {
+        state.light_mode = !state.light_mode;
+    } else if i == 7 {
+        state.locked = true;
+    }
+}
+
+fn nav(state: &mut State, x: u32, y: u32) -> bool {
+    use crate::wallet::paint::{NAV_H, NAV_STEP, NAV_W, NAV_X, NAV_Y0};
+    if x < NAV_X || x >= NAV_X + NAV_W || y < NAV_Y0 {
+        return false;
+    }
+    let rel = y - NAV_Y0;
+    let i = rel / NAV_STEP;
+    if i >= 6 || rel % NAV_STEP >= NAV_H {
+        return false;
+    }
+    let views = [VIEW_HOME, VIEW_RECEIVE, VIEW_SEND, VIEW_PROOF, VIEW_SHIELDED, VIEW_NOX];
+    state.view = views[i as usize];
+    true
+}
+
+pub(super) fn hit(x: u32, y: u32, hx: u32, hy: u32, hw: u32, hh: u32) -> bool {
     x >= hx && y >= hy && x < hx + hw && y < hy + hh
 }

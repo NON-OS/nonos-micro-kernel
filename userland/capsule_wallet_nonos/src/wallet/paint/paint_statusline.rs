@@ -16,10 +16,11 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{ELEV_HI, ELEV_LO, PANEL};
+use crate::wallet::theme::{GREEN, LINE, WIDTH};
 
-pub fn panel(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32) {
-    fb.fill_rect(x, y, w, h, PANEL());
-    fb.fill_rect(x, y, w, 1, ELEV_HI());
-    fb.fill_rect(x, y + h.saturating_sub(1), w, 1, ELEV_LO());
+pub fn paint_statusline(fb: &mut PaintBuffer) {
+    let y = 98u32;
+    fb.fill_rect(226, y + 11, 9, 9, GREEN());
+    let _ = fb.text_ttf(246, (y + 9) as i32, "keys sealed  \u{00b7}  TLS secured  \u{00b7}  route local  \u{00b7}  security STRONG", GREEN(), 12.5);
+    fb.fill_rect(200, 130, WIDTH - 200, 1, LINE());
 }

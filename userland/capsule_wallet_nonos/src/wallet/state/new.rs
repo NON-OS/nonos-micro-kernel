@@ -56,6 +56,15 @@ pub fn new_state() -> State {
         in_kind: 0,
         in_x: 0,
         in_y: 0,
+        fee_tier: 1,
+        stake_unstake: 0,
+        proof_filter: 0,
+        usd_mode: false,
+        light_mode: false,
+        panel: 0,
+        locked: false,
+        account: 0,
+        stake_amount: 4000,
         notes: crate::wallet::shield::notes::NoteStore::new(),
     }
 }

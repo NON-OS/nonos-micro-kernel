@@ -16,23 +16,30 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{BG, ELEV_HI, ELEV_LO, LINE, PANEL};
+use crate::wallet::theme::{LINE, PANEL};
 
-// A raised surface: panel fill, a top highlight and bottom shadow for depth,
-// hairline sides, and clipped corners so it reads as a soft card, not a box.
+// A flat surface card: panel fill with a single hairline border on all edges.
 pub fn card(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32) {
     if w == 0 || h == 0 {
         return;
     }
-    fb.fill_rect(x, y, w, h, PANEL);
-    fb.fill_rect(x, y, w, 1, ELEV_HI);
-    fb.fill_rect(x, y + h - 1, w, 1, ELEV_LO);
-    fb.fill_rect(x, y, 1, h, LINE);
-    fb.fill_rect(x + w - 1, y, 1, h, LINE);
-    let rx = x + w - 1;
-    let ry = y + h - 1;
-    fb.fill_rect(x, y, 1, 1, BG);
-    fb.fill_rect(rx, y, 1, 1, BG);
-    fb.fill_rect(x, ry, 1, 1, BG);
-    fb.fill_rect(rx, ry, 1, 1, BG);
+    fb.fill_rect(x, y, w, h, PANEL());
+    fb.fill_rect(x, y, w, 1, LINE());
+    fb.fill_rect(x, y + h - 1, w, 1, LINE());
+    fb.fill_rect(x, y, 1, h, LINE());
+    fb.fill_rect(x + w - 1, y, 1, h, LINE());
+}
+
+// Same border on an arbitrary fill (e.g. an inset well).
+pub fn bordered(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32, fill: u32, e: u32) {
+    fb.fill_rect(x, y, w, h, fill);
+    edge(fb, x, y, w, h, e);
+}
+
+// A hairline border only, no fill (transparent controls).
+pub fn edge(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32, e: u32) {
+    fb.fill_rect(x, y, w, 1, e);
+    fb.fill_rect(x, y + h - 1, w, 1, e);
+    fb.fill_rect(x, y, 1, h, e);
+    fb.fill_rect(x + w - 1, y, 1, h, e);
 }

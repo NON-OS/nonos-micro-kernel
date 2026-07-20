@@ -22,10 +22,10 @@ pub fn paint_home_security(fb: &mut PaintBuffer, w: u32) {
     if w <= 1080 {
         return;
     }
-    fb.fill_rect(368, 690, 360, 72, PANEL_2);
-    fb.text(392, 710, b"Keys", MUTED);
-    fb.text(392, 738, b"NONOS keyring isolated", FG);
-    fb.fill_rect(760, 690, 360, 72, PANEL_2);
-    fb.text(784, 710, b"Signing", MUTED);
-    fb.text(784, 738, b"EIP-1559 raw tx", FG);
+    fb.fill_rect(368, 690, 360, 72, PANEL_2());
+    fb.text(392, 710, b"Keys", MUTED());
+    fb.text(392, 738, b"NONOS keyring isolated", FG());
+    fb.fill_rect(760, 690, 360, 72, PANEL_2());
+    fb.text(784, 710, b"Signing", MUTED());
+    fb.text(784, 738, b"EIP-1559 raw tx", FG());
 }
