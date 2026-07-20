@@ -21,7 +21,16 @@ syscall_entry_asm:
     mov     gs:PCPU_USER_STACK, rsp
     mov     rsp, gs:PCPU_KERN_STACK
 
-    /* Save state. Seven pushes -> rsp = 8 (mod 16). */
+    /* Save state. The syscall ABI clobbers only rcx/r11 (CPU) and returns in
+       rax; rdi/rsi/rdx must survive so a caller can keep loop state there across
+       a syscall (std's byte-write loop holds its offset in rdx). The arg-shuffle
+       below destroys them, so stash the user copies under the saved frame and
+       restore them on exit. One pad slot keeps 16-alignment since three
+       arg-saves are odd. Eleven slots -> rsp = 8 (mod 16). */
+    sub     rsp, 8
+    push    rdx
+    push    rsi
+    push    rdi
     push    rbp
     push    r11
     push    rcx
@@ -30,7 +39,9 @@ syscall_entry_asm:
     push    r8
     push    rax
 
-    /* User ABI -> SysV: nr,a1..a6. */
+    /* User ABI -> SysV: nr,a1..a6. rdi/rsi/rdx still hold the user args here.
+       The frame offsets match the original 7-push layout because the arg-saves
+       and pad sit below rbp. */
     mov     rcx, rdx
     mov     rdx, rsi
     mov     rsi, rdi
@@ -58,20 +69,22 @@ syscall_entry_asm:
     pop     rcx
     pop     r11
     pop     rbp
+
+    /* Restore the user's rdi/rsi/rdx and drop the pad. Writing back the user's
+       own values honors the ABI (these registers are caller-preserved across a
+       syscall) and leaks nothing: no kernel VA or handler leftover reaches ring
+       3. rax (return value), rcx (user RIP), and r11 (RFLAGS) are intentional;
+       rbx/r12-r15 are callee-saved and still hold user values. */
+    pop     rdi
+    pop     rsi
+    pop     rdx
+    add     rsp, 8
+
     push    rax
     movabs  rax, 0xffffffffffe08aff
     and     r11, rax
     or      r11, 0x202
     pop     rax
-
-    /* Scrub caller-saved registers that carry kernel data before returning to
-       ring 3. rdi held the kernel-stack address of the saved frame (leaking it
-       discloses a kernel VA and defeats kernel ASLR); rsi/rdx hold handler
-       leftovers. rax (return value), rcx (user RIP), and r11 (RFLAGS) are
-       intentional; rbx/r12-r15 are callee-saved and still hold user values. */
-    xor     edi, edi
-    xor     esi, esi
-    xor     edx, edx
 
     /* SYSRETQ requires canonical user RIP. */
     bt      rcx, 47
