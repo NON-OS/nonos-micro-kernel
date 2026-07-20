@@ -18,7 +18,7 @@ use alloc::vec::Vec;
 
 // RFC 4648 base64, standard and URL-safe alphabets, whitespace tolerated,
 // padding optional. Any other byte rejects the input.
-pub(super) fn decode_b64(s: &str) -> Option<Vec<u8>> {
+pub fn decode_b64(s: &str) -> Option<Vec<u8>> {
     let mut out = Vec::with_capacity(s.len() / 4 * 3);
     let mut acc = 0u32;
     let mut bits = 0u32;

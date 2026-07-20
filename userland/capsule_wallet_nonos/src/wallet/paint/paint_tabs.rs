@@ -27,9 +27,9 @@ pub fn paint_tabs(state: &State, fb: &mut PaintBuffer) {
 }
 
 fn paint_tab(fb: &mut PaintBuffer, x: u32, text: &[u8], active: bool) {
-    fb.fill_rect(x, 118, 96, 26, PANEL_2);
+    fb.fill_rect(x, 118, 96, 26, PANEL_2());
     if active {
-        fb.fill_rect(x, 142, 96, 3, ACCENT);
+        fb.fill_rect(x, 142, 96, 3, ACCENT());
     }
-    fb.text(x + 18, 126, text, FG);
+    fb.text(x + 18, 126, text, FG());
 }

@@ -18,10 +18,10 @@ use crate::wallet::theme::{ACCENT, MUTED, WARN};
 
 pub fn rail_color(status: u16) -> u32 {
     if status == 1 {
-        ACCENT
+        ACCENT()
     } else if status == 2 {
-        WARN
+        WARN()
     } else {
-        MUTED
+        MUTED()
     }
 }

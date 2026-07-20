@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::discover::lookup_service;
+use nonos_libc::mk_getpid;
 
 use crate::term::state::State;
 
 pub fn ensure_pid(state: &mut State) -> u32 {
     if state.owner_pid == 0 {
-        state.owner_pid = lookup_service(b"app.terminal").map(|p| p.pid).unwrap_or(0);
+        state.owner_pid = mk_getpid();
     }
     state.owner_pid
 }

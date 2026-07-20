@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 
 pub(super) const MAX_FILES: usize = 2048;
 pub(super) const MAX_OPEN_FDS: usize = 256;
-pub(super) const MAX_FILE_BYTES: usize = 1 << 20;
+pub(super) const MAX_FILE_BYTES: usize = 1 << 26;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StoreError {

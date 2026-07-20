@@ -22,14 +22,14 @@ use crate::wallet::theme::{ACCENT, FG, MUTED};
 
 pub fn paint_header(state: &State, fb: &mut PaintBuffer) {
     super::logo::logo(fb, 32, 28, 76);
-    fb.text_scaled(130, 32, b"NONOS Wallet", FG, 2);
-    fb.text(134, 78, b"Ethereum mainnet rail custody", MUTED);
+    fb.text_scaled(130, 32, b"NONOS Wallet", FG(), 2);
+    fb.text(134, 78, b"Ethereum mainnet rail custody", MUTED());
     if state.address_ready {
         let mut addr = [0u8; 42];
         hex_addr(&state.address, &mut addr);
-        fb.text(520, 46, &addr[..22], ACCENT);
-        fb.text(520, 66, &addr[22..], ACCENT);
+        fb.text(520, 46, &addr[..22], ACCENT());
+        fb.text(520, 66, &addr[22..], ACCENT());
     } else {
-        fb.text(520, 56, b"Generate wallet to receive funds", MUTED);
+        fb.text(520, 56, b"Generate wallet to receive funds", MUTED());
     }
 }

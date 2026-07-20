@@ -16,14 +16,18 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::PANEL_2;
-
-// A status pill: dim base, tone tick, tone label. Returns the width drawn so
-// callers can lay out following content.
-pub fn badge(fb: &mut PaintBuffer, x: u32, y: u32, text: &[u8], tone: u32) -> u32 {
-    let w = text.len() as u32 * 8 + 30;
-    fb.fill_rect(x, y, w, 26, PANEL_2);
-    fb.fill_rect(x, y, 3, 26, tone);
-    fb.text(x + 12, y + 8, text, tone);
+// A solid pill: filled background with dark ink label. Used for status badges
+// and rail chips. Returns the width drawn so callers can lay out siblings.
+pub fn badge(fb: &mut PaintBuffer, x: u32, y: u32, text: &[u8], bg: u32, fg: u32) -> u32 {
+    let s = core::str::from_utf8(text).unwrap_or("");
+    let tw = fb.measure_ttf(s, 11.0).max(0) as u32;
+    let w = tw + 18;
+    fb.fill_rect(x, y, w, 20, bg);
+    let _ = fb.text_ttf((x + 9) as i32, (y + 4) as i32, s, fg, 11.0);
     w
+}
+
+// Alias for sidebar rail chips; identical shape to a badge.
+pub fn chip(fb: &mut PaintBuffer, x: u32, y: u32, text: &[u8], bg: u32, fg: u32) -> u32 {
+    badge(fb, x, y, text, bg, fg)
 }

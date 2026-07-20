@@ -16,42 +16,41 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{ACCENT, BG, FG, LINE, MUTED, PANEL_2};
+use crate::wallet::theme::{ACCENT, FG, INK, LINE2, MUTED};
 
-const BTN_H: u32 = 44;
+const BTN_H: u32 = 42;
 
-// Primary action: filled with an accent underline. Use one per view.
+// Primary action: solid cyan fill with dark ink label.
 pub fn primary(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    fb.fill_rect(x, y, w, BTN_H, PANEL_2);
-    fb.fill_rect(x, y + BTN_H - 2, w, 2, ACCENT);
-    corners(fb, x, y, w);
-    fb.text(x + 22, y + 15, text, FG);
+    fb.fill_rect(x, y, w, BTN_H, ACCENT());
+    label(fb, x, y, w, text, INK());
 }
 
-// Secondary action: outlined, muted. For cancel / less-important choices.
+// Secondary action: outlined, light label.
+pub fn outline(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
+    border(fb, x, y, w, LINE2());
+    label(fb, x, y, w, text, FG());
+}
+
 pub fn ghost(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    fb.fill_rect(x, y, w, 1, LINE);
-    fb.fill_rect(x, y + BTN_H - 1, w, 1, LINE);
-    fb.fill_rect(x, y, 1, BTN_H, LINE);
-    fb.fill_rect(x + w - 1, y, 1, BTN_H, LINE);
-    corners(fb, x, y, w);
-    fb.text(x + 22, y + 15, text, MUTED);
+    label(fb, x, y, w, text, ACCENT());
 }
 
-// A disabled action: rendered dim, no accent. Pairs with the clear-sign gate.
 pub fn disabled(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    fb.fill_rect(x, y, w, BTN_H, BG);
-    fb.fill_rect(x, y, w, 1, LINE);
-    fb.fill_rect(x, y + BTN_H - 1, w, 1, LINE);
-    corners(fb, x, y, w);
-    fb.text(x + 22, y + 15, text, MUTED);
+    border(fb, x, y, w, LINE2());
+    label(fb, x, y, w, text, MUTED());
 }
 
-fn corners(fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {
-    let rx = x + w - 1;
-    let ry = y + BTN_H - 1;
-    fb.fill_rect(x, y, 1, 1, BG);
-    fb.fill_rect(rx, y, 1, 1, BG);
-    fb.fill_rect(x, ry, 1, 1, BG);
-    fb.fill_rect(rx, ry, 1, 1, BG);
+fn label(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8], color: u32) {
+    let s = core::str::from_utf8(text).unwrap_or("");
+    let tw = fb.measure_ttf(s, 14.0).max(0) as u32;
+    let tx = x + w.saturating_sub(tw) / 2;
+    let _ = fb.text_ttf(tx as i32, (y + 12) as i32, s, color, 14.0);
+}
+
+fn border(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, c: u32) {
+    fb.fill_rect(x, y, w, 1, c);
+    fb.fill_rect(x, y + BTN_H - 1, w, 1, c);
+    fb.fill_rect(x, y, 1, BTN_H, c);
+    fb.fill_rect(x + w - 1, y, 1, BTN_H, c);
 }

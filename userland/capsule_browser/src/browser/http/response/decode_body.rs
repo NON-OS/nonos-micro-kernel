@@ -30,9 +30,9 @@ pub fn decode_body(
         raw_body.to_vec()
     };
     match encoding {
-        "gzip" => crate::browser::http::inflate::gunzip(&body),
-        "deflate" => crate::browser::http::inflate::zlib(&body)
-            .or_else(|| crate::browser::http::inflate::inflate(&body)),
+        "gzip" => nonos_inflate::gunzip(&body),
+        "deflate" => nonos_inflate::zlib(&body)
+            .or_else(|| nonos_inflate::inflate(&body)),
         _ => Some(body),
     }
 }

@@ -17,8 +17,6 @@
 // Real raster images for the document view. Sources discovered during layout
 // are fetched through the same socket state machine as pages, decoded from
 // PNG/JPEG/BMP into ARGB8888, cached, and scale-blitted into their box.
-
-mod base64;
 mod blit;
 mod data_uri;
 mod decode;

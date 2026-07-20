@@ -16,41 +16,46 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::ui;
 use crate::wallet::state::State;
-use crate::wallet::theme::{ACCENT, FG, MUTED};
+use crate::wallet::theme::{ACCENT, DIM, FG, GREEN, GREEN_INK, MUTED};
 
-pub fn paint_account_card(state: &State, fb: &mut PaintBuffer) {
-    fb.text(368, 160, b"Account", MUTED);
-    fb.text_scaled(
-        368,
-        198,
-        if state.wallet_id == 0 { b"Not created" } else { b"Active wallet" },
-        FG,
-        2,
-    );
-    fb.text(
-        368,
-        250,
-        if state.address_ready { b"Receive address ready" } else { b"Generate wallet to start" },
-        ACCENT,
-    );
-    fb.text(368, 286, if state.balance_ready { b"Balance live" } else { b"Balance pending" }, MUTED);
-    paint_u64(fb, 520, 286, lower_u64(&state.balance_wei));
-    fb.text(368, 322, if state.nonce_ready { b"Nonce" } else { b"Nonce pending" }, MUTED);
-    paint_u64(fb, 520, 322, state.live_nonce);
-    fb.text(368, 358, if state.fee_ready { b"Gas wei" } else { b"Gas pending" }, MUTED);
-    paint_u64(fb, 520, 358, state.fee_wei);
-    super::paint_button::paint_button(fb, 368, 394, 180, b"Generate");
+const BAL: [u8; 14] = [64, 52, 66, 42, 50, 30, 44, 28, 40, 26, 36, 20, 34, 18];
+
+pub fn paint_account_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {
+    ui::card(fb, x, y, w, 200);
+    let _ = fb.text_ttf((x + 20) as i32, (y + 18) as i32, "TOTAL BALANCE  \u{00b7}  0x71C9\u{2026}4e2B", DIM(), 10.5);
+    let aw = fb.measure_ttf("ACTIVE", 11.0).max(0) as u32 + 18;
+    ui::badge(fb, x + w - 20 - aw, y + 15, b"ACTIVE", GREEN(), GREEN_INK());
+
+    let mut buf = [0u8; 40];
+    let n = format_eth(lower_u64(&state.balance_wei), &mut buf);
+    let bal = core::str::from_utf8(&buf[..n]).unwrap_or("0");
+    let pen = fb.text_ttf((x + 20) as i32, (y + 38) as i32, bal, FG(), 44.0);
+    let _ = fb.text_ttf(pen + 10, (y + 58) as i32, "ETH", ACCENT(), 20.0);
+
+    let dx = fb.text_ttf((x + 20) as i32, (y + 96) as i32, "= $7,516.40    ", MUTED(), 13.0);
+    ui::badge(fb, dx as u32 + 4, y + 94, b"+2.8% 24h", GREEN(), GREEN_INK());
+
+    ui::bars(fb, x + 20, y + 128, w - 40, 56, &BAL, ACCENT());
 }
 
-fn paint_u64(fb: &mut PaintBuffer, x: u32, y: u32, value: u64) {
-    let mut out = [0u8; 20];
-    let n = super::format_u64::format_u64(value, &mut out);
-    fb.text(x, y, &out[..n], FG);
+fn format_eth(v: u64, out: &mut [u8]) -> usize {
+    let whole = v / 1_000_000_000_000_000_000u64;
+    let frac = ((v % 1_000_000_000_000_000_000u64) / 100_000_000_000_000u64) as u32;
+    let mut wb = [0u8; 20];
+    let wn = super::format_u64::format_u64(whole, &mut wb);
+    out[..wn].copy_from_slice(&wb[..wn]);
+    let mut n = wn;
+    out[n] = b'.';
+    n += 1;
+    out[n] = b'0' + ((frac / 1000) % 10) as u8;
+    out[n + 1] = b'0' + ((frac / 100) % 10) as u8;
+    out[n + 2] = b'0' + ((frac / 10) % 10) as u8;
+    out[n + 3] = b'0' + (frac % 10) as u8;
+    n + 4
 }
 
-fn lower_u64(value: &[u8; 32]) -> u64 {
-    u64::from_be_bytes([
-        value[24], value[25], value[26], value[27], value[28], value[29], value[30], value[31],
-    ])
+fn lower_u64(v: &[u8; 32]) -> u64 {
+    u64::from_be_bytes([v[24], v[25], v[26], v[27], v[28], v[29], v[30], v[31]])
 }
