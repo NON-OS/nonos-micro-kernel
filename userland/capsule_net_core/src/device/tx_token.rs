@@ -19,7 +19,9 @@ use crate::device::types::NicTxToken;
 
 impl smoltcp::phy::TxToken for NicTxToken {
     fn consume<R, F>(self, len: usize, f: F) -> R
-    where F: FnOnce(&mut [u8]) -> R {
+    where
+        F: FnOnce(&mut [u8]) -> R,
+    {
         let mut buf = alloc::vec![0u8; len];
         let r = f(&mut buf);
         tx::send_frame(self.port, &buf);

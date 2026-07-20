@@ -30,19 +30,28 @@ pub struct Args {
     #[arg(short, long, value_name = "FILE")]
     pub output: PathBuf,
 
+    // A pre-made attestation trailer to embed verbatim as the proof region. When
+    // set, the curve enrolled-secret proof below is not generated; this is how the
+    // kernel's transparent STARK self-attestation trailer is carried in the image.
     #[arg(long, value_name = "FILE")]
-    pub root: PathBuf,
+    pub proof_file: Option<PathBuf>,
 
-    #[arg(long)]
+    // The curve enrolled-secret arguments. Optional so they can be omitted when
+    // --proof-file is used; the curve path requires the real values and errors if
+    // they are absent.
+    #[arg(long, value_name = "FILE")]
+    pub root: Option<PathBuf>,
+
+    #[arg(long, default_value = "")]
     pub secret_x: String,
 
-    #[arg(long)]
+    #[arg(long, default_value = "")]
     pub secret_r: String,
 
     #[arg(long, value_name = "FILE")]
-    pub commitments: PathBuf,
+    pub commitments: Option<PathBuf>,
 
-    #[arg(long)]
+    #[arg(long, default_value_t = 0)]
     pub index: usize,
 
     #[arg(long)]
@@ -57,7 +66,7 @@ pub struct Args {
     #[arg(long, value_name = "FILE")]
     pub challenge: Option<PathBuf>,
 
-    #[arg(long)]
+    #[arg(long, default_value = "")]
     pub nonce_seed: String,
 
     #[arg(short, long, action = clap::ArgAction::SetTrue)]

@@ -35,7 +35,12 @@ pub fn read_value(raw: &str, start: usize) -> (Option<String>, usize) {
             }
         }
         Some(_) => {
-            let end = match raw[i..].bytes().position(|b| b.is_ascii_whitespace() || b == b'/') {
+            // An unquoted value runs to whitespace or the tag close, per HTML5.
+            // A slash is part of the value, not a terminator: minified markup
+            // writes href=/css/site.css and src=/js/app.js, so stopping at the
+            // first slash truncated every absolute URL to the empty string and
+            // dropped the page's stylesheets, scripts and images.
+            let end = match raw[i..].bytes().position(|b| b.is_ascii_whitespace() || b == b'>') {
                 Some(n) => i + n,
                 None => raw.len(),
             };

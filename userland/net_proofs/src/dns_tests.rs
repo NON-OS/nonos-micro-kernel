@@ -80,3 +80,64 @@ fn compression_pointers_terminate_and_do_not_loop() {
         }
     }
 }
+
+// Ground-truth: a real, RFC 1035 wire-format response must parse to the CORRECT
+// address, not merely "not panic". These pin the extractor to real bytes the way
+// the fuzz tests above cannot: a wrong offset or byte order fails here.
+
+#[test]
+fn resolves_a_real_a_record_to_the_correct_ip() {
+    // Response to a query for example.com A: answer 93.184.216.34, TTL 300, with
+    // the answer name a compression pointer to the question (0xC0 0x0C).
+    let m = alloc::vec![
+        0x12, 0x34, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+        0x07, b'e', b'x', b'a', b'm', b'p', b'l', b'e', 0x03, b'c', b'o', b'm', 0x00,
+        0x00, 0x01, 0x00, 0x01,
+        0xC0, 0x0C, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x01, 0x2C, 0x00, 0x04,
+        93, 184, 216, 34,
+    ];
+    let Ok((hdr, answer)) = first_address(&m) else { panic!("a well-formed response parses") };
+    assert!(hdr.is_response());
+    let a = answer.expect("an A answer is present");
+    assert_eq!(a.ipv4, Some([93, 184, 216, 34]), "the exact address, right byte order");
+    assert_eq!(a.ipv6, None);
+    assert_eq!(a.ttl, 300, "TTL read big-endian from the right offset");
+}
+
+#[test]
+fn resolves_a_real_aaaa_record_to_the_correct_ip() {
+    // AAAA for 2606:2800:220:1:248:1893:25c8:1946.
+    let m = alloc::vec![
+        0x12, 0x34, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+        0x07, b'e', b'x', b'a', b'm', b'p', b'l', b'e', 0x03, b'c', b'o', b'm', 0x00,
+        0x00, 0x1C, 0x00, 0x01,
+        0xC0, 0x0C, 0x00, 0x1C, 0x00, 0x01, 0x00, 0x00, 0x01, 0x2C, 0x00, 0x10,
+        0x26, 0x06, 0x28, 0x00, 0x02, 0x20, 0x00, 0x01,
+        0x02, 0x48, 0x18, 0x93, 0x25, 0xC8, 0x19, 0x46,
+    ];
+    let Ok((_h, answer)) = first_address(&m) else { panic!("parses") };
+    let a = answer.expect("an AAAA answer");
+    assert_eq!(
+        a.ipv6,
+        Some([0x26, 0x06, 0x28, 0x00, 0x02, 0x20, 0x00, 0x01, 0x02, 0x48, 0x18, 0x93, 0x25, 0xC8, 0x19, 0x46])
+    );
+    assert_eq!(a.ipv4, None);
+}
+
+#[test]
+fn skips_a_cname_and_returns_the_following_a_record() {
+    // The real-world common case: answer 1 is a CNAME, answer 2 is the A record.
+    // The extractor must walk past the CNAME (using its rdlength) and return the A.
+    let m = alloc::vec![
+        0x12, 0x34, 0x81, 0x80, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00,
+        0x03, b'w', b'w', b'w', 0x07, b'e', b'x', b'a', b'm', b'p', b'l', b'e',
+        0x03, b'c', b'o', b'm', 0x00, 0x00, 0x01, 0x00, 0x01,
+        // answer 1: CNAME, rdata is a 2-byte compression pointer
+        0xC0, 0x0C, 0x00, 0x05, 0x00, 0x01, 0x00, 0x00, 0x01, 0x2C, 0x00, 0x02, 0xC0, 0x10,
+        // answer 2: A -> 1.2.3.4
+        0xC0, 0x0C, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x01, 0x2C, 0x00, 0x04, 1, 2, 3, 4,
+    ];
+    let Ok((_h, answer)) = first_address(&m) else { panic!("parses") };
+    let a = answer.expect("the A answer after the CNAME");
+    assert_eq!(a.ipv4, Some([1, 2, 3, 4]), "walked past the CNAME by its rdlength");
+}

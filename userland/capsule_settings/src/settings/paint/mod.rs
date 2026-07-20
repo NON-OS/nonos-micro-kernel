@@ -19,6 +19,7 @@ mod field_i8_value;
 mod field_str_value;
 mod field_u8_value;
 pub mod fmt_dec;
+pub mod fmt_ip;
 pub mod fmt_signed;
 pub mod layout;
 pub mod paint;
@@ -32,6 +33,8 @@ pub mod paint_value_enum;
 pub mod paint_value_i8;
 pub mod paint_value_str;
 pub mod paint_value_u8;
+pub mod paint_wifi;
+pub mod paint_wifi_link;
 pub mod scroll_indicator;
 pub mod visible_rows;
 

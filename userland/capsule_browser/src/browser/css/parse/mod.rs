@@ -17,6 +17,7 @@
 mod attr_test;
 mod compound;
 mod decls;
+mod is_expand;
 mod matching_brace;
 mod media_feature;
 mod media_matches;

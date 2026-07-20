@@ -16,7 +16,7 @@
 
 use alloc::string::String;
 
-use crate::browser::css::{Computed, PseudoText};
+use crate::browser::css::{Computed, GridSpec, PseudoText};
 use crate::browser::dom::node::Node;
 use crate::browser::dom::Dom;
 
@@ -26,6 +26,7 @@ pub(super) struct Walk<'a, 'b> {
     pub dom: &'a Dom,
     pub styles: &'a [Computed],
     pub bg_images: &'a [Option<String>],
+    pub grids: &'a [Option<GridSpec>],
     pub pseudos: &'a [(Option<PseudoText>, Option<PseudoText>)],
     pub count: &'b mut usize,
 }

@@ -16,14 +16,20 @@
 
 use nonos_policy_proto::Category;
 
+use crate::settings::state::refresh_wifi::enter_wifi;
 use crate::settings::state::set_category::set_category;
 use crate::settings::state::State;
 
+/// Step back to the previous top-level section, the reverse of `next_category`:
+/// Display -> Wi-Fi -> Security -> Network -> Display.
 pub fn prev_category(state: &mut State) {
-    let prev = match state.category {
-        Category::User => Category::Kernel,
-        Category::Identity => Category::User,
-        Category::Kernel => Category::Identity,
-    };
-    set_category(state, prev);
+    if state.wifi_active {
+        set_category(state, Category::Kernel);
+        return;
+    }
+    match state.category {
+        Category::User => enter_wifi(state),
+        Category::Identity => set_category(state, Category::User),
+        Category::Kernel => set_category(state, Category::Identity),
+    }
 }

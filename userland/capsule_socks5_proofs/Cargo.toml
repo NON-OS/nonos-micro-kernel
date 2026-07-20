@@ -1,0 +1,13 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the SOCKS5 wire codec. Builds for the host so
+# `cargo test` runs the real codec source (included via #[path]) against
+# hand-built request and greeting bytes, checking the exact parse and reply.
+[package]
+name = "socks5_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"

@@ -19,6 +19,8 @@ extern crate alloc;
 pub mod boot;
 pub mod boot_session;
 pub mod capsule_attest;
+#[cfg(feature = "nonos-stark-attest")]
+pub mod kernel_attest;
 pub mod capsule_manifest;
 pub mod crypto;
 pub mod crypto_capsule;

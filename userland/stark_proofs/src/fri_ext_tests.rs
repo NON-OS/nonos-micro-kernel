@@ -100,7 +100,8 @@ fn a_tampered_opening_is_rejected() {
     let (log_n, log_blowup, queries, grind) = (5u32, 2u32, 32usize, 8u32);
     let cw = low_degree_codeword(log_n, 8, Fp::ONE, 0x2468);
     let mut proof = fri_prove_ext(&lift(&cw), Fp::ONE, log_blowup, queries, grind);
-    proof.queries[0].layers[0].a = proof.queries[0].layers[0].a + crate::crypto::stark::field::Fp2::ONE;
+    proof.queries[0].layers[0].a =
+        proof.queries[0].layers[0].a + crate::crypto::stark::field::Fp2::ONE;
     assert!(
         !fri_verify_ext(&proof, Fp::ONE, log_n, log_blowup, queries, grind),
         "a tampered extension opening verified"

@@ -37,13 +37,7 @@ pub fn call<'a>(
         return Err(IpcError::SendFailed);
     }
     let mut tx = [0u8; IPC_PAYLOAD_MAX];
-    let hdr = Header {
-        op,
-        field,
-        kind,
-        status: 0,
-        payload_len: req_payload.len() as u16,
-    };
+    let hdr = Header { op, field, kind, status: 0, payload_len: req_payload.len() as u16 };
     hdr.encode(&mut tx[..HDR_LEN]);
     let total = HDR_LEN + req_payload.len();
     tx[HDR_LEN..total].copy_from_slice(req_payload);

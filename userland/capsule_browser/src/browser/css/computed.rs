@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const DEFAULT_FG: u32 = 0xFFE6_EDF3;
+pub const DEFAULT_FG: u32 = 0xFF1A_1A1A;
 pub const DEFAULT_FONT_PX: u32 = 16;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -96,6 +96,24 @@ pub enum Position {
     Absolute,
 }
 
+/// Whether a box is taken out of the normal flow to one side, with the rest of
+/// the block's content wrapping around it.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Float {
+    None,
+    Left,
+    Right,
+}
+
+/// Which floats a box drops below before it is laid: `clear`.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Clear {
+    None,
+    Left,
+    Right,
+    Both,
+}
+
 // One grid column track: a length, a percentage of the row, or a fraction
 // of the leftover space.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -133,6 +151,10 @@ pub struct Computed {
     // Family key of the custom face this text draws in, 0 for the built-in
     // face; the fonts registry maps keys to loaded faces.
     pub font_key: u32,
+    // Text draws in a webfont icon family (Material Icons/Symbols, Font
+    // Awesome) whose face we do not load. Ligature names like "arrow_forward"
+    // are mapped to a Unicode glyph so the icon reads as a symbol, not a word.
+    pub icon_font: bool,
     pub bg_size: BgSize,
     pub bg_repeat: bool,
     // Element opacity 0..255; multiplies down the subtree at layout.
@@ -174,6 +196,11 @@ pub struct Computed {
     pub is_block: bool,
     pub is_flex: bool,
     pub is_inline_block: bool,
+    // Table roles, set from the tag as a user-agent default or `display: table*`.
+    // A table box lays its rows and cells into a shared column grid.
+    pub is_table: bool,
+    pub is_table_row: bool,
+    pub is_table_cell: bool,
     pub flex_wrap: bool,
     pub flex_col: bool,
     pub justify: Justify,
@@ -184,6 +211,10 @@ pub struct Computed {
     // content or the width property, as CSS specifies.
     pub flex_basis: Size,
     pub position: Position,
+    // float takes the box to one side and flows following content around it;
+    // clear drops a box below the floats named by it.
+    pub float: Float,
+    pub clear: Clear,
     // position: fixed is laid out like absolute but painted without the
     // scroll offset, so it pins to the viewport.
     pub is_fixed: bool,
@@ -199,6 +230,8 @@ pub struct Computed {
     pub radius: u32,
     pub shadow: Option<Shadow>,
     pub is_grid: bool,
+    // display: contents drops the box and promotes the children.
+    pub is_contents: bool,
     pub grid_cols: [GridTrack; MAX_GRID_COLS],
     pub grid_col_n: u8,
     // list-style-type: none suppresses the marker on li boxes; inherited.
@@ -219,6 +252,7 @@ impl Computed {
             object_fit: ObjectFit::Contain,
             text_transform: TextTransform::None,
             font_key: 0,
+            icon_font: false,
             bg_size: BgSize::Auto,
             bg_repeat: true,
             opacity: 255,
@@ -251,6 +285,9 @@ impl Computed {
             is_block: false,
             is_flex: false,
             is_inline_block: false,
+            is_table: false,
+            is_table_row: false,
+            is_table_cell: false,
             flex_wrap: false,
             flex_col: false,
             justify: Justify::Start,
@@ -259,6 +296,8 @@ impl Computed {
             flex_grow: 0,
             flex_basis: Size::Auto,
             position: Position::Static,
+            float: Float::None,
+            clear: Clear::None,
             is_fixed: false,
             is_sticky: false,
             top: Size::Auto,
@@ -270,6 +309,7 @@ impl Computed {
             radius: 0,
             shadow: None,
             is_grid: false,
+            is_contents: false,
             grid_cols: [GridTrack::Fr(1); MAX_GRID_COLS],
             grid_col_n: 0,
             list_none: false,
@@ -291,6 +331,7 @@ impl Computed {
         c.list_none = parent.list_none;
         c.text_transform = parent.text_transform;
         c.font_key = parent.font_key;
+        c.icon_font = parent.icon_font;
         c.letter_spacing = parent.letter_spacing;
         c
     }

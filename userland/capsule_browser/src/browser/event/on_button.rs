@@ -25,6 +25,11 @@ pub fn on_button(state: &mut State, event: InputEvent) -> EventOutcome {
     if event.y < TITLEBAR as i32 {
         return EventOutcome::Idle;
     }
+    // While the settings panel is open it takes every click: its buttons act,
+    // and a click anywhere else closes it.
+    if state.settings_open {
+        return crate::browser::settings::on_click(state, event.x, event.y);
+    }
     if event.y < CONTENT_TOP as i32 {
         return on_toolbar::on_toolbar(state, event);
     }

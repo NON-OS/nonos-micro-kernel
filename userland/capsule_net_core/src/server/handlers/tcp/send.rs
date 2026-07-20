@@ -17,7 +17,7 @@
 use smoltcp::socket::tcp;
 
 use crate::handles;
-use crate::protocol::tcp::{E_BAD_LEN, E_NO_SOCKET, E_NOT_CONNECTED, E_OK, MAGIC_NTCP, OP_SEND};
+use crate::protocol::tcp::{E_BAD_LEN, E_NOT_CONNECTED, E_NO_SOCKET, E_OK, MAGIC_NTCP, OP_SEND};
 use crate::server::parse_req::Request;
 use crate::server::respond::reply;
 use crate::state;
@@ -46,10 +46,12 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     match send_result {
         Some(Ok(n)) => {
             let n = n as u32;
-            let _ = reply(sender_pid, MAGIC_NTCP, OP_SEND, E_OK, req.request_id, &n.to_le_bytes(), tx);
+            let _ =
+                reply(sender_pid, MAGIC_NTCP, OP_SEND, E_OK, req.request_id, &n.to_le_bytes(), tx);
         }
         _ => {
-            let _ = reply(sender_pid, MAGIC_NTCP, OP_SEND, E_NOT_CONNECTED, req.request_id, &[], tx);
+            let _ =
+                reply(sender_pid, MAGIC_NTCP, OP_SEND, E_NOT_CONNECTED, req.request_id, &[], tx);
         }
     }
 }

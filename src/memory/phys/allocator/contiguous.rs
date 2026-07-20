@@ -17,6 +17,10 @@ use super::super::error::{PhysAllocError, PhysAllocResult};
 use super::super::types::{AllocFlags, AllocatorState, Frame};
 use super::zeroing::zero_frame;
 
+/// The top of the address space a 32-bit DMA descriptor can name (4GB). A DMA
+/// allocation whose top crosses this cannot be handed to such a device.
+const DMA_CEILING_32BIT: u64 = 0x1_0000_0000;
+
 pub fn allocate_contiguous(
     state: &mut AllocatorState,
     frame_count: usize,
@@ -35,11 +39,24 @@ pub fn allocate_contiguous(
     } else {
         unsafe { bitmap::find_contiguous_free(bptr, total, frame_count)? }
     };
+    let offset = (run_start as u64).checked_mul(PAGE_SIZE_U64)?;
+    let phys_addr = start.checked_add(offset)?;
+    // A `DMA32` allocation must be addressable by a device that describes buffers
+    // with a 32-bit physical address (Realtek/rtw88 TX buffer descriptors carry a
+    // `__le32 dma`). If the run crosses 4GB the descriptor would silently truncate
+    // it and the device would DMA the wrong memory, so refuse rather than hand back
+    // an untruncatable frame. Checked before the bitmap is claimed so a refusal
+    // leaves the allocator untouched. This applies only to `DMA32`, so 64-bit
+    // devices and large high surfaces are unaffected.
+    if flags.contains(AllocFlags::DMA32) {
+        let span = (frame_count as u64).checked_mul(PAGE_SIZE_U64)?;
+        if phys_addr.checked_add(span)? > DMA_CEILING_32BIT {
+            return None;
+        }
+    }
     if !unsafe { bitmap::set_bit_range(bptr, run_start, frame_count) } {
         return None;
     }
-    let offset = (run_start as u64).checked_mul(PAGE_SIZE_U64)?;
-    let phys_addr = start.checked_add(offset)?;
     if flags.contains(AllocFlags::ZERO) {
         for j in 0..frame_count {
             zero_frame(Frame::new(phys_addr + (j as u64 * PAGE_SIZE_U64)));

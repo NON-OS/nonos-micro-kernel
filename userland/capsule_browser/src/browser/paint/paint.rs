@@ -28,4 +28,6 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
             None => document::paint(state, fb),
         },
     }
+    // The settings panel draws last so it overlays the page.
+    crate::browser::settings::paint(state, fb);
 }

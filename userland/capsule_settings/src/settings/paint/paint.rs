@@ -25,13 +25,19 @@ use super::paint_field_row::paint_field_row;
 use super::paint_header::paint_header;
 use super::paint_status::paint_status;
 use super::paint_tabs::paint_tabs;
+use super::paint_wifi::paint_wifi;
 use super::scroll_indicator::paint_scroll_indicator;
 use super::visible_rows::visible_rows;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
     paint_header(fb);
-    paint_tabs(fb, state.category);
+    paint_tabs(fb, state.category, state.wifi_active);
+    if state.wifi_active {
+        paint_wifi(fb, state);
+        paint_status(fb, &state.status, state.policy_ready);
+        return;
+    }
     let fields = visible_for(state.category);
     let cat = state.category as usize;
     let cursor = state.cursor[cat];

@@ -16,7 +16,13 @@
 
 use crate::iface::dhcp::{write_decimal_u8, write_octet_quad};
 
-pub fn fill_marker(buf: &mut [u8; 64], prefix_msg: &[u8], ip: [u8; 4], prefix: u8, gw: [u8; 4]) -> usize {
+pub fn fill_marker(
+    buf: &mut [u8; 64],
+    prefix_msg: &[u8],
+    ip: [u8; 4],
+    prefix: u8,
+    gw: [u8; 4],
+) -> usize {
     let mut pos = 0usize;
     for &b in prefix_msg {
         buf[pos] = b;

@@ -20,12 +20,15 @@ use alloc::vec::Vec;
 use crate::browser::dom::Dom;
 
 use super::apply::apply_decl;
+use super::budget::MatchBudget;
 use super::computed::Computed;
+use super::grid_spec::GridSpec;
 use super::matching::matches_selector;
 use super::rule::Rule;
 use super::rule_index::RuleIndex;
 use super::specificity::specificity;
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn apply_rules(
     dom: &Dom,
     id: usize,
@@ -35,11 +38,21 @@ pub(super) fn apply_rules(
     parent_fs: u32,
     vars: &[(String, String)],
     bg: &mut Option<alloc::string::String>,
+    grid: &mut Option<GridSpec>,
+    budget: Option<&mut MatchBudget>,
 ) {
     let mut hits: Vec<(u32, usize)> = Vec::new();
     // Only rules whose key could match this node; the full matcher still
     // decides, so the applied set is identical to scanning every rule.
-    for i in index.candidates(dom, id) {
+    let cands = index.candidates(dom, id);
+    // Author sheets pay per candidate test; once the budget is dry the node
+    // keeps its inherited + UA style. UA calls pass no budget.
+    if let Some(b) = budget {
+        if !b.take(cands.len()) {
+            return;
+        }
+    }
+    for i in cands {
         let Some(rule) = rules.get(i) else {
             continue;
         };
@@ -67,6 +80,7 @@ pub(super) fn apply_rules(
                 if let Some(u) = super::bg_url::bg_url(&d.name, &d.value) {
                     *bg = Some(u);
                 }
+                super::grid_area_decl::grid_decl(grid, &d.name, &d.value, c.font_size_px);
             }
         }
     }

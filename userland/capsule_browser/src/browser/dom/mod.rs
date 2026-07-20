@@ -16,6 +16,7 @@
 
 mod attach;
 mod attrs;
+mod auto_close;
 mod close_tag;
 mod consume;
 mod create;

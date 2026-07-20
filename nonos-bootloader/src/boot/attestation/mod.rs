@@ -16,9 +16,11 @@
 
 mod binding;
 mod enforce;
+mod kernel_gate;
 mod run;
 mod source;
 
 pub use enforce::enforce_zk_binding;
+pub use kernel_gate::attest_kernel;
 pub use run::run_zk_attestation;
 pub use source::{proof_source_bytes, select_zk_proof_source, ProofSource};

@@ -89,6 +89,15 @@ pub(super) fn blit(
                     px.swap(0, 2);
                 }
             }
+            // Surface pixels are ARGB8888, stored B,G,R,A in memory, which is
+            // exactly what a BGR framebuffer scans out. RGB firmware needs the
+            // red and blue channels exchanged. Chunks stay pixel-aligned:
+            // row_bytes and the bounce length are both multiples of four.
+            if !fb.bgr {
+                for px in bounce[..chunk].chunks_exact_mut(4) {
+                    px.swap(0, 2);
+                }
+            }
             let dst_off = dst_row_off + copied;
             for i in 0..chunk {
                 unsafe { core::ptr::write_volatile(dst.add(dst_off + i), bounce[i]) };

@@ -18,13 +18,10 @@ mod ast;
 mod collect_scripts;
 mod env;
 mod interp;
-mod lexer;
-mod parse;
-mod run;
-mod token;
+mod regex;
 mod value;
 mod world;
 
-pub use interp::{deliver_net, dispatch_event, pump_timers};
-pub use run::run;
+pub use collect_scripts::collect_scripts;
+pub use interp::{deliver_net, pump_timers};
 pub use world::World;

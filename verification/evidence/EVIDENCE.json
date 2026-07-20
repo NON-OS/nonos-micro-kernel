@@ -1,0 +1,71 @@
+{
+  "axiom_policy": {
+    "allowed": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "forbidden": [
+      "sorryAx"
+    ],
+    "note": "Every profiled Lean theorem depends on at most the three standard axioms; a sorry would surface as sorryAx and fail CI."
+  },
+  "proof_systems": {
+    "kani": {
+      "harnesses": 65
+    },
+    "lean_extraction": {
+      "description": "Functions lowered from real Rust MIR by Charon and translated to Lean by Aeneas, then proven on the extracted definition.",
+      "extracted_functions": [
+        "nonos_caps::capabilities::bits::add_capability",
+        "nonos_caps::capabilities::bits::has_capability",
+        "nonos_caps::capabilities::bits::remove_capability",
+        "nonos_irq::irq::validate::validate_msix_request",
+        "nonos_policy::is_wx_violation",
+        "nonos_policy::to_pte_flags",
+        "nonos_policy::usercopy::policy::check_range"
+      ],
+      "generated_files": [
+        {
+          "path": "verification/extraction/lean/NonosExtraction/Caps.lean",
+          "sha256": "9a879b8d0361506ca4dd8ee831094d0b1562fdadf142f7975b3f2bc3519af59f"
+        },
+        {
+          "path": "verification/extraction/lean/NonosExtraction/Irq.lean",
+          "sha256": "e29ebbd632d0b26b5346345b363c38af3587b043e6168f13c000479ef37e26fe"
+        },
+        {
+          "path": "verification/extraction/lean/Policy/Funs.lean",
+          "sha256": "d378cfc804607be83aa9031b08c0564cab10c8c3ee1b2c13467be8e1a3678670"
+        },
+        {
+          "path": "verification/extraction/lean/Policy/FunsExternal_Template.lean",
+          "sha256": "cd8d376a20e48e3fb263340e39266e1a186de3054dc0165d632edee3945173f1"
+        },
+        {
+          "path": "verification/extraction/lean/Policy/Types.lean",
+          "sha256": "697e73e7dd6dfeaface785514d527f787b54d8703492e8f8dae621f40960172f"
+        }
+      ]
+    },
+    "lean_specification": {
+      "axiom_profiled_theorems": 207,
+      "mathlib": false,
+      "modules": 123,
+      "sorry_count": 0,
+      "theorems": 936,
+      "toolchain": "leanprover/lean4:v4.15.0"
+    },
+    "runnable": {
+      "proof_crates": 32
+    },
+    "verus": {
+      "source_files": 5
+    }
+  },
+  "schema": "nonos-verification-evidence/v1",
+  "toolchains": {
+    "lean": "leanprover/lean4:v4.15.0",
+    "rust_kernel": "nightly-2026-01-16"
+  }
+}

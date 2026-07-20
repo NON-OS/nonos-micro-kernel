@@ -42,6 +42,22 @@ pub(in crate::browser::fetch) fn read_body(state_port: u32, f: &mut Fetch, tls_m
         }
     }
     if tls_mode {
+        // A kept connection the server already dropped never answers, and the
+        // idle accounting below only starts once headers exist. Fail a silent
+        // reused connection after the empty-buffer budget so the caller
+        // retries on a fresh one instead of waiting out the fetch timeout.
+        if f.keep_uses > 0 && f.buf.is_empty() {
+            if got {
+                f.idle = 0;
+            } else {
+                f.idle = f.idle.wrapping_add(1);
+                if f.idle >= constants::FIRST_WAIT {
+                    f.error = Some("kept connection dead");
+                    f.phase = Phase::Error;
+                    return true;
+                }
+            }
+        }
         // Decrypt once per tick and judge completion on the plaintext directly.
         // Checking every tick (not only once the raw socket goes quiet) lets a
         // content-length or chunked response finish the instant its last byte

@@ -20,4 +20,5 @@ pub enum Btn {
     Reload,
     Home,
     Url,
+    Menu,
 }

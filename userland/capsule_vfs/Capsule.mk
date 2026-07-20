@@ -27,9 +27,17 @@ CAPSULE_EXTRA_DEPS := \
 	userland/capsule_ripgrep/target/x86_64-nonos-user/release/rg \
 	nonos-data/trust/capsules/std_proof.nonos_id_cert.bin \
 	nonos-data/trust/capsules/std_proof.manifest.bin \
-	nonos-data/trust/capsules/std_proof.zk_trailer.bin \
 	nonos-data/trust/capsules/rg.nonos_id_cert.bin \
-	nonos-data/trust/capsules/rg.manifest.bin \
+	nonos-data/trust/capsules/rg.manifest.bin
+
+# The embedded STARK trailers are produced by the whole-set enrollment, whose
+# policy root commits to every capsule binary, including this one. Depending on
+# them normally would form a cycle (root -> vfs -> trailer -> root) that makes
+# re-runs the enrollment on every pass. Order-only keeps the guarantee that the
+# trailers exist and are current before vfs builds, without a rewritten trailer
+# mtime retriggering vfs and, through it, the enrollment.
+CAPSULE_EXTRA_ORDER_DEPS := \
+	nonos-data/trust/capsules/std_proof.zk_trailer.bin \
 	nonos-data/trust/capsules/rg.zk_trailer.bin
 
 include nonos-mk/capsule.mk

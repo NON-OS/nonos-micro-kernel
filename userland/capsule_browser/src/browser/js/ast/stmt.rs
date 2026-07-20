@@ -28,9 +28,28 @@ pub enum Stmt {
     While(Expr, Vec<Stmt>),
     For(Option<Box<Stmt>>, Option<Expr>, Option<Expr>, Vec<Stmt>),
     ForOf(String, Expr, Vec<Stmt>),
-    Func(String, Vec<String>, Vec<Stmt>),
+    // Named function declaration: name, parameters, body, and the `async` flag.
+    Func(String, Vec<String>, Vec<Stmt>, bool),
     Return(Option<Expr>),
     Break,
     Continue,
     Block(Vec<Stmt>),
+    // `class Name extends Super { method(params) { body } ... }`. The optional
+    // expression is the superclass; each method carries its name, params and body
+    // (the constructor is the method named "constructor").
+    Class(String, Option<Expr>, Vec<ClassMethod>),
+    // `throw expr`.
+    Throw(Expr),
+    // `try { .. } catch (e) { .. } finally { .. }`: the try body, an optional
+    // catch (binding name and body), and an optional finally body.
+    Try(Vec<Stmt>, Option<(Option<String>, Vec<Stmt>)>, Option<Vec<Stmt>>),
+}
+
+/// One method in a class body.
+#[derive(Clone)]
+pub struct ClassMethod {
+    pub name: String,
+    pub params: Vec<String>,
+    pub body: Vec<Stmt>,
+    pub is_async: bool,
 }

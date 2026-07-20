@@ -22,7 +22,9 @@ use crate::browser::dom::Dom;
 
 use super::apply_rules::apply_rules;
 use super::apply_style_attr::apply_style_attr;
+use super::budget::MatchBudget;
 use super::computed::Computed;
+use super::grid_spec::GridSpec;
 use super::pseudo_style::{pseudo_style, PseudoText};
 use super::rule::Rule;
 use super::rule_index::RuleIndex;
@@ -41,7 +43,9 @@ pub(super) fn walk(
     vars: &[(String, String)],
     styles: &mut Vec<Computed>,
     bg_images: &mut Vec<Option<String>>,
+    grids: &mut Vec<Option<GridSpec>>,
     mut pseudos: Option<&mut Pseudos>,
+    budget: &mut MatchBudget,
     depth: u32,
 ) {
     let node = &dom.nodes[id];
@@ -49,23 +53,36 @@ pub(super) fn walk(
     let mut c = Computed::inherit_from(&inherited);
     let parent_fs = inherited.font_size_px;
     let mut bg: Option<String> = None;
+    let mut grid: Option<GridSpec> = None;
     if node.kind == NodeKind::Element {
-        apply_rules(dom, id, ua, ua_index, &mut c, parent_fs, vars, &mut bg);
-        apply_rules(dom, id, author, author_index, &mut c, parent_fs, vars, &mut bg);
+        apply_rules(dom, id, ua, ua_index, &mut c, parent_fs, vars, &mut bg, &mut grid, None);
+        apply_rules(
+            dom,
+            id,
+            author,
+            author_index,
+            &mut c,
+            parent_fs,
+            vars,
+            &mut bg,
+            &mut grid,
+            Some(budget),
+        );
         if let Some(st) = node.attr("style") {
-            apply_style_attr(st, &mut c, parent_fs, vars, &mut bg);
+            apply_style_attr(st, &mut c, parent_fs, vars, &mut bg, &mut grid);
         }
         // Generated content cascades against the element's final style, so
         // the pseudo boxes inherit color and font exactly like a real child.
         if let Some(p) = pseudos.as_deref_mut() {
             p[id] = (
-                pseudo_style(dom, id, author, author_index, 1, &c, vars),
-                pseudo_style(dom, id, author, author_index, 2, &c, vars),
+                pseudo_style(dom, id, author, author_index, 1, &c, vars, budget),
+                pseudo_style(dom, id, author, author_index, 2, &c, vars, budget),
             );
         }
     }
     styles[id] = c;
     bg_images[id] = bg;
+    grids[id] = grid;
     if depth >= 400 {
         return;
     }
@@ -81,7 +98,9 @@ pub(super) fn walk(
             vars,
             styles,
             bg_images,
+            grids,
             pseudos.as_deref_mut(),
+            budget,
             depth + 1,
         );
     }

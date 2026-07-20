@@ -19,7 +19,12 @@ use smoltcp::iface::{Interface, SocketHandle, SocketSet};
 use crate::state::globals::NET;
 
 pub fn with_dhcp_and_dns_slot<R>(
-    f: impl FnOnce(&mut Interface, &mut SocketSet<'static>, SocketHandle, &mut Option<SocketHandle>) -> R,
+    f: impl FnOnce(
+        &mut Interface,
+        &mut SocketSet<'static>,
+        SocketHandle,
+        &mut Option<SocketHandle>,
+    ) -> R,
 ) -> Option<R> {
     let mut guard = NET.lock();
     let state = guard.as_mut()?;

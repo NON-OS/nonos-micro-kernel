@@ -1,0 +1,18 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Shared WiFi core: the chip-independent 802.11/WPA2 brains and the net_core
+# link adapter both the Intel (iwlwifi) and Realtek (rtl8821ce) drivers depend
+# on. no_std for the drivers; std under `cargo test` for the host proofs.
+[package]
+name = "nonos_wifi_core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

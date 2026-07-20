@@ -23,6 +23,10 @@ mod pm;
 
 use nonos_app_skeleton::run;
 
+/// # Safety
+///
+/// The loader jumps here directly as the capsule entry point; it must be the
+/// process's only `_start` and is never called from Rust.
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     run(pm::ProcessManager::new)

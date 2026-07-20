@@ -14,9 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-const MAX_SELECTOR_CHECKS: usize = 1_000_000;
+// The rule index prunes candidates per node, so real pages stay far below
+// this; the cap only stops pathological sheets (huge universal buckets over
+// huge trees) from going quadratic. Budget exhaustion degrades styling from
+// the end of the document instead of dropping rules for the whole page.
+const MAX_SELECTOR_CHECKS: usize = 16_000_000;
 
-pub fn rule_limit(nodes: usize, rules: usize) -> usize {
-    let per_node = MAX_SELECTOR_CHECKS / nodes.max(1);
-    rules.min(per_node.max(1))
+// Total author-rule candidate tests allowed for one cascade. UA rules are
+// never budgeted: base block layout must survive a hostile author sheet.
+pub(super) struct MatchBudget {
+    left: usize,
+}
+
+impl MatchBudget {
+    pub(super) fn new() -> Self {
+        MatchBudget { left: MAX_SELECTOR_CHECKS }
+    }
+
+    // Reserve n candidate tests. False once dry, at which point the caller
+    // skips author matching and keeps the inherited + UA style.
+    pub(super) fn take(&mut self, n: usize) -> bool {
+        if self.left < n {
+            self.left = 0;
+            return false;
+        }
+        self.left -= n;
+        true
+    }
 }

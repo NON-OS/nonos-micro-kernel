@@ -46,8 +46,15 @@ pub fn apply_decl(
     if name.starts_with("--") {
         return;
     }
-    // Substitute var() so every value parser below sees a plain literal.
-    let resolved = resolve(value, vars, 0);
+    // Substitute var() so every value parser below sees a plain literal. A
+    // poisoned substitution invalidates the whole declaration, which is how
+    // theme toggle vars select their fallback arm.
+    let Some(resolved) = resolve(value, vars, 0) else {
+        return;
+    };
+    // light-dark(a, b) picks per color scheme; this browser renders the
+    // light scheme, so the first argument wins.
+    let resolved = crate::browser::css::vars::strip_light_dark(&resolved);
     let value = resolved.as_str();
     let fs = c.font_size_px;
     let _ = apply_text(c, name, value, fs, parent_fs)
@@ -61,6 +68,7 @@ pub fn apply_decl(
         || apply_grid(c, name, value, fs)
         || apply_list(c, name, value)
         || apply_position(c, name, value, fs)
+        || super::float::apply_float(c, name, value)
         || apply_paint(c, name, value, fs)
         || super::shadow::apply_shadow(c, name, value, fs);
 }

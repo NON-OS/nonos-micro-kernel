@@ -24,6 +24,7 @@ pub mod next_category;
 pub mod on_event;
 pub mod on_event_browsing;
 pub mod on_event_editing;
+pub mod on_event_wifi;
 pub mod on_pointer;
 pub mod prev_category;
 pub mod push_text_char;

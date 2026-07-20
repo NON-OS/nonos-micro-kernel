@@ -16,9 +16,11 @@
 
 use nonos_policy_proto::Category;
 
+use crate::wifi::{NetStatus, ScanNetwork, ScanStats, WifiInterface};
+
 use super::cache::FieldValue;
 use super::edit_buffer::EditBuffer;
-use super::state::{State, FIELD_SLOTS};
+use super::state::{State, WifiConnect, WifiScan, FIELD_SLOTS, WIFI_MAX, WIFI_NET_MAX};
 use super::status::Status;
 
 pub fn new() -> State {
@@ -32,5 +34,19 @@ pub fn new() -> State {
         editing: false,
         edit: EditBuffer::empty(),
         status: Status::idle(),
+        wifi_active: false,
+        wifi_adapters: [WifiInterface::default(); WIFI_MAX],
+        wifi_adapter_count: 0,
+        wifi_cursor: 0,
+        wifi_networks: [ScanNetwork::default(); WIFI_NET_MAX],
+        wifi_network_count: 0,
+        wifi_scan: WifiScan::Idle,
+        wifi_stage: None,
+        wifi_stats: ScanStats::default(),
+        wifi_pass_active: false,
+        wifi_pass: EditBuffer::empty(),
+        wifi_connect: WifiConnect::Idle,
+        wifi_datapath: None,
+        wifi_net: NetStatus::NoService,
     }
 }

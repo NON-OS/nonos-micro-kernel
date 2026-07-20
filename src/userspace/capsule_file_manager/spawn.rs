@@ -20,7 +20,9 @@ use super::embed::{
 };
 use super::state;
 use crate::capabilities::Capability;
-use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
+use crate::kernel_core::process_spawn::capsule_spawn::{
+    self, spawn_next_instance, CapsuleSpecVerified, InstanceEndpoint, InstanceSpawn,
+};
 use crate::security::nonos_id_cert::IdCertVerifyError;
 use crate::security::nonos_trust_anchor::{
     decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
@@ -33,6 +35,42 @@ const SERVICE_PORT: u32 = 4724;
 const REPLY_INBOX: &str = "endpoint.app.file_manager.reply";
 const REPLY_PORT: u32 = 4725;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+
+// Extra window endpoints, each declared in the signed manifest. Ordered, so the
+// lowest-numbered free one is taken.
+const FILE_MANAGER_INSTANCES: &[InstanceEndpoint] = &[
+    InstanceEndpoint {
+        name: "app.file_manager.1",
+        port: 4858,
+        reply_inbox: "endpoint.app.file_manager.1.reply",
+        reply_port: 4859,
+    },
+    InstanceEndpoint {
+        name: "app.file_manager.2",
+        port: 4860,
+        reply_inbox: "endpoint.app.file_manager.2.reply",
+        reply_port: 4861,
+    },
+];
+
+// Spawn the next free file manager window on demand. Same signed artifacts as
+// boot, a fresh pid, and thus its own compositor window.
+pub fn spawn_file_manager_instance() -> Result<u32, SpawnError> {
+    spawn_next_instance(&InstanceSpawn {
+        elf: FILE_MANAGER_ELF,
+        cert: FILE_MANAGER_NONOS_ID_CERT_BYTES,
+        manifest: FILE_MANAGER_MANIFEST_BYTES,
+        attestation: FILE_MANAGER_ATTESTATION_BYTES,
+        target_triple: TARGET_TRIPLE,
+        requested_caps: Capability::CoreExec.bit()
+            | Capability::IPC.bit()
+            | Capability::Memory.bit()
+            | Capability::GraphicsDisplayQuery.bit()
+            | Capability::GraphicsSurfaceCreate.bit(),
+        instances: FILE_MANAGER_INSTANCES,
+        debug_tag: b"[FILE_MANAGER-INSTANCE] elf error:",
+    })
+}
 
 pub fn spawn_file_manager_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

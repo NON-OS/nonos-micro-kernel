@@ -30,4 +30,14 @@ pub trait App {
     fn tick_interval_ms(&self) -> i64 {
         1000
     }
+
+    /// Whether the app has pending asynchronous work, such as an in-flight
+    /// network request or a load in progress, and needs to keep ticking
+    /// promptly. When true the runner yields cooperatively between frames
+    /// instead of sleeping to the next vblank, so the work advances even where
+    /// the scheduler's periodic wake is unreliable and a frame would otherwise
+    /// stall until the next input event. Defaults to idle.
+    fn busy(&self) -> bool {
+        false
+    }
 }

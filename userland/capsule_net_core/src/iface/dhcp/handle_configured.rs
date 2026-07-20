@@ -17,8 +17,8 @@
 use smoltcp::iface::{Interface, SocketHandle, SocketSet};
 use smoltcp::wire::IpCidr;
 
-use crate::iface::dhcp::{emit_lease_marker, emit_status_selfcheck, install_dns_socket};
 use crate::iface::dhcp::types::ConfiguredLease;
+use crate::iface::dhcp::{emit_lease_marker, emit_status_selfcheck, install_dns_socket};
 use crate::state::{self, Lease};
 
 pub fn handle_configured(

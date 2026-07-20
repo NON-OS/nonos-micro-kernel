@@ -48,6 +48,7 @@ path    = "src/nonos_main.rs"
 harness = false
 
 [features]
+nonos-stark-attest = []
 default = ["microkernel-core"]
 
 # Bootstrap. `kernel` switches malloc/free to Rust `alloc`; `standalone`
@@ -121,6 +122,7 @@ nonos-capsule-driver-e1000      = []
 nonos-capsule-driver-i2c-pci    = []
 nonos-capsule-driver-i2c-hid    = []
 nonos-capsule-driver-iwlwifi    = []
+nonos-capsule-driver-rtl8821ce  = []
 nonos-capsule-driver-rtl8139    = []
 nonos-capsule-driver-rtl8169    = []
 nonos-capsule-driver-ahci       = []
@@ -296,6 +298,13 @@ microkernel-driver-iwlwifi = [
   "nonos-production",
   "nonos-capsule-proof-io",
   "nonos-capsule-driver-iwlwifi",
+]
+
+microkernel-driver-rtl8821ce = [
+  "microkernel-core",
+  "nonos-production",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-driver-rtl8821ce",
 ]
 
 microkernel-driver-i2c-pci = [
@@ -531,6 +540,7 @@ microkernel-full-gui = [
   "nonos-capsule-driver-rtl8139",
   "nonos-capsule-driver-rtl8169",
   "nonos-capsule-driver-iwlwifi",
+  "nonos-capsule-driver-rtl8821ce",
   "nonos-capsule-driver-hda",
   "nonos-capsule-driver-usb-msc",
   "nonos-capsule-driver-i2c-pci",
@@ -730,6 +740,8 @@ sha1-legacy = []
 std = []
 
 [dependencies]
+# Transparent STARK stack, shared with the bootloader for kernel self-attestation.
+nonos-stark = { path = "nonos-stark", version = "0.1.0" }
 # Synchronization. spin is the kernel-wide lock primitive (no_std,
 # interrupt-safe).
 spin        = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex", "lazy", "rwlock"] }

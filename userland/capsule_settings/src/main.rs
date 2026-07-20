@@ -20,9 +20,14 @@
 extern crate alloc;
 
 mod settings;
+mod wifi;
 
 use nonos_app_skeleton::run;
 
+/// # Safety
+/// The capsule entry point. The runtime jumps here once, on a fresh stack, with
+/// no prior Rust state; it must not be called from Rust. It runs the settings app
+/// event loop and never returns.
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     run(settings::Settings::new)

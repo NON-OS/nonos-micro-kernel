@@ -17,7 +17,9 @@
 use smoltcp::socket::udp;
 use smoltcp::wire::{IpAddress, IpEndpoint, Ipv4Address};
 
-use crate::protocol::udp::{E_BAD_ADDR, E_BAD_LEN, E_NOT_CONNECTED, E_NO_SOCKET, E_OK, MAGIC_NUDP, OP_SEND};
+use crate::protocol::udp::{
+    E_BAD_ADDR, E_BAD_LEN, E_NOT_CONNECTED, E_NO_SOCKET, E_OK, MAGIC_NUDP, OP_SEND,
+};
 use crate::server::parse_req::Request;
 use crate::server::respond::reply;
 use crate::state;

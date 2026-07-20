@@ -7,6 +7,7 @@ CAPSULE_FEATURE          := nonos-capsule-wallet-nonos
 CAPSULE_NAMESPACE        := systems.nonos.app.nonos_wallet
 CAPSULE_SERVICE_ENDPOINT := service:4734:app.nonos_wallet
 CAPSULE_REPLY_ENDPOINT   := reply:4735:endpoint.app.nonos_wallet.reply
+CAPSULE_INSTANCE_ENDPOINTS := service:4854:app.nonos_wallet.1 reply:4855:endpoint.app.nonos_wallet.1.reply service:4856:app.nonos_wallet.2 reply:4857:endpoint.app.nonos_wallet.2.reply
 CAPSULE_REQUIRED_CAPS    := 0x183d
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_wallet_nonos
 

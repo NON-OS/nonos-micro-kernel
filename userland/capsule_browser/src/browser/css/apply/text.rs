@@ -48,7 +48,9 @@ pub(super) fn apply_text(
             c.mono = value.to_ascii_lowercase().contains("mono");
             let first = value.split(',').next().unwrap_or("").trim();
             let bare = first.trim_matches('"').trim_matches('\'').trim();
-            c.font_key = match bare.to_ascii_lowercase().as_str() {
+            let lower = bare.to_ascii_lowercase();
+            c.icon_font = crate::browser::css::icon_font::is_icon_family(&lower);
+            c.font_key = match lower.as_str() {
                 "" | "sans-serif" | "serif" | "system-ui" | "ui-sans-serif" => 0,
                 "monospace" | "ui-monospace" | "cursive" | "fantasy" => 0,
                 _ => crate::browser::fonts::family_key(bare),

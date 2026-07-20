@@ -34,6 +34,9 @@ pub fn toolbar_button_at(x: i32, y: i32) -> Option<Btn> {
     if hit(x, constants::HOME_X) {
         return Some(Btn::Home);
     }
+    if x >= WIDTH as i32 - 44 {
+        return Some(Btn::Menu);
+    }
     if x >= constants::PILL_L && x < WIDTH as i32 - 52 {
         return Some(Btn::Url);
     }

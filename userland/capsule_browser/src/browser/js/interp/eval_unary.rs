@@ -22,6 +22,7 @@ use crate::browser::js::value::Value;
 
 use super::ctx::Ctx;
 use super::eval_expr::eval_expr;
+use super::promise_await::await_value;
 use super::to_bool::to_bool;
 use super::to_num::to_num;
 use super::type_of::type_of;
@@ -32,6 +33,7 @@ pub fn eval_unary(ctx: &mut Ctx, env: &Env, op: &str, a: &Expr) -> Result<Value,
         "-" => Value::Num(-to_num(&v)),
         "!" => Value::Bool(!to_bool(&v)),
         "typeof" => Value::Str(Rc::new(type_of(&v))),
+        "await" => await_value(ctx, v),
         _ => Value::Undef,
     })
 }

@@ -1,0 +1,12 @@
+[package]
+name = "nonos-stark"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0"
+description = "Transparent post-quantum STARK primitives shared by the kernel and the bootloader"
+
+[lib]
+name = "nonos_stark"
+
+[dependencies]
+blake3 = { version = "1.0", default-features = false }

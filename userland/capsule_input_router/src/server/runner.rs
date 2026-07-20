@@ -26,7 +26,11 @@ use crate::state::Context;
 
 use super::drain_ipc::drain_ipc;
 
-const INPUT_WAIT_MS: u64 = 20;
+// Upper bound on how long the router parks when the kernel input ring is empty.
+// A posted event wakes it immediately; this only bounds the case where the wake
+// signal is missed, so keeping it well under a frame stops a click from waiting
+// on the timeout before it is routed to the focused window.
+const INPUT_WAIT_MS: u64 = 8;
 
 pub fn run() -> ! {
     let mut ctx = Context::new();

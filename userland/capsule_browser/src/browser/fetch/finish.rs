@@ -39,20 +39,24 @@ pub(super) fn finish(state: &mut State, raw: &[u8], suppress: bool) {
             );
             // A fresh document drops any stylesheets gathered for the last one.
             state.css_queue.clear();
+            state.script_queue.clear();
             state.page_css.clear();
             match rendered {
-                render_response::Rendered::Boxes(b, dom, world) => {
+                render_response::Rendered::Html(dom) => {
+                    // Drop the prior page's engine before its DOM disappears,
+                    // then home the new DOM and run its scripts against that
+                    // stable address.
+                    state.engine = None;
                     state.page_dom = Some(dom);
-                    state.world = Some(world);
                     state.document = None;
+                    super::commit_html::commit_html(state);
                     super::enqueue_css::enqueue_css(state);
+                    super::enqueue_scripts::enqueue_scripts(state);
                     // Stylesheets are render-blocking: if the page pulls in
                     // external CSS, hold the first paint until it arrives so
                     // the user never sees the unstyled document flash. With no
                     // external CSS the inline render is already complete.
-                    if state.css_queue.is_empty() {
-                        state.box_doc = Some(b);
-                    } else {
+                    if !state.css_queue.is_empty() {
                         state.box_doc = None;
                         state.status = alloc::string::String::from("loading styles");
                     }
@@ -62,12 +66,14 @@ pub(super) fn finish(state: &mut State, raw: &[u8], suppress: bool) {
                     state.box_doc = None;
                     state.page_dom = None;
                     state.world = None;
+                    state.engine = None;
                 }
                 render_response::Rendered::Nothing => {
                     state.document = None;
                     state.box_doc = None;
                     state.page_dom = None;
                     state.world = None;
+                    state.engine = None;
                 }
             }
             crate::browser::image::enqueue_from_doc(state);
@@ -80,6 +86,7 @@ pub(super) fn finish(state: &mut State, raw: &[u8], suppress: bool) {
             state.box_doc = None;
             state.page_dom = None;
             state.world = None;
+            state.engine = None;
         }
     }
     state.view = View::Page;

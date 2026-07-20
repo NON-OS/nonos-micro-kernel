@@ -20,6 +20,7 @@ use crate::settings::state::State;
 
 use super::on_event_browsing::on_event_browsing;
 use super::on_event_editing::on_event_editing;
+use super::on_event_wifi::on_event_wifi;
 use super::on_pointer::on_pointer;
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
@@ -31,6 +32,9 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     }
     if state.editing {
         return on_event_editing(state, event.code);
+    }
+    if state.wifi_active {
+        return on_event_wifi(state, event.code);
     }
     on_event_browsing(state, event.code)
 }

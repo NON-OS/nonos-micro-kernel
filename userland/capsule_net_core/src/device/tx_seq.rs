@@ -20,5 +20,9 @@ static SEQ: AtomicU32 = AtomicU32::new(1);
 
 pub(super) fn next_rid() -> u32 {
     let v = SEQ.fetch_add(1, Ordering::Relaxed);
-    if v == 0 { SEQ.fetch_add(1, Ordering::Relaxed) } else { v }
+    if v == 0 {
+        SEQ.fetch_add(1, Ordering::Relaxed)
+    } else {
+        v
+    }
 }

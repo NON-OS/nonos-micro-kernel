@@ -16,8 +16,8 @@
 
 use smoltcp::socket::dhcpv4;
 
-use crate::iface::dhcp::{handle_configured, handle_deconfigured};
 use crate::iface::dhcp::types::{ConfiguredLease, DhcpAction};
+use crate::iface::dhcp::{handle_configured, handle_deconfigured};
 use crate::state;
 
 pub fn poll_event() {

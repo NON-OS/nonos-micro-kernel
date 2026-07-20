@@ -1,0 +1,20 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the shared WiFi core. Builds for the host so
+# `cargo test` exercises the net_core link protocol (netif) and the station
+# data path against the crate's public API, with no hardware and no chip
+# driver in the loop.
+[package]
+name = "nonos_wifi_core_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nonos_wifi_core = { path = "../nonos_wifi_core" }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

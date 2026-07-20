@@ -50,11 +50,8 @@ fn path(b: &mut Vec<u8>, p: &[[u8; 32]]) {
 /// Serialize a money-grade proof to the frozen byte layout (spec/stark-serialization.md).
 pub(crate) fn serialize(proof: &StarkProofExt) -> Vec<u8> {
     let mut b = Vec::new();
-    // trace_roots
-    u32le(&mut b, proof.trace_roots.len() as u32);
-    for r in &proof.trace_roots {
-        b.extend_from_slice(r);
-    }
+    // trace_root (single wide-leaf commitment over the trace rows)
+    b.extend_from_slice(&proof.trace_root);
     // comp_root
     b.extend_from_slice(&proof.comp_root);
     // ood_frame
@@ -94,10 +91,8 @@ pub(crate) fn serialize(proof: &StarkProofExt) -> Vec<u8> {
         for t in &q.trace {
             fp(&mut b, *t);
         }
-        u32le(&mut b, q.trace_paths.len() as u32);
-        for p in &q.trace_paths {
-            path(&mut b, p);
-        }
+        // single wide-leaf path authenticating the whole trace row
+        path(&mut b, &q.trace_path);
         fp2(&mut b, q.comp);
         path(&mut b, &q.comp_path);
     }
@@ -124,16 +119,8 @@ fn gen_stark_selftest() {
     // This is the engine vector, NOT the full join-split; the deploy self-test must
     // swap to a full join-split proof before the pool verifier goes immutable.
     let air = Accumulator { log_t: 3 };
-    let addends = [
-        Fp::from_u64(7),
-        Fp::from_u64(3),
-        neg(8),
-        neg(1),
-        neg(1),
-        Fp::ZERO,
-        Fp::ZERO,
-        Fp::ZERO,
-    ];
+    let addends =
+        [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO];
     let mut trace = Vec::with_capacity(addends.len() * 2);
     let mut acc = Fp::ZERO;
     for &a in &addends {
@@ -145,7 +132,10 @@ fn gen_stark_selftest() {
     let n_queries = 32usize;
     let grind_bits = 8u32;
     let proof = stark_prove_ext(&air, &trace, n_queries, grind_bits);
-    assert!(stark_verify_ext(&air, &proof, n_queries, grind_bits), "self-test proof does not verify");
+    assert!(
+        stark_verify_ext(&air, &proof, n_queries, grind_bits),
+        "self-test proof does not verify"
+    );
 
     let bytes = serialize(&proof);
     let json = alloc::format!(
@@ -168,7 +158,9 @@ fn gen_join_split_selftest() {
     // to the range-checked value by a copy constraint. This is the join-split shape
     // (WiredExt compose_ext + grand product + two constraint kinds); the full
     // membership/nullifier/commitment circuit adds Poseidon regions the same way.
-    use crate::crypto::stark::air::{stark_prove_ext, stark_verify_ext, Accumulator, RangeCheck, AirExt, WiredExt};
+    use crate::crypto::stark::air::{
+        stark_prove_ext, stark_verify_ext, Accumulator, AirExt, RangeCheck, WiredExt,
+    };
     use alloc::boxed::Box;
 
     let regions: Vec<Box<dyn AirExt>> = alloc::vec![
@@ -179,7 +171,8 @@ fn gen_join_split_selftest() {
     sigma.swap(1, 8); // conservation acc[1] (=input 7) wired to range acc[0]
     let wired = WiredExt::new(regions, alloc::vec![0], sigma, Fp::from_u64(5), Fp::from_u64(7));
 
-    let addends = [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO];
+    let addends =
+        [Fp::from_u64(7), Fp::from_u64(3), neg(8), neg(1), neg(1), Fp::ZERO, Fp::ZERO, Fp::ZERO];
     let mut cons = Vec::with_capacity(addends.len() * 2);
     let mut acc = Fp::ZERO;
     for &a in &addends {

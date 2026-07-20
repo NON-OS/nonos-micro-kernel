@@ -17,3 +17,4 @@ pub mod pbkdf2;
 pub mod prf;
 pub mod ptk;
 pub mod sha1;
+pub mod supplicant;

@@ -59,9 +59,14 @@ fn chunked_end(body: &[u8]) -> Option<usize> {
             let end = body[i..].windows(4).position(|w| w == b"\r\n\r\n")?;
             return Some(i + end + 4);
         }
-        if body.len() < i + size + 2 || body.get(i + size..i + size + 2) != Some(b"\r\n") {
+        // `size` is an attacker-supplied hex chunk length up to usize::MAX, so
+        // the index math must not overflow (release builds check overflow and
+        // abort). Fold the bound into checked arithmetic; any overflow is just
+        // a body that does not fit and fails the frame.
+        let after = i.checked_add(size).and_then(|v| v.checked_add(2))?;
+        if body.len() < after || body.get(after - 2..after) != Some(b"\r\n") {
             return None;
         }
-        i += size + 2;
+        i = after;
     }
 }

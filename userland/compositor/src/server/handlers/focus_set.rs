@@ -31,6 +31,12 @@ pub fn handle(
     let Some(target_pid) = super::u32_at(body, 0) else {
         return respond::status(sender_pid, req, E_INVAL, tx);
     };
-    ctx.focus.set(target_pid);
+    // A focus change reorders the draw stack, so recomposite the whole screen
+    // this frame. Focus only changes on a click, so the cost is a single full
+    // frame and it guarantees no window is left half-drawn under another as the
+    // cursor later passes over the overlap.
+    if ctx.focus.set(target_pid) {
+        ctx.damage.mark_full(ctx.width, ctx.height);
+    }
     respond::status(sender_pid, req, 0, tx)
 }

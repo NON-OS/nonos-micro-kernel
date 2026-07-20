@@ -43,10 +43,14 @@ pub fn dev_override(_: &mut SystemTable<Boot>) -> bool {
 
 #[cfg(feature = "dev-mode")]
 fn secure_boot_enabled(st: &mut SystemTable<Boot>) -> bool {
+    // The SecureBoot global variable is a single byte; uefi 0.23 writes it into a
+    // caller-provided buffer and returns the filled slice with its attributes.
+    let mut buf = [0u8; 1];
     st.runtime_services()
         .get_variable(
             uefi::cstr16!("SecureBoot"),
             &uefi::table::runtime::VariableVendor::GLOBAL_VARIABLE,
+            &mut buf,
         )
         .map(|(data, _)| data.first().copied().unwrap_or(0) == 1)
         .unwrap_or(false)

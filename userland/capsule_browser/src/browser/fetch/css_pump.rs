@@ -79,6 +79,7 @@ pub fn css_pump(state: &mut State) -> bool {
         tx_seq: 0,
         keep_uses: 0,
         font: 0,
+        script: false,
     });
     true
 }

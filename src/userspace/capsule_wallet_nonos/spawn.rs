@@ -20,7 +20,9 @@ use super::embed::{
 };
 use super::state;
 use crate::capabilities::Capability;
-use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified, SpawnError};
+use crate::kernel_core::process_spawn::capsule_spawn::{
+    self, spawn_next_instance, CapsuleSpecVerified, InstanceEndpoint, InstanceSpawn, SpawnError,
+};
 use crate::security::nonos_id_cert::IdCertVerifyError;
 use crate::security::nonos_trust_anchor::{
     decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
@@ -31,6 +33,44 @@ const SERVICE_PORT: u32 = 4734;
 const REPLY_INBOX: &str = "endpoint.app.nonos_wallet.reply";
 const REPLY_PORT: u32 = 4735;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+
+// Extra window endpoints, each declared in the signed manifest. Ordered, so the
+// lowest-numbered free one is taken.
+const WALLET_NONOS_INSTANCES: &[InstanceEndpoint] = &[
+    InstanceEndpoint {
+        name: "app.nonos_wallet.1",
+        port: 4854,
+        reply_inbox: "endpoint.app.nonos_wallet.1.reply",
+        reply_port: 4855,
+    },
+    InstanceEndpoint {
+        name: "app.nonos_wallet.2",
+        port: 4856,
+        reply_inbox: "endpoint.app.nonos_wallet.2.reply",
+        reply_port: 4857,
+    },
+];
+
+// Spawn the next free wallet window on demand. Same signed artifacts as boot, a
+// fresh pid, and thus its own compositor window.
+pub fn spawn_wallet_nonos_instance() -> Result<u32, SpawnError> {
+    spawn_next_instance(&InstanceSpawn {
+        elf: WALLET_NONOS_ELF,
+        cert: WALLET_NONOS_NONOS_ID_CERT_BYTES,
+        manifest: WALLET_NONOS_MANIFEST_BYTES,
+        attestation: WALLET_NONOS_ATTESTATION_BYTES,
+        target_triple: TARGET_TRIPLE,
+        requested_caps: Capability::CoreExec.bit()
+            | Capability::IPC.bit()
+            | Capability::Network.bit()
+            | Capability::Memory.bit()
+            | Capability::Crypto.bit()
+            | Capability::GraphicsDisplayQuery.bit()
+            | Capability::GraphicsSurfaceCreate.bit(),
+        instances: WALLET_NONOS_INSTANCES,
+        debug_tag: b"[WALLET_NONOS-INSTANCE] elf error:",
+    })
+}
 
 pub fn spawn_wallet_nonos_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

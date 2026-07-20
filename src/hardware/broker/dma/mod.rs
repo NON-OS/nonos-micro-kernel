@@ -23,6 +23,6 @@ mod types;
 mod va;
 
 pub use map::map_for_caller;
-pub(crate) use pool::init_display_pool;
+pub(crate) use pool::{init_display_pool, init_low32_pool, low32_capacity_pages};
 pub use release::{release_all_for_pid, release_for_device, unmap_grant};
 pub use types::{DmaError, DmaGrant, DmaMapError, DmaMapRequest, DmaMapResult};

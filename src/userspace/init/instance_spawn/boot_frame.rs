@@ -35,15 +35,44 @@ const DESKTOP_SHELL: &str = "desktop_shell";
 /// Boot a freshly spawned window instance by delivering the focus frame the
 /// app skeleton waits for. The frame is attributed to the desktop shell, the
 /// only sender the skeleton accepts, because the shell is what asked for this
-/// window. A missing shell or a full inbox just means no window yet, never a
-/// fault, so failures are swallowed.
+/// window.
+///
+/// Delivery is retried until it lands or a wall-clock deadline passes, not a
+/// fixed number of yields. The instance's `proc.<pid>` inbox is created by its
+/// install and the shell must be up to be the sender, but on real hardware
+/// either can lag the spawn return; a fixed count of bare yields resolves in
+/// microseconds on a lightly loaded scheduler, so it gave up before the instance
+/// had even been scheduled to create its inbox. That is why a second or third
+/// window opened reliably under QEMU (steady, fast scheduling) yet not on
+/// hardware. Bounding by the monotonic clock (which does not depend on the timer
+/// tick) gives the instance real time to appear while still capping the wait so a
+/// genuinely missing shell can never wedge the init drain.
+const BOOT_DEADLINE_MS: u64 = 1000;
+
 pub(super) fn boot(instance_pid: u32) {
-    let Some(shell) = lookup_service(DESKTOP_SHELL) else {
-        return;
-    };
-    let from = format!("proc.{}", shell.pid);
     let to = format!("proc.{}", instance_pid);
-    if let Ok(msg) = IpcMessage::new(&from, &to, &NCTL_FOCUS_SELF) {
-        let _ = nonos_inbox::try_enqueue_strict(&to, msg);
+    let deadline = crate::time::timestamp_millis().saturating_add(BOOT_DEADLINE_MS);
+    while crate::time::timestamp_millis() < deadline {
+        if try_deliver(&to) {
+            return;
+        }
+        crate::sched::yield_now();
+    }
+}
+
+// Deliver the focus frame once. Returns true only when the shell is registered,
+// the instance inbox exists, and the frame was accepted, so the caller knows
+// whether to keep retrying.
+fn try_deliver(to: &str) -> bool {
+    let Some(shell) = lookup_service(DESKTOP_SHELL) else {
+        return false;
+    };
+    if !nonos_inbox::exists(to) {
+        return false;
+    }
+    let from = format!("proc.{}", shell.pid);
+    match IpcMessage::new(&from, to, &NCTL_FOCUS_SELF) {
+        Ok(msg) => nonos_inbox::try_enqueue_strict(to, msg).is_ok(),
+        Err(_) => false,
     }
 }

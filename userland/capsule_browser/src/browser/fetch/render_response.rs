@@ -16,33 +16,23 @@
 
 use crate::browser::fetch::unsupported_content;
 use crate::browser::http::response::{ContentKind, Response};
-use crate::browser::{css, dom, html, js, layout};
+use crate::browser::{dom, html, layout};
 
 use super::render_lines::render_lines;
 
-// HTML renders through the box engine and keeps its DOM and script world
-// alive for events; plain text and error surfaces use the line renderer.
+// HTML hands back the parsed DOM: its scripts run through QuickJS and it is laid
+// out only after it is homed in the page state, so the retained engine's pointer
+// into that DOM stays valid for later event dispatch. Plain text and error
+// surfaces use the line renderer directly.
 pub enum Rendered {
-    Boxes(layout::boxmodel::BoxDocument, dom::Dom, js::World),
+    Html(dom::Dom),
     Lines(layout::doc::RenderDocument),
     Nothing,
 }
 
 pub fn render_response(resp: &Response) -> (Rendered, usize) {
     match resp.content_kind {
-        ContentKind::Html => {
-            let mut tree = dom::parse(&resp.body);
-            let world = js::run(&mut tree);
-            let styled = css::compute(&tree, &css::collect_css(&tree));
-            let root =
-                layout::boxmodel::build(&tree, &styled.styles, &styled.bg_images, &styled.pseudos);
-            if root.children.is_empty() {
-                return (Rendered::Nothing, 0);
-            }
-            let doc = layout::boxmodel::layout(&root, crate::browser::manifest::WIDTH);
-            let n = doc.frags.len();
-            (Rendered::Boxes(doc, tree, world), n)
-        }
+        ContentKind::Html => (Rendered::Html(dom::parse(&resp.body)), 0),
         ContentKind::Text => render_lines(html::text::parse_text(&resp.body)),
         ContentKind::Unsupported => {
             render_lines(unsupported_content::unsupported_content(resp.status, resp.body.len()))

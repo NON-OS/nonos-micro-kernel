@@ -32,7 +32,8 @@ pub fn paint(ctx: &mut Context, rect: Rect) {
         byte_len: ctx.backing_len,
     };
     sw_blitter::fill_rect(dst, rect, BACKGROUND_ARGB);
-    let (layers, count) = ctx.scene.z_sorted_snapshot();
+    let focused = ctx.focus.focused();
+    let (layers, count) = ctx.scene.z_sorted_snapshot(focused);
     let mut attached = [0u64; MAX_ATTACH];
     let mut n_attached = 0;
     for layer in layers.iter().take(count) {

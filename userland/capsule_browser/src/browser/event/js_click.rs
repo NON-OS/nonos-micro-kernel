@@ -14,19 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::js;
 use crate::browser::state::State;
 
 use super::relayout::relayout;
 
-// Dispatch a click on a DOM node to its script listeners. Returns whether
-// any listener ran (the click is then consumed).
+// Dispatch a click on a DOM node to the page engine's listeners. Returns
+// whether any listener ran (the click is then consumed). A listener may mutate
+// the DOM through the engine's node bindings, so the page relays out when one
+// fires.
 pub fn js_click(state: &mut State, node: usize) -> bool {
-    let (fired, dirty) = match (state.page_dom.as_mut(), state.world.as_mut()) {
-        (Some(dom), Some(world)) => js::dispatch_event(dom, world, node, "click"),
-        _ => return false,
+    let fired = match state.engine.as_ref() {
+        Some(engine) => engine.dispatch_event(node as i32, "click") > 0,
+        None => return false,
     };
-    if dirty {
+    if fired {
         relayout(state);
     }
     fired

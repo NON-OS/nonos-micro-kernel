@@ -17,12 +17,19 @@ description = "NONOS browser capsule"
 name = "browser"
 path = "src/main.rs"
 
+[features]
+# `harness` compiles only the pure render modules (dom, css, layout, fonts,
+# image decode/blit) so a host tool can render pages to an image off-device.
+# The capsule build never enables it; declaring it keeps cfg checks quiet.
+harness = []
+
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
 nonos_toolkit = { path = "../toolkit" }
 nonos_inflate = { path = "../inflate" }
 nonos_base64 = { path = "../base64" }
+nonos_qjs = { path = "../nonos_qjs" }
 spin = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex"] }
 
 [profile.release]
