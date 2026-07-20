@@ -25,6 +25,7 @@ use alloc::vec::Vec;
 const DOM_LEAF: &[u8] = b"NONOS-STARK-MERKLE-LEAF";
 const DOM_LEAF_EXT: &[u8] = b"NONOS-STARK-MERKLE-LEAF-EXT";
 const DOM_LEAF_WIDE: &[u8] = b"NONOS-STARK-MERKLE-LEAF-WIDE";
+const DOM_LEAF_PERIODIC: &[u8] = b"NONOS-STARK-PERIODIC-WIDE";
 const DOM_NODE: &[u8] = b"NONOS-STARK-MERKLE-NODE";
 
 /// Hash a field element into a leaf digest, domain-separated from node hashing
@@ -55,6 +56,19 @@ pub(super) fn hash_leaf_ext(leaf: Fp2) -> [u8; 32] {
 pub(super) fn hash_leaf_wide(row: &[Fp]) -> [u8; 32] {
     let mut buf = Vec::with_capacity(DOM_LEAF_WIDE.len() + row.len() * 8);
     buf.extend_from_slice(DOM_LEAF_WIDE);
+    for v in row {
+        buf.extend_from_slice(&v.value().to_le_bytes());
+    }
+    keccak256(&buf)
+}
+
+/// Hash a row of preprocessed periodic-column values into one leaf: identical
+/// packing to the wide trace leaf under its own domain, so the structural
+/// periodic commitment a verifier bakes as a constant can never be read as a
+/// trace leaf.
+pub(super) fn hash_leaf_wide_periodic(row: &[Fp]) -> [u8; 32] {
+    let mut buf = Vec::with_capacity(DOM_LEAF_PERIODIC.len() + row.len() * 8);
+    buf.extend_from_slice(DOM_LEAF_PERIODIC);
     for v in row {
         buf.extend_from_slice(&v.value().to_le_bytes());
     }
