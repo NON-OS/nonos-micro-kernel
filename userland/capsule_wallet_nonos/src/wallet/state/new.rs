@@ -64,6 +64,7 @@ pub fn new_state() -> State {
         panel: 0,
         locked: false,
         account: 0,
+        stake_amount: 4000,
         notes: crate::wallet::shield::notes::NoteStore::new(),
     }
 }

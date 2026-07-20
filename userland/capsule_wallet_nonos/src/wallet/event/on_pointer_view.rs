@@ -92,6 +92,9 @@ pub(super) fn nox(state: &mut State, x: u32, y: u32) -> EventOutcome {
         state.stake_unstake = 0;
     } else if hit(x, y, 446, 438, 200, 36) {
         state.stake_unstake = 1;
+    } else if hit(x, y, 246, 516, 560, 30) {
+        let rel = x.saturating_sub(246).min(560);
+        state.stake_amount = rel * crate::wallet::state::MAX_STAKE / 560;
     } else if hit(x, y, 246, 626, 560, 42) {
         return super::sign_nox::sign_nox(state);
     } else if hit(x, y, 862, 496, 372, 42) {

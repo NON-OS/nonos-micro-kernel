@@ -29,21 +29,32 @@ pub fn paint_nox_stake(state: &State, fb: &mut PaintBuffer) {
     tab(fb, cx + 20, 438, "Stake NOX", stake);
     tab(fb, cx + 220, 438, "Unstake", !stake);
 
+    let amt = state.stake_amount.min(crate::wallet::state::MAX_STAKE);
+    let track = lw - 40;
+    let fill = track * amt / crate::wallet::state::MAX_STAKE;
     let _ = fb.text_ttf((cx + 20) as i32, 494, "Amount", MUTED(), 13.0);
-    let av = "4000 NOX";
+    let mut ab = [0u8; 24];
+    let an = label(&mut ab, b"", amt, b" NOX");
+    let av = core::str::from_utf8(&ab[..an]).unwrap_or("0");
     let aw = fb.measure_ttf(av, 14.0).max(0) as u32;
     let _ = fb.text_ttf((cx + lw - 20 - aw) as i32, 493, av, CYAN(), 14.0);
-    fb.fill_rect(cx + 20, 528, lw - 40, 5, PANEL_2());
-    fb.fill_rect(cx + 20, 528, (lw - 40) * 22 / 100, 5, ACCENT());
-    fb.fill_rect(cx + 20 + (lw - 40) * 22 / 100 - 5, 523, 14, 14, CYAN());
+    fb.fill_rect(cx + 20, 528, track, 5, PANEL_2());
+    fb.fill_rect(cx + 20, 528, fill, 5, ACCENT());
+    fb.fill_rect(cx + 13 + fill, 523, 14, 14, CYAN());
     let _ = fb.text_ttf((cx + 20) as i32, 546, "0", DIM(), 12.0);
     let _ = fb.text_ttf((cx + lw - 90) as i32, 546, "18,204 avail", DIM(), 12.0);
 
     ui::bordered(fb, cx + 20, 576, lw - 40, 40, PANEL_2(), LINE2());
     let _ = fb.text_ttf((cx + 34) as i32, 587, "Projected reward / yr", MUTED(), 13.0);
-    let _ = fb.text_ttf((cx + lw - 100) as i32, 587, "336 NOX", CYAN(), 13.0);
-    let btn: &[u8] = if stake { b"Stake 4,000 NOX" } else { b"Unstake 4,000 NOX" };
-    ui::primary(fb, cx + 20, 626, lw - 40, btn);
+    let mut pb = [0u8; 24];
+    let pn = label(&mut pb, b"", amt * 840 / 10000, b" NOX");
+    let ps = core::str::from_utf8(&pb[..pn]).unwrap_or("0");
+    let pw = fb.measure_ttf(ps, 13.0).max(0) as u32;
+    let _ = fb.text_ttf((cx + lw - 20 - pw) as i32, 587, ps, CYAN(), 13.0);
+    let mut bb = [0u8; 32];
+    let pre: &[u8] = if stake { b"Stake " } else { b"Unstake " };
+    let bn = label(&mut bb, pre, amt, b" NOX");
+    ui::primary(fb, cx + 20, 626, lw - 40, &bb[..bn]);
 
     let rx = cx + lw + 16;
     let rw = cw - lw - 16;
@@ -61,6 +72,17 @@ pub fn paint_nox_stake(state: &State, fb: &mut PaintBuffer) {
     let _ = fb.text_ttf((cx + 20) as i32, 682, "Where the fee goes", FG(), 14.0);
     fee(fb, cx, 708, "protocol fee", "treasury / NOX stakers / buyback-burn");
     fee(fb, cx, 730, "relayer fee", "the relayer that fronts gas");
+}
+
+fn label(buf: &mut [u8], pre: &[u8], n: u32, suf: &[u8]) -> usize {
+    let mut i = pre.len();
+    buf[..i].copy_from_slice(pre);
+    let mut nb = [0u8; 10];
+    let nn = super::format_u32::format_u32(n, &mut nb);
+    buf[i..i + nn].copy_from_slice(&nb[..nn]);
+    i += nn;
+    buf[i..i + suf.len()].copy_from_slice(suf);
+    i + suf.len()
 }
 
 fn tab(fb: &mut PaintBuffer, x: u32, y: u32, label: &str, sel: bool) {

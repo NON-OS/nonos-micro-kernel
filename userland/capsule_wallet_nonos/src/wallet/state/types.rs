@@ -18,6 +18,7 @@ use alloc::vec::Vec;
 use crate::wallet::net::NetStatus;
 
 pub const MAX_RAILS: usize = 8;
+pub const MAX_STAKE: u32 = 18204;
 pub const VIEW_HOME: u8 = 0; pub const VIEW_RECEIVE: u8 = 1; pub const VIEW_SEND: u8 = 2; pub const VIEW_PROOF: u8 = 3;
 // New hardened-wallet + private-swap + NOX screens.
 pub const VIEW_SIGN: u8 = 4; pub const VIEW_APPROVALS: u8 = 5; pub const VIEW_SHIELD: u8 = 6;
@@ -91,6 +92,8 @@ pub struct State {
     pub panel: u8,
     pub locked: bool,
     pub account: u8,
+    // NOX stake amount in whole NOX, adjustable via the slider (0..MAX_STAKE).
+    pub stake_amount: u32,
     // Local shielded UTXO set, reconstructed from the note secrets.
     pub notes: crate::wallet::shield::notes::NoteStore,
 }
