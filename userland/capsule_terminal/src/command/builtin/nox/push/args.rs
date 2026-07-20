@@ -29,8 +29,5 @@ pub fn parse(argv: &[&[u8]]) -> Result<PushArgs, &'static str> {
     }
     let src = argv[0].to_vec();
     let target = parse_target(argv[1])?;
-    if target.is_dir {
-        return Err("push: folder upload not supported yet");
-    }
     Ok(PushArgs { src, target })
 }

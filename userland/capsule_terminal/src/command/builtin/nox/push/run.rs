@@ -20,7 +20,7 @@ use nonos_app_skeleton::clients::vfs::read_file;
 
 use super::super::ensure_pid::ensure_pid;
 use super::super::pull::resolve::resolve_host;
-use super::{args, request};
+use super::{args, request, walk};
 use crate::term::cwd::resolve;
 use crate::term::state::State;
 
@@ -43,6 +43,9 @@ pub fn run(state: &mut State, argv: &[&[u8]]) -> bool {
     };
     let pid = ensure_pid(state);
     let path = resolve(state.cwd.as_bytes(), &a.src);
+    if a.target.is_dir {
+        return walk::walk(state, pid, ip, &path, &a.target);
+    }
     let body = match read_file(pid, &path, MAX) {
         Ok(b) => b,
         Err(e) => {
