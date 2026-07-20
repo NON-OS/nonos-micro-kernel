@@ -15,13 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 // A listening TCP socket over net.sockets: bind then listen on a resolved
-// address, and accept a connection into a fresh TcpStream. The local address
-// is remembered for socket_addr; ttl and the v6/nonblocking options the
-// userland stack does not track report fixed values.
+// address, and accept a connection into a fresh TcpStream. The handle is
+// owned through a `Socket` descriptor so close is RAII in the fd table. The
+// local address is remembered for socket_addr; ttl and the v6/nonblocking
+// options the userland stack does not track report fixed values.
 
 use crate::fmt;
 use crate::io;
 use crate::net::{SocketAddr, ToSocketAddrs};
+use crate::sys::FromInner;
+use crate::sys::net::connection::nonos::socket::Socket;
 use crate::sys::net::connection::nonos::tcp_stream::TcpStream;
 use crate::sys::net::connection::nonos::transport::{
     BODY, OP_ACCEPT, OP_BIND, OP_LISTEN, close, endpoint, err, open_socket, read_u32, sk,
@@ -29,7 +32,7 @@ use crate::sys::net::connection::nonos::transport::{
 };
 
 pub struct TcpListener {
-    handle: u32,
+    socket: Socket,
     local: SocketAddr,
 }
 
@@ -56,15 +59,24 @@ impl TcpListener {
             close(handle);
             return Err(e);
         }
-        Ok(TcpListener { handle, local: *addr })
+        Ok(TcpListener { socket: Socket::register(handle)?, local: *addr })
+    }
+
+    pub(crate) fn socket(&self) -> &Socket {
+        &self.socket
+    }
+
+    pub(crate) fn into_socket(self) -> Socket {
+        self.socket
     }
 
     pub fn socket_addr(&self) -> io::Result<SocketAddr> {
         Ok(self.local)
     }
     pub fn accept(&self) -> io::Result<(TcpStream, SocketAddr)> {
-        let child = read_u32(&sk(OP_ACCEPT, &self.handle.to_le_bytes(), 8)?, BODY);
-        Ok((TcpStream::wrap(child, unspecified()), unspecified()))
+        let handle = self.socket.handle()?;
+        let child = read_u32(&sk(OP_ACCEPT, &handle.to_le_bytes(), 8)?, BODY);
+        Ok((TcpStream::wrap(child, unspecified())?, unspecified()))
     }
     pub fn duplicate(&self) -> io::Result<TcpListener> {
         crate::sys::unsupported()
@@ -89,9 +101,11 @@ impl TcpListener {
     }
 }
 
-impl Drop for TcpListener {
-    fn drop(&mut self) {
-        close(self.handle);
+impl FromInner<Socket> for TcpListener {
+    // Reconstruction from a bare descriptor: the bound address is not
+    // recoverable from the table, so socket_addr reads as unspecified.
+    fn from_inner(socket: Socket) -> TcpListener {
+        TcpListener { socket, local: unspecified() }
     }
 }
 

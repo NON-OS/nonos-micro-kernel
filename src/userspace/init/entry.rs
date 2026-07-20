@@ -22,6 +22,7 @@ pub fn run_init() -> ! {
     run_user_entry_proof();
     run_std_proof();
     run_ripgrep();
+    run_sd();
     spawn_plan::spawn_ramfs();
     spawn_plan::spawn_core_after_ramfs();
     spawn_plan::spawn_display_core();
@@ -31,6 +32,7 @@ pub fn run_init() -> ! {
     spawn_plan::spawn_desktop();
     spawn_plan::spawn_market();
     spawn_plan::spawn_apps();
+    run_tokio_smoke();
     boot_log::ok("INIT", "Capsules spawned");
     lower_init_priority();
     yield_after_spawns();
@@ -67,6 +69,28 @@ fn run_ripgrep() {
 
 #[cfg(not(feature = "nonos-capsule-ripgrep"))]
 fn run_ripgrep() {}
+
+#[cfg(feature = "nonos-capsule-sd")]
+fn run_sd() {
+    match crate::userspace::capsule_sd::spawn_sd_capsule() {
+        Ok(()) => boot_log::ok("SD", "capsule spawned"),
+        Err(_) => boot_log::error("SD capsule spawn failed"),
+    }
+}
+
+#[cfg(not(feature = "nonos-capsule-sd"))]
+fn run_sd() {}
+
+#[cfg(feature = "nonos-capsule-tokio-smoke")]
+fn run_tokio_smoke() {
+    match crate::userspace::capsule_tokio_smoke::spawn_tokio_smoke_capsule() {
+        Ok(()) => boot_log::ok("TOKIO-SMOKE", "capsule spawned"),
+        Err(_) => boot_log::error("TOKIO-SMOKE capsule spawn failed"),
+    }
+}
+
+#[cfg(not(feature = "nonos-capsule-tokio-smoke"))]
+fn run_tokio_smoke() {}
 
 fn lower_init_priority() {
     use crate::process::core::{Priority, CURRENT_PID, PROCESS_TABLE};

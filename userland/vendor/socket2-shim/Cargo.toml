@@ -1,0 +1,12 @@
+[package]
+name = "socket2"
+version = "0.6.5"
+edition = "2021"
+rust-version = "1.70"
+description = "NONOS shim for socket2: the subset tokio references, all Unsupported. tokio drives real I/O through mio on NONOS; socket2 only backs optional socket-options NONOS cannot provide."
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+
+[features]
+all = []

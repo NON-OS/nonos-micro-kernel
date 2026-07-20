@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::{
-    accept, bind, close, connect, getsockopt, health, listen, recv, send, setsockopt, socket,
+    accept, bind, close, connect, getsockopt, health, listen, poll, recv, send, setsockopt, socket,
 };
 use crate::protocol::*;
 use crate::server::parse_req::Request;
@@ -28,12 +28,14 @@ pub fn dispatch(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) -> bool {
         OP_LISTEN => listen::handle(pid, req, body, tx),
         OP_ACCEPT => accept::handle(pid, req, body, tx),
         OP_CONNECT => connect::handle(pid, req, body, tx),
+        OP_CONNECT_NB => connect::handle_nb(pid, req, body, tx),
         OP_CONNECT_HOST => connect::handle_host(pid, req, body, tx),
         OP_SEND => send::handle(pid, req, body, tx),
         OP_RECV => recv::handle(pid, req, body, tx),
         OP_CLOSE => close::handle(pid, req, body, tx),
         OP_GETSOCKOPT => getsockopt::handle(pid, req, body, tx),
         OP_SETSOCKOPT => setsockopt::handle(pid, req, body, tx),
+        OP_POLL => poll::handle(pid, req, body, tx),
         _ => return false,
     }
     true

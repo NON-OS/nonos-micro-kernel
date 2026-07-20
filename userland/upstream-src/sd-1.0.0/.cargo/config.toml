@@ -1,0 +1,10 @@
+[alias]
+xtask = "run --package xtask --"
+
+# Patch for building sd unmodified on NONOS. Scoped to this program so its
+# dependency resolution is not perturbed by shims other upstream programs
+# need. sd only requires the is-terminal cfg-gap override; everything else
+# resolves from sd's own pinned lock. (is-terminal 0.4.17 uses std::os::fd and
+# pulls no rustix, which also keeps sd off the rustix path.)
+[patch.crates-io]
+is-terminal = { path = "../../vendor/is-terminal" }

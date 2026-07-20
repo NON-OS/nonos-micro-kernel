@@ -14,17 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Closing the fd on drop: best-effort OP_CLOSE so the service releases the
-// handle. A failed close has nowhere to report, so the result is ignored.
+mod embed;
+mod spawn;
 
-use super::File;
-use crate::sys::fs::nonos::transport::{OP_CLOSE, call};
-
-impl Drop for File {
-    fn drop(&mut self) {
-        let mut body = [0u8; 8];
-        body[..4].copy_from_slice(&self.pid.to_le_bytes());
-        body[4..8].copy_from_slice(&self.fd.to_le_bytes());
-        let _ = call(self.port, OP_CLOSE, &body, 0);
-    }
-}
+pub use spawn::spawn_sd_capsule;

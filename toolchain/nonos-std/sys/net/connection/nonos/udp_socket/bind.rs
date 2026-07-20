@@ -20,6 +20,7 @@
 use super::UdpSocket;
 use crate::io;
 use crate::net::ToSocketAddrs;
+use crate::sys::net::connection::nonos::socket::Socket;
 use crate::sys::net::connection::nonos::transport::{
     OP_BIND, close, endpoint, err, open_socket, sk, v4_parts,
 };
@@ -37,7 +38,7 @@ impl UdpSocket {
             };
             let handle = open_socket(2)?;
             match sk(OP_BIND, &endpoint(handle, ip, port), 0) {
-                Ok(_) => return Ok(UdpSocket { handle, local: a }),
+                Ok(_) => return Ok(UdpSocket { socket: Socket::register(handle)?, local: a }),
                 Err(e) => {
                     close(handle);
                     last = e;

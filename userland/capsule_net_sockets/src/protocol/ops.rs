@@ -26,3 +26,13 @@ pub const OP_CLOSE: u16 = 9;
 pub const OP_GETSOCKOPT: u16 = 10;
 pub const OP_SETSOCKOPT: u16 = 11;
 pub const OP_CONNECT_HOST: u16 = 12;
+// Non-consuming readiness poll for a stream socket: replies one byte (bit0
+// readable, bit1 writable). The PAL async reactor waits on many sockets by
+// polling each without draining it.
+pub const OP_POLL: u16 = 13;
+// Non-blocking stream connect: initiate the handshake, install the transport,
+// and reply at once without waiting for establishment. The caller confirms the
+// connection via OP_POLL writability. OP_CONNECT (blocking) stays for the
+// synchronous PAL path; a reactor-driven client (mio/tokio) uses this so a
+// connect never stalls the whole runtime.
+pub const OP_CONNECT_NB: u16 = 14;

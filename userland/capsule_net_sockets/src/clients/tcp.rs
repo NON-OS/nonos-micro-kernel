@@ -27,6 +27,7 @@ const SEND: u16 = 5;
 const RECV: u16 = 6;
 const CLOSE: u16 = 7;
 const STATE: u16 = 9;
+const POLL: u16 = 10;
 
 pub fn listen(port: u32, local: u16) -> Result<u32, u16> {
     call_handle(port, LISTEN, &local.to_le_bytes())
@@ -69,6 +70,17 @@ pub fn close(port: u32, handle: u32) -> Result<(), u16> {
 pub fn state(port: u32, handle: u32) -> Result<u8, u16> {
     let mut out = [0u8; 1];
     if call(port, MAGIC, STATE, &handle.to_le_bytes(), &mut out)? != 1 {
+        return Err(4);
+    }
+    Ok(out[0])
+}
+
+// Non-consuming readiness bits (bit0 readable, bit1 writable). The async
+// reactor polls this across its sockets to decide which tasks to wake, so it
+// must never drain the connection.
+pub fn poll(port: u32, handle: u32) -> Result<u8, u16> {
+    let mut out = [0u8; 1];
+    if call(port, MAGIC, POLL, &handle.to_le_bytes(), &mut out)? != 1 {
         return Err(4);
     }
     Ok(out[0])

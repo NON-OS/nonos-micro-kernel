@@ -21,6 +21,13 @@ pub const OP_SEND: u16 = 5;
 pub const OP_RECV: u16 = 6;
 pub const OP_CLOSE: u16 = 7;
 pub const OP_STATE: u16 = 9;
+// Non-consuming readiness poll: returns a bitmask (bit0 readable, bit1
+// writable) for one connection, so an async reactor can wait on many sockets
+// without draining any of them. This is the first primitive the PAL async
+// runtime is built on.
+pub const OP_POLL: u16 = 10;
+pub const POLL_READABLE: u8 = 0x01;
+pub const POLL_WRITABLE: u8 = 0x02;
 
 pub const E_OK: u16 = 0;
 pub const E_BAD_OP: u16 = 3;

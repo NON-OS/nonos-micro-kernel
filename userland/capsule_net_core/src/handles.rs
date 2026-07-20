@@ -21,27 +21,36 @@ pub const MAX_SOCKETS: usize = 32;
 
 static TABLE: Mutex<[Option<(u32, SocketHandle)>; MAX_SOCKETS]> = Mutex::new([None; MAX_SOCKETS]);
 
+// Handles are 1-based: 0 is reserved as the null handle so a caller can use zero
+// as a sentinel (net.sockets stores a transport handle and treats 0 as "not
+// connected"). The external handle is `slot index + 1`; get/free undo the offset.
 pub fn alloc(owner_pid: u32, handle: SocketHandle) -> Option<u32> {
     let mut table = TABLE.lock();
     for (i, slot) in table.iter_mut().enumerate() {
         if slot.is_none() {
             *slot = Some((owner_pid, handle));
-            return Some(i as u32);
+            return Some(i as u32 + 1);
         }
     }
     None
 }
 
 pub fn get(index: u32, sender_pid: u32) -> Option<SocketHandle> {
+    if index == 0 {
+        return None;
+    }
     let table = TABLE.lock();
     table
-        .get(index as usize)
+        .get((index - 1) as usize)
         .and_then(|s| s.and_then(|(owner, h)| if owner == sender_pid { Some(h) } else { None }))
 }
 
 pub fn free(index: u32, sender_pid: u32) {
+    if index == 0 {
+        return;
+    }
     let mut table = TABLE.lock();
-    if let Some(slot) = table.get_mut(index as usize) {
+    if let Some(slot) = table.get_mut((index - 1) as usize) {
         if matches!(slot, Some((owner, _)) if *owner == sender_pid) {
             *slot = None;
         }
