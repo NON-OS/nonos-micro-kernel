@@ -35,6 +35,39 @@ import Nonos
 #print axioms Nonos.Paging.confined_preserves_no_wx
 #print axioms Nonos.Path.leading_dotdot_neutralized
 #print axioms Nonos.Secure.every_trace_is_secure
+#print axioms Nonos.Secure.dma_owned_by_caller
+#print axioms Nonos.Secure.dma_within_class_limit
+#print axioms Nonos.Secure.elf_table_in_bounds
+#print axioms Nonos.Secure.irq_vector_count_bounded
+#print axioms Nonos.Secure.irq_not_already_bound
+#print axioms Nonos.Secure.quota_within_cap
+#print axioms Nonos.NonInterference.step_preserves_token
+#print axioms Nonos.NonInterference.token_locality
+#print axioms Nonos.NonInterference.token_noninterference
+#print axioms Nonos.NonInterference.no_authority_leak
+#print axioms Nonos.NonInterference.step_no_gain
+#print axioms Nonos.NonInterference.no_authority_amplification
+#print axioms Nonos.NonInterference.step_preserves_mapping
+#print axioms Nonos.NonInterference.mapping_locality
+#print axioms Nonos.NonInterference.mapping_noninterference
+#print axioms Nonos.NonInterference.Unwinding.locality
+#print axioms Nonos.NonInterference.Unwinding.noninterference
+#print axioms Nonos.NonInterference.admitted_noninterference
+#print axioms Nonos.NonInterference.dma_noninterference
+#print axioms Nonos.NonInterference.copies_noninterference
+#print axioms Nonos.NonInterference.floor_noninterference
+#print axioms Nonos.NonInterference.elf_noninterference
+#print axioms Nonos.NonInterference.irq_noninterference
+#print axioms Nonos.NonInterference.step_preserves_domain_view
+#print axioms Nonos.NonInterference.domain_noninterference
+#print axioms Nonos.NonInterference.touches_disjoint
+#print axioms Nonos.NonInterference.domain_isolation
+#print axioms Nonos.NonInterference.disjoint_domains_noninterfere
+#print axioms Nonos.AttestBinding.starkAttest_true_iff
+#print axioms Nonos.AttestBinding.admitted_is_enrolled
+#print axioms Nonos.AttestBinding.admitted_enrolled_after_trace
+#print axioms Nonos.AttestBinding.admitted_accepted_after_trace
+#print axioms Nonos.AttestBinding.no_cross_policy_replay
 #print axioms Nonos.Spawn.only_attested_capsules_run
 #print axioms Nonos.Stark.AssociationSet.an_excluded_deposit_cannot_pass
 #print axioms Nonos.Stark.AssociationSet.the_registry_only_grows
@@ -254,3 +287,13 @@ import Nonos
 #print axioms Nonos.ElfPhdr.accepted_table_in_bounds
 #print axioms Nonos.ElfPhdr.accepted_no_overflow
 #print axioms Nonos.ElfPhdr.wrong_size_rejected
+
+
+-- Scheduling fairness / liveness: the ready set is a scheduling invariant, no
+-- admitted task is ever dropped or starved out of the queue.
+#print axioms Nonos.Fairness.rotateN_mem
+#print axioms Nonos.Fairness.rotateN_length
+#print axioms Nonos.Fairness.no_starvation_by_loss
+#print axioms Nonos.Fairness.never_stalls
+#print axioms Nonos.Fairness.rotateN_to_head
+#print axioms Nonos.Fairness.reaches_head
