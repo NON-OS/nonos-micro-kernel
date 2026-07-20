@@ -9,6 +9,7 @@ pub fn skip(path: &Path) -> bool {
     p.contains("/target/")
         || p.contains("_proofs/")
         || p.contains("/boot_proofs/")
+        || p.contains("/tests/")
         || p.ends_with("/build.rs")
 }
 
