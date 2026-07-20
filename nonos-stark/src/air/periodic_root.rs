@@ -59,3 +59,11 @@ pub(super) fn periodic_lde_tree<A: AirExt>(
 pub fn periodic_root<A: AirExt>(air: &A, extra_blowup_bits: u32) -> [u8; 32] {
     periodic_lde_tree(air, extra_blowup_bits).1.root()
 }
+
+/// The log2 of the periodic evaluation domain for `air` at this FRI rate: the
+/// size each periodic column is extended to. Deterministic public structure,
+/// exposed so an out-of-crate committer (for example a parallel one) sizes the
+/// domain identically to the serial path and cannot drift from it.
+pub fn periodic_domain_log<A: AirExt>(air: &A, extra_blowup_bits: u32) -> u32 {
+    domain_params_blown(air, extra_blowup_bits).0
+}

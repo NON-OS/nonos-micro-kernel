@@ -5,6 +5,7 @@
 
 mod intermediates;
 mod json;
+pub(crate) mod parallel;
 mod run;
 mod structure;
 mod vector;
