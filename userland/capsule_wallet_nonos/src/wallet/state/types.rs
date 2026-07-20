@@ -86,6 +86,11 @@ pub struct State {
     pub proof_filter: u8,
     pub usd_mode: bool,
     pub light_mode: bool,
+    // Header controls: which dropdown/overlay is open (0 none, 1 command,
+    // 2 messages, 3 account) and whether the wallet is locked.
+    pub panel: u8,
+    pub locked: bool,
+    pub account: u8,
     // Local shielded UTXO set, reconstructed from the note secrets.
     pub notes: crate::wallet::shield::notes::NoteStore,
 }

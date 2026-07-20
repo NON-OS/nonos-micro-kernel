@@ -16,13 +16,19 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::{paint_icons as ic, ui};
 use crate::wallet::state::{State, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED};
 use crate::wallet::theme::{ACCENT, FG, LINE2, MUTED};
 
-pub const THEME_BTN_X: u32 = 920;
-pub const THEME_BTN_Y: u32 = 48;
-pub const THEME_BTN_W: u32 = 62;
-pub const THEME_BTN_H: u32 = 28;
+pub const HDR_Y: u32 = 47;
+pub const HDR_H: u32 = 30;
+pub const ICON_W: u32 = 34;
+pub const MAIN_W: u32 = 44;
+pub const THEME_BTN_X: u32 = 1042;
+pub const CMD_BTN_X: u32 = 1084;
+pub const MSG_BTN_X: u32 = 1126;
+pub const LOCK_BTN_X: u32 = 1168;
+pub const MAIN_BTN_X: u32 = 1210;
 
 pub fn paint_topbar(state: &State, fb: &mut PaintBuffer) {
     let title = match state.view {
@@ -34,33 +40,21 @@ pub fn paint_topbar(state: &State, fb: &mut PaintBuffer) {
         _ => "Account overview",
     };
     let _ = fb.text_ttf(226, 46, title, FG(), 20.0);
-    theme_toggle(fb, state.light_mode);
 
-    let mut x = fb.width.saturating_sub(26);
-    x = btn(fb, x, "Main", true);
-    x = btn(fb, x - 9, "LOCK", false);
-    x = btn(fb, x - 9, "MSG 3", false);
-    let _ = btn(fb, x - 9, "CMD_K", false);
+    let mut c = box_edge(fb, THEME_BTN_X, ICON_W, false);
+    ic::theme(fb, THEME_BTN_X, HDR_Y, state.light_mode, c);
+    c = box_edge(fb, CMD_BTN_X, ICON_W, state.panel == 1);
+    ic::cmd(fb, CMD_BTN_X, HDR_Y, c);
+    c = box_edge(fb, MSG_BTN_X, ICON_W, state.panel == 2);
+    ic::bell(fb, MSG_BTN_X, HDR_Y, c, ACCENT());
+    c = box_edge(fb, LOCK_BTN_X, ICON_W, false);
+    ic::lock(fb, LOCK_BTN_X, HDR_Y, c);
+    c = box_edge(fb, MAIN_BTN_X, MAIN_W, state.panel == 3);
+    ic::account(fb, MAIN_BTN_X, HDR_Y, c);
 }
 
-fn theme_toggle(fb: &mut PaintBuffer, light: bool) {
-    super::ui::edge(fb, THEME_BTN_X, THEME_BTN_Y, THEME_BTN_W, THEME_BTN_H, LINE2());
-    let label = if light { "LIGHT" } else { "DARK" };
-    let tw = fb.measure_ttf_mono(label, 11.0).max(0) as u32;
-    let _ = fb.text_ttf_mono((THEME_BTN_X + THEME_BTN_W / 2 - tw / 2) as i32, 55, label, ACCENT(), 11.0);
-}
-
-fn btn(fb: &mut PaintBuffer, right: u32, label: &str, drop: bool) -> u32 {
-    let tw = fb.measure_ttf_mono(label, 11.5).max(0) as u32;
-    let extra = if drop { 30 } else { 22 };
-    let w = tw + extra;
-    let x = right.saturating_sub(w);
-    super::ui::edge(fb, x, 48, w, 28, LINE2());
-    if drop {
-        fb.fill_rect(x + 10, 58, 12, 12, ACCENT());
-        let _ = fb.text_ttf_mono((x + 27) as i32, 55, label, MUTED(), 11.5);
-    } else {
-        let _ = fb.text_ttf_mono((x + 11) as i32, 55, label, MUTED(), 11.5);
-    }
-    x
+fn box_edge(fb: &mut PaintBuffer, x: u32, w: u32, open: bool) -> u32 {
+    let (edge, tint) = if open { (ACCENT(), ACCENT()) } else { (LINE2(), MUTED()) };
+    ui::edge(fb, x, HDR_Y, w, HDR_H, edge);
+    tint
 }

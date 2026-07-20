@@ -37,4 +37,5 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
         _ => super::paint_home::paint_home(state, fb),
     }
     super::paint_statusbar::paint_statusbar(state, fb);
+    super::paint_panels::paint_panels(state, fb);
 }

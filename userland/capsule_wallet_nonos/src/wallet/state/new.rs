@@ -61,6 +61,9 @@ pub fn new_state() -> State {
         proof_filter: 0,
         usd_mode: false,
         light_mode: false,
+        panel: 0,
+        locked: false,
+        account: 0,
         notes: crate::wallet::shield::notes::NoteStore::new(),
     }
 }
