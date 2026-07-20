@@ -18,7 +18,7 @@
 //! committing side; a verifier only needs `super::verify`.
 
 use super::super::field::{Fp, Fp2};
-use super::hash::{hash_leaf, hash_leaf_ext, hash_leaf_wide, hash_node};
+use super::hash::{hash_leaf, hash_leaf_ext, hash_leaf_wide, hash_leaf_wide_periodic, hash_node};
 use alloc::vec::Vec;
 
 /// A committed binary Merkle tree over field-element leaves. The leaf count is
@@ -61,6 +61,17 @@ impl MerkleTree {
     /// authenticates all columns of a row with a single path instead of one path
     /// per column. `columns` are the extended columns, all the same length.
     pub fn commit_wide(columns: &[Vec<Fp>]) -> MerkleTree {
+        Self::commit_rows(columns, hash_leaf_wide)
+    }
+
+    /// Commit the preprocessed periodic columns row-wise under their own leaf
+    /// domain: the structural commitment a verifier bakes as a constant root
+    /// and authenticates per-query openings against.
+    pub fn commit_wide_periodic(columns: &[Vec<Fp>]) -> MerkleTree {
+        Self::commit_rows(columns, hash_leaf_wide_periodic)
+    }
+
+    fn commit_rows(columns: &[Vec<Fp>], leaf: fn(&[Fp]) -> [u8; 32]) -> MerkleTree {
         let width = columns.len();
         let n = columns.first().map(Vec::len).unwrap_or(0);
         let mut level: Vec<[u8; 32]> = Vec::with_capacity(n.max(1));
@@ -68,14 +79,14 @@ impl MerkleTree {
         for i in 0..n {
             row.clear();
             row.extend(columns.iter().map(|col| col[i]));
-            level.push(hash_leaf_wide(&row));
+            level.push(leaf(&row));
         }
         let pad = alloc::vec![Fp::ZERO; width];
         if level.is_empty() {
-            level.push(hash_leaf_wide(&pad));
+            level.push(leaf(&pad));
         }
         while !level.len().is_power_of_two() {
-            level.push(hash_leaf_wide(&pad));
+            level.push(leaf(&pad));
         }
         Self::build(level)
     }
