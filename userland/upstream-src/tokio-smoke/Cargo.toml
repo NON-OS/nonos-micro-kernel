@@ -1,0 +1,11 @@
+[package]
+name = "tokio-smoke"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "tokio-smoke"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["rt", "net", "io-util", "time", "macros"] }

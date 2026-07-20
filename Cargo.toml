@@ -73,6 +73,8 @@ sched = []
 nonos-capsule-proof-io          = []
 nonos-capsule-std-proof         = []
 nonos-capsule-ripgrep           = []
+nonos-capsule-sd                = []
+nonos-capsule-tokio-smoke       = []
 nonos-capsule-ramfs             = []
 nonos-capsule-wallpaper         = []
 nonos-capsule-compositor        = []
@@ -482,6 +484,7 @@ microkernel-desktop-gui = [
   "nonos-production",
   "capsule-serial-debug",
   "nonos-capsule-proof-io",
+  "nonos-capsule-tokio-smoke",
   "nonos-capsule-ramfs",
   "nonos-capsule-keyring",
   "nonos-capsule-entropy",

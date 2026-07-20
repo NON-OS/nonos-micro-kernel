@@ -586,6 +586,46 @@ $(UPSTREAM_RIPGREP_BIN): $(NONOS_RT_OBJ) $(NONOS_STD_PAL_STAMP) \
 .PHONY: nonos-mk-upstream-ripgrep
 nonos-mk-upstream-ripgrep: $(UPSTREAM_RIPGREP_BIN)
 
+# sd needs the is-terminal cfg-gap override in .cargo/config.toml, and cargo
+# only honors [patch] for path builds (published manifests strip it), so the
+# pinned crates.io source is vendored byte-identical under upstream-src and
+# built with --path. The program source itself is unmodified.
+UPSTREAM_SD_VERSION := 1.0.0
+UPSTREAM_SD_SRC     := userland/upstream-src/sd-$(UPSTREAM_SD_VERSION)
+UPSTREAM_SD_BIN     := $(TARGET_DIR)/upstream-sd/sd
+$(UPSTREAM_SD_BIN): $(NONOS_RT_OBJ) $(NONOS_STD_PAL_STAMP) \
+		userland/x86_64-nonos-user.json | $(TARGET_DIR)/.nonos-toolchain.stamp
+	@echo "Building upstream sd $(UPSTREAM_SD_VERSION) for NONOS (unmodified crates.io source)..."
+	@cd $(UPSTREAM_SD_SRC) && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		RUSTFLAGS="-Clink-arg=$(abspath $(NONOS_RT_OBJ))" \
+		$(CARGO) install --path . \
+		--target $(abspath userland/x86_64-nonos-user.json) \
+		-Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem \
+		--root $(abspath $(TARGET_DIR)/upstream-sd) --no-track --force --bin sd
+	@cp $(TARGET_DIR)/upstream-sd/bin/sd $@
+
+.PHONY: nonos-mk-upstream-sd
+nonos-mk-upstream-sd: $(UPSTREAM_SD_BIN)
+
+# tokio-smoke: the mio-backend + socket2-shim runtime gate. Built like sd from
+# vendored source with the per-program mio/socket2/tokio patches; runs an async
+# runtime with a timer racing an idle socket, proving the Waker self-wake.
+UPSTREAM_TOKIO_SMOKE_SRC := userland/upstream-src/tokio-smoke
+UPSTREAM_TOKIO_SMOKE_BIN := $(TARGET_DIR)/upstream-tokio-smoke/tokio-smoke
+$(UPSTREAM_TOKIO_SMOKE_BIN): $(NONOS_RT_OBJ) $(NONOS_STD_PAL_STAMP) \
+		userland/x86_64-nonos-user.json | $(TARGET_DIR)/.nonos-toolchain.stamp
+	@echo "Building tokio-smoke runtime gate for NONOS (tokio via mio backend + socket2 shim)..."
+	@cd $(UPSTREAM_TOKIO_SMOKE_SRC) && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		RUSTFLAGS="-Clink-arg=$(abspath $(NONOS_RT_OBJ))" \
+		$(CARGO) install --path . \
+		--target $(abspath userland/x86_64-nonos-user.json) \
+		-Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem \
+		--root $(abspath $(TARGET_DIR)/upstream-tokio-smoke) --no-track --force --bin tokio-smoke
+	@cp $(TARGET_DIR)/upstream-tokio-smoke/bin/tokio-smoke $@
+
+.PHONY: nonos-mk-upstream-tokio-smoke
+nonos-mk-upstream-tokio-smoke: $(UPSTREAM_TOKIO_SMOKE_BIN)
+
 $(CAPSULE_SIGN_BIN):
 	@echo "Building capsule-sign host tool..."
 	@cd nonos-sign && cargo build --release --bin capsule-sign
@@ -646,6 +686,8 @@ nonos-mk-trust-policy: $(NONOS_TRUST_ANCHOR_POLICY_BIN)
 include userland/capsule_proof_io/Capsule.mk
 include userland/capsule_std_proof/Capsule.mk
 include userland/capsule_ripgrep/Capsule.mk
+include userland/capsule_sd/Capsule.mk
+include userland/capsule_tokio_smoke/Capsule.mk
 include userland/capsule_ramfs/Capsule.mk
 include userland/capsule_keyring/Capsule.mk
 include userland/capsule_entropy/Capsule.mk
@@ -741,7 +783,7 @@ nonos-mk-all-capsules-attested: $(NONOS_VERIFIED_ARTIFACTS)
 	@echo "Signed and attested $(words $(NONOS_VERIFIED_CAPSULES)) included capsules."
 
 NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
-	$(proof-io_VERIFY) $(std-proof_VERIFY) $(ripgrep_VERIFY) \
+	$(proof-io_VERIFY) $(std-proof_VERIFY) $(ripgrep_VERIFY) $(sd_VERIFY) $(tokio-smoke_VERIFY) \
 	$(ramfs_VERIFY) $(keyring_VERIFY) \
 	$(entropy_VERIFY) $(crypto_VERIFY) $(vfs_VERIFY) \
 	$(driver-virtio-rng_VERIFY) $(driver-virtio-blk_VERIFY) \
@@ -1220,7 +1262,9 @@ nonos-mk-net-sockets-prod: $(proof-io_ARTIFACTS) $(driver-virtio-net_ARTIFACTS) 
 		--no-default-features --features microkernel-net-sockets
 
 nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
-		$(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) $(ramfs_ARTIFACTS) \
+		$(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) $(sd_ARTIFACTS) \
+		$(tokio-smoke_ARTIFACTS) \
+		$(ramfs_ARTIFACTS) \
 		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
 		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
 		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \
@@ -1565,15 +1609,17 @@ nonos-mk-run-serial-net:
 nonos-mk-run-serial-nat:
 	@$(MAKE) --no-print-directory QEMU_NET_MODE=nat nonos-mk-run-serial
 
-nonos-mk-run-serial-log: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG)
+nonos-mk-run-serial-log: nonos-mk-swtpm-start nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
 	@mkdir -p $(dir $(QEMU_SERIAL_LOG))
 	@echo "Booting NONOS serial console in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
+	@echo "  TPM: swtpm CRB"
 	@echo "  Serial log: $(QEMU_SERIAL_LOG)"
 	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
-		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
-		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
+		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) $(QEMU_TPM) \
 		-serial "file:$(QEMU_SERIAL_LOG)" -display none -no-reboot
 
 nonos-mk-run-input-probe-inject-serial-log: nonos-mk-input-probe-inject-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)

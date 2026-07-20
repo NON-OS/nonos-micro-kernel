@@ -63,12 +63,14 @@ pub mod capsule_policy;
 pub mod capsule_process_manager;
 pub mod capsule_proof_io;
 pub mod capsule_ripgrep;
+pub mod capsule_sd;
 pub mod capsule_settings;
 #[cfg(feature = "nonos-capsule-setup-wizard")]
 pub mod capsule_setup_wizard;
 pub mod capsule_snake;
 pub mod capsule_std_proof;
 pub mod capsule_terminal;
+pub mod capsule_tokio_smoke;
 pub mod capsule_text_editor;
 pub mod capsule_toolkit;
 pub mod capsule_wallet_nonos;
