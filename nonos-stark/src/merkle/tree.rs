@@ -32,7 +32,7 @@ impl MerkleTree {
     /// Commit to a sequence of leaves, returning the tree. An empty input
     /// commits to a single zero leaf so the root is always defined.
     pub fn commit(leaves: &[Fp]) -> MerkleTree {
-        let mut level: Vec<[u8; 32]> = leaves.iter().map(|l| hash_leaf(*l)).collect();
+        let mut level: Vec<[u8; 32]> = crate::par::map_slice(leaves, |l| hash_leaf(*l));
         if level.is_empty() {
             level.push(hash_leaf(Fp::ZERO));
         }
@@ -46,7 +46,7 @@ impl MerkleTree {
     /// Same tree structure and node hashing as `commit`; only the leaf hash
     /// differs, so paths open identically via `verify_path_ext`.
     pub fn commit_ext(leaves: &[Fp2]) -> MerkleTree {
-        let mut level: Vec<[u8; 32]> = leaves.iter().map(|l| hash_leaf_ext(*l)).collect();
+        let mut level: Vec<[u8; 32]> = crate::par::map_slice(leaves, |l| hash_leaf_ext(*l));
         if level.is_empty() {
             level.push(hash_leaf_ext(Fp2::ZERO));
         }
@@ -74,13 +74,12 @@ impl MerkleTree {
     fn commit_rows(columns: &[Vec<Fp>], leaf: fn(&[Fp]) -> [u8; 32]) -> MerkleTree {
         let width = columns.len();
         let n = columns.first().map(Vec::len).unwrap_or(0);
-        let mut level: Vec<[u8; 32]> = Vec::with_capacity(n.max(1));
-        let mut row: Vec<Fp> = Vec::with_capacity(width);
-        for i in 0..n {
-            row.clear();
-            row.extend(columns.iter().map(|col| col[i]));
-            level.push(leaf(&row));
-        }
+        // Each row leaf is an independent hash of the columns at that index, so
+        // the leaf layer parallelizes cleanly; the indexed map keeps row order.
+        let mut level: Vec<[u8; 32]> = crate::par::map_index(n, |i| {
+            let row: Vec<Fp> = columns.iter().map(|col| col[i]).collect();
+            leaf(&row)
+        });
         let pad = alloc::vec![Fp::ZERO; width];
         if level.is_empty() {
             level.push(leaf(&pad));

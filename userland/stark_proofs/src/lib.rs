@@ -29,6 +29,8 @@ mod ntt_tests;
 #[cfg(test)]
 mod parallel_commit_tests;
 #[cfg(test)]
+mod parallel_prover_gate;
+#[cfg(test)]
 mod periodic_z_tests;
 #[cfg(test)]
 mod poly_tests;

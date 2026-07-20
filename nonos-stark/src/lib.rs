@@ -24,7 +24,12 @@
 //! same code, so the Fiat-Shamir keccak and the measurement blake3 are
 //! byte-identical on the prover and the verifier.
 
-#![no_std]
+// The crate is `no_std` for the kernel and bootloader. The `parallel` feature —
+// used only by the host emit tooling, never by the kernel — pulls in std and
+// rayon so a production emit uses every core; the field arithmetic and the
+// commitment layout are identical either way, and a bit-exact gate proves the
+// parallel prover emits the same proof bytes as the serial one.
+#![cfg_attr(not(feature = "parallel"), no_std)]
 
 extern crate alloc;
 
@@ -37,6 +42,7 @@ pub mod fri_ext;
 pub mod fri_poseidon;
 pub mod fri_poseidon_ext;
 pub mod merkle;
+pub(crate) mod par;
 pub mod poly;
 pub mod poseidon_merkle;
 pub mod poseidon_transcript;

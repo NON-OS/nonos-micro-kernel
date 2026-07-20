@@ -7,7 +7,7 @@
 use crate::crypto::stark::air::StarkProofExtPre;
 use alloc::vec::Vec;
 
-pub(super) fn serialize_pre(pre: &StarkProofExtPre) -> Vec<u8> {
+pub(crate) fn serialize_pre(pre: &StarkProofExtPre) -> Vec<u8> {
     let mut b = crate::stark_selftest_gen::serialize(&pre.proof);
     // sidecar: n_periodic, the claims at z, then one opening per query in
     // query order: n_periodic row values, then the path.

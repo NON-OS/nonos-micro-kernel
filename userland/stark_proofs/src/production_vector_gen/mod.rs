@@ -9,4 +9,4 @@ pub(crate) mod parallel;
 mod run;
 mod structure;
 mod vector;
-mod wire;
+pub(crate) mod wire;
