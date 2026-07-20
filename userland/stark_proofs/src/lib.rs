@@ -27,6 +27,8 @@ mod merkle_tests;
 #[cfg(test)]
 mod ntt_tests;
 #[cfg(test)]
+mod parallel_commit_tests;
+#[cfg(test)]
 mod periodic_z_tests;
 #[cfg(test)]
 mod poly_tests;

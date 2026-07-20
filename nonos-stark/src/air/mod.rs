@@ -103,7 +103,7 @@ pub use index_point::IndexPoint;
 pub use measure::measure_capsule;
 pub use merkle_membership::MerkleMembership;
 pub use multi_membership::{MultiMembership, Opening};
-pub use periodic_root::periodic_root;
+pub use periodic_root::{periodic_domain_log, periodic_root};
 pub use periodic_z::PeriodicZ;
 pub use permutation::Permutation;
 pub use permutation2::Permutation2;

@@ -14,5 +14,8 @@ path = "src/lib.rs"
 [dependencies]
 nonos-stark = { path = "../../nonos-stark" }
 
+[dev-dependencies]
+rayon = "1"
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

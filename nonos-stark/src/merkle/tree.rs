@@ -91,6 +91,21 @@ impl MerkleTree {
         Self::build(level)
     }
 
+    /// Build a tree from precomputed leaf digests, padding to a power of two
+    /// with `pad_leaf`. This is the seam a parallel committer uses: it hashes
+    /// the wide leaves itself (row order preserved) and hands the digests here,
+    /// so the tree above them is built by the one shared `build` and the root
+    /// is identical to the serial `commit_wide_periodic` on the same rows.
+    pub fn from_leaf_digests(mut level: Vec<[u8; 32]>, pad_leaf: [u8; 32]) -> MerkleTree {
+        if level.is_empty() {
+            level.push(pad_leaf);
+        }
+        while !level.len().is_power_of_two() {
+            level.push(pad_leaf);
+        }
+        Self::build(level)
+    }
+
     /// Build the tree above a power-of-two leaf-digest level. Shared by both
     /// commit paths so node hashing has a single implementation.
     fn build(mut level: Vec<[u8; 32]>) -> MerkleTree {

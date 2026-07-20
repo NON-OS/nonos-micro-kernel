@@ -6,5 +6,6 @@ mod hash;
 mod tree;
 mod verify;
 
+pub use hash::hash_leaf_wide_periodic;
 pub use tree::MerkleTree;
 pub use verify::{verify_path, verify_path_ext, verify_path_wide, verify_path_wide_periodic};
