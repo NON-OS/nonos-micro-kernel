@@ -68,7 +68,7 @@ pub(super) fn one_file(
         tally.skipped += 1;
         return true;
     }
-    let extra = super::auth::extra_headers(a);
+    let extra = super::auth::extra_headers(&a.auth, &a.headers);
     if a.skip_unchanged {
         if let Some(local) = store::size(pid, dest) {
             if fetch::head_reuse(conn, ip, a.target.port, &a.target.host, path, &extra) == Some(local as usize) {

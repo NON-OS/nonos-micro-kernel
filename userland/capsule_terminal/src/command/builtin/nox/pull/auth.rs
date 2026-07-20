@@ -17,16 +17,14 @@
 use alloc::vec::Vec;
 use nonos_base64::encode;
 
-use super::args::PullArgs;
-
-pub fn extra_headers(a: &PullArgs) -> Vec<u8> {
+pub fn extra_headers(auth: &Option<Vec<u8>>, headers: &[Vec<u8>]) -> Vec<u8> {
     let mut e = Vec::new();
-    if let Some(cred) = &a.auth {
+    if let Some(cred) = auth {
         e.extend_from_slice(b"Authorization: Basic ");
         e.extend_from_slice(&encode(cred));
         e.extend_from_slice(b"\r\n");
     }
-    for h in &a.headers {
+    for h in headers {
         e.extend_from_slice(h);
         e.extend_from_slice(b"\r\n");
     }

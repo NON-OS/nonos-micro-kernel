@@ -24,7 +24,14 @@ use crate::term::state::State;
 
 const MAX: u32 = 64 * 1024 * 1024;
 
-pub(super) fn walk(state: &mut State, pid: u32, ip: [u8; 4], src: &[u8], target: &Target) -> bool {
+pub(super) fn walk(
+    state: &mut State,
+    pid: u32,
+    ip: [u8; 4],
+    src: &[u8],
+    target: &Target,
+    extra: &[u8],
+) -> bool {
     let prefix = join(src, &[]);
     let entries = match list_paths(pid, &prefix) {
         Ok(e) => e,
@@ -40,14 +47,22 @@ pub(super) fn walk(state: &mut State, pid: u32, ip: [u8; 4], src: &[u8], target:
             continue;
         }
         let remote = join(&target.path, &local[prefix.len()..]);
-        if !one(state, pid, ip, target, local, &remote) {
+        if !one(state, pid, ip, target, local, &remote, extra) {
             ok = false;
         }
     }
     ok
 }
 
-fn one(state: &mut State, pid: u32, ip: [u8; 4], target: &Target, local: &[u8], remote: &[u8]) -> bool {
+fn one(
+    state: &mut State,
+    pid: u32,
+    ip: [u8; 4],
+    target: &Target,
+    local: &[u8],
+    remote: &[u8],
+    extra: &[u8],
+) -> bool {
     let body = match read_file(pid, local, MAX) {
         Ok(b) => b,
         Err(e) => {
@@ -55,7 +70,7 @@ fn one(state: &mut State, pid: u32, ip: [u8; 4], target: &Target, local: &[u8], 
             return false;
         }
     };
-    if let Err(e) = request::put(ip, target.port, &target.host, remote, &body) {
+    if let Err(e) = request::put(ip, target.port, &target.host, remote, &body, extra) {
         state.scrollback.push_error(e.as_bytes());
         return false;
     }

@@ -21,13 +21,33 @@ use super::super::pull::target::{parse_target, Target};
 pub struct PushArgs {
     pub src: Vec<u8>,
     pub target: Target,
+    pub auth: Option<Vec<u8>>,
+    pub headers: Vec<Vec<u8>>,
 }
 
 pub fn parse(argv: &[&[u8]]) -> Result<PushArgs, &'static str> {
-    if argv.len() != 2 {
-        return Err("usage: nox push <local> <host[:port]>/<path>");
+    let mut auth = None;
+    let mut headers = Vec::new();
+    let mut rest = argv;
+    while let Some((&first, tail)) = rest.split_first() {
+        match first {
+            b"-a" => {
+                let (&v, t) = tail.split_first().ok_or("-a needs user:pass")?;
+                auth = Some(v.to_vec());
+                rest = t;
+            }
+            b"-H" => {
+                let (&v, t) = tail.split_first().ok_or("-H needs 'Key: Value'")?;
+                headers.push(v.to_vec());
+                rest = t;
+            }
+            _ => break,
+        }
     }
-    let src = argv[0].to_vec();
-    let target = parse_target(argv[1])?;
-    Ok(PushArgs { src, target })
+    if rest.len() != 2 {
+        return Err("usage: nox push [-a user:pass] [-H 'K: V'] <local> <host[:port]>/<path>");
+    }
+    let src = rest[0].to_vec();
+    let target = parse_target(rest[1])?;
+    Ok(PushArgs { src, target, auth, headers })
 }

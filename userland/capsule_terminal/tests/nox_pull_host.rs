@@ -413,11 +413,18 @@ fn redirect_rejects_empty_location() {
 
 #[test]
 fn http_build_put_head_has_content_length() {
-    let r = http::build_put_head(b"h.local", b"/up/x.bin", 42);
+    let r = http::build_put_head(b"h.local", b"/up/x.bin", 42, b"");
     assert!(r.starts_with(b"PUT /up/x.bin HTTP/1.1"));
     assert!(scan::find(&r, b"Host: h.local").is_some());
     assert!(scan::find(&r, b"Content-Length: 42").is_some());
     assert!(scan::find(&r, b"Accept-Encoding").is_none());
+    assert!(r.ends_with(b"\r\n\r\n"));
+}
+
+#[test]
+fn http_build_put_head_includes_extra_headers() {
+    let r = http::build_put_head(b"h", b"/p", 0, b"Authorization: Basic abc\r\n");
+    assert!(scan::find(&r, b"Authorization: Basic abc").is_some());
     assert!(r.ends_with(b"\r\n\r\n"));
 }
 

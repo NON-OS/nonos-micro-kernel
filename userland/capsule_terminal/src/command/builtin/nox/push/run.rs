@@ -19,6 +19,7 @@ use alloc::vec::Vec;
 use nonos_app_skeleton::clients::vfs::read_file;
 
 use super::super::ensure_pid::ensure_pid;
+use super::super::pull::auth::extra_headers;
 use super::super::pull::resolve::resolve_host;
 use super::{args, request, walk};
 use crate::term::cwd::resolve;
@@ -43,8 +44,9 @@ pub fn run(state: &mut State, argv: &[&[u8]]) -> bool {
     };
     let pid = ensure_pid(state);
     let path = resolve(state.cwd.as_bytes(), &a.src);
+    let extra = extra_headers(&a.auth, &a.headers);
     if a.target.is_dir {
-        return walk::walk(state, pid, ip, &path, &a.target);
+        return walk::walk(state, pid, ip, &path, &a.target, &extra);
     }
     let body = match read_file(pid, &path, MAX) {
         Ok(b) => b,
@@ -53,7 +55,7 @@ pub fn run(state: &mut State, argv: &[&[u8]]) -> bool {
             return false;
         }
     };
-    match request::put(ip, a.target.port, &a.target.host, &a.target.path, &body) {
+    match request::put(ip, a.target.port, &a.target.host, &a.target.path, &body, &extra) {
         Ok(()) => {
             let mut msg = Vec::from(&b"pushed "[..]);
             msg.extend_from_slice(&a.target.path);

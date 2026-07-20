@@ -39,7 +39,7 @@ pub(super) fn walk(
         return;
     }
     let mut conn = None;
-    let extra = super::auth::extra_headers(a);
+    let extra = super::auth::extra_headers(&a.auth, &a.headers);
     let index = match fetch::get_reuse(&mut conn, ip, a.target.port, &a.target.host, path, &extra) {
         Ok(b) => b,
         Err(e) => {

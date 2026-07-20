@@ -40,7 +40,7 @@ pub fn build_get(host: &[u8], path: &[u8], extra: &[u8]) -> Vec<u8> {
     r
 }
 
-pub fn build_put_head(host: &[u8], path: &[u8], len: usize) -> Vec<u8> {
+pub fn build_put_head(host: &[u8], path: &[u8], len: usize, extra: &[u8]) -> Vec<u8> {
     let mut r = Vec::new();
     r.extend_from_slice(b"PUT ");
     r.extend_from_slice(path);
@@ -50,7 +50,9 @@ pub fn build_put_head(host: &[u8], path: &[u8], len: usize) -> Vec<u8> {
     let mut buf = [0u8; 24];
     let k = format_u64(len as u64, &mut buf);
     r.extend_from_slice(&buf[..k]);
-    r.extend_from_slice(b"\r\n\r\n");
+    r.extend_from_slice(b"\r\n");
+    r.extend_from_slice(extra);
+    r.extend_from_slice(b"\r\n");
     r
 }
 
