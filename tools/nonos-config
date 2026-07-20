@@ -1,0 +1,301 @@
+#!/usr/bin/env bash
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+# nonos-config - build your own NONOS kernel, component by component.
+#
+# The kernel is one cargo crate. A fixed base (microkernel-core plus the
+# production posture) provides the scheduler, memory, crypto and boot path; on
+# top of it every capsule and driver is an independent cargo feature. This tool
+# discovers that catalogue from the userland/*/Capsule.mk files, lets you toggle
+# each component on or off, and writes ".nonos-config" at the repo root.
+# "make from-config" then builds exactly the set you chose: signs it, attests it,
+# and packages a bootable image.
+#
+# It is deliberately dependency-free: numbered prompts, no curses, no bash 4
+# features, so it runs the same over SSH, in a container, on macOS, or on a bare
+# terminal. Run non-interactively with --seed/--add/--remove/--components.
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG_FILE="${REPO_ROOT}/.nonos-config"
+CARGO_TOML="${REPO_ROOT}/Cargo.toml"
+
+# The base every kernel carries: the microkernel core, the production posture,
+# and the serial debug channel. Capsules layer on top of this.
+BASE_FEATURES="microkernel-core,nonos-production,capsule-serial-debug"
+
+# The foundation capsules a bootable system always needs. These stay on; a build
+# without them has no trust root, storage, or policy to attest against.
+MANDATORY_SLUGS="proof-io ramfs keyring entropy crypto vfs policy attest"
+
+# Bring-up and test capsules that are not part of a shipping image. Hidden from
+# the menu so the catalogue reads as the real system surface.
+HIDDEN_SLUGS="std-proof input-probe input-proof hello"
+
+# Security posture, overridable by flags or the interactive flow.
+SEL_ATTEST=1
+SEL_KERNEL_ATTEST=1
+SEL_ROLLBACK=1
+SEL_SEED="full"
+
+die() { echo "nonos-config: $*" >&2; exit 1; }
+is_in() { case " $2 " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
+
+# ---------------------------------------------------------------------------
+# Catalogue discovery. Read every userland/*/Capsule.mk once into one table,
+# one line per component: "slug  feature  handle  group". Lookups are awk over
+# that table, so the tool needs no associative arrays.
+# ---------------------------------------------------------------------------
+CATALOG=""
+ALL_SLUGS=""
+
+capsule_field() { awk -F':=' -v k="$2" '$1 ~ "[ \t]*"k"[ \t]*$"{gsub(/^[ \t]+|[ \t]+$/,"",$2);print $2;exit}' "$1"; }
+
+feat_of()   { awk -v s="$1" '$1==s{print $2;exit}' <<<"${CATALOG}"; }
+handle_of() { awk -v s="$1" '$1==s{print $3;exit}' <<<"${CATALOG}"; }
+exists()    { awk -v s="$1" '$1==s{f=1}END{exit !f}' <<<"${CATALOG}"; }
+group_slugs() { awk -v g="$1" '$4==g{print $1}' <<<"${CATALOG}" | sort; }
+
+discover() {
+  local mk slug feat handle grp
+  for mk in "${REPO_ROOT}"/userland/*/Capsule.mk; do
+    [ -f "${mk}" ] || continue
+    slug="$(capsule_field "${mk}" CAPSULE_SLUG)"
+    feat="$(capsule_field "${mk}" CAPSULE_FEATURE)"
+    handle="$(capsule_field "${mk}" CAPSULE_HANDLE)"
+    [ -n "${slug}" ] && [ -n "${feat}" ] || continue
+    is_in "${slug}" "${HIDDEN_SLUGS}" && continue
+    grp="system"
+    case "${slug}" in driver-*) grp="driver" ;; net-*) grp="network" ;; esac
+    case "${handle}" in app.*) grp="app" ;; esac
+    CATALOG="${CATALOG}${slug} ${feat} ${handle} ${grp}"$'\n'
+    ALL_SLUGS="${ALL_SLUGS} ${slug}"
+  done
+  ALL_SLUGS="$(echo "${ALL_SLUGS}" | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+  [ -n "${ALL_SLUGS// }" ] || die "no capsules found under userland/*/Capsule.mk"
+}
+
+# ---------------------------------------------------------------------------
+# Seeding. A seed is the starting set of selected slugs. "full" is everything,
+# "minimal" the mandatory core only, and a profile name resolves that profile's
+# capsule set straight out of Cargo.toml (features recurse one level).
+# ---------------------------------------------------------------------------
+profile_slugs() { # $1 = microkernel-* feature; prints the capsule slugs it pulls in
+  local feat="$1" f
+  awk "/^${feat} =/{p=1} p{print} p&&/\]/{exit}" "${CARGO_TOML}" \
+    | grep -oE '"[a-z0-9-]+"' | tr -d '"' | while read -r f; do
+        case "$f" in
+          microkernel-*) profile_slugs "$f" ;;
+          nonos-capsule-*) echo "${f#nonos-capsule-}" ;;
+        esac
+      done
+}
+
+seed_slugs() { # $1 = seed keyword; prints catalogue slugs, one per line
+  { case "$1" in
+      full)          echo ${ALL_SLUGS} | tr ' ' '\n' ;;
+      minimal)       echo ${MANDATORY_SLUGS} | tr ' ' '\n' ;;
+      microkernel-*) echo ${MANDATORY_SLUGS} | tr ' ' '\n'; profile_slugs "$1" ;;
+      *) die "unknown seed: $1 (full | minimal | a microkernel-* profile)" ;;
+    esac; } | sort -u | while read -r s; do exists "$s" && echo "$s"; done | tr '\n' ' '
+}
+
+SELECTED=""   # space-separated slugs currently chosen
+
+prompt() { local m="$1" d="$2" r; read -r -p "${m} [${d}]: " r || true; echo "${r:-${d}}"; }
+group_title() { case "$1" in system) echo "System capsules";; driver) echo "Drivers";; network) echo "Network stack";; app) echo "Applications";; esac; }
+
+# ---------------------------------------------------------------------------
+# Interactive flow.
+# ---------------------------------------------------------------------------
+choose_seed() {
+  echo
+  echo "Step 1 of 4  Starting point"
+  echo "---------------------------"
+  echo "  1) Full system        every capsule, driver, and app"
+  echo "  2) Desktop            the graphical desktop that boots under QEMU"
+  echo "  3) Minimal            core system only, no desktop or drivers"
+  echo "  4) Terminal           core plus a single full-screen terminal"
+  local c; c="$(prompt "Start from" 1)"
+  case "${c}" in
+    1) SEL_SEED="full" ;;
+    2) SEL_SEED="microkernel-desktop-gui" ;;
+    3) SEL_SEED="minimal" ;;
+    4) SEL_SEED="microkernel-terminal-only" ;;
+    *) die "not a starting point: ${c}" ;;
+  esac
+  SELECTED="$(seed_slugs "${SEL_SEED}")"
+}
+
+customize() {
+  echo
+  echo "Step 2 of 4  Components  (start: ${SEL_SEED})"
+  echo "--------------------------------------------"
+  echo "Toggle items by number. Foundation capsules (${MANDATORY_SLUGS// /, }) stay on."
+  local grp
+  for grp in system driver network app; do
+    while :; do
+      echo
+      echo "$(group_title "${grp}"):"
+      local slugs=() s i=1
+      while read -r s; do [ -n "$s" ] && slugs+=("$s"); done < <(group_slugs "${grp}")
+      for s in "${slugs[@]}"; do
+        local mark=" " lock=""
+        is_in "$s" "${SELECTED}" && mark="x"
+        is_in "$s" "${MANDATORY_SLUGS}" && lock=" (required)"
+        printf "  %2d) [%s] %-20s %s%s\n" "$i" "${mark}" "$s" "$(handle_of "$s")" "${lock}"
+        i=$((i + 1))
+      done
+      local reply; reply="$(prompt "toggle numbers (space separated), or Enter to keep" "")"
+      [ -z "${reply}" ] && break
+      local n t
+      for n in ${reply}; do
+        [[ "$n" =~ ^[0-9]+$ ]] && (( n >= 1 && n <= ${#slugs[@]} )) || { echo "  ? ${n}"; continue; }
+        t="${slugs[$((n - 1))]}"
+        is_in "$t" "${MANDATORY_SLUGS}" && { echo "  ${t} is required"; continue; }
+        if is_in "$t" "${SELECTED}"; then
+          SELECTED="$(echo "${SELECTED}" | tr ' ' '\n' | grep -vxF "$t" | tr '\n' ' ')"
+        else
+          SELECTED="${SELECTED} $t"
+        fi
+      done
+    done
+  done
+}
+
+choose_security() {
+  echo
+  echo "Step 3 of 4  Security"
+  echo "---------------------"
+  echo "Capsule attestation gates every spawn on a post-quantum STARK proof that"
+  echo "the capsule is enrolled under the policy root. Recommended on."
+  local a; a="$(prompt "Enable capsule attestation? (y/n)" "$([[ ${SEL_ATTEST} -eq 1 ]] && echo y || echo n)")"
+  SEL_ATTEST=$([[ "${a}" =~ ^[Yy] ]] && echo 1 || echo 0)
+  echo
+  echo "Kernel self-attestation has the bootloader verify the kernel's own STARK"
+  echo "proof before the jump. Enrolls the kernel image at build time; on by default."
+  local k; k="$(prompt "Enable kernel self-attestation? (y/n)" "$([[ ${SEL_KERNEL_ATTEST} -eq 1 ]] && echo y || echo n)")"
+  SEL_KERNEL_ATTEST=$([[ "${k}" =~ ^[Yy] ]] && echo 1 || echo 0)
+  echo
+  echo "The anti-rollback index is the floor a signed image must meet; the TPM"
+  echo "monotonic counter refuses anything older. Raise it to burn old images."
+  SEL_ROLLBACK="$(prompt "Anti-rollback index" "${SEL_ROLLBACK}")"
+  [[ "${SEL_ROLLBACK}" =~ ^[0-9]+$ ]] || die "rollback index must be a number: ${SEL_ROLLBACK}"
+}
+
+# Normalise SELECTED: mandatory always in, unique, sorted, catalogue-only.
+resolve_selection() {
+  SELECTED="$(printf '%s\n' ${SELECTED} ${MANDATORY_SLUGS} | sort -u \
+    | while read -r s; do exists "$s" && echo "$s"; done | tr '\n' ' ')"
+  SELECTED="${SELECTED% }"
+}
+
+feature_string() {
+  local f="${BASE_FEATURES}" s
+  for s in ${SELECTED}; do f="${f},$(feat_of "$s")"; done
+  [[ "${SEL_ATTEST}" -eq 1 ]] && f="${f},nonos-stark-attest"
+  echo "${f}"
+}
+
+write_config() {
+  resolve_selection
+  local count; count="$(echo ${SELECTED} | wc -w | tr -d ' ')"
+  echo
+  echo "Step 4 of 4  Review"
+  echo "-------------------"
+  printf "  components            %s selected\n" "${count}"
+  printf "  capsule attestation   %s\n" "$([[ ${SEL_ATTEST} -eq 1 ]] && echo on || echo off)"
+  printf "  kernel self-attest    %s\n" "$([[ ${SEL_KERNEL_ATTEST} -eq 1 ]] && echo on || echo off)"
+  printf "  anti-rollback index   %s\n" "${SEL_ROLLBACK}"
+  echo
+  cat > "${CONFIG_FILE}" <<EOF
+# NONOS kernel build configuration.
+# Generated by tools/nonos-config. Edit by hand or re-run "make menuconfig".
+# Consumed by the "from-config" build target; every value is a plain Make var.
+NONOS_PROFILE := custom
+NONOS_CUSTOM_SLUGS := ${SELECTED}
+NONOS_CUSTOM_FEATURES := $(feature_string)
+NONOS_ATTEST := ${SEL_ATTEST}
+NONOS_STARK_KERNEL_ATTEST := ${SEL_KERNEL_ATTEST}
+NONOS_ROLLBACK_INDEX := ${SEL_ROLLBACK}
+EOF
+  echo "Wrote ${CONFIG_FILE} (${count} components)."
+  echo "Build it with:  make from-config"
+}
+
+list_catalogue() {
+  local grp s
+  for grp in system driver network app; do
+    echo "$(group_title "${grp}"):"
+    while read -r s; do [ -n "$s" ] && printf "  %-20s %-30s %s\n" "$s" "$(feat_of "$s")" "$(handle_of "$s")"; done < <(group_slugs "${grp}")
+    echo
+  done
+}
+
+usage() {
+  cat <<EOF
+usage: nonos-config [options]
+  (no options)              interactive, component by component
+  --seed <full|minimal|microkernel-*>   starting component set
+  --add <a,b,c>             turn these component slugs on
+  --remove <a,b,c>          turn these component slugs off
+  --components <a,b,c>      set the exact component set (plus the required core)
+  --attest <0|1>            capsule attestation off/on
+  --kernel-attest <0|1>     kernel self-attestation off/on
+  --rollback <n>            anti-rollback index
+  --list                    list the component catalogue and exit
+  --print-features          print the resolved cargo feature string and exit
+  -h, --help                this help
+Non-interactive example:
+  nonos-config --seed microkernel-desktop-gui --remove snake,browser --add driver-nvme
+EOF
+}
+
+main() {
+  [[ -f "${CARGO_TOML}" ]] || die "run from inside the NONOS tree (no Cargo.toml)"
+  discover
+  local interactive=1
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --seed) SEL_SEED="$2"; SELECTED="$(seed_slugs "$2")"; interactive=0; shift 2 ;;
+      --components) SELECTED="$(echo "$2" | tr ',' ' ')"; interactive=0; shift 2 ;;
+      --add) SELECTED="${SELECTED} $(echo "$2" | tr ',' ' ')"; interactive=0; shift 2 ;;
+      --remove) for r in $(echo "$2" | tr ',' ' '); do SELECTED="$(echo "${SELECTED}" | tr ' ' '\n' | grep -vxF "$r" | tr '\n' ' ')"; done; interactive=0; shift 2 ;;
+      --attest) SEL_ATTEST="$2"; interactive=0; shift 2 ;;
+      --kernel-attest) SEL_KERNEL_ATTEST="$2"; interactive=0; shift 2 ;;
+      --rollback) SEL_ROLLBACK="$2"; interactive=0; shift 2 ;;
+      --list) list_catalogue; exit 0 ;;
+      --print-features) [ -n "${SELECTED// }" ] || SELECTED="$(seed_slugs "${SEL_SEED}")"; resolve_selection; feature_string; exit 0 ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "unknown option: $1 (see --help)" ;;
+    esac
+  done
+
+  if [[ "${interactive}" -eq 1 ]]; then
+    echo "NONOS kernel configuration"
+    echo "=========================="
+    choose_seed
+    customize
+    choose_security
+  else
+    [ -n "${SELECTED// }" ] || SELECTED="$(seed_slugs "${SEL_SEED}")"
+  fi
+  write_config
+}
+
+main "$@"

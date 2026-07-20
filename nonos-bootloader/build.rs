@@ -11,12 +11,14 @@ fn main() {
     println!("cargo:rerun-if-env-changed=NONOS_MLDSA65_PUBKEY");
     println!("cargo:rerun-if-env-changed=NONOS_TRUST_ANCHOR_PUBKEY");
     println!("cargo:rerun-if-env-changed=NONOS_ZK_DEVICE_ROOT");
+    println!("cargo:rerun-if-env-changed=NONOS_KERNEL_ATTEST_ROOT");
     println!("cargo:rerun-if-env-changed=NONOS_GOP_PREF");
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
     println!("cargo:rerun-if-changed=boot-splash.png");
 
     generate_keys();
     generate_zk_registry();
+    generate_kernel_attest_root();
     configure_uefi();
     configure_optimization();
     configure_crypto();
@@ -164,9 +166,8 @@ fn resolve_mldsa65_public_key() -> [u8; 1952] {
         _ => String::from(".keys/kernel_mldsa65.pub"),
     };
     println!("cargo:rerun-if-changed={}", path);
-    let data = fs::read(&path).unwrap_or_else(|e| {
-        panic!("cannot read ML-DSA-65 public key at {}: {}", path, e)
-    });
+    let data = fs::read(&path)
+        .unwrap_or_else(|e| panic!("cannot read ML-DSA-65 public key at {}: {}", path, e));
     parse_mldsa65_public_key(&data)
 }
 
@@ -266,6 +267,45 @@ fn resolve_device_root_path() -> String {
         Ok(path) if !path.trim().is_empty() => path,
         _ => panic!("production bootloader requires NONOS_ZK_DEVICE_ROOT"),
     }
+}
+
+// The enrolled kernel measurement root the pre-jump self-attestation checks
+// against. When the stark-kernel-attest feature is on, an enrolled root is
+// mandatory: a build that turns the gate on must say what it trusts, so a missing
+// or wrong-sized root is a hard build error rather than a silent zero. When the
+// feature is off the root is emitted as zero so the source still compiles; that
+// path is never consulted, since the verifier is compiled out with the feature.
+fn generate_kernel_attest_root() {
+    let out_dir = env::var("OUT_DIR").expect("OUT_DIR not set");
+    let dest = Path::new(&out_dir).join("kernel_attest_root.rs");
+    let gate_on = cargo_feature("STARK_KERNEL_ATTEST");
+    let root: [u8; 32] = match env::var("NONOS_KERNEL_ATTEST_ROOT") {
+        Ok(path) if !path.trim().is_empty() => {
+            println!("cargo:rerun-if-changed={path}");
+            let bytes = fs::read(&path).unwrap_or_else(|e| {
+                panic!("cannot read NONOS_KERNEL_ATTEST_ROOT at {path}: {e}")
+            });
+            if bytes.len() != 32 {
+                panic!("NONOS_KERNEL_ATTEST_ROOT must be 32 bytes, got {}", bytes.len());
+            }
+            if gate_on && bytes == [0u8; 32] {
+                panic!("stark-kernel-attest is on but NONOS_KERNEL_ATTEST_ROOT is all zeroes; enroll the kernel first");
+            }
+            bytes.try_into().expect("32-byte root")
+        }
+        _ if gate_on => panic!(
+            "stark-kernel-attest is on but NONOS_KERNEL_ATTEST_ROOT is not set; enroll the kernel and point it at the 32-byte root"
+        ),
+        _ => [0u8; 32],
+    };
+    let fp = blake3::hash(&root);
+    let fp_hex = fp.as_bytes().iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>();
+    if gate_on {
+        eprintln!("NONOS kernel attest root fingerprint: {fp_hex}");
+    }
+    let body = root.iter().map(u8::to_string).collect::<Vec<_>>().join(", ");
+    fs::write(&dest, format!("pub const KERNEL_ATTEST_ROOT: [u8; 32] = [{body}];\n"))
+        .expect("write kernel_attest_root.rs");
 }
 
 fn compute_ed25519_pubkey(scalar: &[u8; 32]) -> [u8; 32] {

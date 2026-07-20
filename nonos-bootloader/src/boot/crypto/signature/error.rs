@@ -17,7 +17,7 @@
 use uefi::prelude::*;
 
 use crate::display::{
-    log_warn, show_error_screen, update_stage, StageStatus, STAGE_ED25519_VERIFY,
+    log_warn, show_error_screen, update_stage, StageStatus, STAGE_ED25519_VERIFY, STAGE_ZK_VERIFY,
 };
 use crate::log::logger::log_error;
 use crate::menu::SecurityMode;
@@ -55,5 +55,26 @@ pub fn handle_invalid_signature(st: &mut SystemTable<Boot>, mode: SecurityMode, 
             log_warn(b"Ed25519 signature INVALID (dev mode - continuing)");
         }
         update_stage(STAGE_ED25519_VERIFY, StageStatus::Success);
+    }
+}
+
+/// The kernel signed correctly but its STARK self-attestation did not verify
+/// against the enrolled boot root. Under a mode that requires signatures this is
+/// a hard refuse: a signature alone is not enough, the kernel must also prove its
+/// own measurement. This runs only in stark-kernel-attest builds.
+pub fn handle_failed_attestation(st: &mut SystemTable<Boot>, mode: SecurityMode, gop: bool) {
+    if mode.requires_signature() {
+        log_error("crypto", "kernel STARK self-attestation FAILED - refusing to boot");
+        update_stage(STAGE_ZK_VERIFY, StageStatus::Failed);
+        if gop {
+            crate::display::log_error(b"STARK attestation INVALID");
+            show_error_screen(b"Kernel self-attestation invalid");
+        }
+        fatal_reset(st, "kernel self-attestation invalid");
+    } else {
+        if gop {
+            log_warn(b"STARK self-attestation FAILED (dev mode - continuing)");
+        }
+        update_stage(STAGE_ZK_VERIFY, StageStatus::Success);
     }
 }

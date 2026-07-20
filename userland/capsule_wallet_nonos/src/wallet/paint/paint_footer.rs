@@ -20,7 +20,7 @@ use crate::wallet::state::State;
 use crate::wallet::theme::{FG, MUTED, PANEL_2};
 
 pub fn paint_footer(state: &State, fb: &mut PaintBuffer) {
-    fb.fill_rect(32, 502, 836, 34, PANEL_2);
-    fb.text(48, 514, b"Status", MUTED);
-    fb.text(126, 514, state.status, FG);
+    fb.fill_rect(32, 502, 836, 34, PANEL_2());
+    fb.text(48, 514, b"Status", MUTED());
+    fb.text(126, 514, state.status, FG());
 }

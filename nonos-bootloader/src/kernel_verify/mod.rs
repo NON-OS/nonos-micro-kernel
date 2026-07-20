@@ -30,6 +30,8 @@ mod signature_message;
 mod signature_passed;
 mod signature_policy;
 mod size;
+#[cfg(feature = "stark-kernel-attest")]
+mod stark_attest;
 mod types;
 mod verify;
 mod verify_error;

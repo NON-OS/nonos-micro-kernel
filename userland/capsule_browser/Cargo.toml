@@ -27,6 +27,8 @@ harness = []
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
 nonos_toolkit = { path = "../toolkit" }
+nonos_inflate = { path = "../inflate" }
+nonos_base64 = { path = "../base64" }
 nonos_qjs = { path = "../nonos_qjs" }
 spin = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex"] }
 

@@ -1,3 +1,5 @@
 import NonosExtraction.Caps
 import NonosExtraction.Refinement
 import NonosExtraction.PolicyRefinement
+import NonosExtraction.Irq
+import NonosExtraction.IrqRefinement

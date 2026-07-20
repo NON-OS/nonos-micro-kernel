@@ -16,10 +16,10 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::PANEL;
+use crate::wallet::theme::{ELEV_HI, ELEV_LO, PANEL};
 
 pub fn panel(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32) {
-    fb.fill_rect(x, y, w, h, PANEL);
-    fb.fill_rect(x, y, w, 1, 0xFF2E_3A48);
-    fb.fill_rect(x, y + h.saturating_sub(1), w, 1, 0xFF0A_0E13);
+    fb.fill_rect(x, y, w, h, PANEL());
+    fb.fill_rect(x, y, w, 1, ELEV_HI());
+    fb.fill_rect(x, y + h.saturating_sub(1), w, 1, ELEV_LO());
 }

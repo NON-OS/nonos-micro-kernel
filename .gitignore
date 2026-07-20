@@ -90,3 +90,6 @@ nonos-bootloader/keys/
 
 # stray dev symlink, never track (dir form above only ignores contents)
 nonos-bootloader/keys
+
+# Per-user kernel build configuration written by tools/nonos-config
+.nonos-config

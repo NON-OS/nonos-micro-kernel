@@ -48,6 +48,7 @@ path    = "src/nonos_main.rs"
 harness = false
 
 [features]
+nonos-stark-attest = []
 default = ["microkernel-core"]
 
 # Bootstrap. `kernel` switches malloc/free to Rust `alloc`; `standalone`
@@ -742,6 +743,8 @@ sha1-legacy = []
 std = []
 
 [dependencies]
+# Transparent STARK stack, shared with the bootloader for kernel self-attestation.
+nonos-stark = { path = "nonos-stark", version = "0.1.0" }
 # Synchronization. spin is the kernel-wide lock primitive (no_std,
 # interrupt-safe).
 spin        = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex", "lazy", "rwlock"] }

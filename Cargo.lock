@@ -505,6 +505,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "nonos-stark"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+]
+
+[[package]]
 name = "nonos_kernel"
 version = "0.8.9"
 dependencies = [
@@ -522,6 +529,7 @@ dependencies = [
  "hex-literal",
  "lazy_static",
  "linked_list_allocator",
+ "nonos-stark",
  "sha2",
  "sha3",
  "smallvec",

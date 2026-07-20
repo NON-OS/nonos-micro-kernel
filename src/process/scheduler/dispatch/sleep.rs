@@ -16,13 +16,20 @@
 
 use super::super::preemption::SCHEDULER_STATS;
 use super::run_queue::{add_to_run_queue, remove_from_run_queue};
+use crate::interrupts::disable_interrupts_guard;
 use alloc::collections::BTreeMap;
 use core::sync::atomic::Ordering;
 
+// The timer tick sweeps this table (check_sleeping_processes) to wake expired
+// sleepers, so it is reached from interrupt context. Every normal-path access
+// holds interrupts off while it has the lock, or a tick landing mid-update would
+// spin on a lock the interrupted code cannot release. The sweep itself already
+// runs with interrupts off, so its guards are simply no-ops.
 static SLEEPING_PROCESSES: spin::RwLock<BTreeMap<u32, u64>> = spin::RwLock::new(BTreeMap::new());
 
 pub fn sleep_until(pid: u32, wake_time_ms: u64) {
     use crate::process::nonos_core::{ProcessState, PROCESS_TABLE};
+    let _irq = disable_interrupts_guard();
     SLEEPING_PROCESSES.write().insert(pid, wake_time_ms);
     if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
         *pcb.state.lock() = ProcessState::Sleeping;
@@ -32,6 +39,7 @@ pub fn sleep_until(pid: u32, wake_time_ms: u64) {
 
 pub fn wake_process(pid: u32) {
     use crate::process::nonos_core::{ProcessState, PROCESS_TABLE};
+    let _irq = disable_interrupts_guard();
     let mut woke = false;
     if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
         let mut state = pcb.state.lock();
@@ -52,10 +60,12 @@ pub fn wake_process(pid: u32) {
 }
 
 pub fn is_sleeping(pid: u32) -> bool {
+    let _irq = disable_interrupts_guard();
     SLEEPING_PROCESSES.read().contains_key(&pid)
 }
 
 pub fn get_remaining_sleep(pid: u32) -> Option<u64> {
+    let _irq = disable_interrupts_guard();
     let sleeping = SLEEPING_PROCESSES.read();
     if let Some(&wake_time) = sleeping.get(&pid) {
         let now = crate::time::timestamp_millis();
@@ -70,6 +80,7 @@ pub fn get_remaining_sleep(pid: u32) -> Option<u64> {
 }
 
 pub fn check_sleeping_processes() {
+    let _irq = disable_interrupts_guard();
     let current_time_ms = crate::time::timestamp_millis();
     let mut pids_to_wake = [0u32; 64];
     let mut count = 0usize;

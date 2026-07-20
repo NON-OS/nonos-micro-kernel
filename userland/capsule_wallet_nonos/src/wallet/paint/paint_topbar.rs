@@ -16,46 +16,45 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::hex::hex_addr;
-use crate::wallet::state::State;
-use crate::wallet::theme::{ACCENT, CYAN, FG, MUTED, WARN};
+use super::{paint_icons as ic, ui};
+use crate::wallet::state::{State, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED};
+use crate::wallet::theme::{ACCENT, FG, LINE2, MUTED};
+
+pub const HDR_Y: u32 = 47;
+pub const HDR_H: u32 = 30;
+pub const ICON_W: u32 = 34;
+pub const MAIN_W: u32 = 44;
+pub const THEME_BTN_X: u32 = 1042;
+pub const CMD_BTN_X: u32 = 1084;
+pub const MSG_BTN_X: u32 = 1126;
+pub const LOCK_BTN_X: u32 = 1168;
+pub const MAIN_BTN_X: u32 = 1210;
 
 pub fn paint_topbar(state: &State, fb: &mut PaintBuffer) {
-    let compact = fb.width < 1420;
-    fb.text_scaled(
-        336,
-        28,
-        if compact { b"ETH custody" } else { b"Ethereum mainnet custody" },
-        FG,
-        2,
-    );
-    fb.text(340, 66, b"self-custody keys inside NONOS keyring", MUTED);
-    let x = if compact { 760 } else { fb.width.saturating_sub(520) };
-    if !compact {
-        fb.text(x, 30, b"PublicNode", MUTED);
-        fb.text(x + 118, 30, b"ethereum-rpc.publicnode.com", CYAN);
-    }
-    fb.text(x, 58, b"Route", MUTED);
-    fb.text(
-        x + 118,
-        58,
-        if state.net.route_ready { b"ready" } else { b"local" },
-        ACCENT,
-    );
-    fb.text(
-        x + 202,
-        58,
-        if state.net.rpc_chain_ok { b"chain 0x1" } else if state.net.tls_client_finished_ok { b"client fin" } else if state.net.tls_finished_ok { b"TLS Finished" } else if state.net.tls_validity_ok { b"cert time" } else if state.net.tls_hostname_ok { b"host match" } else if state.net.tls_certificate_ok { b"cert chain" } else if state.net.tls_record_ok { b"TLS record" } else if state.net.tls_server_ok { b"TLS hello" } else if state.net.rpc_tcp_ok { b"tcp 443" } else { b"TLS pending" },
-        WARN,
-    );
-    if !compact {
-        fb.text(x + 336, 58, if state.net.dns_ok { b"dns" } else { b"-" }, MUTED);
-        fb.text(x + 380, 58, if state.net.sockets_ok { b"sock" } else { b"-" }, MUTED);
-        fb.text(x + 436, 58, if state.net.nym_ok { b"nym" } else { b"-" }, MUTED);
-    }
-    if state.address_ready && !compact {
-        let mut addr = [0u8; 42];
-        hex_addr(&state.address, &mut addr);
-        fb.text(x, 76, &addr[..22], ACCENT);
-    }
+    let title = match state.view {
+        VIEW_RECEIVE => "Receive funds",
+        VIEW_SEND => "Compose transfer",
+        VIEW_PROOF => "Transaction proofs",
+        VIEW_SHIELDED => "Shielded balances",
+        VIEW_NOX => "NOX revenue & staking",
+        _ => "Account overview",
+    };
+    let _ = fb.text_ttf(226, 46, title, FG(), 20.0);
+
+    let mut c = box_edge(fb, THEME_BTN_X, ICON_W, false);
+    ic::theme(fb, THEME_BTN_X, HDR_Y, state.light_mode, c);
+    c = box_edge(fb, CMD_BTN_X, ICON_W, state.panel == 1);
+    ic::cmd(fb, CMD_BTN_X, HDR_Y, c);
+    c = box_edge(fb, MSG_BTN_X, ICON_W, state.panel == 2);
+    ic::bell(fb, MSG_BTN_X, HDR_Y, c, ACCENT());
+    c = box_edge(fb, LOCK_BTN_X, ICON_W, false);
+    ic::lock(fb, LOCK_BTN_X, HDR_Y, c);
+    c = box_edge(fb, MAIN_BTN_X, MAIN_W, state.panel == 3);
+    ic::account(fb, MAIN_BTN_X, HDR_Y, c);
+}
+
+fn box_edge(fb: &mut PaintBuffer, x: u32, w: u32, open: bool) -> u32 {
+    let (edge, tint) = if open { (ACCENT(), ACCENT()) } else { (LINE2(), MUTED()) };
+    ui::edge(fb, x, HDR_Y, w, HDR_H, edge);
+    tint
 }

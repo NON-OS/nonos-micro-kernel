@@ -23,6 +23,7 @@ mod hex_digit;
 mod on_event;
 mod on_key;
 mod on_pointer;
+mod on_pointer_view;
 mod probe_net;
 mod recipient;
 mod send_input;
