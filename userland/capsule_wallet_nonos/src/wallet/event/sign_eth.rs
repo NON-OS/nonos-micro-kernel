@@ -39,6 +39,7 @@ pub fn sign_eth(state: &mut State) -> EventOutcome {
         to,
         state.send_nonce,
         value,
+        state.fee_wei,
     );
     super::sign_result::sign_result(state, b"ETH", raw)
 }

@@ -18,6 +18,7 @@ mod address;
 mod call;
 mod constants;
 mod decode_rails;
+mod eip1559_fees;
 mod generate;
 mod lookup_keyring;
 mod lookup_self;
