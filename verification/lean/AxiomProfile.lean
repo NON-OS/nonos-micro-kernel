@@ -48,6 +48,15 @@ import Nonos
 #print axioms Nonos.CryptoLowS.normalized_is_low
 #print axioms Nonos.CryptoLowS.normalize_idempotent
 #print axioms Nonos.CryptoKeccakAddr.in_hash_range
+#print axioms Nonos.CryptoSecretValid.zero_rejected
+#print axioms Nonos.CryptoSecretValid.overflow_rejected
+#print axioms Nonos.CryptoSecretValid.valid_iff
+#print axioms Nonos.CryptoRfc6979.distinct_nonce_distinct_msg
+#print axioms Nonos.WalletRlp.single_low_byte_bare
+#print axioms Nonos.WalletRlp.short_prefix_in_range
+#print axioms Nonos.WalletGwei.never_overstates
+#print axioms Nonos.WalletGwei.monotone
+#print axioms Nonos.WalletShortAddr.shown_in_range
 
 #print axioms Nonos.Ipc.zero_length_rejected
 #print axioms Nonos.Isolation.no_wx_page
