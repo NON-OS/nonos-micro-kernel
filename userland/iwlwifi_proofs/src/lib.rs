@@ -18,10 +18,10 @@ extern crate alloc;
 
 #[path = "../../capsule_driver_iwlwifi/src/constants/mod.rs"]
 pub mod constants;
-#[path = "../../capsule_driver_iwlwifi/src/regs.rs"]
-pub mod regs;
 #[path = "../../capsule_driver_iwlwifi/src/firmware/load.rs"]
 pub mod load;
+#[path = "../../capsule_driver_iwlwifi/src/regs.rs"]
+pub mod regs;
 
 // The 802.11 frame layer: pure IEEE encoding, no hardware, so it is checked
 // exactly rather than modeled. `src/dot11/mod.rs` pulls in the real files.
@@ -68,10 +68,26 @@ mod dot11_tests;
 #[cfg(test)]
 mod ccmp_tests;
 #[cfg(test)]
-mod supplicant_tests;
-#[cfg(test)]
-mod mlme_tests;
-#[cfg(test)]
 mod data_tests;
 #[path = "../../capsule_driver_iwlwifi/src/mlme/mod.rs"]
 pub mod mlme;
+#[cfg(test)]
+mod mlme_tests;
+#[cfg(test)]
+mod supplicant_tests;
+
+// The gen3 (AX210-class) firmware self-load: the context-information structure,
+// the peripheral-scratch control block, the image parser, and the boot
+// registers. Pure layout and parsing, checked byte-exact against the real
+// so-a0-gf-a0 image and the documented struct offsets.
+#[path = "../../capsule_driver_iwlwifi/src/firmware/gen3/mod.rs"]
+pub mod gen3;
+
+#[cfg(test)]
+mod dram_map_tests;
+#[cfg(test)]
+mod gen3_image_tests;
+#[cfg(test)]
+mod gen3_tests;
+#[cfg(test)]
+mod prph_scratch_tests;
