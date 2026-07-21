@@ -37,7 +37,7 @@ pub(super) fn layout_inline(
     ctx: Ctx,
 ) -> i32 {
     let mut items: Vec<InlineItem> = Vec::new();
-    collect_items(children, w, &mut items, 0);
+    collect_items(children, w, &mut items, 0, ctx);
     if items.is_empty() {
         return 0;
     }
