@@ -15,21 +15,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! Curated component library. One visual language across every screen: elevated
-//! cards, TTF section headings, metric tiles, status badges, buttons, and empty
-//! states, all keyed off theme.rs and the 8px spacing scale.
+//! cards, status badges, and buttons, all keyed off theme.rs and the 8px
+//! spacing scale.
 
 mod badge;
 mod button;
 mod card;
-mod chart;
-mod empty;
-mod metric;
-mod section;
 
 pub use badge::{badge, chip};
-pub use button::{disabled, ghost, outline, primary};
+pub use button::{outline, primary};
 pub use card::{bordered, card, edge};
-pub use chart::bars;
-pub use empty::empty_state;
-pub use metric::metric;
-pub use section::{section, title};

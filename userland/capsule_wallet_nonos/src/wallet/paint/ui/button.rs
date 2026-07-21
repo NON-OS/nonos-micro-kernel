@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{ACCENT, FG, INK, LINE2, MUTED};
+use crate::wallet::theme::{ACCENT, FG, INK, LINE2};
 
 const BTN_H: u32 = 42;
 
@@ -30,15 +30,6 @@ pub fn primary(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
 pub fn outline(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
     border(fb, x, y, w, LINE2());
     label(fb, x, y, w, text, FG());
-}
-
-pub fn ghost(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    label(fb, x, y, w, text, ACCENT());
-}
-
-pub fn disabled(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    border(fb, x, y, w, LINE2());
-    label(fb, x, y, w, text, MUTED());
 }
 
 fn label(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8], color: u32) {

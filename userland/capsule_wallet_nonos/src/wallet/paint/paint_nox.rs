@@ -18,34 +18,42 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::ui;
 use crate::wallet::state::State;
-use crate::wallet::theme::{ACCENT, CYAN, DIM, FG, GREEN};
-
-const REV: [u8; 14] = [8, 12, 14, 16, 22, 26, 30, 36, 44, 52, 60, 72, 84, 96];
-const APR: [u8; 10] = [38, 42, 40, 54, 58, 66, 70, 68, 80, 92];
+use crate::wallet::theme::{DIM, FG, MUTED};
 
 pub fn paint_nox(state: &State, fb: &mut PaintBuffer) {
     let cx = 226u32;
     let cw = fb.width.saturating_sub(252);
     let sw = (cw - 48) / 4;
-    stat(fb, cx, 146, sw, "FEE (BPS)", "30", FG());
-    stat(fb, cx + sw + 16, 146, sw, "STAKING APR (BPS)", "840", CYAN());
-    stat(fb, cx + 2 * (sw + 16), 146, sw, "CUMUL. REVENUE", "112.4 ETH", FG());
-    stat(fb, cx + 3 * (sw + 16), 146, sw, "YOUR STAKE", "4,000", CYAN());
+    // These come from the NOX market and staking contracts on chain; until
+    // those reads are wired the wallet shows a dash, never an invented figure.
+    stat(fb, cx, 146, sw, "FEE (BPS)", "\u{2014}");
+    stat(fb, cx + sw + 16, 146, sw, "STAKING APR", "\u{2014}");
+    stat(fb, cx + 2 * (sw + 16), 146, sw, "CUMUL. REVENUE", "\u{2014}");
+    stat(fb, cx + 3 * (sw + 16), 146, sw, "YOUR STAKE", "\u{2014}");
 
-    let col = (cw - 16) / 2;
-    ui::card(fb, cx, 252, col, 170);
-    let _ = fb.text_ttf((cx + 20) as i32, 270, "CUMULATIVE REVENUE", DIM(), 10.5);
-    ui::bars(fb, cx + 20, 296, col - 40, 108, &REV, ACCENT());
-    let rx = cx + col + 16;
-    ui::card(fb, rx, 252, col, 170);
-    let _ = fb.text_ttf((rx + 20) as i32, 270, "APR HISTORY (BPS)", DIM(), 10.5);
-    ui::bars(fb, rx + 20, 296, col - 40, 108, &APR, GREEN());
+    ui::card(fb, cx, 252, cw, 150);
+    let _ = fb.text_ttf((cx + 20) as i32, 270, "NOX ON-CHAIN STATE", DIM(), 10.5);
+    let _ = fb.text_ttf(
+        (cx + 20) as i32,
+        304,
+        "Live NOX market and staking figures are read from the",
+        MUTED(),
+        13.0,
+    );
+    let _ = fb.text_ttf(
+        (cx + 20) as i32,
+        326,
+        "mainnet contracts through your RPC. Reading them into",
+        MUTED(),
+        13.0,
+    );
+    let _ = fb.text_ttf((cx + 20) as i32, 348, "the wallet is the next step.", MUTED(), 13.0);
 
     super::paint_nox_stake::paint_nox_stake(state, fb);
 }
 
-fn stat(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &str, val: &str, color: u32) {
+fn stat(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &str, val: &str) {
     ui::card(fb, x, y, w, 90);
     let _ = fb.text_ttf((x + 18) as i32, (y + 18) as i32, label, DIM(), 10.5);
-    let _ = fb.text_ttf((x + 18) as i32, (y + 40) as i32, val, color, 28.0);
+    let _ = fb.text_ttf((x + 18) as i32, (y + 40) as i32, val, FG(), 28.0);
 }

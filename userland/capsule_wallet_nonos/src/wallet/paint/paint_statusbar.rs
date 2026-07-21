@@ -19,13 +19,15 @@ use nonos_app_skeleton::PaintBuffer;
 use crate::wallet::state::State;
 use crate::wallet::theme::{DIM, GREEN, LINE, MUTED, SYSBAR};
 
-pub fn paint_statusbar(_state: &State, fb: &mut PaintBuffer) {
+pub fn paint_statusbar(state: &State, fb: &mut PaintBuffer) {
     let y = fb.height.saturating_sub(30);
     fb.fill_rect(200, y, fb.width.saturating_sub(200), 30, SYSBAR());
     fb.fill_rect(200, y, fb.width.saturating_sub(200), 1, LINE());
     let sx = fb.text_ttf(226, (y + 8) as i32, "STATUS: ", MUTED(), 12.0);
-    let _ = fb.text_ttf(sx, (y + 8) as i32, "wallet ready", GREEN(), 12.0);
-    let right = "block 20,914,332  \u{00b7}  12:39";
+    let msg = core::str::from_utf8(state.status).unwrap_or("ready");
+    let _ = fb.text_ttf(sx, (y + 8) as i32, msg, GREEN(), 12.0);
+    // The chain the wallet transacts on, not a fabricated block height.
+    let right = "Ethereum mainnet";
     let w = fb.measure_ttf(right, 12.0).max(0) as u32;
     let _ = fb.text_ttf((fb.width - 26 - w) as i32, (y + 8) as i32, right, DIM(), 12.0);
 }

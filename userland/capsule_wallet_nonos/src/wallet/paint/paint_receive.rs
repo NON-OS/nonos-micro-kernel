@@ -19,7 +19,7 @@ use nonos_app_skeleton::PaintBuffer;
 use super::ui;
 use crate::wallet::hex::hex_addr;
 use crate::wallet::state::State;
-use crate::wallet::theme::{DIM, FG, LINE, MUTED, PANEL_2};
+use crate::wallet::theme::{DIM, FG, MUTED};
 
 pub const GEN_BTN_X: u32 = 1162;
 pub const GEN_BTN_Y: u32 = 182;
@@ -30,7 +30,7 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
     let cx = 226u32;
     let cw = fb.width.saturating_sub(252);
     ui::card(fb, cx, 146, 300, 300);
-    qr(fb, cx + 50, 186);
+    qr(fb, state, cx + 40, 176);
     let cap = "Scan to send to this account";
     let cwid = fb.measure_ttf(cap, 13.0).max(0) as u32;
     let _ = fb.text_ttf((cx + 150 - cwid / 2) as i32, 420, cap, DIM(), 13.0);
@@ -41,53 +41,68 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
     let _ = fb.text_ttf((rx + 20) as i32, 164, "YOUR ADDRESS", DIM(), 10.5);
     let mut a = [0u8; 42];
     hex_addr(&state.address, &mut a);
-    let _ = fb.text_ttf_mono((rx + 20) as i32, 190, core::str::from_utf8(&a).unwrap_or(""), FG(), 15.0);
+    let _ =
+        fb.text_ttf_mono((rx + 20) as i32, 190, core::str::from_utf8(&a).unwrap_or(""), FG(), 15.0);
     ui::primary(fb, rx + rw - 92, 182, 72, b"COPY");
     ui::outline(fb, rx + 20, 222, 88, b"Share");
     ui::outline(fb, rx + 118, 222, 100, b"Save QR");
 
     ui::card(fb, rx, 278, rw, 90);
-    let _ = fb.text_ttf((rx + 20) as i32, 296, "REQUEST A SPECIFIC AMOUNT", DIM(), 10.5);
-    ui::bordered(fb, rx + 20, 320, rw - 190, 34, PANEL_2(), LINE());
-    let _ = fb.text_ttf((rx + 32) as i32, 329, "0.00 ETH", MUTED(), 14.0);
-    ui::primary(fb, rx + rw - 150, 320, 130, b"Create link");
-
-    ui::card(fb, rx, 384, rw, 180);
-    let _ = fb.text_ttf((rx + 20) as i32, 402, "DERIVED ADDRESSES", DIM(), 10.5);
-    drow(fb, rx, rw, 428, "m/44'/60'/0'/0", "0x71C9\u{2026}4e2B", "2.41 ETH");
-    drow(fb, rx, rw, 468, "m/44'/60'/0'/1", "0x33aa\u{2026}9f01", "0.00 ETH");
-    drow(fb, rx, rw, 508, "m/44'/60'/0'/2", "0xd1c8\u{2026}6b2e", "0.12 ETH");
+    // The one account this wallet holds, at its real derivation path. The
+    // wallet does not yet manage several accounts, so no others are invented.
+    ui::card(fb, rx, 384, rw, 96);
+    let _ = fb.text_ttf((rx + 20) as i32, 402, "ACCOUNT", DIM(), 10.5);
+    let _ = fb.text_ttf_mono((rx + 20) as i32, 432, "m/44'/60'/0'/0/0", MUTED(), 13.0);
+    if state.address_ready {
+        let mut full = [0u8; 42];
+        hex_addr(&state.address, &mut full);
+        let _ = fb.text_ttf_mono(
+            (rx + 20) as i32,
+            456,
+            core::str::from_utf8(&full).unwrap_or(""),
+            FG(),
+            13.0,
+        );
+    } else {
+        let _ = fb.text_ttf((rx + 20) as i32, 456, "Generate an account first", MUTED(), 13.0);
+    }
 }
 
-fn drow(fb: &mut PaintBuffer, x: u32, w: u32, y: u32, path: &str, addr: &str, amt: &str) {
-    fb.fill_rect(x + 20, y + 28, w - 40, 1, LINE());
-    let _ = fb.text_ttf_mono((x + 20) as i32, (y + 4) as i32, path, MUTED(), 13.0);
-    let aw = fb.measure_ttf_mono(addr, 13.0).max(0) as u32;
-    let _ = fb.text_ttf_mono((x + w / 2 - aw / 2) as i32, (y + 4) as i32, addr, FG(), 13.0);
-    let vw = fb.measure_ttf(amt, 13.0).max(0) as u32;
-    let _ = fb.text_ttf((x + w - 20 - vw) as i32, (y + 4) as i32, amt, FG(), 13.0);
-}
+// A real, scannable QR of the account as an EIP-681 payment URI, centred in a
+// 220px panel with the four-module quiet zone the standard requires. No chain
+// suffix, so wallets read it as a plain mainnet address, never a bogus network.
+fn qr(fb: &mut PaintBuffer, state: &State, x: u32, y: u32) {
+    const PANEL: u32 = 220;
+    const QUIET: u32 = 4;
+    const LIGHT: u32 = 0xFFEE_F2F7;
+    const DARK: u32 = 0xFF0A_0D12;
+    fb.fill_rect(x, y, PANEL, PANEL, LIGHT);
 
-fn qr(fb: &mut PaintBuffer, x: u32, y: u32) {
-    let n = 25u32;
-    let s = 8u32;
-    fb.fill_rect(x - 8, y - 8, n * s + 16, n * s + 16, 0xFFE9_EDF2);
-    let mut seed: u32 = 1337;
-    for i in 0..n {
-        for j in 0..n {
-            seed = seed.wrapping_mul(1103515245).wrapping_add(12345) & 0x7fff_ffff;
-            if seed % 100 > 52 {
-                fb.fill_rect(x + i * s, y + j * s, s, s, 0xFF0A_0D12);
+    if !state.address_ready {
+        return;
+    }
+
+    // ethereum:0x{40 hex} in a fixed 51-byte buffer.
+    let mut uri = [0u8; 51];
+    uri[..9].copy_from_slice(b"ethereum:");
+    let mut hex = [0u8; 42];
+    hex_addr(&state.address, &mut hex);
+    uri[9..].copy_from_slice(&hex);
+
+    let Some(code) = nonos_qr::encode(&uri, nonos_qr::Ecc::Medium) else {
+        return;
+    };
+    let modules = code.size as u32;
+    let span = modules + 2 * QUIET;
+    let scale = (PANEL / span).max(1);
+    let drawn = span * scale;
+    let ox = x + (PANEL - drawn) / 2 + QUIET * scale;
+    let oy = y + (PANEL - drawn) / 2 + QUIET * scale;
+    for my in 0..code.size {
+        for mx in 0..code.size {
+            if code.get(mx, my) {
+                fb.fill_rect(ox + mx as u32 * scale, oy + my as u32 * scale, scale, scale, DARK);
             }
         }
     }
-    finder(fb, x, y, s);
-    finder(fb, x + (n - 7) * s, y, s);
-    finder(fb, x, y + (n - 7) * s, s);
-}
-
-fn finder(fb: &mut PaintBuffer, x: u32, y: u32, s: u32) {
-    fb.fill_rect(x, y, 7 * s, 7 * s, 0xFF0A_0D12);
-    fb.fill_rect(x + s, y + s, 5 * s, 5 * s, 0xFFE9_EDF2);
-    fb.fill_rect(x + 2 * s, y + 2 * s, 3 * s, 3 * s, 0xFF0A_0D12);
 }
