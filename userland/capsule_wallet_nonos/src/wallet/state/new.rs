@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{empty_rail::empty_rail, types::{State, MAX_RAILS}};
+use super::{
+    empty_rail::empty_rail,
+    types::{State, MAX_RAILS},
+};
 pub fn new_state() -> State {
     State {
         keyring_port: 0,
@@ -65,6 +68,7 @@ pub fn new_state() -> State {
         locked: false,
         account: 0,
         stake_amount: 4000,
+        nox: crate::wallet::nox::NoxStatus::empty(),
         notes: crate::wallet::shield::notes::NoteStore::new(),
     }
 }

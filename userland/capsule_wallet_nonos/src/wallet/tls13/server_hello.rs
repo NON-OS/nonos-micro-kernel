@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::{EXT_KEY_SHARE, EXT_SUPPORTED_VERSIONS, GROUP_X25519, SUITE_CHACHA20_SHA256, TLS13};
+use super::constants::{
+    EXT_KEY_SHARE, EXT_SUPPORTED_VERSIONS, GROUP_X25519, SUITE_CHACHA20_SHA256, TLS13,
+};
 
 pub fn key_share(handshake: &[u8]) -> Option<[u8; 32]> {
     if handshake.first() != Some(&2) {
@@ -48,7 +50,11 @@ fn parse_exts(mut exts: &[u8]) -> Option<[u8; 32]> {
         }
         exts = super::read::slice(exts, 4 + len, exts.len().saturating_sub(4 + len))?;
     }
-    if version_ok { share } else { None }
+    if version_ok {
+        share
+    } else {
+        None
+    }
 }
 
 fn parse_keyshare(body: &[u8]) -> Option<[u8; 32]> {

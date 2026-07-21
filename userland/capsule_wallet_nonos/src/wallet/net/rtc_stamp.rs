@@ -21,5 +21,12 @@ pub fn rtc_stamp() -> Option<u64> {
     if mk_time_rtc(&mut t as *mut RtcTime) != 0 {
         return None;
     }
-    Some(t.year as u64 * 10_000_000_000 + t.month as u64 * 100_000_000 + t.day as u64 * 1_000_000 + t.hour as u64 * 10_000 + t.minute as u64 * 100 + t.second as u64)
+    Some(
+        t.year as u64 * 10_000_000_000
+            + t.month as u64 * 100_000_000
+            + t.day as u64 * 1_000_000
+            + t.hour as u64 * 10_000
+            + t.minute as u64 * 100
+            + t.second as u64,
+    )
 }

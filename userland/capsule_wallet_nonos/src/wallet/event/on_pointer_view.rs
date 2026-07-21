@@ -17,7 +17,9 @@
 use nonos_app_skeleton::EventOutcome;
 
 use super::on_pointer::hit;
-use crate::wallet::state::{State, SEND_FIELD_AMOUNT, SEND_FIELD_TO, VIEW_NOX, VIEW_RECEIVE, VIEW_SEND};
+use crate::wallet::state::{
+    State, SEND_FIELD_AMOUNT, SEND_FIELD_TO, VIEW_NOX, VIEW_RECEIVE, VIEW_SEND,
+};
 
 // Home quick actions route to their screens.
 pub(super) fn home(state: &mut State, x: u32, y: u32) -> EventOutcome {

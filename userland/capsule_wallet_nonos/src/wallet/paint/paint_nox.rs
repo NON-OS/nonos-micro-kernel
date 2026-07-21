@@ -24,30 +24,66 @@ pub fn paint_nox(state: &State, fb: &mut PaintBuffer) {
     let cx = 226u32;
     let cw = fb.width.saturating_sub(252);
     let sw = (cw - 48) / 4;
-    // These come from the NOX market and staking contracts on chain; until
-    // those reads are wired the wallet shows a dash, never an invented figure.
-    stat(fb, cx, 146, sw, "FEE (BPS)", "\u{2014}");
-    stat(fb, cx + sw + 16, 146, sw, "STAKING APR", "\u{2014}");
-    stat(fb, cx + 2 * (sw + 16), 146, sw, "CUMUL. REVENUE", "\u{2014}");
-    stat(fb, cx + 3 * (sw + 16), 146, sw, "YOUR STAKE", "\u{2014}");
+
+    // Every figure is read live from the pinned mainnet contracts. A field that
+    // has not returned yet shows a dash, never a fabricated number.
+    let mut apr_b = [0u8; 16];
+    let apr = if state.nox.apr_ready {
+        let n = crate::wallet::nox::format_apr(state.nox.apr_bps, &mut apr_b);
+        core::str::from_utf8(&apr_b[..n]).unwrap_or("\u{2014}")
+    } else {
+        "\u{2014}"
+    };
+    let mut rev_b = [0u8; 48];
+    let rev = crate::wallet::nox::amount_str(
+        state.nox.stats_ready,
+        &state.nox.rewards_distributed_wei,
+        &mut rev_b,
+    );
+    let mut pos_b = [0u8; 20];
+    let pos = if state.nox.positions_ready {
+        let n = super::format_u64::format_u64(state.nox.positions, &mut pos_b);
+        core::str::from_utf8(&pos_b[..n]).unwrap_or("\u{2014}")
+    } else {
+        "\u{2014}"
+    };
+
+    stat(fb, cx, 146, sw, "STAKING APR", apr);
+    stat(fb, cx + sw + 16, 146, sw, "REWARDS PAID", rev);
+    stat(fb, cx + 2 * (sw + 16), 146, sw, "YOUR POSITIONS", pos);
+    let mut bal_b = [0u8; 48];
+    let bal =
+        crate::wallet::nox::amount_str(state.nox.balance_ready, &state.nox.balance_wei, &mut bal_b);
+    stat(fb, cx + 3 * (sw + 16), 146, sw, "NOX BALANCE", bal);
 
     ui::card(fb, cx, 252, cw, 150);
     let _ = fb.text_ttf((cx + 20) as i32, 270, "NOX ON-CHAIN STATE", DIM(), 10.5);
-    let _ = fb.text_ttf(
-        (cx + 20) as i32,
-        304,
-        "Live NOX market and staking figures are read from the",
-        MUTED(),
+    let mut ts_b = [0u8; 48];
+    let ts = crate::wallet::nox::amount_str(
+        state.nox.stats_ready,
+        &state.nox.total_staked_wei,
+        &mut ts_b,
+    );
+    let _ = fb.text_ttf((cx + 20) as i32, 300, "Total staked", MUTED(), 13.0);
+    let tw = fb.measure_ttf(ts, 15.0).max(0) as u32;
+    let _ = fb.text_ttf((cx + cw - 20 - tw) as i32, 298, ts, FG(), 15.0);
+    let mut sa = [0u8; 13];
+    crate::wallet::hex::short_addr(&crate::wallet::nox::constants::STAKING_PROXY, &mut sa);
+    let _ = fb.text_ttf((cx + 20) as i32, 328, "Staking contract", MUTED(), 13.0);
+    let _ = fb.text_ttf_mono(
+        (cx + cw - 20 - 96) as i32,
+        328,
+        core::str::from_utf8(&sa).unwrap_or(""),
+        DIM(),
         13.0,
     );
     let _ = fb.text_ttf(
         (cx + 20) as i32,
-        326,
-        "mainnet contracts through your RPC. Reading them into",
+        360,
+        "Read live from Ethereum mainnet (chain 1).",
         MUTED(),
         13.0,
     );
-    let _ = fb.text_ttf((cx + 20) as i32, 348, "the wallet is the next step.", MUTED(), 13.0);
 
     super::paint_nox_stake::paint_nox_stake(state, fb);
 }

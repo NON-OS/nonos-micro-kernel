@@ -14,15 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
 use crate::wallet::net::NetStatus;
+use alloc::vec::Vec;
 
 pub const MAX_RAILS: usize = 8;
 pub const MAX_STAKE: u32 = 18204;
-pub const VIEW_HOME: u8 = 0; pub const VIEW_RECEIVE: u8 = 1; pub const VIEW_SEND: u8 = 2; pub const VIEW_PROOF: u8 = 3;
+pub const VIEW_HOME: u8 = 0;
+pub const VIEW_RECEIVE: u8 = 1;
+pub const VIEW_SEND: u8 = 2;
+pub const VIEW_PROOF: u8 = 3;
 // New hardened-wallet + private-swap + NOX screens.
-pub const VIEW_SIGN: u8 = 4; pub const VIEW_APPROVALS: u8 = 5; pub const VIEW_SHIELD: u8 = 6;
-pub const VIEW_UNSHIELD: u8 = 7; pub const VIEW_SHIELDED: u8 = 8; pub const VIEW_NOX: u8 = 9;
+pub const VIEW_SIGN: u8 = 4;
+pub const VIEW_APPROVALS: u8 = 5;
+pub const VIEW_SHIELD: u8 = 6;
+pub const VIEW_UNSHIELD: u8 = 7;
+pub const VIEW_SHIELDED: u8 = 8;
+pub const VIEW_NOX: u8 = 9;
 pub const SEND_FIELD_TO: u8 = 0;
 pub const SEND_FIELD_AMOUNT: u8 = 1;
 pub const SEND_FIELD_NONCE: u8 = 2;
@@ -94,6 +101,8 @@ pub struct State {
     pub account: u8,
     // NOX stake amount in whole NOX, adjustable via the slider (0..MAX_STAKE).
     pub stake_amount: u32,
+    // Live NOX token and staking readout from mainnet eth_call.
+    pub nox: crate::wallet::nox::NoxStatus,
     // Local shielded UTXO set, reconstructed from the note secrets.
     pub notes: crate::wallet::shield::notes::NoteStore,
 }

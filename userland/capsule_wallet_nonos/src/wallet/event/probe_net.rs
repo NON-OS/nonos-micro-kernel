@@ -29,6 +29,7 @@ pub fn probe_net(state: &mut State) -> EventOutcome {
         state.live_nonce = account.nonce;
         state.fee_ready = account.fee_ready;
         state.fee_wei = account.fee_wei;
+        state.nox = crate::wallet::net::probe_nox(&state.address);
     }
     state.status = state.net.status;
     EventOutcome::Repaint

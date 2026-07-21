@@ -34,5 +34,9 @@ pub fn der_tlv(buf: &[u8], off: usize) -> Option<(u8, usize, usize)> {
     }
     let val = off + 2 + n;
     let end = val.checked_add(len)?;
-    if end <= buf.len() { Some((tag, val, end)) } else { None }
+    if end <= buf.len() {
+        Some((tag, val, end))
+    } else {
+        None
+    }
 }

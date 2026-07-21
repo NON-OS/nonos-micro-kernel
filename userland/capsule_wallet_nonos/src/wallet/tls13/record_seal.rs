@@ -16,7 +16,13 @@
 
 use alloc::vec::Vec;
 
-pub fn seal(key: &[u8; 32], iv: &[u8; 12], seq: u64, inner_type: u8, body: &[u8]) -> Option<Vec<u8>> {
+pub fn seal(
+    key: &[u8; 32],
+    iv: &[u8; 12],
+    seq: u64,
+    inner_type: u8,
+    body: &[u8],
+) -> Option<Vec<u8>> {
     let mut plain = Vec::with_capacity(body.len() + 1);
     plain.extend_from_slice(body);
     plain.push(inner_type);

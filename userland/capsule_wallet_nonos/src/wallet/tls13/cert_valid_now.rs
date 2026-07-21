@@ -39,7 +39,14 @@ fn pair_valid(cert: &[u8], pos: usize, now: u64) -> bool {
     if len2 >= 128 || end1 + 2 + len2 > cert.len() {
         return false;
     }
-    let Some(from) = super::cert_time_value::cert_time_value(cert[pos], &cert[pos + 2..end1]) else { return false };
-    let Some(until) = super::cert_time_value::cert_time_value(cert[end1], &cert[end1 + 2..end1 + 2 + len2]) else { return false };
+    let Some(from) = super::cert_time_value::cert_time_value(cert[pos], &cert[pos + 2..end1])
+    else {
+        return false;
+    };
+    let Some(until) =
+        super::cert_time_value::cert_time_value(cert[end1], &cert[end1 + 2..end1 + 2 + len2])
+    else {
+        return false;
+    };
     from <= now && now <= until
 }

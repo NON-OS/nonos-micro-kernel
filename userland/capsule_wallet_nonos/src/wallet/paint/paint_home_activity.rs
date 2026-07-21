@@ -25,7 +25,7 @@ pub fn paint_home_activity(state: &State, fb: &mut PaintBuffer, cx: u32, cw: u32
     let rx = cx + col + 28;
     let _ = fb.text_ttf(cx as i32, 486, "ENABLED RAILS", DIM(), 10.5);
 
-    // ETH shows the live balance; other rails have no fetched balance yet.
+    // ETH and NOX show live balances; PR has no fetched balance yet.
     let mut buf = [0u8; 40];
     let eth = if state.balance_ready {
         let n = format_eth(lower_u64(&state.balance_wei), &mut buf);
@@ -34,7 +34,10 @@ pub fn paint_home_activity(state: &State, fb: &mut PaintBuffer, cx: u32, cw: u32
         "\u{2014}"
     };
     rail(fb, cx, 508, col, "ETH", b"L1", eth);
-    rail(fb, cx, 570, col, "NOX", b"ERC-20", "\u{2014}");
+    let mut nox_b = [0u8; 48];
+    let nox =
+        crate::wallet::nox::amount_str(state.nox.balance_ready, &state.nox.balance_wei, &mut nox_b);
+    rail(fb, cx, 570, col, "NOX", b"ERC-20", nox);
     rail(fb, cx, 632, col, "PR", b"RSVD", "\u{2014}");
 
     // No transaction index is fetched, so the wallet does not invent history.

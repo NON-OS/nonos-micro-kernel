@@ -17,7 +17,9 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::ui;
-use crate::wallet::state::{State, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED};
+use crate::wallet::state::{
+    State, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED,
+};
 use crate::wallet::theme::{ACCENT, DIM, FG, GREEN, GREEN_INK, INK, LINE2, MUTED, SEL};
 
 // Nav geometry shared with the pointer hit-test (event::on_pointer) so drawing

@@ -17,5 +17,9 @@
 pub fn hash_sha256(data: &[u8]) -> Option<[u8; 32]> {
     let mut out = [0u8; 32];
     let n = nonos_libc::crypto_hash(1, data.as_ptr(), data.len(), out.as_mut_ptr(), out.len());
-    if n == 32 { Some(out) } else { None }
+    if n == 32 {
+        Some(out)
+    } else {
+        None
+    }
 }

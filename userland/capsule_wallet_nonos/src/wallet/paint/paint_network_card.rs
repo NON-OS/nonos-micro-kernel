@@ -22,7 +22,8 @@ use crate::wallet::theme::{ACCENT, DIM, FG, GREEN, LINE, MUTED};
 
 pub fn paint_network_card(_state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {
     ui::card(fb, x, y, w, 200);
-    let _ = fb.text_ttf((x + 20) as i32, (y + 18) as i32, "GAS  \u{00b7}  ETHEREUM L1", DIM(), 10.5);
+    let _ =
+        fb.text_ttf((x + 20) as i32, (y + 18) as i32, "GAS  \u{00b7}  ETHEREUM L1", DIM(), 10.5);
     let gx = fb.text_ttf((x + 20) as i32, (y + 38) as i32, "16", FG(), 30.0);
     let _ = fb.text_ttf(gx + 8, (y + 50) as i32, "gwei base", MUTED(), 13.0);
     row(fb, x, w, y + 84, "Slow", FG(), "12 gwei", "~2m");

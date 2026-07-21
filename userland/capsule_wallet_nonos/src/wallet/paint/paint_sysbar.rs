@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{ACCENT, DIM, MUTED, SYSBAR, LINE, WIDTH};
+use crate::wallet::theme::{ACCENT, DIM, LINE, MUTED, SYSBAR, WIDTH};
 
 pub fn paint_sysbar(fb: &mut PaintBuffer) {
     fb.fill_rect(0, 0, WIDTH, 34, SYSBAR());

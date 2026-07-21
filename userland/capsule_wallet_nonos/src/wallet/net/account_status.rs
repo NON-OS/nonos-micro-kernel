@@ -26,6 +26,13 @@ pub struct AccountStatus {
 
 impl AccountStatus {
     pub fn empty() -> Self {
-        Self { balance_ready: false, balance_wei: [0; 32], nonce_ready: false, nonce: 0, fee_ready: false, fee_wei: 0 }
+        Self {
+            balance_ready: false,
+            balance_wei: [0; 32],
+            nonce_ready: false,
+            nonce: 0,
+            fee_ready: false,
+            fee_wei: 0,
+        }
     }
 }

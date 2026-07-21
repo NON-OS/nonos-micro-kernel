@@ -16,14 +16,23 @@
 
 use super::constants::ETH_RPC_HOST;
 
-pub fn probe_chain_id(sockets_port: u32, handle: u32, flight: &super::super::tls13::flight::ClientFlight, rx: &[u8]) -> bool {
+pub fn probe_chain_id(
+    sockets_port: u32,
+    handle: u32,
+    flight: &super::super::tls13::flight::ClientFlight,
+    rx: &[u8],
+) -> bool {
     let body = super::super::rpc::request_chain_id(1);
     let http = super::super::rpc::http_post(ETH_RPC_HOST, &body);
     let Some(out) = super::super::tls13::application_write(flight, rx, &http) else { return false };
     if super::socket_send::socket_send(sockets_port, handle, &out).is_err() {
         return false;
     }
-    let Ok(resp) = super::read_tls_flight::read_tls_flight(sockets_port, handle) else { return false };
-    let Some(plain) = super::super::tls13::application_plaintext(flight, rx, &resp) else { return false };
+    let Ok(resp) = super::read_tls_flight::read_tls_flight(sockets_port, handle) else {
+        return false;
+    };
+    let Some(plain) = super::super::tls13::application_plaintext(flight, rx, &resp) else {
+        return false;
+    };
     plain.windows(14).any(|w| w == b"\"result\":\"0x1\"")
 }

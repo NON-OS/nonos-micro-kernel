@@ -23,7 +23,9 @@ pub fn server_keys(client: &ClientFlight, record: &[u8]) -> Option<ServerContext
     let (server_hello, used) = first_handshake(record)?;
     let peer = super::server_hello::key_share(server_hello)?;
     let mut shared = [0u8; 32];
-    if nonos_libc::crypto_x25519_shared(client.private.as_ptr(), peer.as_ptr(), shared.as_mut_ptr()) != 32 {
+    if nonos_libc::crypto_x25519_shared(client.private.as_ptr(), peer.as_ptr(), shared.as_mut_ptr())
+        != 32
+    {
         return None;
     }
     let mut transcript = Vec::with_capacity(client.handshake.len() + server_hello.len());
@@ -39,5 +41,9 @@ fn first_handshake(record: &[u8]) -> Option<(&[u8], usize)> {
     }
     let len = u16::from_be_bytes([record[3], record[4]]) as usize;
     let msg = super::read::slice(record, 5, len)?;
-    if msg.first() == Some(&2) { Some((msg, 5 + len)) } else { None }
+    if msg.first() == Some(&2) {
+        Some((msg, 5 + len))
+    } else {
+        None
+    }
 }

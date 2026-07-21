@@ -17,7 +17,9 @@
 pub fn scan(msgs: &[u8]) -> bool {
     let mut pos = 0usize;
     while pos + 4 <= msgs.len() {
-        let len = ((msgs[pos + 1] as usize) << 16) | ((msgs[pos + 2] as usize) << 8) | msgs[pos + 3] as usize;
+        let len = ((msgs[pos + 1] as usize) << 16)
+            | ((msgs[pos + 2] as usize) << 8)
+            | msgs[pos + 3] as usize;
         let end = pos + 4 + len;
         if end > msgs.len() {
             return false;
@@ -39,7 +41,9 @@ fn valid_body(body: &[u8]) -> bool {
     if list_off + 3 > body.len() {
         return false;
     }
-    let len = ((body[list_off] as usize) << 16) | ((body[list_off + 1] as usize) << 8) | body[list_off + 2] as usize;
+    let len = ((body[list_off] as usize) << 16)
+        | ((body[list_off + 1] as usize) << 8)
+        | body[list_off + 2] as usize;
     if list_off + 3 + len != body.len() || len < 8 {
         return false;
     }

@@ -39,7 +39,9 @@ pub fn on_key(state: &mut State, code: u32) -> EventOutcome {
         code if code == b'd' as u32 || code == b'D' as u32 => view(state, VIEW_SHIELDED),
         code if code == b'x' as u32 || code == b'X' as u32 => view(state, VIEW_NOX),
         code if code == b'g' as u32 || code == b'G' as u32 => super::generate::generate(state),
-        code if state.view == VIEW_SEND => super::send_input::send_input(state, code).unwrap_or(EventOutcome::Idle),
+        code if state.view == VIEW_SEND => {
+            super::send_input::send_input(state, code).unwrap_or(EventOutcome::Idle)
+        }
         code if code == b'E' as u32 => super::sign_eth::sign_eth(state),
         code if code == b'n' as u32 || code == b'N' as u32 => super::sign_nox::sign_nox(state),
         code if code == b'P' as u32 => super::sign_both::sign_both(state),

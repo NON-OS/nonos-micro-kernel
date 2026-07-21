@@ -20,7 +20,8 @@ pub fn last_cert(body: &[u8]) -> Option<&[u8]> {
     if off + 3 > body.len() {
         return None;
     }
-    let list_len = ((body[off] as usize) << 16) | ((body[off + 1] as usize) << 8) | body[off + 2] as usize;
+    let list_len =
+        ((body[off] as usize) << 16) | ((body[off + 1] as usize) << 8) | body[off + 2] as usize;
     let end = off.checked_add(3)?.checked_add(list_len)?;
     if end != body.len() {
         return None;
@@ -28,12 +29,17 @@ pub fn last_cert(body: &[u8]) -> Option<&[u8]> {
     let mut pos = off + 3;
     let mut last = None;
     while pos + 5 <= end {
-        let len = ((body[pos] as usize) << 16) | ((body[pos + 1] as usize) << 8) | body[pos + 2] as usize;
+        let len =
+            ((body[pos] as usize) << 16) | ((body[pos + 1] as usize) << 8) | body[pos + 2] as usize;
         let cert = super::read::slice(body, pos + 3, len)?;
         let cert_end = pos + 3 + len;
         let ext_len = ((body[cert_end] as usize) << 8) | body[cert_end + 1] as usize;
         pos = cert_end.checked_add(2)?.checked_add(ext_len)?;
         last = Some(cert);
     }
-    if pos == end { last } else { None }
+    if pos == end {
+        last
+    } else {
+        None
+    }
 }

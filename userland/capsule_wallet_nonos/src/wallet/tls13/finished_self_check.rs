@@ -20,6 +20,12 @@ pub fn finished_self_check() -> bool {
     let Some(hash) = super::hash_sha256::hash_sha256(transcript) else { return false };
     let Some(key) = super::finished_key::finished_key(&secret) else { return false };
     let mut verify = [0u8; 32];
-    let n = nonos_libc::crypto_hmac_sha256(key.as_ptr(), key.len(), hash.as_ptr(), hash.len(), verify.as_mut_ptr());
+    let n = nonos_libc::crypto_hmac_sha256(
+        key.as_ptr(),
+        key.len(),
+        hash.as_ptr(),
+        hash.len(),
+        verify.as_mut_ptr(),
+    );
     n == 32 && super::finished_verify::verify(&secret, transcript, &verify)
 }
