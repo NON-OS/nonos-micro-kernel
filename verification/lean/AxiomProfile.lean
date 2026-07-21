@@ -28,6 +28,27 @@ import Nonos
 #print axioms Nonos.Capability.attenuate_confines
 #print axioms Nonos.CapabilityBits.word_chain_never_widens
 #print axioms Nonos.Crypto.wrong_tag_rejected
+
+-- Wallet userland and signing crypto: live NOX/staking reads, EIP-1559 fee
+-- sizing, EIP-2 low-s canonicalisation, address derivation, hex parsing, and
+-- the private-key import wipe, each proven on Lean's standard axioms alone.
+#print axioms Nonos.WalletNoxApr.empty_pool_no_rate
+#print axioms Nonos.WalletNoxApr.apr_monotone_in_emission
+#print axioms Nonos.WalletNoxCalldata.padding_is_zero
+#print axioms Nonos.WalletNoxCalldata.address_placed
+#print axioms Nonos.WalletQuantity.high_bytes_refused
+#print axioms Nonos.WalletQuantity.decoded_lt_two_pow_128
+#print axioms Nonos.WalletEip1559.tip_at_least_one_gwei
+#print axioms Nonos.WalletEip1559.cap_covers_tip
+#print axioms Nonos.WalletHex.nibble_lt_16
+#print axioms Nonos.WalletFormatNox.whole_reconstructs
+#print axioms Nonos.WalletFormatApr.reconstructs
+#print axioms Nonos.WalletParseWord.words_disjoint
+#print axioms Nonos.WalletImportWipe.wiped_all_zero
+#print axioms Nonos.CryptoLowS.normalized_is_low
+#print axioms Nonos.CryptoLowS.normalize_idempotent
+#print axioms Nonos.CryptoKeccakAddr.in_hash_range
+
 #print axioms Nonos.Ipc.zero_length_rejected
 #print axioms Nonos.Isolation.no_wx_page
 #print axioms Nonos.Loader.accepted_entry_inside_file
