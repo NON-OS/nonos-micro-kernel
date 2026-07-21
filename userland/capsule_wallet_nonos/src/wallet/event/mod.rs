@@ -20,6 +20,7 @@ mod edit_nonce;
 mod eth_value;
 mod generate;
 mod hex_digit;
+mod import;
 mod on_event;
 mod on_key;
 mod on_pointer;

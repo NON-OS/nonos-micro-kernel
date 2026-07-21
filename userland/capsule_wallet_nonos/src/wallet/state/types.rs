@@ -101,6 +101,11 @@ pub struct State {
     pub account: u8,
     // NOX stake amount in whole NOX, adjustable via the slider (0..MAX_STAKE).
     pub stake_amount: u32,
+    // Private-key import entry. The typed hex never renders and is wiped the
+    // moment the key is handed to the keyring or the field is cancelled.
+    pub import_active: bool,
+    pub import_hex: [u8; 64],
+    pub import_len: usize,
     // Live NOX token and staking readout from mainnet eth_call.
     pub nox: crate::wallet::nox::NoxStatus,
     // Local shielded UTXO set, reconstructed from the note secrets.

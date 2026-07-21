@@ -16,6 +16,7 @@
 
 pub const KEYRING_SERVICE: &[u8] = b"keyring";
 pub const SELF_SERVICE: &[u8] = b"app.nonos_wallet";
+pub const OP_WALLET_IMPORT: u16 = 8;
 pub const OP_WALLET_GENERATE: u16 = 9;
 pub const OP_WALLET_ADDRESS: u16 = 10;
 pub const OP_SIGN_NOX_APPROVE: u16 = 12;

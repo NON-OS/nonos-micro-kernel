@@ -19,7 +19,7 @@ use nonos_app_skeleton::PaintBuffer;
 use super::ui;
 use crate::wallet::hex::hex_addr;
 use crate::wallet::state::State;
-use crate::wallet::theme::{DIM, FG, MUTED};
+use crate::wallet::theme::{ACCENT, DIM, FG, MUTED, PANEL_2};
 
 pub const GEN_BTN_X: u32 = 1162;
 pub const GEN_BTN_Y: u32 = 182;
@@ -47,7 +47,8 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
     ui::outline(fb, rx + 20, 222, 88, b"Share");
     ui::outline(fb, rx + 118, 222, 100, b"Save QR");
 
-    ui::card(fb, rx, 278, rw, 90);
+    setup(fb, state, rx, rw);
+
     // The one account this wallet holds, at its real derivation path. The
     // wallet does not yet manage several accounts, so no others are invented.
     ui::card(fb, rx, 384, rw, 96);
@@ -66,6 +67,46 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
     } else {
         let _ = fb.text_ttf((rx + 20) as i32, 456, "Generate an account first", MUTED(), 13.0);
     }
+}
+
+// Wallet setup: create a fresh account or import an existing key. During import
+// only the number of characters typed is shown, never the key itself.
+fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
+    ui::card(fb, rx, 278, rw, 90);
+    if state.import_active {
+        let _ = fb.text_ttf((rx + 20) as i32, 296, "IMPORT PRIVATE KEY", DIM(), 10.5);
+        let track = rw - 40;
+        let fill = track * (state.import_len.min(64) as u32) / 64;
+        fb.fill_rect(rx + 20, 322, track, 6, PANEL_2());
+        fb.fill_rect(rx + 20, 322, fill, 6, ACCENT());
+        let mut nb = [0u8; 20];
+        let dn = super::format_u64::format_u64(state.import_len as u64, &mut nb);
+        let mut line = [0u8; 32];
+        let ll = build_count(&nb[..dn], &mut line);
+        let s = core::str::from_utf8(&line[..ll]).unwrap_or("");
+        let _ = fb.text_ttf((rx + 20) as i32, 338, s, MUTED(), 12.0);
+        let _ = fb.text_ttf((rx + 20) as i32, 358, "Enter to import, Esc to cancel", DIM(), 11.5);
+    } else {
+        let _ = fb.text_ttf((rx + 20) as i32, 296, "SET UP THIS WALLET", DIM(), 10.5);
+        ui::primary(fb, rx + 20, 320, 150, b"Generate (G)");
+        ui::outline(fb, rx + 182, 320, 180, b"Import key (I)");
+        let _ = fb.text_ttf(
+            (rx + 20) as i32,
+            360,
+            "Import hands the key straight to the keyring, never stored here.",
+            DIM(),
+            11.5,
+        );
+    }
+}
+
+fn build_count(digits: &[u8], out: &mut [u8]) -> usize {
+    let n = digits.len().min(out.len());
+    out[..n].copy_from_slice(&digits[..n]);
+    let suf = b" / 64 hex chars";
+    let take = suf.len().min(out.len() - n);
+    out[n..n + take].copy_from_slice(&suf[..take]);
+    n + take
 }
 
 // A real, scannable QR of the account as an EIP-681 payment URI, centred in a

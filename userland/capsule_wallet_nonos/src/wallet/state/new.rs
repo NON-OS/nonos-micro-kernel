@@ -68,6 +68,9 @@ pub fn new_state() -> State {
         locked: false,
         account: 0,
         stake_amount: 4000,
+        import_active: false,
+        import_hex: [0; 64],
+        import_len: 0,
         nox: crate::wallet::nox::NoxStatus::empty(),
         notes: crate::wallet::shield::notes::NoteStore::new(),
     }

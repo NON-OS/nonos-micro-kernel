@@ -21,11 +21,17 @@ use crate::wallet::state::{
 };
 
 pub fn on_key(state: &mut State, code: u32) -> EventOutcome {
+    // While the import field is open it owns every key, so a typed hex digit is
+    // never mistaken for a view shortcut.
+    if state.import_active {
+        return super::import::import_input(state, code);
+    }
     if code == b'r' as u32 || code == b'R' as u32 {
         hydrate(state);
         return EventOutcome::Repaint;
     }
     match code {
+        code if code == b'i' as u32 || code == b'I' as u32 => super::import::toggle_import(state),
         code if code == b'h' as u32 => view(state, VIEW_HOME),
         code if code == b'v' as u32 => view(state, VIEW_RECEIVE),
         code if code == b's' as u32 => view(state, VIEW_SEND),
