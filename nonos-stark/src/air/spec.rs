@@ -69,7 +69,10 @@ pub trait Air {
 /// `Felt` abstraction and delegating both `transition` and `transition_ext` to it,
 /// which keeps the trait object-safe. Only AIRs proven by the money-grade engine
 /// (`stark_prove_ext`) need it.
-pub trait AirExt: Air {
+// `Sync` lets the prover evaluate the composition and DEEP polynomials across
+// cores under the `parallel` feature; every AIR is plain data, so the bound is
+// satisfied automatically and the kernel build is unaffected.
+pub trait AirExt: Air + Sync {
     /// The transition constraints over the extension field, layout as `transition`.
     fn transition_ext(&self, window: &[Fp2], periodic: &[Fp2]) -> Vec<Fp2>;
 }

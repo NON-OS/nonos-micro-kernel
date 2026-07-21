@@ -47,8 +47,12 @@ pub(super) fn periodic_lde_tree<A: AirExt>(
     let g = root_of_unity(log_t);
     let omega = root_of_unity(log_n);
     let shift = Fp::from_u64(SHIFT);
-    let periodic_d: Vec<Vec<Fp>> =
-        air.periodic_columns().iter().map(|col| lde(col, g, shift, omega, n)).collect();
+    // The per-column coset extension is independent, so the 444-column LDE — the
+    // dominant cost of a deep-domain emit — parallelizes over columns; the tree
+    // then commits with the parallel leaf layer. Serial and parallel produce the
+    // identical root by construction.
+    let cols = air.periodic_columns();
+    let periodic_d: Vec<Vec<Fp>> = crate::par::map_slice(&cols, |col| lde(col, g, shift, omega, n));
     let tree = MerkleTree::commit_wide_periodic(&periodic_d);
     (periodic_d, tree)
 }

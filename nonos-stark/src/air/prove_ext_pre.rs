@@ -62,13 +62,14 @@ pub fn stark_prove_ext_preprocessed<A: AirExt>(
     let shift = Fp::from_u64(SHIFT);
 
     let mut transcript = Transcript::new(b"NONOS-STARK-EXT");
-    let mut trace_d: Vec<Vec<Fp>> = Vec::with_capacity(width);
-    let mut trace_coeffs: Vec<Vec<Fp>> = Vec::with_capacity(width);
-    for c in 0..width {
+    // Each column's interpolation and coset extension are independent of the
+    // others, so the trace LDE parallelizes over columns; the indexed map keeps
+    // column order, so the committed tree is identical to the serial one.
+    let cols: Vec<(Vec<Fp>, Vec<Fp>)> = crate::par::map_index(width, |c| {
         let column: Vec<Fp> = (0..t).map(|i| trace[i * width + c]).collect();
-        trace_coeffs.push(intt(&column, g));
-        trace_d.push(lde(&column, g, shift, omega, n));
-    }
+        (intt(&column, g), lde(&column, g, shift, omega, n))
+    });
+    let (trace_coeffs, trace_d): (Vec<Vec<Fp>>, Vec<Vec<Fp>>) = cols.into_iter().unzip();
     let trace_tree = MerkleTree::commit_wide(&trace_d);
     let trace_root = trace_tree.root();
     transcript.absorb_digest(&trace_root);
@@ -83,9 +84,10 @@ pub fn stark_prove_ext_preprocessed<A: AirExt>(
     let (periodic_d, periodic_tree) =
         super::periodic_root::periodic_lde_tree(air, extra_blowup_bits);
 
-    let mut comp_d: Vec<Fp2> = Vec::with_capacity(n);
-    let mut x = shift;
-    for j in 0..n {
+    // The composition value at each coset point is independent: the evaluation
+    // point is x_j = shift * omega^j, a pure function of j, so the whole
+    // codeword parallelizes over the domain.
+    let comp_d: Vec<Fp2> = crate::par::map_index(n, |j| {
         let mut window: Vec<Fp2> = Vec::with_capacity(window_size * width);
         for k in 0..window_size {
             let idx = (j + k * blowup) % n;
@@ -94,9 +96,9 @@ pub fn stark_prove_ext_preprocessed<A: AirExt>(
             }
         }
         let periodic: Vec<Fp2> = periodic_d.iter().map(|pd| Fp2::from_base(pd[j])).collect();
-        comp_d.push(compose_ext(air, g, Fp2::from_base(x), &window, &periodic, &coeffs));
-        x = x * omega;
-    }
+        let x = shift * omega.pow(j as u64);
+        compose_ext(air, g, Fp2::from_base(x), &window, &periodic, &coeffs)
+    });
     let comp_tree = MerkleTree::commit_ext(&comp_d);
     transcript.absorb_digest(&comp_tree.root());
 
@@ -137,9 +139,10 @@ pub fn stark_prove_ext_preprocessed<A: AirExt>(
     let deep_coeffs: Vec<Fp2> =
         (0..width * window_size + 1 + n_periodic).map(|_| transcript.challenge_fp2()).collect();
 
-    let mut deep_d: Vec<Fp2> = Vec::with_capacity(n);
-    let mut x = shift;
-    for j in 0..n {
+    // The DEEP quotient at each coset point is likewise independent of the
+    // others (same x_j = shift * omega^j), so it parallelizes over the domain.
+    let deep_d: Vec<Fp2> = crate::par::map_index(n, |j| {
+        let x = shift * omega.pow(j as u64);
         let mut acc = Fp2::ZERO;
         for k in 0..window_size {
             let zk = z * Fp2::from_base(g.pow(k as u64));
@@ -158,9 +161,8 @@ pub fn stark_prove_ext_preprocessed<A: AirExt>(
             let pc = deep_coeffs[width * window_size + 1 + pi];
             acc = acc + pc * ((Fp2::from_base(pd[j]) - periodic_z[pi]) * inv_x_z);
         }
-        deep_d.push(acc);
-        x = x * omega;
-    }
+        acc
+    });
 
     let fri = fri_prove_ext(&deep_d, shift, fri_log_blowup, n_queries, grind_bits);
     let deep_tree = MerkleTree::commit_ext(&deep_d);
