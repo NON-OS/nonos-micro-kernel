@@ -96,12 +96,40 @@ impl Transcript {
     /// of proof-of-work to the query soundness, raising the cost of resampling
     /// challenges to forge a proof.
     pub fn grind(&mut self, bits: u32) -> u64 {
+        let nonce = self.grind_search(bits);
+        self.mix(0x05, &nonce.to_le_bytes());
+        nonce
+    }
+
+    /// The proof-of-work search. Serially it is the smallest nonce meeting the
+    /// work; over `bits` in the 30s that is billions of hashes on one core, the
+    /// dominant cost of a deployment emit. The parallel form searches the nonce
+    /// space in blocks across every core and returns the first (lowest) hit in
+    /// each block, so it finds the identical smallest nonce as the serial search
+    /// — bit-exact, just spread across cores.
+    #[cfg(not(feature = "parallel"))]
+    fn grind_search(&self, bits: u32) -> u64 {
         let mut nonce = 0u64;
         while self.pow_word(nonce).leading_zeros() < bits {
             nonce = nonce.wrapping_add(1);
         }
-        self.mix(0x05, &nonce.to_le_bytes());
         nonce
+    }
+
+    #[cfg(feature = "parallel")]
+    fn grind_search(&self, bits: u32) -> u64 {
+        use rayon::prelude::*;
+        const BLOCK: u64 = 1 << 26;
+        let mut base = 0u64;
+        loop {
+            let hit = (base..base + BLOCK)
+                .into_par_iter()
+                .find_first(|&n| self.pow_word(n).leading_zeros() >= bits);
+            if let Some(n) = hit {
+                return n;
+            }
+            base += BLOCK;
+        }
     }
 
     /// Verifier-side grinding check: accept only if the nonce meets the `bits`
