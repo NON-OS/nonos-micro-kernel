@@ -57,6 +57,18 @@ import Nonos
 #print axioms Nonos.WalletGwei.never_overstates
 #print axioms Nonos.WalletGwei.monotone
 #print axioms Nonos.WalletShortAddr.shown_in_range
+#print axioms Nonos.KeyringCustody.access_implies_owner
+#print axioms Nonos.KeyringCustody.non_owner_denied
+#print axioms Nonos.KeyringCustody.non_owner_indistinguishable
+#print axioms Nonos.WalletTxEnvelope.type_prefix_unambiguous
+#print axioms Nonos.WalletTxEnvelope.signing_adds_signature
+#print axioms Nonos.WalletNonceReplay.replay_refused
+#print axioms Nonos.WalletNonceReplay.no_two_nonces
+#print axioms Nonos.CryptoGf256.add_self
+#print axioms Nonos.CryptoGf256.add_cancel
+#print axioms Nonos.CryptoGf256.add_assoc
+#print axioms Nonos.CryptoKeccakPad.multiple_of_rate
+#print axioms Nonos.CryptoKeccakPad.always_pads
 
 #print axioms Nonos.Ipc.zero_length_rejected
 #print axioms Nonos.Isolation.no_wx_page
