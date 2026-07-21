@@ -68,9 +68,24 @@ pub fn is_job_command(state: &mut State, args: &[&[u8]]) -> Verdict {
                 Verdict::Handled
             }
         },
+        // Bare-name run of a bundled store tool (`rg foo`, `sd a b`, ...): route
+        // it through the same async installer path as `install <name>`, so the
+        // tool loads and streams its output without blocking the event loop.
+        // The tool name is args[0], which prepare reads as the capsule stem.
+        name if TOOLS.contains(&name) => match install::prepare(state, args) {
+            Some(job) => Verdict::Job(JobWork::InstallDrain(job)),
+            None => {
+                state.last_status = 1;
+                Verdict::Handled
+            }
+        },
         _ => Verdict::Instant,
     }
 }
+
+// The CLI tools staged in the vfs store. A bare invocation of one of these runs
+// it from the store instead of falling through to "unknown verb".
+const TOOLS: &[&[u8]] = &[b"sd", b"tokio-smoke", b"std_proof"];
 
 fn is_plain(args: &[&[u8]]) -> bool {
     !args.iter().any(|a| matches!(*a, b"|" | b">" | b">>" | b"<"))
