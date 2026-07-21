@@ -16,7 +16,7 @@
 
 use alloc::vec::Vec;
 
-use crate::browser::css::Computed;
+use crate::browser::css::{Computed, WhiteSpace};
 
 use super::collect_items::collect_items;
 use super::ctx::Ctx;
@@ -43,6 +43,9 @@ pub(super) fn layout_inline(
     }
     let base_lh = container.line_height() as i32;
     let align = container.text_align;
+    // white-space: nowrap keeps the run on one line; only an explicit break
+    // ends it. The box's own overflow then clips what runs past its edge.
+    let nowrap = matches!(container.white_space, WhiteSpace::Nowrap);
     let mut pending: Vec<(i32, InlineItem)> = Vec::new();
     let mut cx = 0i32;
     let mut line_h = 0i32;
@@ -57,7 +60,7 @@ pub(super) fn layout_inline(
         }
         let adv = item.advance_w();
         let gap = if cx == 0 { 0 } else { item.space_w() };
-        if cx > 0 && cx + gap + adv > w {
+        if !nowrap && cx > 0 && cx + gap + adv > w {
             cy +=
                 flush_line(frags, &mut pending, x, y + cy, w, line_h.max(base_lh), cx, align, ctx);
             cx = 0;
