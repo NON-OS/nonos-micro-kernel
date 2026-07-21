@@ -16,7 +16,7 @@
 
 use super::types::{
     TouchActions, TouchGesture, CONTINUITY_DIV, GAIN_CEIL_X16, GAIN_FLOOR_X16, GAIN_SPEED_DIV,
-    MOTION_CAP, NOMINAL_WIDTH,
+    MOTION_CAP, NOMINAL_WIDTH, TAP_MAX_FRAMES, TAP_TRAVEL_DIV,
 };
 
 impl TouchGesture {
@@ -112,6 +112,20 @@ impl TouchGesture {
         }
 
         if tip {
+            if !self.was_tip {
+                // Rising edge: begin a fresh tap candidate.
+                self.acc_x = 0;
+                self.acc_y = 0;
+                self.tip_frames = 0;
+                self.tap_travel = 0;
+                self.tap_ok = true;
+            }
+            self.tip_frames = self.tip_frames.saturating_add(1);
+            // A physical clickpad press during the touch is its own click, so it
+            // disqualifies the tap and never double-clicks.
+            if button {
+                self.tap_ok = false;
+            }
             if self.was_tip {
                 let dxp = i64::from(x) - self.last_x;
                 let dyp = i64::from(y) - self.last_y;
@@ -127,6 +141,8 @@ impl TouchGesture {
                     self.was_tip = tip;
                     return act;
                 }
+                // Real travel counts against the tap; a drag lifts the tap.
+                self.tap_travel = self.tap_travel.saturating_add(dxp.abs() + dyp.abs());
                 // Speed in nominal pixels per report drives the gain; both
                 // axes normalize against the X range so the pad's physical
                 // aspect ratio is preserved.
@@ -137,12 +153,20 @@ impl TouchGesture {
                 if mx != 0 || my != 0 {
                     act.motion = Some((mx, my));
                 }
-            } else {
-                self.acc_x = 0;
-                self.acc_y = 0;
             }
             self.last_x = i64::from(x);
             self.last_y = i64::from(y);
+        } else if self.was_tip {
+            // Falling edge: a single finger that touched down and lifted
+            // quickly without travelling is a tap. Emit a left click (down then
+            // up in this report) so a quick tap registers as a left click.
+            if self.tap_ok
+                && self.tip_frames <= TAP_MAX_FRAMES
+                && self.tap_travel < i64::from(x_max) / TAP_TRAVEL_DIV
+            {
+                act.button_down = true;
+                act.button_up = true;
+            }
         }
         self.was_tip = tip;
         act
