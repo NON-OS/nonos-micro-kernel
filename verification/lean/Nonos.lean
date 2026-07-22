@@ -137,9 +137,12 @@ import Nonos.UserCopy
 import Nonos.Vfs
 import Nonos.Vma
 import Nonos.WalletEip1559
+import Nonos.WalletCallerPid
+import Nonos.WalletCustodyOwner
 import Nonos.WalletFormatApr
 import Nonos.WalletFormatNox
 import Nonos.WalletGwei
+import Nonos.WalletHdRecover
 import Nonos.WalletHex
 import Nonos.WalletImportWipe
 import Nonos.WalletNonceReplay
@@ -148,6 +151,7 @@ import Nonos.WalletNoxCalldata
 import Nonos.WalletParseWord
 import Nonos.WalletQuantity
 import Nonos.WalletRlp
+import Nonos.WalletSeedSeal
 import Nonos.WalletShortAddr
 import Nonos.WalletTxEnvelope
 import Nonos.Wpa2Handshake
