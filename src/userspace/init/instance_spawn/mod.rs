@@ -35,6 +35,7 @@ mod queue;
 mod request;
 mod service;
 
+pub(crate) use queue::has_pending;
 pub use queue::PendingApp;
 pub use request::request;
 pub(crate) use service::service;
