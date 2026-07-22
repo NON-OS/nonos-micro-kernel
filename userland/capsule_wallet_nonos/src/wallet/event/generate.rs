@@ -28,18 +28,30 @@ const ATTEMPTS: u32 = 3;
 pub fn generate(state: &mut State) -> EventOutcome {
     let mut id = 0u32;
     let mut ok = false;
+    let mut last_err = 0i32;
     for _ in 0..ATTEMPTS {
-        if let Ok(new_id) = generate_wallet(state.keyring_port, state.owner_pid) {
-            id = new_id;
-            ok = true;
-            break;
+        match generate_wallet(state.keyring_port, state.owner_pid) {
+            Ok(new_id) => {
+                id = new_id;
+                ok = true;
+                break;
+            }
+            Err(e) => last_err = e,
         }
         for _ in 0..300 {
             nonos_libc::mk_yield();
         }
     }
     if !ok {
-        state.status = b"entropy unavailable, try again";
+        // Name the real reason instead of always blaming entropy: the keyring
+        // returns EACCES (-13) when the caller identity does not match, ENOSPC
+        // (-28) when its slots are full, and -11 when it cannot be reached.
+        state.status = match last_err {
+            -13 => b"generate blocked: keyring rejected caller".as_slice(),
+            -28 => b"keyring is full".as_slice(),
+            -11 => b"keyring unreachable".as_slice(),
+            _ => b"generate failed: no entropy source".as_slice(),
+        };
         return EventOutcome::Repaint;
     }
     match wallet_address(state.keyring_port, state.owner_pid, id) {
