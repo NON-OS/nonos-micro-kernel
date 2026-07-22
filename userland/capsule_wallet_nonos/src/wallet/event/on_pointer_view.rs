@@ -23,17 +23,24 @@ use crate::wallet::state::{
 
 // Home quick actions route to their screens.
 pub(super) fn home(state: &mut State, x: u32, y: u32) -> EventOutcome {
-    let v = if hit(x, y, 226, 386, 245, 82) {
-        VIEW_SEND
-    } else if hit(x, y, 487, 386, 245, 82) {
-        VIEW_RECEIVE
-    } else if hit(x, y, 748, 386, 245, 82) || hit(x, y, 1009, 386, 245, 82) {
-        VIEW_NOX
-    } else {
+    // Mirror paint_home.rs: four quick-action cards from cx, each qw wide with a
+    // 16px gap, where qw is derived from the live framebuffer width.
+    let cx = 226u32;
+    let cw = state.view_w.saturating_sub(252);
+    let qw = (cw.saturating_sub(48)) / 4;
+    if y < 386 || y >= 386 + 82 {
         return EventOutcome::Idle;
-    };
-    state.view = v;
-    EventOutcome::Repaint
+    }
+    let step = qw + 16;
+    let views = [VIEW_SEND, VIEW_RECEIVE, VIEW_NOX, VIEW_NOX];
+    for (i, v) in views.iter().enumerate() {
+        let bx = cx + i as u32 * step;
+        if x >= bx && x < bx + qw {
+            state.view = *v;
+            return EventOutcome::Repaint;
+        }
+    }
+    EventOutcome::Idle
 }
 
 pub(super) fn receive(state: &mut State, x: u32, y: u32) -> EventOutcome {
@@ -71,11 +78,15 @@ pub(super) fn send(state: &mut State, x: u32, y: u32) -> EventOutcome {
 }
 
 pub(super) fn proof(state: &mut State, x: u32, y: u32) -> EventOutcome {
-    let f = if hit(x, y, 954, 228, 60, 40) {
+    // Mirror paint_proof_view.rs seg(): three cells (60/110/130 wide) starting
+    // at cx + cw - 300, where cw is the live width less the sidebar.
+    let cw = state.view_w.saturating_sub(252);
+    let sx = 226 + cw.saturating_sub(300);
+    let f = if hit(x, y, sx, 228, 60, 40) {
         0
-    } else if hit(x, y, 1014, 228, 110, 40) {
+    } else if hit(x, y, sx + 60, 228, 110, 40) {
         1
-    } else if hit(x, y, 1124, 228, 130, 40) {
+    } else if hit(x, y, sx + 170, 228, 130, 40) {
         2
     } else {
         return EventOutcome::Idle;

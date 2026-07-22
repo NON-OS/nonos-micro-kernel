@@ -51,6 +51,9 @@ impl App for Wallet {
     }
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
+        // Record the width the screens lay out against so pointer handlers can
+        // hit-test the same rectangles for width-relative controls.
+        self.state.view_w = fb.width;
         paint(&self.state, fb);
     }
 

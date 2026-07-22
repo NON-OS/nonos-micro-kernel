@@ -75,6 +75,7 @@ pub fn new_state() -> State {
         export_hex: [0; 66],
         nox: crate::wallet::nox::NoxStatus::empty(),
         probe_step: 0,
+        view_w: 1280,
         notes: crate::wallet::shield::notes::NoteStore::new(),
     }
 }

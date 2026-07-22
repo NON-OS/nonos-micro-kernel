@@ -115,6 +115,9 @@ pub struct State {
     // Which field the incremental probe refreshes next. One network read per
     // tick keeps the UI responsive instead of blocking on a burst of them.
     pub probe_step: u8,
+    // The framebuffer width recorded on the last paint, so pointer handlers can
+    // hit-test the same width-relative layout the screens draw.
+    pub view_w: u32,
     // Local shielded UTXO set, reconstructed from the note secrets.
     pub notes: crate::wallet::shield::notes::NoteStore,
 }
