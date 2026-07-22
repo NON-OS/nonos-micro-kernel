@@ -25,11 +25,12 @@ pub struct Wallet {
     state: State,
     ready: bool,
     ticks: u32,
+    last_active: u32,
 }
 
 impl Wallet {
     pub fn new() -> Self {
-        Wallet { state: new_state(), ready: false, ticks: 0 }
+        Wallet { state: new_state(), ready: false, ticks: 0, last_active: 0 }
     }
 }
 
@@ -43,6 +44,9 @@ impl App for Wallet {
             hydrate(&mut self.state);
             self.ready = true;
         }
+        // Remember that the user just did something, so the next few ticks skip
+        // the blocking network probe and the UI stays instant under the hand.
+        self.last_active = self.ticks;
         on_event(&mut self.state, event)
     }
 
@@ -57,10 +61,12 @@ impl App for Wallet {
             return true;
         }
         self.ticks = self.ticks.wrapping_add(1);
-        // Refresh one field per pass, never a burst. Each pass blocks on at most
-        // one RPC round-trip, so clicks are always serviced between them; a full
-        // eight-field cycle lands in roughly the old ~15s window.
-        if self.state.address_ready && self.ticks % 2 == 0 {
+        // Never touch the network while the user is actively interacting: a probe
+        // blocks this thread, so defer it until they have paused for a moment.
+        // Once idle, refresh one field per pass (never a burst), so a full cycle
+        // still lands in roughly the old window without ever stalling a click.
+        let idle = self.ticks.wrapping_sub(self.last_active) >= 3;
+        if self.state.address_ready && idle && self.ticks % 2 == 0 {
             super::event::probe_tick(&mut self.state);
             return true;
         }
