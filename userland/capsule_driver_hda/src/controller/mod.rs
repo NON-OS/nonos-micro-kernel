@@ -16,6 +16,7 @@
 
 mod codec_probe;
 pub(crate) mod corb;
+pub(crate) mod graph;
 mod immediate;
 mod info;
 mod reset;
@@ -24,6 +25,7 @@ mod streams;
 pub(crate) mod verb;
 
 pub use codec_probe::{probe, CodecProbe, MAX_CODECS};
+pub(crate) use graph::OutputPath;
 pub(crate) use immediate::{compose_verb, compose_verb_long};
 pub use info::ControllerInfo;
 pub use reset::leave_reset;

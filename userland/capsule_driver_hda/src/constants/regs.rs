@@ -32,7 +32,14 @@ pub const GCTL_CRST: u32 = 1 << 0;
 pub const IRS_BUSY: u8 = 1 << 0;
 pub const IRS_VALID: u8 = 1 << 1;
 pub const VERB_GET_PARAMETER: u16 = 0x0f00;
+pub const VERB_GET_CONNECT_LIST: u16 = 0x0f02;
 pub const PARAM_VENDOR_ID: u16 = 0x00;
+pub const PARAM_SUBNODE_COUNT: u16 = 0x04;
+pub const PARAM_FUNCTION_GROUP_TYPE: u16 = 0x05;
+pub const PARAM_AUDIO_WIDGET_CAP: u16 = 0x09;
+pub const FUNCTION_GROUP_AUDIO: u32 = 0x01;
+pub const WIDGET_TYPE_DAC: u32 = 0x0;
+pub const WIDGET_TYPE_PIN: u32 = 0x4;
 
 pub const CORBLBASE: u32 = 0x40;
 pub const CORBUBASE: u32 = 0x44;
