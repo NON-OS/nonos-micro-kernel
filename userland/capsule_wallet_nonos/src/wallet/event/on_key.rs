@@ -32,6 +32,9 @@ pub fn on_key(state: &mut State, code: u32) -> EventOutcome {
     }
     match code {
         code if code == b'i' as u32 || code == b'I' as u32 => super::import::toggle_import(state),
+        code if code == b'k' as u32 || code == b'K' as u32 => {
+            super::export_key::toggle_export(state)
+        }
         code if code == b'h' as u32 => view(state, VIEW_HOME),
         code if code == b'v' as u32 => view(state, VIEW_RECEIVE),
         code if code == b's' as u32 => view(state, VIEW_SEND),

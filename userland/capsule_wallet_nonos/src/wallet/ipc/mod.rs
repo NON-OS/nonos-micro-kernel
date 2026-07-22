@@ -19,6 +19,7 @@ mod call;
 mod constants;
 mod decode_rails;
 mod eip1559_fees;
+mod export;
 mod generate;
 mod import;
 mod lookup_keyring;
@@ -30,6 +31,7 @@ mod sign_nox;
 
 pub use address::wallet_address;
 pub use decode_rails::decode_rails;
+pub use export::export_secret;
 pub use generate::generate_wallet;
 pub use import::import_wallet;
 pub use lookup_keyring::lookup_keyring;

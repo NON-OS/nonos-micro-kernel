@@ -18,6 +18,7 @@ mod broadcast;
 mod edit_amount;
 mod edit_nonce;
 mod eth_value;
+mod export_key;
 mod generate;
 mod hex_digit;
 mod import;

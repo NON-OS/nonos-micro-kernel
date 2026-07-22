@@ -26,6 +26,7 @@ mod sign_receipt;
 mod store;
 mod unlock;
 mod wallet_address;
+mod wallet_export;
 mod wallet_generate;
 mod wallet_import;
 
@@ -41,5 +42,6 @@ pub(super) use sign_receipt::sign_receipt;
 pub(super) use store::store;
 pub(super) use unlock::unlock;
 pub(super) use wallet_address::wallet_address;
+pub(super) use wallet_export::wallet_export;
 pub(super) use wallet_generate::wallet_generate;
 pub(super) use wallet_import::wallet_import;

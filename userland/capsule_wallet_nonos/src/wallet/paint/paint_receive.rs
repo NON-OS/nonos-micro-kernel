@@ -21,11 +21,6 @@ use crate::wallet::hex::hex_addr;
 use crate::wallet::state::State;
 use crate::wallet::theme::{ACCENT, DIM, FG, MUTED, PANEL_2};
 
-pub const GEN_BTN_X: u32 = 1162;
-pub const GEN_BTN_Y: u32 = 182;
-pub const GEN_BTN_W: u32 = 72;
-pub const GEN_BTN_H: u32 = 42;
-
 pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
     let cx = 226u32;
     let cw = fb.width.saturating_sub(252);
@@ -52,20 +47,36 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
     // The one account this wallet holds, at its real derivation path. The
     // wallet does not yet manage several accounts, so no others are invented.
     ui::card(fb, rx, 384, rw, 96);
-    let _ = fb.text_ttf((rx + 20) as i32, 402, "ACCOUNT", DIM(), 10.5);
-    let _ = fb.text_ttf_mono((rx + 20) as i32, 432, "m/44'/60'/0'/0/0", MUTED(), 13.0);
-    if state.address_ready {
-        let mut full = [0u8; 42];
-        hex_addr(&state.address, &mut full);
-        let _ = fb.text_ttf_mono(
+    if state.export_active {
+        let _ = fb.text_ttf(
             (rx + 20) as i32,
-            456,
-            core::str::from_utf8(&full).unwrap_or(""),
-            FG(),
-            13.0,
+            402,
+            "PRIVATE KEY \u{2014} never share this",
+            ACCENT(),
+            10.5,
         );
+        let key = core::str::from_utf8(&state.export_hex).unwrap_or("");
+        let cut = 34.min(key.len());
+        let _ = fb.text_ttf_mono((rx + 20) as i32, 430, &key[..cut], FG(), 13.0);
+        let _ = fb.text_ttf_mono((rx + 20) as i32, 452, &key[cut..], FG(), 13.0);
+        ui::outline(fb, rx + 300, 392, 96, b"Hide");
     } else {
-        let _ = fb.text_ttf((rx + 20) as i32, 456, "Generate an account first", MUTED(), 13.0);
+        let _ = fb.text_ttf((rx + 20) as i32, 402, "ACCOUNT", DIM(), 10.5);
+        let _ = fb.text_ttf_mono((rx + 20) as i32, 432, "m/44'/60'/0'/0/0", MUTED(), 13.0);
+        if state.address_ready {
+            let mut full = [0u8; 42];
+            hex_addr(&state.address, &mut full);
+            let _ = fb.text_ttf_mono(
+                (rx + 20) as i32,
+                456,
+                core::str::from_utf8(&full).unwrap_or(""),
+                FG(),
+                13.0,
+            );
+            ui::outline(fb, rx + 300, 392, 96, b"Export (K)");
+        } else {
+            let _ = fb.text_ttf((rx + 20) as i32, 456, "Generate an account first", MUTED(), 13.0);
+        }
     }
 }
 

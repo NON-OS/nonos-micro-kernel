@@ -106,6 +106,10 @@ pub struct State {
     pub import_active: bool,
     pub import_hex: [u8; 64],
     pub import_len: usize,
+    // Private-key reveal for backup/export. Held only while shown, wiped the
+    // moment it is hidden. `export_hex` is the 0x-prefixed key when revealed.
+    pub export_active: bool,
+    pub export_hex: [u8; 66],
     // Live NOX token and staking readout from mainnet eth_call.
     pub nox: crate::wallet::nox::NoxStatus,
     // Which field the incremental probe refreshes next. One network read per

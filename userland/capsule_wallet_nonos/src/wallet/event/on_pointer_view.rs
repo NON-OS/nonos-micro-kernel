@@ -37,13 +37,20 @@ pub(super) fn home(state: &mut State, x: u32, y: u32) -> EventOutcome {
 }
 
 pub(super) fn receive(state: &mut State, x: u32, y: u32) -> EventOutcome {
-    use crate::wallet::paint::{GEN_BTN_H, GEN_BTN_W, GEN_BTN_X, GEN_BTN_Y};
-    if hit(x, y, GEN_BTN_X, GEN_BTN_Y, GEN_BTN_W, GEN_BTN_H) || hit(x, y, 1104, 320, 130, 42) {
-        return if state.address_ready {
-            super::probe_tick::probe_kick(state)
-        } else {
-            super::generate::generate(state)
-        };
+    // The import field owns input while open; it is driven from the keyboard.
+    if state.import_active {
+        return EventOutcome::Idle;
+    }
+    // Export / Hide toggle in the account card (rx = 542, card at y = 384).
+    if state.address_ready && hit(x, y, 842, 392, 96, 34) {
+        return super::export_key::toggle_export(state);
+    }
+    // Set-up panel: Generate a fresh account, or open the import field.
+    if hit(x, y, 562, 320, 150, 42) {
+        return super::generate::generate(state);
+    }
+    if hit(x, y, 724, 320, 180, 42) {
+        return super::import::toggle_import(state);
     }
     EventOutcome::Idle
 }

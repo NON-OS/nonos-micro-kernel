@@ -50,9 +50,6 @@ mod panel;
 mod ui;
 
 pub use paint::paint;
-// Shared so the pointer handler can hit-test the Generate/probe button at the
-// exact rect the Receive screen paints it.
-pub use paint_receive::{GEN_BTN_H, GEN_BTN_W, GEN_BTN_X, GEN_BTN_Y};
 pub use paint_sidebar::{NAV_H, NAV_STEP, NAV_W, NAV_X, NAV_Y0};
 pub use paint_topbar::{
     CMD_BTN_X, HDR_H, HDR_Y, ICON_W, LOCK_BTN_X, MAIN_BTN_X, MAIN_W, MSG_BTN_X, THEME_BTN_X,
