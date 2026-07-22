@@ -26,7 +26,11 @@ mod protocol;
 mod ring;
 mod server;
 mod setup;
-use nonos_libc::{heap_init, mk_exit, mk_yield};
+use nonos_libc::{heap_init, mk_exit, mk_time_millis, mk_yield};
+
+// Bounded probe: exit cleanly if no PS/2 controller answers, instead of
+// spinning forever on hardware whose keyboard and pointer are USB or i2c.
+const PROBE_DEADLINE_MS: i64 = 10_000;
 
 /// # Safety
 /// The capsule entry point. The kernel loader calls this once on a fresh stack
@@ -36,10 +40,14 @@ pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
+    let start = mk_time_millis();
     let driver = loop {
         match setup::run() {
             Ok(d) => break d,
             Err(_) => {
+                if mk_time_millis().wrapping_sub(start) > PROBE_DEADLINE_MS {
+                    mk_exit(0);
+                }
                 for _ in 0..64 {
                     mk_yield();
                 }

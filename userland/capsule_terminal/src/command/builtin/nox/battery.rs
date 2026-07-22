@@ -14,51 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod alias;
-mod apps;
-mod battery;
-mod caps;
-mod children;
-mod clear;
-mod copy;
-mod date;
-mod dispatch;
-mod display;
-mod du;
-mod echo;
-mod ensure_pid;
-mod enter;
-mod exec;
-mod find;
-mod help;
-mod history;
-mod http;
-mod id;
-mod ifconfig;
-mod kill;
-mod uptime;
-pub mod install;
-mod ls;
-mod mk;
-mod motd;
-mod mv;
-mod nslookup;
-mod pathname;
-mod ping;
-mod pull;
-mod push;
-mod read;
-mod rm;
-mod run;
-mod set;
-mod stat;
-mod svc;
-mod sysinfo;
-mod touch;
-mod unalias;
-mod unknown;
-mod unset;
-mod whereis;
-mod write;
+// `battery`: charge percentage from the platform battery status. Negative means
+// no battery is reported (a desktop, or emulation).
 
-pub use dispatch::dispatch;
+use alloc::vec::Vec;
+use nonos_libc::mk_battery_status;
+
+use crate::term::state::State;
+use crate::term::util::format_u64;
+
+pub fn run(state: &mut State) -> bool {
+    let b = mk_battery_status();
+    if b < 0 {
+        state.scrollback.push_error(b"battery: not reported");
+        return false;
+    }
+    let pct = (b as u64).min(100);
+    let mut line: Vec<u8> = Vec::new();
+    line.extend_from_slice(b"battery ");
+    let mut buf = [0u8; 24];
+    let k = format_u64(pct, &mut buf);
+    line.extend_from_slice(&buf[..k]);
+    line.push(b'%');
+    state.scrollback.push_line(&line);
+    true
+}

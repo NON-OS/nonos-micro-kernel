@@ -33,6 +33,12 @@ pub(super) const MOTION_CAP: i32 = 36;
 /// fraction of the pad between two consecutive reports. Anything larger is a
 /// torn read or a contact swap, and emitting it would teleport the cursor.
 pub(super) const CONTINUITY_DIV: i64 = 8;
+/// Tap-to-click: a single finger that touches down and lifts within this many
+/// reports, having travelled less than 1/`TAP_TRAVEL_DIV` of the pad, is a tap
+/// and emits a left click. Generous frame bound so a tap registers across pad
+/// report rates; the travel bound is what actually separates a tap from a drag.
+pub(super) const TAP_MAX_FRAMES: u16 = 40;
+pub(super) const TAP_TRAVEL_DIV: i64 = 16;
 
 #[derive(Default)]
 pub struct TouchGesture {
@@ -50,6 +56,13 @@ pub struct TouchGesture {
     // output pixel per report is accumulated instead of truncated away.
     pub(super) acc_x: i64,
     pub(super) acc_y: i64,
+    // Tap-to-click tracking for the current single-finger touch: how many
+    // reports the finger has been down, how far it has travelled, and whether
+    // the touch is still eligible to become a tap (a physical press or a
+    // palm/multi-touch cancels it).
+    pub(super) tip_frames: u16,
+    pub(super) tap_travel: i64,
+    pub(super) tap_ok: bool,
 }
 
 /// What one sample should do. The driver posts these as input events.
