@@ -14,13 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod capsule_boot;
-mod entry;
-mod instance_spawn;
-mod spawn_plan;
-mod supervisor;
+// `battery`: charge percentage from the platform battery status. Negative means
+// no battery is reported (a desktop, or emulation).
 
-pub use entry::run_init;
-pub use instance_spawn::{request as request_instance, PendingApp};
-pub(crate) use instance_spawn::has_pending as instance_spawns_pending;
-pub(crate) use instance_spawn::service as service_instance_spawns;
+use alloc::vec::Vec;
+use nonos_libc::mk_battery_status;
+
+use crate::term::state::State;
+use crate::term::util::format_u64;
+
+pub fn run(state: &mut State) -> bool {
+    let b = mk_battery_status();
+    if b < 0 {
+        state.scrollback.push_error(b"battery: not reported");
+        return false;
+    }
+    let pct = (b as u64).min(100);
+    let mut line: Vec<u8> = Vec::new();
+    line.extend_from_slice(b"battery ");
+    let mut buf = [0u8; 24];
+    let k = format_u64(pct, &mut buf);
+    line.extend_from_slice(&buf[..k]);
+    line.push(b'%');
+    state.scrollback.push_line(&line);
+    true
+}

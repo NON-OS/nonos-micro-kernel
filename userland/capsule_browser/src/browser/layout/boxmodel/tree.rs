@@ -22,6 +22,10 @@ use crate::browser::css::Computed;
 pub enum BoxKind {
     Block,
     Inline,
+    // Inline-level on the outside, block on the inside: it sits in a line box
+    // like a word but sizes to its own width and height and lays its children
+    // in a block context.
+    InlineBlock,
     Flex,
     Grid,
     Text(String),

@@ -17,21 +17,27 @@
 use alloc::vec::Vec;
 
 use super::abs_out_of_flow::out_of_flow;
+use super::border_box_w::border_box_w;
+use super::content_width::content_width;
+use super::ctx::Ctx;
+use super::display_list::DisplayList;
 use super::image_box::image_box;
 use super::inline_items::InlineItem;
-use crate::browser::css::WhiteSpace;
+use super::layout_box::layout_box;
+use crate::browser::css::{Size, WhiteSpace};
 
 use super::tree::{BoxKind, BoxNode};
 
 const MAX_DEPTH: u32 = 400;
 
-// Flatten an inline subtree into measured words, images and hard breaks.
-// A stray block inside an inline run flows like its children.
+// Flatten an inline subtree into measured words, images, inline-block atoms
+// and hard breaks. A stray block inside an inline run flows like its children.
 pub(super) fn collect_items(
     children: &[BoxNode],
     content_w: i32,
     out: &mut Vec<InlineItem>,
     depth: u32,
+    ctx: Ctx,
 ) {
     if depth > MAX_DEPTH {
         return;
@@ -118,8 +124,24 @@ pub(super) fn collect_items(
                     fit: c.style.object_fit,
                 });
             }
+            BoxKind::InlineBlock => {
+                // An inline-block is an atom on the line. Give it its own
+                // width (explicit, else shrink to content) and lay its block
+                // context out at the origin; the line box shifts it into place.
+                let bw = match c.style.width {
+                    Size::Auto => content_width(c, depth + 1).clamp(1, content_w.max(1)),
+                    _ => border_box_w(&c.style, content_w).clamp(1, content_w.max(1)),
+                };
+                let mut sub: DisplayList = Vec::new();
+                let h = layout_box(c, 0, 0, bw, &mut sub, depth + 1, ctx);
+                // The block may resolve wider than the hint (a min-width, an
+                // unbreakable child), so the advance is the real laid-out
+                // extent, or the next item would overlap it.
+                let w = sub.iter().map(|f| f.x + f.w).max().unwrap_or(bw).max(bw);
+                out.push(InlineItem::Atom { frags: sub, w, h });
+            }
             BoxKind::Inline | BoxKind::Block | BoxKind::Flex | BoxKind::Grid => {
-                collect_items(&c.children, content_w, out, depth + 1);
+                collect_items(&c.children, content_w, out, depth + 1, ctx);
             }
         }
     }

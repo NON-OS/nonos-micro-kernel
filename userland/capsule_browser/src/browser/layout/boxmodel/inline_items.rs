@@ -43,6 +43,13 @@ pub(super) enum InlineItem {
         node: usize,
         fit: crate::browser::css::ObjectFit,
     },
+    // An inline-block, laid out in its own coordinate space at the origin; the
+    // line box places it by shifting its whole fragment run into the slot.
+    Atom {
+        frags: super::display_list::DisplayList,
+        w: i32,
+        h: i32,
+    },
     Break,
 }
 
@@ -51,6 +58,7 @@ impl InlineItem {
         match self {
             InlineItem::Word { adv, .. } => *adv,
             InlineItem::Image { w, .. } => *w,
+            InlineItem::Atom { w, .. } => *w,
             InlineItem::Break => 0,
         }
     }
@@ -59,6 +67,7 @@ impl InlineItem {
         match self {
             InlineItem::Word { line_h, .. } => *line_h,
             InlineItem::Image { h, .. } => *h,
+            InlineItem::Atom { h, .. } => *h,
             InlineItem::Break => 0,
         }
     }

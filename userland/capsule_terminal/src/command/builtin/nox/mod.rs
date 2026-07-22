@@ -16,6 +16,7 @@
 
 mod alias;
 mod apps;
+mod battery;
 mod caps;
 mod children;
 mod clear;
@@ -31,8 +32,11 @@ mod exec;
 mod find;
 mod help;
 mod history;
+mod http;
 mod id;
 mod ifconfig;
+mod kill;
+mod uptime;
 pub mod install;
 mod ls;
 mod mk;
