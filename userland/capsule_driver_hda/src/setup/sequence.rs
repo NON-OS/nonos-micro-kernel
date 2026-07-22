@@ -17,7 +17,7 @@
 use nonos_libc::mk_device_release;
 
 use super::mark::mark;
-use super::{claim, irq, mmio, pci};
+use super::{claim, dma, irq, mmio, pci};
 use crate::controller::{leave_reset, probe, ControllerInfo};
 use crate::discover::find_hda;
 use crate::error::{HdaError, HdaResult};
@@ -34,7 +34,15 @@ pub fn run() -> HdaResult<Driver> {
     }
     let mmio = mmio::map(dev.device_id, claim_epoch, dev.bar_size)?;
     let irq = irq::bind(dev, claim_epoch, &mmio)?;
-    let handles = BrokerHandles::new(dev.device_id, mmio.grant_id, mmio.user_va, irq.grant_id);
+    let (corb, rirb) = dma::map_verb_rings(dev.device_id, claim_epoch, &mmio, &irq)?;
+    let handles = BrokerHandles::new(
+        dev.device_id,
+        mmio.grant_id,
+        mmio.user_va,
+        irq.grant_id,
+        corb.grant_id,
+        rirb.grant_id,
+    );
     let regs = Regs::new(handles.mmio_user_va());
 
     leave_reset(regs)?;
@@ -44,5 +52,5 @@ pub fn run() -> HdaResult<Driver> {
     }
     let codecs = probe(regs, info.statests);
     mark("[HDA] up\n");
-    Ok(Driver { handles, regs, codecs })
+    Ok(Driver { handles, regs, codecs, corb, rirb })
 }
