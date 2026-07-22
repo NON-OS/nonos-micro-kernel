@@ -57,7 +57,8 @@ pub(super) fn receive(state: &mut State, x: u32, y: u32) -> EventOutcome {
         return EventOutcome::Idle;
     }
     // Export / Hide toggle in the account card (rx = 542, card at y = 384).
-    if state.address_ready && hit(x, y, 842, 392, 96, 34) {
+    // Height matches the 42px the outline button actually draws.
+    if state.address_ready && hit(x, y, 842, 392, 96, 42) {
         return super::export_key::toggle_export(state);
     }
     // Set-up panel: Generate a fresh HD account, import a raw key, or recover

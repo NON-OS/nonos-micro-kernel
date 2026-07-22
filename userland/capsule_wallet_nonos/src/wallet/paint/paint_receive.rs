@@ -133,28 +133,25 @@ fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
     }
     if state.import_active {
         let _ = fb.text_ttf((rx + 20) as i32, 296, "IMPORT PRIVATE KEY", DIM(), 12.1);
-        // A proper input well: the border lights teal while active, the typed
-        // key is masked to dots, and a progress underline fills toward 64.
+        // Show the key as it is typed so the user can read every character back
+        // and confirm it, the way a hardware wallet's import screen does. This
+        // is entered only on a machine the user already trusts with the key. A
+        // progress underline fills toward 64.
         let fw = rw - 40;
         ui::bordered(fb, rx + 20, 314, fw, 36, PANEL_2(), ACCENT());
-        let shown = state.import_len.min(46);
-        let mut dots = [0u8; 2 + 3 * 46];
-        dots[0] = b'0';
-        dots[1] = b'x';
-        let mut p = 2;
-        for _ in 0..shown {
-            dots[p] = 0xE2;
-            dots[p + 1] = 0x80;
-            dots[p + 2] = 0xA2; // U+2022 bullet
-            p += 3;
+        // "0x" then the typed hex; show the visible tail so the caret stays in
+        // view for a full-length key.
+        let mut buf = [0u8; 2 + 64];
+        buf[0] = b'0';
+        buf[1] = b'x';
+        let n = state.import_len.min(64);
+        buf[2..2 + n].copy_from_slice(&state.import_hex[..n]);
+        let typed = core::str::from_utf8(&buf[..2 + n]).unwrap_or("0x");
+        let mut shown = typed;
+        while fb.measure_ttf(shown, 14.9).max(0) as u32 > fw - 24 && shown.len() > 2 {
+            shown = &shown[1..];
         }
-        let _ = fb.text_ttf_mono(
-            (rx + 32) as i32,
-            324,
-            core::str::from_utf8(&dots[..p]).unwrap_or("0x"),
-            FG(),
-            14.9,
-        );
+        let _ = fb.text_ttf_mono((rx + 32) as i32, 324, shown, FG(), 14.9);
         let mut nb = [0u8; 20];
         let dn = super::format_u64::format_u64(state.import_len as u64, &mut nb);
         let mut cnt = [0u8; 8];
@@ -167,7 +164,7 @@ fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
         let _ = fb.text_ttf(
             (rx + 20) as i32,
             360,
-            "Enter to import  \u{00b7}  Esc to cancel",
+            "Paste or type 64 hex chars  \u{00b7}  Enter to import  \u{00b7}  Esc to cancel",
             DIM(),
             13.2,
         );

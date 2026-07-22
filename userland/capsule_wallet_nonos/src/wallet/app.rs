@@ -19,7 +19,14 @@ use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, InputKind, 
 use super::event::on_event;
 use super::manifest::manifest;
 use super::paint::paint;
-use super::state::{hydrate, new_state, State};
+use super::state::{hydrate, new_state, State, VIEW_HOME, VIEW_NOX, VIEW_SEND, VIEW_SHIELDED};
+
+// Screens that display live on-chain data and so warrant a background probe.
+// Receive (address, QR, setup) and Proof (a static record) do not, so they
+// never trigger a blocking network read.
+fn needs_live_data(view: u8) -> bool {
+    matches!(view, VIEW_HOME | VIEW_SEND | VIEW_NOX | VIEW_SHIELDED)
+}
 
 pub struct Wallet {
     state: State,
@@ -71,11 +78,20 @@ impl App for Wallet {
         if !self.state.address_ready {
             return false;
         }
-        // A probe briefly blocks this thread on network I/O, so only run one
-        // while the user has paused (idle). Mouse movement no longer counts as
-        // activity, so simply moving the cursor never defers the probe: the
-        // reads still land field by field without ever freezing the UI under an
-        // active click or keypress.
+        // A probe briefly blocks this thread on network I/O, so it runs only
+        // when three things hold: the user has paused (idle), no text field is
+        // open, and the current screen actually shows live data. That keeps the
+        // Receive screen, where the account is generated, imported, backed up
+        // and recovered, completely free of blocking reads, so those flows
+        // never stall, while balances and fees still refresh on the screens
+        // that display them.
+        if !needs_live_data(self.state.view)
+            || self.state.import_active
+            || self.state.recover_active
+            || self.state.backup_active
+        {
+            return false;
+        }
         let idle = self.ticks.wrapping_sub(self.last_active) >= 3 && self.ticks % 2 == 0;
         if idle {
             super::event::probe_tick(&mut self.state);
