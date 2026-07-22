@@ -36,7 +36,7 @@ pub fn crypto_status(op: u16, body: &[u8]) -> bool {
         len,
         rx.as_mut_ptr(),
         rx.len(),
-        1500,
+        3000,
     );
     rc >= 24
         && u32::from_le_bytes([rx[0], rx[1], rx[2], rx[3]]) == 0x4e4f_4358

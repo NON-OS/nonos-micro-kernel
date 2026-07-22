@@ -36,7 +36,7 @@ pub fn hash_sha384(data: &[u8]) -> Option<[u8; 48]> {
         len,
         rx.as_mut_ptr(),
         rx.len(),
-        1500,
+        3000,
     );
     if rc < 72
         || u32::from_le_bytes([rx[0], rx[1], rx[2], rx[3]]) != 0x4e4f_4358
