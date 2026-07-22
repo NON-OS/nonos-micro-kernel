@@ -64,4 +64,5 @@ pub const RIRBCTL_DMAEN: u8 = 1 << 1;
 pub const RIRBCTL_RINTCTL: u8 = 1 << 0;
 pub const RIRBWP_RST: u16 = 1 << 15;
 pub const RIRBSIZE_256: u8 = 0x02;
+pub const RIRBSTS_INTFL: u8 = 1 << 0;
 pub const RINTCNT_ONE: u16 = 1;

@@ -16,8 +16,8 @@
 
 use crate::constants::{
     CORBCTL, CORBCTL_RUN, CORBLBASE, CORBRP, CORBRP_RST, CORBSIZE, CORBSIZE_256, CORBUBASE, CORBWP,
-    RINTCNT, RINTCNT_ONE, RIRBCTL, RIRBCTL_DMAEN, RIRBLBASE, RIRBSIZE, RIRBSIZE_256, RIRBUBASE,
-    RIRBWP, RIRBWP_RST,
+    RINTCNT, RINTCNT_ONE, RIRBCTL, RIRBCTL_DMAEN, RIRBCTL_RINTCTL, RIRBLBASE, RIRBSIZE,
+    RIRBSIZE_256, RIRBUBASE, RIRBWP, RIRBWP_RST,
 };
 use crate::error::{HdaError, HdaResult};
 use crate::regs::Regs;
@@ -41,7 +41,7 @@ pub fn init(regs: Regs, corb_pa: u64, rirb_pa: u64) -> HdaResult<()> {
         regs.w16(RIRBWP, RIRBWP_RST);
         regs.w16(RINTCNT, RINTCNT_ONE);
         regs.w8(CORBCTL, CORBCTL_RUN);
-        regs.w8(RIRBCTL, RIRBCTL_DMAEN);
+        regs.w8(RIRBCTL, RIRBCTL_DMAEN | RIRBCTL_RINTCTL);
     }
     Ok(())
 }

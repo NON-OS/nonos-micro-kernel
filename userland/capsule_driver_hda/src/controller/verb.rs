@@ -16,7 +16,7 @@
 
 use core::ptr::{read_volatile, write_volatile};
 
-use crate::constants::{CORBWP, RIRBWP};
+use crate::constants::{CORBWP, RIRBSTS, RIRBSTS_INTFL, RIRBWP};
 use crate::error::{HdaError, HdaResult};
 use crate::regs::Regs;
 
@@ -31,6 +31,7 @@ pub fn send(regs: Regs, corb_va: u64, rirb_va: u64, wp: &mut u16, cmd: u32) -> H
     }
     wait_rirb(regs, next)?;
     let resp = unsafe { read_volatile((rirb_va + next as u64 * 8) as *const u32) };
+    unsafe { regs.w8(RIRBSTS, RIRBSTS_INTFL) };
     *wp = next;
     Ok(resp)
 }
