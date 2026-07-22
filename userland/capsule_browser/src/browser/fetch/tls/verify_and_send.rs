@@ -20,13 +20,14 @@ use crate::browser::net;
 use crate::browser::tls13;
 
 pub(in crate::browser::fetch) fn verify_and_send(port: u32, f: &mut Fetch) {
-    // Image fetches keep the connection open so the next same-host image can
-    // reuse the handshake; everything else closes as before.
-    let req = if f.image.is_some() {
-        http::request::build_keep_alive(&f.url)
-    } else {
-        http::request::build(&f.url, f.post.as_deref())
-    };
+    // Every fetch asks the server to close after the response. A close is a
+    // hard end-of-body the reader cannot miss; a kept-alive response has to be
+    // framed exactly and its plaintext offset carried across the next request
+    // on the same connection, and any drift there strands the following image.
+    // CDNs serve images chunked and gzipped, which is the fragile framing, so
+    // the reuse optimisation cost every image on real pages. Correctness over a
+    // saved handshake.
+    let req = http::request::build(&f.url, f.post.as_deref());
     let host = f.url.host.clone();
     let Some(tls) = f.tls.as_ref() else {
         f.phase = Phase::Error;
