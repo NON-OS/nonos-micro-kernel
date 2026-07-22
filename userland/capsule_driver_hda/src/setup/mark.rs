@@ -19,3 +19,20 @@ use nonos_libc::mk_debug;
 pub(super) fn mark(s: &str) {
     mk_debug(s.as_ptr(), s.len());
 }
+
+pub(super) fn mark_corb_vid(vid: u16) {
+    let prefix = b"[HDA] corb vid=";
+    let mut buf = [0u8; 20];
+    let mut n = prefix.len();
+    buf[..n].copy_from_slice(prefix);
+    let mut shift: i32 = 12;
+    while shift >= 0 {
+        let nib = ((vid >> shift) & 0xf) as u8;
+        buf[n] = if nib < 10 { b'0' + nib } else { b'a' + nib - 10 };
+        n += 1;
+        shift -= 4;
+    }
+    buf[n] = b'\n';
+    n += 1;
+    mk_debug(buf.as_ptr(), n);
+}

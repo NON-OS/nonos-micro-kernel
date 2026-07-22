@@ -16,9 +16,10 @@
 
 use nonos_libc::mk_device_release;
 
-use super::mark::mark;
+use super::mark::{mark, mark_corb_vid};
 use super::{claim, dma, irq, mmio, pci};
-use crate::controller::{corb, leave_reset, probe, ControllerInfo};
+use crate::constants::{PARAM_VENDOR_ID, VERB_GET_PARAMETER};
+use crate::controller::{compose_verb, corb, leave_reset, probe, verb, ControllerInfo};
 use crate::discover::find_hda;
 use crate::error::{HdaError, HdaResult};
 use crate::handles::BrokerHandles;
@@ -51,7 +52,23 @@ pub fn run() -> HdaResult<Driver> {
         return Err(HdaError::UnsupportedController);
     }
     corb::init(regs, corb.device_addr, rirb.device_addr)?;
+    let cad = first_codec(info.statests);
+    let mut wp = 0u16;
+    let cmd = compose_verb(cad, 0, VERB_GET_PARAMETER, PARAM_VENDOR_ID);
+    let resp = verb::send(regs, corb.user_va, rirb.user_va, &mut wp, cmd)?;
+    mark_corb_vid((resp >> 16) as u16);
     let codecs = probe(regs, info.statests);
     mark("[HDA] up\n");
     Ok(Driver { handles, regs, codecs, corb, rirb })
+}
+
+fn first_codec(statests: u16) -> u8 {
+    let mut a = 0u8;
+    while a < 15 {
+        if (statests >> a) & 1 != 0 {
+            return a;
+        }
+        a = a.wrapping_add(1);
+    }
+    0
 }
