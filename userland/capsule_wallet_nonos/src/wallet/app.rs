@@ -21,16 +21,30 @@ use super::manifest::manifest;
 use super::paint::paint;
 use super::state::{hydrate, needs_live_data, new_state, State};
 
+// Idle ticks between account refreshes. One batched fetch fills every field,
+// so the wallet does not need to poll often; a refresh every dozen seconds
+// keeps balances current while leaving the UI free almost all the time.
+const REFRESH_TICKS: u32 = 12;
+
 pub struct Wallet {
     state: State,
     ready: bool,
     ticks: u32,
     last_active: u32,
+    last_probe: u32,
+    probed_once: bool,
 }
 
 impl Wallet {
     pub fn new() -> Self {
-        Wallet { state: new_state(), ready: false, ticks: 0, last_active: 0 }
+        Wallet {
+            state: new_state(),
+            ready: false,
+            ticks: 0,
+            last_active: 0,
+            last_probe: 0,
+            probed_once: false,
+        }
     }
 }
 
@@ -85,14 +99,18 @@ impl App for Wallet {
         {
             return false;
         }
-        // Once the user has paused, refresh one field every idle tick so the
-        // whole cycle (balance, nonce, fee, staking) fills in a few seconds
-        // rather than dribbling in. Any real click or keypress pauses it again
-        // immediately, so this never blocks the hand.
+        // Refresh only when the user has paused AND either it has never fetched
+        // yet or a full refresh interval has elapsed. One batched fetch fills
+        // every field, so between refreshes the UI does no network I/O at all
+        // and stays fully responsive. Any click or keypress pauses it, so a
+        // fetch never lands under the hand.
         let idle = self.ticks.wrapping_sub(self.last_active) >= 2;
-        if idle {
+        let due = !self.probed_once || self.ticks.wrapping_sub(self.last_probe) >= REFRESH_TICKS;
+        if idle && due {
+            self.last_probe = self.ticks;
+            self.probed_once = true;
             // Repaint only when the probe changed something on screen, so a
-            // steady balance does not recomposite the window every cycle.
+            // steady balance does not recomposite the window.
             return matches!(super::event::probe_tick(&mut self.state), EventOutcome::Repaint);
         }
         false
