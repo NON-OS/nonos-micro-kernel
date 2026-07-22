@@ -14,18 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy)]
-pub struct AccountStatus {
-    pub balance_ready: bool,
-    pub balance_wei: [u8; 32],
-    pub nonce_ready: bool,
-    pub nonce: u64,
-    pub fee_ready: bool,
-    pub fee_wei: u64,
-}
-
-impl AccountStatus {
-    pub fn empty() -> Self {
-        Self { balance_ready: false, balance_wei: [0; 32], nonce_ready: false, nonce: 0, fee_ready: false, fee_wei: 0 }
+/// Compress an uncompressed SEC1 public key (0x04 || X || Y) to the 33-byte
+/// form BIP32 serializes: 0x02/0x03 by Y parity, then X. None if the input
+/// is not in uncompressed form.
+pub fn compress_pubkey(uncompressed: &[u8; 65]) -> Option<[u8; 33]> {
+    if uncompressed[0] != 0x04 {
+        return None;
     }
+    let mut out = [0u8; 33];
+    out[0] = if uncompressed[64] & 1 == 1 { 0x03 } else { 0x02 };
+    out[1..].copy_from_slice(&uncompressed[1..33]);
+    Some(out)
 }

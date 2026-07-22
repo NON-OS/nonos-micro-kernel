@@ -37,7 +37,11 @@ pub fn server_complete(client: &ClientFlight, bytes: &[u8]) -> Option<ServerComp
         if bytes[pos] == 23 {
             if decrypt_scan(&mut ctx, seq, &bytes[pos..end]) {
                 let app = super::app_keys::app_keys(&ctx.keys, &ctx.transcript)?;
-                return Some(ServerComplete { handshake: ctx.keys, app, transcript: ctx.transcript });
+                return Some(ServerComplete {
+                    handshake: ctx.keys,
+                    app,
+                    transcript: ctx.transcript,
+                });
             }
             seq += 1;
         }
@@ -47,7 +51,9 @@ pub fn server_complete(client: &ClientFlight, bytes: &[u8]) -> Option<ServerComp
 }
 
 fn decrypt_scan(ctx: &mut super::server_context::ServerContext, seq: u64, record: &[u8]) -> bool {
-    let Some(plain) = super::record_open::open(&ctx.keys.server_key, &ctx.keys.server_iv, seq, record) else {
+    let Some(plain) =
+        super::record_open::open(&ctx.keys.server_key, &ctx.keys.server_iv, seq, record)
+    else {
         return false;
     };
     let Some((msgs, 22)) = super::inner_plain::split(&plain) else { return false };

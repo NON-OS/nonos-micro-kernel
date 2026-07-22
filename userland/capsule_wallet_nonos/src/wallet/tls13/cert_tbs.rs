@@ -20,5 +20,9 @@ pub fn cert_tbs(cert: &[u8]) -> Option<&[u8]> {
         return None;
     }
     let (tag, _, tbs_end) = super::der_tlv::der_tlv(cert, val)?;
-    if tag == 0x30 { Some(&cert[val..tbs_end]) } else { None }
+    if tag == 0x30 {
+        Some(&cert[val..tbs_end])
+    } else {
+        None
+    }
 }

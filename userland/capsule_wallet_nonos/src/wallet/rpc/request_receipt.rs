@@ -18,7 +18,9 @@ use alloc::vec::Vec;
 
 pub fn request_receipt(tx_hash: &[u8; 32], id: u64) -> Vec<u8> {
     let mut out = Vec::with_capacity(160);
-    out.extend_from_slice(b"{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionReceipt\",\"params\":[\"");
+    out.extend_from_slice(
+        b"{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionReceipt\",\"params\":[\"",
+    );
     super::append_hex_bytes::append_hex_bytes(&mut out, tx_hash);
     out.extend_from_slice(b"\"],\"id\":");
     super::append_dec_u64::append_dec_u64(&mut out, id);

@@ -25,11 +25,25 @@ pub fn cert_time_value(tag: u8, value: &[u8]) -> Option<u64> {
 fn utc(value: &[u8]) -> Option<u64> {
     let yy = digits(&value[0..2])? as u16;
     let year = if yy < 50 { 2000 + yy } else { 1900 + yy };
-    stamp(year, digits(&value[2..4])?, digits(&value[4..6])?, digits(&value[6..8])?, digits(&value[8..10])?, digits(&value[10..12])?)
+    stamp(
+        year,
+        digits(&value[2..4])?,
+        digits(&value[4..6])?,
+        digits(&value[6..8])?,
+        digits(&value[8..10])?,
+        digits(&value[10..12])?,
+    )
 }
 
 fn generalized(value: &[u8]) -> Option<u64> {
-    stamp(digits(&value[0..4])? as u16, digits(&value[4..6])?, digits(&value[6..8])?, digits(&value[8..10])?, digits(&value[10..12])?, digits(&value[12..14])?)
+    stamp(
+        digits(&value[0..4])? as u16,
+        digits(&value[4..6])?,
+        digits(&value[6..8])?,
+        digits(&value[8..10])?,
+        digits(&value[10..12])?,
+        digits(&value[12..14])?,
+    )
 }
 
 fn digits(bytes: &[u8]) -> Option<u64> {
@@ -47,5 +61,12 @@ fn stamp(year: u16, mon: u64, day: u64, hour: u64, min: u64, sec: u64) -> Option
     if mon == 0 || mon > 12 || day == 0 || day > 31 || hour > 23 || min > 59 || sec > 60 {
         return None;
     }
-    Some(year as u64 * 10_000_000_000 + mon * 100_000_000 + day * 1_000_000 + hour * 10_000 + min * 100 + sec)
+    Some(
+        year as u64 * 10_000_000_000
+            + mon * 100_000_000
+            + day * 1_000_000
+            + hour * 10_000
+            + min * 100
+            + sec,
+    )
 }

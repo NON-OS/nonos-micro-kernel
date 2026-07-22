@@ -39,7 +39,7 @@ pub fn paint_topbar(state: &State, fb: &mut PaintBuffer) {
         VIEW_NOX => "NOX revenue & staking",
         _ => "Account overview",
     };
-    let _ = fb.text_ttf(226, 46, title, FG(), 20.0);
+    let _ = fb.text_ttf(226, 46, title, FG(), 23.0);
 
     let mut c = box_edge(fb, THEME_BTN_X, ICON_W, false);
     ic::theme(fb, THEME_BTN_X, HDR_Y, state.light_mode, c);

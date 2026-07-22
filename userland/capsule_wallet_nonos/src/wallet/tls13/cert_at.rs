@@ -20,12 +20,14 @@ pub fn cert_at(body: &[u8], want: u8) -> Option<&[u8]> {
     if off + 3 > body.len() {
         return None;
     }
-    let list_len = ((body[off] as usize) << 16) | ((body[off + 1] as usize) << 8) | body[off + 2] as usize;
+    let list_len =
+        ((body[off] as usize) << 16) | ((body[off + 1] as usize) << 8) | body[off + 2] as usize;
     let end = off.checked_add(3)?.checked_add(list_len)?;
     let mut pos = off + 3;
     let mut index = 0u8;
     while pos + 5 <= end && end == body.len() {
-        let len = ((body[pos] as usize) << 16) | ((body[pos + 1] as usize) << 8) | body[pos + 2] as usize;
+        let len =
+            ((body[pos] as usize) << 16) | ((body[pos + 1] as usize) << 8) | body[pos + 2] as usize;
         let cert = super::read::slice(body, pos + 3, len)?;
         let cert_end = pos + 3 + len;
         if cert_end + 2 > end {

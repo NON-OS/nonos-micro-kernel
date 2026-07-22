@@ -15,10 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const KEYRING_SERVICE: &[u8] = b"keyring";
-pub const SELF_SERVICE: &[u8] = b"app.nonos_wallet";
-pub const OP_WALLET_GENERATE: u16 = 9;
+pub const OP_WALLET_IMPORT: u16 = 8;
 pub const OP_WALLET_ADDRESS: u16 = 10;
 pub const OP_SIGN_NOX_APPROVE: u16 = 12;
 pub const OP_SIGN_ETH_TRANSFER: u16 = 13;
 pub const OP_LIST_WALLET_RAILS: u16 = 14;
+pub const OP_WALLET_EXPORT: u16 = 15;
+pub const OP_SIGN_NOX_STAKE_APPROVE: u16 = 16;
+pub const OP_SIGN_NOX_STAKE: u16 = 17;
+pub const OP_SIGN_NOX_TRANSFER: u16 = 18;
+pub const OP_WALLET_GENERATE_HD: u16 = 19;
+pub const OP_WALLET_RECOVER: u16 = 20;
 pub const HDR_LEN: usize = 8;

@@ -37,8 +37,17 @@ pub fn server_validity_flight(client: &ClientFlight, bytes: &[u8], now: u64) -> 
     false
 }
 
-fn decrypt_scan(ctx: &super::server_context::ServerContext, seq: u64, record: &[u8], now: u64) -> bool {
-    let Some(plain) = super::record_open::open(&ctx.keys.server_key, &ctx.keys.server_iv, seq, record) else { return false };
+fn decrypt_scan(
+    ctx: &super::server_context::ServerContext,
+    seq: u64,
+    record: &[u8],
+    now: u64,
+) -> bool {
+    let Some(plain) =
+        super::record_open::open(&ctx.keys.server_key, &ctx.keys.server_iv, seq, record)
+    else {
+        return false;
+    };
     let Some((msgs, 22)) = super::inner_plain::split(&plain) else { return false };
     super::scan_validity::scan(msgs, now)
 }

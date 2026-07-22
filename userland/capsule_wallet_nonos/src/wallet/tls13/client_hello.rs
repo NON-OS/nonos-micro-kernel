@@ -18,7 +18,12 @@ use alloc::vec::Vec;
 
 use super::constants::{HS_CLIENT_HELLO, LEGACY_HANDSHAKE_VERSION, SUITE_CHACHA20_SHA256};
 
-pub fn client_hello(host: &[u8], random: &[u8; 32], session: &[u8; 32], public: &[u8; 32]) -> Vec<u8> {
+pub fn client_hello(
+    host: &[u8],
+    random: &[u8; 32],
+    session: &[u8; 32],
+    public: &[u8; 32],
+) -> Vec<u8> {
     let mut body = Vec::with_capacity(192 + host.len());
     super::push::u16(&mut body, LEGACY_HANDSHAKE_VERSION);
     body.extend_from_slice(random);

@@ -27,7 +27,12 @@ pub fn server_encrypted_flight(client: &ClientFlight, bytes: &[u8]) -> bool {
             return false;
         }
         if bytes[pos] == 23 {
-            return opens_handshake(&ctx.keys.server_key, &ctx.keys.server_iv, seq, &bytes[pos..end]);
+            return opens_handshake(
+                &ctx.keys.server_key,
+                &ctx.keys.server_iv,
+                seq,
+                &bytes[pos..end],
+            );
         }
         pos = end;
     }

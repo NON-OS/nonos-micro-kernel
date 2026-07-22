@@ -20,7 +20,9 @@ pub fn http_post(host: &[u8], body: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(host.len() + body.len() + 160);
     out.extend_from_slice(b"POST / HTTP/1.1\r\nHost: ");
     out.extend_from_slice(host);
-    out.extend_from_slice(b"\r\nContent-Type: application/json\r\nAccept: application/json\r\nContent-Length: ");
+    out.extend_from_slice(
+        b"\r\nContent-Type: application/json\r\nAccept: application/json\r\nContent-Length: ",
+    );
     super::append_dec_u64::append_dec_u64(&mut out, body.len() as u64);
     out.extend_from_slice(b"\r\nConnection: close\r\n\r\n");
     out.extend_from_slice(body);

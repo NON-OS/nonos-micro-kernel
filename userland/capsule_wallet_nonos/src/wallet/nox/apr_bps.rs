@@ -14,22 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::EventOutcome;
+use super::constants::SECONDS_PER_YEAR;
 
-use crate::wallet::net::probe_network;
-use crate::wallet::state::State;
-
-pub fn probe_net(state: &mut State) -> EventOutcome {
-    state.net = probe_network();
-    if state.address_ready && state.net.rpc_chain_ok {
-        let account = crate::wallet::net::probe_account(&state.address);
-        state.balance_ready = account.balance_ready;
-        state.balance_wei = account.balance_wei;
-        state.nonce_ready = account.nonce_ready;
-        state.live_nonce = account.nonce;
-        state.fee_ready = account.fee_ready;
-        state.fee_wei = account.fee_wei;
+// Staking APR in basis points from the per-second emission rate and the total
+// staked amount, both at the same token precision. APR = annual emission over
+// total staked; bps scales that by 10000. None when nothing is staked or the
+// arithmetic would overflow u128, so the UI shows a dash instead of a guess.
+pub fn apr_bps(emission_rate: u128, total_staked: u128) -> Option<u64> {
+    if total_staked == 0 {
+        return None;
     }
-    state.status = state.net.status;
-    EventOutcome::Repaint
+    let annual = emission_rate.checked_mul(SECONDS_PER_YEAR)?;
+    let scaled = annual.checked_mul(10_000)?;
+    let bps = scaled / total_staked;
+    if bps > u64::MAX as u128 {
+        return None;
+    }
+    Some(bps as u64)
 }

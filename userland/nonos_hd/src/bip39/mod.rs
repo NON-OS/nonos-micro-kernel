@@ -14,16 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+//! BIP39: entropy to mnemonic words, words back to entropy with checksum
+//! verification, and phrase to seed via PBKDF2-HMAC-SHA512 with 2048 rounds.
+//! Mnemonics are handled as u16 wordlist indices, not strings, so the phrase
+//! only ever materializes inside `seed_from_words` in a fixed buffer that is
+//! wiped before it returns.
 
-use crate::wallet::theme::{ACCENT, FG, MUTED};
+mod from_words;
+mod seed;
+mod to_words;
+mod word_index;
 
-// A designed empty state inside a card: accent rule, title, one-line reason.
-pub fn empty_state(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, title: &[u8], reason: &[u8]) {
-    super::card::card(fb, x, y, w, 128);
-    fb.fill_rect(x + 26, y + 30, 40, 3, ACCENT());
-    let t = core::str::from_utf8(title).unwrap_or("");
-    let r = core::str::from_utf8(reason).unwrap_or("");
-    let _ = fb.text_ttf((x + 26) as i32, (y + 44) as i32, t, FG(), 18.0);
-    let _ = fb.text_ttf((x + 26) as i32, (y + 84) as i32, r, MUTED(), 13.0);
-}
+pub use from_words::words_to_entropy;
+pub use seed::seed_from_words;
+pub use to_words::entropy_to_words;
+pub use word_index::word_index;
+
+/// Longest supported mnemonic (24 words, 256-bit entropy).
+pub const MAX_WORDS: usize = 24;

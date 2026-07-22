@@ -17,7 +17,9 @@
 pub fn scan(msgs: &[u8], now: u64) -> bool {
     let mut pos = 0usize;
     while pos + 4 <= msgs.len() {
-        let len = ((msgs[pos + 1] as usize) << 16) | ((msgs[pos + 2] as usize) << 8) | msgs[pos + 3] as usize;
+        let len = ((msgs[pos + 1] as usize) << 16)
+            | ((msgs[pos + 2] as usize) << 8)
+            | msgs[pos + 3] as usize;
         let end = pos + 4 + len;
         if end > msgs.len() {
             return false;

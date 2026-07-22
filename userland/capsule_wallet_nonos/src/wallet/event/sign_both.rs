@@ -40,6 +40,7 @@ pub fn sign_both(state: &mut State) -> EventOutcome {
         to,
         state.send_nonce,
         value,
+        state.fee_wei,
     ) else {
         state.status = b"ETH proof failed";
         return EventOutcome::Repaint;

@@ -14,19 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
-
-// A column bar chart. Each value is a 0..100 height percentage of `h`.
-pub fn bars(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32, vals: &[u8], color: u32) {
-    let n = vals.len() as u32;
-    if n == 0 || w == 0 {
-        return;
-    }
-    let gap = 5u32;
-    let bw = (w.saturating_sub(gap * (n - 1)) / n).max(1);
-    for (i, &v) in vals.iter().enumerate() {
-        let bh = (v as u32 * h / 100).max(1);
-        let bx = x + i as u32 * (bw + gap);
-        fb.fill_rect(bx, y + h - bh, bw, bh, color);
-    }
+// ABI calldata for `f(address)`: the 4-byte selector followed by the address
+// right-aligned in a 32-byte word (12 zero bytes, then the 20 address bytes).
+pub fn calldata_addr(selector: &[u8; 4], addr: &[u8; 20]) -> [u8; 36] {
+    let mut out = [0u8; 36];
+    out[0..4].copy_from_slice(selector);
+    out[16..36].copy_from_slice(addr);
+    out
 }

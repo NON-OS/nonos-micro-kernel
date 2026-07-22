@@ -14,23 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod backup;
 mod broadcast;
 mod edit_amount;
 mod edit_nonce;
 mod eth_value;
+mod export_key;
 mod generate;
 mod hex_digit;
+mod import;
 mod on_event;
 mod on_key;
 mod on_pointer;
 mod on_pointer_view;
-mod probe_net;
+mod probe_tick;
 mod recipient;
+mod recover;
 mod send_input;
+mod send_now;
 mod sign_both;
 mod sign_eth;
 mod sign_nox;
 mod sign_result;
+mod stake_flow;
+mod tx_freshen;
 
 pub use on_event::on_event;
-pub use probe_net::probe_net;
+pub use probe_tick::probe_tick;

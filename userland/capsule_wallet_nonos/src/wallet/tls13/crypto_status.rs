@@ -28,7 +28,16 @@ pub fn crypto_status(op: u16, body: &[u8]) -> bool {
     tx[12..16].copy_from_slice(&7u32.to_le_bytes());
     tx[16..20].copy_from_slice(&(body.len() as u32).to_le_bytes());
     tx[20..len].copy_from_slice(body);
-    let rc = nonos_libc::mk_ipc_call(port as u64, tx.as_ptr(), len, rx.as_mut_ptr(), rx.len());
+    // Time-bounded: the crypto capsule answers in microseconds when healthy,
+    // and a stalled peer must fail the handshake, never freeze the UI thread.
+    let rc = nonos_libc::mk_ipc_call_timeout(
+        port as u64,
+        tx.as_ptr(),
+        len,
+        rx.as_mut_ptr(),
+        rx.len(),
+        3000,
+    );
     rc >= 24
         && u32::from_le_bytes([rx[0], rx[1], rx[2], rx[3]]) == 0x4e4f_4358
         && u16::from_le_bytes([rx[6], rx[7]]) == op

@@ -18,6 +18,16 @@ pub fn finished_value(secret: &[u8; 32], transcript: &[u8]) -> Option<[u8; 32]> 
     let hash = super::hash_sha256::hash_sha256(transcript)?;
     let key = super::finished_key::finished_key(secret)?;
     let mut out = [0u8; 32];
-    let n = nonos_libc::crypto_hmac_sha256(key.as_ptr(), key.len(), hash.as_ptr(), hash.len(), out.as_mut_ptr());
-    if n == 32 { Some(out) } else { None }
+    let n = nonos_libc::crypto_hmac_sha256(
+        key.as_ptr(),
+        key.len(),
+        hash.as_ptr(),
+        hash.len(),
+        out.as_mut_ptr(),
+    );
+    if n == 32 {
+        Some(out)
+    } else {
+        None
+    }
 }

@@ -38,7 +38,9 @@ pub fn server_certificate_flight(client: &ClientFlight, bytes: &[u8]) -> bool {
 }
 
 fn decrypt_scan(ctx: &super::server_context::ServerContext, seq: u64, record: &[u8]) -> bool {
-    let Some(plain) = super::record_open::open(&ctx.keys.server_key, &ctx.keys.server_iv, seq, record) else {
+    let Some(plain) =
+        super::record_open::open(&ctx.keys.server_key, &ctx.keys.server_iv, seq, record)
+    else {
         return false;
     };
     let Some((msgs, 22)) = super::inner_plain::split(&plain) else { return false };

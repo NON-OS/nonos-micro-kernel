@@ -36,5 +36,9 @@ pub fn open(key: &[u8; 32], iv: &[u8; 12], seq: u64, record: &[u8]) -> Option<Ve
         frame.len(),
         pt.as_mut_ptr(),
     );
-    if n == pt.len() as i64 { Some(pt) } else { None }
+    if n == pt.len() as i64 {
+        Some(pt)
+    } else {
+        None
+    }
 }

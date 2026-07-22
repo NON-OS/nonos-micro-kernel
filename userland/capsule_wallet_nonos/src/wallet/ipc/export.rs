@@ -16,21 +16,21 @@
 
 use alloc::vec::Vec;
 
-use nonos_libc::mk_time_millis;
-
 use super::call::keyring_call;
-use super::constants::{HDR_LEN, OP_WALLET_GENERATE};
+use super::constants::{HDR_LEN, OP_WALLET_EXPORT};
 
-pub fn generate_wallet(port: u32, owner_pid: u32) -> Result<u32, i32> {
-    let now = mk_time_millis().max(0) as u64;
-    let expires = now.saturating_add(31_536_000_000);
-    let mut payload = Vec::with_capacity(20);
+// Ask the keyring for this wallet's raw private key. The keyring returns it only
+// to the owning process. The caller must wipe the returned secret the moment it
+// is done with it; nothing here or in the keyring keeps a second copy.
+pub fn export_secret(port: u32, owner_pid: u32, wallet_id: u32) -> Result<[u8; 32], i32> {
+    let mut payload = Vec::with_capacity(8);
     payload.extend_from_slice(&owner_pid.to_le_bytes());
-    payload.extend_from_slice(&now.to_le_bytes());
-    payload.extend_from_slice(&expires.to_le_bytes());
-    let rx = keyring_call(port, OP_WALLET_GENERATE, &payload, 4)?;
-    if rx.len() < HDR_LEN + 4 {
+    payload.extend_from_slice(&wallet_id.to_le_bytes());
+    let rx = keyring_call(port, OP_WALLET_EXPORT, &payload, 32)?;
+    if rx.len() < HDR_LEN + 32 {
         return Err(-11);
     }
-    Ok(u32::from_le_bytes([rx[8], rx[9], rx[10], rx[11]]))
+    let mut out = [0u8; 32];
+    out.copy_from_slice(&rx[HDR_LEN..HDR_LEN + 32]);
+    Ok(out)
 }

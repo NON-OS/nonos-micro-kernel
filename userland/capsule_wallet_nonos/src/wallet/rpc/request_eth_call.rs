@@ -14,19 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+use alloc::vec::Vec;
 
-use crate::wallet::theme::{ACCENT, FG};
-
-// A section heading: accent tick + TTF title. Sets the type rhythm for a card.
-pub fn section(fb: &mut PaintBuffer, x: u32, y: u32, title: &str) {
-    fb.fill_rect(x, y + 2, 3, 20, ACCENT());
-    let _ = fb.text_ttf((x + 14) as i32, y as i32, title, FG(), 25.0);
-}
-
-// The large screen title with a muted eyebrow above it.
-pub fn title(fb: &mut PaintBuffer, x: u32, y: u32, eyebrow: &[u8], head: &str) {
-    let e = core::str::from_utf8(eyebrow).unwrap_or("");
-    let _ = fb.text_ttf(x as i32, y as i32, e, ACCENT(), 10.0);
-    let _ = fb.text_ttf(x as i32, (y + 20) as i32, head, FG(), 32.0);
+// A read-only eth_call against `to` with raw ABI calldata, pinned to the latest
+// block. Used for ERC-20 and staking view functions.
+pub fn request_eth_call(to: &[u8; 20], data: &[u8], id: u64) -> Vec<u8> {
+    let mut out = Vec::with_capacity(160 + data.len() * 2);
+    out.extend_from_slice(b"{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"");
+    super::append_hex20::append_hex20(&mut out, to);
+    out.extend_from_slice(b"\",\"data\":\"");
+    super::append_hex_bytes::append_hex_bytes(&mut out, data);
+    out.extend_from_slice(b"\"},\"latest\"],\"id\":");
+    super::append_dec_u64::append_dec_u64(&mut out, id);
+    out.extend_from_slice(b"}");
+    out
 }
