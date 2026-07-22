@@ -54,12 +54,18 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
             "PRIVATE KEY \u{2014} never share this",
             ACCENT(),
             12.1,
-
         );
+        // The full 66-char key (0x + 64 hex) on one line, so it is obviously a
+        // complete private key, with a caption confirming what it is.
         let key = core::str::from_utf8(&state.export_hex).unwrap_or("");
-        let cut = 34.min(key.len());
-        let _ = fb.text_ttf_mono((rx + 20) as i32, 430, &key[..cut], FG(), 14.9);
-        let _ = fb.text_ttf_mono((rx + 20) as i32, 452, &key[cut..], FG(), 14.9);
+        let _ = fb.text_ttf_mono((rx + 20) as i32, 432, key, FG(), 14.0);
+        let _ = fb.text_ttf(
+            (rx + 20) as i32,
+            458,
+            "64 hex chars \u{00b7} import this anywhere to recover this exact account",
+            DIM(),
+            11.5,
+        );
         ui::outline(fb, rx + 300, 392, 96, b"Hide");
     } else {
         let _ = fb.text_ttf((rx + 20) as i32, 402, "ACCOUNT", DIM(), 12.1);
@@ -73,7 +79,6 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
                 core::str::from_utf8(&full).unwrap_or(""),
                 FG(),
                 14.9,
-
             );
             ui::outline(fb, rx + 300, 392, 96, b"Export (K)");
         } else {
@@ -109,7 +114,6 @@ fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
             core::str::from_utf8(&dots[..p]).unwrap_or("0x"),
             FG(),
             14.9,
-
         );
         let mut nb = [0u8; 20];
         let dn = super::format_u64::format_u64(state.import_len as u64, &mut nb);
@@ -126,7 +130,6 @@ fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
             "Enter to import  \u{00b7}  Esc to cancel",
             DIM(),
             13.2,
-
         );
     } else {
         let _ = fb.text_ttf((rx + 20) as i32, 296, "SET UP THIS WALLET", DIM(), 12.1);
