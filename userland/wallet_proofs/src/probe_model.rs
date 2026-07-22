@@ -41,15 +41,15 @@ fn advance(step: u8) -> u8 {
     (step + 1) % STEPS
 }
 
-/// app.rs: probe when the user has paused (idle), and always on every eighth
-/// tick so continuous interaction can never fully starve the reads.
+/// app.rs: probe only when the user has paused (idle). Mouse movement does not
+/// count as activity (see app.rs on_event), so it never defers the probe; a real
+/// click or keypress does, keeping the UI instant under the hand and never
+/// freezing it on a blocking read mid-interaction.
 fn probes(address_ready: bool, ticks: u32, last_active: u32) -> bool {
     if !address_ready {
         return false;
     }
-    let idle = ticks.wrapping_sub(last_active) >= IDLE_GATE && ticks % 2 == 0;
-    let forced = ticks % 8 == 0;
-    idle || forced
+    ticks.wrapping_sub(last_active) >= IDLE_GATE && ticks % 2 == 0
 }
 
 /// Worst-case wall time of one fetch if every op times out (a blackholed peer):
@@ -77,14 +77,14 @@ fn one_step_per_tick_never_a_burst() {
 }
 
 #[test]
-fn interaction_never_starves_the_probe() {
-    // Even under continuous interaction (last_active == ticks every tick), the
-    // forced pass fires, so no field is ever starved: at least one probe in any
-    // eight-tick window. This is what stops the fee/staking reads hanging while
-    // the mouse moves.
-    for start in 0..32u32 {
-        let any = (start..start + 8).any(|t| probes(true, t, t));
-        assert!(any, "a probe must fire within any 8-tick window of interaction");
+fn active_interaction_never_freezes_the_ui() {
+    // A click or keypress every tick (last_active == ticks) defers the probe
+    // every time, so a blocking read never runs under the user's hand. Movement
+    // is handled separately (app.rs does not treat it as activity), so it never
+    // reaches this gate: the fee and staking reads still land once the user
+    // pauses, which probing_resumes_once_idle covers.
+    for t in 0..64u32 {
+        assert!(!probes(true, t, t), "no blocking probe while actively interacting");
     }
 }
 

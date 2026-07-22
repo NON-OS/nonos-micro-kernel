@@ -23,7 +23,7 @@ use crate::wallet::state::State;
 // pool. That draw can briefly stall while the pool reseeds, so a single attempt
 // sometimes returns an error. Retry a handful of times, yielding between tries
 // so the entropy source can recover, before reporting failure.
-const ATTEMPTS: u32 = 6;
+const ATTEMPTS: u32 = 3;
 
 pub fn generate(state: &mut State) -> EventOutcome {
     let mut id = 0u32;
@@ -34,7 +34,7 @@ pub fn generate(state: &mut State) -> EventOutcome {
             ok = true;
             break;
         }
-        for _ in 0..2000 {
+        for _ in 0..300 {
             nonos_libc::mk_yield();
         }
     }

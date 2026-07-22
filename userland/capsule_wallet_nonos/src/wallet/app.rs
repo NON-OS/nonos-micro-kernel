@@ -71,13 +71,13 @@ impl App for Wallet {
         if !self.state.address_ready {
             return false;
         }
-        // Prefer to probe while the user is paused (a probe briefly blocks this
-        // thread), refreshing one field per pass. But never let interaction
-        // starve it: force a pass every eighth tick regardless, so every field
-        // (fee and the staking reads included) always lands within a cycle.
+        // A probe briefly blocks this thread on network I/O, so only run one
+        // while the user has paused (idle). Mouse movement no longer counts as
+        // activity, so simply moving the cursor never defers the probe: the
+        // reads still land field by field without ever freezing the UI under an
+        // active click or keypress.
         let idle = self.ticks.wrapping_sub(self.last_active) >= 3 && self.ticks % 2 == 0;
-        let forced = self.ticks % 8 == 0;
-        if idle || forced {
+        if idle {
             super::event::probe_tick(&mut self.state);
             return true;
         }
