@@ -51,8 +51,15 @@ pub fn paint_nox_stake(state: &State, fb: &mut PaintBuffer) {
     let alw = fb.measure_ttf(aline, 12.0).max(0) as u32;
     let _ = fb.text_ttf((cx + lw - 20 - alw) as i32, 546, aline, DIM(), 12.0);
 
+    // Staking is approve then stake; the label tracks which step is next.
     let mut bb = [0u8; 32];
-    let pre: &[u8] = if stake { b"Stake " } else { b"Unstake " };
+    let pre: &[u8] = if !stake {
+        b"Unstake "
+    } else if state.stake_step == 0 {
+        b"Approve "
+    } else {
+        b"Stake "
+    };
     let bn = label(&mut bb, pre, amt, b" NOX");
     ui::primary(fb, cx + 20, 596, lw - 40, &bb[..bn]);
 

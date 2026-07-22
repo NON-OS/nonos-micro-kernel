@@ -23,4 +23,6 @@ pub const OP_SIGN_NOX_APPROVE: u16 = 12;
 pub const OP_SIGN_ETH_TRANSFER: u16 = 13;
 pub const OP_LIST_WALLET_RAILS: u16 = 14;
 pub const OP_WALLET_EXPORT: u16 = 15;
+pub const OP_SIGN_NOX_STAKE_APPROVE: u16 = 16;
+pub const OP_SIGN_NOX_STAKE: u16 = 17;
 pub const HDR_LEN: usize = 8;

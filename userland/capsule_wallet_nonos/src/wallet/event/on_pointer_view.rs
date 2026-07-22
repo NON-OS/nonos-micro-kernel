@@ -105,7 +105,7 @@ pub(super) fn nox(state: &mut State, x: u32, y: u32) -> EventOutcome {
         let rel = x.saturating_sub(246).min(560);
         state.stake_amount = rel * crate::wallet::state::MAX_STAKE / 560;
     } else if hit(x, y, 246, 596, 560, 42) {
-        return super::sign_nox::sign_nox(state);
+        return super::stake_flow::stake_flow(state);
     } else {
         return EventOutcome::Idle;
     }

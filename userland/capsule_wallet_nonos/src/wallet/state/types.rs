@@ -101,6 +101,9 @@ pub struct State {
     pub account: u8,
     // NOX stake amount in whole NOX, adjustable via the slider (0..MAX_STAKE).
     pub stake_amount: u32,
+    // Two-step staking: 0 = needs the approve, 1 = ready to stake. Advances once
+    // the approve broadcasts and resets after the stake.
+    pub stake_step: u8,
     // Private-key import entry. The typed hex never renders and is wiped the
     // moment the key is handed to the keyring or the field is cancelled.
     pub import_active: bool,

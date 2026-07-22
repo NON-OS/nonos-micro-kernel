@@ -28,6 +28,7 @@ mod push_word;
 mod read_rails;
 mod sign_eth;
 mod sign_nox;
+mod sign_stake;
 
 pub use address::wallet_address;
 pub use decode_rails::decode_rails;
@@ -39,3 +40,4 @@ pub use lookup_self::lookup_self_pid;
 pub use read_rails::read_rails;
 pub use sign_eth::sign_eth_transfer;
 pub use sign_nox::sign_nox_approve;
+pub use sign_stake::{sign_stake, sign_stake_approve};
