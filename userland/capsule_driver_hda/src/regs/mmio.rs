@@ -45,4 +45,8 @@ impl Regs {
     pub unsafe fn w8(self, off: u32, value: u8) {
         write_volatile((self.base + off as u64) as *mut u8, value);
     }
+
+    pub unsafe fn w16(self, off: u32, value: u16) {
+        write_volatile((self.base + off as u64) as *mut u16, value);
+    }
 }
