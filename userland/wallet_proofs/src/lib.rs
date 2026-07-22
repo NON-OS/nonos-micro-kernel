@@ -41,3 +41,6 @@ mod kani_proofs;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod probe_model;
