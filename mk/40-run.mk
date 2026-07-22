@@ -148,6 +148,9 @@ nonos-mk-tamper-run:
 nonos-mk-boot-ramfs:
 	@./tests/boot/ramfs_round_trip.sh
 
+nonos-mk-boot-hda-playback:
+	@./tests/boot/hda_playback.sh
+
 nonos-mk-boot-keyring:
 	@./tests/boot/keyring_round_trip.sh
 

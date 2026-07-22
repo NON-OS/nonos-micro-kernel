@@ -673,6 +673,13 @@ nonos-mk-image-viewer-test: $(proof-io_ARTIFACTS) \
 	@$(MAKE) -B image-viewer_CARGO_FEATURES=nonos-image-viewer-smoketest nonos-mk-image-viewer-sign
 	$(call nonos_kernel_build,microkernel-image-viewer-smoketest,microkernel-image-viewer-smoketest)
 
+nonos-mk-driver-hda-smoketest-test: $(proof-io_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-driver-hda-smoketest)..."
+	@$(MAKE) nonos-mk-driver-hda-sign
+	@$(MAKE) nonos-mk-stark-enroll-capsules
+	$(call nonos_kernel_build,microkernel-driver-hda-smoketest + nonos-stark-attest,microkernel-driver-hda-smoketest$(_boot_comma)nonos-stark-attest)
+
 # nonos-mk-desktop-gui-prod: the QEMU-bootable profile. This is NOT just a lighter
 # cut of zerostate; it deliberately excludes the real-hardware driver capsules
 # (iwlwifi, rtl8821ce, rtl8169, e1000, rtl8139, ahci, hda, nvme, usb-msc, i2c)

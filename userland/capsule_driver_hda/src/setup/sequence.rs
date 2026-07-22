@@ -16,6 +16,7 @@
 
 use nonos_libc::mk_device_release;
 
+use super::mark::mark;
 use super::{claim, irq, mmio, pci};
 use crate::controller::{leave_reset, probe, ControllerInfo};
 use crate::discover::find_hda;
@@ -42,5 +43,6 @@ pub fn run() -> HdaResult<Driver> {
         return Err(HdaError::UnsupportedController);
     }
     let codecs = probe(regs, info.statests);
+    mark("[HDA] up\n");
     Ok(Driver { handles, regs, codecs })
 }

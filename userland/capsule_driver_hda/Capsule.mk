@@ -13,7 +13,7 @@ CAPSULE_FEATURE          := nonos-capsule-driver-hda
 CAPSULE_NAMESPACE        := systems.nonos.driver.hda0
 CAPSULE_SERVICE_ENDPOINT := service:4218:driver.hda0
 CAPSULE_REPLY_ENDPOINT   := reply:4219:endpoint.4294967312
-# IPC|Memory|Driver|DeviceEnum|Mmio|Irq = 0x78019
-CAPSULE_REQUIRED_CAPS    := 0x78019
+# IPC|Memory|Driver|DeviceEnum|Mmio|Irq|Dma|Debug = 0xF8119
+CAPSULE_REQUIRED_CAPS    := 0xF8119
 
 include nonos-mk/capsule.mk

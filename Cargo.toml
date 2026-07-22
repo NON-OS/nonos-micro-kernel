@@ -608,6 +608,17 @@ microkernel-image-viewer-smoketest = [
   "nonos-image-viewer-smoketest",
 ]
 
+# Headless HDA driver smoketest. Trimmed kernel that spawns only the
+# proof-io sentinel and driver.hda0 (no desktop, no production trust
+# posture) so an intel-hda QEMU boot reaches the driver fast and its
+# `[HDA]` serial markers can be asserted deterministically.
+microkernel-driver-hda-smoketest = [
+  "microkernel-core",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-driver-hda",
+  "nonos-user-entry-proof",
+]
+
 microkernel-file-manager = ["microkernel-desktop-gui"]
 microkernel-text-editor = ["microkernel-desktop-gui"]
 microkernel-settings = ["microkernel-desktop-gui"]

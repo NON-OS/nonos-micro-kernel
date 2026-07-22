@@ -14,13 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod claim;
-mod driver;
-mod irq;
-mod mark;
-mod mmio;
-mod pci;
-mod sequence;
+use nonos_libc::mk_debug;
 
-pub use driver::Driver;
-pub use sequence::run;
+pub(super) fn mark(s: &str) {
+    mk_debug(s.as_ptr(), s.len());
+}
