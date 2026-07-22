@@ -22,6 +22,7 @@ mod logo_bits;
 mod paint;
 mod paint_account_card;
 mod paint_background;
+mod paint_backup;
 mod paint_button;
 mod paint_home;
 mod paint_home_activity;

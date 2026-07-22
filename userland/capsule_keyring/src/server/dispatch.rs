@@ -21,7 +21,8 @@ use crate::protocol::{
     encode_response, Request, EINVAL, OP_COUNT, OP_DELETE, OP_LIST_WALLET_RAILS, OP_LOCK,
     OP_METADATA, OP_RETRIEVE, OP_SIGN_ETH_TRANSFER, OP_SIGN_NOX_APPROVE, OP_SIGN_NOX_RECEIPT,
     OP_SIGN_NOX_STAKE, OP_SIGN_NOX_STAKE_APPROVE, OP_SIGN_NOX_TRANSFER, OP_STORE, OP_UNLOCK,
-    OP_WALLET_ADDRESS, OP_WALLET_EXPORT, OP_WALLET_GENERATE, OP_WALLET_IMPORT,
+    OP_WALLET_ADDRESS, OP_WALLET_EXPORT, OP_WALLET_GENERATE, OP_WALLET_GENERATE_HD,
+    OP_WALLET_IMPORT, OP_WALLET_RECOVER,
 };
 use crate::store::Store;
 
@@ -36,6 +37,8 @@ pub fn dispatch(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8>
         OP_COUNT => handlers::count(store, req, sender_pid),
         OP_WALLET_IMPORT => handlers::wallet_import(store, req, sender_pid),
         OP_WALLET_GENERATE => handlers::wallet_generate(store, req, sender_pid),
+        OP_WALLET_GENERATE_HD => handlers::wallet_generate_hd(store, req, sender_pid),
+        OP_WALLET_RECOVER => handlers::wallet_recover(store, req, sender_pid),
         OP_WALLET_ADDRESS => handlers::wallet_address(store, req, sender_pid),
         OP_WALLET_EXPORT => handlers::wallet_export(store, req, sender_pid),
         OP_SIGN_NOX_RECEIPT => handlers::sign_receipt(store, req, sender_pid),

@@ -16,9 +16,15 @@
 
 use alloc::{vec, vec::Vec};
 
-use nonos_libc::mk_ipc_call;
+use nonos_libc::mk_ipc_call_timeout;
 
 use super::constants::HDR_LEN;
+
+// The keyring answers most ops in microseconds; HD generation and recovery
+// run PBKDF2 with 2048 rounds plus derivation, still well under a second.
+// The bound exists so a wedged keyring surfaces as an error on the UI
+// thread instead of freezing the wallet.
+const KEYRING_TIMEOUT_MS: u64 = 4000;
 
 pub fn keyring_call(port: u32, op: u16, payload: &[u8], rx_len: usize) -> Result<Vec<u8>, i32> {
     let mut tx = Vec::with_capacity(HDR_LEN + payload.len());
@@ -27,7 +33,14 @@ pub fn keyring_call(port: u32, op: u16, payload: &[u8], rx_len: usize) -> Result
     tx.extend_from_slice(&0u16.to_le_bytes());
     tx.extend_from_slice(payload);
     let mut rx = vec![0u8; HDR_LEN + rx_len];
-    let rc = mk_ipc_call(port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len());
+    let rc = mk_ipc_call_timeout(
+        port as u64,
+        tx.as_ptr(),
+        tx.len(),
+        rx.as_mut_ptr(),
+        rx.len(),
+        KEYRING_TIMEOUT_MS,
+    );
     if rc < HDR_LEN as i64 {
         return Err(-11);
     }

@@ -28,7 +28,16 @@ pub fn hash_sha384(data: &[u8]) -> Option<[u8; 48]> {
     tx[12..16].copy_from_slice(&8u32.to_le_bytes());
     tx[16..20].copy_from_slice(&(data.len() as u32).to_le_bytes());
     tx[20..len].copy_from_slice(data);
-    let rc = nonos_libc::mk_ipc_call(port as u64, tx.as_ptr(), len, rx.as_mut_ptr(), rx.len());
+    // Time-bounded: the crypto capsule answers in microseconds when healthy,
+    // and a stalled peer must fail the handshake, never freeze the UI thread.
+    let rc = nonos_libc::mk_ipc_call_timeout(
+        port as u64,
+        tx.as_ptr(),
+        len,
+        rx.as_mut_ptr(),
+        rx.len(),
+        1500,
+    );
     if rc < 72
         || u32::from_le_bytes([rx[0], rx[1], rx[2], rx[3]]) != 0x4e4f_4358
         || u16::from_le_bytes([rx[6], rx[7]]) != 20

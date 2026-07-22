@@ -16,23 +16,26 @@
 
 use nonos_app_skeleton::EventOutcome;
 
-use crate::wallet::ipc::{generate_wallet, wallet_address};
+use crate::wallet::ipc::{generate_wallet_hd, wallet_address};
 use crate::wallet::state::State;
 
-// Generation asks the keyring for a fresh key, which draws from the entropy
-// pool. That draw can briefly stall while the pool reseeds, so a single attempt
-// sometimes returns an error. Retry a handful of times, yielding between tries
-// so the entropy source can recover, before reporting failure.
+// Generation asks the keyring for a fresh HD wallet: real entropy becomes a
+// BIP39 phrase, the phrase becomes the m/44'/60'/0'/0/0 account. The response
+// carries the words exactly once for the backup screen. A draw can stall
+// briefly while the entropy source reseeds, so retry a few times before
+// reporting the real failure.
 const ATTEMPTS: u32 = 3;
 
 pub fn generate(state: &mut State) -> EventOutcome {
     let mut id = 0u32;
+    let mut count = 0u8;
     let mut ok = false;
     let mut last_err = 0i32;
     for _ in 0..ATTEMPTS {
-        match generate_wallet(state.keyring_port, state.owner_pid) {
-            Ok(new_id) => {
+        match generate_wallet_hd(state.keyring_port, state.owner_pid, &mut state.backup_words) {
+            Ok((new_id, word_count)) => {
                 id = new_id;
+                count = word_count;
                 ok = true;
                 break;
             }
@@ -43,6 +46,7 @@ pub fn generate(state: &mut State) -> EventOutcome {
         }
     }
     if !ok {
+        super::backup::wipe_backup(state);
         // Name the real reason instead of always blaming entropy: the keyring
         // returns EACCES (-13) when the caller identity does not match, ENOSPC
         // (-28) when its slots are full, and -11 when it cannot be reached.
@@ -60,12 +64,15 @@ pub fn generate(state: &mut State) -> EventOutcome {
             state.address = addr;
             state.address_ready = true;
             state.view = crate::wallet::state::VIEW_RECEIVE;
-            state.status = b"wallet generated";
-            // Immediately pull live account state (balance/nonce/fee) over the
-            // RPC stack so the wallet is usable the moment it exists.
+            // Show the one-time backup screen before anything else; the words
+            // are wiped the moment the user confirms they are written down.
+            state.backup_count = count;
+            state.backup_active = true;
+            state.status = b"wallet created, write down the phrase";
             super::probe_tick::probe_kick(state)
         }
         Err(_) => {
+            super::backup::wipe_backup(state);
             state.status = b"address failed";
             EventOutcome::Repaint
         }

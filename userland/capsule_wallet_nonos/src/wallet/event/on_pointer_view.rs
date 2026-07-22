@@ -44,20 +44,32 @@ pub(super) fn home(state: &mut State, x: u32, y: u32) -> EventOutcome {
 }
 
 pub(super) fn receive(state: &mut State, x: u32, y: u32) -> EventOutcome {
-    // The import field owns input while open; it is driven from the keyboard.
-    if state.import_active {
+    // The backup screen owns input until the phrase is confirmed written
+    // down; the confirm button is the only live control.
+    if state.backup_active {
+        if hit(x, y, 246, 560, 280, 42) {
+            return super::backup::confirm_backup(state);
+        }
+        return EventOutcome::Idle;
+    }
+    // The import and recovery fields own input while open; keyboard-driven.
+    if state.import_active || state.recover_active {
         return EventOutcome::Idle;
     }
     // Export / Hide toggle in the account card (rx = 542, card at y = 384).
     if state.address_ready && hit(x, y, 842, 392, 96, 34) {
         return super::export_key::toggle_export(state);
     }
-    // Set-up panel: Generate a fresh account, or open the import field.
+    // Set-up panel: Generate a fresh HD account, import a raw key, or recover
+    // from a phrase.
     if hit(x, y, 562, 318, 150, 42) {
         return super::generate::generate(state);
     }
     if hit(x, y, 724, 318, 180, 42) {
         return super::import::toggle_import(state);
+    }
+    if hit(x, y, 916, 318, 160, 42) {
+        return super::recover::toggle_recover(state);
     }
     EventOutcome::Idle
 }

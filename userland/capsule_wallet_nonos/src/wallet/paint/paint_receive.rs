@@ -22,6 +22,12 @@ use crate::wallet::state::State;
 use crate::wallet::theme::{ACCENT, DIM, FG, MUTED, PANEL_2};
 
 pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
+    // The one-time backup screen replaces the whole view until the user
+    // confirms the phrase is written down; nothing else may draw over it.
+    if state.backup_active {
+        super::paint_backup::paint_backup(state, fb);
+        return;
+    }
     let cx = 226u32;
     let cw = fb.width.saturating_sub(252);
     ui::card(fb, cx, 146, 300, 300);
@@ -87,10 +93,44 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
     }
 }
 
-// Wallet setup: create a fresh account or import an existing key. During import
-// only the number of characters typed is shown, never the key itself.
+// Wallet setup: create a fresh HD account, import an existing key, or recover
+// from a BIP39 phrase. During import only the number of characters typed is
+// shown, never the key itself; the recovery phrase shows while typed so the
+// user can check the words, and is wiped on submit or cancel.
 fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
     ui::card(fb, rx, 278, rw, 96);
+    if state.recover_active {
+        let _ = fb.text_ttf((rx + 20) as i32, 296, "RECOVER FROM PHRASE", DIM(), 12.1);
+        let fw = rw - 40;
+        ui::bordered(fb, rx + 20, 314, fw, 36, PANEL_2(), ACCENT());
+        let typed = core::str::from_utf8(&state.recover_buf[..state.recover_len]).unwrap_or("");
+        // Show the tail that fits so the caret area stays visible while long
+        // phrases are typed.
+        let mut shown = typed;
+        while fb.measure_ttf(shown, 14.9).max(0) as u32 > fw - 24 && !shown.is_empty() {
+            shown = &shown[1..];
+        }
+        let _ = fb.text_ttf_mono((rx + 32) as i32, 324, shown, FG(), 14.9);
+        let words = state.recover_buf[..state.recover_len]
+            .split(|&b| b == b' ')
+            .filter(|w| !w.is_empty())
+            .count() as u64;
+        let mut nb = [0u8; 20];
+        let dn = super::format_u64::format_u64(words, &mut nb);
+        let mut cnt = [0u8; 12];
+        let cl = build_word_count(&nb[..dn], &mut cnt);
+        let cs = core::str::from_utf8(&cnt[..cl]).unwrap_or("");
+        let cw2 = fb.measure_ttf(cs, 13.8).max(0) as u32;
+        let _ = fb.text_ttf((rx + rw - 32 - cw2) as i32, 326, cs, MUTED(), 13.8);
+        let _ = fb.text_ttf(
+            (rx + 20) as i32,
+            360,
+            "12-24 words, space separated  \u{00b7}  Enter to recover  \u{00b7}  Esc to cancel",
+            DIM(),
+            13.2,
+        );
+        return;
+    }
     if state.import_active {
         let _ = fb.text_ttf((rx + 20) as i32, 296, "IMPORT PRIVATE KEY", DIM(), 12.1);
         // A proper input well: the border lights teal while active, the typed
@@ -135,15 +175,24 @@ fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
         let _ = fb.text_ttf((rx + 20) as i32, 296, "SET UP THIS WALLET", DIM(), 12.1);
         ui::primary(fb, rx + 20, 318, 150, b"Generate (G)");
         ui::outline(fb, rx + 182, 318, 180, b"Import key (I)");
+        ui::outline(fb, rx + 374, 318, 160, b"Recover (M)");
         let _ = fb.text_ttf(
             (rx + 20) as i32,
             366,
-            "Generate makes a fresh key. Import hands yours straight to the keyring, never stored here.",
+            "Generate makes a fresh key with a 12-word phrase. Recover rebuilds the same account from yours.",
             DIM(),
             13.2,
-
         );
     }
+}
+
+fn build_word_count(digits: &[u8], out: &mut [u8]) -> usize {
+    let n = digits.len().min(out.len());
+    out[..n].copy_from_slice(&digits[..n]);
+    let suf = b" words";
+    let take = suf.len().min(out.len() - n);
+    out[n..n + take].copy_from_slice(&suf[..take]);
+    n + take
 }
 
 fn build_count(digits: &[u8], out: &mut [u8]) -> usize {

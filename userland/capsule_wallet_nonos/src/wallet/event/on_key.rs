@@ -21,6 +21,19 @@ use crate::wallet::state::{
 };
 
 pub fn on_key(state: &mut State, code: u32) -> EventOutcome {
+    // The one-time backup screen owns input until the user confirms the
+    // phrase is written down. Enter is the only way through.
+    if state.backup_active {
+        if code == nonos_app_skeleton::KEY_ENTER {
+            return super::backup::confirm_backup(state);
+        }
+        return EventOutcome::Idle;
+    }
+    // The recovery field owns every key while open, so typed words are never
+    // mistaken for view shortcuts.
+    if state.recover_active {
+        return super::recover::recover_input(state, code);
+    }
     // While the import field is open it owns every key, so a typed hex digit is
     // never mistaken for a view shortcut.
     if state.import_active {
@@ -32,6 +45,7 @@ pub fn on_key(state: &mut State, code: u32) -> EventOutcome {
     }
     match code {
         code if code == b'i' as u32 || code == b'I' as u32 => super::import::toggle_import(state),
+        code if code == b'm' as u32 || code == b'M' as u32 => super::recover::toggle_recover(state),
         code if code == b'k' as u32 || code == b'K' as u32 => {
             super::export_key::toggle_export(state)
         }

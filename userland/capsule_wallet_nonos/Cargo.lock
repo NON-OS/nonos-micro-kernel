@@ -64,6 +64,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "nonos_hd"
+version = "0.1.0"
+
+[[package]]
 name = "nonos_qr"
 version = "0.1.0"
 
@@ -88,6 +92,7 @@ name = "nonos_wallet"
 version = "0.1.0"
 dependencies = [
  "nonos_app_skeleton",
+ "nonos_hd",
  "nonos_qr",
  "nonos_userland_libc",
 ]

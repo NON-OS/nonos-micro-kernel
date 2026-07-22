@@ -31,8 +31,14 @@ impl Store {
         if self.entries.len() >= MAX_KEYS {
             return Err(StoreError::Full);
         }
-        let id = self.next_id;
-        self.next_id = self.next_id.wrapping_add(1);
+        // Never hand out an id that is still occupied: after u32 wraparound a
+        // reused id would alias an existing entry. The scan terminates because
+        // the store holds at most MAX_KEYS entries.
+        let mut id = self.next_id;
+        while self.entries.contains_key(&id) {
+            id = id.wrapping_add(1);
+        }
+        self.next_id = id.wrapping_add(1);
         self.entries.insert(
             id,
             KeyEntry {

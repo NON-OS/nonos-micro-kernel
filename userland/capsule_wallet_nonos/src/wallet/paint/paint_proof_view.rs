@@ -34,7 +34,6 @@ pub fn paint_proof_view(state: &State, fb: &mut PaintBuffer) {
             "A signed transfer and its on-chain receipt appear here.",
             DIM(),
             14.4,
-
         );
         return;
     }
@@ -67,7 +66,6 @@ pub fn paint_proof_view(state: &State, fb: &mut PaintBuffer) {
         core::str::from_utf8(&meta[..ml]).unwrap_or(""),
         DIM(),
         14.4,
-
     );
     let bw = fb.measure_ttf(core::str::from_utf8(tag).unwrap_or(""), 12.6).max(0) as u32 + 18;
     ui::badge(fb, cx + cw - 20 - bw, 197, tag, bg, fg);

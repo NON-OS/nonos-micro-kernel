@@ -14,23 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
-
-use nonos_libc::mk_time_millis;
-
-use super::call::keyring_call;
-use super::constants::{HDR_LEN, OP_WALLET_GENERATE};
-
-pub fn generate_wallet(port: u32, owner_pid: u32) -> Result<u32, i32> {
-    let now = mk_time_millis().max(0) as u64;
-    let expires = now.saturating_add(31_536_000_000);
-    let mut payload = Vec::with_capacity(20);
-    payload.extend_from_slice(&owner_pid.to_le_bytes());
-    payload.extend_from_slice(&now.to_le_bytes());
-    payload.extend_from_slice(&expires.to_le_bytes());
-    let rx = keyring_call(port, OP_WALLET_GENERATE, &payload, 4)?;
-    if rx.len() < HDR_LEN + 4 {
-        return Err(-11);
+/// Compress an uncompressed SEC1 public key (0x04 || X || Y) to the 33-byte
+/// form BIP32 serializes: 0x02/0x03 by Y parity, then X. None if the input
+/// is not in uncompressed form.
+pub fn compress_pubkey(uncompressed: &[u8; 65]) -> Option<[u8; 33]> {
+    if uncompressed[0] != 0x04 {
+        return None;
     }
-    Ok(u32::from_le_bytes([rx[8], rx[9], rx[10], rx[11]]))
+    let mut out = [0u8; 33];
+    out[0] = if uncompressed[64] & 1 == 1 { 0x03 } else { 0x02 };
+    out[1..].copy_from_slice(&uncompressed[1..33]);
+    Some(out)
 }

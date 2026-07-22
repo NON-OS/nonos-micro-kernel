@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod backup;
 mod broadcast;
 mod edit_amount;
 mod edit_nonce;
@@ -28,6 +29,7 @@ mod on_pointer;
 mod on_pointer_view;
 mod probe_tick;
 mod recipient;
+mod recover;
 mod send_input;
 mod send_now;
 mod sign_both;

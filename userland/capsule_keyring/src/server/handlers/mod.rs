@@ -31,7 +31,9 @@ mod unlock;
 mod wallet_address;
 mod wallet_export;
 mod wallet_generate;
+mod wallet_generate_hd;
 mod wallet_import;
+mod wallet_recover;
 
 pub(super) use count::count;
 pub(super) use delete::delete;
@@ -50,4 +52,6 @@ pub(super) use unlock::unlock;
 pub(super) use wallet_address::wallet_address;
 pub(super) use wallet_export::wallet_export;
 pub(super) use wallet_generate::wallet_generate;
+pub(super) use wallet_generate_hd::wallet_generate_hd;
 pub(super) use wallet_import::wallet_import;
+pub(super) use wallet_recover::wallet_recover;

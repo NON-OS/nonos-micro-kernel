@@ -85,7 +85,6 @@ pub fn paint_nox(state: &State, fb: &mut PaintBuffer) {
         core::str::from_utf8(&sa).unwrap_or(""),
         DIM(),
         14.9,
-
     );
     let _ = fb.text_ttf(
         (cx + 20) as i32,
@@ -93,7 +92,6 @@ pub fn paint_nox(state: &State, fb: &mut PaintBuffer) {
         "Read live from Ethereum mainnet (chain 1).",
         MUTED(),
         14.9,
-
     );
 
     super::paint_nox_stake::paint_nox_stake(state, fb);

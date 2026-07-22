@@ -27,7 +27,6 @@ pub fn paint_statusline(fb: &mut PaintBuffer) {
         "keys sealed  \u{00b7}  TLS secured  \u{00b7}  route local  \u{00b7}  security STRONG",
         GREEN(),
         14.4,
-
     );
     fb.fill_rect(200, 130, WIDTH - 200, 1, LINE());
 }

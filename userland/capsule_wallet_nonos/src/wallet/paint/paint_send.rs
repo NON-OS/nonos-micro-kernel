@@ -50,7 +50,6 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
         if ok { "20-byte address" } else { "enter 40 hex characters" },
         if ok { ACCENT() } else { MUTED() },
         13.8,
-
     );
 
     // The amount exactly as entered (milli-units), in the selected asset.
@@ -89,7 +88,6 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
         "Verify the recipient. Transfers cannot be reversed.",
         AMBER(),
         14.9,
-
     );
 
     ui::primary(fb, ix, 500, 150, b"Sign & send");

@@ -111,6 +111,17 @@ pub struct State {
     pub import_active: bool,
     pub import_hex: [u8; 64],
     pub import_len: usize,
+    // One-time mnemonic backup: the word indices exist here only while the
+    // backup screen is showing and are volatile-wiped the moment the user
+    // confirms. They are never persisted, logged, or kept past that screen.
+    pub backup_active: bool,
+    pub backup_words: [u16; 24],
+    pub backup_count: u8,
+    // Recovery-phrase entry: typed words, space separated, shown while typing
+    // so the user can check them, wiped on submit or cancel.
+    pub recover_active: bool,
+    pub recover_buf: [u8; 240],
+    pub recover_len: usize,
     // Private-key reveal for backup/export. Held only while shown, wiped the
     // moment it is hidden. `export_hex` is the 0x-prefixed key when revealed.
     pub export_active: bool,

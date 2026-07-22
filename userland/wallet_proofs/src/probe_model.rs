@@ -37,6 +37,15 @@ const T_CONNECT: u64 = 1800;
 const T_SEND: u64 = 800;
 const T_RECV: u64 = 80;
 
+// Non-socket IPC bounds: the TLS handshake's crypto-capsule calls
+// (tls13/crypto_status.rs, tls13/hash_sha384.rs), the keyring call
+// (ipc/call.rs), and the service health probe (net/health.rs). The Send
+// freeze reproduced through these, not the sockets: any blocking IPC on the
+// UI thread must be bounded, whoever the peer is.
+const T_CRYPTO: u64 = 1500;
+const T_KEYRING: u64 = 4000;
+const T_HEALTH: u64 = 800;
+
 fn advance(step: u8) -> u8 {
     (step + 1) % STEPS
 }
@@ -111,4 +120,21 @@ fn worst_case_is_bounded_and_recv_is_snappy() {
     let wc = worst_case_fetch_ms();
     assert!(wc > 0 && wc < 5500, "a dead peer costs a finite {wc} ms, never the UI");
     assert!(T_RECV <= 100, "the polled recv stays responsive");
+}
+
+#[test]
+fn every_ui_thread_ipc_is_time_bounded() {
+    // The invariant behind the Send-path freeze fix: no IPC from the UI
+    // thread may wait forever. Each bound is finite and small enough that
+    // even a fully wedged peer returns control within seconds.
+    for (name, bound) in [
+        ("crypto capsule (TLS handshake)", T_CRYPTO),
+        ("keyring", T_KEYRING),
+        ("health probe", T_HEALTH),
+    ] {
+        assert!(bound > 0 && bound <= 5000, "{name} bound {bound} ms must be finite and short");
+    }
+    // The keyring bound covers its slowest real op: PBKDF2 with 2048 rounds
+    // plus BIP32 derivation during HD generate/recover.
+    assert!(T_KEYRING >= 2000, "keyring bound must leave room for PBKDF2-2048");
 }
