@@ -35,12 +35,15 @@ pub fn wallet_generate(store: &mut Store, req: Request<'_>, sender_pid: u32) -> 
     let mut secret = [0u8; 32];
     let mut ok = false;
     for attempt in 0..64 {
-        if nonos_libc::crypto_random(secret.as_mut_ptr(), 32) == 32 && eth_secret_valid(&secret) {
+        // Draw from the kernel pool and the CPU's own RDRAND/RDSEED at once,
+        // XORed together, so generation survives either source stalling. A draw
+        // is only rejected for the vanishingly rare invalid secp256k1 scalar.
+        if crate::entropy::gather_secret(&mut secret) && eth_secret_valid(&secret) {
             ok = true;
             break;
         }
-        // Give the entropy pool a moment to reseed before trying again, so a
-        // transient stall does not fail the whole generation.
+        // Yield briefly between tries so a transient pool stall can clear before
+        // the next draw rather than failing the whole generation.
         if attempt & 3 == 3 {
             for _ in 0..1000 {
                 nonos_libc::mk_yield();
