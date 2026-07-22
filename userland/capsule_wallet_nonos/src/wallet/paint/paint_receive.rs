@@ -83,28 +83,55 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
 // Wallet setup: create a fresh account or import an existing key. During import
 // only the number of characters typed is shown, never the key itself.
 fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
-    ui::card(fb, rx, 278, rw, 90);
+    ui::card(fb, rx, 278, rw, 96);
     if state.import_active {
         let _ = fb.text_ttf((rx + 20) as i32, 296, "IMPORT PRIVATE KEY", DIM(), 10.5);
-        let track = rw - 40;
-        let fill = track * (state.import_len.min(64) as u32) / 64;
-        fb.fill_rect(rx + 20, 322, track, 6, PANEL_2());
-        fb.fill_rect(rx + 20, 322, fill, 6, ACCENT());
+        // A proper input well: the border lights teal while active, the typed
+        // key is masked to dots, and a progress underline fills toward 64.
+        let fw = rw - 40;
+        ui::bordered(fb, rx + 20, 314, fw, 36, PANEL_2(), ACCENT());
+        let shown = state.import_len.min(46);
+        let mut dots = [0u8; 2 + 3 * 46];
+        dots[0] = b'0';
+        dots[1] = b'x';
+        let mut p = 2;
+        for _ in 0..shown {
+            dots[p] = 0xE2;
+            dots[p + 1] = 0x80;
+            dots[p + 2] = 0xA2; // U+2022 bullet
+            p += 3;
+        }
+        let _ = fb.text_ttf_mono(
+            (rx + 32) as i32,
+            324,
+            core::str::from_utf8(&dots[..p]).unwrap_or("0x"),
+            FG(),
+            13.0,
+        );
         let mut nb = [0u8; 20];
         let dn = super::format_u64::format_u64(state.import_len as u64, &mut nb);
-        let mut line = [0u8; 32];
-        let ll = build_count(&nb[..dn], &mut line);
-        let s = core::str::from_utf8(&line[..ll]).unwrap_or("");
-        let _ = fb.text_ttf((rx + 20) as i32, 338, s, MUTED(), 12.0);
-        let _ = fb.text_ttf((rx + 20) as i32, 358, "Enter to import, Esc to cancel", DIM(), 11.5);
-    } else {
-        let _ = fb.text_ttf((rx + 20) as i32, 296, "SET UP THIS WALLET", DIM(), 10.5);
-        ui::primary(fb, rx + 20, 320, 150, b"Generate (G)");
-        ui::outline(fb, rx + 182, 320, 180, b"Import key (I)");
+        let mut cnt = [0u8; 8];
+        let cl = build_count(&nb[..dn], &mut cnt);
+        let cs = core::str::from_utf8(&cnt[..cl]).unwrap_or("");
+        let cw = fb.measure_ttf(cs, 12.0).max(0) as u32;
+        let _ = fb.text_ttf((rx + rw - 32 - cw) as i32, 326, cs, MUTED(), 12.0);
+        let fill = (fw - 4) * (state.import_len.min(64) as u32) / 64;
+        fb.fill_rect(rx + 22, 348, fill, 2, ACCENT());
         let _ = fb.text_ttf(
             (rx + 20) as i32,
             360,
-            "Import hands the key straight to the keyring, never stored here.",
+            "Enter to import  \u{00b7}  Esc to cancel",
+            DIM(),
+            11.5,
+        );
+    } else {
+        let _ = fb.text_ttf((rx + 20) as i32, 296, "SET UP THIS WALLET", DIM(), 10.5);
+        ui::primary(fb, rx + 20, 318, 150, b"Generate (G)");
+        ui::outline(fb, rx + 182, 318, 180, b"Import key (I)");
+        let _ = fb.text_ttf(
+            (rx + 20) as i32,
+            366,
+            "Generate makes a fresh key. Import hands yours straight to the keyring, never stored here.",
             DIM(),
             11.5,
         );
@@ -114,7 +141,7 @@ fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
 fn build_count(digits: &[u8], out: &mut [u8]) -> usize {
     let n = digits.len().min(out.len());
     out[..n].copy_from_slice(&digits[..n]);
-    let suf = b" / 64 hex chars";
+    let suf = b" / 64";
     let take = suf.len().min(out.len() - n);
     out[n..n + take].copy_from_slice(&suf[..take]);
     n + take

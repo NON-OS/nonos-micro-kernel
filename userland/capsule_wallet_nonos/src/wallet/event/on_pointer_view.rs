@@ -53,10 +53,10 @@ pub(super) fn receive(state: &mut State, x: u32, y: u32) -> EventOutcome {
         return super::export_key::toggle_export(state);
     }
     // Set-up panel: Generate a fresh account, or open the import field.
-    if hit(x, y, 562, 320, 150, 42) {
+    if hit(x, y, 562, 318, 150, 42) {
         return super::generate::generate(state);
     }
-    if hit(x, y, 724, 320, 180, 42) {
+    if hit(x, y, 724, 318, 180, 42) {
         return super::import::toggle_import(state);
     }
     EventOutcome::Idle
