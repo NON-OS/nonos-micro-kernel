@@ -21,8 +21,10 @@ mod info;
 mod reset;
 mod stream_layout;
 mod streams;
+pub(crate) mod verb;
 
 pub use codec_probe::{probe, CodecProbe, MAX_CODECS};
+pub(crate) use immediate::{compose_verb, compose_verb_long};
 pub use info::ControllerInfo;
 pub use reset::leave_reset;
 pub use stream_layout::layout;
