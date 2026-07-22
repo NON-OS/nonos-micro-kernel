@@ -41,9 +41,15 @@ fn advance(step: u8) -> u8 {
     (step + 1) % STEPS
 }
 
-/// app.rs: probe only with an account, after the user has paused, on a probe tick.
+/// app.rs: probe when the user has paused (idle), and always on every eighth
+/// tick so continuous interaction can never fully starve the reads.
 fn probes(address_ready: bool, ticks: u32, last_active: u32) -> bool {
-    address_ready && ticks.wrapping_sub(last_active) >= IDLE_GATE && ticks % 2 == 0
+    if !address_ready {
+        return false;
+    }
+    let idle = ticks.wrapping_sub(last_active) >= IDLE_GATE && ticks % 2 == 0;
+    let forced = ticks % 8 == 0;
+    idle || forced
 }
 
 /// Worst-case wall time of one fetch if every op times out (a blackholed peer):
@@ -71,11 +77,23 @@ fn one_step_per_tick_never_a_burst() {
 }
 
 #[test]
-fn no_probe_while_interacting() {
-    // last_active == ticks means the user just acted: never probe on that tick.
-    for t in 0..64u32 {
-        assert!(!probes(true, t, t), "no network while the hand is on the wallet");
+fn interaction_never_starves_the_probe() {
+    // Even under continuous interaction (last_active == ticks every tick), the
+    // forced pass fires, so no field is ever starved: at least one probe in any
+    // eight-tick window. This is what stops the fee/staking reads hanging while
+    // the mouse moves.
+    for start in 0..32u32 {
+        let any = (start..start + 8).any(|t| probes(true, t, t));
+        assert!(any, "a probe must fire within any 8-tick window of interaction");
     }
+}
+
+#[test]
+fn no_probe_right_after_a_click() {
+    // The tick right after an odd-tick click (not a forced tick) does not probe,
+    // so a click is serviced without waiting on the network.
+    assert!(!probes(true, 5, 5), "no probe on the tick of a click");
+    assert!(!probes(true, 7, 7), "no probe immediately after a click");
 }
 
 #[test]

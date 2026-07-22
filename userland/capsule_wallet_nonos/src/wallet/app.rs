@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
+use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, InputKind, PaintBuffer};
 
 use super::event::on_event;
 use super::manifest::manifest;
@@ -44,9 +44,13 @@ impl App for Wallet {
             hydrate(&mut self.state);
             self.ready = true;
         }
-        // Remember that the user just did something, so the next few ticks skip
-        // the blocking network probe and the UI stays instant under the hand.
-        self.last_active = self.ticks;
+        // Only a real click or keypress pauses the background probe, so the UI
+        // stays instant under the hand. Mouse movement must NOT count, or moving
+        // the cursor would starve the probe and later reads (fee, staking) would
+        // never complete.
+        if matches!(event.kind, InputKind::ButtonDown | InputKind::KeyDown) {
+            self.last_active = self.ticks;
+        }
         on_event(&mut self.state, event)
     }
 
@@ -64,12 +68,16 @@ impl App for Wallet {
             return true;
         }
         self.ticks = self.ticks.wrapping_add(1);
-        // Never touch the network while the user is actively interacting: a probe
-        // blocks this thread, so defer it until they have paused for a moment.
-        // Once idle, refresh one field per pass (never a burst), so a full cycle
-        // still lands in roughly the old window without ever stalling a click.
-        let idle = self.ticks.wrapping_sub(self.last_active) >= 3;
-        if self.state.address_ready && idle && self.ticks % 2 == 0 {
+        if !self.state.address_ready {
+            return false;
+        }
+        // Prefer to probe while the user is paused (a probe briefly blocks this
+        // thread), refreshing one field per pass. But never let interaction
+        // starve it: force a pass every eighth tick regardless, so every field
+        // (fee and the staking reads included) always lands within a cycle.
+        let idle = self.ticks.wrapping_sub(self.last_active) >= 3 && self.ticks % 2 == 0;
+        let forced = self.ticks % 8 == 0;
+        if idle || forced {
             super::event::probe_tick(&mut self.state);
             return true;
         }
