@@ -38,6 +38,8 @@ pub fn probe_tick(state: &mut State) -> EventOutcome {
     if !state.net.rpc_chain_ok {
         return EventOutcome::Repaint;
     }
+    // Balances first (steps 1-2) so the headline figures refresh soonest, then
+    // nonce, fee, and the staking reads.
     match step {
         1 => {
             if let Some(b) = read_field::eth_balance(&state.address) {
@@ -46,6 +48,12 @@ pub fn probe_tick(state: &mut State) -> EventOutcome {
             }
         }
         2 => {
+            if let Some(b) = read_field::nox_balance(&state.address) {
+                state.nox.balance_wei = b;
+                state.nox.balance_ready = true;
+            }
+        }
+        3 => {
             if let Some(n) = read_field::nonce(&state.address) {
                 if !state.nonce_ready {
                     state.send_nonce = n;
@@ -54,16 +62,10 @@ pub fn probe_tick(state: &mut State) -> EventOutcome {
                 state.nonce_ready = true;
             }
         }
-        3 => {
+        4 => {
             if let Some(f) = read_field::fee() {
                 state.fee_wei = f;
                 state.fee_ready = true;
-            }
-        }
-        4 => {
-            if let Some(b) = read_field::nox_balance(&state.address) {
-                state.nox.balance_wei = b;
-                state.nox.balance_ready = true;
             }
         }
         5 => {

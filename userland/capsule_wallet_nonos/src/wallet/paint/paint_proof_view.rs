@@ -18,97 +18,86 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::ui;
 use crate::wallet::state::State;
-use crate::wallet::theme::{
-    ACCENT, AMBER, AMBER_INK, CYAN, DIM, FG, GREEN, GREEN_INK, INK, LINE2, MUTED, PANEL_2,
-};
+use crate::wallet::theme::{ACCENT, AMBER, AMBER_INK, DIM, FG, GREEN, GREEN_INK, INK, MUTED};
 
 pub fn paint_proof_view(state: &State, fb: &mut PaintBuffer) {
     let cx = 226u32;
     let cw = fb.width.saturating_sub(252);
-    ui::card(fb, cx, 146, cw, 64);
-    fb.fill_rect(cx + 20, 172, 10, 10, ACCENT());
-    let _ = fb.text_ttf(
-        (cx + 40) as i32,
-        170,
-        "Generating proof  \u{00b7}  0x33f1\u{2026}",
-        FG(),
-        14.0,
-    );
-    let _ = fb.text_ttf((cx + cw - 60) as i32, 170, "68%", CYAN(), 14.0);
-    ui::bordered(fb, cx + 20, 192, cw - 40, 6, PANEL_2(), PANEL_2());
-    fb.fill_rect(cx + 20, 192, (cw - 40) * 68 / 100, 6, ACCENT());
+    let _ = fb.text_ttf(cx as i32, 160, "SIGNED TRANSACTIONS", DIM(), 10.5);
 
-    ui::bordered(fb, cx, 228, cw - 320, 40, PANEL_2(), LINE2());
-    let _ = fb.text_ttf((cx + 14) as i32, 239, "Search by hash\u{2026}", MUTED(), 14.0);
-    seg(fb, cx + cw - 300, 228, state.proof_filter);
-
-    prow(
-        fb,
-        cx,
-        cw,
-        288,
-        "0x9f2a\u{2026}7bd1",
-        "2 min ago  \u{00b7}  1.5 ETH",
-        b"PROVED",
-        GREEN(),
-        GREEN_INK(),
-    );
-    prow(
-        fb,
-        cx,
-        cw,
-        352,
-        "0x114c\u{2026}2e90",
-        "9 min ago  \u{00b7}  0.2 ETH",
-        b"PEND",
-        AMBER(),
-        AMBER_INK(),
-    );
-    prow(
-        fb,
-        cx,
-        cw,
-        416,
-        "0x77ab\u{2026}01c4",
-        "1 h ago  \u{00b7}  4.0 ETH",
-        b"PROVED",
-        GREEN(),
-        GREEN_INK(),
-    );
-}
-
-fn seg(fb: &mut PaintBuffer, x: u32, y: u32, sel: u8) {
-    cell(fb, x, y, 60, "All", sel == 0);
-    cell(fb, x + 60, y, 110, "Proved", sel == 1);
-    cell(fb, x + 170, y, 130, "Pending", sel == 2);
-}
-
-fn cell(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &str, on: bool) {
-    if on {
-        fb.fill_rect(x, y, w, 40, ACCENT());
-    } else {
-        ui::edge(fb, x, y, w, 40, LINE2());
+    if !state.tx_ready {
+        ui::card(fb, cx, 180, cw, 96);
+        let _ = fb.text_ttf((cx + 20) as i32, 212, "No transactions yet", MUTED(), 15.0);
+        let _ = fb.text_ttf(
+            (cx + 20) as i32,
+            238,
+            "A signed transfer and its on-chain receipt appear here.",
+            DIM(),
+            12.5,
+        );
+        return;
     }
-    let c = if on { INK() } else { MUTED() };
-    let tw = fb.measure_ttf(label, 13.0).max(0) as u32;
-    let _ = fb.text_ttf((x + w / 2 - tw / 2) as i32, (y + 12) as i32, label, c, 13.0);
+
+    // The one real transaction this session signed, with its live status.
+    let mut hb = [0u8; 13];
+    short_hash(&state.tx_hash, &mut hb);
+    let hash = core::str::from_utf8(&hb).unwrap_or("");
+
+    let (tag, bg, fg): (&[u8], u32, u32) = if state.receipt_ready {
+        if state.receipt_ok {
+            (b"CONFIRMED", GREEN(), GREEN_INK())
+        } else {
+            (b"FAILED", AMBER(), AMBER_INK())
+        }
+    } else if state.broadcast_ready {
+        (b"SENT", ACCENT(), INK())
+    } else {
+        (b"SIGNED", ACCENT(), INK())
+    };
+
+    ui::card(fb, cx, 180, cw, 60);
+    fb.fill_rect(cx, 180, 3, 60, ACCENT());
+    let _ = fb.text_ttf_mono((cx + 20) as i32, 192, hash, FG(), 16.0);
+    let mut meta = [0u8; 32];
+    let ml = kind_meta(state.tx_kind, &mut meta);
+    let _ = fb.text_ttf(
+        (cx + 20) as i32,
+        216,
+        core::str::from_utf8(&meta[..ml]).unwrap_or(""),
+        DIM(),
+        12.5,
+    );
+    let bw = fb.measure_ttf(core::str::from_utf8(tag).unwrap_or(""), 11.0).max(0) as u32 + 18;
+    ui::badge(fb, cx + cw - 20 - bw, 197, tag, bg, fg);
 }
 
-fn prow(
-    fb: &mut PaintBuffer,
-    x: u32,
-    w: u32,
-    y: u32,
-    hash: &str,
-    meta: &str,
-    b: &[u8],
-    bg: u32,
-    fg: u32,
-) {
-    ui::card(fb, x, y, w, 54);
-    fb.fill_rect(x, y, 3, 54, ACCENT());
-    let _ = fb.text_ttf_mono((x + 20) as i32, (y + 10) as i32, hash, FG(), 16.0);
-    let _ = fb.text_ttf((x + 20) as i32, (y + 32) as i32, meta, DIM(), 12.0);
-    let bw = fb.measure_ttf(core::str::from_utf8(b).unwrap_or(""), 11.0).max(0) as u32 + 18;
-    ui::badge(fb, x + w - 20 - bw, y + 17, b, bg, fg);
+// "0x" + first two and last two bytes of the 32-byte hash.
+fn short_hash(h: &[u8; 32], out: &mut [u8; 13]) {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    out[0] = b'0';
+    out[1] = b'x';
+    out[2] = HEX[(h[0] >> 4) as usize];
+    out[3] = HEX[(h[0] & 15) as usize];
+    out[4] = HEX[(h[1] >> 4) as usize];
+    out[5] = HEX[(h[1] & 15) as usize];
+    out[6] = 0xE2;
+    out[7] = 0x80;
+    out[8] = 0xA6; // ellipsis
+    out[9] = HEX[(h[30] >> 4) as usize];
+    out[10] = HEX[(h[30] & 15) as usize];
+    out[11] = HEX[(h[31] >> 4) as usize];
+    out[12] = HEX[(h[31] & 15) as usize];
+}
+
+fn kind_meta(kind: &[u8], out: &mut [u8; 32]) -> usize {
+    let label: &[u8] = match kind {
+        b"ETH" => b"ETH transfer",
+        b"NOX" => b"NOX approve",
+        b"APPROVE" => b"Staking approve",
+        b"STAKE" => b"NOX stake",
+        _ => b"Transaction",
+    };
+    let n = label.len().min(out.len());
+    out[..n].copy_from_slice(&label[..n]);
+    n
 }

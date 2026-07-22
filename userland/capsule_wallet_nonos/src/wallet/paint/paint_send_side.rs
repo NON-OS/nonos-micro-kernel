@@ -40,11 +40,15 @@ pub fn paint_send_side(state: &State, fb: &mut PaintBuffer) {
     let mut gnum = [0u8; 20];
     let mut gb = [0u8; 32];
     let gas = if state.fee_ready {
-        let g = state.fee_wei / 1_000_000_000;
-        let gn = super::format_u64::format_u64(g, &mut gnum);
+        let whole = state.fee_wei / 1_000_000_000;
+        let cents = (state.fee_wei % 1_000_000_000) / 10_000_000;
+        let gn = super::format_u64::format_u64(whole, &mut gnum);
         gb[..gn].copy_from_slice(&gnum[..gn]);
-        gb[gn..gn + 5].copy_from_slice(b" gwei");
-        core::str::from_utf8(&gb[..gn + 5]).unwrap_or("\u{2014}")
+        gb[gn] = b'.';
+        gb[gn + 1] = b'0' + ((cents / 10) % 10) as u8;
+        gb[gn + 2] = b'0' + (cents % 10) as u8;
+        gb[gn + 3..gn + 8].copy_from_slice(b" gwei");
+        core::str::from_utf8(&gb[..gn + 8]).unwrap_or("\u{2014}")
     } else {
         "\u{2014}"
     };

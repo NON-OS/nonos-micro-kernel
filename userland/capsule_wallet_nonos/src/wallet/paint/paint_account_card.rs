@@ -38,25 +38,31 @@ pub fn paint_account_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w
         let _ = fb.text_ttf((x + 20) as i32, (y + 18) as i32, "NO ACCOUNT YET", DIM(), 10.5);
     }
 
-    // The live on-chain balance, or a dash until it has been fetched.
-    let mut buf = [0u8; 40];
-    let bal = if state.balance_ready {
-        let n = format_eth(lower_u64(&state.balance_wei), &mut buf);
-        core::str::from_utf8(&buf[..n]).unwrap_or("0")
+    // Headline the NOX balance (the native token), with the live ETH balance on
+    // the line beneath it. Each shows a fetching mark while its read is in
+    // flight and a dash only when there is no route.
+    let up = state.net.rpc_chain_ok;
+    let mut nb = [0u8; 48];
+    let nox = crate::wallet::nox::live_amount(
+        state.nox.balance_ready,
+        &state.nox.balance_wei,
+        up,
+        &mut nb,
+    );
+    let pen = fb.text_ttf((x + 20) as i32, (y + 44) as i32, nox, FG(), 40.0);
+    let _ = fb.text_ttf(pen + 10, (y + 62) as i32, "NOX", ACCENT(), 18.0);
+
+    let mut eb = [0u8; 40];
+    let eth = if state.balance_ready {
+        let n = format_eth(lower_u64(&state.balance_wei), &mut eb);
+        core::str::from_utf8(&eb[..n]).unwrap_or("0")
+    } else if up {
+        "\u{2026}"
     } else {
         "\u{2014}"
     };
-    let pen = fb.text_ttf((x + 20) as i32, (y + 44) as i32, bal, FG(), 44.0);
-    let _ = fb.text_ttf(pen + 10, (y + 64) as i32, "ETH", ACCENT(), 20.0);
-    if state.address_ready && !state.balance_ready {
-        let _ = fb.text_ttf(
-            (x + 20) as i32,
-            (y + 100) as i32,
-            "fetching balance\u{2026}",
-            MUTED(),
-            12.0,
-        );
-    }
+    let ex = fb.text_ttf((x + 20) as i32, (y + 102) as i32, eth, MUTED(), 15.0);
+    let _ = fb.text_ttf(ex + 6, (y + 103) as i32, "ETH", DIM(), 13.0);
 }
 
 fn format_eth(v: u64, out: &mut [u8]) -> usize {

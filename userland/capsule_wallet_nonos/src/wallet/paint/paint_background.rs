@@ -18,23 +18,8 @@ use nonos_app_skeleton::PaintBuffer;
 
 use crate::wallet::theme::{BG, CONTENT_X, LINE};
 
-// The wallet's signature: a faint teal blueprint grid under the content, the
-// same terminal-lattice motif the NONOS desktop uses. One dim pixel every 32px,
-// barely above the ground so it reads as texture and identity, never noise.
-const GRID: u32 = 32;
-const DOT: u32 = 0xFF10_1A1B;
-
 pub fn paint_background(fb: &mut PaintBuffer) {
     fb.clear(BG());
-    let mut y = 112;
-    while y < fb.height {
-        let mut x = CONTENT_X + 16;
-        while x < fb.width {
-            fb.fill_rect(x, y, 1, 1, DOT);
-            x += GRID;
-        }
-        y += GRID;
-    }
     fb.fill_rect(CONTENT_X, 34, 1, fb.height.saturating_sub(34), LINE());
     fb.fill_rect(CONTENT_X, 98, fb.width.saturating_sub(CONTENT_X), 1, LINE());
 }

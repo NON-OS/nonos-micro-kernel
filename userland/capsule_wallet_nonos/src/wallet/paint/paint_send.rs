@@ -103,14 +103,18 @@ fn format_milli_eth(milli: u32, out: &mut [u8]) -> usize {
     wn + 4
 }
 
-// wei-per-gas to a "N gwei" string.
+// wei-per-gas to a "N.NN gwei" string, two decimals so a sub-gwei price shows.
 fn gwei(wei: u64, out: &mut [u8]) -> usize {
-    let g = wei / 1_000_000_000;
+    let whole = wei / 1_000_000_000;
+    let cents = (wei % 1_000_000_000) / 10_000_000;
     let mut gb = [0u8; 20];
-    let n = super::format_u64::format_u64(g, &mut gb);
+    let n = super::format_u64::format_u64(whole, &mut gb);
     out[..n].copy_from_slice(&gb[..n]);
-    out[n..n + 5].copy_from_slice(b" gwei");
-    n + 5
+    out[n] = b'.';
+    out[n + 1] = b'0' + ((cents / 10) % 10) as u8;
+    out[n + 2] = b'0' + (cents % 10) as u8;
+    out[n + 3..n + 8].copy_from_slice(b" gwei");
+    n + 8
 }
 
 fn field(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, val: &str, active: bool) {

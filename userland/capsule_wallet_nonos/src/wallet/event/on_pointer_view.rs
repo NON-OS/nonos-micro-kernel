@@ -77,22 +77,10 @@ pub(super) fn send(state: &mut State, x: u32, y: u32) -> EventOutcome {
     EventOutcome::Repaint
 }
 
-pub(super) fn proof(state: &mut State, x: u32, y: u32) -> EventOutcome {
-    // Mirror paint_proof_view.rs seg(): three cells (60/110/130 wide) starting
-    // at cx + cw - 300, where cw is the live width less the sidebar.
-    let cw = state.view_w.saturating_sub(252);
-    let sx = 226 + cw.saturating_sub(300);
-    let f = if hit(x, y, sx, 228, 60, 40) {
-        0
-    } else if hit(x, y, sx + 60, 228, 110, 40) {
-        1
-    } else if hit(x, y, sx + 170, 228, 130, 40) {
-        2
-    } else {
-        return EventOutcome::Idle;
-    };
-    state.proof_filter = f;
-    EventOutcome::Repaint
+pub(super) fn proof(_state: &mut State, _x: u32, _y: u32) -> EventOutcome {
+    // The proof view is a read-only record of the signed transaction; nothing
+    // to click.
+    EventOutcome::Idle
 }
 
 pub(super) fn nox(state: &mut State, x: u32, y: u32) -> EventOutcome {
