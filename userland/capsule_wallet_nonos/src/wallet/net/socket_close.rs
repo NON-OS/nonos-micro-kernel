@@ -20,5 +20,5 @@ pub fn socket_close(sockets_port: u32, handle: u32) -> bool {
     let mut body = [0u8; 4];
     let mut rx = [0u8; 20];
     body.copy_from_slice(&handle.to_le_bytes());
-    super::call::call(sockets_port, SOCKETS_MAGIC, OP_CLOSE, &body, &mut rx).is_ok()
+    super::call::call(sockets_port, SOCKETS_MAGIC, OP_CLOSE, &body, &mut rx, 400).is_ok()
 }

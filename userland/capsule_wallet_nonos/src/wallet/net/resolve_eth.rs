@@ -18,7 +18,7 @@ use super::constants::{DNS_MAGIC, ETH_RPC_HOST, OP_RESOLVE_A};
 
 pub fn resolve_eth(dns_port: u32) -> Result<[u8; 4], ()> {
     let mut rx = [0u8; 32];
-    let n = super::call::call(dns_port, DNS_MAGIC, OP_RESOLVE_A, ETH_RPC_HOST, &mut rx)?;
+    let n = super::call::call(dns_port, DNS_MAGIC, OP_RESOLVE_A, ETH_RPC_HOST, &mut rx, 1200)?;
     if n < 24 {
         return Err(());
     }

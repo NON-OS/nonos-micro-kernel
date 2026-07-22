@@ -21,7 +21,7 @@ pub fn socket_open(sockets_port: u32) -> Result<u32, ()> {
     let mut rx = [0u8; 32];
     body[0..2].copy_from_slice(&SOCKET_FAMILY_IP4.to_le_bytes());
     body[2..4].copy_from_slice(&SOCKET_KIND_STREAM.to_le_bytes());
-    let n = super::call::call(sockets_port, SOCKETS_MAGIC, OP_SOCKET, &body, &mut rx)?;
+    let n = super::call::call(sockets_port, SOCKETS_MAGIC, OP_SOCKET, &body, &mut rx, 500)?;
     if n < 24 {
         return Err(());
     }
