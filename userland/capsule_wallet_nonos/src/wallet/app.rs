@@ -87,8 +87,9 @@ impl App for Wallet {
         }
         let idle = self.ticks.wrapping_sub(self.last_active) >= 3 && self.ticks % 2 == 0;
         if idle {
-            super::event::probe_tick(&mut self.state);
-            return true;
+            // Repaint only when the probe changed something on screen, so a
+            // steady balance does not recomposite the window every cycle.
+            return matches!(super::event::probe_tick(&mut self.state), EventOutcome::Repaint);
         }
         false
     }
