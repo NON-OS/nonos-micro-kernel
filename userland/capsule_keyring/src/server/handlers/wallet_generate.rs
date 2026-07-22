@@ -34,10 +34,17 @@ pub fn wallet_generate(store: &mut Store, req: Request<'_>, sender_pid: u32) -> 
     let expires_at = u64::from_le_bytes([p[12], p[13], p[14], p[15], p[16], p[17], p[18], p[19]]);
     let mut secret = [0u8; 32];
     let mut ok = false;
-    for _ in 0..32 {
-        if nonos_libc::crypto_random(secret.as_mut_ptr(), 32) >= 0 && eth_secret_valid(&secret) {
+    for attempt in 0..64 {
+        if nonos_libc::crypto_random(secret.as_mut_ptr(), 32) == 32 && eth_secret_valid(&secret) {
             ok = true;
             break;
+        }
+        // Give the entropy pool a moment to reseed before trying again, so a
+        // transient stall does not fail the whole generation.
+        if attempt & 3 == 3 {
+            for _ in 0..1000 {
+                nonos_libc::mk_yield();
+            }
         }
     }
     if !ok {

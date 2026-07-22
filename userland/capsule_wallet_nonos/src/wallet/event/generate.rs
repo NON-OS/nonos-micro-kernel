@@ -19,26 +19,42 @@ use nonos_app_skeleton::EventOutcome;
 use crate::wallet::ipc::{generate_wallet, wallet_address};
 use crate::wallet::state::State;
 
+// Generation asks the keyring for a fresh key, which draws from the entropy
+// pool. That draw can briefly stall while the pool reseeds, so a single attempt
+// sometimes returns an error. Retry a handful of times, yielding between tries
+// so the entropy source can recover, before reporting failure.
+const ATTEMPTS: u32 = 6;
+
 pub fn generate(state: &mut State) -> EventOutcome {
-    match generate_wallet(state.keyring_port, state.owner_pid) {
-        Ok(id) => match wallet_address(state.keyring_port, state.owner_pid, id) {
-            Ok(addr) => {
-                state.wallet_id = id;
-                state.address = addr;
-                state.address_ready = true;
-                state.view = crate::wallet::state::VIEW_RECEIVE;
-                state.status = b"wallet generated";
-                // Immediately pull live account state (balance/nonce/fee) over
-                // the RPC stack so the wallet is usable the moment it exists.
-                super::probe_tick::probe_kick(state)
-            }
-            Err(_) => {
-                state.status = b"address failed";
-                EventOutcome::Repaint
-            }
-        },
+    let mut id = 0u32;
+    let mut ok = false;
+    for _ in 0..ATTEMPTS {
+        if let Ok(new_id) = generate_wallet(state.keyring_port, state.owner_pid) {
+            id = new_id;
+            ok = true;
+            break;
+        }
+        for _ in 0..2000 {
+            nonos_libc::mk_yield();
+        }
+    }
+    if !ok {
+        state.status = b"entropy unavailable, try again";
+        return EventOutcome::Repaint;
+    }
+    match wallet_address(state.keyring_port, state.owner_pid, id) {
+        Ok(addr) => {
+            state.wallet_id = id;
+            state.address = addr;
+            state.address_ready = true;
+            state.view = crate::wallet::state::VIEW_RECEIVE;
+            state.status = b"wallet generated";
+            // Immediately pull live account state (balance/nonce/fee) over the
+            // RPC stack so the wallet is usable the moment it exists.
+            super::probe_tick::probe_kick(state)
+        }
         Err(_) => {
-            state.status = b"generate failed";
+            state.status = b"address failed";
             EventOutcome::Repaint
         }
     }
