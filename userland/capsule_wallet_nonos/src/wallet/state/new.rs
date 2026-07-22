@@ -69,6 +69,7 @@ pub fn new_state() -> State {
         account: 0,
         stake_amount: 4000,
         stake_step: 0,
+        send_token: 0,
         import_active: false,
         import_hex: [0; 64],
         import_len: 0,

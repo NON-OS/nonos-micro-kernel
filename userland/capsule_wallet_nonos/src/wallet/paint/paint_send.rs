@@ -18,7 +18,7 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::ui;
 use crate::wallet::state::{State, SEND_FIELD_AMOUNT, SEND_FIELD_TO};
-use crate::wallet::theme::{ACCENT, AMBER, DIM, FG, LINE2, MUTED, PANEL_2};
+use crate::wallet::theme::{ACCENT, AMBER, DIM, FG, INK, LINE2, MUTED, PANEL_2};
 
 pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
     let cx = 226u32;
@@ -26,6 +26,10 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
     let ix = cx + 20;
     let iw = lw - 40;
     ui::card(fb, cx, 146, lw, 470);
+
+    // Asset toggle: send ETH (a value transfer) or NOX (an ERC-20 transfer).
+    asset_tab(fb, ix + iw - 156, 152, "ETH", state.send_token == 0);
+    asset_tab(fb, ix + iw - 76, 152, "NOX", state.send_token == 1);
 
     // The recipient exactly as typed, prefixed 0x, or an empty-field prompt.
     let _ = fb.text_ttf(ix as i32, 162, "RECIPIENT", DIM(), 10.5);
@@ -48,8 +52,9 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
         12.0,
     );
 
-    // The amount exactly as entered (milli-ETH), formatted as ETH.
-    let _ = fb.text_ttf(ix as i32, 272, "AMOUNT (ETH)", DIM(), 10.5);
+    // The amount exactly as entered (milli-units), in the selected asset.
+    let amount_label = if state.send_token == 1 { "AMOUNT (NOX)" } else { "AMOUNT (ETH)" };
+    let _ = fb.text_ttf(ix as i32, 272, amount_label, DIM(), 10.5);
     let mut ab = [0u8; 24];
     let an = format_milli_eth(state.send_amount_milli_eth, &mut ab);
     field(
@@ -115,6 +120,17 @@ fn gwei(wei: u64, out: &mut [u8]) -> usize {
     out[n + 2] = b'0' + (cents % 10) as u8;
     out[n + 3..n + 8].copy_from_slice(b" gwei");
     n + 8
+}
+
+fn asset_tab(fb: &mut PaintBuffer, x: u32, y: u32, label: &str, on: bool) {
+    if on {
+        fb.fill_rect(x, y, 74, 26, ACCENT());
+    } else {
+        ui::edge(fb, x, y, 74, 26, LINE2());
+    }
+    let c = if on { INK() } else { MUTED() };
+    let tw = fb.measure_ttf(label, 12.0).max(0) as u32;
+    let _ = fb.text_ttf((x + 37 - tw / 2) as i32, (y + 6) as i32, label, c, 12.0);
 }
 
 fn field(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, val: &str, active: bool) {

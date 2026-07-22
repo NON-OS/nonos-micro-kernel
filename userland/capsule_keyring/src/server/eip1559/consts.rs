@@ -34,4 +34,7 @@ pub const STAKING_PROXY: [u8; 20] = [
 ];
 pub const STAKE_SELECTOR: [u8; 4] = [0xa6, 0x94, 0xfc, 0x3a];
 
+// ERC-20 transfer(address,uint256) selector, for sending NOX.
+pub const TRANSFER_SELECTOR: [u8; 4] = [0xa9, 0x05, 0x9c, 0xbb];
+
 pub const CHAIN_ID: u8 = 1;

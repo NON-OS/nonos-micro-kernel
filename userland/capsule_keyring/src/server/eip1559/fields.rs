@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use super::super::rlp::{rlp_list, rlp_string, rlp_uint_be};
 use super::approve_data::approve_calldata;
 use super::consts::{CHAIN_ID, NOX_TOKEN, STAKING_PROXY};
-use super::stake_data::{stake_approve_calldata, stake_calldata};
+use super::stake_data::{stake_approve_calldata, stake_calldata, transfer_calldata};
 
 pub fn tx_fields(
     chain_id: &[u8],
@@ -91,6 +91,27 @@ pub fn nox_stake_approve_fields(
         &NOX_TOKEN,
         &[0u8; 32],
         &stake_approve_calldata(amount),
+    )
+}
+
+// transfer(to, amount) on the NOX token.
+pub fn nox_transfer_fields(
+    nonce: &[u8; 32],
+    max_priority: &[u8; 32],
+    max_fee: &[u8; 32],
+    gas: &[u8; 32],
+    to: &[u8; 20],
+    amount: &[u8; 32],
+) -> Vec<Vec<u8>> {
+    tx_fields(
+        &[CHAIN_ID],
+        nonce,
+        max_priority,
+        max_fee,
+        gas,
+        &NOX_TOKEN,
+        &[0u8; 32],
+        &transfer_calldata(to, amount),
     )
 }
 

@@ -14,7 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::consts::{APPROVE_SELECTOR, STAKE_SELECTOR, STAKING_PROXY};
+use super::consts::{APPROVE_SELECTOR, STAKE_SELECTOR, STAKING_PROXY, TRANSFER_SELECTOR};
+
+// transfer(to, amount) on the NOX token: selector, recipient right-aligned in a
+// word, then the amount.
+pub fn transfer_calldata(to: &[u8; 20], amount: &[u8; 32]) -> [u8; 68] {
+    let mut out = [0u8; 68];
+    out[0..4].copy_from_slice(&TRANSFER_SELECTOR);
+    out[16..36].copy_from_slice(to);
+    out[36..68].copy_from_slice(amount);
+    out
+}
 
 // approve(stakingProxy, amount) on the NOX token: authorise the staking contract
 // to move the amount being staked. Selector, spender right-aligned in a word,

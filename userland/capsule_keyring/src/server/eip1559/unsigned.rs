@@ -20,7 +20,22 @@ use alloc::vec::Vec;
 use super::super::rlp::rlp_list;
 use super::fields::{
     eth_transfer_fields, nox_approve_fields, nox_stake_approve_fields, nox_stake_fields,
+    nox_transfer_fields,
 };
+
+pub fn unsigned_nox_transfer_payload(
+    nonce: &[u8; 32],
+    max_priority: &[u8; 32],
+    max_fee: &[u8; 32],
+    gas: &[u8; 32],
+    to: &[u8; 20],
+    amount: &[u8; 32],
+) -> Vec<u8> {
+    let f = nox_transfer_fields(nonce, max_priority, max_fee, gas, to, amount);
+    let mut out = vec![0x02u8];
+    out.extend_from_slice(&rlp_list(&f));
+    out
+}
 
 pub fn unsigned_nox_stake_approve_payload(
     nonce: &[u8; 32],

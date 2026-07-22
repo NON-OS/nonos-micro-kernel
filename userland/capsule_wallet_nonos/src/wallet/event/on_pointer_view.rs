@@ -63,8 +63,13 @@ pub(super) fn receive(state: &mut State, x: u32, y: u32) -> EventOutcome {
 }
 
 pub(super) fn send(state: &mut State, x: u32, y: u32) -> EventOutcome {
-    // Coordinates match paint_send.rs: card at cx=226, fields inset at ix=246.
-    if hit(x, y, 246, 182, 600, 40) {
+    // Coordinates match paint_send.rs: card at cx=226, fields inset at ix=246,
+    // iw=600. The ETH/NOX asset tabs sit at ix+iw-156 and ix+iw-76 (690, 770).
+    if hit(x, y, 690, 152, 74, 26) {
+        state.send_token = 0;
+    } else if hit(x, y, 770, 152, 74, 26) {
+        state.send_token = 1;
+    } else if hit(x, y, 246, 182, 600, 40) {
         state.send_focus = SEND_FIELD_TO;
     } else if hit(x, y, 246, 292, 600, 40) {
         state.send_focus = SEND_FIELD_AMOUNT;
