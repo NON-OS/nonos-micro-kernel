@@ -14,15 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Curated component library. One visual language across every screen: elevated
-//! cards, status badges, and buttons, all keyed off theme.rs and the 8px
-//! spacing scale.
+use super::amount_str;
 
-mod badge;
-mod button;
-mod card;
-mod shade;
-
-pub use badge::{badge, chip};
-pub use button::{outline, primary};
-pub use card::{bordered, card, edge};
+// Like amount_str, but distinguishes "still loading" from "unavailable": when the
+// value has not arrived yet, show an ellipsis if the chain link is up (a read is
+// coming) and an em dash only when there is no route. This keeps a fresh wallet
+// looking alive and refreshing instead of dead.
+pub fn live_amount<'a>(ready: bool, wei: &[u8; 32], link_up: bool, buf: &'a mut [u8]) -> &'a str {
+    if !ready {
+        return if link_up { "\u{2026}" } else { "\u{2014}" };
+    }
+    amount_str(ready, wei, buf)
+}

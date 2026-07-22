@@ -25,18 +25,25 @@ pub fn paint_home_activity(state: &State, fb: &mut PaintBuffer, cx: u32, cw: u32
     let rx = cx + col + 28;
     let _ = fb.text_ttf(cx as i32, 486, "ENABLED RAILS", DIM(), 10.5);
 
-    // ETH and NOX show live balances; PR has no fetched balance yet.
+    // ETH and NOX show live balances; a field still loading shows "fetching"
+    // while the link is up, a dash only when there is no route.
+    let up = state.net.rpc_chain_ok;
+    let pending = if up { "\u{2026}" } else { "\u{2014}" };
     let mut buf = [0u8; 40];
     let eth = if state.balance_ready {
         let n = format_eth(lower_u64(&state.balance_wei), &mut buf);
-        core::str::from_utf8(&buf[..n]).unwrap_or("\u{2014}")
+        core::str::from_utf8(&buf[..n]).unwrap_or(pending)
     } else {
-        "\u{2014}"
+        pending
     };
     rail(fb, cx, 508, col, "ETH", b"L1", eth);
     let mut nox_b = [0u8; 48];
-    let nox =
-        crate::wallet::nox::amount_str(state.nox.balance_ready, &state.nox.balance_wei, &mut nox_b);
+    let nox = crate::wallet::nox::live_amount(
+        state.nox.balance_ready,
+        &state.nox.balance_wei,
+        up,
+        &mut nox_b,
+    );
     rail(fb, cx, 570, col, "NOX", b"ERC-20", nox);
     rail(fb, cx, 632, col, "PR", b"RSVD", "\u{2014}");
 

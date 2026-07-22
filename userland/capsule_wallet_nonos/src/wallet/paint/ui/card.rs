@@ -16,18 +16,28 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::shade::{darken, lighten};
 use crate::wallet::theme::{LINE, PANEL};
 
-// A flat surface card: panel fill with a single hairline border on all edges.
+// An elevated surface card. A panel fill, a soft hairline border, then a lit top
+// edge and a shadowed bottom edge so the card reads as raised from the page
+// instead of a flat wireframe box.
 pub fn card(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32) {
     if w == 0 || h == 0 {
         return;
     }
-    fb.fill_rect(x, y, w, h, PANEL());
+    let panel = PANEL();
+    fb.fill_rect(x, y, w, h, panel);
     fb.fill_rect(x, y, w, 1, LINE());
     fb.fill_rect(x, y + h - 1, w, 1, LINE());
     fb.fill_rect(x, y, 1, h, LINE());
     fb.fill_rect(x + w - 1, y, 1, h, LINE());
+    // Elevation: a faint highlight just inside the top, a faint shade inside the
+    // bottom. One pixel each, subtle enough to feel like depth, not a stripe.
+    if h > 3 {
+        fb.fill_rect(x + 1, y + 1, w.saturating_sub(2), 1, lighten(panel, 0x0C));
+        fb.fill_rect(x + 1, y + h - 2, w.saturating_sub(2), 1, darken(panel, 0x06));
+    }
 }
 
 // Same border on an arbitrary fill (e.g. an inset well).

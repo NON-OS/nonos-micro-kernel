@@ -16,13 +16,18 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::shade::{darken, lighten};
 use crate::wallet::theme::{ACCENT, FG, INK, LINE2};
 
 const BTN_H: u32 = 42;
 
-// Primary action: solid cyan fill with dark ink label.
+// Primary action: cyan fill with a raised bevel (lit top, shaded bottom) so it
+// reads as a real, pressable button rather than a flat swatch.
 pub fn primary(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    fb.fill_rect(x, y, w, BTN_H, ACCENT());
+    let accent = ACCENT();
+    fb.fill_rect(x, y, w, BTN_H, accent);
+    fb.fill_rect(x, y, w, 1, lighten(accent, 0x1E));
+    fb.fill_rect(x, y + BTN_H - 1, w, 1, darken(accent, 0x22));
     label(fb, x, y, w, text, INK());
 }
 

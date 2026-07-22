@@ -26,42 +26,51 @@ pub fn paint_nox(state: &State, fb: &mut PaintBuffer) {
     let sw = (cw - 48) / 4;
 
     // Every figure is read live from the pinned mainnet contracts. A field that
-    // has not returned yet shows a dash, never a fabricated number.
+    // has not returned yet shows "fetching" while the link is up, a dash only
+    // when there is no route, and never a fabricated number.
+    let up = state.net.rpc_chain_ok;
+    let pending = if up { "\u{2026}" } else { "\u{2014}" };
     let mut apr_b = [0u8; 16];
     let apr = if state.nox.apr_ready {
         let n = crate::wallet::nox::format_apr(state.nox.apr_bps, &mut apr_b);
-        core::str::from_utf8(&apr_b[..n]).unwrap_or("\u{2014}")
+        core::str::from_utf8(&apr_b[..n]).unwrap_or(pending)
     } else {
-        "\u{2014}"
+        pending
     };
     let mut rev_b = [0u8; 48];
-    let rev = crate::wallet::nox::amount_str(
+    let rev = crate::wallet::nox::live_amount(
         state.nox.stats_ready,
         &state.nox.rewards_distributed_wei,
+        up,
         &mut rev_b,
     );
     let mut pos_b = [0u8; 20];
     let pos = if state.nox.positions_ready {
         let n = super::format_u64::format_u64(state.nox.positions, &mut pos_b);
-        core::str::from_utf8(&pos_b[..n]).unwrap_or("\u{2014}")
+        core::str::from_utf8(&pos_b[..n]).unwrap_or(pending)
     } else {
-        "\u{2014}"
+        pending
     };
 
     stat(fb, cx, 146, sw, "STAKING APR", apr);
     stat(fb, cx + sw + 16, 146, sw, "REWARDS PAID", rev);
     stat(fb, cx + 2 * (sw + 16), 146, sw, "YOUR POSITIONS", pos);
     let mut bal_b = [0u8; 48];
-    let bal =
-        crate::wallet::nox::amount_str(state.nox.balance_ready, &state.nox.balance_wei, &mut bal_b);
+    let bal = crate::wallet::nox::live_amount(
+        state.nox.balance_ready,
+        &state.nox.balance_wei,
+        up,
+        &mut bal_b,
+    );
     stat(fb, cx + 3 * (sw + 16), 146, sw, "NOX BALANCE", bal);
 
     ui::card(fb, cx, 252, cw, 150);
     let _ = fb.text_ttf((cx + 20) as i32, 270, "NOX ON-CHAIN STATE", DIM(), 10.5);
     let mut ts_b = [0u8; 48];
-    let ts = crate::wallet::nox::amount_str(
+    let ts = crate::wallet::nox::live_amount(
         state.nox.stats_ready,
         &state.nox.total_staked_wei,
+        up,
         &mut ts_b,
     );
     let _ = fb.text_ttf((cx + 20) as i32, 300, "Total staked", MUTED(), 13.0);

@@ -22,6 +22,7 @@ mod calldata_addr;
 pub mod constants;
 mod format_apr;
 mod format_nox;
+mod live_amount;
 mod q32_to_u128;
 mod status;
 
@@ -30,5 +31,6 @@ pub use apr_bps::apr_bps;
 pub use calldata_addr::calldata_addr;
 pub use format_apr::format_apr;
 pub use format_nox::format_nox;
+pub use live_amount::live_amount;
 pub use q32_to_u128::q32_to_u128;
 pub use status::NoxStatus;
