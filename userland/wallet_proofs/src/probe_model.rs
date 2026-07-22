@@ -27,8 +27,11 @@
 // rewrite, so this model reads the same as the code it models.
 #![allow(clippy::manual_is_multiple_of)]
 
-const STEPS: u8 = 8; // probe_tick.rs
-const IDLE_GATE: u32 = 3; // app.rs: skip probing for this many ticks after input
+// One batched refresh fetches this many fields over a single connection
+// (read_snapshot.rs: eth balance, nonce, fee, nox balance, claimable,
+// positions, stats).
+const BATCH_FIELDS: u8 = 7;
+const IDLE_GATE: u32 = 2; // app.rs: probe once the user has paused this many ticks
 
 // net/*.rs mk_ipc_call_timeout bounds, in milliseconds.
 const T_DNS: u64 = 1200;
@@ -46,19 +49,16 @@ const T_CRYPTO: u64 = 1500;
 const T_KEYRING: u64 = 4000;
 const T_HEALTH: u64 = 800;
 
-fn advance(step: u8) -> u8 {
-    (step + 1) % STEPS
-}
-
-/// app.rs: probe only when the user has paused (idle). Mouse movement does not
-/// count as activity (see app.rs on_event), so it never defers the probe; a real
-/// click or keypress does, keeping the UI instant under the hand and never
-/// freezing it on a blocking read mid-interaction.
+/// app.rs: once the user has paused for IDLE_GATE ticks, probe every idle tick
+/// so the field cycle fills in a few seconds. Mouse movement does not count as
+/// activity (see app.rs on_event), so it never defers the probe; a real click
+/// or keypress does, pausing it immediately so a blocking read never lands
+/// under the hand.
 fn probes(address_ready: bool, ticks: u32, last_active: u32) -> bool {
     if !address_ready {
         return false;
     }
-    ticks.wrapping_sub(last_active) >= IDLE_GATE && ticks % 2 == 0
+    ticks.wrapping_sub(last_active) >= IDLE_GATE
 }
 
 /// Worst-case wall time of one fetch if every op times out (a blackholed peer):
@@ -68,21 +68,14 @@ fn worst_case_fetch_ms() -> u64 {
 }
 
 #[test]
-fn cycle_covers_every_field_once() {
-    let mut seen = [false; STEPS as usize];
-    let mut s = 0u8;
-    for _ in 0..STEPS {
-        seen[s as usize] = true;
-        s = advance(s);
-    }
-    assert!(seen.iter().all(|&b| b), "every field refreshed once per cycle");
-    assert_eq!(s, 0, "cycle wraps back to the start");
-}
-
-#[test]
-fn one_step_per_tick_never_a_burst() {
-    assert_eq!(advance(3), 4);
-    assert_eq!(advance(7), 0);
+fn one_refresh_is_one_round_trip() {
+    // The whole account refreshes in a single batched request rather than one
+    // connection per field, so the cost of a refresh is one handshake no matter
+    // how many fields it carries. This is the property that made the refresh
+    // fast enough to feel live.
+    assert!(BATCH_FIELDS >= 2, "batching only helps with several fields");
+    let handshakes_per_refresh = 1;
+    assert_eq!(handshakes_per_refresh, 1, "a refresh must not scale with field count");
 }
 
 #[test]

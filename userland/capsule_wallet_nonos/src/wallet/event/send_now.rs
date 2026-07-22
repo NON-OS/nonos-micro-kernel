@@ -53,6 +53,11 @@ fn sign_nox(state: &mut State) {
         state.status = b"amount too small";
         return;
     }
+    // Fresh nonce and fee at send time, or refuse rather than sign a bad tx.
+    if !super::tx_freshen::freshen_nonce_and_fee(state) {
+        state.status = b"cannot reach network for nonce and fee, try again";
+        return;
+    }
     let raw = sign_nox_transfer(
         state.keyring_port,
         state.owner_pid,

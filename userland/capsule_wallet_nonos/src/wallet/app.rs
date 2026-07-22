@@ -85,7 +85,11 @@ impl App for Wallet {
         {
             return false;
         }
-        let idle = self.ticks.wrapping_sub(self.last_active) >= 3 && self.ticks % 2 == 0;
+        // Once the user has paused, refresh one field every idle tick so the
+        // whole cycle (balance, nonce, fee, staking) fills in a few seconds
+        // rather than dribbling in. Any real click or keypress pauses it again
+        // immediately, so this never blocks the hand.
+        let idle = self.ticks.wrapping_sub(self.last_active) >= 2;
         if idle {
             // Repaint only when the probe changed something on screen, so a
             // steady balance does not recomposite the window every cycle.

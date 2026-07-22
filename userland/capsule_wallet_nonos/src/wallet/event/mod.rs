@@ -37,6 +37,7 @@ mod sign_eth;
 mod sign_nox;
 mod sign_result;
 mod stake_flow;
+mod tx_freshen;
 
 pub use on_event::on_event;
 pub use probe_tick::probe_tick;

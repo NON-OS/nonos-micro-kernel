@@ -27,6 +27,7 @@ mod probe_rpc_tcp;
 mod probe_status;
 mod probe_tls_rpc;
 pub mod read_field;
+pub mod read_snapshot;
 mod read_tls_flight;
 mod resolve_eth;
 mod rtc_stamp;

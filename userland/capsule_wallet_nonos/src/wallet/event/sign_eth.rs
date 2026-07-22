@@ -32,6 +32,11 @@ pub fn sign_eth(state: &mut State) -> EventOutcome {
         state.status = b"amount too large";
         return EventOutcome::Repaint;
     };
+    // Fresh nonce and fee at send time, or refuse rather than sign a bad tx.
+    if !super::tx_freshen::freshen_nonce_and_fee(state) {
+        state.status = b"cannot reach network for nonce and fee, try again";
+        return EventOutcome::Repaint;
+    }
     let raw = sign_eth_transfer(
         state.keyring_port,
         state.owner_pid,

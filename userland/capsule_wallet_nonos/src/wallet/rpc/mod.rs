@@ -17,6 +17,7 @@
 mod append_dec_u64;
 mod append_hex20;
 mod append_hex_bytes;
+mod batch;
 mod find_result;
 mod hex_digit;
 mod http_body;
@@ -35,6 +36,7 @@ mod request_nonce;
 mod request_receipt;
 mod self_check;
 
+pub use batch::{object_for_id, request_batch};
 pub use http_post::http_post;
 pub use parse_call_word::parse_call_word;
 pub use parse_hash32::parse_hash32;

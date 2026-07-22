@@ -16,106 +16,86 @@
 
 use nonos_app_skeleton::EventOutcome;
 
-use crate::wallet::net::{probe_network, read_field};
+use crate::wallet::net::probe_network;
+use crate::wallet::net::read_snapshot::{read_snapshot, Snapshot};
 use crate::wallet::state::State;
 
-const STEPS: u8 = 8;
-
-/// Refresh one field per call and advance to the next, so a tick blocks on at
-/// most a single RPC round-trip. A full cycle covers the network status, the
-/// ETH account (balance, nonce, fee) and the NOX reads (balance, claimable,
-/// positions, protocol stats). A read that fails leaves its previous value and
-/// is retried on the next cycle, so a transient drop never wipes the screen.
-///
-/// Returns Repaint only when the fetched value actually differs from what is
-/// already shown, so a steady balance or fee does not trigger a full-window
-/// recomposite every cycle and compete with the user's input for the core.
+/// Refresh the account. The expensive network self-diagnostic (DNS, sockets,
+/// the full TLS check) runs once to confirm the link; after that every refresh
+/// is a single batched round trip that fetches balance, nonce, fee and the
+/// staking figures over one connection. Returns Repaint only when a shown value
+/// actually changed, so a steady screen does not recomposite every cycle. On a
+/// failed fetch the link is marked degraded so the next tick re-runs the
+/// diagnostic and reconnects.
 pub fn probe_tick(state: &mut State) -> EventOutcome {
-    let step = state.probe_step;
-    state.probe_step = (step + 1) % STEPS;
-
-    if step == 0 {
+    if !state.net.rpc_chain_ok {
         let net = probe_network();
-        let changed = net.status != state.status || !state.net.rpc_chain_ok && net.rpc_chain_ok;
+        let changed = net.status != state.status;
         state.net = net;
         state.status = state.net.status;
         return outcome(changed);
     }
-    if !state.net.rpc_chain_ok {
-        return EventOutcome::Idle;
+
+    match read_snapshot(&state.address) {
+        Some(snap) => outcome(apply(state, snap)),
+        None => {
+            // The link dropped; fall back to the diagnostic on the next tick.
+            state.net.rpc_chain_ok = false;
+            state.status = b"reconnecting to the network";
+            EventOutcome::Repaint
+        }
     }
-    // Balances first (steps 1-2) so the headline figures refresh soonest, then
-    // nonce, fee, and the staking reads. Each field repaints only on a change.
-    let changed = match step {
-        1 => read_field::eth_balance(&state.address)
-            .map(|b| {
-                let c = !state.balance_ready || b != state.balance_wei;
-                state.balance_wei = b;
-                state.balance_ready = true;
-                c
-            })
-            .unwrap_or(false),
-        2 => read_field::nox_balance(&state.address)
-            .map(|b| {
-                let c = !state.nox.balance_ready || b != state.nox.balance_wei;
-                state.nox.balance_wei = b;
-                state.nox.balance_ready = true;
-                c
-            })
-            .unwrap_or(false),
-        3 => read_field::nonce(&state.address)
-            .map(|n| {
-                let c = !state.nonce_ready || n != state.live_nonce;
-                if !state.nonce_ready {
-                    state.send_nonce = n;
-                }
-                state.live_nonce = n;
-                state.nonce_ready = true;
-                c
-            })
-            .unwrap_or(false),
-        4 => read_field::fee()
-            .map(|f| {
-                let c = !state.fee_ready || f != state.fee_wei;
-                state.fee_wei = f;
-                state.fee_ready = true;
-                c
-            })
-            .unwrap_or(false),
-        5 => read_field::nox_claimable(&state.address)
-            .map(|c| {
-                let ch = !state.nox.claimable_ready || c != state.nox.claimable_wei;
-                state.nox.claimable_wei = c;
-                state.nox.claimable_ready = true;
-                ch
-            })
-            .unwrap_or(false),
-        6 => read_field::nox_positions(&state.address)
-            .map(|p| {
-                let c = !state.nox.positions_ready || p != state.nox.positions;
-                state.nox.positions = p;
-                state.nox.positions_ready = true;
-                c
-            })
-            .unwrap_or(false),
-        7 => read_field::nox_stats()
-            .map(|s| {
-                let c = !state.nox.stats_ready
-                    || s.total != state.nox.total_staked_wei
-                    || s.rewards != state.nox.rewards_distributed_wei;
-                state.nox.total_staked_wei = s.total;
-                state.nox.rewards_distributed_wei = s.rewards;
-                state.nox.stats_ready = true;
-                if let Some(bps) = s.apr {
-                    state.nox.apr_bps = bps;
-                    state.nox.apr_ready = true;
-                }
-                c
-            })
-            .unwrap_or(false),
-        _ => false,
-    };
-    outcome(changed)
+}
+
+/// Apply a snapshot, returning whether anything shown changed.
+fn apply(state: &mut State, snap: Snapshot) -> bool {
+    let mut changed = false;
+    if let Some(b) = snap.eth_balance {
+        changed |= !state.balance_ready || b != state.balance_wei;
+        state.balance_wei = b;
+        state.balance_ready = true;
+    }
+    if let Some(n) = snap.nonce {
+        changed |= !state.nonce_ready || n != state.live_nonce;
+        if !state.nonce_ready {
+            state.send_nonce = n;
+        }
+        state.live_nonce = n;
+        state.nonce_ready = true;
+    }
+    if let Some(f) = snap.fee {
+        changed |= !state.fee_ready || f != state.fee_wei;
+        state.fee_wei = f;
+        state.fee_ready = true;
+    }
+    if let Some(b) = snap.nox_balance {
+        changed |= !state.nox.balance_ready || b != state.nox.balance_wei;
+        state.nox.balance_wei = b;
+        state.nox.balance_ready = true;
+    }
+    if let Some(c) = snap.claimable {
+        changed |= !state.nox.claimable_ready || c != state.nox.claimable_wei;
+        state.nox.claimable_wei = c;
+        state.nox.claimable_ready = true;
+    }
+    if let Some(p) = snap.positions {
+        changed |= !state.nox.positions_ready || p != state.nox.positions;
+        state.nox.positions = p;
+        state.nox.positions_ready = true;
+    }
+    if let Some(s) = snap.stats {
+        changed |= !state.nox.stats_ready
+            || s.total != state.nox.total_staked_wei
+            || s.rewards != state.nox.rewards_distributed_wei;
+        state.nox.total_staked_wei = s.total;
+        state.nox.rewards_distributed_wei = s.rewards;
+        state.nox.stats_ready = true;
+        if let Some(bps) = s.apr {
+            state.nox.apr_bps = bps;
+            state.nox.apr_ready = true;
+        }
+    }
+    changed
 }
 
 fn outcome(changed: bool) -> EventOutcome {
@@ -126,8 +106,7 @@ fn outcome(changed: bool) -> EventOutcome {
     }
 }
 
-/// Kick a fresh refresh cycle from the top (network status first) without
-/// blocking now. The tick loop fills the fields in over the next few ticks.
+/// Kick a fresh refresh from the top on the next idle tick without blocking now.
 pub fn probe_kick(state: &mut State) -> EventOutcome {
     state.probe_step = 0;
     EventOutcome::Repaint
