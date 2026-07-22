@@ -23,7 +23,7 @@ use crate::wallet::theme::{DIM, FG, GREEN, LINE, MUTED};
 pub fn paint_network_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {
     ui::card(fb, x, y, w, 200);
     let _ =
-        fb.text_ttf((x + 20) as i32, (y + 18) as i32, "GAS  \u{00b7}  ETHEREUM L1", DIM(), 10.5);
+        fb.text_ttf((x + 20) as i32, (y + 18) as i32, "GAS  \u{00b7}  ETHEREUM L1", DIM(), 12.1);
 
     // The real gas price read from the RPC, to two decimals so a sub-gwei price
     // does not collapse to zero. A dash before the read lands.
@@ -36,8 +36,8 @@ pub fn paint_network_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w
     } else {
         "\u{2014}"
     };
-    let gx = fb.text_ttf((x + 20) as i32, (y + 38) as i32, g, FG(), 30.0);
-    let _ = fb.text_ttf(gx + 8, (y + 50) as i32, "gwei", MUTED(), 13.0);
+    let gx = fb.text_ttf((x + 20) as i32, (y + 38) as i32, g, FG(), 34.5);
+    let _ = fb.text_ttf(gx + 8, (y + 50) as i32, "gwei", MUTED(), 14.9);
 
     // Honest facts about the route, not invented fee tiers.
     row(fb, x, w, y + 84, "Route", "PublicNode RPC", "TLS 1.3");
@@ -47,11 +47,11 @@ pub fn paint_network_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w
 
 fn row(fb: &mut PaintBuffer, x: u32, w: u32, y: u32, label: &str, val: &str, t: &str) {
     fb.fill_rect(x + 20, y + 30, w - 40, 1, LINE());
-    let _ = fb.text_ttf((x + 20) as i32, (y + 6) as i32, label, MUTED(), 14.0);
-    let vw = fb.measure_ttf(val, 14.0).max(0) as u32;
-    let _ = fb.text_ttf((x + w - 96 - vw) as i32, (y + 6) as i32, val, FG(), 14.0);
-    let tw = fb.measure_ttf(t, 13.0).max(0) as u32;
-    let _ = fb.text_ttf((x + w - 20 - tw) as i32, (y + 7) as i32, t, GREEN(), 13.0);
+    let _ = fb.text_ttf((x + 20) as i32, (y + 6) as i32, label, MUTED(), 16.1);
+    let vw = fb.measure_ttf(val, 16.1).max(0) as u32;
+    let _ = fb.text_ttf((x + w - 96 - vw) as i32, (y + 6) as i32, val, FG(), 16.1);
+    let tw = fb.measure_ttf(t, 14.9).max(0) as u32;
+    let _ = fb.text_ttf((x + w - 20 - tw) as i32, (y + 7) as i32, t, GREEN(), 14.9);
 }
 
 // wei-per-gas to "N.NN gwei" with two decimals.

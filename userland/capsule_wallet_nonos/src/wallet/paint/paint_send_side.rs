@@ -24,8 +24,8 @@ pub fn paint_send_side(state: &State, fb: &mut PaintBuffer) {
     let x = 890u32;
     let w = fb.width.saturating_sub(x + 26);
     ui::card(fb, x, 146, w, 200);
-    let _ = fb.text_ttf((x + 20) as i32, 164, "ROUTE", DIM(), 10.5);
-    let _ = fb.text_ttf((x + 20) as i32, 186, "PublicNode Ethereum RPC", FG(), 16.0);
+    let _ = fb.text_ttf((x + 20) as i32, 164, "ROUTE", DIM(), 12.1);
+    let _ = fb.text_ttf((x + 20) as i32, 186, "PublicNode Ethereum RPC", FG(), 18.4);
     ui::badge(fb, x + 20, 218, b"TLS 1.3", GREEN(), GREEN_INK());
 
     // Real values fetched from the chain, or a dash before they arrive.
@@ -57,7 +57,7 @@ pub fn paint_send_side(state: &State, fb: &mut PaintBuffer) {
 }
 
 fn kv(fb: &mut PaintBuffer, x: u32, w: u32, y: u32, k: &str, v: &str) {
-    let _ = fb.text_ttf((x + 20) as i32, y as i32, k, MUTED(), 13.0);
-    let vw = fb.measure_ttf(v, 13.0).max(0) as u32;
-    let _ = fb.text_ttf((x + w - 20 - vw) as i32, y as i32, v, FG(), 13.0);
+    let _ = fb.text_ttf((x + 20) as i32, y as i32, k, MUTED(), 14.9);
+    let vw = fb.measure_ttf(v, 14.9).max(0) as u32;
+    let _ = fb.text_ttf((x + w - 20 - vw) as i32, y as i32, v, FG(), 14.9);
 }

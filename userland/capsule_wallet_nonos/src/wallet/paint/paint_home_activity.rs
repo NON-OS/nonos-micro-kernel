@@ -23,7 +23,7 @@ use crate::wallet::theme::{ACCENT, DIM, FG, LINE2, MUTED};
 pub fn paint_home_activity(state: &State, fb: &mut PaintBuffer, cx: u32, cw: u32) {
     let col = (cw - 28) / 2;
     let rx = cx + col + 28;
-    let _ = fb.text_ttf(cx as i32, 486, "ENABLED RAILS", DIM(), 10.5);
+    let _ = fb.text_ttf(cx as i32, 486, "ENABLED RAILS", DIM(), 12.1);
 
     // ETH and NOX show live balances; a field still loading shows "fetching"
     // while the link is up, a dash only when there is no route.
@@ -48,20 +48,20 @@ pub fn paint_home_activity(state: &State, fb: &mut PaintBuffer, cx: u32, cw: u32
     rail(fb, cx, 632, col, "PR", b"RSVD", "\u{2014}");
 
     // No transaction index is fetched, so the wallet does not invent history.
-    let _ = fb.text_ttf(rx as i32, 486, "RECENT ACTIVITY", DIM(), 10.5);
+    let _ = fb.text_ttf(rx as i32, 486, "RECENT ACTIVITY", DIM(), 12.1);
     ui::card(fb, rx, 508, col, 116);
-    let _ = fb.text_ttf((rx + 18) as i32, 540, "No transactions yet", MUTED(), 13.0);
-    let _ = fb.text_ttf((rx + 18) as i32, 566, "Sent and received transfers", DIM(), 11.5);
-    let _ = fb.text_ttf((rx + 18) as i32, 584, "will appear here", DIM(), 11.5);
+    let _ = fb.text_ttf((rx + 18) as i32, 540, "No transactions yet", MUTED(), 14.9);
+    let _ = fb.text_ttf((rx + 18) as i32, 566, "Sent and received transfers", DIM(), 13.2);
+    let _ = fb.text_ttf((rx + 18) as i32, 584, "will appear here", DIM(), 13.2);
 }
 
 fn rail(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, sym: &str, tag: &[u8], val: &str) {
     ui::card(fb, x, y, w, 54);
     fb.fill_rect(x, y, 3, 54, ACCENT());
-    let sx = fb.text_ttf((x + 18) as i32, (y + 18) as i32, sym, FG(), 16.0);
+    let sx = fb.text_ttf((x + 18) as i32, (y + 18) as i32, sym, FG(), 18.4);
     ui::badge(fb, sx as u32 + 10, y + 18, tag, LINE2(), MUTED());
-    let vw = fb.measure_ttf(val, 17.0).max(0) as u32;
-    let _ = fb.text_ttf((x + w - 18 - vw) as i32, (y + 17) as i32, val, FG(), 17.0);
+    let vw = fb.measure_ttf(val, 19.5).max(0) as u32;
+    let _ = fb.text_ttf((x + w - 18 - vw) as i32, (y + 17) as i32, val, FG(), 19.5);
 }
 
 fn format_eth(v: u64, out: &mut [u8]) -> usize {

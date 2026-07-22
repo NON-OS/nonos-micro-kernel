@@ -65,7 +65,7 @@ pub fn paint_nox(state: &State, fb: &mut PaintBuffer) {
     stat(fb, cx + 3 * (sw + 16), 146, sw, "NOX BALANCE", bal);
 
     ui::card(fb, cx, 252, cw, 150);
-    let _ = fb.text_ttf((cx + 20) as i32, 270, "NOX ON-CHAIN STATE", DIM(), 10.5);
+    let _ = fb.text_ttf((cx + 20) as i32, 270, "NOX ON-CHAIN STATE", DIM(), 12.1);
     let mut ts_b = [0u8; 48];
     let ts = crate::wallet::nox::live_amount(
         state.nox.stats_ready,
@@ -73,25 +73,27 @@ pub fn paint_nox(state: &State, fb: &mut PaintBuffer) {
         up,
         &mut ts_b,
     );
-    let _ = fb.text_ttf((cx + 20) as i32, 300, "Total staked", MUTED(), 13.0);
-    let tw = fb.measure_ttf(ts, 15.0).max(0) as u32;
-    let _ = fb.text_ttf((cx + cw - 20 - tw) as i32, 298, ts, FG(), 15.0);
+    let _ = fb.text_ttf((cx + 20) as i32, 300, "Total staked", MUTED(), 14.9);
+    let tw = fb.measure_ttf(ts, 17.2).max(0) as u32;
+    let _ = fb.text_ttf((cx + cw - 20 - tw) as i32, 298, ts, FG(), 17.2);
     let mut sa = [0u8; 13];
     crate::wallet::hex::short_addr(&crate::wallet::nox::constants::STAKING_PROXY, &mut sa);
-    let _ = fb.text_ttf((cx + 20) as i32, 328, "Staking contract", MUTED(), 13.0);
+    let _ = fb.text_ttf((cx + 20) as i32, 328, "Staking contract", MUTED(), 14.9);
     let _ = fb.text_ttf_mono(
         (cx + cw - 20 - 96) as i32,
         328,
         core::str::from_utf8(&sa).unwrap_or(""),
         DIM(),
-        13.0,
+        14.9,
+
     );
     let _ = fb.text_ttf(
         (cx + 20) as i32,
         360,
         "Read live from Ethereum mainnet (chain 1).",
         MUTED(),
-        13.0,
+        14.9,
+
     );
 
     super::paint_nox_stake::paint_nox_stake(state, fb);
@@ -99,6 +101,6 @@ pub fn paint_nox(state: &State, fb: &mut PaintBuffer) {
 
 fn stat(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &str, val: &str) {
     ui::card(fb, x, y, w, 90);
-    let _ = fb.text_ttf((x + 18) as i32, (y + 18) as i32, label, DIM(), 10.5);
-    let _ = fb.text_ttf((x + 18) as i32, (y + 40) as i32, val, FG(), 28.0);
+    let _ = fb.text_ttf((x + 18) as i32, (y + 18) as i32, label, DIM(), 12.1);
+    let _ = fb.text_ttf((x + 18) as i32, (y + 40) as i32, val, FG(), 32.2);
 }

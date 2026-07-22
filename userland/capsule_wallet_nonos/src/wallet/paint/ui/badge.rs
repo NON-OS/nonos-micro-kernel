@@ -20,10 +20,10 @@ use nonos_app_skeleton::PaintBuffer;
 // and rail chips. Returns the width drawn so callers can lay out siblings.
 pub fn badge(fb: &mut PaintBuffer, x: u32, y: u32, text: &[u8], bg: u32, fg: u32) -> u32 {
     let s = core::str::from_utf8(text).unwrap_or("");
-    let tw = fb.measure_ttf(s, 11.0).max(0) as u32;
+    let tw = fb.measure_ttf(s, 12.6).max(0) as u32;
     let w = tw + 18;
     fb.fill_rect(x, y, w, 20, bg);
-    let _ = fb.text_ttf((x + 9) as i32, (y + 4) as i32, s, fg, 11.0);
+    let _ = fb.text_ttf((x + 9) as i32, (y + 4) as i32, s, fg, 12.6);
     w
 }
 

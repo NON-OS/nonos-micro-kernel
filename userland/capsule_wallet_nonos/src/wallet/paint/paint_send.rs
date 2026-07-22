@@ -32,7 +32,7 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
     asset_tab(fb, ix + iw - 76, 152, "NOX", state.send_token == 1);
 
     // The recipient exactly as typed, prefixed 0x, or an empty-field prompt.
-    let _ = fb.text_ttf(ix as i32, 162, "RECIPIENT", DIM(), 10.5);
+    let _ = fb.text_ttf(ix as i32, 162, "RECIPIENT", DIM(), 12.1);
     let mut to = [0u8; 42];
     to[0] = b'0';
     to[1] = b'x';
@@ -49,12 +49,13 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
         232,
         if ok { "20-byte address" } else { "enter 40 hex characters" },
         if ok { ACCENT() } else { MUTED() },
-        12.0,
+        13.8,
+
     );
 
     // The amount exactly as entered (milli-units), in the selected asset.
     let amount_label = if state.send_token == 1 { "AMOUNT (NOX)" } else { "AMOUNT (ETH)" };
-    let _ = fb.text_ttf(ix as i32, 272, amount_label, DIM(), 10.5);
+    let _ = fb.text_ttf(ix as i32, 272, amount_label, DIM(), 12.1);
     let mut ab = [0u8; 24];
     let an = format_milli_eth(state.send_amount_milli_eth, &mut ab);
     field(
@@ -67,7 +68,7 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
     );
 
     // The live network fee, not a fabricated dollar figure.
-    let _ = fb.text_ttf(ix as i32, 352, "NETWORK FEE", DIM(), 10.5);
+    let _ = fb.text_ttf(ix as i32, 352, "NETWORK FEE", DIM(), 12.1);
     ui::bordered(fb, ix, 372, iw, 42, PANEL_2(), LINE2());
     let mut gb = [0u8; 32];
     let gn = gwei(state.fee_wei, &mut gb);
@@ -76,9 +77,9 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
     } else {
         "fetching\u{2026}"
     };
-    let _ = fb.text_ttf((ix + 14) as i32, 384, "Gas price", MUTED(), 14.0);
-    let fw = fb.measure_ttf(fee_txt, 15.0).max(0) as u32;
-    let _ = fb.text_ttf((ix + iw - 14 - fw) as i32, 383, fee_txt, FG(), 15.0);
+    let _ = fb.text_ttf((ix + 14) as i32, 384, "Gas price", MUTED(), 16.1);
+    let fw = fb.measure_ttf(fee_txt, 17.2).max(0) as u32;
+    let _ = fb.text_ttf((ix + iw - 14 - fw) as i32, 383, fee_txt, FG(), 17.2);
 
     ui::bordered(fb, ix, 432, iw, 40, 0xFF17_130A, 0xFF5A_4A1E);
     fb.fill_rect(ix + 14, 446, 10, 10, AMBER());
@@ -87,7 +88,8 @@ pub fn paint_send(state: &State, fb: &mut PaintBuffer) {
         444,
         "Verify the recipient. Transfers cannot be reversed.",
         AMBER(),
-        13.0,
+        14.9,
+
     );
 
     ui::primary(fb, ix, 500, 150, b"Sign & send");
@@ -129,12 +131,12 @@ fn asset_tab(fb: &mut PaintBuffer, x: u32, y: u32, label: &str, on: bool) {
         ui::edge(fb, x, y, 74, 26, LINE2());
     }
     let c = if on { INK() } else { MUTED() };
-    let tw = fb.measure_ttf(label, 12.0).max(0) as u32;
-    let _ = fb.text_ttf((x + 37 - tw / 2) as i32, (y + 6) as i32, label, c, 12.0);
+    let tw = fb.measure_ttf(label, 13.8).max(0) as u32;
+    let _ = fb.text_ttf((x + 37 - tw / 2) as i32, (y + 6) as i32, label, c, 13.8);
 }
 
 fn field(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, val: &str, active: bool) {
     let e = if active { ACCENT() } else { LINE2() };
     ui::bordered(fb, x, y, w, 40, PANEL_2(), e);
-    let _ = fb.text_ttf((x + 12) as i32, (y + 11) as i32, val, FG(), 15.0);
+    let _ = fb.text_ttf((x + 12) as i32, (y + 11) as i32, val, FG(), 17.2);
 }

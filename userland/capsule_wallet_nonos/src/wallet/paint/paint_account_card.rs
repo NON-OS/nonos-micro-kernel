@@ -30,12 +30,12 @@ pub fn paint_account_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w
         short_addr(&state.address, &mut sa);
         let label = core::str::from_utf8(&sa).unwrap_or("");
         let lx =
-            fb.text_ttf((x + 20) as i32, (y + 18) as i32, "TOTAL BALANCE  \u{00b7}  ", DIM(), 10.5);
-        let _ = fb.text_ttf(lx, (y + 18) as i32, label, DIM(), 10.5);
-        let aw = fb.measure_ttf("ACTIVE", 11.0).max(0) as u32 + 18;
+            fb.text_ttf((x + 20) as i32, (y + 18) as i32, "TOTAL BALANCE  \u{00b7}  ", DIM(), 12.1);
+        let _ = fb.text_ttf(lx, (y + 18) as i32, label, DIM(), 12.1);
+        let aw = fb.measure_ttf("ACTIVE", 12.6).max(0) as u32 + 18;
         ui::badge(fb, x + w - 20 - aw, y + 15, b"ACTIVE", GREEN(), GREEN_INK());
     } else {
-        let _ = fb.text_ttf((x + 20) as i32, (y + 18) as i32, "NO ACCOUNT YET", DIM(), 10.5);
+        let _ = fb.text_ttf((x + 20) as i32, (y + 18) as i32, "NO ACCOUNT YET", DIM(), 12.1);
     }
 
     // Headline the NOX balance (the native token), with the live ETH balance on
@@ -49,8 +49,8 @@ pub fn paint_account_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w
         up,
         &mut nb,
     );
-    let pen = fb.text_ttf((x + 20) as i32, (y + 44) as i32, nox, FG(), 40.0);
-    let _ = fb.text_ttf(pen + 10, (y + 62) as i32, "NOX", ACCENT(), 18.0);
+    let pen = fb.text_ttf((x + 20) as i32, (y + 44) as i32, nox, FG(), 46.0);
+    let _ = fb.text_ttf(pen + 10, (y + 62) as i32, "NOX", ACCENT(), 20.7);
 
     let mut eb = [0u8; 40];
     let eth = if state.balance_ready {
@@ -61,8 +61,8 @@ pub fn paint_account_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w
     } else {
         "\u{2014}"
     };
-    let ex = fb.text_ttf((x + 20) as i32, (y + 102) as i32, eth, MUTED(), 15.0);
-    let _ = fb.text_ttf(ex + 6, (y + 103) as i32, "ETH", DIM(), 13.0);
+    let ex = fb.text_ttf((x + 20) as i32, (y + 102) as i32, eth, MUTED(), 17.2);
+    let _ = fb.text_ttf(ex + 6, (y + 103) as i32, "ETH", DIM(), 14.9);
 }
 
 fn format_eth(v: u64, out: &mut [u8]) -> usize {

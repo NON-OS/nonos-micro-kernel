@@ -23,17 +23,18 @@ use crate::wallet::theme::{ACCENT, AMBER, AMBER_INK, DIM, FG, GREEN, GREEN_INK, 
 pub fn paint_proof_view(state: &State, fb: &mut PaintBuffer) {
     let cx = 226u32;
     let cw = fb.width.saturating_sub(252);
-    let _ = fb.text_ttf(cx as i32, 160, "SIGNED TRANSACTIONS", DIM(), 10.5);
+    let _ = fb.text_ttf(cx as i32, 160, "SIGNED TRANSACTIONS", DIM(), 12.1);
 
     if !state.tx_ready {
         ui::card(fb, cx, 180, cw, 96);
-        let _ = fb.text_ttf((cx + 20) as i32, 212, "No transactions yet", MUTED(), 15.0);
+        let _ = fb.text_ttf((cx + 20) as i32, 212, "No transactions yet", MUTED(), 17.2);
         let _ = fb.text_ttf(
             (cx + 20) as i32,
             238,
             "A signed transfer and its on-chain receipt appear here.",
             DIM(),
-            12.5,
+            14.4,
+
         );
         return;
     }
@@ -57,7 +58,7 @@ pub fn paint_proof_view(state: &State, fb: &mut PaintBuffer) {
 
     ui::card(fb, cx, 180, cw, 60);
     fb.fill_rect(cx, 180, 3, 60, ACCENT());
-    let _ = fb.text_ttf_mono((cx + 20) as i32, 192, hash, FG(), 16.0);
+    let _ = fb.text_ttf_mono((cx + 20) as i32, 192, hash, FG(), 18.4);
     let mut meta = [0u8; 32];
     let ml = kind_meta(state.tx_kind, &mut meta);
     let _ = fb.text_ttf(
@@ -65,9 +66,10 @@ pub fn paint_proof_view(state: &State, fb: &mut PaintBuffer) {
         216,
         core::str::from_utf8(&meta[..ml]).unwrap_or(""),
         DIM(),
-        12.5,
+        14.4,
+
     );
-    let bw = fb.measure_ttf(core::str::from_utf8(tag).unwrap_or(""), 11.0).max(0) as u32 + 18;
+    let bw = fb.measure_ttf(core::str::from_utf8(tag).unwrap_or(""), 12.6).max(0) as u32 + 18;
     ui::badge(fb, cx + cw - 20 - bw, 197, tag, bg, fg);
 }
 

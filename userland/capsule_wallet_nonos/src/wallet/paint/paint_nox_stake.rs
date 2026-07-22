@@ -32,24 +32,24 @@ pub fn paint_nox_stake(state: &State, fb: &mut PaintBuffer) {
     let amt = state.stake_amount.min(crate::wallet::state::MAX_STAKE);
     let track = lw - 40;
     let fill = track * amt / crate::wallet::state::MAX_STAKE;
-    let _ = fb.text_ttf((cx + 20) as i32, 494, "Amount", MUTED(), 13.0);
+    let _ = fb.text_ttf((cx + 20) as i32, 494, "Amount", MUTED(), 14.9);
     let mut ab = [0u8; 24];
     let an = label(&mut ab, b"", amt, b" NOX");
     let av = core::str::from_utf8(&ab[..an]).unwrap_or("0");
-    let aw = fb.measure_ttf(av, 14.0).max(0) as u32;
-    let _ = fb.text_ttf((cx + lw - 20 - aw) as i32, 493, av, CYAN(), 14.0);
+    let aw = fb.measure_ttf(av, 16.1).max(0) as u32;
+    let _ = fb.text_ttf((cx + lw - 20 - aw) as i32, 493, av, CYAN(), 16.1);
     fb.fill_rect(cx + 20, 528, track, 5, PANEL_2());
     fb.fill_rect(cx + 20, 528, fill, 5, ACCENT());
     fb.fill_rect(cx + 13 + fill, 523, 14, 14, CYAN());
-    let _ = fb.text_ttf((cx + 20) as i32, 546, "0", DIM(), 12.0);
+    let _ = fb.text_ttf((cx + 20) as i32, 546, "0", DIM(), 13.8);
     let mut av_b = [0u8; 48];
     let avail =
         crate::wallet::nox::amount_str(state.nox.balance_ready, &state.nox.balance_wei, &mut av_b);
     let mut avail_line = [0u8; 60];
     let al = build_avail(avail, &mut avail_line);
     let aline = core::str::from_utf8(&avail_line[..al]).unwrap_or("");
-    let alw = fb.measure_ttf(aline, 12.0).max(0) as u32;
-    let _ = fb.text_ttf((cx + lw - 20 - alw) as i32, 546, aline, DIM(), 12.0);
+    let alw = fb.measure_ttf(aline, 13.8).max(0) as u32;
+    let _ = fb.text_ttf((cx + lw - 20 - alw) as i32, 546, aline, DIM(), 13.8);
 
     // Staking is approve then stake; the label tracks which step is next.
     let mut bb = [0u8; 32];
@@ -66,20 +66,20 @@ pub fn paint_nox_stake(state: &State, fb: &mut PaintBuffer) {
     let rx = cx + lw + 16;
     let rw = cw - lw - 16;
     ui::card(fb, rx, 418, rw, 116);
-    let _ = fb.text_ttf((rx + 20) as i32, 436, "CLAIMABLE REWARDS", DIM(), 10.5);
+    let _ = fb.text_ttf((rx + 20) as i32, 436, "CLAIMABLE REWARDS", DIM(), 12.1);
     let mut cl_b = [0u8; 48];
     let claim = crate::wallet::nox::amount_str(
         state.nox.claimable_ready,
         &state.nox.claimable_wei,
         &mut cl_b,
     );
-    let _ = fb.text_ttf((rx + 20) as i32, 458, claim, GREEN(), 22.0);
+    let _ = fb.text_ttf((rx + 20) as i32, 458, claim, GREEN(), 25.3);
     ui::card(fb, rx, 546, rw, 96);
-    let _ = fb.text_ttf((rx + 20) as i32, 564, "LOCK PERIOD", DIM(), 10.5);
-    let _ = fb.text_ttf((rx + 20) as i32, 586, "\u{2014}", FG(), 24.0);
+    let _ = fb.text_ttf((rx + 20) as i32, 564, "LOCK PERIOD", DIM(), 12.1);
+    let _ = fb.text_ttf((rx + 20) as i32, 586, "\u{2014}", FG(), 27.6);
 
     ui::card(fb, cx, 668, cw, 92);
-    let _ = fb.text_ttf((cx + 20) as i32, 682, "Where the fee goes", FG(), 14.0);
+    let _ = fb.text_ttf((cx + 20) as i32, 682, "Where the fee goes", FG(), 16.1);
     fee(fb, cx, 708, "protocol fee", "treasury / NOX stakers / buyback-burn");
     fee(fb, cx, 730, "the relayer", "fronts the gas for a stake");
 }
@@ -113,12 +113,12 @@ fn tab(fb: &mut PaintBuffer, x: u32, y: u32, label: &str, sel: bool) {
         ui::edge(fb, x, y, 200, 36, LINE2());
     }
     let c = if sel { INK() } else { MUTED() };
-    let tw = fb.measure_ttf(label, 13.0).max(0) as u32;
-    let _ = fb.text_ttf((x + 100 - tw / 2) as i32, (y + 11) as i32, label, c, 13.0);
+    let tw = fb.measure_ttf(label, 14.9).max(0) as u32;
+    let _ = fb.text_ttf((x + 100 - tw / 2) as i32, (y + 11) as i32, label, c, 14.9);
 }
 
 fn fee(fb: &mut PaintBuffer, x: u32, y: u32, k: &str, v: &str) {
-    let _ = fb.text_ttf((x + 20) as i32, y as i32, k, CYAN(), 13.0);
-    let _ = fb.text_ttf((x + 150) as i32, y as i32, "\u{203a}", DIM(), 13.0);
-    let _ = fb.text_ttf((x + 180) as i32, y as i32, v, MUTED(), 13.0);
+    let _ = fb.text_ttf((x + 20) as i32, y as i32, k, CYAN(), 14.9);
+    let _ = fb.text_ttf((x + 150) as i32, y as i32, "\u{203a}", DIM(), 14.9);
+    let _ = fb.text_ttf((x + 180) as i32, y as i32, v, MUTED(), 14.9);
 }

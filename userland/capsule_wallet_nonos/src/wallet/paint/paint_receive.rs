@@ -27,17 +27,17 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
     ui::card(fb, cx, 146, 300, 300);
     qr(fb, state, cx + 40, 176);
     let cap = "Scan to send to this account";
-    let cwid = fb.measure_ttf(cap, 13.0).max(0) as u32;
-    let _ = fb.text_ttf((cx + 150 - cwid / 2) as i32, 420, cap, DIM(), 13.0);
+    let cwid = fb.measure_ttf(cap, 14.9).max(0) as u32;
+    let _ = fb.text_ttf((cx + 150 - cwid / 2) as i32, 420, cap, DIM(), 14.9);
 
     let rx = cx + 316;
     let rw = cw - 316;
     ui::card(fb, rx, 146, rw, 116);
-    let _ = fb.text_ttf((rx + 20) as i32, 164, "YOUR ADDRESS", DIM(), 10.5);
+    let _ = fb.text_ttf((rx + 20) as i32, 164, "YOUR ADDRESS", DIM(), 12.1);
     let mut a = [0u8; 42];
     hex_addr(&state.address, &mut a);
     let _ =
-        fb.text_ttf_mono((rx + 20) as i32, 190, core::str::from_utf8(&a).unwrap_or(""), FG(), 15.0);
+        fb.text_ttf_mono((rx + 20) as i32, 190, core::str::from_utf8(&a).unwrap_or(""), FG(), 17.2);
     ui::primary(fb, rx + rw - 92, 182, 72, b"COPY");
     ui::outline(fb, rx + 20, 222, 88, b"Share");
     ui::outline(fb, rx + 118, 222, 100, b"Save QR");
@@ -53,16 +53,17 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
             402,
             "PRIVATE KEY \u{2014} never share this",
             ACCENT(),
-            10.5,
+            12.1,
+
         );
         let key = core::str::from_utf8(&state.export_hex).unwrap_or("");
         let cut = 34.min(key.len());
-        let _ = fb.text_ttf_mono((rx + 20) as i32, 430, &key[..cut], FG(), 13.0);
-        let _ = fb.text_ttf_mono((rx + 20) as i32, 452, &key[cut..], FG(), 13.0);
+        let _ = fb.text_ttf_mono((rx + 20) as i32, 430, &key[..cut], FG(), 14.9);
+        let _ = fb.text_ttf_mono((rx + 20) as i32, 452, &key[cut..], FG(), 14.9);
         ui::outline(fb, rx + 300, 392, 96, b"Hide");
     } else {
-        let _ = fb.text_ttf((rx + 20) as i32, 402, "ACCOUNT", DIM(), 10.5);
-        let _ = fb.text_ttf_mono((rx + 20) as i32, 432, "m/44'/60'/0'/0/0", MUTED(), 13.0);
+        let _ = fb.text_ttf((rx + 20) as i32, 402, "ACCOUNT", DIM(), 12.1);
+        let _ = fb.text_ttf_mono((rx + 20) as i32, 432, "m/44'/60'/0'/0/0", MUTED(), 14.9);
         if state.address_ready {
             let mut full = [0u8; 42];
             hex_addr(&state.address, &mut full);
@@ -71,11 +72,12 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
                 456,
                 core::str::from_utf8(&full).unwrap_or(""),
                 FG(),
-                13.0,
+                14.9,
+
             );
             ui::outline(fb, rx + 300, 392, 96, b"Export (K)");
         } else {
-            let _ = fb.text_ttf((rx + 20) as i32, 456, "Generate an account first", MUTED(), 13.0);
+            let _ = fb.text_ttf((rx + 20) as i32, 456, "Generate an account first", MUTED(), 14.9);
         }
     }
 }
@@ -85,7 +87,7 @@ pub fn paint_receive(state: &State, fb: &mut PaintBuffer) {
 fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
     ui::card(fb, rx, 278, rw, 96);
     if state.import_active {
-        let _ = fb.text_ttf((rx + 20) as i32, 296, "IMPORT PRIVATE KEY", DIM(), 10.5);
+        let _ = fb.text_ttf((rx + 20) as i32, 296, "IMPORT PRIVATE KEY", DIM(), 12.1);
         // A proper input well: the border lights teal while active, the typed
         // key is masked to dots, and a progress underline fills toward 64.
         let fw = rw - 40;
@@ -106,15 +108,16 @@ fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
             324,
             core::str::from_utf8(&dots[..p]).unwrap_or("0x"),
             FG(),
-            13.0,
+            14.9,
+
         );
         let mut nb = [0u8; 20];
         let dn = super::format_u64::format_u64(state.import_len as u64, &mut nb);
         let mut cnt = [0u8; 8];
         let cl = build_count(&nb[..dn], &mut cnt);
         let cs = core::str::from_utf8(&cnt[..cl]).unwrap_or("");
-        let cw = fb.measure_ttf(cs, 12.0).max(0) as u32;
-        let _ = fb.text_ttf((rx + rw - 32 - cw) as i32, 326, cs, MUTED(), 12.0);
+        let cw = fb.measure_ttf(cs, 13.8).max(0) as u32;
+        let _ = fb.text_ttf((rx + rw - 32 - cw) as i32, 326, cs, MUTED(), 13.8);
         let fill = (fw - 4) * (state.import_len.min(64) as u32) / 64;
         fb.fill_rect(rx + 22, 348, fill, 2, ACCENT());
         let _ = fb.text_ttf(
@@ -122,10 +125,11 @@ fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
             360,
             "Enter to import  \u{00b7}  Esc to cancel",
             DIM(),
-            11.5,
+            13.2,
+
         );
     } else {
-        let _ = fb.text_ttf((rx + 20) as i32, 296, "SET UP THIS WALLET", DIM(), 10.5);
+        let _ = fb.text_ttf((rx + 20) as i32, 296, "SET UP THIS WALLET", DIM(), 12.1);
         ui::primary(fb, rx + 20, 318, 150, b"Generate (G)");
         ui::outline(fb, rx + 182, 318, 180, b"Import key (I)");
         let _ = fb.text_ttf(
@@ -133,7 +137,8 @@ fn setup(fb: &mut PaintBuffer, state: &State, rx: u32, rw: u32) {
             366,
             "Generate makes a fresh key. Import hands yours straight to the keyring, never stored here.",
             DIM(),
-            11.5,
+            13.2,
+
         );
     }
 }

@@ -22,8 +22,8 @@ pub fn paint_sysbar(fb: &mut PaintBuffer) {
     fb.fill_rect(0, 0, WIDTH, 34, SYSBAR());
     fb.fill_rect(0, 33, WIDTH, 1, LINE());
     fb.fill_rect(16, 12, 11, 11, ACCENT());
-    let _ = fb.text_ttf_mono(34, 9, "CAPSULE_WALLET_NONOS  CPL=3", MUTED(), 11.0);
+    let _ = fb.text_ttf_mono(34, 9, "CAPSULE_WALLET_NONOS  CPL=3", MUTED(), 12.6);
     let right = "12:39  fps 60  1280x800";
-    let w = fb.measure_ttf_mono(right, 11.0).max(0) as u32;
-    let _ = fb.text_ttf_mono((WIDTH - 16 - w) as i32, 9, right, DIM(), 11.0);
+    let w = fb.measure_ttf_mono(right, 12.6).max(0) as u32;
+    let _ = fb.text_ttf_mono((WIDTH - 16 - w) as i32, 9, right, DIM(), 12.6);
 }

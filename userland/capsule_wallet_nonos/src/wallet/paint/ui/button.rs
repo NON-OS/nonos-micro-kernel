@@ -39,9 +39,9 @@ pub fn outline(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
 
 fn label(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8], color: u32) {
     let s = core::str::from_utf8(text).unwrap_or("");
-    let tw = fb.measure_ttf(s, 14.0).max(0) as u32;
+    let tw = fb.measure_ttf(s, 16.1).max(0) as u32;
     let tx = x + w.saturating_sub(tw) / 2;
-    let _ = fb.text_ttf(tx as i32, (y + 12) as i32, s, color, 14.0);
+    let _ = fb.text_ttf(tx as i32, (y + 12) as i32, s, color, 16.1);
 }
 
 fn border(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, c: u32) {
