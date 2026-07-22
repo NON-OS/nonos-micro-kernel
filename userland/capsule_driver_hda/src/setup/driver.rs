@@ -16,7 +16,7 @@
 
 use nonos_libc::DmaMapOut;
 
-use crate::controller::{CodecProbe, MAX_CODECS};
+use crate::controller::{CodecProbe, OutputPath, MAX_CODECS};
 use crate::handles::BrokerHandles;
 use crate::regs::Regs;
 
@@ -26,4 +26,5 @@ pub struct Driver {
     pub codecs: [CodecProbe; MAX_CODECS],
     pub corb: DmaMapOut,
     pub rirb: DmaMapOut,
+    pub path: OutputPath,
 }

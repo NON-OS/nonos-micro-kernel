@@ -36,3 +36,33 @@ pub(super) fn mark_corb_vid(vid: u16) {
     n += 1;
     mk_debug(buf.as_ptr(), n);
 }
+
+fn put_str(buf: &mut [u8], n: usize, s: &[u8]) -> usize {
+    buf[n..n + s.len()].copy_from_slice(s);
+    n + s.len()
+}
+
+fn put_dec(buf: &mut [u8], mut n: usize, v: u8) -> usize {
+    if v >= 100 {
+        buf[n] = b'0' + v / 100;
+        n += 1;
+    }
+    if v >= 10 {
+        buf[n] = b'0' + (v / 10) % 10;
+        n += 1;
+    }
+    buf[n] = b'0' + v % 10;
+    n + 1
+}
+
+pub(super) fn mark_path(cad: u8, dac: u8, pin: u8) {
+    let mut buf = [0u8; 48];
+    let mut n = put_str(&mut buf, 0, b"[HDA] path cad=");
+    n = put_dec(&mut buf, n, cad);
+    n = put_str(&mut buf, n, b" dac=");
+    n = put_dec(&mut buf, n, dac);
+    n = put_str(&mut buf, n, b" pin=");
+    n = put_dec(&mut buf, n, pin);
+    buf[n] = b'\n';
+    mk_debug(buf.as_ptr(), n + 1);
+}
