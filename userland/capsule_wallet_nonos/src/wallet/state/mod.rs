@@ -18,6 +18,7 @@ mod default_net;
 mod empty_rail;
 mod filter_rails;
 mod hydrate;
+mod live_view;
 mod new;
 mod rail_allowed;
 mod record_tx;
@@ -25,6 +26,7 @@ mod types;
 
 pub use default_net::default_net;
 pub use hydrate::hydrate;
+pub use live_view::needs_live_data;
 pub use new::new_state;
 pub use record_tx::record_tx;
 pub use types::{

@@ -22,7 +22,7 @@ mod key_type_to_u8;
 mod store;
 mod store_error;
 
-pub use constants::{MAX_KEYS, MAX_KEY_SIZE};
+pub use constants::{MAX_KEYS, MAX_KEYS_PER_OWNER, MAX_KEY_SIZE};
 pub(in crate::store) use key_entry::KeyEntry;
 pub use key_metadata::KeyMetadata;
 pub use key_type::KeyType;

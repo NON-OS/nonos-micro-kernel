@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::{KeyEntry, KeyType, Store, StoreError, MAX_KEYS, MAX_KEY_SIZE};
+use super::types::{
+    KeyEntry, KeyType, Store, StoreError, MAX_KEYS, MAX_KEYS_PER_OWNER, MAX_KEY_SIZE,
+};
 
 impl Store {
     pub fn store(
@@ -29,6 +31,12 @@ impl Store {
             return Err(StoreError::InvalidArgument);
         }
         if self.entries.len() >= MAX_KEYS {
+            return Err(StoreError::Full);
+        }
+        // One owner cannot consume more than its share of the store, so a
+        // single misbehaving capsule cannot deny keys to the others.
+        let owned = self.entries.values().filter(|e| e.owner_pid == owner_pid).count();
+        if owned >= MAX_KEYS_PER_OWNER {
             return Err(StoreError::Full);
         }
         // Never hand out an id that is still occupied: after u32 wraparound a

@@ -19,14 +19,7 @@ use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, InputKind, 
 use super::event::on_event;
 use super::manifest::manifest;
 use super::paint::paint;
-use super::state::{hydrate, new_state, State, VIEW_HOME, VIEW_NOX, VIEW_SEND, VIEW_SHIELDED};
-
-// Screens that display live on-chain data and so warrant a background probe.
-// Receive (address, QR, setup) and Proof (a static record) do not, so they
-// never trigger a blocking network read.
-fn needs_live_data(view: u8) -> bool {
-    matches!(view, VIEW_HOME | VIEW_SEND | VIEW_NOX | VIEW_SHIELDED)
-}
+use super::state::{hydrate, needs_live_data, new_state, State};
 
 pub struct Wallet {
     state: State,
