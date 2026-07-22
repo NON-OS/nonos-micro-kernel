@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod codec_probe;
+pub(crate) mod corb;
 mod immediate;
 mod info;
 mod reset;
