@@ -17,9 +17,9 @@
 use nonos_libc::mk_time_millis;
 
 use crate::render::layout::{bottom_dock_rect, TASKBAR_ENTRY_W};
-use crate::server::handlers::launcher_request;
+use crate::server::handlers::launcher_request::{self, LaunchOutcome};
 use crate::server::refresh_taskbar::refresh_taskbar;
-use crate::state::{mark_taskbar_launch, Context, LAUNCHER_APPS};
+use crate::state::{mark_taskbar_launch, Context, NotifyLevel, LAUNCHER_APPS};
 
 pub fn handle(ctx: &mut Context, x: u32, y: u32) {
     let bottom = bottom_dock_rect(ctx.width, ctx.height);
@@ -30,10 +30,24 @@ pub fn handle(ctx: &mut Context, x: u32, y: u32) {
             && y >= bottom.y + 10
             && y < bottom.y + bottom.height - 10
         {
-            if launcher_request::request(app) {
-                mark_taskbar_launch(&mut ctx.taskbar, index, mk_time_millis());
-                refresh_taskbar(ctx);
+            let now = mk_time_millis();
+            // Surface the result on screen: with no serial port a dock click is
+            // otherwise silent, so a toast says which branch it took.
+            match launcher_request::request(app) {
+                LaunchOutcome::Queued => {
+                    ctx.toasts.push(b"opening a new window", NotifyLevel::Info, now);
+                    mark_taskbar_launch(&mut ctx.taskbar, index, now);
+                }
+                LaunchOutcome::Focused => {
+                    ctx.toasts
+                        .push(b"window limit reached, focusing", NotifyLevel::Warn, now);
+                    mark_taskbar_launch(&mut ctx.taskbar, index, now);
+                }
+                LaunchOutcome::Failed => {
+                    ctx.toasts.push(b"could not open window", NotifyLevel::Error, now);
+                }
             }
+            refresh_taskbar(ctx);
             return;
         }
         row_x += TASKBAR_ENTRY_W + 6;
