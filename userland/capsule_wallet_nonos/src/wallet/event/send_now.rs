@@ -14,26 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod broadcast;
-mod edit_amount;
-mod edit_nonce;
-mod eth_value;
-mod export_key;
-mod generate;
-mod hex_digit;
-mod import;
-mod on_event;
-mod on_key;
-mod on_pointer;
-mod on_pointer_view;
-mod probe_tick;
-mod recipient;
-mod send_input;
-mod send_now;
-mod sign_both;
-mod sign_eth;
-mod sign_nox;
-mod sign_result;
+use nonos_app_skeleton::EventOutcome;
 
-pub use on_event::on_event;
-pub use probe_tick::probe_tick;
+use crate::wallet::state::State;
+
+// One press signs the transfer and, if the signature succeeded, broadcasts it.
+// The button reads "Sign & send", so a click does exactly that: build and sign
+// the EIP-1559 transfer in the keyring, then push the raw transaction over the
+// RPC. A failure at either step leaves a clear status and stops.
+pub fn send_now(state: &mut State) -> EventOutcome {
+    let signed = super::sign_eth::sign_eth(state);
+    if state.tx_ready && !state.tx_raw.is_empty() {
+        return super::broadcast::broadcast(state);
+    }
+    signed
+}

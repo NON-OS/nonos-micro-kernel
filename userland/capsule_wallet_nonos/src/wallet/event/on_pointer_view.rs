@@ -56,26 +56,14 @@ pub(super) fn receive(state: &mut State, x: u32, y: u32) -> EventOutcome {
 }
 
 pub(super) fn send(state: &mut State, x: u32, y: u32) -> EventOutcome {
+    // Coordinates match paint_send.rs: card at cx=226, fields inset at ix=246.
     if hit(x, y, 246, 182, 600, 40) {
         state.send_focus = SEND_FIELD_TO;
-    } else if hit(x, y, 246, 342, 508, 40) {
+    } else if hit(x, y, 246, 292, 600, 40) {
         state.send_focus = SEND_FIELD_AMOUNT;
-    } else if hit(x, y, 750, 318, 44, 24) {
-        state.usd_mode = false;
-    } else if hit(x, y, 794, 318, 44, 24) {
-        state.usd_mode = true;
-    } else if hit(x, y, 246, 440, 192, 58) {
-        state.fee_tier = 0;
-    } else if hit(x, y, 450, 440, 192, 58) {
-        state.fee_tier = 1;
-    } else if hit(x, y, 654, 440, 192, 58) {
-        state.fee_tier = 2;
-    } else if hit(x, y, 246, 636, 150, 42) {
-        return super::sign_eth::sign_eth(state);
-    } else if hit(x, y, 408, 636, 150, 42) {
-        return super::sign_both::sign_both(state);
-    } else if hit(x, y, 910, 470, 324, 42) {
-        return super::broadcast::broadcast(state);
+    } else if hit(x, y, 246, 500, 150, 42) {
+        // "Sign & send": sign the transfer and broadcast it in one press.
+        return super::send_now::send_now(state);
     } else {
         return EventOutcome::Idle;
     }
@@ -97,17 +85,16 @@ pub(super) fn proof(state: &mut State, x: u32, y: u32) -> EventOutcome {
 }
 
 pub(super) fn nox(state: &mut State, x: u32, y: u32) -> EventOutcome {
+    // Coordinates match paint_nox_stake.rs: card at cx=226, controls inset 20.
     if hit(x, y, 246, 438, 200, 36) {
         state.stake_unstake = 0;
     } else if hit(x, y, 446, 438, 200, 36) {
         state.stake_unstake = 1;
-    } else if hit(x, y, 246, 516, 560, 30) {
+    } else if hit(x, y, 246, 520, 560, 26) {
         let rel = x.saturating_sub(246).min(560);
         state.stake_amount = rel * crate::wallet::state::MAX_STAKE / 560;
-    } else if hit(x, y, 246, 626, 560, 42) {
+    } else if hit(x, y, 246, 596, 560, 42) {
         return super::sign_nox::sign_nox(state);
-    } else if hit(x, y, 862, 496, 372, 42) {
-        return super::probe_tick::probe_kick(state);
     } else {
         return EventOutcome::Idle;
     }
