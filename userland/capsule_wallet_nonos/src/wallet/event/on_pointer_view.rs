@@ -40,7 +40,7 @@ pub(super) fn receive(state: &mut State, x: u32, y: u32) -> EventOutcome {
     use crate::wallet::paint::{GEN_BTN_H, GEN_BTN_W, GEN_BTN_X, GEN_BTN_Y};
     if hit(x, y, GEN_BTN_X, GEN_BTN_Y, GEN_BTN_W, GEN_BTN_H) || hit(x, y, 1104, 320, 130, 42) {
         return if state.address_ready {
-            super::probe_net::probe_net(state)
+            super::probe_tick::probe_kick(state)
         } else {
             super::generate::generate(state)
         };
@@ -100,7 +100,7 @@ pub(super) fn nox(state: &mut State, x: u32, y: u32) -> EventOutcome {
     } else if hit(x, y, 246, 626, 560, 42) {
         return super::sign_nox::sign_nox(state);
     } else if hit(x, y, 862, 496, 372, 42) {
-        return super::probe_net::probe_net(state);
+        return super::probe_tick::probe_kick(state);
     } else {
         return EventOutcome::Idle;
     }

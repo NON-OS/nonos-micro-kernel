@@ -90,7 +90,7 @@ fn submit(state: &mut State) -> EventOutcome {
                 state.address_ready = true;
                 state.import_active = false;
                 state.status = b"wallet imported";
-                super::probe_net::probe_net(state)
+                super::probe_tick::probe_kick(state)
             }
             Err(_) => {
                 state.status = b"address failed";

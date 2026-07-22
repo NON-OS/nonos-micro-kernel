@@ -25,7 +25,7 @@ mod on_event;
 mod on_key;
 mod on_pointer;
 mod on_pointer_view;
-mod probe_net;
+mod probe_tick;
 mod recipient;
 mod send_input;
 mod sign_both;
@@ -34,4 +34,4 @@ mod sign_nox;
 mod sign_result;
 
 pub use on_event::on_event;
-pub use probe_net::probe_net;
+pub use probe_tick::probe_tick;

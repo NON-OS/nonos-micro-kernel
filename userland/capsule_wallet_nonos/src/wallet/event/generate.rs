@@ -30,7 +30,7 @@ pub fn generate(state: &mut State) -> EventOutcome {
                 state.status = b"wallet generated";
                 // Immediately pull live account state (balance/nonce/fee) over
                 // the RPC stack so the wallet is usable the moment it exists.
-                super::probe_net::probe_net(state)
+                super::probe_tick::probe_kick(state)
             }
             Err(_) => {
                 state.status = b"address failed";

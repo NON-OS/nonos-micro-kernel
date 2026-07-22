@@ -108,6 +108,9 @@ pub struct State {
     pub import_len: usize,
     // Live NOX token and staking readout from mainnet eth_call.
     pub nox: crate::wallet::nox::NoxStatus,
+    // Which field the incremental probe refreshes next. One network read per
+    // tick keeps the UI responsive instead of blocking on a burst of them.
+    pub probe_step: u8,
     // Local shielded UTXO set, reconstructed from the note secrets.
     pub notes: crate::wallet::shield::notes::NoteStore,
 }

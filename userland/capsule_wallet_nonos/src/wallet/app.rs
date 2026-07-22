@@ -57,10 +57,11 @@ impl App for Wallet {
             return true;
         }
         self.ticks = self.ticks.wrapping_add(1);
-        // Keep live account state fresh once a wallet exists, without hammering
-        // the RPC: refresh roughly every 15s.
-        if self.state.address_ready && self.ticks % 15 == 0 {
-            super::event::probe_net(&mut self.state);
+        // Refresh one field per pass, never a burst. Each pass blocks on at most
+        // one RPC round-trip, so clicks are always serviced between them; a full
+        // eight-field cycle lands in roughly the old ~15s window.
+        if self.state.address_ready && self.ticks % 2 == 0 {
+            super::event::probe_tick(&mut self.state);
             return true;
         }
         false
