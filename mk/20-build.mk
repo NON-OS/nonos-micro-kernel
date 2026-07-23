@@ -680,6 +680,20 @@ nonos-mk-driver-hda-smoketest-test: $(proof-io_ARTIFACTS) \
 	@$(MAKE) nonos-mk-stark-enroll-capsules
 	$(call nonos_kernel_build,microkernel-driver-hda-smoketest + nonos-stark-attest,microkernel-driver-hda-smoketest$(_boot_comma)nonos-stark-attest)
 
+# Dev fast-path for driver-hda iterations. Depends on the capsules' _MANIFEST
+# (which pulls _BIN + _CERT) but deliberately NOT their _ATTESTATION, so a
+# changed capsule ELF does not pull $(ZK_CAPSULE_ROOT) and re-trigger the
+# ~11min STARK enrollment. The kernel is built with nonos-stark-attest +
+# nonos-zk-rollout: it still runs the real attest verify against whatever
+# (now stale) trailer is embedded, but a mismatch is logged, not fatal.
+# nonos-zk-rollout is compile_error-exclusive with nonos-production, so this
+# can never leak into a ship build. Select it with
+# HDA_BUILD_TARGET=nonos-mk-driver-hda-smoketest-dev-test.
+nonos-mk-driver-hda-smoketest-dev-test: $(proof-io_MANIFEST) $(driver-hda_MANIFEST) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-driver-hda-smoketest, zk-rollout; no enroll)..."
+	$(call nonos_kernel_build,microkernel-driver-hda-smoketest + nonos-zk-rollout,microkernel-driver-hda-smoketest$(_boot_comma)nonos-stark-attest$(_boot_comma)nonos-zk-rollout)
+
 # nonos-mk-desktop-gui-prod: the QEMU-bootable profile. This is NOT just a lighter
 # cut of zerostate; it deliberately excludes the real-hardware driver capsules
 # (iwlwifi, rtl8821ce, rtl8169, e1000, rtl8139, ahci, hda, nvme, usb-msc, i2c)
