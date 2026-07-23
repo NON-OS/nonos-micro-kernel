@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod queue;
 mod tone;
 
+pub use queue::{PcmQueue, QUEUE_BYTES};
 pub use tone::fill;
