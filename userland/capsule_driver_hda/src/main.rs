@@ -19,6 +19,7 @@
 
 extern crate alloc;
 
+mod audio;
 mod constants;
 mod controller;
 mod discover;

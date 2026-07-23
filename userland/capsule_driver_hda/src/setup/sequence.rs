@@ -18,8 +18,12 @@ use nonos_libc::mk_device_release;
 
 use super::mark::{mark, mark_corb_vid, mark_path};
 use super::{claim, dma, irq, mmio, pci};
-use crate::constants::{PARAM_VENDOR_ID, VERB_GET_PARAMETER};
-use crate::controller::{compose_verb, corb, graph, leave_reset, probe, verb, ControllerInfo};
+use crate::audio;
+use crate::constants::{PARAM_VENDOR_ID, STREAM_TAG, VERB_GET_PARAMETER};
+use crate::controller::{
+    compose_verb, corb, graph, layout, leave_reset, probe, stream_run, stream_setup, verb,
+    ControllerInfo, StreamDescriptor, StreamRun, STREAM_OUTPUT,
+};
 use crate::discover::find_hda;
 use crate::error::{HdaError, HdaResult};
 use crate::handles::BrokerHandles;
@@ -62,7 +66,53 @@ pub fn run() -> HdaResult<Driver> {
     mark_path(cad, path.dac_nid, path.pin_nid);
     let codecs = probe(regs, info.statests);
     mark("[HDA] up\n");
-    Ok(Driver { handles, regs, codecs, corb, rirb, path })
+    let (bdl, sample) = dma::map_stream(
+        dev.device_id,
+        claim_epoch,
+        &mmio,
+        &irq,
+        &[corb.grant_id, rirb.grant_id],
+    )?;
+    audio::fill(sample.user_va, dma::SAMPLE_BYTES as usize);
+    stream_setup::configure(regs, corb.user_va, rirb.user_va, &mut wp, cad, path, STREAM_TAG)?;
+    let out = output_descriptor(info)?;
+    stream_run::run(
+        regs,
+        StreamRun {
+            desc: out,
+            tag: STREAM_TAG,
+            bdl_va: bdl.user_va,
+            bdl_dev: bdl.device_addr,
+            sample_dev: sample.device_addr,
+            bytes: dma::SAMPLE_BYTES as u32,
+        },
+    );
+    mark("[HDA] stream-run\n");
+    Ok(Driver {
+        handles,
+        regs,
+        codecs,
+        corb,
+        rirb,
+        path,
+        bdl,
+        sample,
+        stream_off: out.mmio_offset,
+        stream_tag: STREAM_TAG,
+        stream_gi: out.global_index,
+    })
+}
+
+fn output_descriptor(info: ControllerInfo) -> HdaResult<StreamDescriptor> {
+    let (descs, n) = layout(info);
+    let mut i = 0usize;
+    while i < n {
+        if descs[i].kind == STREAM_OUTPUT {
+            return Ok(descs[i]);
+        }
+        i += 1;
+    }
+    Err(HdaError::UnsupportedController)
 }
 
 fn first_codec(statests: u16) -> u8 {

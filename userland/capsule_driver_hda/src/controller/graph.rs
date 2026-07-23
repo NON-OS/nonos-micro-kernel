@@ -27,6 +27,7 @@ const WALK_CAP: u8 = 64;
 pub(crate) struct OutputPath {
     pub(crate) dac_nid: u8,
     pub(crate) pin_nid: u8,
+    pub(crate) afg_nid: u8,
 }
 
 fn get_param(regs: Regs, cv: u64, rv: u64, wp: &mut u16, cad: u8, nid: u8, param: u16) -> Option<u32> {
@@ -69,5 +70,5 @@ pub(crate) fn find_output(regs: Regs, cv: u64, rv: u64, wp: &mut u16, cad: u8) -
         }
         i = i.wrapping_add(1);
     }
-    Some(OutputPath { dac_nid: dac?, pin_nid: pin? })
+    Some(OutputPath { dac_nid: dac?, pin_nid: pin?, afg_nid: afg })
 }

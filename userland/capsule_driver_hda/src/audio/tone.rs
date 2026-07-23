@@ -14,22 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::DmaMapOut;
+use core::ptr::write_volatile;
 
-use crate::controller::{CodecProbe, OutputPath, MAX_CODECS};
-use crate::handles::BrokerHandles;
-use crate::regs::Regs;
+const HALF_PERIOD: usize = 55;
+const AMPLITUDE: i16 = 0x2000;
 
-pub struct Driver {
-    pub handles: BrokerHandles,
-    pub regs: Regs,
-    pub codecs: [CodecProbe; MAX_CODECS],
-    pub corb: DmaMapOut,
-    pub rirb: DmaMapOut,
-    pub path: OutputPath,
-    pub bdl: DmaMapOut,
-    pub sample: DmaMapOut,
-    pub stream_off: u32,
-    pub stream_tag: u8,
-    pub stream_gi: u16,
+pub fn fill(va: u64, bytes: usize) {
+    let frames = bytes / 4;
+    let buf = va as *mut i16;
+    let mut i = 0usize;
+    while i < frames {
+        let sample = if (i / HALF_PERIOD) & 1 == 0 { AMPLITUDE } else { -AMPLITUDE };
+        unsafe {
+            write_volatile(buf.add(i * 2), sample);
+            write_volatile(buf.add(i * 2 + 1), sample);
+        }
+        i += 1;
+    }
 }

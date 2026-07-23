@@ -21,6 +21,8 @@ mod immediate;
 mod info;
 mod reset;
 mod stream_layout;
+pub(crate) mod stream_run;
+pub(crate) mod stream_setup;
 mod streams;
 pub(crate) mod verb;
 
@@ -30,3 +32,5 @@ pub(crate) use immediate::{compose_verb, compose_verb_long};
 pub use info::ControllerInfo;
 pub use reset::leave_reset;
 pub use stream_layout::layout;
+pub(crate) use stream_layout::{StreamDescriptor, STREAM_OUTPUT};
+pub(crate) use stream_run::StreamRun;

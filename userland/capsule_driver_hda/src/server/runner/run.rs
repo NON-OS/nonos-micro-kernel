@@ -33,9 +33,10 @@ pub fn run(driver: Driver) -> ! {
     let mut rx = vec![0u8; HDR_LEN];
     let mut tx = vec![0u8; TX_LEN];
     let mut last_irq_seq = 0u64;
+    let mut played = false;
     let _service_name = SERVICE_NAME;
     loop {
-        poll_irq(&driver, &mut last_irq_seq);
+        poll_irq(&driver, &mut last_irq_seq, &mut played);
         let n = mk_ipc_recv(0, rx.as_mut_ptr(), HDR_LEN, 0);
         if n <= 0 {
             continue;
