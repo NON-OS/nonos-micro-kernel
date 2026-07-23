@@ -45,10 +45,7 @@ pub fn run(driver: Driver) -> ! {
         }
         let req = match decode_request(&rx[..n as usize]) {
             Some(r) => r,
-            None => {
-                error::reply_decode_failed(&mut tx, E_INVAL);
-                continue;
-            }
+            None => continue,
         };
         if req.payload_len != 0 && req.op != OP_WRITE_PCM {
             error::reply_with_status(&mut tx, &req, E_INVAL);
