@@ -18,20 +18,33 @@ use alloc::vec;
 
 use nonos_libc::mk_ipc_recv;
 
+use super::handle;
 use crate::mark::mark;
+use crate::mixer::Mixer;
 use crate::selftest;
 use crate::sink::Sink;
 
-const RX_LEN: usize = 4096;
+const RX_LEN: usize = 4124;
+const TX_LEN: usize = 24;
 const RECV_TIMEOUT_MS: u64 = 1000;
 
 pub fn run() -> ! {
     mark("[AUDIO] up\n");
-    if let Some(sink) = Sink::resolve() {
-        selftest::run(&sink);
+    let mut mixer = Mixer::new();
+    let sink = Sink::resolve();
+    if let Some(ref s) = sink {
+        selftest::run_mix(&mut mixer, s);
+        selftest::run(s);
     }
     let mut rx = vec![0u8; RX_LEN];
+    let mut tx = vec![0u8; TX_LEN];
     loop {
-        let _ = mk_ipc_recv(0, rx.as_mut_ptr(), RX_LEN, RECV_TIMEOUT_MS);
+        let n = mk_ipc_recv(0, rx.as_mut_ptr(), RX_LEN, RECV_TIMEOUT_MS);
+        if n <= 0 {
+            continue;
+        }
+        if let Some(ref s) = sink {
+            handle(&rx[..n as usize], &mut mixer, s, &mut tx);
+        }
     }
 }

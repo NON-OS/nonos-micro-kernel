@@ -14,23 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use super::proto::{E_INVAL, E_OK};
+use crate::mark::mark;
+use crate::mixer::{Mixer, BYTES};
+use crate::sink::Sink;
 
-extern crate alloc;
-
-mod mark;
-mod mixer;
-mod selftest;
-mod server;
-mod sink;
-
-use nonos_libc::{heap_init, mk_exit};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
+pub fn forward(mixer: &Mixer, sink: &Sink, request_id: u32) -> i32 {
+    let mut out = [0u8; BYTES];
+    mixer.write_bytes(&mut out);
+    if sink.write_pcm(&out, request_id) {
+        mark("[AUDIO] served\n");
+        E_OK
+    } else {
+        E_INVAL
     }
-    server::run();
 }

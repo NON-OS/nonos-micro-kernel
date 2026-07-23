@@ -14,6 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod dispatch;
+mod ops;
+pub mod proto;
 mod run;
+mod serve;
+mod tone;
 
+pub use dispatch::handle;
 pub use run::run;
