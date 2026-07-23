@@ -17,5 +17,5 @@
 mod queue;
 mod tone;
 
-pub use queue::{PcmQueue, QUEUE_BYTES};
+pub use queue::PcmQueue;
 pub use tone::fill;

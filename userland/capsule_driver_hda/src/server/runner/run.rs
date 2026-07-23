@@ -37,6 +37,7 @@ pub fn run(driver: Driver) -> ! {
     let mut last_irq_seq = 0u64;
     let mut played = false;
     let mut running = false;
+    let mut pcm_q = crate::audio::PcmQueue::new();
     let _service_name = SERVICE_NAME;
     loop {
         poll_irq(&driver, &mut last_irq_seq, &mut played);
@@ -63,7 +64,7 @@ pub fn run(driver: Driver) -> ! {
                 handlers::stream::handle_stream_start(&driver, &req, &mut tx, &mut running)
             }
             OP_WRITE_PCM => {
-                handlers::write_pcm::handle(&driver, &req, &rx[..n as usize], &mut tx, &mut played)
+                handlers::write_pcm::handle(&mut pcm_q, &req, &rx[..n as usize], &mut tx)
             }
             _ => error::reply_with_status(&mut tx, &req, E_INVAL),
         }

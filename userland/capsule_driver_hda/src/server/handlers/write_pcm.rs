@@ -14,37 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::ptr::write_volatile;
-
-use super::stream::restart;
-use crate::protocol::{Request, E_INVAL, E_OK, HDR_LEN, MAX_PCM_CHUNK};
+use crate::audio::PcmQueue;
+use crate::protocol::{Request, E_AGAIN, E_INVAL, E_OK, HDR_LEN, MAX_PCM_CHUNK};
 use crate::server::error::reply_with_status;
-use crate::setup::Driver;
 
-pub fn handle(driver: &Driver, req: &Request, msg: &[u8], tx: &mut [u8], played: &mut bool) {
+pub fn handle(q: &mut PcmQueue, req: &Request, msg: &[u8], tx: &mut [u8]) {
     let want = req.payload_len as usize;
     let avail = msg.len().saturating_sub(HDR_LEN);
     if want == 0 || want > MAX_PCM_CHUNK || want > avail {
         reply_with_status(tx, req, E_INVAL);
         return;
     }
-    copy_pcm(driver, &msg[HDR_LEN..HDR_LEN + want]);
-    restart(driver);
-    *played = false;
+    if q.is_full_for(want) {
+        reply_with_status(tx, req, E_AGAIN);
+        return;
+    }
+    q.push(&msg[HDR_LEN..HDR_LEN + want]);
     reply_with_status(tx, req, E_OK);
-}
-
-fn copy_pcm(driver: &Driver, pcm: &[u8]) {
-    let cap = driver.sample.length as usize;
-    let n = pcm.len().min(cap);
-    let dst = driver.sample.user_va as *mut u8;
-    let mut i = 0usize;
-    while i < n {
-        unsafe { write_volatile(dst.add(i), pcm[i]) };
-        i += 1;
-    }
-    while i < cap {
-        unsafe { write_volatile(dst.add(i), 0u8) };
-        i += 1;
-    }
 }
