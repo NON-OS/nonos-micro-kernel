@@ -44,7 +44,12 @@ import Nonos.Endpoint
 import Nonos.Epoch
 import Nonos.Fd
 import Nonos.FdAlloc
+import Nonos.FrameNoAlias
+import Nonos.FramebufferSwap
 import Nonos.Futex
+import Nonos.InputConsumer
+import Nonos.ReplyCorrelation
+import Nonos.ServiceRegisterAuth
 import Nonos.Heap
 import Nonos.Interval
 import Nonos.Iommu
