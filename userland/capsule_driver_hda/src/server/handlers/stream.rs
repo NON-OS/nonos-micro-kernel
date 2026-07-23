@@ -14,25 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod decode;
-mod encode;
-mod endpoint;
-mod errno;
-mod header;
-mod limits;
-mod ops;
+use crate::controller::{stream_run, StreamDescriptor, StreamRun};
+use crate::setup::Driver;
 
-pub use decode::decode_request;
-pub use encode::{encode_response_header, write_status};
-pub use endpoint::{KERNEL_REPLY_ENDPOINT, SERVICE_NAME};
-pub use errno::{E_INVAL, E_OK};
-pub use header::{Request, HDR_LEN, RESP_HDR_LEN};
-pub use limits::{
-    CODEC_ENTRY_BYTES, CODEC_LIST_HEADER_BYTES, CODEC_MASK_PAYLOAD_LEN,
-    CONTROLLER_INFO_PAYLOAD_LEN, MAX_CODEC_LIST_BYTES, MAX_STREAM_LAYOUT_BYTES, STATUS_LEN,
-    STREAM_ENTRY_BYTES, STREAM_LAYOUT_HEADER_BYTES,
-};
-pub use ops::{
-    OP_CODEC_LIST, OP_CODEC_MASK, OP_CONTROLLER_INFO, OP_HEALTHCHECK, OP_PLAY_TONE,
-    OP_STREAM_LAYOUT,
-};
+pub(super) fn restart(driver: &Driver) {
+    let desc = StreamDescriptor {
+        kind: 0,
+        local_index: 0,
+        global_index: driver.stream_gi,
+        mmio_offset: driver.stream_off,
+    };
+    stream_run::run(
+        driver.regs,
+        StreamRun {
+            desc,
+            tag: driver.stream_tag,
+            bdl_va: driver.bdl.user_va,
+            bdl_dev: driver.bdl.device_addr,
+            sample_dev: driver.sample.device_addr,
+            bytes: driver.sample.length as u32,
+        },
+    );
+}

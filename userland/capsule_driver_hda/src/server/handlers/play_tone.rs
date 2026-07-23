@@ -14,25 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod decode;
-mod encode;
-mod endpoint;
-mod errno;
-mod header;
-mod limits;
-mod ops;
+use super::stream::restart;
+use crate::audio;
+use crate::protocol::{Request, E_OK};
+use crate::server::error::reply_with_status;
+use crate::setup::Driver;
 
-pub use decode::decode_request;
-pub use encode::{encode_response_header, write_status};
-pub use endpoint::{KERNEL_REPLY_ENDPOINT, SERVICE_NAME};
-pub use errno::{E_INVAL, E_OK};
-pub use header::{Request, HDR_LEN, RESP_HDR_LEN};
-pub use limits::{
-    CODEC_ENTRY_BYTES, CODEC_LIST_HEADER_BYTES, CODEC_MASK_PAYLOAD_LEN,
-    CONTROLLER_INFO_PAYLOAD_LEN, MAX_CODEC_LIST_BYTES, MAX_STREAM_LAYOUT_BYTES, STATUS_LEN,
-    STREAM_ENTRY_BYTES, STREAM_LAYOUT_HEADER_BYTES,
-};
-pub use ops::{
-    OP_CODEC_LIST, OP_CODEC_MASK, OP_CONTROLLER_INFO, OP_HEALTHCHECK, OP_PLAY_TONE,
-    OP_STREAM_LAYOUT,
-};
+pub fn handle(driver: &Driver, req: &Request, tx: &mut [u8], played: &mut bool) {
+    audio::fill(driver.sample.user_va, driver.sample.length as usize);
+    restart(driver);
+    *played = false;
+    reply_with_status(tx, req, E_OK);
+}

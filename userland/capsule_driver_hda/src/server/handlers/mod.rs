@@ -18,4 +18,6 @@ pub mod codec_list;
 pub mod codec_mask;
 pub mod controller_info;
 pub mod health;
+pub mod play_tone;
 pub mod stream_layout;
+mod stream;

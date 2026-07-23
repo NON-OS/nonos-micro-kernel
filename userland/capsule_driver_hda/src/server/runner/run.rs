@@ -22,7 +22,7 @@ use super::max_tx_body::max_tx_body;
 use super::poll_irq::poll_irq;
 use crate::protocol::{
     decode_request, E_INVAL, HDR_LEN, OP_CODEC_LIST, OP_CODEC_MASK, OP_CONTROLLER_INFO,
-    OP_HEALTHCHECK, OP_STREAM_LAYOUT, RESP_HDR_LEN, SERVICE_NAME,
+    OP_HEALTHCHECK, OP_PLAY_TONE, OP_STREAM_LAYOUT, RESP_HDR_LEN, SERVICE_NAME,
 };
 use crate::server::{error, handlers};
 use crate::setup::Driver;
@@ -58,6 +58,7 @@ pub fn run(driver: Driver) -> ! {
             OP_CODEC_MASK => handlers::codec_mask::handle(&driver, &req, &mut tx),
             OP_STREAM_LAYOUT => handlers::stream_layout::handle(&driver, &req, &mut tx),
             OP_CODEC_LIST => handlers::codec_list::handle(&driver, &req, &mut tx),
+            OP_PLAY_TONE => handlers::play_tone::handle(&driver, &req, &mut tx, &mut played),
             _ => error::reply_with_status(&mut tx, &req, E_INVAL),
         }
     }
