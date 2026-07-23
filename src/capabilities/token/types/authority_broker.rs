@@ -52,10 +52,23 @@ impl CapabilityToken {
     pub fn can_pio(&self) -> bool {
         self.grants(Capability::Pio) || self.grants(Capability::Admin)
     }
+    // Authority to POST raw input events into the kernel ring. Held by input
+    // *producers*: dedicated input drivers (`InputSource`) and any device driver
+    // that surfaces events off its own interrupt (`Irq`).
     #[inline]
     pub fn can_input_source(&self) -> bool {
         self.grants(Capability::InputSource)
             || self.grants(Capability::Irq)
             || self.grants(Capability::Admin)
+    }
+    // Authority to DRAIN/WAIT on the raw input ring, which carries every
+    // keystroke. This is the input router's consumer authority and must NOT
+    // include `Irq`: every device driver holds `Irq`, so accepting it here let
+    // any driver capsule read the focused app's keystrokes (cross-capsule
+    // keylogging). Only a capsule explicitly granted `InputSource` (the router)
+    // may consume the stream.
+    #[inline]
+    pub fn can_input_consumer(&self) -> bool {
+        self.grants(Capability::InputSource) || self.grants(Capability::Admin)
     }
 }

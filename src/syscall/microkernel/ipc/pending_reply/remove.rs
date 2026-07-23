@@ -21,7 +21,7 @@ pub(in crate::syscall::microkernel::ipc) fn remove(server_pid: u32, caller_inbox
     let Some(queue) = map.get_mut(&server_pid) else {
         return false;
     };
-    let Some(pos) = queue.iter().position(|inbox| inbox == caller_inbox) else {
+    let Some(pos) = queue.iter().position(|(inbox, _)| inbox == caller_inbox) else {
         return false;
     };
     queue.remove(pos);

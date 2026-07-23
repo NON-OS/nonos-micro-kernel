@@ -63,10 +63,14 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
         return ERRNO_FAULT;
     }
     let pid = current_pid().unwrap_or(0);
-    let target = redirect_reply(pid, resolve_send_target(endpoint));
+    let (target, redirect_token) = redirect_reply(pid, resolve_send_target(endpoint));
     if !super::send_caps::caller_satisfies_endpoint(endpoint, &target) {
         return ERRNO_PERM;
     }
+    // A redirected reply carries the caller's per-call token so the caller can
+    // match it; a plain send keeps its own correlation (0 for `sys_ipc_send`,
+    // which is what a forged reply-injection is limited to).
+    let correlation = redirect_token.unwrap_or(correlation);
     trace(pid, endpoint, &target, len);
     match kernel_route_ipc_corr(pid, &target, &data, correlation) {
         Ok(()) => 0,
@@ -74,17 +78,21 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
     }
 }
 
-// When a service replies to its own fixed reply endpoint, hand the
-// message to the matching `mk_ipc_call` caller's private inbox instead.
-// A non-reply send, or a reply with no pending caller, is left as-is.
-fn redirect_reply(sender_pid: u32, target: alloc::string::String) -> alloc::string::String {
+// When a service replies to its own fixed reply endpoint, hand the message to
+// the matching `mk_ipc_call` caller's private inbox instead, and surface that
+// caller's correlation token so the reply can be stamped with it. A non-reply
+// send, or a reply with no pending caller, is left as-is with no token.
+fn redirect_reply(
+    sender_pid: u32,
+    target: alloc::string::String,
+) -> (alloc::string::String, Option<u64>) {
     let own_reply = crate::process::get_process(sender_pid).and_then(|p| p.reply_inbox());
     if own_reply == Some(target.as_str()) {
-        if let Some(caller_inbox) = super::pending_reply::pop(sender_pid) {
-            return caller_inbox;
+        if let Some((caller_inbox, token)) = super::pending_reply::pop(sender_pid) {
+            return (caller_inbox, Some(token));
         }
     }
-    target
+    (target, None)
 }
 
 fn resolve_send_target(endpoint: u64) -> alloc::string::String {

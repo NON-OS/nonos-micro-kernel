@@ -16,17 +16,31 @@
 
 use crate::syscall::microkernel::errnos::{ERRNO_BUSY, ERRNO_FAULT, ERRNO_INVAL};
 use crate::{process::current_pid, services::registry::lookup_port};
-use core::sync::atomic::AtomicBool;
+use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 use super::super::pending_reply;
-use super::super::recv::recv_from_inbox;
+use super::super::recv::recv_reply_correlated;
 use super::super::reply_inbox;
-use super::super::send::sys_ipc_send;
+use super::super::send::send_with_correlation;
 use super::trace::trace;
 
 static GPU_TRANSFER: AtomicBool = AtomicBool::new(false);
 static GPU_SCANOUT: AtomicBool = AtomicBool::new(false);
 static GPU_FLUSH: AtomicBool = AtomicBool::new(false);
+
+// Per-call correlation token: monotonic and never zero, so it can never collide
+// with the correlation an attacker's `mk_ipc_send` produces (always 0) nor with
+// another in-flight call. The reply must carry this exact value.
+static CALL_TOKEN: AtomicU64 = AtomicU64::new(1);
+
+fn next_call_token() -> u64 {
+    let t = CALL_TOKEN.fetch_add(1, Ordering::Relaxed);
+    if t == 0 {
+        CALL_TOKEN.fetch_add(1, Ordering::Relaxed)
+    } else {
+        t
+    }
+}
 
 pub fn sys_ipc_call(
     ep: u64,
@@ -43,15 +57,21 @@ pub fn sys_ipc_call(
     if crate::usercopy::validate_user_write(resp, resp_len).is_err() {
         return ERRNO_FAULT;
     }
+    // This call's correlation token. It is registered with the pending reply so
+    // the redirect-reply path (a service replying via `mk_ipc_send` to its fixed
+    // reply endpoint) stamps the reply with it, and it is sent on the request so
+    // an `mk_ipc_reply` service echoes it via `take_for_reply`. Either way the
+    // genuine reply carries this token; a forged injection can only carry 0.
+    let token = next_call_token();
     let inbox = reply_inbox::for_pid(pid);
     let endpoint = lookup_port(ep as u32);
     let endpoint_pid = endpoint.as_ref().map(|endpoint| endpoint.pid);
     if let Some(server_pid) = endpoint_pid {
-        if !pending_reply::push(server_pid, inbox.clone()) {
+        if !pending_reply::push(server_pid, inbox.clone(), token) {
             return ERRNO_BUSY;
         }
     }
-    let send_result = sys_ipc_send(ep, req, req_len);
+    let send_result = send_with_correlation(ep, req, req_len, token);
     trace(pid, b"send", send_result);
     if send_result < 0 {
         if let Some(server_pid) = endpoint_pid {
@@ -60,7 +80,7 @@ pub fn sys_ipc_call(
         return send_result;
     }
     let timeout = if timeout_ms == 0 { 5000 } else { timeout_ms };
-    let recv_result = recv_from_inbox(pid, &inbox, resp, resp_len, timeout);
+    let recv_result = recv_reply_correlated(pid, &inbox, resp, resp_len, timeout, token);
     if recv_result < 0 {
         if let Some(server_pid) = endpoint_pid {
             pending_reply::remove(server_pid, &inbox);
