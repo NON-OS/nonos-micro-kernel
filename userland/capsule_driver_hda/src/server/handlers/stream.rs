@@ -14,8 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use core::ptr::write_volatile;
+
 use crate::controller::{stream_run, StreamDescriptor, StreamRun};
+use crate::protocol::{Request, E_OK};
+use crate::server::error::reply_with_status;
 use crate::setup::Driver;
+
+pub fn handle_stream_start(driver: &Driver, req: &Request, tx: &mut [u8], running: &mut bool) {
+    if !*running {
+        silence(driver);
+        restart(driver);
+        *running = true;
+    }
+    reply_with_status(tx, req, E_OK);
+}
+
+fn silence(driver: &Driver) {
+    let dst = driver.sample.user_va as *mut u8;
+    let cap = driver.sample.length as usize;
+    let mut i = 0usize;
+    while i < cap {
+        unsafe { write_volatile(dst.add(i), 0u8) };
+        i += 1;
+    }
+}
 
 pub(super) fn restart(driver: &Driver) {
     let desc = StreamDescriptor {

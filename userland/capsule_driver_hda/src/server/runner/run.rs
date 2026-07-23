@@ -22,8 +22,8 @@ use super::max_tx_body::max_tx_body;
 use super::poll_irq::poll_irq;
 use crate::protocol::{
     decode_request, E_INVAL, HDR_LEN, MAX_PCM_CHUNK, OP_CODEC_LIST, OP_CODEC_MASK,
-    OP_CONTROLLER_INFO, OP_HEALTHCHECK, OP_PLAY_TONE, OP_STREAM_LAYOUT, OP_WRITE_PCM, RESP_HDR_LEN,
-    SERVICE_NAME,
+    OP_CONTROLLER_INFO, OP_HEALTHCHECK, OP_PLAY_TONE, OP_STREAM_LAYOUT, OP_STREAM_START,
+    OP_WRITE_PCM, RESP_HDR_LEN, SERVICE_NAME,
 };
 use crate::server::{error, handlers};
 use crate::setup::Driver;
@@ -36,6 +36,7 @@ pub fn run(driver: Driver) -> ! {
     let mut tx = vec![0u8; TX_LEN];
     let mut last_irq_seq = 0u64;
     let mut played = false;
+    let mut running = false;
     let _service_name = SERVICE_NAME;
     loop {
         poll_irq(&driver, &mut last_irq_seq, &mut played);
@@ -58,6 +59,9 @@ pub fn run(driver: Driver) -> ! {
             OP_STREAM_LAYOUT => handlers::stream_layout::handle(&driver, &req, &mut tx),
             OP_CODEC_LIST => handlers::codec_list::handle(&driver, &req, &mut tx),
             OP_PLAY_TONE => handlers::play_tone::handle(&driver, &req, &mut tx, &mut played),
+            OP_STREAM_START => {
+                handlers::stream::handle_stream_start(&driver, &req, &mut tx, &mut running)
+            }
             OP_WRITE_PCM => {
                 handlers::write_pcm::handle(&driver, &req, &rx[..n as usize], &mut tx, &mut played)
             }
