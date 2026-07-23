@@ -16,22 +16,33 @@
 
 use alloc::vec;
 
-use nonos_libc::mk_ipc_recv;
-
 use crate::mark::mark;
-use crate::selftest;
 use crate::sink::Sink;
 
-const RX_LEN: usize = 4096;
-const RECV_TIMEOUT_MS: u64 = 1000;
+const CHUNK_BYTES: usize = 4096;
+const HALF_PERIOD: usize = 44;
+const AMPLITUDE: i16 = 0x1800;
 
-pub fn run() -> ! {
-    mark("[AUDIO] up\n");
-    if let Some(sink) = Sink::resolve() {
-        selftest::run(&sink);
+pub fn run(sink: &Sink) {
+    let mut pcm = vec![0u8; CHUNK_BYTES];
+    fill_tone(&mut pcm);
+    if sink.write_pcm(&pcm, 1) {
+        mark("[AUDIO] sink-ok\n");
+    } else {
+        mark("[AUDIO] sink-fail\n");
     }
-    let mut rx = vec![0u8; RX_LEN];
-    loop {
-        let _ = mk_ipc_recv(0, rx.as_mut_ptr(), RX_LEN, RECV_TIMEOUT_MS);
+}
+
+fn fill_tone(buf: &mut [u8]) {
+    let frames = buf.len() / 4;
+    let mut i = 0usize;
+    while i < frames {
+        let sample = if (i / HALF_PERIOD) & 1 == 0 { AMPLITUDE } else { -AMPLITUDE };
+        let le = sample.to_le_bytes();
+        buf[i * 4] = le[0];
+        buf[i * 4 + 1] = le[1];
+        buf[i * 4 + 2] = le[0];
+        buf[i * 4 + 3] = le[1];
+        i += 1;
     }
 }
