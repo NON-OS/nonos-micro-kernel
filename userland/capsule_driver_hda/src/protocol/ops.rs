@@ -20,3 +20,4 @@ pub const OP_CODEC_MASK: u16 = 3;
 pub const OP_STREAM_LAYOUT: u16 = 4;
 pub const OP_CODEC_LIST: u16 = 5;
 pub const OP_PLAY_TONE: u16 = 6;
+pub const OP_WRITE_PCM: u16 = 7;

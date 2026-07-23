@@ -21,23 +21,25 @@ use nonos_libc::mk_ipc_recv;
 use super::max_tx_body::max_tx_body;
 use super::poll_irq::poll_irq;
 use crate::protocol::{
-    decode_request, E_INVAL, HDR_LEN, OP_CODEC_LIST, OP_CODEC_MASK, OP_CONTROLLER_INFO,
-    OP_HEALTHCHECK, OP_PLAY_TONE, OP_STREAM_LAYOUT, RESP_HDR_LEN, SERVICE_NAME,
+    decode_request, E_INVAL, HDR_LEN, MAX_PCM_CHUNK, OP_CODEC_LIST, OP_CODEC_MASK,
+    OP_CONTROLLER_INFO, OP_HEALTHCHECK, OP_PLAY_TONE, OP_STREAM_LAYOUT, OP_WRITE_PCM, RESP_HDR_LEN,
+    SERVICE_NAME,
 };
 use crate::server::{error, handlers};
 use crate::setup::Driver;
 
 const TX_LEN: usize = RESP_HDR_LEN + 4 + max_tx_body();
+const RX_LEN: usize = HDR_LEN + MAX_PCM_CHUNK;
 
 pub fn run(driver: Driver) -> ! {
-    let mut rx = vec![0u8; HDR_LEN];
+    let mut rx = vec![0u8; RX_LEN];
     let mut tx = vec![0u8; TX_LEN];
     let mut last_irq_seq = 0u64;
     let mut played = false;
     let _service_name = SERVICE_NAME;
     loop {
         poll_irq(&driver, &mut last_irq_seq, &mut played);
-        let n = mk_ipc_recv(0, rx.as_mut_ptr(), HDR_LEN, 0);
+        let n = mk_ipc_recv(0, rx.as_mut_ptr(), RX_LEN, 0);
         if n <= 0 {
             continue;
         }
@@ -48,7 +50,7 @@ pub fn run(driver: Driver) -> ! {
                 continue;
             }
         };
-        if req.payload_len != 0 {
+        if req.payload_len != 0 && req.op != OP_WRITE_PCM {
             error::reply_with_status(&mut tx, &req, E_INVAL);
             continue;
         }
@@ -59,6 +61,9 @@ pub fn run(driver: Driver) -> ! {
             OP_STREAM_LAYOUT => handlers::stream_layout::handle(&driver, &req, &mut tx),
             OP_CODEC_LIST => handlers::codec_list::handle(&driver, &req, &mut tx),
             OP_PLAY_TONE => handlers::play_tone::handle(&driver, &req, &mut tx, &mut played),
+            OP_WRITE_PCM => {
+                handlers::write_pcm::handle(&driver, &req, &rx[..n as usize], &mut tx, &mut played)
+            }
             _ => error::reply_with_status(&mut tx, &req, E_INVAL),
         }
     }
