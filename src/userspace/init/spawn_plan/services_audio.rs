@@ -14,22 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod ahci_capsule;
-pub mod audio_capsule;
-pub mod block_device;
-pub mod broker;
-pub mod e1000_capsule;
-pub mod hda_capsule;
-pub mod i2c_pci_capsule;
-pub mod inventory;
-pub mod iwlwifi_capsule;
-pub mod nvme_capsule;
-pub mod ps2_kbd_capsule;
-pub mod rtl8139_capsule;
-pub mod rtl8821ce_capsule;
-pub mod rtl8169_capsule;
-pub mod virtio_blk_capsule;
-pub mod virtio_gpu_capsule;
-pub mod virtio_net_capsule;
-pub mod virtio_rng_capsule;
-pub mod xhci_capsule;
+pub(super) fn spawn() {
+    spawn_audio();
+}
+
+#[cfg(feature = "nonos-capsule-audio")]
+fn spawn_audio() {
+    use crate::hardware::audio_capsule as c;
+    super::boot::capsule("AUDIO", "audio_server", c::spawn_audio_capsule, c::shared_state);
+}
+
+#[cfg(not(feature = "nonos-capsule-audio"))]
+fn spawn_audio() {}

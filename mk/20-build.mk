@@ -365,6 +365,7 @@ include userland/capsule_driver_rtl8139/Capsule.mk
 include userland/capsule_driver_rtl8169/Capsule.mk
 include userland/capsule_driver_ahci/Capsule.mk
 include userland/capsule_driver_hda/Capsule.mk
+include userland/capsule_audio/Capsule.mk
 include userland/capsule_driver_nvme/Capsule.mk
 include userland/capsule_net_l2/Capsule.mk
 include userland/capsule_net_core/Capsule.mk
@@ -677,6 +678,7 @@ nonos-mk-driver-hda-smoketest-test: $(proof-io_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-driver-hda-smoketest)..."
 	@$(MAKE) nonos-mk-driver-hda-sign
+	@$(MAKE) nonos-mk-audio-sign
 	@$(MAKE) nonos-mk-stark-enroll-capsules
 	$(call nonos_kernel_build,microkernel-driver-hda-smoketest + nonos-stark-attest,microkernel-driver-hda-smoketest$(_boot_comma)nonos-stark-attest)
 
@@ -689,7 +691,7 @@ nonos-mk-driver-hda-smoketest-test: $(proof-io_ARTIFACTS) \
 # nonos-zk-rollout is compile_error-exclusive with nonos-production, so this
 # can never leak into a ship build. Select it with
 # HDA_BUILD_TARGET=nonos-mk-driver-hda-smoketest-dev-test.
-nonos-mk-driver-hda-smoketest-dev-test: $(proof-io_MANIFEST) $(driver-hda_MANIFEST) \
+nonos-mk-driver-hda-smoketest-dev-test: $(proof-io_MANIFEST) $(driver-hda_MANIFEST) $(audio_MANIFEST) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-driver-hda-smoketest, zk-rollout; no enroll)..."
 	$(call nonos_kernel_build,microkernel-driver-hda-smoketest + nonos-zk-rollout,microkernel-driver-hda-smoketest$(_boot_comma)nonos-stark-attest$(_boot_comma)nonos-zk-rollout)

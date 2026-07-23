@@ -127,6 +127,7 @@ nonos-capsule-driver-rtl8139    = []
 nonos-capsule-driver-rtl8169    = []
 nonos-capsule-driver-ahci       = []
 nonos-capsule-driver-hda        = []
+nonos-capsule-audio             = []
 nonos-capsule-driver-nvme       = []
 nonos-capsule-net-l2            = []
 nonos-capsule-net-ip            = []
@@ -616,6 +617,7 @@ microkernel-driver-hda-smoketest = [
   "microkernel-core",
   "nonos-capsule-proof-io",
   "nonos-capsule-driver-hda",
+  "nonos-capsule-audio",
   "nonos-user-entry-proof",
 ]
 
