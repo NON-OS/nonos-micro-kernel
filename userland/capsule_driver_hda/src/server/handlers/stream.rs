@@ -16,6 +16,8 @@
 
 use core::ptr::write_volatile;
 
+use crate::audio::PcmQueue;
+use crate::constants::{SDCTL_RUN, SD_CTL};
 use crate::controller::{stream_run, StreamDescriptor, StreamRun};
 use crate::protocol::{Request, E_OK};
 use crate::server::error::reply_with_status;
@@ -26,6 +28,24 @@ pub fn handle_stream_start(driver: &Driver, req: &Request, tx: &mut [u8], runnin
         silence(driver);
         restart(driver);
         *running = true;
+    }
+    reply_with_status(tx, req, E_OK);
+}
+
+pub fn handle_stream_stop(
+    driver: &Driver,
+    req: &Request,
+    tx: &mut [u8],
+    q: &mut PcmQueue,
+    running: &mut bool,
+) {
+    if *running {
+        unsafe {
+            let v = driver.regs.r8(driver.stream_off + SD_CTL) & !SDCTL_RUN;
+            driver.regs.w8(driver.stream_off + SD_CTL, v);
+        }
+        q.clear();
+        *running = false;
     }
     reply_with_status(tx, req, E_OK);
 }

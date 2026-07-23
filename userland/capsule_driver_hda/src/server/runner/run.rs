@@ -23,7 +23,7 @@ use super::poll_irq::poll_irq;
 use crate::protocol::{
     decode_request, E_INVAL, HDR_LEN, MAX_PCM_CHUNK, OP_CODEC_LIST, OP_CODEC_MASK,
     OP_CONTROLLER_INFO, OP_HEALTHCHECK, OP_PLAY_TONE, OP_STREAM_LAYOUT, OP_STREAM_START,
-    OP_WRITE_PCM, RESP_HDR_LEN, SERVICE_NAME,
+    OP_STREAM_STOP, OP_WRITE_PCM, RESP_HDR_LEN, SERVICE_NAME,
 };
 use crate::server::{error, handlers};
 use crate::setup::Driver;
@@ -63,6 +63,13 @@ pub fn run(driver: Driver) -> ! {
             OP_STREAM_START => {
                 handlers::stream::handle_stream_start(&driver, &req, &mut tx, &mut running)
             }
+            OP_STREAM_STOP => handlers::stream::handle_stream_stop(
+                &driver,
+                &req,
+                &mut tx,
+                &mut pcm_q,
+                &mut running,
+            ),
             OP_WRITE_PCM => {
                 handlers::write_pcm::handle(&mut pcm_q, &req, &rx[..n as usize], &mut tx)
             }
