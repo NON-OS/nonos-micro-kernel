@@ -24,6 +24,8 @@
 use std::env;
 use std::fs;
 use std::process::exit;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::thread;
 
 use nonos_stark::air::{
     build_attestation_trailer, deserialize_proof_ext, stark_verify_ext_blown_bound,
@@ -134,16 +136,44 @@ fn enroll(images: &[&[u8]], contexts: &[Vec<u8>]) -> ([u8; 32], Vec<Vec<u8>>) {
     let padded = padded_images(images);
     let root = root_to_bytes(nonos_stark::air::enroll_policy_root(&hasher, &padded));
 
-    let mut trailers = Vec::with_capacity(images.len());
-    for (i, ctx) in contexts.iter().enumerate() {
-        let trailer = build_attestation_trailer(
-            &hasher, LOG_ROUNDS, &padded, i, ctx, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP,
-        );
-        if !gate_verify(&root, &trailer, ctx) {
-            eprintln!("enroll: trailer {i} failed the gate self-check");
-            exit(2);
+    let n = contexts.len();
+    let counter = AtomicUsize::new(0);
+    let workers = thread::available_parallelism()
+        .map(|v| v.get())
+        .unwrap_or(1)
+        .min(n)
+        .max(1);
+    let collected: Vec<Vec<(usize, Vec<u8>)>> = thread::scope(|scope| {
+        let handles: Vec<_> = (0..workers)
+            .map(|_| {
+                scope.spawn(|| {
+                    let mut local = Vec::new();
+                    loop {
+                        let i = counter.fetch_add(1, Ordering::Relaxed);
+                        if i >= n {
+                            break;
+                        }
+                        let ctx = &contexts[i];
+                        let trailer = build_attestation_trailer(
+                            &hasher, LOG_ROUNDS, &padded, i, ctx, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP,
+                        );
+                        if !gate_verify(&root, &trailer, ctx) {
+                            eprintln!("enroll: trailer {i} failed the gate self-check");
+                            exit(2);
+                        }
+                        local.push((i, trailer));
+                    }
+                    local
+                })
+            })
+            .collect();
+        handles.into_iter().map(|h| h.join().unwrap()).collect()
+    });
+    let mut trailers: Vec<Vec<u8>> = vec![Vec::new(); n];
+    for local in collected {
+        for (i, trailer) in local {
+            trailers[i] = trailer;
         }
-        trailers.push(trailer);
     }
     (root, trailers)
 }
