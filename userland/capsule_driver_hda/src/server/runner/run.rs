@@ -20,6 +20,7 @@ use nonos_libc::mk_ipc_recv;
 
 use super::max_tx_body::max_tx_body;
 use super::poll_irq::poll_irq;
+use super::refill::Refill;
 use crate::protocol::{
     decode_request, E_INVAL, HDR_LEN, MAX_PCM_CHUNK, OP_CODEC_LIST, OP_CODEC_MASK,
     OP_CONTROLLER_INFO, OP_HEALTHCHECK, OP_PLAY_TONE, OP_STREAM_LAYOUT, OP_STREAM_START,
@@ -38,9 +39,10 @@ pub fn run(driver: Driver) -> ! {
     let mut played = false;
     let mut running = false;
     let mut pcm_q = crate::audio::PcmQueue::new();
+    let mut rf = Refill::new();
     let _service_name = SERVICE_NAME;
     loop {
-        poll_irq(&driver, &mut last_irq_seq, &mut played);
+        poll_irq(&driver, &mut last_irq_seq, &mut played, &mut pcm_q, &mut rf, running);
         let n = mk_ipc_recv(0, rx.as_mut_ptr(), RX_LEN, 0);
         if n <= 0 {
             continue;
@@ -61,7 +63,11 @@ pub fn run(driver: Driver) -> ! {
             OP_CODEC_LIST => handlers::codec_list::handle(&driver, &req, &mut tx),
             OP_PLAY_TONE => handlers::play_tone::handle(&driver, &req, &mut tx, &mut played),
             OP_STREAM_START => {
-                handlers::stream::handle_stream_start(&driver, &req, &mut tx, &mut running)
+                let was = running;
+                handlers::stream::handle_stream_start(&driver, &req, &mut tx, &mut running);
+                if running && !was {
+                    rf.reset();
+                }
             }
             OP_STREAM_STOP => handlers::stream::handle_stream_stop(
                 &driver,

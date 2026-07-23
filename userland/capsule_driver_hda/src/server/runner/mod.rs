@@ -16,6 +16,7 @@
 
 mod max_tx_body;
 mod poll_irq;
+mod refill;
 mod run;
 
 pub use run::run;

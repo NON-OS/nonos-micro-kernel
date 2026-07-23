@@ -69,6 +69,7 @@ pub const RINTCNT_ONE: u16 = 1;
 
 pub const SD_CTL: u32 = 0x00;
 pub const SD_STS: u32 = 0x03;
+pub const SD_LPIB: u32 = 0x04;
 pub const SD_CBL: u32 = 0x08;
 pub const SD_LVI: u32 = 0x0c;
 pub const SD_FMT: u32 = 0x12;
