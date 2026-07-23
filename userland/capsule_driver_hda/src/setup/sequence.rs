@@ -73,7 +73,7 @@ pub fn run() -> HdaResult<Driver> {
         &irq,
         &[corb.grant_id, rirb.grant_id],
     )?;
-    audio::fill(sample.user_va, dma::SAMPLE_BYTES as usize);
+    audio::fill(sample.user_va, crate::controller::bdl::RING_BYTES as usize);
     stream_setup::configure(regs, corb.user_va, rirb.user_va, &mut wp, cad, path, STREAM_TAG)?;
     let out = output_descriptor(info)?;
     stream_run::run(
@@ -84,7 +84,7 @@ pub fn run() -> HdaResult<Driver> {
             bdl_va: bdl.user_va,
             bdl_dev: bdl.device_addr,
             sample_dev: sample.device_addr,
-            bytes: dma::SAMPLE_BYTES as u32,
+            bytes: crate::controller::bdl::RING_BYTES as u32,
         },
     );
     mark("[HDA] stream-run\n");

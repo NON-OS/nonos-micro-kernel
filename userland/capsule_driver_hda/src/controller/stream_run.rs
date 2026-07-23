@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::bdl::{build_bdl, N_PERIODS};
 use super::StreamDescriptor;
 use crate::constants::{
     INTCTL, INTCTL_GIE, SDCTL_IOCE, SDCTL_RUN, SDCTL_SRST, SDSTS_BCIS, SD_BDPL, SD_BDPU, SD_CBL,
@@ -33,11 +34,15 @@ pub(crate) struct StreamRun {
     pub bytes: u32,
 }
 
-fn write_bdl(va: u64, addr: u64, len: u32) {
-    unsafe {
-        write_volatile(va as *mut u64, addr);
-        write_volatile((va + 8) as *mut u32, len);
-        write_volatile((va + 12) as *mut u32, 1);
+fn write_bdl(va: u64, ring_dev: u64) {
+    let mut p = va;
+    for e in build_bdl(ring_dev).iter() {
+        unsafe {
+            write_volatile(p as *mut u64, e.addr);
+            write_volatile((p + 8) as *mut u32, e.len);
+            write_volatile((p + 12) as *mut u32, e.flags);
+        }
+        p += 16;
     }
 }
 
@@ -57,13 +62,13 @@ fn reset(regs: Regs, off: u32) {
 }
 
 pub(crate) fn run(regs: Regs, r: StreamRun) {
-    write_bdl(r.bdl_va, r.sample_dev, r.bytes);
+    write_bdl(r.bdl_va, r.sample_dev);
     let off = r.desc.mmio_offset;
     reset(regs, off);
     unsafe {
         regs.w8(off + SD_CTL + 2, r.tag << 4);
         regs.w32(off + SD_CBL, r.bytes);
-        regs.w16(off + SD_LVI, 0);
+        regs.w16(off + SD_LVI, (N_PERIODS - 1) as u16);
         regs.w16(off + SD_FMT, STREAM_FMT_48K16S);
         regs.w32(off + SD_BDPL, r.bdl_dev as u32);
         regs.w32(off + SD_BDPU, (r.bdl_dev >> 32) as u32);

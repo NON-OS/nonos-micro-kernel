@@ -25,7 +25,6 @@ const PAGE_MASK: u64 = 0xfff;
 const CORB_BYTES: u64 = 1024;
 const RIRB_BYTES: u64 = 2048;
 const BDL_BYTES: u64 = 4096;
-pub const SAMPLE_BYTES: u64 = 0x2000;
 
 #[inline]
 fn page_round(n: u64) -> u64 {
@@ -79,7 +78,7 @@ pub fn map_stream(
         unwind(device_id, mmio, irq, prior);
         e
     })?;
-    let sample = alloc(device_id, claim_epoch, SAMPLE_BYTES).map_err(|e| {
+    let sample = alloc(device_id, claim_epoch, crate::controller::bdl::RING_BYTES).map_err(|e| {
         let _ = mk_dma_unmap(bdl.grant_id);
         unwind(device_id, mmio, irq, prior);
         e
