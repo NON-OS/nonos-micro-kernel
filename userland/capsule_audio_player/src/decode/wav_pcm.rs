@@ -38,8 +38,8 @@ pub fn parse_riff(bytes: &[u8]) -> Result<(u32, u8, u16, usize, usize), &'static
         }
         off = body + sz + (sz & 1);
     }
-    if rate == 0 || channels == 0 || bits == 0 || data_len == 0 {
-        return Err("missing fmt or data chunk");
+    if rate == 0 || channels == 0 || !matches!(bits, 8 | 16 | 24) || data_len == 0 {
+        return Err("missing fmt/data chunk or unsupported bit depth");
     }
     Ok((rate, channels, bits, data_off, data_len))
 }

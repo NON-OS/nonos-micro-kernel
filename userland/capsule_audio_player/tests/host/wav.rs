@@ -65,5 +65,8 @@ fn main() {
         i16::from_le_bytes([0x01, 0x02])
     );
 
+    let bad_bits = wav_bytes(1, 4, 8000, &[0u8; 4]);
+    assert!(WavDecoder::new(bad_bits).is_err());
+
     println!("HOSTTEST-PASS wav");
 }
