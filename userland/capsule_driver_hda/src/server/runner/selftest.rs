@@ -14,11 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod max_tx_body;
-mod poll_irq;
-mod refill;
-mod run;
-#[cfg(feature = "nonos-driver-hda-smoketest")]
-mod selftest;
+use alloc::vec;
 
-pub use run::run;
+use crate::audio::{fill, PcmQueue};
+use crate::controller::bdl::PERIOD_BYTES;
+
+pub(super) fn feed_idle(q: &mut PcmQueue) {
+    let low = 2 * PERIOD_BYTES as usize;
+    let floor = 4 * PERIOD_BYTES as usize;
+    if q.len() >= low {
+        return;
+    }
+    while q.len() < floor {
+        let mut chunk = vec![0u8; PERIOD_BYTES as usize];
+        fill(chunk.as_mut_ptr() as u64, PERIOD_BYTES as usize);
+        q.push(&chunk);
+    }
+}

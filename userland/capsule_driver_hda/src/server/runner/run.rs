@@ -31,6 +31,7 @@ use crate::setup::Driver;
 
 const TX_LEN: usize = RESP_HDR_LEN + 4 + max_tx_body();
 const RX_LEN: usize = HDR_LEN + MAX_PCM_CHUNK;
+const RECV_TIMEOUT_MS: u64 = 5;
 
 pub fn run(driver: Driver) -> ! {
     let mut rx = vec![0u8; RX_LEN];
@@ -42,8 +43,12 @@ pub fn run(driver: Driver) -> ! {
     let mut rf = Refill::new();
     let _service_name = SERVICE_NAME;
     loop {
+        #[cfg(feature = "nonos-driver-hda-smoketest")]
+        if running {
+            super::selftest::feed_idle(&mut pcm_q);
+        }
         poll_irq(&driver, &mut last_irq_seq, &mut played, &mut pcm_q, &mut rf, running);
-        let n = mk_ipc_recv(0, rx.as_mut_ptr(), RX_LEN, 0);
+        let n = mk_ipc_recv(0, rx.as_mut_ptr(), RX_LEN, RECV_TIMEOUT_MS);
         if n <= 0 {
             continue;
         }

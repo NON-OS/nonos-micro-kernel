@@ -19,6 +19,9 @@ description = "NONOS userland Intel HD-Audio controller driver capsule"
 name = "driver_hda"
 path = "src/main.rs"
 
+[features]
+nonos-driver-hda-smoketest = []
+
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 
