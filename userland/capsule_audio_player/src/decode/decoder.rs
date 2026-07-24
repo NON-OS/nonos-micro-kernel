@@ -14,16 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-mod app;
-mod decode;
-mod loader;
-mod mark;
-use app::PlayerApp;
-use nonos_app_skeleton::run;
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    mark::mark("[PLAYER] up\n");
-    run(PlayerApp::new);
+pub struct AudioInfo {
+    pub rate: u32,
+    pub channels: u8,
+    pub total_frames: Option<u64>,
+}
+
+pub trait Decoder {
+    fn info(&self) -> AudioInfo;
+    fn next(&mut self, out: &mut [i16]) -> usize;
 }
