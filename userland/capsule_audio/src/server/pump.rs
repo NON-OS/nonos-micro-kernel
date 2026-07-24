@@ -23,7 +23,6 @@ use crate::sink::Sink;
 pub const PERIOD_FRAMES: usize = 1024;
 pub const PERIOD_SAMPLES: usize = PERIOD_FRAMES * 2;
 pub const KEEP_AHEAD: usize = 3;
-
 pub struct PumpState { mixer: Mixer, pending: Option<[i16; PERIOD_SAMPLES]>, sent: usize }
 impl PumpState {
     pub fn new() -> Self { Self { mixer: Mixer::new(), pending: None, sent: 0 } }
