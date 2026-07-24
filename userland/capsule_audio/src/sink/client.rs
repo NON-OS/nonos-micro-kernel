@@ -45,10 +45,14 @@ impl Sink {
     }
 
     pub fn write_pcm(&self, pcm: &[u8], request_id: u32) -> bool {
+        self.write_pcm_status(pcm, request_id) == 0
+    }
+
+    pub fn write_pcm_status(&self, pcm: &[u8], request_id: u32) -> i32 {
         let mut tx = vec![0u8; wire::HDR_LEN + pcm.len()];
         let n = wire::request(request_id, pcm, &mut tx);
         if n == 0 {
-            return false;
+            return i32::MIN;
         }
         let mut rx = vec![0u8; wire::HDR_LEN + wire::STATUS_LEN];
         let got = mk_ipc_call_timeout(
@@ -60,9 +64,9 @@ impl Sink {
             CALL_TIMEOUT_MS,
         );
         if got <= 0 {
-            return false;
+            return i32::MIN;
         }
-        wire::reply_ok(&rx[..got as usize])
+        wire::reply_status(&rx[..got as usize])
     }
 
     pub fn stream_start(&self, request_id: u32) -> bool {

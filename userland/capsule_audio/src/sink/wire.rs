@@ -62,3 +62,12 @@ pub fn reply_ok(rx: &[u8]) -> bool {
     status.copy_from_slice(&rx[HDR_LEN..HDR_LEN + STATUS_LEN]);
     i32::from_le_bytes(status) == E_OK
 }
+
+pub fn reply_status(rx: &[u8]) -> i32 {
+    if rx.len() < HDR_LEN + STATUS_LEN {
+        return i32::MIN;
+    }
+    let mut status = [0u8; STATUS_LEN];
+    status.copy_from_slice(&rx[HDR_LEN..HDR_LEN + STATUS_LEN]);
+    i32::from_le_bytes(status)
+}
