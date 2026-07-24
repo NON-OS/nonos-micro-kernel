@@ -17,6 +17,7 @@
 mod dispatch;
 mod ops;
 pub mod proto;
+mod ring;
 mod run;
 mod serve;
 mod tone;
