@@ -14,15 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-mod app;
-mod loader;
-mod mark;
-use app::PlayerApp;
-use nonos_app_skeleton::run;
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    mark::mark("[PLAYER] up\n");
-    run(PlayerApp::new);
+extern crate alloc;
+use alloc::vec::Vec;
+use nonos_app_skeleton::clients::vfs::read_file;
+use nonos_libc::mk_getpid;
+
+pub const MAX_FILE: u32 = 32 * 1024 * 1024;
+
+pub fn load(path: &[u8]) -> Result<Vec<u8>, &'static str> {
+    read_file(mk_getpid(), path, MAX_FILE)
 }
