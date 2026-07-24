@@ -91,6 +91,7 @@ nonos-capsule-power             = []
 nonos-capsule-image-codec       = []
 nonos-capsule-image-viewer      = []
 nonos-capsule-about             = []
+nonos-capsule-audio-player      = []
 nonos-capsule-hello             = []
 nonos-capsule-boot-splash       = []
 nonos-capsule-calculator        = []
@@ -513,6 +514,7 @@ microkernel-desktop-gui = [
   "nonos-capsule-wallpaper-catalog",
   "nonos-capsule-toolkit",
   "nonos-capsule-about",
+  "nonos-capsule-audio-player",
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
   "nonos-capsule-clock",
