@@ -22,7 +22,7 @@ mod ring;
 mod run;
 mod serve;
 pub mod streams;
-mod tone;
+pub mod tone;
 
 pub use dispatch::handle;
 pub use run::run;

@@ -36,8 +36,9 @@ pub fn run() -> ! {
     let sink = Sink::resolve();
     if let Some(ref s) = sink {
         selftest::run_mix(&mut mixer, s);
-        selftest::run(s);
         s.stream_start(3);
+        crate::selftest_stream::run_streams(s);
+        selftest::run(s);
     }
     let mut table = StreamTable::new();
     let mut pump = PumpState::new();

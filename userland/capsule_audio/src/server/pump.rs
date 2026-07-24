@@ -27,6 +27,7 @@ pub const KEEP_AHEAD: usize = 3;
 pub struct PumpState { mixer: Mixer, pending: Option<[i16; PERIOD_SAMPLES]>, sent: usize }
 impl PumpState {
     pub fn new() -> Self { Self { mixer: Mixer::new(), pending: None, sent: 0 } }
+    pub fn sent(&self) -> usize { self.sent }
 }
 
 fn mix(mixer: &mut Mixer, table: &mut StreamTable) -> [i16; PERIOD_SAMPLES] {

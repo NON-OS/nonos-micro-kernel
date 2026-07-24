@@ -22,6 +22,7 @@ extern crate alloc;
 mod mark;
 mod mixer;
 mod selftest;
+mod selftest_stream;
 mod server;
 mod sink;
 
