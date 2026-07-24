@@ -64,4 +64,25 @@ impl Sink {
         }
         wire::reply_ok(&rx[..got as usize])
     }
+
+    pub fn stream_start(&self, request_id: u32) -> bool {
+        let mut tx = [0u8; wire::HDR_LEN];
+        let n = wire::start_request(request_id, &mut tx);
+        if n == 0 {
+            return false;
+        }
+        let mut rx = vec![0u8; wire::HDR_LEN + wire::STATUS_LEN];
+        let got = mk_ipc_call_timeout(
+            self.port as u64,
+            tx.as_ptr(),
+            n,
+            rx.as_mut_ptr(),
+            rx.len(),
+            CALL_TIMEOUT_MS,
+        );
+        if got <= 0 {
+            return false;
+        }
+        wire::reply_ok(&rx[..got as usize])
+    }
 }

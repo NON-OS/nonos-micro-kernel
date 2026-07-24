@@ -35,6 +35,7 @@ pub fn run() -> ! {
     if let Some(ref s) = sink {
         selftest::run_mix(&mut mixer, s);
         selftest::run(s);
+        s.stream_start(3);
     }
     let mut rx = vec![0u8; RX_LEN];
     let mut tx = vec![0u8; TX_LEN];
