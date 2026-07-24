@@ -17,5 +17,7 @@ fn main() {
     assert_eq!(status, 0);
     let stream_id = u32::from_le_bytes([buf[24], buf[25], buf[26], buf[27]]);
     assert_eq!(stream_id, 3);
+    let payload_len = u32::from_le_bytes([buf[16], buf[17], buf[18], buf[19]]);
+    assert_eq!(payload_len, 8);
     println!("HOSTTEST-PASS proto_open");
 }

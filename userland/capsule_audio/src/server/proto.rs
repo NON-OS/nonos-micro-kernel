@@ -74,7 +74,7 @@ pub fn encode_open_reply(req: &Request, status: i32, stream_id: u32, out: &mut [
     if out.len() < 28 {
         return 0;
     }
-    write_header(out, req.op, req.request_id, STATUS_LEN as u32);
+    write_header(out, req.op, req.request_id, STATUS_LEN as u32 + core::mem::size_of::<u32>() as u32);
     out[HDR_LEN..HDR_LEN + STATUS_LEN].copy_from_slice(&status.to_le_bytes());
     out[24..28].copy_from_slice(&stream_id.to_le_bytes());
     28
