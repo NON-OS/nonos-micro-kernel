@@ -20,6 +20,7 @@ pub mod proto;
 mod ring;
 mod run;
 mod serve;
+pub mod streams;
 mod tone;
 
 pub use dispatch::handle;
