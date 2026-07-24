@@ -19,13 +19,15 @@ use alloc::vec;
 use nonos_libc::mk_ipc_recv;
 
 use super::handle;
+use super::pump::PumpState;
+use super::streams::StreamTable;
 use crate::mark::mark;
 use crate::mixer::Mixer;
 use crate::selftest;
 use crate::sink::Sink;
 
 const RX_LEN: usize = 4124;
-const TX_LEN: usize = 24;
+const TX_LEN: usize = 28;
 const RECV_TIMEOUT_MS: u64 = 1000;
 
 pub fn run() -> ! {
@@ -37,15 +39,20 @@ pub fn run() -> ! {
         selftest::run(s);
         s.stream_start(3);
     }
+    let mut table = StreamTable::new();
+    let mut pump = PumpState::new();
     let mut rx = vec![0u8; RX_LEN];
     let mut tx = vec![0u8; TX_LEN];
     loop {
         let n = mk_ipc_recv(0, rx.as_mut_ptr(), RX_LEN, RECV_TIMEOUT_MS);
         if n <= 0 {
+            if let Some(ref s) = sink {
+                super::pump::step(&mut pump, &mut table, s);
+            }
             continue;
         }
         if let Some(ref s) = sink {
-            handle(&rx[..n as usize], &mut mixer, s, &mut tx);
+            handle(&rx[..n as usize], &mut mixer, s, &mut table, &mut pump, &mut tx);
         }
     }
 }

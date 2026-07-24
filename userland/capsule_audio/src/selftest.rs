@@ -19,6 +19,8 @@ use alloc::vec;
 use crate::mark::mark;
 use crate::mixer::Mixer;
 use crate::server::proto;
+use crate::server::pump::PumpState;
+use crate::server::streams::StreamTable;
 use crate::sink::Sink;
 
 const CHUNK_BYTES: usize = 4096;
@@ -39,12 +41,14 @@ pub fn run(sink: &Sink) {
 
 pub fn run_mix(mixer: &mut Mixer, sink: &Sink) {
     let mut tx = [0u8; REPLY_MSG];
+    let mut table = StreamTable::new();
+    let mut pump = PumpState::new();
     let mut a = [0u8; TONE_MSG];
     let na = tone_request(1, 440, 20, 0x2000, &mut a);
-    crate::server::handle(&a[..na], mixer, sink, &mut tx);
+    crate::server::handle(&a[..na], mixer, sink, &mut table, &mut pump, &mut tx);
     let mut b = [0u8; TONE_MSG];
     let nb = tone_request(2, 660, 20, 0x2000, &mut b);
-    crate::server::handle(&b[..nb], mixer, sink, &mut tx);
+    crate::server::handle(&b[..nb], mixer, sink, &mut table, &mut pump, &mut tx);
 }
 
 fn tone_request(id: u32, freq: u32, ms: u32, gain: u16, out: &mut [u8]) -> usize {

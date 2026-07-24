@@ -17,6 +17,7 @@
 mod dispatch;
 mod ops;
 pub mod proto;
+pub mod pump;
 mod ring;
 mod run;
 mod serve;
