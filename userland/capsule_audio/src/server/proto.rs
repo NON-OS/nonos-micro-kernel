@@ -21,8 +21,14 @@ pub const STATUS_LEN: usize = 4;
 pub const OP_PLAY_TONE: u16 = 1;
 pub const OP_PLAY_PCM: u16 = 2;
 pub const OP_STOP: u16 = 3;
+// NAUD ops (magic 0x4e41_5544) — distinct namespace from NHDA.
+pub const OP_STREAM_OPEN: u16 = 4;
+pub const OP_FEED_PCM: u16 = 5;
+pub const OP_PAUSE: u16 = 6;
+pub const OP_CLOSE: u16 = 7;
 pub const E_OK: i32 = 0;
 pub const E_INVAL: i32 = -22;
+pub const E_AGAIN: i32 = -11;
 
 pub struct Request {
     pub op: u16,
@@ -62,4 +68,14 @@ pub fn encode_reply(req: &Request, status: i32, out: &mut [u8]) -> usize {
     write_header(out, req.op, req.request_id, STATUS_LEN as u32);
     out[HDR_LEN..HDR_LEN + STATUS_LEN].copy_from_slice(&status.to_le_bytes());
     HDR_LEN + STATUS_LEN
+}
+
+pub fn encode_open_reply(req: &Request, status: i32, stream_id: u32, out: &mut [u8]) -> usize {
+    if out.len() < 28 {
+        return 0;
+    }
+    write_header(out, req.op, req.request_id, STATUS_LEN as u32);
+    out[HDR_LEN..HDR_LEN + STATUS_LEN].copy_from_slice(&status.to_le_bytes());
+    out[24..28].copy_from_slice(&stream_id.to_le_bytes());
+    28
 }
