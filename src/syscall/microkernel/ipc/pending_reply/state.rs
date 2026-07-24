@@ -20,6 +20,12 @@ use alloc::collections::{BTreeMap, VecDeque};
 use alloc::string::String;
 use spin::Mutex;
 
-pub(super) static PENDING: Mutex<BTreeMap<u32, VecDeque<String>>> = Mutex::new(BTreeMap::new());
+// Each pending entry is (caller reply inbox, correlation token). Carrying the
+// caller's per-call token lets the redirect-reply path (a service replying via
+// `mk_ipc_send` to its own fixed reply endpoint) stamp the reply with the
+// correlation the caller waits on, so the caller can reject a forged reply
+// (which can only ever carry correlation 0).
+pub(super) static PENDING: Mutex<BTreeMap<u32, VecDeque<(String, u64)>>> =
+    Mutex::new(BTreeMap::new());
 
 pub(super) const MAX_PER_SERVICE: usize = 64;

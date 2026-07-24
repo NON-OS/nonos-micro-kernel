@@ -1,0 +1,20 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Runnable proof-of-concept for the trusted-path audit fixes (PR #405). Each
+# test mirrors the decision the kernel change makes and asserts the bug-closed
+# outcome, so `cargo test` is a runnable witness alongside the Lean theorems in
+# verification/lean (InputConsumer, ReplyCorrelation, FrameNoAlias,
+# ServiceRegisterAuth, FramebufferSwap).
+[package]
+name = "nonos_trusted_path_poc"
+version = "0.9.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+
+# Standalone: its own workspace root so it does not join the kernel workspace.
+[workspace]

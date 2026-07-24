@@ -82,17 +82,10 @@ pub(super) fn blit(
             }
             // Surface pixels are ARGB8888, stored B,G,R,A in memory, which is
             // exactly what a BGR framebuffer scans out. RGB firmware needs the
-            // red and blue channels exchanged. Chunks stay pixel-aligned:
-            // row_bytes and the bounce length are both multiples of four.
-            if !fb.bgr {
-                for px in bounce[..chunk].chunks_exact_mut(4) {
-                    px.swap(0, 2);
-                }
-            }
-            // Surface pixels are ARGB8888, stored B,G,R,A in memory, which is
-            // exactly what a BGR framebuffer scans out. RGB firmware needs the
-            // red and blue channels exchanged. Chunks stay pixel-aligned:
-            // row_bytes and the bounce length are both multiples of four.
+            // red and blue channels exchanged, exactly once: this swap was
+            // duplicated, so it cancelled and RGB displays scanned out with red
+            // and blue reversed. Chunks stay pixel-aligned (row_bytes and the
+            // bounce length are both multiples of four).
             if !fb.bgr {
                 for px in bounce[..chunk].chunks_exact_mut(4) {
                     px.swap(0, 2);

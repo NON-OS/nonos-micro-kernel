@@ -14,10 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::constants::*;
 use super::super::error::FrameResult;
 use super::super::types::FrameAllocator;
-use crate::memory::addr::PhysAddr;
 use spin::Mutex;
 
 static GLOBAL_ALLOCATOR: Mutex<FrameAllocator> = Mutex::new(FrameAllocator::new());
@@ -28,11 +26,9 @@ pub fn init() -> FrameResult<()> {
         return Ok(());
     }
     allocator.init()?;
-    if allocator.usable.is_empty() {
-        let start = PhysAddr::new(DEFAULT_REGION_START);
-        let end = PhysAddr::new(DEFAULT_REGION_END);
-        allocator.add_region(start, end)?;
-    }
+    // No DEFAULT_REGION seeding: the `phys` bitmap is the sole physical-frame
+    // source. The removed `[16 MiB, 512 MiB)` shadow region overlapped the
+    // bitmap-managed range and caused cross-owner double-alloc/double-free.
     Ok(())
 }
 

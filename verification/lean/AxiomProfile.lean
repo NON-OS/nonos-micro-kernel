@@ -339,3 +339,18 @@ import Nonos
 #print axioms Nonos.Fairness.never_stalls
 #print axioms Nonos.Fairness.rotateN_to_head
 #print axioms Nonos.Fairness.reaches_head
+
+-- Trusted-path audit fixes (PR #405). Each theorem pins the property the code
+-- change establishes, on Lean's standard axioms alone.
+#print axioms Nonos.FrameNoAlias.alloc_no_alias
+#print axioms Nonos.FrameNoAlias.bump_aliases
+#print axioms Nonos.FrameNoAlias.fixed_none_on_empty
+#print axioms Nonos.InputConsumer.drain_implies_post
+#print axioms Nonos.InputConsumer.irq_only_cannot_drain
+#print axioms Nonos.ReplyCorrelation.forged_never_delivered
+#print axioms Nonos.ReplyCorrelation.firstMatch_matches
+#print axioms Nonos.ReplyCorrelation.all_forged_none
+#print axioms Nonos.ServiceRegisterAuth.new_no_bypass
+#print axioms Nonos.ServiceRegisterAuth.old_low_pid_bypass
+#print axioms Nonos.FramebufferSwap.swap_involutive
+#print axioms Nonos.FramebufferSwap.present_rgb_converts

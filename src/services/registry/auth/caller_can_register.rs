@@ -21,9 +21,13 @@ pub(in crate::services::registry) fn caller_can_register(owner_pid: u32, require
     if !owner_has_required(owner_pid, required) {
         return false;
     }
+    // Kernel-context registration (boot-time trusted services) has no current
+    // pid and is allowed. Every capsule with a pid must hold the register right;
+    // the old `pid <= 64` shortcut handed unauthenticated registration authority
+    // to any capsule spawned early enough to land in that range, which let an
+    // ordinary app squat/impersonate a service name.
     match crate::process::current_pid() {
         None => true,
-        Some(pid) if pid <= 64 => true,
         Some(_) => caller_has_register_right(),
     }
 }
