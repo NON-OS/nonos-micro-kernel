@@ -42,6 +42,7 @@ impl Store {
         self.seed_file("/images/field.png", include_bytes!("../../../testimages/field.png"));
         self.seed_packages();
         self.seed_capsule_store();
+        self.seed_audio_store();
     }
 
     #[cfg(not(feature = "seed-terminal-store"))]
@@ -53,6 +54,14 @@ impl Store {
         self.seed_file("/capsules/hello.nonos_id_cert.bin", store::HELLO_CERT);
         self.seed_file("/capsules/hello.manifest.bin", store::HELLO_MANIFEST);
         self.seed_file("/capsules/hello.zk_trailer.bin", store::HELLO_TRAILER);
+    }
+
+    #[cfg(not(feature = "seed-audio-store"))]
+    fn seed_audio_store(&mut self) {}
+
+    #[cfg(feature = "seed-audio-store")]
+    fn seed_audio_store(&mut self) {
+        self.seed_file("/audio/boot_tone.wav", include_bytes!("../../testassets/boot_tone.wav"));
     }
 
     fn seed_file(&mut self, name: &str, data: &[u8]) {
