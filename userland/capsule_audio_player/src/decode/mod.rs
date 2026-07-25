@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod decoder;
+pub(crate) mod minimp3_sys;
 mod wav;
 mod wav_pcm;
 pub use decoder::{AudioInfo, Decoder};
