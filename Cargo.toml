@@ -515,6 +515,8 @@ microkernel-desktop-gui = [
   "nonos-capsule-toolkit",
   "nonos-capsule-about",
   "nonos-capsule-audio-player",
+  "nonos-capsule-audio",
+  "nonos-capsule-driver-hda",
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
   "nonos-capsule-clock",
