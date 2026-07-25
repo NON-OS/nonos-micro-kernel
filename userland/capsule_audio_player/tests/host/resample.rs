@@ -40,5 +40,18 @@ fn main() {
     rs3.process(b, &mut out3);
     assert_eq!(out3, stereo, "chunked 48k stereo passthrough must stay bit-exact");
 
+    let mut ramp = Vec::new();
+    for i in 0..8i16 {
+        ramp.push(i * 1000);
+    }
+    let mut whole = Vec::new();
+    Resampler::new(24_000, 1).process(&ramp, &mut whole);
+    let mut seam = Vec::new();
+    let mut rs5 = Resampler::new(24_000, 1);
+    let (h1, h2) = ramp.split_at(4);
+    rs5.process(h1, &mut seam);
+    rs5.process(h2, &mut seam);
+    assert_eq!(seam, whole, "chunked upsample must match single call (gapless seam)");
+
     println!("HOSTTEST-PASS resample");
 }
