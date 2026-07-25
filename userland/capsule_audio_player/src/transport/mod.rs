@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod proto;
-pub use call::{AudioClient, FeedResult};
+mod client_sink;
+mod defs;
+mod machine;
+mod pump;
+
+pub use defs::{Fed, FeedSink, State};
+pub use machine::Transport;

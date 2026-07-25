@@ -14,11 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{AudioClient, FeedResult};
-use crate::transport::FeedSink;
+#[derive(PartialEq, Clone, Copy)]
+pub enum State {
+    Stopped,
+    Playing,
+    Paused,
+}
 
-impl FeedSink for AudioClient {
-    fn feed(&mut self, pcm: &[i16]) -> FeedResult {
-        AudioClient::feed(self, pcm).unwrap_or(FeedResult::WouldBlock)
-    }
+pub enum Fed {
+    Accepted,
+    WouldBlock,
+}
+
+pub trait FeedSink {
+    fn open(&mut self, format: u16) -> Result<(), &'static str>;
+    fn feed(&mut self, pcm: &[i16]) -> Fed;
+    fn pause(&mut self);
+    fn close(&mut self);
 }
