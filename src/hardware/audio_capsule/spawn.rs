@@ -26,9 +26,9 @@ use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_T
 pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 
 const SERVICE_NAME: &str = "audio.server";
-const SERVICE_PORT: u32 = 4226;
-const REPLY_PORT: u32 = 4227;
-const REPLY_INBOX: &str = "endpoint.4294967314";
+const SERVICE_PORT: u32 = 4872;
+const REPLY_PORT: u32 = 4873;
+const REPLY_INBOX: &str = "endpoint.4294967321";
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
 
 pub fn spawn_audio_capsule() -> Result<(), SpawnError> {

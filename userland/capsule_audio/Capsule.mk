@@ -10,8 +10,8 @@ CAPSULE_DIR              := userland/capsule_audio
 CAPSULE_BIN_NAME         := audio_server
 CAPSULE_FEATURE          := nonos-capsule-audio
 CAPSULE_NAMESPACE        := systems.nonos.audio.server
-CAPSULE_SERVICE_ENDPOINT := service:4226:audio.server
-CAPSULE_REPLY_ENDPOINT   := reply:4227:endpoint.4294967314
+CAPSULE_SERVICE_ENDPOINT := service:4872:audio.server
+CAPSULE_REPLY_ENDPOINT   := reply:4873:endpoint.4294967321
 # IPC|Memory|Debug + CoreExec base = 0x119
 CAPSULE_REQUIRED_CAPS    := 0x119
 
