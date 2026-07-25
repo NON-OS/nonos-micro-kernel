@@ -26,6 +26,7 @@ mod resample;
 #[cfg(feature = "nonos-audio-player-smoketest")]
 mod selftest;
 mod transport;
+pub mod waveform;
 #[cfg(not(feature = "nonos-audio-player-smoketest"))]
 use app::PlayerApp;
 #[cfg(not(feature = "nonos-audio-player-smoketest"))]
