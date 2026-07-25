@@ -21,6 +21,7 @@ mod audio_client;
 mod decode;
 mod loader;
 mod mark;
+mod model;
 mod resample;
 mod transport;
 use app::PlayerApp;
