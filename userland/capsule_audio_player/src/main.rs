@@ -23,11 +23,18 @@ mod loader;
 mod mark;
 mod model;
 mod resample;
+#[cfg(feature = "nonos-audio-player-smoketest")]
+mod selftest;
 mod transport;
+#[cfg(not(feature = "nonos-audio-player-smoketest"))]
 use app::PlayerApp;
+#[cfg(not(feature = "nonos-audio-player-smoketest"))]
 use nonos_app_skeleton::run;
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     mark::mark("[PLAYER] up\n");
+    #[cfg(feature = "nonos-audio-player-smoketest")]
+    selftest::run();
+    #[cfg(not(feature = "nonos-audio-player-smoketest"))]
     run(PlayerApp::new);
 }
