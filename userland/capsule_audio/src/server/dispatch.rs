@@ -23,7 +23,7 @@ use super::streams::StreamTable;
 use crate::mixer::Mixer;
 use crate::sink::Sink;
 
-const KERNEL_REPLY_ENDPOINT: u64 = 0x1_0000_0010;
+const KERNEL_REPLY_ENDPOINT: u64 = 0x1_0000_0012;
 
 pub fn handle(
     msg: &[u8],
