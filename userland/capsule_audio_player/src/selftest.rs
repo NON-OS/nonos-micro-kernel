@@ -20,7 +20,7 @@ use alloc::boxed::Box;
 use nonos_libc::{heap_init, mk_exit, mk_yield};
 
 use crate::audio_client::AudioClient;
-use crate::decode::WavDecoder;
+use crate::decode::open as decode_open;
 use crate::loader;
 use crate::mark::{mark, mark_frames};
 use crate::transport::{State, Transport};
@@ -34,9 +34,9 @@ pub fn run() -> ! {
     }
     let client = AudioClient::connect().unwrap_or_else(|_| fail("[PLAYER] connect-fail\n"));
     let bytes = loader::load(ASSET).unwrap_or_else(|_| fail("[PLAYER] load-fail\n"));
-    let dec = WavDecoder::new(bytes).unwrap_or_else(|_| fail("[PLAYER] decode-fail\n"));
+    let dec = decode_open(bytes).unwrap_or_else(|_| fail("[PLAYER] decode-fail\n"));
     let mut tp = Transport::new(Box::new(client));
-    if tp.open(Box::new(dec)).is_err() {
+    if tp.open(dec).is_err() {
         fail("[PLAYER] open-fail\n");
     }
     tp.play();
