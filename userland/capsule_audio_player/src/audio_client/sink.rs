@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod proto;
-mod sink;
-pub use call::{AudioClient, FeedResult};
+use super::{AudioClient, FeedResult};
+use crate::transport::FeedSink;
+
+impl FeedSink for AudioClient {
+    fn feed(&mut self, pcm: &[i16]) -> FeedResult {
+        AudioClient::feed(self, pcm).unwrap_or(FeedResult::WouldBlock)
+    }
+}
