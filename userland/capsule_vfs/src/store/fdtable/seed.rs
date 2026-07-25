@@ -62,6 +62,7 @@ impl Store {
     #[cfg(feature = "seed-audio-store")]
     fn seed_audio_store(&mut self) {
         self.seed_file("/audio/boot_tone.wav", include_bytes!("../../testassets/boot_tone.wav"));
+        self.seed_file("/audio/boot_tone.mp3", include_bytes!("../../testassets/boot_tone.mp3"));
     }
 
     fn seed_file(&mut self, name: &str, data: &[u8]) {
