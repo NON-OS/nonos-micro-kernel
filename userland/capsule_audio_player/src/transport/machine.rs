@@ -62,4 +62,7 @@ impl Transport {
     pub fn seek_frames(&mut self, f: u64) { self.pos_frames = f.min(self.dur_frames); }
     pub fn set_volume(&mut self, q15: i32) { self.volume_q15 = q15.clamp(0, 1 << 15); }
     pub fn state(&self) -> State { self.state }
+    pub fn pos_frames(&self) -> u64 { self.pos_frames }
+    pub fn dur_frames(&self) -> u64 { self.dur_frames }
+    pub fn volume_q15(&self) -> i32 { self.volume_q15 }
 }

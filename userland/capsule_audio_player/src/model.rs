@@ -17,7 +17,7 @@
 extern crate alloc;
 use alloc::string::String;
 use crate::resample::OUT_RATE;
-use crate::transport::{FeedSink, State, Transport};
+use crate::transport::{State, Transport};
 
 pub struct TrackMeta { pub title: String, pub artist: String, pub format: String }
 
@@ -32,7 +32,7 @@ pub struct PlayerView {
     pub state: State,
 }
 
-impl<S: FeedSink> Transport<S> {
+impl Transport {
     pub fn view(&self, meta: &TrackMeta) -> PlayerView {
         PlayerView {
             title: meta.title.clone(),
