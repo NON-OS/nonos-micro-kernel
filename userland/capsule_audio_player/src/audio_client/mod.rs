@@ -14,18 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-mod app;
-mod audio_client;
-mod decode;
-mod loader;
-mod mark;
-mod resample;
-use app::PlayerApp;
-use nonos_app_skeleton::run;
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    mark::mark("[PLAYER] up\n");
-    run(PlayerApp::new);
-}
+mod call;
+mod proto;
+pub use call::{AudioClient, FeedResult};
