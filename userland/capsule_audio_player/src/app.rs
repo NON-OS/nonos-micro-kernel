@@ -20,11 +20,13 @@ use alloc::string::String;
 use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer, WindowKind};
 use crate::audio_client::AudioClient;
 use crate::model::TrackMeta;
+use crate::track::load_default;
 use crate::transport::{Fed, FeedSink, State, Transport};
+use crate::ui;
+use crate::waveform::Waveform;
 
 const WINDOW_ID: u32 = 0x5245_534E;
-const BG: u32 = 0xFF10161C; const FG: u32 = 0xFFE8EEF4;
-const BAR: u32 = 0xFF3A9BDC; const TRK: u32 = 0xFF223040;
+const INPUT_MASK: u32 = (1 << 0) | (1 << 3) | (1 << 5);
 
 struct NullSink;
 impl FeedSink for NullSink {
@@ -33,7 +35,7 @@ impl FeedSink for NullSink {
     fn pause(&mut self) {}
     fn close(&mut self) {}
 }
-pub struct PlayerApp { transport: Transport, meta: TrackMeta }
+pub struct PlayerApp { transport: Transport, meta: TrackMeta, waveform: Waveform }
 
 impl PlayerApp {
     pub fn new() -> Self {
@@ -41,8 +43,10 @@ impl PlayerApp {
             Ok(c) => Box::new(c),
             Err(_) => Box::new(NullSink),
         };
-        let meta = TrackMeta { title: String::new(), artist: String::new(), format: String::new() };
-        PlayerApp { transport: Transport::new(sink), meta }
+        let mut transport = Transport::new(sink);
+        let mut meta = TrackMeta { title: String::new(), artist: String::new(), format: String::new() };
+        let waveform = load_default(&mut transport, &mut meta);
+        PlayerApp { transport, meta, waveform }
     }
 }
 
@@ -50,24 +54,14 @@ impl App for PlayerApp {
     fn manifest(&self) -> AppManifest {
         AppManifest {
             title: b"Resonare", window_id: WINDOW_ID, kind: WindowKind::Normal,
-            initial_x: 360, initial_y: 240, width: 480, height: 320, input_kind_mask: 0,
+            initial_x: 360, initial_y: 240, width: 480, height: 320, input_kind_mask: INPUT_MASK,
         }
     }
     fn on_event(&mut self, _event: InputEvent) -> EventOutcome { EventOutcome::Idle }
     fn paint(&mut self, fb: &mut PaintBuffer) {
         let v = self.transport.view(&self.meta);
-        fb.clear(BG);
-        fb.text(24, 32, v.title.as_bytes(), FG);
-        fb.text(24, 56, v.artist.as_bytes(), FG);
-        fb.text(24, 80, v.format.as_bytes(), FG);
-        let label = match v.state { State::Playing => b"PLAYING" as &[u8], State::Paused => b"PAUSED", State::Stopped => b"STOPPED" };
-        fb.text(24, 104, label, FG);
-        let pw = if v.dur_ms == 0 { 0 } else { (432u64 * v.pos_ms as u64 / v.dur_ms as u64) as u32 };
-        fb.fill_rect(24, 160, 432, 12, TRK);
-        fb.fill_rect(24, 160, pw, 12, BAR);
-        let vw = (432u32 * v.volume_q15.max(0) as u32) / 0x8000;
-        fb.fill_rect(24, 200, 432, 12, TRK);
-        fb.fill_rect(24, 200, vw, 12, BAR);
+        let l = ui::layout(fb.width, fb.height);
+        ui::paint_player(fb, &v, &self.waveform, &l);
     }
     fn on_tick(&mut self) -> bool { self.transport.pump(); self.transport.state() == State::Playing }
     fn busy(&self) -> bool { self.transport.state() == State::Playing }

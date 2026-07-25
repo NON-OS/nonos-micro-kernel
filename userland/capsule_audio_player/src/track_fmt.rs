@@ -14,31 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-mod app;
-mod audio_client;
-mod decode;
-mod loader;
-mod mark;
-mod model;
-mod resample;
-#[cfg(feature = "nonos-audio-player-smoketest")]
-mod selftest;
-mod track;
-mod track_fmt;
-mod transport;
-mod ui;
-pub mod waveform;
-#[cfg(not(feature = "nonos-audio-player-smoketest"))]
-use app::PlayerApp;
-#[cfg(not(feature = "nonos-audio-player-smoketest"))]
-use nonos_app_skeleton::run;
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    mark::mark("[PLAYER] up\n");
-    #[cfg(feature = "nonos-audio-player-smoketest")]
-    selftest::run();
-    #[cfg(not(feature = "nonos-audio-player-smoketest"))]
-    run(PlayerApp::new);
+extern crate alloc;
+use alloc::string::String;
+
+use crate::decode::Decoder;
+
+pub fn format_of(dec: &dyn Decoder) -> String {
+    let info = dec.info();
+    let mut s = String::from("WAV ");
+    push_u32(&mut s, info.rate);
+    s.push_str("Hz");
+    s
+}
+
+fn push_u32(s: &mut String, mut n: u32) {
+    if n == 0 {
+        s.push('0');
+        return;
+    }
+    let mut tmp = [0u8; 10];
+    let mut i = 0;
+    while n > 0 {
+        tmp[i] = b'0' + (n % 10) as u8;
+        n /= 10;
+        i += 1;
+    }
+    while i > 0 {
+        i -= 1;
+        s.push(tmp[i] as char);
+    }
 }
