@@ -702,8 +702,8 @@ nonos-mk-driver-hda-smoketest-dev-test: $(proof-io_MANIFEST) $(audio_MANIFEST) \
 nonos-mk-audio-player-smoketest-test: $(proof-io_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building capsules (audio-player smoketest)..."
-	@$(MAKE) -B audio_player_CARGO_FEATURES=nonos-audio-player-smoketest nonos-mk-audio_player-sign
-	@$(MAKE) -B vfs_CARGO_FEATURES=seed-audio-store nonos-mk-vfs-sign
+	@$(MAKE) -B audio_player_CARGO_FEATURES=nonos-audio-player-smoketest vfs_CARGO_FEATURES=seed-audio-store \
+		nonos-mk-audio_player-sign nonos-mk-vfs-sign
 	@$(MAKE) nonos-mk-driver-hda-sign
 	@$(MAKE) nonos-mk-audio-sign
 	@$(MAKE) nonos-mk-stark-enroll-capsules
@@ -718,8 +718,8 @@ nonos-mk-audio-player-smoketest-test: $(proof-io_ARTIFACTS) \
 nonos-mk-audio-player-smoketest-dev-test: $(proof-io_MANIFEST) $(audio_MANIFEST) $(driver-hda_MANIFEST) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building capsules (audio-player smoketest, dev; no enroll)..."
-	@$(MAKE) -B audio_player_CARGO_FEATURES=nonos-audio-player-smoketest nonos-mk-audio_player-sign
-	@$(MAKE) -B vfs_CARGO_FEATURES=seed-audio-store nonos-mk-vfs-sign
+	@$(MAKE) -B audio_player_CARGO_FEATURES=nonos-audio-player-smoketest vfs_CARGO_FEATURES=seed-audio-store \
+		nonos-mk-audio_player-sign nonos-mk-vfs-sign
 	@echo "Building kernel (microkernel-audio-player-smoketest, zk-rollout; no enroll)..."
 	$(call nonos_kernel_build,microkernel-audio-player-smoketest + nonos-zk-rollout,microkernel-audio-player-smoketest$(_boot_comma)nonos-stark-attest$(_boot_comma)nonos-zk-rollout)
 
