@@ -151,6 +151,9 @@ nonos-mk-boot-ramfs:
 nonos-mk-boot-hda-playback:
 	@./tests/boot/hda_playback.sh
 
+nonos-mk-boot-audio-player:
+	@./tests/boot/audio_player_playback.sh
+
 nonos-mk-boot-keyring:
 	@./tests/boot/keyring_round_trip.sh
 

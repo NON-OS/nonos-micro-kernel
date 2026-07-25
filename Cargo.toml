@@ -623,6 +623,16 @@ microkernel-driver-hda-smoketest = [
   "nonos-user-entry-proof",
 ]
 
+microkernel-audio-player-smoketest = [
+  "microkernel-core",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-driver-hda",
+  "nonos-capsule-audio",
+  "nonos-capsule-vfs",
+  "nonos-capsule-audio-player",
+  "nonos-user-entry-proof",
+]
+
 microkernel-file-manager = ["microkernel-desktop-gui"]
 microkernel-text-editor = ["microkernel-desktop-gui"]
 microkernel-settings = ["microkernel-desktop-gui"]
