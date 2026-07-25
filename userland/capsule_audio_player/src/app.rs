@@ -37,7 +37,7 @@ impl FeedSink for NullSink {
     fn pause(&mut self) {}
     fn close(&mut self) {}
 }
-pub struct PlayerApp { transport: Transport, meta: TrackMeta, waveform: Waveform }
+pub struct PlayerApp { transport: Transport, meta: TrackMeta, waveform: Waveform, dims: (u32, u32) }
 
 impl PlayerApp {
     pub fn new() -> Self {
@@ -48,7 +48,7 @@ impl PlayerApp {
         let mut transport = Transport::new(sink);
         let mut meta = TrackMeta { title: String::new(), artist: String::new(), format: String::new() };
         let waveform = load_default(&mut transport, &mut meta);
-        PlayerApp { transport, meta, waveform }
+        PlayerApp { transport, meta, waveform, dims: (WINDOW_W, WINDOW_H) }
     }
 }
 
@@ -60,9 +60,10 @@ impl App for PlayerApp {
         }
     }
     fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        ui::event::handle(&mut self.transport, &ui::layout(WINDOW_W, WINDOW_H), event)
+        ui::event::handle(&mut self.transport, &ui::layout(self.dims.0, self.dims.1), event)
     }
     fn paint(&mut self, fb: &mut PaintBuffer) {
+        self.dims = (fb.width, fb.height);
         let v = self.transport.view(&self.meta);
         let l = ui::layout(fb.width, fb.height);
         ui::paint_player(fb, &v, &self.waveform, &l);
