@@ -16,7 +16,10 @@
 
 mod decoder;
 pub(crate) mod minimp3_sys;
+mod mp3;
+mod mp3_frame;
 mod wav;
 mod wav_pcm;
 pub use decoder::{AudioInfo, Decoder};
+pub use mp3::Mp3Decoder;
 pub use wav::WavDecoder;
