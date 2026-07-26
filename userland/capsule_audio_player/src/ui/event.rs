@@ -14,43 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::control::{control_at, Control};
-use super::Layout;
+use super::control::Control;
 use crate::resample::OUT_RATE;
 use crate::transport::{State, Transport};
-use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, KEY_ENTER, KEY_LEFT, KEY_RIGHT};
+use nonos_app_skeleton::{EventOutcome, KEY_ENTER, KEY_LEFT, KEY_RIGHT};
 
 const KEY_SPACE: u32 = 0x20;
 
-pub fn handle(tp: &mut Transport, l: &Layout, ev: InputEvent) -> EventOutcome {
-    match ev.kind {
-        InputKind::ButtonDown => match control_at(l, ev.x, ev.y) {
-            Some(c) => {
-                apply(tp, c);
-                EventOutcome::Repaint
-            }
-            None => EventOutcome::Idle,
-        },
-        InputKind::KeyDown => match ev.code {
-            KEY_SPACE | KEY_ENTER => {
-                apply(tp, Control::PlayPause);
-                EventOutcome::Repaint
-            }
-            KEY_LEFT => {
-                apply(tp, Control::SeekBackSecs(10));
-                EventOutcome::Repaint
-            }
-            KEY_RIGHT => {
-                apply(tp, Control::SeekFwdSecs(10));
-                EventOutcome::Repaint
-            }
-            _ => EventOutcome::Idle,
-        },
-        _ => EventOutcome::Idle,
-    }
-}
-
-fn apply(tp: &mut Transport, c: Control) {
+pub fn apply(tp: &mut Transport, c: Control) {
     match c {
         Control::PlayPause => {
             if tp.state() == State::Playing {
@@ -59,12 +30,30 @@ fn apply(tp: &mut Transport, c: Control) {
                 tp.play()
             }
         }
-        Control::Stop => tp.stop(),
+        Control::Seek(p) => tp.seek_frames(tp.dur_frames() * p as u64 / 1000),
+        Control::Volume(p) => tp.set_volume((0x8000i32 * p as i32) / 1000),
         Control::SeekBackSecs(s) => {
             tp.seek_frames(tp.pos_frames().saturating_sub(s as u64 * OUT_RATE as u64))
         }
         Control::SeekFwdSecs(s) => tp.seek_frames(tp.pos_frames() + s as u64 * OUT_RATE as u64),
-        Control::SeekPermille(p) => tp.seek_frames(tp.dur_frames() * p as u64 / 1000),
-        Control::VolumePermille(p) => tp.set_volume((0x8000i32 * p as i32) / 1000),
+        Control::Prev | Control::Next | Control::Shuffle | Control::Repeat => {}
+    }
+}
+
+pub fn key(tp: &mut Transport, code: u32) -> EventOutcome {
+    match code {
+        KEY_SPACE | KEY_ENTER => {
+            apply(tp, Control::PlayPause);
+            EventOutcome::Repaint
+        }
+        KEY_LEFT => {
+            apply(tp, Control::SeekBackSecs(10));
+            EventOutcome::Repaint
+        }
+        KEY_RIGHT => {
+            apply(tp, Control::SeekFwdSecs(10));
+            EventOutcome::Repaint
+        }
+        _ => EventOutcome::Idle,
     }
 }

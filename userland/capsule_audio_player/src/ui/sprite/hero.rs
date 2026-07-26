@@ -14,13 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod control;
-mod draw;
-pub mod event;
-mod format;
-mod geometry;
-pub mod sprite;
-mod view;
+//! Hero glow disc button base and album-art gradient tile.
 
-pub use geometry::{layout, list_row_at, Layout};
-pub use view::{paint_library, paint_player};
+use super::canvas::Sprite;
+use super::{fx, prim};
+
+pub fn glow_disc(px: u32, fill_rgb: u32, glow_rgb: u32) -> Sprite {
+    let mut s = Sprite::blank(px);
+    let c = (px / 2) as i32;
+    let r = (px * 30 / 100) as i32;
+    let edge = (px * 50 / 100) as i32;
+    fx::radial(&mut s, c, c, r, edge, glow_rgb, 200);
+    prim::disc(&mut s, c, c, r, fill_rgb);
+    s
+}
+
+pub fn gradient_art(px: u32) -> Sprite {
+    let mut s = Sprite::blank(px);
+    fx::gradient(&mut s, 0x7C5CFF, 0x0E0E16);
+    s
+}

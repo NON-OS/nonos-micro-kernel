@@ -67,4 +67,22 @@ impl Queue {
         self.current = (self.current + 1) % self.items.len();
         self.current()
     }
+
+    pub fn back(&mut self) -> Option<usize> {
+        if self.items.is_empty() {
+            return None;
+        }
+        self.current = (self.current + self.items.len() - 1) % self.items.len();
+        self.current()
+    }
+
+    pub fn reverse(&mut self) {
+        let cur = self.current();
+        self.items.reverse();
+        if let Some(t) = cur {
+            if let Some(pos) = self.items.iter().position(|&x| x == t) {
+                self.current = pos;
+            }
+        }
+    }
 }

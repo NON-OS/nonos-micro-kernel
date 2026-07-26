@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod control;
-mod draw;
-pub mod event;
-mod format;
-mod geometry;
-pub mod sprite;
-mod view;
+pub const BG: u32 = 0xFF0A0A0F;
+pub const PANEL: u32 = 0xFF15151E;
+pub const GROOVE: u32 = 0xFF232334;
+pub const ACCENT: u32 = 0xFF7C5CFF;
+pub const TEXT: u32 = 0xFFF2F1F8;
+pub const MUTED: u32 = 0xFF8A8A99;
 
-pub use geometry::{layout, list_row_at, Layout};
-pub use view::{paint_library, paint_player};
+pub fn rgb24(argb: u32) -> u32 {
+    argb & 0x00FF_FFFF
+}

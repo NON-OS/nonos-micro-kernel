@@ -14,13 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod control;
-mod draw;
-pub mod event;
-mod format;
-mod geometry;
-pub mod sprite;
-mod view;
+//! Anti-aliased RGBA8 sprite rasterizer for transport icons and art.
 
-pub use geometry::{layout, list_row_at, Layout};
-pub use view::{paint_library, paint_player};
+mod canvas;
+mod fx;
+mod glyph_a;
+mod glyph_b;
+mod hero;
+mod prim;
+mod shape;
+mod stroke;
+mod transport_a;
+mod transport_b;
+
+pub use canvas::Sprite;
+pub use glyph_a::{magnifier, note, speaker};
+pub use glyph_b::{check, close, plus};
+pub use hero::{glow_disc, gradient_art};
+pub use transport_a::{pause, play, prev, next, stop};
+pub use transport_b::{repeat, shuffle};

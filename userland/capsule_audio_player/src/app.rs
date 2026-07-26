@@ -17,9 +17,10 @@
 extern crate alloc;
 use alloc::boxed::Box;
 use alloc::string::String;
-use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer, WindowKind};
+use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, InputKind, PaintBuffer, WindowKind};
 use crate::audio_client::AudioClient;
 use crate::library::{Library, Queue};
+use crate::ui::control::{control_at, Control};
 use crate::model::TrackMeta;
 use crate::track::{load_default, load_track};
 use crate::transport::{Fed, FeedSink, State, Transport};
@@ -38,7 +39,11 @@ impl FeedSink for NullSink {
     fn pause(&mut self) {}
     fn close(&mut self) {}
 }
-pub struct PlayerApp { transport: Transport, meta: TrackMeta, waveform: Waveform, library: Library, queue: Queue, dims: (u32, u32) }
+
+#[derive(Clone, Copy, PartialEq)]
+enum ViewMode { NowPlaying, Library }
+
+pub struct PlayerApp { transport: Transport, meta: TrackMeta, waveform: Waveform, library: Library, queue: Queue, shuffle: bool, repeat: bool, view: ViewMode, dims: (u32, u32) }
 
 impl PlayerApp {
     pub fn new() -> Self {
@@ -57,7 +62,68 @@ impl PlayerApp {
             Some(t) => load_track(&mut transport, &mut meta, t),
             None => load_default(&mut transport, &mut meta),
         };
-        PlayerApp { transport, meta, waveform, library, queue, dims: (WINDOW_W, WINDOW_H) }
+        PlayerApp { transport, meta, waveform, library, queue, shuffle: false, repeat: false, view: ViewMode::NowPlaying, dims: (WINDOW_W, WINDOW_H) }
+    }
+
+    fn select(&mut self, i: usize) {
+        self.queue.focus(i);
+        self.load_index(i);
+        self.view = ViewMode::NowPlaying;
+    }
+
+    fn on_click(&mut self, l: &ui::Layout, x: i32, y: i32) -> EventOutcome {
+        if l.now_tab.contains(x, y) {
+            self.view = ViewMode::NowPlaying;
+            return EventOutcome::Repaint;
+        }
+        if l.lib_tab.contains(x, y) {
+            self.view = ViewMode::Library;
+            return EventOutcome::Repaint;
+        }
+        if self.view == ViewMode::Library {
+            return match ui::list_row_at(&l.list, self.library.tracks.len(), x, y) {
+                Some(i) => { self.select(i); EventOutcome::Repaint }
+                None => EventOutcome::Idle,
+            };
+        }
+        match control_at(l, x, y) {
+            Some(Control::Prev) => { self.prev_track(); EventOutcome::Repaint }
+            Some(Control::Next) => { self.next_track(); EventOutcome::Repaint }
+            Some(Control::Shuffle) => { self.toggle_shuffle(); EventOutcome::Repaint }
+            Some(Control::Repeat) => { self.repeat = !self.repeat; EventOutcome::Repaint }
+            Some(c) => { ui::event::apply(&mut self.transport, c); EventOutcome::Repaint }
+            None => EventOutcome::Idle,
+        }
+    }
+
+    fn toggle_shuffle(&mut self) {
+        self.shuffle = !self.shuffle;
+        self.queue.reverse();
+    }
+
+    fn prev_track(&mut self) {
+        if let Some(i) = self.queue.back() {
+            self.load_index(i);
+        }
+    }
+
+    fn next_track(&mut self) {
+        if self.repeat {
+            if let Some(i) = self.queue.current() {
+                self.load_index(i);
+            }
+            return;
+        }
+        if let Some(i) = self.queue.advance() {
+            self.load_index(i);
+        }
+    }
+
+    fn load_index(&mut self, i: usize) {
+        if let Some(t) = self.library.get(i) {
+            self.waveform = load_track(&mut self.transport, &mut self.meta, t);
+            self.transport.play();
+        }
     }
 }
 
@@ -69,13 +135,22 @@ impl App for PlayerApp {
         }
     }
     fn on_event(&mut self, event: InputEvent) -> EventOutcome {
-        ui::event::handle(&mut self.transport, &ui::layout(self.dims.0, self.dims.1), event)
+        let l = ui::layout(self.dims.0, self.dims.1);
+        match event.kind {
+            InputKind::ButtonDown => self.on_click(&l, event.x, event.y),
+            InputKind::KeyDown => ui::event::key(&mut self.transport, event.code),
+            _ => EventOutcome::Idle,
+        }
     }
     fn paint(&mut self, fb: &mut PaintBuffer) {
         self.dims = (fb.width, fb.height);
-        let v = self.transport.view(&self.meta);
         let l = ui::layout(fb.width, fb.height);
-        ui::paint_player(fb, &v, &self.waveform, &l);
+        if self.view == ViewMode::Library {
+            ui::paint_library(fb, &self.library, &self.queue, self.queue.current(), &l);
+        } else {
+            let v = self.transport.view(&self.meta);
+            ui::paint_player(fb, &v, &self.waveform, &l);
+        }
     }
     fn on_tick(&mut self) -> bool { self.transport.pump(); self.transport.state() == State::Playing }
     fn busy(&self) -> bool { self.transport.state() == State::Playing }

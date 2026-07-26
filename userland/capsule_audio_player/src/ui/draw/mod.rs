@@ -14,13 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod control;
-mod draw;
-pub mod event;
-mod format;
-mod geometry;
-pub mod sprite;
-mod view;
+mod bars;
+mod header;
+mod library;
+mod meter;
+mod palette;
+mod panel;
+mod transport;
 
-pub use geometry::{layout, list_row_at, Layout};
-pub use view::{paint_library, paint_player};
+pub use header::paint_header;
+pub use library::paint_list;
+pub use palette::BG;
+pub use panel::paint_panel;
+pub use transport::paint_transport;

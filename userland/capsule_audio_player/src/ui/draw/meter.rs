@@ -16,22 +16,25 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::library::{Library, Queue};
 use crate::model::PlayerView;
-use crate::waveform::Waveform;
+use crate::ui::geometry::Rect;
 
-use super::draw::{paint_header, paint_list, paint_panel, paint_transport, BG};
-use super::geometry::Layout;
+use super::palette::{ACCENT, GROOVE, MUTED};
 
-pub fn paint_player(fb: &mut PaintBuffer, v: &PlayerView, wf: &Waveform, l: &Layout) {
-    fb.clear(BG);
-    paint_header(fb, l, false);
-    paint_panel(fb, v, wf, l);
-    paint_transport(fb, v, l);
-}
-
-pub fn paint_library(fb: &mut PaintBuffer, lib: &Library, q: &Queue, current: Option<usize>, l: &Layout) {
-    fb.clear(BG);
-    paint_header(fb, l, true);
-    paint_list(fb, lib, q, current, &l.list);
+pub fn paint_vu(fb: &mut PaintBuffer, v: &PlayerView, r: &Rect) {
+    let cols = 2u32;
+    let rows = (r.h / 12).max(6);
+    let cell = (r.h / rows).max(1);
+    let col_w = (r.w / cols).max(1);
+    let dot = col_w.min(cell).saturating_sub(3).max(3);
+    let base = rows * (v.volume_q15.max(0) as u32) / 0x8000;
+    for c in 0..cols {
+        let lit = base.saturating_sub(c);
+        for row in 0..rows {
+            let dx = r.x + c * col_w;
+            let dy = r.y + r.h.saturating_sub((row + 1) * cell);
+            let color = if row < lit { ACCENT } else if row * 3 >= rows * 2 { MUTED } else { GROOVE };
+            fb.fill_rect(dx, dy, dot, dot, color);
+        }
+    }
 }

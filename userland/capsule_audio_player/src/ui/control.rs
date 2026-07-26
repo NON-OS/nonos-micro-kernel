@@ -19,11 +19,14 @@ use super::Layout;
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Control {
     PlayPause,
-    Stop,
+    Prev,
+    Next,
+    Shuffle,
+    Repeat,
+    Seek(u32),
+    Volume(u32),
     SeekBackSecs(u32),
     SeekFwdSecs(u32),
-    SeekPermille(u32),
-    VolumePermille(u32),
 }
 
 fn track_permille(x: i32, base: u32, w: u32) -> u32 {
@@ -35,23 +38,26 @@ fn track_permille(x: i32, base: u32, w: u32) -> u32 {
 }
 
 pub fn control_at(l: &Layout, x: i32, y: i32) -> Option<Control> {
-    if l.back.contains(x, y) {
-        return Some(Control::SeekBackSecs(10));
+    if l.shuffle.contains(x, y) {
+        return Some(Control::Shuffle);
+    }
+    if l.prev.contains(x, y) {
+        return Some(Control::Prev);
     }
     if l.play.contains(x, y) {
         return Some(Control::PlayPause);
     }
-    if l.stop.contains(x, y) {
-        return Some(Control::Stop);
+    if l.next.contains(x, y) {
+        return Some(Control::Next);
     }
-    if l.fwd.contains(x, y) {
-        return Some(Control::SeekFwdSecs(10));
+    if l.repeat.contains(x, y) {
+        return Some(Control::Repeat);
     }
-    if l.progress.contains(x, y) {
-        return Some(Control::SeekPermille(track_permille(x, l.progress.x, l.progress.w)));
+    if l.waveform.contains(x, y) {
+        return Some(Control::Seek(track_permille(x, l.waveform.x, l.waveform.w)));
     }
     if l.volume.contains(x, y) {
-        return Some(Control::VolumePermille(track_permille(x, l.volume.x, l.volume.w)));
+        return Some(Control::Volume(track_permille(x, l.volume.x, l.volume.w)));
     }
     None
 }

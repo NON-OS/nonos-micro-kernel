@@ -14,13 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod control;
-mod draw;
-pub mod event;
-mod format;
-mod geometry;
-pub mod sprite;
-mod view;
+//! RGBA8 sprite buffer with allocation and alpha pixel writes.
 
-pub use geometry::{layout, list_row_at, Layout};
-pub use view::{paint_library, paint_player};
+extern crate alloc;
+
+use alloc::vec::Vec;
+
+pub struct Sprite {
+    pub rgba: Vec<u8>,
+    pub w: u32,
+    pub h: u32,
+}
+
+impl Sprite {
+    pub fn blank(px: u32) -> Sprite {
+        Sprite { rgba: alloc::vec![0u8; (px * px * 4) as usize], w: px, h: px }
+    }
+
+    pub fn set(&mut self, x: u32, y: u32, rgb: u32, a: u8) {
+        if x >= self.w || y >= self.h {
+            return;
+        }
+        let i = ((y * self.w + x) * 4) as usize;
+        self.rgba[i] = (rgb >> 16) as u8;
+        self.rgba[i + 1] = (rgb >> 8) as u8;
+        self.rgba[i + 2] = rgb as u8;
+        self.rgba[i + 3] = a;
+    }
+}
