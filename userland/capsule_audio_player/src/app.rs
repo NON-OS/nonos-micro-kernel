@@ -19,8 +19,9 @@ use alloc::boxed::Box;
 use alloc::string::String;
 use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer, WindowKind};
 use crate::audio_client::AudioClient;
+use crate::library::{Library, Queue};
 use crate::model::TrackMeta;
-use crate::track::load_default;
+use crate::track::{load_default, load_track};
 use crate::transport::{Fed, FeedSink, State, Transport};
 use crate::ui;
 use crate::waveform::Waveform;
@@ -37,7 +38,7 @@ impl FeedSink for NullSink {
     fn pause(&mut self) {}
     fn close(&mut self) {}
 }
-pub struct PlayerApp { transport: Transport, meta: TrackMeta, waveform: Waveform, dims: (u32, u32) }
+pub struct PlayerApp { transport: Transport, meta: TrackMeta, waveform: Waveform, library: Library, queue: Queue, dims: (u32, u32) }
 
 impl PlayerApp {
     pub fn new() -> Self {
@@ -47,8 +48,16 @@ impl PlayerApp {
         };
         let mut transport = Transport::new(sink);
         let mut meta = TrackMeta { title: String::new(), artist: String::new(), format: String::new() };
-        let waveform = load_default(&mut transport, &mut meta);
-        PlayerApp { transport, meta, waveform, dims: (WINDOW_W, WINDOW_H) }
+        let library = Library::scan();
+        let mut queue = Queue::new();
+        for i in 0..library.tracks.len() {
+            queue.enqueue(i);
+        }
+        let waveform = match queue.current().and_then(|i| library.get(i)) {
+            Some(t) => load_track(&mut transport, &mut meta, t),
+            None => load_default(&mut transport, &mut meta),
+        };
+        PlayerApp { transport, meta, waveform, library, queue, dims: (WINDOW_W, WINDOW_H) }
     }
 }
 

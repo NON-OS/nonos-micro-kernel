@@ -14,32 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-mod app;
-mod audio_client;
-mod decode;
-mod library;
-mod loader;
-mod mark;
-mod model;
-mod resample;
-#[cfg(feature = "nonos-audio-player-smoketest")]
-mod selftest;
+mod catalog;
+mod queue;
 mod track;
-mod track_fmt;
-mod transport;
-mod ui;
-pub mod waveform;
-#[cfg(not(feature = "nonos-audio-player-smoketest"))]
-use app::PlayerApp;
-#[cfg(not(feature = "nonos-audio-player-smoketest"))]
-use nonos_app_skeleton::run;
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    mark::mark("[PLAYER] up\n");
-    #[cfg(feature = "nonos-audio-player-smoketest")]
-    selftest::run();
-    #[cfg(not(feature = "nonos-audio-player-smoketest"))]
-    run(PlayerApp::new);
-}
+
+pub use catalog::Library;
+pub use queue::Queue;
+pub use track::Track;

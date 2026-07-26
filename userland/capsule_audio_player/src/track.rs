@@ -19,6 +19,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::decode::{self, Decoder};
+use crate::library::Track;
 use crate::loader;
 use crate::model::TrackMeta;
 use crate::track_fmt::format_of;
@@ -38,6 +39,25 @@ pub fn load_default(transport: &mut Transport, meta: &mut TrackMeta) -> Waveform
     };
     meta.title = String::from("Boot Tone");
     meta.artist = String::from("NONOS");
+    meta.format = format_of(&*probe);
+    let pcm = drain(&mut *probe);
+    if let Ok(dec) = decode::open(bytes) {
+        let _ = transport.open(dec);
+    }
+    from_samples(&pcm, 96)
+}
+
+pub fn load_track(transport: &mut Transport, meta: &mut TrackMeta, track: &Track) -> Waveform {
+    let bytes = match loader::load(track.path.as_bytes()) {
+        Ok(b) => b,
+        Err(_) => return from_samples(&[], 96),
+    };
+    let mut probe = match decode::open(bytes.clone()) {
+        Ok(d) => d,
+        Err(_) => return from_samples(&[], 96),
+    };
+    meta.title = track.title.clone();
+    meta.artist = track.artist.clone();
     meta.format = format_of(&*probe);
     let pcm = drain(&mut *probe);
     if let Ok(dec) = decode::open(bytes) {
