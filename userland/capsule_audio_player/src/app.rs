@@ -28,8 +28,8 @@ use crate::ui;
 use crate::waveform::Waveform;
 
 const WINDOW_ID: u32 = 0x5245_534E;
-const WINDOW_W: u32 = 480;
-const WINDOW_H: u32 = 320;
+const WINDOW_W: u32 = 720;
+const WINDOW_H: u32 = 520;
 const INPUT_MASK: u32 = (1 << 0) | (1 << 3) | (1 << 5);
 
 struct NullSink;
@@ -131,7 +131,7 @@ impl App for PlayerApp {
     fn manifest(&self) -> AppManifest {
         AppManifest {
             title: b"Resonare", window_id: WINDOW_ID, kind: WindowKind::Normal,
-            initial_x: 360, initial_y: 240, width: WINDOW_W, height: WINDOW_H, input_kind_mask: INPUT_MASK,
+            initial_x: 150, initial_y: 110, width: WINDOW_W, height: WINDOW_H, input_kind_mask: INPUT_MASK,
         }
     }
     fn on_event(&mut self, event: InputEvent) -> EventOutcome {
