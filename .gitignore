@@ -93,3 +93,6 @@ nonos-bootloader/keys
 
 # Per-user kernel build configuration written by tools/nonos-config
 .nonos-config
+
+# Build output from vendored crates.io tool sources
+userland/upstream-src/*/target/
