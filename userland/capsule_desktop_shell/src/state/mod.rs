@@ -22,9 +22,11 @@ pub mod notify;
 pub mod spotlight;
 pub mod taskbar;
 pub mod toasts;
+pub mod tool_apps;
 pub mod tray;
 
 pub use apps::LAUNCHER_APPS;
+pub use tool_apps::TOOL_APPS;
 pub use chrome::TASKBAR_WINDOW_ID;
 pub use context::Context;
 pub use notify::NotifyLevel;

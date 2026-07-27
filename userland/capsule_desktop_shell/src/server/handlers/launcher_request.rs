@@ -41,10 +41,16 @@ const OP_FOCUS_SELF: u16 = 1;
 // an error and we focus the running instance instead, so a click is never a
 // dead end.
 pub fn request(app: &LauncherApp) -> LaunchOutcome {
-    if mk_spawn_instance(app.service) >= 0 {
+    request_service(app.service)
+}
+
+/// Launch, or focus if already running, whatever capsule owns `service`. Used
+/// by both the dock (a desktop app) and the Launchpad (an installed tool).
+pub fn request_service(service: &[u8]) -> LaunchOutcome {
+    if mk_spawn_instance(service) >= 0 {
         return LaunchOutcome::Queued;
     }
-    let Some(pid) = lookup_pid(app.service) else { return LaunchOutcome::Failed };
+    let Some(pid) = lookup_pid(service) else { return LaunchOutcome::Failed };
     let frame = focus_frame();
     if mk_ipc_send_to_pid(pid, frame.as_ptr(), frame.len()) >= 0 {
         LaunchOutcome::Focused

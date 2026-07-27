@@ -20,6 +20,7 @@ pub mod desktop_icons;
 pub mod desktop_menu;
 pub mod fill;
 mod icons;
+pub mod launchpad;
 pub mod layout;
 pub mod text;
 pub mod toasts;

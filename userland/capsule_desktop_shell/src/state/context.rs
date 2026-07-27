@@ -30,6 +30,8 @@ pub struct Context {
     pub tray: TrayTable,
     pub taskbar: TaskbarState,
     pub spotlight: SpotlightState,
+    /// Whether the full-screen Launchpad overlay is open.
+    pub launchpad: bool,
     pub last_notify_level: Option<NotifyLevel>,
     pub toasts: ToastQueue,
     pub toast_layer_live: bool,

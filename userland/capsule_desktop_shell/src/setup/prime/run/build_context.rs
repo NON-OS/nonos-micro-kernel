@@ -32,6 +32,7 @@ pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
         tray: TrayTable::new(),
         taskbar: new_taskbar_state(),
         spotlight: SpotlightState::new(),
+        launchpad: false,
         last_notify_level: None,
         toasts: ToastQueue::new(),
         toast_layer_live: false,

@@ -43,6 +43,10 @@ pub fn paint_chrome(ctx: &Context) {
     if ctx.spotlight.visible {
         paint_rect::paint_rect(ctx, spotlight_rect(ctx.width, ctx.height), SPOTLIGHT_ARGB);
     }
+    // The Launchpad, when open, covers the whole desktop and its dock.
+    if ctx.launchpad {
+        super::launchpad::paint_launchpad(ctx);
+    }
     // The right-click menu floats above everything else, dock included.
     super::desktop_menu::paint(ctx);
 }
