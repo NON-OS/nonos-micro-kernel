@@ -14,9 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Reads through the paging hardware boundary, so every architecture that can
-// name its page-table root reports the real one. Returning a placeholder here
-// would hand callers an address that translates nothing.
-pub(crate) fn active_page_table_root() -> u64 {
-    crate::arch::paging::read_root()
-}
+//! The paging hardware boundary. Everything the shared paging manager needs
+//! from the CPU lives here as a small, arch-neutral surface: the page-table
+//! root register, TLB invalidation, and the write-protect override. Each call
+//! dispatches to the architecture that owns the instruction sequence, so the
+//! manager above stays free of `asm!` and of any one CPU's register names.
+
+mod root;
+mod tlb;
+mod write_protect;
+
+pub use root::{read_root, write_root};
+pub use tlb::{invalidate_all, invalidate_page};
+pub use write_protect::{disable_write_protection, enable_write_protection};

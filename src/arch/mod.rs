@@ -23,6 +23,7 @@ pub mod fdt;
 pub mod halt;
 mod init_boot_memory;
 mod init_broker_irq_routing;
+pub mod paging;
 mod run_without_interrupts;
 pub mod trap;
 
