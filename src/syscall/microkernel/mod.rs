@@ -42,6 +42,7 @@ pub mod process;
 pub mod procstat;
 pub mod spawn_instance;
 pub mod time;
+pub mod tool_run;
 pub mod wait;
 
 pub use attest::sys_attest_status;

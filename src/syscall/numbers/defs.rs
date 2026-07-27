@@ -74,6 +74,7 @@ pub enum SyscallNumber {
     MkProcInput = tag4(b"MPIN"),
     MkStdinRead = tag4(b"MSRD"),
     MkAttestStatus = tag4(b"MAST"),
+    MkToolRun = tag4(b"MTRN"),
     MkCapGrant = tag4(b"MCGT"),
     MkCapRevoke = tag4(b"MCRV"),
     MkCapCheck = tag4(b"MCCK"),

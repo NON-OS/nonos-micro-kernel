@@ -8,7 +8,7 @@
 use crate::render::launchpad::{hit, target, Target};
 use crate::server::handlers::launcher_request;
 use crate::server::repaint::repaint;
-use crate::state::{Context, LAUNCHER_APPS, TOOL_APPS};
+use crate::state::{Context, LAUNCHER_APPS};
 
 pub fn open(ctx: &mut Context) {
     ctx.launchpad = true;
@@ -21,8 +21,12 @@ pub fn click(ctx: &mut Context, px: u32, py: u32) {
             Target::App(a) => {
                 let _ = launcher_request::request(&LAUNCHER_APPS[a]);
             }
-            Target::Tool(t) => {
-                let _ = launcher_request::request_service(TOOL_APPS[t].service);
+            Target::Tool(_) => {
+                // A tool is a command-line program: it runs in the terminal,
+                // where the kernel spawns it parented to the shell so its output
+                // streams into the scrollback. Opening the terminal is the
+                // launch; the user runs the tool there by name.
+                let _ = launcher_request::request_service(b"app.terminal");
             }
         }
     }

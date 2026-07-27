@@ -77,3 +77,7 @@ pub const SYS_PCI_CONFIG_WRITE: u64 = tag4(b"MPCW");
 // Spawn another window instance of an embedded, attested app capsule
 // (terminal or browser). Gated on the SpawnWindow capability.
 pub const SYS_SPAWN_INSTANCE: u64 = tag4(b"MSPI");
+
+// Run a baked, attested command-line tool by name, parented to the caller so
+// it can drive the tool's stdin and stdout. Gated on the IPC capability.
+pub const SYS_TOOL_RUN: u64 = tag4(b"MTRN");

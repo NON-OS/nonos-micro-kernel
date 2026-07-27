@@ -38,13 +38,19 @@ fn embedded_tools() -> Vec<ToolCapsule> {
     ]
 }
 
-/// Spawn every embedded tool capsule, verified under the baked trust anchor. One
-/// tool failing to spawn is logged and skipped so it never blocks the others.
-pub fn spawn_all() {
-    for tool in embedded_tools() {
-        match tool.spawn() {
-            Ok(()) => boot_log::ok("TOOL", tool.name),
-            Err(_) => boot_log::error("tool capsule spawn failed"),
+/// Run the embedded tool whose service name matches `name` (for example
+/// `tool.tokei`), verified under the baked trust anchor and parented to the
+/// caller so it can drive the tool's stdin and stdout. `argv` is the NUL
+/// separated argument blob. Returns the tool's pid, or `None` when no tool
+/// matches or the spawn is rejected. A command-line tool has nothing to do
+/// until invoked, so tools are launched here on demand, not at boot.
+pub fn run_named(name: &[u8], argv: &[u8]) -> Option<u32> {
+    let tool = embedded_tools().into_iter().find(|t| t.name.as_bytes() == name)?;
+    match tool.spawn_with_args(argv) {
+        Ok(pid) => Some(pid),
+        Err(_) => {
+            boot_log::error("tool capsule spawn failed");
+            None
         }
     }
 }

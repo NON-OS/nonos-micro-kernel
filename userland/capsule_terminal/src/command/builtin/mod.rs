@@ -30,5 +30,6 @@ pub mod nox;
 pub mod ping;
 pub mod service;
 pub mod theme;
+pub mod tool;
 pub mod version;
 pub mod whoami;
