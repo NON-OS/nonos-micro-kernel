@@ -23,7 +23,7 @@ use crate::ipc::nonos_inbox;
 use crate::kernel_core::process_spawn::{
     allocate_kernel_stack, allocate_user_stack, setup_initial_user_context,
 };
-use crate::process::core::{create_process_with_parent, Priority, ProcessState};
+use crate::process::core::{create_process_with_parent, ProcessState};
 use crate::services::registry::{register_endpoint, required_caps};
 use alloc::format;
 
@@ -38,7 +38,7 @@ pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
     let pid = create_process_with_parent(
         params.name,
         ProcessState::Ready,
-        Priority::Normal,
+        super::priority::for_capsule(params.name),
         0,
         params.on_behalf_of,
     )

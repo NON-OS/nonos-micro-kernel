@@ -23,6 +23,7 @@ mod init;
 mod ipi_handler;
 mod ipi_idt;
 mod preempt;
+mod sole_cpu;
 mod state;
 mod stats;
 mod tlb;
@@ -35,6 +36,7 @@ pub mod trampoline;
 
 pub use constants::*;
 pub use cpu::*;
+pub use sole_cpu::sole_cpu_apic_id;
 pub(crate) use state::{cpu_count, cpus_online};
 pub use types::*;
 pub fn current_cpu_id() -> u32 {

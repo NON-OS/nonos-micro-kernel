@@ -1,0 +1,40 @@
+# NONOS userland: capsule_audio_player
+#
+# Windowed audio player capsule ("Resonare") built on
+# `nonos_app_skeleton`. C1 scaffold: boots dormant, opens its window,
+# paints a stub background, and emits a boot marker. Real transport,
+# decode, and paint arrive in later phases.
+
+[package]
+name = "nonos_audio_player"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+description = "NONOS audio player capsule"
+
+[[bin]]
+name = "audio_player"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_app_skeleton = { path = "../app_skeleton" }
+
+[build-dependencies]
+cc = "1"
+
+[features]
+nonos-audio-player-smoketest = []
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
+
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true

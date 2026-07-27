@@ -23,6 +23,7 @@ nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 
 [features]
 seed-terminal-store = []
+seed-audio-store = []
 
 [profile.release]
 panic    = "abort"

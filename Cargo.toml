@@ -93,6 +93,7 @@ nonos-capsule-power             = []
 nonos-capsule-image-codec       = []
 nonos-capsule-image-viewer      = []
 nonos-capsule-about             = []
+nonos-capsule-audio-player      = []
 nonos-capsule-hello             = []
 nonos-capsule-boot-splash       = []
 nonos-capsule-calculator        = []
@@ -129,6 +130,7 @@ nonos-capsule-driver-rtl8139    = []
 nonos-capsule-driver-rtl8169    = []
 nonos-capsule-driver-ahci       = []
 nonos-capsule-driver-hda        = []
+nonos-capsule-audio             = []
 nonos-capsule-driver-nvme       = []
 nonos-capsule-net-l2            = []
 nonos-capsule-net-ip            = []
@@ -148,6 +150,14 @@ nonos-capsule-market            = []
 # and diagnostic paths. Off by default — production builds are
 # byte-identical to before when this feature is absent.
 dbg-ring = []
+
+# Live-allocation tracking in the kernel heap. Records every allocated
+# pointer in a fixed 8192-entry `FnvIndexSet` so `verify_heap_integrity`
+# can sweep every live block's header, redzone and timestamp. Costs a
+# spin-lock plus a hash insert/remove on every kernel alloc and free, so
+# it is off by default; the always-compiled per-free header and redzone
+# checks in `dealloc_impl` are unaffected either way.
+heap-track = []
 
 # Production posture. Excludes the legacy unverified spawn path:
 # `runner::legacy`, the `CapsuleSpec` legacy struct, and every
@@ -515,6 +525,9 @@ microkernel-desktop-gui = [
   "nonos-capsule-wallpaper-catalog",
   "nonos-capsule-toolkit",
   "nonos-capsule-about",
+  "nonos-capsule-audio-player",
+  "nonos-capsule-audio",
+  "nonos-capsule-driver-hda",
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
   "nonos-capsule-clock",
@@ -609,6 +622,28 @@ microkernel-image-viewer-smoketest = [
   "nonos-capsule-proof-io",
   "nonos-capsule-image-viewer",
   "nonos-image-viewer-smoketest",
+]
+
+# Headless HDA driver smoketest. Trimmed kernel that spawns only the
+# proof-io sentinel and driver.hda0 (no desktop, no production trust
+# posture) so an intel-hda QEMU boot reaches the driver fast and its
+# `[HDA]` serial markers can be asserted deterministically.
+microkernel-driver-hda-smoketest = [
+  "microkernel-core",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-driver-hda",
+  "nonos-capsule-audio",
+  "nonos-user-entry-proof",
+]
+
+microkernel-audio-player-smoketest = [
+  "microkernel-core",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-driver-hda",
+  "nonos-capsule-audio",
+  "nonos-capsule-vfs",
+  "nonos-capsule-audio-player",
+  "nonos-user-entry-proof",
 ]
 
 microkernel-file-manager = ["microkernel-desktop-gui"]

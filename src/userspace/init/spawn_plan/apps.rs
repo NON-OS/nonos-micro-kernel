@@ -25,6 +25,7 @@ pub(super) fn spawn() {
     spawn_wallet_nonos();
     spawn_terminal();
     spawn_file_manager();
+    spawn_audio_player();
     super::apps_tools::spawn();
 }
 
@@ -134,6 +135,19 @@ fn spawn_file_manager() {
 }
 #[cfg(not(feature = "nonos-capsule-file-manager"))]
 fn spawn_file_manager() {}
+
+#[cfg(feature = "nonos-capsule-audio-player")]
+fn spawn_audio_player() {
+    use crate::userspace::capsule_audio_player as c;
+    super::boot::capsule(
+        "APP-AUDIO-PLAYER",
+        "app_audio_player",
+        c::spawn_audio_player_capsule,
+        c::shared_state,
+    );
+}
+#[cfg(not(feature = "nonos-capsule-audio-player"))]
+fn spawn_audio_player() {}
 
 #[cfg(feature = "nonos-capsule-snake")]
 fn spawn_snake() {

@@ -28,6 +28,7 @@ pub enum LauncherIcon {
     Wallet,
     Browser,
     ImageViewer,
+    AudioPlayer,
 }
 
 pub struct LauncherApp {
@@ -36,7 +37,7 @@ pub struct LauncherApp {
     pub service: &'static [u8],
 }
 
-pub const LAUNCHER_APPS: [LauncherApp; 12] = [
+pub const LAUNCHER_APPS: [LauncherApp; 13] = [
     LauncherApp { icon: LauncherIcon::Terminal, label: b"Terminal", service: b"app.terminal" },
     LauncherApp { icon: LauncherIcon::FileManager, label: b"Files", service: b"app.file_manager" },
     LauncherApp { icon: LauncherIcon::TextEditor, label: b"Editor", service: b"app.text_editor" },
@@ -60,5 +61,10 @@ pub const LAUNCHER_APPS: [LauncherApp; 12] = [
         icon: LauncherIcon::ImageViewer,
         label: b"Images",
         service: b"app.image_viewer",
+    },
+    LauncherApp {
+        icon: LauncherIcon::AudioPlayer,
+        label: b"Resonare",
+        service: b"app.audio_player",
     },
 ];

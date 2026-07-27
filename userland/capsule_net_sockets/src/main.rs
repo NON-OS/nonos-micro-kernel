@@ -25,7 +25,10 @@ mod server;
 mod sockets;
 mod state;
 
-use nonos_libc::{heap_init, mk_exit, mk_yield};
+use nonos_libc::{heap_init, mk_exit, mk_ipc_recv};
+
+const OWN_INBOX: u64 = 0;
+const RETRY_BACKOFF_MS: u64 = 250;
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
@@ -36,13 +39,19 @@ pub unsafe extern "C" fn _start() -> ! {
     server::run();
 }
 
+// The transports this capsule sits on are absent in every profile that does
+// not build them, so this wait has no bound. Retrying through `mk_yield`
+// left the capsule permanently runnable, which kept the scheduler off its
+// halt path and burned a whole core for the life of the boot. A timed
+// receive parks it off the run queue instead; no client can be served until
+// discovery succeeds, so a request landing inside the window is no more lost
+// than it is today.
 fn wait_for_setup() {
+    let mut idle = [0u8; 1];
     loop {
         if state::discover().is_ok() {
             return;
         }
-        for _ in 0..64 {
-            mk_yield();
-        }
+        let _ = mk_ipc_recv(OWN_INBOX, idle.as_mut_ptr(), idle.len(), RETRY_BACKOFF_MS);
     }
 }

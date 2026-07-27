@@ -15,11 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod claim;
+mod dma;
 mod driver;
+mod fail;
 mod irq;
+mod mark;
 mod mmio;
 mod pci;
 mod sequence;
 
 pub use driver::Driver;
+pub use fail::mark_setup_fail;
 pub use sequence::run;

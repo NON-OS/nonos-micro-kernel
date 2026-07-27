@@ -53,7 +53,9 @@ pub fn spawn_driver_hda_capsule() -> Result<(), SpawnError> {
             | Capability::Driver.bit()
             | Capability::DeviceEnum.bit()
             | Capability::Mmio.bit()
-            | Capability::Irq.bit(),
+            | Capability::Irq.bit()
+            | Capability::Dma.bit()
+            | Capability::Debug.bit(),
         debug_tag: b"[DRIVER-HDA] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

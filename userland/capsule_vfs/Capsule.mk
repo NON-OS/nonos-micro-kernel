@@ -15,6 +15,13 @@ CAPSULE_REPLY_ENDPOINT   := reply:4105:endpoint.4294967301
 CAPSULE_REQUIRED_CAPS    := 0x19
 CAPSULE_KERNEL_MIRROR    := src/fs/vfs_capsule
 
+# Resonare (app.audio_player) auto-boots on the base desktop and loads its
+# default track from /audio/boot_tone.wav, so the audio store must be seeded in
+# every image that ships vfs, not only the audio smoketest. Enabling the feature
+# here makes seed_audio_store() populate /audio; smoketests still force it via a
+# command-line vfs_CARGO_FEATURES override, which composes with this default.
+CAPSULE_CARGO_FEATURES   := seed-audio-store
+
 # The vfs capsule stages packages into its store by include_bytes!ing their
 # signed artifacts (see src/store/fdtable/packages.rs). Capsule signing is not
 # byte-deterministic across builds, so whenever an artifact is re-signed the vfs

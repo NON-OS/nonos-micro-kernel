@@ -70,6 +70,8 @@ endif
 # there; the xHCI controller stays for the USB stack/storage paths.
 QEMU_USB := -device qemu-xhci,id=xhci
 QEMU_RNG := -device virtio-rng-pci
+QEMU_AUDIODEV ?= coreaudio
+QEMU_AUDIO := -audiodev $(QEMU_AUDIODEV),id=snd0 -device intel-hda -device hda-duplex,audiodev=snd0
 
 # Software TPM 2.0 for measured boot. The guest reaches it by direct MMIO at
 # 0xFED40000 (tpm-crb), so no TCG2 firmware is needed; swtpm backs it over a

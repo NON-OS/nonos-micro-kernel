@@ -21,7 +21,7 @@ pub(crate) fn clear_pid(pid: u32) {
     let mut map = PENDING.lock();
     map.remove(&pid);
     map.retain(|_, queue| {
-        queue.retain(|(inbox, _)| inbox != &caller_inbox);
+        queue.retain(|(_, inbox, _)| inbox != &caller_inbox);
         !queue.is_empty()
     });
 }

@@ -33,15 +33,20 @@ const CONTROL_MAGIC: u32 = u32::from_le_bytes(*b"NCTL");
 const CONTROL_VERSION: u16 = 1;
 const OP_FOCUS_SELF: u16 = 1;
 
+// Services that own a single device-backed session, so a second window
+// would fight the first over the same hardware stream rather than give
+// the user anything new.
+const SINGLE_INSTANCE: [&[u8]; 1] = [b"app.audio_player"];
+
 // Clicking a dock app asks the kernel to spawn another attested instance.
 // The kernel queues the request and init performs the spawn in its own
 // context, because doing it inline in this shell's syscall corrupted the
 // caller. A click with a free instance slot returns ok and a new window
 // appears a tick later; when every declared slot is live the kernel returns
 // an error and we focus the running instance instead, so a click is never a
-// dead end.
+// dead end. Single-instance services skip the spawn and always focus.
 pub fn request(app: &LauncherApp) -> LaunchOutcome {
-    if mk_spawn_instance(app.service) >= 0 {
+    if !is_single_instance(app.service) && mk_spawn_instance(app.service) >= 0 {
         return LaunchOutcome::Queued;
     }
     let Some(pid) = lookup_pid(app.service) else { return LaunchOutcome::Failed };
@@ -51,6 +56,10 @@ pub fn request(app: &LauncherApp) -> LaunchOutcome {
     } else {
         LaunchOutcome::Failed
     }
+}
+
+fn is_single_instance(service: &[u8]) -> bool {
+    SINGLE_INSTANCE.iter().any(|s| *s == service)
 }
 
 pub(crate) fn lookup_pid(service: &[u8]) -> Option<u32> {

@@ -40,7 +40,7 @@ nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof nonos-mk-zeros
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
 		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
 		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
-		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) $(QEMU_TPM) \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) $(QEMU_TPM) $(QEMU_AUDIO) \
 		-serial mon:stdio -vga none -display $(QEMU_DISPLAY) -no-reboot
 
 nonos-mk-run-net:
@@ -147,6 +147,12 @@ nonos-mk-tamper-run:
 
 nonos-mk-boot-ramfs:
 	@./tests/boot/ramfs_round_trip.sh
+
+nonos-mk-boot-hda-playback:
+	@./tests/boot/hda_playback.sh
+
+nonos-mk-boot-audio-player:
+	@./tests/boot/audio_player_playback.sh
 
 nonos-mk-boot-keyring:
 	@./tests/boot/keyring_round_trip.sh

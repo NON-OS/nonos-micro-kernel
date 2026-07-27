@@ -19,6 +19,8 @@ pub struct BrokerHandles {
     pub(super) mmio_grant_id: u64,
     pub(super) mmio_user_va: u64,
     pub(super) irq_grant_id: u64,
+    pub(super) corb_grant_id: u64,
+    pub(super) rirb_grant_id: u64,
 }
 
 impl BrokerHandles {
@@ -27,7 +29,16 @@ impl BrokerHandles {
         mmio_grant_id: u64,
         mmio_user_va: u64,
         irq_grant_id: u64,
+        corb_grant_id: u64,
+        rirb_grant_id: u64,
     ) -> Self {
-        Self { device_id, mmio_grant_id, mmio_user_va, irq_grant_id }
+        Self {
+            device_id,
+            mmio_grant_id,
+            mmio_user_va,
+            irq_grant_id,
+            corb_grant_id,
+            rirb_grant_id,
+        }
     }
 }

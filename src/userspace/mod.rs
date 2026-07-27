@@ -28,6 +28,7 @@
 
 pub mod capsule_about;
 pub mod capsule_attest;
+pub mod capsule_audio_player;
 pub mod capsule_boot_splash;
 pub mod capsule_browser;
 pub mod capsule_calculator;

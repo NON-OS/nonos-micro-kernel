@@ -14,9 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+#[cfg(feature = "heap-track")]
 use super::super::types::AllocationHeader;
-use super::globals::{get_timestamp, KERNEL_HEAP};
+#[cfg(feature = "heap-track")]
+use super::globals::get_timestamp;
+use super::globals::KERNEL_HEAP;
+#[cfg(feature = "heap-track")]
 use crate::memory::layout;
+#[cfg(feature = "heap-track")]
 use core::{mem, ptr};
 
 pub fn verify_heap_integrity() -> bool {
@@ -27,6 +32,19 @@ pub fn verify_heap_integrity() -> bool {
     if heap_size == 0 {
         return false;
     }
+    verify_tracked_allocations()
+}
+
+// Without `heap-track` no live-pointer set exists to walk, so this reduces to a
+// no-op. The per-free header and redzone checks in `dealloc_impl` are always
+// compiled and remain the live corruption detectors.
+#[cfg(not(feature = "heap-track"))]
+fn verify_tracked_allocations() -> bool {
+    true
+}
+
+#[cfg(feature = "heap-track")]
+fn verify_tracked_allocations() -> bool {
     let _sampled = KERNEL_HEAP.tracking_overflowed.load(core::sync::atomic::Ordering::Relaxed);
     crate::arch::x86_64::idt::without_interrupts(|| {
         let allocated_ptrs = KERNEL_HEAP.allocated_ptrs.lock();

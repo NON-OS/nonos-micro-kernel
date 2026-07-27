@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const STATUS_LEN: usize = 4;
+pub const MAX_PCM_CHUNK: usize = 4096;
 pub const CONTROLLER_INFO_PAYLOAD_LEN: usize = 28;
 pub const CODEC_MASK_PAYLOAD_LEN: usize = 8;
 pub const STREAM_LAYOUT_HEADER_BYTES: usize = 4;

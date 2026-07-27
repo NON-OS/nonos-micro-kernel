@@ -1,0 +1,45 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+#![no_std]
+#![no_main]
+mod app;
+mod audio_client;
+mod decode;
+mod library;
+mod loader;
+mod mark;
+mod model;
+mod resample;
+#[cfg(feature = "nonos-audio-player-smoketest")]
+mod selftest;
+mod track;
+mod track_fmt;
+mod transport;
+mod ui;
+pub mod waveform;
+#[cfg(not(feature = "nonos-audio-player-smoketest"))]
+use app::PlayerApp;
+#[cfg(not(feature = "nonos-audio-player-smoketest"))]
+use nonos_app_skeleton::run;
+#[no_mangle]
+pub extern "C" fn _start() -> ! {
+    mark::mark("[PLAYER] up\n");
+    #[cfg(feature = "nonos-audio-player-smoketest")]
+    selftest::run();
+    #[cfg(not(feature = "nonos-audio-player-smoketest"))]
+    run(PlayerApp::new);
+}

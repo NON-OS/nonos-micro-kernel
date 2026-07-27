@@ -407,6 +407,8 @@ include userland/capsule_driver_rtl8139/Capsule.mk
 include userland/capsule_driver_rtl8169/Capsule.mk
 include userland/capsule_driver_ahci/Capsule.mk
 include userland/capsule_driver_hda/Capsule.mk
+include userland/capsule_audio/Capsule.mk
+include userland/capsule_audio_player/Capsule.mk
 include userland/capsule_driver_nvme/Capsule.mk
 include userland/capsule_net_l2/Capsule.mk
 include userland/capsule_net_core/Capsule.mk
@@ -714,6 +716,54 @@ nonos-mk-image-viewer-test: $(proof-io_ARTIFACTS) \
 	@echo "Building image_viewer capsule (nonos-image-viewer-smoketest)..."
 	@$(MAKE) -B image-viewer_CARGO_FEATURES=nonos-image-viewer-smoketest nonos-mk-image-viewer-sign
 	$(call nonos_kernel_build,microkernel-image-viewer-smoketest,microkernel-image-viewer-smoketest)
+
+nonos-mk-driver-hda-smoketest-test: $(proof-io_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building kernel (microkernel-driver-hda-smoketest)..."
+	@$(MAKE) -B driver-hda_CARGO_FEATURES=nonos-driver-hda-smoketest nonos-mk-driver-hda-sign
+	@$(MAKE) nonos-mk-audio-sign
+	@$(MAKE) nonos-mk-stark-enroll-capsules
+	$(call nonos_kernel_build,microkernel-driver-hda-smoketest + nonos-stark-attest,microkernel-driver-hda-smoketest$(_boot_comma)nonos-stark-attest)
+
+# Dev fast-path for driver-hda iterations. Depends on the capsules' _MANIFEST
+# (which pulls _BIN + _CERT) but deliberately NOT their _ATTESTATION, so a
+# changed capsule ELF does not pull $(ZK_CAPSULE_ROOT) and re-trigger the
+# ~11min STARK enrollment. The kernel is built with nonos-stark-attest +
+# nonos-zk-rollout: it still runs the real attest verify against whatever
+# (now stale) trailer is embedded, but a mismatch is logged, not fatal.
+# nonos-zk-rollout is compile_error-exclusive with nonos-production, so this
+# can never leak into a ship build. Select it with
+# HDA_BUILD_TARGET=nonos-mk-driver-hda-smoketest-dev-test.
+nonos-mk-driver-hda-smoketest-dev-test: $(proof-io_MANIFEST) $(audio_MANIFEST) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building driver-hda capsule (nonos-driver-hda-smoketest feature)..."
+	@$(MAKE) -B driver-hda_CARGO_FEATURES=nonos-driver-hda-smoketest nonos-mk-driver-hda-sign
+	@echo "Building kernel (microkernel-driver-hda-smoketest, zk-rollout; no enroll)..."
+	$(call nonos_kernel_build,microkernel-driver-hda-smoketest + nonos-zk-rollout,microkernel-driver-hda-smoketest$(_boot_comma)nonos-stark-attest$(_boot_comma)nonos-zk-rollout)
+
+nonos-mk-audio-player-smoketest-test: $(proof-io_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building capsules (audio-player smoketest)..."
+	@$(MAKE) -B audio_player_CARGO_FEATURES=nonos-audio-player-smoketest vfs_CARGO_FEATURES=seed-audio-store \
+		nonos-mk-audio_player-sign nonos-mk-vfs-sign
+	@$(MAKE) nonos-mk-driver-hda-sign
+	@$(MAKE) nonos-mk-audio-sign
+	@$(MAKE) nonos-mk-stark-enroll-capsules
+	$(call nonos_kernel_build,microkernel-audio-player-smoketest + nonos-stark-attest,microkernel-audio-player-smoketest$(_boot_comma)nonos-stark-attest)
+
+# Dev fast-path for audio-player iterations. See the driver-hda dev-test note:
+# depends on _MANIFEST (not _ATTESTATION) so a changed capsule ELF does not pull
+# $(ZK_CAPSULE_ROOT) and re-trigger the ~11min STARK enrollment. The kernel runs
+# the real attest verify but a mismatch is logged, not fatal (nonos-zk-rollout,
+# compile_error-exclusive with nonos-production so it can never leak into a ship
+# build). vfs is rebuilt with seed-audio-store so the boot WAV is present.
+nonos-mk-audio-player-smoketest-dev-test: $(proof-io_MANIFEST) $(audio_MANIFEST) $(driver-hda_MANIFEST) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building capsules (audio-player smoketest, dev; no enroll)..."
+	@$(MAKE) -B audio_player_CARGO_FEATURES=nonos-audio-player-smoketest vfs_CARGO_FEATURES=seed-audio-store \
+		nonos-mk-audio_player-sign nonos-mk-vfs-sign
+	@echo "Building kernel (microkernel-audio-player-smoketest, zk-rollout; no enroll)..."
+	$(call nonos_kernel_build,microkernel-audio-player-smoketest + nonos-zk-rollout,microkernel-audio-player-smoketest$(_boot_comma)nonos-stark-attest$(_boot_comma)nonos-zk-rollout)
 
 # nonos-mk-desktop-gui-prod: the QEMU-bootable profile. This is NOT just a lighter
 # cut of zerostate; it deliberately excludes the real-hardware driver capsules

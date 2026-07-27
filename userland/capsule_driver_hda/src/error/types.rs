@@ -22,6 +22,7 @@ pub enum HdaError {
     ImmediateCommandBusy,
     ImmediateResponseTimeout,
     UnsupportedController,
+    VerbTimeout,
 }
 
 pub type HdaResult<T> = Result<T, HdaError>;
@@ -34,5 +35,6 @@ pub fn exit_code(e: HdaError) -> i32 {
         HdaError::ImmediateCommandBusy => 5,
         HdaError::ImmediateResponseTimeout => 6,
         HdaError::UnsupportedController => 7,
+        HdaError::VerbTimeout => 8,
     }
 }

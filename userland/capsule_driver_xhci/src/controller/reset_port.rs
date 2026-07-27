@@ -18,6 +18,7 @@ use nonos_libc::Deadline;
 use crate::constants::{
     PORTSC_CCS, PORTSC_CHANGE_BITS, PORTSC_PED, PORTSC_PLS_MASK, PORTSC_PP, PORTSC_PR, PORTSC_PRC,
 };
+use crate::controller::park::{park_step, SPIN_BUDGET};
 use crate::error::{XhciError, XhciResult};
 use crate::regs::op::{portsc_clear_changes, portsc_read, portsc_write};
 
@@ -36,16 +37,18 @@ pub fn reset_port(op_base: u64, port: u8) -> XhciResult<u32> {
     let clean = portsc_read(op_base, port) & !PORTSC_CHANGE_BITS;
     portsc_write(op_base, port, (clean & !PORTSC_PLS_MASK) | PORTSC_PR);
     let deadline = Deadline::after_ms(RESET_TIMEOUT_MS);
+    let mut spins = 0u32;
     loop {
         let now = portsc_read(op_base, port);
         if (now & PORTSC_PRC) != 0 && (now & PORTSC_PED) != 0 {
             portsc_clear_changes(op_base, port, now);
             return Ok(portsc_read(op_base, port));
         }
-        if deadline.expired() {
+        spins = spins.saturating_add(1);
+        if spins > SPIN_BUDGET && deadline.expired() {
             return Err(XhciError::PortResetTimeout);
         }
-        core::hint::spin_loop();
+        park_step(spins);
     }
 }
 
@@ -62,8 +65,10 @@ fn power_on(op_base: u64, port: u8) -> u32 {
     }
     let mut last = portsc_read(op_base, port);
     let deadline = Deadline::after_ms(POWER_SETTLE_MS);
+    let mut spins = SPIN_BUDGET;
     while (last & PORTSC_CCS) == 0 && !deadline.expired() {
-        core::hint::spin_loop();
+        spins = spins.saturating_add(1);
+        park_step(spins);
         last = portsc_read(op_base, port);
     }
     last
