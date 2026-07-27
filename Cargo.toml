@@ -149,6 +149,14 @@ nonos-capsule-market            = []
 # byte-identical to before when this feature is absent.
 dbg-ring = []
 
+# Live-allocation tracking in the kernel heap. Records every allocated
+# pointer in a fixed 8192-entry `FnvIndexSet` so `verify_heap_integrity`
+# can sweep every live block's header, redzone and timestamp. Costs a
+# spin-lock plus a hash insert/remove on every kernel alloc and free, so
+# it is off by default; the always-compiled per-free header and redzone
+# checks in `dealloc_impl` are unaffected either way.
+heap-track = []
+
 # Production posture. Excludes the legacy unverified spawn path:
 # `runner::legacy`, the `CapsuleSpec` legacy struct, and every
 # capsule still wired through them are cfg-gated off. Only capsules
