@@ -14,33 +14,40 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+use nonos_app_skeleton::{font_advance, PaintBuffer};
 
 use crate::ui::geometry::{Layout, Rect};
-use crate::ui::sprite::{gradient_art, note};
+use crate::ui::sprite::{gradient_logo, note};
 
-use super::palette::{rgb24, ACCENT, GROOVE, MUTED, TEXT};
+use super::chip::chip;
+use super::palette::{rgb24, ACCENT_DIM, ACCENT_LIGHT, ACCENT_WASH, BG, DIM, LINE_2, MUTED, TEXT};
 
 pub fn paint_header(fb: &mut PaintBuffer, l: &Layout, lib_active: bool) {
     let lg = &l.logo;
-    let tile = gradient_art(64);
+    let tile = gradient_logo(64);
     fb.blit_rgba8_scaled(lg.x, lg.y, lg.w, lg.h, &tile.rgba, tile.w, tile.h);
     let gs = lg.w * 6 / 10;
     let nt = note(48, rgb24(TEXT));
     fb.blit_rgba8_scaled(lg.x + lg.w / 5, lg.y + lg.h / 5, gs, gs, &nt.rgba, nt.w, nt.h);
 
     let tx = (lg.x + lg.w + lg.w / 3) as i32;
-    fb.text_ttf(tx, l.header.y as i32, "Resonare", TEXT, (lg.h as f32) * 0.62);
-    fb.text(tx as u32, l.header.y + lg.h * 62 / 100, b"Audio player", MUTED);
+    let px = (lg.h as f32) * 0.62;
+    let pen = fb.text_ttf(tx, l.header.y as i32, "Reson", TEXT, px);
+    fb.text_ttf(pen, l.header.y as i32, "are", ACCENT_LIGHT, px);
+    fb.text(tx as u32, l.header.y + lg.h * 62 / 100, b"Audio player", DIM);
 
     tab(fb, &l.now_tab, b"Now Playing", !lib_active);
     tab(fb, &l.lib_tab, b"Library", lib_active);
 }
 
 fn tab(fb: &mut PaintBuffer, r: &Rect, label: &[u8], active: bool) {
-    let bg = if active { ACCENT } else { GROOVE };
-    let fg = if active { TEXT } else { MUTED };
-    fb.fill_rect(r.x, r.y, r.w, r.h, bg);
-    let lx = r.x + r.w.saturating_sub(label.len() as u32 * 6) / 2;
+    let (fill, border, fg) = if active {
+        (ACCENT_WASH, ACCENT_DIM, ACCENT_LIGHT)
+    } else {
+        (BG, LINE_2, MUTED)
+    };
+    chip(fb, r, r.h / 2, fill, border);
+    let lw = label.len() as u32 * font_advance();
+    let lx = r.x + r.w.saturating_sub(lw) / 2;
     fb.text(lx, r.y + r.h / 2 - 4, label, fg);
 }

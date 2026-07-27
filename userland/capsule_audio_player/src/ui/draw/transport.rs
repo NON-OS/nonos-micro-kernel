@@ -19,31 +19,40 @@ use nonos_app_skeleton::PaintBuffer;
 use crate::model::PlayerView;
 use crate::transport::State;
 use crate::ui::geometry::{Layout, Rect};
-use crate::ui::sprite::{glow_disc, next, pause, play, prev, repeat, shuffle, speaker, Sprite};
+use crate::ui::sprite::{glow_ring, next, pause, play, prev, repeat, shuffle, speaker, Sprite};
 
 use super::bars::paint_bar;
-use super::palette::{rgb24, ACCENT, BG, MUTED, TEXT};
+use super::palette::{rgb24, ACCENT, ACCENT_LIGHT, DIM, MUTED};
 
 fn icon(fb: &mut PaintBuffer, r: &Rect, s: Sprite) {
     fb.blit_rgba8_scaled(r.x, r.y, r.w, r.h, &s.rgba, s.w, s.h);
 }
 
-pub fn paint_transport(fb: &mut PaintBuffer, v: &PlayerView, l: &Layout) {
-    icon(fb, &l.shuffle, shuffle(48, rgb24(MUTED)));
-    icon(fb, &l.prev, prev(48, rgb24(TEXT)));
+fn toggle_tint(on: bool) -> u32 {
+    if on {
+        rgb24(ACCENT_LIGHT)
+    } else {
+        rgb24(MUTED)
+    }
+}
 
-    let disc = glow_disc(128, rgb24(ACCENT), rgb24(ACCENT));
-    fb.blit_rgba8_scaled(l.play.x, l.play.y, l.play.w, l.play.h, &disc.rgba, disc.w, disc.h);
-    let gs = l.play.w * 42 / 100;
+pub fn paint_transport(fb: &mut PaintBuffer, v: &PlayerView, l: &Layout) {
+    icon(fb, &l.shuffle, shuffle(48, toggle_tint(v.shuffle)));
+    icon(fb, &l.prev, prev(48, rgb24(MUTED)));
+
+    let btn = glow_ring(128, rgb24(ACCENT), rgb24(ACCENT));
+    fb.blit_rgba8_scaled(l.play.x, l.play.y, l.play.w, l.play.h, &btn.rgba, btn.w, btn.h);
+    let gs = l.play.w * 24 / 100;
     let gx = l.play.x + l.play.w.saturating_sub(gs) / 2;
     let gy = l.play.y + l.play.h.saturating_sub(gs) / 2;
-    let g = if v.state == State::Playing { pause(64, rgb24(BG)) } else { play(64, rgb24(BG)) };
+    let lit = rgb24(ACCENT_LIGHT);
+    let g = if v.state == State::Playing { pause(64, lit) } else { play(64, lit) };
     fb.blit_rgba8_scaled(gx, gy, gs, gs, &g.rgba, g.w, g.h);
 
-    icon(fb, &l.next, next(48, rgb24(TEXT)));
-    icon(fb, &l.repeat, repeat(48, rgb24(MUTED)));
+    icon(fb, &l.next, next(48, rgb24(MUTED)));
+    icon(fb, &l.repeat, repeat(48, toggle_tint(v.repeat)));
 
-    let sp = speaker(48, rgb24(MUTED));
+    let sp = speaker(48, if v.muted { rgb24(DIM) } else { rgb24(MUTED) });
     fb.blit_rgba8_scaled(l.speaker.x, l.speaker.y, l.speaker.w, l.speaker.h, &sp.rgba, sp.w, sp.h);
     paint_bar(fb, &l.volume, v.volume_q15.max(0) as u32, 0x8000);
 }

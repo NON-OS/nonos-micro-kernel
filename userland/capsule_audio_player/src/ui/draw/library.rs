@@ -19,9 +19,10 @@ use nonos_app_skeleton::PaintBuffer;
 use crate::library::{Library, Queue};
 use crate::library::Track;
 use crate::ui::geometry::{list_row_h, Rect};
-use crate::ui::sprite::note;
+use crate::ui::sprite::{check, note};
 
-use super::palette::{rgb24, ACCENT, GROOVE, MUTED, PANEL, TEXT};
+use super::chip::fill_round;
+use super::palette::{rgb24, ACCENT, BG, GROOVE, MUTED, PANEL, TEXT};
 
 pub fn paint_list(fb: &mut PaintBuffer, lib: &Library, q: &Queue, current: Option<usize>, r: &Rect) {
     let rh = list_row_h(r);
@@ -32,16 +33,22 @@ pub fn paint_list(fb: &mut PaintBuffer, lib: &Library, q: &Queue, current: Optio
         if ry + rh > r.y + r.h {
             break;
         }
-        row(fb, t, current == Some(i), q.contains(i), r.x, ry, r.w, rh);
+        row(fb, t, current == Some(i), q.contains(i), r.x, ry, r.w, rh, i % 2 == 1);
     }
     if lib.tracks.is_empty() {
         fb.text(r.x, top, b"No tracks in /audio", MUTED);
     }
 }
 
-fn row(fb: &mut PaintBuffer, t: &Track, playing: bool, queued: bool, x: u32, y: u32, w: u32, h: u32) {
-    let bg = if playing { PANEL } else { GROOVE };
-    fb.fill_rect(x, y + 3, w, h.saturating_sub(6), bg);
+fn row(fb: &mut PaintBuffer, t: &Track, playing: bool, queued: bool, x: u32, y: u32, w: u32, h: u32, alt: bool) {
+    let bg = if playing {
+        GROOVE
+    } else if alt {
+        PANEL
+    } else {
+        BG
+    };
+    fill_round(fb, x, y + 3, w, h.saturating_sub(6), h * 20 / 100, bg);
     let ic = if playing { ACCENT } else { MUTED };
     let is = h * 45 / 100;
     let g = note(48, rgb24(ic));
@@ -50,6 +57,8 @@ fn row(fb: &mut PaintBuffer, t: &Track, playing: bool, queued: bool, x: u32, y: 
     fb.text(tx, y + h / 3 - 4, t.title.as_bytes(), TEXT);
     fb.text(tx, y + h * 2 / 3 - 4, t.format.as_bytes(), MUTED);
     if queued {
-        fb.text(x + w.saturating_sub(h), y + h / 2 - 4, b"Q", ACCENT);
+        let cs = h * 35 / 100;
+        let g = check(48, rgb24(ACCENT));
+        fb.blit_rgba8_scaled(x + w.saturating_sub(h), y + h.saturating_sub(cs) / 2, cs, cs, &g.rgba, g.w, g.h);
     }
 }

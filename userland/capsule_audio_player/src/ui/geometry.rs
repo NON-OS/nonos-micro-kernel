@@ -83,7 +83,7 @@ pub fn layout(width: u32, height: u32) -> Layout {
     let head_h = (height / 8).max(40);
     let head_y = pad * 3 / 4;
     let logo = head_h * 62 / 100;
-    let tab_w = (width * 15 / 100).max(74);
+    let tab_w = (width * 17 / 100).max(120);
     let tab_h = head_h * 6 / 10;
     let lib_x = width.saturating_sub(pad + tab_w);
     let now_x = lib_x.saturating_sub(tab_w + 8);

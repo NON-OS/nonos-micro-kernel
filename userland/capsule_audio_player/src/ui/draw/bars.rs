@@ -18,17 +18,29 @@ use nonos_app_skeleton::PaintBuffer;
 
 use crate::model::PlayerView;
 use crate::ui::geometry::Rect;
+use crate::ui::sprite::{knob, lerp};
 use crate::waveform::Waveform;
 
-use super::palette::{ACCENT, GROOVE, MUTED};
+use super::chip::fill_round;
+use super::palette::{rgb24, ACCENT, ACCENT_DIM, ACCENT_LIGHT, GROOVE, TEXT, WAVE};
 
 pub fn paint_bar(fb: &mut PaintBuffer, r: &Rect, num: u32, den: u32) {
+    let th = (r.h * 38 / 100).max(3);
     let cy = r.y + r.h / 2;
-    fb.fill_rect(r.x, cy.saturating_sub(1), r.w, 3, GROOVE);
+    let ty = cy.saturating_sub(th / 2);
+    fb.fill_rect(r.x, ty, r.w, th, GROOVE);
     let fill = if den == 0 { 0 } else { (r.w as u64 * num as u64 / den as u64) as u32 };
-    fb.fill_rect(r.x, cy.saturating_sub(1), fill, 3, ACCENT);
-    let knob = r.x + fill.min(r.w);
-    fb.fill_rect(knob.saturating_sub(2), cy.saturating_sub(4), 4, 9, ACCENT);
+    let steps = fill.min(24);
+    for i in 0..steps {
+        let sx = fill * i / steps;
+        let sw = (fill * (i + 1) / steps).saturating_sub(sx);
+        let c = 0xFF00_0000 | lerp(rgb24(ACCENT_DIM), rgb24(ACCENT), i * 255 / steps);
+        fb.fill_rect(r.x + sx, ty, sw, th, c);
+    }
+    let ks = (r.h * 94 / 100).max(9);
+    let kx = (r.x + fill.min(r.w)).saturating_sub(ks / 2);
+    let kn = knob(32, rgb24(TEXT));
+    fb.blit_rgba8_scaled(kx, cy.saturating_sub(ks / 2), ks, ks, &kn.rgba, kn.w, kn.h);
 }
 
 pub fn paint_waveform(fb: &mut PaintBuffer, v: &PlayerView, wf: &Waveform, r: &Rect) {
@@ -43,8 +55,10 @@ pub fn paint_waveform(fb: &mut PaintBuffer, v: &PlayerView, wf: &Waveform, r: &R
         let bx = r.x + (r.w * i as u32) / n;
         let bh = ((r.h * b as u32) / 255).max(2);
         let top = cy.saturating_sub(bh / 2);
-        let color = if bx.saturating_sub(r.x) < played { ACCENT } else { MUTED };
+        let color = if bx.saturating_sub(r.x) < played { ACCENT } else { WAVE };
         fb.fill_rect(bx, top, bw, bh, color);
     }
     fb.fill_rect((r.x + played).saturating_sub(1), r.y, 2, r.h, ACCENT);
+    let kh = (r.h * 17 / 100).max(6);
+    fill_round(fb, (r.x + played).saturating_sub(kh / 2), r.y + r.h * 42 / 100, kh, kh, kh * 30 / 100, ACCENT_LIGHT);
 }

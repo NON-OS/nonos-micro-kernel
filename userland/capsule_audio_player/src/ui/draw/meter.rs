@@ -18,22 +18,28 @@ use nonos_app_skeleton::PaintBuffer;
 
 use crate::model::PlayerView;
 use crate::ui::geometry::Rect;
+use crate::ui::sprite::lerp;
 
-use super::palette::{ACCENT, GROOVE, MUTED};
+use super::palette::{rgb24, ACCENT, ACCENT_DIM, GROOVE};
 
 pub fn paint_vu(fb: &mut PaintBuffer, v: &PlayerView, r: &Rect) {
     let cols = 2u32;
     let rows = (r.h / 12).max(6);
     let cell = (r.h / rows).max(1);
     let col_w = (r.w / cols).max(1);
-    let dot = col_w.min(cell).saturating_sub(3).max(3);
+    let dot = (col_w.min(cell) / 2).max(3);
     let base = rows * (v.volume_q15.max(0) as u32) / 0x8000;
     for c in 0..cols {
         let lit = base.saturating_sub(c);
         for row in 0..rows {
             let dx = r.x + c * col_w;
             let dy = r.y + r.h.saturating_sub((row + 1) * cell);
-            let color = if row < lit { ACCENT } else if row * 3 >= rows * 2 { MUTED } else { GROOVE };
+            let color = if row < lit {
+                let t = (row * 255 / lit.saturating_sub(1).max(1)).min(255);
+                0xFF00_0000 | lerp(rgb24(ACCENT), rgb24(ACCENT_DIM), t)
+            } else {
+                GROOVE
+            };
             fb.fill_rect(dx, dy, dot, dot, color);
         }
     }

@@ -28,8 +28,9 @@ mod transport_a;
 mod transport_b;
 
 pub use canvas::Sprite;
+pub use fx::lerp;
 pub use glyph_a::{magnifier, note, speaker};
 pub use glyph_b::{check, close, plus};
-pub use hero::{glow_disc, gradient_art};
+pub use hero::{glow_ring, gradient_art, gradient_logo, knob};
 pub use transport_a::{pause, play, prev, next, stop};
 pub use transport_b::{repeat, shuffle};
