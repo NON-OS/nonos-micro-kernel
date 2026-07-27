@@ -47,7 +47,7 @@ pub fn sys_ipc_call(
     let endpoint = lookup_port(ep as u32);
     let endpoint_pid = endpoint.as_ref().map(|endpoint| endpoint.pid);
     if let Some(server_pid) = endpoint_pid {
-        if !pending_reply::push(server_pid, inbox.clone()) {
+        if !pending_reply::push(server_pid, pid, inbox.clone()) {
             return ERRNO_BUSY;
         }
     }

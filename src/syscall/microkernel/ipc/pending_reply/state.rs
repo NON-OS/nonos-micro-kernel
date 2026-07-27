@@ -20,6 +20,7 @@ use alloc::collections::{BTreeMap, VecDeque};
 use alloc::string::String;
 use spin::Mutex;
 
-pub(super) static PENDING: Mutex<BTreeMap<u32, VecDeque<String>>> = Mutex::new(BTreeMap::new());
+pub(super) static PENDING: Mutex<BTreeMap<u32, VecDeque<(u32, String)>>> =
+    Mutex::new(BTreeMap::new());
 
 pub(super) const MAX_PER_SERVICE: usize = 64;

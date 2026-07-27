@@ -18,7 +18,7 @@ use alloc::string::String;
 
 use super::state::PENDING;
 
-pub(in crate::syscall::microkernel::ipc) fn pop(server_pid: u32) -> Option<String> {
+pub(in crate::syscall::microkernel::ipc) fn pop(server_pid: u32) -> Option<(u32, String)> {
     let mut map = PENDING.lock();
     let queue = map.get_mut(&server_pid)?;
     let inbox = queue.pop_front();
