@@ -16,6 +16,7 @@
 use nonos_libc::Deadline;
 
 use crate::constants::{CC_SUCCESS, TRB_TYPE_CMD_COMPLETION_EVENT};
+use crate::controller::park::{park_step, SPIN_BUDGET};
 use crate::error::{XhciError, XhciResult};
 use crate::regs::runtime::erdp_program;
 use crate::rings::event::EventRing;
@@ -32,12 +33,14 @@ pub fn wait_command_completion(
     evt_ring: &mut EventRing,
 ) -> XhciResult<CommandCompletion> {
     let deadline = Deadline::after_ms(COMPLETION_TIMEOUT_MS);
+    let mut spins = 0u32;
     loop {
-        if deadline.expired() {
+        spins = spins.saturating_add(1);
+        if spins > SPIN_BUDGET && deadline.expired() {
             return Err(XhciError::CommandCompletionTimeout);
         }
         if !evt_ring.has_event() {
-            core::hint::spin_loop();
+            park_step(spins);
             continue;
         }
         let event = evt_ring.current_trb();

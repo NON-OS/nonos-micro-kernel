@@ -17,10 +17,11 @@ use nonos_libc::{mk_irq_bind, IrqBindOut, MK_IRQ_BIND_MSIX};
 
 use crate::discover::Found;
 
-/// Bind the controller MSI-X interrupt. Best-effort: the driver polls the event
-/// ring for every command and transfer and never waits on the interrupt, so a
-/// device without usable MSI-X, or a bind that fails on real firmware, still
-/// works over polling. A zero grant means no interrupt was bound.
+/// Bind the controller MSI-X interrupt. Best-effort: the driver still decides
+/// every command and transfer from the event ring and only uses the interrupt
+/// to park between polls, so a device without usable MSI-X, or a bind that
+/// fails on real firmware, still works over polling. A zero grant means no
+/// interrupt was bound.
 pub fn irq_bind(dev: Found, claim_epoch: u64) -> IrqBindOut {
     let mut out = IrqBindOut { grant_id: 0, vector: 0 };
     if mk_irq_bind(dev.device_id, claim_epoch, 0, MK_IRQ_BIND_MSIX, 1, &mut out) < 0 {
