@@ -17,10 +17,10 @@ use crate::constants::VG_MAX_SCANOUTS;
 use crate::device::cmd;
 use crate::device::virtqueue::ControlQueue;
 use crate::state::{FenceCounter, Scanout, ScanoutTable};
-const DEFAULT_SCANOUT_WIDTH: u32 = 1920;
-const DEFAULT_SCANOUT_HEIGHT: u32 = 1080;
-const MIN_SCANOUT_WIDTH: u32 = 1280;
-const MIN_SCANOUT_HEIGHT: u32 = 720;
+const DEFAULT_SCANOUT_WIDTH: u32 = 1280;
+const DEFAULT_SCANOUT_HEIGHT: u32 = 720;
+const MIN_SCANOUT_WIDTH: u32 = 640;
+const MIN_SCANOUT_HEIGHT: u32 = 480;
 pub fn seed(
     q: &ControlQueue,
     table: &ScanoutTable,
