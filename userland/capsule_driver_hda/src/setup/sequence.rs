@@ -38,7 +38,7 @@ pub fn run() -> HdaResult<Driver> {
         return Err(e);
     }
     let mmio = mmio::map(dev.device_id, claim_epoch, dev.bar_size)?;
-    let irq = irq::bind(dev, claim_epoch, &mmio)?;
+    let irq = irq::bind(dev, claim_epoch)?;
     let (corb, rirb) = dma::map_verb_rings(dev.device_id, claim_epoch, &mmio, &irq)?;
     let handles = BrokerHandles::new(
         dev.device_id,
