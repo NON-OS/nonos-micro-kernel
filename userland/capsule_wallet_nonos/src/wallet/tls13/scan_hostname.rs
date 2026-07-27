@@ -17,7 +17,9 @@
 pub fn scan(msgs: &[u8], host: &[u8]) -> bool {
     let mut pos = 0usize;
     while pos + 4 <= msgs.len() {
-        let len = ((msgs[pos + 1] as usize) << 16) | ((msgs[pos + 2] as usize) << 8) | msgs[pos + 3] as usize;
+        let len = ((msgs[pos + 1] as usize) << 16)
+            | ((msgs[pos + 2] as usize) << 8)
+            | msgs[pos + 3] as usize;
         let end = pos + 4 + len;
         if end > msgs.len() {
             return false;
@@ -42,7 +44,8 @@ fn cert_list(body: &[u8], off: usize) -> Option<&[u8]> {
     if off + 3 > body.len() {
         return None;
     }
-    let len = ((body[off] as usize) << 16) | ((body[off + 1] as usize) << 8) | body[off + 2] as usize;
+    let len =
+        ((body[off] as usize) << 16) | ((body[off + 1] as usize) << 8) | body[off + 2] as usize;
     super::read::slice(body, off + 3, len)
 }
 

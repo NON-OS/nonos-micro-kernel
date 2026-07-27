@@ -45,11 +45,29 @@ pub fn sys_spawn_instance(name_ptr: u64, name_len: u64) -> i64 {
         Err(_) => return ERRNO_INVAL,
     };
     let result = queue_by_name(name);
+    if result >= 0 {
+        boost_init_for_drain();
+    }
     // Land every request in the boot log so the on-demand path is observable.
     crate::sys::serial::print(b"[SPAWN-INSTANCE] queued ");
     crate::sys::serial::print(name.as_bytes());
     crate::sys::serial::print(if result >= 0 { b" -> ok\n" } else { b" -> fail\n" });
     result
+}
+
+// The queued window spawn is drained by init, which runs at Priority::Low so an
+// idle desktop leaves its cycles to the apps. A busy-yielding app with a fetch
+// in flight can then starve a low-priority init off a single CPU, and the drain
+// never runs, so the second window never opens. This syscall runs in the
+// scheduled caller (the shell), so lift init to Normal here: init cannot boost
+// itself once starved, but the click that needs the window can. Init drops back
+// to Low from its own loop once the queue empties. Init is pid 1, the first
+// process the kernel creates, before any capsule.
+fn boost_init_for_drain() {
+    const INIT_PID: u32 = 1;
+    if let Some(pcb) = crate::process::core::PROCESS_TABLE.find_by_pid(INIT_PID) {
+        *pcb.priority.lock() = crate::process::core::Priority::Normal;
+    }
 }
 
 // Map a handle to an app that declares instance endpoints, and queue it.

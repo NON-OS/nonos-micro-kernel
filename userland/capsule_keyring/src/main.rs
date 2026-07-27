@@ -19,6 +19,7 @@
 
 extern crate alloc;
 
+mod entropy;
 mod protocol;
 mod server;
 mod store;

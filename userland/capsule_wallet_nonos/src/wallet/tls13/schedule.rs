@@ -42,15 +42,27 @@ pub fn handshake_keys(shared: &[u8; 32], transcript: &[u8]) -> Option<TrafficKey
 
 pub(super) fn secret(base: &[u8; 32], label: &[u8], context: &[u8; 32]) -> Option<[u8; 32]> {
     let mut out = [0u8; 32];
-    if super::expand_label::expand_label(base, label, context, &mut out) { Some(out) } else { None }
+    if super::expand_label::expand_label(base, label, context, &mut out) {
+        Some(out)
+    } else {
+        None
+    }
 }
 
 pub(super) fn key(secret: &[u8; 32]) -> Option<[u8; 32]> {
     let mut out = [0u8; 32];
-    if super::expand_label::expand_label(secret, b"key", &[], &mut out) { Some(out) } else { None }
+    if super::expand_label::expand_label(secret, b"key", &[], &mut out) {
+        Some(out)
+    } else {
+        None
+    }
 }
 
 pub(super) fn iv(secret: &[u8; 32]) -> Option<[u8; 12]> {
     let mut out = [0u8; 12];
-    if super::expand_label::expand_label(secret, b"iv", &[], &mut out) { Some(out) } else { None }
+    if super::expand_label::expand_label(secret, b"iv", &[], &mut out) {
+        Some(out)
+    } else {
+        None
+    }
 }

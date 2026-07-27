@@ -1,0 +1,18 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable + Kani proofs for the wallet's on-chain read and signing helpers.
+# The real functions from `capsule_wallet_nonos` are pulled in with `#[path]`, so
+# `cargo test` checks them against known vectors and `cargo kani` proves the same
+# properties for every input, cross-validating the Lean specification against the
+# code that actually ships.
+[package]
+name = "wallet_proofs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

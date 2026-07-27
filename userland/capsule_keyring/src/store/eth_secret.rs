@@ -28,6 +28,13 @@ impl Store {
         if entry.locked {
             return Err(StoreError::Locked);
         }
+        // Expiry is enforced at the moment of use, against the keyring's own
+        // clock, so an expired key cannot sign or export no matter what the
+        // caller claims the time is.
+        let now = nonos_libc::mk_time_millis().max(0) as u64;
+        if entry.expires_at != 0 && now > entry.expires_at {
+            return Err(StoreError::AccessDenied);
+        }
         if entry.data.len() != 32 {
             return Err(StoreError::InvalidArgument);
         }

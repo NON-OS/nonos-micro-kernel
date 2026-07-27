@@ -14,5 +14,13 @@ path = "src/lib.rs"
 [dependencies]
 nonos-stark = { path = "../../nonos-stark" }
 
+[dev-dependencies]
+rayon = "1"
+
+[features]
+# Forwards to the prover's all-cores path. The emit-hash gate builds the crate
+# both ways and diffs the proof bytes; they must be identical.
+parallel = ["nonos-stark/parallel"]
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

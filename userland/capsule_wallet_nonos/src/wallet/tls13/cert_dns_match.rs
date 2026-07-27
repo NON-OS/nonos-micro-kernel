@@ -44,7 +44,8 @@ fn wildcard(suffix: &[u8], host: &[u8]) -> bool {
     if host.len() <= suffix.len() || !eq_ascii(&host[host.len() - suffix.len()..], suffix) {
         return false;
     }
-    host[host.len() - suffix.len() - 1] == b'.' && !host[..host.len() - suffix.len() - 1].contains(&b'.')
+    host[host.len() - suffix.len() - 1] == b'.'
+        && !host[..host.len() - suffix.len() - 1].contains(&b'.')
 }
 
 fn eq_ascii(a: &[u8], b: &[u8]) -> bool {

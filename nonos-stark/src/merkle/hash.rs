@@ -66,7 +66,7 @@ pub(super) fn hash_leaf_wide(row: &[Fp]) -> [u8; 32] {
 /// packing to the wide trace leaf under its own domain, so the structural
 /// periodic commitment a verifier bakes as a constant can never be read as a
 /// trace leaf.
-pub(super) fn hash_leaf_wide_periodic(row: &[Fp]) -> [u8; 32] {
+pub fn hash_leaf_wide_periodic(row: &[Fp]) -> [u8; 32] {
     let mut buf = Vec::with_capacity(DOM_LEAF_PERIODIC.len() + row.len() * 8);
     buf.extend_from_slice(DOM_LEAF_PERIODIC);
     for v in row {

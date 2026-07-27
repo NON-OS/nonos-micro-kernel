@@ -116,12 +116,16 @@ pub(super) fn element_box(
         BoxKind::Flex
     } else if style.is_block || out_of_flow(&style) {
         BoxKind::Block
+    } else if style.is_inline_block {
+        BoxKind::InlineBlock
     } else {
         BoxKind::Inline
     };
     let mut kids = match kind {
         BoxKind::Flex | BoxKind::Grid => wrap_items(&style, kids),
-        BoxKind::Block => wrap_mixed(&style, kids),
+        // An inline-block runs a block formatting context inside, so its
+        // children get the same anonymous-block wrapping a block box does.
+        BoxKind::Block | BoxKind::InlineBlock => wrap_mixed(&style, kids),
         _ => kids,
     };
     // Grid items that asked for a named or numeric position get it resolved

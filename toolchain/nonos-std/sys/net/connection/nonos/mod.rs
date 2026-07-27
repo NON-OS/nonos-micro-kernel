@@ -25,12 +25,14 @@
 // `dns`, and re-exported here.
 
 mod dns;
+mod socket;
 mod tcp_listener;
 mod tcp_stream;
 mod transport;
 mod udp_socket;
 
 pub use dns::{LookupHost, lookup_host};
+pub use socket::Socket;
 pub use tcp_listener::TcpListener;
 pub use tcp_stream::TcpStream;
 pub use udp_socket::UdpSocket;

@@ -14,21 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod empty_rail;
 mod default_net;
+mod empty_rail;
 mod filter_rails;
 mod hydrate;
+mod live_view;
 mod new;
 mod rail_allowed;
 mod record_tx;
 mod types;
 
-pub use hydrate::hydrate;
 pub use default_net::default_net;
+pub use hydrate::hydrate;
+pub use live_view::needs_live_data;
 pub use new::new_state;
 pub use record_tx::record_tx;
 pub use types::{
-    Rail, State, MAX_RAILS, MAX_STAKE, SEND_FIELD_AMOUNT, SEND_FIELD_NONCE, SEND_FIELD_TO, VIEW_APPROVALS,
-    VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELD, VIEW_SHIELDED,
-    VIEW_SIGN, VIEW_UNSHIELD,
+    Rail, State, MAX_RAILS, MAX_STAKE, SEND_FIELD_AMOUNT, SEND_FIELD_NONCE, SEND_FIELD_TO,
+    VIEW_APPROVALS, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELD,
+    VIEW_SHIELDED, VIEW_SIGN, VIEW_UNSHIELD,
 };

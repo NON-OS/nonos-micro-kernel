@@ -1,0 +1,4 @@
+[patch.crates-io]
+mio = { path = "../../vendor/mio" }
+socket2 = { path = "../../vendor/socket2-shim" }
+tokio = { path = "../../vendor/tokio" }

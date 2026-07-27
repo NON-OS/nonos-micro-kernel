@@ -61,6 +61,18 @@ jobs:
         with:
           submodules: recursive
           persist-credentials: false
+      - name: Reclaim runner disk space
+        # The benchmark builds the full zerostate ship image: every capsule and
+        # driver, each into its own target tree. That overruns the ~14 GB free
+        # on a stock ubuntu-latest runner (No space left on device, error 28).
+        # Drop the preinstalled toolchains this build never uses to free ~25 GB.
+        run: |
+          set -eux
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android \
+            /usr/local/share/boost /usr/share/swift /usr/local/share/powershell \
+            /usr/local/lib/node_modules "${AGENT_TOOLSDIRECTORY:-}" || true
+          sudo docker image prune --all --force || true
+          df -h /
       - uses: ./.github/actions/nonos-setup
         with:
           targets: x86_64-nonos,x86_64-unknown-uefi

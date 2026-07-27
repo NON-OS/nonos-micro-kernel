@@ -118,6 +118,24 @@ pub(super) fn flush_line(
                     node,
                 });
             }
+            InlineItem::Atom { frags: sub, h, .. } => {
+                // Shift the inline-block's own fragments, laid out at the
+                // origin, into its slot on the line, sitting on the line's
+                // bottom edge so it aligns with the text run.
+                let dx = x + shift + ix;
+                let dy = top + (line_h - h).max(0);
+                for mut f in sub {
+                    f.x += dx;
+                    f.y += dy;
+                    if let Some(c) = f.clip.as_mut() {
+                        c[0] += dx;
+                        c[1] += dy;
+                        c[2] += dx;
+                        c[3] += dy;
+                    }
+                    frags.push(f);
+                }
+            }
             InlineItem::Break => {}
         }
     }

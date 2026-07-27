@@ -1,0 +1,18 @@
+[package]
+name = "nonos_hd"
+version = "0.1.0"
+edition = "2021"
+description = "BIP39/BIP32 hierarchical deterministic key derivation for the NONOS keyring, no_std"
+license = "AGPL-3.0"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+
+[dev-dependencies]
+serde_json = "1"
+hex = "0.4"
+bs58 = { version = "0.5", features = ["check"] }
+k256 = { version = "0.13", features = ["arithmetic"] }
+sha3 = "0.10"

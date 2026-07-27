@@ -15,3 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 pub const MAX_KEY_SIZE: usize = 256;
 pub const MAX_KEYS: usize = 128;
+// Per-owner cap: one capsule cannot fill the whole store and starve the other
+// capsules that share the keyring. Generous for real wallet use, far below the
+// global limit.
+pub const MAX_KEYS_PER_OWNER: usize = 16;

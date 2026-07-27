@@ -79,3 +79,14 @@ pub(super) fn take() -> Vec<PendingApp> {
     }
     core::mem::take(&mut *q)
 }
+
+/// Whether any window-instance request is waiting to be drained. The init loop
+/// reads this to raise its priority only while there is deferred window work. A
+/// contended lock means a push is in flight, which is itself pending work, so it
+/// counts as pending rather than risking a missed boost.
+pub(crate) fn has_pending() -> bool {
+    match PENDING.try_lock() {
+        Some(q) => !q.is_empty(),
+        None => true,
+    }
+}

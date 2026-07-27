@@ -30,7 +30,11 @@ mod server;
 mod setup;
 mod tx;
 
-use nonos_libc::{heap_init, mk_exit, mk_yield};
+use nonos_libc::{heap_init, mk_exit, mk_time_millis, mk_yield};
+
+// Bounded probe: exit cleanly if no virtio-net appears, instead of spinning
+// forever on hardware that has none (real machines use their physical NIC).
+const PROBE_DEADLINE_MS: i64 = 10_000;
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
@@ -38,10 +42,14 @@ pub unsafe extern "C" fn _start() -> ! {
         mk_exit(1);
     }
 
+    let start = mk_time_millis();
     let mut driver = loop {
         match setup::run() {
             Ok(d) => break d,
             Err(_) => {
+                if mk_time_millis().wrapping_sub(start) > PROBE_DEADLINE_MS {
+                    mk_exit(0);
+                }
                 for _ in 0..64 {
                     mk_yield();
                 }

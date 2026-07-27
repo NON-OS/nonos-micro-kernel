@@ -18,7 +18,9 @@ use alloc::vec::Vec;
 
 pub fn request_nonce(address: &[u8; 20], id: u64) -> Vec<u8> {
     let mut out = Vec::with_capacity(144);
-    out.extend_from_slice(b"{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionCount\",\"params\":[\"");
+    out.extend_from_slice(
+        b"{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionCount\",\"params\":[\"",
+    );
     super::append_hex20::append_hex20(&mut out, address);
     out.extend_from_slice(b"\",\"pending\"],\"id\":");
     super::append_dec_u64::append_dec_u64(&mut out, id);

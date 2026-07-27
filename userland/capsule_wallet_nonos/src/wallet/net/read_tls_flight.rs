@@ -16,7 +16,10 @@
 
 use alloc::vec::Vec;
 
-const FIRST_WAIT: u32 = 4000;
+// Bounded wait for the first response bytes. Kept generous enough for a live
+// but slow RPC, low enough that a dead connection fails fast and the single
+// per-tick read never stalls the UI for long.
+const FIRST_WAIT: u32 = 1400;
 const IDLE_AFTER_DATA: u32 = 48;
 const YIELD_BURST: u32 = 400;
 

@@ -23,6 +23,6 @@ pub fn socket_send(sockets_port: u32, handle: u32, payload: &[u8]) -> Result<(),
     let mut rx = [0u8; 20];
     body.extend_from_slice(&handle.to_le_bytes());
     body.extend_from_slice(payload);
-    super::call::call(sockets_port, SOCKETS_MAGIC, OP_SEND, &body, &mut rx)?;
+    super::call::call(sockets_port, SOCKETS_MAGIC, OP_SEND, &body, &mut rx, 1800)?;
     Ok(())
 }

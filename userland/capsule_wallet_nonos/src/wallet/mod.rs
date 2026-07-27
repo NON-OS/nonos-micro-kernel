@@ -20,6 +20,7 @@ mod hex;
 mod ipc;
 mod manifest;
 mod net;
+mod nox;
 mod paint;
 mod pool;
 mod rpc;

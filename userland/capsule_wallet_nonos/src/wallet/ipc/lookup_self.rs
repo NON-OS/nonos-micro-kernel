@@ -14,16 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_service_lookup;
+use nonos_libc::mk_getpid;
 
-use super::constants::SELF_SERVICE;
-
+// The wallet's own pid, as the kernel attributes it to this capsule's IPC. It
+// must come from getpid, not a service-name lookup: under the on-demand window
+// model the interactive wallet is an instance (app.nonos_wallet.N) with its own
+// pid, while a name lookup resolves to the boot instance. The keyring checks
+// this value against the IPC sender pid, so a name-resolved pid fails every
+// ownership check with EACCES.
 pub fn lookup_self_pid() -> Result<u32, i32> {
-    let mut port = 0u32;
-    let mut pid = 0u32;
-    let rc = mk_service_lookup(SELF_SERVICE.as_ptr(), SELF_SERVICE.len(), &mut port, &mut pid);
-    if rc < 0 || port == 0 || pid == 0 {
-        return Err(-11);
+    match mk_getpid() {
+        0 => Err(-11),
+        pid => Ok(pid),
     }
-    Ok(pid)
 }

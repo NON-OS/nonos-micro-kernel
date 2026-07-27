@@ -18,6 +18,16 @@ use nonos_libc::{mk_ipc_send_to_pid, mk_service_lookup, mk_spawn_instance};
 
 use crate::state::apps::LauncherApp;
 
+/// What a dock-launch click actually did, so the caller can surface it on
+/// screen. `Queued` means the kernel accepted a new-window spawn; `Focused`
+/// means the slot table was full and the running window was raised instead.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum LaunchOutcome {
+    Queued,
+    Focused,
+    Failed,
+}
+
 const CONTROL_LEN: usize = 8;
 const CONTROL_MAGIC: u32 = u32::from_le_bytes(*b"NCTL");
 const CONTROL_VERSION: u16 = 1;
@@ -35,13 +45,17 @@ const SINGLE_INSTANCE: [&[u8]; 1] = [b"app.audio_player"];
 // appears a tick later; when every declared slot is live the kernel returns
 // an error and we focus the running instance instead, so a click is never a
 // dead end. Single-instance services skip the spawn and always focus.
-pub fn request(app: &LauncherApp) -> bool {
+pub fn request(app: &LauncherApp) -> LaunchOutcome {
     if !is_single_instance(app.service) && mk_spawn_instance(app.service) >= 0 {
-        return true;
+        return LaunchOutcome::Queued;
     }
-    let Some(pid) = lookup_pid(app.service) else { return false };
+    let Some(pid) = lookup_pid(app.service) else { return LaunchOutcome::Failed };
     let frame = focus_frame();
-    mk_ipc_send_to_pid(pid, frame.as_ptr(), frame.len()) >= 0
+    if mk_ipc_send_to_pid(pid, frame.as_ptr(), frame.len()) >= 0 {
+        LaunchOutcome::Focused
+    } else {
+        LaunchOutcome::Failed
+    }
 }
 
 fn is_single_instance(service: &[u8]) -> bool {

@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::constants::*;
 use super::super::error::FrameResult;
 use super::global::get_allocator;
 use crate::memory::addr::PhysAddr;
@@ -24,12 +23,10 @@ pub fn alloc_frame() -> Option<PhysFrame<Size4KiB>> {
     let mut allocator = get_allocator().lock();
     if !allocator.is_initialized() {
         let _ = allocator.init();
-        if allocator.usable.is_empty() {
-            let start = PhysAddr::new(DEFAULT_REGION_START);
-            let end = PhysAddr::new(DEFAULT_REGION_END);
-            let _ = allocator.add_region(start, end);
-        }
     }
+    // No DEFAULT_REGION seeding: `alloc()` draws only from the `phys` bitmap that
+    // owns physical memory. Seeding a `[16 MiB, 512 MiB)` shadow region here is
+    // what created the double-alloc/double-free aliasing.
     allocator.alloc()
 }
 

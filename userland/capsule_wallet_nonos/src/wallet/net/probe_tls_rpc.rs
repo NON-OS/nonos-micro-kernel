@@ -32,13 +32,27 @@ pub struct TlsProbe {
 
 impl TlsProbe {
     pub fn blocked() -> Self {
-        Self { server_hello: false, encrypted_record: false, certificate: false, chain: false, anchor: false, signature: false, hostname: false, validity: false, finished: false, client_finished: false, chain_id: false }
+        Self {
+            server_hello: false,
+            encrypted_record: false,
+            certificate: false,
+            chain: false,
+            anchor: false,
+            signature: false,
+            hostname: false,
+            validity: false,
+            finished: false,
+            client_finished: false,
+            chain_id: false,
+        }
     }
 }
 
 pub fn probe_tls_rpc(dns_port: u32, sockets_port: u32) -> TlsProbe {
     let Ok(ip) = super::resolve_eth::resolve_eth(dns_port) else { return TlsProbe::blocked() };
-    let Ok(handle) = super::socket_open::socket_open(sockets_port) else { return TlsProbe::blocked() };
+    let Ok(handle) = super::socket_open::socket_open(sockets_port) else {
+        return TlsProbe::blocked();
+    };
     let ok = connect_and_probe(sockets_port, handle, ip);
     let _ = super::socket_close::socket_close(sockets_port, handle);
     ok
@@ -48,14 +62,20 @@ fn connect_and_probe(sockets_port: u32, handle: u32, ip: [u8; 4]) -> TlsProbe {
     if super::socket_connect::socket_connect(sockets_port, handle, ip, 443).is_err() {
         return TlsProbe::blocked();
     }
-    let Some(flight) = super::super::tls13::client_flight(ETH_RPC_HOST) else { return TlsProbe::blocked() };
+    let Some(flight) = super::super::tls13::client_flight(ETH_RPC_HOST) else {
+        return TlsProbe::blocked();
+    };
     if super::socket_send::socket_send(sockets_port, handle, &flight.record).is_err() {
         return TlsProbe::blocked();
     }
-    let Ok(rx) = super::read_tls_flight::read_tls_flight(sockets_port, handle) else { return TlsProbe::blocked() };
+    let Ok(rx) = super::read_tls_flight::read_tls_flight(sockets_port, handle) else {
+        return TlsProbe::blocked();
+    };
     let client_finished = super::super::tls13::client_finished_flight(&flight, &rx);
-    let chain_id = client_finished && super::probe_chain_id::probe_chain_id(sockets_port, handle, &flight, &rx);
-    let validity = super::rtc_stamp::rtc_stamp().is_some_and(|now| super::super::tls13::server_validity_flight(&flight, &rx, now));
+    let chain_id = client_finished
+        && super::probe_chain_id::probe_chain_id(sockets_port, handle, &flight, &rx);
+    let validity = super::rtc_stamp::rtc_stamp()
+        .is_some_and(|now| super::super::tls13::server_validity_flight(&flight, &rx, now));
     TlsProbe {
         server_hello: super::super::tls13::server_first_flight(&flight, &rx),
         encrypted_record: super::super::tls13::server_encrypted_flight(&flight, &rx),

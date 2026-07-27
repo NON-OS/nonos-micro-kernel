@@ -91,12 +91,13 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkDisplayVsyncWait => caps.can_display_query(),
         SyscallNumber::MkInputEventPost => caps.can_input_source(),
         // Draining/waiting on the global raw-input ring is a privileged consumer
-        // operation: the ring carries every keystroke. Gating it on baseline IPC
-        // let any capsule steal the keystroke stream (cross-capsule keylogging).
-        // Restrict it to input-trusted capsules (the input_router is granted
-        // InputSource for exactly this).
-        SyscallNumber::MkInputEventDrain => caps.can_input_source(),
-        SyscallNumber::MkInputEventWait => caps.can_input_source(),
+        // operation: the ring carries every keystroke. `can_input_source()`
+        // accepts `Irq`, which every device driver holds, so it let any driver
+        // capsule steal the keystroke stream (cross-capsule keylogging). The
+        // consumer gate requires `InputSource` (the input_router's cap) and
+        // excludes `Irq`, keeping drivers able to POST but not DRAIN.
+        SyscallNumber::MkInputEventDrain => caps.can_input_consumer(),
+        SyscallNumber::MkInputEventWait => caps.can_input_consumer(),
 
         // Only a SpawnWindow-trusted capsule (the desktop shell) may ask the
         // kernel to open another window instance of an embedded app capsule.

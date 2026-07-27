@@ -17,9 +17,13 @@
 // An open file handle over the VFS. Holds the pool port, the process id the
 // service keys handles by, and the returned fd; the path is kept for the
 // by-path operations the protocol has no by-fd form of (fstat, truncate).
-// The operations themselves live one to a file in the sibling modules.
+// The vfs handle is owned through a `FileDesc` whose descriptor-table drop
+// issues the close, so `os::fd` can borrow or take the descriptor like it
+// does a unix file fd. The operations live one to a file in the sibling
+// modules.
 
 use crate::fmt;
+use crate::sys::fd::FileDesc;
 use crate::vec::Vec;
 
 pub struct File {
@@ -30,6 +34,7 @@ pub struct File {
     // (fstat, ftruncate). Renaming the file while it is open makes these
     // miss, the usual race a path-based fallback accepts.
     pub(super) path: Vec<u8>,
+    pub(super) desc: FileDesc,
 }
 
 impl fmt::Debug for File {

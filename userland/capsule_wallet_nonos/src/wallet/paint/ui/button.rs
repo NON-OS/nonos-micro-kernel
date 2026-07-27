@@ -16,13 +16,18 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::wallet::theme::{ACCENT, FG, INK, LINE2, MUTED};
+use super::shade::{darken, lighten};
+use crate::wallet::theme::{ACCENT, FG, INK, LINE2};
 
 const BTN_H: u32 = 42;
 
-// Primary action: solid cyan fill with dark ink label.
+// Primary action: cyan fill with a raised bevel (lit top, shaded bottom) so it
+// reads as a real, pressable button rather than a flat swatch.
 pub fn primary(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    fb.fill_rect(x, y, w, BTN_H, ACCENT());
+    let accent = ACCENT();
+    fb.fill_rect(x, y, w, BTN_H, accent);
+    fb.fill_rect(x, y, w, 1, lighten(accent, 0x1E));
+    fb.fill_rect(x, y + BTN_H - 1, w, 1, darken(accent, 0x22));
     label(fb, x, y, w, text, INK());
 }
 
@@ -32,20 +37,11 @@ pub fn outline(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
     label(fb, x, y, w, text, FG());
 }
 
-pub fn ghost(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    label(fb, x, y, w, text, ACCENT());
-}
-
-pub fn disabled(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8]) {
-    border(fb, x, y, w, LINE2());
-    label(fb, x, y, w, text, MUTED());
-}
-
 fn label(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, text: &[u8], color: u32) {
     let s = core::str::from_utf8(text).unwrap_or("");
-    let tw = fb.measure_ttf(s, 14.0).max(0) as u32;
+    let tw = fb.measure_ttf(s, 16.1).max(0) as u32;
     let tx = x + w.saturating_sub(tw) / 2;
-    let _ = fb.text_ttf(tx as i32, (y + 12) as i32, s, color, 14.0);
+    let _ = fb.text_ttf(tx as i32, (y + 12) as i32, s, color, 16.1);
 }
 
 fn border(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, c: u32) {

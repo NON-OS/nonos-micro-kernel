@@ -24,8 +24,18 @@ pub fn parse_hash32(resp: &[u8]) -> Option<[u8; 32]> {
     for i in 0..32 {
         let hi = hex[i * 2];
         let lo = hex[i * 2 + 1];
-        let h = match hi { b'0'..=b'9' => hi - b'0', b'a'..=b'f' => hi - b'a' + 10, b'A'..=b'F' => hi - b'A' + 10, _ => return None };
-        let l = match lo { b'0'..=b'9' => lo - b'0', b'a'..=b'f' => lo - b'a' + 10, b'A'..=b'F' => lo - b'A' + 10, _ => return None };
+        let h = match hi {
+            b'0'..=b'9' => hi - b'0',
+            b'a'..=b'f' => hi - b'a' + 10,
+            b'A'..=b'F' => hi - b'A' + 10,
+            _ => return None,
+        };
+        let l = match lo {
+            b'0'..=b'9' => lo - b'0',
+            b'a'..=b'f' => lo - b'a' + 10,
+            b'A'..=b'F' => lo - b'A' + 10,
+            _ => return None,
+        };
         out[i] = (h << 4) | l;
     }
     Some(out)

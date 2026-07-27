@@ -27,7 +27,14 @@ pub fn server_chain_flight(client: &ClientFlight, bytes: &[u8]) -> bool {
             return false;
         }
         if bytes[pos] == 23 {
-            let Some(plain) = super::record_open::open(&ctx.keys.server_key, &ctx.keys.server_iv, seq, &bytes[pos..end]) else { return false };
+            let Some(plain) = super::record_open::open(
+                &ctx.keys.server_key,
+                &ctx.keys.server_iv,
+                seq,
+                &bytes[pos..end],
+            ) else {
+                return false;
+            };
             let Some((msgs, 22)) = super::inner_plain::split(&plain) else { return false };
             if super::scan_chain::scan(msgs) {
                 return true;

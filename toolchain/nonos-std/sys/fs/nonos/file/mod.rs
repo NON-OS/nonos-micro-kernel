@@ -16,9 +16,11 @@
 
 // The open-file handle. The struct lives in `handle`; its operations are
 // split one concern to a file (open, read, write, seek, lock, truncate,
-// metadata, and the close-on-drop) and hang off it as impl blocks.
+// metadata, and the descriptor plumbing `os::fd` reaches through) and hang
+// off it as impl blocks. Close is RAII through the descriptor table, which
+// issues the vfs OP_CLOSE when the last descriptor over the handle drops.
 
-mod close;
+mod fd;
 mod handle;
 mod lock;
 mod meta;

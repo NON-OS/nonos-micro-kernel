@@ -31,9 +31,10 @@ impl TcpStream {
     }
 
     pub fn read(&self, buf: &mut [u8]) -> io::Result<usize> {
+        let handle = self.socket.handle()?;
         let nb = self.nonblocking.load(Relaxed);
         let t = if nb { 1 } else { self.read_timeout_ms.load(Relaxed) };
-        let rx = match sk_timed(OP_RECV, &self.handle.to_le_bytes(), MAX_PAYLOAD, t) {
+        let rx = match sk_timed(OP_RECV, &handle.to_le_bytes(), MAX_PAYLOAD, t) {
             Ok(rx) => rx,
             Err(e) if nb && e.kind() == io::ErrorKind::TimedOut => {
                 return Err(io::Error::from(io::ErrorKind::WouldBlock));
@@ -67,11 +68,12 @@ impl TcpStream {
     }
 
     pub fn write(&self, buf: &[u8]) -> io::Result<usize> {
+        let handle = self.socket.handle()?;
         let nb = self.nonblocking.load(Relaxed);
         let t = if nb { 1 } else { self.write_timeout_ms.load(Relaxed) };
         let n = buf.len().min(MAX_PAYLOAD);
         let mut body = Vec::with_capacity(4 + n);
-        body.extend_from_slice(&self.handle.to_le_bytes());
+        body.extend_from_slice(&handle.to_le_bytes());
         body.extend_from_slice(&buf[..n]);
         match sk_timed(OP_SEND, &body, 0, t) {
             Ok(_) => Ok(n),

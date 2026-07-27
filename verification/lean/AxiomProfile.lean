@@ -28,6 +28,48 @@ import Nonos
 #print axioms Nonos.Capability.attenuate_confines
 #print axioms Nonos.CapabilityBits.word_chain_never_widens
 #print axioms Nonos.Crypto.wrong_tag_rejected
+
+-- Wallet userland and signing crypto: live NOX/staking reads, EIP-1559 fee
+-- sizing, EIP-2 low-s canonicalisation, address derivation, hex parsing, and
+-- the private-key import wipe, each proven on Lean's standard axioms alone.
+#print axioms Nonos.WalletNoxApr.empty_pool_no_rate
+#print axioms Nonos.WalletNoxApr.apr_monotone_in_emission
+#print axioms Nonos.WalletNoxCalldata.padding_is_zero
+#print axioms Nonos.WalletNoxCalldata.address_placed
+#print axioms Nonos.WalletQuantity.high_bytes_refused
+#print axioms Nonos.WalletQuantity.decoded_lt_two_pow_128
+#print axioms Nonos.WalletEip1559.tip_at_least_one_gwei
+#print axioms Nonos.WalletEip1559.cap_covers_tip
+#print axioms Nonos.WalletHex.nibble_lt_16
+#print axioms Nonos.WalletFormatNox.whole_reconstructs
+#print axioms Nonos.WalletFormatApr.reconstructs
+#print axioms Nonos.WalletParseWord.words_disjoint
+#print axioms Nonos.WalletImportWipe.wiped_all_zero
+#print axioms Nonos.CryptoLowS.normalized_is_low
+#print axioms Nonos.CryptoLowS.normalize_idempotent
+#print axioms Nonos.CryptoKeccakAddr.in_hash_range
+#print axioms Nonos.CryptoSecretValid.zero_rejected
+#print axioms Nonos.CryptoSecretValid.overflow_rejected
+#print axioms Nonos.CryptoSecretValid.valid_iff
+#print axioms Nonos.CryptoRfc6979.distinct_nonce_distinct_msg
+#print axioms Nonos.WalletRlp.single_low_byte_bare
+#print axioms Nonos.WalletRlp.short_prefix_in_range
+#print axioms Nonos.WalletGwei.never_overstates
+#print axioms Nonos.WalletGwei.monotone
+#print axioms Nonos.WalletShortAddr.shown_in_range
+#print axioms Nonos.KeyringCustody.access_implies_owner
+#print axioms Nonos.KeyringCustody.non_owner_denied
+#print axioms Nonos.KeyringCustody.non_owner_indistinguishable
+#print axioms Nonos.WalletTxEnvelope.type_prefix_unambiguous
+#print axioms Nonos.WalletTxEnvelope.signing_adds_signature
+#print axioms Nonos.WalletNonceReplay.replay_refused
+#print axioms Nonos.WalletNonceReplay.no_two_nonces
+#print axioms Nonos.CryptoGf256.add_self
+#print axioms Nonos.CryptoGf256.add_cancel
+#print axioms Nonos.CryptoGf256.add_assoc
+#print axioms Nonos.CryptoKeccakPad.multiple_of_rate
+#print axioms Nonos.CryptoKeccakPad.always_pads
+
 #print axioms Nonos.Ipc.zero_length_rejected
 #print axioms Nonos.Isolation.no_wx_page
 #print axioms Nonos.Loader.accepted_entry_inside_file
@@ -297,3 +339,18 @@ import Nonos
 #print axioms Nonos.Fairness.never_stalls
 #print axioms Nonos.Fairness.rotateN_to_head
 #print axioms Nonos.Fairness.reaches_head
+
+-- Trusted-path audit fixes (PR #405). Each theorem pins the property the code
+-- change establishes, on Lean's standard axioms alone.
+#print axioms Nonos.FrameNoAlias.alloc_no_alias
+#print axioms Nonos.FrameNoAlias.bump_aliases
+#print axioms Nonos.FrameNoAlias.fixed_none_on_empty
+#print axioms Nonos.InputConsumer.drain_implies_post
+#print axioms Nonos.InputConsumer.irq_only_cannot_drain
+#print axioms Nonos.ReplyCorrelation.forged_never_delivered
+#print axioms Nonos.ReplyCorrelation.firstMatch_matches
+#print axioms Nonos.ReplyCorrelation.all_forged_none
+#print axioms Nonos.ServiceRegisterAuth.new_no_bypass
+#print axioms Nonos.ServiceRegisterAuth.old_low_pid_bypass
+#print axioms Nonos.FramebufferSwap.swap_involutive
+#print axioms Nonos.FramebufferSwap.present_rgb_converts

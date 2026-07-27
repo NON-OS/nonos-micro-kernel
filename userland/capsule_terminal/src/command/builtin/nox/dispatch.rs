@@ -15,9 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::{
-    alias, apps, caps, clear, copy, date, display, du, echo, enter, find, help, history, id,
-    exec, ifconfig, install, ls, mk, motd, mv, nslookup, pathname, ping, pull, push, read, rm, run, set, stat, svc,
-    sysinfo, touch, unalias, unknown, unset, whereis, write,
+    alias, apps, battery, caps, clear, copy, date, display, du, echo, enter, find, help, history,
+    http, id, exec, ifconfig, install, kill, ls, mk, motd, mv, nslookup, pathname, ping, pull, push,
+    read, rm, run, set, stat, svc, sysinfo, touch, unalias, unknown, unset, uptime, whereis, write,
 };
 use crate::command::output::Output;
 use crate::command::Outcome;
@@ -59,6 +59,16 @@ pub fn dispatch(state: &mut State, args: &[&[u8]]) -> Outcome {
         b"date" => date::run(state),
         b"ifconfig" | b"ip" => ifconfig::run(state),
         b"nslookup" | b"host" => nslookup::run(state, rest),
+        b"http" | b"curl" | b"get" | b"fetch" => http::run(state, rest),
+        b"kill" => kill::run(state, rest),
+        b"uptime" => {
+            uptime::run(state);
+            true
+        }
+        b"battery" | b"bat" => {
+            battery::run(state);
+            true
+        }
         b"env" => {
             set::run(state, &[]);
             true

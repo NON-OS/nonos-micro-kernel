@@ -18,6 +18,7 @@ mod connect_nym;
 mod finish_host;
 mod handle;
 mod handle_host;
+mod handle_nb;
 mod install_transport;
 mod parse_body;
 mod parse_host;
@@ -28,7 +29,9 @@ mod status_host;
 mod update_datagram;
 mod update_mixnet;
 mod update_stream;
+mod update_stream_nb;
 mod wait_established;
 
 pub use handle::handle;
 pub use handle_host::handle_host;
+pub use handle_nb::handle as handle_nb;

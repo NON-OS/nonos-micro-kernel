@@ -22,6 +22,6 @@ pub fn socket_connect(sockets_port: u32, handle: u32, ip: [u8; 4], port: u16) ->
     body[0..4].copy_from_slice(&handle.to_le_bytes());
     body[4..8].copy_from_slice(&ip);
     body[8..10].copy_from_slice(&port.to_le_bytes());
-    super::call::call(sockets_port, SOCKETS_MAGIC, OP_CONNECT, &body, &mut rx)?;
+    super::call::call(sockets_port, SOCKETS_MAGIC, OP_CONNECT, &body, &mut rx, 4000)?;
     Ok(())
 }

@@ -30,27 +30,29 @@ use crate::sys::unsupported;
 
 impl UdpSocket {
     pub fn recv_from(&self, buf: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
-        let n = recv_on(self.handle, buf)?;
+        let n = recv_on(self.socket.handle()?, buf)?;
         Ok((n, unspecified()))
     }
     pub fn peek_from(&self, _: &mut [u8]) -> io::Result<(usize, SocketAddr)> {
         unsupported()
     }
     pub fn send_to(&self, buf: &[u8], addr: &SocketAddr) -> io::Result<usize> {
+        let handle = self.socket.handle()?;
         let (ip, port) = v4_parts(addr)?;
-        sk(OP_CONNECT, &endpoint(self.handle, ip, port), 0)?;
-        send_on(self.handle, buf)
+        sk(OP_CONNECT, &endpoint(handle, ip, port), 0)?;
+        send_on(handle, buf)
     }
     pub fn recv(&self, buf: &mut [u8]) -> io::Result<usize> {
-        recv_on(self.handle, buf)
+        recv_on(self.socket.handle()?, buf)
     }
     pub fn peek(&self, _: &mut [u8]) -> io::Result<usize> {
         unsupported()
     }
     pub fn send(&self, buf: &[u8]) -> io::Result<usize> {
-        send_on(self.handle, buf)
+        send_on(self.socket.handle()?, buf)
     }
     pub fn connect<A: ToSocketAddrs>(&self, addr: A) -> io::Result<()> {
+        let handle = self.socket.handle()?;
         let mut last = err("no address");
         for a in addr.to_socket_addrs()? {
             let (ip, port) = match v4_parts(&a) {
@@ -60,7 +62,7 @@ impl UdpSocket {
                     continue;
                 }
             };
-            match sk(OP_CONNECT, &endpoint(self.handle, ip, port), 0) {
+            match sk(OP_CONNECT, &endpoint(handle, ip, port), 0) {
                 Ok(_) => return Ok(()),
                 Err(e) => last = e,
             }

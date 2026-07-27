@@ -253,6 +253,46 @@ $(UPSTREAM_RIPGREP_BIN): $(NONOS_RT_OBJ) $(NONOS_STD_PAL_STAMP) \
 .PHONY: nonos-mk-upstream-ripgrep
 nonos-mk-upstream-ripgrep: $(UPSTREAM_RIPGREP_BIN)
 
+# sd needs the is-terminal cfg-gap override in .cargo/config.toml, and cargo
+# only honors [patch] for path builds (published manifests strip it), so the
+# pinned crates.io source is vendored byte-identical under upstream-src and
+# built with --path. The program source itself is unmodified.
+UPSTREAM_SD_VERSION := 1.0.0
+UPSTREAM_SD_SRC     := userland/upstream-src/sd-$(UPSTREAM_SD_VERSION)
+UPSTREAM_SD_BIN     := $(TARGET_DIR)/upstream-sd/sd
+$(UPSTREAM_SD_BIN): $(NONOS_RT_OBJ) $(NONOS_STD_PAL_STAMP) \
+		userland/x86_64-nonos-user.json | $(TARGET_DIR)/.nonos-toolchain.stamp
+	@echo "Building upstream sd $(UPSTREAM_SD_VERSION) for NONOS (unmodified crates.io source)..."
+	@cd $(UPSTREAM_SD_SRC) && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		RUSTFLAGS="-Clink-arg=$(abspath $(NONOS_RT_OBJ))" \
+		$(CARGO) install --path . \
+		--target $(abspath userland/x86_64-nonos-user.json) \
+		-Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem \
+		--root $(abspath $(TARGET_DIR)/upstream-sd) --no-track --force --bin sd
+	@cp $(TARGET_DIR)/upstream-sd/bin/sd $@
+
+.PHONY: nonos-mk-upstream-sd
+nonos-mk-upstream-sd: $(UPSTREAM_SD_BIN)
+
+# tokio-smoke: the mio-backend + socket2-shim runtime gate. Built like sd from
+# vendored source with the per-program mio/socket2/tokio patches; runs an async
+# runtime that opens a real TCP connection, proving the reactor and Waker.
+UPSTREAM_TOKIO_SMOKE_SRC := userland/upstream-src/tokio-smoke
+UPSTREAM_TOKIO_SMOKE_BIN := $(TARGET_DIR)/upstream-tokio-smoke/tokio-smoke
+$(UPSTREAM_TOKIO_SMOKE_BIN): $(NONOS_RT_OBJ) $(NONOS_STD_PAL_STAMP) \
+		userland/x86_64-nonos-user.json | $(TARGET_DIR)/.nonos-toolchain.stamp
+	@echo "Building tokio-smoke runtime gate for NONOS (tokio via mio backend + socket2 shim)..."
+	@cd $(UPSTREAM_TOKIO_SMOKE_SRC) && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		RUSTFLAGS="-Clink-arg=$(abspath $(NONOS_RT_OBJ))" \
+		$(CARGO) install --path . \
+		--target $(abspath userland/x86_64-nonos-user.json) \
+		-Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem \
+		--root $(abspath $(TARGET_DIR)/upstream-tokio-smoke) --no-track --force --bin tokio-smoke
+	@cp $(TARGET_DIR)/upstream-tokio-smoke/bin/tokio-smoke $@
+
+.PHONY: nonos-mk-upstream-tokio-smoke
+nonos-mk-upstream-tokio-smoke: $(UPSTREAM_TOKIO_SMOKE_BIN)
+
 $(CAPSULE_SIGN_BIN):
 	@echo "Building capsule-sign host tool..."
 	@cd nonos-sign && cargo build --release --bin capsule-sign
@@ -313,6 +353,8 @@ nonos-mk-trust-policy: $(NONOS_TRUST_ANCHOR_POLICY_BIN)
 include userland/capsule_proof_io/Capsule.mk
 include userland/capsule_std_proof/Capsule.mk
 include userland/capsule_ripgrep/Capsule.mk
+include userland/capsule_sd/Capsule.mk
+include userland/capsule_tokio_smoke/Capsule.mk
 include userland/capsule_ramfs/Capsule.mk
 include userland/capsule_keyring/Capsule.mk
 include userland/capsule_entropy/Capsule.mk
@@ -429,7 +471,7 @@ nonos-mk-kernel-attest: $(KERNEL_ATTEST_ROOT_BIN) $(KERNEL_ATTEST_TRAILER)
 	@echo "Kernel self-attestation enrolled: root $(KERNEL_ATTEST_ROOT_BIN)"
 
 NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
-	$(proof-io_VERIFY) $(std-proof_VERIFY) $(ripgrep_VERIFY) \
+	$(proof-io_VERIFY) $(std-proof_VERIFY) $(ripgrep_VERIFY) $(sd_VERIFY) $(tokio-smoke_VERIFY) \
 	$(ramfs_VERIFY) $(keyring_VERIFY) \
 	$(entropy_VERIFY) $(crypto_VERIFY) $(vfs_VERIFY) \
 	$(driver-virtio-rng_VERIFY) $(driver-virtio-blk_VERIFY) \
@@ -731,7 +773,8 @@ nonos-mk-audio-player-smoketest-dev-test: $(proof-io_MANIFEST) $(audio_MANIFEST)
 # reaches the ready marker. The full hardware image is nonos-mk-zerostate, which
 # is what ships and what the ISO carries; do not fold this into it.
 nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
-		$(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) $(ramfs_ARTIFACTS) \
+		$(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) $(sd_ARTIFACTS) \
+		$(tokio-smoke_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
 		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \
 		$(driver-virtio-blk_ARTIFACTS) $(driver-virtio-gpu_ARTIFACTS) \

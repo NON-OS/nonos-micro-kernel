@@ -14,11 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_ipc_call;
+use nonos_libc::mk_ipc_call_timeout;
 
 const HDR_LEN: usize = 20;
 
-pub fn call(port: u32, magic: u32, op: u16, body: &[u8], rx: &mut [u8]) -> Result<usize, ()> {
+// Every socket call is time-bounded. A plain mk_ipc_call blocks until the
+// sockets service replies, so a stalled TCP connect or a rate-limited peer
+// froze the whole UI thread. mk_ipc_call_timeout returns an error once the
+// bound elapses, so a bad connection costs at most `timeout_ms`, never the UI.
+pub fn call(
+    port: u32,
+    magic: u32,
+    op: u16,
+    body: &[u8],
+    rx: &mut [u8],
+    timeout_ms: u64,
+) -> Result<usize, ()> {
     let mut tx = [0u8; 1536];
     let len = HDR_LEN.checked_add(body.len()).ok_or(())?;
     if len > tx.len() {
@@ -30,7 +41,8 @@ pub fn call(port: u32, magic: u32, op: u16, body: &[u8], rx: &mut [u8]) -> Resul
     tx[12..16].copy_from_slice(&1u32.to_le_bytes());
     tx[16..20].copy_from_slice(&(body.len() as u32).to_le_bytes());
     tx[HDR_LEN..len].copy_from_slice(body);
-    let rc = mk_ipc_call(port as u64, tx.as_ptr(), len, rx.as_mut_ptr(), rx.len());
+    let rc =
+        mk_ipc_call_timeout(port as u64, tx.as_ptr(), len, rx.as_mut_ptr(), rx.len(), timeout_ms);
     if rc < HDR_LEN as i64 {
         return Err(());
     }

@@ -18,7 +18,14 @@ mod approve_data;
 mod consts;
 mod fields;
 mod signed;
+mod stake_data;
 mod unsigned;
 
-pub use signed::{signed_eth_transfer_tx, signed_nox_approve_tx};
-pub use unsigned::{unsigned_eth_transfer_payload, unsigned_nox_approve_payload};
+pub use signed::{
+    signed_eth_transfer_tx, signed_nox_approve_tx, signed_nox_stake_approve_tx,
+    signed_nox_stake_tx, signed_nox_transfer_tx,
+};
+pub use unsigned::{
+    unsigned_eth_transfer_payload, unsigned_nox_approve_payload,
+    unsigned_nox_stake_approve_payload, unsigned_nox_stake_payload, unsigned_nox_transfer_payload,
+};

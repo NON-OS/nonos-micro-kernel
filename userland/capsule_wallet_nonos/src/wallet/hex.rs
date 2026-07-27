@@ -23,3 +23,24 @@ pub fn hex_addr(src: &[u8; 20], out: &mut [u8; 42]) {
         out[3 + i * 2] = H[(src[i] & 0x0F) as usize];
     }
 }
+
+/// Short "0x1234...abcd" form: the first and last two address bytes with an
+/// ellipsis between, for labels where the full address does not fit. The
+/// buffer holds 2 prefix + 4 hex + 3-byte ellipsis + 4 hex = 13 bytes.
+pub fn short_addr(src: &[u8; 20], out: &mut [u8; 13]) {
+    const H: &[u8; 16] = b"0123456789abcdef";
+    out[0] = b'0';
+    out[1] = b'x';
+    out[2] = H[(src[0] >> 4) as usize];
+    out[3] = H[(src[0] & 0x0F) as usize];
+    out[4] = H[(src[1] >> 4) as usize];
+    out[5] = H[(src[1] & 0x0F) as usize];
+    // U+2026 horizontal ellipsis.
+    out[6] = 0xE2;
+    out[7] = 0x80;
+    out[8] = 0xA6;
+    out[9] = H[(src[18] >> 4) as usize];
+    out[10] = H[(src[18] & 0x0F) as usize];
+    out[11] = H[(src[19] >> 4) as usize];
+    out[12] = H[(src[19] & 0x0F) as usize];
+}
