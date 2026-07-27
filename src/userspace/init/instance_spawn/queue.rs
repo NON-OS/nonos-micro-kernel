@@ -34,6 +34,7 @@ pub enum PendingApp {
     WalletNonos,
     FileManager,
     ProcessManager,
+    AudioPlayer,
 }
 
 // A click enqueues one request; a few in flight at once is the most a user
@@ -50,7 +51,21 @@ pub(super) fn push(app: PendingApp) -> bool {
         return false;
     }
     q.push(app);
+    super::priority::raise();
     true
+}
+
+/// Return init to its idle band once nothing is left to spawn. The check and
+/// the demotion happen under the queue lock, the same lock `push` raises
+/// under, so a click landing here can never be left queued behind a
+/// demotion it raced.
+pub(super) fn settle() {
+    let Some(q) = PENDING.try_lock() else {
+        return;
+    };
+    if q.is_empty() {
+        super::priority::restore();
+    }
 }
 
 /// Take everything queued so far. Called from init's context only.

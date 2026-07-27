@@ -20,7 +20,9 @@ use super::embed::{
 };
 use super::state;
 use crate::capabilities::Capability;
-use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified, SpawnError};
+use crate::kernel_core::process_spawn::capsule_spawn::{
+    self, spawn_next_instance, CapsuleSpecVerified, InstanceEndpoint, InstanceSpawn, SpawnError,
+};
 use crate::security::nonos_id_cert::IdCertVerifyError;
 use crate::security::nonos_trust_anchor::{
     decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
@@ -31,6 +33,43 @@ const SERVICE_PORT: u32 = 4870;
 const REPLY_INBOX: &str = "endpoint.app.audio_player.reply";
 const REPLY_PORT: u32 = 4871;
 const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+
+// Extra window endpoints, each declared in the signed manifest. Ordered, so the
+// lowest-numbered free one is taken.
+const AUDIO_PLAYER_INSTANCES: &[InstanceEndpoint] = &[
+    InstanceEndpoint {
+        name: "app.audio_player.1",
+        port: 4874,
+        reply_inbox: "endpoint.app.audio_player.1.reply",
+        reply_port: 4875,
+    },
+    InstanceEndpoint {
+        name: "app.audio_player.2",
+        port: 4876,
+        reply_inbox: "endpoint.app.audio_player.2.reply",
+        reply_port: 4877,
+    },
+];
+
+// Spawn the next free audio player window on demand. Same signed artifacts as
+// boot, a fresh pid, and thus its own compositor window.
+pub fn spawn_audio_player_instance() -> Result<u32, SpawnError> {
+    spawn_next_instance(&InstanceSpawn {
+        elf: AUDIO_PLAYER_ELF,
+        cert: AUDIO_PLAYER_NONOS_ID_CERT_BYTES,
+        manifest: AUDIO_PLAYER_MANIFEST_BYTES,
+        attestation: AUDIO_PLAYER_ATTESTATION_BYTES,
+        target_triple: TARGET_TRIPLE,
+        requested_caps: Capability::CoreExec.bit()
+            | Capability::IPC.bit()
+            | Capability::Memory.bit()
+            | Capability::GraphicsDisplayQuery.bit()
+            | Capability::GraphicsSurfaceCreate.bit()
+            | Capability::Debug.bit(),
+        instances: AUDIO_PLAYER_INSTANCES,
+        debug_tag: b"[AUDIO-PLAYER-INSTANCE] elf error:",
+    })
+}
 
 pub fn spawn_audio_player_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

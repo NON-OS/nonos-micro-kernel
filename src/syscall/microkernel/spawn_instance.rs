@@ -68,6 +68,7 @@ fn queue_by_name(name: &str) -> i64 {
         "app.nonos_wallet" => PendingApp::WalletNonos,
         "app.file_manager" => PendingApp::FileManager,
         "app.process_manager" => PendingApp::ProcessManager,
+        "app.audio_player" => PendingApp::AudioPlayer,
         _ => return ERRNO_NOENT,
     };
     if request_instance(app) {

@@ -18,5 +18,5 @@ mod embed;
 mod spawn;
 mod state;
 
-pub use spawn::spawn_audio_player_capsule;
+pub use spawn::{spawn_audio_player_capsule, spawn_audio_player_instance};
 pub use state::shared_state;

@@ -21,6 +21,7 @@
 //! state machine.
 
 const TICK_INTERVAL_MS: u64 = 1000;
+const PARK_SLICE_MS: u64 = 20;
 
 pub(crate) fn init_loop() -> ! {
     let mut last_tick = 0u64;
@@ -42,6 +43,23 @@ pub(crate) fn init_loop() -> ! {
         // calling capsule's syscall, which is what stopped the caller from
         // resuming (it faulted on its own code under the wrong page tables).
         crate::userspace::init::service_instance_spawns();
-        crate::sched::yield_now();
+        park();
     }
+}
+
+// A bare yield left init permanently runnable, so `select_next_process`
+// never came up empty and the scheduler's `sti; hlt` idle path was
+// unreachable: the vCPU spun at full load with an idle desktop. Sleeping
+// on a short deadline takes init off the run queue between passes, which
+// lets the CPU actually halt, while still draining the shell's window
+// spawn requests inside one compositor frame. Falling back to the yield
+// keeps the loop live if init runs before its pid is current.
+fn park() {
+    let Some(pid) = crate::process::current_pid() else {
+        crate::sched::yield_now();
+        return;
+    };
+    let wake = crate::time::timestamp_millis().saturating_add(PARK_SLICE_MS);
+    crate::sched::sleep_until(pid, wake);
+    crate::sched::yield_now();
 }

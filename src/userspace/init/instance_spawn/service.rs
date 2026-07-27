@@ -36,6 +36,7 @@ pub(crate) fn service() {
             PendingApp::WalletNonos => spawn_wallet_nonos(),
             PendingApp::FileManager => spawn_file_manager(),
             PendingApp::ProcessManager => spawn_process_manager(),
+            PendingApp::AudioPlayer => spawn_audio_player(),
         };
         match result {
             // Deliver the focus frame the app skeleton waits for, so the
@@ -47,6 +48,7 @@ pub(crate) fn service() {
             }
         }
     }
+    queue::settle();
 }
 
 fn spawn_error_name(e: SpawnError) -> &'static [u8] {
@@ -169,5 +171,15 @@ fn spawn_process_manager() -> Result<u32, SpawnError> {
 
 #[cfg(not(feature = "nonos-capsule-process-manager"))]
 fn spawn_process_manager() -> Result<u32, SpawnError> {
+    Err(SpawnError::FeatureDisabled)
+}
+
+#[cfg(feature = "nonos-capsule-audio-player")]
+fn spawn_audio_player() -> Result<u32, SpawnError> {
+    crate::userspace::capsule_audio_player::spawn_audio_player_instance()
+}
+
+#[cfg(not(feature = "nonos-capsule-audio-player"))]
+fn spawn_audio_player() -> Result<u32, SpawnError> {
     Err(SpawnError::FeatureDisabled)
 }
