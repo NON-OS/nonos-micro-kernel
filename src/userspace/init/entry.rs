@@ -133,6 +133,7 @@ fn lower_init_priority() {
     if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
         *pcb.priority.lock() = Priority::Low;
     }
+    super::instance_spawn::adopt_drain_pid(pid);
 }
 
 fn yield_after_spawns() {

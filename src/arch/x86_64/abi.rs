@@ -55,8 +55,15 @@ impl ArchOps for X86_64 {
         rflags & (1 << 9) != 0
     }
 
+    // A uniprocessor boot already knows the answer, and answering from
+    // memory matters: CPUID is an unconditional VM exit under hardware
+    // virtualization, and this call sits on the syscall dispatch, timer
+    // tick and context switch paths, so the exits dominate guest time.
     #[inline(always)]
     fn current_cpu_id() -> u32 {
+        if let Some(id) = crate::smp::sole_cpu_apic_id() {
+            return id;
+        }
         // Read the local APIC id from CPUID leaf 1, EBX[31:24].
         // This matches the value the platform IRQ controller uses to
         // route IPIs and is the canonical CPU identifier on x86_64.

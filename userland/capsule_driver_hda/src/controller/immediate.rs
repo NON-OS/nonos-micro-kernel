@@ -59,9 +59,16 @@ fn wait_response(regs: Regs) -> HdaResult<u32> {
     Err(HdaError::ImmediateResponseTimeout)
 }
 
-const fn compose_verb(codec: u8, node: u8, verb: u16, payload: u16) -> u32 {
+pub(crate) const fn compose_verb(codec: u8, node: u8, verb: u16, payload: u16) -> u32 {
     ((codec as u32 & 0x0f) << 28)
         | ((node as u32 & 0x7f) << 20)
         | ((verb as u32 & 0x0fff) << 8)
         | (payload as u32 & 0xff)
+}
+
+pub(crate) const fn compose_verb_long(cad: u8, nid: u8, verb4: u16, payload16: u16) -> u32 {
+    ((cad as u32 & 0x0f) << 28)
+        | ((nid as u32 & 0x7f) << 20)
+        | ((verb4 as u32 & 0x0f) << 16)
+        | (payload16 as u32)
 }

@@ -15,4 +15,5 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const E_OK: i32 = 0;
+pub const E_AGAIN: i32 = -11;
 pub const E_INVAL: i32 = -22;

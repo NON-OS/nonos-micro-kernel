@@ -22,7 +22,7 @@ use super::{
 };
 use crate::controller::{
     halt, issue_noop_and_wait, legacy_handoff, program_command_ring, program_dcbaa,
-    program_event_ring, reset, start, wait_cnr_clear, wait_hc_running, Scratchpads,
+    program_event_ring, reset, set_irq_grant, start, wait_cnr_clear, wait_hc_running, Scratchpads,
 };
 use crate::discover::find_xhci;
 use crate::dma::DmaPool;
@@ -40,6 +40,7 @@ pub fn run() -> XhciResult<Driver> {
     }
     let mmio = mmio_map(dev.device_id, claim_epoch, dev.bar0_size)?;
     let irq = irq_bind(dev, claim_epoch);
+    set_irq_grant(irq.grant_id);
     let handles = BrokerHandles::new(dev.device_id, mmio.grant_id, mmio.user_va, irq.grant_id);
     let layout = read_layout(&handles, mmio.length)?;
     // Take the controller from BIOS/SMM before halting or resetting it. On real

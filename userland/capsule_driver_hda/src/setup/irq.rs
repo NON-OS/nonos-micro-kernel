@@ -14,18 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_device_release, mk_irq_bind, mk_mmio_unmap, IrqBindOut, MmioMapOut};
+use nonos_libc::{mk_irq_bind, IrqBindOut, MK_IRQ_BIND_MSIX};
 
+use super::mark::mark;
 use crate::discover::Found;
-use crate::error::{HdaError, HdaResult};
+use crate::error::HdaResult;
 
-pub fn bind(dev: Found, claim_epoch: u64, mmio: &MmioMapOut) -> HdaResult<IrqBindOut> {
+pub fn bind(dev: Found, claim_epoch: u64) -> HdaResult<IrqBindOut> {
     let mut out = IrqBindOut { grant_id: 0, vector: 0 };
-    let r = mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out);
-    if r < 0 {
-        let _ = mk_mmio_unmap(mmio.grant_id);
-        let _ = mk_device_release(dev.device_id);
-        return Err(HdaError::BrokerCallFailed(r));
+    let intx = mk_irq_bind(dev.device_id, claim_epoch, dev.irq_line as u32, 0, 0, &mut out);
+    if intx >= 0 {
+        return Ok(out);
     }
-    Ok(out)
+    let msix = mk_irq_bind(dev.device_id, claim_epoch, 0, MK_IRQ_BIND_MSIX, 1, &mut out);
+    if msix >= 0 {
+        return Ok(out);
+    }
+    mark("[HDA] irq-polled\n");
+    Ok(IrqBindOut { grant_id: 0, vector: 0 })
 }

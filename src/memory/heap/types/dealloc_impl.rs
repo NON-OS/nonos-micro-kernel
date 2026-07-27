@@ -58,6 +58,7 @@ pub(super) unsafe fn dealloc_impl(allocator: &SecureHeapAllocator, ptr: *mut u8,
             return;
         }
 
+        #[cfg(feature = "heap-track")]
         crate::arch::x86_64::idt::without_interrupts(|| {
             allocator.allocated_ptrs.lock().remove(&(ptr as usize));
         });

@@ -28,8 +28,10 @@ pub(in crate::syscall::microkernel::ipc) fn remove(
 ) -> Option<u64> {
     let mut map = PENDING.lock();
     let queue = map.get_mut(&server_pid)?;
-    let pos = queue.iter().position(|(inbox, _)| inbox == caller_inbox)?;
-    let (_, token) = queue.remove(pos)?;
+    let pos = queue.iter().position(|(_, inbox, _)| inbox == caller_inbox)?;
+    // main's entry is (caller_pid, inbox, token); return the token so the direct
+    // mk_ipc_reply path stamps the reply from the same entry it removes.
+    let (_, _, token) = queue.remove(pos)?;
     if queue.is_empty() {
         map.remove(&server_pid);
     }

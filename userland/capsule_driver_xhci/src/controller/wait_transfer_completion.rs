@@ -16,14 +16,12 @@
 use nonos_libc::Deadline;
 
 use crate::constants::{CC_SHORT_PACKET, CC_SUCCESS, TRB_TYPE_TRANSFER_EVENT};
+use crate::controller::park::{park_step, SPIN_BUDGET};
 use crate::error::{XhciError, XhciResult};
 use crate::regs::runtime::erdp_program;
 use crate::rings::event::EventRing;
 
 const TRANSFER_TIMEOUT_MS: u64 = 1_000;
-// Check the wall-time deadline only every this many idle spins so the transfer
-// poll stays a tight loop and does not make a syscall per iteration.
-const DEADLINE_CHECK_SPINS: u32 = 1024;
 
 pub fn wait_transfer_completion(
     intr_base: u64,
@@ -33,12 +31,12 @@ pub fn wait_transfer_completion(
     let deadline = Deadline::after_ms(TRANSFER_TIMEOUT_MS);
     let mut spins = 0u32;
     loop {
+        spins = spins.saturating_add(1);
+        if spins > SPIN_BUDGET && deadline.expired() {
+            return Err(XhciError::TransferCompletionTimeout);
+        }
         if !evt_ring.has_event() {
-            spins = spins.wrapping_add(1);
-            if spins.is_multiple_of(DEADLINE_CHECK_SPINS) && deadline.expired() {
-                return Err(XhciError::TransferCompletionTimeout);
-            }
-            core::hint::spin_loop();
+            park_step(spins);
             continue;
         }
         let event = evt_ring.current_trb();

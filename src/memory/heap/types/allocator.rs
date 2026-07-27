@@ -16,15 +16,20 @@
 
 use super::super::constants::CANARY_VALUE;
 use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+#[cfg(feature = "heap-track")]
 use heapless::FnvIndexSet;
 use linked_list_allocator::LockedHeap;
+#[cfg(feature = "heap-track")]
 use spin::Mutex;
 
+#[cfg(feature = "heap-track")]
 pub(crate) const TRACK_CAPACITY: usize = 8192;
 
 pub struct SecureHeapAllocator {
     pub inner: LockedHeap,
+    #[cfg(feature = "heap-track")]
     pub allocated_ptrs: Mutex<FnvIndexSet<usize, TRACK_CAPACITY>>,
+    #[cfg(feature = "heap-track")]
     pub tracking_overflowed: AtomicBool,
     pub canary_value: u64,
     pub initialized: AtomicBool,
@@ -35,7 +40,9 @@ impl SecureHeapAllocator {
     pub const fn new() -> Self {
         Self {
             inner: LockedHeap::empty(),
+            #[cfg(feature = "heap-track")]
             allocated_ptrs: Mutex::new(FnvIndexSet::new()),
+            #[cfg(feature = "heap-track")]
             tracking_overflowed: AtomicBool::new(false),
             canary_value: CANARY_VALUE,
             initialized: AtomicBool::new(false),

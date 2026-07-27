@@ -16,6 +16,9 @@
 
 mod max_tx_body;
 mod poll_irq;
+mod refill;
 mod run;
+#[cfg(feature = "nonos-driver-hda-smoketest")]
+mod selftest;
 
 pub use run::run;

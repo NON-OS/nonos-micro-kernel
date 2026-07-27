@@ -14,14 +14,49 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::{mk_irq_ack, mk_irq_poll, IrqPollOut};
+use nonos_libc::{mk_debug, mk_irq_ack, mk_irq_wait};
 
+use super::refill::{refill, Refill};
+use crate::audio::PcmQueue;
+use crate::constants::{SDSTS_BCIS, SD_STS};
 use crate::setup::Driver;
 
-pub(super) fn poll_irq(driver: &Driver, last: &mut u64) {
-    let mut irq = IrqPollOut { seq: 0, overflow: 0 };
-    if mk_irq_poll(driver.handles.irq_grant_id(), &mut irq as *mut _) >= 0 && irq.seq != *last {
-        *last = irq.seq;
+const PLAY_DONE: &str = "[HDA] play-complete\n";
+const IRQ_WAIT_MS: u64 = 50;
+
+pub(super) fn poll_irq(
+    driver: &Driver,
+    last: &mut u64,
+    played: &mut bool,
+    q: &mut PcmQueue,
+    rf: &mut Refill,
+    running: bool,
+) {
+    let mut seq = *last;
+    if mk_irq_wait(driver.handles.irq_grant_id(), *last, IRQ_WAIT_MS, &mut seq as *mut u64) >= 0
+        && seq != *last
+    {
+        *last = seq;
         let _ = mk_irq_ack(driver.handles.irq_grant_id());
+    }
+    check_completion(driver, played, q, rf, running);
+}
+
+fn check_completion(
+    driver: &Driver,
+    played: &mut bool,
+    q: &mut PcmQueue,
+    rf: &mut Refill,
+    running: bool,
+) {
+    let sts = unsafe { driver.regs.r8(driver.stream_off + SD_STS) };
+    if sts & SDSTS_BCIS != 0 {
+        unsafe { driver.regs.w8(driver.stream_off + SD_STS, SDSTS_BCIS) };
+        if running {
+            refill(driver, q, rf);
+        } else if !*played {
+            *played = true;
+            mk_debug(PLAY_DONE.as_ptr(), PLAY_DONE.len());
+        }
     }
 }

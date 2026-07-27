@@ -1,0 +1,30 @@
+# NONOS userland: capsule_audio
+# eK@nonos.systems
+#
+# audio.server — the system audio service. Accepts play/PCM requests
+# from client capsules, mixes them additively (S16 + clamp), and
+# forwards the mixed stream to the driver.hda0 PCM sink. IPC-only:
+# it owns no hardware, only IPC | Memory | Debug.
+
+[package]
+name = "nonos_capsule_audio"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS userland system audio mixing service capsule"
+
+[[bin]]
+name = "audio_server"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true

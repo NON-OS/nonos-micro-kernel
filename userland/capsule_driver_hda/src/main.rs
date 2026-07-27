@@ -19,6 +19,7 @@
 
 extern crate alloc;
 
+mod audio;
 mod constants;
 mod controller;
 mod discover;
@@ -40,7 +41,10 @@ pub unsafe extern "C" fn _start() -> ! {
     }
     let driver = match setup::run() {
         Ok(driver) => driver,
-        Err(e) => mk_exit(exit_code(e)),
+        Err(e) => {
+            setup::mark_setup_fail(e);
+            mk_exit(exit_code(e))
+        }
     };
     server::run(driver);
 }

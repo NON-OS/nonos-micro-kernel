@@ -16,8 +16,14 @@
 
 use nonos_libc::mk_device_release;
 
-use super::{claim, irq, mmio, pci};
-use crate::controller::{leave_reset, probe, ControllerInfo};
+use super::mark::{mark, mark_corb_vid, mark_path};
+use super::{claim, dma, irq, mmio, pci};
+use crate::audio;
+use crate::constants::{PARAM_VENDOR_ID, STREAM_TAG, VERB_GET_PARAMETER};
+use crate::controller::{
+    compose_verb, corb, graph, layout, leave_reset, probe, stream_run, stream_setup, verb,
+    ControllerInfo, StreamDescriptor, StreamRun, STREAM_OUTPUT,
+};
 use crate::discover::find_hda;
 use crate::error::{HdaError, HdaResult};
 use crate::handles::BrokerHandles;
@@ -32,8 +38,16 @@ pub fn run() -> HdaResult<Driver> {
         return Err(e);
     }
     let mmio = mmio::map(dev.device_id, claim_epoch, dev.bar_size)?;
-    let irq = irq::bind(dev, claim_epoch, &mmio)?;
-    let handles = BrokerHandles::new(dev.device_id, mmio.grant_id, mmio.user_va, irq.grant_id);
+    let irq = irq::bind(dev, claim_epoch)?;
+    let (corb, rirb) = dma::map_verb_rings(dev.device_id, claim_epoch, &mmio, &irq)?;
+    let handles = BrokerHandles::new(
+        dev.device_id,
+        mmio.grant_id,
+        mmio.user_va,
+        irq.grant_id,
+        corb.grant_id,
+        rirb.grant_id,
+    );
     let regs = Regs::new(handles.mmio_user_va());
 
     leave_reset(regs)?;
@@ -41,6 +55,73 @@ pub fn run() -> HdaResult<Driver> {
     if info.vmaj == 0 || info.gcap == 0 {
         return Err(HdaError::UnsupportedController);
     }
+    corb::init(regs, corb.device_addr, rirb.device_addr)?;
+    let cad = first_codec(info.statests);
+    let mut wp = 0u16;
+    let cmd = compose_verb(cad, 0, VERB_GET_PARAMETER, PARAM_VENDOR_ID);
+    let resp = verb::send(regs, corb.user_va, rirb.user_va, &mut wp, cmd)?;
+    mark_corb_vid((resp >> 16) as u16);
+    let path = graph::find_output(regs, corb.user_va, rirb.user_va, &mut wp, cad)
+        .ok_or(HdaError::UnsupportedController)?;
+    mark_path(cad, path.dac_nid, path.pin_nid);
     let codecs = probe(regs, info.statests);
-    Ok(Driver { handles, regs, codecs })
+    mark("[HDA] up\n");
+    let (bdl, sample) = dma::map_stream(
+        dev.device_id,
+        claim_epoch,
+        &mmio,
+        &irq,
+        &[corb.grant_id, rirb.grant_id],
+    )?;
+    audio::fill(sample.user_va, crate::controller::bdl::RING_BYTES as usize);
+    stream_setup::configure(regs, corb.user_va, rirb.user_va, &mut wp, cad, path, STREAM_TAG)?;
+    let out = output_descriptor(info)?;
+    stream_run::run(
+        regs,
+        StreamRun {
+            desc: out,
+            tag: STREAM_TAG,
+            bdl_va: bdl.user_va,
+            bdl_dev: bdl.device_addr,
+            sample_dev: sample.device_addr,
+            bytes: crate::controller::bdl::RING_BYTES as u32,
+        },
+    );
+    mark("[HDA] stream-run\n");
+    Ok(Driver {
+        handles,
+        regs,
+        codecs,
+        corb,
+        rirb,
+        path,
+        bdl,
+        sample,
+        stream_off: out.mmio_offset,
+        stream_tag: STREAM_TAG,
+        stream_gi: out.global_index,
+    })
+}
+
+fn output_descriptor(info: ControllerInfo) -> HdaResult<StreamDescriptor> {
+    let (descs, n) = layout(info);
+    let mut i = 0usize;
+    while i < n {
+        if descs[i].kind == STREAM_OUTPUT {
+            return Ok(descs[i]);
+        }
+        i += 1;
+    }
+    Err(HdaError::UnsupportedController)
+}
+
+fn first_codec(statests: u16) -> u8 {
+    let mut a = 0u8;
+    while a < 15 {
+        if (statests >> a) & 1 != 0 {
+            return a;
+        }
+        a = a.wrapping_add(1);
+    }
+    0
 }
