@@ -1,0 +1,134 @@
+name: Create Releases
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Check style
+      run: cargo fmt -- --check
+
+    - name: Run unit tests
+      run: cargo test --verbose
+
+    - name: Rust end-to-end test
+      run: test/e2e_test.sh
+
+    - name: Build x86_64-unknown-linux-gnu
+      run: cargo build --verbose --release --target x86_64-unknown-linux-gnu
+
+    - name: Build x86_64-unknown-linux-musl
+      run: |
+        rustup target add x86_64-unknown-linux-musl
+        cargo build --verbose --release --target x86_64-unknown-linux-musl
+
+    - name: Build aarch64-unknown-linux-gnu
+      run: |
+        sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+        rustup target add aarch64-unknown-linux-gnu
+        cargo build --verbose --release --target aarch64-unknown-linux-gnu --config target.aarch64-unknown-linux-gnu.linker=\"aarch64-linux-gnu-gcc\"
+
+    - name: Build aarch64-apple-darwin
+      run: |
+        curl -L https://github.com/roblabla/MacOSX-SDKs/releases/download/13.3/MacOSX13.3.sdk.tar.xz | tar xJ
+        export SDKROOT=$(pwd)/MacOSX13.3.sdk/
+        export PATH=$PATH:~/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/
+        export CARGO_TARGET_AARCH64_APPLE_DARWIN_LINKER=rust-lld
+        rustup target add aarch64-apple-darwin
+        cargo build --verbose --release --target aarch64-apple-darwin
+        rm -rf $SDKROOT
+
+    - name: Build x86_64-pc-windows-gnu
+      run: |
+        sudo apt-get update && sudo apt-get install -y mingw-w64
+        rustup target add x86_64-pc-windows-gnu
+        cargo build --verbose --release --target x86_64-pc-windows-gnu
+
+    - name: Create GitHub release
+      id: create-release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: ''
+        draft: false
+        prerelease: false
+
+    - name: Upload binary to GitHub release
+      id: upload-x86_64-unknown-linux-gnu-release-asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: target/x86_64-unknown-linux-gnu/release/choose
+        asset_name: choose-x86_64-unknown-linux-gnu
+        asset_content_type: application/raw
+
+    - name: Upload musl binary to GitHub release
+      id: upload-x86_64-unknown-linux-musl-release-asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: target/x86_64-unknown-linux-musl/release/choose
+        asset_name: choose-x86_64-unknown-linux-musl
+        asset_content_type: application/raw
+
+    - name: Upload aarch64 linux binary to GitHub release
+      id: upload-aarch64-unknown-linux-gnu-release-asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: target/aarch64-unknown-linux-gnu/release/choose
+        asset_name: choose-aarch64-unknown-linux-gnu
+        asset_content_type: application/raw
+
+    - name: Upload aarch64 darwin binary to GitHub release
+      id: upload-aarch64-apple-darwin-release-asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: target/aarch64-apple-darwin/release/choose
+        asset_name: choose-aarch64-apple-darwin
+        asset_content_type: application/raw
+
+    - name: Upload mingw binary to GitHub release
+      id: upload-x86_64-pc-windows-gnu-release-asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: target/x86_64-pc-windows-gnu/release/choose.exe
+        asset_name: choose-x86_64-pc-windows-gnu
+        asset_content_type: application/raw
+
+    - name: Upload mingw .exe binary to GitHub release
+      id: upload-x86_64-pc-windows-gnu-release-asset-exe
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: target/x86_64-pc-windows-gnu/release/choose.exe
+        asset_name: choose-x86_64-pc-windows-gnu.exe
+        asset_content_type: application/raw
+
+    - name: Create crates.io release
+      run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}

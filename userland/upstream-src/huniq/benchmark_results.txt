@@ -1,0 +1,106 @@
+uniq 1 huniq2-rust 0.26 29524
+uniq 1 huniq1-c++  1.67 26188
+uniq 1 awk         1.63 321936
+uniq 1 datamash    1.78 9644
+uniq 1 shell       7.30 9736
+
+uniq 2 huniq2-rust 0.84 29592
+uniq 2 huniq1-c++  3.28 26180
+uniq 2 awk         3.71 322012
+uniq 2 datamash    4.60 9636
+uniq 2 shell       16.68 9740
+
+uniq 5 huniq2-rust 2.02 29648
+uniq 5 huniq1-c++  6.21 26184
+uniq 5 awk         7.69 322012
+uniq 5 datamash    9.10 9992
+uniq 5 shell       44.71 10184
+
+uniq 10 huniq2-rust 3.40 29676
+uniq 10 huniq1-c++  12.84 26172
+uniq 10 awk         16.73 321940
+uniq 10 datamash    24.44 10032
+uniq 10 shell       93.75 10036
+
+uniq 50 huniq2-rust 14.68 29612
+uniq 50 huniq1-c++  55.32 26200
+uniq 50 awk         74.91 321940
+uniq 50 datamash    103.54 10936
+uniq 50 shell       453.94 10956
+
+uniq 100 huniq2-rust 43.65 29492
+uniq 100 huniq1-c++  154.99 26180
+uniq 100 awk         239.66 321956
+uniq 100 datamash    285.94 12148
+uniq 100 shell       1062.07 12208
+
+count 1 huniq2-rust 1.47 132096
+count 1 huniq1-c++  1.85 60196
+count 1 awk         2.79 362940
+count 1 datamash    2.28 9636
+count 1 shell       7.71 11716
+
+count 2 huniq2-rust 2.32 132052
+count 2 huniq1-c++  2.98 60156
+count 2 awk         4.65 363016
+count 2 datamash    5.27 9732
+count 2 shell       16.37 11680
+
+count 5 huniq2-rust 4.98 132092
+count 5 huniq1-c++  7.54 60128
+count 5 awk         9.37 363016
+count 5 datamash    11.22 9964
+count 5 shell       44.77 11948
+
+count 10 huniq2-rust 8.81 132048
+count 10 huniq1-c++  13.55 60196
+count 10 awk         16.19 363032
+count 10 datamash    25.12 9908
+count 10 shell       90.01 11976
+
+count 50 huniq2-rust 45.89 132092
+count 50 huniq1-c++  74.04 60104
+count 50 awk         85.43 362956
+count 50 datamash    141.90 10996
+count 50 shell       454.42 12876
+
+count 100 huniq2-rust 90.80 132080
+count 100 huniq1-c++  150.41 60196
+count 100 awk         163.13 363008
+count 100 datamash    322.70 12212
+count 100 shell       933.67 14100
+
+uniq 1 huniq2-rust 0.38 29672
+uniq 1 huniq1-c++  2.39 26144
+uniq 1 awk         2.23 321972
+uniq 1 datamash    1.96 9644
+uniq 1 shell       10.40 9884
+
+uniq 2 huniq2-rust 0.70 29764
+uniq 2 huniq1-c++  3.56 26176
+uniq 2 awk         3.69 321972
+uniq 2 datamash    3.50 9640
+uniq 2 shell       20.67 9936
+
+uniq 5 huniq2-rust 1.71 29640
+uniq 5 huniq1-c++  7.60 26124
+uniq 5 awk         8.61 322036
+uniq 5 datamash    13.94 10000
+uniq 5 shell       53.19 10048
+
+uniq 10 huniq2-rust 3.53 29580
+uniq 10 huniq1-c++  13.81 26120
+uniq 10 awk         16.63 322036
+uniq 10 datamash    24.32 10100
+uniq 10 shell       97.46 10052
+
+uniq 50 huniq2-rust 16.41 29676
+uniq 50 huniq1-c++  65.71 26120
+uniq 50 awk         82.96 321988
+uniq 50 datamash    138.09 11060
+uniq 50 shell       507.67 11032
+
+uniq 100 huniq2-rust 32.65 29548
+uniq 100 huniq1-c++  130.76 26140
+uniq 100 awk         167.15 321960
+uniq 100 datamash    288.22 11976

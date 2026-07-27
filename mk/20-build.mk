@@ -354,6 +354,14 @@ include userland/capsule_proof_io/Capsule.mk
 include userland/capsule_std_proof/Capsule.mk
 include userland/capsule_ripgrep/Capsule.mk
 include userland/capsule_sd/Capsule.mk
+include userland/capsule_csview/Capsule.mk
+include userland/capsule_huniq/Capsule.mk
+include userland/capsule_tokei/Capsule.mk
+include userland/capsule_choose/Capsule.mk
+include userland/capsule_jsonxf/Capsule.mk
+include userland/capsule_pastel/Capsule.mk
+include userland/capsule_dotenv-linter/Capsule.mk
+include userland/capsule_grex/Capsule.mk
 include userland/capsule_tokio_smoke/Capsule.mk
 include userland/capsule_ramfs/Capsule.mk
 include userland/capsule_keyring/Capsule.mk
@@ -724,6 +732,14 @@ nonos-mk-image-viewer-test: $(proof-io_ARTIFACTS) \
 # is what ships and what the ISO carries; do not fold this into it.
 nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) $(sd_ARTIFACTS) \
+		$(csview_ARTIFACTS) \
+		$(huniq_ARTIFACTS) \
+		$(tokei_ARTIFACTS) \
+		$(choose_ARTIFACTS) \
+		$(jsonxf_ARTIFACTS) \
+		$(pastel_ARTIFACTS) \
+		$(dotenv-linter_ARTIFACTS) \
+		$(grex_ARTIFACTS) \
 		$(tokio-smoke_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
 		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \

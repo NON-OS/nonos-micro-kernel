@@ -1,0 +1,287 @@
+#!/usr/bin/env bash
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# nonos-app: install a crates.io tool as a signed, STARK-attested NONOS capsule
+# from one command. It cross-compiles the crate for x86_64-nonos, mints its
+# publisher keys, signs it, records it in userland/apps.list (the single source
+# of truth), and regenerates the kernel tool registry. No kernel file is edited
+# by hand. After `add`, run `make nonos-mk-desktop-gui-prod` to enroll + build.
+#
+#   nonos-app add <crate> [bin]   install a crate (bin defaults to the crate name)
+#   nonos-app regen               rewrite the registry block from apps.list
+#   nonos-app list                show installed tool apps
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+APPS="$ROOT/userland/apps.list"
+REGISTRY="$ROOT/src/userspace/tool_capsules/registry.rs"
+BUILDMK="$ROOT/mk/20-build.mk"
+TARGET="$ROOT/userland/x86_64-nonos-user.json"
+RTOBJ="$ROOT/target/nonos_rt.o"
+TC="nightly-2026-01-16"
+NB="$(dirname "$(RUSTUP_TOOLCHAIN=$TC rustup which rustc)")"
+CS="$ROOT/nonos-sign/target/release/capsule-sign"
+
+die() { echo "nonos-app: $*" >&2; exit 1; }
+
+# The highest service port currently in apps.list, or 4898 so the first app
+# starts at 4900. The system capsules (desktop apps, compositor, drivers) hold
+# ports up to 4865, so tools begin above that range to avoid endpoint clashes.
+next_ports() {
+  local max=4898
+  while read -r _ _ sp _; do [ -n "${sp:-}" ] && [ "$sp" -gt "$max" ] && max=$sp; done \
+    < <(grep -vE '^\s*#|^\s*$' "$APPS" 2>/dev/null || true)
+  echo $((max + 2)) $((max + 3))
+}
+
+CC_FLAGS="-Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem"
+
+# The vendored NONOS shim dir under upstream-src for a foundational crate that
+# assumes unix, or empty if there is no shim for it yet.
+shim_dir_for() {
+  case "$1" in
+    ctrlc)     echo "ctrlc-3.5.2" ;;
+    getrandom) echo "getrandom-0.2.17" ;;
+    atty)      echo "atty-0.2.14" ;;
+    home)      echo "home-0.5.12" ;;
+    fd-lock)   echo "fd-lock-4.0.4" ;;
+    dirs)      echo "dirs-6.0.0" ;;
+    os_str_bytes) echo "os_str_bytes-6.6.1" ;;
+    errno)     echo "errno-0.3.14" ;;
+    is-terminal) echo "is-terminal-0.4.17" ;;
+    *)         echo "" ;;
+  esac
+}
+
+# Copy a crate's fetched source from the registry cache into upstream-src so it
+# can be built with --path and local [patch] overrides.
+vendor_app() {
+  local crate="$1" src
+  # Match only <crate>-<version>, never a sibling like <crate>-core, by
+  # requiring a digit right after the crate name.
+  src="$(ls -d "$HOME/.cargo/registry/src"/*/"$crate"-[0-9]* 2>/dev/null | sort -V | tail -1)"
+  [ -n "$src" ] || die "no fetched source for $crate in the registry cache"
+  rm -rf "$ROOT/userland/upstream-src/$crate"
+  cp -R "$src" "$ROOT/userland/upstream-src/$crate"
+  chmod -R u+w "$ROOT/userland/upstream-src/$crate"
+}
+
+# Rewrite the [patch.crates-io] block in the vendored manifest for every shim
+# accumulated so far, replacing any previous block.
+write_patches() {
+  local crate="$1"; shift
+  local mk="$ROOT/userland/upstream-src/$crate/Cargo.toml" s
+  sed -i '' '/# nonos-app-patch/,$d' "$mk"
+  { printf '\n# nonos-app-patch\n[patch.crates-io]\n'
+    for s in "$@"; do printf '%s = { path = "../%s" }\n' "$s" "$(shim_dir_for "$s")"; done
+  } >> "$mk"
+}
+
+# One build attempt (remote crate or vendored --path), log captured for blocker
+# detection. Args: <install-target> <log> <bin> [extra cargo args, e.g. --features].
+build_once() {
+  local tgt="$1" log="$2" bin="$3"; shift 3
+  PATH="$NB:$PATH" RUSTUP_TOOLCHAIN="$TC" \
+    RUSTFLAGS="-Clink-arg=$RTOBJ --cfg getrandom_backend=\"rdrand\"" \
+    CARGO_TARGET_DIR="$ROOT/target/nonos-app-target" \
+    "$NB/cargo" install $tgt --no-default-features --target "$TARGET" $CC_FLAGS "$@" \
+      --root "$ROOT/target/upstream-$bin" --no-track --force --bin "$bin" > "$log" 2>&1
+}
+
+# Cross-compile for x86_64-nonos, applying NONOS shims for known foundational
+# crates and retrying until it builds or hits a blocker with no shim.
+cross_compile() {
+  local crate="$1" bin="$2" log vendored="" attempt; log="$(mktemp)"
+  local shims=() feats=() feat_arg
+  if [ -f "$ROOT/target/upstream-$bin/bin/$bin" ]; then
+    echo "  reusing prebuilt $bin"; return
+  fi
+  echo "  cross-compiling $crate (bin $bin)..."
+  for attempt in 1 2 3 4 5 6 7 8; do
+    feat_arg=""
+    [ ${#feats[@]} -gt 0 ] && feat_arg="--features=$(IFS=,; echo "${feats[*]}")"
+    if [ -z "$vendored" ]; then
+      build_once "$crate" "$log" "$bin" $feat_arg && { echo "  built clean (${feats[*]:-no extra features})"; return; }
+    else
+      write_patches "$crate" "${shims[@]}"
+      build_once "--path $ROOT/userland/upstream-src/$crate" "$log" "$bin" $feat_arg \
+        && { echo "  built with shims: ${shims[*]:-}"; return; }
+    fi
+    # A crate whose binary is gated behind a feature (commonly `cli`): enable it
+    # and retry rather than treat the missing bin as a dead end.
+    local need; need="$(grep -oE "requires the features: .*" "$log" | head -1 | grep -oE '\`[^\`]+\`' | tr -d '\`' | tr '\n' ' ')" || true
+    if [ -n "$need" ]; then
+      feats+=($need); echo "  enabling features: $need, retrying..."; continue
+    fi
+    local blocker; blocker="$(grep -oE "could not compile \`[^\`]+\`" "$log" | head -1 | sed -E 's/.*`([^`]+)`.*/\1/')" || true
+    [ -n "$(shim_dir_for "$blocker")" ] \
+      || die "$crate needs '${blocker:-unknown}', which has no NONOS shim yet (or is a hard C/GUI/net/spawn dep). Add a shim under userland/upstream-src and a shim_dir_for entry."
+    # If a shim is already applied yet the same crate still fails, the shim does
+    # not cover this crate's version. Stop rather than loop applying it forever.
+    case " ${shims[*]:-} " in
+      *" $blocker "*) die "$crate still fails on '$blocker' after its shim; the shim likely targets a different version." ;;
+    esac
+    [ -z "$vendored" ] && { vendor_app "$crate"; vendored=1; }
+    shims+=("$blocker")
+    echo "  applying $blocker shim, retrying..."
+  done
+  die "$crate did not converge after shims: ${shims[*]:-} features: ${feats[*]:-}"
+}
+
+# Mint the hybrid ed25519 + ML-DSA-65 publisher keypair and publish the pubs.
+gen_keys() {
+  local bin="$1" alg
+  for alg in ed25519 mldsa65; do
+    "$CS" keygen --alg "$alg" --out "$ROOT/.keys/${bin}_publisher_$alg" >/dev/null
+    cp "$ROOT/.keys/${bin}_publisher_$alg.pub" "$ROOT/nonos-data/trust/keys/"
+  done
+}
+
+# Write the capsule manifest fragment that names the endpoint and points at the
+# cross-compiled binary.
+gen_capsule_mk() {
+  local slug="$1" bin="$2" sp="$3" rp="$4" crate="$5"
+  mkdir -p "$ROOT/userland/capsule_$slug"
+  cat > "$ROOT/userland/capsule_$slug/Capsule.mk" <<EOF
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# $slug: unmodified crates.io source cross-compiled for x86_64-nonos and
+# installed as a signed, STARK-attested capsule. Generated by tools/nonos-app.
+
+CAPSULE_SLUG               := $slug
+CAPSULE_HANDLE             := $slug
+CAPSULE_DIR                := userland/capsule_$slug
+CAPSULE_BIN_NAME           := $bin
+CAPSULE_DOMAIN             := crates.io
+CAPSULE_NAMESPACE          := systems.nonos.tool.$slug
+CAPSULE_SERVICE_ENDPOINT   := service:$sp:tool.$slug
+CAPSULE_REPLY_ENDPOINT     := reply:$rp:endpoint.tool.$slug.reply
+CAPSULE_REQUIRED_CAPS      := 0x19
+CAPSULE_CAPS_CEILING       := 0x19
+CAPSULE_PREBUILT_BIN       := target/upstream-$bin/bin/$bin
+CAPSULE_METADATA           := crates.io $crate publisher
+
+include nonos-mk/capsule.mk
+EOF
+}
+
+# Register the capsule include and add it to the desktop image, idempotently.
+wire_build() {
+  local slug="$1"
+  grep -q "capsule_$slug/Capsule.mk" "$BUILDMK" \
+    || sed -i '' "/include userland\/capsule_sd\/Capsule.mk/a\\
+include userland/capsule_$slug/Capsule.mk
+" "$BUILDMK"
+  grep -q "\$($slug""_ARTIFACTS)" "$BUILDMK" \
+    || sed -i '' "/\$(std-proof_ARTIFACTS) \$(ripgrep_ARTIFACTS) \$(sd_ARTIFACTS)/a\\
+		\$($slug""_ARTIFACTS) \\\\
+" "$BUILDMK"
+}
+
+# Regenerate the kernel registry from apps.list by writing the whole file: the
+# static frame plus one generated tool_capsule! entry per installed app.
+regen_registry() {
+  local body="" slug bin sp rp
+  while read -r slug bin sp rp; do
+    [ -z "${slug:-}" ] && continue
+    body+="        tool_capsule!(\"tool.$slug\", $sp, \"endpoint.tool.$slug.reply\", $rp,"$'\n'
+    body+="            \"../../../target/upstream-$bin/bin/$bin\", \"$bin\"),"$'\n'
+  done < <(grep -vE '^\s*#|^\s*$' "$APPS")
+  cat > "$REGISTRY" <<EOF
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+//! The list of embedded tool capsules. The block between the generated markers
+//! is written by \`tools/nonos-app\` from \`userland/apps.list\`, the single
+//! source of truth. Adding a tool is \`nonos-app add <crate>\`, not a hand edit.
+
+extern crate alloc;
+
+use alloc::vec;
+use alloc::vec::Vec;
+
+use super::spec::ToolCapsule;
+use crate::sys::boot_log;
+
+/// Every embedded tool capsule, generated from \`userland/apps.list\`.
+fn embedded_tools() -> Vec<ToolCapsule> {
+    vec![
+        // nonos-app:begin (generated; do not edit by hand)
+$body        // nonos-app:end
+    ]
+}
+
+/// Spawn every embedded tool capsule, verified under the baked trust anchor. One
+/// tool failing to spawn is logged and skipped so it never blocks the others.
+pub fn spawn_all() {
+    for tool in embedded_tools() {
+        match tool.spawn() {
+            Ok(()) => boot_log::ok("TOOL", tool.name),
+            Err(_) => boot_log::error("tool capsule spawn failed"),
+        }
+    }
+}
+EOF
+  echo "  registry regenerated from apps.list"
+}
+
+# Regenerate the desktop shell's tool app table so the Launchpad shows one tile
+# per installed tool. The shell is a separate capsule and cannot include the
+# kernel registry, so it gets its own generated table from the same apps.list.
+regen_tool_apps() {
+  local table="$ROOT/userland/capsule_desktop_shell/src/state/tool_apps.rs" body="" slug bin sp rp n=0
+  [ -d "$(dirname "$table")" ] || return 0
+  while read -r slug bin sp rp; do
+    [ -z "${slug:-}" ] && continue
+    body+="    ToolApp { label: b\"$slug\", service: b\"tool.$slug\" },"$'\n'
+    n=$((n + 1))
+  done < <(grep -vE '^\s*#|^\s*$' "$APPS")
+  cat > "$table" <<EOF
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+//! The installed command-line tools shown in the Launchpad, generated by
+//! \`tools/nonos-app\` from \`userland/apps.list\`. Each tile launches the tool
+//! capsule by its service. Do not edit by hand: run \`nonos-app add <crate>\`.
+
+/// One installed tool: the name on its tile and the service it launches under.
+pub struct ToolApp {
+    pub label: &'static [u8],
+    pub service: &'static [u8],
+}
+
+/// Every installed tool, generated from \`userland/apps.list\`.
+pub const TOOL_APPS: [ToolApp; $n] = [
+$body];
+EOF
+  echo "  desktop tool_apps table regenerated ($n tools)"
+}
+
+cmd_add() {
+  local crate="$1" bin="${2:-$1}" slug="${2:-$1}"
+  grep -qE "^$slug " "$APPS" && die "$slug is already installed"
+  read -r sp rp < <(next_ports)
+  cross_compile "$crate" "$bin"
+  gen_keys "$bin"
+  gen_capsule_mk "$slug" "$bin" "$sp" "$rp" "$crate"
+  wire_build "$slug"
+  printf '%s %s %s %s\n' "$slug" "$bin" "$sp" "$rp" >> "$APPS"
+  regen_registry
+  regen_tool_apps
+  echo "installed $slug (ports $sp/$rp). Run: make nonos-mk-desktop-gui-prod NONOS_DEV=1"
+}
+
+cmd_list() { grep -vE '^\s*#|^\s*$' "$APPS" | awk '{printf "  %-16s %s:%s\n",$1,$3,$4}'; }
+
+case "${1:-}" in
+  add)   shift; [ $# -ge 1 ] || die "usage: nonos-app add <crate> [bin]"; cmd_add "$@" ;;
+  regen) regen_registry; regen_tool_apps ;;
+  list)  cmd_list ;;
+  *)     die "usage: nonos-app {add <crate> [bin] | regen | list}" ;;
+esac

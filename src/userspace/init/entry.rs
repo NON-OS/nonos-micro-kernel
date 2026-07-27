@@ -32,6 +32,10 @@ pub fn run_init() -> ! {
     spawn_plan::spawn_desktop();
     spawn_plan::spawn_market();
     spawn_plan::spawn_apps();
+    // Installed command-line tools have nothing to do until launched, so they
+    // spawn after the display and desktop are up; ahead of the GPU they starved
+    // the display bring-up.
+    run_tools();
     run_tokio_smoke();
     boot_log::ok("INIT", "Capsules spawned");
     lower_init_priority();
@@ -80,6 +84,12 @@ fn run_sd() {
 
 #[cfg(not(feature = "nonos-capsule-sd"))]
 fn run_sd() {}
+
+// Spawn every embedded tool capsule from the generated registry. Adding a tool
+// is a registry line, not a new function here.
+fn run_tools() {
+    crate::userspace::tool_capsules::spawn_all();
+}
 
 #[cfg(feature = "nonos-capsule-tokio-smoke")]
 fn run_tokio_smoke() {
