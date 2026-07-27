@@ -23,7 +23,6 @@ use crate::syscall::microkernel::errnos::{
     ERRNO_BUSY, ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOENT, ERRNO_NOMEM,
 };
 
-use super::correlation::take_for_reply;
 use super::pending_reply;
 use super::reply_inbox;
 
@@ -69,10 +68,14 @@ pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {
     }
     let caller_pid = current_pid().unwrap_or(0);
     let dest = reply_inbox::for_pid(dest_pid as u32);
-    if !pending_reply::remove(caller_pid, &dest) {
+    // The token comes from the same pending-reply entry that authorizes this
+    // reply, matched by the caller's inbox. Using that entry's token (rather
+    // than a separate per-client FIFO) keeps the stamp correct when several
+    // callers have replies outstanding on this server at once.
+    let Some(token) = pending_reply::remove(caller_pid, &dest) else {
         trace(caller_pid, dest_pid, b"drop no-call", 0, &dest);
         return 0;
-    }
+    };
     let from = alloc::format!("proc.{}", caller_pid);
     let mut msg = match IpcMessage::new(&from, &dest, &data) {
         Ok(msg) => msg,
@@ -81,7 +84,7 @@ pub fn sys_ipc_reply(dest_pid: u64, buf: u64, len: usize) -> i64 {
             return ERRNO_NOMEM;
         }
     };
-    msg.correlation = take_for_reply(dest_pid as u32);
+    msg.correlation = token;
     let rc = match try_enqueue_strict(&dest, msg) {
         Ok(()) => {
             crate::sched::wake_process(dest_pid as u32);
