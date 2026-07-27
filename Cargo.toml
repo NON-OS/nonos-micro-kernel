@@ -51,6 +51,10 @@ harness = false
 nonos-stark-attest = []
 default = ["microkernel-core"]
 
+# Bring up a non-x86_64 arch tree (aarch64/riscv64) in QEMU. Compiles + boots
+# the arch but is not a release-signed target. See the arch guard in lib.rs.
+nonos-arch-preview = []
+
 # Bootstrap. `kernel` switches malloc/free to Rust `alloc`; `standalone`
 # brings in the panic handler and global allocator.
 kernel     = []
