@@ -18,6 +18,7 @@ mod install;
 mod install_caps;
 mod load_elf_into_pid;
 mod params;
+mod priority;
 mod spawn_log;
 mod trace;
 
