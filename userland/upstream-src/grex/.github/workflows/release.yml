@@ -1,0 +1,221 @@
+#
+# Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either expressed or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - v1.*
+
+jobs:
+  rust-release-build:
+    name: ${{ matrix.name }}
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            name: Rust Release Build on Linux
+            x86_64-target: x86_64-unknown-linux-musl
+            aarch64-target: aarch64-unknown-linux-musl
+
+          - os: macos-latest
+            name: Rust Release Build on MacOS
+            x86_64-target: x86_64-apple-darwin
+            aarch64-target: aarch64-apple-darwin
+
+          - os: windows-latest
+            name: Rust Release Build on Windows
+            x86_64-target: x86_64-pc-windows-msvc
+            aarch64-target: aarch64-pc-windows-msvc
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Build x86_64 target in release mode
+        uses: houseabsolute/actions-rust-cross@v1
+        with:
+          target: ${{ matrix.x86_64-target }}
+          args: '--release --locked'
+
+      - name: Build aarch64 target in release mode
+        uses: houseabsolute/actions-rust-cross@v1
+        with:
+          target: ${{ matrix.aarch64-target }}
+          args: '--release --locked'
+
+      - name: Get latest release version number
+        id: get_version
+        uses: battila7/get-version-action@v2
+
+      - name: Create x86_64 zip file on Windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          choco install zip
+          cd target/${{ matrix.x86_64-target }}/release
+          zip grex-${{ steps.get_version.outputs.version }}-${{ matrix.x86_64-target }}.zip grex.exe
+          cd ../../..
+
+      - name: Create aarch64 zip file on Windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          cd target/${{ matrix.aarch64-target }}/release
+          zip grex-${{ steps.get_version.outputs.version }}-${{ matrix.aarch64-target }}.zip grex.exe
+          cd ../../..
+
+      - name: Create x86_64 tar.gz file on Linux and macOS
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: |
+          chmod +x target/${{ matrix.x86_64-target }}/release/grex
+          tar -zcf target/${{ matrix.x86_64-target }}/release/grex-${{ steps.get_version.outputs.version }}-${{ matrix.x86_64-target }}.tar.gz -C target/${{ matrix.x86_64-target }}/release grex
+
+      - name: Create aarch64 tar.gz file on Linux and macOS
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: |
+          chmod +x target/${{ matrix.aarch64-target }}/release/grex
+          tar -zcf target/${{ matrix.aarch64-target }}/release/grex-${{ steps.get_version.outputs.version }}-${{ matrix.aarch64-target }}.tar.gz -C target/${{ matrix.aarch64-target }}/release grex
+
+      - name: Upload release and assets to GitHub
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          release_name: grex ${{ steps.get_version.outputs.version-without-v }}
+          file_glob: true
+          file: target/*/release/grex-${{ steps.get_version.outputs.version }}-*.{zip,tar.gz}
+
+  python-linux-release-build:
+    name: Python Release Build on Linux and target ${{ matrix.target }}
+    needs: rust-release-build
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target: [ x86_64, aarch64 ]
+        linux: [ auto, musllinux_1_2 ]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist -i 3.12 3.13 3.14 pypy3.11
+          sccache: 'true'
+          manylinux: ${{ matrix.linux }}
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v5
+        with:
+          name: linux-${{ matrix.linux }}-${{ matrix.target }}-wheels
+          path: dist
+
+  python-windows-release-build:
+    name: Python Release Build on Windows and target ${{ matrix.target }}
+    needs: rust-release-build
+
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        target: [ x86_64, aarch64 ]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist -i 3.12 3.13 3.14
+          sccache: 'true'
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v5
+        with:
+          name: windows-${{ matrix.target }}-wheels
+          path: dist
+
+  python-macos-release-build:
+    name: Python Release Build on MacOS and target ${{ matrix.target }}
+    needs: rust-release-build
+
+    runs-on: macos-latest
+
+    strategy:
+      matrix:
+        target: [ x86_64, aarch64 ]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist -i 3.12 3.13 3.14 pypy3.11
+          sccache: 'true'
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v5
+        with:
+          name: macos-${{ matrix.target }}-wheels
+          path: dist
+
+  python-release-upload:
+    name: Publish wheels to PyPI
+    needs: [ python-linux-release-build, python-windows-release-build, python-macos-release-build ]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download wheels from previous jobs
+        uses: actions/download-artifact@v6
+        with:
+          path: wheels
+          merge-multiple: true
+
+      - name: Upload to PyPI
+        uses: PyO3/maturin-action@v1
+        env:
+          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        with:
+          command: upload
+          args: --skip-existing wheels/*.whl
+
+  rust-release-upload:
+    name: Upload to crates.io
+    needs: [ python-linux-release-build, python-windows-release-build, python-macos-release-build ]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Upload release to crates.io
+        uses: katyo/publish-crates@v2
+        with:
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}

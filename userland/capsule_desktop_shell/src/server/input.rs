@@ -18,7 +18,7 @@ use crate::protocol::{read_i32, read_u16, read_u32};
 use crate::render::layout::{bottom_dock_rect, MENUBAR_HEIGHT};
 use crate::render::{desktop_icons, desktop_menu, topbar};
 use crate::server::desktop;
-use crate::server::handlers::{launcher_focus, launcher_request};
+use crate::server::handlers::{launcher_focus, launcher_request, launchpad};
 use crate::server::refresh_taskbar::refresh_taskbar;
 use crate::state::{collapse_taskbar, reveal_taskbar, Context, LAUNCHER_APPS};
 use nonos_libc::{
@@ -105,6 +105,12 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
         return true;
     }
     let (px, py) = (x as u32, y as u32);
+    // The Launchpad, while open, captures every click: a tile launches its app
+    // or tool, and anything else dismisses the overlay.
+    if ctx.launchpad {
+        launchpad::click(ctx, px, py);
+        return true;
+    }
     // While the right-click menu is open, the next click either picks an item
     // or dismisses it. Handle that before anything else consumes the click.
     if ctx.desktop_menu.is_some() {

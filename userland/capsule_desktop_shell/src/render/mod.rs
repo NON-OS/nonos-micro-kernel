@@ -20,6 +20,7 @@ pub mod desktop_icons;
 pub mod desktop_menu;
 pub mod fill;
 mod icons;
+pub mod launchpad;
 pub mod layout;
 pub mod text;
 pub mod toasts;
@@ -27,6 +28,6 @@ pub mod topbar;
 
 pub use bottom_taskbar::paint_bottom_taskbar;
 pub use chrome::paint_chrome;
-pub use icons::draw_app_icon;
+pub use icons::{draw_app_icon, draw_tool_icon};
 pub use layout::{menubar_rect, spotlight_rect};
 pub use toasts::sync_toast_layer;

@@ -103,6 +103,11 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         // kernel to open another window instance of an embedded app capsule.
         SyscallNumber::MkSpawnInstance => caps.can_spawn_window(),
 
+        // Running a baked command-line tool needs only IPC: the tool is spawned
+        // parented to the caller so the caller can drive its stdio, and only the
+        // baked, attested set can be named.
+        SyscallNumber::MkToolRun => caps.can_ipc(),
+
         _ => return None,
     })
 }

@@ -18,10 +18,17 @@ use crate::state::spotlight::{SPOTLIGHT_HEIGHT, SPOTLIGHT_WIDTH};
 use crate::state::LAUNCHER_APPS;
 
 pub const MENUBAR_HEIGHT: u32 = 28;
-pub const BOTTOM_DOCK_WIDTH: u32 = LAUNCHER_APPS.len() as u32 * (TASKBAR_ENTRY_W + 6) - 6 + 24;
+// One slot per desktop app, plus a trailing slot for the Launchpad button.
+pub const BOTTOM_DOCK_WIDTH: u32 =
+    (LAUNCHER_APPS.len() as u32 + 1) * (TASKBAR_ENTRY_W + 6) - 6 + 24;
 pub const BOTTOM_DOCK_HEIGHT: u32 = 64;
 pub const BOTTOM_DOCK_BOTTOM_INSET: u32 = 24;
 pub const TASKBAR_ENTRY_W: u32 = 80;
+
+/// Left edge of the Launchpad button: the slot just past the last app.
+pub fn launchpad_slot_x(dock: Rect) -> u32 {
+    dock.x + 12 + LAUNCHER_APPS.len() as u32 * (TASKBAR_ENTRY_W + 6)
+}
 
 #[derive(Clone, Copy, Default)]
 pub struct Rect {

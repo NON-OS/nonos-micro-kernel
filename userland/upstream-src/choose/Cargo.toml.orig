@@ -1,0 +1,22 @@
+[package]
+name = "choose"
+version = "1.3.7"
+authors = ["Ryan Geary <rtgnj42@gmail.com>"]
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "A human-friendly and fast alternative to cut and (sometimes) awk"
+homepage = "https://github.com/theryangeary/choose"
+documentation = "https://github.com/theryangeary/choose"
+repository = "https://github.com/theryangeary/choose"
+readme = "readme.md"
+exclude = [
+  "test/*",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+structopt = "0.3"
+regex = "1"
+lazy_static = "1"
+backslash = "0"

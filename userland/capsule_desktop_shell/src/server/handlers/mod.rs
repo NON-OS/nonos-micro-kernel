@@ -17,6 +17,7 @@
 pub mod health;
 pub mod launcher_focus;
 pub mod launcher_request;
+pub mod launchpad;
 pub mod notify;
 pub mod open_with;
 pub mod spotlight_open;

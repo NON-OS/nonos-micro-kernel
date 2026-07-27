@@ -76,6 +76,12 @@ nonos-capsule-std-proof         = []
 nonos-capsule-ripgrep           = []
 nonos-capsule-sd                = []
 nonos-capsule-tokio-smoke       = []
+# Bake the installed crates.io tools (grex, tokei, ...) into the image. Off for
+# core builds, which do not cross-compile the tool binaries; on for the desktop.
+nonos-tool-capsules             = []
+# Boot self-test: run each installed tool once with --version/-h so its output
+# lands on the serial log, proving the whole run path end to end. Test builds only.
+nonos-tool-selftest             = ["nonos-tool-capsules"]
 nonos-capsule-ramfs             = []
 nonos-capsule-wallpaper         = []
 nonos-capsule-compositor        = []
@@ -494,6 +500,7 @@ microkernel-desktop-gui = [
   "microkernel-core",
   "nonos-production",
   "capsule-serial-debug",
+  "nonos-tool-capsules",
   "nonos-capsule-proof-io",
   "nonos-capsule-tokio-smoke",
   "nonos-capsule-ramfs",

@@ -57,11 +57,11 @@ pub fn sys_ipc_call(
     if crate::usercopy::validate_user_write(resp, resp_len).is_err() {
         return ERRNO_FAULT;
     }
-    // This call's correlation token. It is registered with the pending reply so
-    // the redirect-reply path (a service replying via `mk_ipc_send` to its fixed
-    // reply endpoint) stamps the reply with it, and it is sent on the request so
-    // an `mk_ipc_reply` service echoes it via `take_for_reply`. Either way the
-    // genuine reply carries this token; a forged injection can only carry 0.
+    // This call's correlation token, registered with the pending reply keyed by
+    // this caller's inbox. Both reply paths read it back from that same entry:
+    // the redirect path (a service replying via `mk_ipc_send` to its fixed reply
+    // endpoint) and the direct `mk_ipc_reply` path both stamp the reply with it.
+    // The genuine reply carries this token; a forged injection can only carry 0.
     let token = next_call_token();
     let inbox = reply_inbox::for_pid(pid);
     let endpoint = lookup_port(ep as u32);
@@ -75,7 +75,7 @@ pub fn sys_ipc_call(
     trace(pid, b"send", send_result);
     if send_result < 0 {
         if let Some(server_pid) = endpoint_pid {
-            pending_reply::remove(server_pid, &inbox);
+            let _ = pending_reply::remove(server_pid, &inbox);
         }
         return send_result;
     }
@@ -83,7 +83,7 @@ pub fn sys_ipc_call(
     let recv_result = recv_reply_correlated(pid, &inbox, resp, resp_len, timeout, token);
     if recv_result < 0 {
         if let Some(server_pid) = endpoint_pid {
-            pending_reply::remove(server_pid, &inbox);
+            let _ = pending_reply::remove(server_pid, &inbox);
         }
     }
     if recv_result >= 24 && req_len >= 20 {

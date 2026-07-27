@@ -293,6 +293,38 @@ $(UPSTREAM_TOKIO_SMOKE_BIN): $(NONOS_RT_OBJ) $(NONOS_STD_PAL_STAMP) \
 .PHONY: nonos-mk-upstream-tokio-smoke
 nonos-mk-upstream-tokio-smoke: $(UPSTREAM_TOKIO_SMOKE_BIN)
 
+# Installed crates.io command-line tools, cross-compiled unmodified for
+# x86_64-nonos from the byte-identical source vendored under upstream-src (cargo
+# only honors [patch] for path builds, so shimmed crates must build with --path).
+# Each tool's Capsule.mk consumes target/upstream-<bin>/bin/<bin>; this template
+# is the one rule that builds it, so adding a tool is a name in NONOS_TOOL_BINS
+# plus its `nonos-app add`, not a new recipe. getrandom-backed tools take the
+# RDRAND backend, which nonos x86_64 always has.
+NONOS_TOOL_BINS := grex dotenv-linter pastel jsonxf tokei huniq csview
+
+# Default is to strip default features (they pull unix-only or update-check
+# extras nonos does not want). grex and tokei gate their binary behind a `cli`
+# feature, so those two re-enable it. Per-tool overrides live in <bin>_CARGO_FEATURES.
+NONOS_TOOL_FEATURES_DEFAULT := --no-default-features
+grex_CARGO_FEATURES  := --no-default-features --features cli
+tokei_CARGO_FEATURES := --no-default-features --features cli
+
+define nonos_upstream_tool_rule
+$(TARGET_DIR)/upstream-$(1)/bin/$(1): $(NONOS_RT_OBJ) $(NONOS_STD_PAL_STAMP) \
+		userland/x86_64-nonos-user.json | $(TARGET_DIR)/.nonos-toolchain.stamp
+	@echo "Building upstream $(1) for NONOS (unmodified crates.io source)..."
+	@cd userland/upstream-src/$(1) && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		RUSTFLAGS="-Clink-arg=$(abspath $(NONOS_RT_OBJ)) --cfg getrandom_backend=\"rdrand\"" \
+		$(CARGO) install --path . $(or $($(1)_CARGO_FEATURES),$(NONOS_TOOL_FEATURES_DEFAULT)) \
+		--target $(abspath userland/x86_64-nonos-user.json) \
+		-Zbuild-std=std,panic_abort -Zbuild-std-features=compiler-builtins-mem \
+		--root $(abspath $(TARGET_DIR)/upstream-$(1)) --no-track --force --bin $(1)
+endef
+$(foreach t,$(NONOS_TOOL_BINS),$(eval $(call nonos_upstream_tool_rule,$(t))))
+
+.PHONY: nonos-mk-upstream-tools
+nonos-mk-upstream-tools: $(foreach t,$(NONOS_TOOL_BINS),$(TARGET_DIR)/upstream-$(t)/bin/$(t))
+
 $(CAPSULE_SIGN_BIN):
 	@echo "Building capsule-sign host tool..."
 	@cd nonos-sign && cargo build --release --bin capsule-sign
@@ -354,6 +386,13 @@ include userland/capsule_proof_io/Capsule.mk
 include userland/capsule_std_proof/Capsule.mk
 include userland/capsule_ripgrep/Capsule.mk
 include userland/capsule_sd/Capsule.mk
+include userland/capsule_csview/Capsule.mk
+include userland/capsule_huniq/Capsule.mk
+include userland/capsule_tokei/Capsule.mk
+include userland/capsule_jsonxf/Capsule.mk
+include userland/capsule_pastel/Capsule.mk
+include userland/capsule_dotenv-linter/Capsule.mk
+include userland/capsule_grex/Capsule.mk
 include userland/capsule_tokio_smoke/Capsule.mk
 include userland/capsule_ramfs/Capsule.mk
 include userland/capsule_keyring/Capsule.mk
@@ -774,6 +813,13 @@ nonos-mk-audio-player-smoketest-dev-test: $(proof-io_MANIFEST) $(audio_MANIFEST)
 # is what ships and what the ISO carries; do not fold this into it.
 nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) $(sd_ARTIFACTS) \
+		$(csview_ARTIFACTS) \
+		$(huniq_ARTIFACTS) \
+		$(tokei_ARTIFACTS) \
+		$(jsonxf_ARTIFACTS) \
+		$(pastel_ARTIFACTS) \
+		$(dotenv-linter_ARTIFACTS) \
+		$(grex_ARTIFACTS) \
 		$(tokio-smoke_ARTIFACTS) $(ramfs_ARTIFACTS) \
 		$(keyring_ARTIFACTS) $(entropy_ARTIFACTS) $(crypto_ARTIFACTS) \
 		$(vfs_ARTIFACTS) $(driver-virtio-rng_ARTIFACTS) \

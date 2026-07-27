@@ -1,0 +1,154 @@
+#
+# Copyright © 2019-today Peter M. Stahl pemistahl@gmail.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either expressed or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Rust Build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - 'src/**'
+      - 'tests/**'
+      - '**.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - 'src/**'
+      - 'tests/**'
+      - '**.yml'
+
+jobs:
+  rust-build:
+    name: Rust on ${{ matrix.name }}
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            name: Linux 64-Bit
+            target: x86_64-unknown-linux-musl
+
+          - os: macos-latest
+            name: MacOS 64-Bit
+            target: x86_64-apple-darwin
+            env:
+              MACOSX_DEPLOYMENT_TARGET: 10.7
+
+          - os: windows-latest
+            name: Windows 64-Bit
+            target: x86_64-pc-windows-msvc
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Add rustup target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Store or retrieve cargo caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build target in debug mode
+        run: cargo build --target ${{ matrix.target }} --locked
+
+      - name: Test target in debug mode
+        run: cargo test --target ${{ matrix.target }}
+
+      - name: Check Clippy lints
+        run: cargo clippy --target ${{ matrix.target }} -- -Dwarnings
+
+  wasm-build:
+    name: WASM Build
+    needs: rust-build
+
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Install Firefox and Geckodriver # not available anymore in macos-latest
+        run: |
+          brew install --cask firefox
+          brew install geckodriver
+
+      #- name: Enable Safari web driver
+      #  run: sudo safaridriver --enable
+
+      - name: Run WASM integration tests on NodeJS
+        run: wasm-pack test --node -- --no-default-features
+
+      - name: Run WASM integration tests in Chrome
+        run: wasm-pack test --headless --chrome -- --no-default-features
+
+      - name: Run WASM integration tests in Firefox
+        run: wasm-pack test --headless --firefox -- --no-default-features
+
+      # Safari WASM tests not working, reason unclear
+      # Increasing driver timeout does not seem to work
+      # https://github.com/wasm-bindgen/wasm-bindgen/pull/4320
+
+      #- name: Run WASM integration tests in Safari
+      #  env:
+      #    WASM_BINDGEN_TEST_DRIVER_TIMEOUT: 10
+      #  run: wasm-pack test --headless --safari -- --no-default-features
+
+  coverage-report:
+    name: Coverage Report
+    needs: rust-build
+    if: ${{ github.event_name == 'push' }}
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: xd009642/tarpaulin:develop-nightly
+      options: --security-opt seccomp=unconfined
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Generate coverage report
+        run: cargo +nightly tarpaulin --ignore-config --ignore-panics --ignore-tests --exclude-files src/python.rs src/main.rs src/wasm.rs --verbose --timeout 900 --out xml
+
+      - name: Workaround for codecov/feedback#263
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true

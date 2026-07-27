@@ -14,6 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(super) fn owner_has_required(owner_pid: u32, required: u64) -> bool {
+pub(in crate::services::registry) fn owner_has_required(owner_pid: u32, required: u64) -> bool {
     required == 0 || crate::process::caps::has(owner_pid, required)
 }

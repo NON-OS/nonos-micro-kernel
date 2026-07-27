@@ -79,5 +79,6 @@ pub mod capsule_wallpaper;
 pub mod capsule_wallpaper_catalog;
 pub mod capsule_wm;
 pub mod init;
+pub mod tool_capsules;
 
 pub use init::run_init;

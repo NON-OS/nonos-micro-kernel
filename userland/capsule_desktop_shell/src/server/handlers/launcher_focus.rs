@@ -16,8 +16,9 @@
 
 use nonos_libc::mk_time_millis;
 
-use crate::render::layout::{bottom_dock_rect, TASKBAR_ENTRY_W};
+use crate::render::layout::{bottom_dock_rect, launchpad_slot_x, TASKBAR_ENTRY_W};
 use crate::server::handlers::launcher_request::{self, LaunchOutcome};
+use crate::server::handlers::launchpad;
 use crate::server::refresh_taskbar::refresh_taskbar;
 use crate::state::{mark_taskbar_launch, Context, NotifyLevel, LAUNCHER_APPS};
 
@@ -51,5 +52,14 @@ pub fn handle(ctx: &mut Context, x: u32, y: u32) {
             return;
         }
         row_x += TASKBAR_ENTRY_W + 6;
+    }
+    // The trailing dock slot is the Launchpad button.
+    let lp = launchpad_slot_x(bottom);
+    if x >= lp
+        && x < lp + TASKBAR_ENTRY_W
+        && y >= bottom.y + 10
+        && y < bottom.y + bottom.height - 10
+    {
+        launchpad::open(ctx);
     }
 }
