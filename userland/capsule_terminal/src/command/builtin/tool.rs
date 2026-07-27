@@ -2,7 +2,7 @@
 // Copyright (C) 2026 NONOS Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Run one of the baked, attested command-line tools (grex, tokei, choose, ...)
+//! Run one of the baked, attested command-line tools (grex, tokei, csview, ...)
 //! from the shell. The kernel spawns the tool parented to this terminal, so the
 //! same async drain job that streams a store install's output streams the
 //! tool's stdout here. Adding a tool is one line in `TOOLS`.
@@ -20,7 +20,6 @@ pub const TOOLS: &[&[u8]] = &[
     b"dotenv-linter",
     b"pastel",
     b"jsonxf",
-    b"choose",
     b"tokei",
     b"huniq",
     b"csview",

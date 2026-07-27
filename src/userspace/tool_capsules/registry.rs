@@ -34,8 +34,6 @@ fn embedded_tools() -> Vec<ToolCapsule> {
             "../../../target/upstream-pastel/bin/pastel", "pastel"),
         tool_capsule!("tool.jsonxf", 4906, "endpoint.tool.jsonxf.reply", 4907,
             "../../../target/upstream-jsonxf/bin/jsonxf", "jsonxf"),
-        tool_capsule!("tool.choose", 4908, "endpoint.tool.choose.reply", 4909,
-            "../../../target/upstream-choose/bin/choose", "choose"),
         tool_capsule!("tool.tokei", 4910, "endpoint.tool.tokei.reply", 4911,
             "../../../target/upstream-tokei/bin/tokei", "tokei"),
         tool_capsule!("tool.huniq", 4912, "endpoint.tool.huniq.reply", 4913,

@@ -300,7 +300,7 @@ nonos-mk-upstream-tokio-smoke: $(UPSTREAM_TOKIO_SMOKE_BIN)
 # is the one rule that builds it, so adding a tool is a name in NONOS_TOOL_BINS
 # plus its `nonos-app add`, not a new recipe. getrandom-backed tools take the
 # RDRAND backend, which nonos x86_64 always has.
-NONOS_TOOL_BINS := grex dotenv-linter pastel jsonxf choose tokei huniq csview
+NONOS_TOOL_BINS := grex dotenv-linter pastel jsonxf tokei huniq csview
 
 # Default is to strip default features (they pull unix-only or update-check
 # extras nonos does not want). grex and tokei gate their binary behind a `cli`
@@ -389,7 +389,6 @@ include userland/capsule_sd/Capsule.mk
 include userland/capsule_csview/Capsule.mk
 include userland/capsule_huniq/Capsule.mk
 include userland/capsule_tokei/Capsule.mk
-include userland/capsule_choose/Capsule.mk
 include userland/capsule_jsonxf/Capsule.mk
 include userland/capsule_pastel/Capsule.mk
 include userland/capsule_dotenv-linter/Capsule.mk
@@ -767,7 +766,6 @@ nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(csview_ARTIFACTS) \
 		$(huniq_ARTIFACTS) \
 		$(tokei_ARTIFACTS) \
-		$(choose_ARTIFACTS) \
 		$(jsonxf_ARTIFACTS) \
 		$(pastel_ARTIFACTS) \
 		$(dotenv-linter_ARTIFACTS) \
