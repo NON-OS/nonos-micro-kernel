@@ -8,6 +8,7 @@
 //! trust anchor before it runs. Tools run on demand through `run_named`, not at
 //! boot: a command-line tool has nothing to do until it is invoked.
 
+#[cfg(feature = "nonos-tool-capsules")]
 #[macro_use]
 mod embed_macro;
 mod registry;

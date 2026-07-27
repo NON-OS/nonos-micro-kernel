@@ -14,7 +14,15 @@ use alloc::vec::Vec;
 use super::spec::ToolCapsule;
 use crate::sys::boot_log;
 
-/// Every embedded tool capsule, generated from `userland/apps.list`.
+/// Every embedded tool capsule, generated from `userland/apps.list`. Off the
+/// `nonos-tool-capsules` feature (core builds that do not cross-compile the tool
+/// binaries) the list is empty, so nothing is `include_bytes`d.
+#[cfg(not(feature = "nonos-tool-capsules"))]
+fn embedded_tools() -> Vec<ToolCapsule> {
+    Vec::new()
+}
+
+#[cfg(feature = "nonos-tool-capsules")]
 fn embedded_tools() -> Vec<ToolCapsule> {
     vec![
         // nonos-app:begin (generated; do not edit by hand)
