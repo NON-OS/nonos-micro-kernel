@@ -63,6 +63,12 @@ pub fn draw_fs_icon(ctx: &Context, x: u32, y: u32, size: u32, is_dir: bool) {
     badge::badge(ctx, x, y, size, glyph, CYAN);
 }
 
+/// An installed-tool tile from its own 48x48 glyph mask, in the same badge
+/// and cyan tile language as the desktop apps.
+pub fn draw_tool_icon(ctx: &Context, x: u32, y: u32, size: u32, glyph: &'static [u8]) {
+    badge::badge(ctx, x, y, size, glyph, CYAN);
+}
+
 /// The real NØNOS logo, drawn as the top-left brand mark on the menu bar.
 pub fn draw_logo(ctx: &Context, x: u32, y: u32, size: u32) {
     nonos_logo::paint(ctx, x, y, size, 0);

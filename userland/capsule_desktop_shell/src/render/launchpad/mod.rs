@@ -11,6 +11,7 @@ mod grid;
 mod hit;
 mod paint;
 mod tile;
+mod tool_icons;
 
 pub use hit::{hit, target, Target};
 pub use paint::paint_launchpad;

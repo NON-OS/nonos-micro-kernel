@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Draw one Launchpad tile: a desktop app uses its own artwork, an installed
-//! tool gets a generated tile, and both carry a centred label underneath.
+//! tool uses its shipped glyph (or a generated tile when it has none), and
+//! both carry a centred label underneath.
 
-use super::gen_icon;
 use super::grid::{cell_origin, CELL_W, TILE};
+use super::tool_icons;
 use crate::render::draw_app_icon;
 use crate::render::text::draw_overlay_text;
 use crate::state::{Context, LAUNCHER_APPS, TOOL_APPS};
@@ -25,7 +26,7 @@ pub(super) fn paint(ctx: &Context, index: usize) {
         app.label
     } else {
         let tool = &TOOL_APPS[index - apps];
-        gen_icon::draw(ctx, icon_x, cy, TILE, tool.label);
+        tool_icons::draw(ctx, icon_x, cy, TILE, tool.label);
         tool.label
     };
     paint_label(ctx, label, cx, cy + TILE + 8);
