@@ -32,8 +32,14 @@ pub(crate) use reserved::is_reserved_service;
 pub const MAX_SERVICES: usize = 256;
 static ENDPOINTS: Mutex<Vec<ServiceEndpoint>> = Mutex::new(Vec::new());
 
+/// Register a service endpoint on behalf of `pid`. This is the trusted core
+/// path: the kernel spawn path calls it to publish a verified capsule's own
+/// declared endpoint, so the only authorization it enforces is that `pid`
+/// actually holds the capabilities the endpoint advertises. The runtime
+/// `sys_service_register` syscall layers the caller-side register-right check
+/// on top before reaching here (see `caller_has_register_right`).
 pub fn register_endpoint(name: &str, port: u32, pid: u32, caps: u64) -> Result<(), RegError> {
-    if !auth::caller_can_register(pid, caps) {
+    if !auth::owner_has_required(pid, caps) {
         return Err(RegError::PermissionDenied);
     }
     let mut eps = ENDPOINTS.lock();
@@ -48,6 +54,14 @@ pub fn register_endpoint(name: &str, port: u32, pid: u32, caps: u64) -> Result<(
     }
     eps.push(ServiceEndpoint::new(name, port, pid, caps));
     Ok(())
+}
+
+/// True if the current process is allowed to register a service name it does
+/// not already own. Gates the runtime `sys_service_register` syscall so an
+/// ordinary capsule cannot squat a peer's service; publishers granted
+/// `RegisterService` (e.g. net.core) pass.
+pub(crate) fn caller_has_register_right() -> bool {
+    auth::caller_has_register_right()
 }
 
 pub fn lookup_service(name: &str) -> Option<ServiceEndpoint> {

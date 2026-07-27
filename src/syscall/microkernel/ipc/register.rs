@@ -61,6 +61,17 @@ pub fn sys_service_register(name_ptr: u64, name_len: usize, port: u32) -> i64 {
     if crate::services::registry::is_reserved_service(name, port) {
         return ERRNO_PERM;
     }
+    // A capsule may confirm the endpoint the kernel already published for it at
+    // spawn (idempotent self-registration); claiming any other name requires the
+    // RegisterService right. This lets an ordinary capsule re-assert its own
+    // service without holding the right, keeps a publisher like net.core able to
+    // register its extra sub-endpoints, and still bars a runtime capsule from
+    // squatting a peer's name.
+    let owns_already = crate::services::registry::lookup_service(name)
+        .map_or(false, |e| e.pid == pid && e.port == port);
+    if !owns_already && !crate::services::registry::caller_has_register_right() {
+        return ERRNO_PERM;
+    }
     match register_endpoint(name, port, pid, required_caps(name, Capability::IPC.bit())) {
         Ok(()) => 0,
         Err(RegError::Full) => ERRNO_NOMEM,

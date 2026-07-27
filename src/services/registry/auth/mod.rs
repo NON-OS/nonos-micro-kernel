@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod caller_can_register;
 mod caller_has_register_right;
 mod owner_has_required;
 
-pub(in crate::services::registry) use caller_can_register::caller_can_register;
+pub(in crate::services::registry) use caller_has_register_right::caller_has_register_right;
+pub(in crate::services::registry) use owner_has_required::owner_has_required;
