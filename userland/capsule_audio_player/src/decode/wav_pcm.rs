@@ -26,12 +26,22 @@ pub fn parse_riff(bytes: &[u8]) -> Result<(u32, u8, u16, usize, usize), &'static
     let mut data_len = 0usize;
     while off + 8 <= bytes.len() {
         let id = &bytes[off..off + 4];
-        let sz = u32::from_le_bytes(bytes[off + 4..off + 8].try_into().unwrap()) as usize;
+        let sz = u32::from_le_bytes([
+            bytes[off + 4],
+            bytes[off + 5],
+            bytes[off + 6],
+            bytes[off + 7],
+        ]) as usize;
         let body = off + 8;
         if id == b"fmt " && body + 16 <= bytes.len() {
             channels = bytes[body + 2];
-            rate = u32::from_le_bytes(bytes[body + 4..body + 8].try_into().unwrap());
-            bits = u16::from_le_bytes(bytes[body + 14..body + 16].try_into().unwrap());
+            rate = u32::from_le_bytes([
+                bytes[body + 4],
+                bytes[body + 5],
+                bytes[body + 6],
+                bytes[body + 7],
+            ]);
+            bits = u16::from_le_bytes([bytes[body + 14], bytes[body + 15]]);
         } else if id == b"data" {
             data_off = body;
             data_len = sz.min(bytes.len().saturating_sub(body));
