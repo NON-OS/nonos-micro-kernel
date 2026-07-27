@@ -37,6 +37,7 @@ impl FeedSink for NullSink {
     fn open(&mut self, _format: u16) -> Result<(), &'static str> { Ok(()) }
     fn feed(&mut self, _pcm: &[i16]) -> Fed { Fed::WouldBlock }
     fn pause(&mut self) {}
+    fn resume(&mut self) {}
     fn close(&mut self) {}
 }
 
@@ -96,9 +97,19 @@ impl PlayerApp {
         }
     }
 
+    fn on_eof(&mut self) {
+        if self.repeat || self.queue.has_next() {
+            self.next_track();
+        }
+    }
+
     fn toggle_shuffle(&mut self) {
         self.shuffle = !self.shuffle;
-        self.queue.reverse();
+        if self.shuffle {
+            self.queue.shuffle(nonos_libc::mk_time_millis() as u64);
+        } else {
+            self.queue.restore_order();
+        }
     }
 
     fn prev_track(&mut self) {
@@ -148,11 +159,20 @@ impl App for PlayerApp {
         if self.view == ViewMode::Library {
             ui::paint_library(fb, &self.library, &self.queue, self.queue.current(), &l);
         } else {
-            let v = self.transport.view(&self.meta);
+            let mut v = self.transport.view(&self.meta);
+            v.shuffle = self.shuffle;
+            v.repeat = self.repeat;
             ui::paint_player(fb, &v, &self.waveform, &l);
         }
     }
-    fn on_tick(&mut self) -> bool { self.transport.pump(); self.transport.state() == State::Playing }
+    fn on_tick(&mut self) -> bool {
+        let was = self.transport.state();
+        self.transport.pump();
+        if was == State::Playing && self.transport.state() == State::Stopped {
+            self.on_eof();
+        }
+        self.transport.state() == State::Playing
+    }
     fn busy(&self) -> bool { self.transport.state() == State::Playing }
     fn tick_interval_ms(&self) -> i64 { if self.transport.state() == State::Playing { 10 } else { 500 } }
 }

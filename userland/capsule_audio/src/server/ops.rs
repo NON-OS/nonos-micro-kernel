@@ -118,6 +118,15 @@ pub fn stream_pause(req: &Request, msg: &[u8], table: &mut StreamTable) -> i32 {
     if table.set_paused(id, true) { E_OK } else { E_INVAL }
 }
 
+pub fn stream_resume(req: &Request, msg: &[u8], table: &mut StreamTable) -> i32 {
+    let b = payload(req, msg);
+    if b.len() < 4 {
+        return E_INVAL;
+    }
+    let id = u32::from_le_bytes([b[0], b[1], b[2], b[3]]);
+    if table.set_paused(id, false) { E_OK } else { E_INVAL }
+}
+
 pub fn stream_close(req: &Request, msg: &[u8], table: &mut StreamTable) -> i32 {
     let b = payload(req, msg);
     if b.len() < 4 {

@@ -30,5 +30,6 @@ pub trait FeedSink {
     fn open(&mut self, format: u16) -> Result<(), &'static str>;
     fn feed(&mut self, pcm: &[i16]) -> Fed;
     fn pause(&mut self);
+    fn resume(&mut self);
     fn close(&mut self);
 }

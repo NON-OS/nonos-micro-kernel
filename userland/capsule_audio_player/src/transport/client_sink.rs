@@ -34,6 +34,10 @@ impl FeedSink for AudioClient {
         AudioClient::pause(self);
     }
 
+    fn resume(&mut self) {
+        AudioClient::resume(self);
+    }
+
     fn close(&mut self) {
         AudioClient::close(self);
     }

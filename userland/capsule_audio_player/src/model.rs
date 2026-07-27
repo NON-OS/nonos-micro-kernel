@@ -30,6 +30,9 @@ pub struct PlayerView {
     pub dur_ms: u32,
     pub volume_q15: i32,
     pub state: State,
+    pub muted: bool,
+    pub shuffle: bool,
+    pub repeat: bool,
 }
 
 impl Transport {
@@ -42,6 +45,9 @@ impl Transport {
             dur_ms: (self.dur_frames() * 1000 / OUT_RATE as u64) as u32,
             volume_q15: self.volume_q15(),
             state: self.state(),
+            muted: self.muted(),
+            shuffle: false,
+            repeat: false,
         }
     }
 }

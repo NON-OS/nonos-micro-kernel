@@ -60,6 +60,10 @@ impl Queue {
         }
     }
 
+    pub fn has_next(&self) -> bool {
+        self.current + 1 < self.items.len()
+    }
+
     pub fn advance(&mut self) -> Option<usize> {
         if self.items.is_empty() {
             return None;
@@ -76,13 +80,29 @@ impl Queue {
         self.current()
     }
 
-    pub fn reverse(&mut self) {
+    pub fn shuffle(&mut self, seed: u64) {
         let cur = self.current();
-        self.items.reverse();
-        if let Some(t) = cur {
-            if let Some(pos) = self.items.iter().position(|&x| x == t) {
-                self.current = pos;
-            }
+        let mut s = seed | 1;
+        let mut i = self.items.len();
+        while i > 1 {
+            s ^= s << 13;
+            s ^= s >> 7;
+            s ^= s << 17;
+            i -= 1;
+            self.items.swap(i, (s % (i as u64 + 1)) as usize);
+        }
+        self.refocus(cur);
+    }
+
+    pub fn restore_order(&mut self) {
+        let cur = self.current();
+        self.items.sort_unstable();
+        self.refocus(cur);
+    }
+
+    fn refocus(&mut self, track: Option<usize>) {
+        if let Some(t) = track {
+            self.focus(t);
         }
     }
 }

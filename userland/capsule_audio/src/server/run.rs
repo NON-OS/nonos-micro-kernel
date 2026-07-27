@@ -28,7 +28,7 @@ use crate::sink::Sink;
 
 const RX_LEN: usize = 4124;
 const TX_LEN: usize = 28;
-const RECV_TIMEOUT_MS: u64 = 1000;
+const RECV_TIMEOUT_MS: u64 = 5;
 
 pub fn run() -> ! {
     mark("[AUDIO] up\n");

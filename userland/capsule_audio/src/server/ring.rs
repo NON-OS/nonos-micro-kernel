@@ -34,6 +34,11 @@ impl PcmRing {
         self.len
     }
 
+    pub fn clear(&mut self) {
+        self.head = 0;
+        self.len = 0;
+    }
+
     pub fn push(&mut self, s: &[i16]) -> usize {
         let free = FEED_SAMPLES - self.len;
         let n = core::cmp::min(free, s.len());

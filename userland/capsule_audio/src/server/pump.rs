@@ -23,9 +23,16 @@ use crate::sink::Sink;
 pub const PERIOD_FRAMES: usize = 1024;
 pub const PERIOD_SAMPLES: usize = PERIOD_FRAMES * 2;
 pub const KEEP_AHEAD: usize = 3;
-pub struct PumpState { mixer: Mixer, pending: Option<[i16; PERIOD_SAMPLES]>, sent: usize }
+pub struct PumpState {
+    mixer: Mixer,
+    pending: Option<[i16; PERIOD_SAMPLES]>,
+    sent: usize,
+    running: bool,
+}
 impl PumpState {
-    pub fn new() -> Self { Self { mixer: Mixer::new(), pending: None, sent: 0 } }
+    pub fn new() -> Self {
+        Self { mixer: Mixer::new(), pending: None, sent: 0, running: false }
+    }
     pub fn sent(&self) -> usize { self.sent }
 }
 
@@ -53,7 +60,28 @@ fn mark_progress(sent: usize) {
     if sent % KEEP_AHEAD == 0 && sent > 0 { mark("[AUDIO] pump\n"); }
 }
 
+fn gate(state: &mut PumpState, table: &StreamTable, sink: &Sink) -> bool {
+    if !table.any_active() {
+        if state.running {
+            state.pending = None;
+            state.running = false;
+            sink.stream_stop(state.sent as u32);
+            mark("[AUDIO] dac-stop\n");
+        }
+        return false;
+    }
+    if !state.running {
+        state.running = true;
+        sink.stream_start(state.sent as u32);
+        mark("[AUDIO] dac-start\n");
+    }
+    true
+}
+
 pub fn step(state: &mut PumpState, table: &mut StreamTable, sink: &Sink) {
+    if !gate(state, table, sink) {
+        return;
+    }
     if let Some(pending) = state.pending {
         let status = sink.write_pcm_status(&to_bytes(&pending), state.sent as u32);
         if status == E_AGAIN { return; }

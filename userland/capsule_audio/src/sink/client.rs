@@ -71,7 +71,15 @@ impl Sink {
 
     pub fn stream_start(&self, request_id: u32) -> bool {
         let mut tx = [0u8; wire::HDR_LEN];
-        let n = wire::start_request(request_id, &mut tx);
+        self.control(wire::start_request(request_id, &mut tx), &tx)
+    }
+
+    pub fn stream_stop(&self, request_id: u32) -> bool {
+        let mut tx = [0u8; wire::HDR_LEN];
+        self.control(wire::stop_request(request_id, &mut tx), &tx)
+    }
+
+    fn control(&self, n: usize, tx: &[u8]) -> bool {
         if n == 0 {
             return false;
         }

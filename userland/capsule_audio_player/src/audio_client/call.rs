@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_libc::{mk_ipc_call_timeout, mk_service_lookup};
-use super::proto::{close_request, feed_request, open_request, pause_request, read_status, read_stream_id, E_AGAIN};
+use super::proto::{close_request, feed_request, open_request, pause_request, read_status, read_stream_id, resume_request, E_AGAIN};
 
 const SERVICE_NAME: &[u8] = b"audio.server";
 const REQUEST_ID: u32 = 1;
@@ -67,9 +67,24 @@ impl AudioClient {
         }
     }
     pub fn pause(&mut self) {
+        if self.stream_id == 0 {
+            return;
+        }
         self.round_trip(&pause_request(REQUEST_ID, self.stream_id));
+        crate::mark::mark("[PLAYER] pause-sent\n");
+    }
+    pub fn resume(&mut self) {
+        if self.stream_id == 0 {
+            return;
+        }
+        self.round_trip(&resume_request(REQUEST_ID, self.stream_id));
+        crate::mark::mark("[PLAYER] resume-sent\n");
     }
     pub fn close(&mut self) {
+        if self.stream_id == 0 {
+            return;
+        }
         self.round_trip(&close_request(REQUEST_ID, self.stream_id));
+        self.stream_id = 0;
     }
 }

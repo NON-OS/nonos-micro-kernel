@@ -58,4 +58,15 @@ impl Decoder for WavDecoder {
         }
         written
     }
+
+    fn seek(&mut self, frame: u64) -> bool {
+        let bytes_per_sample = (self.bits / 8) as usize;
+        if bytes_per_sample == 0 || self.channels == 0 {
+            return false;
+        }
+        let total_samples = self.data_len / bytes_per_sample;
+        let sample = frame.saturating_mul(self.channels as u64);
+        self.pos = (sample as usize).min(total_samples);
+        true
+    }
 }

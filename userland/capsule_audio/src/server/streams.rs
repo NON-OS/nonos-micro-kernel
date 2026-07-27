@@ -51,9 +51,19 @@ impl StreamTable {
 
     pub fn set_paused(&mut self, id: u32, p: bool) -> bool {
         match self.find(id) {
-            Some(s) => { s.paused = p; true }
+            Some(s) => {
+                s.paused = p;
+                if p {
+                    s.feed.clear();
+                }
+                true
+            }
             None => false,
         }
+    }
+
+    pub fn any_active(&self) -> bool {
+        self.slots.iter().flatten().any(|s| !s.paused)
     }
 
     pub fn feed(&mut self, id: u32, s: &[i16]) -> i32 {

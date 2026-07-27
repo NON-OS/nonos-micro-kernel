@@ -23,6 +23,7 @@ pub enum Control {
     Next,
     Shuffle,
     Repeat,
+    Mute,
     Seek(u32),
     Volume(u32),
     SeekBackSecs(u32),
@@ -52,6 +53,9 @@ pub fn control_at(l: &Layout, x: i32, y: i32) -> Option<Control> {
     }
     if l.repeat.contains(x, y) {
         return Some(Control::Repeat);
+    }
+    if l.speaker.contains(x, y) {
+        return Some(Control::Mute);
     }
     if l.waveform.contains(x, y) {
         return Some(Control::Seek(track_permille(x, l.waveform.x, l.waveform.w)));

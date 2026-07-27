@@ -26,6 +26,7 @@ pub const OP_STREAM_OPEN: u16 = 4;
 pub const OP_FEED_PCM: u16 = 5;
 pub const OP_PAUSE: u16 = 6;
 pub const OP_CLOSE: u16 = 7;
+pub const OP_RESUME: u16 = 8;
 pub const E_OK: i32 = 0;
 pub const E_INVAL: i32 = -22;
 pub const E_AGAIN: i32 = -11;

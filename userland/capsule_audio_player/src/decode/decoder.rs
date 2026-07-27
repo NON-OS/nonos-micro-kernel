@@ -23,4 +23,7 @@ pub struct AudioInfo {
 pub trait Decoder {
     fn info(&self) -> AudioInfo;
     fn next(&mut self, out: &mut [i16]) -> usize;
+    fn seek(&mut self, _frame: u64) -> bool {
+        false
+    }
 }

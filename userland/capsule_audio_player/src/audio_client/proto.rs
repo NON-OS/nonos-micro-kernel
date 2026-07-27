@@ -25,6 +25,7 @@ pub const OP_STREAM_OPEN: u16 = 4;
 pub const OP_FEED_PCM: u16 = 5;
 pub const OP_PAUSE: u16 = 6;
 pub const OP_CLOSE: u16 = 7;
+pub const OP_RESUME: u16 = 8;
 
 pub const E_AGAIN: i32 = -11;
 
@@ -56,6 +57,10 @@ pub fn feed_request(request_id: u32, stream_id: u32, pcm: &[i16]) -> Vec<u8> {
 
 pub fn pause_request(request_id: u32, stream_id: u32) -> Vec<u8> {
     build_request(OP_PAUSE, request_id, &stream_id.to_le_bytes())
+}
+
+pub fn resume_request(request_id: u32, stream_id: u32) -> Vec<u8> {
+    build_request(OP_RESUME, request_id, &stream_id.to_le_bytes())
 }
 
 pub fn close_request(request_id: u32, stream_id: u32) -> Vec<u8> {

@@ -69,6 +69,7 @@ fn route(
         }
         proto::OP_FEED_PCM => ops::stream_feed(req, msg, table, pump, sink),
         proto::OP_PAUSE => ops::stream_pause(req, msg, table),
+        proto::OP_RESUME => ops::stream_resume(req, msg, table),
         proto::OP_CLOSE => ops::stream_close(req, msg, table),
         _ => proto::E_INVAL,
     }

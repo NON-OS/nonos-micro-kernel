@@ -30,12 +30,17 @@ pub fn apply(tp: &mut Transport, c: Control) {
                 tp.play()
             }
         }
-        Control::Seek(p) => tp.seek_frames(tp.dur_frames() * p as u64 / 1000),
-        Control::Volume(p) => tp.set_volume((0x8000i32 * p as i32) / 1000),
-        Control::SeekBackSecs(s) => {
-            tp.seek_frames(tp.pos_frames().saturating_sub(s as u64 * OUT_RATE as u64))
+        Control::Seek(p) => {
+            tp.seek_frames(tp.dur_frames() * p as u64 / 1000);
         }
-        Control::SeekFwdSecs(s) => tp.seek_frames(tp.pos_frames() + s as u64 * OUT_RATE as u64),
+        Control::Volume(p) => tp.set_volume((0x8000i32 * p as i32) / 1000),
+        Control::Mute => tp.toggle_mute(),
+        Control::SeekBackSecs(s) => {
+            tp.seek_frames(tp.pos_frames().saturating_sub(s as u64 * OUT_RATE as u64));
+        }
+        Control::SeekFwdSecs(s) => {
+            tp.seek_frames(tp.pos_frames() + s as u64 * OUT_RATE as u64);
+        }
         Control::Prev | Control::Next | Control::Shuffle | Control::Repeat => {}
     }
 }
