@@ -55,6 +55,19 @@ covers security reports and scope, and
 [rewards](https://github.com/NON-OS/nonos-docs/blob/main/community/rewards.md)
 covers what securing NONOS pays.
 
+## Community
+
+<div align="center">
+
+**[`discord.gg/nonos`](https://discord.gg/nonos)**
+
+[![Discord](https://img.shields.io/badge/join-5865F2?style=flat-square&logo=discord&logoColor=white&label=%20&labelColor=5865F2)](https://discord.gg/nonos)
+
+</div>
+
+Design discussion, capsule work and security reports start there. Verified
+contributors get the capsule-signing channels.
+
 ## Building
 
     make                       # the full ZeroState system, attested, as a bootable image
