@@ -361,3 +361,10 @@ import Nonos
 #print axioms Nonos.ServiceRegisterAuth.old_low_pid_bypass
 #print axioms Nonos.FramebufferSwap.swap_involutive
 #print axioms Nonos.FramebufferSwap.present_rgb_converts
+#print axioms Nonos.ZeroState.off_was_wiped
+#print axioms Nonos.ZeroState.off_holds_nothing
+#print axioms Nonos.ZeroState.into_off_only_from_wiped
+#print axioms Nonos.ZeroState.no_shortcut_to_off
+#print axioms Nonos.ZeroState.quiescing_is_not_wiping
+#print axioms Nonos.ZeroState.secrets_imply_still_here
+#print axioms Nonos.ZeroState.off_is_terminal
