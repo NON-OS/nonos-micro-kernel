@@ -14,18 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(target_arch = "x86_64")]
-#[path = "backend_x86_64/mod.rs"]
-mod backend_x86_64;
-#[cfg(target_arch = "x86_64")]
-pub(super) use backend_x86_64::{
-    fence_full, fence_reads, fence_writes, read_acquire, read_relaxed, write_relaxed, write_release,
-};
+//! DMA sync windows where the sync is not a formality.
+//!
+//! An x86 host bus snoops the caches, so both windows collapse to a fence.
+//! Plenty of arm64 systems do not: a device reading a buffer sees main memory
+//! while the CPU's writes sit in a dirty line, and a device writing one leaves
+//! the CPU reading what it cached earlier. Skipping the maintenance does not
+//! fail loudly, it corrupts quietly.
 
-#[cfg(target_arch = "aarch64")]
-#[path = "backend_aarch64/mod.rs"]
-mod backend_aarch64;
-#[cfg(target_arch = "aarch64")]
-pub(super) use backend_aarch64::{
-    fence_full, fence_reads, fence_writes, read_acquire, read_relaxed, write_relaxed, write_release,
-};
+mod maintain;
+mod sync;
+
+pub(in crate::memory::dma::coherency) use sync::{sync_for_cpu, sync_for_device};

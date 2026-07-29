@@ -14,18 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(target_arch = "x86_64")]
-#[path = "backend_x86_64/mod.rs"]
-mod backend_x86_64;
-#[cfg(target_arch = "x86_64")]
-pub(super) use backend_x86_64::{
-    fence_full, fence_reads, fence_writes, read_acquire, read_relaxed, write_relaxed, write_release,
-};
+pub(super) mod access;
+pub(super) mod fences;
 
-#[cfg(target_arch = "aarch64")]
-#[path = "backend_aarch64/mod.rs"]
-mod backend_aarch64;
-#[cfg(target_arch = "aarch64")]
-pub(super) use backend_aarch64::{
-    fence_full, fence_reads, fence_writes, read_acquire, read_relaxed, write_relaxed, write_release,
+pub(in crate::memory::mmio::ordering) use access::{
+    read_acquire, read_relaxed, write_relaxed, write_release,
 };
+pub(in crate::memory::mmio::ordering) use fences::{fence_full, fence_reads, fence_writes};
