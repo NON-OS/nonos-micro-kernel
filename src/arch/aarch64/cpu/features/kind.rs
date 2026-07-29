@@ -43,4 +43,7 @@ pub enum CpuFeature {
     Bti,
     Mte,
     Rng,
+    /// FEAT_PAN: EL1 accesses to EL0-accessible pages fault unless PSTATE.PAN
+    /// is cleared. The aarch64 counterpart of SMAP.
+    Pan,
 }
