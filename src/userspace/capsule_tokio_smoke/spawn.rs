@@ -21,7 +21,9 @@ use super::embed::{
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified, SpawnError};
 use crate::security::nonos_id_cert::IdCertVerifyError;
-use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY};
+use crate::security::nonos_trust_anchor::{
+    decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
+};
 
 const SERVICE_NAME: &str = "tokio_smoke";
 const SERVICE_PORT: u32 = 4504;

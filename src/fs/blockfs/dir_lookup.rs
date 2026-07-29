@@ -26,8 +26,8 @@ pub fn lookup(key: &[u8; 32], dir: &BlockFsNode, name: &[u8]) -> Result<Option<u
     if dir.first_record_lba == 0 {
         return Ok(None);
     }
-    let block =
-        crate::fs::cryptoblock::read(key, dir.first_record_lba).map_err(BlockFsError::CryptoBlock)?;
+    let block = crate::fs::cryptoblock::read(key, dir.first_record_lba)
+        .map_err(BlockFsError::CryptoBlock)?;
     if block[0..8] != REC_MAGIC[..] {
         return Err(BlockFsError::InvalidRecord);
     }

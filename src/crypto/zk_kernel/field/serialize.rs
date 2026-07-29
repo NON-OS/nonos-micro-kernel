@@ -22,9 +22,7 @@ impl FieldElement {
     pub fn from_bytes(bytes: &[u8; 32]) -> Self {
         let mut wide = [0u8; 64];
         wide[..32].copy_from_slice(bytes);
-        Self {
-            bytes: sc_reduce_mod_l(&mut wide),
-        }
+        Self { bytes: sc_reduce_mod_l(&mut wide) }
     }
 
     // SECURITY: Constant-time Barrett reduction for 64-byte input.

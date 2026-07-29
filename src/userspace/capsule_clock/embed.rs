@@ -15,9 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-clock")]
-pub(crate) const CLOCK_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_clock/target/x86_64-nonos-user/release/clock"
-);
+pub(crate) const CLOCK_ELF: &[u8] =
+    include_bytes!("../../../userland/capsule_clock/target/x86_64-nonos-user/release/clock");
 
 #[cfg(feature = "nonos-capsule-clock")]
 pub(crate) const CLOCK_NONOS_ID_CERT_BYTES: &[u8] =

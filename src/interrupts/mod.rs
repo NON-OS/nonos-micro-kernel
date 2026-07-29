@@ -27,7 +27,9 @@ pub mod isr;
 pub mod pic;
 pub mod safety;
 pub mod stats;
-#[cfg(target_arch = "x86_64")]
+// The tick counter and the liveness heartbeat. Whatever raises the interrupt,
+// counting it and noticing when it stops are the same job everywhere, and this
+// module contains no instruction of its own.
 pub mod timer;
 
 pub use allocation::{

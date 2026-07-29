@@ -189,4 +189,3 @@ pub fn ripemd160(data: &[u8]) -> [u8; 20] {
     hasher.update(data);
     hasher.finalize()
 }
-

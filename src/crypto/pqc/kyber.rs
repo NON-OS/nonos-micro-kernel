@@ -87,7 +87,6 @@ pub struct KyberKeyPair {
     pub secret_key: KyberSecretKey,
 }
 
-
 #[cfg(all(feature = "mlkem768", not(feature = "mlkem512"), not(feature = "mlkem1024")))]
 mod ffi {
     extern "C" {
@@ -166,11 +165,7 @@ mod ffi {
     }
 }
 
-#[cfg(all(
-    not(feature = "mlkem512"),
-    not(feature = "mlkem768"),
-    not(feature = "mlkem1024")
-))]
+#[cfg(all(not(feature = "mlkem512"), not(feature = "mlkem768"), not(feature = "mlkem1024")))]
 mod ffi {
     extern "C" {
         pub fn PQCLEAN_MLKEM768_CLEAN_crypto_kem_keypair(pk: *mut u8, sk: *mut u8) -> i32;

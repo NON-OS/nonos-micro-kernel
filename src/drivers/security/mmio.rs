@@ -101,4 +101,3 @@ pub fn safe_mmio_write64(addr: VirtAddr, val: u64) -> Result<(), DriverError> {
 
     Ok(())
 }
-

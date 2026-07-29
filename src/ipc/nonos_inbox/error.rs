@@ -90,4 +90,3 @@ impl core::fmt::Display for InboxError {
         }
     }
 }
-

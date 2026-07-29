@@ -44,4 +44,3 @@ pub fn sha384(data: &[u8]) -> Hash384 {
     out.copy_from_slice(&full[..48]);
     out
 }
-

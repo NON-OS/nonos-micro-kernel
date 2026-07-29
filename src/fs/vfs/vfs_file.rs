@@ -48,7 +48,8 @@ impl VirtualFileSystem {
     pub fn unlink(&self, path: &str) -> VfsResult<()> {
         validate_path(path)?;
         if let Some(rel) = super::data_rel::data_rel(path) {
-            crate::fs::blockfs_volume::remove(rel).map_err(super::map_volume_err::map_volume_err)?;
+            crate::fs::blockfs_volume::remove(rel)
+                .map_err(super::map_volume_err::map_volume_err)?;
             self.inner.lock().vfs_stats.unlink_ops += 1;
             return Ok(());
         }

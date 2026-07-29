@@ -198,4 +198,3 @@ fn determine_health_status(
 
     StorageHealthStatus::Healthy
 }
-

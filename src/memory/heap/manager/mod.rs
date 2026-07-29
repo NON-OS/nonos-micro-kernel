@@ -20,9 +20,9 @@ mod globals;
 mod init;
 mod verify;
 
+pub use api::get_allocator;
 pub use api::{get_heap_stats, set_heap_zero_on_alloc, set_heap_zero_on_free};
 pub use bootstrap::{init_bootstrap, is_using_bootstrap};
 pub use globals::{get_timestamp, HEAP_STATS, HEAP_ZERO_ON_ALLOC, HEAP_ZERO_ON_FREE};
 pub use init::init;
-pub use api::get_allocator;
 pub use verify::verify_heap_integrity;

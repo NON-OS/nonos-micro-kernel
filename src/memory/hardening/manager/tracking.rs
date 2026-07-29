@@ -18,7 +18,7 @@ use core::sync::atomic::{AtomicU64, Ordering};
 impl MemoryHardening {
     pub(super) fn track_allocation(&self, addr: u64, size: usize) -> u64 {
         let allocation_id = self.generate_allocation_id();
-        let timestamp = unsafe { core::arch::x86_64::_rdtsc() };
+        let timestamp = crate::arch::read_time_counter();
         let info = AllocationInfo { size, timestamp, allocation_id, freed: false };
         self.allocation_tracker.lock().insert(addr, info);
         allocation_id

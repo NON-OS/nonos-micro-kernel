@@ -71,7 +71,8 @@ pub fn verify_capsule_attestation_stark(
     let dirs = &trailer[sib_end..sib_end + dir_bytes];
     let directions: Vec<bool> =
         (0..POLICY_TREE_DEPTH).map(|i| (dirs[i / 8] >> (i % 8)) & 1 == 1).collect();
-    let proof = deserialize_proof_ext(&trailer[sib_end + dir_bytes..]).ok_or(AttestError::Malformed)?;
+    let proof =
+        deserialize_proof_ext(&trailer[sib_end + dir_bytes..]).ok_or(AttestError::Malformed)?;
 
     let root = to_rate(&policy_root::root().ok_or(AttestError::RootUnavailable)?);
 
@@ -82,7 +83,13 @@ pub fn verify_capsule_attestation_stark(
     ctx[32..40].copy_from_slice(&granted_caps.to_be_bytes());
     ctx[40..48].copy_from_slice(&POLICY_EPOCH.to_be_bytes());
 
-    let air = MerkleMembership::new(Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]), LOG_ROUNDS, root, siblings, directions);
+    let air = MerkleMembership::new(
+        Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]),
+        LOG_ROUNDS,
+        root,
+        siblings,
+        directions,
+    );
     if stark_verify_ext_blown_bound(&air, &proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP, &ctx) {
         Ok(())
     } else {

@@ -71,4 +71,3 @@ pub fn p256_ecdh(sk: &[u8; 32], peer_pub: &[u8; 65]) -> Option<[u8; 32]> {
 
     Some(shared.x.to_bytes())
 }
-

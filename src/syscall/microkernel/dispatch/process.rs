@@ -18,6 +18,7 @@ use super::args::Args;
 use crate::syscall::microkernel::attest::sys_attest_status;
 use crate::syscall::microkernel::battery::sys_battery_status;
 use crate::syscall::microkernel::capsule_load::sys_capsule_load;
+use crate::syscall::microkernel::futex::{sys_futex_wait, sys_futex_wake};
 use crate::syscall::microkernel::kill::sys_kill;
 use crate::syscall::microkernel::memory::{sys_mmap, sys_munmap};
 use crate::syscall::microkernel::numbers::*;
@@ -27,13 +28,12 @@ use crate::syscall::microkernel::process::{
     sys_args, sys_exit, sys_getpid, sys_pid_alive, sys_set_tls, sys_spawn, sys_thread_spawn,
     sys_yield,
 };
-use crate::syscall::microkernel::futex::{sys_futex_wait, sys_futex_wake};
 use crate::syscall::microkernel::procstat::sys_proc_stat;
 use crate::syscall::microkernel::spawn_instance::sys_spawn_instance;
-use crate::syscall::microkernel::tool_run::sys_tool_run;
 use crate::syscall::microkernel::time::{
     sys_time_adjust, sys_time_millis, sys_time_monotonic, sys_time_rtc,
 };
+use crate::syscall::microkernel::tool_run::sys_tool_run;
 use crate::syscall::microkernel::wait::sys_wait;
 
 pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {

@@ -14,17 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::file_consts::{DATA_BYTES, INDEX_COUNT_OFFSET, INDEX_MAGIC, INDEX_PTR_BASE, MAX_PTRS, PTR_BYTES};
+use super::file_consts::{
+    DATA_BYTES, INDEX_COUNT_OFFSET, INDEX_MAGIC, INDEX_PTR_BASE, MAX_PTRS, PTR_BYTES,
+};
 use super::read_u32::read_u32;
 use super::read_u64::read_u64;
 use super::{BlockFsError, BlockFsNode};
 
-pub fn read_file(key: &[u8; 32], node: &BlockFsNode, out: &mut [u8]) -> Result<usize, BlockFsError> {
+pub fn read_file(
+    key: &[u8; 32],
+    node: &BlockFsNode,
+    out: &mut [u8],
+) -> Result<usize, BlockFsError> {
     if node.first_record_lba == 0 || node.size == 0 {
         return Ok(0);
     }
-    let index =
-        crate::fs::cryptoblock::read(key, node.first_record_lba).map_err(BlockFsError::CryptoBlock)?;
+    let index = crate::fs::cryptoblock::read(key, node.first_record_lba)
+        .map_err(BlockFsError::CryptoBlock)?;
     if index[0..8] != INDEX_MAGIC[..] {
         return Err(BlockFsError::InvalidRecord);
     }

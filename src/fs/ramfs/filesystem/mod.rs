@@ -37,4 +37,3 @@ pub use legacy::{
     create_file_legacy, delete_file_legacy, list_dir_legacy, read_file_legacy, write_file_legacy,
 };
 pub use path::normalize_path;
-

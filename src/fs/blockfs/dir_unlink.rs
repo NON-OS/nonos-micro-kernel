@@ -23,11 +23,17 @@ use super::write_node::write_node;
 use super::write_u32::write_u32;
 use super::{BlockFsError, BlockFsNode};
 
-pub(crate) fn unlink(key: &[u8; 32], dir_lba: u64, dir: &mut BlockFsNode, name: &[u8]) -> Result<(), BlockFsError> {
+pub(crate) fn unlink(
+    key: &[u8; 32],
+    dir_lba: u64,
+    dir: &mut BlockFsNode,
+    name: &[u8],
+) -> Result<(), BlockFsError> {
     if dir.first_record_lba == 0 {
         return Err(BlockFsError::NotFound);
     }
-    let mut block = crate::fs::cryptoblock::read(key, dir.first_record_lba).map_err(BlockFsError::CryptoBlock)?;
+    let mut block = crate::fs::cryptoblock::read(key, dir.first_record_lba)
+        .map_err(BlockFsError::CryptoBlock)?;
     if block[0..8] != REC_MAGIC[..] {
         return Err(BlockFsError::InvalidRecord);
     }
@@ -53,7 +59,8 @@ pub(crate) fn unlink(key: &[u8; 32], dir_lba: u64, dir: &mut BlockFsNode, name: 
         *b = 0;
     }
     write_u32(&mut block, REC_COUNT_OFFSET, (count - 1) as u32);
-    crate::fs::cryptoblock::write(key, dir.first_record_lba, &block).map_err(BlockFsError::CryptoBlock)?;
+    crate::fs::cryptoblock::write(key, dir.first_record_lba, &block)
+        .map_err(BlockFsError::CryptoBlock)?;
     dir.size = dir.size.saturating_sub(ENTRY_BYTES as u64);
     write_node(key, dir_lba, dir)
 }

@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::state::SCHEDULER_STATS;
-use crate::arch::x86_64::idt::without_interrupts;
+use crate::arch::run_without_interrupts as without_interrupts;
 use crate::process::scheduler::contract::{switch as contract_switch, SwitchIntent};
 use core::sync::atomic::Ordering;
 

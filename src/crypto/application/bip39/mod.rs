@@ -26,4 +26,3 @@ pub use helpers::{
 pub use mnemonic::Mnemonic;
 pub use types::MnemonicStrength;
 pub use wordlist::ENGLISH_WORDLIST;
-
