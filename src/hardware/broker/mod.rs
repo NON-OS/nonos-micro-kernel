@@ -35,6 +35,8 @@ pub(crate) mod pci_index;
 // ENOSYS via `syscall/microkernel/pio/unsupported.rs`.
 #[cfg(target_arch = "x86_64")]
 pub mod pio;
+#[cfg(not(target_arch = "x86_64"))]
+mod pio_absent;
 mod platform;
 mod power;
 mod table;
@@ -75,5 +77,7 @@ pub use pio::{
     release_grant as pio_release_grant, write as pio_write, PioError, PioGrantRequest,
     PioGrantResult, PioWidth,
 };
+#[cfg(not(target_arch = "x86_64"))]
+pub use pio_absent::{pio_release_all_for_pid, pio_release_for_device};
 pub use platform::register_legacy as register_legacy_platform_devices;
 pub use table::{contains, init_from_pci, list, list_by_class};
