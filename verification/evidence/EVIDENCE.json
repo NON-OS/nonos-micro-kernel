@@ -49,11 +49,11 @@
       ]
     },
     "lean_specification": {
-      "axiom_profiled_theorems": 263,
+      "axiom_profiled_theorems": 270,
       "mathlib": false,
-      "modules": 154,
+      "modules": 155,
       "sorry_count": 0,
-      "theorems": 1064,
+      "theorems": 1071,
       "toolchain": "leanprover/lean4:v4.15.0"
     },
     "runnable": {
