@@ -36,6 +36,7 @@ pub mod observability;
 mod periodic;
 pub mod policy;
 pub mod quantum;
+pub(crate) mod zerostate;
 
 pub use boot::firmware;
 pub use boot::secure_boot;

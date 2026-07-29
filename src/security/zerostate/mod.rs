@@ -14,7 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(super) const E_OK: i64 = 0;
-pub(super) const E_INVAL: i64 = -22;
-pub(super) const E_FAULT: i64 = -14;
-pub(super) const E_NOSYS: i64 = -38;
+//! The end of a boot.
+//!
+//! ZeroState is a claim about what the machine holds once it stops, so the
+//! wipe cannot be a step a caller is trusted to remember. `terminate` is the
+//! only route to `arch::power`, which is itself crate-private, so wiping is
+//! not a convention here: it is the only reachable path.
+//!
+//! `verification/lean/Nonos/ZeroState.lean` proves the property this shape
+//! buys, that no reachable state powers the machine off with memory unwiped.
+
+mod terminate;
+
+pub(crate) use terminate::terminate;

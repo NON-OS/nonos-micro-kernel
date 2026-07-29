@@ -14,11 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::arch::x86_64::acpi::power_reboot;
+use crate::arch::power::PowerOff;
+use crate::security::zerostate::terminate;
 
-use super::errno::E_OK;
-
-pub(super) fn reboot() -> i64 {
-    let _ = power_reboot::reboot();
-    E_OK
+/// Reset the machine, wiping on the way.
+///
+/// A warm reset leaves DRAM powered and its rows intact, so this path needs
+/// the wipe at least as much as the power-off one does. It used to call ACPI
+/// straight out of the syscall router, which both skipped the wipe and only
+/// built on x86_64.
+pub(super) fn reboot() -> ! {
+    terminate(PowerOff::Reboot)
 }
