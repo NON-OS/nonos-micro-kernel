@@ -14,12 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod consts;
-mod convert;
-mod init;
-mod rdtsc;
+use core::sync::atomic::{AtomicU64, Ordering};
 
-pub use consts::{BOOT_EPOCH_MS, BOOT_TSC, TIMER_INIT, TSC_FREQ_HZ};
-pub use convert::{ms_to_ticks, ticks_to_ms, ticks_to_ns, ticks_to_us, tsc_frequency, us_to_ticks};
-pub use init::{calibrate_tsc_hz, init, init_default};
-pub use rdtsc::rdtsc;
+/// Where the device tree said the PL031 is, or zero for a board without one.
+static BASE: AtomicU64 = AtomicU64::new(0);
+
+pub fn set_base(base: u64) {
+    BASE.store(base, Ordering::Release);
+}
+
+pub(super) fn base() -> Option<u64> {
+    match BASE.load(Ordering::Acquire) {
+        0 => None,
+        base => Some(base),
+    }
+}

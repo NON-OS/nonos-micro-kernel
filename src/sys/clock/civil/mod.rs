@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod consts;
-mod convert;
-mod init;
-mod rdtsc;
+//! Calendar arithmetic, owned in one place.
+//!
+//! No hardware here. The CMOS clock hands over a date and wants seconds; a
+//! PL031 hands over seconds and the syscall wants a date. Both conversions are
+//! the same maths, so it lives above the arch boundary and each side calls in.
 
-pub use consts::{BOOT_EPOCH_MS, BOOT_TSC, TIMER_INIT, TSC_FREQ_HZ};
-pub use convert::{ms_to_ticks, ticks_to_ms, ticks_to_ns, ticks_to_us, tsc_frequency, us_to_ticks};
-pub use init::{calibrate_tsc_hz, init, init_default};
-pub use rdtsc::rdtsc;
+mod days;
+mod time;
+
+pub use days::{days_in_month, days_in_year, is_leap_year};
+pub use time::{from_unix, to_unix, CivilTime, UNIX_EPOCH_YEAR};

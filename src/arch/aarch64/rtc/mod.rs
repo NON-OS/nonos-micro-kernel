@@ -14,12 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod consts;
-mod convert;
-mod init;
-mod rdtsc;
+//! ARM PrimeCell PL031, the real-time clock on QEMU's virt board and most
+//! ARM reference platforms.
+//!
+//! Simpler than a PC's CMOS clock: `DR` is a 32-bit count of seconds since the
+//! Unix epoch, readable in one access with no BCD, no update-in-progress flag
+//! and no register index to select first.
 
-pub use consts::{BOOT_EPOCH_MS, BOOT_TSC, TIMER_INIT, TSC_FREQ_HZ};
-pub use convert::{ms_to_ticks, ticks_to_ms, ticks_to_ns, ticks_to_us, tsc_frequency, us_to_ticks};
-pub use init::{calibrate_tsc_hz, init, init_default};
-pub use rdtsc::rdtsc;
+mod read;
+mod state;
+
+pub use read::unix_timestamp;
+pub use state::set_base;
