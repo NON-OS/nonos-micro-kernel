@@ -15,78 +15,38 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::state::ENTROPY_SOURCE;
-use core::arch::x86_64::__cpuid;
+use crate::arch::cpu_random;
 
+/// Record what the CPU offers, once, before anything asks for a byte.
 pub fn init() {
+    let random = cpu_random::random_available();
+    let entropy = cpu_random::entropy_available();
     // SAFETY: single-threaded initialization during early boot
     unsafe {
-        let cpuid = __cpuid(1);
-        ENTROPY_SOURCE.rdrand_available = (cpuid.ecx & (1 << 30)) != 0;
-
-        let cpuid_ext = __cpuid_count(7, 0);
-        ENTROPY_SOURCE.rdseed_available = (cpuid_ext.ebx & (1 << 18)) != 0;
+        ENTROPY_SOURCE.random_available = random;
+        ENTROPY_SOURCE.entropy_available = entropy;
     }
 }
 
-pub(crate) fn rdrand64() -> Option<u64> {
+/// Conditioned DRBG output from the CPU, if it has one.
+pub(crate) fn hardware_random64() -> Option<u64> {
     // SAFETY: reading global state after init
-    unsafe {
-        if !ENTROPY_SOURCE.rdrand_available {
-            return None;
-        }
-
-        let mut val: u64;
-        let mut success: u8;
-
-        // SAFETY: RDRAND is checked available via CPUID
-        core::arch::asm!(
-            "rdrand {val}",
-            "setc {success}",
-            val = out(reg) val,
-            success = out(reg_byte) success,
-            options(nomem, nostack)
-        );
-
-        if success != 0 {
-            Some(val)
-        } else {
-            None
-        }
+    if !unsafe { ENTROPY_SOURCE.random_available } {
+        return None;
     }
+    cpu_random::random_u64()
 }
 
-pub(crate) fn rdseed64() -> Option<u64> {
+/// Reseeded entropy from the CPU, if it has a source for it.
+pub(crate) fn hardware_entropy64() -> Option<u64> {
     // SAFETY: reading global state after init
-    unsafe {
-        if !ENTROPY_SOURCE.rdseed_available {
-            return None;
-        }
-
-        let mut val: u64;
-        let mut success: u8;
-
-        // SAFETY: RDSEED is checked available via CPUID
-        core::arch::asm!(
-            "rdseed {val}",
-            "setc {success}",
-            val = out(reg) val,
-            success = out(reg_byte) success,
-            options(nomem, nostack)
-        );
-
-        if success != 0 {
-            Some(val)
-        } else {
-            None
-        }
+    if !unsafe { ENTROPY_SOURCE.entropy_available } {
+        return None;
     }
+    cpu_random::entropy_u64()
 }
 
 pub fn has_hardware_rng() -> bool {
     // SAFETY: reading global state after init
-    unsafe { ENTROPY_SOURCE.rdrand_available || ENTROPY_SOURCE.rdseed_available }
-}
-
-fn __cpuid_count(leaf: u32, subleaf: u32) -> core::arch::x86_64::CpuidResult {
-    core::arch::x86_64::__cpuid_count(leaf, subleaf)
+    unsafe { ENTROPY_SOURCE.random_available || ENTROPY_SOURCE.entropy_available }
 }

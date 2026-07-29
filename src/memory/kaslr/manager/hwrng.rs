@@ -14,59 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::constants::*;
-use core::arch::x86_64::__cpuid;
+//! The CPU generator, as the slide derivation sees it.
+
+use crate::arch::cpu_random;
 
 #[inline]
-pub(super) fn has_rdrand() -> bool {
-    let cpuid = __cpuid(CPUID_FEATURES_LEAF);
-    (cpuid.ecx & (1 << RDRAND_FEATURE_BIT)) != 0
+pub(super) fn has_cpu_random() -> bool {
+    cpu_random::random_available()
 }
 
 #[inline]
-pub(super) fn has_rdseed() -> bool {
-    let cpuid = __cpuid(CPUID_EXTENDED_LEAF);
-    (cpuid.ebx & (1 << RDSEED_FEATURE_BIT)) != 0
+pub(super) fn has_cpu_entropy() -> bool {
+    cpu_random::entropy_available()
 }
 
 #[inline]
-pub(super) fn rdrand64() -> Option<u64> {
-    unsafe {
-        let mut val: u64 = 0;
-        let mut success: u8 = 0;
-        core::arch::asm!(
-            "rdrand {val}", "setc {success}",
-            val = out(reg) val,
-            success = out(reg_byte) success,
-            options(nostack, preserves_flags)
-        );
-        if success != 0 {
-            Some(val)
-        } else {
-            None
-        }
-    }
+pub(super) fn cpu_random64() -> Option<u64> {
+    cpu_random::random_u64()
 }
 
 #[inline]
-pub(super) fn rdseed64() -> Option<u64> {
-    unsafe {
-        let mut val: u64 = 0;
-        let mut success: u8 = 0;
-        core::arch::asm!(
-            "rdseed {val}", "setc {success}",
-            val = out(reg) val,
-            success = out(reg_byte) success,
-            options(nostack, preserves_flags)
-        );
-        if success != 0 {
-            Some(val)
-        } else {
-            None
-        }
-    }
+pub(super) fn cpu_entropy64() -> Option<u64> {
+    cpu_random::entropy_u64()
 }
 
 pub fn has_hardware_rng() -> bool {
-    has_rdrand() || has_rdseed()
+    has_cpu_random() || has_cpu_entropy()
 }

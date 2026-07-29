@@ -14,21 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EntropyError {
-    NoHardwareSource,
-    HardwareFailure,
-    InsufficientEntropy,
-    NotInitialized,
-}
+//! FEAT_RNG presence, from ID_AA64ISAR0_EL1.RNDR.
 
-impl EntropyError {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::NoHardwareSource => "No hardware entropy source available",
-            Self::HardwareFailure => "Hardware entropy source failed after retries",
-            Self::InsufficientEntropy => "Insufficient entropy collected",
-            Self::NotInitialized => "Entropy system not initialized",
-        }
-    }
+use crate::arch::aarch64::cpu::{has_feature, CpuFeature};
+
+/// True iff the core implements FEAT_RNG. Both RNDR and RNDRRS are added by
+/// that one feature, so a single probe answers for both taps.
+pub fn has_rng() -> bool {
+    has_feature(CpuFeature::Rng)
 }

@@ -14,21 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EntropyError {
-    NoHardwareSource,
-    HardwareFailure,
-    InsufficientEntropy,
-    NotInitialized,
-}
+//! aarch64 backend for `arch::cpu_random`: FEAT_RNG's RNDR and RNDRRS.
 
-impl EntropyError {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::NoHardwareSource => "No hardware entropy source available",
-            Self::HardwareFailure => "Hardware entropy source failed after retries",
-            Self::InsufficientEntropy => "Insufficient entropy collected",
-            Self::NotInitialized => "Entropy system not initialized",
-        }
-    }
-}
+mod detect;
+mod read;
+
+pub use detect::has_rng;
+pub use read::{rndr_u64, rndrrs_u64};

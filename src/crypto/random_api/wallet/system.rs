@@ -21,14 +21,14 @@ use core::sync::atomic::{AtomicU64, Ordering};
 static WALLET_COUNTER: AtomicU64 = AtomicU64::new(0xCAFE_BABE_DEAD_BEEF);
 
 pub(super) fn collect(pool: &mut EntropyPool, timing: TimingSeed) {
-    let rtc = crate::arch::x86_64::time::rtc::read_unix_timestamp();
+    let rtc = crate::arch::wall_clock::unix_timestamp().unwrap_or(0);
     let kernel_ms = crate::time::timestamp_millis();
 
     pool.push_u64(rtc);
     pool.push_u64(kernel_ms);
     pool.push_u64(address_mix(pool));
     pool.push_u64(counter_mix(rtc));
-    pool.push_u64(super::super::platform::read_tsc_full().wrapping_sub(timing.tsc_start));
+    pool.push_u64(super::super::platform::read_cycle_counter().wrapping_sub(timing.tsc_start));
 }
 
 fn address_mix(pool: &EntropyPool) -> u64 {
@@ -39,6 +39,6 @@ fn address_mix(pool: &EntropyPool) -> u64 {
 
 fn counter_mix(rtc: u64) -> u64 {
     let counter = WALLET_COUNTER.fetch_add(0x9E37_79B9_7F4A_7C15, Ordering::SeqCst);
-    let tsc_now = super::super::platform::read_tsc_full();
+    let tsc_now = super::super::platform::read_cycle_counter();
     counter ^ tsc_now ^ rtc.wrapping_mul(0xBF58_476D_1CE4_E5B9)
 }

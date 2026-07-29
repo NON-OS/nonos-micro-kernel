@@ -14,21 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EntropyError {
-    NoHardwareSource,
-    HardwareFailure,
-    InsufficientEntropy,
-    NotInitialized,
-}
+//! x86_64 backend for `arch::cpu_random`: RDRAND and RDSEED.
 
-impl EntropyError {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::NoHardwareSource => "No hardware entropy source available",
-            Self::HardwareFailure => "Hardware entropy source failed after retries",
-            Self::InsufficientEntropy => "Insufficient entropy collected",
-            Self::NotInitialized => "Entropy system not initialized",
-        }
-    }
-}
+mod detect;
+mod read;
+
+pub use detect::{has_rdrand, has_rdseed};
+pub use read::{rdrand_u64, rdseed_u64};

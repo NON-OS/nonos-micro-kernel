@@ -16,10 +16,9 @@
 
 extern crate alloc;
 use alloc::vec::Vec;
-use core::arch::x86_64::_rdtsc;
 
 use super::super::rng::{fill_random_bytes, get_random_bytes};
-use super::hardware::{rdrand64, rdseed64};
+use super::hardware::{hardware_entropy64, hardware_random64};
 use crate::crypto::hash::sha256;
 
 pub fn gather_entropy() -> [u8; 32] {
@@ -27,7 +26,7 @@ pub fn gather_entropy() -> [u8; 32] {
     let mut offset = 0;
 
     for _ in 0..4 {
-        if let Some(val) = rdseed64() {
+        if let Some(val) = hardware_entropy64() {
             if offset + 8 <= entropy.len() {
                 entropy[offset..offset + 8].copy_from_slice(&val.to_ne_bytes());
                 offset += 8;
@@ -36,7 +35,7 @@ pub fn gather_entropy() -> [u8; 32] {
     }
 
     while offset < entropy.len() {
-        if let Some(val) = rdrand64() {
+        if let Some(val) = hardware_random64() {
             let remaining = entropy.len() - offset;
             let copy_len = core::cmp::min(8, remaining);
             entropy[offset..offset + copy_len].copy_from_slice(&val.to_ne_bytes()[..copy_len]);
@@ -51,19 +50,17 @@ pub fn gather_entropy() -> [u8; 32] {
         return entropy;
     }
 
-    // SAFETY: _rdtsc is safe on x86_64
-    unsafe {
-        let tsc = _rdtsc();
-        let timestamp = crate::time::timestamp_millis();
+    // The cycle counter only stirs the pool; it is not the entropy source.
+    let ticks = crate::arch::read_time_counter();
+    let timestamp = crate::time::timestamp_millis();
 
-        let mut mixer = Vec::with_capacity(entropy.len() + 16);
-        mixer.extend_from_slice(&entropy);
-        mixer.extend_from_slice(&tsc.to_ne_bytes());
-        mixer.extend_from_slice(&timestamp.to_ne_bytes());
+    let mut mixer = Vec::with_capacity(entropy.len() + 16);
+    mixer.extend_from_slice(&entropy);
+    mixer.extend_from_slice(&ticks.to_ne_bytes());
+    mixer.extend_from_slice(&timestamp.to_ne_bytes());
 
-        let hash = sha256(&mixer);
-        entropy.copy_from_slice(&hash);
-    }
+    let hash = sha256(&mixer);
+    entropy.copy_from_slice(&hash);
 
     entropy
 }
@@ -98,9 +95,9 @@ pub fn fill_entropy(buf: &mut [u8]) {
 }
 
 pub fn get_random_u64() -> u64 {
-    if let Some(val) = rdseed64() {
+    if let Some(val) = hardware_entropy64() {
         val
-    } else if let Some(val) = rdrand64() {
+    } else if let Some(val) = hardware_random64() {
         val
     } else {
         let bytes = get_random_bytes();

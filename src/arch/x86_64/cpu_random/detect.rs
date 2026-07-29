@@ -14,21 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EntropyError {
-    NoHardwareSource,
-    HardwareFailure,
-    InsufficientEntropy,
-    NotInitialized,
+//! CPUID feature bits for the two on-die generators.
+
+use crate::arch::x86_64::cpu::cpuid::{cpuid, cpuid_count};
+
+const LEAF_FEATURES: u32 = 1;
+const LEAF_EXTENDED: u32 = 7;
+const ECX_RDRAND: u32 = 1 << 30;
+const EBX_RDSEED: u32 = 1 << 18;
+
+/// CPUID.01H:ECX[30].
+pub fn has_rdrand() -> bool {
+    let (_, _, ecx, _) = cpuid(LEAF_FEATURES);
+    ecx & ECX_RDRAND != 0
 }
 
-impl EntropyError {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::NoHardwareSource => "No hardware entropy source available",
-            Self::HardwareFailure => "Hardware entropy source failed after retries",
-            Self::InsufficientEntropy => "Insufficient entropy collected",
-            Self::NotInitialized => "Entropy system not initialized",
-        }
-    }
+/// CPUID.07H:EBX[18].
+pub fn has_rdseed() -> bool {
+    let (_, ebx, _, _) = cpuid_count(LEAF_EXTENDED, 0);
+    ebx & EBX_RDSEED != 0
 }
