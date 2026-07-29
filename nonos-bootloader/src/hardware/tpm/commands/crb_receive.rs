@@ -57,9 +57,17 @@ pub(crate) fn crb_receive(state: &TpmState, buf: &mut [u8]) -> Result<usize, Tpm
         return Err(TpmError::InvalidResponse);
     }
 
+    // Read the size field a byte at a time for the same reason the send side
+    // writes one: a slice read over the device window is free to widen into a
+    // vector load, which is not a defined device access and which a hypervisor
+    // decoding the trap cannot handle.
+    //
     // SAFETY: the address and size come from the part's control registers,
     // bounded by `crb_buffer`, and the bootloader is identity mapped.
-    let header = unsafe { core::slice::from_raw_parts(buffer.addr as *const u8, HEADER_LEN) };
+    let mut header = [0u8; HEADER_LEN];
+    for (offset, slot) in header.iter_mut().enumerate() {
+        *slot = unsafe { core::ptr::read_volatile((buffer.addr as *const u8).add(offset)) };
+    }
     let declared = u32::from_be_bytes([header[2], header[3], header[4], header[5]]) as usize;
 
     // A part that declares more than its own buffer holds, or less than a
@@ -70,9 +78,10 @@ pub(crate) fn crb_receive(state: &TpmState, buf: &mut [u8]) -> Result<usize, Tpm
 
     let take = declared.min(buf.len());
     // SAFETY: `take` is bounded by both the advertised buffer and the caller's
-    // slice, so neither side can be overrun.
-    unsafe {
-        core::ptr::copy_nonoverlapping(buffer.addr as *const u8, buf.as_mut_ptr(), take);
+    // slice, so neither side can be overrun. Volatile and byte-wise for the
+    // same reason as the header above.
+    for (offset, slot) in buf.iter_mut().enumerate().take(take) {
+        *slot = unsafe { core::ptr::read_volatile((buffer.addr as *const u8).add(offset)) };
     }
 
     // Let the part idle again so the next command starts from a known state.

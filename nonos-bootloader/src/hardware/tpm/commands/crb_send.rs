@@ -53,13 +53,20 @@ pub(crate) fn crb_send(state: &TpmState, cmd: &[u8]) -> Result<(), TpmError> {
         return Err(TpmError::Timeout);
     }
 
+    // Byte at a time, volatile, and deliberately not `copy_nonoverlapping`.
+    // The command buffer is inside the device's window, and a memcpy is free to
+    // widen into SSE: `movups` against MMIO is not a defined device access, and
+    // a hypervisor decoding the trap sees an instruction it has no rule for and
+    // gives up. QEMU aborts the guest outright.
+    //
     // SAFETY: `buffer.addr` and its size come from the part's own control
-    // registers, bounded above by `crb_buffer`, and the bootloader runs with
-    // an identity mapping so the physical address is directly writable. The
-    // length was checked against the buffer above.
-    unsafe {
-        let dst = buffer.addr as *mut u8;
-        core::ptr::copy_nonoverlapping(cmd.as_ptr(), dst, cmd.len());
+    // registers, bounded by `crb_buffer`, the bootloader is identity mapped so
+    // the physical address is directly writable, and the length was checked
+    // against the buffer above.
+    for (offset, byte) in cmd.iter().enumerate() {
+        unsafe {
+            core::ptr::write_volatile((buffer.addr as *mut u8).add(offset), *byte);
+        }
     }
 
     // The command has to be fully visible before the doorbell, because the
