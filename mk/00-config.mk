@@ -12,6 +12,28 @@ KEYS_DIR       := $(BOOTLOADER_DIR)/keys
 export SOURCE_DATE_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null || date +%s)
 export CARGO_INCREMENTAL := 0
 
+# Capsules are independent targets and their shared inputs are real
+# prerequisites, so the set fans out safely. NONOS_JOBS=1 when bisecting a
+# build failure and interleaved output gets in the way.
+NONOS_JOBS ?= $(shell sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)
+MAKEFLAGS += -j$(NONOS_JOBS)
+
+# Every capsule builds the standard library into its own target directory, so
+# a cold tree compiles core and alloc once per capsule. One shared
+# CARGO_TARGET_DIR would dedupe that, but cargo locks a target directory for
+# the whole build and would serialise the fan-out above. A content-addressed
+# cache dedupes without taking that lock.
+#
+# It caches inputs to a signing pipeline, so it stays local and stays
+# switchable. NONOS_CACHE=0 for release and reproducibility builds.
+NONOS_CACHE ?= auto
+ifneq ($(NONOS_CACHE),0)
+NONOS_SCCACHE := $(shell command -v sccache 2>/dev/null)
+ifneq ($(NONOS_SCCACHE),)
+export RUSTC_WRAPPER := $(NONOS_SCCACHE)
+endif
+endif
+
 export PATH := $(HOME)/.cargo/bin:$(PATH)
 TOOLCHAIN := nightly-2026-01-16
 CARGO     := $(HOME)/.cargo/bin/cargo
