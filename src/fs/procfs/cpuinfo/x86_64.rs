@@ -20,7 +20,7 @@ use alloc::format;
 use alloc::string::String;
 use core::arch::x86_64::__cpuid;
 
-pub fn read_cpuinfo() -> String {
+pub(super) fn read_cpuinfo() -> String {
     let mut output = String::new();
     let num_cpus = crate::smp::cpu_count();
     for cpu in 0..num_cpus {
