@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 // Reads through the paging hardware boundary, so every architecture that can
-// name its page-table root reports the real one. Returning a placeholder here
+// name its page-table root reports the real one. Answering with a fixed value
 // would hand callers an address that translates nothing.
 pub(crate) fn active_page_table_root() -> u64 {
     crate::arch::paging::read_root()
