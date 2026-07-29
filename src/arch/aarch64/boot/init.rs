@@ -20,6 +20,25 @@ use crate::arch::aarch64::{cpu, exceptions, gic, mmu, security, timer, uart};
 pub fn init(boot_info: &BootInfo) {
     uart::init_uart(boot_info.uart_base);
     cpu::init_cpu();
+    // Latch the CPU list before anything asks which CPU it is running on. The
+    // GIC does, one call below, and its answer decides which redistributor
+    // this core talks to.
+    //
+    // SAFETY: this is the boot CPU, this runs once, and no secondary has been
+    // released yet, so nothing else can be touching the roster.
+    unsafe {
+        super::multicore::roster::populate(&boot_info.cpu_affinities);
+    }
+    // Port numbers are offsets into the bridge's I/O window on this arch, so
+    // the window has to be known before any driver reaches for a port. ECAM is
+    // the only way to config space here, and enumeration needs it.
+    crate::arch::port_io::set_io_window(
+        boot_info.pci_io_cpu_base,
+        boot_info.pci_io_port_base,
+        boot_info.pci_io_size,
+    );
+    crate::drivers::pci::set_ecam_window(boot_info.pci_ecam_base, boot_info.pci_ecam_size);
+    crate::arch::aarch64::rtc::set_base(boot_info.rtc_base);
     exceptions::install_vbar_el1();
     if security::init_all().is_err() {
         cpu::halt();
@@ -34,7 +53,7 @@ pub fn init(boot_info: &BootInfo) {
     if timer::install_on_cpu().is_err() {
         cpu::halt();
     }
-    if boot_info.cpu_count > 1 {
+    if super::multicore::roster::len() > 1 {
         super::multicore::start_secondary_cpus(boot_info);
     }
 }

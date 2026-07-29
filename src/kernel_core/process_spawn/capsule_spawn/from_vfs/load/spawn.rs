@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::endpoint::endpoint;
 use super::super::artifacts::CapsuleArtifacts;
 use super::super::error::LoadError;
 use super::super::leak::{leak_bytes, leak_str};
-use crate::kernel_core::process_spawn::capsule_spawn::{spawn_verified_as, AttestedParent, CapsuleSpecVerified};
+use super::endpoint::endpoint;
+use crate::kernel_core::process_spawn::capsule_spawn::{
+    spawn_verified_as, AttestedParent, CapsuleSpecVerified,
+};
 use crate::security::capsule_manifest::{decode as decode_manifest, EndpointKind};
 use crate::security::nonos_trust_anchor::{decode as decode_trust, BAKED_TRUST_ANCHOR_POLICY};
 
@@ -60,8 +62,7 @@ pub(crate) fn load_capsule_from_vfs(
     // NotYetValid. Before the clock is set the gate returns None and the
     // signature and trust anchor still gate the load.
     let now_ms = super::super::validity_clock::validity_now_ms(crate::sys::unix_ms());
-    let pid =
-        spawn_verified_as(&spec, &trust, now_ms, on_behalf_of).map_err(LoadError::Spawn)?;
+    let pid = spawn_verified_as(&spec, &trust, now_ms, on_behalf_of).map_err(LoadError::Spawn)?;
     if !args.is_empty() {
         let argv: alloc::vec::Vec<alloc::string::String> = args
             .split(|&b| b == 0)

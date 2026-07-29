@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+#[cfg(target_arch = "aarch64")]
+mod aarch64;
 mod arch;
 mod console;
 mod cpu;

@@ -18,10 +18,10 @@ use crate::sys::serial;
 
 #[cfg(feature = "nonos-user-entry-proof")]
 pub(super) fn print_syscall_msrs() {
-    use crate::arch::x86_64::diag::print_hex_u64;
     use crate::arch::x86_64::syscall::msr::{
         read_msr, EFER_SCE, IA32_EFER, IA32_FMASK, IA32_LSTAR, IA32_STAR,
     };
+    use crate::sys::serial::print_hex as print_hex_u64;
     let efer = read_msr(IA32_EFER);
     serial::print(b"[SYSCALL-MSR] EFER=");
     print_hex_u64(efer);

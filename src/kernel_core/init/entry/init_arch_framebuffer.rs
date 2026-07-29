@@ -23,5 +23,9 @@ pub(super) fn init_arch_framebuffer(handoff: &KernelHandoff) {
         ArchSpecificHandoff::X86_64 { v1 } => {
             init_framebuffer(v1);
         }
+        // Nothing to map: the boot path handed over no framebuffer, so the
+        // display comes up later as a virtio-gpu device.
+        #[cfg(target_arch = "aarch64")]
+        ArchSpecificHandoff::Aarch64 { .. } => {}
     }
 }
