@@ -29,6 +29,7 @@ pub mod interrupt_controller;
 pub mod paging;
 mod percpu_base;
 pub mod port_io;
+pub(crate) mod power;
 mod run_without_interrupts;
 mod stack_pointer;
 mod time_counter;
