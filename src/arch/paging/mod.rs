@@ -22,9 +22,11 @@
 
 pub mod descriptor;
 mod root;
+mod tagged_tlb;
 mod tlb;
 mod write_protect;
 
 pub use root::{read_root, write_root};
+pub use tagged_tlb::supports_tagged_invalidation;
 pub use tlb::{invalidate_all, invalidate_page};
 pub use write_protect::{disable_write_protection, enable_write_protection};
