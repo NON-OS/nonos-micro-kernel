@@ -14,12 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+/// The CPU's free-running cycle counter, which the clock scales into wall time
+/// with the frequency it calibrated at boot.
 #[inline]
 pub fn rdtsc() -> u64 {
-    unsafe {
-        let lo: u32;
-        let hi: u32;
-        core::arch::asm!("rdtsc", out("eax") lo, out("edx") hi);
-        ((hi as u64) << 32) | (lo as u64)
-    }
+    crate::arch::read_time_counter()
 }
