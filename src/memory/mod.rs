@@ -40,7 +40,9 @@ pub mod encryption;
 pub mod frame_alloc;
 pub mod hardening;
 pub mod heap;
-#[cfg(target_arch = "x86_64")]
+// The backend inside picks VT-d or the unsupported stand-in by target and
+// feature, so this builds anywhere. An ARM board has no SMMU driver behind it
+// yet, which means every mapping request is refused rather than ignored.
 pub mod iommu;
 pub mod kaslr;
 pub mod layout;
@@ -66,7 +68,6 @@ pub use hardening::{
     get_all_process_regions, init_module_memory_protection, read_bytes,
     verify_kernel_data_integrity, verify_kernel_page_tables,
 };
-#[cfg(target_arch = "x86_64")]
 pub use iommu::{DeviceAddress, DomainId, IommuDomain, IommuError, IommuProtection};
 pub use layout as nonos_layout;
 #[cfg(target_arch = "x86_64")]
