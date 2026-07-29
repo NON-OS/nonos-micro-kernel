@@ -55,12 +55,12 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     // memory/framebuffer step failed to map on real GOP framebuffers
     // because the page-table machinery was not ready yet.
     init_arch_framebuffer(handoff);
-    // Cache the real BSP LAPIC ID into the arch APIC module before any IOAPIC
-    // redirection entry is programmed, so device interrupts route to the CPU
-    // that actually exists rather than the default of APIC 0 (correct only on
-    // QEMU). This only writes the ID cache; it does not touch the arch APIC
-    // mode/base/init state, so the timer and IPI paths are unaffected.
-    crate::arch::x86_64::interrupt::apic::cache_bsp_apic_id();
+    // Latch the boot CPU's controller id before any redirection entry is
+    // programmed, so device interrupts route to the CPU that actually exists
+    // rather than to id 0, which is only correct under QEMU. This writes the
+    // id cache and nothing else: controller mode, base and init state are
+    // untouched, so the timer and IPI paths are unaffected.
+    crate::arch::interrupt_controller::cache_boot_cpu_id();
     match crate::arch::init_broker_irq_routing() {
         Ok(_) => boot_log::ok("NONOS", "broker IO-APIC routing ready"),
         Err(_) => crate::sys::serial::println(b"[NONOS] broker IO-APIC init failed"),
