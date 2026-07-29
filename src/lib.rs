@@ -79,8 +79,8 @@ pub mod services;
 pub mod smp;
 pub mod sys;
 pub mod syscall;
+pub mod time;
 pub mod usercopy;
 pub mod userspace;
 
-pub use arch::x86_64::time;
 pub use fs as filesystem;
