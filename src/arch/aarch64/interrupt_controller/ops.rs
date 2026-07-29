@@ -14,25 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::memory::addr::PhysAddr;
-use crate::smp::constants::AP_TRAMPOLINE_ADDR;
-use crate::smp::trampoline::install_trampoline_at;
+use super::intid::intid_of;
+use crate::arch::aarch64::cpu::cpu_affinity;
+use crate::arch::aarch64::gic;
+use crate::arch::interrupt_controller::Ipi;
 
-pub(super) struct ApBootInputs {
-    pub(super) pml4_phys: u64,
-    pub(super) entry_ptr: u64,
+/// The GIC addresses a CPU by affinity, so that is what this returns. It is
+/// the same value a redistributor reports as its owner.
+pub fn local_id() -> u32 {
+    cpu_affinity()
 }
 
-pub(super) fn prepare() -> Result<ApBootInputs, &'static str> {
-    install_trampoline_at(PhysAddr::new(AP_TRAMPOLINE_ADDR))
-        .map_err(|_| "Failed to install AP trampoline")?;
-
-    Ok(ApBootInputs {
-        pml4_phys: read_cr3_pml4(),
-        entry_ptr: crate::smp::ap_entry as *const () as usize as u64,
-    })
+/// The GIC has no in-service register to consult: the handler has to name the
+/// INTID it is finishing, or the running priority never drops.
+pub fn end_of_interrupt(ipi: Ipi) {
+    gic::end_interrupt(intid_of(ipi));
 }
 
-fn read_cr3_pml4() -> u64 {
-    crate::arch::paging::read_root()
+pub fn send_ipi(target: u32, ipi: Ipi) -> Result<(), ()> {
+    gic::send_sgi(target, intid_of(ipi))
+}
+
+pub fn broadcast_ipi(ipi: Ipi) -> Result<(), ()> {
+    gic::send_sgi_all_others(intid_of(ipi))
 }

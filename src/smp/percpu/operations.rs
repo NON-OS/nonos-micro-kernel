@@ -15,8 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use core::sync::atomic::Ordering;
-use x86_64::registers::model_specific::{GsBase, KernelGsBase};
-use x86_64::VirtAddr;
 
 use super::types::PerCpuData;
 use crate::smp::{cpu_id, MAX_CPUS};
@@ -57,11 +55,12 @@ pub fn init_bsp() {
         let data = &mut PERCPU_DATA[0];
         data.self_ptr = data as *const PerCpuData as u64;
         data.cpu_id = 0;
-        data.apic_id = crate::arch::x86_64::interrupt::apic::id();
-        data.random_state.store(read_tsc(), Ordering::Relaxed);
+        data.apic_id = crate::arch::interrupt_controller::local_id();
+        data.random_state.store(read_ticks(), Ordering::Relaxed);
 
-        GsBase::write(VirtAddr::new(data.self_ptr));
-        KernelGsBase::write(VirtAddr::new(0));
+        // SAFETY: `data` is this CPU.s own block, held in a static that lives
+        // for the whole run.
+        crate::arch::set_percpu_base(data.self_ptr);
     }
 }
 
@@ -75,11 +74,12 @@ pub fn init_ap(cpu_id: usize) {
         let data = &mut PERCPU_DATA[cpu_id];
         data.self_ptr = data as *const PerCpuData as u64;
         data.cpu_id = cpu_id as u32;
-        data.apic_id = crate::arch::x86_64::interrupt::apic::id();
-        data.random_state.store(read_tsc().wrapping_mul(cpu_id as u64 + 1), Ordering::Relaxed);
+        data.apic_id = crate::arch::interrupt_controller::local_id();
+        data.random_state.store(read_ticks().wrapping_mul(cpu_id as u64 + 1), Ordering::Relaxed);
 
-        GsBase::write(VirtAddr::new(data.self_ptr));
-        KernelGsBase::write(VirtAddr::new(0));
+        // SAFETY: `data` is this CPU.s own block, held in a static that lives
+        // for the whole run.
+        crate::arch::set_percpu_base(data.self_ptr);
     }
 }
 
@@ -182,7 +182,6 @@ pub fn percpu_random() -> u64 {
 }
 
 #[inline]
-fn read_tsc() -> u64 {
-    // SAFETY: rdtsc is always safe on x86_64
-    unsafe { core::arch::x86_64::_rdtsc() }
+fn read_ticks() -> u64 {
+    crate::arch::read_time_counter()
 }

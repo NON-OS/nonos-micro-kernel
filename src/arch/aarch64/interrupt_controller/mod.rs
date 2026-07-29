@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[inline]
-pub(super) fn read_tsc() -> u64 {
-    crate::arch::read_time_counter()
-}
+//! aarch64 backend for `arch::interrupt_controller`: the GIC.
+
+mod intid;
+mod ops;
+
+pub use intid::intid_of;
+pub use ops::{broadcast_ipi, end_of_interrupt, local_id, send_ipi};

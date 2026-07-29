@@ -17,10 +17,7 @@
 pub mod operations;
 pub mod types;
 
-pub use types::{
-    IpiFn, IpiWork, IpiWorkQueue, OnceBarrier, PerCpuLock, IPI_BARRIER, IPI_CALL_FUNCTION,
-    MAX_IPI_WORK,
-};
+pub use types::{IpiFn, IpiWork, IpiWorkQueue, OnceBarrier, PerCpuLock, MAX_IPI_WORK};
 
 pub use operations::{
     barrier_all, broadcast_collect, call_on_all, call_on_cpu, call_on_others, handle_barrier_ipi,

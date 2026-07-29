@@ -14,7 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[inline]
-pub(super) fn read_tsc() -> u64 {
-    crate::arch::read_time_counter()
+/// What one CPU is telling another to do.
+///
+/// The set is closed on purpose: every kind here has a handler installed at
+/// boot on each arch, so adding one means adding that handler too rather than
+/// silently sending an interrupt nobody answers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Ipi {
+    /// Drop the TLB entry the shootdown record names.
+    TlbShootdown,
+    /// Look at the run queue again.
+    Reschedule,
+    /// Run the queued cross-CPU call.
+    CallFunction,
+    /// Everyone check in at the rendezvous point.
+    Barrier,
+    /// The system is panicking; stop what you are doing.
+    Panic,
+    /// Halt and stay halted.
+    Stop,
 }

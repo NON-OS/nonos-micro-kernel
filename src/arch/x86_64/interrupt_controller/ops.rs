@@ -14,7 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[inline]
-pub(super) fn read_tsc() -> u64 {
-    crate::arch::read_time_counter()
+use super::vector::vector_of;
+use crate::arch::interrupt_controller::Ipi;
+use crate::arch::x86_64::interrupt::apic;
+
+/// The local APIC ID, as cached at boot from the real BSP.
+pub fn local_id() -> u32 {
+    apic::id()
+}
+
+/// The local APIC works out which interrupt is being finished from its own
+/// in-service register, so the kind is not needed here.
+pub fn end_of_interrupt(_ipi: Ipi) {
+    apic::eoi();
+}
+
+pub fn send_ipi(target: u32, ipi: Ipi) -> Result<(), ()> {
+    apic::ipi_one(target, vector_of(ipi));
+    Ok(())
+}
+
+pub fn broadcast_ipi(ipi: Ipi) -> Result<(), ()> {
+    apic::ipi_others(vector_of(ipi));
+    Ok(())
 }

@@ -20,7 +20,8 @@ use alloc::vec::Vec;
 use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use spin::Mutex;
 
-use super::types::{IpiFn, IpiWork, IpiWorkQueue, IPI_BARRIER, IPI_CALL_FUNCTION};
+use super::types::{IpiFn, IpiWork, IpiWorkQueue};
+use crate::arch::interrupt_controller::{broadcast_ipi, send_ipi, Ipi};
 use crate::smp::{cpu_count, cpus_online, get_cpu, MAX_CPUS};
 
 pub use crate::smp::cpu_id;
@@ -58,7 +59,7 @@ pub fn call_on_cpu(target_cpu: usize, func: IpiFn, arg: usize) -> Result<(), &'s
         }
     }
 
-    crate::arch::x86_64::interrupt::apic::ipi_one(cpu.apic_id, IPI_CALL_FUNCTION);
+    send_ipi(cpu.apic_id, Ipi::CallFunction).map_err(|_| "IPI not deliverable")?;
 
     Ok(())
 }
@@ -116,7 +117,7 @@ pub fn barrier_all() {
 
     BARRIER_TARGET.store(target, Ordering::Release);
 
-    crate::arch::x86_64::interrupt::apic::ipi_others(IPI_BARRIER);
+    let _ = broadcast_ipi(Ipi::Barrier);
 
     let arrived = BARRIER_ARRIVED.fetch_add(1, Ordering::AcqRel) + 1;
 

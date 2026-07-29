@@ -14,7 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[inline]
-pub(super) fn read_tsc() -> u64 {
-    crate::arch::read_time_counter()
-}
+//! x86_64 backend for `arch::interrupt_controller`: the local APIC.
+
+mod ops;
+mod vector;
+
+pub use ops::{broadcast_ipi, end_of_interrupt, local_id, send_ipi};
+pub use vector::{
+    vector_of, IPI_BARRIER, IPI_CALL_FUNCTION, IPI_PANIC, IPI_RESCHEDULE, IPI_STOP,
+    IPI_TLB_SHOOTDOWN,
+};
