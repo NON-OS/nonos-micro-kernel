@@ -20,7 +20,8 @@ mod main_id;
 mod mpidr;
 
 pub use affinity::{
-    affinity_level, cluster_id, core_id, cpu_id, is_multiprocessor, is_primary_core,
+    affinity_level, cluster_id, core_id, cpu_affinity, cpu_id, is_multiprocessor, is_primary_core,
+    mpidr_affinity, pack_affinity,
 };
 pub use info::CpuInfo;
 pub use main_id::{architecture, implementer, main_id, part_number, revision, variant};

@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod ap_entry;
+pub mod roster;
 mod start_cpus;
 mod state;
 

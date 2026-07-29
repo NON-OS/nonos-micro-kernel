@@ -19,6 +19,7 @@ mod config;
 mod constants;
 mod device;
 mod enable;
+mod find;
 mod init;
 mod pending;
 mod priority;
@@ -26,3 +27,4 @@ mod registers;
 mod wake;
 
 pub use device::GicRedistributor;
+pub use find::for_this_cpu;
