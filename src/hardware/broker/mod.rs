@@ -14,7 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+// GPIO and I2C controllers that only firmware knows about. ACPI describes
+// them in AML, which is an x86 firmware interface; the same parts on an ARM
+// board come out of the device tree instead, through `arch::fdt`.
+#[cfg(target_arch = "x86_64")]
 mod acpi_gpio;
+#[cfg(target_arch = "x86_64")]
 mod acpi_i2c;
 // on-screen device census: bring-up diagnostic, silenced
 // mod census;
@@ -41,7 +46,9 @@ mod platform;
 mod power;
 mod table;
 
+#[cfg(target_arch = "x86_64")]
 pub use acpi_gpio::register_acpi_gpio;
+#[cfg(target_arch = "x86_64")]
 pub use acpi_i2c::register_acpi_i2c;
 // pub use census::render_and_hold as device_census; // bring-up diagnostic, silenced
 pub use claim::{
