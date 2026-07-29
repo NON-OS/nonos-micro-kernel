@@ -31,4 +31,11 @@ impl TpmState {
         let addr = (self.base + offset as u64) as *const u32;
         unsafe { core::ptr::read_volatile(addr) }
     }
+
+    /// The CRB control registers are all 32 bits wide and several of them will
+    /// not accept a byte write, so they need this rather than `write_reg8`.
+    pub(crate) fn write_reg32(&self, offset: u32, value: u32) {
+        let addr = (self.base + offset as u64) as *mut u32;
+        unsafe { core::ptr::write_volatile(addr, value) }
+    }
 }
