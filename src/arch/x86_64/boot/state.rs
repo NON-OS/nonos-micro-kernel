@@ -19,4 +19,3 @@ pub use super::state_ops::{
     increment_exception_count, is_complete, set_boot_tsc, set_complete, set_error, set_stage,
 };
 pub use super::state_stats::get_stats;
-

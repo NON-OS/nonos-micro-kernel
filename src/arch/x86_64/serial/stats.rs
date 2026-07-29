@@ -34,4 +34,3 @@ pub fn reset_stats(port_index: usize) -> bool {
         false
     }
 }
-

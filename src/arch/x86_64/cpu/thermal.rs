@@ -78,4 +78,3 @@ pub fn current_pstate() -> u8 {
     let status = rdmsr(MSR_PERF_STATUS);
     ((status >> 8) & 0xFF) as u8
 }
-

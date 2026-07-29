@@ -109,4 +109,3 @@ pub fn handle_com3_interrupt() {
 pub fn handle_com4_interrupt() {
     handle_interrupt(3);
 }
-

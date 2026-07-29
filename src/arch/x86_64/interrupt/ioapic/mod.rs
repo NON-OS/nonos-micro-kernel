@@ -42,8 +42,8 @@ pub use init::init;
 pub use init_from_acpi::init_from_acpi;
 pub use ops::{
     alloc_route, claim_gsi_for_msi, free_vector, gsi_for_irq, mask, program_route,
-    program_route_external,
-    query, release_gsi_from_msi, restore, retarget, snapshot, status, IoApicStatus,
+    program_route_external, query, release_gsi_from_msi, restore, retarget, snapshot, status,
+    IoApicStatus,
 };
 pub use state::{count, is_initialized};
 pub use types::{IsoFlags, MadtIoApic, MadtIso, MadtNmi, Rte};

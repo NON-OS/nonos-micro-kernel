@@ -16,46 +16,25 @@
 
 pub mod abi;
 mod active_page_table_root;
+pub mod console;
 pub mod context;
 pub mod cpu;
+pub mod cpu_random;
 #[cfg(any(target_arch = "aarch64", target_arch = "riscv64"))]
 pub mod fdt;
 pub mod halt;
 mod init_boot_memory;
 mod init_broker_irq_routing;
+pub mod interrupt_controller;
 pub mod paging;
-mod run_without_interrupts;
-mod time_counter;
-pub mod console;
-mod time_counter;
-pub mod console;
-pub mod cpu_random;
-mod time_counter;
-pub mod console;
-pub mod cpu_random;
-pub mod interrupt_controller;
-mod time_counter;
-pub mod console;
-pub mod cpu_random;
-pub mod interrupt_controller;
-pub mod port_io;
-mod time_counter;
-pub mod console;
-pub mod cpu_random;
-pub mod interrupt_controller;
-pub mod port_io;
-mod time_counter;
-pub mod wall_clock;
-pub mod console;
-pub mod cpu_random;
-pub mod interrupt_controller;
 mod percpu_base;
 pub mod port_io;
+mod run_without_interrupts;
 mod stack_pointer;
 mod time_counter;
+pub mod trap;
 pub mod user_access;
 pub mod wall_clock;
-pub mod trap;
 
 #[cfg(target_arch = "x86_64")]
 pub mod nonos_boot;
@@ -77,15 +56,9 @@ pub use cpu::{cpu_yield, disable_interrupts, enable_interrupts, get_cpu_id, idle
 pub use halt::halt_loop;
 pub(crate) use init_boot_memory::init_boot_memory;
 pub(crate) use init_broker_irq_routing::init_broker_irq_routing;
-pub(crate) use run_without_interrupts::run_without_interrupts;
 pub(crate) use percpu_base::set as set_percpu_base;
+pub(crate) use run_without_interrupts::run_without_interrupts;
 pub(crate) use stack_pointer::stack_pointer;
-pub(crate) use time_counter::{read_time_counter, time_counter_hz};
-pub(crate) use time_counter::{read_time_counter, time_counter_hz};
-pub(crate) use time_counter::{read_time_counter, time_counter_hz};
-pub(crate) use time_counter::{read_time_counter, time_counter_hz};
-pub(crate) use time_counter::{read_time_counter, time_counter_hz};
-pub(crate) use time_counter::{read_time_counter, time_counter_hz};
 pub(crate) use time_counter::{read_time_counter, time_counter_hz};
 
 #[cfg(target_arch = "x86_64")]

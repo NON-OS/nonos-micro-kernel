@@ -52,4 +52,3 @@ impl SmmStats {
         self.regions_protected.store(0, Ordering::SeqCst);
     }
 }
-

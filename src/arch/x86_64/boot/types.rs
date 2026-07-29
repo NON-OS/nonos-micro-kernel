@@ -19,4 +19,3 @@ pub use super::types_stats::BootStats;
 pub use crate::arch::x86_64::cpu::CpuFeatures;
 pub use crate::arch::x86_64::gdt::Tss;
 pub use crate::arch::x86_64::idt::InterruptFrame;
-

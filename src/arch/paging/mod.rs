@@ -20,6 +20,7 @@
 //! dispatches to the architecture that owns the instruction sequence, so the
 //! manager above stays free of `asm!` and of any one CPU's register names.
 
+pub mod descriptor;
 mod root;
 mod tlb;
 mod write_protect;

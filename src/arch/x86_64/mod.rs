@@ -21,12 +21,15 @@ pub mod acpi;
 mod api;
 pub mod asm;
 pub mod boot;
+pub mod console;
 pub mod context;
 pub mod cpu;
+pub mod cpu_random;
 pub mod diag;
 pub mod gdt;
 pub mod idt;
 pub mod interrupt;
+pub mod interrupt_controller;
 #[cfg(feature = "nonos-arch-iommu")]
 pub mod iommu;
 pub mod multiboot;

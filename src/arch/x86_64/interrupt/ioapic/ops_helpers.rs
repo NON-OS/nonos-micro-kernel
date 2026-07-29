@@ -32,12 +32,7 @@ pub(super) fn iso_flags_for(gsi: u32) -> Option<IsoFlags> {
 /// the wrong redirection entry and the interrupt never arrives.
 pub fn gsi_for_irq(bus_irq: u32) -> u32 {
     let cache = ISO.lock();
-    cache
-        .iso
-        .iter()
-        .find(|e| e.bus_irq as u32 == bus_irq)
-        .map(|e| e.gsi)
-        .unwrap_or(bus_irq)
+    cache.iso.iter().find(|e| e.bus_irq as u32 == bus_irq).map(|e| e.gsi).unwrap_or(bus_irq)
 }
 
 pub(super) fn locate(gsi: u32) -> Option<(IoApicChip, u32)> {

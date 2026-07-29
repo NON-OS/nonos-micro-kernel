@@ -68,4 +68,3 @@ impl core::fmt::Display for PortError {
         }
     }
 }
-
