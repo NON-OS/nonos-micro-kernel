@@ -19,6 +19,7 @@ use crate::security::check::{
     check_hardware_rng, check_measured_boot, check_platform_key, check_secure_boot,
     check_signature_db,
 };
+use crate::hardware::tpm::init_tpm;
 use crate::security::crypto::{blake3_health_check, ed25519_health_check};
 use crate::security::init::display::display_security_status;
 use crate::security::types::SecurityContext;
@@ -34,6 +35,14 @@ pub fn initialize_security_subsystem(st: &mut SystemTable<Boot>) -> SecurityCont
     ctx.blake3_health_ok = blake3_health_check();
     ctx.ed25519_health_ok = ed25519_health_check();
     ctx.measured_boot_active = check_measured_boot(st);
+    // Bring up the register-level TPM as well. The check above extends a PCR
+    // through firmware, which proves the TPM answers but leaves the MMIO state
+    // machine undetected, and that is the one the endorsement key and the
+    // anti-rollback NV counter both go through. init_tpm had no caller at all,
+    // so the EK read failed with "TPM not initialized" every boot and the
+    // machine id fell back to software without anything being wrong with the
+    // hardware.
+    let _ = init_tpm();
     display_security_status(&ctx, st);
     ctx
 }
