@@ -35,6 +35,11 @@ pub mod console;
 pub mod cpu_random;
 pub mod interrupt_controller;
 mod time_counter;
+pub mod console;
+pub mod cpu_random;
+pub mod interrupt_controller;
+pub mod port_io;
+mod time_counter;
 pub mod trap;
 
 #[cfg(target_arch = "x86_64")]
@@ -58,6 +63,7 @@ pub use halt::halt_loop;
 pub(crate) use init_boot_memory::init_boot_memory;
 pub(crate) use init_broker_irq_routing::init_broker_irq_routing;
 pub(crate) use run_without_interrupts::run_without_interrupts;
+pub(crate) use time_counter::{read_time_counter, time_counter_hz};
 pub(crate) use time_counter::{read_time_counter, time_counter_hz};
 pub(crate) use time_counter::{read_time_counter, time_counter_hz};
 pub(crate) use time_counter::{read_time_counter, time_counter_hz};

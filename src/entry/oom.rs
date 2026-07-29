@@ -14,62 +14,50 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! What happens when the heap is exhausted.
+//!
+//! Nothing here may allocate. The console sink and its decimal printer both
+//! work without the allocator, which is why the report goes through them
+//! rather than the formatter.
+
 use core::alloc::Layout;
 
-fn serial_byte(b: u8) {
-    unsafe {
-        core::arch::asm!("out dx, al", in("dx") 0x3F8u16, in("al") b, options(nomem, nostack));
-    }
-}
+use crate::sys::serial;
 
-fn serial_str(s: &[u8]) {
-    for &b in s {
-        serial_byte(b);
-    }
-}
-
-fn serial_num(mut n: usize) {
-    if n == 0 {
-        serial_byte(b'0');
-        return;
-    }
-    let mut buf = [0u8; 20];
-    let mut i = 0;
-    while n > 0 {
-        buf[i] = b'0' + (n % 10) as u8;
-        n /= 10;
-        i += 1;
-    }
-    while i > 0 {
-        i -= 1;
-        serial_byte(buf[i]);
-    }
-}
-
+/// Paint the message into VGA text memory too, so a machine with no serial
+/// cable still shows why it stopped. No counterpart elsewhere: text mode is a
+/// PC device, and the boards this kernel otherwise targets have no display at
+/// all this early.
+#[cfg(target_arch = "x86_64")]
 fn show_vga_error() {
+    const VGA_BASE: *mut u16 = 0xb8000 as *mut u16;
+    const WHITE_ON_RED: u16 = 0x4F00;
+    let msg = b"OOM: Memory allocation failed - system halted";
+    // SAFETY: the VGA text buffer is a fixed 80x25 window and the message is
+    // far shorter than one line. Nothing else is writing it by the time the
+    // machine reaches here.
     unsafe {
-        let vga_base = 0xb8000 as *mut u16;
-        let msg = b"OOM: Memory allocation failed - system halted";
-        let attr: u16 = 0x4F00;
         for (i, &ch) in msg.iter().enumerate() {
-            core::ptr::write_volatile(vga_base.add(i), (ch as u16) | attr);
+            core::ptr::write_volatile(VGA_BASE.add(i), (ch as u16) | WHITE_ON_RED);
         }
     }
 }
 
 pub fn handle_oom(layout: Layout) -> ! {
-    serial_str(b"\r\n[OOM] ALLOCATION FAILED\r\n[OOM] Requested size: ");
-    serial_num(layout.size());
-    serial_str(b" bytes, align: ");
-    serial_num(layout.align());
-    serial_str(b"\r\n");
+    serial::println(b"");
+    serial::println(b"[OOM] ALLOCATION FAILED");
+    serial::print(b"[OOM] Requested size: ");
+    serial::print_dec(layout.size() as u64);
+    serial::print(b" bytes, align: ");
+    serial::print_dec(layout.align() as u64);
+    serial::println(b"");
+
     crate::syscall::microkernel::memory::dump_mmap_accounting();
     crate::kernel_core::surface_registry::dump_surface_accounting();
-    serial_str(b"\r\n[OOM] System halted\r\n");
+    serial::println(b"[OOM] System halted");
+
+    #[cfg(target_arch = "x86_64")]
     show_vga_error();
-    loop {
-        unsafe {
-            core::arch::asm!("hlt", options(nomem, nostack, preserves_flags));
-        }
-    }
+
+    crate::arch::halt_loop()
 }
