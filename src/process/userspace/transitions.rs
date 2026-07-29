@@ -49,7 +49,7 @@ pub fn exec_process(ctx: &ExecContext) -> ! {
     unsafe {
         core::arch::asm!("mov cr3, {}", in(reg) ctx.cr3, options(nostack));
     }
-    crate::security::spectre_mitigations::kernel_exit_mitigations();
+    crate::security::speculation::kernel_exit();
     unsafe {
         jump_to_usermode(ctx.entry, ctx.stack, ctx.argc);
     }
