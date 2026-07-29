@@ -49,7 +49,7 @@ pub(crate) fn write_stderr(buf: *const u8, count: usize) -> FdResult<usize> {
     unsafe {
         let slice = core::slice::from_raw_parts(buf, count);
         for &byte in slice {
-            let _ = crate::arch::x86_64::serial::write_byte(byte);
+            crate::arch::console::write_byte(byte);
         }
     }
     Ok(count)
