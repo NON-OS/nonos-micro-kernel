@@ -17,6 +17,8 @@
 mod allocator;
 mod ops;
 mod range;
+#[cfg(target_arch = "x86_64")]
+mod x86_shim;
 
 pub use allocator::FrameAllocator;
 pub use range::FrameRange;
