@@ -25,6 +25,7 @@ pub mod fdt;
 pub mod halt;
 mod init_boot_memory;
 mod init_broker_irq_routing;
+pub(crate) mod idle;
 pub mod interrupt_controller;
 pub mod paging;
 mod percpu_base;
