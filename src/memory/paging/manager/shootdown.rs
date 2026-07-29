@@ -164,5 +164,5 @@ fn wait_for_acks(va: VirtAddr, asid: u32) {
 fn read_tsc() -> u64 {
     // SAFETY: eK@nonos.systems — rdtsc has no side effects and is
     // unconditionally available on every x86_64 CPU NØNOS supports.
-    unsafe { core::arch::x86_64::_rdtsc() }
+    crate::arch::read_time_counter()
 }

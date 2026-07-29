@@ -17,7 +17,7 @@
 use super::super::core::PagingManager;
 use super::super::shootdown::flush_tlb_one_smp;
 use super::super::tlb_scope::mutation_asid;
-use crate::arch::x86_64::paging::read_cr3;
+use crate::arch::paging::read_root as read_cr3;
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use crate::memory::layout;
 use crate::memory::paging::constants::*;

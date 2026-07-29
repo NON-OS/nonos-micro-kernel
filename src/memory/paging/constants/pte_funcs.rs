@@ -14,24 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::pte_flags::*;
+//! Reading a live page-table entry.
+//!
+//! The bit that answers each of these differs per architecture, so all four
+//! go through `arch::paging::descriptor` rather than masking here. The names
+//! stay as the manager has always spelled them.
+
+use crate::arch::paging::descriptor;
 
 #[inline]
 pub const fn pte_is_present(pte: u64) -> bool {
-    pte & PTE_PRESENT != 0
+    descriptor::is_present(pte)
 }
 
+/// True when the entry maps a block rather than pointing at another table.
+/// Only ask at a level where a block is legal.
 #[inline]
 pub const fn pte_is_huge(pte: u64) -> bool {
-    pte & PTE_HUGE_PAGE != 0
+    descriptor::is_block(pte)
 }
 
 #[inline]
 pub const fn pte_address(pte: u64) -> u64 {
-    pte & PTE_ADDR_MASK
+    descriptor::address(pte)
 }
 
 #[inline]
 pub const fn pte_is_writable(pte: u64) -> bool {
-    pte & PTE_WRITABLE != 0
+    descriptor::is_writable(pte)
 }

@@ -14,14 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::globals::{PAGING_MANAGER, PAGING_STATS};
-use crate::arch::run_without_interrupts as without_interrupts;
-use crate::memory::addr::{PhysAddr, VirtAddr};
-use crate::memory::paging::error::PagingResult;
+//! aarch64 stage 1 descriptors.
+//!
+//! Three differences from the neutral vocabulary, each silent if got wrong:
+//! write permission is inverted, a block is the absence of a flag rather than
+//! a flag, and the access flag is mandatory.
 
-pub fn unmap_page(virtual_addr: VirtAddr) -> PagingResult<PhysAddr> {
-    let (phys, perms, size) =
-        without_interrupts(|| PAGING_MANAGER.lock().unmap_page(virtual_addr))?;
-    PAGING_STATS.record_unmapping(perms, size);
-    Ok(phys)
-}
+mod bits;
+mod build;
+mod read;
+
+pub use bits::ADDR_MASK;
+pub use build::{leaf, table};
+pub use read::{address, is_block, is_present, is_user, is_writable, table_grants_user};
