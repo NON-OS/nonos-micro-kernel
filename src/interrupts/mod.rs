@@ -122,7 +122,9 @@ pub fn get_interrupt_stats() -> InterruptStatsExt {
         ],
     }
 }
-#[cfg(target_arch = "x86_64")]
+
+/// Counts only, read off the tick counter, which every architecture keeps the
+/// same way. Nothing here touches a controller, so there is nothing to gate.
 pub fn get_softirq_stats() -> SoftirqStats {
     SoftirqStats {
         total: timer::tick_count(),
