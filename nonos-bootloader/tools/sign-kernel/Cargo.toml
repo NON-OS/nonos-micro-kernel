@@ -1,6 +1,6 @@
 [package]
 name = "nonos-sign-kernel"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 description = "Sign NONOS kernel binaries with Ed25519 and ML-DSA-65"
 

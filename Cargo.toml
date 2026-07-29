@@ -25,7 +25,7 @@
 
 [package]
 name        = "nonos_kernel"
-version     = "0.8.9"
+version     = "0.9.0"
 edition     = "2021"
 publish     = false
 license     = "AGPL-3.0"
@@ -790,7 +790,7 @@ std = []
 
 [dependencies]
 # Transparent STARK stack, shared with the bootloader for kernel self-attestation.
-nonos-stark = { path = "nonos-stark", version = "0.1.0" }
+nonos-stark = { path = "nonos-stark", version = "0.2.0" }
 # Synchronization. spin is the kernel-wide lock primitive (no_std,
 # interrupt-safe).
 spin        = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex", "lazy", "rwlock"] }
@@ -864,7 +864,7 @@ perf        = "warn"
 # src/capabilities/types.rs.
 [package.metadata.nonos]
 zerostate = true
-version   = "0.8.4"
+version   = "0.9.0"
 abi       = "Mk-v0"
 
 [package.metadata.nonos.vm]

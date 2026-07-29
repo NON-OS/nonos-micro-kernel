@@ -1,6 +1,6 @@
 [package]
 name = "nonos_boot"
-version = "1.0.5"
+version = "1.1.0"
 edition = "2021"
 publish = false
 authors = ["eK <team@nonos.systems>"]
