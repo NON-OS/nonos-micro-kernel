@@ -17,17 +17,30 @@
 use super::intent::SwitchIntent;
 use super::lease::SwitchLease;
 use super::outcome::{SwitchError, SwitchOutcome};
+use crate::process::core::api::current_pid;
+use crate::process::scheduler::preemption::{perform_yield_inline, preempt_current_process};
 
-#[cfg(target_arch = "x86_64")]
-use super::backend_x86_64 as imp;
-
+/// Whether the caller can be switched away from right now.
 pub(super) fn interrupts_enabled() -> bool {
-    imp::interrupts_enabled()
+    crate::arch::cpu::interrupts_enabled()
 }
 
+/// Give up the CPU the way `intent` asks for.
+///
+/// This used to live behind a per architecture backend, but only the mask
+/// check underneath it was ever architecture specific, and the arch layer
+/// already answers that one. What is left decides on the current task and
+/// hands off to preemption, which is the same work on any CPU.
 pub(super) fn perform(
-    lease: SwitchLease,
+    _lease: SwitchLease,
     intent: SwitchIntent,
 ) -> Result<SwitchOutcome, SwitchError> {
-    imp::perform(lease, intent)
+    if current_pid().is_none() {
+        return Err(SwitchError::NoCurrentTask);
+    }
+    match intent {
+        SwitchIntent::Preempt => preempt_current_process(),
+        SwitchIntent::Yield => perform_yield_inline(),
+    }
+    Ok(SwitchOutcome::Returned)
 }
