@@ -14,17 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod access;
-pub mod bridge;
-pub mod config_space;
-mod transport;
-
-pub mod power;
-
-pub use access::{
-    get_config_stats, make_config_address, read16, read32, read32_unchecked, read8,
-    reset_config_stats, write16, write32, write32_unchecked, write8,
-};
-pub use bridge::BridgeConfigSpace;
-pub use config_space::ConfigSpace;
-pub use transport::set_ecam_window;
+/// The value port 0xCF8 takes: enable bit, then bus, device, function and the
+/// dword-aligned register number.
+#[inline]
+pub(in crate::drivers::pci::config) fn config_address(
+    bus: u8,
+    device: u8,
+    function: u8,
+    offset: u16,
+) -> u32 {
+    (1u32 << 31)
+        | ((bus as u32) << 16)
+        | ((device as u32) << 11)
+        | ((function as u32) << 8)
+        | ((offset as u32) & 0xFC)
+}

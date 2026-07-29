@@ -14,23 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU64, Ordering};
+//! Validated config-space access.
+//!
+//! What belongs here is the checking and the counting. How an access reaches
+//! the bus is `transport`'s problem, which is where the port pair and the ECAM
+//! window both live. Before that split this file carried six copies of the
+//! same 0xCF8/0xCFC sequence and could only ever run on a PC.
 
-use spin::Mutex;
+use core::sync::atomic::{AtomicU64, Ordering};
 
 use super::super::constants::*;
 use super::super::error::{PciError, Result};
-use super::port_io::{inl, outl};
+use super::transport;
 
 pub static CONFIG_READS: AtomicU64 = AtomicU64::new(0);
 pub static CONFIG_WRITES: AtomicU64 = AtomicU64::new(0);
-
-// Serialise the (PCI_CONFIG_ADDRESS, PCI_CONFIG_DATA) port pair. On
-// SMP, an interleaving between one CPU's address write and the other
-// CPU's data read returns garbage from the wrong device. The lock is
-// held only across the two outl/inl that form one PCI config word
-// access, so contention is bounded by the port-IO latency.
-static CONFIG_PORT_LOCK: Mutex<()> = Mutex::new(());
 
 pub fn validate_access(_bus: u8, device: u8, function: u8, offset: u16) -> Result<()> {
     if device > PCI_MAX_DEVICE {
@@ -52,157 +50,67 @@ pub fn validate_alignment(offset: u16, size: u8) -> Result<()> {
     Ok(())
 }
 
+/// The word the legacy address port takes. Kept because the scan path reports
+/// it in diagnostics; it means nothing to an ECAM access.
 #[inline]
 pub fn make_config_address(bus: u8, device: u8, function: u8, offset: u16) -> u32 {
-    (1u32 << 31)
-        | ((bus as u32) << 16)
-        | ((device as u32) << 11)
-        | ((function as u32) << 8)
-        | ((offset as u32) & 0xFC)
+    transport::config_address(bus, device, function, offset)
 }
 
 pub fn read8(bus: u8, device: u8, function: u8, offset: u16) -> Result<u8> {
     validate_access(bus, device, function, offset)?;
     CONFIG_READS.fetch_add(1, Ordering::Relaxed);
-
-    let addr = make_config_address(bus, device, function, offset);
-    let byte_offset = (offset & 3) as u16;
-
-    let _g = CONFIG_PORT_LOCK.lock();
-    // SAFETY: PCI config space ports are valid for kernel access; the
-    // lock guarantees the (address, data) pair is atomic.
-    let value = unsafe {
-        outl(PCI_CONFIG_ADDRESS, addr);
-        let data = inl(PCI_CONFIG_DATA);
-        ((data >> (byte_offset * 8)) & 0xFF) as u8
-    };
-
-    Ok(value)
+    transport::read8(bus, device, function, offset)
 }
 
 pub fn read16(bus: u8, device: u8, function: u8, offset: u16) -> Result<u16> {
     validate_access(bus, device, function, offset)?;
     validate_alignment(offset, 2)?;
     CONFIG_READS.fetch_add(1, Ordering::Relaxed);
-
-    let addr = make_config_address(bus, device, function, offset);
-    let word_offset = (offset & 2) as u16;
-
-    let _g = CONFIG_PORT_LOCK.lock();
-    // SAFETY: PCI config space ports are valid for kernel access; the
-    // lock guarantees the (address, data) pair is atomic.
-    let value = unsafe {
-        outl(PCI_CONFIG_ADDRESS, addr);
-        let data = inl(PCI_CONFIG_DATA);
-        ((data >> (word_offset * 8)) & 0xFFFF) as u16
-    };
-
-    Ok(value)
+    transport::read16(bus, device, function, offset)
 }
 
 pub fn read32(bus: u8, device: u8, function: u8, offset: u16) -> Result<u32> {
     validate_access(bus, device, function, offset)?;
     validate_alignment(offset, 4)?;
     CONFIG_READS.fetch_add(1, Ordering::Relaxed);
-
-    let addr = make_config_address(bus, device, function, offset);
-
-    let _g = CONFIG_PORT_LOCK.lock();
-    // SAFETY: PCI config space ports are valid for kernel access; the
-    // lock guarantees the (address, data) pair is atomic.
-    let value = unsafe {
-        outl(PCI_CONFIG_ADDRESS, addr);
-        inl(PCI_CONFIG_DATA)
-    };
-
-    Ok(value)
+    transport::read32(bus, device, function, offset)
 }
 
 pub fn write8(bus: u8, device: u8, function: u8, offset: u16, value: u8) -> Result<()> {
     validate_access(bus, device, function, offset)?;
     CONFIG_WRITES.fetch_add(1, Ordering::Relaxed);
-
-    let addr = make_config_address(bus, device, function, offset);
-    let byte_offset = (offset & 3) as u32;
-    let mask = 0xFFu32 << (byte_offset * 8);
-
-    let _g = CONFIG_PORT_LOCK.lock();
-    // SAFETY: PCI config space ports are valid for kernel access; the
-    // lock guarantees the read-modify-write is atomic.
-    unsafe {
-        outl(PCI_CONFIG_ADDRESS, addr);
-        let current = inl(PCI_CONFIG_DATA);
-        let new_value = (current & !mask) | ((value as u32) << (byte_offset * 8));
-        outl(PCI_CONFIG_DATA, new_value);
-    }
-
-    Ok(())
+    transport::write8(bus, device, function, offset, value)
 }
 
 pub fn write16(bus: u8, device: u8, function: u8, offset: u16, value: u16) -> Result<()> {
     validate_access(bus, device, function, offset)?;
     validate_alignment(offset, 2)?;
     CONFIG_WRITES.fetch_add(1, Ordering::Relaxed);
-
-    let addr = make_config_address(bus, device, function, offset);
-    let word_offset = (offset & 2) as u32;
-    let mask = 0xFFFFu32 << (word_offset * 8);
-
-    let _g = CONFIG_PORT_LOCK.lock();
-    // SAFETY: PCI config space ports are valid for kernel access; the
-    // lock guarantees the read-modify-write is atomic.
-    unsafe {
-        outl(PCI_CONFIG_ADDRESS, addr);
-        let current = inl(PCI_CONFIG_DATA);
-        let new_value = (current & !mask) | ((value as u32) << (word_offset * 8));
-        outl(PCI_CONFIG_DATA, new_value);
-    }
-
-    Ok(())
+    transport::write16(bus, device, function, offset, value)
 }
 
 pub fn write32(bus: u8, device: u8, function: u8, offset: u16, value: u32) -> Result<()> {
     validate_access(bus, device, function, offset)?;
     validate_alignment(offset, 4)?;
     CONFIG_WRITES.fetch_add(1, Ordering::Relaxed);
-
-    let addr = make_config_address(bus, device, function, offset);
-
-    let _g = CONFIG_PORT_LOCK.lock();
-    // SAFETY: PCI config space ports are valid for kernel access; the
-    // lock guarantees the (address, data) pair is atomic.
-    unsafe {
-        outl(PCI_CONFIG_ADDRESS, addr);
-        outl(PCI_CONFIG_DATA, value);
-    }
-
-    Ok(())
+    transport::write32(bus, device, function, offset, value)
 }
 
+/// Scan-path read that skips validation because the caller already bounded the
+/// offset to a byte. An absent function reads as all-ones, which is how the
+/// bus reports one and what the scan is looking for, so an unreachable config
+/// space collapses into the same answer rather than a new error case.
 #[inline]
 pub fn read32_unchecked(bus: u8, device: u8, function: u8, offset: u8) -> u32 {
     CONFIG_READS.fetch_add(1, Ordering::Relaxed);
-    let addr = pci_config_address(bus, device, function, offset);
-    let _g = CONFIG_PORT_LOCK.lock();
-    // SAFETY: PCI config space ports are valid for kernel access; the
-    // lock guarantees the (address, data) pair is atomic.
-    unsafe {
-        outl(PCI_CONFIG_ADDRESS, addr);
-        inl(PCI_CONFIG_DATA)
-    }
+    transport::read32(bus, device, function, offset as u16).unwrap_or(!0)
 }
 
 #[inline]
 pub fn write32_unchecked(bus: u8, device: u8, function: u8, offset: u8, value: u32) {
     CONFIG_WRITES.fetch_add(1, Ordering::Relaxed);
-    let addr = pci_config_address(bus, device, function, offset);
-    let _g = CONFIG_PORT_LOCK.lock();
-    // SAFETY: PCI config space ports are valid for kernel access; the
-    // lock guarantees the (address, data) pair is atomic.
-    unsafe {
-        outl(PCI_CONFIG_ADDRESS, addr);
-        outl(PCI_CONFIG_DATA, value);
-    }
+    let _ = transport::write32(bus, device, function, offset as u16, value);
 }
 
 pub fn get_config_stats() -> (u64, u64) {
