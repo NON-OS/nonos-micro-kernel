@@ -170,6 +170,13 @@ import Nonos
 #print axioms Nonos.MemGrant.run_conserves
 #print axioms Nonos.MemGrant.run_granted_le_capacity
 #print axioms Nonos.Scheduler.rotate_mem
+#print axioms Nonos.PageDescriptor.leaf_present_iff_requested
+#print axioms Nonos.PageDescriptor.kernel_leaf_never_reaches_el0
+#print axioms Nonos.PageDescriptor.user_leaf_reaches_el0
+#print axioms Nonos.PageDescriptor.read_only_leaf_never_writable
+#print axioms Nonos.PageDescriptor.user_leaf_never_executes_at_el1
+#print axioms Nonos.PageDescriptor.kernel_leaf_never_executes_at_el0
+#print axioms Nonos.PageDescriptor.table_is_present_and_not_a_block
 #print axioms Nonos.PageTable.mapAllChecked_safe
 #print axioms Nonos.Iommu.empty_grant_denies
 #print axioms Nonos.Dispatch.serviced_requires_cap
