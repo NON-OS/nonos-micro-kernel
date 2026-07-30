@@ -40,7 +40,7 @@ pub(super) fn get_physical_address(va: VirtAddr) -> SecureMemoryResult<PhysAddr>
 }
 
 pub(super) fn get_timestamp() -> u64 {
-    unsafe { core::arch::x86_64::_rdtsc() }
+    crate::arch::read_time_counter()
 }
 
 pub(super) fn secure_zero_memory(

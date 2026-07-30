@@ -7,7 +7,7 @@
 
 [package]
 name = "nonos-secops"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "AGPL-3.0"
 description = "Defense and offense tools for the NONOS transparent STARK attestation"
@@ -25,6 +25,6 @@ name = "nonos-attack"
 path = "src/bin/attack.rs"
 
 [dependencies]
-nonos-stark = { path = "../../nonos-stark", version = "0.1.0" }
-embed-zk-proof = { path = "../../nonos-bootloader/tools/embed-zk-proof", version = "0.1.0" }
+nonos-stark = { path = "../../nonos-stark", version = "0.2.0" }
+embed-zk-proof = { path = "../../nonos-bootloader/tools/embed-zk-proof", version = "0.2.0" }
 blake3 = "1"

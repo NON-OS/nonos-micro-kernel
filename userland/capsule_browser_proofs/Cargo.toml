@@ -6,7 +6,7 @@
 # known-answer inputs, checking rendering-correctness pieces with no GUI.
 [package]
 name = "capsule_browser_proofs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [lib]

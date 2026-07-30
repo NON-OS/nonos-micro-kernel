@@ -101,4 +101,3 @@ impl core::fmt::Display for IpcMessage {
         )
     }
 }
-

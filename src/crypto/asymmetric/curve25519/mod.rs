@@ -28,7 +28,6 @@ mod util;
 // `X25519_BASEPOINT`, and `x25519_clamp`). Compile the module only when
 // the dalek-backed feature is on or when the legacy tree is selected.
 
-
 pub use ed25519::EdwardsPoint;
 pub use field::FieldElement;
 

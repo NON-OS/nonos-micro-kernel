@@ -14,17 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::IPI_TLB_SHOOTDOWN;
 use super::state::{cpus_online, TLB_SHOOTDOWN_ACK, TLB_SHOOTDOWN_ACTIVE, TLB_SHOOTDOWN_ADDR};
+use crate::arch::interrupt_controller::{broadcast_ipi, Ipi};
+use crate::arch::paging::{invalidate_all, invalidate_page};
 use crate::memory::addr::VirtAddr;
 use core::sync::atomic::Ordering;
 
+/// How long to wait for the other CPUs to acknowledge, in cycle-counter ticks.
+const ACK_TIMEOUT_TICKS: u64 = 10_000_000;
+
 pub fn tlb_shootdown(addr: VirtAddr) {
     if cpus_online() <= 1 {
-        // SAFETY: Single CPU, just invalidate locally
-        unsafe {
-            invalidate_page(addr);
-        }
+        invalidate_page(addr.as_u64());
         return;
     }
 
@@ -32,19 +33,23 @@ pub fn tlb_shootdown(addr: VirtAddr) {
     TLB_SHOOTDOWN_ACK.store(0, Ordering::Release);
     TLB_SHOOTDOWN_ACTIVE.store(true, Ordering::Release);
 
-    crate::arch::x86_64::interrupt::apic::ipi_others(IPI_TLB_SHOOTDOWN);
-
-    // SAFETY: Invalidating TLB entry for given address
-    unsafe {
-        invalidate_page(addr);
+    if broadcast_ipi(Ipi::TlbShootdown).is_err() {
+        // No other CPU was told to flush, so waiting for acknowledgements
+        // would only burn the timeout. The local invalidation below still has
+        // to happen either way.
+        crate::log_error!("[SMP] TLB shootdown broadcast refused");
+        TLB_SHOOTDOWN_ACTIVE.store(false, Ordering::Release);
+        invalidate_page(addr.as_u64());
+        return;
     }
 
+    invalidate_page(addr.as_u64());
+
     let expected = cpus_online() as u32 - 1;
-    let timeout = 10_000_000u64;
-    let start = read_tsc();
+    let start = read_ticks();
 
     while TLB_SHOOTDOWN_ACK.load(Ordering::Acquire) < expected {
-        if read_tsc() - start > timeout {
+        if read_ticks().wrapping_sub(start) > ACK_TIMEOUT_TICKS {
             crate::log_error!("[SMP] TLB shootdown timeout");
             break;
         }
@@ -56,35 +61,17 @@ pub fn tlb_shootdown(addr: VirtAddr) {
 
 pub fn handle_tlb_shootdown_ipi() {
     if TLB_SHOOTDOWN_ACTIVE.load(Ordering::Acquire) {
-        let addr = VirtAddr::new(TLB_SHOOTDOWN_ADDR.load(Ordering::Acquire));
-        // SAFETY: Invalidating TLB entry for shootdown address
-        unsafe {
-            invalidate_page(addr);
-        }
+        invalidate_page(TLB_SHOOTDOWN_ADDR.load(Ordering::Acquire));
         TLB_SHOOTDOWN_ACK.fetch_add(1, Ordering::Release);
     }
 }
 
-#[inline]
-unsafe fn invalidate_page(addr: VirtAddr) {
-    // SAFETY: invlpg is safe for any valid virtual address
-    unsafe {
-        core::arch::asm!("invlpg [{}]", in(reg) addr.as_u64(), options(nostack, preserves_flags));
-    }
+/// Drop every entry in the calling CPU's TLB.
+pub fn flush_tlb() {
+    invalidate_all();
 }
 
 #[inline]
-pub unsafe fn flush_tlb() {
-    unsafe {
-        // SAFETY: Reloading CR3 flushes the entire TLB
-        let cr3: u64;
-        core::arch::asm!("mov {}, cr3", out(reg) cr3, options(nostack, preserves_flags));
-        core::arch::asm!("mov cr3, {}", in(reg) cr3, options(nostack, preserves_flags));
-    }
-}
-
-#[inline]
-fn read_tsc() -> u64 {
-    // SAFETY: rdtsc is always safe
-    unsafe { core::arch::x86_64::_rdtsc() }
+fn read_ticks() -> u64 {
+    crate::arch::read_time_counter()
 }

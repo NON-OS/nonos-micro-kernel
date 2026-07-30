@@ -23,6 +23,7 @@ pub use api::{
     current_stack_pointer, get_exception_stack, get_irq_stack, get_kernel_stack, setup_stack,
     stack_remaining, StackError, StackResult,
 };
+pub use state::MAX_CPUS;
 pub use types::{
     ExceptionStack, IrqStack, KernelStack, EXCEPTION_STACK_SIZE, IRQ_STACK_SIZE, KERNEL_STACK_SIZE,
 };

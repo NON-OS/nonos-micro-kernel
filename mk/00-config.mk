@@ -12,6 +12,45 @@ KEYS_DIR       := $(BOOTLOADER_DIR)/keys
 export SOURCE_DATE_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null || date +%s)
 export CARGO_INCREMENTAL := 0
 
+# Capsules are independent targets and their shared inputs are real
+# prerequisites, so the set fans out safely. NONOS_JOBS=1 when bisecting a
+# build failure and interleaved output gets in the way.
+#
+# How wide is a memory question rather than a core-count one. A rustc pass over
+# the kernel crate holds a couple of gigabytes, and make's fan-out multiplies
+# that by cargo's own, so sizing purely off logical cores oversubscribes badly:
+# eight make jobs each starting an eight-way cargo is dozens of concurrent
+# rustc on a machine that fits about six. That drives the host into swap, where
+# the build gets slower than it was serial and anything else running, a QEMU
+# guest in particular, fails to allocate at all.
+#
+# So the width is the smaller of the physical cores and what memory can hold at
+# roughly four gigabytes a job, and cargo is capped per invocation so the two
+# layers cannot multiply out of hand.
+NONOS_CORES := $(shell sysctl -n hw.physicalcpu 2>/dev/null || nproc 2>/dev/null || echo 2)
+NONOS_RAM_GB := $(shell expr $$(sysctl -n hw.memsize 2>/dev/null || echo 8589934592) / 1073741824)
+NONOS_JOBS ?= $(shell \
+	c=$(NONOS_CORES); m=$$(expr $(NONOS_RAM_GB) / 4); \
+	[ "$$m" -lt "$$c" ] && c=$$m; [ "$$c" -lt 1 ] && c=1; echo $$c)
+MAKEFLAGS += -j$(NONOS_JOBS)
+export CARGO_BUILD_JOBS ?= 2
+
+# Every capsule builds the standard library into its own target directory, so
+# a cold tree compiles core and alloc once per capsule. One shared
+# CARGO_TARGET_DIR would dedupe that, but cargo locks a target directory for
+# the whole build and would serialise the fan-out above. A content-addressed
+# cache dedupes without taking that lock.
+#
+# It caches inputs to a signing pipeline, so it stays local and stays
+# switchable. NONOS_CACHE=0 for release and reproducibility builds.
+NONOS_CACHE ?= auto
+ifneq ($(NONOS_CACHE),0)
+NONOS_SCCACHE := $(shell command -v sccache 2>/dev/null)
+ifneq ($(NONOS_SCCACHE),)
+export RUSTC_WRAPPER := $(NONOS_SCCACHE)
+endif
+endif
+
 export PATH := $(HOME)/.cargo/bin:$(PATH)
 TOOLCHAIN := nightly-2026-01-16
 CARGO     := $(HOME)/.cargo/bin/cargo

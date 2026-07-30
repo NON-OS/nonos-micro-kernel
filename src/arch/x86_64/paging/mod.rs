@@ -16,7 +16,9 @@
 
 mod clear_low_half;
 mod read_cr3;
+mod tagged_tlb;
 mod write_cr3;
 
 pub use clear_low_half::clear_low_half;
 pub use read_cr3::read_cr3;
+pub use tagged_tlb::supports_tagged_invalidation;

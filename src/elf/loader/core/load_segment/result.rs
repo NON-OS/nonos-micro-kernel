@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use x86_64::structures::paging::PageTableFlags;
+use crate::arch::paging::descriptor::flags;
 
 use crate::elf::loader::image::LoadedSegment;
 use crate::elf::types::ProgramHeader;
@@ -22,12 +22,12 @@ use crate::elf::types::ProgramHeader;
 use super::plan::SegmentPlan;
 
 pub(super) fn loaded_segment(plan: &SegmentPlan, header: &ProgramHeader) -> LoadedSegment {
-    let mut flags = PageTableFlags::PRESENT | PageTableFlags::USER_ACCESSIBLE;
+    let mut flags = flags::PRESENT | flags::USER;
     if header.is_writable() {
-        flags |= PageTableFlags::WRITABLE;
+        flags |= flags::WRITABLE;
     }
     if !header.is_executable() {
-        flags |= PageTableFlags::NO_EXECUTE;
+        flags |= flags::NO_EXECUTE;
     }
     LoadedSegment { vaddr: plan.seg_va, size: plan.seg_size, flags, segment_type: header.p_type }
 }

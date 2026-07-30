@@ -61,6 +61,7 @@ pub use resource::{
     verify_resource_token, verify_resource_token_strict, ResourceError, ResourceQuota,
     ResourceToken,
 };
+pub(crate) use serial_debug::serial_debug_cap;
 pub use token::{
     clear_revocations, create_token, create_token_with_nonce, current_nonce_counter, default_nonce,
     from_bytes, has_signing_key, is_revoked, is_token_not_revoked, is_token_signature_valid,
@@ -68,5 +69,4 @@ pub use token::{
     set_signing_key, sign_token, signing_key, to_bytes, token_material, validate_token_full,
     verify_token, CapabilityToken, TOKEN_BINARY_SIZE, TOKEN_VERSION,
 };
-pub(crate) use serial_debug::serial_debug_cap;
 pub use types::Capability;

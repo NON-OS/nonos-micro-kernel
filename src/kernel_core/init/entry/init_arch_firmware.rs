@@ -23,5 +23,10 @@ pub(super) fn init_arch_firmware(handoff: &KernelHandoff) {
         ArchSpecificHandoff::X86_64 { v1 } => {
             crate::boot::firmware::init(&v1.firmware);
         }
+        // The aarch64 firmware table is the DTB, and the boot path walked it
+        // into `BootInfo` before kernel-core started: console, GIC, timer and
+        // memory all came from there. There is no second pass to run.
+        #[cfg(target_arch = "aarch64")]
+        ArchSpecificHandoff::Aarch64 { .. } => {}
     }
 }

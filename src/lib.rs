@@ -25,9 +25,14 @@
 #![allow(clippy::declare_interior_mutable_const)]
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 
-#[cfg(not(target_arch = "x86_64"))]
+// x86_64 is the production release target. aarch64 and riscv64 are brought up
+// behind `nonos-arch-preview`: the arch trees compile and boot in QEMU but are
+// not yet release-signed. Without the feature, a non-x86_64 build is refused so
+// a release can never ship an unfinished arch by accident.
+#[cfg(all(not(target_arch = "x86_64"), not(feature = "nonos-arch-preview")))]
 compile_error!(
-    "Developer Preview 1.0 supports only x86_64; other arch trees are not release targets."
+    "Developer Preview 1.0 ships only x86_64. Build aarch64/riscv64 with \
+     --features nonos-arch-preview (QEMU bring-up, not a release target)."
 );
 
 #[cfg(all(feature = "nonos-production", feature = "nonos-dev-unverified-capsules"))]
@@ -74,8 +79,8 @@ pub mod services;
 pub mod smp;
 pub mod sys;
 pub mod syscall;
+pub mod time;
 pub mod usercopy;
 pub mod userspace;
 
-pub use arch::x86_64::time;
 pub use fs as filesystem;

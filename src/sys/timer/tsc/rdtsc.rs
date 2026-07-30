@@ -14,17 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+/// The CPU's free-running cycle counter.
+///
+/// Named for the x86 instruction this used to be, because the timer code above
+/// reads in those terms. The counter itself comes from the arch boundary and is
+/// whatever that architecture's equivalent is.
 #[inline]
 pub fn rdtsc() -> u64 {
-    unsafe {
-        let lo: u32;
-        let hi: u32;
-        core::arch::asm!(
-            "rdtsc",
-            out("eax") lo,
-            out("edx") hi,
-            options(nomem, nostack)
-        );
-        ((hi as u64) << 32) | (lo as u64)
-    }
+    crate::arch::read_time_counter()
 }

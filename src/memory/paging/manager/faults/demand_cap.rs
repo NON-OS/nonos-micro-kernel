@@ -49,8 +49,10 @@ pub(super) fn charge(pid: u32) -> bool {
             // serial log instead of silently exhausting memory.
             if c.pages == MAX_DEMAND_PAGES {
                 c.pages = c.pages.saturating_add(1);
-                crate::sys::serial::print(b"[DEMAND-CAP] per-process page budget hit, killing pid=");
-                crate::arch::x86_64::diag::print_hex_u64(pid as u64);
+                crate::sys::serial::print(
+                    b"[DEMAND-CAP] per-process page budget hit, killing pid=",
+                );
+                crate::sys::serial::print_hex(pid as u64);
                 crate::sys::serial::println(b"");
             }
             return false;

@@ -29,7 +29,7 @@ pub(crate) use runner::spawn_verified_as;
 pub use spec::CapsuleSpec;
 pub use spec::{CapsuleSpecVerified, SpawnError};
 // Runtime capsule loading from the VFS store, driven by the install syscall.
-pub use from_vfs::{CapsuleArtifacts, LoadError};
 pub(crate) use from_vfs::load_capsule_from_vfs;
+pub use from_vfs::{CapsuleArtifacts, LoadError};
 // Spawning an extra window instance of an embedded, attested app capsule.
 pub use instance::{spawn_next as spawn_next_instance, InstanceEndpoint, InstanceSpawn};

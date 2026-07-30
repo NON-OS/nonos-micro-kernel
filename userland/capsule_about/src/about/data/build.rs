@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const VERSION: &[u8] = env!("CARGO_PKG_VERSION").as_bytes();
+pub const VERSION: &[u8] = include_bytes!("../../../../../VERSION");
 pub const GIT_SHA: &[u8] = env!("ABOUT_GIT_SHA").as_bytes();
 pub const TOOLCHAIN: &[u8] = b"nightly-2026-01-16";
 

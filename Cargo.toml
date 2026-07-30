@@ -25,7 +25,7 @@
 
 [package]
 name        = "nonos_kernel"
-version     = "0.8.9"
+version     = "0.9.0"
 edition     = "2021"
 publish     = false
 license     = "AGPL-3.0"
@@ -50,6 +50,15 @@ harness = false
 [features]
 nonos-stark-attest = []
 default = ["microkernel-core"]
+
+# Bring up a non-x86_64 arch tree (aarch64/riscv64) in QEMU. Compiles + boots
+# the arch but is not a release-signed target. See the arch guard in lib.rs.
+nonos-arch-preview = []
+
+# Run the in-kernel microbenchmarks at boot and print them on the serial
+# channel. Off by default: they cost real time on a path a shipped image has
+# no reason to spend it on, and the benchmark lane turns them on.
+nonos-bench-micro = []
 
 # Bootstrap. `kernel` switches malloc/free to Rust `alloc`; `standalone`
 # brings in the panic handler and global allocator.
@@ -786,7 +795,7 @@ std = []
 
 [dependencies]
 # Transparent STARK stack, shared with the bootloader for kernel self-attestation.
-nonos-stark = { path = "nonos-stark", version = "0.1.0" }
+nonos-stark = { path = "nonos-stark", version = "0.2.0" }
 # Synchronization. spin is the kernel-wide lock primitive (no_std,
 # interrupt-safe).
 spin        = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex", "lazy", "rwlock"] }
@@ -860,7 +869,7 @@ perf        = "warn"
 # src/capabilities/types.rs.
 [package.metadata.nonos]
 zerostate = true
-version   = "0.8.4"
+version   = "0.9.0"
 abi       = "Mk-v0"
 
 [package.metadata.nonos.vm]

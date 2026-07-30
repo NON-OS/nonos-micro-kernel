@@ -134,4 +134,3 @@ pub fn aes128_gcm_decrypt(
     let gcm = Aes128Gcm::new(key);
     gcm.decrypt(nonce, aad, ciphertext_and_tag)
 }
-

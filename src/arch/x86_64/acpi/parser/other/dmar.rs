@@ -25,7 +25,8 @@ use crate::arch::x86_64::acpi::tables::{Dmar, Drhd, SdtHeader, SIG_DMAR};
 const DRHD_TYPE: u16 = 0;
 const MAX_REMAP_UNITS: usize = 8;
 
-static REMAP_UNIT_BASES: Mutex<heapless::Vec<u64, MAX_REMAP_UNITS>> = Mutex::new(heapless::Vec::new());
+static REMAP_UNIT_BASES: Mutex<heapless::Vec<u64, MAX_REMAP_UNITS>> =
+    Mutex::new(heapless::Vec::new());
 
 pub fn parse_dmar(registry: &mut TableRegistry) {
     let addr = match registry.tables.get(&SIG_DMAR) {

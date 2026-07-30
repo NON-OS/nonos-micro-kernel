@@ -17,6 +17,7 @@
 use super::super::super::core::PagingManager;
 use super::super::super::shootdown::flush_tlb_one_smp;
 use super::super::super::tlb_scope::mutation_asid;
+use crate::arch::paging::descriptor;
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use crate::memory::layout;
 use crate::memory::paging::constants::*;
@@ -44,7 +45,7 @@ impl PagingManager {
             }
             if pte_is_huge(l3_table[l3_idx]) {
                 let phys_addr = pte_address(l3_table[l3_idx]);
-                l3_table[l3_idx] = phys_addr | new_flags | PTE_HUGE_PAGE;
+                l3_table[l3_idx] = descriptor::leaf(phys_addr, new_flags | PTE_HUGE_PAGE);
                 flush_tlb_one_smp(va, mutation_asid(va, self.active_asid));
                 return Ok(());
             }
@@ -56,7 +57,7 @@ impl PagingManager {
             }
             if pte_is_huge(l2_table[l2_idx]) {
                 let phys_addr = pte_address(l2_table[l2_idx]);
-                l2_table[l2_idx] = phys_addr | new_flags | PTE_HUGE_PAGE;
+                l2_table[l2_idx] = descriptor::leaf(phys_addr, new_flags | PTE_HUGE_PAGE);
                 flush_tlb_one_smp(va, mutation_asid(va, self.active_asid));
                 return Ok(());
             }
@@ -67,7 +68,7 @@ impl PagingManager {
                 return Err(PagingError::PtNotPresent);
             }
             let phys_addr = pte_address(l1_table[l1_idx]);
-            l1_table[l1_idx] = phys_addr | new_flags;
+            l1_table[l1_idx] = descriptor::leaf(phys_addr, new_flags);
             flush_tlb_one_smp(va, mutation_asid(va, self.active_asid));
         }
         Ok(())

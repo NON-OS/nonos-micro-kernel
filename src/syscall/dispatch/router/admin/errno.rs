@@ -18,4 +18,3 @@ pub(super) const E_OK: i64 = 0;
 pub(super) const E_INVAL: i64 = -22;
 pub(super) const E_FAULT: i64 = -14;
 pub(super) const E_NOSYS: i64 = -38;
-pub(super) const E_NOTSUP: i64 = -95;

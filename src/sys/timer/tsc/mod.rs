@@ -20,8 +20,6 @@ mod init;
 mod rdtsc;
 
 pub use consts::{BOOT_EPOCH_MS, BOOT_TSC, TIMER_INIT, TSC_FREQ_HZ};
-pub use convert::{
-    ms_to_ticks, ticks_to_ms, ticks_to_ns, ticks_to_us, tsc_frequency, us_to_ticks,
-};
+pub use convert::{ms_to_ticks, ticks_to_ms, ticks_to_ns, ticks_to_us, tsc_frequency, us_to_ticks};
 pub use init::{calibrate_tsc_hz, init, init_default};
 pub use rdtsc::rdtsc;

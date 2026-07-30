@@ -19,13 +19,13 @@ extern crate alloc;
 pub mod boot;
 pub mod boot_session;
 pub mod capsule_attest;
-#[cfg(feature = "nonos-stark-attest")]
-pub mod kernel_attest;
 pub mod capsule_manifest;
 pub mod crypto;
 pub mod crypto_capsule;
 pub mod entropy_capsule;
 pub mod hardening;
+#[cfg(feature = "nonos-stark-attest")]
+pub mod kernel_attest;
 pub mod keyring_capsule;
 pub mod market_capsule;
 pub mod module_db;
@@ -36,6 +36,7 @@ pub mod observability;
 mod periodic;
 pub mod policy;
 pub mod quantum;
+pub(crate) mod zerostate;
 
 pub use boot::firmware;
 pub use boot::secure_boot;
@@ -72,19 +73,27 @@ pub use crypto::{
 };
 
 pub use hardening::memory_sanitization;
+#[cfg(target_arch = "x86_64")]
 pub use hardening::spectre_mitigations;
+pub use hardening::speculation;
+
+#[cfg(target_arch = "x86_64")]
+pub use hardening::{
+    are_mitigations_enabled, array_access_nospec, array_index_mask_nospec,
+    context_switch_mitigations, detect_vulnerabilities, enable_mitigations, get_mitigation_status,
+    get_vulnerabilities, ibpb, ibrs_disable, ibrs_enable, kernel_entry_mitigations,
+    kernel_exit_mitigations, l1d_flush, lfence, mds_clear, mfence, rsb_clear, rsb_fill, sfence,
+    spectre_init, ssbd_disable, ssbd_enable, stibp_disable, stibp_enable, CpuVulnerabilities,
+    MitigationStatus,
+};
 
 pub use hardening::{
-    allocate_with_guards, are_mitigations_enabled, array_access_nospec, array_index_mask_nospec,
-    context_switch_mitigations, detect_vulnerabilities, dod_5220_erase, enable_mitigations,
-    free_with_guards, get_level, get_mitigation_status, get_stack_canary, get_vulnerabilities,
-    gutmann_erase, ibpb, ibrs_disable, ibrs_enable, init_stack_canary, kernel_entry_mitigations,
-    kernel_exit_mitigations, l1d_flush, lfence, mds_clear, memory_sanitization_init, mfence,
-    on_free, on_realloc, paranoid_erase, rsb_clear, rsb_fill, sanitization_stats, sanitize,
-    sanitize_process_memory, sanitize_slice, secure_zero, secure_zero_slice, set_level, sfence,
-    spectre_init, ssbd_disable, ssbd_enable, stack_canary_failed, stibp_disable, stibp_enable,
-    verify_stack_canary, zerostate_shutdown_wipe, CpuVulnerabilities, GuardPage, MitigationStatus,
-    SanitizationLevel, SanitizationStats, SecureString, SensitiveData, StackCanaryConfig,
+    allocate_with_guards, dod_5220_erase, free_with_guards, get_level, get_stack_canary,
+    gutmann_erase, init_stack_canary, memory_sanitization_init, on_free, on_realloc,
+    paranoid_erase, sanitization_stats, sanitize, sanitize_process_memory, sanitize_slice,
+    secure_zero, secure_zero_slice, set_level, stack_canary_failed, verify_stack_canary,
+    zerostate_shutdown_wipe, GuardPage, SanitizationLevel, SanitizationStats, SecureString,
+    SensitiveData, StackCanaryConfig,
 };
 
 pub use monitoring::audit;

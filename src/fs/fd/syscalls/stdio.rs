@@ -30,10 +30,10 @@ pub(crate) fn write_stdout(buf: *const u8, count: usize) -> FdResult<usize> {
         let slice = core::slice::from_raw_parts(buf, count);
         for &byte in slice {
             if byte == b'\n' {
-                crate::arch::x86_64::vga::print("\n");
+                crate::sys::serial::print_str("\n");
             } else if byte.is_ascii_graphic() || byte == b' ' {
                 let ch = byte as char;
-                crate::arch::x86_64::vga::print(&format!("{}", ch));
+                crate::sys::serial::print_str(&format!("{}", ch));
             }
         }
     }
@@ -49,7 +49,7 @@ pub(crate) fn write_stderr(buf: *const u8, count: usize) -> FdResult<usize> {
     unsafe {
         let slice = core::slice::from_raw_parts(buf, count);
         for &byte in slice {
-            let _ = crate::arch::x86_64::serial::write_byte(byte);
+            crate::arch::console::write_byte(byte);
         }
     }
     Ok(count)

@@ -39,7 +39,7 @@ pub fn unix_timestamp_ms() -> u64 {
     let boot_epoch = BOOT_EPOCH_MS.load(Ordering::Relaxed);
     if boot_epoch == 0 {
         // Get real current time from RTC hardware and convert to milliseconds
-        let real_time_seconds = crate::arch::x86_64::time::rtc::read_unix_timestamp();
+        let real_time_seconds = crate::arch::wall_clock::unix_timestamp().unwrap_or(0);
         return (real_time_seconds * 1000) + uptime_ms();
     }
     boot_epoch + uptime_ms()

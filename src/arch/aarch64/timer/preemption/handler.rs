@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::arch::aarch64::timer::set_timer;
-use crate::process::scheduler::preemption::tick::tick;
+use crate::process::scheduler::preemption::tick;
 
 pub(super) const TICK_PERIOD_NS: u64 = 10_000_000;
 

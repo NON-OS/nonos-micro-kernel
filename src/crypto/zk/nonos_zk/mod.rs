@@ -48,4 +48,3 @@ pub mod halo2_range {
         [inputs_le32]
     }
 }
-

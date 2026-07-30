@@ -4,6 +4,7 @@
 //! functions below are call-graph roots that only forward to the real
 //! methods so the extractor has plain function names to start from.
 
+pub mod arch;
 pub mod memory;
 pub mod usercopy;
 

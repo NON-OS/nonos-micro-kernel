@@ -14,8 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::errno::E_NOTSUP;
+use crate::arch::power::PowerOff;
+use crate::security::zerostate::terminate;
 
-pub(super) fn shutdown() -> i64 {
-    E_NOTSUP
+/// Power the machine off, wiping on the way.
+///
+/// Divergent, which is what the caller actually gets: the router needs an
+/// arm for this syscall number but never reaches the point of returning from
+/// it.
+pub(super) fn shutdown() -> ! {
+    terminate(PowerOff::Shutdown)
 }

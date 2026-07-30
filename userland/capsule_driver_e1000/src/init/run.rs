@@ -14,18 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Hardware bring-up orchestrator. Reset -> EEPROM MAC -> RAL/RAH
+//! Hardware bring-up orchestrator. Reset -> station address -> RAL/RAH
 //! + MTA -> RX ring -> TX ring. The Driver's existing RX/TX ring
 //! state is programmed in place; the server loop reads them
 //! through `&mut driver.rx` / `&mut driver.tx` after this returns.
 
 use crate::setup::Driver;
 
-use super::{eeprom, mac_filter, reset, rx_setup, tx_setup};
+use super::{mac_filter, reset, rx_setup, station_address, tx_setup};
 
 pub fn bring_up(driver: &mut Driver) -> Result<(), &'static str> {
     reset::run(&driver.regs)?;
-    let mac = eeprom::read_mac(&driver.regs)?;
+    // Drawn, not read out of the EEPROM. The factory address identifies this
+    // card to every network it ever joins, which outlives a system that keeps
+    // nothing on disk.
+    let mac = station_address::draw()?;
     driver.mac = mac;
     mac_filter::program(&driver.regs, &mac);
     rx_setup::program(&driver.regs, &driver.rx, driver.rx_ring_device_addr);

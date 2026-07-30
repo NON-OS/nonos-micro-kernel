@@ -1,0 +1,63 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+//! Turning what the device tree said into the neutral handoff fields.
+
+use super::super::cpu::CpuTopology;
+use super::super::measurement::Measurement;
+use super::super::memory::MemoryHandoff;
+use super::super::timing::TimingHandoff;
+use crate::arch::aarch64::boot::info::{BootInfo, MemoryType};
+
+pub(super) fn memory(info: &BootInfo) -> MemoryHandoff {
+    let largest_usable_bytes = info
+        .memory_regions
+        .iter()
+        .filter(|r| r.region_type == MemoryType::Available)
+        .map(|r| r.size)
+        .max()
+        .unwrap_or(info.ram_size);
+
+    MemoryHandoff {
+        // The regions live in a `Vec` the boot path owns for the life of the
+        // kernel. Nothing walks this pointer blind: the only code that reads
+        // the aarch64 memory map goes through the arch downcast, which hands
+        // it the typed `BootInfo` instead. The pointer and count are here so a
+        // diagnostic dump can report where the map came from.
+        map_ptr: info.memory_regions.as_ptr() as u64,
+        map_entries: info.memory_regions.len() as u32,
+        largest_usable_bytes,
+    }
+}
+
+pub(super) fn cpus(info: &BootInfo) -> CpuTopology {
+    CpuTopology { boot_cpu_id: 0, cpu_count: info.cpu_count }
+}
+
+pub(super) fn timing() -> TimingHandoff {
+    // The generic timer's frequency comes from CNTFRQ_EL0, which the timer
+    // code reads for itself, and the device tree carries no wall-clock time.
+    // Both stay unset rather than guessed; `clock::init` reads zero as "the
+    // boot path did not know" and the RTC supplies the epoch later.
+    TimingHandoff { fixed_freq_hz: None, unix_epoch_ms: 0 }
+}
+
+pub(super) fn measurement() -> Measurement {
+    // Nothing in this boot path has verified a signature: the aarch64
+    // bootloader chain does not exist yet. Claiming otherwise would put a
+    // measurement in the security log that never happened.
+    Measurement { secure_boot: false, kernel_signature_verified: false }
+}

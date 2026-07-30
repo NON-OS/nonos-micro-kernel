@@ -14,27 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! The active page-table root, as the paging manager sees it. The register
+//! itself belongs to the architecture; this layer only adds the `PhysAddr`
+//! typing the manager works in.
+
 use crate::memory::addr::PhysAddr;
 
+/// Install `root` and drop the translations the previous table left behind.
 #[inline]
-pub fn flush_address_space(cr3_value: PhysAddr) {
-    unsafe {
-        core::arch::asm!("mov cr3, {}", in(reg) cr3_value.as_u64(), options(nostack, preserves_flags));
-    }
+pub fn flush_address_space(root: PhysAddr) {
+    crate::arch::paging::write_root(root.as_u64(), 0);
 }
 
+/// Physical base of the table the CPU is translating through.
 #[inline]
 pub fn get_cr3() -> PhysAddr {
-    let cr3: u64;
-    unsafe {
-        core::arch::asm!("mov {}, cr3", out(reg) cr3, options(nostack, preserves_flags));
-    }
-    PhysAddr::new(cr3 & !0xFFF)
+    PhysAddr::new(crate::arch::paging::read_root())
 }
 
+/// Point the CPU at `page_table_pa`.
 #[inline]
 pub fn set_cr3(page_table_pa: PhysAddr) {
-    unsafe {
-        core::arch::asm!("mov cr3, {}", in(reg) page_table_pa.as_u64(), options(nostack, preserves_flags));
-    }
+    crate::arch::paging::write_root(page_table_pa.as_u64(), 0);
 }

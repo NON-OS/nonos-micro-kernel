@@ -39,11 +39,8 @@ impl PagingManager {
             return Err(PagingError::UnhandledPageFault);
         }
         let page_addr = page_align_down(virtual_addr.as_u64());
-        let original = self
-            .mappings
-            .get(&page_addr)
-            .ok_or(PagingError::UnhandledPageFault)?
-            .permissions;
+        let original =
+            self.mappings.get(&page_addr).ok_or(PagingError::UnhandledPageFault)?.permissions;
         if !original.contains(PagePermissions::COW) {
             return Err(PagingError::UnhandledPageFault);
         }
@@ -64,9 +61,7 @@ impl PagingManager {
 
         // Resolve the copy-on-write: drop the COW marker and grant the deferred
         // write, preserving the original permissions (never fabricating USER).
-        let permissions = original
-            .remove(PagePermissions::COW)
-            .insert(PagePermissions::WRITE);
+        let permissions = original.remove(PagePermissions::COW).insert(PagePermissions::WRITE);
         self.map_page(virtual_addr, new_frame, permissions, PageSize::Size4KiB, stats)?;
 
         Ok(())

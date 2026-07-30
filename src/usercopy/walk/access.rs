@@ -23,12 +23,12 @@
 
 use super::leaf::UserLeaf;
 use super::levels::walk_to_leaf;
-use crate::memory::paging::constants::{PTE_USER, PTE_WRITABLE};
+use crate::arch::paging::descriptor;
 use crate::usercopy::error::UsercopyError;
 
 pub(crate) fn translate_read(va: u64) -> Result<UserLeaf, UsercopyError> {
     let leaf = walk_to_leaf(va)?;
-    if leaf.entry & PTE_USER == 0 {
+    if !descriptor::is_user(leaf.entry) {
         return Err(UsercopyError::PageNotUser);
     }
     Ok(leaf)
@@ -36,10 +36,10 @@ pub(crate) fn translate_read(va: u64) -> Result<UserLeaf, UsercopyError> {
 
 pub(crate) fn translate_write(va: u64) -> Result<UserLeaf, UsercopyError> {
     let leaf = walk_to_leaf(va)?;
-    if leaf.entry & PTE_USER == 0 {
+    if !descriptor::is_user(leaf.entry) {
         return Err(UsercopyError::PageNotUser);
     }
-    if leaf.entry & PTE_WRITABLE == 0 {
+    if !descriptor::is_writable(leaf.entry) {
         return Err(UsercopyError::PageNotWritable);
     }
     Ok(leaf)

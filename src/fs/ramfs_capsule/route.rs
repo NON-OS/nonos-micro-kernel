@@ -17,4 +17,3 @@
 pub fn is_capsule_path(path: &str) -> bool {
     path == "/ram" || path.starts_with("/ram/")
 }
-

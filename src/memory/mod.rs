@@ -32,12 +32,17 @@ pub mod addr;
 pub mod boot_memory;
 pub mod buddy_alloc;
 pub mod dma;
-pub mod encryption;
+// AMD SME/SEV and Intel TME/MKTME, detected through CPUID and driven through
+// model-specific registers. ARM's equivalent is CCA/RME, which is a different
+// mechanism with a different trust model, not a port of this one.
 #[cfg(target_arch = "x86_64")]
+pub mod encryption;
 pub mod frame_alloc;
 pub mod hardening;
 pub mod heap;
-#[cfg(target_arch = "x86_64")]
+// The backend inside picks VT-d or the unsupported stand-in by target and
+// feature, so this builds anywhere. An ARM board has no SMMU driver behind it
+// yet, which means every mapping request is refused rather than ignored.
 pub mod iommu;
 pub mod kaslr;
 pub mod layout;
@@ -46,7 +51,6 @@ pub mod mmio;
 pub mod mmu;
 pub mod page_allocator;
 pub mod page_info;
-#[cfg(target_arch = "x86_64")]
 pub mod paging;
 pub mod phys;
 pub mod proof;
@@ -59,13 +63,11 @@ pub mod unified;
 pub use addr::{PhysAddr, VirtAddr};
 pub use api::{get_memory_stats, get_process_vm_areas, read_process_memory};
 pub use buddy_alloc as allocator;
-#[cfg(target_arch = "x86_64")]
 pub use frame_alloc as nonos_frame_alloc;
 pub use hardening::{
     get_all_process_regions, init_module_memory_protection, read_bytes,
     verify_kernel_data_integrity, verify_kernel_page_tables,
 };
-#[cfg(target_arch = "x86_64")]
 pub use iommu::{DeviceAddress, DomainId, IommuDomain, IommuError, IommuProtection};
 pub use layout as nonos_layout;
 #[cfg(target_arch = "x86_64")]

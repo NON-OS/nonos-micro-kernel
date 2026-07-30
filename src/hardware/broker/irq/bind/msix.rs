@@ -18,14 +18,12 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 
-use super::handle_view::handle_view;
 use super::super::msix_ops::current_ops;
 use super::super::records;
 use super::super::slots;
-use super::super::types::{
-    IrqBindError, IrqBindRequest, IrqBindResult, IrqGrant, IrqGrantKind,
-};
+use super::super::types::{IrqBindError, IrqBindRequest, IrqBindResult, IrqGrant, IrqGrantKind};
 use super::super::validate::validate_msix_request;
+use super::handle_view::handle_view;
 use crate::arch::interrupt::broker::{vector_of, BROKER_VEC_COUNT};
 use crate::hardware::broker::pci_index;
 
@@ -52,7 +50,7 @@ pub(super) fn bind_msix(
     let n = req.vector_count as usize;
     let base_slot = slots::try_alloc_contiguous(n).ok_or(IrqBindError::NoVector)?;
     let base_vector = vector_of(base_slot).ok_or(IrqBindError::NoVector)?;
-    let dest_apic_id = crate::arch::interrupt::apic::id() as u8;
+    let dest_apic_id = crate::arch::interrupt_controller::local_id() as u8;
     if let Err(e) = current_ops().program_run(
         &handle.address,
         &msix,

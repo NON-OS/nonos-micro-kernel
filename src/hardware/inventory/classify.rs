@@ -20,7 +20,13 @@ use super::classify_serial_bus::classify_serial_bus;
 use super::classify_storage::classify_storage;
 use super::family::HardwareFamily;
 
-pub fn classify_family(class: u8, subclass: u8, progif: u8, vendor: u16, device: u16) -> HardwareFamily {
+pub fn classify_family(
+    class: u8,
+    subclass: u8,
+    progif: u8,
+    vendor: u16,
+    device: u16,
+) -> HardwareFamily {
     match class {
         0x01 => classify_storage(subclass, vendor),
         0x02 => classify_network(subclass, vendor, device),

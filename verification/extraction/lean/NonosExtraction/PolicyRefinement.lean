@@ -119,6 +119,16 @@ theorem to_pte_flags_spec (p : memory.paging.types.permissions.flags.PagePermiss
     memory.paging.constants.pte_flags.PTE_CACHE_DISABLE,
     memory.paging.constants.pte_flags.PTE_GLOBAL,
     memory.paging.constants.pte_flags.PTE_NO_EXECUTE,
+    -- The PTE constants name the shared flag vocabulary at the paging
+    -- boundary rather than restating its bit positions, so unfolding them
+    -- lands on these and the encoding is only literal one step further down.
+    arch.paging.descriptor.flags.PRESENT,
+    arch.paging.descriptor.flags.WRITABLE,
+    arch.paging.descriptor.flags.USER,
+    arch.paging.descriptor.flags.WRITE_THROUGH,
+    arch.paging.descriptor.flags.NO_CACHE,
+    arch.paging.descriptor.flags.GLOBAL,
+    arch.paging.descriptor.flags.NO_EXECUTE,
     lift, bind_tc_ok, shl32_1, shl32_2, shl32_3, shl32_4, shl32_5, shl32_6,
     shl64_0, shl64_1, shl64_2, shl64_3, shl64_4, shl64_8, shl64_63]
   simp only [uscalar_eq_val, UScalar.val_and]

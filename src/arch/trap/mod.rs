@@ -15,3 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod contract;
+mod vector_table;
+
+pub(crate) use vector_table::is_intact as vector_table_is_intact;

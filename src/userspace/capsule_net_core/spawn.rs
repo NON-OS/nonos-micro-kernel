@@ -15,8 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    NET_CORE_ATTESTATION_BYTES, NET_CORE_ELF, NET_CORE_MANIFEST_BYTES,
-    NET_CORE_NONOS_ID_CERT_BYTES,
+    NET_CORE_ATTESTATION_BYTES, NET_CORE_ELF, NET_CORE_MANIFEST_BYTES, NET_CORE_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;

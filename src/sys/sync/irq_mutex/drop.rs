@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::arch::x86_64::idt::enable;
+use crate::arch::cpu::enable_interrupts;
 
 use super::guard::IrqMutexGuard;
 
@@ -24,7 +24,7 @@ impl<'a, T> Drop for IrqMutexGuard<'a, T> {
             core::mem::ManuallyDrop::drop(&mut self.inner);
         }
         if self.restore {
-            enable();
+            enable_interrupts();
         }
     }
 }

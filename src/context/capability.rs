@@ -41,4 +41,3 @@ pub fn require_capability(cap: u64) -> Result<(), ContextError> {
         false => Err(ContextError::CapabilityDenied),
     }
 }
-

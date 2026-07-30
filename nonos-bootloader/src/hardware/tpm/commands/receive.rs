@@ -22,6 +22,11 @@ pub fn receive_response_impl(state: &TpmState, buf: &mut [u8]) -> Result<usize, 
     if !state.initialized {
         return Err(TpmError::NotPresent);
     }
+    // CRB signals completion by clearing its start bit and leaves the reply in
+    // a buffer, so there is no data-available bit here to wait on.
+    if state.is_crb {
+        return super::crb_receive(state, buf);
+    }
     state.wait_for_status(TPM_STS_DATA_AVAIL, TPM_STS_DATA_AVAIL)?;
     let mut received = 0;
     while received < buf.len() {

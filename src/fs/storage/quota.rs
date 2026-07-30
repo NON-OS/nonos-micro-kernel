@@ -154,4 +154,3 @@ pub fn get_remaining_capacity() -> (usize, usize) {
 
     (remaining_bytes, remaining_files)
 }
-

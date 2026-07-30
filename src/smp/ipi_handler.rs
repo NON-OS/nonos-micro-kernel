@@ -14,44 +14,34 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::IPI_RESCHEDULE;
 use super::cpu::{current_cpu, get_cpu};
 use super::state::CPUS_ONLINE;
 use super::types::CpuState;
+use crate::arch::interrupt_controller::{broadcast_ipi, send_ipi, Ipi};
 use core::sync::atomic::Ordering;
 
 pub fn send_reschedule_ipi(cpu_id: usize) {
     if let Some(cpu) = get_cpu(cpu_id) {
         if cpu.is_online() {
-            crate::arch::x86_64::interrupt::apic::ipi_one(cpu.apic_id, IPI_RESCHEDULE);
+            let _ = send_ipi(cpu.apic_id, Ipi::Reschedule);
         }
     }
 }
 
 pub fn send_panic_ipi() {
-    crate::arch::x86_64::interrupt::apic::ipi_others(super::constants::IPI_PANIC);
+    let _ = broadcast_ipi(Ipi::Panic);
 }
 
-pub fn handle_panic_ipi() {
+pub fn handle_panic_ipi() -> ! {
     current_cpu().set_state(CpuState::Halted);
-    loop {
-        // SAFETY: Halt loop on panic
-        unsafe {
-            core::arch::asm!("cli; hlt", options(nostack, nomem));
-        }
-    }
+    crate::arch::halt_loop()
 }
 
-pub fn handle_stop_ipi() {
+pub fn handle_stop_ipi() -> ! {
     let cpu = current_cpu();
     cpu.set_state(CpuState::GoingOffline);
     cpu.set_state(CpuState::Halted);
     CPUS_ONLINE.fetch_sub(1, Ordering::Release);
 
-    loop {
-        // SAFETY: Halt loop after stop
-        unsafe {
-            core::arch::asm!("cli; hlt", options(nostack, nomem));
-        }
-    }
+    crate::arch::halt_loop()
 }

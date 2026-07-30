@@ -52,4 +52,3 @@ impl SmmError {
 }
 
 pub type SmmResult<T> = Result<T, SmmError>;
-

@@ -19,14 +19,14 @@ It boots. The default image comes up to a graphical desktop with a
 damage-tracked compositor, window management, a terminal and a file manager, on
 real drivers for NVMe and AHCI storage, xHCI USB and mass storage, e1000 and
 Realtek networking, Intel and Realtek Wi-Fi, HDA audio, i2c and PS/2 input.
-Around sixty capsules ship in it. One command builds the whole system, proves
-it, and boots it.
+Fifty-nine capsules come up in it, out of seventy-eight in the tree. One
+command builds the whole system, proves it, and boots it.
 
 The attestation is checked, not asserted. Four independent tools verify it on
-every change: Lean 4 with 203 theorems, Verus, Kani, and 165 runnable proofs
-against the real code. The prover and the verifier are a single crate linked
-into both the kernel and the bootloader, so the proof that gets written is the
-proof that gets read.
+every change: Lean 4 with 1,076 theorems and no sorry, Verus, Kani with 82
+harnesses, and 34 crates of runnable proofs against the real code. The prover
+and the verifier are a single crate linked into both the kernel and the
+bootloader, so the proof that gets written is the proof that gets read.
 
 ## Documentation
 

@@ -26,7 +26,6 @@ pub mod scan_config;
 pub mod scan_stats;
 pub mod types;
 
-
 pub use classify::*;
 pub use error::{UtilsError, UtilsResult};
 pub use helpers::*;

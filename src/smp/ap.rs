@@ -26,7 +26,7 @@ pub unsafe extern "C" fn ap_entry(cpu_id: u32) {
     // software-disabled. The global mode and MMIO mapping were adopted from
     // the BSP before the SIPI, so only the register programming runs here.
     unsafe { crate::arch::x86_64::interrupt::apic::init_ap_lapic() };
-    let apic_id = crate::arch::x86_64::interrupt::apic::id();
+    let apic_id = crate::arch::interrupt_controller::local_id();
 
     // GDT/TSS before anything that can take an exception.
     unsafe {

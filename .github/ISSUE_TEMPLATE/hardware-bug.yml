@@ -1,0 +1,52 @@
+name: Hardware or boot bug
+description: Something misbehaves on real hardware or in QEMU
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Serial output is worth more than any description. If you can capture
+        one line, capture the boot log.
+  - type: input
+    id: machine
+    attributes:
+      label: Machine
+      description: Vendor and model, or the QEMU command line.
+      placeholder: HP 14-cf0xxx (Gemini Lake), or qemu-system-x86_64 -machine q35 ...
+    validations:
+      required: true
+  - type: dropdown
+    id: target
+    attributes:
+      label: Architecture
+      options: [x86_64, aarch64, riscv64]
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Build
+      description: The make target you used, and the commit.
+      placeholder: make full-gui-prod, commit 99aab13
+    validations:
+      required: true
+  - type: textarea
+    id: serial
+    attributes:
+      label: Serial log
+      description: Paste it. Trim the middle if it is long, keep the start and the failure.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened instead
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device involved
+      description: If this is a driver problem, the PCI or USB ID.
+      placeholder: 8086:9df0, or lsusb 0bda:8153

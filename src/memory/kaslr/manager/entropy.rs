@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::arch::x86_64::{__cpuid, _rdtsc};
 use core::sync::atomic::Ordering;
 use sha3::{Digest, Sha3_256};
 
 use super::super::constants::*;
-use super::hwrng::{has_rdrand, has_rdseed, rdrand64, rdseed64};
+use super::hwrng::{cpu_entropy64, cpu_random64, has_cpu_entropy, has_cpu_random};
 use super::state::ENTROPY_POOL;
+use crate::arch::read_time_counter;
 
 pub(super) fn secure_hash(data: &[u8]) -> [u8; HASH_OUTPUT_SIZE] {
     let mut hasher = Sha3_256::new();
@@ -31,27 +31,27 @@ pub(super) fn secure_hash(data: &[u8]) -> [u8; HASH_OUTPUT_SIZE] {
 pub(super) fn collect_entropy() -> u64 {
     let mut entropy = ENTROPY_POOL.load(Ordering::Relaxed);
 
-    unsafe {
-        let tsc1 = _rdtsc();
-        for _ in 0..ENTROPY_SPIN_ITERATIONS {
-            core::hint::spin_loop();
-        }
-        let tsc2 = _rdtsc();
-        entropy ^= tsc1.wrapping_mul(tsc2);
+    // Jitter across a fixed spin: how many cycles the loop actually costs
+    // varies with cache, frequency and interrupt arrivals.
+    let before = read_time_counter();
+    for _ in 0..ENTROPY_SPIN_ITERATIONS {
+        core::hint::spin_loop();
     }
+    let after = read_time_counter();
+    entropy ^= before.wrapping_mul(after);
 
-    let cpuid0 = __cpuid(0);
-    let cpuid1 = __cpuid(CPUID_FEATURES_LEAF);
-    entropy ^= (cpuid0.eax as u64) << 32 | (cpuid0.ebx as u64);
-    entropy ^= (cpuid1.ecx as u64) << 16 | (cpuid1.edx as u64);
+    // The CPU identification registers used to be mixed in here. They hold the
+    // same value on every boot of a given machine, so they contributed no
+    // entropy to an XOR pool; the counter jitter above and the hardware
+    // generator below are the sources that actually vary.
 
-    if has_rdrand() {
-        if let Some(hw_rng) = rdrand64() {
+    if has_cpu_random() {
+        if let Some(hw_rng) = cpu_random64() {
             entropy ^= hw_rng;
         }
     }
-    if has_rdseed() {
-        if let Some(hw_rng) = rdseed64() {
+    if has_cpu_entropy() {
+        if let Some(hw_rng) = cpu_entropy64() {
             entropy ^= hw_rng;
         }
     }

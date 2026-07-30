@@ -14,10 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+/// What the CPU underneath this kernel can produce, latched at boot.
 pub(crate) struct EntropySource {
-    pub(crate) rdrand_available: bool,
-    pub(crate) rdseed_available: bool,
+    /// A conditioned DRBG tap is present (RDRAND, RNDR).
+    pub(crate) random_available: bool,
+    /// A reseeded entropy tap is present (RDSEED, RNDRRS).
+    pub(crate) entropy_available: bool,
 }
 
 pub(crate) static mut ENTROPY_SOURCE: EntropySource =
-    EntropySource { rdrand_available: false, rdseed_available: false };
+    EntropySource { random_available: false, entropy_available: false };

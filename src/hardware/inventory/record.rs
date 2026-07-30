@@ -38,8 +38,13 @@ pub struct InventoryRecord {
 
 impl InventoryRecord {
     pub fn from_device_record(rec: &DeviceRecord) -> Self {
-        let family =
-            classify_family(rec.pci_class, rec.pci_subclass, rec.pci_progif, rec.vendor, rec.device);
+        let family = classify_family(
+            rec.pci_class,
+            rec.pci_subclass,
+            rec.pci_progif,
+            rec.vendor,
+            rec.device,
+        );
         Self {
             device_id: rec.device_id,
             vendor: rec.vendor,

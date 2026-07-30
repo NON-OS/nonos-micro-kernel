@@ -179,9 +179,7 @@ pub(super) fn low32_alloc(pages: usize) -> Option<u64> {
 /// Whether `addr` was handed out by the low pool, so a free is routed here.
 pub(super) fn low32_owns(addr: u64) -> bool {
     let pool = LOW32_POOL.lock();
-    pool.pages != 0
-        && addr >= pool.base
-        && addr < pool.base + (pool.pages as u64 * PAGE_SIZE_U64)
+    pool.pages != 0 && addr >= pool.base && addr < pool.base + (pool.pages as u64 * PAGE_SIZE_U64)
 }
 
 pub(super) fn low32_free(addr: u64, pages: usize) -> bool {

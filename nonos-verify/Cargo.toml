@@ -1,6 +1,6 @@
 [package]
 name = "nonos-verify"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "NONOS verification engine. Build, trust-chain, adversarial, runtime, supply-chain, and attestation checks in typed Rust; the GitHub workflows only invoke its subcommands."
 

@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::idle::idle_until_interrupt;
 use super::super::super::dispatch::add_to_run_queue;
 use super::super::super::selection::{select_next_process, switch_to_process};
 use super::super::save_syscall_user_rsp;
 use super::super::state::CURRENT_TIME_SLICE;
+use super::idle::idle_until_interrupt;
 use core::sync::atomic::Ordering;
 
 /// Voluntary-yield body. Runs with interrupts already disabled by the

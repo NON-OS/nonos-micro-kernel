@@ -20,14 +20,6 @@ pub const PERCPU_STACK_SIZE: usize = 64 * 1024;
 
 pub const AP_TRAMPOLINE_ADDR: u64 = 0x8000;
 
-pub const IPI_TLB_SHOOTDOWN: u8 = 0x40;
-
-pub const IPI_RESCHEDULE: u8 = 0x41;
-
-pub const IPI_PANIC: u8 = 0x42;
-
-pub const IPI_STOP: u8 = 0x43;
-
 pub const IPI_FLAG_TLB_SHOOTDOWN: u32 = 1 << 0;
 pub const IPI_FLAG_RESCHEDULE: u32 = 1 << 1;
 pub const IPI_FLAG_PANIC: u32 = 1 << 2;

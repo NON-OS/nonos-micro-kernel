@@ -17,7 +17,8 @@
 pub mod access;
 pub mod bridge;
 pub mod config_space;
-pub mod port_io;
+mod transport;
+
 pub mod power;
 
 pub use access::{
@@ -26,4 +27,4 @@ pub use access::{
 };
 pub use bridge::BridgeConfigSpace;
 pub use config_space::ConfigSpace;
-pub use port_io::{inl, outl};
+pub use transport::set_ecam_window;

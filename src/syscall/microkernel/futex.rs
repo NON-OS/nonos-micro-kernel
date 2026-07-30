@@ -32,8 +32,7 @@ use crate::process::current_pid;
 
 const SAFETY_MS: u64 = 20;
 
-static FUTEX_QUEUE: spin::Mutex<BTreeMap<(u32, u64), Vec<u32>>> =
-    spin::Mutex::new(BTreeMap::new());
+static FUTEX_QUEUE: spin::Mutex<BTreeMap<(u32, u64), Vec<u32>>> = spin::Mutex::new(BTreeMap::new());
 
 fn tgid_of(pid: u32) -> u32 {
     crate::process::nonos_core::PROCESS_TABLE

@@ -44,8 +44,7 @@ pub(super) struct Slot {
 
 pub(super) static SLOTS: Mutex<[Option<Slot>; SLOT_CAP]> = Mutex::new([const { None }; SLOT_CAP]);
 
-pub(super) static SLOT_GENERATIONS: [AtomicU32; SLOT_CAP] =
-    [const { AtomicU32::new(1) }; SLOT_CAP];
+pub(super) static SLOT_GENERATIONS: [AtomicU32; SLOT_CAP] = [const { AtomicU32::new(1) }; SLOT_CAP];
 
 pub(super) fn bump_generation(idx: usize) {
     let next = SLOT_GENERATIONS[idx].fetch_add(1, Ordering::AcqRel).wrapping_add(1);

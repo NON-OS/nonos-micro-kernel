@@ -57,11 +57,26 @@ unsafe fn map_range(slot: usize, base: u64, size: u64, kind: BootMemoryType) {
     }
 }
 
+/// Map the few devices the kernel must reach before any driver exists: the
+/// console, and both halves of the interrupt controller.
+///
+/// The redistributor belongs here alongside the distributor. It is a separate
+/// window, often megabytes away, and it is what enables a CPU's private
+/// interrupts, so leaving it unmapped means the timer tick never arrives on
+/// any core.
 unsafe fn map_devices(boot_info: &BootInfo) {
     let attrs = PageAttributes::device();
     state::l1().set_table(510, state::l2_addr(DEVICE_SLOT));
     state::l2(DEVICE_SLOT).set_block(0, boot_info.uart_base & !(BLOCK_2M - 1), &attrs);
     state::l2(DEVICE_SLOT).set_block(1, boot_info.gic_dist_base & !(BLOCK_2M - 1), &attrs);
+    state::l2(DEVICE_SLOT).set_block(2, boot_info.gic_redist_base & !(BLOCK_2M - 1), &attrs);
+    // Redistributor frames run one per CPU at 64 KiB or 128 KiB apiece, so a
+    // large machine's region can cross the 2 MiB block above.
+    state::l2(DEVICE_SLOT).set_block(
+        3,
+        (boot_info.gic_redist_base & !(BLOCK_2M - 1)).saturating_add(BLOCK_2M),
+        &attrs,
+    );
 }
 
 fn region_attrs(kind: BootMemoryType) -> PageAttributes {

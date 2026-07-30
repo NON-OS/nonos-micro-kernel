@@ -14,29 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::arch::paging::descriptor::flags;
 use crate::elf::types::phdr_type;
 use crate::memory::addr::VirtAddr;
-use x86_64::structures::paging::PageTableFlags;
 
 #[derive(Debug, Clone)]
 pub struct LoadedSegment {
     pub vaddr: VirtAddr,
     pub size: usize,
-    pub flags: PageTableFlags,
+    pub flags: u64,
     pub segment_type: u32,
 }
 
 impl LoadedSegment {
     pub fn is_readable(&self) -> bool {
-        self.flags.contains(PageTableFlags::PRESENT)
+        self.flags & flags::PRESENT != 0
     }
 
     pub fn is_writable(&self) -> bool {
-        self.flags.contains(PageTableFlags::WRITABLE)
+        self.flags & flags::WRITABLE != 0
     }
 
     pub fn is_executable(&self) -> bool {
-        !self.flags.contains(PageTableFlags::NO_EXECUTE)
+        self.flags & flags::NO_EXECUTE == 0
     }
 
     pub fn end_addr(&self) -> VirtAddr {

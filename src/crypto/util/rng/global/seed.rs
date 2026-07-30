@@ -100,7 +100,7 @@ pub fn seed_from_bootloader(bootloader_entropy: &[u8; 32]) -> RngResult<()> {
         combined[i] = bootloader_entropy[i] ^ local_entropy[i];
     }
 
-    let rtc = crate::arch::x86_64::time::rtc::read_unix_timestamp();
+    let rtc = crate::arch::wall_clock::unix_timestamp().unwrap_or(0);
     let rtc_bytes = rtc.to_le_bytes();
     for i in 0..8 {
         combined[i] ^= rtc_bytes[i];

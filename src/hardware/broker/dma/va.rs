@@ -40,4 +40,3 @@ pub(super) fn reserve(pages: u64) -> Option<VirtAddr> {
     }
     Some(VirtAddr::new(base))
 }
-

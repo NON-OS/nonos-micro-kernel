@@ -25,10 +25,10 @@ pub use api::{fill_bytes, secure_random_u64};
 pub use csprng::{ChaChaRng, RESEED_INTERVAL};
 
 pub use entropy::{
-    collect_seed_entropy, collect_seed_entropy_secure, get_entropy64, get_entropy64_secure,
-    get_tsc_entropy, has_adequate_entropy, has_rdrand, has_rdseed, init_entropy,
-    mark_bootloader_entropy_provided, mix_entropy_into_seed, try_rdrand64, try_rdseed64,
-    verify_entropy_sources, EntropyError,
+    collect_seed_entropy, collect_seed_entropy_secure, cpu_entropy64, cpu_random64, get_entropy64,
+    get_entropy64_secure, get_tsc_entropy, has_adequate_entropy, has_cpu_entropy, has_cpu_random,
+    init_entropy, mark_bootloader_entropy_provided, mix_entropy_into_seed, verify_entropy_sources,
+    EntropyError,
 };
 
 pub use error::{RngError, RngResult};

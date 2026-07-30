@@ -15,11 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    BROWSER_ATTESTATION_BYTES, BROWSER_ELF, BROWSER_MANIFEST_BYTES,
-    BROWSER_NONOS_ID_CERT_BYTES,
+    BROWSER_ATTESTATION_BYTES, BROWSER_ELF, BROWSER_MANIFEST_BYTES, BROWSER_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
+use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 use crate::kernel_core::process_spawn::capsule_spawn::{
     self, spawn_next_instance, CapsuleSpecVerified, InstanceEndpoint, InstanceSpawn,
 };
@@ -27,7 +27,6 @@ use crate::security::nonos_id_cert::IdCertVerifyError;
 use crate::security::nonos_trust_anchor::{
     decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
 };
-use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 
 const SERVICE_NAME: &str = "app.browser";
 const SERVICE_PORT: u32 = 4760;

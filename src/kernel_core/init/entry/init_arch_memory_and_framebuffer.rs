@@ -24,5 +24,11 @@ pub(super) fn init_arch_memory_and_framebuffer(handoff: &KernelHandoff) {
         ArchSpecificHandoff::X86_64 { v1 } => {
             crate::arch::init_boot_memory(v1);
         }
+        // The device tree's regions rather than EFI descriptors, and no
+        // firmware framebuffer to map on this arch.
+        #[cfg(target_arch = "aarch64")]
+        ArchSpecificHandoff::Aarch64 { info } => {
+            crate::arch::aarch64::boot::init_boot_memory(info);
+        }
     }
 }

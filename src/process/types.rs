@@ -16,10 +16,10 @@
 
 extern crate alloc;
 
+use crate::arch::paging::descriptor::flags;
 use alloc::string::String;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use x86_64::structures::paging::PageTableFlags;
 
 use super::core::ProcessControlBlock;
 
@@ -91,7 +91,7 @@ impl Process {
             for vma in &mem.vmas {
                 if address >= vma.start.as_u64()
                     && address < vma.end.as_u64()
-                    && vma.flags.contains(PageTableFlags::PRESENT)
+                    && vma.flags & flags::PRESENT != 0
                 {
                     return true;
                 }

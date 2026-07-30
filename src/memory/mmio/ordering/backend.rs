@@ -21,3 +21,11 @@ mod backend_x86_64;
 pub(super) use backend_x86_64::{
     fence_full, fence_reads, fence_writes, read_acquire, read_relaxed, write_relaxed, write_release,
 };
+
+#[cfg(target_arch = "aarch64")]
+#[path = "backend_aarch64/mod.rs"]
+mod backend_aarch64;
+#[cfg(target_arch = "aarch64")]
+pub(super) use backend_aarch64::{
+    fence_full, fence_reads, fence_writes, read_acquire, read_relaxed, write_relaxed, write_release,
+};

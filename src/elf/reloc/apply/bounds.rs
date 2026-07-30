@@ -62,6 +62,11 @@ fn in_segment(image: &ElfImage, addr: u64, size: usize, executable: bool) -> boo
     image.segments.iter().any(|segment| {
         let exec_ok = !executable || segment.is_executable();
         exec_ok
-            && super::range::in_range(addr, size as u64, segment.vaddr.as_u64(), segment.size as u64)
+            && super::range::in_range(
+                addr,
+                size as u64,
+                segment.vaddr.as_u64(),
+                segment.size as u64,
+            )
     })
 }

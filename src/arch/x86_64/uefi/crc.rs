@@ -113,4 +113,3 @@ impl Default for Crc32 {
         Self::new()
     }
 }
-

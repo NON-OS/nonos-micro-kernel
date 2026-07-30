@@ -42,6 +42,6 @@ fn resolve_epoch_ms(handoff_ms: u64) -> u64 {
     super::super::resolve::pick_nonzero(
         handoff_ms,
         || crate::sys::timer::tsc::BOOT_EPOCH_MS.load(Ordering::Relaxed),
-        || crate::arch::x86_64::time::rtc::read_unix_timestamp().saturating_mul(1000),
+        || crate::arch::wall_clock::unix_timestamp().unwrap_or(0).saturating_mul(1000),
     )
 }

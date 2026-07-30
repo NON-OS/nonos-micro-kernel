@@ -19,3 +19,9 @@
 mod backend_x86_64;
 #[cfg(target_arch = "x86_64")]
 pub(super) use backend_x86_64::{sync_for_cpu, sync_for_device};
+
+#[cfg(target_arch = "aarch64")]
+#[path = "backend_aarch64/mod.rs"]
+mod backend_aarch64;
+#[cfg(target_arch = "aarch64")]
+pub(super) use backend_aarch64::{sync_for_cpu, sync_for_device};

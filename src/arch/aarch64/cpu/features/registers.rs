@@ -55,3 +55,13 @@ pub fn read_aa64zfr0() -> u64 {
     }
     value
 }
+
+/// `ID_AA64MMFR1_EL1`, which reports the memory-model features PAN lives in.
+pub fn read_aa64mmfr1() -> u64 {
+    let value: u64;
+    // SAFETY: an identification register, always readable at EL1, no side effects.
+    unsafe {
+        asm!("mrs {}, id_aa64mmfr1_el1", out(reg) value, options(nomem, nostack, preserves_flags));
+    }
+    value
+}

@@ -97,4 +97,3 @@ pub(super) fn drain_for_device(pid: u32, device_id: u64) -> Vec<PioGrant> {
     });
     taken
 }
-

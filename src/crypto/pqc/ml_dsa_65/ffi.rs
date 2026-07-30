@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 #[cfg(all(feature = "mldsa2", not(feature = "mldsa3"), not(feature = "mldsa5")))]
 extern "C" {
     fn PQCLEAN_MLDSA44_CLEAN_crypto_sign_keypair(pk: *mut u8, sk: *mut u8) -> i32;

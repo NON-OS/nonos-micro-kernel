@@ -24,9 +24,10 @@
 //! allocations (PD, PT, leaf) flow into them and propagate to all
 //! address spaces without further bookkeeping.
 
+use crate::arch::paging::descriptor;
 use crate::memory::addr::PhysAddr;
 use crate::memory::frame_alloc;
-use crate::memory::paging::constants::{PAGE_TABLE_ENTRIES, PTE_KERNEL_TABLE, PTE_PRESENT};
+use crate::memory::paging::constants::{pte_is_present, PAGE_TABLE_ENTRIES};
 use crate::memory::paging::error::{PagingError, PagingResult};
 use crate::memory::unified::phys_to_virt_checked;
 
@@ -36,7 +37,7 @@ pub(super) fn seed_kernel_half_pdpts(kernel_cr3: PhysAddr) -> PagingResult<()> {
     let pml4_va = phys_to_virt_checked(kernel_cr3).ok_or(PagingError::NoActivePageTable)?;
     let pml4 = unsafe { &mut *(pml4_va.as_u64() as *mut [u64; PAGE_TABLE_ENTRIES]) };
     for i in PML4_KERNEL_HALF_START..PAGE_TABLE_ENTRIES {
-        if pml4[i] & PTE_PRESENT != 0 {
+        if pte_is_present(pml4[i]) {
             continue;
         }
         let pdpt_frame = frame_alloc::allocate_frame().ok_or(PagingError::FrameAllocationFailed)?;
@@ -45,7 +46,7 @@ pub(super) fn seed_kernel_half_pdpts(kernel_cr3: PhysAddr) -> PagingResult<()> {
         for entry in pdpt.iter_mut() {
             *entry = 0;
         }
-        pml4[i] = pdpt_frame.as_u64() | PTE_KERNEL_TABLE;
+        pml4[i] = descriptor::table(pdpt_frame.as_u64(), false);
     }
     Ok(())
 }

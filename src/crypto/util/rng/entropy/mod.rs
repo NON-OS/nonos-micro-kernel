@@ -25,4 +25,4 @@ pub use collect::{
     mix_entropy_into_seed, verify_entropy_sources,
 };
 pub use error::EntropyError;
-pub use hardware::{has_rdrand, has_rdseed, try_rdrand64, try_rdseed64};
+pub use hardware::{cpu_entropy64, cpu_random64, has_cpu_entropy, has_cpu_random};

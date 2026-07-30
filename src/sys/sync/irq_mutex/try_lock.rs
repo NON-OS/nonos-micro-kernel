@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::arch::x86_64::idt::{are_enabled, disable, enable};
+use crate::arch::cpu::{disable_interrupts, enable_interrupts, interrupts_enabled};
 use core::mem::ManuallyDrop;
 
 use super::guard::IrqMutexGuard;
@@ -22,9 +22,9 @@ use super::state::IrqMutex;
 
 impl<T> IrqMutex<T> {
     pub fn try_lock(&self) -> Option<IrqMutexGuard<'_, T>> {
-        let were_enabled = are_enabled();
+        let were_enabled = interrupts_enabled();
         if were_enabled {
-            disable();
+            disable_interrupts();
         }
         match self.inner.try_lock() {
             Some(guard) => {
@@ -32,7 +32,7 @@ impl<T> IrqMutex<T> {
             }
             None => {
                 if were_enabled {
-                    enable();
+                    enable_interrupts();
                 }
                 None
             }

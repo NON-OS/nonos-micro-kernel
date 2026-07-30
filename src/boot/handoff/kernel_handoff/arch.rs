@@ -22,5 +22,13 @@ use super::super::types::handoff::BootHandoffV1;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ArchSpecificHandoff<'a> {
-    X86_64 { v1: &'a BootHandoffV1 },
+    X86_64 {
+        v1: &'a BootHandoffV1,
+    },
+    /// What the device tree told the aarch64 boot path. Only built on that
+    /// arch, because `BootInfo` only exists there.
+    #[cfg(target_arch = "aarch64")]
+    Aarch64 {
+        info: &'a crate::arch::aarch64::boot::BootInfo,
+    },
 }

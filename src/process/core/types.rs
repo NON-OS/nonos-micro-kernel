@@ -17,7 +17,6 @@
 use crate::memory::addr::VirtAddr;
 use alloc::vec::Vec;
 use core::sync::atomic::AtomicU64;
-use x86_64::structures::paging::PageTableFlags;
 
 pub type Pid = u32;
 pub type Tid = u32;
@@ -46,7 +45,7 @@ pub enum Priority {
 pub struct Vma {
     pub start: VirtAddr,
     pub end: VirtAddr,
-    pub flags: PageTableFlags,
+    pub flags: u64,
 }
 
 #[derive(Debug)]
