@@ -260,6 +260,8 @@ import Nonos
 -- fact that a served page is never executable.
 #print axioms Nonos.DemandPaging.kernel_half_never_mapped
 #print axioms Nonos.DemandPaging.refused_forever
+#print axioms Nonos.DemandPaging.saturated_refused
+#print axioms Nonos.DemandPaging.saturated_admission_bounded
 #print axioms Nonos.DemandPaging.demand_not_wx
 
 -- ELF load protection: no writable-and-executable segment is admitted, and the
