@@ -22,6 +22,7 @@ pub mod guard;
 pub mod primitives;
 pub mod state;
 pub mod types;
+mod user_range;
 
 pub use api::{
     get_level, init, on_free, on_realloc, sanitization_stats, sanitize_process_memory, set_level,
