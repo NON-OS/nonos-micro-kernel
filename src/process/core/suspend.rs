@@ -49,48 +49,14 @@ pub fn suspend_process(pid: Pid) -> Result<(), &'static str> {
         let mut saved: crate::sched::Context = unsafe { core::mem::zeroed() };
         unsafe { crate::sched::Context::save_to(&mut saved as *mut crate::sched::Context) };
         SuspendedContext {
-            rax: saved.rax,
-            rbx: saved.rbx,
-            rcx: saved.rcx,
-            rdx: saved.rdx,
-            rsi: saved.rsi,
-            rdi: saved.rdi,
-            rbp: saved.rbp,
-            rsp: saved.rsp,
-            r8: saved.r8,
-            r9: saved.r9,
-            r10: saved.r10,
-            r11: saved.r11,
-            r12: saved.r12,
-            r13: saved.r13,
-            r14: saved.r14,
-            r15: saved.r15,
-            rip: saved.rip,
-            rflags: saved.rflags,
+            context: saved,
             suspended_at: crate::time::current_ticks(),
             previous_state: current_state,
         }
     } else {
         let saved_ctx = get_saved_interrupt_context(pid);
         SuspendedContext {
-            rax: saved_ctx.rax,
-            rbx: saved_ctx.rbx,
-            rcx: saved_ctx.rcx,
-            rdx: saved_ctx.rdx,
-            rsi: saved_ctx.rsi,
-            rdi: saved_ctx.rdi,
-            rbp: saved_ctx.rbp,
-            rsp: saved_ctx.rsp,
-            r8: saved_ctx.r8,
-            r9: saved_ctx.r9,
-            r10: saved_ctx.r10,
-            r11: saved_ctx.r11,
-            r12: saved_ctx.r12,
-            r13: saved_ctx.r13,
-            r14: saved_ctx.r14,
-            r15: saved_ctx.r15,
-            rip: saved_ctx.rip,
-            rflags: saved_ctx.rflags,
+            context: saved_ctx,
             suspended_at: crate::time::current_ticks(),
             previous_state: current_state,
         }
@@ -119,26 +85,10 @@ fn get_saved_interrupt_context(pid: Pid) -> crate::sched::Context {
         return ctx.clone();
     }
 
-    crate::sched::Context {
-        rax: 0,
-        rbx: 0,
-        rcx: 0,
-        rdx: 0,
-        rsi: 0,
-        rdi: 0,
-        rbp: 0,
-        rsp: get_process_stack_pointer(pid).unwrap_or(0x7FFF_FFFF_FFF8),
-        r8: 0,
-        r9: 0,
-        r10: 0,
-        r11: 0,
-        r12: 0,
-        r13: 0,
-        r14: 0,
-        r15: 0,
-        rip: get_process_instruction_pointer(pid).unwrap_or(0x0000_4000_0000),
-        rflags: 0x202,
-    }
+    crate::sched::Context::for_resume(
+        get_process_stack_pointer(pid).unwrap_or(0x7FFF_FFFF_FFF8),
+        get_process_instruction_pointer(pid).unwrap_or(0x0000_4000_0000),
+    )
 }
 
 pub fn save_interrupt_context(pid: Pid, ctx: crate::sched::Context) {
@@ -184,26 +134,9 @@ pub fn resume_process(pid: Pid) -> Result<(), &'static str> {
 
     let context = SUSPENDED_CONTEXTS.write().remove(&pid).ok_or("No saved context for process")?;
 
-    let restore_ctx = crate::sched::Context {
-        rax: context.rax,
-        rbx: context.rbx,
-        rcx: context.rcx,
-        rdx: context.rdx,
-        rsi: context.rsi,
-        rdi: context.rdi,
-        rbp: context.rbp,
-        rsp: context.rsp,
-        r8: context.r8,
-        r9: context.r9,
-        r10: context.r10,
-        r11: context.r11,
-        r12: context.r12,
-        r13: context.r13,
-        r14: context.r14,
-        r15: context.r15,
-        rip: context.rip,
-        rflags: context.rflags,
-    };
+    // The registers are the saved context itself now, so resuming is handing it
+    // back rather than copying it across.
+    let restore_ctx = context.context;
 
     save_interrupt_context(pid, restore_ctx);
     *pcb.state.lock() = ProcessState::Ready;
