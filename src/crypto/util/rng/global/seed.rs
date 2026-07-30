@@ -49,10 +49,7 @@ pub fn seed_rng() -> RngResult<()> {
         }
     }
 
-    let stack_addr: u64;
-    unsafe {
-        core::arch::asm!("mov {}, rsp", out(reg) stack_addr, options(nomem, nostack));
-    }
+    let stack_addr = crate::arch::stack_pointer();
     let stack_bytes = stack_addr.to_le_bytes();
     for i in 0..8 {
         combined[i] ^= stack_bytes[i];

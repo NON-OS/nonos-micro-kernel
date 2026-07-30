@@ -74,10 +74,7 @@ pub fn collect_seed_entropy_secure() -> Result<[u8; 32], EntropyError> {
     if hw_bytes < 32 {
         return Err(EntropyError::InsufficientEntropy);
     }
-    let stack_addr: u64;
-    unsafe {
-        core::arch::asm!("mov {}, rsp", out(reg) stack_addr, options(nomem, nostack));
-    }
+    let stack_addr = crate::arch::stack_pointer();
     let counter = ENTROPY_COUNTER.fetch_add(0xA7B3_C5D9_E1F4_2680, Ordering::SeqCst);
     let (sb, cb) = (stack_addr.to_le_bytes(), counter.to_le_bytes());
     for i in 0..8 {
@@ -102,10 +99,7 @@ pub fn collect_seed_entropy() -> [u8; 32] {
         let entropy = get_entropy64();
         seed[i * 8..(i + 1) * 8].copy_from_slice(&entropy.to_le_bytes());
     }
-    let stack_addr: u64;
-    unsafe {
-        core::arch::asm!("mov {}, rsp", out(reg) stack_addr, options(nomem, nostack));
-    }
+    let stack_addr = crate::arch::stack_pointer();
     let sb = stack_addr.to_le_bytes();
     for i in 0..8 {
         seed[i] ^= sb[i];
