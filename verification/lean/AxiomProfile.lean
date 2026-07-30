@@ -368,3 +368,8 @@ import Nonos
 #print axioms Nonos.ZeroState.quiescing_is_not_wiping
 #print axioms Nonos.ZeroState.secrets_imply_still_here
 #print axioms Nonos.ZeroState.off_is_terminal
+#print axioms Nonos.StationAddress.never_group
+#print axioms Nonos.StationAddress.always_local
+#print axioms Nonos.StationAddress.never_a_factory_address
+#print axioms Nonos.StationAddress.never_broadcast
+#print axioms Nonos.StationAddress.never_zero
