@@ -268,6 +268,13 @@ import Nonos
 #print axioms Nonos.UserCopy.accepted_within_user
 #print axioms Nonos.UserCopy.accepted_nonzero_addr
 
+-- The page walk behind that policy: every table above a returned leaf granted
+-- user, and a leaf a transfer accepts is user and, for writes, writable.
+#print axioms Nonos.UserWalk.tables_above_grant_user
+#print axioms Nonos.UserWalk.read_path_is_user_accessible
+#print axioms Nonos.UserWalk.write_path_is_user_writable
+#print axioms Nonos.UserWalk.write_implies_read
+
 -- Demand paging: the fault router and the per-process page budget, and the
 -- fact that a served page is never executable.
 #print axioms Nonos.DemandPaging.kernel_half_never_mapped

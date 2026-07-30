@@ -145,6 +145,7 @@ import Nonos.Tlb
 import Nonos.TokenBucket
 import Nonos.UsbHid
 import Nonos.UserCopy
+import Nonos.UserWalk
 import Nonos.Vfs
 import Nonos.Vma
 import Nonos.WalletEip1559
