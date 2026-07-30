@@ -28,6 +28,8 @@ use crate::refcount::dec::dec_checked;
 use crate::region::overlap::{contains, overlaps};
 use crate::ring::ring_math::wrap;
 use crate::scheduler::policy_types::{SchedAttr, SCHED_DEADLINE, SCHED_IDLE};
+use crate::spawn::caps_bits::{grant_within_manifest, install_caps, within_ceiling};
+use crate::spawn::lifetime::delegation_expiry;
 use crate::spec;
 use crate::timer::interval::elapsed_reached;
 
@@ -240,4 +242,50 @@ fn the_user_resume_sets_only_interrupt_enable() {
     assert_eq!(sanitize_user(saved), sanitize(saved) | (1 << 9));
     assert_eq!(sanitize_user(saved) & (1 << 12), 0);
     assert_eq!(sanitize_user(saved) & (1 << 13), 0);
+}
+
+// A capsule never installs authority its publisher's certificate does not
+// permit, for every manifest, ceiling and grant.
+#[kani::proof]
+fn a_capsule_never_installs_above_its_publisher_ceiling() {
+    let required: u64 = kani::any();
+    let optional: u64 = kani::any();
+    let ceiling: u64 = kani::any();
+    let granted: u64 = kani::any();
+    kani::assume(within_ceiling(required, optional, ceiling));
+    kani::assume(grant_within_manifest(required, optional, granted));
+    assert_eq!(install_caps(required, optional, granted) & !ceiling, 0);
+}
+
+// The installed word never exceeds what the manifest declares, for every
+// input: the grant can only narrow the optional set.
+#[kani::proof]
+fn installed_caps_stay_within_the_manifest() {
+    let required: u64 = kani::any();
+    let optional: u64 = kani::any();
+    let granted: u64 = kani::any();
+    let installed = install_caps(required, optional, granted);
+    assert_eq!(installed & !(required | optional), 0);
+    assert_eq!(installed & required, required);
+}
+
+// A delegation never outlives its parent and never outlasts the request, for
+// every pair.
+#[kani::proof]
+fn a_delegation_never_outlives_its_parent() {
+    let requested: Option<u64> = kani::any();
+    let parent: Option<u64> = kani::any();
+    let out = delegation_expiry(requested, parent);
+    if let Some(p) = parent {
+        match out {
+            Some(e) => assert!(e <= p),
+            None => panic!("a bounded parent must bound the child"),
+        }
+    }
+    if let Some(r) = requested {
+        match out {
+            Some(e) => assert!(e <= r),
+            None => panic!("a requested expiry must not be dropped"),
+        }
+    }
 }

@@ -111,6 +111,12 @@ import Nonos
 #print axioms Nonos.AttestBinding.admitted_accepted_after_trace
 #print axioms Nonos.AttestBinding.no_cross_policy_replay
 #print axioms Nonos.Spawn.only_attested_capsules_run
+#print axioms Nonos.SpawnCaps.installed_within_ceiling
+#print axioms Nonos.SpawnCaps.installed_within_manifest
+#print axioms Nonos.SpawnCaps.authority_only_narrows
+#print axioms Nonos.Delegation.never_outlives_parent
+#print axioms Nonos.Delegation.never_outlasts_request
+#print axioms Nonos.Delegation.live_child_implies_live_parent
 #print axioms Nonos.Stark.AssociationSet.an_excluded_deposit_cannot_pass
 #print axioms Nonos.Stark.AssociationSet.the_registry_only_grows
 #print axioms Nonos.Stark.Attest.a_proof_for_one_capsule_is_rejected_for_another

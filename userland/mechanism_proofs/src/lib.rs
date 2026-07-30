@@ -31,6 +31,7 @@ pub mod refcount;
 pub mod region;
 pub mod ring;
 pub mod scheduler;
+pub mod spawn;
 pub mod spec;
 pub mod timer;
 

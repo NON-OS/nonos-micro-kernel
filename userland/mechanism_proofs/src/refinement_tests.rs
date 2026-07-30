@@ -32,6 +32,8 @@ use crate::ring::ring_math::{is_full, wrap};
 use crate::scheduler::policy_types::{
     SchedAttr, SCHED_BATCH, SCHED_DEADLINE, SCHED_FIFO, SCHED_IDLE, SCHED_NORMAL, SCHED_RR,
 };
+use crate::spawn::caps_bits::{grant_within_manifest, install_caps, within_ceiling};
+use crate::spawn::lifetime::delegation_expiry;
 use crate::spec;
 use crate::timer::interval::elapsed_reached;
 
@@ -369,4 +371,89 @@ fn only_the_user_resume_enables_interrupts() {
     assert_eq!(sanitize(0) & (1 << 9), 0);
     assert_eq!(sanitize(1 << 9) & (1 << 9), 1 << 9);
     assert_eq!(sanitize_user(0) & (1 << 9), 1 << 9);
+}
+
+// Spawn capability ceiling: verification/lean Nonos/SpawnCaps.lean.
+
+#[test]
+fn the_spawn_gate_agrees_with_the_spec() {
+    let vals: [u64; 9] = [0, 1, 2, 3, 0xF0, 0xFF, 0x8000_0000_0000_0000, u64::MAX, 0x0F0F_0F0F];
+    for &r in &vals {
+        for &o in &vals {
+            for &c in &vals {
+                assert_eq!(within_ceiling(r, o, c), spec::spawn_within_ceiling(r, o, c));
+                assert_eq!(
+                    grant_within_manifest(r, o, c),
+                    spec::spawn_grant_within_manifest(r, o, c)
+                );
+                assert_eq!(install_caps(r, o, c), spec::spawn_install_caps(r, o, c));
+            }
+        }
+    }
+}
+
+#[test]
+fn a_capsule_never_installs_above_its_publisher_ceiling() {
+    // The composition that matters: the ceiling comes from the signed NØNOS ID
+    // certificate, and install_caps is what reaches the PCB.
+    let vals: [u64; 8] = [0, 1, 3, 0xF0, 0xFF, 0xDEAD_BEEF, u64::MAX, 0x0F0F_0F0F];
+    for &r in &vals {
+        for &o in &vals {
+            for &c in &vals {
+                if !within_ceiling(r, o, c) {
+                    continue;
+                }
+                for &g in &vals {
+                    if !grant_within_manifest(r, o, g) {
+                        continue;
+                    }
+                    let installed = install_caps(r, o, g);
+                    assert_eq!(installed & !c, 0, "installed authority escaped the ceiling");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn required_capabilities_survive_an_empty_grant() {
+    // Required caps are deliberately not attenuated by the grant, so the
+    // ceiling is the only bound. Pin that rather than let it drift.
+    for &r in &[0u64, 1, 0xFF, u64::MAX] {
+        for &o in &[0u64, 1, 0xFF, u64::MAX] {
+            assert_eq!(install_caps(r, o, 0), r);
+            assert_eq!(install_caps(r, o, u64::MAX), r | o);
+            assert_eq!(install_caps(r, o, 0) & !r, 0);
+        }
+    }
+}
+
+// Delegation lifetime: verification/lean Nonos/Delegation.lean.
+
+#[test]
+fn a_delegation_never_outlives_its_parent() {
+    let vals = [None, Some(0u64), Some(1), Some(500), Some(u64::MAX)];
+    for &requested in &vals {
+        for &parent in &vals {
+            let out = delegation_expiry(requested, parent);
+            assert_eq!(out, spec::delegation_expiry(requested, parent));
+            if let Some(p) = parent {
+                let e = out.expect("a bounded parent always bounds the child");
+                assert!(e <= p, "child outlived its parent");
+            }
+            if let Some(r) = requested {
+                let e = out.expect("a requested expiry is never dropped");
+                assert!(e <= r, "child outlasted what was asked for");
+            }
+        }
+    }
+}
+
+#[test]
+fn an_unbounded_parent_leaves_the_request_alone() {
+    assert_eq!(delegation_expiry(None, None), None);
+    assert_eq!(delegation_expiry(Some(7), None), Some(7));
+    assert_eq!(delegation_expiry(None, Some(7)), Some(7));
+    assert_eq!(delegation_expiry(Some(9), Some(7)), Some(7));
+    assert_eq!(delegation_expiry(Some(3), Some(7)), Some(3));
 }

@@ -34,6 +34,7 @@ import Nonos.CryptoKeccakPad
 import Nonos.CryptoLowS
 import Nonos.CryptoRfc6979
 import Nonos.CryptoSecretValid
+import Nonos.Delegation
 import Nonos.DemandPaging
 import Nonos.Dhcp
 import Nonos.Dispatch
@@ -91,6 +92,7 @@ import Nonos.Seqlock
 import Nonos.ServiceRegistry
 import Nonos.Signal
 import Nonos.Spawn
+import Nonos.SpawnCaps
 import Nonos.SigningKey
 import Nonos.KeyLifecycle
 import Nonos.KeyringCustody

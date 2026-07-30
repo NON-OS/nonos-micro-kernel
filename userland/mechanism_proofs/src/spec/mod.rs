@@ -127,3 +127,41 @@ pub fn sanitize_rflags(rflags: u64) -> u64 {
         | (1 << 20);
     (rflags & !privileged) | (1 << 1)
 }
+
+// Spawn capability ceiling: verification/lean Nonos/SpawnCaps.lean. Restated
+// as set containment over the bits, independent of the kernel's expressions.
+pub fn spawn_within_ceiling(required: u64, optional: u64, ceiling: u64) -> bool {
+    (0..64).all(|b| {
+        let asked = (required >> b) & 1 == 1 || (optional >> b) & 1 == 1;
+        !asked || (ceiling >> b) & 1 == 1
+    })
+}
+
+pub fn spawn_grant_within_manifest(required: u64, optional: u64, granted: u64) -> bool {
+    (0..64).all(|b| {
+        let given = (granted >> b) & 1 == 1;
+        !given || (required >> b) & 1 == 1 || (optional >> b) & 1 == 1
+    })
+}
+
+pub fn spawn_install_caps(required: u64, optional: u64, granted: u64) -> u64 {
+    let mut out = 0u64;
+    for b in 0..64 {
+        let keep =
+            (required >> b) & 1 == 1 || ((optional >> b) & 1 == 1 && (granted >> b) & 1 == 1);
+        if keep {
+            out |= 1 << b;
+        }
+    }
+    out
+}
+
+// Delegation expiry: verification/lean Nonos/Delegation.lean. A delegation
+// never outlives its parent, and never outlasts what was asked for.
+pub fn delegation_expiry(requested: Option<u64>, parent: Option<u64>) -> Option<u64> {
+    match (requested, parent) {
+        (Some(r), Some(p)) => Some(if r < p { r } else { p }),
+        (None, Some(p)) => Some(p),
+        (r, None) => r,
+    }
+}
