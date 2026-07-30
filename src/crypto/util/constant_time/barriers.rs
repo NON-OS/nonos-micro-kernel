@@ -16,27 +16,44 @@
 
 use core::ptr;
 
+/// Stop the compiler reordering memory operations across this point. Costs no
+/// instruction; it constrains the optimizer only, which is what a constant-time
+/// sequence needs to keep its shape after inlining.
 #[inline(always)]
 pub fn compiler_fence() {
-    // SAFETY: Empty inline assembly with memory clobber acts as a compiler barrier.
-    unsafe {
-        core::arch::asm!("", options(nostack, preserves_flags));
-    }
+    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
 }
 
+/// Stop the machine reordering memory operations across this point. Emits the
+/// part's full barrier, `mfence` on x86_64 and `dmb ish` on aarch64, so a
+/// masked write cannot be observed out of order with the branch that chose it.
 #[inline(always)]
 pub fn memory_fence() {
-    // SAFETY: MFENCE is a serializing memory instruction on x86-64.
-    unsafe {
-        core::arch::asm!("mfence", options(nostack, preserves_flags));
-    }
+    core::sync::atomic::fence(core::sync::atomic::Ordering::SeqCst);
 }
 
+/// Stop speculation running ahead of this point.
+///
+/// This is not the same as a memory fence and cannot be written as one: it bounds
+/// what the part is allowed to execute speculatively, not what it may reorder
+/// architecturally. Each architecture spells that differently, so each is named
+/// here rather than approximated by an ordering primitive that would compile to
+/// something weaker.
 #[inline(always)]
 pub fn serialize_execution() {
-    // SAFETY: LFENCE ensures all prior load instructions complete before subsequent instructions.
+    #[cfg(target_arch = "x86_64")]
+    // SAFETY: LFENCE retires every prior load before any later instruction
+    // issues, which on x86_64 also bounds speculation past this point.
     unsafe {
         core::arch::asm!("lfence", options(nostack, preserves_flags));
+    }
+    #[cfg(target_arch = "aarch64")]
+    // SAFETY: ISB flushes the pipeline so nothing fetched after this point was
+    // fetched under an earlier prediction. Chosen over `sb`, which is the
+    // dedicated speculation barrier but only exists from ARMv8.5, while ISB is
+    // baseline and carries the guarantee this call is here for.
+    unsafe {
+        core::arch::asm!("isb", options(nostack, preserves_flags));
     }
 }
 
