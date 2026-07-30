@@ -25,29 +25,18 @@ static CURRENT_ADDRESS_SPACE: AtomicU64 = AtomicU64::new(0);
 #[inline(always)]
 pub fn switch_address_space(space: &AddressSpace) {
     let new_cr3 = space.cr3_value();
-    let current_cr3: u64;
-    // SAFETY: Reading CR3 is always safe - it just returns the current page table
-    // base address.
-    unsafe {
-        core::arch::asm!("mov {}, cr3", out(reg) current_cr3, options(nomem, nostack));
-    }
-    if current_cr3 != new_cr3 {
-        // SAFETY: Writing CR3 is safe when new_cr3 contains a valid page table
-        // physical address (guaranteed by AddressSpace::cr3_value()).
-        unsafe {
-            core::arch::asm!("mov cr3, {}", in(reg) new_cr3, options(nostack));
-        }
+    // Compare table bases, not the packed register value: the boundary hands
+    // back the base with the address-space id masked off, and the base is what
+    // identifies the space. Skipping the write when it already matches avoids
+    // the flush that installing a root costs.
+    if crate::arch::paging::read_root() != new_cr3 & !0xFFF {
+        crate::arch::paging::write_root(new_cr3, (new_cr3 & 0xFFF) as u16);
         CURRENT_ADDRESS_SPACE.store(space.pml4_phys.as_u64(), Ordering::SeqCst);
     }
 }
 
 pub fn current_address_space_phys() -> PhysAddr {
-    let cr3: u64;
-    // SAFETY: Reading CR3 is always safe.
-    unsafe {
-        core::arch::asm!("mov {}, cr3", out(reg) cr3, options(nomem, nostack));
-    }
-    PhysAddr::new(cr3 & pte_flags::ADDR_MASK)
+    PhysAddr::new(crate::arch::paging::read_root() & pte_flags::ADDR_MASK)
 }
 
 pub fn init() -> Result<(), &'static str> {

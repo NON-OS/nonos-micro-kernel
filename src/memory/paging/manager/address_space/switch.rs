@@ -24,14 +24,10 @@ impl PagingManager {
         // SAFETY: eK@nonos.systems — `address_space.cr3_value` was
         // produced by this manager's `create_address_space` and stays
         // valid until `cleanup_address_space(asid)` removes it; the
-        // mov to CR3 is the canonical address-space switch.
-        unsafe {
-            core::arch::asm!(
-                "mov cr3, {}",
-                in(reg) address_space.cr3_value.as_u64(),
-                options(nostack, preserves_flags)
-            );
-        }
+        // The stored value packs the table base with its address-space id, the
+        // same way the register does, so hand both halves to the boundary.
+        let packed = address_space.cr3_value.as_u64();
+        crate::arch::paging::write_root(packed, (packed & 0xFFF) as u16);
         self.active_page_table = Some(address_space.cr3_value);
         self.active_asid = Some(asid);
         // Record on the calling CPU which asid is now executing.

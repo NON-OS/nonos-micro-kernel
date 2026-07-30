@@ -21,12 +21,16 @@
 //! manager above stays free of `asm!` and of any one CPU's register names.
 
 pub mod descriptor;
+mod enable_tagged;
 mod root;
+mod tagged_invalidate;
 mod tagged_tlb;
 mod tlb;
 mod write_protect;
 
+pub use enable_tagged::enable_tagged_invalidation;
 pub use root::{read_root, write_root};
+pub use tagged_invalidate::invalidate_tagged;
 pub use tagged_tlb::supports_tagged_invalidation;
 pub use tlb::{invalidate_all, invalidate_page};
 pub use write_protect::{disable_write_protection, enable_write_protection};
