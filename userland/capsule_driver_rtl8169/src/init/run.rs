@@ -23,7 +23,7 @@ use super::{mac, reset, rx_setup, tx_setup};
 
 pub fn bring_up(driver: &mut Driver) -> Result<(), &'static str> {
     reset::run(&driver.regs)?;
-    driver.mac = mac::read(&driver.regs)?;
+    driver.mac = mac::program(&driver.regs)?;
     rx_setup::program(&driver.regs, &driver.rx);
     tx_setup::program(&driver.regs, &driver.tx);
     unsafe {

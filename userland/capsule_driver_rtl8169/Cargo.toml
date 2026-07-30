@@ -16,6 +16,7 @@ path = "src/main.rs"
 
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_mac = { path = "../nonos_mac" }
 
 [profile.release]
 panic = "abort"
