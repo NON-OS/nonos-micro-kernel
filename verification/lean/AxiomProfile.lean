@@ -364,6 +364,8 @@ import Nonos
 #print axioms Nonos.FramebufferSwap.swap_involutive
 #print axioms Nonos.FramebufferSwap.present_rgb_converts
 #print axioms Nonos.ZeroState.off_was_wiped
+#print axioms Nonos.ZeroState.wipe_covers_every_region
+#print axioms Nonos.ZeroState.wiped_residue_empty
 #print axioms Nonos.ZeroState.off_holds_nothing
 #print axioms Nonos.ZeroState.into_off_only_from_wiped
 #print axioms Nonos.ZeroState.no_shortcut_to_off

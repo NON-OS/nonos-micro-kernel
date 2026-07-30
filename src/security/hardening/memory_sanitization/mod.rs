@@ -19,6 +19,7 @@ pub mod canary;
 pub mod containers;
 pub mod erase;
 pub mod guard;
+mod kernel_stacks;
 pub mod primitives;
 pub mod state;
 pub mod types;

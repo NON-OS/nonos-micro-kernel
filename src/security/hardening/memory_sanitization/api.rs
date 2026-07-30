@@ -16,6 +16,7 @@
 
 use super::canary::init_stack_canary;
 use super::erase::{dod_5220_erase, sanitize};
+use super::kernel_stacks::wipe_kernel_stacks;
 use super::state::{BYTES_SANITIZED, INITIALIZED, SANITIZATION_CALLS, SANITIZATION_LEVEL};
 use super::types::{SanitizationLevel, SanitizationStats};
 use super::user_range::wipe_user_range;
@@ -64,6 +65,17 @@ pub fn zerostate_shutdown_wipe() {
     for process in crate::process::enumerate_all_processes() {
         sanitize_process_memory(process.pid as u64);
     }
+
+    // Kernel stacks hold what the kernel did for each process: bytes copied
+    // in from user space, key material a syscall touched. They come from the
+    // page allocator, so neither the heap erase nor the process wipe reaches
+    // them.
+    wipe_kernel_stacks();
+
+    // Filesystem caches and the cryptofs state. Most of this is heap resident
+    // and would go with the erase below, but clearing it structurally also
+    // drops what the caches hold outside the heap.
+    crate::fs::clear_caches();
 
     // The key vault walks a map that lives in the heap, so it has to run while
     // the heap is still readable.

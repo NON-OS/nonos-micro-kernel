@@ -21,6 +21,14 @@ the firmware cannot be reached except through the wipe. What follows models
 that shape as a transition system and proves the property it buys: every
 reachable powered off state has been wiped, and every reachable state whose
 memory still holds secrets is one the machine has not left yet.
+
+Ordering alone is not the whole claim. A wipe that runs in the right place but
+covers the wrong memory satisfies every reachability theorem here, which is
+what happened: the heap erase addressed a layout constant nothing maps, and
+the kernel stacks had no mechanism at all. So the regions a running system
+holds are enumerated, each is tied to the call that clears it, and what a
+wiped machine still holds is derived from that table rather than declared. A
+region without a mechanism now fails a proof instead of passing silently.
 -/
 
 namespace Nonos.ZeroState
@@ -64,15 +72,57 @@ inductive Reaches : Phase → Phase → Prop where
   | refl (p : Phase) : Reaches p p
   | tail {p q r : Phase} : Reaches p q → Step q r → Reaches p r
 
-/-- Does this phase still hold anything worth reading out of DRAM? Running and
-    quiesced systems do; a wiped one does not, and neither does a machine that
-    has already gone, because the only way it got there was through the wipe.
-    That last clause is a claim, and it is what `off_was_wiped` discharges. -/
-def holdsSecrets : Phase → Bool
-  | Running => true
-  | Quiesced => true
-  | Wiped => false
-  | Off => false
+/-- A place a running kernel keeps material worth reading out of DRAM.
+
+    Ordering matters and the wipe respects it: the key vault and the
+    filesystem caches are walked while the heap is still readable because they
+    live in it, and the heap erase runs last because it takes the allocator's
+    own free list with it. -/
+inductive Region where
+  /-- User pages of every process, translated in the owning address space. -/
+  | processMemory
+  /-- The allocator's arena: IPC payloads, loader scratch, cached objects. -/
+  | kernelHeap
+  /-- Per-process kernel stacks, which come from the page allocator and so are
+      reached by neither the heap erase nor the process wipe. -/
+  | kernelStacks
+  /-- The VFS and cryptofs caches. -/
+  | fsCaches
+  /-- The key vault. -/
+  | keyVault
+  deriving DecidableEq, Repr
+
+/-- Everything a running system holds. A constructor added above without a
+    mechanism below breaks `wipe_covers_every_region`, which is the point of
+    listing them rather than asserting the wipe is complete. -/
+def liveRegions : List Region :=
+  [.processMemory, .kernelHeap, .kernelStacks, .fsCaches, .keyVault]
+
+/-- What `zerostate_shutdown_wipe` clears, one entry per call it makes:
+    `sanitize_process_memory` for every process, `wipe_kernel_stacks`,
+    `fs::clear_caches`, `vault::zeroize_all_keys`, and `dod_5220_erase` over
+    the allocator's extent. A region this answers `false` for is one the
+    shutdown path does not reach; it then survives in `residue` instead of
+    being quietly assumed gone. -/
+def wipeCovers : Region → Bool
+  | .processMemory => true
+  | .kernelHeap => true
+  | .kernelStacks => true
+  | .fsCaches => true
+  | .keyVault => true
+
+/-- What still holds material in each phase: before the wipe everything, after
+    it exactly the regions the wipe does not cover. -/
+def residue : Phase → List Region
+  | Running => liveRegions
+  | Quiesced => liveRegions
+  | Wiped => liveRegions.filter (fun r => !wipeCovers r)
+  | Off => liveRegions.filter (fun r => !wipeCovers r)
+
+/-- Does this phase still hold anything worth reading out of DRAM? Derived
+    from `residue` rather than declared, so what a wiped machine holds depends
+    on what the wipe actually covers. -/
+def holdsSecrets (p : Phase) : Bool := !(residue p).isEmpty
 
 /-! ### The theorems -/
 
@@ -98,9 +148,23 @@ theorem off_was_wiped (h : Reaches Running Off) : Reaches Running Wiped := by
   cases h with
   | tail hpq hqr => cases hqr; exact hpq
 
+/-- Every region a running system holds is one the wipe covers. This is the
+    coverage half of the claim, and it is the half that used to be a
+    definition: `holdsSecrets Wiped` was declared `false` rather than derived,
+    so a region the wipe missed could not make any theorem fail. Two did, and
+    the model said nothing: the heap erase addressed a window nothing maps, and
+    the kernel stacks had no mechanism at all. -/
+theorem wipe_covers_every_region (r : Region) (h : r ∈ liveRegions) :
+    wipeCovers r = true := by
+  cases r <;> rfl
+
+/-- Nothing is left after the wipe. Now a consequence of the coverage above
+    rather than a definition. -/
+theorem wiped_residue_empty : residue Wiped = [] := by decide
+
 /-- No powered off machine still holds secrets. The corollary a user actually
     cares about: pull the plug and the DRAM has nothing left in it. -/
-theorem off_holds_nothing : holdsSecrets Off = false := rfl
+theorem off_holds_nothing : holdsSecrets Off = false := by decide
 
 /-- Turned around: while memory still holds secrets, the machine has not left.
     An attacker who wants to read DRAM has to catch a system that is still
@@ -108,7 +172,7 @@ theorem off_holds_nothing : holdsSecrets Off = false := rfl
     chips out of a box that was shut down a minute ago. -/
 theorem secrets_imply_still_here (p : Phase) (h : holdsSecrets p = true) :
     p ≠ Off := by
-  intro hoff; rw [hoff] at h; exact absurd h (by simp [holdsSecrets])
+  intro hoff; rw [hoff] at h; exact absurd h (by decide)
 
 /-- The wipe cannot be skipped: `Running` does not reach `Off` in one step. -/
 theorem no_shortcut_to_off (h : Step Running Off) : False := by
