@@ -620,6 +620,9 @@ nonos-mk-userland-clean:
 KERNEL_BUILD_FLAGS := --release --target x86_64-nonos.json \
 		-Zbuild-std=core,alloc -Zbuild-std-features=compiler-builtins-mem
 
+ARM_KERNEL_BUILD_FLAGS := --release --lib --target aarch64-nonos.json \
+		-Zbuild-std=core,alloc -Zbuild-std-features=compiler-builtins-mem
+
 KERNEL_SIGNING_KEY = $(if $(filter /%,$(SIGNING_KEY)),$(SIGNING_KEY),$(shell pwd)/$(SIGNING_KEY))
 
 # nonos_kernel_build: compile the kernel with one cargo feature set. Every
@@ -649,6 +652,27 @@ nonos-mk-check: nonos-mk-check-deps nonos-mk-ensure-signing-key
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) check $(KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-core
+
+# A note on aarch64-nonos.json, which cannot carry comments of its own: the cpu
+# stays "generic" so codegen targets ARMv8.0, and the feature bits only let the
+# assembler accept the mnemonics the kernel writes by hand: pointer authentication,
+# the speculation barriers, memory tagging (gcr_el1) and the v8.5 RNG (rndr). Named
+# one by one rather than as an architecture version, because +v8.5a would also let
+# LLVM emit v8.5 instructions into ordinary code and those fault on a Cortex-A72.
+# Every one of these is reached through a runtime ID register check, so a single
+# binary runs on a Pi and still uses tagging and PAC on an Apple M-series.
+#
+# Compile the kernel library for aarch64. The library only: the binary still pulls
+# in x86 trampolines that have no ARM counterpart yet, so linking an image is not
+# the gate here, keeping the shared code free of x86 is. PATH puts the rustup shims
+# first because a Homebrew rustc on /usr/local/bin shadows them and then rejects the
+# -Z flags with a confusing "only accepted on the nightly compiler".
+nonos-mk-arm: nonos-mk-ensure-signing-key
+	@echo "Building kernel library (aarch64, microkernel-core + nonos-arch-preview)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) PATH="$(HOME)/.cargo/bin:$$PATH" \
+		$(CARGO) build $(ARM_KERNEL_BUILD_FLAGS) \
+		--no-default-features --features microkernel-core$(_boot_comma)nonos-arch-preview
 
 nonos-mk-core: nonos-mk-check-deps nonos-mk-ensure-signing-key
 	$(call nonos_kernel_build,microkernel-core,microkernel-core)
