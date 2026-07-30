@@ -14,19 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The address this station transmits from, drawn per bring-up rather than read
-//! out of the EEPROM.
+//! The address this radio transmits under. Every AP logs the source of a probe
+//! request whether it associates or not, so the efuse address is not used.
 
 use nonos_mac::{apply, MAC_LEN};
 
-/// Draw a station address. Fails closed: the EEPROM fallback would transmit the
-/// identifier this avoids.
-pub fn draw() -> Result<[u8; MAC_LEN], &'static str> {
+/// Draw a station address. `None` is fatal: falling back to the efuse would
+/// transmit the identifier this avoids.
+pub fn draw() -> Option<[u8; MAC_LEN]> {
     let mut mac = [0u8; MAC_LEN];
     let rc = nonos_libc::crypto_random(mac.as_mut_ptr(), MAC_LEN);
     if rc < 0 || (rc as usize) != MAC_LEN {
-        return Err("no entropy for station address");
+        return None;
     }
     apply(&mut mac);
-    Ok(mac)
+    Some(mac)
 }

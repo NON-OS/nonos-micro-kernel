@@ -36,10 +36,22 @@ const LOCAL: u8 = 0x02;
 /// The caller supplies the randomness. This crate deliberately has no opinion
 /// about where entropy comes from, so it stays testable and so a driver cannot
 /// accidentally seed it from something predictable that lives in the crate.
+#[inline]
 pub fn from_random(bytes: [u8; MAC_LEN]) -> [u8; MAC_LEN] {
     let mut mac = bytes;
-    mac[0] = (mac[0] | LOCAL) & !GROUP;
+    apply(&mut mac);
     mac
+}
+
+/// The same rule, in place.
+///
+/// What the drivers call. Returning an array across a crate boundary emits a
+/// `memcpy`, and a freestanding capsule has no libc to resolve it against, so
+/// the link fails on a symbol that never appears in any source file. Writing
+/// through a reference sidesteps that entirely.
+#[inline]
+pub fn apply(mac: &mut [u8; MAC_LEN]) {
+    mac[0] = (mac[0] | LOCAL) & !GROUP;
 }
 
 /// Whether an address is one a station may legitimately transmit from: a
