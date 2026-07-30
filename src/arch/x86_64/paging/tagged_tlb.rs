@@ -19,14 +19,12 @@
 /// tag leaves no way to retire one address space, so the pair is reported as
 /// a single answer rather than two.
 pub fn supports_tagged_invalidation() -> bool {
-    // SAFETY: cpuid takes no memory operand and faults on nothing. Leaves 1
-    // and 7 are architectural on every CPU this kernel boots on, both of them
-    // below the maximum leaf any x86_64 part reports.
-    let (pcid, invpcid) = unsafe {
-        let base = core::arch::x86_64::__cpuid(1);
-        let ext = core::arch::x86_64::__cpuid_count(7, 0);
-        (base.ecx & (1 << 17) != 0, ext.ebx & (1 << 10) != 0)
-    };
+    // Leaves 1 and 7 are architectural on every CPU this kernel boots on, both
+    // below the maximum leaf any x86_64 part reports, so neither read needs a
+    // guard.
+    let base = core::arch::x86_64::__cpuid(1);
+    let ext = core::arch::x86_64::__cpuid_count(7, 0);
+    let (pcid, invpcid) = (base.ecx & (1 << 17) != 0, ext.ebx & (1 << 10) != 0);
 
     if !pcid {
         crate::log::log_warning!("[ADDR_SPACE] PCID not supported by CPU");

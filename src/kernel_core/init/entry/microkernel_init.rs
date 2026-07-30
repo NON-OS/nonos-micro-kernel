@@ -70,6 +70,12 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     crate::crypto::kernel_keys::init();
     crate::sys::bench::mark(b"process_runtime_ready");
 
+    // Run here rather than earlier: the crypto the suite times needs its keys
+    // up, and the counter needs the clock anchored. Nothing after this point
+    // depends on the results, so a slow run delays the boot and breaks nothing.
+    #[cfg(feature = "nonos-bench-micro")]
+    crate::sys::bench::suite::run_all();
+
     super::super::start_secondary::start_secondary_cpus();
 
     boot_log::ok("NONOS", "Core ready");

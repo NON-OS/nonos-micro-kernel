@@ -55,6 +55,11 @@ default = ["microkernel-core"]
 # the arch but is not a release-signed target. See the arch guard in lib.rs.
 nonos-arch-preview = []
 
+# Run the in-kernel microbenchmarks at boot and print them on the serial
+# channel. Off by default: they cost real time on a path a shipped image has
+# no reason to spend it on, and the benchmark lane turns them on.
+nonos-bench-micro = []
+
 # Bootstrap. `kernel` switches malloc/free to Rust `alloc`; `standalone`
 # brings in the panic handler and global allocator.
 kernel     = []

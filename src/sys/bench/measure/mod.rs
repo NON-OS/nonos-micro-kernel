@@ -14,14 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod mark;
-mod mark_named;
-mod mark_once;
-pub mod measure;
-#[cfg(feature = "nonos-bench-micro")]
-pub mod suite;
+//! Timing something small enough that milliseconds cannot see it.
+//!
+//! The boot markers next door report `uptime_ms`, which is the right unit for
+//! phases and useless for anything a kernel does thousands of times a second.
+//! An IPC round trip, a capability check, a signature verification: all of
+//! those are microseconds or less, so measuring them needs the cycle counter
+//! and needs the result reported as a spread rather than a single figure.
 
-pub use mark::mark;
-pub use mark_named::mark_named;
-pub use mark_once::mark_once;
-pub use measure::{measure, report, Sample};
+mod report;
+mod run;
+mod sample;
+
+pub use report::report;
+pub use run::measure;
+pub use sample::Sample;
