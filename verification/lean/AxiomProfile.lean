@@ -111,6 +111,9 @@ import Nonos
 #print axioms Nonos.AttestBinding.admitted_accepted_after_trace
 #print axioms Nonos.AttestBinding.no_cross_policy_replay
 #print axioms Nonos.Spawn.only_attested_capsules_run
+#print axioms Nonos.Spawn.enforcing_run_admits_only_verified
+#print axioms Nonos.Spawn.enforcing_refuses_a_missing_trailer
+#print axioms Nonos.Spawn.production_is_always_enforcing
 #print axioms Nonos.SpawnCaps.installed_within_ceiling
 #print axioms Nonos.SpawnCaps.installed_within_manifest
 #print axioms Nonos.SpawnCaps.authority_only_narrows
