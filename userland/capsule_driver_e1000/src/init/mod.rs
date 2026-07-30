@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod eeprom;
 mod mac_filter;
 mod reset;
 mod run;
 mod rx_setup;
+mod station_address;
 mod tx_setup;
 
 pub use run::bring_up;
