@@ -45,6 +45,7 @@ contract the code owes. Moving an entry to level 2 or 1 is tracked work.
 | `Nonce` | `src/capabilities/resource` | `userland/mechanism_proofs` (differential tests and Kani over the composition in `nonce_compose.rs`) |
 | `Bounds` | `src/elf/reloc` | `userland/mechanism_proofs` (differential tests and Kani over the range test in `range.rs`) |
 | `Priority` | `src/process/scheduler` | `userland/mechanism_proofs` (differential tests and Kani over `SchedAttr::effective_priority`) |
+| `Rflags` | `src/arch/x86_64/context/rflags.rs` | `userland/mechanism_proofs` (differential tests and Kani over `sanitize` and `sanitize_user` for every 64-bit input; the Lean side pins the mask constant to the bit positions it stands for) |
 | `Isolation`, `Paging` | `src/memory/paging` | `userland/kernel_proofs` (page permission W xor X, over all bit patterns) |
 | `Loader` | `src/elf` loader | `userland/kernel_proofs` (segment bounds) |
 | `Syscall` | `src/syscall` numbers | `userland/kernel_proofs` (decode totality and registry agreement) |

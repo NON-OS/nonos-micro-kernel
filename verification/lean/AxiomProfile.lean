@@ -185,6 +185,9 @@ import Nonos
 #print axioms Nonos.Interval.disjoint_not_mem
 #print axioms Nonos.Interval.mem_of_subset
 #print axioms Nonos.Refcount.dec_from_one_dead
+#print axioms Nonos.Rflags.mask_is_exactly_the_privileged_bits
+#print axioms Nonos.Rflags.iopl_is_masked
+#print axioms Nonos.Rflags.interrupt_flag_is_not_masked
 #print axioms Nonos.Timer.tickAll_monotone
 #print axioms Nonos.Endpoint.recv_was_sent
 #print axioms Nonos.Heap.double_free_safe

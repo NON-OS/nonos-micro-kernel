@@ -19,6 +19,7 @@
 
 use crate::bounds::range::in_range;
 use crate::buddy::constants::helpers::{buddy_address, order_to_size};
+use crate::context::rflags::{sanitize, sanitize_user};
 use crate::mmio::mmio_range::range_ok;
 use crate::nonce::compose::compose;
 use crate::phys::bitmap::index::{bit_mask, byte_of};
@@ -27,6 +28,7 @@ use crate::refcount::dec::dec_checked;
 use crate::region::overlap::{contains, overlaps};
 use crate::ring::ring_math::wrap;
 use crate::scheduler::policy_types::{SchedAttr, SCHED_DEADLINE, SCHED_IDLE};
+use crate::spec;
 use crate::timer::interval::elapsed_reached;
 
 // The buddy of the buddy of a block is the block itself: the address XOR is an
@@ -191,11 +193,51 @@ fn deadline_tops_and_idle_bottoms_the_priority_order() {
     let nice: i32 = kani::any();
     kani::assume((0..=99).contains(&rt));
     kani::assume((-20..=19).contains(&nice));
-    let other = SchedAttr { policy, rt_priority: rt, nice, ..Default::default() }.effective_priority();
+    let other =
+        SchedAttr { policy, rt_priority: rt, nice, ..Default::default() }.effective_priority();
     let deadline =
-        SchedAttr { policy: SCHED_DEADLINE, rt_priority: rt, nice, ..Default::default() }.effective_priority();
-    let idle =
-        SchedAttr { policy: SCHED_IDLE, rt_priority: rt, nice, ..Default::default() }.effective_priority();
+        SchedAttr { policy: SCHED_DEADLINE, rt_priority: rt, nice, ..Default::default() }
+            .effective_priority();
+    let idle = SchedAttr { policy: SCHED_IDLE, rt_priority: rt, nice, ..Default::default() }
+        .effective_priority();
     assert!(deadline >= other);
     assert!(idle <= other);
+}
+
+// A restored context never resumes with IOPL set, so a capsule cannot come
+// back holding the I/O ports, for every saved RFLAGS value.
+#[kani::proof]
+fn a_restored_context_never_carries_iopl() {
+    let saved: u64 = kani::any();
+    let out = sanitize(saved);
+    assert_eq!(out & (1 << 12), 0);
+    assert_eq!(out & (1 << 13), 0);
+}
+
+// Every privileged bit is cleared and the reserved bit is set, for every saved
+// RFLAGS value: the kernel's mask agrees with the bit positions it stands for.
+#[kani::proof]
+fn sanitized_rflags_agrees_with_spec() {
+    let saved: u64 = kani::any();
+    assert_eq!(sanitize(saved), spec::sanitize_rflags(saved));
+}
+
+// Sanitizing is idempotent and never sets a bit the caller did not save,
+// except the reserved one.
+#[kani::proof]
+fn sanitizing_rflags_only_clears() {
+    let saved: u64 = kani::any();
+    let out = sanitize(saved);
+    assert_eq!(sanitize(out), out);
+    assert_eq!(out & !(saved | 2), 0);
+}
+
+// The user resume path is the same sanitizer with interrupts on: it clears
+// exactly what the kernel path clears, and differs only in IF.
+#[kani::proof]
+fn the_user_resume_sets_only_interrupt_enable() {
+    let saved: u64 = kani::any();
+    assert_eq!(sanitize_user(saved), sanitize(saved) | (1 << 9));
+    assert_eq!(sanitize_user(saved) & (1 << 12), 0);
+    assert_eq!(sanitize_user(saved) & (1 << 13), 0);
 }

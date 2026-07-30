@@ -110,3 +110,20 @@ pub fn effective_priority(policy: i32, rt_priority: i32, nice: i32) -> i32 {
         20 - nice
     }
 }
+
+// Restored RFLAGS: verification/lean Nonos/Rflags.lean. Restated from the bit
+// positions directly, independent of the kernel's mask constant: every bit
+// ring 0 controls is cleared, bit 1 is set, and nothing else is touched.
+pub fn sanitize_rflags(rflags: u64) -> u64 {
+    let privileged: u64 = (1 << 8)
+        | (1 << 10)
+        | (1 << 12)
+        | (1 << 13)
+        | (1 << 14)
+        | (1 << 16)
+        | (1 << 17)
+        | (1 << 18)
+        | (1 << 19)
+        | (1 << 20);
+    (rflags & !privileged) | (1 << 1)
+}

@@ -14,28 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Host-runnable proofs binding kernel mechanisms to the properties their Lean
-//! models state. The real Rust of each mechanism is pulled in via `#[path]` and
-//! run directly, so the property is proven of the code the kernel executes.
-//! Modules land here as their Lean model moves from a specification to a
-//! code-bound proof; see `verification/lean/REFINEMENT.md`.
-
-pub mod bounds;
-pub mod buddy;
-pub mod context;
-pub mod mmio;
-pub mod nonce;
-pub mod phys;
-pub mod quota;
-pub mod refcount;
-pub mod region;
-pub mod ring;
-pub mod scheduler;
-pub mod spec;
-pub mod timer;
-
-#[cfg(test)]
-mod refinement_tests;
-
-#[cfg(kani)]
-mod kani_proofs;
+// The real RFLAGS sanitizer both context restore paths call before a saved
+// context resumes.
+#[allow(dead_code)]
+#[path = "../../../../src/arch/x86_64/context/rflags.rs"]
+pub mod rflags;

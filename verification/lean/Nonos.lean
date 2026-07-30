@@ -77,6 +77,7 @@ import Nonos.Priority
 import Nonos.Quota
 import Nonos.Reaper
 import Nonos.Refcount
+import Nonos.Rflags
 import Nonos.Ring
 import Nonos.Rng
 import Nonos.Rwlock
