@@ -179,6 +179,9 @@ import Nonos
 #print axioms Nonos.MemGrant.run_conserves
 #print axioms Nonos.MemGrant.run_granted_le_capacity
 #print axioms Nonos.Scheduler.rotate_mem
+#print axioms Nonos.Scheduler.at_most_one_cpu_wins
+#print axioms Nonos.Scheduler.a_ready_process_is_claimed_once
+#print axioms Nonos.Scheduler.only_ready_is_claimed
 #print axioms Nonos.PageDescriptor.leaf_present_iff_requested
 #print axioms Nonos.PageDescriptor.kernel_leaf_never_reaches_el0
 #print axioms Nonos.PageDescriptor.user_leaf_reaches_el0

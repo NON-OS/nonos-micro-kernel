@@ -86,7 +86,7 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | `Iommu` | device DMA windows under `src/hardware` |
 | `Tlb` | TLB shootdown under `src/memory` |
 | `CapTable`, `Dispatch` | capability tables and the syscall dispatch under `src/syscall` |
-| `Scheduler` | `src/process/scheduler` |
+| `Scheduler` | `src/process/scheduler` (the claim transition in `selection/select.rs` is modelled, not code-bound: `ProcessState` lives in `process/core/types.rs`, which pulls in `VirtAddr`, `Context` and `Vec`, so it cannot be `#[path]`-included without duplicating the state type) |
 | `Epoch` | RCU-style reclamation across the kernel |
 | `Signal` | signal delivery |
 | `Reaper` | the process table |
