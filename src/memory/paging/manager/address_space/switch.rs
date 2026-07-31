@@ -21,13 +21,17 @@ impl PagingManager {
     pub fn switch_address_space(&mut self, asid: u32) -> PagingResult<()> {
         let address_space =
             self.address_spaces.get(&asid).ok_or(PagingError::AddressSpaceNotFound)?;
-        // SAFETY: eK@nonos.systems — `address_space.cr3_value` was
-        // produced by this manager's `create_address_space` and stays
-        // valid until `cleanup_address_space(asid)` removes it; the
-        // The stored value packs the table base with its address-space id, the
-        // same way the register does, so hand both halves to the boundary.
-        let packed = address_space.cr3_value.as_u64();
-        crate::arch::paging::write_root(packed, (packed & 0xFFF) as u16);
+        // `cr3_value` was produced by this manager's `create_address_space`
+        // and stays valid until `cleanup_address_space(asid)` removes it.
+        //
+        // It does not pack the asid, whatever the previous comment here said:
+        // `AddressSpace::new` stores the raw page-table frame, so the low bits
+        // are zero and the mask below always yields 0. The register is loaded
+        // untagged, which is correct but means tagged invalidation does
+        // nothing for the switch. The asid is still tracked on the CPU below,
+        // where the shootdown broadcaster does use it.
+        let root = address_space.cr3_value.as_u64();
+        crate::arch::paging::write_root(root, (root & 0xFFF) as u16);
         self.active_page_table = Some(address_space.cr3_value);
         self.active_asid = Some(asid);
         // Record on the calling CPU which asid is now executing.

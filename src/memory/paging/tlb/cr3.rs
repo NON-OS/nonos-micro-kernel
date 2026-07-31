@@ -20,19 +20,23 @@
 
 use crate::memory::addr::PhysAddr;
 
-/// Install `root` and drop the translations the previous table left behind.
-#[inline]
-pub fn flush_address_space(root: PhysAddr) {
-    crate::arch::paging::write_root(root.as_u64(), 0);
-}
-
 /// Physical base of the table the CPU is translating through.
 #[inline]
 pub fn get_cr3() -> PhysAddr {
     PhysAddr::new(crate::arch::paging::read_root())
 }
 
-/// Point the CPU at `page_table_pa`.
+/// Point the CPU at `page_table_pa`, untagged.
+///
+/// The zero is the address-space id, and it is honest rather than incidental:
+/// `AddressSpace` keeps the id in its own field and stores the raw page-table
+/// frame here, so the value reaching this function is page aligned and carries
+/// no id to pass on. Every switch therefore loads the table under id 0, which
+/// `pcid::KERNEL_PCID` also names. That is correct, because writing the root
+/// invalidates the entries tagged with the id being loaded, but it means
+/// tagged invalidation buys nothing on this path even once `enable_pcid` has
+/// turned it on. Wiring the id through is a behaviour change and wants a
+/// measurement, not a guess.
 #[inline]
 pub fn set_cr3(page_table_pa: PhysAddr) {
     crate::arch::paging::write_root(page_table_pa.as_u64(), 0);
