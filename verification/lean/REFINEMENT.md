@@ -55,6 +55,20 @@ contract the code owes. Moving an entry to level 2 or 1 is tracked work.
 The proof crates run in CI: `.github/workflows/verify.yml` runs each crate's
 `cargo test` and clippy, and a Kani job runs the model checks for all inputs.
 
+### Constants
+
+A level 3 module states the kernel's constants as its own Lean literals, so
+the two agree only until someone edits one of them. `mechanism_proofs`
+includes the real constant definitions by `#[path]` and holds them against the
+numbers the specifications quote, in `constants_tests.rs`. Editing
+`CANONICAL_LOW_MAX`, the page sizes, or `MAX_MESSAGE_SIZE` without editing the
+Lean file that quotes it fails CI.
+
+This covers the constants the specifications actually rest on. Bounds defined
+privately inside a module that pulls in kernel dependencies, such as
+`MAX_DEMAND_PAGES` and `MAX_TRACKED` in `demand_cap.rs`, cannot be included
+this way and are still stated in Lean alone.
+
 ## Level 3: specification, binding pending
 
 These modules are machine-checked in Lean with no `sorry`, and each names the

@@ -14,16 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Wire envelope (`IpcMessage`) and MAC-key bootstrap (`init_ipc_secret`).
-//! Capsule traffic enqueues directly on `nonos_inbox`; this module owns
-//! only the on-the-wire format and integrity primitives.
+//! The size bound every IPC path checks before it allocates.
+//!
+//! Kept in a file of its own so `mechanism_proofs` can include it and hold it
+//! against `Nonos.Ipc.maxMessageSize`, which states the same number in Lean.
+//! Two literals agreeing today is not the same as them being kept in step.
 
-mod error;
-mod hash;
-mod limits;
-mod message;
-
-pub use error::ChannelError;
-pub use hash::{compute_channel_key, compute_checksum, init_ipc_secret};
-pub use limits::MAX_MESSAGE_SIZE;
-pub use message::IpcMessage;
+/// Largest payload an IPC message may carry. Checked by `sys_ipc_send`,
+/// `sys_ipc_send_to_pid`, `sys_ipc_reply` and `sys_ipc_call` before any buffer
+/// is allocated, so it bounds what one caller can make the kernel hold.
+pub const MAX_MESSAGE_SIZE: usize = 1024 * 1024;
