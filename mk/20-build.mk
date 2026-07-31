@@ -662,17 +662,38 @@ nonos-mk-check: nonos-mk-check-deps nonos-mk-ensure-signing-key
 # Every one of these is reached through a runtime ID register check, so a single
 # binary runs on a Pi and still uses tagging and PAC on an Apple M-series.
 #
-# Compile the kernel library for aarch64. The library only: the binary still pulls
-# in x86 trampolines that have no ARM counterpart yet, so linking an image is not
-# the gate here, keeping the shared code free of x86 is. PATH puts the rustup shims
-# first because a Homebrew rustc on /usr/local/bin shadows them and then rejects the
-# -Z flags with a confusing "only accepted on the nightly compiler".
+# Build the aarch64 kernel. PATH puts the rustup shims first because a Homebrew
+# rustc on /usr/local/bin shadows them and then rejects the -Z flags with a
+# confusing "only accepted on the nightly compiler".
 nonos-mk-arm: nonos-mk-ensure-signing-key
-	@echo "Building kernel library (aarch64, microkernel-core + nonos-arch-preview)..."
+	@echo "Building kernel (aarch64, microkernel-core + nonos-arch-preview)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) PATH="$(HOME)/.cargo/bin:$$PATH" \
 		$(CARGO) build $(ARM_KERNEL_BUILD_FLAGS) \
 		--no-default-features --features microkernel-core$(_boot_comma)nonos-arch-preview
+
+# Boot the aarch64 kernel under QEMU. Every flag here is load bearing.
+#
+#   gic-version=3   virt defaults to a GICv2, and the kernel drives a v3. Without
+#                   this the redistributor is not there and the first access to it
+#                   aborts.
+#   -cpu max        advertises the optional features, so the paths guarded by an
+#                   ID register check are the ones that actually run. It is the
+#                   closer proxy for a Neoverse or an M series part than a72 is,
+#                   and it is what caught the MTE and SVE gaps.
+#   virtio-rng-pci  the RNG refuses to seed from nothing, so without an entropy
+#                   source the boot stops at init_rng and says so.
+#
+# QEMU passes no device tree when it boots an ELF, so x0 arrives as zero and the
+# board facts come from the defaults in BootInfo. That path is what this target
+# exercises; a device tree boot needs an Image-format target instead.
+ARM_QEMU_FLAGS := -M virt,gic-version=3 -cpu max -m 512 -nographic \
+		-serial mon:stdio -device virtio-rng-pci
+
+nonos-mk-arm-run: nonos-mk-arm
+	@echo "Booting aarch64 kernel under QEMU (ctrl-a x to quit)..."
+	@qemu-system-aarch64 $(ARM_QEMU_FLAGS) \
+		-kernel $(TARGET_DIR)/aarch64-nonos/release/nonos-kernel
 
 nonos-mk-core: nonos-mk-check-deps nonos-mk-ensure-signing-key
 	$(call nonos_kernel_build,microkernel-core,microkernel-core)
