@@ -19,9 +19,6 @@ use crate::{bus, interrupts};
 use core::arch::asm;
 
 use super::acpi_tables::init_acpi_tables;
-use super::boot_session_nonce::init_boot_session_nonce;
-use super::entropy::init_entropy;
-use super::hardware_broker::seed_hardware_broker;
 #[cfg(feature = "nonos-user-entry-proof")]
 use super::syscall_msrs::print_syscall_msrs;
 
@@ -84,9 +81,6 @@ pub fn init_core_systems() {
     // hand out a register window, so it runs here, not beside the parse.
     #[cfg(feature = "nonos-arch-iommu")]
     crate::arch::x86_64::iommu::unit::report::init();
-    seed_hardware_broker();
-    init_entropy();
-    init_boot_session_nonce();
-    super::super::init_token_signing_key();
+    crate::kernel_core::init::init_platform_baseline();
     crate::sys::bench::mark(b"kernel_core_ready");
 }

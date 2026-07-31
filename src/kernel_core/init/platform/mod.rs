@@ -14,13 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod entry;
-pub(crate) mod framebuffer;
-mod platform;
-mod start_secondary;
+mod baseline;
+mod boot_session_nonce;
+mod entropy;
+mod hardware_broker;
+mod token_signing_key;
 
-#[cfg(target_arch = "x86_64")]
-pub(crate) mod memory;
-
-pub use entry::{microkernel_init, microkernel_main};
-pub use platform::init_platform_baseline;
+pub use baseline::init_platform_baseline;
