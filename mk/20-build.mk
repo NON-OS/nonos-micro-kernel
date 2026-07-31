@@ -620,7 +620,7 @@ nonos-mk-userland-clean:
 KERNEL_BUILD_FLAGS := --release --target x86_64-nonos.json \
 		-Zbuild-std=core,alloc -Zbuild-std-features=compiler-builtins-mem
 
-ARM_KERNEL_BUILD_FLAGS := --release --lib --target aarch64-nonos.json \
+ARM_KERNEL_BUILD_FLAGS := --release --target aarch64-nonos.json \
 		-Zbuild-std=core,alloc -Zbuild-std-features=compiler-builtins-mem
 
 KERNEL_SIGNING_KEY = $(if $(filter /%,$(SIGNING_KEY)),$(SIGNING_KEY),$(shell pwd)/$(SIGNING_KEY))
