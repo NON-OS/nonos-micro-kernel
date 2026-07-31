@@ -17,7 +17,7 @@
 use nonos_app_skeleton::EventOutcome;
 use nonos_policy_proto::Category;
 
-use crate::settings::manifest::{HEIGHT, WIDTH};
+use crate::settings::paint::paint_tabs::tab_width;
 use crate::settings::paint::{
     layout::{BODY_TOP, HEADER_H, ROW_H, STATUS_H, TAB_H, VALUE_LEFT},
     visible_rows::visible_rows,
@@ -30,15 +30,16 @@ use crate::settings::state::{
 use super::adjust::adjust;
 use super::toggle_or_inc::toggle_or_inc;
 
-const TAB_WIDTH: u32 = WIDTH / 4;
-
 pub(super) fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if x < 0 || y < 0 {
         return EventOutcome::Idle;
     }
     let (x, y) = (x as u32, y as u32);
     if (HEADER_H..HEADER_H + TAB_H).contains(&y) {
-        match core::cmp::min(x / TAB_WIDTH, 3) {
+        // Same width the tabs are drawn at, so a widened window does not leave
+        // a strip past the last tab that selects Wi-Fi.
+        let tab_w = tab_width(state.win_w).max(1);
+        match core::cmp::min(x / tab_w, 3) {
             0 => set_category(state, Category::User),
             1 => set_category(state, Category::Identity),
             2 => set_category(state, Category::Kernel),
@@ -50,13 +51,15 @@ pub(super) fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if state.wifi_active {
         return EventOutcome::Idle;
     }
-    if y < BODY_TOP || y >= HEIGHT.saturating_sub(STATUS_H) {
+    // Against the manifest height, a click below the starting height read as
+    // the status bar and was dropped, so a taller window had a dead lower half.
+    if y < BODY_TOP || y >= state.win_h.saturating_sub(STATUS_H) {
         return EventOutcome::Idle;
     }
     let row = ((y - BODY_TOP) / ROW_H) as usize;
     let cat = state.category as usize;
     let idx = state.scroll_top[cat] + row;
-    if row >= visible_rows() || idx >= focused_count(state.category) {
+    if row >= visible_rows(state.win_h) || idx >= focused_count(state.category) {
         return EventOutcome::Idle;
     }
     state.cursor[cat] = idx;
@@ -66,7 +69,7 @@ pub(super) fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
     }
     if x < VALUE_LEFT + 96 {
         adjust(state, -1);
-    } else if x > WIDTH.saturating_sub(120) {
+    } else if x > state.win_w.saturating_sub(120) {
         adjust(state, 1);
     } else {
         toggle_or_inc(state);

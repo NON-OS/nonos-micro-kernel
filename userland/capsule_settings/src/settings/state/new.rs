@@ -48,5 +48,7 @@ pub fn new() -> State {
         wifi_connect: WifiConnect::Idle,
         wifi_datapath: None,
         wifi_net: NetStatus::NoService,
+        win_w: crate::settings::manifest::WIDTH,
+        win_h: crate::settings::manifest::HEIGHT,
     }
 }

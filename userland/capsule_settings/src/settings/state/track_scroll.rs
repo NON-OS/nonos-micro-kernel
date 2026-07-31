@@ -22,7 +22,7 @@ pub fn track_scroll(state: &mut State) {
     let i = state.category as usize;
     let cursor = state.cursor[i];
     let top = state.scroll_top[i];
-    let rows = visible_rows();
+    let rows = visible_rows(state.win_h);
     if rows == 0 {
         state.scroll_top[i] = cursor;
         return;

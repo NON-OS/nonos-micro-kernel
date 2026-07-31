@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::settings::manifest::HEIGHT;
-
 use super::layout::{BODY_TOP, ROW_H, STATUS_H};
 
-pub fn visible_rows() -> usize {
-    let body_height = HEIGHT.saturating_sub(BODY_TOP + STATUS_H);
+/// Rows that fit a window `win_h` tall. This was fixed at the manifest height,
+/// so making the window taller left the extra space empty.
+pub fn visible_rows(win_h: u32) -> usize {
+    let body_height = win_h.saturating_sub(BODY_TOP + STATUS_H);
     (body_height / ROW_H) as usize
 }
