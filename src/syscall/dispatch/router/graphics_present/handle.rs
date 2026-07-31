@@ -17,10 +17,23 @@
 use super::blit::blit;
 use crate::syscall::SyscallResult;
 
+/// Present a surface, either whole or one damage rectangle of it.
+///
+/// A zero width or height means "the whole thing", which is what a caller that
+/// passes no rectangle at all sends. That keeps the meaning of the old
+/// four-argument call intact while letting a compositor that knows what it
+/// changed say so: on the GOP path the blit is a CPU copy of every byte it is
+/// given, so a full screen is 8.3 MB at 1920x1080 whether one pixel moved or
+/// all of them did.
 pub(in crate::syscall::dispatch::router) fn handle(
     display: u64,
     surface: u64,
     span: usize,
+    x: u64,
+    y: u64,
+    w: u64,
+    h: u64,
 ) -> SyscallResult {
-    blit(display, surface, span, 0, 0, 0, 0, true)
+    let full = w == 0 || h == 0;
+    blit(display, surface, span, x, y, w, h, full)
 }

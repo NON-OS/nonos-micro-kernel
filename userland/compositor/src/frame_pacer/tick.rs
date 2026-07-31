@@ -23,20 +23,27 @@ use core::sync::atomic::{fence, Ordering};
 pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
     // Composite every damaged rectangle this frame. Each is small and separate,
     // so the empty space between far-apart damage is never touched.
-    let mut composited = false;
     while let Some(rect) = ctx.damage.drain() {
         composite::paint(ctx, rect);
-        composited = true;
-        if !ctx.gop_mode {
+        if ctx.gop_mode {
+            // The composed pixels already live in the registered surface and
+            // the kernel copies them to the UEFI framebuffer with the CPU, so
+            // it is handed the rectangle that changed rather than the screen.
+            // Presenting the whole surface here cost 8.3 MB at 1920x1080 for
+            // every frame, however little of it moved.
+            fence(Ordering::Release);
+            let rc = nonos_libc::mk_surface_present_rect(
+                ctx.surface_handle,
+                rect.x,
+                rect.y,
+                rect.width,
+                rect.height,
+            );
+            if rc < 0 {
+                return Err("gop present rejected");
+            }
+        } else {
             present_rect(ctx, rect)?;
-        }
-    }
-    if composited && ctx.gop_mode {
-        // The composed pixels already live in the registered surface; the kernel
-        // blits it to the UEFI framebuffer. Present once for the whole frame.
-        fence(Ordering::Release);
-        if nonos_libc::mk_surface_present(ctx.surface_handle) < 0 {
-            return Err("gop present rejected");
         }
     }
     Ok(())

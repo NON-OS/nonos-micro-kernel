@@ -80,10 +80,10 @@ pub use process::{mk_args, mk_getpid, mk_kill, mk_pid_alive, mk_wait};
 pub use procstat::{mk_proc_stat, ProcStatEntry, ProcStatHeader, PROC_NAME_LEN};
 pub use surface_registry::{
     mk_display_vsync_wait, mk_input_event_drain, mk_input_event_post, mk_input_event_wait,
-    mk_surface_attach, mk_surface_present, mk_surface_register, mk_surface_release,
-    mk_surface_share, InputEvent, SurfaceDescriptor, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP,
-    INPUT_KIND_KEY_DOWN, INPUT_KIND_KEY_UP, INPUT_KIND_POINTER_ABS, INPUT_KIND_POINTER_REL,
-    INPUT_KIND_TOUCH, INPUT_KIND_WHEEL, SURFACE_FORMAT_ARGB8888,
+    mk_surface_attach, mk_surface_present, mk_surface_present_rect, mk_surface_register,
+    mk_surface_release, mk_surface_share, InputEvent, SurfaceDescriptor, INPUT_KIND_BUTTON_DOWN,
+    INPUT_KIND_BUTTON_UP, INPUT_KIND_KEY_DOWN, INPUT_KIND_KEY_UP, INPUT_KIND_POINTER_ABS,
+    INPUT_KIND_POINTER_REL, INPUT_KIND_TOUCH, INPUT_KIND_WHEEL, SURFACE_FORMAT_ARGB8888,
 };
 pub use syscall::call_raw as mk_syscall_raw;
 pub use time::{mk_time_adjust, mk_time_millis, mk_time_rtc, mk_uptime_ms, Deadline, RtcTime};

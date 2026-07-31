@@ -32,9 +32,9 @@ pub(super) fn handle(
     nr: SyscallNumber,
     a0: u64,
     a1: u64,
-    _a2: u64,
-    _a3: u64,
-    _a4: u64,
+    a2: u64,
+    a3: u64,
+    a4: u64,
     _a5: u64,
 ) -> SyscallResult {
     match nr {
@@ -42,7 +42,10 @@ pub(super) fn handle(
         SyscallNumber::MkSurfaceShare => h::do_share(a0),
         SyscallNumber::MkSurfaceAttach => h::do_attach(a0, a1),
         SyscallNumber::MkSurfaceRelease => h::do_release(a0),
-        SyscallNumber::MkSurfacePresent => h::do_present(a0),
+        // a1..a4 carry an optional damage rectangle. All zero means the whole
+        // surface, which is what a caller that does not track damage sends, so
+        // the older four-argument call keeps working unchanged.
+        SyscallNumber::MkSurfacePresent => h::do_present(a0, a1, a2, a3, a4),
         SyscallNumber::MkDisplayVsyncWait => h::do_vsync_wait(a0),
         _ => errno(ENOTSUP),
     }
