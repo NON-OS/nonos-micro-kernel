@@ -25,6 +25,10 @@ use super::types::{File, Store, MAX_FILES};
 // installer reads as /capsules/<name>.{elf,nonos_id_cert.bin,manifest.bin,
 // zk_trailer.bin}. This stands in for a future network fetch; the install path
 // itself (verify, load, spawn) is identical either way.
+// std_proof is built on the std platform layer, which issues its syscalls with
+// raw x86_64 registers and so has no aarch64 build to stage. There the store
+// starts empty instead; the runtime install path is the same either way.
+#[cfg(target_arch = "x86_64")]
 const STD_PROOF: [(&str, &[u8]); 4] = [
     (
         "/capsules/std_proof.elf",
@@ -52,6 +56,9 @@ const STD_PROOF: [(&str, &[u8]); 4] = [
 // filesystem read as "vfs ipc failed". Large packages belong to the runtime
 // installer path (`/capsules` starts empty and is filled on demand), not the
 // image. std_proof (~1.5 MB) is small enough to stay as a working demo.
+
+#[cfg(not(target_arch = "x86_64"))]
+const STD_PROOF: [(&str, &[u8]); 0] = [];
 
 impl Store {
     pub(super) fn seed_packages(&mut self) {

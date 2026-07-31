@@ -14,22 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-
-mod arch;
-
-const fn tag4(b: &[u8; 4]) -> i64 {
-    (b[0] as i64) | ((b[1] as i64) << 8) | ((b[2] as i64) << 16) | ((b[3] as i64) << 24)
-}
-
-const N_MK_EXIT: i64 = tag4(b"MEXT");
-
-extern "C" {
-    fn main(argc: isize, argv: *const *const u8) -> isize;
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    let code = main(0, core::ptr::null());
-    arch::exit(N_MK_EXIT, code as i64);
+/// Hand the exit status to the kernel and never come back.
+///
+/// AAPCS64 puts the syscall number in x8 and the first argument in x0, which
+/// is what the kernel reads out of the trap frame on an `svc`.
+pub unsafe fn exit(num: i64, code: i64) -> ! {
+    core::arch::asm!(
+        "svc #0",
+        in("x8") num,
+        in("x0") code as u64,
+        options(noreturn),
+    );
 }

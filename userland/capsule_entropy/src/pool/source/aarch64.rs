@@ -14,22 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-
-mod arch;
-
-const fn tag4(b: &[u8; 4]) -> i64 {
-    (b[0] as i64) | ((b[1] as i64) << 8) | ((b[2] as i64) << 16) | ((b[3] as i64) << 24)
-}
-
-const N_MK_EXIT: i64 = tag4(b"MEXT");
-
-extern "C" {
-    fn main(argc: isize, argv: *const *const u8) -> isize;
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    let code = main(0, core::ptr::null());
-    arch::exit(N_MK_EXIT, code as i64);
+/// Draw from the kernel's generator.
+///
+/// There is no unprivileged equivalent of RDRAND to reach for here. FEAT_RNG
+/// adds RNDR, but it is optional and absent on the Apple M-series among
+/// others, and whether it exists is only readable from EL1, so a capsule
+/// cannot check before issuing the instruction and would take an undefined
+/// instruction trap where it is missing. The kernel can check, and already
+/// backs this call with RNDR or the virtio entropy device as the board
+/// allows, so the source decision belongs there.
+pub(in crate::pool) unsafe fn fill(out: &mut [u8]) -> bool {
+    nonos_libc::crypto_random(out.as_mut_ptr(), out.len()) == out.len() as i64
 }

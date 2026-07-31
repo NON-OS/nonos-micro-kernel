@@ -17,26 +17,8 @@ use core::sync::atomic::Ordering;
 
 use crate::protocol::MAX_RANDOM_BYTES;
 
+use super::source;
 use super::types::Pool;
-
-#[target_feature(enable = "rdrand")]
-unsafe fn rdrand_fill(out: &mut [u8]) -> bool {
-    let mut filled = 0;
-    while filled < out.len() {
-        let mut word: u64 = 0;
-        let mut tries = 0;
-        while core::arch::x86_64::_rdrand64_step(&mut word) != 1 {
-            tries += 1;
-            if tries >= 32 {
-                return false;
-            }
-        }
-        let take = core::cmp::min(8, out.len() - filled);
-        out[filled..filled + take].copy_from_slice(&word.to_le_bytes()[..take]);
-        filled += take;
-    }
-    true
-}
 
 impl Pool {
     pub fn fill(&self, out: &mut [u8]) -> i64 {
@@ -46,7 +28,7 @@ impl Pool {
             return 0;
         }
         self.requests.fetch_add(1, Ordering::Relaxed);
-        if !unsafe { rdrand_fill(&mut out[..want]) } {
+        if !unsafe { source::fill(&mut out[..want]) } {
             self.source_failures.fetch_add(1, Ordering::Relaxed);
             return -5;
         }

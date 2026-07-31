@@ -14,22 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
+//! Where the pool's raw bytes come from, per architecture.
 
-mod arch;
+#[cfg(target_arch = "aarch64")]
+mod aarch64;
+#[cfg(target_arch = "x86_64")]
+mod x86_64;
 
-const fn tag4(b: &[u8; 4]) -> i64 {
-    (b[0] as i64) | ((b[1] as i64) << 8) | ((b[2] as i64) << 16) | ((b[3] as i64) << 24)
-}
-
-const N_MK_EXIT: i64 = tag4(b"MEXT");
-
-extern "C" {
-    fn main(argc: isize, argv: *const *const u8) -> isize;
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    let code = main(0, core::ptr::null());
-    arch::exit(N_MK_EXIT, code as i64);
-}
+#[cfg(target_arch = "aarch64")]
+pub(super) use aarch64::fill;
+#[cfg(target_arch = "x86_64")]
+pub(super) use x86_64::fill;

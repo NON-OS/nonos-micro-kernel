@@ -4,6 +4,10 @@
 // Rust stub layer in src/stubs.rs.
 use std::process::Command;
 
+fn target_arch() -> String {
+    std::env::var("CARGO_CFG_TARGET_ARCH").expect("CARGO_CFG_TARGET_ARCH")
+}
+
 fn clang_resource_include() -> String {
     let out = Command::new("clang")
         .arg("-print-resource-dir")
@@ -42,11 +46,19 @@ fn main() {
     b.compiler("clang");
     b.no_default_flags(true);
     b.warnings(false);
-    b.flag("--target=x86_64-unknown-none");
+    // The capsule triple is a JSON target clang has never heard of, so name the
+    // bare triple for the same architecture instead. Getting this wrong is not
+    // a compile error: clang builds for whatever it defaulted to and the
+    // mismatch only surfaces as "incompatible" objects at link time.
+    let arch = target_arch();
+    b.flag(&format!("--target={arch}-unknown-none"));
     b.flag("-ffreestanding");
     b.flag("-fno-stack-protector");
     b.flag("-fno-builtin");
-    b.flag("-mno-red-zone");
+    // The red zone is an x86_64 ABI rule and the flag is rejected elsewhere.
+    if arch == "x86_64" {
+        b.flag("-mno-red-zone");
+    }
     // The browser capsule links as a position-independent executable, so the C
     // objects must use PIC relocations to link against the Rust PIC code.
     b.flag("-fPIC");
