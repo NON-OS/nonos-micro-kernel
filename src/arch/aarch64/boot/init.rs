@@ -27,7 +27,9 @@ pub fn init(boot_info: &BootInfo) {
     // SAFETY: this is the boot CPU, this runs once, and no secondary has been
     // released yet, so nothing else can be touching the roster.
     unsafe {
-        super::multicore::roster::populate(&boot_info.cpu_affinities);
+        super::multicore::roster::populate(
+            &boot_info.cpu_affinities[..boot_info.cpu_affinity_count],
+        );
     }
     // Port numbers are offsets into the bridge's I/O window on this arch, so
     // the window has to be known before any driver reaches for a port. ECAM is

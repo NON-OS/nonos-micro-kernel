@@ -24,9 +24,9 @@ mod switch;
 mod types;
 
 pub use capture::save_user_frame;
+pub use enter::{enter_user, EnterError, SPSR_EL0T_INITIAL};
 pub use kernel::Context;
 pub use restored::set_restored_flag;
-pub use enter::{enter_user, EnterError, SPSR_EL0T_INITIAL};
 pub use resume::{resume_user, ResumeError};
 pub use setup::{setup_initial_user_pcb_aarch64, SetupError};
 pub(crate) use switch::switch_to_user_pcb_aarch64;

@@ -23,9 +23,9 @@ pub mod cpu_random;
 #[cfg(any(target_arch = "aarch64", target_arch = "riscv64"))]
 pub mod fdt;
 pub mod halt;
+pub(crate) mod idle;
 mod init_boot_memory;
 mod init_broker_irq_routing;
-pub(crate) mod idle;
 pub mod interrupt_controller;
 pub mod paging;
 mod percpu_base;

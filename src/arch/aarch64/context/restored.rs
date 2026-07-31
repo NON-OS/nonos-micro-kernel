@@ -39,6 +39,5 @@ pub(super) fn current_cpu_index() -> usize {
 
 /// Mark the current CPU as having just come back from a saved context.
 pub fn set_restored_flag() {
-    CONTEXT_JUST_RESTORED[current_cpu_index()]
-        .store(true, core::sync::atomic::Ordering::SeqCst);
+    CONTEXT_JUST_RESTORED[current_cpu_index()].store(true, core::sync::atomic::Ordering::SeqCst);
 }
