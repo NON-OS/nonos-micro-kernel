@@ -24,7 +24,25 @@ use super::layout::SIDEBAR_W;
 use super::refresh::refresh;
 use super::state::{State, ViewKind};
 
+// Rows moved per wheel notch, matching the editor.
+const WHEEL_STEP: usize = 3;
+
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
+    // Wheel events were delivered and dropped, so a long listing could only be
+    // walked with the arrow keys.
+    if event.kind == InputKind::Wheel {
+        let rows = (event.delta_y.unsigned_abs() as usize).min(10) * WHEEL_STEP;
+        if rows == 0 {
+            return EventOutcome::Idle;
+        }
+        let max = state.entries.len().saturating_sub(state.view_rows.max(1));
+        state.scroll = if event.delta_y > 0 {
+            state.scroll.saturating_sub(rows)
+        } else {
+            (state.scroll + rows).min(max)
+        };
+        return EventOutcome::Repaint;
+    }
     // A click in the PLACES sidebar navigates straight to that location and
     // must not fall through to row selection / open.
     if event.kind == InputKind::ButtonDown

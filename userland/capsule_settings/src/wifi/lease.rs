@@ -36,6 +36,11 @@ pub enum NetStatus {
     NoService,
     /// The service resolved but the lease-status call got no reply in time.
     NoReply,
-    Unbound { port: u32 },
-    Bound { lease: Lease, port: u32 },
+    Unbound {
+        port: u32,
+    },
+    Bound {
+        lease: Lease,
+        port: u32,
+    },
 }

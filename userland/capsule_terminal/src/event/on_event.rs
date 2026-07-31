@@ -14,12 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent};
+use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
 
 use super::on_key::on_key;
 use crate::term::state::State;
 
+// Scrollback lines per wheel notch, matching the editor.
+const WHEEL_STEP: usize = 3;
+
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
+    // Wheel events were being delivered and dropped, so the scrollback could
+    // only be reached with the keyboard.
+    if event.kind == InputKind::Wheel {
+        let lines = (event.delta_y.unsigned_abs() as usize).min(10) * WHEEL_STEP;
+        if lines == 0 {
+            return EventOutcome::Idle;
+        }
+        if event.delta_y > 0 {
+            state.scrollback.scroll_up(lines);
+        } else {
+            state.scrollback.scroll_down(lines);
+        }
+        return EventOutcome::Repaint;
+    }
     if !event.is_key_down() {
         return EventOutcome::Idle;
     }
