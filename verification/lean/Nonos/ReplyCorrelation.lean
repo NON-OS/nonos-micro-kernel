@@ -13,18 +13,26 @@ IPC reply correlation (`recv_reply_correlated` in
 kernel-owned on a predictable port, so any capsule could `mk_ipc_send` a forged
 frame into another capsule's reply inbox. The fix tags each call with a nonzero
 token and delivers only the message whose correlation equals that token,
-dropping the rest. Because `sys_ipc_send` hardcodes correlation 0, a forged
-message can never match a nonzero token. The theorems fix that: a forged
-message (correlation 0) is never delivered to a valid call, only a message
-carrying the exact token is delivered, and an inbox full of forgeries yields
-nothing to the caller.
+dropping the rest. The theorems below are about that filter: a message with
+correlation 0 is never delivered to a valid call, only a message carrying the
+exact token is delivered, and an inbox full of forgeries yields nothing.
+
+What the filter is worth depends on who can produce a matching correlation, and
+that is not settled here. An earlier version of this comment said
+`sys_ipc_send` hardcodes correlation 0, which is not true: `send.rs` overrides
+it with `redirect_token.unwrap_or(correlation)`, so a send can carry a nonzero
+token. The property that holds instead is that a process can only obtain a
+token from a call addressed to it, which is a fact about the `pending_reply`
+table rather than about this filter. It is proven in `ReplyAuthorization.lean`,
+and the two together are what rule out a forged reply.
 -/
 
 namespace Nonos.ReplyCorrelation
 
 /-- A message sitting in a reply inbox carries a correlation token. A genuine
-    reply is stamped with the caller's call token; a message injected via
-    `mk_ipc_send` carries correlation 0. -/
+    reply is stamped with the caller's call token. A `mk_ipc_send` carries 0
+    unless the redirect path supplied a token, which it does only for a call
+    addressed to the sender: see `ReplyAuthorization.lean`. -/
 structure Msg where
   correlation : Nat
 

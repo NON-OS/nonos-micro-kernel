@@ -375,6 +375,13 @@ import Nonos
 #print axioms Nonos.FrameNoAlias.fixed_none_on_empty
 #print axioms Nonos.InputConsumer.drain_implies_post
 #print axioms Nonos.InputConsumer.irq_only_cannot_drain
+-- And who can hold a token to stamp with in the first place: only the process
+-- the call was addressed to, spent once.
+#print axioms Nonos.ReplyAuthorization.a_reply_token_comes_from_a_call_to_the_replier
+#print axioms Nonos.ReplyAuthorization.a_redirect_token_comes_from_a_call_to_the_sender
+#print axioms Nonos.ReplyAuthorization.remove_consumes_one
+#print axioms Nonos.ReplyAuthorization.pop_consumes_one
+
 #print axioms Nonos.ReplyCorrelation.forged_never_delivered
 #print axioms Nonos.ReplyCorrelation.firstMatch_matches
 #print axioms Nonos.ReplyCorrelation.all_forged_none

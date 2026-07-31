@@ -62,6 +62,7 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 
 | Module | Kernel subsystem |
 | --- | --- |
+| `ReplyAuthorization` | `src/syscall/microkernel/ipc/pending_reply` (the table operations as written, with the key each caller passes) |
 | `UserWalk` | `src/usercopy/walk` (the model mirrors `walk` branch for branch and `access.rs` on top of it; the descriptor predicates it names are already code-bound through `verification/extraction`) |
 | `Mutex` | `src/sys/sync/irq_mutex` |
 | `Rwlock` | `src/sys/sync/irq_rwlock` |

@@ -49,6 +49,7 @@ import Nonos.FrameNoAlias
 import Nonos.FramebufferSwap
 import Nonos.Futex
 import Nonos.InputConsumer
+import Nonos.ReplyAuthorization
 import Nonos.ReplyCorrelation
 import Nonos.ServiceRegisterAuth
 import Nonos.Heap
