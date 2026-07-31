@@ -24,7 +24,7 @@ use crate::arch::aarch64::boot::info::{BootInfo, MemoryType};
 
 pub(super) fn memory(info: &BootInfo) -> MemoryHandoff {
     let largest_usable_bytes = info
-        .memory_regions
+        .memory_map()
         .iter()
         .filter(|r| r.region_type == MemoryType::Available)
         .map(|r| r.size)
@@ -32,13 +32,12 @@ pub(super) fn memory(info: &BootInfo) -> MemoryHandoff {
         .unwrap_or(info.ram_size);
 
     MemoryHandoff {
-        // The regions live in a `Vec` the boot path owns for the life of the
-        // kernel. Nothing walks this pointer blind: the only code that reads
-        // the aarch64 memory map goes through the arch downcast, which hands
-        // it the typed `BootInfo` instead. The pointer and count are here so a
-        // diagnostic dump can report where the map came from.
-        map_ptr: info.memory_regions.as_ptr() as u64,
-        map_entries: info.memory_regions.len() as u32,
+        // Nothing walks this pointer blind: the only code that reads the
+        // aarch64 memory map goes through the arch downcast, which hands it the
+        // typed `BootInfo`. The pointer and count are here so a diagnostic dump
+        // can report where the map came from.
+        map_ptr: info.memory_map().as_ptr() as u64,
+        map_entries: info.memory_map().len() as u32,
         largest_usable_bytes,
     }
 }

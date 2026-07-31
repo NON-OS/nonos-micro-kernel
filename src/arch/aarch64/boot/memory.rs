@@ -55,7 +55,7 @@ pub(crate) fn init_boot_memory(info: &BootInfo) {
 
 /// The widest `Available` region the device tree reported, page aligned inward.
 fn largest_available(info: &BootInfo) -> Option<(u64, u64)> {
-    info.memory_regions
+    info.memory_map()
         .iter()
         .filter(|r| r.region_type == MemoryType::Available)
         .filter_map(|r| bounds(r))
@@ -77,7 +77,7 @@ fn find_low_dma_region(info: &BootInfo, main_start: u64, main_end: u64) -> (u64,
     let want_pages = dma::low32_capacity_pages();
     let want_bytes = (want_pages as u64) * PAGE_SIZE;
 
-    for region in info.memory_regions.iter() {
+    for region in info.memory_map().iter() {
         if region.region_type != MemoryType::Available {
             continue;
         }
