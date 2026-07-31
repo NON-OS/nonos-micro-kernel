@@ -43,9 +43,6 @@ pub fn map_range(
     }
     let _ = pages;
     let _ = flags;
-    // The arguments are validated and then dropped: there are no second-level
-    // page tables to write them into, because none are ever built. Reported as
-    // not enforcing rather than not present, since DMAR did find the hardware
-    // and it is translation that was never turned on.
+    // Validated and dropped: there are no second-level tables to write into.
     Err(VtdError::NotEnforcing)
 }

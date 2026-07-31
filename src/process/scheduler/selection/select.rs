@@ -23,25 +23,14 @@ pub static LAST_SCHEDULED_PID: AtomicU32 = AtomicU32::new(0);
 static LAST_PER_BAND: [AtomicU32; 5] =
     [AtomicU32::new(0), AtomicU32::new(0), AtomicU32::new(0), AtomicU32::new(0), AtomicU32::new(0)];
 
-/// Pick a process to run next and claim it for this CPU.
-///
-/// The claim is the part that matters once more than one CPU schedules.
-/// Picking only reads state, and `Running` is not set until the arch switch
-/// several calls later, so two CPUs picking at the same moment used to choose
-/// the same pid and both switch into the same control block. Taking the state
-/// from `Ready` to `Running` here, under its own lock, means exactly one CPU
-/// can win a given process and the loser picks again.
-///
-/// Every caller either switches to the pid returned or, when it is the process
-/// already running, leaves it `Running`, so claiming early does not strand
-/// anything: the end state is what it was before. The one path that returns
-/// without setting `Running` is a pid that vanished from the table between the
-/// pick and the switch, which has no control block left to strand.
+/// Pick a process to run next and claim it, so two CPUs cannot pick the same
+/// one. Picking only reads state and `Running` is not set until the arch
+/// switch, so without the claim both would switch into the same control block.
+/// Callers either switch to what they get back or leave it `Running`, so
+/// claiming early does not strand anything.
 pub fn select_next_process() -> Option<u32> {
-    // Bounded. A failed claim means another CPU took that process, and the
-    // next pick sees the new state, so this converges; the cap is there so a
-    // pathological churn cannot spin here with interrupts off. Giving up lets
-    // the caller idle and try again on the next tick.
+    // Bounded: a lost claim means the state moved, so the next pick sees it.
+    // The cap stops a churn spinning here with interrupts off.
     const CLAIM_ATTEMPTS: usize = 8;
     for _ in 0..CLAIM_ATTEMPTS {
         let (pid, band) = pick()?;
@@ -56,8 +45,8 @@ pub fn select_next_process() -> Option<u32> {
     None
 }
 
-/// Take `pid` from `Ready` to `Running`, reporting whether this caller is the
-/// one that made the transition. The state lock is what serialises it.
+/// Take `pid` from `Ready` to `Running` under the state lock, reporting
+/// whether this caller made the transition.
 fn claim(pid: u32) -> bool {
     use crate::process::nonos_core::{ProcessState, PROCESS_TABLE};
     let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) else {
@@ -72,9 +61,8 @@ fn claim(pid: u32) -> bool {
     }
 }
 
-/// The candidate and, when it came from a priority band, that band's index.
-/// The round-robin cursors are not advanced here: a pick that loses its claim
-/// never ran, and moving the cursor past it would skip it next time.
+/// The candidate and, if it came from a priority band, that band's index. The
+/// cursors are not advanced here: a pick that loses its claim never ran.
 fn pick() -> Option<(u32, Option<usize>)> {
     use crate::process::nonos_core::CURRENT_PID;
     let current = CURRENT_PID.load(Ordering::Relaxed);

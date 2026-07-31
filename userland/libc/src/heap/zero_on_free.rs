@@ -16,21 +16,13 @@
 
 //! An allocator that clears a block before returning it to the free list.
 //!
-//! Capsules hold the secrets a user would mind losing: the keyring's stored
-//! keys, the wallet's note secrets and signing material, TLS traffic keys. A
-//! `Drop` on the owning type covers the original, but not the copies that a
-//! `clone()`, a protocol encode buffer or a `Vec` growth leave behind. Those
-//! reach `dealloc` as ordinary bytes, and a plain free list overwrites only
-//! the first few bytes of the block with its own links. The rest stays
-//! readable to the next allocation that lands there, and stays in DRAM.
-//!
-//! Wiping on free rather than on allocation is deliberate: it bounds how long
-//! a secret is readable to the moment it is dropped, instead of to whenever
-//! that memory happens to be reused, which may be never.
-//!
-//! This costs a write per freed byte. That is the price of the guarantee and
-//! it is paid on every capsule free, not only the ones holding secrets, since
-//! the allocator cannot know which is which.
+//! A Drop on the owning type covers the original secret, not the copies a
+//! clone, an encode buffer or a Vec growth leave behind. Those reach dealloc
+//! as ordinary bytes, and a plain free list only overwrites its own links at
+//! the head of the block. Wiping on free bounds exposure to the drop rather
+//! than to whenever that memory is reused, which may be never. Costs a write
+//! per freed byte, on every free, since the allocator cannot tell which blocks
+//! held secrets.
 
 use core::alloc::{GlobalAlloc, Layout};
 use core::ptr;

@@ -18,7 +18,6 @@ use super::{tlb::flush_tlb_pcid, types::MAX_PCID};
 use core::sync::atomic::{AtomicBool, Ordering};
 use spin::Mutex;
 
-
 pub const KERNEL_PCID: u16 = 0;
 
 static PCID_BITMAP: Mutex<[u64; 64]> = Mutex::new([0; 64]);

@@ -19,12 +19,8 @@ use super::isolation::IsolationLevel;
 use super::types::Capability;
 use spin::Once;
 
-// The engine answers capability checks on syscall paths, so a second CPU
-// running userspace reads this while the boot CPU may still be publishing it.
-// A `static mut` write carries no ordering to make the fully built engine
-// visible to that reader, and its soundness rested on a comment about when
-// init happens. `Once` publishes with release/acquire, and makes a second
-// init idempotent rather than an overwrite of an engine already in use.
+// Read on syscall paths, so a second CPU sees this while the boot CPU may
+// still be publishing it. A static mut carried no ordering for that reader.
 static CAPABILITY_ENGINE: Once<CapabilityEngine> = Once::new();
 
 pub fn init_capability_system() -> Result<(), &'static str> {

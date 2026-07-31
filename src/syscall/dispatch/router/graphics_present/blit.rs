@@ -101,12 +101,9 @@ pub(super) fn blit(
             // `dst_off + chunk` stays inside the row, so every store lands in
             // the mapped framebuffer.
             let dst_ptr = unsafe { dst.add(dst_off) };
-            // A pixel at a time rather than a byte at a time. The framebuffer
-            // is write-combining, so the store count is what costs: a full
-            // 1920x1080 frame is 8.3 MB, and doing that byte-wise is four
-            // times the stores for no reason. Fall back where the destination
-            // is not pixel-aligned, which a firmware stride that is not a
-            // multiple of four would cause.
+            // Whole pixels: the framebuffer is write-combining, so the store
+            // count is the cost and byte-wise was four times as many. Falls
+            // back if a firmware stride leaves the destination unaligned.
             if (dst_ptr as usize) % 4 == 0 && chunk % 4 == 0 {
                 for (i, px) in bounce.0[..chunk].chunks_exact(4).enumerate() {
                     let word = u32::from_ne_bytes([px[0], px[1], px[2], px[3]]);

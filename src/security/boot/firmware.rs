@@ -24,8 +24,7 @@ pub struct FirmwareDB {
     pub trusted_hashes: BTreeMap<String, [u8; 32]>,
 }
 
-// Same reason as the module database: written once at init, read afterwards,
-// and a `static mut` publishes it with no ordering for another CPU to observe.
+// Same as the module database: written once at init, read afterwards.
 static FIRMWARE_DB: Once<FirmwareDB> = Once::new();
 
 pub fn init() -> Result<(), &'static str> {

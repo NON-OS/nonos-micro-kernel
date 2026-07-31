@@ -21,7 +21,9 @@ use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
 use crate::security::nonos_id_cert::IdCertVerifyError;
-use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY};
+use crate::security::nonos_trust_anchor::{
+    decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
+};
 
 pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 
@@ -45,9 +47,7 @@ pub fn spawn_audio_capsule() -> Result<(), SpawnError> {
         manifest_bytes: AUDIO_MANIFEST_BYTES,
         attestation_trailer: AUDIO_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit()
-            | Capability::Memory.bit()
-            | Capability::Debug.bit(),
+        requested_caps: Capability::IPC.bit() | Capability::Memory.bit() | Capability::Debug.bit(),
         debug_tag: b"[AUDIO] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

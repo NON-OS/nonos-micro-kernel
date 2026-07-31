@@ -20,6 +20,7 @@
 extern crate alloc;
 extern crate nonos_kernel;
 
+#[cfg(target_arch = "x86_64")]
 use core::sync::atomic::{AtomicU64, Ordering};
 
 mod manifest_embed {
@@ -27,14 +28,26 @@ mod manifest_embed {
 }
 pub use manifest_embed::*;
 
+// The entry below is the one a UEFI bootloader jumps to, and it takes the
+// handoff structure that bootloader builds. aarch64 arrives somewhere else
+// entirely: firmware enters `_start` in arch/aarch64/asm/start.S, which drops to
+// EL1 and calls the `kernel_entry` in arch::aarch64::boot::entry with a device
+// tree pointer instead. Two entries, one per boot protocol, and only the one
+// belonging to the target is compiled so the symbol is defined once.
+#[cfg(target_arch = "x86_64")]
 use nonos_kernel::boot::handoff::init_handoff;
+#[cfg(target_arch = "x86_64")]
 use nonos_kernel::boot::main::init_core_systems;
+#[cfg(target_arch = "x86_64")]
 use nonos_kernel::entry::{fallback, security};
+#[cfg(target_arch = "x86_64")]
 use nonos_kernel::sys::serial;
 
 // `_start` lives in arch/x86_64/asm/start.S; calls in with rdi=handoff_ptr.
+#[cfg(target_arch = "x86_64")]
 static HANDOFF_PTR: AtomicU64 = AtomicU64::new(0);
 
+#[cfg(target_arch = "x86_64")]
 #[no_mangle]
 extern "C" fn kernel_entry(handoff_ptr: u64) -> ! {
     // First instruction path: paint the entry breadcrumb from the raw,
@@ -81,6 +94,7 @@ extern "C" fn kernel_entry(handoff_ptr: u64) -> ! {
     boot_microkernel(handoff)
 }
 
+#[cfg(target_arch = "x86_64")]
 fn boot_microkernel(handoff: &nonos_kernel::boot::handoff::BootHandoffV1) -> ! {
     if handoff.fb.ptr == 0 {
         serial::println(b"[NONOS] No boot framebuffer; continuing with capsule graphics");

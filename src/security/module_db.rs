@@ -23,10 +23,8 @@ pub struct ModuleDB {
     trusted_modules: BTreeMap<String, [u8; 32]>,
 }
 
-// Written once at init and read afterwards, including on paths a second CPU
-// would run. A `static mut` gave the reader no ordering against that write and
-// leaned on a comment for its soundness; `Once` publishes with release/acquire
-// and needs no unsafe at either end.
+// Written once at init, read afterwards. A static mut gave a second CPU no
+// ordering against that write.
 static MODULE_DB: Once<ModuleDB> = Once::new();
 
 pub fn init() -> Result<(), &'static str> {

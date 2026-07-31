@@ -21,10 +21,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "nonos_userland_libc"
+name = "nonos-abi"
+version = "0.2.0"
+
+[[package]]
+name = "nonos-alloc"
 version = "0.2.0"
 dependencies = [
  "linked_list_allocator",
+ "nonos-abi",
 ]
 
 [[package]]

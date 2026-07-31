@@ -16,17 +16,10 @@
 
 //! An allocator that clears a block before returning it to the free list.
 //!
-//! The same guarantee `nonos_userland_libc` gives, for capsules that link this
-//! crate instead. Both exist, so a secret's exposure must not depend on which
-//! one a capsule happened to pick.
-//!
-//! A `Drop` on the owning type covers the original but not the copies a
-//! `clone()`, an encode buffer or a `Vec` growth leave behind. Those reach
-//! `dealloc` as ordinary bytes, and a plain free list overwrites only its own
-//! links at the head of the block.
-//!
-//! This costs a write per freed byte, on every free, since the allocator
-//! cannot tell which blocks held secrets.
+//! Same guarantee `nonos_userland_libc` gives, for capsules linking this crate
+//! instead: exposure should not depend on which one a capsule picked. Copies
+//! left by a clone or a Vec growth reach dealloc as ordinary bytes, and a
+//! plain free list only overwrites its own links at the head of the block.
 
 use core::alloc::{GlobalAlloc, Layout};
 use core::ptr;

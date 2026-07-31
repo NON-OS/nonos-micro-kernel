@@ -26,18 +26,18 @@ pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
     while let Some(rect) = ctx.damage.drain() {
         composite::paint(ctx, rect);
         if ctx.gop_mode {
-            // The composed pixels already live in the registered surface and
-            // the kernel copies them to the UEFI framebuffer with the CPU, so
-            // it is handed the rectangle that changed rather than the screen.
-            // Presenting the whole surface here cost 8.3 MB at 1920x1080 for
-            // every frame, however little of it moved.
+            // The kernel copies whatever it is handed with the CPU, so give it
+            // the rectangle that changed, not the screen.
+            let Some(r) = clip_to_screen(ctx, rect) else {
+                continue;
+            };
             fence(Ordering::Release);
             let rc = nonos_libc::mk_surface_present_rect(
                 ctx.surface_handle,
-                rect.x,
-                rect.y,
-                rect.width,
-                rect.height,
+                r.x,
+                r.y,
+                r.width,
+                r.height,
             );
             if rc < 0 {
                 return Err("gop present rejected");
@@ -47,6 +47,24 @@ pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
         }
     }
     Ok(())
+}
+
+// Clients submit layer rectangles unclipped, so damage can hang off the edge.
+// The kernel rejects a rectangle that leaves the framebuffer, and a rejected
+// present takes the compositor down, so trim here. None means nothing visible.
+fn clip_to_screen(
+    ctx: &Context,
+    rect: crate::state::damage::Rect,
+) -> Option<crate::state::damage::Rect> {
+    if rect.x >= ctx.width || rect.y >= ctx.height {
+        return None;
+    }
+    let width = core::cmp::min(rect.width, ctx.width - rect.x);
+    let height = core::cmp::min(rect.height, ctx.height - rect.y);
+    if width == 0 || height == 0 {
+        return None;
+    }
+    Some(crate::state::damage::Rect { x: rect.x, y: rect.y, width, height })
 }
 
 fn present_rect(ctx: &mut Context, rect: crate::state::damage::Rect) -> Result<(), &'static str> {

@@ -29,9 +29,9 @@ pub use cpu_context::CpuContext;
 // One name, one meaning: the kernel execution point the scheduler saves. Each
 // arch saves what its calling convention says has to survive, so the shape
 // differs and the API does not.
-#[cfg(target_arch = "x86_64")]
-pub use full::Context;
 #[cfg(target_arch = "aarch64")]
 pub use crate::arch::aarch64::context::Context;
+#[cfg(target_arch = "x86_64")]
+pub use full::Context;
 #[cfg(target_arch = "x86_64")]
 pub use install::{modify_saved_context, read_saved_context};

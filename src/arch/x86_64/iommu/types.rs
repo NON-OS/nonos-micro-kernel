@@ -81,10 +81,8 @@ pub struct IommuPageFlags {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VtdError {
     NotPresent,
-    /// DMAR named remapping hardware, but translation has never been turned
-    /// on: no root table is installed and no context entry is written, so
-    /// nothing this module did confines a device. Returned in place of success
-    /// by every call that would otherwise imply isolation.
+    /// Hardware was found but translation is never enabled, so nothing here
+    /// confines a device. Returned instead of success.
     NotEnforcing,
     DomainTableFull,
     DomainAlreadyExists,

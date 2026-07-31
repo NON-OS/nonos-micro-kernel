@@ -17,14 +17,8 @@
 use super::blit::blit;
 use crate::syscall::SyscallResult;
 
-/// Present a surface, either whole or one damage rectangle of it.
-///
-/// A zero width or height means "the whole thing", which is what a caller that
-/// passes no rectangle at all sends. That keeps the meaning of the old
-/// four-argument call intact while letting a compositor that knows what it
-/// changed say so: on the GOP path the blit is a CPU copy of every byte it is
-/// given, so a full screen is 8.3 MB at 1920x1080 whether one pixel moved or
-/// all of them did.
+/// Present a surface, or one damage rectangle of it. Zero width or height
+/// means the whole surface, which is what a caller passing no rectangle sends.
 pub(in crate::syscall::dispatch::router) fn handle(
     display: u64,
     surface: u64,
