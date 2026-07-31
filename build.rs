@@ -524,7 +524,7 @@ fn rerun_on_capsule_binaries() {
         return;
     };
     for entry in entries.flatten() {
-        let bin_dir = entry.path().join("target/x86_64-nonos-user/release");
+        let bin_dir = entry.path().join(format!("target/{}/release", user_target())); 
         let Ok(children) = fs::read_dir(&bin_dir) else {
             continue;
         };
@@ -557,4 +557,19 @@ fn c_target(arch: &str) -> Option<(&'static str, &'static [&'static str])> {
         "riscv64" => Some(("riscv64-unknown-none-elf", &[][..])),
         _ => None,
     }
+}
+
+/// The user target whose capsule binaries this kernel embeds.
+///
+/// The build system passes `NONOS_USER_TARGET` so the capsules the kernel bakes
+/// in are built for the same architecture it is. Defaults to the x86_64 user
+/// target, which is what a plain `cargo build` with no make wrapper expects.
+fn user_target() -> String {
+    println!("cargo:rerun-if-env-changed=NONOS_USER_TARGET");
+    let target = env::var("NONOS_USER_TARGET").unwrap_or_else(|_| "x86_64-nonos-user".to_string());
+    // The embed sites are `include_bytes!`, which takes a literal, so the path
+    // has to be assembled at compile time. Re-exporting the value as a rustc env
+    // lets them reach it through `env!` inside a `concat!`.
+    println!("cargo:rustc-env=NONOS_USER_TARGET={target}");
+    target
 }

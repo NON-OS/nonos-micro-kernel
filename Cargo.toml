@@ -505,13 +505,15 @@ microkernel-net-sockets = [
 # base services, storage and network drivers, input ingest, the
 # input router, compositor, WM, desktop shell, toolkit, and signed
 # first-party app capsules in one kernel image.
-microkernel-desktop-gui = [
+# Split out from microkernel-desktop-gui: everything here is a first-party
+# no_std capsule built on nonos_libc. The tool capsules and the tokio smoke
+# test are the two pieces that need the std platform layer, which is x86_64
+# only, so they live in the profile below. aarch64 builds this set.
+microkernel-desktop-base = [
   "microkernel-core",
   "nonos-production",
   "capsule-serial-debug",
-  "nonos-tool-capsules",
   "nonos-capsule-proof-io",
-  "nonos-capsule-tokio-smoke",
   "nonos-capsule-ramfs",
   "nonos-capsule-keyring",
   "nonos-capsule-entropy",
@@ -557,6 +559,16 @@ microkernel-desktop-gui = [
   "nonos-capsule-policy",
   "nonos-capsule-process-manager",
   "nonos-capsule-power",
+]
+
+# Desktop boot profile. This is the signed QEMU GUI lane:
+# base services, storage and network drivers, input ingest, the
+# input router, compositor, WM, desktop shell, toolkit, and signed
+# first-party app capsules in one kernel image.
+microkernel-desktop-gui = [
+  "microkernel-desktop-base",
+  "nonos-tool-capsules",
+  "nonos-capsule-tokio-smoke",
 ]
 
 # Full desktop image. The desktop-gui set plus every production hardware
