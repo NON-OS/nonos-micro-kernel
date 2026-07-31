@@ -80,6 +80,10 @@ pub fn init_core_systems() {
     bus::pci::init();
     serial::println(b"[NONOS] PCI enumerated");
     crate::sys::bench::mark(b"kernel_pci_ready");
+    // Wants the DMAR bases from the ACPI parse and an MMIO mapper that can
+    // hand out a register window, so it runs here, not beside the parse.
+    #[cfg(feature = "nonos-arch-iommu")]
+    crate::arch::x86_64::iommu::unit::report::init();
     seed_hardware_broker();
     init_entropy();
     init_boot_session_nonce();

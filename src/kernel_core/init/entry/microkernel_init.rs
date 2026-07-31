@@ -41,6 +41,15 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     }
     crate::sched::init();
     clock::init(handoff.timing.fixed_freq_hz.unwrap_or(0), handoff.timing.unix_epoch_ms);
+    // The wall clock and the uptime counter hold their own copies of the
+    // counter frequency. Seeding only the first leaves uptime reporting zero
+    // forever, and every wait on elapsed time then never finishes. The x86_64
+    // binary seeds the second from `init_core_systems`, which no other entry
+    // path runs, so it belongs here where every arch passes through.
+    crate::sys::timer::tsc::init(
+        handoff.timing.fixed_freq_hz.unwrap_or(0),
+        handoff.timing.unix_epoch_ms,
+    );
 
     // VM/paging must be ready before any process creator runs. The
     // process subsystem only initializes its tables after this; the

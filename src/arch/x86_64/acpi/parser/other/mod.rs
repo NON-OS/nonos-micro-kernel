@@ -20,7 +20,7 @@ mod mcfg;
 mod srat;
 mod srat_memory;
 
-pub use dmar::parse_dmar;
+pub use dmar::{parse_dmar, remap_unit_bases};
 pub use hpet::parse_hpet;
 pub use mcfg::parse_mcfg;
 pub use srat::parse_srat;
