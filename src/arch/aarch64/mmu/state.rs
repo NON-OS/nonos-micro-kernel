@@ -18,7 +18,8 @@ use super::table::PageTable;
 
 static mut KERNEL_L0: PageTable = PageTable::new();
 static mut KERNEL_L1: PageTable = PageTable::new();
-static mut KERNEL_L2: [PageTable; 6] = [
+static mut KERNEL_L2: [PageTable; 7] = [
+    PageTable::new(),
     PageTable::new(),
     PageTable::new(),
     PageTable::new(),

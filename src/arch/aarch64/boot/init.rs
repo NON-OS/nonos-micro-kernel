@@ -39,7 +39,15 @@ pub fn init(boot_info: &BootInfo) {
         boot_info.pci_io_port_base,
         boot_info.pci_io_size,
     );
-    crate::drivers::pci::set_ecam_window(boot_info.pci_ecam_base, boot_info.pci_ecam_size);
+    super::pci_windows::publish(boot_info);
+    // Bus addresses, so the I/O window is named by its port base rather than
+    // where the CPU reaches it.
+    crate::bus::pci::set_windows(
+        boot_info.pci_mmio_base,
+        boot_info.pci_mmio_size,
+        boot_info.pci_io_port_base,
+        boot_info.pci_io_size,
+    );
     crate::arch::aarch64::rtc::set_base(boot_info.rtc_base);
     exceptions::install_vbar_el1();
     if security::init_all().is_err() {

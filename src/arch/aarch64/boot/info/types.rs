@@ -52,6 +52,11 @@ pub struct BootInfo {
     pub pci_io_cpu_base: u64,
     pub pci_io_port_base: u64,
     pub pci_io_size: u64,
+    /// The memory window the host bridge forwards to its devices. Booting from
+    /// a device tree means no firmware has assigned any BAR, so the kernel
+    /// hands out addresses from here itself.
+    pub pci_mmio_base: u64,
+    pub pci_mmio_size: u64,
     /// MMIO base of the PL031 real-time clock, zero when the board has none.
     pub rtc_base: u64,
     /// Fixed storage: this is filled from the device tree in `kernel_entry`,
@@ -87,12 +92,21 @@ impl Default for BootInfo {
             timer_phys_intid: 30,
             timer_virt_intid: 27,
             gic_unsupported: false,
-            pci_ecam_base: 0,
-            pci_ecam_size: 0,
-            pci_io_cpu_base: 0,
+            // The virt board's PCIe host bridge. Config space is ECAM at
+            // 0x3f00_0000, and the 16 MiB window is what limits the bus range
+            // to 16. Its I/O window sits just below at 0x3eff_0000 and is
+            // addressed from port 0, so a driver asking for port N reads
+            // 0x3eff_0000 + N. Leaving these at zero means no config space, so
+            // enumeration finds nothing and every virtio device is invisible.
+            pci_ecam_base: 0x3f00_0000,
+            pci_ecam_size: 0x0100_0000,
+            pci_io_cpu_base: 0x3eff_0000,
             pci_io_port_base: 0,
-            pci_io_size: 0,
-            rtc_base: 0,
+            pci_io_size: 0x0001_0000,
+            pci_mmio_base: 0x1000_0000,
+            pci_mmio_size: 0x2eff_0000,
+            // PL031, the board's real-time clock.
+            rtc_base: 0x0901_0000,
             memory_regions: {
                 let mut regions = [MemoryRegion::EMPTY; MAX_MEMORY_REGIONS];
                 // Same figures as the scalars above, so the map and the fields
