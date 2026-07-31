@@ -69,7 +69,7 @@ pub fn init_sized(bytes: usize) -> Result<(), HeapError> {
     // SAFETY: ek@nonos.systems — `mk_mmap` returned a userspace VA, so
     // `[base, base + bytes)` is owned by this process.
     unsafe {
-        ALLOCATOR.lock().init(base, bytes);
+        ALLOCATOR.init(base, bytes);
     }
     Ok(())
 }

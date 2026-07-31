@@ -47,7 +47,7 @@ pub fn init() -> Result<(), AllocError> {
         return Err(AllocError::MmapFailed);
     }
     unsafe {
-        ALLOCATOR.lock().init(base, INITIAL_HEAP_SIZE);
+        ALLOCATOR.init(base, INITIAL_HEAP_SIZE);
     }
     Ok(())
 }

@@ -24,6 +24,7 @@ pub mod bounds;
 pub mod buddy;
 pub mod constants;
 pub mod context;
+pub mod heap;
 pub mod mmio;
 pub mod nonce;
 pub mod phys;
@@ -38,6 +39,9 @@ pub mod timer;
 
 #[cfg(test)]
 mod constants_tests;
+
+#[cfg(test)]
+mod heap_tests;
 
 #[cfg(test)]
 mod refinement_tests;

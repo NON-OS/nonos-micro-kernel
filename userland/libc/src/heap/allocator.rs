@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use linked_list_allocator::LockedHeap;
+use super::zero_on_free::ZeroOnFree;
 
 #[global_allocator]
-pub(super) static ALLOCATOR: LockedHeap = LockedHeap::empty();
+pub(super) static ALLOCATOR: ZeroOnFree = ZeroOnFree::empty();

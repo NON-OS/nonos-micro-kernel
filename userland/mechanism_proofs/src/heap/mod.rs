@@ -14,12 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-
-mod allocator;
-mod error;
-mod init;
-mod zero_on_free;
-
-pub use error::AllocError;
-pub use init::init;
+// The real allocator every capsule linking `nonos_userland_libc` frees
+// through. `nonos_alloc` carries a copy of the same wrapper for the capsules
+// that link it instead; the test here covers this one, and the two are kept
+// identical deliberately.
+#[allow(dead_code)]
+#[path = "../../../../userland/libc/src/heap/zero_on_free.rs"]
+pub mod zero_on_free;
