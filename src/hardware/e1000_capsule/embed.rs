@@ -21,9 +21,11 @@
 //! empty slice.
 
 #[cfg(feature = "nonos-capsule-driver-e1000")]
-pub(super) const DRIVER_E1000_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_e1000/target/x86_64-nonos-user/release/driver_e1000"
-);
+pub(super) const DRIVER_E1000_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_e1000/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_e1000"
+));
 
 #[cfg(feature = "nonos-capsule-driver-e1000")]
 pub(super) const DRIVER_E1000_NONOS_ID_CERT_BYTES: &[u8] =

@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-attest")]
 pub(crate) const ATTEST_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_attest/target/x86_64-nonos-user/release/attest");
+    include_bytes!(concat!(
+    "../../../userland/capsule_attest/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/attest"
+));
 
 #[cfg(feature = "nonos-capsule-attest")]
 pub(crate) const ATTEST_NONOS_ID_CERT_BYTES: &[u8] =

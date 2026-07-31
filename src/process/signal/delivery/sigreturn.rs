@@ -38,11 +38,9 @@ pub fn sigreturn_current() -> ! {
 #[inline]
 fn read_user_rsp() -> u64 {
     let rsp: u64;
-    // SAFETY: reads `user_stack_saved` in PerCpuData, where the syscall
-    // asm shim writes the user RSP on entry after `swapgs`. An earlier
-    // version read `current_process` (an unrelated AtomicU64) and would
-    // surface a bogus user RSP. The kernel GS base is still active here
-    // because sysret/iretq has not happened yet.
+    // SAFETY: ek@nonos.systems - reads `user_stack_saved` in PerCpuData, where
+    // the syscall asm shim writes the user RSP on entry after `swapgs`. Kernel
+    // GS is still active here because sysret/iretq has not happened yet.
     unsafe {
         core::arch::asm!(
             "mov {0}, gs:[{off}]",

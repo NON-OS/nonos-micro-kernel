@@ -29,7 +29,7 @@ const SERVICE_NAME: &str = "wallpaper_catalog";
 const SERVICE_PORT: u32 = 4110;
 const REPLY_INBOX: &str = "endpoint.wallpaper_catalog.reply";
 const REPLY_PORT: u32 = 4111;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 const REQUIRED_CAPS: u64 = 0x19;
 
 pub fn spawn_wallpaper_catalog_capsule() -> Result<(), SpawnError> {

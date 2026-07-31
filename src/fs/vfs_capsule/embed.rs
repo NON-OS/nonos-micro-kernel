@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-vfs")]
 pub(super) const VFS_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_vfs/target/x86_64-nonos-user/release/vfs");
+    include_bytes!(concat!(
+    "../../../userland/capsule_vfs/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/vfs"
+));
 
 #[cfg(feature = "nonos-capsule-vfs")]
 pub(super) const VFS_NONOS_ID_CERT_BYTES: &[u8] =

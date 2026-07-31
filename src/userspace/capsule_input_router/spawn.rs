@@ -32,7 +32,7 @@ const SERVICE_NAME: &str = "input_router";
 const SERVICE_PORT: u32 = 4320;
 const REPLY_INBOX: &str = "endpoint.input_router.reply";
 const REPLY_PORT: u32 = 4321;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_input_router_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

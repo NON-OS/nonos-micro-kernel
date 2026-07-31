@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-installer")]
-pub(crate) const INSTALLER_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_installer/target/x86_64-nonos-user/release/installer"
-);
+pub(crate) const INSTALLER_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_installer/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/installer"
+));
 
 #[cfg(feature = "nonos-capsule-installer")]
 pub(crate) const INSTALLER_NONOS_ID_CERT_BYTES: &[u8] =

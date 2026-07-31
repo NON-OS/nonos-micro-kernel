@@ -58,4 +58,16 @@ pub fn init(boot_info: &BootInfo) {
     if super::multicore::roster::len() > 1 {
         super::multicore::start_secondary_cpus(boot_info);
     }
+
+    // Firmware hands the kernel a CPU with DAIF masked and `_start` keeps it
+    // that way, so nothing is delivered until this point. It goes last, once the
+    // vectors are installed and the GIC and timer can say who is asking:
+    // unmasking earlier means the first interrupt arrives before anything can
+    // handle it.
+    //
+    // x86_64 does the same thing with `sti` inside its own early setup, which
+    // this path does not share. Without it the timer never ticks, the clock
+    // never advances, and anything waiting on elapsed time waits forever with
+    // the machine idle and no sign of what is wrong.
+    cpu::enable_interrupts();
 }

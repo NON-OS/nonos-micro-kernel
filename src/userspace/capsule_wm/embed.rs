@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-wm")]
 pub(crate) const WM_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_wm/target/x86_64-nonos-user/release/wm");
+    include_bytes!(concat!(
+    "../../../userland/capsule_wm/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/wm"
+));
 
 #[cfg(feature = "nonos-capsule-wm")]
 pub(crate) const WM_NONOS_ID_CERT_BYTES: &[u8] =

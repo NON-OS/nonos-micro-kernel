@@ -35,7 +35,7 @@ const SERVICE_NAME: &str = "net.ntp.client";
 const SERVICE_PORT: u32 = 4482;
 const REPLY_INBOX: &str = "endpoint.net.ntp.client.reply";
 const REPLY_PORT: u32 = 4483;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_net_ntp_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

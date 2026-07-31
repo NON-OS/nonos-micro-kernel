@@ -14,13 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Wiping a user range that belongs to some other address space.
-//!
-//! The shutdown wipe runs in whichever process called it, so a user virtual
-//! address from a different process means nothing here: writing it either
-//! faults or, worse, scribbles the caller's own page at the same address. Each
-//! page is translated in the owning address space and zeroed through the
-//! directmap instead, which needs no CR3 switch and skips what is not mapped.
+//! Wiping a user range belonging to another address space. The shutdown wipe
+//! runs in whichever process called it, so a foreign user address either
+//! faults or scribbles the caller's own page at that address. Each page is
+//! translated in the owning space and zeroed through the directmap instead.
 
 use super::erase::secure_zero;
 use crate::memory::addr::VirtAddr;

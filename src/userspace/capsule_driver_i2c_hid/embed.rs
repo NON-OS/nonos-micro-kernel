@@ -7,9 +7,11 @@
 // (at your option) any later version.
 
 #[cfg(feature = "nonos-capsule-driver-i2c-hid")]
-pub(super) const DRIVER_I2C_HID_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_i2c_hid/target/x86_64-nonos-user/release/driver_i2c_hid"
-);
+pub(super) const DRIVER_I2C_HID_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_i2c_hid/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_i2c_hid"
+));
 
 #[cfg(feature = "nonos-capsule-driver-i2c-hid")]
 pub(super) const DRIVER_I2C_HID_NONOS_ID_CERT_BYTES: &[u8] =

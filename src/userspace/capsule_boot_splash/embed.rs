@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-boot-splash")]
-pub(crate) const BOOT_SPLASH_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_boot_splash/target/x86_64-nonos-user/release/boot_splash"
-);
+pub(crate) const BOOT_SPLASH_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_boot_splash/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/boot_splash"
+));
 
 #[cfg(feature = "nonos-capsule-boot-splash")]
 pub(crate) const BOOT_SPLASH_NONOS_ID_CERT_BYTES: &[u8] =

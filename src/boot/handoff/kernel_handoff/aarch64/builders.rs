@@ -47,11 +47,16 @@ pub(super) fn cpus(info: &BootInfo) -> CpuTopology {
 }
 
 pub(super) fn timing() -> TimingHandoff {
-    // The generic timer's frequency comes from CNTFRQ_EL0, which the timer
-    // code reads for itself, and the device tree carries no wall-clock time.
-    // Both stay unset rather than guessed; `clock::init` reads zero as "the
-    // boot path did not know" and the RTC supplies the epoch later.
-    TimingHandoff { fixed_freq_hz: None, unix_epoch_ms: 0 }
+    // CNTFRQ_EL0 is the generic timer's tick rate, and the clock needs it to
+    // turn a counter delta into milliseconds. Leaving it unset stops the clock
+    // advancing at all, which does not fail loudly: anything waiting on elapsed
+    // time waits forever, and the boot simply stops making progress.
+    //
+    // Zero means firmware never told the part its own frequency and there is
+    // nothing to infer from, so `None` stays the honest answer there. The device
+    // tree carries no wall-clock time either way; the RTC supplies the epoch.
+    let hz = crate::arch::aarch64::timer::frequency();
+    TimingHandoff { fixed_freq_hz: (hz > 0).then_some(hz), unix_epoch_ms: 0 }
 }
 
 pub(super) fn measurement() -> Measurement {

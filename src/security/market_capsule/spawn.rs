@@ -37,7 +37,7 @@ pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 const SERVICE_NAME: &str = "market.index";
 const SERVICE_PORT: u32 = 4106;
 const REPLY_PORT: u32 = 4107;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_market_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

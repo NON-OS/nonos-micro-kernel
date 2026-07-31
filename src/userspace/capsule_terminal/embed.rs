@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-terminal")]
 pub(crate) const TERMINAL_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_terminal/target/x86_64-nonos-user/release/terminal");
+    include_bytes!(concat!(
+    "../../../userland/capsule_terminal/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/terminal"
+));
 
 #[cfg(feature = "nonos-capsule-terminal")]
 pub(crate) const TERMINAL_NONOS_ID_CERT_BYTES: &[u8] =

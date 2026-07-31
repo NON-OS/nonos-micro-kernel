@@ -31,7 +31,7 @@ const SERVICE_NAME: &str = "image_codec";
 const SERVICE_PORT: u32 = 4412;
 const REPLY_INBOX: &str = "endpoint.image_codec.reply";
 const REPLY_PORT: u32 = 4413;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 const REQUIRED_CAPS: u64 = 0x3819;
 
 pub fn spawn_image_codec_capsule() -> Result<(), SpawnError> {

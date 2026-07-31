@@ -14,19 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Holding the kernel's constants against the numbers the Lean specifications
-//! state.
-//!
-//! A Lean file that says `def userTop : Nat := 0x00007FFFFFFFFFFF` is making a
-//! claim about the kernel, but it is a claim written as its own literal: the
-//! two agree until someone edits one of them. Nothing in the tree noticed that
-//! before this file, so the theorems resting on those numbers could have gone
-//! quietly stale.
-//!
-//! Each assertion below names the Lean definition it mirrors. Changing the
-//! kernel constant fails here, and the fix is to change the Lean file in the
-//! same commit, which is what keeps a proof about the model a proof about the
-//! code.
+//! Holds the kernel's constants against the numbers the Lean specs state.
+//! A spec writes them as its own literals, so the two agree only until someone
+//! edits one. Each assertion names the definition it mirrors; changing the
+//! kernel constant fails here until the Lean file moves with it.
 
 use crate::constants::canonical::{CANONICAL_HIGH_MIN, CANONICAL_LOW_MAX, USER_TOP};
 use crate::constants::chain::MAX_CHAIN_DEPTH;

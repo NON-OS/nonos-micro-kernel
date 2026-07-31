@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-login")]
 pub(crate) const LOGIN_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_login/target/x86_64-nonos-user/release/login",);
+    include_bytes!(concat!(
+    "../../../userland/capsule_login/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/login"
+));
 
 #[cfg(feature = "nonos-capsule-login")]
 pub(crate) const LOGIN_NONOS_ID_CERT_BYTES: &[u8] =

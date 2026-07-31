@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-calculator")]
-pub(crate) const CALCULATOR_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_calculator/target/x86_64-nonos-user/release/calculator"
-);
+pub(crate) const CALCULATOR_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_calculator/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/calculator"
+));
 
 #[cfg(feature = "nonos-capsule-calculator")]
 pub(crate) const CALCULATOR_NONOS_ID_CERT_BYTES: &[u8] =

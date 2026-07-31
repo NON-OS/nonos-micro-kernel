@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-audio")]
 pub(super) const AUDIO_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_audio/target/x86_64-nonos-user/release/audio_server");
+    include_bytes!(concat!(
+    "../../../userland/capsule_audio/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/audio_server"
+));
 
 #[cfg(feature = "nonos-capsule-audio")]
 pub(super) const AUDIO_NONOS_ID_CERT_BYTES: &[u8] =

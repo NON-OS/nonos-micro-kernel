@@ -47,7 +47,7 @@ impl ToolCapsule {
             nonos_id_cert_bytes: self.cert,
             manifest_bytes: self.manifest,
             attestation_trailer: self.attestation,
-            target_triple: "x86_64-nonos-user",
+            target_triple: env!("NONOS_USER_TARGET"),
             requested_caps: Capability::CoreExec.bit()
                 | Capability::IPC.bit()
                 | Capability::Memory.bit(),

@@ -14,17 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Wiping the per-process kernel stacks at shutdown.
-//!
-//! These come from the page allocator, not the heap, so the heap erase does
-//! not reach them, and they are kernel-half addresses so the process wipe does
-//! not either. What sits on them is whatever the kernel last did on behalf of
-//! that process: bytes copied from user space, key material a syscall handled.
-//!
-//! The stack this code is running on is the one exception and is skipped by
-//! address rather than by pid, because the wipe runs on whichever stack the
-//! caller entered on. The other CPUs are stopped before this runs, so no other
-//! stack is live.
+//! Wiping the per-process kernel stacks at shutdown. They come from the page
+//! allocator, not the heap, and sit in the kernel half, so neither the heap
+//! erase nor the process wipe reaches them; they hold user bytes a syscall
+//! copied in. The running stack is skipped by address, not pid, since the wipe
+//! runs on whichever stack the caller entered on.
 
 use super::erase::secure_zero;
 use crate::memory::addr::VirtAddr;

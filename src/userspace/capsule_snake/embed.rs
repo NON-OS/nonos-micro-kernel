@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-snake")]
 pub(crate) const SNAKE_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_snake/target/x86_64-nonos-user/release/snake");
+    include_bytes!(concat!(
+    "../../../userland/capsule_snake/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/snake"
+));
 
 #[cfg(feature = "nonos-capsule-snake")]
 pub(crate) const SNAKE_NONOS_ID_CERT_BYTES: &[u8] =

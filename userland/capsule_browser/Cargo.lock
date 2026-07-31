@@ -73,7 +73,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_app_skeleton"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "nonos_toolkit",
  "nonos_userland_libc",
@@ -81,11 +81,11 @@ dependencies = [
 
 [[package]]
 name = "nonos_base64"
-version = "0.1.0"
+version = "0.2.0"
 
 [[package]]
 name = "nonos_browser"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "nonos_app_skeleton",
  "nonos_base64",
@@ -98,11 +98,11 @@ dependencies = [
 
 [[package]]
 name = "nonos_inflate"
-version = "0.1.0"
+version = "0.2.0"
 
 [[package]]
 name = "nonos_qjs"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "cc",
  "libm",
@@ -110,7 +110,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_toolkit"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "ab_glyph",
  "nonos_userland_libc",
@@ -119,7 +119,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_userland_libc"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "linked_list_allocator",
 ]

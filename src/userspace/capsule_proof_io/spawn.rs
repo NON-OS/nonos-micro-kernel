@@ -30,7 +30,7 @@ const SERVICE_NAME: &str = "proof_io";
 const SERVICE_PORT: u32 = 4500;
 const REPLY_INBOX: &str = "endpoint.proof_io.reply";
 const REPLY_PORT: u32 = 4501;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_proof_io_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

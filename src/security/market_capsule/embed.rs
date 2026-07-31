@@ -22,7 +22,11 @@
 
 #[cfg(feature = "nonos-capsule-market")]
 pub(super) const MARKET_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_market/target/x86_64-nonos-user/release/market");
+    include_bytes!(concat!(
+    "../../../userland/capsule_market/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/market"
+));
 
 #[cfg(feature = "nonos-capsule-market")]
 pub(super) const MARKET_NONOS_ID_CERT_BYTES: &[u8] =

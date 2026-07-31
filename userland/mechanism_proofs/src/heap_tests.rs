@@ -16,16 +16,10 @@
 
 //! A freed capsule allocation is unreadable afterwards.
 //!
-//! Run against the real `ZeroOnFree` the capsules link, on a backing region
-//! this test owns, so the block can be read back after `dealloc` the way
-//! whatever allocates next would see it. Without the wipe a plain free list
-//! overwrites only its own links at the head of the block and leaves the rest:
-//! measured at 48 of 64 secret bytes surviving. With it, none do.
-//!
-//! Reads and writes go through `read_volatile` and `write_volatile` because
-//! the compiler is entitled to assume nothing observes a freed block, and an
-//! ordinary read here folds against the writes above it and reports whatever
-//! the test wants to hear.
+//! Runs the real ZeroOnFree over a region this test owns so the block can be
+//! read back after dealloc. Without the wipe, 48 of 64 secret bytes survived.
+//! Volatile both ways: the compiler may assume nothing reads a freed block, so
+//! a plain read folds against the writes and passes regardless.
 
 use core::alloc::{GlobalAlloc, Layout};
 

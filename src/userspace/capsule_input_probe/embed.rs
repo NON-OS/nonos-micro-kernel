@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-input-probe")]
-pub(crate) const INPUT_PROBE_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_input_probe/target/x86_64-nonos-user/release/input_probe"
-);
+pub(crate) const INPUT_PROBE_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_input_probe/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/input_probe"
+));
 
 #[cfg(feature = "nonos-capsule-input-probe")]
 pub(crate) const INPUT_PROBE_NONOS_ID_CERT_BYTES: &[u8] =
