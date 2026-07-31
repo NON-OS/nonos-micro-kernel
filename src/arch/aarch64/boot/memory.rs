@@ -33,11 +33,31 @@ const DMA_CEILING_32BIT: u64 = 0x1_0000_0000;
 const DMA_POOL_MIN_BASE: u64 = 0x0100_0000;
 const PAGE_SIZE: u64 = 0x1000;
 
+extern "C" {
+    static __kernel_image_end: u8;
+}
+
 pub(crate) fn init_boot_memory(info: &BootInfo) {
-    let Some((start, end)) = largest_available(info) else {
+    let Some((region_start, end)) = largest_available(info) else {
         serial::println(b"[MEM] no usable region in device tree");
         return;
     };
+
+    // The image sits inside the region firmware calls available, so the
+    // allocator has to be told where it ends. A frame holding kernel text is
+    // not a fault the kernel survives to report: it is handed out as a fresh
+    // page table, zeroed, and the next call into whatever lived there executes
+    // zeros.
+    let image_end = (&raw const __kernel_image_end) as u64;
+    let start = if image_end > region_start && image_end < end {
+        (image_end + PAGE_SIZE - 1) & !(PAGE_SIZE - 1)
+    } else {
+        region_start
+    };
+    if start >= end {
+        serial::println(b"[MEM] nothing usable above the kernel image");
+        return;
+    }
 
     let (dma_base, dma_pages) = find_low_dma_region(info, start, end);
 

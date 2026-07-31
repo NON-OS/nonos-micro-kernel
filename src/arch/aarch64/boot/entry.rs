@@ -30,13 +30,14 @@ use crate::sys::serial;
 
 #[no_mangle]
 pub extern "C" fn kernel_entry(dtb_ptr: u64) -> ! {
-    let mut info = BootInfo::default();
-
-    // FP and SIMD before any compiled Rust runs. The compiler uses the vector
-    // registers for ordinary things like a struct copy, and reaching one with
-    // CPACR_EL1.FPEN clear traps, which at this point means a fault with no
-    // vectors installed to report it.
+    // First statement in the function, before even a local exists. The compiler
+    // uses the vector registers for ordinary work, and building `BootInfo` here
+    // compiles to a `ldr q0` that traps while CPACR_EL1.FPEN is clear, with no
+    // vectors installed yet to report it. Anything placed above this call is
+    // running before the registers it may be compiled into are usable.
     crate::arch::aarch64::cpu::init_cpu();
+
+    let mut info = BootInfo::default();
 
     // Console next, on the default base, so everything after can report its own
     // failure. The device tree may name a different UART, in which case `init`
