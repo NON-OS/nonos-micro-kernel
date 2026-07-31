@@ -48,10 +48,10 @@ pub enum ProbeError {
 
 /// Map the first unit DMAR reported and read its capabilities.
 ///
-/// One unit for now. A machine with several needs each programmed, and picking
-/// only the first would silently leave devices behind the others unconfined,
-/// so `probe_all` reports the count and callers must not assume one covers the
-/// machine.
+/// This reads a single unit. A machine with several needs each programmed, and
+/// picking only the first would silently leave devices behind the others
+/// unconfined, so `probe_all` reports the count and callers must not assume one
+/// covers the machine.
 pub fn probe_first() -> Result<UnitInfo, ProbeError> {
     let bases = remap_unit_bases();
     let base = *bases.first().ok_or(ProbeError::NoUnits)?;
