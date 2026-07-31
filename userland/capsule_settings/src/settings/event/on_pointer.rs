@@ -47,9 +47,26 @@ pub(super) fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
         }
         return EventOutcome::Repaint;
     }
-    // The Wi-Fi panel is keyboard-driven; body clicks there do nothing.
+    // Clicking a network selects it. The panel used to drop every body click,
+    // so networks could only be reached with the arrow keys plus `c`, which
+    // the panel does not mention anywhere.
     if state.wifi_active {
-        return EventOutcome::Idle;
+        // While the passphrase editor is open the body is not a list.
+        if state.wifi_pass_active || state.wifi_network_count == 0 {
+            return EventOutcome::Idle;
+        }
+        // Mirrors paint_wifi: the heading row, then the adapter row, then a
+        // 4px gap, then one row per network.
+        let net_top = BODY_TOP + 2 * ROW_H + 4;
+        if y < net_top {
+            return EventOutcome::Idle;
+        }
+        let row = ((y - net_top) / ROW_H) as usize;
+        if row >= state.wifi_network_count {
+            return EventOutcome::Idle;
+        }
+        state.wifi_cursor = row;
+        return EventOutcome::Repaint;
     }
     // Against the manifest height, a click below the starting height read as
     // the status bar and was dropped, so a taller window had a dead lower half.
