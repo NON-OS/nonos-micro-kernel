@@ -1,8 +1,8 @@
 extern crate alloc;
-use nonos_app_skeleton::PaintBuffer;
-use crate::viewer::scale::{draw_nn, Dst};
 use crate::viewer::gallery::layout::{cell_rect, grid, Grid, HEADER_H, THUMB_H, THUMB_W};
 use crate::viewer::gallery::state::{GalleryState, MAX_TILES};
+use crate::viewer::scale::{draw_nn, Dst};
+use nonos_app_skeleton::PaintBuffer;
 
 const BG: u32 = 0xFF10_1418;
 const FG: u32 = 0xFFE6_E6E6;
@@ -28,10 +28,18 @@ fn paint_boxes(fb: &mut PaintBuffer, g: &GalleryState, gr: &Grid, n: usize) {
     let h = fb.height;
     for i in 0..n {
         let (x, y, _cw, ch) = cell_rect(i, g.scroll, gr);
-        if y + ch as i32 <= HEADER_H as i32 || y >= h as i32 { continue; }
+        if y + ch as i32 <= HEADER_H as i32 || y >= h as i32 {
+            continue;
+        }
         let (ux, uy) = (x.max(0) as u32, y.max(0) as u32);
         let e = &g.entries[i];
-        let base = if e.failed { ERRTILE } else if e.thumb.is_none() { PLACEHOLDER } else { BG };
+        let base = if e.failed {
+            ERRTILE
+        } else if e.thumb.is_none() {
+            PLACEHOLDER
+        } else {
+            BG
+        };
         fb.fill_rect(ux, uy, THUMB_W, THUMB_H, base);
         if i == g.sel {
             fb.fill_rect(ux, uy, THUMB_W, 2, SEL);
@@ -46,7 +54,9 @@ fn blit_thumbs(fb: &mut PaintBuffer, g: &GalleryState, gr: &Grid, n: usize) {
     let mut dst = Dst { px: fb.pixels, stride, w, h };
     for i in 0..n {
         let (x, y, _cw, ch) = cell_rect(i, g.scroll, gr);
-        if y + ch as i32 <= HEADER_H as i32 || y >= h as i32 { continue; }
+        if y + ch as i32 <= HEADER_H as i32 || y >= h as i32 {
+            continue;
+        }
         if let Some(thumb) = g.entries[i].thumb.as_ref() {
             let (tw, th) = (g.entries[i].tw, g.entries[i].th);
             let ox = x + ((THUMB_W - tw) / 2) as i32;
@@ -58,7 +68,10 @@ fn blit_thumbs(fb: &mut PaintBuffer, g: &GalleryState, gr: &Grid, n: usize) {
 
 fn label(path: &str) -> &[u8] {
     let b = path.as_bytes();
-    let start = match b.iter().rposition(|&c| c == b'/') { Some(i) => i + 1, None => 0 };
+    let start = match b.iter().rposition(|&c| c == b'/') {
+        Some(i) => i + 1,
+        None => 0,
+    };
     let end = (start + 18).min(b.len());
     &b[start..end]
 }

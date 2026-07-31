@@ -1,9 +1,9 @@
 extern crate alloc;
+use crate::viewer::state::ViewerState;
+use crate::viewer::viewport::FitMode;
 use alloc::format;
 use alloc::string::String;
 use nonos_app_skeleton::PaintBuffer;
-use crate::viewer::state::ViewerState;
-use crate::viewer::viewport::FitMode;
 
 const PANEL: u32 = 0xC0_10_14_18;
 const FG: u32 = 0xFFE6_E6E6;
@@ -43,7 +43,9 @@ fn mode_name(mode: FitMode) -> &'static str {
 }
 
 pub fn draw_info(fb: &mut PaintBuffer, st: &ViewerState) {
-    if !st.info_visible { return; }
+    if !st.info_visible {
+        return;
+    }
     fb.fill_rect(0, 0, 260, 60, PANEL);
     let path = st.dir.get(st.idx).map(|p| p.as_str());
     fb.text(8, 6, path.map(basename).unwrap_or("(no image)").as_bytes(), FG);
@@ -51,12 +53,15 @@ pub fn draw_info(fb: &mut PaintBuffer, st: &ViewerState) {
     let fmt = path.map(ext_upper).unwrap_or_default();
     fb.text(8, 24, format!("{}x{}  {}  {}B", w, h, fmt, st.file_size).as_bytes(), FG);
     let zoom_pct = (st.view.zoom * 100.0) as u32;
-    let line = format!("{}/{}  {}%  {}", st.idx + 1, st.dir.len(), zoom_pct, mode_name(st.fit_mode));
+    let line =
+        format!("{}/{}  {}%  {}", st.idx + 1, st.dir.len(), zoom_pct, mode_name(st.fit_mode));
     fb.text(8, 42, line.as_bytes(), FG);
 }
 
 pub fn draw_help(fb: &mut PaintBuffer, st: &ViewerState) {
-    if !st.help_visible { return; }
+    if !st.help_visible {
+        return;
+    }
     let h = 8 + KEYMAP.len() as u32 * 16;
     fb.fill_rect(0, 0, 260, h, PANEL);
     for (i, (keys, action)) in KEYMAP.iter().enumerate() {
@@ -65,7 +70,9 @@ pub fn draw_help(fb: &mut PaintBuffer, st: &ViewerState) {
 }
 
 pub fn draw_slideshow(fb: &mut PaintBuffer, st: &ViewerState) {
-    if !st.slideshow_on { return; }
+    if !st.slideshow_on {
+        return;
+    }
     let line = format!("> {}s", st.interval_ms / 1000);
     fb.text(fb.width.saturating_sub(60), 6, line.as_bytes(), FG);
 }
