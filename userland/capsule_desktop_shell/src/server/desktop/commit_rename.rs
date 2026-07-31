@@ -18,8 +18,9 @@
 
 use alloc::format;
 use alloc::string::ToString;
+use nonos_libc::mk_time_millis;
 
-use crate::state::Context;
+use crate::state::{Context, NotifyLevel};
 
 pub fn commit_rename(ctx: &mut Context) {
     super::release_keys::release_keys(ctx);
@@ -40,5 +41,9 @@ pub fn commit_rename(ctx: &mut Context) {
     let new = format!("/{new_name}");
     if crate::vfs_client::rename(old.as_bytes(), new.as_bytes()) {
         let _ = super::refresh::refresh(ctx);
+    } else {
+        // The name silently snapped back to the old one before.
+        let now = mk_time_millis();
+        ctx.toasts.push(b"could not rename", NotifyLevel::Error, now);
     }
 }
