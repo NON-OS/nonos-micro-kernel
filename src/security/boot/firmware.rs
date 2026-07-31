@@ -18,16 +18,17 @@ extern crate alloc;
 
 use alloc::collections::BTreeMap;
 use alloc::string::String;
+use spin::Once;
 
 pub struct FirmwareDB {
     pub trusted_hashes: BTreeMap<String, [u8; 32]>,
 }
 
-static mut FIRMWARE_DB: Option<FirmwareDB> = None;
+// Same reason as the module database: written once at init, read afterwards,
+// and a `static mut` publishes it with no ordering for another CPU to observe.
+static FIRMWARE_DB: Once<FirmwareDB> = Once::new();
 
 pub fn init() -> Result<(), &'static str> {
-    unsafe {
-        FIRMWARE_DB = Some(FirmwareDB { trusted_hashes: BTreeMap::new() });
-    }
+    FIRMWARE_DB.call_once(|| FirmwareDB { trusted_hashes: BTreeMap::new() });
     Ok(())
 }
