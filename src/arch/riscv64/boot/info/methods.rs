@@ -19,15 +19,27 @@ use super::types::BootInfo;
 
 impl BootInfo {
     pub fn total_memory(&self) -> u64 {
-        self.memory_regions
+        self.memory_map()
             .iter()
             .filter(|r| r.region_type == MemoryType::Available)
             .map(|r| r.size)
             .sum()
     }
 
+    /// The regions filled so far.
+    pub fn memory_map(&self) -> &[MemoryRegion] {
+        &self.memory_regions[..self.memory_region_count]
+    }
+
+    /// Record a region. Silently drops anything past the fixed capacity, which
+    /// is the honest answer here: this runs before the console and before the
+    /// heap, so there is nowhere to report to and nothing to grow into.
     pub fn add_memory_region(&mut self, base: u64, size: u64, region_type: MemoryType) {
-        self.memory_regions.push(MemoryRegion { base, size, region_type });
+        if self.memory_region_count < self.memory_regions.len() {
+            self.memory_regions[self.memory_region_count] =
+                MemoryRegion { base, size, region_type };
+            self.memory_region_count += 1;
+        }
     }
 
     pub fn usable_memory_start(&self) -> u64 {
