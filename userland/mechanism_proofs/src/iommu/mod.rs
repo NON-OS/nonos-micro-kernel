@@ -14,18 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! VT-d domain and device bookkeeping. No device is confined by this module:
-//! DMA remapping is never enabled. Domains and bindings are tracked in
-//! software, but no root table, context entry or second-level page table is
-//! written and Translation Enable is never set, so every DMA-capable device
-//! can reach all of physical memory. Calls that would imply isolation return
-//! `NotEnforcing` rather than success. The tables are kept because a real
-//! implementation programs from them.
+// The real VT-d capability decode and table encoding the kernel uses.
+#[allow(dead_code)]
+#[path = "../../../../src/arch/x86_64/iommu/regs/cap.rs"]
+pub mod cap;
 
-pub mod device;
-pub mod domain;
-pub mod globals;
-pub mod mapping;
-pub mod regs;
-pub mod tables;
-pub mod types;
+#[allow(dead_code)]
+#[path = "../../../../src/arch/x86_64/iommu/tables/sl_pte.rs"]
+pub mod sl_pte;
+
+#[allow(dead_code)]
+#[path = "../../../../src/arch/x86_64/iommu/tables/context.rs"]
+pub mod context;
