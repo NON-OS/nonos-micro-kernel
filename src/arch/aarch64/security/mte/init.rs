@@ -19,7 +19,10 @@ use core::arch::asm;
 use crate::arch::aarch64::cpu::features::{has_feature, CpuFeature};
 
 pub fn init_mte() {
-    if has_feature(CpuFeature::Mte) {
+    // Everything below is EL1 state: the TCR tag-checking bits, SCTLR.ATA and
+    // GCR_EL1. All three arrive with FEAT_MTE2, so a part reporting plain MTE,
+    // which is EL0 instructions and nothing else, must not come through here.
+    if has_feature(CpuFeature::Mte2) {
         configure_tcr_mte();
         configure_sctlr_mte();
         configure_gcr();

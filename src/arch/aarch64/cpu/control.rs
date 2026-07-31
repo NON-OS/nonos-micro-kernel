@@ -16,16 +16,31 @@
 
 use core::arch::asm;
 
+/// Put SCTLR_EL1 into the state the rest of bring-up expects.
+///
+/// Deliberately leaves M, C and I alone. Translation and the caches come on
+/// together in `mmu::control::enable_mmu`, once TTBR and TCR are loaded and the
+/// tables describe the image. Setting M here faults on the next instruction
+/// fetch, before the vectors are installed to report it, so the machine hangs
+/// with nothing on the console to say why.
+///
+/// SA0 keeps stack alignment checked at EL0. UCI lets EL0 issue the cache
+/// maintenance it is permitted. WXN is cleared because write implying
+/// execute-never belongs in the tables, stated per mapping, not as one global
+/// switch that the page attributes then have to work around.
 pub(super) fn configure_sctlr() {
+    const SCTLR_SA0: u64 = 1 << 4;
+    const SCTLR_WXN: u64 = 1 << 19;
+    const SCTLR_UCI: u64 = 1 << 26;
+
     let mut sctlr: u64;
+    // SAFETY: SCTLR_EL1 is readable and writable at EL1. None of the bits
+    // touched here affect translation, which is still off.
     unsafe {
         asm!("mrs {}, sctlr_el1", out(reg) sctlr, options(nostack));
     }
-    sctlr |= 1 << 0;
-    sctlr |= 1 << 2;
-    sctlr |= 1 << 12;
-    sctlr |= 1 << 26;
-    sctlr &= !(1 << 19);
+    sctlr |= SCTLR_SA0 | SCTLR_UCI;
+    sctlr &= !SCTLR_WXN;
     unsafe {
         asm!("msr sctlr_el1, {}", in(reg) sctlr, options(nostack));
         asm!("isb", options(nostack));

@@ -51,6 +51,7 @@ pub fn has_feature(feature: CpuFeature) -> bool {
         CpuFeature::Sme => ((aa64pfr1 >> 24) & 0xF) >= 1,
         CpuFeature::Bti => (aa64pfr1 & 0xF) >= 1,
         CpuFeature::Mte => ((aa64pfr1 >> 8) & 0xF) >= 1,
+        CpuFeature::Mte2 => ((aa64pfr1 >> 8) & 0xF) >= 2,
         CpuFeature::Rng => ((aa64isar0 >> 60) & 0xF) >= 1,
         CpuFeature::Pan => (read_aa64mmfr1() & 0xF) >= 1,
     }
