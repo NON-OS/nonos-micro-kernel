@@ -61,9 +61,12 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     // id cache and nothing else: controller mode, base and init state are
     // untouched, so the timer and IPI paths are unaffected.
     crate::arch::interrupt_controller::cache_boot_cpu_id();
+    // Named for the job, not the part: x86_64 does this with an IO-APIC and
+    // aarch64 with the GIC distributor, which is already up by the time this
+    // runs.
     match crate::arch::init_broker_irq_routing() {
-        Ok(_) => boot_log::ok("NONOS", "broker IO-APIC routing ready"),
-        Err(_) => crate::sys::serial::println(b"[NONOS] broker IO-APIC init failed"),
+        Ok(_) => boot_log::ok("NONOS", "device interrupt routing ready"),
+        Err(_) => crate::sys::serial::println(b"[NONOS] device interrupt routing failed"),
     }
     crate::process::init_process_management();
     crate::elf::loader::init_elf_loader();
