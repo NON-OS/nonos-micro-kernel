@@ -49,14 +49,10 @@ fn compile_arch_asm() {
     }
 
     let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
-    let (subdir, clang_target, arch_flags) = match arch.as_str() {
-        "x86_64" => {
-            ("x86_64", "x86_64-unknown-none-elf", &["-mno-red-zone", "-mcmodel=kernel"][..])
-        }
-        "aarch64" => ("aarch64", "aarch64-unknown-none-elf", &[][..]),
-        "riscv64" => ("riscv64", "riscv64-unknown-none-elf", &[][..]),
-        _ => return,
+    let Some((clang_target, arch_flags)) = c_target(&arch) else {
+        return;
     };
+    let subdir = arch.as_str();
 
     let dir = PathBuf::from(format!("src/arch/{}/asm", subdir));
     if !dir.exists() {
@@ -172,6 +168,11 @@ fn compile_pqclean_mlkem() {
         return;
     }
 
+    let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
+    let Some((c_triple, c_flags)) = c_target(&arch) else {
+        return;
+    };
+
     let mut build = cc::Build::new();
     build
         .compiler("clang")
@@ -182,7 +183,7 @@ fn compile_pqclean_mlkem() {
         .opt_level(2)
         .pic(false)
         .flag("-target")
-        .flag("x86_64-unknown-none-elf")
+        .flag(c_triple)
         .flag("-ffreestanding")
         .flag("-fno-builtin")
         .flag("-fno-strict-aliasing")
@@ -190,12 +191,14 @@ fn compile_pqclean_mlkem() {
         .flag("-fno-omit-frame-pointer")
         .flag("-fno-tree-vectorize")
         .flag("-fno-stack-protector")
-        .flag("-mno-red-zone")
-        .flag("-mcmodel=kernel")
         .flag("-fno-pic")
         .flag("-w")
         .define(kem_macro, None)
         .warnings(false);
+
+    for flag in c_flags {
+        build.flag(flag);
+    }
 
     configure_cross_archive(&mut build);
     build.compile("pqclean_mlkem_clean");
@@ -246,6 +249,11 @@ fn compile_pqclean_mldsa() {
         return;
     }
 
+    let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
+    let Some((c_triple, c_flags)) = c_target(&arch) else {
+        return;
+    };
+
     let mut build = cc::Build::new();
     build
         .compiler("clang")
@@ -256,7 +264,7 @@ fn compile_pqclean_mldsa() {
         .opt_level(2)
         .pic(false)
         .flag("-target")
-        .flag("x86_64-unknown-none-elf")
+        .flag(c_triple)
         .flag("-ffreestanding")
         .flag("-fno-builtin")
         .flag("-fno-strict-aliasing")
@@ -264,12 +272,14 @@ fn compile_pqclean_mldsa() {
         .flag("-fno-omit-frame-pointer")
         .flag("-fno-tree-vectorize")
         .flag("-fno-stack-protector")
-        .flag("-mno-red-zone")
-        .flag("-mcmodel=kernel")
         .flag("-fno-pic")
         .flag("-w")
         .define(sign_macro, None)
         .warnings(false);
+
+    for flag in c_flags {
+        build.flag(flag);
+    }
 
     configure_cross_archive(&mut build);
     build.compile("pqclean_mldsa_clean");
@@ -528,5 +538,23 @@ fn rerun_on_capsule_binaries() {
                 }
             }
         }
+    }
+}
+
+/// The clang target triple and any extra flags the freestanding C in this tree
+/// needs for `arch`. Every C source here is compiled for the kernel rather than
+/// for the machine doing the build, so the triple follows the cargo target.
+/// `None` where there is no kernel C for that architecture.
+///
+/// The two x86_64 flags have no counterpart elsewhere. Kernel code cannot use the
+/// red zone below the stack pointer, because an interrupt frame would land in it,
+/// and the kernel code model places the image in the top 2GB. aarch64 addresses
+/// the whole space uniformly and needs neither.
+fn c_target(arch: &str) -> Option<(&'static str, &'static [&'static str])> {
+    match arch {
+        "x86_64" => Some(("x86_64-unknown-none-elf", &["-mno-red-zone", "-mcmodel=kernel"][..])),
+        "aarch64" => Some(("aarch64-unknown-none-elf", &[][..])),
+        "riscv64" => Some(("riscv64-unknown-none-elf", &[][..])),
+        _ => None,
     }
 }
