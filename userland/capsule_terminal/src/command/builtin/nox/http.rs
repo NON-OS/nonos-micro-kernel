@@ -55,14 +55,8 @@ fn call(port: u32, op: u16, body: &[u8], rx: &mut [u8], timeout: u64) -> Option<
     tx.extend_from_slice(&0u32.to_le_bytes());
     tx.extend_from_slice(&(body.len() as u32).to_le_bytes());
     tx.extend_from_slice(body);
-    let n = mk_ipc_call_timeout(
-        port as u64,
-        tx.as_ptr(),
-        tx.len(),
-        rx.as_mut_ptr(),
-        rx.len(),
-        timeout,
-    );
+    let n =
+        mk_ipc_call_timeout(port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len(), timeout);
     if n < HDR as i64 {
         return None;
     }
@@ -110,9 +104,9 @@ fn parse_url(raw: &[u8]) -> (Vec<u8>, u16, Vec<u8>) {
 
 pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     let Some(&url) = args.first() else {
-        state
-            .scrollback
-            .push_error(b"usage: http <url>   e.g. http example.com  |  http 1.1.1.1  |  http host:8080/path");
+        state.scrollback.push_error(
+            b"usage: http <url>   e.g. http example.com  |  http 1.1.1.1  |  http host:8080/path",
+        );
         return false;
     };
     let (host, port, path) = parse_url(url);

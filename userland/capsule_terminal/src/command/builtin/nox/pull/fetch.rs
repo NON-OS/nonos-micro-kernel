@@ -38,7 +38,13 @@ fn is_redirect(status: u16) -> bool {
     matches!(status, 301 | 302 | 303 | 307 | 308)
 }
 
-pub fn get(ip: [u8; 4], port: u16, host: &[u8], path: &[u8], extra: &[u8]) -> Result<Fetched, &'static str> {
+pub fn get(
+    ip: [u8; 4],
+    port: u16,
+    host: &[u8],
+    path: &[u8],
+    extra: &[u8],
+) -> Result<Fetched, &'static str> {
     let mut last = "connect failed";
     for i in 0..RETRIES {
         match attempt(ip, port, host, path, extra) {
@@ -165,7 +171,13 @@ fn head_len<T: Transport>(conn: &T, host: &[u8], path: &[u8], extra: &[u8]) -> O
     }
 }
 
-fn attempt(ip: [u8; 4], port: u16, host: &[u8], path: &[u8], extra: &[u8]) -> Result<Fetched, (bool, &'static str)> {
+fn attempt(
+    ip: [u8; 4],
+    port: u16,
+    host: &[u8],
+    path: &[u8],
+    extra: &[u8],
+) -> Result<Fetched, (bool, &'static str)> {
     let conn = connect(ip, port).ok_or((true, "connect failed"))?;
     if !conn.send(&http::build_get(host, path, extra)) {
         conn.close();
@@ -216,9 +228,7 @@ fn finish(raw: &[u8]) -> Result<Fetched, &'static str> {
         return Err("chunked transfer unsupported");
     }
     let body = match head.content_length {
-        Some(len) => raw
-            .get(head.body_off..head.body_off + len)
-            .ok_or("truncated body")?,
+        Some(len) => raw.get(head.body_off..head.body_off + len).ok_or("truncated body")?,
         None => &raw[head.body_off..],
     };
     decode(body, head.gzip).map(Fetched::Body).map_err(|(_, e)| e)

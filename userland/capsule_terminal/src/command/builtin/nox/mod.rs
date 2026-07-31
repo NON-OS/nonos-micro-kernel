@@ -35,9 +35,8 @@ mod history;
 mod http;
 mod id;
 mod ifconfig;
-mod kill;
-mod uptime;
 pub mod install;
+mod kill;
 mod ls;
 mod mk;
 mod motd;
@@ -58,6 +57,7 @@ mod touch;
 mod unalias;
 mod unknown;
 mod unset;
+mod uptime;
 mod whereis;
 mod write;
 

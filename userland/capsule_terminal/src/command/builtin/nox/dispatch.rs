@@ -15,9 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::{
-    alias, apps, battery, caps, clear, copy, date, display, du, echo, enter, find, help, history,
-    http, id, exec, ifconfig, install, kill, ls, mk, motd, mv, nslookup, pathname, ping, pull, push,
-    read, rm, run, set, stat, svc, sysinfo, touch, unalias, unknown, unset, uptime, whereis, write,
+    alias, apps, battery, caps, clear, copy, date, display, du, echo, enter, exec, find, help,
+    history, http, id, ifconfig, install, kill, ls, mk, motd, mv, nslookup, pathname, ping, pull,
+    push, read, rm, run, set, stat, svc, sysinfo, touch, unalias, unknown, unset, uptime, whereis,
+    write,
 };
 use crate::command::output::Output;
 use crate::command::Outcome;
