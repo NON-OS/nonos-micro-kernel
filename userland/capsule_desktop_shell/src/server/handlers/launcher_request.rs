@@ -55,6 +55,16 @@ pub fn request_service(service: &[u8]) -> LaunchOutcome {
     if !is_single_instance(service) && mk_spawn_instance(service) >= 0 {
         return LaunchOutcome::Queued;
     }
+    focus_service(service)
+}
+
+/// Focus whatever already owns `service`, spawning nothing.
+///
+/// The dock uses this when it knows the app is running. Going through
+/// `request_service` spawned a fresh window on every click and left a
+/// minimized one hidden, which made it unreachable: this message is the only
+/// thing that reaches `wm::window_restore`.
+pub fn focus_service(service: &[u8]) -> LaunchOutcome {
     let Some(pid) = lookup_pid(service) else { return LaunchOutcome::Failed };
     let frame = focus_frame();
     if mk_ipc_send_to_pid(pid, frame.as_ptr(), frame.len()) >= 0 {

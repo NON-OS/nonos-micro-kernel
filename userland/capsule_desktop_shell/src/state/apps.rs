@@ -57,11 +57,7 @@ pub const LAUNCHER_APPS: [LauncherApp; 13] = [
     LauncherApp { icon: LauncherIcon::Snake, label: b"Snake", service: b"app.snake" },
     LauncherApp { icon: LauncherIcon::Wallet, label: b"Wallet", service: b"app.nonos_wallet" },
     LauncherApp { icon: LauncherIcon::Browser, label: b"Browser", service: b"app.browser" },
-    LauncherApp {
-        icon: LauncherIcon::ImageViewer,
-        label: b"Images",
-        service: b"app.image_viewer",
-    },
+    LauncherApp { icon: LauncherIcon::ImageViewer, label: b"Images", service: b"app.image_viewer" },
     LauncherApp {
         icon: LauncherIcon::AudioPlayer,
         label: b"Resonare",
