@@ -33,5 +33,6 @@ pub fn unmap_range(domain: DomainId, iova: u64, size: usize) -> Result<(), VtdEr
         return Err(VtdError::DomainNotFound);
     }
     let _ = pages;
-    Err(VtdError::NotPresent)
+    // Nothing to unmap: no range was ever mapped. See `map_range`.
+    Err(VtdError::NotEnforcing)
 }

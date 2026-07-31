@@ -36,5 +36,13 @@ pub fn map_device(domain: DomainId, bus: u8, device: u8, function: u8) -> Result
         return Err(VtdError::DeviceAlreadyAttached);
     }
     state.bindings.push(DeviceBinding { source, domain }).map_err(|_| VtdError::DomainTableFull)?;
-    Ok(())
+    // The binding is recorded and that is all that happened. Confining the
+    // device needs a context entry pointing at the domain's second-level
+    // tables, and translation enabled in the remapping unit. This module
+    // writes neither: the DRHD register bases the DMAR parse collected have no
+    // reader, and nothing here touches a hardware register. Returning `Ok`
+    // told a caller its device was isolated while that device still had every
+    // byte of physical memory. The table above is kept because a real
+    // implementation programs from exactly it.
+    Err(VtdError::NotEnforcing)
 }
