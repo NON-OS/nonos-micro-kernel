@@ -59,6 +59,11 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
         fatal("memory: init_unified_vm failed", e);
     }
     crate::sys::bench::mark(b"vm_ready");
+    // Runs here rather than earlier because seeding the broker walks PCI
+    // config space, which needs the paging manager to hand out a register
+    // window. On x86_64 the boot path has already done this and the call
+    // returns without repeating it.
+    crate::kernel_core::init::init_platform_baseline();
     // The framebuffer is MMIO-mapped only now: mapping it needs the paging
     // manager, which init_unified_vm brings up. Doing it in the early
     // memory/framebuffer step failed to map on real GOP framebuffers
