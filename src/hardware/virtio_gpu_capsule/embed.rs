@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-driver-virtio-gpu")]
-pub(super) const DRIVER_VIRTIO_GPU_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_virtio_gpu/target/x86_64-nonos-user/release/driver_virtio_gpu"
-);
+pub(super) const DRIVER_VIRTIO_GPU_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_virtio_gpu/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_virtio_gpu"
+));
 
 #[cfg(feature = "nonos-capsule-driver-virtio-gpu")]
 pub(super) const DRIVER_VIRTIO_GPU_NONOS_ID_CERT_BYTES: &[u8] =

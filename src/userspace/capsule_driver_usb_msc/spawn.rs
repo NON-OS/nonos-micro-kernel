@@ -32,7 +32,7 @@ const SERVICE_NAME: &str = "driver.usb_msc0";
 const SERVICE_PORT: u32 = 4224;
 const REPLY_INBOX: &str = "endpoint.4294967315";
 const REPLY_PORT: u32 = 4225;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_driver_usb_msc_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

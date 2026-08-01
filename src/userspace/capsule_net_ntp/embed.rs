@@ -21,7 +21,11 @@
 
 #[cfg(feature = "nonos-capsule-net-ntp")]
 pub(super) const NET_NTP_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_net_ntp/target/x86_64-nonos-user/release/net_ntp");
+    include_bytes!(concat!(
+    "../../../userland/capsule_net_ntp/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/net_ntp"
+));
 
 #[cfg(feature = "nonos-capsule-net-ntp")]
 pub(super) const NET_NTP_NONOS_ID_CERT_BYTES: &[u8] =

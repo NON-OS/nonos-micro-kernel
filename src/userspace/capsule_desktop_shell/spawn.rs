@@ -32,7 +32,7 @@ const SERVICE_NAME: &str = "desktop_shell";
 const SERVICE_PORT: u32 = 4410;
 const REPLY_INBOX: &str = "endpoint.desktop_shell.reply";
 const REPLY_PORT: u32 = 4411;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_desktop_shell_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

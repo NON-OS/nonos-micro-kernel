@@ -32,7 +32,7 @@ pub fn init_mmu(boot_info: &BootInfo) {
 }
 
 unsafe fn setup_kernel_page_tables(boot_info: &BootInfo) {
-    for region in boot_info.memory_regions.iter() {
+    for region in boot_info.memory_map().iter() {
         map_region(region);
     }
 }

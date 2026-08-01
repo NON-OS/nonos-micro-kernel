@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-text-editor")]
-pub(crate) const TEXT_EDITOR_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_text_editor/target/x86_64-nonos-user/release/text_editor"
-);
+pub(crate) const TEXT_EDITOR_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_text_editor/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/text_editor"
+));
 
 #[cfg(feature = "nonos-capsule-text-editor")]
 pub(crate) const TEXT_EDITOR_NONOS_ID_CERT_BYTES: &[u8] =

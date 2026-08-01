@@ -44,6 +44,7 @@ mod scan;
 mod sec;
 mod serve;
 mod setup;
+mod station;
 mod status;
 mod tx;
 

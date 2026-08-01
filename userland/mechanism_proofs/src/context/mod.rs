@@ -14,19 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::sys::serial;
-
-pub(crate) fn init_token_signing_key() {
-    let mut key = [0u8; 32];
-    if crate::crypto::random_api::get_bytes_secure(&mut key).is_err() {
-        serial::println(b"[FATAL] token signing key init failed: RNG not ready");
-        crate::arch::halt_loop();
-    }
-    if let Err(msg) = crate::capabilities::token::set_signing_key(&key) {
-        serial::print(b"[FATAL] token signing key init failed: ");
-        serial::println(msg.as_bytes());
-        crate::arch::halt_loop();
-    }
-    crate::crypto::util::constant_time::secure_zero(&mut key);
-    serial::println(b"[NONOS] token signing key latched");
-}
+// The real RFLAGS sanitizer both context restore paths call before a saved
+// context resumes.
+#[allow(dead_code)]
+#[path = "../../../../src/arch/x86_64/context/rflags.rs"]
+pub mod rflags;

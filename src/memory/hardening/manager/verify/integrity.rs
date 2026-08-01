@@ -28,13 +28,21 @@ pub fn verify_kernel_data_integrity() -> bool {
     if current_cr3.as_u64() == 0 {
         return false;
     }
+// The required CR4 bits are SMEP, SMAP and the rest of the ring-0
+// restrictions, which only x86_64 keeps in a control register. aarch64
+// enforces the same properties through PAN and the PXN and UXN table bits,
+// and those are checked with the tables below rather than here.
+#[cfg(target_arch = "x86_64")]
+{
     let current_cr4: u64;
+    // SAFETY: reading CR4 has no side effect and touches no memory.
     unsafe {
         core::arch::asm!("mov {}, cr4", out(reg) current_cr4, options(nostack, preserves_flags));
     }
     if (current_cr4 & CR4_REQUIRED_BITS) != CR4_REQUIRED_BITS {
         return false;
     }
+}
     if !verify_kernel_page_tables() {
         return false;
     }

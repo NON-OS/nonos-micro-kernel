@@ -66,6 +66,10 @@ impl App for Settings {
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
         self.ensure_ready();
+        // The window resizes, so record what is actually being painted into.
+        // Hit tests and row counts read this back.
+        self.state.win_w = fb.width;
+        self.state.win_h = fb.height;
         paint(&self.state, fb);
     }
 

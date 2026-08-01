@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-clipboard")]
-pub(crate) const CLIPBOARD_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_clipboard/target/x86_64-nonos-user/release/clipboard",
-);
+pub(crate) const CLIPBOARD_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_clipboard/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/clipboard"
+));
 
 #[cfg(feature = "nonos-capsule-clipboard")]
 pub(crate) const CLIPBOARD_NONOS_ID_CERT_BYTES: &[u8] =

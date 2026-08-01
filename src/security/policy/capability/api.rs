@@ -17,16 +17,15 @@
 use super::engine::CapabilityEngine;
 use super::isolation::IsolationLevel;
 use super::types::Capability;
-use core::ptr::{addr_of, addr_of_mut};
+use spin::Once;
 
-static mut CAPABILITY_ENGINE: Option<CapabilityEngine> = None;
+// Read on syscall paths, so a second CPU sees this while the boot CPU may
+// still be publishing it. A static mut carried no ordering for that reader.
+static CAPABILITY_ENGINE: Once<CapabilityEngine> = Once::new();
 
 pub fn init_capability_system() -> Result<(), &'static str> {
     let engine = CapabilityEngine::new()?;
-    // SAFETY: Called once during kernel initialization before any concurrent access
-    unsafe {
-        *addr_of_mut!(CAPABILITY_ENGINE) = Some(engine);
-    }
+    CAPABILITY_ENGINE.call_once(|| engine);
     Ok(())
 }
 
@@ -35,8 +34,7 @@ pub fn init_capability_engine() -> Result<(), &'static str> {
 }
 
 pub fn get_capability_engine() -> Option<&'static CapabilityEngine> {
-    // SAFETY: Read-only access after initialization
-    unsafe { (*addr_of!(CAPABILITY_ENGINE)).as_ref() }
+    CAPABILITY_ENGINE.get()
 }
 
 pub fn create_isolation_chamber(

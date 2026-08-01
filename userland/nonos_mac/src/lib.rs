@@ -38,4 +38,4 @@ mod proofs;
 #[cfg(test)]
 mod tests;
 
-pub use local::{from_random, is_factory_assigned, is_local_unicast, MAC_LEN};
+pub use local::{apply, from_random, is_factory_assigned, is_local_unicast, MAC_LEN};

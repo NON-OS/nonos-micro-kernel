@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+#[cfg(target_arch = "x86_64")]
 use crate::process::nonos_core::PROCESS_TABLE;
+#[cfg(target_arch = "x86_64")]
 use core::sync::atomic::Ordering;
 
 #[cfg(target_arch = "x86_64")]
@@ -22,8 +24,9 @@ pub(crate) fn save_syscall_user_rsp(pid: u32) {
     let rsp: u64;
     unsafe {
         core::arch::asm!(
-            "mov {0}, gs:0x28",
+            "mov {0}, gs:[{off}]",
             out(reg) rsp,
+            off = const crate::smp::percpu::layout::USER_STACK_SAVED,
             options(nomem, nostack, preserves_flags),
         );
     }

@@ -41,6 +41,15 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     }
     crate::sched::init();
     clock::init(handoff.timing.fixed_freq_hz.unwrap_or(0), handoff.timing.unix_epoch_ms);
+    // The wall clock and the uptime counter hold their own copies of the
+    // counter frequency. Seeding only the first leaves uptime reporting zero
+    // forever, and every wait on elapsed time then never finishes. The x86_64
+    // binary seeds the second from `init_core_systems`, which no other entry
+    // path runs, so it belongs here where every arch passes through.
+    crate::sys::timer::tsc::init(
+        handoff.timing.fixed_freq_hz.unwrap_or(0),
+        handoff.timing.unix_epoch_ms,
+    );
 
     // VM/paging must be ready before any process creator runs. The
     // process subsystem only initializes its tables after this; the
@@ -50,6 +59,11 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
         fatal("memory: init_unified_vm failed", e);
     }
     crate::sys::bench::mark(b"vm_ready");
+    // Runs here rather than earlier because seeding the broker walks PCI
+    // config space, which needs the paging manager to hand out a register
+    // window. On x86_64 the boot path has already done this and the call
+    // returns without repeating it.
+    crate::kernel_core::init::init_platform_baseline();
     // The framebuffer is MMIO-mapped only now: mapping it needs the paging
     // manager, which init_unified_vm brings up. Doing it in the early
     // memory/framebuffer step failed to map on real GOP framebuffers
@@ -61,9 +75,12 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     // id cache and nothing else: controller mode, base and init state are
     // untouched, so the timer and IPI paths are unaffected.
     crate::arch::interrupt_controller::cache_boot_cpu_id();
+    // Named for the job, not the part: x86_64 does this with an IO-APIC and
+    // aarch64 with the GIC distributor, which is already up by the time this
+    // runs.
     match crate::arch::init_broker_irq_routing() {
-        Ok(_) => boot_log::ok("NONOS", "broker IO-APIC routing ready"),
-        Err(_) => crate::sys::serial::println(b"[NONOS] broker IO-APIC init failed"),
+        Ok(_) => boot_log::ok("NONOS", "device interrupt routing ready"),
+        Err(_) => crate::sys::serial::println(b"[NONOS] device interrupt routing failed"),
     }
     crate::process::init_process_management();
     crate::elf::loader::init_elf_loader();

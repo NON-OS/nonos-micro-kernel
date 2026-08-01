@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-ripgrep")]
 pub(crate) const RIPGREP_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_ripgrep/target/x86_64-nonos-user/release/rg");
+    include_bytes!(concat!(
+    "../../../userland/capsule_ripgrep/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/rg"
+));
 
 #[cfg(feature = "nonos-capsule-ripgrep")]
 pub(crate) const RIPGREP_NONOS_ID_CERT_BYTES: &[u8] =

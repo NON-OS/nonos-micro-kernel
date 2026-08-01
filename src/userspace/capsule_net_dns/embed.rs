@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-net-dns")]
 pub(super) const NET_DNS_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_net_dns/target/x86_64-nonos-user/release/net_dns");
+    include_bytes!(concat!(
+    "../../../userland/capsule_net_dns/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/net_dns"
+));
 
 #[cfg(feature = "nonos-capsule-net-dns")]
 pub(super) const NET_DNS_NONOS_ID_CERT_BYTES: &[u8] =

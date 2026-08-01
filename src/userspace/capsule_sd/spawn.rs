@@ -26,7 +26,7 @@ const SERVICE_NAME: &str = "tool.sd";
 const SERVICE_PORT: u32 = 4822;
 const REPLY_INBOX: &str = "endpoint.tool.sd.reply";
 const REPLY_PORT: u32 = 4823;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_sd_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

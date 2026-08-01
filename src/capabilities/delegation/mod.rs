@@ -17,6 +17,7 @@
 mod create_checked;
 mod create_unchecked;
 mod error;
+mod lifetime;
 mod material;
 mod sign;
 mod types;

@@ -32,7 +32,7 @@ const SERVICE_NAME: &str = "app.browser";
 const SERVICE_PORT: u32 = 4760;
 const REPLY_INBOX: &str = "endpoint.app.browser.reply";
 const REPLY_PORT: u32 = 4761;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 // Shared caps ceiling for the boot instance and every extra window, so the
 // attestation context (which binds granted caps) matches across instances.

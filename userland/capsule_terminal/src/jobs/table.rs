@@ -72,11 +72,7 @@ impl JobTable {
     }
 
     pub fn foreground(&self) -> Option<u32> {
-        self.jobs
-            .iter()
-            .rev()
-            .find(|j| !j.background && j.state == JobState::Running)
-            .map(|j| j.id)
+        self.jobs.iter().rev().find(|j| !j.background && j.state == JobState::Running).map(|j| j.id)
     }
 
     pub fn get_mut(&mut self, id: u32) -> Option<&mut JobRecord> {

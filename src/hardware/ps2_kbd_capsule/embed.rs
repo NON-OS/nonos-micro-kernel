@@ -21,9 +21,11 @@
 //! empty slice.
 
 #[cfg(feature = "nonos-capsule-driver-ps2-input")]
-pub(super) const DRIVER_PS2_INPUT_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_ps2_input/target/x86_64-nonos-user/release/driver_ps2_input"
-);
+pub(super) const DRIVER_PS2_INPUT_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_ps2_input/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_ps2_input"
+));
 
 #[cfg(feature = "nonos-capsule-driver-ps2-input")]
 pub(super) const DRIVER_PS2_INPUT_NONOS_ID_CERT_BYTES: &[u8] =

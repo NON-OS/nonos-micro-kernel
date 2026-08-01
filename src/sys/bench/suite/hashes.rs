@@ -42,19 +42,34 @@ pub(super) fn run() {
         *byte = (i % 251) as u8;
     }
 
-    report(b"blake3_4k", &measure(ITERATIONS, || {
-        core::hint::black_box(blake3_hash(core::hint::black_box(&block)));
-    }));
-    report(b"sha256_4k", &measure(ITERATIONS, || {
-        core::hint::black_box(sha256(core::hint::black_box(&block)));
-    }));
-    report(b"sha512_4k", &measure(ITERATIONS, || {
-        core::hint::black_box(sha512(core::hint::black_box(&block)));
-    }));
-    report(b"sha3_256_4k", &measure(ITERATIONS, || {
-        core::hint::black_box(sha3_256(core::hint::black_box(&block)));
-    }));
-    report(b"keccak256_4k", &measure(ITERATIONS, || {
-        core::hint::black_box(keccak256(core::hint::black_box(&block)));
-    }));
+    report(
+        b"blake3_4k",
+        &measure(ITERATIONS, || {
+            core::hint::black_box(blake3_hash(core::hint::black_box(&block)));
+        }),
+    );
+    report(
+        b"sha256_4k",
+        &measure(ITERATIONS, || {
+            core::hint::black_box(sha256(core::hint::black_box(&block)));
+        }),
+    );
+    report(
+        b"sha512_4k",
+        &measure(ITERATIONS, || {
+            core::hint::black_box(sha512(core::hint::black_box(&block)));
+        }),
+    );
+    report(
+        b"sha3_256_4k",
+        &measure(ITERATIONS, || {
+            core::hint::black_box(sha3_256(core::hint::black_box(&block)));
+        }),
+    );
+    report(
+        b"keccak256_4k",
+        &measure(ITERATIONS, || {
+            core::hint::black_box(keccak256(core::hint::black_box(&block)));
+        }),
+    );
 }

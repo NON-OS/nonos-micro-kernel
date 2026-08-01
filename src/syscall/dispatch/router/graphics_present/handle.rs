@@ -17,10 +17,17 @@
 use super::blit::blit;
 use crate::syscall::SyscallResult;
 
+/// Present a surface, or one damage rectangle of it. Zero width or height
+/// means the whole surface, which is what a caller passing no rectangle sends.
 pub(in crate::syscall::dispatch::router) fn handle(
     display: u64,
     surface: u64,
     span: usize,
+    x: u64,
+    y: u64,
+    w: u64,
+    h: u64,
 ) -> SyscallResult {
-    blit(display, surface, span, 0, 0, 0, 0, true)
+    let full = w == 0 || h == 0;
+    blit(display, surface, span, x, y, w, h, full)
 }

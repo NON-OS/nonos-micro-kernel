@@ -24,7 +24,14 @@ use super::super::pull::http;
 const EMPTY_BUDGET: u32 = 64;
 const MAX_RESP: usize = 64 * 1024;
 
-pub fn put(ip: [u8; 4], port: u16, host: &[u8], path: &[u8], body: &[u8], extra: &[u8]) -> Result<(), &'static str> {
+pub fn put(
+    ip: [u8; 4],
+    port: u16,
+    host: &[u8],
+    path: &[u8],
+    body: &[u8],
+    extra: &[u8],
+) -> Result<(), &'static str> {
     let conn = connect(ip, port).ok_or("push: connect failed")?;
     let sent = conn.send(&http::build_put_head(host, path, body.len(), extra))
         && (body.is_empty() || conn.send(body));

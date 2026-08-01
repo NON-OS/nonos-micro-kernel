@@ -24,8 +24,13 @@ dependencies = [
 name = "nonos_capsule_driver_e1000"
 version = "0.2.0"
 dependencies = [
+ "nonos_mac",
  "nonos_userland_libc",
 ]
+
+[[package]]
+name = "nonos_mac"
+version = "0.2.0"
 
 [[package]]
 name = "nonos_userland_libc"

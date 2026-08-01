@@ -15,8 +15,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod constants;
+// Delivering a signal means writing the register frame the CPU returns into, and
+// holding the frame it interrupted. Both are the x86_64 register file today; the
+// aarch64 equivalent goes in beside the exception frame in `arch::aarch64`.
+#[cfg(target_arch = "x86_64")]
 pub mod delivery;
 pub mod error;
+#[cfg(target_arch = "x86_64")]
 pub mod frame;
 pub mod helpers;
 pub mod name;

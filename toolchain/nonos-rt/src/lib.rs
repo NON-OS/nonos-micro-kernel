@@ -16,6 +16,8 @@
 
 #![no_std]
 
+mod arch;
+
 const fn tag4(b: &[u8; 4]) -> i64 {
     (b[0] as i64) | ((b[1] as i64) << 8) | ((b[2] as i64) << 16) | ((b[3] as i64) << 24)
 }
@@ -29,10 +31,5 @@ extern "C" {
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     let code = main(0, core::ptr::null());
-    core::arch::asm!(
-        "syscall",
-        in("rax") N_MK_EXIT,
-        in("rdi") code as u64,
-        options(noreturn),
-    );
+    arch::exit(N_MK_EXIT, code as i64);
 }

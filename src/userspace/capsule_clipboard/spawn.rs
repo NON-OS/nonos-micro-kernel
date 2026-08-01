@@ -31,7 +31,7 @@ const SERVICE_NAME: &str = "clipboard";
 const SERVICE_PORT: u32 = 4414;
 const REPLY_INBOX: &str = "endpoint.clipboard.reply";
 const REPLY_PORT: u32 = 4415;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 const REQUIRED_CAPS: u64 = 0x19;
 
 pub fn spawn_clipboard_capsule() -> Result<(), SpawnError> {

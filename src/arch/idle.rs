@@ -40,12 +40,7 @@ pub(crate) fn wait_for_interrupt() {
         // timer counts through `wfi` by definition, so unlike x86_64 there is
         // no part on which this stops the tick.
         unsafe {
-            core::arch::asm!(
-                "msr daifclr, #2",
-                "wfi",
-                "msr daifset, #2",
-                options(nomem, nostack)
-            );
+            core::arch::asm!("msr daifclr, #2", "wfi", "msr daifset, #2", options(nomem, nostack));
         }
     }
     #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]

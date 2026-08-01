@@ -33,4 +33,6 @@ mod units;
 
 pub(crate) use boot::anchor;
 pub use now::now_ns;
-pub use units::{current_ticks, get_kernel_time_ns, monotonic_ns, timestamp_millis, timestamp_secs};
+pub use units::{
+    current_ticks, get_kernel_time_ns, monotonic_ns, timestamp_millis, timestamp_secs,
+};

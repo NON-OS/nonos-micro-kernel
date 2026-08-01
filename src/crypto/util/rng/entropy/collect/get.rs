@@ -50,10 +50,7 @@ pub fn get_entropy64() -> u64 {
 pub(super) fn emergency_entropy_mix() -> u64 {
     let counter = ENTROPY_COUNTER.fetch_add(1, Ordering::SeqCst);
     let tsc1 = read_cycle_counter();
-    let stack_addr: u64;
-    unsafe {
-        core::arch::asm!("mov {}, rsp", out(reg) stack_addr, options(nomem, nostack));
-    }
+    let stack_addr = crate::arch::stack_pointer();
     for _ in 0..counter.wrapping_rem(16).wrapping_add(1) {
         core::hint::spin_loop();
     }

@@ -34,6 +34,7 @@ import Nonos.CryptoKeccakPad
 import Nonos.CryptoLowS
 import Nonos.CryptoRfc6979
 import Nonos.CryptoSecretValid
+import Nonos.Delegation
 import Nonos.DemandPaging
 import Nonos.Dhcp
 import Nonos.Dispatch
@@ -48,6 +49,7 @@ import Nonos.FrameNoAlias
 import Nonos.FramebufferSwap
 import Nonos.Futex
 import Nonos.InputConsumer
+import Nonos.ReplyAuthorization
 import Nonos.ReplyCorrelation
 import Nonos.ServiceRegisterAuth
 import Nonos.Heap
@@ -77,6 +79,7 @@ import Nonos.Priority
 import Nonos.Quota
 import Nonos.Reaper
 import Nonos.Refcount
+import Nonos.Rflags
 import Nonos.Ring
 import Nonos.Rng
 import Nonos.Rwlock
@@ -90,6 +93,7 @@ import Nonos.Seqlock
 import Nonos.ServiceRegistry
 import Nonos.Signal
 import Nonos.Spawn
+import Nonos.SpawnCaps
 import Nonos.SigningKey
 import Nonos.KeyLifecycle
 import Nonos.KeyringCustody
@@ -142,6 +146,7 @@ import Nonos.Tlb
 import Nonos.TokenBucket
 import Nonos.UsbHid
 import Nonos.UserCopy
+import Nonos.UserWalk
 import Nonos.Vfs
 import Nonos.Vma
 import Nonos.WalletEip1559

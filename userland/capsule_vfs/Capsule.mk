@@ -29,6 +29,11 @@ CAPSULE_CARGO_FEATURES   := seed-audio-store
 # signed by a stale trust anchor and the runtime load is rejected. Declaring the
 # artifacts as inputs keeps the embedded copies in lockstep with the kernel's
 # baked trust roots.
+#
+# The staged packages are std capsules, and the std platform layer issues its
+# syscalls with raw x86_64 registers, so on any other target the store stages
+# nothing and there is nothing here to depend on.
+ifeq ($(NONOS_USER_TARGET),x86_64-nonos-user)
 CAPSULE_EXTRA_DEPS := \
 	userland/capsule_std_proof/target/x86_64-nonos-user/release/std_proof \
 	userland/capsule_ripgrep/target/x86_64-nonos-user/release/rg \
@@ -46,5 +51,6 @@ CAPSULE_EXTRA_DEPS := \
 CAPSULE_EXTRA_ORDER_DEPS := \
 	nonos-data/trust/capsules/std_proof.zk_trailer.bin \
 	nonos-data/trust/capsules/rg.zk_trailer.bin
+endif
 
 include nonos-mk/capsule.mk

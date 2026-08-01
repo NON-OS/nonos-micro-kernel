@@ -30,10 +30,7 @@ pub fn verify_stack_integrity() -> bool {
         }
     }
 
-    let current_rsp: u64;
-    unsafe {
-        core::arch::asm!("mov {}, rsp", out(reg) current_rsp);
-    }
+    let current_rsp = crate::arch::stack_pointer();
 
     for region in layout::get_all_stack_regions() {
         if current_rsp >= region.base && current_rsp < region.base + region.size as u64 {

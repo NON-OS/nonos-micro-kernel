@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-driver-rtl8821ce")]
-pub(super) const DRIVER_RTL8821CE_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_rtl8821ce/target/x86_64-nonos-user/release/driver_rtl8821ce"
-);
+pub(super) const DRIVER_RTL8821CE_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_rtl8821ce/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_rtl8821ce"
+));
 
 #[cfg(feature = "nonos-capsule-driver-rtl8821ce")]
 pub(super) const DRIVER_RTL8821CE_NONOS_ID_CERT_BYTES: &[u8] =

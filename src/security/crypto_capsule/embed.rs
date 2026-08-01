@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-crypto")]
 pub(super) const CRYPTO_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_crypto/target/x86_64-nonos-user/release/crypto");
+    include_bytes!(concat!(
+    "../../../userland/capsule_crypto/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/crypto"
+));
 
 #[cfg(feature = "nonos-capsule-crypto")]
 pub(super) const CRYPTO_NONOS_ID_CERT_BYTES: &[u8] =

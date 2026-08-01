@@ -16,9 +16,11 @@
 
 mod entry;
 pub(crate) mod framebuffer;
+mod platform;
 mod start_secondary;
 
 #[cfg(target_arch = "x86_64")]
 pub(crate) mod memory;
 
 pub use entry::{microkernel_init, microkernel_main};
+pub use platform::init_platform_baseline;

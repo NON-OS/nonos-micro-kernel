@@ -189,7 +189,7 @@ pub(super) fn do_release(handle: u64) -> SyscallResult {
     }
 }
 
-pub(super) fn do_present(handle: u64) -> SyscallResult {
+pub(super) fn do_present(handle: u64, x: u64, y: u64, w: u64, h: u64) -> SyscallResult {
     let pid = match current_pid() {
         Some(p) => p,
         None => return errno(ESRCH),
@@ -198,7 +198,7 @@ pub(super) fn do_present(handle: u64) -> SyscallResult {
         Some(v) => v,
         None => return errno(EINVAL),
     };
-    let result = super::graphics_present::handle(0, base_va, byte_len as usize);
+    let result = super::graphics_present::handle(0, base_va, byte_len as usize, x, y, w, h);
     if !result.is_error() {
         crate::sys::bench::mark_once(&FIRST_SURFACE_PRESENT, b"surface_present_first");
     }

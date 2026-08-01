@@ -30,8 +30,25 @@ use crate::sys::serial;
 
 #[no_mangle]
 pub extern "C" fn kernel_entry(dtb_ptr: u64) -> ! {
+    // First statement in the function, before even a local exists. The compiler
+    // uses the vector registers for ordinary work, and building `BootInfo` here
+    // compiles to a `ldr q0` that traps while CPACR_EL1.FPEN is clear, with no
+    // vectors installed yet to report it. Anything placed above this call is
+    // running before the registers it may be compiled into are usable.
+    crate::arch::aarch64::cpu::init_cpu();
+
     let mut info = BootInfo::default();
-    let parsed = super::dtb_adapter::populate(dtb_ptr, &mut info);
+
+    // Console next, on the default base, so everything after can report its own
+    // failure. The device tree may name a different UART, in which case `init`
+    // reopens the console on that one; until then the default is all there is,
+    // and a wrong guess costs less than a silent boot.
+    crate::arch::aarch64::uart::init_uart(info.uart_base);
+    serial::print(b"[NONOS] dtb at ");
+    serial::print_hex(dtb_ptr);
+    serial::println(b"");
+
+let parsed = super::dtb_adapter::populate(dtb_ptr, &mut info);
 
     // Brings up the console, puts the MMU and caches into a known state, then
     // installs the vector table, the GIC and the timer.
@@ -45,6 +62,13 @@ pub extern "C" fn kernel_entry(dtb_ptr: u64) -> ! {
         // into the wrong MMIO is far worse than a loud one.
         serial::println(b"[NONOS] no usable device tree, assuming QEMU virt");
     }
+
+    // Arm the bootstrap heap before any shared code runs. It hands out of a
+    // static region, so it needs nothing but the MMU that init brought up.
+    // x86_64 does this inside its own early setup, which this path does not
+    // share; without it the first allocation is the frame allocator's bitmap
+    // and it fails with the heap reporting no memory at all.
+    crate::memory::heap::manager::init_bootstrap();
 
     let handoff = KernelHandoff::from_aarch64(&info);
     crate::kernel_core::microkernel_init(&handoff);

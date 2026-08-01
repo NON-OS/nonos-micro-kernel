@@ -14,27 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Which address this station transmits from.
-//!
-//! The EEPROM address is unique to one card and is the first thing every
-//! access point on the way records, so a system that keeps nothing on disk
-//! still arrives everywhere carrying the same name. This draws a fresh
-//! locally administered address instead, once per bring-up, which on a
-//! RAM-resident system means once per boot.
+//! The address this station transmits from, drawn per bring-up rather than read
+//! out of the EEPROM.
 
-use nonos_mac::{from_random, MAC_LEN};
+use nonos_mac::{apply, MAC_LEN};
 
-/// Draw a station address from kernel entropy.
-///
-/// Fails closed. A driver that cannot get randomness must not quietly fall
-/// back to the EEPROM address, because the fallback is the exact identifier
-/// this exists to stop transmitting, and it would take the one path nobody
-/// looks at.
+/// Draw a station address. Fails closed: the EEPROM fallback would transmit the
+/// identifier this avoids.
 pub fn draw() -> Result<[u8; MAC_LEN], &'static str> {
-    let mut bytes = [0u8; MAC_LEN];
-    let rc = unsafe { nonos_libc::crypto_random(bytes.as_mut_ptr(), bytes.len()) };
-    if rc < 0 || (rc as usize) != bytes.len() {
+    let mut mac = [0u8; MAC_LEN];
+    let rc = nonos_libc::crypto_random(mac.as_mut_ptr(), MAC_LEN);
+    if rc < 0 || (rc as usize) != MAC_LEN {
         return Err("no entropy for station address");
     }
-    Ok(from_random(bytes))
+    apply(&mut mac);
+    Ok(mac)
 }

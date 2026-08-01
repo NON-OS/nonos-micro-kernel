@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-wallet-nonos")]
-pub(crate) const WALLET_NONOS_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_wallet_nonos/target/x86_64-nonos-user/release/wallet_nonos"
-);
+pub(crate) const WALLET_NONOS_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_wallet_nonos/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/wallet_nonos"
+));
 #[cfg(feature = "nonos-capsule-wallet-nonos")]
 pub(crate) const WALLET_NONOS_NONOS_ID_CERT_BYTES: &[u8] =
     include_bytes!("../../../nonos-data/trust/capsules/wallet_nonos.nonos_id_cert.bin");

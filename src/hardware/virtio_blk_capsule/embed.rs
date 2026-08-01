@@ -21,9 +21,11 @@
 //! replaced by an empty slice.
 
 #[cfg(feature = "nonos-capsule-driver-virtio-blk")]
-pub(super) const DRIVER_VIRTIO_BLK_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_virtio_blk/target/x86_64-nonos-user/release/driver_virtio_blk"
-);
+pub(super) const DRIVER_VIRTIO_BLK_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_virtio_blk/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_virtio_blk"
+));
 
 #[cfg(feature = "nonos-capsule-driver-virtio-blk")]
 pub(super) const DRIVER_VIRTIO_BLK_NONOS_ID_CERT_BYTES: &[u8] =

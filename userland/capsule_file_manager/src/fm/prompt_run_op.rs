@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::clients::vfs::{mkdir, rename, unlink, write_file};
+use nonos_app_skeleton::clients::vfs::{mkdir, rename, rmdir, unlink, write_file};
 
+use super::selection_acting::acting;
 use super::state::{PromptKind, State};
 
 pub fn run_op(
@@ -39,11 +40,32 @@ pub fn run_op(
             if name != "y" {
                 return Ok(b"not deleted");
             }
-            let sel = state.entries.get(state.cursor).ok_or("no selection")?;
-            if sel.is_dir {
-                return Err("dirs not supported");
+            // Delete what is selected, not just the row under the cursor:
+            // copy, cut, duplicate and chmod all act on the selection, and the
+            // help text promises "selection or cursor". Directories go through
+            // rmdir, which was refused outright before.
+            let targets = acting(state);
+            if targets.is_empty() {
+                return Err("no selection");
             }
-            unlink(pid, sel.full_path.as_bytes()).map(|_| b"deleted".as_slice())
+            let mut failed = 0usize;
+            for (path, is_dir) in &targets {
+                let done = if *is_dir {
+                    rmdir(pid, path.trim_end_matches('/').as_bytes(), true)
+                } else {
+                    unlink(pid, path.as_bytes())
+                };
+                if done.is_err() {
+                    failed += 1;
+                }
+            }
+            if failed == 0 {
+                Ok(b"deleted")
+            } else if failed == targets.len() {
+                Err("delete failed")
+            } else {
+                Ok(b"some items not deleted")
+            }
         }
     }
 }

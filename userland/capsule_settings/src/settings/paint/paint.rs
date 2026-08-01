@@ -32,7 +32,7 @@ use super::visible_rows::visible_rows;
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
     paint_header(fb);
-    paint_tabs(fb, state.category, state.wifi_active);
+    paint_tabs(fb, state.category, state.wifi_active, state.win_w);
     if state.wifi_active {
         paint_wifi(fb, state);
         paint_status(fb, &state.status, state.policy_ready);
@@ -42,7 +42,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     let cat = state.category as usize;
     let cursor = state.cursor[cat];
     let top = state.scroll_top[cat];
-    let rows = visible_rows();
+    let rows = visible_rows(state.win_h);
     let end = core::cmp::min(top + rows, fields.len());
     let mut y = BODY_TOP;
     for (i, field) in fields[top..end].iter().enumerate() {

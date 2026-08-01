@@ -194,12 +194,37 @@ fn drop_drag(ctx: &mut Context) {
     super::repaint::repaint(ctx);
 }
 
-// Open a desktop item: folders in the file manager, files in the text editor.
-fn open_item(ctx: &Context, idx: usize) {
-    if let Some(item) = ctx.desktop_items.get(idx) {
-        let app = if item.is_dir { &LAUNCHER_APPS[1] } else { &LAUNCHER_APPS[2] };
-        launcher_request::request(app);
+fn is_image_name(name: &str) -> bool {
+    let Some((_, ext)) = name.rsplit_once('.') else { return false };
+    ext.eq_ignore_ascii_case("png")
+        || ext.eq_ignore_ascii_case("jpg")
+        || ext.eq_ignore_ascii_case("jpeg")
+        || ext.eq_ignore_ascii_case("bmp")
+}
+
+// Open a desktop item in the app that suits it, and tell that app which item.
+// This used to launch the file manager or the text editor and hand over
+// nothing, so every icon opened the same blank app at its default location.
+// The path travels the way the file manager's Open With already sends it.
+fn open_item(ctx: &mut Context, idx: usize) {
+    let Some(item) = ctx.desktop_items.get(idx) else { return };
+    let service: &[u8] = if item.is_dir {
+        b"app.file_manager"
+    } else if is_image_name(&item.name) {
+        b"app.image_viewer"
+    } else {
+        b"app.text_editor"
+    };
+    // By service rather than by position: the table is edited often enough
+    // that an index would drift into launching the wrong app.
+    let Some(app) = LAUNCHER_APPS.iter().find(|a| a.service == service) else { return };
+    // Desktop items are the root listing, so the path is the name under "/".
+    let mut path = alloc::string::String::from("/");
+    path.push_str(&item.name);
+    if let Ok(service) = core::str::from_utf8(app.service) {
+        ctx.pending_open.insert(alloc::string::String::from(service), path);
     }
+    launcher_request::request(app);
 }
 
 fn hover_reveal(ctx: &mut Context, y: u32) {

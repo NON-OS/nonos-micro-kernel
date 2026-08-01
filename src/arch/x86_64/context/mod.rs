@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod aliases;
+pub(crate) mod rflags;
 mod setup;
 mod switch;
 

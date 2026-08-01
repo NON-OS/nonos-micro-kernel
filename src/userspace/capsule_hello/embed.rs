@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-hello")]
 pub(crate) const HELLO_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_hello/target/x86_64-nonos-user/release/hello");
+    include_bytes!(concat!(
+    "../../../userland/capsule_hello/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/hello"
+));
 
 #[cfg(feature = "nonos-capsule-hello")]
 pub(crate) const HELLO_NONOS_ID_CERT_BYTES: &[u8] =

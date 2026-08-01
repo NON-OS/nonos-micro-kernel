@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-driver-iwlwifi")]
-pub(super) const DRIVER_IWLWIFI_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_iwlwifi/target/x86_64-nonos-user/release/driver_iwlwifi"
-);
+pub(super) const DRIVER_IWLWIFI_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_iwlwifi/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_iwlwifi"
+));
 
 #[cfg(feature = "nonos-capsule-driver-iwlwifi")]
 pub(super) const DRIVER_IWLWIFI_NONOS_ID_CERT_BYTES: &[u8] =

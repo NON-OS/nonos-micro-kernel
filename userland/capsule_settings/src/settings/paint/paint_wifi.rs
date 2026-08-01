@@ -22,7 +22,6 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::settings::manifest::WIDTH;
 use crate::settings::state::{State, WifiConnect, WifiScan};
 use crate::settings::theme::{LABEL_FG, ROW_SELECTED_BG, STATUS_FG_IDLE, VALUE_FG};
 use crate::wifi::{DriverStage, ScanOutcome};
@@ -123,7 +122,7 @@ pub fn paint_wifi(fb: &mut PaintBuffer, state: &State) {
         let y = net_top + i as u32 * ROW_H;
         let selected = i == state.wifi_cursor;
         if selected {
-            fb.fill_rect(0, y, WIDTH, ROW_H, ROW_SELECTED_BG);
+            fb.fill_rect(0, y, fb.width, ROW_H, ROW_SELECTED_BG);
         }
         let fg = if selected { VALUE_FG } else { LABEL_FG };
         fb.text(LABEL_LEFT, y + 5, net.ssid(), fg);

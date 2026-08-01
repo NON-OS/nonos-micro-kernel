@@ -26,6 +26,13 @@ pub fn sleep_precise_ns(nanoseconds: u64) {
 pub fn sleep_with_power_mgmt(nanoseconds: u64) {
     let end_time = now_ns() + nanoseconds;
     while now_ns() < end_time {
+        // MONITOR/MWAIT parks the core until a wake, and HLT is the fallback on
+        // parts without it. Neither has an aarch64 counterpart that is safe to
+        // reach for here: `wfe` without an armed event source can wait past the
+        // deadline this loop is holding, so the portable path yields and lets the
+        // deadline check do the work. Deeper idle on aarch64 wants a timer event
+        // set up first, which belongs with the generic timer, not here.
+        #[cfg(target_arch = "x86_64")]
         unsafe {
             if has_mwait_support() {
                 core::arch::asm!("monitor", in("rax") core::ptr::null::<u8>(), in("rcx") 0u32, in("rdx") 0u32);
@@ -34,6 +41,8 @@ pub fn sleep_with_power_mgmt(nanoseconds: u64) {
                 x86_64::instructions::hlt();
             }
         }
+        #[cfg(not(target_arch = "x86_64"))]
+        core::hint::spin_loop();
     }
 }
 

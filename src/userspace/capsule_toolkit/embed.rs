@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-toolkit")]
 pub(crate) const TOOLKIT_ELF: &[u8] =
-    include_bytes!("../../../userland/toolkit/target/x86_64-nonos-user/release/toolkit");
+    include_bytes!(concat!(
+    "../../../userland/toolkit/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/toolkit"
+));
 
 #[cfg(feature = "nonos-capsule-toolkit")]
 pub(crate) const TOOLKIT_NONOS_ID_CERT_BYTES: &[u8] =

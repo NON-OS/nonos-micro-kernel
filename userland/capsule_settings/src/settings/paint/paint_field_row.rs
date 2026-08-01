@@ -17,7 +17,6 @@
 use nonos_app_skeleton::PaintBuffer;
 use nonos_policy_proto::{label_of, Field};
 
-use crate::settings::manifest::WIDTH;
 use crate::settings::state::State;
 use crate::settings::theme::{LABEL_FG, ROW_BG, ROW_BG_ALT, ROW_SELECTED_BG};
 
@@ -39,7 +38,7 @@ pub fn paint_field_row(
     } else {
         ROW_BG_ALT
     };
-    fb.fill_rect(0, y, WIDTH, ROW_H, bg);
+    fb.fill_rect(0, y, fb.width, ROW_H, bg);
     fb.text(LABEL_LEFT, y + 5, label_of(field), LABEL_FG);
     paint_field_value(fb, state, field, y + 5, selected);
 }

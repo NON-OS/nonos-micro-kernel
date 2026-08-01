@@ -34,6 +34,7 @@ pub fn populate(fdt: &Fdt, info: &mut BootInfo) {
     // Keep the affinities, not just the count. They are what PSCI and the GIC
     // are addressed by, and the position of each one is the kernel's dense CPU
     // index from here on.
-    info.cpu_affinities.clear();
-    info.cpu_affinities.extend_from_slice(&affinities[..n]);
+    let take = n.min(info.cpu_affinities.len());
+    info.cpu_affinities[..take].copy_from_slice(&affinities[..take]);
+    info.cpu_affinity_count = take;
 }

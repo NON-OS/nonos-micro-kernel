@@ -88,4 +88,10 @@ pub struct State {
     /// What net_core reports: down, bound-but-no-address, or a bound lease. Splits
     /// "the stack never started" from "started but got no address".
     pub wifi_net: NetStatus,
+    /// Window size as of the last paint. The window is resizable, so layout and
+    /// hit tests read this rather than the manifest's starting size: against
+    /// the constants, clicks below the original height were treated as the
+    /// status bar and the control on the right of a widened window did nothing.
+    pub win_w: u32,
+    pub win_h: u32,
 }

@@ -65,7 +65,12 @@ pub(super) fn blit(
     if rect_x.saturating_add(rect_w) > fb_w || rect_y.saturating_add(rect_h) > fb_h {
         return util::errno(EINVAL);
     }
-    let mut bounce = [0u8; 4096];
+    // Four-byte aligned so the destination stores below can move whole pixels.
+    // A bare `[u8; N]` is only byte aligned, and reading `u32`s out of it would
+    // depend on where the stack happened to put it.
+    #[repr(align(4))]
+    struct Bounce([u8; 4096]);
+    let mut bounce = Bounce([0u8; 4096]);
     let dst = (fb.base_va.as_u64() + fb.offset as u64) as *mut u8;
     let row_bytes = rect_w * bytes_per_pixel;
     let src_stride = fb_w * bytes_per_pixel;
@@ -75,9 +80,9 @@ pub(super) fn blit(
         let dst_row_off = ((rect_y + row) * dst_stride) + (rect_x * bytes_per_pixel);
         let mut copied = 0usize;
         while copied < row_bytes {
-            let chunk = core::cmp::min(bounce.len(), row_bytes - copied);
+            let chunk = core::cmp::min(bounce.0.len(), row_bytes - copied);
             let src = surface + (src_row_off + copied) as u64;
-            if copy_from_user(src, &mut bounce[..chunk]).is_err() {
+            if copy_from_user(src, &mut bounce.0[..chunk]).is_err() {
                 return util::errno(EFAULT);
             }
             // Surface pixels are ARGB8888, stored B,G,R,A in memory, which is
@@ -87,13 +92,30 @@ pub(super) fn blit(
             // and blue reversed. Chunks stay pixel-aligned (row_bytes and the
             // bounce length are both multiples of four).
             if !fb.bgr {
-                for px in bounce[..chunk].chunks_exact_mut(4) {
+                for px in bounce.0[..chunk].chunks_exact_mut(4) {
                     px.swap(0, 2);
                 }
             }
             let dst_off = dst_row_off + copied;
-            for i in 0..chunk {
-                unsafe { core::ptr::write_volatile(dst.add(dst_off + i), bounce[i]) };
+            // SAFETY: the rectangle was clamped to the framebuffer above, and
+            // `dst_off + chunk` stays inside the row, so every store lands in
+            // the mapped framebuffer.
+            let dst_ptr = unsafe { dst.add(dst_off) };
+            // Whole pixels: the framebuffer is write-combining, so the store
+            // count is the cost and byte-wise was four times as many. Falls
+            // back if a firmware stride leaves the destination unaligned.
+            if (dst_ptr as usize) % 4 == 0 && chunk % 4 == 0 {
+                for (i, px) in bounce.0[..chunk].chunks_exact(4).enumerate() {
+                    let word = u32::from_ne_bytes([px[0], px[1], px[2], px[3]]);
+                    // SAFETY: `dst_ptr` is 4-byte aligned on this branch and
+                    // `i < chunk / 4`, so the write is in bounds and aligned.
+                    unsafe { core::ptr::write_volatile((dst_ptr as *mut u32).add(i), word) };
+                }
+            } else {
+                for (i, &b) in bounce.0[..chunk].iter().enumerate() {
+                    // SAFETY: `i < chunk` and the row was bounds checked.
+                    unsafe { core::ptr::write_volatile(dst_ptr.add(i), b) };
+                }
             }
             copied += chunk;
         }

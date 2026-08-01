@@ -53,12 +53,7 @@ impl Sample {
             total += run as u128;
         }
 
-        Self {
-            min,
-            avg: (total / runs.len() as u128) as u64,
-            max,
-            iterations: runs.len() as u32,
-        }
+        Self { min, avg: (total / runs.len() as u128) as u64, max, iterations: runs.len() as u32 }
     }
 
     /// Ticks converted to nanoseconds, or `None` where the platform never

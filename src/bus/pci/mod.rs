@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod assign;
 mod config;
 mod device;
 mod enable;
@@ -21,6 +22,7 @@ mod find;
 mod init;
 mod types;
 
+pub use assign::{assign_unassigned, set_windows};
 pub use config::*;
 pub use enable::*;
 pub use find::*;

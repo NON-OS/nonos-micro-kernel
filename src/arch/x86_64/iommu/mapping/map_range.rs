@@ -43,5 +43,6 @@ pub fn map_range(
     }
     let _ = pages;
     let _ = flags;
-    Err(VtdError::NotPresent)
+    // Validated and dropped: there are no second-level tables to write into.
+    Err(VtdError::NotEnforcing)
 }

@@ -18,7 +18,7 @@
   "frame-pointer": "always",
 
   "cpu": "generic",
-  "features": "+strict-align",
+  "features": "+strict-align,+pauth,+sb,+ssbs,+mte,+rand,+el3",
 
   "linker-flavor": "ld.lld",
   "linker": "rust-lld",

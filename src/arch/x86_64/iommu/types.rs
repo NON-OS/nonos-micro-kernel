@@ -81,6 +81,9 @@ pub struct IommuPageFlags {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VtdError {
     NotPresent,
+    /// Hardware was found but translation is never enabled, so nothing here
+    /// confines a device. Returned instead of success.
+    NotEnforcing,
     DomainTableFull,
     DomainAlreadyExists,
     DomainNotFound,

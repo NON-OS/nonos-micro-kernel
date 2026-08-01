@@ -33,7 +33,7 @@ const SERVICE_NAME: &str = "app.about";
 const SERVICE_PORT: u32 = 4710;
 const REPLY_INBOX: &str = "endpoint.app.about.reply";
 const REPLY_PORT: u32 = 4711;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 // Extra window endpoints, each declared in the signed manifest. Ordered, so the
 // lowest-numbered free one is taken.

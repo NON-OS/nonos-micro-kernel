@@ -24,7 +24,7 @@ use crate::arch::aarch64::boot::info::{BootInfo, MemoryType};
 
 pub(super) fn memory(info: &BootInfo) -> MemoryHandoff {
     let largest_usable_bytes = info
-        .memory_regions
+        .memory_map()
         .iter()
         .filter(|r| r.region_type == MemoryType::Available)
         .map(|r| r.size)
@@ -32,13 +32,12 @@ pub(super) fn memory(info: &BootInfo) -> MemoryHandoff {
         .unwrap_or(info.ram_size);
 
     MemoryHandoff {
-        // The regions live in a `Vec` the boot path owns for the life of the
-        // kernel. Nothing walks this pointer blind: the only code that reads
-        // the aarch64 memory map goes through the arch downcast, which hands
-        // it the typed `BootInfo` instead. The pointer and count are here so a
-        // diagnostic dump can report where the map came from.
-        map_ptr: info.memory_regions.as_ptr() as u64,
-        map_entries: info.memory_regions.len() as u32,
+        // Nothing walks this pointer blind: the only code that reads the
+        // aarch64 memory map goes through the arch downcast, which hands it the
+        // typed `BootInfo`. The pointer and count are here so a diagnostic dump
+        // can report where the map came from.
+        map_ptr: info.memory_map().as_ptr() as u64,
+        map_entries: info.memory_map().len() as u32,
         largest_usable_bytes,
     }
 }
@@ -48,11 +47,16 @@ pub(super) fn cpus(info: &BootInfo) -> CpuTopology {
 }
 
 pub(super) fn timing() -> TimingHandoff {
-    // The generic timer's frequency comes from CNTFRQ_EL0, which the timer
-    // code reads for itself, and the device tree carries no wall-clock time.
-    // Both stay unset rather than guessed; `clock::init` reads zero as "the
-    // boot path did not know" and the RTC supplies the epoch later.
-    TimingHandoff { fixed_freq_hz: None, unix_epoch_ms: 0 }
+    // CNTFRQ_EL0 is the generic timer's tick rate, and the clock needs it to
+    // turn a counter delta into milliseconds. Leaving it unset stops the clock
+    // advancing at all, which does not fail loudly: anything waiting on elapsed
+    // time waits forever, and the boot simply stops making progress.
+    //
+    // Zero means firmware never told the part its own frequency and there is
+    // nothing to infer from, so `None` stays the honest answer there. The device
+    // tree carries no wall-clock time either way; the RTC supplies the epoch.
+    let hz = crate::arch::aarch64::timer::frequency();
+    TimingHandoff { fixed_freq_hz: (hz > 0).then_some(hz), unix_epoch_ms: 0 }
 }
 
 pub(super) fn measurement() -> Measurement {

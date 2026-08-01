@@ -23,23 +23,48 @@ use core::sync::atomic::{fence, Ordering};
 pub fn tick(ctx: &mut Context) -> Result<(), &'static str> {
     // Composite every damaged rectangle this frame. Each is small and separate,
     // so the empty space between far-apart damage is never touched.
-    let mut composited = false;
     while let Some(rect) = ctx.damage.drain() {
         composite::paint(ctx, rect);
-        composited = true;
-        if !ctx.gop_mode {
+        if ctx.gop_mode {
+            // The kernel copies whatever it is handed with the CPU, so give it
+            // the rectangle that changed, not the screen.
+            let Some(r) = clip_to_screen(ctx, rect) else {
+                continue;
+            };
+            fence(Ordering::Release);
+            let rc = nonos_libc::mk_surface_present_rect(
+                ctx.surface_handle,
+                r.x,
+                r.y,
+                r.width,
+                r.height,
+            );
+            if rc < 0 {
+                return Err("gop present rejected");
+            }
+        } else {
             present_rect(ctx, rect)?;
         }
     }
-    if composited && ctx.gop_mode {
-        // The composed pixels already live in the registered surface; the kernel
-        // blits it to the UEFI framebuffer. Present once for the whole frame.
-        fence(Ordering::Release);
-        if nonos_libc::mk_surface_present(ctx.surface_handle) < 0 {
-            return Err("gop present rejected");
-        }
-    }
     Ok(())
+}
+
+// Clients submit layer rectangles unclipped, so damage can hang off the edge.
+// The kernel rejects a rectangle that leaves the framebuffer, and a rejected
+// present takes the compositor down, so trim here. None means nothing visible.
+fn clip_to_screen(
+    ctx: &Context,
+    rect: crate::state::damage::Rect,
+) -> Option<crate::state::damage::Rect> {
+    if rect.x >= ctx.width || rect.y >= ctx.height {
+        return None;
+    }
+    let width = core::cmp::min(rect.width, ctx.width - rect.x);
+    let height = core::cmp::min(rect.height, ctx.height - rect.y);
+    if width == 0 || height == 0 {
+        return None;
+    }
+    Some(crate::state::damage::Rect { x: rect.x, y: rect.y, width, height })
 }
 
 fn present_rect(ctx: &mut Context, rect: crate::state::damage::Rect) -> Result<(), &'static str> {

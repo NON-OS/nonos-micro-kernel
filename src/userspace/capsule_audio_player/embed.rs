@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-audio-player")]
-pub(crate) const AUDIO_PLAYER_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_audio_player/target/x86_64-nonos-user/release/audio_player"
-);
+pub(crate) const AUDIO_PLAYER_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_audio_player/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/audio_player"
+));
 
 #[cfg(feature = "nonos-capsule-audio-player")]
 pub(crate) const AUDIO_PLAYER_NONOS_ID_CERT_BYTES: &[u8] =

@@ -24,10 +24,7 @@ pub fn sidecar_path(path: &[u8]) -> Vec<u8> {
 }
 
 pub fn parse_sha256_hex(sidecar: &[u8]) -> Option<[u8; 32]> {
-    let mut it = sidecar
-        .iter()
-        .copied()
-        .skip_while(|c| matches!(c, b' ' | b'\t' | b'\r' | b'\n'));
+    let mut it = sidecar.iter().copied().skip_while(|c| matches!(c, b' ' | b'\t' | b'\r' | b'\n'));
     let mut out = [0u8; 32];
     for b in out.iter_mut() {
         *b = (nibble(it.next()?)? << 4) | nibble(it.next()?)?;

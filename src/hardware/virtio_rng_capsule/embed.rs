@@ -21,9 +21,11 @@
 //! empty slice (no driver capsule available).
 
 #[cfg(feature = "nonos-capsule-driver-virtio-rng")]
-pub(super) const DRIVER_VIRTIO_RNG_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_virtio_rng/target/x86_64-nonos-user/release/driver_virtio_rng"
-);
+pub(super) const DRIVER_VIRTIO_RNG_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_virtio_rng/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_virtio_rng"
+));
 
 #[cfg(feature = "nonos-capsule-driver-virtio-rng")]
 pub(super) const DRIVER_VIRTIO_RNG_NONOS_ID_CERT_BYTES: &[u8] =

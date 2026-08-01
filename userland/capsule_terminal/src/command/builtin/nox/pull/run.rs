@@ -71,7 +71,9 @@ pub(super) fn one_file(
     let extra = super::auth::extra_headers(&a.auth, &a.headers);
     if a.skip_unchanged {
         if let Some(local) = store::size(pid, dest) {
-            if fetch::head_reuse(conn, ip, a.target.port, &a.target.host, path, &extra) == Some(local as usize) {
+            if fetch::head_reuse(conn, ip, a.target.port, &a.target.host, path, &extra)
+                == Some(local as usize)
+            {
                 tally.skipped += 1;
                 return true;
             }
@@ -85,9 +87,15 @@ pub(super) fn one_file(
     match fetch::get_reuse(conn, ip, a.target.port, &a.target.host, path, &extra) {
         Ok(body) => {
             if a.verify {
-                if let Err(e) =
-                    super::verify::check(conn, ip, a.target.port, &a.target.host, path, &extra, &body)
-                {
+                if let Err(e) = super::verify::check(
+                    conn,
+                    ip,
+                    a.target.port,
+                    &a.target.host,
+                    path,
+                    &extra,
+                    &body,
+                ) {
                     state.scrollback.push_error(e.as_bytes());
                     tally.failed += 1;
                     return false;

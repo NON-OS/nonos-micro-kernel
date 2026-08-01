@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The radio the serve loop holds, and building it: map the DMA rings, bring the
-//! PHY up, read the station MAC, and construct the `RtlLink` and its CAM key store.
+//! The radio the serve loop holds: map the DMA rings, bring the PHY up, and build
+//! the `RtlLink` and its CAM key store.
 
 use alloc::boxed::Box;
 
@@ -75,8 +75,7 @@ pub(super) fn build_radio(mapped: Option<Mapped>, stage: Stage) -> (Radio, Stage
     (Radio::Up(Box::new(RadioUp { link, keys, regs: m.regs })), Stage::Ready)
 }
 
-/// The station MAC address from the MAC-ID registers, which `phy_setup` programs
-/// from the efuse (the chip does not autoload it).
+/// The station MAC from the MAC-ID registers, as `phy_setup` programmed it.
 pub(super) fn read_mac(regs: &Regs) -> [u8; 6] {
     let lo = regs.read32(REG_MACID);
     let hi = regs.read32(REG_MACID + 4);
@@ -115,12 +114,16 @@ fn phy_setup(regs: &Regs) -> bool {
     rxpath::pre_tables(regs);
     load_all(regs, &cond);
     rxpath::post_tables(regs);
-    // Program the station MAC from the efuse. The chip does not autoload it into
-    // the MAC-ID registers, so without this the station runs on an all-zero MAC:
-    // it associates, but the access point cannot send the unicast EAPOL handshake
-    // to 00:00:00:00:00:00 and the four-way never completes. Done after the table
-    // load so nothing clobbers it.
-    program_mac(regs, &info.mac);
+    // The chip does not autoload a MAC, and an all-zero one associates but never
+    // completes the four-way, so this must happen after the table load. Drawn
+    // rather than read from the efuse; no entropy means no radio.
+    match crate::station::draw() {
+        Some(mac) => program_mac(regs, &mac),
+        None => {
+            status::line(b"[rtl8821ce] no entropy for station address\n");
+            return false;
+        }
+    }
     let rfe_btg = rxpath::rfe_is_btg(info.rfe);
     rxpath::set_channel(regs, DEFAULT_CHANNEL, Bw::W20, rfe_btg);
     status::line(b"[rtl8821ce] phy configured\n");

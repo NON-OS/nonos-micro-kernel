@@ -21,7 +21,11 @@
 
 #[cfg(feature = "nonos-capsule-net-ip")]
 pub(super) const NET_IP_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_net_ip/target/x86_64-nonos-user/release/net_ip");
+    include_bytes!(concat!(
+    "../../../userland/capsule_net_ip/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/net_ip"
+));
 
 #[cfg(feature = "nonos-capsule-net-ip")]
 pub(super) const NET_IP_NONOS_ID_CERT_BYTES: &[u8] =
