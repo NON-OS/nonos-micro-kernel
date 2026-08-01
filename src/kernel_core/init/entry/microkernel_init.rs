@@ -64,6 +64,11 @@ pub fn microkernel_init(handoff: &KernelHandoff) {
     // window. On x86_64 the boot path has already done this and the call
     // returns without repeating it.
     crate::kernel_core::init::init_platform_baseline();
+    // Measured here because the counter frequency and the IPC secret are both
+    // up by now, and nothing else is competing for the machine yet, which is
+    // the only point in a boot where a quantile means anything.
+    #[cfg(feature = "nonos-bench-micro")]
+    crate::sys::microbench::run();
     // The framebuffer is MMIO-mapped only now: mapping it needs the paging
     // manager, which init_unified_vm brings up. Doing it in the early
     // memory/framebuffer step failed to map on real GOP framebuffers

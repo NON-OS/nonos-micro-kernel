@@ -678,7 +678,7 @@ nonos-mk-check: nonos-mk-check-deps nonos-mk-ensure-signing-key
 # Build the aarch64 kernel. PATH puts the rustup shims first because a Homebrew
 # rustc on /usr/local/bin shadows them and then rejects the -Z flags with a
 # confusing "only accepted on the nightly compiler".
-.PHONY: nonos-mk-arm nonos-mk-arm-run nonos-mk-arm-gui nonos-mk-arm-gui-capsules nonos-mk-arm-gui-run
+.PHONY: nonos-mk-arm nonos-mk-arm-bench nonos-mk-bench-micro nonos-mk-arm-run nonos-mk-arm-gui nonos-mk-arm-gui-capsules nonos-mk-arm-gui-run
 nonos-mk-arm: nonos-mk-ensure-signing-key
 	@echo "Building kernel (aarch64, microkernel-core + nonos-arch-preview)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
@@ -703,6 +703,23 @@ nonos-mk-arm: nonos-mk-ensure-signing-key
 # exercises; a device tree boot needs an Image-format target instead.
 ARM_QEMU_FLAGS := -M virt,gic-version=3 -cpu max -m 512 -nographic \
 		-serial mon:stdio -device virtio-rng-pci
+
+# Build with the in-kernel microbenchmarks compiled in and boot far enough to
+# print them. The numbers are cycle counts from the kernel's own paths, so they
+# belong to this image and this machine, not to a marketing table.
+nonos-mk-arm-bench: nonos-mk-ensure-signing-key
+	@echo "Building kernel (aarch64, microkernel-core + nonos-bench-micro)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) PATH="$(HOME)/.cargo/bin:$$PATH" \
+		$(CARGO) build $(ARM_KERNEL_BUILD_FLAGS) \
+		--no-default-features \
+		--features microkernel-core$(_boot_comma)nonos-arch-preview$(_boot_comma)nonos-bench-micro
+
+# The same measurement image for x86_64. The kernel paths under test are the
+# shared ones, so the two runs are comparable and the difference between them
+# is the architecture rather than the build.
+nonos-mk-bench-micro: nonos-mk-check-deps nonos-mk-ensure-signing-key
+	$(call nonos_kernel_build,microkernel-core + nonos-bench-micro,microkernel-core$(_boot_comma)nonos-bench-micro)
 
 nonos-mk-arm-run: nonos-mk-arm
 	@echo "Booting aarch64 kernel under QEMU (ctrl-a x to quit)..."
