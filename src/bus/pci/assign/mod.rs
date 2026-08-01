@@ -22,6 +22,7 @@
 //! a driver that trusts the BAR ends up pointing at address zero.
 
 mod access;
+mod carve;
 mod device;
 mod run;
 mod size;

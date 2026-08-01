@@ -20,6 +20,7 @@
 //! memory access.
 
 pub mod arch;
+pub mod bus;
 pub mod capabilities;
 pub mod elf;
 pub mod memory;
