@@ -29,7 +29,9 @@ pub(super) fn finalize_teardown(pid: Pid) {
         let _ = crate::services::registry::unregister_endpoint_by_name(reply);
         let _ = crate::ipc::nonos_inbox::unregister_inbox(reply);
     }
-    let _ = crate::ipc::nonos_inbox::unregister_for_pid(pid);
+    if !super::postmortem::is_retained(pid) {
+        let _ = crate::ipc::nonos_inbox::unregister_for_pid(pid);
+    }
 
     crate::process::clear_interrupt_context(pid);
     crate::process::clear_fpu_state(pid);

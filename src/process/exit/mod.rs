@@ -17,6 +17,7 @@
 mod exit_and_yield;
 mod finalize;
 mod pending;
+pub mod postmortem;
 mod teardown;
 
 pub use exit_and_yield::exit_and_yield;
