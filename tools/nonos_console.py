@@ -368,8 +368,11 @@ def section_rings():
             "ring 0 kernel", bar(kernel_lines, total, 30, YELLOW),
             100.0 - share, commas(kernel_lines)))
         out("")
-        out("  {}{:.0f}% of the system runs with no privilege at all.{}".format(
-            BOLD, share, OFF))
+        # Of the code that runs on the machine. The bootloader and the host
+        # tools are counted in SCALE but are not resident, and folding them in
+        # would flatter this figure with code that is not running.
+        out("  {}{:.0f}% of the {} lines that run has no privilege at all.{}".format(
+            BOLD, share, commas(total), OFF))
     out("")
     out("  " + DIM + "How the boundary is held" + OFF)
     field("  address spaces", "{} ASID references".format(commas(rg("asid", os.path.join(SRC, "memory")) + rg("Asid", os.path.join(SRC, "memory")))))
@@ -514,10 +517,15 @@ def section_tcb():
     out("")
     field("trusted total", "{} lines".format(commas(tcb_lines)), BOLD)
     if whole:
-        out("  {}{:.1f}% of the system has to be correct; the other {:.1f}% is "
-            "contained by it.{}".format(
-                BOLD, 100.0 * tcb_lines / whole, 100.0 - 100.0 * tcb_lines / whole,
-                OFF))
+        # Same denominator as the privilege split: the resident system. Stated
+        # rather than implied, because the SCALE total includes the bootloader
+        # and the host tools and a percentage is meaningless without its base.
+        out("  {}{:.1f}% of the {} lines that run has to be correct; the other "
+            "{:.1f}% is contained by it.{}".format(
+                BOLD, 100.0 * tcb_lines / whole, commas(whole),
+                100.0 - 100.0 * tcb_lines / whole, OFF))
+        out("  {}the bootloader is trusted before handoff and is not counted "
+            "here{}".format(DIM, OFF))
 
 
 def section_surface():
