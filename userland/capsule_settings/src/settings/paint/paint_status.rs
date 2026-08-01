@@ -21,8 +21,10 @@ use crate::settings::theme::{STATUS_BG, STATUS_FG_ERR, STATUS_FG_IDLE, STATUS_FG
 
 use super::layout::{PAD_X, STATUS_H};
 
+// At 9px a glyph this has to stay under about 80 characters or it runs past
+// the right edge of a default-width window.
 const HINT: &[u8] =
-    b"[Tab] tabs  [Up/Down] move  [Left/Right] adjust  [Enter] edit/toggle  [Esc] close";
+    b"[Tab] tabs  [arrows] move/adjust  [PgUp/PgDn] page  [Enter] toggle  [Esc] close";
 
 /// Which set of keys is live, so the hint describes the panel the user is
 /// actually looking at rather than always the field list.
