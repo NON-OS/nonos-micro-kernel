@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::config::{pci_read32, pci_write32};
+use super::access::{read32, write32};
 
 /// What one BAR decodes, learned the only way the spec offers: write all ones
 /// and read back which bits stayed clear.
@@ -30,10 +30,10 @@ pub(super) struct Bar {
 /// probe makes the device claim a wild address for the moment it is written,
 /// and a device still decoding would answer on it.
 pub(super) fn size_bar(bus: u8, device: u8, function: u8, offset: u8) -> Option<Bar> {
-    let original = pci_read32(bus, device, function, offset);
-    pci_write32(bus, device, function, offset, u32::MAX);
-    let probed = pci_read32(bus, device, function, offset);
-    pci_write32(bus, device, function, offset, original);
+    let original = read32(bus, device, function, offset);
+    write32(bus, device, function, offset, u32::MAX);
+    let probed = read32(bus, device, function, offset);
+    write32(bus, device, function, offset, original);
 
     if probed == 0 {
         return None;
@@ -49,10 +49,10 @@ pub(super) fn size_bar(bus: u8, device: u8, function: u8, offset: u8) -> Option<
     let is_64bit = (original >> 1) & 0x3 == 0x2;
     if is_64bit {
         let high_offset = offset.checked_add(4)?;
-        let high_original = pci_read32(bus, device, function, high_offset);
-        pci_write32(bus, device, function, high_offset, u32::MAX);
-        let high_probed = pci_read32(bus, device, function, high_offset);
-        pci_write32(bus, device, function, high_offset, high_original);
+        let high_original = read32(bus, device, function, high_offset);
+        write32(bus, device, function, high_offset, u32::MAX);
+        let high_probed = read32(bus, device, function, high_offset);
+        write32(bus, device, function, high_offset, high_original);
 
         let mask = ((high_probed as u64) << 32) | ((probed & !0xF) as u64);
         let size = (!mask).wrapping_add(1);
