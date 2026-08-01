@@ -1,6 +1,7 @@
-// NONOS std PAL: stdout/stderr via the kernel debug syscall (serial sink),
-// the same path the userland libc `mk_debug` uses. Stdin is a blocking read
-// of this process's kernel stdin channel, fed by a launcher (the terminal).
+// NONOS std PAL: stdout/stderr via the kernel stdout syscall, which mirrors
+// the bytes into this process's `proc.<pid>` inbox for its launcher to drain.
+// Stdin is a blocking read of this process's kernel stdin channel, fed by a
+// launcher (the terminal).
 // Raw syscall: rax = tag, rdi/rsi = (buf, len).
 
 use crate::io;
@@ -9,7 +10,7 @@ const fn tag4(b: &[u8; 4]) -> i64 {
     (b[0] as i64) | ((b[1] as i64) << 8) | ((b[2] as i64) << 16) | ((b[3] as i64) << 24)
 }
 
-const N_MK_DEBUG: i64 = tag4(b"MDBG");
+const N_MK_STDOUT_WRITE: i64 = tag4(b"MSOW");
 const N_MK_STDIN_READ: i64 = tag4(b"MSRD");
 const N_MK_YIELD: i64 = tag4(b"MYLD");
 const CHUNK: usize = 240;
@@ -40,13 +41,16 @@ fn raw_yield() {
     }
 }
 
+// Program stdout. Unlike the kernel debug syscall this needs no `Capability::Debug`:
+// the kernel only mirrors the bytes into this process's `proc.<pid>` inbox,
+// which its launcher drains.
 #[inline]
-unsafe fn debug_write(ptr: *const u8, len: usize) {
+unsafe fn stdout_write(ptr: *const u8, len: usize) {
     let ret: i64;
     unsafe {
         core::arch::asm!(
             "syscall",
-            inout("rax") N_MK_DEBUG => ret,
+            inout("rax") N_MK_STDOUT_WRITE => ret,
             in("rdi") ptr as u64,
             in("rsi") len as u64,
             out("rcx") _,
@@ -99,7 +103,7 @@ impl io::Write for Stdout {
         let mut off = 0;
         while off < buf.len() {
             let n = core::cmp::min(CHUNK, buf.len() - off);
-            unsafe { debug_write(buf[off..].as_ptr(), n) };
+            unsafe { stdout_write(buf[off..].as_ptr(), n) };
             off += n;
         }
         Ok(buf.len())

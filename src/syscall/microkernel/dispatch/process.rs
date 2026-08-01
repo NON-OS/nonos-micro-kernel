@@ -30,6 +30,7 @@ use crate::syscall::microkernel::process::{
 use crate::syscall::microkernel::futex::{sys_futex_wait, sys_futex_wake};
 use crate::syscall::microkernel::procstat::sys_proc_stat;
 use crate::syscall::microkernel::spawn_instance::sys_spawn_instance;
+use crate::syscall::microkernel::stdout_write::sys_stdout_write;
 use crate::syscall::microkernel::tool_run::sys_tool_run;
 use crate::syscall::microkernel::time::{
     sys_time_adjust, sys_time_millis, sys_time_monotonic, sys_time_rtc,
@@ -62,6 +63,7 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_PROC_OUTPUT => sys_proc_output(a.a0, a.a1, a.a2 as usize),
         SYS_PROC_INPUT => sys_proc_input(a.a0, a.a1, a.a2 as usize),
         SYS_STDIN_READ => sys_stdin_read(a.a0, a.a1 as usize),
+        SYS_STDOUT_WRITE => sys_stdout_write(a.a0, a.a1),
         SYS_ATTEST_STATUS => sys_attest_status(a.a0),
         SYS_SPAWN_INSTANCE => sys_spawn_instance(a.a0, a.a1),
         SYS_TOOL_RUN => sys_tool_run(a.a0, a.a1, a.a2, a.a3),
