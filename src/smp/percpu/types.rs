@@ -53,7 +53,12 @@ pub struct PerCpuData {
     /// asserts, so the assembly that addresses this block is unaffected.
     pub time_slice: AtomicU64,
     pub need_resched: AtomicU32,
-    _reserved: [u8; 4096 - 128],
+    /// Non-zero while a TLB shootdown round has this CPU as a target. Set by
+    /// the originator before it publishes the request, cleared by whichever
+    /// path here does the flush first. It is what makes the flush both
+    /// correctly targeted and safe to run twice.
+    pub tlb_flush_pending: AtomicU32,
+    _reserved: [u8; 4096 - 132],
 }
 
 impl PerCpuData {
@@ -75,7 +80,8 @@ impl PerCpuData {
             active_asid: AtomicU32::new(ASID_NONE),
             time_slice: AtomicU64::new(0),
             need_resched: AtomicU32::new(0),
-            _reserved: [0; 4096 - 128],
+            tlb_flush_pending: AtomicU32::new(0),
+            _reserved: [0; 4096 - 132],
         }
     }
 }

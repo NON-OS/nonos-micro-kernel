@@ -59,7 +59,6 @@ pub struct CpuDescriptor {
     /// timer tick of latency, never a lost task: the idle loop rechecks the
     /// run queue after every wake.
     pub idle: AtomicBool,
-    pub tlb_shootdown_pending: AtomicBool,
     pub preempt_disable_count: AtomicU32,
     pub in_interrupt: AtomicBool,
     pub last_error: AtomicU32,
@@ -79,7 +78,6 @@ impl CpuDescriptor {
             total_cycles: AtomicU64::new(0),
             current_pid: AtomicU32::new(0),
             idle: AtomicBool::new(false),
-            tlb_shootdown_pending: AtomicBool::new(false),
             preempt_disable_count: AtomicU32::new(0),
             in_interrupt: AtomicBool::new(false),
             last_error: AtomicU32::new(0),
@@ -137,11 +135,6 @@ impl CpuDescriptor {
     /// Get current PID
     pub fn get_current_pid(&self) -> u32 {
         self.current_pid.load(Ordering::Relaxed)
-    }
-
-    /// Check if TLB shootdown is pending
-    pub fn has_tlb_shootdown_pending(&self) -> bool {
-        self.tlb_shootdown_pending.load(Ordering::Relaxed)
     }
 
     /// Get preempt disable count

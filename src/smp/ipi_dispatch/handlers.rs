@@ -28,7 +28,7 @@
 use crate::arch::interrupt_controller::{end_of_interrupt, Ipi};
 
 pub(super) fn tlb_shootdown() {
-    super::super::tlb::handle_tlb_shootdown_ipi();
+    crate::memory::paging::manager::handle_shootdown_ipi();
     end_of_interrupt(Ipi::TlbShootdown);
 }
 
