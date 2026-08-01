@@ -20,7 +20,7 @@ use crate::arch::riscv64::interrupts::cause::InterruptCode;
 use crate::arch::riscv64::interrupts::frame::TrapFrame;
 use crate::arch::riscv64::plic::{claim_interrupt, complete_interrupt, dispatch_irq};
 use crate::arch::riscv64::timer;
-use crate::process::scheduler::preemption::NEED_RESCHEDULE;
+use crate::process::scheduler::preemption::set_reschedule;
 use core::sync::atomic::Ordering;
 
 use super::fatal::fatal;
@@ -66,5 +66,5 @@ fn handle_software() {
     if clear_csr(SIP, SIP_SSIP).is_err() {
         fatal();
     }
-    NEED_RESCHEDULE.store(true, Ordering::Release);
+    set_reschedule();
 }
