@@ -26,7 +26,7 @@ reported as a failure and exits non zero.
     python3 tools/nonos_console.py --fast         no typing delay
     python3 tools/nonos_console.py <section>      one section
 
-Sections: scale rings subsystems layering tcb surface boot kernel syscalls safety memory crypto authority ipc arch bench attack
+Sections: scale rings subsystems layering tcb surface boot kernel syscalls safety memory crypto authority ipc arch lean bench attack
 """
 
 import math
@@ -952,6 +952,95 @@ def section_bench(capsules):
     bench_boot()
 
 
+LEAN_ROOT = os.path.join(ROOT, "verification", "lean")
+
+
+def lean_modules():
+    """Every hand written Lean module with its theorem and definition count."""
+    found = []
+    base = os.path.join(LEAN_ROOT, "Nonos")
+    for path in walk(base, ".lean"):
+        theorems = defs = axioms = sorries = 0
+        try:
+            with open(path, "r", encoding="utf-8", errors="replace") as handle:
+                for line in handle:
+                    stripped = line.strip()
+                    if stripped.startswith("--") or stripped.startswith("/-"):
+                        continue
+                    if stripped.startswith(("theorem ", "lemma ")):
+                        theorems += 1
+                    elif stripped.startswith(("def ", "abbrev ")):
+                        defs += 1
+                    elif stripped.startswith("axiom "):
+                        axioms += 1
+                    # A real sorry stands alone as a term, not inside prose.
+                    if stripped == "sorry" or stripped.endswith(" sorry") \
+                            or stripped.startswith("sorry "):
+                        sorries += 1
+        except OSError:
+            continue
+        name = os.path.relpath(path, base).replace(".lean", "")
+        found.append({"name": name, "theorems": theorems, "defs": defs,
+                      "axioms": axioms, "sorries": sorries,
+                      "lines": count_lines([path])})
+    return found
+
+
+def section_lean():
+    heading("MACHINE CHECKED PROOF")
+    out("  " + DIM + "Lean 4, core only, no Mathlib. A theorem here is a "
+        "property of the kernel," + OFF)
+    out("  " + DIM + "not a test of one case." + OFF)
+    out("")
+    modules = lean_modules()
+    if not modules:
+        out("  {}no Lean corpus found{}".format(YELLOW, OFF))
+        return
+    theorems = sum(m["theorems"] for m in modules)
+    defs = sum(m["defs"] for m in modules)
+    axioms = sum(m["axioms"] for m in modules)
+    sorries = sum(m["sorries"] for m in modules)
+    lines = sum(m["lines"] for m in modules)
+
+    field("modules", commas(len(modules)))
+    field("theorems", commas(theorems), BOLD)
+    field("definitions", commas(defs))
+    field("lines", commas(lines))
+    field("axioms", commas(axioms), GREEN if axioms == 0 else YELLOW)
+    field("sorry", commas(sorries), GREEN if sorries == 0 else RED)
+    if sorries == 0 and axioms == 0:
+        out("  " + GREEN + "  nothing assumed and nothing left unproven" + OFF)
+
+    out("")
+    out("  " + BOLD + "Largest proof modules" + OFF)
+    for module in sorted(modules, key=lambda m: -m["theorems"])[:12]:
+        if not module["theorems"]:
+            continue
+        out("  {:<28} {} {:>4} theorems".format(
+            module["name"], bar(module["theorems"],
+                                max(m["theorems"] for m in modules), 20),
+            module["theorems"]))
+
+    # Which kernel subsystems the corpus actually names. A module named after a
+    # subsystem is evidence that subsystem has stated properties; silence is
+    # not evidence of the opposite, so this is reported as coverage of names.
+    out("")
+    out("  " + BOLD + "Kernel subsystems named by a proof module" + OFF)
+    subsystems = [d for d in os.listdir(SRC) if os.path.isdir(os.path.join(SRC, d))]
+    named = []
+    lowered = [(m["name"].lower(), m["theorems"]) for m in modules]
+    for sub in sorted(subsystems):
+        key = sub.replace("_", "")
+        hits = sum(t for n, t in lowered if key in n.replace("_", ""))
+        if hits:
+            named.append((sub, hits))
+    for sub, hits in sorted(named, key=lambda kv: -kv[1])[:10]:
+        out("  {:<16} {:>4} theorems".format(sub, hits))
+    field("covered", "{} of {} subsystems named".format(
+        len(named), len(subsystems)),
+        GREEN if len(named) * 2 >= len(subsystems) else YELLOW)
+
+
 def section_boot():
     heading("BOOT CHAIN")
     out("  " + DIM + "Each stage measures the next before handing control over." + OFF)
@@ -1255,6 +1344,7 @@ SECTIONS = [
     ("safety", section_safety, False), ("memory", section_memory, False),
     ("crypto", section_crypto, False), ("authority", section_authority, True),
     ("ipc", section_ipc, True), ("arch", section_arch, True),
+    ("lean", section_lean, False),
     ("bench", section_bench, True),
     ("attack", section_attack, True),
 ]
