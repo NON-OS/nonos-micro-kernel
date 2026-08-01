@@ -16,6 +16,7 @@
 
 pub mod copy_rect;
 pub mod fill;
+pub mod row;
 
 pub use copy_rect::composite_layer;
 pub use fill::fill_rect;
