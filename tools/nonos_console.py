@@ -26,7 +26,7 @@ reported as a failure and exits non zero.
     python3 tools/nonos_console.py --fast         no typing delay
     python3 tools/nonos_console.py <section>      one section
 
-Sections: scale rings subsystems layering tcb surface boot kernel syscalls safety memory crypto authority ipc arch lean bench attack
+Sections: scale rings subsystems layering tcb surface boot kernel syscalls safety memory crypto authority ipc arch lean bench ubench attack
 """
 
 import math
@@ -1041,6 +1041,195 @@ def section_lean():
         GREEN if len(named) * 2 >= len(subsystems) else YELLOW)
 
 
+BENCH_DIR = os.path.join(ROOT, "target", "bench")
+OVMF_CANDIDATES = [
+    "/usr/local/share/qemu/edk2-x86_64-code.fd",
+    "/opt/homebrew/share/qemu/edk2-x86_64-code.fd",
+    "/usr/share/OVMF/OVMF_CODE.fd",
+]
+
+
+def parse_ubench(text):
+    """Pull the kernel's own microbenchmark markers out of a serial log."""
+    cases = {}
+    meta = {}
+    for line in text.splitlines():
+        if "[UBENCH]" not in line:
+            continue
+        body = line.split("[UBENCH]", 1)[1].strip()
+        parts = body.split()
+        if not parts:
+            continue
+        name = parts[0]
+        fields = {}
+        for token in parts[1:]:
+            if "=" in token:
+                key, _, value = token.partition("=")
+                try:
+                    fields[key] = int(value)
+                except ValueError:
+                    pass
+        if name == "counter_overhead":
+            meta.update(fields)
+        elif fields:
+            cases[name] = fields
+    return meta, cases
+
+
+def qemu_boot(arch, seconds):
+    """Boot the measurement image and return whatever it printed."""
+    log = os.path.join(BENCH_DIR, "serial-{}.log".format(arch))
+    os.makedirs(BENCH_DIR, exist_ok=True)
+    if arch == "aarch64":
+        kernel = os.path.join(ROOT, "target", "aarch64-nonos", "release", "nonos-kernel")
+        if not size_of(kernel):
+            return None, "no aarch64 kernel; run make nonos-mk-arm-bench"
+        cmd = ["qemu-system-aarch64", "-M", "virt,gic-version=3", "-cpu", "max",
+               "-m", "512", "-nographic", "-serial", "mon:stdio",
+               "-device", "virtio-rng-pci", "-kernel", kernel]
+    else:
+        esp = os.path.join(ROOT, "target", "esp")
+        if not os.path.isdir(esp):
+            return None, "no ESP; run make nonos-mk-bench-micro && make nonos-mk-esp"
+        firmware = next((f for f in OVMF_CANDIDATES if os.path.isfile(f)), None)
+        if firmware is None:
+            return None, "OVMF firmware not found"
+        cmd = ["qemu-system-x86_64", "-m", "2048", "-machine", "q35", "-cpu", "max",
+               "-smp", "1", "-drive", "format=raw,file=fat:rw:" + esp,
+               "-drive", "if=pflash,format=raw,readonly=on,file=" + firmware,
+               "-display", "none", "-serial", "stdio", "-no-reboot"]
+    try:
+        with open(log, "wb") as handle:
+            process = subprocess.Popen(cmd, stdout=handle,
+                                       stderr=subprocess.STDOUT,
+                                       stdin=subprocess.DEVNULL)
+            deadline = time.time() + seconds
+            while time.time() < deadline:
+                if process.poll() is not None:
+                    break
+                time.sleep(0.5)
+                try:
+                    with open(log, "r", errors="replace") as reader:
+                        if "[UBENCH] done" in reader.read():
+                            break
+                except OSError:
+                    pass
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=10)
+                except subprocess.SubprocessError:
+                    process.kill()
+    except (OSError, subprocess.SubprocessError) as err:
+        return None, str(err)
+    try:
+        with open(log, "r", errors="replace") as handle:
+            return handle.read(), None
+    except OSError as err:
+        return None, str(err)
+
+
+def section_ubench(_capsules=None):
+    heading("KERNEL MICROBENCHMARK")
+    out("  " + DIM + "Cycle counts from the kernel's own paths, measured in "
+        "kernel, quantiles" + OFF)
+    out("  " + DIM + "not means, with the cost of the measurement removed." + OFF)
+    out("")
+    results = {}
+    for arch in ("x86_64", "aarch64"):
+        for candidate in (os.path.join(BENCH_DIR, "serial-{}.log".format(arch)),
+                          os.path.join(ROOT, "boot.log")):
+            if not os.path.isfile(candidate):
+                continue
+            try:
+                with open(candidate, "r", errors="replace") as handle:
+                    meta, cases = parse_ubench(handle.read())
+            except OSError:
+                continue
+            if cases:
+                results[arch] = (meta, cases)
+                break
+    if not results:
+        out("  {}no measurement log found{}".format(YELLOW, OFF))
+        out("  run: {}python3 tools/nonos_console.py measure{}".format(BOLD, OFF))
+        return
+
+    for arch, (meta, _cases) in results.items():
+        hz = meta.get("hz", 0)
+        out("  {}{:<10}{} counter {:.3f} GHz, measurement overhead {} ticks".format(
+            DIM, arch, OFF, hz / 1e9 if hz else 0.0, meta.get("ticks", 0)))
+    out("")
+
+    names = []
+    for _arch, (_m, cases) in results.items():
+        for name in cases:
+            if name not in names:
+                names.append(name)
+
+    archs = list(results.keys())
+    out("  {}{:<20}{}{}".format(
+        DIM, "CASE", "".join("{:>22}".format(a) for a in archs), OFF))
+    for name in names:
+        row = "  {:<20}".format(name)
+        for arch in archs:
+            case = results[arch][1].get(name)
+            if not case:
+                row += "{:>22}".format("-")
+                continue
+            ns = case.get("p50_ns", 0)
+            row += "{:>22}".format("{} ns  p50".format(commas(ns)))
+        out(row)
+
+    # The spread between p50 and p95 is what a caller actually feels, so it is
+    # reported rather than left for the reader to compute.
+    out("")
+    out("  " + BOLD + "Tail behaviour" + OFF)
+    for arch in archs:
+        meta, cases = results[arch]
+        for name, case in cases.items():
+            p50, p95 = case.get("p50", 0), case.get("p95", 0)
+            if p50:
+                out("  {:<10} {:<20} p95 is {:.2f}x p50".format(
+                    arch, name, p95 / float(p50)))
+
+
+def command_measure(args):
+    """Build, boot and collect, so a number never comes from a stale log."""
+    out("")
+    out(BOLD + "  NONOS measurement run" + OFF)
+    wanted = [a for a in ("x86_64", "aarch64") if a in args] or ["x86_64", "aarch64"]
+    for arch in wanted:
+        heading("MEASURE " + arch)
+        target = "nonos-mk-bench-micro" if arch == "x86_64" else "nonos-mk-arm-bench"
+        out("  {}building{} make {}".format(DIM, OFF, target))
+        try:
+            built = subprocess.run(["make", target], cwd=ROOT,
+                                   stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL, timeout=3600)
+        except (OSError, subprocess.SubprocessError) as err:
+            out("  {}build failed: {}{}".format(RED, err, OFF))
+            continue
+        if built.returncode != 0:
+            out("  {}build failed{}".format(RED, OFF))
+            continue
+        if arch == "x86_64":
+            out("  {}packaging{} make nonos-mk-esp".format(DIM, OFF))
+            subprocess.run(["make", "nonos-mk-esp"], cwd=ROOT,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        out("  {}booting{} under qemu".format(DIM, OFF))
+        text, err = qemu_boot(arch, 180)
+        if text is None:
+            out("  {}{}{}".format(YELLOW, err, OFF))
+            continue
+        meta, cases = parse_ubench(text)
+        if not cases:
+            out("  {}no markers in the log{}".format(YELLOW, OFF))
+            continue
+        out("  {}collected{} {} cases".format(GREEN, OFF, len(cases)))
+    section_ubench()
+    return 0
+
+
 def section_boot():
     heading("BOOT CHAIN")
     out("  " + DIM + "Each stage measures the next before handing control over." + OFF)
@@ -1345,6 +1534,7 @@ SECTIONS = [
     ("crypto", section_crypto, False), ("authority", section_authority, True),
     ("ipc", section_ipc, True), ("arch", section_arch, True),
     ("lean", section_lean, False),
+    ("ubench", section_ubench, True),
     ("bench", section_bench, True),
     ("attack", section_attack, True),
 ]
@@ -1364,6 +1554,9 @@ def main():
     if "--json" in sys.argv:
         emit_json(capsules)
         return 0
+
+    if args and args[0] == "measure":
+        return command_measure(args[1:])
 
     want = args[0] if args else "all"
     out("")
