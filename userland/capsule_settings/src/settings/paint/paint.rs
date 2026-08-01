@@ -23,7 +23,7 @@ use crate::settings::theme::BACKGROUND;
 use super::layout::{BODY_TOP, ROW_H};
 use super::paint_field_row::paint_field_row;
 use super::paint_header::paint_header;
-use super::paint_status::paint_status;
+use super::paint_status::{paint_status, HintMode};
 use super::paint_tabs::paint_tabs;
 use super::paint_wifi::paint_wifi;
 use super::scroll_indicator::paint_scroll_indicator;
@@ -35,7 +35,8 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     paint_tabs(fb, state.category, state.wifi_active, state.win_w);
     if state.wifi_active {
         paint_wifi(fb, state);
-        paint_status(fb, &state.status, state.policy_ready);
+        let mode = if state.wifi_pass_active { HintMode::WifiPassphrase } else { HintMode::Wifi };
+        paint_status(fb, &state.status, state.policy_ready, mode);
         return;
     }
     let fields = visible_for(state.category);
@@ -51,5 +52,6 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
         y += ROW_H;
     }
     paint_scroll_indicator(fb, top, rows, fields.len());
-    paint_status(fb, &state.status, state.policy_ready);
+    let mode = if state.editing { HintMode::Editing } else { HintMode::Browsing };
+    paint_status(fb, &state.status, state.policy_ready, mode);
 }
