@@ -53,7 +53,12 @@ pub struct CpuDescriptor {
     pub idle_cycles: AtomicU64,
     pub total_cycles: AtomicU64,
     pub current_pid: AtomicU32,
-    pub ipi_pending: AtomicU32,
+    /// Set by this CPU's idle loop while it is halted with nothing to run.
+    /// Read by `wake_idle_cpu` to pick a CPU worth interrupting. Only ever
+    /// written by its owner, so a stale read costs a redundant IPI or one
+    /// timer tick of latency, never a lost task: the idle loop rechecks the
+    /// run queue after every wake.
+    pub idle: AtomicBool,
     pub tlb_shootdown_pending: AtomicBool,
     pub preempt_disable_count: AtomicU32,
     pub in_interrupt: AtomicBool,
@@ -73,7 +78,7 @@ impl CpuDescriptor {
             idle_cycles: AtomicU64::new(0),
             total_cycles: AtomicU64::new(0),
             current_pid: AtomicU32::new(0),
-            ipi_pending: AtomicU32::new(0),
+            idle: AtomicBool::new(false),
             tlb_shootdown_pending: AtomicBool::new(false),
             preempt_disable_count: AtomicU32::new(0),
             in_interrupt: AtomicBool::new(false),
@@ -132,11 +137,6 @@ impl CpuDescriptor {
     /// Get current PID
     pub fn get_current_pid(&self) -> u32 {
         self.current_pid.load(Ordering::Relaxed)
-    }
-
-    /// Check if IPI is pending
-    pub fn has_ipi_pending(&self) -> bool {
-        self.ipi_pending.load(Ordering::Relaxed) > 0
     }
 
     /// Check if TLB shootdown is pending

@@ -40,7 +40,6 @@ pub fn init() {
     get_queue().lock().clear();
     realtime::init();
     super::deadline::init();
-    super::smp::init_smp_scheduler();
 }
 
 pub fn get() -> Option<&'static Scheduler> {
