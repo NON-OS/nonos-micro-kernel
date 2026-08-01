@@ -23,7 +23,7 @@ use super::layout::{HEADER_H, TAB_H};
 
 /// The three policy categories and the Wi-Fi tab, in tab order.
 const TABS: [(Option<Category>, &[u8]); 4] = [
-    (Some(Category::User), b"Display"),
+    (Some(Category::User), b"General"),
     (Some(Category::Identity), b"Network"),
     (Some(Category::Kernel), b"Security"),
     (None, b"Wi-Fi"),

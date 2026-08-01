@@ -14,10 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod all_fields;
-pub mod read_only;
-pub mod visible_for;
+//! Fields the panel shows but will not change.
+//!
+//! The policy protocol has no read-only notion, so the store accepts a write
+//! to any field. Some of them report what the system did rather than what the
+//! user wants, and letting someone assert one from a settings row would be
+//! stating something untrue about the machine.
 
-pub use all_fields::ALL_FIELDS;
-pub use read_only::read_only;
-pub use visible_for::visible_for;
+use nonos_policy_proto::Field;
+
+/// Whether `field` is a status the panel displays without editing.
+pub fn read_only(field: Field) -> bool {
+    matches!(field, Field::SystemKeysGenerated)
+}
