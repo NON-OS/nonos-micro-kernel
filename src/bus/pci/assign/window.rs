@@ -57,10 +57,7 @@ fn alloc_from(next: &AtomicU64, end: &AtomicU64, size: u64) -> Option<u64> {
         if after > limit {
             return None;
         }
-        if next
-            .compare_exchange(cur, after, Ordering::SeqCst, Ordering::SeqCst)
-            .is_ok()
-        {
+        if next.compare_exchange(cur, after, Ordering::SeqCst, Ordering::SeqCst).is_ok() {
             return Some(base);
         }
     }

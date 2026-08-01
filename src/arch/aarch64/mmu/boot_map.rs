@@ -94,8 +94,8 @@ unsafe fn map_direct_range(slot: usize, base: u64, size: u64) {
     let mut phys = base & !(BLOCK_2M - 1);
     let end = base.saturating_add(size);
     let table_end = (phys / GIB + 1) * GIB;
-    state::l1_high().set_table(((phys + KERNEL_SPACE_START) / GIB % ENTRIES) as usize,
-        state::l2_addr(slot));
+    state::l1_high()
+        .set_table(((phys + KERNEL_SPACE_START) / GIB % ENTRIES) as usize, state::l2_addr(slot));
     while phys < end && phys < table_end {
         let virt = phys.wrapping_add(KERNEL_SPACE_START);
         let l2_idx = ((virt / BLOCK_2M) % ENTRIES) as usize;
@@ -164,7 +164,6 @@ unsafe fn map_devices(boot_info: &BootInfo) {
     map_device_range(boot_info.pci_mmio_base, boot_info.pci_mmio_size, &attrs);
     map_device_range(boot_info.rtc_base, BLOCK_2M, &attrs);
 }
-
 
 /// Identity map every 2MB block that a window touches.
 unsafe fn map_device_range(base: u64, size: u64, attrs: &PageAttributes) {

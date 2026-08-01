@@ -20,7 +20,6 @@ pub const MAX_MEMORY_REGIONS: usize = 8;
 /// As many CPUs as the device tree walker reads in one pass.
 pub const MAX_CPUS: usize = 64;
 
-
 use super::memory::{MemoryRegion, MemoryType};
 
 #[derive(Debug, Clone)]

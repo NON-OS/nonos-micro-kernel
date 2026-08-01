@@ -40,8 +40,7 @@ pub fn assign_unassigned() -> usize {
                 continue;
             }
             let header = read8(bus, device, 0, HEADER_TYPE);
-            let functions =
-                if header & HEADER_MULTI_FUNCTION != 0 { MAX_FUNCTION } else { 1 };
+            let functions = if header & HEADER_MULTI_FUNCTION != 0 { MAX_FUNCTION } else { 1 };
             for function in 0..functions {
                 if read16(bus, device, function, VENDOR_ID) == INVALID_VENDOR {
                     continue;

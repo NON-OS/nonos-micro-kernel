@@ -35,13 +35,7 @@ pub(super) fn assign_device(bus: u8, device: u8, function: u8) -> bool {
     // Sizing drives the address lines to all ones. Stop the device decoding
     // before that happens, or for the width of the probe it claims a window
     // that is not its own.
-    write16(
-        bus,
-        device,
-        function,
-        COMMAND,
-        command & !(COMMAND_IO_SPACE | COMMAND_MEMORY_SPACE),
-    );
+    write16(bus, device, function, COMMAND, command & !(COMMAND_IO_SPACE | COMMAND_MEMORY_SPACE));
 
     let mut assigned = false;
     let mut index = 0;
