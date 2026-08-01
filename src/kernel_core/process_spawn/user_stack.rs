@@ -30,10 +30,7 @@
 
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use crate::memory::frame_alloc;
-use crate::memory::paging::constants::KERNEL_ASID;
-use crate::memory::paging::manager::{
-    map_page, switch_address_space, switch_to_process_address_space,
-};
+use crate::memory::paging::manager::{lookup_asid_for_process, map_page_in_asid};
 use crate::memory::paging::types::PagePermissions;
 use crate::process::core::Pid;
 use crate::process::userspace::constants::{USER_STACK_BASE, USER_STACK_SIZE};
@@ -63,7 +60,7 @@ pub(crate) fn allocate_user_stack(pid: Pid) -> Result<u64, UserStackError> {
         return Err(UserStackError::AddressSpace);
     }
 
-    switch_to_process_address_space(pid).map_err(|_| UserStackError::AddressSpace)?;
+    let asid = lookup_asid_for_process(pid).ok_or(UserStackError::AddressSpace)?;
 
     let perms = PagePermissions::READ | PagePermissions::WRITE | PagePermissions::USER;
     let pages = (size / PAGE_SIZE) as usize;
@@ -74,15 +71,13 @@ pub(crate) fn allocate_user_stack(pid: Pid) -> Result<u64, UserStackError> {
         let frame = match frame_alloc::allocate_frame() {
             Some(f) => f,
             None => {
-                rollback(&allocated);
-                let _ = switch_address_space(KERNEL_ASID);
+                rollback(asid, perms, &allocated);
                 return Err(UserStackError::FrameExhausted);
             }
         };
-        if map_page(va, frame, perms).is_err() {
+        if map_page_in_asid(asid, va, frame, perms).is_err() {
             let _ = frame_alloc::deallocate_frame(frame);
-            rollback(&allocated);
-            let _ = switch_address_space(KERNEL_ASID);
+            rollback(asid, perms, &allocated);
             return Err(UserStackError::MapFailed);
         }
         allocated.push((va, frame));
@@ -90,20 +85,13 @@ pub(crate) fn allocate_user_stack(pid: Pid) -> Result<u64, UserStackError> {
 
     // Guard page at `bottom - PAGE_SIZE` is left unmapped on purpose.
 
-    if switch_address_space(KERNEL_ASID).is_err() {
-        // We have lost the kernel ASID; this is fatal. The caller is
-        // already mid-spawn so log + halt rather than return.
-        crate::sys::serial::println(b"[FATAL] user_stack: kernel ASID switch failed");
-        crate::boot::halt_loop();
-    }
-
     Ok(top - 8)
 }
 
-fn rollback(allocated: &[(VirtAddr, PhysAddr)]) {
-    use crate::memory::paging::manager::unmap_page;
+fn rollback(asid: u32, perms: PagePermissions, allocated: &[(VirtAddr, PhysAddr)]) {
+    use crate::memory::paging::manager::unmap_page_in_asid;
     for (va, frame) in allocated.iter().rev() {
-        let _ = unmap_page(*va);
+        let _ = unmap_page_in_asid(asid, *va, perms);
         let _ = frame_alloc::deallocate_frame(*frame);
     }
 }

@@ -18,4 +18,6 @@ mod install;
 mod install_in_asid;
 mod map;
 mod map_in_asid;
+mod remove_in_asid;
 mod unmap;
+mod unmap_in_asid;
