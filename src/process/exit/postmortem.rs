@@ -20,6 +20,7 @@
 //! never drains cannot grow it without bound.
 
 use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
 use spin::Mutex;
 
 use crate::process::core::Pid;
@@ -61,6 +62,26 @@ pub fn release(pid: Pid) {
     let retained = RETAINED.lock().remove(&pid).is_some();
     if retained {
         drop_inbox(pid);
+    }
+}
+
+/// Drop everything a freshly allocated pid could inherit from a dead one: its
+/// own retained stdout, and any retention that still names it as the parent
+/// allowed to drain. `choose_pid` recycles ids once they are inactive, so a
+/// capsule handed a recycled pid would otherwise inherit the right to read an
+/// unrelated dead capsule's output.
+pub(crate) fn purge_for_new_pid(pid: Pid) {
+    let dropped = {
+        let mut map = RETAINED.lock();
+        let stale: Vec<Pid> =
+            map.iter().filter(|(&k, &v)| k == pid || v == pid).map(|(&k, _)| k).collect();
+        for k in &stale {
+            map.remove(k);
+        }
+        stale
+    };
+    for k in dropped {
+        drop_inbox(k);
     }
 }
 
