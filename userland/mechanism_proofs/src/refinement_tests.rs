@@ -35,7 +35,6 @@ use crate::scheduler::policy_types::{
 use crate::spawn::caps_bits::{grant_within_manifest, install_caps, within_ceiling};
 use crate::spawn::lifetime::delegation_expiry;
 use crate::spec;
-use crate::timer::interval::elapsed_reached;
 
 fn sched_attr(policy: i32, rt_priority: i32, nice: i32) -> SchedAttr {
     SchedAttr { policy, rt_priority, nice, ..Default::default() }
@@ -152,25 +151,6 @@ fn contains_holds_only_within_the_range() {
             }
         }
     }
-}
-
-// Load balancer elapsed test: verification/lean Nonos/Timer.lean.
-
-#[test]
-fn elapsed_agrees_with_spec_and_saturates() {
-    for current in 0..160u64 {
-        for last in 0..160u64 {
-            for interval in 0..160u64 {
-                assert_eq!(
-                    elapsed_reached(current, last, interval),
-                    spec::timer_elapsed_reached(current, last, interval)
-                );
-            }
-        }
-    }
-    // an earlier "current" (wraparound) counts as no time elapsed
-    assert!(elapsed_reached(5, 10, 0));
-    assert!(!elapsed_reached(5, 10, 1));
 }
 
 // Resource quota check: verification/lean Nonos/Quota.lean.

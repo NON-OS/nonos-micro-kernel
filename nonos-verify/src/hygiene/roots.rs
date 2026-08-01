@@ -10,6 +10,10 @@ pub fn skip(path: &Path) -> bool {
         || p.contains("_proofs/")
         || p.contains("/boot_proofs/")
         || p.contains("/tests/")
+        // A cfg(test) module in the conventional src/tests.rs layout. Test
+        // code is allowed to unwrap: a failing assertion is the point, and
+        // this check is about what ships.
+        || p.ends_with("/tests.rs")
         // Vendored crates and unmodified upstream program source are third
         // party. They are not held to the NONOS no-panic production standard;
         // the point of vendoring is to build them as published.
