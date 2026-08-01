@@ -503,6 +503,7 @@ microkernel-desktop-gui = [
   "nonos-tool-capsules",
   "nonos-capsule-proof-io",
   "nonos-capsule-tokio-smoke",
+  "nonos-capsule-std-proof",
   "nonos-capsule-ramfs",
   "nonos-capsule-keyring",
   "nonos-capsule-entropy",
