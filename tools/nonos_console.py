@@ -26,7 +26,7 @@ reported as a failure and exits non zero.
     python3 tools/nonos_console.py --fast         no typing delay
     python3 tools/nonos_console.py <section>      one section
 
-Sections: scale rings boot kernel syscalls safety memory crypto authority ipc arch attack
+Sections: scale rings subsystems layering tcb surface boot kernel syscalls safety memory crypto authority ipc arch attack
 """
 
 import os
@@ -380,6 +380,160 @@ def section_rings():
     field("  user access guards", commas(rg("user_access")))
 
 
+def subsystem_stats():
+    """Per subsystem: size, unsafe density, and how much of it is documented."""
+    stats = {}
+    for entry in sorted(os.listdir(SRC)):
+        base = os.path.join(SRC, entry)
+        if not os.path.isdir(base):
+            continue
+        files = walk(base, ".rs")
+        if not files:
+            continue
+        lines = count_lines(files)
+        unsafe = safety = deps = 0
+        uses = {}
+        for path in files:
+            try:
+                with open(path, "r", encoding="utf-8", errors="replace") as handle:
+                    for line in handle:
+                        if "unsafe {" in line:
+                            unsafe += 1
+                        if "SAFETY:" in line:
+                            safety += 1
+                        at = line.find("use crate::")
+                        if at >= 0:
+                            rest = line[at + len("use crate::"):]
+                            name = ""
+                            for ch in rest:
+                                if ch.isalnum() or ch == "_":
+                                    name += ch
+                                else:
+                                    break
+                            if name and name != entry:
+                                uses[name] = uses.get(name, 0) + 1
+                                deps += 1
+            except OSError:
+                pass
+        stats[entry] = {
+            "files": len(files), "lines": lines, "unsafe": unsafe,
+            "safety": safety, "uses": uses, "deps": deps,
+            "density": (1000.0 * unsafe / lines) if lines else 0.0,
+        }
+    return stats
+
+
+def section_subsystems():
+    heading("SUBSYSTEM DECOMPOSITION")
+    out("  " + DIM + "Unsafe density is blocks per thousand lines. It is where "
+        "review time is worth spending." + OFF)
+    out("")
+    stats = subsystem_stats()
+    out("  {}{:<14} {:>6} {:>8} {:>7} {:>7} {:>6}{}".format(
+        DIM, "SUBSYSTEM", "FILES", "LINES", "UNSAFE", "PER KLOC", "DOC%", OFF))
+    ranked = sorted(stats.items(), key=lambda kv: -kv[1]["lines"])
+    for name, info in ranked:
+        doc = (100.0 * info["safety"] / info["unsafe"]) if info["unsafe"] else 100.0
+        colour = ""
+        if info["density"] >= 10.0:
+            colour = RED
+        elif info["density"] >= 4.0:
+            colour = YELLOW
+        out("  {:<14} {:>6} {:>8} {:>7} {}{:>7.1f}{} {:>5.0f}%".format(
+            name, commas(info["files"]), commas(info["lines"]),
+            commas(info["unsafe"]), colour, info["density"], OFF if colour else "",
+            doc))
+    total_lines = sum(i["lines"] for i in stats.values())
+    total_unsafe = sum(i["unsafe"] for i in stats.values())
+    out("")
+    field("kernel density", "{:.1f} unsafe blocks per thousand lines".format(
+        1000.0 * total_unsafe / total_lines if total_lines else 0.0))
+
+
+def section_layering():
+    heading("LAYERING")
+    out("  " + DIM + "Who depends on whom, counted from `use crate::` across the "
+        "kernel." + OFF)
+    out("")
+    stats = subsystem_stats()
+    fan_out = {n: len(i["uses"]) for n, i in stats.items()}
+    fan_in = {}
+    for name, info in stats.items():
+        for target in info["uses"]:
+            if target in stats:
+                fan_in[target] = fan_in.get(target, 0) + 1
+
+    out("  " + BOLD + "Most depended on" + OFF)
+    for name, count in sorted(fan_in.items(), key=lambda kv: -kv[1])[:8]:
+        out("  {:<14} {} {:>3} subsystems depend on it".format(
+            name, bar(count, max(fan_in.values()), 22), count))
+
+    out("")
+    out("  " + BOLD + "Widest reach" + OFF)
+    for name, count in sorted(fan_out.items(), key=lambda kv: -kv[1])[:8]:
+        out("  {:<14} {} {:>3} subsystems used".format(
+            name, bar(count, max(fan_out.values()) or 1, 22), count))
+
+    # A cycle means neither side can be reasoned about, tested, or replaced on
+    # its own, so they are worth naming rather than leaving in the graph.
+    pairs = []
+    for name, info in stats.items():
+        for target in info["uses"]:
+            if target in stats and name in stats[target]["uses"] and name < target:
+                pairs.append((name, target,
+                              info["uses"][target], stats[target]["uses"][name]))
+    out("")
+    out("  " + BOLD + "Mutual dependencies" + OFF)
+    if not pairs:
+        out("  {}none{}".format(GREEN, OFF))
+    else:
+        for a, b, ab, ba in sorted(pairs, key=lambda p: -(p[2] + p[3]))[:10]:
+            out("  {}{:<13}{} <-> {:<13} {:>4} / {:<4}".format(
+                YELLOW, a, OFF, b, ab, ba))
+        out("  {}{} mutually dependent pairs{}".format(DIM, len(pairs), OFF))
+
+
+def section_tcb():
+    heading("TRUSTED COMPUTING BASE")
+    out("  " + DIM + "What has to be correct for every guarantee to hold." + OFF)
+    out("")
+    # The trusted path: anything that decides whether code runs, what it may
+    # touch, or what a signature means. A bug anywhere here is not contained by
+    # the capability model, because it is the capability model.
+    trusted = ["capabilities", "security", "crypto", "elf", "syscall",
+               "usercopy", "memory", "process", "sched", "ipc", "arch"]
+    stats = subsystem_stats()
+    tcb_lines = sum(stats[n]["lines"] for n in trusted if n in stats)
+    kernel_lines = sum(i["lines"] for i in stats.values())
+    user_lines = count_lines(walk(USERLAND, ".rs"))
+    whole = kernel_lines + user_lines
+    for name in trusted:
+        if name in stats:
+            out("  {:<14} {:>8} lines".format(name, commas(stats[name]["lines"])))
+    out("")
+    field("trusted total", "{} lines".format(commas(tcb_lines)), BOLD)
+    if whole:
+        out("  {}{:.1f}% of the system has to be correct; the other {:.1f}% is "
+            "contained by it.{}".format(
+                BOLD, 100.0 * tcb_lines / whole, 100.0 - 100.0 * tcb_lines / whole,
+                OFF))
+
+
+def section_surface():
+    heading("ATTACK SURFACE")
+    out("  " + DIM + "Every place untrusted input crosses into the kernel." + OFF)
+    out("")
+    field("syscall entries", commas(rg('tag4(b"', os.path.join(SRC, "syscall"))))
+    field("ipc endpoints", commas(rg("register_endpoint")))
+    field("user pointer reads", commas(rg("copy_from_user")))
+    field("user pointer writes", commas(rg("copy_to_user")))
+    field("mmio grants", commas(rg("map_device_memory") + rg("map_mmio")))
+    field("interrupt handlers", commas(rg("extern \"x86-interrupt\"")))
+    field("bounds checks", commas(rg("checked_add") + rg("checked_sub") +
+                                  rg("checked_mul")))
+    field("saturating ops", commas(rg("saturating_add") + rg("saturating_sub")))
+
+
 def section_boot():
     heading("BOOT CHAIN")
     out("  " + DIM + "Each stage measures the next before handing control over." + OFF)
@@ -674,6 +828,10 @@ def section_attack(capsules):
 
 SECTIONS = [
     ("scale", section_scale, True), ("rings", section_rings, False),
+    ("subsystems", section_subsystems, False),
+    ("layering", section_layering, False),
+    ("tcb", section_tcb, False),
+    ("surface", section_surface, False),
     ("boot", section_boot, False),
     ("kernel", section_kernel, False), ("syscalls", section_syscalls, False),
     ("safety", section_safety, False), ("memory", section_memory, False),
