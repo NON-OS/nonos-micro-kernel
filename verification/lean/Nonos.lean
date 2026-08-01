@@ -94,6 +94,7 @@ import Nonos.ServiceRegistry
 import Nonos.Signal
 import Nonos.Spawn
 import Nonos.SpawnCaps
+import Nonos.SeedCustody
 import Nonos.SigningKey
 import Nonos.KeyLifecycle
 import Nonos.KeyringCustody
