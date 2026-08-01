@@ -16,19 +16,12 @@
 
 //! The license broker's decision, without the capsule around it.
 //!
-//! Given a tool, the funding transaction's receipt and the transaction hash,
-//! `issue` decides whether to grant an entitlement and what it says. It prices
-//! the tool, verifies the receipt pays the treasury at least that price in NOX,
-//! refuses a transaction already redeemed, and otherwise returns the
-//! entitlement the buyer earned, with one use per price paid so a larger
-//! payment buys a bundle. It never signs: the capsule holds the ed25519 key
-//! and signs the returned body, keeping the secret out of this pure core so
-//! the whole decision is host-testable.
-//!
-//! Replay is the property that matters most here, and it is enforced by a
-//! spent-set the caller owns and persists. `issue` marks the funding hash only
-//! on success, so a failed attempt never burns a payment and a repeated one
-//! never mints a second grant.
+//! `issue` prices the tool, verifies the receipt pays the treasury at least
+//! that price in NOX, refuses a transaction already redeemed, and returns the
+//! grant the buyer earned, one use per price paid. It never signs: the capsule
+//! holds the ed25519 key. Replay is blocked by a spent-set the caller persists;
+//! `issue` records the funding hash only on success, so a failed attempt never
+//! burns a payment and a repeat never mints a second grant.
 
 #![cfg_attr(not(test), no_std)]
 
@@ -40,3 +33,6 @@ pub use spent::{SpentSet, SPENT_CAPACITY};
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(kani)]
+mod kani_proofs;

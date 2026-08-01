@@ -26,8 +26,13 @@
 //! `record` reports whether it evicted, so the capsule can widen the store
 //! rather than let the horizon shrink silently.
 
-/// How many redeemed hashes the set holds before it wraps.
+/// How many redeemed hashes the set holds before it wraps. The wrap and
+/// contains logic does not depend on this, so under Kani it shrinks to keep the
+/// symbolic state small while proving the same properties.
+#[cfg(not(kani))]
 pub const SPENT_CAPACITY: usize = 4096;
+#[cfg(kani)]
+pub const SPENT_CAPACITY: usize = 2;
 
 /// Fixed-capacity record of redeemed funding hashes.
 pub struct SpentSet {

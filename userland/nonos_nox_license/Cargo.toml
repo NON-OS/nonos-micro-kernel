@@ -13,3 +13,6 @@ crate-type = ["rlib"]
 [dev-dependencies]
 ed25519-dalek = "2"
 rand_core = { version = "0.6", features = ["getrandom"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

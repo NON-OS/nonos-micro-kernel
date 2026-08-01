@@ -9,3 +9,6 @@ license = "AGPL-3.0"
 crate-type = ["rlib"]
 
 [dependencies]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

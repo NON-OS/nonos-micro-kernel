@@ -11,3 +11,6 @@ crate-type = ["rlib"]
 [dependencies]
 nonos_nox_license = { path = "../nonos_nox_license" }
 nonos_nox_receipt = { path = "../nonos_nox_receipt" }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
