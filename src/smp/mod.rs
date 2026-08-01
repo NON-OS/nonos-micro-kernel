@@ -27,7 +27,6 @@ mod preempt;
 mod sole_cpu;
 mod state;
 mod stats;
-mod tlb;
 mod types;
 
 pub mod ipi;
@@ -50,4 +49,3 @@ pub use init::*;
 pub use ipi_handler::*;
 pub use preempt::*;
 pub use stats::*;
-pub use tlb::*;

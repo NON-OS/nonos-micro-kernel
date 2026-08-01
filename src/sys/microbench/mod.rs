@@ -14,8 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const MAX_CPUS: usize = 256;
-pub const DEFAULT_TIME_SLICE: u32 = 10;
-pub const LOAD_BALANCE_INTERVAL_TICKS: u64 = 100;
-pub(super) const MIGRATION_THRESHOLD: usize = 2;
-pub(super) const MAX_QUEUE_IMBALANCE: usize = 4;
+//! Cycle level measurements of the kernel's own paths.
+//!
+//! Every case times the real function through the same call the kernel makes,
+//! subtracts the cost of the measurement itself, and reports quantiles rather
+//! than a mean, because the tail is what a caller waits on.
+//!
+//! Behind a feature: the loop runs thousands of iterations at boot and has no
+//! place in an image anyone ships.
+
+mod counter_overhead;
+mod ipc_message;
+mod report;
+mod run;
+mod sample;
+
+pub use run::run;

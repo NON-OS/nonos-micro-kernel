@@ -58,7 +58,11 @@ extracted_files_json=$(
 
 # --- Other proof systems ---
 verus_files=$(find verification/verus -name '*.rs' 2>/dev/null | wc -l | tr -d ' ')
-kani_harnesses=$(grep -rh '#\[kani::proof\]' userland 2>/dev/null | wc -l | tr -d ' ')
+# Source only. A build tree carries the same string inside its artifacts, so
+# counting those inflates the figure and makes this walk minutes long on a
+# machine that has actually built something.
+kani_harnesses=$(grep -rh --include='*.rs' --exclude-dir=target \
+  '#\[kani::proof\]' userland 2>/dev/null | wc -l | tr -d ' ')
 runnable_crates=$(ls -d userland/*_proofs 2>/dev/null | wc -l | tr -d ' ')
 
 rust_toolchain=$(grep -oE 'channel = "[^"]+"' rust-toolchain.toml 2>/dev/null \

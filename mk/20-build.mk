@@ -489,12 +489,18 @@ $(ZK_CAPSULE_LABELS): $(NONOS_VERIFIED_CAPSULE_MKS) Makefile
 # depends each trailer on this rule, so building any capsule's artifacts
 # triggers the single enrollment. This replaces the curve enrolled-secret
 # pipeline, which was not post-quantum.
+# Which capsules go under the root. Every verified capsule by default, which
+# is what an x86_64 image ships. A target that cannot build the whole set
+# narrows this to what it does ship, since enrolling a capsule means measuring
+# a binary that has to exist for that architecture.
+NONOS_ENROLLED_CAPSULES ?= $(NONOS_VERIFIED_CAPSULES)
+
 $(ZK_CAPSULE_ROOT): $(NONOS_STARK_ENROLL) \
-		$(foreach s,$(NONOS_VERIFIED_CAPSULES),$($(s)_BIN) $($(s)_MANIFEST))
-	@echo "Enrolling $(words $(NONOS_VERIFIED_CAPSULES)) capsules under one transparent STARK policy root..."
+		$(foreach s,$(NONOS_ENROLLED_CAPSULES),$($(s)_BIN) $($(s)_MANIFEST))
+	@echo "Enrolling $(words $(NONOS_ENROLLED_CAPSULES)) capsules under one transparent STARK policy root..."
 	@mkdir -p $(dir $(ZK_CAPSULE_ROOT)) $(NONOS_BAKED_TRUST_DIR)/capsules
 	@$(NONOS_STARK_ENROLL) capsules $(ZK_CAPSULE_ROOT) \
-		$(foreach s,$(NONOS_VERIFIED_CAPSULES),$($(s)_REQUIRED_CAPS):$($(s)_BIN):$($(s)_ATTESTATION))
+		$(foreach s,$(NONOS_ENROLLED_CAPSULES),$($(s)_REQUIRED_CAPS):$($(s)_BIN):$($(s)_ATTESTATION))
 
 .PHONY: nonos-mk-stark-enroll-capsules
 nonos-mk-stark-enroll-capsules: $(ZK_CAPSULE_ROOT)
@@ -672,7 +678,7 @@ nonos-mk-check: nonos-mk-check-deps nonos-mk-ensure-signing-key
 # Build the aarch64 kernel. PATH puts the rustup shims first because a Homebrew
 # rustc on /usr/local/bin shadows them and then rejects the -Z flags with a
 # confusing "only accepted on the nightly compiler".
-.PHONY: nonos-mk-arm nonos-mk-arm-run nonos-mk-arm-gui nonos-mk-arm-gui-capsules nonos-mk-arm-gui-run
+.PHONY: nonos-mk-arm nonos-mk-arm-bench nonos-mk-bench-micro nonos-mk-arm-run nonos-mk-arm-gui nonos-mk-arm-gui-capsules nonos-mk-arm-gui-run
 nonos-mk-arm: nonos-mk-ensure-signing-key
 	@echo "Building kernel (aarch64, microkernel-core + nonos-arch-preview)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
@@ -697,6 +703,23 @@ nonos-mk-arm: nonos-mk-ensure-signing-key
 # exercises; a device tree boot needs an Image-format target instead.
 ARM_QEMU_FLAGS := -M virt,gic-version=3 -cpu max -m 512 -nographic \
 		-serial mon:stdio -device virtio-rng-pci
+
+# Build with the in-kernel microbenchmarks compiled in and boot far enough to
+# print them. The numbers are cycle counts from the kernel's own paths, so they
+# belong to this image and this machine, not to a marketing table.
+nonos-mk-arm-bench: nonos-mk-ensure-signing-key
+	@echo "Building kernel (aarch64, microkernel-core + nonos-bench-micro)..."
+	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
+		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) PATH="$(HOME)/.cargo/bin:$$PATH" \
+		$(CARGO) build $(ARM_KERNEL_BUILD_FLAGS) \
+		--no-default-features \
+		--features microkernel-core$(_boot_comma)nonos-arch-preview$(_boot_comma)nonos-bench-micro
+
+# The same measurement image for x86_64. The kernel paths under test are the
+# shared ones, so the two runs are comparable and the difference between them
+# is the architecture rather than the build.
+nonos-mk-bench-micro: nonos-mk-check-deps nonos-mk-ensure-signing-key
+	$(call nonos_kernel_build,microkernel-core + nonos-bench-micro,microkernel-core$(_boot_comma)nonos-bench-micro)
 
 nonos-mk-arm-run: nonos-mk-arm
 	@echo "Booting aarch64 kernel under QEMU (ctrl-a x to quit)..."
@@ -930,17 +953,18 @@ nonos-mk-desktop-gui-prod: $(DESKTOP_GUI_CAPSULE_ARTIFACTS) \
 # Signing runs over the aarch64 ELFs, and the certificates it writes land in
 # the shared trust directory, so an x86_64 image built earlier needs its own
 # capsule pass again before it will boot.
-nonos-mk-arm-gui-capsules: $(DESKTOP_BASE_SIGNED_ARTIFACTS)
+nonos-mk-arm-gui-capsules: $(DESKTOP_BASE_SIGNED_ARTIFACTS) $(ZK_POLICY_ROOT)
 
 nonos-mk-arm-gui: nonos-mk-check-deps nonos-mk-ensure-signing-key
-	@$(MAKE) NONOS_USER_TARGET=aarch64-nonos-user nonos-mk-arm-gui-capsules
-	@echo "Building kernel (aarch64, microkernel-desktop-base + nonos-arch-preview)..."
+	@$(MAKE) NONOS_USER_TARGET=aarch64-nonos-user \
+		NONOS_ENROLLED_CAPSULES="$(DESKTOP_BASE_SLUGS)" nonos-mk-arm-gui-capsules
+	@echo "Building kernel (aarch64, microkernel-desktop-base + nonos-stark-attest)..."
 	@$(SDK_FLAGS) NONOS_USER_TARGET=aarch64-nonos-user \
 		NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) PATH="$(HOME)/.cargo/bin:$$PATH" \
 		$(CARGO) build $(ARM_KERNEL_BUILD_FLAGS) \
 		--no-default-features \
-		--features microkernel-desktop-base$(_boot_comma)nonos-arch-preview
+		--features microkernel-desktop-base$(_boot_comma)nonos-arch-preview$(_boot_comma)nonos-stark-attest
 
 # nonos-mk-zerostate: the canonical NONOS image. The whole ZeroState system in
 # one build: every capsule and driver, the transparent STARK spawn gate

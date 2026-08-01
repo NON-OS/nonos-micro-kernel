@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::preemption::{NEED_RESCHEDULE, SCHEDULER_STATS};
+use super::super::preemption::{set_reschedule, SCHEDULER_STATS};
 use super::run_queue::runnable_process_count;
 use super::sleep::check_sleeping_processes;
 use core::sync::atomic::Ordering;
@@ -23,6 +23,6 @@ pub fn wakeup() {
     SCHEDULER_STATS.wakeups.fetch_add(1, Ordering::Relaxed);
     check_sleeping_processes();
     if runnable_process_count() > 0 {
-        NEED_RESCHEDULE.store(true, Ordering::SeqCst);
+        set_reschedule();
     }
 }

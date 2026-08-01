@@ -16,6 +16,8 @@
 
 use core::sync::atomic::{AtomicU64, Ordering};
 
+use super::carve::carve;
+
 static MMIO_NEXT: AtomicU64 = AtomicU64::new(0);
 static MMIO_END: AtomicU64 = AtomicU64::new(0);
 static IO_NEXT: AtomicU64 = AtomicU64::new(0);
@@ -30,9 +32,9 @@ pub fn set_windows(mmio_base: u64, mmio_size: u64, io_base: u64, io_size: u64) {
     IO_END.store(io_base.saturating_add(io_size), Ordering::SeqCst);
 }
 
-/// Carve `size` bytes out of the memory window, aligned to its own size as the
-/// spec requires. `None` once the window is exhausted, which leaves the BAR
-/// unassigned rather than handing back an address the bridge does not forward.
+/// Carve `size` bytes out of the memory window. `None` once it is exhausted,
+/// which leaves the BAR unassigned rather than handing back an address the
+/// bridge does not forward.
 pub(super) fn alloc_mmio(size: u64) -> Option<u64> {
     alloc_from(&MMIO_NEXT, &MMIO_END, size)
 }
@@ -42,25 +44,13 @@ pub(super) fn alloc_io(size: u64) -> Option<u64> {
     alloc_from(&IO_NEXT, &IO_END, size)
 }
 
+/// Advance one window's cursor, retrying when another CPU wins the exchange.
 fn alloc_from(next: &AtomicU64, end: &AtomicU64, size: u64) -> Option<u64> {
-    if size == 0 {
-        return None;
-    }
     let limit = end.load(Ordering::SeqCst);
     loop {
-        let cur = next.load(Ordering::SeqCst);
-        if cur == 0 && limit == 0 {
-            return None;
-        }
-        let base = cur.checked_add(size - 1)? & !(size - 1);
-        let after = base.checked_add(size)?;
-        if after > limit {
-            return None;
-        }
-        if next
-            .compare_exchange(cur, after, Ordering::SeqCst, Ordering::SeqCst)
-            .is_ok()
-        {
+        let cursor = next.load(Ordering::SeqCst);
+        let (base, after) = carve(cursor, limit, size)?;
+        if next.compare_exchange(cursor, after, Ordering::SeqCst, Ordering::SeqCst).is_ok() {
             return Some(base);
         }
     }

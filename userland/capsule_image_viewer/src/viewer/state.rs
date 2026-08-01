@@ -1,12 +1,15 @@
 extern crate alloc;
+use crate::viewer::decode::Decoded;
+use crate::viewer::gallery::state::GalleryState;
+use crate::viewer::viewport::{FitMode, View};
 use alloc::string::String;
 use alloc::vec::Vec;
-use crate::viewer::decode::Decoded;
-use crate::viewer::viewport::{View, FitMode};
-use crate::viewer::gallery::state::GalleryState;
 
 #[derive(Clone, Copy, PartialEq)]
-pub enum Mode { Gallery, Single }
+pub enum Mode {
+    Gallery,
+    Single,
+}
 
 pub struct ViewerState {
     pub owner_pid: u32,

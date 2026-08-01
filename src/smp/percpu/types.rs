@@ -45,7 +45,20 @@ pub struct PerCpuData {
     /// shootdown broadcaster to filter target CPUs for a per-asid
     /// invalidation.
     pub active_asid: AtomicU32,
-    _reserved: [u8; 4096 - 116],
+    /// Ticks left in the running task's slice on this CPU, and whether this
+    /// CPU should reschedule at the next safe point. Both were single globals:
+    /// every CPU's timer tick decremented the same counter, so N cores would
+    /// have burned a slice N times faster than one, and a reschedule raised
+    /// anywhere was seen everywhere. Appended after the offsets `layout.rs`
+    /// asserts, so the assembly that addresses this block is unaffected.
+    pub time_slice: AtomicU64,
+    pub need_resched: AtomicU32,
+    /// Non-zero while a TLB shootdown round has this CPU as a target. Set by
+    /// the originator before it publishes the request, cleared by whichever
+    /// path here does the flush first. It is what makes the flush both
+    /// correctly targeted and safe to run twice.
+    pub tlb_flush_pending: AtomicU32,
+    _reserved: [u8; 4096 - 132],
 }
 
 impl PerCpuData {
@@ -65,7 +78,10 @@ impl PerCpuData {
             last_tick_tsc: AtomicU64::new(0),
             interrupt_disable_depth: 0,
             active_asid: AtomicU32::new(ASID_NONE),
-            _reserved: [0; 4096 - 116],
+            time_slice: AtomicU64::new(0),
+            need_resched: AtomicU32::new(0),
+            tlb_flush_pending: AtomicU32::new(0),
+            _reserved: [0; 4096 - 132],
         }
     }
 }

@@ -64,3 +64,41 @@ jobs:
     uses: ./.github/workflows/ci-attestation.yml
     with:
       required-modules: build,trust-chain,adversarial,supply-chain,evidence,reproducible,runtime,release
+
+  # Publishing is the only irreversible step, so it runs last and only when
+  # every lane above has passed. A tag that fails any gate produces no release,
+  # which is the whole point of gating it.
+  publish:
+    name: publish
+    needs: [build, trust-chain, adversarial, supply-chain, evidence, reproducible, runtime, release-artifacts, attestation]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: nonos-image
+          path: release
+
+      - name: Check the image arrived intact
+        run: |
+          set -euo pipefail
+          cd release
+          sha256sum -c SHA256SUMS
+          ls -l
+
+      - uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191
+        with:
+          files: release/*
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          body: |
+            Signed, STARK-attested ZeroState image.
+
+            The kernel carries its own attestation trailer, every capsule is
+            enrolled under the policy root published beside it, and the trust
+            chain was verified on this artifact before it was uploaded. A tag
+            that fails any gate publishes nothing.
+
+            Check what you downloaded against `SHA256SUMS`, and check the
+            policy roots here against the ones your running image reports.

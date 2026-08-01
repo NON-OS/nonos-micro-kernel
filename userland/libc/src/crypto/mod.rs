@@ -16,6 +16,7 @@
 
 mod decrypt;
 mod decrypt_aad;
+mod ed25519_sign;
 mod ed25519_verify;
 mod encrypt;
 mod encrypt_aad;
@@ -29,6 +30,7 @@ mod x25519;
 
 pub use decrypt::crypto_decrypt;
 pub use decrypt_aad::crypto_decrypt_aad;
+pub use ed25519_sign::crypto_ed25519_sign;
 pub use ed25519_verify::crypto_ed25519_verify;
 pub use encrypt::crypto_encrypt;
 pub use encrypt_aad::crypto_encrypt_aad;

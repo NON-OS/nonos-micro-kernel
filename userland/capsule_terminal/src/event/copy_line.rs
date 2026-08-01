@@ -18,7 +18,12 @@ use nonos_app_skeleton::{clipboard_copy, EventOutcome};
 
 use crate::term::state::State;
 
-pub fn copy_line(state: &State) -> EventOutcome {
-    let _ = clipboard_copy(state.line.as_bytes());
+pub fn copy_line(state: &mut State) -> EventOutcome {
+    // A failed copy said nothing, so the user pasted stale clipboard contents
+    // somewhere else and had no way to know why.
+    if clipboard_copy(state.line.as_bytes()).is_err() {
+        state.scrollback.push_line(b"copy: clipboard unavailable");
+        return EventOutcome::Repaint;
+    }
     EventOutcome::Idle
 }

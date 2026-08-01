@@ -28,5 +28,7 @@ pub fn load_mldsa65_pub(args: &Args) -> Result<Vec<u8>> {
     if key.alg != AlgId::MlDsa65 {
         bail!("ML-DSA-65 pubkey file has wrong algorithm");
     }
-    Ok(key.bytes)
+    // `key` now owns zeroize-on-drop material, so its bytes cannot be moved
+    // out. Clone them; the original is wiped when `key` drops.
+    Ok(key.bytes.clone())
 }

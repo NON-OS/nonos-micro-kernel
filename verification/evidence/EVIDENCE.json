@@ -12,7 +12,7 @@
   },
   "proof_systems": {
     "kani": {
-      "harnesses": 89
+      "harnesses": 99
     },
     "lean_extraction": {
       "description": "Functions lowered from real Rust MIR by Charon and translated to Lean by Aeneas, then proven on the extracted definition.",
@@ -51,9 +51,9 @@
     "lean_specification": {
       "axiom_profiled_theorems": 302,
       "mathlib": false,
-      "modules": 161,
+      "modules": 162,
       "sorry_count": 0,
-      "theorems": 1123,
+      "theorems": 1131,
       "toolchain": "leanprover/lean4:v4.15.0"
     },
     "runnable": {

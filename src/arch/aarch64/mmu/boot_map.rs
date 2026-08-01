@@ -35,10 +35,6 @@ const DIRECT_L0_INDEX: usize = 256;
 /// ones.
 const DIRECT_SLOT: usize = 4;
 const DIRECT_SLOTS: usize = 2;
-/// Level 2 table for the device windows in the kernel half. The identity
-/// mappings below live in the low half, which the unified address space clears
-/// once it is up, taking config space with it; these outlive that.
-const DEVICE_DIRECT_SLOT: usize = 6;
 
 pub fn init_mmu(boot_info: &BootInfo) {
     control::configure_mair();
@@ -60,7 +56,6 @@ unsafe fn setup_kernel_page_tables(boot_info: &BootInfo) {
     }
     map_devices(boot_info);
     map_direct(boot_info);
-    map_devices_high(boot_info);
     ttbr::set_ttbr1(state::l0_addr());
     ttbr::set_ttbr0(state::l0_addr(), 0);
 }
@@ -99,8 +94,8 @@ unsafe fn map_direct_range(slot: usize, base: u64, size: u64) {
     let mut phys = base & !(BLOCK_2M - 1);
     let end = base.saturating_add(size);
     let table_end = (phys / GIB + 1) * GIB;
-    state::l1_high().set_table(((phys + KERNEL_SPACE_START) / GIB % ENTRIES) as usize,
-        state::l2_addr(slot));
+    state::l1_high()
+        .set_table(((phys + KERNEL_SPACE_START) / GIB % ENTRIES) as usize, state::l2_addr(slot));
     while phys < end && phys < table_end {
         let virt = phys.wrapping_add(KERNEL_SPACE_START);
         let l2_idx = ((virt / BLOCK_2M) % ENTRIES) as usize;
@@ -161,71 +156,13 @@ unsafe fn map_devices(boot_info: &BootInfo) {
     for window in windows {
         map_device_block(window, &attrs);
     }
-    // The host bridge's three windows: config space, I/O, and the memory the
-    // BARs are assigned out of. Enumeration reads config space before any
-    // driver exists, so none of this can wait for the MMIO mapper, and the
-    // memory window is mapped whole because the kernel assigns the BARs inside
-    // it and every driver then reaches its own registers there.
-    map_device_range(boot_info.pci_ecam_base, boot_info.pci_ecam_size, &attrs);
+    // The bridge's I/O window and the memory its BARs are assigned out of.
+    // Config space is deliberately absent: the board puts it at 256 GiB, past
+    // what one level 1 table here describes, and nothing touches it until the
+    // unified address space is up and the MMIO mapper can place it.
     map_device_range(boot_info.pci_io_cpu_base, boot_info.pci_io_size, &attrs);
     map_device_range(boot_info.pci_mmio_base, boot_info.pci_mmio_size, &attrs);
     map_device_range(boot_info.rtc_base, BLOCK_2M, &attrs);
-}
-
-
-/// Map the same device windows a second time, in the kernel half.
-///
-/// The identity mappings above are what enumeration uses before paging is
-/// brought up properly, and they do not survive it: the unified address space
-/// clears the low half. These are at the direct map's address for the same
-/// physical page, so a caller reaches them by adding `KERNEL_SPACE_START`,
-/// and they are cloned along with the rest of the kernel half.
-///
-/// They carry device attributes rather than the direct map's normal memory
-/// ones. That is the whole reason for a separate table: a config space read
-/// through a cacheable mapping can be reordered or merged with its neighbours,
-/// and a register that reports a queue's state stops reporting anything real.
-unsafe fn map_devices_high(boot_info: &BootInfo) {
-    let attrs = PageAttributes::device();
-    let redist = boot_info.gic_redist_base & !(BLOCK_2M - 1);
-    let windows = [
-        (boot_info.uart_base, BLOCK_2M),
-        (boot_info.gic_dist_base, BLOCK_2M),
-        (redist, BLOCK_2M * 2),
-        (boot_info.rtc_base, BLOCK_2M),
-        (boot_info.pci_ecam_base, boot_info.pci_ecam_size),
-        (boot_info.pci_io_cpu_base, boot_info.pci_io_size),
-        (boot_info.pci_mmio_base, boot_info.pci_mmio_size),
-    ];
-    for (base, size) in windows {
-        map_device_high_range(base, size, &attrs);
-    }
-}
-
-/// Map one window into the kernel half with 2MB blocks.
-///
-/// Only the first gigabyte of physical space is covered. Every MMIO window on
-/// this board sits there, and RAM starts above it, so the direct map's own
-/// level 2 tables are left alone.
-unsafe fn map_device_high_range(base: u64, size: u64, attrs: &PageAttributes) {
-    const ENTRIES: u64 = 512;
-    const GIB: u64 = ENTRIES * BLOCK_2M;
-
-    if base == 0 || size == 0 || base >= GIB {
-        return;
-    }
-    let start = base & !(BLOCK_2M - 1);
-    let end = base.saturating_add(size).saturating_add(BLOCK_2M - 1) & !(BLOCK_2M - 1);
-    state::l1_high().set_table(
-        ((start.wrapping_add(KERNEL_SPACE_START)) / GIB % ENTRIES) as usize,
-        state::l2_addr(DEVICE_DIRECT_SLOT),
-    );
-    let mut phys = start;
-    while phys < end && phys < GIB {
-        let virt = phys.wrapping_add(KERNEL_SPACE_START);
-        state::l2(DEVICE_DIRECT_SLOT).set_block(((virt / BLOCK_2M) % ENTRIES) as usize, phys, attrs);
-        phys = phys.saturating_add(BLOCK_2M);
-    }
 }
 
 /// Identity map every 2MB block that a window touches.

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::IPI_FLAG_RESCHEDULE;
 use super::cpu::current_cpu;
+use crate::process::scheduler::preemption::{clear_reschedule, need_reschedule};
 use core::sync::atomic::Ordering;
 
 #[inline]
@@ -37,9 +37,8 @@ pub fn preempt_enabled() -> bool {
 }
 
 fn maybe_reschedule() {
-    let cpu = current_cpu();
-    if cpu.ipi_pending.load(Ordering::Relaxed) & IPI_FLAG_RESCHEDULE != 0 {
-        cpu.ipi_pending.fetch_and(!IPI_FLAG_RESCHEDULE, Ordering::Relaxed);
+    if need_reschedule() {
+        clear_reschedule();
         crate::sched::schedule();
     }
 }

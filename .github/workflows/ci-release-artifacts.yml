@@ -58,6 +58,30 @@ jobs:
             test -n "${!name:-}" || { echo "::error::${name} is required for release artifacts"; exit 1; }
           done
           make nonos-mk-check-trust-manifest
+      # The bootable artifact itself, built from the same tree the lanes above
+      # checked. Capsules are attested before packaging so a capsule that
+      # cannot be enrolled stops the release rather than shipping unenforced.
+      - name: Build the attested ZeroState image
+        run: |
+          set -euo pipefail
+          make nonos-mk-all-capsules-attested
+          make nonos-mk-zerostate
+          make nonos-mk-esp
+          make nonos-mk-usb-img
+
+      - name: Collect the image and its roots
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          cp target/nonos.img release/nonos.img
+          cp target/kernel_attested.bin release/nonos-kernel.bin
+          cp nonos-bootloader/target/x86_64-unknown-uefi/release/nonos_boot.efi \
+             release/nonos-boot.efi
+          cp nonos-data/trust/policy/zk_capsule_policy_root.bin release/
+          cp nonos-data/trust/policy/kernel_attest_root.bin release/
+          cp nonos-data/trust/policy/nonos_trust_anchor.policy.bin release/
+          ( cd release && sha256sum * > SHA256SUMS && cat SHA256SUMS )
+
       - name: nonos-verify release
         env:
           ZK_BOOT_INDEX: ${{ secrets.ZK_BOOT_INDEX }}
@@ -65,6 +89,14 @@ jobs:
           ZK_BOOT_SECRET_R: ${{ secrets.ZK_BOOT_SECRET_R }}
           ZK_BOOT_NONCE_SEED: ${{ secrets.ZK_BOOT_NONCE_SEED }}
         run: cargo run --release --manifest-path nonos-verify/Cargo.toml -- release
+      - name: Upload the bootable image
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nonos-image
+          path: release/
+          retention-days: 30
+          if-no-files-found: error
+
       - name: Upload release artifacts
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

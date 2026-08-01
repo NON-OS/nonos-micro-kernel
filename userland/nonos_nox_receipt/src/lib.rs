@@ -14,14 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The elapsed-tick test of the load balancer, factored out of
-//! `LoadBalanceState::should_balance` so it holds no atomic and can be included
-//! by the `mechanism_proofs` crate and checked against the Lean `Nonos.Timer`
-//! model.
+//! Prove a NOX payment from the transaction receipt the chain returns.
+//!
+//! `verify_payment` accepts a receipt only when it shows a successful
+//! transaction carrying an ERC20 `Transfer` from the buyer to the treasury,
+//! emitted by the NOX token, for at least the price. The scan reads only the
+//! fields the decision needs and never allocates, so a truncated or hostile
+//! receipt fails closed rather than reading as a payment.
 
-/// Whether at least `interval` ticks have elapsed since `last` at `current`.
-/// Saturating, so a tick-counter wraparound reads as no time elapsed rather than
-/// a spuriously huge span.
-pub(crate) const fn elapsed_reached(current: u64, last: u64, interval: u64) -> bool {
-    current.saturating_sub(last) >= interval
-}
+#![cfg_attr(not(test), no_std)]
+
+mod hex;
+mod logs;
+mod verify;
+
+pub use verify::{verify_payment, Payment, ReceiptError, NOX_TOKEN, TRANSFER_TOPIC};
+
+#[cfg(test)]
+mod tests;
+
+#[cfg(kani)]
+mod kani_proofs;

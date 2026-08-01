@@ -16,26 +16,21 @@
 
 use super::super::realtime;
 use super::proc_ticks;
-use super::state::{CURRENT_TIME_SLICE, NEED_RESCHEDULE, SCHEDULER_STATS};
+use super::state::{set_reschedule, spend_time_slice, SCHEDULER_STATS};
 use core::sync::atomic::Ordering;
 
 pub fn tick() {
     proc_ticks::charge_tick(crate::process::CURRENT_PID.load(Ordering::Relaxed));
     SCHEDULER_STATS.tick_count.fetch_add(1, Ordering::SeqCst);
-    let remaining = CURRENT_TIME_SLICE.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |v| {
-        if v > 0 {
-            Some(v - 1)
-        } else {
-            None
-        }
-    });
-    if remaining == Ok(1) {
+    // This CPU's own slice. The tick that takes it from one to zero is the one
+    // that exhausted it.
+    if spend_time_slice() == 1 {
         SCHEDULER_STATS.time_slice_exhaustions.fetch_add(1, Ordering::SeqCst);
         if crate::sys::policy::kernel_preempt() {
-            NEED_RESCHEDULE.store(true, Ordering::Release);
+            set_reschedule();
         }
     }
     if realtime::has_realtime_tasks() {
-        NEED_RESCHEDULE.store(true, Ordering::Release);
+        set_reschedule();
     }
 }

@@ -28,14 +28,16 @@
 use crate::arch::interrupt_controller::{end_of_interrupt, Ipi};
 
 pub(super) fn tlb_shootdown() {
-    super::super::tlb::handle_tlb_shootdown_ipi();
+    crate::memory::paging::manager::handle_shootdown_ipi();
     end_of_interrupt(Ipi::TlbShootdown);
 }
 
 pub(super) fn reschedule() {
-    // Acknowledge only. A migrated task is picked up by the target CPU's next
-    // timer tick; triggering an immediate reschedule from interrupt context is
-    // wired separately once the per-CPU scheduler path is live.
+    // Raise this CPU's flag rather than switching here. We are in interrupt
+    // context on the interrupted task's stack, and the sender means "you have
+    // work", not "switch now". The idle loop and the preemptible return path
+    // both act on the flag.
+    crate::process::scheduler::preemption::set_reschedule();
     end_of_interrupt(Ipi::Reschedule);
 }
 

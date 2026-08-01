@@ -49,6 +49,11 @@ pub fn init_platform_baseline() {
         crate::sys::serial::print_dec(assigned as u64);
         crate::sys::serial::println(b" devices");
     }
+    // After the BARs are assigned, so the device table records the addresses
+    // each device actually decodes at rather than the zeros it booted with.
+    // The x86_64 path enumerated here from its own boot code, which no other
+    // entry runs, so this is where every architecture gets a device table.
+    crate::bus::pci::init();
     seed_hardware_broker();
     init_entropy();
     init_boot_session_nonce();

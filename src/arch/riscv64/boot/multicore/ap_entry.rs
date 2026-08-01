@@ -22,7 +22,6 @@ use crate::arch::riscv64::interrupts::install_stvec;
 use crate::arch::riscv64::plic::init_plic_hart;
 use crate::arch::riscv64::security;
 use crate::arch::riscv64::timer::init_timer_hart;
-use crate::process::scheduler::smp::api::init_ap_scheduler;
 
 use super::state::HARTS_ONLINE;
 
@@ -41,7 +40,6 @@ pub extern "C" fn riscv64_ap_entry(_hart_id: u64, _stack_top: u64) -> ! {
     }
     HARTS_ONLINE.fetch_add(1, Ordering::AcqRel);
     let hart = cpu::id::hart_id();
-    init_ap_scheduler(hart);
     loop {
         idle_cpu();
     }

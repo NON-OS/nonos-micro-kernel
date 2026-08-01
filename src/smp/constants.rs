@@ -19,8 +19,3 @@ pub const MAX_CPUS: usize = 256;
 pub const PERCPU_STACK_SIZE: usize = 64 * 1024;
 
 pub const AP_TRAMPOLINE_ADDR: u64 = 0x8000;
-
-pub const IPI_FLAG_TLB_SHOOTDOWN: u32 = 1 << 0;
-pub const IPI_FLAG_RESCHEDULE: u32 = 1 << 1;
-pub const IPI_FLAG_PANIC: u32 = 1 << 2;
-pub const IPI_FLAG_STOP: u32 = 1 << 3;

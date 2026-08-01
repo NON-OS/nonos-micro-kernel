@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::config::{pci_read16, pci_read32, pci_write16, pci_write32};
+use super::access::{read16, read32, write16, write32};
 use super::size::size_bar;
 use super::window::{alloc_io, alloc_mmio};
 
@@ -31,17 +31,11 @@ const BAR_COUNT: u8 = 6;
 /// have described the result to the OS by other means, and moving the window
 /// afterwards would leave that description pointing at nothing.
 pub(super) fn assign_device(bus: u8, device: u8, function: u8) -> bool {
-    let command = pci_read16(bus, device, function, COMMAND);
+    let command = read16(bus, device, function, COMMAND);
     // Sizing drives the address lines to all ones. Stop the device decoding
     // before that happens, or for the width of the probe it claims a window
     // that is not its own.
-    pci_write16(
-        bus,
-        device,
-        function,
-        COMMAND,
-        command & !(COMMAND_IO_SPACE | COMMAND_MEMORY_SPACE),
-    );
+    write16(bus, device, function, COMMAND, command & !(COMMAND_IO_SPACE | COMMAND_MEMORY_SPACE));
 
     let mut assigned = false;
     let mut index = 0;
@@ -52,7 +46,7 @@ pub(super) fn assign_device(bus: u8, device: u8, function: u8) -> bool {
             continue;
         };
 
-        let current = pci_read32(bus, device, function, offset);
+        let current = read32(bus, device, function, offset);
         let occupied = if bar.is_io { current & !0x3 } else { current & !0xF };
         if occupied != 0 {
             index += if bar.is_64bit { 2 } else { 1 };
@@ -62,9 +56,9 @@ pub(super) fn assign_device(bus: u8, device: u8, function: u8) -> bool {
         let base = if bar.is_io { alloc_io(bar.size) } else { alloc_mmio(bar.size) };
         if let Some(base) = base {
             let low = (base as u32) | (current & if bar.is_io { 0x3 } else { 0xF });
-            pci_write32(bus, device, function, offset, low);
+            write32(bus, device, function, offset, low);
             if bar.is_64bit {
-                pci_write32(bus, device, function, offset + 4, (base >> 32) as u32);
+                write32(bus, device, function, offset + 4, (base >> 32) as u32);
             }
             assigned = true;
         }
@@ -74,7 +68,7 @@ pub(super) fn assign_device(bus: u8, device: u8, function: u8) -> bool {
 
     // Bus mastering goes on with the decoders: every virtio device moves its
     // queues by DMA, and without it the rings stay silent.
-    pci_write16(
+    write16(
         bus,
         device,
         function,

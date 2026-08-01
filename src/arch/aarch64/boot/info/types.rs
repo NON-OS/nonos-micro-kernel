@@ -20,7 +20,6 @@ pub const MAX_MEMORY_REGIONS: usize = 8;
 /// As many CPUs as the device tree walker reads in one pass.
 pub const MAX_CPUS: usize = 64;
 
-
 use super::memory::{MemoryRegion, MemoryType};
 
 #[derive(Debug, Clone)]
@@ -92,14 +91,16 @@ impl Default for BootInfo {
             timer_phys_intid: 30,
             timer_virt_intid: 27,
             gic_unsupported: false,
-            // The virt board's PCIe host bridge. Config space is ECAM at
-            // 0x3f00_0000, and the 16 MiB window is what limits the bus range
-            // to 16. Its I/O window sits just below at 0x3eff_0000 and is
-            // addressed from port 0, so a driver asking for port N reads
-            // 0x3eff_0000 + N. Leaving these at zero means no config space, so
-            // enumeration finds nothing and every virtio device is invisible.
-            pci_ecam_base: 0x3f00_0000,
-            pci_ecam_size: 0x0100_0000,
+            // The virt board's PCIe host bridge. Config space is the high ECAM
+            // window at 256 GiB, which is where the board puts it whenever the
+            // CPU can address that far. The 16 MiB window at 0x3f00_0000 is the
+            // older placement and reads there return nothing, which surfaces as
+            // an external abort rather than a translation fault, since the page
+            // tables are perfectly happy to map an address no device answers.
+            // Its I/O window sits at 0x3eff_0000 and is addressed from port 0,
+            // so a driver asking for port N reads 0x3eff_0000 + N.
+            pci_ecam_base: 0x40_1000_0000,
+            pci_ecam_size: 0x1000_0000,
             pci_io_cpu_base: 0x3eff_0000,
             pci_io_port_base: 0,
             pci_io_size: 0x0001_0000,

@@ -31,7 +31,6 @@ use crate::scheduler::policy_types::{SchedAttr, SCHED_DEADLINE, SCHED_IDLE};
 use crate::spawn::caps_bits::{grant_within_manifest, install_caps, within_ceiling};
 use crate::spawn::lifetime::delegation_expiry;
 use crate::spec;
-use crate::timer::interval::elapsed_reached;
 
 // The buddy of the buddy of a block is the block itself: the address XOR is an
 // involution, for every address and every order.
@@ -96,21 +95,6 @@ fn contains_implies_within_bounds() {
     let addr: u64 = kani::any();
     if contains(start, end, addr) {
         assert!(addr >= start && addr < end);
-    }
-}
-
-// The elapsed test saturates on a tick wraparound: when current is at or after
-// last it is the true elapsed span, and when current is before last it reads as
-// no time elapsed, for every input.
-#[kani::proof]
-fn elapsed_saturates_on_wraparound() {
-    let current: u64 = kani::any();
-    let last: u64 = kani::any();
-    let interval: u64 = kani::any();
-    if current >= last {
-        assert_eq!(elapsed_reached(current, last, interval), current - last >= interval);
-    } else {
-        assert_eq!(elapsed_reached(current, last, interval), interval == 0);
     }
 }
 

@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Canonical scheduler authority. Dispatcher loop (core), per-CPU SMP
-// (smp), realtime and deadline tier schedulers, preemption path,
-// PID run queue (dispatch) and the sched_setattr / setpolicy /
-// setaffinity / setnice policy registry the syscall layer talks to.
-// All lifted out of src/sched during Phase 1.
+// Canonical scheduler authority. Dispatcher loop (core), realtime and
+// deadline tier schedulers, preemption path, PID run queue (dispatch)
+// and the sched_setattr / setpolicy / setaffinity / setnice policy
+// registry the syscall layer talks to. All lifted out of src/sched
+// during Phase 1.
 
 extern crate alloc;
 
@@ -35,7 +35,6 @@ pub mod preemption;
 pub mod realtime;
 pub mod runqueue;
 pub mod selection;
-pub mod smp;
 pub mod stats;
 pub mod task;
 pub mod types;

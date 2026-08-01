@@ -14,23 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod api;
-mod balance;
-mod constants;
-mod interval;
-mod percpu_queue;
-mod spawn;
-mod state;
-mod tick;
-mod types;
+//! Fields the panel shows but will not change.
+//!
+//! The policy protocol has no read-only notion, so the store accepts a write
+//! to any field. Some of them report what the system did rather than what the
+//! user wants, and letting someone assert one from a settings row would be
+//! stating something untrue about the machine.
 
-pub use api::*;
-pub use balance::try_load_balance;
-pub use constants::{DEFAULT_TIME_SLICE, LOAD_BALANCE_INTERVAL_TICKS, MAX_CPUS};
-pub use percpu_queue::PerCpuRunQueue;
-pub use spawn::{run_local, spawn_on_cpu, spawn_smp};
-pub use state::{
-    active_cpu_count, for_each_cpu_queue, get_cpu_queue, init_cpu_queue, is_smp_initialized,
-};
-pub use tick::smp_tick;
-pub use types::{CpuLoad, CpuRunQueueStats, LoadBalanceState};
+use nonos_policy_proto::Field;
+
+/// Whether `field` is a status the panel displays without editing.
+pub fn read_only(field: Field) -> bool {
+    matches!(field, Field::SystemKeysGenerated)
+}

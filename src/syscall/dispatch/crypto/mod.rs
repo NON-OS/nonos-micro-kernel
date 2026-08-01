@@ -21,6 +21,7 @@ mod keccak;
 mod primitives;
 mod random;
 mod secp256k1_pubkey;
+mod ed25519_sign;
 mod secp256k1_sign;
 mod verify;
 
@@ -35,5 +36,6 @@ pub use primitives::{
 };
 pub use random::handle_crypto_random;
 pub use secp256k1_pubkey::handle_crypto_secp256k1_pubkey;
+pub use ed25519_sign::handle_crypto_ed25519_sign;
 pub use secp256k1_sign::handle_crypto_secp256k1_sign;
 pub use verify::handle_crypto_ed25519_verify;

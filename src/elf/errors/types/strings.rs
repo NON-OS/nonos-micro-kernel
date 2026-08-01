@@ -23,7 +23,7 @@ impl ElfError {
             Self::InvalidClass => "Invalid ELF class (not 64-bit)",
             Self::InvalidEndian => "Invalid ELF endianness (not little-endian)",
             Self::InvalidVersion => "Invalid ELF version",
-            Self::InvalidMachine => "Invalid ELF machine type (not x86-64)",
+            Self::InvalidMachine => "ELF machine type is not this architecture",
             Self::InvalidType => "Invalid ELF type (not EXEC or DYN)",
             Self::InvalidHeaderSize => "Invalid ELF header size",
             Self::InvalidProgramHeaderSize => "Invalid ELF program header entry size",

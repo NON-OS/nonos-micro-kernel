@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::config::{pci_read16, pci_read8};
+use super::access::{read16, read8};
 use super::device::assign_device;
 
 const VENDOR_ID: u8 = 0x00;
@@ -36,20 +36,19 @@ pub fn assign_unassigned() -> usize {
     for bus in 0..MAX_BUS {
         let bus = bus as u8;
         for device in 0..MAX_DEVICE {
-            if pci_read16(bus, device, 0, VENDOR_ID) == INVALID_VENDOR {
+            if read16(bus, device, 0, VENDOR_ID) == INVALID_VENDOR {
                 continue;
             }
-            let header = pci_read8(bus, device, 0, HEADER_TYPE);
-            let functions =
-                if header & HEADER_MULTI_FUNCTION != 0 { MAX_FUNCTION } else { 1 };
+            let header = read8(bus, device, 0, HEADER_TYPE);
+            let functions = if header & HEADER_MULTI_FUNCTION != 0 { MAX_FUNCTION } else { 1 };
             for function in 0..functions {
-                if pci_read16(bus, device, function, VENDOR_ID) == INVALID_VENDOR {
+                if read16(bus, device, function, VENDOR_ID) == INVALID_VENDOR {
                     continue;
                 }
                 // Bridges carry windows rather than BARs, and programming those
                 // means deciding the whole bus hierarchy. Nothing behind a
                 // bridge is reachable until that is done, so endpoints only.
-                let kind = pci_read8(bus, device, function, HEADER_TYPE) & HEADER_TYPE_MASK;
+                let kind = read8(bus, device, function, HEADER_TYPE) & HEADER_TYPE_MASK;
                 if kind != HEADER_TYPE_ENDPOINT {
                     continue;
                 }

@@ -16,15 +16,30 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::settings::theme::{VALUE_FG, VALUE_FG_FALSE};
+use crate::settings::theme::{TAB_ACTIVE_BG, TAB_BG, VALUE_FG, VALUE_FG_FALSE};
 
 use super::layout::VALUE_LEFT;
 
+// A drawn switch reads at a glance down a column of eighteen rows in a way
+// that "[x] enabled" does not. Track and knob are plain rects: the buffer has
+// no rounded primitive, and a square switch beats a faked one.
+const TRACK_W: u32 = 34;
+const TRACK_H: u32 = 14;
+const KNOB: u32 = 10;
+const LABEL_GAP: u32 = 12;
+
 pub fn paint_value_bool(fb: &mut PaintBuffer, y: u32, value: Option<bool>) {
-    let (text, color): (&[u8], u32) = match value {
-        Some(true) => (b"[x] enabled", VALUE_FG),
-        Some(false) => (b"[ ] disabled", VALUE_FG_FALSE),
-        None => (b"...", VALUE_FG_FALSE),
+    let Some(on) = value else {
+        // Not fetched yet. No switch is drawn, so an unknown never reads as
+        // an "off" the user might try to turn on.
+        fb.text(VALUE_LEFT, y, b"...", VALUE_FG_FALSE);
+        return;
     };
-    fb.text(VALUE_LEFT, y, text, color);
+    let track_y = y + 1;
+    fb.fill_rect(VALUE_LEFT, track_y, TRACK_W, TRACK_H, if on { TAB_ACTIVE_BG } else { TAB_BG });
+    let knob_x = if on { VALUE_LEFT + TRACK_W - KNOB - 2 } else { VALUE_LEFT + 2 };
+    fb.fill_rect(knob_x, track_y + 2, KNOB, KNOB, if on { 0xFFFFFFFF } else { VALUE_FG_FALSE });
+    let (text, color): (&[u8], u32) =
+        if on { (b"enabled", VALUE_FG) } else { (b"disabled", VALUE_FG_FALSE) };
+    fb.text(VALUE_LEFT + TRACK_W + LABEL_GAP, y, text, color);
 }

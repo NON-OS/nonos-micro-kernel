@@ -19,9 +19,9 @@
 
 extern crate alloc;
 
-mod viewer;
 #[cfg(feature = "nonos-image-viewer-smoketest")]
 mod selftest;
+mod viewer;
 
 use nonos_app_skeleton::run;
 

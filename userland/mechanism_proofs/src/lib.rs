@@ -22,6 +22,7 @@
 
 pub mod bounds;
 pub mod buddy;
+pub mod compositor;
 pub mod constants;
 pub mod context;
 pub mod heap;
@@ -37,6 +38,9 @@ pub mod scheduler;
 pub mod spawn;
 pub mod spec;
 pub mod timer;
+
+#[cfg(test)]
+mod compositor_tests;
 
 #[cfg(test)]
 mod constants_tests;
