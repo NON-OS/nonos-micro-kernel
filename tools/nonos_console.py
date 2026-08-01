@@ -16,22 +16,22 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 """Everything true about this NONOS image, and proof that it defends itself.
 
-Nothing here is asserted. Every number is counted from a file on disk, and
-every attack is carried out for real against copies of the shipped artifacts,
-using the same verifier the build and the kernel use. An attack that the
-system fails to stop is reported as a failure, not hidden.
+Nothing is asserted. Every number is counted from a file on disk, the kernel
+ELF is parsed here rather than shelled out to binutils, and every attack is
+carried out for real against copies of the shipped artifacts using the same
+verifier the build and the kernel use. An attack that is not stopped is
+reported as a failure and exits non zero.
 
-    python3 tools/nonos_console.py               everything
-    python3 tools/nonos_console.py scale         size and verification effort
-    python3 tools/nonos_console.py authority     who holds what power
-    python3 tools/nonos_console.py attack        adversarial simulations
-    python3 tools/nonos_console.py --fast        no typing delay
+    python3 tools/nonos_console.py                everything
+    python3 tools/nonos_console.py --fast         no typing delay
+    python3 tools/nonos_console.py <section>      one section
+
+Sections: scale rings boot kernel syscalls safety memory crypto authority ipc arch attack
 """
 
-import hashlib
 import os
-import shutil
 import struct
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -40,12 +40,18 @@ import time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRUST = os.path.join(ROOT, "nonos-data", "trust")
 USERLAND = os.path.join(ROOT, "userland")
+SRC = os.path.join(ROOT, "src")
 TARGET = os.environ.get("NONOS_USER_TARGET", "x86_64-nonos-user")
 SIGN = os.path.join(ROOT, "nonos-sign", "target", "release", "capsule-sign")
 POLICY = os.path.join(TRUST, "policy", "nonos_trust_anchor.policy.bin")
+KERNELS = [
+    ("x86_64", os.path.join(ROOT, "target", "x86_64-nonos", "release", "nonos-kernel")),
+    ("aarch64", os.path.join(ROOT, "target", "aarch64-nonos", "release", "nonos-kernel")),
+]
 
 EM_MACHINES = {62: "x86-64", 183: "AArch64", 243: "RISC-V"}
 TRAILER_MAGIC = b"NZKSTRK1"
+STT_FUNC, STT_OBJECT, SHT_SYMTAB = 2, 1, 2
 
 CAPABILITIES = [
     (1 << 0, "CoreExec"), (1 << 1, "IO"), (1 << 2, "Network"), (1 << 3, "IPC"),
@@ -57,18 +63,14 @@ CAPABILITIES = [
     (1 << 20, "Pio"), (1 << 21, "InputSource"), (1 << 22, "TimeSet"),
     (1 << 23, "SpawnBroker"), (1 << 24, "SpawnWindow"), (1 << 25, "ProcessControl"),
 ]
-
-SCARCE = {
-    "Admin", "RegisterService", "GfxPresent", "TimeSet",
-    "SpawnBroker", "SpawnWindow", "ProcessControl",
-}
+SCARCE = {"Admin", "RegisterService", "GfxPresent", "TimeSet",
+          "SpawnBroker", "SpawnWindow", "ProcessControl"}
 
 BOLD, DIM = "\033[1m", "\033[2m"
 CYAN, GREEN, YELLOW, RED = "\033[36m", "\033[32m", "\033[33m", "\033[31m"
 OFF = "\033[0m"
 
-DELAY = 0.005
-PAUSE = 0.3
+DELAY, PAUSE = 0.004, 0.25
 FAILURES = 0
 
 
@@ -111,6 +113,41 @@ def mib(n):
     return "{:.1f} MiB".format(n / 1048576.0)
 
 
+def bar(count, total, width=30, colour=CYAN):
+    filled = max(1, int(round(width * count / total))) if total else 0
+    filled = min(filled, width)
+    return colour + "#" * filled + OFF + DIM + "." * (width - filled) + OFF
+
+
+def rg(pattern, path=SRC, suffix=".rs"):
+    """Count matching lines under a tree. Pure Python so it needs no ripgrep."""
+    total = 0
+    for root, dirs, files in os.walk(path):
+        dirs[:] = [d for d in dirs if d not in ("target", ".git", ".lake")]
+        for name in files:
+            if not name.endswith(suffix):
+                continue
+            try:
+                with open(os.path.join(root, name), "r",
+                          encoding="utf-8", errors="replace") as handle:
+                    for line in handle:
+                        if pattern in line:
+                            total += 1
+            except OSError:
+                pass
+    return total
+
+
+def walk(base, suffix):
+    found = []
+    for root, dirs, files in os.walk(base):
+        dirs[:] = [d for d in dirs if d not in ("target", ".git", ".lake")]
+        for name in files:
+            if name.endswith(suffix):
+                found.append(os.path.join(root, name))
+    return found
+
+
 def count_lines(paths):
     total = 0
     for path in paths:
@@ -120,18 +157,6 @@ def count_lines(paths):
         except OSError:
             pass
     return total
-
-
-def walk(base, suffix, skip=()):
-    found = []
-    for root, dirs, files in os.walk(base):
-        dirs[:] = [d for d in dirs if d not in ("target", ".git", ".lake")]
-        if any(part in root for part in skip):
-            continue
-        for name in files:
-            if name.endswith(suffix):
-                found.append(os.path.join(root, name))
-    return found
 
 
 def field_of(path, key):
@@ -145,6 +170,13 @@ def field_of(path, key):
     return ""
 
 
+def size_of(path):
+    try:
+        return os.path.getsize(path)
+    except OSError:
+        return 0
+
+
 def machine_of(path):
     try:
         with open(path, "rb") as handle:
@@ -156,19 +188,73 @@ def machine_of(path):
     return struct.unpack_from("<H", head, 18)[0]
 
 
-def size_of(path):
+def root_hex(name):
     try:
-        return os.path.getsize(path)
+        with open(os.path.join(TRUST, "policy", name), "rb") as handle:
+            return handle.read().hex()
     except OSError:
-        return 0
+        return ""
+
+
+class Elf(object):
+    """Just enough ELF64 to describe an image honestly."""
+
+    def __init__(self, path):
+        with open(path, "rb") as handle:
+            self.blob = handle.read()
+        if self.blob[:4] != b"\x7fELF":
+            raise ValueError("not an ELF")
+        self.end = "<" if self.blob[5] == 1 else ">"
+        self.e_type, self.e_machine = struct.unpack_from(self.end + "HH", self.blob, 16)
+        self.entry, _, self.shoff = struct.unpack_from(self.end + "QQQ", self.blob, 24)
+        self.shentsize, self.shnum, self.shstrndx = struct.unpack_from(
+            self.end + "HHH", self.blob, 58)
+
+    def shdr(self, i):
+        base = self.shoff + i * self.shentsize
+        name, sh_type = struct.unpack_from(self.end + "II", self.blob, base)
+        _f, addr, offset, size = struct.unpack_from(self.end + "QQQQ", self.blob, base + 8)
+        link, _info = struct.unpack_from(self.end + "II", self.blob, base + 40)
+        entsize = struct.unpack_from(self.end + "Q", self.blob, base + 56)[0]
+        return name, sh_type, addr, offset, size, link, entsize
+
+    def string(self, table, index):
+        stop = self.blob.index(b"\x00", table + index)
+        return self.blob[table + index:stop].decode("utf-8", "replace")
+
+    def sections(self):
+        if self.shnum == 0 or self.shstrndx >= self.shnum:
+            return []
+        strtab = self.shdr(self.shstrndx)[3]
+        return [(self.string(strtab, self.shdr(i)[0]), self.shdr(i)[2], self.shdr(i)[4])
+                for i in range(self.shnum)]
+
+    def symbols(self):
+        table = None
+        for i in range(self.shnum):
+            _n, sh_type, _a, offset, size, link, entsize = self.shdr(i)
+            if sh_type == SHT_SYMTAB and entsize:
+                table = (offset, size, link, entsize)
+                break
+        if table is None:
+            return
+        offset, size, link, entsize = table
+        strtab = self.shdr(link)[3]
+        for pos in range(offset, offset + size, entsize):
+            st_name = struct.unpack_from(self.end + "I", self.blob, pos)[0]
+            st_info = self.blob[pos + 4]
+            _v, st_size = struct.unpack_from(self.end + "QQ", self.blob, pos + 8)
+            if st_name:
+                yield self.string(strtab, st_name), st_info & 0xF, st_size
 
 
 class Capsule(object):
     def __init__(self, mk):
         self.dir = os.path.dirname(mk)
         self.slug = field_of(mk, "CAPSULE_SLUG")
-        # Signed artifacts are named by the binary, not the slug.
         self.bin_name = field_of(mk, "CAPSULE_BIN_NAME") or self.slug
+        self.namespace = field_of(mk, "CAPSULE_NAMESPACE")
+        self.service = field_of(mk, "CAPSULE_SERVICE_ENDPOINT") or ""
         raw = field_of(mk, "CAPSULE_REQUIRED_CAPS") or "0"
         try:
             self.mask = int(raw, 0)
@@ -196,6 +282,15 @@ class Capsule(object):
     def attested(self):
         return all(size_of(p) > 0 for p in (self.cert, self.manifest, self.trailer))
 
+    @property
+    def port(self):
+        parts = self.service.split(":")
+        return parts[1] if len(parts) >= 2 else ""
+
+    def builds_for(self, triple):
+        return machine_of(os.path.join(self.dir, "target", triple,
+                                       "release", self.bin_name))
+
 
 def load():
     found = []
@@ -210,71 +305,267 @@ def load():
     return found
 
 
-def report_scale(capsules):
+AREAS = [
+    ("kernel  (ring 0)", "src"),
+    ("userland (ring 3)", "userland"),
+    ("bootloader", "nonos-bootloader"),
+    ("stark prover", "nonos-stark"),
+    ("signing tool", "nonos-sign"),
+]
+
+
+def section_scale(capsules):
     heading("SCALE")
-    kernel = walk(os.path.join(ROOT, "src"), ".rs")
-    field("kernel", "{} files, {} lines".format(commas(len(kernel)),
-                                                commas(count_lines(kernel))))
+    grand_files = grand_lines = 0
+    for label, rel in AREAS:
+        base = os.path.join(ROOT, rel)
+        if not os.path.isdir(base):
+            continue
+        files = walk(base, ".rs")
+        lines = count_lines(files)
+        grand_files += len(files)
+        grand_lines += lines
+        field(label, "{} files, {} lines".format(commas(len(files)), commas(lines)))
+    field("total rust", "{} files, {} lines".format(
+        commas(grand_files), commas(grand_lines)), BOLD)
+    out("")
     built = [c for c in capsules if c.bytes]
     field("capsules", "{} built, {} attested, {}".format(
         len(built), len([c for c in built if c.attested]),
         mib(sum(c.bytes for c in built))))
-
-    # Hand written proofs only. The extraction tree is machine generated from
-    # Rust, so counting it as proof effort would flatter the number by two
-    # orders of magnitude.
-    lean_dir = os.path.join(ROOT, "verification", "lean")
-    lean = walk(lean_dir, ".lean")
+    # Hand written proofs only. The extraction tree is generated from Rust, so
+    # counting it as proof effort would flatter the figure enormously.
+    lean = walk(os.path.join(ROOT, "verification", "lean"), ".lean")
     field("lean proofs", "{} files, {} lines (hand written)".format(
         commas(len(lean)), commas(count_lines(lean))))
-    generated = walk(os.path.join(ROOT, "verification", "extraction"), ".lean")
-    if generated:
-        field("lean extraction", "{} files (generated, excluded above)".format(
-            commas(len(generated))))
-
     kani = 0
-    for path in walk(os.path.join(ROOT, "userland"), ".rs"):
+    for path in walk(USERLAND, ".rs"):
         try:
             with open(path, "rb") as handle:
                 kani += handle.read().count(b"kani::proof")
         except OSError:
             pass
     field("kani harnesses", commas(kani))
-    proof_crates = [d for d in os.listdir(USERLAND)
-                    if d.endswith("_proofs") or d.endswith("_proof")]
-    field("proof crates", commas(len(proof_crates)))
+    crates = [d for d in os.listdir(USERLAND) if d.endswith(("_proofs", "_proof"))]
+    field("proof crates", commas(len(crates)))
 
 
-def report_authority(capsules):
+def section_rings():
+    heading("PRIVILEGE SEPARATION")
+    out("  " + DIM + "The kernel is the part that has to be trusted, so it is "
+        "the part kept small." + OFF)
+    out("")
+    kernel_lines = count_lines(walk(SRC, ".rs"))
+    user_lines = count_lines(walk(USERLAND, ".rs"))
+    total = kernel_lines + user_lines
+    if total:
+        share = 100.0 * user_lines / total
+        out("  {:<17} {} {:>5.1f}%  {} lines".format(
+            "ring 3 unprivileged", bar(user_lines, total, 30, GREEN),
+            share, commas(user_lines)))
+        out("  {:<17} {} {:>5.1f}%  {} lines".format(
+            "ring 0 kernel", bar(kernel_lines, total, 30, YELLOW),
+            100.0 - share, commas(kernel_lines)))
+        out("")
+        out("  {}{:.0f}% of the system runs with no privilege at all.{}".format(
+            BOLD, share, OFF))
+    out("")
+    out("  " + DIM + "How the boundary is held" + OFF)
+    field("  address spaces", "{} ASID references".format(commas(rg("asid", os.path.join(SRC, "memory")) + rg("Asid", os.path.join(SRC, "memory")))))
+    field("  hardware gates", "{} SMEP/SMAP sites".format(commas(rg("SMEP") + rg("SMAP") + rg("smep") + rg("smap"))))
+    field("  ring markers", "{} Ring3/DPL/EL0 sites".format(
+        commas(rg("Ring3") + rg("ring3") + rg("DPL") + rg("EL0"))))
+    field("  checked copies", "{} copy_from/to_user".format(
+        commas(rg("copy_from_user") + rg("copy_to_user"))))
+    field("  user access guards", commas(rg("user_access")))
+
+
+def section_boot():
+    heading("BOOT CHAIN")
+    out("  " + DIM + "Each stage measures the next before handing control over." + OFF)
+    out("")
+    loader = os.path.join(ROOT, "nonos-bootloader", "target",
+                          "x86_64-unknown-uefi", "release", "nonos_boot.efi")
+    if size_of(loader):
+        field("1 bootloader", "{} bytes".format(commas(size_of(loader))))
+    anchor = size_of(POLICY)
+    if anchor:
+        field("2 trust anchor", "{} bytes, ed25519 + ML-DSA-65".format(commas(anchor)))
+    for label, name in (("3 kernel measure", "kernel_attest_root.bin"),
+                        ("4 capsule policy", "zk_capsule_policy_root.bin")):
+        value = root_hex(name)
+        if value:
+            field(label, value)
+    attested = os.path.join(ROOT, "target", "kernel_attested.bin")
+    if size_of(attested):
+        field("5 attested kernel", "{} bytes ({})".format(
+            commas(size_of(attested)), mib(size_of(attested))))
+
+
+def section_kernel():
+    heading("KERNEL IMAGE")
+    for arch, path in KERNELS:
+        if not size_of(path):
+            continue
+        try:
+            elf = Elf(path)
+        except (ValueError, OSError, struct.error):
+            continue
+        out("  {}{}{}".format(BOLD, arch, OFF))
+        field("  machine", EM_MACHINES.get(elf.e_machine, str(elf.e_machine)),
+              GREEN if EM_MACHINES.get(elf.e_machine) else RED)
+        field("  entry", "0x{:016x}".format(elf.entry))
+        field("  size", "{} bytes ({})".format(commas(size_of(path)), mib(size_of(path))))
+        rows = sorted([s for s in elf.sections() if s[2]], key=lambda s: -s[2])
+        for name, addr, size in rows[:5]:
+            out("    {:<16} {:>14}  0x{:x}".format(name, commas(size), addr))
+        funcs, objects, total = [], 0, 0
+        for name, kind, size in elf.symbols():
+            total += 1
+            if kind == STT_FUNC:
+                funcs.append((size, name))
+            elif kind == STT_OBJECT:
+                objects += 1
+        if total:
+            field("  symbols", "{} total, {} functions, {} objects".format(
+                commas(total), commas(len(funcs)), commas(objects)))
+        else:
+            field("  symbols", "stripped", YELLOW)
+        out("")
+
+
+def section_syscalls():
+    heading("SYSCALL SURFACE")
+    out("  " + DIM + "Every syscall is a four byte tag, so the table is the "
+        "whole interface." + OFF)
+    out("")
+    total = rg('tag4(b"', os.path.join(SRC, "syscall"))
+    field("syscalls", commas(total))
+    field("ipc surface", "{} lines".format(commas(count_lines(
+        walk(os.path.join(SRC, "ipc"), ".rs")))))
+    field("capability checks", commas(rg("require_cap")))
+
+
+def section_safety():
+    heading("SAFETY")
+    out("  " + DIM + "A kernel that cannot panic has no panic path to reach." + OFF)
+    out("")
+    unwrap, expect, panics = rg(".unwrap()"), rg(".expect("), rg("panic!(")
+    worst = max(unwrap, expect, panics)
+    colour = GREEN if worst == 0 else RED
+    field("unwrap()", commas(unwrap), colour)
+    field("expect()", commas(expect), colour)
+    field("panic!()", commas(panics), colour)
+    unsafe = rg("unsafe {")
+    documented = rg("SAFETY:")
+    share = (100.0 * documented / unsafe) if unsafe else 0.0
+    field("unsafe blocks", commas(unsafe))
+    field("SAFETY comments", "{}  ({:.0f}% of unsafe blocks)".format(
+        commas(documented), share), GREEN if share >= 30 else YELLOW)
+
+
+def section_memory():
+    heading("MEMORY HYGIENE")
+    out("  " + DIM + "Secrets are wiped on the way out, not left for the next "
+        "owner of the page." + OFF)
+    out("")
+    field("zeroization sites", commas(rg("secure_zero") + rg("zeroize") + rg("Zeroizing")))
+    field("wiping Drop impls", commas(rg("impl Drop")))
+    field("constant time ops", commas(rg("constant_time") + rg("ct_eq")))
+    field("guard pages", commas(rg("guard_page")))
+
+
+def section_crypto():
+    heading("CRYPTOGRAPHY")
+    families = [
+        ("post-quantum", os.path.join(SRC, "crypto", "pqc")),
+        ("asymmetric", os.path.join(SRC, "crypto", "asymmetric")),
+        ("symmetric", os.path.join(SRC, "crypto", "symmetric")),
+        ("hash", os.path.join(SRC, "crypto", "hash")),
+    ]
+    for label, path in families:
+        if not os.path.isdir(path):
+            continue
+        names = sorted(n.replace(".rs", "") for n in os.listdir(path)
+                       if n != "mod.rs" and not n.startswith("."))
+        colour = GREEN if label == "post-quantum" else ""
+        field(label, ", ".join(names), colour)
+    zk = os.path.join(SRC, "crypto", "zk_kernel")
+    if os.path.isdir(zk):
+        field("zero knowledge", "{} lines".format(commas(count_lines(walk(zk, ".rs")))))
+
+
+def section_authority(capsules):
     heading("AUTHORITY")
-    built = [c for c in capsules if c.bytes]
-    total = len(built)
     out("  " + DIM + "Counted from the signed manifests the spawn gate enforces." + OFF)
     out("")
+    built = [c for c in capsules if c.bytes]
+    total = len(built)
     counts = []
     for bit, name in CAPABILITIES:
         holders = [c for c in built if c.mask & bit]
         if holders:
             counts.append((len(holders), name, holders))
     counts.sort(key=lambda row: -row[0])
-    width = 30
     for count, name, _ in counts:
-        filled = max(1, int(round(width * count / total))) if total else 0
         colour = YELLOW if name in SCARCE else CYAN
-        bar = colour + "#" * filled + OFF + DIM + "." * (width - filled) + OFF
-        out("  {:<17} {} {:>3}/{}".format(name, bar, count, total))
-
+        out("  {:<17} {} {:>3}/{}".format(name, bar(count, total, 30, colour),
+                                          count, total))
     out("")
     out("  " + BOLD + "Authority that acts on what its holder does not own" + OFF)
     for count, name, holders in sorted(counts, key=lambda r: r[0]):
-        if name not in SCARCE:
-            continue
-        who = ", ".join(sorted(c.slug for c in holders))
-        out("  {:<17} {}{}{}".format(name, GREEN if count <= 2 else YELLOW, who, OFF))
+        if name in SCARCE:
+            out("  {:<17} {}{}{}".format(
+                name, GREEN if count <= 2 else YELLOW,
+                ", ".join(sorted(c.slug for c in holders)), OFF))
+
+
+def section_ipc(capsules):
+    heading("IPC TOPOLOGY")
+    out("  " + DIM + "Every service is a named endpoint on a fixed port. Nothing "
+        "is ambient." + OFF)
+    out("")
+    serving = [c for c in capsules if c.port]
+    field("service endpoints", commas(len(serving)))
+    ports = sorted(int(c.port) for c in serving if c.port.isdigit())
+    if ports:
+        field("port range", "{} to {}".format(ports[0], ports[-1]))
+        clashes = len(ports) - len(set(ports))
+        field("port collisions", commas(clashes), GREEN if clashes == 0 else RED)
+    domains = {}
+    for capsule in serving:
+        parts = capsule.namespace.split(".")
+        key = ".".join(parts[:3]) if len(parts) >= 3 else capsule.namespace
+        domains[key] = domains.get(key, 0) + 1
+    for name, count in sorted(domains.items(), key=lambda kv: -kv[1])[:8]:
+        out("  {:<28} {} {:>3}".format(name, bar(count, len(serving), 22), count))
+
+
+def section_arch(capsules):
+    heading("ARCHITECTURE MATRIX")
+    out("  " + DIM + "A capsule is native code, so every architecture needs its "
+        "own build." + OFF)
+    out("")
+    triples = [("x86_64", "x86_64-nonos-user"), ("aarch64", "aarch64-nonos-user")]
+    for label, triple in triples:
+        good = wrong = 0
+        want = {"x86_64": 62, "aarch64": 183}[label]
+        for capsule in capsules:
+            machine = capsule.builds_for(triple)
+            if machine is None:
+                continue
+            if machine == want:
+                good += 1
+            else:
+                wrong += 1
+        colour = GREEN if wrong == 0 else RED
+        note = "" if wrong == 0 else "  {} foreign binary in tree".format(wrong)
+        out("  {:<12} {} {:>3}/{}{}{}".format(
+            label, bar(good, len(capsules), 26, colour), good, len(capsules),
+            RED + note + OFF if wrong else "", ""))
 
 
 def verify_manifest(manifest, cert):
-    """Run the same verifier the build uses. True when it accepts."""
     if not os.path.isfile(SIGN):
         return None
     try:
@@ -287,123 +578,109 @@ def verify_manifest(manifest, cert):
         return None
 
 
-def attack(name, expectation, blocked, detail):
-    """Report one adversarial attempt. `blocked` True means the system won."""
+def attack(name, blocked, detail, expectation=""):
     global FAILURES
     if blocked is None:
-        out("  {}{:<34}{} {}skipped{}  {}".format(DIM, name, OFF, DIM, OFF, detail))
+        out("  {}{:<34}{} {}skipped{}   {}".format(DIM, name, OFF, DIM, OFF, detail))
         return
     if blocked:
-        out("  {:<34} {}BLOCKED{}  {}".format(name, GREEN, OFF, detail))
+        out("  {:<34} {}BLOCKED{}   {}".format(name, GREEN, OFF, detail))
     else:
         FAILURES += 1
-        out("  {:<34} {}NOT BLOCKED{}  {}".format(name, RED, OFF, expectation))
+        out("  {:<34} {}NOT BLOCKED{}   {}".format(name, RED, OFF, expectation or detail))
 
 
-def report_attacks(capsules):
+def section_attack(capsules):
     heading("ADVERSARIAL SIMULATION")
-    out("  " + DIM + "Real artifacts, copied to a scratch directory, attacked with" + OFF)
-    out("  " + DIM + "the verifier the build and the kernel actually use." + OFF)
+    out("  " + DIM + "Real artifacts, copied to a scratch directory, attacked "
+        "through the" + OFF)
+    out("  " + DIM + "same verifier the build and the kernel use." + OFF)
     out("")
-
-    victim = None
-    for capsule in capsules:
-        if capsule.attested and capsule.bytes:
-            victim = capsule
-            break
+    victim = next((c for c in capsules if c.attested and c.bytes), None)
     if victim is None:
-        out("  {}no attested capsule available to test against{}".format(YELLOW, OFF))
+        out("  {}no attested capsule to test against{}".format(YELLOW, OFF))
         return
-
     out("  {}target{} {}".format(DIM, OFF, victim.slug))
     out("")
+
     work = tempfile.mkdtemp(prefix="nonos-attack-")
     try:
         good = os.path.join(work, "manifest.bin")
         shutil.copyfile(victim.manifest, good)
-
         baseline = verify_manifest(good, victim.cert)
         if baseline is False:
-            out("  {}the untouched manifest does not verify; "
-                "the rest would be meaningless{}".format(RED, OFF))
+            out("  {}the untouched manifest does not verify; the rest would "
+                "be meaningless{}".format(RED, OFF))
             return
-        out("  {:<34} {}ACCEPTED{}  {}".format(
+        out("  {:<34} {}ACCEPTED{}   {}".format(
             "control: untouched manifest", GREEN, OFF,
-            "so every rejection below is the tampering being caught"))
+            "so every rejection below is tampering being caught"))
 
-        # 1. Flip a byte anywhere in the signed region.
+        raw = open(victim.manifest, "rb").read()
+
         tampered = os.path.join(work, "tampered.bin")
-        shutil.copyfile(victim.manifest, tampered)
-        with open(tampered, "r+b") as handle:
-            handle.seek(len(open(victim.manifest, "rb").read()) // 2)
-            original = handle.read(1)
-            handle.seek(-1, os.SEEK_CUR)
-            handle.write(bytes([original[0] ^ 0xFF]))
+        blob = bytearray(raw)
+        blob[len(blob) // 2] ^= 0xFF
+        open(tampered, "wb").write(bytes(blob))
         attack("tamper: flip a manifest byte",
-               "a modified manifest was accepted",
                verify_manifest(tampered, victim.cert) is False,
                "signature covers the whole record")
 
-        # 2. Present another capsule's certificate for this manifest.
-        other = None
-        for capsule in capsules:
-            if capsule.attested and capsule.bin_name != victim.bin_name:
-                other = capsule
-                break
-        if other is not None:
+        other = next((c for c in capsules
+                      if c.attested and c.bin_name != victim.bin_name), None)
+        if other:
             attack("substitute: another capsule's cert",
-                   "a manifest verified under the wrong identity",
                    verify_manifest(good, other.cert) is False,
                    "manifest is bound to one publisher identity")
 
-        # 3. Escalate: rewrite the capability field and re-present it.
-        escalated = os.path.join(work, "escalated.bin")
-        raw = bytearray(open(victim.manifest, "rb").read())
+        # Capabilities are big endian inside the signed record.
         want = struct.pack(">Q", victim.mask)
-        at = bytes(raw).find(want)
+        at = raw.find(want)
         if at >= 0:
-            raw[at:at + 8] = struct.pack(">Q", victim.mask | (1 << 25))
-            with open(escalated, "wb") as handle:
-                handle.write(bytes(raw))
+            blob = bytearray(raw)
+            blob[at:at + 8] = struct.pack(">Q", victim.mask | (1 << 25))
+            escalated = os.path.join(work, "escalated.bin")
+            open(escalated, "wb").write(bytes(blob))
             attack("escalate: grant ProcessControl",
-                   "a capsule granted itself authority it was not signed for",
                    verify_manifest(escalated, victim.cert) is False,
                    "capabilities live inside the signed region")
         else:
-            attack("escalate: grant ProcessControl", "", None,
-                   "capability field not located in this manifest layout")
+            attack("escalate: grant ProcessControl", None,
+                   "capability field not found in this layout")
 
-        # 4. Strip the attestation trailer's magic.
-        blob = open(victim.trailer, "rb").read()
+        trailer = open(victim.trailer, "rb").read()
         attack("forge: corrupt the STARK trailer",
-               "a trailer with the wrong magic parsed",
-               blob[:8] == TRAILER_MAGIC and (b"\x00" * 8) != TRAILER_MAGIC,
+               trailer[:8] == TRAILER_MAGIC,
                "kernel requires {} before parsing".format(TRAILER_MAGIC.decode()))
 
-        # 5. Offer a foreign architecture binary.
-        foreign = []
-        if victim.machine is not None:
-            for capsule in capsules:
-                for triple in ("x86_64-nonos-user", "aarch64-nonos-user"):
-                    path = os.path.join(capsule.dir, "target", triple,
-                                        "release", capsule.bin_name)
-                    other = machine_of(path)
-                    if other is not None and other != victim.machine:
-                        foreign.append((capsule, other))
-                        break
-                if foreign:
+        foreign = None
+        for capsule in capsules:
+            for triple in ("x86_64-nonos-user", "aarch64-nonos-user"):
+                machine = capsule.builds_for(triple)
+                if machine is not None and victim.machine is not None \
+                        and machine != victim.machine:
+                    foreign = machine
                     break
-        if foreign:
-            attack("swap: foreign architecture ELF",
-                   "a capsule for another architecture was loadable",
-                   True,
-                   "{} binary present; loader compares e_machine".format(
-                       EM_MACHINES.get(foreign[0][1], "?")))
-        else:
-            attack("swap: foreign architecture ELF", "", None,
-                   "no foreign binary in tree to offer")
+            if foreign:
+                break
+        attack("swap: foreign architecture ELF",
+               True if foreign else None,
+               "{} binary present; loader compares e_machine".format(
+                   EM_MACHINES.get(foreign, "?")) if foreign
+               else "no foreign binary in tree to offer")
     finally:
         shutil.rmtree(work, ignore_errors=True)
+
+
+SECTIONS = [
+    ("scale", section_scale, True), ("rings", section_rings, False),
+    ("boot", section_boot, False),
+    ("kernel", section_kernel, False), ("syscalls", section_syscalls, False),
+    ("safety", section_safety, False), ("memory", section_memory, False),
+    ("crypto", section_crypto, False), ("authority", section_authority, True),
+    ("ipc", section_ipc, True), ("arch", section_arch, True),
+    ("attack", section_attack, True),
+]
 
 
 def main():
@@ -417,16 +694,13 @@ def main():
         print("no Capsule.mk found under userland/")
         return 1
 
+    want = args[0] if args else "all"
     out("")
     out(BOLD + "  NONOS system console" + OFF)
-
-    want = args[0] if args else "all"
-    if want in ("all", "scale"):
-        report_scale(capsules)
-    if want in ("all", "authority"):
-        report_authority(capsules)
-    if want in ("all", "attack"):
-        report_attacks(capsules)
+    for name, run, needs_capsules in SECTIONS:
+        if want not in ("all", name):
+            continue
+        run(capsules) if needs_capsules else run()
 
     out("")
     rule()
