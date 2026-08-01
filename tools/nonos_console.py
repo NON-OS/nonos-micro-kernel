@@ -625,73 +625,178 @@ def emit_json(capsules):
     print(json.dumps(doc, indent=1))
 
 
-def section_bench(capsules):
-    heading("BENCHMARK")
-    out("  " + DIM + "Measured here, now, on this machine. Verification runs "
-        "through capsule-sign," + OFF)
-    out("  " + DIM + "so each figure carries process startup with it and is a "
-        "floor, not a ceiling." + OFF)
-    out("")
+def percentile(values, share):
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    at = min(len(ordered) - 1, int(round(share * (len(ordered) - 1))))
+    return ordered[at]
+
+
+def bench_signature(attested):
+    """Time the hybrid signature check the spawn gate depends on."""
+    out("  " + BOLD + "Signature verification" + OFF)
+    times = []
+    for capsule in attested:
+        started = time.perf_counter()
+        accepted = verify_manifest(capsule.manifest, capsule.cert)
+        if accepted:
+            times.append((time.perf_counter() - started) * 1000.0)
+    if not times:
+        out("  {}no manifest verified{}".format(YELLOW, OFF))
+        return None
+    total = sum(times) / 1000.0
+    field("  verified", "{} of {} manifests".format(len(times), len(attested)),
+          GREEN if len(times) == len(attested) else RED)
+    field("  latency", "min {:.1f}  median {:.1f}  p95 {:.1f}  max {:.1f} ms".format(
+        min(times), percentile(times, 0.5), percentile(times, 0.95), max(times)))
+    field("  throughput", "{:.0f} verifications per second".format(len(times) / total))
+    field("  whole image", "{:.2f} s to re-verify every capsule".format(total))
+    return times
+
+
+def bench_hash(attested):
+    """Measurement throughput, which is what re-attesting an image costs."""
     import hashlib
-
-    attested = [c for c in capsules if c.attested]
-    if not attested:
-        out("  {}nothing attested to measure{}".format(YELLOW, OFF))
-        return
-
-    # Hybrid signature verification: ed25519 and ML-DSA-65 over one manifest.
-    sample = attested[:20]
-    started = time.perf_counter()
-    verified = 0
-    for capsule in sample:
-        if verify_manifest(capsule.manifest, capsule.cert):
-            verified += 1
-    elapsed = time.perf_counter() - started
-    if verified:
-        field("hybrid verify", "{:.1f} ms each, {:.0f} per second".format(
-            1000.0 * elapsed / verified, verified / elapsed), GREEN)
-        field("  sample", "{} manifests, ed25519 + ML-DSA-65".format(verified))
-        field("  whole image", "{:.2f} s to re-verify all {} capsules".format(
-            elapsed / verified * len(attested), len(attested)))
-
-    # Measurement throughput: what hashing the shipped corpus costs.
+    out("")
+    out("  " + BOLD + "Measurement" + OFF)
     corpus = [c.binary for c in attested if c.bytes]
     total = sum(size_of(p) for p in corpus)
-    started = time.perf_counter()
-    digest = hashlib.sha256()
+    if not total:
+        return
+    blob = bytearray()
     for path in corpus:
         try:
             with open(path, "rb") as handle:
-                while True:
-                    chunk = handle.read(1 << 20)
-                    if not chunk:
-                        break
-                    digest.update(chunk)
+                blob += handle.read()
         except OSError:
             pass
-    elapsed = time.perf_counter() - started
-    if elapsed > 0:
-        field("measure corpus", "{} in {:.2f} s  ({:.0f} MiB/s)".format(
-            mib(total), elapsed, total / 1048576.0 / elapsed))
+    for alg in ("sha256", "sha512", "sha3_256", "blake2b"):
+        try:
+            started = time.perf_counter()
+            digest = hashlib.new(alg)
+            digest.update(blob)
+            elapsed = time.perf_counter() - started
+        except ValueError:
+            continue
+        if elapsed <= 0:
+            continue
+        rate = len(blob) / 1048576.0 / elapsed
+        out("  {}{:<18}{} {} {:>6.0f} MiB/s".format(
+            DIM, "  " + alg, OFF, bar(int(rate), 400, 20), rate))
+    field("  corpus", "{} across {} capsules".format(mib(total), len(corpus)))
 
-    # Trailer parsing is what the spawn gate does before it will admit a capsule.
+
+def bench_parse(attested):
+    """Parsing is what the loader does before it maps a single page."""
+    out("")
+    out("  " + BOLD + "Parsing" + OFF)
     started = time.perf_counter()
-    parsed = 0
+    parsed = sections = 0
+    for capsule in attested:
+        try:
+            elf = Elf(capsule.binary)
+            sections += len(elf.sections())
+            parsed += 1
+        except Exception:
+            pass
+    elapsed = time.perf_counter() - started
+    if parsed and elapsed > 0:
+        field("  elf headers", "{} capsules, {} sections in {:.0f} ms "
+              "({:.0f}/s)".format(parsed, sections, elapsed * 1000.0,
+                                  parsed / elapsed))
+    started = time.perf_counter()
+    admitted = 0
     for capsule in attested:
         try:
             with open(capsule.trailer, "rb") as handle:
                 if handle.read(8) == TRAILER_MAGIC:
-                    parsed += 1
+                    admitted += 1
         except OSError:
             pass
     elapsed = time.perf_counter() - started
-    if parsed and elapsed > 0:
-        field("trailer admit", "{} checked in {:.0f} ms".format(
-            parsed, 1000.0 * elapsed))
+    if admitted and elapsed > 0:
+        field("  trailer admit", "{} checked in {:.0f} ms ({:.0f}/s)".format(
+            admitted, elapsed * 1000.0, admitted / elapsed))
 
-    trailer_bytes = sum(size_of(c.trailer) for c in attested)
-    field("proof carried", "{} of STARK trailers for {} capsules".format(
-        mib(trailer_bytes), len(attested)))
+
+def bench_overhead(attested):
+    """What the guarantees cost in bytes."""
+    out("")
+    out("  " + BOLD + "Overhead of proof" + OFF)
+    code = sum(c.bytes for c in attested)
+    trailers = sum(size_of(c.trailer) for c in attested)
+    manifests = sum(size_of(c.manifest) for c in attested)
+    certs = sum(size_of(c.cert) for c in attested)
+    trust = trailers + manifests + certs
+    field("  capsule code", mib(code))
+    field("  stark trailers", "{}  ({:.1f}% of code)".format(
+        mib(trailers), 100.0 * trailers / code if code else 0.0))
+    field("  manifests", "{} bytes".format(commas(manifests)))
+    field("  identity certs", "{} bytes".format(commas(certs)))
+    field("  trust total", "{}  ({:.1f}% of the image)".format(
+        mib(trust), 100.0 * trust / (code + trust) if code else 0.0), BOLD)
+
+
+def bench_boot():
+    """In-kernel timings, if a serial log from a real boot is present."""
+    import re
+    logs = []
+    for name in ("boot.log", "serial.log"):
+        path = os.path.join(ROOT, name)
+        if os.path.isfile(path):
+            logs.append(path)
+    if not logs:
+        return
+    out("")
+    out("  " + BOLD + "Boot, measured by the kernel itself" + OFF)
+    text = ""
+    for path in logs:
+        try:
+            with open(path, "r", errors="replace") as handle:
+                text += handle.read()
+        except OSError:
+            pass
+    rows = re.findall(r"\[BENCH\] (\d+) ([a-zA-Z_]+):?([a-zA-Z_0-9-]*)", text)
+    if not rows:
+        return
+    phases, starts, oks = {}, {}, {}
+    for stamp, kind, name in rows:
+        stamp = int(stamp)
+        if kind == "capsule_spawn_start":
+            starts.setdefault(name, stamp)
+        elif kind == "capsule_attest_ok":
+            oks.setdefault(name, stamp)
+        else:
+            phases.setdefault(kind, stamp)
+    for kind in ("microkernel_init_start", "vm_ready", "process_runtime_ready",
+                 "microkernel_core_ready", "init_process_created",
+                 "init_enter_userspace"):
+        if kind in phases:
+            field("  " + kind.replace("_", " "), "{} ms".format(phases[kind]))
+    costs = [oks[k] - starts[k] for k in oks if k in starts]
+    if costs:
+        field("  stark verify", "min {}  median {}  max {} ms, {} capsules".format(
+            min(costs), int(percentile(costs, 0.5)), max(costs), len(costs)))
+        out("  " + DIM + "  in-kernel, under emulation, so a real CPU is faster" + OFF)
+
+
+def section_bench(capsules):
+    heading("BENCHMARK")
+    out("  " + DIM + "Measured on this machine, now. Verification goes through "
+        "capsule-sign as a" + OFF)
+    out("  " + DIM + "separate process, so startup is inside each figure and "
+        "they are floors." + OFF)
+    out("")
+    attested = [c for c in capsules if c.attested and c.bytes]
+    if not attested:
+        out("  {}nothing attested to measure{}".format(YELLOW, OFF))
+        return
+    bench_signature(attested)
+    bench_hash(attested)
+    bench_parse(attested)
+    bench_overhead(attested)
+    bench_boot()
 
 
 def section_boot():
