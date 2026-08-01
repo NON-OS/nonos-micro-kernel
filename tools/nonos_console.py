@@ -29,6 +29,7 @@ reported as a failure and exits non zero.
 Sections: scale rings subsystems layering tcb surface boot kernel syscalls safety memory crypto authority ipc arch bench attack
 """
 
+import math
 import os
 import struct
 import shutil
@@ -781,6 +782,155 @@ def bench_boot():
         out("  " + DIM + "  in-kernel, under emulation, so a real CPU is faster" + OFF)
 
 
+def stat_line(label, values, unit="ms", scale=1.0):
+    if not values:
+        return
+    vals = sorted(v * scale for v in values)
+    out("  {}{:<16}{} min {:>8.3f}  med {:>8.3f}  p95 {:>8.3f}  max {:>8.3f} {}".format(
+        DIM, label, OFF, vals[0], percentile(vals, 0.5),
+        percentile(vals, 0.95), vals[-1], unit))
+
+
+def shannon(data):
+    """Bits of entropy per byte. Compiled code sits near 6, padding near 0."""
+    if not data:
+        return 0.0
+    counts = [0] * 256
+    for byte in data:
+        counts[byte] += 1
+    total = float(len(data))
+    acc = 0.0
+    for count in counts:
+        if count:
+            share = count / total
+            acc -= share * math.log(share, 2)
+    return acc
+
+
+def bench_pipeline(attested):
+    """Every stage of admitting a capsule, timed separately, per capsule.
+
+    This is the sequence the kernel performs before a capsule runs: read it,
+    measure it, parse it, verify who signed it, admit its proof, decode what it
+    is allowed to do. Timing them apart shows which stage a boot actually waits
+    on, which a single total hides.
+    """
+    import hashlib
+    out("  " + BOLD + "Admission pipeline, per capsule" + OFF)
+    read_t, hash_t, parse_t, verify_t, admit_t, caps_t = [], [], [], [], [], []
+    totals = {}
+    for capsule in attested:
+        started = time.perf_counter()
+        try:
+            with open(capsule.binary, "rb") as handle:
+                blob = handle.read()
+        except OSError:
+            continue
+        read = time.perf_counter() - started
+        read_t.append(read)
+
+        started = time.perf_counter()
+        hashlib.sha256(blob).digest()
+        hashed = time.perf_counter() - started
+        hash_t.append(hashed)
+
+        started = time.perf_counter()
+        try:
+            elf = Elf(capsule.binary)
+            elf.sections()
+        except Exception:
+            pass
+        parsed = time.perf_counter() - started
+        parse_t.append(parsed)
+
+        started = time.perf_counter()
+        verify_manifest(capsule.manifest, capsule.cert)
+        verified = time.perf_counter() - started
+        verify_t.append(verified)
+
+        started = time.perf_counter()
+        try:
+            with open(capsule.trailer, "rb") as handle:
+                handle.read(8) == TRAILER_MAGIC
+        except OSError:
+            pass
+        admitted = time.perf_counter() - started
+        admit_t.append(admitted)
+
+        started = time.perf_counter()
+        _ = capsule.caps
+        decoded = time.perf_counter() - started
+        caps_t.append(decoded)
+
+        totals[capsule.slug] = (read + hashed + parsed + verified
+                                + admitted + decoded)
+
+    
+    stat_line("read", read_t, "ms", 1000.0)
+    stat_line("measure sha256", hash_t, "ms", 1000.0)
+    stat_line("parse elf", parse_t, "ms", 1000.0)
+    stat_line("verify signature", verify_t, "ms", 1000.0)
+    stat_line("admit trailer", admit_t, "us", 1000000.0)
+    stat_line("decode caps", caps_t, "us", 1000000.0)
+    if totals:
+        every = sorted(totals.values())
+        out("")
+        field("  per capsule", "median {:.1f} ms, p95 {:.1f} ms".format(
+            1000 * percentile(every, 0.5), 1000 * percentile(every, 0.95)))
+        field("  whole image", "{:.2f} s to admit all {} capsules".format(
+            sum(every), len(every)), BOLD)
+        out("")
+        out("  " + DIM + "slowest to admit" + OFF)
+        for slug, cost in sorted(totals.items(), key=lambda kv: -kv[1])[:6]:
+            out("    {:<22} {:>7.1f} ms".format(slug, 1000 * cost))
+
+
+def bench_kernel_image():
+    """What the kernel image is made of, measured rather than described."""
+    out("")
+    out("  " + BOLD + "Kernel image analysis" + OFF)
+    for arch, path in KERNELS:
+        if not size_of(path):
+            continue
+        try:
+            elf = Elf(path)
+        except Exception:
+            continue
+        started = time.perf_counter()
+        sizes = []
+        for _n, kind, size in elf.symbols():
+            if kind == STT_FUNC and size:
+                sizes.append(size)
+        scan = time.perf_counter() - started
+        out("  {}{}{}".format(BOLD, arch, OFF))
+        if sizes:
+            field("    symbol scan", "{} functions in {:.0f} ms ({:.0f}k/s)".format(
+                commas(len(sizes)), scan * 1000, len(sizes) / scan / 1000))
+            field("    function size", "median {} B, p95 {} B, max {} B".format(
+                commas(int(percentile(sorted(sizes), 0.5))),
+                commas(int(percentile(sorted(sizes), 0.95))),
+                commas(max(sizes))))
+            field("    code in symbols", mib(sum(sizes)))
+        # Entropy separates real code from zero padding without unpacking it.
+        for name, _addr, size in elf.sections():
+            if name not in (".text", ".rodata", ".data"):
+                continue
+            for sec_name, sh_type, addr, offset, sec_size, link, ent in (
+                    [elf.shdr(i) for i in range(elf.shnum)]):
+                pass
+            blob = b""
+            for i in range(elf.shnum):
+                nm, _t, _a, offset, sz, _l, _e = elf.shdr(i)
+                if elf.string(elf.shdr(elf.shstrndx)[3], nm) == name and sz:
+                    blob = elf.blob[offset:offset + min(sz, 1 << 20)]
+                    break
+            if blob:
+                field("    {} entropy".format(name),
+                      "{:.2f} bits per byte over {}".format(
+                          shannon(blob), mib(min(size, 1 << 20))))
+        out("")
+
+
 def section_bench(capsules):
     heading("BENCHMARK")
     out("  " + DIM + "Measured on this machine, now. Verification goes through "
@@ -792,9 +942,12 @@ def section_bench(capsules):
     if not attested:
         out("  {}nothing attested to measure{}".format(YELLOW, OFF))
         return
+    bench_pipeline(attested)
+    out("")
     bench_signature(attested)
     bench_hash(attested)
     bench_parse(attested)
+    bench_kernel_image()
     bench_overhead(attested)
     bench_boot()
 
