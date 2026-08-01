@@ -26,7 +26,7 @@ reported as a failure and exits non zero.
     python3 tools/nonos_console.py --fast         no typing delay
     python3 tools/nonos_console.py <section>      one section
 
-Sections: scale rings subsystems layering tcb surface boot kernel syscalls safety memory crypto authority ipc arch attack
+Sections: scale rings subsystems layering tcb surface boot kernel syscalls safety memory crypto authority ipc arch bench attack
 """
 
 import os
@@ -534,6 +534,166 @@ def section_surface():
     field("saturating ops", commas(rg("saturating_add") + rg("saturating_sub")))
 
 
+def emit_json(capsules):
+    """Every measurement as one JSON object, for the visual map to render."""
+    import json
+    stats = subsystem_stats()
+    built = [c for c in capsules if c.bytes]
+    areas = {}
+    for label, rel in AREAS:
+        base = os.path.join(ROOT, rel)
+        if os.path.isdir(base):
+            files = walk(base, ".rs")
+            areas[label.strip()] = {"files": len(files), "lines": count_lines(files)}
+    trusted = ["capabilities", "security", "crypto", "elf", "syscall",
+               "usercopy", "memory", "process", "sched", "ipc", "arch"]
+    caps = []
+    for bit, name in CAPABILITIES:
+        holders = sorted(c.slug for c in built if c.mask & bit)
+        if holders:
+            caps.append({"name": name, "holders": holders,
+                         "scarce": name in SCARCE})
+    kernels = {}
+    for arch, path in KERNELS:
+        if not size_of(path):
+            continue
+        try:
+            elf = Elf(path)
+        except Exception:
+            continue
+        sections = sorted([{"name": n, "addr": a, "size": z}
+                           for n, a, z in elf.sections() if z],
+                          key=lambda r: -r["size"])[:8]
+        funcs = objects = total = 0
+        for _n, kind, _z in elf.symbols():
+            total += 1
+            if kind == STT_FUNC:
+                funcs += 1
+            elif kind == STT_OBJECT:
+                objects += 1
+        kernels[arch] = {"bytes": size_of(path), "entry": elf.entry,
+                         "machine": EM_MACHINES.get(elf.e_machine, "?"),
+                         "sections": sections, "symbols": total,
+                         "functions": funcs, "objects": objects}
+    doc = {
+        "areas": areas,
+        "subsystems": [
+            {"name": n, "files": i["files"], "lines": i["lines"],
+             "unsafe": i["unsafe"], "safety": i["safety"],
+             "density": round(i["density"], 2),
+             "uses": i["uses"], "trusted": n in trusted}
+            for n, i in sorted(stats.items(), key=lambda kv: -kv[1]["lines"])
+        ],
+        "capsules": [
+            {"slug": c.slug, "bytes": c.bytes, "port": c.port,
+             "caps": c.caps, "attested": c.attested,
+             "namespace": c.namespace}
+            for c in sorted(built, key=lambda c: -c.bytes)
+        ],
+        "capabilities": caps,
+        "kernels": kernels,
+        "safety": {
+            "unwrap": rg(".unwrap()"), "expect": rg(".expect("),
+            "panic": rg("panic!("), "unsafe": rg("unsafe {"),
+            "documented": rg("SAFETY:"),
+        },
+        "surface": {
+            "syscalls": rg('tag4(b"', os.path.join(SRC, "syscall")),
+            "user_reads": rg("copy_from_user"), "user_writes": rg("copy_to_user"),
+            "mmio": rg("map_device_memory") + rg("map_mmio"),
+            "checked": rg("checked_add") + rg("checked_sub") + rg("checked_mul"),
+            "saturating": rg("saturating_add") + rg("saturating_sub"),
+        },
+        "memory": {
+            "zeroize": rg("secure_zero") + rg("zeroize") + rg("Zeroizing"),
+            "drops": rg("impl Drop"),
+            "constant_time": rg("constant_time") + rg("ct_eq"),
+        },
+        "proofs": {
+            "lean_files": len(walk(os.path.join(ROOT, "verification", "lean"), ".lean")),
+            "lean_lines": count_lines(walk(os.path.join(ROOT, "verification", "lean"), ".lean")),
+            "kani": sum(open(f, "rb").read().count(b"kani::proof")
+                        for f in walk(USERLAND, ".rs")),
+            "crates": len([d for d in os.listdir(USERLAND)
+                           if d.endswith(("_proofs", "_proof"))]),
+        },
+        "roots": {
+            "policy": root_hex("zk_capsule_policy_root.bin"),
+            "kernel": root_hex("kernel_attest_root.bin"),
+        },
+    }
+    print(json.dumps(doc, indent=1))
+
+
+def section_bench(capsules):
+    heading("BENCHMARK")
+    out("  " + DIM + "Measured here, now, on this machine. Verification runs "
+        "through capsule-sign," + OFF)
+    out("  " + DIM + "so each figure carries process startup with it and is a "
+        "floor, not a ceiling." + OFF)
+    out("")
+    import hashlib
+
+    attested = [c for c in capsules if c.attested]
+    if not attested:
+        out("  {}nothing attested to measure{}".format(YELLOW, OFF))
+        return
+
+    # Hybrid signature verification: ed25519 and ML-DSA-65 over one manifest.
+    sample = attested[:20]
+    started = time.perf_counter()
+    verified = 0
+    for capsule in sample:
+        if verify_manifest(capsule.manifest, capsule.cert):
+            verified += 1
+    elapsed = time.perf_counter() - started
+    if verified:
+        field("hybrid verify", "{:.1f} ms each, {:.0f} per second".format(
+            1000.0 * elapsed / verified, verified / elapsed), GREEN)
+        field("  sample", "{} manifests, ed25519 + ML-DSA-65".format(verified))
+        field("  whole image", "{:.2f} s to re-verify all {} capsules".format(
+            elapsed / verified * len(attested), len(attested)))
+
+    # Measurement throughput: what hashing the shipped corpus costs.
+    corpus = [c.binary for c in attested if c.bytes]
+    total = sum(size_of(p) for p in corpus)
+    started = time.perf_counter()
+    digest = hashlib.sha256()
+    for path in corpus:
+        try:
+            with open(path, "rb") as handle:
+                while True:
+                    chunk = handle.read(1 << 20)
+                    if not chunk:
+                        break
+                    digest.update(chunk)
+        except OSError:
+            pass
+    elapsed = time.perf_counter() - started
+    if elapsed > 0:
+        field("measure corpus", "{} in {:.2f} s  ({:.0f} MiB/s)".format(
+            mib(total), elapsed, total / 1048576.0 / elapsed))
+
+    # Trailer parsing is what the spawn gate does before it will admit a capsule.
+    started = time.perf_counter()
+    parsed = 0
+    for capsule in attested:
+        try:
+            with open(capsule.trailer, "rb") as handle:
+                if handle.read(8) == TRAILER_MAGIC:
+                    parsed += 1
+        except OSError:
+            pass
+    elapsed = time.perf_counter() - started
+    if parsed and elapsed > 0:
+        field("trailer admit", "{} checked in {:.0f} ms".format(
+            parsed, 1000.0 * elapsed))
+
+    trailer_bytes = sum(size_of(c.trailer) for c in attested)
+    field("proof carried", "{} of STARK trailers for {} capsules".format(
+        mib(trailer_bytes), len(attested)))
+
+
 def section_boot():
     heading("BOOT CHAIN")
     out("  " + DIM + "Each stage measures the next before handing control over." + OFF)
@@ -837,6 +997,7 @@ SECTIONS = [
     ("safety", section_safety, False), ("memory", section_memory, False),
     ("crypto", section_crypto, False), ("authority", section_authority, True),
     ("ipc", section_ipc, True), ("arch", section_arch, True),
+    ("bench", section_bench, True),
     ("attack", section_attack, True),
 ]
 
@@ -851,6 +1012,10 @@ def main():
     if not capsules:
         print("no Capsule.mk found under userland/")
         return 1
+
+    if "--json" in sys.argv:
+        emit_json(capsules)
+        return 0
 
     want = args[0] if args else "all"
     out("")
