@@ -16,8 +16,10 @@
 
 //! The tree object: one directory, as git records it.
 
+mod compare;
 mod encode;
 mod entry;
+mod is_sorted;
 mod parse;
 mod sort;
 

@@ -17,6 +17,8 @@
 //! The commit object: a tree, its parents, who made it and why.
 
 mod encode;
+mod lines;
+mod offset;
 mod parse;
 mod signature;
 mod types;

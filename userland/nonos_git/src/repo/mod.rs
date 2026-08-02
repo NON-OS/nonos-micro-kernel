@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! Repository operations: creating one, and recording a commit in it.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
+mod commit_tree;
+mod error;
+mod init;
+mod log;
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
-}
+pub use commit_tree::{commit, CommitRequest};
+pub use error::RepoError;
+pub use init::init;
+pub use log::{log, LogEntry};

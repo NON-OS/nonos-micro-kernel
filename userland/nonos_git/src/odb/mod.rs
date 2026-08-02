@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! The object database: loose objects under `objects`.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
+mod error;
+mod object_dir;
+mod object_path;
+mod read;
+mod write;
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
-}
+pub use error::OdbError;
+pub use read::read_object;
+pub use write::write_object;

@@ -14,12 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! Hex digits, the form git prints object ids in.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
+/// The lowercase hex character for a nibble. Only the low four bits are read.
+pub(super) fn digit(v: u8) -> char {
+    match v & 0x0F {
+        d @ 0..=9 => (b'0' + d) as char,
+        d => (b'a' + (d - 10)) as char,
+    }
+}
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
+/// The value of a hex character, or `None` if it is not one.
+pub(super) fn value(c: u8) -> Option<u8> {
+    match c {
+        b'0'..=b'9' => Some(c - b'0'),
+        b'a'..=b'f' => Some(c - b'a' + 10),
+        b'A'..=b'F' => Some(c - b'A' + 10),
+        _ => None,
+    }
 }

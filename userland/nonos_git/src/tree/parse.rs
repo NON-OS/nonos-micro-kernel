@@ -24,7 +24,7 @@ use alloc::vec::Vec;
 use crate::oid::ObjectId;
 
 use super::entry::{Mode, TreeEntry};
-use super::sort::is_sorted_and_unique;
+use super::is_sorted::is_sorted_and_unique;
 
 /// Why a byte slice is not a well-formed tree.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]

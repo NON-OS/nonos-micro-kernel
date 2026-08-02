@@ -14,12 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! The filesystem a repository lives on.
+//!
+//! Everything above this is pure: the repository decides which paths to read
+//! and write and what bytes go in them, and a `Storage` carries that out. The
+//! terminal passes one backed by the VFS capsule; the tests pass one backed by
+//! a real directory, so the code that runs in the OS is the code shown to
+//! produce repositories git can read.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
+mod error;
+mod traits;
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
-}
+pub use error::StorageError;
+pub use traits::Storage;

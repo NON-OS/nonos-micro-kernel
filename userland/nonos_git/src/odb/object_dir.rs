@@ -14,12 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! The directory an object's file sits in.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
+extern crate alloc;
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
+use alloc::format;
+use alloc::string::String;
+
+use crate::oid::ObjectId;
+
+/// `<git_dir>/objects/xx`, the first two characters of the id. Git splits
+/// objects this way so a large repository does not put them all in one
+/// directory.
+pub(super) fn object_dir(git_dir: &str, id: &ObjectId) -> String {
+    let (dir, _file) = id.loose_path();
+    format!("{git_dir}/objects/{dir}")
 }

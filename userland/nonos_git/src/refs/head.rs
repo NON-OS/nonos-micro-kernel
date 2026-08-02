@@ -14,12 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! What `HEAD` points at.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
+extern crate alloc;
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
+use alloc::string::String;
+
+use crate::oid::ObjectId;
+
+/// A repository is either on a branch or detached at a commit.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum Head {
+    /// On a branch, named as it appears after `refs/heads/`. The branch file
+    /// may not exist yet, which is the state a fresh repository is in before
+    /// its first commit.
+    Branch(String),
+    /// Detached: `HEAD` holds a commit id directly.
+    Detached(ObjectId),
 }
