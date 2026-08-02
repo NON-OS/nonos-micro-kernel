@@ -14,18 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! The entry point.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+use crate::index::IndexEntry;
+use crate::oid::ObjectId;
+use crate::storage::Storage;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+use super::build::build;
+use crate::repo::error::RepoError;
+
+/// Write the tree the index describes and return its id.
+pub fn write_tree<S: Storage>(
+    storage: &mut S,
+    git_dir: &str,
+    entries: &[IndexEntry],
+) -> Result<ObjectId, RepoError> {
+    build(storage, git_dir, entries, "")
+}

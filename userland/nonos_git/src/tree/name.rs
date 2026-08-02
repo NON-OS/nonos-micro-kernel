@@ -14,18 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! What a tree entry name may be.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+extern crate alloc;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+use alloc::string::String;
+
+use super::parse::TreeError;
+
+/// A single path component. Refusing `/`, `.` and `..` is what stops a hostile
+/// tree writing outside the work tree when it is checked out.
+pub(super) fn check_name(bytes: &[u8]) -> Result<String, TreeError> {
+    if bytes.is_empty() || bytes == b"." || bytes == b".." {
+        return Err(TreeError::Name);
+    }
+    if bytes.contains(&b'/') || bytes.contains(&0) {
+        return Err(TreeError::Name);
+    }
+    core::str::from_utf8(bytes).map(String::from).map_err(|_| TreeError::Name)
+}

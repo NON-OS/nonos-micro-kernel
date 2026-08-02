@@ -18,13 +18,14 @@
 
 extern crate alloc;
 
-use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::oid::ObjectId;
 
-use super::entry::{Mode, TreeEntry};
+use super::entry::TreeEntry;
 use super::is_sorted::is_sorted_and_unique;
+use super::mode::Mode;
+use super::name::check_name;
 
 /// Why a byte slice is not a well-formed tree.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -39,9 +40,8 @@ pub enum TreeError {
     Order,
 }
 
-/// Parse tree content into entries, rejecting anything git would not have
-/// written: an unknown mode, a name that could escape its directory, or an
-/// order that would mean a different tree hash than the bytes claim.
+/// Rejects anything git would not have written: an unknown mode, a name that
+/// could escape its directory, or a wrong order.
 pub fn parse(content: &[u8]) -> Result<Vec<TreeEntry>, TreeError> {
     let mut entries = Vec::new();
     let mut i = 0usize;
@@ -51,38 +51,23 @@ pub fn parse(content: &[u8]) -> Result<Vec<TreeEntry>, TreeError> {
         let mode = Mode::from_bytes(&content[i..space]).ok_or(TreeError::Mode)?;
 
         let nul = find(content, space + 1, 0).ok_or(TreeError::Truncated)?;
-        let name_bytes = &content[space + 1..nul];
-        let name = check_name(name_bytes)?;
+        let name = check_name(&content[space + 1..nul])?;
 
-        let id_start = nul + 1;
-        let id_end = id_start + 20;
-        if id_end > content.len() {
+        let end = nul + 21;
+        if end > content.len() {
             return Err(TreeError::Truncated);
         }
         let mut raw = [0u8; 20];
-        raw.copy_from_slice(&content[id_start..id_end]);
+        raw.copy_from_slice(&content[nul + 1..end]);
 
         entries.push(TreeEntry { mode, name, id: ObjectId::from_bytes(raw) });
-        i = id_end;
+        i = end;
     }
 
     if !is_sorted_and_unique(&entries) {
         return Err(TreeError::Order);
     }
     Ok(entries)
-}
-
-/// A tree entry name is a single path component. Rejecting `/`, `.` and `..`
-/// here is what stops a hostile tree from writing outside the work tree when it
-/// is later checked out.
-fn check_name(bytes: &[u8]) -> Result<String, TreeError> {
-    if bytes.is_empty() || bytes == b"." || bytes == b".." {
-        return Err(TreeError::Name);
-    }
-    if bytes.contains(&b'/') || bytes.contains(&0) {
-        return Err(TreeError::Name);
-    }
-    core::str::from_utf8(bytes).map(String::from).map_err(|_| TreeError::Name)
 }
 
 fn find(data: &[u8], from: usize, byte: u8) -> Option<usize> {

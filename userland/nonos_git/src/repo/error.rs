@@ -17,6 +17,7 @@
 //! Why a repository operation failed.
 
 use crate::commit::CommitError;
+use crate::index::IndexError;
 use crate::odb::OdbError;
 use crate::storage::StorageError;
 use crate::tree::TreeError;
@@ -40,6 +41,8 @@ pub enum RepoError {
     WrongKind,
     /// `HEAD` was missing or unreadable.
     NoHead,
+    /// The index file was damaged.
+    Index(IndexError),
 }
 
 impl From<OdbError> for RepoError {

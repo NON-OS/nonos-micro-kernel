@@ -14,18 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! The mode word on an index entry.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+use crate::tree::Mode;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+/// The mode git wrote, refusing anything it would not have.
+pub(super) fn mode_from_word(word: u32) -> Option<Mode> {
+    match word {
+        0o100_644 => Some(Mode::File),
+        0o100_755 => Some(Mode::Executable),
+        0o120_000 => Some(Mode::Symlink),
+        0o160_000 => Some(Mode::Submodule),
+        _ => None,
+    }
+}

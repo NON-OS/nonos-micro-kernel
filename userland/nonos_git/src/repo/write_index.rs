@@ -14,18 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! Storing the index.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+extern crate alloc;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+use alloc::format;
+
+use crate::index::{encode, IndexEntry};
+use crate::storage::Storage;
+
+use super::error::RepoError;
+
+/// Write the index file.
+pub fn write_index<S: Storage>(
+    storage: &mut S,
+    git_dir: &str,
+    entries: &[IndexEntry],
+) -> Result<(), RepoError> {
+    storage.write(&format!("{git_dir}/index"), &encode(entries))?;
+    Ok(())
+}

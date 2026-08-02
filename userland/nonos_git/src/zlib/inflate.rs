@@ -22,7 +22,8 @@ use alloc::vec::Vec;
 
 use super::adler::adler32;
 use super::bit_reader::BitReader;
-use super::block::{inflate_block, inflate_stored};
+use super::huffman_block::inflate_block;
+use super::stored::inflate_stored;
 use super::dynamic::dynamic_tables;
 use super::error::InflateError;
 use super::tables::{fixed_dist, fixed_lit};

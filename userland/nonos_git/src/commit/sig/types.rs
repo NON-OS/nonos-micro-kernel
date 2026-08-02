@@ -14,18 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! The signature record.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+extern crate alloc;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+use alloc::string::String;
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Signature {
+    pub name: String,
+    pub email: String,
+    /// Seconds since the epoch.
+    pub when: u64,
+    /// Minutes east of UTC. `+0100` is 60, `-0500` is -300.
+    pub offset_minutes: i16,
+}

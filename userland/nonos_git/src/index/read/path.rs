@@ -14,18 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! What an index path may be.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+use crate::index::error::IndexError;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+/// Relative, and staying inside the work tree. Refusing an absolute path or a
+/// `..` component stops a hostile index writing outside it on checkout.
+pub(super) fn check_path(path: &str) -> Result<(), IndexError> {
+    if path.is_empty() || path.starts_with('/') {
+        return Err(IndexError::Entry);
+    }
+    if path.split('/').any(|p| p.is_empty() || p == "." || p == "..") {
+        return Err(IndexError::Entry);
+    }
+    Ok(())
+}

@@ -14,18 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! Hashing a whole slice at once.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+use super::state::Sha1;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+impl Sha1 {
+    pub fn digest(data: &[u8]) -> [u8; 20] {
+        let mut h = Sha1::new();
+        h.update(data);
+        h.finish()
+    }
+}

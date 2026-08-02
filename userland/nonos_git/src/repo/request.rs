@@ -14,18 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! What to record in a commit.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+extern crate alloc;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+use alloc::string::String;
+
+use crate::commit::Signature;
+use crate::oid::ObjectId;
+
+pub struct CommitRequest {
+    /// The tree to snapshot, already written to the database.
+    pub tree: ObjectId,
+    pub author: Signature,
+    pub committer: Signature,
+    pub message: String,
+}

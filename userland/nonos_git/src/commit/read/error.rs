@@ -14,18 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! Why a byte slice is not a well-formed commit.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
-
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum CommitError {
+    /// No `tree` line, or it did not come first.
+    Tree,
+    /// A `parent` line held something that is not an object id.
+    Parent,
+    /// An `author` or `committer` line was missing or unparseable.
+    Signature,
+    /// The header was not terminated by a blank line.
+    Header,
+    /// The message was not valid UTF-8.
+    Message,
+}
