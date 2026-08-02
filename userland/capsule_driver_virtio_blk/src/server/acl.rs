@@ -13,8 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod acl;
-mod error;
-mod handlers;
-mod runner;
-pub use runner::run;
+use crate::protocol::{OP_FLUSH, OP_WRITE_BLOCKS};
+// The sender pid is parsed by the kernel from the message envelope it stamps
+// itself (`proc.<pid>`), so a capsule cannot forge it, and pid 0 is never
+// handed to a process. Only the kernel-internal client enqueues without that
+// prefix and so arrives as 0. Mutating operations are reserved for it: the
+// package store at LBA 0 is read back as trusted input on the next boot.
+pub fn permits(op: u16, sender_pid: u32) -> bool {
+    match op {
+        OP_WRITE_BLOCKS | OP_FLUSH => sender_pid == 0,
+        _ => true,
+    }
+}
