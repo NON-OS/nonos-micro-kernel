@@ -14,18 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! The mode word an index entry carries.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+use crate::index::entry::IndexEntry;
+use crate::tree::Mode;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+/// The object type in the high bits and the permission in the low ones, which
+/// is what `100644` means as a number.
+pub(super) fn mode_word(entry: &IndexEntry) -> u32 {
+    match entry.mode {
+        Mode::File => 0o100_644,
+        Mode::Executable => 0o100_755,
+        Mode::Symlink => 0o120_000,
+        // A tree is never an index entry; a submodule is recorded as a commit.
+        Mode::Directory | Mode::Submodule => 0o160_000,
+    }
+}

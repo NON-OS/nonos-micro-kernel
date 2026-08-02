@@ -14,18 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! Header field helpers.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+use crate::oid::ObjectId;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+/// The rest of `line` after `prefix`, or `None` if it does not start with it.
+pub(super) fn strip<'a>(line: &'a [u8], prefix: &[u8]) -> Option<&'a [u8]> {
+    if line.len() >= prefix.len() && &line[..prefix.len()] == prefix {
+        Some(&line[prefix.len()..])
+    } else {
+        None
+    }
+}
+
+/// A 40-character hex id from a header field.
+pub(super) fn oid(hex: &[u8]) -> Option<ObjectId> {
+    ObjectId::from_hex(core::str::from_utf8(hex).ok()?)
+}

@@ -17,13 +17,13 @@
 //! The commit object: a tree, its parents, who made it and why.
 
 mod encode;
-mod lines;
-mod offset;
-mod parse;
-mod signature;
-mod types;
+pub(crate) mod lines;
+pub(crate) mod offset;
+mod read;
+pub(crate) mod sig;
+pub(crate) mod types;
 
 pub use encode::encode;
-pub use parse::{parse, CommitError};
-pub use signature::Signature;
+pub use read::{parse, CommitError};
+pub use sig::Signature;
 pub use types::Commit;

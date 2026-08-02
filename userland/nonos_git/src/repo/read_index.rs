@@ -14,18 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! Loading the index.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+extern crate alloc;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+use alloc::format;
+use alloc::vec::Vec;
+
+use crate::index::{parse, IndexEntry};
+use crate::storage::{Storage, StorageError};
+
+use super::error::RepoError;
+
+/// Read the index, or an empty one if the repository has no index file yet,
+/// which is the state between `init` and the first `add`.
+pub fn read_index<S: Storage>(storage: &S, git_dir: &str) -> Result<Vec<IndexEntry>, RepoError> {
+    match storage.read(&format!("{git_dir}/index")) {
+        Ok(raw) => parse(&raw).map_err(RepoError::Index),
+        Err(StorageError::NotFound) => Ok(Vec::new()),
+        Err(e) => Err(RepoError::Storage(e)),
+    }
+}

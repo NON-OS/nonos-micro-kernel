@@ -25,7 +25,6 @@ use super::error::InflateError;
 use super::huffman::Huffman;
 use super::tables::CODE_LENGTH_ORDER;
 
-/// Build the literal/length and distance decoders from a dynamic header.
 pub(super) fn dynamic_tables(r: &mut BitReader<'_>) -> Result<(Huffman, Huffman), InflateError> {
     let hlit = r.bits(5)? as usize + 257;
     let hdist = r.bits(5)? as usize + 1;
@@ -34,43 +33,43 @@ pub(super) fn dynamic_tables(r: &mut BitReader<'_>) -> Result<(Huffman, Huffman)
         return Err(InflateError::Invalid);
     }
 
-    // The code-length code lengths arrive in the permuted order.
     let mut cl_lengths = [0u8; 19];
     for &pos in CODE_LENGTH_ORDER.iter().take(hclen) {
         cl_lengths[pos] = r.bits(3)? as u8;
     }
-    let cl = Huffman::new(&cl_lengths);
+    let lengths = code_lengths(r, &Huffman::new(&cl_lengths), hlit + hdist)?;
 
-    // Decode the literal and distance code lengths as one run, honoring the
-    // repeat codes 16 (copy previous), 17 and 18 (runs of zero).
-    let mut lengths: Vec<u8> = Vec::with_capacity(hlit + hdist);
-    while lengths.len() < hlit + hdist {
-        let sym = cl.decode(r)?;
-        match sym {
-            0..=15 => lengths.push(sym as u8),
+    Ok((Huffman::new(&lengths[..hlit]), Huffman::new(&lengths[hlit..])))
+}
+
+/// One run of lengths, honoring repeat codes 16, 17 and 18.
+fn code_lengths(
+    r: &mut BitReader<'_>,
+    cl: &Huffman,
+    total: usize,
+) -> Result<Vec<u8>, InflateError> {
+    let mut lengths: Vec<u8> = Vec::with_capacity(total);
+    while lengths.len() < total {
+        match cl.decode(r)? {
+            s @ 0..=15 => lengths.push(s as u8),
             16 => {
                 let prev = *lengths.last().ok_or(InflateError::Invalid)?;
-                let repeat = 3 + r.bits(2)? as usize;
-                for _ in 0..repeat {
-                    lengths.push(prev);
-                }
+                let n = 3 + r.bits(2)? as usize;
+                lengths.resize(lengths.len() + n, prev);
             }
             17 => {
-                let repeat = 3 + r.bits(3)? as usize;
-                lengths.resize(lengths.len() + repeat, 0);
+                let n = 3 + r.bits(3)? as usize;
+                lengths.resize(lengths.len() + n, 0);
             }
             18 => {
-                let repeat = 11 + r.bits(7)? as usize;
-                lengths.resize(lengths.len() + repeat, 0);
+                let n = 11 + r.bits(7)? as usize;
+                lengths.resize(lengths.len() + n, 0);
             }
             _ => return Err(InflateError::Invalid),
         }
     }
-    if lengths.len() != hlit + hdist {
+    if lengths.len() != total {
         return Err(InflateError::Invalid);
     }
-
-    let lit = Huffman::new(&lengths[..hlit]);
-    let dist = Huffman::new(&lengths[hlit..]);
-    Ok((lit, dist))
+    Ok(lengths)
 }

@@ -14,91 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! A `Storage` over a real directory, shared by the repository tests.
+//! Shared test fixtures.
 //!
-//! The crate itself is `no_std`; this lives on the test side so the tests
-//! exercise the same public API a capsule uses, over an ordinary filesystem
-//! that real `git` can also be pointed at.
+//! Each integration test binary compiles this module but uses only the parts
+//! it needs, so unused items here are expected rather than dead.
 
-use std::fs;
-use std::path::PathBuf;
+#![allow(dead_code, unused_imports)]
 
-use nonos_git::{Storage, StorageError};
+mod build;
+mod git_cmd;
+mod scratch;
+mod storage;
 
-pub struct DirStorage {
-    root: PathBuf,
-}
-
-impl DirStorage {
-    pub fn new(root: PathBuf) -> DirStorage {
-        DirStorage { root }
-    }
-}
-
-impl Storage for DirStorage {
-    fn read(&self, path: &str) -> Result<Vec<u8>, StorageError> {
-        fs::read(self.root.join(path)).map_err(|e| match e.kind() {
-            std::io::ErrorKind::NotFound => StorageError::NotFound,
-            _ => StorageError::Io,
-        })
-    }
-
-    fn write(&mut self, path: &str, data: &[u8]) -> Result<(), StorageError> {
-        let full = self.root.join(path);
-        if let Some(parent) = full.parent() {
-            fs::create_dir_all(parent).map_err(|_| StorageError::Io)?;
-        }
-        fs::write(full, data).map_err(|_| StorageError::Io)
-    }
-
-    fn exists(&self, path: &str) -> bool {
-        self.root.join(path).exists()
-    }
-
-    fn create_dir_all(&mut self, path: &str) -> Result<(), StorageError> {
-        fs::create_dir_all(self.root.join(path)).map_err(|_| StorageError::Io)
-    }
-
-    fn read_dir(&self, path: &str) -> Result<Vec<String>, StorageError> {
-        let mut out = Vec::new();
-        for entry in fs::read_dir(self.root.join(path)).map_err(|e| match e.kind() {
-            std::io::ErrorKind::NotFound => StorageError::NotFound,
-            _ => StorageError::Io,
-        })? {
-            out.push(
-                entry.map_err(|_| StorageError::Io)?.file_name().to_string_lossy().into_owned(),
-            );
-        }
-        Ok(out)
-    }
-
-    fn is_dir(&self, path: &str) -> bool {
-        self.root.join(path).is_dir()
-    }
-}
-
-/// A scratch directory that removes itself when the test ends.
-pub struct Scratch {
-    pub path: PathBuf,
-}
-
-impl Scratch {
-    pub fn new(tag: &str) -> Scratch {
-        let mut path = std::env::temp_dir();
-        // The pid and tag keep concurrent tests apart without needing a clock.
-        path.push(format!("nonos_git_{}_{}", std::process::id(), tag));
-        let _ = fs::remove_dir_all(&path);
-        fs::create_dir_all(&path).expect("scratch dir");
-        Scratch { path }
-    }
-
-    pub fn storage(&self) -> DirStorage {
-        DirStorage::new(self.path.clone())
-    }
-}
-
-impl Drop for Scratch {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.path);
-    }
-}
+pub use build::{build_repo, signature};
+pub use git_cmd::{git, git_available};
+pub use scratch::Scratch;
+pub use storage::DirStorage;

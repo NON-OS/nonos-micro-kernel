@@ -31,6 +31,7 @@
 extern crate alloc;
 
 mod commit;
+mod index;
 mod object;
 mod odb;
 mod oid;
@@ -42,11 +43,14 @@ mod tree;
 mod zlib;
 
 pub use commit::{parse as parse_commit, Commit, CommitError, Signature};
+pub use index::{IndexEntry, IndexError};
 pub use object::{frame, unframe, ObjectKind};
 pub use odb::{read_object, write_object, OdbError};
 pub use oid::ObjectId;
 pub use refs::{is_valid_ref_name, read_head, resolve_head, set_head_branch, update_ref, Head};
-pub use repo::{commit, init, log, CommitRequest, LogEntry, RepoError};
+pub use repo::{
+    add, commit, init, log, read_index, write_index, write_tree, CommitRequest, LogEntry, RepoError,
+};
 pub use sha1::Sha1;
 pub use storage::{Storage, StorageError};
 pub use tree::{parse as parse_tree, Mode, TreeEntry, TreeError};
@@ -56,12 +60,3 @@ pub use zlib::{compress, decompress, InflateError};
 pub use commit::encode as encode_commit;
 /// Encode a tree's content bytes, sorting the entries into git's order.
 pub use tree::encode as encode_tree;
-
-#[cfg(test)]
-mod tests;
-
-#[cfg(test)]
-mod tree_tests;
-
-#[cfg(test)]
-mod zlib_tests;

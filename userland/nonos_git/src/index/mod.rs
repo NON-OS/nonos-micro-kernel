@@ -14,18 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! The staging index: what the next commit will contain.
+//!
+//! Git stores this as the binary `DIRC` file version 2. The format is fixed and
+//! checksummed, and `git` reads the same file we write, so `add` here is `add`
+//! git agrees with.
 
-mod compare;
 mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+mod mode_word;
+pub(crate) mod entry;
+pub(crate) mod error;
+mod read;
+mod stage;
 
 pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+pub use entry::IndexEntry;
+pub use error::IndexError;
+pub use read::parse;
+pub use stage::stage;

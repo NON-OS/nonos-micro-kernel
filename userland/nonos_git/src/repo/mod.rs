@@ -14,14 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Repository operations: creating one, and recording a commit in it.
+//! Repository operations: creating one, staging into it, recording a commit
+//! and reading its history.
 
+mod add;
 mod commit_tree;
-mod error;
+mod request;
+pub(crate) mod error;
 mod init;
 mod log;
+mod read_index;
+mod write_index;
+mod tree_build;
 
-pub use commit_tree::{commit, CommitRequest};
+pub use add::add;
+pub use commit_tree::commit;
+pub use request::CommitRequest;
 pub use error::RepoError;
 pub use init::init;
 pub use log::{log, LogEntry};
+pub use read_index::read_index;
+pub use write_index::write_index;
+pub use tree_build::write_tree;

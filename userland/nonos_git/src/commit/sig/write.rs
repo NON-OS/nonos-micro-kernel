@@ -14,18 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! Writing a signature line.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+extern crate alloc;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+use alloc::vec::Vec;
+
+use crate::commit::offset;
+
+use super::decimal::push;
+use super::types::Signature;
+
+impl Signature {
+    pub(in crate::commit) fn write(&self, out: &mut Vec<u8>) {
+        out.extend_from_slice(self.name.as_bytes());
+        out.extend_from_slice(b" <");
+        out.extend_from_slice(self.email.as_bytes());
+        out.extend_from_slice(b"> ");
+        push(out, self.when);
+        out.push(b' ');
+        offset::write(out, self.offset_minutes);
+    }
+}

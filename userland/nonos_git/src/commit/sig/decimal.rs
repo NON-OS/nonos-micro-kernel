@@ -14,18 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! The timestamp field.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+extern crate alloc;
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+use alloc::vec::Vec;
+
+pub(super) fn push(out: &mut Vec<u8>, mut v: u64) {
+    if v == 0 {
+        out.push(b'0');
+        return;
+    }
+    let start = out.len();
+    while v > 0 {
+        out.push(b'0' + (v % 10) as u8);
+        v /= 10;
+    }
+    out[start..].reverse();
+}
+
+pub(super) fn parse(bytes: &[u8]) -> Option<u64> {
+    if bytes.is_empty() {
+        return None;
+    }
+    let mut v: u64 = 0;
+    for b in bytes {
+        if !b.is_ascii_digit() {
+            return None;
+        }
+        v = v.checked_mul(10)?.checked_add((b - b'0') as u64)?;
+    }
+    Some(v)
+}

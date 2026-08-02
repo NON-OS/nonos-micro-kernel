@@ -26,8 +26,9 @@
 
 mod adler;
 mod bit_reader;
-mod block;
+mod huffman_block;
 mod compress;
+mod stored;
 mod dynamic;
 mod error;
 mod huffman;

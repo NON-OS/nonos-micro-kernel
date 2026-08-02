@@ -23,7 +23,7 @@ use alloc::vec::Vec;
 
 use crate::oid::ObjectId;
 
-use super::signature::Signature;
+use super::sig::Signature;
 
 /// A commit: the tree it snapshots, the commits it follows, who wrote it and
 /// the message.

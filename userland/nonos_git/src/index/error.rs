@@ -14,18 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! Why an index could not be read.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
-
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+/// Every variant is a refusal: a damaged index is never partially believed,
+/// since it decides what the next commit contains.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum IndexError {
+    /// Not a `DIRC` file.
+    Magic,
+    /// A version this does not implement. Only version 2 is written and read.
+    Version(u32),
+    /// The file ended inside the header, an entry, or the trailer.
+    Truncated,
+    /// The trailing SHA-1 does not cover the bytes before it.
+    Checksum,
+    /// An entry held a mode git would not write, or a path that is empty,
+    /// absolute, or walks upward.
+    Entry,
+}

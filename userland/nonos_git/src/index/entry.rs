@@ -14,19 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! One entry in a tree.
+//! One staged path.
 
 extern crate alloc;
 
 use alloc::string::String;
 
 use crate::oid::ObjectId;
+use crate::tree::Mode;
 
-use super::mode::Mode;
-
+/// A file staged for the next commit.
+///
+/// Git also records the stat data it saw when staging, so it can skip hashing
+/// files whose metadata is unchanged. That is a cache, not a fact about the
+/// commit, and this writes it as zeros: git treats a zeroed stat as "cannot
+/// trust, compare the content", which is correct, just without the shortcut.
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct TreeEntry {
+pub struct IndexEntry {
+    /// Path relative to the work tree root, with `/` separators.
+    pub path: String,
     pub mode: Mode,
-    pub name: String,
     pub id: ObjectId,
+    /// Size of the staged content, which git carries in the entry.
+    pub size: u32,
 }

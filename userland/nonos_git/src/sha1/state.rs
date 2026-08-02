@@ -14,18 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The tree object: one directory, as git records it.
+//! The hash state.
 
-mod compare;
-mod encode;
-mod entry;
-mod mode;
-mod is_sorted;
-mod name;
-mod parse;
-mod sort;
+/// Streaming SHA-1: feed with `update`, take the digest with `finish`.
+pub struct Sha1 {
+    pub(super) state: [u32; 5],
+    /// Bytes hashed so far, for the length padding.
+    pub(super) len: u64,
+    pub(super) block: [u8; 64],
+    pub(super) fill: usize,
+}
 
-pub use encode::encode;
-pub use entry::TreeEntry;
-pub use mode::Mode;
-pub use parse::{parse, TreeError};
+impl Default for Sha1 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Sha1 {
+    pub fn new() -> Self {
+        Sha1 {
+            state: [0x6745_2301, 0xEFCD_AB89, 0x98BA_DCFE, 0x1032_5476, 0xC3D2_E1F0],
+            len: 0,
+            block: [0u8; 64],
+            fill: 0,
+        }
+    }
+}
