@@ -14,32 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+//! Wire constants for the installer protocol.
 
-extern crate alloc;
+pub(super) const SERVICE: &[u8] = b"installer";
+pub(super) const HDR_LEN: usize = 8;
+pub(super) const SEQ: u32 = 1;
 
-mod compositor_client;
-mod input_router_client;
-mod installer_client;
-mod market_client;
-mod protocol;
-mod render;
-mod server;
-mod setup;
-mod state;
-mod vfs_client;
-mod wait_for_setup;
-mod wallpaper_client;
-mod wm_client;
+pub(super) const OP_LIST_INSTALLED: u16 = 5;
 
-use nonos_libc::{heap_init, mk_exit};
+pub(super) const TIMEOUT_MS: u64 = 300;
 
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    let ctx = wait_for_setup::wait_for_setup();
-    server::run(ctx);
-}
+/// Reply buffer size, the same budget the desktop gives a vfs listing. Anything
+/// past it is simply not shown rather than risking a large per-tick allocation.
+pub(super) const REPLY_CAP: usize = 16384;
+
+/// Longest capsule-store base name the store contract allows.
+pub(super) const MAX_NAME: usize = 64;
+
+/// Upper bound on decoded names, so a hostile reply cannot turn one buffer into
+/// an unbounded number of allocations.
+pub(super) const MAX_ENTRIES: usize = 256;

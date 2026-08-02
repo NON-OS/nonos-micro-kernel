@@ -14,32 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+//! Ask the installer which capsule-store apps are installed. A missing
+//! installer, a timeout or a malformed reply all come back as an empty list, so
+//! the desktop is never blocked or panicked by the store.
 
-extern crate alloc;
+use alloc::vec;
+use alloc::vec::Vec;
 
-mod compositor_client;
-mod input_router_client;
-mod installer_client;
-mod market_client;
-mod protocol;
-mod render;
-mod server;
-mod setup;
-mod state;
-mod vfs_client;
-mod wait_for_setup;
-mod wallpaper_client;
-mod wm_client;
+use super::admissible::admissible;
+use super::call::call;
+use super::constants::{OP_LIST_INSTALLED, REPLY_CAP};
+use super::decode;
 
-use nonos_libc::{heap_init, mk_exit};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    let ctx = wait_for_setup::wait_for_setup();
-    server::run(ctx);
+pub fn list_installed() -> Vec<Vec<u8>> {
+    let mut rx = vec![0u8; REPLY_CAP];
+    let Some(total) = call(OP_LIST_INSTALLED, &mut rx) else {
+        return Vec::new();
+    };
+    decode::names(&rx, total).into_iter().filter(|name| admissible(name)).collect()
 }

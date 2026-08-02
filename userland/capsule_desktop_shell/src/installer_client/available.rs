@@ -14,32 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+//! Whether the installer has registered its service yet. Callers use this as a
+//! cheap gate so they only pay for an IPC round trip once there is a server to
+//! answer it.
 
-extern crate alloc;
-
-mod compositor_client;
-mod input_router_client;
-mod installer_client;
-mod market_client;
-mod protocol;
-mod render;
-mod server;
-mod setup;
-mod state;
-mod vfs_client;
-mod wait_for_setup;
-mod wallpaper_client;
-mod wm_client;
-
-use nonos_libc::{heap_init, mk_exit};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    let ctx = wait_for_setup::wait_for_setup();
-    server::run(ctx);
+pub fn available() -> bool {
+    super::port::port().is_some()
 }

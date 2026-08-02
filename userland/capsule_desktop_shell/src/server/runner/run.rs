@@ -51,6 +51,7 @@ pub fn run(mut ctx: Context) -> ! {
             if crate::server::desktop::refresh(&mut ctx) {
                 crate::server::repaint::repaint(&mut ctx);
             }
+            crate::server::installed_apps::load_once(&mut ctx);
             ctx.toasts.expire(now);
             if !ctx.toasts.is_empty() || ctx.toast_layer_live {
                 sync_toast_layer(&mut ctx);

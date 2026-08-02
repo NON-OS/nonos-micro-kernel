@@ -14,32 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+//! Build a request frame: seq, op, reserved. Every op this client sends carries
+//! an empty body.
 
-extern crate alloc;
+use super::constants::{HDR_LEN, SEQ};
 
-mod compositor_client;
-mod input_router_client;
-mod installer_client;
-mod market_client;
-mod protocol;
-mod render;
-mod server;
-mod setup;
-mod state;
-mod vfs_client;
-mod wait_for_setup;
-mod wallpaper_client;
-mod wm_client;
-
-use nonos_libc::{heap_init, mk_exit};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    let ctx = wait_for_setup::wait_for_setup();
-    server::run(ctx);
+pub(super) fn build(op: u16) -> [u8; HDR_LEN] {
+    let mut out = [0u8; HDR_LEN];
+    out[0..4].copy_from_slice(&SEQ.to_le_bytes());
+    out[4..6].copy_from_slice(&op.to_le_bytes());
+    out
 }

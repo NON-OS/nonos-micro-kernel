@@ -41,6 +41,8 @@ pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
         policy_port: 0,
         next_request_id: 2,
         desktop_items: alloc::vec::Vec::new(),
+        installed_apps: alloc::vec::Vec::new(),
+        installed_apps_loaded: false,
         desktop_menu: None,
         menu_hover: None,
         menu_target: None,

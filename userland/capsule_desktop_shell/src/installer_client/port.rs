@@ -14,32 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+//! Resolve the installer's endpoint by service name. None means the service is
+//! not registered, which is the normal state on a system without a store.
 
-extern crate alloc;
+use core::ptr;
 
-mod compositor_client;
-mod input_router_client;
-mod installer_client;
-mod market_client;
-mod protocol;
-mod render;
-mod server;
-mod setup;
-mod state;
-mod vfs_client;
-mod wait_for_setup;
-mod wallpaper_client;
-mod wm_client;
+use nonos_libc::mk_service_lookup;
 
-use nonos_libc::{heap_init, mk_exit};
+use super::constants::SERVICE;
 
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
+pub(super) fn port() -> Option<u32> {
+    let mut port = 0u32;
+    let rc =
+        mk_service_lookup(SERVICE.as_ptr(), SERVICE.len(), &mut port as *mut u32, ptr::null_mut());
+    if rc < 0 || port == 0 {
+        return None;
     }
-    let ctx = wait_for_setup::wait_for_setup();
-    server::run(ctx);
+    Some(port)
 }

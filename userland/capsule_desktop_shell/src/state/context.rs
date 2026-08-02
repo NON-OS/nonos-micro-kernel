@@ -42,6 +42,11 @@ pub struct Context {
     /// Entries at the VFS root, shown as icons on the desktop. Loaded lazily
     /// once the vfs_pool service is up, then refreshed after we mutate it.
     pub desktop_items: alloc::vec::Vec<crate::vfs_client::Entry>,
+    /// Base names of the capsule-store apps the installer reports, already
+    /// filtered of anything impersonating a built-in. Loaded lazily once the
+    /// installer service is up, then left alone.
+    pub installed_apps: alloc::vec::Vec<alloc::vec::Vec<u8>>,
+    pub installed_apps_loaded: bool,
     /// Top-left corner of the desktop right-click menu, or None when hidden.
     pub desktop_menu: Option<(u32, u32)>,
     /// Which menu row the pointer is over, so it can be highlighted.
