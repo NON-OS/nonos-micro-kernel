@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# nonos-store-pack: write the capsule package store into the virtio-blk image
+# in place. Container = 32-byte header (magic/version/count) + 128-byte TOC
+# entries (96-byte NUL-padded vfs path, u64 absolute offset, u64 length), each
+# payload 512-aligned. The Makefile owns the image's creation and size, so this
+# overwrites only the container's own span, zeroing it first so a shrinking
+# store leaves no stale bytes; identical inputs give identical bytes.
+import argparse, os, struct, sys
+
+MAGIC, HDR, TOC, SEC, NAME = b"NONOSTR1", 32, 128, 512, 96
+
+def die(msg):
+    sys.exit("nonos-store-pack: %s" % msg)
+
+def align(x):
+    return (x + SEC - 1) // SEC * SEC
+
+def parse_entries(specs):
+    entries, seen = [], set()
+    for spec in specs:
+        name, sep, path = spec.partition("=")
+        if not sep or not name or not path:
+            die("bad --entry, want VFSPATH=FILEPATH: %s" % spec)
+        try:
+            raw = name.encode("ascii")
+        except UnicodeEncodeError:
+            die("vfs path is not ASCII: %s" % name)
+        if len(raw) >= NAME:
+            die("vfs path exceeds %d bytes including NUL: %s" % (NAME, name))
+        if name in seen:
+            die("duplicate vfs path: %s" % name)
+        if not os.path.isfile(path):
+            die("input file not found: %s" % path)
+        seen.add(name)
+        with open(path, "rb") as f:
+            entries.append((raw, f.read()))
+    return entries
+
+def main():
+    ap = argparse.ArgumentParser(description="pack the NONOS capsule store into a disk image")
+    ap.add_argument("--image", required=True)
+    ap.add_argument("--entry", action="append", default=[], metavar="VFSPATH=FILEPATH")
+    ap.add_argument("--lba", type=int, default=0)
+    args = ap.parse_args()
+    if args.lba < 0:
+        die("--lba must be non-negative")
+    if not os.path.isfile(args.image):
+        die("image not found: %s" % args.image)
+    base, entries = args.lba * SEC, parse_entries(args.entry)
+    offs, cur = [], align(HDR + TOC * len(entries))
+    for _, data in entries:
+        offs.append(cur)
+        cur = align(cur + len(data))
+    size = os.path.getsize(args.image)
+    if base + cur > size:
+        die("container needs %d bytes at offset %d, image is %d" % (cur, base, size))
+    buf = bytearray(cur)
+    buf[0:HDR] = MAGIC + struct.pack("<II", 1, len(entries)) + bytes(16)
+    for i, (raw, data) in enumerate(entries):
+        p = HDR + TOC * i
+        buf[p:p + TOC] = raw.ljust(NAME, b"\0") + struct.pack("<QQ", base + offs[i], len(data)) + bytes(16)
+        buf[offs[i]:offs[i] + len(data)] = data
+    with open(args.image, "r+b") as f:
+        f.seek(base)
+        f.write(buf)
+    print("nonos-store-pack: %s (lba %d)" % (args.image, args.lba))
+    for i, (raw, data) in enumerate(entries):
+        print("  %-42s %8d bytes @ %d" % (raw.decode("ascii"), len(data), base + offs[i]))
+    print("  %d entries, %d bytes used" % (len(entries), cur))
+
+main()
