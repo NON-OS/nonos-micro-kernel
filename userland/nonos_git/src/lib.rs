@@ -33,10 +33,15 @@ extern crate alloc;
 mod object;
 mod oid;
 mod sha1;
+mod zlib;
 
 pub use object::{frame, unframe, ObjectKind};
 pub use oid::ObjectId;
 pub use sha1::Sha1;
+pub use zlib::{compress, decompress, InflateError};
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod zlib_tests;
