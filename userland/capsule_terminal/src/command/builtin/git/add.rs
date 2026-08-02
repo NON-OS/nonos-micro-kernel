@@ -17,6 +17,7 @@
 
 extern crate alloc;
 
+use alloc::string::String;
 use alloc::vec::Vec;
 
 use nonos_git::{add, Mode};
@@ -32,16 +33,25 @@ pub(super) fn run(state: &mut State, argv: &[&[u8]]) {
         return;
     }
     for arg in argv {
-        let Ok(path) = core::str::from_utf8(arg) else {
+        let Ok(text) = core::str::from_utf8(arg) else {
             Output::new(&mut state.scrollback).writeln(b"git add: path not utf8");
             continue;
         };
-        let path = alloc::string::String::from(path);
         let mut s = storage(state);
-        if add(&mut s, GIT_DIR, &path, Mode::File).is_err() {
+        // The index records paths relative to the work tree, so an absolute
+        // argument is trimmed back to one before it is staged.
+        let rel = relative(s.root(), text);
+        if rel.is_empty() || add(&mut s, GIT_DIR, &rel, Mode::File).is_err() {
             let mut line = Vec::from(&b"git add: cannot stage "[..]);
             line.extend_from_slice(arg);
             Output::new(&mut state.scrollback).writeln(&line);
         }
     }
+}
+
+/// `path` expressed relative to `root`, with no leading slash.
+fn relative(root: &str, path: &str) -> String {
+    let base = root.trim_end_matches('/');
+    let trimmed = path.strip_prefix(base).unwrap_or(path);
+    String::from(trimmed.trim_start_matches('/'))
 }
