@@ -21,8 +21,21 @@ pub(super) const HDR_LEN: usize = 8;
 pub(super) const SEQ: u32 = 1;
 
 pub(super) const OP_LIST_INSTALLED: u16 = 5;
+pub(super) const OP_LOAD_BY_NAME: u16 = 4;
 
 pub(super) const TIMEOUT_MS: u64 = 300;
+
+/// Loading reads the capsule's artifacts out of the store and runs the full
+/// verify and attestation before the installer replies, so a multi-megabyte
+/// binary legitimately takes seconds. The listing budget would abandon a load
+/// that is still running correctly.
+pub(super) const LOAD_TIMEOUT_MS: u64 = 30_000;
+
+/// Ceiling on the optional caps the loaded capsule may receive. The verified
+/// manifest and the identity certificate are the real bounds; this only avoids
+/// restricting a capsule below what it legitimately declares, which would show
+/// up as a silent denial on its first service call.
+pub(super) const REQUESTED_CAPS: u64 = u64::MAX;
 
 /// Reply buffer size, the same budget the desktop gives a vfs listing. Anything
 /// past it is simply not shown rather than risking a large per-tick allocation.

@@ -43,6 +43,7 @@ pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
         desktop_items: alloc::vec::Vec::new(),
         installed_apps: alloc::vec::Vec::new(),
         installed_apps_loaded: false,
+        installed_pids: alloc::collections::BTreeMap::new(),
         desktop_menu: None,
         menu_hover: None,
         menu_target: None,

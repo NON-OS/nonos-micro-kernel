@@ -3,10 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Opening the Launchpad from the dock, and acting on a click while it is open:
-//! a tile launches its app or tool, and any click then dismisses the overlay.
+//! a tile launches its app, tool or capsule-store app, and any click then
+//! dismisses the overlay. A store app is absent from the kernel's compile-time
+//! spawn table, so it goes to the installer rather than the dock's spawn path.
 
 use crate::render::launchpad::{hit, target, Target};
-use crate::server::handlers::launcher_request;
+use crate::server::handlers::{installed_launch, launcher_request};
 use crate::server::repaint::repaint;
 use crate::state::{Context, LAUNCHER_APPS};
 
@@ -16,8 +18,8 @@ pub fn open(ctx: &mut Context) {
 }
 
 pub fn click(ctx: &mut Context, px: u32, py: u32) {
-    if let Some(index) = hit(ctx.width, px, py) {
-        match target(index) {
+    if let Some(index) = hit(ctx.width, px, py, ctx.installed_apps.len()) {
+        match target(index, ctx.installed_apps.len()) {
             Target::App(a) => {
                 let _ = launcher_request::request(&LAUNCHER_APPS[a]);
             }
@@ -27,6 +29,11 @@ pub fn click(ctx: &mut Context, px: u32, py: u32) {
                 // streams into the scrollback. Opening the terminal is the
                 // launch; the user runs the tool there by name.
                 let _ = launcher_request::request_service(b"app.terminal");
+            }
+            Target::Installed(i) => {
+                if let Some(name) = ctx.installed_apps.get(i).cloned() {
+                    installed_launch::launch(ctx, &name);
+                }
             }
         }
     }

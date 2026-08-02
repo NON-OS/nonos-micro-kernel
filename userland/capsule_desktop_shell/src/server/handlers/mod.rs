@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod health;
+pub mod installed_launch;
 pub mod launcher_focus;
 pub mod launcher_request;
 pub mod launchpad;

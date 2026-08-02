@@ -47,6 +47,10 @@ pub struct Context {
     /// installer service is up, then left alone.
     pub installed_apps: alloc::vec::Vec<alloc::vec::Vec<u8>>,
     pub installed_apps_loaded: bool,
+    /// Pid the installer handed back for each store app we have launched, so a
+    /// second click focuses that window instead of loading another copy. An
+    /// entry is dropped once its pid stops accepting control frames.
+    pub installed_pids: alloc::collections::BTreeMap<alloc::vec::Vec<u8>, u32>,
     /// Top-left corner of the desktop right-click menu, or None when hidden.
     pub desktop_menu: Option<(u32, u32)>,
     /// Which menu row the pointer is over, so it can be highlighted.

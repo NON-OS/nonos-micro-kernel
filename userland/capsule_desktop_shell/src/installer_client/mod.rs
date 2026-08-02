@@ -25,7 +25,9 @@ mod constants;
 mod decode;
 mod frame;
 mod list_installed;
+mod load;
 mod port;
 
 pub use available::available;
 pub use list_installed::list_installed;
+pub use load::load_by_name;
