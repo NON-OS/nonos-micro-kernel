@@ -30,18 +30,30 @@
 
 extern crate alloc;
 
+mod commit;
 mod object;
 mod oid;
 mod sha1;
+mod tree;
 mod zlib;
 
+pub use commit::{parse as parse_commit, Commit, CommitError, Signature};
 pub use object::{frame, unframe, ObjectKind};
 pub use oid::ObjectId;
 pub use sha1::Sha1;
+pub use tree::{parse as parse_tree, Mode, TreeEntry, TreeError};
 pub use zlib::{compress, decompress, InflateError};
+
+/// Encode a commit's content bytes.
+pub use commit::encode as encode_commit;
+/// Encode a tree's content bytes, sorting the entries into git's order.
+pub use tree::encode as encode_tree;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod tree_tests;
 
 #[cfg(test)]
 mod zlib_tests;
