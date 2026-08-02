@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! Object framing: the `<type> <size>\0<content>` bytes git hashes and stores.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
+mod decimal;
+mod frame;
+mod kind;
+mod unframe;
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
-}
+pub use frame::frame;
+pub use kind::ObjectKind;
+pub use unframe::unframe;

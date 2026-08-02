@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! Why a storage operation failed.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
-
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
+/// Deliberately coarse: a repository cares whether a path was there and
+/// readable, not which errno the layer below used.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum StorageError {
+    /// The path does not exist.
+    NotFound,
+    /// The path exists but could not be read or written.
+    Io,
 }

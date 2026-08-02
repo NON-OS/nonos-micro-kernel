@@ -23,6 +23,7 @@ use alloc::vec::Vec;
 
 use crate::oid::ObjectId;
 
+use super::lines::Lines;
 use super::signature::Signature;
 use super::types::Commit;
 
@@ -41,9 +42,13 @@ pub enum CommitError {
     Message,
 }
 
-/// Parse commit content. Headers are read in the order git writes them, so a
-/// commit whose lines are shuffled is refused rather than silently accepted
-/// into a different id than the bytes imply.
+/// Parse commit content.
+///
+/// Headers are read in the order git writes them, so a commit whose lines are
+/// shuffled is refused rather than accepted into a different id than its bytes
+/// imply. Extra headers git may add, such as `encoding` or a gpg signature, are
+/// skipped to the blank line: they are not carried, and such a commit is read
+/// but never re-encoded.
 pub fn parse(content: &[u8]) -> Result<Commit, CommitError> {
     let mut lines = Lines::new(content);
 
@@ -65,9 +70,6 @@ pub fn parse(content: &[u8]) -> Result<Commit, CommitError> {
     let committer_line = strip(committer_line, b"committer ").ok_or(CommitError::Signature)?;
     let committer = Signature::parse(committer_line).ok_or(CommitError::Signature)?;
 
-    // Extra headers git may write, such as `encoding` or a gpg signature, run
-    // until the blank line. They are not carried, and a commit holding them is
-    // not re-encoded, only read.
     loop {
         match lines.next() {
             Some([]) => break,
@@ -82,45 +84,7 @@ pub fn parse(content: &[u8]) -> Result<Commit, CommitError> {
     Ok(Commit { tree, parents, author, committer, message })
 }
 
-/// A cursor over newline-separated header lines that can hand back the
-/// remaining bytes verbatim once the header ends.
-struct Lines<'a> {
-    data: &'a [u8],
-    pos: usize,
-}
-
-impl<'a> Lines<'a> {
-    fn new(data: &'a [u8]) -> Lines<'a> {
-        Lines { data, pos: 0 }
-    }
-
-    fn next(&mut self) -> Option<&'a [u8]> {
-        if self.pos > self.data.len() {
-            return None;
-        }
-        if self.pos == self.data.len() {
-            self.pos += 1;
-            return Some(&self.data[self.data.len()..]);
-        }
-        let end = self.data[self.pos..]
-            .iter()
-            .position(|b| *b == b'\n')
-            .map(|p| p + self.pos)
-            .unwrap_or(self.data.len());
-        let line = &self.data[self.pos..end];
-        self.pos = end + 1;
-        Some(line)
-    }
-
-    fn rest(&self) -> &'a [u8] {
-        if self.pos >= self.data.len() {
-            &self.data[self.data.len()..]
-        } else {
-            &self.data[self.pos..]
-        }
-    }
-}
-
+/// The rest of `line` after `prefix`, or `None` if it does not start with it.
 fn strip<'a>(line: &'a [u8], prefix: &[u8]) -> Option<&'a [u8]> {
     if line.len() >= prefix.len() && &line[..prefix.len()] == prefix {
         Some(&line[prefix.len()..])
@@ -129,6 +93,7 @@ fn strip<'a>(line: &'a [u8], prefix: &[u8]) -> Option<&'a [u8]> {
     }
 }
 
+/// A 40-character hex id from a header field.
 fn oid(hex: &[u8]) -> Option<ObjectId> {
     ObjectId::from_hex(core::str::from_utf8(hex).ok()?)
 }

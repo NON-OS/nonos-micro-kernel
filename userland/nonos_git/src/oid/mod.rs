@@ -14,12 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! An object id: the 20-byte SHA-1 that names a git object.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
+mod hex;
+mod object_id;
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
-}
+pub use object_id::ObjectId;

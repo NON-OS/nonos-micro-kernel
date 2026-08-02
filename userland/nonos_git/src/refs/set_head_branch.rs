@@ -14,12 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! Pointing `HEAD` at a branch.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
+extern crate alloc;
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
+use alloc::format;
+
+use crate::storage::{Storage, StorageError};
+
+use super::name::is_valid_ref_name;
+
+/// Point `HEAD` at a branch, whether or not that branch exists yet. An unborn
+/// branch is how a repository sits between `init` and its first commit.
+pub fn set_head_branch<S: Storage>(
+    storage: &mut S,
+    git_dir: &str,
+    branch: &str,
+) -> Result<(), StorageError> {
+    if !is_valid_ref_name(branch) {
+        return Err(StorageError::Io);
+    }
+    storage.write(&format!("{git_dir}/HEAD"), format!("ref: refs/heads/{branch}\n").as_bytes())
 }

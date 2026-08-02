@@ -14,12 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! Following `HEAD` to a commit.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
+extern crate alloc;
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
+use alloc::format;
+
+use crate::oid::ObjectId;
+use crate::storage::Storage;
+
+use super::head::Head;
+use super::read_head::read_head;
+
+/// The commit `HEAD` names, or `None` on an unborn branch.
+pub fn resolve_head<S: Storage>(storage: &S, git_dir: &str) -> Option<ObjectId> {
+    match read_head(storage, git_dir)? {
+        Head::Detached(id) => Some(id),
+        Head::Branch(branch) => {
+            let raw = storage.read(&format!("{git_dir}/refs/heads/{branch}")).ok()?;
+            ObjectId::from_hex(core::str::from_utf8(&raw).ok()?.trim())
+        }
+    }
 }

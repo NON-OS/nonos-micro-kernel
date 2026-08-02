@@ -21,16 +21,14 @@ extern crate alloc;
 use alloc::string::String;
 use alloc::vec::Vec;
 
+use super::offset;
+
 /// An author or committer line's contents.
-///
-/// The timestamp is seconds since the epoch and the offset is the author's
-/// local zone as git writes it, `+HHMM` or `-HHMM`. Both are carried verbatim
-/// rather than normalised, because they are hashed into the commit id: a
-/// commit re-encoded with a different offset is a different commit.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Signature {
     pub name: String,
     pub email: String,
+    /// Seconds since the epoch.
     pub when: u64,
     /// Minutes east of UTC. `+0100` is 60, `-0500` is -300.
     pub offset_minutes: i16,
@@ -45,27 +43,16 @@ impl Signature {
         out.extend_from_slice(b"> ");
         push_decimal(out, self.when);
         out.push(b' ');
-        self.write_offset(out);
+        offset::write(out, self.offset_minutes);
     }
 
-    fn write_offset(&self, out: &mut Vec<u8>) {
-        let (sign, abs) = if self.offset_minutes < 0 {
-            (b'-', (-(self.offset_minutes as i32)) as u32)
-        } else {
-            (b'+', self.offset_minutes as u32)
-        };
-        out.push(sign);
-        let hours = abs / 60;
-        let minutes = abs % 60;
-        push_two(out, hours);
-        push_two(out, minutes);
-    }
-
-    /// Parse the part of an `author`/`committer` line after the field name.
+    /// Parse the part of an `author` or `committer` line after the field name.
+    ///
+    /// The name is taken up to the last `<`, so a name that itself contains one
+    /// still parses the way git reads it.
     pub(super) fn parse(line: &[u8]) -> Option<Signature> {
-        // Name runs up to the last ` <`, so a name may itself contain `<`.
-        let lt = rfind(line, b'<')?;
-        let gt = rfind(line, b'>')?;
+        let lt = line.iter().rposition(|b| *b == b'<')?;
+        let gt = line.iter().rposition(|b| *b == b'>')?;
         if gt < lt || lt == 0 {
             return None;
         }
@@ -76,7 +63,7 @@ impl Signature {
         let rest = if rest.first() == Some(&b' ') { &rest[1..] } else { rest };
         let space = rest.iter().position(|b| *b == b' ')?;
         let when = parse_decimal(&rest[..space])?;
-        let offset_minutes = parse_offset(&rest[space + 1..])?;
+        let offset_minutes = offset::parse(&rest[space + 1..])?;
 
         Some(Signature {
             name: String::from(name),
@@ -85,36 +72,6 @@ impl Signature {
             offset_minutes,
         })
     }
-}
-
-/// Parse `+HHMM` or `-HHMM` into minutes east of UTC.
-fn parse_offset(bytes: &[u8]) -> Option<i16> {
-    if bytes.len() != 5 {
-        return None;
-    }
-    let sign: i16 = match bytes[0] {
-        b'+' => 1,
-        b'-' => -1,
-        _ => return None,
-    };
-    let hours = two_digits(&bytes[1..3])?;
-    let minutes = two_digits(&bytes[3..5])?;
-    if minutes >= 60 {
-        return None;
-    }
-    Some(sign * (hours as i16 * 60 + minutes as i16))
-}
-
-fn two_digits(b: &[u8]) -> Option<u8> {
-    if !b[0].is_ascii_digit() || !b[1].is_ascii_digit() {
-        return None;
-    }
-    Some((b[0] - b'0') * 10 + (b[1] - b'0'))
-}
-
-fn push_two(out: &mut Vec<u8>, v: u32) {
-    out.push(b'0' + ((v / 10) % 10) as u8);
-    out.push(b'0' + (v % 10) as u8);
 }
 
 fn push_decimal(out: &mut Vec<u8>, mut v: u64) {
@@ -142,8 +99,4 @@ fn parse_decimal(bytes: &[u8]) -> Option<u64> {
         v = v.checked_mul(10)?.checked_add((b - b'0') as u64)?;
     }
     Some(v)
-}
-
-fn rfind(data: &[u8], byte: u8) -> Option<usize> {
-    data.iter().rposition(|b| *b == byte)
 }

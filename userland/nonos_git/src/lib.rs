@@ -32,15 +32,23 @@ extern crate alloc;
 
 mod commit;
 mod object;
+mod odb;
 mod oid;
+mod refs;
+mod repo;
 mod sha1;
+mod storage;
 mod tree;
 mod zlib;
 
 pub use commit::{parse as parse_commit, Commit, CommitError, Signature};
 pub use object::{frame, unframe, ObjectKind};
+pub use odb::{read_object, write_object, OdbError};
 pub use oid::ObjectId;
+pub use refs::{is_valid_ref_name, read_head, resolve_head, set_head_branch, update_ref, Head};
+pub use repo::{commit, init, log, CommitRequest, LogEntry, RepoError};
 pub use sha1::Sha1;
+pub use storage::{Storage, StorageError};
 pub use tree::{parse as parse_tree, Mode, TreeEntry, TreeError};
 pub use zlib::{compress, decompress, InflateError};
 

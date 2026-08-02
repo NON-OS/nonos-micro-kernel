@@ -14,12 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! Refs: `HEAD` and the branch files under `refs/heads`.
 
-use super::compare::compare;
-use super::entry::TreeEntry;
+mod head;
+mod name;
+mod read_head;
+mod resolve_head;
+mod set_head_branch;
+mod update_ref;
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
-}
+pub use head::Head;
+pub use name::is_valid_ref_name;
+pub use read_head::read_head;
+pub use resolve_head::resolve_head;
+pub use set_head_branch::set_head_branch;
+pub use update_ref::update_ref;

@@ -14,12 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Putting entries into the order a tree requires.
+//! Checking a tree read off disk is in the order it claims.
+
+use core::cmp::Ordering;
 
 use super::compare::compare;
 use super::entry::TreeEntry;
 
-/// Sort entries into the order a tree object requires.
-pub(super) fn sort(entries: &mut [TreeEntry]) {
-    entries.sort_by(compare);
+/// Whether entries are in the required order with no duplicate name, which is
+/// what a well-formed tree must satisfy. A tree failing this would re-encode
+/// to a different id than the one it was read from.
+pub(super) fn is_sorted_and_unique(entries: &[TreeEntry]) -> bool {
+    entries.windows(2).all(|w| compare(&w[0], &w[1]) == Ordering::Less)
 }
