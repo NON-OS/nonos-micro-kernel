@@ -15,37 +15,43 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 //! The adapter itself.
 
-use nonos_git::Storage;
+extern crate alloc;
+
+use alloc::string::String;
+use alloc::vec::Vec;
+
+use nonos_git::{Storage, StorageError};
+
+use super::join::join;
 
 /// Carries the owning pid every VFS call needs, and the work tree the
 /// repository paths are relative to.
 pub struct VfsStorage {
     pub(super) owner: u32,
-    pub(super) root: alloc::string::String,
+    root: String,
 }
 
 impl VfsStorage {
     pub fn new(owner: u32, root: &str) -> VfsStorage {
-        VfsStorage { owner, root: alloc::string::String::from(root) }
+        VfsStorage { owner, root: String::from(root) }
     }
 
-    /// A repository-relative path joined onto the work tree.
-    pub(super) fn full(&self, path: &str) -> alloc::string::String {
-        let mut out = self.root.clone();
-        if !out.ends_with('/') {
-            out.push('/');
-        }
-        out.push_str(path);
-        out
+    /// The work tree, as the shell's working directory gave it.
+    pub fn root(&self) -> &str {
+        &self.root
+    }
+
+    pub(super) fn full(&self, path: &str) -> String {
+        join(&self.root, path)
     }
 }
 
 impl Storage for VfsStorage {
-    fn read(&self, path: &str) -> Result<alloc::vec::Vec<u8>, nonos_git::StorageError> {
+    fn read(&self, path: &str) -> Result<Vec<u8>, StorageError> {
         super::files::read(self, path)
     }
 
-    fn write(&mut self, path: &str, data: &[u8]) -> Result<(), nonos_git::StorageError> {
+    fn write(&mut self, path: &str, data: &[u8]) -> Result<(), StorageError> {
         super::files::write(self, path, data)
     }
 
@@ -53,11 +59,11 @@ impl Storage for VfsStorage {
         super::files::exists(self, path)
     }
 
-    fn create_dir_all(&mut self, path: &str) -> Result<(), nonos_git::StorageError> {
+    fn create_dir_all(&mut self, path: &str) -> Result<(), StorageError> {
         super::dirs::create_dir_all(self, path)
     }
 
-    fn read_dir(&self, path: &str) -> Result<alloc::vec::Vec<alloc::string::String>, nonos_git::StorageError> {
+    fn read_dir(&self, path: &str) -> Result<Vec<String>, StorageError> {
         super::dirs::read_dir(self, path)
     }
 
