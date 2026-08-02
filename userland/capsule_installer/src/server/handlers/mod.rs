@@ -16,10 +16,12 @@
 
 mod health;
 mod install;
+mod list_installed;
 mod load_by_name;
 mod load_store;
 
 pub(super) use health::health;
 pub(super) use install::install;
+pub(super) use list_installed::list_installed;
 pub(super) use load_by_name::load_by_name;
 pub(super) use load_store::load_store;
