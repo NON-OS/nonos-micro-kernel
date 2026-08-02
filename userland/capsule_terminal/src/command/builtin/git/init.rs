@@ -13,35 +13,22 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! `git init`
 
-#![no_std]
-#![no_main]
+use nonos_git::init;
 
-extern crate alloc;
+use crate::command::output::Output;
+use crate::term::state::State;
 
-mod command;
-mod git;
-mod event;
-mod jobs;
-mod paint;
-mod term;
+use super::repo::{storage, GIT_DIR};
 
-#[cfg(not(feature = "nonos-autorun-selftest"))]
-use nonos_app_skeleton::run;
-
-/// # Safety
-///
-/// This is the capsule entry point. The loader calls it exactly once on a
-/// freshly initialized stack with no live Rust state, and it never returns.
-/// It must not be called from Rust code.
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    #[cfg(feature = "nonos-autorun-selftest")]
-    {
-        term::terminal::selftest::main()
-    }
-    #[cfg(not(feature = "nonos-autorun-selftest"))]
-    {
-        run(term::Terminal::new)
+pub(super) fn run(state: &mut State) {
+    let mut s = storage(state);
+    let result = init(&mut s, GIT_DIR, "main");
+    let mut out = Output::new(&mut state.scrollback);
+    match result {
+        Ok(()) => out.writeln(b"Initialized empty repository on branch main"),
+        Err(nonos_git::RepoError::Exists) => out.writeln(b"git: already a repository"),
+        Err(_) => out.writeln(b"git: could not create repository"),
     }
 }

@@ -29,6 +29,7 @@ nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
 nonos_inflate = { path = "../inflate" }
 nonos_base64 = { path = "../base64" }
+nonos_git = { path = "../nonos_git" }
 
 [profile.release]
 panic = "abort"

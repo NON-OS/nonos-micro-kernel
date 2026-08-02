@@ -13,35 +13,23 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-#![no_std]
-#![no_main]
+//! Where the repository lives, and who is asking.
 
 extern crate alloc;
 
-mod command;
-mod git;
-mod event;
-mod jobs;
-mod paint;
-mod term;
+use alloc::string::String;
 
-#[cfg(not(feature = "nonos-autorun-selftest"))]
-use nonos_app_skeleton::run;
+use crate::git::VfsStorage;
+use crate::term::state::State;
 
-/// # Safety
-///
-/// This is the capsule entry point. The loader calls it exactly once on a
-/// freshly initialized stack with no live Rust state, and it never returns.
-/// It must not be called from Rust code.
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    #[cfg(feature = "nonos-autorun-selftest")]
-    {
-        term::terminal::selftest::main()
-    }
-    #[cfg(not(feature = "nonos-autorun-selftest"))]
-    {
-        run(term::Terminal::new)
-    }
+use crate::command::builtin::fs::pid;
+
+/// The git directory inside the current work tree.
+pub(super) const GIT_DIR: &str = ".git";
+
+/// Storage rooted at the shell's working directory, which is the work tree.
+pub(super) fn storage(state: &mut State) -> VfsStorage {
+    let owner = pid(state);
+    let cwd = String::from_utf8_lossy(state.cwd.as_bytes()).into_owned();
+    VfsStorage::new(owner, &cwd)
 }
