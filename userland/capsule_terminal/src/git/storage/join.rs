@@ -13,11 +13,20 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! A `Storage` backed by the VFS capsule.
+//! Joining a repository path onto the work tree.
 
-mod dirs;
-mod files;
-mod join;
-mod vfs_storage;
+extern crate alloc;
 
-pub use vfs_storage::VfsStorage;
+use alloc::string::String;
+
+/// Both sides may carry a slash, so this trims rather than concatenating
+/// blindly: a doubled separator names a different path to the VFS.
+pub(super) fn join(root: &str, path: &str) -> String {
+    let base = root.trim_end_matches('/');
+    let rel = path.trim_start_matches('/');
+    let mut out = String::with_capacity(base.len() + rel.len() + 1);
+    out.push_str(base);
+    out.push('/');
+    out.push_str(rel);
+    out
+}
