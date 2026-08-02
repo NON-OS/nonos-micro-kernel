@@ -14,22 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use alloc::vec::Vec;
 
-extern crate alloc;
+use super::wire::{HDR_LEN, MAGIC, VERSION};
 
-mod blk;
-mod protocol;
-mod server;
-mod store;
-
-use nonos_libc::{mk_exit, heap_init};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    server::run();
+pub fn encode_request(op: u16, request_id: u32, body: &[u8]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(HDR_LEN + body.len());
+    out.extend_from_slice(&MAGIC.to_le_bytes());
+    out.extend_from_slice(&VERSION.to_le_bytes());
+    out.extend_from_slice(&op.to_le_bytes());
+    out.extend_from_slice(&0u16.to_le_bytes());
+    out.extend_from_slice(&0u16.to_le_bytes());
+    out.extend_from_slice(&request_id.to_le_bytes());
+    out.extend_from_slice(&(body.len() as u32).to_le_bytes());
+    out.extend_from_slice(body);
+    out
 }

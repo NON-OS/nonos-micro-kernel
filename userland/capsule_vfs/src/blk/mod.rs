@@ -14,22 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-
-extern crate alloc;
-
-mod blk;
-mod protocol;
-mod server;
+mod client;
+mod error;
+mod reply;
+mod request;
 mod store;
+mod store_header;
+mod store_toc;
+mod transport;
+mod wire;
 
-use nonos_libc::{mk_exit, heap_init};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    server::run();
-}
+pub use store::load;

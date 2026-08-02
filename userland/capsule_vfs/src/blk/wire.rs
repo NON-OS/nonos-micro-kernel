@@ -14,22 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-
-extern crate alloc;
-
-mod blk;
-mod protocol;
-mod server;
-mod store;
-
-use nonos_libc::{mk_exit, heap_init};
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
-    }
-    server::run();
-}
+// The "NBLK" wire contract of driver.virtio_blk0, mirrored from that capsule's
+// src/protocol/. It is duplicated rather than shared because capsules link no
+// common crate; any change on the driver side has to be reflected here.
+pub const MAGIC: u32 = 0x4E42_4C4B;
+pub const VERSION: u16 = 1;
+pub const HDR_LEN: usize = 20;
+pub const STATUS_LEN: usize = 4;
+pub const RW_REQ_LEN: usize = 12;
+pub const CAPACITY_BODY_LEN: usize = 8;
+pub const SECTOR_SIZE: usize = 512;
+pub const MAX_SECTORS_PER_REQUEST: usize = 64;
+pub const MAX_READ_BYTES: usize = SECTOR_SIZE * MAX_SECTORS_PER_REQUEST;
+pub const OP_CAPACITY: u16 = 2;
+pub const OP_READ_BLOCKS: u16 = 3;
