@@ -101,6 +101,10 @@ pub fn dispatch(state: &mut State, args: &[&[u8]]) -> Outcome {
         b"run" | b"open" => run::run(state, rest),
         b"exec" => exec::run(state, rest),
         b"install" => install::run(state, rest),
+        b"git" => {
+            crate::command::builtin::git::run(state, rest);
+            true
+        }
         b"set" => {
             set::run(state, rest);
             true
