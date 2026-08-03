@@ -22,6 +22,12 @@ use alloc::vec::Vec;
 
 use super::super::error::HttpError;
 
+/// The most header lines a response may carry.
+///
+/// A server sending more than this is not one this needs to talk to, and
+/// collecting them without a bound is a way to be made to allocate.
+const MAX_HEADERS: usize = 128;
+
 /// Split one header line into a lowercased name and a trimmed value.
 ///
 /// Names are compared case insensitively by the spec, and lowercasing once
@@ -40,13 +46,16 @@ pub(super) fn header(line: &[u8]) -> Result<(String, String), HttpError> {
     Ok((lower, String::from(value.trim())))
 }
 
-/// Every header line up to the blank line, and where the body starts.
+/// Every header line up to the blank line.
 pub(super) fn headers(head: &[u8]) -> Result<Vec<(String, String)>, HttpError> {
     let mut out = Vec::new();
     for line in head.split(|b| *b == b'\n') {
         let line = line.strip_suffix(b"\r").unwrap_or(line);
         if line.is_empty() {
             continue;
+        }
+        if out.len() >= MAX_HEADERS {
+            return Err(HttpError::Header);
         }
         out.push(header(line)?);
     }

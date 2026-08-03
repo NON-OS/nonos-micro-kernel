@@ -13,26 +13,14 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Pack files: the format a fetch or clone sends objects in.
-//!
-//! A pack is a header, a run of zlib-compressed objects, and a SHA-1 trailer.
-//! Most objects arrive as deltas against another object in the same pack, so
-//! reading one means resolving those chains before anything can be stored.
+//! Making an altered pack well formed again.
 
-mod checksum;
-mod delta;
-mod entry;
-mod error;
-mod header;
-mod index;
-mod reader;
-mod varint;
-mod write;
+use nonos_git::Sha1;
 
-pub use error::PackError;
-pub use index::{
-    build as build_index_rows, entries as index_entries, lookup as pack_lookup,
-    write_index as write_pack_index,
-};
-pub use reader::{read_at, read_pack, PackObject};
-pub use write::write_pack;
+/// Recompute the trailing SHA-1 after changing a pack, so a test that alters
+/// one byte on purpose is testing the check it means to and not the trailer.
+pub fn reseal(pack: &mut [u8]) {
+    let body = pack.len() - 20;
+    let sha = Sha1::digest(&pack[..body]);
+    pack[body..].copy_from_slice(&sha);
+}

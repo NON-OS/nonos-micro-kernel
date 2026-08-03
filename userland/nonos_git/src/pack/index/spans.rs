@@ -32,6 +32,9 @@ use super::crc::crc32;
 /// what comes out. That is the whole point: a thirty megabyte pack is walked
 /// with one object in memory at a time rather than all of them.
 pub(super) fn spans(pack: &[u8]) -> Result<Vec<(usize, u32)>, PackError> {
+    // Nothing in the pack is trusted until the trailer says the bytes are the
+    // ones that were sent.
+    super::super::checksum::verify(pack)?;
     let count = header::parse(pack)? as usize;
     let mut out = Vec::with_capacity(count);
     let mut at = header::HEADER_LEN;

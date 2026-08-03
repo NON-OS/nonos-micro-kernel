@@ -13,26 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Pack files: the format a fetch or clone sends objects in.
-//!
-//! A pack is a header, a run of zlib-compressed objects, and a SHA-1 trailer.
-//! Most objects arrive as deltas against another object in the same pack, so
-//! reading one means resolving those chains before anything can be stored.
+//! How far a stream is allowed to expand.
 
-mod checksum;
-mod delta;
-mod entry;
-mod error;
-mod header;
-mod index;
-mod reader;
-mod varint;
-mod write;
-
-pub use error::PackError;
-pub use index::{
-    build as build_index_rows, entries as index_entries, lookup as pack_lookup,
-    write_index as write_pack_index,
-};
-pub use reader::{read_at, read_pack, PackObject};
-pub use write::write_pack;
+/// Ceiling on what one object may inflate to.
+///
+/// Deflate expands by roughly a thousand to one at its worst, so a few
+/// kilobytes of hostile input can ask for gigabytes. Nothing git stores comes
+/// near this: the largest object in a clone of this kernel is under 34 MB.
+pub const MAX_INFLATED: usize = 256 * 1024 * 1024;

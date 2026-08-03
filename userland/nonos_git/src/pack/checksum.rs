@@ -13,26 +13,22 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Pack files: the format a fetch or clone sends objects in.
-//!
-//! A pack is a header, a run of zlib-compressed objects, and a SHA-1 trailer.
-//! Most objects arrive as deltas against another object in the same pack, so
-//! reading one means resolving those chains before anything can be stored.
+//! Checking a pack arrived intact.
 
-mod checksum;
-mod delta;
-mod entry;
-mod error;
-mod header;
-mod index;
-mod reader;
-mod varint;
-mod write;
+use crate::sha1::Sha1;
 
-pub use error::PackError;
-pub use index::{
-    build as build_index_rows, entries as index_entries, lookup as pack_lookup,
-    write_index as write_pack_index,
-};
-pub use reader::{read_at, read_pack, PackObject};
-pub use write::write_pack;
+use super::error::PackError;
+
+/// Verify the twenty byte SHA-1 a pack ends with.
+///
+/// It covers every byte before it. Without this a pack that was damaged or
+/// altered in transit is read anyway, and the damage only surfaces later as
+/// an object whose id does not match, or worse, as one whose id does.
+pub(super) fn verify(pack: &[u8]) -> Result<(), PackError> {
+    let body = pack.len().checked_sub(20).ok_or(PackError::Truncated)?;
+    let (data, trailer) = pack.split_at(body);
+    if Sha1::digest(data) != trailer {
+        return Err(PackError::Checksum);
+    }
+    Ok(())
+}

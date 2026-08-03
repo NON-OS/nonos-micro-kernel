@@ -60,3 +60,14 @@ fn an_unterminated_chunked_body_is_refused() {
     let raw = b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n3\r\nabc\r\n";
     assert_eq!(parse_response(raw).err(), Some(HttpError::Chunk));
 }
+
+#[test]
+fn a_flood_of_headers_is_refused() {
+    // Small on the wire, large in what it asks the parser to collect.
+    let mut raw = Vec::from(&b"HTTP/1.1 200 OK\r\n"[..]);
+    for i in 0..500 {
+        raw.extend_from_slice(format!("x-pad-{i}: v\r\n").as_bytes());
+    }
+    raw.extend_from_slice(b"\r\n");
+    assert_eq!(parse_response(&raw).err(), Some(HttpError::Header));
+}

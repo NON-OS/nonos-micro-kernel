@@ -32,6 +32,7 @@ mod error;
 mod huffman;
 mod huffman_block;
 mod inflate;
+mod limit;
 mod prefix;
 mod stored;
 mod tables;

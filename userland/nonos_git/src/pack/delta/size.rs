@@ -28,6 +28,12 @@ pub(super) fn header_size(delta: &[u8], at: &mut usize) -> Result<u64, PackError
     let mut value = 0u64;
     let mut shift = 0u32;
     loop {
+        // Ten groups of seven bits cover a u64. An eleventh would shift past
+        // the end of the word, so a header claiming one is malformed rather
+        // than something to keep reading.
+        if shift >= 64 {
+            return Err(PackError::BadDelta);
+        }
         let byte = take(delta, at)?;
         value |= u64::from(byte & 0x7F) << shift;
         if byte & 0x80 == 0 {

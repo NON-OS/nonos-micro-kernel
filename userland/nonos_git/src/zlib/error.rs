@@ -28,4 +28,8 @@ pub enum InflateError {
     Invalid,
     /// The trailing Adler-32 did not match the decoded data.
     Checksum,
+    /// The stream decoded to more than the caller allows. A small input can
+    /// expand without bound, so the limit is what stops a hostile object
+    /// exhausting memory before anything has been verified.
+    TooLarge,
 }

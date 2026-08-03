@@ -53,6 +53,9 @@ pub fn decompress(input: &[u8]) -> Result<Vec<u8>, InflateError> {
             }
             _ => return Err(InflateError::Invalid),
         }
+        if out.len() > super::limit::MAX_INFLATED {
+            return Err(InflateError::TooLarge);
+        }
         if final_block {
             break;
         }

@@ -20,6 +20,9 @@ extern crate alloc;
 use alloc::vec::Vec;
 
 use super::super::error::PackError;
+
+/// Ceiling on what one delta may reconstruct, matching what inflate allows.
+const MAX_TARGET: u64 = 256 * 1024 * 1024;
 use super::copy::copy;
 use super::size::{header_size, take};
 
@@ -33,7 +36,13 @@ pub(in crate::pack) fn apply(base: &[u8], delta: &[u8]) -> Result<Vec<u8>, PackE
         return Err(PackError::BadDelta);
     }
 
-    let mut out = Vec::with_capacity(target_len as usize);
+    // The target size is the delta.s own claim, so it is checked before it is
+    // believed and never used to reserve. A delta asserting a four gigabyte
+    // result would otherwise allocate that much before a byte is copied.
+    if target_len > MAX_TARGET {
+        return Err(PackError::BadDelta);
+    }
+    let mut out = Vec::new();
     while at < delta.len() {
         let op = take(delta, &mut at)?;
         if op & 0x80 != 0 {

@@ -31,6 +31,7 @@ use super::resolve::resolve;
 /// Read every object, resolving deltas against the objects already seen. A
 /// delta whose base is absent is an error, not a silently dropped object.
 pub fn read_pack(data: &[u8]) -> Result<Vec<PackObject>, PackError> {
+    super::super::checksum::verify(data)?;
     let count = header::parse(data)? as usize;
     let mut out: Vec<PackObject> = Vec::with_capacity(count);
     let mut at = header::HEADER_LEN;

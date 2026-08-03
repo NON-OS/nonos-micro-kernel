@@ -13,26 +13,29 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Pack files: the format a fetch or clone sends objects in.
-//!
-//! A pack is a header, a run of zlib-compressed objects, and a SHA-1 trailer.
-//! Most objects arrive as deltas against another object in the same pack, so
-//! reading one means resolving those chains before anything can be stored.
+//! Packs that were altered after they were sealed.
 
-mod checksum;
-mod delta;
-mod entry;
-mod error;
-mod header;
-mod index;
-mod reader;
-mod varint;
-mod write;
+mod reseal;
 
-pub use error::PackError;
-pub use index::{
-    build as build_index_rows, entries as index_entries, lookup as pack_lookup,
-    write_index as write_pack_index,
-};
-pub use reader::{read_at, read_pack, PackObject};
-pub use write::write_pack;
+use nonos_git::{read_pack, PackError};
+use reseal::reseal;
+
+const SIMPLE: &[u8] = include_bytes!("data/simple.pack");
+
+#[test]
+fn a_single_flipped_bit_is_caught() {
+    let mut bad = SIMPLE.to_vec();
+    bad[30] ^= 0x01;
+    assert_eq!(read_pack(&bad).err(), Some(PackError::Checksum));
+}
+
+#[test]
+fn an_object_swapped_for_another_is_caught() {
+    // Resealing hides the tampering from the trailer, so what catches it is
+    // the id being recomputed from the bytes rather than read from the pack.
+    let mut bad = SIMPLE.to_vec();
+    let at = bad.len() - 30;
+    bad[at] ^= 0x40;
+    reseal(&mut bad);
+    assert!(read_pack(&bad).is_err());
+}

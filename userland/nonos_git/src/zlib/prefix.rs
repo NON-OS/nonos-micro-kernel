@@ -15,10 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 //! Inflating one stream out of a buffer holding more than one.
 //!
-//! A pack stores its objects as back-to-back zlib streams with no length in
-//! front, so reading the next one means knowing exactly how many bytes the
-//! last consumed. `decompress` cannot say, since it takes the whole slice as
-//! one stream; this returns the byte count alongside the data.
+//! A pack stores objects as back-to-back zlib streams with no length in front,
+//! so reading the next means knowing how many bytes the last consumed, which
+//! `decompress` cannot say. This returns that count alongside the data.
 
 extern crate alloc;
 
@@ -55,6 +54,9 @@ pub fn decompress_prefix(input: &[u8]) -> Result<(Vec<u8>, usize), InflateError>
                 inflate_block(&mut r, &mut out, &lit, &dist)?;
             }
             _ => return Err(InflateError::Invalid),
+        }
+        if out.len() > super::limit::MAX_INFLATED {
+            return Err(InflateError::TooLarge);
         }
         if final_block {
             break;

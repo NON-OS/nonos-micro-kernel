@@ -13,14 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Pack reading, against packs GitHub actually served.
+//! Pack reading, against a pack GitHub actually served.
 //!
-//! `simple.pack` is the pack a shallow clone of octocat/Hello-World returns:
-//! three whole objects, no deltas, and the ids are the ones git reports for
-//! it. The delta path is checked against a full clone when one is present,
-//! since a pack with thousands of deltas is too large to vendor.
+//! `simple.pack` is what a shallow clone of octocat/Hello-World returns: three
+//! whole objects, ids as git reports them. Deltas are covered separately.
+
+mod reseal;
 
 use nonos_git::{read_pack, ObjectKind, PackError};
+use reseal::reseal;
 
 const SIMPLE: &[u8] = include_bytes!("data/simple.pack");
 
@@ -50,18 +51,25 @@ fn the_ids_are_recomputed_not_trusted() {
 }
 
 #[test]
-fn a_truncated_pack_is_refused() {
-    // Shorter than a header plus trailer: caught before any object is read.
-    assert_eq!(read_pack(&SIMPLE[..20]).err(), Some(PackError::Truncated));
-    // Long enough to pass that, but an object stream is cut short.
-    assert_eq!(read_pack(&SIMPLE[..40]).err(), Some(PackError::Corrupt));
+fn the_trailer_is_checked_first() {
+    // Any cut leaves the last twenty bytes covering the wrong data, so a
+    // truncated pack fails on its checksum rather than deeper in.
+    assert_eq!(read_pack(&SIMPLE[..40]).err(), Some(PackError::Checksum));
+    assert_eq!(read_pack(&SIMPLE[..20]).err(), Some(PackError::Checksum));
+    // Too short to hold a trailer at all.
     assert_eq!(read_pack(&SIMPLE[..8]).err(), Some(PackError::Truncated));
-    assert_eq!(read_pack(b"NOPExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx").err(), Some(PackError::Magic));
 }
 
 #[test]
-fn an_unknown_version_is_refused() {
+fn the_magic_and_version_are_still_checked() {
+    // Both come after the checksum, so the trailer is made to match first.
     let mut bad = SIMPLE.to_vec();
     bad[7] = 9;
+    reseal(&mut bad);
     assert_eq!(read_pack(&bad).err(), Some(PackError::Version(9)));
+
+    let mut wrong_magic = SIMPLE.to_vec();
+    wrong_magic[..4].copy_from_slice(b"NOPE");
+    reseal(&mut wrong_magic);
+    assert_eq!(read_pack(&wrong_magic).err(), Some(PackError::Magic));
 }
