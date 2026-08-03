@@ -34,7 +34,8 @@ const EAGAIN: i32 = -11;
 
 // Installer wire: seq(4) | op(2) | pad(2) | body. Mirrors the installer's
 // decode_request, which reads the op at byte 4 and the body after an 8 byte
-// header. The reply is seq(4) | status(4) | pid(4).
+// header. The reply is seq(4) | status(4) | pid(4), and the installer omits
+// the pid on failure, so only a success reply is 12 bytes long.
 const OP_LOAD_BY_NAME: u16 = 4;
 const SEQ: u32 = 1;
 
@@ -54,12 +55,15 @@ pub(crate) fn call_installer(name: &[u8], args: &[u8]) -> Result<u32, i32> {
         rx.len(),
         INSTALL_TIMEOUT_MS,
     );
-    if rc < 12 {
+    if rc < 8 {
         return Err(EAGAIN);
     }
     let status = i32::from_le_bytes([rx[4], rx[5], rx[6], rx[7]]);
     if status != 0 {
         return Err(status);
+    }
+    if rc < 12 {
+        return Err(EAGAIN);
     }
     Ok(u32::from_le_bytes([rx[8], rx[9], rx[10], rx[11]]))
 }
