@@ -13,17 +13,26 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! The `git` builtin.
+//! Reading a remote back.
 
-mod add;
-mod clone;
-mod commit;
-mod dispatch;
-mod init;
-mod log;
-mod push;
-mod remote;
-mod repo;
-mod status;
+extern crate alloc;
 
-pub use dispatch::run;
+use alloc::format;
+use alloc::string::String;
+
+use crate::storage::Storage;
+
+use super::parse::walk;
+
+/// The URL recorded for `name`, if there is one.
+pub fn remote_url<S: Storage>(storage: &S, git_dir: &str, name: &str) -> Option<String> {
+    let raw = storage.read(&format!("{git_dir}/config")).ok()?;
+    let text = core::str::from_utf8(&raw).ok()?;
+    let mut found = None;
+    walk(text, |section, subsection, key, value| {
+        if section == "remote" && subsection == name && key == "url" {
+            found = Some(String::from(value));
+        }
+    });
+    found
+}

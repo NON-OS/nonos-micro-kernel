@@ -13,17 +13,18 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! The `git` builtin.
+//! The text of a remote section.
 
-mod add;
-mod clone;
-mod commit;
-mod dispatch;
-mod init;
-mod log;
-mod push;
-mod remote;
-mod repo;
-mod status;
+extern crate alloc;
 
-pub use dispatch::run;
+use alloc::format;
+use alloc::string::String;
+
+/// A `[remote "name"]` section, in the layout git writes.
+///
+/// The fetch refspec is what tells git which remote branches map to which
+/// local tracking refs. It is written so the repository reads the same to git
+/// as one git cloned itself, even though nothing here consumes it yet.
+pub(super) fn remote_section(name: &str, url: &str) -> String {
+    format!("[remote \"{name}\"]\n\turl = {url}\n\tfetch = +refs/heads/*:refs/remotes/{name}/*\n")
+}

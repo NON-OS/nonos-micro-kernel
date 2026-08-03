@@ -17,6 +17,7 @@
 
 extern crate alloc;
 
+use crate::config::set_remote;
 use crate::object::ObjectKind;
 use crate::odb::read_object;
 use crate::refs::{set_head_branch, update_ref};
@@ -51,6 +52,9 @@ pub fn clone_into<S: Storage>(
     }
     let commit = crate::commit::parse(&content)?;
 
+    if let Some(url) = request.url {
+        set_remote(storage, git_dir, "origin", url)?;
+    }
     set_head_branch(storage, git_dir, request.branch)?;
     update_ref(storage, git_dir, request.branch, &request.head)?;
     if request.shallow {

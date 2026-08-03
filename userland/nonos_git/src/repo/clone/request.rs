@@ -19,6 +19,9 @@ use crate::oid::ObjectId;
 
 /// Where a clone writes and what it fetched.
 pub struct CloneRequest<'a> {
+    /// The URL this was cloned from, recorded as the origin remote so a later
+    /// push has somewhere to go without being told again.
+    pub url: Option<&'a str>,
     /// The repository directory, usually `.git` inside the work tree.
     pub git_dir: &'a str,
     /// Prefix the work tree files are written under. Empty for the root.

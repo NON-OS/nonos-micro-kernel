@@ -18,7 +18,7 @@
 use crate::command::output::Output;
 use crate::term::state::State;
 
-use super::{add, clone, commit, init, log, push, status};
+use super::{add, clone, commit, init, log, push, remote, status};
 
 pub fn run(state: &mut State, argv: &[&[u8]]) {
     let Some(sub) = argv.first() else {
@@ -30,6 +30,7 @@ pub fn run(state: &mut State, argv: &[&[u8]]) {
         b"init" => init::run(state),
         b"clone" => clone::run(state, rest),
         b"push" => push::run(state, rest),
+        b"remote" => remote::run(state, rest),
         b"add" => add::run(state, rest),
         b"status" => status::run(state),
         b"log" => log::run(state),
@@ -52,5 +53,5 @@ fn message<'a>(rest: &'a [&'a [u8]]) -> &'a [u8] {
 
 fn usage(state: &mut State) {
     let mut out = Output::new(&mut state.scrollback);
-    out.writeln(b"usage: git <init|clone <url>|add|status|commit -m <msg>|log|push <url>>");
+    out.writeln(b"usage: git <init|clone <url>|add|status|commit -m <msg>|log|push|remote>");
 }

@@ -25,10 +25,11 @@ mod common;
 
 use common::{git, git_available, Replay, Scratch};
 
-use nonos_git::{clone, Storage};
+use nonos_git::{clone, remote_url, Storage};
 
 const ADVERT: &[u8] = include_bytes!("data/advert_live.bin");
 const PACK: &[u8] = include_bytes!("data/live_uploadpack.bin");
+const URL: &str = "https://github.com/octocat/Hello-World.git";
 const HEAD: &str = "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d";
 
 #[test]
@@ -37,12 +38,15 @@ fn a_clone_asks_for_the_right_things_and_lands_a_repository() {
     let mut storage = scratch.storage();
     let mut transport = Replay::new(ADVERT, PACK);
 
-    let files = clone(&mut transport, &mut storage, ".git", "", "master", 1).expect("clone");
+    let files =
+        clone(&mut transport, &mut storage, ".git", "", "master", 1, Some(URL)).expect("clone");
     assert_eq!(files, 1);
 
     // Discovery first, then the pack, in that order and nothing else.
     assert_eq!(transport.asked, vec!["/info/refs?service=git-upload-pack", "/git-upload-pack"]);
     assert_eq!(storage.read("README").expect("work tree"), b"Hello World!\n");
+    // A clone records where it came from, so a push has somewhere to go.
+    assert_eq!(remote_url(&storage, ".git", "origin").as_deref(), Some(URL));
 }
 
 #[test]
@@ -53,7 +57,7 @@ fn git_reads_what_the_clone_wrote() {
     let scratch = Scratch::new("remote_clone_git");
     let mut storage = scratch.storage();
     let mut transport = Replay::new(ADVERT, PACK);
-    clone(&mut transport, &mut storage, ".git", "", "master", 1).expect("clone");
+    clone(&mut transport, &mut storage, ".git", "", "master", 1, None).expect("clone");
 
     git(&scratch.path, &["fsck", "--strict"]);
     assert_eq!(git(&scratch.path, &["rev-parse", "HEAD"]).trim(), HEAD);
@@ -65,5 +69,5 @@ fn a_branch_the_remote_does_not_have_is_an_error() {
     let scratch = Scratch::new("remote_clone_missing");
     let mut storage = scratch.storage();
     let mut transport = Replay::new(ADVERT, PACK);
-    assert!(clone(&mut transport, &mut storage, ".git", "", "nope", 1).is_err());
+    assert!(clone(&mut transport, &mut storage, ".git", "", "nope", 1, None).is_err());
 }

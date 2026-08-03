@@ -36,6 +36,7 @@ pub fn clone<T: Transport, S: Storage>(
     work_tree: &str,
     branch: &str,
     depth: u32,
+    url: Option<&str>,
 ) -> Result<usize, TransportError> {
     let refs = discover(transport, UPLOAD_PACK)?;
     let mut full = alloc::string::String::from("refs/heads/");
@@ -43,6 +44,6 @@ pub fn clone<T: Transport, S: Storage>(
     let head = refs.iter().find(|r| r.name == full).ok_or(TransportError::Malformed)?.id;
 
     let pack = fetch(transport, &[head], depth)?;
-    let request = CloneRequest { git_dir, work_tree, head, branch, shallow: depth > 0 };
+    let request = CloneRequest { git_dir, work_tree, head, branch, shallow: depth > 0, url };
     clone_into(storage, &request, &pack).map_err(|_| TransportError::Malformed)
 }

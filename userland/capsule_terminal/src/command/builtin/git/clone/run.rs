@@ -53,7 +53,7 @@ pub(in crate::command::builtin::git) fn run(state: &mut State, argv: &[&[u8]]) {
     let mut transport = Https::new(remote, rtc_now());
     let mut s = storage(state);
 
-    match clone(&mut transport, &mut s, &git_dir, &work_tree, branch, DEPTH) {
+    match clone(&mut transport, &mut s, &git_dir, &work_tree, branch, DEPTH, Some(url)) {
         Ok(files) => {
             let mut line = Vec::from(&b"Cloned into "[..]);
             line.extend_from_slice(into.as_bytes());

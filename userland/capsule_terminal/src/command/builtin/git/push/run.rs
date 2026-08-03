@@ -18,9 +18,10 @@
 extern crate alloc;
 
 use alloc::format;
+use alloc::string::String;
 use alloc::vec::Vec;
 
-use nonos_git::{push, read_head, resolve_head, Head};
+use nonos_git::{push, read_head, remote_url, resolve_head, Head};
 use nonos_tls::rtc_now;
 
 use crate::command::output::Output;
@@ -31,16 +32,17 @@ use super::super::clone::fail_with;
 use super::super::repo::{storage, GIT_DIR};
 
 pub(in crate::command::builtin::git) fn run(state: &mut State, argv: &[&[u8]]) {
-    let Some(url) = argv.first().and_then(|a| core::str::from_utf8(a).ok()) else {
-        Output::new(&mut state.scrollback).writeln(b"usage: git push <https url>");
+    let s = storage(state);
+    // An explicit url wins, otherwise the origin the clone recorded.
+    let given = argv.first().and_then(|a| core::str::from_utf8(a).ok()).map(String::from);
+    let Some(url) = given.or_else(|| remote_url(&s, GIT_DIR, "origin")) else {
+        Output::new(&mut state.scrollback).writeln(b"git push: no origin, give a url");
         return;
     };
-    let Some(remote) = Remote::parse(url) else {
+    let Some(remote) = Remote::parse(&url) else {
         Output::new(&mut state.scrollback).writeln(b"git push: only https urls are supported");
         return;
     };
-
-    let s = storage(state);
     let Some(Head::Branch(branch)) = read_head(&s, GIT_DIR) else {
         Output::new(&mut state.scrollback).writeln(b"git push: HEAD is not on a branch");
         return;

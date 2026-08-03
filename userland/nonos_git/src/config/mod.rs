@@ -13,17 +13,17 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! The `git` builtin.
+//! The repository config file.
+//!
+//! Only what this needs: the remotes a clone records and a push reads back.
+//! Git's config format is larger than this, so parsing keeps to sections and
+//! `name = value` lines and ignores what it does not recognise rather than
+//! rejecting a file git wrote.
 
-mod add;
-mod clone;
-mod commit;
-mod dispatch;
-mod init;
-mod log;
-mod push;
+mod parse;
+mod read;
 mod remote;
-mod repo;
-mod status;
+mod write;
 
-pub use dispatch::run;
+pub use read::remote_url;
+pub use remote::set_remote;

@@ -18,19 +18,17 @@
 //!
 //! A git repository is a content-addressed store: every blob, tree and commit
 //! is named by the SHA-1 of its framed bytes, `<type> <size>\0<content>`. This
-//! crate is that core, the part that must agree with real git bit for bit so a
-//! repository written here is one `git` can read and one written by `git` reads
-//! here. It owns the hash, the object framing, and the object id; the store on
-//! disk and the higher commands build on top.
-//!
-//! Everything is pure and deterministic, so it is proven on the host against
-//! the hashes real `git` produces for the same content.
+//! crate is that model, packfiles both ways, the wire protocol, and clone and
+//! push on top of a transport it does not implement. It has to agree with real
+//! git bit for bit, so it is checked against real git rather than against
+//! itself.
 
 #![cfg_attr(not(test), no_std)]
 
 extern crate alloc;
 
 mod commit;
+pub(crate) mod config;
 mod index;
 mod object;
 mod odb;
@@ -47,6 +45,7 @@ mod wire;
 mod zlib;
 
 pub use commit::{parse as parse_commit, Commit, CommitError, Signature};
+pub use config::{remote_url, set_remote};
 pub use index::{IndexEntry, IndexError};
 pub use object::{frame, unframe, ObjectKind};
 pub use odb::{read_object, write_object, OdbError};

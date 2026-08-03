@@ -33,8 +33,14 @@ fn a_fetched_pack_becomes_a_working_repository() {
     let mut storage = scratch.storage();
     let head = ObjectId::from_hex(HEAD).expect("head id");
 
-    let request =
-        CloneRequest { git_dir: ".git", work_tree: "", head, branch: "master", shallow: true };
+    let request = CloneRequest {
+        git_dir: ".git",
+        work_tree: "",
+        head,
+        branch: "master",
+        shallow: true,
+        url: None,
+    };
     let written = clone_into(&mut storage, &request, PACK).expect("clone");
     assert_eq!(written, 1);
 
@@ -50,8 +56,14 @@ fn git_agrees_the_clone_is_intact() {
     let scratch = Scratch::new("clone_git");
     let mut storage = scratch.storage();
     let head = ObjectId::from_hex(HEAD).expect("head id");
-    let request =
-        CloneRequest { git_dir: ".git", work_tree: "", head, branch: "master", shallow: true };
+    let request = CloneRequest {
+        git_dir: ".git",
+        work_tree: "",
+        head,
+        branch: "master",
+        shallow: true,
+        url: None,
+    };
     clone_into(&mut storage, &request, PACK).expect("clone");
 
     git(&scratch.path, &["fsck", "--strict"]);
