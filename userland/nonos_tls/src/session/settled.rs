@@ -13,12 +13,25 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! Whether the server's flight has stopped growing.
 
-use crate::browser::tls13::roots::{chunk0, chunk1, chunk2, chunk3};
-
-pub fn is_trusted_spki_hash(h: &[u8; 32]) -> bool {
-    chunk0::ROOTS_0.iter().any(|r| r == h)
-        || chunk1::ROOTS_1.iter().any(|r| r == h)
-        || chunk2::ROOTS_2.iter().any(|r| r == h)
-        || chunk3::ROOTS_3.iter().any(|r| r == h)
+/// True once an application-data record appears in the flight.
+///
+/// Records are typed in their first byte and carry a big-endian length, so
+/// walking them is exact rather than a guess about how much has arrived. A
+/// type of 23 is application data, which only follows a finished handshake.
+pub(super) fn settled(bytes: &[u8]) -> bool {
+    let mut at = 0usize;
+    while at + 5 <= bytes.len() {
+        let len = u16::from_be_bytes([bytes[at + 3], bytes[at + 4]]) as usize;
+        let end = at + 5 + len;
+        if end > bytes.len() {
+            return false;
+        }
+        if bytes[at] == 23 {
+            return true;
+        }
+        at = end;
+    }
+    false
 }

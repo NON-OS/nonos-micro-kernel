@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub fn hash_sha384(data: &[u8]) -> Option<[u8; 48]> {
-    let Some(port) = super::crypto_port::crypto_port() else { return None };
+    let port = super::crypto_port::crypto_port()?;
     let mut tx = [0u8; 1536];
     let mut rx = [0u8; 96];
     let len = 20usize.checked_add(data.len())?;

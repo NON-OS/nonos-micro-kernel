@@ -13,6 +13,18 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! A TLS 1.3 client.
+//!
+//! Lifted out of the browser, which had one copy, while the wallet had
+//! another that had already drifted from it in twenty one files. A
+//! certificate check that only half the system gets is worse than no shared
+//! code at all, so there is one of these now.
+//!
+//! Bulk crypto goes to the pool service rather than being implemented here.
+
+#![no_std]
+
+extern crate alloc;
 
 mod aad_frame;
 mod aes_gcm;
@@ -68,6 +80,7 @@ mod server_context;
 mod server_finished_flight_ready;
 mod server_hello;
 mod server_keys;
+mod session;
 mod spki_point;
 mod traffic_keys;
 mod verify_link;
@@ -81,4 +94,5 @@ pub use application_write::application_write;
 pub use client_flight::client_flight;
 pub use server_complete::server_complete;
 pub use server_finished_flight_ready::server_finished_flight_ready;
+pub use session::{exchange, Io, SessionError};
 pub use traffic_keys::TrafficKeys;

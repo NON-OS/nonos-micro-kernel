@@ -13,9 +13,17 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! A blocking TLS session.
+//!
+//! The browser drives the handshake as a state machine because it cannot
+//! block its UI. A caller that can wait wants none of that, so this walks the
+//! same steps in order and hands back the response.
 
-mod verify_ecdsa;
-mod verify_link;
-mod verify_rsa;
+mod exchange;
+mod flight;
+mod response;
+mod settled;
+mod traits;
 
-pub use verify_link::verify_link;
+pub use exchange::exchange;
+pub use traits::{Io, SessionError};

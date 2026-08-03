@@ -91,6 +91,7 @@ dependencies = [
  "nonos_base64",
  "nonos_inflate",
  "nonos_qjs",
+ "nonos_tls",
  "nonos_toolkit",
  "nonos_userland_libc",
  "spin",
@@ -106,6 +107,13 @@ version = "0.2.0"
 dependencies = [
  "cc",
  "libm",
+]
+
+[[package]]
+name = "nonos_tls"
+version = "0.1.0"
+dependencies = [
+ "nonos_userland_libc",
 ]
 
 [[package]]

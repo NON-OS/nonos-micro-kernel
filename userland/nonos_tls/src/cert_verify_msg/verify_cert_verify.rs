@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::tls13::cert_verify_msg::{constants, verify_ecdsa, verify_rsa};
+use crate::cert_verify_msg::{constants, verify_ecdsa, verify_rsa};
 
 pub fn verify_cert_verify(leaf: &[u8], before_cv: &[u8], body: &[u8]) -> bool {
     if body.len() < 4 {

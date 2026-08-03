@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::cert_sig_alg::{cert_sig_alg, SigAlg};
-use crate::browser::tls13::verify_link::{verify_ecdsa, verify_rsa};
+use crate::verify_link::{verify_ecdsa, verify_rsa};
 
 pub fn verify_link(child: &[u8], parent_spki: &[u8]) -> bool {
     let Some(tbs) = super::super::cert_tbs::cert_tbs(child) else {

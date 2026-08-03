@@ -18,34 +18,42 @@ use alloc::vec::Vec;
 
 use super::constants::SUITE_AES128_GCM_SHA256;
 
-pub fn open(suite: u16, key: &[u8; 32], iv: &[u8; 12], seq: u64, record: &[u8]) -> Option<Vec<u8>> {
-    if record.len() < 22 || record.first() != Some(&23) {
-        return None;
-    }
-    let len = super::read::u16_at(record, 3)? as usize;
-    if len + 5 != record.len() || len <= 16 {
-        return None;
-    }
+pub fn seal(
+    suite: u16,
+    key: &[u8; 32],
+    iv: &[u8; 12],
+    seq: u64,
+    inner_type: u8,
+    body: &[u8],
+) -> Option<Vec<u8>> {
+    let mut plain = Vec::with_capacity(body.len() + 1);
+    plain.extend_from_slice(body);
+    plain.push(inner_type);
+    let mut head = Vec::with_capacity(5);
+    head.push(23);
+    super::push::u16(&mut head, 0x0303);
+    super::push::u16(&mut head, plain.len() as u16 + 16);
     let nonce = super::nonce::nonce(iv, seq);
     if suite == SUITE_AES128_GCM_SHA256 {
         let mut k = [0u8; 16];
         k.copy_from_slice(&key[..16]);
-        return super::aes_gcm::open(&k, &nonce, &record[..5], &record[5..]);
+        let ct = super::aes_gcm::seal(&k, &nonce, &head, &plain);
+        head.extend_from_slice(&ct);
+        return Some(head);
     }
-    let frame = super::aad_frame::aad_frame(&record[..5], &record[5..]);
-    let mut pt = Vec::new();
-    pt.resize(len - 16, 0);
-    let n = nonos_libc::crypto_decrypt_aad(
+    let frame = super::aad_frame::aad_frame(&head, &plain);
+    let mut ct = alloc::vec![0u8; plain.len() + 16];
+    let n = nonos_libc::crypto_encrypt_aad(
         0,
         key.as_ptr(),
         nonce.as_ptr(),
         frame.as_ptr(),
         frame.len(),
-        pt.as_mut_ptr(),
+        ct.as_mut_ptr(),
     );
-    if n == pt.len() as i64 {
-        Some(pt)
-    } else {
-        None
+    if n != ct.len() as i64 {
+        return None;
     }
+    head.extend_from_slice(&ct);
+    Some(head)
 }
