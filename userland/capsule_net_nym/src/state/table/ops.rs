@@ -31,9 +31,6 @@ impl Table {
             return Err(TableError::Full);
         }
         topology_gate::check()?;
-        if state::credential_material().is_err() {
-            return Err(TableError::NoCredential);
-        }
         let gateway = self.gateway.ok_or(TableError::NoGateway)?;
         let id = self.alloc_id();
         self.sessions.push(Session::new(owner, id, gateway, key));
