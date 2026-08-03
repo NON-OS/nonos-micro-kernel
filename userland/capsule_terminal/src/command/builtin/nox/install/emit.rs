@@ -39,6 +39,7 @@ pub(super) fn emit_err(state: &mut State, status: i32) {
         -11 => b"install rejected: installer not ready, try again",
         -13 => b"install rejected: signature, manifest, or attestation failed verification",
         -16 => b"install rejected: installer busy",
+        -17 => b"install rejected: already running, close it first",
         -22 => b"install rejected: malformed manifest or artifacts",
         _ => b"",
     };
