@@ -14,11 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod parse;
-mod read;
-mod recv;
-mod send;
-mod types;
+use super::sizes::{EPHEMERAL_BYTES, IDENTITY_BYTES, INIT_BYTES, SALT_BYTES};
 
-pub use recv::recv_binary;
-pub use send::{send_binary, send_close, send_text};
+/// First message: who we are, a throwaway key, and the salt that binds the
+/// derived key to this exchange.
+pub fn init_message(
+    identity: &[u8; IDENTITY_BYTES],
+    ephemeral: &[u8; EPHEMERAL_BYTES],
+    salt: &[u8; SALT_BYTES],
+) -> [u8; INIT_BYTES] {
+    let mut out = [0u8; INIT_BYTES];
+    out[..IDENTITY_BYTES].copy_from_slice(identity);
+    out[IDENTITY_BYTES..IDENTITY_BYTES + EPHEMERAL_BYTES].copy_from_slice(ephemeral);
+    out[IDENTITY_BYTES + EPHEMERAL_BYTES..].copy_from_slice(salt);
+    out
+}

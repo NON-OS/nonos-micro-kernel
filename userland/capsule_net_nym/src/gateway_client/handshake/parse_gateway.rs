@@ -14,11 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod parse;
-mod read;
-mod recv;
-mod send;
-mod types;
+use super::material::Material;
+use super::sizes::{EPHEMERAL_BYTES, GATEWAY_MATERIAL_BYTES};
 
-pub use recv::recv_binary;
-pub use send::{send_binary, send_close, send_text};
+/// Split the gateway's reply into its ephemeral key and sealed material.
+pub fn parse_gateway_material(bytes: &[u8]) -> Option<([u8; EPHEMERAL_BYTES], Material)> {
+    if bytes.len() != GATEWAY_MATERIAL_BYTES {
+        return None;
+    }
+    let mut ephemeral = [0u8; EPHEMERAL_BYTES];
+    ephemeral.copy_from_slice(&bytes[..EPHEMERAL_BYTES]);
+    let material = Material::from_bytes(&bytes[EPHEMERAL_BYTES..])?;
+    Some((ephemeral, material))
+}

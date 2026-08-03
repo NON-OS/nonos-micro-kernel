@@ -14,11 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod parse;
-mod read;
-mod recv;
-mod send;
-mod types;
+pub const IDENTITY_BYTES: usize = 32;
+pub const SIGNATURE_BYTES: usize = 64;
+pub const EPHEMERAL_BYTES: usize = 32;
+/// KDF_SALT_LENGTH in the reference.
+pub const SALT_BYTES: usize = 16;
+pub const TAG_BYTES: usize = 16;
+pub const NONCE_BYTES: usize = 12;
 
-pub use recv::recv_binary;
-pub use send::{send_binary, send_close, send_text};
+/// identity || ephemeral || salt
+pub const INIT_BYTES: usize = IDENTITY_BYTES + EPHEMERAL_BYTES + SALT_BYTES;
+/// sealed signature || nonce
+pub const MATERIAL_BYTES: usize = SIGNATURE_BYTES + TAG_BYTES + NONCE_BYTES;
+/// the gateway prepends its own ephemeral key
+pub const GATEWAY_MATERIAL_BYTES: usize = EPHEMERAL_BYTES + MATERIAL_BYTES;
+
+const _: () = assert!(INIT_BYTES == 80);
+const _: () = assert!(MATERIAL_BYTES == 92);
+const _: () = assert!(GATEWAY_MATERIAL_BYTES == 124);

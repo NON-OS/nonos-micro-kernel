@@ -25,6 +25,10 @@ pub fn send_binary(tcp_port: u32, stream: u32, payload: &[u8]) -> Result<(), u16
     send_frame(tcp_port, stream, 0x82, payload)
 }
 
+pub fn send_text(tcp_port: u32, stream: u32, payload: &[u8]) -> Result<(), u16> {
+    send_frame(tcp_port, stream, 0x81, payload)
+}
+
 pub fn send_close(tcp_port: u32, stream: u32) -> Result<(), u16> {
     send_frame(tcp_port, stream, 0x88, &[])
 }

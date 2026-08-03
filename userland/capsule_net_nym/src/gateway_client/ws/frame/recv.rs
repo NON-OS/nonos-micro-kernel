@@ -35,7 +35,7 @@ pub fn recv_binary(tcp_port: u32, stream: u32, out: &mut [u8]) -> Result<usize, 
         buf.extend_from_slice(&chunk[..n]);
         while let Some(frame) = parse::next(&buf, out, &mut ctrl)? {
             match frame.kind {
-                FrameKind::Binary => return Ok(frame.len),
+                FrameKind::Binary | FrameKind::Text => return Ok(frame.len),
                 FrameKind::Ping => send::send_pong(tcp_port, stream, &ctrl[..frame.len])?,
                 FrameKind::Pong => {}
                 FrameKind::Close => return Err(9),

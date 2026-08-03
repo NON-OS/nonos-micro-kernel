@@ -14,11 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod parse;
-mod read;
-mod recv;
-mod send;
-mod types;
+use alloc::vec::Vec;
 
-pub use recv::recv_binary;
-pub use send::{send_binary, send_close, send_text};
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum HandshakeError {
+    Crypto,
+    Transport,
+    Malformed,
+    Refused,
+    BadSignature,
+}
+
+/// The socket, as the handshake needs to see it.
+pub trait Wire {
+    fn send_text(&mut self, text: &str) -> Result<(), HandshakeError>;
+    fn recv_text(&mut self) -> Result<Vec<u8>, HandshakeError>;
+}
+
+/// The keys the exchange is anchored on.
+pub struct Identity<'a> {
+    pub own_seed: &'a [u8; 32],
+    pub own_public: &'a [u8; 32],
+    pub gateway_public: &'a [u8; 32],
+}
