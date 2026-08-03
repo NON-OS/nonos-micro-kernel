@@ -26,10 +26,8 @@ static SKIP: AtomicUsize = AtomicUsize::new(0);
 /// How many ticks the next failure will wait, doubling each time.
 static BACKOFF: AtomicUsize = AtomicUsize::new(1);
 
-/// Ceiling on the wait, in idle ticks. Retrying forever at tick rate would
-/// put steady pressure on gateways run by other people, which is not a cost
-/// this client gets to impose on them; giving up entirely would leave a
-/// machine offline after one bad minute.
+/// Ceiling on the wait. Retrying at tick rate forever leans on gateways other
+/// people pay for; giving up strands the machine after one bad minute.
 const MAX_BACKOFF: usize = 64;
 
 /// Whether a gateway is bound.
@@ -37,13 +35,10 @@ pub fn connected() -> bool {
     CONNECTED.load(Ordering::Relaxed)
 }
 
-/// Try one bootstrap candidate, while nothing else is asking to be served.
+/// Try one bootstrap candidate while nothing is asking to be served.
 ///
-/// One candidate per idle tick rather than the whole list at boot. Each stage
-/// of a connection now waits a real round trip, so walking five gateways can
-/// take tens of seconds, and a capsule cannot answer anyone while it does.
-/// Everything downstream waits on this one, so blocking here stalls the
-/// desktop on a handshake nobody asked for yet.
+/// One per idle tick, not the whole list at boot: each stage waits a real
+/// round trip, and everything downstream waits on this capsule.
 pub fn connect_tick() {
     if CONNECTED.load(Ordering::Relaxed) {
         return;

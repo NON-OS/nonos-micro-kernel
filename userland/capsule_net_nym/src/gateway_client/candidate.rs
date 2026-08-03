@@ -19,11 +19,8 @@ use crate::state::{bootstrap_gateway, BOOTSTRAP_GATEWAYS, TABLE};
 
 /// Try the bootstrap gateway at `index`, wrapping around the list.
 ///
-/// One candidate per call so the caller keeps control: a connection now waits
-/// a real round trip at each stage, and whoever is driving this has other work
-/// to do between attempts. Wrapping rather than stopping means a client that
-/// starts before the network is up keeps trying rather than giving up on the
-/// whole list once.
+/// One per call so the caller keeps control between attempts. Wrapping means
+/// a client that starts before the network is up keeps trying.
 pub fn connect_candidate(tcp_port: u32, index: usize) -> bool {
     let slot = index % BOOTSTRAP_GATEWAYS.len();
     let Some(candidate) = bootstrap_gateway(slot) else {
@@ -32,9 +29,6 @@ pub fn connect_candidate(tcp_port: u32, index: usize) -> bool {
     match connect(tcp_port, candidate) {
         Ok(gateway) => {
             let _ = TABLE.lock().set_gateway(gateway);
-            // Only failures were reported, so a session that established left
-            // no trace at all and had to be inferred from an absence of
-            // errors. Say when the mixnet is reachable.
             super::trace::bound(gateway.ip);
             true
         }

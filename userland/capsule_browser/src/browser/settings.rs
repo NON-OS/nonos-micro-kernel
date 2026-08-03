@@ -70,8 +70,16 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     };
     fb.text_ttf(x + 14, PANEL_TOP + 42, &status, constants::DIM, 14.0);
 
-    button(fb, x, SET_Y, "Set proxy (type host:port)");
-    button(fb, x, OFF_Y, "Turn proxy off");
+    // Both rows describe the mixnet while it carries the traffic. A manual
+    // proxy is still reachable through the address bar for anyone who needs
+    // one, and does not need a button that rewrites what is typed there.
+    if crate::browser::net::mixnet::is_on() {
+        button(fb, x, SET_Y, "Every request leaves through the mixnet");
+        button(fb, x, OFF_Y, "Exit node chosen per session");
+    } else {
+        button(fb, x, SET_Y, "Set proxy (type host:port)");
+        button(fb, x, OFF_Y, "Turn proxy off");
+    }
 }
 
 fn button(fb: &mut PaintBuffer, x: i32, y: i32, label: &str) {
@@ -108,11 +116,17 @@ fn action_at(x: i32, y: i32, width: i32) -> Action {
 }
 
 /// Handle a click while the panel is open. A click on empty space, or anywhere
-/// outside the panel, closes it. "Set proxy" focuses the address bar with the
-/// `proxy socks5://` prefix so the user types the host:port and presses Enter,
-/// which the existing address command applies. "Turn proxy off" clears it.
+/// outside the panel, closes it.
+///
+/// While the mixnet carries the traffic both rows are statements rather than
+/// controls: there is nothing to configure, and the row that used to prefill
+/// the address bar left whatever was typed next attached to a command word,
+/// which then failed to load as a URL.
 pub fn on_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
+    let routed = crate::browser::net::mixnet::is_on();
     match action_at(x, y, width_of(state)) {
+        Action::Set if routed => state.settings_open = false,
+        Action::Off if routed => state.settings_open = false,
         Action::Set => {
             state.settings_open = false;
             state.address = String::from("proxy socks5://");

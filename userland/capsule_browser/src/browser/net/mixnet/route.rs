@@ -19,10 +19,8 @@ use spin::Mutex;
 
 /// Where the browser's bytes go.
 ///
-/// `net.socks5` speaks RFC 1928 over IPC and has no listening socket, by
-/// design: a proxy that cannot be dialled over TCP is one that cannot be
-/// bypassed by pointing at it directly. So the browser reaches it the same
-/// way every other capsule is reached, and this holds the state that makes a
+/// `net.socks5` speaks RFC 1928 over IPC and has no listening socket, so it
+/// cannot be bypassed by dialling past it. This holds the state that makes a
 /// service call look like a socket to the code above.
 pub struct Route {
     pub socks_port: u32,

@@ -16,10 +16,8 @@
 
 use nonos_libc::mk_debug;
 
-/// Report which stage of a gateway connection failed, and with what.
-///
-/// Registration failures were previously only visible as an absence of
-/// traffic in a packet capture, which says a candidate failed but not where.
+/// Report which stage of a gateway connection failed, and with what. Without
+/// this a failure is only an absence of traffic in a capture.
 pub fn fail(stage: &[u8], code: u16) {
     let mut line = [0u8; 64];
     let mut n = 0;

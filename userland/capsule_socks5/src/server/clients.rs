@@ -28,11 +28,8 @@ struct Slot {
     conn: Conn,
 }
 
-/// Handshake state per caller.
-///
-/// Keyed on the sender pid the kernel attests on delivery, not on anything the
-/// message carries, so one capsule cannot drive another's handshake by
-/// claiming its identity.
+/// Handshake state per caller, keyed on the pid the kernel attests at
+/// delivery, so one capsule cannot drive another's handshake.
 pub struct Clients {
     slots: Vec<Slot>,
 }

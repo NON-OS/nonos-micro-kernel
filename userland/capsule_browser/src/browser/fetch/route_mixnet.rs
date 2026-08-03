@@ -20,15 +20,10 @@ const PROXY: &[u8] = b"net.socks5";
 
 /// Route through the mixnet whenever the proxy capsule is running.
 ///
-/// Presence decides this rather than a setting. A browser that reaches hosts
-/// directly while a mixnet proxy is available would publish the address the
-/// proxy exists to hide, and nothing on the page would show that it had. The
-/// safe default is therefore the private one, and a direct path is what has
-/// to be asked for.
-///
-/// Once routed, a proxy that cannot carry the request fails it. There is no
-/// fall back to the direct path: silently reverting would turn one failed
-/// request into a disclosure.
+/// Presence decides it, not a setting: going direct while a mixnet proxy sits
+/// there would publish the address it exists to hide, and the page would look
+/// the same either way. A proxy that cannot carry a request fails it rather
+/// than falling back, since reverting quietly is the disclosure.
 pub fn route_mixnet() {
     if mixnet::is_on() {
         return;

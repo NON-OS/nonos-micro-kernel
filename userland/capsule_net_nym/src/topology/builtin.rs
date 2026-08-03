@@ -21,22 +21,14 @@ use super::store;
 use super::types::{Node, Role, TopologyError};
 use crate::state::{BOOTSTRAP_MIXNODES, PER_LAYER};
 
-/// Delay each hop is asked to hold a packet for, in milliseconds.
-///
-/// The mixnet's guarantee comes from packets being reordered against each
-/// other, not from arriving quickly, so this buys shuffling at every layer.
+/// Per-hop delay. Reordering is where the anonymity comes from, not speed.
 const HOP_DELAY_MS: u16 = 50;
 
 /// Publish the mixnodes compiled into this image as the route directory.
 ///
-/// No signature is made or checked. These nodes arrived inside a kernel that
-/// the bootloader measured, verified against two signatures, and matched to
-/// its STARK enrollment before jumping to it. Signing the list again would
-/// mean minting a key whose theft would redirect every route, which is a
-/// worse position than the one it claims to improve.
-///
-/// A fetched directory replaces this and does have to prove itself, since
-/// those bytes carry none of the above.
+/// Nothing is signed here. Signing a list that already ships inside an
+/// attested kernel would only mint a key whose theft redirects every route. A
+/// fetched directory replaces this and still has to prove itself.
 pub fn install() -> Result<(), TopologyError> {
     let now = super::clock::now_ms()?;
     let nodes: Vec<Node> = BOOTSTRAP_MIXNODES
@@ -44,15 +36,13 @@ pub fn install() -> Result<(), TopologyError> {
         .enumerate()
         .map(|(i, (ip, port, packet_key))| Node {
             role: Role::Mix,
-            // Three per layer, laid out layer one first, so the index names
-            // the layer a node forwards from.
+            // Table is laid out layer one first, three per layer.
             layer: (i / PER_LAYER) as u8 + 1,
             delay_ms: HOP_DELAY_MS,
             ip: *ip,
             port: *port,
-            // A mix hop is authenticated by its packet key when the header is
-            // sealed for it. The identity key names gateways, and no route
-            // built from this table consults one.
+            // Identity names gateways. A mix hop is authenticated by its
+            // packet key when the header is sealed for it.
             identity: [0u8; 32],
             packet_key: *packet_key,
         })

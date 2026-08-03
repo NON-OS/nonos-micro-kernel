@@ -14,31 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+/// Nym request and response protocol version this speaks.
+pub const PROTOCOL_VERSION: u8 = 3;
 
-use super::types::Node;
+/// Ask the exit to open a TCP connection to the named host.
+pub const REQ_CONNECT: u8 = 0;
+/// Forward stream bytes, or with the closed flag, close our half.
+pub const REQ_SEND: u8 = 1;
 
-/// Where a directory came from, which decides how it earns trust. Fetched
-/// bytes need a signature; a table compiled into the image is already covered
-/// by the image's own signatures and STARK enrollment.
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Provenance {
-    /// Compiled into the attested image.
-    Image,
-    /// Received over the network, signed by a trusted authority.
-    Signed,
-}
-
-#[derive(Clone, Copy)]
-pub struct DirectoryMeta {
-    pub epoch: u64,
-    pub not_before_ms: u64,
-    pub not_after_ms: u64,
-    pub issuer: [u8; 32],
-    pub provenance: Provenance,
-}
-
-pub struct ParsedDirectory {
-    pub meta: DirectoryMeta,
-    pub nodes: Vec<Node>,
-}
+/// Stream bytes coming back from the exit.
+pub const RESP_NETWORK_DATA: u8 = 1;
+/// The exit could not, or can no longer, serve the connection.
+pub const RESP_CONNECTION_ERROR: u8 = 2;

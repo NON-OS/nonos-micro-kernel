@@ -16,11 +16,9 @@
 
 use nonos_libc::mk_debug;
 
-/// Say which step of opening a tunnel refused.
-///
-/// A client is told only that the connect was rejected, which is all it can
-/// act on, but the reason matters here: no session, no exit, and a send that
-/// failed are three unrelated faults that look identical from the browser.
+/// Say which step of opening a tunnel refused. The client only learns the
+/// connect was rejected; no session, no exit and a failed send look identical
+/// from there.
 pub fn open_failed(step: &[u8]) {
     let mut line = [0u8; 64];
     let mut n = 0;
