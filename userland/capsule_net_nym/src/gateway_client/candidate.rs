@@ -32,6 +32,10 @@ pub fn connect_candidate(tcp_port: u32, index: usize) -> bool {
     match connect(tcp_port, candidate) {
         Ok(gateway) => {
             let _ = TABLE.lock().set_gateway(gateway);
+            // Only failures were reported, so a session that established left
+            // no trace at all and had to be inferred from an absence of
+            // errors. Say when the mixnet is reachable.
+            super::trace::bound(gateway.ip);
             true
         }
         Err(_) => false,

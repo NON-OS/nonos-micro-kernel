@@ -40,6 +40,25 @@ pub fn fail(stage: &[u8], code: u16) {
     mk_debug(line.as_ptr(), n + 1);
 }
 
+/// Report the gateway a session was established with.
+pub fn bound(ip: [u8; 4]) {
+    let mut line = [0u8; 64];
+    let mut n = 0;
+    for &b in b"[NET-NYM] gateway bound " {
+        line[n] = b;
+        n += 1;
+    }
+    for (i, &octet) in ip.iter().enumerate() {
+        if i > 0 {
+            line[n] = b'.';
+            n += 1;
+        }
+        n += write_u16(&mut line[n..], octet as u16);
+    }
+    line[n] = b'\n';
+    mk_debug(line.as_ptr(), n + 1);
+}
+
 fn write_u16(out: &mut [u8], mut v: u16) -> usize {
     let mut digits = [0u8; 5];
     let mut k = 0;

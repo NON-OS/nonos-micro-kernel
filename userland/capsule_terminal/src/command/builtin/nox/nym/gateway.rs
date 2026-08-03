@@ -14,10 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod gateway;
-mod run;
-mod status;
-mod topology;
-mod wire;
+use alloc::vec::Vec;
 
-pub use run::run;
+use crate::term::util::format_u64;
+
+/// Render the gateway a session is bound to as `address:port`.
+pub fn push_gateway(out: &mut Vec<u8>, health: &[u8]) {
+    for (i, &octet) in health[..4].iter().enumerate() {
+        if i > 0 {
+            out.push(b'.');
+        }
+        push_num(out, octet as u64);
+    }
+    out.push(b':');
+    push_num(out, u16::from_le_bytes([health[4], health[5]]) as u64);
+}
+
+fn push_num(out: &mut Vec<u8>, v: u64) {
+    let mut buf = [0u8; 24];
+    let k = format_u64(v, &mut buf);
+    out.extend_from_slice(&buf[..k]);
+}

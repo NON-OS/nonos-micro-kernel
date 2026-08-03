@@ -18,6 +18,19 @@ use crate::protocol::{E_OK, OP_HEALTHCHECK};
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 
+/// Answer with the gateway the client is bound to, or zeros when it has none.
+///
+/// Liveness alone reported that the capsule was running, which is the part
+/// nobody doubts. Whether it has reached the mixnet is the question being
+/// asked, and there was no way to see that from inside the machine.
 pub fn handle(pid: u32, req: &Request, tx: &mut [u8]) {
-    respond(pid, OP_HEALTHCHECK, E_OK, req.request_id, 0, tx);
+    let off = 20usize;
+    match crate::state::TABLE.lock().gateway() {
+        Some(gw) => {
+            tx[off..off + 4].copy_from_slice(&gw.ip);
+            tx[off + 4..off + 6].copy_from_slice(&gw.port.to_le_bytes());
+        }
+        None => tx[off..off + 6].fill(0),
+    }
+    respond(pid, OP_HEALTHCHECK, E_OK, req.request_id, 6, tx);
 }

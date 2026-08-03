@@ -56,9 +56,17 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.fill_rect(x as u32, PANEL_TOP as u32, PANEL_W as u32, 2, constants::ACCENT);
     fb.text_ttf(x + 14, PANEL_TOP + 12, "Settings", constants::FG, 16.0);
 
-    let status = match state.proxy.as_ref() {
-        Some(p) => format!("SOCKS5 proxy: {}:{}", p.host, p.port),
-        None => String::from("SOCKS5 proxy: off"),
+    // The mixnet route is reported ahead of a manual proxy because it is what
+    // actually carries the traffic. Reading "off" while pages leave through
+    // the mixnet would misdescribe the one property anyone opens this panel
+    // to check.
+    let status = if crate::browser::net::mixnet::is_on() {
+        String::from("Network: Nym mixnet")
+    } else {
+        match state.proxy.as_ref() {
+            Some(p) => format!("SOCKS5 proxy: {}:{}", p.host, p.port),
+            None => String::from("Network: direct, not anonymised"),
+        }
     };
     fb.text_ttf(x + 14, PANEL_TOP + 42, &status, constants::DIM, 14.0);
 
