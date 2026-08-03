@@ -15,6 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec;
+
+use super::errno::{E_CALL, E_ERRNO, E_LEN, E_MAGIC, E_OP, E_SHORT};
 use nonos_libc::mk_ipc_call;
 
 pub const HDR: usize = 20;
@@ -27,7 +29,7 @@ pub fn call(port: u32, op: u16, body: &[u8], out: &mut [u8]) -> Result<usize, u1
     let mut resp = vec![0u8; HDR + out.len()];
     let n = mk_ipc_call(port as u64, req.as_ptr(), req.len(), resp.as_mut_ptr(), resp.len());
     if n < 0 {
-        return Err(8);
+        return Err(E_CALL);
     }
     parse(op, &resp[..n as usize], out)
 }
@@ -41,20 +43,8 @@ fn write(out: &mut [u8], op: u16, len: u32) {
     out[16..20].copy_from_slice(&len.to_le_bytes());
 }
 
-/// Reply shorter than a header, so nothing could be read from it.
-pub const E_SHORT: u16 = 20;
-/// Reply carried another service's magic.
-pub const E_MAGIC: u16 = 21;
-/// Reply answered a different opcode than the one asked.
-pub const E_OP: u16 = 22;
-/// Reply claimed a payload that does not fit what was sent or asked for.
-pub const E_LEN: u16 = 23;
-/// Added to a service errno so it cannot be confused with the above.
-pub const E_ERRNO: u16 = 30;
-
-/// Each rejection reports its own reason. Folding them together names the
-/// call that failed but not what was wrong with the answer, which is the
-/// difference between a service that refused and one that never replied.
+/// Each rejection reports its own reason, so a log line says what was wrong
+/// with the answer rather than only that there was something.
 fn parse(op: u16, resp: &[u8], out: &mut [u8]) -> Result<usize, u16> {
     if resp.len() < HDR {
         return Err(E_SHORT);

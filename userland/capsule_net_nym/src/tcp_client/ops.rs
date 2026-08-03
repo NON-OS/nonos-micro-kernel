@@ -16,15 +16,14 @@
 
 use alloc::vec;
 
-use super::envelope::{call, E_ERRNO};
+use super::envelope::call;
+use super::errno::{E_ERRNO, E_LEN, E_SHORT_WRITE, RX_EMPTY};
 
 const OP_CONNECT: u16 = 3;
 const OP_SEND: u16 = 5;
 const OP_RECV: u16 = 6;
 const OP_CLOSE: u16 = 7;
 const SEGMENT_MAX: usize = 1460;
-/// net.tcp took fewer bytes than were offered.
-const E_SHORT_WRITE: u16 = 5;
 
 pub fn connect(port: u32, ip: [u8; 4], dst_port: u16) -> Result<u32, u16> {
     let mut body = [0u8; 6];
@@ -32,7 +31,7 @@ pub fn connect(port: u32, ip: [u8; 4], dst_port: u16) -> Result<u32, u16> {
     body[4..6].copy_from_slice(&dst_port.to_le_bytes());
     let mut out = [0u8; 4];
     if call(port, OP_CONNECT, &body, &mut out)? != 4 {
-        return Err(4);
+        return Err(E_LEN);
     }
     Ok(u32::from_le_bytes(out))
 }
@@ -44,14 +43,11 @@ pub fn send_all(port: u32, handle: u32, payload: &[u8]) -> Result<(), u16> {
     Ok(())
 }
 
-/// net.tcp reports an empty receive queue as an errno.
-const E_RX_EMPTY: u16 = 11;
-
 pub fn recv(port: u32, handle: u32, out: &mut [u8]) -> Result<usize, u16> {
     match call(port, OP_RECV, &handle.to_le_bytes(), out) {
         // Nothing has arrived yet. That is a state, not a failure: a peer
         // that has not answered is the normal case while waiting on one.
-        Err(e) if e == E_ERRNO + E_RX_EMPTY => Ok(0),
+        Err(e) if e == E_ERRNO + RX_EMPTY => Ok(0),
         other => other,
     }
 }
@@ -68,7 +64,7 @@ fn send_chunk(port: u32, handle: u32, chunk: &[u8]) -> Result<(), u16> {
     // for it, or a short reply buffer turns a delivered write into an error.
     let mut out = [0u8; 4];
     if call(port, OP_SEND, &body, &mut out)? != 4 {
-        return Err(4);
+        return Err(E_LEN);
     }
     // A partial write would leave the peer reading a truncated request, so it
     // is reported rather than passed off as success.

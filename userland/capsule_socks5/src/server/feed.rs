@@ -44,12 +44,17 @@ pub fn feed(pid: u32, data: &[u8]) -> Vec<u8> {
             Vec::new()
         }
         Event::Open(dest) => {
-            let id = server.manager.open(0).unwrap_or(0);
-            let outcome = open_tunnel(id, &dest);
+            // A full table has no id to give. Zero is reserved for "no
+            // connection", so using it would open a tunnel that every later
+            // frame fails to match, rather than telling the client no.
+            let opened = match server.manager.open(0) {
+                Some(id) => open_tunnel(id, &dest) == OpenOutcome::Opened,
+                None => false,
+            };
             let Some(conn) = server.clients.get(pid) else {
                 return Vec::new();
             };
-            let (reply, len) = conn.opened(outcome == OpenOutcome::Opened);
+            let (reply, len) = conn.opened(opened);
             reply[..len].to_vec()
         }
     }
