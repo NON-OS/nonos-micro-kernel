@@ -27,9 +27,15 @@ use nonos_tls::exchange;
 use super::https::Https;
 use super::io::SocketIo;
 
-/// A packfile for a small repository runs to a few megabytes. This bounds
-/// what a remote can make the terminal allocate for one request.
-const MAX_RESPONSE: usize = 16 * 1024 * 1024;
+/// What a remote can make the terminal allocate for one request.
+///
+/// A depth-1 clone of this kernel is a 33 MB pack, so 16 MB refused it before
+/// an object was read. Indexing that pack peaks near four times its size,
+/// dominated by its largest single object rather than by how many it holds,
+/// which is affordable against the memory a capsule has. 64 MB covers the
+/// repositories this is meant for and still refuses a remote that decides to
+/// send without end.
+const MAX_RESPONSE: usize = 64 * 1024 * 1024;
 
 /// Connect, handshake, send, read, and hand back the body.
 ///

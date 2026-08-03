@@ -13,14 +13,19 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Reading a whole pack into resolved objects.
+//! One row of `git verify-pack -v`.
 
-mod chain;
-mod object;
-mod one;
-mod read;
-mod resolve;
+use nonos_git::ObjectId;
 
-pub use object::PackObject;
-pub use one::read_at;
-pub use read::read_pack;
+/// The columns are id, type, size, size-in-pack, offset. Anything else in the
+/// output, such as the chain histogram at the end, has no id in the first
+/// column and is skipped.
+pub fn git_row(line: &str) -> Option<(ObjectId, u64)> {
+    let mut parts = line.split_whitespace();
+    let id = parts.next()?;
+    if id.len() != 40 {
+        return None;
+    }
+    let offset = parts.nth(3)?.parse::<u64>().ok()?;
+    Some((ObjectId::from_hex(id)?, offset))
+}

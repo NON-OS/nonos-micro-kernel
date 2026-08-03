@@ -14,14 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Git's object model for the NONOS terminal, from scratch and `no_std`.
+//! Git for the NONOS terminal, from scratch and `no_std`.
 //!
-//! A git repository is a content-addressed store: every blob, tree and commit
-//! is named by the SHA-1 of its framed bytes, `<type> <size>\0<content>`. This
-//! crate is that model, packfiles both ways, the wire protocol, and clone and
-//! push on top of a transport it does not implement. It has to agree with real
-//! git bit for bit, so it is checked against real git rather than against
-//! itself.
+//! Every object is named by the SHA-1 of its framed bytes. This crate is that
+//! model, packfiles both ways, the wire protocol, and clone and push over a
+//! transport it does not implement. It has to agree with real git bit for bit,
+//! so it is checked against real git rather than against itself.
 
 #![cfg_attr(not(test), no_std)]
 
@@ -51,7 +49,8 @@ pub use object::{frame, unframe, ObjectKind};
 pub use odb::{read_object, write_object, OdbError};
 pub use oid::ObjectId;
 pub use pack::{
-    index_entries, pack_lookup, read_pack, write_pack, write_pack_index, PackError, PackObject,
+    build_index_rows, index_entries, pack_lookup, read_pack, write_pack, write_pack_index,
+    PackError, PackObject,
 };
 pub use refs::{is_valid_ref_name, read_head, resolve_head, set_head_branch, update_ref, Head};
 pub use remote::{clone, discover, fetch, push};

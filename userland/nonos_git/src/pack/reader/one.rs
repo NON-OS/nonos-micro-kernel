@@ -20,20 +20,20 @@ extern crate alloc;
 use alloc::vec::Vec;
 
 use crate::object::ObjectKind;
+use crate::oid::ObjectId;
 use crate::zlib::decompress_prefix;
 
 use super::super::delta::apply;
-use super::super::entry::{parse as parse_entry, EntryKind};
+use super::super::entry::parse as parse_entry;
 use super::super::error::PackError;
-
-/// How long a delta chain may be before this gives up.
-///
-/// Git packs keep chains short, and a pack claiming a longer one is either
-/// hostile or damaged. Following it without a bound would recurse until the
-/// stack ran out.
-const MAX_CHAIN: u32 = 64;
+use super::chain::chain;
 
 /// The object at `offset`, with its delta chain resolved.
+///
+/// The chain is walked to its base first, reading only entry headers, and the
+/// deltas are then applied from the base forward. Recursing instead would
+/// hold every intermediate object alive at once, which on a large pack costs
+/// several times the pack itself.
 ///
 /// A reference delta names its base by id rather than position, which cannot
 /// be followed without an index, so `find` is asked where that id lives.
@@ -41,30 +41,27 @@ pub fn read_at<F>(
     pack: &[u8],
     offset: usize,
     find: &F,
-    depth: u32,
+    _depth: u32,
 ) -> Result<(ObjectKind, Vec<u8>), PackError>
 where
-    F: Fn(&crate::oid::ObjectId) -> Option<usize>,
+    F: Fn(&ObjectId) -> Option<usize>,
 {
-    if depth > MAX_CHAIN {
-        return Err(PackError::MissingBase);
+    let (mut links, kind) = chain(pack, offset, find)?;
+
+    // The base is last, so walk back applying each delta onto the running
+    // content. Only that content and one delta are alive at any moment.
+    let mut content = inflate_at(pack, links.pop().ok_or(PackError::MissingBase)?)?;
+    while let Some(delta_at) = links.pop() {
+        let raw = inflate_at(pack, delta_at)?;
+        content = apply(&content, &raw)?;
     }
+    Ok((kind, content))
+}
+
+fn inflate_at(pack: &[u8], offset: usize) -> Result<Vec<u8>, PackError> {
     let mut at = offset;
-    let (entry, _size) = parse_entry(pack, &mut at)?;
+    let (_entry, _size) = parse_entry(pack, &mut at)?;
     let rest = pack.get(at..).ok_or(PackError::Truncated)?;
     let (raw, _used) = decompress_prefix(rest).map_err(|_| PackError::Corrupt)?;
-
-    match entry {
-        EntryKind::Whole(kind) => Ok((kind, raw)),
-        EntryKind::OfsDelta(back) => {
-            let base_at = offset.checked_sub(back as usize).ok_or(PackError::MissingBase)?;
-            let (kind, base) = read_at(pack, base_at, find, depth + 1)?;
-            Ok((kind, apply(&base, &raw)?))
-        }
-        EntryKind::RefDelta(id) => {
-            let base_at = find(&id).ok_or(PackError::MissingBase)?;
-            let (kind, base) = read_at(pack, base_at, find, depth + 1)?;
-            Ok((kind, apply(&base, &raw)?))
-        }
-    }
+    Ok(raw)
 }

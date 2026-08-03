@@ -20,7 +20,7 @@ extern crate alloc;
 use alloc::format;
 
 use crate::oid::ObjectId;
-use crate::pack::{index_entries, read_pack, write_pack_index};
+use crate::pack::{build_index_rows, write_pack_index};
 use crate::sha1::Sha1;
 use crate::storage::Storage;
 
@@ -31,13 +31,16 @@ use super::super::error::OdbError;
 /// Storing the pack whole is what makes a real repository possible at all.
 /// Exploding it would mean one file per object, which for a clone of any size
 /// is tens of thousands of writes and the whole tree resident at once.
+///
+/// The index is built straight from the pack without keeping what it
+/// inflates, so the cost here is the pack itself plus one object at a time,
+/// not the pack plus everything in it.
 pub fn store_pack_files<S: Storage>(
     storage: &mut S,
     git_dir: &str,
     pack: &[u8],
 ) -> Result<usize, OdbError> {
-    let objects = read_pack(pack).map_err(|_| OdbError::Malformed)?;
-    let rows = index_entries(pack, &objects).ok_or(OdbError::Malformed)?;
+    let rows = build_index_rows(pack).map_err(|_| OdbError::Malformed)?;
     let body = pack.len().checked_sub(20).ok_or(OdbError::Malformed)?;
     let sha = Sha1::digest(&pack[..body]);
     let idx = write_pack_index(&rows, &sha).ok_or(OdbError::Malformed)?;
@@ -47,5 +50,5 @@ pub fn store_pack_files<S: Storage>(
     let name = format!("{dir}/pack-{}", ObjectId::from_bytes(sha).to_hex());
     storage.write(&format!("{name}.pack"), pack)?;
     storage.write(&format!("{name}.idx"), &idx)?;
-    Ok(objects.len())
+    Ok(rows.len())
 }
