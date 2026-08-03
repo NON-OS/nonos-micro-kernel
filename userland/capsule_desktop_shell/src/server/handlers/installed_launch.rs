@@ -20,7 +20,9 @@
 //! owns that load instead. The pid it returns is remembered, so a later click
 //! raises the running window rather than loading a second copy.
 
-use nonos_libc::{mk_ipc_send_to_pid, mk_yield};
+use alloc::vec::Vec;
+
+use nonos_libc::{mk_ipc_send_to_pid, mk_service_lookup, mk_yield};
 
 use super::launcher_request::focus_frame;
 use crate::installer_client::load_by_name;
@@ -28,6 +30,13 @@ use crate::state::Context;
 
 pub fn launch(ctx: &mut Context, name: &[u8]) {
     if let Some(pid) = ctx.installed_pids.get(name).copied() {
+        if focus(pid) {
+            return;
+        }
+        ctx.installed_pids.remove(name);
+    }
+    if let Some(pid) = already_running(name) {
+        ctx.installed_pids.insert(name.to_vec(), pid);
         if focus(pid) {
             return;
         }
@@ -58,6 +67,24 @@ fn boot(pid: u32) {
             return;
         }
     }
+}
+
+/// Another client -- the terminal's `nox install`, say -- may already have
+/// loaded the app, and this shell would know nothing about it. Spawning a
+/// second copy then dies in the kernel on the service endpoint the live
+/// instance still holds, with no marker and no reply, so ask the registry
+/// before loading.
+fn already_running(name: &[u8]) -> Option<u32> {
+    let mut service = Vec::with_capacity(b"app.".len() + name.len());
+    service.extend_from_slice(b"app.");
+    service.extend_from_slice(name);
+    let mut port = 0u32;
+    let mut pid = 0u32;
+    let rc = mk_service_lookup(service.as_ptr(), service.len(), &mut port, &mut pid);
+    if rc < 0 || pid == 0 {
+        return None;
+    }
+    Some(pid)
 }
 
 /// A send failure means the pid is gone or no longer takes control frames, so
