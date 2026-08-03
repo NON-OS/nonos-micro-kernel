@@ -16,5 +16,8 @@
 
 mod envelope;
 mod ops;
+mod state;
+mod wait;
 
 pub use ops::{close, connect, recv, send_all};
+pub use wait::wait_established;

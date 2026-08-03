@@ -14,19 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod autoconnect;
-mod bandwidth;
-mod binary;
-mod establish;
-mod handshake;
-mod ops;
-mod register;
-mod ws;
+use super::envelope::call;
 
-pub use ops::{close, connect, recv, send};
-pub use binary::{
-    is_pushed_message, make_encrypted_blob, parse_blob, Incoming, KIND_FORWARD_SPHINX,
-    KIND_FORWARD_SPHINX_V2, KIND_PUSHED_MIX_MESSAGE,
-};
-pub use autoconnect::autoconnect;
-pub use bandwidth::claim_free_bandwidth;
+const OP_STATE: u16 = 9;
+
+pub const SYN_SENT: u8 = 1;
+pub const SYN_RECEIVED: u8 = 2;
+pub const ESTABLISHED: u8 = 3;
+pub const CLOSED: u8 = 0xFF;
+
+/// One-byte connection state from `net.tcp`, mapped from the smoltcp state
+/// machine. Read-only: it neither drains the socket nor advances it.
+pub fn state(port: u32, handle: u32) -> Result<u8, u16> {
+    let mut out = [0u8; 1];
+    if call(port, OP_STATE, &handle.to_le_bytes(), &mut out)? != 1 {
+        return Err(4);
+    }
+    Ok(out[0])
+}

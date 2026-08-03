@@ -14,26 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::establish::establish;
 use super::ws;
-use crate::protocol::E_GATEWAY_PROTO;
 use crate::state::{Gateway, Transport};
 use crate::tcp_client;
 
 pub fn connect(tcp_port: u32, mut gateway: Gateway) -> Result<Gateway, u16> {
     let stream = tcp_client::connect(tcp_port, gateway.ip, gateway.port)?;
     gateway.stream = stream;
-    if gateway.transport == Transport::WebSocket {
-        ws::handshake(tcp_port, gateway).map_err(|_| E_GATEWAY_PROTO)?;
-        if gateway.identity != [0u8; 32] {
-            gateway.shared_key = super::register::register(tcp_port, &gateway)?;
-            crate::state::set_gateway_shared_key(&gateway.shared_key);
-            // Without allowance the gateway prices a correct packet and
-            // refuses it, which reads as a protocol fault rather than a
-            // billing one.
-            let _ = super::bandwidth::claim_free_bandwidth(tcp_port, gateway.stream);
+    match establish(tcp_port, &mut gateway) {
+        Ok(()) => Ok(gateway),
+        Err(e) => {
+            // A candidate that fails partway leaves the socket open. Closing
+            // it here is what keeps a run down the bootstrap list from
+            // stranding one connection per gateway it tried.
+            let _ = tcp_client::close(tcp_port, stream);
+            Err(e)
         }
     }
-    Ok(gateway)
 }
 
 pub fn send(tcp_port: u32, gateway: Gateway, payload: &[u8]) -> Result<(), u16> {
