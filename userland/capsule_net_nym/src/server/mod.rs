@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod authz;
+mod connect_tick;
 mod handlers;
 mod parse_req;
 mod respond;

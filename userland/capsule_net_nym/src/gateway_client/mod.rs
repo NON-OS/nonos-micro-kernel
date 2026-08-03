@@ -17,6 +17,7 @@
 mod autoconnect;
 mod bandwidth;
 mod binary;
+mod candidate;
 mod establish;
 mod handshake;
 mod ops;
@@ -30,4 +31,5 @@ pub use binary::{
     KIND_FORWARD_SPHINX_V2, KIND_PUSHED_MIX_MESSAGE,
 };
 pub use autoconnect::autoconnect;
+pub use candidate::connect_candidate;
 pub use bandwidth::claim_free_bandwidth;
