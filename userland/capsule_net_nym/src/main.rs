@@ -45,6 +45,9 @@ pub unsafe extern "C" fn _start() -> ! {
         mk_exit(1);
     }
     wait_for_setup();
+    // Reach the mixnet without waiting to be configured. A failure here is not
+    // fatal: the capsule still serves clients that bring their own gateway.
+    let _ = gateway_client::autoconnect(setup::tcp_port());
     server::run();
 }
 

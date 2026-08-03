@@ -17,6 +17,7 @@
 mod authority;
 mod credential;
 mod directory;
+mod bootstrap;
 mod gateway;
 mod identity;
 mod shared_key;
@@ -43,3 +44,4 @@ pub use timing::{
 };
 pub use identity::{client_identity, set_client_identity, Identity as ClientIdentity};
 pub use shared_key::{clear_gateway_shared_key, gateway_shared_key, set_gateway_shared_key};
+pub use bootstrap::{bootstrap_gateway, BOOTSTRAP_GATEWAYS};
