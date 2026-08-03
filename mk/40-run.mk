@@ -15,12 +15,16 @@ $(QEMU_BLK_IMG):
 # re-pack on every mtime bump while still not ordering creation before packing.
 QEMU_BLK_STORE_STAMP := $(QEMU_BLK_IMG).store.stamp
 
-$(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) tools/nonos-store-pack | $(QEMU_BLK_IMG)
+$(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) tools/nonos-store-pack | $(QEMU_BLK_IMG)
 	@$(NONOS_PYTHON) tools/nonos-store-pack --image $(QEMU_BLK_IMG) \
 		--entry /capsules/std_proof.elf=$(std-proof_BIN) \
 		--entry /capsules/std_proof.nonos_id_cert.bin=$(std-proof_CERT) \
 		--entry /capsules/std_proof.manifest.bin=$(std-proof_MANIFEST) \
-		--entry /capsules/std_proof.zk_trailer.bin=$(std-proof_ATTESTATION)
+		--entry /capsules/std_proof.zk_trailer.bin=$(std-proof_ATTESTATION) \
+		--entry /capsules/gui_demo.elf=$(gui_demo_BIN) \
+		--entry /capsules/gui_demo.nonos_id_cert.bin=$(gui_demo_CERT) \
+		--entry /capsules/gui_demo.manifest.bin=$(gui_demo_MANIFEST) \
+		--entry /capsules/gui_demo.zk_trailer.bin=$(gui_demo_ATTESTATION)
 	@touch $@
 
 # Declared in mk/20-build.mk; this only extends its prerequisites.
