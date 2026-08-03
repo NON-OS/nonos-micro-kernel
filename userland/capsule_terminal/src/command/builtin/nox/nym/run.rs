@@ -17,7 +17,6 @@
 use alloc::vec::Vec;
 use nonos_libc::mk_service_lookup;
 
-use super::gateway::push_gateway;
 use super::status::status;
 use super::topology::topology_line;
 use super::wire::{OP_HEALTHCHECK, OP_TOPOLOGY_STATUS};
@@ -37,18 +36,13 @@ pub fn run(state: &mut State) -> bool {
         state.scrollback.push_error(b"nym: capsule not running");
         return false;
     }
-    let Some(health) = status(port, OP_HEALTHCHECK, 6) else {
+    if status(port, OP_HEALTHCHECK, 0).is_none() {
         state.scrollback.push_error(b"nym: capsule not answering");
         return false;
-    };
+    }
 
     let mut line: Vec<u8> = Vec::new();
-    if health[..4] == [0, 0, 0, 0] {
-        line.extend_from_slice(b"nym: client up, no gateway yet");
-    } else {
-        line.extend_from_slice(b"nym: gateway ");
-        push_gateway(&mut line, &health);
-    }
+    line.extend_from_slice(b"nym: client up");
     state.scrollback.push_line(&line);
 
     match status(port, OP_TOPOLOGY_STATUS, 28) {
