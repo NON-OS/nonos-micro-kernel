@@ -13,22 +13,29 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Pack files: the format a fetch or clone sends objects in.
-//!
-//! A pack is a header, a run of zlib-compressed objects, and a SHA-1 trailer.
-//! Most objects arrive as deltas against another object in the same pack, so
-//! reading one means resolving those chains before anything can be stored.
+//! The first-byte fanout table.
 
-mod delta;
-mod entry;
-mod error;
-mod header;
-mod index;
-mod reader;
-mod varint;
-mod write;
+extern crate alloc;
 
-pub use error::PackError;
-pub use reader::{read_pack, PackObject};
-pub use index::write_index as write_pack_index;
-pub use write::write_pack;
+use alloc::vec::Vec;
+
+use crate::oid::ObjectId;
+
+/// Counts of ids whose first byte is at most each value.
+///
+/// This is what makes a lookup cheap: the first byte of an id picks a range
+/// out of 256, and the search only ever covers that range instead of every
+/// object in the pack.
+pub(super) fn fanout(sorted: &[(ObjectId, u64)]) -> Vec<u32> {
+    let mut counts = [0u32; 256];
+    for (id, _) in sorted {
+        counts[usize::from(id.as_bytes()[0])] += 1;
+    }
+    let mut out = Vec::with_capacity(256);
+    let mut running = 0u32;
+    for c in counts {
+        running += c;
+        out.push(running);
+    }
+    out
+}

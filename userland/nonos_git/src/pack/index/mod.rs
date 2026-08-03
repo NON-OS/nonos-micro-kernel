@@ -13,22 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Pack files: the format a fetch or clone sends objects in.
-//!
-//! A pack is a header, a run of zlib-compressed objects, and a SHA-1 trailer.
-//! Most objects arrive as deltas against another object in the same pack, so
-//! reading one means resolving those chains before anything can be stored.
+//! The index that makes a pack usable without unpacking it.
 
-mod delta;
-mod entry;
-mod error;
-mod header;
-mod index;
-mod reader;
-mod varint;
+mod fanout;
 mod write;
 
-pub use error::PackError;
-pub use reader::{read_pack, PackObject};
-pub use index::write_index as write_pack_index;
-pub use write::write_pack;
+pub use write::write_index;
