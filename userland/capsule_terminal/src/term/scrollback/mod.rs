@@ -26,5 +26,4 @@ mod role;
 mod scroll_down;
 mod scroll_up;
 mod types;
-pub use role::Role;
 pub use types::Scrollback;

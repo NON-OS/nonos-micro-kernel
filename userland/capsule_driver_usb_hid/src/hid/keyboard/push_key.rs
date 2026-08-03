@@ -25,7 +25,7 @@ impl Keyboard {
         }
         // Ctrl+Alt+Space cycles the keyboard layout inside the driver and
         // is consumed here; no app has a use for that chord as input.
-        if pressed && scancode == 0x2c && self.modifiers & 0x11 != 0 && self.modifiers & 0x44 != 0 {
+        if pressed && scancode == 0x2c && self.modifiers & 0x11 != 0 && self.modifiers & 0x04 != 0 {
             let _ = super::super::active::cycle();
             return;
         }

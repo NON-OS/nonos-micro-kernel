@@ -52,7 +52,7 @@ pub fn ls(state: &mut State, argv: &[&[u8]]) {
         if cut < rest.len() || bytes.last() == Some(&b'/') {
             name.push(b'/');
         }
-        if !name.is_empty() && !seen.iter().any(|s| *s == name) {
+        if !name.is_empty() && !seen.contains(&name) {
             seen.push(name);
         }
     }

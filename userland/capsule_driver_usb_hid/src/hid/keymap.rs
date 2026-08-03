@@ -20,6 +20,12 @@
 // and caps rule. Control keys keep their ASCII control codes.
 
 const SHIFT_MASK: u8 = 0x22;
+// Right alt alone. On every layout here but US it is AltGr and selects a
+// third level of characters rather than acting as alt.
+const ALTGR_MASK: u8 = 0x40;
+// Keyboard Non-US backslash: the extra key an ISO board has between the
+// left shift and Z.
+const ISO_KEY: u8 = 0x64;
 const CAPS_LOCK: u8 = 0x39;
 
 pub fn is_caps_lock(scancode: u8) -> bool {
@@ -51,12 +57,17 @@ fn us_base(scancode: u8) -> u8 {
 /// Final codepoint for a printable key under the active layout, shift and
 /// caps state; 0 for control, navigation and unknown usages.
 pub fn resolve_code(scancode: u8, modifiers: u8, caps: bool) -> u32 {
+    let shift = (modifiers & SHIFT_MASK) != 0;
+    let altgr = (modifiers & ALTGR_MASK) != 0;
+    let layout = super::active::current();
+    if scancode == ISO_KEY {
+        return nonos_keymap::iso(layout, shift, altgr);
+    }
     let base = us_base(scancode);
     if base == 0 {
         return 0;
     }
-    let shift = (modifiers & SHIFT_MASK) != 0;
-    nonos_keymap::resolve(base as u32, shift, caps, super::active::current())
+    nonos_keymap::resolve(base as u32, shift, caps, altgr, layout)
 }
 
 /// ASCII byte for the event queue wire format (one byte on the wire).

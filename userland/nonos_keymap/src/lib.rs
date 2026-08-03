@@ -16,9 +16,11 @@
 
 #![no_std]
 
+mod iso;
 mod layout;
 mod resolve;
 mod tables;
 
+pub use iso::{iso, KEY_ISO};
 pub use layout::Layout;
 pub use resolve::resolve;

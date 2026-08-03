@@ -47,6 +47,8 @@ pub(super) fn keycode_for(scan: u8) -> Option<u32> {
         0x51 => b'3' as u32,
         0x52 => b'0' as u32,
         0x53 => b'.' as u32,
+        // The extra key an ISO board has between the left shift and Z.
+        0x56 => nonos_keymap::KEY_ISO,
         0x57 => KEYCODE_F11,
         0x58 => KEYCODE_F12,
         _ => return None,

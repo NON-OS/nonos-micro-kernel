@@ -28,9 +28,9 @@ pub(super) enum Plan<'a> {
 // Scan for an input redirect `< path`, returning the args with the
 // `< path` pair removed plus the captured path (None if absent). Output
 // redirects and pipes are scanned separately on the returned args.
-pub(super) fn split_input<'a>(
-    args: &'a [&'a [u8]],
-) -> Result<(Vec<&'a [u8]>, Option<&'a [u8]>), &'static [u8]> {
+type Split<'a> = Result<(Vec<&'a [u8]>, Option<&'a [u8]>), &'static [u8]>;
+
+pub(super) fn split_input<'a>(args: &'a [&'a [u8]]) -> Split<'a> {
     let mut out: Vec<&[u8]> = Vec::new();
     let mut path: Option<&[u8]> = None;
     let mut i = 0;

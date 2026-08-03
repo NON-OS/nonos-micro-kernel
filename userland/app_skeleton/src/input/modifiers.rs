@@ -20,3 +20,6 @@ pub const MOD_ALT: u16 = 1 << 2;
 pub const MOD_META: u16 = 1 << 3;
 pub const MOD_CAPS: u16 = 1 << 4;
 pub const MOD_NUM: u16 = 1 << 5;
+/// The right alt key on a European board, which selects a third level of
+/// characters rather than acting as alt.
+pub const MOD_ALTGR: u16 = 1 << 6;

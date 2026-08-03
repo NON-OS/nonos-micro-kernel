@@ -21,6 +21,7 @@ use crate::term::grid::types::Grid;
 use crate::term::state::State;
 use crate::term::util::copy_into;
 
+mod git_test;
 mod jobs_test;
 mod kernel_api;
 mod proc_lifecycle;
@@ -327,6 +328,7 @@ fn run_ext(state: &mut State) {
     kernel_api::run();
     proc_lifecycle::run();
     jobs_test::run(state);
+    git_test::run(state);
 }
 
 fn run_cmd(state: &mut State, cmd: &[u8]) {

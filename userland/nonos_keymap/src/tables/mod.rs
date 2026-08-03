@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod altgr;
 mod de;
 mod es;
 mod fr;
@@ -25,6 +26,8 @@ use crate::layout::Layout;
 
 // The letter a layout produces at the physical position of US `base`
 // (a..z). Identity except where the layout moves letters.
+pub(crate) use altgr::altgr;
+
 pub(crate) fn letter(layout: Layout, base: u8) -> u8 {
     match layout {
         Layout::De => de::letter(base),

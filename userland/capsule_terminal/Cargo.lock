@@ -68,8 +68,23 @@ name = "nonos_base64"
 version = "0.2.0"
 
 [[package]]
+name = "nonos_git"
+version = "0.1.0"
+
+[[package]]
+name = "nonos_http"
+version = "0.1.0"
+
+[[package]]
 name = "nonos_inflate"
 version = "0.2.0"
+
+[[package]]
+name = "nonos_socket"
+version = "0.1.0"
+dependencies = [
+ "nonos_userland_libc",
+]
 
 [[package]]
 name = "nonos_terminal"
@@ -77,7 +92,18 @@ version = "0.2.0"
 dependencies = [
  "nonos_app_skeleton",
  "nonos_base64",
+ "nonos_git",
+ "nonos_http",
  "nonos_inflate",
+ "nonos_socket",
+ "nonos_tls",
+ "nonos_userland_libc",
+]
+
+[[package]]
+name = "nonos_tls"
+version = "0.1.0"
+dependencies = [
  "nonos_userland_libc",
 ]
 
