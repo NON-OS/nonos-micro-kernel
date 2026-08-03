@@ -27,4 +27,4 @@ pub use keys::{
     KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_RIGHT, KEY_TAB, KEY_UP,
 };
 pub use kind::InputKind;
-pub use modifiers::{MOD_ALT, MOD_CAPS, MOD_CTRL, MOD_META, MOD_NUM, MOD_SHIFT};
+pub use modifiers::{MOD_ALT, MOD_ALTGR, MOD_CAPS, MOD_CTRL, MOD_META, MOD_NUM, MOD_SHIFT};

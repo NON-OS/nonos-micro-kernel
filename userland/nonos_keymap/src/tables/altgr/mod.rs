@@ -13,13 +13,25 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! The AltGr level, layout by layout.
 
-pub const MOD_SHIFT: u16 = 1 << 0;
-pub const MOD_CTRL: u16 = 1 << 1;
-pub const MOD_ALT: u16 = 1 << 2;
-pub const MOD_META: u16 = 1 << 3;
-pub const MOD_CAPS: u16 = 1 << 4;
-pub const MOD_NUM: u16 = 1 << 5;
-/// The right alt key on a European board, which selects a third level of
-/// characters rather than acting as alt.
-pub const MOD_ALTGR: u16 = 1 << 6;
+mod de;
+mod es;
+mod fr;
+mod it;
+mod uk;
+
+use crate::layout::Layout;
+
+/// The character AltGr produces on this key, or 0 when the layout puts
+/// nothing there and the ordinary level should be used instead.
+pub(crate) fn altgr(layout: Layout, base: u8, shift: bool) -> u32 {
+    match layout {
+        Layout::Us => 0,
+        Layout::Uk => uk::altgr(base),
+        Layout::De => de::altgr(base),
+        Layout::Fr => fr::altgr(base),
+        Layout::Es => es::altgr(base),
+        Layout::It => it::altgr(base, shift),
+    }
+}

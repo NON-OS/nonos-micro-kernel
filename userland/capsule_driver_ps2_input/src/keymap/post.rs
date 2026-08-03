@@ -28,13 +28,17 @@ pub const MOD_CTRL: u16 = 1 << 1;
 pub const MOD_ALT: u16 = 1 << 2;
 pub const MOD_META: u16 = 1 << 3;
 pub const MOD_CAPS: u16 = 1 << 4;
+pub const MOD_ALTGR: u16 = 1 << 6;
 
 /// The modifier bit a keycode toggles, or None for a normal key.
 pub fn modifier_bit(keycode: u32) -> Option<u16> {
     match keycode {
         KEYCODE_LSHIFT | KEYCODE_RSHIFT => Some(MOD_SHIFT),
         KEYCODE_LCTRL | KEYCODE_RCTRL => Some(MOD_CTRL),
-        KEYCODE_LALT | KEYCODE_RALT => Some(MOD_ALT),
+        KEYCODE_LALT => Some(MOD_ALT),
+        // Right alt is AltGr on every layout here but US, where nothing is
+        // mapped to it, so it never doubles as alt.
+        KEYCODE_RALT => Some(MOD_ALTGR),
         KEYCODE_LMETA | KEYCODE_RMETA => Some(MOD_META),
         _ => None,
     }
@@ -48,7 +52,18 @@ pub fn publish(t: Translated, mods: u16, caps: bool) -> bool {
     // function and modifier keycodes live above the ASCII range and pass
     // through. Key-up events resolve with the modifiers held at release;
     // character input only reads key-down, so the asymmetry is harmless.
-    let code = nonos_keymap::resolve(t.keycode, mods & MOD_SHIFT != 0, caps, active::current());
+    let code = nonos_keymap::resolve(
+        t.keycode,
+        mods & MOD_SHIFT != 0,
+        caps,
+        mods & MOD_ALTGR != 0,
+        active::current(),
+    );
+    // A key the active layout leaves empty, such as the ISO key on a US
+    // layout, produces nothing rather than a null character.
+    if code == 0 {
+        return false;
+    }
     let flags = if caps { mods | MOD_CAPS } else { mods };
     let ev = InputEvent { kind, flags, code, x: 0, y: 0, delta_x: 0, delta_y: 0, timestamp_ns: 0 };
     let rc = mk_input_event_post(&ev);

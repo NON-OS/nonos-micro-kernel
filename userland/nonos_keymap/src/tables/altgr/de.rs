@@ -13,13 +13,21 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// German. Brackets and braces sit across the 7 to 0 row, @ on Q, and the
+// backslash and tilde on the two keys right of the zero.
 
-pub const MOD_SHIFT: u16 = 1 << 0;
-pub const MOD_CTRL: u16 = 1 << 1;
-pub const MOD_ALT: u16 = 1 << 2;
-pub const MOD_META: u16 = 1 << 3;
-pub const MOD_CAPS: u16 = 1 << 4;
-pub const MOD_NUM: u16 = 1 << 5;
-/// The right alt key on a European board, which selects a third level of
-/// characters rather than acting as alt.
-pub const MOD_ALTGR: u16 = 1 << 6;
+pub(super) fn altgr(base: u8) -> u32 {
+    let c = match base {
+        b'7' => b'{',
+        b'8' => b'[',
+        b'9' => b']',
+        b'0' => b'}',
+        b'-' => b'\\',
+        b']' => b'~',
+        b'q' => b'@',
+        b'e' => return 0x20AC, // euro sign
+        b'm' => return 0x00B5, // micro sign
+        _ => return 0,
+    };
+    c as u32
+}

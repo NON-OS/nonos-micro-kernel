@@ -13,13 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// British. The layout is US-shaped, so AltGr only carries the two
+// characters the UK board prints on its front faces.
 
-pub const MOD_SHIFT: u16 = 1 << 0;
-pub const MOD_CTRL: u16 = 1 << 1;
-pub const MOD_ALT: u16 = 1 << 2;
-pub const MOD_META: u16 = 1 << 3;
-pub const MOD_CAPS: u16 = 1 << 4;
-pub const MOD_NUM: u16 = 1 << 5;
-/// The right alt key on a European board, which selects a third level of
-/// characters rather than acting as alt.
-pub const MOD_ALTGR: u16 = 1 << 6;
+pub(super) fn altgr(base: u8) -> u32 {
+    match base {
+        b'4' => 0x20AC, // euro sign
+        b'`' => 0x00A6, // broken bar
+        _ => 0,
+    }
+}

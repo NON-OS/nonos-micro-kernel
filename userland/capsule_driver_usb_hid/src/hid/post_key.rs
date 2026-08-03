@@ -68,8 +68,9 @@ fn resolved_or_usage(ev: KeyEvent) -> u32 {
 fn flags(modifiers: u8, caps: bool) -> u16 {
     let shift = u16::from((modifiers & 0x22) != 0);
     let ctrl = u16::from((modifiers & 0x11) != 0) << 1;
-    let alt = u16::from((modifiers & 0x44) != 0) << 2;
+    let alt = u16::from((modifiers & 0x04) != 0) << 2;
+    let altgr = u16::from((modifiers & 0x40) != 0) << 6;
     let meta = u16::from((modifiers & 0x88) != 0) << 3;
     let caps = u16::from(caps) << 4;
-    shift | ctrl | alt | meta | caps
+    shift | ctrl | alt | altgr | meta | caps
 }

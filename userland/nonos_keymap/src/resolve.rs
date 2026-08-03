@@ -24,14 +24,28 @@ use crate::tables;
 /// a/q, z/w and m; QWERTZ swaps y/z), then case: shift XOR caps-lock,
 /// matching how caps behaves on real keyboards (caps only affects
 /// letters). Every other key resolves through the layout's symbol table
-/// with the shift state alone. Codepoints outside the printable ASCII
-/// base range (navigation, function and modifier keys) pass through
-/// untouched, as do values that are not a US base character.
-pub fn resolve(base: u32, shift: bool, caps: bool, layout: Layout) -> u32 {
+/// with the shift state alone.
+///
+/// AltGr is checked first and only wins where the layout puts something
+/// on the third level, so holding it over a key with nothing there gives
+/// the ordinary character rather than nothing at all. Codepoints outside
+/// the printable ASCII base range (navigation, function and modifier
+/// keys) pass through untouched, as do values that are not a US base
+/// character.
+pub fn resolve(base: u32, shift: bool, caps: bool, altgr: bool, layout: Layout) -> u32 {
+    if base == crate::iso::KEY_ISO {
+        return crate::iso::iso(layout, shift, altgr);
+    }
     if !(0x20..=0x7E).contains(&base) {
         return base;
     }
     let b = base as u8;
+    if altgr {
+        let c = tables::altgr(layout, b, shift);
+        if c != 0 {
+            return c;
+        }
+    }
     // AZERTY's M key sits where US ';' is; resolve it before the generic
     // letter path so it gets letter casing, and let the US 'm' position
     // fall through to the symbol table (it produces ',' / '?' there).
