@@ -13,26 +13,17 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! The all-zero id.
 
-//! Shared test fixtures.
-//!
-//! Each integration test binary compiles this module but uses only the parts
-//! it needs, so unused items here are expected rather than dead.
+use super::object_id::ObjectId;
 
-#![allow(dead_code, unused_imports)]
-
-mod build;
-mod git_cmd;
-mod local_git;
-mod receive;
-mod replay;
-mod scratch;
-mod storage;
-
-pub use build::{build_repo, signature};
-pub use git_cmd::{git, git_available};
-pub use local_git::LocalGit;
-pub use receive::receive_pack;
-pub use replay::Replay;
-pub use scratch::Scratch;
-pub use storage::DirStorage;
+impl ObjectId {
+    /// The id git uses to mean "this ref does not exist yet".
+    ///
+    /// It is not a hash of anything. A push naming it as the value it expects
+    /// is saying the branch is unborn, and the receiver refuses the push if
+    /// the branch turns out to exist after all.
+    pub fn zero() -> ObjectId {
+        ObjectId::from_bytes([0u8; 20])
+    }
+}

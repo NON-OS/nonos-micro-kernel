@@ -18,5 +18,6 @@
 
 mod hex;
 mod object_id;
+mod zero;
 
 pub use object_id::ObjectId;

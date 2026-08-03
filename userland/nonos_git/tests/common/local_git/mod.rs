@@ -13,26 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Shared test fixtures.
+//! A transport backed by a real git serving a local repository.
 //!
-//! Each integration test binary compiles this module but uses only the parts
-//! it needs, so unused items here are expected rather than dead.
+//! Smart HTTP is a thin shell around two commands: the advertisement comes
+//! from `--advertise-refs` with the service banner prepended, and the request
+//! body is handed to `--stateless-rpc` on stdin. Driving those directly means
+//! the other end of this is genuine git, not a model of it.
 
-#![allow(dead_code, unused_imports)]
+mod banner;
+mod transport;
+mod types;
 
-mod build;
-mod git_cmd;
-mod local_git;
-mod receive;
-mod replay;
-mod scratch;
-mod storage;
-
-pub use build::{build_repo, signature};
-pub use git_cmd::{git, git_available};
-pub use local_git::LocalGit;
-pub use receive::receive_pack;
-pub use replay::Replay;
-pub use scratch::Scratch;
-pub use storage::DirStorage;
+pub use types::LocalGit;

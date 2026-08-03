@@ -13,8 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Walking the advertisement.
-
 extern crate alloc;
 
 use alloc::vec::Vec;
@@ -24,28 +22,38 @@ use super::super::pkt::{read_pkt, Pkt};
 use super::ref_line::parse_ref;
 use super::remote_ref::RemoteRef;
 
-/// Parse `GET /info/refs?service=git-upload-pack`.
+/// Parse `GET /info/refs?service=...`, for either service.
 ///
 /// The body opens with a banner packet naming the service and a flush, then
 /// one ref per packet. The first ref carries the server's capabilities after a
 /// NUL, dropped here: this asks for nothing beyond the defaults, so claiming
 /// none back is what keeps the request honest.
+///
+/// A repository with no refs still has to answer, so it sends a single
+/// placeholder under the name `capabilities^{}` purely to carry that list.
+/// It names no object and is skipped, or a push would read it as a branch.
 pub fn parse_advertisement(body: &[u8]) -> Result<Vec<RemoteRef>, WireError> {
-    let (first, mut at) = match read_pkt(body)? {
-        (Pkt::Data(d), used) if d.starts_with(b"# service=git-upload-pack") => (d, used),
+    let mut at = match read_pkt(body)? {
+        (Pkt::Data(d), used) if d.starts_with(b"# service=") => used,
         _ => return Err(WireError::NotSmartHttp),
     };
-    let _ = first;
 
     let mut refs = Vec::new();
+    let mut seen_any = false;
     while at < body.len() {
         let (pkt, used) = read_pkt(&body[at..])?;
         at += used;
         match pkt {
-            Pkt::Data(line) => refs.push(parse_ref(line)?),
+            Pkt::Data(line) => {
+                seen_any = true;
+                let parsed = parse_ref(line)?;
+                if parsed.name != "capabilities^{}" {
+                    refs.push(parsed);
+                }
+            }
             // The flush after the banner is skipped; the one after the refs
             // ends the advertisement.
-            Pkt::Flush if refs.is_empty() => continue,
+            Pkt::Flush if !seen_any => continue,
             Pkt::Flush => break,
         }
     }

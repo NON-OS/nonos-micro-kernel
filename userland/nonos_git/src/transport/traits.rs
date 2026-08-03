@@ -13,26 +13,28 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! The seam between the protocol and whatever carries it.
 
-//! Shared test fixtures.
-//!
-//! Each integration test binary compiles this module but uses only the parts
-//! it needs, so unused items here are expected rather than dead.
+extern crate alloc;
 
-#![allow(dead_code, unused_imports)]
+use alloc::vec::Vec;
 
-mod build;
-mod git_cmd;
-mod local_git;
-mod receive;
-mod replay;
-mod scratch;
-mod storage;
+use super::error::TransportError;
 
-pub use build::{build_repo, signature};
-pub use git_cmd::{git, git_available};
-pub use local_git::LocalGit;
-pub use receive::receive_pack;
-pub use replay::Replay;
-pub use scratch::Scratch;
-pub use storage::DirStorage;
+/// A request and response pair against one remote repository.
+///
+/// `path` is appended to the repository URL the transport was opened with, so
+/// an implementation holds the host and the base path and this layer only
+/// names the service it wants.
+pub trait Transport {
+    /// Issue a GET and return the body.
+    fn get(&mut self, path: &str) -> Result<Vec<u8>, TransportError>;
+
+    /// Issue a POST with `content_type` and return the body.
+    fn post(
+        &mut self,
+        path: &str,
+        content_type: &str,
+        body: &[u8],
+    ) -> Result<Vec<u8>, TransportError>;
+}

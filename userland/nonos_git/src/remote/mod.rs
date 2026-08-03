@@ -13,26 +13,16 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! Talking to a remote repository over the git smart HTTP protocol.
 
-//! Shared test fixtures.
-//!
-//! Each integration test binary compiles this module but uses only the parts
-//! it needs, so unused items here are expected rather than dead.
+mod clone;
+mod discover;
+mod fetch;
+mod pack_body;
+mod push;
+mod report;
 
-#![allow(dead_code, unused_imports)]
-
-mod build;
-mod git_cmd;
-mod local_git;
-mod receive;
-mod replay;
-mod scratch;
-mod storage;
-
-pub use build::{build_repo, signature};
-pub use git_cmd::{git, git_available};
-pub use local_git::LocalGit;
-pub use receive::receive_pack;
-pub use replay::Replay;
-pub use scratch::Scratch;
-pub use storage::DirStorage;
+pub use clone::clone;
+pub use discover::discover;
+pub use fetch::fetch;
+pub use push::push;

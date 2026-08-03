@@ -15,13 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 //! The ref advertisement, against what GitHub actually serves.
 //!
-//! `advert.bin` is the head of a real `GET /info/refs?service=git-upload-pack`
-//! response for octocat/Hello-World, cut at a packet boundary and closed with
-//! a flush so it stays small. The refs and ids are the ones GitHub sent.
+//! `advert_live.bin` is the service banner, the HEAD packet and the
+//! refs/heads/master packet from a real `GET /info/refs` response for
+//! octocat/Hello-World, reassembled without the other 3370 refs. Every byte
+//! of every packet is what GitHub sent.
 
 use nonos_git::{parse_advertisement, WireError};
 
-const ADVERT: &[u8] = include_bytes!("data/advert.bin");
+const ADVERT: &[u8] = include_bytes!("data/advert_live.bin");
 
 #[test]
 fn reads_a_real_advertisement() {

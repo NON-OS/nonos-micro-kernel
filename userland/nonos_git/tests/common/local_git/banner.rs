@@ -13,26 +13,24 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! The two pieces smart HTTP adds around the plain git commands.
 
-//! Shared test fixtures.
-//!
-//! Each integration test binary compiles this module but uses only the parts
-//! it needs, so unused items here are expected rather than dead.
+/// The service banner a smart HTTP advertisement opens with.
+pub(super) fn banner(service: &str) -> Vec<u8> {
+    let line = format!("# service={service}\n");
+    let mut out = format!("{:04x}", line.len() + 4).into_bytes();
+    out.extend_from_slice(line.as_bytes());
+    out.extend_from_slice(b"0000");
+    out
+}
 
-#![allow(dead_code, unused_imports)]
-
-mod build;
-mod git_cmd;
-mod local_git;
-mod receive;
-mod replay;
-mod scratch;
-mod storage;
-
-pub use build::{build_repo, signature};
-pub use git_cmd::{git, git_available};
-pub use local_git::LocalGit;
-pub use receive::receive_pack;
-pub use replay::Replay;
-pub use scratch::Scratch;
-pub use storage::DirStorage;
+/// Which git command a request path names.
+pub(super) fn service_of(path: &str) -> Option<&'static str> {
+    if path.contains("git-receive-pack") {
+        Some("git-receive-pack")
+    } else if path.contains("git-upload-pack") {
+        Some("git-upload-pack")
+    } else {
+        None
+    }
+}

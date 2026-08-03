@@ -37,9 +37,11 @@ mod odb;
 mod oid;
 mod pack;
 mod refs;
+mod remote;
 mod repo;
 mod sha1;
 mod storage;
+mod transport;
 mod tree;
 mod wire;
 mod zlib;
@@ -51,12 +53,14 @@ pub use odb::{read_object, write_object, OdbError};
 pub use oid::ObjectId;
 pub use pack::{read_pack, write_pack, PackError, PackObject};
 pub use refs::{is_valid_ref_name, read_head, resolve_head, set_head_branch, update_ref, Head};
+pub use remote::{clone, discover, fetch, push};
 pub use repo::{
     add, checkout, clone_into, commit, init, log, objects_to_send, read_index, store_pack,
     write_index, write_tree, CloneRequest, CommitRequest, LogEntry, RepoError,
 };
 pub use sha1::Sha1;
 pub use storage::{Storage, StorageError};
+pub use transport::{Transport, TransportError};
 pub use tree::{parse as parse_tree, Mode, TreeEntry, TreeError};
 pub use wire::{
     encode_pkt, parse_advertisement, push_request, read_pkt, want_request, Pkt, RefUpdate,

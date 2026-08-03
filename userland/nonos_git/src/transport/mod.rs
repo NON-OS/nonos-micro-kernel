@@ -13,26 +13,14 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Shared test fixtures.
+//! How bytes reach a remote.
 //!
-//! Each integration test binary compiles this module but uses only the parts
-//! it needs, so unused items here are expected rather than dead.
+//! The protocol code here does not open sockets or speak TLS. It asks for a
+//! request and is handed a response, so the same fetch runs against a real
+//! server in the shell and against recorded bytes in a test.
 
-#![allow(dead_code, unused_imports)]
+mod error;
+mod traits;
 
-mod build;
-mod git_cmd;
-mod local_git;
-mod receive;
-mod replay;
-mod scratch;
-mod storage;
-
-pub use build::{build_repo, signature};
-pub use git_cmd::{git, git_available};
-pub use local_git::LocalGit;
-pub use receive::receive_pack;
-pub use replay::Replay;
-pub use scratch::Scratch;
-pub use storage::DirStorage;
+pub use error::TransportError;
+pub use traits::Transport;

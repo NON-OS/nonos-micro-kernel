@@ -13,26 +13,18 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! What a transport reports when it cannot deliver.
 
-//! Shared test fixtures.
-//!
-//! Each integration test binary compiles this module but uses only the parts
-//! it needs, so unused items here are expected rather than dead.
-
-#![allow(dead_code, unused_imports)]
-
-mod build;
-mod git_cmd;
-mod local_git;
-mod receive;
-mod replay;
-mod scratch;
-mod storage;
-
-pub use build::{build_repo, signature};
-pub use git_cmd::{git, git_available};
-pub use local_git::LocalGit;
-pub use receive::receive_pack;
-pub use replay::Replay;
-pub use scratch::Scratch;
-pub use storage::DirStorage;
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum TransportError {
+    /// The host could not be reached.
+    Unreachable,
+    /// The connection closed before the response was complete.
+    Closed,
+    /// The server answered, but not with success.
+    Status(u16),
+    /// The response was not something this understands.
+    Malformed,
+    /// The remote refused the request without saying why.
+    Refused,
+}
