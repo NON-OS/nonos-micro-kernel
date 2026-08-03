@@ -13,22 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! Reading a whole pack into resolved objects.
 
-//! The staging index: what the next commit will contain.
-//!
-//! Git stores this as the binary `DIRC` file version 2. The format is fixed and
-//! checksummed, and `git` reads the same file we write, so `add` here is `add`
-//! git agrees with.
-
-mod encode;
-pub(crate) mod entry;
-pub(crate) mod error;
-mod mode_word;
+mod object;
 mod read;
-mod stage;
+mod resolve;
 
-pub use encode::encode;
-pub use entry::IndexEntry;
-pub use error::IndexError;
-pub use read::parse;
-pub use stage::stage;
+pub use object::PackObject;
+pub use read::read_pack;

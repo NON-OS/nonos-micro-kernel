@@ -13,32 +13,20 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! A stored block: byte-align, read LEN and its complement, copy LEN bytes.
+//! One object out of a pack.
 
 extern crate alloc;
 
 use alloc::vec::Vec;
 
-use super::bit_reader::BitReader;
-use super::error::InflateError;
+use crate::object::ObjectKind;
+use crate::oid::ObjectId;
 
-pub(super) fn inflate_stored(r: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<(), InflateError> {
-    r.align();
-    if r.byte + 4 > r.data.len() {
-        return Err(InflateError::Truncated);
-    }
-    let len = u16::from_le_bytes([r.data[r.byte], r.data[r.byte + 1]]);
-    let nlen = u16::from_le_bytes([r.data[r.byte + 2], r.data[r.byte + 3]]);
-    if len != !nlen {
-        return Err(InflateError::Invalid);
-    }
-    r.byte += 4;
-    let end = r.byte + len as usize;
-    if end > r.data.len() {
-        return Err(InflateError::Truncated);
-    }
-    out.extend_from_slice(&r.data[r.byte..end]);
-    r.byte = end;
-    Ok(())
+pub struct PackObject {
+    pub id: ObjectId,
+    pub kind: ObjectKind,
+    /// Full content, with any delta already applied.
+    pub data: Vec<u8>,
+    /// Byte offset in the pack, which an ofs-delta counts back from.
+    pub offset: usize,
 }

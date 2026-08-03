@@ -18,7 +18,7 @@
 
 mod entries;
 mod mode;
-mod path;
 mod parse;
+mod path;
 
 pub use parse::parse;

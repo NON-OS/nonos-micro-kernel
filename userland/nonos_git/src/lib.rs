@@ -35,6 +35,7 @@ mod index;
 mod object;
 mod odb;
 mod oid;
+mod pack;
 mod refs;
 mod repo;
 mod sha1;
@@ -47,6 +48,7 @@ pub use index::{IndexEntry, IndexError};
 pub use object::{frame, unframe, ObjectKind};
 pub use odb::{read_object, write_object, OdbError};
 pub use oid::ObjectId;
+pub use pack::{read_pack, PackError, PackObject};
 pub use refs::{is_valid_ref_name, read_head, resolve_head, set_head_branch, update_ref, Head};
 pub use repo::{
     add, commit, init, log, read_index, write_index, write_tree, CommitRequest, LogEntry, RepoError,

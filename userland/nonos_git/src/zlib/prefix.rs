@@ -13,8 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! The inflate driver: zlib header, DEFLATE blocks, Adler-32 trailer.
+//! Inflating one stream out of a buffer holding more than one.
+//!
+//! A pack stores its objects as back-to-back zlib streams with no length in
+//! front, so reading the next one means knowing exactly how many bytes the
+//! last consumed. `decompress` cannot say, since it takes the whole slice as
+//! one stream; this returns the byte count alongside the data.
 
 extern crate alloc;
 
@@ -28,14 +32,13 @@ use super::huffman_block::inflate_block;
 use super::stored::inflate_stored;
 use super::tables::{fixed_dist, fixed_lit};
 
-/// Inflate a zlib stream, verifying the header and the trailing Adler-32.
-pub fn decompress(input: &[u8]) -> Result<Vec<u8>, InflateError> {
+/// Inflate the stream at the start of `input`, returning the data and how many
+/// bytes of `input` it occupied, trailer included.
+pub fn decompress_prefix(input: &[u8]) -> Result<(Vec<u8>, usize), InflateError> {
     if input.len() < 2 {
         return Err(InflateError::Header);
     }
-    let cmf = input[0];
-    let flg = input[1];
-    // Deflate method, no preset dictionary, header checksum.
+    let (cmf, flg) = (input[0], input[1]);
     if cmf & 0x0F != 8 || flg & 0x20 != 0 || (u16::from(cmf) << 8 | u16::from(flg)) % 31 != 0 {
         return Err(InflateError::Header);
     }
@@ -58,14 +61,13 @@ pub fn decompress(input: &[u8]) -> Result<Vec<u8>, InflateError> {
         }
     }
 
-    // The four bytes after the deflate data are the Adler-32, big-endian.
-    let trailer = r.byte_aligned_tail();
-    if trailer.len() < 4 {
-        return Err(InflateError::Truncated);
-    }
+    r.align();
+    let end = r.byte;
+    let trailer = r.data.get(end..end + 4).ok_or(InflateError::Truncated)?;
     let want = u32::from_be_bytes([trailer[0], trailer[1], trailer[2], trailer[3]]);
     if adler32(&out) != want {
         return Err(InflateError::Checksum);
     }
-    Ok(out)
+    // Two header bytes, the deflate data, and the four-byte checksum.
+    Ok((out, 2 + end + 4))
 }

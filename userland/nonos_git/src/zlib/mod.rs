@@ -26,15 +26,17 @@
 
 mod adler;
 mod bit_reader;
-mod huffman_block;
 mod compress;
-mod stored;
 mod dynamic;
 mod error;
 mod huffman;
+mod huffman_block;
 mod inflate;
+mod prefix;
+mod stored;
 mod tables;
 
 pub use compress::compress;
 pub use error::InflateError;
 pub use inflate::decompress;
+pub use prefix::decompress_prefix;

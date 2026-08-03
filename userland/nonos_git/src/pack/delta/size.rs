@@ -13,22 +13,26 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! The sizes at the head of a delta, and byte access that cannot run off.
 
-//! The staging index: what the next commit will contain.
-//!
-//! Git stores this as the binary `DIRC` file version 2. The format is fixed and
-//! checksummed, and `git` reads the same file we write, so `add` here is `add`
-//! git agrees with.
+use super::super::error::PackError;
 
-mod encode;
-pub(crate) mod entry;
-pub(crate) mod error;
-mod mode_word;
-mod read;
-mod stage;
+pub(super) fn take(delta: &[u8], at: &mut usize) -> Result<u8, PackError> {
+    let byte = *delta.get(*at).ok_or(PackError::BadDelta)?;
+    *at += 1;
+    Ok(byte)
+}
 
-pub use encode::encode;
-pub use entry::IndexEntry;
-pub use error::IndexError;
-pub use read::parse;
-pub use stage::stage;
+/// Base and target size: seven bits per byte, little end first.
+pub(super) fn header_size(delta: &[u8], at: &mut usize) -> Result<u64, PackError> {
+    let mut value = 0u64;
+    let mut shift = 0u32;
+    loop {
+        let byte = take(delta, at)?;
+        value |= u64::from(byte & 0x7F) << shift;
+        if byte & 0x80 == 0 {
+            return Ok(value);
+        }
+        shift += 7;
+    }
+}

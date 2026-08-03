@@ -36,8 +36,8 @@ pub fn parse(content: &[u8]) -> Result<Commit, CommitError> {
     let mut lines = Lines::new(content);
 
     let tree_line = lines.next().ok_or(CommitError::Tree)?;
-    let tree = oid(strip(tree_line, b"tree ").ok_or(CommitError::Tree)?)
-        .ok_or(CommitError::Tree)?;
+    let tree =
+        oid(strip(tree_line, b"tree ").ok_or(CommitError::Tree)?).ok_or(CommitError::Tree)?;
 
     let mut parents = Vec::new();
     let mut line = lines.next().ok_or(CommitError::Signature)?;

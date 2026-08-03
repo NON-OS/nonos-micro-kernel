@@ -13,32 +13,28 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! A stored block: byte-align, read LEN and its complement, copy LEN bytes.
+//! Applying a delta against an object already read.
 
 extern crate alloc;
 
 use alloc::vec::Vec;
 
-use super::bit_reader::BitReader;
-use super::error::InflateError;
+use crate::object::ObjectKind;
 
-pub(super) fn inflate_stored(r: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<(), InflateError> {
-    r.align();
-    if r.byte + 4 > r.data.len() {
-        return Err(InflateError::Truncated);
-    }
-    let len = u16::from_le_bytes([r.data[r.byte], r.data[r.byte + 1]]);
-    let nlen = u16::from_le_bytes([r.data[r.byte + 2], r.data[r.byte + 3]]);
-    if len != !nlen {
-        return Err(InflateError::Invalid);
-    }
-    r.byte += 4;
-    let end = r.byte + len as usize;
-    if end > r.data.len() {
-        return Err(InflateError::Truncated);
-    }
-    out.extend_from_slice(&r.data[r.byte..end]);
-    r.byte = end;
-    Ok(())
+use super::super::delta::apply;
+use super::super::error::PackError;
+use super::object::PackObject;
+
+/// A delta takes its base's type: only the content differs.
+///
+/// No recursion is needed. A pack lists a base before the deltas naming it,
+/// and this reads forward, so by the time a delta is reached its base is
+/// already fully resolved rather than still a delta itself.
+pub(super) fn resolve(
+    seen: &[PackObject],
+    is_base: impl Fn(&PackObject) -> bool,
+    delta: &[u8],
+) -> Result<(ObjectKind, Vec<u8>), PackError> {
+    let base = seen.iter().find(|o| is_base(o)).ok_or(PackError::MissingBase)?;
+    Ok((base.kind, apply(&base.data, delta)?))
 }

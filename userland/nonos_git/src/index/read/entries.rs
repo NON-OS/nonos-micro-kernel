@@ -40,7 +40,8 @@ pub(super) fn read_entries(body: &[u8], count: usize) -> Result<Vec<IndexEntry>,
         if pos + FIXED > body.len() {
             return Err(IndexError::Truncated);
         }
-        let at = |o: usize| u32::from_be_bytes(body[pos + o..pos + o + 4].try_into().unwrap_or([0; 4]));
+        let at =
+            |o: usize| u32::from_be_bytes(body[pos + o..pos + o + 4].try_into().unwrap_or([0; 4]));
         let mode_word = at(24);
         let size = at(36);
         let mut raw = [0u8; 20];

@@ -13,22 +13,14 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! The staging index: what the next commit will contain.
+//! Applying a delta to its base.
 //!
-//! Git stores this as the binary `DIRC` file version 2. The format is fixed and
-//! checksummed, and `git` reads the same file we write, so `add` here is `add`
-//! git agrees with.
+//! A delta is the base size, the target size, then instructions: a byte with
+//! the top bit set copies a run out of the base, one without inserts literal
+//! bytes that follow it.
 
-mod encode;
-pub(crate) mod entry;
-pub(crate) mod error;
-mod mode_word;
-mod read;
-mod stage;
+mod apply;
+mod copy;
+mod size;
 
-pub use encode::encode;
-pub use entry::IndexEntry;
-pub use error::IndexError;
-pub use read::parse;
-pub use stage::stage;
+pub(in crate::pack) use apply::apply;

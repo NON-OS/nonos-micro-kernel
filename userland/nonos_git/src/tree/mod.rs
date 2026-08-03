@@ -19,8 +19,8 @@
 mod compare;
 mod encode;
 mod entry;
-mod mode;
 mod is_sorted;
+mod mode;
 mod name;
 mod parse;
 mod sort;

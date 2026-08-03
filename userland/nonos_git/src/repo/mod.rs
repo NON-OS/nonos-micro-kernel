@@ -19,20 +19,20 @@
 
 mod add;
 mod commit_tree;
-mod request;
 pub(crate) mod error;
 mod init;
 mod log;
 mod read_index;
-mod write_index;
+mod request;
 mod tree_build;
+mod write_index;
 
 pub use add::add;
 pub use commit_tree::commit;
-pub use request::CommitRequest;
 pub use error::RepoError;
 pub use init::init;
 pub use log::{log, LogEntry};
 pub use read_index::read_index;
-pub use write_index::write_index;
+pub use request::CommitRequest;
 pub use tree_build::write_tree;
+pub use write_index::write_index;
