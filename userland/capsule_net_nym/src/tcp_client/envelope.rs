@@ -41,15 +41,38 @@ fn write(out: &mut [u8], op: u16, len: u32) {
     out[16..20].copy_from_slice(&len.to_le_bytes());
 }
 
+/// Reply shorter than a header, so nothing could be read from it.
+pub const E_SHORT: u16 = 20;
+/// Reply carried another service's magic.
+pub const E_MAGIC: u16 = 21;
+/// Reply answered a different opcode than the one asked.
+pub const E_OP: u16 = 22;
+/// Reply claimed a payload that does not fit what was sent or asked for.
+pub const E_LEN: u16 = 23;
+/// Added to a service errno so it cannot be confused with the above.
+pub const E_ERRNO: u16 = 30;
+
+/// Each rejection reports its own reason. Folding them together names the
+/// call that failed but not what was wrong with the answer, which is the
+/// difference between a service that refused and one that never replied.
 fn parse(op: u16, resp: &[u8], out: &mut [u8]) -> Result<usize, u16> {
-    if resp.len() < HDR || le32(resp, 0) != MAGIC {
-        return Err(4);
+    if resp.len() < HDR {
+        return Err(E_SHORT);
+    }
+    if le32(resp, 0) != MAGIC {
+        return Err(E_MAGIC);
     }
     let got_op = u16::from_le_bytes([resp[6], resp[7]]);
     let errno = u16::from_le_bytes([resp[8], resp[9]]);
     let len = le32(resp, 16) as usize;
-    if got_op != op || errno != 0 || HDR + len > resp.len() || len > out.len() {
-        return Err(errno.max(4));
+    if got_op != op {
+        return Err(E_OP);
+    }
+    if errno != 0 {
+        return Err(E_ERRNO + errno);
+    }
+    if HDR + len > resp.len() || len > out.len() {
+        return Err(E_LEN);
     }
     out[..len].copy_from_slice(&resp[HDR..HDR + len]);
     Ok(len)
