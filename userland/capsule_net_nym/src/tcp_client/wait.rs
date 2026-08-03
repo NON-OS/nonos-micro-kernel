@@ -30,11 +30,16 @@ const DEADLINE_MS: i64 = 5_000;
 /// so the wait is bounded by time rather than by attempts.
 pub fn wait_established(port: u32, handle: u32) -> Result<(), u16> {
     let deadline = mk_uptime_ms().saturating_add(DEADLINE_MS);
+    // net.tcp reports Closed until its interface is next polled, so the first
+    // reads after connect say Closed for a socket that is about to open.
+    // Closed only means refused once the socket has been seen on its way up.
+    let mut opening = false;
     loop {
         match state(port, handle)? {
             ESTABLISHED => return Ok(()),
-            CLOSED => return Err(E_REFUSED),
-            SYN_SENT | SYN_RECEIVED => {}
+            SYN_SENT | SYN_RECEIVED => opening = true,
+            CLOSED if opening => return Err(E_REFUSED),
+            CLOSED => {}
             // Any other state means the peer took the connection somewhere
             // this client cannot use, so stop rather than spin to the deadline.
             _ => return Err(E_REFUSED),

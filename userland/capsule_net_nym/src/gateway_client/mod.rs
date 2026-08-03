@@ -21,6 +21,7 @@ mod establish;
 mod handshake;
 mod ops;
 mod register;
+mod trace;
 mod ws;
 
 pub use ops::{close, connect, recv, send};

@@ -1,0 +1,58 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use nonos_libc::mk_debug;
+
+/// Report which stage of a gateway connection failed, and with what.
+///
+/// Registration failures were previously only visible as an absence of
+/// traffic in a packet capture, which says a candidate failed but not where.
+pub fn fail(stage: &[u8], code: u16) {
+    let mut line = [0u8; 64];
+    let mut n = 0;
+    for &b in b"[NET-NYM] gateway " {
+        line[n] = b;
+        n += 1;
+    }
+    for &b in stage {
+        if n < line.len() - 8 {
+            line[n] = b;
+            n += 1;
+        }
+    }
+    line[n] = b' ';
+    n += 1;
+    n += write_u16(&mut line[n..], code);
+    line[n] = b'\n';
+    mk_debug(line.as_ptr(), n + 1);
+}
+
+fn write_u16(out: &mut [u8], mut v: u16) -> usize {
+    let mut digits = [0u8; 5];
+    let mut k = 0;
+    loop {
+        digits[k] = b'0' + (v % 10) as u8;
+        v /= 10;
+        k += 1;
+        if v == 0 {
+            break;
+        }
+    }
+    for i in 0..k {
+        out[i] = digits[k - 1 - i];
+    }
+    k
+}

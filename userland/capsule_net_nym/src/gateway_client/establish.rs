@@ -25,15 +25,20 @@ use crate::tcp_client;
 /// write while the socket is still SYN-SENT, so the handshake has to be up
 /// before the request goes out.
 pub fn establish(tcp_port: u32, gateway: &mut Gateway) -> Result<(), u16> {
-    tcp_client::wait_established(tcp_port, gateway.stream)?;
+    tcp_client::wait_established(tcp_port, gateway.stream)
+        .inspect_err(|e| super::trace::fail(b"connect", *e))?;
     if gateway.transport != Transport::WebSocket {
         return Ok(());
     }
-    ws::handshake(tcp_port, *gateway).map_err(|_| E_GATEWAY_PROTO)?;
+    ws::handshake(tcp_port, *gateway).map_err(|e| {
+        super::trace::fail(b"upgrade", e);
+        E_GATEWAY_PROTO
+    })?;
     if gateway.identity == [0u8; 32] {
         return Ok(());
     }
-    gateway.shared_key = super::register::register(tcp_port, gateway)?;
+    gateway.shared_key = super::register::register(tcp_port, gateway)
+        .inspect_err(|e| super::trace::fail(b"register", *e))?;
     crate::state::set_gateway_shared_key(&gateway.shared_key);
     // Without allowance the gateway prices a correct packet and refuses it,
     // which reads as a protocol fault rather than a billing one.
