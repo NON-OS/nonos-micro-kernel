@@ -39,6 +39,7 @@ mod render_lines;
 mod render_response;
 mod retryable_error;
 mod reuse;
+mod route_mixnet;
 mod rtc_packed;
 mod script_pump;
 mod security_error;

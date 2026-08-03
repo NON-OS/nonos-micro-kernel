@@ -14,19 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::{OP_SOCKET, SOCKETS_MAGIC, SOCKET_FAMILY_IP4, SOCKET_KIND_STREAM};
+mod call;
+mod route;
+mod wire;
 
-pub fn socket_open(sockets_port: u32) -> Result<u32, ()> {
-    if super::mixnet::is_on() {
-        return super::mixnet::open();
-    }
-    let mut body = [0u8; 4];
-    let mut rx = [0u8; 32];
-    body[0..2].copy_from_slice(&SOCKET_FAMILY_IP4.to_le_bytes());
-    body[2..4].copy_from_slice(&SOCKET_KIND_STREAM.to_le_bytes());
-    let n = super::call::call(sockets_port, SOCKETS_MAGIC, OP_SOCKET, &body, &mut rx)?;
-    if n < 24 {
-        return Err(());
-    }
-    Ok(u32::from_le_bytes([rx[20], rx[21], rx[22], rx[23]]))
-}
+pub use route::{disable, enable, is_on};
+pub use wire::{close, connect, open, recv, send};
