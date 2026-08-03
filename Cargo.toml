@@ -157,6 +157,7 @@ nonos-capsule-net-ntp           = []
 nonos-capsule-net-core          = []
 nonos-capsule-net-sockets       = []
 nonos-capsule-net-nym           = []
+nonos-capsule-socks5            = []
 nonos-capsule-market            = []
 
 # Layout-stable debug ring. Allocation-free, formatter-free fixed-VA
