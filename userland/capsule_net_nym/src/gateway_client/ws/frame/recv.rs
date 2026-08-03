@@ -17,19 +17,32 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
+use nonos_libc::{mk_uptime_ms, mk_yield};
 
 use super::parse;
 use super::send;
 use super::types::FrameKind;
 use crate::tcp_client;
 
+/// How long to wait on a frame the peer has not sent yet.
+///
+/// A duration and not a count of reads: an empty read costs microseconds, so
+/// counting them gave up long before a gateway one round trip away could
+/// answer at all.
+const FRAME_DEADLINE_MS: i64 = 5_000;
+
 pub fn recv_binary(tcp_port: u32, stream: u32, out: &mut [u8]) -> Result<usize, u16> {
     let mut buf = Vec::with_capacity(out.len() + 32);
     let mut chunk = [0u8; 1536];
     let mut ctrl = [0u8; 125];
-    for _ in 0..16 {
+    let deadline = mk_uptime_ms().saturating_add(FRAME_DEADLINE_MS);
+    loop {
         let n = tcp_client::recv(tcp_port, stream, &mut chunk)?;
         if n == 0 {
+            if mk_uptime_ms() >= deadline {
+                return Err(8);
+            }
+            mk_yield();
             continue;
         }
         buf.extend_from_slice(&chunk[..n]);
@@ -43,5 +56,4 @@ pub fn recv_binary(tcp_port: u32, stream: u32, out: &mut [u8]) -> Result<usize, 
             buf.drain(0..frame.consumed);
         }
     }
-    Err(8)
 }
