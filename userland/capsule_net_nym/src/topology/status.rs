@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{clock, store};
+use super::directory::Provenance;
 use super::types::TopologyStatus;
+use super::{clock, store};
 
 pub fn current() -> TopologyStatus {
     let Some(meta) = store::meta() else {
@@ -26,6 +27,14 @@ pub fn current() -> TopologyStatus {
     };
     if now < meta.not_before_ms || now >= meta.not_after_ms {
         return TopologyStatus::Expired;
+    }
+    // A table compiled into the image is already covered by that image's own
+    // signatures and its STARK enrollment, both checked before the kernel
+    // ran, and its age is bounded by the anti-rollback index rather than by a
+    // directory window. There is no authority to consult and nothing a second
+    // key would establish.
+    if meta.provenance == Provenance::Image {
+        return TopologyStatus::Ready;
     }
     if crate::state::trusted_authority(&meta.issuer) != Some(true) {
         return TopologyStatus::UntrustedAuthority;

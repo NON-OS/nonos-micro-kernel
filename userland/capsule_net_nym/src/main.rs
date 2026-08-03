@@ -45,6 +45,11 @@ pub unsafe extern "C" fn _start() -> ! {
         mk_exit(1);
     }
     wait_for_setup();
+    // Publish the routes that shipped in this image. They arrived inside a
+    // kernel the bootloader measured and verified, so they are usable without
+    // asking anyone to sign them again. A fetched directory replaces this and
+    // does have to prove itself.
+    let _ = topology::install_builtin();
     // The gateway is reached from inside the serve loop, one candidate per
     // idle moment. Connecting here instead held the capsule for as long as
     // the whole bootstrap list took, and every capsule downstream waits on

@@ -46,4 +46,4 @@ pub use timing::{
 pub use identity::{client_identity, set_client_identity, Identity as ClientIdentity};
 pub use shared_key::{clear_gateway_shared_key, gateway_shared_key, set_gateway_shared_key};
 pub use bootstrap::{bootstrap_gateway, BOOTSTRAP_GATEWAYS};
-pub use bootstrap_mix::{bootstrap_route, BOOTSTRAP_MIXNODES};
+pub use bootstrap_mix::{bootstrap_route, BOOTSTRAP_MIXNODES, PER_LAYER};

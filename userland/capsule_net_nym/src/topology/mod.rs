@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod builtin;
 mod clock;
 mod directory;
 mod layout;
@@ -25,6 +26,7 @@ mod store;
 mod types;
 mod verify;
 
+pub use builtin::install as install_builtin;
 pub use parse::install;
 pub use select::route;
 pub use status::current as status;
