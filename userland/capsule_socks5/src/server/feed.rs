@@ -17,6 +17,7 @@
 use super::open::{open_tunnel, OpenOutcome};
 use super::state::SERVER;
 use crate::conn::Event;
+use crate::wire::method_reply;
 use alloc::vec::Vec;
 
 /// Drive the SOCKS handshake with bytes from the client, returning whatever
@@ -25,23 +26,30 @@ use alloc::vec::Vec;
 /// A rejected or malformed client is answered and closed rather than left
 /// half open: the state machine reports that through `is_closed`, and holding
 /// the slot would deny it to the next caller.
-pub fn feed(data: &[u8]) -> Vec<u8> {
+pub fn feed(pid: u32, data: &[u8]) -> Vec<u8> {
     let mut guard = SERVER.lock();
     let Some(server) = guard.as_mut() else {
         return Vec::new();
     };
-    match server.conn.on_client(data) {
+    let Some(conn) = server.clients.get(pid) else {
+        // Table full. Refusing is the honest answer: the client disconnects
+        // rather than waiting on a handshake that will never advance.
+        return method_reply(false).to_vec();
+    };
+    match conn.on_client(data) {
         Event::NeedMore => Vec::new(),
         Event::ToClient { buf, len } => buf[..len].to_vec(),
         Event::Close => {
-            drop(guard);
-            super::state::reset();
+            server.clients.drop_client(pid);
             Vec::new()
         }
         Event::Open(dest) => {
             let id = server.manager.open(0).unwrap_or(0);
             let outcome = open_tunnel(id, &dest);
-            let (reply, len) = server.conn.opened(outcome == OpenOutcome::Opened);
+            let Some(conn) = server.clients.get(pid) else {
+                return Vec::new();
+            };
+            let (reply, len) = conn.opened(outcome == OpenOutcome::Opened);
             reply[..len].to_vec()
         }
     }

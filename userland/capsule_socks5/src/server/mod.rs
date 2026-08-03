@@ -16,6 +16,7 @@
 
 //! Serving SOCKS clients.
 
+mod clients;
 mod feed;
 mod open;
 mod run;

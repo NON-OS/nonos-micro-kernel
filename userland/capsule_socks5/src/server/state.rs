@@ -14,23 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::conn::Conn;
+use super::clients::Clients;
 use crate::manager::Manager;
 use spin::Mutex;
 
-/// One SOCKS handshake per client, and the connection table behind them.
+/// The handshakes in flight, and the tunnel table behind them.
 ///
-/// A single slot rather than a map: this capsule serves one client at a time
-/// today, and a table keyed by pid would imply an isolation guarantee the
-/// rest of the path does not yet provide.
+/// Handshakes are per caller because one page load opens several at once. The
+/// tunnels they produce all ride the single mixnet session, which is what
+/// keeps every capsule's traffic in one stream rather than in a stream of its
+/// own. Slots are keyed on the pid the kernel attests at delivery.
 pub struct Server {
-    pub conn: Conn,
+    pub clients: Clients,
     pub manager: Manager,
 }
 
 pub static SERVER: Mutex<Option<Server>> = Mutex::new(None);
 
-/// Reset the handshake state, discarding whatever was in flight.
+/// Reset the server, discarding every handshake in flight.
 pub fn reset() {
-    *SERVER.lock() = Some(Server { conn: Conn::new(), manager: Manager::new() });
+    *SERVER.lock() = Some(Server { clients: Clients::new(), manager: Manager::new() });
 }

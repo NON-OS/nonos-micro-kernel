@@ -36,7 +36,7 @@ pub fn run() -> ! {
         if n <= 0 || sender == 0 {
             continue;
         }
-        let out = feed(&rx[..n as usize]);
+        let out = feed(sender, &rx[..n as usize]);
         if !out.is_empty() {
             let _ = mk_ipc_reply(sender, out.as_ptr(), out.len());
         }
