@@ -22,11 +22,18 @@ extern crate alloc;
 mod protocol;
 mod server;
 
-use nonos_libc::{heap_init, mk_exit};
+use nonos_libc::{heap_init_sized, mk_exit};
+
+// A load holds the 8 MiB request buffer, the artifact itself, and the transient
+// copy the read's grow-and-copy leaves live at the same time, so peak use is
+// roughly 8 + 2.5x the artifact. The 16 MiB libc default cannot even hold a
+// 4 MiB capsule, and the failure is a silent OOM abort with no reply; size the
+// heap against MAX_ARTIFACT (16 MiB) instead.
+const INSTALLER_HEAP: usize = 64 * 1024 * 1024;
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
+    if heap_init_sized(INSTALLER_HEAP).is_err() {
         mk_exit(1);
     }
     server::run();
