@@ -14,20 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::address::routing_address;
 use crate::sphinx::node::Node as SphinxNode;
 use crate::topology::{self, Node as TopoNode};
 use alloc::vec::Vec;
 
 /// Turn a selected route into what Sphinx needs.
 ///
-/// A mix is addressed by its identity key while packets are sealed to its
-/// separate packet key. Conflating the two is the mistake this exists to
-/// make impossible.
+/// A hop is addressed on the wire by its socket address and packets are sealed
+/// to its packet key. The identity key is neither of those; it authenticates
+/// the node in the directory and never appears in a header.
 pub fn sphinx_route(seed: &[u8; 32]) -> Option<Vec<SphinxNode>> {
     let hops = topology::route(seed).ok()?;
     Some(hops.iter().map(convert).collect())
 }
 
 fn convert(node: &TopoNode) -> SphinxNode {
-    SphinxNode { address: node.identity, pub_key: node.packet_key }
+    SphinxNode { address: routing_address(node.ip, node.port), pub_key: node.packet_key }
 }

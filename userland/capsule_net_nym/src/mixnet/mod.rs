@@ -16,9 +16,11 @@
 
 //! Bridging the directory's view of the network to Sphinx.
 
+mod address;
 mod delays;
 mod encode;
 mod route;
 
+pub use address::routing_address;
 pub use encode::encode_sphinx;
 pub use route::sphinx_route;
