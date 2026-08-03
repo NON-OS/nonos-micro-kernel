@@ -18,6 +18,8 @@
 //! and reading its history.
 
 mod add;
+mod checkout;
+mod clone;
 mod commit_tree;
 pub(crate) mod error;
 mod init;
@@ -28,6 +30,8 @@ mod tree_build;
 mod write_index;
 
 pub use add::add;
+pub use checkout::checkout;
+pub use clone::{clone_into, store_pack, CloneRequest};
 pub use commit_tree::commit;
 pub use error::RepoError;
 pub use init::init;

@@ -34,7 +34,6 @@ mod commit;
 mod index;
 mod object;
 mod odb;
-mod wire;
 mod oid;
 mod pack;
 mod refs;
@@ -42,6 +41,7 @@ mod repo;
 mod sha1;
 mod storage;
 mod tree;
+mod wire;
 mod zlib;
 
 pub use commit::{parse as parse_commit, Commit, CommitError, Signature};
@@ -50,16 +50,17 @@ pub use object::{frame, unframe, ObjectKind};
 pub use odb::{read_object, write_object, OdbError};
 pub use oid::ObjectId;
 pub use pack::{read_pack, PackError, PackObject};
-pub use wire::{
-    encode_pkt, parse_advertisement, read_pkt, want_request, Pkt, RemoteRef, WireError,
-};
 pub use refs::{is_valid_ref_name, read_head, resolve_head, set_head_branch, update_ref, Head};
 pub use repo::{
-    add, commit, init, log, read_index, write_index, write_tree, CommitRequest, LogEntry, RepoError,
+    add, checkout, clone_into, commit, init, log, read_index, store_pack, write_index, write_tree,
+    CloneRequest, CommitRequest, LogEntry, RepoError,
 };
 pub use sha1::Sha1;
 pub use storage::{Storage, StorageError};
 pub use tree::{parse as parse_tree, Mode, TreeEntry, TreeError};
+pub use wire::{
+    encode_pkt, parse_advertisement, read_pkt, want_request, Pkt, RemoteRef, WireError,
+};
 pub use zlib::{compress, decompress, InflateError};
 
 /// Encode a commit's content bytes.

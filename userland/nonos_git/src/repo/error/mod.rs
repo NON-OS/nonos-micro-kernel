@@ -13,11 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! The ref advertisement a fetch begins with.
+//! Why a repository operation failed.
 
-mod parse;
-mod ref_line;
-mod remote_ref;
+mod from;
+mod kind;
 
-pub use parse::parse_advertisement;
-pub use remote_ref::RemoteRef;
+pub use kind::RepoError;

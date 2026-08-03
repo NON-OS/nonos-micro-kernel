@@ -13,11 +13,21 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! The ref advertisement a fetch begins with.
+//! What a clone was asked to lay down.
 
-mod parse;
-mod ref_line;
-mod remote_ref;
+use crate::oid::ObjectId;
 
-pub use parse::parse_advertisement;
-pub use remote_ref::RemoteRef;
+/// Where a clone writes and what it fetched.
+pub struct CloneRequest<'a> {
+    /// The repository directory, usually `.git` inside the work tree.
+    pub git_dir: &'a str,
+    /// Prefix the work tree files are written under. Empty for the root.
+    pub work_tree: &'a str,
+    /// The commit the branch is set to.
+    pub head: ObjectId,
+    /// Short branch name, without `refs/heads/`.
+    pub branch: &'a str,
+    /// True when the fetch asked for a bounded depth, so the parents of `head`
+    /// were not sent and git has to be told the history is cut here.
+    pub shallow: bool,
+}

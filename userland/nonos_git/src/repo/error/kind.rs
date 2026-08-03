@@ -13,12 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-//! Why a repository operation failed.
+//! The error a repository operation reports.
 
 use crate::commit::CommitError;
 use crate::index::IndexError;
 use crate::odb::OdbError;
+use crate::pack::PackError;
 use crate::storage::StorageError;
 use crate::tree::TreeError;
 
@@ -43,28 +43,6 @@ pub enum RepoError {
     NoHead,
     /// The index file was damaged.
     Index(IndexError),
-}
-
-impl From<OdbError> for RepoError {
-    fn from(e: OdbError) -> RepoError {
-        RepoError::Odb(e)
-    }
-}
-
-impl From<StorageError> for RepoError {
-    fn from(e: StorageError) -> RepoError {
-        RepoError::Storage(e)
-    }
-}
-
-impl From<TreeError> for RepoError {
-    fn from(e: TreeError) -> RepoError {
-        RepoError::Tree(e)
-    }
-}
-
-impl From<CommitError> for RepoError {
-    fn from(e: CommitError) -> RepoError {
-        RepoError::Commit(e)
-    }
+    /// A fetched pack could not be read.
+    Pack(PackError),
 }

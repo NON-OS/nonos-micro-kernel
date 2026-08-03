@@ -13,11 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! The ref advertisement a fetch begins with.
+//! Turning a fetched pack into a repository on disk.
 
-mod parse;
-mod ref_line;
-mod remote_ref;
+mod request;
+mod shallow;
+mod store;
+mod take;
 
-pub use parse::parse_advertisement;
-pub use remote_ref::RemoteRef;
+pub use request::CloneRequest;
+pub use store::store_pack;
+pub use take::clone_into;

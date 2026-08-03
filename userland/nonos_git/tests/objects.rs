@@ -21,7 +21,10 @@ use nonos_git::{frame, unframe, ObjectId, ObjectKind};
 #[test]
 fn blob_ids_match_git() {
     // `printf 'hello\n' | git hash-object --stdin`
-    assert_eq!(frame(ObjectKind::Blob, b"hello\n").1.to_hex(), "ce013625030ba8dba906f756967f9e9ca394464a");
+    assert_eq!(
+        frame(ObjectKind::Blob, b"hello\n").1.to_hex(),
+        "ce013625030ba8dba906f756967f9e9ca394464a"
+    );
     assert_eq!(frame(ObjectKind::Blob, b"").1.to_hex(), "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391");
 }
 

@@ -17,8 +17,8 @@
 //! Trees and commits against the ids real git computed for the same content.
 
 use nonos_git::{
-    encode_commit, encode_tree, frame, parse_commit, Commit, Mode, ObjectId,
-    ObjectKind, Signature, TreeEntry,
+    encode_commit, encode_tree, frame, parse_commit, Commit, Mode, ObjectId, ObjectKind, Signature,
+    TreeEntry,
 };
 
 const BLOB: &str = "ce013625030ba8dba906f756967f9e9ca394464a";

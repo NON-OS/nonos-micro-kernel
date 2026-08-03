@@ -47,6 +47,10 @@ fn every_object_in_a_real_delta_pack_reconstructs() {
         listed.lines().map(str::trim).filter(|l| !l.is_empty()).map(String::from).collect();
 
     let missing: Vec<&String> = theirs.difference(&ours).take(5).collect();
-    assert!(missing.is_empty(), "{} objects git has that we did not rebuild: {missing:?}", theirs.difference(&ours).count());
+    assert!(
+        missing.is_empty(),
+        "{} objects git has that we did not rebuild: {missing:?}",
+        theirs.difference(&ours).count()
+    );
     assert_eq!(ours.len(), theirs.len(), "object count differs");
 }

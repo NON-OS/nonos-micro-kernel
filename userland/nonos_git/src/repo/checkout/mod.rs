@@ -13,11 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! The ref advertisement a fetch begins with.
+//! Writing a tree out to the work tree.
 
-mod parse;
-mod ref_line;
-mod remote_ref;
+mod entry;
+mod walk;
 
-pub use parse::parse_advertisement;
-pub use remote_ref::RemoteRef;
+pub use walk::checkout;
