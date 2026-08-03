@@ -22,8 +22,10 @@ use alloc::vec::Vec;
 /// The delay is what actually mixes traffic: packets arriving together leave
 /// apart, so an observer at both ends cannot pair them.
 pub fn hop_delays(seed: &[u8; 32]) -> Option<Vec<[u8; 8]>> {
-    let hops = topology::route(seed).ok()?;
-    Some(hops.iter().map(encode).collect())
+    match topology::route(seed) {
+        Ok(hops) => Some(hops.iter().map(encode).collect()),
+        Err(_) => Some(crate::state::bootstrap_route(seed).iter().map(encode).collect()),
+    }
 }
 
 fn encode(node: &Node) -> [u8; 8] {

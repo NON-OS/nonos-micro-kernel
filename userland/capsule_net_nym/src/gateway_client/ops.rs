@@ -14,14 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::handshake::{run_handshake, Identity, WsWire};
 use super::ws;
 use crate::protocol::E_GATEWAY_PROTO;
 use crate::state::{Gateway, Transport};
 use crate::tcp_client;
-
-/// Gateway protocol version this client speaks.
-const PROTOCOL_VERSION: u64 = 3;
 
 pub fn connect(tcp_port: u32, mut gateway: Gateway) -> Result<Gateway, u16> {
     let stream = tcp_client::connect(tcp_port, gateway.ip, gateway.port)?;
@@ -29,20 +25,15 @@ pub fn connect(tcp_port: u32, mut gateway: Gateway) -> Result<Gateway, u16> {
     if gateway.transport == Transport::WebSocket {
         ws::handshake(tcp_port, gateway).map_err(|_| E_GATEWAY_PROTO)?;
         if gateway.identity != [0u8; 32] {
-            gateway.shared_key = register(tcp_port, &gateway)?;
+            gateway.shared_key = super::register::register(tcp_port, &gateway)?;
             crate::state::set_gateway_shared_key(&gateway.shared_key);
+            // Without allowance the gateway prices a correct packet and
+            // refuses it, which reads as a protocol fault rather than a
+            // billing one.
+            let _ = super::bandwidth::claim_free_bandwidth(tcp_port, gateway.stream);
         }
     }
     Ok(gateway)
-}
-
-/// Run the registration handshake and return the shared key.
-fn register(tcp_port: u32, gateway: &Gateway) -> Result<[u8; 32], u16> {
-    let own = crate::state::client_identity().ok_or(E_GATEWAY_PROTO)?;
-    let mut wire = WsWire { tcp_port, stream: gateway.stream };
-    let identity =
-        Identity { own_seed: &own.seed, own_public: &own.public, gateway_public: &gateway.identity };
-    run_handshake(&mut wire, &identity, PROTOCOL_VERSION).map_err(|_| E_GATEWAY_PROTO)
 }
 
 pub fn send(tcp_port: u32, gateway: Gateway, payload: &[u8]) -> Result<(), u16> {

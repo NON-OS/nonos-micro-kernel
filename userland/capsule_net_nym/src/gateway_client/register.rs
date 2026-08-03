@@ -14,18 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod autoconnect;
-mod bandwidth;
-mod binary;
-mod handshake;
-mod ops;
-mod register;
-mod ws;
+use super::handshake::{run_handshake, Identity, WsWire};
+use crate::protocol::E_GATEWAY_PROTO;
+use crate::state::Gateway;
 
-pub use ops::{close, connect, recv, send};
-pub use binary::{
-    is_pushed_message, make_encrypted_blob, parse_blob, Incoming, KIND_FORWARD_SPHINX,
-    KIND_FORWARD_SPHINX_V2, KIND_PUSHED_MIX_MESSAGE,
-};
-pub use autoconnect::autoconnect;
-pub use bandwidth::claim_free_bandwidth;
+/// Gateway protocol version this client speaks.
+const PROTOCOL_VERSION: u64 = 3;
+
+/// Run the registration handshake and return the shared key.
+pub fn register(tcp_port: u32, gateway: &Gateway) -> Result<[u8; 32], u16> {
+    let own = crate::state::client_identity().ok_or(E_GATEWAY_PROTO)?;
+    let mut wire = WsWire { tcp_port, stream: gateway.stream };
+    let identity = Identity {
+        own_seed: &own.seed,
+        own_public: &own.public,
+        gateway_public: &gateway.identity,
+    };
+    run_handshake(&mut wire, &identity, PROTOCOL_VERSION).map_err(|_| E_GATEWAY_PROTO)
+}

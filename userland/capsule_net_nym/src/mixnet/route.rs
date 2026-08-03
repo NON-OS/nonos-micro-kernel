@@ -25,8 +25,13 @@ use alloc::vec::Vec;
 /// to its packet key. The identity key is neither of those; it authenticates
 /// the node in the directory and never appears in a header.
 pub fn sphinx_route(seed: &[u8; 32]) -> Option<Vec<SphinxNode>> {
-    let hops = topology::route(seed).ok()?;
-    Some(hops.iter().map(convert).collect())
+    match topology::route(seed) {
+        Ok(hops) => Some(hops.iter().map(convert).collect()),
+        // No directory yet, so fall back to the compiled-in operator nodes.
+        // This is a smaller route than a synced topology would give, and it is
+        // the difference between reaching the mixnet and not reaching it.
+        Err(_) => Some(crate::state::bootstrap_route(seed).iter().map(convert).collect()),
+    }
 }
 
 fn convert(node: &TopoNode) -> SphinxNode {
