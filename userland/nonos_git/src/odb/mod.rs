@@ -19,9 +19,11 @@
 mod error;
 mod object_dir;
 mod object_path;
+mod packs;
 mod read;
 mod write;
 
 pub use error::OdbError;
+pub use packs::store_pack_files;
 pub use read::read_object;
 pub use write::write_object;

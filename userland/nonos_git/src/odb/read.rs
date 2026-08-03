@@ -13,14 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 //! Loading an object.
 
 extern crate alloc;
 
 use alloc::vec::Vec;
 
-use crate::object::{unframe, ObjectKind};
+use crate::object::{frame, unframe, ObjectKind};
 use crate::oid::ObjectId;
 use crate::sha1::Sha1;
 use crate::storage::Storage;
@@ -28,25 +27,48 @@ use crate::zlib::decompress;
 
 use super::error::OdbError;
 use super::object_path::object_path;
+use super::packs::read_from_packs;
 
 /// Load the object named by `id`, returning its kind and content.
 ///
-/// The content is hashed again and checked against the id it was stored under.
-/// That is what makes a silently damaged object database an error rather than
-/// wrong data handed to a caller that has no way to tell.
+/// Loose first, then the packs. A fetched pack is stored whole rather than
+/// exploded, so most of a cloned repository lives in one and this is the only
+/// path that reaches it.
+///
+/// Either way the content is hashed again and checked against the id it was
+/// asked for. That is what makes a silently damaged object database an error
+/// rather than wrong data handed to a caller with no way to tell.
 pub fn read_object<S: Storage>(
     storage: &S,
     git_dir: &str,
     id: &ObjectId,
 ) -> Result<(ObjectKind, Vec<u8>), OdbError> {
-    let path = object_path(git_dir, id);
-    let stored = storage.read(&path)?;
-    let framed = decompress(&stored).map_err(OdbError::Corrupt)?;
+    match storage.read(&object_path(git_dir, id)) {
+        Ok(stored) => loose(&stored, id),
+        Err(_) => packed(storage, git_dir, id),
+    }
+}
 
+fn loose(stored: &[u8], id: &ObjectId) -> Result<(ObjectKind, Vec<u8>), OdbError> {
+    let framed = decompress(stored).map_err(OdbError::Corrupt)?;
     if ObjectId::from_bytes(Sha1::digest(&framed)) != *id {
         return Err(OdbError::IdMismatch);
     }
-
     let (kind, content) = unframe(&framed).ok_or(OdbError::Malformed)?;
     Ok((kind, content.to_vec()))
+}
+
+fn packed<S: Storage>(
+    storage: &S,
+    git_dir: &str,
+    id: &ObjectId,
+) -> Result<(ObjectKind, Vec<u8>), OdbError> {
+    let (kind, content) = read_from_packs(storage, git_dir, id).ok_or(OdbError::NotFound)?;
+    // The pack index says this offset holds this id. Framing the result and
+    // hashing it is what checks that claim rather than trusting it.
+    let (_framed, actual) = frame(kind, &content);
+    if actual != *id {
+        return Err(OdbError::IdMismatch);
+    }
+    Ok((kind, content))
 }

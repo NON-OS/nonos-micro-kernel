@@ -13,24 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Unpacking a fetched pack into the object store.
+//! Packs in the object store.
 
-extern crate alloc;
+mod find;
+mod names;
+mod store;
 
-use crate::odb::store_pack_files;
-use crate::storage::Storage;
-
-use super::super::error::RepoError;
-
-/// Store a fetched pack, returning how many objects it carries.
-///
-/// The pack is kept whole with an index beside it, which is what git does and
-/// what makes a repository of any size workable: exploding it would mean one
-/// file per object and the whole tree resident at once.
-pub fn store_pack<S: Storage>(
-    storage: &mut S,
-    git_dir: &str,
-    pack: &[u8],
-) -> Result<usize, RepoError> {
-    Ok(store_pack_files(storage, git_dir, pack)?)
-}
+pub use find::read_from_packs;
+pub use store::store_pack_files;

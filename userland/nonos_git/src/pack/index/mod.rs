@@ -15,7 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 //! The index that makes a pack usable without unpacking it.
 
+mod crc;
+mod entries;
 mod fanout;
+mod read;
 mod write;
 
+pub use entries::entries;
+pub use read::lookup;
 pub use write::write_index;

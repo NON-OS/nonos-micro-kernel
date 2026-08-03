@@ -29,6 +29,6 @@ mod varint;
 mod write;
 
 pub use error::PackError;
-pub use reader::{read_pack, PackObject};
-pub use index::write_index as write_pack_index;
+pub use index::{entries as index_entries, lookup as pack_lookup, write_index as write_pack_index};
+pub use reader::{read_at, read_pack, PackObject};
 pub use write::write_pack;

@@ -16,8 +16,10 @@
 //! Reading a whole pack into resolved objects.
 
 mod object;
+mod one;
 mod read;
 mod resolve;
 
 pub use object::PackObject;
+pub use one::read_at;
 pub use read::read_pack;

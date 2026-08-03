@@ -13,24 +13,23 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Unpacking a fetched pack into the object store.
+//! CRC32, as the pack index records it.
 
-extern crate alloc;
+/// The IEEE polynomial, reflected, which is what git writes in a `.idx`.
+const POLY: u32 = 0xEDB8_8320;
 
-use crate::odb::store_pack_files;
-use crate::storage::Storage;
-
-use super::super::error::RepoError;
-
-/// Store a fetched pack, returning how many objects it carries.
+/// CRC32 of the packed bytes of one entry.
 ///
-/// The pack is kept whole with an index beside it, which is what git does and
-/// what makes a repository of any size workable: exploding it would mean one
-/// file per object and the whole tree resident at once.
-pub fn store_pack<S: Storage>(
-    storage: &mut S,
-    git_dir: &str,
-    pack: &[u8],
-) -> Result<usize, RepoError> {
-    Ok(store_pack_files(storage, git_dir, pack)?)
+/// The index carries this so a later read can tell a corrupted entry from a
+/// wrong one, without inflating it first.
+pub(super) fn crc32(data: &[u8]) -> u32 {
+    let mut crc = 0xFFFF_FFFFu32;
+    for byte in data {
+        crc ^= u32::from(*byte);
+        for _ in 0..8 {
+            let mask = (crc & 1).wrapping_neg();
+            crc = (crc >> 1) ^ (POLY & mask);
+        }
+    }
+    !crc
 }

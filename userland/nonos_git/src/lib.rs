@@ -50,7 +50,9 @@ pub use index::{IndexEntry, IndexError};
 pub use object::{frame, unframe, ObjectKind};
 pub use odb::{read_object, write_object, OdbError};
 pub use oid::ObjectId;
-pub use pack::{read_pack, write_pack, write_pack_index, PackError, PackObject};
+pub use pack::{
+    index_entries, pack_lookup, read_pack, write_pack, write_pack_index, PackError, PackObject,
+};
 pub use refs::{is_valid_ref_name, read_head, resolve_head, set_head_branch, update_ref, Head};
 pub use remote::{clone, discover, fetch, push};
 pub use repo::{
