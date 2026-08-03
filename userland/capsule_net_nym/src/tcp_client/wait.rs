@@ -20,6 +20,9 @@ use super::state::{state, CLOSED, ESTABLISHED, SYN_RECEIVED, SYN_SENT};
 
 const E_TIMEOUT: u16 = 6;
 const E_REFUSED: u16 = 7;
+/// Unexpected states are reported as this plus the state code, so a log line
+/// says which state stopped the wait rather than only that one did.
+const STATE_BASE: u16 = 100;
 const DEADLINE_MS: i64 = 5_000;
 
 /// Block until the three-way handshake completes.
@@ -41,8 +44,10 @@ pub fn wait_established(port: u32, handle: u32) -> Result<(), u16> {
             CLOSED if opening => return Err(E_REFUSED),
             CLOSED => {}
             // Any other state means the peer took the connection somewhere
-            // this client cannot use, so stop rather than spin to the deadline.
-            _ => return Err(E_REFUSED),
+            // this client cannot use, so stop rather than spin to the
+            // deadline. The state itself is carried in the error so the log
+            // names which one it was.
+            other => return Err(STATE_BASE + other as u16),
         }
         if mk_uptime_ms() >= deadline {
             return Err(E_TIMEOUT);

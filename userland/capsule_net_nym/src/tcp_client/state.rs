@@ -23,12 +23,22 @@ pub const SYN_RECEIVED: u8 = 2;
 pub const ESTABLISHED: u8 = 3;
 pub const CLOSED: u8 = 0xFF;
 
+/// The call to net.tcp failed outright.
+pub const E_STATE_CALL: u16 = 8;
+/// net.tcp answered with something other than the one state byte.
+pub const E_STATE_LEN: u16 = 9;
+
 /// One-byte connection state from `net.tcp`, mapped from the smoltcp state
 /// machine. Read-only: it neither drains the socket nor advances it.
+///
+/// The two failure modes are kept apart because they mean different things:
+/// a failed call is the service refusing or unreachable, a wrong length is
+/// the two sides disagreeing about the reply.
 pub fn state(port: u32, handle: u32) -> Result<u8, u16> {
     let mut out = [0u8; 1];
-    if call(port, OP_STATE, &handle.to_le_bytes(), &mut out)? != 1 {
-        return Err(4);
+    match call(port, OP_STATE, &handle.to_le_bytes(), &mut out) {
+        Ok(1) => Ok(out[0]),
+        Ok(_) => Err(E_STATE_LEN),
+        Err(_) => Err(E_STATE_CALL),
     }
-    Ok(out[0])
 }
