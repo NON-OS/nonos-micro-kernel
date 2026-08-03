@@ -13,24 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! HTTP/1.1 for a client, with no I/O of its own.
-//!
-//! Requests are built into bytes and responses are parsed from bytes, so the
-//! same code runs over TLS in the shell and over a buffer in a test. Nothing
-//! here opens a socket.
+//! The part of a URL a request is built from.
 
-#![no_std]
+mod host;
+mod parse;
+mod types;
 
-extern crate alloc;
-
-mod error;
-mod request;
-mod response;
-mod stream;
-mod url;
-
-pub use error::HttpError;
-pub use request::{Request, RequestBuilder};
-pub use response::{parse_response, Response};
-pub use stream::{fetch, Stream};
-pub use url::{parse_url, Url};
+pub use parse::parse as parse_url;
+pub use types::Url;

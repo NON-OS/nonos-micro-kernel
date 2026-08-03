@@ -26,11 +26,23 @@ use super::traits::{Io, SessionError};
 /// because the socket layer returns zero on a timeout rather than blocking.
 const QUIET_READS: u32 = 60;
 
+/// A ceiling on reads regardless of whether they carry anything.
+///
+/// Counting only quiet reads is not enough on its own: a server sending one
+/// byte at a time resets that counter forever and the loop never ends. This
+/// bounds the exchange whether the peer is slow, stuck, or deliberate.
+const MAX_READS: u32 = 200_000;
+
 pub(super) fn read_response<S: Io>(io: &mut S, limit: usize) -> Result<Vec<u8>, SessionError> {
     let mut buf = Vec::new();
     let mut chunk = [0u8; 4096];
     let mut quiet = 0u32;
+    let mut reads = 0u32;
     while quiet < QUIET_READS {
+        reads += 1;
+        if reads > MAX_READS {
+            return Err(SessionError::Io);
+        }
         let n = io.read(&mut chunk)?;
         if n == 0 {
             quiet += 1;

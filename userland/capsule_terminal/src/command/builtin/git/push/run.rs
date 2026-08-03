@@ -25,7 +25,8 @@ use nonos_git::{push, read_head, remote_url, resolve_head, Head};
 use nonos_tls::rtc_now;
 
 use crate::command::output::Output;
-use crate::git::{Https, Remote};
+use crate::git::Https;
+use nonos_http::parse_url;
 use crate::term::state::State;
 
 use super::super::clone::fail_with;
@@ -39,7 +40,7 @@ pub(in crate::command::builtin::git) fn run(state: &mut State, argv: &[&[u8]]) {
         Output::new(&mut state.scrollback).writeln(b"git push: no origin, give a url");
         return;
     };
-    let Some(remote) = Remote::parse(&url) else {
+    let Some(remote) = parse_url(&url) else {
         Output::new(&mut state.scrollback).writeln(b"git push: only https urls are supported");
         return;
     };

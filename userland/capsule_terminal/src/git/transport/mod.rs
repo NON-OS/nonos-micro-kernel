@@ -18,7 +18,5 @@
 mod https;
 mod io;
 mod round_trip;
-mod url;
 
 pub use https::Https;
-pub use url::Remote;

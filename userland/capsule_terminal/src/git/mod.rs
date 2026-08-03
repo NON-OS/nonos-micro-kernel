@@ -19,4 +19,4 @@ mod storage;
 mod transport;
 
 pub use storage::VfsStorage;
-pub use transport::{Https, Remote};
+pub use transport::Https;

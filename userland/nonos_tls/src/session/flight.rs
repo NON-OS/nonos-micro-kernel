@@ -27,12 +27,21 @@ use super::traits::{Io, SessionError};
 /// so quiet has to be counted rather than waited on.
 const QUIET_READS: u32 = 40;
 
+/// A ceiling on reads regardless of whether they carry anything, so a peer
+/// that dribbles bytes cannot hold the handshake open forever.
+const MAX_READS: u32 = 20_000;
+
 /// Read until the flight is complete or the server stops sending.
 pub(super) fn read_flight<S: Io>(io: &mut S, limit: usize) -> Result<Vec<u8>, SessionError> {
     let mut flight = Vec::new();
     let mut chunk = [0u8; 4096];
     let mut quiet = 0u32;
+    let mut reads = 0u32;
     while quiet < QUIET_READS {
+        reads += 1;
+        if reads > MAX_READS {
+            return Err(SessionError::Handshake);
+        }
         let n = io.read(&mut chunk)?;
         if n == 0 {
             quiet += 1;

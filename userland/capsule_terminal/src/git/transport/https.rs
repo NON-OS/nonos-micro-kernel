@@ -24,10 +24,10 @@ use nonos_git::{Transport, TransportError};
 use nonos_http::RequestBuilder;
 
 use super::round_trip::round_trip;
-use super::url::Remote;
+use nonos_http::Url;
 
 pub struct Https {
-    pub(super) remote: Remote,
+    pub(super) remote: Url,
     pub(super) now: u64,
 }
 
@@ -35,14 +35,14 @@ impl Https {
     /// `now` is the wall clock the certificate is judged against. A caller
     /// that does not know the time passes zero, and every certificate then
     /// reads as expired, which is the safe direction to fail.
-    pub fn new(remote: Remote, now: u64) -> Https {
+    pub fn new(remote: Url, now: u64) -> Https {
         Https { remote, now }
     }
 }
 
 impl Transport for Https {
     fn get(&mut self, path: &str) -> Result<Vec<u8>, TransportError> {
-        let target = format!("{}{}", self.remote.base, path);
+        let target = format!("{}{}", self.remote.path, path);
         let request = RequestBuilder::get(&self.remote.host, &target).build();
         round_trip(self, request.bytes)
     }
@@ -53,7 +53,7 @@ impl Transport for Https {
         content_type: &str,
         body: &[u8],
     ) -> Result<Vec<u8>, TransportError> {
-        let target = format!("{}{}", self.remote.base, path);
+        let target = format!("{}{}", self.remote.path, path);
         let request = RequestBuilder::post(&self.remote.host, &target, content_type, body).build();
         round_trip(self, request.bytes)
     }

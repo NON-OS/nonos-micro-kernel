@@ -25,7 +25,8 @@ use nonos_git::clone;
 use nonos_tls::rtc_now;
 
 use crate::command::output::Output;
-use crate::git::{Https, Remote};
+use crate::git::Https;
+use nonos_http::parse_url;
 use crate::term::state::State;
 
 use super::super::repo::storage;
@@ -41,13 +42,16 @@ pub(in crate::command::builtin::git) fn run(state: &mut State, argv: &[&[u8]]) {
         Output::new(&mut state.scrollback).writeln(b"usage: git clone <https url> [branch]");
         return;
     };
-    let Some(remote) = Remote::parse(url) else {
+    let Some(remote) = parse_url(url) else {
         Output::new(&mut state.scrollback).writeln(b"git clone: only https urls are supported");
         return;
     };
     let branch = argv.get(1).and_then(|a| core::str::from_utf8(a).ok()).unwrap_or("main");
 
-    let into = String::from(remote.name());
+    let Some(into) = remote.last_segment().map(String::from) else {
+        Output::new(&mut state.scrollback).writeln(b"git clone: that url names no directory");
+        return;
+    };
     let git_dir = format!("{into}/.git");
     let work_tree = format!("{into}/");
     let mut transport = Https::new(remote, rtc_now());
