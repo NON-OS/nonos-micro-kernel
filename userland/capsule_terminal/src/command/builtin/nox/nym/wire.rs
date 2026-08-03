@@ -14,52 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod alias;
-mod apps;
-mod battery;
-mod caps;
-mod children;
-mod clear;
-mod copy;
-mod date;
-mod dispatch;
-mod display;
-mod du;
-mod echo;
-mod ensure_pid;
-mod enter;
-mod exec;
-mod find;
-mod help;
-mod history;
-mod http;
-mod id;
-mod ifconfig;
-pub mod install;
-mod kill;
-mod ls;
-mod mk;
-mod motd;
-mod mv;
-mod nslookup;
-mod nym;
-mod pathname;
-mod ping;
-mod pull;
-mod push;
-mod read;
-mod rm;
-mod run;
-mod set;
-mod stat;
-mod svc;
-mod sysinfo;
-mod touch;
-mod unalias;
-mod unknown;
-mod unset;
-mod uptime;
-mod whereis;
-mod write;
+pub const MAGIC: u32 = 0x4E59_4D31;
+pub const HDR_LEN: usize = 20;
+pub const TIMEOUT_MS: u64 = 64;
 
-pub use dispatch::dispatch;
+pub const OP_HEALTHCHECK: u16 = 1;
+pub const OP_TOPOLOGY_STATUS: u16 = 15;
+pub const OP_TIMING_STATUS: u16 = 16;
+
+/// Request header the nym server parses: magic, version 1, opcode,
+/// then a zeroed errno/request-id/payload-len tail.
+pub fn header(op: u16) -> [u8; HDR_LEN] {
+    let mut tx = [0u8; HDR_LEN];
+    tx[0..4].copy_from_slice(&MAGIC.to_le_bytes());
+    tx[4..6].copy_from_slice(&1u16.to_le_bytes());
+    tx[6..8].copy_from_slice(&op.to_le_bytes());
+    tx
+}
