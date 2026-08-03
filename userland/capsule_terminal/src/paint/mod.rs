@@ -31,6 +31,5 @@ mod metrics;
 mod shade;
 pub mod tabstrip;
 
-pub use compose::paint;
 pub use compose::paint_tabs;
 pub use tabstrip::draw_tabstrip;

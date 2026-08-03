@@ -13,10 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Git in the terminal.
+//! Pushing the current branch to a remote.
 
-mod storage;
-mod transport;
+mod run;
 
-pub use storage::VfsStorage;
-pub use transport::{Https, Remote};
+pub(in crate::command::builtin::git) use run::run;

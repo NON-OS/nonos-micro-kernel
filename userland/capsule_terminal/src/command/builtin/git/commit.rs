@@ -39,7 +39,7 @@ pub(super) fn run(state: &mut State, message: &[u8]) {
     match result {
         Ok(id) => {
             let mut line = Vec::from(&b"[main "[..]);
-            line.extend_from_slice(id.to_hex()[..7].as_bytes());
+            line.extend_from_slice(&id.to_hex().as_bytes()[..7]);
             line.extend_from_slice(b"] ");
             line.extend_from_slice(message);
             out.writeln(&line);

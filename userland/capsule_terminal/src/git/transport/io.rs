@@ -13,10 +13,22 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Git in the terminal.
+//! Bridging the socket to what TLS and HTTP expect.
 
-mod storage;
-mod transport;
+use nonos_socket::TcpStream;
+use nonos_tls::{Io, SessionError};
 
-pub use storage::VfsStorage;
-pub use transport::{Https, Remote};
+/// The socket, seen as the byte stream a TLS session reads and writes.
+pub(super) struct SocketIo {
+    pub(super) stream: TcpStream,
+}
+
+impl Io for SocketIo {
+    fn write_all(&mut self, data: &[u8]) -> Result<(), SessionError> {
+        self.stream.write_all(data).map_err(|_| SessionError::Io)
+    }
+
+    fn read(&mut self, into: &mut [u8]) -> Result<usize, SessionError> {
+        self.stream.read(into).map_err(|_| SessionError::Io)
+    }
+}
