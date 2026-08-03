@@ -25,6 +25,8 @@ mod error;
 mod header;
 mod reader;
 mod varint;
+mod write;
 
 pub use error::PackError;
 pub use reader::{read_pack, PackObject};
+pub use write::write_pack;

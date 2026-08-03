@@ -49,17 +49,18 @@ pub use index::{IndexEntry, IndexError};
 pub use object::{frame, unframe, ObjectKind};
 pub use odb::{read_object, write_object, OdbError};
 pub use oid::ObjectId;
-pub use pack::{read_pack, PackError, PackObject};
+pub use pack::{read_pack, write_pack, PackError, PackObject};
 pub use refs::{is_valid_ref_name, read_head, resolve_head, set_head_branch, update_ref, Head};
 pub use repo::{
-    add, checkout, clone_into, commit, init, log, read_index, store_pack, write_index, write_tree,
-    CloneRequest, CommitRequest, LogEntry, RepoError,
+    add, checkout, clone_into, commit, init, log, objects_to_send, read_index, store_pack,
+    write_index, write_tree, CloneRequest, CommitRequest, LogEntry, RepoError,
 };
 pub use sha1::Sha1;
 pub use storage::{Storage, StorageError};
 pub use tree::{parse as parse_tree, Mode, TreeEntry, TreeError};
 pub use wire::{
-    encode_pkt, parse_advertisement, read_pkt, want_request, Pkt, RemoteRef, WireError,
+    encode_pkt, parse_advertisement, push_request, read_pkt, want_request, Pkt, RefUpdate,
+    RemoteRef, WireError,
 };
 pub use zlib::{compress, decompress, InflateError};
 

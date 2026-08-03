@@ -23,10 +23,12 @@
 
 mod build;
 mod git_cmd;
+mod receive;
 mod scratch;
 mod storage;
 
 pub use build::{build_repo, signature};
 pub use git_cmd::{git, git_available};
+pub use receive::receive_pack;
 pub use scratch::Scratch;
 pub use storage::DirStorage;

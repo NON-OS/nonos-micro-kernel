@@ -13,32 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! Collecting what a push has to send.
 
-//! Repository operations: creating one, staging into it, recording a commit
-//! and reading its history.
+mod history;
+mod objects;
+mod tree_walk;
 
-mod add;
-mod checkout;
-mod clone;
-mod commit_tree;
-pub(crate) mod error;
-mod init;
-mod log;
-mod push;
-mod read_index;
-mod request;
-mod tree_build;
-mod write_index;
-
-pub use add::add;
-pub use checkout::checkout;
-pub use clone::{clone_into, store_pack, CloneRequest};
-pub use commit_tree::commit;
-pub use error::RepoError;
-pub use init::init;
-pub use log::{log, LogEntry};
-pub use push::objects_to_send;
-pub use read_index::read_index;
-pub use request::CommitRequest;
-pub use tree_build::write_tree;
-pub use write_index::write_index;
+pub use objects::objects_to_send;

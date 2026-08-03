@@ -23,7 +23,7 @@ use alloc::string::String;
 use super::hex;
 
 /// The name of a git object, its 20-byte SHA-1.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct ObjectId {
     bytes: [u8; 20],
 }

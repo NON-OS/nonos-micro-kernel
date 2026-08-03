@@ -13,32 +13,19 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+//! One ref a push asks the receiver to move.
 
-//! Repository operations: creating one, staging into it, recording a commit
-//! and reading its history.
+use crate::oid::ObjectId;
 
-mod add;
-mod checkout;
-mod clone;
-mod commit_tree;
-pub(crate) mod error;
-mod init;
-mod log;
-mod push;
-mod read_index;
-mod request;
-mod tree_build;
-mod write_index;
-
-pub use add::add;
-pub use checkout::checkout;
-pub use clone::{clone_into, store_pack, CloneRequest};
-pub use commit_tree::commit;
-pub use error::RepoError;
-pub use init::init;
-pub use log::{log, LogEntry};
-pub use push::objects_to_send;
-pub use read_index::read_index;
-pub use request::CommitRequest;
-pub use tree_build::write_tree;
-pub use write_index::write_index;
+/// Move `name` from `old` to `new`.
+///
+/// `old` is what the pusher believes the receiver holds. The receiver refuses
+/// the update if it holds something else, which is what stops a push silently
+/// overwriting work that arrived in between. A zero id means the ref is
+/// expected not to exist yet.
+pub struct RefUpdate<'a> {
+    pub old: ObjectId,
+    pub new: ObjectId,
+    /// Full ref name, such as `refs/heads/main`.
+    pub name: &'a str,
+}

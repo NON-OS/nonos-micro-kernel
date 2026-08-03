@@ -23,8 +23,10 @@ mod advert;
 mod error;
 mod pkt;
 mod request;
+mod update;
 
 pub use advert::{parse_advertisement, RemoteRef};
 pub use error::WireError;
 pub use pkt::{encode_pkt, read_pkt, Pkt};
 pub use request::want_request;
+pub use update::{push_request, RefUpdate};
