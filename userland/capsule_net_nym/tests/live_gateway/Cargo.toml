@@ -1,0 +1,18 @@
+[package]
+name = "nym-live-gateway"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+blake3 = "1"
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+rand = "0.8"
+bs58 = "0.5"
+tungstenite = "0.24"
+nonos_libc = { path = "shim" }
+
+[[bin]]
+name = "nym-live-gateway"
+path = "src/main.rs"

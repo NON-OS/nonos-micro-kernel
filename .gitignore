@@ -96,3 +96,4 @@ nonos-bootloader/keys
 
 # Build output from vendored crates.io tool sources
 userland/upstream-src/*/target/
+userland/capsule_net_nym/tests/live_gateway/target/
