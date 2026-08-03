@@ -14,22 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Transport {
-    RawTcp,
-    WebSocket,
+use crate::topology::{self, Node};
+use alloc::vec::Vec;
+
+/// Per-hop delays from the directory, not invented here.
+///
+/// The delay is what actually mixes traffic: packets arriving together leave
+/// apart, so an observer at both ends cannot pair them.
+pub fn hop_delays(seed: &[u8; 32]) -> Option<Vec<[u8; 8]>> {
+    let hops = topology::route(seed).ok()?;
+    Some(hops.iter().map(encode).collect())
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Gateway {
-    pub ip: [u8; 4],
-    pub port: u16,
-    pub stream: u32,
-    pub transport: Transport,
-    /// The gateway's Ed25519 identity from the directory. Zero means none was
-    /// supplied and registration is skipped: there would be nothing to
-    /// authenticate against.
-    pub identity: [u8; 32],
-    /// Derived by the handshake; zero until it completes.
-    pub shared_key: [u8; 32],
+fn encode(node: &Node) -> [u8; 8] {
+    (node.delay_ms as u64).to_be_bytes()
 }

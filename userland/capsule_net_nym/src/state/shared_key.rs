@@ -14,22 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Transport {
-    RawTcp,
-    WebSocket,
+use spin::Mutex;
+
+/// The key the current gateway registration produced. Held apart from the
+/// Gateway record because every frame needs it while only connect sets it, and
+/// it must clear on disconnect rather than linger for the next gateway.
+static SHARED_KEY: Mutex<Option<[u8; 32]>> = Mutex::new(None);
+
+pub fn set_gateway_shared_key(key: &[u8; 32]) {
+    *SHARED_KEY.lock() = Some(*key);
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Gateway {
-    pub ip: [u8; 4],
-    pub port: u16,
-    pub stream: u32,
-    pub transport: Transport,
-    /// The gateway's Ed25519 identity from the directory. Zero means none was
-    /// supplied and registration is skipped: there would be nothing to
-    /// authenticate against.
-    pub identity: [u8; 32],
-    /// Derived by the handshake; zero until it completes.
-    pub shared_key: [u8; 32],
+pub fn gateway_shared_key() -> Option<[u8; 32]> {
+    *SHARED_KEY.lock()
+}
+
+pub fn clear_gateway_shared_key() {
+    *SHARED_KEY.lock() = None;
 }

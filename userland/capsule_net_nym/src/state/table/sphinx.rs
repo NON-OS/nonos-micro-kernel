@@ -14,22 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Transport {
-    RawTcp,
-    WebSocket,
-}
+use super::types::Table;
+use crate::state::Session;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Gateway {
-    pub ip: [u8; 4],
-    pub port: u16,
-    pub stream: u32,
-    pub transport: Transport,
-    /// The gateway's Ed25519 identity from the directory. Zero means none was
-    /// supplied and registration is skipped: there would be nothing to
-    /// authenticate against.
-    pub identity: [u8; 32],
-    /// Derived by the handshake; zero until it completes.
-    pub shared_key: [u8; 32],
+impl Table {
+    /// The session running over Sphinx, if exactly one is bound.
+    pub fn with_sphinx_session<R>(&mut self, f: impl FnOnce(&mut Session) -> R) -> Option<R> {
+        let mut bound = self.sessions.iter_mut().filter(|s| s.dest != [0u8; 32]);
+        let first = bound.next()?;
+        if bound.next().is_some() {
+            return None;
+        }
+        Some(f(first))
+    }
+
+    pub fn sphinx_session_count(&self) -> usize {
+        self.sessions.iter().filter(|s| s.dest != [0u8; 32]).count()
+    }
+
+    pub fn session_has_dest(&self, owner: u32, id: u32) -> bool {
+        self.sessions.iter().any(|s| s.owner == owner && s.id == id && s.dest != [0u8; 32])
+    }
 }

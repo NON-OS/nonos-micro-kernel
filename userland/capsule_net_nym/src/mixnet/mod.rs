@@ -14,22 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Transport {
-    RawTcp,
-    WebSocket,
-}
+//! Bridging the directory's view of the network to Sphinx.
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Gateway {
-    pub ip: [u8; 4],
-    pub port: u16,
-    pub stream: u32,
-    pub transport: Transport,
-    /// The gateway's Ed25519 identity from the directory. Zero means none was
-    /// supplied and registration is skipped: there would be nothing to
-    /// authenticate against.
-    pub identity: [u8; 32],
-    /// Derived by the handshake; zero until it completes.
-    pub shared_key: [u8; 32],
-}
+mod delays;
+mod encode;
+mod route;
+
+pub use encode::encode_sphinx;
+pub use route::sphinx_route;

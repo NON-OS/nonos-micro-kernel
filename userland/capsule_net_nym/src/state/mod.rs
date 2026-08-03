@@ -18,6 +18,8 @@ mod authority;
 mod credential;
 mod directory;
 mod gateway;
+mod identity;
+mod shared_key;
 mod replay;
 mod session;
 mod surb;
@@ -39,3 +41,5 @@ pub use table::{TableError, TABLE};
 pub use timing::{
     cover_due, install as install_timing, next_cover_ms, policy as timing_policy,
 };
+pub use identity::{client_identity, set_client_identity, Identity as ClientIdentity};
+pub use shared_key::{clear_gateway_shared_key, gateway_shared_key, set_gateway_shared_key};

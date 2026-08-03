@@ -62,5 +62,11 @@ fn parse_gateway(body: &[u8]) -> Result<Gateway, u16> {
         1 => Transport::WebSocket,
         _ => return Err(E_GATEWAY_PROTO),
     };
-    Ok(Gateway { ip, port, stream: 0, transport })
+    // Optional so existing callers keep working; supplying it is what turns
+    // the registration handshake on.
+    let mut identity = [0u8; 32];
+    if body.len() >= 7 + 32 {
+        identity.copy_from_slice(&body[7..7 + 32]);
+    }
+    Ok(Gateway { ip, port, stream: 0, transport, identity, shared_key: [0u8; 32] })
 }

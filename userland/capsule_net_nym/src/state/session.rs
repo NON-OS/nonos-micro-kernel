@@ -30,13 +30,26 @@ pub struct Session {
     pub id: u32,
     pub gateway: Gateway,
     pub key: Key,
+    /// Zero until set. Without one there is nowhere to route, so the session
+    /// cannot be sealed as Sphinx.
+    pub dest: [u8; 32],
+    pub dest_id: [u8; 16],
     replay: ReplayWindow,
     rx: VecDeque<Vec<u8>>,
 }
 
 impl Session {
     pub fn new(owner: u32, id: u32, gateway: Gateway, key: Key) -> Self {
-        Self { owner, id, gateway, key, replay: ReplayWindow::new(), rx: VecDeque::new() }
+        Self {
+            owner,
+            id,
+            gateway,
+            key,
+            dest: [0u8; 32],
+            dest_id: [0u8; 16],
+            replay: ReplayWindow::new(),
+            rx: VecDeque::new(),
+        }
     }
 
     pub fn push(&mut self, body: Vec<u8>) {

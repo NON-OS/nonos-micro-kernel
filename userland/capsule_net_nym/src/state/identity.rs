@@ -14,22 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Transport {
-    RawTcp,
-    WebSocket,
+use spin::Mutex;
+
+/// The client identity the gateway handshake signs with.
+///
+/// Supplied by whoever configures this capsule rather than generated here: an
+/// Ed25519 public key cannot be recovered from a signature, and no syscall
+/// derives one from a seed, so the caller passes both or the handshake does
+/// not run.
+static IDENTITY: Mutex<Option<Identity>> = Mutex::new(None);
+
+#[derive(Clone, Copy)]
+pub struct Identity {
+    pub seed: [u8; 32],
+    pub public: [u8; 32],
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Gateway {
-    pub ip: [u8; 4],
-    pub port: u16,
-    pub stream: u32,
-    pub transport: Transport,
-    /// The gateway's Ed25519 identity from the directory. Zero means none was
-    /// supplied and registration is skipped: there would be nothing to
-    /// authenticate against.
-    pub identity: [u8; 32],
-    /// Derived by the handshake; zero until it completes.
-    pub shared_key: [u8; 32],
+pub fn set_client_identity(seed: &[u8; 32], public: &[u8; 32]) {
+    *IDENTITY.lock() = Some(Identity { seed: *seed, public: *public });
+}
+
+pub fn client_identity() -> Option<Identity> {
+    *IDENTITY.lock()
 }

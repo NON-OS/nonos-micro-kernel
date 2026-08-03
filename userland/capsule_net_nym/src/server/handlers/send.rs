@@ -54,6 +54,9 @@ pub(super) fn send_payload(pid: u32, id: u32, payload: &[u8], flags: u8, buf: &m
     TABLE
         .lock()
         .with_mut(pid, id, |s| {
+            if s.dest != [0u8; 32] {
+                return super::send_sphinx::send_sphinx(tcp_port, s, payload);
+            }
             let n = match packet::encode(s.id, flags, &s.key, &credential, payload, buf) {
                 Ok(n) => n,
                 Err(packet::PacketError::NoRoute) => return E_NO_ROUTE,

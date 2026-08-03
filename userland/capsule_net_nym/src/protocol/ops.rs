@@ -30,3 +30,9 @@ pub const OP_SET_AUTHORITY: u16 = 13;
 pub const OP_SYNC_DIRECTORY: u16 = 14;
 pub const OP_TOPOLOGY_STATUS: u16 = 15;
 pub const OP_TIMING_STATUS: u16 = 16;
+
+/// Bind a session to a Nym destination so its traffic is sealed as Sphinx.
+pub const OP_SET_DESTINATION: u16 = 17;
+
+/// Install the Ed25519 identity the gateway handshake signs with.
+pub const OP_SET_IDENTITY: u16 = 18;

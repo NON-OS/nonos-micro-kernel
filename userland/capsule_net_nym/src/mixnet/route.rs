@@ -14,22 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Transport {
-    RawTcp,
-    WebSocket,
+use crate::sphinx::node::Node as SphinxNode;
+use crate::topology::{self, Node as TopoNode};
+use alloc::vec::Vec;
+
+/// Turn a selected route into what Sphinx needs.
+///
+/// A mix is addressed by its identity key while packets are sealed to its
+/// separate packet key. Conflating the two is the mistake this exists to
+/// make impossible.
+pub fn sphinx_route(seed: &[u8; 32]) -> Option<Vec<SphinxNode>> {
+    let hops = topology::route(seed).ok()?;
+    Some(hops.iter().map(convert).collect())
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Gateway {
-    pub ip: [u8; 4],
-    pub port: u16,
-    pub stream: u32,
-    pub transport: Transport,
-    /// The gateway's Ed25519 identity from the directory. Zero means none was
-    /// supplied and registration is skipped: there would be nothing to
-    /// authenticate against.
-    pub identity: [u8; 32],
-    /// Derived by the handshake; zero until it completes.
-    pub shared_key: [u8; 32],
+fn convert(node: &TopoNode) -> SphinxNode {
+    SphinxNode { address: node.identity, pub_key: node.packet_key }
 }
