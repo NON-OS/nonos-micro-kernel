@@ -16,10 +16,12 @@
 //! The `git` builtin.
 
 mod add;
+mod clone;
 mod commit;
 mod dispatch;
 mod init;
 mod log;
+mod push;
 mod repo;
 mod status;
 

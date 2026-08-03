@@ -13,10 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Git in the terminal.
+//! Carrying git's requests to a remote over HTTPS.
 
-mod storage;
-mod transport;
+mod https;
+mod io;
+mod round_trip;
+mod url;
 
-pub use storage::VfsStorage;
-pub use transport::{Https, Remote};
+pub use https::Https;
+pub use url::Remote;

@@ -28,7 +28,6 @@ mod send;
 
 pub use emit::emit_probe;
 pub use job::PingJob;
-pub use probe::Probe;
 
 use crate::command::output::Output;
 

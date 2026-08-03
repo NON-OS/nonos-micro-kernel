@@ -13,10 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-//! Git in the terminal.
+//! What every step of a pull needs to know.
 
-mod storage;
-mod transport;
+use super::args::PullArgs;
 
-pub use storage::VfsStorage;
-pub use transport::{Https, Remote};
+/// The three values that were being threaded through every call: who is
+/// pulling, where from, and under what options. They travel together and
+/// never change during a pull, so they travel as one thing.
+pub struct Ctx<'a> {
+    pub pid: u32,
+    pub ip: [u8; 4],
+    pub args: &'a PullArgs,
+}
