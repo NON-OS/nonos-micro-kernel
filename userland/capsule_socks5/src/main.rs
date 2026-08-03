@@ -20,6 +20,7 @@
 extern crate alloc;
 
 mod conn;
+mod ipc;
 mod manager;
 mod nym;
 mod setup;

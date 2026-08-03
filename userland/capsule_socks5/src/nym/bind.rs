@@ -14,20 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Carrying SOCKS streams over the mixnet.
+use super::exit::Exit;
+use crate::ipc::{call, OP_SET_DESTINATION};
+use alloc::vec::Vec;
 
-mod bind;
-mod exit;
-mod send;
-mod session;
-
-pub use exit::{exit, set_exit, Exit};
-pub use send::{connect_request, SendError};
-pub use session::{open_session, session};
-
-/// Serve SOCKS clients. Not yet wired to an IPC listener.
-pub fn serve() -> ! {
-    loop {
-        core::hint::spin_loop();
-    }
+/// Tell the mixnet capsule where a session's traffic is bound.
+///
+/// The identifier is the reply-block tag the exit echoes back. Taking it from
+/// the encryption key's leading half distinguishes one session from another
+/// without carrying anything the exit could link us by.
+pub fn bind_destination(id: u32, exit: &Exit) -> Result<(), ()> {
+    let mut body: Vec<u8> = Vec::with_capacity(4 + 32 + 16);
+    body.extend_from_slice(&id.to_le_bytes());
+    body.extend_from_slice(&exit.identity);
+    body.extend_from_slice(&exit.encryption[..16]);
+    call(OP_SET_DESTINATION, &body).map(|_| ()).map_err(|_| ())
 }

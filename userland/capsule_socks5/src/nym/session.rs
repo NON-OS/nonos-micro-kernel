@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::bind::bind_destination;
+use super::exit::exit;
+use crate::ipc::{call, OP_OPEN_SESSION};
 use crate::setup::nym_port;
 use core::sync::atomic::{AtomicU32, Ordering};
 
@@ -45,7 +48,19 @@ pub fn session() -> Option<u32> {
     }
 }
 
-/// Placeholder for the open-session request until the IPC client lands.
+/// Open a session and bind it to the configured exit.
+///
+/// Binding is part of opening rather than a later step: a session with no
+/// destination cannot be sealed as a Sphinx packet, and leaving one half
+/// configured invites a send that fails at the last moment instead of here.
 fn request_open() -> Option<u32> {
-    None
+    let exit = exit()?;
+    let reply = call(OP_OPEN_SESSION, &[]).ok()?;
+    if reply.len() < 4 {
+        return None;
+    }
+    let id = u32::from_le_bytes([reply[0], reply[1], reply[2], reply[3]]);
+    bind_destination(id, &exit).ok()?;
+    Some(id)
 }
+

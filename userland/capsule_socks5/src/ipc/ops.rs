@@ -14,20 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Carrying SOCKS streams over the mixnet.
-
-mod bind;
-mod exit;
-mod send;
-mod session;
-
-pub use exit::{exit, set_exit, Exit};
-pub use send::{connect_request, SendError};
-pub use session::{open_session, session};
-
-/// Serve SOCKS clients. Not yet wired to an IPC listener.
-pub fn serve() -> ! {
-    loop {
-        core::hint::spin_loop();
-    }
-}
+/// Open a session on the mixnet transport.
+pub const OP_OPEN_SESSION: u16 = 3;
+/// Send a payload through an open session.
+pub const OP_SEND: u16 = 4;
+/// Collect anything the mixnet delivered.
+pub const OP_RECV: u16 = 5;
+/// Bind a session to the Nym address its traffic is sealed for.
+pub const OP_SET_DESTINATION: u16 = 17;
