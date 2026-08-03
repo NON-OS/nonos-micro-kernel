@@ -21,6 +21,16 @@ use crate::setup;
 
 static CONNECTED: AtomicBool = AtomicBool::new(false);
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// Idle ticks left to sit out before the next attempt.
+static SKIP: AtomicUsize = AtomicUsize::new(0);
+/// How many ticks the next failure will wait, doubling each time.
+static BACKOFF: AtomicUsize = AtomicUsize::new(1);
+
+/// Ceiling on the wait, in idle ticks. Retrying forever at tick rate would
+/// put steady pressure on gateways run by other people, which is not a cost
+/// this client gets to impose on them; giving up entirely would leave a
+/// machine offline after one bad minute.
+const MAX_BACKOFF: usize = 64;
 
 /// Whether a gateway is bound.
 pub fn connected() -> bool {
@@ -38,8 +48,17 @@ pub fn connect_tick() {
     if CONNECTED.load(Ordering::Relaxed) {
         return;
     }
+    let skip = SKIP.load(Ordering::Relaxed);
+    if skip > 0 {
+        SKIP.store(skip - 1, Ordering::Relaxed);
+        return;
+    }
     let index = NEXT.fetch_add(1, Ordering::Relaxed);
     if gateway_client::connect_candidate(setup::tcp_port(), index) {
         CONNECTED.store(true, Ordering::Relaxed);
+        return;
     }
+    let wait = BACKOFF.load(Ordering::Relaxed);
+    SKIP.store(wait, Ordering::Relaxed);
+    BACKOFF.store((wait * 2).min(MAX_BACKOFF), Ordering::Relaxed);
 }

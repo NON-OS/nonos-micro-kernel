@@ -14,13 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Serving SOCKS clients.
+use nonos_libc::mk_debug;
 
-mod clients;
-mod feed;
-mod open;
-mod run;
-mod state;
-mod trace;
-
-pub use run::run;
+/// Say which step of opening a tunnel refused.
+///
+/// A client is told only that the connect was rejected, which is all it can
+/// act on, but the reason matters here: no session, no exit, and a send that
+/// failed are three unrelated faults that look identical from the browser.
+pub fn open_failed(step: &[u8]) {
+    let mut line = [0u8; 64];
+    let mut n = 0;
+    for &b in b"[SOCKS5] open refused: " {
+        line[n] = b;
+        n += 1;
+    }
+    for &b in step {
+        if n < line.len() - 2 {
+            line[n] = b;
+            n += 1;
+        }
+    }
+    line[n] = b'\n';
+    mk_debug(line.as_ptr(), n + 1);
+}
