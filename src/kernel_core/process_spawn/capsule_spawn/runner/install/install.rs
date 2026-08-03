@@ -33,8 +33,10 @@ pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
         return Err(SpawnError::FeatureDisabled);
     }
     nonos_inbox::register_or_get_bootstrap_inbox(params.reply_inbox);
-    register_endpoint(params.reply_inbox, params.reply_port, 0, 0)
-        .map_err(|_| SpawnError::EndpointCollision)?;
+    register_endpoint(params.reply_inbox, params.reply_port, 0, 0).map_err(|_| {
+        crate::sys::bench::mark_named(b"capsule_endpoint_collision", params.name.as_bytes());
+        SpawnError::EndpointCollision
+    })?;
     let pid = create_process_with_parent(
         params.name,
         ProcessState::Ready,
@@ -54,8 +56,10 @@ pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
     let user_rsp = allocate_user_stack(pid).map_err(|_| SpawnError::AddressSpace)?;
     setup_initial_user_context(pid, entry, user_rsp).map_err(|_| SpawnError::AddressSpace)?;
     let service_caps = required_caps(params.name, Capability::IPC.bit());
-    register_endpoint(params.name, params.service_port, pid, service_caps)
-        .map_err(|_| SpawnError::EndpointCollision)?;
+    register_endpoint(params.name, params.service_port, pid, service_caps).map_err(|_| {
+        crate::sys::bench::mark_named(b"capsule_endpoint_collision", params.name.as_bytes());
+        SpawnError::EndpointCollision
+    })?;
     super::spawn_log::emit(params.name, pid, caps, entry);
     crate::sched::add_to_run_queue(pid);
     crate::sys::bench::mark_named(b"capsule_runqueue_ok", params.name.as_bytes());
