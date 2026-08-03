@@ -19,8 +19,10 @@
 mod address;
 mod delays;
 mod encode;
+mod mix_packet;
 mod route;
 
 pub use address::routing_address;
 pub use encode::encode_sphinx;
+pub use mix_packet::frame_mix_packet;
 pub use route::sphinx_route;

@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::delays::hop_delays;
+use super::mix_packet::frame_mix_packet;
 use super::route::sphinx_route;
 use crate::crypto::random::fill_random;
 use crate::sphinx::constants::DESTINATION_ADDRESS_LENGTH;
@@ -24,7 +25,7 @@ use alloc::vec::Vec;
 
 const VERSION: [u8; 3] = [1, 0, 0];
 
-/// Build one Sphinx packet for `payload`.
+/// Build one Sphinx packet for `payload`, framed for the gateway.
 ///
 /// The ephemeral scalar is fresh per packet: reusing one would give every
 /// packet the same per-hop keys and let a single mix link them.
@@ -40,5 +41,7 @@ pub fn encode_sphinx(
     let mut secret = [0u8; 32];
     fill_random(&mut secret).ok()?;
     let dest = Destination { address: *destination, identifier: *identifier };
-    build_packet(&secret, &route, &dest, &delays, VERSION, payload).ok()?.to_bytes()
+    let first_hop = route[0].address;
+    let packet = build_packet(&secret, &route, &dest, &delays, VERSION, payload).ok()?;
+    Some(frame_mix_packet(&first_hop, &packet.to_bytes()?))
 }

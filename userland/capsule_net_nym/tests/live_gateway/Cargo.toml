@@ -11,6 +11,10 @@ ed25519-dalek = { version = "2", features = ["rand_core"] }
 rand = "0.8"
 bs58 = "0.5"
 tungstenite = "0.24"
+hkdf = "0.12"
+hmac = "0.12"
+sha2 = "0.10"
+serde_json = "1"
 nonos_libc = { path = "shim" }
 
 [[bin]]

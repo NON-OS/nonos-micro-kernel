@@ -10,6 +10,30 @@ pub mod polyval;
 pub mod gcm_siv;
 #[path = "../../../src/crypto/hkdf_blake3/mod.rs"]
 pub mod hkdf_blake3;
+#[path = "../../../src/crypto/chacha20/mod.rs"]
+pub mod chacha20;
+#[path = "../../../src/crypto/blake2b/mod.rs"]
+pub mod blake2b;
+#[path = "../../../src/crypto/lioness/mod.rs"]
+pub mod lioness;
+
+/// HKDF and HMAC over SHA-256, which are syscalls in the capsule. Sphinx key
+/// expansion uses these; the gateway handshake uses the BLAKE3 variant above.
+pub mod kdf {
+    use super::types::CryptoError;
+    use hkdf::Hkdf;
+    use hmac::{Hmac, Mac};
+    use sha2::Sha256;
+    pub fn hkdf_sha256(salt: &[u8], ikm: &[u8], info: &[u8], out: &mut [u8]) -> Result<(), CryptoError> {
+        Hkdf::<Sha256>::new(Some(salt), ikm).expand(info, out).map_err(|_| CryptoError::Kdf)
+    }
+    pub fn hmac_sha256(key: &[u8], data: &[u8], out: &mut [u8; 32]) -> Result<(), CryptoError> {
+        let mut m = <Hmac<Sha256> as Mac>::new_from_slice(key).map_err(|_| CryptoError::Mac)?;
+        m.update(data);
+        out.copy_from_slice(&m.finalize().into_bytes());
+        Ok(())
+    }
+}
 
 pub mod types {
     #[derive(Debug, PartialEq)]
