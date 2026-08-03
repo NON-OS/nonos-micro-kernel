@@ -14,20 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Carrying SOCKS streams over the mixnet.
+use crate::conn::Conn;
+use crate::manager::Manager;
+use spin::Mutex;
 
-mod address;
-mod base58;
-mod bind;
-mod bootstrap;
-mod exit;
-mod send;
-mod session;
+/// One SOCKS handshake per client, and the connection table behind them.
+///
+/// A single slot rather than a map: this capsule serves one client at a time
+/// today, and a table keyed by pid would imply an isolation guarantee the
+/// rest of the path does not yet provide.
+pub struct Server {
+    pub conn: Conn,
+    pub manager: Manager,
+}
 
-pub use address::parse_address;
-pub use bootstrap::{bootstrap_exit, BOOTSTRAP_EXITS};
-pub use exit::{exit, set_exit, Exit};
-pub use send::{connect_request, send_through_mixnet, SendError};
-pub use session::{open_session, session};
+pub static SERVER: Mutex<Option<Server>> = Mutex::new(None);
 
-
+/// Reset the handshake state, discarding whatever was in flight.
+pub fn reset() {
+    *SERVER.lock() = Some(Server { conn: Conn::new(), manager: Manager::new() });
+}

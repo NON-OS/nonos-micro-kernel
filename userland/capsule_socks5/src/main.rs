@@ -23,6 +23,7 @@ mod conn;
 mod ipc;
 mod manager;
 mod nym;
+mod server;
 mod setup;
 mod tunnel;
 mod wire;
@@ -38,7 +39,7 @@ pub unsafe extern "C" fn _start() -> ! {
         mk_exit(1);
     }
     wait_for_setup();
-    nym::serve();
+    server::run();
 }
 
 /// Wait until `net.nym` is up.

@@ -49,3 +49,14 @@ pub fn connect_request(conn_id: u64, dest: &Dest) -> Result<Vec<u8>, SendError> 
     buf.truncate(n);
     Ok(buf)
 }
+
+/// Hand a built frame to the mixnet capsule for this session.
+pub fn send_through_mixnet(frame: &[u8]) -> Result<(), SendError> {
+    let id = session().ok_or(SendError::NoSession)?;
+    let mut body: Vec<u8> = Vec::with_capacity(4 + frame.len());
+    body.extend_from_slice(&id.to_le_bytes());
+    body.extend_from_slice(frame);
+    crate::ipc::call(crate::ipc::OP_SEND, &body)
+        .map(|_| ())
+        .map_err(|_| SendError::NoSession)
+}

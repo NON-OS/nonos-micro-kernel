@@ -14,20 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Carrying SOCKS streams over the mixnet.
+//! Serving SOCKS clients.
 
-mod address;
-mod base58;
-mod bind;
-mod bootstrap;
-mod exit;
-mod send;
-mod session;
+mod feed;
+mod open;
+mod run;
+mod state;
 
-pub use address::parse_address;
-pub use bootstrap::{bootstrap_exit, BOOTSTRAP_EXITS};
-pub use exit::{exit, set_exit, Exit};
-pub use send::{connect_request, send_through_mixnet, SendError};
-pub use session::{open_session, session};
-
-
+pub use run::run;
