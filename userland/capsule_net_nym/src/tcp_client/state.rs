@@ -23,8 +23,9 @@ pub const SYN_RECEIVED: u8 = 2;
 pub const ESTABLISHED: u8 = 3;
 pub const CLOSED: u8 = 0xFF;
 
-/// The call to net.tcp failed outright.
-pub const E_STATE_CALL: u16 = 8;
+/// Added to whatever the call reported, so the underlying code survives
+/// instead of every failure arriving as one value.
+pub const E_STATE_CALL: u16 = 200;
 /// net.tcp answered with something other than the one state byte.
 pub const E_STATE_LEN: u16 = 9;
 
@@ -39,6 +40,6 @@ pub fn state(port: u32, handle: u32) -> Result<u8, u16> {
     match call(port, OP_STATE, &handle.to_le_bytes(), &mut out) {
         Ok(1) => Ok(out[0]),
         Ok(_) => Err(E_STATE_LEN),
-        Err(_) => Err(E_STATE_CALL),
+        Err(e) => Err(E_STATE_CALL + e),
     }
 }
