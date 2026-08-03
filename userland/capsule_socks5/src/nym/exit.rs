@@ -37,6 +37,13 @@ pub fn set_exit(exit: Exit) {
     *EXIT.lock() = Some(exit);
 }
 
+/// The configured exit, or the first published one if none was chosen.
 pub fn exit() -> Option<Exit> {
-    *EXIT.lock()
+    let mut slot = EXIT.lock();
+    if let Some(configured) = *slot {
+        return Some(configured);
+    }
+    let fallback = super::bootstrap::bootstrap_exit(0)?;
+    *slot = Some(fallback);
+    Some(fallback)
 }

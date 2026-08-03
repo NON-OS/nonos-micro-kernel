@@ -16,11 +16,16 @@
 
 //! Carrying SOCKS streams over the mixnet.
 
+mod address;
+mod base58;
 mod bind;
+mod bootstrap;
 mod exit;
 mod send;
 mod session;
 
+pub use address::parse_address;
+pub use bootstrap::{bootstrap_exit, BOOTSTRAP_EXITS};
 pub use exit::{exit, set_exit, Exit};
 pub use send::{connect_request, SendError};
 pub use session::{open_session, session};
