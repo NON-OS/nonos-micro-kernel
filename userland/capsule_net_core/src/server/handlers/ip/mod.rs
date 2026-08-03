@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod dns;
-pub mod ip;
-pub mod errno;
-pub mod header;
-pub mod ops;
-pub mod tcp;
-pub mod udp;
+mod dispatch;
+mod last_ident;
+mod poll;
+mod send;
+mod socket;
+
+pub use dispatch::dispatch;

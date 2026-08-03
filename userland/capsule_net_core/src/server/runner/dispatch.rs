@@ -16,6 +16,7 @@
 
 use crate::protocol::dns::MAGIC_NDNS;
 use crate::protocol::errno::E_BAD_MAGIC;
+use crate::protocol::ip::MAGIC_NIP4;
 use crate::protocol::ops::MAGIC_NDHC;
 use crate::protocol::tcp::MAGIC_NTCP;
 use crate::protocol::udp::MAGIC_NUDP;
@@ -31,6 +32,7 @@ pub fn dispatch(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
             MAGIC_NTCP => crate::server::handlers::tcp::dispatch(sender_pid, req, body, tx),
             MAGIC_NUDP => crate::server::handlers::udp::dispatch(sender_pid, req, body, tx),
             MAGIC_NDNS => crate::server::handlers::dns::dispatch(sender_pid, req, body, tx),
+            MAGIC_NIP4 => crate::server::handlers::ip::dispatch(sender_pid, req, body, tx),
             _ => {
                 let _ = reply(sender_pid, req.magic, req.op, E_BAD_MAGIC, req.request_id, &[], tx);
             }
