@@ -46,7 +46,7 @@ pub fn all() {
     let ip_ok = one(NET_IP, PORT_IP, b"[NET-CORE] register FAILED net.ip\n");
 
     if tcp_ok && udp_ok && dhcp_ok && dns_ok && ip_ok {
-        let msg = b"[NET-CORE] registered net.tcp net.udp net.dhcp.client net.dns\n";
+        let msg = b"[NET-CORE] registered net.tcp net.udp net.dhcp.client net.dns net.ip\n";
         mk_debug(msg.as_ptr(), msg.len());
     } else {
         let msg = b"[NET-CORE] registration partial failure\n";
