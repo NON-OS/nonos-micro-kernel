@@ -24,6 +24,7 @@ mod drain_ipc;
 mod ensure_primed;
 #[cfg(feature = "runtime")]
 mod entry;
+#[cfg(feature = "runtime")]
 mod ephemeral;
 mod fail;
 mod fit_display;
