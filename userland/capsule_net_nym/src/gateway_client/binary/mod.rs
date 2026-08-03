@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod binary;
-mod handshake;
-mod ops;
-mod ws;
+//! Encrypted binary frames between client and gateway.
 
-pub use ops::{close, connect, recv, send};
-pub use binary::{
-    is_pushed_message, make_encrypted_blob, parse_blob, Incoming, KIND_FORWARD_SPHINX,
-    KIND_FORWARD_SPHINX_V2, KIND_PUSHED_MIX_MESSAGE,
-};
+mod blob;
+mod kinds;
+mod parse;
+mod response;
+
+pub use blob::make_encrypted_blob;
+pub use kinds::{KIND_FORWARD_SPHINX, KIND_FORWARD_SPHINX_V2};
+pub use parse::{parse_blob, Incoming};
+pub use response::{is_pushed_message, KIND_PUSHED_MIX_MESSAGE};

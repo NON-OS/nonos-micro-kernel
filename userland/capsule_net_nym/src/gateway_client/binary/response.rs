@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod binary;
-mod handshake;
-mod ops;
-mod ws;
+/// A message the gateway pushed to us from the mixnet.
+pub const KIND_PUSHED_MIX_MESSAGE: u8 = 1;
 
-pub use ops::{close, connect, recv, send};
-pub use binary::{
-    is_pushed_message, make_encrypted_blob, parse_blob, Incoming, KIND_FORWARD_SPHINX,
-    KIND_FORWARD_SPHINX_V2, KIND_PUSHED_MIX_MESSAGE,
-};
+/// Unknown kinds are ignored rather than guessed at: the kind byte is outside
+/// the authenticated region.
+pub fn is_pushed_message(kind: u8) -> bool {
+    kind == KIND_PUSHED_MIX_MESSAGE
+}
