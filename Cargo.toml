@@ -490,6 +490,7 @@ microkernel-net-nym = [
   "nonos-capsule-driver-virtio-net",
   "nonos-capsule-net-core",
   "nonos-capsule-net-nym",
+  "nonos-capsule-socks5",
 ]
 
 microkernel-net-sockets = [
@@ -500,6 +501,7 @@ microkernel-net-sockets = [
   "nonos-capsule-net-core",
   "nonos-capsule-net-sockets",
   "nonos-capsule-net-nym",
+  "nonos-capsule-socks5",
 ]
 
 # Desktop boot profile. This is the signed QEMU GUI lane:
@@ -531,6 +533,7 @@ microkernel-desktop-base = [
   "nonos-capsule-net-core",
   "nonos-capsule-net-sockets",
   "nonos-capsule-net-nym",
+  "nonos-capsule-socks5",
   "nonos-capsule-input-router",
   "nonos-capsule-compositor",
   "nonos-capsule-wm",
@@ -708,6 +711,7 @@ microkernel-input-e2e-ps2 = [
   "nonos-capsule-net-dns",
   "nonos-capsule-net-sockets",
   "nonos-capsule-net-nym",
+  "nonos-capsule-socks5",
   "nonos-capsule-input-router",
   "nonos-capsule-compositor",
   "nonos-capsule-wm",
@@ -743,6 +747,7 @@ microkernel-input-e2e-xhci = [
   "nonos-capsule-net-dns",
   "nonos-capsule-net-sockets",
   "nonos-capsule-net-nym",
+  "nonos-capsule-socks5",
   "nonos-capsule-input-router",
   "nonos-capsule-compositor",
   "nonos-capsule-wm",

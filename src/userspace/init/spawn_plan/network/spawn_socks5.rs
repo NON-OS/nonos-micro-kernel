@@ -14,12 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(in crate::userspace::init::spawn_plan) fn spawn() {
-    super::spawn_core::spawn_core();
-    super::spawn_legacy_stack::spawn_legacy_stack();
-    super::spawn_nym::spawn_nym();
-    super::spawn_sockets::spawn_sockets();
-    // After net.nym: the SOCKS front end resolves it at startup and would
-    // otherwise spin waiting for a service that has not registered yet.
-    super::spawn_socks5::spawn_socks5();
+#[cfg(feature = "nonos-capsule-socks5")]
+pub(super) fn spawn_socks5() {
+    use crate::userspace::capsule_socks5 as c;
+    super::super::boot::capsule("SOCKS5", "socks5", c::spawn_socks5_capsule, c::shared_state);
 }
+
+#[cfg(not(feature = "nonos-capsule-socks5"))]
+pub(super) fn spawn_socks5() {}
