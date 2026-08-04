@@ -22,15 +22,15 @@ mod establish;
 mod handshake;
 mod ops;
 mod register;
-mod trace;
+pub mod trace;
 mod ws;
 
-pub use ops::{close, connect, ping, recv, send};
+pub use autoconnect::autoconnect;
+pub use bandwidth::claim_free_bandwidth;
 pub use binary::{
     is_pushed_message, make_encrypted_blob, parse_blob, Incoming, KIND_FORWARD_SPHINX,
     KIND_FORWARD_SPHINX_V2, KIND_PUSHED_MIX_MESSAGE,
 };
-pub use autoconnect::autoconnect;
 pub use candidate::connect_candidate;
+pub use ops::{close, connect, ping, recv, send};
 pub use trace::directory as trace_directory;
-pub use bandwidth::claim_free_bandwidth;

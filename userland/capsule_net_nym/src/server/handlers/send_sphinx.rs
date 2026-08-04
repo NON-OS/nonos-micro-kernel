@@ -34,11 +34,14 @@ pub fn send_sphinx(tcp_port: u32, session: &Session, payload: &[u8]) -> u16 {
     };
     match gateway_client::send(tcp_port, session.gateway, &frame) {
         Ok(()) => E_OK,
-        Err(_) => {
-            // The gateway stopped taking bytes, which usually means it closed
-            // a connection nothing had used since registration. Drop the
-            // binding so the serve loop dials again, rather than writing
-            // every later packet into a socket that is gone.
+        Err(code) => {
+            // Callers see one code for a write that did not land, so the
+            // reason it did not land is only recoverable from the log. A
+            // closed socket and a socket that never drained need different
+            // fixes and are indistinguishable without this.
+            gateway_client::trace::fail(b"send", code);
+            // Drop the binding so the serve loop dials again, rather than
+            // writing every later packet into a socket that is gone.
             crate::server::gateway_lost();
             E_NO_TCP
         }

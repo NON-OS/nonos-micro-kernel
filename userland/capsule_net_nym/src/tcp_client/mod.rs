@@ -17,8 +17,10 @@
 mod envelope;
 mod errno;
 mod ops;
+mod send;
 mod state;
 mod wait;
 
-pub use ops::{close, connect, recv, send_all};
+pub use ops::{close, connect, recv};
+pub use send::send_all;
 pub use wait::wait_established;

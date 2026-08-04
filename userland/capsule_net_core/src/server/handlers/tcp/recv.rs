@@ -18,7 +18,8 @@ use smoltcp::socket::tcp;
 
 use crate::handles;
 use crate::protocol::tcp::{E_BAD_LEN, E_NO_SOCKET, E_OK, E_RX_EMPTY, MAGIC_NTCP, OP_RECV};
-use crate::server::parse_req::{Request, IPC_BUF_MAX};
+use crate::server::handlers::tcp::recv_cap::recv_cap;
+use crate::server::parse_req::Request;
 use crate::server::respond::reply;
 use crate::state;
 
@@ -37,7 +38,7 @@ pub fn handle(sender_pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         }
     };
 
-    let mut buf = alloc::vec![0u8; IPC_BUF_MAX];
+    let mut buf = alloc::vec![0u8; recv_cap(body)];
     let result = state::with_iface(|_iface, sockets, _dev| {
         let sock = sockets.get_mut::<tcp::Socket>(sock_handle);
         sock.recv_slice(&mut buf)

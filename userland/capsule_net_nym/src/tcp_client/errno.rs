@@ -31,9 +31,9 @@ pub const E_MAGIC: u16 = 21;
 pub const E_OP: u16 = 22;
 /// Reply claimed a payload that does not fit what was sent or asked for.
 pub const E_LEN: u16 = 23;
+/// net.tcp took no bytes for long enough that waiting stopped being sensible.
+pub const E_SHORT_WRITE: u16 = 24;
 /// Added to a service errno so it cannot be confused with the above.
 pub const E_ERRNO: u16 = 30;
-/// net.tcp took fewer bytes than were offered.
-pub const E_SHORT_WRITE: u16 = 5;
 /// net.tcp reports an empty receive queue as this errno.
 pub const RX_EMPTY: u16 = 11;

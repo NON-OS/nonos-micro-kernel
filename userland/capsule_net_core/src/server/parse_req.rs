@@ -17,7 +17,14 @@
 use crate::protocol::errno::{E_BAD_LEN, E_BAD_VERSION};
 
 pub const HDR_LEN: usize = 20;
-pub const IPC_BUF_MAX: usize = 1024;
+/// Largest TCP payload a client may hand over in one send, which is the MSS
+/// an Ethernet link gives it.
+pub const SEGMENT_PAYLOAD_MAX: usize = 1460;
+/// Room for that segment plus the fields wrapped around it. A buffer shorter
+/// than the largest request a client may legally make does not fail loudly:
+/// the kernel copies what fits and reports that count, so the request arrives
+/// truncated and is rejected as malformed rather than as too long.
+pub const IPC_BUF_MAX: usize = SEGMENT_PAYLOAD_MAX + 64;
 
 #[derive(Clone, Copy)]
 pub struct Request {

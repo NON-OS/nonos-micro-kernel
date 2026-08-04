@@ -19,7 +19,7 @@ use alloc::vec;
 use nonos_libc::mk_time_millis;
 
 use crate::server::parse_req::{parse, HDR_LEN, IPC_BUF_MAX};
-use crate::server::runner::{dispatch, receive};
+use crate::server::runner::{dispatch, receive, refuse};
 
 // How often to re-check whether a better network interface has come up. The WiFi
 // link is down at boot and only associates once the user connects, so the stack
@@ -43,8 +43,13 @@ pub fn run() -> ! {
         if n <= 0 || sender_pid == 0 {
             continue;
         }
-        let Ok((req, body)) = parse(&rx[..n as usize]) else {
-            continue;
+        let raw = &rx[..n as usize];
+        let (req, body) = match parse(raw) {
+            Ok(parsed) => parsed,
+            Err(errno) => {
+                refuse::refuse(sender_pid, raw, errno, &mut tx);
+                continue;
+            }
         };
         dispatch::dispatch(sender_pid, &req, body, &mut tx);
     }

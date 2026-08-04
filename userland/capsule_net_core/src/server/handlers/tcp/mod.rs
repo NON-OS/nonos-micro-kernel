@@ -19,6 +19,7 @@ pub mod connect;
 pub mod dispatch;
 pub mod poll;
 pub mod recv;
+pub mod recv_cap;
 pub mod send;
 pub mod smoltcp_state_to_code;
 pub mod state;
