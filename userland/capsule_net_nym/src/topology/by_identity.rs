@@ -14,17 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Bridging the directory's view of the network to Sphinx.
+use super::store;
+use super::types::Node;
 
-mod address;
-mod delays;
-mod encode;
-mod mix_packet;
-mod route;
-mod route_home;
-
-pub use address::routing_address;
-pub use encode::encode_sphinx;
-pub use mix_packet::frame_mix_packet;
-pub use route::sphinx_route;
-pub use route_home::route_home;
+/// The directory's record for a node we know only by identity.
+///
+/// A gateway we hold a session with is known by the key it authenticated
+/// with, but routing a packet to it needs the address and packet key the
+/// directory publishes. Those are not interchangeable, so one has to be
+/// looked up from the other.
+pub fn node_by_identity(identity: &[u8; 32]) -> Option<Node> {
+    let nodes = store::snapshot().ok()?;
+    nodes.into_iter().find(|n| &n.identity == identity)
+}

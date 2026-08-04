@@ -124,3 +124,50 @@ fn the_packet_version_is_one_a_hop_knows() {
     let value = u16::from_be_bytes([PACKET_VERSION[1], PACKET_VERSION[2]]);
     assert_eq!(value, 258, "explicit payload keys over standard X25519");
 }
+
+/// A packet has to leave room for a message after its overheads, and the
+/// sizes it is derived from are not obviously large enough to see by eye.
+#[test]
+fn a_packet_has_room_for_a_message() {
+    use crate::message::{FRAGMENT_PER_PACKET, PLAINTEXT_PER_PACKET};
+    use crate::message::UNLINKED_HEADER_LEN;
+
+    assert!(PLAINTEXT_PER_PACKET > 0);
+    assert_eq!(FRAGMENT_PER_PACKET - PLAINTEXT_PER_PACKET, UNLINKED_HEADER_LEN);
+    assert!(PLAINTEXT_PER_PACKET > 1024, "a packet should carry a useful request");
+}
+
+/// A short request is one packet, and its fragment says so.
+#[test]
+fn a_short_request_is_one_fragment() {
+    use crate::message::{parse, prepare, SENDER_TAG_SIZE};
+
+    let prepared = prepare(&[1u8; SENDER_TAG_SIZE], &[], b"GET / HTTP/1.1", 42)
+        .expect("a short request must prepare");
+    assert_eq!(prepared.fragments.len(), 1);
+
+    let (header, _) = parse(&prepared.fragments[0]).expect("our own fragment must parse");
+    assert_eq!(header.set_id, 42);
+    assert_eq!(header.total, 1);
+    assert_eq!(header.current, 1, "positions count from one");
+}
+
+/// Reply blocks are bulky, so a request carrying them spans packets. Every
+/// piece has to be numbered in order or the far end cannot rebuild it.
+#[test]
+fn a_request_with_reply_blocks_spans_packets_in_order() {
+    use crate::message::{parse, prepare, PLAINTEXT_PER_PACKET, SENDER_TAG_SIZE};
+
+    let surbs: Vec<Vec<u8>> = (0..4).map(|_| vec![0xabu8; 900]).collect();
+    let prepared = prepare(&[2u8; SENDER_TAG_SIZE], &surbs, b"GET /", 7)
+        .expect("a request with blocks must prepare");
+    assert!(prepared.fragments.len() > 1, "blocks this size do not fit one packet");
+
+    for (index, fragment) in prepared.fragments.iter().enumerate() {
+        let (header, payload) = parse(fragment).expect("every fragment must parse");
+        assert_eq!(header.set_id, 7);
+        assert_eq!(header.total as usize, prepared.fragments.len());
+        assert_eq!(header.current as usize, index + 1);
+        assert_eq!(payload.len(), PLAINTEXT_PER_PACKET, "every packet is the same width");
+    }
+}

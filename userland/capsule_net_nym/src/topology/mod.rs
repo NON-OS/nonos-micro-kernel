@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod builtin;
+mod by_identity;
 mod clock;
 mod directory;
 mod fetched;
@@ -28,6 +29,7 @@ mod types;
 mod verify;
 
 pub use builtin::install as install_builtin;
+pub use by_identity::node_by_identity;
 pub use directory::DirectoryMeta;
 pub use fetched::install_fetched;
 pub use parse::install;

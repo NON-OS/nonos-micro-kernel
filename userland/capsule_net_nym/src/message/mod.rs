@@ -22,9 +22,13 @@
 //! puts bytes on the wire that reach an exit and mean nothing to it.
 
 mod fragment;
+mod plaintext;
+mod prepare;
 mod repliable;
 mod types;
 
 pub use fragment::{parse, Fragment, MAX_FRAGMENTS, UNLINKED_HEADER_LEN};
+pub use plaintext::{FRAGMENT_PER_PACKET, PLAINTEXT_PER_PACKET};
+pub use prepare::{prepare, Prepared};
 pub use repliable::{pad_to_packets, repliable_data, unpad};
 pub use types::{SENDER_TAG_SIZE, TAG_DATA, TYPE_REPLIABLE};
