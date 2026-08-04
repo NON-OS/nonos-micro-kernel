@@ -19,7 +19,10 @@ pub const DIR_VERSION: u8 = 1;
 pub const DIR_HEADER_LEN: usize = 128;
 pub const NODE_CAP: usize = 128;
 pub const NODE_WIRE_LEN: usize = 74;
-pub const ROUTE_HOPS: usize = 5;
+/// Hops a header holds a layer for: one per mix layer, then the gateway the
+/// packet leaves by. Five nodes carry a packet, but our own entry gateway is
+/// handed it directly and only forwards it, so it is not one of these.
+pub const ROUTE_HOPS: usize = 4;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Role {
