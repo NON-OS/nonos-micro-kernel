@@ -27,6 +27,7 @@ mod json;
 mod message;
 mod mixnet;
 mod packet;
+mod payload;
 mod protocol;
 mod route;
 mod server;

@@ -75,3 +75,8 @@ pub mod random {
         Ok(())
     }
 }
+
+// The capsule re-exports these at the crypto root, so the shim does too and
+// code pulled in by path resolves the same paths either side.
+pub use ecdh::{x25519_public, x25519_shared};
+pub use random::fill_random;

@@ -10,8 +10,14 @@ mod api;
 mod gateway_client;
 #[path = "../../../src/surb/mod.rs"]
 mod surb;
+#[path = "../../../src/ack/mod.rs"]
+mod ack;
+#[path = "../../../src/payload/mod.rs"]
+mod payload;
 #[cfg(test)]
 mod message_vectors;
+#[cfg(test)]
+mod payload_vectors;
 #[cfg(test)]
 mod surb_vectors;
 #[path = "../../../src/message/mod.rs"]
