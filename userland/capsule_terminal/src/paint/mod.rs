@@ -31,6 +31,7 @@ mod line_chars;
 mod line_text;
 mod metrics;
 mod shade;
+mod suggestion;
 mod syntax;
 pub mod tabstrip;
 

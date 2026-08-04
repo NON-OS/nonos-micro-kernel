@@ -21,6 +21,7 @@ mod prev_matching;
 mod push;
 mod reset_cursor;
 mod searching;
+mod suggest;
 mod types;
 
 pub use types::History;

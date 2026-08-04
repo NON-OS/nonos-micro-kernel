@@ -17,6 +17,7 @@
 use nonos_app_skeleton::{EventOutcome, MOD_SHIFT};
 use nonos_libc::mk_kill;
 
+use super::accept_suggestion::accept_suggestion;
 use super::copy_line::copy_line;
 use super::paste_clipboard::paste_clipboard;
 use crate::jobs::JobWork;
@@ -86,7 +87,9 @@ pub fn on_ctrl(state: &mut State, code: u32, flags: u16) -> Option<EventOutcome>
             Some(EventOutcome::Repaint)
         }
         CTRL_E | CTRL_E_LO => {
-            state.line.move_end();
+            if !accept_suggestion(state) {
+                state.line.move_end();
+            }
             Some(EventOutcome::Repaint)
         }
         // Ctrl+= / Ctrl++ zoom the body font in, Ctrl+- / Ctrl+_ out (1..=4).

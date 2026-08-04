@@ -22,10 +22,11 @@ use super::line_chars::char_floor;
 use super::line_text::{text, text_parts};
 use super::metrics::Metrics;
 use super::shade::elevate;
+use super::suggestion::draw_suggestion;
 use super::syntax::{classify, Part};
 
 use crate::term::state::State;
-use crate::term::theme::{ACCENT, FOREGROUND, PATH, PROMPT};
+use crate::term::theme::{ACCENT, BLOCK_ERR, FOREGROUND, PATH, PROMPT};
 
 pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32, m: Metrics) {
     let (adv, px) = (m.adv, m.px);
@@ -43,7 +44,11 @@ pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32, m: Metrics) 
     let cwd = state.cwd.as_bytes();
     let take = cwd.len().min((total_cells / 3).max(1));
     let prompt_cells = 1 + take + 1;
-    text(fb, TEXT_LEFT, y, b">", PROMPT, adv, px);
+    // The mark takes the colour of what the last command did. A reader who
+    // looked away while it ran learns the outcome from where they are about
+    // to type, rather than by finding the block it came from.
+    let mark = if state.last_status == 0 { PROMPT } else { BLOCK_ERR };
+    text(fb, TEXT_LEFT, y, b">", mark, adv, px);
     text(fb, TEXT_LEFT + adv, y, &cwd[cwd.len() - take..], PATH, adv, px);
     // Horizontal scroll: slide a body_cells-wide window so the cursor is always
     // on screen, showing the start of the line whenever it fits.
@@ -65,6 +70,12 @@ pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32, m: Metrics) 
     let from = start.min(MAX_HIGHLIGHT);
     let to = stop.min(MAX_HIGHLIGHT);
     text_parts(fb, bx, y, &body[start..stop], &parts[from..to], adv, px);
+    // The offer sits where the cursor is, so it has to be drawn before the
+    // cursor goes on top of it.
+    let typed_cells = stop.saturating_sub(start);
+    let ghost_x = bx + typed_cells as u32 * adv;
+    let room = body_cells.saturating_sub(typed_cells);
+    draw_suggestion(state, fb, ghost_x, y, adv, px, room);
     let under = body.get(cursor).copied().unwrap_or(0);
     draw_cursor(fb, prompt_cells, cursor - scroll, y + 1, under, m);
 }
