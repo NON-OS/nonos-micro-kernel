@@ -23,12 +23,21 @@ use alloc::vec::Vec;
 /// packet on the wire is the same size whatever it carries, which is the
 /// point: length would otherwise identify traffic through the mixnet.
 pub fn pad_payload(message: &[u8]) -> Option<Vec<u8>> {
-    if message.len() + 1 > REGULAR_PAYLOAD_SIZE {
+    pad_payload_to(message, REGULAR_PAYLOAD_SIZE)
+}
+
+/// Pad to a width other than the usual one.
+///
+/// Acknowledgements travel in their own narrower packet, so the width a
+/// payload is padded to is a property of the packet being built rather than
+/// a constant of the protocol.
+pub fn pad_payload_to(message: &[u8], width: usize) -> Option<Vec<u8>> {
+    if message.len() + 1 > width {
         return None;
     }
-    let mut out = Vec::with_capacity(REGULAR_PAYLOAD_SIZE);
+    let mut out = Vec::with_capacity(width);
     out.extend_from_slice(message);
     out.push(0x01);
-    out.resize(REGULAR_PAYLOAD_SIZE, 0);
+    out.resize(width, 0);
     Some(out)
 }

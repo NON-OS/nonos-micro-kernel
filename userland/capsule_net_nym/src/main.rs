@@ -19,6 +19,7 @@
 
 extern crate alloc;
 
+mod ack;
 mod crypto;
 mod directory_sync;
 mod gateway_client;

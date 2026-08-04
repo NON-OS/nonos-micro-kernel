@@ -72,3 +72,17 @@ const _: () = assert!(REGULAR_PACKET_SIZE == 2413);
 const _: () = assert!(EXPANDED_SHARED_SECRET_LENGTH == 288);
 const _: () = assert!(TRUNCATED_ROUTING_INFO_SIZE == 240);
 const _: () = assert!(PADDED_ENCRYPTED_ROUTING_INFO_SIZE == 360);
+
+/// Random prefix an acknowledgement puts before the fragment it names, so no
+/// hop can tell two acks from the same client apart.
+pub const ACK_IV_SIZE: usize = 16;
+
+/// Bytes naming one fragment: the set id, then the position within it.
+pub const FRAG_ID_SIZE: usize = 5;
+
+/// What an acknowledgement carries before padding.
+pub const ACK_PLAINTEXT_SIZE: usize = ACK_IV_SIZE + FRAG_ID_SIZE;
+
+/// Payload width of an acknowledgement packet. Acks travel narrower than
+/// messages, and the width is how a hop tells which kind it is holding.
+pub const ACK_PAYLOAD_SIZE: usize = ACK_PLAINTEXT_SIZE + PAYLOAD_OVERHEAD_SIZE;

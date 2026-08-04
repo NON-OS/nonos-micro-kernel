@@ -22,6 +22,6 @@ mod seal;
 mod unpad;
 
 pub use open::open_layer;
-pub use pad::pad_payload;
+pub use pad::{pad_payload, pad_payload_to};
 pub use seal::seal_payload;
 pub use unpad::unpad_payload;

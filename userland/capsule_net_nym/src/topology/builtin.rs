@@ -41,6 +41,8 @@ pub fn install() -> Result<(), TopologyError> {
             delay_ms: HOP_DELAY_MS,
             ip: *ip,
             port: *port,
+            // Mixes hold no client sessions, so there is nothing to dial.
+            ws_port: 0,
             // Identity names gateways. A mix hop is authenticated by its
             // packet key when the header is sealed for it.
             identity: [0u8; 32],

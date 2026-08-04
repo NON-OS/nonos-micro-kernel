@@ -17,9 +17,11 @@
 //! Packet serialisation.
 
 mod build;
+mod build_sized;
 mod from_bytes;
 mod to_bytes;
 mod types;
 
 pub use build::build_packet;
+pub use build_sized::build_packet_sized;
 pub use types::SphinxPacket;

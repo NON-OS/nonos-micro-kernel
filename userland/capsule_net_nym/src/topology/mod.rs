@@ -33,5 +33,5 @@ pub use fetched::install_fetched;
 pub use parse::install;
 pub use select::route;
 pub use status::current as status;
-pub use store::meta;
+pub use store::{meta, snapshot};
 pub use types::{Node, Role, TopologyError, TopologyStatus, NODE_CAP, ROUTE_HOPS};

@@ -15,7 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::ops::connect;
-use crate::state::{bootstrap_gateway, BOOTSTRAP_GATEWAYS, TABLE};
+use super::pick::pick;
+use crate::state::TABLE;
 
 /// Try the bootstrap gateway at `index`, wrapping around the list.
 ///
@@ -26,8 +27,7 @@ pub fn connect_candidate(tcp_port: u32, index: usize) -> bool {
     // in order means every machine enters the mixnet through the same gateway
     // on every boot, and an entry point that never changes is something an
     // observer can tie sessions together by.
-    let slot = (start_offset() + index) % BOOTSTRAP_GATEWAYS.len();
-    let Some(candidate) = bootstrap_gateway(slot) else {
+    let Some(candidate) = pick(index, start_offset()) else {
         return false;
     };
     match connect(tcp_port, candidate) {

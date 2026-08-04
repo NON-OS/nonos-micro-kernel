@@ -29,12 +29,14 @@ pub fn parse(chunk: &[u8]) -> Option<Node> {
     ip.copy_from_slice(&chunk[4..8]);
     identity.copy_from_slice(&chunk[10..42]);
     packet_key.copy_from_slice(&chunk[42..74]);
+    let ws_port = u16::from_le_bytes([chunk[74], chunk[75]]);
     Some(Node {
         role,
         layer: chunk[1],
         delay_ms: u16::from_le_bytes([chunk[2], chunk[3]]),
         ip,
         port: u16::from_le_bytes([chunk[8], chunk[9]]),
+        ws_port,
         identity,
         packet_key,
     })

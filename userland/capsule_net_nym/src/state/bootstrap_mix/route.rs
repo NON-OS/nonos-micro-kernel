@@ -35,6 +35,7 @@ pub fn bootstrap_route(seed: &[u8; 32]) -> [Node; 3] {
             delay_ms: 0,
             ip,
             port,
+            ws_port: 0,
             identity: [0u8; 32],
             packet_key,
         };
@@ -48,6 +49,7 @@ const EMPTY: Node = Node {
     delay_ms: 0,
     ip: [0u8; 4],
     port: 0,
+    ws_port: 0,
     identity: [0u8; 32],
     packet_key: [0u8; 32],
 };
