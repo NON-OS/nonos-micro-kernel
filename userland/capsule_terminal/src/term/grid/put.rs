@@ -20,9 +20,9 @@ use crate::term::grid::types::Grid;
 
 impl Grid {
     pub fn blank_cell(&self) -> Cell {
-        Cell { ch: b' ', fg: self.fg, bg: self.bg, flags: 0 }
+        Cell { ch: ' ', fg: self.fg, bg: self.bg, flags: 0 }
     }
-    pub fn put_char(&mut self, c: u8) {
+    pub fn put_char(&mut self, c: char) {
         let i = Grid::idx(self.x, self.y);
         self.cells[i] = Cell { ch: c, fg: self.fg, bg: self.bg, flags: self.flags };
         self.x += 1;

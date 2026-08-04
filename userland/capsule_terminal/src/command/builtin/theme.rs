@@ -23,6 +23,7 @@ use crate::term::state::State;
 
 // (name, ARGB background). Alpha < 0xFF means translucent.
 const PROFILES: &[(&[u8], u32)] = &[
+    (b"blackarch", 0xFF07_090B),
     (b"dark", 0xFF18_1A1F),
     (b"black", 0xFF00_0000),
     (b"blue", 0xFF0A_1929),

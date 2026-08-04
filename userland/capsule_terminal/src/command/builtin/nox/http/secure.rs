@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_http::{parse_response, RequestBuilder, Response};
 use crate::mixnet::Wire;
+use nonos_http::{parse_response, RequestBuilder, Response};
 use nonos_tls::{exchange, rtc_now};
 
 use super::io::SocketIo;

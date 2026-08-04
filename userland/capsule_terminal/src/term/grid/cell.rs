@@ -20,7 +20,7 @@ pub const F_REVERSE: u8 = 4;
 
 #[derive(Clone, Copy)]
 pub struct Cell {
-    pub ch: u8,
+    pub ch: char,
     // Full ARGB foreground and background, so 24-bit colour is preserved.
     pub fg: u32,
     pub bg: u32,
@@ -30,7 +30,7 @@ pub struct Cell {
 impl Cell {
     pub const fn blank() -> Cell {
         Cell {
-            ch: b' ',
+            ch: ' ',
             fg: crate::term::vt::color::DEFAULT_FG,
             bg: crate::term::vt::color::DEFAULT_BG,
             flags: 0,

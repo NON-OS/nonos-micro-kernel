@@ -17,9 +17,8 @@
 use super::{
     alias, apps, battery, caps, clear, copy, date, display, du, echo, enter, exec, find, help,
     history, http, id, ifconfig, install, kill, ls, mk, motd, mv, nslookup, nym, pathname, ping,
-    pull,
-    push, read, rm, run, set, stat, svc, sysinfo, touch, unalias, unknown, unset, uptime, whereis,
-    write,
+    pull, push, read, rm, run, set, stat, svc, sysinfo, touch, unalias, unknown, unset, uptime,
+    whereis, write,
 };
 use crate::command::output::Output;
 use crate::command::Outcome;

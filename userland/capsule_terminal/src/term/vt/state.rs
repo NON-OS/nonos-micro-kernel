@@ -19,14 +19,19 @@ use crate::term::grid::types::Grid;
 use crate::term::vt::csi_cursor::csi_cursor;
 use crate::term::vt::csi_edit::csi_edit;
 use crate::term::vt::parser::Perform;
+use crate::term::vt::utf8::Utf8;
 
 pub struct VtState<'a> {
     pub g: &'a mut Grid,
+    /// Rebuilds characters from the bytes they arrive in. It lives across
+    /// calls because a character can be split over two reads.
+    pub utf8: &'a mut Utf8,
 }
 
 impl<'a> Perform for VtState<'a> {
     fn print(&mut self, c: u8) {
-        self.g.put_char(c);
+        let g = &mut *self.g;
+        self.utf8.push(c, |ch| g.put_char(ch));
     }
 
     fn execute(&mut self, b: u8) {

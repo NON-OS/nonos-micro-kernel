@@ -24,9 +24,7 @@ use crate::term::util::format_u64;
 pub fn topology_line(body: &[u8]) -> Vec<u8> {
     let mut out = Vec::new();
     out.extend_from_slice(b"topology: ");
-    out.extend_from_slice(state_name(u32::from_le_bytes([
-        body[0], body[1], body[2], body[3],
-    ])));
+    out.extend_from_slice(state_name(u32::from_le_bytes([body[0], body[1], body[2], body[3]])));
     let epoch = u64::from_le_bytes([
         body[4], body[5], body[6], body[7], body[8], body[9], body[10], body[11],
     ]);

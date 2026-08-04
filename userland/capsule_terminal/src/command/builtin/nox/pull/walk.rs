@@ -33,7 +33,8 @@ pub(super) fn walk(
     count: &mut u32,
     tally: &mut progress::Tally,
 ) {
-    let (pid, ip, a) = (ctx.pid, ctx.ip, ctx.args);    if depth >= MAX_DEPTH {
+    let (pid, ip, a) = (ctx.pid, ctx.ip, ctx.args);
+    if depth >= MAX_DEPTH {
         return;
     }
     let mut conn = None;
