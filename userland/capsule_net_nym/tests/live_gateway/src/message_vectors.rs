@@ -110,3 +110,17 @@ fn padding_with_a_dirty_tail_is_refused() {
     padded[last] = 2;
     assert!(unpad(&padded).is_none());
 }
+
+/// The version a hop reads to know how the payload keys were built.
+///
+/// nym writes it as a big endian u16 behind a leading zero, so a version put
+/// in the first byte names no version at all. Ours has to be the explicit
+/// payload keys one, because that is how our keys are built.
+#[test]
+fn the_packet_version_is_one_a_hop_knows() {
+    use crate::sphinx_root::sphinx::constants::PACKET_VERSION;
+
+    assert_eq!(PACKET_VERSION[0], 0, "the leading byte is not part of the number");
+    let value = u16::from_be_bytes([PACKET_VERSION[1], PACKET_VERSION[2]]);
+    assert_eq!(value, 258, "explicit payload keys over standard X25519");
+}

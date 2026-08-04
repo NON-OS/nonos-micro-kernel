@@ -25,8 +25,10 @@ mod fields;
 mod flags;
 mod kdf;
 mod sizes;
+mod version;
 
 pub use fields::*;
 pub use flags::*;
 pub use kdf::*;
 pub use sizes::*;
+pub use version::PACKET_VERSION;

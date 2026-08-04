@@ -18,12 +18,10 @@ use super::delays::hop_delays;
 use super::mix_packet::frame_mix_packet;
 use super::route::sphinx_route;
 use crate::crypto::random::fill_random;
-use crate::sphinx::constants::DESTINATION_ADDRESS_LENGTH;
+use crate::sphinx::constants::{DESTINATION_ADDRESS_LENGTH, PACKET_VERSION};
 use crate::sphinx::node::Destination;
 use crate::sphinx::packet::build_packet;
 use alloc::vec::Vec;
-
-const VERSION: [u8; 3] = [1, 0, 0];
 
 /// Build one Sphinx packet for `payload`, framed for the gateway.
 ///
@@ -42,6 +40,6 @@ pub fn encode_sphinx(
     fill_random(&mut secret).ok()?;
     let dest = Destination { address: *destination, identifier: *identifier };
     let first_hop = route[0].address;
-    let packet = build_packet(&secret, &route, &dest, &delays, VERSION, payload).ok()?;
+    let packet = build_packet(&secret, &route, &dest, &delays, PACKET_VERSION, payload).ok()?;
     Some(frame_mix_packet(&first_hop, &packet.to_bytes()?))
 }
