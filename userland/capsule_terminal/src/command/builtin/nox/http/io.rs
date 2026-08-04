@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_http::{HttpError, Stream};
+use nonos_libc::{mk_uptime_ms, mk_yield};
 use nonos_socket::TcpStream;
 use nonos_tls::{Io, SessionError};
 
@@ -23,6 +24,14 @@ use nonos_tls::{Io, SessionError};
 /// one connection implementation.
 pub struct SocketIo {
     pub stream: TcpStream,
+    /// Set once at construction.
+    total_deadline: i64,
+}
+
+impl SocketIo {
+    pub fn new(stream: TcpStream) -> Self {
+        Self { stream, total_deadline: mk_uptime_ms().saturating_add(TOTAL_MS) }
+    }
 }
 
 impl Io for SocketIo {
@@ -35,12 +44,33 @@ impl Io for SocketIo {
     }
 }
 
+/// Idle bound: the socket says "nothing yet" with a zero length read while
+/// `Stream` defines zero as closed. Bridging the two is this adapter's job.
+const QUIET_MS: i64 = 4_000;
+
+/// Total bound. The idle one restarts on every byte, so alone it lets a drip
+/// of one byte every few seconds hold the connection forever.
+const TOTAL_MS: i64 = 120_000;
+
 impl Stream for SocketIo {
     fn write_all(&mut self, data: &[u8]) -> Result<(), HttpError> {
         self.stream.write_all(data).map_err(|_| HttpError::Io)
     }
 
     fn read(&mut self, into: &mut [u8]) -> Result<usize, HttpError> {
-        self.stream.read(into).map_err(|_| HttpError::Io)
+        let quiet_until = mk_uptime_ms().saturating_add(QUIET_MS);
+        loop {
+            if mk_uptime_ms() >= self.total_deadline {
+                return Err(HttpError::Io);
+            }
+            let n = self.stream.read(into).map_err(|_| HttpError::Io)?;
+            if n > 0 {
+                return Ok(n);
+            }
+            if mk_uptime_ms() >= quiet_until {
+                return Ok(0);
+            }
+            mk_yield();
+        }
     }
 }
