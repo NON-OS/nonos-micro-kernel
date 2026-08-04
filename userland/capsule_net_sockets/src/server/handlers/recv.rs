@@ -57,7 +57,8 @@ fn recv_socket(sock: Socket, out: &mut [u8]) -> Result<usize, u16> {
 fn recv_mixnet(sock: Socket, out: &mut [u8]) -> Result<usize, u16> {
     let Some(remote) = sock.remote else { return Err(E_NOT_CONNECTED) };
     let mut frame = [0u8; mixnet_frame::MAX_BODY + 16];
-    let n = nym::recv(state::nym(), sock.transport_handle, &mut frame).map_err(|_| E_NO_TRANSPORT)?;
+    let n =
+        nym::recv(state::nym(), sock.transport_handle, &mut frame).map_err(|_| E_NO_TRANSPORT)?;
     let decoded = mixnet_frame::decode(&frame[..n]).ok_or(E_NO_TRANSPORT)?;
     if decoded.ip != remote.ip || decoded.port != remote.port {
         return Err(E_NOT_CONNECTED);

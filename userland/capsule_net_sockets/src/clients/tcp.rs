@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec;
-
 use super::envelope::{call, call_t};
 
 const MAGIC: u32 = 0x4E54_4350;
@@ -23,11 +21,8 @@ const CONNECT_TIMEOUT_MS: u64 = 9000;
 const LISTEN: u16 = 2;
 const CONNECT: u16 = 3;
 const ACCEPT: u16 = 4;
-const SEND: u16 = 5;
 const RECV: u16 = 6;
 const CLOSE: u16 = 7;
-const STATE: u16 = 9;
-const POLL: u16 = 10;
 
 pub fn listen(port: u32, local: u16) -> Result<u32, u16> {
     call_handle(port, LISTEN, &local.to_le_bytes())
@@ -48,43 +43,23 @@ pub fn accept(port: u32, handle: u32) -> Result<u32, u16> {
     call_handle(port, ACCEPT, &handle.to_le_bytes())
 }
 
-pub fn send(port: u32, handle: u32, payload: &[u8]) -> Result<(), u16> {
-    let mut body = vec![0u8; 4 + payload.len()];
-    body[0..4].copy_from_slice(&handle.to_le_bytes());
-    body[4..].copy_from_slice(payload);
-    // net.tcp replies with the 4-byte sent-count; give the envelope room for
-    // it or a successful send is rejected as a body-length mismatch.
-    let mut sent = [0u8; 4];
-    call(port, MAGIC, SEND, &body, &mut sent).map(|_| ())
-}
+pub use super::tcp_send::send;
 
 pub fn recv(port: u32, handle: u32, out: &mut [u8]) -> Result<usize, u16> {
-    call(port, MAGIC, RECV, &handle.to_le_bytes(), out)
+    // State how much can be held. A read takes bytes out of the socket, so
+    // whatever net.tcp sends back that does not fit here is lost rather than
+    // kept for the next call.
+    let mut body = [0u8; 8];
+    body[0..4].copy_from_slice(&handle.to_le_bytes());
+    body[4..8].copy_from_slice(&(out.len() as u32).to_le_bytes());
+    call(port, MAGIC, RECV, &body, out)
 }
 
 pub fn close(port: u32, handle: u32) -> Result<(), u16> {
     call(port, MAGIC, CLOSE, &handle.to_le_bytes(), &mut []).map(|_| ())
 }
 
-// TCP state code for a connection: 3 = established, 0xFF = closed.
-pub fn state(port: u32, handle: u32) -> Result<u8, u16> {
-    let mut out = [0u8; 1];
-    if call(port, MAGIC, STATE, &handle.to_le_bytes(), &mut out)? != 1 {
-        return Err(4);
-    }
-    Ok(out[0])
-}
-
-// Non-consuming readiness bits (bit0 readable, bit1 writable). The async
-// reactor polls this across its sockets to decide which tasks to wake, so it
-// must never drain the connection.
-pub fn poll(port: u32, handle: u32) -> Result<u8, u16> {
-    let mut out = [0u8; 1];
-    if call(port, MAGIC, POLL, &handle.to_le_bytes(), &mut out)? != 1 {
-        return Err(4);
-    }
-    Ok(out[0])
-}
+pub use super::tcp_status::{poll, state};
 
 fn call_handle(port: u32, op: u16, body: &[u8]) -> Result<u32, u16> {
     let mut out = [0u8; 4];

@@ -55,8 +55,8 @@ fn send_socket(sock: Socket, payload: &[u8]) -> u16 {
         Kind::Mixnet if sock.transport_handle != 0 => match sock.remote {
             Some(r) => mixnet_frame::encode(r.ip, r.port, payload).map_or(E_BAD_LEN, |frame| {
                 nym::send(state::nym(), sock.transport_handle, &frame)
-                .map(|_| E_OK)
-                .map_or(E_NO_TRANSPORT, |errno| errno)
+                    .map(|_| E_OK)
+                    .map_or(E_NO_TRANSPORT, |errno| errno)
             }),
             None => E_NOT_CONNECTED,
         },
