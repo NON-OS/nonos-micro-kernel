@@ -1,12 +1,18 @@
-//! Host cover for the frame a mixnet write is split into.
+//! Host cover for the frames a mixnet write is split into, and for what a
+//! short read leaves behind.
 //!
-//! The module is the shipping one, pulled in by path, so a test cannot pass
-//! against a copy that has drifted from what the capsule runs.
+//! The modules are the shipping ones, pulled in by path, so a test cannot
+//! pass against a copy that has drifted from what the capsule runs.
 
 extern crate alloc;
 
-#[path = "../../../src/server/handlers/mixnet_frame/mod.rs"]
-pub mod mixnet_frame;
+pub mod server;
+pub mod sockets;
 
 #[cfg(test)]
 mod vectors;
+
+#[cfg(test)]
+mod residual_vectors;
+
+pub use server::handlers::mixnet_frame;

@@ -14,23 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod bind;
-mod close;
-mod connect;
-mod dispatch;
-mod getsockopt;
-mod health;
-mod io;
-mod listen;
-mod mixnet_frame;
-mod mixnet_recv;
-mod mixnet_residual;
-mod mixnet_send;
-mod poll;
-mod recv;
-mod send;
-mod setsockopt;
-mod socket;
+use super::types::RESIDUAL;
+use crate::sockets::SocketKey;
 
-pub use dispatch::dispatch;
+/// Drop anything held for a socket that is going away, so a later socket
+/// reusing the handle does not read bytes meant for the one before it.
+pub fn release(key: SocketKey) {
+    let mut slots = RESIDUAL.lock();
+    for slot in slots.iter_mut() {
+        if slot.pid == key.pid && slot.handle == key.handle {
+            slot.len = 0;
+            slot.off = 0;
+        }
+    }
+}

@@ -14,23 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod bind;
-mod close;
-mod connect;
-mod dispatch;
-mod getsockopt;
-mod health;
-mod io;
-mod listen;
-mod mixnet_frame;
-mod mixnet_recv;
-mod mixnet_residual;
-mod mixnet_send;
-mod poll;
-mod recv;
-mod send;
-mod setsockopt;
-mod socket;
+//! What a mixnet frame left behind when a reader could not take all of it.
 
-pub use dispatch::dispatch;
+mod release;
+mod store;
+mod take;
+mod types;
+
+pub use release::release;
+pub use store::store;
+pub use take::take;

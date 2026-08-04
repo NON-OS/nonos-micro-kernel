@@ -14,23 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accept;
-mod bind;
-mod close;
-mod connect;
-mod dispatch;
-mod getsockopt;
-mod health;
-mod io;
-mod listen;
-mod mixnet_frame;
-mod mixnet_recv;
-mod mixnet_residual;
-mod mixnet_send;
-mod poll;
-mod recv;
-mod send;
-mod setsockopt;
-mod socket;
+use super::types::RESIDUAL;
+use crate::sockets::SocketKey;
 
-pub use dispatch::dispatch;
+/// Serve a read from what a previous frame left over.
+///
+/// Returns how many bytes were copied, which is zero when nothing is held.
+pub fn take(key: SocketKey, out: &mut [u8]) -> usize {
+    if out.is_empty() {
+        return 0;
+    }
+    let mut slots = RESIDUAL.lock();
+    let Some(slot) = slots.iter_mut().find(|s| s.holds(key)) else {
+        return 0;
+    };
+    let n = (slot.len - slot.off).min(out.len());
+    out[..n].copy_from_slice(&slot.buf[slot.off..slot.off + n]);
+    slot.off += n;
+    if slot.off >= slot.len {
+        slot.len = 0;
+        slot.off = 0;
+    }
+    n
+}
