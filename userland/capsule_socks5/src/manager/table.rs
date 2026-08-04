@@ -14,29 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Track the tunneled connections. One mixnet session carries every client's
-//! traffic, so each SOCKS5 client that reaches the relay phase is given a
-//! connection id that its tunnel frames carry. A response arriving off the mixnet
-//! names an id; the manager maps it back to the client socket to write, and the
-//! reverse (a client socket closing) back to the id to tear down. Fixed capacity,
-//! no allocation: the server refuses a new client rather than growing unbounded.
-
 /// The most concurrent tunneled connections.
 pub const MAX_CONNS: usize = 64;
 
 #[derive(Clone, Copy)]
-struct Slot {
-    id: u64,
-    socket: u32,
+pub(super) struct Slot {
+    pub(super) id: u64,
+    pub(super) socket: u32,
     /// The next stream position to stamp on a send for this connection. Nym send
     /// requests carry a sequence so the exit can reassemble a reordered stream.
     seq: u64,
-    used: bool,
+    pub(super) used: bool,
 }
 
 /// The live connection table.
 pub struct Manager {
-    slots: [Slot; MAX_CONNS],
+    pub(super) slots: [Slot; MAX_CONNS],
     next_id: u64,
 }
 
@@ -73,30 +66,5 @@ impl Manager {
         let seq = slot.seq;
         slot.seq = slot.seq.wrapping_add(1);
         Some(seq)
-    }
-
-    /// The client socket for `id`, or `None` if it is unknown or closed.
-    pub fn socket_of(&self, id: u64) -> Option<u32> {
-        self.slots.iter().find(|s| s.used && s.id == id).map(|s| s.socket)
-    }
-
-    /// Close the connection named by `id`, returning the client socket to close.
-    pub fn close(&mut self, id: u64) -> Option<u32> {
-        let slot = self.slots.iter_mut().find(|s| s.used && s.id == id)?;
-        slot.used = false;
-        Some(slot.socket)
-    }
-
-    /// Close the connection whose client socket is `socket` (the client hung up),
-    /// returning the id so its tunnel can be closed.
-    pub fn close_socket(&mut self, socket: u32) -> Option<u64> {
-        let slot = self.slots.iter_mut().find(|s| s.used && s.socket == socket)?;
-        slot.used = false;
-        Some(slot.id)
-    }
-
-    /// How many connections are live.
-    pub fn count(&self) -> usize {
-        self.slots.iter().filter(|s| s.used).count()
     }
 }
