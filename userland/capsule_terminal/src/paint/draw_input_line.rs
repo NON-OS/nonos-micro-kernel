@@ -18,9 +18,11 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::constants::TEXT_LEFT;
 use super::draw_cursor::draw_cursor;
-use super::line_text::{char_floor, text};
+use super::line_chars::char_floor;
+use super::line_text::{text, text_parts};
 use super::metrics::Metrics;
 use super::shade::elevate;
+use super::syntax::{classify, Part};
 
 use crate::term::state::State;
 use crate::term::theme::{ACCENT, FOREGROUND, PATH, PROMPT};
@@ -56,7 +58,18 @@ pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32, m: Metrics) 
     let start = char_floor(body, scroll);
     let stop = char_floor(body, end).max(start);
     let bx = TEXT_LEFT + prompt_cells as u32 * adv;
-    text(fb, bx, y, &body[start..stop], FOREGROUND, adv, px);
+    // Classify the whole line, not the visible window, so a word keeps its
+    // colour when it scrolls in from either side.
+    let mut parts = [Part::Plain; MAX_HIGHLIGHT];
+    classify(body, &mut parts);
+    let from = start.min(MAX_HIGHLIGHT);
+    let to = stop.min(MAX_HIGHLIGHT);
+    text_parts(fb, bx, y, &body[start..stop], &parts[from..to], adv, px);
     let under = body.get(cursor).copied().unwrap_or(0);
     draw_cursor(fb, prompt_cells, cursor - scroll, y + 1, under, m);
 }
+
+// The longest line that is coloured. Past it the tail is drawn plain rather
+// than growing a buffer on every keystroke; a command that long is being
+// pasted, not read.
+const MAX_HIGHLIGHT: usize = 1024;

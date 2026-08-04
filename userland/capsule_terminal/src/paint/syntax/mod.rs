@@ -14,25 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod block_chrome;
-mod block_meta;
-mod compose;
-mod constants;
-mod draw_cursor;
-mod draw_grid;
-mod draw_input_line;
-mod fetch;
-mod fetch_banner;
-mod fetch_palette;
-mod fetch_uptime;
-mod footer;
-mod header;
-mod line_chars;
-mod line_text;
-mod metrics;
-mod shade;
-mod syntax;
-pub mod tabstrip;
+//! Colouring a command as it is typed.\n//!\n//! A line of one colour has to be read word by word to find where the command\n//! ends and its arguments begin. Colouring the parts differently means the\n//! shape is visible before it is read, which matters most when the line is\n//! long enough that reading it is the slow part.
 
-pub use compose::paint_tabs;
-pub use tabstrip::draw_tabstrip;
+mod classify;
+mod part;
+mod word;
+
+pub use classify::classify;
+pub use part::Part;
