@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::constants::{
-    INTEGRITY_MAC_KEY_SIZE, PAYLOAD_KEY_SIZE, STREAM_CIPHER_KEY_SIZE,
-};
+use super::super::constants::{INTEGRITY_MAC_KEY_SIZE, PAYLOAD_KEY_SIZE, STREAM_CIPHER_KEY_SIZE};
 
 pub(super) const STREAM_CIPHER_KEY_AT: usize = 0;
 pub(super) const INTEGRITY_MAC_KEY_AT: usize = STREAM_CIPHER_KEY_AT + STREAM_CIPHER_KEY_SIZE;

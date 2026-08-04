@@ -29,5 +29,3 @@ pub use bootstrap::{bootstrap_exit, BOOTSTRAP_EXITS};
 pub use exit::{exit, set_exit, Exit};
 pub use send::{connect_request, send_through_mixnet, SendError};
 pub use session::{open_session, session};
-
-

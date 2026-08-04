@@ -24,7 +24,11 @@ pub fn decimal(s: &[u8]) -> Option<usize> {
         seen = true;
         n = n.checked_mul(10)?.checked_add((*b - b'0') as usize)?;
     }
-    if seen { Some(n) } else { None }
+    if seen {
+        Some(n)
+    } else {
+        None
+    }
 }
 
 pub fn trim_left(mut s: &[u8]) -> &[u8] {

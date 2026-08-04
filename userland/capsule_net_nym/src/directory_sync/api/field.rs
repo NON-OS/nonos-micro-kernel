@@ -57,7 +57,9 @@ pub fn nested_u64(obj: &[u8], outer: &str, inner: &str) -> Option<u64> {
     let needle = inner.as_bytes();
     let mut i = 0usize;
     while i + needle.len() + 2 < span.len() {
-        if span[i] == b'"' && span[i + 1..].starts_with(needle) && span[i + 1 + needle.len()] == b'"'
+        if span[i] == b'"'
+            && span[i + 1..].starts_with(needle)
+            && span[i + 1 + needle.len()] == b'"'
         {
             // Step past the closing quote and the colon: the number reader
             // skips whitespace but a colon is not whitespace.

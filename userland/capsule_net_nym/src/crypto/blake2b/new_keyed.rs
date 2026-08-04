@@ -22,13 +22,7 @@ impl Blake2b {
     /// parameter block and the key is processed as a padded first block;
     /// hashing it as ordinary input would be self-consistent and wrong.
     pub fn new_keyed(key: &[u8], out_len: usize) -> Self {
-        let mut state = Self {
-            h: IV,
-            buf: [0u8; BLOCK_BYTES],
-            buf_len: 0,
-            counter: 0,
-            out_len,
-        };
+        let mut state = Self { h: IV, buf: [0u8; BLOCK_BYTES], buf_len: 0, counter: 0, out_len };
         state.h[0] ^= 0x0101_0000 ^ ((key.len() as u64) << 8) ^ out_len as u64;
         if !key.is_empty() {
             let mut first = [0u8; BLOCK_BYTES];

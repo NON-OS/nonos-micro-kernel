@@ -28,8 +28,8 @@ pub fn apply_ctr32(enc_key: &[u8; 32], tag: &[u8; 16], data: &mut [u8]) {
         for (byte, key) in chunk.iter_mut().zip(keystream.iter()) {
             *byte ^= key;
         }
-        let next = u32::from_le_bytes([counter[0], counter[1], counter[2], counter[3]])
-            .wrapping_add(1);
+        let next =
+            u32::from_le_bytes([counter[0], counter[1], counter[2], counter[3]]).wrapping_add(1);
         counter[..4].copy_from_slice(&next.to_le_bytes());
     }
 }

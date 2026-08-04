@@ -15,9 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod ops;
-mod sphinx;
 mod owner;
 mod reset;
+mod sphinx;
 mod stream;
 mod topology_gate;
 mod types;

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::hmac::hmac_blake3;
 use super::super::types::CryptoError;
+use super::hmac::hmac_blake3;
 
 /// HKDF-Extract: the salt is the key and the input keying material the
 /// message, which is the opposite of what the names suggest.

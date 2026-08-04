@@ -29,7 +29,11 @@ pub fn handshake(tcp_port: u32, gateway: Gateway) -> Result<(), u16> {
     fill_random(&mut raw_key).map_err(|_| 9u16)?;
     let mut key = [0u8; 24];
     let Some(key_len) = base64::encode(&raw_key, &mut key) else { return Err(9) };
-    let req = request::build(gateway.ip, gateway.port, core::str::from_utf8(&key[..key_len]).map_err(|_| 9u16)?);
+    let req = request::build(
+        gateway.ip,
+        gateway.port,
+        core::str::from_utf8(&key[..key_len]).map_err(|_| 9u16)?,
+    );
     tcp_client::send_all(tcp_port, gateway.stream, req.as_bytes())?;
     let resp = read_headers(tcp_port, gateway.stream)?;
     if !accept::verify(&resp, &key[..key_len]) {

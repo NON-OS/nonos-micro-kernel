@@ -15,9 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod builtin;
-mod fetched;
 mod clock;
 mod directory;
+mod fetched;
 mod layout;
 mod node;
 mod parse;
@@ -28,10 +28,10 @@ mod types;
 mod verify;
 
 pub use builtin::install as install_builtin;
+pub use directory::DirectoryMeta;
 pub use fetched::install_fetched;
 pub use parse::install;
 pub use select::route;
 pub use status::current as status;
-pub use directory::DirectoryMeta;
 pub use store::meta;
 pub use types::{Node, Role, TopologyError, TopologyStatus, NODE_CAP, ROUTE_HOPS};

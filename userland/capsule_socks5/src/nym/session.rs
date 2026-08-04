@@ -80,4 +80,3 @@ fn request_open() -> Option<u32> {
     }
     Some(id)
 }
-

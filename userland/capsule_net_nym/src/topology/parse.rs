@@ -15,10 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::clock;
+use super::directory::{DirectoryMeta, ParsedDirectory, Provenance};
 use super::layout;
 use super::node;
 use super::store;
-use super::directory::{DirectoryMeta, ParsedDirectory, Provenance};
 use super::types::{TopologyError, DIR_HEADER_LEN, DIR_MAGIC, DIR_VERSION, NODE_WIRE_LEN};
 use super::verify;
 

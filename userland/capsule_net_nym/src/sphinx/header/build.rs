@@ -42,8 +42,7 @@ pub fn build_header(
     let filler = build_filler(&secrets[..route.len() - 1]).ok_or(CryptoError::Kdf)?;
     let routing = build_final_block(last, destination, route.len(), version, &filler)?;
     let mac = compute_mac(&last.integrity_mac_key(), &routing)?;
-    let (routing, mac) =
-        wrap_forward_hops(route, &secrets, delays, version, (routing, mac))?;
+    let (routing, mac) = wrap_forward_hops(route, &secrets, delays, version, (routing, mac))?;
 
     let mut ephemeral_pubkey = [0u8; 32];
     x25519_public(initial_secret, &mut ephemeral_pubkey)?;

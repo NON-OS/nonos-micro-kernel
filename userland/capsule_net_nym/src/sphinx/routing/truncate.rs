@@ -18,9 +18,7 @@ use crate::sphinx::constants::{ENCRYPTED_ROUTING_INFO_SIZE, TRUNCATED_ROUTING_IN
 
 /// Drop the tail a hop will never see. The next hop refills that space from
 /// the filler, so the header stays one fixed length end to end.
-pub fn truncate(
-    enc: &[u8; ENCRYPTED_ROUTING_INFO_SIZE],
-) -> [u8; TRUNCATED_ROUTING_INFO_SIZE] {
+pub fn truncate(enc: &[u8; ENCRYPTED_ROUTING_INFO_SIZE]) -> [u8; TRUNCATED_ROUTING_INFO_SIZE] {
     let mut out = [0u8; TRUNCATED_ROUTING_INFO_SIZE];
     out.copy_from_slice(&enc[..TRUNCATED_ROUTING_INFO_SIZE]);
     out

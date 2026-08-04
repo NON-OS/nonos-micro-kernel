@@ -16,7 +16,7 @@
 
 use alloc::vec::Vec;
 
-use super::types::{DIR_HEADER_LEN, NODE_CAP, NODE_WIRE_LEN, TopologyError};
+use super::types::{TopologyError, DIR_HEADER_LEN, NODE_CAP, NODE_WIRE_LEN};
 
 pub fn check_len(body: &[u8]) -> Result<usize, TopologyError> {
     if body.len() < DIR_HEADER_LEN {

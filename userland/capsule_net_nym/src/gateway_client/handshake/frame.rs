@@ -40,7 +40,5 @@ pub fn decode(text: &[u8]) -> Result<Vec<u8>, HandshakeFrameError> {
     if tag == "handshakeError" {
         return Err(HandshakeFrameError::Refused);
     }
-    find_key(text, "data")
-        .and_then(|at| read_bytes(text, at))
-        .ok_or(HandshakeFrameError::Malformed)
+    find_key(text, "data").and_then(|at| read_bytes(text, at)).ok_or(HandshakeFrameError::Malformed)
 }

@@ -16,8 +16,8 @@
 
 //! POLYVAL, the universal hash under AES-GCM-SIV.
 
-mod finalize;
 mod dot;
+mod finalize;
 mod mul_x;
 mod mul_x_inv;
 mod types;

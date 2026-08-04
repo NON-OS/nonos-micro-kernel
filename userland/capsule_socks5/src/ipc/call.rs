@@ -58,14 +58,8 @@ pub fn call(op: u16, payload: &[u8]) -> Result<Vec<u8>, CallError> {
     let mut tx = vec![0u8; HDR_LEN + payload.len()];
     let n = encode(op, request_id, payload, &mut tx).ok_or(CallError::Encode)?;
     let mut rx = vec![0u8; REPLY_MAX];
-    let got = mk_ipc_call_timeout(
-        port as u64,
-        tx.as_ptr(),
-        n,
-        rx.as_mut_ptr(),
-        rx.len(),
-        TIMEOUT_MS,
-    );
+    let got =
+        mk_ipc_call_timeout(port as u64, tx.as_ptr(), n, rx.as_mut_ptr(), rx.len(), TIMEOUT_MS);
     if got <= 0 {
         return Err(CallError::Transport);
     }

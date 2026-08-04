@@ -46,7 +46,6 @@ pub fn gateway_lost() {
     BACKOFF.store(1, Ordering::Relaxed);
 }
 
-
 /// Try one bootstrap candidate while nothing is asking to be served.
 ///
 /// One per idle tick, not the whole list at boot: each stage waits a real

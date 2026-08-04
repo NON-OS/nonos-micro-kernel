@@ -19,13 +19,13 @@ mod http;
 mod https;
 mod live;
 mod resolve;
-mod tls_io;
 mod source;
+mod tls_io;
 
 pub use api::{objects, parse_node};
 pub use http::fetch;
 pub use https::fetch_tls;
 pub use live::sync as sync_live;
 pub use resolve::resolve;
-pub use tls_io::TcpIo;
 pub use source::{parse, DirectorySource};
+pub use tls_io::TcpIo;

@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::gateway_client;
 use crate::packet;
 use crate::protocol::{
     E_AUTHORITY_MISSING, E_AUTHORITY_UNTRUSTED, E_BAD_LEN, E_CREDENTIAL_EXPIRED, E_CRYPTO,
     E_NO_CREDENTIAL, E_NO_ROUTE, E_NO_SESSION, E_NO_TCP, E_OK, MIX_PAYLOAD_MAX, OP_SEND,
 };
-use crate::gateway_client;
 use crate::server::handlers::io::u32_at;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;

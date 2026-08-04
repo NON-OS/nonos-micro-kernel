@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::sphinx::constants::{
-    DESTINATION_ADDRESS_LENGTH, IDENTIFIER_LENGTH, VERSION_LENGTH,
-};
+use crate::sphinx::constants::{DESTINATION_ADDRESS_LENGTH, IDENTIFIER_LENGTH, VERSION_LENGTH};
 
 /// What the last hop is told. No address or delay: it forwards to nobody.
 pub struct FinalRoutingInformation {

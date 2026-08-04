@@ -15,15 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod authority;
-mod credential;
-mod directory;
 mod bootstrap;
 mod bootstrap_mix;
+mod credential;
+mod directory;
 mod gateway;
 mod identity;
-mod shared_key;
 mod replay;
 mod session;
+mod shared_key;
 mod surb;
 mod surb_id;
 mod surb_tag;
@@ -32,18 +32,16 @@ mod table;
 mod timing;
 
 pub use authority::{install as install_authority, trusted as trusted_authority};
+pub use bootstrap::{bootstrap_gateway, BOOTSTRAP_GATEWAYS};
+pub use bootstrap_mix::{bootstrap_route, BOOTSTRAP_MIXNODES, PER_LAYER};
 pub use credential::{
     install as install_credential, material as credential_material, CredentialError,
 };
 pub use directory::{get as directory_source, install as install_directory_source};
 pub use gateway::{Gateway, Transport};
+pub use identity::{client_identity, set_client_identity, Identity as ClientIdentity};
 pub use session::Session;
+pub use shared_key::{clear_gateway_shared_key, gateway_shared_key, set_gateway_shared_key};
 pub use surb::{consume as consume_surb, create as create_surb, default_ttl_ms as surb_ttl_ms};
 pub use table::{TableError, TABLE};
-pub use timing::{
-    cover_due, install as install_timing, next_cover_ms, policy as timing_policy,
-};
-pub use identity::{client_identity, set_client_identity, Identity as ClientIdentity};
-pub use shared_key::{clear_gateway_shared_key, gateway_shared_key, set_gateway_shared_key};
-pub use bootstrap::{bootstrap_gateway, BOOTSTRAP_GATEWAYS};
-pub use bootstrap_mix::{bootstrap_route, BOOTSTRAP_MIXNODES, PER_LAYER};
+pub use timing::{cover_due, install as install_timing, next_cover_ms, policy as timing_policy};
