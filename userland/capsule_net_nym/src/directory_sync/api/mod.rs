@@ -25,7 +25,7 @@ pub(super) mod field;
 mod node;
 mod objects;
 #[cfg(test)]
-mod vectors;
+mod tests;
 
 pub use node::parse_node;
 pub use objects::objects;
