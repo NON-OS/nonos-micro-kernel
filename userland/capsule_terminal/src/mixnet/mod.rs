@@ -26,3 +26,9 @@ mod stream;
 mod wire;
 
 pub use stream::Wire;
+
+/// Whether the mixnet proxy is running, and so whether anything that leaves
+/// directly is worth pointing out.
+pub fn routed() -> bool {
+    stream::proxy_available()
+}

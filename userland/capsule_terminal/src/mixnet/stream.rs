@@ -60,6 +60,11 @@ impl Wire {
     }
 }
 
+/// Whether the proxy capsule is reachable.
+pub fn proxy_available() -> bool {
+    proxy_port().is_some()
+}
+
 fn proxy_port() -> Option<u32> {
     let mut port = 0u32;
     let mut pid = 0u32;
