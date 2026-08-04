@@ -39,6 +39,9 @@ pub fn run() -> ! {
             // Nothing to serve, so spend the gap on one gateway candidate.
             // Connecting from here rather than before the loop is what lets
             // the capsule answer while it is still finding a gateway.
+            // The directory comes first: without it a gateway is picked from
+            // the compiled list and no route home can be built at all.
+            super::directory_tick::directory_tick();
             super::connect_tick::connect_tick();
             super::keepalive::keepalive_tick();
             continue;

@@ -16,6 +16,7 @@
 
 mod authz;
 mod connect_tick;
+mod directory_tick;
 
 mod handlers;
 mod keepalive;
