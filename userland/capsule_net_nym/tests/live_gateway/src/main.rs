@@ -8,6 +8,10 @@ mod topology;
 #[path = "../../../src/directory_sync/api/mod.rs"]
 mod api;
 mod gateway_client;
+#[cfg(test)]
+mod message_vectors;
+#[path = "../../../src/message/mod.rs"]
+mod message;
 #[path = "sphinx_mod.rs"]
 mod sphinx_root;
 use sphinx_root::sphinx;

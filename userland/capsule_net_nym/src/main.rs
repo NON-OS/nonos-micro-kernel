@@ -23,6 +23,7 @@ mod crypto;
 mod directory_sync;
 mod gateway_client;
 mod json;
+mod message;
 mod mixnet;
 mod packet;
 mod protocol;
