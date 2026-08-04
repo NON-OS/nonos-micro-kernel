@@ -22,5 +22,7 @@ mod mul_x;
 mod mul_x_inv;
 mod types;
 mod update;
+#[cfg(test)]
+mod vectors;
 
 pub use types::Polyval;
