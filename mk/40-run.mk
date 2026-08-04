@@ -16,7 +16,7 @@ $(QEMU_BLK_IMG):
 QEMU_BLK_STORE_STAMP := $(QEMU_BLK_IMG).store.stamp
 
 $(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(egui_proof_ARTIFACTS) tools/nonos-store-pack | $(QEMU_BLK_IMG)
-	@$(NONOS_PYTHON) tools/nonos-store-pack --image $(QEMU_BLK_IMG) \
+	@$(NONOS_PYTHON) tools/nonos-store-pack --image $(QEMU_BLK_IMG) --lba 256 \
 		--entry /capsules/std_proof.elf=$(std-proof_BIN) \
 		--entry /capsules/std_proof.nonos_id_cert.bin=$(std-proof_CERT) \
 		--entry /capsules/std_proof.manifest.bin=$(std-proof_MANIFEST) \

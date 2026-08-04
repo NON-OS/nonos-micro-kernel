@@ -32,15 +32,20 @@ pub struct StoreEntry {
     pub data: Vec<u8>,
 }
 
+// Hand-synced with the `--lba` flag mk/40-run.mk passes to nonos-store-pack.
+// 256 keeps the container clear of blockfs's header ring, which rewrites
+// LBA (generation % 256) on every commit and lands on 0 at generation 0.
+const STORE_BASE_LBA: u64 = 256;
+
 pub fn load() -> Result<Vec<StoreEntry>, BlkError> {
     let capacity_bytes = capacity()?
         .checked_mul(SECTOR_SIZE as u64)
         .ok_or(BlkError::BadLength)?;
     let mut head = [0u8; SECTOR_SIZE];
-    read_blocks(0, &mut head)?;
+    read_blocks(STORE_BASE_LBA, &mut head)?;
     let count = entry_count(&head)?;
     let mut toc = vec![0u8; sector_span(HEADER_LEN + ENTRY_LEN * count)];
-    read_blocks(0, &mut toc)?;
+    read_blocks(STORE_BASE_LBA, &mut toc)?;
     let mut staged = Vec::with_capacity(count);
     for entry in decode(&toc, count, capacity_bytes)? {
         let data = read_extent(entry.offset, entry.len)?;

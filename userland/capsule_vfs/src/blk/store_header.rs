@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Framing of the package container tools/nonos-store-pack writes at LBA 0: a
+// Framing of the package container tools/nonos-store-pack writes at LBA 256: a
 // 32-byte header followed by `count` fixed-size descriptors. The device is
 // outside this capsule's trust boundary, so a foreign or corrupt sector 0 has
 // to fail here rather than size an allocation later.
