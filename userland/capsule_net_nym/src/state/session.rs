@@ -33,6 +33,10 @@ pub struct Session {
     /// Zero until set. Without one there is nowhere to route, so the session
     /// cannot be sealed as Sphinx.
     pub dest: [u8; 32],
+    /// The exit's x25519 key. A message is sealed for the exit alone under a
+    /// key agreed against this, so the identity above cannot stand in for it:
+    /// one names the destination, the other encrypts to it.
+    pub dest_encryption: [u8; 32],
     pub dest_id: [u8; 16],
     replay: ReplayWindow,
     rx: VecDeque<Vec<u8>>,
@@ -46,6 +50,7 @@ impl Session {
             gateway,
             key,
             dest: [0u8; 32],
+            dest_encryption: [0u8; 32],
             dest_id: [0u8; 16],
             replay: ReplayWindow::new(),
             rx: VecDeque::new(),

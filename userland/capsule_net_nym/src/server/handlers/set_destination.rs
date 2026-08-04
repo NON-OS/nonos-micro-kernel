@@ -20,14 +20,19 @@ use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::state::TABLE;
 
-/// Bind a session to a Nym destination: session id, 32-byte address, 16-byte
-/// identifier.
+/// Bind a session to a Nym destination: session id, the exit's 32-byte
+/// identity, then its 32-byte encryption key.
+///
+/// Both keys are needed and neither substitutes for the other. The identity
+/// is where the packet is addressed; the encryption key is what the message
+/// inside it is sealed to. The identifier a destination also carries is sent
+/// as zeros, which is what a reference client puts there.
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     let id = match u32_at(body, 0) {
         Ok(id) => id,
         Err(e) => return respond(pid, OP_SET_DESTINATION, e, req.request_id, 0, tx),
     };
-    if body.len() != 4 + 32 + 16 {
+    if body.len() != 4 + 32 + 32 {
         return respond(pid, OP_SET_DESTINATION, E_BAD_LEN, req.request_id, 0, tx);
     }
     let mut table = TABLE.lock();
@@ -41,7 +46,8 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     let errno = table
         .with_mut(pid, id, |s| {
             s.dest.copy_from_slice(&body[4..36]);
-            s.dest_id.copy_from_slice(&body[36..52]);
+            s.dest_encryption.copy_from_slice(&body[36..68]);
+            s.dest_id = [0u8; 16];
             E_OK
         })
         .unwrap_or(E_NO_SESSION);

@@ -20,13 +20,13 @@ use alloc::vec::Vec;
 
 /// Tell the mixnet capsule where a session's traffic is bound.
 ///
-/// The identifier is the reply-block tag the exit echoes back. Taking it from
-/// the encryption key's leading half distinguishes one session from another
-/// without carrying anything the exit could link us by.
+/// Both of the exit's keys go over. The identity is where a packet is
+/// addressed and the encryption key is what the message inside it is sealed
+/// to, so neither stands in for the other.
 pub fn bind_destination(id: u32, exit: &Exit) -> Result<(), ()> {
-    let mut body: Vec<u8> = Vec::with_capacity(4 + 32 + 16);
+    let mut body: Vec<u8> = Vec::with_capacity(4 + 32 + 32);
     body.extend_from_slice(&id.to_le_bytes());
     body.extend_from_slice(&exit.identity);
-    body.extend_from_slice(&exit.encryption[..16]);
+    body.extend_from_slice(&exit.encryption);
     call(OP_SET_DESTINATION, &body).map(|_| ()).map_err(|_| ())
 }
