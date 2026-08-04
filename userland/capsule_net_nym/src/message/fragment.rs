@@ -22,7 +22,7 @@ pub const UNLINKED_HEADER_LEN: usize = 7;
 /// Set ids are carried with the top bit set. The receiver reads that bit to
 /// tell a fragment header apart from the older unfragmented form, so it is
 /// part of the encoding rather than part of the id.
-const SET_ID_MARKER: i32 = 1 << 31;
+pub(super) const SET_ID_MARKER: i32 = 1 << 31;
 
 /// The most fragments one set can be split into.
 pub const MAX_FRAGMENTS: u8 = 255;
@@ -52,29 +52,4 @@ impl Fragment {
         out.extend_from_slice(payload);
         out
     }
-}
-
-/// Read back a header, returning it with the payload that followed.
-pub fn parse(bytes: &[u8]) -> Option<(Fragment, &[u8])> {
-    if bytes.len() < UNLINKED_HEADER_LEN {
-        return None;
-    }
-    let raw = i32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
-    // A set id arrives with the marker bit set; without it these are not
-    // fragment bytes at all.
-    if raw & SET_ID_MARKER == 0 {
-        return None;
-    }
-    // Linked sets carry four more bytes that this does not produce and
-    // cannot read back.
-    if bytes[6] != 0 {
-        return None;
-    }
-    let total = bytes[4];
-    let current = bytes[5];
-    if total == 0 || current == 0 || current > total {
-        return None;
-    }
-    let set_id = raw & !SET_ID_MARKER;
-    Some((Fragment { set_id, total, current }, &bytes[UNLINKED_HEADER_LEN..]))
 }
