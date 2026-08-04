@@ -22,7 +22,7 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::metrics::Metrics;
 use crate::term::dimensions::{COLS, VISIBLE_ROWS};
-use crate::term::grid::cell::F_REVERSE;
+use crate::term::grid::cell::{F_REVERSE, F_WIDE_TAIL};
 use crate::term::grid::types::Grid;
 use crate::term::theme::{BACKGROUND, CURSOR};
 use crate::term::vt::color::DEFAULT_BG;
@@ -75,7 +75,12 @@ pub fn draw_grid(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, max_y: u32, m
             if has_bg || reverse {
                 fb.fill_rect(x, y, m.adv, m.lh, bg);
             }
-            glyph(fb, x, y, cell.ch, fg, m.px);
+            // The right half of a wide character carries the background and
+            // nothing else. Its glyph was drawn by the cell before it, which
+            // had both columns to draw into.
+            if cell.flags & F_WIDE_TAIL == 0 {
+                glyph(fb, x, y, cell.ch, fg, m.px);
+            }
         }
     }
 }
