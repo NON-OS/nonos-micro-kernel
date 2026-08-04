@@ -14,18 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Take the installed capsule-store list into the desktop, once.
+//! Keep the installed capsule-store list in sync with the desktop.
 
 use crate::state::Context;
 
-/// Fetch the store list the first time the installer has a registered service.
-/// Most systems never run an installer, so until one appears this costs a bare
-/// service lookup and no IPC round trip; once it has answered, the round trip
-/// never repeats.
+/// Refresh the installed-app list whenever the installer has a registered
+/// service. Most systems never run an installer, so until one appears this
+/// costs a bare service lookup and no IPC round trip; once it answers, the
+/// list is re-fetched each call and adopted only when it changed.
 pub fn load_once(ctx: &mut Context) {
-    if ctx.installed_apps_loaded || !crate::installer_client::available() {
+    if !crate::installer_client::available() {
         return;
     }
-    ctx.installed_apps = crate::installer_client::list_installed();
+    let listed = crate::installer_client::list_installed();
+    if listed.is_empty() || ctx.installed_apps == listed {
+        return;
+    }
+    ctx.installed_apps = listed;
     ctx.installed_apps_loaded = true;
 }
