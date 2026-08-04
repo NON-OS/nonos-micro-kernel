@@ -42,7 +42,13 @@ pub(crate) fn spawn_verified_as(
     on_behalf_of: Option<AttestedParent>,
 ) -> Result<u32, SpawnError> {
     crate::sys::bench::mark_named(b"capsule_spawn_start", spec.name.as_bytes());
-    let preflighted = preflight::run(spec, trust_anchor, now_ms)?;
+    let preflighted = match preflight::run(spec, trust_anchor, now_ms) {
+        Ok(preflighted) => preflighted,
+        Err(err) => {
+            crate::sys::bench::mark_named(b"capsule_verify_fail", spec.name.as_bytes());
+            return Err(err);
+        }
+    };
     crate::sys::bench::mark_named(b"capsule_preflight_ok", spec.name.as_bytes());
     install(&InstallParams {
         name: spec.name,
