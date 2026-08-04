@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_http::{parse_response, RequestBuilder, Response};
-use nonos_socket::TcpStream;
+use crate::mixnet::Wire;
 use nonos_tls::{exchange, rtc_now};
 
 use super::io::SocketIo;
@@ -28,7 +28,7 @@ const AGENT: &str = "nonos-terminal";
 /// before the request is written. A chain that does not verify aborts the
 /// request rather than sending it to whoever answered.
 pub fn get(url: &Url) -> Result<Response, &'static str> {
-    let stream = TcpStream::connect(&url.host, url.port).map_err(|_| "connect failed")?;
+    let stream = Wire::connect(&url.host, url.port).map_err(|_| "connect failed")?;
     let mut io = SocketIo::new(stream);
     let request = RequestBuilder::get(&url.host, &url.path).user_agent(AGENT).build();
     let raw = exchange(&mut io, &url.host, &request.bytes, rtc_now(), MAX_BODY)

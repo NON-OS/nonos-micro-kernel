@@ -16,20 +16,21 @@
 
 use nonos_http::{HttpError, Stream};
 use nonos_libc::{mk_uptime_ms, mk_yield};
-use nonos_socket::TcpStream;
 use nonos_tls::{Io, SessionError};
 
-/// The socket seen as a byte stream. TLS reads and writes it directly for
-/// `https`; plain `http` drives it through the same type so both paths share
-/// one connection implementation.
+use crate::mixnet::Wire;
+
+/// The connection seen as a byte stream, whether it runs through the mixnet
+/// or straight to the host. TLS reads and writes it directly for `https`;
+/// plain `http` drives the same type, so both share one implementation.
 pub struct SocketIo {
-    pub stream: TcpStream,
+    pub stream: Wire,
     /// Set once at construction.
     total_deadline: i64,
 }
 
 impl SocketIo {
-    pub fn new(stream: TcpStream) -> Self {
+    pub fn new(stream: Wire) -> Self {
         Self { stream, total_deadline: mk_uptime_ms().saturating_add(TOTAL_MS) }
     }
 }

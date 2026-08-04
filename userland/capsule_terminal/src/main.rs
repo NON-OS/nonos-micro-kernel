@@ -23,6 +23,7 @@ mod command;
 mod event;
 mod git;
 mod jobs;
+mod mixnet;
 mod paint;
 mod term;
 
