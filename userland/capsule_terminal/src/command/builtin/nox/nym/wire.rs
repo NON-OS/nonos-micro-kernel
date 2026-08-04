@@ -16,7 +16,11 @@
 
 pub const MAGIC: u32 = 0x4E59_4D31;
 pub const HDR_LEN: usize = 20;
-pub const TIMEOUT_MS: u64 = 64;
+/// The mixnet capsule does network work between requests, a gateway
+/// connection or a directory fetch, and answers once it is back. Sixty four
+/// milliseconds was a local-call budget and reported a busy capsule as a dead
+/// one.
+pub const TIMEOUT_MS: u64 = 3_000;
 
 pub const OP_HEALTHCHECK: u16 = 1;
 pub const OP_TOPOLOGY_STATUS: u16 = 15;
