@@ -15,14 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod api;
+mod exit;
 mod http;
 mod https;
 mod live;
+mod plain;
 mod resolve;
 mod source;
 mod tls_io;
 
 pub use api::{objects, parse_node};
+pub use exit::{fetch_exit, ExitAddress};
 pub use http::fetch;
 pub use https::fetch_tls;
 pub use live::sync as sync_live;

@@ -18,6 +18,7 @@ mod close;
 mod cover;
 mod dispatch;
 mod gateway;
+mod get_exit;
 mod health;
 mod io;
 mod open;

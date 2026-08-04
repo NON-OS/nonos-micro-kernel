@@ -37,13 +37,19 @@ pub fn set_exit(exit: Exit) {
     *EXIT.lock() = Some(exit);
 }
 
-/// The configured exit, or the first published one if none was chosen.
+/// The exit to route through.
+///
+/// A choice made here wins. Otherwise one is taken from the directory, and
+/// only if the network cannot be asked at all does the compiled list stand
+/// in: that list ages, and an operator who stops running a requester leaves
+/// every client that shipped with it unable to reach anything.
 pub fn exit() -> Option<Exit> {
     let mut slot = EXIT.lock();
     if let Some(configured) = *slot {
         return Some(configured);
     }
-    let fallback = super::bootstrap::bootstrap_exit(0)?;
-    *slot = Some(fallback);
-    Some(fallback)
+    let found =
+        super::discover::discover_exit(0).or_else(|| super::bootstrap::bootstrap_exit(0))?;
+    *slot = Some(found);
+    Some(found)
 }

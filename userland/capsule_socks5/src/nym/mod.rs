@@ -20,6 +20,7 @@ mod address;
 mod base58;
 mod bind;
 mod bootstrap;
+mod discover;
 mod exit;
 mod send;
 mod session;

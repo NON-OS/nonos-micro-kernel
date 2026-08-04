@@ -22,3 +22,7 @@ pub const OP_SEND: u16 = 4;
 pub const OP_RECV: u16 = 5;
 /// Bind a session to the Nym address its traffic is sealed for.
 pub const OP_SET_DESTINATION: u16 = 17;
+
+/// Ask net.nym for an exit it found in the directory, so this capsule does
+/// not have to carry one compiled in.
+pub const OP_GET_EXIT: u16 = 19;

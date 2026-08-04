@@ -36,3 +36,7 @@ pub const OP_SET_DESTINATION: u16 = 17;
 
 /// Install the Ed25519 identity the gateway handshake signs with.
 pub const OP_SET_IDENTITY: u16 = 18;
+
+/// Ask for an exit the directory published, so a client does not have to
+/// carry one compiled in.
+pub const OP_GET_EXIT: u16 = 19;

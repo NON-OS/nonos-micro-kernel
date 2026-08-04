@@ -20,8 +20,8 @@
 //! built and get no less wrong with time. This turns an API answer into the
 //! same node records, so the network view is what the network currently is.
 
-mod base58;
-mod field;
+pub(super) mod base58;
+pub(super) mod field;
 mod node;
 mod objects;
 #[cfg(test)]
