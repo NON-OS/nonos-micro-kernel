@@ -19,6 +19,7 @@ use spin::Mutex;
 
 use crate::reply::{collect, open_reply, reply_body, Assembly};
 use crate::state::TABLE;
+use crate::trace;
 
 /// Fragments of the reply currently being rebuilt.
 ///
@@ -34,15 +35,22 @@ static PENDING: Mutex<Option<Assembly>> = Mutex::new(None);
 /// arriving is not evidence of anything: only opening under one of the reply
 /// block keys we handed out is.
 pub fn route_reply(payload: &[u8]) {
+    trace::say_num(b"pushed message bytes", payload.len() as u64);
     let Some(fragment) = open_reply(payload) else {
+        // Either it was not sealed to one of our blocks, or it is shorter
+        // than the parts a reply is read in. Both mean it was not for us.
+        trace::say(b"push dropped: no reply block key matched");
         return;
     };
     let Some(message) = collect(&mut PENDING.lock(), &fragment) else {
+        trace::say(b"push held: message still missing fragments");
         return;
     };
     let Some(body) = reply_body(&message) else {
+        trace::say_num(b"push dropped: not a reply message, bytes", message.len() as u64);
         return;
     };
+    trace::say_num(b"reply delivered bytes", body.len() as u64);
     deliver(body);
 }
 

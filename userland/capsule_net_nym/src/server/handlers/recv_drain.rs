@@ -21,6 +21,7 @@ use crate::gateway_client::{self, is_pushed_message, parse_blob};
 use crate::protocol::WIRE_PACKET_MAX;
 use crate::setup;
 use crate::state::TABLE;
+use crate::trace;
 
 /// Take whatever the gateway has pushed and route it.
 ///
@@ -41,10 +42,13 @@ pub fn drain_stream() {
     if n == 0 {
         return;
     }
+    trace::say_num(b"gateway frame bytes", n as u64);
     let Some(incoming) = parse_blob(&chunk[..n], &gateway.shared_key) else {
+        trace::say(b"frame dropped: failed to authenticate under the session key");
         return;
     };
     if !is_pushed_message(incoming.kind) {
+        trace::say_num(b"frame ignored: kind", incoming.kind as u64);
         return;
     }
     route_reply(&incoming.plaintext);

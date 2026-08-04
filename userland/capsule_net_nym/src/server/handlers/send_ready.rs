@@ -22,6 +22,7 @@ use crate::protocol::{E_CRYPTO, E_NO_ROUTE};
 use crate::sphinx::node::Node;
 use crate::state::{ack_key, client_identity, Session};
 use crate::surb::build_supply;
+use crate::trace;
 
 /// What a message needs before it can be built.
 pub struct Ready {
@@ -41,20 +42,38 @@ pub fn ready(session: &Session) -> Result<Ready, u16> {
     // Zeros mean the tag was never drawn. Sending it would give every such
     // session the same one, which is the link the tag exists to prevent.
     if session.sender_tag == [0u8; 16] {
+        trace::say(b"send refused: no sender tag");
         return Err(E_CRYPTO);
     }
-    let identity = client_identity().ok_or(E_CRYPTO)?;
-    let key = ack_key().ok_or(E_CRYPTO)?;
+    let Some(identity) = client_identity() else {
+        trace::say(b"send refused: no client identity");
+        return Err(E_CRYPTO);
+    };
+    let Some(key) = ack_key() else {
+        trace::say(b"send refused: no ack key");
+        return Err(E_CRYPTO);
+    };
 
     // Reply blocks and acknowledgements both need a route ending at the
     // gateway holding our session, which needs the directory's record for it.
     let gateway_identity = session.gateway.identity;
-    let reply_surbs = build_supply(&gateway_identity, &identity.public).ok_or(E_NO_ROUTE)?;
+    let Some(reply_surbs) = build_supply(&gateway_identity, &identity.public) else {
+        trace::say(b"send refused: no reply blocks, gateway not in directory yet");
+        return Err(E_NO_ROUTE);
+    };
+    trace::say_num(b"reply blocks built", reply_surbs.len() as u64);
 
     let mut seed = [0u8; 32];
     fill_random(&mut seed).map_err(|_| E_CRYPTO)?;
-    let home = route_home(&seed, &gateway_identity).ok_or(E_NO_ROUTE)?;
-    hop_delays_for(home.len()).ok_or(E_NO_ROUTE)?;
+    let Some(home) = route_home(&seed, &gateway_identity) else {
+        trace::say(b"send refused: no route home");
+        return Err(E_NO_ROUTE);
+    };
+    if hop_delays_for(home.len()).is_none() {
+        trace::say(b"send refused: no delays for route home");
+        return Err(E_NO_ROUTE);
+    }
+    trace::say_num(b"route home hops", home.len() as u64);
 
     Ok(Ready { identity: identity.public, ack_key: key, home, reply_surbs })
 }

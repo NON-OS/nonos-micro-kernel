@@ -14,15 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Serving SOCKS clients.
+//! Saying what happened at each step of a message's life.
+//!
+//! A mixnet gives no feedback by design: a packet that is malformed, routed
+//! wrongly, or refused looks exactly like one that was delivered. Nothing
+//! comes back either way. That leaves the log as the only place a failure is
+//! visible, so every step that can refuse says so and why.
 
-mod clients;
-mod feed;
-mod open;
-mod run;
-mod state;
-mod trace;
+mod emit;
+mod write;
 
-pub use run::run;
-pub use trace::open_failed as trace_open;
-pub use trace::step as trace_step;
+pub use emit::{say, say_num, say_two};

@@ -57,3 +57,45 @@ fn write_u16(out: &mut [u8], mut v: u16) -> usize {
     }
     k
 }
+
+/// Say what a tunnel did, not only what refused it.
+///
+/// A connection that opens and then goes quiet looks the same from the client
+/// as one that was never opened, so the steps that succeed are worth as much
+/// in a log as the ones that fail.
+pub fn step(what: &[u8], value: u64) {
+    let mut line = [0u8; 80];
+    let mut n = 0;
+    for &b in b"[SOCKS5] " {
+        line[n] = b;
+        n += 1;
+    }
+    for &b in what {
+        if n < line.len() - 24 {
+            line[n] = b;
+            n += 1;
+        }
+    }
+    line[n] = b' ';
+    n += 1;
+    n += write_u64(&mut line[n..], value);
+    line[n] = b'\n';
+    mk_debug(line.as_ptr(), n + 1);
+}
+
+fn write_u64(out: &mut [u8], mut v: u64) -> usize {
+    let mut digits = [0u8; 20];
+    let mut k = 0;
+    loop {
+        digits[k] = b'0' + (v % 10) as u8;
+        v /= 10;
+        k += 1;
+        if v == 0 {
+            break;
+        }
+    }
+    for i in 0..k {
+        out[i] = digits[k - 1 - i];
+    }
+    k
+}

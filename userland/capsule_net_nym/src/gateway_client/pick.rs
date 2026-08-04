@@ -28,7 +28,9 @@ use crate::state::{
 pub fn pick(index: usize, offset: usize) -> Option<Gateway> {
     let published = directory_gateway_count();
     if published > 0 {
+        crate::trace::say_num(b"dialling a directory gateway of", published as u64);
         return directory_gateway((offset + index) % published);
     }
+    crate::trace::say(b"no directory gateways yet, dialling a compiled one");
     bootstrap_gateway((offset + index) % BOOTSTRAP_GATEWAYS.len())
 }

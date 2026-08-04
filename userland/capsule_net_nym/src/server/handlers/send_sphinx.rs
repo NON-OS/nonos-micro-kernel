@@ -19,6 +19,7 @@ use crate::mixnet::{encode_message, Addressed};
 use crate::protocol::{E_CRYPTO, E_NO_ROUTE, E_NO_TCP, E_OK};
 use crate::server::handlers::send_ready::ready;
 use crate::state::Session;
+use crate::trace;
 
 /// Send a request through the mixnet as a real message.
 ///
@@ -40,13 +41,16 @@ pub fn send_sphinx(tcp_port: u32, session: &Session, payload: &[u8]) -> u16 {
         reply_surbs: &prepared.reply_surbs,
     };
     let Some(packets) = encode_message(&addressed, payload) else {
+        trace::say_num(b"send refused: could not build packets for bytes", payload.len() as u64);
         return E_NO_ROUTE;
     };
+    trace::say_two(b"sending packets for bytes", packets.len() as u64, payload.len() as u64);
 
     for packet in &packets {
         let Ok(frame) =
             gateway_client::make_encrypted_blob(gateway_client::KIND_FORWARD_SPHINX, packet)
         else {
+            trace::say(b"send failed: could not seal frame for gateway");
             return E_CRYPTO;
         };
         if let Err(code) = gateway_client::send(tcp_port, session.gateway, &frame) {
@@ -58,5 +62,6 @@ pub fn send_sphinx(tcp_port: u32, session: &Session, payload: &[u8]) -> u16 {
             return E_NO_TCP;
         }
     }
+    trace::say(b"sent");
     E_OK
 }

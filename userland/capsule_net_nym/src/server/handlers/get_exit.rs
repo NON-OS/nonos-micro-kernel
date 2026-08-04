@@ -20,6 +20,7 @@ use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::setup;
 use crate::topology::{self, Role};
+use crate::trace;
 
 /// Hand back an exit taken from the directory.
 ///
@@ -39,8 +40,10 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     };
 
     let Some(exit) = nth_exit(index) else {
+        trace::say_num(b"exit lookup failed at index", index as u64);
         return respond(pid, OP_GET_EXIT, E_NO_ROUTE, req.request_id, 0, tx);
     };
+    trace::say_num(b"exit found at index", index as u64);
     if tx.len() < 20 + 96 {
         return respond(pid, OP_GET_EXIT, E_NO_ROUTE, req.request_id, 0, tx);
     }

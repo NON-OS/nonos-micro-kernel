@@ -38,6 +38,7 @@ mod state;
 mod surb;
 mod tcp_client;
 mod topology;
+mod trace;
 
 use nonos_libc::{heap_init, mk_exit, mk_ipc_recv};
 

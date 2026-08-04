@@ -31,11 +31,18 @@ use crate::topology::{self, Node as TopoNode, Role};
 /// with it by identity, but routing to it needs the address and packet key it
 /// publishes, and those cannot be guessed.
 pub fn route_home(seed: &[u8; 32], gateway_identity: &[u8; 32]) -> Option<Vec<SphinxNode>> {
-    let gateway = topology::node_by_identity(gateway_identity)?;
+    let Some(gateway) = topology::node_by_identity(gateway_identity) else {
+        crate::trace::say(b"route home: our gateway is not in the directory yet");
+        return None;
+    };
     if gateway.role != Role::EntryGateway && gateway.role != Role::ExitGateway {
+        crate::trace::say(b"route home: our gateway is not a gateway in the directory");
         return None;
     }
-    let hops = topology::route(seed).ok()?;
+    let Some(hops) = topology::route(seed).ok() else {
+        crate::trace::say(b"route home: no mix route available");
+        return None;
+    };
     let mut home = Vec::with_capacity(hops.len());
     // Everything up to the egress is a mix like any other; only the last hop
     // differs, and it is ours rather than the one the forward route ends at.
