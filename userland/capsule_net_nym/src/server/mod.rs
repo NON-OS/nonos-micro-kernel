@@ -16,9 +16,12 @@
 
 mod authz;
 mod connect_tick;
+
 mod handlers;
+mod keepalive;
 mod parse_req;
 mod respond;
 mod runner;
 
+pub use connect_tick::gateway_lost;
 pub use runner::run;

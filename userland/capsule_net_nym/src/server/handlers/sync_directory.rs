@@ -32,6 +32,17 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     if tcp == 0 {
         return respond(pid, OP_SYNC_DIRECTORY, E_NO_TCP, req.request_id, 0, tx);
     }
+    // No source named means the public API. That fetch holds the capsule for
+    // as long as the far end takes, which is why it is asked for rather than
+    // run on a timer: nothing downstream is served while it runs.
+    if body.is_empty() && crate::state::directory_source().is_none() {
+        let errno = match directory_sync::sync_live(tcp) {
+            Ok(_) => E_OK,
+            Err(E_NO_TCP) => E_NO_TCP,
+            Err(_) => E_DIRECTORY_PROTO,
+        };
+        return respond(pid, OP_SYNC_DIRECTORY, errno, req.request_id, 0, tx);
+    }
     let source = match source(body) {
         Ok(source) => source,
         Err(e) => return respond(pid, OP_SYNC_DIRECTORY, e, req.request_id, 0, tx),

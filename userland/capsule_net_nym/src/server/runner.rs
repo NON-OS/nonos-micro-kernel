@@ -40,6 +40,7 @@ pub fn run() -> ! {
             // Connecting from here rather than before the loop is what lets
             // the capsule answer while it is still finding a gateway.
             super::connect_tick::connect_tick();
+            super::keepalive::keepalive_tick();
             continue;
         }
         let Ok((req, body)) = parse(&rx[..n as usize]) else { continue };

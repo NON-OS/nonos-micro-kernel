@@ -54,13 +54,30 @@ pub fn session() -> Option<u32> {
 /// destination cannot be sealed as a Sphinx packet, and leaving one half
 /// configured invites a send that fails at the last moment instead of here.
 fn request_open() -> Option<u32> {
-    let exit = exit()?;
-    let reply = call(OP_OPEN_SESSION, &[]).ok()?;
+    let Some(exit) = exit() else {
+        crate::server::trace_open(b"session no exit", 0);
+        return None;
+    };
+    let reply = match call(OP_OPEN_SESSION, &[]) {
+        Ok(reply) => reply,
+        Err(crate::ipc::CallError::Remote(code)) => {
+            crate::server::trace_open(b"session refused", code);
+            return None;
+        }
+        Err(_) => {
+            crate::server::trace_open(b"session no answer", 0);
+            return None;
+        }
+    };
     if reply.len() < 4 {
+        crate::server::trace_open(b"session short reply", reply.len() as u16);
         return None;
     }
     let id = u32::from_le_bytes([reply[0], reply[1], reply[2], reply[3]]);
-    bind_destination(id, &exit).ok()?;
+    if bind_destination(id, &exit).is_err() {
+        crate::server::trace_open(b"session bind failed", 0);
+        return None;
+    }
     Some(id)
 }
 

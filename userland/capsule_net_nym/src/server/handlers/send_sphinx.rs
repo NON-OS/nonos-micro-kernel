@@ -32,5 +32,15 @@ pub fn send_sphinx(tcp_port: u32, session: &Session, payload: &[u8]) -> u16 {
     else {
         return E_CRYPTO;
     };
-    gateway_client::send(tcp_port, session.gateway, &frame).map_or(E_NO_TCP, |()| E_OK)
+    match gateway_client::send(tcp_port, session.gateway, &frame) {
+        Ok(()) => E_OK,
+        Err(_) => {
+            // The gateway stopped taking bytes, which usually means it closed
+            // a connection nothing had used since registration. Drop the
+            // binding so the serve loop dials again, rather than writing
+            // every later packet into a socket that is gone.
+            crate::server::gateway_lost();
+            E_NO_TCP
+        }
+    }
 }

@@ -30,6 +30,9 @@ pub enum SendError {
     NoExit,
     NoSession,
     TooLarge,
+    /// net.nym refused the send and said why. Folding this into NoSession
+    /// named the call that failed but not what was wrong with it.
+    Remote(u16),
 }
 
 /// Build the network-requester frame that asks an exit to open `dest`.
@@ -56,7 +59,15 @@ pub fn send_through_mixnet(frame: &[u8]) -> Result<(), SendError> {
     let mut body: Vec<u8> = Vec::with_capacity(4 + frame.len());
     body.extend_from_slice(&id.to_le_bytes());
     body.extend_from_slice(frame);
-    crate::ipc::call(crate::ipc::OP_SEND, &body)
-        .map(|_| ())
-        .map_err(|_| SendError::NoSession)
+    // Each way the call can fail gets its own number. A refusal by net.nym, a
+    // transport that never answered, and a reply that would not parse are
+    // three unrelated faults, and one shared code names none of them.
+    match crate::ipc::call(crate::ipc::OP_SEND, &body) {
+        Ok(_) => Ok(()),
+        Err(crate::ipc::CallError::Remote(code)) => Err(SendError::Remote(code)),
+        Err(crate::ipc::CallError::NoTransport) => Err(SendError::Remote(101)),
+        Err(crate::ipc::CallError::Encode) => Err(SendError::Remote(102)),
+        Err(crate::ipc::CallError::Transport) => Err(SendError::Remote(103)),
+        Err(crate::ipc::CallError::Malformed) => Err(SendError::Remote(104)),
+    }
 }

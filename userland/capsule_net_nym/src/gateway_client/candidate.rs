@@ -22,7 +22,11 @@ use crate::state::{bootstrap_gateway, BOOTSTRAP_GATEWAYS, TABLE};
 /// One per call so the caller keeps control between attempts. Wrapping means
 /// a client that starts before the network is up keeps trying.
 pub fn connect_candidate(tcp_port: u32, index: usize) -> bool {
-    let slot = index % BOOTSTRAP_GATEWAYS.len();
+    // Start somewhere random rather than at the head of the list. Walking it
+    // in order means every machine enters the mixnet through the same gateway
+    // on every boot, and an entry point that never changes is something an
+    // observer can tie sessions together by.
+    let slot = (start_offset() + index) % BOOTSTRAP_GATEWAYS.len();
     let Some(candidate) = bootstrap_gateway(slot) else {
         return false;
     };
@@ -34,4 +38,24 @@ pub fn connect_candidate(tcp_port: u32, index: usize) -> bool {
         }
         Err(_) => false,
     }
+}
+
+/// Where the walk begins, chosen once per boot from the same entropy the
+/// packet keys come from.
+fn start_offset() -> usize {
+    use core::sync::atomic::{AtomicUsize, Ordering};
+    static START: AtomicUsize = AtomicUsize::new(usize::MAX);
+    let seen = START.load(Ordering::Relaxed);
+    if seen != usize::MAX {
+        return seen;
+    }
+    let mut byte = [0u8; 1];
+    let picked = match crate::crypto::fill_random(&mut byte) {
+        Ok(()) => byte[0] as usize,
+        // No entropy is not a reason to refuse to connect, and the head of
+        // the list is no worse than the old behaviour.
+        Err(_) => 0,
+    };
+    START.store(picked, Ordering::Relaxed);
+    picked
 }

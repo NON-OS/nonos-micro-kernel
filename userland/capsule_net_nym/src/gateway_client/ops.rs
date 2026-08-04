@@ -61,3 +61,11 @@ pub fn close(tcp_port: u32, gateway: Gateway) -> Result<(), u16> {
     }
     Ok(())
 }
+
+/// Ping the gateway so an idle link is not closed under us.
+pub fn ping(tcp_port: u32, gateway: Gateway) -> Result<(), u16> {
+    match gateway.transport {
+        Transport::RawTcp => Ok(()),
+        Transport::WebSocket => ws::send_ping(tcp_port, gateway.stream),
+    }
+}

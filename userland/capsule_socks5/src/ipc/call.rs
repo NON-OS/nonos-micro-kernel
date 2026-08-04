@@ -29,7 +29,13 @@ const REPLY_MAX: usize = 4096;
 /// Bounded rather than open ended: this runs on the path serving a SOCKS
 /// client, and a transport that never answers would otherwise hang the
 /// connection rather than fail it.
-const TIMEOUT_MS: u64 = 5_000;
+///
+/// Wide enough for what the call actually does. A send builds a Sphinx packet
+/// and writes it to a gateway across the internet, so the budget covers a
+/// round trip and the crypto, not just an IPC hop. At five seconds this
+/// expired before the mixnet capsule could answer, and the give up surfaced
+/// as a transport failure carrying no reason.
+const TIMEOUT_MS: u64 = 15_000;
 
 static NEXT_REQUEST: AtomicU32 = AtomicU32::new(1);
 

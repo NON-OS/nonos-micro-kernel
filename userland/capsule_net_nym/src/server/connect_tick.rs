@@ -35,6 +35,18 @@ pub fn connected() -> bool {
     CONNECTED.load(Ordering::Relaxed)
 }
 
+/// Report that the bound gateway stopped accepting bytes.
+///
+/// The next idle moment dials again. Backoff is reset because this is a
+/// connection that worked and then went away, not a candidate that has been
+/// refusing us.
+pub fn gateway_lost() {
+    CONNECTED.store(false, Ordering::Relaxed);
+    SKIP.store(0, Ordering::Relaxed);
+    BACKOFF.store(1, Ordering::Relaxed);
+}
+
+
 /// Try one bootstrap candidate while nothing is asking to be served.
 ///
 /// One per idle tick, not the whole list at boot: each stage waits a real

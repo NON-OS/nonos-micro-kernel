@@ -24,3 +24,4 @@ mod state;
 mod trace;
 
 pub use run::run;
+pub use trace::open_failed as trace_open;

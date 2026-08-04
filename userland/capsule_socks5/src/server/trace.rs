@@ -19,7 +19,7 @@ use nonos_libc::mk_debug;
 /// Say which step of opening a tunnel refused. The client only learns the
 /// connect was rejected; no session, no exit and a failed send look identical
 /// from there.
-pub fn open_failed(step: &[u8]) {
+pub fn open_failed(step: &[u8], code: u16) {
     let mut line = [0u8; 64];
     let mut n = 0;
     for &b in b"[SOCKS5] open refused: " {
@@ -27,11 +27,33 @@ pub fn open_failed(step: &[u8]) {
         n += 1;
     }
     for &b in step {
-        if n < line.len() - 2 {
+        if n < line.len() - 10 {
             line[n] = b;
             n += 1;
         }
     }
+    if code != 0 {
+        line[n] = b' ';
+        n += 1;
+        n += write_u16(&mut line[n..], code);
+    }
     line[n] = b'\n';
     mk_debug(line.as_ptr(), n + 1);
+}
+
+fn write_u16(out: &mut [u8], mut v: u16) -> usize {
+    let mut digits = [0u8; 5];
+    let mut k = 0;
+    loop {
+        digits[k] = b'0' + (v % 10) as u8;
+        v /= 10;
+        k += 1;
+        if v == 0 {
+            break;
+        }
+    }
+    for i in 0..k {
+        out[i] = digits[k - 1 - i];
+    }
+    k
 }

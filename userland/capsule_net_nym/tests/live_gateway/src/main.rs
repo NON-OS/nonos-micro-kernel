@@ -3,6 +3,10 @@ extern crate alloc;
 mod crypto;
 #[path = "../../../src/json/mod.rs"]
 mod json;
+#[path = "topology_shim.rs"]
+mod topology;
+#[path = "../../../src/directory_sync/api/mod.rs"]
+mod api;
 mod gateway_client;
 #[path = "sphinx_mod.rs"]
 mod sphinx_root;

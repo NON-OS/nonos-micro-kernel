@@ -37,6 +37,13 @@ pub fn send_pong(tcp_port: u32, stream: u32, payload: &[u8]) -> Result<(), u16> 
     send_frame(tcp_port, stream, 0x8a, payload)
 }
 
+/// A ping, which keeps a link that carries nothing between packets from being
+/// closed as idle. A gateway that drops the connection takes the session with
+/// it, and the client finds out only by having a packet refused.
+pub fn send_ping(tcp_port: u32, stream: u32) -> Result<(), u16> {
+    send_frame(tcp_port, stream, 0x89, &[])
+}
+
 fn send_frame(tcp_port: u32, stream: u32, op: u8, payload: &[u8]) -> Result<(), u16> {
     if payload.len() > u16::MAX as usize {
         return Err(4);

@@ -30,23 +30,27 @@ pub enum OpenOutcome {
 /// open across it would stall the client on a path built to add delay.
 pub fn open_tunnel(conn_id: u64, dest: &Dest) -> OpenOutcome {
     if open_session().is_none() {
-        super::trace::open_failed(b"no session");
+        super::trace::open_failed(b"no session", 0);
         return OpenOutcome::NoRoute;
     }
     match connect_request(conn_id, dest) {
         Ok(frame) => match crate::nym::send_through_mixnet(&frame) {
             Ok(()) => OpenOutcome::Opened,
+            Err(SendError::Remote(code)) => {
+                super::trace::open_failed(b"send", code);
+                OpenOutcome::NoRoute
+            }
             Err(_) => {
-                super::trace::open_failed(b"send");
+                super::trace::open_failed(b"send", 0);
                 OpenOutcome::NoRoute
             }
         },
         Err(SendError::NoExit) => {
-            super::trace::open_failed(b"no exit");
+            super::trace::open_failed(b"no exit", 0);
             OpenOutcome::NoRoute
         }
         Err(_) => {
-            super::trace::open_failed(b"request");
+            super::trace::open_failed(b"request", 0);
             OpenOutcome::NoRoute
         }
     }

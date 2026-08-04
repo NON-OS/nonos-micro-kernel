@@ -27,6 +27,10 @@ pub enum Provenance {
     Image,
     /// Received over the network, signed by a trusted authority.
     Signed,
+    /// Fetched over TLS from a named API. The chain proves who answered, not
+    /// that an operator vouched for the answer, so it is kept apart from
+    /// `Signed` rather than folded into it.
+    Fetched,
 }
 
 #[derive(Clone, Copy)]

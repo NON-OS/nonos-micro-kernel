@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod number;
-mod parse;
+pub(super) mod parse;
 mod read;
 mod request;
 

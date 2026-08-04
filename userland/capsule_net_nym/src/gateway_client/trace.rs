@@ -57,6 +57,20 @@ pub fn bound(ip: [u8; 4]) {
     mk_debug(line.as_ptr(), n + 1);
 }
 
+/// Report how many nodes a directory fetch installed, so a live list is
+/// distinguishable from the compiled one it replaced.
+pub fn directory(count: usize) {
+    let mut line = [0u8; 64];
+    let mut n = 0;
+    for &b in b"[NET-NYM] directory nodes " {
+        line[n] = b;
+        n += 1;
+    }
+    n += write_u16(&mut line[n..], count.min(u16::MAX as usize) as u16);
+    line[n] = b'\n';
+    mk_debug(line.as_ptr(), n + 1);
+}
+
 fn write_u16(out: &mut [u8], mut v: u16) -> usize {
     let mut digits = [0u8; 5];
     let mut k = 0;
