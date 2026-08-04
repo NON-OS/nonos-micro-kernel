@@ -16,7 +16,7 @@
 
 use alloc::vec;
 
-use super::envelope::call;
+use super::envelope::{call, E_ERRNO};
 
 const OP_CONNECT: u16 = 3;
 const OP_SEND: u16 = 5;
@@ -44,8 +44,16 @@ pub fn send_all(port: u32, handle: u32, payload: &[u8]) -> Result<(), u16> {
     Ok(())
 }
 
+/// net.tcp reports an empty receive queue as an errno.
+const E_RX_EMPTY: u16 = 11;
+
 pub fn recv(port: u32, handle: u32, out: &mut [u8]) -> Result<usize, u16> {
-    call(port, OP_RECV, &handle.to_le_bytes(), out)
+    match call(port, OP_RECV, &handle.to_le_bytes(), out) {
+        // Nothing has arrived yet. That is a state, not a failure: a peer
+        // that has not answered is the normal case while waiting on one.
+        Err(e) if e == E_ERRNO + E_RX_EMPTY => Ok(0),
+        other => other,
+    }
 }
 
 pub fn close(port: u32, handle: u32) -> Result<(), u16> {
