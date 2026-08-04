@@ -50,3 +50,16 @@ pub fn header(
     }
     queue(device_id, regs, irq, queue_grant)
 }
+pub fn data(
+    device_id: u64,
+    regs: RegisterGrant,
+    irq: &IrqBindOut,
+    queue_grant: &DmaMapOut,
+    header_grant: &DmaMapOut,
+    data_grant: &DmaMapOut,
+) -> Result<(), &'static str> {
+    if mk_dma_unmap(data_grant.grant_id) < 0 {
+        return Err("virtio-blk: data dma rollback failed");
+    }
+    header(device_id, regs, irq, queue_grant, header_grant)
+}
