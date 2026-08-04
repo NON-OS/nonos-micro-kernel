@@ -24,6 +24,7 @@ mod health;
 mod io;
 mod listen;
 mod mixnet_frame;
+mod mixnet_send;
 mod poll;
 mod recv;
 mod send;
