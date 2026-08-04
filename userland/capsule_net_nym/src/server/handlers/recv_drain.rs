@@ -16,14 +16,18 @@
 
 use alloc::vec;
 
-use super::recv_plain;
-use crate::crypto;
-use crate::gateway_client;
-use crate::packet::{self, FLAG_COVER};
-use crate::protocol::{NYM_PAYLOAD_BYTES, WIRE_PACKET_MAX};
+use super::route_reply::route_reply;
+use crate::gateway_client::{self, is_pushed_message, parse_blob};
+use crate::protocol::WIRE_PACKET_MAX;
 use crate::setup;
 use crate::state::TABLE;
 
+/// Take whatever the gateway has pushed and route it.
+///
+/// A gateway forwards messages addressed to us as they arrive, so this is the
+/// only place a reply can enter. The frame is authenticated under the session
+/// key before its kind is believed: the kind sits outside the sealed part and
+/// anyone on the path can set it.
 pub fn drain_stream() {
     let tcp_port = setup::tcp_port();
     let gateway = match TABLE.lock().gateway() {
@@ -37,35 +41,11 @@ pub fn drain_stream() {
     if n == 0 {
         return;
     }
-    TABLE.lock().append_stream(&chunk[..n]);
-    route_ready_packets();
-}
-
-fn route_ready_packets() {
-    let mut packet = vec![0u8; WIRE_PACKET_MAX];
-    loop {
-        if !TABLE.lock().take_packet(&mut packet) {
-            return;
-        }
-        route_packet(&packet);
-    }
-}
-
-fn route_packet(bytes: &[u8]) {
-    let Ok(decoded) = packet::decode(bytes) else { return };
-    if decoded.flags & FLAG_COVER != 0 {
+    let Some(incoming) = parse_blob(&chunk[..n], &gateway.shared_key) else {
+        return;
+    };
+    if !is_pushed_message(incoming.kind) {
         return;
     }
-    let mut plain = vec![0u8; NYM_PAYLOAD_BYTES];
-    let routed = TABLE.lock().with_id_mut(decoded.session_id, |s| {
-        if !s.accept_replay_tag(&decoded.replay_tag) {
-            return;
-        }
-        if let Ok(n) = crypto::open(&s.key, &decoded.nonce, decoded.ciphertext, &mut plain) {
-            recv_plain::queue(s, &plain[..n]);
-        }
-    });
-    if routed.is_none() {
-        return;
-    }
+    route_reply(&incoming.plaintext);
 }

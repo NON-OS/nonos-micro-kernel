@@ -14,19 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Bridging the directory's view of the network to Sphinx.
+use alloc::vec::Vec;
 
-mod address;
-mod delays;
-mod encode;
-mod encode_message;
-mod mix_packet;
-mod route;
-mod route_home;
-pub mod seal;
+/// Fragments of one message, held until all of them have arrived.
+pub struct Assembly {
+    pub(super) set_id: i32,
+    pub(super) total: u8,
+    pub(super) pieces: Vec<Option<Vec<u8>>>,
+    pub(super) held: u8,
+}
 
-pub use address::routing_address;
-pub use encode_message::{encode_message, Addressed};
-pub use mix_packet::frame_mix_packet;
-pub use route::sphinx_route;
-pub use route_home::route_home;
+impl Assembly {
+    pub(super) fn new(set_id: i32, total: u8) -> Self {
+        let mut pieces = Vec::with_capacity(total as usize);
+        pieces.resize_with(total as usize, || None);
+        Self { set_id, total, pieces, held: 0 }
+    }
+
+    /// Whether this holds fragments of `set_id`.
+    pub fn holds(&self, set_id: i32) -> bool {
+        self.set_id == set_id
+    }
+}

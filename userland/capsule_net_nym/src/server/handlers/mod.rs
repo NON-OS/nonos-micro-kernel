@@ -25,6 +25,7 @@ mod recv;
 mod recv_drain;
 mod recv_plain;
 mod recv_sphinx;
+mod route_reply;
 mod send;
 mod send_ready;
 mod send_reply;

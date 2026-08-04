@@ -14,19 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Bridging the directory's view of the network to Sphinx.
+//! Offsets a reply is read at.
 
-mod address;
-mod delays;
-mod encode;
-mod encode_message;
-mod mix_packet;
-mod route;
-mod route_home;
-pub mod seal;
+use crate::ack::PADDED_ADDRESS_BYTES;
+use crate::sphinx::constants::{ACK_PAYLOAD_SIZE, HEADER_SIZE};
 
-pub use address::routing_address;
-pub use encode_message::{encode_message, Addressed};
-pub use mix_packet::frame_mix_packet;
-pub use route::sphinx_route;
-pub use route_home::route_home;
+/// Bytes the acknowledgement takes at the front of a reply, before anything
+/// meant for us begins.
+pub const ACK_SPAN: usize = PADDED_ADDRESS_BYTES + HEADER_SIZE + ACK_PAYLOAD_SIZE;
+
+/// Bytes of the tag naming which reply block a reply came back on. It is a
+/// digest of that block's key, so it identifies one of ours to us and nothing
+/// to anyone else.
+pub const DIGEST_BYTES: usize = 32;
+
+/// A message that says it is a reply.
+pub const TYPE_REPLY: u8 = 2;
+
+/// Reply content that carries data, rather than a request for more blocks.
+pub const TAG_REPLY_DATA: u8 = 0;

@@ -14,8 +14,12 @@ mod surb;
 mod ack;
 #[path = "../../../src/payload/mod.rs"]
 mod payload;
+#[path = "reply_mod.rs"]
+mod reply;
 #[cfg(test)]
 mod message_vectors;
+#[cfg(test)]
+mod reply_vectors;
 #[cfg(test)]
 mod payload_vectors;
 #[cfg(test)]

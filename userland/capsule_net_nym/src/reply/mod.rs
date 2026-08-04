@@ -14,19 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Bridging the directory's view of the network to Sphinx.
+//! Opening what comes back: a reply arrives on one of the blocks we handed
+//! out, sealed under that block's key.
 
-mod address;
-mod delays;
-mod encode;
-mod encode_message;
-mod mix_packet;
-mod route;
-mod route_home;
-pub mod seal;
+mod assembly;
+mod message;
+mod open;
+mod reassemble;
+mod types;
 
-pub use address::routing_address;
-pub use encode_message::{encode_message, Addressed};
-pub use mix_packet::frame_mix_packet;
-pub use route::sphinx_route;
-pub use route_home::route_home;
+pub use assembly::Assembly;
+pub use message::reply_body;
+pub use open::open_reply;
+pub use reassemble::collect;
+pub use types::{ACK_SPAN, DIGEST_BYTES, TAG_REPLY_DATA, TYPE_REPLY};
