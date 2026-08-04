@@ -32,6 +32,7 @@ mod server;
 mod setup;
 mod sphinx;
 mod state;
+mod surb;
 mod tcp_client;
 mod topology;
 

@@ -8,8 +8,12 @@ mod topology;
 #[path = "../../../src/directory_sync/api/mod.rs"]
 mod api;
 mod gateway_client;
+#[path = "../../../src/surb/mod.rs"]
+mod surb;
 #[cfg(test)]
 mod message_vectors;
+#[cfg(test)]
+mod surb_vectors;
 #[path = "../../../src/message/mod.rs"]
 mod message;
 #[path = "sphinx_mod.rs"]
