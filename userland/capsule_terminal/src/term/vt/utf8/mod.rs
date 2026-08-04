@@ -21,22 +21,12 @@
 //! one character into that many pieces of mojibake, which is what a grid of
 //! bytes can do and no more.
 
-/// What the character before the current byte should be replaced with when a
-/// sequence turns out to be malformed. Substituting rather than dropping
-/// keeps a column count that matches what was sent.
-const REPLACEMENT: char = '\u{FFFD}';
+use finish::{finish, REPLACEMENT};
 
-/// Accumulates bytes until they form a character.
-#[derive(Default)]
-pub struct Utf8 {
-    /// Bits gathered so far from the bytes of the current sequence.
-    acc: u32,
-    /// Continuation bytes still expected.
-    left: u8,
-    /// Continuation bytes in the sequence, kept so an overlong encoding can
-    /// be told from a legitimate one of the same value.
-    width: u8,
-}
+mod finish;
+mod state;
+
+pub use state::Utf8;
 
 impl Utf8 {
     /// Offer one byte and emit the characters it completes.
@@ -76,31 +66,4 @@ impl Utf8 {
             _ => emit(REPLACEMENT),
         }
     }
-
-    fn begin(&mut self, bits: u32, follow: u8) {
-        self.acc = bits;
-        self.left = follow;
-        self.width = follow;
-    }
-
-    fn reset(&mut self) {
-        self.acc = 0;
-        self.left = 0;
-        self.width = 0;
-    }
-}
-
-/// Turn gathered bits into a character, refusing the encodings that are
-/// shorter forms written long. Those decode to the same value as a shorter
-/// sequence and exist only to slip past a check that reads the short one.
-fn finish(acc: u32, width: u8) -> char {
-    let overlong = match width {
-        1 => acc < 0x80,
-        2 => acc < 0x800,
-        _ => acc < 0x10000,
-    };
-    if overlong {
-        return REPLACEMENT;
-    }
-    char::from_u32(acc).unwrap_or(REPLACEMENT)
 }

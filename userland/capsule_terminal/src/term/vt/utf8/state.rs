@@ -14,23 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod block_chrome;
-mod block_meta;
-mod compose;
-mod constants;
-mod draw_cursor;
-mod draw_grid;
-mod draw_input_line;
-mod fetch;
-mod fetch_banner;
-mod fetch_palette;
-mod fetch_uptime;
-mod footer;
-mod header;
-mod line_text;
-mod metrics;
-mod shade;
-pub mod tabstrip;
+//! What the decoder carries between bytes.
 
-pub use compose::paint_tabs;
-pub use tabstrip::draw_tabstrip;
+/// Accumulates bytes until they form a character.
+#[derive(Default)]
+pub struct Utf8 {
+    /// Bits gathered so far from the bytes of the current sequence.
+    pub(super) acc: u32,
+    /// Continuation bytes still expected.
+    pub(super) left: u8,
+    /// How many the sequence asked for, kept so an overlong encoding can be
+    /// told from a legitimate one of the same value.
+    pub(super) width: u8,
+}
+
+impl Utf8 {
+    pub(super) fn begin(&mut self, bits: u32, follow: u8) {
+        self.acc = bits;
+        self.left = follow;
+        self.width = follow;
+    }
+
+    pub(super) fn reset(&mut self) {
+        self.acc = 0;
+        self.left = 0;
+        self.width = 0;
+    }
+}

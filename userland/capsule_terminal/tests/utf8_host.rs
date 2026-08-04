@@ -8,7 +8,7 @@
 // The module is pulled in by path so this cannot pass against a copy that has
 // drifted from what the capsule runs.
 
-#[path = "../src/term/vt/utf8.rs"]
+#[path = "../src/term/vt/utf8/mod.rs"]
 mod utf8;
 
 use utf8::Utf8;
