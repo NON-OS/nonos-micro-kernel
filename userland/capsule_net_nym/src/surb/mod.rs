@@ -19,8 +19,12 @@
 
 mod build;
 mod bytes;
+mod keys;
+mod supply;
 mod types;
 
 pub use build::build_surb;
 pub use bytes::surb_bytes;
+pub use keys::{candidates, remember};
+pub use supply::{build_supply, SURBS_PER_REQUEST};
 pub use types::{ReplySurb, SURB_KEY_BYTES};

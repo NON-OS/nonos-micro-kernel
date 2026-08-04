@@ -15,35 +15,48 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::gateway_client;
+use crate::mixnet::{encode_message, Addressed};
 use crate::protocol::{E_CRYPTO, E_NO_ROUTE, E_NO_TCP, E_OK};
+use crate::server::handlers::send_ready::ready;
 use crate::state::Session;
 
-/// Seal a payload as a Sphinx packet and hand it to the gateway.
+/// Send a request through the mixnet as a real message.
 ///
-/// Refuses rather than degrades: no route or no gateway key means the message
-/// is not sent at all, never sent unprotected.
+/// Refuses rather than degrades: a message that cannot be answered or that
+/// would be linkable is not sent at all.
 pub fn send_sphinx(tcp_port: u32, session: &Session, payload: &[u8]) -> u16 {
-    let Some(packet) = crate::mixnet::encode_sphinx(&session.dest, &session.dest_id, payload)
-    else {
+    let prepared = match ready(session) {
+        Ok(prepared) => prepared,
+        Err(errno) => return errno,
+    };
+
+    let addressed = Addressed {
+        destination: &session.dest,
+        destination_encryption: &session.dest_encryption,
+        our_identity: &prepared.identity,
+        ack_key: &prepared.ack_key,
+        home: &prepared.home,
+        sender_tag: &session.sender_tag,
+        reply_surbs: &prepared.reply_surbs,
+    };
+    let Some(packets) = encode_message(&addressed, payload) else {
         return E_NO_ROUTE;
     };
-    let Ok(frame) =
-        gateway_client::make_encrypted_blob(gateway_client::KIND_FORWARD_SPHINX, &packet)
-    else {
-        return E_CRYPTO;
-    };
-    match gateway_client::send(tcp_port, session.gateway, &frame) {
-        Ok(()) => E_OK,
-        Err(code) => {
+
+    for packet in &packets {
+        let Ok(frame) =
+            gateway_client::make_encrypted_blob(gateway_client::KIND_FORWARD_SPHINX, packet)
+        else {
+            return E_CRYPTO;
+        };
+        if let Err(code) = gateway_client::send(tcp_port, session.gateway, &frame) {
             // Callers see one code for a write that did not land, so the
-            // reason it did not land is only recoverable from the log. A
-            // closed socket and a socket that never drained need different
-            // fixes and are indistinguishable without this.
+            // reason is only recoverable from the log. A closed socket and a
+            // socket that never drained need different fixes.
             gateway_client::trace::fail(b"send", code);
-            // Drop the binding so the serve loop dials again, rather than
-            // writing every later packet into a socket that is gone.
             crate::server::gateway_lost();
-            E_NO_TCP
+            return E_NO_TCP;
         }
     }
+    E_OK
 }

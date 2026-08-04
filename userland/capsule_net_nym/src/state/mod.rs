@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod ack_key;
 mod authority;
 mod bootstrap;
 mod bootstrap_mix;
@@ -32,6 +33,7 @@ mod surb_types;
 mod table;
 mod timing;
 
+pub use ack_key::ack_key;
 pub use authority::{install as install_authority, trusted as trusted_authority};
 pub use bootstrap::{bootstrap_gateway, BOOTSTRAP_GATEWAYS};
 pub use bootstrap_mix::{bootstrap_route, BOOTSTRAP_MIXNODES, PER_LAYER};

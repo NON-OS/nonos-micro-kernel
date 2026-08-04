@@ -23,7 +23,7 @@ mod encode_message;
 mod mix_packet;
 mod route;
 mod route_home;
-mod seal;
+pub mod seal;
 
 pub use address::routing_address;
 pub use encode::encode_sphinx;

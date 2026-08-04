@@ -38,6 +38,10 @@ pub struct Session {
     /// one names the destination, the other encrypts to it.
     pub dest_encryption: [u8; 32],
     pub dest_id: [u8; 16],
+    /// What an exit quotes to reach us again. It is ours and it is random:
+    /// the exit never learns anything else about where we are, and a tag
+    /// derived from something it already knows would tell it more.
+    pub sender_tag: [u8; 16],
     replay: ReplayWindow,
     rx: VecDeque<Vec<u8>>,
 }
@@ -52,6 +56,7 @@ impl Session {
             dest: [0u8; 32],
             dest_encryption: [0u8; 32],
             dest_id: [0u8; 16],
+            sender_tag: random_tag(),
             replay: ReplayWindow::new(),
             rx: VecDeque::new(),
         }
@@ -75,4 +80,18 @@ impl Session {
     pub fn zeroize(&mut self) {
         self.key.fill(0);
     }
+}
+
+/// A fresh sender tag, or zeros if there was no entropy to draw one from.
+///
+/// Zeros are left deliberately recognisable rather than replaced with
+/// anything derived. Every session without entropy would otherwise share a
+/// tag, which is the link the tag exists to avoid, so the send path treats
+/// an unset tag as a reason to refuse rather than something to send.
+fn random_tag() -> [u8; 16] {
+    let mut tag = [0u8; 16];
+    if crate::crypto::random::fill_random(&mut tag).is_err() {
+        return [0u8; 16];
+    }
+    tag
 }

@@ -26,6 +26,7 @@ mod recv_drain;
 mod recv_plain;
 mod recv_sphinx;
 mod send;
+mod send_ready;
 mod send_reply;
 mod send_sphinx;
 mod set_authority;

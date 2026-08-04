@@ -8,7 +8,7 @@ mod topology;
 #[path = "../../../src/directory_sync/api/mod.rs"]
 mod api;
 mod gateway_client;
-#[path = "../../../src/surb/mod.rs"]
+#[path = "surb_mod.rs"]
 mod surb;
 #[path = "../../../src/ack/mod.rs"]
 mod ack;
