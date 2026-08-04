@@ -22,11 +22,12 @@
 
 use alloc::vec::Vec;
 
-use nonos_libc::{mk_ipc_send_to_pid, mk_service_lookup, mk_yield};
+use nonos_libc::{mk_ipc_send_to_pid, mk_service_lookup, mk_time_millis, mk_yield};
 
 use super::launcher_request::focus_frame;
 use crate::installer_client::load_by_name;
-use crate::state::Context;
+use crate::render::sync_toast_layer;
+use crate::state::{Context, NotifyLevel};
 
 pub fn launch(ctx: &mut Context, name: &[u8]) {
     if let Some(pid) = ctx.installed_pids.get(name).copied() {
@@ -42,10 +43,28 @@ pub fn launch(ctx: &mut Context, name: &[u8]) {
         }
         ctx.installed_pids.remove(name);
     }
-    if let Some(pid) = load_by_name(name) {
-        ctx.installed_pids.insert(name.to_vec(), pid);
-        boot(pid);
+    match load_by_name(name) {
+        Ok(pid) => {
+            ctx.installed_pids.insert(name.to_vec(), pid);
+            boot(pid);
+        }
+        Err(status) => report_failure(ctx, status),
     }
+}
+
+const ERR_REJECTED: i32 = -13;
+
+/// A refused load used to look exactly like nothing happening; say why on
+/// screen, and call out a verification rejection distinctly since it means
+/// the store artifacts themselves failed attestation.
+fn report_failure(ctx: &mut Context, status: i32) {
+    let text: &[u8] = if status == ERR_REJECTED {
+        b"app rejected: failed verification"
+    } else {
+        b"app failed to launch"
+    };
+    ctx.toasts.push(text, NotifyLevel::Error, mk_time_millis());
+    sync_toast_layer(ctx);
 }
 
 // The kernel registers the app's `proc.<pid>` inbox inside the load syscall
