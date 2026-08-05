@@ -14,9 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const CAP_VFS: u64 = 1 << 0;
-pub const CAP_NET: u64 = 1 << 1;
-pub const CAP_DISPLAY: u64 = 1 << 2;
+// CAP_VFS/NET/DISPLAY must equal the kernel Capability bits, not an independent
+// 1<<N. As 1<<0/1/2 they aliased ambient or unrelated bits -- 1<<0 is the
+// AMBIENT CoreExec every capsule holds, so the VFS gate collapsed to "any
+// capsule" -- and these service gates never enforced their intended
+// FileSystem/Network/Display authority. Binding to bit() closes the aliases;
+// the capsule manifests that reach these gates carry the matching cap.
+pub const CAP_VFS: u64 = crate::capabilities::Capability::FileSystem.bit();
+pub const CAP_NET: u64 = crate::capabilities::Capability::Network.bit();
+pub const CAP_DISPLAY: u64 = crate::capabilities::Capability::GraphicsDisplayQuery.bit();
 // CAP_DRIVER must equal the kernel Capability::Driver bit, not an independent
 // 1<<3. These service constants are tested against the PCB capability bitmap
 // (services::caps::has -> process::caps::has), which is built from
