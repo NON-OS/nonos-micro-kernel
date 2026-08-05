@@ -14,23 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod banner;
-pub mod block;
-pub mod cwd;
-pub mod dimensions;
-pub mod dur;
-pub mod grid;
-pub mod history;
-pub mod line;
-pub mod manifest;
-pub mod prompt;
-pub mod rtc;
-pub mod scrollback;
-pub mod search;
-pub mod state;
-pub mod terminal;
-pub mod theme;
-pub mod util;
-pub mod vt;
+//! Which slice of a long line is on screen.
 
-pub use terminal::Terminal;
+use super::line_chars::char_floor;
+
+/// The byte range of the line to draw, so the cursor is always visible.
+///
+/// Measured in cells but indexing bytes, so both ends are moved back to a
+/// character boundary: cutting one in half would draw the rest of the line
+/// as damage.
+pub fn window(body: &[u8], cursor: usize, cells: usize) -> (usize, usize, usize) {
+    let scroll = if cursor < cells { 0 } else { cursor - cells + 1 };
+    let end = (scroll + cells).min(body.len());
+    let start = char_floor(body, scroll);
+    let stop = char_floor(body, end).max(start);
+    (start, stop, scroll)
+}

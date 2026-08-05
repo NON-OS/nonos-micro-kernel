@@ -18,15 +18,16 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::constants::TEXT_LEFT;
 use super::draw_cursor::draw_cursor;
-use super::line_chars::char_floor;
-use super::line_text::{text, text_parts};
+use super::line_text::text_parts;
+use super::line_window::window;
 use super::metrics::Metrics;
+use super::prompt::draw_prompt;
 use super::shade::elevate;
 use super::suggestion::draw_suggestion;
 use super::syntax::{classify, Part};
 
 use crate::term::state::State;
-use crate::term::theme::{ACCENT, BLOCK_ERR, FOREGROUND, PATH, PROMPT};
+use crate::term::theme::ACCENT;
 
 pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32, m: Metrics) {
     let (adv, px) = (m.adv, m.px);
@@ -41,27 +42,13 @@ pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32, m: Metrics) 
     let total_cells = (fb.width.saturating_sub(TEXT_LEFT * 2) / adv) as usize;
     // Prompt is glyph + path + trailing space; cap the path to a third of the
     // line so a deep cwd never starves the area left to type in.
-    let cwd = state.cwd.as_bytes();
-    let take = cwd.len().min((total_cells / 3).max(1));
-    let prompt_cells = 1 + take + 1;
-    // The mark takes the colour of what the last command did. A reader who
-    // looked away while it ran learns the outcome from where they are about
-    // to type, rather than by finding the block it came from.
-    let mark = if state.last_status == 0 { PROMPT } else { BLOCK_ERR };
-    text(fb, TEXT_LEFT, y, b">", mark, adv, px);
-    text(fb, TEXT_LEFT + adv, y, &cwd[cwd.len() - take..], PATH, adv, px);
+    let prompt_cells = draw_prompt(state, fb, y, adv, px, total_cells / 3);
     // Horizontal scroll: slide a body_cells-wide window so the cursor is always
     // on screen, showing the start of the line whenever it fits.
     let body = state.line.as_bytes();
     let cursor = state.line.cursor.min(body.len());
     let body_cells = total_cells.saturating_sub(prompt_cells).max(1);
-    let scroll = if cursor < body_cells { 0 } else { cursor - body_cells + 1 };
-    let end = (scroll + body_cells).min(body.len());
-    // The window is measured in cells but indexes bytes, so both ends are
-    // moved back to a character boundary. Cutting one in half would draw the
-    // rest of the line as damage.
-    let start = char_floor(body, scroll);
-    let stop = char_floor(body, end).max(start);
+    let (start, stop, scroll) = window(body, cursor, body_cells);
     let bx = TEXT_LEFT + prompt_cells as u32 * adv;
     // Classify the whole line, not the visible window, so a word keeps its
     // colour when it scrolls in from either side.

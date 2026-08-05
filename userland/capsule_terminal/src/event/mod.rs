@@ -28,6 +28,9 @@ mod on_printable;
 mod on_tab;
 mod on_up;
 mod paste_clipboard;
+pub(crate) mod search;
+pub(crate) mod search_edit;
+mod search_place;
 
 #[cfg(feature = "nonos-autorun-selftest")]
 pub use on_enter::on_enter;

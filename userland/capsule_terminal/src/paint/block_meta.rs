@@ -17,7 +17,7 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::constants::TEXT_LEFT;
-use crate::term::block::{Block, Status};
+use crate::term::block::Block;
 use crate::term::theme::DIM;
 
 /// Size the meta is drawn at. Below the body, because it annotates a command

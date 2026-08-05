@@ -20,6 +20,7 @@ use nonos_libc::mk_kill;
 use super::accept_suggestion::accept_suggestion;
 use super::copy_line::copy_line;
 use super::paste_clipboard::paste_clipboard;
+use super::search::{search_cancel, search_step};
 use crate::jobs::JobWork;
 use crate::term::state::State;
 
@@ -30,6 +31,8 @@ const CTRL_C: u32 = 0x43;
 const CTRL_E: u32 = 0x45;
 const CTRL_K: u32 = 0x4B;
 const CTRL_L: u32 = 0x4C;
+const CTRL_R: u32 = 0x52;
+const CTRL_R_LO: u32 = 0x72;
 const CTRL_U: u32 = 0x55;
 const CTRL_V: u32 = 0x56;
 const CTRL_W: u32 = 0x57;
@@ -47,6 +50,19 @@ pub fn on_ctrl(state: &mut State, code: u32, flags: u16) -> Option<EventOutcome>
     match code {
         CTRL_V | CTRL_V_LO => Some(paste_clipboard(state)),
         CTRL_C | CTRL_C_LO if shift => Some(copy_line(state)),
+        // The same key starts a search and steps it, which is what every
+        // shell binds it to: the key is pressed again because the match on
+        // screen is not the one that was meant.
+        CTRL_R | CTRL_R_LO => {
+            search_step(state);
+            Some(EventOutcome::Repaint)
+        }
+        // Leaving a search puts the line back as it was, rather than killing
+        // a line the reader never chose to change.
+        CTRL_C | CTRL_C_LO if state.search.is_some() => {
+            search_cancel(state);
+            Some(EventOutcome::Repaint)
+        }
         CTRL_L | CTRL_L_LO => {
             state.scrollback.clear();
             state.scrollback.jump_bottom();
