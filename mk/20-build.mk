@@ -386,6 +386,7 @@ include userland/capsule_proof_io/Capsule.mk
 include userland/capsule_std_proof/Capsule.mk
 include userland/capsule_ripgrep/Capsule.mk
 include userland/capsule_sd/Capsule.mk
+include userland/capsule_flacprobe/Capsule.mk
 include userland/capsule_csview/Capsule.mk
 include userland/capsule_huniq/Capsule.mk
 include userland/capsule_tokei/Capsule.mk
@@ -413,6 +414,7 @@ include userland/toolkit/Capsule.mk
 include userland/capsule_about/Capsule.mk
 include userland/capsule_hello/Capsule.mk
 include userland/capsule_gui_demo/Capsule.mk
+include userland/capsule_game_2048/Capsule.mk
 include userland/capsule_egui_proof/Capsule.mk
 include userland/capsule_boot_splash/Capsule.mk
 include userland/capsule_calculator/Capsule.mk
@@ -815,6 +817,7 @@ nonos-mk-audio-player-smoketest-dev-test: $(proof-io_MANIFEST) $(audio_MANIFEST)
 # is what ships and what the ISO carries; do not fold this into it.
 nonos-mk-desktop-gui-prod: $(proof-io_ARTIFACTS) \
 		$(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) $(sd_ARTIFACTS) \
+		$(flacprobe_ARTIFACTS) \
 		$(csview_ARTIFACTS) \
 		$(huniq_ARTIFACTS) \
 		$(tokei_ARTIFACTS) \

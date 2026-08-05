@@ -1,0 +1,33 @@
+# NONOS userland: capsule_game_2048
+#
+# 2048 game capsule built on the vendored MIT tools-2048 logic. Shipped only
+# through the on-disk package store; opens a window and plays via arrow keys.
+
+[package]
+name = "nonos_2048"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+description = "NONOS 2048 game capsule"
+
+[[bin]]
+name = "game_2048"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_app_skeleton = { path = "../app_skeleton" }
+tools_2048 = { package = "tools-2048", path = "../upstream-src/tools-2048" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
+
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true

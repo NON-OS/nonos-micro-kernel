@@ -15,7 +15,7 @@ $(QEMU_BLK_IMG):
 # re-pack on every mtime bump while still not ordering creation before packing.
 QEMU_BLK_STORE_STAMP := $(QEMU_BLK_IMG).store.stamp
 
-$(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(egui_proof_ARTIFACTS) tools/nonos-store-pack | $(QEMU_BLK_IMG)
+$(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(game_2048_ARTIFACTS) $(egui_proof_ARTIFACTS) tools/nonos-store-pack | $(QEMU_BLK_IMG)
 	@$(NONOS_PYTHON) tools/nonos-store-pack --image $(QEMU_BLK_IMG) --lba 256 \
 		--entry /capsules/std_proof.elf=$(std-proof_BIN) \
 		--entry /capsules/std_proof.nonos_id_cert.bin=$(std-proof_CERT) \
@@ -25,6 +25,10 @@ $(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(egui_pro
 		--entry /capsules/gui_demo.nonos_id_cert.bin=$(gui_demo_CERT) \
 		--entry /capsules/gui_demo.manifest.bin=$(gui_demo_MANIFEST) \
 		--entry /capsules/gui_demo.zk_trailer.bin=$(gui_demo_ATTESTATION) \
+		--entry /capsules/game_2048.elf=$(game_2048_BIN) \
+		--entry /capsules/game_2048.nonos_id_cert.bin=$(game_2048_CERT) \
+		--entry /capsules/game_2048.manifest.bin=$(game_2048_MANIFEST) \
+		--entry /capsules/game_2048.zk_trailer.bin=$(game_2048_ATTESTATION) \
 		--entry /capsules/egui_proof.elf=$(egui_proof_BIN) \
 		--entry /capsules/egui_proof.nonos_id_cert.bin=$(egui_proof_CERT) \
 		--entry /capsules/egui_proof.manifest.bin=$(egui_proof_MANIFEST) \
