@@ -1,0 +1,17 @@
+[package]
+name = "nonos-pack"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+
+[lib]
+name = "nonos_pack"
+path = "src/lib.rs"
+
+[[bin]]
+name = "nonos-pack"
+path = "src/main.rs"
+
+[dependencies]
+nonos_capsule_sign = { path = "../../nonos-sign", package = "nonos-sign" }
