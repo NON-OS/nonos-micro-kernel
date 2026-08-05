@@ -1,0 +1,20 @@
+[package]
+name = "tools-2048"
+version = "0.4.1"
+authors = ["Antonio Mamić <antoniomamic007@gmail.com>"]
+edition = "2021"
+description = "A Rust crate that provides the core logic of the popular game 2048, along with a basic AI to play the game."
+readme = "README.md"
+repository = "https://github.com/amamic1803/tools-2048-rs"
+license = "MIT"
+keywords = ["game-logic", "game-ai", "open-source", "algorithm"]
+categories = ["games"]
+include = [
+    "/src",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE.md"
+]
+
+[profile.test]
+opt-level = 3
