@@ -65,6 +65,7 @@ pub fn spawn_file_manager_instance() -> Result<u32, SpawnError> {
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
             | Capability::Memory.bit()
+            | Capability::FileSystem.bit()
             | Capability::GraphicsDisplayQuery.bit()
             | Capability::GraphicsSurfaceCreate.bit(),
         instances: FILE_MANAGER_INSTANCES,
@@ -88,6 +89,7 @@ pub fn spawn_file_manager_capsule() -> Result<(), SpawnError> {
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
             | Capability::Memory.bit()
+            | Capability::FileSystem.bit()
             | Capability::GraphicsDisplayQuery.bit()
             | Capability::GraphicsSurfaceCreate.bit(),
         debug_tag: b"",
