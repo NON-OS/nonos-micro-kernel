@@ -20,13 +20,16 @@ use alloc::vec::Vec;
 
 /// Tell the mixnet capsule where a session's traffic is bound.
 ///
-/// Both of the exit's keys go over. The identity is where a packet is
-/// addressed and the encryption key is what the message inside it is sealed
-/// to, so neither stands in for the other.
+/// All three parts of the exit's address go over. The identity is where a
+/// packet is addressed, the encryption key is what the message inside it is
+/// sealed to, and the gateway is the only node that can hand the packet to
+/// it. None of them stands in for another, and a route that ends at the
+/// wrong gateway is answered exactly like one that arrived.
 pub fn bind_destination(id: u32, exit: &Exit) -> Result<(), ()> {
-    let mut body: Vec<u8> = Vec::with_capacity(4 + 32 + 32);
+    let mut body: Vec<u8> = Vec::with_capacity(4 + 32 + 32 + 32);
     body.extend_from_slice(&id.to_le_bytes());
     body.extend_from_slice(&exit.identity);
     body.extend_from_slice(&exit.encryption);
+    body.extend_from_slice(&exit.gateway);
     call(OP_SET_DESTINATION, &body).map(|_| ()).map_err(|_| ())
 }

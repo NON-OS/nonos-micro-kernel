@@ -75,10 +75,13 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     // one, and does not need a button that rewrites what is typed there.
     if crate::browser::net::mixnet::is_on() {
         button(fb, x, SET_Y, "Every request leaves through the mixnet");
-        button(fb, x, OFF_Y, "Exit node chosen per session");
-    } else {
+        button(fb, x, OFF_Y, "Stop routing through Nym");
+    } else if crate::browser::net::mixnet::wanted() {
         button(fb, x, SET_Y, "Set proxy (type host:port)");
         button(fb, x, OFF_Y, "Turn proxy off");
+    } else {
+        button(fb, x, SET_Y, "Set proxy (type host:port)");
+        button(fb, x, OFF_Y, "Route through Nym");
     }
 }
 
@@ -126,7 +129,20 @@ pub fn on_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
     let routed = crate::browser::net::mixnet::is_on();
     match action_at(x, y, width_of(state)) {
         Action::Set if routed => state.settings_open = false,
-        Action::Off if routed => state.settings_open = false,
+        // The one control worth having here: whether this session leaves
+        // through the mixnet at all. It is deliberate and takes effect on the
+        // next request, so nothing already in flight changes route under it.
+        Action::Off if routed => {
+            crate::browser::net::mixnet::set_wanted(false);
+            crate::browser::net::mixnet::disable();
+            state.settings_open = false;
+            state.status = String::from("direct, not anonymised");
+        }
+        Action::Off if !crate::browser::net::mixnet::wanted() => {
+            crate::browser::net::mixnet::set_wanted(true);
+            state.settings_open = false;
+            state.status = String::from("routing through Nym");
+        }
         Action::Set => {
             state.settings_open = false;
             state.address = String::from("proxy socks5://");

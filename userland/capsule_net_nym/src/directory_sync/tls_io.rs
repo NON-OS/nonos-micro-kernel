@@ -16,6 +16,7 @@
 
 use nonos_tls::{Io, SessionError};
 
+use super::budget::Budget;
 use crate::tcp_client;
 
 /// The gateway transport, seen as the byte stream a TLS session drives.
@@ -27,14 +28,34 @@ use crate::tcp_client;
 pub struct TcpIo {
     pub tcp_port: u32,
     pub stream: u32,
+    budget: Budget,
+}
+
+impl TcpIo {
+    pub fn new(tcp_port: u32, stream: u32) -> Self {
+        Self { tcp_port, stream, budget: Budget::new() }
+    }
+
+    pub fn overran(&self) -> bool {
+        self.budget.overran()
+    }
 }
 
 impl Io for TcpIo {
     fn write_all(&mut self, data: &[u8]) -> Result<(), SessionError> {
+        if self.budget.spent() {
+            return Err(SessionError::Io);
+        }
         tcp_client::send_all(self.tcp_port, self.stream, data).map_err(|_| SessionError::Io)
     }
 
     fn read(&mut self, into: &mut [u8]) -> Result<usize, SessionError> {
+        // A peer with nothing to say reads as zero bytes, not as an error, so
+        // a session waiting on a handshake that never comes keeps asking. The
+        // budget is what ends that, rather than the session's own bound.
+        if self.budget.spent() {
+            return Err(SessionError::Io);
+        }
         tcp_client::recv(self.tcp_port, self.stream, into).map_err(|_| SessionError::Io)
     }
 }

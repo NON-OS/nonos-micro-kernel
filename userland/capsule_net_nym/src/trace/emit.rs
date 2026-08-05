@@ -42,3 +42,18 @@ pub fn say_two(stage: &[u8], first: u64, second: u64) {
     let (bytes, len) = line.finish();
     mk_debug(bytes.as_ptr(), len);
 }
+
+/// Report a step alongside a slice of text something else produced.
+///
+/// The text is not ours, so it is written as bytes rather than interpreted.
+/// Control characters are replaced: a gateway is free to send anything, and
+/// one that sent an escape sequence would otherwise be writing to the log.
+pub fn say_text(stage: &[u8], body: &[u8]) {
+    let mut line = Line::new(stage);
+    line.text(b" ");
+    for &b in body {
+        line.text(&[if (0x20..0x7f).contains(&b) { b } else { b'.' }]);
+    }
+    let (bytes, len) = line.finish();
+    mk_debug(bytes.as_ptr(), len);
+}

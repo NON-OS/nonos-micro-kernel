@@ -23,7 +23,15 @@ use crate::packet::REPLAY_TAG_LEN;
 use super::gateway::Gateway;
 use super::replay::ReplayWindow;
 
-pub const RX_DEPTH: usize = 8;
+/// Messages held for a reader that has not collected them yet.
+///
+/// A response arrives as many messages, and the reader only asks between its
+/// own writes, so a whole page can queue up before anything is taken. When
+/// this fills the oldest is dropped, and dropping the oldest of a byte stream
+/// leaves a hole the far end will never resend: everything after it waits for
+/// bytes that are gone. Sized so that filling it means the reader has stopped
+/// reading, not that the answer was large.
+pub const RX_DEPTH: usize = 256;
 
 pub struct Session {
     pub owner: u32,
@@ -37,6 +45,9 @@ pub struct Session {
     /// key agreed against this, so the identity above cannot stand in for it:
     /// one names the destination, the other encrypts to it.
     pub dest_encryption: [u8; 32],
+    /// The gateway the recipient holds its session with. Only that node can
+    /// hand a packet to it, so the route out has to end there.
+    pub dest_gateway: [u8; 32],
     pub dest_id: [u8; 16],
     /// What an exit quotes to reach us again. It is ours and it is random:
     /// the exit never learns anything else about where we are, and a tag
@@ -55,6 +66,7 @@ impl Session {
             key,
             dest: [0u8; 32],
             dest_encryption: [0u8; 32],
+            dest_gateway: [0u8; 32],
             dest_id: [0u8; 16],
             sender_tag: random_tag(),
             replay: ReplayWindow::new(),
@@ -71,6 +83,26 @@ impl Session {
 
     pub fn pop(&mut self) -> Option<Vec<u8>> {
         self.rx.pop_front()
+    }
+
+    /// Take at most `limit` bytes of the next message, leaving the rest where
+    /// a later read will find it.
+    ///
+    /// A reply is whatever the far end had to say and can be larger than one
+    /// reply carries. Taking it whole or not at all meant a message that did
+    /// not fit was popped and thrown away, and it was the long ones that did
+    /// not fit: the acknowledgements and the small answers arrived, the page
+    /// bodies were destroyed one hop from the reader.
+    pub fn take(&mut self, limit: usize) -> Option<Vec<u8>> {
+        if limit == 0 {
+            return None;
+        }
+        let mut body = self.rx.pop_front()?;
+        if body.len() > limit {
+            let rest = body.split_off(limit);
+            self.rx.push_front(rest);
+        }
+        Some(body)
     }
 
     pub fn accept_replay_tag(&mut self, tag: &[u8; REPLAY_TAG_LEN]) -> bool {

@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use super::seal::{hop_delays_for, seal_one};
 use crate::ack::{build_surb_ack, FRAG_ID_BYTES};
 use crate::crypto::random::fill_random;
-use crate::message::prepare;
+use crate::message::prepare_built;
 use crate::payload::build_payload;
 use crate::sphinx::constants::DESTINATION_ADDRESS_LENGTH;
 
@@ -28,6 +28,11 @@ pub struct Addressed<'a> {
     /// Where the packet goes, and what the message inside it is sealed to.
     pub destination: &'a [u8; DESTINATION_ADDRESS_LENGTH],
     pub destination_encryption: &'a [u8; 32],
+    /// The gateway the recipient is reachable through. The route out has to
+    /// end there: no other node holds a session with it, and one that does
+    /// not will still answer every acknowledgement while dropping the
+    /// message.
+    pub destination_gateway: &'a [u8; 32],
     /// Our own address, for the acknowledgements that come back.
     pub our_identity: &'a [u8; DESTINATION_ADDRESS_LENGTH],
     pub ack_key: &'a [u8; 16],
@@ -45,12 +50,27 @@ pub struct Addressed<'a> {
 /// own acknowledgement and its own key agreement, so two packets of the same
 /// message share nothing an observer could group them by.
 pub fn encode_message(addressed: &Addressed<'_>, request: &[u8]) -> Option<Vec<Vec<u8>>> {
+    let message =
+        crate::message::repliable_data(addressed.sender_tag, addressed.reply_surbs, request);
+    encode_built(addressed, message)
+}
+
+/// Turn a message that is already built into the packets that carry it.
+///
+/// A request is one kind of message. A top up of reply blocks is another, and
+/// travels identically: same padding, same splitting, same per packet
+/// acknowledgement and key agreement. Only the building differs.
+pub fn encode_built(addressed: &Addressed<'_>, message: Vec<u8>) -> Option<Vec<Vec<u8>>> {
     let mut set_seed = [0u8; 4];
     fill_random(&mut set_seed).ok()?;
     // The top bit is the header's own marker, so the id stays below it.
     let set_id = i32::from_be_bytes(set_seed) & 0x7fff_ffff;
 
-    let prepared = prepare(addressed.sender_tag, addressed.reply_surbs, request, set_id)?;
+    let Some(prepared) = prepare_built(message, set_id) else {
+        crate::trace::say(b"build: could not split the message into packets");
+        return None;
+    };
+    crate::trace::say_num(b"build: fragments", prepared.fragments.len() as u64);
     let mut out = Vec::with_capacity(prepared.fragments.len());
 
     for (index, fragment) in prepared.fragments.iter().enumerate() {
@@ -58,18 +78,34 @@ pub fn encode_message(addressed: &Addressed<'_>, request: &[u8]) -> Option<Vec<V
         frag_id[..4].copy_from_slice(&set_id.to_be_bytes());
         frag_id[4] = (index + 1) as u8;
 
-        let home_delays = hop_delays_for(addressed.home.len())?;
-        let ack = build_surb_ack(
+        let Some(home_delays) = hop_delays_for(addressed.home.len()) else {
+            crate::trace::say(b"build: no delays for the route home");
+            return None;
+        };
+        let ack = match build_surb_ack(
             addressed.home,
             &home_delays,
             addressed.our_identity,
             addressed.ack_key,
             frag_id,
-        )
-        .ok()?;
+        ) {
+            Ok(ack) => ack,
+            Err(_) => {
+                crate::trace::say(b"build: could not build the acknowledgement");
+                return None;
+            }
+        };
 
-        let payload = build_payload(&ack, addressed.destination_encryption, fragment).ok()?;
-        out.push(seal_one(addressed.destination, &payload)?);
+        let Ok(payload) = build_payload(&ack, addressed.destination_encryption, fragment) else {
+            crate::trace::say(b"build: could not seal the payload");
+            return None;
+        };
+        let Some(packet) = seal_one(addressed.destination, addressed.destination_gateway, &payload)
+        else {
+            crate::trace::say_num(b"build: could not seal the packet, bytes", payload.len() as u64);
+            return None;
+        };
+        out.push(packet);
     }
     Some(out)
 }

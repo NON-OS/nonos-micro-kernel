@@ -16,7 +16,7 @@
 
 use alloc::vec::Vec;
 
-use super::types::{SENDER_TAG_SIZE, TAG_DATA, TYPE_REPLIABLE};
+use super::types::{SENDER_TAG_SIZE, TAG_ADDITIONAL_SURBS, TAG_DATA, TYPE_REPLIABLE};
 
 /// Build a repliable data message.
 ///
@@ -42,6 +42,27 @@ pub fn repliable_data(
         out.extend_from_slice(surb);
     }
     out.extend_from_slice(message);
+    out
+}
+
+/// Build a message carrying nothing but reply blocks.
+///
+/// A recipient keeps a reserve it will not spend and stops answering once it
+/// is down to it, saying so rather than going quiet. This is the answer to
+/// that: no request, no data, just more ways home.
+pub fn repliable_additional_surbs(
+    sender_tag: &[u8; SENDER_TAG_SIZE],
+    reply_surbs: &[Vec<u8>],
+) -> Vec<u8> {
+    let surb_bytes: usize = reply_surbs.iter().map(|s| s.len()).sum();
+    let mut out = Vec::with_capacity(1 + SENDER_TAG_SIZE + 1 + 4 + surb_bytes);
+    out.push(TYPE_REPLIABLE);
+    out.extend_from_slice(sender_tag);
+    out.push(TAG_ADDITIONAL_SURBS);
+    out.extend_from_slice(&(reply_surbs.len() as u32).to_be_bytes());
+    for surb in reply_surbs {
+        out.extend_from_slice(surb);
+    }
     out
 }
 

@@ -16,7 +16,9 @@
 
 mod call;
 mod route;
+mod wanted;
 mod wire;
 
 pub use route::{disable, enable, is_on};
+pub use wanted::{set_wanted, wanted};
 pub use wire::{close, connect, open, recv, send};

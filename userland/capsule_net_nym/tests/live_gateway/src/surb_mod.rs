@@ -10,3 +10,10 @@ pub mod bytes;
 
 pub use bytes::surb_bytes;
 pub use types::{ReplySurb, SURB_KEY_BYTES};
+
+// The builder needs the key store and the topology, which do not stand alone,
+// so it is taken with the shims the harness already provides.
+#[path = "../../../src/surb/build.rs"]
+pub mod build;
+
+pub use build::build_surb;

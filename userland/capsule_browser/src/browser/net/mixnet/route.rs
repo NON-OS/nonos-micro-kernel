@@ -26,13 +26,16 @@ pub struct Route {
     pub socks_port: u32,
     /// Bytes the proxy has answered that the reader has not taken yet.
     pub pending: Vec<u8>,
+    /// The proxy has said the far end finished, so no further asking will
+    /// produce anything.
+    pub closed: bool,
 }
 
 static ROUTE: Mutex<Option<Route>> = Mutex::new(None);
 
 /// Send everything through `net.socks5` from now on.
 pub fn enable(socks_port: u32) {
-    *ROUTE.lock() = Some(Route { socks_port, pending: Vec::new() });
+    *ROUTE.lock() = Some(Route { socks_port, pending: Vec::new(), closed: false });
 }
 
 /// Go back to reaching hosts directly.

@@ -35,6 +35,10 @@ pub enum Event {
     /// Open a tunnel to this destination, then report the result with
     /// [`super::Conn::opened`].
     Open(Dest),
+    /// Carry these bytes to the exit and bring back whatever it answers.
+    /// The handshake is over, so nothing here is parsed: the stream belongs
+    /// to whatever protocol the client and the far end agreed on.
+    Relay,
     /// Close without a reply: malformed, or not a SOCKS5 client at all.
     Close,
 }

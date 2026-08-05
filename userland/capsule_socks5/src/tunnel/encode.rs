@@ -16,22 +16,25 @@
 
 use super::constants::{PROTOCOL_VERSION, REQ_CONNECT, REQ_SEND};
 use super::hostport::write_hostport;
+use super::provider::open_envelope;
 use crate::conn::Dest;
 
 /// Encode a connect request naming `dest`, with no return address: replies
 /// come back through reply blocks, so nothing here identifies the sender.
 /// Returns the byte count, or `None` if `out` is too small for the address.
 pub fn encode_connect(conn_id: u64, dest: &Dest, out: &mut [u8]) -> Option<usize> {
-    // [version][flag][conn_id:8][addr_len:2][addr]
-    if out.len() < 2 + 8 + 2 {
+    // [envelope][version][flag][conn_id:8][addr_len:2][addr]
+    let base = open_envelope(out)?;
+    let body = out.get_mut(base..)?;
+    if body.len() < 2 + 8 + 2 {
         return None;
     }
-    out[0] = PROTOCOL_VERSION;
-    out[1] = REQ_CONNECT;
-    out[2..10].copy_from_slice(&conn_id.to_be_bytes());
-    let addr_len = write_hostport(dest, out.get_mut(12..)?)?;
-    out[10..12].copy_from_slice(&(addr_len as u16).to_be_bytes());
-    Some(12 + addr_len)
+    body[0] = PROTOCOL_VERSION;
+    body[1] = REQ_CONNECT;
+    body[2..10].copy_from_slice(&conn_id.to_be_bytes());
+    let addr_len = write_hostport(dest, body.get_mut(12..)?)?;
+    body[10..12].copy_from_slice(&(addr_len as u16).to_be_bytes());
+    Some(base + 12 + addr_len)
 }
 
 /// Encode a send request carrying `data` for `conn_id` at stream position
@@ -45,16 +48,18 @@ pub fn encode_send(
     data: &[u8],
     out: &mut [u8],
 ) -> Option<usize> {
-    // [version][flag][conn_id:8][closed:1][seq:8][data]
+    // [envelope][version][flag][conn_id:8][closed:1][seq:8][data]
+    let base = open_envelope(out)?;
+    let body = out.get_mut(base..)?;
     let total = 2 + 8 + 1 + 8 + data.len();
-    if out.len() < total {
+    if body.len() < total {
         return None;
     }
-    out[0] = PROTOCOL_VERSION;
-    out[1] = REQ_SEND;
-    out[2..10].copy_from_slice(&conn_id.to_be_bytes());
-    out[10] = closed as u8;
-    out[11..19].copy_from_slice(&seq.to_be_bytes());
-    out[19..total].copy_from_slice(data);
-    Some(total)
+    body[0] = PROTOCOL_VERSION;
+    body[1] = REQ_SEND;
+    body[2..10].copy_from_slice(&conn_id.to_be_bytes());
+    body[10] = closed as u8;
+    body[11..19].copy_from_slice(&seq.to_be_bytes());
+    body[19..total].copy_from_slice(data);
+    Some(base + total)
 }

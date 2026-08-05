@@ -21,7 +21,9 @@ const SERVICE: &[u8] = b"net.dns";
 const MAGIC_NDNS: u32 = 0x4E44_4E53;
 const OP_RESOLVE_A: u16 = 2;
 const HDR: usize = 20;
-const TIMEOUT_MS: u64 = 6_000;
+/// A lookup runs on the serve loop, so it is bounded by what a caller waits
+/// for a reply rather than by what a resolver might eventually manage.
+const TIMEOUT_MS: u64 = 2_000;
 
 /// Resolve `host` to one IPv4 address through `net.dns`.
 ///

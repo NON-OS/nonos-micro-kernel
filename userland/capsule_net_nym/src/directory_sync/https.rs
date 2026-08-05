@@ -35,18 +35,30 @@ const MAX_RESPONSE: usize = 512 * 1024;
 /// this fetch is anonymous: it happens before there is a mixnet to be
 /// anonymous over.
 pub fn fetch_tls(tcp_port: u32, host: &str, path: &str) -> Result<Vec<u8>, u16> {
+    crate::trace::say(b"fetch: resolving");
     let ip = resolve(host.as_bytes()).ok_or(21u16)?;
+    crate::trace::say(b"fetch: connecting");
     let stream = tcp_client::connect(tcp_port, ip, HTTPS_PORT)?;
     tcp_client::wait_established(tcp_port, stream)?;
+    crate::trace::say(b"fetch: handshaking");
 
     let request = format!(
         "GET {} HTTP/1.1\r\nHost: {}\r\nUser-Agent: nonos-nym\r\nAccept: application/json\r\nConnection: close\r\n\r\n",
         path, host
     );
-    let mut io = TcpIo { tcp_port, stream };
+    let mut io = TcpIo::new(tcp_port, stream);
     let raw = exchange(&mut io, host, request.as_bytes(), rtc_now(), MAX_RESPONSE);
+    let stage = match &raw {
+        Ok(body) => 0u64 + body.len() as u64,
+        Err(nonos_tls::SessionError::Init) => 1,
+        Err(nonos_tls::SessionError::Io) => 2,
+        Err(nonos_tls::SessionError::Handshake) => 3,
+        Err(nonos_tls::SessionError::Certificate) => 4,
+        Err(nonos_tls::SessionError::TooLarge) => 5,
+    };
+    crate::trace::say_two(b"fetch: ok-len-or-err", stage, io.overran() as u64);
     let _ = tcp_client::close(tcp_port, stream);
-    let body = raw.map_err(|_| 20u16)?;
+    let body = raw.map_err(|_| if io.overran() { 22u16 } else { 20u16 })?;
     // A short answer is a redirect or an error page, not a node list, and
     // parsing it would find no objects and report an empty directory rather
     // than a wrong address.

@@ -22,7 +22,7 @@ use nonos_libc::mk_ipc_call_timeout;
 /// is generous next to a direct socket call.
 const CALL_MS: u64 = 15_000;
 /// Largest single answer worth taking from the proxy.
-const REPLY_MAX: usize = 8192;
+const REPLY_MAX: usize = 36 * 1024;
 
 /// Hand raw SOCKS bytes to `net.socks5` and return whatever it says back.
 ///

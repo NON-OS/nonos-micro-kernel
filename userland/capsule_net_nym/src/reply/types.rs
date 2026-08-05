@@ -16,13 +16,6 @@
 
 //! Offsets a reply is read at.
 
-use crate::ack::PADDED_ADDRESS_BYTES;
-use crate::sphinx::constants::{ACK_PAYLOAD_SIZE, HEADER_SIZE};
-
-/// Bytes the acknowledgement takes at the front of a reply, before anything
-/// meant for us begins.
-pub const ACK_SPAN: usize = PADDED_ADDRESS_BYTES + HEADER_SIZE + ACK_PAYLOAD_SIZE;
-
 /// Bytes of the tag naming which reply block a reply came back on. It is a
 /// digest of that block's key, so it identifies one of ours to us and nothing
 /// to anyone else.
@@ -33,3 +26,12 @@ pub const TYPE_REPLY: u8 = 2;
 
 /// Reply content that carries data, rather than a request for more blocks.
 pub const TAG_REPLY_DATA: u8 = 0;
+
+/// Reply content asking for more reply blocks. A recipient holds a reserve
+/// it will not spend, so once its supply runs low it says so instead of
+/// answering, and stays silent until it is topped up.
+pub const TAG_REPLY_SURB_REQUEST: u8 = 1;
+
+/// Bytes of the address a top up is sent to: identity, encryption key and
+/// the gateway it is reachable through.
+pub const RECIPIENT_BYTES: usize = 96;

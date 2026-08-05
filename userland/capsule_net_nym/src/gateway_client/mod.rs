@@ -35,3 +35,4 @@ pub use binary::{
 pub use candidate::connect_candidate;
 pub use ops::{close, connect, ping, recv, send};
 pub use trace::directory as trace_directory;
+pub use ws::{Frame, E_CLOSED as E_RECV_CLOSED, E_TIMEOUT as E_RECV_TIMEOUT};

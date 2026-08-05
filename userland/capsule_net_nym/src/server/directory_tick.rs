@@ -16,19 +16,23 @@
 
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-use crate::directory_sync::sync_live;
+use super::directory_outcome::record;
+use crate::directory_sync::sync_step;
 use crate::setup;
 use crate::state::directory_gateway_count;
 use crate::trace;
 
 /// Idle ticks to sit out before trying again, doubling on each failure.
-static SKIP: AtomicUsize = AtomicUsize::new(0);
-static BACKOFF: AtomicUsize = AtomicUsize::new(1);
+pub(super) static SKIP: AtomicUsize = AtomicUsize::new(0);
+/// Ticks to wait after the first failure. It starts high rather than at one
+/// because every attempt costs the capsule a pause, and an attempt that just
+/// failed is unlikely to succeed on the next tick.
+pub(super) static BACKOFF: AtomicUsize = AtomicUsize::new(16);
 
 /// Ceiling on the wait. The directory is what makes the mixnet usable, so
 /// giving up on it entirely would leave the capsule permanently degraded, but
 /// retrying at tick rate against an API that is down helps nobody.
-const MAX_BACKOFF: usize = 256;
+pub(super) const MAX_BACKOFF: usize = 256;
 
 /// Fetch the node list while nothing is asking to be served.
 ///
@@ -55,16 +59,6 @@ pub fn directory_tick() {
         return;
     }
 
-    match sync_live(tcp_port) {
-        Ok(count) => {
-            trace::say_num(b"directory synced, nodes", count as u64);
-            BACKOFF.store(1, Ordering::Relaxed);
-        }
-        Err(code) => {
-            trace::say_num(b"directory sync failed, code", code as u64);
-            let wait = BACKOFF.load(Ordering::Relaxed);
-            SKIP.store(wait, Ordering::Relaxed);
-            BACKOFF.store((wait * 2).min(MAX_BACKOFF), Ordering::Relaxed);
-        }
-    }
+    trace::say(b"directory: fetching");
+    record(sync_step(tcp_port));
 }

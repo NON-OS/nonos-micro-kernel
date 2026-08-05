@@ -63,6 +63,6 @@ pub fn build_surb_ack(
     let mut out = Vec::with_capacity(PADDED_ADDRESS_BYTES);
     out.extend_from_slice(&first_hop.address[..PADDED_ADDRESS_BYTES.min(first_hop.address.len())]);
     out.resize(PADDED_ADDRESS_BYTES, 0);
-    out.extend_from_slice(&packet.to_bytes().ok_or(CryptoError::Kdf)?);
+    out.extend_from_slice(&packet.to_bytes_sized(ACK_PAYLOAD_SIZE).ok_or(CryptoError::Kdf)?);
     Ok(out)
 }

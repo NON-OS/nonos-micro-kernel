@@ -38,7 +38,15 @@ pub fn prepare(
     request: &[u8],
     set_id: i32,
 ) -> Option<Prepared> {
-    let message = repliable_data(sender_tag, reply_surbs, request);
+    prepare_built(repliable_data(sender_tag, reply_surbs, request), set_id)
+}
+
+/// Split a message that is already built.
+///
+/// Not every message carries a request. A top up of reply blocks is a message
+/// in its own right and travels the same way, so the splitting is shared and
+/// only the building differs.
+pub fn prepare_built(message: Vec<u8>, set_id: i32) -> Option<Prepared> {
     let padded = pad_to_packets(message, PLAINTEXT_PER_PACKET)?;
 
     let total = padded.len() / PLAINTEXT_PER_PACKET;

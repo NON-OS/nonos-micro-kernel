@@ -49,6 +49,12 @@ impl Conn {
     /// Feed handshake bytes and advance. A client flooding past the
     /// accumulator closes the connection rather than growing it.
     pub fn on_client(&mut self, data: &[u8]) -> Event {
+        // A relaying connection has no handshake left to accumulate. Its
+        // bytes belong to the tunnel, and holding them here would both
+        // corrupt the stream and fill a buffer sized for a handshake.
+        if self.phase == Phase::Relaying {
+            return Event::Relay;
+        }
         let room = ACC_MAX - self.len;
         if data.len() > room {
             self.phase = Phase::Closed;

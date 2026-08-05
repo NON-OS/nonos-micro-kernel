@@ -21,6 +21,13 @@ use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::state::TABLE;
 
+/// How long a caller's read is allowed to hold the server open on an empty
+/// link. A mixnet round trip runs to seconds, so a read that waited for one
+/// would stop the capsule answering anyone else for that long. The idle pump
+/// is what actually catches a late reply; this only saves a caller whose
+/// answer is already on its way.
+const CLIENT_WAIT_MS: i64 = 250;
+
 pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     let session_id = match u32_at(body, 0) {
         Ok(id) => id,
@@ -29,7 +36,7 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     if deliver_queued(pid, req, session_id, tx) {
         return;
     }
-    drain_stream();
+    drain_stream(CLIENT_WAIT_MS);
     if deliver_queued(pid, req, session_id, tx) {
         return;
     }
@@ -41,7 +48,11 @@ fn deliver_queued(pid: u32, req: &Request, id: u32, tx: &mut [u8]) -> bool {
         respond(pid, OP_RECV, E_BAD_LEN, req.request_id, 0, tx);
         return true;
     }
-    let msg = TABLE.lock().with_mut(pid, id, |s| s.pop());
+    // Ask for only what will fit. The rest stays queued rather than being
+    // taken and dropped, so a long answer arrives across several reads
+    // instead of not at all.
+    let room = tx.len().saturating_sub(20);
+    let msg = TABLE.lock().with_mut(pid, id, |s| s.take(room));
     match msg {
         Some(Some(body)) if 20 + body.len() <= tx.len() => {
             tx[20..20 + body.len()].copy_from_slice(&body);

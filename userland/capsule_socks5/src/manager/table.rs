@@ -23,7 +23,7 @@ pub(super) struct Slot {
     pub(super) socket: u32,
     /// The next stream position to stamp on a send for this connection. Nym send
     /// requests carry a sequence so the exit can reassemble a reordered stream.
-    seq: u64,
+    pub(super) seq: u64,
     pub(super) used: bool,
 }
 

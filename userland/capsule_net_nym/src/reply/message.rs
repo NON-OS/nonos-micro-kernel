@@ -16,22 +16,54 @@
 
 //! The message a reassembled reply turns out to be.
 
-use super::types::{TAG_REPLY_DATA, TYPE_REPLY};
+use super::types::{RECIPIENT_BYTES, TAG_REPLY_DATA, TAG_REPLY_SURB_REQUEST, TYPE_REPLY};
 use crate::message::unpad;
 
-/// Strip the message layer and hand back what was actually sent.
+/// What a reply was.
+pub enum Reply<'a> {
+    /// Bytes for whoever asked.
+    Data(&'a [u8]),
+    /// The far end is low on reply blocks and cannot answer until it has
+    /// more. It names where to send them and how many it wants.
+    SurbRequest { recipient: [u8; RECIPIENT_BYTES], amount: u32 },
+}
+
+/// Strip the message layer and say what was actually sent.
 ///
 /// A reply names its own type and content, and both are checked rather than
 /// skipped: a message that says it is something else has either been
 /// tampered with or belongs to a protocol this does not speak, and reading
 /// past the tags would hand its body on as though it were ours.
-pub fn reply_body(reassembled: &[u8]) -> Option<&[u8]> {
+pub fn reply_message(reassembled: &[u8]) -> Option<Reply<'_>> {
     let message = unpad(reassembled)?;
-    if message.len() < 2 {
+    if message.len() < 2 || message[0] != TYPE_REPLY {
         return None;
     }
-    if message[0] != TYPE_REPLY || message[1] != TAG_REPLY_DATA {
-        return None;
+    match message[1] {
+        TAG_REPLY_DATA => Some(Reply::Data(&message[2..])),
+        TAG_REPLY_SURB_REQUEST => {
+            let body = &message[2..];
+            if body.len() < RECIPIENT_BYTES + 4 {
+                return None;
+            }
+            let mut recipient = [0u8; RECIPIENT_BYTES];
+            recipient.copy_from_slice(&body[..RECIPIENT_BYTES]);
+            let amount = u32::from_be_bytes([
+                body[RECIPIENT_BYTES],
+                body[RECIPIENT_BYTES + 1],
+                body[RECIPIENT_BYTES + 2],
+                body[RECIPIENT_BYTES + 3],
+            ]);
+            Some(Reply::SurbRequest { recipient, amount })
+        }
+        _ => None,
     }
-    Some(&message[2..])
+}
+
+/// The data of a reply, for callers that only handle that.
+pub fn reply_body(reassembled: &[u8]) -> Option<&[u8]> {
+    match reply_message(reassembled)? {
+        Reply::Data(body) => Some(body),
+        Reply::SurbRequest { .. } => None,
+    }
 }

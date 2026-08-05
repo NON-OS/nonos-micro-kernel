@@ -18,7 +18,7 @@ use alloc::vec::Vec;
 
 use super::delays::hop_delays;
 use super::mix_packet::frame_mix_packet;
-use super::route::sphinx_route;
+use super::route_to::route_to;
 use crate::crypto::random::fill_random;
 use crate::sphinx::constants::{DESTINATION_ADDRESS_LENGTH, PACKET_VERSION};
 use crate::sphinx::node::Destination;
@@ -29,10 +29,14 @@ use crate::sphinx::packet::build_packet;
 /// The route is drawn per packet rather than per message. Two packets of the
 /// same message then share no path, which is what stops a mix that sees both
 /// from grouping them.
-pub fn seal_one(destination: &[u8; DESTINATION_ADDRESS_LENGTH], payload: &[u8]) -> Option<Vec<u8>> {
+pub fn seal_one(
+    destination: &[u8; DESTINATION_ADDRESS_LENGTH],
+    gateway_identity: &[u8; 32],
+    payload: &[u8],
+) -> Option<Vec<u8>> {
     let mut seed = [0u8; 32];
     fill_random(&mut seed).ok()?;
-    let route = sphinx_route(&seed)?;
+    let route = route_to(&seed, gateway_identity)?;
     let delays = hop_delays(&seed)?;
     let mut secret = [0u8; 32];
     fill_random(&mut secret).ok()?;

@@ -14,13 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::directory_sync::fetch_exit;
+use super::find_exit::find_exit;
 use crate::protocol::{E_NO_ROUTE, E_OK, OP_GET_EXIT};
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
-use crate::setup;
-use crate::topology::{self, Role};
-use crate::trace;
 
 /// Hand back an exit taken from the directory.
 ///
@@ -39,11 +36,9 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         0
     };
 
-    let Some(exit) = nth_exit(index) else {
-        trace::say_num(b"exit lookup failed at index", index as u64);
+    let Some(exit) = find_exit(index) else {
         return respond(pid, OP_GET_EXIT, E_NO_ROUTE, req.request_id, 0, tx);
     };
-    trace::say_num(b"exit found at index", index as u64);
     if tx.len() < 20 + 96 {
         return respond(pid, OP_GET_EXIT, E_NO_ROUTE, req.request_id, 0, tx);
     }
@@ -51,12 +46,4 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     tx[52..84].copy_from_slice(&exit.encryption);
     tx[84..116].copy_from_slice(&exit.gateway);
     respond(pid, OP_GET_EXIT, E_OK, req.request_id, 96, tx);
-}
-
-/// The exit at `index` among those the directory lists, asked directly for
-/// the requester it runs.
-fn nth_exit(index: usize) -> Option<crate::directory_sync::ExitAddress> {
-    let nodes = topology::snapshot().ok()?;
-    let node = nodes.iter().filter(|n| n.role == Role::ExitGateway).nth(index)?;
-    fetch_exit(setup::tcp_port(), node.ip, node.identity)
 }

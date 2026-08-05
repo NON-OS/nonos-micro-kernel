@@ -14,11 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-/// Strip the padding by finding the trailing 0x01 marker.
+use crate::sphinx::constants::{PAYLOAD_OVERHEAD_SIZE, SECURITY_PARAMETER};
+
+/// Recover the message from a fully unwrapped payload.
+///
+/// The leading zeros are checked rather than skipped. They are the only
+/// evidence the last layer came off under the right key, so a payload that
+/// does not carry them is noise that happened to be the right length, and
+/// reading a message out of it would mean reading whatever an attacker sent.
 pub fn unpad_payload(padded: &[u8]) -> Option<&[u8]> {
-    let end = padded.iter().rposition(|b| *b == 0x01)?;
-    if padded[end + 1..].iter().any(|b| *b != 0) {
+    if padded.len() < PAYLOAD_OVERHEAD_SIZE {
         return None;
     }
-    Some(&padded[..end])
+    if padded[..SECURITY_PARAMETER].iter().any(|b| *b != 0) {
+        return None;
+    }
+    let body = &padded[SECURITY_PARAMETER..];
+    let end = body.iter().rposition(|b| *b == 0x01)?;
+    if body[end + 1..].iter().any(|b| *b != 0) {
+        return None;
+    }
+    Some(&body[..end])
 }

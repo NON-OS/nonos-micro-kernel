@@ -41,10 +41,18 @@ pub fn send(tcp_port: u32, gateway: Gateway, payload: &[u8]) -> Result<(), u16> 
     }
 }
 
-pub fn recv(tcp_port: u32, gateway: Gateway, out: &mut [u8]) -> Result<usize, u16> {
+pub fn recv(
+    tcp_port: u32,
+    gateway: Gateway,
+    out: &mut [u8],
+    wait_ms: i64,
+) -> Result<ws::Frame, u16> {
     match gateway.transport {
-        Transport::RawTcp => tcp_client::recv(tcp_port, gateway.stream, out),
-        Transport::WebSocket => ws::recv_binary(tcp_port, gateway.stream, out),
+        // A raw link carries the same blobs with no framing of its own, so
+        // everything on it is binary by construction.
+        Transport::RawTcp => tcp_client::recv(tcp_port, gateway.stream, out)
+            .map(|len| ws::Frame { len, text: false }),
+        Transport::WebSocket => ws::recv_binary(tcp_port, gateway.stream, out, wait_ms),
     }
 }
 

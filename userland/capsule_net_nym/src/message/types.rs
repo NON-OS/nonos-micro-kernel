@@ -24,5 +24,9 @@ pub const TYPE_REPLIABLE: u8 = 1;
 /// tops up the far end's supply of reply surbs.
 pub const TAG_DATA: u8 = 0;
 
+/// Content tag for a message carrying nothing but reply blocks, sent when the
+/// far end has asked for more.
+pub const TAG_ADDITIONAL_SURBS: u8 = 1;
+
 /// Bytes of the tag a far end quotes to reach us again.
 pub const SENDER_TAG_SIZE: usize = 16;

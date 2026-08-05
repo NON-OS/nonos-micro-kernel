@@ -21,11 +21,15 @@
 //! same node records, so the network view is what the network currently is.
 
 pub(super) mod base58;
+mod data_span;
 pub(super) mod field;
+mod find_array;
 mod node;
+mod node_objects;
 mod objects;
 #[cfg(test)]
 mod tests;
 
 pub use node::parse_node;
+pub use node_objects::node_objects;
 pub use objects::objects;

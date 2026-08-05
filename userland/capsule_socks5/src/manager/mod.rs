@@ -22,6 +22,7 @@
 //! refuses a new client rather than growing without bound.
 
 mod lookup;
+mod seq;
 mod table;
 
 pub use table::{Manager, MAX_CONNS};

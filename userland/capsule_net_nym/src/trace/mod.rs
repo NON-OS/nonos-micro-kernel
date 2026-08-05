@@ -24,4 +24,4 @@
 mod emit;
 mod write;
 
-pub use emit::{say, say_num, say_two};
+pub use emit::{say, say_num, say_text, say_two};

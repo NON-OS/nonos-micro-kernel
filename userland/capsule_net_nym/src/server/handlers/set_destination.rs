@@ -21,7 +21,8 @@ use crate::server::respond::respond;
 use crate::state::TABLE;
 
 /// Bind a session to a Nym destination: session id, the exit's 32-byte
-/// identity, then its 32-byte encryption key.
+/// identity, its 32-byte encryption key, then the 32-byte identity of the
+/// gateway it is reachable through.
 ///
 /// Both keys are needed and neither substitutes for the other. The identity
 /// is where the packet is addressed; the encryption key is what the message
@@ -32,7 +33,7 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         Ok(id) => id,
         Err(e) => return respond(pid, OP_SET_DESTINATION, e, req.request_id, 0, tx),
     };
-    if body.len() != 4 + 32 + 32 {
+    if body.len() != 4 + 32 + 32 + 32 {
         return respond(pid, OP_SET_DESTINATION, E_BAD_LEN, req.request_id, 0, tx);
     }
     let mut table = TABLE.lock();
@@ -47,6 +48,7 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         .with_mut(pid, id, |s| {
             s.dest.copy_from_slice(&body[4..36]);
             s.dest_encryption.copy_from_slice(&body[36..68]);
+            s.dest_gateway.copy_from_slice(&body[68..100]);
             s.dest_id = [0u8; 16];
             E_OK
         })

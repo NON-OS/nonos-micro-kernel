@@ -29,6 +29,7 @@ pub enum OpenOutcome {
 /// a mixnet round trip is deliberately slow, and holding the SOCKS handshake
 /// open across it would stall the client on a path built to add delay.
 pub fn open_tunnel(conn_id: u64, dest: &Dest) -> OpenOutcome {
+    super::trace::destination(dest);
     if open_session().is_none() {
         super::trace::open_failed(b"no session", 0);
         return OpenOutcome::NoRoute;

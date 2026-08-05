@@ -25,6 +25,16 @@ const PROXY: &[u8] = b"net.socks5";
 /// the same either way. A proxy that cannot carry a request fails it rather
 /// than falling back, since reverting quietly is the disclosure.
 pub fn route_mixnet() {
+    // The reader can say they do not want this session hidden. Honouring it
+    // here, before a route is taken, is what makes it a choice rather than a
+    // fallback: nothing reverts on failure, and a request the mixnet cannot
+    // carry still fails instead of quietly going direct.
+    if !mixnet::wanted() {
+        if mixnet::is_on() {
+            mixnet::disable();
+        }
+        return;
+    }
     if mixnet::is_on() {
         return;
     }

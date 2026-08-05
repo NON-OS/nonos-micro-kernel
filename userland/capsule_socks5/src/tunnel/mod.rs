@@ -37,6 +37,7 @@ mod constants;
 mod decode;
 mod encode;
 mod hostport;
+mod provider;
 mod writer;
 
 pub use constants::{
@@ -44,3 +45,5 @@ pub use constants::{
 };
 pub use decode::{decode_response, Response};
 pub use encode::{encode_connect, encode_send};
+pub use hostport::write_hostport;
+pub use provider::{ENVELOPE_BYTES, INTERFACE_VERSION, TAG_PROVIDER_DATA};

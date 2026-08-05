@@ -22,7 +22,10 @@ use core::sync::atomic::{AtomicU32, Ordering};
 use nonos_libc::mk_ipc_call_timeout;
 
 /// Longest reply worth accepting from the mixnet capsule.
-const REPLY_MAX: usize = 4096;
+/// Largest answer worth taking from the mixnet capsule in one read. It has
+/// to be at least what that capsule will hand over at once, or a long reply
+/// is refused here after surviving the whole network.
+const REPLY_MAX: usize = 34 * 1024;
 
 /// How long to wait before giving up on the mixnet capsule.
 ///

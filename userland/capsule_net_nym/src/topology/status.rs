@@ -33,7 +33,7 @@ pub fn current() -> TopologyStatus {
     if meta.provenance == Provenance::Image {
         return TopologyStatus::Ready;
     }
-    if crate::state::trusted_authority(&meta.issuer) != Some(true) {
+    if !super::admissible::admissible(meta, crate::state::trusted_authority) {
         return TopologyStatus::UntrustedAuthority;
     }
     TopologyStatus::Ready

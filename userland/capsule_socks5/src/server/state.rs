@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::clients::Clients;
+use super::inbox::Inbox;
 use crate::manager::Manager;
 use spin::Mutex;
 
@@ -27,11 +28,13 @@ use spin::Mutex;
 pub struct Server {
     pub clients: Clients,
     pub manager: Manager,
+    pub inbox: Inbox,
 }
 
 pub static SERVER: Mutex<Option<Server>> = Mutex::new(None);
 
 /// Reset the server, discarding every handshake in flight.
 pub fn reset() {
-    *SERVER.lock() = Some(Server { clients: Clients::new(), manager: Manager::new() });
+    *SERVER.lock() =
+        Some(Server { clients: Clients::new(), manager: Manager::new(), inbox: Inbox::default() });
 }

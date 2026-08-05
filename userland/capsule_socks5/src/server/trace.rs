@@ -99,3 +99,68 @@ fn write_u64(out: &mut [u8], mut v: u64) -> usize {
     }
     k
 }
+
+/// Say where a tunnel was asked to connect, as the exit is asked for it.
+///
+/// The request the exit receives is an ASCII host and port, and everything
+/// upstream of it is guesswork without knowing what that string actually
+/// said. A destination that is not what the client typed points at this side
+/// of the proxy rather than at the network.
+pub fn destination(dest: &crate::conn::Dest) {
+    let mut host = [0u8; 288];
+    let Some(len) = crate::tunnel::write_hostport(dest, &mut host) else {
+        return say(b"[SOCKS5] connect: destination will not render\n");
+    };
+    let mut line = [0u8; 320];
+    let mut n = 0;
+    for &b in b"[SOCKS5] connect " {
+        line[n] = b;
+        n += 1;
+    }
+    for &b in &host[..len] {
+        line[n] = b;
+        n += 1;
+    }
+    line[n] = b'\n';
+    say(&line[..n + 1]);
+}
+
+/// Report what the exit said back, so a reply that arrives but does not parse
+/// is told apart from one that never came.
+pub fn reply_bytes(count: usize) {
+    let mut line = [0u8; 64];
+    let mut n = 0;
+    for &b in b"[SOCKS5] exit answered bytes " {
+        line[n] = b;
+        n += 1;
+    }
+    n += write_u16(&mut line[n..], count.min(u16::MAX as usize) as u16);
+    line[n] = b'\n';
+    say(&line[..n + 1]);
+}
+
+fn say(line: &[u8]) {
+    mk_debug(line.as_ptr(), line.len());
+}
+
+/// Report what kind of answer the exit sent.
+///
+/// Length alone does not say whether a short message is stream data or the
+/// exit reporting that it could not reach the host, and those need opposite
+/// fixes. The flag distinguishes them, so it is worth naming.
+pub fn reply_kind(msg: &[u8]) {
+    let text: &[u8] = match msg.get(..2) {
+        Some([3, 1]) => b"[SOCKS5] exit sent stream data\n",
+        Some([3, 2]) => b"[SOCKS5] exit could not reach the host\n",
+        Some([3, other]) => {
+            let mut line = *b"[SOCKS5] exit sent an unknown response 000\n";
+            let n = line.len();
+            line[n - 4] = b'0' + (other / 100) % 10;
+            line[n - 3] = b'0' + (other / 10) % 10;
+            line[n - 2] = b'0' + other % 10;
+            return say(&line);
+        }
+        _ => b"[SOCKS5] exit sent something this does not speak\n",
+    };
+    say(text);
+}

@@ -23,14 +23,26 @@ use crate::crypto::random::fill_random;
 use crate::mixnet::{route_home, seal::hop_delays_for};
 use crate::sphinx::constants::DESTINATION_ADDRESS_LENGTH;
 
-/// How many reply blocks a request carries.
+/// Reply blocks the far end keeps in reserve and will not spend.
 ///
-/// Each one is a single use route home, so this is a budget for how much the
-/// far end may say back before it has to ask for more. Too few and a reply
-/// larger than the budget cannot be delivered at all; too many and every
+/// A recipient holds this many back so it always has a way to ask for more,
+/// and refuses to answer at all rather than spend its last ones. Sending
+/// fewer than this is the same as sending none: everything arrives, every
+/// packet is acknowledged, and no answer is ever sent, because the far end
+/// never has one it is willing to use.
+const RESERVE_HELD_BY_RECIPIENT: usize = 10;
+
+/// Reply blocks a request carries beyond that reserve.
+///
+/// Each one is a single use route home, so this is the budget for how much
+/// the far end may say back before it has to ask for more. Too few and a
+/// reply larger than the budget cannot be delivered; too many and every
 /// request pays for capacity it will not use, in packets that all have to be
 /// built and sent.
-pub const SURBS_PER_REQUEST: usize = 8;
+const USABLE_FOR_A_REPLY: usize = 14;
+
+/// How many reply blocks a request carries.
+pub const SURBS_PER_REQUEST: usize = RESERVE_HELD_BY_RECIPIENT + USABLE_FOR_A_REPLY;
 
 /// Build the reply blocks that travel with a request.
 ///

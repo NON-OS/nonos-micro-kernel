@@ -34,6 +34,7 @@ pub fn send_sphinx(tcp_port: u32, session: &Session, payload: &[u8]) -> u16 {
     let addressed = Addressed {
         destination: &session.dest,
         destination_encryption: &session.dest_encryption,
+        destination_gateway: &session.dest_gateway,
         our_identity: &prepared.identity,
         ack_key: &prepared.ack_key,
         home: &prepared.home,

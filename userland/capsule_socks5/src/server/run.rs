@@ -15,12 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::feed::feed;
+use super::request::{ask, Ask};
 use super::state::reset;
 use alloc::vec;
 use nonos_libc::{mk_ipc_recv_from, mk_ipc_reply};
 
 /// Largest SOCKS exchange worth buffering.
-const RX_MAX: usize = 4096;
+/// Largest exchange worth buffering from a client. A relayed write can be a
+/// whole TLS record, so this is sized for the stream rather than for the
+/// handshake that opens it.
+const RX_MAX: usize = 34 * 1024;
 
 /// Serve SOCKS clients over IPC.
 ///
@@ -33,12 +37,24 @@ pub fn run() -> ! {
     loop {
         let mut sender = 0u32;
         let n = mk_ipc_recv_from(0, rx.as_mut_ptr(), rx.len(), 0, &mut sender);
-        if n <= 0 || sender == 0 {
+        if n < 0 || sender == 0 {
             continue;
         }
-        let out = feed(sender, &rx[..n as usize]);
-        if !out.is_empty() {
-            let _ = mk_ipc_reply(sender, out.as_ptr(), out.len());
+        // A caller with nothing to say is asking whether the far end has
+        // answered yet, which is the only way to collect a reply that arrives
+        // seconds after the request. It is a request like any other, and the
+        // marker is what lets it be sent at all.
+        let Some(asked) = ask(&rx[..n as usize]) else {
+            continue;
+        };
+        let out = match asked {
+            Ask::Stream(body) => feed(sender, body),
+            Ask::Reset => super::feed::reset_client(sender),
         }
+        .encode();
+        // Every request is answered, including with nothing. A caller blocks
+        // on its reply, so staying silent does not mean "no data", it means
+        // the caller waits out its whole timeout for an answer already known.
+        let _ = mk_ipc_reply(sender, out.as_ptr(), out.len());
     }
 }

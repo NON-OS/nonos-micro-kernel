@@ -18,7 +18,11 @@
 
 mod clients;
 mod feed;
+mod inbox;
 mod open;
+mod relay;
+mod reply;
+mod request;
 mod run;
 mod state;
 mod trace;
@@ -26,3 +30,7 @@ mod trace;
 pub use run::run;
 pub use trace::open_failed as trace_open;
 pub use trace::step as trace_step;
+pub use trace::{
+    destination as trace_destination, reply_bytes as trace_reply_bytes,
+    reply_kind as trace_reply_kind,
+};

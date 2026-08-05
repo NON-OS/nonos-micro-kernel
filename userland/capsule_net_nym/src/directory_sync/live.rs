@@ -16,7 +16,7 @@
 
 use alloc::vec::Vec;
 
-use super::api::{objects, parse_node};
+use super::api::{node_objects, parse_node};
 use super::https::fetch_tls;
 use crate::topology::{self, Node, Role};
 
@@ -29,6 +29,7 @@ const API_HOST: &str = "validator.nymtech.net";
 /// and both keys, in tens of kilobytes instead of a megabyte and a half.
 const MIXNODES_PATH: &str = "/api/v1/unstable/nym-nodes/skimmed/mixnodes/active";
 const GATEWAYS_PATH: &str = "/api/v1/unstable/nym-nodes/skimmed/entry-gateways/active";
+const EXITS_PATH: &str = "/api/v1/unstable/nym-nodes/skimmed/exit-gateways/active";
 
 /// Refuse a list that cannot make a route: three mix layers, and something to
 /// enter through. A short answer is a broken answer, and installing it would
@@ -56,9 +57,25 @@ pub fn sync(tcp_port: u32) -> Result<usize, u16> {
     Ok(count)
 }
 
+/// The mix layers, which are what a route is built from.
+pub(super) fn fetch_mixnodes(tcp_port: u32) -> Result<Vec<Node>, u16> {
+    fetch_role(tcp_port, MIXNODES_PATH, Role::Mix)
+}
+
+/// The entry gateways a client can hold a session with.
+pub(super) fn fetch_gateways(tcp_port: u32) -> Result<Vec<Node>, u16> {
+    fetch_role(tcp_port, GATEWAYS_PATH, Role::EntryGateway)
+}
+
+/// The gateways a packet leaves the mixnet by. A route ends at one of these,
+/// and the exit that opens connections runs behind it.
+pub(super) fn fetch_exits(tcp_port: u32) -> Result<Vec<Node>, u16> {
+    fetch_role(tcp_port, EXITS_PATH, Role::ExitGateway)
+}
+
 fn fetch_role(tcp_port: u32, path: &str, role: Role) -> Result<Vec<Node>, u16> {
     let body = fetch_tls(tcp_port, API_HOST, path)?;
-    let found = objects(&body, topology::NODE_CAP);
+    let found = node_objects(&body, topology::NODE_CAP);
     let nodes: Vec<Node> = found.iter().filter_map(|o| parse_node(o, role)).collect();
     if nodes.is_empty() {
         return Err(20);
@@ -66,7 +83,7 @@ fn fetch_role(tcp_port: u32, path: &str, role: Role) -> Result<Vec<Node>, u16> {
     Ok(nodes)
 }
 
-fn layers_present(nodes: &[Node]) -> bool {
+pub(super) fn layers_present(nodes: &[Node]) -> bool {
     (1u8..=3).all(|layer| {
         nodes.iter().filter(|n| n.role == Role::Mix && n.layer == layer).count() >= MIN_PER_LAYER
     })

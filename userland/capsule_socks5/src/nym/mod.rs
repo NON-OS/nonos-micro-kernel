@@ -22,11 +22,13 @@ mod bind;
 mod bootstrap;
 mod discover;
 mod exit;
+mod recv;
 mod send;
 mod session;
 
 pub use address::parse_address;
 pub use bootstrap::{bootstrap_exit, BOOTSTRAP_EXITS};
 pub use exit::{exit, set_exit, Exit};
+pub use recv::{recv_once, Delivery};
 pub use send::{connect_request, send_through_mixnet, SendError};
 pub use session::{open_session, session};

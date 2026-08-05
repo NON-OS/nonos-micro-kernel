@@ -24,7 +24,14 @@ use super::types::SURB_KEY_BYTES;
 /// which, so every one held is a candidate to try. Keeping them forever would
 /// grow that work without bound; the oldest is dropped instead, which costs a
 /// reply that came back long after the request it answers.
-const CAP: usize = 64;
+///
+/// Every request hands out a fresh set, and a mixnet round trip is measured
+/// in seconds, so several are always outstanding at once. Held too few and
+/// the ring wraps while replies are still in the air: the key that opens one
+/// is gone by the time it lands, and a real answer is dropped as though it
+/// were addressed to somebody else. Sized for the tens of requests a page
+/// load actually produces.
+const CAP: usize = 512;
 
 static KEYS: Mutex<[[u8; SURB_KEY_BYTES]; CAP]> = Mutex::new([[0u8; SURB_KEY_BYTES]; CAP]);
 static NEXT: Mutex<usize> = Mutex::new(0);

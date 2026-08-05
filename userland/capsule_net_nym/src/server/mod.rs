@@ -16,11 +16,14 @@
 
 mod authz;
 mod connect_tick;
+mod directory_outcome;
 mod directory_tick;
+mod rebind;
 
 mod handlers;
 mod keepalive;
 mod parse_req;
+mod pump_tick;
 mod respond;
 mod runner;
 

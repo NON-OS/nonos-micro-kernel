@@ -36,14 +36,22 @@ pub fn run() -> ! {
         let mut sender = 0u32;
         let n = mk_ipc_recv_from(SERVICE_INBOX, rx.as_mut_ptr(), rx.len(), IDLE_MS, &mut sender);
         if n <= 0 || sender == 0 {
-            // Nothing to serve, so spend the gap on one gateway candidate.
-            // Connecting from here rather than before the loop is what lets
-            // the capsule answer while it is still finding a gateway.
-            // The directory comes first: without it a gateway is picked from
-            // the compiled list and no route home can be built at all.
+            // Nothing to serve, so spend the gap on the work that has to
+            // happen before anything can be served.
+            //
+            // The directory comes first. It is fetched over net.tcp and needs
+            // no gateway, and holding a session across a fetch is what loses
+            // one: a fetch takes seconds, the keepalive falls due while it
+            // runs, and the ping afterwards finds a gateway that has closed
+            // an idle connection. Fetching before there is a session to lose
+            // avoids that, and the first gateway dialled is then one the
+            // directory describes, which is the only kind a route home can
+            // end at.
             super::directory_tick::directory_tick();
             super::connect_tick::connect_tick();
             super::keepalive::keepalive_tick();
+            // Last, because the two above are what create a link to read.
+            super::pump_tick::pump_tick();
             continue;
         }
         let Ok((req, body)) = parse(&rx[..n as usize]) else { continue };

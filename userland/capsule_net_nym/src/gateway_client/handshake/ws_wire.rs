@@ -23,6 +23,11 @@ use alloc::vec::Vec;
 /// gateway's 124-byte material as a JSON number array.
 const MAX_FRAME: usize = 8192;
 
+/// How long a handshake step waits on its answer. A gateway one round trip
+/// away answers in well under this, and a gateway that does not answer at all
+/// is one the caller should move on from.
+const HANDSHAKE_WAIT_MS: i64 = 5_000;
+
 pub struct WsWire {
     pub tcp_port: u32,
     pub stream: u32,
@@ -36,9 +41,9 @@ impl Wire for WsWire {
 
     fn recv_text(&mut self) -> Result<Vec<u8>, HandshakeError> {
         let mut buf = vec![0u8; MAX_FRAME];
-        let n = ws::recv_binary(self.tcp_port, self.stream, &mut buf)
+        let frame = ws::recv_binary(self.tcp_port, self.stream, &mut buf, HANDSHAKE_WAIT_MS)
             .map_err(|_| HandshakeError::Transport)?;
-        buf.truncate(n);
+        buf.truncate(frame.len);
         Ok(buf)
     }
 }
