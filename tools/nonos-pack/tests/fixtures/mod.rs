@@ -14,5 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod container;
-pub mod sign;
+mod load;
+mod paths;
+
+pub use load::{first_elf_byte_offset, gui_demo_container_and_seeds, seal_ed25519_only};

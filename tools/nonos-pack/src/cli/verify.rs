@@ -14,5 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod container;
-pub mod sign;
+use std::fs;
+
+use super::args::flag;
+
+pub fn run(av: &[String]) -> Result<(), String> {
+    let input = flag("verify", av, "--in")?;
+    let bytes = fs::read(&input).map_err(|e| format!("{}: {}", input, e))?;
+    nonos_pack::sign::verify(&bytes).map_err(|e| format!("verify: {:?}", e))?;
+    println!("{}: ed25519 + mldsa65 publisher signatures verify", input);
+    Ok(())
+}

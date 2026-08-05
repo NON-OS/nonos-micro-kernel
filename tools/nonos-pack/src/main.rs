@@ -14,6 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod cli;
+
 fn main() {
-    println!("usage: nonos-pack <command> [args]");
+    let argv: Vec<String> = std::env::args().collect();
+    if let Err(e) = cli::dispatch(&argv) {
+        eprintln!("nonos-pack: {}", e);
+        std::process::exit(1);
+    }
 }

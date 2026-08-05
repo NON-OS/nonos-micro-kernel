@@ -14,7 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod fixtures;
+
 use nonos_pack::container::{decode, encode_unsigned, Container, Section, SectionKind};
+
+macro_rules! gui_demo_or_skip {
+    () => {
+        match fixtures::gui_demo_container_and_seeds() {
+            Some(f) => f,
+            None => {
+                eprintln!("skip: gui_demo artifacts or publisher seeds absent");
+                return;
+            }
+        }
+    };
+}
 
 #[test]
 fn roundtrip_preserves_all_four_sections() {
@@ -54,4 +68,27 @@ fn decode_rejects_bad_magic() {
     });
     bytes[0] = b'X';
     assert!(decode(&bytes).is_err());
+}
+
+#[test]
+fn seal_then_verify_roundtrips() {
+    let (c, ed_seed, mldsa_seed) = gui_demo_or_skip!();
+    let sealed = nonos_pack::sign::seal(&c, &ed_seed, &mldsa_seed).unwrap();
+    nonos_pack::sign::verify(&sealed).expect("freshly sealed package must verify");
+}
+
+#[test]
+fn verify_rejects_tampered_elf() {
+    let (c, ed_seed, mldsa_seed) = gui_demo_or_skip!();
+    let mut sealed = nonos_pack::sign::seal(&c, &ed_seed, &mldsa_seed).unwrap();
+    let elf_off = fixtures::first_elf_byte_offset(&sealed);
+    sealed[elf_off] ^= 0xFF;
+    assert!(nonos_pack::sign::verify(&sealed).is_err());
+}
+
+#[test]
+fn verify_rejects_missing_mldsa_signature() {
+    let (c, ed_seed, _) = gui_demo_or_skip!();
+    let ed_only = fixtures::seal_ed25519_only(&c, &ed_seed);
+    assert!(nonos_pack::sign::verify(&ed_only).is_err());
 }

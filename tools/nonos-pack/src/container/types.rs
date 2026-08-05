@@ -51,6 +51,14 @@ pub enum PackErr {
     OutOfOrder,
     Duplicate,
     UnknownKind,
+    NoTrailer,
+    SignatureTooLong,
+    MissingSection,
+    BadCert(String),
+    MissingSignature(&'static str),
+    MissingPublisherKey(&'static str),
+    BadSignature(&'static str),
+    Crypto(String),
 }
 
 pub const MAGIC: &[u8; 4] = b"NOS1";

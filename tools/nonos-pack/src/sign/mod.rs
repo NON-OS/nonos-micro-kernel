@@ -14,5 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod container;
-pub mod sign;
+mod seal;
+mod trailer;
+mod verify;
+
+pub use seal::seal;
+pub use verify::verify;
