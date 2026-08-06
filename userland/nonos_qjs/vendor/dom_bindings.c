@@ -526,10 +526,18 @@ static const char *PRELUDE =
     /* Due timers first, then the clock moves to the next one waiting. A
      * repeating timer is requeued rather than dropped, and the run count is
      * capped so a timer that reschedules itself cannot hold the pump. */
-    "globalThis.__njs_flush_timers=function(){var n=0;"
-    "while(q.length&&n<10000){"
+    /* Run what the clock says is due, and nothing else. The caller passes
+     * real elapsed milliseconds, so a repeating timer requeued during this
+     * flush lands in the future and waits there. Advancing the clock to meet
+     * the earliest timer instead would make every requeue instantly due, and
+     * a single setInterval would then run its callback until the iteration
+     * cap on every tick, which is a page that never stops working long
+     * enough to draw. */
+    "globalThis.__njs_flush_timers=function(now){var n=0;"
+    "if(now>clock)clock=+now;"
+    "while(q.length&&n<1000){"
     "var i=0;for(var k=1;k<q.length;k++)if(q[k].at<q[i].at)i=k;"
-    "var t=q[i];if(t.at>clock)clock=t.at;q.splice(i,1);n++;"
+    "var t=q[i];if(t.at>clock)break;q.splice(i,1);n++;"
     "if(t.r){q.push({id:t.id,at:clock+t.r,f:t.f,r:t.r});}"
     "try{t.f();}catch(e){"
     "(globalThis.__njs_errors=globalThis.__njs_errors||[]).push(String(e)+' @ '+String(e&&e.stack||''));}}"

@@ -18,6 +18,7 @@ mod decrypt;
 mod flight_settled;
 mod hello;
 mod read_flight;
+mod trace;
 mod verify_and_send;
 
 pub(super) use decrypt::decrypt;

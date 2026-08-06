@@ -27,7 +27,7 @@ pub fn js_tick(state: &mut State) -> bool {
     // draining this queue, so every callback a page deferred sat in it: the
     // work a page does after its first paint never happened at all.
     let ran = match state.engine.as_ref() {
-        Some(engine) => engine.flush_timers() > 0,
+        Some(engine) => engine.flush_timers(nonos_libc::mk_uptime_ms() as u64) > 0,
         None => false,
     };
     if ran {

@@ -43,6 +43,7 @@ pub(in crate::browser::fetch) fn read_flight(port: u32, f: &mut Fetch) {
                     return;
                 }
                 if tls13::server_finished_flight_ready(&tls.flight) {
+                    super::trace::flight(b"complete", tls.flight.len(), f.idle);
                     f.phase = Phase::TlsVerify;
                     return;
                 }
@@ -55,8 +56,13 @@ pub(in crate::browser::fetch) fn read_flight(port: u32, f: &mut Fetch) {
     } else {
         f.idle = f.idle.wrapping_add(1);
         if flight_settled(&tls.flight) && f.idle >= budget::flight_settle() {
+            // Believed on a quiet gap rather than because the flight said it
+            // was done. Over the mixnet the rest can still be on its way, so
+            // this is the case worth being able to tell apart.
+            super::trace::flight(b"settled", tls.flight.len(), f.idle);
             f.phase = Phase::TlsVerify;
         } else if f.idle >= budget::hs_wait() {
+            super::trace::flight(b"abandoned", tls.flight.len(), f.idle);
             f.error = Some("tls handshake failed");
             f.phase = Phase::Error;
         }

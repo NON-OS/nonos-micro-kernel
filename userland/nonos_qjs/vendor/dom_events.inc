@@ -162,13 +162,15 @@ static void install_page_address(JSContext *ctx, JSValueConst global, void *host
 /* Run the page's due timers. The queue lives in the prelude, so this is a
  * call into it rather than a table here. Returns how many callbacks ran, so
  * the caller knows whether the tree may have changed under it. */
-int njs_flush_timers(JSContext *ctx) {
+int njs_flush_timers(JSContext *ctx, double now_ms) {
     JS_UpdateStackTop(JS_GetRuntime(ctx));
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue fn = JS_GetPropertyStr(ctx, global, "__njs_flush_timers");
     int ran = 0;
     if (JS_IsFunction(ctx, fn)) {
-        JSValue r = JS_Call(ctx, fn, JS_UNDEFINED, 0, 0);
+        JSValue arg = JS_NewFloat64(ctx, now_ms);
+        JSValue r = JS_Call(ctx, fn, JS_UNDEFINED, 1, (JSValueConst *)&arg);
+        JS_FreeValue(ctx, arg);
         JS_ToInt32(ctx, &ran, r);
         JS_FreeValue(ctx, r);
     }
