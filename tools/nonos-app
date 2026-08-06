@@ -313,7 +313,7 @@ cmd_pack() {
   out="${out:-$bin.nonos}"
   make -C "$ROOT" "nonos-mk-$slug" "nonos-mk-$slug-sign"
   local elf manifest cert trailer seed_ed seed_mldsa f
-  elf="$(find "$dir/target" -type f -path "*/release/$bin" 2>/dev/null | head -1)"
+  elf="$dir/target/$(basename "$TARGET" .json)/release/$bin"
   manifest="$ROOT/nonos-data/trust/capsules/$bin.manifest.bin"
   cert="$ROOT/nonos-data/trust/capsules/$bin.nonos_id_cert.bin"
   trailer="$ROOT/nonos-data/trust/capsules/$bin.zk_trailer.bin"
