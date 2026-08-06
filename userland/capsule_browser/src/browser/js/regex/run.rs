@@ -54,13 +54,15 @@ pub fn run(
                 }
                 false => return false,
             },
-            Inst::Class(items, neg) => match pos < text.len() && class_match(items, *neg, text[pos], ci) {
-                true => {
-                    pc += 1;
-                    pos += 1;
+            Inst::Class(items, neg) => {
+                match pos < text.len() && class_match(items, *neg, text[pos], ci) {
+                    true => {
+                        pc += 1;
+                        pos += 1;
+                    }
+                    false => return false,
                 }
-                false => return false,
-            },
+            }
             Inst::Match => return true,
             Inst::Jmp(x) => pc = *x,
             Inst::Split(x, y) => {

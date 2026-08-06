@@ -14,11 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::string::String;
+
 use crate::browser::js::value::Value;
 
+use super::attr_prop::{attr_prop, bool_prop};
 use super::ctx::Ctx;
 use super::graft_html::graft_html;
 use super::set_text_content::set_text_content;
+use super::to_bool::to_bool;
 use super::to_str::to_str;
 
 pub fn set_node_prop(ctx: &mut Ctx, id: usize, name: &str, v: &Value) {
@@ -40,6 +44,27 @@ pub fn set_node_prop(ctx: &mut Ctx, id: usize, name: &str, v: &Value) {
             ctx.dom.set_attr(id, "value", to_str(v));
             ctx.dirty = true;
         }
-        _ => {}
+        _ => reflect(ctx, id, name, v),
+    }
+}
+
+/// Write a property that is stored as an attribute.
+///
+/// A boolean one is present or absent rather than set to a string, so false
+/// removes it. Writing "false" would leave a control disabled by the code
+/// that meant to enable it.
+fn reflect(ctx: &mut Ctx, id: usize, name: &str, v: &Value) {
+    if let Some(attr) = bool_prop(name) {
+        if to_bool(v) {
+            ctx.dom.set_attr(id, attr, String::new());
+        } else {
+            ctx.dom.remove_attr(id, attr);
+        }
+        ctx.dirty = true;
+        return;
+    }
+    if let Some(attr) = attr_prop(name) {
+        ctx.dom.set_attr(id, attr, to_str(v));
+        ctx.dirty = true;
     }
 }

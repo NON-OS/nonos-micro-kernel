@@ -3,6 +3,7 @@ pub mod css;
 pub mod dom;
 pub mod html;
 pub mod image;
+pub mod js;
 
 #[path = "../../../capsule_browser/src/browser/url/mod.rs"]
 pub mod url;

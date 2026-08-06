@@ -113,6 +113,19 @@ pub(super) fn node_method(ctx: &mut Ctx, id: usize, method: &str, argv: &[Value]
             }
             Value::Undef
         }
+        // A page writes a row's shape once in markup and every row is a copy
+        // of it. Without this a script has to build each one tag by tag.
+        "cloneNode" => {
+            let deep = matches!(argv.first(), Some(Value::Bool(true)));
+            match ctx.dom.clone_node(id, deep) {
+                Some(copy) => Value::Node(copy),
+                None => Value::Undef,
+            }
+        }
+        "contains" => match argv.first() {
+            Some(Value::Node(other)) => Value::Bool(in_subtree(ctx.dom, id, *other)),
+            _ => Value::Bool(false),
+        },
         "remove" => {
             ctx.dom.detach(id);
             ctx.dirty = true;

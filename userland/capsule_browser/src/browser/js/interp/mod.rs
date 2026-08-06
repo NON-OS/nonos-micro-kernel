@@ -24,6 +24,7 @@ mod array_query;
 mod array_reduce;
 mod array_sort;
 mod array_util;
+mod attr_prop;
 mod bound_member;
 mod call_func;
 mod class_build;

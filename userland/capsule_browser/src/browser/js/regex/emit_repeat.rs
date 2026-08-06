@@ -24,7 +24,13 @@ const CAP: usize = 1000;
 
 // Expand `inner{min,max}` into mandatory copies followed by a greedy star (open
 // upper bound) or a run of optional copies, backpatching skip targets.
-pub(super) fn emit_repeat(prog: &mut Vec<Inst>, inner: &Re, min: usize, max: Option<usize>, greedy: bool) {
+pub(super) fn emit_repeat(
+    prog: &mut Vec<Inst>,
+    inner: &Re,
+    min: usize,
+    max: Option<usize>,
+    greedy: bool,
+) {
     let min = min.min(CAP);
     for _ in 0..min {
         emit(prog, inner);

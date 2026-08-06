@@ -14,24 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+//! Host callbacks the QuickJS bindings call that the first bridge did not
+//! cover. They are reached from C by name, so nothing here is referenced
+//! from Rust and the module exists to keep the surface in one place.
 
-pub fn decode_body(
-    raw_body: &[u8],
-    chunked: bool,
-    content_len: Option<usize>,
-    encoding: &str,
-) -> Option<Vec<u8>> {
-    let body = if chunked {
-        crate::browser::http::chunked::decode(raw_body)?
-    } else if let Some(n) = content_len {
-        raw_body.get(..n)?.to_vec()
-    } else {
-        raw_body.to_vec()
-    };
-    match encoding {
-        "gzip" => nonos_inflate::gunzip(&body),
-        "deflate" => nonos_inflate::zlib(&body).or_else(|| nonos_inflate::inflate(&body)),
-        _ => Some(body),
-    }
-}
+mod clone;
+mod edit;
+mod nav;
+
+/// How far up a parent chain a walk will go before giving up.
+///
+/// A tree a script built can hold a cycle, and a walk up it would otherwise
+/// never end.
+const MAX_ANCESTRY: u32 = 512;

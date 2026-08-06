@@ -344,6 +344,8 @@ static JSValue get_child_nodes(JSContext *ctx, JSValueConst t, int a, JSValueCon
 /* One JS object per DOM node, cached in a global registry. Frameworks hang
  * expando state off DOM nodes and compare them by identity, so every lookup
  * for the same node must return the same object. */
+#include "dom_ext.inc"
+
 static JSValue make_element(JSContext *ctx, int node) {
     if (node < 0) return JS_NULL;
     JSValue global = JS_GetGlobalObject(ctx);
@@ -384,7 +386,6 @@ static JSValue make_element(JSContext *ctx, int node) {
     accessor(ctx, el, "data", get_text_content, set_text_content);
     accessor(ctx, el, "nodeValue", get_text_content, set_text_content);
     accessor(ctx, el, "className", get_class_name, set_class_name);
-    accessor(ctx, el, "id", 0, set_id);
     accessor(ctx, el, "tagName", get_tag_name, 0);
     accessor(ctx, el, "localName", get_local_name, 0);
     accessor(ctx, el, "nodeName", get_node_name, 0);
@@ -396,6 +397,7 @@ static JSValue make_element(JSContext *ctx, int node) {
     accessor(ctx, el, "childNodes", get_child_nodes, 0);
     accessor(ctx, el, "style", get_style, 0);
     accessor(ctx, el, "innerHTML", 0, set_inner_html);
+    install_element_ext(ctx, el);
     JS_SetPropertyUint32(ctx, reg, (uint32_t)node, JS_DupValue(ctx, el));
     JS_FreeValue(ctx, reg);
     JS_FreeValue(ctx, global);
@@ -491,6 +493,8 @@ void njs_install_dom(JSContext *ctx, void *host) {
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue doc = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, doc, "createElement", JS_NewCFunction(ctx, doc_create_element, "createElement", 1));
+    JS_SetPropertyStr(ctx, doc, "createDocumentFragment",
+                      JS_NewCFunction(ctx, doc_create_fragment, "createDocumentFragment", 0));
     JS_SetPropertyStr(ctx, doc, "createTextNode", JS_NewCFunction(ctx, doc_create_text, "createTextNode", 1));
     JS_SetPropertyStr(ctx, doc, "getElementById", JS_NewCFunction(ctx, doc_get_by_id, "getElementById", 1));
     JS_SetPropertyStr(ctx, doc, "querySelector", JS_NewCFunction(ctx, doc_query, "querySelector", 1));

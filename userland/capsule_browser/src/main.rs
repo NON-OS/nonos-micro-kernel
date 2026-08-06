@@ -20,6 +20,7 @@
 extern crate alloc;
 
 mod browser;
+mod qjs_bridge;
 mod qjs_dom;
 
 use nonos_app_skeleton::run;

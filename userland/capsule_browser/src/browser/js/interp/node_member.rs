@@ -22,6 +22,7 @@ use core::cell::RefCell;
 use crate::browser::dom::node::NodeKind;
 use crate::browser::js::value::Value;
 
+use super::attr_prop::{attr_prop, bool_prop};
 use super::ctx::Ctx;
 use super::node_text::node_text;
 
@@ -67,7 +68,18 @@ pub fn node_member(ctx: &mut Ctx, id: usize, name: &str) -> Value {
                 .collect();
             Value::Array(Rc::new(RefCell::new(kids)))
         }
-        _ => Value::Undef,
+        _ => reflected(ctx, id, name),
+    }
+}
+
+/// A property that is really an attribute, read back through it.
+fn reflected(ctx: &Ctx, id: usize, name: &str) -> Value {
+    if let Some(attr) = bool_prop(name) {
+        return Value::Bool(ctx.dom.nodes[id].attr(attr).is_some());
+    }
+    match attr_prop(name) {
+        Some(attr) => Value::Str(Rc::new(ctx.dom.nodes[id].attr(attr).unwrap_or("").to_string())),
+        None => Value::Undef,
     }
 }
 

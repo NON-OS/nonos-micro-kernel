@@ -8,6 +8,8 @@ mod attach;
 mod attrs;
 #[path = "../../../../capsule_browser/src/browser/dom/auto_close.rs"]
 mod auto_close;
+#[path = "../../../../capsule_browser/src/browser/dom/clone.rs"]
+mod clone;
 #[path = "../../../../capsule_browser/src/browser/dom/close_tag.rs"]
 mod close_tag;
 #[path = "../../../../capsule_browser/src/browser/dom/comment.rs"]

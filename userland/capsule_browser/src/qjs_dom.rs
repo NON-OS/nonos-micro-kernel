@@ -33,11 +33,11 @@ extern "C" {
     fn malloc(n: usize) -> *mut u8;
 }
 
-unsafe fn dom<'a>(host: *mut c_void) -> &'a mut Dom {
+pub(crate) unsafe fn dom<'a>(host: *mut c_void) -> &'a mut Dom {
     &mut *(host as *mut Dom)
 }
 
-unsafe fn cstr(p: *const u8) -> String {
+pub(crate) unsafe fn cstr(p: *const u8) -> String {
     if p.is_null() {
         return String::new();
     }
@@ -48,7 +48,7 @@ unsafe fn cstr(p: *const u8) -> String {
     String::from_utf8_lossy(slice::from_raw_parts(p, n)).into_owned()
 }
 
-unsafe fn cdup(s: &str) -> *mut u8 {
+pub(crate) unsafe fn cdup(s: &str) -> *mut u8 {
     let b = s.as_bytes();
     let p = malloc(b.len() + 1);
     if p.is_null() {
@@ -305,20 +305,13 @@ pub unsafe extern "C" fn njs_dom_insert_before(
     if parent < 0 || child < 0 {
         return;
     }
-    let d = dom(host);
-    if !d.attach(parent as usize, child as usize) {
-        return;
-    }
-    if before >= 0 && before != child {
-        let p = parent as usize;
-        let (c, b) = (child as usize, before as usize);
-        if let Some(node) = d.nodes.get_mut(p) {
-            if let Some(bi) = node.children.iter().position(|&x| x == b) {
-                node.children.retain(|&x| x != c);
-                node.children.insert(bi, c);
-            }
-        }
-    }
+    // The reference position has to be read after the node leaves the list,
+    // not before. Moving a node forwards shifts everything behind it down by
+    // one, so a position taken first puts the node one slot late, and a list
+    // that reorders drifts further out of order with every update. `place`
+    // also unwraps a fragment rather than putting the holder in the page.
+    let before = if before < 0 { usize::MAX } else { before as usize };
+    dom(host).place(parent as usize, child as usize, before);
 }
 
 #[no_mangle]

@@ -11,6 +11,8 @@ mod cascade_tests;
 #[cfg(test)]
 mod chunked_tests;
 #[cfg(test)]
+mod clone_tests;
+#[cfg(test)]
 mod color_tests;
 #[cfg(test)]
 mod dom_tests;
