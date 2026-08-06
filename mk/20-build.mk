@@ -421,6 +421,7 @@ include userland/capsule_hello/Capsule.mk
 include userland/capsule_gui_demo/Capsule.mk
 include userland/capsule_game_2048/Capsule.mk
 include userland/capsule_egui_proof/Capsule.mk
+include userland/capsule_mdview/Capsule.mk
 include userland/capsule_boot_splash/Capsule.mk
 include userland/capsule_calculator/Capsule.mk
 include userland/capsule_clock/Capsule.mk

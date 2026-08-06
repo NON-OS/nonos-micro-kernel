@@ -1,0 +1,35 @@
+# NONOS userland: capsule_mdview
+#
+# Markdown viewer shipped only through the on-disk package store: reads
+# /readme.txt from the vfs capsule, parses it with the unmodified crates.io
+# pulldown-cmark parser, and paints the result. Never embedded in the kernel
+# image.
+
+[package]
+name = "nonos_mdview"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+description = "NONOS mdview capsule: markdown viewer on unmodified pulldown-cmark"
+
+[[bin]]
+name = "mdview"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc", default-features = false }
+nonos_app_skeleton = { path = "../app_skeleton", default-features = false }
+pulldown-cmark = { version = "0.13", default-features = false }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true
