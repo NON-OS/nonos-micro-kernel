@@ -16,7 +16,7 @@
 
 mod fixtures;
 
-use nonos_pack::container::{decode, encode_unsigned, Container, Section, SectionKind};
+use nonos_pack::container::{decode, encode_unsigned, Container, PackErr, Section, SectionKind};
 
 macro_rules! gui_demo_or_skip {
     () => {
@@ -91,4 +91,28 @@ fn verify_rejects_missing_mldsa_signature() {
     let (c, ed_seed, _) = gui_demo_or_skip!();
     let ed_only = fixtures::seal_ed25519_only(&c, &ed_seed);
     assert!(nonos_pack::sign::verify(&ed_only).is_err());
+}
+
+#[test]
+fn verify_rejects_corrupt_mldsa_signature() {
+    let (c, ed_seed, mldsa_seed) = gui_demo_or_skip!();
+    let sealed = nonos_pack::sign::seal(&c, &ed_seed, &mldsa_seed).unwrap();
+    let bad = fixtures::corrupt_signature(&sealed, 2);
+    assert!(matches!(nonos_pack::sign::verify(&bad), Err(PackErr::BadSignature("mldsa65"))));
+}
+
+#[test]
+fn verify_rejects_appended_trailer_entry() {
+    let (c, ed_seed, mldsa_seed) = gui_demo_or_skip!();
+    let sealed = nonos_pack::sign::seal(&c, &ed_seed, &mldsa_seed).unwrap();
+    let padded = fixtures::append_trailer_entry(&sealed, 0x7f, &[0xAAu8; 4096]);
+    assert!(matches!(nonos_pack::sign::verify(&padded), Err(PackErr::NonCanonicalTrailer)));
+}
+
+#[test]
+fn verify_rejects_duplicate_ed25519_entry() {
+    let (c, ed_seed, mldsa_seed) = gui_demo_or_skip!();
+    let sealed = nonos_pack::sign::seal(&c, &ed_seed, &mldsa_seed).unwrap();
+    let dup = fixtures::append_trailer_entry(&sealed, 1, &[0u8; 64]);
+    assert!(matches!(nonos_pack::sign::verify(&dup), Err(PackErr::NonCanonicalTrailer)));
 }

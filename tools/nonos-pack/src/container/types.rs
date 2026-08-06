@@ -52,6 +52,7 @@ pub enum PackErr {
     Duplicate,
     UnknownKind,
     NoTrailer,
+    NonCanonicalTrailer,
     SignatureTooLong,
     MissingSection,
     BadCert(String),

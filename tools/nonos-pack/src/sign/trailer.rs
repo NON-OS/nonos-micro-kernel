@@ -37,6 +37,9 @@ pub fn append(out: &mut Vec<u8>, sigs: &[(u8, Vec<u8>)]) -> Result<(), PackErr> 
 
 pub fn parse(t: &[u8]) -> Result<Vec<(u8, &[u8])>, PackErr> {
     let count = *t.first().ok_or(PackErr::NoTrailer)? as usize;
+    if count != REQUIRED.len() {
+        return Err(PackErr::NonCanonicalTrailer);
+    }
     let mut p = 1usize;
     let mut out = Vec::with_capacity(count);
     for _ in 0..count {
@@ -54,6 +57,9 @@ pub fn parse(t: &[u8]) -> Result<Vec<(u8, &[u8])>, PackErr> {
     }
     if p != t.len() {
         return Err(PackErr::Truncated);
+    }
+    if out.iter().zip(REQUIRED.iter()).any(|((tag, _), (want, _))| tag != want) {
+        return Err(PackErr::NonCanonicalTrailer);
     }
     Ok(out)
 }
