@@ -17,6 +17,7 @@
 mod about_page;
 mod append_capped;
 mod apply_css;
+mod budget;
 mod commit_html;
 mod constants;
 mod css_pump;

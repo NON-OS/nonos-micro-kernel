@@ -16,7 +16,7 @@
 
 use crate::browser::fetch::tls::flight_settled;
 use crate::browser::fetch::types::{Fetch, Phase};
-use crate::browser::fetch::{append_capped, constants};
+use crate::browser::fetch::{append_capped, budget, constants};
 use crate::browser::net;
 use crate::browser::tls13;
 
@@ -54,9 +54,9 @@ pub(in crate::browser::fetch) fn read_flight(port: u32, f: &mut Fetch) {
         f.idle = 0;
     } else {
         f.idle = f.idle.wrapping_add(1);
-        if flight_settled(&tls.flight) && f.idle >= constants::FLIGHT_SETTLE {
+        if flight_settled(&tls.flight) && f.idle >= budget::flight_settle() {
             f.phase = Phase::TlsVerify;
-        } else if f.idle >= constants::HS_WAIT {
+        } else if f.idle >= budget::hs_wait() {
             f.error = Some("tls handshake failed");
             f.phase = Phase::Error;
         }

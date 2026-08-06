@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::browser::fetch::types::{Fetch, Phase};
-use crate::browser::fetch::{append_capped, constants, tls};
+use crate::browser::fetch::{append_capped, budget, constants, tls};
 use crate::browser::http;
 use crate::browser::net;
 
@@ -51,7 +51,7 @@ pub(in crate::browser::fetch) fn read_body(state_port: u32, f: &mut Fetch, tls_m
                 f.idle = 0;
             } else {
                 f.idle = f.idle.wrapping_add(1);
-                if f.idle >= constants::FIRST_WAIT {
+                if f.idle >= budget::first_wait() {
                     f.error = Some("kept connection dead");
                     f.phase = Phase::Error;
                     return true;
@@ -76,7 +76,7 @@ pub(in crate::browser::fetch) fn read_body(state_port: u32, f: &mut Fetch, tls_m
                     f.idle = 0;
                 } else {
                     f.idle = f.idle.wrapping_add(1);
-                    if f.idle >= constants::IDLE_AFTER {
+                    if f.idle >= budget::idle_after() {
                         f.phase = Phase::Decrypt;
                         return true;
                     }
@@ -93,8 +93,8 @@ pub(in crate::browser::fetch) fn read_body(state_port: u32, f: &mut Fetch, tls_m
         f.idle = 0;
     } else {
         f.idle = f.idle.wrapping_add(1);
-        let budget = if f.buf.is_empty() { constants::FIRST_WAIT } else { constants::IDLE_AFTER };
-        if f.idle >= budget {
+        let allowed = if f.buf.is_empty() { budget::first_wait() } else { budget::idle_after() };
+        if f.idle >= allowed {
             f.phase = Phase::Done;
         }
     }
