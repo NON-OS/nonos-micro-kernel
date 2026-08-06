@@ -35,6 +35,12 @@ pub fn relayout(state: &mut State) {
         &styled.pseudos,
     );
     let doc = layout::boxmodel::layout(&root, state.viewport_w);
+    // The rectangles just produced are what a script gets when it measures an
+    // element. Recording them here means a read after a layout sees the
+    // layout that happened rather than the one before it.
+    if let Some(dom) = state.page_dom.as_mut() {
+        dom.record_rects(doc.frags.iter().map(|f| (f.node, f.x, f.y, f.w, f.h)));
+    }
     state.box_doc = Some(doc);
     // Queue newly declared web fonts; each face is fetched once and text
     // relayouts with its real metrics when it lands. A data: source, the way

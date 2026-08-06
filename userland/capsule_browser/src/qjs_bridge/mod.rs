@@ -20,6 +20,7 @@
 
 mod clone;
 mod edit;
+mod location;
 mod nav;
 mod query;
 

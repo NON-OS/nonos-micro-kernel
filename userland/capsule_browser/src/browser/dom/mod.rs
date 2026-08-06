@@ -26,6 +26,7 @@ mod detach;
 mod flush_text;
 mod insert_before;
 mod limits;
+mod measure;
 pub mod node;
 mod parse;
 mod place;

@@ -144,3 +144,37 @@ static JSValue get_dataset(JSContext *ctx, JSValueConst t, int a, JSValueConst *
     (void)a; (void)v;
     return from_factory(ctx, t, "__njs_dataset");
 }
+
+/* The document-wide forms. These search the whole tree rather than one
+ * element's descendants, so they cannot share the element versions. */
+static JSValue doc_by_tag(JSContext *ctx, JSValueConst t, int argc, JSValueConst *v) {
+    (void)t;
+    if (argc < 1) return JS_NewArray(ctx);
+    const char *s = JS_ToCString(ctx, v[0]);
+    if (!s) return JS_NewArray(ctx);
+    int buf[512];
+    int n = njs_dom_query_all(JS_GetContextOpaque(ctx), s, buf, 512);
+    JS_FreeCString(ctx, s);
+    JSValue arr = JS_NewArray(ctx);
+    for (int i = 0; i < n; i++)
+        JS_SetPropertyUint32(ctx, arr, (uint32_t)i, make_element(ctx, buf[i]));
+    return arr;
+}
+static JSValue doc_by_class(JSContext *ctx, JSValueConst t, int argc, JSValueConst *v) {
+    (void)t;
+    if (argc < 1) return JS_NewArray(ctx);
+    const char *s = JS_ToCString(ctx, v[0]);
+    if (!s) return JS_NewArray(ctx);
+    char sel[128];
+    sel[0] = '.';
+    int i = 0;
+    for (; s[i] && i < 126; i++) sel[i + 1] = s[i] == ' ' ? '.' : s[i];
+    sel[i + 1] = 0;
+    JS_FreeCString(ctx, s);
+    int buf[512];
+    int n = njs_dom_query_all(JS_GetContextOpaque(ctx), sel, buf, 512);
+    JSValue arr = JS_NewArray(ctx);
+    for (int k = 0; k < n; k++)
+        JS_SetPropertyUint32(ctx, arr, (uint32_t)k, make_element(ctx, buf[k]));
+    return arr;
+}

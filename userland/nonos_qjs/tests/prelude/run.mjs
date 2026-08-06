@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { extractPrelude } from './extract.mjs';
 import { classListChecks } from './classlist.mjs';
+import { historyChecks } from './history.mjs';
+import { locationChecks } from './location.mjs';
 import { datasetChecks } from './dataset.mjs';
 import { eventChecks } from './events.mjs';
 import { storageChecks } from './storage.mjs';
@@ -43,6 +45,8 @@ for (const [name, check] of [
   ['events', eventChecks],
   ['timers', timerChecks],
   ['storage', storageChecks],
+  ['location', locationChecks],
+  ['history', historyChecks],
 ]) {
   try {
     check(counting);
