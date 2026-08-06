@@ -22,11 +22,7 @@ use super::paths::GuiDemoPaths;
 pub struct Packed {
     pub path: PathBuf,
 }
-pub struct Unpacked {
-    pub manifest: PathBuf,
-    pub id_cert: PathBuf,
-    pub elf: PathBuf,
-}
+pub struct Unpacked { pub manifest: PathBuf, pub id_cert: PathBuf, pub elf: PathBuf, pub trailer: PathBuf }
 
 fn repo_root() -> PathBuf { PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("..") }
 pub fn nonos_pack_bin() -> PathBuf { repo_root().join("tools/nonos-pack/target/release/nonos-pack") }
@@ -70,5 +66,6 @@ pub fn unpack(pkg: &Packed) -> Unpacked {
         manifest: dir.join("gui_demo.manifest.bin"),
         id_cert: dir.join("gui_demo.nonos_id_cert.bin"),
         elf: dir.join("gui_demo.elf"),
+        trailer: dir.join("gui_demo.zk_trailer.bin"),
     }
 }

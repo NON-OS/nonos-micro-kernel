@@ -30,6 +30,7 @@ fn packed_then_unpacked_artifacts_still_admit() {
     assert_eq!(std::fs::read(&out.manifest).unwrap(), std::fs::read(&f.manifest).unwrap());
     assert_eq!(std::fs::read(&out.id_cert).unwrap(), std::fs::read(&f.id_cert).unwrap());
     assert_eq!(std::fs::read(&out.elf).unwrap(), std::fs::read(&f.elf).unwrap());
+    assert_eq!(std::fs::read(&out.trailer).unwrap(), std::fs::read(&f.trailer).unwrap());
     let status = std::process::Command::new(fixtures::capsule_sign())
         .args(["verify-manifest", "--manifest"])
         .arg(&out.manifest)
