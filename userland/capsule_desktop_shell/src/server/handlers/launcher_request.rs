@@ -36,7 +36,7 @@ const OP_FOCUS_SELF: u16 = 1;
 // Services that own a single device-backed session, so a second window
 // would fight the first over the same hardware stream rather than give
 // the user anything new.
-const SINGLE_INSTANCE: [&[u8]; 1] = [b"app.audio_player"];
+const SINGLE_INSTANCE: [&[u8]; 0] = [];
 
 // Clicking a dock app asks the kernel to spawn another attested instance.
 // The kernel queues the request and init performs the spawn in its own
