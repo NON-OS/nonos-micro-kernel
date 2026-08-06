@@ -29,9 +29,9 @@ use super::remote_ref::RemoteRef;
 /// NUL, dropped here: this asks for nothing beyond the defaults, so claiming
 /// none back is what keeps the request honest.
 ///
-/// A repository with no refs still has to answer, so it sends a single
-/// placeholder under the name `capabilities^{}` purely to carry that list.
-/// It names no object and is skipped, or a push would read it as a branch.
+/// A repository with no refs still has to answer, so it sends one entry
+/// named `capabilities^{}` purely to carry that list. It names no object and
+/// is skipped, or a push would read it as a branch.
 pub fn parse_advertisement(body: &[u8]) -> Result<Vec<RemoteRef>, WireError> {
     let mut at = match read_pkt(body)? {
         (Pkt::Data(d), used) if d.starts_with(b"# service=") => used,
