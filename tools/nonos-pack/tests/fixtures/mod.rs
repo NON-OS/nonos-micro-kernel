@@ -14,9 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod exec;
 mod load;
 mod mutate;
 mod paths;
 
+pub use exec::{capsule_sign, pack_gui_demo, trust_policy, unpack};
 pub use load::{first_elf_byte_offset, gui_demo_container_and_seeds, seal_ed25519_only};
 pub use mutate::{append_trailer_entry, corrupt_signature};
+pub use paths::gui_demo_paths;
