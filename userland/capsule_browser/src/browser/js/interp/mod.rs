@@ -36,6 +36,7 @@ mod copy_children;
 mod css_name;
 mod ctx;
 mod deliver_net;
+mod document_member;
 mod equals;
 mod error_obj;
 mod eval_args;

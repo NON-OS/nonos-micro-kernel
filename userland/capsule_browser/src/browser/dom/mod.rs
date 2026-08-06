@@ -27,6 +27,7 @@ mod insert_before;
 mod limits;
 pub mod node;
 mod parse;
+mod place;
 mod push;
 mod raw_text;
 mod remove_attr;

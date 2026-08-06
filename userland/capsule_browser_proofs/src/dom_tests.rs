@@ -143,3 +143,72 @@ fn placing_a_node_already_present_moves_it() {
     assert_eq!(order, ["b", "a"]);
     assert_eq!(dom.nodes[root].children.len(), 2, "the node was duplicated rather than moved");
 }
+
+#[test]
+fn a_fragment_places_its_children_and_not_itself() {
+    // A fragment exists so several nodes go in with one call. Placing the
+    // holder would put a node in the document no markup ever described.
+    let mut dom = parse(b"<div></div>");
+    let root = dom.nodes.iter().position(|n| n.tag == "div").expect("root");
+    let frag = dom.create(NodeKind::Document, String::new()).expect("fragment");
+    let a = dom.create(NodeKind::Element, "a".into()).expect("a");
+    let b = dom.create(NodeKind::Element, "b".into()).expect("b");
+    dom.attach(frag, a);
+    dom.attach(frag, b);
+
+    assert!(dom.place(root, frag, usize::MAX));
+    let order: Vec<String> =
+        dom.nodes[root].children.iter().map(|&i| dom.nodes[i].tag.clone()).collect();
+    assert_eq!(order, ["a", "b"], "the fragment did not unwrap");
+    assert!(dom.nodes[frag].children.is_empty(), "the holder kept its children");
+}
+
+#[test]
+fn a_reconciler_can_build_reorder_and_update_a_list() {
+    // The whole cycle a framework drives: build a keyed list, reorder it,
+    // replace an entry, and read back what is there. Each step needs a
+    // different primitive, and any one missing shows up as an update that
+    // silently does nothing.
+    let mut dom = parse(b"<div id=\"app\"></div>");
+    let app = dom.nodes.iter().position(|n| n.tag == "div").expect("app");
+
+    // Render: three rows, each an element wrapping a text node.
+    let mut rows = Vec::new();
+    for label in ["one", "two", "three"] {
+        let row = dom.create(NodeKind::Element, "li".into()).expect("row");
+        let text = dom.create(NodeKind::Text, String::new()).expect("text");
+        dom.nodes[text].text = label.into();
+        assert!(dom.place(row, text, usize::MAX));
+        assert!(dom.place(app, row, usize::MAX));
+        rows.push(row);
+    }
+    let read = |dom: &crate::browser::dom::Dom| -> Vec<String> {
+        dom.nodes[app]
+            .children
+            .iter()
+            .map(|&r| {
+                dom.nodes[r]
+                    .children
+                    .first()
+                    .map(|&t| dom.nodes[t].text.clone())
+                    .unwrap_or_default()
+            })
+            .collect()
+    };
+    assert_eq!(read(&dom), ["one", "two", "three"]);
+
+    // Reorder: move the last row to the front, as a keyed diff does.
+    assert!(dom.insert_before(app, rows[2], rows[0]));
+    assert_eq!(read(&dom), ["three", "one", "two"]);
+
+    // Update in place: the framework kept the text node and writes to it.
+    let middle = dom.nodes[app].children[1];
+    let text = dom.nodes[middle].children[0];
+    dom.nodes[text].text = "ONE".into();
+    assert_eq!(read(&dom), ["three", "ONE", "two"]);
+
+    // Remove: drop the first row.
+    let first = dom.nodes[app].children[0];
+    dom.detach(first);
+    assert_eq!(read(&dom), ["ONE", "two"]);
+}

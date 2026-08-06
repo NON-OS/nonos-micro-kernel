@@ -29,6 +29,10 @@ pub fn install(env: &Env) {
             ("querySelectorAll", Value::Native("document.querySelectorAll")),
             ("createElement", Value::Native("document.createElement")),
             ("createTextNode", Value::Native("document.createTextNode")),
+            ("createDocumentFragment", Value::Native("document.createDocumentFragment")),
+            // Marks this object as the document, so reading body, head or
+            // documentElement goes to the tree rather than to this map.
+            ("__document__", Value::Bool(true)),
         ]),
     );
     env.define(

@@ -28,6 +28,8 @@ mod limits;
 pub mod node;
 #[path = "../../../../capsule_browser/src/browser/dom/parse.rs"]
 mod parse;
+#[path = "../../../../capsule_browser/src/browser/dom/place.rs"]
+mod place;
 #[path = "../../../../capsule_browser/src/browser/dom/push.rs"]
 mod push;
 #[path = "../../../../capsule_browser/src/browser/dom/raw_text.rs"]

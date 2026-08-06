@@ -64,7 +64,7 @@ pub(super) fn node_method(ctx: &mut Ctx, id: usize, method: &str, argv: &[Value]
         }
         "appendChild" => {
             if let Some(Value::Node(child)) = argv.first() {
-                if ctx.dom.attach(id, *child) {
+                if ctx.dom.place(id, *child, usize::MAX) {
                     ctx.dirty = true;
                     return Value::Node(*child);
                 }
@@ -81,7 +81,7 @@ pub(super) fn node_method(ctx: &mut Ctx, id: usize, method: &str, argv: &[Value]
                     // caller asks for when it is adding at the end.
                     _ => usize::MAX,
                 };
-                if ctx.dom.insert_before(id, *child, before) {
+                if ctx.dom.place(id, *child, before) {
                     ctx.dirty = true;
                     return Value::Node(*child);
                 }
