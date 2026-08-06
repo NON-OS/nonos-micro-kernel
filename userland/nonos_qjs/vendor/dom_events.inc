@@ -158,3 +158,26 @@ static void install_page_address(JSContext *ctx, JSValueConst global, void *host
     JS_SetPropertyStr(ctx, global, "__njs_navigate",
                       JS_NewCFunction(ctx, js_navigate, "__njs_navigate", 1));
 }
+
+/* Run the page's due timers. The queue lives in the prelude, so this is a
+ * call into it rather than a table here. Returns how many callbacks ran, so
+ * the caller knows whether the tree may have changed under it. */
+int njs_flush_timers(JSContext *ctx) {
+    JS_UpdateStackTop(JS_GetRuntime(ctx));
+    JSValue global = JS_GetGlobalObject(ctx);
+    JSValue fn = JS_GetPropertyStr(ctx, global, "__njs_flush_timers");
+    int ran = 0;
+    if (JS_IsFunction(ctx, fn)) {
+        JSValue r = JS_Call(ctx, fn, JS_UNDEFINED, 0, 0);
+        JS_ToInt32(ctx, &ran, r);
+        JS_FreeValue(ctx, r);
+    }
+    JS_FreeValue(ctx, fn);
+    JS_FreeValue(ctx, global);
+    /* A callback that resolved a promise leaves jobs behind it; settling them
+     * here means the tree is final before the caller lays it out. */
+    JSRuntime *rt = JS_GetRuntime(ctx);
+    JSContext *p;
+    while (JS_ExecutePendingJob(rt, &p) > 0) {}
+    return ran;
+}

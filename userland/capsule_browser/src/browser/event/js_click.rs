@@ -30,5 +30,8 @@ pub fn js_click(state: &mut State, node: usize) -> bool {
     if fired {
         relayout(state);
     }
+    // A handler may have asked to go somewhere. It could not be acted on
+    // while the script still held the tree, so it is collected here.
+    super::script_nav::take_script_nav(state);
     fired
 }

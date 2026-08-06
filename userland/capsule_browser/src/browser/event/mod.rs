@@ -29,6 +29,7 @@ mod on_page_click;
 mod on_page_key;
 mod on_toolbar;
 mod relayout;
+mod script_nav;
 mod scroll_by;
 mod submit_form;
 

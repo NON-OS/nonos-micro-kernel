@@ -35,6 +35,8 @@ extern "C" {
     fn njs_eval_to_string(ctx: *mut c_void, code: *const u8, len: usize) -> *mut u8;
     fn njs_install_dom(ctx: *mut c_void, host: *mut c_void);
     fn njs_dispatch_event(ctx: *mut c_void, node: i32, ty: *const u8) -> i32;
+    fn njs_take_navigation() -> *const u8;
+    fn njs_flush_timers(ctx: *mut c_void) -> i32;
 }
 
 pub struct Engine {
@@ -75,6 +77,35 @@ impl Engine {
         let n = ty.len().min(31);
         buf[..n].copy_from_slice(&ty.as_bytes()[..n]);
         unsafe { njs_dispatch_event(self.ctx, node, buf.as_ptr()) }
+    }
+
+    /// Run the page timers that have come due, and report how many ran.
+    ///
+    /// Nothing drained this queue, so every callback a page deferred stayed
+    /// in it. Most of what a page does after its first paint is deferred, so
+    /// what looked like a rendering problem was work that never started.
+    pub fn flush_timers(&self) -> i32 {
+        unsafe { njs_flush_timers(self.ctx) }
+    }
+
+    /// The address a script asked to navigate to since this was last called.
+    ///
+    /// Navigating from inside the run would tear down the tree the script is
+    /// still executing against, so the request is parked and collected once
+    /// the run is over. Reading clears it, so one request is acted on once
+    /// rather than on every poll after it.
+    pub fn take_navigation(&self) -> Option<String> {
+        unsafe {
+            let p = njs_take_navigation();
+            if p.is_null() {
+                return None;
+            }
+            let mut n = 0;
+            while *p.add(n) != 0 {
+                n += 1;
+            }
+            Some(String::from_utf8_lossy(core::slice::from_raw_parts(p, n)).into_owned())
+        }
     }
 
     /// Evaluate a script and return its result coerced to a string, or the
