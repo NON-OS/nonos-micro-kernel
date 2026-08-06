@@ -32,6 +32,7 @@ mod place;
 mod push;
 mod raw_text;
 mod remove_attr;
+mod serialize;
 mod set_attr;
 mod tree;
 mod void;

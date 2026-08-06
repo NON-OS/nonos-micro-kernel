@@ -21,6 +21,7 @@
 mod clone;
 mod edit;
 mod nav;
+mod query;
 
 /// How far up a parent chain a walk will go before giving up.
 ///

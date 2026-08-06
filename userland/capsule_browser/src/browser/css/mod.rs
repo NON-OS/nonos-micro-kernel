@@ -37,6 +37,7 @@ mod grid_tracks;
 mod hex;
 mod hsl_fn;
 pub(crate) mod icon_font;
+mod matches;
 mod matching;
 mod matching_paren;
 mod named;
@@ -73,5 +74,6 @@ pub use computed::{
     TextAlign, TextTransform, WhiteSpace,
 };
 pub use grid_spec::GridSpec;
+pub use matches::{closest, matches};
 pub use pseudo_style::PseudoText;
 pub use select::select;

@@ -93,6 +93,9 @@ jobs:
       - name: Browser engine clippy
         run: cargo clippy --release -- -D warnings
         working-directory: userland/capsule_browser_proofs
+      - name: Script environment proofs
+        run: node tests/prelude/run.mjs
+        working-directory: userland/nonos_qjs
       - name: Mixnet proxy proofs
         run: cargo test --release
         working-directory: userland/capsule_socks5_proofs

@@ -345,6 +345,7 @@ static JSValue get_child_nodes(JSContext *ctx, JSValueConst t, int a, JSValueCon
  * expando state off DOM nodes and compare them by identity, so every lookup
  * for the same node must return the same object. */
 #include "dom_ext.inc"
+#include "dom_query.inc"
 
 static JSValue make_element(JSContext *ctx, int node) {
     if (node < 0) return JS_NULL;
@@ -396,8 +397,9 @@ static JSValue make_element(JSContext *ctx, int node) {
     accessor(ctx, el, "nextSibling", get_next_sibling, 0);
     accessor(ctx, el, "childNodes", get_child_nodes, 0);
     accessor(ctx, el, "style", get_style, 0);
-    accessor(ctx, el, "innerHTML", 0, set_inner_html);
+    accessor(ctx, el, "innerHTML", get_inner_html, set_inner_html);
     install_element_ext(ctx, el);
+    install_query_ext(ctx, el);
     JS_SetPropertyUint32(ctx, reg, (uint32_t)node, JS_DupValue(ctx, el));
     JS_FreeValue(ctx, reg);
     JS_FreeValue(ctx, global);
@@ -458,15 +460,31 @@ static const char *PRELUDE =
     "globalThis.window=globalThis;globalThis.self=globalThis;"
     "var sink=function(){};"
     "globalThis.console={log:sink,warn:sink,error:sink,info:sink,debug:sink,trace:sink};"
-    "globalThis.setTimeout=function(f){q.push(f);return q.length;};"
-    "globalThis.setInterval=function(){return 0;};"
-    "globalThis.clearTimeout=sink;globalThis.clearInterval=sink;"
-    "globalThis.requestAnimationFrame=function(f){q.push(f);return q.length;};"
-    "globalThis.cancelAnimationFrame=sink;"
+    /* Timers keep their delay and fire in due order. Dropping the delay ran
+     * a chain of deferred steps out of sequence, which is worse than not
+     * running it. Cancelling has to work too: a component that unmounts and
+     * clears its timer would otherwise still fire into a tree it gave up. */
+    "var tid=1,clock=0;"
+    "globalThis.setTimeout=function(f,ms){q.push({id:tid,at:clock+(+ms||0),f:f,r:0});return tid++;};"
+    "globalThis.setInterval=function(f,ms){var d=Math.max(1,+ms||1);"
+    "q.push({id:tid,at:clock+d,f:f,r:d});return tid++;};"
+    "globalThis.clearTimeout=function(i){for(var k=0;k<q.length;k++)"
+    "if(q[k].id===i){q.splice(k,1);return;}};"
+    "globalThis.clearInterval=globalThis.clearTimeout;"
+    "globalThis.requestAnimationFrame=function(f){q.push({id:tid,at:clock,f:f,r:0});return tid++;};"
+    "globalThis.cancelAnimationFrame=globalThis.clearTimeout;"
     "globalThis.queueMicrotask=globalThis.queueMicrotask||function(f){Promise.resolve().then(f);};"
+    /* Due timers first, then the clock moves to the next one waiting. A
+     * repeating timer is requeued rather than dropped, and the run count is
+     * capped so a timer that reschedules itself cannot hold the pump. */
     "globalThis.__njs_flush_timers=function(){var n=0;"
-    "while(q.length&&n<10000){var f=q.shift();n++;try{f();}catch(e){"
-    "(globalThis.__njs_errors=globalThis.__njs_errors||[]).push(String(e)+' @ '+String(e&&e.stack||''));}}return n;};"
+    "while(q.length&&n<10000){"
+    "var i=0;for(var k=1;k<q.length;k++)if(q[k].at<q[i].at)i=k;"
+    "var t=q[i];if(t.at>clock)clock=t.at;q.splice(i,1);n++;"
+    "if(t.r){q.push({id:t.id,at:clock+t.r,f:t.f,r:t.r});}"
+    "try{t.f();}catch(e){"
+    "(globalThis.__njs_errors=globalThis.__njs_errors||[]).push(String(e)+' @ '+String(e&&e.stack||''));}}"
+    "return n;};"
     "globalThis.navigator={userAgent:'NONOS Browser',language:'en-US',languages:['en-US']};"
     "globalThis.location={href:'http://localhost/',protocol:'http:',host:'localhost',"
     "hostname:'localhost',pathname:'/',search:'',hash:'',origin:'http://localhost'};"
@@ -481,8 +499,69 @@ static const char *PRELUDE =
     "globalThis.Document=globalThis.Document||function(){};"
     "globalThis.Text=globalThis.Text||function(){};"
     "globalThis.Comment=globalThis.Comment||function(){};"
-    "globalThis.Event=globalThis.Event||function(){};"
-    "globalThis.CustomEvent=globalThis.CustomEvent||function(){};"
+    /* An event a script builds has to carry what it was built with. These
+     * were empty functions, so `new CustomEvent('x',{detail:d})` produced an
+     * object with no type and no detail, and the handler that received it
+     * could not tell what had happened. */
+    "globalThis.Event=function(t,o){o=o||{};this.type=t;this.bubbles=!!o.bubbles;"
+    "this.cancelable=!!o.cancelable;this.defaultPrevented=false;this.target=null;"
+    "this.currentTarget=null;this.timeStamp=0;this.isTrusted=false;"
+    "this.preventDefault=function(){if(this.cancelable)this.defaultPrevented=true;};"
+    "this.stopPropagation=function(){this.__stop=true;};"
+    "this.stopImmediatePropagation=function(){this.__stop=true;this.__stopnow=true;};};"
+    "globalThis.CustomEvent=function(t,o){o=o||{};Event.call(this,t,o);this.detail="
+    "o.detail===undefined?null:o.detail;};"
+    "globalThis.MouseEvent=globalThis.KeyboardEvent=globalThis.PointerEvent="
+    "globalThis.InputEvent=globalThis.FocusEvent=Event;"
+    /* classList and dataset, built from the element's own attribute methods
+     * so neither needs the host. classList is on nearly every page that has
+     * a script at all, and dataset is how markup hands a value to one. */
+    "globalThis.__njs_classlist=function(el){"
+    "var g=function(){return String(el.className||'').split(/\\s+/).filter(Boolean);};"
+    "var s=function(a){el.className=a.join(' ');};"
+    "var o={contains:function(c){return g().indexOf(c)>=0;},"
+    "add:function(){var a=g();for(var i=0;i<arguments.length;i++)"
+    "if(a.indexOf(arguments[i])<0)a.push(arguments[i]);s(a);},"
+    "remove:function(){var a=g();for(var i=0;i<arguments.length;i++){"
+    "var k=a.indexOf(arguments[i]);if(k>=0)a.splice(k,1);}s(a);},"
+    "toggle:function(c,f){var a=g(),k=a.indexOf(c);"
+    "var on=f===undefined?k<0:!!f;if(on&&k<0)a.push(c);else if(!on&&k>=0)a.splice(k,1);"
+    "s(a);return on;},"
+    "replace:function(x,y){var a=g(),k=a.indexOf(x);if(k<0)return false;a[k]=y;s(a);return true;},"
+    "item:function(i){return g()[i]||null;},"
+    "toString:function(){return g().join(' ');}};"
+    "Object.defineProperty(o,'length',{get:function(){return g().length;}});"
+    "Object.defineProperty(o,'value',{get:function(){return g().join(' ');}});"
+    "return o;};"
+    /* dataset reads and writes through the attributes, so a value a script
+     * sets is the one markup shows, and the kebab spelling is derived rather
+     * than stored twice. */
+    "globalThis.__njs_dataset=function(el){"
+    "var kebab=function(p){return 'data-'+p.replace(/[A-Z]/g,function(c){"
+    "return '-'+c.toLowerCase();});};"
+    "var camel=function(a){return a.slice(5).replace(/-([a-z])/g,function(m,c){"
+    "return c.toUpperCase();});};"
+    "return new Proxy({},{get:function(t,p){if(typeof p!=='string')return undefined;"
+    "var v=el.getAttribute(kebab(p));return v===null?undefined:v;},"
+    "set:function(t,p,v){el.setAttribute(kebab(p),String(v));return true;},"
+    "has:function(t,p){return el.hasAttribute(kebab(p));},"
+    "deleteProperty:function(t,p){el.removeAttribute(kebab(p));return true;},"
+    "ownKeys:function(){return el.getAttributeNames()"
+    ".filter(function(a){return a.indexOf('data-')===0;}).map(camel);},"
+    "getOwnPropertyDescriptor:function(t,p){return{enumerable:true,configurable:true,"
+    "value:el.getAttribute(kebab(p))};}});};"
+    /* Storage a page can actually use. Backed by a plain object, so it lasts
+     * as long as the page rather than across a boot: a script that stores a
+     * preference and reads it back in the same visit works, and nothing is
+     * written to disk that the reader did not ask to keep. */
+    "var mkstore=function(){var m={};return{getItem:function(k){"
+    "return Object.prototype.hasOwnProperty.call(m,String(k))?m[String(k)]:null;},"
+    "setItem:function(k,v){m[String(k)]=String(v);},"
+    "removeItem:function(k){delete m[String(k)];},"
+    "clear:function(){m={};},"
+    "key:function(i){return Object.keys(m)[i]||null;},"
+    "get length(){return Object.keys(m).length;}};};"
+    "globalThis.localStorage=mkstore();globalThis.sessionStorage=mkstore();"
     "globalThis.MutationObserver=globalThis.MutationObserver||function(){"
     "this.observe=sink;this.disconnect=sink;this.takeRecords=function(){return[];};};"
     "if(globalThis.document){document.defaultView=globalThis;document.nodeType=9;}"
