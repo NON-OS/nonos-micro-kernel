@@ -9,5 +9,7 @@ pub mod compound;
 pub mod pseudo;
 #[path = "../../../../../capsule_browser/src/browser/css/parse/simple.rs"]
 pub mod simple;
+#[path = "../../../../../capsule_browser/src/browser/css/parse/is_expand.rs"]
+mod is_expand;
 #[path = "../../../../../capsule_browser/src/browser/css/parse/selectors.rs"]
 pub mod selectors;

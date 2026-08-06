@@ -26,6 +26,11 @@ pub(super) enum Phase {
 }
 
 /// What the serving loop should do after feeding the handshake more bytes.
+///
+/// The reply variant carries its bytes inline. The buffer is one short fixed
+/// reply, and boxing it would allocate on every step of a handshake to save a
+/// few bytes of enum width.
+#[allow(clippy::large_enum_variant)]
 pub enum Event {
     /// Not enough bytes yet; read more from the client.
     NeedMore,
