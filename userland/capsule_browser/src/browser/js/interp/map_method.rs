@@ -65,7 +65,12 @@ pub fn map_method(
             for e in pairs {
                 if let Value::Array(p) = e {
                     let (k, v) = (p.borrow().first().cloned(), p.borrow().get(1).cloned());
-                    apply(ctx, env, cb.clone(), vec![v.unwrap_or(Value::Undef), k.unwrap_or(Value::Undef)])?;
+                    apply(
+                        ctx,
+                        env,
+                        cb.clone(),
+                        vec![v.unwrap_or(Value::Undef), k.unwrap_or(Value::Undef)],
+                    )?;
                 }
             }
             Ok(Value::Undef)

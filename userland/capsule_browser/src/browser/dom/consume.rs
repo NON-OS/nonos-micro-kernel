@@ -22,6 +22,7 @@ use crate::browser::html::parse::tag_name::tag_name;
 use super::attrs::parse_attrs;
 use super::auto_close::auto_close;
 use super::close_tag::close_tag;
+use super::comment::skip_comment;
 use super::node::NodeKind;
 use super::raw_text::raw_text;
 use super::tree::Dom;
@@ -32,6 +33,10 @@ pub fn consume(
     cur: usize,
     chars: &mut core::iter::Peekable<core::str::CharIndices>,
 ) -> usize {
+    // Before anything else, because a comment does not end where a tag would.
+    if skip_comment(chars) {
+        return cur;
+    }
     let raw = read_to_gt(chars);
     if raw.starts_with('!') || raw.starts_with('?') {
         return cur;

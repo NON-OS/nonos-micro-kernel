@@ -34,8 +34,7 @@ pub fn promise_then(
     argv: &[Value],
 ) -> Result<Value, ()> {
     let (state, val) = ctx.promises.get(id).cloned().unwrap_or((0, Value::Undef));
-    let on_rejected =
-        if method == "catch" { argv.first().cloned() } else { argv.get(1).cloned() };
+    let on_rejected = if method == "catch" { argv.first().cloned() } else { argv.get(1).cloned() };
     let cb = match state {
         1 if method == "then" => argv.first().cloned(),
         2 => on_rejected,

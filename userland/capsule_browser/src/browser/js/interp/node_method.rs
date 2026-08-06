@@ -71,6 +71,37 @@ pub(super) fn node_method(ctx: &mut Ctx, id: usize, method: &str, argv: &[Value]
             }
             Value::Undef
         }
+        // A framework reorders by inserting ahead of a sibling. Appending can
+        // only build a list once; this is what keeps it correct after that.
+        "insertBefore" => {
+            if let Some(Value::Node(child)) = argv.first() {
+                let before = match argv.get(1) {
+                    Some(Value::Node(r)) => *r,
+                    // A null reference means append, which is what the
+                    // caller asks for when it is adding at the end.
+                    _ => usize::MAX,
+                };
+                if ctx.dom.insert_before(id, *child, before) {
+                    ctx.dirty = true;
+                    return Value::Node(*child);
+                }
+            }
+            Value::Undef
+        }
+        "replaceChild" => {
+            if let (Some(Value::Node(fresh)), Some(Value::Node(old))) = (argv.first(), argv.get(1))
+            {
+                let (fresh, old) = (*fresh, *old);
+                if ctx.dom.nodes.get(old).is_some_and(|n| n.parent == id)
+                    && ctx.dom.insert_before(id, fresh, old)
+                {
+                    ctx.dom.detach(old);
+                    ctx.dirty = true;
+                    return Value::Node(old);
+                }
+            }
+            Value::Undef
+        }
         "removeChild" => {
             if let Some(Value::Node(child)) = argv.first() {
                 let child = *child;

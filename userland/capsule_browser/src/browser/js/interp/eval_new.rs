@@ -26,9 +26,9 @@ use crate::browser::js::value::Value;
 use super::call_func::call_func_this;
 use super::class_instantiate::instantiate;
 use super::ctx::Ctx;
+use super::error_obj::{error_obj, is_err_name};
 use super::eval_args::eval_args;
 use super::eval_expr::eval_expr;
-use super::error_obj::{error_obj, is_err_name};
 use super::map_obj::{map_obj, set_obj};
 use super::promise_construct::promise_construct;
 use super::regex_obj::regex_obj;
@@ -41,12 +41,8 @@ pub fn eval_new(ctx: &mut Ctx, env: &Env, callee: &Expr, arg_exprs: &[Expr]) -> 
     let target = eval_expr(ctx, env, callee)?;
     let argv = eval_args(ctx, env, arg_exprs)?;
     match &target {
-        Value::Object(cls) if cls.borrow().contains_key("__class__") => {
-            instantiate(ctx, cls, argv)
-        }
-        Value::Object(o) if native_ctor(o) == Some("Promise") => {
-            promise_construct(ctx, env, &argv)
-        }
+        Value::Object(cls) if cls.borrow().contains_key("__class__") => instantiate(ctx, cls, argv),
+        Value::Object(o) if native_ctor(o) == Some("Promise") => promise_construct(ctx, env, &argv),
         Value::Object(o) if native_ctor(o) == Some("RegExp") => {
             let src = argv.first().map(to_str).unwrap_or_default();
             let flags = argv.get(1).map(to_str).unwrap_or_default();

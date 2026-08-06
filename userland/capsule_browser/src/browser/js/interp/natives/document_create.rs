@@ -31,3 +31,19 @@ pub fn create_element(ctx: &mut Ctx, argv: &[Value]) -> Value {
         None => Value::Null,
     }
 }
+
+/// document.createTextNode: a detached text node that renders once appended.
+///
+/// A framework builds text through this rather than by assigning to a
+/// parent, because it has to hold on to the node to update it in place
+/// later. Without it every string a component renders has nowhere to go.
+pub fn create_text_node(ctx: &mut Ctx, argv: &[Value]) -> Value {
+    let text = argv.first().map(to_str).unwrap_or_default();
+    match ctx.dom.create(NodeKind::Text, alloc::string::String::new()) {
+        Some(id) => {
+            ctx.dom.nodes[id].text = text;
+            Value::Node(id)
+        }
+        None => Value::Null,
+    }
+}
