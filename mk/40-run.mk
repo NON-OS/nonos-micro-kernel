@@ -223,6 +223,10 @@ nonos-mk-boot-image-viewer:
 		$(MAKE) -B nonos-mk-image-viewer-sign >/dev/null 2>&1; \
 		exit $$rc
 
+.PHONY: nonos-mk-pack-install-test
+nonos-mk-pack-install-test: $(NONOS_PACK_BIN)
+	@./tests/boot/pack_install_boot.sh
+
 .PHONY: nonos-mk-boot-terminal
 nonos-mk-boot-terminal:
 	@./tests/boot/terminal_round_trip.sh; rc=$$?; \
