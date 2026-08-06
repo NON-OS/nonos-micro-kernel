@@ -45,19 +45,14 @@ pub(super) fn draw_meta(fb: &mut PaintBuffer, b: &Block, stripe: u32, y: u32) {
     let (dbuf, dlen) = crate::term::dur::fmt_dur(b.dur_ms);
     if let Ok(dur) = core::str::from_utf8(&dbuf[..dlen]) {
         right -= fb.measure_ttf(dur, META_PX);
-        let _ = fb.text_ttf(right, baseline, dur, DIM, META_PX);
+        let _ = fb.text_ttf(right, baseline, dur, stripe, META_PX);
         right -= GAP;
     }
 
-    // A real mark rather than a control byte standing in for one. It carries
-    // the same colour as the stripe down the left of the block, so status is
-    // stated twice on the same line and neither reading depends on colour
-    // alone.
-    let mark = match b.status {
-        Status::Ok => "\u{2713}",
-        Status::Err => "\u{2717}",
-        Status::Running => "\u{00B7}",
-    };
-    right -= fb.measure_ttf(mark, META_PX);
-    let _ = fb.text_ttf(right, baseline, mark, stripe, META_PX);
+    // No separate status glyph. The faces here do not carry a tick or a
+    // cross, so one drew as a missing-glyph box, which says less than
+    // nothing. The duration takes the stripe colour instead: the outcome is
+    // already stated by the stripe down the left of the block, and this
+    // repeats it where the eye is reading.
+    let _ = stripe;
 }
