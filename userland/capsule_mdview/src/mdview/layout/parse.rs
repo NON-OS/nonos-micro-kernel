@@ -22,18 +22,20 @@ use super::heading::{body, heading};
 pub fn parse(markdown: &str) -> Vec<Block> {
     let mut blocks = Vec::new();
     let mut open: Option<Block> = None;
-    let mut in_item = false;
+    let mut depth: u32 = 0;
     for event in Parser::new(markdown) {
         match event {
-            Event::Start(Tag::Heading { level, .. }) => open = Some(Block::new(heading(level))),
-            Event::Start(Tag::Paragraph) => open = Some(Block::new(body(in_item))),
-            Event::Start(Tag::Item) => {
-                in_item = true;
-                open = Some(Block::new(Style::Bullet));
+            Event::Start(Tag::Heading { level, .. }) => {
+                start(&mut blocks, &mut open, heading(level))
             }
-            Event::Start(Tag::CodeBlock(_)) => open = Some(Block::new(Style::Code)),
+            Event::Start(Tag::Paragraph) => start(&mut blocks, &mut open, body(depth > 0)),
+            Event::Start(Tag::Item) => {
+                depth += 1;
+                start(&mut blocks, &mut open, Style::Bullet);
+            }
+            Event::Start(Tag::CodeBlock(_)) => start(&mut blocks, &mut open, Style::Code),
             Event::End(TagEnd::Item) => {
-                in_item = false;
+                depth = depth.saturating_sub(1);
                 flush(&mut blocks, open.take());
             }
             Event::End(TagEnd::Heading(_) | TagEnd::Paragraph | TagEnd::CodeBlock) => {
@@ -47,6 +49,11 @@ pub fn parse(markdown: &str) -> Vec<Block> {
     }
     flush(&mut blocks, open.take());
     blocks
+}
+
+fn start(blocks: &mut Vec<Block>, open: &mut Option<Block>, style: Style) {
+    flush(blocks, open.take());
+    *open = Some(Block::new(style));
 }
 
 fn push(open: &mut Option<Block>, text: &str, mono: bool) {

@@ -14,15 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod doc;
-mod draw;
-mod event;
-mod layout;
-mod load;
-mod manifest;
-mod measure;
-mod paint;
-mod theme;
+#[path = "../../src/mdview/layout/mod.rs"]
+pub mod layout;
 
-pub use app::MdView;
+mod fixtures;
+mod measure;
+
+pub use fixtures::{ITEM_CODE, NESTED, NESTED_LOOSE, README, SAMPLE};
+pub use measure::{line_width, measure, plain, words};

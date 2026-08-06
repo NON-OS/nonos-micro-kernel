@@ -16,46 +16,37 @@
 
 use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
 
+use super::doc::Doc;
 use super::event::on_event;
-use super::layout::{parse, wrap, Block, Line};
-use super::load::read_doc;
+use super::layout::{wrap, Line};
 use super::manifest::manifest;
 use super::measure::measure;
 use super::paint::paint;
 use super::theme::MARGIN;
 
 pub struct MdView {
-    blocks: Vec<Block>,
+    doc: Doc,
     lines: Vec<Line>,
-    error: Option<&'static str>,
     wrapped_width: u32,
-    loaded: bool,
 }
 
 impl MdView {
     pub fn new() -> Self {
         MdView {
-            blocks: Vec::new(),
+            doc: Doc::new(),
             lines: Vec::new(),
-            error: None,
             wrapped_width: 0,
-            loaded: false,
         }
     }
 
     fn relayout(&mut self, width: u32) {
-        if !self.loaded {
-            self.loaded = true;
-            match read_doc() {
-                Ok(text) => self.blocks = parse(&text),
-                Err(message) => self.error = Some(message),
-            }
+        let reloaded = self.doc.ensure();
+        if self.doc.blocks.is_empty() || !(reloaded || self.wrapped_width != width) {
+            return;
         }
-        if self.error.is_none() && self.wrapped_width != width {
-            self.wrapped_width = width;
-            let content = (width as i32 - 2 * MARGIN).max(80);
-            self.lines = wrap(&self.blocks, content, measure);
-        }
+        self.wrapped_width = width;
+        let content = (width as i32 - 2 * MARGIN).max(80);
+        self.lines = wrap(&self.doc.blocks, content, measure);
     }
 }
 
@@ -70,6 +61,6 @@ impl App for MdView {
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
         self.relayout(fb.width);
-        paint(fb, &self.lines, self.error);
+        paint(fb, &self.lines, self.doc.error);
     }
 }
