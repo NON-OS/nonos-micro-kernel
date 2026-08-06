@@ -37,3 +37,10 @@ impl Dom {
         Dom { nodes: vec![root] }
     }
 }
+
+impl Default for Dom {
+    /// A document holding nothing but its root, which is what `new` builds.
+    fn default() -> Self {
+        Self::new()
+    }
+}
