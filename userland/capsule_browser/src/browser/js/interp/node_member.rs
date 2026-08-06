@@ -38,6 +38,24 @@ pub fn node_member(ctx: &mut Ctx, id: usize, name: &str) -> Value {
         "value" => Value::Str(Rc::new(ctx.dom.nodes[id].attr("value").unwrap_or("").to_string())),
         "tagName" | "nodeName" => Value::Str(Rc::new(ctx.dom.nodes[id].tag.to_ascii_uppercase())),
         "parentNode" | "parentElement" => Value::Node(ctx.dom.nodes[id].parent),
+        // Navigation a reconciler walks on every update. `children` skips
+        // text, and these deliberately do not: a framework that placed a
+        // text node has to be able to find it again.
+        "firstChild" => match ctx.dom.nodes[id].children.first() {
+            Some(&c) => Value::Node(c),
+            None => Value::Null,
+        },
+        "lastChild" => match ctx.dom.nodes[id].children.last() {
+            Some(&c) => Value::Node(c),
+            None => Value::Null,
+        },
+        "nextSibling" => sibling(ctx, id, 1),
+        "previousSibling" => sibling(ctx, id, -1),
+        // 1 for an element, 3 for text, as the specification numbers them.
+        "nodeType" => Value::Num(match ctx.dom.nodes[id].kind {
+            NodeKind::Element => 1.0,
+            _ => 3.0,
+        }),
         "classList" => Value::Bound("classList", id),
         "style" => Value::Bound("style", id),
         "children" => {
@@ -50,5 +68,27 @@ pub fn node_member(ctx: &mut Ctx, id: usize, name: &str) -> Value {
             Value::Array(Rc::new(RefCell::new(kids)))
         }
         _ => Value::Undef,
+    }
+}
+
+/// The sibling `step` places away, or null at either end.
+///
+/// Read from the parent's list rather than held on the node, so that a move
+/// cannot leave a stale link behind: there is only ever one record of where
+/// a node sits.
+fn sibling(ctx: &Ctx, id: usize, step: isize) -> Value {
+    let parent = ctx.dom.nodes[id].parent;
+    let Some(node) = ctx.dom.nodes.get(parent) else {
+        return Value::Null;
+    };
+    let Some(at) = node.children.iter().position(|&c| c == id) else {
+        return Value::Null;
+    };
+    let Some(next) = at.checked_add_signed(step) else {
+        return Value::Null;
+    };
+    match node.children.get(next) {
+        Some(&c) => Value::Node(c),
+        None => Value::Null,
     }
 }

@@ -9,14 +9,16 @@ pub mod browser;
 #[cfg(test)]
 mod cascade_tests;
 #[cfg(test)]
-mod selector_tests;
+mod chunked_tests;
 #[cfg(test)]
 mod color_tests;
 #[cfg(test)]
-mod url_tests;
+mod dom_tests;
 #[cfg(test)]
 mod entity_tests;
 #[cfg(test)]
+mod selector_tests;
+#[cfg(test)]
 mod table_tests;
 #[cfg(test)]
-mod chunked_tests;
+mod url_tests;
